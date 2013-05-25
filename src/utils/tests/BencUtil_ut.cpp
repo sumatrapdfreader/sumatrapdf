@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "BencUtil.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 // define for testing the encoding of a very large tree
@@ -11,19 +13,19 @@
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)
 {
     ScopedMem<char> data(obj->Encode());
-    assert(data);
-    assert(str::Eq(data, dataOrig));
+    utassert(data);
+    utassert(str::Eq(data, dataOrig));
 }
 
 static void BencTestRoundtrip(BencObj *obj)
 {
     ScopedMem<char> encoded(obj->Encode());
-    assert(encoded);
+    utassert(encoded);
     size_t len;
     BencObj *obj2 = BencObj::Decode(encoded, &len);
-    assert(obj2 && len == str::Len(encoded));
+    utassert(obj2 && len == str::Len(encoded));
     ScopedMem<char> roundtrip(obj2->Encode());
-    assert(str::Eq(encoded, roundtrip));
+    utassert(str::Eq(encoded, roundtrip));
     delete obj2;
 }
 
@@ -70,13 +72,13 @@ static void BencTestParseInt()
     for (int i = 0; i < dimof(testData); i++) {
         BencObj *obj = BencObj::Decode(testData[i].benc);
         if (testData[i].valid) {
-            assert(obj);
-            assert(obj->Type() == BT_INT);
-            assert(static_cast<BencInt *>(obj)->Value() == testData[i].value);
+            utassert(obj);
+            utassert(obj->Type() == BT_INT);
+            utassert(static_cast<BencInt *>(obj)->Value() == testData[i].value);
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
         } else {
-            assert(!obj);
+            utassert(!obj);
         }
     }
 }
@@ -110,14 +112,14 @@ static void BencTestParseString()
     for (int i = 0; i < dimof(testData); i++) {
         BencObj *obj = BencObj::Decode(testData[i].benc);
         if (testData[i].value) {
-            assert(obj);
-            assert(obj->Type() == BT_STRING);
+            utassert(obj);
+            utassert(obj->Type() == BT_STRING);
             ScopedMem<WCHAR> value(static_cast<BencString *>(obj)->Value());
-            assert(str::Eq(value, testData[i].value));
+            utassert(str::Eq(value, testData[i].value));
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
         } else {
-            assert(!obj);
+            utassert(!obj);
         }
     }
 }
@@ -128,29 +130,29 @@ static void BencTestParseRawStrings()
     array.AddRaw("a\x82");
     array.AddRaw("a\x82", 1);
     BencString *raw = array.GetString(0);
-    assert(raw && str::Eq(raw->RawValue(), "a\x82"));
+    utassert(raw && str::Eq(raw->RawValue(), "a\x82"));
     BencTestSerialization(raw, "2:a\x82");
     raw = array.GetString(1);
-    assert(raw && str::Eq(raw->RawValue(), "a"));
+    utassert(raw && str::Eq(raw->RawValue(), "a"));
     BencTestSerialization(raw, "1:a");
 
     BencDict dict;
     dict.AddRaw("1", "a\x82");
     dict.AddRaw("2", "a\x82", 1);
     raw = dict.GetString("1");
-    assert(raw && str::Eq(raw->RawValue(), "a\x82"));
+    utassert(raw && str::Eq(raw->RawValue(), "a\x82"));
     BencTestSerialization(raw, "2:a\x82");
     raw = dict.GetString("2");
-    assert(raw && str::Eq(raw->RawValue(), "a"));
+    utassert(raw && str::Eq(raw->RawValue(), "a"));
     BencTestSerialization(raw, "1:a");
 }
 
 static void BencTestParseArray(const char *benc, size_t expectedLen)
 {
     BencObj *obj = BencObj::Decode(benc);
-    assert(obj);
-    assert(obj->Type() == BT_ARRAY);
-    assert(static_cast<BencArray *>(obj)->Length() == expectedLen);
+    utassert(obj);
+    utassert(obj->Type() == BT_ARRAY);
+    utassert(static_cast<BencArray *>(obj)->Length() == expectedLen);
     BencTestSerialization(obj, benc);
     delete obj;
 }
@@ -160,13 +162,13 @@ static void BencTestParseArrays()
     BencObj *obj;
 
     obj = BencObj::Decode("l");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("l123");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("li12e");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("l2:ie");
-    assert(!obj);
+    utassert(!obj);
 
     BencTestParseArray("le", 0);
     BencTestParseArray("li35ee", 1);
@@ -178,9 +180,9 @@ static void BencTestParseArrays()
 static void BencTestParseDict(const char *benc, size_t expectedLen)
 {
     BencObj *obj = BencObj::Decode(benc);
-    assert(obj);
-    assert(obj->Type() == BT_DICT);
-    assert(static_cast<BencDict *>(obj)->Length() == expectedLen);
+    utassert(obj);
+    utassert(obj->Type() == BT_DICT);
+    utassert(static_cast<BencDict *>(obj)->Length() == expectedLen);
     BencTestSerialization(obj, benc);
     delete obj;
 }
@@ -190,13 +192,13 @@ static void BencTestParseDicts()
     BencObj *obj;
 
     obj = BencObj::Decode("d");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("d123");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("di12e");
-    assert(!obj);
+    utassert(!obj);
     obj = BencObj::Decode("di12e2:ale");
-    assert(!obj);
+    utassert(!obj);
 
     BencTestParseDict("de", 0);
     BencTestParseDict("d2:hai35ee", 1);
@@ -211,26 +213,26 @@ static void BencTestArrayAppend()
     BencArray *array = new BencArray();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
         array->Add(i);
-        assert(array->Length() == i);
+        utassert(array->Length() == i);
     }
     array->Add(new BencDict());
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
         BencInt *obj = array->GetInt(i - 1);
-        assert(obj && obj->Type() == BT_INT);
-        assert(obj->Value() == i);
-        assert(!array->GetString(i - 1));
-        assert(!array->GetArray(i - 1));
-        assert(!array->GetDict(i - 1));
+        utassert(obj && obj->Type() == BT_INT);
+        utassert(obj->Value() == i);
+        utassert(!array->GetString(i - 1));
+        utassert(!array->GetArray(i - 1));
+        utassert(!array->GetDict(i - 1));
     }
-    assert(!array->GetInt(ITERATION_COUNT));
-    assert(array->GetDict(ITERATION_COUNT));
+    utassert(!array->GetInt(ITERATION_COUNT));
+    utassert(array->GetDict(ITERATION_COUNT));
     BencTestRoundtrip(array);
     delete array->Remove(ITERATION_COUNT);
     delete array->Remove(0);
     delete array->Remove(ITERATION_COUNT + 13);
-    assert(array->Length() == ITERATION_COUNT - 1);
-    assert(array->GetInt(0)->Value() == 2);
-    assert(array->GetInt(ITERATION_COUNT - 2)->Value() == ITERATION_COUNT);
+    utassert(array->Length() == ITERATION_COUNT - 1);
+    utassert(array->GetInt(0)->Value() == 2);
+    utassert(array->GetInt(ITERATION_COUNT - 2)->Value() == ITERATION_COUNT);
     BencTestRoundtrip(array);
     delete array;
 }
@@ -241,16 +243,16 @@ static void BencTestDictAppend()
     BencDict *dict = new BencDict();
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
         ScopedMem<char> key(str::Format("%04u", i));
-        assert(str::Len(key) == 4);
+        utassert(str::Len(key) == 4);
         dict->Add(key, i);
-        assert(dict->Length() == i);
-        assert(dict->GetInt(key));
-        assert(!dict->GetString(key));
-        assert(!dict->GetArray(key));
-        assert(!dict->GetDict(key));
+        utassert(dict->Length() == i);
+        utassert(dict->GetInt(key));
+        utassert(!dict->GetString(key));
+        utassert(!dict->GetArray(key));
+        utassert(!dict->GetDict(key));
     }
     BencInt *intObj = dict->GetInt("0123");
-    assert(intObj && intObj->Value() == 123);
+    utassert(intObj && intObj->Value() == 123);
     BencTestRoundtrip(dict);
     delete dict;
 
@@ -258,14 +260,14 @@ static void BencTestDictAppend()
     dict = new BencDict();
     for (size_t i = ITERATION_COUNT; i > 0; i--) {
         ScopedMem<char> key(str::Format("%04u", i));
-        assert(str::Len(key) == 4);
+        utassert(str::Len(key) == 4);
         BencObj *obj = new BencInt(i);
         dict->Add(key, obj);
-        assert(dict->Length() == ITERATION_COUNT + 1 - i);
-        assert(dict->GetInt(key));
+        utassert(dict->Length() == ITERATION_COUNT + 1 - i);
+        utassert(dict->GetInt(key));
     }
     intObj = dict->GetInt("0123");
-    assert(intObj && intObj->Value() == 123);
+    utassert(intObj && intObj->Value() == 123);
     BencTestRoundtrip(dict);
     delete dict;
 

@@ -7,6 +7,8 @@
 #include "BaseUtil.h"
 #include "SvgPath.h"
 #include "VecSegmented.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 using namespace Gdiplus;

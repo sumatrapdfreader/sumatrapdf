@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "SettingsUtil.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
@@ -133,36 +135,36 @@ Key = Value";
     SutStruct *data = NULL;
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
-        assert(data->internal == i);
+        utassert(data->internal == i);
         ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
-        assert(str::Eq(serialized, reserialized));
+        utassert(str::Eq(serialized, reserialized));
         data->internal++;
     }
-    assert(RGB(0xab, 0xcd, 0xef) == data->color);
-    assert(str::Eq(data->escapedString, L"\t\r\n$ "));
-    assert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
-    assert(2 == data->intArray->Count() && 3 == data->intArray->At(0));
-    assert(2 == data->sutStructItems->Count());
-    assert(PointI(-1, 5) == data->sutStructItems->At(0)->compactPoint);
-    assert(2 == data->sutStructItems->At(0)->floatArray->Count());
-    assert(0 == data->sutStructItems->At(0)->nested.colorArray->Count());
-    assert(0 == data->sutStructItems->At(1)->floatArray->Count());
-    assert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
-    assert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
-    assert(!data->internalString);
-    assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data))));
+    utassert(RGB(0xab, 0xcd, 0xef) == data->color);
+    utassert(str::Eq(data->escapedString, L"\t\r\n$ "));
+    utassert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
+    utassert(2 == data->intArray->Count() && 3 == data->intArray->At(0));
+    utassert(2 == data->sutStructItems->Count());
+    utassert(PointI(-1, 5) == data->sutStructItems->At(0)->compactPoint);
+    utassert(2 == data->sutStructItems->At(0)->floatArray->Count());
+    utassert(0 == data->sutStructItems->At(0)->nested.colorArray->Count());
+    utassert(0 == data->sutStructItems->At(1)->floatArray->Count());
+    utassert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
+    utassert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
+    utassert(!data->internalString);
+    utassert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data))));
     data->sutStructItems->At(0)->nested.point.x++;
-    assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
+    utassert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct *)DeserializeStruct(&gSutStructInfo, NULL);
-    assert(data && data->boolean && 0xffcc9933 == data->color);
-    assert(-3.14f == data->floatingPoint && 27 == data->integer);
-    assert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
-    assert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String && str::Eq(data->escapedUtf8String, "$\nstring "));
-    assert(data->intArray && 3 == data->intArray->Count() && 1 == data->intArray->At(0));
-    assert(2 == data->intArray->At(1) && -3 == data->intArray->At(2));
-    assert(PointI(111, 222) == data->point);
-    assert(data->sutStructItems && 0 == data->sutStructItems->Count());
+    utassert(data && data->boolean && 0xffcc9933 == data->color);
+    utassert(-3.14f == data->floatingPoint && 27 == data->integer);
+    utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));
+    utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String && str::Eq(data->escapedUtf8String, "$\nstring "));
+    utassert(data->intArray && 3 == data->intArray->Count() && 1 == data->intArray->At(0));
+    utassert(2 == data->intArray->At(1) && -3 == data->intArray->At(2));
+    utassert(PointI(111, 222) == data->point);
+    utassert(data->sutStructItems && 0 == data->sutStructItems->Count());
     FreeStruct(&gSutStructInfo, data);
 }

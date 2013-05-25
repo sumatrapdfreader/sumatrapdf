@@ -3,29 +3,29 @@
 
 #include "BaseUtil.h"
 #include "HtmlPullParser.h"
-#include "UtAssert.h"
 
-namespace unittests {
+// must be last due to assert() over-write
+#include "UtAssert.h"
 
 static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
-    assert(t->type == expectedType);
-    assert(t->NameIs("p"));
-    assert(Tag_P == t->tag);
+    utassert(t->type == expectedType);
+    utassert(t->NameIs("p"));
+    utassert(Tag_P == t->tag);
     AttrInfo *a = t->GetAttrByName("a1");
-    assert(a->NameIs("a1"));
-    assert(a->ValIs(">"));
+    utassert(a->NameIs("a1"));
+    utassert(a->ValIs(">"));
 
     a = t->GetAttrByName("foo");
-    assert(a->NameIs("foo"));
-    assert(a->ValIs("bar"));
+    utassert(a->NameIs("foo"));
+    utassert(a->ValIs("bar"));
 
     a = t->GetAttrByName("nope");
-    assert(!a);
+    utassert(!a);
 
     t = parser.Next();
-    assert(!t);
+    utassert(!t);
 }
 
 static void HtmlEntities()
@@ -51,8 +51,8 @@ static void HtmlEntities()
         const char *s = entities[i].s;
         int got;
         const char *entEnd = ResolveHtmlEntity(s + 1, str::Len(s) - 1, got);
-        assert(got == entities[i].rune);
-        assert((-1 == got) == !entEnd);
+        utassert(got == entities[i].rune);
+        utassert((-1 == got) == !entEnd);
     }
     const char *unchanged[] = {
         "foo", "", " as;d "
@@ -60,7 +60,7 @@ static void HtmlEntities()
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char *s = unchanged[i];
         const char *res = ResolveHtmlEntities(s, s + str::Len(s), NULL);
-        assert(res == s);
+        utassert(res == s);
     }
 
     struct {
@@ -80,21 +80,21 @@ static void HtmlEntities()
     for (size_t i = 0; i < dimof(changed); i++) {
         const char *s = changed[i].s;
         const char *res = ResolveHtmlEntities(s, s + str::Len(s), NULL);
-        assert(str::Eq(res, changed[i].res));
+        utassert(str::Eq(res, changed[i].res));
         free((void*)res);
     }
 }
 
 static void Test01()
 {
-    assert(IsInlineTag(Tag_A));
-    assert(IsInlineTag(Tag_U));
-    assert(IsInlineTag(Tag_Span));
-    assert(!IsInlineTag(Tag_P));
-    assert(IsTagSelfClosing(Tag_Area));
-    assert(IsTagSelfClosing(Tag_Link));
-    assert(IsTagSelfClosing(Tag_Param));
-    assert(!IsTagSelfClosing(Tag_P));
+    utassert(IsInlineTag(Tag_A));
+    utassert(IsInlineTag(Tag_U));
+    utassert(IsInlineTag(Tag_Span));
+    utassert(!IsInlineTag(Tag_P));
+    utassert(IsTagSelfClosing(Tag_Area));
+    utassert(IsTagSelfClosing(Tag_Link));
+    utassert(IsTagSelfClosing(Tag_Param));
+    utassert(!IsTagSelfClosing(Tag_P));
 }
 
 static void Test02()
@@ -102,9 +102,9 @@ static void Test02()
     const char *s = "<p>Last paragraph";
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
-    assert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
+    utassert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
-    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "Last paragraph"));
+    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "Last paragraph"));
 }
 
 static void Test03()
@@ -112,28 +112,26 @@ static void Test03()
     const char *s = "a < b > c <> d <";
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
-    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "a "));
+    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "a "));
     t = parser.Next();
-    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "< b > c "));
+    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "< b > c "));
     t = parser.Next();
-    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "<> d "));
+    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "<> d "));
     t = parser.Next();
-    assert(t && t->IsError() && HtmlToken::UnclosedTag == t->error);
+    utassert(t && t->IsError() && HtmlToken::UnclosedTag == t->error);
     t = parser.Next();
-    assert(!t);
-}
-
+    utassert(!t);
 }
 
 void HtmlPullParser_UnitTests()
 {
-    unittests::Test00("<p a1='>' foo=bar />", HtmlToken::EmptyElementTag);
-    unittests::Test00("<p a1 ='>'     foo=\"bar\"/>", HtmlToken::EmptyElementTag);
-    unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
-    unittests::Test00("</><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
-    unittests::Test00("<P A1='>' FOO=bar />", HtmlToken::EmptyElementTag);
-    unittests::HtmlEntities();
-    unittests::Test01();
-    unittests::Test02();
-    unittests::Test03();
+    Test00("<p a1='>' foo=bar />", HtmlToken::EmptyElementTag);
+    Test00("<p a1 ='>'     foo=\"bar\"/>", HtmlToken::EmptyElementTag);
+    Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
+    Test00("</><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
+    Test00("<P A1='>' FOO=bar />", HtmlToken::EmptyElementTag);
+    HtmlEntities();
+    Test01();
+    Test02();
+    Test03();
 }

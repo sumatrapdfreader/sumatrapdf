@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "SquareTreeParser.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 void SquareTreeTest()
@@ -22,14 +24,14 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(keyValueData); i++) {
         SquareTree keyValue(keyValueData[i]);
-        assert(keyValue.root && 1 == keyValue.root->data.Count());
+        utassert(keyValue.root && 1 == keyValue.root->data.Count());
         SquareTreeNode::DataItem& item = keyValue.root->data.At(0);
-        assert(!item.isChild && str::Eq(item.key, "key") && str::Eq(item.value.str, "value"));
-        assert(!keyValue.root->GetChild("key"));
-        assert(str::Eq(keyValue.root->GetValue("KEY"), "value"));
+        utassert(!item.isChild && str::Eq(item.key, "key") && str::Eq(item.value.str, "value"));
+        utassert(!keyValue.root->GetChild("key"));
+        utassert(str::Eq(keyValue.root->GetValue("KEY"), "value"));
         size_t off = 0;
-        assert(str::Eq(keyValue.root->GetValue("key", &off), "value"));
-        assert(!keyValue.root->GetValue("key", &off));
+        utassert(str::Eq(keyValue.root->GetValue("key", &off), "value"));
+        utassert(!keyValue.root->GetValue("key", &off));
     }
 
     static const char *nodeData[] = {
@@ -45,14 +47,14 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
         SquareTree node(nodeData[i]);
-        assert(node.root && 1 == node.root->data.Count());
+        utassert(node.root && 1 == node.root->data.Count());
         SquareTreeNode::DataItem& item = node.root->data.At(0);
-        assert(item.isChild && str::Eq(item.key, "node"));
-        assert(item.value.child == node.root->GetChild("NODE"));
+        utassert(item.isChild && str::Eq(item.key, "node"));
+        utassert(item.value.child == node.root->GetChild("NODE"));
         size_t off = 0;
-        assert(item.value.child == node.root->GetChild("node", &off));
-        assert(!node.root->GetChild("node", &off));
-        assert(str::Eq(item.value.child->GetValue("key"), "value"));
+        utassert(item.value.child == node.root->GetChild("node", &off));
+        utassert(!node.root->GetChild("node", &off));
+        utassert(str::Eq(item.value.child->GetValue("key"), "value"));
     }
 
     static const char *arrayData[] = {
@@ -64,14 +66,14 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(arrayData); i++) {
         SquareTree array(arrayData[i]);
-        assert(array.root && 2 == array.root->data.Count());
+        utassert(array.root && 2 == array.root->data.Count());
         size_t off = 0;
         SquareTreeNode *node = array.root->GetChild("array", &off);
-        assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "0"));
+        utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "0"));
         node = array.root->GetChild("array", &off);
-        assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "1"));
+        utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "1"));
         node = array.root->GetChild("array", &off);
-        assert(!node && 2 == off);
+        utassert(!node && 2 == off);
     }
 
     static const char *serArrayData[] = {
@@ -87,16 +89,16 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(serArrayData); i++) {
         SquareTree serArray(serArrayData[i]);
-        assert(serArray.root && 1 == serArray.root->data.Count());
+        utassert(serArray.root && 1 == serArray.root->data.Count());
         SquareTreeNode *array = serArray.root->GetChild("array");
-        assert(2 == array->data.Count());
+        utassert(2 == array->data.Count());
         size_t off = 0;
         SquareTreeNode *node = array->GetChild("", &off);
-        assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "0"));
+        utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "0"));
         node = array->GetChild("", &off);
-        assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "1"));
+        utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("item"), "1"));
         node = array->GetChild("", &off);
-        assert(!node && 2 == off);
+        utassert(!node && 2 == off);
     }
 
     static const char *valueArrayData[] = {
@@ -107,14 +109,14 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(valueArrayData); i++) {
         SquareTree valueArray(valueArrayData[i]);
-        assert(valueArray.root && 2 == valueArray.root->data.Count());
+        utassert(valueArray.root && 2 == valueArray.root->data.Count());
         size_t off = 0;
         const char *value = valueArray.root->GetValue("count", &off);
-        assert(str::Eq(value, "0") && 1 == off);
+        utassert(str::Eq(value, "0") && 1 == off);
         value = valueArray.root->GetValue("count", &off);
-        assert(str::Eq(value, "1") && 2 == off);
+        utassert(str::Eq(value, "1") && 2 == off);
         value = valueArray.root->GetValue("count", &off);
-        assert(!value && 2 == off);
+        utassert(!value && 2 == off);
     }
 
     static const char *emptyNodeData[] = {
@@ -128,9 +130,9 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(emptyNodeData); i++) {
         SquareTree emptyNode(emptyNodeData[i]);
-        assert(emptyNode.root && 1 == emptyNode.root->data.Count());
-        assert(emptyNode.root->GetChild("node"));
-        assert(0 == emptyNode.root->GetChild("node")->data.Count());
+        utassert(emptyNode.root && 1 == emptyNode.root->data.Count());
+        utassert(emptyNode.root->GetChild("node"));
+        utassert(0 == emptyNode.root->GetChild("node")->data.Count());
     }
 
     static const char *halfBrokenData[] = {
@@ -142,33 +144,33 @@ void SquareTreeTest()
 
     for (size_t i = 0; i < dimof(halfBrokenData); i++) {
         SquareTree halfBroken(halfBrokenData[i]);
-        assert(halfBroken.root && 2 == halfBroken.root->data.Count());
-        assert(halfBroken.root->GetChild("node") == halfBroken.root->data.At(0).value.child);
+        utassert(halfBroken.root && 2 == halfBroken.root->data.Count());
+        utassert(halfBroken.root->GetChild("node") == halfBroken.root->data.At(0).value.child);
         SquareTreeNode *node = halfBroken.root->GetChild("Node");
-        assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("child"), ""));
-        assert(str::Eq(halfBroken.root->GetValue("key"), "value"));
-        assert(!halfBroken.root->GetValue("node") && !halfBroken.root->GetChild("key"));
+        utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("child"), ""));
+        utassert(str::Eq(halfBroken.root->GetValue("key"), "value"));
+        utassert(!halfBroken.root->GetValue("node") && !halfBroken.root->GetChild("key"));
     }
 
     SquareTree null(NULL);
-    assert(!null.root);
+    utassert(!null.root);
 
     SquareTree empty("");
-    assert(empty.root && 0 == empty.root->data.Count());
+    utassert(empty.root && 0 == empty.root->data.Count());
 
     SquareTree onlyBom(UTF8_BOM);
-    assert(onlyBom.root && 0 == onlyBom.root->data.Count());
+    utassert(onlyBom.root && 0 == onlyBom.root->data.Count());
 
     SquareTree nested(UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]");
     SquareTreeNode *node = nested.root;
     for (size_t i = 0; i < 5; i++) {
-        assert(node && 1 == node->data.Count());
+        utassert(node && 1 == node->data.Count());
         node = node->GetChild("node");
     }
-    assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("depth"), "5"));
+    utassert(node && 1 == node->data.Count() && str::Eq(node->GetValue("depth"), "5"));
 
     SquareTree mixed(UTF8_BOM "node1 [\n [node2] \n key:value");
-    assert(mixed.root && mixed.root->GetChild("node1") && mixed.root->GetChild("node2"));
-    assert(0 == mixed.root->GetChild("node1")->data.Count());
-    assert(str::Eq(mixed.root->GetChild("node2")->GetValue("Key"), "value"));
+    utassert(mixed.root && mixed.root->GetChild("node1") && mixed.root->GetChild("node2"));
+    utassert(0 == mixed.root->GetChild("node1")->data.Count());
+    utassert(str::Eq(mixed.root->GetChild("node2")->GetValue("Key"), "value"));
 }

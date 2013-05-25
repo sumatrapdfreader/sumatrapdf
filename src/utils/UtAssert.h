@@ -14,8 +14,7 @@ int  utassert_print_results();
 #define utassert(_expr) \
     utassert_func(_expr, #_expr, __FILE__, __LINE__)
 
-// TODO: temporary. Unit tests should use utassert explicitly
 #undef assert
-#define assert utassert
+#define assert use_utassert_insteadof_assert
 
 #endif

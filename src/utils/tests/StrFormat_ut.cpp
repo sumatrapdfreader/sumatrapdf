@@ -3,11 +3,13 @@
 
 #include "BaseUtil.h"
 #include "StrFormat.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 static void StrFormatCheck(char *s, char *expected)
 {
-    assert(str::Eq(s, expected));
+    utassert(str::Eq(s, expected));
     free(s);
 }
 

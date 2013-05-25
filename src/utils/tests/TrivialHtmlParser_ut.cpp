@@ -4,204 +4,204 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "TrivialHtmlParser.h"
-#include "UtAssert.h"
 #include "WinUtil.h"
 
-namespace unittests {
+// must be last due to assert() over-write
+#include "UtAssert.h"
 
 static void HtmlParser00()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<a></A>");
-    assert(p.ElementsCount() == 1);
-    assert(root);
-    assert(Tag_A == root->tag && !root->name);
-    assert(root->NameIs("a"));
+    utassert(p.ElementsCount() == 1);
+    utassert(root);
+    utassert(Tag_A == root->tag && !root->name);
+    utassert(root->NameIs("a"));
 
     root = p.Parse("<b></B>");
-    assert(p.ElementsCount() == 1);
-    assert(root);
-    assert(Tag_B == root->tag && !root->name);
-    assert(root->NameIs("b"));
+    utassert(p.ElementsCount() == 1);
+    utassert(root);
+    utassert(Tag_B == root->tag && !root->name);
+    utassert(root->NameIs("b"));
 }
 
 static void HtmlParser01()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<A><bAh></a>");
-    assert(p.ElementsCount() == 2);
-    assert(Tag_A == root->tag && !root->name);
-    assert(NULL == root->up);
-    assert(NULL == root->next);
+    utassert(p.ElementsCount() == 2);
+    utassert(Tag_A == root->tag && !root->name);
+    utassert(NULL == root->up);
+    utassert(NULL == root->next);
     HtmlElement *el = root->down;
-    assert(NULL == el->firstAttr);
-    assert(el->NameIs("bah") && el->NameIs("BAH"));
-    assert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
-    assert(el->up == root);
-    assert(NULL == el->down);
-    assert(NULL == el->next);
+    utassert(NULL == el->firstAttr);
+    utassert(el->NameIs("bah") && el->NameIs("BAH"));
+    utassert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
+    utassert(el->up == root);
+    utassert(NULL == el->down);
+    utassert(NULL == el->next);
 }
 
 static void HtmlParser05()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo val=bar></object><ul><li></ul></object></body></Html>");
-    assert(8 == p.ElementsCount());
-    assert(4 == p.TotalAttrCount());
-    assert(root->NameIs("html"));
-    assert(NULL == root->up);
-    assert(NULL == root->next);
+    utassert(8 == p.ElementsCount());
+    utassert(4 == p.TotalAttrCount());
+    utassert(root->NameIs("html"));
+    utassert(NULL == root->up);
+    utassert(NULL == root->next);
     HtmlElement *el = root->down;
-    assert(el->NameIs("head"));
+    utassert(el->NameIs("head"));
     HtmlElement *el2 = el->down;
-    assert(el2->NameIs("meta"));
-    assert(NULL == el2->next);
-    assert(NULL == el2->down);
+    utassert(el2->NameIs("meta"));
+    utassert(NULL == el2->next);
+    utassert(NULL == el2->down);
     el2 = el->next;
-    assert(el2->NameIs("body"));
-    assert(NULL == el2->next);
+    utassert(el2->NameIs("body"));
+    utassert(NULL == el2->next);
     el2 = el2->down;
-    assert(el2->NameIs("object"));
+    utassert(el2->NameIs("object"));
     el = p.FindElementByName("html");
-    assert(el);
+    utassert(el);
     el = p.FindElementByName("head", el);
-    assert(el);
-    assert(el->NameIs("head"));
+    utassert(el);
+    utassert(el->NameIs("head"));
     el = p.FindElementByName("ul", el);
-    assert(el);
+    utassert(el);
 }
 
 static void HtmlParser04()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<el att=  va&apos;l></ el >");
-    assert(1 == p.ElementsCount());
-    assert(1 == p.TotalAttrCount());
-    assert(root->NameIs("el"));
-    assert(NULL == root->next);
-    assert(NULL == root->up);
-    assert(NULL == root->down);
+    utassert(1 == p.ElementsCount());
+    utassert(1 == p.TotalAttrCount());
+    utassert(root->NameIs("el"));
+    utassert(NULL == root->next);
+    utassert(NULL == root->up);
+    utassert(NULL == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
-    assert(str::Eq(val, L"va'l"));
-    assert(!root->firstAttr->next);
+    utassert(str::Eq(val, L"va'l"));
+    utassert(!root->firstAttr->next);
 }
 
 static void HtmlParser03()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<el   att  =v&quot;al/>");
-    assert(1 == p.ElementsCount());
-    assert(1 == p.TotalAttrCount());
-    assert(root->NameIs("el"));
-    assert(NULL == root->next);
-    assert(NULL == root->up);
-    assert(NULL == root->down);
+    utassert(1 == p.ElementsCount());
+    utassert(1 == p.TotalAttrCount());
+    utassert(root->NameIs("el"));
+    utassert(NULL == root->next);
+    utassert(NULL == root->up);
+    utassert(NULL == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
-    assert(str::Eq(val, L"v\"al"));
-    assert(!root->firstAttr->next);
+    utassert(str::Eq(val, L"v\"al"));
+    utassert(!root->firstAttr->next);
 }
 
 static void HtmlParser02()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
-    assert(4 == p.ElementsCount());
-    assert(4 == p.TotalAttrCount());
-    assert(root->NameIs("a"));
-    assert(NULL == root->next);
+    utassert(4 == p.ElementsCount());
+    utassert(4 == p.TotalAttrCount());
+    utassert(root->NameIs("a"));
+    utassert(NULL == root->next);
     HtmlElement *el = root->down;
-    assert(el->NameIs("b"));
-    assert(root == el->up);
+    utassert(el->NameIs("b"));
+    utassert(root == el->up);
     el = el->next;
-    assert(el->NameIs("c"));
-    assert(root == el->up);
+    utassert(el->NameIs("c"));
+    utassert(root == el->up);
     el = el->next;
-    assert(el->NameIs("d"));
-    assert(NULL == el->next);
-    assert(root == el->up);
+    utassert(el->NameIs("d"));
+    utassert(NULL == el->next);
+    utassert(root == el->up);
     ScopedMem<WCHAR> val(el->GetAttribute("at1"));
-    assert(str::Eq(val, L"<quo&ted>"));
+    utassert(str::Eq(val, L"<quo&ted>"));
     val.Set(el->GetAttribute("at2"));
-    assert(str::Eq(val, L"also quoted"));
+    utassert(str::Eq(val, L"also quoted"));
     val.Set(el->GetAttribute("att3"));
-    assert(str::Eq(val, L"notquoted"));
+    utassert(str::Eq(val, L"notquoted"));
     val.Set(el->GetAttribute("att4"));
-    assert(str::Eq(val, L"end"));
+    utassert(str::Eq(val, L"end"));
 }
 
 static void HtmlParser06()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
-    assert(9 == p.ElementsCount());
-    assert(0 == p.TotalAttrCount());
-    assert(root->NameIs("ul"));
-    assert(!root->next);
+    utassert(9 == p.ElementsCount());
+    utassert(0 == p.TotalAttrCount());
+    utassert(root->NameIs("ul"));
+    utassert(!root->next);
     HtmlElement *el = root->GetChildByTag(Tag_Li);
-    assert(el);
-    assert(el->down->NameIs("br"));
-    assert(el->down->next->NameIs("meta"));
-    assert(!el->down->next->next);
+    utassert(el);
+    utassert(el->down->NameIs("br"));
+    utassert(el->down->next->NameIs("meta"));
+    utassert(!el->down->next->next);
     el = root->GetChildByTag(Tag_Li, 1);
-    assert(el);
-    assert(!el->next);
+    utassert(el);
+    utassert(!el->next);
     el = el->GetChildByTag(Tag_Ol);
-    assert(!el->next);
-    assert(el->down->NameIs("li"));
-    assert(!el->down->down);
+    utassert(!el->next);
+    utassert(el->down->NameIs("li"));
+    utassert(!el->down->down);
 }
 
 static void HtmlParser07()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>", CP_UTF8);
-    assert(1 == p.ElementsCount());
+    utassert(1 == p.ElementsCount());
     ScopedMem<WCHAR> val(root->GetAttribute("umls"));
-    assert(str::Eq(val, L"\xE4\xF6\xFC"));
+    utassert(str::Eq(val, L"\xE4\xF6\xFC"));
     val.Set(root->GetAttribute("zerO"));
-    assert(str::Eq(val, L"\x01??"));
+    utassert(str::Eq(val, L"\x01??"));
 }
 
 static void HtmlParser08()
 {
     ScopedMem<WCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
-    assert(str::Eq(val, L"\xE4&test;&\xF6-"));
+    utassert(str::Eq(val, L"\xE4&test;&\xF6-"));
 }
 
 static void HtmlParser09()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
-    assert(1 == p.ElementsCount());
-    assert(1 == p.TotalAttrCount());
-    assert(root->NameIs("root"));
+    utassert(1 == p.ElementsCount());
+    utassert(1 == p.TotalAttrCount());
+    utassert(root->NameIs("root"));
     ScopedMem<WCHAR> val(root->GetAttribute("attr"));
-    assert(str::Eq(val, L"<!-- comment -->"));
+    utassert(str::Eq(val, L"<!-- comment -->"));
 
     root = p.Parse("<!-- comment with \" and \' --><main />");
-    assert(1 == p.ElementsCount());
-    assert(0 == p.TotalAttrCount());
-    assert(root->NameIs("main"));
+    utassert(1 == p.ElementsCount());
+    utassert(0 == p.TotalAttrCount());
+    utassert(root->NameIs("main"));
 }
 
 static void HtmlParser10()
 {
     HtmlParser p;
     HtmlElement *root = p.Parse("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>");
-    assert(2 == p.ElementsCount());
-    assert(2 == p.TotalAttrCount());
-    assert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
+    utassert(2 == p.ElementsCount());
+    utassert(2 == p.TotalAttrCount());
+    utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
 
     HtmlElement *node = p.FindElementByName("b");
-    assert(!node);
+    utassert(!node);
     node = p.FindElementByNameNS("b", "http://example.org/ns/x");
-    assert(node);
-    assert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
+    utassert(node);
+    utassert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
     ScopedMem<WCHAR> val(node->GetAttribute("attr"));
-    assert(str::Eq(val, L"val"));
+    utassert(str::Eq(val, L"val"));
     // TODO: XML tags are case sensitive (HTML tags aren't)
     node = p.FindElementByName("X:B");
-    assert(node && node->NameIs("X:B"));
+    utassert(node && node->NameIs("X:B"));
 }
 
 static void HtmlParserFile()
@@ -220,55 +220,53 @@ static void HtmlParserFile()
         return;
     HtmlParser p;
     HtmlElement *root = p.ParseInPlace(d);
-    assert(root);
-    assert(709 == p.ElementsCount());
-    assert(955 == p.TotalAttrCount());
-    assert(root->NameIs("html"));
+    utassert(root);
+    utassert(709 == p.ElementsCount());
+    utassert(955 == p.TotalAttrCount());
+    utassert(root->NameIs("html"));
     HtmlElement *el = root->down;
-    assert(el->NameIs("head"));
+    utassert(el->NameIs("head"));
     el = el->next;
-    assert(el->NameIs("body"));
+    utassert(el->NameIs("body"));
     el = el->down;
-    assert(el->NameIs("object"));
+    utassert(el->NameIs("object"));
     el = el->next;
-    assert(el->NameIs("ul"));
+    utassert(el->NameIs("ul"));
     el = el->down;
-    assert(el->NameIs("li"));
+    utassert(el->NameIs("li"));
     el = el->down;
-    assert(el->NameIs("object"));
+    utassert(el->NameIs("object"));
     ScopedMem<WCHAR> val(el->GetAttribute("type"));
-    assert(str::Eq(val, L"text/sitemap"));
+    utassert(str::Eq(val, L"text/sitemap"));
     el = el->down;
-    assert(el->NameIs("param"));
-    assert(!el->down);
-    assert(el->next->NameIs("param"));
+    utassert(el->NameIs("param"));
+    utassert(!el->down);
+    utassert(el->next->NameIs("param"));
     el = p.FindElementByName("body");
-    assert(el);
+    utassert(el);
     el = p.FindElementByName("ul", el);
-    assert(el);
+    utassert(el);
     int count = 0;
     while (el) {
         ++count;
         el = p.FindElementByName("ul", el);
     }
-    assert(18 == count);
+    utassert(18 == count);
     free(d);
-}
-
 }
 
 void TrivialHtmlParser_UnitTests()
 {
-    unittests::HtmlParserFile();
-    unittests::HtmlParser10();
-    unittests::HtmlParser09();
-    unittests::HtmlParser08();
-    unittests::HtmlParser07();
-    unittests::HtmlParser06();
-    unittests::HtmlParser05();
-    unittests::HtmlParser04();
-    unittests::HtmlParser03();
-    unittests::HtmlParser02();
-    unittests::HtmlParser00();
-    unittests::HtmlParser01();
+    HtmlParserFile();
+    HtmlParser10();
+    HtmlParser09();
+    HtmlParser08();
+    HtmlParser07();
+    HtmlParser06();
+    HtmlParser05();
+    HtmlParser04();
+    HtmlParser03();
+    HtmlParser02();
+    HtmlParser00();
+    HtmlParser01();
 }

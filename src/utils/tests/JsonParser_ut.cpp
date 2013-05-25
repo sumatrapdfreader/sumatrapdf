@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "JsonParser.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 struct JsonValue {
@@ -23,13 +25,13 @@ class JsonVerifier : public json::ValueVisitor {
 public:
     JsonVerifier(const JsonValue *data, size_t dataLen) :
         data(data), dataLen(dataLen), idx(0) { }
-    ~JsonVerifier() { assert(dataLen == idx); }
+    ~JsonVerifier() { utassert(dataLen == idx); }
 
     virtual bool Visit(const char *path, const char *value, json::DataType type) {
-        assert(idx < dataLen);
-        assert(type == data[idx].type);
-        assert(str::Eq(path, data[idx].path));
-        assert(str::Eq(value, data[idx].value));
+        utassert(idx < dataLen);
+        utassert(type == data[idx].type);
+        utassert(str::Eq(path, data[idx].path));
+        utassert(str::Eq(value, data[idx].value));
 
         idx++;
         return true;
@@ -70,7 +72,7 @@ void JsonTest()
 
     for (size_t i = 0; i < dimof(validJsonData); i++) {
         JsonVerifier verifier(&validJsonData[i].value, validJsonData[i].value.value ? 1 : 0);
-        assert(json::Parse(validJsonData[i].json, &verifier));
+        utassert(json::Parse(validJsonData[i].json, &verifier));
     }
 
     static const struct {
@@ -89,7 +91,7 @@ void JsonTest()
 
     for (size_t i = 0; i < dimof(invalidJsonData); i++) {
         JsonVerifier verifier(&invalidJsonData[i].value, 1);
-        assert(!json::Parse(invalidJsonData[i].json, &verifier));
+        utassert(!json::Parse(invalidJsonData[i].json, &verifier));
     }
 
     static const char *invalidJson[] = {
@@ -102,7 +104,7 @@ void JsonTest()
 
     JsonVerifier verifyError(NULL, 0);
     for (size_t i = 0; i < dimof(invalidJson); i++) {
-        assert(!json::Parse(invalidJson[i], &verifyError));
+        utassert(!json::Parse(invalidJson[i], &verifyError));
     }
 
     const JsonValue testData[] = {
@@ -130,5 +132,5 @@ void JsonTest()
     \"appID\": \"Test/123\"\n\
 }";
     JsonVerifier sampleVerifier(testData, dimof(testData));
-    assert(json::Parse(jsonSample, &sampleVerifier));
+    utassert(json::Parse(jsonSample, &sampleVerifier));
 }

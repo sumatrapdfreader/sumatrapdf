@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "SimpleLog.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 void SimpleLogTest()
@@ -21,7 +23,7 @@ void SimpleLogTest()
         ml.LogFmt(L"%s : %d", L"filen\xE4me.pdf", 25);
         log.RemoveLogger(&ml);
 
-        assert(str::Eq(ml.GetData(), L"Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n"));
+        utassert(str::Eq(ml.GetData(), L"Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n"));
     }
 
     {
@@ -38,13 +40,13 @@ void SimpleLogTest()
         char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
         DWORD len;
         BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, NULL);
-        assert(ok && len == str::Len(expected));
+        utassert(ok && len == str::Len(expected));
         pipeData[len] = '\0';
-        assert(str::Eq(pipeData, expected));
+        utassert(str::Eq(pipeData, expected));
         CloseHandle(hRead);
     }
 
-    assert(str::Eq(logAll.GetData(), L"Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n"));
+    utassert(str::Eq(logAll.GetData(), L"Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n"));
     log.RemoveLogger(&logAll);
 
     // don't leak the logger, don't crash on logging NULL

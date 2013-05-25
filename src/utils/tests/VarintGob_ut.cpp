@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "VarintGob.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 // if set to 1, dumps on to the debugger code that can be copied
@@ -14,7 +16,7 @@ static void GenPythonIntTest(int64_t val, uint8_t *d, int dLen)
 {
 #if GEN_PYTHON_TESTS == 1
     str::Str<char> s;
-    s.AppendFmt("  assert gob_varint_encode(%I64d) == ", val);
+    s.AppendFmt("  utassert gob_varint_encode(%I64d) == ", val);
     int n;
     for (int i = 0; i < dLen; i++) {
         n = (int)d[i];
@@ -30,7 +32,7 @@ static void GenPythonUIntTest(uint64_t val, uint8_t *d, int dLen)
 {
 #if GEN_PYTHON_TESTS == 1
     str::Str<char> s;
-    s.AppendFmt("  assert gob_uvarint_encode(%I64u) == ", val);
+    s.AppendFmt("  utassert gob_uvarint_encode(%I64u) == ", val);
     int n;
     for (int i = 0; i < dLen; i++) {
         n = (int)d[i];
@@ -64,51 +66,51 @@ static void GobEncodingTest()
     for (int i = 0; i < dimof(intVals); i++) {
         val = intVals[i];
         n = VarintGobEncode(val, d, dLen);
-        assert(n >= 1);
+        utassert(n >= 1);
         GenPythonIntTest(val, d, n);
         n2 = VarintGobDecode(d, n, &expVal);
-        assert(n == n2);
-        assert(val == expVal);
+        utassert(n == n2);
+        utassert(val == expVal);
         d += n;
         dLen -= n;
-        assert(dLen > 0);
+        utassert(dLen > 0);
     }
     dLen = (d - buf);
     d = buf;
     for (int i = 0; i < dimof(intVals); i++) {
         expVal = intVals[i];
         n = VarintGobDecode(d, dLen, &val);
-        assert(0 != n);
-        assert(val == expVal);
+        utassert(0 != n);
+        utassert(val == expVal);
         d += n;
         dLen -= n;
     }
-    assert(0 == dLen);
+    utassert(0 == dLen);
 
     d = buf; dLen = dimof(buf);
     for (int i = 0; i < dimof(uintVals); i++) {
         uval = uintVals[i];
         n = UVarintGobEncode(uval, d, dLen);
-        assert(n >= 1);
+        utassert(n >= 1);
         GenPythonUIntTest(uval, d, n);
         n2 = UVarintGobDecode(d, n, &expUval);
-        assert(n == n2);
-        assert(uval == expUval);
+        utassert(n == n2);
+        utassert(uval == expUval);
         d += n;
         dLen -= n;
-        assert(dLen > 0);
+        utassert(dLen > 0);
     }
     dLen = (d - buf);
     d = buf;
     for (int i = 0; i < dimof(uintVals); i++) {
         expUval = uintVals[i];
         n = UVarintGobDecode(d, dLen, &uval);
-        assert(0 != n);
-        assert(uval == expUval);
+        utassert(0 != n);
+        utassert(uval == expUval);
         d += n;
         dLen -= n;
     }
-    assert(0 == dLen);
+    utassert(0 == dLen);
 }
 
 void VarintGobTest()

@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "Sigslot.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 // for a lack of a better place, simple tests to make sure sigslot compiles
@@ -51,15 +53,15 @@ static void SigSlotTestEmit(SigSlotSender& s)
 
 static void SigSlotTestAssertCounts(SigSlotReceiver& r, int count)
 {
-    assert(count == r.s0c);
-    assert(count == r.s1c);
-    assert(count == r.s2c);
-    assert(count == r.s3c);
-    assert(count == r.s4c);
-    assert(count == r.s5c);
-    assert(count == r.s6c);
-    assert(count == r.s7c);
-    assert(count == r.s8c);
+    utassert(count == r.s0c);
+    utassert(count == r.s1c);
+    utassert(count == r.s2c);
+    utassert(count == r.s3c);
+    utassert(count == r.s4c);
+    utassert(count == r.s5c);
+    utassert(count == r.s6c);
+    utassert(count == r.s7c);
+    utassert(count == r.s8c);
 }
 
 void SigSlotTest()

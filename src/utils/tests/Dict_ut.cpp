@@ -4,6 +4,9 @@
 #include "BaseUtil.h"
 #include "Dict.h"
 
+// must be last due to assert() over-write
+#include "UtAssert.h"
+
 #define LETTERS "abcdefghijklmnopqrtswzABCDEFGHIJLMNOPQRTSWZ0123456789"
 
 static inline char GenRandChar()
@@ -29,32 +32,32 @@ void DictTestMapStrToInt()
     bool ok;
     int val;
 
-    assert(0 == d.Count());
+    utassert(0 == d.Count());
     ok = d.Get("foo", &val);
-    assert(!ok);
+    utassert(!ok);
     ok = d.Remove("foo", NULL);
-    assert(!ok);
+    utassert(!ok);
 
     ok = d.Insert("foo", 5, NULL);
-    assert(ok);
-    assert(1 == d.Count());
+    utassert(ok);
+    utassert(1 == d.Count());
     ok = d.Get("foo", &val);
-    assert(ok);
-    assert(val == 5);
+    utassert(ok);
+    utassert(val == 5);
     ok = d.Insert("foo", 8, &val);
-    assert(!ok);
-    assert(val == 5);
+    utassert(!ok);
+    utassert(val == 5);
     ok = d.Get("foo", &val);
-    assert(ok);
-    assert(val == 5);
+    utassert(ok);
+    utassert(val == 5);
     ok = d.Get("bar", &val);
-    assert(!ok);
+    utassert(!ok);
 
     val = 0;
     ok = d.Remove("foo", &val);
-    assert(ok);
-    assert(val == 5);
-    assert(0 == d.Count());
+    utassert(ok);
+    utassert(val == 5);
+    utassert(0 == d.Count());
 
     srand((unsigned int)time(NULL));
     Vec<char *> toRemove;
@@ -65,14 +68,14 @@ void DictTestMapStrToInt()
         if (!ok)
             continue;
         toRemove.Append(str::Dup(k));
-        assert(toRemove.Count() == d.Count());
+        utassert(toRemove.Count() == d.Count());
         ok = d.Get(k, &val);
         CrashIf(!ok);
         CrashIf(i != val);
     }
     for (char **k = toRemove.IterStart(); k; k = toRemove.IterNext()) {
         ok = d.Remove(*k, NULL);
-        assert(ok);
+        utassert(ok);
     }
     FreeVecMembers(toRemove);
 }

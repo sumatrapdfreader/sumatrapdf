@@ -2,27 +2,29 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+
+// must be last due to assert() over-write
 #include "UtAssert.h"
 
 static void GeomTest()
 {
     PointD ptD(12.4, -13.6);
-    assert(ptD.x == 12.4 && ptD.y == -13.6);
+    utassert(ptD.x == 12.4 && ptD.y == -13.6);
     PointI ptI = ptD.Convert<int>();
-    assert(ptI.x == 12 && ptI.y == -14);
+    utassert(ptI.x == 12 && ptI.y == -14);
     ptD = ptI.Convert<double>();
-    assert(PointD(12, -14) == ptD);
-    assert(PointD(12.4, -13.6) != ptD);
+    utassert(PointD(12, -14) == ptD);
+    utassert(PointD(12.4, -13.6) != ptD);
 
     SizeD szD(7.7, -3.3);
-    assert(szD.dx == 7.7 && szD.dy == -3.3);
+    utassert(szD.dx == 7.7 && szD.dy == -3.3);
     SizeI szI = szD.Convert<int>();
-    assert(szI.dx == 8 && szI.dy == -3);
+    utassert(szI.dx == 8 && szI.dy == -3);
     szD = szI.Convert<double>();
-    assert(SizeD(8, -3) == szD);
+    utassert(SizeD(8, -3) == szD);
 
-    assert(!szD.IsEmpty() && !szI.IsEmpty());
-    assert(SizeI().IsEmpty() && SizeD().IsEmpty());
+    utassert(!szD.IsEmpty() && !szI.IsEmpty());
+    utassert(SizeI().IsEmpty() && SizeD().IsEmpty());
 
     struct SRIData {
         int     x1s, x1e, y1s, y1e;
@@ -46,50 +48,50 @@ static void GeomTest()
         RectI rx2 = RectI::FromXY(curr->x2s, curr->y2s, curr->x2e, curr->y2e);
         RectI isect = rx1.Intersect(rx2);
         if (curr->intersect) {
-            assert(!isect.IsEmpty());
-            assert(isect.x == curr->i_xs && isect.y == curr->i_ys);
-            assert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
+            utassert(!isect.IsEmpty());
+            utassert(isect.x == curr->i_xs && isect.y == curr->i_ys);
+            utassert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
         }
         else {
-            assert(isect.IsEmpty());
+            utassert(isect.IsEmpty());
         }
         RectI urect = rx1.Union(rx2);
-        assert(urect.x == curr->u_xs && urect.y == curr->u_ys);
-        assert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
+        utassert(urect.x == curr->u_xs && urect.y == curr->u_ys);
+        utassert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
 
         /* if we swap rectangles, the results should be the same */
         Swap(rx1, rx2);
         isect = rx1.Intersect(rx2);
         if (curr->intersect) {
-            assert(!isect.IsEmpty());
-            assert(isect.x == curr->i_xs && isect.y == curr->i_ys);
-            assert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
+            utassert(!isect.IsEmpty());
+            utassert(isect.x == curr->i_xs && isect.y == curr->i_ys);
+            utassert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
         }
         else {
-            assert(isect.IsEmpty());
+            utassert(isect.IsEmpty());
         }
         urect = rx1.Union(rx2);
-        assert(RectI::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
+        utassert(RectI::FromXY(curr->u_xs, curr->u_ys, curr->u_xe, curr->u_ye) == urect);
 
-        assert(!rx1.Contains(PointI(-2, -2)));
-        assert(rx1.Contains(rx1.TL()));
-        assert(!rx1.Contains(PointI(rx1.x, INT_MAX)));
-        assert(!rx1.Contains(PointI(INT_MIN, rx1.y)));
+        utassert(!rx1.Contains(PointI(-2, -2)));
+        utassert(rx1.Contains(rx1.TL()));
+        utassert(!rx1.Contains(PointI(rx1.x, INT_MAX)));
+        utassert(!rx1.Contains(PointI(INT_MIN, rx1.y)));
     }
 }
 
 void BaseUtilTest()
 {
-    assert(RoundToPowerOf2(0) == 1);
-    assert(RoundToPowerOf2(1) == 1);
-    assert(RoundToPowerOf2(2) == 2);
-    assert(RoundToPowerOf2(3) == 4);
-    assert(RoundToPowerOf2(15) == 16);
-    assert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
-    assert(RoundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
+    utassert(RoundToPowerOf2(0) == 1);
+    utassert(RoundToPowerOf2(1) == 1);
+    utassert(RoundToPowerOf2(2) == 2);
+    utassert(RoundToPowerOf2(3) == 4);
+    utassert(RoundToPowerOf2(15) == 16);
+    utassert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
+    utassert(RoundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
 
-    assert(MurmurHash2(NULL, 0) == 0x342CE6C);
-    assert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
+    utassert(MurmurHash2(NULL, 0) == 0x342CE6C);
+    utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
 
     GeomTest();
 }
