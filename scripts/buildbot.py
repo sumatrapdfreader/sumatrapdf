@@ -181,6 +181,7 @@ def build_release(stats, ver):
     platform = "PLATFORM=X86"
 
     shutil.rmtree(obj_dir, ignore_errors=True)
+    shutil.rmtree("vs-premake", ignore_errors=True)
     shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
     (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
 
