@@ -415,6 +415,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\UtAssert.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\UtAssert.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\VecSegmented.h"
 					>
 				</File>
@@ -627,14 +635,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\UtAssert.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\UtAssert.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

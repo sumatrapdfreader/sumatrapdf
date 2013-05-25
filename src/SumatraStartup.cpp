@@ -504,8 +504,6 @@ Exit:
         uitask::DrainQueue();
     }
 
-    gFileHistory.UpdateStatesSource(NULL);
-
     mui::Destroy();
     uitask::Destroy();
     trans::Destroy();
@@ -515,6 +513,7 @@ Exit:
 
     // must be after uitask::Destroy() because we might have queued prefs::Reload()
     // which crashes if gGlobalPrefs is freed
+    gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
 
     // it's still possible to crash after this (destructors of static classes,

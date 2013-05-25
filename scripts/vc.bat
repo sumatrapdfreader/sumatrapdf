@@ -1,5 +1,8 @@
 @ECHO OFF
 
+REM append ..\bin to PATH to make nasm.exe available
+FOR %%p IN (nasm.exe) DO IF "%%~$PATH:p" == "" SET PATH=%PATH%;%~dp0..\bin
+
 REM Allow to explicitly specify the desired Visual Studio version
 IF /I "%1" == "vc12" GOTO TRY_VS12
 IF /I "%1" == "vc10" GOTO TRY_VS10
