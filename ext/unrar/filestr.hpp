@@ -2,8 +2,7 @@
 #define _RAR_FILESTR_
 
 bool ReadTextFile(
-  const char *Name,
-  const wchar *NameW,
+  const wchar *Name,
   StringList *List,
   bool Config,
   bool AbortOnError=false,

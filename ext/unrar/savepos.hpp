@@ -6,10 +6,16 @@ class SaveFilePos
   private:
     File *SaveFile;
     int64 SavePos;
-    uint CloseCount;
   public:
-    SaveFilePos(File &SaveFile);
-    ~SaveFilePos();
+    SaveFilePos(File &Src)
+    {
+      SaveFile=&Src;
+      SavePos=Src.Tell();
+    }
+    ~SaveFilePos()
+    {
+      SaveFile->Seek(SavePos,SEEK_SET);
+    }
 };
 
 #endif

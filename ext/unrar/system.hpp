@@ -20,9 +20,15 @@
 void InitSystemOptions(int SleepTime);
 void SetPriority(int Priority);
 void Wait();
-bool EmailFile(char *FileName,char *MailTo);
+bool EmailFile(const wchar *FileName,const wchar *MailToW);
 void Shutdown();
 
 
+
+#ifdef USE_SSE
+enum SSE_VERSION {SSE_NONE,SSE_SSE,SSE_SSE2,SSE_SSSE3,SSE_SSE41};
+SSE_VERSION GetSSEVersion();
+extern SSE_VERSION _SSE_Version;
+#endif
 
 #endif

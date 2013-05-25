@@ -1,13 +1,11 @@
-/**************************************************************************
- * This code is based on Szymon Stefanek AES implementation:              *
- * http://www.esat.kuleuven.ac.be/~rijmen/rijndael/rijndael-cpplib.tar.gz *
- *                                                                        *
- * Dynamic tables generation is based on the Brian Gladman work:          *
- * http://fp.gladman.plus.com/cryptography_technology/rijndael            *
- **************************************************************************/
+/***************************************************************************
+ * This code is based on public domain Szymon Stefanek AES implementation: *
+ * http://www.pragmaware.net/software/rijndael/index.php                   *
+ *                                                                         *
+ * Dynamic tables generation is based on the Brian Gladman work:           *
+ * http://fp.gladman.plus.com/cryptography_technology/rijndael             *
+ ***************************************************************************/
 #include "rar.hpp"
-
-const int uKeyLenInBytes=16, m_uRounds=10;
 
 static byte S[256],S5[256],rcon[30];
 static byte T1[256][4],T2[256][4],T3[256][4],T4[256][4];
@@ -66,21 +64,36 @@ Rijndael::Rijndael()
 }
 
 
-void Rijndael::init(Direction dir,const byte * key,byte * initVector)
+void Rijndael::Init(bool Encrypt,const byte *key,uint keyLen,const byte * initVector)
 {
-  m_direction = dir;
+  uint uKeyLenInBytes;
+  switch(keyLen)
+  {
+    case 128:
+      uKeyLenInBytes = 16;
+      m_uRounds = 10;
+      break;
+    case 192:
+      uKeyLenInBytes = 24;
+      m_uRounds = 12;
+      break;
+    case 256:
+      uKeyLenInBytes = 32;
+      m_uRounds = 14;
+      break;
+  }
 
   byte keyMatrix[_MAX_KEY_COLUMNS][4];
 
-  for(uint i = 0;i < uKeyLenInBytes;i++)
+  for(uint i = 0; i < uKeyLenInBytes; i++)
     keyMatrix[i >> 2][i & 3] = key[i]; 
 
-  for(int i = 0;i < MAX_IV_SIZE;i++)
+  for(int i = 0; i < MAX_IV_SIZE; i++)
     m_initVector[i] = initVector[i];
 
   keySched(keyMatrix);
 
-  if(m_direction == Decrypt)
+  if(!Encrypt)
     keyEncToDec();
 }
 
@@ -197,8 +210,8 @@ void Rijndael::keyEncToDec()
   for(int r = 1; r < m_uRounds; r++)
   {
     byte n_expandedKey[4][4];
-    for (int i=0;i<4;i++)
-      for (int j=0;j<4;j++)
+    for (int i = 0; i < 4; i++)
+      for (int j = 0; j < 4; j++)
       {
         byte *w=m_expandedKey[r][j];
         n_expandedKey[j][i]=U1[w[0]][i]^U2[w[1]][i]^U3[w[2]][i]^U4[w[3]][i];
@@ -296,3 +309,53 @@ void Rijndael::GenerateTables()
     U1[b][0]=U2[b][1]=U3[b][2]=U4[b][3]=T5[i][0]=T6[i][1]=T7[i][2]=T8[i][3]=FFmul0e(b);
   }
 }
+
+
+#if 0
+static void TestRijndael();
+struct TestRij {TestRij() {TestRijndael();exit(0);}} GlobalTestRij;
+
+// Test CBC encryption according to NIST 800-38A.
+void TestRijndael()
+{
+  byte IV[16]={0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f};
+  byte PT[64]={
+    0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a,
+    0xae,0x2d,0x8a,0x57,0x1e,0x03,0xac,0x9c,0x9e,0xb7,0x6f,0xac,0x45,0xaf,0x8e,0x51,
+    0x30,0xc8,0x1c,0x46,0xa3,0x5c,0xe4,0x11,0xe5,0xfb,0xc1,0x19,0x1a,0x0a,0x52,0xef,
+    0xf6,0x9f,0x24,0x45,0xdf,0x4f,0x9b,0x17,0xad,0x2b,0x41,0x7b,0xe6,0x6c,0x37,0x10,
+  };
+
+  byte Key128[16]={0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c};
+  byte Chk128[16]={0x3f,0xf1,0xca,0xa1,0x68,0x1f,0xac,0x09,0x12,0x0e,0xca,0x30,0x75,0x86,0xe1,0xa7};
+  byte Key192[24]={0x8e,0x73,0xb0,0xf7,0xda,0x0e,0x64,0x52,0xc8,0x10,0xf3,0x2b,0x80,0x90,0x79,0xe5,0x62,0xf8,0xea,0xd2,0x52,0x2c,0x6b,0x7b};
+  byte Chk192[16]={0x08,0xb0,0xe2,0x79,0x88,0x59,0x88,0x81,0xd9,0x20,0xa9,0xe6,0x4f,0x56,0x15,0xcd};
+  byte Key256[32]={0x60,0x3d,0xeb,0x10,0x15,0xca,0x71,0xbe,0x2b,0x73,0xae,0xf0,0x85,0x7d,0x77,0x81,0x1f,0x35,0x2c,0x07,0x3b,0x61,0x08,0xd7,0x2d,0x98,0x10,0xa3,0x09,0x14,0xdf,0xf4};
+  byte Chk256[16]={0xb2,0xeb,0x05,0xe2,0xc3,0x9b,0xe9,0xfc,0xda,0x6c,0x19,0x07,0x8c,0x6a,0x9d,0x1b};
+  byte *Key[3]={Key128,Key192,Key256};
+  byte *Chk[3]={Chk128,Chk192,Chk256};
+
+  Rijndael rij; // Declare outside of loop to test re-initialization.
+  for (uint L=0;L<3;L++)
+  {
+    byte Out[16];
+    wchar Str[sizeof(Out)*2+1];
+
+    uint KeyLength=128+L*64;
+    rij.Init(true,Key[L],KeyLength,IV);
+    for (uint I=0;I<sizeof(PT);I+=16)
+      rij.blockEncrypt(PT+I,16,Out);
+    BinToHex(Chk[L],16,NULL,Str,ASIZE(Str));
+    mprintf(L"\nAES-%d expected: %s",KeyLength,Str);
+    BinToHex(Out,sizeof(Out),NULL,Str,ASIZE(Str));
+    mprintf(L"\nAES-%d result:   %s",KeyLength,Str);
+    if (memcmp(Out,Chk[L],16)==0)
+      mprintf(L" OK");
+    else
+    {
+      mprintf(L" FAILED");
+      getchar();
+    }
+  }
+}
+#endif

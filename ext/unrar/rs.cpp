@@ -19,10 +19,10 @@ void RSCoder::gfInit()
     gfLog[J]=I;
     gfExp[I]=J;
     J<<=1;
-    if (J & 0x100)
+    if (J > MAXPAR)
       J^=0x11D; // 0x11D field-generator polynomial (x^8+x^4+x^3+x^2+1).
   }
-  for (int I=MAXPAR;I<MAXPOL;I++)
+  for (int I=MAXPAR;I<MAXPOL;I++) // Avoid gfExp overflow check.
     gfExp[I]=gfExp[I-MAXPAR];
 }
 
@@ -97,21 +97,9 @@ bool RSCoder::Decode(byte *Data,int DataSize,int *EraLoc,int EraSize)
   bool AllZeroes=true;
   for (int I=0;I<ParSize;I++)
   {
-    int Sum=Data[0],J=1,Exp=gfExp[I+1];
-    for (;J+8<=DataSize;J+=8) // Unroll the loop for speed.
-    {
-      Sum=Data[J]^gfMult(Exp,Sum);
-      Sum=Data[J+1]^gfMult(Exp,Sum);
-      Sum=Data[J+2]^gfMult(Exp,Sum);
-      Sum=Data[J+3]^gfMult(Exp,Sum);
-      Sum=Data[J+4]^gfMult(Exp,Sum);
-      Sum=Data[J+5]^gfMult(Exp,Sum);
-      Sum=Data[J+6]^gfMult(Exp,Sum);
-      Sum=Data[J+7]^gfMult(Exp,Sum);
-    }
-
-    for (;J<DataSize;J++)
-      Sum=Data[J]^gfMult(Exp,Sum);
+    int Sum=0;
+    for (int J=0;J<DataSize;J++)
+      Sum=Data[J]^gfMult(gfExp[I+1],Sum);
     if ((SynData[I]=Sum)!=0)
       AllZeroes=false;
   }

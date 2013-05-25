@@ -2,11 +2,7 @@
 #define _RAR_VM_
 
 #define VM_STANDARDFILTERS
-
-#ifndef SFX_MODULE
-#define VM_OPTIMIZE
-#endif
-
+#define NORARVM
 
 #define VM_MEMSIZE                  0x40000
 #define VM_MEMMASK           (VM_MEMSIZE-1)
@@ -34,7 +30,7 @@ enum VM_Commands
 
 enum VM_StandardFilters {
   VMSF_NONE, VMSF_E8, VMSF_E8E9, VMSF_ITANIUM, VMSF_RGB, VMSF_AUDIO, 
-  VMSF_DELTA, VMSF_UPCASE
+  VMSF_DELTA
 };
 
 enum VM_Flags {VM_FC=1,VM_FZ=2,VM_FS=0x80000000};
@@ -106,7 +102,7 @@ class RarVM:private BitInput
     void Prepare(byte *Code,uint CodeSize,VM_PreparedProgram *Prg);
     void Execute(VM_PreparedProgram *Prg);
     void SetLowEndianValue(uint *Addr,uint Value);
-    void SetMemory(uint Pos,byte *Data,uint DataSize);
+    void SetMemory(size_t Pos,byte *Data,size_t DataSize);
     static uint ReadData(BitInput &Inp);
 };
 

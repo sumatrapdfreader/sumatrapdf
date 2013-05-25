@@ -1,81 +1,105 @@
 #ifndef _RAR_ARCHIVE_
 #define _RAR_ARCHIVE_
 
-class Pack;
+class PPack;
+class RawRead;
+class RawWrite;
 
-enum {EN_LOCK=1,EN_VOL=2,EN_FIRSTVOL=4};
+enum NOMODIFY_FLAGS 
+{
+  NMDF_ALLOWLOCK=1,NMDF_ALLOWANYVOLUME=2,NMDF_ALLOWFIRSTVOLUME=4
+};
 
-enum ARCSIGN_TYPE {ARCSIGN_NONE,ARCSIGN_OLD,ARCSIGN_CURRENT,ARCSIGN_FUTURE};
+enum RARFORMAT {RARFMT_NONE,RARFMT14,RARFMT15,RARFMT50,RARFMT_FUTURE};
+
+enum ADDSUBDATA_FLAGS
+{
+  ASDF_SPLIT          = 1, // Allow to split archive just before header if necessary.
+  ASDF_COMPRESS       = 2, // Allow to compress data following subheader.
+  ASDF_CRYPT          = 4, // Encrypt data after subheader if password is set.
+  ASDF_CRYPTIFHEADERS = 8  // Encrypt data after subheader only in -hp mode.
+};
 
 class Archive:public File
 {
   private:
-    ARCSIGN_TYPE IsSignature(const byte *D,size_t Size);
     void UpdateLatestTime(FileHeader *CurBlock);
-    void ConvertNameCase(char *Name);
     void ConvertNameCase(wchar *Name);
-    void ConvertUnknownHeader();
-    size_t ReadOldHeader();
+    void ConvertFileHeader(FileHeader *hd);
+    void WriteBlock50(HEADER_TYPE HeaderType,BaseBlock *wb,bool OnlySetSize,bool NonFinalWrite);
+    size_t ReadHeader14();
+    size_t ReadHeader15();
+    size_t ReadHeader50();
+    void ProcessExtra50(RawRead *Raw,size_t ExtraSize,BaseBlock *bb);
+    void RequestArcPassword();
     void UnexpEndArcMsg();
+    void BrokenHeaderMsg();
+    void UnkEncVerMsg(const wchar *Name);
+    void UnkEncVerMsg();
+    bool ReadCommentData(Array<wchar> *CmtData);
 
 #if !defined(SHELL_EXT) && !defined(RAR_NOCRYPT)
     CryptData HeadersCrypt;
-    byte HeadersSalt[SALT_SIZE];
 #endif
 #ifndef SHELL_EXT
     ComprDataIO SubDataIO;
-    byte SubDataSalt[SALT_SIZE];
 #endif
-    RAROptions *Cmd,DummyCmd;
+    bool DummyCmd;
+    RAROptions *Cmd;
 
-    MarkHeader MarkHead;
-    OldMainHeader OldMhd;
-
-    int RecoverySectors;
-    int64 RecoveryPos;
-
-    bool FailedHeaderDecryption;
+    int64 RecoverySize;
+    int RecoveryPercent;
 
     RarTime LatestTime;
     int LastReadBlock;
-    int CurHeaderType;
+    HEADER_TYPE CurHeaderType;
 
     bool SilentOpen;
+#ifdef USE_QOPEN
+    QuickOpen QOpen;
+#endif
   public:
     Archive(RAROptions *InitCmd=NULL);
+    RARFORMAT IsSignature(const byte *D,size_t Size);
     bool IsArchive(bool EnableBroken);
-    size_t SearchBlock(int BlockType);
-    size_t SearchSubBlock(const char *Type);
-    int ReadBlock(int BlockType);
-    void WriteBlock(int BlockType,BaseBlock *wb=NULL);
-    int PrepareNamesToWrite(char *Name,wchar *NameW,char *DestName,byte *DestNameW);
-    void SetLhdSize();
+    size_t SearchBlock(HEADER_TYPE HeaderType);
+    size_t SearchSubBlock(const wchar *Type);
+    size_t SearchRR();
+    void WriteBlock(HEADER_TYPE HeaderType,BaseBlock *wb=NULL,bool OnlySetSize=false,bool NonFinalWrite=false);
+    void SetBlockSize(HEADER_TYPE HeaderType,BaseBlock *wb=NULL) {WriteBlock(HeaderType,wb,true);}
     size_t ReadHeader();
     void CheckArc(bool EnableBroken);
-    void CheckOpen(const char *Name,const wchar *NameW=NULL);
-    bool WCheckOpen(const char *Name,const wchar *NameW=NULL);
-    bool GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW);
+    void CheckOpen(const wchar *Name);
+    bool WCheckOpen(const wchar *Name);
+    bool GetComment(Array<wchar> *CmtData);
     void ViewComment();
-    void ViewFileComment();
     void SetLatestTime(RarTime *NewTime);
     void SeekToNext();
     bool CheckAccess();
     bool IsArcDir();
-    bool IsArcLabel();
     void ConvertAttributes();
-    int GetRecoverySize(bool Required);
     void VolSubtractHeaderSize(size_t SubSize);
-    void AddSubData(byte *SrcData,size_t DataSize,File *SrcFile,const char *Name,bool AllowSplit);
+    uint FullHeaderSize(size_t Size);
+    int64 GetStartPos();
+    void AddSubData(byte *SrcData,uint64 DataSize,File *SrcFile,
+         const wchar *Name,uint Flags);
     bool ReadSubData(Array<byte> *UnpData,File *DestFile);
-    int GetHeaderType() {return(CurHeaderType);};
-    size_t ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW);
+    HEADER_TYPE GetHeaderType() {return(CurHeaderType);};
     void WriteCommentData(byte *Data,size_t DataSize,bool FileComment);
     RAROptions* GetRAROptions() {return(Cmd);}
     void SetSilentOpen(bool Mode) {SilentOpen=Mode;}
+#ifdef USE_QOPEN
+    int Read(void *Data,size_t Size);
+    void Seek(int64 Offset,int Method);
+    int64 Tell();
+    void QOpenUnload() {QOpen.Unload();}
+#endif
 
     BaseBlock ShortBlock;
-    MainHeader NewMhd;
-    FileHeader NewLhd;
+    MarkHeader MarkHead;
+    MainHeader MainHead;
+    CryptHeader CryptHead;
+    FileHeader FileHead;
     EndArcHeader EndArcHead;
     SubBlockHeader SubBlockHead;
     FileHeader SubHead;
@@ -91,30 +115,34 @@ class Archive:public File
     int64 CurBlockPos;
     int64 NextBlockPos;
 
-    bool OldFormat;
+    RARFORMAT Format;
     bool Solid;
     bool Volume;
     bool MainComment;
     bool Locked;
     bool Signed;
-    bool NotFirstVolume;
+    bool FirstVolume;
+    bool NewNumbering;
     bool Protected;
     bool Encrypted;
     size_t SFXSize;
-    bool BrokenFileHeader;
+    bool BrokenHeader;
+    bool FailedHeaderDecryption;
+
+#if !defined(SHELL_EXT) && !defined(RAR_NOCRYPT)
+    byte ArcSalt[SIZE_SALT50];
+#endif
 
     bool Splitting;
 
-    ushort HeaderCRC;
-
+    uint VolNumber;
     int64 VolWrite;
-    int64 AddingFilesSize;
-    size_t AddingHeadersSize;
+    uint64 AddingFilesSize;
+    uint64 AddingHeadersSize;
 
     bool NewArchive;
 
-    char FirstVolumeName[NM];
-    wchar FirstVolumeNameW[NM];
+    wchar FirstVolumeName[NM];
 };
 
 

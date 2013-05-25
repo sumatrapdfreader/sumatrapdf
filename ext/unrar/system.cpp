@@ -72,6 +72,8 @@ void SetPriority(int Priority)
 #ifndef SETUP
 void Wait()
 {
+  if (ErrHandler.UserBreak)
+    ErrHandler.Exit(RARX_USERBREAK);
 #if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
   if (SleepTime!=0)
     Sleep(SleepTime);
@@ -100,3 +102,22 @@ void Shutdown()
 #endif
 
 
+
+#ifdef USE_SSE
+SSE_VERSION _SSE_Version=GetSSEVersion();
+
+SSE_VERSION GetSSEVersion()
+{
+  int CPUInfo[4];
+  __cpuid(CPUInfo, 1);
+  if ((CPUInfo[2] & 0x80000)!=0)
+    return SSE_SSE41;
+  if ((CPUInfo[2] & 0x200)!=0)
+    return SSE_SSSE3;
+  if ((CPUInfo[3] & 0x4000000)!=0)
+    return SSE_SSE2;
+  if ((CPUInfo[3] & 0x2000000)!=0)
+    return SSE_SSE;
+  return SSE_NONE;
+}
+#endif

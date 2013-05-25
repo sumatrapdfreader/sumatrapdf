@@ -1,8 +1,20 @@
 #ifndef _RAR_EXTINFO_
 #define _RAR_EXTINFO_
 
+bool ExtractSymlink(CommandData *Cmd,ComprDataIO &DataIO,Archive &Arc,const wchar *LinkName);
+#ifdef _UNIX
+void SetUnixOwner(Archive &Arc,const wchar *FileName);
+#endif
 
-void SetExtraInfo(CommandData *Cmd,Archive &Arc,char *Name,wchar *NameW);
-void SetExtraInfoNew(CommandData *Cmd,Archive &Arc,char *Name,wchar *NameW);
+bool ExtractHardlink(wchar *NameNew,wchar *NameExisting,size_t NameExistingSize);
+
+void GetStreamNameNTFS(Archive &Arc,wchar *StreamName,size_t MaxSize);
+
+#ifdef _WIN_ALL
+bool SetPrivilege(LPCTSTR PrivName);
+#endif
+
+void SetExtraInfo20(CommandData *Cmd,Archive &Arc,wchar *Name);
+void SetExtraInfo(CommandData *Cmd,Archive &Arc,wchar *Name);
 
 #endif

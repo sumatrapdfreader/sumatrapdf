@@ -8,25 +8,62 @@ RarTime::RarTime()
 #ifdef _WIN_ALL
 RarTime& RarTime::operator =(FILETIME &ft)
 {
+  _ULARGE_INTEGER ul = {ft.dwLowDateTime, ft.dwHighDateTime};
+  itime=ul.QuadPart;
+  return *this;
+}
+
+
+void RarTime::GetWin32(FILETIME *ft)
+{
+  _ULARGE_INTEGER ul;
+  ul.QuadPart=itime;
+  ft->dwLowDateTime=ul.LowPart;
+  ft->dwHighDateTime=ul.HighPart;
+}
+#endif
+
+
+RarTime& RarTime::operator =(time_t ut)
+{
+  uint64 ushift=INT32TO64(0x19DB1DE,0xD53E8000); // 116444736000000000.
+  itime=uint64(ut)*10000000+ushift;
+  return *this;
+}
+
+
+time_t RarTime::GetUnix()
+{
+  uint64 ushift=INT32TO64(0x19DB1DE,0xD53E8000); // 116444736000000000.
+  time_t ut=(itime-ushift)/10000000;
+  return ut;
+}
+
+
+void RarTime::GetLocal(RarLocalTime *lt)
+{
+#ifdef _WIN_ALL
+  FILETIME ft;
+  GetWin32(&ft);
   FILETIME lft;
   FileTimeToLocalFileTime(&ft,&lft);
   SYSTEMTIME st;
   FileTimeToSystemTime(&lft,&st);
-  rlt.Year=st.wYear;
-  rlt.Month=st.wMonth;
-  rlt.Day=st.wDay;
-  rlt.Hour=st.wHour;
-  rlt.Minute=st.wMinute;
-  rlt.Second=st.wSecond;
-  rlt.wDay=st.wDayOfWeek;
-  rlt.yDay=rlt.Day-1;
-  for (uint I=1;I<rlt.Month;I++)
-  {
-    static int mdays[12]={31,28,31,30,31,30,31,31,30,31,30,31};
-    rlt.yDay+=mdays[I-1];
-  }
-  if (rlt.Month>2 && IsLeapYear(rlt.Year))
-    rlt.yDay++;
+  lt->Year=st.wYear;
+  lt->Month=st.wMonth;
+  lt->Day=st.wDay;
+  lt->Hour=st.wHour;
+  lt->Minute=st.wMinute;
+  lt->Second=st.wSecond;
+  lt->wDay=st.wDayOfWeek;
+  lt->yDay=lt->Day-1;
+
+  static int mdays[12]={31,28,31,30,31,30,31,31,30,31,30,31};
+  for (uint I=1;I<lt->Month && I<=ASIZE(mdays);I++)
+    lt->yDay+=mdays[I-1];
+
+  if (lt->Month>2 && IsLeapYear(lt->Year))
+    lt->yDay++;
 
   st.wMilliseconds=0;
   FILETIME zft;
@@ -34,236 +71,157 @@ RarTime& RarTime::operator =(FILETIME &ft)
 
   // Calculate the time reminder, which is the part of time smaller
   // than 1 second, represented in 100-nanosecond intervals.
-  rlt.Reminder=INT32TO64(lft.dwHighDateTime,lft.dwLowDateTime)-
+  lt->Reminder=INT32TO64(lft.dwHighDateTime,lft.dwLowDateTime)-
                INT32TO64(zft.dwHighDateTime,zft.dwLowDateTime);
-  return(*this);
-}
-
-
-void RarTime::GetWin32(FILETIME *ft)
-{
-  SYSTEMTIME st;
-  st.wYear=rlt.Year;
-  st.wMonth=rlt.Month;
-  st.wDay=rlt.Day;
-  st.wHour=rlt.Hour;
-  st.wMinute=rlt.Minute;
-  st.wSecond=rlt.Second;
-  st.wMilliseconds=0;
-  FILETIME lft;
-  SystemTimeToFileTime(&st,&lft);
-  lft.dwLowDateTime+=rlt.Reminder;
-  if (lft.dwLowDateTime<rlt.Reminder)
-    lft.dwHighDateTime++;
-  LocalFileTimeToFileTime(&lft,ft);
-}
-#endif
-
-
-#if defined(_UNIX) || defined(_EMX)
-RarTime& RarTime::operator =(time_t ut)
-{
+#else
+  time_t ut=GetUnix();
   struct tm *t;
   t=localtime(&ut);
 
-  rlt.Year=t->tm_year+1900;
-  rlt.Month=t->tm_mon+1;
-  rlt.Day=t->tm_mday;
-  rlt.Hour=t->tm_hour;
-  rlt.Minute=t->tm_min;
-  rlt.Second=t->tm_sec;
-  rlt.Reminder=0;
-  rlt.wDay=t->tm_wday;
-  rlt.yDay=t->tm_yday;
-  return(*this);
+  lt->Year=t->tm_year+1900;
+  lt->Month=t->tm_mon+1;
+  lt->Day=t->tm_mday;
+  lt->Hour=t->tm_hour;
+  lt->Minute=t->tm_min;
+  lt->Second=t->tm_sec;
+  lt->Reminder=0;
+  lt->wDay=t->tm_wday;
+  lt->yDay=t->tm_yday;
+#endif
 }
 
 
-time_t RarTime::GetUnix()
+void RarTime::SetLocal(RarLocalTime *lt)
 {
+#ifdef _WIN_ALL
+  SYSTEMTIME st;
+  st.wYear=lt->Year;
+  st.wMonth=lt->Month;
+  st.wDay=lt->Day;
+  st.wHour=lt->Hour;
+  st.wMinute=lt->Minute;
+  st.wSecond=lt->Second;
+  st.wMilliseconds=0;
+  FILETIME lft;
+  if (SystemTimeToFileTime(&st,&lft))
+  {
+    lft.dwLowDateTime+=lt->Reminder;
+    if (lft.dwLowDateTime<lt->Reminder)
+      lft.dwHighDateTime++;
+    FILETIME ft;
+    LocalFileTimeToFileTime(&lft,&ft);
+    *this=ft;
+  }
+  else
+    Reset();
+#else
   struct tm t;
 
-  t.tm_sec=rlt.Second;
-  t.tm_min=rlt.Minute;
-  t.tm_hour=rlt.Hour;
-  t.tm_mday=rlt.Day;
-  t.tm_mon=rlt.Month-1;
-  t.tm_year=rlt.Year-1900;
+  t.tm_sec=lt->Second;
+  t.tm_min=lt->Minute;
+  t.tm_hour=lt->Hour;
+  t.tm_mday=lt->Day;
+  t.tm_mon=lt->Month-1;
+  t.tm_year=lt->Year-1900;
   t.tm_isdst=-1;
-  return(mktime(&t));
-}
+  *this=mktime(&t);
 #endif
+}
 
-// Return the stored time as 64-bit number of 100-nanosecond intervals
-// since January 1, 1601 for Windows and since January 1, 1970 for Unix.
-// Actually we do not care since which date this time starts from
+
+// Return the stored time as 64-bit number of 100-nanosecond intervals since 
+// 01.01.1601. Actually we do not care since which date this time starts from
 // as long as this date is the same for GetRaw and SetRaw. We use the value
 // returned by GetRaw() for time comparisons, for relative operations
 // like SetRaw(GetRaw()-C) and for compact time storage when necessary.
-int64 RarTime::GetRaw()
+uint64 RarTime::GetRaw()
 {
-  if (!IsSet())
-    return(0);
-#ifdef _WIN_ALL
-  FILETIME ft;
-  GetWin32(&ft);
-  return(INT32TO64(ft.dwHighDateTime,ft.dwLowDateTime));
-#elif defined(_UNIX) || defined(_EMX)
-  time_t ut=GetUnix();
-  return(INT32TO64(0,ut)*10000000+rlt.Reminder);
-#else
-  // We should never be here. It is better to use standard time functions.
-
-  // Days since 1970. We do not care about leap years for code simplicity.
-  // It should be acceptable for comprisons.
-  int64 r=(rlt.Year-1970)*365; // Days since 1970.
-
-  // Cumulative day value for beginning of every month.
-  static int MonthToDay[12]={0,31,60,91,121,152,182,213,244,274,305,335};
-
-  r+=MonthToDay[rlt.Month-1]+(rlt.Day-1); // Add days since beginning of year.
-  r=r*24+rlt.Hour;   // Hours.
-  r=r*60+rlt.Minute; // Minutes.
-  r=r*60+rlt.Second; // Seconds.
-  r=r*10000000+rlt.Reminder; // 100-nanosecond intervals.
-
-  return(r);
-#endif
+  return itime;
 }
 
 
-#ifndef SFX_MODULE
-void RarTime::SetRaw(int64 RawTime)
+void RarTime::SetRaw(uint64 RawTime)
 {
-#ifdef _WIN_ALL
-  FILETIME ft;
-  ft.dwHighDateTime=(DWORD)(RawTime>>32);
-  ft.dwLowDateTime=(DWORD)RawTime;
-  *this=ft;
-#elif defined(_UNIX) || defined(_EMX)
-  time_t ut=(time_t)(RawTime/10000000);
-  *this=ut;
-  rlt.Reminder=(uint)(RawTime%10000000);
-#else
-  // We should never be here. It is better to use standard time functions.
-  rlt.Reminder=RawTime%10000000;
-  RawTime/=10000000; // Seconds.
-  rlt.Second=uint(RawTime%60);
-  RawTime/=60;       // Minutes.
-  rlt.Minute=uint(RawTime%60);
-  RawTime/=60;       // Hours.
-  rlt.Hour=uint(RawTime%24);
-  RawTime/=24;       // Days since 1970.
-  rlt.Year=uint(1970+RawTime/365);
-  RawTime%=365;      // Days since beginning of year.
-
-  // Cumulative day value for beginning of every month.
-  static int MonthToDay[12]={0,31,60,91,121,152,182,213,244,274,305,335};
-
-  for (int I=0;I<12;I++)
-    if (RawTime>=MonthToDay[I])
-    {
-      rlt.Day=uint(RawTime-MonthToDay[I]+1);
-      rlt.Month=I+1;
-    }
-
-  rlt.wDay=0;
-  rlt.yDay=0;
-#endif
-}
-#endif
-
-
-bool RarTime::operator == (RarTime &rt)
-{
-  return(rlt.Year==rt.rlt.Year && rlt.Month==rt.rlt.Month &&
-         rlt.Day==rt.rlt.Day && rlt.Hour==rt.rlt.Hour &&
-         rlt.Minute==rt.rlt.Minute && rlt.Second==rt.rlt.Second &&
-         rlt.Reminder==rt.rlt.Reminder);
-}
-
-
-bool RarTime::operator < (RarTime &rt)
-{
-  return(GetRaw()<rt.GetRaw());
-}
-
-
-bool RarTime::operator <= (RarTime &rt)
-{
-  return(*this<rt || *this==rt);
-}
-
-
-bool RarTime::operator > (RarTime &rt)
-{
-  return(GetRaw()>rt.GetRaw());
-}
-
-
-bool RarTime::operator >= (RarTime &rt)
-{
-  return(*this>rt || *this==rt);
+  itime=RawTime;
 }
 
 
 uint RarTime::GetDos()
 {
-  uint DosTime=(rlt.Second/2)|(rlt.Minute<<5)|(rlt.Hour<<11)|
-               (rlt.Day<<16)|(rlt.Month<<21)|((rlt.Year-1980)<<25);
-  return(DosTime);
+  RarLocalTime lt;
+  GetLocal(&lt);
+  uint DosTime=(lt.Second/2)|(lt.Minute<<5)|(lt.Hour<<11)|
+               (lt.Day<<16)|(lt.Month<<21)|((lt.Year-1980)<<25);
+  return DosTime;
 }
 
 
 void RarTime::SetDos(uint DosTime)
 {
-  rlt.Second=(DosTime & 0x1f)*2;
-  rlt.Minute=(DosTime>>5) & 0x3f;
-  rlt.Hour=(DosTime>>11) & 0x1f;
-  rlt.Day=(DosTime>>16) & 0x1f;
-  rlt.Month=(DosTime>>21) & 0x0f;
-  rlt.Year=(DosTime>>25)+1980;
-  rlt.Reminder=0;
+  RarLocalTime lt;
+  lt.Second=(DosTime & 0x1f)*2;
+  lt.Minute=(DosTime>>5) & 0x3f;
+  lt.Hour=(DosTime>>11) & 0x1f;
+  lt.Day=(DosTime>>16) & 0x1f;
+  lt.Month=(DosTime>>21) & 0x0f;
+  lt.Year=(DosTime>>25)+1980;
+  lt.Reminder=0;
+  SetLocal(&lt);
 }
 
 
 #if !defined(GUI) || !defined(SFX_MODULE)
-void RarTime::GetText(char *DateStr,bool FullYear)
+void RarTime::GetText(wchar *DateStr,size_t MaxSize,bool FullYear,bool FullMS)
 {
-  if (FullYear)
-    sprintf(DateStr,"%02u-%02u-%u %02u:%02u",rlt.Day,rlt.Month,rlt.Year,rlt.Hour,rlt.Minute);
+  if (IsSet())
+  {
+    RarLocalTime lt;
+    GetLocal(&lt);
+    if (FullMS)
+      swprintf(DateStr,MaxSize,L"%u-%02u-%02u %02u:%02u,%03u",lt.Year,lt.Month,lt.Day,lt.Hour,lt.Minute,lt.Reminder/10000);
+    else
+      if (FullYear)
+        swprintf(DateStr,MaxSize,L"%02u-%02u-%u %02u:%02u",lt.Day,lt.Month,lt.Year,lt.Hour,lt.Minute);
+      else
+        swprintf(DateStr,MaxSize,L"%02u-%02u-%02u %02u:%02u",lt.Day,lt.Month,lt.Year%100,lt.Hour,lt.Minute);
+  }
   else
-    sprintf(DateStr,"%02u-%02u-%02u %02u:%02u",rlt.Day,rlt.Month,rlt.Year%100,rlt.Hour,rlt.Minute);
+  {
+    // We use escape before '?' to avoid weird C trigraph characters.
+    wcscpy(DateStr,FullYear ? L"\?\?-\?\?-\?\?\?\? \?\?:\?\?":L"\?\?-\?\?-\?\? \?\?:\?\?");
+  }
 }
 #endif
 
 
 #ifndef SFX_MODULE
-void RarTime::SetIsoText(const char *TimeText)
+void RarTime::SetIsoText(const wchar *TimeText)
 {
   int Field[6];
   memset(Field,0,sizeof(Field));
-  for (int DigitCount=0;*TimeText!=0;TimeText++)
+  for (uint DigitCount=0;*TimeText!=0;TimeText++)
     if (IsDigit(*TimeText))
     {
       int FieldPos=DigitCount<4 ? 0:(DigitCount-4)/2+1;
-      if (FieldPos<sizeof(Field)/sizeof(Field[0]))
+      if (FieldPos<ASIZE(Field))
         Field[FieldPos]=Field[FieldPos]*10+*TimeText-'0';
       DigitCount++;
     }
-  rlt.Second=Field[5];
-  rlt.Minute=Field[4];
-  rlt.Hour=Field[3];
-  rlt.Day=Field[2]==0 ? 1:Field[2];
-  rlt.Month=Field[1]==0 ? 1:Field[1];
-  rlt.Year=Field[0];
-  rlt.Reminder=0;
+  RarLocalTime lt;
+  lt.Second=Field[5];
+  lt.Minute=Field[4];
+  lt.Hour=Field[3];
+  lt.Day=Field[2]==0 ? 1:Field[2];
+  lt.Month=Field[1]==0 ? 1:Field[1];
+  lt.Year=Field[0];
+  lt.Reminder=0;
+  SetLocal(&lt);
 }
 #endif
 
 
 #ifndef SFX_MODULE
-void RarTime::SetAgeText(const char *TimeText)
+void RarTime::SetAgeText(const wchar *TimeText)
 {
   uint Seconds=0,Value=0;
   for (int I=0;TimeText[I]!=0;I++)
@@ -293,7 +251,7 @@ void RarTime::SetAgeText(const char *TimeText)
   }
   SetCurrentTime();
   int64 RawTime=GetRaw();
-  SetRaw(RawTime-INT32TO64(0,Seconds)*10000000);
+  SetRaw(itime-uint64(Seconds)*10000000);
 }
 #endif
 
@@ -315,10 +273,10 @@ void RarTime::SetCurrentTime()
 
 
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)
-const char *GetMonthName(int Month)
+const wchar *GetMonthName(int Month)
 {
 #ifdef SILENT
-  return("");
+  return(L"");
 #else
   static MSGID MonthID[]={
          MMonthJan,MMonthFeb,MMonthMar,MMonthApr,MMonthMay,MMonthJun,

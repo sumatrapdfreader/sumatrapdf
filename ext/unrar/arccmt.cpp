@@ -1,56 +1,55 @@
-bool IsAnsiComment(const char *Data,int Size);
+static bool IsAnsiEscComment(const wchar *Data,size_t Size);
 
-bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
+bool Archive::GetComment(Array<wchar> *CmtData)
 {
   if (!MainComment)
-    return(false);
+    return false;
   SaveFilePos SavePos(*this);
 
 #ifndef SFX_MODULE
   ushort CmtLength;
-  if (OldFormat)
+  if (Format==RARFMT14)
   {
-    Seek(SFXSize+SIZEOF_OLDMHD,SEEK_SET);
+    Seek(SFXSize+SIZEOF_MAINHEAD14,SEEK_SET);
     CmtLength=GetByte();
     CmtLength+=(GetByte()<<8);
   }
   else
 #endif
   {
-    if ((NewMhd.Flags & MHD_COMMENT)!=0)
+    if (MainHead.CommentInHeader)
     {
       // Old style (RAR 2.9) archive comment embedded into the main 
       // archive header.
-      Seek(SFXSize+SIZEOF_MARKHEAD+SIZEOF_NEWMHD,SEEK_SET);
+      Seek(SFXSize+SIZEOF_MARKHEAD3+SIZEOF_MAINHEAD3,SEEK_SET);
       ReadHeader();
     }
     else
     {
       // Current (RAR 3.0+) version of archive comment.
-      Seek(SFXSize+SIZEOF_MARKHEAD+NewMhd.HeadSize,SEEK_SET);
-      return(SearchSubBlock(SUBHEAD_TYPE_CMT)!=0 && ReadCommentData(CmtData,CmtDataW)!=0);
+      Seek(GetStartPos(),SEEK_SET);
+      return(SearchSubBlock(SUBHEAD_TYPE_CMT)!=0 && ReadCommentData(CmtData));
     }
 #ifndef SFX_MODULE
     // Old style (RAR 2.9) comment header embedded into the main 
     // archive header.
-    if (CommHead.HeadCRC!=HeaderCRC)
+    if (BrokenHeader)
     {
       Log(FileName,St(MLogCommHead));
-      Alarm();
-      return(false);
+      return false;
     }
     CmtLength=CommHead.HeadSize-SIZEOF_COMMHEAD;
 #endif
   }
 #ifndef SFX_MODULE
-  if (OldFormat && (OldMhd.Flags & MHD_PACK_COMMENT)!=0 || !OldFormat && CommHead.Method!=0x30)
+  if (Format==RARFMT14 && MainHead.PackComment || Format!=RARFMT14 && CommHead.Method!=0x30)
   {
-    if (!OldFormat && (CommHead.UnpVer < 15 || CommHead.UnpVer > UNP_VER || CommHead.Method > 0x35))
+    if (Format!=RARFMT14 && (CommHead.UnpVer < 15 || CommHead.UnpVer > VER_UNPACK || CommHead.Method > 0x35))
       return(false);
     ComprDataIO DataIO;
     DataIO.SetTestMode(true);
     uint UnpCmtLength;
-    if (OldFormat)
+    if (Format==RARFMT14)
     {
 #ifdef RAR_NOCRYPT
       return(false);
@@ -59,6 +58,7 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
       UnpCmtLength+=(GetByte()<<8);
       CmtLength-=2;
       DataIO.SetCmt13Encryption();
+      CommHead.UnpVer=15;
 #endif
     }
     else
@@ -66,100 +66,78 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     DataIO.SetFiles(this,NULL);
     DataIO.EnableShowProgress(false);
     DataIO.SetPackedSizeToRead(CmtLength);
+    DataIO.UnpHash.Init(HASH_CRC32,1);
 
-    Unpack Unpack(&DataIO);
-    Unpack.Init();
-    Unpack.SetDestSize(UnpCmtLength);
-    Unpack.DoUnpack(CommHead.UnpVer,false);
+    Unpack CmtUnpack(&DataIO);
+    CmtUnpack.Init(0x10000,false);
+    CmtUnpack.SetDestSize(UnpCmtLength);
+    CmtUnpack.DoUnpack(CommHead.UnpVer,false);
 
-    if (!OldFormat && ((~DataIO.UnpFileCRC)&0xffff)!=CommHead.CommCRC)
+    if (Format!=RARFMT14 && (DataIO.UnpHash.GetCRC32()&0xffff)!=CommHead.CommCRC)
     {
       Log(FileName,St(MLogCommBrk));
-      Alarm();
-      return(false);
+      return false;
     }
     else
     {
       byte *UnpData;
       size_t UnpDataSize;
       DataIO.GetUnpackedData(&UnpData,&UnpDataSize);
-      CmtData->Alloc(UnpDataSize);
-      memcpy(&((*CmtData)[0]),UnpData,UnpDataSize);
+#ifdef _WIN_ALL
+      OemToCharBuffA((char *)UnpData,(char *)UnpData,(DWORD)UnpDataSize);
+#endif
+      CmtData->Alloc(UnpDataSize+1);
+      memset(CmtData->Addr(0),0,CmtData->Size()*sizeof(wchar));
+      CharToWide((char *)UnpData,CmtData->Addr(0),UnpDataSize);
+      CmtData->Alloc(wcslen(CmtData->Addr(0)));
     }
   }
   else
   {
-    CmtData->Alloc(CmtLength);
-    
-    Read(&((*CmtData)[0]),CmtLength);
-    if (!OldFormat && CommHead.CommCRC!=(~CRC(0xffffffff,&((*CmtData)[0]),CmtLength)&0xffff))
+    Array<byte> CmtRaw(CmtLength);
+    Read(&CmtRaw[0],CmtLength);
+
+    if (Format!=RARFMT14 && CommHead.CommCRC!=(~CRC32(0xffffffff,&CmtRaw[0],CmtLength)&0xffff))
     {
       Log(FileName,St(MLogCommBrk));
-      Alarm();
-      CmtData->Reset();
-      return(false);
+      return false;
     }
+    CmtData->Alloc(CmtLength+1);
+    CmtRaw.Push(0);
+#ifdef _WIN_ALL
+    OemToCharA((char *)&CmtRaw[0],(char *)&CmtRaw[0]);
+#endif
+    CharToWide((char *)&CmtRaw[0],CmtData->Addr(0),CmtLength);
+    CmtData->Alloc(wcslen(CmtData->Addr(0)));
   }
 #endif
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
-  if (CmtData->Size()>0)
-  {
-    size_t CmtSize=CmtData->Size();
-    char *DataA=(char *)CmtData->Addr();
-    OemToCharBuffA(DataA,DataA,(DWORD)CmtSize);
-
-    if (CmtDataW!=NULL)
-    {
-      CmtDataW->Alloc(CmtSize+1);
-
-      // It can cause reallocation, so we should not use 'DataA' variable
-      // with previosuly saved CmtData->Addr() after Push() call.
-      CmtData->Push(0); 
-
-      CharToWide((char *)CmtData->Addr(),CmtDataW->Addr(),CmtSize+1);
-      CmtData->Alloc(CmtSize);
-      CmtDataW->Alloc(wcslen(CmtDataW->Addr()));
-    }
-  }
-#endif
-  return(CmtData->Size()>0);
+  return CmtData->Size() > 0;
 }
 
 
-size_t Archive::ReadCommentData(Array<byte> *CmtData,Array<wchar> *CmtDataW)
+bool Archive::ReadCommentData(Array<wchar> *CmtData)
 {
-  bool Unicode=SubHead.SubFlags & SUBHEAD_FLAGS_CMT_UNICODE;
-  if (!ReadSubData(CmtData,NULL))
-    return(0);
-  size_t CmtSize=CmtData->Size();
-  if (Unicode)
-  {
-    CmtSize/=2;
-    Array<wchar> DataW(CmtSize+1);
-    RawToWide(CmtData->Addr(),DataW.Addr(),CmtSize);
-    DataW[CmtSize]=0;
-    size_t DestSize=CmtSize*4;
-    CmtData->Alloc(DestSize+1);
-    WideToChar(DataW.Addr(),(char *)CmtData->Addr(),DestSize);
-    (*CmtData)[DestSize]=0;
-    CmtSize=strlen((char *)CmtData->Addr());
-    CmtData->Alloc(CmtSize);
-    if (CmtDataW!=NULL)
-    {
-      *CmtDataW=DataW;
-      CmtDataW->Alloc(CmtSize);
-    }
-  }
+  Array<byte> CmtRaw;
+  if (!ReadSubData(&CmtRaw,NULL))
+    return false;
+  size_t CmtSize=CmtRaw.Size();
+  CmtRaw.Push(0);
+  CmtData->Alloc(CmtSize+1);
+  if (Format==RARFMT50)
+    UtfToWide((char *)&CmtRaw[0],CmtData->Addr(0),CmtData->Size());
   else
-    if (CmtDataW!=NULL)
+    if ((SubHead.SubFlags & SUBHEAD_FLAGS_CMT_UNICODE)!=0)
     {
-      CmtData->Push(0);
-      CmtDataW->Alloc(CmtSize+1);
-      CharToWide((char *)CmtData->Addr(),CmtDataW->Addr(),CmtSize+1);
-      CmtData->Alloc(CmtSize);
-      CmtDataW->Alloc(wcslen(CmtDataW->Addr()));
+      RawToWide(&CmtRaw[0],CmtData->Addr(0),CmtSize/2);
+      (*CmtData)[CmtSize/2]=0;
+
     }
-  return(CmtSize);
+    else
+    {
+      CharToWide((char *)&CmtRaw[0],CmtData->Addr(0),CmtData->Size());
+    }
+  CmtData->Alloc(wcslen(CmtData->Addr(0))); // Set buffer size to actual comment length.
+  return true;
 }
 
 
@@ -168,68 +146,17 @@ void Archive::ViewComment()
 #ifndef GUI
   if (Cmd->DisableComment)
     return;
-  Array<byte> CmtBuf;
-  if (GetComment(&CmtBuf,NULL))
+  Array<wchar> CmtBuf;
+  if (GetComment(&CmtBuf))
   {
     size_t CmtSize=CmtBuf.Size();
-    char *ChPtr=(char *)memchr(&CmtBuf[0],0x1A,CmtSize);
+    wchar *ChPtr=wcschr(&CmtBuf[0],0x1A);
     if (ChPtr!=NULL)
-      CmtSize=ChPtr-(char *)&CmtBuf[0];
-    mprintf("\n");
-    OutComment((char *)&CmtBuf[0],CmtSize);
+      CmtSize=ChPtr-&CmtBuf[0];
+    mprintf(L"\n");
+    OutComment(&CmtBuf[0],CmtSize);
   }
 #endif
 }
-
-
-#ifndef SFX_MODULE
-// Used for archives created by old RAR versions up to and including RAR 2.9.
-// New RAR versions store file comments in separate headers and such comments
-// are displayed in ListNewSubHeader function.
-void Archive::ViewFileComment()
-{
-  if (!(NewLhd.Flags & LHD_COMMENT) || Cmd->DisableComment || OldFormat)
-    return;
-#ifndef GUI
-  mprintf(St(MFileComment));
-#endif
-  const int MaxSize=0x8000;
-  Array<char> CmtBuf(MaxSize);
-  SaveFilePos SavePos(*this);
-  Seek(CurBlockPos+SIZEOF_NEWLHD+NewLhd.NameSize,SEEK_SET);
-  int64 SaveCurBlockPos=CurBlockPos;
-  int64 SaveNextBlockPos=NextBlockPos;
-
-  size_t Size=ReadHeader();
-
-  CurBlockPos=SaveCurBlockPos;
-  NextBlockPos=SaveNextBlockPos;
-
-  if (Size<7 || CommHead.HeadType!=COMM_HEAD)
-    return;
-  if (CommHead.HeadCRC!=HeaderCRC)
-  {
-#ifndef GUI
-    Log(FileName,St(MLogCommHead));
-#endif
-    return;
-  }
-  if (CommHead.UnpVer < 15 || CommHead.UnpVer > UNP_VER ||
-      CommHead.Method > 0x30 || CommHead.UnpSize > MaxSize)
-    return;
-  Read(&CmtBuf[0],CommHead.UnpSize);
-  if (CommHead.CommCRC!=((~CRC(0xffffffff,&CmtBuf[0],CommHead.UnpSize)&0xffff)))
-  {
-    Log(FileName,St(MLogBrokFCmt));
-  }
-  else
-  {
-    OutComment(&CmtBuf[0],CommHead.UnpSize);
-#ifndef GUI
-    mprintf("\n");
-#endif
-  }
-}
-#endif
 
 

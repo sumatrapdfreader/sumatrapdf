@@ -7,6 +7,20 @@ class CmdExtract
 {
   private:
     EXTRACT_ARC_CODE ExtractArchive(CommandData *Cmd);
+    bool ExtractFileCopy(File &New,wchar *ArcName,wchar *NameNew,wchar *NameExisting,size_t NameExistingSize);
+    void ExtrPrepareName(CommandData *Cmd,Archive &Arc,const wchar *ArcFileName,wchar *DestName,size_t DestSize);
+#ifdef RARDLL
+    bool ExtrDllGetPassword(CommandData *Cmd);
+#else
+    bool ExtrGetPassword(CommandData *Cmd,Archive &Arc,const wchar *ArcFileName);
+#endif
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+    void ConvertDosPassword(Archive &Arc,SecPassword &DestPwd);
+#endif
+    void ExtrCreateDir(CommandData *Cmd,Archive &Arc,const wchar *ArcFileName);
+    bool ExtrCreateFile(CommandData *Cmd,Archive &Arc,File &CurFile);
+    bool CheckUnpVer(Archive &Arc,const wchar *ArcFileName);
+
     RarTime StartTime; // time when extraction started
 
     ComprDataIO DataIO;
@@ -25,25 +39,21 @@ class CmdExtract
     // any wrong password hints.
     bool AnySolidDataUnpackedWell;
 
-    char ArcName[NM];
-    wchar ArcNameW[NM];
+    wchar ArcName[NM];
 
     SecPassword Password;
     bool PasswordAll;
     bool PrevExtracted;
-    char DestFileName[NM];
-    wchar DestFileNameW[NM];
+    wchar DestFileName[NM];
     bool PasswordCancelled;
   public:
-    CmdExtract();
+    CmdExtract(CommandData *Cmd);
     ~CmdExtract();
     void DoExtract(CommandData *Cmd);
     void ExtractArchiveInit(CommandData *Cmd,Archive &Arc);
     bool ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderSize,
                             bool &Repeat);
     static void UnstoreFile(ComprDataIO &DataIO,int64 DestUnpSize);
-
-    bool SignatureFound;
 };
 
 #endif

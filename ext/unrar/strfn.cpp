@@ -12,93 +12,64 @@ const wchar *NullToEmpty(const wchar *Str)
 }
 
 
-
-
-char *IntNameToExt(const char *Name)
-{
-  static char OutName[NM];
-  IntToExt(Name,OutName);
-  return(OutName);
-}
-
-
-void ExtToInt(const char *Src,char *Dest)
+void IntToExt(const char *Src,char *Dest,size_t DestSize)
 {
 #ifdef _WIN_ALL
-  CharToOemA(Src,Dest);
+  OemToCharBuffA(Src,Dest,(DWORD)DestSize);
+  Dest[DestSize-1]=0;
 #else
   if (Dest!=Src)
-    strcpy(Dest,Src);
+    strncpyz(Dest,Src,DestSize);
 #endif
 }
 
 
-void IntToExt(const char *Src,char *Dest)
+int stricomp(const char *s1,const char *s2)
 {
 #ifdef _WIN_ALL
-  OemToCharA(Src,Dest);
+  return(CompareStringA(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,-1,s2,-1)-2);
 #else
-  if (Dest!=Src)
-    strcpy(Dest,Src);
+  while (toupper(*s1)==toupper(*s2))
+  {
+    if (*s1==0)
+      return 0;
+    s1++;
+    s2++;
+  }
+  return s1 < s2 ? -1 : 1;
 #endif
 }
 
 
-char* strlower(char *Str)
+int strnicomp(const char *s1,const char *s2,size_t n)
 {
 #ifdef _WIN_ALL
-  CharLowerA((LPSTR)Str);
+  // If we specify 'n' exceeding the actual string length, CompareString goes
+  // beyond the trailing zero and compares garbage. So we need to limit 'n'
+  // to real string length.
+  size_t l1=Min(strlen(s1)+1,n);
+  size_t l2=Min(strlen(s2)+1,n);
+  return(CompareStringA(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,(int)l1,s2,(int)l2)-2);
 #else
-  for (char *ChPtr=Str;*ChPtr;ChPtr++)
-    *ChPtr=(char)loctolower(*ChPtr);
+  if (n==0)
+    return 0;
+  while (toupper(*s1)==toupper(*s2))
+  {
+    if (*s1==0 || --n==0)
+      return 0;
+    s1++;
+    s2++;
+  }
+  return s1 < s2 ? -1 : 1;
 #endif
-  return(Str);
 }
 
 
-char* strupper(char *Str)
+wchar* RemoveEOL(wchar *Str)
 {
-#ifdef _WIN_ALL
-  CharUpperA((LPSTR)Str);
-#else
-  for (char *ChPtr=Str;*ChPtr;ChPtr++)
-    *ChPtr=(char)loctoupper(*ChPtr);
-#endif
-  return(Str);
-}
-
-
-int stricomp(const char *Str1,const char *Str2)
-{
-  char S1[NM*2],S2[NM*2];
-  strncpyz(S1,Str1,ASIZE(S1));
-  strncpyz(S2,Str2,ASIZE(S2));
-  return(strcmp(strupper(S1),strupper(S2)));
-}
-
-
-int strnicomp(const char *Str1,const char *Str2,size_t N)
-{
-  char S1[NM*2],S2[NM*2];
-  strncpyz(S1,Str1,ASIZE(S1));
-  strncpyz(S2,Str2,ASIZE(S2));
-  return(strncmp(strupper(S1),strupper(S2),N));
-}
-
-
-char* RemoveEOL(char *Str)
-{
-  for (int I=(int)strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n' || Str[I]==' ' || Str[I]=='\t');I--)
+  for (int I=(int)wcslen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n' || Str[I]==' ' || Str[I]=='\t');I--)
     Str[I]=0;
-  return(Str);
-}
-
-
-char* RemoveLF(char *Str)
-{
-  for (int I=(int)strlen(Str)-1;I>=0 && (Str[I]=='\r' || Str[I]=='\n');I--)
-    Str[I]=0;
-  return(Str);
+  return Str;
 }
 
 
@@ -185,6 +156,33 @@ bool IsAlpha(int ch)
 
 
 
+void BinToHex(const byte *Bin,size_t BinSize,char *HexA,wchar *HexW,size_t HexSize)
+{
+  uint A=0,W=0; // ASCII and Unicode hex output positions.
+  for (uint I=0;I<BinSize;I++)
+  {
+    uint High=Bin[I] >> 4;
+    uint Low=Bin[I] & 0xf;
+    uint HighHex=High>9 ? 'a'+High-10:'0'+High;
+    uint LowHex=Low>9 ? 'a'+Low-10:'0'+Low;
+    if (HexA!=NULL && A<HexSize-2) // Need space for 2 chars and final zero.
+    {
+      HexA[A++]=(char)HighHex;
+      HexA[A++]=(char)LowHex;
+    }
+    if (HexW!=NULL && W<HexSize-2) // Need space for 2 chars and final zero.
+    {
+      HexW[W++]=HighHex;
+      HexW[W++]=LowHex;
+    }
+  }
+  if (HexA!=NULL && HexSize>0)
+    HexA[A]=0;
+  if (HexW!=NULL && HexSize>0)
+    HexW[W]=0;
+}
+
+
 #ifndef SFX_MODULE
 uint GetDigits(uint Number)
 {
@@ -221,19 +219,6 @@ bool LowAscii(const wchar *Str)
 }
 
 
-
-
-int stricompc(const char *Str1,const char *Str2)
-{
-#if defined(_UNIX)
-  return(strcmp(Str1,Str2));
-#else
-  return(stricomp(Str1,Str2));
-#endif
-}
-
-
-#ifndef SFX_MODULE
 int wcsicompc(const wchar *Str1,const wchar *Str2)
 {
 #if defined(_UNIX)
@@ -242,7 +227,6 @@ int wcsicompc(const wchar *Str1,const wchar *Str2)
   return(wcsicomp(Str1,Str2));
 #endif
 }
-#endif
 
 
 // safe strncpy: copies maxlen-1 max and always returns zero terminated dest
@@ -265,7 +249,7 @@ wchar* wcsncpyz(wchar *dest, const wchar *src, size_t maxlen)
     wcsncpy(dest,src,maxlen-1);
     dest[maxlen-1]=0;
   }
-  return(dest);
+  return dest;
 }
 
 
@@ -310,19 +294,6 @@ void itoa(int64 n,char *Str)
 }
 
 
-
-int64 atoil(const char *Str)
-{
-  int64 n=0;
-  while (*Str>='0' && *Str<='9')
-  {
-    n=n*10+*Str-'0';
-    Str++;
-  }
-  return(n);
-}
-
-
 void itoa(int64 n,wchar *Str)
 {
   wchar NumStr[50];
@@ -340,18 +311,6 @@ void itoa(int64 n,wchar *Str)
 }
 
 
-int64 atoil(const wchar *Str)
-{
-  int64 n=0;
-  while (*Str>='0' && *Str<='9')
-  {
-    n=n*10+*Str-'0';
-    Str++;
-  }
-  return(n);
-}
-
-
 const wchar* GetWide(const char *Src)
 {
   const size_t MaxLength=NM;
@@ -366,15 +325,6 @@ const wchar* GetWide(const char *Src)
 }
 
 
-const wchar* GetWide(const char *Src,const wchar *SrcW)
-{
-  if (SrcW!=NULL && *SrcW!=0)
-    return SrcW;
-  return GetWide(Src);
-}
-
-
-#ifdef _WIN_ALL
 // Parse string containing parameters separated with spaces.
 // Support quote marks. Param can be NULL to return the pointer to next
 // parameter, which can be used to estimate the buffer size for Param.
@@ -410,4 +360,50 @@ const wchar* GetCmdParam(const wchar *CmdLine,wchar *Param,size_t MaxSize)
     Param[ParamSize]=0;
   return CmdLine;
 }
+
+
+#ifndef SILENT
+// For compatibility with existing translations we use %s to print Unicode
+// strings in format strings and convert them to %ls here. %s could work
+// without such conversion in Windows, but not in Unix wprintf.
+void PrintfPrepareFmt(const wchar *Org,wchar *Cvt,size_t MaxSize)
+{
+  uint Src=0,Dest=0;
+  while (Org[Src]!=0 && Dest<MaxSize-1)
+  {
+    if (Org[Src]=='%' && (Src==0 || Org[Src-1]!='%'))
+    {
+      uint SPos=Src+1;
+      // Skipping a possible width specifier like %-50s.
+      while (IsDigit(Org[SPos]) || Org[SPos]=='-')
+        SPos++;
+      if (Org[SPos]=='s' && Dest<MaxSize-(SPos-Src+1))
+      {
+        while (Src<SPos)
+          Cvt[Dest++]=Org[Src++];
+        Cvt[Dest++]='l';
+      }
+    }
+#ifdef _WIN_ALL
+    // Convert \n to \r\n in Windows. Important when writing to log,
+    // so other tools like Notebook can view resulting log properly.
+    if (Org[Src]=='\n' && (Src==0 || Org[Src-1]!='\r'))
+      Cvt[Dest++]='\r';
 #endif
+
+    Cvt[Dest++]=Org[Src++];
+  }
+  Cvt[Dest]=0;
+}
+#endif
+
+
+bool GetPassword(PASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password)
+{
+#ifdef SILENT
+  return false;
+#else
+  return GetConsolePassword(Type,FileName,Password);
+#endif
+}
+

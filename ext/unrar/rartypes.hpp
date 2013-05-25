@@ -21,12 +21,7 @@ typedef unsigned long long uint64; // unsigned 64 bits
 typedef   signed long long  int64; // signed 64 bits
 #endif
 
-
-#if defined(_WIN_ALL) || defined(__GNUC__) || defined(__sgi) || defined(_AIX) || defined(__sun) || defined(__hpux) || defined(_OSF_SOURCE)
 typedef wchar_t wchar;
-#else
-typedef ushort wchar;
-#endif
 
 // Get lowest 16 bits.
 #define GET_SHORT16(x) (sizeof(ushort)==2 ? (ushort)(x):((x)&0xffff))
@@ -43,5 +38,9 @@ typedef ushort wchar;
 // Lower part is intentionally 0x7fffffff, not 0xffffffff, to make it 
 // compatible with 32 bit int64.
 #define INT64NDF INT32TO64(0x7fffffff,0x7fffffff)
+
+// Maximum uint64 value.
+#define MAX_UINT64 INT32TO64(0xffffffff,0xffffffff)
+#define UINT64NDF MAX_UINT64
 
 #endif

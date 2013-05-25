@@ -1,37 +1,26 @@
 #ifndef _RAR_CONSIO_
 #define _RAR_CONSIO_
 
-#if !defined(SILENT) && !defined(SFX_MODULE)
-  enum {SOUND_OK,SOUND_ALARM,SOUND_ERROR,SOUND_QUESTION};
-#endif
-
-enum PASSWORD_TYPE {PASSWORD_GLOBAL,PASSWORD_FILE,PASSWORD_ARCHIVE};
-
+void InitConsole();
 void InitConsoleOptions(MESSAGE_TYPE MsgStream,bool Sound);
+void OutComment(const wchar *Comment,size_t Size);
 
 #ifndef SILENT
-  void mprintf(const char *fmt,...);
-  void eprintf(const char *fmt,...);
-  void Alarm();
-  void GetPasswordText(wchar *Str,uint MaxLength);
-  bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,SecPassword *Password);
-  int Ask(const char *AskStr);
+bool GetConsolePassword(PASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password);
 #endif
 
-void OutComment(char *Comment,size_t Size);
-
 #ifdef SILENT
-  #ifdef __GNUC__
-    #define mprintf(args...)
-    #define eprintf(args...)
-  #else
-    inline void mprintf(const char *fmt,...) {}
-    inline void eprintf(const char *fmt,...) {}
-  #endif
+  inline void mprintf(const wchar *fmt,...) {}
+  inline void eprintf(const wchar *fmt,...) {}
   inline void Alarm() {}
-  inline void GetPasswordText(wchar *Str,uint MaxLength) {}
-  inline bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,SecPassword *Password) {return(false);}
-  inline int Ask(const char *AskStr) {return(0);}
+  inline int Ask(const wchar *AskStr) {return 0;}
+  inline bool getwstr(wchar *str,size_t n) {return false;}
+#else
+  void mprintf(const wchar *fmt,...);
+  void eprintf(const wchar *fmt,...);
+  void Alarm();
+  int Ask(const wchar *AskStr);
+  bool getwstr(wchar *str,size_t n);
 #endif
 
 #endif

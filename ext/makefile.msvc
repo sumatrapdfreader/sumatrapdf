@@ -23,7 +23,7 @@ MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "INC_CUSTOM_ALL
 MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /wd4131 /wd4245
 
 UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
-UNRAR_CFLAGS = $(UNRAR_CFLAGS) /wd4201 /wd4244 /wd4310 /wd4389 /wd4701 /wd4709 /wd4996
+UNRAR_CFLAGS = $(UNRAR_CFLAGS) /wd4201 /wd4211 /wd4244 /wd4389 /wd4701 /wd4702 /wd4706 /wd4709 /wd4996
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 
@@ -59,18 +59,17 @@ MINIZIP_OBJS = \
 	$(OZ)\iowin32s.obj $(OZ)\zip.obj
 
 UNRAR_OBJS = \
-	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \
+	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\blake2s.obj $(OR)\cmddata.obj \
 	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
 	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
 	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
-	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
-	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rarvm.obj \
+	$(OR)\global.obj $(OR)\hash.obj $(OR)\headers.obj $(OR)\isnt.obj  $(OR)\list.obj \
+	$(OR)\match.obj $(OR)\options.obj $(OR)\pathfn.obj $(OR)\qopen.obj $(OR)\rarvm.obj \
 	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
-	$(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
-	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
-	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
-	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
-	$(OR)\volume.obj $(OR)\dll.obj $(OR)\secpassword.obj
+	$(OR)\rijndael.obj $(OR)\rs.obj $(OR)\rs16.obj $(OR)\secpassword.obj \
+	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\sha256.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
+	$(OR)\strlist.obj $(OR)\system.obj $(OR)\threadpool.obj $(OR)\timefn.obj \
+	$(OR)\unicode.obj $(OR)\unpack.obj $(OR)\volume.obj $(OR)\dll.obj
 
 # Note: in theory using compiling all djvu files as one should generate smaller
 # code, but it does just the opposite. Why?

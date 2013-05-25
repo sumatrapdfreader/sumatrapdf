@@ -3,8 +3,7 @@
 static bool IsUnicode(byte *Data,int Size);
 
 bool ReadTextFile(
-  const char *Name,
-  const wchar *NameW,
+  const wchar *Name,
   StringList *List,
   bool Config,
   bool AbortOnError,
@@ -13,29 +12,19 @@ bool ReadTextFile(
   bool SkipComments,
   bool ExpandEnvStr)
 {
-  char FileName[NM];
+  wchar FileName[NM];
   *FileName=0;
+
   if (Name!=NULL)
     if (Config)
-      GetConfigName(Name,FileName,true);
+      GetConfigName(Name,FileName,ASIZE(FileName),true);
     else
-      strcpy(FileName,Name);
-
-  wchar FileNameW[NM];
-  *FileNameW=0;
-
-#ifdef _WIN_ALL
-  if (NameW!=NULL)
-    if (Config)
-      GetConfigName(NameW,FileNameW,true);
-    else
-      wcscpy(FileNameW,NameW);
-#endif
+      wcsncpyz(FileName,Name,ASIZE(FileName));
 
   File SrcFile;
-  if (FileName!=NULL && *FileName!=0 || FileNameW!=NULL && *FileNameW!=0)
+  if (FileName!=NULL && *FileName!=0)
   {
-    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName,FileNameW):SrcFile.Open(FileName,FileNameW,0);
+    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName):SrcFile.Open(FileName,0);
 
     if (!OpenCode)
     {
@@ -58,6 +47,8 @@ bool ReadTextFile(
 
   memset(&Data[DataSize],0,5);
 
+  Array<wchar> WideStr;
+
   if (SrcCharset==RCH_UNICODE ||
       SrcCharset==RCH_DEFAULT && IsUnicode((byte *)&Data[0],DataSize))
   {
@@ -71,7 +62,6 @@ bool ReadTextFile(
     }
 
     wchar *CurStr=&DataW[0];
-    Array<char> AnsiName;
 
     while (*CurStr!=0)
     {
@@ -92,21 +82,15 @@ bool ReadTextFile(
           break;
         *SpacePtr=0;
       }
-      if (*CurStr)
+      if (*CurStr!=0)
       {
-        // Length and AddSize must be defined as signed, because AddSize
-        // can be negative.
-        int Length=(int)wcslen(CurStr);
-        int AddSize=4*(Length-(int)AnsiName.Size()+1);
+        size_t Length=wcslen(CurStr);
 
-        if (AddSize>0)
-          AnsiName.Add(AddSize);
         if (Unquote && *CurStr=='\"' && CurStr[Length-1]=='\"')
         {
           CurStr[Length-1]=0;
           CurStr++;
         }
-        WideToChar(CurStr,&AnsiName[0],AnsiName.Size());
 
         bool Expanded=false;
 #if defined(_WIN_ALL) && !defined(_WIN_CE)
@@ -114,21 +98,16 @@ bool ReadTextFile(
         {
           // Expanding environment variables in Windows version.
 
-          char ExpName[NM];
-          wchar ExpNameW[NM];
-          *ExpNameW=0;
-          int ret,retw=1;
-          ret=ExpandEnvironmentStringsA(&AnsiName[0],ExpName,ASIZE(ExpName));
-          if (ret!=0 && WinNT())
-            retw=ExpandEnvironmentStringsW(CurStr,ExpNameW,ASIZE(ExpNameW));
-          Expanded=ret!=0 && ret<ASIZE(ExpName) &&
-                   retw!=0 && retw<ASIZE(ExpNameW);
+          wchar ExpName[NM];
+          *ExpName=0;
+          DWORD Result=ExpandEnvironmentStrings(CurStr,ExpName,ASIZE(ExpName));
+          Expanded=Result!=0 && Result<ASIZE(ExpName);
           if (Expanded)
-            List->AddString(ExpName,ExpNameW);
+            List->AddString(ExpName);
         }
 #endif
         if (!Expanded)
-          List->AddString(&AnsiName[0],CurStr);
+          List->AddString(CurStr);
       }
       CurStr=NextStr+1;
       while (*CurStr=='\r' || *CurStr=='\n')
@@ -174,35 +153,38 @@ bool ReadTextFile(
 #endif
 
         bool Expanded=false;
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+
+        WideStr.Alloc(strlen(CurStr)+1);
+        CharToWide(CurStr,&WideStr[0],WideStr.Size());
+#ifdef _WIN_ALL
         if (ExpandEnvStr && *CurStr=='%')
         {
           // Expanding environment variables in Windows version.
-          char ExpName[NM];
-          int ret=ExpandEnvironmentStringsA(CurStr,ExpName,ASIZE(ExpName));
-          Expanded=ret!=0 && ret<ASIZE(ExpName);
+          wchar ExpName[NM];
+          DWORD Result=ExpandEnvironmentStringsW(&WideStr[0],ExpName,ASIZE(ExpName));
+          Expanded=Result!=0 && Result<ASIZE(ExpName);
           if (Expanded)
             List->AddString(ExpName);
         }
 #endif
         if (!Expanded)
-          List->AddString(CurStr);
+          List->AddString(&WideStr[0]);
       }
       CurStr=NextStr+1;
       while (*CurStr=='\r' || *CurStr=='\n')
         CurStr++;
     }
   }
-  return(true);
+  return true;
 }
 
 
 bool IsUnicode(byte *Data,int Size)
 {
   if (Size<4 || Data[0]!=0xff || Data[1]!=0xfe)
-    return(false);
+    return false;
   for (int I=2;I<Size;I++)
     if (Data[I]<32 && Data[I]!='\r' && Data[I]!='\n')
-      return(true);
-  return(false);
+      return true;
+  return false;
 }

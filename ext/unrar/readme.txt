@@ -4,12 +4,13 @@
 
    1. General
 
-   This package includes freeware Unrar C++ source and a few makefiles
-   (makefile.bcc, makefile.msc+msc.dep, makefile.unix). Unrar source
-   is subset of RAR and generated from RAR source automatically,
+   This package includes freeware Unrar C++ source and makefile for
+   several Unix compilers.
+
+   Unrar source is subset of RAR and generated from RAR source automatically,
    by a small program removing blocks like '#ifndef UNRAR ... #endif'.
-   Such method is not perfect and you may find some RAR related
-   stuff unnecessary in Unrar, especially in header files.
+   Such method is not perfect and you may find some RAR related stuff
+   unnecessary in Unrar, especially in header files.
 
    If you wish to port Unrar to a new platform, you may need to edit
    '#define LITTLE_ENDIAN' in os.hpp and data type definitions
@@ -17,16 +18,7 @@
 
    if computer architecture does not allow not aligned data access,
    you need to undefine ALLOW_NOT_ALIGNED_INT and define
-   STRICT_ALIGNMENT_REQUIRED in os.h. Note that it will increase memory
-   requirements.
-
-   If you use Borland C++ makefile (makefile.bcc), you need to define
-   BASEPATHCC environment (or makefile) variable containing
-   the path to Borland C++ installation.
-
-   Makefile.unix contains numerous compiler option sets.
-   GCC Linux is selected by default. If you need to compile Unrar
-   for other platforms, uncomment corresponding lines.
+   STRICT_ALIGNMENT_REQUIRED in os.h.
 
    UnRAR.vcproj and UnRARDll.vcproj are projects for Microsoft Visual C++.
    UnRARDll.vcproj lets to build unrar.dll library.
@@ -41,16 +33,8 @@
 
    3. Acknowledgements
 
-   This source includes parts of code written by the following authors:
-
-   Dmitry Shkarin     PPMII v.H text compression
-   Dmitry Subbotin    Carryless rangecoder
-   Szymon Stefanek    AES encryption
-   Brian Gladman      AES encryption
-   Steve Reid         SHA-1 hash function
-   Marcus Herbert     makefile.unix file
-   Tomasz Klim        fixes for libunrar.so
-   Robert Riebisch    makefile.dj and patches for DJGPP
+   This source includes parts of code written by other authors.
+   Please see acknow.txt file for details.
 
 
    4. Legal stuff

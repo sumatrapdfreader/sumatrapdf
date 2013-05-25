@@ -18,37 +18,37 @@ struct RarLocalTime
 class RarTime
 {
   private:
-    RarLocalTime rlt;
+    // Internal FILETIME like time representation in 100 nanoseconds
+    // since 01.01.1601.
+    uint64 itime;
   public:
     RarTime();
 #ifdef _WIN_ALL
     RarTime& operator =(FILETIME &ft);
     void GetWin32(FILETIME *ft);
 #endif
-#if defined(_UNIX) || defined(_EMX)
     RarTime& operator =(time_t ut);
     time_t GetUnix();
-#endif
-    bool operator == (RarTime &rt);
-    bool operator < (RarTime &rt);
-    bool operator <= (RarTime &rt);
-    bool operator > (RarTime &rt);
-    bool operator >= (RarTime &rt);
-    void GetLocal(RarLocalTime *lt) {*lt=rlt;}
-    void SetLocal(RarLocalTime *lt) {rlt=*lt;}
-    int64 GetRaw();
-    void SetRaw(int64 RawTime);
+    bool operator == (RarTime &rt) {return itime==rt.itime;}
+    bool operator < (RarTime &rt)  {return itime<rt.itime;}
+    bool operator <= (RarTime &rt) {return itime<rt.itime || itime==rt.itime;}
+    bool operator > (RarTime &rt)  {return itime>rt.itime;}
+    bool operator >= (RarTime &rt) {return itime>rt.itime || itime==rt.itime;}
+    void GetLocal(RarLocalTime *lt);
+    void SetLocal(RarLocalTime *lt);
+    uint64 GetRaw();
+    void SetRaw(uint64 RawTime);
     uint GetDos();
     void SetDos(uint DosTime);
-    void GetText(char *DateStr,bool FullYear);
-    void SetIsoText(const char *TimeText);
-    void SetAgeText(const char *TimeText);
+    void GetText(wchar *DateStr,size_t MaxSize,bool FullYear,bool FullMS);
+    void SetIsoText(const wchar *TimeText);
+    void SetAgeText(const wchar *TimeText);
     void SetCurrentTime();
-    void Reset() {rlt.Year=0;}
-    bool IsSet() {return(rlt.Year!=0);}
+    void Reset() {itime=0;}
+    bool IsSet() {return(itime!=0);}
 };
 
-const char *GetMonthName(int Month);
+const wchar *GetMonthName(int Month);
 bool IsLeapYear(int Year);
 
 #endif

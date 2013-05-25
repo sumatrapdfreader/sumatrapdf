@@ -1,5 +1,12 @@
                            ACKNOWLEDGMENTS
 
+* We used "Screaming Fast Galois Field Arithmetic Using Intel
+  SIMD Instructions" paper by James S. Plank, Kevin M. Greenan
+  and Ethan L. Miller to improve Reed-Solomon coding performance.
+  Also we are grateful to Artem Drobanov and Bulat Ziganshin
+  for samples and ideas allowed to make Reed-Solomon coding
+  more efficient.
+
 * RAR text compression algorithm is based on Dmitry Shkarin PPMII
   and Dmitry Subbotin carryless rangecoder public domain source code.
   You may find it in ftp.elf.stuba.sk/pub/pc/pack.
@@ -76,6 +83,10 @@
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
     OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
     SUCH DAMAGE.
+
+* RAR archives may optionally include BLAKE2sp hash ( https://blake2.net ),
+  designed by Jean-Philippe Aumasson, Samuel Neves, Zooko Wilcox-O'Hearn
+  and Christian Winnerlein.
 
 * Useful hints provided by Alexander Khoroshev and Bulat Ziganshin allowed
   to significantly improve RAR compression and speed.

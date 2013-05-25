@@ -1,62 +1,88 @@
 #ifndef _RAR_CRYPT_
 #define _RAR_CRYPT_
 
-enum { OLD_DECODE=0,OLD_ENCODE=1,NEW_CRYPT=2 };
+
+enum CRYPT_METHOD {
+  CRYPT_NONE,CRYPT_RAR13,CRYPT_RAR15,CRYPT_RAR20,CRYPT_RAR30,CRYPT_RAR50
+};
+
+#define SIZE_SALT50              16
+#define SIZE_SALT30               8
+#define SIZE_INITV               16
+#define SIZE_PSWCHECK             8
+#define SIZE_PSWCHECK_CSUM        4
+
+#define CRYPT_BLOCK_SIZE         16
+#define CRYPT_BLOCK_MASK         (CRYPT_BLOCK_SIZE-1) // 0xf
+
+#define CRYPT5_KDF_LG2_COUNT     15 // LOG2 of PDKDF2 iteration count.
+#define CRYPT5_KDF_LG2_COUNT_MAX 24 // LOG2 of maximum accepted iteration count.
+#define CRYPT_VERSION             0 // Supported encryption version.
 
 
-struct CryptKeyCacheItem
+struct KDFCacheItem
 {
-#ifndef _SFX_RTL_
-  CryptKeyCacheItem()
-  {
-    Password.Set(L"");
-  }
-
-  ~CryptKeyCacheItem()
-  {
-    memset(AESKey,0,sizeof(AESKey));
-    memset(AESInit,0,sizeof(AESInit));
-    memset(&Password,0,sizeof(Password));
-  }
-#endif
-  byte AESKey[16],AESInit[16];
-  SecPassword Password;
-  bool SaltPresent;
-  byte Salt[SALT_SIZE];
-  bool HandsOffHash;
+  SecPassword Pwd;
+  byte Salt[SIZE_SALT50];
+  uint Lg2Count; // Log2 of PBKDF2 repetition count.
+  byte Key[32];
+  byte PswCheckValue[SHA256_DIGEST_SIZE];
+  byte HashKeyValue[SHA256_DIGEST_SIZE];
 };
 
 class CryptData
 {
   private:
-    void Encode13(byte *Data,uint Count);
-    void Decode13(byte *Data,uint Count);
-    void Crypt15(byte *Data,uint Count);
-    void UpdKeys(byte *Buf);
-    void Swap(byte *Ch1,byte *Ch2);
-    void SetOldKeys(const char *Password);
+    void SetKey13(const char *Password);
+    void Decrypt13(byte *Data,size_t Count);
 
-    Rijndael rin;
-    
-    byte SubstTable[256];
-    uint Key[4];
-    ushort OldKey[4];
-    byte PN1,PN2,PN3;
+    void SetKey15(const char *Password);
+    void Crypt15(byte *Data,size_t Count);
 
-    byte AESKey[16],AESInit[16];
-
-    static CryptKeyCacheItem Cache[4];
-    static int CachePos;
-  public:
-    void SetCryptKeys(SecPassword *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
-    void SetAV15Encryption();
-    void SetCmt13Encryption();
+    void SetKey20(const char *Password);
+    void Swap20(byte *Ch1,byte *Ch2);
+    void UpdKeys20(byte *Buf);
     void EncryptBlock20(byte *Buf);
     void DecryptBlock20(byte *Buf);
+
+    void SetKey30(bool Encrypt,SecPassword *Password,const wchar *PwdW,const byte *Salt);
+
+    void SetKey50(bool Encrypt,SecPassword *Password,const wchar *PwdW,const byte *Salt,const byte *InitV,uint Lg2Cnt,byte *HashKey,byte *PswCheck);
+    KDFCacheItem KDFCache[4];
+    uint KDFCachePos;
+
+    CRYPT_METHOD Method;
+
+    Rijndael rin;
+
+    uint CRCTab[256]; // For RAR 1.5 and RAR 2.0 encryption.
+    
+    byte SubstTable20[256];
+    uint Key20[4];
+
+    byte Key13[3];
+    ushort Key15[4];
+  public:
+    CryptData();
+    ~CryptData();
+    void SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,SecPassword *Password,
+         const byte *Salt,const byte *InitV,uint Lg2Cnt,
+         byte *HashKey,byte *PswCheck);
+    void SetAV15Encryption();
+    void SetCmt13Encryption();
     void EncryptBlock(byte *Buf,size_t Size);
     void DecryptBlock(byte *Buf,size_t Size);
-    void Crypt(byte *Data,uint Count,int Method);
-    static void SetSalt(byte *Salt,int SaltSize);
+    static void SetSalt(byte *Salt,size_t SaltSize);
 };
+
+void GetRnd(byte *RndBuf,size_t BufSize);
+
+void hmac_sha256(const byte *Key,size_t KeyLength,const byte *Data,
+                 size_t DataLength,byte *ResDigest);
+void pbkdf2(const byte *pass, size_t pass_len, const byte *salt,
+            size_t salt_len,byte *key, byte *Value1, byte *Value2,
+            uint rounds);
+
+void ConvertHashToMAC(HashValue *Value,byte *Key);
 
 #endif

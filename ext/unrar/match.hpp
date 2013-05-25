@@ -29,7 +29,6 @@ enum {
 #define MATCH_MODEMASK           0x0000ffff
 #define MATCH_FORCECASESENSITIVE 0x80000000
 
-bool CmpName(const char *Wildcard,const char *Name,int CmpMode);
 bool CmpName(const wchar *Wildcard,const wchar *Name,int CmpMode);
 
 #endif

@@ -1,10 +1,6 @@
 #ifndef _RAR_ERRHANDLER_
 #define _RAR_ERRHANDLER_
 
-#ifndef SFX_MODULE
-#define ALLOW_EXCEPTIONS
-#endif
-
 enum RAR_EXIT // RAR exit code.
 { 
   RARX_SUCCESS   =   0,
@@ -18,16 +14,15 @@ enum RAR_EXIT // RAR exit code.
   RARX_MEMORY    =   8,
   RARX_CREATE    =   9,
   RARX_NOFILES   =  10,
+  RARX_BADPWD    =  11,
   RARX_USERBREAK = 255
 };
 
 class ErrorHandler
 {
   private:
-    void ErrMsg(const char *ArcName,const char *fmt,...);
-
     RAR_EXIT ExitCode;
-    int ErrCount;
+    uint ErrCount;
     bool EnableBreak;
     bool Silent;
     bool DoShutdown;
@@ -35,32 +30,36 @@ class ErrorHandler
     ErrorHandler();
     void Clean();
     void MemoryError();
-    void OpenError(const char *FileName,const wchar *FileNameW);
-    void CloseError(const char *FileName,const wchar *FileNameW);
-    void ReadError(const char *FileName,const wchar *FileNameW);
-    bool AskRepeatRead(const char *FileName,const wchar *FileNameW);
-    void WriteError(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
-    void WriteErrorFAT(const char *FileName,const wchar *FileNameW);
-    bool AskRepeatWrite(const char *FileName,const wchar *FileNameW,bool DiskFull);
-    void SeekError(const char *FileName,const wchar *FileNameW);
-    void GeneralErrMsg(const char *Msg);
+    void OpenError(const wchar *FileName);
+    void CloseError(const wchar *FileName);
+    void ReadError(const wchar *FileName);
+    bool AskRepeatRead(const wchar *FileName);
+    void WriteError(const wchar *ArcName,const wchar *FileName);
+    void WriteErrorFAT(const wchar *FileName);
+    bool AskRepeatWrite(const wchar *FileName,bool DiskFull);
+    void SeekError(const wchar *FileName);
+    void GeneralErrMsg(const wchar *fmt,...);
     void MemoryErrorMsg();
-    void OpenErrorMsg(const char *FileName,const wchar *FileNameW=NULL);
-    void OpenErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
-    void CreateErrorMsg(const char *FileName,const wchar *FileNameW=NULL);
-    void CreateErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
-    void CheckLongPathErrMsg(const char *FileName,const wchar *FileNameW);
-    void ReadErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
-    void WriteErrorMsg(const char *ArcName,const wchar *ArcNameW,const char *FileName,const wchar *FileNameW);
+    void OpenErrorMsg(const wchar *FileName);
+    void OpenErrorMsg(const wchar *ArcName,const wchar *FileName);
+    void CreateErrorMsg(const wchar *FileName);
+    void CreateErrorMsg(const wchar *ArcName,const wchar *FileName);
+    void CheckLongPathErrMsg(const wchar *FileName);
+    void ReadErrorMsg(const wchar *FileName);
+    void ReadErrorMsg(const wchar *ArcName,const wchar *FileName);
+    void WriteErrorMsg(const wchar *ArcName,const wchar *FileName);
     void Exit(RAR_EXIT ExitCode);
     void SetErrorCode(RAR_EXIT Code);
     RAR_EXIT GetErrorCode() {return(ExitCode);}
-    int GetErrorCount() {return(ErrCount);}
+    uint GetErrorCount() {return ErrCount;}
     void SetSignalHandlers(bool Enable);
     void Throw(RAR_EXIT Code);
     void SetSilent(bool Mode) {Silent=Mode;};
     void SetShutdown(bool Mode) {DoShutdown=Mode;};
     void SysErrMsg();
+    int GetSystemErrorCode();
+    void SetSystemErrorCode(int Code);
+    bool UserBreak;
 };
 
 

@@ -1,17 +1,20 @@
 #include "rar.hpp"
 
-bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
+// If NewFile==NULL, we delete created file after user confirmation.
+// It is useful we we need to overwrite an existing folder or file,
+// but need user confirmation for that.
+bool FileCreate(RAROptions *Cmd,File *NewFile,wchar *Name,size_t MaxNameSize,
                 OVERWRITE_MODE Mode,bool *UserReject,int64 FileSize,
-                uint FileTime,bool WriteOnly)
+                RarTime *FileTime,bool WriteOnly)
 {
   if (UserReject!=NULL)
     *UserReject=false;
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+#ifdef _WIN_ALL
   bool ShortNameChanged=false;
 #endif
-  while (FileExist(Name,NameW))
+  while (FileExist(Name))
   {
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+#ifdef _WIN_ALL
     if (!ShortNameChanged)
     {
       // Avoid the infinite loop if UpdateExistingShortName returns
@@ -20,16 +23,8 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
 
       // Maybe our long name matches the short name of existing file.
       // Let's check if we can change the short name.
-      wchar WideName[NM];
-      GetWideName(Name,NameW,WideName,ASIZE(WideName));
-      if (UpdateExistingShortName(WideName))
-      {
-        if (Name!=NULL && *Name!=0)
-          WideToChar(WideName,Name);
-        if (NameW!=NULL && *NameW!=0)
-          wcscpy(NameW,WideName);
+      if (UpdateExistingShortName(Name))
         continue;
-      }
     }
     // Allow short name check again. It is necessary, because rename and
     // autorename below can change the name, so we need to check it again.
@@ -39,13 +34,13 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
     {
       if (UserReject!=NULL)
         *UserReject=true;
-      return(false);
+      return false;
     }
 
     // Must be before Cmd->AllYes check or -y switch would override -or.
     if (Mode==OVERWRITE_AUTORENAME)
     {
-      if (!GetAutoRenamedName(Name,NameW))
+      if (!GetAutoRenamedName(Name,MaxNameSize))
         Mode=OVERWRITE_DEFAULT;
       continue;
     }
@@ -61,9 +56,8 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
 
     if (Mode==OVERWRITE_DEFAULT || Mode==OVERWRITE_FORCE_ASK)
     {
-      char NewName[NM];
-      wchar NewNameW[NM];
-      *NewNameW=0;
+      wchar NewName[NM];
+      *NewName=0;
       eprintf(St(MFileExists),Name);
       int Choice=Ask(St(MYesNoAllRenQ));
       if (Choice==1)
@@ -72,7 +66,7 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
       {
         if (UserReject!=NULL)
           *UserReject=true;
-        return(false);
+        return false;
       }
       if (Choice==3)
       {
@@ -84,40 +78,24 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
         if (UserReject!=NULL)
           *UserReject=true;
         Cmd->Overwrite=OVERWRITE_NONE;
-        return(false);
+        return false;
       }
       if (Choice==5)
       {
 #ifndef GUI
         mprintf(St(MAskNewName));
-
-#ifdef  _WIN_ALL
-        File SrcFile;
-        SrcFile.SetHandleType(FILE_HANDLESTD);
-        int Size=SrcFile.Read(NewName,sizeof(NewName)-1);
-        NewName[Size]=0;
-        OemToCharA(NewName,NewName);
-#else
-        if (fgets(NewName,sizeof(NewName),stdin)==NULL)
+        if (!getwstr(NewName,ASIZE(NewName)))
         {
-          // Process fgets failure as if user answered 'No'.
+          // Process fwgets failure as if user answered 'No'.
           if (UserReject!=NULL)
             *UserReject=true;
-          return(false);
+          return false;
         }
 #endif
-        RemoveLF(NewName);
-#endif
         if (PointToName(NewName)==NewName)
-          strcpy(PointToName(Name),NewName);
+          SetName(Name,NewName,MaxNameSize);
         else
-          strcpy(Name,NewName);
-
-        if (NameW!=NULL)
-          if (PointToName(NewNameW)==NewNameW)
-            wcscpy(PointToName(NameW),NewNameW);
-          else
-            wcscpy(NameW,NewNameW);
+          wcsncpyz(Name,NewName,MaxNameSize);
         continue;
       }
       if (Choice==6)
@@ -125,79 +103,63 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
     }
   }
   uint FileMode=WriteOnly ? FMF_WRITE|FMF_SHAREREAD:FMF_UPDATE|FMF_SHAREREAD;
-  if (NewFile!=NULL && NewFile->Create(Name,NameW,FileMode))
-    return(true);
-  PrepareToDelete(Name,NameW);
-  CreatePath(Name,NameW,true);
-  return(NewFile!=NULL ? NewFile->Create(Name,NameW,FileMode):DelFile(Name,NameW));
+  if (NewFile!=NULL && NewFile->Create(Name,FileMode))
+    return true;
+  PrepareToDelete(Name);
+  CreatePath(Name,true);
+  return NewFile!=NULL ? NewFile->Create(Name,FileMode):DelFile(Name);
 }
 
 
-bool GetAutoRenamedName(char *Name,wchar *NameW)
+bool GetAutoRenamedName(wchar *Name,size_t MaxNameSize)
 {
-  char NewName[NM];
-  wchar NewNameW[NM];
-
-  if (Name!=NULL && strlen(Name)>ASIZE(NewName)-10 || 
-      NameW!=NULL && wcslen(NameW)>ASIZE(NewNameW)-10)
-    return(false);
-  char *Ext=NULL;
-  if (Name!=NULL && *Name!=0)
-  {
-    Ext=GetExt(Name);
-    if (Ext==NULL)
-      Ext=Name+strlen(Name);
-  }
-  wchar *ExtW=NULL;
-  if (NameW!=NULL && *NameW!=0)
-  {
-    ExtW=GetExt(NameW);
-    if (ExtW==NULL)
-      ExtW=NameW+wcslen(NameW);
-  }
+  wchar NewName[NM];
+  if (wcslen(Name)>ASIZE(NewName)-10)
+    return false;
+  wchar *Ext=GetExt(Name);
+  if (Ext==NULL)
+    Ext=Name+wcslen(Name);
   *NewName=0;
-  *NewNameW=0;
-  for (int FileVer=1;;FileVer++)
+  for (uint FileVer=1;;FileVer++)
   {
-    if (Name!=NULL && *Name!=0)
-      sprintf(NewName,"%.*s(%d)%s",int(Ext-Name),Name,FileVer,Ext);
-    if (NameW!=NULL && *NameW!=0)
-      sprintfw(NewNameW,ASIZE(NewNameW),L"%.*s(%d)%s",int(ExtW-NameW),NameW,FileVer,ExtW);
-    if (!FileExist(NewName,NewNameW))
+    swprintf(NewName,ASIZE(NewName),L"%.*ls(%u)%ls",uint(Ext-Name),Name,FileVer,Ext);
+    if (!FileExist(NewName))
     {
-      if (Name!=NULL && *Name!=0)
-        strcpy(Name,NewName);
-      if (NameW!=NULL && *NameW!=0)
-        wcscpy(NameW,NewNameW);
+      wcsncpyz(Name,NewName,MaxNameSize);
       break;
     }
     if (FileVer>=1000000)
-      return(false);
+      return false;
   }
-  return(true);
+  return true;
 }
 
 
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+#ifdef _WIN_ALL
 // If we find a file, which short name is equal to 'Name', we try to change
 // its short name, while preserving the long name. It helps when unpacking
 // an archived file, which long name is equal to short name of already
 // existing file. Otherwise we would overwrite the already existing file,
 // even though its long name does not match the name of unpacking file.
-bool UpdateExistingShortName(wchar *Name)
+bool UpdateExistingShortName(const wchar *Name)
 {
-  // 'Name' is the name of file which we want to create. Let's check
-  // if file with such name is exist. If it does not, we return.
-  FindData fd;
-  if (!FindFile::FastFind(NULL,Name,&fd))
-    return(false);
+  wchar LongPathName[NM];
+  DWORD Res=GetLongPathName(Name,LongPathName,ASIZE(LongPathName));
+  if (Res==0 || Res>=ASIZE(LongPathName))
+    return false;
+  wchar ShortPathName[NM];
+  Res=GetShortPathName(Name,ShortPathName,ASIZE(ShortPathName));
+  if (Res==0 || Res>=ASIZE(ShortPathName))
+    return false;
+  wchar *LongName=PointToName(LongPathName);
+  wchar *ShortName=PointToName(ShortPathName);
 
   // We continue only if file has a short name, which does not match its
   // long name, and this short name is equal to name of file which we need
   // to create.
-  if (*fd.ShortName==0 || wcsicomp(PointToName(fd.NameW),fd.ShortName)==0 ||
-      wcsicomp(PointToName(Name),fd.ShortName)!=0)
-    return(false);
+  if (*ShortName==0 || wcsicomp(LongName,ShortName)==0 ||
+      wcsicomp(PointToName(Name),ShortName)!=0)
+    return false;
 
   // Generate the temporary new name for existing file.
   wchar NewName[NM];
@@ -209,28 +171,28 @@ bool UpdateExistingShortName(wchar *Name)
     wcsncpyz(NewName,Name,ASIZE(NewName));
 
     // Here we set the random name part.
-    sprintfw(PointToName(NewName),ASIZE(NewName),L"rtmp%d",I);
+    swprintf(PointToName(NewName),ASIZE(NewName),L"rtmp%d",I);
     
     // If such file is already exist, try next random name.
-    if (FileExist(NULL,NewName))
+    if (FileExist(NewName))
       *NewName=0;
   }
 
   // If we could not generate the name not used by any other file, we return.
   if (*NewName==0)
-    return(false);
+    return false;
   
   // FastFind returns the name without path, but we need the fully qualified
   // name for renaming, so we use the path from file to create and long name
   // from existing file.
   wchar FullName[NM];
   wcsncpyz(FullName,Name,ASIZE(FullName));
-  wcscpy(PointToName(FullName),PointToName(fd.NameW));
+  SetName(FullName,LongName,ASIZE(FullName));
   
   // Rename the existing file to randomly generated name. Normally it changes
   // the short name too.
-  if (!MoveFileW(FullName,NewName))
-    return(false);
+  if (!MoveFile(FullName,NewName))
+    return false;
 
   // Now we need to create the temporary empty file with same name as
   // short name of our already existing file. We do it to occupy its previous
@@ -238,13 +200,13 @@ bool UpdateExistingShortName(wchar *Name)
   // its original long name.
   File KeepShortFile;
   bool Created=false;
-  if (!FileExist(NULL,Name))
-    Created=KeepShortFile.Create(NULL,Name);
+  if (!FileExist(Name))
+    Created=KeepShortFile.Create(Name);
 
   // Now we rename the existing file from temporary name to original long name.
   // Since its previous short name is occupied by another file, it should
   // get another short name.
-  MoveFileW(NewName,FullName);
+  MoveFile(NewName,FullName);
 
   if (Created)
   {
@@ -255,6 +217,6 @@ bool UpdateExistingShortName(wchar *Name)
   // We successfully changed the short name. Maybe sometimes we'll simplify
   // this function by use of SetFileShortName Windows API call.
   // But SetFileShortName is not available in older Windows.
-  return(true);
+  return true;
 }
 #endif

@@ -8,7 +8,6 @@
 #include "dll.hpp"
 #endif
 
-
 #ifndef _WIN_CE
 #include "version.hpp"
 #endif
@@ -20,16 +19,20 @@
 #include "array.hpp"
 #include "timefn.hpp"
 #include "secpassword.hpp"
+#include "sha1.hpp"
+#include "sha256.hpp"
+#include "blake2s.hpp"
+#include "hash.hpp"
 #include "options.hpp"
+#include "rijndael.hpp"
+#include "crypt.hpp"
+#include "headers5.hpp"
 #include "headers.hpp"
 #include "pathfn.hpp"
 #include "strfn.hpp"
 #include "strlist.hpp"
 #include "file.hpp"
-#include "sha1.hpp"
 #include "crc.hpp"
-#include "rijndael.hpp"
-#include "crypt.hpp"
 #include "filefn.hpp"
 #include "filestr.hpp"
 #include "find.hpp"
@@ -37,11 +40,16 @@
 #include "savepos.hpp"
 #include "getbits.hpp"
 #include "rdwrfn.hpp"
+#ifdef USE_QOPEN
+#include "qopen.hpp"
+#endif
 #include "archive.hpp"
 #include "match.hpp"
 #include "cmddata.hpp"
 #include "filcreat.hpp"
+#ifndef GUI
 #include "consio.hpp"
+#endif
 #include "system.hpp"
 #ifdef _WIN_ALL
 #include "isnt.hpp"
@@ -54,6 +62,8 @@
 
 #include "rarvm.hpp"
 #include "model.hpp"
+
+#include "threadpool.hpp"
 
 #include "unpack.hpp"
 
@@ -68,10 +78,10 @@
 
 
 #include "rs.hpp"
+#include "rs16.hpp"
 #include "recvol.hpp"
 #include "volume.hpp"
 #include "smallfn.hpp"
-#include "ulinks.hpp"
 
 #include "global.hpp"
 

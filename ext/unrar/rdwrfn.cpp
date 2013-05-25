@@ -2,6 +2,7 @@
 
 ComprDataIO::ComprDataIO()
 {
+
   Init();
 }
 
@@ -21,11 +22,9 @@ void ComprDataIO::Init()
   DestFile=NULL;
   UnpWrSize=0;
   Command=NULL;
-  Encryption=0;
-  Decryption=0;
-  TotalPackRead=0;
+  Encryption=false;
+  Decryption=false;
   CurPackRead=CurPackWrite=CurUnpRead=CurUnpWrite=0;
-  PackFileCRC=UnpFileCRC=PackedCRC=0xffffffff;
   LastPercent=-1;
   SubHead=NULL;
   SubHeadPos=NULL;
@@ -36,40 +35,51 @@ void ComprDataIO::Init()
 
 
 
+
+
 int ComprDataIO::UnpRead(byte *Addr,size_t Count)
 {
-  int RetCode=0,TotalRead=0;
+#ifndef RAR_NOCRYPT
+  // In case of encryption we need to align read size to encryption 
+  // block size. We can do it by simple masking, because unpack read code
+  // always reads more than CRYPT_BLOCK_SIZE, so we do not risk to make it 0.
+  if (Decryption)
+    Count&=~CRYPT_BLOCK_MASK;
+#endif
+  int ReadSize=0,TotalRead=0;
   byte *ReadAddr;
   ReadAddr=Addr;
   while (Count > 0)
   {
     Archive *SrcArc=(Archive *)SrcFile;
 
-    size_t ReadSize=((int64)Count>UnpPackedSize) ? (size_t)UnpPackedSize:Count;
     if (UnpackFromMemory)
     {
       memcpy(Addr,UnpackFromMemoryAddr,UnpackFromMemorySize);
-      RetCode=(int)UnpackFromMemorySize;
+      ReadSize=(int)UnpackFromMemorySize;
       UnpackFromMemorySize=0;
     }
     else
     {
+      size_t SizeToRead=((int64)Count>UnpPackedSize) ? (size_t)UnpPackedSize:Count;
+      if (SizeToRead==0)
+        return 0;
       if (!SrcFile->IsOpened())
         return(-1);
-      RetCode=SrcFile->Read(ReadAddr,ReadSize);
-      FileHeader *hd=SubHead!=NULL ? SubHead:&SrcArc->NewLhd;
-      if (hd->Flags & LHD_SPLIT_AFTER)
-        PackedCRC=CRC(PackedCRC,ReadAddr,RetCode);
+      ReadSize=SrcFile->Read(ReadAddr,SizeToRead);
+      FileHeader *hd=SubHead!=NULL ? SubHead:&SrcArc->FileHead;
+      if (hd->SplitAfter)
+        PackedDataHash.Update(ReadAddr,ReadSize);
     }
-    CurUnpRead+=RetCode;
-    TotalRead+=RetCode;
+    CurUnpRead+=ReadSize;
+    TotalRead+=ReadSize;
 #ifndef NOVOLUME
     // These variable are not used in NOVOLUME mode, so it is better
     // to exclude commands below to avoid compiler warnings.
-    ReadAddr+=RetCode;
-    Count-=RetCode;
+    ReadAddr+=ReadSize;
+    Count-=ReadSize;
 #endif
-    UnpPackedSize-=RetCode;
+    UnpPackedSize-=ReadSize;
     if (UnpPackedSize == 0 && UnpVolume)
     {
 #ifndef NOVOLUME
@@ -86,28 +96,16 @@ int ComprDataIO::UnpRead(byte *Addr,size_t Count)
   Archive *SrcArc=(Archive *)SrcFile;
   if (SrcArc!=NULL)
     ShowUnpRead(SrcArc->CurBlockPos+CurUnpRead,UnpArcSize);
-  if (RetCode!=-1)
+  if (ReadSize!=-1)
   {
-    RetCode=TotalRead;
+    ReadSize=TotalRead;
 #ifndef RAR_NOCRYPT
     if (Decryption)
-#ifndef SFX_MODULE
-      if (Decryption<20)
-        Decrypt.Crypt(Addr,RetCode,(Decryption==15) ? NEW_CRYPT : OLD_DECODE);
-      else
-        if (Decryption==20)
-          for (int I=0;I<RetCode;I+=16)
-            Decrypt.DecryptBlock20(&Addr[I]);
-        else
-#endif
-        {
-          int CryptSize=(RetCode & 0xf)==0 ? RetCode:((RetCode & ~0xf)+16);
-          Decrypt.DecryptBlock(Addr,CryptSize);
-        }
+      Decrypt.DecryptBlock(Addr,ReadSize);
 #endif
   }
   Wait();
-  return(RetCode);
+  return ReadSize;
 }
 
 
@@ -174,12 +172,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
       DestFile->Write(Addr,Count);
   CurUnpWrite+=Count;
   if (!SkipUnpCRC)
-#ifndef SFX_MODULE
-    if (((Archive *)SrcFile)->OldFormat)
-      UnpFileCRC=OldCRC((ushort)UnpFileCRC,Addr,Count);
-    else
-#endif
-      UnpFileCRC=CRC(UnpFileCRC,Addr,Count);
+    UnpHash.Update(Addr,Count);
   ShowUnpWrite();
   Wait();
 }
@@ -211,7 +204,7 @@ void ComprDataIO::ShowUnpRead(int64 ArcPos,int64 ArcSize)
     int CurPercent=ToPercent(ArcPos,ArcSize);
     if (!Cmd->DisablePercentage && CurPercent!=LastPercent)
     {
-      mprintf("\b\b\b\b%3d%%",CurPercent);
+      mprintf(L"\b\b\b\b%3d%%",CurPercent);
       LastPercent=CurPercent;
     }
   }
@@ -221,6 +214,8 @@ void ComprDataIO::ShowUnpRead(int64 ArcPos,int64 ArcSize)
 void ComprDataIO::ShowUnpWrite()
 {
 }
+
+
 
 
 
@@ -246,20 +241,22 @@ void ComprDataIO::GetUnpackedData(byte **Data,size_t *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,SecPassword *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
+void ComprDataIO::SetEncryption(bool Encrypt,CRYPT_METHOD Method,
+     SecPassword *Password,const byte *Salt,const byte *InitV,
+     uint Lg2Cnt,byte *PswCheck,byte *HashKey)
 {
   if (Encrypt)
   {
-    Encryption=Password->IsSet() ? Method:0;
+    Encryption=Password->IsSet();
 #ifndef RAR_NOCRYPT
-    Crypt.SetCryptKeys(Password,Salt,Encrypt,false,HandsOffHash);
+    Crypt.SetCryptKeys(true,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
 #endif
   }
   else
   {
-    Decryption=Password->IsSet() ? Method:0;
+    Decryption=Password->IsSet();
 #ifndef RAR_NOCRYPT
-    Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29,HandsOffHash);
+    Decrypt.SetCryptKeys(false,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
 #endif
   }
 }
@@ -268,7 +265,7 @@ void ComprDataIO::SetEncryption(int Method,SecPassword *Password,const byte *Sal
 #if !defined(SFX_MODULE) && !defined(RAR_NOCRYPT)
 void ComprDataIO::SetAV15Encryption()
 {
-  Decryption=15;
+  Decryption=true;
   Decrypt.SetAV15Encryption();
 }
 #endif
@@ -277,7 +274,7 @@ void ComprDataIO::SetAV15Encryption()
 #if !defined(SFX_MODULE) && !defined(RAR_NOCRYPT)
 void ComprDataIO::SetCmt13Encryption()
 {
-  Decryption=13;
+  Decryption=true;
   Decrypt.SetCmt13Encryption();
 }
 #endif

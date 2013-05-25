@@ -1,18 +1,12 @@
 #ifndef _RAR_LOG_
 #define _RAR_LOG_
 
-void InitLogOptions(char *LogName);
-
-#ifndef SILENT
-void Log(const char *ArcName,const char *Format,...);
-#endif
+void InitLogOptions(const wchar *LogFileName);
 
 #ifdef SILENT
-#ifdef __GNUC__
-#define Log(args...)
+inline void Log(const wchar *ArcName,const wchar *fmt,...) {}
 #else
-inline void Log(const char *a,const char *b,const char *c=NULL,const char *d=NULL) {}
-#endif
+void Log(const wchar *ArcName,const wchar *fmt,...);
 #endif
 
 #endif

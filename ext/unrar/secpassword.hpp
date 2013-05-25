@@ -6,7 +6,7 @@
 class SecPassword
 {
   private:
-    void Process(const wchar *Src,wchar *Dst,size_t MaxSize,bool Encode);
+    void Process(const wchar *Src,size_t SrcSize,wchar *Dst,size_t DstSize,bool Encode);
 
     wchar Password[MAXPASSWORD];
 
@@ -26,5 +26,6 @@ class SecPassword
 
 
 void cleandata(void *data,size_t size);
+void SecHideData(void *Data,size_t DataSize,bool Encode);
 
 #endif
