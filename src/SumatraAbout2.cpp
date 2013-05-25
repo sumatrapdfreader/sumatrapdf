@@ -112,9 +112,9 @@ struct AboutLayoutInfoEl {
 #define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
 #define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/trunk/TRANSLATORS"
 #else
-#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
-#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
-#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/TRANSLATORS"
+#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
 #endif
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
