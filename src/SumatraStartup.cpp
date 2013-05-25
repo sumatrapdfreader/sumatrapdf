@@ -515,7 +515,6 @@ Exit:
     }
 
     gFileHistory.UpdateStatesSource(NULL);
-    DeleteGlobalPrefs(gGlobalPrefs);
 
     mui::Destroy();
     uitask::Destroy();
@@ -523,6 +522,10 @@ Exit:
 
     SaveCallstackLogs();
     dbghelp::FreeCallstackLogs();
+
+    // must be after uitask::Destroy() because we might have queued prefs::Reload()
+    // which crashes if gGlobalPrefs is freed
+    DeleteGlobalPrefs(gGlobalPrefs);
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
