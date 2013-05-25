@@ -1126,6 +1126,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		collection = new PrivateFontCollection();
 		assert(collection->GetFamilyCount() == 0);
 		
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2311 and https://code.google.com/p/sumatrapdf/issues/detail?id=2212
 		if (font->ft_data)
 		{
 			// TODO: memory fonts seem to get substituted in release builds
@@ -1134,7 +1135,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 			if (*user->tempFiles->path)
 				collection->AddFontFile(user->tempFiles->path);
 		}
-		else if (font->ft_file)
+		else */ if (font->ft_file)
 		{
 			WCHAR fontPath[MAX_PATH];
 			MultiByteToWideChar(CP_UTF8, 0, font->ft_file, -1, fontPath, nelem(fontPath));
