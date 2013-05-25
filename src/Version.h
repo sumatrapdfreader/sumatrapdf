@@ -14,8 +14,9 @@
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
 // a distinguishing string at the end of the version number
 // (e.g. version 2.3.2z or 2.4opt or 2.5x64)
-#ifndef VER_QUALIFIER
-#define VER_QUALIFIER
+#if !defined(VER_QUALIFIER) && defined(DEBUG)
+// adds " (dbg)" after the version in debug builds
+#define VER_QUALIFIER \x20(dbg)
 #endif
 
 #define APP_NAME_STR       L"SumatraPDF"
@@ -33,19 +34,23 @@
 
 // version as displayed in UI and included in resources
 #ifndef SVN_PRE_RELEASE_VER
- #ifndef DEBUG
-  #define CURR_VERSION_STRA QM2(CURR_VERSION, VER_QUALIFIER)
+ #ifndef VER_QUALIFIER
+  #define CURR_VERSION_STRA QM(CURR_VERSION)
  #else
-  // hack: adds " (dbg)" after the version
-  #define CURR_VERSION_STRA QM3(CURR_VERSION, VER_QUALIFIER, \x20(dbg))
+  #define CURR_VERSION_STRA QM2(CURR_VERSION, VER_QUALIFIER)
  #endif
+ #define VER_RESOURCE_STR  CURR_VERSION_STRA
  #define VER_RESOURCE      CURR_VERSION_COMMA,0
- #define VER_RESOURCE_STR  QM2(CURR_VERSION, VER_QUALIFIER)
  #define UPDATE_CHECK_VER  TEXT(QM(CURR_VERSION))
 #else
- #define CURR_VERSION_STRA QM4(CURR_VERSION, ., SVN_PRE_RELEASE_VER, VER_QUALIFIER)
+ #ifndef VER_QUALIFIER
+   #define CURR_VERSION_STRA QM3(CURR_VERSION, ., SVN_PRE_RELEASE_VER)
+   #define VER_RESOURCE_STR  QM3(CURR_VERSION, .0., SVN_PRE_RELEASE_VER)
+ #else
+   #define CURR_VERSION_STRA QM4(CURR_VERSION, ., SVN_PRE_RELEASE_VER, VER_QUALIFIER)
+   #define VER_RESOURCE_STR  QM4(CURR_VERSION, .0., SVN_PRE_RELEASE_VER, VER_QUALIFIER)
+ #endif
  #define VER_RESOURCE      CURR_VERSION_COMMA,SVN_PRE_RELEASE_VER
- #define VER_RESOURCE_STR  QM4(CURR_VERSION, .0., SVN_PRE_RELEASE_VER, VER_QUALIFIER)
  #define UPDATE_CHECK_VER  TEXT(QM(SVN_PRE_RELEASE_VER))
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
