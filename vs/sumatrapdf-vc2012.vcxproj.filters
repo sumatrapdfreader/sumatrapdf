@@ -267,9 +267,6 @@
     <ClCompile Include="..\src\mui\SvgPath.cpp">
       <Filter>mui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mui\SvgPath_ut.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>

@@ -59,6 +59,8 @@ g_global_blacklist = [
 
 def is_file_blacklisted(path):
     file_name = os.path.basename(path)
+    # unit tests files go in the test project build with premake
+    if file_name.endswith("_ut.cpp"): return True
     if file_name in g_global_blacklist: return True
     for n in ["SettingsSumatra.", "SerializeBin.", "MiniMui."]:
         if file_name.startswith(n):

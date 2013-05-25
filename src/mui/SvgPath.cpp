@@ -51,7 +51,7 @@ struct SvgPathInstr {
     SvgPathInstr(PathInstrType type) : type(type) { }
 
     PathInstrType   type;
-    // the meaning of values depends on InstrType. We could be more safe 
+    // the meaning of values depends on InstrType. We could be more safe
     // by giving them symbolic names but this gives us simpler parsing
     float           v[6];
     bool            largeArc, sweep;
@@ -192,8 +192,4 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
 }
 
 }
-
-#ifdef DEBUG
-#include "SvgPath_ut.cpp"
-#endif
 

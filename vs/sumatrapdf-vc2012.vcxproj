@@ -132,7 +132,6 @@
     <ClCompile Include="..\src\mui\MuiPainter.cpp" />
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
-    <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BencUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />

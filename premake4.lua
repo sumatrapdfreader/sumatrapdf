@@ -138,6 +138,7 @@ solution "all_tests"
       --"src/ParseCommandLine.*",
       --"src/StressTesting.*",
       "src/UnitTests.cpp",
+      "src/mui/SvgPath*",
       "tools/tests/UnitMain.cpp"
     }
     includedirs { "src/utils", "src/utils/msvc" }

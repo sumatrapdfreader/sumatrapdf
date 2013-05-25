@@ -4,9 +4,10 @@
 // note: only meant to be #included from SvgPath.cpp,
 // not compiled on its own
 
-#include <assert.h>
-
-namespace unittests {
+#include "BaseUtil.h"
+#include "SvgPath.h"
+#include "VecSegmented.h"
+#include "UtAssert.h"
 
 using namespace Gdiplus;
 
@@ -18,14 +19,12 @@ static void SvgPath00()
     };
     for (size_t i = 0; i < dimof(paths); i++) {
         GraphicsPath *gp = svg::GraphicsPathFromPathData(paths[i]);
-        assert(gp);
+        utassert(gp);
         ::delete gp;
     }
 }
 
-}
-
 void SvgPath_UnitTests()
 {
-    unittests::SvgPath00();
+    SvgPath00();
 }

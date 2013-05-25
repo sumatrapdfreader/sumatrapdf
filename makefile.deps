@@ -123,10 +123,13 @@ $(OMUI)\MuiScrollBar.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\
 $(OMUI)\MuiScrollBar.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OMUI)\MuiScrollBar.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
 $(OMUI)\MuiScrollBar.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OMUI)\SvgPath.obj: $B\src\mui\SvgPath.h $B\src\mui\SvgPath_ut.cpp $B\src\utils\Allocator.h
-$(OMUI)\SvgPath.obj: $B\src\utils\BaseUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
-$(OMUI)\SvgPath.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OMUI)\SvgPath.obj: $B\src\utils\VecSegmented.h
+$(OMUI)\SvgPath.obj: $B\src\mui\SvgPath.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OMUI)\SvgPath.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OMUI)\SvgPath.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\VecSegmented.h
+$(OMUI)\SvgPath_ut.obj: $B\src\mui\SvgPath.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OMUI)\SvgPath_ut.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OMUI)\SvgPath_ut.obj: $B\src\utils\StrUtil.h $B\src\utils\UtAssert.h $B\src\utils\Vec.h
+$(OMUI)\SvgPath_ut.obj: $B\src\utils\VecSegmented.h
 $(OS)\AppPrefs.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\AppPrefs.obj: $B\src\ChmEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
 $(OS)\AppPrefs.obj: $B\src\Doc.h $B\src\EbookEngine.h $B\src\EbookWindow.h
