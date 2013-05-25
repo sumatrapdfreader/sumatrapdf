@@ -1,10 +1,6 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// note: only meant to be #included from TrivialHtmlParser.cpp,
-// not compiled on its own
-
-#include <assert.h>
 #include "FileUtil.h"
 #include "WinUtil.h"
 

@@ -68,6 +68,7 @@ def run_tests():
 			(out, err, errcode) = util.run_cmd(f)
 			if errcode != 0:
 				return "%s failed with:\n%s" % (f, fmt_out_err(out, err))
+			print(fmt_out_err(out, err))
 		except:
 			return "%s failed to run" % f
 	return None

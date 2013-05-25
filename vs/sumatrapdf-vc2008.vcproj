@@ -119,10 +119,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\CssParser_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>
@@ -144,10 +140,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\HtmlPullParser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\HtmlPullParser_ut.cpp"
 					>
 				</File>
 				<File
@@ -188,10 +180,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\TrivialHtmlParser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\TrivialHtmlParser_ut.cpp"
 					>
 				</File>
 				<File
@@ -392,10 +380,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\Dict.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Dict_ut.cpp"
 					>
 				</File>
 				<File
@@ -643,6 +627,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\UtAssert.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\UtAssert.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

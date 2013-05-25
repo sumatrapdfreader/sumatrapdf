@@ -548,8 +548,8 @@ $(OU)\CmdLineParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src
 $(OU)\CmdLineParser.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\CmdLineParser.obj: $B\src\utils\Vec.h
 $(OU)\CssParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CssParser.h
-$(OU)\CssParser.obj: $B\src\utils\CssParser_ut.cpp $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OU)\CssParser.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\CssParser.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h
+$(OU)\CssParser.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
@@ -562,9 +562,6 @@ $(OU)\DialogSizer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\Dict.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\Dict.h
 $(OU)\Dict.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\Dict.obj: $B\src\utils\Vec.h
-$(OU)\Dict_ut.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\Dict.h
-$(OU)\Dict_ut.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\Dict_ut.obj: $B\src\utils\Vec.h
 $(OU)\DirIter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h
 $(OU)\DirIter.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\DirIter.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -592,8 +589,8 @@ $(OU)\HtmlPrettyPrint.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\s
 $(OU)\HtmlPrettyPrint.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPrettyPrint.h $B\src\utils\HtmlPullParser.h
 $(OU)\HtmlPrettyPrint.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\HtmlPullParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OU)\HtmlPullParser.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\HtmlPullParser_ut.cpp
-$(OU)\HtmlPullParser.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\HtmlPullParser.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\Scoped.h
+$(OU)\HtmlPullParser.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\HtmlWindow.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GdiPlusUtil.h
 $(OU)\HtmlWindow.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlWindow.h $B\src\utils\Scoped.h
 $(OU)\HtmlWindow.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
@@ -639,17 +636,18 @@ $(OU)\ThreadUtil.obj: $B\src\utils\Vec.h
 $(OU)\Touch.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\Touch.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Touch.h
 $(OU)\Touch.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\TrivialHtmlParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
-$(OU)\TrivialHtmlParser.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h
-$(OU)\TrivialHtmlParser.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\TrivialHtmlParser.h
-$(OU)\TrivialHtmlParser.obj: $B\src\utils\TrivialHtmlParser_ut.cpp $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\TrivialHtmlParser_ut.obj: $B\src\utils\FileUtil.h $B\src\utils\WinUtil.h
+$(OU)\TrivialHtmlParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\TrivialHtmlParser.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\Scoped.h
+$(OU)\TrivialHtmlParser.obj: $B\src\utils\StrUtil.h $B\src\utils\TrivialHtmlParser.h $B\src\utils\Vec.h
 $(OU)\TxtParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\TxtParser.obj: $B\src\utils\Scoped.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
 $(OU)\TxtParser.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h
 $(OU)\UITask.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\UITask.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\UITask.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OU)\UtAssert.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\UtAssert.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\UtAssert.h
+$(OU)\UtAssert.obj: $B\src\utils\Vec.h
 $(OU)\VarintGob.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OU)\VarintGob.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\VarintGob.obj: $B\src\utils\VarintGob.h $B\src\utils\Vec.h

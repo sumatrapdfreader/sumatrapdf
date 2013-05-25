@@ -222,7 +222,3 @@ GetNextProperty:
 
     return &prop;
 }
-
-#ifdef DEBUG
-#include "CssParser_ut.cpp"
-#endif

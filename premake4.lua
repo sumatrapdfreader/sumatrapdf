@@ -81,7 +81,6 @@ solution "efi"
       "src/utils/Dict*",
       "src/utils/StrUtil*",
     }
-    excludes { "src/utils/*_ut.cpp" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { }
 
@@ -118,21 +117,24 @@ solution "all_tests"
       "src/utils/BencUtil*",
       "src/utils/BitManip.h",
       "src/utils/ByteOrderDecoder.*",
+      "src/utils/CssParser*",
       "src/utils/Dict*",
       "src/utils/DebugLog*",
       "src/utils/FileUtil*",
+      "src/utils/HtmlParserLookup*",
+      "src/utils/HtmlPullParser*",
       "src/utils/JsonParser*",
       "src/utils/SettingsUtil*",
       "src/utils/StrFormat*",
       "src/utils/StrUtil*",
       "src/utils/SquareTreeParser*",
+      "src/utils/TrivialHtmlParser*",
       "src/utils/UtAssert*",
       "src/utils/VarintGob*",
       "src/utils/WinUtil*",
       "src/utils/tests/UtilTests.cpp",
       "tools/tests/unit_main.*"
     }
-    excludes { "src/utils/*_ut.cpp" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 

@@ -172,6 +172,11 @@ const char * IdxToStr(const char *strings, int idx);
 
 } // namespace seqstrings
 
+// TODO: change to str::EqNIx
+static inline bool StrEqNIx(const char *s, size_t len, const char *s2) {
+    return str::Len(s2) == len && str::StartsWithI(s, s2);
+}
+
 #define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))
 

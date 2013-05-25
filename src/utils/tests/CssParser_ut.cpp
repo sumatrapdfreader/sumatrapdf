@@ -4,11 +4,8 @@
 // note: this is only meant to be #included from CssParser.cpp,
 // not compiled on its own
 
-namespace unittests {
+namespace cssparserunittests {
 
-static inline bool StrEqNIx(const char *s, size_t len, const char *s2) {
-    return str::Len(s2) == len && str::StartsWithI(s, s2);
-}
 static inline bool IsPropVal(const CssProperty *prop, const char *val) {
     return StrEqNIx(prop->s, prop->sLen, val);
 }
@@ -196,12 +193,12 @@ static void Test08()
 
 void CssParser_UnitTests()
 {
-    unittests::Test01();
-    unittests::Test02();
-    unittests::Test03();
-    unittests::Test04();
-    unittests::Test05();
-    unittests::Test06();
-    unittests::Test07();
-    unittests::Test08();
+    cssparserunittests::Test01();
+    cssparserunittests::Test02();
+    cssparserunittests::Test03();
+    cssparserunittests::Test04();
+    cssparserunittests::Test05();
+    cssparserunittests::Test06();
+    cssparserunittests::Test07();
+    cssparserunittests::Test08();
 }

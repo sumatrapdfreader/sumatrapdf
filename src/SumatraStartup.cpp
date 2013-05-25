@@ -259,12 +259,6 @@ static bool SetupPluginMode(CommandLineInfo& i)
 static void RunUnitTests()
 {
 #ifdef DEBUG
-    extern void HtmlPullParser_UnitTests();
-    HtmlPullParser_UnitTests();
-    extern void TrivialHtmlParser_UnitTests();
-    TrivialHtmlParser_UnitTests();
-    extern void CssParser_UnitTests();
-    CssParser_UnitTests();
     extern void SumatraPDF_UnitTests();
     SumatraPDF_UnitTests();
 #endif

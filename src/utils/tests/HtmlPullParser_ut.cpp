@@ -4,13 +4,7 @@
 // note: this is only meant to be #included from HtmlPullParser.cpp,
 // not compiled on its own
 
-#include <assert.h>
-
 namespace unittests {
-
-static inline bool StrEqNIx(const char *s, size_t len, const char *s2) {
-    return str::Len(s2) == len && str::StartsWithI(s, s2);
-}
 
 static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     HtmlPullParser parser(s, str::Len(s));

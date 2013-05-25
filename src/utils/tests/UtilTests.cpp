@@ -2,8 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "CssParser.h"
+#include "HtmlPullParser.h"
 #include "FileUtil.h"
 #include "SimpleLog.h"
+#include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 
 #include "UtAssert.h"
@@ -232,6 +235,7 @@ static void LogTest()
     log.Log(NULL);
 }
 
+// TODO: make those separately compilable instead of this hack
 #include "BencUtil_ut.cpp"
 #include "JsonParser_ut.cpp"
 #include "Sigslot_ut.cpp"
@@ -243,10 +247,13 @@ static void LogTest()
 #include "VarintGob_ut.cpp"
 #include "SquareTreeParser_ut.cpp"
 #include "SettingsUtil_ut.cpp"
+#include "HtmlPullParser_ut.cpp"
+#include "TrivialHtmlParser_ut.cpp"
+#include "CssParser_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
-    printf("Running BaseUtils unit tests");
+    printf("Running BaseUtils unit tests\n");
     BaseUtilTest();
     ByteOrderTests();
     GeomTest();
@@ -265,4 +272,7 @@ void BaseUtils_UnitTests()
     VarintGobTest();
     SquareTreeTest();
     SettingsUtilTest();
+    HtmlPullParser_UnitTests();
+    TrivialHtmlParser_UnitTests();
+    CssParser_UnitTests();
 }
