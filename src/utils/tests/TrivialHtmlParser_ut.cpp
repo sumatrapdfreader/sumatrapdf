@@ -1,7 +1,10 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "FileUtil.h"
+#include "TrivialHtmlParser.h"
+#include "UtAssert.h"
 #include "WinUtil.h"
 
 namespace unittests {

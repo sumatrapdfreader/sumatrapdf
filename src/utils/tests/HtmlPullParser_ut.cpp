@@ -1,8 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// note: this is only meant to be #included from HtmlPullParser.cpp,
-// not compiled on its own
+#include "BaseUtil.h"
+#include "HtmlPullParser.h"
+#include "UtAssert.h"
 
 namespace unittests {
 

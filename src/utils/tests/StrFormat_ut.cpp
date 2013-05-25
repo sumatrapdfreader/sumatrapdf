@@ -1,7 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "StrFormat.h"
+#include "UtAssert.h"
 
 static void StrFormatCheck(char *s, char *expected)
 {
@@ -9,7 +11,7 @@ static void StrFormatCheck(char *s, char *expected)
     free(s);
 }
 
-static void StrFormatTest()
+void StrFormatTest()
 {
     StrFormatCheck(str::Fmt("{0}", 1), "1");
     StrFormatCheck(str::Fmt("{03foo{0}", 255), "{03foo255");

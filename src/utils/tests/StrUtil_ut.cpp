@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "UtAssert.h"
 
 static void StrReplaceTestOne(const char *s, const char *toReplace, const char *replaceWith, const char *expected)
 {
@@ -58,7 +59,7 @@ static void StrSeqTest()
     assert(-1 == seqstrings::StrToIdx(s, L"ba"));
 }
 
-static void StrTest()
+void StrTest()
 {
     WCHAR buf[32];
     WCHAR *str = L"a string";

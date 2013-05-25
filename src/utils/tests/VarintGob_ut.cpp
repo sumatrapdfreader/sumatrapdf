@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "VarintGob.h"
+#include "UtAssert.h"
 
 // if set to 1, dumps on to the debugger code that can be copied
 // to util.py (test_gob()), to verify C and python generate
@@ -110,7 +111,7 @@ static void GobEncodingTest()
     assert(0 == dLen);
 }
 
-static void VarintGobTest()
+void VarintGobTest()
 {
     GobEncodingTest();
 }

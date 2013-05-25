@@ -1,7 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "BencUtil.h"
+#include "UtAssert.h"
 
 // define for testing the encoding of a very large tree
 // #define ENABLE_BENC_STRESS_TEST
@@ -281,8 +283,6 @@ static void BencTestDictAppend()
     delete dict;
 }
 
-#ifdef ENABLE_BENC_STRESS_TEST
-
 static void GenRandStr(char *buf, int bufLen)
 {
     int l = rand() % (bufLen - 1);
@@ -388,9 +388,7 @@ static void BencTestStress()
     delete startDict;
 }
 
-#endif
-
-static void BencTest()
+void BencTest()
 {
     BencTestParseInt();
     BencTestParseString();
@@ -399,7 +397,5 @@ static void BencTest()
     BencTestParseDicts();
     BencTestArrayAppend();
     BencTestDictAppend();
-#ifdef ENABLE_BENC_STRESS_TEST
     BencTestStress();
-#endif
 }

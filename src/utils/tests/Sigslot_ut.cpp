@@ -1,7 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "Sigslot.h"
+#include "UtAssert.h"
 
 // for a lack of a better place, simple tests to make sure sigslot compiles
 class SigSlotSender {
@@ -60,7 +62,7 @@ static void SigSlotTestAssertCounts(SigSlotReceiver& r, int count)
     assert(count == r.s8c);
 }
 
-static void SigSlotTest()
+void SigSlotTest()
 {
     SigSlotSender s;
     SigSlotReceiver r;

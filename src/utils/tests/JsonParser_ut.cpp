@@ -1,7 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "JsonParser.h"
+#include "UtAssert.h"
 
 struct JsonValue {
     const char *path;
@@ -34,7 +36,7 @@ public:
     }
 };
 
-static void JsonTest()
+void JsonTest()
 {
     static const struct {
         const char *json;

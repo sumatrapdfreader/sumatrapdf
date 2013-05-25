@@ -1,7 +1,9 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "SettingsUtil.h"
+#include "UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
     { offsetof(PointI, x), Type_Int, 111 },
@@ -70,7 +72,7 @@ static const FieldInfo gSutStructFields[] = {
 };
 static const StructInfo gSutStructInfo = { sizeof(SutStruct), 15, gSutStructFields, "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0Point\0\0SutStructItems" };
 
-static void SettingsUtilTest()
+void SettingsUtilTest()
 {
     static const char *serialized = UTF8_BOM "# This file will be overwritten - modify at your own risk!\r\n\r\n\
 Boolean = true\r\n\

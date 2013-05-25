@@ -1,10 +1,12 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "ByteOrderDecoder.h"
+#include "UtAssert.h"
 
 #define ABC "abc"
-static void ByteOrderTests()
+void ByteOrderTests()
 {
     unsigned char d1[] = {
         0x00, 0x01,

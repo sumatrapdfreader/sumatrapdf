@@ -1,6 +1,11 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
+#include "UtAssert.h"
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 static void WStrVecTest()
 {
     WStrVec v;
@@ -87,7 +92,7 @@ static size_t VecTestAppendFmt()
     return l;
 }
 
-static void VecTest()
+void VecTest()
 {
     Vec<int> ints;
     assert(ints.Count() == 0);
@@ -239,4 +244,7 @@ static void VecTest()
         v.InsertAt(2, 2);
         assert(v.Count() == 3 && v.At(0) == 0 && v.At(2) == 2);
     }
+
+    WStrVecTest();
+    StrListTest();
 }
