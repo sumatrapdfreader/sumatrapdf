@@ -538,14 +538,12 @@ $(OU)\BaseUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Ve
 $(OU)\BencUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h
 $(OU)\BencUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\BencUtil.obj: $B\src\utils\Vec.h
-$(OU)\BencUtil_ut.obj: $B\src\utils\BencUtil.h
 $(OU)\BitReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitReader.h
 $(OU)\BitReader.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\BitReader.obj: $B\src\utils\Vec.h
 $(OU)\ByteOrderDecoder.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteOrderDecoder.h
 $(OU)\ByteOrderDecoder.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\ByteOrderDecoder.obj: $B\src\utils\Vec.h
-$(OU)\ByteOrderDecoder_ut.obj: $B\src\utils\ByteOrderDecoder.h
 $(OU)\CmdLineParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
 $(OU)\CmdLineParser.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\CmdLineParser.obj: $B\src\utils\Vec.h
@@ -606,7 +604,6 @@ $(OU)\HttpUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUt
 $(OU)\JsonParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\JsonParser.obj: $B\src\utils\JsonParser.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\JsonParser.obj: $B\src\utils\Vec.h
-$(OU)\JsonParser_ut.obj: $B\src\utils\JsonParser.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -622,23 +619,17 @@ $(OU)\SerializeTxt.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\u
 $(OU)\SettingsUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h
 $(OU)\SettingsUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
 $(OU)\SettingsUtil.obj: $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\SettingsUtil_ut.obj: $B\src\utils\SettingsUtil.h
-$(OU)\Sigslot_ut.obj: $B\src\utils\Sigslot.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Vec.h
-$(OU)\SquareTreeParser_ut.obj: $B\src\utils\SquareTreeParser.h
 $(OU)\StrFormat.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\StrFormat.obj: $B\src\utils\Scoped.h $B\src\utils\StrFormat.h $B\src\utils\StrUtil.h
 $(OU)\StrFormat.obj: $B\src\utils\Vec.h
-$(OU)\StrFormat_ut.obj: $B\src\utils\StrFormat.h
 $(OU)\StrSlice.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\StrSlice.obj: $B\src\utils\Scoped.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
 $(OU)\StrSlice.obj: $B\src\utils\Vec.h
 $(OU)\StrUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\StrUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\StrUtil_ut.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OU)\StrUtil_ut.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\TgaReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\TgaReader.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\TgaReader.h
 $(OU)\TgaReader.obj: $B\src\utils\Vec.h
@@ -659,22 +650,9 @@ $(OU)\TxtParser.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h
 $(OU)\UITask.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\UITask.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\UITask.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\UtilTests.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h
-$(OU)\UtilTests.obj: $B\src\utils\BencUtil_ut.cpp $B\src\utils\ByteOrderDecoder.h $B\src\utils\ByteOrderDecoder_ut.cpp
-$(OU)\UtilTests.obj: $B\src\utils\DebugLog.h $B\src\utils\Dict.h $B\src\utils\Dict_ut.cpp
-$(OU)\UtilTests.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\JsonParser.h
-$(OU)\UtilTests.obj: $B\src\utils\JsonParser_ut.cpp $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OU)\UtilTests.obj: $B\src\utils\SettingsUtil_ut.cpp $B\src\utils\Sigslot.h $B\src\utils\Sigslot_ut.cpp
-$(OU)\UtilTests.obj: $B\src\utils\SimpleLog.h $B\src\utils\SquareTreeParser.h $B\src\utils\SquareTreeParser_ut.cpp
-$(OU)\UtilTests.obj: $B\src\utils\StrFormat.h $B\src\utils\StrFormat_ut.cpp $B\src\utils\StrUtil.h
-$(OU)\UtilTests.obj: $B\src\utils\StrUtil_ut.cpp $B\src\utils\Vec.h $B\src\utils\Vec_ut.cpp
-$(OU)\UtilTests.obj: $B\src\utils\WinUtil.h
 $(OU)\VarintGob.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OU)\VarintGob.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\VarintGob.obj: $B\src\utils\VarintGob.h $B\src\utils\Vec.h
-$(OU)\VarintGob_ut.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OU)\VarintGob_ut.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\VarintGob.h
-$(OU)\VarintGob_ut.obj: $B\src\utils\Vec.h
 $(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\WinUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h

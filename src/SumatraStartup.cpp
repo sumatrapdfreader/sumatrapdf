@@ -259,8 +259,6 @@ static bool SetupPluginMode(CommandLineInfo& i)
 static void RunUnitTests()
 {
 #ifdef DEBUG
-    extern void BaseUtils_UnitTests();
-    BaseUtils_UnitTests();
     extern void HtmlPullParser_UnitTests();
     HtmlPullParser_UnitTests();
     extern void TrivialHtmlParser_UnitTests();

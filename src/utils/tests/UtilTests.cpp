@@ -1,14 +1,12 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifdef DEBUG
-
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "SimpleLog.h"
 #include "WinUtil.h"
 
-#include "DebugLog.h"
+#include "UtAssert.h"
 
 static void BaseUtilTest()
 {
@@ -242,13 +240,13 @@ static void LogTest()
 #include "ByteOrderDecoder_ut.cpp"
 #include "StrFormat_ut.cpp"
 #include "Dict_ut.cpp"
-//#include "VarintBin_ut.cpp"
+#include "VarintGob_ut.cpp"
 #include "SquareTreeParser_ut.cpp"
 #include "SettingsUtil_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
-    plogf("Running BaseUtils unit tests");
+    printf("Running BaseUtils unit tests");
     BaseUtilTest();
     ByteOrderTests();
     GeomTest();
@@ -264,9 +262,7 @@ void BaseUtils_UnitTests()
     JsonTest();
     StrFormatTest();
     DictTest();
-    //VarintGobTest();
+    VarintGobTest();
     SquareTreeTest();
     SettingsUtilTest();
 }
-
-#endif

@@ -159,10 +159,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\JsonParser_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\LzmaSimpleArchive.cpp"
 					>
 				</File>
@@ -335,10 +331,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\StrFormat_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\StrHash.h"
 					>
 				</File>
@@ -348,10 +340,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\VarintGob.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\VarintGob_ut.cpp"
 					>
 				</File>
 			</Filter>
@@ -376,10 +364,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\ByteOrderDecoder.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ByteOrderDecoder_ut.cpp"
 					>
 				</File>
 				<File
@@ -428,10 +412,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\Sigslot.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Sigslot_ut.cpp"
 					>
 				</File>
 				<File
@@ -615,19 +595,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\StrUtil_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\UtilTests.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\Vec.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Vec_ut.cpp"
 					>
 				</File>
 			</Filter>
@@ -640,10 +608,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\BencUtil.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\BencUtil_ut.cpp"
 					>
 				</File>
 				<File
@@ -663,19 +627,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\SettingsUtil_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\SquareTreeParser.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\utils\SquareTreeParser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SquareTreeParser_ut.cpp"
 					>
 				</File>
 				<File

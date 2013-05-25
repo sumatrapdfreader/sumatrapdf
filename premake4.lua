@@ -114,7 +114,6 @@ solution "all_tests"
     kind "ConsoleApp"
     language "C++"
     files {
-      "tools/tests/unit_main.*",
       "src/utils/BaseUtil*",
       "src/utils/BencUtil*",
       "src/utils/BitManip.h",
@@ -127,8 +126,11 @@ solution "all_tests"
       "src/utils/StrFormat*",
       "src/utils/StrUtil*",
       "src/utils/SquareTreeParser*",
+      "src/utils/UtAssert*",
+      "src/utils/VarintGob*",
       "src/utils/WinUtil*",
-      "src/utils/UtilTests.cpp"
+      "src/utils/tests/UtilTests.cpp",
+      "tools/tests/unit_main.*"
     }
     excludes { "src/utils/*_ut.cpp" }
     includedirs { "src/utils", "src/utils/msvc" }
@@ -164,7 +166,6 @@ solution "muitest"
     }
     excludes
     {
-      "src/utils/*_ut.cpp",
       "src/mui/*_ut.cpp",
       "src/mui/MiniMui*",
     }

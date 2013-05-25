@@ -26,6 +26,16 @@ def run_premake():
 def is_test_exe(file_name):
 	return file_name.startswith("test_") and file_name.endswith(".exe")
 
+def is_empty_str(s):
+	return s == None or len(s) == 0
+
+def fmt_out_err(out, err):
+	if is_empty_str(out) and is_empty_str(err):
+		return ""
+	if is_empty_str(out): return err
+	if is_empty_str(err): return out
+	return out + "\n" + err
+
 # returns None if all tests succeeded or an error string if one
 # or more tests failed
 # assumes current directory is top-level sumatra dir
@@ -44,14 +54,12 @@ def run_tests():
 	except:
 		return "util.kill_msbuild() failed"
 	try:
-		# TODO: compile release build
-		(out, err, errcode) = util.run_cmd("devenv", "all_tests.sln", "/build", "Debug")
+		(out, err, errcode) = util.run_cmd("devenv", "all_tests.sln", "/build", "Release")
 		if errcode != 0:
-			return "devenv.exe failed to build all_tests.sln\n" + out + err
+			return "devenv.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
 	except:
 		return "devenv.exe not found"
-	# TODO: obj-rel
-	p = os.path.join("..", "obj-dbg")
+	p = os.path.join("..", "obj-rel")
 	os.chdir(p)
 	test_files = [f for f in os.listdir(".") if is_test_exe(f)]
 	print("Running %d test executables" % len(test_files))
@@ -59,7 +67,7 @@ def run_tests():
 		try:
 			(out, err, errcode) = util.run_cmd(f)
 			if errcode != 0:
-				return "%s failed with:\n%s\%s" % (f, err, out)
+				return "%s failed with:\n%s" % (f, fmt_out_err(out, err))
 		except:
 			return "%s failed to run" % f
 	return None

@@ -62,7 +62,7 @@ static void GobEncodingTest()
     d = buf; dLen = dimof(buf);
     for (int i = 0; i < dimof(intVals); i++) {
         val = intVals[i];
-        n = GobVarintEncode(val, d, dLen);
+        n = VarintGobEncode(val, d, dLen);
         assert(n >= 1);
         GenPythonIntTest(val, d, n);
         n2 = VarintGobDecode(d, n, &expVal);
@@ -87,7 +87,7 @@ static void GobEncodingTest()
     d = buf; dLen = dimof(buf);
     for (int i = 0; i < dimof(uintVals); i++) {
         uval = uintVals[i];
-        n = GobUVarintEncode(uval, d, dLen);
+        n = UVarintGobEncode(uval, d, dLen);
         assert(n >= 1);
         GenPythonUIntTest(uval, d, n);
         n2 = UVarintGobDecode(d, n, &expUval);
