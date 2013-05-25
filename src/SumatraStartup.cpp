@@ -256,14 +256,6 @@ static bool SetupPluginMode(CommandLineInfo& i)
     return true;
 }
 
-static void RunUnitTests()
-{
-#ifdef DEBUG
-    extern void SumatraPDF_UnitTests();
-    SumatraPDF_UnitTests();
-#endif
-}
-
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gGlobalPrefs->mainWindowBackground;
@@ -333,8 +325,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             return 0;
     }
 #endif
-
-    RunUnitTests();
 
     srand((unsigned int)time(NULL));
 

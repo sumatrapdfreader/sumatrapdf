@@ -4,32 +4,44 @@
 #include "BaseUtil.h"
 #include "UtAssert.h"
 
-static int g_total_asserts = 0;
-static int g_failed_asserts = 0;
+static int g_nTotal = 0;
+static int g_nFailed = 0;
 
-// TODO: a way to return failed messages or print them to a descriptor
+#define MAX_FAILED_ASSERTS 32
 
-#define MAX_FAILED_MSGS 32
+struct FailedAssert {
+    const char *exprStr;
+    const char *file;
+    int lineNo;
+};
 
-static const char *g_failed_msgs[MAX_FAILED_MSGS];
-static int g_nfailed_msgs = 0;
+static FailedAssert g_failedAssert[MAX_FAILED_ASSERTS];
 
-void utassert_func(bool ok, const char *expr_str)
+void utassert_func(bool ok, const char *exprStr, const char *file, int lineNo)
 {
-    ++g_total_asserts;
+    ++g_nTotal;
     if (ok)
         return;
-    ++g_failed_asserts;
-    if (g_nfailed_msgs < MAX_FAILED_MSGS) {
-        g_failed_msgs[g_nfailed_msgs] = expr_str;
-        ++g_nfailed_msgs;
+    ++g_nFailed;
+    if (g_nFailed < MAX_FAILED_ASSERTS) {
+        g_failedAssert[g_nFailed].exprStr = exprStr;
+        g_failedAssert[g_nFailed].file = file;
+        g_failedAssert[g_nFailed].lineNo = lineNo;
     }
 }
 
-void utassert_get_stats(int *total_asserts, int *failed_asserts)
+int utassert_print_results()
 {
-    if (total_asserts)
-        *total_asserts = g_total_asserts;
-    if (failed_asserts)
-        *failed_asserts = g_failed_asserts;
+    if (0 == g_nFailed) {
+        printf("Passed all %d tests\n", g_nTotal);
+        return 0;
+    }
+
+    fprintf(stderr, "Failed %d (of %d) tests\n", g_nFailed, g_nTotal);
+    for (int i=0; i < g_nFailed && i < MAX_FAILED_ASSERTS; i++) {
+        FailedAssert *a = &(g_failedAssert[i]);
+        fprintf(stderr, "%s %s@%d\n", a->exprStr, a->file, a->lineNo);
+    }
+    return g_nFailed;
 }
+

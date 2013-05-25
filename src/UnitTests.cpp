@@ -1,8 +1,6 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifdef DEBUG
-
 #include "BaseUtil.h"
 #include "AppTools.h"
 #include "FileUtil.h"
@@ -10,30 +8,12 @@
 #include "StressTesting.h"
 #include "WinUtil.h"
 
-static void hexstrTest()
-{
-    unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
-    unsigned char buf2[6] = { 0 };
-    ScopedMem<char> s(_MemToHex(&buf));
-    assert(str::Eq(s, "010221ff0012"));
-    bool ok = _HexToMem(s, &buf2);
-    assert(ok);
-    assert(memeq(buf, buf2, sizeof(buf)));
+#include "UtAssert.h"
 
-    FILETIME ft1, ft2;
-    GetSystemTimeAsFileTime(&ft1);
-    s.Set(_MemToHex(&ft1));
-    _HexToMem(s, &ft2);
-    DWORD diff = FileTimeDiffInSecs(ft1, ft2);
-    assert(0 == diff);
-    assert(FileTimeEq(ft1, ft2));
+// TODO: those bring too many dependencies from the rest of Sumatra code
+// either have to pull all the code in or make it more independent
 
-    s.Set(str::MemToHex(NULL, 0));
-    assert(str::Eq(s, ""));
-    ok = str::HexToMem(s, NULL, 0);
-    assert(ok);
-}
-
+#if 0
 static void ParseCommandLineTest()
 {
     {
@@ -187,11 +167,38 @@ static void UrlExtractTest()
 
 void SumatraPDF_UnitTests()
 {
-    hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();
     BenchRangeTest();
     UrlExtractTest();
 }
+#else
+static void hexstrTest()
+{
+    unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
+    unsigned char buf2[6] = { 0 };
+    ScopedMem<char> s(_MemToHex(&buf));
+    assert(str::Eq(s, "010221ff0012"));
+    bool ok = _HexToMem(s, &buf2);
+    assert(ok);
+    assert(memeq(buf, buf2, sizeof(buf)));
 
+    FILETIME ft1, ft2;
+    GetSystemTimeAsFileTime(&ft1);
+    s.Set(_MemToHex(&ft1));
+    _HexToMem(s, &ft2);
+    DWORD diff = FileTimeDiffInSecs(ft1, ft2);
+    assert(0 == diff);
+    assert(FileTimeEq(ft1, ft2));
+
+    s.Set(str::MemToHex(NULL, 0));
+    assert(str::Eq(s, ""));
+    ok = str::HexToMem(s, NULL, 0);
+    assert(ok);
+}
+
+void SumatraPDF_UnitTests()
+{
+    hexstrTest();
+}
 #endif

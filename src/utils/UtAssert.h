@@ -8,12 +8,11 @@
 Instead of showing a UI to the user, like regular assert(), it simply
 remembers number of failed asserts. */
 
-// TODO: add file name/line number
-void utassert_func(bool ok, const char *expr_str);
-void utassert_get_stats(int *total_asserts, int *failed_asserts);
+void utassert_func(bool ok, const char *exprStr, const char *file, int lineNo);
+int  utassert_print_results();
 
 #define utassert(_expr) \
-    utassert_func(_expr, #_expr)
+    utassert_func(_expr, #_expr, __FILE__, __LINE__)
 
 // TODO: temporary. Unit tests should use utassert explicitly
 #undef assert

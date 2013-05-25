@@ -133,7 +133,11 @@ solution "all_tests"
       "src/utils/VarintGob*",
       "src/utils/WinUtil*",
       "src/utils/tests/UtilTests.cpp",
-      "tools/tests/unit_main.*"
+      --"src/AppTools.*",
+      --"src/ParseCommandLine.*",
+      --"src/StressTesting.*",
+      "src/UnitTests.cpp",
+      "tools/tests/UnitMain.cpp"
     }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
