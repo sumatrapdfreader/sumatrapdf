@@ -11,7 +11,7 @@
 #define _UNICODE
 #endif
 
-#include <WinSock2.h>
+// #include <WinSock2.h>
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
@@ -195,19 +195,19 @@ bool ListRemove(T** root, T* el)
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
 
-static inline BYTE GetRValueSafe(DWORD rgb)
+static inline BYTE GetRValueSafe(COLORREF rgb)
 {
     rgb = rgb & 0xff;
     return (BYTE)rgb;
 }
 
-static inline BYTE GetGValueSafe(DWORD rgb)
+static inline BYTE GetGValueSafe(COLORREF rgb)
 {
     rgb = (rgb >> 8) & 0xff;
     return (BYTE)rgb;
 }
 
-static inline BYTE GetBValueSafe(DWORD rgb)
+static inline BYTE GetBValueSafe(COLORREF rgb)
 {
     rgb = (rgb >> 16) & 0xff;
     return (BYTE)rgb;

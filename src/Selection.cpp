@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Selection.h"
 
+#include "AppPrefs.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "Toolbar.h"
@@ -11,8 +12,6 @@
 #include "uia/Provider.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
-
-#define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
 RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {
@@ -141,7 +140,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
             rects.Append(win->selectionOnPage->At(i).GetRect(win->dm));
     }
 
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, COL_SELECTION_RECT);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->fixedPageUI.selectionColor);
 }
 
 void UpdateTextSelection(WindowInfo *win, bool select)

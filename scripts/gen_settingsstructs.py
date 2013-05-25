@@ -155,26 +155,13 @@ PageSpacing = [
 	Field("Dy", Int, 4, "vertical difference"),
 ]
 
-# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
-# kjk: I think we need a scheme where we can set those settings per document
-# type. For example, the best background color for comic books is black,
-# which is not the best for other documents, so let's just generalize it
-# We can either key those by a list of extensions (most flexible but more
-# generates more settings) or we can create fixed categories (pdf, comic books,
-# images, ebooks etc.). Or both.
-# This could include more settings other than color
-# (paddings?). In order to avoid repetition, we could have a "default"
-# entry which then could be over-written for a given document type/extension
-# (or a list of extensions/types)
-# zeniko: extensions doesn't work as reliable as file type due to sniffing
-# (also, when adding support for more document types, grouping by category should
-# scale better); currently, there are three major groups:
-# FixedPage (PDF, XPS, DjVu, etc.), ImageOnly (images and comic books) and Reflow/Ebook
 FixedPageUI = [
 	Field("TextColor", Color, 0x000000,
 		"color value with which black (text) will be substituted"),
 	Field("BackgroundColor", Color, 0xFFFFFF,
 		"color value with which white (background) will be substituted"),
+	Field("SelectionColor", Color, 0x0CFCF5,
+		"color value for the text selection rectangle (also used to highlight found text)"),
 	Struct("WindowMargin", WindowMargin_FixedPageUI,
 		"top, right, bottom and left margin (in that order) between window and document",
 		compact=True),
@@ -190,17 +177,11 @@ FixedPageUI = [
 ]
 
 EbookUI = [
-	# zeniko: that's the default serif font, a different font is used for monospaced text
+	# default serif font, a different font is used for monospaced text (currently always "Courier New")
 	Field("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
 	Field("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
 	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
-	# kjk: don't have an alternative, but I'm not happy with this name
-	# zeniko: DisableEbookUI? Disable? UseFixedPageSize? DisableReflow?
-	# (or all the Disable options as Enable options with default true instead?)
-	# kjk: AltEbookUI ? (Alt - short for alternative, as in "different from the default")
-	# zeniko: "alternative" isn't that descriptive, if there's a FixedPageUI struct
-	# (and a ComicBookUI one), then UseFixedPageUI might be be clearer which alternative is meant
 	Field("UseFixedPageUI", Bool, False,
 		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
@@ -273,13 +254,6 @@ FileSettings = [
 		"crypt key (64 chars) - only applies for PDF documents",
 		doc="data required to open a password protected document without having to " +
 		"ask for the password again"),
-	# kjk: I think this only applies to certain settings. Should those settings
-	# be grouped in a separate struct and the name reflect that? How does it
-	# interact with GlobalPrefsOnly?
-	# zeniko: in the previous implementation, when UseGlobalValues was set, all
-	# document specific settings weren't saved at all; that's no longer easily possible
-	# This pref applies to: DisplayMode, ScrollPos, PageNo, ReparseIdx, Zoom, Rotation,
-	# WindowState, WindowPos, ShowToc, SidebarDx, DisplayR2L and TocState
 	Field("UseDefaultState", Bool, False,
 		"if true, we use global defaults when opening this file (instead of " +
 		"the values below)"),
@@ -344,9 +318,6 @@ GlobalPrefs = [
 	Field("EscToExit", Bool, False,
 		"if true, Esc key closes SumatraPDF",
 		expert=True),
-	# kjk: SingleInstance is a common term for such functionality
-	# zeniko: this pref is to make the -reuse-instance command line switch permanent
-	# kjk: I understand that. It should be renamed as -single-instance
 	Field("ReuseInstance", Bool, False,
 		"if true, we'll always open files using existing SumatraPDF process",
 		expert=True),
@@ -366,7 +337,7 @@ GlobalPrefs = [
 		"list of additional external viewers for various file types " +
 		"(can have multiple entries for the same format)",
 		expert=True),
-	# zeniko: the below prefs apply only to FixedPageUI and ComicBookUI (so far)
+	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
 		"the minimum and maximum allowed values (8.33 and 6400)",
@@ -405,10 +376,6 @@ GlobalPrefs = [
 		"if true, we show the toolbar at the top of the window"),
 	Field("ShowFavorites", Bool, False,
 		"if true, we show the Favorites sidebar"),
-	# zeniko: replace these two with AssociatedExtensions (String, default: empty,
-	# might be e.g. ".pdf .xps") and CheckAssociationsAtStartup (Bool, default: true) ?
-	# the semantics are good but "association" is rather technical term. A better
-	# name would be more descriptive (UseSumatraToOpenThoseFiles, MakeSumatraDefaultAppFor ?)
 	Field("AssociatedExtensions", String, None,
 		"a list of extensions that SumatraPDF has associated itself with and will " +
 		"reassociate if a different application takes over (e.g. \".pdf .xps .epub\")"),
@@ -420,17 +387,6 @@ GlobalPrefs = [
 		"we won't ask again to update to this version"),
 	Field("RememberOpenedFiles", Bool, True,
 		"if true, we remember which files we opened and their display settings"),
-	# kjk: probably should be removed as we'll provide a way to set colors explicitly
-	# zeniko: no, this is a UI exposed option for people who prefer changing their
-	# color scheme system wide
-	# kjk: exposed how? My problem with this is that it has complex semantics.
-	# First: what are "system colors"? Second: how does it interact with other ways
-	# to set colors (i.e. who gets precedence)? Is there a better way to provide
-	# such functionality?
-	# zeniko: system colors are the ones you set in Windows' Appearance Settings dialog,
-	# if they're not the usual black text on white background, then there's an option to
-	# use "Windows' color scheme" in the Settings dialog, and if that option is checked,
-	# system colors are used instead of TextColor/BackgroundColor
 	Field("UseSysColors", Bool, False,
 		"if true, we use Windows system colors for background/text color. Over-rides other settings"),
 	Field("InverseSearchCmdLine", String, None,

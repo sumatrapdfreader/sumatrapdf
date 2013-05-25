@@ -25,6 +25,9 @@ struct FixedPageUI {
     COLORREF textColor;
     // color value with which white (background) will be substituted
     COLORREF backgroundColor;
+    // color value for the text selection rectangle (also used to highlight
+    // found text)
+    COLORREF selectionColor;
     // top, right, bottom and left margin (in that order) between window
     // and document
     WindowMargin windowMargin;
@@ -327,11 +330,12 @@ static const StructInfo gSizeIInfo = { sizeof(SizeI), 2, gSizeIFields, "Dx\0Dy" 
 static const FieldInfo gFixedPageUIFields[] = {
     { offsetof(FixedPageUI, textColor),       Type_Color,      0x000000                     },
     { offsetof(FixedPageUI, backgroundColor), Type_Color,      0xffffff                     },
+    { offsetof(FixedPageUI, selectionColor),  Type_Color,      0x0cfcf5                     },
     { offsetof(FixedPageUI, windowMargin),    Type_Compact,    (intptr_t)&gWindowMarginInfo },
     { offsetof(FixedPageUI, pageSpacing),     Type_Compact,    (intptr_t)&gSizeIInfo        },
     { offsetof(FixedPageUI, gradientColors),  Type_ColorArray, NULL                         },
 };
-static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 5, gFixedPageUIFields, "TextColor\0BackgroundColor\0WindowMargin\0PageSpacing\0GradientColors" };
+static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 6, gFixedPageUIFields, "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors" };
 
 static const FieldInfo gEbookUIFields[] = {
     { offsetof(EbookUI, fontName),        Type_String, (intptr_t)L"Georgia" },
