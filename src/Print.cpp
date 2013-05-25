@@ -492,8 +492,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     assert(dm);
     if (!dm) return;
 
-    if (!dm->engine || !dm->engine->AllowsPrinting())
+    if (!dm->engine)
         return;
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    if (!dm->engine->AllowsPrinting())
+        return;
+#endif
 
     if (win->IsChm()) {
         win->dm->AsChmEngine()->PrintCurrentPage();
@@ -666,7 +670,13 @@ bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, co
 
     ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(fileName2, true /* prefer Chm2Engine */);
-    if (!engine || !engine->AllowsPrinting()) {
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    if (engine && !engine->AllowsPrinting()) {
+        delete engine;
+        engine = NULL;
+    }
+#endif
+    if (!engine) {
         if (displayErrors)
             MessageBoxWarning(NULL, _TR("Cannot print this file"), _TR("Printing problem."));
         return false;

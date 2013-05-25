@@ -2758,8 +2758,11 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!srcFileName) return;
 
     // Can't save a document's content as plain text if text copying isn't allowed
-    bool hasCopyPerm = !win.dm->engine->IsImageCollection() &&
-                       win.dm->engine->AllowsCopyingText();
+    bool hasCopyPerm = !win.dm->engine->IsImageCollection();
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    if (!win.dm->engine->AllowsCopyingText())
+        hasCopyPerm = false;
+#endif
     bool canConvertToPDF = Engine_PS == win.dm->engineType;
 
     const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
