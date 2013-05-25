@@ -16,6 +16,7 @@ from util import verify_path_exists, verify_started_in_right_directory
 from build import build_installer_data
 from buildbot_html import gen_analyze_html, build_index_html, rebuild_trans_src_path_cache
 from buildbot_html import build_sizes_json, g_first_analyze_build
+import runtests
 
 """
 TODO:
@@ -357,6 +358,15 @@ def build_version(ver, skip_release=False):
 	s3.upload_data_public_with_content_type(json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
 	if stats.rel_failed:
 		email_build_failed(ver)
+		return # don't run tests if build fails
+
+	err = runtests.run_tests()
+	if err != None:
+		s3.upload_data_public_with_content_type(err, s3dir + "tests_error.txt", silent=True)
+		email_tests_failed(ver, err)
+		print("Tests failed. Error message:\n" + err)
+	else:
+		print("Tests passed!")
 
 def test_build_html_index():
 	print("test_build_html_index()")
@@ -368,6 +378,22 @@ def test_build_html_index():
 	sys.exit(1)
 
 g_email_to = ["kkowalczyk@gmail.com"]
+
+def email_tests_failed(ver, err):
+	s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
+	c = load_config()
+	if not c.HasNotifierEmail():
+		return
+	sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
+	subject = "SumatraPDF tests failed for build %s" % str(ver)
+	checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" + str(ver)
+	body = "Checkin: %s\n\n" % checkin_url
+	log_url = s3_url_start + str(ver) + "/tests_error.txt"
+	body += "Build log: %s\n\n" % log_url
+	buildbot_index_url = s3_url_start + "index.html"
+	body += "Buildbot: %s\n\n" % buildbot_index_url
+	body += "Error: %s\n\n" % err
+	util.sendmail(sender, senderpwd, g_email_to, subject, body)
 
 def email_build_failed(ver):
 	s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
@@ -393,7 +419,7 @@ def build_curr(force=False):
 	else:
 		print("We have already built revision %s" % local_ver)
 
-def build_version_try(ver, try_count = 2):
+def build_version_retry(ver, try_count = 2):
 	# it can happen we get a valid but intermitten exception e.g.
 	# due to svn command failing due to server hiccup
 	# in that case we'll retry, waiting 1 min in between,
@@ -432,7 +458,7 @@ def buildbot_loop():
 		revs_built = 0
 		while int(local_ver) <= int(latest_ver):
 			if not has_already_been_built(local_ver):
-				build_version_try(local_ver)
+				build_version_retry(local_ver)
 				revs_built += 1
 			else:
 				print("We have already built revision %s" % local_ver)
@@ -456,7 +482,7 @@ def main():
 	s3.set_bucket("kjkpub")
 	os.chdir(src_path)
 
-	#build_version("6698", skip_release=True)
+	#build_version("8190", skip_release=True)
 	#test_build_html_index()
 	#build_sizes_json()
 	#build_curr(force=True)

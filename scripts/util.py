@@ -403,6 +403,8 @@ def load_config():
     c.aws_secret = config.aws_secret
     c.cert_pwd = config.cert_pwd
     c.trans_ul_secret = config.trans_ul_secret
+    c.notifier_email = config.notifier_email
+    c.notifier_email_pwd = c.notifier_email_pwd
   except:
     # it's ok if doesn't exist, we just won't have the config data
     print("no config.py!")

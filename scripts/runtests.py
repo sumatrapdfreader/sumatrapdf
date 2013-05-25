@@ -12,7 +12,7 @@ The conventions are:
    an error message pin-pointing the problem. stderr is used by
    buildbot. stdout can be used for interactive use
 """
-import sys, os, util
+import os, util
 
 def is_vs2008():
     # vcbuild.exe no longer exists for VS2010 and later

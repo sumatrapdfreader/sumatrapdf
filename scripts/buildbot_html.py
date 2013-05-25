@@ -110,8 +110,9 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 	names = [n[len(s3_dir):] for n in names if len(n.split("/")) == 4]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
 
-	html += '<table id="table-5"><tr>' + th("build") + th("/analyze") + th("release")
-	html += th("SumatraPDF.exe") + th("Installer.exe") + th("efi") + th("checkin comment") + '</tr>\n'
+	html += '<table id="table-5"><tr>' + th("svn") + th("/analyze")
+	html += th("build") + th("tests") + th("SumatraPDF.exe")
+	html += th("Installer.exe") + th("efi") + th("checkin comment") + '</tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver[:512]:
 		(ver, files) = arr
@@ -147,6 +148,14 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 		# release build status
 		if stats.rel_failed:
 			url =  s3_ver_url + "release_build_log.txt"
+			s = '<b>' + a(url, "fail") + '</b>'
+		else:
+			s = '<font color="green"<b>ok!</b></font>'
+		html += td(s, 4) + "\n"
+
+		# tests status
+		if "tests_error.txt" in files:
+			url =  s3_ver_url + "tests_error.txt"
 			s = '<b>' + a(url, "fail") + '</b>'
 		else:
 			s = '<font color="green"<b>ok!</b></font>'
@@ -223,14 +232,18 @@ def trans_src_path(s):
 # Into:
 # <a href="https://code.google.com/p/sumatrapdf/source/browse/trunk/src/utils/allocator.h#156">src\utils\allocator.h(156)</a>
 def htmlize_src_link(s, ver):
-	parts = s.split("(")
-	src_path = parts[0] # src\utils\allocator.h
-	src_path = trans_src_path(src_path) # src\utils\Allocator.h
-	src_path_in_url = src_path.replace("\\", "/")
-	src_line = parts[1][:-1] # "156)"" => "156"
-	base = "https://code.google.com/p/sumatrapdf/source/browse/trunk/"
-	#url = base + src_path_in_url + "#" + src_line
-	url =  base + src_path_in_url + "?r=%s#%s" % (str(ver), str(src_line))
+	try:
+		parts = s.split("(")
+		src_path = parts[0] # src\utils\allocator.h
+		src_path = trans_src_path(src_path) # src\utils\Allocator.h
+		src_path_in_url = src_path.replace("\\", "/")
+		src_line = parts[1][:-1] # "156)"" => "156"
+		base = "https://code.google.com/p/sumatrapdf/source/browse/trunk/"
+		#url = base + src_path_in_url + "#" + src_line
+		url =  base + src_path_in_url + "?r=%s#%s" % (str(ver), str(src_line))
+	except:
+		print("htmlize_src_link: s: '%s', ver: '%s'" % (str(s), str(ver)))
+		return s
 	return a(url, src_path + "(" + src_line + ")")
 
 def skip_error(s):
