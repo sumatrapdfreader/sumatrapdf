@@ -68,7 +68,7 @@ const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
 const char **           GetOriginalStrings();
 
-// used locally
+// used locally, gCurrLangCode points into gLangCodes
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
 
@@ -220,7 +220,7 @@ void SetCurrentLangByCode(const char *langCode)
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
-    gCurrLangCode = langCode;
+    gCurrLangCode = GetLangCodeByIdx(idx);
     BuildStringsIndexForLang(gCurrLangIdx);
 }
 

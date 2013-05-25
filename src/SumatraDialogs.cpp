@@ -386,7 +386,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
             const char *langCode = trans::GetLangCodeByIdx(i);
             ScopedMem<WCHAR> langName(str::conv::FromUtf8(name));
             ListBox_AppendString_NoSort(langList, langName);
-            if (langCode == data->langCode)
+            if (str::Eq(langCode, data->langCode))
                 itemToSelect = i;
         }
         ListBox_SetCurSel(langList, itemToSelect);

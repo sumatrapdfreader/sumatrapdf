@@ -3331,7 +3331,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
 
 void SetCurrentLanguageAndRefreshUi(const char *langCode)
 {
-    if (!langCode || (str::Eq(langCode, trans::GetCurrentLangCode())))
+    if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode()))
         return;
     SetCurrentLang(langCode);
     UpdateRtlLayoutForAllWindows();
