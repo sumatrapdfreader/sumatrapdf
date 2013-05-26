@@ -174,15 +174,18 @@ def verify_efi_present():
 def file_size_in_obj(file_name):
     return file_size(os.path.join("obj-rel", file_name))
 
+def clean_release():
+    shutil.rmtree("obj-rel", ignore_errors=True)
+    shutil.rmtree("vs-premake", ignore_errors=True)
+    shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
+
 def build_release(stats, ver):
     config = "CFG=rel"
     obj_dir = "obj-rel"
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
     platform = "PLATFORM=X86"
 
-    shutil.rmtree(obj_dir, ignore_errors=True)
-    shutil.rmtree("vs-premake", ignore_errors=True)
-    shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
+    clean_release()
     (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
 
     log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
@@ -315,6 +318,13 @@ def build_and_upload_efi_txt_diff(ver):
 # skip_release is just for testing
 def build_version(ver, skip_release=False):
     print("Building version %s" % ver)
+
+    clean_release()
+    # a hack: checkin_comment_for_ver() might call svn log, which doesn't like
+    # unversioning directories (like obj-rel or vs-premake), so we call it here,
+    # after clean, to cache the result
+    checkin_comment_for_ver(ver)
+
     svn_update_to_ver(ver)
     s3dir = "sumatrapdf/buildbot/%s/" % ver
 
