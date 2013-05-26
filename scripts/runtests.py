@@ -47,7 +47,7 @@ def fmt_out_err(out, err):
 # returns None if all tests succeeded or an error string if one
 # or more tests failed
 # assumes current directory is top-level sumatra dir
-def run_tests():
+def run_tests2():
     if not os.path.exists("premake4.lua"):
         return "premake4.lua doesn't exist in current directory (%s)" % os.getcwd()
     vs_action = "vs2010" if not is_vs2008() else "vs2008"
@@ -89,6 +89,12 @@ def run_tests():
         except:
             return "%s failed to run" % f
     return None
+
+def run_tests():
+    d = os.getcwd()
+    res = run_tests2()
+    os.chdir(d)
+    return res
 
 def main():
     err = run_tests()
