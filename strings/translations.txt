@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6bf4a37519035d9a9d412391750cebc1f84e8a80
+3945758aa949dea19c8e15250411038b070bd911
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -192,6 +192,7 @@ hu:Speciális beállítások...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
 kr:고급 옵션(&A)...
+ku:هەڵبژاردنی پەرەسەندوو ...&
 mk:&Напредни oпции...
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
@@ -9917,7 +9918,7 @@ it:Imposta SumatraPDF come lettore PDF predefinito
 ja:SumatraPDF を規定の PDF リーダーにする
 ka:მოხდეს SumatraPDF-ის ასოცირება PDF ფაილებთან
 kr:SumatraPDF를 기본 PDF 리더로 만들기
-ku:PDF وەکو خوێنەرەوەی سەرەکی فایلەکانی SumatraPDF ڕێکخستنی
+ku:ڕێکخستنی ئەم بەرنامەیە وەکو خوێنەرەوەی سەرەکی فایلەکانی PDF
 kw:Gwra SumatraPDF ow fennredyer PDF
 lt:„SumatraPDF“ nustatymas numatytąja PDF žiūrykle
 mk:Направи ја SumatraPDF основен читач на PDF
@@ -9966,6 +9967,7 @@ hu:Manga mód
 it:Modo Man&ga
 ja:漫画モード(&G)
 kr:만화 방식(&G)
+ku:Man&ga شێوازی
 mk:Режим за Man&ga
 pl:Tryb mangi
 pt:Modo man&ga
@@ -10289,7 +10291,7 @@ uk:Наступна сторінка
 uz:Keyingi bet
 vn:Trang sau
 :No matches were found
-am:Օրինակներ չի գտնվել
+am:Ոչինչ չի գտնվել
 ar:لم يتم العثور على نتائج
 az:Uyğun mətn tapılmadı
 bg:Няма съвпадения
