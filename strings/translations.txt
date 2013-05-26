@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3945758aa949dea19c8e15250411038b070bd911
+c8663c976bfa556629f75c116accfe3398a25bf1
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -6762,7 +6762,7 @@ cz:EPUB dokumenty
 de:EPUB E-Bücher
 dk:EPUB-dokumenter
 el:Έγγραφα EPUB
-es:Documentos EPUB
+es:Libros en formato EPUB
 et:EPUB-dokumendid
 eu:EPUB agiriak
 fa:EPUB اسناد
@@ -7430,7 +7430,7 @@ ca:No es pot crear una drecera
 cn:无法创建快捷方式
 cz:Vytvoření zástupce se nezdařilo
 de:Konnte keine Verknüpfung erstellen
-es:Error al crear un acceso directo
+es:No se pudo crear un acceso directo
 et:Ei õnnestu luua otseteed
 eu:Hutsegitea lasterbidea sortzerakoan
 fi:Pikakuvakkeen luominen epäonnistui
@@ -7496,7 +7496,7 @@ cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
-es:¡No se pudo renombrar el fichero!
+es:¡No se pudo renombrar el archivo!
 et:Faili ümbernimetamine ebaõnnestus.
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده با شکست مواجه شد!
@@ -9313,7 +9313,7 @@ cz:Nápověda: Klávesou F3 vyhledáte další výskyt
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
 dk:Vink: Brug F3 knappen for at finde igen
 el:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
-es:Usar "F3" para mostrar el siguiente resultado
+es:Consejo: Presione F3 para mostrar el siguiente resultado
 et:Soovitus: Uuesti otsimiseks vajuta F3-klahvi
 eu:Oharra: Erabili F3 tekla berriro bilatzeko
 fa:اشاره: برای جستجوی مجدد از کلید F3 استفاده کنید
@@ -9371,7 +9371,7 @@ cz:Soubory obrázků (*.%s)
 de:Bilder (*.%s)
 dk:Billed filer (*.%s)
 el:Αρχεία εικόνων (*.%s)
-es:Ficheros de imagen (*.%s)
+es:Archivos de imagen (*.%s)
 et:Pildifailid (*.%s)
 eu:Irudi agiriak (*.%s)
 fa:پرونده‌های تصویری (*.%s)
@@ -9516,7 +9516,7 @@ ca:La instal·lació ha fallat!
 cn:安装失败!
 cz:Instalace selhala!
 de:Die Installation ist fehlgeschlagen!
-es:Falló la instalación
+es:¡La instalación ha fallado!
 et:Paigaldamine ebaõnnestus!
 eu:Ezarpen hutsegitea!
 fi:Asentaminen epäonnistui!
@@ -9649,7 +9649,7 @@ ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
 cn:使用Windows桌面搜索来搜索PDF文档
 de:PDF Dokumente in Windows-&Suchen einbeziehen
-es:Permitir al escritorio Windows buscar &buscar documentos PDF
+es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fi:Anna Windowsin työpöydän hakutoiminnon &etsiä PDF-asiakirjoista
@@ -9678,7 +9678,7 @@ ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar &visualitzacions prèvies dels documents PDF
 cn:使用Windows的PDF预览功能
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
-es:Permitir mostrar a Windows &vistaprevia de documentos PDF
+es:Mostrar miniaturas en los iconos de documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
@@ -9712,7 +9712,7 @@ cz:Načítání souboru %s...
 de:%s wird geladen…
 dk:Indlæser fil %s...
 el:Φόρτωση του αρχείου %s
-es:Cargando fichero %s...
+es:Cargando archivo %s...
 et:Faili %s laadimine...
 eu:%s agiria gertatzen...
 fa:در حال بازکردن پرونده‌ی %s...
@@ -10057,7 +10057,7 @@ cz:Mobi dokumenty
 de:Kindle E-Bücher
 dk:Mobi documenter
 el:Έγγραφα Mobi
-es:Documentos Mobi
+es:Documentos en formato Mobi
 et:Mobi-dokumendid
 eu:Mobi agiriak
 fa:Mobi اسناد
@@ -10539,7 +10539,7 @@ cz:Počet stránek:
 de:Anzahl der Seiten:
 dk:Antal sider:
 el:Αριθμός Σελίδων:
-es:Número de Páginas:
+es:Número de páginas:
 et:Lehekülgede arv:
 eu:Orrialde Zenbatekoa:
 fa:تعداد صفحات:
@@ -11099,7 +11099,7 @@ ca-xv:S'està obrint el document al SumatraPDF...
 ca:S'està obrint el document al SumatraPDF...
 cn:正在用SumatraPDF打开文件...
 de:Das Dokument wird in SumatraPDF geöffnet…
-es:Abriendo documento en SumatraPDF
+es:Abriendo documento en SumatraPDF...
 et:Dokumendi avamine rakenduses SumatraPDF...
 eu:Agiria irekitzen SumatraPDF-an...
 fi:Avataan asiakirjaa SumatraPDF:ssä...
@@ -13433,7 +13433,7 @@ ca:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 cn:将SumatraPDF安装到指定目录
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
-es:Seleccione la carpeta donde SumatraPDF debería ser instalado:
+es:Seleccione la carpeta de instalación de SumatraPDF:
 et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
 fi:Valitse kansio, johon SumatraPDF asennetaan:
@@ -13532,7 +13532,7 @@ cz:Nastavit inverzní vyhledávání z příkazového řádku
 de:Befehlszeile für die Inverssuche setzen
 dk:Indstil komando-linje til invers søgning
 el:Εμφάνιση γραμμής αντίστροφης αναζήτησης
-es:Establecer línea de comando para búsqueda inversa
+es:Establecer línea de comandos para búsqueda inversa
 et:Loo pööratud otsingu käsurida
 eu:Ezarri alderantzizko bilaketa agindu-lerroa
 fa:تنظیم خط فرمان جستجوی وارونه
@@ -14595,7 +14595,7 @@ cz:SumatraPDF by měl být výchozím PDF prohlížečem
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 dk:SumatraPDF skulle nu være din standard PDF-læser
 el:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
-es:SumatraPDF a partir de ahora será el lector PDF predeterminado
+es:A partir de ahora SumatraPDF será el lector PDF predeterminado
 et:SumatraPDF peaks nüüd olema vaikimisi PDF-lehitseja
 eu:SumatraPDF orain zure berezko PDF irakurlea izan beharko litzake
 fa:اکنون SumatraPDF باید برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شما باشد
@@ -14711,7 +14711,7 @@ cz:Tagované PDF
 de:PDF mit Tags
 dk:Tagged PDF
 el:PDF με ετικέττα
-es:PDF Etiquetado
+es:PDF etiquetado
 et:Siltidega PDF
 eu:PDF etiketatua
 fa:نشان دار  PDF
@@ -14815,7 +14815,7 @@ ca:Gràcies per triar el SumatraPDF!
 cn:谢谢选用SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
-es:Gracias por seleccionar SumatraPDF
+es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
 fi:Kiitos että valitsit SumatraPDF:n!
@@ -14847,7 +14847,7 @@ ca:Gràcies! S'ha instal·lat el SumatraPDF.
 cn:谢谢! SumatraPDF已经安装好.
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
-es:¡Gracias! SumatraPDF ha sido instalado
+es:¡Gracias! SumatraPDF ha sido instalado.
 et:Täname! SumatraPDF on paigaldatud.
 eu:Mila esker! SumatraPDF ezarri da.
 fi:Kiitos! SumatraPDF asennettiin.
@@ -15075,7 +15075,7 @@ cz:Neznámý zdrojový soubor (%s)
 de:Unbekannte Datei (%s)
 dk:Ukendt kildefil (%s)
 el:Άγνωστο αρχείο προέλευσης (%s)
-es:Archivo fuente desconocido (%s)
+es:Archivo de origen desconocido (%s)
 et:Tundmatu lähtefail (%s)
 eu:Iturburu agiri ezezaguna: (%s)
 fa:پرونده‌ی منبع نامعلوم است (%s)
@@ -15128,7 +15128,7 @@ ca:Usa el SumatraPDF com a visor PDF &predeterminat
 cn:将SumatraPDF设为&缺省PDF阅读器
 cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
-es:Usar SumatraPDF como el lector PDF por &defecto
+es:Usar SumatraPDF como lector PDF por &defecto
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fi:Käytä SumatraPDF:ää PDF-tiedostojen oletuslukijana
@@ -15488,7 +15488,7 @@ cz:Používáte verzi %s
 de:Sie haben Version %s.
 dk:Du har version %s
 el:Έχετε την έκδοση %s
-es:Usted tiene la versión %s
+es:Versión en uso: %s
 et:Kasutusel on versioon %s
 eu:%s bertsioa duzu
 fa:شما نسخه‌ی %s را دارید

@@ -288,7 +288,7 @@ const WCHAR * const gTranslations[] = {
   NULL,
   NULL,
   NULL,
-  L"Abriendo documento en SumatraPDF",
+  L"Abriendo documento en SumatraPDF...",
 
   /* Translations for language sv */
   L"%s av %s",

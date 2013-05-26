@@ -11388,7 +11388,7 @@ const char * gTranslations_es =
   "Propiedades del documento\0"\
   "Descargar\0"\
   "&Salir\tCtrl+Q\0"\
-  "Documentos EPUB\0"\
+  "Libros en formato EPUB\0"\
   "Introduzca contrase\303\261a\0"\
   "Introduzca contrase\303\261a para %s\0"\
   "Introduzca los modificadores de l\303\255nea de comando que se ejecutar\303\241n al hacer doble-clic en el documento PDF:\0"\
@@ -11397,7 +11397,7 @@ const char * gTranslations_es =
   "Adelante\tAlt+->\0"\
   "Pantalla completa\tCtrl+May\303\272s+L\0"\
   "P\303\241gina doble\0"\
-  "\302\241No se pudo renombrar el fichero!\0"\
+  "\302\241No se pudo renombrar el archivo!\0"\
   "Error al guardar un archivo\0"\
   "Visualizaci\303\263n r\303\241pida en Web\0"\
   "Favoritos\0"\
@@ -11426,16 +11426,16 @@ const char * gTranslations_es =
   "\0"\
   "Ir a la p\303\241gina\0"\
   "Ocultar \"lo m\303\241s le\303\255do\"\0"\
-  "Usar \"F3\" para mostrar el siguiente resultado\0"\
-  "Ficheros de imagen (*.%s)\0"\
+  "Consejo: Presione F3 para mostrar el siguiente resultado\0"\
+  "Archivos de imagen (*.%s)\0"\
   "\0"\
-  "Cargando fichero %s...\0"\
+  "Cargando archivo %s...\0"\
   "\0"\
   "\302\277Convertir SumatraPDF en la aplicaci\303\263n predeterminada para archivos PDF?\0"\
   "Hacer SumatraPDF el lector PDF predeterminado\0"\
   "Modo man&ga\0"\
   "Coincidir may\303\272sculas y min\303\272sculas\0"\
-  "Documentos Mobi\0"\
+  "Documentos en formato Mobi\0"\
   "Modificado:\0"\
   "Est\303\241 disponible la nueva versi\303\263n %s. \302\277Desea descargarla?\0"\
   "P\303\241gina siguiente\0"\
@@ -11443,7 +11443,7 @@ const char * gTranslations_es =
   "No se encontr\303\263 resultado cerca de la l\303\255nea %u en el archivo %s\0"\
   "No se encontr\303\263 archivo de sincronizaci\303\263n\0"\
   "No hay informaci\303\263n de sincronizaci\303\263n en esta posici\303\263n\0"\
-  "N\303\272mero de P\303\241ginas:\0"\
+  "N\303\272mero de p\303\241ginas:\0"\
   "Aceptar\0"\
   "Abrir\0"\
   "Abrir en PDF-XChange\0"\
@@ -11494,7 +11494,7 @@ const char * gTranslations_es =
   "Seleccionar &todo\tCtrl+A\0"\
   "Seleccionar con Ctrl+Bot\303\263n. Izq. del rat\303\263n\0"\
   "Enviar por correo electr\303\263nico\0"\
-  "Establecer l\303\255nea de comando para b\303\272squeda inversa\0"\
+  "Establecer l\303\255nea de comandos para b\303\272squeda inversa\0"\
   "Mostrar &marcadores\0"\
   "Mostrar barra de herramientas\0"\
   "Mostrar p\303\241ginas de forma continua\0"\
@@ -11509,18 +11509,18 @@ const char * gTranslations_es =
   "Actualizar SumatraPDF\0"\
   "SumatraPDF se ha reiniciado debido a un fallo\0"\
   "SumatraPDF es el lector PDF predeterminado\0"\
-  "SumatraPDF a partir de ahora ser\303\241 el lector PDF predeterminado\0"\
+  "A partir de ahora SumatraPDF ser\303\241 el lector PDF predeterminado\0"\
   "No se pudo abrir el archivo de sincronizaci\303\263n\0"\
-  "PDF Etiquetado\0"\
+  "PDF etiquetado\0"\
   "Documentos de texto\0"\
   "T\303\255tulo:\0"\
-  "Archivo fuente desconocido (%s)\0"\
+  "Archivo de origen desconocido (%s)\0"\
   "Vista del documento\0"\
   "&Visitar Sitio Web\0"\
   "Advertencia\0"\
   "Documentos XPS\0"\
   "Esta es la \303\272ltima versi\303\263n disponible.\0"\
-  "Usted tiene la versi\303\263n %s\0"\
+  "Versi\303\263n en uso: %s\0"\
   "\0"\
   "Acercar zoom\0"\
   "Alejar zoom\0"\

@@ -1156,7 +1156,7 @@ const char * gTranslations_es =
   "No se puede desinstalar el plugin de navegaci\303\263n\0"\
   "No se puede escribir %s al disco\0"\
   "Error al copiar el desinstalador al directorio temporal\0"\
-  "Error al crear un acceso directo\0"\
+  "No se pudo crear un acceso directo\0"\
   "Error al eliminar las claves del registro del desinstalador\0"\
   "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo en el registro\0"\
   "Error al escribir informaci\303\263n de desinstalaci\303\263n en el registro\0"\
@@ -1164,25 +1164,25 @@ const char * gTranslations_es =
   "Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF en &directorio:\0"\
-  "Fall\303\263 la instalaci\303\263n\0"\
+  "\302\241La instalaci\303\263n ha fallado!\0"\
   "Instalaci\303\263n en progreso...\0"\
-  "Permitir al escritorio Windows buscar &buscar documentos PDF\0"\
-  "Permitir mostrar a Windows &vistaprevia de documentos PDF\0"\
+  "Permitir que la b\303\272squeda de Windows encuentre documentos PDF\0"\
+  "Mostrar miniaturas en los iconos de documentos &PDF\0"\
   "\302\241Para continuar es necesario cerrar %s!\0"\
-  "Seleccione la carpeta donde SumatraPDF deber\303\255a ser instalado:\0"\
+  "Seleccione la carpeta de instalaci\303\263n de SumatraPDF:\0"\
   "Algunos de los archivos que van a ser instalados estan da\303\261ados o no se encuentran\0"\
   "Iniciar SumatraPDF\0"\
   "Instalador de SumatraPDF %s\0"\
   "Desinstalador de SumatraPDF %s\0"\
   "SumatraPDF ha sido desinstalado.\0"\
   "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
-  "Gracias por seleccionar SumatraPDF\0"\
-  "\302\241Gracias! SumatraPDF ha sido instalado\0"\
+  "\302\241Gracias por elegir a SumatraPDF!\0"\
+  "\302\241Gracias! SumatraPDF ha sido instalado.\0"\
   "El instalador est\303\241 da\303\261ado. Por favor desc\303\241rguelo de nuevo. \nDisculpas por el inconveniente!\0"\
   "Desinstalar SumatraPDF\0"\
   "Fall\303\263 la desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en progreso...\0"\
-  "Usar SumatraPDF como el lector PDF por &defecto\0";
+  "Usar SumatraPDF como lector PDF por &defecto\0";
 
 const char * gTranslations_sv = 
   "Alternativ\0"\
