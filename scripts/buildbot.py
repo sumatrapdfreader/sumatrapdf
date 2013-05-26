@@ -394,10 +394,11 @@ def email_tests_failed(ver, err):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
     if not c.HasNotifierEmail():
+        print("email_tests_failed() not ran because not c.HasNotifierEmail()")
         return
     sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
     subject = "SumatraPDF tests failed for build %s" % str(ver)
-    checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" + str(ver)
+    checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" % str(ver)
     body = "Checkin: %s\n\n" % checkin_url
     log_url = s3_url_start + str(ver) + "/tests_error.txt"
     body += "Build log: %s\n\n" % log_url
@@ -413,7 +414,7 @@ def email_build_failed(ver):
         return
     sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
     subject = "SumatraPDF build %s failed" % str(ver)
-    checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" + str(ver)
+    checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" % str(ver)
     body = "Checkin: %s\n\n" % checkin_url
     build_log_url = s3_url_start + str(ver) + "/rel_build_log.txt"
     body += "Build log: %s\n\n" % build_log_url
@@ -482,6 +483,10 @@ def buildbot_loop():
         print("Sleeping for 15 minutes")
         time.sleep(60*15) # 15 mins
 
+def test_email_tests_failed():
+    email_tests_failed("200", "hello")
+    sys.exit(1)
+
 def main():
     verify_efi_present()
     verify_started_in_right_directory()
@@ -493,6 +498,7 @@ def main():
     s3.set_bucket("kjkpub")
     os.chdir(src_path)
 
+    #test_email_tests_failed()
     #build_version("8190", skip_release=True)
     #test_build_html_index()
     #build_sizes_json()

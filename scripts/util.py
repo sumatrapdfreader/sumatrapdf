@@ -395,20 +395,25 @@ class Config(object):
     if None is self.aws_secret: return False
     return True
 
+g_config = None
 def load_config():
+  global g_config
+  if g_config != None:
+    return g_config
   c = Config()
   try:
     import config
     c.aws_access = config.aws_access
     c.aws_secret = config.aws_secret
     c.cert_pwd = config.cert_pwd
-    c.trans_ul_secret = config.trans_ul_secret
     c.notifier_email = config.notifier_email
-    c.notifier_email_pwd = c.notifier_email_pwd
+    c.notifier_email_pwd = config.notifier_email_pwd
+    c.trans_ul_secret = config.trans_ul_secret
   except:
     # it's ok if doesn't exist, we just won't have the config data
     print("no config.py!")
-  return c
+  g_config = c
+  return g_config
 
 def test_load_config():
   c = load_config()
