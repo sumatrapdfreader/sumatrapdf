@@ -82,6 +82,7 @@ static void GeomTest()
 
 void BaseUtilTest()
 {
+    utassert(false);
     utassert(RoundToPowerOf2(0) == 1);
     utassert(RoundToPowerOf2(1) == 1);
     utassert(RoundToPowerOf2(2) == 2);

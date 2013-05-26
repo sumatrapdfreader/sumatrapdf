@@ -22,12 +22,12 @@ void utassert_func(bool ok, const char *exprStr, const char *file, int lineNo)
     ++g_nTotal;
     if (ok)
         return;
-    ++g_nFailed;
     if (g_nFailed < MAX_FAILED_ASSERTS) {
         g_failedAssert[g_nFailed].exprStr = exprStr;
         g_failedAssert[g_nFailed].file = file;
         g_failedAssert[g_nFailed].lineNo = lineNo;
     }
+    ++g_nFailed;
 }
 
 int utassert_print_results()
@@ -40,7 +40,7 @@ int utassert_print_results()
     fprintf(stderr, "Failed %d (of %d) tests\n", g_nFailed, g_nTotal);
     for (int i=0; i < g_nFailed && i < MAX_FAILED_ASSERTS; i++) {
         FailedAssert *a = &(g_failedAssert[i]);
-        fprintf(stderr, "%s %s@%d\n", a->exprStr, a->file, a->lineNo);
+        fprintf(stderr, "'%s' %s@%d\n", a->exprStr, a->file, a->lineNo);
     }
     return g_nFailed;
 }
