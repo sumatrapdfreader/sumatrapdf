@@ -7,6 +7,10 @@ Next version:
 
 * support screen readers etc. via UI automation (disabled in release builds)
 
+2.3.2 (2013-05-25):
+
+* fix a bug changing a language using Settings/Change Language menu
+
 2.3.1 (2013-05-23):
 
 * not compiled with SSE2
