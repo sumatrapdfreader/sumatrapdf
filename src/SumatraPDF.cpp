@@ -2281,10 +2281,11 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if (win.IsAboutWindow())
+    if (win.IsAboutWindow()) {
         // remember a link under so that on mouse up we only activate
         // link if mouse up is on the same link as mouse down
         win.url = GetStaticLink(win.staticLinks, x, y);
+    }
     if (!win.IsDocLoaded())
         return;
 
@@ -2370,6 +2371,10 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     if (didDragMouse)
         /* pass */;
+    /* return from white/black screens in presentation mode */
+    else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
+        win.ChangePresentationMode(PM_ENABLED);
+    /* follow an active link */
     else if (activeLink && activeLink->GetRect().Contains(ptPage)) {
         win.linkHandler->GotoLink(activeLink->AsLink());
         SetCursor(gCursorArrow);
@@ -2377,6 +2382,11 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* if we had a selection and this was just a click, hide the selection */
     else if (win.showSelection)
         ClearSearchResult(&win);
+    /* if there's a permanent forward search mark, hide it */
+    else if (win.fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+        win.fwdSearchMark.show = false;
+        win.RepaintAsync();
+    }
     /* in presentation mode, change pages on left/right-clicks */
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
@@ -2384,9 +2394,6 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         else
             win.dm->GoToNextPage(0);
     }
-    /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
-        win.ChangePresentationMode(PM_ENABLED);
 
     delete activeLink;
 }

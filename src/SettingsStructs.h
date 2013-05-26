@@ -388,7 +388,7 @@ static const StructInfo gPrinterDefaultsInfo = { sizeof(PrinterDefaults), 2, gPr
 static const FieldInfo gForwardSearchFields[] = {
     { offsetof(ForwardSearch, highlightOffset),    Type_Int,   0        },
     { offsetof(ForwardSearch, highlightWidth),     Type_Int,   15       },
-    { offsetof(ForwardSearch, highlightColor),     Type_Color, 0x6581ff },
+    { offsetof(ForwardSearch, highlightColor),     Type_Color, 0xff8165 },
     { offsetof(ForwardSearch, highlightPermanent), Type_Bool,  false    },
 };
 static const StructInfo gForwardSearchInfo = { sizeof(ForwardSearch), 4, gForwardSearchFields, "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent" };

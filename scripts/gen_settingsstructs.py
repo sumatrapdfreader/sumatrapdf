@@ -98,6 +98,9 @@ class Comment(Field):
 def EmptyLine(expert=False):
 	return Comment(None, expert)
 
+def RGB(r, g, b, a=0):
+	return r | (g << 8) | (b << 16) | (a << 24)
+
 # ##### setting definitions for SumatraPDF #####
 
 WindowPos = [
@@ -129,11 +132,11 @@ ForwardSearch = [
 		"amount of margin from the page margin)"),
 	Field("HighlightWidth", Int, 15,
 		"width of the highlight rectangle (if HighlightOffset is > 0)"),
-	Field("HighlightColor", Color, 0x6581FF,
+	Field("HighlightColor", Color, RGB(0x65, 0x81, 0xFF),
 		"color used for the forward search highlight"),
 	Field("HighlightPermanent", Bool, False,
-		"if true, highlight remains visible until the next " +
-		"mouse click (instead of fading away immediately)"),
+		"if true, highlight remains visible until the next mouse click " +
+		"(instead of fading away immediately)"),
 ]
 
 WindowMargin_FixedPageUI = [
@@ -156,11 +159,11 @@ PageSpacing = [
 ]
 
 FixedPageUI = [
-	Field("TextColor", Color, 0x000000,
+	Field("TextColor", Color, RGB(0x00, 0x00, 0x00),
 		"color value with which black (text) will be substituted"),
-	Field("BackgroundColor", Color, 0xFFFFFF,
+	Field("BackgroundColor", Color, RGB(0xFF, 0xFF, 0xFF),
 		"color value with which white (background) will be substituted"),
-	Field("SelectionColor", Color, 0x0CFCF5,
+	Field("SelectionColor", Color, RGB(0xF5, 0xFC, 0x0C),
 		"color value for the text selection rectangle (also used to highlight found text)"),
 	Struct("WindowMargin", WindowMargin_FixedPageUI,
 		"top, right, bottom and left margin (in that order) between window and document",
@@ -180,8 +183,8 @@ EbookUI = [
 	# default serif font, a different font is used for monospaced text (currently always "Courier New")
 	Field("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
 	Field("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
-	Field("TextColor", Color, 0x324b5f, "color for text"),
-	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
+	Field("TextColor", Color, RGB(0x5F, 0x4B, 0x32), "color for text"),
+	Field("BackgroundColor", Color, RGB(0xFB, 0xF0, 0xD9), "color of the background (page)"),
 	Field("UseFixedPageUI", Bool, False,
 		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
@@ -214,7 +217,7 @@ ExternalViewer = [
 ]
 
 AnnotationDefaults = [
-	Field("HighlightColor", Color, 0x60ffff,
+	Field("HighlightColor", Color, RGB(0xFF, 0xFF, 0x60),
 		"color used for the highlight tool (in prerelease builds, the current selection " +
 		"can be converted into a highlight annotation by pressing the 'h' key)"),
 ]
@@ -312,7 +315,7 @@ GlobalPrefs = [
 	Comment("For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings%s.html" % util2.get_sumatrapdf_version()),
 	EmptyLine(),
 
-	Field("MainWindowBackground", Color, 0x8000F2FF,
+	Field("MainWindowBackground", Color, RGB(0xFF, 0xF2, 0x00, a=0x80),
 		"background color of the non-document windows, traditionally yellow",
 		expert=True),
 	Field("EscToExit", Bool, False,
