@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c8663c976bfa556629f75c116accfe3398a25bf1
+5e3e6e7f01a878e7d9dc5ac7195b5e52d0b1b7f0
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -19,6 +19,7 @@ fi:%s / %s
 fr:%s de %s
 hr:%s od %s
 hu:%s/%s
+id:%s dari %s
 it:%s di %s
 ja:%s 中 %s
 kr:%s / %s
@@ -189,6 +190,7 @@ fi:&Lisäasetukset...
 fr:Options &avancées…
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
+id:&Pilihan Lanjut...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
 kr:고급 옵션(&A)...
@@ -1818,6 +1820,7 @@ fi:&Asetukset
 fr:&Options
 hr:P&ostavke
 hu:&Beállítások
+id:Pilihan
 it:&Opzioni
 kr:옵션(&O)
 ku:هەڵبژاردنەکان&
@@ -5883,6 +5886,7 @@ fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
 hr:Nemoguće ukloniti prečac
 hu:Parancsikon eltávolítása sikertelen
+id:Tidak dapat menghapus shortcut.
 it:Impossibile rimuovere il collegamento
 ja:ショートカットを削除できませんでした
 kr:바로가기를 제거할 수 없습니다.
@@ -6070,6 +6074,7 @@ fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 hr:Nemoguće zapisati %s na disk
 hu:%s lemezre írása sikertelen
+id:Tidak dapat menulis ke disk %s
 it:Impossibile scrivere %s nel disco.
 ja:%s をディスクに書き込めませんでした
 kr:%s(을)를 디스크에 쓸 수 없습니다.
@@ -7062,6 +7067,7 @@ fi:Virhe: SumatraPDF:n käynnistäminen epäonnistui!
 fr:Erreur : impossible de lancer SumatraPDF !
 hr:Greška: Nemoguće pokrenuti SumatraPDF
 hu:Hiba: SumatraPDF futtatása sikertelen!
+id:Kesalahan: Tidak bisa menjalankan SumatraPDF.
 it:Errore. Impossibile eseguire SumatraPDF!
 ja:エラー: SumatraPDF を実行できませんでした！
 kr:오류: SumatraPDF를 실행할 수 없습니다!
@@ -7095,6 +7101,7 @@ fi:Virhe: SumatraPDF ei löytynyt!
 fr:Erreur : SumatraPDF non trouvé !
 hr:Greška: SumatraPDF nije pronađena
 hu:Hiba: SumatraPDF nem található!
+id:Kesalahan: SumatraPDF tidak ditemukan.
 it:Errore. SumatraPDF non trovato!
 ja:エラー: SumatraPDF が見つかりませんでした！
 kr:오류: SumatraPDF를 찾을 수 없습니다!
@@ -7128,6 +7135,7 @@ fi:Virhe: tiedoston lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
 hr:Greška: Dokument nije moguće preuzeti!
 hu:Hiba: a dokumentum letöltése sikertelen!
+id:Kesalahan: file tidak dapat diunduh.
 it:Errore. Il documento non può essere scaricato!
 ja:エラー: ドキュメントをダウンロードできませんでした！
 kr:오류: 문서를 다운로드할 수 없습니다!
@@ -7406,6 +7414,7 @@ fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
+id:Gagal mengkopi uninstaller ke direktori temp
 it:Impossibile copiare programma disinstallazione nella cartella temporanea
 kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
 ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
@@ -7437,6 +7446,7 @@ fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
 hr:Neuspjeh u kreiranju prečaca
 hu:Nem sikerült létrehozni a parancsikont
+id:Gagal membuat shortcut.
 it:Impossibile creare il collegamento
 ja:ショートカットの作成に失敗しました
 kr:바로가기를 만들지 못했습니다.
@@ -9426,6 +9436,7 @@ fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
+id:Install plugin untuk peram&bah Firefox, Chrome, dan Opera
 it:Installa plugin PDF per i &browser FireFox, Chrome e Opera
 kr:Firefox, Chrome 및 Opera용 PDF 브라우저 플러그인 설치(&B)
 ku:بۆ فایەرفۆکس، کرۆم و ئۆپێرا& PDF دابەزاندنی پێوەکراوی
@@ -9459,6 +9470,7 @@ fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
 hr:Instaliraj SumatraPDF
 hu:SumatraPDF telepítése
+id:Install SumatraPDF
 it:Installa SumatraPDF
 ja:SumatraPDFをインストール
 kr:SumatraPDF 설치
@@ -9491,6 +9503,7 @@ fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
 hr:Instaliraj SumatraPDF u &mapu:
 hu:SumatraPDF telepítése a következő &könyvtárba:
+id:Install SumatraPDF ke &folder:
 it:Installa SumatraPD&F nella cartella:
 ja:SumatraPDF インストール先フォルダ(&F)
 kr:SumatraPDF 설치 폴더(&F):
@@ -9523,6 +9536,7 @@ fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
 hr:Instalacija nije uspjela!
 hu:Telepítés sikertelen!
+id:Instalasi gagal!
 it:Installazione fallita!
 ja:インストールに失敗！
 kr:설치 실패!
@@ -9556,6 +9570,7 @@ fi:Asennus käynnissä...
 fr:Installation en cours…
 hr:Instaliranje...
 hu:Telepítés folyamatban...
+id:Instalasi sedang berlangsung...
 it:Installazione in corso...
 ja:インストール中…
 kr:설치하는 중...
@@ -9964,6 +9979,7 @@ fi:Man&ga-moodi
 fr:Mode man&ga
 hr:Man&ga način
 hu:Manga mód
+id:Mode komik
 it:Modo Man&ga
 ja:漫画モード(&G)
 kr:만화 방식(&G)
@@ -10841,6 +10857,7 @@ eu:Irekitzea %s
 fr:Ouvrir dans %s
 hr:Otvori u %s
 hu:Megnyitás %s
+id:Buka di %s
 it:Apri in %s
 kr:%s(으)로 열기
 ku:کردنەوە لە %s
@@ -11106,6 +11123,7 @@ fi:Avataan asiakirjaa SumatraPDF:ssä...
 fr:Ouverture du document dans SumatraPDF…
 hr:Otvaranje dokumenta u SumatraPDF...
 hu:Dokumentum megnyitása SumatraPDF-ben...
+id:Membuka dokumen menggunakan SumatraPDF
 it:Apri documento in SumatraPDF...
 ja:SumatraPDF でドキュメントを開いています…
 kr:SumatraPDF로 문서 여는 중...
@@ -11896,6 +11914,7 @@ fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
 hr:Molim zatvorite %s za nastavak!
 hu:A(z) %s bezárása szükséges a folytatáshoz!
+id:Silakan tutup %s untuk melanjutkan.
 it:Chiudi %s per continuare!
 ja:%s を閉じてください
 kr:진행하려면 %s(을)를 닫으세요!
@@ -14003,6 +14022,7 @@ fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
+id:Beberapa file yang di-install rusak atau terhapus.
 it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
@@ -14148,6 +14168,7 @@ fi:Käynnistä SumatraPDF
 fr:Lancer SumatraPDF
 hr:Pokreni SumatraPDF
 hu:SumatraPDF indítása
+id:Jalankan SumatraPDF
 it:Avvia SumatraPDF
 ja:SumatraPDFを実行
 kr:SumatraPDF 시작
@@ -14472,6 +14493,7 @@ fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
 hr:SumatraPDF je deinstaliran.
 hu:SumatraPDF eltávolítása befejeződött.
+id:SumatraPDF telah di-uninstall.
 it:SumatraPDF è stata completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
@@ -14822,6 +14844,7 @@ fi:Kiitos että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
+id:Terima kasih telah memakai SumatraPDF!
 it:Grazie per aver scelto SumatraPDF!
 kr:SumatraPDF를 선택해 주셔서 고마워요!
 ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
@@ -14854,6 +14877,7 @@ fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
+id:Terima kasih. SumatraPDF telah berhasil ter-install.
 it:Grazie! SumatraPDF installato correttamente.
 ja:ありがとう！SumatraPDF はインストールされました。
 kr:야호! SumatraPDF가 설치됐습니다.
@@ -14978,6 +15002,7 @@ fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
 hr:Deinstaliraj SumatraPDF
 hu:SumatraPDF eltávolítása
+id:Uninstall SumatraPDF
 it:Disinstalla SumatraPDF
 ja:SumatraPDFをアンインストール
 kr:SumatraPDF 제거
@@ -15011,6 +15036,7 @@ fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
 hr:Deinstalacija nije uspjela
 hu:Eltávolítás sikertelen
+id:Proses uninstall gagal.
 it:Disinstallazione fallita
 ja:アンインストールに失敗
 kr:제거 실패
@@ -15043,6 +15069,7 @@ fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
+id:Proses uninstall sedang berjalan...
 it:Disinstallazione in corso...
 ja:アンインストール中…
 kr:제거하는 중...
@@ -15135,6 +15162,7 @@ fi:Käytä SumatraPDF:ää PDF-tiedostojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hr:Koristi SumatraPDF kao zadani PDF preglednik
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
+id:Gunakan SumatraPDF sebagai pembaca PDF standar.
 it:Usa SumatraPDF come lettore PDF pre&definito
 ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?(&d)
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)

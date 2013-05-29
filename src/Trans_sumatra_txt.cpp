@@ -6387,7 +6387,7 @@ const char * gTranslations_hu =
 const char * gTranslations_id = 
   "&Tentang\0"\
   "&Ukuran Sebenarnya\tCtrl+1\0"\
-  "\0"\
+  "&Pilihan Lanjut...\0"\
   "&Semua halaman yang dipilih\0"\
   "Kembali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
@@ -6533,7 +6533,7 @@ const char * gTranslations_id =
   "\0"\
   "Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?\0"\
   "Jadikan SumatraPDF sebagai pembaca PDF utama\0"\
-  "\0"\
+  "Mode komik\0"\
   "Cocokkan Ukuran Huruf\0"\
   "Dokumen Mobi\0"\
   "Dimodifikasi:\0"\
@@ -6548,7 +6548,7 @@ const char * gTranslations_id =
   "Buka\0"\
   "Buka di PDF-&XChange\0"\
   "Buka Dokumen...\0"\
-  "\0"\
+  "Buka di %s\0"\
   "Buka di &Adobe Reader\0"\
   "Buka di &Foxit Reader\0"\
   "Buka dengan Microsoft HTML Help\0"\
