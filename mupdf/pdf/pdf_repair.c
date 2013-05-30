@@ -164,6 +164,8 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 
 		for (i = 0; i < count; i++)
 		{
+			pdf_xref_entry *entry;
+
 			tok = pdf_lex(stm, &buf);
 			if (tok != PDF_TOK_INT)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
@@ -179,15 +181,14 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
 				continue;
 			}
-			if (n >= xref->len)
-				pdf_resize_xref(xref, n + 1);
 
-			xref->table[n].ofs = num;
-			xref->table[n].gen = i;
-			xref->table[n].stm_ofs = 0;
-			pdf_drop_obj(xref->table[n].obj);
-			xref->table[n].obj = NULL;
-			xref->table[n].type = 'o';
+			entry = pdf_get_xref_entry(xref, n);
+			entry->ofs = num;
+			entry->gen = i;
+			entry->stm_ofs = 0;
+			pdf_drop_obj(entry->obj);
+			entry->obj = NULL;
+			entry->type = 'o';
 
 			tok = pdf_lex(stm, &buf);
 			if (tok != PDF_TOK_INT)
@@ -209,7 +210,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 void
 pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
-	pdf_obj *dict, *obj;
+	pdf_obj *dict, *obj = NULL;
 	pdf_obj *length;
 
 	pdf_obj *encrypt = NULL;
@@ -236,6 +237,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 	fz_var(root);
 	fz_var(info);
 	fz_var(list);
+	fz_var(obj);
 
 	xref->dirty = 1;
 
@@ -243,6 +245,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	fz_try(ctx)
 	{
+		pdf_xref_entry *entry;
 		listlen = 0;
 		listcap = 1024;
 		list = fz_malloc_array(ctx, listcap, sizeof(struct entry));
@@ -398,21 +401,26 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 		/* make xref reasonable */
 
-		pdf_resize_xref(xref, maxnum + 1);
+		/*
+			Dummy access to entry to assure sufficient space in the xref table
+			and avoid repeated reallocs in the loop
+		*/
+		(void)pdf_get_xref_entry(xref, maxnum);
 
 		for (i = 0; i < listlen; i++)
 		{
-			xref->table[list[i].num].type = 'n';
-			xref->table[list[i].num].ofs = list[i].ofs;
-			xref->table[list[i].num].gen = list[i].gen;
+			entry = pdf_get_xref_entry(xref, list[i].num);
+			entry->type = 'n';
+			entry->ofs = list[i].ofs;
+			entry->gen = list[i].gen;
 
-			xref->table[list[i].num].stm_ofs = list[i].stm_ofs;
+			entry->stm_ofs = list[i].stm_ofs;
 
 			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
-			if (xref->table[list[i].num].obj)
+			if (entry->obj)
 			{
-				pdf_drop_obj(xref->table[list[i].num].obj);
-				xref->table[list[i].num].obj = NULL;
+				pdf_drop_obj(entry->obj);
+				entry->obj = NULL;
 			}
 
 			/* correct stream length for unencrypted documents */
@@ -428,41 +436,47 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			}
 		}
 
-		xref->table[0].type = 'f';
-		xref->table[0].ofs = 0;
-		xref->table[0].gen = 65535;
-		xref->table[0].stm_ofs = 0;
-		xref->table[0].obj = NULL;
+		entry = pdf_get_xref_entry(xref, 0);
+		entry->type = 'f';
+		entry->ofs = 0;
+		entry->gen = 65535;
+		entry->stm_ofs = 0;
+		entry->obj = NULL;
 
 		next = 0;
-		for (i = xref->len - 1; i >= 0; i--)
+		for (i = pdf_xref_len(xref) - 1; i >= 0; i--)
 		{
-			if (xref->table[i].type == 'f')
+			entry = pdf_get_xref_entry(xref, i);
+			if (entry->type == 'f')
 			{
-				xref->table[i].ofs = next;
-				if (xref->table[i].gen < 65535)
-					xref->table[i].gen ++;
+				entry->ofs = next;
+				if (entry->gen < 65535)
+					entry->gen ++;
 				next = i;
 			}
 		}
 
 		/* create a repaired trailer, Root will be added later */
 
-		xref->trailer = pdf_new_dict(ctx, 5);
+		obj = pdf_new_dict(ctx, 5);
+		pdf_set_xref_trailer(xref, obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
 
 		obj = pdf_new_int(ctx, maxnum + 1);
-		pdf_dict_puts(xref->trailer, "Size", obj);
+		pdf_dict_puts(pdf_trailer(xref), "Size", obj);
 		pdf_drop_obj(obj);
+		obj = NULL;
 
 		if (root)
 		{
-			pdf_dict_puts(xref->trailer, "Root", root);
+			pdf_dict_puts(pdf_trailer(xref), "Root", root);
 			pdf_drop_obj(root);
 			root = NULL;
 		}
 		if (info)
 		{
-			pdf_dict_puts(xref->trailer, "Info", info);
+			pdf_dict_puts(pdf_trailer(xref), "Info", info);
 			pdf_drop_obj(info);
 			info = NULL;
 		}
@@ -476,7 +490,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				pdf_drop_obj(encrypt);
 				encrypt = obj;
 			}
-			pdf_dict_puts(xref->trailer, "Encrypt", encrypt);
+			pdf_dict_puts(pdf_trailer(xref), "Encrypt", encrypt);
 			pdf_drop_obj(encrypt);
 			encrypt = NULL;
 		}
@@ -490,7 +504,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				pdf_drop_obj(id);
 				id = obj;
 			}
-			pdf_dict_puts(xref->trailer, "ID", id);
+			pdf_dict_puts(pdf_trailer(xref), "ID", id);
 			pdf_drop_obj(id);
 			id = NULL;
 		}
@@ -502,6 +516,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 		pdf_drop_obj(encrypt);
 		pdf_drop_obj(id);
 		pdf_drop_obj(root);
+		pdf_drop_obj(obj);
 		pdf_drop_obj(info);
 		fz_free(ctx, list);
 		fz_rethrow(ctx);
@@ -514,10 +529,13 @@ pdf_repair_obj_stms(pdf_document *xref)
 	fz_context *ctx = xref->ctx;
 	pdf_obj *dict;
 	int i;
+	int xref_len = pdf_xref_len(xref);
 
-	for (i = 0; i < xref->len; i++)
+	for (i = 0; i < xref_len; i++)
 	{
-		if (xref->table[i].stm_ofs)
+		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+
+		if (entry->stm_ofs)
 		{
 			dict = pdf_load_object(xref, i, 0);
 			fz_try(ctx)
@@ -537,7 +555,11 @@ pdf_repair_obj_stms(pdf_document *xref)
 	}
 
 	/* Ensure that streamed objects reside inside a known non-streamed object */
-	for (i = 0; i < xref->len; i++)
-		if (xref->table[i].type == 'o' && xref->table[xref->table[i].ofs].type != 'n')
-			fz_throw(xref->ctx, "invalid reference to non-object-stream: %d (%d 0 R)", xref->table[i].ofs, i);
+	for (i = 0; i < xref_len; i++)
+	{
+		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+
+		if (entry->type == 'o' && pdf_get_xref_entry(xref, entry->ofs)->type != 'n')
+			fz_throw(xref->ctx, "invalid reference to non-object-stream: %d (%d 0 R)", entry->ofs, i);
+	}
 }

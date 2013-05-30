@@ -7,12 +7,15 @@
 int
 pdf_is_stream(pdf_document *xref, int num, int gen)
 {
-	if (num < 0 || num >= xref->len)
+	pdf_xref_entry *entry;
+
+	if (num < 0 || num >= pdf_xref_len(xref))
 		return 0;
 
 	pdf_cache_object(xref, num, gen);
 
-	return xref->table[num].stm_ofs != 0 || xref->table[num].stm_buf;
+	entry = pdf_get_xref_entry(xref, num);
+	return entry->stm_ofs != 0 || entry->stm_buf;
 }
 
 /*
@@ -261,8 +264,12 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int n
 	int hascrypt;
 	int len;
 
-	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
-		return fz_open_buffer(ctx, xref->table[num].stm_buf);
+	if (num > 0 && num < pdf_xref_len(xref))
+	{
+		pdf_xref_entry *entry = pdf_get_xref_entry(xref, num);
+		if (entry->stm_buf)
+			return fz_open_buffer(ctx, entry->stm_buf);
+	}
 
 	/* don't close chain when we close this filter */
 	fz_keep_stream(chain);
@@ -354,10 +361,10 @@ pdf_open_raw_renumbered_stream(pdf_document *xref, int num, int gen, int orig_nu
 {
 	pdf_xref_entry *x;
 
-	if (num < 0 || num >= xref->len)
+	if (num < 0 || num >= pdf_xref_len(xref))
 		fz_throw(xref->ctx, "object id out of range (%d %d R)", num, gen);
 
-	x = xref->table + num;
+	x = pdf_get_xref_entry(xref, num);
 
 	pdf_cache_object(xref, num, gen);
 
@@ -372,10 +379,10 @@ pdf_open_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 {
 	pdf_xref_entry *x;
 
-	if (num < 0 || num >= xref->len)
+	if (num < 0 || num >= pdf_xref_len(xref))
 		fz_throw(xref->ctx, "object id out of range (%d %d R)", num, gen);
 
-	x = xref->table + num;
+	x = pdf_get_xref_entry(xref, num);
 
 	pdf_cache_object(xref, num, gen);
 
@@ -422,8 +429,12 @@ pdf_load_raw_renumbered_stream(pdf_document *xref, int num, int gen, int orig_nu
 	int len;
 	fz_buffer *buf;
 
-	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
-		return fz_keep_buffer(xref->ctx, xref->table[num].stm_buf);
+	if (num > 0 && num < pdf_xref_len(xref))
+	{
+		pdf_xref_entry *entry = pdf_get_xref_entry(xref, num);
+		if (entry->stm_buf)
+			return fz_keep_buffer(xref->ctx, entry->stm_buf);
+	}
 
 	dict = pdf_load_object(xref, num, gen);
 
@@ -466,8 +477,12 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 
 	fz_var(buf);
 
-	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
-		return fz_keep_buffer(xref->ctx, xref->table[num].stm_buf);
+	if (num > 0 && num < pdf_xref_len(xref))
+	{
+		pdf_xref_entry *entry = pdf_get_xref_entry(xref, num);
+		if (entry->stm_buf)
+			return fz_keep_buffer(xref->ctx, entry->stm_buf);
+	}
 
 	dict = pdf_load_object(xref, num, gen);
 

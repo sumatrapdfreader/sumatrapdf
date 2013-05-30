@@ -225,7 +225,7 @@ multi-threaded operations run smoothly:
 	document was. This does not mean that the device can only ever
 	be used from one thread, though in many cases this is the
 	simplest structure overall.
-	
+
 So, how does a multi-threaded example differ from a non-multithreaded
 one?
 

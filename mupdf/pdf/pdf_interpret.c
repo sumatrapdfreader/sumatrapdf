@@ -1623,7 +1623,6 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	fz_context *ctx = csi->dev->ctx;
 	pdf_gstate *gstate = NULL;
 	int oldtop = 0;
-	int popmask;
 	fz_matrix local_transform = *transform;
 	softmask_save softmask = { NULL };
 	int gparent_save;
@@ -1645,7 +1644,6 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 
 		gstate = csi->gstate + csi->gtop;
 		oldtop = csi->gtop;
-		popmask = 0;
 
 		/* apply xobject's transform matrix */
 		fz_concat(&local_transform, &xobj->matrix, &local_transform);

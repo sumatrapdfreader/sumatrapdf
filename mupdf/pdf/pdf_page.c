@@ -157,7 +157,7 @@ pdf_load_page_tree(pdf_document *xref)
 	if (xref->page_refs)
 		return;
 
-	catalog = pdf_dict_gets(xref->trailer, "Root");
+	catalog = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pages = pdf_dict_gets(catalog, "Pages");
 	count = pdf_dict_gets(pages, "Count");
 

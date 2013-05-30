@@ -492,7 +492,7 @@ objects_dump(pdf_document *xref, pdf_write_options *opts)
 {
 	int i;
 
-	for (i=0; i < xref->len; i++)
+	for (i=0; i < pdf_xref_len(xref); i++)
 	{
 		fprintf(stderr, "Object %d use=%x offset=%d\n", i, opts->use_list[i], opts->ofs_list[i]);
 	}
@@ -509,7 +509,7 @@ static pdf_obj *sweepref(pdf_document *xref, pdf_write_options *opts, pdf_obj *o
 	int gen = pdf_to_gen(obj);
 	fz_context *ctx = xref->ctx;
 
-	if (num < 0 || num >= xref->len)
+	if (num < 0 || num >= pdf_xref_len(xref))
 		return NULL;
 	if (opts->use_list[num])
 		return NULL;
@@ -568,8 +568,9 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 {
 	int num, other;
 	fz_context *ctx = xref->ctx;
+	int xref_len = pdf_xref_len(xref);
 
-	for (num = 1; num < xref->len; num++)
+	for (num = 1; num < xref_len; num++)
 	{
 		/* Only compare an object to objects preceding it */
 		for (other = 1; other < num; other++)
@@ -602,8 +603,8 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 			if (differ)
 				continue;
 
-			a = xref->table[num].obj;
-			b = xref->table[other].obj;
+			a = pdf_get_xref_entry(xref, num)->obj;
+			b = pdf_get_xref_entry(xref, other)->obj;
 
 			a = pdf_resolve_indirect(a);
 			b = pdf_resolve_indirect(b);
@@ -667,6 +668,7 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 static void compactxref(pdf_document *xref, pdf_write_options *opts)
 {
 	int num, newnum;
+	int xref_len = pdf_xref_len(xref);
 
 	/*
 	 * Update renumber_map in-place, clustering all used
@@ -676,7 +678,7 @@ static void compactxref(pdf_document *xref, pdf_write_options *opts)
 	 */
 
 	newnum = 1;
-	for (num = 1; num < xref->len; num++)
+	for (num = 1; num < xref_len; num++)
 	{
 		/* If it's not used, map it to zero */
 		if (!opts->use_list[opts->renumber_map[num]])
@@ -752,21 +754,23 @@ static void renumberobj(pdf_document *xref, pdf_write_options *opts, pdf_obj *ob
 
 static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 {
-	pdf_xref_entry *oldxref;
+	pdf_xref_entry *newxref = NULL;
 	int newlen;
 	int num;
 	fz_context *ctx = xref->ctx;
 	int *new_use_list;
+	int xref_len = pdf_xref_len(xref);
 
-	new_use_list = fz_calloc(ctx, xref->len+3, sizeof(int));
+	new_use_list = fz_calloc(ctx, pdf_xref_len(xref)+3, sizeof(int));
 
+	fz_var(newxref);
 	fz_try(ctx)
 	{
 		/* Apply renumber map to indirect references in all objects in xref */
-		renumberobj(xref, opts, xref->trailer);
-		for (num = 0; num < xref->len; num++)
+		renumberobj(xref, opts, pdf_trailer(xref));
+		for (num = 0; num < xref_len; num++)
 		{
-			pdf_obj *obj = xref->table[num].obj;
+			pdf_obj *obj = pdf_get_xref_entry(xref, num)->obj;
 
 			if (pdf_is_indirect(obj))
 			{
@@ -781,40 +785,39 @@ static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 		}
 
 		/* Create new table for the reordered, compacted xref */
-		oldxref = xref->table;
-		xref->table = fz_malloc_array(ctx, xref->len + 3, sizeof(pdf_xref_entry));
-		xref->table[0] = oldxref[0];
+		newxref = fz_malloc_array(ctx, xref_len + 3, sizeof(pdf_xref_entry));
+		newxref[0] = *pdf_get_xref_entry(xref, 0);
 
 		/* Move used objects into the new compacted xref */
 		newlen = 0;
-		for (num = 1; num < xref->len; num++)
+		for (num = 1; num < xref_len; num++)
 		{
 			if (opts->use_list[num])
 			{
 				if (newlen < opts->renumber_map[num])
 					newlen = opts->renumber_map[num];
-				xref->table[opts->renumber_map[num]] = oldxref[num];
+				newxref[opts->renumber_map[num]] = *pdf_get_xref_entry(xref, num);
 				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
 			}
 			else
 			{
-				pdf_drop_obj(oldxref[num].obj);
+				pdf_drop_obj(pdf_get_xref_entry(xref, num)->obj);
 			}
 		}
+
+		pdf_replace_xref(xref, newxref, newlen + 1);
+		newxref = NULL;
 	}
 	fz_catch(ctx)
 	{
+		fz_free(ctx, newxref);
 		fz_free(ctx, new_use_list);
 		fz_rethrow(ctx);
 	}
-	fz_free(ctx, oldxref);
 	fz_free(ctx, opts->use_list);
 	opts->use_list = new_use_list;
 
-	/* Update the used objects count in compacted xref */
-	xref->len = newlen + 1;
-
-	for (num = 1; num < xref->len; num++)
+	for (num = 1; num < xref_len; num++)
 	{
 		opts->renumber_map[num] = num;
 	}
@@ -1112,7 +1115,7 @@ add_linearization_objs(pdf_document *xref, pdf_write_options *opts)
 		pdf_dict_puts_drop(hint_obj, "Filter", pdf_new_name(ctx, "FlateDecode"));
 		opts->hints_length = pdf_new_int(ctx, INT_MIN);
 		pdf_dict_puts(hint_obj, "Length", opts->hints_length);
-		xref->table[hint_num].stm_ofs = -1;
+		pdf_get_xref_entry(xref, hint_num)->stm_ofs = -1;
 	}
 	fz_always(ctx)
 	{
@@ -1301,7 +1304,7 @@ pdf_localise_page_resources(pdf_document *xref)
 	if (xref->resources_localised)
 		return;
 
-	lpr(ctx, pdf_dict_getp(xref->trailer, "Root/Pages"), 0, 0);
+	lpr(ctx, pdf_dict_getp(pdf_trailer(xref), "Root/Pages"), 0, 0);
 
 	xref->resources_localised = 1;
 }
@@ -1310,7 +1313,7 @@ static void
 linearize(pdf_document *xref, pdf_write_options *opts)
 {
 	int i;
-	int n = xref->len + 2;
+	int n = pdf_xref_len(xref) + 2;
 	int *reorder;
 	int *rev_renumber_map;
 	int *rev_gen_list;
@@ -1326,14 +1329,14 @@ linearize(pdf_document *xref, pdf_write_options *opts)
 
 	/* Walk the objects for each page, marking which ones are used, where */
 	memset(opts->use_list, 0, n * sizeof(int));
-	mark_trailer(xref, opts, xref->trailer);
+	mark_trailer(xref, opts, pdf_trailer(xref));
 
 	/* Add new objects required for linearization */
 	add_linearization_objs(xref, opts);
 
 #ifdef DEBUG_WRITING
 	fprintf(stderr, "Usage calculated:\n");
-	for (i=0; i < xref->len; i++)
+	for (i=0; i < pdf_xref_len(xref); i++)
 	{
 		fprintf(stderr, "%d: use=%d\n", i, opts->use_list[i]);
 	}
@@ -1353,7 +1356,7 @@ linearize(pdf_document *xref, pdf_write_options *opts)
 
 #ifdef DEBUG_WRITING
 	fprintf(stderr, "Reordered:\n");
-	for (i=1; i < xref->len; i++)
+	for (i=1; i < pdf_xref_len(xref); i++)
 	{
 		fprintf(stderr, "%d: use=%d\n", i, opts->use_list[reorder[i]]);
 	}
@@ -1389,10 +1392,10 @@ update_linearization_params(pdf_document *xref, pdf_write_options *opts)
 	int offset;
 	pdf_set_int(opts->linear_l, opts->file_len);
 	/* Primary hint stream offset (of object, not stream!) */
-	pdf_set_int(opts->linear_h0, opts->ofs_list[xref->len-1]);
+	pdf_set_int(opts->linear_h0, opts->ofs_list[pdf_xref_len(xref)-1]);
 	/* Primary hint stream length (of object, not stream!) */
 	offset = (opts->start == 1 ? opts->main_xref_offset : opts->ofs_list[1] + opts->hintstream_len);
-	pdf_set_int(opts->linear_h1, offset - opts->ofs_list[xref->len-1]);
+	pdf_set_int(opts->linear_h1, offset - opts->ofs_list[pdf_xref_len(xref)-1]);
 	/* Object number of first pages page object (the first object of page 0) */
 	pdf_set_int(opts->linear_o, opts->page_object_lists->page[0]->object[0]);
 	/* Offset of end of first page (first page is followed by primary
@@ -1419,10 +1422,11 @@ static void preloadobjstms(pdf_document *xref)
 {
 	pdf_obj *obj;
 	int num;
+	int xref_len = pdf_xref_len(xref);
 
-	for (num = 0; num < xref->len; num++)
+	for (num = 0; num < xref_len; num++)
 	{
-		if (xref->table[num].type == 'o')
+		if (pdf_get_xref_entry(xref, num)->type == 'o')
 		{
 			obj = pdf_load_object(xref, num, 0);
 			pdf_drop_obj(obj);
@@ -1628,6 +1632,7 @@ static int filter_implies_image(pdf_document *xref, pdf_obj *o)
 
 static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, int gen)
 {
+	pdf_xref_entry *entry;
 	pdf_obj *obj;
 	pdf_obj *type;
 	fz_context *ctx = xref->ctx;
@@ -1668,13 +1673,14 @@ static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, in
 		}
 	}
 
+	entry = pdf_get_xref_entry(xref, num);
 	if (!pdf_is_stream(xref, num, gen))
 	{
 		fprintf(opts->out, "%d %d obj\n", num, gen);
 		pdf_fprint_obj(opts->out, obj, opts->do_expand == 0);
 		fprintf(opts->out, "endobj\n\n");
 	}
-	else if (xref->table[num].stm_ofs < 0 && xref->table[num].stm_buf == NULL)
+	else if (entry->stm_ofs < 0 && entry->stm_buf == NULL)
 	{
 		fprintf(opts->out, "%d %d obj\n", num, gen);
 		pdf_fprint_obj(opts->out, obj, opts->do_expand == 0);
@@ -1769,15 +1775,15 @@ static void writexref(pdf_document *xref, pdf_write_options *opts, int from, int
 
 		if (first)
 		{
-			obj = pdf_dict_gets(xref->trailer, "Info");
+			obj = pdf_dict_gets(pdf_trailer(xref), "Info");
 			if (obj)
 				pdf_dict_puts(trailer, "Info", obj);
 
-			obj = pdf_dict_gets(xref->trailer, "Root");
+			obj = pdf_dict_gets(pdf_trailer(xref), "Root");
 			if (obj)
 				pdf_dict_puts(trailer, "Root", obj);
 
-			obj = pdf_dict_gets(xref->trailer, "ID");
+			obj = pdf_dict_gets(pdf_trailer(xref), "ID");
 			if (obj)
 				pdf_dict_puts(trailer, "ID", obj);
 		}
@@ -1823,11 +1829,12 @@ padto(FILE *file, int target)
 static void
 dowriteobject(pdf_document *xref, pdf_write_options *opts, int num, int pass)
 {
-	if (xref->table[num].type == 'f')
-		opts->gen_list[num] = xref->table[num].gen;
-	if (xref->table[num].type == 'n')
-		opts->gen_list[num] = xref->table[num].gen;
-	if (xref->table[num].type == 'o')
+	pdf_xref_entry *entry = pdf_get_xref_entry(xref, num);
+	if (entry->type == 'f')
+		opts->gen_list[num] = entry->gen;
+	if (entry->type == 'n')
+		opts->gen_list[num] = entry->gen;
+	if (entry->type == 'o')
 		opts->gen_list[num] = 0;
 
 	/* If we are renumbering, then make sure all generation numbers are
@@ -1841,7 +1848,7 @@ dowriteobject(pdf_document *xref, pdf_write_options *opts, int num, int pass)
 	if (opts->do_garbage && !opts->use_list[num])
 		return;
 
-	if (xref->table[num].type == 'n' || xref->table[num].type == 'o')
+	if (entry->type == 'n' || entry->type == 'o')
 	{
 		if (pass > 0)
 			padto(opts->out, opts->ofs_list[num]);
@@ -1856,6 +1863,7 @@ static void
 writeobjects(pdf_document *xref, pdf_write_options *opts, int pass)
 {
 	int num;
+	int xref_len = pdf_xref_len(xref);
 
 	fprintf(opts->out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
 	fprintf(opts->out, "%%\316\274\341\277\246\n\n");
@@ -1869,10 +1877,10 @@ writeobjects(pdf_document *xref, pdf_write_options *opts, int pass)
 			opts->first_xref_offset = ftell(opts->out);
 		else
 			padto(opts->out, opts->first_xref_offset);
-		writexref(xref, opts, opts->start, xref->len, 1, opts->main_xref_offset, 0);
+		writexref(xref, opts, opts->start, pdf_xref_len(xref), 1, opts->main_xref_offset, 0);
 	}
 
-	for (num = opts->start+1; num < xref->len; num++)
+	for (num = opts->start+1; num < xref_len; num++)
 		dowriteobject(xref, opts, num, pass);
 	if (opts->do_linear && pass == 1)
 	{
@@ -1918,19 +1926,20 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 	page_objects **pop = &opts->page_object_lists->page[0];
 	int page_len_bits, shared_object_bits, shared_object_id_bits;
 	int shared_length_bits;
+	int xref_len = pdf_xref_len(xref);
 
-	min_shared_object = xref->len;
+	min_shared_object = pdf_xref_len(xref);
 	max_shared_object = 1;
 	min_shared_length = opts->file_len;
 	max_shared_length = 0;
-	for (i=1; i < xref->len; i++)
+	for (i=1; i < xref_len; i++)
 	{
 		int min, max, page;
 
 		min = opts->ofs_list[i];
-		if (i == opts->start-1 || (opts->start == 1 && i == xref->len-1))
+		if (i == opts->start-1 || (opts->start == 1 && i == xref_len-1))
 			max = opts->main_xref_offset;
-		else if (i == xref->len-1)
+		else if (i == xref_len-1)
 			max = opts->ofs_list[1];
 		else
 			max = opts->ofs_list[i+1];
@@ -2142,7 +2151,7 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 		min = opts->ofs_list[o];
 		if (o == opts->start-1)
 			max = opts->main_xref_offset;
-		else if (o < xref->len-1)
+		else if (o < xref_len-1)
 			max = opts->ofs_list[o+1];
 		else
 			max = opts->ofs_list[1];
@@ -2156,7 +2165,7 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 		min = opts->ofs_list[i];
 		if (i == opts->start-1)
 			max = opts->main_xref_offset;
-		else if (i < xref->len-1)
+		else if (i < xref_len-1)
 			max = opts->ofs_list[i+1];
 		else
 			max = opts->ofs_list[1];
@@ -2184,7 +2193,7 @@ make_hint_stream(pdf_document *xref, pdf_write_options *opts)
 	fz_try(ctx)
 	{
 		make_page_offset_hints(xref, opts, buf);
-		pdf_update_stream(xref, xref->len-1, buf);
+		pdf_update_stream(xref, pdf_xref_len(xref)-1, buf);
 		opts->hintstream_len = buf->len;
 		fz_drop_buffer(ctx, buf);
 	}
@@ -2200,7 +2209,7 @@ static void dump_object_details(pdf_document *xref, pdf_write_options *opts)
 {
 	int i;
 
-	for (i = 0; i < xref->len; i++)
+	for (i = 0; i < pdf_xref_len(xref); i++)
 	{
 		fprintf(stderr, "%d@%d: use=%d\n", i, opts->ofs_list[i], opts->use_list[i]);
 	}
@@ -2213,6 +2222,7 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 	int num;
 	pdf_write_options opts = { 0 };
 	fz_context *ctx;
+	int xref_len = pdf_xref_len(xref);
 
 	if (!xref)
 		return;
@@ -2234,22 +2244,22 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		/* We deliberately make these arrays long enough to cope with
 		 * 1 to n access rather than 0..n-1, and add space for 2 new
 		 * extra entries that may be required for linearization. */
-		opts.use_list = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
-		opts.ofs_list = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
-		opts.gen_list = fz_calloc(ctx, xref->len + 3, sizeof(int));
-		opts.renumber_map = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
-		opts.rev_renumber_map = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
-		opts.rev_gen_list = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
+		opts.use_list = fz_malloc_array(ctx, pdf_xref_len(xref) + 3, sizeof(int));
+		opts.ofs_list = fz_malloc_array(ctx, pdf_xref_len(xref) + 3, sizeof(int));
+		opts.gen_list = fz_calloc(ctx, pdf_xref_len(xref) + 3, sizeof(int));
+		opts.renumber_map = fz_malloc_array(ctx, pdf_xref_len(xref) + 3, sizeof(int));
+		opts.rev_renumber_map = fz_malloc_array(ctx, pdf_xref_len(xref) + 3, sizeof(int));
+		opts.rev_gen_list = fz_malloc_array(ctx, pdf_xref_len(xref) + 3, sizeof(int));
 		opts.continue_on_error = fz_opts->continue_on_error;
 		opts.errors = fz_opts->errors;
 
-		for (num = 0; num < xref->len; num++)
+		for (num = 0; num < xref_len; num++)
 		{
 			opts.use_list[num] = 0;
 			opts.ofs_list[num] = 0;
 			opts.renumber_map[num] = num;
 			opts.rev_renumber_map[num] = num;
-			opts.rev_gen_list[num] = xref->table[num].gen;
+			opts.rev_gen_list[num] = pdf_get_xref_entry(xref, num)->gen;
 		}
 
 		/* Make sure any objects hidden in compressed streams have been loaded */
@@ -2257,9 +2267,9 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 
 		/* Sweep & mark objects from the trailer */
 		if (opts.do_garbage >= 1)
-			sweepobj(xref, &opts, xref->trailer);
+			sweepobj(xref, &opts, pdf_trailer(xref));
 		else
-			for (num = 0; num < xref->len; num++)
+			for (num = 0; num < xref_len; num++)
 				opts.use_list[num] = 1;
 
 		/* Coalesce and renumber duplicate objects */
@@ -2287,7 +2297,7 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 
 		/* Construct linked list of free object slots */
 		lastfree = 0;
-		for (num = 0; num < xref->len; num++)
+		for (num = 0; num < xref_len; num++)
 		{
 			if (!opts.use_list[num])
 			{
@@ -2316,7 +2326,7 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		else
 		{
 			opts.first_xref_offset = ftell(opts.out);
-			writexref(xref, &opts, 0, xref->len, 1, 0, opts.first_xref_offset);
+			writexref(xref, &opts, 0, xref_len, 1, 0, opts.first_xref_offset);
 		}
 
 		xref->dirty = 0;

@@ -9,7 +9,7 @@ BEGIN
 	EDITTEXT			3, 57, 20, 140, 12, 32
 	DEFPUSHBUTTON "Okay",		1, 90, 40, 50, 14, 0x50010001
 	PUSHBUTTON "Cancel",		2, 147, 40, 50, 14, 0x50010000
-	LTEXT "The file is encrypted.",	4, 10, 7, 180, 10, 0x00000
+	LTEXT "The file is encrypted.", 4, 10, 7, 180, 10, 0x00000
 	LTEXT "Password:",		5, 17, 22, 40, 10, 0x00000
 END
 
@@ -54,10 +54,10 @@ STYLE 128 | 0x80000000
 CAPTION " MuPDF: fill out form"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        3,8,7,183,50,0x1004
-    DEFPUSHBUTTON   "Okay",1,89,64,50,14
-    PUSHBUTTON      "Cancel",2,147,64,50,14
-    LTEXT           "** Invalid value **",4,11,65,62,8
+	EDITTEXT		3,8,7,183,50,0x1004
+	DEFPUSHBUTTON	"Okay",1,89,64,50,14
+	PUSHBUTTON		"Cancel",2,147,64,50,14
+	LTEXT			"** Invalid value **",4,11,65,62,8
 END
 
 IDD_DLOGLIST DIALOG 50, 50, 204, 85
@@ -65,9 +65,9 @@ STYLE 128 | 0x80000000
 CAPTION " MuPDF: select an item"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX         3,8,7,183,50,0x210102
-    DEFPUSHBUTTON   "Okay",1,89,64,50,14
-    PUSHBUTTON      "Cancel",2,147,64,50,14
+	LISTBOX			3,8,7,183,50,0x210102
+	DEFPUSHBUTTON	"Okay",1,89,64,50,14
+	PUSHBUTTON		"Cancel",2,147,64,50,14
 END
 
 IDD_DLOGABOUT DIALOG 50, 50, 200, 300

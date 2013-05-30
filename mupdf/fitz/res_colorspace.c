@@ -243,7 +243,7 @@ fz_device_cmyk(fz_context *ctx)
 }
 
 fz_colorspace *
-fz_find_device_colorspace(fz_context *ctx, char *name)
+fz_lookup_device_colorspace(fz_context *ctx, char *name)
 {
 	if (!strcmp(name, "DeviceGray"))
 		return fz_device_gray(ctx);
@@ -843,7 +843,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	{
 		fz_color_converter cc;
 
-		fz_find_color_converter(&cc, ctx, ds, ss);
+		fz_lookup_color_converter(&cc, ctx, ds, ss);
 		for (; xy > 0; xy--)
 		{
 			srcv[0] = *s++ / 255.0f * 100;
@@ -864,7 +864,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	{
 		fz_color_converter cc;
 
-		fz_find_color_converter(&cc, ctx, ds, ss);
+		fz_lookup_color_converter(&cc, ctx, ds, ss);
 		for (; xy > 0; xy--)
 		{
 			for (k = 0; k < srcn; k++)
@@ -885,7 +885,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 		unsigned char lookup[FZ_MAX_COLORS * 256];
 		fz_color_converter cc;
 
-		fz_find_color_converter(&cc, ctx, ds, ss);
+		fz_lookup_color_converter(&cc, ctx, ds, ss);
 		for (i = 0; i < 256; i++)
 		{
 			srcv[0] = i / 255.0f;
@@ -912,7 +912,7 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 		unsigned char *sold = &dummy;
 		fz_color_converter cc;
 
-		fz_find_color_converter(&cc, ctx, ds, ss);
+		fz_lookup_color_converter(&cc, ctx, ds, ss);
 		lookup = fz_new_hash_table(ctx, 509, srcn, -1);
 
 		for (; xy > 0; xy--)
@@ -1126,7 +1126,7 @@ cmyk2bgr(fz_color_converter *cc, float *dv, float *sv)
 #endif
 }
 
-void fz_find_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss)
+void fz_lookup_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss)
 {
 	cc->ctx = ctx;
 	cc->ds = ds;
@@ -1186,10 +1186,9 @@ fz_convert_color(fz_context *ctx, fz_colorspace *ds, float *dv, fz_colorspace *s
 {
 	fz_color_converter cc;
 
-	fz_find_color_converter(&cc, ctx, ds, ss);
+	fz_lookup_color_converter(&cc, ctx, ds, ss);
 	cc.convert(&cc, dv, sv);
 }
-
 
 /* Indexed */
 

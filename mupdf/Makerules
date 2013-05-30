@@ -25,17 +25,39 @@ endif
 
 # Mac OS X doesn't have pkg-config so we hard code paths.
 ifeq "$(OS)" "Darwin"
-SYS_FREETYPE_CFLAGS = -I/usr/X11R6/include/freetype2
+SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
+SYS_OPENSSL_LIBS = -lcrypto
 SYS_X11_CFLAGS = -I/usr/X11R6/include
 SYS_X11_LIBS = -L/usr/X11R6/lib -lX11 -lXext
+
+SYS_FREETYPE_CFLAGS = -I/usr/X11R6/include/freetype2
+SYS_FREETYPE_LIBS = -lfreetype
+SYS_OPENJPEG_LIBS = -lopenjpeg
+SYS_JBIG2DEC_LIBS = -ljbig2dec
+SYS_JPEG_LIBS = -ljpeg
+SYS_ZLIB_LIBS = -lz
+
 RANLIB_CMD = ranlib $@
 
-# Other Unixes use pkg-config for system third party libs
+# Other Unixes use pkg-config for system libraries.
 else
-SYS_FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
-SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjpeg1)
+
+ifeq "$(shell pkg-config --exists libcrypto && echo yes)" "yes"
+SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL $(shell pkg-config --cflags libcrypto)
+SYS_OPENSSL_LIBS = $(shell pkg-config --libs libcrypto)
+endif
+
 SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
 SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
+
+SYS_FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
+SYS_FREETYPE_LIBS = $(shell pkg-config --libs freetype2)
+SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjpeg1)
+SYS_OPENJPEG_LIBS = $(shell pkg-config --libs libopenjpeg1)
+SYS_JBIG2DEC_LIBS = -ljbig2dec
+SYS_JPEG_LIBS = -ljpeg
+SYS_ZLIB_LIBS = -lz
+
 endif
 
 # The following section is an example of how to simply do cross-compilation
@@ -105,4 +127,3 @@ RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
 CROSSCOMPILE=yes
 NOX11=yes
 endif
-

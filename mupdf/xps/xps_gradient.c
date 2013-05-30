@@ -449,9 +449,7 @@ xps_parse_gradient_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect 
 	fz_xml *node;
 
 	char *opacity_att;
-	char *interpolation_att;
 	char *spread_att;
-	char *mapping_att;
 	char *transform_att;
 
 	fz_xml *transform_tag = NULL;
@@ -463,9 +461,7 @@ xps_parse_gradient_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect 
 	int spread_method;
 
 	opacity_att = fz_xml_att(root, "Opacity");
-	interpolation_att = fz_xml_att(root, "ColorInterpolationMode");
 	spread_att = fz_xml_att(root, "SpreadMethod");
-	mapping_att = fz_xml_att(root, "MappingMode");
 	transform_att = fz_xml_att(root, "Transform");
 
 	for (node = fz_xml_down(root); node; node = fz_xml_next(node))

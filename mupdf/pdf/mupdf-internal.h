@@ -57,7 +57,7 @@ void pdf_lexbuf_init(fz_context *ctx, pdf_lexbuf *lexbuf, int size);
 void pdf_lexbuf_fin(pdf_lexbuf *lexbuf);
 ptrdiff_t pdf_lexbuf_grow(pdf_lexbuf *lexbuf);
 
-int pdf_lex(fz_stream *f, pdf_lexbuf *lexbuf);
+pdf_token pdf_lex(fz_stream *f, pdf_lexbuf *lexbuf);
 
 pdf_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
@@ -173,9 +173,14 @@ fz_buffer *pdf_load_raw_renumbered_stream(pdf_document *doc, int num, int gen, i
 fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, int *truncated);
 fz_stream *pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 
+pdf_obj *pdf_trailer(pdf_document *doc);
+void pdf_set_xref_trailer(pdf_document *doc, pdf_obj *trailer);
+int pdf_xref_len(pdf_document *doc);
+pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i);
+void pdf_replace_xref(pdf_document *doc, pdf_xref_entry *entries, int n);
+
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
-void pdf_resize_xref(pdf_document *doc, int newcap);
 pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
 
 void pdf_print_xref(pdf_document *);
@@ -607,6 +612,8 @@ int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[]);
 int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw);
 int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[]);
 void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[]);
+int pdf_signature_widget_byte_range(pdf_document *doc, fz_widget *widget, int (*byte_range)[2]);
+int pdf_signature_widget_contents(pdf_document *doc, fz_widget *widget, char **contents);
 pdf_annot *pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type);
 void pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot);
 void pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_display_list *disp_list);

@@ -172,14 +172,14 @@ showglobalinfo(void)
 
 	printf("\nPDF-%d.%d\n", xref->version / 10, xref->version % 10);
 
-	obj = pdf_dict_gets(xref->trailer, "Info");
+	obj = pdf_dict_gets(pdf_trailer(xref), "Info");
 	if (obj)
 	{
 		printf("Info object (%d %d R):\n", pdf_to_num(obj), pdf_to_gen(obj));
 		pdf_fprint_obj(stdout, pdf_resolve_indirect(obj), 0);
 	}
 
-	obj = pdf_dict_gets(xref->trailer, "Encrypt");
+	obj = pdf_dict_gets(pdf_trailer(xref), "Encrypt");
 	if (obj)
 	{
 		printf("\nEncryption object (%d %d R):\n", pdf_to_num(obj), pdf_to_gen(obj));

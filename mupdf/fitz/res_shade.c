@@ -752,7 +752,6 @@ fz_process_mesh_type6(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 			else
 				continue;
 
-
 			make_tensor_patch(&patch, 6, v);
 
 			for (i = 0; i < 4; i++)

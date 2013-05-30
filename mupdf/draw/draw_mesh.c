@@ -221,7 +221,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_pixmap
 		if (shade->use_function)
 		{
 			fz_color_converter cc;
-			fz_find_color_converter(&cc, ctx, dest->colorspace, shade->colorspace);
+			fz_lookup_color_converter(&cc, ctx, dest->colorspace, shade->colorspace);
 			for (i = 0; i < 256; i++)
 			{
 				cc.convert(&cc, color, shade->function[i]);

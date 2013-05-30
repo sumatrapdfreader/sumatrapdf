@@ -254,7 +254,7 @@ FITZ_OBJS = \
 	$(OFZ)\stm_buffer.obj $(OFZ)\stm_comp_buf.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj \
 	$(OFZ)\stm_output.obj $(OFZ)\image_md5.obj $(OFZ)\image_save.obj $(OFZ)\image_jxr.obj \
 	$(OFZ)\res_func.obj $(OFZ)\res_image.obj $(OFZ)\text_extract.obj $(OFZ)\text_output.obj \
-	$(OFZ)\text_paragraph.obj $(OFZ)\text_search.obj
+	$(OFZ)\text_paragraph.obj $(OFZ)\text_search.obj $(OFZ)\crypt_pkcs7.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \

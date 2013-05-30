@@ -787,7 +787,7 @@ protected:
 		}
 		
 		fz_color_converter cc;
-		fz_find_color_converter(&cc, ctx, fz_device_gray(ctx), fz_device_rgb(ctx));
+		fz_lookup_color_converter(&cc, ctx, fz_device_gray(ctx), fz_device_rgb(ctx));
 		for (int row = 0; row < bounds.Height; row++)
 		{
 			LPBYTE Scan0 = (LPBYTE)data.Scan0 + row * data.Stride;

@@ -5,13 +5,13 @@
  */
 
 static fz_outline *
-xps_find_last_outline_at_level(fz_outline *node, int level, int target_level)
+xps_lookup_last_outline_at_level(fz_outline *node, int level, int target_level)
 {
 	while (node->next)
 		node = node->next;
 	if (level == target_level || !node->down)
 		return node;
-	return xps_find_last_outline_at_level(node->down, level + 1, target_level);
+	return xps_lookup_last_outline_at_level(node->down, level + 1, target_level);
 }
 
 static fz_outline *
@@ -61,7 +61,7 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 			}
 			else
 			{
-				tail = xps_find_last_outline_at_level(head, 1, this_level);
+				tail = xps_lookup_last_outline_at_level(head, 1, this_level);
 				if (this_level > last_level)
 					tail->down = entry;
 				else

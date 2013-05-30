@@ -99,7 +99,6 @@ fz_bound_text(fz_context *ctx, fz_text *text, const fz_stroke_state *stroke, con
 	bbox->x1 += 1;
 	bbox->y1 += 1;
 
-
 	return bbox;
 }
 

@@ -1402,6 +1402,10 @@
 					RelativePath="..\mupdf\fitz\text_search.c"
 					>
 				</File>
+				<File
+					RelativePath="..\mupdf\fitz\crypt_pkcs7.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="draw"

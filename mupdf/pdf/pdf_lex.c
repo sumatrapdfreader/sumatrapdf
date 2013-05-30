@@ -378,7 +378,7 @@ end:
 	return PDF_TOK_STRING;
 }
 
-static int
+static pdf_token
 pdf_token_from_keyword(char *key)
 {
 	switch (*key)
@@ -448,7 +448,7 @@ ptrdiff_t pdf_lexbuf_grow(pdf_lexbuf *lb)
 	return lb->scratch - old;
 }
 
-int
+pdf_token
 pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 {
 	while (1)

@@ -103,9 +103,16 @@ static int match(fz_text_page *page, const char *s, int n)
 		s += fz_chartorune(&c, (char *)s);
 		if (iswhite(c) && iswhite(charat(page, n)))
 		{
+			const char *s_next;
+
+			/* Skip over whitespace in the document */
 			do
 				n++;
 			while (iswhite(charat(page, n)));
+
+			/* Skip over multiple whitespace in the search string */
+			while (s_next = s + fz_chartorune(&c, (char *)s), iswhite(c))
+				s = s_next;
 		}
 		else
 		{
@@ -118,7 +125,7 @@ static int match(fz_text_page *page, const char *s, int n)
 }
 
 int
-fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_rect *hit_bbox, int hit_max)
+fz_search_text_page(fz_context *ctx, fz_text_page *text, const char *needle, fz_rect *hit_bbox, int hit_max)
 {
 	int pos, len, i, n, hit_count;
 

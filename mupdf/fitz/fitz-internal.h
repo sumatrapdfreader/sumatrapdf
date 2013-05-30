@@ -1101,7 +1101,7 @@ struct fz_color_converter_s
 	fz_colorspace *ss;
 };
 
-void fz_find_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss);
+void fz_lookup_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss);
 
 /*
  * Fonts come in two variants:

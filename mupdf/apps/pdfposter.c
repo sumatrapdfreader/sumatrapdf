@@ -38,7 +38,7 @@ static void decimatepages(pdf_document *xref)
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
-	oldroot = pdf_dict_gets(xref->trailer, "Root");
+	oldroot = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pages = pdf_dict_gets(oldroot, "Pages");
 
 	root = pdf_new_dict(ctx, 2);

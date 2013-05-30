@@ -403,7 +403,6 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 		break;
 	}
 
-
 	/* Now we try to cache the pixmap. Any failure here will just result
 	 * in us not caching. */
 	fz_var(keyp);

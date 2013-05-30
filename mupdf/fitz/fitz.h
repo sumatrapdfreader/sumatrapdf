@@ -1431,10 +1431,10 @@ void fz_drop_bitmap(fz_context *ctx, fz_bitmap *bit);
 typedef struct fz_colorspace_s fz_colorspace;
 
 /*
-	fz_find_device_colorspace: Find a standard colorspace based upon
+	fz_lookup_device_colorspace: Find a standard colorspace based upon
 	it's name.
 */
-fz_colorspace *fz_find_device_colorspace(fz_context *ctx, char *name);
+fz_colorspace *fz_lookup_device_colorspace(fz_context *ctx, char *name);
 
 /*
 	fz_colorspace_is_indexed: Return true, iff a given colorspace is
@@ -1922,6 +1922,11 @@ fz_output *fz_new_output_with_buffer(fz_context *, fz_buffer *);
 int fz_printf(fz_output *, const char *, ...);
 
 /*
+	fz_puts: fputs equivalent for output streams.
+*/
+int fz_puts(fz_output *, const char *);
+
+/*
 	fz_write: fwrite equivalent for output streams.
 */
 int fz_write(fz_output *out, const void *data, int len);
@@ -2314,7 +2319,7 @@ void fz_print_text_page(fz_context *ctx, fz_output *out, fz_text_page *page);
 
 	NOTE: This is an experimental interface and subject to change without notice.
 */
-int fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_rect *hit_bbox, int hit_max);
+int fz_search_text_page(fz_context *ctx, fz_text_page *text, const char *needle, fz_rect *hit_bbox, int hit_max);
 
 /*
 	fz_highlight_selection: Return a list of rectangles to highlight given a selection rectangle.
@@ -3061,7 +3066,8 @@ enum
 	FZ_WIDGET_TYPE_RADIOBUTTON,
 	FZ_WIDGET_TYPE_TEXT,
 	FZ_WIDGET_TYPE_LISTBOX,
-	FZ_WIDGET_TYPE_COMBOBOX
+	FZ_WIDGET_TYPE_COMBOBOX,
+	FZ_WIDGET_TYPE_SIGNATURE
 };
 
 /* Types of text widget content */
@@ -3254,6 +3260,21 @@ int fz_choice_widget_value(fz_interactive *idoc, fz_widget *tw, char *opts[]);
 	array of their names
 */
 void fz_choice_widget_set_value(fz_interactive *idoc, fz_widget *tw, int n, char *opts[]);
+
+/*
+	fz_signature_widget_byte_range: retrieve the byte range for a signature widget
+*/
+int fz_signature_widget_byte_range(fz_interactive *idoc, fz_widget *widget, int (*byte_range)[2]);
+
+/*
+	fz_signature_widget_contents: retrieve the contents for a signature widget
+*/
+int fz_signature_widget_contents(fz_interactive *idoc, fz_widget *widget, char **contents);
+
+/*
+	fz_check_signature: check a signature's certificate chain and digest
+*/
+int fz_check_signature(fz_context *ctx, fz_interactive *idoc, fz_widget *widget, char *file, char *ebuf, int ebufsize);
 
 /*
 	Document events: the objects via which MuPDF informs the calling app

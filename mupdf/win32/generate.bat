@@ -6,10 +6,12 @@ if not exist generated mkdir generated
 cl /nologo -Ifitz -Ipdf scripts/fontdump.c
 cl /nologo -Ifitz -Ipdf scripts/cmapdump.c
 cl /nologo -Ifitz -Ipdf scripts/cquote.c
+cl /nologo -Ifitz -Ipdf scripts/bin2hex.c
 
 if not exist fontdump.exe goto usage
 if not exist cmapdump.exe goto usage
 if not exist cquote.exe goto usage
+if not exist bin2hex.exe goto usage
 
 if not exist generated/font_base14.h fontdump.exe generated/font_base14.h fonts/Dingbats.cff fonts/NimbusMonL-Bold.cff fonts/NimbusMonL-BoldObli.cff fonts/NimbusMonL-Regu.cff fonts/NimbusMonL-ReguObli.cff fonts/NimbusRomNo9L-Medi.cff fonts/NimbusRomNo9L-MediItal.cff fonts/NimbusRomNo9L-Regu.cff fonts/NimbusRomNo9L-ReguItal.cff fonts/NimbusSanL-Bold.cff fonts/NimbusSanL-BoldItal.cff fonts/NimbusSanL-Regu.cff fonts/NimbusSanL-ReguItal.cff fonts/StandardSymL.cff
 
@@ -29,7 +31,9 @@ if not exist generated/cmap_korea.h cmapdump.exe generated/cmap_korea.h cmaps/ko
 
 if not exist generated/js_util.h cquote.exe generated/js_util.h pdf/pdf_util.js
 
-del cmapdump.obj fontdump.obj cquote.obj cmapdump.exe fontdump.exe cquote.exe
+if not exist generated/adobe_ca.h bin2hex.exe generated/adobe_ca.h certs/AdobeCA.p7c
+
+del cmapdump.obj fontdump.obj cquote.obj bin2hex.obj cmapdump.exe fontdump.exe cquote.exe bin2hex.exe
 
 goto fin
 

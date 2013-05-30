@@ -14,7 +14,7 @@ pdf_obj *pdf_get_inheritable(pdf_document *doc, pdf_obj *obj, char *key)
 	}
 
 	return fobj ? fobj
-				: pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(doc->trailer, "Root"), "AcroForm"), key);
+				: pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(pdf_trailer(doc), "Root"), "AcroForm"), key);
 }
 
 int pdf_get_field_flags(pdf_document *doc, pdf_obj *obj)
@@ -50,7 +50,8 @@ int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 		else
 			return FZ_WIDGET_TYPE_LISTBOX;
 	}
+	else if (!strcmp(type, "Sig"))
+		return FZ_WIDGET_TYPE_SIGNATURE;
 	else
 		return FZ_WIDGET_TYPE_NOT_WIDGET;
 }
-

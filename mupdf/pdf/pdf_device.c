@@ -823,6 +823,7 @@ pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int 
 		snprintf(text, sizeof(text), "XObject/Fm%d", num);
 		pdf_dict_putp(pdev->resources, text, *form_ref);
 	}
+
 	return num;
 }
 
@@ -1023,7 +1024,7 @@ pdf_dev_begin_mask(fz_device *dev, const fz_rect *bbox, int luminosity, fz_color
 	pdf_obj *egs_ref;
 	pdf_obj *form_ref;
 	pdf_obj *color_obj = NULL;
-	int num, i;
+	int i;
 
 	fz_var(smask);
 	fz_var(egs);
@@ -1032,7 +1033,7 @@ pdf_dev_begin_mask(fz_device *dev, const fz_rect *bbox, int luminosity, fz_color
 	pdf_dev_end_text(pdev);
 
 	/* Make a new form to contain the contents of the softmask */
-	num = pdf_dev_new_form(&form_ref, pdev, bbox, 0, 0, 0, 1, colorspace);
+	pdf_dev_new_form(&form_ref, pdev, bbox, 0, 0, 0, 1, colorspace);
 
 	fz_try(ctx)
 	{

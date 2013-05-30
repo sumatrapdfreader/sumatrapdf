@@ -1069,7 +1069,7 @@ pdf_dict_get_inheritable(pdf_document *xref, pdf_obj *obj, char *key)
 			return val;
 		obj = pdf_dict_gets(obj, "Parent");
 	}
-	return pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(xref->trailer, "Root"), "AcroForm"), key);
+	return pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(pdf_trailer(xref), "Root"), "AcroForm"), key);
 }
 
 static float

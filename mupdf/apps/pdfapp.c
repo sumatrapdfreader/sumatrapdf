@@ -1283,6 +1283,25 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 						}
 					}
 					break;
+
+				case FZ_WIDGET_TYPE_SIGNATURE:
+					{
+						char ebuf[256];
+
+						ebuf[0] = 0;
+						if (fz_check_signature(ctx, idoc, widget, app->docpath, ebuf, sizeof(ebuf)))
+						{
+							winwarn(app, "Signature is valid");
+						}
+						else
+						{
+							if (ebuf[0] == 0)
+								winwarn(app, "Signature check failed for unknown reason");
+							else
+								winwarn(app, ebuf);
+						}
+					}
+					break;
 				}
 			}
 

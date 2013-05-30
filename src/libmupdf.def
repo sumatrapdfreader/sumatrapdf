@@ -88,7 +88,7 @@ EXPORTS
 	fz_clone_stream
 	fz_keep_bitmap
 	fz_drop_bitmap
-	fz_find_device_colorspace
+	fz_lookup_device_colorspace
 	fz_colorspace_is_indexed
 	fz_device_gray
 	fz_device_rgb
@@ -132,6 +132,7 @@ EXPORTS
 	fz_new_output_with_file
 	fz_new_output_with_buffer
 	fz_printf
+	fz_puts
 	fz_write
 	fz_output_png
 	fz_image_as_png
@@ -173,6 +174,7 @@ EXPORTS
 	fz_generate_transition
 	fz_widget_get_type
 	fz_bound_widget
+	fz_check_signature
 	fz_access_alert_event
 	fz_access_exec_menu_item_event
 	fz_access_launch_url_event
@@ -311,7 +313,7 @@ EXPORTS
 	fz_new_colorspace_context
 	fz_keep_colorspace_context
 	fz_drop_colorspace_context
-	fz_find_color_converter
+	fz_lookup_color_converter
 	ft_error_string
 	fz_new_font_context
 	fz_keep_font_context
@@ -556,9 +558,13 @@ EXPORTS
 	pdf_load_raw_renumbered_stream
 	pdf_load_renumbered_stream
 	pdf_open_raw_renumbered_stream
+	pdf_trailer
+	pdf_set_xref_trailer
+	pdf_xref_len
+	pdf_get_xref_entry
+	pdf_replace_xref
 	pdf_repair_xref
 	pdf_repair_obj_stms
-	pdf_resize_xref
 	pdf_new_ref
 	pdf_print_xref
 	pdf_new_crypt
@@ -684,6 +690,8 @@ EXPORTS
 	pdf_choice_widget_is_multiselect
 	pdf_choice_widget_value
 	pdf_choice_widget_set_value
+	pdf_signature_widget_byte_range
+	pdf_signature_widget_contents
 	pdf_create_annot
 	pdf_delete_annot
 	pdf_set_annot_appearance

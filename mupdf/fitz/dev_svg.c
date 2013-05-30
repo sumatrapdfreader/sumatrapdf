@@ -206,7 +206,6 @@ svg_dev_text(svg_device *sdev, const fz_matrix *ctm, fz_text *text)
 	fz_printf(out, "\n</text>\n");
 }
 
-
 /* Entry points */
 
 static void

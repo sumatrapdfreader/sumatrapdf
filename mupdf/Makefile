@@ -13,17 +13,32 @@ default: all
 # XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
 # set a variable that was set on the command line.
 CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iimage -Iucdn -Iscripts
-LIBS += $(XLIBS) -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
+LIBS += $(XLIBS) -lm
 LIBS_V8 = $(LIBS) $(V8LIBS)
 
 include Makerules
 include Makethird
 
-THIRD_LIBS := $(FREETYPE_LIB)
+THIRD_LIBS += $(FREETYPE_LIB)
 THIRD_LIBS += $(JBIG2DEC_LIB)
 THIRD_LIBS += $(JPEG_LIB)
 THIRD_LIBS += $(OPENJPEG_LIB)
+THIRD_LIBS += $(OPENSSL_LIB)
 THIRD_LIBS += $(ZLIB_LIB)
+
+LIBS += $(FREETYPE_LIBS)
+LIBS += $(JBIG2DEC_LIBS)
+LIBS += $(JPEG_LIBS)
+LIBS += $(OPENJPEG_LIBS)
+LIBS += $(OPENSSL_LIBS)
+LIBS += $(ZLIB_LIBS)
+
+CFLAGS += $(FREETYPE_CFLAGS)
+CFLAGS += $(JBIG2DEC_CFLAGS)
+CFLAGS += $(JPEG_CFLAGS)
+CFLAGS += $(OPENJPEG_CFLAGS)
+CFLAGS += $(OPENSSL_CFLAGS)
+CFLAGS += $(ZLIB_CFLAGS)
 
 ifeq "$(verbose)" ""
 QUIET_AR = @ echo ' ' ' ' AR $@ ;
@@ -118,6 +133,7 @@ libs_v8: libs $(FITZ_V8_LIB)
 CMAPDUMP := $(OUT)/cmapdump
 FONTDUMP := $(OUT)/fontdump
 CQUOTE := $(OUT)/cquote
+BIN2HEX := $(OUT)/bin2hex
 
 CMAP_CNS_SRC := $(wildcard cmaps/cns/*)
 CMAP_GB_SRC := $(wildcard cmaps/gb/*)
@@ -128,6 +144,7 @@ FONT_DROID_SRC := fonts/droid/DroidSans.ttf fonts/droid/DroidSansMono.ttf
 FONT_CJK_SRC := fonts/droid/DroidSansFallback.ttf
 FONT_CJK_FULL_SRC := fonts/droid/DroidSansFallbackFull.ttf
 JAVASCRIPT_SRC := pdf/pdf_util.js
+ADOBECA_SRC := certs/AdobeCA.p7c
 
 $(GEN)/cmap_cns.h : $(CMAP_CNS_SRC)
 	$(QUIET_GEN) $(CMAPDUMP) $@ $(CMAP_CNS_SRC)
@@ -150,21 +167,27 @@ $(GEN)/font_cjk_full.h : $(FONT_CJK_FULL_SRC)
 $(GEN)/js_util.h : $(JAVASCRIPT_SRC)
 	$(QUIET_GEN) $(CQUOTE) $@ $(JAVASCRIPT_SRC)
 
+$(GEN)/adobe_ca.h : $(ADOBECA_SRC)
+	$(QUIET_GEN) $(BIN2HEX) $@ $(ADOBECA_SRC)
+
 CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
 FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h $(GEN)/font_cjk_full.h
 JAVASCRIPT_HDR := $(GEN)/js_util.h
+ADOBECA_HDR := $(GEN)/adobe_ca.h
 
 ifeq "$(CROSSCOMPILE)" ""
 $(CMAP_HDR) : $(CMAPDUMP) | $(GEN)
 $(FONT_HDR) : $(FONTDUMP) | $(GEN)
 $(JAVASCRIPT_HDR) : $(CQUOTE) | $(GEN)
+$(ADOBECA_HDR) : $(BIN2HEX) | $(GEN)
 endif
 
-generate: $(CMAP_HDR) $(FONT_HDR) $(JAVASCRIPT_HDR)
+generate: $(CMAP_HDR) $(FONT_HDR) $(JAVASCRIPT_HDR) $(ADOBECA_HDR)
 
 $(OUT)/pdf_cmap_table.o : $(CMAP_HDR)
 $(OUT)/pdf_fontfile.o : $(FONT_HDR)
 $(OUT)/pdf_js.o : $(JAVASCRIPT_HDR)
+$(OUT)/crypt_pkcs7.o : $(ADOBECA_HDR)
 $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 
 # --- Tools and Apps ---
@@ -180,12 +203,12 @@ ifeq "$(NOX11)" ""
 MUVIEW := $(OUT)/mupdf
 $(MUVIEW) : $(FITZ_LIB) $(THIRD_LIBS)
 $(MUVIEW) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
-	$(LINK_CMD) $(SYS_X11_LIBS)
+	$(LINK_CMD) $(X11_LIBS)
 
 MUVIEW_V8 := $(OUT)/mupdf-v8
 $(MUVIEW_V8) : $(FITZ_V8_LIB) $(THIRD_LIBS)
 $(MUVIEW_V8) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
-	$(LINK_V8_CMD) $(SYS_X11_LIBS)
+	$(LINK_V8_CMD) $(X11_LIBS)
 endif
 
 MUJSTEST_V8 := $(OUT)/mujstest-v8

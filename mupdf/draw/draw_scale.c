@@ -1261,6 +1261,34 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 
 	DBUG(("Scale: (%d,%d) to (%g,%g) at (%g,%g)\n",src->w,src->h,w,h,x,y));
 
+	/* Avoid extreme scales where overflows become problematic. */
+	if (w > (1<<24) || h > (1<<24) || w < -(1<<24) || h < -(1<<24))
+		return NULL;
+
+	/* Clamp small ranges of w and h */
+	if (w <= -1)
+	{
+	}
+	else if (w < 0)
+	{
+		w = -1;
+	}
+	else if (w < 1)
+	{
+		w = 1;
+	}
+	if (h <= -1)
+	{
+	}
+	else if (h < 0)
+	{
+		h = -1;
+	}
+	else if (h < 1)
+	{
+		h = 1;
+	}
+
 	/* Find the destination bbox, width/height, and sub pixel offset,
 	 * allowing for whether we're flipping or not. */
 	/* The (x,y) position given describes where the top left corner
@@ -1280,7 +1308,7 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 	 * y is always R.ymax - r.ymax.
 	 */
 	/* dst_x_int is calculated to be the left of the scaled image, and
-	 * x (the sub_pixel_offset) is the distance in from either the left
+	 * x (the sub pixel offset) is the distance in from either the left
 	 * or right pixel expanded edge. */
 	flip_x = (w < 0);
 	if (flip_x)
@@ -1299,11 +1327,11 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 		x -= (float)dst_x_int;
 		dst_w_int = (int)ceilf(x + w);
 	}
-	flip_y = (h < 0);
 	/* dst_y_int is calculated to be the top of the scaled image, and
 	 * y (the sub pixel offset) is the distance in from either the top
 	 * or bottom pixel expanded edge.
 	 */
+	flip_y = (h < 0);
 	if (flip_y)
 	{
 		float tmp;
@@ -1313,7 +1341,9 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 		dst_h_int = (int)tmp;
 		y = tmp - y;
 		dst_h_int -= dst_y_int;
-	} else {
+	}
+	else
+	{
 		dst_y_int = floorf(y);
 		y -= (float)dst_y_int;
 		dst_h_int = (int)ceilf(y + h);

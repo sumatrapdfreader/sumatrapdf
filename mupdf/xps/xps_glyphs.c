@@ -380,7 +380,6 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 	char *opacity_mask_uri;
 
 	char *bidi_level_att;
-	char *caret_stops_att;
 	char *fill_att;
 	char *font_size_att;
 	char *font_uri_att;
@@ -425,7 +424,6 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 	 */
 
 	bidi_level_att = fz_xml_att(root, "BidiLevel");
-	caret_stops_att = fz_xml_att(root, "CaretStops");
 	fill_att = fz_xml_att(root, "Fill");
 	font_size_att = fz_xml_att(root, "FontRenderingEmSize");
 	font_uri_att = fz_xml_att(root, "FontUri");

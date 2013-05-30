@@ -75,8 +75,6 @@ xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *a
 	char *viewbox_att;
 	char *viewport_att;
 	char *tile_mode_att;
-	char *viewbox_units_att;
-	char *viewport_units_att;
 
 	fz_xml *transform_tag = NULL;
 
@@ -92,8 +90,6 @@ xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *a
 	viewbox_att = fz_xml_att(root, "Viewbox");
 	viewport_att = fz_xml_att(root, "Viewport");
 	tile_mode_att = fz_xml_att(root, "TileMode");
-	viewbox_units_att = fz_xml_att(root, "ViewboxUnits");
-	viewport_units_att = fz_xml_att(root, "ViewportUnits");
 
 	c.base_uri = base_uri;
 	c.dict = dict;

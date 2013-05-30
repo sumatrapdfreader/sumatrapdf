@@ -62,6 +62,14 @@ fz_write(fz_output *out, const void *data, int len)
 	return out->write(out, data, len);
 }
 
+int
+fz_puts(fz_output *out, const char *str)
+{
+	if (!out)
+		return 0;
+	return out->write(out, str, strlen(str));
+}
+
 static int
 buffer_printf(fz_output *out, const char *fmt, va_list list)
 {

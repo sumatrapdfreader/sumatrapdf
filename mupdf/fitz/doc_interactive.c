@@ -81,6 +81,16 @@ void fz_choice_widget_set_value(fz_interactive *idoc, fz_widget *tw, int n, char
 	pdf_choice_widget_set_value((pdf_document *)idoc, tw, n, opts);
 }
 
+int fz_signature_widget_byte_range(fz_interactive *idoc, fz_widget *widget, int (*byte_range)[2])
+{
+	return pdf_signature_widget_byte_range((pdf_document *)idoc, widget, byte_range);
+}
+
+int fz_signature_widget_contents(fz_interactive *idoc, fz_widget *widget, char **contents)
+{
+	return pdf_signature_widget_contents((pdf_document *)idoc, widget, contents);
+}
+
 fz_annot_type fz_get_annot_type(fz_annot *annot)
 {
 	return pdf_annot_type((pdf_annot *)annot);

@@ -42,7 +42,7 @@ static void retainpages(int argc, char **argv)
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
-	oldroot = pdf_dict_gets(xref->trailer, "Root");
+	oldroot = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pages = pdf_dict_gets(oldroot, "Pages");
 	olddests = pdf_load_name_tree(xref, "Dests");
 
@@ -141,7 +141,7 @@ static void retainpages(int argc, char **argv)
 			pdf_drop_obj(key_str);
 		}
 
-		root = pdf_dict_gets(xref->trailer, "Root");
+		root = pdf_dict_gets(pdf_trailer(xref), "Root");
 		pdf_dict_puts(dests, "Names", names_list);
 		pdf_dict_puts(names, "Dests", dests);
 		pdf_dict_puts(root, "Names", names);

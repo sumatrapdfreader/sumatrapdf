@@ -199,6 +199,7 @@
     <ClCompile Include="..\mupdf\fitz\crypt_aes.c" />
     <ClCompile Include="..\mupdf\fitz\crypt_arc4.c" />
     <ClCompile Include="..\mupdf\fitz\crypt_md5.c" />
+    <ClCompile Include="..\mupdf\fitz\crypt_pkcs7.c" />
     <ClCompile Include="..\mupdf\fitz\crypt_sha2.c" />
     <ClCompile Include="..\mupdf\fitz\dev_bbox.c" />
     <ClCompile Include="..\mupdf\fitz\dev_gdiplus.cpp" />

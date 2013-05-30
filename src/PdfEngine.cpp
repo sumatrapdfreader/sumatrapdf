@@ -1616,7 +1616,7 @@ bool PdfEngineImpl::FinishLoading()
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
-        _info = pdf_dict_gets(_doc->trailer, "Info");
+        _info = pdf_dict_gets(pdf_trailer(_doc), "Info");
         if (_info)
             _info = pdf_copy_str_dict(ctx, _info);
         if (!_info)
@@ -1624,10 +1624,10 @@ bool PdfEngineImpl::FinishLoading()
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile())
             pdf_dict_puts_drop(_info, "Linearized", pdf_new_bool(ctx, 1));
-        if (pdf_to_bool(pdf_dict_getp(_doc->trailer, "Root/MarkInfo/Marked")))
+        if (pdf_to_bool(pdf_dict_getp(pdf_trailer(_doc), "Root/MarkInfo/Marked")))
             pdf_dict_puts_drop(_info, "Marked", pdf_new_bool(ctx, 1));
         // also remember known output intents (PDF/X, etc.)
-        pdf_obj *intents = pdf_dict_getp(_doc->trailer, "Root/OutputIntents");
+        pdf_obj *intents = pdf_dict_getp(pdf_trailer(_doc), "Root/OutputIntents");
         if (pdf_is_array(intents)) {
             pdf_obj *list = pdf_new_array(ctx, pdf_array_len(intents));
             for (int i = 0; i < pdf_array_len(intents); i++) {
@@ -1646,7 +1646,7 @@ bool PdfEngineImpl::FinishLoading()
         _info = NULL;
     }
     fz_try(ctx) {
-        pdf_obj *pagelabels = pdf_dict_getp(_doc->trailer, "Root/PageLabels");
+        pdf_obj *pagelabels = pdf_dict_getp(pdf_trailer(_doc), "Root/PageLabels");
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
     }
@@ -2442,7 +2442,7 @@ bool PdfEngineImpl::IsLinearizedFile()
     if (tok != PDF_TOK_INT)
         return false;
     int num = _doc->lexbuf.base.i;
-    if (num < 0 || num >= _doc->len)
+    if (num < 0 || num >= pdf_xref_len(_doc))
         return false;
     // check whether it's a linearization dictionary
     fz_try(_doc->ctx) {
@@ -2451,7 +2451,7 @@ bool PdfEngineImpl::IsLinearizedFile()
     fz_catch(_doc->ctx) {
         return false;
     }
-    pdf_obj *obj = _doc->table[num].obj;
+    pdf_obj *obj = pdf_get_xref_entry(_doc, num)->obj;
     if (!pdf_is_dict(obj))
         return false;
     // /Linearized format must be version 1.0
@@ -2675,7 +2675,7 @@ PageLayoutType PdfEngineImpl::PreferredLayout()
     ScopedCritSec scope(&ctxAccess);
     pdf_obj *root = NULL;
     fz_try(ctx) {
-        root = pdf_dict_gets(_doc->trailer, "Root");
+        root = pdf_dict_gets(pdf_trailer(_doc), "Root");
     }
     fz_catch(ctx) {
         return layout;
@@ -2850,7 +2850,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
     bool ok = true;
     pdf_obj *obj = NULL, *annots_new = NULL;
     pdf_file_update_list *list = NULL;
-    int next_num = _doc->len;
+    int next_num = pdf_xref_len(_doc);
 
     fz_var(obj);
     fz_var(annots_new);
@@ -2899,7 +2899,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
         if (list) {
             // write xref, trailer and startxref entries and clean up
             fz_try(ctx) {
-                pdf_file_update_end(list, _doc->trailer, _doc->startxref);
+                pdf_file_update_end(list, pdf_trailer(_doc), _doc->startxref);
             }
             fz_catch(ctx) {
                 ok = false;
@@ -2987,7 +2987,7 @@ WCHAR *PdfLink::GetValue() const
         if (IsRelativeURI(path)) {
             ScopedMem<WCHAR> base;
             fz_try(engine->ctx) {
-                pdf_obj *obj = pdf_dict_gets(engine->_doc->trailer, "Root");
+                pdf_obj *obj = pdf_dict_gets(pdf_trailer(engine->_doc), "Root");
                 obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
                 if (obj)
                     base.Set(str::conv::FromPdf(obj));

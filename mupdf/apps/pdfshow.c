@@ -24,7 +24,7 @@ static void showtrailer(void)
 	if (!doc)
 		fz_throw(ctx, "no file specified");
 	printf("trailer\n");
-	pdf_fprint_obj(stdout, doc->trailer, 0);
+	pdf_fprint_obj(stdout, pdf_trailer(doc), 0);
 	printf("\n");
 }
 
@@ -34,7 +34,7 @@ static void showencrypt(void)
 
 	if (!doc)
 		fz_throw(ctx, "no file specified");
-	encrypt = pdf_dict_gets(doc->trailer, "Encrypt");
+	encrypt = pdf_dict_gets(pdf_trailer(doc), "Encrypt");
 	if (!encrypt)
 		fz_throw(ctx, "document not encrypted");
 	printf("encryption dictionary\n");
@@ -161,7 +161,8 @@ static void showgrep(char *filename)
 	len = pdf_count_objects(doc);
 	for (i = 0; i < len; i++)
 	{
-		if (doc->table[i].type == 'n' || doc->table[i].type == 'o')
+		pdf_xref_entry *entry = pdf_get_xref_entry(doc, i);
+		if (entry->type == 'n' || entry->type == 'o')
 		{
 			fz_try(ctx)
 			{
@@ -183,7 +184,7 @@ static void showgrep(char *filename)
 	}
 
 	printf("%s:trailer: ", filename);
-	pdf_fprint_obj(stdout, doc->trailer, 1);
+	pdf_fprint_obj(stdout, pdf_trailer(doc), 1);
 }
 
 int pdfshow_main(int argc, char **argv)

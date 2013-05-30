@@ -468,6 +468,9 @@
     <ClCompile Include="..\mupdf\fitz\crypt_md5.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\crypt_pkcs7.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\crypt_sha2.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

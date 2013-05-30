@@ -75,7 +75,7 @@ pdf_lookup_name(pdf_document *xref, char *which, pdf_obj *needle)
 {
 	fz_context *ctx = xref->ctx;
 
-	pdf_obj *root = pdf_dict_gets(xref->trailer, "Root");
+	pdf_obj *root = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pdf_obj *names = pdf_dict_gets(root, "Names");
 	pdf_obj *tree = pdf_dict_gets(names, which);
 	return pdf_lookup_name_imp(ctx, tree, needle);
@@ -86,7 +86,7 @@ pdf_lookup_dest(pdf_document *xref, pdf_obj *needle)
 {
 	fz_context *ctx = xref->ctx;
 
-	pdf_obj *root = pdf_dict_gets(xref->trailer, "Root");
+	pdf_obj *root = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pdf_obj *dests = pdf_dict_gets(root, "Dests");
 	pdf_obj *names = pdf_dict_gets(root, "Names");
 	pdf_obj *dest = NULL;
@@ -154,7 +154,7 @@ pdf_load_name_tree(pdf_document *xref, char *which)
 {
 	fz_context *ctx = xref->ctx;
 
-	pdf_obj *root = pdf_dict_gets(xref->trailer, "Root");
+	pdf_obj *root = pdf_dict_gets(pdf_trailer(xref), "Root");
 	pdf_obj *names = pdf_dict_gets(root, "Names");
 	pdf_obj *tree = pdf_dict_gets(names, which);
 	if (pdf_is_dict(tree))

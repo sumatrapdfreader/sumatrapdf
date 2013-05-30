@@ -1,7 +1,7 @@
 #include "muxps-internal.h"
 
 static fz_xml *
-xps_find_resource(xps_document *doc, xps_resource *dict, char *name, char **urip)
+xps_lookup_resource(xps_document *doc, xps_resource *dict, char *name, char **urip)
 {
 	xps_resource *head, *node;
 	for (head = dict; head; head = head->parent)
@@ -33,7 +33,7 @@ xps_parse_resource_reference(xps_document *doc, xps_resource *dict, char *att, c
 	if (s)
 		*s = 0;
 
-	return xps_find_resource(doc, dict, name, urip);
+	return xps_lookup_resource(doc, dict, name, urip);
 }
 
 void

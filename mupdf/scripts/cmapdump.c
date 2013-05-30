@@ -192,7 +192,6 @@ fz_colorspace_context *fz_keep_colorspace_context(fz_context *ctx)
 	return NULL;
 }
 
-
 void fz_new_aa_context(fz_context *ctx)
 {
 }

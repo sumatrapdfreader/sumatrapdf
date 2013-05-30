@@ -10,6 +10,7 @@ FREETYPE_DIR := thirdparty/freetype
 JBIG2DEC_DIR := thirdparty/jbig2dec
 JPEG_DIR := thirdparty/jpeg
 OPENJPEG_DIR := thirdparty/openjpeg
+OPENSSL_DIR := thirdparty/openssl
 ZLIB_DIR := thirdparty/zlib
 
 # --- V8 ---
@@ -22,9 +23,9 @@ V8_DIR := $(wildcard thirdparty/v8*)
 ifneq "$(V8_DIR)" ""
 
 CFLAGS += -I$(V8_DIR)/include
-ifeq "$(BUILD)" "release"
+ifeq "$(build)" "release"
 V8LIB_CHOICE := release
-else ifeq "$(BUILD)" "profile"
+else ifeq "$(build)" "profile"
 V8LIB_CHOICE := release
 else
 V8LIB_CHOICE := debug
@@ -48,8 +49,7 @@ endif
 # --- FreeType 2 ---
 
 ifneq "$(wildcard $(FREETYPE_DIR)/README)" ""
-CFLAGS += -I$(FREETYPE_DIR)/include
-LIBS := $(filter-out -lfreetype, $(LIBS))
+
 FREETYPE_LIB := $(OUT)/libfreetype.a
 
 FREETYPE_SRC := \
@@ -104,16 +104,16 @@ $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(OUT)
 $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 
+FREETYPE_CFLAGS := -I$(FREETYPE_DIR)/include
 else
-SYS_FREETYPE_CFLAGS := $(SYS_FREETYPE_CFLAGS)
-CFLAGS += $(SYS_FREETYPE_CFLAGS)
+FREETYPE_CFLAGS := $(SYS_FREETYPE_CFLAGS)
+FREETYPE_LIBS := $(SYS_FREETYPE_LIBS)
 endif
 
 # --- JBIG2DEC ---
 
 ifneq "$(wildcard $(JBIG2DEC_DIR)/README)" ""
-CFLAGS += -I$(JBIG2DEC_DIR)
-LIBS := $(filter-out -ljbig2dec, $(LIBS))
+
 JBIG2DEC_LIB := $(OUT)/libjbig2dec.a
 
 JBIG2DEC_SRC := \
@@ -136,13 +136,17 @@ JBIG2DEC_SRC := \
 $(JBIG2DEC_LIB): $(addprefix $(OUT)/, $(JBIG2DEC_SRC:%.c=%.o))
 $(OUT)/%.o: $(JBIG2DEC_DIR)/%.c | $(OUT)
 	$(CC_CMD) -DHAVE_STDINT_H
+
+JBIG2DEC_CFLAGS := -I$(JBIG2DEC_DIR)
+else
+JBIG2DEC_CFLAGS := $(SYS_JBIG2DEC_CFLAGS)
+JBIG2DEC_LIBS := $(SYS_JBIG2DEC_LIBS)
 endif
 
 # --- JPEG library from IJG ---
 
 ifneq "$(wildcard $(JPEG_DIR)/README)" ""
-CFLAGS += -I$(JPEG_DIR)
-LIBS := $(filter-out -ljpeg, $(LIBS))
+
 JPEG_LIB := $(OUT)/libjpeg.a
 
 JPEG_SRC := \
@@ -181,13 +185,17 @@ JPEG_SRC := \
 $(JPEG_LIB): $(addprefix $(OUT)/jpeg_, $(JPEG_SRC:%.c=%.o))
 $(OUT)/jpeg_%.o: $(JPEG_DIR)/%.c | $(OUT)
 	$(CC_CMD) -Dmain=xxxmain
+
+JPEG_CFLAGS := -I$(JPEG_DIR)
+else
+JPEG_CFLAGS := $(SYS_JPEG_CFLAGS)
+JPEG_LIBS := $(SYS_JPEG_LIBS)
 endif
 
 # --- OpenJPEG ---
 
 ifneq "$(wildcard $(OPENJPEG_DIR)/README)" ""
-CFLAGS += -I$(OPENJPEG_DIR)/src/lib/openjp2
-LIBS := $(filter-out -lopenjpeg, $(LIBS))
+
 OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 
 OPENJPEG_SRC := \
@@ -219,16 +227,17 @@ OPENJPEG_SRC := \
 $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
 $(OUT)/opj_%.o: $(OPENJPEG_DIR)/src/lib/openjp2/%.c | $(OUT)
 	$(CC_CMD) -DOPJ_STATIC -DOPJ_HAVE_STDINT_H
+
+OPENJPEG_CFLAGS += -I$(OPENJPEG_DIR)/src/lib/openjp2
 else
-SYS_OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
-CFLAGS += $(SYS_OPENJPEG_CFLAGS)
+OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
+OPENJPEG_LIBS := $(SYS_OPENJPEG_LIBS)
 endif
 
 # --- ZLIB ---
 
 ifneq "$(wildcard $(ZLIB_DIR)/README)" ""
-CFLAGS += -I$(ZLIB_DIR) -Dverbose=-1
-LIBS := $(filter-out -lz, $(LIBS))
+
 ZLIB_LIB := $(OUT)/libz.a
 
 ZLIB_SRC := \
@@ -245,16 +254,48 @@ ZLIB_SRC := \
 
 $(ZLIB_LIB): $(addprefix $(OUT)/zlib_, $(ZLIB_SRC:%.c=%.o))
 $(OUT)/zlib_%.o: $(ZLIB_DIR)/%.c | $(OUT)
-	$(CC_CMD)
+	$(CC_CMD) -Dverbose=-1
+
+ZLIB_CFLAGS := -I$(ZLIB_DIR)
+else
+ZLIB_CFLAGS := $(SYS_ZLIB_CFLAGS)
+ZLIB_LIBS := $(SYS_ZLIB_LIBS)
+endif
+
+# --- OpenSSL ---
+
+ifneq "$(wildcard $(OPENSSL_DIR)/README)" ""
+
+OPENSSL_LIB := $(OUT)/libcrypto.a
+
+OPENSSL_DIR_MAK := $(OPENSSL_DIR)/Makefile
+OPENSSL_DIR_LIB := $(OPENSSL_DIR)/libcrypto.a
+
+$(OPENSSL_DIR_MAK):
+	cd $(OPENSSL_DIR) && ./config no-threads no-zlib no-shared no-asm no-dso
+
+$(OPENSSL_DIR_LIB): $(OPENSSL_DIR_MAK)
+	$(MAKE) -C $(OPENSSL_DIR) build_crypto
+
+$(OPENSSL_LIB): $(OPENSSL_DIR_LIB) | $(OUT)
+	cp $(OPENSSL_DIR_LIB) $(OPENSSL_LIB)
+
+openssl-clean:
+	$(MAKE) -C $(OPENSSL_DIR) clean
+	rm -f thirdparty/openssl/Makefile thirdparty/openssl/libcrypto.a
+
+OPENSSL_CFLAGS := -DHAVE_OPENSSL -I$(OPENSSL_DIR)/include
+else
+OPENSSL_CFLAGS := $(SYS_OPENSSL_CFLAGS)
+OPENSSL_LIBS := $(SYS_OPENSSL_LIBS)
 endif
 
 # --- X11 ---
 
 ifeq "$(NOX11)" ""
-SYS_X11_CFLAGS := $(SYS_X11_CFLAGS)
-SYS_X11_LIBS := $(SYS_X11_LIBS)
-CFLAGS += $(SYS_X11_CFLAGS)
+X11_CFLAGS := $(SYS_X11_CFLAGS)
+X11_LIBS := $(SYS_X11_LIBS)
 else
-SYS_X11_CFLAGS :=
-SYS_X11_LIBS :=
+X11_CFLAGS :=
+X11_LIBS :=
 endif

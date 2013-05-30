@@ -155,7 +155,6 @@ load_separation(pdf_document *xref, pdf_obj *array)
 	return cs;
 }
 
-
 static fz_colorspace *
 load_indexed(pdf_document *xref, pdf_obj *array)
 {

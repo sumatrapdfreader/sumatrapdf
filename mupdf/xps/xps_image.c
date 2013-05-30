@@ -26,8 +26,8 @@ xps_paint_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 	fz_fill_image(doc->dev, image, &local_ctm, doc->opacity[doc->opacity_top]);
 }
 
-static xps_part *
-xps_find_image_brush_source_part(xps_document *doc, char *base_uri, fz_xml *root)
+static void
+xps_find_image_brush_source_part(xps_document *doc, char *base_uri, fz_xml *root, xps_part **image_part, xps_part **profile_part)
 {
 	char *image_source_att;
 	char buf[1024];
@@ -71,9 +71,22 @@ xps_find_image_brush_source_part(xps_document *doc, char *base_uri, fz_xml *root
 	if (!image_name)
 		fz_throw(doc->ctx, "cannot find image source");
 
-	xps_resolve_url(partname, base_uri, image_name, sizeof partname);
+	if (image_part)
+	{
+		xps_resolve_url(partname, base_uri, image_name, sizeof partname);
+		*image_part = xps_read_part(doc, partname);
+	}
 
-	return xps_read_part(doc, partname);
+	if (profile_part)
+	{
+		if (profile_name)
+		{
+			xps_resolve_url(partname, base_uri, profile_name, sizeof partname);
+			*profile_part = xps_read_part(doc, partname);
+		}
+		else
+			*profile_part = NULL;
+	}
 }
 
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
@@ -135,7 +148,7 @@ xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 
 	fz_try(doc->ctx)
 	{
-		part = xps_find_image_brush_source_part(doc, base_uri, root);
+		xps_find_image_brush_source_part(doc, base_uri, root, &part, NULL);
 	}
 	fz_catch(doc->ctx)
 	{

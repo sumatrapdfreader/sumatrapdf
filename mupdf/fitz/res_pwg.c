@@ -174,13 +174,10 @@ fz_output_pwg_bitmap_page(fz_output *out, const fz_bitmap *bitmap, const fz_pwg_
 {
 	unsigned char *sp;
 	int y, x, ss;
-	fz_context *ctx;
 	int byte_width;
 
 	if (!out || !bitmap)
 		return;
-
-	ctx = out->ctx;
 
 	output_header(out, pwg, bitmap->xres, bitmap->yres, bitmap->w, bitmap->h, 1);
 

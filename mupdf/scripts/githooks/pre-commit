@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# pre-commit hook to fix whitespace errors
+#
+# Uses the core.whitespace or .gitattributes whitespace=... settings.
+#
+# see also: "man git-config" under core.whitespace
+# see also: "man gitattributes"
+#
+
+PATCH=P.diff
+
+if ! git diff --cached --check --quiet
+then
+	git diff --cached > $PATCH
+	git apply --cached -R $PATCH
+	git apply --cached --whitespace=fix $PATCH
+	rm $PATCH
+fi

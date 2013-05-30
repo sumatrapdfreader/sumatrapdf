@@ -305,16 +305,8 @@ add_weight(fz_weights *weights, int j, int i, fz_scale_filter *filter,
 	weight = (int)(256*f+0.5f);
 
 	/* Ensure i is in range */
-	if (i < 0)
-	{
-		i = 0;
+	if (i < 0 || i >= src_w)
 		return;
-	}
-	else if (i >= src_w)
-	{
-		i = src_w-1;
-		return;
-	}
 	if (weight == 0)
 	{
 		/* We add a fudge factor here to allow for extreme downscales
@@ -1267,13 +1259,13 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 
 	/* Find the destination bbox, width/height, and sub pixel offset,
 	 * allowing for whether we're flipping or not. */
-	/* The (x,y) position given describes where the top left corner of the
-	 * source image should be mapped to (i.e. where (0,0) in image space ends
-	 * up). Also there are differences in the way we scale horizontally and
-	 * vertically. When scaling rows horizontally, we always read forwards
-	 * through the source, and store either forwards or in reverse as required.
-	 * When scaling vertically, we always store out forwards, but may feed
-	 * source rows in in a different order.
+	/* The (x,y) position given describes where the top left corner
+	 * of the source image should be mapped to (i.e. where (0,0) in image
+	 * space ends up). Also there are differences in the way we scale
+	 * horizontally and vertically. When scaling rows horizontally, we
+	 * always read forwards through the source, and store either forwards
+	 * or in reverse as required. When scaling vertically, we always store
+	 * out forwards, but may feed source rows in in a different order.
 	 *
 	 * Consider the image rectangle 'r' to which the image is mapped,
 	 * and the (possibly) larger rectangle 'R', given by expanding 'r' to
@@ -1284,7 +1276,7 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 	 * y is always R.ymax - r.ymax.
 	 */
 	/* dst_x_int is calculated to be the left of the scaled image, and
-	 * x (the sub_pixel_offset) is the distance in from either the left
+	 * x (the sub pixel offset) is the distance in from either the left
 	 * or right pixel expanded edge. */
 	flip_x = (w < 0);
 	if (flip_x)
@@ -1304,7 +1296,7 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 		dst_w_int = (int)ceilf(x + w);
 	}
 	/* dst_y_int is calculated to be the top of the scaled image, and
-	 * y (the sub_pixel_offset) is the distance in from either the top
+	 * y (the sub pixel offset) is the distance in from either the top
 	 * or bottom pixel expanded edge.
 	 */
 	flip_y = (h < 0);
