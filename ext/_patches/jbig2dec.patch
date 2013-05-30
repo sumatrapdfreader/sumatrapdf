@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
 --- jbig2dec.orig\jbig2.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2.c	Tue May 14 21:21:20 2013
++++ jbig2dec\jbig2.c	Thu May 30 17:27:47 2013
 @@ -388,11 +388,10 @@
  	    return 0;
  	  return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1,
@@ -15,7 +15,7 @@ diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
  {
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
 --- jbig2dec.orig\jbig2_huffman.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2_huffman.c	Tue May 14 21:21:21 2013
++++ jbig2dec\jbig2_huffman.c	Thu May 30 17:28:30 2013
 @@ -563,11 +563,11 @@
          const size_t lines_data_bitlen = (segment->data_length - 9) * 8;    /* length in bit */
          /* bit offset: controls bit reading */
@@ -31,7 +31,7 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
              code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
 diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
 --- jbig2dec.orig\jbig2_segment.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2_segment.c	Tue May 14 21:21:21 2013
++++ jbig2dec\jbig2_segment.c	Thu May 30 17:26:29 2013
 @@ -242,12 +242,10 @@
              } else {
                  return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
@@ -45,3 +45,32 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  /* general segment parsing dispatch */
  int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
  			 const uint8_t *segment_data)
+diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
+--- jbig2dec.orig\jbig2_text.c	Wed May 29 22:46:18 2013
++++ jbig2dec\jbig2_text.c	Thu May 30 19:27:16 2013
+@@ -849,11 +849,11 @@
+ 
+     image = jbig2_image_new(ctx, region_info.width, region_info.height);
+     if (image == NULL) {
+         code =jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "couldn't allocate text region image");
+-        goto cleanup1;
++        goto cleanup2;
+     }
+ 
+     ws = jbig2_word_stream_buf_new(ctx, segment_data + offset, segment->data_length - offset);
+     if (ws == NULL)
+     {
+@@ -949,11 +949,11 @@
+     }
+     jbig2_free(ctx->allocator, as);
+     jbig2_word_stream_buf_free(ctx, ws);
+ 
+ cleanup2:
+-    if (!params.SBHUFF && params.SBREFINE) {
++    {
+         jbig2_free(ctx->allocator, GR_stats);
+     }
+     jbig2_image_release(ctx, image);
+ 
+ cleanup1:

@@ -619,8 +619,9 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 		      rparams.DY = RDY;
 		      rparams.TPGRON = 0;
 		      memcpy(rparams.grat, params->sdrat, 4);
-		      jbig2_decode_refinement_region(ctx, segment,
+		      code = jbig2_decode_refinement_region(ctx, segment,
 		          &rparams, as, image, GR_stats);
+			  if (code < 0) goto cleanup4;
 
 		      SDNEWSYMS->glyphs[NSYMSDECODED] = image;
 
@@ -1083,6 +1084,7 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   if (flags & 0x0100) {
       jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
         "segment marks bitmap coding context as used (NYI)");
+      goto cleanup;
   } else {
       int stats_size = params.SDTEMPLATE == 0 ? 65536 :
           params.SDTEMPLATE == 1 ? 8192 : 1024;
@@ -1094,20 +1096,18 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
           goto cleanup;
       }
       memset(GB_stats, 0, stats_size);
-      if (params.SDREFAGG) {
-          stats_size = params.SDRTEMPLATE ? 1 << 10 : 1 << 13;
-          GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
-          if (GR_stats == NULL)
-          {
-              jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
-                  "failed to allocate GR_stats in jbig2_symbol_dictionary");
-              jbig2_free(ctx->allocator, GB_stats);
-              goto cleanup;
-          }
-          memset(GR_stats, 0, stats_size);
-      }
+	  
+	  stats_size = params.SDRTEMPLATE ? 1 << 10 : 1 << 13;
+	  GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
+	  if (GR_stats == NULL)
+	  {
+		  jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+			  "failed to allocate GR_stats in jbig2_symbol_dictionary");
+		  jbig2_free(ctx->allocator, GB_stats);
+		  goto cleanup;
+	  }
+	  memset(GR_stats, 0, stats_size);
   }
-
 
   segment->result = (void *)jbig2_decode_symbol_dict(ctx, segment,
 				  &params,

@@ -71,6 +71,9 @@ jbig2_decode_generic_template0(Jbig2Ctx *ctx,
   printf("P4\n%d %d\n", GBW, GBH);
 #endif
 
+  if (GBW <= 0)
+    return 0;
+
   for (y = 0; y < GBH; y++)
     {
       uint32_t CONTEXT;
@@ -189,6 +192,9 @@ jbig2_decode_generic_template1(Jbig2Ctx *ctx,
   printf("P4\n%d %d\n", GBW, GBH);
 #endif
 
+  if (GBW <= 0)
+    return 0;
+
   for (y = 0; y < GBH; y++)
     {
       uint32_t CONTEXT;
@@ -258,6 +264,9 @@ jbig2_decode_generic_template2(Jbig2Ctx *ctx,
 #ifdef OUTPUT_PBM
   printf("P4\n%d %d\n", GBW, GBH);
 #endif
+
+  if (GBW <= 0)
+    return 0;
 
   for (y = 0; y < GBH; y++)
     {
@@ -329,6 +338,9 @@ jbig2_decode_generic_template2a(Jbig2Ctx *ctx,
   printf("P4\n%d %d\n", GBW, GBH);
 #endif
 
+  if (GBW <= 0)
+    return 0;
+
   for (y = 0; y < GBH; y++)
     {
       uint32_t CONTEXT;
@@ -399,6 +411,9 @@ jbig2_decode_generic_template3(Jbig2Ctx *ctx,
 #ifdef OUTPUT_PBM
   printf("P4\n%d %d\n", GBW, GBH);
 #endif
+
+  if (GBW <= 0)
+    return 0;
 
   for (y = 0; y < GBH; y++)
     {

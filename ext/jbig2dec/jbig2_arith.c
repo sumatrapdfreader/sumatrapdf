@@ -229,6 +229,8 @@ jbig2_arith_new (Jbig2Ctx *ctx, Jbig2WordStream *ws)
   return result;
 }
 
+#define MAX_QE_ARRAY_SIZE 47
+
 /* could put bit fields in to minimize memory usage */
 typedef struct {
   unsigned short Qe;
@@ -236,7 +238,7 @@ typedef struct {
   byte lps_xor; /* lps_xor = index ^ NLPS ^ (SWITCH << 7) */
 } Jbig2ArithQe;
 
-const Jbig2ArithQe jbig2_arith_Qe[] = {
+const Jbig2ArithQe jbig2_arith_Qe[MAX_QE_ARRAY_SIZE] = {
   { 0x5601,  1 ^  0,  1 ^  0 ^ 0x80 },
   { 0x3401,  2 ^  1,  6 ^  1 },
   { 0x1801,  3 ^  2,  9 ^  2 },
@@ -306,8 +308,18 @@ bool
 jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx)
 {
   Jbig2ArithCx cx = *pcx;
-  const Jbig2ArithQe *pqe = &jbig2_arith_Qe[cx & 0x7f];
+  const Jbig2ArithQe *pqe;
+  unsigned int index = cx & 0x7f;
   bool D;
+
+  if (index >= MAX_QE_ARRAY_SIZE)
+  {
+	  return -1;
+  }
+  else
+  {
+	  pqe = &jbig2_arith_Qe[index];
+  }
 
   /* Figure E.15 */
   as->A -= pqe->Qe;

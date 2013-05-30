@@ -21,6 +21,7 @@ AC_SUBST([JBIG2DEC_LT_AGE], [0])
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
 # platform specific compiler flags
