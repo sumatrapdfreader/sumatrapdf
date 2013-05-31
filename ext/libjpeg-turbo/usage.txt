@@ -1,3 +1,6 @@
+NOTE:  This file was modified by The libjpeg-turbo Project to include only
+information relevant to libjpeg-turbo and to wordsmith certain sections.
+
 USAGE instructions for the Independent JPEG Group's JPEG software
 =================================================================
 
@@ -76,6 +79,10 @@ The basic command line switches for cjpeg are:
 			whether a BMP file uses only shades of gray.  By
 			saying -grayscale, you'll get a smaller JPEG file that
 			takes less time to process.
+
+	-rgb		Create RGB JPEG file.
+			Using this switch suppresses the conversion from RGB
+			colorspace input to the default YCbCr JPEG colorspace.
 
 	-optimize	Perform optimization of entropy encoding parameters.
 			Without this, default encoding parameters are used.
@@ -250,10 +257,11 @@ The basic command line switches for djpeg are:
 			djpeg runs noticeably faster in this mode.
 
 	-scale M/N	Scale the output image by a factor M/N.  Currently
-			the scale factor must be 1/1, 1/2, 1/4, or 1/8.
-			Scaling is handy if the image is larger than your
-			screen; also, djpeg runs much faster when scaling
-			down the output.
+			the scale factor must be M/8, where M is an integer
+			between 1 and 16 inclusive, or any reduced fraction
+			thereof (such as 1/2, 3/4, etc.  Scaling is handy if
+			the image is larger than your screen; also, djpeg runs
+			much faster when scaling down the output.
 
 	-bmp		Select BMP output format (Windows flavor).  8-bit
 			colormapped format is emitted if -colors or -grayscale

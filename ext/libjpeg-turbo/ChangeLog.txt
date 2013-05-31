@@ -1,3 +1,101 @@
+1.3.0
+=====
+
+[1] 'make test' now works properly on FreeBSD, and it no longer requires the
+md5sum executable to be present on other Un*x platforms.
+
+[2] Overhauled the packaging system:
+-- To avoid conflict with vendor-supplied libjpeg-turbo packages, the
+official RPMs and DEBs for libjpeg-turbo have been renamed to
+"libjpeg-turbo-official".
+-- The TurboJPEG libraries are now located under /opt/libjpeg-turbo in the
+official Linux and Mac packages, to avoid conflict with vendor-supplied
+packages and also to streamline the packaging system.
+-- Release packages are now created with the directory structure defined
+by the configure variables "prefix", "bindir", "libdir", etc. (Un*x) or by the
+CMAKE_INSTALL_PREFIX variable (Windows.)  The exception is that the docs are
+always located under the system default documentation directory on Un*x and Mac
+systems, and on Windows, the TurboJPEG DLL is always located in the Windows
+system directory.
+-- To avoid confusion, official libjpeg-turbo packages on Linux/Unix platforms
+(except for Mac) will always install the 32-bit libraries in
+/opt/libjpeg-turbo/lib32 and the 64-bit libraries in /opt/libjpeg-turbo/lib64.
+-- Fixed an issue whereby, in some cases, the libjpeg-turbo executables on Un*x
+systems were not properly linking with the shared libraries installed by the
+same package.
+-- Fixed an issue whereby building the "installer" target on Windows when
+WITH_JAVA=1 would fail if the TurboJPEG JAR had not been previously built.
+-- Building the "install" target on Windows now installs files into the same
+places that the installer does.
+
+[3] Fixed a Huffman encoder bug that prevented I/O suspension from working
+properly.
+
+
+1.2.90 (1.3 beta1)
+==================
+
+[1] Added support for additional scaling factors (3/8, 5/8, 3/4, 7/8, 9/8, 5/4,
+11/8, 3/2, 13/8, 7/4, 15/8, and 2) when decompressing.  Note that the IDCT will
+not be SIMD-accelerated when using any of these new scaling factors.
+
+[2] The TurboJPEG dynamic library is now versioned.  It was not strictly
+necessary to do so, because TurboJPEG uses versioned symbols, and if a function
+changes in an ABI-incompatible way, that function is renamed and a legacy
+function is provided to maintain backward compatibility.  However, certain
+Linux distro maintainers have a policy against accepting any library that isn't
+versioned.
+
+[3] Extended the TurboJPEG Java API so that it can be used to compress a JPEG
+image from and decompress a JPEG image to an arbitrary position in a large
+image buffer.
+
+[4] The tjDecompressToYUV() function now supports the TJFLAG_FASTDCT flag.
+
+[5] The 32-bit supplementary package for amd64 Debian systems now provides
+symlinks in /usr/lib/i386-linux-gnu for the TurboJPEG libraries in /usr/lib32.
+This allows those libraries to be used on MultiArch-compatible systems (such as
+Ubuntu 11 and later) without setting the linker path.
+
+[6] The TurboJPEG Java wrapper should now find the JNI library on Mac systems
+without having to pass -Djava.library.path=/usr/lib to java.
+
+[7] TJBench has been ported to Java to provide a convenient way of validating
+the performance of the TurboJPEG Java API.  It can be run with
+'java -cp turbojpeg.jar TJBench'.
+
+[8] cjpeg can now be used to generate JPEG files with the RGB colorspace
+(feature ported from jpeg-8d.)
+
+[9] The width and height in the -crop argument passed to jpegtran can now be
+suffixed with "f" to indicate that, when the upper left corner of the cropping
+region is automatically moved to the nearest iMCU boundary, the bottom right
+corner should be moved by the same amount.  In other words, this feature causes
+jpegtran to strictly honor the specified width/height rather than the specified
+bottom right corner (feature ported from jpeg-8d.)
+
+[10] JPEG files using the RGB colorspace can now be decompressed into grayscale
+images (feature ported from jpeg-8d.)
+
+[11] Fixed a regression caused by 1.2.1[7] whereby the build would fail with
+multiple "Mismatch in operand sizes" errors when attempting to build the x86
+SIMD code with NASM 0.98.
+
+[12] The in-memory source/destination managers (jpeg_mem_src() and
+jpeg_mem_dest()) are now included by default when building libjpeg-turbo with
+libjpeg v6b or v7 emulation, so that programs can take advantage of these
+functions without requiring the use of the backward-incompatible libjpeg v8
+ABI.  The "age number" of the libjpeg-turbo library on Un*x systems has been
+incremented by 1 to reflect this.  You can disable this feature with a
+configure/CMake switch in order to retain strict API/ABI compatibility with the
+libjpeg v6b or v7 API/ABI (or with previous versions of libjpeg-turbo.)  See
+README-turbo.txt for more details.
+
+[13] Added ARM v7s architecture to libjpeg.a and libturbojpeg.a in the official
+libjpeg-turbo binary package for OS X, so that those libraries can be used to
+build applications that leverage the faster CPUs in the iPhone 5 and iPad 4.
+
+
 1.2.1
 =====
 
@@ -77,8 +175,8 @@ are in violation of the spec, other JPEG implementations handle them
 correctly.
 
 [7] Added ARM v6 and ARM v7 architectures to libjpeg.a and libturbojpeg.a in
-the official OS X distribution package, so that those libraries can be used to
-build both OS X and iOS applications.
+the official libjpeg-turbo binary package for OS X, so that those libraries can
+be used to build both OS X and iOS applications.
 
 
 1.1.90 (1.2 beta1)
@@ -124,7 +222,7 @@ NEON instructions.
 TurboJPEG 1.2 API uses pixel formats to define the size and component order of
 the uncompressed source/destination images, and it includes a more efficient
 version of TJBUFSIZE() that computes a worst-case JPEG size based on the level
-of chrominance subsampling.  The refactored implementation of TurboJPEG/OSS
+of chrominance subsampling.  The refactored implementation of the TurboJPEG API
 now uses the libjpeg memory source and destination managers, which allows the
 TurboJPEG compressor to grow the JPEG buffer as necessary.
 
@@ -200,12 +298,12 @@ and libjpeg-turbo should now produce identical output to libjpeg v6b in all
 cases.
 
 [2] Despite the above, the fast integer forward DCT still degrades somewhat for
-JPEG qualities greater than 95, so TurboJPEG/OSS will now automatically use the
-slow integer forward DCT when generating JPEG images of quality 96 or greater.
-This reduces compression performance by as much as 15% for these high-quality
-images but is necessary to ensure that the images are perceptually lossless.
-It also ensures that the library can avoid the performance pitfall created by
-[1].
+JPEG qualities greater than 95, so the TurboJPEG wrapper will now automatically
+use the slow integer forward DCT when generating JPEG images of quality 96 or
+greater.  This reduces compression performance by as much as 15% for these
+high-quality images but is necessary to ensure that the images are perceptually
+lossless.  It also ensures that the library can avoid the performance pitfall
+created by [1].
 
 [3] Ported jpgtest.cxx to pure C to avoid the need for a C++ compiler.
 
@@ -278,7 +376,7 @@ INCOMPLETE_TYPES_BROKEN macro should be defined.
 [1] 2983700: Further FreeBSD build tweaks (no longer necessary to specify
 --host when configuring on a 64-bit system)
 
-[2] Created sym. links in the Unix/Linux packages so that the TurboJPEG
+[2] Created symlinks in the Unix/Linux packages so that the TurboJPEG
 include file can always be found in /opt/libjpeg-turbo/include, the 32-bit
 static libraries can always be found in /opt/libjpeg-turbo/lib32, and the
 64-bit static libraries can always be found in /opt/libjpeg-turbo/lib64.

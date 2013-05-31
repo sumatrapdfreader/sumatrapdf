@@ -1,4 +1,19 @@
+NOTE:  This file was modified by The libjpeg-turbo Project to include only
+information relevant to libjpeg-turbo.
+
 CHANGE LOG for Independent JPEG Group's JPEG software
+
+
+Version 8d  15-Jan-2012
+-----------------------
+
+Add cjpeg -rgb option to create RGB JPEG files.
+Using this switch suppresses the conversion from RGB
+colorspace input to the default YCbCr JPEG colorspace.
+Thank to Michael Koch for the initial suggestion.
+
+Add option to disable the region adjustment in the transupp crop code.
+Thank to Jeffrey Friedl for the suggestion.
 
 
 Version 8b  16-May-2010
@@ -30,6 +45,9 @@ Thank to Roberto Boni from Italy for the suggestion.
 
 Version 7  27-Jun-2009
 ----------------------
+
+New scaled DCTs implemented.
+djpeg now supports scalings N/8 with all N from 1 to 16.
 
 cjpeg -quality option has been extended for support of separate quality
 settings for luminance and chrominance (or in general, for every provided

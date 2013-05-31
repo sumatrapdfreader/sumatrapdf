@@ -1,7 +1,9 @@
 USING THE IJG JPEG LIBRARY
 
-Copyright (C) 1994-2010, Thomas G. Lane, Guido Vollbeding, D. R. Commander.
-This file is part of the Independent JPEG Group's software.
+This file was part of the Independent JPEG Group's software:
+Copyright (C) 1994-2011, Thomas G. Lane, Guido Vollbeding.
+Modifications:
+Copyright (C) 2010, D. R. Commander.
 For conditions of distribution and use, see the accompanying README file.
 
 
@@ -1019,7 +1021,8 @@ The actual dimensions of the JPEG image that will be written to the file are
 given by the following fields.  These are computed from the input image
 dimensions and the compression parameters by jpeg_start_compress().  You can
 also call jpeg_calc_jpeg_dimensions() to obtain the values that will result
-from the current parameter settings.
+from the current parameter settings.  This can be useful if you are trying
+to pick a scaling ratio that will get close to a desired target size.
 
 JDIMENSION jpeg_width		Actual dimensions of output image.
 JDIMENSION jpeg_height
@@ -1113,7 +1116,8 @@ J_COLOR_SPACE out_color_space
 unsigned int scale_num, scale_denom
 	Scale the image by the fraction scale_num/scale_denom.  Default is
 	1/1, or no scaling.  Currently, the only supported scaling ratios
-	are 1/1, 1/2, 1/4, and 1/8.  (The library design allows for arbitrary
+	are M/8 with all M from 1 to 16, or any reduced fraction thereof (such
+	as 1/2, 3/4, etc.)  (The library design allows for arbitrary
 	scaling ratios but this is not likely to be implemented any time soon.)
 	Smaller scaling ratios permit significantly faster decoding since
 	fewer pixels need be processed and a simpler IDCT method can be used.
@@ -1275,8 +1279,9 @@ jpeg_read_header's guess by setting jpeg_color_space.  jpeg_read_header also
 selects a default output color space based on (its guess of) jpeg_color_space;
 set out_color_space to override this.  Again, you must select a supported
 transformation.  jdcolor.c currently supports
-	YCbCr => GRAYSCALE
 	YCbCr => RGB
+	YCbCr => GRAYSCALE
+	RGB => GRAYSCALE
 	GRAYSCALE => RGB
 	YCCK => CMYK
 as well as the null transforms.  (Since GRAYSCALE=>RGB is provided, an

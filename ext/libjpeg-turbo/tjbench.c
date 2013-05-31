@@ -700,6 +700,7 @@ void usage(char *progname)
 			if(i!=nsf-1) printf(", ");
 			if(i==nsf-2) printf("or ");
 		}
+		if(i%8==0 && i!=0) printf("\n     ");
 	}
 	printf(")\n");
 	printf("-hflip, -vflip, -transpose, -transverse, -rot90, -rot180, -rot270 =\n");
@@ -825,7 +826,8 @@ int main(int argc, char *argv[])
 				{
 					for(j=0; j<nsf; j++)
 					{
-						if(temp1==scalingfactors[j].num && temp2==scalingfactors[j].denom)
+						if((double)temp1/(double)temp2
+							== (double)scalingfactors[j].num/(double)scalingfactors[j].denom)
 						{
 							sf=scalingfactors[j];
 							match=1;  break;

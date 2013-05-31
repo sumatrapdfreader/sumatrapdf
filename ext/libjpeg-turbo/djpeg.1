@@ -1,4 +1,4 @@
-.TH DJPEG 1 "11 October 2010"
+.TH DJPEG 1 "18 January 2013"
 .SH NAME
 djpeg \- decompress a JPEG file to an image file
 .SH SYNOPSIS
@@ -62,8 +62,9 @@ runs noticeably faster in this mode.
 .TP
 .BI \-scale " M/N"
 Scale the output image by a factor M/N.  Currently the scale factor must be
-1/1, 1/2, 1/4, or 1/8.  Scaling is handy if the image is larger than your
-screen; also,
+M/8, where M is an integer between 1 and 16 inclusive, or any reduced fraction
+thereof (such as 1/2, 3/4, etc.)  Scaling is handy if the image is larger than
+your screen; also,
 .B djpeg
 runs much faster when scaling down the output.
 .TP
@@ -172,6 +173,10 @@ selects 4000000 bytes.  If more space is needed, temporary files will be used.
 .BI \-outfile " name"
 Send output image to the named file, not to standard output.
 .TP
+.BI \-memsrc
+Load input file into memory before decompressing.  This feature was implemented
+mainly as a way of testing the in-memory source manager (jpeg_mem_src().)
+.TP
 .B \-verbose
 Enable debug printout.  More
 .BR \-v 's
@@ -242,6 +247,10 @@ Wallace, Gregory K.  "The JPEG Still Picture Compression Standard",
 Communications of the ACM, April 1991 (vol. 34, no. 4), pp. 30-44.
 .SH AUTHOR
 Independent JPEG Group
+.PP
+This file was modified by The libjpeg-turbo Project to include only information
+relevant to libjpeg-turbo, to wordsmith certain sections, and to describe
+features not present in libjpeg.
 .SH BUGS
 To avoid the Unisys LZW patent,
 .B djpeg

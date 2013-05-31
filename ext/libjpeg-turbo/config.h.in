@@ -72,6 +72,9 @@
 /* libjpeg-turbo version */
 #undef LIBJPEG_TURBO_VERSION
 
+/* Support in-memory source/destination managers */
+#undef MEM_SRCDST_SUPPORTED
+
 /* Define if you have BSD-like bzero and bcopy */
 #undef NEED_BSD_STRINGS
 

@@ -1,10 +1,10 @@
 /*
  * jdinput.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2002-2009 by Guido Vollbeding.
+ * Modifications:
  * Copyright (C) 2010, D. R. Commander.
- * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains input control logic for the JPEG decompressor.
@@ -37,79 +37,6 @@ METHODDEF(int) consume_markers JPP((j_decompress_ptr cinfo));
 /*
  * Routines to calculate various quantities related to the size of the image.
  */
-
-
-#if JPEG_LIB_VERSION >= 80
-/*
- * Compute output image dimensions and related values.
- * NOTE: this is exported for possible use by application.
- * Hence it mustn't do anything that can't be done twice.
- */
-
-GLOBAL(void)
-jpeg_core_output_dimensions (j_decompress_ptr cinfo)
-/* Do computations that are needed before master selection phase.
- * This function is used for transcoding and full decompression.
- */
-{
-#ifdef IDCT_SCALING_SUPPORTED
-  int ci;
-  jpeg_component_info *compptr;
-
-  /* Compute actual output image dimensions and DCT scaling choices. */
-  if (cinfo->scale_num * cinfo->block_size <= cinfo->scale_denom) {
-    /* Provide 1/block_size scaling */
-    cinfo->output_width = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_width, (long) cinfo->block_size);
-    cinfo->output_height = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_height, (long) cinfo->block_size);
-    cinfo->min_DCT_h_scaled_size = 1;
-    cinfo->min_DCT_v_scaled_size = 1;
-  } else if (cinfo->scale_num * cinfo->block_size <= cinfo->scale_denom * 2) {
-    /* Provide 2/block_size scaling */
-    cinfo->output_width = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_width * 2L, (long) cinfo->block_size);
-    cinfo->output_height = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_height * 2L, (long) cinfo->block_size);
-    cinfo->min_DCT_h_scaled_size = 2;
-    cinfo->min_DCT_v_scaled_size = 2;
-  } else if (cinfo->scale_num * cinfo->block_size <= cinfo->scale_denom * 4) {
-    /* Provide 4/block_size scaling */
-    cinfo->output_width = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_width * 4L, (long) cinfo->block_size);
-    cinfo->output_height = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_height * 4L, (long) cinfo->block_size);
-    cinfo->min_DCT_h_scaled_size = 4;
-    cinfo->min_DCT_v_scaled_size = 4;
-  } else if (cinfo->scale_num * cinfo->block_size <= cinfo->scale_denom * 8) {
-    /* Provide 8/block_size scaling */
-    cinfo->output_width = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_width * 8L, (long) cinfo->block_size);
-    cinfo->output_height = (JDIMENSION)
-      jdiv_round_up((long) cinfo->image_height * 8L, (long) cinfo->block_size);
-    cinfo->min_DCT_h_scaled_size = 8;
-    cinfo->min_DCT_v_scaled_size = 8;
-  }
-  /* Recompute dimensions of components */
-  for (ci = 0, compptr = cinfo->comp_info; ci < cinfo->num_components;
-       ci++, compptr++) {
-    compptr->DCT_h_scaled_size = cinfo->min_DCT_h_scaled_size;
-    compptr->DCT_v_scaled_size = cinfo->min_DCT_v_scaled_size;
-  }
-
-#else /* !IDCT_SCALING_SUPPORTED */
-
-  /* Hardwire it to "no scaling" */
-  cinfo->output_width = cinfo->image_width;
-  cinfo->output_height = cinfo->image_height;
-  /* jdinput.c has already initialized DCT_scaled_size,
-   * and has computed unscaled downsampled_width and downsampled_height.
-   */
-
-#endif /* IDCT_SCALING_SUPPORTED */
-}
-#endif
-
 
 LOCAL(void)
 initial_setup (j_decompress_ptr cinfo)

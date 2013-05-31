@@ -12,6 +12,9 @@
 /* Support arithmetic decoding */
 #undef D_ARITH_CODING_SUPPORTED
 
+/* Support in-memory source/destination managers */
+#undef MEM_SRCDST_SUPPORTED
+
 /* Compiler supports function prototypes. */
 #undef HAVE_PROTOTYPES
 

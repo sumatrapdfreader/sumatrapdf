@@ -53,3 +53,12 @@ TURBOJPEG_1.2
 		Java_org_libjpegturbo_turbojpeg_TJTransformer_init;
 		Java_org_libjpegturbo_turbojpeg_TJTransformer_transform;
 } TURBOJPEG_1.1;
+
+TURBOJPEG_1.3
+{
+	global:
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_compress___3BIIIIII_3BIII;
+		Java_org_libjpegturbo_turbojpeg_TJCompressor_compress___3IIIIIII_3BIII;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompress___3BI_3BIIIIIII;
+		Java_org_libjpegturbo_turbojpeg_TJDecompressor_decompress___3BI_3IIIIIIII;
+} TURBOJPEG_1.2;

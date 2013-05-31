@@ -2,7 +2,7 @@
 ; jdclrss2-64.asm - colorspace conversion (64-bit SSE2)
 ;
 ; Copyright 2009, 2012 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright 2009 D. R. Commander
+; Copyright 2009, 2012 D. R. Commander
 ;
 ; Based on
 ; x86 SIMD extension for IJG JPEG library
@@ -288,7 +288,7 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	; space.
 	cmp	rcx, byte SIZEOF_MMWORD
 	jb	short .column_st7
-	movq	MMWORD [rdi], xmmA
+	movq	XMM_MMWORD [rdi], xmmA
 	add	rdi, byte SIZEOF_MMWORD
 	sub	rcx, byte SIZEOF_MMWORD
 	psrldq	xmmA, SIZEOF_MMWORD
@@ -297,7 +297,7 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	; space.
 	cmp	rcx, byte SIZEOF_DWORD
 	jb	short .column_st3
-	movd	DWORD [rdi], xmmA
+	movd	XMM_DWORD [rdi], xmmA
 	add	rdi, byte SIZEOF_DWORD
 	sub	rcx, byte SIZEOF_DWORD
 	psrldq	xmmA, SIZEOF_DWORD
@@ -407,7 +407,7 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	; space.
 	test	rcx, rcx
 	jz	short .nextrow
-	movd	DWORD [rdi], xmmA
+	movd	XMM_DWORD [rdi], xmmA
 
 %endif ; RGB_PIXELSIZE ; ---------------
 

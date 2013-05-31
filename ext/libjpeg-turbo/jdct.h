@@ -95,9 +95,21 @@ typedef FAST_FLOAT FLOAT_MULT_TYPE; /* preferred floating type */
 #define jpeg_idct_islow		jRDislow
 #define jpeg_idct_ifast		jRDifast
 #define jpeg_idct_float		jRDfloat
+#define jpeg_idct_7x7		jRD7x7
+#define jpeg_idct_6x6		jRD6x6
+#define jpeg_idct_5x5		jRD5x5
 #define jpeg_idct_4x4		jRD4x4
+#define jpeg_idct_3x3		jRD3x3
 #define jpeg_idct_2x2		jRD2x2
 #define jpeg_idct_1x1		jRD1x1
+#define jpeg_idct_9x9		jRD9x9
+#define jpeg_idct_10x10		jRD10x10
+#define jpeg_idct_11x11		jRD11x11
+#define jpeg_idct_12x12		jRD12x12
+#define jpeg_idct_13x13		jRD13x13
+#define jpeg_idct_14x14		jRD14x14
+#define jpeg_idct_15x15		jRD15x15
+#define jpeg_idct_16x16		jRD16x16
 #endif /* NEED_SHORT_EXTERNAL_NAMES */
 
 /* Extern declarations for the forward and inverse DCT routines. */
@@ -115,13 +127,49 @@ EXTERN(void) jpeg_idct_ifast
 EXTERN(void) jpeg_idct_float
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_7x7
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_6x6
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_5x5
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
 EXTERN(void) jpeg_idct_4x4
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_3x3
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
 EXTERN(void) jpeg_idct_2x2
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
 EXTERN(void) jpeg_idct_1x1
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_9x9
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_10x10
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_11x11
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_12x12
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_13x13
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_14x14
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_15x15
+    JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
+	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
+EXTERN(void) jpeg_idct_16x16
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
 

@@ -1,9 +1,10 @@
 /*
  * jchuff.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
+ * Modifications:
  * Copyright (C) 2009-2011, D. R. Commander.
- * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains Huffman entropy encoding routines.
@@ -297,8 +298,6 @@ dump_buffer (working_state * state)
 /* Empty the output buffer; return TRUE if successful, FALSE if must suspend */
 {
   struct jpeg_destination_mgr * dest = state->cinfo->dest;
-
-  dest->free_in_buffer = state->free_in_buffer;
 
   if (! (*dest->empty_output_buffer) (state->cinfo))
     return FALSE;

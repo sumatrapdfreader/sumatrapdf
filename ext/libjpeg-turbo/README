@@ -1,8 +1,8 @@
-libjpeg-turbo note:  This file contains portions of the libjpeg v6b and v8
-README files, with additional wordsmithing by The libjpeg-turbo Project.
-It is included only for reference, as some parts of it may not apply to
-libjpeg-turbo.  Please see README-turbo.txt for information specific to
-libjpeg-turbo.
+libjpeg-turbo note:  This file has been modified by The libjpeg-turbo Project
+to include only information relevant to libjpeg-turbo, to wordsmith certain
+sections, and to remove impolitic language that existed in the libjpeg v8
+README.  It is included only for reference.  Please see README-turbo.txt for
+information specific to libjpeg-turbo.
 
 
 The Independent JPEG Group's JPEG software
@@ -17,7 +17,8 @@ Bill Allombert, Jim Boucher, Lee Crocker, Bob Friesenhahn, Ben Jackson,
 Julian Minguillon, Luis Ortiz, George Phillips, Davide Rossi, Ge' Weijers,
 and other members of the Independent JPEG Group.
 
-IJG is not affiliated with the official ISO JPEG standards committee.
+IJG is not affiliated with the ISO/IEC JTC1/SC29/WG1 standards committee
+(also known as JPEG, together with ITU-T SG16).
 
 
 DOCUMENTATION ROADMAP
@@ -45,7 +46,6 @@ Programmer and internal documentation:
   libjpeg.txt       How to use the JPEG library in your own programs.
   example.c         Sample code for calling the JPEG library.
   structure.txt     Overview of the JPEG library's internal structure.
-  filelist.txt      Road map of IJG files.
   coderules.txt     Coding style rules --- please read if you contribute code.
 
 Please read at least the files install.txt and usage.txt.  Some information
@@ -129,7 +129,7 @@ with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and you,
 its user, assume the entire risk as to its quality and accuracy.
 
-This software is copyright (C) 1991-2010, Thomas G. Lane, Guido Vollbeding.
+This software is copyright (C) 1991-2012, Thomas G. Lane, Guido Vollbeding.
 All Rights Reserved except as specified below.
 
 Permission is hereby granted to use, copy, modify, and distribute this
@@ -159,15 +159,6 @@ We specifically permit and encourage the use of this software as the basis of
 commercial products, provided that all warranty or liability claims are
 assumed by the product vendor.
 
-
-ansi2knr.c is included in this distribution by permission of L. Peter Deutsch,
-sole proprietor of its copyright holder, Aladdin Enterprises of Menlo Park, CA.
-ansi2knr.c is NOT covered by the above copyright and conditions, but instead
-by the usual distribution terms of the Free Software Foundation; principally,
-that you must include source code if you redistribute it.  (See the file
-ansi2knr.c for full details.)  However, since ansi2knr.c is not needed as part
-of any program generated from the IJG code, this does not limit you more than
-the foregoing paragraphs do.
 
 The Unix configuration script "configure" was produced with GNU Autoconf.
 It is copyright by the Free Software Foundation but is freely distributable.
@@ -274,11 +265,12 @@ with body
 FILE FORMAT WARS
 ================
 
-The ISO JPEG standards committee actually promotes different formats like
-"JPEG 2000" or "JPEG XR", which are incompatible with original DCT-based
-JPEG.  IJG therefore does not support these formats (see REFERENCES).  Indeed,
-one of the original reasons for developing this free software was to help
-force convergence on common, interoperable format standards for JPEG files.
+The ISO/IEC JTC1/SC29/WG1 standards committee (also known as JPEG, together
+with ITU-T SG16) currently promotes different formats containing the name
+"JPEG" which are incompatible with original DCT-based JPEG.  IJG therefore does
+not support these formats (see REFERENCES).  Indeed, one of the original
+reasons for developing this free software was to help force convergence on
+common, interoperable format standards for JPEG files.
 Don't use an incompatible file format!
 (In any case, our decoder will remain capable of reading existing JPEG
 image files indefinitely.)

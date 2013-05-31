@@ -1,9 +1,11 @@
 /*
  * jdatasrc.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1994-1996, Thomas G. Lane.
- * Modified 2009-2010 by Guido Vollbeding.
- * This file is part of the Independent JPEG Group's software.
+ * Modified 2009-2011 by Guido Vollbeding.
+ * Modifications:
+ * Copyright (C) 2013, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains decompression data source routines for the case of
@@ -53,7 +55,7 @@ init_source (j_decompress_ptr cinfo)
   src->start_of_file = TRUE;
 }
 
-#if JPEG_LIB_VERSION >= 80
+#if JPEG_LIB_VERSION >= 80 || defined(MEM_SRCDST_SUPPORTED)
 METHODDEF(void)
 init_mem_source (j_decompress_ptr cinfo)
 {
@@ -120,20 +122,21 @@ fill_input_buffer (j_decompress_ptr cinfo)
   return TRUE;
 }
 
-#if JPEG_LIB_VERSION >= 80
+#if JPEG_LIB_VERSION >= 80 || defined(MEM_SRCDST_SUPPORTED)
 METHODDEF(boolean)
 fill_mem_input_buffer (j_decompress_ptr cinfo)
 {
-  static JOCTET mybuffer[4];
+  static const JOCTET mybuffer[4] = {
+    (JOCTET) 0xFF, (JOCTET) JPEG_EOI, 0, 0
+  };
 
   /* The whole JPEG data is expected to reside in the supplied memory
    * buffer, so any request for more data beyond the given buffer size
    * is treated as an error.
    */
   WARNMS(cinfo, JWRN_JPEG_EOF);
+
   /* Insert a fake EOI marker */
-  mybuffer[0] = (JOCTET) 0xFF;
-  mybuffer[1] = (JOCTET) JPEG_EOI;
 
   cinfo->src->next_input_byte = mybuffer;
   cinfo->src->bytes_in_buffer = 2;
@@ -243,7 +246,7 @@ jpeg_stdio_src (j_decompress_ptr cinfo, FILE * infile)
 }
 
 
-#if JPEG_LIB_VERSION >= 80
+#if JPEG_LIB_VERSION >= 80 || defined(MEM_SRCDST_SUPPORTED)
 /*
  * Prepare for input from a supplied memory buffer.
  * The buffer must contain the whole JPEG data.

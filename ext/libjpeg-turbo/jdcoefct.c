@@ -1,9 +1,10 @@
 /*
  * jdcoefct.c
  *
+ * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1994-1997, Thomas G. Lane.
+ * Modifications:
  * Copyright (C) 2010, D. R. Commander.
- * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains the coefficient buffer controller for decompression.

@@ -219,7 +219,6 @@ int checkBuf(unsigned char *buf, int w, int h, int pf, int subsamp,
 	bailout:
 	if(retval==0)
 	{
-		printf("\n");
 		for(row=0; row<h; row++)
 		{
 			for(col=0; col<w; col++)
@@ -312,7 +311,6 @@ int checkBufYUV(unsigned char *buf, int w, int h, int subsamp)
 				printf("%.3d ", buf[ypitch*ph + uvpitch*ch + (uvpitch*row+col)]);
 			printf("\n");
 		}
-		printf("\n");
 	}
 
 	return retval;
@@ -405,7 +403,7 @@ void _decompTest(tjhandle handle, unsigned char *jpegBuf,
 	if(yuv==YUVENCODE) return;
 
 	if(yuv==YUVDECODE)
-		printf("JPEG -> YUV %s ... ", subName[subsamp]);
+		printf("JPEG -> YUV %s ... ", subNameLong[subsamp]);
 	else
 	{
 		printf("JPEG -> %s %s ", pixFormatStr[pf],
@@ -475,7 +473,7 @@ void decompTest(tjhandle handle, unsigned char *jpegBuf,
 			sf1);
 
 	bailout:
-	printf("\n");
+	return;
 }
 
 
@@ -517,8 +515,10 @@ void doTest(int w, int h, const int *formats, int nformats, int subsamp,
 			if(pf>=TJPF_RGBX && pf<=TJPF_XRGB)
 				decompTest(dhandle, dstBuf, size, w, h, pf+(TJPF_RGBA-TJPF_RGBX),
 					basename, subsamp, flags);
+			printf("\n");
 		}
 	}
+	printf("--------------------\n\n");
 
 	bailout:
 	if(chandle) tjDestroy(chandle);
