@@ -1725,7 +1725,7 @@ OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 		if (l_current_handler != 00) {
 			if (l_current_data_size > l_last_data_size) {
 				OPJ_BYTE* new_current_data = (OPJ_BYTE*)opj_realloc(l_current_data,l_current_data_size);
-				if (!l_current_data){
+				if (!new_current_data){
 					opj_free(l_current_data);
                     opj_event_msg(p_manager, EVT_ERROR, "Not enough memory to handle jpeg2000 box\n");
 					return OPJ_FALSE;
