@@ -248,7 +248,7 @@ public:
     virtual bool SaveFileAs(const WCHAR *copyFileName) = 0;
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
-    // caller needs to free() the result
+    // caller needs to free() the result and delete[] *coords_out
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) = 0;
     // pages where clipping doesn't help are rendered in larger tiles

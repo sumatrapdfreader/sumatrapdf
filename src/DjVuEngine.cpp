@@ -804,7 +804,8 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
                 coords.At(i).y = page.dy - coords.At(i).y - coords.At(i).dy;
             }
         }
-        *coords_out = coords.StealData();
+        *coords_out = new RectI[coords.Count()];
+        memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
     }
 
     return extracted.StealData();
