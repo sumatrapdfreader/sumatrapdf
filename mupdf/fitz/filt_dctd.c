@@ -20,7 +20,33 @@ struct fz_dctd_s
 	struct jpeg_error_mgr errmgr;
 	jmp_buf jb;
 	char msg[JMSG_LENGTH_MAX];
+	int has_common_tables; /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
 };
+
+/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
+void
+fz_dctd_set_common_tables(fz_stream *stm, unsigned char *data, int size)
+{
+	fz_dctd *state = stm->state;
+	fz_context *ctx = state->ctx;
+	fz_stream *concat = NULL;
+	fz_var(concat);
+	fz_try(ctx)
+	{
+		if (state->init)
+			fz_throw(ctx, "fz_dctd_set_common_tables must be called before the first fz_read");
+		concat = fz_open_concat(ctx, 2, 0);
+		fz_concat_push(concat, fz_open_memory(ctx, data, size));
+		fz_concat_push(concat, state->chain);
+	}
+	fz_catch(ctx)
+	{
+		fz_close(concat);
+		fz_rethrow(ctx);
+	}
+	state->chain = concat;
+	state->has_common_tables = 1;
+}
 
 static void error_exit(j_common_ptr cinfo)
 {
@@ -121,6 +147,10 @@ read_dctd(fz_stream *stm, unsigned char *buf, int len)
 		cinfo->src->term_source = term_source;
 		cinfo->src->next_input_byte = state->chain->rp;
 		cinfo->src->bytes_in_buffer = state->chain->wp - state->chain->rp;
+
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
+		if (state->has_common_tables)
+			jpeg_read_header(cinfo, 0);
 
 		jpeg_read_header(cinfo, 1);
 

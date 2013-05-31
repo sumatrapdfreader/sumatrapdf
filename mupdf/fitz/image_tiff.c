@@ -187,6 +187,9 @@ static void
 fz_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
 	fz_stream *stm = fz_open_dctd(chain, -1);
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
+	if (tiff->jpegtables && (int)tiff->jpegtableslen > 0)
+		fz_dctd_set_common_tables(stm, tiff->jpegtables, tiff->jpegtableslen);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }
@@ -428,6 +431,7 @@ fz_decode_tiff_strips(struct tiff *tiff)
 		/* the strip decoders will close this */
 		stm = fz_open_memory(tiff->ctx, rp, rlen);
 
+		/* SumatraPDF: TODO: if any of the following throws, the stream is leaked (including any chained streams) */
 		switch (tiff->compression)
 		{
 		case 1:
@@ -660,7 +664,6 @@ fz_read_tiff_tag(struct tiff *tiff, unsigned offset)
 		break;
 
 	case JPEGTables:
-		fz_warn(tiff->ctx, "jpeg tables in tiff not implemented");
 		tiff->jpegtables = tiff->bp + value;
 		tiff->jpegtableslen = count;
 		break;

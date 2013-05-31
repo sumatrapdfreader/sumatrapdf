@@ -848,6 +848,10 @@ fz_stream *fz_open_faxd(fz_stream *chain,
 fz_stream *fz_open_flated(fz_stream *chain);
 fz_stream *fz_open_lzwd(fz_stream *chain, int early_change);
 fz_stream *fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bpc);
+
+/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
+void fz_dctd_set_common_tables(fz_stream *stm, unsigned char *data, int size);
+
 /* SumatraPDF: reuse JBIG2Globals */
 typedef struct fz_jbig2_globals_s fz_jbig2_globals;
 fz_jbig2_globals *fz_load_jbig2_globals(fz_context *ctx, unsigned char *data, int size);
