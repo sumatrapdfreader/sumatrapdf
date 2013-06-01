@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
 --- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
-+++ openjpeg\cio.c	Thu May 23 00:35:04 2013
++++ openjpeg\cio.c	Sat Jun 01 18:06:44 2013
 @@ -254,16 +254,22 @@
  }
  
@@ -26,7 +26,7 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Wed May 22 18:04:39 2013
++++ openjpeg\j2k.c	Sat Jun 01 18:06:44 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -160,7 +160,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\jp2.c	Fri May 31 00:29:28 2013
++++ openjpeg\jp2.c	Fri May 31 18:51:58 2013
 @@ -774,10 +774,17 @@
  			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
  
@@ -278,7 +278,7 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define USE_JPIP
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Wed May 22 17:49:08 2013
++++ openjpeg\opj_malloc.h	Sat Jun 01 18:06:44 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -307,9 +307,40 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  /**
  Deallocates or frees a memory block.
  @param m Previously allocated memory block to be freed
+diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
+--- openjpeg.orig\t2.c	Sat May 18 20:52:42 2013
++++ openjpeg\t2.c	Sat Jun 01 18:06:46 2013
+@@ -979,10 +979,15 @@
+                         n = l_cblk->numnewpasses;
+ 
+                         do {
+                                 l_cblk->segs[l_segno].numnewpasses = opj_int_min(l_cblk->segs[l_segno].maxpasses - l_cblk->segs[l_segno].numpasses, n);
+                                 l_cblk->segs[l_segno].newlen = opj_bio_read(l_bio, l_cblk->numlenbits + opj_uint_floorlog2(l_cblk->segs[l_segno].numnewpasses));
++                                /* testcase 1802.pdf.SIGSEGV.36e.894 */
++                                if (l_cblk->segs[l_segno].newlen > *l_modified_length_ptr) {
++                                        opj_bio_destroy(l_bio);
++                                        return OPJ_FALSE;
++                                }
+ 
+                                 n -= l_cblk->segs[l_segno].numnewpasses;
+                                 if (n > 0) {
+                                         ++l_segno;
+ 
+@@ -1114,10 +1119,11 @@
+                                 /* Check if the cblk->data have allocated enough memory */
+                                 if ((l_cblk->data_current_size + l_seg->newlen) > l_cblk->data_max_size) {
+                                     OPJ_BYTE* new_cblk_data = (OPJ_BYTE*) opj_realloc(l_cblk->data, l_cblk->data_current_size + l_seg->newlen);
+                                     if(! new_cblk_data) {
+                                         opj_free(l_cblk->data);
++                                        l_cblk->data = NULL;
+                                         l_cblk->data_max_size = 0;
+                                         /* opj_event_msg(p_manager, EVT_ERROR, "Not enough memory to realloc code block cata!\n"); */
+                                         return OPJ_FALSE;
+                                     }
+                                     l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Fri May 31 18:43:52 2013
++++ openjpeg\tcd.c	Sat Jun 01 18:06:44 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
