@@ -379,6 +379,11 @@ public:
         return *this;
     }
 
+    void Reset() {
+        // FreeVecMembers calls Vec::Reset()
+        FreeVecMembers(*this);
+    }
+
     WCHAR *Join(const WCHAR *joint=NULL) {
         str::Str<WCHAR> tmp(256);
         size_t jointLen = str::Len(joint);

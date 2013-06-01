@@ -340,7 +340,6 @@ static bool IsUsingInstallation(DWORD procId)
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names)
 {
-    FreeVecMembers(names);
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == snap)
         return;
@@ -399,6 +398,7 @@ static void SetCloseProcessMsg()
 
 bool CheckInstallUninstallPossible(bool silent)
 {
+    gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 
     bool possible = gProcessesToClose.Count() == 0;

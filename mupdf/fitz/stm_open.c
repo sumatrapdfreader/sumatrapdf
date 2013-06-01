@@ -162,7 +162,7 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
 	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
-		fz_throw(ctx, "cannot open file %Ls", name);
+		fz_throw(ctx, "cannot open file %S", name);
 	return fz_open_fd(ctx, fd);
 }
 #endif

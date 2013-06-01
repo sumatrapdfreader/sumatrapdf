@@ -296,7 +296,7 @@ static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 class TestFileProvider {
 public:
     virtual ~TestFileProvider() {}
-    // returns path of the next file to test or NULL if done
+    // returns path of the next file to test or NULL if done (caller needs to free() the result)
     virtual WCHAR *NextFile() = 0;
     // start the iteration from the beginning
     virtual void Restart() = 0;
@@ -313,7 +313,7 @@ public:
     FilesProvider(WStrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
         for (size_t i = offset; i < newFiles.Count(); i += n) {
-            WCHAR *f = newFiles[i];
+            const WCHAR *f = newFiles.At(i);
             files.Append(str::Dup(f));
         }
         provided = 0;
@@ -324,7 +324,7 @@ public:
     virtual WCHAR *NextFile() {
         if (provided >= files.Count())
             return NULL;
-        return files[provided++];
+        return str::Dup(files.At(provided++));
     }
 
     virtual void Restart() {
@@ -728,13 +728,6 @@ void GetStressTestInfo(str::Str<char>* s)
     }
 }
 
-enum { MaxTypes = 32 };
-struct FilesPerType {
-    WCHAR *ext; // without the '.'
-    WStrVec *filesAll;
-    WStrVec *filesRandom;
-};
-
 // Select random files to test. We want to test each file type equally, so
 // we first group them by file extension and then select up to maxPerType
 // for each extension, randomly, and inter-leave the files with different
@@ -742,50 +735,44 @@ struct FilesPerType {
 // Returns result in <files>.
 static void RandomizeFiles(WStrVec& files, int maxPerType)
 {
-    int nTypes = 0;
-    FilesPerType filesPerType[MaxTypes];
+    WStrVec fileExts;
+    Vec<WStrVec *> filesPerType;
 
-    for (size_t i=0; i < files.Count(); i++) {
-        WCHAR *file = files.At(i);
-        const WCHAR *ext = str::FindCharLast(file, L'.');
+    for (size_t i = 0; i < files.Count(); i++) {
+        const WCHAR *file = files.At(i);
+        const WCHAR *ext = path::GetExt(file);
         CrashAlwaysIf(!ext);
-        ext++;
-        int typeNo = -1;
-        for (int j=0; j<nTypes; j++) {
-            if (str::EqI(ext, filesPerType[j].ext)) {
-                typeNo = j;
-                break;
-            }
-        }
+        int typeNo = fileExts.FindI(ext);
         if (-1 == typeNo) {
-            typeNo = nTypes++;
-            CrashAlwaysIf(nTypes >= MaxTypes);
-            filesPerType[typeNo].ext = str::Dup(ext);
-            filesPerType[typeNo].filesAll = new WStrVec();
-            filesPerType[typeNo].filesRandom = NULL;
+            fileExts.Append(str::Dup(ext));
+            filesPerType.Append(new WStrVec());
+            typeNo = filesPerType.Count() - 1;
         }
-        filesPerType[typeNo].filesAll->Append(str::Dup(file));
+        filesPerType.At(typeNo)->Append(str::Dup(file));
     }
 
-    for (int j=0; j<nTypes; j++) {
-        WStrVec *all = filesPerType[j].filesAll;
+    for (size_t j = 0; j < filesPerType.Count(); j++) {
+        WStrVec *all = filesPerType.At(j);
         WStrVec *random = new WStrVec();
-        filesPerType[j].filesRandom = random;
 
-        for (int n=0; n < maxPerType && all->Count() > 0; n++) {
+        for (int n = 0; n < maxPerType && all->Count() > 0; n++) {
             int idx = rand() % all->Count();
             WCHAR *file = all->At(idx);
             random->Append(file);
             all->RemoveAtFast(idx);
         }
+
+        filesPerType.At(j) = random;
+        delete all;
     }
 
     files.Reset();
+
     bool gotAll = false;
     while (!gotAll) {
         gotAll = true;
-        for (int j=0; j<nTypes; j++) {
-            WStrVec *random = filesPerType[j].filesRandom;
+        for (size_t j = 0; j < filesPerType.Count(); j++) {
+            WStrVec *random = filesPerType.At(j);
             if (random->Count() > 0) {
                 gotAll = false;
                 WCHAR *file = random->At(0);
@@ -795,10 +782,8 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
         }
     }
 
-    for (int j=0; j<nTypes; j++) {
-        free(filesPerType[j].ext);
-        delete filesPerType[j].filesAll;
-        delete filesPerType[j].filesRandom;
+    for (size_t j = 0; j < filesPerType.Count(); j++) {
+        delete filesPerType.At(j);
     }
 }
 
@@ -843,7 +828,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         wprintf(L"\n");
         fflush(stdout);
 
-        for (int j=0; j<n; j++) {
+        for (int j = 0; j < n; j++) {
             // dst will be deleted when the stress ends
             win = windows[j];
             StressTest *dst = new StressTest(win, renderCache, i->exitWhenDone);
