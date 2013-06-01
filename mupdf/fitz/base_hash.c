@@ -160,6 +160,7 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 
 	if (table->lock == FZ_LOCK_ALLOC)
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
+	/* SumatraPDF: TODO: won't this cause a lock-mismatch if fz_malloc_array throws? */
 	newents = fz_malloc_array(ctx, newsize, sizeof(fz_hash_entry));
 	if (table->lock == FZ_LOCK_ALLOC)
 		fz_lock(ctx, FZ_LOCK_ALLOC);

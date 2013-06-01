@@ -1212,11 +1212,16 @@ fz_text_free_user(fz_device *dev)
 	fz_context *ctx = dev->ctx;
 	fz_text_device *tdev = dev->user;
 
+	/* SumatraPDF: swallow exceptions in clean-up code (fixes a memory leak) */
+	fz_try(dev->ctx)
+	{
+
 	add_span_to_soup(tdev->spans, tdev->cur_span);
 	tdev->cur_span = NULL;
 
 	strain_soup(ctx, tdev);
 	free_span_soup(tdev->spans);
+	tdev->spans = NULL;
 
 	/* TODO: smart sorting of blocks in reading order */
 	/* TODO: unicode NFC normalization */
@@ -1225,6 +1230,12 @@ fz_text_free_user(fz_device *dev)
 
 	/* SumatraPDF: various string fixups */
 	fixup_text_page(dev->ctx, tdev->page);
+
+	}
+	fz_catch(dev->ctx)
+	{
+		free_span_soup(tdev->spans);
+	}
 
 	fz_free(dev->ctx, tdev);
 }
