@@ -198,10 +198,10 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
 {
     bool ok = true;
 
-    ScopedMem<WCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<WCHAR> installDate(GetInstallDate());
     ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
+    ScopedMem<WCHAR> uninstallCmdLine(str::Format(L"\"%s\"", ScopedMem<WCHAR>(GetUninstallerPath())));
 
     ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
@@ -217,7 +217,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
     ok &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallCmdLine);
     ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://blog.kowalczyk.info/software/sumatrapdf/");
     ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://blog.kowalczyk.info/software/sumatrapdf/news.html");
 

@@ -120,45 +120,35 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
     return NPERR_NO_ERROR;
 }
 
-bool EnsureRegKey(const WCHAR *lpKey)
-{
-    CreateRegKey(HKEY_LOCAL_MACHINE, lpKey);
-    return CreateRegKey(HKEY_CURRENT_USER, lpKey);
-}
-
-bool SetRegValue(const WCHAR *lpKey, const WCHAR *lpName, const WCHAR *lpValue)
-{
-    WriteRegStr(HKEY_LOCAL_MACHINE, lpKey, lpName, lpValue);
-    return WriteRegStr(HKEY_CURRENT_USER, lpKey, lpName, lpValue);
-}
-
 DLLEXPORT STDAPI DllRegisterServer(VOID)
 {
-    if (!EnsureRegKey(g_lpRegKey))
-        return E_UNEXPECTED;
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    if (!CreateRegKey(hkey, g_lpRegKey))
+    {
+        hkey = HKEY_CURRENT_USER;
+        if (!CreateRegKey(hkey, g_lpRegKey))
+            return E_UNEXPECTED;
+    }
     
     WCHAR szPath[MAX_PATH];
     GetModuleFileName(g_hInstance, szPath, MAX_PATH);
-    if (!SetRegValue(g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
-        !SetRegValue(g_lpRegKey, L"Path", szPath) ||
-        !SetRegValue(g_lpRegKey, L"Version", CURR_VERSION_STR) ||
-        !SetRegValue(g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
+    if (!WriteRegStr(hkey, g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
+        !WriteRegStr(hkey, g_lpRegKey, L"Path", szPath) ||
+        !WriteRegStr(hkey, g_lpRegKey, L"Version", CURR_VERSION_STR) ||
+        !WriteRegStr(hkey, g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
     {
         return E_UNEXPECTED;
     }
     
-    ScopedMem<WCHAR> mimeType(str::Join(g_lpRegKey, L"\\MimeTypes\\application/pdf"));
-    EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\application/vnd.ms-xpsdocument"));
-    EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\application/oxps"));
-    EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/vnd.djvu"));
-    EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/x-djvu"));
-    EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/x.djvu"));
-    EnsureRegKey(mimeType);
+    static const WCHAR *mimeTypes[] = {
+        L"application/pdf", L"application/vnd.ms-xpsdocument", L"application/oxps",
+        L"image/vnd.djvu", L"image/x-djvu", L"image/x.djvu",
+    };
+    for (int i = 0; i < dimof(mimeTypes); i++)
+    {
+        ScopedMem<WCHAR> keyName(str::Join(g_lpRegKey, L"\\MimeTypes\\", mimeTypes[i]));
+        CreateRegKey(hkey, keyName);
+    }
     
     return S_OK;
 }
@@ -176,8 +166,7 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
     }
     
     DeleteRegKey(HKEY_LOCAL_MACHINE, g_lpRegKey);
-    if (!DeleteRegKey(HKEY_CURRENT_USER, g_lpRegKey))
-        return E_UNEXPECTED;
+    DeleteRegKey(HKEY_CURRENT_USER, g_lpRegKey);
     
     return S_OK;
 }

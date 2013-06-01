@@ -69,7 +69,7 @@
 #define NO_REPAIR L"NoRepair"
 // REG_SZ, e.g. "Krzysztof Kowalczyk" (PUBLISHER_STR)
 #define PUBLISHER L"Publisher"
-// REG_SZ, path to uninstaller exe
+// REG_SZ, command line for uninstaller
 #define UNINSTALL_STRING L"UninstallString"
 // REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
 #define URL_INFO_ABOUT L"URLInfoAbout"
