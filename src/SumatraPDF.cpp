@@ -2043,7 +2043,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     // draw comic books and single images on a black background (without frame and shadow)
                                      dm->engine && dm->engine->IsImageCollection();
     if (paintOnBlackWithoutShadow) {
-        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[0]));
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(WIN_COL_BLACK));
         FillRect(hdc, rcArea, brush);
     }
     else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
