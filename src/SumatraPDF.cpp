@@ -1465,6 +1465,9 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
         }
+    } else if (!win->IsAboutWindow() && !win->IsDocLoaded()) {
+        // reuse the window if it only contains an error message
+        args.forceReuse = true;
     }
 
     if (!win->IsAboutWindow()) {
