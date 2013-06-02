@@ -114,7 +114,7 @@ def Serialize(root, level=0):
 	if level > 0:
 		return result
 	# encode the result as UTF-8
-	return "\n".join(result).encode("utf-8-sig")
+	return ("\n".join(result) + "\n").encode("utf-8-sig")
 
 if __name__ == "__main__":
 	import util2, os
@@ -132,5 +132,11 @@ if __name__ == "__main__":
 	if os.path.exists(path):
 		data = open(path).read()
 		root = Parse(data)
+		# modification example: filter out all states for missing files
+		root.GetChild("FileStates").data = [
+			state
+			for state in root.GetChild("FileStates").data
+			if state[1].GetValue("IsMissing") != u"true"
+		]
 		data = Serialize(root)
 		assert Serialize(Parse(data)) == data
