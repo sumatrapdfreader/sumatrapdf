@@ -3098,9 +3098,9 @@ void OnMenuOpen(const SumatraWindow& win)
     if (gPluginMode)
         return;
 
-    struct {
+    const struct {
         const WCHAR *name; /* NULL if only to include in "All supported documents" */
-        WCHAR *filter;
+        const WCHAR *filter;
         bool available;
     } fileFormats[] = {
         { _TR("PDF documents"),         L"*.pdf",       true },
@@ -3120,25 +3120,26 @@ void OnMenuOpen(const SumatraWindow& win)
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<WCHAR> fileFilter;
-    WStrVec filters;
-    for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available)
-            filters.Append(fileFormats[i].filter);
-    }
     fileFilter.Append(_TR("All supported documents"));
-    fileFilter.Append('\1');
-    fileFilter.AppendAndFree(filters.Join(L";"));
-    fileFilter.Append('\1');
-    filters.Reset();
-
+    fileFilter.Append(L'\1');
     for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available && fileFormats[i].name) {
-            const WCHAR *name = fileFormats[i].name;
-            WCHAR *filter = fileFormats[i].filter;
-            fileFilter.AppendAndFree(str::Format(L"%s\1%s\1", name, filter));
+        if (fileFormats[i].available) {
+            fileFilter.Append(fileFormats[i].filter);
+            fileFilter.Append(';');
         }
     }
-    fileFilter.AppendAndFree(str::Format(L"%s\1*.*\1", _TR("All files")));
+    CrashIf(fileFilter.Last() != L';');
+    fileFilter.Last() = L'\1';
+    for (int i = 0; i < dimof(fileFormats); i++) {
+        if (fileFormats[i].available && fileFormats[i].name) {
+            fileFilter.Append(fileFormats[i].name);
+            fileFilter.Append(L'\1');
+            fileFilter.Append(fileFormats[i].filter);
+            fileFilter.Append(L'\1');
+        }
+    }
+    fileFilter.Append(_TR("All files"));
+    fileFilter.Append(L"\1*.*\1");
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     OPENFILENAME ofn = { 0 };
