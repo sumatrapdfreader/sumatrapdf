@@ -1543,6 +1543,14 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, pdf_gstate *pat_gstate, const f
 		fy0 = (local_area.y0 - pat->bbox.y0) / pat->ystep;
 		fx1 = (local_area.x1 - pat->bbox.x0) / pat->xstep;
 		fy1 = (local_area.y1 - pat->bbox.y0) / pat->ystep;
+		if (fx0 > fx1)
+		{
+			float t = fx0; fx0 = fx1; fx1 = t;
+		}
+		if (fy0 > fy1)
+		{
+			float t = fy0; fy0 = fy1; fy1 = t;
+		}
 
 		oldtop = csi->gtop;
 

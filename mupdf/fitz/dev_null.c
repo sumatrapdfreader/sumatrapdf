@@ -340,6 +340,11 @@ fz_begin_tile_id(fz_device *dev, const fz_rect *area, const fz_rect *view, float
 		return 0;
 	}
 
+	if (xstep < 0)
+		xstep = -xstep;
+	if (ystep < 0)
+		ystep = -ystep;
+        
 	fz_try(ctx)
 	{
 		if (dev->begin_tile)

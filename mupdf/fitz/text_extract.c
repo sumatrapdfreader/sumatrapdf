@@ -1212,32 +1212,31 @@ fz_text_free_user(fz_device *dev)
 	fz_context *ctx = dev->ctx;
 	fz_text_device *tdev = dev->user;
 
-	/* SumatraPDF: swallow exceptions in clean-up code (fixes a memory leak) */
-	fz_try(dev->ctx)
+	fz_try(ctx)
 	{
+		add_span_to_soup(tdev->spans, tdev->cur_span);
+		tdev->cur_span = NULL;
 
-	add_span_to_soup(tdev->spans, tdev->cur_span);
-	tdev->cur_span = NULL;
+		strain_soup(ctx, tdev);
 
-	strain_soup(ctx, tdev);
-	free_span_soup(tdev->spans);
-	tdev->spans = NULL;
+		/* TODO: smart sorting of blocks in reading order */
+		/* TODO: unicode NFC normalization */
 
-	/* TODO: smart sorting of blocks in reading order */
-	/* TODO: unicode NFC normalization */
+		fz_bidi_reorder_text_page(ctx, tdev->page);
 
-	fz_bidi_reorder_text_page(ctx, tdev->page);
-
-	/* SumatraPDF: various string fixups */
-	fixup_text_page(dev->ctx, tdev->page);
-
+		/* SumatraPDF: various string fixups */
+		fixup_text_page(dev->ctx, tdev->page);
 	}
-	fz_catch(dev->ctx)
+	fz_always(ctx)
 	{
 		free_span_soup(tdev->spans);
+		fz_free(dev->ctx, tdev);
 	}
-
-	fz_free(dev->ctx, tdev);
+	fz_catch(ctx)
+	{
+		/* TODO: mark fz_free_device as "doesn't throw" (else rethrowing would
+		   have to be caught/rethrown again in fz_free_device) */
+	}
 }
 
 fz_device *

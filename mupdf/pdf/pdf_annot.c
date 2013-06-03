@@ -244,6 +244,34 @@ pdf_file_spec_to_str(pdf_document *xref, pdf_obj *file_spec)
 	return path;
 }
 
+static char *
+pdf_parse_file_spec(pdf_document *xref, pdf_obj *file_spec)
+{
+	fz_context *ctx = xref->ctx;
+	pdf_obj *filename;
+
+	if (pdf_is_string(file_spec))
+		return pdf_to_utf8(xref, file_spec);
+
+	if (pdf_is_dict(file_spec)) {
+		fz_warn(ctx, "parsing dict");
+		filename = pdf_dict_gets(file_spec, "UF");
+		if (!filename)
+			filename = pdf_dict_gets(file_spec, "F");
+		if (!filename)
+			filename = pdf_dict_gets(file_spec, "Unix");
+		if (!filename)
+			filename = pdf_dict_gets(file_spec, "Mac");
+		if (!filename)
+			filename = pdf_dict_gets(file_spec, "DOS");
+
+		return pdf_to_utf8(xref, filename);
+	}
+
+	fz_warn(ctx, "cannot parse file specification");
+	return NULL;
+}
+
 fz_link_dest
 pdf_parse_action(pdf_document *xref, pdf_obj *action)
 {
@@ -272,8 +300,8 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 	}
 	else if (!strcmp(pdf_to_name(obj), "Launch"))
 	{
-		dest = pdf_dict_gets(action, "F");
 		ld.kind = FZ_LINK_LAUNCH;
+		dest = pdf_dict_gets(action, "F");
 		/* SumatraPDF: parse full file specifications */
 		ld.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
 		ld.ld.launch.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
@@ -308,8 +336,9 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 		if (rname || ld.kind == FZ_LINK_GOTO && ld.ld.gotor.page >= 0)
 		{
 		ld.kind = FZ_LINK_GOTOR;
+		dest = pdf_dict_gets(action, "F");
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.gotor.file_spec = pdf_file_spec_to_str(xref, pdf_dict_gets(action, "F"));
+		ld.ld.gotor.file_spec = pdf_file_spec_to_str(xref, dest);
 		ld.ld.gotor.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: allow to resolve against remote documents */
 		ld.ld.gotor.rname = rname;

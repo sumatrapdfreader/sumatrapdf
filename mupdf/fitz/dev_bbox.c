@@ -1,7 +1,5 @@
 #include "fitz-internal.h"
 
-/* SumatraPDF: add clip stack and use to intersect bboxes */
-
 #define STACK_SIZE 96
 
 typedef struct fz_bbox_data_s
@@ -9,6 +7,7 @@ typedef struct fz_bbox_data_s
 	fz_rect *result;
 	int top;
 	fz_rect stack[STACK_SIZE];
+	/* mask content and tiles are ignored */
 	int ignore;
 } fz_bbox_data;
 
@@ -19,11 +18,17 @@ fz_bbox_add_rect(fz_device *dev, const fz_rect *rect, int clip)
 	fz_rect r = *rect;
 
 	if (0 < data->top && data->top <= STACK_SIZE)
+	{
 		fz_intersect_rect(&r, &data->stack[data->top-1]);
+	}
 	if (!clip && data->top <= STACK_SIZE && !data->ignore)
+	{
 		fz_union_rect(data->result, &r);
+	}
 	if (clip && ++data->top <= STACK_SIZE)
+	{
 		data->stack[data->top-1] = r;
+	}
 }
 
 static void

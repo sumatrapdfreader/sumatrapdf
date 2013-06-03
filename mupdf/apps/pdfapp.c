@@ -319,49 +319,40 @@ static int pdfapp_save(pdfapp_t *app)
 		opts.do_garbage = 1;
 		opts.do_linear = 0;
 
-		if (strcmp(buf, app->docpath) == 0)
-		{
-			if (gen_tmp_file(buf, PATH_MAX))
-			{
-				int written;
-
-				fz_var(written);
-				fz_try(app->ctx)
-				{
-					fz_write_document(app->doc, buf, &opts);
-					written = 1;
-				}
-				fz_catch(app->ctx)
-				{
-					written = 0;
-				}
-
-				if (written)
-				{
-					char buf2[PATH_MAX];
-					fz_strlcpy(buf2, app->docpath, PATH_MAX);
-					pdfapp_close(app);
-					winreplacefile(buf, buf2);
-					pdfapp_open(app, buf2, 1);
-				}
-
-				return written;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		else
+		if (strcmp(buf, app->docpath) != 0)
 		{
 			fz_write_document(app->doc, buf, &opts);
 			return 1;
 		}
+
+		if (gen_tmp_file(buf, PATH_MAX))
+		{
+			int written;
+
+			fz_try(app->ctx)
+			{
+				fz_write_document(app->doc, buf, &opts);
+				written = 1;
+			}
+			fz_catch(app->ctx)
+			{
+				written = 0;
+			}
+
+			if (written)
+			{
+				char buf2[PATH_MAX];
+				fz_strlcpy(buf2, app->docpath, PATH_MAX);
+				pdfapp_close(app);
+				winreplacefile(buf, buf2);
+				pdfapp_open(app, buf2, 1);
+
+				return written;
+			}
+		}
 	}
-	else
-	{
-		return 0;
-	}
+
+	return 0;
 }
 
 int pdfapp_preclose(pdfapp_t *app)

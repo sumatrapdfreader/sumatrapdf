@@ -552,19 +552,19 @@ retry_unhinted:
 		return NULL;
 	}
 
-	/* SumatraPDF: prevent lock mismatch */
 	fz_try(ctx)
 	{
-	result = fz_copy_ft_bitmap(ctx, face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
+		result = fz_copy_ft_bitmap(ctx, face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
 	}
 	fz_always(ctx)
 	{
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 	}
 	fz_catch(ctx)
 	{
 		fz_rethrow(ctx);
 	}
+
 	return result;
 }
 
@@ -671,15 +671,14 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	}
 
 	bitmap = (FT_BitmapGlyph)glyph;
-	/* SumatraPDF: prevent lock mismatch */
 	fz_try(ctx)
 	{
-	pixmap = fz_copy_ft_bitmap(ctx, bitmap->left, bitmap->top, &bitmap->bitmap);
+		pixmap = fz_copy_ft_bitmap(ctx, bitmap->left, bitmap->top, &bitmap->bitmap);
 	}
 	fz_always(ctx)
 	{
-	FT_Done_Glyph(glyph);
-	fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		FT_Done_Glyph(glyph);
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 	}
 	fz_catch(ctx)
 	{

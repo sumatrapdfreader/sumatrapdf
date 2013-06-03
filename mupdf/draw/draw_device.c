@@ -1893,6 +1893,12 @@ fz_draw_end_tile(fz_device *devp)
 	fz_intersect_irect(&area, fz_irect_from_rect(&scissor, &scissor_tmp));
 
 	/* FIXME: area is a bbox, so FP not appropriate here */
+	/* In PDF files xstep/ystep can be smaller than view (the area of a
+	 * single tile) (see fts_15_1506.pdf for an example). This means that
+	 * we have to bias the left hand/bottom edge calculations by the
+	 * difference between the step and the width/height of the tile. */
+	/* state[0].scissor = view, transformed by ctm */
+	/* SumatraPDF: TODO: check whether these adjustments are equivalent to our calculations above */
 	x0 = floorf(area.x0 / xstep);
 	y0 = floorf(area.y0 / ystep);
 	/* SumatraPDF: fix rounding issue in pattern_with_extra_q.pdf */

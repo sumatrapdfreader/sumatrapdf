@@ -370,7 +370,7 @@ lex_hex_string(fz_stream *f, pdf_lexbuf *lb)
 		case EOF:
 			goto end;
 		default:
-			fz_warn(f->ctx, "ignoring invalid character in hex string: '%c'", c);
+			fz_warn(f->ctx, "ignoring invalid character in hex string");
 		}
 	}
 end:

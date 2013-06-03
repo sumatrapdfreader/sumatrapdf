@@ -76,7 +76,7 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_PAM, CS_RGBA, { CS_RGBA } },
 	{ OUT_PGM, CS_GRAY, { CS_GRAY, CS_RGB } },
 	{ OUT_PBM, CS_MONO, { CS_MONO } },
-	{ OUT_SVG, CS_UNSET, { CS_UNSET } },
+	{ OUT_SVG, CS_RGB, { CS_RGB } },
 	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } }
 	/* SumatraPDF: support TGA as output format */
 	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } }
