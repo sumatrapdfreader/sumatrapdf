@@ -19,7 +19,7 @@ PageTextCache::~PageTextCache()
     EnterCriticalSection(&access);
 
     for (int i = 0; i < engine->PageCount(); i++) {
-        delete[] coords[i];
+        free(coords[i]);
         free(text[i]);
     }
 

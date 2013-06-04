@@ -283,7 +283,7 @@ DjVuEngineImpl::~DjVuEngineImpl()
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
-    delete[] mediaboxes;
+    free(mediaboxes);
     free(fileName);
 
     if (annos) {
@@ -393,7 +393,7 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     if (0 == pageCount)
         return false;
 
-    mediaboxes = new RectD[pageCount];
+    mediaboxes = AllocArray<RectD>(pageCount);
     bool ok = LoadMediaboxes();
     if (!ok) {
         // fall back to the slower but safer way to extract page mediaboxes
@@ -804,8 +804,8 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
                 coords.At(i).y = page.dy - coords.At(i).y - coords.At(i).dy;
             }
         }
-        *coords_out = new RectI[coords.Count()];
-        memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
+        CrashIf(coords.Count() != extracted.Count());
+        *coords_out = coords.StealData();
     }
 
     return extracted.StealData();

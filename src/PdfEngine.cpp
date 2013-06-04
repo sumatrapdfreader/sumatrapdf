@@ -269,7 +269,7 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
 
     RectI *destRect = NULL;
     if (coords_out) {
-        destRect = *coords_out = new RectI[textLen];
+        destRect = *coords_out = AllocArray<RectI>(textLen + 1);
         if (!*coords_out) {
             free(content);
             return NULL;
@@ -1352,7 +1352,7 @@ PdfEngineImpl::~PdfEngineImpl()
         DropPageRun(runCache.Last(), true);
     }
 
-    delete[] _mediaboxes;
+    free(_mediaboxes);
     delete _pagelabels;
     free(_fileName);
     free(_decryptionKey);
@@ -1587,7 +1587,7 @@ bool PdfEngineImpl::FinishLoading()
     }
 
     _pages = AllocArray<pdf_page *>(PageCount());
-    _mediaboxes = new RectD[PageCount()];
+    _mediaboxes = AllocArray<RectD>(PageCount());
     pageAnnots = AllocArray<pdf_annot **>(PageCount());
     imageRects = AllocArray<fz_rect *>(PageCount());
 
@@ -2276,7 +2276,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     }
 
     delete list;
-    delete[] coords;
+    free(coords);
 }
 
 pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
@@ -3399,22 +3399,18 @@ XpsEngineImpl::~XpsEngineImpl()
         assert(_doc);
         free(_pages);
     }
-    if (_outline)
-        fz_free_outline(ctx, _outline);
-    if (_mediaboxes)
-        delete[] _mediaboxes;
+    fz_free_outline(ctx, _outline);
+    free(_mediaboxes);
     if (imageRects) {
         for (int i = 0; i < PageCount(); i++)
             free(imageRects[i]);
         free(imageRects);
     }
 
-    if (_doc) {
-        xps_close_document(_doc);
-        _doc = NULL;
-    }
-    if (_info)
-        xps_free_doc_props(ctx, _info);
+    xps_close_document(_doc);
+    _doc = NULL;
+
+    xps_free_doc_props(ctx, _info);
 
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
@@ -3523,7 +3519,7 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
     }
 
     _pages = AllocArray<xps_page *>(PageCount());
-    _mediaboxes = new RectD[PageCount()];
+    _mediaboxes = AllocArray<RectD>(PageCount());
     imageRects = AllocArray<fz_rect *>(PageCount());
 
     if (!_pages || !_mediaboxes || !imageRects)
@@ -4139,7 +4135,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     }
 
     delete list;
-    delete[] coords;
+    free(coords);
 }
 
 RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx)

@@ -529,8 +529,7 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
 
     if (coords_out) {
         CrashIf(coords.Count() != content.Count());
-        *coords_out = new RectI[coords.Count()];
-        memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
+        *coords_out = coords.StealData();
     }
     return content.StealData();
 }
