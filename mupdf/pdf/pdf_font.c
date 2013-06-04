@@ -1019,6 +1019,9 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan2-UCS2");
 				else if (!strcmp(collection, "Adobe-Korea1"))
 					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2318 */
+				else if (!strcmp(collection, "Adobe-Identity") && fontdesc->font->ft_file)
+					fontdesc->font->ft_substitute = 0;
 			}
 		}
 
