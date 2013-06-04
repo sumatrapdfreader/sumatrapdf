@@ -84,7 +84,10 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 
 	if (tok == PDF_TOK_INT)
 	{
-		while (buf->len-- > 0)
+		/* SumatraPDF: try to undo fz_lex_number */
+		while (file->rp > file->bp && '0' <= file->rp[-1] && file->rp[-1] <= '9')
+			fz_unread_byte(file);
+		if (file->rp > file->bp && (file->rp[-1] == '-' || file->rp[-1] == '+'))
 			fz_unread_byte(file);
 	}
 	else if (tok == PDF_TOK_STREAM)

@@ -490,6 +490,7 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 				return PDF_TOK_CLOSE_DICT;
 			}
 			fz_warn(f->ctx, "lexical error (unexpected '>')");
+			fz_unread_byte(f);
 			continue;
 		case '[':
 			return PDF_TOK_OPEN_ARRAY;
