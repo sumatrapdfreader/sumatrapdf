@@ -11352,7 +11352,7 @@ const char * gTranslations_es =
   "B&uscar actualizaciones autom\303\241ticamente\0"\
   "Vista de libro\0"\
   "&Marcadores\tF12\0"\
-  "Marcar Atajos\0"\
+  "Marcar atajos\0"\
   "Marcar atajo a pagina %s de %s\0"\
   "Marcadores\0"\
   "\0"\
@@ -11380,8 +11380,8 @@ const char * gTranslations_es =
   "Creado:\0"\
   "Archivo actual\0"\
   "&Zoom personalizado...\tCtrl+Y\0"\
-  "&Vista Predeterminada:\0"\
-  "&Acercamiento Predeterminado:\0"\
+  "Apariencia predeterminada:\0"\
+  "&Zoom por defecto:\0"\
   "No se puede cambiar el lector PDF predeterminado en modo port\303\241til\0"\
   "Permisos denegados:\0"\
   "Documentos DjVu\0"\
@@ -11391,9 +11391,9 @@ const char * gTranslations_es =
   "Libros en formato EPUB\0"\
   "Introduzca contrase\303\261a\0"\
   "Introduzca contrase\303\261a para %s\0"\
-  "Introduzca los modificadores de l\303\255nea de comando que se ejecutar\303\241n al hacer doble-clic en el documento PDF:\0"\
+  "Introduzca los par\303\241metros de l\303\255nea de comandos que se ejecutar\303\241n al hacer doble-clic en el documento PDF:\0"\
   "Error al cargar %s\0"\
-  "F&avoritos\0"\
+  "&Favoritos\0"\
   "Adelante\tAlt+->\0"\
   "Pantalla completa\tCtrl+May\303\272s+L\0"\
   "P\303\241gina doble\0"\
@@ -11412,7 +11412,7 @@ const char * gTranslations_es =
   "Buscar:\0"\
   "Ajustar a &contenido\tCtrl+3\0"\
   "Ajustar a &p\303\241gina\tCtrl+0\0"\
-  "Ajustar a &ancho de p\303\241gina\tCtrl+2\0"\
+  "Ajustar a a&ncho de p\303\241gina\tCtrl+2\0"\
   "Ajustar a contenido\0"\
   "Ajustar a p\303\241gina\0"\
   "Ajustar a ancho de p\303\241gina\0"\
@@ -11432,7 +11432,7 @@ const char * gTranslations_es =
   "Cargando archivo %s...\0"\
   "\0"\
   "\302\277Convertir SumatraPDF en la aplicaci\303\263n predeterminada para archivos PDF?\0"\
-  "Hacer SumatraPDF el lector PDF predeterminado\0"\
+  "Convertir SumatraPDF el lector PDF predeterminado\0"\
   "Modo man&ga\0"\
   "Coincidir may\303\272sculas y min\303\272sculas\0"\
   "Documentos en formato Mobi\0"\
@@ -11447,7 +11447,7 @@ const char * gTranslations_es =
   "Aceptar\0"\
   "Abrir\0"\
   "Abrir en PDF-XChange\0"\
-  "Abrir un documento ...\0"\
+  "Abrir un documento...\0"\
   "Abrir en %s\0"\
   "Abrir en &Adobe Reader\0"\
   "Abrir en &Foxit Reader\0"\
@@ -11463,7 +11463,7 @@ const char * gTranslations_es =
   "P\303\241gina...\tCtrl+G\0"\
   "P\303\241gina %s\0"\
   "Tama\303\261o de p\303\241gina:\0"\
-  "N\303\272mero de p\303\241gina %u inexistente\0"\
+  "La p\303\241gina %u no existe\0"\
   "Escalado de p\303\241gina\0"\
   "P\303\241gina:\0"\
   "Espere un momento mientras se carga la visualizaci\303\263n...\0"\
@@ -11483,7 +11483,7 @@ const char * gTranslations_es =
   "Recordar archiv&os abiertos\0"\
   "Eliminar de favoritos\0"\
   "Eliminar p\303\241gina %s de favoritos\0"\
-  "Renombrando a\0"\
+  "Renombrando a...\0"\
   "Reemplazar &colores del documento con el esquema de color de Windows\0"\
   "Girar a la izquierda\tCtrl+May\303\272s+-\0"\
   "Girar a la derecha\tCtrl+May\303\272s++\0"\
@@ -11493,7 +11493,7 @@ const char * gTranslations_es =
   "Seleccionar &todo\0"\
   "Seleccionar &todo\tCtrl+A\0"\
   "Seleccionar con Ctrl+Bot\303\263n. Izq. del rat\303\263n\0"\
-  "Enviar por correo electr\303\263nico\0"\
+  "Enviar por correo &electr\303\263nico\0"\
   "Establecer l\303\255nea de comandos para b\303\272squeda inversa\0"\
   "Mostrar &marcadores\0"\
   "Mostrar barra de herramientas\0"\
@@ -11503,7 +11503,7 @@ const char * gTranslations_es =
   "Mostrar la barra de marcadores cuando est\303\251 disponible\0"\
   "P\303\241gina \303\272nica\0"\
   "Lo sentimos, esto no deber\303\255a haber sucedido...\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.\0"\
-  "El archivo fuente %s no posee un punto de sincronizaci\303\263n\0"\
+  "El archivo de origen %s no posee un punto de sincronizaci\303\263n\0"\
   "Asunto:\0"\
   "Opciones de SumatraPDF\0"\
   "Actualizar SumatraPDF\0"\
@@ -11515,13 +11515,13 @@ const char * gTranslations_es =
   "Documentos de texto\0"\
   "T\303\255tulo:\0"\
   "Archivo de origen desconocido (%s)\0"\
-  "Vista del documento\0"\
-  "&Visitar Sitio Web\0"\
+  "Opciones de visualizaci\303\263n\0"\
+  "Visitar sitio &Web\0"\
   "Advertencia\0"\
   "Documentos XPS\0"\
   "Esta es la \303\272ltima versi\303\263n disponible.\0"\
   "Versi\303\263n en uso: %s\0"\
-  "\0"\
+  "Ampliar\0"\
   "Acercar zoom\0"\
   "Alejar zoom\0"\
   "Proporci\303\263n de zoom\0"\

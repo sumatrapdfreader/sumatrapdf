@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5e3e6e7f01a878e7d9dc5ac7195b5e52d0b1b7f0
+d55c6082c63d55c104bf80bbd5609184e5030beb
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -4178,7 +4178,7 @@ cz:Zástupce záložky
 de:Lesezeichen-Verknüpfungen
 dk:Gem genveje
 el:Συντομεύσεις Σελιδοδεικτών
-es:Marcar Atajos
+es:Marcar atajos
 et:Järjehoidjate otseteed
 eu:Gogoekoenen Lasterbideak
 fa:میانبرهای نشانه‌گذاری‌ها
@@ -5779,7 +5779,7 @@ ca:No es pot instal·lar el connector del navegador
 cn:无法安装浏览器插件
 cz:Nepodařilo se nainstalovat rozšíření do prohlížeče
 de:Konnte das Browser-Plugin nicht installieren
-es:No es posible instalar el plugin de navegación
+es:No es posible instalar el plugin del navegador
 et:Ei suudetud paigaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina ezartzea
 fi:Selainliitännäisen asentaminen epäonnistui
@@ -6036,7 +6036,7 @@ ca:No es pot desinstal·lar el connector de navegador
 cn:无法卸载浏览器插件
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
-es:No se puede desinstalar el plugin de navegación
+es:No se puede desinstalar el plugin del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
 fi:Selainliitännäisen poistaminen epäonnistui
@@ -6282,7 +6282,7 @@ cz:Výchozí &uspořádání:
 de:&Standardlayout:
 dk:Standard &Layout:
 el:Προκαθορισμένη &Διαμόρφωση:
-es:&Vista Predeterminada:
+es:Apariencia predeterminada:
 et:Vaike&küljend:
 eu:Berezko &Egitura:
 fa:&نمایش پیش‌فرض:
@@ -6343,7 +6343,7 @@ cz:Výchozí &zvětšení:
 de:Standard&vergrößerung:
 dk:Standard &Zoom
 el:Προκαθορισμένο &Ζουμ:
-es:&Acercamiento Predeterminado:
+es:&Zoom por defecto:
 et:Vaike&suurendus:
 eu:Berezko &Zooma:
 fa:&ابعاد نمایش پیش‌فرض:
@@ -6955,7 +6955,7 @@ cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
-es:Introduzca los modificadores de línea de comando que se ejecutarán al hacer doble-clic en el documento PDF:
+es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
 et:Sisesta käsurida, mis käivitatakse, kui teed topeltklõpsu PDF dokumendil:
 eu:Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
 fa:خط دستور را برای فراخوانی هنگام کلیک روی پرونده‌ی PDF وارد کنید:
@@ -7165,7 +7165,7 @@ cz:&Oblíbené položky
 de:&Favoriten
 dk:Bogm&ærker
 el:Α&γαπημένα
-es:F&avoritos
+es:&Favoritos
 et:L&emmikud
 eu:&Gogokoenak
 fa:موارد &منتخب
@@ -8461,7 +8461,7 @@ cz:&Podle šířky\tCtrl+2
 de:An &Breite anpassen\tStrg+2
 dk:Tilpas &bredde\tCtrl+2
 el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
-es:Ajustar a &ancho de página\tCtrl+2
+es:Ajustar a a&ncho de página\tCtrl+2
 et:Lehekülje &laiuse sobitamine\tCtrl+2
 eu:Finkatu &Zabalera\tKtrl+2
 fa:به بزرگی &پهنای پنجره\tCtrl+2
@@ -9229,7 +9229,7 @@ ca-xv:Amaga les &opcions
 ca:Amaga les &opcions
 cn:隐藏选项菜单
 de:&Optionen
-es:Ocultar &opciones
+es:Menos &opciones
 et:Peida &sätted
 eu:Ezkutatu A&ukerak
 fi:Piilota &asetukset
@@ -9429,7 +9429,7 @@ ca-xv:Instal·la el &connector PDF per als navegadors Firefox, Chrome i Opera
 ca:Instal·la el &connector PDF pels navegadors Firefox, Chrome i Opera
 cn:安装PDF浏览器插件到火狐, Chrome和Opera
 de:PDF Browser-Plugin für Firefox, Chrome und Opera installieren
-es:Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera
+es:Instalar el &plugin PDF para Firefox, Chrome y Opera
 et:Paigalda lisaks PDF &plugin Firefox, Chrome ja Opera brauseritele.
 eu:Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat
 fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
@@ -9496,7 +9496,7 @@ ca:Instal·la el SumatraPDF a la &carpeta:
 cn:安装SumatraPDF到目录: &folder
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
-es:Instalar SumatraPDF en &directorio:
+es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
 fi:Asenna SumatraPDF kansioon:
@@ -9915,7 +9915,7 @@ cz:Nastavit SumatraPDF jako výchozí PDF prohlížeč
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
 dk:Gør SumatraPDF til min standard PDF-læser
 el:Συσχετισμός του SumatraPDF με τα αρχεία PDF
-es:Hacer SumatraPDF el lector PDF predeterminado
+es:Convertir SumatraPDF el lector PDF predeterminado
 et:Tee SumatraPDF PDF-failide vaikerakenduseks
 eu:Egin SumatraPDF nire berezko PDF irakurlea
 fa:انتخاب SumatraPDF به عنوان برنامه‌ی پیش‌فرض من برای خواندن اسناد PDF
@@ -10801,7 +10801,7 @@ cz:Otevřít dokument...
 de:Dokument öffnen…
 dk:Åbn et dokument...
 el:Άνοιγμα εγγράφου...
-es:Abrir un documento ...
+es:Abrir un documento...
 et:Ava dokument...
 eu:Ireki agiri bat...
 fa:باز کردن یک سند...
@@ -11734,7 +11734,7 @@ cz:Stránka číslo %u neexistuje
 de:Seite %u nicht vorhanden
 dk:Side nummer %u eksisterer ikke
 el:Δεν υπάρχει σελίδα με αριθμό %u
-es:Número de página %u inexistente
+es:La página %u no existe
 et:Lehekülge number %u ei ole olemas
 eu:%u orrialde zenbakia ez dago
 fa:صفحه‌ی %u موجود نیست
@@ -12873,7 +12873,7 @@ cz:Přejmenovat na
 de:Umbenennen zu
 dk:Omdøb til
 el:Μετονομασία
-es:Renombrando a
+es:Renombrando a...
 et:Nimeta ümber
 eu:Berrizendatu Honela
 fa:تغییر نام به
@@ -13489,7 +13489,7 @@ cz:Odeslat &e-mailem...
 de:Per &E-Mail versenden…
 dk:Send med &email...
 el:Α&ποστολή με E-mail...
-es:Enviar por correo electrónico
+es:Enviar por correo &electrónico
 et:Saada &e-postiga
 eu:&Post@z bidali...
 fa:ارسال با پست ا&لکترونیکی...
@@ -14108,7 +14108,7 @@ cz:Zdrojový soubor %s nemá bod synchronizace
 de:%s hat keinen Synchronisations-Punkt
 dk:Kildefilen %s har ingen synkroniseringspunkter
 el:Το αρχείο προέλευσης %s δεν έχει σημείο συγχρονισμού
-es:El archivo fuente %s no posee un punto de sincronización
+es:El archivo de origen %s no posee un punto de sincronización
 et:Lähtefailil %s puudub sünkroniseerimispunkt
 eu:%s iturburu agiriak ez du aldiberetze punturik
 fa:پرونده‌ی %s نقاط همگام‌سازی ندارد
@@ -14903,7 +14903,7 @@ ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les mol
 ca:L'instal·lador és malmès. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 cn:抱歉安装程序损坏，请重新下载。
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
-es:El instalador está dañado. Por favor descárguelo de nuevo. \nDisculpas por el inconveniente!
+es:El instalador está dañado, descárguelo de nuevo.\n¡Disculpa las molestias!
 et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
@@ -15197,7 +15197,7 @@ cz:Zobrazení
 de:Ansicht
 dk:Vis
 el:Προβολή
-es:Vista del documento
+es:Opciones de visualización
 et:Vaade
 eu:Ikusi
 fa:نمایش
@@ -15265,7 +15265,7 @@ cz:Navštívit &webovou stránku
 de:&SumatraPDF im Internet
 dk:Besøg &webside
 el:&Ιστοσελίδα Προγράμματος
-es:&Visitar Sitio Web
+es:Visitar sitio &Web
 et:&Külasta kodulehte
 eu:Ikusi &Webgunea
 fa:بازدید از &وب‌سایت
@@ -15579,7 +15579,7 @@ cz:Zvětšení
 de:Zoom
 dk:Zoom
 el:Ζουμ
-es:Zoom
+es:Ampliar
 et:Suurenda
 eu:Zooma
 fa:ابعاد نمایش

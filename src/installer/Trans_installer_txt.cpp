@@ -1147,23 +1147,23 @@ const char * gTranslations_es =
   "No se puede crear el directorio de instalaci\303\263n\0"\
   "No se puede instalar previsualizador PDF\0"\
   "No se puede instalar el filtro buscador PDF\0"\
-  "No es posible instalar el plugin de navegaci\303\263n\0"\
+  "No es posible instalar el plugin del navegador\0"\
   "No se puede acceder al directorio temporal\0"\
   "No se puede eliminar el directorio de instalaci\303\263n\0"\
   "No se puede eliminar el acceso directo\0"\
   "No se puede desinstalar el previsualizador PDF\0"\
   "No se puede desinstalar el filtro buscador PDF\0"\
-  "No se puede desinstalar el plugin de navegaci\303\263n\0"\
+  "No se puede desinstalar el plugin del navegador\0"\
   "No se puede escribir %s al disco\0"\
   "Error al copiar el desinstalador al directorio temporal\0"\
   "No se pudo crear un acceso directo\0"\
   "Error al eliminar las claves del registro del desinstalador\0"\
   "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo en el registro\0"\
   "Error al escribir informaci\303\263n de desinstalaci\303\263n en el registro\0"\
-  "Ocultar &opciones\0"\
-  "Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera\0"\
+  "Menos &opciones\0"\
+  "Instalar el &plugin PDF para Firefox, Chrome y Opera\0"\
   "Instalar SumatraPDF\0"\
-  "Instalar SumatraPDF en &directorio:\0"\
+  "&Instalar SumatraPDF en la siguiente carpeta:\0"\
   "\302\241La instalaci\303\263n ha fallado!\0"\
   "Instalaci\303\263n en progreso...\0"\
   "Permitir que la b\303\272squeda de Windows encuentre documentos PDF\0"\
@@ -1178,7 +1178,7 @@ const char * gTranslations_es =
   "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
   "\302\241Gracias por elegir a SumatraPDF!\0"\
   "\302\241Gracias! SumatraPDF ha sido instalado.\0"\
-  "El instalador est\303\241 da\303\261ado. Por favor desc\303\241rguelo de nuevo. \nDisculpas por el inconveniente!\0"\
+  "El instalador est\303\241 da\303\261ado, desc\303\241rguelo de nuevo.\n\302\241Disculpa las molestias!\0"\
   "Desinstalar SumatraPDF\0"\
   "Fall\303\263 la desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en progreso...\0"\
