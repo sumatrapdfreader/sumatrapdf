@@ -5363,11 +5363,12 @@ InitMouseWheelInfo:
             return OnDDETerminate(hwnd, wParam, lParam);
 
         case WM_TIMER:
-            OnTimer(*win, hwnd, wParam);
+            if (win)
+                OnTimer(*win, hwnd, wParam);
             break;
 
         case WM_MOUSEACTIVATE:
-            if ((win->presentation || win->fullScreen) && hwnd != GetForegroundWindow())
+            if (win && (win->presentation || win->fullScreen) && hwnd != GetForegroundWindow())
                 return MA_ACTIVATEANDEAT;
             return MA_ACTIVATE;
 
