@@ -186,7 +186,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		{
 			assert(!image->usecolorkey);
 			image->usecolorkey = 2;
-			for (i = 0; i < n; i++)
+			for (i = 0; i < image->n; i++)
 				image->colorkey[i] = pdf_to_int(pdf_array_get(obj, i));
 		}
 	}
