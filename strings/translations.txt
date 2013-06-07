@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d55c6082c63d55c104bf80bbd5609184e5030beb
+e7472bc33c71b6b32fcf2366b10b0d93a25ace8f
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -1822,6 +1822,7 @@ hr:P&ostavke
 hu:&Beállítások
 id:Pilihan
 it:&Opzioni
+ja:オプション(&O)
 kr:옵션(&O)
 ku:هەڵبژاردنەکان&
 mk:&Опции
@@ -7416,6 +7417,7 @@ hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
 id:Gagal mengkopi uninstaller ke direktori temp
 it:Impossibile copiare programma disinstallazione nella cartella temporanea
+ja:アンインストーラを一時ディレクトリへコピーするのに失敗しました
 kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
 ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
@@ -7479,6 +7481,7 @@ fr:La suppression des clés de la base de registre du désinstalleur a échoué
 hr:Neuspjeh kod brisanja ključeva registra deinstalatera
 hu:Az eltávolító registry kulcsainak törlése sikertelen
 it:Impossibile rimuovere chiavi registro
+ja:アンインストーラのレジストリキーを削除するのに失敗しました
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
@@ -7903,7 +7906,7 @@ hr:Veličina datoteke:
 hu:Méret:
 id:Ukuran Berkas:
 it:Dimensione file:
-ja:ファイル サイズ:
+ja:ファイルサイズ:
 ka:ფაილის ზომა:
 kr:파일 크기:
 ku:قەبارەی فایل:
@@ -9438,6 +9441,7 @@ hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
 id:Install plugin untuk peram&bah Firefox, Chrome, dan Opera
 it:Installa plugin PDF per i &browser FireFox, Chrome e Opera
+ja:Firefox, Chrome, Opera へ PDF 閲覧プラグインをインストール(&b)
 kr:Firefox, Chrome 및 Opera용 PDF 브라우저 플러그인 설치(&B)
 ku:بۆ فایەرفۆکس، کرۆم و ئۆپێرا& PDF دابەزاندنی پێوەکراوی
 mk:Инсталирај додаток за PDF во Firefox, Chrome и Opera
@@ -9672,6 +9676,7 @@ fr:Permettre à Windows Desktop Search la recherche de documents PDF
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 it:Assegna a Windows la ricerca sul desktop & dei documenti PDF
+ja:Windows デスクトップ サーチの PDF ドキュメント検索を許可する(&s)
 kr:Windows 데스크톱 검색에서 PDF 문서를 검색할 수 있습니다.
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
@@ -9701,6 +9706,7 @@ fr:Permettre à Windows de montrer des a&perçus des documents PDF
 hr:Neka Windows prikazuje &pregled PDF dokumenata
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
+ja:Windows の PDF ドキュメントプレビューを許可する(&p)
 kr:Windows 내에서 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
 mk:Дозволи Windows да прикажува слики за PDF-документи
@@ -14262,6 +14268,7 @@ fr:Installeur de SumatraPDF %s
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
 it:Installazione SumatraPDF %s
+ja:SumatraPDF %s インストーラ
 kr:SumatraPDF %s 설치 관리자
 ku:SumatraPDF %s دابەزاندنی
 mk:Инсталација на SumatraPDF %s
@@ -14292,6 +14299,7 @@ fr:Désinstalleur de SumatraPDF %s
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
 it:Disinstallazione SumatraPDF %s
+ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
 ku:SumatraPDF %s سڕینەوەی
 mk:Деинсталација на SumatraPDF %s
@@ -14846,6 +14854,7 @@ hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
 id:Terima kasih telah memakai SumatraPDF!
 it:Grazie per aver scelto SumatraPDF!
+ja:SumatraPDF を選んで頂きありがとうございます！
 kr:SumatraPDF를 선택해 주셔서 고마워요!
 ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
 mk:Ви благодарам што го одбравте SumatraPDF!
