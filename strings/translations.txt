@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e7472bc33c71b6b32fcf2366b10b0d93a25ace8f
+5ddd2d67ec693b49044b6734f8ca2c91ba0169a2
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -198,9 +198,11 @@ ku:هەڵبژاردنی پەرەسەندوو ...&
 mk:&Напредни oпции...
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
+ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
 sq:Opsionet e &avancuara...
 ta:&மேம்பட்ட விருப்பங்கள்
+tw:進階選項...
 uk:Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
 :&All selected pages
@@ -3721,6 +3723,7 @@ sn:Une chokwadi chekuti urikuda kubvisa SumatraPDF?
 sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
+tw:你確定要解除安裝 SumatraPDF 嗎？
 uk:Ви впевнені, що хочете видалити SumatraPDF?
 uz:SumatraPDF'ni o'chirishga ishonchingiz komilmi?
 vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
@@ -4864,6 +4867,7 @@ sq:Mbyll
 sr-rs:Затвори
 sv:Stäng
 ta:மூடு
+tw:關閉
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
@@ -5603,6 +5607,7 @@ ru:Не удалось создать временную директорию
 sq:Nuk mund të krijojë direktorinë e përkohshme
 sv:Kunde inte skapa en tillfällig katalog
 ta:தற்காலிக கோப்புறையினை உருவாக்க இயலவில்லை
+tw:無法建立暫存資料夾
 uk:Не вдалося створити тимчасову папку
 uz:Vaqtincha direktoriyani yaratib bo'lmadi
 vn:Không tạo được thư mục tạm
@@ -5638,6 +5643,7 @@ ru:Не удалось создать директорию для установ
 sq:Nuk mund të krijojë direktorinë për instalimin
 sv:Kunde inte skapa installationsmappen
 ta:நிறுவல் கோப்புறையினை உருவாக்க இயலவில்லை
+tw:無法建立安裝資料夾
 uk:Не вдалося створити папку для встановлення
 uz:O'rnatish directoriyasini yaratib bo'lmadi
 vn:Không tạo được thư mục cài đặt
@@ -9993,6 +9999,7 @@ ku:Man&ga شێوازی
 mk:Режим за Man&ga
 pl:Tryb mangi
 pt:Modo man&ga
+ro:Mod man&ga
 ru:Режим Man&ga
 sq:Mënyra Man&ga
 ta:மேங்கா முறை
@@ -10865,6 +10872,7 @@ hr:Otvori u %s
 hu:Megnyitás %s
 id:Buka di %s
 it:Apri in %s
+ja:%s で開く
 kr:%s(으)로 열기
 ku:کردنەوە لە %s
 mk:Отвори во %s
@@ -15180,7 +15188,7 @@ mk:Користи го SumatraPDF како &основен читач на PDF
 nl:Gebruik SumatraPDF als &standaard PDF lezer
 pl:Używaj SumatraPDF jako domyślnej przeglądarki PDF
 pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
-ro:Folositi SumatraPDF ca cititor implicit pentru fisiere P&DF
+ro:Folosiți SumatraPDF ca cititor implicit pentru fișiere P&DF
 ru:Использовать SumatraPDF для просмотра PDF
 sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
 sv:Använd SumatraPDF som standardläsare för PDF-filer

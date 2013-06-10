@@ -1137,7 +1137,7 @@ const char * gTranslations_ro =
   "Dezinstalare SumatraPDF\0"\
   "Dezinstalarea a esuat\0"\
   "Dezinstalare in curs...\0"\
-  "Folositi SumatraPDF ca cititor implicit pentru fisiere P&DF\0";
+  "Folosi\310\233i SumatraPDF ca cititor implicit pentru fi\310\231iere P&DF\0";
 
 const char * gTranslations_ru = 
   "&\320\237\320\260\321\200\320\260\320\274\320\265\321\202\321\200\321\213\0"\
