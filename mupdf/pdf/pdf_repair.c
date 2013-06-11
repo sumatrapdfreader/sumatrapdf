@@ -393,6 +393,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				}
 
 				pdf_drop_obj(dict);
+				obj = NULL;
 			}
 
 			else if (tok == PDF_TOK_ERROR)
@@ -493,6 +494,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				obj = pdf_new_indirect(ctx, pdf_to_num(encrypt), pdf_to_gen(encrypt), xref);
 				pdf_drop_obj(encrypt);
 				encrypt = obj;
+				obj = NULL;
 			}
 			pdf_dict_puts(pdf_trailer(xref), "Encrypt", encrypt);
 			pdf_drop_obj(encrypt);
@@ -507,6 +509,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				obj = pdf_new_indirect(ctx, pdf_to_num(id), pdf_to_gen(id), xref);
 				pdf_drop_obj(id);
 				id = obj;
+				obj = NULL;
 			}
 			pdf_dict_puts(pdf_trailer(xref), "ID", id);
 			pdf_drop_obj(id);
