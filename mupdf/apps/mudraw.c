@@ -806,7 +806,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					fz_pcl_options options;
 
 					fz_pcl_preset(ctx, &options, "ljet4");
-				    
+
 					if (strstr(output, "%d") != NULL)
 						append = 0;
 					if (out_cs == CS_MONO)

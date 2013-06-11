@@ -206,6 +206,18 @@ static int
 pdf_extgstate_uses_blending(fz_context *ctx, pdf_obj *dict)
 {
 	pdf_obj *obj = pdf_dict_gets(dict, "BM");
+	/* SumatraPDF: properly support /BM arrays */
+	if (pdf_is_array(obj))
+	{
+		int k;
+		for (k = 0; k < pdf_array_len(obj); k++)
+		{
+			char *bm = pdf_to_name(pdf_array_get(obj, k));
+			if (!strcmp(bm, "Normal") || fz_lookup_blendmode(bm) > 0)
+				break;
+		}
+		obj = pdf_array_get(obj, k);
+	}
 	if (pdf_is_name(obj) && strcmp(pdf_to_name(obj), "Normal"))
 		return 1;
 	/* SumatraPDF: support transfer functions */

@@ -1811,7 +1811,16 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		else if (!strcmp(s, "BM"))
 		{
 			if (pdf_is_array(val))
-				val = pdf_array_get(val, 0);
+			{
+				/* SumatraPDF: properly support /BM arrays */
+				for (k = 0; k < pdf_array_len(val); k++)
+				{
+					char *bm = pdf_to_name(pdf_array_get(val, k));
+					if (!strcmp(bm, "Normal") || fz_lookup_blendmode(bm) > 0)
+						break;
+				}
+				val = pdf_array_get(val, k);
+			}
 			gstate->blendmode = fz_lookup_blendmode(pdf_to_name(val));
 		}
 

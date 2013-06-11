@@ -205,7 +205,7 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		default:
 			fz_throw(ctx, "Unsupported PCL spacing %d (0-3 only)", val);
 		}
-        }
+	}
 	else if (!strcmp(option, "mode2"))
 	{
 		if (val == 0)
@@ -213,8 +213,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_MODE_2_COMPRESSION;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for mode2 value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for mode2 value");
+	}
 	else if (!strcmp(option, "mode3"))
 	{
 		if (val == 0)
@@ -222,8 +222,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_MODE_3_COMPRESSION;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for mode3 value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for mode3 value");
+	}
 	else if (!strcmp(option, "eog_reset"))
 	{
 		if (val == 0)
@@ -231,8 +231,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_END_GRAPHICS_DOES_RESET;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for eog_reset value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for eog_reset value");
+	}
 	else if (!strcmp(option, "has_duplex"))
 	{
 		if (val == 0)
@@ -240,8 +240,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_HAS_DUPLEX;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for has_duplex value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for has_duplex value");
+	}
 	else if (!strcmp(option, "has_papersize"))
 	{
 		if (val == 0)
@@ -249,8 +249,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_CAN_SET_PAPER_SIZE;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for has_papersize value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for has_papersize value");
+	}
 	else if (!strcmp(option, "has_copies"))
 	{
 		if (val == 0)
@@ -258,8 +258,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= PCL_CAN_PRINT_COPIES;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for has_papersize value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for has_papersize value");
+	}
 	else if (!strcmp(option, "is_ljet4pjl"))
 	{
 		if (val == 0)
@@ -267,8 +267,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= HACK__IS_A_LJET4PJL;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for is_ljet4pjl value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for is_ljet4pjl value");
+	}
 	else if (!strcmp(option, "is_oce9050"))
 	{
 		if (val == 0)
@@ -276,8 +276,8 @@ void fz_pcl_option(fz_context *ctx, fz_pcl_options *opts, const char *option, in
 		else if (val == 1)
 			opts->features |= HACK__IS_A_OCE9050;
 		else
-                	fz_throw(ctx, "Expected 0 or 1 for is_oce9050 value");
-        }
+			fz_throw(ctx, "Expected 0 or 1 for is_oce9050 value");
+	}
 	else
 		fz_throw(ctx, "Unknown pcl option '%s'", option);
 }
@@ -504,7 +504,7 @@ mode2compress(unsigned char *out, unsigned char *in, int in_len)
 	int x;
 	int out_len = 0;
 	int run;
-    
+
 	for (x = 0; x < in_len; x += run)
 	{
 		/* How far do we have to look to find a value that isn't repeated? */
@@ -520,7 +520,7 @@ mode2compress(unsigned char *out, unsigned char *in, int in_len)
 		else
 		{
 			int i;
-		    
+
 			/* How many literals do we need to copy? */
 			for (run = 1; run < 127 && x+run < in_len; run++)
 				if (in[run] == in[run+1])
@@ -547,7 +547,7 @@ mode3compress(unsigned char *out, const unsigned char *in, unsigned char *prev, 
 	unsigned char *compressed = out;
 	const unsigned char *cur = in;
 	const unsigned char *end = in + in_len;
-    
+
 	while (cur < end) {		/* Detect a maximum run of unchanged bytes. */
 		const unsigned char *run = cur;
 		const unsigned char *diff;
