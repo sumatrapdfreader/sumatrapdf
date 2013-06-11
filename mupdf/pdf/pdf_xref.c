@@ -707,7 +707,7 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	pdf_read_xref_sections(xref, xref->startxref, buf);
 
-	if (xref->num_xref_sections == 0)
+	if (xref->num_xref_sections == 0 || pdf_xref_len(xref) == 0)
 		fz_throw(ctx, "didn't find any valid xref");
 
 	/* broken pdfs where first object is not free */
