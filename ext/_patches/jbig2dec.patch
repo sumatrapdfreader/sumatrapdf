@@ -46,8 +46,8 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
  			 const uint8_t *segment_data)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Wed May 29 22:46:18 2013
-+++ jbig2dec\jbig2_symbol_dict.c	Fri May 31 20:28:08 2013
+--- jbig2dec.orig\jbig2_symbol_dict.c	Tue Jun 11 22:07:23 2013
++++ jbig2dec\jbig2_symbol_dict.c	Tue Jun 11 22:13:51 2013
 @@ -440,11 +440,14 @@
                goto cleanup4;
            }
@@ -64,6 +64,33 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  	      } else {
            /* 6.5.8.2 refinement/aggregate symbol */
            uint32_t REFAGGNINST;
+@@ -775,25 +778,23 @@
+     int j = 0;
+     int k;
+     int exflag = 0;
+     int64_t limit = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
+     int32_t exrunlength;
+-    /* SumatraPDF: prevent infinite loop */
+     int zerolength = 0;
+ 
+     while (i < limit) {
+       if (params->SDHUFF)
+         exrunlength = jbig2_huffman_get(hs, SBHUFFRSIZE, &code);
+       else
+         code = jbig2_arith_int_decode(IAEX, as, &exrunlength);
+       /* SumatraPDF: prevent infinite loop */
+       zerolength = exrunlength > 0 ? 0 : zerolength + 1;
+-      if (code || (exrunlength > limit - i) || (exrunlength < 0) || (zerolength > 4)) {
++      if (code || (exrunlength > limit - i) || exflag && (exrunlength > params->SDNUMEXSYMS - j) || (exrunlength < 0) || (zerolength > 4)) {
+         if (code)
+           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "failed to decode exrunlength for exported symbols");
+-        /* SumatraPDF: prevent infinite loop */
+         else if (exrunlength <= 0)
+           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "runlength too small in export symbol table (%d <= 0)\n", exrunlength);
+         else
+           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Wed May 29 22:46:18 2013
 +++ jbig2dec\jbig2_text.c	Thu May 30 19:32:24 2013
