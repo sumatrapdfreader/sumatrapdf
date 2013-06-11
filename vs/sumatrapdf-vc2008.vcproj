@@ -1211,6 +1211,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\fitz\crypt_pkcs7.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\fitz\crypt_sha2.c"
 					>
 				</File>
@@ -1347,6 +1351,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\fitz\res_pcl.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\fitz\res_pixmap.c"
 					>
 				</File>
@@ -1400,10 +1408,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\text_search.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\fitz\crypt_pkcs7.c"
 					>
 				</File>
 			</Filter>

@@ -119,6 +119,13 @@ struct pdf_hotspot_s
 
 typedef struct pdf_js_s pdf_js;
 
+typedef struct pdf_xref_s
+{
+	int len;
+	pdf_xref_entry *table;
+	pdf_obj *trailer;
+} pdf_xref;
+
 struct pdf_document_s
 {
 	fz_document super;
@@ -130,12 +137,12 @@ struct pdf_document_s
 	int startxref;
 	int file_size;
 	pdf_crypt *crypt;
-	pdf_obj *trailer;
 	pdf_ocg_descriptor *ocg;
 	pdf_hotspot hotspot;
 
-	int len;
-	pdf_xref_entry *table;
+	int num_xref_sections;
+	pdf_xref *xref_sections;
+	int xref_altered;
 
 	int page_len;
 	int page_cap;
@@ -174,8 +181,9 @@ fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int o
 fz_stream *pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 
 pdf_obj *pdf_trailer(pdf_document *doc);
-void pdf_set_xref_trailer(pdf_document *doc, pdf_obj *trailer);
+void pdf_set_populating_xref_trailer(pdf_document *doc, pdf_obj *trailer);
 int pdf_xref_len(pdf_document *doc);
+pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int i);
 pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i);
 void pdf_replace_xref(pdf_document *doc, pdf_xref_entry *entries, int n);
 

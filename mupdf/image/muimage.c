@@ -33,11 +33,13 @@ image_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	{
 		buffer = fz_read_all(doc->file, 1024);
 		doc->image = fz_new_image_from_buffer(ctx, buffer);
-		buffer = NULL;
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, buffer);
 	}
 	fz_catch(ctx)
 	{
-		// fz_drop_buffer(ctx, buffer);
 		image_close_document(doc);
 		fz_rethrow(ctx);
 	}

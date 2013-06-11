@@ -110,6 +110,7 @@ EXPORTS
 	fz_pixmap_colorspace
 	fz_pixmap_components
 	fz_pixmap_samples
+	fz_pixmap_set_resolution
 	fz_clear_pixmap_with_value
 	fz_clear_pixmap_rect_with_value
 	fz_clear_pixmap
@@ -560,8 +561,9 @@ EXPORTS
 	pdf_load_renumbered_stream
 	pdf_open_raw_renumbered_stream
 	pdf_trailer
-	pdf_set_xref_trailer
+	pdf_set_populating_xref_trailer
 	pdf_xref_len
+	pdf_get_populating_xref_entry
 	pdf_get_xref_entry
 	pdf_replace_xref
 	pdf_repair_xref

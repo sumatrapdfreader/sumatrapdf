@@ -79,7 +79,7 @@ def main():
 	
 	# don't include/export doc_* functions, mucbz.h and muimage.h functions and svg and pwg functions
 	doc_exports = collectFunctions("fitz/doc_document.c") + collectFunctions("fitz/doc_interactive.c")
-	more_formats = collectFunctions("fitz/dev_svg.c") + collectFunctions("fitz/res_pwg.c")
+	more_formats = collectFunctions("fitz/dev_svg.c") + collectFunctions("fitz/res_pcl.c") + collectFunctions("fitz/res_pwg.c")
 	ignore_exports = doc_exports + more_formats + ["fz_init_ui_pointer_event", "fz_access_submit_event"]
 	
 	fitz_exports = generateExports("fitz/fitz.h", ignore_exports) + "\n\n" + generateExports("fitz/fitz-internal.h", ignore_exports)

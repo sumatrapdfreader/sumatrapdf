@@ -257,6 +257,9 @@ install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
 
 # --- Clean and Default ---
 
+tags: $(wildcard */*.h */*.c)
+	ctags $^
+
 all: all-nojs $(JSTARGETS)
 
 all-nojs: $(THIRD_LIBS) $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)

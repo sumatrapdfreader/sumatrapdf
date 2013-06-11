@@ -14,7 +14,7 @@
 
 enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
-enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_TGA, OUT_BMP };
+enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_TGA, OUT_BMP };
 
 enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA };
 
@@ -33,7 +33,8 @@ static const suffix_t suffix_table[] =
 	{ ".pam", OUT_PAM },
 	{ ".pbm", OUT_PBM },
 	{ ".svg", OUT_SVG },
-	{ ".pwg", OUT_PWG }
+	{ ".pwg", OUT_PWG },
+	{ ".pcl", OUT_PCL }
 	, { ".tga", OUT_TGA } /* SumatraPDF: support TGA as output format */
 #ifdef GDI_PLUS_BMP_RENDERER
 	, { ".bmp", OUT_BMP }
@@ -77,7 +78,8 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_PGM, CS_GRAY, { CS_GRAY, CS_RGB } },
 	{ OUT_PBM, CS_MONO, { CS_MONO } },
 	{ OUT_SVG, CS_RGB, { CS_RGB } },
-	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } }
+	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } },
+	{ OUT_PCL, CS_MONO, { CS_MONO } }
 	/* SumatraPDF: support TGA as output format */
 	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } }
 	, { OUT_BMP, CS_RGB, { CS_RGB } }
@@ -752,7 +754,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			int savealpha = (out_cs == CS_RGBA || out_cs == CS_GRAYALPHA);
 
 			pix = fz_new_pixmap_with_bbox(ctx, colorspace, &ibounds);
-
+			fz_pixmap_set_resolution(pix, resolution);
+			
 			if (savealpha)
 				fz_clear_pixmap(ctx, pix);
 			else
@@ -796,6 +799,24 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					}
 					else
 						fz_write_pwg(ctx, pix, buf, append, NULL);
+					append = 1;
+				}
+				else if (output_format == OUT_PCL)
+				{
+					fz_pcl_options options;
+
+					fz_pcl_preset(ctx, &options, "ljet4");
+				    
+					if (strstr(output, "%d") != NULL)
+						append = 0;
+					if (out_cs == CS_MONO)
+					{
+						fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
+						fz_write_pcl_bitmap(ctx, bit, buf, append, &options);
+						fz_drop_bitmap(ctx, bit);
+					}
+					else
+						fz_write_pcl(ctx, pix, buf, append, &options);
 					append = 1;
 				}
 				else if (output_format == OUT_PBM) {

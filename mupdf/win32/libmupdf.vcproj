@@ -557,6 +557,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\res_pcl.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\res_pixmap.c"
 				>
 			</File>

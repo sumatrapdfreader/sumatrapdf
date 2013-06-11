@@ -254,7 +254,6 @@ pdf_parse_file_spec(pdf_document *xref, pdf_obj *file_spec)
 		return pdf_to_utf8(xref, file_spec);
 
 	if (pdf_is_dict(file_spec)) {
-		fz_warn(ctx, "parsing dict");
 		filename = pdf_dict_gets(file_spec, "UF");
 		if (!filename)
 			filename = pdf_dict_gets(file_spec, "F");

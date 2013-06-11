@@ -24,7 +24,6 @@ main(int argc, char **argv)
 	char name[256];
 	char *realname;
 	int i, j, c;
-	int bol = 1;
 
 	if (argc < 3)
 	{

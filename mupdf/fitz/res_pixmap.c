@@ -1123,3 +1123,10 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	tile->samples = fz_resize_array(ctx, tile->samples, dst_w * n, dst_h);
 	tile->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
+
+void
+fz_pixmap_set_resolution(fz_pixmap *pix, int res)
+{
+	pix->xres = res;
+	pix->yres = res;
+}

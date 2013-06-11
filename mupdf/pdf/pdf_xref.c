@@ -12,11 +12,40 @@ static inline int iswhite(int ch)
  * xref tables
  */
 
-static void pdf_resize_xref(pdf_document *xref, int newlen)
+static void pdf_free_xref_sections(pdf_document *doc)
+{
+	fz_context *ctx = doc->ctx;
+	int x, e;
+
+	for (x = 0; x < doc->num_xref_sections; x++)
+	{
+		pdf_xref *xref = &doc->xref_sections[x];
+
+		for (e = 0; e < xref->len; e++)
+		{
+			pdf_xref_entry *entry = &xref->table[e];
+
+			if (entry->obj)
+			{
+				pdf_drop_obj(entry->obj);
+				fz_drop_buffer(ctx, entry->stm_buf);
+			}
+		}
+
+		fz_free(ctx, xref->table);
+		pdf_drop_obj(xref->trailer);
+	}
+
+	fz_free(ctx, doc->xref_sections);
+	doc->xref_sections = NULL;
+	doc->num_xref_sections = 0;
+}
+
+static void pdf_resize_xref(fz_context *ctx, pdf_xref *xref, int newlen)
 {
 	int i;
 
-	xref->table = fz_resize_array(xref->ctx, xref->table, newlen, sizeof(pdf_xref_entry));
+	xref->table = fz_resize_array(ctx, xref->table, newlen, sizeof(pdf_xref_entry));
 	for (i = xref->len; i < newlen; i++)
 	{
 		xref->table[i].type = 0;
@@ -29,35 +58,140 @@ static void pdf_resize_xref(pdf_document *xref, int newlen)
 	xref->len = newlen;
 }
 
-pdf_obj *pdf_trailer(pdf_document *doc)
+static void pdf_populate_next_xref_level(pdf_document *doc)
 {
-	return doc->trailer;
+	pdf_xref *xref;
+	doc->xref_sections = fz_resize_array(doc->ctx, doc->xref_sections, doc->num_xref_sections + 1, sizeof(pdf_xref));
+	doc->num_xref_sections++;
+
+	xref = &doc->xref_sections[doc->num_xref_sections - 1];
+	xref->len = 0;
+	xref->table = NULL;
+	xref->trailer = NULL;
 }
 
-void pdf_set_xref_trailer(pdf_document *doc, pdf_obj *trailer)
+pdf_obj *pdf_trailer(pdf_document *doc)
 {
-	pdf_drop_obj(doc->trailer);
-	doc->trailer = pdf_keep_obj(trailer);
+	/* Return the document's final trailer */
+	pdf_xref *xref = &doc->xref_sections[0];
+
+	return xref->trailer;
+}
+
+void pdf_set_populating_xref_trailer(pdf_document *doc, pdf_obj *trailer)
+{
+	/* Update the trailer of the xref section being populated */
+	pdf_xref *xref = &doc->xref_sections[doc->num_xref_sections - 1];
+	pdf_drop_obj(xref->trailer);
+	xref->trailer = pdf_keep_obj(trailer);
 }
 
 int pdf_xref_len(pdf_document *doc)
 {
-	return doc->len;
+	/* Return the length of the document's final xref section */
+	pdf_xref *xref = &doc->xref_sections[0];
+
+	return xref->len;
 }
 
+/* Used while reading the individual xref sections from a file */
+pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int i)
+{
+	/* Return an entry within the xref currently being populated */
+	pdf_xref *xref;
+
+	if (doc->num_xref_sections == 0)
+	{
+		doc->xref_sections = fz_calloc(doc->ctx, 1, sizeof(pdf_xref));
+		doc->num_xref_sections = 1;
+	}
+
+	xref = &doc->xref_sections[doc->num_xref_sections - 1];
+
+	if (i >= xref->len)
+		pdf_resize_xref(doc->ctx, xref, i+1);
+
+	return &xref->table[i];
+}
+
+/* Used after loading a document to access entries */
 pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i)
 {
-	if (i >= doc->len)
-		pdf_resize_xref(doc, i+1);
+	int j;
 
-	return &doc->table[i];
+	/* Find the first xref section where the entry is defined. */
+	for (j = 0; j < doc->num_xref_sections; j++)
+	{
+		pdf_xref *xref = &doc->xref_sections[j];
+
+		if (i >= 0 && i < xref->len)
+		{
+			pdf_xref_entry *entry = &xref->table[i];
+
+			if (entry->type)
+				return entry;
+		}
+	}
+
+	/*
+		Didn't find the entry in any section. Return the entry from the final
+		section.
+	*/
+	return &doc->xref_sections[0].table[i];
+}
+
+/* Used when altering a document */
+static pdf_xref_entry *pdf_get_new_xref_entry(pdf_document *doc, int i)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_xref *xref;
+
+	/* Make a new final xref section if we haven't already */
+	if (!doc->xref_altered)
+	{
+		doc->xref_sections = fz_resize_array(ctx, doc->xref_sections, doc->num_xref_sections + 1, sizeof(pdf_xref));
+		memmove(&doc->xref_sections[1], &doc->xref_sections[0], doc->num_xref_sections * sizeof(pdf_xref));
+		doc->num_xref_sections++;
+		xref = &doc->xref_sections[0];
+		xref->len = 0;
+		xref->table = NULL;
+		xref->trailer = pdf_keep_obj(doc->xref_sections[1].trailer);
+		doc->xref_altered = 1;
+	}
+
+	xref = &doc->xref_sections[0];
+	if (i >= xref->len)
+		pdf_resize_xref(ctx, xref, i + 1);
+
+	return &xref->table[i];
 }
 
 void pdf_replace_xref(pdf_document *doc, pdf_xref_entry *entries, int n)
 {
-	fz_free(doc->ctx, doc->table);
-	doc->table = entries;
-	doc->len = n;
+	fz_context *ctx = doc->ctx;
+	pdf_xref *xref;
+	pdf_obj *trailer = pdf_keep_obj(pdf_trailer(doc));
+
+	/* The new table completely replaces the previous separate sections */
+	pdf_free_xref_sections(doc);
+
+	fz_var(trailer);
+	fz_try(ctx)
+	{
+		xref = fz_calloc(ctx, 1, sizeof(pdf_xref));
+		xref->table = entries;
+		xref->len = n;
+		xref->trailer = trailer;
+		trailer = NULL;
+
+		doc->xref_sections = xref;
+		doc->num_xref_sections = 1;
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(trailer);
+		fz_rethrow(ctx);
+	}
 }
 
 /*
@@ -69,7 +203,7 @@ pdf_load_version(pdf_document *xref)
 {
 	char buf[20];
 
-	fz_seek(xref->file, 0, 0);
+	fz_seek(xref->file, 0, SEEK_SET);
 	fz_read_line(xref->file, buf, sizeof buf);
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		fz_throw(xref->ctx, "cannot recognize version marker");
@@ -85,12 +219,12 @@ pdf_read_start_xref(pdf_document *xref)
 	int t, n;
 	int i;
 
-	fz_seek(xref->file, 0, 2);
+	fz_seek(xref->file, 0, SEEK_END);
 
 	xref->file_size = fz_tell(xref->file);
 
 	t = fz_maxi(0, xref->file_size - (int)sizeof buf);
-	fz_seek(xref->file, t, 0);
+	fz_seek(xref->file, t, SEEK_SET);
 
 	n = fz_read(xref->file, buf, sizeof buf);
 	if (n < 0)
@@ -116,14 +250,19 @@ pdf_read_start_xref(pdf_document *xref)
  * trailer dictionary
  */
 
-static void
-pdf_read_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
+static int
+pdf_xref_size_from_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
 {
 	int len;
 	char *s;
 	int t;
 	pdf_token tok;
 	int c;
+	int size;
+	int ofs;
+
+	/* Record the current file read offset so that we can reinstate it */
+	ofs = fz_tell(xref->file);
 
 	fz_read_line(xref->file, buf->scratch, buf->size);
 	if (strncmp(buf->scratch, "xref", 4) != 0)
@@ -144,13 +283,13 @@ pdf_read_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
 
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')
-			fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
+			fz_seek(xref->file, -(2 + (int)strlen(s)), SEEK_CUR);
 
 		t = fz_tell(xref->file);
 		if (t < 0)
 			fz_throw(xref->ctx, "cannot tell in file");
 
-		fz_seek(xref->file, t + 20 * len, 0);
+		fz_seek(xref->file, t + 20 * len, SEEK_SET);
 	}
 
 	fz_try(xref->ctx)
@@ -165,65 +304,21 @@ pdf_read_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
 			fz_throw(xref->ctx, "expected trailer dictionary");
 
 		trailer = pdf_parse_dict(xref, xref->file, buf);
-		pdf_set_xref_trailer(xref, trailer);
+
+		size = pdf_to_int(pdf_dict_gets(trailer, "Size"));
+		if (!size)
+			fz_throw(xref->ctx, "trailer missing Size entry");
+
 		pdf_drop_obj(trailer);
 	}
 	fz_catch(xref->ctx)
 	{
 		fz_throw(xref->ctx, "cannot parse trailer");
 	}
-}
 
-static void
-pdf_read_new_trailer(pdf_document *xref, pdf_lexbuf *buf)
-{
-	fz_try(xref->ctx)
-	{
-		pdf_xref_entry *entry;
-		pdf_obj *trailer;
-		int num, gen, stm_ofs, ofs;
-		ofs = fz_tell(xref->file);
-		trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
-		pdf_set_xref_trailer(xref, trailer);
-		pdf_drop_obj(trailer);
-		entry = pdf_get_xref_entry(xref, num);
-		entry->ofs = ofs;
-		entry->gen = gen;
-		entry->stm_ofs = stm_ofs;
-		pdf_drop_obj(entry->obj);
-		entry->obj = pdf_keep_obj(pdf_trailer(xref));
-		entry->type = 'n';
-	}
-	fz_catch(xref->ctx)
-	{
-		fz_throw(xref->ctx, "cannot parse trailer (compressed)");
-	}
-}
+	fz_seek(xref->file, ofs, SEEK_SET);
 
-static void
-pdf_read_trailer(pdf_document *xref, pdf_lexbuf *buf)
-{
-	int c;
-
-	fz_seek(xref->file, xref->startxref, 0);
-
-	while (iswhite(fz_peek_byte(xref->file)))
-		fz_read_byte(xref->file);
-
-	fz_try(xref->ctx)
-	{
-		c = fz_peek_byte(xref->file);
-		if (c == 'x')
-			pdf_read_old_trailer(xref, buf);
-		else if (c >= '0' && c <= '9')
-			pdf_read_new_trailer(xref, buf);
-		else
-			fz_throw(xref->ctx, "cannot recognize xref format: '%c'", c);
-	}
-	fz_catch(xref->ctx)
-	{
-		fz_throw(xref->ctx, "cannot read trailer");
-	}
+	return size;
 }
 
 pdf_obj *
@@ -244,7 +339,10 @@ pdf_read_old_xref(pdf_document *xref, pdf_lexbuf *buf)
 	int i;
 	int c;
 	pdf_obj *trailer;
-	int xref_len = pdf_xref_len(xref);
+	int xref_len = pdf_xref_size_from_old_trailer(xref, buf);
+
+	/* Access last entry to ensure xref size up front and avoid reallocs */
+	(void)pdf_get_populating_xref_entry(xref, xref_len - 1);
 
 	fz_read_line(xref->file, buf->scratch, buf->size);
 	if (strncmp(buf->scratch, "xref", 4) != 0)
@@ -265,7 +363,7 @@ pdf_read_old_xref(pdf_document *xref, pdf_lexbuf *buf)
 		if (s && *s != '\0')
 		{
 			fz_warn(xref->ctx, "broken xref section. proceeding anyway.");
-			fz_seek(xref->file, -(2 + (int)strlen(s)), 1);
+			fz_seek(xref->file, -(2 + (int)strlen(s)), SEEK_CUR);
 		}
 
 		if (ofs < 0)
@@ -276,12 +374,12 @@ pdf_read_old_xref(pdf_document *xref, pdf_lexbuf *buf)
 		{
 			fz_warn(xref->ctx, "broken xref section, proceeding anyway.");
 			/* Access last entry to ensure size */
-			(void)pdf_get_xref_entry(xref, ofs + len - 1);
+			(void)pdf_get_populating_xref_entry(xref, ofs + len - 1);
 		}
 
 		for (i = ofs; i < ofs + len; i++)
 		{
-			pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+			pdf_xref_entry *entry = pdf_get_populating_xref_entry(xref, i);
 			n = fz_read(xref->file, (unsigned char *) buf->scratch, 20);
 			if (n < 0)
 				fz_throw(xref->ctx, "cannot read xref table");
@@ -333,7 +431,7 @@ pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, in
 
 	for (i = i0; i < i0 + i1; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+		pdf_xref_entry *entry = pdf_get_populating_xref_entry(xref, i);
 		int a = 0;
 		int b = 0;
 		int c = 0;
@@ -379,7 +477,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		pdf_xref_entry *entry;
 		int ofs = fz_tell(xref->file);
 		trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
-		entry = pdf_get_xref_entry(xref, num);
+		entry = pdf_get_populating_xref_entry(xref, num);
 		entry->ofs = ofs;
 		entry->gen = gen;
 		entry->stm_ofs = stm_ofs;
@@ -401,7 +499,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 		size = pdf_to_int(obj);
 		/* Access xref entry to assure table size */
-		(void)pdf_get_xref_entry(xref, size-1);
+		(void)pdf_get_populating_xref_entry(xref, size-1);
 
 		/* SumatraPDF: xref stream objects don't need an xref entry themselves */
 		if (num < 0 || num >= pdf_xref_len(xref))
@@ -465,7 +563,7 @@ pdf_read_xref(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 	fz_context *ctx = xref->ctx;
 	pdf_obj *trailer;
 
-	fz_seek(xref->file, ofs, 0);
+	fz_seek(xref->file, ofs, SEEK_SET);
 
 	while (iswhite(fz_peek_byte(xref->file)))
 		fz_read_byte(xref->file);
@@ -496,8 +594,8 @@ struct ofs_list_s
 	int *list;
 };
 
-static void
-do_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, ofs_list *offsets)
+static int
+read_xref_section(pdf_document *xref, int ofs, pdf_lexbuf *buf, ofs_list *offsets)
 {
 	pdf_obj *trailer = NULL;
 	fz_context *ctx = xref->ctx;
@@ -505,61 +603,62 @@ do_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, ofs_list *of
 	int prevofs = 0;
 
 	fz_var(trailer);
-	fz_var(xrefstmofs);
-	fz_var(prevofs);
 
 	fz_try(ctx)
 	{
-		do
+		int i;
+		/* Avoid potential infinite recursion */
+		for (i = 0; i < offsets->len; i ++)
 		{
-			int i;
-			/* Avoid potential infinite recursion */
-			for (i = 0; i < offsets->len; i ++)
-			{
-				if (offsets->list[i] == ofs)
-					break;
-			}
-			if (i < offsets->len)
-			{
-				fz_warn(ctx, "ignoring xref recursion with offset %d", ofs);
+			if (offsets->list[i] == ofs)
 				break;
-			}
-			if (offsets->len == offsets->max)
-			{
-				offsets->list = fz_resize_array(ctx, offsets->list, offsets->max*2, sizeof(int));
-				offsets->max *= 2;
-			}
-			offsets->list[offsets->len++] = ofs;
+		}
+		if (i < offsets->len)
+		{
+			fz_warn(ctx, "ignoring xref recursion with offset %d", ofs);
+			prevofs = 0;
+			break;
+		}
+		if (offsets->len == offsets->max)
+		{
+			offsets->list = fz_resize_array(ctx, offsets->list, offsets->max*2, sizeof(int));
+			offsets->max *= 2;
+		}
+		offsets->list[offsets->len++] = ofs;
 
-			trailer = pdf_read_xref(xref, ofs, buf);
+		trailer = pdf_read_xref(xref, ofs, buf);
 
-			/* FIXME: do we overwrite free entries properly? */
-			xrefstmofs = pdf_to_int(pdf_dict_gets(trailer, "XRefStm"));
-			prevofs = pdf_to_int(pdf_dict_gets(trailer, "Prev"));
+		pdf_set_populating_xref_trailer(xref, trailer);
 
+		/* FIXME: do we overwrite free entries properly? */
+		xrefstmofs = pdf_to_int(pdf_dict_gets(trailer, "XRefStm"));
+		if (xrefstmofs)
+		{
 			if (xrefstmofs < 0)
 				fz_throw(ctx, "negative xref stream offset");
-			if (prevofs < 0)
-				fz_throw(ctx, "negative xref stream offset for previous xref stream");
 
-			/* We only recurse if we have both xrefstm and prev.
-			 * Hopefully this happens infrequently. */
-			if (xrefstmofs && prevofs)
-				do_read_xref_sections(xref, xrefstmofs, buf, offsets);
-			if (prevofs)
-				ofs = prevofs;
-			else if (xrefstmofs)
-				ofs = xrefstmofs;
-			pdf_drop_obj(trailer);
-			trailer = NULL;
+			/*
+				Read the XRefStm stream, but throw away the resulting trailer. We do not
+				follow any Prev tag therein, as specified on Page 108 of the PDF reference
+				1.7
+			*/
+			pdf_drop_obj(pdf_read_xref(xref, xrefstmofs, buf));
 		}
-		while (prevofs || xrefstmofs);
+
+		prevofs = pdf_to_int(pdf_dict_gets(trailer, "Prev"));
+		if (prevofs < 0)
+			fz_throw(ctx, "negative xref stream offset for previous xref stream");
+
+		pdf_drop_obj(trailer);
+		trailer = NULL;
 	}
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(trailer);
 		fz_throw(ctx, "cannot read xref at offset %d", ofs);
 	}
+
+	return prevofs;
 }
 
 static void
@@ -573,7 +672,11 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 	list.list = fz_malloc_array(ctx, 10, sizeof(int));
 	fz_try(ctx)
 	{
-		do_read_xref_sections(xref, ofs, buf, &list);
+		while(ofs)
+		{
+			pdf_populate_next_xref_level(xref);
+			ofs = read_xref_section(xref, ofs, buf, &list);
+		}
 	}
 	fz_always(ctx)
 	{
@@ -594,7 +697,6 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 static void
 pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
-	int size;
 	int i;
 	int xref_len;
 	fz_context *ctx = xref->ctx;
@@ -603,16 +705,10 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	pdf_read_start_xref(xref);
 
-	pdf_read_trailer(xref, buf);
-
-	size = pdf_to_int(pdf_dict_gets(pdf_trailer(xref), "Size"));
-	if (!size)
-		fz_throw(ctx, "trailer missing Size entry");
-
-	/* access entry to ensure xref table size */
-	(void)pdf_get_xref_entry(xref, size-1);
-
 	pdf_read_xref_sections(xref, xref->startxref, buf);
+
+	if (xref->num_xref_sections == 0)
+		fz_throw(ctx, "didn't find any valid xref");
 
 	/* broken pdfs where first object is not free */
 	if (pdf_get_xref_entry(xref, 0)->type != 'f')
@@ -822,20 +918,7 @@ pdf_init_document(pdf_document *xref)
 	}
 	fz_catch(ctx)
 	{
-		/* SumatraPDF: fix memory leak */
-		int xref_len = pdf_xref_len(xref);
-		for (i = 0; i < xref_len; i++)
-		{
-			pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
-			if (entry->obj)
-			{
-				pdf_drop_obj(entry->obj);
-				entry->obj = NULL;
-				fz_drop_buffer(ctx, entry->stm_buf);
-			}
-		}
-		pdf_replace_xref(xref, NULL, 0);
-		pdf_set_xref_trailer(xref, NULL);
+		pdf_free_xref_sections(xref);
 		fz_warn(xref->ctx, "trying to repair broken xref");
 		repaired = 1;
 	}
@@ -939,7 +1022,7 @@ pdf_init_document(pdf_document *xref)
 void
 pdf_close_document(pdf_document *xref)
 {
-	int i, xref_len;
+	int i;
 	fz_context *ctx;
 
 	if (!xref)
@@ -948,18 +1031,7 @@ pdf_close_document(pdf_document *xref)
 
 	pdf_drop_js(xref->js);
 
-	xref_len = pdf_xref_len(xref);
-	for (i = 0; i < xref_len; i++)
-	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
-		if (entry->obj)
-		{
-			pdf_drop_obj(entry->obj);
-			entry->obj = NULL;
-			fz_drop_buffer(ctx, entry->stm_buf);
-		}
-	}
-	pdf_replace_xref(xref, NULL, 0);
+	pdf_free_xref_sections(xref);
 
 	if (xref->page_objs)
 	{
@@ -979,7 +1051,6 @@ pdf_close_document(pdf_document *xref)
 		pdf_drop_obj(xref->focus_obj);
 	if (xref->file)
 		fz_close(xref->file);
-	pdf_drop_obj(pdf_trailer(xref));
 	if (xref->crypt)
 		pdf_free_crypt(ctx, xref->crypt);
 
@@ -1063,13 +1134,13 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 			ofsbuf[i] = buf->i;
 		}
 
-		fz_seek(stm, first, 0);
+		fz_seek(stm, first, SEEK_SET);
 
 		for (i = 0; i < count; i++)
 		{
 			int xref_len = pdf_xref_len(xref);
 			pdf_xref_entry *entry;
-			fz_seek(stm, first + ofsbuf[i], 0);
+			fz_seek(stm, first + ofsbuf[i], SEEK_SET);
 
 			obj = pdf_parse_stm_obj(xref, stm, buf);
 
@@ -1141,7 +1212,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 	}
 	else if (x->type == 'n')
 	{
-		fz_seek(xref->file, x->ofs, 0);
+		fz_seek(xref->file, x->ofs, SEEK_SET);
 
 		fz_try(ctx)
 		{
@@ -1260,7 +1331,7 @@ pdf_create_object(pdf_document *xref)
 	/* TODO: reuse free object slots by properly linking free object chains in the ofs field */
 	pdf_xref_entry *entry;
 	int num = pdf_xref_len(xref);
-	entry = pdf_get_xref_entry(xref, num);
+	entry = pdf_get_new_xref_entry(xref, num);
 	entry->type = 'f';
 	entry->ofs = -1;
 	entry->gen = 0;
@@ -1281,7 +1352,7 @@ pdf_delete_object(pdf_document *xref, int num)
 		return;
 	}
 
-	x = pdf_get_xref_entry(xref, num);
+	x = pdf_get_new_xref_entry(xref, num);
 
 	fz_drop_buffer(xref->ctx, x->stm_buf);
 	pdf_drop_obj(x->obj);
@@ -1305,7 +1376,7 @@ pdf_update_object(pdf_document *xref, int num, pdf_obj *newobj)
 		return;
 	}
 
-	x = pdf_get_xref_entry(xref, num);
+	x = pdf_get_new_xref_entry(xref, num);
 
 	pdf_drop_obj(x->obj);
 

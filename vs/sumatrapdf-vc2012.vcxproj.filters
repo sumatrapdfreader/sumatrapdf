@@ -567,6 +567,9 @@
     <ClCompile Include="..\mupdf\fitz\res_path.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\res_pcl.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\res_pixmap.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

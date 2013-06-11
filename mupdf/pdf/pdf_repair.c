@@ -185,7 +185,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 				continue;
 			}
 
-			entry = pdf_get_xref_entry(xref, n);
+			entry = pdf_get_populating_xref_entry(xref, n);
 			entry->ofs = num;
 			entry->gen = i;
 			entry->stm_ofs = 0;
@@ -408,11 +408,11 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			Dummy access to entry to assure sufficient space in the xref table
 			and avoid repeated reallocs in the loop
 		*/
-		(void)pdf_get_xref_entry(xref, maxnum);
+		(void)pdf_get_populating_xref_entry(xref, maxnum);
 
 		for (i = 0; i < listlen; i++)
 		{
-			entry = pdf_get_xref_entry(xref, list[i].num);
+			entry = pdf_get_populating_xref_entry(xref, list[i].num);
 			entry->type = 'n';
 			entry->ofs = list[i].ofs;
 			entry->gen = list[i].gen;
@@ -439,7 +439,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			}
 		}
 
-		entry = pdf_get_xref_entry(xref, 0);
+		entry = pdf_get_populating_xref_entry(xref, 0);
 		entry->type = 'f';
 		entry->ofs = 0;
 		entry->gen = 65535;
@@ -449,7 +449,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 		next = 0;
 		for (i = pdf_xref_len(xref) - 1; i >= 0; i--)
 		{
-			entry = pdf_get_xref_entry(xref, i);
+			entry = pdf_get_populating_xref_entry(xref, i);
 			if (entry->type == 'f')
 			{
 				entry->ofs = next;
@@ -462,7 +462,8 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 		/* create a repaired trailer, Root will be added later */
 
 		obj = pdf_new_dict(ctx, 5);
-		pdf_set_xref_trailer(xref, obj);
+		/* During repair there is only a single xref section */
+		pdf_set_populating_xref_trailer(xref, obj);
 		pdf_drop_obj(obj);
 		obj = NULL;
 
@@ -536,7 +537,7 @@ pdf_repair_obj_stms(pdf_document *xref)
 
 	for (i = 0; i < xref_len; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+		pdf_xref_entry *entry = pdf_get_populating_xref_entry(xref, i);
 
 		if (entry->stm_ofs)
 		{
@@ -560,9 +561,9 @@ pdf_repair_obj_stms(pdf_document *xref)
 	/* Ensure that streamed objects reside inside a known non-streamed object */
 	for (i = 0; i < xref_len; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_xref_entry(xref, i);
+		pdf_xref_entry *entry = pdf_get_populating_xref_entry(xref, i);
 
-		if (entry->type == 'o' && pdf_get_xref_entry(xref, entry->ofs)->type != 'n')
+		if (entry->type == 'o' && pdf_get_populating_xref_entry(xref, entry->ofs)->type != 'n')
 			fz_throw(xref->ctx, "invalid reference to non-object-stream: %d (%d 0 R)", entry->ofs, i);
 	}
 }

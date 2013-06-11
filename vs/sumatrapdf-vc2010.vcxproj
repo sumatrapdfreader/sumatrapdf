@@ -253,6 +253,7 @@
     <ClCompile Include="..\mupdf\fitz\res_halftone.c" />
     <ClCompile Include="..\mupdf\fitz\res_image.c" />
     <ClCompile Include="..\mupdf\fitz\res_path.c" />
+    <ClCompile Include="..\mupdf\fitz\res_pcl.c" />
     <ClCompile Include="..\mupdf\fitz\res_pixmap.c" />
     <ClCompile Include="..\mupdf\fitz\res_pwg.c" />
     <ClCompile Include="..\mupdf\fitz\res_shade.c" />
