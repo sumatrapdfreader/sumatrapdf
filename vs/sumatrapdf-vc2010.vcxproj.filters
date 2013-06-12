@@ -495,9 +495,6 @@
     <ClCompile Include="..\mupdf\fitz\doc_document.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\fitz\doc_interactive.c">
-      <Filter>ext\mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\doc_link.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

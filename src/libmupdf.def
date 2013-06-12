@@ -173,13 +173,6 @@ EXPORTS
 	fz_print_outline
 	fz_free_outline
 	fz_generate_transition
-	fz_widget_get_type
-	fz_bound_widget
-	fz_check_signature
-	fz_access_alert_event
-	fz_access_exec_menu_item_event
-	fz_access_launch_url_event
-	fz_access_mail_doc_event
 
 	fz_clone_context_internal
 	fz_new_aa_context
@@ -390,6 +383,8 @@ EXPORTS
 	fz_keep_transfer_function
 	fz_drop_transfer_function
 	fz_new_draw_device_type3
+	fz_begin_page
+	fz_end_page
 	fz_fill_path
 	fz_stroke_path
 	fz_clip_path
@@ -517,6 +512,7 @@ EXPORTS
 	pdf_open_document
 	pdf_open_document_with_stream
 	pdf_close_document
+	pdf_specifics
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
@@ -593,7 +589,6 @@ EXPORTS
 	pdf_keep_xobject
 	pdf_drop_xobject
 	pdf_update_xobject_contents
-	pdf_update_appearance
 	pdf_create_xobject
 	pdf_new_cmap
 	pdf_keep_cmap
@@ -657,18 +652,6 @@ EXPORTS
 	pdf_get_inheritable
 	pdf_get_field_flags
 	pdf_field_type
-	pdf_field_value
-	pdf_field_set_value
-	pdf_field_border_style
-	pdf_field_set_border_style
-	pdf_field_set_button_caption
-	pdf_field_set_fill_color
-	pdf_field_set_text_color
-	pdf_field_display
-	pdf_field_name
-	pdf_field_set_display
-	pdf_lookup_field
-	pdf_field_reset
 	pdf_run_glyph
 	pdf_store_item
 	pdf_find_item
@@ -677,24 +660,8 @@ EXPORTS
 	pdf_file_update_start_w
 	pdf_file_update_append
 	pdf_file_update_end
-	pdf_has_unsaved_changes
-	pdf_pass_event
-	pdf_update_page
 	pdf_annot_obj_type
-	pdf_poll_changed_annot
-	pdf_focused_widget
-	pdf_first_widget
-	pdf_next_widget
-	pdf_text_widget_text
-	pdf_text_widget_max_len
-	pdf_text_widget_content_type
-	pdf_text_widget_set_text
-	pdf_choice_widget_options
-	pdf_choice_widget_is_multiselect
-	pdf_choice_widget_value
-	pdf_choice_widget_set_value
-	pdf_signature_widget_byte_range
-	pdf_signature_widget_contents
+	pdf_check_signature
 	pdf_create_annot
 	pdf_delete_annot
 	pdf_set_annot_appearance
@@ -703,13 +670,6 @@ EXPORTS
 	pdf_set_markup_appearance
 	pdf_set_ink_annot_list
 	pdf_set_ink_obj_appearance
-	pdf_set_doc_event_callback
-	pdf_event_issue_alert
-	pdf_event_issue_print
-	pdf_event_issue_exec_menu_item
-	pdf_event_issue_exec_dialog
-	pdf_event_issue_launch_url
-	pdf_event_issue_mail_doc
 	pdf_js_supported
 	pdf_new_js
 	pdf_drop_js

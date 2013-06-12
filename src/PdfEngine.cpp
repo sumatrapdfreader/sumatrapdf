@@ -1863,10 +1863,13 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, const fz_matrix *ctm
         EnterCriticalSection(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
+            fz_rect pagerect;
+            fz_begin_page(dev, pdf_bound_page(_doc, page, &pagerect), ctm);
             fz_run_page_transparency(pageAnnots, dev, cliprect, false, page->transparency);
             fz_run_display_list(run->list, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
             fz_run_page_transparency(pageAnnots, dev, cliprect, true, page->transparency);
             fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
+            fz_end_page(dev);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1880,10 +1883,13 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, const fz_matrix *ctm
                            target == Target_Export ? "Export" : "View";
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
+            fz_rect pagerect;
+            fz_begin_page(dev, pdf_bound_page(_doc, page, &pagerect), ctm);
             fz_run_page_transparency(pageAnnots, dev, cliprect, false, page->transparency);
             pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : NULL);
             fz_run_page_transparency(pageAnnots, dev, cliprect, true, page->transparency);
             fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
+            fz_end_page(dev);
         }
         fz_catch(ctx) {
             ok = false;
@@ -2379,9 +2385,8 @@ WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **co
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        fz_rect pagerect;
         sheet = fz_new_text_sheet(ctx);
-        text = fz_new_text_page(ctx, pdf_bound_page(_doc, page, &pagerect));
+        text = fz_new_text_page(ctx);
         dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {
@@ -3675,10 +3680,13 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, const fz_matrix *ctm
         EnterCriticalSection(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
+            fz_rect pagerect;
+            fz_begin_page(dev, xps_bound_page(_doc, page, &pagerect), ctm);
             fz_run_page_transparency(pageAnnots, dev, cliprect, false);
             fz_run_display_list(run->list, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
             fz_run_page_transparency(pageAnnots, dev, cliprect, true);
             fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
+            fz_end_page(dev);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3690,10 +3698,13 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, const fz_matrix *ctm
         ScopedCritSec scope(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
+            fz_rect pagerect;
+            fz_begin_page(dev, xps_bound_page(_doc, page, &pagerect), ctm);
             fz_run_page_transparency(pageAnnots, dev, cliprect, false);
             xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : NULL);
             fz_run_page_transparency(pageAnnots, dev, cliprect, true);
             fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : NULL);
+            fz_end_page(dev);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3945,9 +3956,8 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **co
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        fz_rect pagerect;
         sheet = fz_new_text_sheet(ctx);
-        text = fz_new_text_page(ctx, xps_bound_page(_doc, page, &pagerect));
+        text = fz_new_text_page(ctx);
         dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {

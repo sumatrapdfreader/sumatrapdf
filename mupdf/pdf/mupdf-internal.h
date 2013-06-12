@@ -126,6 +126,18 @@ typedef struct pdf_xref_s
 	pdf_obj *trailer;
 } pdf_xref;
 
+/*
+	Document event structures are mostly opaque to the app. Only the type
+	is visible to the app.
+*/
+typedef struct pdf_doc_event_s pdf_doc_event;
+
+/*
+	pdf_doc_event_cb: the type of function via which the app receives
+	document events.
+*/
+typedef void (pdf_doc_event_cb)(pdf_doc_event *event, void *data);
+
 struct pdf_document_s
 {
 	fz_document super;
@@ -160,7 +172,7 @@ struct pdf_document_s
 	int dirty;
 	void (*update_appearance)(pdf_document *xref, pdf_obj *annot);
 
-	fz_doc_event_cb *event_cb;
+	pdf_doc_event_cb *event_cb;
 	void *event_cb_data;
 };
 
@@ -604,40 +616,413 @@ void pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int 
 /*
  * PDF interaction interface
  */
+
+/* Types of widget */
+enum
+{
+	PDF_WIDGET_TYPE_NOT_WIDGET = -1,
+	PDF_WIDGET_TYPE_PUSHBUTTON,
+	PDF_WIDGET_TYPE_CHECKBOX,
+	PDF_WIDGET_TYPE_RADIOBUTTON,
+	PDF_WIDGET_TYPE_TEXT,
+	PDF_WIDGET_TYPE_LISTBOX,
+	PDF_WIDGET_TYPE_COMBOBOX,
+	PDF_WIDGET_TYPE_SIGNATURE
+};
+
+/* Types of text widget content */
+enum
+{
+	PDF_WIDGET_CONTENT_UNRESTRAINED,
+	PDF_WIDGET_CONTENT_NUMBER,
+	PDF_WIDGET_CONTENT_SPECIAL,
+	PDF_WIDGET_CONTENT_DATE,
+	PDF_WIDGET_CONTENT_TIME
+};
+
+/* Types of UI event */
+enum
+{
+	PDF_EVENT_TYPE_POINTER,
+};
+
+/* Types of pointer event */
+enum
+{
+	PDF_POINTER_DOWN,
+	PDF_POINTER_UP,
+};
+
+
+/*
+	UI events that can be passed to an interactive document.
+*/
+typedef struct pdf_ui_event_s
+{
+	int etype;
+	union
+	{
+		struct
+		{
+			int ptype;
+			fz_point pt;
+		} pointer;
+	} event;
+} pdf_ui_event;
+
+/*
+	pdf_init_ui_pointer_event: Set up a pointer event
+*/
+void pdf_init_ui_pointer_event(pdf_ui_event *event, int type, float x, float y);
+
+/*
+	Widgets that may appear in PDF forms
+*/
+typedef struct pdf_widget_s pdf_widget;
+
+/*
+	Determine whether changes have been made since the
+	document was opened or last saved.
+*/
 int pdf_has_unsaved_changes(pdf_document *doc);
-int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event);
+
+/*
+	pdf_pass_event: Pass a UI event to an interactive
+	document.
+
+	Returns a boolean indication of whether the ui_event was
+	handled. Example of use for the return value: when considering
+	passing the events that make up a drag, if the down event isn't
+	accepted then don't send the move events or the up event.
+*/
+int pdf_pass_event(pdf_document *doc, pdf_page *page, pdf_ui_event *ui_event);
+
+/*
+	pdf_update_page: update a page for the sake of changes caused by a call
+	to pdf_pass_event. pdf_update_page regenerates any appearance streams that
+	are out of date, checks for cases where different appearance streams
+	should be selected because of state changes, and records internally
+	each annotation that has changed appearance. The list of chagned annotations
+	is then available via pdf_poll_changed_annotation. Note that a call to
+	pdf_pass_event for one page may lead to changes on any other, so an app
+	should call pdf_update_page for every page it currently displays. Also
+	it is important that the pdf_page object is the one used to last render
+	the page. If instead the app were to drop the page and reload it then
+	a call to pdf_update_page would not reliably be able to report all changed
+	areas.
+*/
 void pdf_update_page(pdf_document *doc, pdf_page *page);
+
 fz_annot_type pdf_annot_obj_type(pdf_obj *obj);
+
+/*
+	pdf_poll_changed_annot: enumerate the changed annotations recoreded
+	by a call to pdf_update_page.
+*/
 pdf_annot *pdf_poll_changed_annot(pdf_document *idoc, pdf_page *page);
-fz_widget *pdf_focused_widget(pdf_document *doc);
-fz_widget *pdf_first_widget(pdf_document *doc, pdf_page *page);
-fz_widget *pdf_next_widget(fz_widget *previous);
-char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw);
-int pdf_text_widget_max_len(pdf_document *doc, fz_widget *tw);
-int pdf_text_widget_content_type(pdf_document *doc, fz_widget *tw);
-int pdf_text_widget_set_text(pdf_document *doc, fz_widget *tw, char *text);
-int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[]);
-int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw);
-int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[]);
-void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[]);
-int pdf_signature_widget_byte_range(pdf_document *doc, fz_widget *widget, int (*byte_range)[2]);
-int pdf_signature_widget_contents(pdf_document *doc, fz_widget *widget, char **contents);
+
+/*
+	pdf_focused_widget: returns the currently focussed widget
+
+	Widgets can become focussed as a result of passing in ui events.
+	NULL is returned if there is no currently focussed widget. An
+	app may wish to create a native representative of the focussed
+	widget, e.g., to collect the text for a text widget, rather than
+	routing key strokes through pdf_pass_event.
+*/
+pdf_widget *pdf_focused_widget(pdf_document *doc);
+
+/*
+	pdf_first_widget: get first widget when enumerating
+*/
+pdf_widget *pdf_first_widget(pdf_document *doc, pdf_page *page);
+
+/*
+	pdf_next_widget: get next widget when enumerating
+*/
+pdf_widget *pdf_next_widget(pdf_widget *previous);
+
+/*
+	pdf_widget_get_type: find out the type of a widget.
+
+	The type determines what widget subclass the widget
+	can safely be cast to.
+*/
+int pdf_widget_get_type(pdf_widget *widget);
+
+/*
+	pdf_bound_widget: get the bounding box of a widget.
+*/
+fz_rect *pdf_bound_widget(pdf_widget *widget, fz_rect *);
+
+/*
+	pdf_text_widget_text: Get the text currently displayed in
+	a text widget.
+*/
+char *pdf_text_widget_text(pdf_document *doc, pdf_widget *tw);
+
+/*
+	pdf_widget_text_max_len: get the maximum number of
+	characters permitted in a text widget
+*/
+int pdf_text_widget_max_len(pdf_document *doc, pdf_widget *tw);
+
+/*
+	pdf_text_widget_content_type: get the type of content
+	required by a text widget
+*/
+int pdf_text_widget_content_type(pdf_document *doc, pdf_widget *tw);
+
+/*
+	pdf_text_widget_set_text: Update the text of a text widget.
+	The text is first validated and accepted only if it passes. The
+	function returns whether validation passed.
+*/
+int pdf_text_widget_set_text(pdf_document *doc, pdf_widget *tw, char *text);
+
+/*
+	pdf_choice_widget_options: get the list of options for a list
+	box or combo box. Returns the number of options and fills in their
+	names within the supplied array. Should first be called with a
+	NULL array to find out how big the array should be.
+*/
+int pdf_choice_widget_options(pdf_document *doc, pdf_widget *tw, char *opts[]);
+
+/*
+	pdf_choice_widget_is_multiselect: returns whether a list box or
+	combo box supports selection of multiple options
+*/
+int pdf_choice_widget_is_multiselect(pdf_document *doc, pdf_widget *tw);
+
+/*
+	pdf_choice_widget_value: get the value of a choice widget.
+	Returns the number of options curently selected and fills in
+	the supplied array with their strings. Should first be called
+	with NULL as the array to find out how big the array need to
+	be. The filled in elements should not be freed by the caller.
+*/
+int pdf_choice_widget_value(pdf_document *doc, pdf_widget *tw, char *opts[]);
+
+/*
+	pdf_widget_set_value: set the value of a choice widget. The
+	caller should pass the number of options selected and an
+	array of their names
+*/
+void pdf_choice_widget_set_value(pdf_document *doc, pdf_widget *tw, int n, char *opts[]);
+
+/*
+	pdf_signature_widget_byte_range: retrieve the byte range for a signature widget
+*/
+int pdf_signature_widget_byte_range(pdf_document *doc, pdf_widget *widget, int (*byte_range)[2]);
+
+/*
+	pdf_signature_widget_contents: retrieve the contents for a signature widget
+*/
+int pdf_signature_widget_contents(pdf_document *doc, pdf_widget *widget, char **contents);
+
+/*
+	fz_check_signature: check a signature's certificate chain and digest
+*/
+int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, char *file, char *ebuf, int ebufsize);
+
+/*
+	fz_create_annot: create a new annotation of the specified type on the
+	specified page. The returned pdf_annot structure is owned by the page
+	and does not need to be freed.
+*/
 pdf_annot *pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type);
+
+/*
+	fz_delete_annot: delete an annotation
+*/
 void pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot);
+
+/*
+	fz_set_annot_appearance: update the appearance of an annotation based
+	on a display list.
+*/
 void pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_display_list *disp_list);
+
+/*
+	fz_set_markup_annot_quadpoints: set the quadpoints for a text-markup annotation.
+*/
 void pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n);
+
 void pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3], float alpha, float line_thickness, float line_height);
+
+/*
+	fz_set_markup_appearance: set the appearance stream of a text markup annotations, basing it on
+	its QuadPoints array
+*/
 void pdf_set_markup_appearance(pdf_document *doc, pdf_annot *annot, float color[3], float alpha, float line_thickness, float line_height);
+
+/*
+	fz_set_ink_annot_list: set the details of an ink annotation. All the points of the multiple arcs
+	are carried in a single array, with the counts for each arc held in a secondary array.
+*/
 void pdf_set_ink_annot_list(pdf_document *doc, pdf_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness);
 void pdf_set_ink_obj_appearance(pdf_document *doc, pdf_obj *annot);
-void pdf_set_doc_event_callback(pdf_document *doc, fz_doc_event_cb *event_cb, void *data);
 
-void pdf_event_issue_alert(pdf_document *doc, fz_alert_event *event);
+/*
+	Document events: the objects via which MuPDF informs the calling app
+	of occurrences emanating from the document, possibly from user interaction
+	or javascript execution. MuPDF informs the app of document events via a
+	callback.
+*/
+
+struct pdf_doc_event_s
+{
+	int type;
+};
+
+enum
+{
+	PDF_DOCUMENT_EVENT_ALERT,
+	PDF_DOCUMENT_EVENT_PRINT,
+	PDF_DOCUMENT_EVENT_LAUNCH_URL,
+	PDF_DOCUMENT_EVENT_MAIL_DOC,
+	PDF_DOCUMENT_EVENT_SUBMIT,
+	PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM,
+	PDF_DOCUMENT_EVENT_EXEC_DIALOG
+};
+
+/*
+	pdf_set_doc_event_callback: set the function via which to receive
+	document events.
+*/
+void pdf_set_doc_event_callback(pdf_document *doc, pdf_doc_event_cb *event_cb, void *data);
+
+/*
+	The various types of document events
+*/
+
+/*
+	pdf_alert_event: details of an alert event. In response the app should
+	display an alert dialog with the bittons specified by "button_type_group".
+	If "check_box_message" is non-NULL, a checkbox should be displayed in
+	the lower-left corned along with the messsage.
+
+	"finally_checked" and "button_pressed" should be set by the app
+	before returning from the callback. "finally_checked" need be set
+	only if "check_box_message" is non-NULL.
+*/
+typedef struct
+{
+	char *message;
+	int icon_type;
+	int button_group_type;
+	char *title;
+	char *check_box_message;
+	int initially_checked;
+	int finally_checked;
+	int button_pressed;
+} pdf_alert_event;
+
+/* Possible values of icon_type */
+enum
+{
+	PDF_ALERT_ICON_ERROR,
+	PDF_ALERT_ICON_WARNING,
+	PDF_ALERT_ICON_QUESTION,
+	PDF_ALERT_ICON_STATUS
+};
+
+/* Possible values of button_group_type */
+enum
+{
+	PDF_ALERT_BUTTON_GROUP_OK,
+	PDF_ALERT_BUTTON_GROUP_OK_CANCEL,
+	PDF_ALERT_BUTTON_GROUP_YES_NO,
+	PDF_ALERT_BUTTON_GROUP_YES_NO_CANCEL
+};
+
+/* Possible values of button_pressed */
+enum
+{
+	PDF_ALERT_BUTTON_NONE,
+	PDF_ALERT_BUTTON_OK,
+	PDF_ALERT_BUTTON_CANCEL,
+	PDF_ALERT_BUTTON_NO,
+	PDF_ALERT_BUTTON_YES
+};
+
+/*
+	pdf_access_alert_event: access the details of an alert event
+	The returned pointer and all the data referred to by the
+	structire are owned by mupdf and need not be freed by the
+	caller.
+*/
+pdf_alert_event *pdf_access_alert_event(pdf_doc_event *event);
+
+/*
+	pdf_access_exec_menu_item_event: access the details of am execMenuItem
+	event, which consists of just the name of the menu item
+*/
+char *pdf_access_exec_menu_item_event(pdf_doc_event *event);
+
+/*
+	pdf_submit_event: details of a submit event. The app should submit
+	the specified data to the specified url. "get" determines whether
+	to use the GET or POST method.
+*/
+typedef struct
+{
+	char *url;
+	char *data;
+	int data_len;
+	int get;
+} pdf_submit_event;
+
+/*
+	pdf_access_submit_event: access the details of a submit event
+	The returned pointer and all data referred to by the structure are
+	owned by mupdf and need not be freed by the caller.
+*/
+pdf_submit_event *pdf_access_submit_event(pdf_doc_event *event);
+
+/*
+	pdf_launch_url_event: details of a launch-url event. The app should
+	open the url, either in a new frame or in the current window.
+*/
+typedef struct
+{
+	char *url;
+	int new_frame;
+} pdf_launch_url_event;
+
+/*
+	pdf_access_launch_url_event: access the details of a launch-url
+	event. The returned pointer and all data referred to by the structure
+	are owned by mupdf and need not be freed by the caller.
+*/
+pdf_launch_url_event *pdf_access_launch_url_event(pdf_doc_event *event);
+
+/*
+	pdf_mail_doc_event: details of a mail_doc event. The app should save
+	the current state of the document and email it using the specified
+	parameters.
+*/
+typedef struct
+{
+	int ask_user;
+	char *to;
+	char *cc;
+	char *bcc;
+	char *subject;
+	char *message;
+} pdf_mail_doc_event;
+
+/*
+	pdf_acccess_mail_doc_event: access the details of a mail-doc event.
+*/
+pdf_mail_doc_event *pdf_access_mail_doc_event(pdf_doc_event *event);
+
+void pdf_event_issue_alert(pdf_document *doc, pdf_alert_event *event);
 void pdf_event_issue_print(pdf_document *doc);
 void pdf_event_issue_exec_menu_item(pdf_document *doc, char *item);
 void pdf_event_issue_exec_dialog(pdf_document *doc);
 void pdf_event_issue_launch_url(pdf_document *doc, char *url, int new_frame);
-void pdf_event_issue_mail_doc(pdf_document *doc, fz_mail_doc_event *event);
+void pdf_event_issue_mail_doc(pdf_document *doc, pdf_mail_doc_event *event);
 
 /*
  * Javascript handler

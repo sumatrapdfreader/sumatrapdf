@@ -1497,8 +1497,8 @@ static void reset_field(pdf_document *doc, pdf_obj *field)
 		 * the appearance stream will be regenerated. */
 		switch (pdf_field_type(doc, field))
 		{
-		case FZ_WIDGET_TYPE_RADIOBUTTON:
-		case FZ_WIDGET_TYPE_CHECKBOX:
+		case PDF_WIDGET_TYPE_RADIOBUTTON:
+		case PDF_WIDGET_TYPE_CHECKBOX:
 			{
 				pdf_obj *leafv = pdf_get_inheritable(doc, field, "V");
 
@@ -1522,7 +1522,7 @@ static void reset_field(pdf_document *doc, pdf_obj *field)
 			}
 			break;
 
-		case FZ_WIDGET_TYPE_PUSHBUTTON:
+		case PDF_WIDGET_TYPE_PUSHBUTTON:
 			break;
 
 		default:
@@ -1768,7 +1768,7 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 		case FZ_ANNOT_WIDGET:
 			switch (pdf_field_type(doc, obj))
 			{
-			case FZ_WIDGET_TYPE_TEXT:
+			case PDF_WIDGET_TYPE_TEXT:
 				{
 					pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
 					if (formatting && doc->js)
@@ -1790,11 +1790,11 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 					}
 				}
 				break;
-			case FZ_WIDGET_TYPE_PUSHBUTTON:
+			case PDF_WIDGET_TYPE_PUSHBUTTON:
 				update_pushbutton_appearance(doc, obj);
 				break;
-			case FZ_WIDGET_TYPE_LISTBOX:
-			case FZ_WIDGET_TYPE_COMBOBOX:
+			case PDF_WIDGET_TYPE_LISTBOX:
+			case PDF_WIDGET_TYPE_COMBOBOX:
 				/* Treating listbox and combobox identically for now,
 				 * and the behaviour is most appropriate for a combobox */
 				update_combobox_appearance(doc, obj);
@@ -2057,7 +2057,7 @@ int pdf_has_unsaved_changes(pdf_document *doc)
 	return doc->dirty;
 }
 
-int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
+int pdf_pass_event(pdf_document *doc, pdf_page *page, pdf_ui_event *ui_event)
 {
 	pdf_annot *annot;
 	pdf_hotspot *hp = &doc->hotspot;
@@ -2081,11 +2081,11 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 
 	switch (ui_event->etype)
 	{
-	case FZ_EVENT_TYPE_POINTER:
+	case PDF_EVENT_TYPE_POINTER:
 		{
 			switch (ui_event->event.pointer.ptype)
 			{
-			case FZ_POINTER_DOWN:
+			case PDF_POINTER_DOWN:
 				if (doc->focus_obj)
 				{
 					/* Execute the blur action */
@@ -2110,7 +2110,7 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 				}
 				break;
 
-			case FZ_POINTER_UP:
+			case PDF_POINTER_UP:
 				if (hp->state != 0)
 					changed = 1;
 
@@ -2122,8 +2122,8 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 				{
 					switch (annot->widget_type)
 					{
-					case FZ_WIDGET_TYPE_RADIOBUTTON:
-					case FZ_WIDGET_TYPE_CHECKBOX:
+					case PDF_WIDGET_TYPE_RADIOBUTTON:
+					case PDF_WIDGET_TYPE_CHECKBOX:
 						/* FIXME: treating radio buttons like check boxes, for now */
 						toggle_check_box(doc, annot->obj);
 						changed = 1;
@@ -2217,35 +2217,35 @@ pdf_annot *pdf_poll_changed_annot(pdf_document *idoc, pdf_page *page)
 	return annot;
 }
 
-fz_widget *pdf_focused_widget(pdf_document *doc)
+pdf_widget *pdf_focused_widget(pdf_document *doc)
 {
-	return (fz_widget *)doc->focus;
+	return (pdf_widget *)doc->focus;
 }
 
-fz_widget *pdf_first_widget(pdf_document *doc, pdf_page *page)
+pdf_widget *pdf_first_widget(pdf_document *doc, pdf_page *page)
 {
 	pdf_annot *annot = page->annots;
 
-	while (annot && annot->widget_type == FZ_WIDGET_TYPE_NOT_WIDGET)
+	while (annot && annot->widget_type == PDF_WIDGET_TYPE_NOT_WIDGET)
 		annot = annot->next;
 
-	return (fz_widget *)annot;
+	return (pdf_widget *)annot;
 }
 
-fz_widget *pdf_next_widget(fz_widget *previous)
+pdf_widget *pdf_next_widget(pdf_widget *previous)
 {
 	pdf_annot *annot = (pdf_annot *)previous;
 
 	if (annot)
 		annot = annot->next;
 
-	while (annot && annot->widget_type == FZ_WIDGET_TYPE_NOT_WIDGET)
+	while (annot && annot->widget_type == PDF_WIDGET_TYPE_NOT_WIDGET)
 		annot = annot->next;
 
-	return (fz_widget *)annot;
+	return (pdf_widget *)annot;
 }
 
-int fz_widget_get_type(fz_widget *widget)
+int pdf_widget_get_type(pdf_widget *widget)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 	return annot->widget_type;
@@ -2332,12 +2332,12 @@ int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text)
 
 	switch (pdf_field_type(doc, field))
 	{
-	case FZ_WIDGET_TYPE_TEXT:
+	case PDF_WIDGET_TYPE_TEXT:
 		res = set_text_field_value(doc, field, text);
 		break;
 
-	case FZ_WIDGET_TYPE_CHECKBOX:
-	case FZ_WIDGET_TYPE_RADIOBUTTON:
+	case PDF_WIDGET_TYPE_CHECKBOX:
+	case PDF_WIDGET_TYPE_RADIOBUTTON:
 		res = set_checkbox_value(doc, field, text);
 		break;
 
@@ -2409,7 +2409,7 @@ void pdf_field_set_button_caption(pdf_document *doc, pdf_obj *field, char *text)
 
 	fz_try(ctx);
 	{
-		if (pdf_field_type(doc, field) == FZ_WIDGET_TYPE_PUSHBUTTON)
+		if (pdf_field_type(doc, field) == PDF_WIDGET_TYPE_PUSHBUTTON)
 		{
 			pdf_dict_putp(field, "MK/CA", val);
 			pdf_field_mark_dirty(ctx, field);
@@ -2607,7 +2607,7 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 	}
 }
 
-fz_rect *fz_bound_widget(fz_widget *widget, fz_rect *rect)
+fz_rect *pdf_bound_widget(pdf_widget *widget, fz_rect *rect)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 
@@ -2618,7 +2618,7 @@ fz_rect *fz_bound_widget(fz_widget *widget, fz_rect *rect)
 	return rect;
 }
 
-char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw)
+char *pdf_text_widget_text(pdf_document *doc, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	fz_context *ctx = doc->ctx;
@@ -2637,19 +2637,19 @@ char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw)
 	return text;
 }
 
-int pdf_text_widget_max_len(pdf_document *doc, fz_widget *tw)
+int pdf_text_widget_max_len(pdf_document *doc, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 
 	return pdf_to_int(pdf_get_inheritable(doc, annot->obj, "MaxLen"));
 }
 
-int pdf_text_widget_content_type(pdf_document *doc, fz_widget *tw)
+int pdf_text_widget_content_type(pdf_document *doc, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	fz_context *ctx = doc->ctx;
 	char *code = NULL;
-	int type = FZ_WIDGET_CONTENT_UNRESTRAINED;
+	int type = PDF_WIDGET_CONTENT_UNRESTRAINED;
 
 	fz_var(code);
 	fz_try(ctx)
@@ -2658,13 +2658,13 @@ int pdf_text_widget_content_type(pdf_document *doc, fz_widget *tw)
 		if (code)
 		{
 			if (strstr(code, "AFNumber_Format"))
-				type = FZ_WIDGET_CONTENT_NUMBER;
+				type = PDF_WIDGET_CONTENT_NUMBER;
 			else if (strstr(code, "AFSpecial_Format"))
-				type = FZ_WIDGET_CONTENT_SPECIAL;
+				type = PDF_WIDGET_CONTENT_SPECIAL;
 			else if (strstr(code, "AFDate_FormatEx"))
-				type = FZ_WIDGET_CONTENT_DATE;
+				type = PDF_WIDGET_CONTENT_DATE;
 			else if (strstr(code, "AFTime_FormatEx"))
-				type = FZ_WIDGET_CONTENT_TIME;
+				type = PDF_WIDGET_CONTENT_TIME;
 		}
 	}
 	fz_always(ctx)
@@ -2701,7 +2701,7 @@ static int run_keystroke(pdf_document *doc, pdf_obj *field, char **text)
 	return 1;
 }
 
-int pdf_text_widget_set_text(pdf_document *doc, fz_widget *tw, char *text)
+int pdf_text_widget_set_text(pdf_document *doc, pdf_widget *tw, char *text)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	fz_context *ctx = doc->ctx;
@@ -2721,7 +2721,7 @@ int pdf_text_widget_set_text(pdf_document *doc, fz_widget *tw, char *text)
 	return accepted;
 }
 
-int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[])
+int pdf_choice_widget_options(pdf_document *doc, pdf_widget *tw, char *opts[])
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	pdf_obj *optarr;
@@ -2744,7 +2744,7 @@ int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[])
 	return n;
 }
 
-int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw)
+int pdf_choice_widget_is_multiselect(pdf_document *doc, pdf_widget *tw)
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 
@@ -2752,15 +2752,15 @@ int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw)
 
 	switch (pdf_field_type(doc, annot->obj))
 	{
-	case FZ_WIDGET_TYPE_LISTBOX:
-	case FZ_WIDGET_TYPE_COMBOBOX:
+	case PDF_WIDGET_TYPE_LISTBOX:
+	case PDF_WIDGET_TYPE_COMBOBOX:
 		return (pdf_get_field_flags(doc, annot->obj) & Ff_MultiSelect) != 0;
 	default:
 		return 0;
 	}
 }
 
-int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[])
+int pdf_choice_widget_value(pdf_document *doc, pdf_widget *tw, char *opts[])
 {
 	pdf_annot *annot = (pdf_annot *)tw;
 	pdf_obj *optarr;
@@ -2799,7 +2799,7 @@ int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[])
 	}
 }
 
-void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[])
+void pdf_choice_widget_set_value(pdf_document *doc, pdf_widget *tw, int n, char *opts[])
 {
 	fz_context *ctx = doc->ctx;
 	pdf_annot *annot = (pdf_annot *)tw;
@@ -2849,7 +2849,7 @@ void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *
 	}
 }
 
-int pdf_signature_widget_byte_range(pdf_document *doc, fz_widget *widget, int (*byte_range)[2])
+int pdf_signature_widget_byte_range(pdf_document *doc, pdf_widget *widget, int (*byte_range)[2])
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 	pdf_obj *br = pdf_dict_getp(annot->obj, "V/ByteRange");
@@ -2867,7 +2867,7 @@ int pdf_signature_widget_byte_range(pdf_document *doc, fz_widget *widget, int (*
 	return n;
 }
 
-int pdf_signature_widget_contents(pdf_document *doc, fz_widget *widget, char **contents)
+int pdf_signature_widget_contents(pdf_document *doc, pdf_widget *widget, char **contents)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 	pdf_obj *c = pdf_dict_getp(annot->obj, "V/Contents");

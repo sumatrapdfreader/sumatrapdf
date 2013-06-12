@@ -286,9 +286,8 @@ LIBS_OBJS = \
 	$(MUXPS_OBJS)
 
 MUDOC_OBJS = \
-	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj \
-	$(OFZ)\dev_svg.obj $(OFZ)\res_pcl.obj $(OFZ)\res_pwg.obj \
-	$(OX)\mucbz.obj $(OX)\muimage.obj
+	$(OFZ)\doc_document.obj $(OX)\mucbz.obj $(OX)\muimage.obj \
+	$(OFZ)\dev_svg.obj $(OFZ)\res_pcl.obj $(OFZ)\res_pwg.obj
 
 MUAPPS_OBJS = \
 	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfshow.obj \

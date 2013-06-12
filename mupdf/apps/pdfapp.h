@@ -2,6 +2,7 @@
 #define PDFAPP_H
 
 #include "fitz.h"
+#include "mupdf-internal.h"
 
 /*
  * Utility object for handling a pdf application / view
@@ -37,7 +38,7 @@ extern void winhelp(pdfapp_t*);
 extern void winfullscreen(pdfapp_t*, int state);
 extern int winsavequery(pdfapp_t*);
 extern int wingetsavepath(pdfapp_t*, char *buf, int len);
-extern void winalert(pdfapp_t *, fz_alert_event *alert);
+extern void winalert(pdfapp_t *, pdf_alert_event *alert);
 extern void winprint(pdfapp_t *);
 extern void winadvancetimer(pdfapp_t *, float duration);
 extern void winreplacefile(char *source, char *target);

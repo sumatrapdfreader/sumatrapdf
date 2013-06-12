@@ -430,13 +430,14 @@ fz_lookup_text_style(fz_context *ctx, fz_text_sheet *sheet, fz_text *text, const
 }
 
 fz_text_page *
-fz_new_text_page(fz_context *ctx, const fz_rect *mediabox)
+fz_new_text_page(fz_context *ctx)
 {
 	fz_text_page *page = fz_malloc(ctx, sizeof(*page));
-	page->mediabox = *mediabox;
+	page->mediabox = fz_empty_rect;
 	page->len = 0;
 	page->cap = 0;
 	page->blocks = NULL;
+	page->next = NULL;
 	return page;
 }
 
@@ -1207,36 +1208,51 @@ fz_bidi_reorder_text_page(fz_context *ctx, fz_text_page *page)
 }
 
 static void
-fz_text_free_user(fz_device *dev)
+fz_text_begin_page(fz_device *dev, const fz_rect *mediabox, const fz_matrix *ctm)
 {
 	fz_context *ctx = dev->ctx;
 	fz_text_device *tdev = dev->user;
 
-	fz_try(ctx)
+	if (tdev->page->len)
 	{
-		add_span_to_soup(tdev->spans, tdev->cur_span);
-		tdev->cur_span = NULL;
-
-		strain_soup(ctx, tdev);
-
-		/* TODO: smart sorting of blocks in reading order */
-		/* TODO: unicode NFC normalization */
-
-		fz_bidi_reorder_text_page(ctx, tdev->page);
-
-		/* SumatraPDF: various string fixups */
-		fixup_text_page(dev->ctx, tdev->page);
+		tdev->page->next = fz_new_text_page(ctx);
+		tdev->page = tdev->page->next;
 	}
-	fz_always(ctx)
-	{
-		free_span_soup(tdev->spans);
-		fz_free(dev->ctx, tdev);
-	}
-	fz_catch(ctx)
-	{
-		/* TODO: mark fz_free_device as "doesn't throw" (else rethrowing would
-		   have to be caught/rethrown again in fz_free_device) */
-	}
+
+	tdev->page->mediabox = *mediabox;
+	fz_transform_rect(&tdev->page->mediabox, ctm);
+
+	tdev->spans = new_span_soup(ctx);
+}
+
+static void
+fz_text_end_page(fz_device *dev)
+{
+	fz_context *ctx = dev->ctx;
+	fz_text_device *tdev = dev->user;
+
+	add_span_to_soup(tdev->spans, tdev->cur_span);
+	tdev->cur_span = NULL;
+
+	strain_soup(ctx, tdev);
+	free_span_soup(tdev->spans);
+	tdev->spans = NULL;
+
+	/* TODO: smart sorting of blocks in reading order */
+	/* TODO: unicode NFC normalization */
+
+	fz_bidi_reorder_text_page(ctx, tdev->page);
+
+	/* SumatraPDF: various string fixups */
+	fixup_text_page(dev->ctx, tdev->page);
+}
+
+static void
+fz_text_free_user(fz_device *dev)
+{
+	fz_text_device *tdev = dev->user;
+	free_span_soup(tdev->spans);
+	fz_free(dev->ctx, tdev);
 }
 
 fz_device *
@@ -1247,12 +1263,14 @@ fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 	fz_text_device *tdev = fz_malloc_struct(ctx, fz_text_device);
 	tdev->sheet = sheet;
 	tdev->page = page;
-	tdev->spans = new_span_soup(ctx);
+	tdev->spans = NULL;
 	tdev->cur_span = NULL;
 	tdev->lastchar = ' ';
 
 	dev = fz_new_device(ctx, tdev);
 	dev->hints = FZ_IGNORE_IMAGE | FZ_IGNORE_SHADE;
+	dev->begin_page = fz_text_begin_page;
+	dev->end_page = fz_text_end_page;
 	dev->free_user = fz_text_free_user;
 	dev->fill_text = fz_text_fill_text;
 	dev->stroke_text = fz_text_stroke_text;

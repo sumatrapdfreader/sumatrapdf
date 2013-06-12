@@ -1,4 +1,4 @@
-#include "fitz.h"
+#include "mupdf-internal.h"
 
 #ifdef HAVE_OPENSSL
 
@@ -104,7 +104,6 @@ static long bsegs_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 	return BIO_callback_ctrl(b->next_bio, cmd, fp);
 }
 
-
 static BIO_METHOD methods_bsegs =
 {
 	0,"segment reader",
@@ -130,7 +129,6 @@ static void BIO_set_segments(BIO *b, int (*seg)[2], int nsegs)
 	ctx->seg = seg;
 	ctx->nsegs = nsegs;
 }
-
 
 typedef struct verify_context_s
 {
@@ -259,7 +257,6 @@ exit:
 	return res;
 }
 
-
 static unsigned char adobe_ca[] =
 {
 #include "../generated/adobe_ca.h"
@@ -344,7 +341,7 @@ exit:
 	return res;
 }
 
-int fz_check_signature(fz_context *ctx, fz_interactive *idoc, fz_widget *widget, char *file, char *ebuf, int ebufsize)
+int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, char *file, char *ebuf, int ebufsize)
 {
 	int (*byte_range)[2] = NULL;
 	int byte_range_len;
@@ -356,14 +353,14 @@ int fz_check_signature(fz_context *ctx, fz_interactive *idoc, fz_widget *widget,
 	fz_var(res);
 	fz_try(ctx);
 	{
-		byte_range_len = fz_signature_widget_byte_range(idoc, widget, NULL);
+		byte_range_len = pdf_signature_widget_byte_range(doc, widget, NULL);
 		if (byte_range_len)
 		{
 			byte_range = fz_calloc(ctx, byte_range_len, sizeof(*byte_range));
-			fz_signature_widget_byte_range(idoc, widget, byte_range);
+			pdf_signature_widget_byte_range(doc, widget, byte_range);
 		}
 
-		contents_len = fz_signature_widget_contents(idoc, widget, &contents);
+		contents_len = pdf_signature_widget_contents(doc, widget, &contents);
 		if (byte_range && contents)
 		{
 			res = verify_sig(contents, contents_len, file, byte_range, byte_range_len, ebuf, ebufsize);
@@ -393,7 +390,7 @@ int fz_check_signature(fz_context *ctx, fz_interactive *idoc, fz_widget *widget,
 
 #else /* HAVE_OPENSSL */
 
-int fz_check_signature(fz_context *ctx, fz_interactive *idoc, fz_widget *widget, char *file, char *ebuf, int ebufsize)
+int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, char *file, char *ebuf, int ebufsize)
 {
 	strncpy(ebuf, "This version of MuPDF was built without signature support", ebufsize);
 

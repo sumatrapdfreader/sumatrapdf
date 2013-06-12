@@ -22,15 +22,15 @@ static pdf_jsimp_obj *app_alert(void *jsctx, void *obj, int argc, pdf_jsimp_obj 
 	pdf_jsimp_obj *nType_obj = NULL;
 	pdf_jsimp_obj *cTitle_obj = NULL;
 	pdf_jsimp_obj *nButton_obj = NULL;
-	fz_alert_event event;
+	pdf_alert_event event;
 	int arg_is_obj = 0;
 
 	if (argc < 1 || argc > 6)
 		return NULL;
 
 	event.message = "";
-	event.icon_type = FZ_ALERT_ICON_ERROR;
-	event.button_group_type = FZ_ALERT_BUTTON_GROUP_OK;
+	event.icon_type = PDF_ALERT_ICON_ERROR;
+	event.button_group_type = PDF_ALERT_BUTTON_GROUP_OK;
 	event.title = "MuPDF";
 	event.check_box_message = NULL;
 	event.button_pressed = 0;
@@ -617,7 +617,7 @@ static pdf_jsimp_obj *doc_mailDoc(void *jsctx, void *obj, int argc, pdf_jsimp_ob
 	pdf_jsimp_obj *cBcc_obj = NULL;
 	pdf_jsimp_obj *cSubject_obj = NULL;
 	pdf_jsimp_obj *cMessage_obj = NULL;
-	fz_mail_doc_event event;
+	pdf_mail_doc_event event;
 	int arg_is_obj = 0;
 
 	if (argc < 1 || argc > 6)

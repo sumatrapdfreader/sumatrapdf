@@ -279,7 +279,10 @@ fz_print_text_page_xml(fz_context *ctx, fz_output *out, fz_text_page *page)
 {
 	int block_n;
 
-	fz_printf(out, "<page>\n");
+	fz_printf(out, "<page width=\"%g\" height=\"%g\">\n",
+		page->mediabox.x1 - page->mediabox.x0,
+		page->mediabox.y1 - page->mediabox.y0);
+
 	for (block_n = 0; block_n < page->len; block_n++)
 	{
 		switch (page->blocks[block_n].type)

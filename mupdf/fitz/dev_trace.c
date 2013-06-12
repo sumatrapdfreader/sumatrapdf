@@ -67,6 +67,20 @@ fz_trace_path(fz_path *path, int indent)
 }
 
 static void
+fz_trace_begin_page(fz_device *dev, const fz_rect *rect, const fz_matrix *ctm)
+{
+	printf("<page mediabox=\"%g %g %g %g\"", rect->x0, rect->y0, rect->x1, rect->y1);
+	fz_trace_matrix(ctm);
+	printf(">\n");
+}
+
+static void
+fz_trace_end_page(fz_device *dev)
+{
+	printf("</page>\n");
+}
+
+static void
 fz_trace_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
@@ -302,6 +316,9 @@ fz_trace_apply_transfer_function(fz_device *devp, fz_transfer_function *tr, int 
 fz_device *fz_new_trace_device(fz_context *ctx)
 {
 	fz_device *dev = fz_new_device(ctx, NULL);
+
+	dev->begin_page = fz_trace_begin_page;
+	dev->end_page = fz_trace_end_page;
 
 	dev->fill_path = fz_trace_fill_path;
 	dev->stroke_path = fz_trace_stroke_path;

@@ -6,6 +6,8 @@ typedef struct fz_display_node_s fz_display_node;
 
 typedef enum fz_display_command_e
 {
+	FZ_CMD_BEGIN_PAGE,
+	FZ_CMD_END_PAGE,
 	FZ_CMD_FILL_PATH,
 	FZ_CMD_STROKE_PATH,
 	FZ_CMD_CLIP_PATH,
@@ -212,6 +214,8 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 	case FZ_CMD_END_GROUP:
 	case FZ_CMD_BEGIN_TILE:
 	case FZ_CMD_END_TILE:
+	case FZ_CMD_BEGIN_PAGE:
+	case FZ_CMD_END_PAGE:
 		break;
 	/* SumatraPDF: support transfer functions */
 	case FZ_CMD_APPLY_TRANSFER_FUNCTION:
@@ -223,6 +227,24 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 	if (node->colorspace)
 		fz_drop_colorspace(ctx, node->colorspace);
 	fz_free(ctx, node);
+}
+
+static void
+fz_list_begin_page(fz_device *dev, const fz_rect *mediabox, const fz_matrix *ctm)
+{
+	fz_context *ctx = dev->ctx;
+	fz_display_node *node = fz_new_display_node(ctx, FZ_CMD_BEGIN_PAGE, ctm, NULL, NULL, 0);
+	node->rect = *mediabox;
+	fz_transform_rect(&node->rect, ctm);
+	fz_append_display_node(dev->user, node);
+}
+
+static void
+fz_list_end_page(fz_device *dev)
+{
+	fz_context *ctx = dev->ctx;
+	fz_display_node *node = fz_new_display_node(ctx, FZ_CMD_END_PAGE, &fz_identity, NULL, NULL, 0);
+	fz_append_display_node(dev->user, node);
 }
 
 static void
@@ -550,6 +572,9 @@ fz_new_list_device(fz_context *ctx, fz_display_list *list)
 {
 	fz_device *dev = fz_new_device(ctx, list);
 
+	dev->begin_page = fz_list_begin_page;
+	dev->end_page = fz_list_end_page;
+
 	dev->fill_path = fz_list_fill_path;
 	dev->stroke_path = fz_list_stroke_path;
 	dev->clip_path = fz_list_clip_path;
@@ -648,7 +673,6 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, const fz_matrix *top_
 	fz_matrix ctm;
 	int clipped = 0;
 	int tiled = 0;
-	int empty;
 	int progress = 0;
 	fz_context *ctx = dev->ctx;
 
@@ -663,6 +687,11 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, const fz_matrix *top_
 
 	for (node = list->first; node; node = node->next)
 	{
+		int empty;
+
+		fz_rect node_rect = node->rect;
+		fz_transform_rect(&node_rect, top_ctm);
+
 		/* Check the cookie for aborting */
 		if (cookie)
 		{
@@ -673,14 +702,16 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, const fz_matrix *top_
 
 		/* cull objects to draw using a quick visibility test */
 
-		if (tiled || node->cmd == FZ_CMD_BEGIN_TILE || node->cmd == FZ_CMD_END_TILE)
+		if (tiled ||
+			node->cmd == FZ_CMD_BEGIN_TILE || node->cmd == FZ_CMD_END_TILE ||
+			node->cmd == FZ_CMD_BEGIN_PAGE || node->cmd == FZ_CMD_END_PAGE)
 		{
 			empty = 0;
 		}
 		else
 		{
-			fz_rect rect = node->rect;
-			fz_intersect_rect(fz_transform_rect(&rect, top_ctm), scissor);
+			fz_rect rect = node_rect;
+			fz_intersect_rect(&rect, scissor);
 			empty = fz_is_empty_rect(&rect);
 		}
 
@@ -723,6 +754,12 @@ visible:
 		{
 			switch (node->cmd)
 			{
+			case FZ_CMD_BEGIN_PAGE:
+				fz_begin_page(dev, &node_rect, &ctm);
+				break;
+			case FZ_CMD_END_PAGE:
+				fz_end_page(dev);
+				break;
 			case FZ_CMD_FILL_PATH:
 				fz_fill_path(dev, node->item.path, node->flag, &ctm,
 					node->colorspace, node->color, node->alpha);
@@ -732,19 +769,11 @@ visible:
 					node->colorspace, node->color, node->alpha);
 				break;
 			case FZ_CMD_CLIP_PATH:
-			{
-				fz_rect rect = node->rect;
-				fz_transform_rect(&rect, top_ctm);
-				fz_clip_path(dev, node->item.path, &rect, node->flag, &ctm);
+				fz_clip_path(dev, node->item.path, &node_rect, node->flag, &ctm);
 				break;
-			}
 			case FZ_CMD_CLIP_STROKE_PATH:
-			{
-				fz_rect rect = node->rect;
-				fz_transform_rect(&rect, top_ctm);
-				fz_clip_stroke_path(dev, node->item.path, &rect, node->stroke, &ctm);
+				fz_clip_stroke_path(dev, node->item.path, &node_rect, node->stroke, &ctm);
 				break;
-			}
 			case FZ_CMD_FILL_TEXT:
 				fz_fill_text(dev, node->item.text, &ctm,
 					node->colorspace, node->color, node->alpha);
@@ -776,54 +805,38 @@ visible:
 						node->colorspace, node->color, node->alpha);
 				break;
 			case FZ_CMD_CLIP_IMAGE_MASK:
-			{
 				if ((dev->hints & FZ_IGNORE_IMAGE) == 0)
-				{
-					fz_rect rect = node->rect;
-					fz_transform_rect(&rect, top_ctm);
-					fz_clip_image_mask(dev, node->item.image, &rect, &ctm);
-				}
+					fz_clip_image_mask(dev, node->item.image, &node_rect, &ctm);
 				break;
-			}
 			case FZ_CMD_POP_CLIP:
 				fz_pop_clip(dev);
 				break;
 			case FZ_CMD_BEGIN_MASK:
-			{
-				fz_rect rect = node->rect;
-				fz_transform_rect(&rect, top_ctm);
-				fz_begin_mask(dev, &rect, node->flag, node->colorspace, node->color);
+				fz_begin_mask(dev, &node_rect, node->flag, node->colorspace, node->color);
 				break;
-			}
 			case FZ_CMD_END_MASK:
 				fz_end_mask(dev);
 				break;
 			case FZ_CMD_BEGIN_GROUP:
-			{
-				fz_rect rect = node->rect;
-				fz_transform_rect(&rect, top_ctm);
-				fz_begin_group(dev, &rect,
+				fz_begin_group(dev, &node_rect,
 					(node->flag & ISOLATED) != 0, (node->flag & KNOCKOUT) != 0,
 					node->item.blendmode, node->alpha);
 				break;
-			}
 			case FZ_CMD_END_GROUP:
 				fz_end_group(dev);
 				break;
 			case FZ_CMD_BEGIN_TILE:
 			{
 				int cached;
-				fz_rect rect;
+				fz_rect tile_rect;
 				tiled++;
-				rect.x0 = node->color[2];
-				rect.y0 = node->color[3];
-				rect.x1 = node->color[4];
-				rect.y1 = node->color[5];
-				cached = fz_begin_tile_id(dev, &node->rect, &rect, node->color[0], node->color[1], &ctm, node->flag);
+				tile_rect.x0 = node->color[2];
+				tile_rect.y0 = node->color[3];
+				tile_rect.x1 = node->color[4];
+				tile_rect.y1 = node->color[5];
+				cached = fz_begin_tile_id(dev, &node->rect, &tile_rect, node->color[0], node->color[1], &ctm, node->flag);
 				if (cached)
-				{
 					node = skip_to_end_tile(node, &progress);
-				}
 				break;
 			}
 			case FZ_CMD_END_TILE:

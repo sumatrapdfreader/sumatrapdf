@@ -449,10 +449,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\doc_interactive.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\doc_link.c"
 				>
 			</File>

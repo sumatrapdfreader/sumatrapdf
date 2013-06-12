@@ -192,6 +192,12 @@ pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 */
 void pdf_close_document(pdf_document *doc);
 
+/*
+	pdf_specific: down-cast an fz_document to a pdf_document.
+	Returns NULL if underlying document is not PDF
+*/
+pdf_document *pdf_specifics(fz_document *doc);
+
 int pdf_needs_password(pdf_document *doc);
 int pdf_authenticate_password(pdf_document *doc, const char *pw);
 

@@ -635,7 +635,7 @@ pdf_create_annot_ex(pdf_document *xref, const fz_rect *rect, pdf_obj *base_obj, 
 	annot->ap = form;
 	annot->next = NULL;
 	annot->annot_type = type;
-	annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;
+	annot->widget_type = PDF_WIDGET_TYPE_NOT_WIDGET;
 
 	pdf_transform_annot(annot);
 
@@ -1447,7 +1447,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 
 	fz_transform_rect(&rect, fz_rotate(&ctm, -rotate));
 	annot = pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0, FZ_ANNOT_WIDGET);
-	annot->widget_type = FZ_WIDGET_TYPE_TEXT;
+	annot->widget_type = PDF_WIDGET_TYPE_TEXT;
 	return annot;
 }
 
@@ -1643,7 +1643,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 			fz_transform_rect(&annot->pagerect, &page->ctm);
 			annot->ap = NULL;
 			annot->annot_type = pdf_annot_obj_type(obj);
-			annot->widget_type = annot->annot_type == FZ_ANNOT_WIDGET ? pdf_field_type(xref, obj) : FZ_WIDGET_TYPE_NOT_WIDGET;
+			annot->widget_type = annot->annot_type == FZ_ANNOT_WIDGET ? pdf_field_type(xref, obj) : PDF_WIDGET_TYPE_NOT_WIDGET;
 
 			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 			{
@@ -1795,7 +1795,7 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 		annot->rect = rect;
 		annot->pagerect = rect;
 		annot->ap = NULL;
-		annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;
+		annot->widget_type = PDF_WIDGET_TYPE_NOT_WIDGET;
 		annot->annot_type = type;
 
 		/*

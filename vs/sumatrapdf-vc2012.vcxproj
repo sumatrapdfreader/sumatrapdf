@@ -208,7 +208,6 @@
     <ClCompile Include="..\mupdf\fitz\dev_svg.c" />
     <ClCompile Include="..\mupdf\fitz\dev_trace.c" />
     <ClCompile Include="..\mupdf\fitz\doc_document.c" />
-    <ClCompile Include="..\mupdf\fitz\doc_interactive.c" />
     <ClCompile Include="..\mupdf\fitz\doc_link.c" />
     <ClCompile Include="..\mupdf\fitz\doc_outline.c" />
     <ClCompile Include="..\mupdf\fitz\filt_basic.c" />

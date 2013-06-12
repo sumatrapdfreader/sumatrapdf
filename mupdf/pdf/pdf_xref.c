@@ -1485,12 +1485,6 @@ pdf_page_presentation(pdf_document *doc, pdf_page *page, float *duration)
 	return &page->transition;
 }
 
-static fz_interactive *
-pdf_interact(pdf_document *doc)
-{
-	return (fz_interactive *)doc;
-}
-
 /*
 	Initializers for the fz_document interface.
 
@@ -1522,7 +1516,6 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.free_page = (void*)pdf_free_page;
 	doc->super.meta = (void*)pdf_meta;
 	doc->super.page_presentation = (void*)pdf_page_presentation;
-	doc->super.interact = (void*)pdf_interact;
 	doc->super.write = (void*)pdf_write_document;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
@@ -1563,4 +1556,9 @@ pdf_open_document_no_run(fz_context *ctx, const char *filename)
 		fz_throw(ctx, "cannot load document '%s'", filename);
 	}
 	return doc;
+}
+
+pdf_document *pdf_specifics(fz_document *doc)
+{
+	return (pdf_document *)(doc->close == (void *)pdf_close_document ? doc : NULL);
 }

@@ -101,26 +101,26 @@ void pdfapp_invert(pdfapp_t *app, const fz_rect *rect)
 	fz_invert_pixmap_rect(app->image, fz_round_rect(&b, rect));
 }
 
-static void event_cb(fz_doc_event *event, void *data)
+static void event_cb(pdf_doc_event *event, void *data)
 {
 	pdfapp_t *app = (pdfapp_t *)data;
 
 	switch (event->type)
 	{
-	case FZ_DOCUMENT_EVENT_ALERT:
+	case PDF_DOCUMENT_EVENT_ALERT:
 		{
-			fz_alert_event *alert = fz_access_alert_event(event);
+			pdf_alert_event *alert = pdf_access_alert_event(event);
 			winalert(app, alert);
 		}
 		break;
 
-	case FZ_DOCUMENT_EVENT_PRINT:
+	case PDF_DOCUMENT_EVENT_PRINT:
 		winprint(app);
 		break;
 
-	case FZ_DOCUMENT_EVENT_EXEC_MENU_ITEM:
+	case PDF_DOCUMENT_EVENT_EXEC_MENU_ITEM:
 		{
-			char *item = fz_access_exec_menu_item_event(event);
+			char *item = pdf_access_exec_menu_item_event(event);
 
 			if (!strcmp(item, "Print"))
 				winprint(app);
@@ -129,21 +129,21 @@ static void event_cb(fz_doc_event *event, void *data)
 		}
 		break;
 
-	case FZ_DOCUMENT_EVENT_EXEC_DIALOG:
+	case PDF_DOCUMENT_EVENT_EXEC_DIALOG:
 		pdfapp_warn(app, "The document attempted to open a dialog box. (Not supported)");
 		break;
 
-	case FZ_DOCUMENT_EVENT_LAUNCH_URL:
+	case PDF_DOCUMENT_EVENT_LAUNCH_URL:
 		{
-			fz_launch_url_event *launch_url = fz_access_launch_url_event(event);
+			pdf_launch_url_event *launch_url = pdf_access_launch_url_event(event);
 
 			pdfapp_warn(app, "The document attempted to open url: %s. (Not supported by app)", launch_url->url);
 		}
 		break;
 
-	case FZ_DOCUMENT_EVENT_MAIL_DOC:
+	case PDF_DOCUMENT_EVENT_MAIL_DOC:
 		{
-			fz_mail_doc_event *mail_doc = fz_access_mail_doc_event(event);
+			pdf_mail_doc_event *mail_doc = pdf_access_mail_doc_event(event);
 
 			pdfapp_warn(app, "The document attmepted to mail the document%s%s%s%s%s%s%s%s (Not supported)",
 				mail_doc->to[0]?", To: ":"", mail_doc->to,
@@ -162,14 +162,14 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 
 	fz_try(ctx)
 	{
-		fz_interactive *idoc;
+		pdf_document *idoc;
 
 		app->doc = fz_open_document(ctx, filename);
 
-		idoc = fz_interact(app->doc);
+		idoc = pdf_specifics(app->doc);
 
 		if (idoc)
-			fz_set_doc_event_callback(idoc, event_cb, app);
+			pdf_set_doc_event_callback(idoc, event_cb, app);
 
 		if (fz_needs_password(app->doc))
 		{
@@ -357,9 +357,9 @@ static int pdfapp_save(pdfapp_t *app)
 
 int pdfapp_preclose(pdfapp_t *app)
 {
-	fz_interactive *idoc = fz_interact(app->doc);
+	pdf_document *idoc = pdf_specifics(app->doc);
 
-	if (idoc && fz_has_unsaved_changes(idoc))
+	if (idoc && pdf_has_unsaved_changes(idoc))
 	{
 		switch (winsavequery(app))
 		{
@@ -540,16 +540,16 @@ static void pdfapp_recreate_annotationslist(pdfapp_t *app)
 
 static void pdfapp_updatepage(pdfapp_t *app)
 {
-	fz_interactive *idoc = fz_interact(app->doc);
+	pdf_document *idoc = pdf_specifics(app->doc);
 	fz_device *idev;
 	fz_matrix ctm;
 	fz_annot *annot;
 
 	pdfapp_viewctm(&ctm, app);
-	fz_update_page(idoc, app->page);
+	pdf_update_page(idoc, (pdf_page *)app->page);
 	pdfapp_recreate_annotationslist(app);
 
-	while ((annot = fz_poll_changed_annot(idoc, app->page)) != NULL)
+	while ((annot = (fz_annot *)pdf_poll_changed_annot(idoc, (pdf_page *)app->page)) != NULL)
 	{
 		fz_rect bounds;
 		fz_irect ibounds;
@@ -601,7 +601,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 		/* Extract text */
 		app->page_sheet = fz_new_text_sheet(app->ctx);
-		app->page_text = fz_new_text_page(app->ctx, &app->page_bbox);
+		app->page_text = fz_new_text_page(app->ctx);
 
 		if (app->page_list || app->annotations_list)
 		{
@@ -1195,32 +1195,32 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 	if (btn == 1 && (state == 1 || state == -1))
 	{
-		fz_ui_event event;
-		fz_interactive *idoc = fz_interact(app->doc);
+		pdf_ui_event event;
+		pdf_document *idoc = pdf_specifics(app->doc);
 
-		event.etype = FZ_EVENT_TYPE_POINTER;
+		event.etype = PDF_EVENT_TYPE_POINTER;
 		event.event.pointer.pt = p;
 		if (state == 1)
-			event.event.pointer.ptype = FZ_POINTER_DOWN;
+			event.event.pointer.ptype = PDF_POINTER_DOWN;
 		else /* state == -1 */
-			event.event.pointer.ptype = FZ_POINTER_UP;
+			event.event.pointer.ptype = PDF_POINTER_UP;
 
-		if (idoc && fz_pass_event(idoc, app->page, &event))
+		if (idoc && pdf_pass_event(idoc, (pdf_page *)app->page, &event))
 		{
-			fz_widget *widget;
+			pdf_widget *widget;
 
-			widget = fz_focused_widget(idoc);
+			widget = pdf_focused_widget(idoc);
 
 			app->nowaitcursor = 1;
 			pdfapp_updatepage(app);
 
 			if (widget)
 			{
-				switch (fz_widget_get_type(widget))
+				switch (pdf_widget_get_type(widget))
 				{
-				case FZ_WIDGET_TYPE_TEXT:
+				case PDF_WIDGET_TYPE_TEXT:
 					{
-						char *text = fz_text_widget_text(idoc, widget);
+						char *text = pdf_text_widget_text(idoc, widget);
 						char *current_text = text;
 						int retry = 0;
 
@@ -1229,15 +1229,15 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 							current_text = wintextinput(app, current_text, retry);
 							retry = 1;
 						}
-						while (current_text && !fz_text_widget_set_text(idoc, widget, current_text));
+						while (current_text && !pdf_text_widget_set_text(idoc, widget, current_text));
 
 						fz_free(app->ctx, text);
 						pdfapp_updatepage(app);
 					}
 					break;
 
-				case FZ_WIDGET_TYPE_LISTBOX:
-				case FZ_WIDGET_TYPE_COMBOBOX:
+				case PDF_WIDGET_TYPE_LISTBOX:
+				case PDF_WIDGET_TYPE_COMBOBOX:
 					{
 						int nopts;
 						int nvals;
@@ -1249,17 +1249,17 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 						fz_try(ctx)
 						{
-							nopts = fz_choice_widget_options(idoc, widget, NULL);
+							nopts = pdf_choice_widget_options(idoc, widget, NULL);
 							opts = fz_malloc(ctx, nopts * sizeof(*opts));
-							(void)fz_choice_widget_options(idoc, widget, opts);
+							(void)pdf_choice_widget_options(idoc, widget, opts);
 
-							nvals = fz_choice_widget_value(idoc, widget, NULL);
+							nvals = pdf_choice_widget_value(idoc, widget, NULL);
 							vals = fz_malloc(ctx, MAX(nvals,nopts) * sizeof(*vals));
-							(void)fz_choice_widget_value(idoc, widget, vals);
+							(void)pdf_choice_widget_value(idoc, widget, vals);
 
 							if (winchoiceinput(app, nopts, opts, &nvals, vals))
 							{
-								fz_choice_widget_set_value(idoc, widget, nvals, vals);
+								pdf_choice_widget_set_value(idoc, widget, nvals, vals);
 								pdfapp_updatepage(app);
 							}
 						}
@@ -1275,12 +1275,12 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 					}
 					break;
 
-				case FZ_WIDGET_TYPE_SIGNATURE:
+				case PDF_WIDGET_TYPE_SIGNATURE:
 					{
 						char ebuf[256];
 
 						ebuf[0] = 0;
-						if (fz_check_signature(ctx, idoc, widget, app->docpath, ebuf, sizeof(ebuf)))
+						if (pdf_check_signature(ctx, idoc, widget, app->docpath, ebuf, sizeof(ebuf)))
 						{
 							winwarn(app, "Signature is valid");
 						}

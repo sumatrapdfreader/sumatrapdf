@@ -24,20 +24,20 @@ ifneq "$(V8_DIR)" ""
 
 CFLAGS += -I$(V8_DIR)/include
 ifeq "$(build)" "release"
-V8LIB_CHOICE := release
+V8_LIB_CHOICE := release
 else ifeq "$(build)" "profile"
-V8LIB_CHOICE := release
+V8_LIB_CHOICE := release
 else
-V8LIB_CHOICE := debug
+V8_LIB_CHOICE := debug
 endif
 
 V8_ARCH ?= x64
 
 # If you are building for 32bit linux use V8_ARCH=ia32
 ifeq "$(OS)" "Darwin"
-V8LIBS = -L$(V8_DIR)/out-mac/$(V8_ARCH).$(V8LIB_CHOICE)/ -lv8_base -lv8_snapshot
+V8_LIBS = -L$(V8_DIR)/out-mac/$(V8_ARCH).$(V8_LIB_CHOICE)/ -lv8_base -lv8_snapshot -lstdc++
 else
-V8LIBS = -L$(V8_DIR)/out/$(V8_ARCH).$(V8LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread
+V8_LIBS = -L$(V8_DIR)/out/$(V8_ARCH).$(V8_LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread -lstdc++
 endif
 
 V8_PRESENT := 1

@@ -35,23 +35,23 @@ int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 	if (!strcmp(type, "Btn"))
 	{
 		if (flags & Ff_Pushbutton)
-			return FZ_WIDGET_TYPE_PUSHBUTTON;
+			return PDF_WIDGET_TYPE_PUSHBUTTON;
 		else if (flags & Ff_Radio)
-			return FZ_WIDGET_TYPE_RADIOBUTTON;
+			return PDF_WIDGET_TYPE_RADIOBUTTON;
 		else
-			return FZ_WIDGET_TYPE_CHECKBOX;
+			return PDF_WIDGET_TYPE_CHECKBOX;
 	}
 	else if (!strcmp(type, "Tx"))
-		return FZ_WIDGET_TYPE_TEXT;
+		return PDF_WIDGET_TYPE_TEXT;
 	else if (!strcmp(type, "Ch"))
 	{
 		if (flags & Ff_Combo)
-			return FZ_WIDGET_TYPE_COMBOBOX;
+			return PDF_WIDGET_TYPE_COMBOBOX;
 		else
-			return FZ_WIDGET_TYPE_LISTBOX;
+			return PDF_WIDGET_TYPE_LISTBOX;
 	}
 	else if (!strcmp(type, "Sig"))
-		return FZ_WIDGET_TYPE_SIGNATURE;
+		return PDF_WIDGET_TYPE_SIGNATURE;
 	else
-		return FZ_WIDGET_TYPE_NOT_WIDGET;
+		return PDF_WIDGET_TYPE_NOT_WIDGET;
 }
