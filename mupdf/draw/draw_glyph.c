@@ -181,8 +181,19 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 			 * abandon ours, and use the one there already.
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
+			/* SumatraPDF: prevent lock mismatch */
+			fz_try(ctx)
+			{
 			val = fz_render_t3_glyph(ctx, font, gid, &local_ctm, model, scissor);
+			}
+			fz_always(ctx)
+			{
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
+			}
+			fz_catch(ctx)
+			{
+				fz_rethrow(ctx);
+			}
 		}
 		else
 		{

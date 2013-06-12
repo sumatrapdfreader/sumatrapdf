@@ -15,8 +15,30 @@ diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
  {
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
 --- jbig2dec.orig\jbig2_huffman.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2_huffman.c	Thu May 30 17:28:30 2013
-@@ -563,11 +563,11 @@
++++ jbig2dec\jbig2_huffman.c	Wed Jun 12 21:22:40 2013
+@@ -412,18 +412,21 @@
+   result = jbig2_new(ctx, Jbig2HuffmanTable, 1);
+   if (result == NULL)
+   {
+     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+         "couldn't allocate result storage in jbig2_build_huffman_table");
++    jbig2_free(ctx->allocator, LENCOUNT);
+     return NULL;
+   }
+   result->log_table_size = log_table_size;
+   entries = jbig2_new(ctx, Jbig2HuffmanEntry, max_j);
+   if (entries == NULL)
+   {
+     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+         "couldn't allocate entries storage in jbig2_build_huffman_table");
++    jbig2_free(ctx->allocator, result);
++    jbig2_free(ctx->allocator, LENCOUNT);
+     return NULL;
+   }
+   /* fill now to catch missing JBIG2Globals later */
+   memset(entries, 0xFF, sizeof(Jbig2HuffmanEntry)*max_j);
+   result->entries = entries;
+@@ -563,11 +566,11 @@
          const size_t lines_data_bitlen = (segment->data_length - 9) * 8;    /* length in bit */
          /* bit offset: controls bit reading */
          size_t boffset = 0;
@@ -180,7 +202,7 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  			 const uint8_t *segment_data)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Tue Jun 11 22:53:47 2013
-+++ jbig2dec\jbig2_symbol_dict.c	Tue Jun 11 22:46:59 2013
++++ jbig2dec\jbig2_symbol_dict.c	Wed Jun 12 21:22:52 2013
 @@ -440,11 +440,14 @@
                goto cleanup4;
            }
@@ -224,6 +246,19 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
              "runlength too small in export symbol table (%d <= 0)\n", exrunlength);
          else
            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+@@ -949,11 +950,11 @@
+         params.SDHUFFDW = jbig2_build_huffman_table(ctx, huffman_params);
+         ++table_index;
+         break;
+       case 2:
+       default:
+-	return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++	jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+ 	    "symbol dictionary specified invalid huffman table");
+ 	break;
+     }
+     if (params.SDHUFFDW == NULL)
+     {
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Wed May 29 22:46:18 2013
 +++ jbig2dec\jbig2_text.c	Thu May 30 19:32:24 2013

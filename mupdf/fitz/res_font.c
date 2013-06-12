@@ -1022,8 +1022,19 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm
 
 	if (!model)
 	{
+		/* SumatraPDF: prevent memory leak */
+		fz_try(ctx)
+		{
 		result = fz_alpha_from_gray(ctx, glyph, 0);
+		}
+		fz_always(ctx)
+		{
 		fz_drop_pixmap(ctx, glyph);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
 	}
 	else
 		result = glyph;

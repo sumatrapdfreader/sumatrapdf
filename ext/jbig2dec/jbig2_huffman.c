@@ -414,6 +414,7 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
   {
     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
         "couldn't allocate result storage in jbig2_build_huffman_table");
+    jbig2_free(ctx->allocator, LENCOUNT);
     return NULL;
   }
   result->log_table_size = log_table_size;
@@ -422,6 +423,8 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
   {
     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
         "couldn't allocate entries storage in jbig2_build_huffman_table");
+    jbig2_free(ctx->allocator, result);
+    jbig2_free(ctx->allocator, LENCOUNT);
     return NULL;
   }
   /* fill now to catch missing JBIG2Globals later */
