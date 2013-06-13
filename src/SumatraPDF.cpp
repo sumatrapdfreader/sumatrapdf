@@ -3195,17 +3195,20 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (win.IsAboutWindow()) return;
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
 
-    // TODO: browse through all supported file types at the same time?
-    const WCHAR *fileExt = path::GetExt(win.loadedFilePath);
-    if (win.IsDocLoaded())
-        fileExt = win.dm->engine->GetDefaultFileExt();
-    ScopedMem<WCHAR> pattern(str::Format(L"*%s", fileExt));
-    ScopedMem<WCHAR> dir(path::GetDir(win.loadedFilePath));
-    pattern.Set(path::Join(dir, pattern));
-
     WStrVec files;
+    ScopedMem<WCHAR> pattern(path::GetDir(win.loadedFilePath));
+    // TODO: make pattern configurable (for users who e.g. want to skip single images)?
+    pattern.Set(path::Join(pattern, L"*"));
     if (!CollectPathsFromDirectory(pattern, files))
         return;
+
+    // remove unsupported files that have never been successfully loaded
+    for (size_t i = files.Count(); i > 0; i--) {
+        if (!EngineManager::IsSupportedFile(files.At(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
+            !gFileHistory.Find(files.At(i - 1))) {
+            files.RemoveAt(i - 1);
+        }
+    }
 
     if (!files.Contains(win.loadedFilePath))
         files.Append(str::Dup(win.loadedFilePath));
