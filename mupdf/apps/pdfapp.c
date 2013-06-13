@@ -223,59 +223,44 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 
 void pdfapp_close(pdfapp_t *app)
 {
-	if (app->page_list)
-		fz_free_display_list(app->ctx, app->page_list);
+	fz_drop_display_list(app->ctx, app->page_list);
 	app->page_list = NULL;
 
-	if (app->annotations_list)
-		fz_free_display_list(app->ctx, app->annotations_list);
+	fz_drop_display_list(app->ctx, app->annotations_list);
 	app->annotations_list = NULL;
 
-	if (app->page_text)
-		fz_free_text_page(app->ctx, app->page_text);
+	fz_free_text_page(app->ctx, app->page_text);
 	app->page_text = NULL;
 
-	if (app->page_sheet)
-		fz_free_text_sheet(app->ctx, app->page_sheet);
+	fz_free_text_sheet(app->ctx, app->page_sheet);
 	app->page_sheet = NULL;
 
-	if (app->page_links)
-		fz_drop_link(app->ctx, app->page_links);
+	fz_drop_link(app->ctx, app->page_links);
 	app->page_links = NULL;
 
-	if (app->doctitle)
-		fz_free(app->ctx, app->doctitle);
+	fz_free(app->ctx, app->doctitle);
 	app->doctitle = NULL;
 
-	if (app->docpath)
-		fz_free(app->ctx, app->docpath);
+	fz_free(app->ctx, app->docpath);
 	app->docpath = NULL;
 
-	if (app->image)
-		fz_drop_pixmap(app->ctx, app->image);
+	fz_drop_pixmap(app->ctx, app->image);
 	app->image = NULL;
 
-	if (app->new_image)
-		fz_drop_pixmap(app->ctx, app->new_image);
+	fz_drop_pixmap(app->ctx, app->new_image);
 	app->new_image = NULL;
 
-	if (app->old_image)
-		fz_drop_pixmap(app->ctx, app->old_image);
+	fz_drop_pixmap(app->ctx, app->old_image);
 	app->old_image = NULL;
 
-	if (app->outline)
-		fz_free_outline(app->ctx, app->outline);
+	fz_free_outline(app->ctx, app->outline);
 	app->outline = NULL;
 
-	if (app->page)
-		fz_free_page(app->doc, app->page);
+	fz_free_page(app->doc, app->page);
 	app->page = NULL;
 
-	if (app->doc)
-	{
-		fz_close_document(app->doc);
-		app->doc = NULL;
-	}
+	fz_close_document(app->doc);
+	app->doc = NULL;
 
 	fz_flush_warnings(app->ctx);
 }
@@ -417,18 +402,12 @@ static void pdfapp_loadpage(pdfapp_t *app)
 
 	fz_var(mdev);
 
-	if (app->page_list)
-		fz_free_display_list(app->ctx, app->page_list);
-	if (app->annotations_list)
-		fz_free_display_list(app->ctx, app->annotations_list);
-	if (app->page_text)
-		fz_free_text_page(app->ctx, app->page_text);
-	if (app->page_sheet)
-		fz_free_text_sheet(app->ctx, app->page_sheet);
-	if (app->page_links)
-		fz_drop_link(app->ctx, app->page_links);
-	if (app->page)
-		fz_free_page(app->doc, app->page);
+	fz_drop_display_list(app->ctx, app->page_list);
+	fz_drop_display_list(app->ctx, app->annotations_list);
+	fz_free_text_page(app->ctx, app->page_text);
+	fz_free_text_sheet(app->ctx, app->page_sheet);
+	fz_drop_link(app->ctx, app->page_links);
+	fz_free_page(app->doc, app->page);
 
 	app->page_list = NULL;
 	app->annotations_list = NULL;
@@ -503,11 +482,8 @@ static void pdfapp_recreate_annotationslist(pdfapp_t *app)
 
 	fz_var(mdev);
 
-	if (app->annotations_list)
-	{
-		fz_free_display_list(app->ctx, app->annotations_list);
-		app->annotations_list = NULL;
-	}
+	fz_drop_display_list(app->ctx, app->annotations_list);
+	app->annotations_list = NULL;
 
 	fz_try(app->ctx)
 	{
@@ -536,6 +512,16 @@ static void pdfapp_recreate_annotationslist(pdfapp_t *app)
 	app->errored = errored;
 }
 
+static void pdfapp_runpage(pdfapp_t *app, fz_device *dev, const fz_matrix *ctm, const fz_rect *rect, fz_cookie *cookie)
+{
+	fz_begin_page(dev, rect, ctm);
+	if (app->page_list)
+		fz_run_display_list(app->page_list, dev, ctm, rect, cookie);
+	if (app->annotations_list)
+		fz_run_display_list(app->annotations_list, dev, ctm, rect, cookie);
+	fz_end_page(dev);
+}
+
 #define MAX_TITLE 256
 
 static void pdfapp_updatepage(pdfapp_t *app)
@@ -557,12 +543,7 @@ static void pdfapp_updatepage(pdfapp_t *app)
 		fz_rect_from_irect(&bounds, fz_round_rect(&ibounds, &bounds));
 		fz_clear_pixmap_rect_with_value(app->ctx, app->image, 255, &ibounds);
 		idev = fz_new_draw_device_with_bbox(app->ctx, app->image, &ibounds);
-
-		if (app->page_list)
-			fz_run_display_list(app->page_list, idev, &ctm, &bounds, NULL);
-		if (app->annotations_list)
-			fz_run_display_list(app->annotations_list, idev, &ctm, &bounds, NULL);
-
+		pdfapp_runpage(app, idev, &ctm, &bounds, NULL);
 		fz_free_device(idev);
 	}
 
@@ -606,10 +587,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		if (app->page_list || app->annotations_list)
 		{
 			tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
-			if (app->page_list)
-				fz_run_display_list(app->page_list, tdev, &fz_identity, &fz_infinite_rect, &cookie);
-			if (app->annotations_list)
-				fz_run_display_list(app->annotations_list, tdev, &fz_identity, &fz_infinite_rect, &cookie);
+			pdfapp_runpage(app, tdev, &fz_identity, &fz_infinite_rect, &cookie);
 			fz_free_device(tdev);
 		}
 	}
@@ -650,10 +628,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		if (app->page_list || app->annotations_list)
 		{
 			idev = fz_new_draw_device(app->ctx, app->image);
-			if (app->page_list)
-				fz_run_display_list(app->page_list, idev, &ctm, &bounds, &cookie);
-			if (app->annotations_list)
-				fz_run_display_list(app->annotations_list, idev, &ctm, &bounds, &cookie);
+			pdfapp_runpage(app, idev, &ctm, &bounds, &cookie);
 			fz_free_device(idev);
 		}
 		if (app->invert)

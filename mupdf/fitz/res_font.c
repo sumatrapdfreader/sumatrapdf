@@ -103,7 +103,7 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 			if (font->t3procs[i])
 				fz_drop_buffer(ctx, font->t3procs[i]);
 			if (font->t3lists[i])
-				fz_free_display_list(ctx, font->t3lists[i]);
+				fz_drop_display_list(ctx, font->t3lists[i]);
 		}
 		fz_free(ctx, font->t3procs);
 		fz_free(ctx, font->t3lists);

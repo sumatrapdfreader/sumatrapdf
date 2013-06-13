@@ -702,8 +702,8 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, pdf_ui_event *ui_event);
 	to pdf_pass_event. pdf_update_page regenerates any appearance streams that
 	are out of date, checks for cases where different appearance streams
 	should be selected because of state changes, and records internally
-	each annotation that has changed appearance. The list of chagned annotations
-	is then available via pdf_poll_changed_annotation. Note that a call to
+	each annotation that has changed appearance. The list of changed annotations
+	is then available via pdf_poll_changed_annot. Note that a call to
 	pdf_pass_event for one page may lead to changes on any other, so an app
 	should call pdf_update_page for every page it currently displays. Also
 	it is important that the pdf_page object is the one used to last render

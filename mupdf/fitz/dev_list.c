@@ -54,6 +54,7 @@ struct fz_display_node_s
 
 struct fz_display_list_s
 {
+	fz_storable storable;
 	fz_display_node *first;
 	fz_display_node *last;
 	int len;
@@ -607,21 +608,10 @@ fz_new_list_device(fz_context *ctx, fz_display_list *list)
 	return dev;
 }
 
-fz_display_list *
-fz_new_display_list(fz_context *ctx)
+static void
+fz_free_display_list(fz_context *ctx, fz_storable *list_)
 {
-	fz_display_list *list = fz_malloc_struct(ctx, fz_display_list);
-	list->first = NULL;
-	list->last = NULL;
-	list->len = 0;
-	list->top = 0;
-	list->tiled = 0;
-	return list;
-}
-
-void
-fz_free_display_list(fz_context *ctx, fz_display_list *list)
-{
+	fz_display_list *list = (fz_display_list *)list_;
 	fz_display_node *node;
 
 	if (list == NULL)
@@ -634,6 +624,31 @@ fz_free_display_list(fz_context *ctx, fz_display_list *list)
 		node = next;
 	}
 	fz_free(ctx, list);
+}
+
+fz_display_list *
+fz_new_display_list(fz_context *ctx)
+{
+	fz_display_list *list = fz_malloc_struct(ctx, fz_display_list);
+	FZ_INIT_STORABLE(list, 1, fz_free_display_list);
+	list->first = NULL;
+	list->last = NULL;
+	list->len = 0;
+	list->top = 0;
+	list->tiled = 0;
+	return list;
+}
+
+fz_display_list *
+fz_keep_display_list(fz_context *ctx, fz_display_list *list)
+{
+	return (fz_display_list *)fz_keep_storable(ctx, &list->storable);
+}
+
+void
+fz_drop_display_list(fz_context *ctx, fz_display_list *list)
+{
+	fz_drop_storable(ctx, &list->storable);
 }
 
 static fz_display_node *

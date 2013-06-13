@@ -533,6 +533,8 @@ xps_bound_page(xps_document *doc, xps_page *page, fz_rect *bounds)
 void
 xps_free_page(xps_document *doc, xps_page *page)
 {
+	if (page == NULL)
+		return;
 	/* only free the XML contents */
 	if (page->root)
 		fz_free_xml(doc->ctx, page->root);

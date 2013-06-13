@@ -2193,7 +2193,7 @@ pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3],
 		fz_free_device(dev);
 		fz_drop_stroke_state(ctx, stroke);
 		fz_free_path(ctx, path);
-		fz_free_display_list(ctx, strike_list);
+		fz_drop_display_list(ctx, strike_list);
 	}
 	fz_catch(ctx)
 	{
@@ -2285,7 +2285,7 @@ pdf_set_ink_obj_appearance(pdf_document *doc, pdf_obj *annot)
 		fz_free_device(dev);
 		fz_drop_stroke_state(ctx, stroke);
 		fz_free_path(ctx, path);
-		fz_free_display_list(ctx, strike_list);
+		fz_drop_display_list(ctx, strike_list);
 	}
 	fz_catch(ctx)
 	{

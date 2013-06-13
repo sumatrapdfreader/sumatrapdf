@@ -497,6 +497,8 @@ pdf_load_links(pdf_document *xref, pdf_page *page)
 void
 pdf_free_page(pdf_document *xref, pdf_page *page)
 {
+	if (page == NULL)
+		return;
 	pdf_drop_obj(page->resources);
 	pdf_drop_obj(page->contents);
 	if (page->links)

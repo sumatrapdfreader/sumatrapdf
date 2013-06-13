@@ -15,8 +15,8 @@ struct entry
 	int stm_len;
 };
 
-static void
-pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id)
+static int
+pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, int *tmpofs)
 {
 	pdf_token tok;
 	int stm_len;
@@ -28,6 +28,10 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 
 	stm_len = 0;
 
+	/* On entry to this function, we know that we've just seen
+	 * '<int> <int> obj'. We expect the next thing we see to be a
+	 * pdf object. Regardless of the type of thing we meet next
+	 * we only need to fully parse it if it is a dictionary. */
 	tok = pdf_lex(file, buf);
 
 	if (tok == PDF_TOK_OPEN_DICT)
@@ -79,18 +83,13 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 		tok != PDF_TOK_EOF &&
 		tok != PDF_TOK_INT )
 	{
+		*tmpofs = fz_tell(file);
+		if (*tmpofs < 0)
+			fz_throw(ctx, "cannot tell in file");
 		tok = pdf_lex(file, buf);
 	}
 
-	if (tok == PDF_TOK_INT)
-	{
-		/* SumatraPDF: try to undo fz_lex_number */
-		while (file->rp > file->bp && '0' <= file->rp[-1] && file->rp[-1] <= '9')
-			fz_unread_byte(file);
-		if (file->rp > file->bp && (file->rp[-1] == '-' || file->rp[-1] == '+'))
-			fz_unread_byte(file);
-	}
-	else if (tok == PDF_TOK_STREAM)
+	if (tok == PDF_TOK_STREAM)
 	{
 		int c = fz_read_byte(file);
 		if (c == '\r') {
@@ -135,10 +134,22 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 		*stmlenp = fz_tell(file) - *stmofsp - 9;
 
 atobjend:
+		*tmpofs = fz_tell(file);
+		if (*tmpofs < 0)
+			fz_throw(ctx, "cannot tell in file");
 		tok = pdf_lex(file, buf);
 		if (tok != PDF_TOK_ENDOBJ)
 			fz_warn(ctx, "object missing 'endobj' token");
+		else
+		{
+			/* Read another token as we always return the next one */
+			*tmpofs = fz_tell(file);
+			if (*tmpofs < 0)
+				fz_throw(ctx, "cannot tell in file");
+			tok = pdf_lex(file, buf);
+		}
 	}
+	return tok;
 }
 
 static void
@@ -291,6 +302,11 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				break;
 			}
 
+			/* If we have the next token already, then we'll jump
+			 * back here, rather than going through the top of
+			 * the loop. */
+		have_next_token:
+
 			if (tok == PDF_TOK_INT)
 			{
 				numofs = genofs;
@@ -303,7 +319,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			{
 				fz_try(ctx)
 				{
-					pdf_repair_obj(xref->file, buf, &stm_ofs, &stm_len, &encrypt, &id);
+					tok = pdf_repair_obj(xref->file, buf, &stm_ofs, &stm_len, &encrypt, &id, &tmpofs);
 				}
 				fz_catch(ctx)
 				{
@@ -319,12 +335,12 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				if (num <= 0)
 				{
 					fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", num, gen);
-					continue;
+					goto have_next_token;
 				}
 				else if (num > MAX_OBJECT_NUMBER)
 				{
 					fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", num, gen);
-					continue;
+					goto have_next_token;
 				}
 
 				gen = fz_clampi(gen, 0, 65535);
@@ -344,6 +360,8 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 				if (num > maxnum)
 					maxnum = num;
+
+				goto have_next_token;
 			}
 
 			/* trailer dictionary */

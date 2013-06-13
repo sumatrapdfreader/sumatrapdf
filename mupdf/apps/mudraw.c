@@ -544,7 +544,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_catch(ctx)
 		{
-			fz_free_display_list(ctx, list);
+			fz_drop_display_list(ctx, list);
 			fz_free_page(doc, page);
 			fz_throw(ctx, "cannot draw page %d in file '%s'", pagenum, filename);
 		}
@@ -567,7 +567,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_catch(ctx)
 		{
-			fz_free_display_list(ctx, list);
+			fz_drop_display_list(ctx, list);
 			fz_free_page(doc, page);
 			fz_rethrow(ctx);
 		}
@@ -614,7 +614,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_catch(ctx)
 		{
-			fz_free_display_list(ctx, list);
+			fz_drop_display_list(ctx, list);
 			fz_free_page(doc, page);
 			fz_rethrow(ctx);
 		}
@@ -663,7 +663,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_catch(ctx)
 		{
-			fz_free_display_list(ctx, list);
+			fz_drop_display_list(ctx, list);
 			fz_free_page(doc, page);
 			fz_rethrow(ctx);
 		}
@@ -846,14 +846,14 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_catch(ctx)
 		{
-			fz_free_display_list(ctx, list);
+			fz_drop_display_list(ctx, list);
 			fz_free_page(doc, page);
 			fz_rethrow(ctx);
 		}
 	}
 
 	if (list)
-		fz_free_display_list(ctx, list);
+		fz_drop_display_list(ctx, list);
 
 	fz_free_page(doc, page);
 

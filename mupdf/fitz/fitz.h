@@ -2402,7 +2402,7 @@ struct fz_cookie_s
 	Create a displaylist with fz_new_display_list, hand it over to
 	fz_new_list_device to have it populated, and later replay the
 	list (once or many times) by calling fz_run_display_list. When
-	the list is no longer needed free it with fz_free_display_list.
+	the list is no longer needed drop it with fz_drop_display_list.
 */
 typedef struct fz_display_list_s fz_display_list;
 
@@ -2456,14 +2456,19 @@ fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 void fz_run_display_list(fz_display_list *list, fz_device *dev, const fz_matrix *ctm, const fz_rect *area, fz_cookie *cookie);
 
 /*
-	fz_free_display_list: Frees a display list.
-
-	list: Display list to be freed. Any objects put into the
-	display list by a list device will also be freed.
+	fz_keep_display_list: Keep a reference to a display list.
 
 	Does not throw exceptions.
 */
-void fz_free_display_list(fz_context *ctx, fz_display_list *list);
+fz_display_list *fz_keep_display_list(fz_context *ctx, fz_display_list *list);
+
+/*
+	fz_drop_display_list: Drop a reference to a display list, freeing it
+	if the reference count reaches zero.
+
+	Does not throw exceptions.
+*/
+void fz_drop_display_list(fz_context *ctx, fz_display_list *list);
 
 /*
 	Links

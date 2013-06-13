@@ -164,7 +164,8 @@ EXPORTS
 	fz_new_display_list
 	fz_new_list_device
 	fz_run_display_list
-	fz_free_display_list
+	fz_keep_display_list
+	fz_drop_display_list
 	fz_new_link
 	fz_keep_link
 	fz_drop_link

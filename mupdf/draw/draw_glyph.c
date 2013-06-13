@@ -122,8 +122,11 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 	fz_glyph_key key;
 	fz_pixmap *val;
 	float size = fz_matrix_expansion(ctm);
-	int do_cache;
+	int do_cache, locked, caching;
 	fz_matrix local_ctm = *ctm;
+
+	fz_var(locked);
+	fz_var(caching);
 
 	if (size <= MAX_GLYPH_SIZE)
 	{
@@ -163,6 +166,9 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 		return val;
 	}
 
+	locked = 1;
+	caching = 0;
+
 	fz_try(ctx)
 	{
 		if (font->ft_face)
@@ -181,58 +187,55 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 			 * abandon ours, and use the one there already.
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-			/* SumatraPDF: prevent lock mismatch */
-			fz_try(ctx)
-			{
+			locked = 0;
 			val = fz_render_t3_glyph(ctx, font, gid, &local_ctm, model, scissor);
-			}
-			fz_always(ctx)
-			{
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
-			}
-			fz_catch(ctx)
-			{
-				fz_rethrow(ctx);
-			}
+			locked = 1;
 		}
 		else
 		{
 			fz_warn(ctx, "assert: uninitialized font structure");
 			val = NULL;
 		}
-	}
-	fz_catch(ctx)
-	{
-		fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-		fz_rethrow(ctx);
-	}
-
-	if (val && do_cache)
-	{
-		if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
+		if (val && do_cache)
 		{
-			if (cache->total + val->w * val->h > MAX_CACHE_SIZE)
-				fz_evict_glyph_cache(ctx);
-			fz_try(ctx)
+			if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
 			{
-				fz_pixmap *pix = fz_hash_insert(ctx, cache->hash, &key, val);
+				fz_pixmap *pix;
+
+				/* If we throw an exception whilst caching,
+				 * just ignore the exception and carry on. */
+				caching = 1;
+				if (cache->total + val->w * val->h > MAX_CACHE_SIZE)
+					fz_evict_glyph_cache(ctx);
+
+				pix = fz_hash_insert(ctx, cache->hash, &key, val);
 				if (pix)
 				{
 					fz_drop_pixmap(ctx, val);
 					val = pix;
 				}
 				else
+				{
 					fz_keep_font(ctx, key.font);
+					cache->total += val->w * val->h;
+				}
 				val = fz_keep_pixmap(ctx, val);
 			}
-			fz_catch(ctx)
-			{
-				fz_warn(ctx, "Failed to encache glyph - continuing");
-			}
-			cache->total += val->w * val->h;
 		}
 	}
+	fz_always(ctx)
+	{
+		if (locked)
+			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
+	}
+	fz_catch(ctx)
+	{
+		if (caching)
+			fz_warn(ctx, "cannot encache glyph; continuing");
+		else
+			fz_rethrow(ctx);
+	}
 
-	fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 	return val;
 }

@@ -1833,7 +1833,7 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
             pdf_run_page(_doc, page, dev, &fz_identity, NULL);
         }
         fz_catch(ctx) {
-            fz_free_display_list(ctx, list);
+            fz_drop_display_list(ctx, list);
             list = NULL;
         }
         fz_free_device(dev);
@@ -1912,7 +1912,7 @@ void PdfEngineImpl::DropPageRun(PdfPageRun *run, bool forceRemove)
         runCache.Remove(run);
         if (0 == run->refs) {
             EnterCriticalSection(&ctxAccess);
-            fz_free_display_list(ctx, run->list);
+            fz_drop_display_list(ctx, run->list);
             LeaveCriticalSection(&ctxAccess);
             delete run;
         }
@@ -3650,7 +3650,7 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
             xps_run_page(_doc, page, dev, &fz_identity, NULL);
         }
         fz_catch(ctx) {
-            fz_free_display_list(ctx, list);
+            fz_drop_display_list(ctx, list);
             list = NULL;
         }
         fz_free_device(dev);
@@ -3727,7 +3727,7 @@ void XpsEngineImpl::DropPageRun(XpsPageRun *run, bool forceRemove)
         runCache.Remove(run);
         if (0 == run->refs) {
             ScopedCritSec ctxScope(&ctxAccess);
-            fz_free_display_list(ctx, run->list);
+            fz_drop_display_list(ctx, run->list);
             delete run;
         }
     }

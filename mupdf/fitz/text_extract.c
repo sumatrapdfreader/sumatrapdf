@@ -370,7 +370,12 @@ fz_new_text_sheet(fz_context *ctx)
 void
 fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet)
 {
-	fz_text_style *style = sheet->style;
+	fz_text_style *style;
+	
+	if (sheet == NULL)
+		return;
+
+	style = sheet->style;
 	while (style)
 	{
 		fz_text_style *next = style->next;
@@ -479,6 +484,8 @@ void
 fz_free_text_page(fz_context *ctx, fz_text_page *page)
 {
 	fz_page_block *block;
+	if (page == NULL)
+		return;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
 		switch (block->type)
