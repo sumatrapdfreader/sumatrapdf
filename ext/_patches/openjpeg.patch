@@ -26,7 +26,7 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Sat Jun 01 18:06:44 2013
++++ openjpeg\j2k.c	Fri Jun 14 21:24:16 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -143,7 +143,24 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                          l_marker_size -= 2; /* Subtract the size of the marker ID already read */
  
                          /* Get the marker handler from the marker ID */
-@@ -7438,10 +7475,14 @@
+@@ -7280,10 +7317,16 @@
+                         return OPJ_FALSE;
+                 }
+ 
+                 opj_read_bytes(l_data,&l_current_marker,2);
+ 
++                /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
++                if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 2) {
++                        opj_stream_read_data(p_stream, l_data, 2, p_manager);
++                        opj_read_bytes(l_data, &l_current_marker, 2);
++                }
++
+                 if (l_current_marker == J2K_MS_EOC) {
+                         p_j2k->m_current_tile_number = 0;
+                         p_j2k->m_specific_param.m_decoder.m_state =  0x0100;/*FIXME J2K_DEC_STATE_EOC;*/
+                 }
+                 else if (l_current_marker != J2K_MS_SOT)
+@@ -7438,10 +7481,14 @@
                                  l_offset_y1_src = l_res->y1 - l_y1_dest;
                          }
                  }
@@ -160,7 +177,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\jp2.c	Fri May 31 18:51:58 2013
++++ openjpeg\jp2.c	Fri Jun 14 20:49:58 2013
 @@ -774,10 +774,17 @@
  			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
  
@@ -309,7 +326,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
 --- openjpeg.orig\t2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\t2.c	Sat Jun 01 18:06:46 2013
++++ openjpeg\t2.c	Fri Jun 14 20:49:58 2013
 @@ -979,10 +979,15 @@
                          n = l_cblk->numnewpasses;
  
@@ -340,7 +357,7 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Sat Jun 01 18:06:44 2013
++++ openjpeg\tcd.c	Fri Jun 14 20:49:58 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \

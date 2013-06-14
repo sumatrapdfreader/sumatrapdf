@@ -7319,6 +7319,12 @@ OPJ_BOOL opj_j2k_decode_tile (  opj_j2k_t * p_j2k,
 
                 opj_read_bytes(l_data,&l_current_marker,2);
 
+                /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
+                if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 2) {
+                        opj_stream_read_data(p_stream, l_data, 2, p_manager);
+                        opj_read_bytes(l_data, &l_current_marker, 2);
+                }
+
                 if (l_current_marker == J2K_MS_EOC) {
                         p_j2k->m_current_tile_number = 0;
                         p_j2k->m_specific_param.m_decoder.m_state =  0x0100;/*FIXME J2K_DEC_STATE_EOC;*/
