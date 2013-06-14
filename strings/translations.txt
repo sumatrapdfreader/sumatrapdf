@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5ddd2d67ec693b49044b6734f8ca2c91ba0169a2
+735000677bad833603d6ffbb9d190b44cd64773c
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -5872,6 +5872,7 @@ ru:Не удалось удалить директорию установки
 sq:Nuk mund të heqë direktorinë e përkohshme
 sv:Kunde inte ta bort installationsmappen
 ta:நிறுவிய கோப்புறையை நீக்க முடியவில்லை
+tw:無法移除安裝目錄
 uk:Не вдалося видалити папку, де було встановлено програму
 uz:O'rnatish direktoriyasini o'chirib bo'lmadi
 vn:Không thể gỡ bỏ thư mục cài đặt
@@ -5907,6 +5908,7 @@ ru:Не удалось удалить ярлык
 sq:Nuk mund të heqë shkurtoren
 sv:Kunde inte ta bort genvägen
 ta:சுருக்கு வழியை நீக்க முடியவில்லை
+tw:無法移除捷徑
 uk:Не вдалося видалити ярлик
 uz:Xatcho'pni o'chirib bo'lmadi
 vn:Không bỏ lối tắt được
@@ -6031,6 +6033,7 @@ ru:Не удалось удалить фильтр поиска PDF
 sq:Nuk mund të çinstalojë kërkuesin e PDF-ve
 sv:Kunde inte avinstallera sökfiltret för PDF:er
 ta:PDF தேடலை நீக்க முடியவில்லை
+tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося видалити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'chirib bo'lmadi
 :Couldn't uninstall browser plugin
@@ -7088,6 +7091,7 @@ ru:Ошибка: не удалось запустить SumatraPDF!
 sq:Gabim: Nuk mund të hapë SumatraPDF!
 sv:Fel: Kunde inte starta SumatraPDF!
 ta:சுமத்ரா PDFஐ இயங்கவில்லை
+tw:錯誤：無法運行 SumatraPDF!
 uk:Помилка: не вдалося запустити SumatraPDF
 uz:Xato: SumatraPDF ishga tushirib bo'lmadi!
 vn:Lỗi: Không thể chạy SumatraPDF!
@@ -7122,6 +7126,7 @@ ru:Ошибка: SumatraPDF не найдена!
 sq:Gabim: Nuk u gjet SumatraPDF!
 sv:Fel: Hittade inte SumatraPDF!
 ta:சுமத்ராPDF காணவில்லை
+tw:錯誤：找不到 SumatraPDF
 uk:Помилка: SumatraPDF не було знайдено
 uz:Xato: SumatraPDF topilmadi!
 vn:Lỗi: Không tìm thấy SumatraPDF!
@@ -7156,6 +7161,7 @@ ru:Ошибка: не удалось загрузить документ!
 sq:Gabim: Nuk mund të shkarkohet dokumenti!
 sv:Fel: Dokumentet kunde inte laddas ner!
 ta:பிழை: கோப்பை பதிவிறக்கம் செய்ய முடியவில்லை
+tw:錯誤：無法下載文件！
 uk:Помилка: Неможливо завантажити документ!
 uz:Xato: hujjatni yuklab bo'lmadi!
 :F&avorites
@@ -7435,6 +7441,7 @@ ru:Не удалось скопировать деинсталлятор во в
 sq:Dështoi kopjimi i çinstaluesit te direktoria e përkohshme
 sv:Misslyckades med att kopiera avinstalleraren till temp-katalogen
 ta:நிறுவி நீக்கலை தற்காலிக கோப்புறையில் இருந்து நகலெடுத்தல் தோல்வி
+tw:無法將解除安裝程式複製到暫存目錄
 uk:Не вдалося скопіювати деінсталятор у тимчасову папку
 uz:O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tugadi
 :Failed to create a shortcut
@@ -7468,6 +7475,7 @@ ru:Не удалось создать ярлык
 sq:Dështoi krijimi i shkurtores
 sv:Misslyckades med att skapa genväg
 ta:சுருக்கு வழி அமைதல் தோல்வி
+tw:無法建立捷徑
 uk:Не вдалося створити ярлик
 uz:Xatcho'pni yaratib bo'lmadi
 :Failed to delete uninstaller registry keys
