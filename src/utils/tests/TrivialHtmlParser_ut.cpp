@@ -204,6 +204,18 @@ static void HtmlParser10()
     utassert(node && node->NameIs("X:B"));
 }
 
+static void HtmlParser11()
+{
+    HtmlParser p;
+    HtmlElement *root = p.Parse("<root/><!-- comment -->");
+    utassert(1 == p.ElementsCount());
+    utassert(0 == p.TotalAttrCount());
+    utassert(root && root->NameIs("root"));
+
+    root = p.Parse("<root><!---></root>");
+    utassert(!root);
+}
+
 static void HtmlParserFile()
 {
     WCHAR *fileName = L"HtmlParseTest00.html";
@@ -258,6 +270,7 @@ static void HtmlParserFile()
 void TrivialHtmlParser_UnitTests()
 {
     HtmlParserFile();
+    HtmlParser11();
     HtmlParser10();
     HtmlParser09();
     HtmlParser08();

@@ -47,7 +47,7 @@ bool SkipUntil(const char*& s, const char *end, char *term)
 {
     size_t len = str::Len(term);
     for (; s < end; s++) {
-        if (s + len < end && str::StartsWith(s, term))
+        if (s + len <= end && str::StartsWith(s, term))
             return true;
     }
     return false;
@@ -423,7 +423,7 @@ Next:
     // skip <? and <! (processing instructions and comments)
     if (start < end && (('?' == *start) || ('!' == *start))) {
         if ('!' == *start && start + 2 < end && str::StartsWith(start, "!--")) {
-            currPos = start + 2;
+            currPos = start + 3;
             if (!SkipUntil(currPos, end, "-->")) {
                 currToken.SetError(HtmlToken::UnclosedTag, start);
                 return &currToken;
