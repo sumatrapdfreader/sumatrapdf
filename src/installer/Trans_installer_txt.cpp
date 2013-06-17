@@ -748,7 +748,7 @@ const char * gTranslations_it =
   "Impossibile rimuovere il collegamento\0"\
   "Impossibile disinstallare modulo anteprima PDF\0"\
   "Impossibile disinstallare filtro ricerca PDF\0"\
-  "Impossibile disinstallare il plugin del brwoser\0"\
+  "Impossibile disinstallare il plugin del browser\0"\
   "Impossibile scrivere %s nel disco.\0"\
   "Impossibile copiare programma disinstallazione nella cartella temporanea\0"\
   "Impossibile creare il collegamento\0"\

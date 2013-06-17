@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-735000677bad833603d6ffbb9d190b44cd64773c
+6581bcde3b55f0926611ff5138dc705430912cc2
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -1901,7 +1901,7 @@ uk:Опції...
 uz:&Parametrlar...
 vn:Tuỳ chọn
 :&Password:
-am:&Ծածկագիրը
+am:&Գաղտնաբառը
 ar:&كلمة المرور:
 az:&Parol:
 bg:&Парола
@@ -5942,7 +5942,7 @@ hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
 hu:Oldalfeldolgozási hiba
 id:Tidak dapat menampilkan halaman
-it:Impossibile renderizzare la pagina
+it:Impossibile presentare la pagina
 ja:ページを描画できませんでした
 ka:გვერდის რენდერი ვერ მოხერხდა
 kr:페이지를 렌더링할 수 없습니다.
@@ -6053,7 +6053,7 @@ fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 hr:Nemoguće deinstalirati dodatak za internet preglednik
 hu:Böngésző beépülő eltávolítása sikertelen
-it:Impossibile disinstallare il plugin del brwoser
+it:Impossibile disinstallare il plugin del browser
 ja:ブラウザプラグインをアンインストールできませんでした
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
@@ -6819,7 +6819,7 @@ uz:EPUB kitoblari
 vn:Tập tin EPUB
 :Enter password
 af:Tik Wagwoord In
-am:Գրել ծածկագիրը
+am:Գրեք գաղտնաբառը
 ar:ادخل كلمة المرور
 az:Parolu daxil edin
 bg:Въведете парола
@@ -6886,7 +6886,7 @@ uz:Maxfiy so'zni kiriting
 vn:Nhập mật khẩu
 :Enter password for %s
 af:Tik Wagwoord In Vir %s
-am:Գրել ծածկագիրը՝ %s-ի համար
+am:Գրեք գաղտնաբառը՝ %s-ի համար
 ar:كلمة المرور لـ %s
 az:%s üçün parolu daxil edin
 bg:Въведете парола за %s
@@ -9992,6 +9992,7 @@ br:Modo Man&gá
 ca-xv:Mode man&ga
 ca:Mode man&ga
 cn:漫画模式(&G)
+de:Lese&richtung umkehren
 es:Modo man&ga
 et:Man&garežiim
 eu:Ma&nga Modua
