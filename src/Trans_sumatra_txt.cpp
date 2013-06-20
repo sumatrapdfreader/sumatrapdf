@@ -1242,7 +1242,7 @@ const char * gTranslations_az =
 const char * gTranslations_eu = 
   "&Honi buruz...\0"\
   "&Oraingo Neurria\tKtrl+1\0"\
-  "A&ukera Aurreratuak...\0"\
+  "Au&kera Aurreratuak...\0"\
   "&Hautatutako orrialde guztiak\0"\
   "A&tzera\tAlt+Ezker Gezia\0"\
   "&Liburu Ikuspegia\tKtrl+8\0"\
