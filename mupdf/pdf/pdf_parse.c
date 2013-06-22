@@ -27,6 +27,15 @@ pdf_to_matrix(fz_context *ctx, pdf_obj *array, fz_matrix *m)
 	return m;
 }
 
+/* SumatraPDF: replace undefined control characters with a space */
+static inline unsigned short
+pdf_replace_undefined(unsigned short ucs)
+{
+	if (0x00 < ucs && ucs < 0x20 && ucs != '\t' && ucs != '\n' && ucs != '\r')
+		return ' ';
+	return ucs;
+}
+
 /* Convert Unicode/PdfDocEncoding string into utf-8 */
 char *
 pdf_to_utf8(pdf_document *xref, pdf_obj *src)
@@ -99,7 +108,7 @@ pdf_to_utf8(pdf_document *xref, pdf_obj *src)
 
 			for (i = 0; i < srclen; i++)
 			{
-				ucs = pdf_doc_encoding[srcptr[i]];
+				ucs = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
 				dstptr += fz_runetochar(dstptr, ucs);
 			}
 		}
@@ -143,7 +152,7 @@ pdf_to_ucs2(pdf_document *xref, pdf_obj *src)
 	{
 		dstptr = dst = fz_malloc_array(ctx, srclen + 1, sizeof(short));
 		for (i = 0; i < srclen; i++)
-			*dstptr++ = pdf_doc_encoding[srcptr[i]];
+			*dstptr++ = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
 	}
 
 	*dstptr = '\0';
@@ -173,7 +182,7 @@ pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src)
 	else
 	{
 		for (i = 0; i < srclen; i++)
-			*dstptr++ = pdf_doc_encoding[srcptr[i]];
+			*dstptr++ = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
 	}
 
 	*dstptr = '\0';
