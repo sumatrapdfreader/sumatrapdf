@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   31
+#define LANGS_COUNT   32
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1184,6 +1184,51 @@ const char * gTranslations_ru =
   "\320\237\321\200\320\276\320\270\321\201\321\205\320\276\320\264\320\270\321\202 \321\203\320\264\320\260\320\273\320\265\320\275\320\270\320\265...\0"\
   "\320\230\321\201\320\277\320\276\320\273\321\214\320\267\320\276\320\262\320\260\321\202\321\214 SumatraPDF \320\264\320\273\321\217 \320\277\321\200\320\276\321\201\320\274\320\276\321\202\321\200\320\260 PDF\0";
 
+const char * gTranslations_sk = 
+  "&Mo\305\276nosti\0"\
+  "Naozaj chcete odin\305\241talovat SumatraPDF?\0"\
+  "Zatvori\305\245\0"\
+  "Nie je mo\305\276n\303\251 vytvori\305\245 do\304\215asn\303\275 adres\303\241r\0"\
+  "Nie je mo\305\276n\303\251 vytvori\305\245 in\305\241tala\304\215n\303\275 adres\303\241r\0"\
+  "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 PDF prehliada\304\215 r\303\275chlych n\303\241h\304\276adov\0"\
+  "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 PDF vyh\304\276ad\303\241vac\303\255 filter\0"\
+  "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 plugin do prehliada\304\215a\0"\
+  "Po\305\276iadavka na do\304\215asn\303\275 adres\303\241r bola ne\303\272spe\305\241n\303\241\0"\
+  "Nie je mo\305\276n\303\251 odstr\303\241ni\305\245 in\305\241tala\304\215n\303\275 adres\303\241r\0"\
+  "Nie je mo\305\276n\303\251 odstr\303\241ni\305\245 odkaz\0"\
+  "Nie je mo\305\276n\303\251 odin\305\241talova\305\245 PDF prehliada\304\215 r\303\275chlych n\303\241h\304\276adov\0"\
+  "Nie je mo\305\276n\303\251 odin\305\241talova\305\245 PDF vyh\304\276ad\303\241vac\303\255 filter\0"\
+  "Nie je mo\305\276n\303\251 odin\305\241talova\305\245 plugin prehliada\304\215a\0"\
+  "Nie je mo\305\276n\303\251 zap\303\255sa\305\245 %s na disk\0"\
+  "Kop\303\255rovanie odin\305\241tal\303\241tora do do\304\215asn\303\251ho adres\303\241ra bolo ne\303\272spe\305\241n\303\251\0"\
+  "Vytvorenie odkazu bolo ne\303\272spe\305\241n\303\251\0"\
+  "Vymazanie odin\305\241tala\304\215n\303\275ch k\304\276\303\272\304\215ov v registroch bolo ne\303\272spe\305\241n\303\251\0"\
+  "Z\303\241pis roz\305\241\303\255ren\303\275ch inform\303\241ci\303\255 o pr\303\255pone s\303\272boru do registrov bolo ne\303\272spe\305\241n\303\251\0"\
+  "Ulo\305\276enie inform\303\241ci\303\255 pre odin\305\241talovanie do registrov bolo ne\303\272spe\305\241n\303\251\0"\
+  "Skry\305\245 &Mo\305\276nosti\0"\
+  "In\305\241taluj PDF pluginy pre &prehliada\304\215e Firefox, Chrome a Opera\0"\
+  "In\305\241taluj SumatraPDF\0"\
+  "In\305\241taluj SumatraPDF do &adres\303\241ra:\0"\
+  "In\305\241tal\303\241cia sa nepodarila!\0"\
+  "Prebieha in\305\241tal\303\241cia...\0"\
+  "Povoli\305\245, aby Windows Desktop Search &vyh\304\276ad\303\241val PDF dokumenty\0"\
+  "Povoli\305\245, aby Windows zobrazoval &n\303\241h\304\276ad PDF dokumentov\0"\
+  "Pros\303\255m zatvorte %s pre pokra\304\215ovanie!\0"\
+  "Vyberte adres\303\241r, kde sa m\303\241 SumatraPDF nain\305\241talova\305\245:\0"\
+  "Niektor\303\251 in\305\241tala\304\215n\303\251 s\303\272bory s\303\272 po\305\241koden\303\251 alebo ch\303\275baj\303\272\0"\
+  "Spusti\305\245 SumatraPDF\0"\
+  "SumatraPDF %s in\305\241tal\303\241tor\0"\
+  "SumatraPDF %s odin\305\241tal\303\241tor\0"\
+  "Program SumatraPDF bol odin\305\241talovan\303\275.\0"\
+  "In\305\241tal\303\241cia programu SumatraPDF nebola n\303\241jden\303\241.\0"\
+  "Dakujeme, \305\276e ste sa rozhodli pre SumatraPDF!\0"\
+  "\304\216akujeme! SumatraPDF bol nain\305\241talovan\303\275.\0"\
+  "In\305\241tala\304\215n\303\275 s\303\272bor je po\305\241koden\303\275. Pros\303\255m stiahnite si ho e\305\241te raz. \nOspravedl\305\210ujeme sa za \305\245a\305\276kosti!\0"\
+  "Odin\305\241talovanie SumatraPDF\0"\
+  "Odin\305\241talovanie sa nepodarilo\0"\
+  "Prebieha odin\305\241talovanie...\0"\
+  "Pou\305\276i SumatraPDF ako &predvolen\303\275 PDF prehliada\304\215\0";
+
 const char * gTranslations_es = 
   "&Opciones\0"\
   "\302\277Est\303\241 seguro de querer desinstalar SumatraPDF?\0"\
@@ -1437,6 +1482,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_pt, 
   gTranslations_ro, 
   gTranslations_ru, 
+  gTranslations_sk, 
   gTranslations_es, 
   gTranslations_sv, 
   gTranslations_ta, 
@@ -1473,6 +1519,7 @@ const char *gLangCodes =   "en\0" \
   "pt\0" \
   "ro\0" \
   "ru\0" \
+  "sk\0" \
   "es\0" \
   "sv\0" \
   "ta\0" \
@@ -1505,6 +1552,7 @@ const char *gLangNames =   "English\0" \
   "Portuguese - Portugal (Portugu\303\252s)\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
+  "Slovak (Sloven\304\215ina)\0" \
   "Spanish (Espa\303\261ol)\0" \
   "Swedish (Svenska)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
@@ -1549,6 +1597,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_PORTUGUESE),
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
+  _LANGID(LANG_SLOVAK),
   _LANGID(LANG_SPANISH),
   _LANGID(LANG_SWEDISH),
   _LANGID(LANG_TAMIL),
