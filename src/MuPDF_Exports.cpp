@@ -8,7 +8,7 @@
 // building a static SumatraPDF.exe.
 
 extern "C" {
-#include <mupdf/fitz.h>
+#include <mupdf/fitz/math.h>
 }
 
 // copied from mupdf/source/fitz/geometry.c
