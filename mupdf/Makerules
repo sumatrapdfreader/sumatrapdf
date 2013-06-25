@@ -2,6 +2,7 @@
 
 OS ?= $(shell uname)
 OS := $(OS:MINGW%=MINGW)
+OS := $(OS:Windows_NT=MINGW)
 
 CFLAGS += -Wall
 
@@ -23,8 +24,12 @@ else
 $(error unknown build setting: '$(build)')
 endif
 
+# Windows (MINGW) build doesn't use system libraries.
+ifeq "$(OS)" "MINGW"
+NOX11=yes
+
 # Mac OS X doesn't have pkg-config so we hard code paths.
-ifeq "$(OS)" "Darwin"
+else ifeq "$(OS)" "Darwin"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
 SYS_OPENSSL_LIBS = -lcrypto
 SYS_X11_CFLAGS = -I/usr/X11R6/include

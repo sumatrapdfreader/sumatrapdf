@@ -15,18 +15,18 @@ DIR_STRUCT = [
 	(pjoin("src", "previewer"), ("Integration DLLs", "Previewer")),
 	(pjoin("src", "mui"), ("baseutils", "mui")),
 	(pjoin("src", "uia"), ("Source Files", "Automation")),
-	(pjoin("mupdf", "draw"), ("mupdf", "draw")),
-	(pjoin("mupdf", "fitz"), ("mupdf", "fitz")),
-	(pjoin("mupdf", "pdf"), ("mupdf", "pdf")),
-	(pjoin("mupdf", "xps"), ("mupdf", "xps")),
+	(pjoin("mupdf", "source", "fitz"), ("mupdf", "fitz")),
+	(pjoin("mupdf", "include", "mupdf"), ("mupdf", "include")),
+	(pjoin("mupdf", "include", "mupdf", "fitz"), ("mupdf", "include", "fitz")),
+	(pjoin("mupdf", "include", "mupdf", "pdf"), ("mupdf", "include", "pdf")),
+	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
+	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
+	(pjoin("mupdf", "source", "xps"), ("mupdf", "xps")),
 ]
 SOURCE_EXTS = [".cpp", ".c", ".h", ".rc"]
 EXCLUDE = [
-	pjoin("mupdf", "draw", "draw_simple_scale.c"),
-	pjoin("mupdf", "pdf", "pdf_js.c"),
-	pjoin("mupdf", "pdf", "pdf_jsimp_cpp.c"),
-	pjoin("mupdf", "pdf", "pdf_jsimp_cpp.h"),
-	pjoin("mupdf", "pdf", "pdf_jsimp_v8.cpp"),
+	pjoin("mupdf", "include", "mupdf", "cbz.c"),
+	pjoin("mupdf", "include", "mupdf", "img.c"),
 ]
 
 class XmlNode:

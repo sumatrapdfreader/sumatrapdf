@@ -10,7 +10,7 @@ import os, re, fnmatch, util2, update_vs, update_vs2008
 pjoin = os.path.join
 
 DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "browserplugin"), pjoin("src", "previewer"), pjoin("src", "mui"), pjoin("src", "memtrace"), pjoin("src", "regress"), pjoin("src", "uia")]
-INCLUDE_DIRS = DIRS + [pjoin("mupdf", "fitz"), pjoin("mupdf", "pdf"), pjoin("mupdf", "xps"), pjoin("mupdf", "cbz")]
+INCLUDE_DIRS = DIRS + [pjoin("mupdf", "include", "mupdf"), pjoin("mupdf", "include", "mupdf", "fitz"), pjoin("mupdf", "include", "mupdf", "pdf")]
 OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\mui": "$(OMUI)", "src\\memtrace": "$(OM)", "src\\uia": "$(OUIA)" } # default: "$(OS)"
 MAKEFILE = "makefile.deps"
 DEPENDENCIES_PER_LINE = 3

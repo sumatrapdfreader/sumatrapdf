@@ -8,10 +8,10 @@
 // building a static SumatraPDF.exe.
 
 extern "C" {
-#include <fitz.h>
+#include <mupdf/fitz.h>
 }
 
-// copied from mupdf/fitz/base_geometry.c
+// copied from mupdf/source/fitz/geometry.c
 
 const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
 

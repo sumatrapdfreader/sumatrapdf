@@ -193,11 +193,10 @@ g_resource_files = list_top_dir_files("src", is_resources_group_file)
 g_ifilter_files = list_top_dir_files(pj("src", "ifilter"), is_any_file)
 g_previewer_files = list_top_dir_files(pj("src", "previewer"), is_any_file)
 g_installer_files = list_top_dir_files(pj("src", "installer"), is_any_file)
-g_mupdf_fitz_files = list_top_dir_files(pj("mupdf", "fitz"), is_c_src_file)
-g_mupdf_draw_files = list_top_dir_files(pj("mupdf", "draw"), is_c_src_file)
-g_mupdf_pdf_files = list_top_dir_files(pj("mupdf", "pdf"), is_c_src_file)
-g_mupdf_xps_files = list_top_dir_files(pj("mupdf", "xps"), is_c_src_file)
-g_mupdf_apps_files = list_top_dir_files(pj("mupdf", "apps"), is_c_src_file)
+g_mupdf_fitz_files = list_top_dir_files(pj("mupdf", "source", "fitz"), is_c_src_file)
+g_mupdf_pdf_files = list_top_dir_files(pj("mupdf", "source", "pdf"), is_c_src_file)
+g_mupdf_xps_files = list_top_dir_files(pj("mupdf", "source", "xps"), is_c_src_file)
+g_mupdf_tools_files = list_top_dir_files(pj("mupdf", "source", "tools"), is_c_src_file)
 
 g_filters = [
     Filter("sumatra", "{4FC737F1-C7A5-4376-A066-2A32D752A2FF}", g_sumatra_files),
@@ -217,10 +216,9 @@ g_filters = [
     Filter("ext\\chm", "{87c09434-b151-4582-b0b3-eab39e5a51ef}", g_chm_files),
     Filter("ext\\mupdf", "{078d86a8-74f1-49fa-af7f-8d12c180a485}", []),
     Filter("ext\\mupdf\\fitz", "{8a33d4a4-1f54-4fe9-98c5-a0dfd57a601e}", g_mupdf_fitz_files),
-    Filter("ext\\mupdf\\draw", "{bdd43343-e63b-467d-b5e5-ba10a0e94337}", g_mupdf_draw_files),
     Filter("ext\\mupdf\\pdf", "{a35cfdd9-b833-4410-afd7-a4771ef8887b}", g_mupdf_pdf_files),
     Filter("ext\\mupdf\\xps", "{29dc662e-3fee-4c3b-8186-205cf82221c0}", g_mupdf_xps_files),
-    Filter("ext\\mupdf\\xps", "{29dc662e-3fee-b3c4-8186-205cf82221c0}", g_mupdf_apps_files),
+    Filter("ext\\mupdf\\xps", "{29dc662e-3fee-b3c4-8186-205cf82221c0}", g_mupdf_tools_files),
 ]
 
 class FileType(object):
@@ -351,6 +349,8 @@ def replace_item_group(src_file, dst_file, s):
         write_file_utf8(dst_file, d2)
 
 def main():
+    util2.chdir_top()
+
     files = build_files(g_filters, pj(top_dir(), "vs"))
 
     vcxproj_part = gen_vcxproj_part(files)

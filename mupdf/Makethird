@@ -37,12 +37,12 @@ V8_ARCH ?= x64
 ifeq "$(OS)" "Darwin"
 V8_LIBS = -L$(V8_DIR)/out-mac/$(V8_ARCH).$(V8_LIB_CHOICE)/ -lv8_base -lv8_snapshot -lstdc++
 else
-V8_LIBS = -L$(V8_DIR)/out/$(V8_ARCH).$(V8_LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread -lstdc++
+V8_LIBS = -L$(V8_DIR)/out/$(V8_ARCH).$(V8_LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread -ldl -lstdc++
 endif
 
-V8_PRESENT := 1
+V8_PRESENT := yes
 else
-V8_PRESENT := 0
+V8_PRESENT := no
 endif
 
 # --- FreeType 2 ---
@@ -50,7 +50,7 @@ endif
 ifneq "$(wildcard $(FREETYPE_DIR)/README)" ""
 
 FREETYPE_LIB := $(OUT)/libfreetype.a
-
+FREETYPE_OUT := $(OUT)/freetype
 FREETYPE_SRC := \
 	ftbase.c \
 	ftbbox.c \
@@ -74,33 +74,37 @@ FREETYPE_SRC := \
 	type1.c \
 	type1cid.c \
 
-$(FREETYPE_LIB): $(addprefix $(OUT)/ft_, $(FREETYPE_SRC:%.c=%.o))
+
+$(FREETYPE_LIB): $(addprefix $(FREETYPE_OUT)/, $(FREETYPE_SRC:%.c=%.o))
+
+$(FREETYPE_OUT):
+	$(MKDIR_CMD)
 
 FT_CFLAGS := -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON \
 	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
 	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
 
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/base/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/base/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cff/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/cff/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/pshinter/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/pshinter/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/raster/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/raster/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/smooth/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/smooth/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/sfnt/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/sfnt/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
-$(OUT)/ft_%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(OUT)
+$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 
 FREETYPE_CFLAGS := -I$(FREETYPE_DIR)/include
@@ -114,7 +118,7 @@ endif
 ifneq "$(wildcard $(JBIG2DEC_DIR)/README)" ""
 
 JBIG2DEC_LIB := $(OUT)/libjbig2dec.a
-
+JBIG2DEC_OUT := $(OUT)/jbig2dec
 JBIG2DEC_SRC := \
 	jbig2.c \
 	jbig2_arith.c \
@@ -132,8 +136,10 @@ JBIG2DEC_SRC := \
 	jbig2_symbol_dict.c \
 	jbig2_text.c \
 
-$(JBIG2DEC_LIB): $(addprefix $(OUT)/, $(JBIG2DEC_SRC:%.c=%.o))
-$(OUT)/%.o: $(JBIG2DEC_DIR)/%.c | $(OUT)
+$(JBIG2DEC_LIB): $(addprefix $(JBIG2DEC_OUT)/, $(JBIG2DEC_SRC:%.c=%.o))
+$(JBIG2DEC_OUT):
+	$(MKDIR_CMD)
+$(JBIG2DEC_OUT)/%.o: $(JBIG2DEC_DIR)/%.c | $(JBIG2DEC_OUT)
 	$(CC_CMD) -DHAVE_STDINT_H
 
 JBIG2DEC_CFLAGS := -I$(JBIG2DEC_DIR)
@@ -147,7 +153,7 @@ endif
 ifneq "$(wildcard $(JPEG_DIR)/README)" ""
 
 JPEG_LIB := $(OUT)/libjpeg.a
-
+JPEG_OUT := $(OUT)/jpeg
 JPEG_SRC := \
 	jaricom.c \
 	jcomapi.c \
@@ -181,8 +187,10 @@ JPEG_SRC := \
 	jquant2.c \
 	jutils.c \
 
-$(JPEG_LIB): $(addprefix $(OUT)/jpeg_, $(JPEG_SRC:%.c=%.o))
-$(OUT)/jpeg_%.o: $(JPEG_DIR)/%.c | $(OUT)
+$(JPEG_LIB): $(addprefix $(JPEG_OUT)/, $(JPEG_SRC:%.c=%.o))
+$(JPEG_OUT):
+	$(MKDIR_CMD)
+$(JPEG_OUT)/%.o: $(JPEG_DIR)/%.c | $(JPEG_OUT)
 	$(CC_CMD) -Dmain=xxxmain
 
 JPEG_CFLAGS := -I$(JPEG_DIR)
@@ -196,7 +204,7 @@ endif
 ifneq "$(wildcard $(OPENJPEG_DIR)/README)" ""
 
 OPENJPEG_LIB := $(OUT)/libopenjpeg.a
-
+OPENJPEG_OUT := $(OUT)/openjpeg
 OPENJPEG_SRC := \
 	bio.c \
 	cidx_manager.c \
@@ -223,8 +231,10 @@ OPENJPEG_SRC := \
 	thix_manager.c \
 	tpix_manager.c \
 
-$(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
-$(OUT)/opj_%.o: $(OPENJPEG_DIR)/src/lib/openjp2/%.c | $(OUT)
+$(OPENJPEG_LIB): $(addprefix $(OPENJPEG_OUT)/, $(OPENJPEG_SRC:%.c=%.o))
+$(OPENJPEG_OUT):
+	$(MKDIR_CMD)
+$(OPENJPEG_OUT)/%.o: $(OPENJPEG_DIR)/src/lib/openjp2/%.c | $(OPENJPEG_OUT)
 	$(CC_CMD) -DOPJ_STATIC -DOPJ_HAVE_STDINT_H
 
 OPENJPEG_CFLAGS += -I$(OPENJPEG_DIR)/src/lib/openjp2
@@ -238,7 +248,7 @@ endif
 ifneq "$(wildcard $(ZLIB_DIR)/README)" ""
 
 ZLIB_LIB := $(OUT)/libz.a
-
+ZLIB_OUT := $(OUT)/zlib
 ZLIB_SRC := \
 	adler32.c \
 	compress.c \
@@ -251,8 +261,10 @@ ZLIB_SRC := \
 	uncompr.c \
 	zutil.c \
 
-$(ZLIB_LIB): $(addprefix $(OUT)/zlib_, $(ZLIB_SRC:%.c=%.o))
-$(OUT)/zlib_%.o: $(ZLIB_DIR)/%.c | $(OUT)
+$(ZLIB_LIB): $(addprefix $(ZLIB_OUT)/, $(ZLIB_SRC:%.c=%.o))
+$(ZLIB_OUT):
+	$(MKDIR_CMD)
+$(ZLIB_OUT)/%.o: $(ZLIB_DIR)/%.c | $(ZLIB_OUT)
 	$(CC_CMD) -Dverbose=-1
 
 ZLIB_CFLAGS := -I$(ZLIB_DIR)

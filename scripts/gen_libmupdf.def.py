@@ -2,20 +2,22 @@
 
 """
 Generates a list of all exports from libmupdf.dll from the function lists
-contained in the mupdf/*/*.h headers (only MuPDF and MuXPS are included).
+contained in the mupdf/include/* headers (only MuPDF and MuXPS are included).
 """
 
 import os, re, util2
 
 def generateExports(header, exclude=[]):
+	if os.path.isdir(header):
+		return "\n".join([generateExports(os.path.join(header, file), exclude) for file in os.listdir(header)])
+	
 	data = open(header, "r").read()
 	data = re.sub(r"(?sm)^#ifndef NDEBUG\s.*?^#endif", "", data, 0)
 	data = re.sub(r"(?sm)^#ifdef ARCH_ARM\s.*?^#endif", "", data, 0)
 	data = re.sub(r"(?sm)^#ifdef FITZ_DEBUG_LOCKING\s.*?^#endif", "", data, 0)
 	data = data.replace(" FZ_NORETURN;", ";")
 	functions = re.findall(r"(?sm)^\w+ (?:\w+ )?\*?(\w+)\(.*?\);", data)
-	exports = "\n".join(["\t" + name for name in functions if name not in exclude])
-	return exports
+	return "\n".join(["\t" + name for name in functions if name not in exclude])
 
 def collectFunctions(file):
 	data = open(file, "r").read()
@@ -78,13 +80,13 @@ def main():
 	os.chdir("mupdf")
 	
 	# don't include/export doc_* functions, support for additional input/output formats and form support
-	doc_exports = collectFunctions("fitz/doc_document.c") + ["fz_get_annot_type"]
-	more_formats = collectFunctions("fitz/dev_svg.c") + collectFunctions("fitz/res_pcl.c") + collectFunctions("fitz/res_pwg.c")
-	form_exports = collectFunctions("pdf/pdf_form.c") + collectFunctions("pdf/pdf_event.c") + ["pdf_access_submit_event", "pdf_init_ui_pointer_event"]
+	doc_exports = collectFunctions("source/fitz/document.c") + ["fz_get_annot_type"]
+	more_formats = collectFunctions("source/fitz/svg-device.c") + collectFunctions("source/fitz/output-pcl.c") + collectFunctions("source/fitz/output-pwg.c")
+	form_exports = collectFunctions("source/pdf/pdf-form.c") + collectFunctions("source/pdf/pdf-event.c") + ["pdf_access_submit_event", "pdf_init_ui_pointer_event"]
 	
-	fitz_exports = generateExports("fitz/fitz.h", doc_exports + more_formats) + "\n\n" + generateExports("fitz/fitz-internal.h", doc_exports + more_formats)
-	mupdf_exports = generateExports("pdf/mupdf.h") + "\n\n" + generateExports("pdf/mupdf-internal.h", form_exports + ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
-	muxps_exports = generateExports("xps/muxps.h") + "\n\n" + generateExports("xps/muxps-internal.h", ["xps_parse_solid_color_brush", "xps_print_path"])
+	fitz_exports = generateExports("include/mupdf/fitz", doc_exports + more_formats)
+	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
+	muxps_exports = generateExports("include/mupdf/xps.h", ["xps_parse_solid_color_brush", "xps_print_path"])
 	
 	list = LIBMUPDF_DEF % locals()
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))

@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 extern "C" {
-#include <fitz-internal.h>
+#include <mupdf/fitz.h>
 }
 
 #include "BaseUtil.h"
@@ -220,7 +220,7 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
     fz_drop_buffer(stream->ctx, buffer);
 
     if (!data)
-        fz_throw(stream->ctx, "OOM in fz_extract_stream_data");
+        fz_throw(stream->ctx, FZ_ERROR_GENERIC, "OOM in fz_extract_stream_data");
     return data;
 }
 
@@ -332,7 +332,7 @@ extern "C" static int read_istream(fz_stream *stm, unsigned char *buf, int len)
     ULONG cbRead = len;
     HRESULT res = ((IStream *)stm->state)->Read(buf, len, &cbRead);
     if (FAILED(res))
-        fz_throw(stm->ctx, "IStream read error: %x", res);
+        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
     return (int)cbRead;
 }
 
@@ -343,9 +343,9 @@ extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
     off.QuadPart = offset;
     HRESULT res = ((IStream *)stm->state)->Seek(off, whence, &n);
     if (FAILED(res))
-        fz_throw(stm->ctx, "IStream seek error: %x", res);
+        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
     if (n.HighPart != 0 || n.LowPart > INT_MAX)
-        fz_throw(stm->ctx, "documents beyond 2GB aren't supported");
+        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
     stm->pos = n.LowPart;
     stm->rp = stm->wp = stm->bp;
 }
@@ -362,9 +362,9 @@ extern "C" static fz_stream *reopen_istream(fz_context *ctx, fz_stream *stm)
     ScopedComPtr<IStream> stream2;
     HRESULT res = ((IStream *)stm->state)->Clone(&stream2);
     if (E_NOTIMPL == res)
-        fz_throw(ctx, "IStream doesn't support cloning");
+        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream doesn't support cloning");
     if (FAILED(res))
-        fz_throw(ctx, "IStream clone error: %x", res);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream clone error: %x", res);
     return fz_open_istream(ctx, stream2);
 }
 
@@ -376,7 +376,7 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
     LARGE_INTEGER zero = { 0 };
     HRESULT res = stream->Seek(zero, STREAM_SEEK_SET, NULL);
     if (FAILED(res))
-        fz_throw(ctx, "IStream seek error: %x", res);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
     stream->AddRef();
 
     fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream);
@@ -888,7 +888,7 @@ static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device 
 ///// PDF-specific extensions to Fitz/MuPDF /////
 
 extern "C" {
-#include <mupdf-internal.h>
+#include <mupdf/pdf.h>
 }
 
 namespace str {
@@ -2361,7 +2361,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_pixmap *pixmap = NULL;
     fz_try(ctx) {
         fz_image *image = positions.At(imageIx).image;
-        pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+        pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
     }
     fz_catch(ctx) {
         return NULL;
@@ -2531,7 +2531,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
 
             name = pdf_to_name(pdf_dict_getsa(font2, "BaseFont", "Name"));
             if (str::IsEmpty(name))
-                fz_throw(ctx, "ignoring font with empty name");
+                fz_throw(ctx, FZ_ERROR_GENERIC, "ignoring font with empty name");
             embedded = false;
             pdf_obj *desc = pdf_dict_gets(font2, "FontDescriptor");
             if (desc && (pdf_dict_gets(desc, "FontFile") || pdf_dict_getsa(desc, "FontFile2", "FontFile3")))
@@ -3185,7 +3185,7 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 extern "C" {
-#include <muxps-internal.h>
+#include <mupdf/xps.h>
 }
 
 struct XpsPageRun {
@@ -4180,7 +4180,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_pixmap *pixmap = NULL;
     fz_try(ctx) {
         fz_image *image = positions.At(imageIx).image;
-        pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+        pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
     }
     fz_catch(ctx) {
         return NULL;

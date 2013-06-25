@@ -6,20 +6,19 @@
 /* We never want to build memento versions of the cmapdump util */
 #undef MEMENTO
 
-#include "fitz-internal.h"
-#include "mupdf-internal.h"
+#include "mupdf/pdf.h"
 
-#include "../fitz/base_context.c"
-#include "../fitz/base_error.c"
-#include "../fitz/base_memory.c"
-#include "../fitz/base_string.c"
-#include "../fitz/stm_buffer.c"
-#include "../fitz/stm_open.c"
-#include "../fitz/stm_read.c"
+#include "../source/fitz/context.c"
+#include "../source/fitz/error.c"
+#include "../source/fitz/memory.c"
+#include "../source/fitz/string.c"
+#include "../source/fitz/buffer.c"
+#include "../source/fitz/stream-open.c"
+#include "../source/fitz/stream-read.c"
 
-#include "../pdf/pdf_lex.c"
-#include "../pdf/pdf_cmap.c"
-#include "../pdf/pdf_cmap_parse.c"
+#include "../source/pdf/pdf-lex.c"
+#include "../source/pdf/pdf-cmap.c"
+#include "../source/pdf/pdf-cmap-parse.c"
 
 static void
 clean(char *p)
