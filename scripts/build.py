@@ -139,6 +139,10 @@ def create_lzma_archive(dir, archiveName, files):
 # build installer data, will be included as part of Installer.exe resources
 def build_installer_data(dir):
   src = os.path.join("mupdf", "resources", "fonts", "droid", "DroidSansFallback.ttf")
+  if not os.path.exists(src):
+    # location before https://code.google.com/p/sumatrapdf/source/detail?r=8266
+    src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
+  assert os.path.exists(src)
   dst = os.path.join(dir, "DroidSansFallback.ttf")
   if not os.path.exists(dst) or is_more_recent(src, dst):
     copy_to_dst_dir(src, dir)
