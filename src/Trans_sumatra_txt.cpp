@@ -3447,7 +3447,7 @@ const char * gTranslations_cz =
 const char * gTranslations_dk = 
   "&Om\0"\
   "&Faktisk st\303\270rrelse\tCtrl+1\0"\
-  "\0"\
+  "&Avancerede valgmuligheder\0"\
   "&Alle valgte sider\0"\
   "&Tilbage\tAlt+<-\0"\
   "&Bogvisning\tCtrl+8\0"\
@@ -3593,7 +3593,7 @@ const char * gTranslations_dk =
   "Mb\0"\
   "G\303\270r SumatraPDF standardprogram for PDF-filer\0"\
   "G\303\270r SumatraPDF til min standard PDF-l\303\246ser\0"\
-  "\0"\
+  "Man&ga tilstand\0"\
   "Versalf\303\270lsom s\303\270gning\0"\
   "Mobi documenter\0"\
   "\303\206ndret:\0"\
@@ -3608,7 +3608,7 @@ const char * gTranslations_dk =
   "\303\205bn\0"\
   "\303\205ben med PDF-XChange\0"\
   "\303\205bn et dokument...\0"\
-  "\0"\
+  "\303\205ben o %s\0"\
   "\303\205bn med &Adobe Reader\0"\
   "\303\205ben med &Foxit Reader\0"\
   "\303\205bn med Microsoft HTML Help\0"\

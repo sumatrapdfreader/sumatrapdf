@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   32
+#define LANGS_COUNT   33
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -463,6 +463,51 @@ const char * gTranslations_hr =
   "Deinstalacija nije uspjela\0"\
   "Deinstaliranje...\0"\
   "Koristi SumatraPDF kao zadani PDF preglednik\0";
+
+const char * gTranslations_dk = 
+  "&Valgmuligheder\0"\
+  "Er du sikker p\303\245 at du vil afinstallere SumatraPDF ?\0"\
+  "Luk\0"\
+  "Kunne ikke oprette midlertidigt folder\0"\
+  "Kunne ikke oprette installations folder\0"\
+  "Kunne ikke installere PDF viser\0"\
+  "Kunne ikke installere PDF s\303\270ge filter\0"\
+  "Kunne ikke installere browser plugin\0"\
+  "Kunne ikke tilg\303\245 midlertidig folder\0"\
+  "Kunne ikke fjerne installations folder\0"\
+  "Kunne ikke fjerne genvej\0"\
+  "Kunne ikke fjerne PDF viser\0"\
+  "Kunne ikke afinstallere PDF s\303\270ge filter\0"\
+  "Kunne ikke fjerne browser plugin\0"\
+  "Kunne ikke skrive %s til disk\0"\
+  "Kunne ikke kopiere fra midlertidig folder\0"\
+  "Kunne ikke oprette genvej\0"\
+  "Kunne ikke slette afinstallering n\303\270ger i registreringsdatabasen\0"\
+  "Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen\0"\
+  "Kunne ikke skrive afinstallerings information i registreringsdatabasen\0"\
+  "Gem &Valgmuligheder\0"\
+  "Installer PDF &browser plugin til Firefox, Chrome og Opera\0"\
+  "Installer SumatraPDF\0"\
+  "Installer SumatraPDF i &folder:\0"\
+  "Installation fejlede !\0"\
+  "Installation i gang ...\0"\
+  "Lad Windows skrivebord S\303\270ge &s\303\270g PDF dokumenter\0"\
+  "Lad Windows vise &femvisning af PDF dokumenter\0"\
+  "Luk venligst %s for at forts\303\246tte !\0"\
+  "V\303\246lg folderen hvor SumatraPDF skal installeres:\0"\
+  "Nogle installations filer er beskadiget eller mangler\0"\
+  "\0"\
+  "SumatraPDF %s installer\0"\
+  "SumatraPDF %s afinstallere\0"\
+  "SumatraPDF er afinstalleret.\0"\
+  "SumatraPDF installation ikke fundet.\0"\
+  "Tak fordi du valgte SumatraPDF !\0"\
+  "Tak ! SumatraPDF er installeret.\0"\
+  "Installationsprogrammet er fejlbeh\303\246ftet. Pr\303\270v venligst at hente det igen.\nVi beklager ulejligheden!\0"\
+  "Afinstaller SumatraPDF\0"\
+  "Afinstallationen fejlede\0"\
+  "Afinstallation p\303\245g\303\245r ...\0"\
+  "Anvend SumatraPDF som &standard PDF l\303\246ser\0";
 
 const char * gTranslations_nl = 
   "&Opties\0"\
@@ -1466,6 +1511,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_hr, 
+  gTranslations_dk, 
   gTranslations_nl, 
   gTranslations_et, 
   gTranslations_fi, 
@@ -1503,6 +1549,7 @@ const char *gLangCodes =   "en\0" \
   "ca-xv\0" \
   "cn\0" \
   "hr\0" \
+  "dk\0" \
   "nl\0" \
   "et\0" \
   "fi\0" \
@@ -1536,6 +1583,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Croatian (Hrvatski)\0" \
+  "Danish (Dansk)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
   "Finnish (Suomi)\0" \
@@ -1581,6 +1629,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_CROATIAN),
+  _LANGID(LANG_DANISH),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
   _LANGID(LANG_FINNISH),
@@ -1608,7 +1657,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (19 == idx);
+  return (2 == idx) || (20 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
