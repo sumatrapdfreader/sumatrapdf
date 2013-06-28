@@ -12,8 +12,7 @@ pdf_obj *pdf_get_inheritable(pdf_document *doc, pdf_obj *obj, char *key)
 			obj = pdf_dict_gets(obj, "Parent");
 	}
 
-	return fobj ? fobj
-				: pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(pdf_trailer(doc), "Root"), "AcroForm"), key);
+	return fobj ? fobj : pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(pdf_trailer(doc), "Root"), "AcroForm"), key);
 }
 
 int pdf_get_field_flags(pdf_document *doc, pdf_obj *obj)

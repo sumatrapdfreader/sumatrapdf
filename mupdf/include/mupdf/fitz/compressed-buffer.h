@@ -35,7 +35,7 @@ struct fz_compression_params_s
 	int type;
 	union {
 		struct {
-			int color_transform;
+			int color_transform; /* Use -1 for unset */
 		} jpeg;
 		struct {
 			int smask_in_data;

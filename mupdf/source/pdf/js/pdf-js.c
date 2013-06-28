@@ -138,13 +138,14 @@ static pdf_jsimp_obj *app_launchURL(void *jsctx, void *obj, int argc, pdf_jsimp_
 	return NULL;
 }
 
-static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
+static pdf_obj *load_color(pdf_document *doc, pdf_jsimp *imp, pdf_jsimp_obj *val)
 {
 	pdf_obj *col = NULL;
 	pdf_obj *comp = NULL;
 	pdf_jsimp_obj *jscomp = NULL;
 	int i;
 	int n;
+	fz_context *ctx = doc->ctx;
 
 	n = pdf_jsimp_array_len(imp, val);
 
@@ -154,7 +155,7 @@ static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 	if (n <= 1)
 		return NULL;
 
-	col = pdf_new_array(ctx, n-1);
+	col = pdf_new_array(doc, n-1);
 
 	fz_var(comp);
 	fz_var(jscomp);
@@ -163,7 +164,7 @@ static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 		for (i = 0; i < n-1; i++)
 		{
 			jscomp = pdf_jsimp_array_item(imp, val, i+1);
-			comp = pdf_new_real(ctx, pdf_jsimp_to_number(imp, jscomp));
+			comp = pdf_new_real(doc, pdf_jsimp_to_number(imp, jscomp));
 			pdf_array_push(col, comp);
 			pdf_jsimp_drop_obj(imp, jscomp);
 			jscomp = NULL;
@@ -242,9 +243,7 @@ static pdf_jsimp_obj *field_getDisplay(void *jsctx, void *obj)
 static void field_setDisplay(void *jsctx, void *obj, pdf_jsimp_obj *val)
 {
 	pdf_js *js = (pdf_js *)jsctx;
-	fz_context *ctx = js->doc->ctx;
 	pdf_obj *field = (pdf_obj *)obj;
-
 	if (field)
 		pdf_field_set_display(js->doc, field, (int)pdf_jsimp_to_number(js->imp, val));
 }
@@ -264,7 +263,7 @@ static void field_setFillColor(void *jsctx, void *obj, pdf_jsimp_obj *val)
 	if (!field)
 		return;
 
-	col = load_color(js->doc->ctx, js->imp, val);
+	col = load_color(js->doc, js->imp, val);
 	fz_try(ctx)
 	{
 		pdf_field_set_fill_color(js->doc, field, col);
@@ -294,7 +293,7 @@ static void field_setTextColor(void *jsctx, void *obj, pdf_jsimp_obj *val)
 	if (!field)
 		return;
 
-	col = load_color(js->doc->ctx, js->imp, val);
+	col = load_color(js->doc, js->imp, val);
 	fz_try(ctx)
 	{
 		pdf_field_set_text_color(js->doc, field, col);

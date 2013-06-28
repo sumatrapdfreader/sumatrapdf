@@ -67,9 +67,9 @@ void fz_var_imp(void *);
 int fz_push_try(fz_error_context *ex);
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_throw(CTX, ERRCODE, MSG, ...) fz_throw_imp(CTX, __FILE__, __LINE__, ERRCODE, MSG, __VA_ARGS__)
-void fz_throw_imp(fz_context *ctx, char *file, int line, int errcode, const char *fmt, ...) __printflike(5, 6) FZ_NORETURN;
-void fz_rethrow(fz_context *) FZ_NORETURN;
-void fz_rethrow_message(fz_context *, const char *, ...)  __printflike(2, 3) FZ_NORETURN;
+FZ_NORETURN void fz_throw_imp(fz_context *ctx, char *file, int line, int errcode, const char *fmt, ...) __printflike(5, 6);
+FZ_NORETURN void fz_rethrow(fz_context *);
+FZ_NORETURN void fz_rethrow_message(fz_context *, const char *, ...)  __printflike(2, 3);
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5);

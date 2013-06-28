@@ -220,7 +220,7 @@ static int pk7_verify(X509_STORE *cert_store, PKCS7 *p7, BIO *detached, char *eb
 	{
 		/* there are no signatures on this data */
 		res = 0;
-		strncpy(ebuf, "No signatures", sizeof(ebuf));
+		fz_strlcpy(ebuf, "No signatures", ebufsize);
 		goto exit;
 	}
 
@@ -235,15 +235,13 @@ static int pk7_verify(X509_STORE *cert_store, PKCS7 *p7, BIO *detached, char *eb
 
 			if (rc <= 0)
 			{
-				strncpy(ebuf, ERR_error_string(ERR_get_error(), tbuf), ebufsize-1);
+				fz_strlcpy(ebuf, ERR_error_string(ERR_get_error(), tbuf), ebufsize);
 			}
 			else
 			{
 				/* Error while checking the certificate chain */
-				snprintf(ebuf, ebufsize-1, "%s(%d): %s", X509_verify_cert_error_string(vctx.err), vctx.err, vctx.certdesc);
+				snprintf(ebuf, ebufsize, "%s(%d): %s", X509_verify_cert_error_string(vctx.err), vctx.err, vctx.certdesc);
 			}
-
-			ebuf[ebufsize-1] = 0;
 
 			res = 0;
 			goto exit;
@@ -368,7 +366,7 @@ int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 		else
 		{
 			res = 0;
-			strncpy(ebuf, "Not signed", ebufsize);
+			fz_strlcpy(ebuf, "Not signed", ebufsize);
 		}
 
 	}
@@ -379,7 +377,7 @@ int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 	fz_catch(ctx)
 	{
 		res = 0;
-		strncpy(ebuf, fz_caught_message(ctx), ebufsize);
+		fz_strlcpy(ebuf, fz_caught_message(ctx), ebufsize);
 	}
 
 	if (ebufsize > 0)
@@ -392,8 +390,7 @@ int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, 
 
 int pdf_check_signature(fz_context *ctx, pdf_document *doc, pdf_widget *widget, char *file, char *ebuf, int ebufsize)
 {
-	strncpy(ebuf, "This version of MuPDF was built without signature support", ebufsize);
-
+	fz_strlcpy(ebuf, "This version of MuPDF was built without signature support", ebufsize);
 	return 0;
 }
 

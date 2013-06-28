@@ -68,7 +68,7 @@ struct pdf_gstate_s
 struct pdf_csi_s
 {
 	fz_device *dev;
-	pdf_document *xref;
+	pdf_document *doc;
 
 	int nested_depth;
 
@@ -155,7 +155,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 	char event_state[16];
 	pdf_obj *obj, *obj2;
 	char *type;
-	pdf_ocg_descriptor *desc = csi->xref->ocg;
+	pdf_ocg_descriptor *desc = csi->doc->ocg;
 	fz_context *ctx = csi->dev->ctx;
 
 	/* Avoid infinite recursions */
@@ -286,7 +286,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 			combine = 0;
 		}
 
-		if (pdf_obj_mark(ocg))
+		if (pdf_mark_obj(ocg))
 			return 0; /* Should never happen */
 		fz_try(ctx)
 		{
@@ -316,7 +316,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		}
 		fz_always(ctx)
 		{
-			pdf_obj_unmark(ocg);
+			pdf_unmark_obj(ocg);
 		}
 		fz_catch(ctx)
 		{
@@ -1205,7 +1205,7 @@ pdf_copy_pattern_gstate(fz_context *ctx, pdf_gstate *gs, const pdf_gstate *old)
 }
 
 static pdf_csi *
-pdf_new_csi(pdf_document *xref, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate, int nested)
+pdf_new_csi(pdf_document *doc, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate, int nested)
 {
 	pdf_csi *csi;
 	fz_context *ctx = dev->ctx;
@@ -1213,7 +1213,7 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, const fz_matrix *ctm, char *even
 	csi = fz_malloc_struct(ctx, pdf_csi);
 	fz_try(ctx)
 	{
-		csi->xref = xref;
+		csi->doc = doc;
 		csi->dev = dev;
 		csi->event = event;
 
@@ -1638,7 +1638,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	fz_matrix gparent_save_ctm;
 
 	/* Avoid infinite recursion */
-	if (xobj == NULL || pdf_obj_mark(xobj->me))
+	if (xobj == NULL || pdf_mark_obj(xobj->me))
 		return;
 
 	fz_var(gstate);
@@ -1707,7 +1707,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 			pdf_grestore(csi);
 		}
 
-		pdf_obj_unmark(xobj->me);
+		pdf_unmark_obj(xobj->me);
 
 		/* wrap up transparency stacks */
 		if (xobj->transparency)
@@ -1751,7 +1751,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					gstate->font = NULL;
 				}
 
-				gstate->font = pdf_load_font(csi->xref, rdb, font, csi->nested_depth);
+				gstate->font = pdf_load_font(csi->doc, rdb, font, csi->nested_depth);
 				if (!gstate->font)
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find font in store");
 				gstate->size = pdf_to_real(pdf_array_get(val, 1));
@@ -1847,7 +1847,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 				group = pdf_dict_gets(val, "G");
 				if (!group)
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load softmask xobject (%d %d R)", pdf_to_num(val), pdf_to_gen(val));
-				xobj = pdf_load_xobject(csi->xref, group);
+				xobj = pdf_load_xobject(csi->doc, group);
 
 				colorspace = xobj->colorspace;
 				if (!colorspace)
@@ -1876,7 +1876,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 				tr = pdf_dict_gets(val, "TR");
 				/* SumatraPDF: support transfer functions */
 				if (tr)
-					gstate->softmask_tr = pdf_load_transfer_function(csi->xref, tr, 0);
+					gstate->softmask_tr = pdf_load_transfer_function(csi->doc, tr, 0);
 			}
 			else if (pdf_is_name(val) && !strcmp(pdf_to_name(val), "None"))
 			{
@@ -1893,7 +1893,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		{
 			fz_drop_transfer_function(ctx, gstate->tr);
 			gstate->tr = NULL;
-			gstate->tr = pdf_load_transfer_function(csi->xref, val, !strcmp(s, "TR2"));
+			gstate->tr = pdf_load_transfer_function(csi->doc, val, !strcmp(s, "TR2"));
 		}
 	}
 }
@@ -1938,7 +1938,7 @@ static void pdf_run_BI(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	fz_image *img;
 	pdf_obj *obj;
 
-	obj = pdf_parse_dict(csi->xref, file, &csi->xref->lexbuf.base);
+	obj = pdf_parse_dict(csi->doc, file, &csi->doc->lexbuf.base);
 
 	/* read whitespace after ID keyword */
 	ch = fz_read_byte(file);
@@ -1948,7 +1948,7 @@ static void pdf_run_BI(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 
 	fz_try(ctx)
 	{
-		img = pdf_load_inline_image(csi->xref, rdb, obj, file);
+		img = pdf_load_inline_image(csi->doc, rdb, obj, file);
 	}
 	fz_always(ctx)
 	{
@@ -2031,7 +2031,7 @@ static void pdf_run_cs_imp(pdf_csi *csi, pdf_obj *rdb, int what)
 			obj = pdf_dict_gets(dict, csi->name);
 			if (!obj)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find colorspace resource '%s'", csi->name);
-			colorspace = pdf_load_colorspace(csi->xref, obj);
+			colorspace = pdf_load_colorspace(csi->doc, obj);
 		}
 
 		pdf_set_colorspace(csi, what, colorspace);
@@ -2087,7 +2087,7 @@ static void pdf_run_Do(pdf_csi *csi, pdf_obj *rdb)
 	{
 		pdf_xobject *xobj;
 
-		xobj = pdf_load_xobject(csi->xref, obj);
+		xobj = pdf_load_xobject(csi->doc, obj);
 
 		/* Inherit parent resources, in case this one was empty XXX check where it's loaded */
 		if (!xobj->resources)
@@ -2111,7 +2111,7 @@ static void pdf_run_Do(pdf_csi *csi, pdf_obj *rdb)
 	{
 		if ((csi->dev->hints & FZ_IGNORE_IMAGE) == 0)
 		{
-			fz_image *img = pdf_load_image(csi->xref, obj);
+			fz_image *img = pdf_load_image(csi->doc, obj);
 
 			fz_try(ctx)
 			{
@@ -2250,14 +2250,14 @@ static void pdf_run_SC_imp(pdf_csi *csi, pdf_obj *rdb, int what, pdf_material *m
 		if (pdf_to_int(patterntype) == 1)
 		{
 			pdf_pattern *pat;
-			pat = pdf_load_pattern(csi->xref, obj);
+			pat = pdf_load_pattern(csi->doc, obj);
 			pdf_set_pattern(csi, what, pat, csi->top > 0 ? csi->stack : NULL);
 			pdf_drop_pattern(ctx, pat);
 		}
 		else if (pdf_to_int(patterntype) == 2)
 		{
 			fz_shade *shd;
-			shd = pdf_load_shading(csi->xref, obj);
+			shd = pdf_load_shading(csi->doc, obj);
 			pdf_set_shade(csi, what, shd);
 			fz_drop_shade(ctx, shd);
 		}
@@ -2333,7 +2333,7 @@ static void pdf_run_Tf(pdf_csi *csi, pdf_obj *rdb)
 	if (!obj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find font resource: '%s'", csi->name);
 
-	gstate->font = pdf_load_font(csi->xref, rdb, obj, csi->nested_depth);
+	gstate->font = pdf_load_font(csi->doc, rdb, obj, csi->nested_depth);
 }
 
 static void pdf_run_Tr(pdf_csi *csi)
@@ -2618,7 +2618,7 @@ static void pdf_run_sh(pdf_csi *csi, pdf_obj *rdb)
 
 	if ((csi->dev->hints & FZ_IGNORE_SHADE) == 0)
 	{
-		shd = pdf_load_shading(csi->xref, obj);
+		shd = pdf_load_shading(csi->doc, obj);
 
 		fz_try(ctx)
 		{
@@ -2925,7 +2925,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 							pdf_drop_obj(csi->obj);
 							csi->obj = NULL;
 						}
-						csi->obj = pdf_parse_array(csi->xref, file, buf);
+						csi->obj = pdf_parse_array(csi->doc, file, buf);
 					}
 					else
 					{
@@ -2939,7 +2939,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 						pdf_drop_obj(csi->obj);
 						csi->obj = NULL;
 					}
-					csi->obj = pdf_parse_dict(csi->xref, file, buf);
+					csi->obj = pdf_parse_dict(csi->doc, file, buf);
 					break;
 
 				case PDF_TOK_NAME:
@@ -2977,7 +2977,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 							pdf_drop_obj(csi->obj);
 							csi->obj = NULL;
 						}
-						csi->obj = pdf_new_string(ctx, buf->scratch, buf->len);
+						csi->obj = pdf_new_string(csi->doc, buf->scratch, buf->len);
 					}
 					break;
 
@@ -3066,7 +3066,7 @@ pdf_run_contents_object(pdf_csi *csi, pdf_obj *rdb, pdf_obj *contents)
 	if (contents == NULL)
 		return;
 
-	file = pdf_open_contents_stream(csi->xref, contents);
+	file = pdf_open_contents_stream(csi->doc, contents);
 	fz_try(ctx)
 	{
 		pdf_run_contents_stream(csi, rdb, file);
@@ -3105,7 +3105,7 @@ pdf_run_contents_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents)
 	}
 }
 
-static void pdf_run_page_contents_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
+static void pdf_run_page_contents_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
 {
 	fz_context *ctx = dev->ctx;
 	pdf_csi *csi;
@@ -3119,7 +3119,7 @@ static void pdf_run_page_contents_with_usage(pdf_document *xref, pdf_page *page,
 		fz_begin_group(dev, fz_transform_rect(&mediabox, &local_ctm), 1, 0, 0, 1);
 	}
 
-	csi = pdf_new_csi(xref, dev, &local_ctm, event, cookie, NULL, 0);
+	csi = pdf_new_csi(doc, dev, &local_ctm, event, cookie, NULL, 0);
 	fz_try(ctx)
 	{
 		/* We need to save an extra level here to allow for level 0
@@ -3142,12 +3142,12 @@ static void pdf_run_page_contents_with_usage(pdf_document *xref, pdf_page *page,
 		fz_end_group(dev);
 }
 
-void pdf_run_page_contents(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
+void pdf_run_page_contents(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
-	pdf_run_page_contents_with_usage(xref, page, dev, ctm, "View", cookie);
+	pdf_run_page_contents_with_usage(doc, page, dev, ctm, "View", cookie);
 }
 
-static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
+static void pdf_run_annot_with_usage(pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
 {
 	fz_context *ctx = dev->ctx;
 	pdf_csi *csi;
@@ -3168,7 +3168,7 @@ static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_ann
 	if (!strcmp(event, "View") && (flags & (1 << 5))) /* NoView */
 		return;
 
-	csi = pdf_new_csi(xref, dev, &local_ctm, event, cookie, NULL, 0);
+	csi = pdf_new_csi(doc, dev, &local_ctm, event, cookie, NULL, 0);
 	if (!pdf_is_hidden_ocg(pdf_dict_gets(annot->obj, "OC"), csi, page->resources))
 	{
 		fz_try(ctx)
@@ -3189,12 +3189,12 @@ static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_ann
 	pdf_free_csi(csi);
 }
 
-void pdf_run_annot(pdf_document *xref, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
+void pdf_run_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
-	pdf_run_annot_with_usage(xref, page, annot, dev, ctm, "View", cookie);
+	pdf_run_annot_with_usage(doc, page, annot, dev, ctm, "View", cookie);
 }
 
-static void pdf_run_page_annots_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
+static void pdf_run_page_annots_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
 {
 	pdf_annot *annot;
 
@@ -3216,28 +3216,28 @@ static void pdf_run_page_annots_with_usage(pdf_document *xref, pdf_page *page, f
 			cookie->progress++;
 		}
 
-		pdf_run_annot_with_usage(xref, page, annot, dev, ctm, event, cookie);
+		pdf_run_annot_with_usage(doc, page, annot, dev, ctm, event, cookie);
 	}
 }
 
 void
-pdf_run_page_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
+pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
 {
-	pdf_run_page_contents_with_usage(xref, page, dev, ctm, event, cookie);
-	pdf_run_page_annots_with_usage(xref, page, dev, ctm, event, cookie);
+	pdf_run_page_contents_with_usage(doc, page, dev, ctm, event, cookie);
+	pdf_run_page_annots_with_usage(doc, page, dev, ctm, event, cookie);
 }
 
 void
-pdf_run_page(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
+pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
-	pdf_run_page_with_usage(xref, page, dev, ctm, "View", cookie);
+	pdf_run_page_with_usage(doc, page, dev, ctm, "View", cookie);
 }
 
 void
-pdf_run_glyph(pdf_document *xref, pdf_obj *resources, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nested_depth)
+pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nested_depth)
 {
-	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL, gstate, nested_depth+1);
-	fz_context *ctx = xref->ctx;
+	pdf_csi *csi = pdf_new_csi(doc, dev, ctm, "View", NULL, gstate, nested_depth+1);
+	fz_context *ctx = doc->ctx;
 
 	fz_try(ctx)
 	{

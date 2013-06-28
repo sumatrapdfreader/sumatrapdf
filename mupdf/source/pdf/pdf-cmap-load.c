@@ -15,14 +15,14 @@ pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
  * Load CMap stream in PDF file
  */
 pdf_cmap *
-pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
+pdf_load_embedded_cmap(pdf_document *doc, pdf_obj *stmobj)
 {
 	fz_stream *file = NULL;
 	pdf_cmap *cmap = NULL;
 	pdf_cmap *usecmap;
 	pdf_obj *wmode;
 	pdf_obj *obj = NULL;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	int phase = 0;
 
 	fz_var(phase);
@@ -40,7 +40,7 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 
 	fz_try(ctx)
 	{
-		file = pdf_open_stream(xref, pdf_to_num(stmobj), pdf_to_gen(stmobj));
+		file = pdf_open_stream(doc, pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		phase = 1;
 		cmap = pdf_load_cmap(ctx, file);
 		phase = 2;
@@ -60,9 +60,9 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 		else if (pdf_is_indirect(obj))
 		{
 			phase = 3;
-			pdf_obj_mark(obj);
-			usecmap = pdf_load_embedded_cmap(xref, obj);
-			pdf_obj_unmark(obj);
+			pdf_mark_obj(obj);
+			usecmap = pdf_load_embedded_cmap(doc, obj);
+			pdf_unmark_obj(obj);
 			phase = 4;
 			pdf_set_usecmap(ctx, cmap, usecmap);
 			pdf_drop_cmap(ctx, usecmap);
@@ -85,7 +85,7 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 		else
 		{
 			if (phase == 3)
-				pdf_obj_unmark(obj);
+				pdf_unmark_obj(obj);
 			fz_rethrow_message(ctx, "cannot load embedded usecmap (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 		}
 	}

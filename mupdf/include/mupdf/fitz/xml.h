@@ -4,7 +4,6 @@
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
 
-
 /*
 	XML document model
 */

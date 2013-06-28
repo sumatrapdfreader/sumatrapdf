@@ -161,7 +161,11 @@ void fz_free_argv(int argc, char **argv);
 #ifdef __GNUC__
 #define FZ_NORETURN __attribute__((noreturn))
 #else
+#ifdef _MSC_VER
+#define FZ_NORETURN __declspec(noreturn)
+#else
 #define FZ_NORETURN
+#endif
 #endif
 
 /*
@@ -197,7 +201,10 @@ extern void __gnu_mcount_nc(void);
  * the ARM functions to a separate file and arrange for it to be compiled
  * without thumb mode, we can save some time on entry.
  */
-#ifdef ARCH_THUMB
+/* This is slightly suboptimal; __thumb__ and __thumb2__ become defined
+ * and undefined by #pragma arm/#pragma thumb - but we can't define a
+ * macro to track that. */
+#if defined(__thumb__) || defined(__thumb2__)
 #define ENTER_ARM ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n" ENTER_PG
 #define ENTER_THUMB "9:.thumb\n" ENTER_PG
 #else

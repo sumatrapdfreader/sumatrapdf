@@ -186,6 +186,7 @@ EXPORTS
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
 	fz_drop_glyph_cache_context
+	fz_purge_glyph_cache
 	fz_outline_ft_glyph
 	fz_outline_glyph
 	fz_render_ft_glyph
@@ -433,10 +434,9 @@ EXPORTS
 	pdf_delete_annot
 	pdf_set_annot_appearance
 	pdf_set_markup_annot_quadpoints
-	pdf_set_markup_obj_appearance
 	pdf_set_markup_appearance
 	pdf_set_ink_annot_list
-	pdf_set_ink_obj_appearance
+	pdf_set_ink_appearance
 	pdf_annot_obj_type
 	pdf_new_cmap
 	pdf_keep_cmap
@@ -481,6 +481,13 @@ EXPORTS
 	pdf_has_permission
 	pdf_meta
 	pdf_load_outline
+	pdf_create_document
+	pdf_create_page
+	pdf_insert_page
+	pdf_delete_page
+	pdf_delete_page_range
+	pdf_page_write
+	pdf_finish_edit
 
 	pdf_get_inheritable
 	pdf_get_field_flags
@@ -550,8 +557,13 @@ EXPORTS
 	pdf_is_stream
 	pdf_objcmp
 	pdf_obj_marked
-	pdf_obj_mark
-	pdf_obj_unmark
+	pdf_mark_obj
+	pdf_unmark_obj
+	pdf_set_obj_memo
+	pdf_obj_memo
+	pdf_obj_is_dirty
+	pdf_dirty_obj
+	pdf_clean_obj
 	pdf_to_bool
 	pdf_to_int
 	pdf_to_real

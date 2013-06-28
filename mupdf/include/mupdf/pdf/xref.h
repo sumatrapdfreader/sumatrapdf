@@ -4,17 +4,17 @@
 /*
 	pdf_create_object: Allocate a slot in the xref table and return a fresh unused object number.
 */
-int pdf_create_object(pdf_document *xref);
+int pdf_create_object(pdf_document *doc);
 
 /*
 	pdf_delete_object: Remove object from xref table, marking the slot as free.
 */
-void pdf_delete_object(pdf_document *xref, int num);
+void pdf_delete_object(pdf_document *doc, int num);
 
 /*
 	pdf_update_object: Replace object in xref table with the passed in object.
 */
-void pdf_update_object(pdf_document *xref, int num, pdf_obj *obj);
+void pdf_update_object(pdf_document *doc, int num, pdf_obj *obj);
 
 /*
 	pdf_update_stream: Replace stream contents for object in xref table with the passed in buffer.
@@ -24,7 +24,7 @@ void pdf_update_object(pdf_document *xref, int num, pdf_obj *obj);
 	the stream dictionary. If storing deflated data, make sure to set the
 	/Filter value to /FlateDecode.
 */
-void pdf_update_stream(pdf_document *xref, int num, fz_buffer *buf);
+void pdf_update_stream(pdf_document *doc, int num, fz_buffer *buf);
 
 /*
  * xref and object / stream api
@@ -64,7 +64,7 @@ fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length
 fz_compressed_buffer *pdf_load_compressed_stream(pdf_document *doc, int num, int gen);
 fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
 fz_stream *pdf_open_compressed_stream(fz_context *ctx, fz_compressed_buffer *);
-fz_stream *pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj);
+fz_stream *pdf_open_contents_stream(pdf_document *doc, pdf_obj *obj);
 fz_buffer *pdf_load_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, int *truncated);
 fz_stream *pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
@@ -75,6 +75,7 @@ int pdf_xref_len(pdf_document *doc);
 pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int i);
 pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i);
 void pdf_replace_xref(pdf_document *doc, pdf_xref_entry *entries, int n);
+void pdf_xref_ensure_incremental_object(pdf_document *doc, int num);
 
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);

@@ -33,11 +33,11 @@ pdf_pattern_size(pdf_pattern *pat)
 }
 
 pdf_pattern *
-pdf_load_pattern(pdf_document *xref, pdf_obj *dict)
+pdf_load_pattern(pdf_document *doc, pdf_obj *dict)
 {
 	pdf_pattern *pat;
 	pdf_obj *obj;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
 	if ((pat = pdf_find_item(ctx, pdf_free_pattern_imp, dict)))
 	{

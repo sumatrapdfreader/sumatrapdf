@@ -16,6 +16,7 @@
 void fz_new_glyph_cache_context(fz_context *ctx);
 fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx);
 void fz_drop_glyph_cache_context(fz_context *ctx);
+void fz_purge_glyph_cache(fz_context *ctx);
 
 fz_path *fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm);
 fz_path *fz_outline_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm);

@@ -3,7 +3,7 @@
 /* ICCBased */
 
 static fz_colorspace *
-load_icc_based(pdf_document *xref, pdf_obj *dict)
+load_icc_based(pdf_document *doc, pdf_obj *dict)
 {
 	int n;
 
@@ -12,23 +12,23 @@ load_icc_based(pdf_document *xref, pdf_obj *dict)
 	/* SumatraPDF: support alternate colorspaces for ICCBased */
 	if (pdf_dict_gets(dict, "Alternate"))
 	{
-		fz_colorspace *cs_alt = pdf_load_colorspace(xref, pdf_dict_gets(dict, "Alternate"));
+		fz_colorspace *cs_alt = pdf_load_colorspace(doc, pdf_dict_gets(dict, "Alternate"));
 		if (cs_alt->n != n)
 		{
-			fz_drop_colorspace(xref->ctx, cs_alt);
-			fz_throw(xref->ctx, FZ_ERROR_GENERIC, "ICCBased /Alternate colorspace must have %d components (not %d)", n, cs_alt->n);
+			fz_drop_colorspace(doc->ctx, cs_alt);
+			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "ICCBased /Alternate colorspace must have %d components (not %d)", n, cs_alt->n);
 		}
 		return cs_alt;
 	}
 
 	switch (n)
 	{
-	case 1: return fz_device_gray(xref->ctx);
-	case 3: return fz_device_rgb(xref->ctx);
-	case 4: return fz_device_cmyk(xref->ctx);
+	case 1: return fz_device_gray(doc->ctx);
+	case 3: return fz_device_rgb(doc->ctx);
+	case 4: return fz_device_cmyk(doc->ctx);
 	}
 
-	fz_throw(xref->ctx, FZ_ERROR_GENERIC, "syntaxerror: ICCBased must have 1, 3 or 4 components");
+	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "syntaxerror: ICCBased must have 1, 3 or 4 components");
 	return NULL; /* Stupid MSVC */
 }
 
@@ -102,11 +102,11 @@ free_separation(fz_context *ctx, fz_colorspace *cs)
 }
 
 static fz_colorspace *
-load_separation(pdf_document *xref, pdf_obj *array)
+load_separation(pdf_document *doc, pdf_obj *array)
 {
 	fz_colorspace *cs;
 	struct separation *sep = NULL;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	pdf_obj *nameobj = pdf_array_get(array, 1);
 	pdf_obj *baseobj = pdf_array_get(array, 2);
 	pdf_obj *tintobj = pdf_array_get(array, 3);
@@ -125,11 +125,11 @@ load_separation(pdf_document *xref, pdf_obj *array)
 	if (n > FZ_MAX_COLORS)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "too many components in colorspace");
 
-	base = pdf_load_colorspace(xref, baseobj);
+	base = pdf_load_colorspace(doc, baseobj);
 
 	fz_try(ctx)
 	{
-		tint = pdf_load_function(xref, tintobj, n, base->n);
+		tint = pdf_load_function(doc, tintobj, n, base->n);
 		/* RJW: fz_drop_colorspace(ctx, base);
 		 * "cannot load tint function (%d %d R)", pdf_to_num(tintobj), pdf_to_gen(tintobj) */
 
@@ -155,9 +155,9 @@ load_separation(pdf_document *xref, pdf_obj *array)
 }
 
 static fz_colorspace *
-load_indexed(pdf_document *xref, pdf_obj *array)
+load_indexed(pdf_document *doc, pdf_obj *array)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	pdf_obj *baseobj = pdf_array_get(array, 1);
 	pdf_obj *highobj = pdf_array_get(array, 2);
 	pdf_obj *lookupobj = pdf_array_get(array, 3);
@@ -171,7 +171,7 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 
 	fz_try(ctx)
 	{
-		base = pdf_load_colorspace(xref, baseobj);
+		base = pdf_load_colorspace(doc, baseobj);
 
 		high = pdf_to_int(highobj);
 		high = fz_clampi(high, 0, 255);
@@ -192,7 +192,7 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 
 			fz_try(ctx)
 			{
-				file = pdf_open_stream(xref, pdf_to_num(lookupobj), pdf_to_gen(lookupobj));
+				file = pdf_open_stream(doc, pdf_to_num(lookupobj), pdf_to_gen(lookupobj));
 				i = fz_read(file, lookup, n);
 			}
 			fz_always(ctx)
@@ -224,9 +224,9 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 /* Parse and create colorspace from PDF object */
 
 static fz_colorspace *
-pdf_load_colorspace_imp(pdf_document *xref, pdf_obj *obj)
+pdf_load_colorspace_imp(pdf_document *doc, pdf_obj *obj)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
 	if (pdf_obj_marked(obj))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Recursion in colorspace definition");
@@ -285,20 +285,20 @@ pdf_load_colorspace_imp(pdf_document *xref, pdf_obj *obj)
 				fz_colorspace *cs;
 				fz_try(ctx)
 				{
-					pdf_obj_mark(obj);
+					pdf_mark_obj(obj);
 					if (!strcmp(str, "ICCBased"))
-						cs = load_icc_based(xref, pdf_array_get(obj, 1));
+						cs = load_icc_based(doc, pdf_array_get(obj, 1));
 
 					else if (!strcmp(str, "Indexed"))
-						cs = load_indexed(xref, obj);
+						cs = load_indexed(doc, obj);
 					else if (!strcmp(str, "I"))
-						cs = load_indexed(xref, obj);
+						cs = load_indexed(doc, obj);
 
 					else if (!strcmp(str, "Separation"))
-						cs = load_separation(xref, obj);
+						cs = load_separation(doc, obj);
 
 					else if (!strcmp(str, "DeviceN"))
-						cs = load_separation(xref, obj);
+						cs = load_separation(doc, obj);
 					else if (!strcmp(str, "Pattern"))
 					{
 						pdf_obj *pobj;
@@ -310,14 +310,14 @@ pdf_load_colorspace_imp(pdf_document *xref, pdf_obj *obj)
 							break;
 						}
 
-						cs = pdf_load_colorspace(xref, pobj);
+						cs = pdf_load_colorspace(doc, pobj);
 					}
 					else
 						fz_throw(ctx, FZ_ERROR_GENERIC, "syntaxerror: unknown colorspace %s", str);
 				}
 				fz_always(ctx)
 				{
-					pdf_obj_unmark(obj);
+					pdf_unmark_obj(obj);
 				}
 				fz_catch(ctx)
 				{
@@ -328,14 +328,14 @@ pdf_load_colorspace_imp(pdf_document *xref, pdf_obj *obj)
 		}
 	}
 
-	fz_throw(xref->ctx, FZ_ERROR_GENERIC, "syntaxerror: could not parse color space (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
+	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "syntaxerror: could not parse color space (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 	return NULL; /* Stupid MSVC */
 }
 
 fz_colorspace *
-pdf_load_colorspace(pdf_document *xref, pdf_obj *obj)
+pdf_load_colorspace(pdf_document *doc, pdf_obj *obj)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	fz_colorspace *cs;
 
 	if ((cs = pdf_find_item(ctx, fz_free_colorspace_imp, obj)))
@@ -343,7 +343,7 @@ pdf_load_colorspace(pdf_document *xref, pdf_obj *obj)
 		return cs;
 	}
 
-	cs = pdf_load_colorspace_imp(xref, obj);
+	cs = pdf_load_colorspace_imp(doc, obj);
 
 	pdf_store_item(ctx, obj, cs, cs->size);
 

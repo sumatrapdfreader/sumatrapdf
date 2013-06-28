@@ -862,7 +862,6 @@ function AFRange_Validate(lowerCheck, lowerLimit, upperCheck, upperLimit)
 		event.rc = false;
 	}
 
-
 	if (!event.rc)
 	{
 		if (lowerCheck && upperCheck)

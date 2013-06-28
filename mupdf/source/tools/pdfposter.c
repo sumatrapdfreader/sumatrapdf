@@ -28,34 +28,33 @@ static void usage(void)
  * Recreate page tree to only retain specified pages.
  */
 
-static void decimatepages(pdf_document *xref)
+static void decimatepages(pdf_document *doc)
 {
 	pdf_obj *oldroot, *root, *pages, *kids, *parent;
-	fz_context *ctx = xref->ctx;
-	int num_pages = pdf_count_pages(xref);
+	int num_pages = pdf_count_pages(doc);
 	int page, kidcount;
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
-	oldroot = pdf_dict_gets(pdf_trailer(xref), "Root");
+	oldroot = pdf_dict_gets(pdf_trailer(doc), "Root");
 	pages = pdf_dict_gets(oldroot, "Pages");
 
-	root = pdf_new_dict(ctx, 2);
+	root = pdf_new_dict(doc, 2);
 	pdf_dict_puts(root, "Type", pdf_dict_gets(oldroot, "Type"));
 	pdf_dict_puts(root, "Pages", pdf_dict_gets(oldroot, "Pages"));
 
-	pdf_update_object(xref, pdf_to_num(oldroot), root);
+	pdf_update_object(doc, pdf_to_num(oldroot), root);
 
 	pdf_drop_obj(root);
 
 	/* Create a new kids array with only the pages we want to keep */
-	parent = pdf_new_indirect(ctx, pdf_to_num(pages), pdf_to_gen(pages), xref);
-	kids = pdf_new_array(ctx, 1);
+	parent = pdf_new_indirect(doc, pdf_to_num(pages), pdf_to_gen(pages));
+	kids = pdf_new_array(doc, 1);
 
 	kidcount = 0;
 	for (page=0; page < num_pages; page++)
 	{
-		pdf_page *page_details = pdf_load_page(xref, page);
+		pdf_page *page_details = pdf_load_page(doc, page);
 		int xf = x_factor, yf = y_factor;
 		int x, y;
 		float w = page_details->mediabox.x1 - page_details->mediabox.x0;
@@ -82,12 +81,12 @@ static void decimatepages(pdf_document *xref)
 				fz_rect mb;
 				int num;
 
-				newpageobj = pdf_copy_dict(ctx, xref->page_objs[page]);
-				num = pdf_create_object(xref);
-				pdf_update_object(xref, num, newpageobj);
-				newpageref = pdf_new_indirect(ctx, num, 0, xref);
+				newpageobj = pdf_copy_dict(doc->page_objs[page]);
+				num = pdf_create_object(doc);
+				pdf_update_object(doc, num, newpageobj);
+				newpageref = pdf_new_indirect(doc, num, 0);
 
-				newmediabox = pdf_new_array(ctx, 4);
+				newmediabox = pdf_new_array(doc, 4);
 
 				mb.x0 = page_details->mediabox.x0 + (w/xf)*x;
 				if (x == xf-1)
@@ -100,10 +99,10 @@ static void decimatepages(pdf_document *xref)
 				else
 					mb.y1 = page_details->mediabox.y0 + (h/yf)*(y+1);
 
-				pdf_array_push(newmediabox, pdf_new_real(ctx, mb.x0));
-				pdf_array_push(newmediabox, pdf_new_real(ctx, mb.y0));
-				pdf_array_push(newmediabox, pdf_new_real(ctx, mb.x1));
-				pdf_array_push(newmediabox, pdf_new_real(ctx, mb.y1));
+				pdf_array_push(newmediabox, pdf_new_real(doc, mb.x0));
+				pdf_array_push(newmediabox, pdf_new_real(doc, mb.y0));
+				pdf_array_push(newmediabox, pdf_new_real(doc, mb.x1));
+				pdf_array_push(newmediabox, pdf_new_real(doc, mb.y1));
 
 				pdf_dict_puts(newpageobj, "Parent", parent);
 				pdf_dict_puts(newpageobj, "MediaBox", newmediabox);
@@ -119,7 +118,7 @@ static void decimatepages(pdf_document *xref)
 	pdf_drop_obj(parent);
 
 	/* Update page count and kids array */
-	pdf_dict_puts(pages, "Count", pdf_new_int(ctx, kidcount));
+	pdf_dict_puts(pages, "Count", pdf_new_int(doc, kidcount));
 	pdf_dict_puts(pages, "Kids", kids);
 	pdf_drop_obj(kids);
 }
@@ -131,7 +130,7 @@ int pdfposter_main(int argc, char **argv)
 	char *password = "";
 	int c;
 	fz_write_options opts;
-	pdf_document *xref;
+	pdf_document *doc;
 	fz_context *ctx;
 
 	opts.do_garbage = 0;
@@ -167,17 +166,17 @@ int pdfposter_main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_document_no_run(ctx, infile);
-	if (pdf_needs_password(xref))
-		if (!pdf_authenticate_password(xref, password))
+	doc = pdf_open_document_no_run(ctx, infile);
+	if (pdf_needs_password(doc))
+		if (!pdf_authenticate_password(doc, password))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
 	/* Only retain the specified subset of the pages */
-	decimatepages(xref);
+	decimatepages(doc);
 
-	pdf_write_document(xref, outfile, &opts);
+	pdf_write_document(doc, outfile, &opts);
 
-	pdf_close_document(xref);
+	pdf_close_document(doc);
 	fz_free_context(ctx);
 	return 0;
 }

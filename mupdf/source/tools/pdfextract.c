@@ -67,7 +67,7 @@ static void saveimage(int num)
 	pdf_obj *ref;
 	char name[32];
 
-	ref = pdf_new_indirect(ctx, num, 0, doc);
+	ref = pdf_new_indirect(doc, num, 0);
 
 	/* TODO: detect DCTD and save as jpeg */
 

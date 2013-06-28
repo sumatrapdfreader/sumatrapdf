@@ -18,7 +18,7 @@
 
 enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
-enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_TGA, OUT_BMP };
+enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_PDF, OUT_TGA, OUT_BMP };
 
 enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA };
 
@@ -38,10 +38,11 @@ static const suffix_t suffix_table[] =
 	{ ".pbm", OUT_PBM },
 	{ ".svg", OUT_SVG },
 	{ ".pwg", OUT_PWG },
-	{ ".pcl", OUT_PCL }
-	, { ".tga", OUT_TGA } /* SumatraPDF: support TGA as output format */
+	{ ".pcl", OUT_PCL },
+	{ ".pdf", OUT_PDF },
+	{ ".tga", OUT_TGA }, /* SumatraPDF: support TGA as output format */
 #ifdef GDI_PLUS_BMP_RENDERER
-	, { ".bmp", OUT_BMP }
+	{ ".bmp", OUT_BMP },
 #endif
 };
 
@@ -83,10 +84,11 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_PBM, CS_MONO, { CS_MONO } },
 	{ OUT_SVG, CS_RGB, { CS_RGB } },
 	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } },
-	{ OUT_PCL, CS_MONO, { CS_MONO } }
+	{ OUT_PCL, CS_MONO, { CS_MONO } },
+	{ OUT_PDF, CS_RGB, { CS_RGB } }
 	/* SumatraPDF: support TGA as output format */
-	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } }
-	, { OUT_BMP, CS_RGB, { CS_RGB } }
+	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+	{ OUT_BMP, CS_RGB, { CS_RGB } },
 };
 
 /*
@@ -148,6 +150,7 @@ static int showxml = 0;
 static int showtext = 0;
 static int showtime = 0;
 static int showmd5 = 0;
+static pdf_document *pdfout = NULL;
 static int showoutline = 0;
 static int uselist = 1;
 static int alphabits = 8;
@@ -630,6 +633,44 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	if (showmd5 || showtime)
 		printf("page %s %d", filename, pagenum);
 
+	if (pdfout)
+	{
+		fz_matrix ctm;
+		fz_rect bounds, tbounds;
+		pdf_page *newpage;
+
+		fz_bound_page(doc, page, &bounds);
+		fz_rotate(&ctm, rotation);
+		tbounds = bounds;
+		fz_transform_rect(&tbounds, &ctm);
+
+		newpage = pdf_create_page(pdfout, bounds, 72, 0);
+
+		fz_try(ctx)
+		{
+			dev = pdf_page_write(pdfout, newpage);
+			if (list)
+				fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
+			else
+				fz_run_page(doc, page, dev, &ctm, &cookie);
+			fz_free_device(dev);
+			dev = NULL;
+		}
+		fz_always(ctx)
+		{
+			fz_free_device(dev);
+			dev = NULL;
+		}
+		fz_catch(ctx)
+		{
+			fz_drop_display_list(ctx, list);
+			fz_free_page(doc, page);
+			fz_rethrow(ctx);
+		}
+		pdf_insert_page(pdfout, newpage, INT_MAX);
+		pdf_free_page(pdfout, newpage);
+	}
+
 	if (output && output_format == OUT_SVG)
 	{
 		float zoom;
@@ -682,7 +723,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		drawbmp(ctx, doc, page, list, pagenum, &cookie);
 	else
 #endif
-	if ((output && output_format != OUT_SVG) || showmd5 || showtime)
+	if ((output && output_format != OUT_SVG && !pdfout)|| showmd5 || showtime)
 	{
 		float zoom;
 		fz_matrix ctm;
@@ -1102,6 +1143,11 @@ int main(int argc, char **argv)
 		break;
 	}
 
+	if (output_format == OUT_PDF)
+	{
+		pdfout = pdf_create_document(ctx);
+	}
+
 	timing.count = 0;
 	timing.total = 0;
 	timing.min = 1 << 30;
@@ -1203,6 +1249,14 @@ int main(int argc, char **argv)
 		errored = 1;
 	}
 
+	if (pdfout)
+	{
+		fz_write_options opts = { 0 };
+
+		pdf_write_document(pdfout, output, &opts);
+		pdf_close_document(pdfout);
+	}
+
 	if (showtext == TEXT_HTML)
 	{
 		fz_printf(out, "</body>\n");
@@ -1211,7 +1265,7 @@ int main(int argc, char **argv)
 		fz_printf(out, "</style>\n");
 	}
 
-	if (showtext)
+	if (showtext && 0 /* SumatraPDF: leak instead of crashing */)
 		fz_free_text_sheet(ctx, sheet);
 
 	if (showxml || showtext)

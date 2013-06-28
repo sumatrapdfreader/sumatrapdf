@@ -831,13 +831,13 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 }
 
 static void
-load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num, int gen)
+load_postscript_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, int gen)
 {
 	fz_stream *stream = NULL;
 	int codeptr;
 	pdf_lexbuf buf;
 	pdf_token tok;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	int locked = 0;
 
 	pdf_lexbuf_init(ctx, &buf, PDF_LEXBUF_SMALL);
@@ -847,7 +847,7 @@ load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int 
 
 	fz_try(ctx)
 	{
-		stream = pdf_open_stream(xref, num, gen);
+		stream = pdf_open_stream(doc, num, gen);
 
 		tok = pdf_lex(stream, &buf);
 		if (tok != PDF_TOK_OPEN_BRACE)
@@ -905,9 +905,9 @@ eval_postscript_func(fz_context *ctx, pdf_function *func, float *in, float *out)
 #define MAX_SAMPLE_FUNCTION_SIZE (100 << 20)
 
 static void
-load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num, int gen)
+load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, int gen)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	fz_stream *stream;
 	pdf_obj *obj;
 	int samplecount;
@@ -982,7 +982,7 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	func->u.sa.samples = fz_malloc_array(ctx, samplecount, sizeof(float));
 	func->base.size += samplecount * sizeof(float);
 
-	stream = pdf_open_stream(xref, num, gen);
+	stream = pdf_open_stream(doc, num, gen);
 
 	/* read samples */
 	for (i = 0; i < samplecount; i++)
@@ -1209,9 +1209,9 @@ eval_exponential_func(fz_context *ctx, pdf_function *func, float in, float *out)
  */
 
 static void
-load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
+load_stitching_func(pdf_function *func, pdf_document *doc, pdf_obj *dict)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	fz_function **funcs;
 	pdf_obj *obj;
 	pdf_obj *sub;
@@ -1231,7 +1231,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 
 	fz_try(ctx)
 	{
-		pdf_obj_mark(obj);
+		pdf_mark_obj(obj);
 		k = pdf_array_len(obj);
 
 		func->u.st.funcs = fz_malloc_array(ctx, k, sizeof(fz_function*));
@@ -1242,7 +1242,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 		for (i = 0; i < k; i++)
 		{
 			sub = pdf_array_get(obj, i);
-			funcs[i] = pdf_load_function(xref, sub, 1, func->base.n);
+			funcs[i] = pdf_load_function(doc, sub, 1, func->base.n);
 
 			func->base.size += fz_function_size(funcs[i]);
 			func->u.st.k ++;
@@ -1255,7 +1255,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 	}
 	fz_always(ctx)
 	{
-		pdf_obj_unmark(obj);
+		pdf_unmark_obj(obj);
 	}
 	fz_catch(ctx)
 	{
@@ -1616,9 +1616,9 @@ pdf_debug_function(fz_function *func)
 #endif
 
 fz_function *
-pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
+pdf_load_function(pdf_document *doc, pdf_obj *dict, int in, int out)
 {
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 	pdf_function *func;
 	pdf_obj *obj;
 	int i;
@@ -1679,7 +1679,7 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 		switch (func->type)
 		{
 		case SAMPLE:
-			load_sample_func(func, xref, dict, pdf_to_num(dict), pdf_to_gen(dict));
+			load_sample_func(func, doc, dict, pdf_to_num(dict), pdf_to_gen(dict));
 			break;
 
 		case EXPONENTIAL:
@@ -1687,11 +1687,11 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 			break;
 
 		case STITCHING:
-			load_stitching_func(func, xref, dict);
+			load_stitching_func(func, doc, dict);
 			break;
 
 		case POSTSCRIPT:
-			load_postscript_func(func, xref, dict, pdf_to_num(dict), pdf_to_gen(dict));
+			load_postscript_func(func, doc, dict, pdf_to_num(dict), pdf_to_gen(dict));
 			break;
 
 		default:

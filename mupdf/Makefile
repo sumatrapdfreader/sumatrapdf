@@ -293,6 +293,9 @@ tags: $(shell find include source -name '*.[ch]')
 
 all: libs apps
 
+all-nojs:
+	$(MAKE) V8_PRESENT=no
+
 clean:
 	rm -rf $(OUT)
 nuke:

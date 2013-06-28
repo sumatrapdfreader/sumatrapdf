@@ -14,7 +14,7 @@ pdf_t3_free_resources(void *doc, void *rdb_)
 }
 
 pdf_font_desc *
-pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
+pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 {
 	char buf[256];
 	char *estrings[256];
@@ -27,7 +27,7 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	int i, k, n;
 	fz_rect bbox;
 	fz_matrix matrix;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
 	fz_var(fontdesc);
 
@@ -96,7 +96,7 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
 		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
 
-		pdf_load_to_unicode(xref, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
+		pdf_load_to_unicode(doc, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
 
 		/* SumatraPDF: trying to match Adobe Reader's behavior */
 		if (!(fontdesc->flags & PDF_FD_SYMBOLIC) && fontdesc->cid_to_ucs_len >= 128)
@@ -149,7 +149,7 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		if (!fontdesc->font->t3resources)
 			fz_warn(ctx, "no resource dictionary for type 3 font!");
 
-		fontdesc->font->t3doc = xref;
+		fontdesc->font->t3doc = doc;
 		fontdesc->font->t3run = pdf_run_glyph_func;
 
 		/* CharProcs */
@@ -169,9 +169,9 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 				{
 
 				obj = pdf_dict_gets(charprocs, estrings[i]);
-				if (pdf_is_stream(xref, pdf_to_num(obj), pdf_to_gen(obj)))
+				if (pdf_is_stream(doc, pdf_to_num(obj), pdf_to_gen(obj)))
 				{
-					fontdesc->font->t3procs[i] = pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
+					fontdesc->font->t3procs[i] = pdf_load_stream(doc, pdf_to_num(obj), pdf_to_gen(obj));
 					fontdesc->size += fontdesc->font->t3procs[i]->cap;
 					fontdesc->size += 0; // TODO: display list size calculation
 				}
@@ -193,10 +193,10 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	return fontdesc;
 }
 
-void pdf_load_type3_glyphs(pdf_document *xref, pdf_font_desc *fontdesc, int nested_depth)
+void pdf_load_type3_glyphs(pdf_document *doc, pdf_font_desc *fontdesc, int nested_depth)
 {
 	int i;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
 	fz_try(ctx)
 	{

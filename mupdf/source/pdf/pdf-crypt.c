@@ -724,24 +724,24 @@ static void pdf_saslprep_from_utf8(char *password, const char *utf8, int n)
 }
 
 int
-pdf_authenticate_password(pdf_document *xref, const char *pwd_utf8)
+pdf_authenticate_password(pdf_document *doc, const char *pwd_utf8)
 {
 	char password[2048];
 
-	if (xref->crypt)
+	if (doc->crypt)
 	{
 		password[0] = 0;
 		if (pwd_utf8)
 		{
-			if (xref->crypt->r <= 4)
+			if (doc->crypt->r <= 4)
 				pdf_docenc_from_utf8(password, pwd_utf8, sizeof password);
 			else
 				pdf_saslprep_from_utf8(password, pwd_utf8, sizeof password);
 		}
 
-		if (pdf_authenticate_user_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))
+		if (pdf_authenticate_user_password(doc->ctx, doc->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
-		if (pdf_authenticate_owner_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))
+		if (pdf_authenticate_owner_password(doc->ctx, doc->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
 		return 0;
 	}
@@ -749,52 +749,52 @@ pdf_authenticate_password(pdf_document *xref, const char *pwd_utf8)
 }
 
 int
-pdf_needs_password(pdf_document *xref)
+pdf_needs_password(pdf_document *doc)
 {
-	if (!xref->crypt)
+	if (!doc->crypt)
 		return 0;
-	if (pdf_authenticate_password(xref, ""))
+	if (pdf_authenticate_password(doc, ""))
 		return 0;
 	return 1;
 }
 
 int
-pdf_has_permission(pdf_document *xref, int p)
+pdf_has_permission(pdf_document *doc, int p)
 {
-	if (!xref->crypt)
+	if (!doc->crypt)
 		return 1;
-	return xref->crypt->p & p;
+	return doc->crypt->p & p;
 }
 
 unsigned char *
-pdf_crypt_key(pdf_document *xref)
+pdf_crypt_key(pdf_document *doc)
 {
-	if (xref->crypt)
-		return xref->crypt->key;
+	if (doc->crypt)
+		return doc->crypt->key;
 	return NULL;
 }
 
 int
-pdf_crypt_version(pdf_document *xref)
+pdf_crypt_version(pdf_document *doc)
 {
-	if (xref->crypt)
-		return xref->crypt->v;
+	if (doc->crypt)
+		return doc->crypt->v;
 	return 0;
 }
 
-int pdf_crypt_revision(pdf_document *xref)
+int pdf_crypt_revision(pdf_document *doc)
 {
-	if (xref->crypt)
-		return xref->crypt->r;
+	if (doc->crypt)
+		return doc->crypt->r;
 	return 0;
 }
 
 char *
-pdf_crypt_method(pdf_document *xref)
+pdf_crypt_method(pdf_document *doc)
 {
-	if (xref->crypt)
+	if (doc->crypt)
 	{
-		switch (xref->crypt->strf.method)
+		switch (doc->crypt->strf.method)
 		{
 		case PDF_CRYPT_NONE: return "None";
 		case PDF_CRYPT_RC4: return "RC4";
@@ -807,10 +807,10 @@ pdf_crypt_method(pdf_document *xref)
 }
 
 int
-pdf_crypt_length(pdf_document *xref)
+pdf_crypt_length(pdf_document *doc)
 {
-	if (xref->crypt)
-		return xref->crypt->length;
+	if (doc->crypt)
+		return doc->crypt->length;
 	return 0;
 }
 

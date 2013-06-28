@@ -11,7 +11,7 @@
 
 #include "mupdf/pdf.h"
 
-static pdf_document *xref = NULL;
+static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 
 static void usage(void)
@@ -41,21 +41,21 @@ static void retainpages(int argc, char **argv)
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
-	oldroot = pdf_dict_gets(pdf_trailer(xref), "Root");
+	oldroot = pdf_dict_gets(pdf_trailer(doc), "Root");
 	pages = pdf_dict_gets(oldroot, "Pages");
-	olddests = pdf_load_name_tree(xref, "Dests");
+	olddests = pdf_load_name_tree(doc, "Dests");
 
-	root = pdf_new_dict(ctx, 2);
+	root = pdf_new_dict(doc, 2);
 	pdf_dict_puts(root, "Type", pdf_dict_gets(oldroot, "Type"));
 	pdf_dict_puts(root, "Pages", pdf_dict_gets(oldroot, "Pages"));
 
-	pdf_update_object(xref, pdf_to_num(oldroot), root);
+	pdf_update_object(doc, pdf_to_num(oldroot), root);
 
 	pdf_drop_obj(root);
 
 	/* Create a new kids array with only the pages we want to keep */
-	parent = pdf_new_indirect(ctx, pdf_to_num(pages), pdf_to_gen(pages), xref);
-	kids = pdf_new_array(ctx, 1);
+	parent = pdf_new_indirect(doc, pdf_to_num(pages), pdf_to_gen(pages));
+	kids = pdf_new_array(doc, 1);
 
 	/* Retain pages specified */
 	while (argc - fz_optind)
@@ -64,7 +64,7 @@ static void retainpages(int argc, char **argv)
 		char *spec, *dash;
 		char *pagelist = argv[fz_optind];
 
-		pagecount = pdf_count_pages(xref);
+		pagecount = pdf_count_pages(doc);
 		spec = fz_strsep(&pagelist, ",");
 		while (spec)
 		{
@@ -91,8 +91,8 @@ static void retainpages(int argc, char **argv)
 
 			for (page = spage; page <= epage; page++)
 			{
-				pdf_obj *pageobj = xref->page_objs[page-1];
-				pdf_obj *pageref = xref->page_refs[page-1];
+				pdf_obj *pageobj = doc->page_objs[page-1];
+				pdf_obj *pageref = doc->page_refs[page-1];
 
 				pdf_dict_puts(pageobj, "Parent", parent);
 
@@ -109,7 +109,7 @@ static void retainpages(int argc, char **argv)
 	pdf_drop_obj(parent);
 
 	/* Update page count and kids array */
-	countobj = pdf_new_int(ctx, pdf_array_len(kids));
+	countobj = pdf_new_int(doc, pdf_array_len(kids));
 	pdf_dict_puts(pages, "Count", countobj);
 	pdf_drop_obj(countobj);
 	pdf_dict_puts(pages, "Kids", kids);
@@ -119,16 +119,16 @@ static void retainpages(int argc, char **argv)
 	if (olddests)
 	{
 		int i;
-		pdf_obj *names = pdf_new_dict(ctx, 1);
-		pdf_obj *dests = pdf_new_dict(ctx, 1);
-		pdf_obj *names_list = pdf_new_array(ctx, 32);
+		pdf_obj *names = pdf_new_dict(doc, 1);
+		pdf_obj *dests = pdf_new_dict(doc, 1);
+		pdf_obj *names_list = pdf_new_array(doc, 32);
 		int len = pdf_dict_len(olddests);
 
 		for (i = 0; i < len; i++)
 		{
 			pdf_obj *key = pdf_dict_get_key(olddests, i);
 			pdf_obj *val = pdf_dict_get_val(olddests, i);
-			pdf_obj *key_str = pdf_new_string(ctx, pdf_to_name(key), strlen(pdf_to_name(key)));
+			pdf_obj *key_str = pdf_new_string(doc, pdf_to_name(key), strlen(pdf_to_name(key)));
 			pdf_obj *dest = pdf_dict_gets(val, "D");
 
 			dest = pdf_array_get(dest ? dest : val, 0);
@@ -140,7 +140,7 @@ static void retainpages(int argc, char **argv)
 			pdf_drop_obj(key_str);
 		}
 
-		root = pdf_dict_gets(pdf_trailer(xref), "Root");
+		root = pdf_dict_gets(pdf_trailer(doc), "Root");
 		pdf_dict_puts(dests, "Names", names_list);
 		pdf_dict_puts(names, "Dests", dests);
 		pdf_dict_puts(root, "Names", names);
@@ -209,20 +209,20 @@ int pdfclean_main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
-		xref = pdf_open_document_no_run(ctx, infile);
-		if (pdf_needs_password(xref))
-			if (!pdf_authenticate_password(xref, password))
+		doc = pdf_open_document_no_run(ctx, infile);
+		if (pdf_needs_password(doc))
+			if (!pdf_authenticate_password(doc, password))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
 		/* Only retain the specified subset of the pages */
 		if (subset)
 			retainpages(argc, argv);
 
-		pdf_write_document(xref, outfile, &opts);
+		pdf_write_document(doc, outfile, &opts);
 	}
 	fz_always(ctx)
 	{
-		pdf_close_document(xref);
+		pdf_close_document(doc);
 	}
 	fz_catch(ctx)
 	{

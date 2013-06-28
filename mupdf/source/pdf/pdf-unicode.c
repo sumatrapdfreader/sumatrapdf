@@ -3,7 +3,7 @@
 /* Load or synthesize ToUnicode map for fonts */
 
 void
-pdf_load_to_unicode(pdf_document *xref, pdf_font_desc *font,
+pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font,
 	char **strings, char *collection, pdf_obj *cmapstm)
 {
 	pdf_cmap *cmap;
@@ -11,11 +11,11 @@ pdf_load_to_unicode(pdf_document *xref, pdf_font_desc *font,
 	int ucsbuf[8];
 	int ucslen;
 	int i;
-	fz_context *ctx = xref->ctx;
+	fz_context *ctx = doc->ctx;
 
-	if (pdf_is_stream(xref, pdf_to_num(cmapstm), pdf_to_gen(cmapstm)))
+	if (pdf_is_stream(doc, pdf_to_num(cmapstm), pdf_to_gen(cmapstm)))
 	{
-		cmap = pdf_load_embedded_cmap(xref, cmapstm);
+		cmap = pdf_load_embedded_cmap(doc, cmapstm);
 
 		font->to_unicode = pdf_new_cmap(ctx);
 

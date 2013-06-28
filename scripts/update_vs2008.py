@@ -20,7 +20,7 @@ DIR_STRUCT = [
 	(pjoin("mupdf", "include", "mupdf", "fitz"), ("mupdf", "include", "fitz")),
 	(pjoin("mupdf", "include", "mupdf", "pdf"), ("mupdf", "include", "pdf")),
 	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
-	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
+	(pjoin("mupdf", "source", "tools"), ("mupdf", "tools")),
 	(pjoin("mupdf", "source", "xps"), ("mupdf", "xps")),
 ]
 SOURCE_EXTS = [".cpp", ".c", ".h", ".rc"]

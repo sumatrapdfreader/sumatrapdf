@@ -62,7 +62,7 @@ void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, 
 	ctm: A transformation matrix applied to the objects on the page,
 	e.g. to scale or rotate the page contents as desired.
 */
-void pdf_run_page_contents(pdf_document *xref, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
+void pdf_run_page_contents(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
 
 /*
 	Presentation interface.

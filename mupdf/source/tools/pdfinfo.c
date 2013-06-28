@@ -5,7 +5,7 @@
 
 #include "mupdf/pdf.h"
 
-pdf_document *xref;
+pdf_document *doc;
 fz_context *ctx;
 int pagecount;
 
@@ -91,10 +91,10 @@ static int psobjs = 0;
 void closexref(void)
 {
 	int i;
-	if (xref)
+	if (doc)
 	{
-		pdf_close_document(xref);
-		xref = NULL;
+		pdf_close_document(doc);
+		doc = NULL;
 	}
 
 	if (dim)
@@ -169,16 +169,16 @@ showglobalinfo(void)
 {
 	pdf_obj *obj;
 
-	printf("\nPDF-%d.%d\n", xref->version / 10, xref->version % 10);
+	printf("\nPDF-%d.%d\n", doc->version / 10, doc->version % 10);
 
-	obj = pdf_dict_gets(pdf_trailer(xref), "Info");
+	obj = pdf_dict_gets(pdf_trailer(doc), "Info");
 	if (obj)
 	{
 		printf("Info object (%d %d R):\n", pdf_to_num(obj), pdf_to_gen(obj));
 		pdf_fprint_obj(stdout, pdf_resolve_indirect(obj), 0);
 	}
 
-	obj = pdf_dict_gets(pdf_trailer(xref), "Encrypt");
+	obj = pdf_dict_gets(pdf_trailer(doc), "Encrypt");
 	if (obj)
 	{
 		printf("\nEncryption object (%d %d R):\n", pdf_to_num(obj), pdf_to_gen(obj));
@@ -572,8 +572,8 @@ gatherresourceinfo(int page, pdf_obj *rsrc, int show)
 	pdf_obj *subrsrc;
 	int i;
 
-	pageobj = xref->page_objs[page-1];
-	pageref = xref->page_refs[page-1];
+	pageobj = doc->page_objs[page-1];
+	pageref = doc->page_refs[page-1];
 
 	if (!pageobj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);
@@ -640,8 +640,8 @@ gatherpageinfo(int page, int show)
 	pdf_obj *pageref;
 	pdf_obj *rsrc;
 
-	pageobj = xref->page_objs[page-1];
-	pageref = xref->page_refs[page-1];
+	pageobj = doc->page_objs[page-1];
+	pageref = doc->page_refs[page-1];
 
 	if (!pageobj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);
@@ -893,12 +893,12 @@ showinfo(char *filename, int show, char *pagelist)
 	int allpages;
 	int pagecount;
 
-	if (!xref)
+	if (!doc)
 		infousage();
 
 	allpages = !strcmp(pagelist, "1-");
 
-	pagecount = pdf_count_pages(xref);
+	pagecount = pdf_count_pages(doc);
 	spec = fz_strsep(&pagelist, ",");
 	while (spec && pagecount)
 	{
@@ -998,18 +998,17 @@ int pdfinfo_main(int argc, char **argv)
 			if (state == NO_INFO_GATHERED)
 			{
 				showinfo(filename, show, "1-");
-				closexref();
 			}
 
 			closexref();
 
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
-			xref = pdf_open_document_no_run(ctx, filename);
-			if (pdf_needs_password(xref))
-				if (!pdf_authenticate_password(xref, password))
+			doc = pdf_open_document_no_run(ctx, filename);
+			if (pdf_needs_password(doc))
+				if (!pdf_authenticate_password(doc, password))
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", filename);
-			pagecount = pdf_count_pages(xref);
+			pagecount = pdf_count_pages(doc);
 
 			showglobalinfo();
 			state = NO_INFO_GATHERED;
