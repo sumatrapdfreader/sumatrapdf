@@ -1247,10 +1247,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\source\fitz\draw-scale.c"
-					>
-				</File>
-				<File
 					RelativePath="..\mupdf\source\fitz\draw-unpack.c"
 					>
 				</File>

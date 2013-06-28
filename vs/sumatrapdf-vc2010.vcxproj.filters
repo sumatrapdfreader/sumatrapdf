@@ -489,9 +489,6 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\source\fitz\draw-scale.c">
-      <Filter>ext\mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

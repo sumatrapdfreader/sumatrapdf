@@ -1091,11 +1091,13 @@ gdiplus_get_pen(Brush *brush, const fz_matrix *ctm, fz_stroke_state *stroke)
 	{
 		REAL dashlist[nelem(stroke->dash_list) + 1];
 		int dashCount = stroke->dash_len;
+		REAL phaseLen = 0.0f;
 		for (int i = 0; i < dashCount; i++)
 		{
 			dashlist[i] = stroke->dash_list[i] ? stroke->dash_list[i] / stroke->linewidth : 0.1 /* ??? */;
 			if (stroke->dash_cap != 0)
 				dashlist[i] += (i % 2 == 0) ? 1 : -1;
+			phaseLen += stroke->dash_list[i];
 		}
 		if (dashCount % 2 == 1)
 		{
@@ -1104,6 +1106,8 @@ gdiplus_get_pen(Brush *brush, const fz_matrix *ctm, fz_stroke_state *stroke)
 		}
 		pen->SetDashPattern(dashlist, dashCount);
 		pen->SetDashOffset(stroke->dash_phase / stroke->linewidth);
+		if (phaseLen == 0.0f)
+			pen->SetColor(Color::Transparent);
 	}
 	
 	return pen;

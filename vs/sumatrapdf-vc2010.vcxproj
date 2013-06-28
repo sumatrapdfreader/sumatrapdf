@@ -228,7 +228,6 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-paint.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-path.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
-    <ClCompile Include="..\mupdf\source\fitz\draw-scale.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
