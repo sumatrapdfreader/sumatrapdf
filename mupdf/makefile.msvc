@@ -233,13 +233,15 @@ OPENJPEG_OBJS = \
 	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj $(OOJ)\cidx_manager.obj $(OOJ)\phix_manager.obj \
 	$(OOJ)\ppix_manager.obj $(OOJ)\thix_manager.obj $(OOJ)\tpix_manager.obj $(OOJ)\opj_clock.obj
 
+DRAW_OBJS = \
+	$(OFZ)\draw-affine.obj $(OFZ)\draw-blend.obj $(OFZ)\draw-device.obj $(OFZ)\draw-edge.obj \
+	$(OFZ)\draw-glyph.obj $(OFZ)\draw-mesh.obj $(OFZ)\draw-paint.obj $(OFZ)\draw-path.obj \
+	$(OFZ)\draw-scale-simple.obj $(OFZ)\draw-unpack.obj
+
 FITZ_OBJS = \
 	$(OFZ)\bbox-device.obj $(OFZ)\bitmap.obj $(OFZ)\buffer.obj $(OFZ)\colorspace.obj \
 	$(OFZ)\compressed-buffer.obj $(OFZ)\context.obj $(OFZ)\crypt-aes.obj $(OFZ)\crypt-arc4.obj \
-	$(OFZ)\crypt-md5.obj $(OFZ)\crypt-sha2.obj $(OFZ)\device.obj \
-	$(OFZ)\draw-affine.obj $(OFZ)\draw-blend.obj $(OFZ)\draw-device.obj $(OFZ)\draw-edge.obj \
-	$(OFZ)\draw-glyph.obj $(OFZ)\draw-mesh.obj $(OFZ)\draw-paint.obj $(OFZ)\draw-path.obj \
-	$(OFZ)\draw-scale.obj $(OFZ)\draw-unpack.obj $(OFZ)\error.obj \
+	$(OFZ)\crypt-md5.obj $(OFZ)\crypt-sha2.obj $(OFZ)\device.obj $(OFZ)\error.obj \
 	$(OFZ)\filter-basic.obj $(OFZ)\filter-dct.obj $(OFZ)\filter-fax.obj $(OFZ)\filter-flate.obj \
 	$(OFZ)\filter-jbig2.obj $(OFZ)\filter-lzw.obj $(OFZ)\filter-predict.obj $(OFZ)\font.obj \
 	$(OFZ)\function.obj $(OFZ)\geometry.obj $(OFZ)\getopt.obj $(OFZ)\halftone.obj \
@@ -271,14 +273,8 @@ MUXPS_OBJS = \
 	$(OX)\xps-tile.obj $(OX)\xps-util.obj $(OX)\xps-zip.obj
 
 LIBS_OBJS = \
-	$(ZLIB_OBJS) \
-	$(FT_OBJS) \
-	$(JPEG_TURBO_OBJS) \
-	$(JBIG2_OBJS) \
-	$(OPENJPEG_OBJS) \
-	$(FITZ_OBJS) \
-	$(MUPDF_OBJS) \
-	$(MUXPS_OBJS)
+	$(ZLIB_OBJS) $(FT_OBJS) $(JPEG_TURBO_OBJS) $(JBIG2_OBJS) $(OPENJPEG_OBJS) \
+	$(FITZ_OBJS) $(DRAW_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
 
 MUDOC_OBJS = \
 	$(OFZ)\document.obj $(OX)\mucbz.obj $(OX)\muimage.obj \
@@ -453,5 +449,7 @@ $(FITZ_OBJS): $(FITZ_H)
 $(MUPDF_OBJS): $(FITZ_H) $(MUPDF_H)
 $(MUXPS_OBJS): $(FITZ_H) $(MUXPS_H)
 $(MUTOOLS_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUOTH_H)
+$(DRAW_OBJS) $(OFZ)\gdiplus-device.obj: $(MUPDF_DIR)\source\fitz\draw-imp.h
+$(OP)\pdf-encoding.obj: $(MUPDF_DIR)\source\pdf\pdf-encodings.h $(MUPDF_DIR)\source\pdf\pdf-glyphlist.h
 
 force: ;

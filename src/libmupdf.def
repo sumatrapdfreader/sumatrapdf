@@ -579,6 +579,8 @@ EXPORTS
 	pdf_array_push
 	pdf_array_push_drop
 	pdf_array_insert
+	pdf_array_insert_drop
+	pdf_array_delete
 	pdf_array_contains
 	pdf_dict_len
 	pdf_dict_get_key
@@ -595,6 +597,7 @@ EXPORTS
 	pdf_dict_del
 	pdf_dict_dels
 	pdf_sort_dict
+	pdf_set_objects_parent_num
 	pdf_fprint_obj
 	pdf_to_utf8
 	pdf_to_ucs2
@@ -676,6 +679,7 @@ EXPORTS
 	pdf_get_populating_xref_entry
 	pdf_get_xref_entry
 	pdf_replace_xref
+	pdf_xref_ensure_incremental_object
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_new_ref
