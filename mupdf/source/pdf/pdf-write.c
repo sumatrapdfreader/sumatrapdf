@@ -797,10 +797,8 @@ static void renumberobjs(pdf_document *doc, pdf_write_options *opts)
 					newlen = opts->renumber_map[num];
 				newxref[opts->renumber_map[num]] = *pdf_get_xref_entry(doc, num);
 				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
-			}
-			else
-			{
-				pdf_drop_obj(pdf_get_xref_entry(doc, num)->obj);
+				/* SumatraPDF: prevent use-after-free */
+				pdf_keep_obj(pdf_get_xref_entry(doc, num)->obj);
 			}
 		}
 

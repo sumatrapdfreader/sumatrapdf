@@ -15,18 +15,18 @@ DIR_STRUCT = [
 	(pjoin("src", "previewer"), ("Integration DLLs", "Previewer")),
 	(pjoin("src", "mui"), ("baseutils", "mui")),
 	(pjoin("src", "uia"), ("Source Files", "Automation")),
-	(pjoin("mupdf", "source", "fitz"), ("mupdf", "fitz")),
 	(pjoin("mupdf", "include", "mupdf"), ("mupdf", "include")),
 	(pjoin("mupdf", "include", "mupdf", "fitz"), ("mupdf", "include", "fitz")),
 	(pjoin("mupdf", "include", "mupdf", "pdf"), ("mupdf", "include", "pdf")),
+	(pjoin("mupdf", "source", "fitz"), ("mupdf", "fitz")),
 	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
 	(pjoin("mupdf", "source", "tools"), ("mupdf", "tools")),
 	(pjoin("mupdf", "source", "xps"), ("mupdf", "xps")),
 ]
 SOURCE_EXTS = [".cpp", ".c", ".h", ".rc"]
 EXCLUDE = [
-	pjoin("mupdf", "include", "mupdf", "cbz.c"),
-	pjoin("mupdf", "include", "mupdf", "img.c"),
+	pjoin("mupdf", "include", "mupdf", "cbz.h"),
+	pjoin("mupdf", "include", "mupdf", "img.h"),
 ]
 
 class XmlNode:

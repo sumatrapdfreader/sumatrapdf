@@ -1447,15 +1447,7 @@
 				Name="include"
 				>
 				<File
-					RelativePath="..\mupdf\include\mupdf\cbz.h"
-					>
-				</File>
-				<File
 					RelativePath="..\mupdf\include\mupdf\fitz.h"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\include\mupdf\img.h"
 					>
 				</File>
 				<File
