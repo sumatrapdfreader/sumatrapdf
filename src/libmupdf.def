@@ -62,7 +62,7 @@ EXPORTS
 	fz_push_try
 	fz_throw_imp
 	fz_rethrow
-	fz_rethrow_message
+	fz_rethrow_message_imp
 	fz_warn_imp
 	fz_caught_message
 	fz_caught
@@ -178,6 +178,7 @@ EXPORTS
 	fz_set_font_bbox
 	fz_bound_glyph
 	fz_glyph_cacheable
+	fz_decouple_type3_font
 	fz_eval_function
 	fz_keep_function
 	fz_drop_function

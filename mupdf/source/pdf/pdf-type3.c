@@ -31,6 +31,17 @@ pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 
 	fz_var(fontdesc);
 
+	/* Make a new type3 font entry in the document */
+	if (doc->num_type3_fonts == doc->max_type3_fonts)
+	{
+		int new_max = doc->max_type3_fonts * 2;
+
+		if (new_max == 0)
+			new_max = 4;
+		doc->type3_fonts = fz_resize_array(doc->ctx, doc->type3_fonts, new_max, sizeof(*doc->type3_fonts));
+		doc->max_type3_fonts = new_max;
+	}
+
 	fz_try(ctx)
 	{
 		obj = pdf_dict_gets(dict, "Name");
@@ -190,6 +201,9 @@ pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
 			pdf_drop_font(ctx, fontdesc);
 		fz_rethrow_message(ctx, "cannot load type3 font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 	}
+
+	doc->type3_fonts[doc->num_type3_fonts++] = fz_keep_font(ctx, fontdesc->font);
+
 	return fontdesc;
 }
 

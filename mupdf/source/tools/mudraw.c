@@ -1265,7 +1265,7 @@ int main(int argc, char **argv)
 		fz_printf(out, "</style>\n");
 	}
 
-	if (showtext && 0 /* SumatraPDF: leak instead of crashing */)
+	if (showtext)
 		fz_free_text_sheet(ctx, sheet);
 
 	if (showxml || showtext)

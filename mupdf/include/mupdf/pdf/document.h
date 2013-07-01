@@ -206,6 +206,10 @@ struct pdf_document_s
 
 	pdf_doc_event_cb *event_cb;
 	void *event_cb_data;
+
+	int num_type3_fonts;
+	int max_type3_fonts;
+	fz_font **type3_fonts;
 };
 
 /*

@@ -148,7 +148,8 @@ void fz_rethrow(fz_context *ctx)
 	throw(ctx->error);
 }
 
-void fz_rethrow_message(fz_context *ctx, const char *fmt, ...)
+/* SumatraPDF: add filename and line number to errors and warnings */
+void fz_rethrow_message_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 {
 	va_list args;
 
@@ -159,7 +160,7 @@ void fz_rethrow_message(fz_context *ctx, const char *fmt, ...)
 	va_end(args);
 
 	fz_flush_warnings(ctx);
-	fprintf(stderr, "error: %s\n", ctx->error->message);
+	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
 	LOGE("error: %s\n", ctx->error->message);
 
 	throw(ctx->error);

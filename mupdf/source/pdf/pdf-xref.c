@@ -1114,6 +1114,13 @@ pdf_close_document(pdf_document *doc)
 	if (doc->crypt)
 		pdf_free_crypt(ctx, doc->crypt);
 
+	for (i=0; i < doc->num_type3_fonts; i++)
+	{
+		fz_decouple_type3_font(ctx, doc->type3_fonts[i], (void *)doc);
+		fz_drop_font(ctx, doc->type3_fonts[i]);
+	}
+	fz_free(ctx, doc->type3_fonts);
+
 	pdf_free_ocg(ctx, doc->ocg);
 
 	fz_empty_store(ctx);
@@ -1622,7 +1629,7 @@ pdf_open_document_no_run(fz_context *ctx, const char *filename)
 
 pdf_document *pdf_specifics(fz_document *doc)
 {
-	return (pdf_document *)(doc->close == (void *)pdf_close_document ? doc : NULL);
+	return (pdf_document *)((doc && doc->close == (void *)pdf_close_document) ? doc : NULL);
 }
 
 pdf_document *pdf_create_document(fz_context *ctx)

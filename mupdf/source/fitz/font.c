@@ -82,6 +82,39 @@ fz_keep_font(fz_context *ctx, fz_font *font)
 	return font;
 }
 
+static void
+free_resources(fz_context *ctx, fz_font *font)
+{
+	int i;
+
+	if (font->t3resources)
+	{
+		font->t3freeres(font->t3doc, font->t3resources);
+		font->t3resources = NULL;
+	}
+
+	if (font->t3procs)
+	{
+		for (i = 0; i < 256; i++)
+			if (font->t3procs[i])
+				fz_drop_buffer(ctx, font->t3procs[i]);
+	}
+	fz_free(ctx, font->t3procs);
+	font->t3procs = NULL;
+}
+
+void fz_decouple_type3_font(fz_context *ctx, fz_font *font, void *t3doc)
+{
+	if (!ctx || !font || !t3doc || font->t3doc == NULL)
+		return;
+
+	if (font->t3doc != t3doc)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "can't decouple type3 font from a different doc");
+
+	font->t3doc = NULL;
+	free_resources(ctx, font);
+}
+
 void
 fz_drop_font(fz_context *ctx, fz_font *font)
 {
@@ -94,14 +127,11 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 	if (!drop)
 		return;
 
-	if (font->t3procs)
+	free_resources(ctx, font);
+	if (font->t3lists)
 	{
-		if (font->t3resources)
-			font->t3freeres(font->t3doc, font->t3resources);
 		for (i = 0; i < 256; i++)
 		{
-			if (font->t3procs[i])
-				fz_drop_buffer(ctx, font->t3procs[i]);
 			if (font->t3lists[i])
 				fz_drop_display_list(ctx, font->t3lists[i]);
 		}
