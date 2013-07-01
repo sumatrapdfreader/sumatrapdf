@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-25256a123e4c31344d2ed1c4561b4940f583f3b2
+bbce7578199158e28deae9d13b1285ebba070677
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3456,6 +3456,7 @@ uk:Додати до закладок
 uz:Tanlanganlarga qo'shish
 vn:Thêm vào Ưa thích
 :Advanced
+af:Gevorderde
 am:Ընդլայնված
 ar:متقدم
 az:Əlavə
@@ -3866,6 +3867,7 @@ uk:Додаток: %s
 uz:Qo'shimcha ilovasi: %s
 vn:Đính kèm: %s
 :Author:
+af:Outeur
 am:Հեղինակը.
 ar:المؤلف
 az:Müəllif:
@@ -3927,6 +3929,7 @@ uk:Автор:
 uz:Muallif:
 vn:Tác giả
 :Automatic
+af:Outomaties
 am:Ինքնաշխատ
 ar:آلي
 az:Avtomatik
@@ -5734,6 +5737,7 @@ br:Não foi possível instalar o pré-visualizador para PDF
 ca-xv:No es pot instal·lar el visor ràpid de PDF
 ca:No es pot instal·lar el visor ràpid de PDF
 cn:无法安装PDF文件预临览
+cz:Nelze nainstalova PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
 dk:Kunne ikke installere PDF viser
 es:No se puede instalar previsualizador PDF
@@ -5770,6 +5774,7 @@ br:Não foi possível instalar o filtro de pesquisa para PDF
 ca-xv:No es pot instal·lar el filtre de cerca PDF
 ca:No es pot instal·lar el filtre de cerca PDF
 cn:无法安装PDF搜索过滤器
+cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht installieren
 dk:Kunne ikke installere PDF søge filter
 es:No se puede instalar el filtro buscador PDF
@@ -5841,6 +5846,7 @@ br:Não foi possível obter a pasta temporária
 ca-xv:No es pot obtindre el directori temporal
 ca:No es pot obtenir el directori temporal
 cn:无法得到暂存目录
+cz:Dočasná složka není dostupná
 de:Konnte das temporäre Verzeichnis nicht finden
 dk:Kunne ikke tilgå midlertidig folder
 es:No se puede acceder al directorio temporal
@@ -6010,6 +6016,7 @@ br:Não foi possível desinstalar o pré-visualizador para PDF
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
 ca:No es pot desinstal·lar el visor ràpid PDF
 cn:无法卸载PDF预览
+cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF viser
 es:No se puede desinstalar el previsualizador PDF
@@ -6043,6 +6050,7 @@ br:Não foi possível desinstalar o filtro de pesquisa para PDF
 ca-xv:No es pot desinstal·lar el filtre de cerca PDF
 ca:No es pot desinstal·lar el filtre de cerca PDF
 cn:无法卸载PDF搜索过滤器
+cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
 dk:Kunne ikke afinstallere PDF søge filter
 es:No se puede desinstalar el filtro buscador PDF
@@ -6111,6 +6119,7 @@ br:Não foi possível gravar %s no disco
 ca-xv:No es pot escriure %s al disc
 ca:No es pot escriure %s al disc
 cn:无法将%s写进硬盘
+cz:Nelze zapsat %s na disk
 de:Konnte %s nicht kopieren
 dk:Kunne ikke skrive %s til disk
 es:No se puede escribir %s al disco
@@ -7462,6 +7471,7 @@ br:Falha na cópia do desinstalador para a pasta temporária
 ca-xv:No es pot copiar el desinstal·lador al directori temporal
 ca:No es pot copiar el desinstal·lador al directori temporal
 cn:无法将安装程序复制到暂存目录
+cz:Nepodařilo se zkopírovat odinstalační program do dočasné složky
 de:Konnte das Deinstallationsprogramm nicht kopieren
 dk:Kunne ikke kopiere fra midlertidig folder
 es:Error al copiar el desinstalador al directorio temporal
@@ -7533,6 +7543,7 @@ br:Falha na remoção das entradas de registro do desinstalador
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:No es poden suprimir les claus de registre del desinstal·lador
 cn:删除卸载程序的注册表项失败
+cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Konnte nicht alle Registry-Einträge löschen
 dk:Kunne ikke slette afinstallering nøger i registreringsdatabasen
 es:Error al eliminar las claves del registro del desinstalador
@@ -7685,6 +7696,7 @@ br:Falha na gravação da extensão de arquivo no registro
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:No es pot escriure la informació d'extensió de fitxer extesa al registre
 cn:无法将文件扩展名的扩展信息写进注册表
+cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
 dk:Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen
 es:Fallo al escribir información de la extensión de archivo en el registro
@@ -7716,6 +7728,7 @@ br:Falha na gravação dos dados de desinstalação no registro
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:No es pot escriure la informació de desinstal·lació al registre
 cn:将卸载所需信息写进注册表时失败了
+cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
 dk:Kunne ikke skrive afinstallerings information i registreringsdatabasen
 es:Error al escribir información de desinstalación en el registro
@@ -9503,6 +9516,7 @@ br:Instalar plugin PDF para Firefox, Chrome e Opera
 ca-xv:Instal·la el &connector PDF per als navegadors Firefox, Chrome i Opera
 ca:Instal·la el &connector PDF pels navegadors Firefox, Chrome i Opera
 cn:安装PDF浏览器插件到火狐, Chrome和Opera
+cz:Instalovat PDF doplněk pro prohlížeče Firefox, Chrome a Opera
 de:PDF Browser-Plugin für Firefox, Chrome und Opera installieren
 dk:Installer PDF &browser plugin til Firefox, Chrome og Opera
 es:Instalar el &plugin PDF para Firefox, Chrome y Opera
@@ -9749,6 +9763,7 @@ br:Permitir que o Windows faça a bu&sca em documentos PDF
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
 cn:使用Windows桌面搜索来搜索PDF文档
+cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
 de:PDF Dokumente in Windows-&Suchen einbeziehen
 dk:Lad Windows skrivebord Søge &søg PDF dokumenter
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
@@ -9781,6 +9796,7 @@ br:Permitir que o Windows &pré-visualize documentos PDF
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar &visualitzacions prèvies dels documents PDF
 cn:使用Windows的PDF预览功能
+cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
 dk:Lad Windows vise &femvisning af PDF dokumenter
 es:Mostrar miniaturas en los iconos de documentos &PDF
@@ -12010,6 +12026,7 @@ br:Por favor feche %s para continuar!
 ca-xv:Tanqueu %s per continuar!
 ca:Tanqueu %s per continuar!
 cn:请关闭%s后继续!
+cz:Prosím ukončete %s pro pokračování!
 de:Bitte schliessen Sie %s vor der Installation!
 dk:Luk venligst %s for at fortsætte !
 es:¡Para continuar es necesario cerrar %s!
@@ -13292,7 +13309,7 @@ et:Salvesta &otsetee...\tCtrl+Shift+S
 eu:Gorde &Lasterbidea...\tKtrl+Shift+S
 fa:ذخیره‌ی &میانبر...\tCtrl+Shift+S
 fi:Tallenna p&ikakuvake...\tCtrl+Shift+S
-fr:Enregistrer le raccourci... \tCtrl+Maj-S
+fr:Enregistrer un raccourci... \tCtrl+Maj-S
 ga:Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S
 gl:Gardar Atallo...\tCtrl+Shift+S
 he:קיצור שמירה...\tCtrl+Shift+S
@@ -15036,6 +15053,7 @@ br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo in
 ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 ca:L'instal·lador és malmès. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 cn:抱歉安装程序损坏，请重新下载。
+cz:Instalační program byl nejspíše poškozen. Stáhněte si jej prosím znovu. \nOmlouváme se za způsobené nepříjemnosti!
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
 dk:Installationsprogrammet er fejlbehæftet. Prøv venligst at hente det igen.\nVi beklager ulejligheden!
 es:El instalador está dañado, descárguelo de nuevo.\n¡Disculpa las molestias!
@@ -15461,6 +15479,7 @@ uk:Відкрити сайт
 uz:&Veb sahifaga o'tish
 vn:Trang chủ
 :Warning
+af:Waarskuwing
 am:Զգուշացում
 ar:تحذير
 az:Xəbərdarlıq

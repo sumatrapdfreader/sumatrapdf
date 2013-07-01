@@ -4628,7 +4628,7 @@ const char * gTranslations_fr =
   "Rotation &antihoraire\tCtrl+Shift+-\0"\
   "Rotation &horaire\tCtrl+Shift++\0"\
   "Enregistrer sous\0"\
-  "Enregistrer le raccourci... \tCtrl+Maj-S\0"\
+  "Enregistrer un raccourci... \tCtrl+Maj-S\0"\
   "Recherche de %d \303\240 %d...\0"\
   "&Tout s\303\251lectionner\0"\
   "&Tout s\303\251lectionner\tCtrl+A\0"\

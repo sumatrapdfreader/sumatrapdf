@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   33
+#define LANGS_COUNT   34
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -463,6 +463,51 @@ const char * gTranslations_hr =
   "Deinstalacija nije uspjela\0"\
   "Deinstaliranje...\0"\
   "Koristi SumatraPDF kao zadani PDF preglednik\0";
+
+const char * gTranslations_cz = 
+  "&Mo\305\276nosti\0"\
+  "Opravdu chcete odinstalovat SumatraPDF?\0"\
+  "Zav\305\231\303\255t\0"\
+  "Nepoda\305\231ilo se vytvo\305\231it do\304\215asn\303\275 adres\303\241\305\231\0"\
+  "Nepoda\305\231ilo se vytvo\305\231it adres\303\241\305\231 pro instalaci\0"\
+  "Nelze nainstalova PDF prohl\303\255\305\276e\304\215\0"\
+  "Nelze nainstalovat vyhled\303\241vac\303\255 PDF filtr\0"\
+  "Nepoda\305\231ilo se nainstalovat roz\305\241\303\255\305\231en\303\255 do prohl\303\255\305\276e\304\215e\0"\
+  "Do\304\215asn\303\241 slo\305\276ka nen\303\255 dostupn\303\241\0"\
+  "Nepoda\305\231ilo se odstranit adres\303\241\305\231 pro instalaci\0"\
+  "Nepoda\305\231ilo se odstranit z\303\241stupce\0"\
+  "Nelze odinstalovat PDF prohl\303\255\305\276e\304\215\0"\
+  "Nelze odinstalovavat vyhled\303\241vac\303\255 PDF filtr\0"\
+  "Nepoda\305\231ilo se odinstalovat roz\305\241\303\255\305\231en\303\255 z prohl\303\255\305\276e\304\215e\0"\
+  "Nelze zapsat %s na disk\0"\
+  "Nepoda\305\231ilo se zkop\303\255rovat odinstala\304\215n\303\255 program do do\304\215asn\303\251 slo\305\276ky\0"\
+  "Vytvo\305\231en\303\255 z\303\241stupce se nezda\305\231ilo\0"\
+  "Nepoda\305\231ilo se smazat odinsla\304\215n\303\255 z\303\241znamy z registru\0"\
+  "Nepoda\305\231ilo se zapsat informace o p\305\231\303\255pon\304\233 souboru do registru\0"\
+  "Nepoda\305\231ilo se zapsat odinsla\304\215n\303\255 z\303\241znamy do registru\0"\
+  "Skr\303\275t &mo\305\276nosti\0"\
+  "Instalovat PDF dopln\304\233k pro prohl\303\255\305\276e\304\215e Firefox, Chrome a Opera\0"\
+  "Nainstalovat SumatraPDF\0"\
+  "Nainstalovat SumatraPDF do &slo\305\276ky:\0"\
+  "Instalace selhala!\0"\
+  "Prob\303\255h\303\241 instalace...\0"\
+  "Nechte Windows Desktop Search &prohled\303\241vat PDF dokumenty\0"\
+  "Nechte Windows zobrazit &n\303\241hledy PDF dokument\305\257\0"\
+  "Pros\303\255m ukon\304\215ete %s pro pokra\304\215ov\303\241n\303\255!\0"\
+  "Vyberte adres\303\241\305\231, do kter\303\251ho chcete nainstalovat SumatraPDF:\0"\
+  "N\304\233kter\303\251 soubory pot\305\231ebn\303\251 pro instalaci jsou po\305\241kozen\303\251 nebo nebyly nalezeny\0"\
+  "Spustit SumatraPDF\0"\
+  "SumatraPDF %s instal\303\241tor\0"\
+  "SumatraPDF %s odinstal\303\241tor\0"\
+  "SumatraPDF byl odinstalov\303\241n.\0"\
+  "Instalace programu SumatraPDF nebyla nalezena.\0"\
+  "D\304\233kujeme, \305\276e jste si vybrali SumatraPDF!\0"\
+  "D\304\233kujeme! Program SumatraPDF byl nainstalov\303\241n.\0"\
+  "Instala\304\215n\303\255 program byl nejsp\303\255\305\241e po\305\241kozen. St\303\241hn\304\233te si jej pros\303\255m znovu. \nOmlouv\303\241me se za zp\305\257soben\303\251 nep\305\231\303\255jemnosti!\0"\
+  "Odinstalovat SumatraPDF\0"\
+  "Odinstalace programu selhala\0"\
+  "Prob\303\255h\303\241 odinstalace...\0"\
+  "Pou\305\276ij SumatraPDF jako &v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0";
 
 const char * gTranslations_dk = 
   "&Valgmuligheder\0"\
@@ -1511,6 +1556,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_hr, 
+  gTranslations_cz, 
   gTranslations_dk, 
   gTranslations_nl, 
   gTranslations_et, 
@@ -1549,6 +1595,7 @@ const char *gLangCodes =   "en\0" \
   "ca-xv\0" \
   "cn\0" \
   "hr\0" \
+  "cz\0" \
   "dk\0" \
   "nl\0" \
   "et\0" \
@@ -1583,6 +1630,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Croatian (Hrvatski)\0" \
+  "Czech (\304\214e\305\241tina)\0" \
   "Danish (Dansk)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
@@ -1629,6 +1677,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_CROATIAN),
+  _LANGID(LANG_CZECH),
   _LANGID(LANG_DANISH),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
@@ -1657,7 +1706,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (20 == idx);
+  return (2 == idx) || (21 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
