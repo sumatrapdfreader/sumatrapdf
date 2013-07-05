@@ -46,6 +46,7 @@ typedef struct {
 struct pdf_write_options_s
 {
 	FILE *out;
+	int do_incremental;
 	int do_ascii;
 	int do_expand;
 	int do_garbage;
@@ -793,12 +794,23 @@ static void renumberobjs(pdf_document *doc, pdf_write_options *opts)
 		{
 			if (opts->use_list[num])
 			{
+				pdf_xref_entry *e;
 				if (newlen < opts->renumber_map[num])
 					newlen = opts->renumber_map[num];
-				newxref[opts->renumber_map[num]] = *pdf_get_xref_entry(doc, num);
+				e = pdf_get_xref_entry(doc, num);
+				newxref[opts->renumber_map[num]] = *e;
+				if (e->obj)
+				{
+					pdf_set_obj_parent(e->obj, opts->renumber_map[num]);
+					e->obj = NULL;
+				}
 				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
-				/* SumatraPDF: prevent use-after-free */
-				pdf_keep_obj(pdf_get_xref_entry(doc, num)->obj);
+			}
+			else
+			{
+				pdf_xref_entry *e = pdf_get_xref_entry(doc, num);
+				pdf_drop_obj(e->obj);
+				e->obj = NULL;
 			}
 		}
 
@@ -1739,16 +1751,11 @@ static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int
 	pdf_drop_obj(obj);
 }
 
-static void writexref(pdf_document *doc, pdf_write_options *opts, int from, int to, int first, int main_xref_offset, int startxref)
+static void writexrefsubsect(pdf_write_options *opts, int from, int to)
 {
-	pdf_obj *trailer = NULL;
-	pdf_obj *obj;
-	pdf_obj *nobj = NULL;
 	int num;
-	fz_context *ctx = doc->ctx;
 
-	fprintf(opts->out, "xref\n%d %d\n", from, to - from);
-	opts->first_xref_entry_offset = ftell(opts->out);
+	fprintf(opts->out, "%d %d\n", from, to - from);
 	for (num = from; num < to; num++)
 	{
 		if (opts->use_list[num])
@@ -1756,6 +1763,43 @@ static void writexref(pdf_document *doc, pdf_write_options *opts, int from, int 
 		else
 			fprintf(opts->out, "%010d %05d f \n", opts->ofs_list[num], opts->gen_list[num]);
 	}
+}
+
+static void writexref(pdf_document *doc, pdf_write_options *opts, int from, int to, int first, int main_xref_offset, int startxref)
+{
+	pdf_obj *trailer = NULL;
+	pdf_obj *obj;
+	pdf_obj *nobj = NULL;
+	fz_context *ctx = doc->ctx;
+
+	fprintf(opts->out, "xref\n");
+	opts->first_xref_entry_offset = ftell(opts->out);
+
+	if (opts->do_incremental)
+	{
+		int subfrom = from;
+		int subto;
+
+		while (subfrom < to)
+		{
+			while (subfrom < to && !pdf_xref_is_incremental(doc, subfrom))
+				subfrom++;
+
+			subto = subfrom;
+			while (subto < to && pdf_xref_is_incremental(doc, subto))
+				subto++;
+
+			if (subfrom < subto)
+				writexrefsubsect(opts, subfrom, subto);
+
+			subfrom = subto;
+		}
+	}
+	else
+	{
+		writexrefsubsect(opts, from, to);
+	}
+
 	fprintf(opts->out, "\n");
 
 	fz_var(trailer);
@@ -1763,33 +1807,43 @@ static void writexref(pdf_document *doc, pdf_write_options *opts, int from, int 
 
 	fz_try(ctx)
 	{
-		trailer = pdf_new_dict(doc, 5);
-
-		nobj = pdf_new_int(doc, to);
-		pdf_dict_puts(trailer, "Size", nobj);
-		pdf_drop_obj(nobj);
-		nobj = NULL;
-
-		if (first)
+		if (opts->do_incremental)
 		{
-			obj = pdf_dict_gets(pdf_trailer(doc), "Info");
-			if (obj)
-				pdf_dict_puts(trailer, "Info", obj);
-
-			obj = pdf_dict_gets(pdf_trailer(doc), "Root");
-			if (obj)
-				pdf_dict_puts(trailer, "Root", obj);
-
-			obj = pdf_dict_gets(pdf_trailer(doc), "ID");
-			if (obj)
-				pdf_dict_puts(trailer, "ID", obj);
+			trailer = pdf_keep_obj(pdf_trailer(doc));
+			pdf_dict_puts_drop(trailer, "Size", pdf_new_int(doc, pdf_xref_len(doc)));
+			pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(doc, doc->startxref));
+			doc->startxref = startxref;
 		}
-		if (main_xref_offset != 0)
+		else
 		{
-			nobj = pdf_new_int(doc, main_xref_offset);
-			pdf_dict_puts(trailer, "Prev", nobj);
+			trailer = pdf_new_dict(doc, 5);
+
+			nobj = pdf_new_int(doc, to);
+			pdf_dict_puts(trailer, "Size", nobj);
 			pdf_drop_obj(nobj);
 			nobj = NULL;
+
+			if (first)
+			{
+				obj = pdf_dict_gets(pdf_trailer(doc), "Info");
+				if (obj)
+					pdf_dict_puts(trailer, "Info", obj);
+
+				obj = pdf_dict_gets(pdf_trailer(doc), "Root");
+				if (obj)
+					pdf_dict_puts(trailer, "Root", obj);
+
+				obj = pdf_dict_gets(pdf_trailer(doc), "ID");
+				if (obj)
+					pdf_dict_puts(trailer, "ID", obj);
+			}
+			if (main_xref_offset != 0)
+			{
+				nobj = pdf_new_int(doc, main_xref_offset);
+				pdf_dict_puts(trailer, "Prev", nobj);
+				pdf_drop_obj(nobj);
+				nobj = NULL;
+			}
 		}
 	}
 	fz_always(ctx)
@@ -1850,7 +1904,8 @@ dowriteobject(pdf_document *doc, pdf_write_options *opts, int num, int pass)
 		if (pass > 0)
 			padto(opts->out, opts->ofs_list[num]);
 		opts->ofs_list[num] = ftell(opts->out);
-		writeobject(doc, opts, num, opts->gen_list[num]);
+		if (!opts->do_incremental || pdf_xref_is_incremental(doc, num))
+			writeobject(doc, opts, num, opts->gen_list[num]);
 	}
 	else
 		opts->use_list[num] = 0;
@@ -1862,8 +1917,11 @@ writeobjects(pdf_document *doc, pdf_write_options *opts, int pass)
 	int num;
 	int xref_len = pdf_xref_len(doc);
 
-	fprintf(opts->out, "%%PDF-%d.%d\n", doc->version / 10, doc->version % 10);
-	fprintf(opts->out, "%%\316\274\341\277\246\n\n");
+	if (!opts->do_incremental)
+	{
+		fprintf(opts->out, "%%PDF-%d.%d\n", doc->version / 10, doc->version % 10);
+		fprintf(opts->out, "%%\316\274\341\277\246\n\n");
+	}
 
 	dowriteobject(doc, opts, opts->start, pass);
 
@@ -2231,12 +2289,23 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 
 	xref_len = pdf_xref_len(doc);
 
-	opts.out = fopen(filename, "wb");
+	if (fz_opts->do_incremental)
+	{
+		opts.out = fopen(filename, "ab");
+		if (opts.out)
+			fseek(opts.out, 0, SEEK_END);
+	}
+	else
+	{
+		opts.out = fopen(filename, "wb");
+	}
+
 	if (!opts.out)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open output file '%s'", filename);
 
 	fz_try(ctx)
 	{
+		opts.do_incremental = fz_opts ? fz_opts->do_incremental : 0;
 		opts.do_expand = fz_opts ? fz_opts->do_expand : 0;
 		opts.do_garbage = fz_opts ? fz_opts->do_garbage : 0;
 		opts.do_ascii = fz_opts ? fz_opts->do_ascii: 0;
@@ -2265,7 +2334,8 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		}
 
 		/* Make sure any objects hidden in compressed streams have been loaded */
-		preloadobjstms(doc);
+		if (!opts.do_incremental)
+			preloadobjstms(doc);
 
 		/* Sweep & mark objects from the trailer */
 		if (opts.do_garbage >= 1)
@@ -2297,15 +2367,30 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		dump_object_details(doc, &opts);
 #endif
 
-		/* Construct linked list of free object slots */
-		lastfree = 0;
-		for (num = 0; num < xref_len; num++)
+		if (opts.do_incremental)
 		{
-			if (!opts.use_list[num])
+			for (num = 0; num < xref_len; num++)
 			{
-				opts.gen_list[num]++;
-				opts.ofs_list[lastfree] = num;
-				lastfree = num;
+				if (!opts.use_list[num] && pdf_xref_is_incremental(doc, num))
+				{
+					/* Make unreusable. FIXME: would be better to link to existing free list */
+					opts.gen_list[num] = 65535;
+					opts.ofs_list[num] = 0;
+				}
+			}
+		}
+		else
+		{
+			/* Construct linked list of free object slots */
+			lastfree = 0;
+			for (num = 0; num < xref_len; num++)
+			{
+				if (!opts.use_list[num])
+				{
+					opts.gen_list[num]++;
+					opts.ofs_list[lastfree] = num;
+					lastfree = num;
+				}
 			}
 		}
 

@@ -133,6 +133,7 @@ int pdfposter_main(int argc, char **argv)
 	pdf_document *doc;
 	fz_context *ctx;
 
+	opts.do_incremental = 0;
 	opts.do_garbage = 0;
 	opts.do_expand = 0;
 	opts.do_ascii = 0;

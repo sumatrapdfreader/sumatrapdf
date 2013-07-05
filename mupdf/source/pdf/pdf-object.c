@@ -543,7 +543,7 @@ static void object_altered(pdf_obj *obj, pdf_obj *val)
 	object needs to record the parent_num
 	*/
 	pdf_xref_ensure_incremental_object(obj->doc, obj->parent_num);
-	pdf_set_objects_parent_num(val, obj->parent_num);
+	pdf_set_obj_parent(val, obj->parent_num);
 }
 
 void
@@ -1349,7 +1349,7 @@ pdf_drop_obj(pdf_obj *obj)
 }
 
 void
-pdf_set_objects_parent_num(pdf_obj *obj, int num)
+pdf_set_obj_parent(pdf_obj *obj, int num)
 {
 	int n, i;
 
@@ -1363,12 +1363,12 @@ pdf_set_objects_parent_num(pdf_obj *obj, int num)
 	case PDF_ARRAY:
 		n = pdf_array_len(obj);
 		for (i = 0; i < n; i++)
-			pdf_set_objects_parent_num(pdf_array_get(obj, i), num);
+			pdf_set_obj_parent(pdf_array_get(obj, i), num);
 		break;
 	case PDF_DICT:
 		n = pdf_dict_len(obj);
 		for (i = 0; i < n; i++)
-			pdf_set_objects_parent_num(pdf_dict_get_val(obj, i), num);
+			pdf_set_obj_parent(pdf_dict_get_val(obj, i), num);
 		break;
 	}
 }

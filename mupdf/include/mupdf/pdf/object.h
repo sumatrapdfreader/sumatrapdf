@@ -103,7 +103,7 @@ void pdf_sort_dict(pdf_obj *dict);
 	The whole containing hierarchy is moved to the incremental xref section, so
 	to be later written out as an incremental file update.
 */
-void pdf_set_objects_parent_num(pdf_obj *obj, int num);
+void pdf_set_obj_parent(pdf_obj *obj, int num);
 
 int pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight);
 

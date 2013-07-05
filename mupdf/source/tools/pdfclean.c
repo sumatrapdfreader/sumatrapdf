@@ -163,6 +163,7 @@ int pdfclean_main(int argc, char **argv)
 	int write_failed = 0;
 	int errors = 0;
 
+	opts.do_incremental = 0;
 	opts.do_garbage = 0;
 	opts.do_expand = 0;
 	opts.do_ascii = 0;

@@ -12,6 +12,7 @@
 */
 struct fz_write_options_s
 {
+	int do_incremental; /* Write just the changed objects */
 	int do_ascii; /* If non-zero then attempt (where possible) to make
 				the output ascii. */
 	int do_expand; /* Bitflags; each non zero bit indicates an aspect

@@ -1564,12 +1564,13 @@ pdf_load_annots(pdf_document *doc, pdf_obj *annots, pdf_page *page)
 {
 	pdf_annot *annot, *head, **itr;
 	pdf_obj *obj, *ap, *as, *n, *rect;
-	int i, len, is_dict;
+	int i, len, keep_annot;
 	fz_context *ctx = doc->ctx;
 
 	fz_var(annot);
 	fz_var(itr);
 	fz_var(head);
+	fz_var(keep_annot);
 
 	head = NULL;
 
@@ -1628,6 +1629,7 @@ pdf_load_annots(pdf_document *doc, pdf_obj *annots, pdf_page *page)
 				*annot = *synth;
 				fz_free(ctx, synth);
 				itr = &annot->next;
+				keep_annot = 1;
 				break; // out of fz_try
 			}
 
@@ -1641,19 +1643,13 @@ pdf_load_annots(pdf_document *doc, pdf_obj *annots, pdf_page *page)
 			rect = pdf_dict_gets(obj, "Rect");
 			ap = pdf_dict_gets(obj, "AP");
 			as = pdf_dict_gets(obj, "AS");
-			is_dict = pdf_is_dict(ap);
 
-			/* SumatraPDF: don't warn about AP-less annotations */
-			if (!ap)
-			{
-				*itr = annot->next;
-				annot->next = NULL;
-				pdf_free_annot(ctx, annot);
-				break; // out of fz_try
-			}
-
-			if (!is_dict)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "Annotation object not a dictionary");
+			/* We only collect annotations with an appearance
+			 * stream into this list, so remove any that don't
+			 * (such as links) and continue. */
+			keep_annot = pdf_is_dict(ap);
+			if (!keep_annot)
+				break;
 
 			if (hp->num == pdf_to_num(obj)
 				&& hp->gen == pdf_to_gen(obj)
@@ -1691,12 +1687,16 @@ pdf_load_annots(pdf_document *doc, pdf_obj *annots, pdf_page *page)
 		}
 		fz_catch(ctx)
 		{
+			keep_annot = 0;
+			fz_warn(ctx, "ignoring broken annotation");
+			/* FIXME: TryLater */
+		}
+		if (!keep_annot)
+		{
 			/* Move to next item in the linked list, dropping this one */
 			*itr = annot->next;
 			annot->next = NULL; /* Required because pdf_free_annot follows the "next" chain */
 			pdf_free_annot(ctx, annot);
-			fz_warn(ctx, "ignoring broken annotation");
-			/* FIXME: TryLater */
 		}
 	}
 
