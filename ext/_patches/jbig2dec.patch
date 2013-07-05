@@ -15,7 +15,7 @@ diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
  {
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
 --- jbig2dec.orig\jbig2_huffman.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2_huffman.c	Wed Jun 12 21:22:40 2013
++++ jbig2dec\jbig2_huffman.c	Fri Jun 14 20:49:58 2013
 @@ -412,18 +412,21 @@
    result = jbig2_new(ctx, Jbig2HuffmanTable, 1);
    if (result == NULL)
@@ -51,9 +51,37 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
          jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, 
              "DECODING USER TABLE... Flags: %d, HTOOB: %d, HTPS: %d, HTRS: %d, HTLOW: %d, HTHIGH: %d", 
              code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
+diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
+--- jbig2dec.orig\jbig2_image.c	Fri May 24 17:23:20 2013
++++ jbig2dec\jbig2_image.c	Fri Jul 05 13:01:57 2013
+@@ -254,19 +254,21 @@
+         return 0;
+     }
+ #endif
+ 
+     leftbyte = x >> 3;
+-    if (leftbyte > dst->height * dst->stride)
+-        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+-            "preventing heap overflow in jbig2_image_compose");
+     rightbyte = (x + w - 1) >> 3;
+     shift = x & 7;
+ 
+     /* general OR case */
+     s = ss;
+     d = dd = dst->data + y*dst->stride + leftbyte;
++    if (d < dst->data || leftbyte > dst->stride || h * dst->stride < 0 ||
++        d - leftbyte + h * dst->stride > dst->data + dst->height * dst->stride) {
++        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
++            "preventing heap overflow in jbig2_image_compose");
++    }
+     if (leftbyte == rightbyte) {
+ 	mask = 0x100 - (0x100 >> w);
+         for (j = 0; j < h; j++) {
+             *d |= (*s & mask) >> shift;
+             d += dst->stride;
 diff -rPu5 jbig2dec.orig\jbig2_mmr.c jbig2dec\jbig2_mmr.c
 --- jbig2dec.orig\jbig2_mmr.c	Tue Jun 11 22:53:47 2013
-+++ jbig2dec\jbig2_mmr.c	Tue Jun 11 22:47:18 2013
++++ jbig2dec\jbig2_mmr.c	Fri Jun 14 20:49:58 2013
 @@ -860,11 +860,11 @@
  				black_run = jbig2_decode_get_run(mmr, jbig2_mmr_black_decode, 7);
  				a1 = a0 + white_run;
@@ -202,7 +230,7 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  			 const uint8_t *segment_data)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Tue Jun 11 22:53:47 2013
-+++ jbig2dec\jbig2_symbol_dict.c	Wed Jun 12 21:22:52 2013
++++ jbig2dec\jbig2_symbol_dict.c	Fri Jun 14 20:49:58 2013
 @@ -440,11 +440,14 @@
                goto cleanup4;
            }
@@ -261,7 +289,33 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
      {
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Wed May 29 22:46:18 2013
-+++ jbig2dec\jbig2_text.c	Thu May 30 19:32:24 2013
++++ jbig2dec\jbig2_text.c	Fri Jul 05 12:52:10 2013
+@@ -379,11 +379,11 @@
+ 		rparams.DY = (RDH >> 1) + RDY;
+ 		rparams.TPGRON = 0;
+ 		memcpy(rparams.grat, params->sbrat, 4);
+ 		code = jbig2_decode_refinement_region(ctx, segment,
+ 		    &rparams, as, refimage, GR_stats);
+-		if (code < 0) goto cleanup2;
++		if (code < 0) { jbig2_image_release(ctx, refimage); goto cleanup2; }
+ 		IB = refimage;
+ 
+ 		jbig2_image_release(ctx, IBO);
+ 
+ 		/* 6.4.11 (7) */
+@@ -426,11 +426,11 @@
+ 			"composing glyph id %d: %dx%d @ (%d,%d) symbol %d/%d",
+ 			ID, IB->width, IB->height, x, y, NINSTANCES + 1,
+ 			params->SBNUMINSTANCES);
+ #endif
+ 	    code = jbig2_image_compose(ctx, image, IB, x, y, params->SBCOMBOP);
+-            if (code < 0) goto cleanup2;
++	    if (code < 0) { jbig2_image_release(ctx, IB); goto cleanup2; }
+ 
+ 	    /* (3c.x) */
+ 	    if ((!params->TRANSPOSED) && (params->REFCORNER < 2)) {
+ 		CURS += IB->width -1 ;
+ 	    } else if ((params->TRANSPOSED) && (params->REFCORNER & 1)) {
 @@ -849,11 +849,11 @@
  
      image = jbig2_image_new(ctx, region_info.width, region_info.height);
