@@ -479,6 +479,9 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
     pages.AppendBlanks(pageFileNames.Count());
     mediaboxes.AppendBlanks(pageFileNames.Count());
 
+    if (!LoadImage(1)) // required for GetFileDPI()
+        return false;
+
     return true;
 }
 
@@ -754,6 +757,9 @@ bool CbxEngineImpl::FinishLoadingCbz()
 
     pages.AppendBlanks(fileIdxs.Count());
     mediaboxes.AppendBlanks(fileIdxs.Count());
+
+    if (!LoadImage(1)) // required for GetFileDPI()
+        return false;
 
     return true;
 }
