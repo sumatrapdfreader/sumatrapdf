@@ -726,9 +726,6 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (fontlistMS.len == 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
 
-	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
-		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
-
 	// work on a normalized copy of the font name
 	fontname = fz_strdup(ctx, fontname);
 	remove_spaces(fontname);
@@ -792,8 +789,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (!found)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
 
-	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
-		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
+	fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
 
 	font->font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
 		strcmp(found->fontface, "DroidSansFallback") != 0);

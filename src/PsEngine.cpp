@@ -104,11 +104,7 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
     ScopedMem<WCHAR> cmdLine(str::Format(L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\"", gswin32c, tmpFile, shortPath));
-
-    if (GetEnvironmentVariable(L"MULOG", NULL, 0)) {
-        wprintf(L"ps2pdf: using Ghostscript from '%s'\n", gswin32c.Get());
-        wprintf(L"ps2pdf: for creating '%s'\n", tmpFile.Get());
-    }
+    fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", __FILE__, __LINE__, gswin32c.Get(), path::GetBaseName(tmpFile));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
     HANDLE process = LaunchProcess(cmdLine, NULL, CREATE_NO_WINDOW);
@@ -137,9 +133,6 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData, len));
     if (!stream)
         return NULL;
-
-    if (GetEnvironmentVariable(L"MULOG", NULL, 0))
-        printf("ps2pdf: PDF conversion successful\n");
 
     return PdfEngine::CreateFromStream(stream);
 }
