@@ -56,6 +56,11 @@ public:
     virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
 
+    virtual float GetFileDPI() const {
+        // TODO: support files with DPIs differing between pages
+        //       (or premultiply DPI same as for DjVu documents)
+        return pages.At(0)->GetHorizontalResolution();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
