@@ -56,11 +56,6 @@ public:
     virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
 
-    virtual float GetFileDPI() const {
-        // TODO: support files with DPIs differing between pages
-        //       (or premultiply DPI same as for DjVu documents)
-        return pages.At(0)->GetHorizontalResolution();
-    }
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
@@ -244,6 +239,10 @@ public:
     virtual ImageEngine *Clone();
 
     virtual WCHAR *GetProperty(DocumentProperty prop);
+
+    virtual float GetFileDPI() const {
+        return pages.At(0)->GetHorizontalResolution();
+    }
 
 protected:
     bool LoadSingleFile(const WCHAR *fileName);
@@ -479,9 +478,6 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
     pages.AppendBlanks(pageFileNames.Count());
     mediaboxes.AppendBlanks(pageFileNames.Count());
 
-    if (!LoadImage(1)) // required for GetFileDPI()
-        return false;
-
     return true;
 }
 
@@ -611,6 +607,11 @@ public:
     virtual RectD PageMediabox(int pageNo);
 
     virtual WCHAR *GetProperty(DocumentProperty prop);
+
+    // not using the resolution of the contained images seems to be
+    // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
+    // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
+    virtual float GetFileDPI() const { return 96.0f; }
 
     // json::ValueVisitor
     virtual bool Visit(const char *path, const char *value, json::DataType type);
@@ -757,9 +758,6 @@ bool CbxEngineImpl::FinishLoadingCbz()
 
     pages.AppendBlanks(fileIdxs.Count());
     mediaboxes.AppendBlanks(fileIdxs.Count());
-
-    if (!LoadImage(1)) // required for GetFileDPI()
-        return false;
 
     return true;
 }
