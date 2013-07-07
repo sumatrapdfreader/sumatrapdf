@@ -6876,9 +6876,9 @@ const char * gTranslations_ga =
 
 const char * gTranslations_it = 
   "&Informazioni su...\0"\
-  "Dimensioni re&ali\t<Ctrl>+1\0"\
+  "&Dimensioni reali\t<Ctrl>+1\0"\
   "Opzioni &avanzate...\0"\
-  "Tutte le p&agine selezionate\0"\
+  "&Tutte le pagine selezionate\0"\
   "&Indietro\t<Alt>+<Freccia sinistra>\0"\
   "Vista &libro\t<Ctrl>+8\0"\
   "&Chiudi\tCtrl+W\0"\

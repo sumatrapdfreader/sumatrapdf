@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bbce7578199158e28deae9d13b1285ebba070677
+afac4534198dcdfd90c993bf5461109b9e574f5c
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -141,7 +141,7 @@ hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
 hu:&Tényleges méret\tCtrl+1
 id:&Ukuran Sebenarnya\tCtrl+1
-it:Dimensioni re&ali\t<Ctrl>+1
+it:&Dimensioni reali\t<Ctrl>+1
 ja:実際のサイズ(&A)\tCtrl+1
 ka:&თავდაპირველი ზომა\tCtrl+1
 kr:실제 크기(&A)\tCtrl+1
@@ -239,7 +239,7 @@ hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
 hu:Az összes kiválasztott oldal
 id:&Semua halaman yang dipilih
-it:Tutte le p&agine selezionate
+it:&Tutte le pagine selezionate
 ja:すべての選択されたページ(&A)
 ka:&ყველა მონიშნული გვერდი
 kr:선택한 모든 페이지(&A)
