@@ -1906,9 +1906,9 @@ public:
         // be marked as inexistent in gFileHistory)
         for (size_t i = 0; i < paths.Count() && !WasCancelRequested(); i++) {
             WCHAR *path = paths.At(i);
-            if (!path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
+            if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
                 paths.RemoveAt(i--);
-                delete path;
+                free(path);
             }
         }
         if (!WasCancelRequested())
