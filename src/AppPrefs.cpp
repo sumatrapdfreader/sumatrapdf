@@ -272,6 +272,7 @@ bool Load()
         gGlobalPrefs->zoomLevels->Pop();
     }
 
+    // TODO: verify that all states have a non-NULL file path?
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
     SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
 
