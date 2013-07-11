@@ -92,7 +92,6 @@ CleanUp:
 	}
 #endif
 	fz_throw(ctx, FZ_ERROR_GENERIC, "JPEG-XR codec is not available");
-	return NULL;
 }
 
 fz_pixmap *

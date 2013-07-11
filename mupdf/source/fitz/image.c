@@ -3,9 +3,15 @@
 fz_pixmap *
 fz_new_pixmap_from_image(fz_context *ctx, fz_image *image, int w, int h)
 {
+	/* SumatraPDF: try preventing a strange NULL-pointer dereference due to image->get_pixmap failing without throwing */
+	fz_pixmap *pix;
+	assert(image);
 	if (image == NULL)
 		return NULL;
-	return image->get_pixmap(ctx, image, w, h);
+	pix = image->get_pixmap(ctx, image, w, h);
+	if (!pix)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "image->get_pixmap failed - why? (%d x %d)", w, h);
+	return pix;
 }
 
 fz_image *
