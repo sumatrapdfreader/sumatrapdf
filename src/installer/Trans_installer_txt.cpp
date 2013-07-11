@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   34
+#define LANGS_COUNT   35
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -824,6 +824,51 @@ const char * gTranslations_hu =
   "Elt\303\241vol\303\255t\303\241s folyamatban...\0"\
   "SumatraPDF haszn\303\241lata alap\303\251rtelmezett PDF olvas\303\263k\303\251nt\0";
 
+const char * gTranslations_id = 
+  "Pilihan\0"\
+  "Anda yakin untuk menghapus instalasi SumatraPDF?\0"\
+  "Tutup\0"\
+  "Gagal membuat folder sementara\0"\
+  "Gagal membuat folder instalasi\0"\
+  "Gagal memasang penampil cepat PDF\0"\
+  "Gagal memasang filter pencari PDF\0"\
+  "Gagal memasang plugin untuk browser\0"\
+  "Gagal mendeteksi folder sementara\0"\
+  "Gagal menghapus folder instalasi\0"\
+  "Gagal menghapus shortcut\0"\
+  "Gagal menghapus penampil cepat PDF\0"\
+  "Gagal menghapus filter pencari PDF\0"\
+  "Gagal menghapus plugin browser\0"\
+  "Gagal menulis %s ke harddisk\0"\
+  "Gagal mengkopi uninstaller ke direktori temp\0"\
+  "Gagal membuat shortcut.\0"\
+  "Gagal menghapus kunci registry uninstaller\0"\
+  "Gagal menulis info ekstensi file lanjutan ke registry\0"\
+  "Gagal menulis info penghapusan program ke registry\0"\
+  "Sembunyikan &Opsi\0"\
+  "Install plugin untuk peram&bah Firefox, Chrome, dan Opera\0"\
+  "\0"\
+  "Install SumatraPDF ke &folder:\0"\
+  "Instalasi gagal!\0"\
+  "Instalasi sedang berlangsung...\0"\
+  "Izinkan Windows Desktop Search mencari dokumen PDF\0"\
+  "Izinkan Windows menampilkan dokumen PDF\0"\
+  "Silakan tutup %s untuk melanjutkan.\0"\
+  "Pilih folder instalasi SumatraPDF:\0"\
+  "Beberapa file yang di-install rusak atau terhapus.\0"\
+  "Jalankan SumatraPDF\0"\
+  "Pasang SumatraPDF %s\0"\
+  "Hapus SumatraPDF %s\0"\
+  "SumatraPDF telah di-uninstall.\0"\
+  "Instalasi SumatraPDF tidak ditemukan.\0"\
+  "Terima kasih telah memakai SumatraPDF!\0"\
+  "Terima kasih. SumatraPDF telah berhasil ter-install.\0"\
+  "Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!\0"\
+  "\0"\
+  "Proses uninstall gagal.\0"\
+  "Proses uninstall sedang berjalan...\0"\
+  "Gunakan SumatraPDF sebagai pembaca PDF standar.\0";
+
 const char * gTranslations_it = 
   "&Opzioni\0"\
   "Sei sicuro di voler disinstallare SumatraPDF?\0"\
@@ -1564,6 +1609,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_fr, 
   gTranslations_de, 
   gTranslations_hu, 
+  gTranslations_id, 
   gTranslations_it, 
   gTranslations_ja, 
   gTranslations_kr, 
@@ -1603,6 +1649,7 @@ const char *gLangCodes =   "en\0" \
   "fr\0" \
   "de\0" \
   "hu\0" \
+  "id\0" \
   "it\0" \
   "ja\0" \
   "kr\0" \
@@ -1638,6 +1685,7 @@ const char *gLangNames =   "English\0" \
   "French (Fran\303\247ais)\0" \
   "German (Deutsch)\0" \
   "Hungarian (Magyar)\0" \
+  "Indonesian (Bahasa Indonesia)\0" \
   "Italian (Italiano)\0" \
   "Japanese (\346\227\245\346\234\254\350\252\236)\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
@@ -1685,6 +1733,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_FRENCH),
   _LANGID(LANG_GERMAN),
   _LANGID(LANG_HUNGARIAN),
+  _LANGID(LANG_INDONESIAN),
   _LANGID(LANG_ITALIAN),
   _LANGID(LANG_JAPANESE),
   _LANGID(LANG_KOREAN),
@@ -1706,7 +1755,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (21 == idx);
+  return (2 == idx) || (22 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

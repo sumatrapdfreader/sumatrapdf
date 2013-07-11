@@ -6387,7 +6387,7 @@ const char * gTranslations_hu =
 const char * gTranslations_id = 
   "&Tentang\0"\
   "&Ukuran Sebenarnya\tCtrl+1\0"\
-  "&Pilihan Lanjut...\0"\
+  "&Pilihan Lanjutan...\0"\
   "&Semua halaman yang dipilih\0"\
   "Kembali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
@@ -6474,9 +6474,9 @@ const char * gTranslations_id =
   "Salin &Komentar\0"\
   "Menyalin teks ditolak (menyalin sebagai gambar saja)\0"\
   "Hak Cipta\0"\
-  "Tidak bsa mendapatkan sifat Pencetak\0"\
-  "Tidak dapat menginisialisasi printer\0"\
-  "Tidak dapat menampilkan halaman\0"\
+  "Gagal mendapatkan properti printer\0"\
+  "Gagal memulai printer\0"\
+  "Gagal menampilkan halaman\0"\
   "Dibuat:\0"\
   "Berkas sekarang\0"\
   "&Pembesaran Buatan\tCtrl+Y\0"\
@@ -6573,7 +6573,7 @@ const char * gTranslations_id =
   "Cetak\0"\
   "Cetak Sebagai Gambar (butuh banyak memori)\0"\
   "Kisaran cetakan\0"\
-  "Pencetak dengan nama tersebut tidak ada\0"\
+  "Printer dengan nama tersebut tidak ada\0"\
   "Dalam proses mencetak\0"\
   "Sedang dalam proses mencetak. Batalkan dan keluar?\0"\
   "Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?\0"\
