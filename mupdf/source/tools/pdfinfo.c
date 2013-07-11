@@ -572,8 +572,8 @@ gatherresourceinfo(int page, pdf_obj *rsrc, int show)
 	pdf_obj *subrsrc;
 	int i;
 
-	pageobj = doc->page_objs[page-1];
-	pageref = doc->page_refs[page-1];
+	pageref = pdf_lookup_page_obj(doc, page-1);
+	pageobj = pdf_resolve_indirect(pageref);
 
 	if (!pageobj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);
@@ -640,8 +640,8 @@ gatherpageinfo(int page, int show)
 	pdf_obj *pageref;
 	pdf_obj *rsrc;
 
-	pageobj = doc->page_objs[page-1];
-	pageref = doc->page_refs[page-1];
+	pageref = pdf_lookup_page_obj(doc, page-1);
+	pageobj = pdf_resolve_indirect(pageref);
 
 	if (!pageobj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot retrieve info from page %d", page);

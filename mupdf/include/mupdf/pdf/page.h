@@ -3,6 +3,9 @@
 
 int pdf_lookup_page_number(pdf_document *doc, pdf_obj *pageobj);
 int pdf_count_pages(pdf_document *doc);
+pdf_obj *pdf_lookup_page_obj(pdf_document *doc, int needle);
+/* SumatraPDF: make pdf_lookup_inherited_page_item externally available */
+pdf_obj *pdf_lookup_inherited_page_item(pdf_document *doc, pdf_obj *node, const char *key);
 
 /*
 	pdf_load_page: Load a page and its resources.

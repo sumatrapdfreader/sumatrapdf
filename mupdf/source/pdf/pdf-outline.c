@@ -34,10 +34,17 @@ pdf_load_outline_imp(pdf_document *doc, pdf_obj *dict)
 			/* SumatraPDF: support expansion states */
 			node->is_open = pdf_to_int(pdf_dict_gets(dict, "Count")) >= 0;
 
+			/* SumatraPDF: tolerate invalid link destinations and actions */
+			fz_try(ctx)
+			{
+
 			if ((obj = pdf_dict_gets(dict, "Dest")))
 				node->dest = pdf_parse_link_dest(doc, obj);
 			else if ((obj = pdf_dict_gets(dict, "A")))
 				node->dest = pdf_parse_action(doc, obj);
+
+			}
+			fz_catch(ctx) { }
 
 			obj = pdf_dict_gets(dict, "First");
 			if (obj)

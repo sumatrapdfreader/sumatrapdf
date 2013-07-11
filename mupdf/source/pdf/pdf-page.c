@@ -1,180 +1,211 @@
 #include "mupdf/pdf.h"
 
-struct info
+int
+pdf_count_pages(pdf_document *doc)
 {
-	pdf_obj *resources;
-	pdf_obj *mediabox;
-	pdf_obj *cropbox;
-	pdf_obj *rotate;
-};
+	if (doc->page_count == 0)
+	{
+		pdf_obj *count = pdf_dict_getp(pdf_trailer(doc), "Root/Pages/Count");
+		doc->page_count = pdf_to_int(count);
+	}
+	return doc->page_count;
+}
 
-typedef struct pdf_page_load_s pdf_page_load;
-
-struct pdf_page_load_s
+static pdf_obj *
+pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **parentp, int *indexp)
 {
-	int max;
-	int pos;
-	pdf_obj *node;
-	pdf_obj *kids;
-	struct info info;
-};
-
-static void
-pdf_load_page_tree_node(pdf_document *doc, pdf_obj *node, struct info info)
-{
-	pdf_obj *dict, *kids, *count;
-	pdf_obj *obj;
 	fz_context *ctx = doc->ctx;
-	pdf_page_load *stack = NULL;
-	int stacklen = -1;
-	int stackmax = 0;
+	pdf_obj *kids, *hit;
+	int i, len;
+
+	kids = pdf_dict_gets(node, "Kids");
+	len = pdf_array_len(kids);
+
+	if (pdf_mark_obj(node))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
+
+	hit = NULL;
+	fz_var(hit);
 
 	fz_try(ctx)
 	{
-		do
+		for (i = 0; i < len; i++)
 		{
-			if (!node || pdf_mark_obj(node))
+			pdf_obj *kid = pdf_array_get(kids, i);
+			char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
+			if (!strcmp(type, "Page"))
 			{
-				/* NULL node, or we've been here before.
-				 * Nothing to do. */
+				if (*skip == 0)
+				{
+					if (parentp) *parentp = node;
+					if (indexp) *indexp = i;
+					hit = kid;
+					break;
+				}
+				else
+				{
+					(*skip)--;
+				}
+			}
+			else if (!strcmp(type, "Pages"))
+			{
+				int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
+				if (*skip < count)
+				{
+					hit = pdf_lookup_page_loc_imp(doc, kid, skip, parentp, indexp);
+					if (hit)
+						break;
+				}
+				else
+				{
+					*skip -= count;
+				}
 			}
 			else
 			{
-				kids = pdf_dict_gets(node, "Kids");
-				count = pdf_dict_gets(node, "Count");
-				if (pdf_is_array(kids) && pdf_is_int(count))
-				{
-					/* Push this onto the stack */
-					obj = pdf_dict_gets(node, "Resources");
-					if (obj)
-						info.resources = obj;
-					obj = pdf_dict_gets(node, "MediaBox");
-					if (obj)
-						info.mediabox = obj;
-					obj = pdf_dict_gets(node, "CropBox");
-					if (obj)
-						info.cropbox = obj;
-					obj = pdf_dict_gets(node, "Rotate");
-					if (obj)
-						info.rotate = obj;
-					stacklen++;
-					if (stacklen == stackmax)
-					{
-						stack = fz_resize_array(ctx, stack, stackmax ? stackmax*2 : 10, sizeof(*stack));
-						stackmax = stackmax ? stackmax*2 : 10;
-					}
-					stack[stacklen].kids = kids;
-					stack[stacklen].node = node;
-					stack[stacklen].pos = -1;
-					stack[stacklen].max = pdf_array_len(kids);
-					stack[stacklen].info = info;
-				}
-				else if ((dict = pdf_to_dict(node)) != NULL)
-				{
-					if (info.resources && !pdf_dict_gets(dict, "Resources"))
-						pdf_dict_puts(dict, "Resources", info.resources);
-					if (info.mediabox && !pdf_dict_gets(dict, "MediaBox"))
-						pdf_dict_puts(dict, "MediaBox", info.mediabox);
-					if (info.cropbox && !pdf_dict_gets(dict, "CropBox"))
-						pdf_dict_puts(dict, "CropBox", info.cropbox);
-					if (info.rotate && !pdf_dict_gets(dict, "Rotate"))
-						pdf_dict_puts(dict, "Rotate", info.rotate);
-
-					if (doc->page_len == doc->page_cap)
-					{
-						fz_warn(ctx, "found more pages than expected");
-						doc->page_refs = fz_resize_array(ctx, doc->page_refs, doc->page_cap+1, sizeof(pdf_obj*));
-						doc->page_objs = fz_resize_array(ctx, doc->page_objs, doc->page_cap+1, sizeof(pdf_obj*));
-						doc->page_cap ++;
-					}
-
-					doc->page_refs[doc->page_len] = pdf_keep_obj(node);
-					doc->page_objs[doc->page_len] = pdf_keep_obj(dict);
-					doc->page_len ++;
-					pdf_unmark_obj(node);
-				}
+				fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree");
 			}
-			/* Get the next node */
-			if (stacklen < 0)
-				break;
-			while (++stack[stacklen].pos == stack[stacklen].max)
-			{
-				pdf_unmark_obj(stack[stacklen].node);
-				stacklen--;
-				if (stacklen < 0) /* No more to pop! */
-					break;
-				node = stack[stacklen].node;
-				info = stack[stacklen].info;
-				pdf_unmark_obj(node); /* Unmark it, cos we're about to mark it again */
-			}
-			if (stacklen >= 0)
-				node = pdf_array_get(stack[stacklen].kids, stack[stacklen].pos);
 		}
-		while (stacklen >= 0);
 	}
 	fz_always(ctx)
 	{
-		while (stacklen >= 0)
-			pdf_unmark_obj(stack[stacklen--].node);
-		fz_free(ctx, stack);
+		pdf_unmark_obj(node);
 	}
 	fz_catch(ctx)
 	{
 		fz_rethrow(ctx);
 	}
+
+	return hit;
 }
 
-static void
-pdf_load_page_tree(pdf_document *doc)
+pdf_obj *
+pdf_lookup_page_loc(pdf_document *doc, int needle, pdf_obj **parentp, int *indexp)
+{
+	pdf_obj *root = pdf_dict_gets(pdf_trailer(doc), "Root");
+	pdf_obj *node = pdf_dict_gets(root, "Pages");
+	int skip = needle;
+	pdf_obj *hit = pdf_lookup_page_loc_imp(doc, node, &skip, parentp, indexp);
+	if (!hit)
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find page %d in page tree", needle);
+	return hit;
+}
+
+pdf_obj *
+pdf_lookup_page_obj(pdf_document *doc, int needle)
+{
+	return pdf_lookup_page_loc(doc, needle, NULL, NULL);
+}
+
+static int
+pdf_count_pages_before_kid(pdf_document *doc, pdf_obj *parent, int kid_num)
+{
+	pdf_obj *kids = pdf_dict_gets(parent, "Kids");
+	int i, total = 0, len = pdf_array_len(kids);
+	for (i = 0; i < len; i++)
+	{
+		pdf_obj *kid = pdf_array_get(kids, i);
+		if (pdf_to_num(kid) == kid_num)
+			return total;
+		if (!strcmp(pdf_to_name(pdf_dict_gets(kid, "Type")), "Pages"))
+		{
+			pdf_obj *count = pdf_dict_gets(kid, "Count");
+			int n = pdf_to_int(count);
+			if (count == NULL || n <= 0)
+				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "illegal or missing count in pages tree");
+			total += n;
+		}
+		else
+			total++;
+	}
+	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "kid not found in parent's kids array");
+}
+
+int
+pdf_lookup_page_number(pdf_document *doc, pdf_obj *node)
 {
 	fz_context *ctx = doc->ctx;
-	pdf_obj *catalog;
-	pdf_obj *pages;
-	pdf_obj *count;
-	struct info info;
+	int needle = pdf_to_num(node);
+	int total = 0;
+	pdf_obj *parent, *parent2;
 
-	if (doc->page_refs)
-		return;
+	/* SumatraPDF: don't return 0 for non-dict nodes (certainly not the first page) */
+	if (!pdf_is_dict(node))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
 
-	catalog = pdf_dict_gets(pdf_trailer(doc), "Root");
-	pages = pdf_dict_gets(catalog, "Pages");
-	count = pdf_dict_gets(pages, "Count");
+	parent2 = parent = pdf_dict_gets(node, "Parent");
+	fz_var(parent);
+	fz_try(ctx)
+	{
+		/* SumatraPDF: don't throw for non-dict parents */
+		while (parent && pdf_is_dict(parent))
+		{
+			if (pdf_mark_obj(parent))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree (parents)");
+			total += pdf_count_pages_before_kid(doc, parent, needle);
+			needle = pdf_to_num(parent);
+			parent = pdf_dict_gets(parent, "Parent");
+		}
+	}
+	fz_always(ctx)
+	{
+		/* Run back and unmark */
+		while (parent2)
+		{
+			pdf_unmark_obj(parent2);
+			if (parent2 == parent)
+				break;
+			parent2 = pdf_dict_gets(parent2, "Parent");
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
-	if (!pdf_is_dict(pages))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "missing page tree");
-	if (!pdf_is_int(count) || pdf_to_int(count) < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "missing page count");
-
-	doc->page_cap = pdf_to_int(count);
-	doc->page_len = 0;
-	doc->page_refs = fz_malloc_array(ctx, doc->page_cap, sizeof(pdf_obj*));
-	doc->page_objs = fz_malloc_array(ctx, doc->page_cap, sizeof(pdf_obj*));
-
-	info.resources = NULL;
-	info.mediabox = NULL;
-	info.cropbox = NULL;
-	info.rotate = NULL;
-
-	pdf_load_page_tree_node(doc, pages, info);
+	return total;
 }
 
-int
-pdf_count_pages(pdf_document *doc)
+/* SumatraPDF: make pdf_lookup_inherited_page_item externally available */
+pdf_obj *
+pdf_lookup_inherited_page_item(pdf_document *doc, pdf_obj *node, const char *key)
 {
-	pdf_load_page_tree(doc);
-	return doc->page_len;
-}
+	fz_context *ctx = doc->ctx;
+	pdf_obj *node2 = node;
+	pdf_obj *val;
 
-int
-pdf_lookup_page_number(pdf_document *doc, pdf_obj *page)
-{
-	int i, num = pdf_to_num(page);
+	/* fz_var(node); Not required as node passed in */
 
-	pdf_load_page_tree(doc);
-	for (i = 0; i < doc->page_len; i++)
-		if (num == pdf_to_num(doc->page_refs[i]))
-			return i;
-	return -1;
+	fz_try(ctx)
+	{
+		do
+		{
+			val = pdf_dict_gets(node, key);
+			if (val)
+				break;
+			if (pdf_mark_obj(node))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree (parents)");
+			node = pdf_dict_gets(node, "Parent");
+		}
+		while (node);
+	}
+	fz_always(ctx)
+	{
+		do
+		{
+			pdf_unmark_obj(node2);
+			if (node2 == node)
+				break;
+			node2 = pdf_dict_gets(node2, "Parent");
+		}
+		while (node2);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return val;
 }
 
 /* We need to know whether to install a page-level transparency group */
@@ -337,12 +368,8 @@ pdf_load_page(pdf_document *doc, int number)
 	float userunit;
 	fz_matrix mat;
 
-	pdf_load_page_tree(doc);
-	if (number < 0 || number >= doc->page_len)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find page %d", number + 1);
-
-	pageobj = doc->page_objs[number];
-	pageref = doc->page_refs[number];
+	pageref = pdf_lookup_page_obj(doc, number);
+	pageobj = pdf_resolve_indirect(pageref);
 
 	page = fz_malloc_struct(ctx, pdf_page);
 	page->resources = NULL;
@@ -360,7 +387,7 @@ pdf_load_page(pdf_document *doc, int number)
 	else
 		userunit = 1;
 
-	pdf_to_rect(ctx, pdf_dict_gets(pageobj, "MediaBox"), &mediabox);
+	pdf_to_rect(ctx, pdf_lookup_inherited_page_item(doc, pageobj, "MediaBox"), &mediabox);
 	if (fz_is_empty_rect(&mediabox))
 	{
 		fz_warn(ctx, "cannot find page size for page %d", number + 1);
@@ -370,7 +397,7 @@ pdf_load_page(pdf_document *doc, int number)
 		mediabox.y1 = 792;
 	}
 
-	pdf_to_rect(ctx, pdf_dict_gets(pageobj, "CropBox"), &cropbox);
+	pdf_to_rect(ctx, pdf_lookup_inherited_page_item(doc, pageobj, "CropBox"), &cropbox);
 	if (!fz_is_empty_rect(&cropbox))
 		fz_intersect_rect(&mediabox, &cropbox);
 
@@ -385,7 +412,7 @@ pdf_load_page(pdf_document *doc, int number)
 		page->mediabox = fz_unit_rect;
 	}
 
-	page->rotate = pdf_to_int(pdf_dict_gets(pageobj, "Rotate"));
+	page->rotate = pdf_to_int(pdf_lookup_inherited_page_item(doc, pageobj, "Rotate"));
 	/* Snap page->rotate to 0, 90, 180 or 270 */
 	if (page->rotate < 0)
 		page->rotate = 360 - ((-page->rotate) % 360);
@@ -425,7 +452,8 @@ pdf_load_page(pdf_document *doc, int number)
 		pdf_load_transition(doc, page, obj);
 	}
 
-	page->resources = pdf_dict_gets(pageobj, "Resources");
+	// TODO: inherit
+	page->resources = pdf_lookup_inherited_page_item(doc, pageobj, "Resources");
 	if (page->resources)
 		pdf_keep_obj(page->resources);
 
@@ -496,68 +524,67 @@ pdf_free_page(pdf_document *doc, pdf_page *page)
 }
 
 void
-pdf_delete_page(pdf_document *doc, int page)
+pdf_delete_page(pdf_document *doc, int at)
 {
-	pdf_delete_page_range(doc, page, page+1);
-}
-
-void
-pdf_delete_page_range(pdf_document *doc, int start, int end)
-{
+	pdf_obj *parent, *kids;
 	int i;
 
-	if (start > end)
+	pdf_lookup_page_loc(doc, at, &parent, &i);
+	kids = pdf_dict_gets(parent, "Kids");
+	pdf_array_delete(kids, i);
+
+	while (parent)
 	{
-		int tmp = start;
-		start = end;
-		end = tmp;
+		int count = pdf_to_int(pdf_dict_gets(parent, "Count"));
+		pdf_dict_puts_drop(parent, "Count", pdf_new_int(doc, count - 1));
+		parent = pdf_dict_gets(parent, "Parent");
 	}
-
-	if (!doc || start >= doc->page_len || end < 0)
-		return;
-
-	for (i=start; i < end; i++)
-		pdf_drop_obj(doc->page_refs[i]);
-	if (doc->page_len > end)
-	{
-		memmove(&doc->page_refs[start], &doc->page_refs[end], sizeof(pdf_page *) * (doc->page_len - end + start));
-		memmove(&doc->page_refs[start], &doc->page_refs[end], sizeof(pdf_page *) * (doc->page_len - end + start));
-	}
-
-	doc->page_len -= end - start;
-	doc->needs_page_tree_rebuild = 1;
 }
 
 void
 pdf_insert_page(pdf_document *doc, pdf_page *page, int at)
 {
-	if (!doc || !page)
-		return;
-	if (at < 0)
-		at = 0;
-	if (at > doc->page_len)
-		at = doc->page_len;
+	int count = pdf_count_pages(doc);
+	pdf_obj *parent, *kids;
+	int i;
 
-	if (doc->page_len + 1 >= doc->page_cap)
+	if (count == 0)
 	{
-		int newmax = doc->page_cap * 2;
-		if (newmax == 0)
-			newmax = 4;
-		doc->page_refs = fz_resize_array(doc->ctx, doc->page_refs, newmax, sizeof(pdf_page *));
-		doc->page_objs = fz_resize_array(doc->ctx, doc->page_objs, newmax, sizeof(pdf_page *));
-		doc->page_cap = newmax;
+		/* TODO: create new page tree? */
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "empty page tree, cannot insert page");
 	}
-	if (doc->page_len > at)
+	else if (at >= count)
 	{
-		memmove(&doc->page_objs[at+1], &doc->page_objs[at], doc->page_len - at);
-		memmove(&doc->page_refs[at+1], &doc->page_refs[at], doc->page_len - at);
+		if (at > count)
+			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot insert page beyond end of page tree");
+
+		/* append after last page */
+		pdf_lookup_page_loc(doc, count - 1, &parent, &i);
+		kids = pdf_dict_gets(parent, "Kids");
+		pdf_array_insert_drop(kids, pdf_new_ref(doc, page->me), i + 1);
+	}
+	else
+	{
+		/* insert before found page */
+		pdf_lookup_page_loc(doc, at, &parent, &i);
+		kids = pdf_dict_gets(parent, "Kids");
+		pdf_array_insert_drop(kids, pdf_new_ref(doc, page->me), i);
 	}
 
-	doc->page_len++;
-	doc->page_objs[at] = pdf_keep_obj(page->me);
-	doc->page_refs[at] = NULL;
-	doc->page_refs[at] = pdf_new_ref(doc, page->me);
-	doc->needs_page_tree_rebuild = 1;
+	/* Adjust page counts */
+	while (parent)
+	{
+		int count = pdf_to_int(pdf_dict_gets(parent, "Count"));
+		pdf_dict_puts_drop(parent, "Count", pdf_new_int(doc, count + 1));
+		parent = pdf_dict_gets(parent, "Parent");
+	}
+}
+
+void
+pdf_delete_page_range(pdf_document *doc, int start, int end)
+{
+	while (start < end)
+		pdf_delete_page(doc, start++);
 }
 
 pdf_page *

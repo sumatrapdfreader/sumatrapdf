@@ -619,6 +619,8 @@ EXPORTS
 	pdf_file_update_end
 	pdf_lookup_page_number
 	pdf_count_pages
+	pdf_lookup_page_obj
+	pdf_lookup_inherited_page_item
 	pdf_load_page
 	pdf_load_links
 	pdf_bound_page

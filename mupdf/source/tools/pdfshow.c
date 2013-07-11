@@ -62,7 +62,7 @@ static void showpagetree(void)
 	count = pdf_count_pages(doc);
 	for (i = 0; i < count; i++)
 	{
-		ref = doc->page_refs[i];
+		ref = pdf_lookup_page_obj(doc, i);
 		printf("page %d = %d %d R\n", i + 1, pdf_to_num(ref), pdf_to_gen(ref));
 	}
 	printf("\n");

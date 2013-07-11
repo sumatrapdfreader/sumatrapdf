@@ -1168,6 +1168,7 @@ protected:
 
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
+    pdf_obj **      _pageObjs;
 
     bool            Load(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
     bool            Load(IStream *stream, PasswordUI *pwdUI=NULL);
@@ -1298,7 +1299,7 @@ public:
 };
 
 PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
-    _pages(NULL), _mediaboxes(NULL), _info(NULL),
+    _pages(NULL), _pageObjs(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
     _decryptionKey(NULL), isProtected(false),
     pageAnnots(NULL), imageRects(NULL)
@@ -1326,6 +1327,7 @@ PdfEngineImpl::~PdfEngineImpl()
         }
         free(_pages);
     }
+    free(_pageObjs);
 
     fz_free_outline(ctx, outline);
     fz_free_outline(ctx, attachments);
@@ -1575,7 +1577,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 bool PdfEngineImpl::FinishLoading()
 {
     fz_try(ctx) {
-        // this calls pdf_load_page_tree(_doc) which may throw
+        // this call might throw the first time
         pdf_count_pages(_doc);
     }
     fz_catch(ctx) {
@@ -1587,15 +1589,24 @@ bool PdfEngineImpl::FinishLoading()
     }
 
     _pages = AllocArray<pdf_page *>(PageCount());
+    _pageObjs = AllocArray<pdf_obj *>(PageCount());
     _mediaboxes = AllocArray<RectD>(PageCount());
     pageAnnots = AllocArray<pdf_annot **>(PageCount());
     imageRects = AllocArray<fz_rect *>(PageCount());
 
-    if (!_pages || !_mediaboxes || !pageAnnots || !imageRects)
+    if (!_pages || !_pageObjs || !_mediaboxes || !pageAnnots || !imageRects)
         return false;
 
     ScopedCritSec scope(&ctxAccess);
 
+    for (int i = 0; i < PageCount(); i++) {
+        fz_try(ctx) {
+            _pageObjs[i] = pdf_lookup_page_obj(_doc, i);
+        }
+        fz_catch(ctx) {
+            fz_warn(ctx, "Couldn't load page %d", i + 1);
+        }
+    }
     fz_try(ctx) {
         outline = pdf_load_outline(_doc);
     }
@@ -1927,7 +1938,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     if (!_mediaboxes[pageNo-1].IsEmpty())
         return _mediaboxes[pageNo-1];
 
-    pdf_obj *page = _doc->page_objs[pageNo-1];
+    pdf_obj *page = _pageObjs[pageNo - 1];
     if (!page)
         return RectD();
 
@@ -1938,9 +1949,9 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     int rotate = 0;
     float userunit = 1.0;
     fz_try(ctx) {
-        pdf_to_rect(ctx, pdf_dict_gets(page, "MediaBox"), &mbox);
-        pdf_to_rect(ctx, pdf_dict_gets(page, "CropBox"), &cbox);
-        rotate = pdf_to_int(pdf_dict_gets(page, "Rotate"));
+        pdf_to_rect(ctx, pdf_lookup_inherited_page_item(_doc, page, "MediaBox"), &mbox);
+        pdf_to_rect(ctx, pdf_lookup_inherited_page_item(_doc, page, "CropBox"), &cbox);
+        rotate = pdf_to_int(pdf_lookup_inherited_page_item(_doc, page, "Rotate"));
         pdf_obj *obj = pdf_dict_gets(page, "UserUnit");
         if (pdf_is_real(obj))
             userunit = pdf_to_real(obj);
@@ -2466,7 +2477,7 @@ bool PdfEngineImpl::IsLinearizedFile()
     if (pdf_to_int(pdf_dict_gets(obj, "L")) != _doc->file_size)
         return false;
     // /O must be the object number of the first page
-    if (pdf_to_int(pdf_dict_gets(obj, "O")) != pdf_to_num(_doc->page_refs[0]))
+    if (pdf_to_int(pdf_dict_gets(obj, "O")) != pdf_to_num(_pageObjs[0]))
         return false;
     // /N must be the total number of pages
     if (pdf_to_int(pdf_dict_gets(obj, "N")) != PageCount())
@@ -2649,7 +2660,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const
     if (forSaving) {
         // TODO: support updating of documents where pages aren't all numbered objects?
         for (int i = 0; i < PageCount(); i++) {
-            if (pdf_to_num(_doc->page_refs[i]) == 0)
+            if (pdf_to_num(_pageObjs[i]) == 0)
                 return false;
         }
     }
@@ -2776,9 +2787,10 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
     if ((rotation % 180) == 90)
         Swap(dx, dy);
     float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
+    pdf_obj *page_obj = pdf_lookup_page_obj(doc, annot.pageNo - 1);
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
-        pdf_to_num(doc->page_refs[annot.pageNo-1]), pdf_to_gen(doc->page_refs[annot.pageNo-1]), //P
+        pdf_to_num(page_obj), pdf_to_gen(page_obj), //P
         next_num));
     ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
@@ -2865,7 +2877,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
         list = pdf_file_update_start_w(_doc, fileName, next_num + PageCount() * 2 + userAnnots.Count() * 2);
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             // TODO: this will skip annotations for broken documents
-            if (!GetPdfPage(pageNo) || !pdf_to_num(_doc->page_refs[pageNo-1])) {
+            if (!GetPdfPage(pageNo) || !pdf_to_num(_pageObjs[pageNo - 1])) {
                 ok = false;
                 break;
             }
@@ -2873,7 +2885,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
             if (pageAnnots.Count() == 0)
                 continue;
             // get the page's /Annots array for appending
-            pdf_obj *annots = pdf_dict_gets(_doc->page_objs[pageNo-1], "Annots");
+            pdf_obj *annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
             if (pdf_is_array(annots))
                 annots_new = pdf_copy_array(annots);
             else
@@ -2889,9 +2901,9 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
             }
             else {
                 // make /Annots indirect for the current /Page
-                obj = pdf_copy_dict(_doc->page_objs[pageNo-1]);
+                obj = pdf_copy_dict(_pageObjs[pageNo - 1]);
                 pdf_dict_puts_drop(obj, "Annots", pdf_new_indirect(_doc, next_num, 0));
-                pdf_file_update_append(list, obj, pdf_to_num(_doc->page_refs[pageNo-1]), pdf_to_gen(_doc->page_refs[pageNo-1]), NULL);
+                pdf_file_update_append(list, obj, pdf_to_num(_pageObjs[pageNo - 1]), pdf_to_gen(_pageObjs[pageNo - 1]), NULL);
                 pdf_drop_obj(obj);
                 obj = NULL;
                 pdf_file_update_append(list, annots_new, next_num++, 0, NULL);

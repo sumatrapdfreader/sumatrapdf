@@ -187,12 +187,8 @@ struct pdf_document_s
 	int xref_altered;
 	int freeze_updates;
 
-	int page_len;
-	int page_cap;
-	pdf_obj **page_objs;
-	pdf_obj **page_refs;
+	int page_count;
 	int resources_localised;
-	int needs_page_tree_rebuild;
 
 	pdf_lexbuf_large lexbuf;
 

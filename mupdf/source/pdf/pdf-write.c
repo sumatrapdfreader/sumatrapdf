@@ -2451,6 +2451,10 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 
 #define KIDS_PER_LEVEL 32
 
+#if 0
+
+// TODO: pdf_rebalance_page_tree(doc);
+
 static pdf_obj *
 make_page_tree_node(pdf_document *doc, int l, int r, pdf_obj *parent_ref, int root)
 {
@@ -2517,7 +2521,7 @@ make_page_tree_node(pdf_document *doc, int l, int r, pdf_obj *parent_ref, int ro
 }
 
 static void
-pdf_rebuild_page_tree(pdf_document *doc)
+pdf_rebalance_page_tree(pdf_document *doc)
 {
 	pdf_obj *catalog;
 	pdf_obj *pages;
@@ -2532,12 +2536,18 @@ pdf_rebuild_page_tree(pdf_document *doc)
 	doc->needs_page_tree_rebuild = 0;
 }
 
+#endif
+
+static void
+pdf_rebalance_page_tree(pdf_document *doc)
+{
+}
+
 void pdf_finish_edit(pdf_document *doc)
 {
 	if (!doc)
 		return;
-
-	pdf_rebuild_page_tree(doc);
+	pdf_rebalance_page_tree(doc);
 }
 
 /* SumatraPDF: support PDF document updates */

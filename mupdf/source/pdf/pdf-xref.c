@@ -1097,8 +1097,8 @@ pdf_init_document(pdf_document *doc)
 void
 pdf_close_document(pdf_document *doc)
 {
-	int i;
 	fz_context *ctx;
+	int i;
 
 	if (!doc)
 		return;
@@ -1112,20 +1112,6 @@ pdf_close_document(pdf_document *doc)
 	pdf_drop_js(doc->js);
 
 	pdf_free_xref_sections(doc);
-
-	if (doc->page_objs)
-	{
-		for (i = 0; i < doc->page_len; i++)
-			pdf_drop_obj(doc->page_objs[i]);
-		fz_free(ctx, doc->page_objs);
-	}
-
-	if (doc->page_refs)
-	{
-		for (i = 0; i < doc->page_len; i++)
-			pdf_drop_obj(doc->page_refs[i]);
-		fz_free(ctx, doc->page_refs);
-	}
 
 	if (doc->focus_obj)
 		pdf_drop_obj(doc->focus_obj);

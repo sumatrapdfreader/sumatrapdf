@@ -91,8 +91,8 @@ static void retainpages(int argc, char **argv)
 
 			for (page = spage; page <= epage; page++)
 			{
-				pdf_obj *pageobj = doc->page_objs[page-1];
-				pdf_obj *pageref = doc->page_refs[page-1];
+				pdf_obj *pageref = pdf_lookup_page_obj(doc, page-1);
+				pdf_obj *pageobj = pdf_resolve_indirect(pageref);
 
 				pdf_dict_puts(pageobj, "Parent", parent);
 
