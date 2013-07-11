@@ -69,7 +69,7 @@ struct fz_image_s
 	fz_colorspace *colorspace;
 	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);
 	fz_compressed_buffer *buffer;
-	int colorkey[FZ_MAX_COLORS * 2];
+	int colorkey[(FZ_MAX_COLORS + 1) * 2]; /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
 	float decode[FZ_MAX_COLORS * 2];
 	int imagemask;
 	int interpolate;
