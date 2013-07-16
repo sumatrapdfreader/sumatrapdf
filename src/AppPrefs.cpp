@@ -366,7 +366,6 @@ bool Reload(bool forceReload)
 
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
-    bool useSysColors = gGlobalPrefs->useSysColors;
 
     gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
@@ -375,19 +374,20 @@ bool Reload(bool forceReload)
     bool ok = Load();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
 
+    // TODO: about window doesn't have to be at position 0
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
         gWindows.At(0)->DeleteInfotip();
         gWindows.At(0)->staticLinks.Reset();
         gWindows.At(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {
+    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage))
         SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
-    }
+
     if (gGlobalPrefs->showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
-    if (gGlobalPrefs->useSysColors != useSysColors)
-        UpdateDocumentColors();
+
+    UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 
     int n = gEbookWindows.Count();

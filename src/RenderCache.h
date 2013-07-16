@@ -91,8 +91,8 @@ private:
     bool                isRemoteSession;
 
 public:
-    /* allow to modify the range of colors used for accessibility reasons (experimental!) */
-    COLORREF            colorRange[2];
+    COLORREF            textColor;
+    COLORREF            backgroundColor;
 
     RenderCache();
     ~RenderCache();

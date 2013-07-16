@@ -19,8 +19,8 @@ RenderCache::RenderCache()
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)),
       isRemoteSession(GetSystemMetrics(SM_REMOTESESSION))
 {
-    colorRange[0] = WIN_COL_BLACK;
-    colorRange[1] = WIN_COL_WHITE;
+    textColor = WIN_COL_BLACK;
+    backgroundColor = WIN_COL_WHITE;
 
     InitializeCriticalSection(&cacheAccess);
     InitializeCriticalSection(&requestAccess);
@@ -591,7 +591,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         else {
             // don't replace colors for individual images
             if (bmp && !req.dm->engine->IsImageCollection())
-                UpdateBitmapColorRange(bmp->GetBitmap(), cache->colorRange);
+                UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
             cache->Add(req, bmp);
             req.dm->RepaintDisplay();
         }

@@ -262,14 +262,8 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.forwardSearch = gGlobalPrefs->forwardSearch;
     i.escToExit = gGlobalPrefs->escToExit;
     i.cbxMangaMode = gGlobalPrefs->comicBookUI.cbxMangaMode;
-    if (gGlobalPrefs->useSysColors) {
-        i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
-        i.colorRange[1] = GetSysColor(COLOR_WINDOW);
-    }
-    else {
-        i.colorRange[0] = gGlobalPrefs->fixedPageUI.textColor;
-        i.colorRange[1] = gGlobalPrefs->fixedPageUI.backgroundColor;
-    }
+    i.textColor = GetFixedPageUiTextColor();
+    i.backgroundColor = GetFixedPageUiBgColor();
     i.ParseCommandLine(GetCommandLine());
 }
 
@@ -374,8 +368,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs->escToExit = i.escToExit;
     gGlobalPrefs->comicBookUI.cbxMangaMode = i.cbxMangaMode;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
-    gRenderCache.colorRange[0] = i.colorRange[0];
-    gRenderCache.colorRange[1] = i.colorRange[1];
+    gRenderCache.textColor = i.textColor;
+    gRenderCache.backgroundColor = i.backgroundColor;
     DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (i.inverseSearchCmdLine) {

@@ -912,18 +912,18 @@ inline int mul255(int a, int b)
     return x >> 8;
 }
 
-void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
+void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
 {
-    if ((range[0] & 0xFFFFFF) == WIN_COL_BLACK &&
-        (range[1] & 0xFFFFFF) == WIN_COL_WHITE)
+    if ((textColor & 0xFFFFFF) == WIN_COL_BLACK &&
+        (bgColor & 0xFFFFFF) == WIN_COL_WHITE)
         return;
 
     // color order in DIB is blue-green-red-alpha
-    int base[4] = { GetBValueSafe(range[0]), GetGValueSafe(range[0]), GetRValueSafe(range[0]), 0 };
+    int base[4] = { GetBValueSafe(textColor), GetGValueSafe(textColor), GetRValueSafe(textColor), 0 };
     int diff[4] = {
-        GetBValueSafe(range[1]) - base[0],
-        GetGValueSafe(range[1]) - base[1],
-        GetRValueSafe(range[1]) - base[2],
+        GetBValueSafe(bgColor) - base[0],
+        GetGValueSafe(bgColor) - base[1],
+        GetRValueSafe(bgColor) - base[2],
         255
     };
 

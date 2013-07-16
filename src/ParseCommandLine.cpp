@@ -176,8 +176,8 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // -invert-colors is for consistency
             // -invert-colors is a shortcut for -set-color-range 0xFFFFFF 0x000000
             // (i.e. it sets white as foreground color and black as background color)
-            colorRange[0] = WIN_COL_WHITE;
-            colorRange[1] = WIN_COL_BLACK;
+            textColor = WIN_COL_WHITE;
+            backgroundColor = WIN_COL_BLACK;
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;
@@ -262,8 +262,8 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             lang = str::conv::ToAnsi(argList.At(++n));
         }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
-            ParseColor(&colorRange[0], argList.At(++n));
-            ParseColor(&colorRange[1], argList.At(++n));
+            ParseColor(&textColor, argList.At(++n));
+            ParseColor(&backgroundColor, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
             forwardSearch.highlightOffset = _wtoi(argList.At(++n));

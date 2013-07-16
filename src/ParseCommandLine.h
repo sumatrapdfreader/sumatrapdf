@@ -31,7 +31,8 @@ public:
     WCHAR *     destName;
     int         pageNumber;
     bool        restrictedUse;
-    COLORREF    colorRange[2]; // foreground color / background color
+    COLORREF    textColor;
+    COLORREF    backgroundColor;
     bool        enterPresentation;
     bool        enterFullscreen;
     DisplayMode startView;
@@ -68,8 +69,8 @@ public:
         stressRandomizeFiles(false),
         crashOnOpen(false)
     {
-        colorRange[0] = RGB(0, 0, 0); // black
-        colorRange[1] = RGB(0xFF, 0xFF, 0xFF); // white
+        textColor = RGB(0, 0, 0); // black
+        backgroundColor = RGB(0xFF, 0xFF, 0xFF); // white
         forwardSearch.highlightOffset = 0;
         forwardSearch.highlightWidth = 0;
         forwardSearch.highlightColor = (COLORREF)-1;

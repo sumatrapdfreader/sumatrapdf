@@ -1959,7 +1959,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 
     // Draw frame
     ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[1]));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
@@ -1968,7 +1968,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[1]));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
@@ -2124,7 +2124,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         if (renderDelay) {
             ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            SetTextColor(hdc, gRenderCache.colorRange[0]);
+            SetTextColor(hdc, gRenderCache.textColor);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
@@ -2176,21 +2176,32 @@ static void RerenderEverything()
     }
 }
 
+COLORREF GetFixedPageUiTextColor()
+{
+    if (gGlobalPrefs->useSysColors)
+        return GetSysColor(COLOR_WINDOWTEXT);
+    return gGlobalPrefs->fixedPageUI.textColor;
+}
+
+COLORREF GetFixedPageUiBgColor()
+{
+    if (gGlobalPrefs->useSysColors)
+        return GetSysColor(COLOR_WINDOW);
+    return gGlobalPrefs->fixedPageUI.backgroundColor;
+}
+
 void UpdateDocumentColors()
 {
-    COLORREF fore = WIN_COL_BLACK;
-    COLORREF back = WIN_COL_WHITE;
-    if (gGlobalPrefs->useSysColors) {
-        fore = GetSysColor(COLOR_WINDOWTEXT);
-        back = GetSysColor(COLOR_WINDOW);
+    COLORREF text = GetFixedPageUiTextColor();
+    COLORREF bg = GetFixedPageUiBgColor();
+    if ((text == gRenderCache.textColor) &&
+        (bg == gRenderCache.backgroundColor)) {
+            return; // colors didn't change
     }
-    // update document color range
-    if (fore != gRenderCache.colorRange[0] ||
-        back != gRenderCache.colorRange[1]) {
-        gRenderCache.colorRange[0] = fore;
-        gRenderCache.colorRange[1] = back;
-        RerenderEverything();
-    }
+
+    gRenderCache.textColor = text;
+    gRenderCache.backgroundColor = bg;
+    RerenderEverything();
 }
 
 #if defined(SHOW_DEBUG_MENU_ITEMS) || defined(DEBUG)
@@ -2543,10 +2554,11 @@ static void OnPaint(WindowInfo& win)
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
     if (win.IsAboutWindow()) {
-        if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage)
-            DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.colorRange);
-        else
+        if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
+            DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.textColor, gRenderCache.backgroundColor);
+        } else {
             DrawAboutPage(win, win.buffer->GetDC());
+        }
         win.buffer->Flush(hdc);
     } else if (!win.IsDocLoaded()) {
         // TODO: replace with notifications as far as reasonably possible
@@ -3394,8 +3406,6 @@ void OnMenuOptions(HWND hwnd)
 {
     if (!HasPermission(Perm_SavePreferences)) return;
 
-    bool useSysColors = gGlobalPrefs->useSysColors;
-
     if (IDOK != Dialog_Settings(hwnd, gGlobalPrefs))
         return;
 
@@ -3404,8 +3414,7 @@ void OnMenuOptions(HWND hwnd)
         gFileHistory.Clear(true);
         CleanUpThumbnailCache(gFileHistory);
     }
-    if (useSysColors != gGlobalPrefs->useSysColors)
-        UpdateDocumentColors();
+    UpdateDocumentColors();
 
     prefs::Save();
 }

@@ -44,10 +44,10 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        utassert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
+        utassert(i.textColor == WIN_COL_BLACK && i.backgroundColor == WIN_COL_WHITE);
         i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef");
-        utassert(i.colorRange[0] == RGB(0x12, 0x34, 0x56));
-        utassert(i.colorRange[1] == RGB(0xAB, 0xCD, 0xEF));
+        utassert(i.textColor == RGB(0x12, 0x34, 0x56));
+        utassert(i.backgroundColor == RGB(0xAB, 0xCD, 0xEF));
         utassert(2 == i.pathsToBenchmark.Count());
         utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
         utassert(str::Eq(L"1", i.pathsToBenchmark.At(1)));
@@ -65,10 +65,10 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        utassert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
+        utassert(i.textColor == WIN_COL_BLACK && i.backgroundColor == WIN_COL_WHITE);
         i.ParseCommandLine(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf");
         utassert(true == i.enterPresentation);
-        utassert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
+        utassert(i.textColor == WIN_COL_WHITE && i.backgroundColor == WIN_COL_BLACK);
         utassert(1248426 == i.bgColor);
         utassert(2 == i.fileNames.Count());
         utassert(0 == i.fileNames.Find(L"foo.pdf"));
@@ -77,9 +77,9 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        utassert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
+        utassert(i.textColor == WIN_COL_BLACK && i.backgroundColor == WIN_COL_WHITE);
         i.ParseCommandLine(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf");
-        utassert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
+        utassert(i.textColor == WIN_COL_WHITE && i.backgroundColor == WIN_COL_BLACK);
         utassert(1248426 == i.bgColor);
         utassert(1 == i.fileNames.Count());
         utassert(0 == i.fileNames.Find(L"rosanna.pdf"));
