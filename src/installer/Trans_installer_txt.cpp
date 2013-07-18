@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   35
+#define LANGS_COUNT   36
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1563,16 +1563,16 @@ const char * gTranslations_uz =
   "O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tugadi\0"\
   "Xatcho'pni yaratib bo'lmadi\0"\
   "O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi\0"\
-  "\0"\
-  "\0"\
+  "Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi\0"\
+  "Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi\0"\
   "&Parametrlarni yashirish\0"\
   "PDF &brauzer plaginini Firefox, Chrome va Opera uchun o'rnatish\0"\
   "SumatraPDF o'rnatish\0"\
   "SumatraPDF &jildga o'rnatish\0"\
   "O'rnatish muvaffaqiyatsiz tugadi!\0"\
   "O'rnatilmoqda...\0"\
-  "\0"\
-  "\0"\
+  "Windows Desktop Search yordamida PDF hujjatlarini &qidirish\0"\
+  "Windows yordamida PDF hujjatlarini oldindan &ko'rish\0"\
   "Davom etish uchun %s yoping!\0"\
   "SumatraPDF o'rnatish uchun jildni tanlang:\0"\
   "Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas\0"\
@@ -1580,14 +1580,59 @@ const char * gTranslations_uz =
   "SumatraPDF %s o'rnatuvchisi\0"\
   "SumatraPDF %s o'chirish dasturi\0"\
   "SumatraPDF o'chirildi.\0"\
-  "\0"\
+  "SumatraPDF o'rnatilganligi topilmadi.\0"\
   "SumatraPDF tanlaganingiz uchun tashakkur!\0"\
   "Tashakkur! SumatraPDF o'rnatildi.\0"\
-  "\0"\
+  "O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!\0"\
   "SumatraPDFni o'chirish\0"\
   "O'chirish muvaffaqiyatsiz tugadi\0"\
   "O'chirilmoqda...\0"\
   "SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish\0";
+
+const char * gTranslations_cy = 
+  "&Dewisiadau\0"\
+  "Ydych chi'n si\305\265r eich bod am ddadosod SumatraPDF\0"\
+  "Cau\0"\
+  "Methu creu cyfeiriadur dros dro\0"\
+  "Merhu creu'r cyfeiriadur gosod\0"\
+  "Mehu gosod rhagolygwr PDF\0"\
+  "Methu gosod hidl chwilio PDF\0"\
+  "Methu gosod ategyn porwr\0"\
+  "Methu canfod cyfeiriadur dros dro\0"\
+  "Methu tynnu'r cyfeiriadur gosod\0"\
+  "Methu tynnu'r llwybr byr\0"\
+  "Methu dadosod rhagolygwr PDF\0"\
+  "Methu dadosod hidl chwilio PDF\0"\
+  "Methu dadosod ategyn porwr\0"\
+  "Methu ysgrifennu %s i ddisg\0"\
+  "Methwyd cop\303\257o'r dadosodwr i'r cyfeiriadur dros dro\0"\
+  "Methwyd creu llwybr byr\0"\
+  "Methwyd dileu allweddi cofrestrfa'r dadosodwr\0"\
+  "Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa\0"\
+  "Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa\0"\
+  "Dewisiadau C&uddio\0"\
+  "Gosod ategyn &porwr PDF ar gyfer Firefox, Chrome ac Opera\0"\
+  "Gosod SumatraPDF\0"\
+  "Gosod SumatraPDF yn &ffolder:\0"\
+  "Methodd y gosod!\0"\
+  "Wrthi'n gosod\0"\
+  "Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF\0"\
+  "Gadael i Windows ddangos &rhagolwg o ddogfennau PDF\0"\
+  "Cau %s i barhau!\0"\
+  "Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:\0"\
+  "Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll\0"\
+  "Cychwyn SumatraPDF\0"\
+  "Gosodwr SumatraPDF %s\0"\
+  "Dadosodwr SumatraPDF %s\0"\
+  "Mae SumatraPDF wedi ei ddadosod.\0"\
+  "Heb ganfod gosodiad SumatraPDF.\0"\
+  "Diolch am ddefnyddio SumatraPDF!\0"\
+  "Diolch yn fawr! Mae SumatraPDF wedi ei gosod\0"\
+  "Mae'r gosodwr yn llwgr. Llwythwch y ffeil i lawr eto. \n Ymddiheuriadau am yr anghyfleuster!\0"\
+  "Dadosod SumatraPDF\0"\
+  "Methodd y gosod\0"\
+  "Wrthi'n dadosod...\0"\
+  "Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig\0";
 
 
 static const char *gTranslations[LANGS_COUNT] = {
@@ -1625,7 +1670,8 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_sv, 
   gTranslations_ta, 
   gTranslations_uk, 
-  gTranslations_uz
+  gTranslations_uz, 
+  gTranslations_cy
 };
 
 const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx]; }
@@ -1665,7 +1711,8 @@ const char *gLangCodes =   "en\0" \
   "sv\0" \
   "ta\0" \
   "uk\0" \
-  "uz\0" "\0";
+  "uz\0" \
+  "cy\0" "\0";
 
 const char *gLangNames =   "English\0" \
   "Albanian (Shqip)\0" \
@@ -1701,7 +1748,8 @@ const char *gLangNames =   "English\0" \
   "Swedish (Svenska)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" \
-  "Uzbek (O'zbek)\0" "\0";
+  "Uzbek (O'zbek)\0" \
+  "Welsh (Cymraeg)\0" "\0";
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -1749,7 +1797,8 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_SWEDISH),
   _LANGID(LANG_TAMIL),
   _LANGID(LANG_UKRAINIAN),
-  _LANGID(LANG_UZBEK)
+  _LANGID(LANG_UZBEK),
+  _LANGID(LANG_WELSH)
 };
 #undef _LANGID
 

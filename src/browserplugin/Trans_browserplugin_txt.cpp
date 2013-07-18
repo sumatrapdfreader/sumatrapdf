@@ -359,13 +359,23 @@ const WCHAR * const gTranslations[] = {
   NULL,
   NULL,
   L"Hujjat SumatraPDFda ochilmoqda...",
+
+  /* Translations for language cy */
+  L"%s o %s",
+  L"Gwall. Methu rhedeg SumatraPDF",
+  L"Gwall: Heb ganfod SumatraPDF!",
+  L"Gwall: Nid oedd modd llwytho'r ddogfen i lawr!",
+  NULL,
+  NULL,
+  NULL,
+  L"Agor dogfen yn SumatraPDF...",
 };
 
 const char * const gLanguages[] = {
     "en", "sq", "ar", "am", "az", "eu", "ca", "ca-xv", "cn", "hr",
     "cz", "dk", "nl", "et", "fi", "fr", "de", "hu", "id", "it",
     "ja", "kr", "ku", "mk", "pl", "br", "pt", "ro", "ru", "sk",
-    "es", "sv", "ta", "uk", "uz", NULL
+    "es", "sv", "ta", "uk", "uz", "cy", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -418,6 +428,7 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_TAMIL): return 256;
     case _LANGID(LANG_UKRAINIAN): return 264;
     case _LANGID(LANG_UZBEK): return 272;
+    case _LANGID(LANG_WELSH): return 280;
     default: return -1;
 #undef _LANGID
     }

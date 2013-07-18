@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-48b2f6be5a0a79dd23fa6c1ec5d560bcc71ffe45
+c79fdf74a7829093fa17a9dc0a60829459e90962
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -10,6 +10,7 @@ by:%s з %s
 ca-xv:%s de %s
 ca:%s de %s
 cn:%s of %s
+cy:%s o %s
 cz:%s z %s
 de:%s von %s
 dk:%s af %s
@@ -184,6 +185,7 @@ br:Opções &Avançadas...
 ca-xv:Opcions &avançades...
 ca:Opcions &avançades...
 cn:高级选项(&A)...
+cy:Dewisiadau &Uwch...
 cz:&Pokročilé možnosti...
 de:&Mehr Optionen…
 dk:&Avancerede valgmuligheder
@@ -339,6 +341,7 @@ bs:&Knjiški pregled\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
 ca:Visualització de &llibre\tCtrl+8
 cn:书籍视图(&B)\tCtrl+8
+cy:Golwg &Llyfr\tCtrl+8
 cz:K&niha\tCtrl+8
 de:&Buchansicht\tStrg+8
 dk:&Bogvisning\tCtrl+8
@@ -462,6 +465,7 @@ bs:&Kopiraj označeno
 ca-xv:&Copia la selecció
 ca:&Copia la selecció
 cn:复制选择内容(&C)\tCtrl+C
+cy:Copïo &Dewis
 cz:&Kopírovat výběr
 de:Auswahl &kopieren
 dk:&Kopier Markering
@@ -702,6 +706,7 @@ bs:&Dvije stranice\tCtrl+7
 ca-xv:Pàgina &doble\tCtrl+7
 ca:Pàgina &doble\tCtrl+7
 cn:双页视图(&F)\tCtrl+7
+cy:&Gwynebu\tCtrl+7
 cz:&Dvojstránky\tCtrl+7
 de:&Doppelseite\tStrg+7
 dk:&Modstående\tCtrl+7
@@ -1011,7 +1016,7 @@ by:Перайсці да
 ca-xv:&Vés a
 ca:&Vés a
 cn:转到(&G)
-cy:&Mynd
+cy:&Mynd i
 cz:&Přejít
 de:&Gehe zu
 dk:&Gå til
@@ -1700,6 +1705,7 @@ bs:&Otvori dokument
 ca-xv:&Obri el document
 ca:&Obre el document
 cn:打开文件(&O)
+cy:Agor &Dogfen
 cz:&Otevřít dokument
 de:Ö&ffnen
 dk:&Åbn dokument
@@ -1819,6 +1825,7 @@ br:&Opções
 ca-xv:&Opcions
 ca:&Opcions
 cn:&选项
+cy:&Dewisiadau
 cz:&Možnosti
 de:&Optionen
 dk:&Valgmuligheder
@@ -1978,6 +1985,7 @@ bs:&Pričvrsti dokument
 ca-xv:&Marca el document
 ca:&Marca el document
 cn:固定文件(&P)
+cy:&Pinio Dogfen
 cz:&Připnout dokument
 de:Auf dieser Seite &behalten
 dk:&Fastgør dokument
@@ -2034,7 +2042,7 @@ by:Папярэдняя старонка\t<-
 ca-xv:Pàgina &anterior\t<-
 ca:Pàgina &anterior\t<-
 cn:上一页(&P)\t<-
-cy:Tudalen Flaenorol\t<-
+cy:Tudalen &Flaenorol\tSaeth Chwith
 cz:&Předchozí stránka\tŠipka vlevo
 de:&Vorherige Seite\t<-
 dk:&Forrige side\t<-
@@ -2099,6 +2107,7 @@ bs:Š&tampaj...
 ca-xv:Im&primeix...
 ca:Im&primeix...
 cn:打印(&P)...
+cy:&Argraffu...
 cz:&Tisk...
 de:&Drucken…
 dk:&Udskriv...
@@ -2396,6 +2405,7 @@ bs:&Ukloni dokument
 ca-xv:&Suprimeix el document
 ca:&Suprimeix el document
 cn:删除文件(&R)
+cy:&Tynnu Dogfen
 cz:Odeb&rat dokument
 de:Von dieser Seite &entfernen
 dk:&Fjern dokument
@@ -2449,6 +2459,7 @@ bs:&Spasi kao...
 ca-xv:Anomena i al&ça...
 ca:Anomena i de&sa...
 cn:另存为(&S)...
+cy:&Cadw fel...
 cz:&Uložit jako...
 de:&Speichern unter…
 dk:&Gem som
@@ -2688,6 +2699,7 @@ bs:&Jedna stranica\tCtrl+6
 ca-xv:Pàgina ú&nica\tCtrl+6
 ca:Pàgina ú&nica\tCtrl+6
 cn:单页视图(&S)\tCtrl+6
+cy:Tudalen &Unigol\tCtrl+6
 cz:&Jedna stránka\tCtrl+6
 de:&Einzelne Seite\tStrg+6
 dk:&Enkelt side\tCtrl+6
@@ -3119,6 +3131,7 @@ bs:(strana %s)
 ca-xv:(pàgina %s)
 ca:(pàgina %s)
 cn:(第 %s 页)
+cy:(tudalen %s)
 cz:(stránka %s)
 de:(Seite %s)
 dk:(side %s)
@@ -3242,6 +3255,7 @@ by:Дадаць у Выбранае
 ca-xv:Afegix un preferit
 ca:Afegeix un preferit
 cn:添加收藏
+cy:Ychwanegu Ffefryn
 cz:Přidat oblíbenou položku
 de:Favoriten hinzufügen
 dk:Tilføj bogmærke
@@ -3298,6 +3312,7 @@ by:Дадаць старонку %s да выбраных
 ca-xv:Afegix la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
 cn:收藏第 %s 页
+cy:Ychwanegu tudalen %s i'r Ffefrynnau
 cz:Přidat stránku %s k oblíbeným...
 de:Seite %s hinzufügen…
 dk:Tilføj side %s til bogmærker
@@ -3353,6 +3368,7 @@ bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 ca-xv:Afegix la pàgina %s als preferits amb el nom (opcional):
 ca:Afegeix la pàgina %s als preferits amb el nom (opcional):
 cn:收藏第 %s 页为:
+cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
 de:Bezeichnung des Favoriten für Seite %s (optional):
 dk:Tilføj side %s til bogmærker med (valgfrit) navn:
@@ -3410,6 +3426,7 @@ by:Дадаць у Выбраныя
 ca-xv:Afegix als preferits
 ca:Afegeix als preferits
 cn:添加到收藏
+cy:Ychwanegu i'r ffefrynnau
 cz:Přidat k oblíbeným
 de:Zu Favoriten hinzufügen…
 dk:Tilføj til bogmærker
@@ -3591,6 +3608,7 @@ bs:Svi podržani dokumenti
 ca-xv:Tots els documents suportats
 ca:Tots els documents suportats
 cn:所有支持文件类型
+cy:Pob dogfen sy'n cael ei chynnal
 cz:Všechny podporované dokumenty
 de:Alle unterstützten Dokumente
 dk:Alle understøttede dokumenter
@@ -3708,6 +3726,7 @@ br:Tem certeza de que quer desinstalar o SumatraPDF?
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
 ca:Esteu segur de voler desinstal·lar el SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
+cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på at du vil afinstallere SumatraPDF ?
@@ -4062,7 +4081,7 @@ bs:Knjiški pregled
 ca-xv:Visualització de llibre
 ca:Visualització de llibre
 cn:书籍视图
-cy:Golwg llyfr
+cy:Golwg Llyfr
 cz:Kniha
 de:Buchansicht
 dk:Bogvisning
@@ -4191,6 +4210,7 @@ bs:Kratice zabilješki
 ca-xv:Dreceres de marcadors
 ca:Dreceres de marcadors
 cn:书签快捷方式
+cy:Llwybrau Byr Nodau Tudalen
 cz:Zástupce záložky
 de:Lesezeichen-Verknüpfungen
 dk:Gem genveje
@@ -4245,6 +4265,7 @@ bs:Kratica zabilješke na stranicu %s od %s
 ca-xv:Drecera del marcador a la pàgina %s de %s
 ca:Drecera del marcador a la pàgina %s de %s
 cn:书签快捷方式：第 %s 页/共 %s 页
+cy:Llwybr byr nod tudalen i dudalen %s o %s
 cz:Zástupce záložky na straně %s souboru %s
 de:Lesezeichen-Verknüpfung zu Seite %s von %s
 dk:Gem genvej til side %s af %s
@@ -4722,7 +4743,7 @@ by:Змяніць мову (Change Language)
 ca-xv:Canvia la llengua (Change Language)
 ca:Canvia la llengua (Change Language)
 cn:更改语言 (Change Language)
-cy:Newid iaith (Change Language)
+cy:Newid Iaith
 cz:Změnit jazyk... (Language)
 de:Sprache ändern… (Change Language)
 dk:Skift sprog (Change Language)
@@ -4789,7 +4810,7 @@ by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
 cn:检查是否有新版本(&U)
-cy:&Gwirio am fersiwn newydd
+cy:Gwirio am &Ddiweddariad
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
 dk:Tjek for ny &version
@@ -4853,6 +4874,7 @@ by:Зачынiць
 ca-xv:Tanca
 ca:Tanca
 cn:关闭
+cy:Cau
 cz:Zavřít
 de:Schließen
 dk:Luk
@@ -4897,6 +4919,7 @@ bs:Stripovi
 ca-xv:Llibres de còmic
 ca:Llibres de còmic
 cn:漫画书
+cy:Llyfrau Comics
 cz:Komiksy
 de:Comicbücher
 dk:Tegneserier
@@ -4953,6 +4976,7 @@ bs:Kompatibilnost
 ca-xv:Compatibilitat
 ca:Compatibilitat
 cn:兼容性
+cy:Cydnawsedd
 cz:Kompatibilita
 de:Kompatibilität
 dk:Kompatibilitet
@@ -5073,7 +5097,7 @@ bs:Slijedni knjiški pogled
 ca-xv:Visualització contínua de llibre
 ca:Visualització contínua de llibre
 cn:连续书籍视图
-cy:Golwg llyfr didor
+cy:Golwg Llyfr Didor
 cz:Kniha průběžně
 de:Fortlaufende Buchansicht
 dk:Fortløbende bog-visning
@@ -5204,7 +5228,7 @@ by:Дапамагчы з перакладам
 ca-xv:Contribuïu en la traducció
 ca:Contribuïu en la traducció
 cn:提供翻译
-cy:Cyfrannu cyfieithiad.
+cy:Cyfrannu Cyfieithiad.
 cz:Zaslat překlad
 de:Übersetzung beisteuern
 dk:Bidrag med oversættelse
@@ -5269,6 +5293,7 @@ bs:Kopiraj &sliku
 ca-xv:Copia la &imatge
 ca:Copia la &imatge
 cn:复制图片(&I)
+cy:Copïo &Delwedd
 cz:Kopírovat &obrázek
 de:&Bild kopieren
 dk:Kopier &Billede
@@ -5322,6 +5347,7 @@ bs:Kopiraj adresu &linka
 ca-xv:Copia l'adreça de l'enllaç
 ca:Copia l'adreça de l'enllaç
 cn:复制链接地址(&L)
+cy:Copïo &Dolen Cyfeiriad
 cz:Kopírovat &adresu odkazu
 de:Adresse des &Links kopieren
 dk:Kopier &Linkadresse
@@ -5378,6 +5404,7 @@ bs:Kopiraj ko&mentar
 ca-xv:Copia el co&mentari
 ca:Copia el co&mentari
 cn:复制注释(&M)
+cy:Copïo &Sylw
 cz:Kopírovat ko&mentář
 de:K&ommentar kopieren
 dk:Kopier ko&mmentar
@@ -5494,6 +5521,7 @@ bs:Prava pridržana:
 ca-xv:Copyright:
 ca:Copyright:
 cn:版权:
+cy:Hawlfraint
 cz:Autorská práva:
 de:Copyright:
 dk:Copyright:
@@ -5546,6 +5574,7 @@ bs:Ne mogu dobaviti postavke štampača
 ca-xv:No es poden obtindre les propietats de la impressora
 ca:No es poden obtenir les propietats de la impressora
 cn:无法获得打印机属性
+cy:Methu canfod priodweddau Argraffydd
 cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
 dk:Kan ikke hente printer egenskaber
@@ -5600,6 +5629,7 @@ br:Não foi possível criar pasta temporária
 ca-xv:No es pot crear el directori temporal
 ca:No es pot crear el directori temporal
 cn:无法创建临时目录
+cy:Methu creu cyfeiriadur dros dro
 cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
 dk:Kunne ikke oprette midlertidigt folder
@@ -5638,6 +5668,7 @@ br:Não foi possível criar a pasta de instalação.
 ca-xv:No es pot crear el directori d'instal·lació
 ca:No es pot crear el directori d'instal·lació
 cn:无法创建指定的安装目录
+cy:Merhu creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Kunne ikke oprette installations folder
@@ -5737,6 +5768,7 @@ br:Não foi possível instalar o pré-visualizador para PDF
 ca-xv:No es pot instal·lar el visor ràpid de PDF
 ca:No es pot instal·lar el visor ràpid de PDF
 cn:无法安装PDF文件预临览
+cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalova PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
 dk:Kunne ikke installere PDF viser
@@ -5774,6 +5806,7 @@ br:Não foi possível instalar o filtro de pesquisa para PDF
 ca-xv:No es pot instal·lar el filtre de cerca PDF
 ca:No es pot instal·lar el filtre de cerca PDF
 cn:无法安装PDF搜索过滤器
+cy:Methu gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht installieren
 dk:Kunne ikke installere PDF søge filter
@@ -5810,6 +5843,7 @@ br:Não foi possível instalar o plugin do navegador
 ca-xv:No es pot instal·lar el connector del navegador
 ca:No es pot instal·lar el connector del navegador
 cn:无法安装浏览器插件
+cy:Methu gosod ategyn porwr
 cz:Nepodařilo se nainstalovat rozšíření do prohlížeče
 de:Konnte das Browser-Plugin nicht installieren
 dk:Kunne ikke installere browser plugin
@@ -5846,6 +5880,7 @@ br:Não foi possível obter a pasta temporária
 ca-xv:No es pot obtindre el directori temporal
 ca:No es pot obtenir el directori temporal
 cn:无法得到暂存目录
+cy:Methu canfod cyfeiriadur dros dro
 cz:Dočasná složka není dostupná
 de:Konnte das temporäre Verzeichnis nicht finden
 dk:Kunne ikke tilgå midlertidig folder
@@ -5881,6 +5916,7 @@ br:Não foi possível remover a pasta de instalação
 ca-xv:No es pot suprimir el directori d'instal·lació
 ca:No es pot suprimir el directori d'instal·lació
 cn:无法移除安装目录
+cy:Methu tynnu'r cyfeiriadur gosod
 cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 dk:Kunne ikke fjerne installations folder
@@ -5919,6 +5955,7 @@ br:Não foi possível remover o atalho
 ca-xv:No es pot suprimir la drecera
 ca:No es pot suprimir la drecera
 cn:无法移除快捷方式
+cy:Methu tynnu'r llwybr byr
 cz:Nepodařilo se odstranit zástupce
 de:Konnte die Verknüpfung nicht löschen
 dk:Kunne ikke fjerne genvej
@@ -6017,6 +6054,7 @@ br:Não foi possível desinstalar o pré-visualizador para PDF
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
 ca:No es pot desinstal·lar el visor ràpid PDF
 cn:无法卸载PDF预览
+cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF viser
@@ -6052,6 +6090,7 @@ br:Não foi possível desinstalar o filtro de pesquisa para PDF
 ca-xv:No es pot desinstal·lar el filtre de cerca PDF
 ca:No es pot desinstal·lar el filtre de cerca PDF
 cn:无法卸载PDF搜索过滤器
+cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
 dk:Kunne ikke afinstallere PDF søge filter
@@ -6088,6 +6127,7 @@ br:Não foi possível desinstalar o plugin do navegador
 ca-xv:No es pot desinstal·lar el connector de navegador
 ca:No es pot desinstal·lar el connector de navegador
 cn:无法卸载浏览器插件
+cy:Methu dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
 dk:Kunne ikke fjerne browser plugin
@@ -6123,6 +6163,7 @@ br:Não foi possível gravar %s no disco
 ca-xv:No es pot escriure %s al disc
 ca:No es pot escriure %s al disc
 cn:无法将%s写进硬盘
+cy:Methu ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
 de:Konnte %s nicht kopieren
 dk:Kunne ikke skrive %s til disk
@@ -6222,6 +6263,7 @@ bs:Trenutni fajl
 ca-xv:Fitxer actual
 ca:Fitxer actual
 cn:当前文件
+cy:Ffeil cyfredol
 cz:Aktuální soubor
 de:Aktuelle Datei
 dk:Aktuel fil
@@ -6822,7 +6864,7 @@ bs:EPUB dokumenti
 ca-xv:Documents EPUB
 ca:Documents EPUB
 cn:EPUB 文档
-cy:Dogfennau EPUB
+cy:eLyfrau EPUB
 cz:EPUB dokumenty
 de:EPUB E-Bücher
 dk:EPUB-dokumenter
@@ -7011,6 +7053,7 @@ bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF doku
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
 cn:请输入双击 PDF 文档时的命令行调用:
+cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
@@ -7066,6 +7109,7 @@ bs:Greška pri učitavanju %s
 ca-xv:S'ha produït un error en carregar %s
 ca:S'ha produït un error en carregar %s
 cn:载入错误 %s
+cy:Gwall llwytho %s
 cz:Chyba při načítání %s
 de:Fehler beim Öffnen von %s
 dk:Side %s kan ikke indlæses
@@ -7118,6 +7162,7 @@ br:Não foi possível rodar o SumatraPDF!
 ca-xv:Error: no es pot executar el SumatraPDF!
 ca:Error: no es pot executar el SumatraPDF!
 cn:错误：无法运行SumatraPDF!
+cy:Gwall. Methu rhedeg SumatraPDF
 cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 dk:Fejl: Kan ikke køre SumatraPDF !
@@ -7155,6 +7200,7 @@ br:O SumatraPDF não foi encontrado!
 ca-xv:S'ha produït un error: no es troba el SumatraPDF!
 ca:S'ha produït un error: no es troba el SumatraPDF!
 cn:失败: 找不到SumatraPDF
+cy:Gwall: Heb ganfod SumatraPDF!
 cz:Chyba: Program SumatraPDF nebyl nalezen!
 de:Fehler: SumatraPDF ist unaufindbar!
 dk:Fejl: SumatraPDF ikke fundet !
@@ -7192,6 +7238,7 @@ br:Erro: o documento não pôde ser baixado!
 ca-xv:Error: no es pot baixar el document!
 ca:Error: no es pot baixar el document!
 cn:错误： 文档无法下载!
+cy:Gwall: Nid oedd modd llwytho'r ddogfen i lawr!
 cz:Chyba: Stažení dokumentu se nezdařilo!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 dk:Fejl: Dokumentet kunne ikke hentes !
@@ -7230,6 +7277,7 @@ bs:F&avoriti
 ca-xv:F&avorits
 ca:Pr&eferits
 cn:收藏(&A)
+cy:&Ffefrynnau
 cz:&Oblíbené položky
 de:&Favoriten
 dk:Bogm&ærker
@@ -7412,7 +7460,7 @@ by:Дзьве старонкі
 ca-xv:Pàgina doble
 ca:Pàgina doble
 cn:平铺页面
-cy:Wynebu
+cy:Gwynebu
 cz:Dvojstránky
 de:Doppelseite
 dk:Modstående
@@ -7475,6 +7523,7 @@ br:Falha na cópia do desinstalador para a pasta temporária
 ca-xv:No es pot copiar el desinstal·lador al directori temporal
 ca:No es pot copiar el desinstal·lador al directori temporal
 cn:无法将安装程序复制到暂存目录
+cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
 cz:Nepodařilo se zkopírovat odinstalační program do dočasné složky
 de:Konnte das Deinstallationsprogramm nicht kopieren
 dk:Kunne ikke kopiere fra midlertidig folder
@@ -7511,6 +7560,7 @@ br:Falha na criação do atalho
 ca-xv:No es pot crear una drecera
 ca:No es pot crear una drecera
 cn:无法创建快捷方式
+cy:Methwyd creu llwybr byr
 cz:Vytvoření zástupce se nezdařilo
 de:Konnte keine Verknüpfung erstellen
 dk:Kunne ikke oprette genvej
@@ -7547,6 +7597,7 @@ br:Falha na remoção das entradas de registro do desinstalador
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:No es poden suprimir les claus de registre del desinstal·lador
 cn:删除卸载程序的注册表项失败
+cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Konnte nicht alle Registry-Einträge löschen
 dk:Kunne ikke slette afinstallering nøger i registreringsdatabasen
@@ -7584,6 +7635,7 @@ bs:Neuspješna promjena naziva faja!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名!
+cy:Methwyd ailenwi'r ffeil!
 cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
@@ -7701,6 +7753,7 @@ br:Falha na gravação da extensão de arquivo no registro
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:No es pot escriure la informació d'extensió de fitxer extesa al registre
 cn:无法将文件扩展名的扩展信息写进注册表
+cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
 dk:Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen
@@ -7726,6 +7779,7 @@ sq:Dështoi shkrimi në regjistër i informacionit të zgjeruar për skedën.
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
+uz:Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
 :Failed to write the uninstallation information to the registry
 am:Ծրագիրը հեռացնելու մասին գրառումը չստացվեց Գրանցատեղիում
 ar:فشل في كتابة بيانات إزالة البرنامج في registry
@@ -7734,6 +7788,7 @@ br:Falha na gravação dos dados de desinstalação no registro
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:No es pot escriure la informació de desinstal·lació al registre
 cn:将卸载所需信息写进注册表时失败了
+cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
 dk:Kunne ikke skrive afinstallerings information i registreringsdatabasen
@@ -7760,6 +7815,7 @@ sq:Dështoi shkrimi në regjistër i informacionit për çinstalimin
 sv:Missluckades spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
 uk:Не вдалося записати інформацію для видалення у реєстр
+uz:Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
 :Fast Web View
 am:Արագ վեբ դիտում
 ar:تهيئة الويب السريعة
@@ -7770,6 +7826,7 @@ bs:Brzi web pregled
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 cn:快速WEB查看(线性PDF)
+cy:Golwg Gwe Cyflym
 cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
 dk:Hurtig Internet Visning
@@ -7820,6 +7877,7 @@ bs:Favoriti
 ca-xv:Preferits
 ca:Preferits
 cn:收藏
+cy:Ffefrynnau
 cz:Oblíbené položky
 de:Favoriten
 dk:Bogmærker
@@ -7874,6 +7932,7 @@ bs:FictionBook dokumenti
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
+cy:Dogfennau FictionBook
 cz:Dokumenty FictionBook
 de:FictionBook-Dokumente
 dk:FictionBook-dokumenter
@@ -7922,6 +7981,7 @@ bs:Fajl %s nije pronađen
 ca-xv:No s'ha trobat el fitxer %s
 ca:No es troba el fitxer %s
 cn:无法找到文件 %s
+cy:Heb ganfod ffeil %s
 cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
 dk:Fil %s ikke fundet
@@ -8920,6 +8980,7 @@ bs:Fontovi:
 ca-xv:Tipus de lletra:
 ca:Tipus de lletra:
 cn:字体:
+cy:Ffontiau:
 cz:Písma:
 de:Schriftarten:
 dk:Skrifttyper:
@@ -8971,6 +9032,7 @@ bs:Formatiranje knjige... %d stranica
 ca-xv:S'està formatant el llibre... %d pàgines
 ca:S'està formatant el llibre... %d pàgines
 cn:正在格式化 %d 页
+cy:Fformatio'r llyfr... %d tudalen
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
 dk:Formaterer bogen... %d sider
@@ -9080,6 +9142,7 @@ bs:Tekst pronađen na stranici %s (opet)
 ca-xv:S'ha trobat el text a la pàgina %s (altra vegada)
 ca:S'ha trobat el text a la pàgina %s (altra vegada)
 cn:在第 %s 页找到文本 (再一次)
+cy:Canfod testun ar dudalen %s (eto)
 cz:Položka nalezena na stránce %s (znovu)
 de:Text auf Seite %s gefunden (erneut)
 dk:Tekst er (også) fundet på side %s
@@ -9133,6 +9196,7 @@ bs:Najčešće čitano
 ca-xv:Llegits més freqüents
 ca:Llegits més freqüents
 cn:最近阅读
+cy:Darllen yn Aml
 cz:Často čtené dokumenty
 de:Oft gelesene Dokumente
 dk:Hyppigt læste
@@ -9320,6 +9384,7 @@ br:Ocultar &Opções
 ca-xv:Amaga les &opcions
 ca:Amaga les &opcions
 cn:隐藏选项菜单
+cy:Dewisiadau C&uddio
 cz:Skrýt &možnosti
 de:&Optionen
 dk:Gem &Valgmuligheder
@@ -9360,6 +9425,7 @@ bs:Sakrij najčešće čitano
 ca-xv:Amaga els més llegits
 ca:Amaga els més llegits
 cn:隐藏最近阅读
+cy:Cuddio darllen yn aml
 cz:Skrýt často čtené dokumenty
 de:Oft gelesene Dokumente ausblenden
 dk:Skjul hyppigt læste
@@ -9473,6 +9539,7 @@ bs:Slike (*.%s)
 ca-xv:Fitxers d'imatge (*.%s))
 ca:Fitxers d'imatge (*.%s))
 cn:图片文件(*.%s)
+cy:Ffeiliau delwedd  (*.%s)
 cz:Soubory obrázků (*.%s)
 de:Bilder (*.%s)
 dk:Billed filer (*.%s)
@@ -9524,6 +9591,7 @@ br:Instalar plugin PDF para Firefox, Chrome e Opera
 ca-xv:Instal·la el &connector PDF per als navegadors Firefox, Chrome i Opera
 ca:Instal·la el &connector PDF pels navegadors Firefox, Chrome i Opera
 cn:安装PDF浏览器插件到火狐, Chrome和Opera
+cy:Gosod ategyn &porwr PDF ar gyfer Firefox, Chrome ac Opera
 cz:Instalovat PDF doplněk pro prohlížeče Firefox, Chrome a Opera
 de:PDF Browser-Plugin für Firefox, Chrome und Opera installieren
 dk:Installer PDF &browser plugin til Firefox, Chrome og Opera
@@ -9561,6 +9629,7 @@ br:Instalar SumatraPDF
 ca-xv:Instal·la el SumatraPDF
 ca:Instal·la el SumatraPDF
 cn:安装SumatraPDF
+cy:Gosod SumatraPDF
 cz:Nainstalovat SumatraPDF
 de:Installieren
 dk:Installer SumatraPDF
@@ -9596,6 +9665,7 @@ br:Instalar SumatraPDF na &pasta:
 ca-xv:Instal·la el SumatraPDF a la &carpeta:
 ca:Instal·la el SumatraPDF a la &carpeta:
 cn:安装SumatraPDF到目录: &folder
+cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
 dk:Installer SumatraPDF i &folder:
@@ -9631,6 +9701,7 @@ br:Falha na instalação!
 ca-xv:La instal·lació ha fallat!
 ca:La instal·lació ha fallat!
 cn:安装失败!
+cy:Methodd y gosod!
 cz:Instalace selhala!
 de:Die Installation ist fehlgeschlagen!
 dk:Installation fejlede !
@@ -9667,6 +9738,7 @@ br:Instalação em progresso...
 ca-xv:La instal·lació és en progrés...
 ca:La instal·lació és en progrés...
 cn:安装正在进行中...
+cy:Wrthi'n gosod
 cz:Probíhá instalace...
 de:Die Installation wird ausgeführt…
 dk:Installation i gang ...
@@ -9771,6 +9843,7 @@ br:Permitir que o Windows faça a bu&sca em documentos PDF
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
 cn:使用Windows桌面搜索来搜索PDF文档
+cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
 de:PDF Dokumente in Windows-&Suchen einbeziehen
 dk:Lad Windows skrivebord Søge &søg PDF dokumenter
@@ -9797,6 +9870,7 @@ sq:Lejoj Windows Desktop Search të &kërkojë dokumentet PDF
 sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
 uk:Дозволити Windows Desktop Search пошук у PDF документах
+uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
 :Let Windows show &previews of PDF documents
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
 ar:السماح لويندوز عرض صور معاينة PDF
@@ -9805,6 +9879,7 @@ br:Permitir que o Windows &pré-visualize documentos PDF
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar &visualitzacions prèvies dels documents PDF
 cn:使用Windows的PDF预览功能
+cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
 dk:Lad Windows vise &femvisning af PDF dokumenter
@@ -9831,6 +9906,7 @@ sq:Lejoj Windows Desktop Search të &parashikojë dokumentet PDF
 sv:Visa förhandstitt av PDF-dokument i Windows
 ta:விண்டாஸ் PDF கோப்புகளை காண்பிக்க &முன்னோட்டம் செய்யட்டும்
 uk:Дозволити Windows здійснювати попередній перегляд для PDF
+uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 :Loading file %s...
 am:%s ֆայլը բացվում է...
 ar:تحميل الملف %s...
@@ -9841,6 +9917,7 @@ bs:Učitavanje fajl %s...
 ca-xv:S'està carregant el fitxer %s...
 ca:S'està carregant el fitxer %s...
 cn:正在加载 %s...
+cy:Llwytho ffeil %s...
 cz:Načítání souboru %s...
 de:%s wird geladen…
 dk:Indlæser fil %s...
@@ -10090,6 +10167,7 @@ br:Modo Man&gá
 ca-xv:Mode man&ga
 ca:Mode man&ga
 cn:漫画模式(&G)
+cy:Modd &Manga
 cz:Man&ga mód
 de:Lese&richtung umkehren
 dk:Man&ga tilstand
@@ -10308,7 +10386,7 @@ by:Даступная новая версія: %s. Загрузіць яе?
 ca-xv:Es troba disponible una versió nova %s. Voleu baixar-la?
 ca:Es troba disponible una versió nova %s. Voleu baixar-la?
 cn:发现新版本 %s。是否立即下载？
-cy:Mae fersiwn newydd %s ar gael. Llwytho'r fersiwn newydd i lawr??
+cy:Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??
 cz:Nová verze %s je k dispozici. Stáhnout novou verzi?
 de:Es ist die neue Version %s vorhanden. Möchten Sie diese herunterladen?
 dk:Ny version %s er tilgængelig. Hent ny version?
@@ -10920,6 +10998,7 @@ bs:Otvori dokument...
 ca-xv:Obri un document...
 ca:Obre un document...
 cn:打开一个文件...
+cy:Agor dogfen...
 cz:Otevřít dokument...
 de:Dokument öffnen…
 dk:Åbn et dokument...
@@ -10972,6 +11051,7 @@ br:Abrir em %s
 ca-xv:Obri amb %s
 ca:Obre amb %s
 cn:开放的 %s
+cy:Agor yn %s
 cz:Otevřít v %s
 de:Mit %s öffnen
 dk:Åben o %s
@@ -11241,6 +11321,7 @@ br:Abrindo documento no SumatraPDF...
 ca-xv:S'està obrint el document al SumatraPDF...
 ca:S'està obrint el document al SumatraPDF...
 cn:正在用SumatraPDF打开文件...
+cy:Agor dogfen yn SumatraPDF...
 cz:Otevírat dokumenty v SumatraPDF...
 de:Das Dokument wird in SumatraPDF geöffnet…
 dk:Åben dokument i SumatraPDF ...
@@ -11278,6 +11359,7 @@ bs:&Postavke
 ca-xv:P&ropietats
 ca:P&ropietats
 cn:属性(&R)
+cy:&Priodweddau
 cz:&Vlastnosti
 de:Ei&genschaften
 dk:Egenskabe&r
@@ -11451,6 +11533,7 @@ bs:PDF optimizacije:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 cn:PDF 优化：
+cy:Gwella'r PDF
 cz:Optimalizace PDF:
 de:PDF Optimierungen:
 dk:PDF Optimeringer:
@@ -11745,6 +11828,7 @@ bs:Stranica %s
 ca-xv:Pàgina %s
 ca:Pàgina %s
 cn:第 %s 页
+cy:Tudalen %s
 cz:Stránka %s
 de:Seite %s
 dk:Side %s
@@ -12036,6 +12120,7 @@ br:Por favor feche %s para continuar!
 ca-xv:Tanqueu %s per continuar!
 ca:Tanqueu %s per continuar!
 cn:请关闭%s后继续!
+cy:Cau %s i barhau!
 cz:Prosím ukončete %s pro pokračování!
 de:Bitte schliessen Sie %s vor der Installation!
 dk:Luk venligst %s for at fortsætte !
@@ -12133,6 +12218,7 @@ bs:Postscript dokumenti
 ca-xv:Documents Postscript
 ca:Documents Postscript
 cn:Postscript 文件
+cy:Dogfennau postscript
 cz:PostScript dokumenty
 de:Postscript-Dokumente
 dk:Postscript dokumenter
@@ -12309,6 +12395,7 @@ bs:Štampaj
 ca-xv:Impressora
 ca:Impressora
 cn:打印
+cy:Argraffu
 cz:Tisk...
 de:Drucken…
 dk:Udskriv
@@ -12363,6 +12450,7 @@ bs:Štampaj kao &sliku (zahtjeva više memorije)
 ca-xv:Imprimeix com a &imatge (requereix més memòria)
 ca:Imprimeix com a &imatge (requereix més memòria)
 cn:打印为图像(需要更多的内存)(&I)
+cy:Argraffu fel &delwedd (angen mwy o gof)
 cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
 dk:Print som &Billede (kræver mere hukommelse)
@@ -12468,6 +12556,7 @@ bs:Štampač sa datim nazivom ne postoji
 ca-xv:No existeix cap impressora amb el nom proveït
 ca:No existeix cap impressora amb el nom proveït
 cn:该打印机不存在
+cy:Nid oes argraffydd gyda'r enw yna'n bod
 cz:Tiskárna se zadaným názvem neexistuje
 de:Drucker mit dem angegebenen Namen nicht gefunden
 dk:Printer med dette navn findes ikke
@@ -12521,6 +12610,7 @@ bs:Štampanje u napretku.
 ca-xv:La impresió és en procés.
 ca:La impressio és en procés.
 cn:正在打印
+cy:Wrthi'n argraffu.
 cz:Probíhá tisk
 de:Drucken - SumatraPDF
 dk:Udskrift igang
@@ -12567,6 +12657,7 @@ bs:Štampanje je još uvijek u toku. Prekini i izađi?
 ca-xv:La impressió encara és en procés. Voleu aturar i sortir?
 ca:La impressió encara està en procés. Voleu aturar i sortir?
 cn:仍然在打印。中断并放弃？
+cy:Dal wrthi'n argraffu. Hepgor a gadael?
 cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 dk:Udskrift er stadig igang. Afbryd?
@@ -12613,6 +12704,7 @@ bs:Štampa je još u toku. Prekini i započni ispočetka?
 ca-xv:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
 ca:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
 cn:仍然在打印。中断并重新开始?
+cy:Dal wrthi'n argraffu. Hepgor a chychwyn eto?
 cz:Tisk je stále probíhá. Přerušit a začít znovu?
 de:Bestehenden Druckvorgang abbrechen und neu beginnen?
 dk:Udskrift pågår stadig. Afbryd og start forfra?
@@ -12666,6 +12758,7 @@ bs:Štampam stranicu %d od %d...
 ca-xv:S'està imprimient la pàgina %d de %d...
 ca:S'està imprimient la pàgina %d de %d...
 cn:正在打印第 %d 页/共 %d 页
+cy:Argraffu tudalen %d o %d...
 cz:Tisk stránky %d z %d...
 de:Drucke Seite %d von %d…
 dk:Udskriver side %d af %d...
@@ -12787,6 +12880,7 @@ bs:Promije&ni naziv...\tF2
 ca-xv:Canvia el &nom...\tF2
 ca:Canvia el &nom...\tF2
 cn:重命名(&N)...\tF2
+cy:&Ailenwi...\tF2
 cz:Přejme&novat...\tF2
 de:Umbe&nennen…\tF2
 dk:Om&døb... \tF2
@@ -12897,6 +12991,7 @@ bs:Ukloni iz favorita
 ca-xv:Suprimeix dels preferits
 ca:Suprimeix dels preferits
 cn:删除收藏
+cy:Tynnu o'r ffefrynnau
 cz:Odebrat z oblíbených
 de:Aus Favoriten entfernen
 dk:Fjern fra bogmærker
@@ -12951,6 +13046,7 @@ bs:Ukloni stranicu %s iz favorita
 ca-xv:Suprimeix la pàgina %s dels preferits
 ca:Suprimeix la pàgina %s dels preferits
 cn:从收藏中删除第 %s 页
+cy:Tynnu tudalen %s o'r ffefrynnau
 cz:Odebrat stránku %s z oblíbených
 de:Seite %s aus Favoriten entfernen
 dk:Fjern side %s fra bogmærker
@@ -13005,6 +13101,7 @@ bs:Promije&ni naziv u
 ca-xv:Canvia el nom a
 ca:Canvia el nom a
 cn:重命名到
+cy:Ailenwi i
 cz:Přejmenovat na
 de:Umbenennen zu
 dk:Omdøb til
@@ -13057,6 +13154,7 @@ bs:Zamijeni &boje u dokumentu sa Windows kolor šemom
 ca-xv:Substitueix els &colors del document amb l'esquema de colors del Windows
 ca:Substitueix els &colors del document amb l'esquema de colors del Windows
 cn:采用系统颜色方案(&C)
+cy:Amnewid &lliwiau dogfen gyda threfn lliwiau Windows
 cz:Barvy dokumentu nahradit barevným s&chématem systému Windows
 de:Dokumenten&farben durch Windows-Farbschema ersetzen
 dk:Erstat dokument &farver med Windows farveskema
@@ -13109,7 +13207,7 @@ by:Павярнуць налева\tCtrl+Shift+-
 ca-xv:Gira a l'esquerra\tCtrl+Shift+-
 ca:Gira a l'esquerra\tCtrl+Shift+-
 cn:向左旋转(&L)\tCtrl+Shift+-
-cy:Troi i'r chwith\tCtrl+Shift+-
+cy:Troi i'r &Chwith\tCtrl+Shift+-
 cz:Otočit do&leva\tCtrl+Shift+Num-
 de:&Gegen UZS drehen\tStrg+Umschalt+-
 dk:Roter mod &venstre\tCtrl+Shift+-
@@ -13310,6 +13408,7 @@ bs:Spasi k&raticu...\tCtrl+Shift+S
 ca-xv:Guarda una &drecera...\tCtrl+Maj+5
 ca:Desa una &drecera...\tCtrl+Maj+5
 cn:保存快捷方式(&H)...\tCtrl+Shift+S
+cy:Cadw'r &Llwybr Byr...\tCtrl+Shift+S
 cz:U&ložit zástupce...\tCtrl+Shift+S
 de:&Verknüpfung speichern…\tStrg+Umschalt+S
 dk:Gem ge&nvej...\tCtrl+Shift+S
@@ -13421,6 +13520,7 @@ bs:Označi &sve
 ca-xv:Selecciona-ho &tot
 ca:Selecciona-ho &tot
 cn:全选(&A)
+cy:Dewis &Popeth
 cz:Vybrat &vše
 de:Alles &markieren
 dk:Markér &alt
@@ -13586,6 +13686,7 @@ br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
 ca-xv:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 ca:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 cn:将SumatraPDF安装到指定目录
+cy:Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
 dk:Vælg folderen hvor SumatraPDF skal installeres:
@@ -13623,7 +13724,7 @@ bs:Pošalji &e-mailom...
 ca-xv:Envia per correu-&e...
 ca:Envia per correu-&e...
 cn:通过电子邮件发送(&E)...
-cy:Anfon drwy &e-bost...
+cy:Anfon drwy &E-bost...
 cz:Odeslat &e-mailem...
 de:Per &E-Mail versenden…
 dk:Send med &email...
@@ -13746,6 +13847,7 @@ bs:Pokaži &oznake
 ca-xv:Mostra els &marcadors
 ca:Mostra els &marcadors
 cn:显示书签(&B)
+cy:Dangos &Nodau Tudalen
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
 dk:Vis &Bogmærker
@@ -13798,7 +13900,7 @@ by:Паказ панэлі прылад
 ca-xv:Mostra la &barra d'eines
 ca:Mostra la &barra d'eines
 cn:显示工具栏(&T)
-cy:Dangos y bar offer
+cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
 de:&Werkzeugleiste anzeigen
 dk:Vis &værktøjslinie
@@ -13863,7 +13965,7 @@ bs:Prikaži stranice slijedno
 ca-xv:Mostra les &pàgines de forma contínua
 ca:Mostra les &pàgines de forma contínua
 cn:连续显示页面(&P)
-cy:Dangos tudalennau'n ddidor
+cy:Dangos &tudalennau'n ddidor
 cz:Zobrazit stránky &průběžně
 de:Seiten &fortlaufend anzeigen
 dk:Vis &sider fortløbende
@@ -13922,6 +14024,7 @@ bs:Prikaži favorite
 ca-xv:Mostra els preferits
 ca:Mostra els preferits
 cn:显示收藏
+cy:Dangos Ffefrynnau
 cz:Zobrazit oblíbené položky
 de:Favoriten anzeigen
 dk:Vis bogmærker
@@ -13975,6 +14078,7 @@ bs:Prikaži najčešće čitano
 ca-xv:Mostra els més llegits
 ca:Mostra els més llegits
 cn:显示最常阅读
+cy:Dangos darllenwyd yn aml
 cz:Zobrazit často čtené dokumenty
 de:Oft gelesene Dokumente einblenden
 dk:Vis hyppigt læste
@@ -14153,6 +14257,7 @@ br:Alguns arquivos de instalação estão danificados ou ausentes
 ca-xv:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
 ca:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
 cn:某些安装所需的文件损坏或丢失
+cy:Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll
 cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
 de:Einige Dateien konnten nicht korrekt installiert werden
 dk:Nogle installations filer er beskadiget eller mangler
@@ -14190,6 +14295,7 @@ bs:Oprostite, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'aquest error.
 cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
+cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
 dk:Desværrre, det var ikke meningen\n\nKlik på 'Afbryd', hvis du kan og vil hjælpe med at finde årsagen til nedbruddet.
@@ -14301,6 +14407,7 @@ br:Iniciar SumatraPDF
 ca-xv:Inicia el SumatraPDF
 ca:Inicia el SumatraPDF
 cn:启动SumatraPDF
+cy:Cychwyn SumatraPDF
 cz:Spustit SumatraPDF
 de:SumatraPDF starten
 dk:Start SumatraPDF
@@ -14397,6 +14504,7 @@ br:SumatraPDF %s instalador
 ca-xv:Instal·lador del SumatraPDF %s
 ca:Instal·lador del SumatraPDF %s
 cn:SumatraPDF %s 安装程序
+cy:Gosodwr SumatraPDF %s
 cz:SumatraPDF %s instalátor
 de:SumatraPDF %s installieren
 dk:SumatraPDF %s installer
@@ -14432,6 +14540,7 @@ br:SumatraPDF %s desinstalador
 ca-xv:Desintal·lador del SumatraPDF %s
 ca:Desintal·lador del SumatraPDF %s
 cn:SumatraPDF %s 卸载程序
+cy:Dadosodwr SumatraPDF %s
 cz:SumatraPDF %s odinstalátor
 de:SumatraPDF %s deinstallieren
 dk:SumatraPDF %s afinstallere
@@ -14638,6 +14747,7 @@ br:SumatraPDF foi desinstalado.
 ca-xv:S'ha desinstal·lat el SumatraPDF.
 ca:S'ha desinstal·lat el SumatraPDF.
 cn:成功卸载SumatraPDF.
+cy:Mae SumatraPDF wedi ei ddadosod.
 cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
 dk:SumatraPDF er afinstalleret.
@@ -14674,6 +14784,7 @@ br:A instalação do SumatraPDF não foi encontrada.
 ca-xv:No s'ha trobat cap instal·lació del SumatraPDF.
 ca:No s'ha trobat cap instal·lació del SumatraPDF.
 cn:找不到SumatraPDF安装程序.
+cy:Heb ganfod gosodiad SumatraPDF.
 cz:Instalace programu SumatraPDF nebyla nalezena.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
 dk:SumatraPDF installation ikke fundet.
@@ -14700,6 +14811,7 @@ sq:Nuk u gjet SumatraPDF i instaluar.
 sv:Kunde inte hitta SumatraPDF-installation.
 ta:சுமத்ராPDF நிறுவல் கிடைக்கவில்லை.
 uk:Встановлений SumatraPDF не було знайдено.
+uz:SumatraPDF o'rnatilganligi topilmadi.
 :SumatraPDF is your default PDF reader
 am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 ar:قارئ SumatraPDF هو الافتراضي
@@ -14888,6 +15000,7 @@ bs:Označeni PDF
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
 cn:已标记PDF
+cy:PDF wedi ei thagio
 cz:Tagované PDF
 de:PDF mit Tags
 dk:Tagged PDF
@@ -14995,6 +15108,7 @@ br:Obrigado por escolher o SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
 ca:Gràcies per triar el SumatraPDF!
 cn:谢谢选用SumatraPDF!
+cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
 dk:Tak fordi du valgte SumatraPDF !
@@ -15031,6 +15145,7 @@ br:Obrigado! O SumatraPDF foi instalado.
 ca-xv:Gràcies! S'ha instal·lat el SumatraPDF.
 ca:Gràcies! S'ha instal·lat el SumatraPDF.
 cn:谢谢! SumatraPDF已经安装好.
+cy:Diolch yn fawr! Mae SumatraPDF wedi ei gosod
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
 dk:Tak ! SumatraPDF er installeret.
@@ -15067,6 +15182,7 @@ br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo in
 ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 ca:L'instal·lador és malmès. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 cn:抱歉安装程序损坏，请重新下载。
+cy:Mae'r gosodwr yn llwgr. Llwythwch y ffeil i lawr eto. \n Ymddiheuriadau am yr anghyfleuster!
 cz:Instalační program byl nejspíše poškozen. Stáhněte si jej prosím znovu. \nOmlouváme se za způsobené nepříjemnosti!
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
 dk:Installationsprogrammet er fejlbehæftet. Prøv venligst at hente det igen.\nVi beklager ulejligheden!
@@ -15093,6 +15209,7 @@ sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni pë
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
+uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
 :Title:
 af:Titel:
@@ -15162,6 +15279,7 @@ br:Desinstalar SumatraPDF
 ca-xv:Desinstal·la el SumatraPDF
 ca:Desinstal·la el SumatraPDF
 cn:卸载SumatraPDF
+cy:Dadosod SumatraPDF
 cz:Odinstalovat SumatraPDF
 de:Deinstallieren
 dk:Afinstaller SumatraPDF
@@ -15198,6 +15316,7 @@ br:A desinstalação falhou
 ca-xv:La desinstal·lació ha fallat
 ca:La desinstal·lació ha fallat
 cn:卸载失败
+cy:Methodd y gosod
 cz:Odinstalace programu selhala
 de:Die Deinstallation ist fehlgeschlagen
 dk:Afinstallationen fejlede
@@ -15234,6 +15353,7 @@ br:Desinstalação em progresso...
 ca-xv:Desinstal·lació en progrés...
 ca:Desinstal·lació en progrés...
 cn:卸载正在进行中...
+cy:Wrthi'n dadosod...
 cz:Probíhá odinstalace...
 de:Die Deinstallation wird ausgeführt…
 dk:Afinstallation pågår ...
@@ -15329,6 +15449,7 @@ br:Usar o SumatraPDF como o leitor PDF pa&drão
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
 ca:Usa el SumatraPDF com a visor PDF &predeterminat
 cn:将SumatraPDF设为&缺省PDF阅读器
+cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF læser
@@ -16008,6 +16129,7 @@ by:[Выяўлены змены; адбываецца абнаўленне] %s
 ca-xv:[S'han detectat canvis; s'està actualitzant] %s
 ca:[S'han detectat canvis; s'està actualitzant] %s
 cn:[检测到改动；刷新中] %s
+cy:[Wedi canfod newidiadau: adnewyddu] %s
 cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 dk:[Ændringer konstateret; opdaterer] %s

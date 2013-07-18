@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   53
+#define LANGS_COUNT   54
 #define STRINGS_COUNT 243
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -12999,6 +12999,251 @@ const char * gTranslations_vn =
   "\304\221ang ch\303\251p v\304\203n b\341\272\243n\0"\
   "\304\221ang in t\341\272\255p tin\0";
 
+const char * gTranslations_cy = 
+  "&Ynghylch...\0"\
+  "&Gwir Faint\tCtrl+1\0"\
+  "Dewisiadau &Uwch...\0"\
+  "&Pob tudalen dewiswyd\0"\
+  "N\303\264l\tAlt+Saeth Chwith\0"\
+  "Golwg &Llyfr\tCtrl+8\0"\
+  "&Cau\tCtrl+W\0"\
+  "Cop\303\257o &Dewis\0"\
+  "Cop\303\257o'r Dewis\tCtrl+C\0"\
+  "&Peidio gofyn eto\0"\
+  "Tudalennau &eilrif yn unig\0"\
+  "&Gwynebu\tCtrl+7\0"\
+  "&Ffeil\0"\
+  "&Canfod beth:\0"\
+  "Tudalen Gyntaf\tHome\0"\
+  "&Ffitio tudalennau i ardal argraffu\0"\
+  "&Mynd i\0"\
+  "&Mynd i dudalen:\0"\
+  "&Cymorth\0"\
+  "Tudalen Olaf\tEnd\0"\
+  "&Chwyddiad:\0"\
+  "&Llawlyfr\0"\
+  "&Cydweddu maint\0"\
+  "Tudalen Nesaf\t->\0"\
+  "&Na\0"\
+  "&Dim diolch\0"\
+  "Tudalennau &odrif yn unig\0"\
+  "Agor &Dogfen\0"\
+  "&Agor...\tCtrl+O\0"\
+  "&Dewisiadau...\0"\
+  "&Cyfrinair:\0"\
+  "&Pinio Dogfen\0"\
+  "Tudalen &Flaenorol\tSaeth Chwith\0"\
+  "&Argraffu...\0"\
+  "&Argraffu...\tCtrl+P\0"\
+  "&Argraffu... (gwrthodwyd)\0"\
+  "&Cofio cyfrinair y ddogfen\0"\
+  "C&ofio'r gosodiadau hyn ar gyfer pob dogfen\0"\
+  "&Tynnu Dogfen\0"\
+  "&Cadw fel...\0"\
+  "&Cadw fel...\tCtrl+S\0"\
+  "&Gosodiadau\0"\
+  "C&rebachu tudalennau i'r ardal argraffu (os oes angen)\0"\
+  "Tudalen &Unigol\tCtrl+6\0"\
+  "&Hepgor y fersiwn yma.\0"\
+  "&Defnyddio maint gwreiddiol y dudalen\0"\
+  "&Gweld\0"\
+  "&Iawn\0"\
+  "&Chwyddo\0"\
+  "(o %d)\0"\
+  "(tudalen %s)\0"\
+  "Ynghylch SumatraPDF\0"\
+  "Ychwanegu Ffefryn\0"\
+  "Ychwanegu tudalen %s i'r Ffefrynnau\0"\
+  "Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):\0"\
+  "Ychwanegu i'r ffefrynnau\0"\
+  "Uwch\0"\
+  "Pob ffeil\0"\
+  "Pob dogfen sy'n cael ei chynnal\0"\
+  "Rhaglen:\0"\
+  "Cysylltu gyda ffeiliau PDF?\0"\
+  "Atodiad: %s\0"\
+  "Awdur:\0"\
+  "Awtomatig\0"\
+  "Gwirio'n awtomatig am &ddiweddariadau\0"\
+  "Golwg Llyfr\0"\
+  "Nodau Tudalen\tF12\0"\
+  "Llwybrau Byr Nodau Tudalen\0"\
+  "Llwybr byr nod tudalen i dudalen %s o %s\0"\
+  "Nodau Tudalen\0"\
+  "Beit\0"\
+  "Dogfennau CHM\0"\
+  "Methu cysylltu \303\242'r Rhyngrwyd (gwall %#x).\0"\
+  "Diddymu\0"\
+  "Methu argraffu'r ffeil\0"\
+  "Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau\0"\
+  "Newid Iaith\0"\
+  "Gwirio am &Ddiweddariad\0"\
+  "Llyfrau Comics\0"\
+  "Cydnawsedd\0"\
+  "Didor\0"\
+  "Golwg Llyfr Didor\0"\
+  "Gwynebu'n Ddidor\0"\
+  "Cyfrannu Cyfieithiad.\0"\
+  "Cop\303\257o &Delwedd\0"\
+  "Cop\303\257o &Dolen Cyfeiriad\0"\
+  "Cop\303\257o &Sylw\0"\
+  "Cop\303\257o testun wedi ei atal (cop\303\257o fel delwedd yn unig)\0"\
+  "Hawlfraint\0"\
+  "Methu canfod priodweddau Argraffydd\0"\
+  "Methu cychwyn yr argraffydd\0"\
+  "Methu cyflwyno'r dudalen\0"\
+  "Cr\303\253wyd:\0"\
+  "Ffeil cyfredol\0"\
+  "&Addasu Chwyddo...\tCtrl+Y\0"\
+  "&Cynllun Rhagosodedig:\0"\
+  "C&hwyddo Rhagosodedig:\0"\
+  "Nid oes modd newid y prif ddarllenydd yn y modd cludadwy\0"\
+  "Gwrthodwyd Caniat\303\242d:\0"\
+  "Dogfennau DjVu\0"\
+  "Priodweddau Dogfen\0"\
+  "Llwytho i Lawr\0"\
+  "&Gadael\tCtrl+Q\0"\
+  "eLyfrau EPUB\0"\
+  "Rhoi cyfrinair\0"\
+  "Rhoi cyfrinair ar gyfer %s\0"\
+  "Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:\0"\
+  "Gwall llwytho %s\0"\
+  "&Ffefrynnau\0"\
+  "Ymlaen\tAlt+Saeth Dde\0"\
+  "Sgrin Lawn\tCtrl+Shift+L\0"\
+  "Gwynebu\0"\
+  "Methwyd ailenwi'r ffeil!\0"\
+  "Methwyd cadw ffeil\0"\
+  "Golwg Gwe Cyflym\0"\
+  "Ffefrynnau\0"\
+  "Dogfennau FictionBook\0"\
+  "Heb ganfod ffeil %s\0"\
+  "Maint Ffeil:\0"\
+  "Ffeil:\0"\
+  "Canfod...\tCtrl+F\0"\
+  "Canfod\0"\
+  "Canfod y Nesaf\0"\
+  "Canfod y Blaenorol\0"\
+  "Canfod:\0"\
+  "Ffitio'r &Cynnwys\tCtrl+3\0"\
+  "&Ffitio'r Dudalen\tCtrl+0\0"\
+  "&Fitio'r Lled\tCtrl+2\0"\
+  "Ffitio'r Cynnwys\0"\
+  "Ffitio'r Dudalen\0"\
+  "Fitio'r Lled\0"\
+  "Ffitio'r Lled a Dangos Tudalennau'n Barhaus\0"\
+  "Ffitio Tudalen Unigol\0"\
+  "Ffontiau:\0"\
+  "Fformatio'r llyfr... %d tudalen\0"\
+  "Canfod testun ar dudalen %s\0"\
+  "Canfod testun ar dudalen %s (eto)\0"\
+  "Darllen yn Aml\0"\
+  "\0"\
+  "Mynd i dudalen\0"\
+  "Cuddio darllen yn aml\0"\
+  "Cyngor: Defnyddiwch bysell F3 i ganfod eto\0"\
+  "Ffeiliau delwedd  (*.%s)\0"\
+  "\0"\
+  "Llwytho ffeil %s...\0"\
+  "\0"\
+  "Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?\0"\
+  "Gosod SumatraPDF fel y darllenydd PDF rhagosodedig\0"\
+  "Modd &Manga\0"\
+  "Cydweddu Maint\0"\
+  "Dogfennau Mobi\0"\
+  "Newidwyd:\0"\
+  "Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??\0"\
+  "Tudalen Nesaf\0"\
+  "Heb ganfod cyfatebiad\0"\
+  "Dim canlyniad o liell %u yn ffeil %s\0"\
+  "Heb ganfod ffeil cydweddu\0"\
+  "Dim gwybodaeth cydweddu yn y fan hon\0"\
+  "Nifer o Dudalennau:\0"\
+  "Iawn\0"\
+  "Agor\0"\
+  "Agor yn PDF-XChange\0"\
+  "Agor dogfen...\0"\
+  "Agor yn %s\0"\
+  "Agor yn &Adobe Reader\0"\
+  "Agor yn &Foxit Reader\0"\
+  "Agor yn Microsoft HTML Help\0"\
+  "Agor yn Microsoft XPS-Viewer\0"\
+  "&Priodweddau\0"\
+  "P&riodweddau...\tCtrl+D\0"\
+  "Dogfen PDF\0"\
+  "Gwella'r PDF\0"\
+  "Cynhyrchydd PDF:\0"\
+  "PDF Fersiwn:\0"\
+  "Dogfennau PDF\0"\
+  "Tudalen...\tCtrl+G\0"\
+  "Tudalen %s\0"\
+  "Maint Tudalen:\0"\
+  "Nid yw tudalen rhif %u yn bodoli\0"\
+  "Graddio tudalen\0"\
+  "Tudalen:\0"\
+  "Arhoswch, wrthi'n cyflwyno...\0"\
+  "Dogfennau postscript\0"\
+  "Cyflwyniad\tCtrl+L\0"\
+  "Tudalen Flaenorol\0"\
+  "Argraffu\0"\
+  "Argraffu fel &delwedd (angen mwy o gof)\0"\
+  "Ystod argraffu\0"\
+  "Nid oes argraffydd gyda'r enw yna'n bod\0"\
+  "Wrthi'n argraffu.\0"\
+  "Dal wrthi'n argraffu. Hepgor a gadael?\0"\
+  "Dal wrthi'n argraffu. Hepgor a chychwyn eto?\0"\
+  "Argraffu tudalen %d o %d...\0"\
+  "Anhawster argraffu\0"\
+  "&Ailenwi...\tF2\0"\
+  "Co&fio ffeiliau ar agor\0"\
+  "Tynnu o'r ffefrynnau\0"\
+  "Tynnu tudalen %s o'r ffefrynnau\0"\
+  "Ailenwi i\0"\
+  "Amnewid &lliwiau dogfen gyda threfn lliwiau Windows\0"\
+  "Troi i'r &Chwith\tCtrl+Shift+-\0"\
+  "Troi i'r dde\tCtrl+Shift++\0"\
+  "Cadw fel\0"\
+  "Cadw'r &Llwybr Byr...\tCtrl+Shift+S\0"\
+  "Chwilio am %d o %d...\0"\
+  "Dewis &Popeth\0"\
+  "Dewis &Popeth\tCtrl+A\0"\
+  "Dewis cynnwys drwy Ctrl a botwm chwith y llygoden\0"\
+  "Anfon drwy &E-bost...\0"\
+  "Gosod linell-orchymyn chwilio gwrthdro\0"\
+  "Dangos &Nodau Tudalen\0"\
+  "Dangos y &Bar Offer\0"\
+  "Dangos &tudalennau'n ddidor\0"\
+  "Dangos Ffefrynnau\0"\
+  "Dangos darllenwyd yn aml\0"\
+  "Dangos bar ochr y &nodau tudalen pan yw ar gael\0"\
+  "Tudalen unigol\0"\
+  "Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.\0"\
+  "Does dim pwynt cydweddu yn ffeil %s\0"\
+  "Pwnc:\0"\
+  "Dewisiadau SumatraPDF\0"\
+  "Diweddaru SumatraPDF\0"\
+  "Chwalodd SumatraPDF\0"\
+  "SumatraPDF yw eich prif ddarllenydd PDF\0"\
+  "SumatraPDF dylai fod eich prif ddarllenydd PDF\0"\
+  "Methu agor ffeil cydweddu\0"\
+  "PDF wedi ei thagio\0"\
+  "Dogfennau testun\0"\
+  "Teitl:\0"\
+  "Ffeil ffynhonnell anhysbys (%s)\0"\
+  "Gweld\0"\
+  "&Ymweld \303\242'r Wefan\0"\
+  "Rhybudd\0"\
+  "Dogfennau XPS\0"\
+  "Mae'r fersiwn diweddaraf gennych.\0"\
+  "Mae fersiwn %s gennych\0"\
+  "Chwyddo\0"\
+  "Chwyddo i Mewn\0"\
+  "Chwyddo Allan\0"\
+  "Ffactor Chwyddo\0"\
+  "[Wedi canfod newidiadau: adnewyddu] %s\0"\
+  "cop\303\257o testun\0"\
+  "argraffu dogfen\0";
+
 
 static const char *gTranslations[LANGS_COUNT] = {
   NULL,
@@ -13053,7 +13298,8 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_tr, 
   gTranslations_uk, 
   gTranslations_uz, 
-  gTranslations_vn
+  gTranslations_vn, 
+  gTranslations_cy
 };
 
 const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx]; }
@@ -13111,7 +13357,8 @@ const char *gLangCodes =   "en\0" \
   "tr\0" \
   "uk\0" \
   "uz\0" \
-  "vn\0" "\0";
+  "vn\0" \
+  "cy\0" "\0";
 
 const char *gLangNames =   "English\0" \
   "Albanian (Shqip)\0" \
@@ -13165,7 +13412,8 @@ const char *gLangNames =   "English\0" \
   "Turkish (T\303\274rk\303\247e)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" \
   "Uzbek (O'zbek)\0" \
-  "Vietnamese (Vi\341\273\207t Nam)\0" "\0";
+  "Vietnamese (Vi\341\273\207t Nam)\0" \
+  "Welsh (Cymraeg)\0" "\0";
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -13231,7 +13479,8 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_TURKISH),
   _LANGID(LANG_UKRAINIAN),
   _LANGID(LANG_UZBEK),
-  _LANGID(LANG_VIETNAMESE)
+  _LANGID(LANG_VIETNAMESE),
+  _LANGID(LANG_WELSH)
 };
 #undef _LANGID
 
