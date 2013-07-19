@@ -1431,7 +1431,8 @@ gdiplus_run_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, Brush *bru
 	for (int i = 0; i < text->len; i++)
 	{
 		WCHAR out = ft_get_charcode(text->font, &text->items[i]);
-		if (!out)
+		/* graphics->DrawString seems to always render ' ' as blank spaces */
+		if (!out || out == ' ')
 		{
 			fz_text t2 = *text;
 			t2.len = 1;
