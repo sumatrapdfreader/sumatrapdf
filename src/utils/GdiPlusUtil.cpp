@@ -284,7 +284,7 @@ Bitmap *WICDecodeImageFromStream(IStream *stream)
 
 enum ImgFormat {
     Img_Unknown, Img_BMP, Img_GIF, Img_JPEG,
-    Img_JXR, Img_PNG, Img_TGA, Img_TIFF,
+    Img_JXR, Img_PNG, Img_TGA, Img_TIFF, Img_WebP,
 };
 
 static ImgFormat GfxFormatFromData(const char *data, size_t len)
@@ -306,6 +306,8 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_TGA;
     if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
         return Img_JXR;
+    if (str::StartsWith(data, "RIFF") && len > 12 && str::StartsWith(data + 8, "WEBP"))
+        return Img_WebP;
     return Img_Unknown;
 }
 
@@ -319,6 +321,7 @@ const WCHAR *GfxFileExtFromData(const char *data, size_t len)
     case Img_PNG:  return L".png";
     case Img_TGA:  return L".tga";
     case Img_TIFF: return L".tif";
+    case Img_WebP: return L".webp";
     default:       return NULL;
     }
 }
@@ -341,7 +344,7 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
-    if (Img_JXR == format)
+    if (Img_JXR == format || Img_WebP == format)
         return WICDecodeImageFromStream(stream);
 
     Bitmap *bmp = Bitmap::FromStream(stream);
@@ -456,11 +459,17 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Height = r.WordLE(14);
         }
         break;
+    case Img_WebP:
+        if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
+            result.Width = r.WordLE(26) & 0x3fff;
+            result.Height = r.WordLE(28) & 0x3fff;
+        }
+        break;
     }
 
     if (result.Empty()) {
-        // let GDI+ extract the image size if we've failed
-        // (currently happens for animated GIFs)
+        // let GDI+ or WIC extract the image size if we've failed
+        // (currently happens for animated GIF and extended/lossless WebP)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = Size(bmp->GetWidth(), bmp->GetHeight());

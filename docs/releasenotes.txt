@@ -6,6 +6,8 @@ Next version:
 2.4 (????-??-???):
 
 * support screen readers etc. via UI automation (disabled in release builds)
+* support WebP images (requires a WebP WIC codec installed, e.g. from
+  https://developers.google.com/speed/webp/docs/webp_codec )
 
 2.3.2 (2013-05-25):
 
