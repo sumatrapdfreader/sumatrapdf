@@ -3218,8 +3218,9 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     for (size_t i = files.Count(); i > 0; i--) {
         if (!EngineManager::IsSupportedFile(files.At(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
             !gFileHistory.Find(files.At(i - 1))) {
-            free(files.At(i - 1));
+            WCHAR *path = files.At(i - 1);
             files.RemoveAt(i - 1);
+            free(path);
         }
     }
 
