@@ -75,7 +75,8 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 UTILS_CFLAGS = $(CFLAGS) \
-	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip /I$(EXTDIR)/lzma/C
+	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
+	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp
 
 SUMATRA_CFLAGS = $(UTILS_CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(MUPDF_DIR)\include \
@@ -151,7 +152,7 @@ UTILS_OBJS = \
 	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\WinUtil.obj \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
-	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
+	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
 	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
@@ -159,7 +160,8 @@ UTILS_OBJS = \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
-	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj
+	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj \
+	$(OU)\GdiPlusUtil.obj $(WEBP_OBJS)
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj

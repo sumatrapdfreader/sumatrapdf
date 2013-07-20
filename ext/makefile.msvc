@@ -10,6 +10,7 @@ OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
 OLZ= $(O)\lzma
+OWP= $(O)\webp
 
 SYNCTEX_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /wd4244 /wd4702 /wd4706 /wd4996
 !if "$(PLATFORM)"=="X64"
@@ -44,6 +45,8 @@ CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4018 /wd4057 /wd4189 /wd4244 /wd4295 /wd4701
 CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "PPC_BSTR"
 
 LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
+
+WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -109,6 +112,17 @@ CHMLIB_OBJS = \
 LZMA_OBJS = \
 	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj
 
+WEBP_OBJS = \
+	$(OWP)\alpha.obj $(OWP)\buffer.obj $(OWP)\frame.obj $(OWP)\idec.obj \
+	$(OWP)\io.obj $(OWP)\layer.obj $(OWP)\quant.obj $(OWP)\tree.obj \
+	$(OWP)\vp8.obj $(OWP)\vp8l.obj $(OWP)\webp.obj \
+	$(OWP)\cpu.obj $(OWP)\dec.obj $(OWP)\dec_neon.obj $(OWP)\dec_sse2.obj \
+	$(OWP)\lossless.obj $(OWP)\upsampling.obj $(OWP)\upsampling_neon.obj \
+	$(OWP)\upsampling_sse2.obj $(OWP)\yuv.obj \
+	$(OWP)\bit_reader.obj $(OWP)\color_cache.obj $(OWP)\filters.obj \
+	$(OWP)\huffman.obj $(OWP)\quant_levels_dec.obj $(OWP)\rescaler.obj \
+	$(OWP)\thread.obj $(OWP)\utils.obj
+
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
@@ -116,6 +130,7 @@ $(OE): force
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
 	@if not exist $(OLZ) mkdir $(OLZ)
+	@if not exist $(OWP) mkdir $(OWP)
 
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
@@ -137,3 +152,12 @@ $(OE): force
 
 {$(EXTDIR)\lzma\C}.c{$(OLZ)}.obj::
 	$(CC) $(LZMA_CFLAGS) /Fo$(OLZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\libwebp\dec}.c{$(OWP)}.obj::
+	$(CC) $(WEBP_CFLAGS) /Fo$(OWP)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\libwebp\dsp}.c{$(OWP)}.obj::
+	$(CC) $(WEBP_CFLAGS) /Fo$(OWP)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\libwebp\utils}.c{$(OWP)}.obj::
+	$(CC) $(WEBP_CFLAGS) /Fo$(OWP)\ /Fd$(O)\vc80.pdb $<

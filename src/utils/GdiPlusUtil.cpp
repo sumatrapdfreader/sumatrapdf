@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include <wincodec.h>
+#include <webp/decode.h>
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
@@ -246,7 +247,7 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
     m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-Bitmap *WICDecodeImageFromStream(IStream *stream)
+static Bitmap *WICDecodeImageFromStream(IStream *stream)
 {
     ScopedCom com;
 
@@ -273,10 +274,30 @@ Bitmap *WICDecodeImageFromStream(IStream *stream)
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok)
         return NULL;
-    HR(pConverter->CopyPixels(NULL, bmpData.Stride, w * h * 4, (BYTE *)bmpData.Scan0));
+    HR(pConverter->CopyPixels(NULL, bmpData.Stride, bmpData.Stride * h, (BYTE *)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
     bmp.SetResolution((REAL)xres, (REAL)yres);
 #undef HR
+
+    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
+    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
+}
+
+static Bitmap *WebPDecodeImage(const char *data, size_t len)
+{
+    int w, h;
+    if (!WebPGetInfo((const uint8_t *)data, len, &w, &h))
+        return NULL;
+
+    Bitmap bmp(w, h, PixelFormat32bppARGB);
+    Rect bmpRect(0, 0, w, h);
+    BitmapData bmpData;
+    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
+    if (ok != Ok)
+        return NULL;
+    if (!WebPDecodeBGRAInto((const uint8_t *)data, len, (uint8_t *)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride))
+        return NULL;
+    bmp.UnlockBits(&bmpData);
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
@@ -340,11 +361,13 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ImgFormat format = GfxFormatFromData(data, len);
     if (Img_TGA == format)
         return tga::ImageFromData(data, len);
+    if (Img_WebP == format)
+        return WebPDecodeImage(data, len);
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return NULL;
-    if (Img_JXR == format || Img_WebP == format)
+    if (Img_JXR == format)
         return WICDecodeImageFromStream(stream);
 
     Bitmap *bmp = Bitmap::FromStream(stream);
@@ -464,12 +487,15 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Width = r.WordLE(26) & 0x3fff;
             result.Height = r.WordLE(28) & 0x3fff;
         }
+        else {
+            WebPGetInfo((const uint8_t *)data, len, &result.Width, &result.Height);
+        }
         break;
     }
 
     if (result.Empty()) {
-        // let GDI+ or WIC extract the image size if we've failed
-        // (currently happens for animated GIF and extended/lossless WebP)
+        // let GDI+ extract the image size if we've failed
+        // (currently happens for animated GIF)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = Size(bmp->GetWidth(), bmp->GetHeight());
