@@ -606,15 +606,13 @@ struct FitzImagePos {
 
 struct ListInspectionData {
     Vec<FitzImagePos> *images;
-    bool req_blending;
     bool req_t3_fonts;
     size_t mem_estimate;
     size_t path_len;
     size_t clip_path_len;
 
     ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
-        req_blending(false), req_t3_fonts(false), mem_estimate(0),
-        path_len(0), clip_path_len(0) { }
+        req_t3_fonts(false), mem_estimate(0), path_len(0), clip_path_len(0) { }
 };
 
 extern "C" static void
@@ -727,13 +725,6 @@ fz_inspection_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *re
     fz_inspection_handle_image(dev, image);
 }
 
-extern "C" static void
-fz_inspection_begin_group(fz_device *dev, const fz_rect *rect, int isolated, int knockout, int blendmode, float alpha)
-{
-    if (blendmode != FZ_BLEND_NORMAL || alpha != 1.0f || !isolated || knockout)
-        ((ListInspectionData *)dev->user)->req_blending = true;
-}
-
 static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *data)
 {
     fz_device *dev = fz_new_device(ctx, data);
@@ -754,7 +745,6 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
     dev->fill_image_mask = fz_inspection_fill_image_mask;
     dev->clip_image_mask = fz_inspection_clip_image_mask;
 
-    dev->begin_group = fz_inspection_begin_group;
     return dev;
 }
 
@@ -1068,15 +1058,13 @@ struct PdfPageRun {
     pdf_page *page;
     fz_display_list *list;
     size_t size_est;
-    bool req_blending;
     bool req_t3_fonts;
     size_t path_len;
     size_t clip_path_len;
     int refs;
 
     PdfPageRun(pdf_page *page, fz_display_list *list, ListInspectionData& data) :
-        page(page), list(list), size_est(data.mem_estimate),
-        req_blending(data.req_blending), req_t3_fonts(data.req_t3_fonts),
+        page(page), list(list), size_est(data.mem_estimate), req_t3_fonts(data.req_t3_fonts),
         path_len(data.path_len), clip_path_len(data.clip_path_len), refs(1) { }
 };
 
@@ -2093,13 +2081,9 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
     // dev_gdiplus seems to render quicker and more reliably at high zoom levels
     else if (zoom > 40.0f)
         result = true;
-    // dev_gdiplus' Type 3 fonts look worse than bad transparency at lower zoom levels
+    // dev_gdiplus' Type 3 fonts look worse at lower zoom levels
     else if (run->req_t3_fonts)
         result = false;
-    // fitz/draw currently isn't able to correctly/quickly render some
-    // transparency groups while dev_gdiplus gets most of them right
-    else if (run->req_blending)
-        result = true;
     // dev_gdiplus seems significantly faster at rendering large (amounts of) paths
     // (only required when tiling, at lower zoom levels lines look slightly worse)
     else if (run->path_len > 100000) {
