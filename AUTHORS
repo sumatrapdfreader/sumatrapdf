@@ -54,12 +54,12 @@ NPAPI          src/browserplugin/npapi   MPL  http://code.google.com/p/npapi-sdk
 ucrt           src/ucrt/AUTHORS          BSD  http://code.google.com/p/sumatrapdf/source/browse/trunk/src/ucrt
 msinttypes     src/utils/inttypes.h      BSD  http://code.google.com/p/msinttypes/
 
-CMap Resources mupdf/cmaps/README             http://sourceforge.net/adobe/cmap/home/Home/
-XySSL          mupdf/fitz/crypt_aes.c    BSD  http://en.wikipedia.org/wiki/PolarSSL#History
-Arcfour        mupdf/fitz/crypt_arc4.c        http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
-RSA's MD5      mupdf/fitz/crypt_md5.c         http://tools.ietf.org/html/rfc1321
-Android        mupdf/fonts/droid/NOTICE  APL  http://www.droidfonts.com/
-Poppler        mupdf/pdf/pdf_annot.c     GPL  http://poppler.freedesktop.org/
-ezgdi          mupdf/pdf/pdf_ft_tools.c  GPL  http://code.google.com/p/ezgdi/
+CMap Resources mupdf/.../cmaps/README         http://sourceforge.net/adobe/cmap/home/Home/
+XySSL          mupdf/.../crypt-aes.c     BSD  http://en.wikipedia.org/wiki/PolarSSL#History
+Arcfour        mupdf/.../crypt-arc4.c         http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
+RSA's MD5      mupdf/.../crypt-md5.c          http://tools.ietf.org/html/rfc1321
+Android        mupdf/.../droid/NOTICE    APL  http://www.droidfonts.com/
+Poppler        mupdf/.../pdf-annot.c     GPL  http://poppler.freedesktop.org/
+ezgdi          mupdf/.../pdf-ft-tools.c  GPL  http://code.google.com/p/ezgdi/
 
 Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/
