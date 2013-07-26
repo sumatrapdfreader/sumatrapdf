@@ -13,8 +13,11 @@
 
 // Compile a debug build of mupdf, then compile and run this example:
 //
-// gcc -g -o build/debug/example-mt -Iinclude doc/multi-threading.c \
-//	build/debug/lib*.a -lpthread -lm
+// gcc -g -o build/debug/example-mt -Iinclude docs/multi-threaded.c \
+//	build/debug/libmupdf.a build/debug/libmupdf-js-none.a \
+//	build/debug/libfreetype.a build/debug/libjbig2dec.a \
+//	build/debug/libjpeg.a build/debug/libopenjpeg.a \
+//	build/debug/libz.a -lpthread -lm
 //
 // build/debug/example-mt /path/to/document.pdf
 //
@@ -32,7 +35,7 @@
 void
 fail(char *msg)
 {
-	fprintf(stderr, "%s", msg);
+	fprintf(stderr, "%s\n", msg);
 	abort();
 }
 
@@ -127,7 +130,7 @@ void unlock_mutex(void *user, int lock)
 
 int main(int argc, char **argv)
 {
-	char *filename = argv[1];
+	char *filename = argc >= 2 ? argv[1] : "";
 	pthread_t *thread = NULL;
 	fz_locks_context locks;
 	pthread_mutex_t mutex[FZ_LOCK_MAX];
@@ -243,7 +246,7 @@ int main(int argc, char **argv)
 		// they were allocated by the main thread above.
 
 		fz_drop_pixmap(ctx, data->pix);
-		fz_free_display_list(ctx, data->list);
+		fz_drop_display_list(ctx, data->list);
 
 		// Free the data structured passed back and forth
 		// between the main thread and rendering thread.

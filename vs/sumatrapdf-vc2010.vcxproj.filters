@@ -603,6 +603,9 @@
     <ClCompile Include="..\mupdf\source\fitz\stream-open.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\stream-prog.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
@@ -631,6 +634,9 @@
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c">

@@ -12,6 +12,7 @@ JPEG_DIR := thirdparty/jpeg
 OPENJPEG_DIR := thirdparty/openjpeg
 OPENSSL_DIR := thirdparty/openssl
 ZLIB_DIR := thirdparty/zlib
+CURL_DIR := thirdparty/curl
 
 # --- V8 ---
 #
@@ -309,4 +310,140 @@ X11_LIBS := $(SYS_X11_LIBS)
 else
 X11_CFLAGS :=
 X11_LIBS :=
+endif
+
+# --- cURL ---
+
+ifneq "$(wildcard $(CURL_DIR)/README)" ""
+
+CURL_LIB := $(OUT)/libcurl.a
+CURL_OUT := $(OUT)/curl
+CURL_SRC := \
+	amigaos.c \
+	asyn-ares.c \
+	asyn-thread.c \
+	axtls.c \
+	base64.c \
+	bundles.c \
+	conncache.c \
+	connect.c \
+	content_encoding.c \
+	cookie.c \
+	curl_addrinfo.c \
+	curl_darwinssl.c \
+	curl_fnmatch.c \
+	curl_gethostname.c \
+	curl_gssapi.c \
+	curl_memrchr.c \
+	curl_multibyte.c \
+	curl_ntlm.c \
+	curl_ntlm_core.c \
+	curl_ntlm_msgs.c \
+	curl_ntlm_wb.c \
+	curl_rand.c \
+	curl_rtmp.c \
+	curl_sasl.c \
+	curl_schannel.c \
+	curl_sspi.c \
+	curl_threads.c \
+	cyassl.c \
+	dict.c \
+	easy.c \
+	escape.c \
+	file.c \
+	fileinfo.c \
+	formdata.c \
+	ftp.c \
+	ftplistparser.c \
+	getenv.c \
+	getinfo.c \
+	gopher.c \
+	gtls.c \
+	hash.c \
+	hmac.c \
+	hostasyn.c \
+	hostcheck.c \
+	hostip.c \
+	hostip4.c \
+	hostip6.c \
+	hostsyn.c \
+	http.c \
+	http_chunks.c \
+	http_digest.c \
+	http_negotiate.c \
+	http_negotiate_sspi.c \
+	http_proxy.c \
+	idn_win32.c \
+	if2ip.c \
+	imap.c \
+	inet_ntop.c \
+	inet_pton.c \
+	krb4.c \
+	krb5.c \
+	ldap.c \
+	llist.c \
+	md4.c \
+	md5.c \
+	memdebug.c \
+	mprintf.c \
+	multi.c \
+	netrc.c \
+	non-ascii.c \
+	nonblock.c \
+	nss.c \
+	openldap.c \
+	parsedate.c \
+	pingpong.c \
+	pipeline.c \
+	polarssl.c \
+	polarssl_threadlock.c \
+	pop3.c \
+	progress.c \
+	qssl.c \
+	rawstr.c \
+	rtsp.c \
+	security.c \
+	select.c \
+	sendf.c \
+	share.c \
+	slist.c \
+	smtp.c \
+	socks.c \
+	socks_gssapi.c \
+	speedcheck.c \
+	splay.c \
+	ssh.c \
+	sslgen.c \
+	ssluse.c \
+	strdup.c \
+	strequal.c \
+	strerror.c \
+	strtok.c \
+	strtoofft.c \
+	telnet.c \
+	tftp.c \
+	timeval.c \
+	transfer.c \
+	url.c \
+	version.c \
+	warnless.c \
+	wildcard.c \
+
+
+$(CURL_LIB): $(addprefix $(CURL_OUT)/, $(CURL_SRC:%.c=%.o))
+
+$(CURL_OUT):
+	$(MKDIR_CMD)
+
+CRL_CFLAGS := -DHAVE_CONFIG_H -DBUILDING_LIBCURL -DCURL_STATICLIB \
+	-DCURL_DISABLE_LDAP -I$(CURL_DIR)/include
+
+$(CURL_OUT)/%.o: $(CURL_DIR)/lib/%.c	| $(CURL_OUT)
+	$(CC_CMD) $(CRL_CFLAGS)
+
+CURL_CFLAGS := -I$(CURL_DIR)/include
+CURL_LIBS := -lpthread -lrt
+else
+CURL_CFLAGS := $(SYS_CURL_CFLAGS)
+CURL_LIBS := $(SYS_CURL_LIBS)
 endif

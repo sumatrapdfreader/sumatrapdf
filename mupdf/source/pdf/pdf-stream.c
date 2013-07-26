@@ -569,7 +569,7 @@ pdf_open_object_array(pdf_document *doc, pdf_obj *list)
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			fz_warn(ctx, "cannot load content stream part %d/%d", i + 1, n);
 			continue;
 		}

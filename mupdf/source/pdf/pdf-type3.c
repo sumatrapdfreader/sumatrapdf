@@ -225,7 +225,7 @@ void pdf_load_type3_glyphs(pdf_document *doc, pdf_font_desc *fontdesc, int neste
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		fz_warn(ctx, "Type3 glyph load failed: %s", fz_caught_message(ctx));
 	}
 }

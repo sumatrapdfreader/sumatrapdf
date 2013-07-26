@@ -1,17 +1,22 @@
-.TH MUPDF 1 "June 12, 2012"
+.TH MUPDF 1 "July 25, 2013"
 .\" Please adjust this date whenever revising the manpage.
+
 .SH NAME
 mupdf \- MuPDF is a lightweight PDF viewer written in portable C
+
 .SH SYNOPSIS
 .B mupdf
 .RI [ options ] " PDFfile"
+
 .SH DESCRIPTION
 This manual page briefly describes the
 .B mupdf
 command.
 .PP
+
 .SH OPTIONS
 A description of each of the supported options is included below.
+
 .TP
 .B \-p password
 Uses the given password to open an encrypted PDF file.
@@ -20,25 +25,52 @@ The password is tried both as user and owner password.
 .B \-r resolution
 Changes the initial zoom level, specified as the resolution in dpi.
 The default value is 72.
-.SH MOUSE AND KEY BINDINGS
-In addition to the key bindings described below, the mouse can also be
-used. Clicking the left mouse button follows links within the PDF while
-dragging with the left mouse button pans the page. Dragging with the right
-mouse button selects an area and copies the enclosed text to the clipboard
-buffer. Using the scroll-wheel while pressing Control zooms in/out, if
-Shift is pressed on the other hand then the page is panned.
+.TP
+.B \-b bits
+Changes the anti-aliasing quality, specified as a number of bits between 0
+(off) and 8 (best). The default value is 8.
+
+.SH MOUSE BEHAVIOR
+
+.TP
+.B Left mouse button click
+A left click on a hyper link follows the link.
+.TP
+.B Left mouse button drag
+Pan the page. Panning beyond the bottom or top
+edge will go to the next or previous page.
+.TP
+.B Right mouse button drag
+Select text in an area. On X11, the selected text
+can be pasted in another application with a middle click.
+Press Ctl+C to copy the selected text to the clipboard.
+On windows, the selected text will automatically be copied
+to the clipboard.
+.TP
+.B Scroll wheel
+Pan page up or down. Does not change page
+when reaching the bottom or top edge.
+.TP
+.B Shift + Scroll wheel
+Pan page left or right.
+.TP
+.B Control + Scroll wheel
+Zoom in or out.
+
+.SH KEY BINDINGS
+
 .TP
 .B L, R
 Rotate page left (clockwise) or right (counter-clockwise).
 .TP
 .B h, j, k, l
-Scroll page left, down, up, or right.
+Pan page left, down, up, or right.
 .TP
 .B \+, \-
 Zoom in or out.
 .TP
 .B W, H
-Zoom so page exactly fits width or height of window.
+Zoom page to exactly fit width or height of window.
 .TP
 .B w
 Shrinkwrap window to fit the page.
@@ -56,7 +88,7 @@ Go to the previous page
 Skip back/forth 10 pages at a time.
 .TP
 .B m
-Mark page for snap back.
+Mark current page for snap back. Up to 256 pages can be marked.
 .TP
 .B t
 Pop back to the latest mark.
@@ -70,23 +102,40 @@ Go to the page saved in the numbered register.
 .B 123g
 Go to page 123.
 .TP
-.B /
-Search for text.
+.B g, G
+Go to the first or last page.
+.TP
+.B /, ?
+Search for text forwards or backwards.
 .TP
 .B n, N
 Find the next/previous search result.
+.TP
+.B f
+Toggles fullscreen mode.
+.TP
+.B p
+Toggle presentation mode.
 .TP
 .B c
 Toggle between color and grayscale rendering.
 .TP
 .B i
 Toggle between normal and inverted color rendering.
-.P
+.TP
+.B q
+Quit.
+
+.SH SIGNALS
+
+.TP
+.B SIGHUP
 Sending a \fBSIGHUP\fR signal to the mupdf process will also cause the viewed
 file to be reloaded automatically, for use in e.g. build scripts.
+
 .SH SEE ALSO
-.BR mupdfclean (1),
-.BR mupdfdraw (1),
-.BR mupdfshow (1).
+.BR mudraw (1),
+.BR mutool (1).
+
 .SH AUTHOR
 MuPDF is Copyright 2006-2013 Artifex Software, Inc.

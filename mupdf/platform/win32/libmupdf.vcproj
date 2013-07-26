@@ -626,6 +626,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\stream-prog.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\stream-read.c"
 				>
 			</File>
@@ -683,6 +687,10 @@
 			>
 			<File
 				RelativePath="..\..\source\pdf\pdf-annot.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\pdf\pdf-appearance.c"
 				>
 			</File>
 			<File
@@ -866,6 +874,10 @@
 				>
 				<File
 					RelativePath="..\..\include\mupdf\pdf\annot.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\mupdf\pdf\appearance.h"
 					>
 				</File>
 				<File

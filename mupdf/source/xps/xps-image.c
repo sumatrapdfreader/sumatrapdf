@@ -152,7 +152,7 @@ xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 	}
 	fz_catch(doc->ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(doc->ctx, FZ_ERROR_TRYLATER);
 		fz_warn(doc->ctx, "cannot find image source");
 		return;
 	}
@@ -177,7 +177,7 @@ xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 	}
 	fz_catch(doc->ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(doc->ctx, FZ_ERROR_TRYLATER);
 		fz_warn(doc->ctx, "cannot decode image resource");
 		return;
 	}

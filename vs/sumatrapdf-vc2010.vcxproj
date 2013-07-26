@@ -266,6 +266,7 @@
     <ClCompile Include="..\mupdf\source\fitz\stext-search.c" />
     <ClCompile Include="..\mupdf\source\fitz\store.c" />
     <ClCompile Include="..\mupdf\source\fitz\stream-open.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stream-prog.c" />
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\mupdf\source\fitz\string.c" />
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c" />
@@ -276,6 +277,7 @@
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-parse.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-table.c" />

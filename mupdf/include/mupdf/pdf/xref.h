@@ -82,6 +82,10 @@ void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
 pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
 
+int pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int *tmpofs);
+
+pdf_obj *pdf_progressive_advance(pdf_document *doc, int pagenum);
+
 void pdf_print_xref(pdf_document *);
 
 #endif

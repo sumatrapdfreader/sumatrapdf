@@ -30,7 +30,7 @@ static int isfontdesc(pdf_obj *obj)
 
 static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int rgb)
 {
-	char name[1024];
+	char buf[1024];
 	fz_pixmap *converted = NULL;
 
 	if (!pix)
@@ -46,15 +46,15 @@ static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int rgb)
 
 	if (pix->n <= 4)
 	{
-		sprintf(name, "%s.png", file);
-		printf("extracting image %s\n", name);
-		fz_write_png(ctx, pix, name, 0);
+		snprintf(buf, sizeof(buf), "%s.png", file);
+		printf("extracting image %s\n", buf);
+		fz_write_png(ctx, pix, buf, 0);
 	}
 	else
 	{
-		sprintf(name, "%s.pam", file);
-		printf("extracting image %s\n", name);
-		fz_write_pam(ctx, pix, name, 0);
+		snprintf(buf, sizeof(buf), "%s.pam", file);
+		printf("extracting image %s\n", buf);
+		fz_write_pam(ctx, pix, buf, 0);
 	}
 
 	fz_drop_pixmap(ctx, converted);
@@ -65,7 +65,7 @@ static void saveimage(int num)
 	fz_image *image;
 	fz_pixmap *pix;
 	pdf_obj *ref;
-	char name[32];
+	char buf[32];
 
 	ref = pdf_new_indirect(doc, num, 0);
 
@@ -75,8 +75,8 @@ static void saveimage(int num)
 	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
 	fz_drop_image(ctx, image);
 
-	sprintf(name, "img-%04d", num);
-	writepixmap(ctx, pix, name, dorgb);
+	snprintf(buf, sizeof(buf), "img-%04d", num);
+	writepixmap(ctx, pix, buf, dorgb);
 
 	fz_drop_pixmap(ctx, pix);
 	pdf_drop_obj(ref);
@@ -84,7 +84,7 @@ static void saveimage(int num)
 
 static void savefont(pdf_obj *dict, int num)
 {
-	char name[1024];
+	char namebuf[1024];
 	char *subtype;
 	fz_buffer *buf;
 	pdf_obj *stream = NULL;
@@ -141,10 +141,10 @@ static void savefont(pdf_obj *dict, int num)
 
 	buf = pdf_load_stream(doc, pdf_to_num(stream), pdf_to_gen(stream));
 
-	sprintf(name, "%s-%04d.%s", fontname, num, ext);
-	printf("extracting font %s\n", name);
+	snprintf(namebuf, sizeof(namebuf), "%s-%04d.%s", fontname, num, ext);
+	printf("extracting font %s\n", namebuf);
 
-	f = fopen(name, "wb");
+	f = fopen(namebuf, "wb");
 	if (!f)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Error creating font file");
 

@@ -251,7 +251,7 @@ FITZ_OBJS = \
 	$(OFZ)\output.obj $(OFZ)\path.obj $(OFZ)\pixmap.obj \
 	$(OFZ)\shade.obj $(OFZ)\stext-device.obj $(OFZ)\stext-output.obj $(OFZ)\stext-paragraph.obj \
 	$(OFZ)\stext-search.obj $(OFZ)\store.obj $(OFZ)\stream-open.obj $(OFZ)\stream-read.obj \
-	$(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
+	$(OFZ)\stream-prog.obj $(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
 	$(OFZ)\trace-device.obj $(OFZ)\transition.obj $(OFZ)\ucdn.obj $(OFZ)\xml.obj \
 	$(OFZ)\gdiplus-device.obj
 
@@ -265,7 +265,7 @@ MUPDF_OBJS = \
 	$(OP)\pdf-parse.obj $(OP)\pdf-pattern.obj $(OP)\pdf-pkcs7.obj $(OP)\pdf-repair.obj \
 	$(OP)\pdf-shade.obj $(OP)\pdf-store.obj $(OP)\pdf-stream.obj $(OP)\pdf-type3.obj \
 	$(OP)\pdf-unicode.obj $(OP)\pdf-write.obj $(OP)\pdf-xobject.obj $(OP)\pdf-xref-aux.obj \
-	$(OP)\pdf-xref.obj $(OP)\pdf-js-none.obj
+	$(OP)\pdf-xref.obj $(OP)\pdf-js-none.obj $(OP)\pdf-appearance.obj
 
 MUXPS_OBJS = \
 	$(OX)\xps-common.obj $(OX)\xps-doc.obj $(OX)\xps-glyphs.obj $(OX)\xps-gradient.obj \

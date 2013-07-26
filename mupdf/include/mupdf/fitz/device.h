@@ -223,6 +223,16 @@ typedef struct fz_cookie_s fz_cookie;
 	value of progress to that of progress_max.
 
 	errors: count of errors during current rendering.
+
+	incomplete_ok: If this is set to 1 by the caller, then TRYLATER
+	errors are swallowed as they occur, setting the 'incomplete' flag.
+	Rendering continues as much as possible ignoring errors. The caller
+	is expected to check the 'incomplete' flag at the end to see if the
+	rendering may be considered final or not.
+
+	incomplete: Initially should be set to 0. Will be set to non-zero
+	if a TRYLATER error is thrown during rendering and the incomplete_ok
+	flag is set.
 */
 struct fz_cookie_s
 {
@@ -230,6 +240,8 @@ struct fz_cookie_s
 	int progress;
 	int progress_max; /* -1 for unknown */
 	int errors;
+	int incomplete_ok;
+	int incomplete;
 };
 
 /*

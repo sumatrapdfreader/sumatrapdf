@@ -75,7 +75,7 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		xml = NULL;
 	}
 

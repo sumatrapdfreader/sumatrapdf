@@ -146,7 +146,7 @@ xps_load_outline(xps_document *doc)
 			}
 			fz_catch(doc->ctx)
 			{
-				/* FIXME: TryLater ? */
+				fz_rethrow_if(doc->ctx, FZ_ERROR_TRYLATER);
 				outline = NULL;
 			}
 			if (!outline)

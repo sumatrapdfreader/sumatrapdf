@@ -90,6 +90,8 @@ static void
 fz_ensure_buffer(fz_context *ctx, fz_buffer *buf, int min)
 {
 	int newsize = buf->cap;
+	if (newsize < 16)
+		newsize = 16;
 	while (newsize < min)
 	{
 		newsize = (newsize * 3) / 2;

@@ -129,16 +129,14 @@ pdf_lookup_page_number(pdf_document *doc, pdf_obj *node)
 	int total = 0;
 	pdf_obj *parent, *parent2;
 
-	/* SumatraPDF: don't return 0 for non-dict nodes (certainly not the first page) */
-	if (!pdf_is_dict(node))
+	if (strcmp(pdf_to_name(pdf_dict_gets(node, "Type")), "Page") != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
 
 	parent2 = parent = pdf_dict_gets(node, "Parent");
 	fz_var(parent);
 	fz_try(ctx)
 	{
-		/* SumatraPDF: don't throw for non-dict parents */
-		while (parent && pdf_is_dict(parent))
+		while (pdf_is_dict(parent))
 		{
 			if (pdf_mark_obj(parent))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree (parents)");
@@ -368,7 +366,14 @@ pdf_load_page(pdf_document *doc, int number)
 	float userunit;
 	fz_matrix mat;
 
-	pageref = pdf_lookup_page_obj(doc, number);
+	if (doc->file_reading_linearly)
+	{
+		pageref = pdf_progressive_advance(doc, number);
+		if (pageref == NULL)
+			fz_throw(doc->ctx, FZ_ERROR_TRYLATER, "page %d not available yet", number);
+	}
+	else
+		pageref = pdf_lookup_page_obj(doc, number);
 	pageobj = pdf_resolve_indirect(pageref);
 
 	page = fz_malloc_struct(ctx, pdf_page);
@@ -380,6 +385,7 @@ pdf_load_page(pdf_document *doc, int number)
 	page->deleted_annots = NULL;
 	page->tmp_annots = NULL;
 	page->me = pdf_keep_obj(pageobj);
+	page->incomplete = 0;
 
 	obj = pdf_dict_gets(pageobj, "UserUnit");
 	if (pdf_is_real(obj))
@@ -428,19 +434,21 @@ pdf_load_page(pdf_document *doc, int number)
 	fz_pre_scale(fz_translate(&mat, -realbox.x0, -realbox.y0), userunit, userunit);
 	fz_concat(&page->ctm, &page->ctm, &mat);
 
-	obj = pdf_dict_gets(pageobj, "Annots");
-	if (obj)
+	fz_try(ctx)
 	{
-		/* SumatraPDF: ignore annotations in case of unexpected errors */
-		fz_try(ctx)
+		obj = pdf_dict_gets(pageobj, "Annots");
+		if (obj)
 		{
-		page->links = pdf_load_link_annots(doc, obj, &page->ctm);
-		page->annots = pdf_load_annots(doc, obj, page);
+			page->links = pdf_load_link_annots(doc, obj, &page->ctm);
+			page->annots = pdf_load_annots(doc, obj, page);
 		}
-		fz_catch(ctx)
-		{
+	}
+	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) != FZ_ERROR_TRYLATER)
+			/* SumatraPDF: ignore annotations in case of unexpected errors */
 			fz_warn(ctx, "unexpectedly failed to load page annotations");
-		}
+		page->incomplete |= PDF_PAGE_INCOMPLETE_ANNOTS;
 	}
 
 	page->duration = pdf_to_real(pdf_dict_gets(pageobj, "Dur"));
@@ -474,8 +482,12 @@ pdf_load_page(pdf_document *doc, int number)
 	}
 	fz_catch(ctx)
 	{
-		pdf_free_page(doc, page);
-		fz_rethrow_message(ctx, "cannot load page %d contents (%d 0 R)", number + 1, pdf_to_num(pageref));
+		if (fz_caught(ctx) != FZ_ERROR_TRYLATER)
+		{
+			pdf_free_page(doc, page);
+			fz_rethrow_message(ctx, "cannot load page %d contents (%d 0 R)", number + 1, pdf_to_num(pageref));
+		}
+		page->incomplete |= PDF_PAGE_INCOMPLETE_CONTENTS;
 	}
 
 	return page;
@@ -544,39 +556,57 @@ pdf_delete_page(pdf_document *doc, int at)
 void
 pdf_insert_page(pdf_document *doc, pdf_page *page, int at)
 {
+	fz_context *ctx = doc->ctx;
 	int count = pdf_count_pages(doc);
 	pdf_obj *parent, *kids;
+	pdf_obj *page_ref;
 	int i;
 
-	if (count == 0)
-	{
-		/* TODO: create new page tree? */
-		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "empty page tree, cannot insert page");
-	}
-	else if (at >= count)
-	{
-		if (at > count)
-			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot insert page beyond end of page tree");
+	page_ref = pdf_new_ref(doc, page->me);
 
-		/* append after last page */
-		pdf_lookup_page_loc(doc, count - 1, &parent, &i);
-		kids = pdf_dict_gets(parent, "Kids");
-		pdf_array_insert_drop(kids, pdf_new_ref(doc, page->me), i + 1);
-	}
-	else
+	fz_try(ctx)
 	{
-		/* insert before found page */
-		pdf_lookup_page_loc(doc, at, &parent, &i);
-		kids = pdf_dict_gets(parent, "Kids");
-		pdf_array_insert_drop(kids, pdf_new_ref(doc, page->me), i);
-	}
+		if (count == 0)
+		{
+			/* TODO: create new page tree? */
+			fz_throw(ctx, FZ_ERROR_GENERIC, "empty page tree, cannot insert page");
+		}
+		else if (at >= count)
+		{
+			if (at > count)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot insert page beyond end of page tree");
 
-	/* Adjust page counts */
-	while (parent)
+			/* append after last page */
+			pdf_lookup_page_loc(doc, count - 1, &parent, &i);
+			kids = pdf_dict_gets(parent, "Kids");
+			pdf_array_insert(kids, page_ref, i + 1);
+		}
+		else
+		{
+			/* insert before found page */
+			pdf_lookup_page_loc(doc, at, &parent, &i);
+			kids = pdf_dict_gets(parent, "Kids");
+			pdf_array_insert(kids, page_ref, i);
+		}
+
+		pdf_dict_puts(page->me, "Parent", page_ref);
+
+		/* Adjust page counts */
+		while (parent)
+		{
+			int count = pdf_to_int(pdf_dict_gets(parent, "Count"));
+			pdf_dict_puts_drop(parent, "Count", pdf_new_int(doc, count + 1));
+			parent = pdf_dict_gets(parent, "Parent");
+		}
+
+	}
+	fz_always(ctx)
 	{
-		int count = pdf_to_int(pdf_dict_gets(parent, "Count"));
-		pdf_dict_puts_drop(parent, "Count", pdf_new_int(doc, count + 1));
-		parent = pdf_dict_gets(parent, "Parent");
+		pdf_drop_obj(page_ref);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 }
 

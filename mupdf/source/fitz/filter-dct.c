@@ -79,7 +79,7 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TRYLATER */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		return 0;
 	}
 	src->next_input_byte = chain->rp;

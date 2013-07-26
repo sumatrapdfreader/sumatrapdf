@@ -532,7 +532,7 @@ static pdf_obj *sweepref(pdf_document *doc, pdf_write_options *opts, pdf_obj *ob
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		/* Leave broken */
 	}
 
@@ -1650,7 +1650,7 @@ static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		if (opts->continue_on_error)
 		{
 			fprintf(opts->out, "%d %d obj\nnull\nendobj\n", num, gen);
@@ -1732,7 +1732,7 @@ static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater ? */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			if (opts->continue_on_error)
 			{
 				fprintf(opts->out, "%d %d obj\nnull\nendobj\n", num, gen);

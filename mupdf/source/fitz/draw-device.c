@@ -490,12 +490,16 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	int xorig, int yorig, const fz_irect *scissor)
 {
 	unsigned char *dp, *mp;
-	fz_irect bbox;
+	fz_irect bbox, bbox2;
 	int x, y, w, h;
 
 	fz_pixmap_bbox_no_ctx(msk, &bbox);
 	fz_translate_irect(&bbox, xorig, yorig);
 	fz_intersect_irect(&bbox, scissor); /* scissor < dst */
+
+	if (fz_is_empty_irect(fz_intersect_irect(&bbox, fz_pixmap_bbox_no_ctx(dst, &bbox2))))
+		return;
+
 	x = bbox.x0;
 	y = bbox.y0;
 	w = bbox.x1 - bbox.x0;

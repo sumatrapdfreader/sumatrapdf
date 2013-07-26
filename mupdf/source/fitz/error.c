@@ -193,3 +193,10 @@ void fz_rethrow_message_imp(fz_context *ctx, char *file, int line, const char *f
 
 	throw(ctx->error);
 }
+
+void fz_rethrow_if(fz_context *ctx, int err)
+{
+	assert(ctx && ctx->error && ctx->error->errcode >= FZ_ERROR_NONE);
+	if (ctx->error->errcode == err)
+		fz_rethrow(ctx);
+}

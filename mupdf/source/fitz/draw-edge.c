@@ -182,8 +182,8 @@ fz_new_gel(fz_context *ctx)
 		gel->len = 0;
 		gel->edges = fz_malloc_array(ctx, gel->cap, sizeof(fz_edge));
 
-		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
-		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
+		gel->clip.x0 = gel->clip.y0 = BBOX_MIN;
+		gel->clip.x1 = gel->clip.y1 = BBOX_MAX;
 
 		gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
 		gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
@@ -210,8 +210,8 @@ fz_reset_gel(fz_gel *gel, const fz_irect *clip)
 
 	if (fz_is_infinite_irect(clip))
 	{
-		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
-		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
+		gel->clip.x0 = gel->clip.y0 = BBOX_MIN;
+		gel->clip.x1 = gel->clip.y1 = BBOX_MAX;
 	}
 	else {
 		gel->clip.x0 = clip->x0 * fz_aa_hscale;
@@ -964,9 +964,13 @@ fz_scan_convert(fz_gel *gel, int eofill, const fz_irect *clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	fz_aa_context *ctxaa = gel->ctx->aa;
+	fz_irect local_clip;
+
+	if (fz_is_empty_irect(fz_intersect_irect(fz_pixmap_bbox_no_ctx(dst, &local_clip), clip)))
+		return;
 
 	if (fz_aa_bits > 0)
-		fz_scan_convert_aa(gel, eofill, clip, dst, color);
+		fz_scan_convert_aa(gel, eofill, &local_clip, dst, color);
 	else
-		fz_scan_convert_sharp(gel, eofill, clip, dst, color);
+		fz_scan_convert_sharp(gel, eofill, &local_clip, dst, color);
 }

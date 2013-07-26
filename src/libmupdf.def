@@ -66,6 +66,7 @@ EXPORTS
 	fz_warn_imp
 	fz_caught_message
 	fz_caught
+	fz_rethrow_if
 	fz_flush_warnings
 	fz_new_context
 	fz_clone_context
@@ -352,6 +353,8 @@ EXPORTS
 	fz_empty_store
 	fz_store_scavenge
 	fz_open_file
+	fz_open_fd_progressive
+	fz_open_file_progressive
 	fz_open_file_w
 	fz_open_fd
 	fz_open_memory
@@ -362,6 +365,7 @@ EXPORTS
 	fz_seek
 	fz_read
 	fz_read_all
+	fz_stream_meta
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
@@ -433,12 +437,19 @@ EXPORTS
 	pdf_free_annot
 	pdf_create_annot
 	pdf_delete_annot
-	pdf_set_annot_appearance
 	pdf_set_markup_annot_quadpoints
-	pdf_set_markup_appearance
 	pdf_set_ink_annot_list
-	pdf_set_ink_appearance
 	pdf_annot_obj_type
+	pdf_da_info_fin
+	pdf_parse_da
+	pdf_fzbuf_print_da
+	pdf_update_text_appearance
+	pdf_update_combobox_appearance
+	pdf_update_pushbutton_appearance
+	pdf_update_text_markup_appearance
+	pdf_set_annot_appearance
+	pdf_set_markup_appearance
+	pdf_set_ink_appearance
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
@@ -514,6 +525,7 @@ EXPORTS
 	pdf_load_type3_font
 	pdf_load_type3_glyphs
 	pdf_load_font
+	pdf_load_hail_mary_font
 	pdf_load_windows_font
 	pdf_load_similar_cjk_font
 	pdf_new_font_desc
@@ -687,6 +699,8 @@ EXPORTS
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_new_ref
+	pdf_repair_obj
+	pdf_progressive_advance
 	pdf_print_xref
 
 ; MuXPS exports

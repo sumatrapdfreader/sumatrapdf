@@ -93,6 +93,13 @@ struct pdf_page_s
 	float duration;
 	int transition_present;
 	fz_transition transition;
+	int incomplete;
+};
+
+enum
+{
+	PDF_PAGE_INCOMPLETE_CONTENTS = 1,
+	PDF_PAGE_INCOMPLETE_ANNOTS = 2
 };
 
 #endif

@@ -444,7 +444,7 @@ begin_softmask(pdf_csi * csi, softmask_save *save, int for_group)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		/* FIXME: Ignore error - nasty, but if we throw from
 		 * here the clip stack would be messed up. */
 		if (csi->cookie)
@@ -1321,7 +1321,7 @@ pdf_grestore(pdf_csi *csi)
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			/* Silently swallow the problem */
 		}
 		clip_depth--;
@@ -1722,6 +1722,31 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	}
 }
 
+static pdf_font_desc *
+load_font_or_hail_mary(pdf_csi *csi, pdf_obj *rdb, pdf_obj *font, int depth)
+{
+	pdf_document *doc = csi->doc;
+	fz_context *ctx = doc->ctx;
+	pdf_font_desc *desc;
+
+	fz_try(ctx)
+	{
+		desc = pdf_load_font(doc, rdb, font, depth);
+	}
+	fz_catch(ctx)
+	{
+		if (fz_caught(ctx) != FZ_ERROR_TRYLATER)
+			fz_rethrow(ctx);
+		if (!csi->cookie || !csi->cookie->incomplete_ok)
+			fz_rethrow(ctx);
+		desc = NULL;
+		csi->cookie->incomplete++;
+	}
+	if (desc == NULL)
+		desc = pdf_load_hail_mary_font(doc);
+	return desc;
+}
+
 static void
 pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 {
@@ -1751,7 +1776,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					gstate->font = NULL;
 				}
 
-				gstate->font = pdf_load_font(csi->doc, rdb, font, csi->nested_depth);
+				gstate->font = load_font_or_hail_mary(csi, rdb, font, csi->nested_depth);
 				if (!gstate->font)
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find font in store");
 				gstate->size = pdf_to_real(pdf_array_get(val, 1));
@@ -2333,7 +2358,7 @@ static void pdf_run_Tf(pdf_csi *csi, pdf_obj *rdb)
 	if (!obj)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find font resource: '%s'", csi->name);
 
-	gstate->font = pdf_load_font(csi->doc, rdb, obj, csi->nested_depth);
+	gstate->font = load_font_or_hail_mary(csi, rdb, obj, csi->nested_depth);
 }
 
 static void pdf_run_Tr(pdf_csi *csi)
@@ -2998,10 +3023,21 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
-			/* Swallow the error */
-			if (csi->cookie)
-				csi->cookie->errors++;
+			if (!csi->cookie)
+			{
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+			}
+			else if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+			{
+				if (csi->cookie->incomplete_ok)
+					csi->cookie->incomplete++;
+				else
+					fz_rethrow(ctx);
+			}
+			else
+			{
+				 csi->cookie->errors++;
+			}
 			if (!ignoring_errors)
 			{
 				fz_warn(ctx, "Ignoring errors during rendering");
@@ -3046,7 +3082,7 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		fz_warn(ctx, "Content stream parsing error - rendering truncated");
 	}
 	while (csi->gtop > csi->gbot)
@@ -3145,6 +3181,8 @@ static void pdf_run_page_contents_with_usage(pdf_document *doc, pdf_page *page, 
 void pdf_run_page_contents(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
 	pdf_run_page_contents_with_usage(doc, page, dev, ctm, "View", cookie);
+	if (page->incomplete & PDF_PAGE_INCOMPLETE_CONTENTS)
+		fz_throw(doc->ctx, FZ_ERROR_TRYLATER, "incomplete rendering");
 }
 
 static void pdf_run_annot_with_usage(pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
@@ -3192,6 +3230,8 @@ static void pdf_run_annot_with_usage(pdf_document *doc, pdf_page *page, pdf_anno
 void pdf_run_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
 	pdf_run_annot_with_usage(doc, page, annot, dev, ctm, "View", cookie);
+	if (page->incomplete & PDF_PAGE_INCOMPLETE_ANNOTS)
+		fz_throw(doc->ctx, FZ_ERROR_TRYLATER, "incomplete rendering");
 }
 
 static void pdf_run_page_annots_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie)
@@ -3225,6 +3265,8 @@ pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const
 {
 	pdf_run_page_contents_with_usage(doc, page, dev, ctm, event, cookie);
 	pdf_run_page_annots_with_usage(doc, page, dev, ctm, event, cookie);
+	if (page->incomplete)
+		fz_throw(doc->ctx, FZ_ERROR_TRYLATER, "incomplete rendering");
 }
 
 void

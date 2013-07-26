@@ -424,7 +424,7 @@ xps_read_page_list(xps_document *doc)
 		}
 		fz_catch(doc->ctx)
 		{
-			/* FIXME: TryLater ? */
+			fz_rethrow_if(doc->ctx, FZ_ERROR_TRYLATER);
 			fz_warn(doc->ctx, "cannot process FixedDocument rels part");
 		}
 		xps_read_and_process_metadata_part(doc, fixdoc->name, fixdoc);
@@ -457,7 +457,7 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		root = NULL;
 	}
 	if (!root)

@@ -118,6 +118,7 @@ unsigned char *pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *
 pdf_font_desc *pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
 void pdf_load_type3_glyphs(pdf_document *doc, pdf_font_desc *fontdesc, int nestedDepth);
 pdf_font_desc *pdf_load_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj, int nestedDepth);
+pdf_font_desc *pdf_load_hail_mary_font(pdf_document *doc);
 
 /* SumatraPDF: use locally installed fonts */
 void pdf_load_windows_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname);

@@ -76,11 +76,13 @@ FZ_NORETURN void fz_rethrow_message_imp(fz_context *, char *file, int line, cons
 void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5);
 const char *fz_caught_message(fz_context *ctx);
 int fz_caught(fz_context *ctx);
+void fz_rethrow_if(fz_context *ctx, int errcode);
 
 enum
 {
 	FZ_ERROR_NONE = 0,
 	FZ_ERROR_GENERIC = 1,
+	FZ_ERROR_TRYLATER = 2,
 	FZ_ERROR_COUNT
 };
 

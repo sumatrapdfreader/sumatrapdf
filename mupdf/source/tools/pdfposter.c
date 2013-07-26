@@ -1,12 +1,5 @@
 /*
- * PDF cleaning tool: general purpose pdf syntax washer.
- *
- * Rewrite PDF with pretty printed objects.
- * Garbage collect unreachable objects.
- * Inflate compressed streams.
- * Create subset documents.
- *
- * TODO: linearize document for fast web view
+ * PDF posteriser; split pages within a PDF file into smaller lumps.
  */
 
 #include "mupdf/pdf.h"
@@ -25,7 +18,7 @@ static void usage(void)
 }
 
 /*
- * Recreate page tree to only retain specified pages.
+ * Recreate page tree with our posterised pages in.
  */
 
 static void decimatepages(pdf_document *doc)
@@ -34,8 +27,6 @@ static void decimatepages(pdf_document *doc)
 	int num_pages = pdf_count_pages(doc);
 	int page, kidcount;
 
-	/* Keep only pages/type and (reduced) dest entries to avoid
-	 * references to unretained pages */
 	oldroot = pdf_dict_gets(pdf_trailer(doc), "Root");
 	pages = pdf_dict_gets(oldroot, "Pages");
 
@@ -47,7 +38,7 @@ static void decimatepages(pdf_document *doc)
 
 	pdf_drop_obj(root);
 
-	/* Create a new kids array with only the pages we want to keep */
+	/* Create a new kids array with our new pages in */
 	parent = pdf_new_indirect(doc, pdf_to_num(pages), pdf_to_gen(pages));
 	kids = pdf_new_array(doc, 1);
 
@@ -129,7 +120,7 @@ int pdfposter_main(int argc, char **argv)
 	char *outfile = "out.pdf";
 	char *password = "";
 	int c;
-	fz_write_options opts;
+	fz_write_options opts = { 0 };
 	pdf_document *doc;
 	fz_context *ctx;
 
@@ -137,6 +128,7 @@ int pdfposter_main(int argc, char **argv)
 	opts.do_garbage = 0;
 	opts.do_expand = 0;
 	opts.do_ascii = 0;
+	opts.do_linear = 0;
 
 	while ((c = fz_getopt(argc, argv, "x:y:")) != -1)
 	{
@@ -172,7 +164,6 @@ int pdfposter_main(int argc, char **argv)
 		if (!pdf_authenticate_password(doc, password))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
-	/* Only retain the specified subset of the pages */
 	decimatepages(doc);
 
 	pdf_write_document(doc, outfile, &opts);

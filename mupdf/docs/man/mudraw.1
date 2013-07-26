@@ -1,12 +1,15 @@
-.TH MUDRAW 1 "March 28, 2012"
+.TH MUDRAW 1 "July 25, 2013"
 .\" Please adjust this date whenever revising the manpage.
+
 .SH NAME
 mudraw \- render PDF/XPS/CBZ documents
+
 .SH SYNOPSIS
 .B mudraw
 .RI [ options ]
 .RI input.{pdf,xps,cbz}
 .RI [ pages]
+
 .SH DESCRIPTION
 .B mudraw
 will render a document of a supported document format to image files.
@@ -15,6 +18,7 @@ The supported image formats are: pgm, ppm, pam and png.
 Select the pages to be rendered by specifying a comma
 separated list of ranges and individual page numbers (for example: 1,5,10-15).
 In no pages are specified all the pages will be rendered.
+
 .SH OPTIONS
 .TP
 .B \-o output
@@ -81,9 +85,10 @@ Invert the output image colors.
 .TP
 .B pages
 Comma separated list of ranges to render.
+
 .SH SEE ALSO
 .BR mupdf (1),
-.BR mupdfclean (1).
-.BR mupdfshow (1).
+.BR mutool (1).
+
 .SH AUTHOR
 MuPDF is Copyright 2006-2013 Artifex Software, Inc.

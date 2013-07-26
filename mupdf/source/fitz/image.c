@@ -252,7 +252,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 			}
 			fz_catch(ctx)
 			{
-				/* FIXME: TryLater? */
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 				fz_warn(ctx, "ignoring error at end of image");
 			}
 		}

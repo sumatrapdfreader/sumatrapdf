@@ -14,8 +14,8 @@ struct entry
 	int stm_len;
 };
 
-static int
-pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, int *tmpofs)
+int
+pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int *tmpofs)
 {
 	pdf_token tok;
 	int stm_len;
@@ -24,7 +24,8 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 	fz_context *ctx = file->ctx;
 
 	*stmofsp = 0;
-	*stmlenp = -1;
+	if (stmlenp)
+		*stmlenp = -1;
 
 	stm_len = 0;
 
@@ -45,7 +46,7 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			/* Don't let a broken object at EOF overwrite a good one */
 			if (file->eof)
 				fz_rethrow_message(ctx, "broken object at EOF ignored");
@@ -53,27 +54,40 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 			dict = pdf_new_dict(doc, 2);
 		}
 
-		obj = pdf_dict_gets(dict, "Type");
-		if (pdf_is_name(obj) && !strcmp(pdf_to_name(obj), "XRef"))
+		if (encrypt && id)
 		{
-			obj = pdf_dict_gets(dict, "Encrypt");
-			if (obj)
+			obj = pdf_dict_gets(dict, "Type");
+			if (pdf_is_name(obj) && !strcmp(pdf_to_name(obj), "XRef"))
 			{
-				pdf_drop_obj(*encrypt);
-				*encrypt = pdf_keep_obj(obj);
-			}
+				obj = pdf_dict_gets(dict, "Encrypt");
+				if (obj)
+				{
+					pdf_drop_obj(*encrypt);
+					*encrypt = pdf_keep_obj(obj);
+				}
 
-			obj = pdf_dict_gets(dict, "ID");
-			if (obj)
-			{
-				pdf_drop_obj(*id);
-				*id = pdf_keep_obj(obj);
+				obj = pdf_dict_gets(dict, "ID");
+				if (obj)
+				{
+					pdf_drop_obj(*id);
+					*id = pdf_keep_obj(obj);
+				}
 			}
 		}
 
 		obj = pdf_dict_gets(dict, "Length");
 		if (!pdf_is_indirect(obj) && pdf_is_int(obj))
 			stm_len = pdf_to_int(obj);
+
+		if (doc->file_reading_linearly && page)
+		{
+			obj = pdf_dict_gets(dict, "Type");
+			if (!strcmp(pdf_to_name(obj), "Page"))
+			{
+				pdf_drop_obj(*page);
+				*page = pdf_keep_obj(dict);
+			}
+		}
 
 		pdf_drop_obj(dict);
 	}
@@ -112,7 +126,7 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 			}
 			fz_catch(ctx)
 			{
-				/* FIXME: TryLater */
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 				fz_warn(ctx, "cannot find endstream token, falling back to scanning");
 			}
 			if (tok == PDF_TOK_ENDSTREAM)
@@ -133,7 +147,8 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 			buf->scratch[8] = c;
 		}
 
-		*stmlenp = fz_tell(file) - *stmofsp - 9;
+		if (stmlenp)
+			*stmlenp = fz_tell(file) - *stmofsp - 9;
 
 atobjend:
 		*tmpofs = fz_tell(file);
@@ -302,7 +317,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 			}
 			fz_catch(ctx)
 			{
-				/* FIXME: TryLater */
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 				fz_warn(ctx, "ignoring the rest of the file");
 				break;
 			}
@@ -324,11 +339,11 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 			{
 				fz_try(ctx)
 				{
-					tok = pdf_repair_obj(doc, buf, &stm_ofs, &stm_len, &encrypt, &id, &tmpofs);
+					tok = pdf_repair_obj(doc, buf, &stm_ofs, &stm_len, &encrypt, &id, NULL, &tmpofs);
 				}
 				fz_catch(ctx)
 				{
-					/* FIXME: TryLater */
+					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 					/* If we haven't seen a root yet, there is nothing
 					 * we can do, but give up. Otherwise, we'll make
 					 * do. */
@@ -374,7 +389,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 				}
 				fz_catch(ctx)
 				{
-					/* FIXME: TryLater */
+					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 					/* If we haven't seen a root yet, there is nothing
 					 * we can do, but give up. Otherwise, we'll make
 					 * do. */

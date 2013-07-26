@@ -492,7 +492,7 @@ static pdf_jsimp_obj *doc_getField(void *jsctx, void *obj, int argc, pdf_jsimp_o
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater ? */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		fz_warn(ctx, "doc_getField failed: %s", fz_caught_message(ctx));
 		dict = NULL;
 	}
@@ -832,7 +832,7 @@ void pdf_js_load_document_level(pdf_js *js)
 			}
 			fz_catch(ctx)
 			{
-				/* FIXME: TryLater ? */
+				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 				fz_warn(ctx, "Warning: %s", fz_caught_message(ctx));
 			}
 		}

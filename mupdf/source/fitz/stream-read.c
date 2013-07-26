@@ -84,7 +84,7 @@ fz_fill_buffer(fz_stream *stm)
 	}
 	fz_catch(stm->ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(stm->ctx, FZ_ERROR_TRYLATER);
 		fz_warn(stm->ctx, "read error; treating as end of file");
 		stm->error = 1;
 	}
@@ -134,7 +134,11 @@ fz_read_best(fz_stream *stm, int initial, int *truncated)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+		{
+			fz_drop_buffer(ctx, buf);
+			fz_rethrow(ctx);
+		}
 		if (truncated)
 		{
 			*truncated = 1;
@@ -184,6 +188,7 @@ fz_tell(fz_stream *stm)
 void
 fz_seek(fz_stream *stm, int offset, int whence)
 {
+	stm->avail = 0; /* Reset bit reading */
 	if (stm->seek)
 	{
 		if (whence == 1)
@@ -216,4 +221,11 @@ fz_seek(fz_stream *stm, int offset, int whence)
 	}
 	else
 		fz_warn(stm->ctx, "cannot seek");
+}
+
+int fz_stream_meta(fz_stream *stm, int key, int size, void *ptr)
+{
+	if (!stm || !stm->meta)
+		return -1;
+	return stm->meta(stm, key, size, ptr);
 }

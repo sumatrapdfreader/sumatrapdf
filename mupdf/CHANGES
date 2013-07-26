@@ -1,3 +1,41 @@
+List of changes on master since MuPDF 1.2
+
+ * Windows RT viewer app for MuPDF.
+ * Library changes to support progressive loading (display PDF files as
+   they download). Windows/Linux/MacOS viewer supports this using curl.
+ * Incremental updates to PDF files are now (optionally) preserved on
+   loading/saving.
+ * Prototype support for checking PDF Digital Signatures.
+ * Initial annotation support (strike-out, underline, highlight and ink)
+   (library and android builds only).
+ * Fix operation on Android API level 8.
+ * Android redraw optimisations.
+ * Android app now supports Google Cloud Print.
+ * Android app translated into many languages.
+ * Android support for more architectures.
+ * Improvements to store (avoid collisions causing unnecessary evictions).
+ * Windows apps use Unicode filenames now.
+ * PDF function handling improved; functions can now be passed to devices
+   without 'sampling'.
+ * PDF image handling improved; images can now be passed to devices
+   without decompression.
+ * Indexed images are no longer uncompressed at load time, saving memory.
+ * Caching of rendered tiles for speed.
+ * Improved text analysis mode, capable of spotting columns/indents,
+   right-to-left text etc.
+ * HTML output mode now includes image output.
+ * PDF password encoding handling improved.
+ * MuPDF now opens Jpeg, Tiff and PNG files directly.
+ * Bug preventing OpenXPS files from being opened fixed.
+ * Initial (feature incomplete) SVG and PDF output devices.
+ * PWG raster (mono/grey/RGB) and PCL (mono) output devices.
+ * Various performance improvements (including tilings and mesh based
+   shadings).
+ * Revamped directory structure to reflect recent changes.
+ * Various potential SEGV, SoftMask and rendering fixes.
+ * Many potential crashes in Jpeg2000 and JBIG2 images fixed.
+
+
 List of changes on master since MuPDF 1.1
 
  * Important API changes:

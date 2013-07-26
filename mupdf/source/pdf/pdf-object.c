@@ -1392,7 +1392,7 @@ pdf_obj *pdf_new_obj_from_str(pdf_document *doc, const char *src)
 	}
 	fz_catch(ctx)
 	{
-		/* FIXME: TryLater */
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 		return NULL;
 	}
 

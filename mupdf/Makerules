@@ -26,12 +26,13 @@ endif
 
 # Windows (MINGW) build doesn't use system libraries.
 ifeq "$(OS)" "MINGW"
-NOX11=yes
+NOX11 ?= yes
 
 # Mac OS X doesn't have pkg-config so we hard code paths.
 else ifeq "$(OS)" "Darwin"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
 SYS_OPENSSL_LIBS = -lcrypto
+
 SYS_X11_CFLAGS = -I/usr/X11R6/include
 SYS_X11_LIBS = -L/usr/X11R6/lib -lX11 -lXext
 
@@ -84,7 +85,6 @@ LD = arm-none-linux-gnueabi-gcc
 AR = arm-none-linux-gnueabi-ar
 CFLAGS += -O3 -mfpu=neon -mcpu=cortex-a8 -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
 CROSSCOMPILE=yes
-NOX11=yes
 endif
 
 ifeq "$(OS)" "webos-pre-cross"
@@ -93,7 +93,6 @@ LD = arm-none-linux-gnueabi-gcc
 AR = arm-none-linux-gnueabi-ar
 CFLAGS += -O3 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
 CROSSCOMPILE=yes
-NOX11=yes
 endif
 
 ifeq "$(OS)" "webos-pixi-cross"
@@ -102,7 +101,6 @@ LD = arm-none-linux-gnueabi-gcc
 AR = arm-none-linux-gnueabi-ar
 CFLAGS += -O3 -mcpu=arm1136jf-s -mfpu=vfp -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
 CROSSCOMPILE=yes
-NOX11=yes
 endif
 
 ifeq "$(OS)" "w64_x86-cross-mingw32"
@@ -110,7 +108,6 @@ CC = i686-w64-mingw32-gcc
 LD = i686-w64-mingw32-gcc
 AR = i686-w64-mingw32-ar
 CROSSCOMPILE=yes
-NOX11=yes
 endif
 
 ifeq "$(OS)" "w64_amd64-cross-mingw32"
@@ -118,7 +115,6 @@ CC = x86_64-w64-mingw32-gcc
 LD = x86_64-w64-mingw32-gcc
 AR = x86_64-w64-mingw32-ar
 CROSSCOMPILE=yes
-NOX11=yes
 endif
 
 # Most variables when building for iOS are set up in ios/build_libs.sh,
@@ -130,5 +126,8 @@ CC = $(PLATFORM_DEVELOPER_BIN_DIR)/gcc
 AR = $(PLATFORM_DEVELOPER_BIN_DIR)/ar
 RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
 CROSSCOMPILE=yes
-NOX11=yes
+endif
+
+ifeq "$(CROSSCOMPILE)" "yes"
+NOX11 ?= yes
 endif

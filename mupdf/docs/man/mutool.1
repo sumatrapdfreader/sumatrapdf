@@ -1,16 +1,20 @@
-.TH "MUTOOL" "1" "Oct 02, 2012"
+.TH "MUTOOL" "1" "July 25, 2013"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
 .\" adjust left
 .ad l
+
 .SH NAME
 mutool \- all purpose tool for dealing with PDF files
+
 .SH SYNOPSIS
 mutool <sub-command> [options]
+
 .SH DESCRIPTION
 mutool is a tool based on MuPDF for dealing with PDF files in various manners.
 There are several sub commands available, as described below.
+
 .SH CLEAN
 mutool clean [options] input.pdf [output.pdf] [pages]
 .PP
@@ -33,14 +37,58 @@ Give it three times to merge and reuse duplicate objects.
 Decompress streams. This will make the output file larger, but provides
 easy access for reading and editing the contents with a text editor.
 .TP
+.B \-l
+Linearize output. Create a "Web Optimized" output file.
+.TP
+.B \-i
+Toggle decompression of image streams. Use in conjunction with -d to leave
+image- compressed.
+.TP
+.B \-f
+Toggle decompression of font streams. Use in conjunction with -d to leave
+fonts compressed.
+.TP
+.B \-a
+ASCII Hex encode binary streams. Use in conjuction with -d and -i or -f to
+ensure that although the images and/or fonts are compressed, the resulting
+file can still be viewed and edited with a text editor.
+.TP
 .B pages
 Comma separated list of page ranges to include.
+
 .SH EXTRACT
-TODO
+mutool extract [options] file.pdf [object numbers]
+.PP
+The extract command can be used to extract images and font files from a PDF.
+If no object numbers are given on the command line, all images and fonts
+will be extracted.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-r
+Convert images to RGB when extracting them.
+
 .SH INFO
 TODO
+
 .SH POSTER
-TODO
+mutool poster [options] input.pdf [output.pdf]
+.PP
+The poster command splits each page into tiles, and puts each tile on
+a page of its own. It's useful for printing a large page onto smaller
+pieces of paper that can then be glued together to create a large poster.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-x factor
+Split the page into this many horizontal pieces.
+.TP
+.B \-y factor
+Split the page into this many vertical pieces.
+.PP
+The output will have x times y number of pages for each input page.
 .SH SHOW
 mutool show [options] file.pdf [object numbers ...]
 .PP
@@ -70,8 +118,10 @@ List the object numbers for every page.
 .TP
 .B 'grep' or 'g'
 Print all the objects in the file in a compact one-line format suitable for piping to grep.
+
 .SH SEE ALSO
-.BR mupdf (1),
 .BR mudraw (1).
+.BR mupdf (1),
+
 .SH AUTHOR
 MuPDF is Copyright 2006-2013 Artifex Software, Inc.

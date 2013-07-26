@@ -2,7 +2,11 @@
 
 // Compile a debug build of mupdf, then compile and run this example:
 //
-// gcc -g -o build/debug/example -Iinclude doc/example.c build/debug/lib*.a -lm
+// gcc -g -o build/debug/example -Iinclude docs/example.c \
+//	build/debug/libmupdf.a build/debug/libmupdf-js-none.a \
+//	build/debug/libfreetype.a build/debug/libjbig2dec.a \
+//	build/debug/libjpeg.a build/debug/libopenjpeg.a \
+//	build/debug/libz.a -lm
 //
 // build/debug/example /path/to/document.pdf 1 200 25
 
@@ -90,7 +94,7 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 
 int main(int argc, char **argv)
 {
-	char *filename = argv[1];
+	char *filename = argc >= 2 ? argv[1] : "";
 	int pagenumber = argc > 2 ? atoi(argv[2]) : 1;
 	int zoom = argc > 3 ? atoi(argv[3]) : 100;
 	int rotation = argc > 4 ? atoi(argv[4]) : 0;

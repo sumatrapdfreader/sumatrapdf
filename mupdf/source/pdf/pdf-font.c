@@ -494,7 +494,7 @@ pdf_load_bullet_font(fz_context *ctx)
  */
 
 static pdf_font_desc *
-pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
+pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 {
 	pdf_obj *descriptor;
 	pdf_obj *encoding;
@@ -507,7 +507,6 @@ pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
 	int symbolic;
 	int kind;
 
-	char *basefont;
 	char *estrings[256];
 	char ebuffer[256][32];
 	int i, k, n;
@@ -518,8 +517,6 @@ pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
 	fz_var(fontdesc);
 	fz_var(etable);
 	fz_var(has_lock);
-
-	basefont = pdf_to_name(pdf_dict_gets(dict, "BaseFont"));
 
 	/* Load font file */
 	fz_try(ctx)
@@ -825,7 +822,7 @@ pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			fz_warn(ctx, "cannot load ToUnicode CMap");
 		}
 
@@ -885,6 +882,79 @@ pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
 		pdf_drop_font(ctx, fontdesc);
 		fz_rethrow_message(ctx, "cannot load simple font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 	}
+	return fontdesc;
+}
+
+static pdf_font_desc *
+pdf_load_simple_font(pdf_document *doc, pdf_obj *dict)
+{
+	char *basefont = pdf_to_name(pdf_dict_gets(dict, "BaseFont"));
+
+	return pdf_load_simple_font_by_name(doc, dict, basefont);
+}
+
+static int
+hail_mary_make_hash_key(fz_store_hash *hash, void *key_)
+{
+	hash->u.i.i0 = 0;
+	hash->u.i.i1 = 0;
+	return 1;
+}
+
+static void *
+hail_mary_keep_key(fz_context *ctx, void *key)
+{
+	return key;
+}
+
+static void
+hail_mary_drop_key(fz_context *ctx, void *key)
+{
+}
+
+static int
+hail_mary_cmp_key(void *k0, void *k1)
+{
+	return k0 == k1;
+}
+
+#ifndef NDEBUG
+static void
+hail_mary_debug_key(FILE *out, void *key_)
+{
+	fprintf(out, "hail mary ");
+}
+#endif
+
+static fz_store_type hail_mary_store_type =
+{
+	hail_mary_make_hash_key,
+	hail_mary_keep_key,
+	hail_mary_drop_key,
+	hail_mary_cmp_key,
+#ifndef NDEBUG
+	hail_mary_debug_key
+#endif
+};
+
+pdf_font_desc *
+pdf_load_hail_mary_font(pdf_document *doc)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_font_desc *fontdesc;
+	pdf_font_desc *existing;
+
+	if ((fontdesc = fz_find_item(ctx, pdf_free_font_imp, &hail_mary_store_type, &hail_mary_store_type)))
+	{
+		return fontdesc;
+	}
+
+	/* FIXME: Get someone with a clue about fonts to fix this */
+	fontdesc = pdf_load_simple_font_by_name(doc, NULL, "Helvetica");
+
+	existing = fz_store_item(ctx, &hail_mary_store_type, fontdesc, fontdesc->size, &hail_mary_store_type);
+	assert(existing == NULL);
+
 	return fontdesc;
 }
 
@@ -1226,7 +1296,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *doc, pdf_obj *di
 		}
 		fz_catch(ctx)
 		{
-			/* FIXME: TryLater */
+			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			fz_warn(ctx, "ignored error when loading embedded font; attempting to load system font");
 			if (origname != fontname && !iscidfont)
 				pdf_load_builtin_font(ctx, fontdesc, fontname);
