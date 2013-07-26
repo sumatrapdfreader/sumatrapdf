@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c79fdf74a7829093fa17a9dc0a60829459e90962
+5896fdbe13923288db1552314d5b0d8ea667efe2
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -32,6 +32,7 @@ pl:%s z %s
 pt:%s de %s
 ro:%s din %s
 ru:%s из %s
+si:%s වැනි %s ගෙන්
 sk:%s z %s
 sn:%s ye %s
 sp-rs:%s od %s
@@ -498,6 +499,7 @@ pl:Kopiuj &zaznaczenie
 pt:&Copiar seleção
 ro:&Copiază selecția
 ru:С&копировать выделенное
+si:ලකුනුකල ‌කොටස ‌කොපිකරන්න
 sk:&Kopírovať vybrané
 sl:Kopiraj izbor
 sp-rs:Kopiraj izabrano
@@ -2140,6 +2142,7 @@ pl:&Drukuj...
 pt:&Imprimir...
 ro:&Tipărește...
 ru:Пе&чать...
+si:මුද්‍රණය...
 sk:&Tlač...
 sl:&Natisni …
 sp-rs:Štampaj...
@@ -3288,6 +3291,7 @@ pl:Dodaj do ulubionych
 pt:Adicionar favorito
 ro:Adaugă ca favorit
 ru:Добавить "Избранное"
+si:ප්‍රියතම  ගොන්නට දමන්න
 sk:Pridať obľúbenú položku
 sl:Dodaj Priljubljene
 sp-rs:Dodavanje u odabir
@@ -3345,6 +3349,7 @@ pl:Dodaj stronę %s do ulubionych
 pt:Adicionar página %s aos favoritos
 ro:Adaugă pagina %s la favorite
 ru:Добавить стр. %s к избранному
+si:%s වැනි පිටුව ප්‍රියතම ‌ගොන්නට දමන්න
 sk:Pridať stranu %s k obľúbeným
 sl:Dodaj stran %s med priljubljene
 sp-rs:Dodaj stranicu %s među odabrane
@@ -3401,6 +3406,7 @@ pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
 pt:Adicionar página %s aos favoritos com nome (opcional):
 ro:Adaugă pagina %s la favorite cu (opțional) numele:
 ru:Добавить стр. %s к избранному с (необязательным) именем:
+si:%s වැනි පිටුව ප්‍රියතම ‌‌ගොන්නට දමන්න (අවශ්‍යයනම්) නමකින්
 sk:Pridať stranu %s k obľúbeným s (voliteľným) názvom:
 sl:Dodaj stran %s med priljubljene z (neobveznim) imenom:
 sp-rs:Dodaj stranicu %s među odabrane pod (opciono) imenom:
@@ -3459,6 +3465,7 @@ pl:Dodaj do ulubionych
 pt:Adicionar aos favoritos
 ro:Adaugă la favorite
 ru:Добавить к избранному
+si:ප්‍රියතම ‌‌ගොන්නට දමන්න
 sk:Pridať k obľúbeným
 sl:Dodaj med priljubljene
 sp-rs:Dodaj među odabrane
@@ -3843,7 +3850,7 @@ dk:Bilag: %s
 el:Επισύναψη: %s
 es:Adjunto: %s
 et:Manus: %s
-eu:Itsaspena: %s
+eu:Eranspena: %s
 fa:پیوست: %s
 fi:Liite: %s
 fr:Fichier joint : %s
@@ -4897,6 +4904,7 @@ pl:Zamknij
 pt:Fechar
 ro:Inchidere
 ru:Закрыть
+si:වහන්න
 sk:Zatvoriť
 sn:Vhara
 sp-rs:Zatvori
@@ -5006,6 +5014,7 @@ pl:Zgodność
 pt:Compatibilidade
 ro:Compatibilitate
 ru:Совместимость
+si:‌පෙර අනුවාදනවලට සරිලනබව
 sk:Kompatibilita
 sl:Združljivost
 sp-rs:Kompatibilnost
@@ -5323,6 +5332,7 @@ pl:Kopiuj obraz
 pt:Copiar &imagem
 ro:Copiere &Imagine
 ru:Скопировать &изображение
+si:රුපය ‌කොපි කරන්න
 sk:Kopírovať &obrázok
 sl:Kopiraj &sliko
 sn:kopa nemufananidzo
@@ -5550,6 +5560,7 @@ pl:Prawo autorskie:
 pt:Direitos de autor:
 ro:Drept de autor
 ru:Авторское право:
+si:බුද්ධිමය දේපළ
 sk:Autorské práva:
 sl:Avtorske pravice:
 sp-rs:Autorska prava:
@@ -5794,6 +5805,7 @@ sk:Nie je možné nainštalovať PDF prehliadač rýchlych náhľadov
 sq:Nuk mund të instalojë parashikuesin e PDF-ve
 sv:Kunde inte installera förhandstitt av PDF:er
 ta:PDF முன்னோட்டம் நிறுவ இயலவில்லை
+tw:無法安裝 PDF 預覽器
 uk:Не вдалося встановити програму для попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'rnatib bo'lmadi
 vn:Không thể cài đặt phần hiển thị trước PDF
@@ -5832,6 +5844,7 @@ sk:Nie je možné nainštalovať PDF vyhľadávací filter
 sq:Nuk mund të instalojë kërkuesin e PDF-ve
 sv:Kunde inte installera sökfilter för PDF
 ta:PDF தேடலை நிறுவ இயலவில்லை
+tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося встановити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'rnatib bo'lmadi
 :Couldn't install browser plugin
@@ -5869,6 +5882,7 @@ sk:Nie je možné nainštalovať plugin do prehliadača
 sq:Nuk mund të instalojë spinën për shfletuesin
 sv:Kunde inte installera insticksprogrammet i webbläsaren
 ta:உலாவி உள்இடுக்கைகளை நிறுவ இயலவில்லை
+tw:無法安裝瀏覽器附加元件
 uk:Не вдалося встановити розширення для браузера
 uz:Brauzer plaginini o'rnatib bo'lmadi
 vn:Không cài được trình cắm vào trình duyệt
@@ -6080,6 +6094,7 @@ sk:Nie je možné odinštalovať PDF prehliadač rýchlych náhľadov
 sq:Nuk mund të çinstalojë parashikuesin e PDF-ve
 sv:Kunde inte avinstallera förhandstitt på PDF:er
 ta:PDF முன்னோட்டத்தை நீக்க முடியவில்லை
+tw:無法解除安裝 PDF 預覽器
 uk:Не вдалося видалити програму для попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 :Couldn't uninstall PDF search filter
@@ -6153,6 +6168,7 @@ sk:Nie je možné odinštalovať plugin prehliadača
 sq:Nuk mund të çinstalojë spinën për shfletuesin
 sv:Kunde inte avinstallera webbläsarens insticksprogram
 ta:உலாவி உள்இடுக்கைளை நீக்க முடியவில்லை
+tw:無法解除安裝瀏覽器附加元件
 uk:Не вдалося видалити розширення для браузера
 uz:Brauzer plaginini o'chirib bo'lmadi
 :Couldn't write %s to disk
@@ -6270,7 +6286,7 @@ dk:Aktuel fil
 el:Τρέχον αρχείο
 es:Archivo actual
 et:Praegune fail
-eu:Uneko agiria
+eu:Oraingo agiria
 fa:همین پرونده
 fi:Nykyinen tiedosto
 fr:Fichier actuel
@@ -6296,6 +6312,7 @@ pl:Bieżący plik
 pt:Ficheiro atual
 ro:Fișier curent
 ru:Текущий файл
+si:‌මෙම ‌ගොනුව
 sk:Aktuálny súbor
 sl:Trenutna datoteka
 sp-rs:Tekuća datoteka
@@ -7910,6 +7927,7 @@ pl:Ulubione
 pt:Favoritos
 ro:Favorite
 ru:Избранное
+si:ප්‍රියතමයන්
 sk:Obľúbené položky
 sl:Priljubljeni
 sp-rs:Odabir
@@ -9010,6 +9028,7 @@ pl:Czcionki:
 pt:Tipo de letra:
 ro:Fonturi:
 ru:Шрифты:
+si:අකුරුවර්ගය
 sk:Písma:
 sl:Pisave:
 sp-rs:Fontovi:
@@ -10393,7 +10412,7 @@ dk:Ny version %s er tilgængelig. Hent ny version?
 el:Η νέα έκδοση %s είναι διαθέσιμη. Να γίνει λήψη;
 es:Está disponible la nueva versión %s. ¿Desea descargarla?
 et:Uus %s versioon on saadaval. Kas laadin alla uue versiooni?
-eu:%s bertsio berria eskuragarri dago. Bertsio berria jeitsi?
+eu:%s bertsio berria eskuragarri dago. Jeitsi bertsio berria?
 fa:نسخه جدید %s موجود است. آیا می‌خواهید آن را دریافت کنید؟
 fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
 fr:La version %s est disponible. Télécharger la nouvelle version ?
@@ -11861,6 +11880,7 @@ pl:Strona %s
 pt:Página %s
 ro:Pagina %s
 ru:Стр. %s
+si:%s වැනි පිටුව
 sk:Strana %s
 sl:Stran %s
 sn:shizha rechi %s
@@ -12428,6 +12448,7 @@ pl:Drukuj
 pt:Imprimir
 ro:Imprimare
 ru:Печать
+si:මුද්‍රණය
 sk:Tlač
 sl:Natisni
 sp-rs:Štampaj
@@ -15338,6 +15359,7 @@ pl:Usunięcie programu nie powiodło się
 pt:Falha na desinstalação!
 ro:Dezinstalarea a esuat
 ru:Удаление не удалось
+si:ඉවත්කිරීම අසාර්ථක විය
 sk:Odinštalovanie sa nepodarilo
 sq:Dështoi çinstalimi
 sv:Avinstallationen misslyckades

@@ -1301,7 +1301,7 @@ const char * gTranslations_eu =
   "Sostengatutako agiri guztiak\0"\
   "Aplikazioa:\0"\
   "Elkartu PDF agiriekin?\0"\
-  "Itsaspena: %s\0"\
+  "Eranspena: %s\0"\
   "Egilea:\0"\
   "Berezgaitasunez\0"\
   "&Berezgaitasunez egiaztatu eguneraketak\0"\
@@ -1333,7 +1333,7 @@ const char * gTranslations_eu =
   "Ezinezkoa irarkailua abiaraztea\0"\
   "Ezinezkoa orrialdea aurkeztea\0"\
   "Sortua:\0"\
-  "Uneko agiria\0"\
+  "Oraingo agiria\0"\
   "Egile Zoo&ma...\tKtrl+Y\0"\
   "Berezko &Egitura:\0"\
   "Berezko &Zooma:\0"\
@@ -1392,7 +1392,7 @@ const char * gTranslations_eu =
   "Hizki Larriak-xeheak Bereizi\0"\
   "Mobi agiriak\0"\
   "Aldatuta:\0"\
-  "%s bertsio berria eskuragarri dago. Bertsio berria jeitsi?\0"\
+  "%s bertsio berria eskuragarri dago. Jeitsi bertsio berria?\0"\
   "Hurrengo Orrialdea\0"\
   "Ez da emaitzik aurkitu\0"\
   "Ez da emaitzik aurkitu %u lerro inguran %s agirian\0"\
