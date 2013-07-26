@@ -251,7 +251,7 @@ FITZ_OBJS = \
 	$(OFZ)\output.obj $(OFZ)\path.obj $(OFZ)\pixmap.obj \
 	$(OFZ)\shade.obj $(OFZ)\stext-device.obj $(OFZ)\stext-output.obj $(OFZ)\stext-paragraph.obj \
 	$(OFZ)\stext-search.obj $(OFZ)\store.obj $(OFZ)\stream-open.obj $(OFZ)\stream-read.obj \
-	$(OFZ)\stream-prog.obj $(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
+	$(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
 	$(OFZ)\trace-device.obj $(OFZ)\transition.obj $(OFZ)\ucdn.obj $(OFZ)\xml.obj \
 	$(OFZ)\gdiplus-device.obj
 
@@ -278,7 +278,8 @@ LIBS_OBJS = \
 
 MUDOC_OBJS = \
 	$(OFZ)\document.obj $(OX)\mucbz.obj $(OX)\muimage.obj \
-	$(OFZ)\svg-device.obj $(OFZ)\output-pcl.obj $(OFZ)\output-pwg.obj
+	$(OFZ)\svg-device.obj $(OFZ)\output-pcl.obj $(OFZ)\output-pwg.obj \
+	$(OFZ)\stream-prog.obj
 
 MUTOOLS_OBJS = \
 	$(OA)\mudraw.obj $(OA)\mutool.obj $(OA)\pdfclean.obj $(OA)\pdfextract.obj \

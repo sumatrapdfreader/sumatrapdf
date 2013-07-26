@@ -353,8 +353,6 @@ EXPORTS
 	fz_empty_store
 	fz_store_scavenge
 	fz_open_file
-	fz_open_fd_progressive
-	fz_open_file_progressive
 	fz_open_file_w
 	fz_open_fd
 	fz_open_memory
@@ -440,16 +438,7 @@ EXPORTS
 	pdf_set_markup_annot_quadpoints
 	pdf_set_ink_annot_list
 	pdf_annot_obj_type
-	pdf_da_info_fin
-	pdf_parse_da
-	pdf_fzbuf_print_da
-	pdf_update_text_appearance
-	pdf_update_combobox_appearance
-	pdf_update_pushbutton_appearance
-	pdf_update_text_markup_appearance
-	pdf_set_annot_appearance
-	pdf_set_markup_appearance
-	pdf_set_ink_appearance
+
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
