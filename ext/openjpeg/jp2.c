@@ -1124,9 +1124,13 @@ OPJ_BOOL opj_jp2_read_colr( opj_jp2_t *jp2,
 	++p_colr_header_data;
 
 	if (jp2->meth == 1) {
-		if (p_colr_header_size != 7) {
-			opj_event_msg(p_manager, EVT_ERROR, "Bad BPCC header box (bad size)\n");
+		if (p_colr_header_size < 7) {
+			opj_event_msg(p_manager, EVT_ERROR, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
 			return OPJ_FALSE;
+		}
+		if (p_colr_header_size > 7) {
+			/* testcase Altona_Technical_v20_x4.pdf */
+			opj_event_msg(p_manager, EVT_WARNING, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
 		}
 
 		opj_read_bytes(p_colr_header_data,&jp2->enumcs ,4);			/* EnumCS */

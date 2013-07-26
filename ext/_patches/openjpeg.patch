@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
 --- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
-+++ openjpeg\cio.c	Sat Jun 01 18:06:44 2013
++++ openjpeg\cio.c	Fri Jul 26 23:20:29 2013
 @@ -254,16 +254,22 @@
  }
  
@@ -26,7 +26,7 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Fri Jun 14 21:24:16 2013
++++ openjpeg\j2k.c	Fri Jul 26 23:20:29 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -66,25 +66,42 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
          l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
  
  #ifdef USE_JPWL
-@@ -3959,10 +3976,17 @@
+@@ -3962,27 +3979,21 @@
                  ++p_header_data;
  
-                 opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
-                 ++p_header_data;
- 
-+                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
-+                if (l_num_parts && l_current_part >= l_num_parts) {
-+                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to TNsot (%d), giving up\n", l_current_part, l_num_parts);
-+                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
-+                        return OPJ_FALSE;
-+                }
-+
                  if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
                          /* Useful to manage the case of textGBR.jp2 file because two values of TNSot are allowed: the correct numbers of
                           * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
-                         if (l_tcp->m_nb_tile_parts) {
-                                 if (l_current_part >= l_tcp->m_nb_tile_parts){
-@@ -4434,10 +4458,18 @@
+-                        if (l_tcp->m_nb_tile_parts) {
+-                                if (l_current_part >= l_tcp->m_nb_tile_parts){
+-                                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
+-                                                        "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
+-                                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
+-                                        return OPJ_FALSE;
+-                                }
++                        if (l_num_parts < l_tcp->m_nb_tile_parts) {
++                                l_num_parts = l_tcp->m_nb_tile_parts;
++                        }
++                        if (l_current_part >= l_num_parts) {
++                                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
++                                l_num_parts = l_current_part + 1;
+                         }
+                         l_tcp->m_nb_tile_parts = l_num_parts;
+                 }
+ 
+-                /* If know the number of tile part header we will check if we didn't read the last*/
+-                if (l_tcp->m_nb_tile_parts) {
+-                        if (l_tcp->m_nb_tile_parts == (l_current_part + 1)) {
+-                                p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
+-                        }
+-                }
++                assert(!l_tcp->m_nb_tile_parts || l_current_part < l_tcp->m_nb_tile_parts); /*MUPDF*/
+ 
+                 if (!p_j2k->m_specific_param.m_decoder.m_last_tile_part){
+                         /* Keep the size of data to skip after this marker */
+                         p_j2k->m_specific_param.m_decoder.m_sot_length = l_tot_len - 12; /* SOT_marker_size = 12 */
+                 }
+@@ -4434,10 +4445,18 @@
                          }
                  }
          };
@@ -103,7 +120,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
          return OPJ_TRUE;
  
-@@ -5806,10 +5838,11 @@
+@@ -5806,10 +5825,11 @@
          */
  
          if (parameters->tile_size_on) {
@@ -115,7 +132,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  cp->tdy = image->y1 - cp->ty0;
          }
  
-@@ -5910,11 +5943,13 @@
+@@ -5910,11 +5930,13 @@
                  tcp->POC = 0;
  
                  if (parameters->numpocs) {
@@ -130,10 +147,18 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
                                          tcp_poc->resno0         = parameters->POC[numpocs_tile].resno0;
                                          tcp_poc->compno0        = parameters->POC[numpocs_tile].compno0;
-@@ -7049,10 +7084,12 @@
+@@ -7047,12 +7069,20 @@
+                         }
+ 
                          /* Read 2 bytes from the buffer as the marker size */
                          opj_read_bytes(p_j2k->m_specific_param.m_decoder.m_header_data,&l_marker_size,2);
  
++                        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
++                        if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 0) {
++                                p_j2k->m_specific_param.m_decoder.m_state = J2K_STATE_NEOC;
++                                break;
++                        }
++
                          /* Why this condition? FIXME */
                          if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
 +                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
@@ -143,24 +168,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                          l_marker_size -= 2; /* Subtract the size of the marker ID already read */
  
                          /* Get the marker handler from the marker ID */
-@@ -7280,10 +7317,16 @@
-                         return OPJ_FALSE;
-                 }
- 
-                 opj_read_bytes(l_data,&l_current_marker,2);
- 
-+                /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
-+                if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 2) {
-+                        opj_stream_read_data(p_stream, l_data, 2, p_manager);
-+                        opj_read_bytes(l_data, &l_current_marker, 2);
-+                }
-+
-                 if (l_current_marker == J2K_MS_EOC) {
-                         p_j2k->m_current_tile_number = 0;
-                         p_j2k->m_specific_param.m_decoder.m_state =  0x0100;/*FIXME J2K_DEC_STATE_EOC;*/
-                 }
-                 else if (l_current_marker != J2K_MS_SOT)
-@@ -7438,10 +7481,14 @@
+@@ -7438,10 +7468,14 @@
                                  l_offset_y1_src = l_res->y1 - l_y1_dest;
                          }
                  }
@@ -177,7 +185,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\jp2.c	Fri Jun 14 20:49:58 2013
++++ openjpeg\jp2.c	Fri Jul 26 23:20:28 2013
 @@ -774,10 +774,17 @@
  			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
  
@@ -249,7 +257,28 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  			opj_image_comp_t saved;
  
  			memcpy(&saved, &image->comps[cn], sizeof(opj_image_comp_t));
-@@ -1683,18 +1710,24 @@
+@@ -1095,14 +1122,18 @@
+ 
+ 	opj_read_bytes(p_colr_header_data,&jp2->approx ,1);			/* APPROX */
+ 	++p_colr_header_data;
+ 
+ 	if (jp2->meth == 1) {
+-		if (p_colr_header_size != 7) {
+-			opj_event_msg(p_manager, EVT_ERROR, "Bad BPCC header box (bad size)\n");
++		if (p_colr_header_size < 7) {
++			opj_event_msg(p_manager, EVT_ERROR, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
+ 			return OPJ_FALSE;
+ 		}
++		if (p_colr_header_size > 7) {
++			/* testcase Altona_Technical_v20_x4.pdf */
++			opj_event_msg(p_manager, EVT_WARNING, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
++		}
+ 
+ 		opj_read_bytes(p_colr_header_data,&jp2->enumcs ,4);			/* EnumCS */
+         
+         jp2->color.jp2_has_colr = 1;
+ 	}
+@@ -1683,18 +1714,24 @@
  		else if	(box.length == 0) {
  			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
  			opj_free(l_current_data);
@@ -293,9 +322,25 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define OPJ_EXPORTS
 +
 +#define USE_JPIP
+diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
+--- openjpeg.orig\opj_includes.h	Sat May 18 20:52:42 2013
++++ openjpeg\opj_includes.h	Fri Jul 26 13:49:55 2013
+@@ -130,11 +130,11 @@
+ #endif
+ 
+ /* MSVC and Borland C do not have lrintf */
+ #if defined(_MSC_VER) || defined(__BORLANDC__)
+ static INLINE long lrintf(float f){
+-#ifdef _M_X64
++#ifndef _M_IX86
+     return (long)((f>0.0f) ? (f + 0.5f):(f -0.5f));
+ #else
+     int i;
+  
+     _asm{
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Sat Jun 01 18:06:44 2013
++++ openjpeg\opj_malloc.h	Fri Jul 26 23:20:29 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -326,7 +371,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
 --- openjpeg.orig\t2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\t2.c	Fri Jun 14 20:49:58 2013
++++ openjpeg\t2.c	Fri Jul 26 21:30:42 2013
 @@ -979,10 +979,15 @@
                          n = l_cblk->numnewpasses;
  
@@ -357,7 +402,7 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Fri Jun 14 20:49:58 2013
++++ openjpeg\tcd.c	Fri Jul 26 23:20:29 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \

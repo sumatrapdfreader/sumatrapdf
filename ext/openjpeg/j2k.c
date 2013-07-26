@@ -3978,33 +3978,20 @@ OPJ_BOOL opj_j2k_read_sot ( opj_j2k_t *p_j2k,
                 opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
                 ++p_header_data;
 
-                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
-                if (l_num_parts && l_current_part >= l_num_parts) {
-                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to TNsot (%d), giving up\n", l_current_part, l_num_parts);
-                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
-                        return OPJ_FALSE;
-                }
-
                 if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
                         /* Useful to manage the case of textGBR.jp2 file because two values of TNSot are allowed: the correct numbers of
                          * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
-                        if (l_tcp->m_nb_tile_parts) {
-                                if (l_current_part >= l_tcp->m_nb_tile_parts){
-                                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
-                                                        "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
-                                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
-                                        return OPJ_FALSE;
-                                }
+                        if (l_num_parts < l_tcp->m_nb_tile_parts) {
+                                l_num_parts = l_tcp->m_nb_tile_parts;
+                        }
+                        if (l_current_part >= l_num_parts) {
+                                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
+                                l_num_parts = l_current_part + 1;
                         }
                         l_tcp->m_nb_tile_parts = l_num_parts;
                 }
 
-                /* If know the number of tile part header we will check if we didn't read the last*/
-                if (l_tcp->m_nb_tile_parts) {
-                        if (l_tcp->m_nb_tile_parts == (l_current_part + 1)) {
-                                p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
-                        }
-                }
+                assert(!l_tcp->m_nb_tile_parts || l_current_part < l_tcp->m_nb_tile_parts); /*MUPDF*/
 
                 if (!p_j2k->m_specific_param.m_decoder.m_last_tile_part){
                         /* Keep the size of data to skip after this marker */
@@ -7084,6 +7071,12 @@ OPJ_BOOL opj_j2k_read_tile_header(      opj_j2k_t * p_j2k,
                         /* Read 2 bytes from the buffer as the marker size */
                         opj_read_bytes(p_j2k->m_specific_param.m_decoder.m_header_data,&l_marker_size,2);
 
+                        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
+                        if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 0) {
+                                p_j2k->m_specific_param.m_decoder.m_state = J2K_STATE_NEOC;
+                                break;
+                        }
+
                         /* Why this condition? FIXME */
                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
                                 /* testcase 2236.pdf.SIGSEGV.398.1376 */
@@ -7318,12 +7311,6 @@ OPJ_BOOL opj_j2k_decode_tile (  opj_j2k_t * p_j2k,
                 }
 
                 opj_read_bytes(l_data,&l_current_marker,2);
-
-                /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
-                if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 2) {
-                        opj_stream_read_data(p_stream, l_data, 2, p_manager);
-                        opj_read_bytes(l_data, &l_current_marker, 2);
-                }
 
                 if (l_current_marker == J2K_MS_EOC) {
                         p_j2k->m_current_tile_number = 0;
