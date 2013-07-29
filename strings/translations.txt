@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5896fdbe13923288db1552314d5b0d8ea667efe2
+a52a52453b06fa1615a328f02a931c62df4f6e9f
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -193,6 +193,7 @@ dk:&Avancerede valgmuligheder
 es:Opciones &avanzadas...
 et:&Rohkem sätteid...
 eu:Au&kera Aurreratuak...
+fa:تنظیمات پیشرفته
 fi:&Lisäasetukset...
 fr:Options &avancées…
 hr:N&apredne mogućnosti
@@ -1834,6 +1835,7 @@ dk:&Valgmuligheder
 es:&Opciones
 et:&Sätted
 eu:A&ukerak
+fa:&تنظیمات
 fi:&Asetukset
 fr:&Options
 hr:P&ostavke
@@ -1876,7 +1878,7 @@ el:&Επιλογές...
 es:&Opciones...
 et:&Sätted...
 eu:A&ukerak...
-fa:&گزینه‌ها
+fa:&تنظیمات ...
 fi:&Asetukset...
 fr:&Options...
 fy-nl:&Opsjes...
@@ -3740,6 +3742,7 @@ dk:Er du sikker på at du vil afinstallere SumatraPDF ?
 es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
+fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
 fi:Oletko varma että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
@@ -4888,6 +4891,7 @@ dk:Luk
 es:Cerrar
 et:Sulge
 eu:Itxi
+fa:بستن
 fi:Sulje
 fr:Fermer
 hi:Close
@@ -5686,6 +5690,7 @@ dk:Kunne ikke oprette installations folder
 es:No se puede crear el directorio de instalación
 et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
+fa:عدم توانایی در ایجاد پوشه نصب
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
 hr:Nemoguće napraviti instalacijsku mapu
@@ -5786,6 +5791,7 @@ dk:Kunne ikke installere PDF viser
 es:No se puede instalar previsualizador PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
+fa:pdf عدم توانایی در نصب پیش نمایش
 fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
 hr:Nemoguće instalirati PDF preglednik
@@ -5863,6 +5869,7 @@ dk:Kunne ikke installere browser plugin
 es:No es posible instalar el plugin del navegador
 et:Ei suudetud paigaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina ezartzea
+fa:عدم توانایی در نصب پلاگین بروسر
 fi:Selainliitännäisen asentaminen epäonnistui
 fr:Impossible d'installer le plug-in du navigateur
 hr:Nemoguće instalirati dodatak za internet preglednik
@@ -7186,6 +7193,7 @@ dk:Fejl: Kan ikke køre SumatraPDF !
 es:Error: ¡No se pudo ejecutar SumatraPDF!
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
+fa:sumatra pdf خطا: عدم توانایی در اجرای
 fi:Virhe: SumatraPDF:n käynnistäminen epäonnistui!
 fr:Erreur : impossible de lancer SumatraPDF !
 hr:Greška: Nemoguće pokrenuti SumatraPDF
@@ -7224,6 +7232,7 @@ dk:Fejl: SumatraPDF ikke fundet !
 es:Error: ¡SumatraPDF no ha sido encontrado!
 et:Viga: Ei leitud rakendust SumatraPDF
 eu:Akatsa: SumatraPDF ez da aurkitu!
+fa:خطا :sumatra pdf پیدا نشد
 fi:Virhe: SumatraPDF ei löytynyt!
 fr:Erreur : SumatraPDF non trouvé !
 hr:Greška: SumatraPDF nije pronađena
@@ -9410,6 +9419,7 @@ dk:Gem &Valgmuligheder
 es:Menos &opciones
 et:Peida &sätted
 eu:Ezkutatu A&ukerak
+fa:مخفی & تنظیمات
 fi:Piilota &asetukset
 fr:Masque les &options
 hr:Sakrij postavke
@@ -9617,6 +9627,7 @@ dk:Installer PDF &browser plugin til Firefox, Chrome og Opera
 es:Instalar el &plugin PDF para Firefox, Chrome y Opera
 et:Paigalda lisaks PDF &plugin Firefox, Chrome ja Opera brauseritele.
 eu:Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat
+fa:برای فایرفاکس و کروم و اپرا pdf نصب پلاگین
 fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
@@ -9655,6 +9666,7 @@ dk:Installer SumatraPDF
 es:Instalar SumatraPDF
 et:Paigalda SumatraPDF
 eu:Ezarri SumatraPDF
+fa:sumatra pdf نصب
 fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
 hr:Instaliraj SumatraPDF
@@ -9691,6 +9703,7 @@ dk:Installer SumatraPDF i &folder:
 es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
+fa:در &پوشه sumatra pdf نصب
 fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
 hr:Instaliraj SumatraPDF u &mapu:
@@ -9727,6 +9740,7 @@ dk:Installation fejlede !
 es:¡La instalación ha fallado!
 et:Paigaldamine ebaõnnestus!
 eu:Ezarpen hutsegitea!
+fa:ایراد در نصب
 fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
 hr:Instalacija nije uspjela!
@@ -9764,6 +9778,7 @@ dk:Installation i gang ...
 es:Instalación en progreso...
 et:Toimub paigaldamine...
 eu:Ezarpena garatzen...
+fa:نصب در حال بارگذاری
 fi:Asennus käynnissä...
 fr:Installation en cours…
 hr:Instaliranje...
@@ -11077,6 +11092,7 @@ dk:Åben o %s
 es:Abrir en %s
 et:Ava rakenduses %s
 eu:Irekitzea %s
+fa:%s بازشدن در
 fr:Ouvrir dans %s
 hr:Otvori u %s
 hu:Megnyitás %s
@@ -11347,6 +11363,7 @@ dk:Åben dokument i SumatraPDF ...
 es:Abriendo documento en SumatraPDF...
 et:Dokumendi avamine rakenduses SumatraPDF...
 eu:Agiria irekitzen SumatraPDF-an...
+fa:sumatra pdf باز کردن متن در
 fi:Avataan asiakirjaa SumatraPDF:ssä...
 fr:Ouverture du document dans SumatraPDF…
 hr:Otvaranje dokumenta u SumatraPDF...
@@ -14435,6 +14452,7 @@ dk:Start SumatraPDF
 es:Iniciar SumatraPDF
 et:Käivita SumatraPDF
 eu:Abiarazi SumatraPDF
+fa:اجرای sumatra pdf
 fi:Käynnistä SumatraPDF
 fr:Lancer SumatraPDF
 hr:Pokreni SumatraPDF
@@ -14775,6 +14793,7 @@ dk:SumatraPDF er afinstalleret.
 es:SumatraPDF ha sido desinstalado.
 et:SumatraPDF on eemaldatud.
 eu:SumatraPDF kendu da.
+fa:پاک شد sumatra pdf
 fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
 hr:SumatraPDF je deinstaliran.
@@ -15136,6 +15155,7 @@ dk:Tak fordi du valgte SumatraPDF !
 es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
+fa:sumatra pdf با تشکر از شما جهت انتخاب
 fi:Kiitos että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
 hr:Hvala Vam na odabiru SumatraPDF!
@@ -15173,6 +15193,7 @@ dk:Tak ! SumatraPDF er installeret.
 es:¡Gracias! SumatraPDF ha sido instalado.
 et:Täname! SumatraPDF on paigaldatud.
 eu:Mila esker! SumatraPDF ezarri da.
+fa:با تشکر ! sumapra pdf نصب شد
 fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
 hr:Hvala Vam! SumatraPDF je instaliran.
@@ -15382,6 +15403,7 @@ dk:Afinstallation pågår ...
 es:Desinstalación en progreso...
 et:Toimub eemaldamine...
 eu:Kentzea garatzen...
+fa:حذف شدن در حال بارگذاری
 fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
 hr:Deinstaliranje...
@@ -15478,6 +15500,7 @@ dk:Anvend SumatraPDF som &standard PDF læser
 es:Usar SumatraPDF como lector PDF por &defecto
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
+fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از
 fi:Käytä SumatraPDF:ää PDF-tiedostojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hr:Koristi SumatraPDF kao zadani PDF preglednik
