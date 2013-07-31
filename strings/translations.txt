@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a52a52453b06fa1615a328f02a931c62df4f6e9f
+49926c067b0eb79954cd31d2d155670b7c4fbb1f
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -5831,6 +5831,7 @@ dk:Kunne ikke installere PDF søge filter
 es:No se puede instalar el filtro buscador PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
+fa:عدم توانایی در نصب فیلتر جستجوی pdf
 fi:PDF-hakusuodattimen asentaminen epäonnistui
 fr:Impossible d'installer le filtre de recherche PDF
 hr:Nemoguće instalirati PDF filter pretraživanja
@@ -7271,6 +7272,7 @@ dk:Fejl: Dokumentet kunne ikke hentes !
 es:Error: ¡El documento no pudo ser descargado!
 et:Viga: Dokumenti ei suudetud alla laadida!
 eu:Akatsa: Agiria ezin da jeitsi!
+fa:خطا : عدم توانایی در دانلود متن
 fi:Virhe: tiedoston lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
 hr:Greška: Dokument nije moguće preuzeti!
@@ -7593,6 +7595,7 @@ dk:Kunne ikke oprette genvej
 es:No se pudo crear un acceso directo
 et:Ei õnnestu luua otseteed
 eu:Hutsegitea lasterbidea sortzerakoan
+fa:خطا در ایجاد فایل میانبر
 fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
 hr:Neuspjeh u kreiranju prečaca
@@ -14302,6 +14305,7 @@ dk:Nogle installations filer er beskadiget eller mangler
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
 et:Mõned paigaldatavad failid on viga saanud või puuduvad
 eu:Ezarritako zenbait agiri hondatuta edo galduta daude
+fa:بخشی از فایهای نصب شده خراب شده و یا گم شده
 fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
@@ -14550,6 +14554,7 @@ dk:SumatraPDF %s installer
 es:Instalador de SumatraPDF %s
 et:SumatraPDF %s paigaldamine
 eu:SumatraPDF %s Ezartzailea
+fa:نصب کننده sumatra pdf %s
 fi:SumatraPDF %s asennusohjelma
 fr:Installeur de SumatraPDF %s
 hr:SumatraPDF %s instaler
@@ -14586,6 +14591,7 @@ dk:SumatraPDF %s afinstallere
 es:Desinstalador de SumatraPDF %s
 et:SumatraPDF %s eemaldamine
 eu:SumatraPDF %s Kentzailea
+fa:حذف کننده sumatra pdf %s
 fi:SumatraPDF %s poisto-ohjelma
 fr:Désinstalleur de SumatraPDF %s
 hr:SumatraPDF %s deinstaler
@@ -14831,6 +14837,7 @@ dk:SumatraPDF installation ikke fundet.
 es:Instalación de SumatraPDF no encontrada.
 et:SumatraPDF paigaldust ei leitud.
 eu:SumatraPDF ezarpena ez da aurkitu.
+fa:نصب شده sumatra pdf پیدا نشد.
 fi:SumatraPDF-asennusta ei löytynyt.
 fr:Installation de SumatraPDF non trouvée
 hr:SumatraPDF instalacija nije pronađena.
@@ -15328,6 +15335,7 @@ dk:Afinstaller SumatraPDF
 es:Desinstalar SumatraPDF
 et:Eemalda SumatraPDF
 eu:Kendu SumatraPDF
+fa:پاک کردن sumatra pdf
 fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
 hr:Deinstaliraj SumatraPDF
@@ -15365,6 +15373,7 @@ dk:Afinstallationen fejlede
 es:Falló la desinstalación
 et:Eemaldamine ebaõnnestus
 eu:Kentze hutsegitea
+fa:خطا در پاک کردن
 fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
 hr:Deinstalacija nije uspjela
