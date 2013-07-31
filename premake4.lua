@@ -156,7 +156,7 @@ solution "muitest"
 
     -- too lazy to add the decoder files and they increase
     -- compilation time
-    defines { "NO_LIBWEP" }
+    defines { "NO_LIBWEBP" }
 
     files {
       "tools/mui_test/*",

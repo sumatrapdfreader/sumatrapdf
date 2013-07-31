@@ -3,6 +3,9 @@
 
 #include "BaseUtil.h"
 #include <wincodec.h>
+#ifndef NO_LIBWEBP
+#include <webp/decode.h>
+#endif
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
@@ -282,10 +285,9 @@ static Bitmap *WICDecodeImageFromStream(IStream *stream)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-#if !defined(NO_LIBWEP)
-#include <webp/decode.h>
 static Bitmap *WebPDecodeImage(const char *data, size_t len)
 {
+#ifndef NO_LIBWEBP
     int w, h;
     if (!WebPGetInfo((const uint8_t *)data, len, &w, &h))
         return NULL;
@@ -302,8 +304,10 @@ static Bitmap *WebPDecodeImage(const char *data, size_t len)
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
-}
+#else
+    return NULL;
 #endif
+}
 
 enum ImgFormat {
     Img_Unknown, Img_BMP, Img_GIF, Img_JPEG,
@@ -363,10 +367,8 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ImgFormat format = GfxFormatFromData(data, len);
     if (Img_TGA == format)
         return tga::ImageFromData(data, len);
-#if !defined(NO_LIBWEP)
     if (Img_WebP == format)
         return WebPDecodeImage(data, len);
-#endif
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
@@ -486,17 +488,17 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Height = r.WordLE(14);
         }
         break;
-#if !defined(NO_LIBWEP)
     case Img_WebP:
         if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
             result.Width = r.WordLE(26) & 0x3fff;
             result.Height = r.WordLE(28) & 0x3fff;
         }
+#ifndef NO_LIBWEBP
         else {
             WebPGetInfo((const uint8_t *)data, len, &result.Width, &result.Height);
         }
-        break;
 #endif
+        break;
     }
 
     if (result.Empty()) {
