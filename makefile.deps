@@ -604,7 +604,7 @@ $(OU)\FileWatcher.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteReader.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\TgaReader.h $B\src\utils\Vec.h
-$(OU)\GdiPlusUtil.obj: $B\src\utils\WinUtil.h
+$(OU)\GdiPlusUtil.obj: $B\src\utils\WebpReader.h $B\src\utils\WinUtil.h
 $(OU)\HtmlParserLookup.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\HtmlParserLookup.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\HtmlParserLookup.obj: $B\src\utils\Vec.h
@@ -674,6 +674,9 @@ $(OU)\UtAssert.obj: $B\src\utils\Vec.h
 $(OU)\VarintGob.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OU)\VarintGob.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\VarintGob.obj: $B\src\utils\VarintGob.h $B\src\utils\Vec.h
+$(OU)\WebpReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\WebpReader.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\WebpReader.obj: $B\src\utils\WebpReader.h
 $(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\WinUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h

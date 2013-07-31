@@ -382,7 +382,7 @@ WCHAR *ImageEngineImpl::GetProperty(DocumentProperty prop)
 bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        char header[13] = { 0 };
+        char header[32] = { 0 };
         file::ReadAll(fileName, header, sizeof(header));
         fileName = GfxFileExtFromData(header, sizeof(header));
     }

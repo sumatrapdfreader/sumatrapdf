@@ -3,14 +3,12 @@
 
 #include "BaseUtil.h"
 #include <wincodec.h>
-#ifndef NO_LIBWEBP
-#include <webp/decode.h>
-#endif
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 #include "ByteReader.h"
 #include "TgaReader.h"
+#include "WebpReader.h"
 #include "WinUtil.h"
 
 // Get width of each character and add them up.
@@ -285,30 +283,6 @@ static Bitmap *WICDecodeImageFromStream(IStream *stream)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-static Bitmap *WebPDecodeImage(const char *data, size_t len)
-{
-#ifndef NO_LIBWEBP
-    int w, h;
-    if (!WebPGetInfo((const uint8_t *)data, len, &w, &h))
-        return NULL;
-
-    Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Ok)
-        return NULL;
-    if (!WebPDecodeBGRAInto((const uint8_t *)data, len, (uint8_t *)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride))
-        return NULL;
-    bmp.UnlockBits(&bmpData);
-
-    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
-    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
-#else
-    return NULL;
-#endif
-}
-
 enum ImgFormat {
     Img_Unknown, Img_BMP, Img_GIF, Img_JPEG,
     Img_JXR, Img_PNG, Img_TGA, Img_TIFF, Img_WebP,
@@ -333,7 +307,7 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_TGA;
     if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
         return Img_JXR;
-    if (str::StartsWith(data, "RIFF") && len > 12 && str::StartsWith(data + 8, "WEBP"))
+    if (webp::HasSignature(data, len))
         return Img_WebP;
     return Img_Unknown;
 }
@@ -368,7 +342,7 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     if (Img_TGA == format)
         return tga::ImageFromData(data, len);
     if (Img_WebP == format)
-        return WebPDecodeImage(data, len);
+        return webp::ImageFromData(data, len);
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
@@ -493,11 +467,9 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Width = r.WordLE(26) & 0x3fff;
             result.Height = r.WordLE(28) & 0x3fff;
         }
-#ifndef NO_LIBWEBP
         else {
-            WebPGetInfo((const uint8_t *)data, len, &result.Width, &result.Height);
+            result = webp::SizeFromData(data, len);
         }
-#endif
         break;
     }
 

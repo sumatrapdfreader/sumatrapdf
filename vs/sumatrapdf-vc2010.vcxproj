@@ -192,6 +192,7 @@
     <ClCompile Include="..\src\utils\UITask.cpp" />
     <ClCompile Include="..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\src\utils\VarintGob.cpp" />
+    <ClCompile Include="..\src\utils\WebpReader.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\browserplugin\npPdfViewer.cpp" />
@@ -456,6 +457,7 @@
     <ClInclude Include="..\src\utils\VarintGob.h" />
     <ClInclude Include="..\src\utils\Vec.h" />
     <ClInclude Include="..\src\utils\VecSegmented.h" />
+    <ClInclude Include="..\src\utils\WebpReader.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
     <ClInclude Include="..\src\browserplugin\npapi\npapi.h" />

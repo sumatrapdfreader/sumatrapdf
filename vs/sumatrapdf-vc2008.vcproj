@@ -183,6 +183,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\WebpReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\WebpReader.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\ZipUtil.cpp"
 					>
 				</File>

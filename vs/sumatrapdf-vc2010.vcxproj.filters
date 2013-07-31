@@ -381,6 +381,9 @@
     <ClCompile Include="..\src\utils\VarintGob.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\WebpReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1167,6 +1170,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\VecSegmented.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WebpReader.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\WinUtil.h">

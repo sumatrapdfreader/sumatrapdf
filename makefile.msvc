@@ -150,7 +150,7 @@ MAIN_UI_LIB = $(O)\sumatra.lib
 
 UTILS_OBJS = \
 	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
-	$(OU)\StrUtil.obj $(OU)\WinUtil.obj \
+	$(OU)\StrUtil.obj $(OU)\WinUtil.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
@@ -161,7 +161,7 @@ UTILS_OBJS = \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj \
-	$(OU)\GdiPlusUtil.obj $(WEBP_OBJS)
+	$(OU)\WebpReader.obj $(WEBP_OBJS)
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
