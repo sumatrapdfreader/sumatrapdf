@@ -154,6 +154,10 @@ solution "muitest"
 
     flags { "NoManifest", "WinMain" }
 
+    -- too lazy to add the decoder files and they increase
+    -- compilation time
+    defines { "NO_LIBWEP" }
+
     files {
       "tools/mui_test/*",
       "src/utils/BaseUtil*",

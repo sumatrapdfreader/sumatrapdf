@@ -230,8 +230,8 @@ void Painter::OnWmPaint(HWND hwnd)
 
     r.Inflate(1, 3, 0, -2);
     gfx->DrawFilledRect(r, COL_GRAY);
-//    r.Inflate(-1);
-//    gfx->DrawRect(r, COL_BLACK, 1.f);
+    r.Inflate(-1);
+    gfx->DrawRect(r, COL_BLACK, 1.f);
 
     delete gfx;
 
