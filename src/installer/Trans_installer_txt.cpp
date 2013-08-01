@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   36
+#define LANGS_COUNT   37
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1499,6 +1499,51 @@ const char * gTranslations_ta =
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\215 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\256\256\340\257\215 \340\256\232\340\257\206\340\256\257\340\256\262\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201...\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276 PDF\340\256\220 \340\256\256\340\257\201\340\256\251\340\257\215\340\256\251\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\225 \340\256\252\340\256\257\340\256\251\340\257\215\340\256\252\340\256\237\340\257\201\340\256\244\340\257\215\340\256\244\340\257\201\0";
 
+const char * gTranslations_tr = 
+  "&Ayarlar\0"\
+  "SumatraPDF'yi bilgisayar\304\261n\304\261zdan kald\304\261rmak istedi\304\237inize emin misiniz ?\0"\
+  "Kapat\0"\
+  "Ge\303\247ici dizin olu\305\237turulamad\304\261\0"\
+  "Kurulum dizini olu\305\237turulamad\304\261\0"\
+  "PDF \303\266n zileyici y\303\274klenemedi\0"\
+  "PDF arama filtresi y\303\274klenemedi\0"\
+  "Taray\304\261c\304\261 eklentisi y\303\274klenemedi\0"\
+  "Ge\303\247ici dizin bulunamad\304\261\0"\
+  "Kurulum dizini kald\304\261r\304\261lamad\304\261\0"\
+  "K\304\261sayol silinemedi\0"\
+  "PDF \303\266nizleyicisi kald\304\261r\304\261lamad\304\261\0"\
+  "PDF arama filtresi kald\304\261r\304\261lamad\304\261\0"\
+  "Taray\304\261c\304\261 eklentisi silinemedi\0"\
+  "Diske %s yaz\304\261lamad\304\261\0"\
+  "Kald\304\261r\304\261c\304\261y\304\261 ge\303\247ici dizine kopyalama ba\305\237ar\304\261s\304\261z oldu\0"\
+  "K\304\261sayol olu\305\237turulamad\304\261\0"\
+  "Kald\304\261r\304\261c\304\261 kay\304\261t defteri anahtarlar\304\261n\304\261 silemedi\0"\
+  "Kay\304\261t defterine geni\305\237letimi\305\237 dosya uzant\304\261s\304\261 yazma ba\305\237ar\304\261s\304\261z oldu\0"\
+  "Kay\304\261t defterine kald\304\261rma bilgisi yazma i\305\237i ba\305\237ar\304\261s\304\261z oldu\0"\
+  "Sakla & Se\303\247enekler\0"\
+  "Firefox, Chrome ve Opera i\303\247in &taray\304\261c\304\261 eklentisi y\303\274kle\0"\
+  "SumatraPDF y\303\274kle\0"\
+  "&folder klas\303\266r\303\274ne SumatraPDF'yi y\303\274kle\0"\
+  "Y\303\274kleme ba\305\237ar\304\261s\304\261z !\0"\
+  "Kurulum devam ediyor...\0"\
+  "PDF belgelrini aramak i\303\247in Windows Masa\303\274st\303\274 Aramaya izin ver\0"\
+  "PDF belgelerini g\303\266r\303\274nt\303\274lemek ve \303\266nizleme i\303\247in Windows'a izin ver\0"\
+  "Devam etmek i\303\247in %s kapat\304\261n!\0"\
+  "SumatraPDF'in y\303\274klenece\304\237i alan\304\261 se\303\247in:\0"\
+  "Y\303\274kl\303\274 olmas\304\261 gereken baz\304\261 dosyalar eksik ve ya hasar g\303\266rm\303\274\305\237\0"\
+  "SumatraPDF'yi ba\305\237lat\0"\
+  "SumatraPDF %s y\303\274kleyici\0"\
+  "SumatraPDF %s Kald\304\261r\304\261c\304\261\0"\
+  "SumatraPDF kald\304\261r\304\261ld\304\261.\0"\
+  "SumatraPDF kurulum dosyas\304\261 bulunamad\304\261.\0"\
+  "SumatraPDF 'i se\303\247ti\304\237iniz i\303\247in te\305\237ekk\303\274rler !\0"\
+  "Te\305\237ekk\303\274rler! SumatraPDF bilgisayar\304\261n\304\261za kuruldu\0"\
+  "Y\303\274kleyici hasar g\303\266rm\303\274\305\237.L\303\274tfen tekrar indirin.\nGe\303\247ici rahats\304\261zl\304\261k i\303\247in \303\266z\303\274r dileriz!\0"\
+  "SumatraPDF'i kald\304\261r\0"\
+  "Program kald\304\261rma ba\305\237ar\304\261s\304\261z\0"\
+  "Program kald\304\261r\304\261l\304\261yor...\0"\
+  "SumatraPDF varsay\304\261lan PDF okuyucum olsun\0";
+
 const char * gTranslations_uk = 
   "\320\235\320\260\320\273\320\260\321\210\321\202\321\203\320\262\320\260\320\275\320\275\321\217\0"\
   "\320\222\320\270 \320\262\320\277\320\265\320\262\320\275\320\265\320\275\321\226, \321\211\320\276 \321\205\320\276\321\207\320\265\321\202\320\265 \320\262\320\270\320\264\320\260\320\273\320\270\321\202\320\270 SumatraPDF?\0"\
@@ -1669,6 +1714,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_es, 
   gTranslations_sv, 
   gTranslations_ta, 
+  gTranslations_tr, 
   gTranslations_uk, 
   gTranslations_uz, 
   gTranslations_cy
@@ -1710,6 +1756,7 @@ const char *gLangCodes =   "en\0" \
   "es\0" \
   "sv\0" \
   "ta\0" \
+  "tr\0" \
   "uk\0" \
   "uz\0" \
   "cy\0" "\0";
@@ -1747,6 +1794,7 @@ const char *gLangNames =   "English\0" \
   "Spanish (Espa\303\261ol)\0" \
   "Swedish (Svenska)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
+  "Turkish (T\303\274rk\303\247e)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" \
   "Uzbek (O'zbek)\0" \
   "Welsh (Cymraeg)\0" "\0";
@@ -1796,6 +1844,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_SPANISH),
   _LANGID(LANG_SWEDISH),
   _LANGID(LANG_TAMIL),
+  _LANGID(LANG_TURKISH),
   _LANGID(LANG_UKRAINIAN),
   _LANGID(LANG_UZBEK),
   _LANGID(LANG_WELSH)

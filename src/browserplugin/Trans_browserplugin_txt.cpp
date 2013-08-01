@@ -350,6 +350,16 @@ const WCHAR * const gTranslations[] = {
   NULL,
   L"கோப்பு சுமத்ரா PDFல் திறக்கப்படுகிறது..",
 
+  /* Translations for language tr */
+  L"%s ın %s ı",
+  L"Hata: SumatraPDF çalıştırılamadı!",
+  L"Hata: SumatraPDF bulunamadı!",
+  L"Hata: Belge indirilemedi!",
+  NULL,
+  NULL,
+  NULL,
+  L"Belge SumatraPDF ile açılıyor...",
+
   /* Translations for language uk */
   L"%s із %s",
   L"Помилка: не вдалося запустити SumatraPDF",
@@ -385,7 +395,7 @@ const char * const gLanguages[] = {
     "en", "sq", "ar", "am", "az", "eu", "ca", "ca-xv", "cn", "hr",
     "cz", "dk", "nl", "et", "fi", "fr", "de", "hu", "id", "it",
     "ja", "kr", "ku", "mk", "fa", "pl", "br", "pt", "ro", "ru",
-    "sk", "es", "sv", "ta", "uk", "uz", "cy", NULL
+    "sk", "es", "sv", "ta", "tr", "uk", "uz", "cy", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -437,9 +447,10 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_SPANISH): return 248;
     case _LANGID(LANG_SWEDISH): return 256;
     case _LANGID(LANG_TAMIL): return 264;
-    case _LANGID(LANG_UKRAINIAN): return 272;
-    case _LANGID(LANG_UZBEK): return 280;
-    case _LANGID(LANG_WELSH): return 288;
+    case _LANGID(LANG_TURKISH): return 272;
+    case _LANGID(LANG_UKRAINIAN): return 280;
+    case _LANGID(LANG_UZBEK): return 288;
+    case _LANGID(LANG_WELSH): return 296;
     default: return -1;
 #undef _LANGID
     }

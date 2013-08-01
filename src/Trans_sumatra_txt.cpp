@@ -3692,7 +3692,7 @@ const char * gTranslations_dk =
 const char * gTranslations_nl = 
   "&Over\0"\
   "W&are grootte\tCtrl+1\0"\
-  "\0"\
+  "&geavanceerde opties\0"\
   "&Alle geselecteerde pagina's\0"\
   "Terug\tAlt+<-\0"\
   "&Boekweergave\tCtrl+8\0"\
@@ -12022,7 +12022,7 @@ const char * gTranslations_ta =
 const char * gTranslations_tr = 
   "&Hakk\304\261nda\0"\
   "Ger\303\247ek &Boyut\tCtrl+1\0"\
-  "\0"\
+  "Geli\305\237mi\305\237 Ayarlar\0"\
   "T\303\274m se\303\247ilen &sayfalar\0"\
   "&Geri\tAlt+Sol Ok\0"\
   "&Kitap G\303\266r\303\274n\303\274m\303\274\0"\
@@ -12153,7 +12153,7 @@ const char * gTranslations_tr =
   "Geni\305\237li\304\237e s\304\261\304\237d\304\261r\0"\
   "Geni\305\237li\304\237e \303\266l\303\247ekle ve sayfalar\304\261 devaml\304\261 g\303\266ster\0"\
   "Tek sayfaya \303\266l\303\247ekle\0"\
-  "Yaz\304\261y\303\274zleri:\0"\
+  "Yaz\304\261 Tipleri:\0"\
   "Kitap bi\303\247imlendiriliyor... %d sayfa\0"\
   "Metin %s numaral\304\261 sayfada bulundu\0"\
   "Metin sayfa %s bulundu (tekrar)\0"\
@@ -12168,7 +12168,7 @@ const char * gTranslations_tr =
   "\0"\
   "SumatraPDF'i PDF dosyalar\304\261 i\303\247in varsay\304\261lan uygulama yapmak ister misiniz?\0"\
   "Varsay\304\261lan PDF okuyucusu yap\0"\
-  "\0"\
+  "Man&ga modu\0"\
   "B\303\274y\303\274k/K\303\274\303\247\303\274k harf e\305\237le\305\237tir\0"\
   "Mobi belgeleri\0"\
   "De\304\237i\305\237tirilme tarihi:\0"\
@@ -12183,7 +12183,7 @@ const char * gTranslations_tr =
   "&A\303\247\0"\
   "PDF-XChange ile a\303\247\0"\
   "Belge a\303\247...\0"\
-  "\0"\
+  "%s i\303\247inde a\303\247\0"\
   "&Adobe Reader ile a\303\247\0"\
   "&Adobe Foxit ile a\303\247\0"\
   "Microsoft HTML Help ile a\303\247\0"\
@@ -12251,7 +12251,7 @@ const char * gTranslations_tr =
   "Ba\305\237l\304\261k:\0"\
   "Bilinmeyen kaynak dosyas\304\261 (%s)\0"\
   "G\303\266r\303\274n\303\274m\0"\
-  "&Web sayfas\304\261\0"\
+  "&Website ziyaret et\0"\
   "Uyar\304\261\0"\
   "XPS belgeleri\0"\
   "G\303\274ncel s\303\274r\303\274m\303\274 kullan\304\261yorsunuz.\0"\
