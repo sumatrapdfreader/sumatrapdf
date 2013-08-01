@@ -186,7 +186,8 @@ fz_decode_tiff_fax(struct tiff *tiff, int comp, fz_stream *chain, unsigned char 
 static void
 fz_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
-	fz_stream *stm = fz_open_dctd(chain, -1);
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2370 */
+	fz_stream *stm = fz_open_dctd(chain, tiff->photometric != 2 && tiff->photometric != 3 ? -1 : 0);
 	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2314 */
 	if (tiff->jpegtables && (int)tiff->jpegtableslen > 0)
 		fz_dctd_set_common_tables(stm, tiff->jpegtables, tiff->jpegtableslen);
