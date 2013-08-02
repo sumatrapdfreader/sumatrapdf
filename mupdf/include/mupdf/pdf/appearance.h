@@ -30,6 +30,12 @@ void pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect
 */
 void pdf_set_markup_appearance(pdf_document *doc, pdf_annot *annot, float color[3], float alpha, float line_thickness, float line_height);
 
+/*
+	pdf_update_free_text_annot_appearance: update the appearance stream for a free text
+	annotation, basing it on the annoations rectangle and contents.
+*/
+void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot);
+
 void pdf_set_ink_appearance(pdf_document *doc, pdf_annot *annot);
 
 #endif

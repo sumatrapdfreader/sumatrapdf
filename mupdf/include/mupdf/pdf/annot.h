@@ -89,10 +89,16 @@ void pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot);
 void pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n);
 
 /*
-	fz_set_ink_annot_list: set the details of an ink annotation. All the points of the multiple arcs
+	pdf_set_ink_annot_list: set the details of an ink annotation. All the points of the multiple arcs
 	are carried in a single array, with the counts for each arc held in a secondary array.
 */
 void pdf_set_ink_annot_list(pdf_document *doc, pdf_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness);
+
+/*
+	pdf_set_free_text_details: set the position, text, font and color for a free text annotation.
+	Only base 14 fonts are supported and are specified by name.
+*/
+void pdf_set_free_text_details(pdf_document *doc, pdf_annot *annot, fz_point *pos, char *text, char *font_name, float font_size, float color[3]);
 
 fz_annot_type pdf_annot_obj_type(pdf_obj *obj);
 

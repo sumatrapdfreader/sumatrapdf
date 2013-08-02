@@ -1,7 +1,5 @@
 #include "mupdf/pdf.h"
 
-#define SMALL_FLOAT (0.00001)
-
 enum
 {
 	F_Invisible = 1 << (1-1),
@@ -473,6 +471,9 @@ void pdf_update_appearance(pdf_document *doc, pdf_annot *annot)
 				pdf_update_combobox_appearance(doc, obj);
 				break;
 			}
+			break;
+		case FZ_ANNOT_FREETEXT:
+			pdf_update_free_text_annot_appearance(doc, annot);
 			break;
 		case FZ_ANNOT_STRIKEOUT:
 		case FZ_ANNOT_UNDERLINE:

@@ -543,6 +543,9 @@ pdf_dev_font(pdf_device *pdev, fz_font *font, float size)
 	if (gs->font >= 0 && pdev->fonts[gs->font].font == font)
 		return;
 
+	if (font->ft_data != NULL || font->ft_substitute)
+		fz_throw(pdev->ctx, FZ_ERROR_GENERIC, "pdf device supports only base 14 fonts currently");
+
 	/* Have we sent such a font before? */
 	for (i = 0; i < pdev->num_fonts; i++)
 		if (pdev->fonts[i].font == font)
@@ -569,11 +572,11 @@ pdf_dev_font(pdf_device *pdev, fz_font *font, float size)
 		o = pdf_new_dict(doc, 3);
 		fz_try(ctx)
 		{
-			/* BIG FIXME: Get someone who understands fonts to fill this bit in. */
 			char text[32];
 			pdf_dict_puts_drop(o, "Type", pdf_new_name(doc, "Font"));
 			pdf_dict_puts_drop(o, "Subtype", pdf_new_name(doc, "Type1"));
-			pdf_dict_puts_drop(o, "BaseFont", pdf_new_name(doc, "Helvetica"));
+			pdf_dict_puts_drop(o, "BaseFont", pdf_new_name(doc, font->name));
+			pdf_dict_puts_drop(o, "Encoding", pdf_new_name(doc, "WinAnsiEncoding"));
 			ref = pdf_new_ref(doc, o);
 			snprintf(text, sizeof(text), "Font/F%d", i);
 			pdf_dict_putp(pdev->resources, text, ref);
@@ -658,7 +661,6 @@ pdf_dev_text(pdf_device *pdev, fz_text *text)
 	gstate *gs = CURRENT_GSTATE(pdev);
 	fz_matrix trunc_trm;
 
-	/* BIG FIXME: Get someone who understands fonts to fill this bit in. */
 	trm = gs->tm;
 	trunc_trm.a = trm.a;
 	trunc_trm.b = trm.b;
@@ -681,6 +683,8 @@ pdf_dev_text(pdf_device *pdev, fz_text *text)
 			trm.e = it->x;
 			trm.f = it->y;
 		}
+		/* FIXME: should use it->gid, rather than it->ucs, and convert
+		 * to the correct encoding */
 		fz_buffer_printf(pdev->ctx, gs->buf, "<%02x> Tj\n", it->ucs);
 		/* FIXME: Advance the text position - doesn't matter at the
 		 * moment as we absolutely position each glyph, but we should
@@ -899,9 +903,13 @@ pdf_dev_fill_text(fz_device *dev, fz_text *text, const fz_matrix *ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	pdf_device *pdev = dev->user;
+	fz_matrix trm = text->trm;
+	float size = fz_matrix_expansion(&trm);
 
-	pdf_dev_begin_text(pdev, &text->trm, 0);
-	pdf_dev_font(pdev, text->font, 1);
+	fz_pre_scale(&trm, 1/size, 1/size);
+
+	pdf_dev_begin_text(pdev, &trm, 0);
+	pdf_dev_font(pdev, text->font, size);
 	pdf_dev_ctm(pdev, ctm);
 	pdf_dev_alpha(pdev, alpha, 0);
 	pdf_dev_color(pdev, colorspace, color, 0);

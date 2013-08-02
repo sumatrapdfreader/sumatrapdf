@@ -2033,3 +2033,113 @@ pdf_set_ink_annot_list(pdf_document *doc, pdf_annot *annot, fz_point *pts, int *
 	for (i = 0; i < 3; i++)
 		pdf_array_push_drop(col, pdf_new_real(doc, color[i]));
 }
+
+static void find_free_font_name(pdf_obj *fdict, char *buf, int buf_size)
+{
+	int i;
+
+	/* Find a number X such that /FX doesn't occur as a key in fdict */
+	for (i = 0; 1; i++)
+	{
+		snprintf(buf, buf_size, "F%d", i);
+
+		if (!pdf_dict_gets(fdict, buf))
+			break;
+	}
+}
+
+void pdf_set_free_text_details(pdf_document *doc, pdf_annot *annot, fz_point *pos, char *text, char *font_name, float font_size, float color[3])
+{
+	fz_context *ctx = doc->ctx;
+	char nbuf[32];
+	pdf_obj *dr;
+	pdf_obj *form_fonts;
+	pdf_obj *font = NULL;
+	pdf_obj *ref;
+	pdf_font_desc *font_desc = NULL;
+	pdf_da_info da_info;
+	fz_buffer *fzbuf = NULL;
+	fz_matrix ctm;
+	fz_point page_pos;
+
+	fz_invert_matrix(&ctm, &annot->page->ctm);
+
+	dr = pdf_dict_gets(annot->page->me, "Resources");
+	if (!dr)
+	{
+		dr = pdf_new_dict(doc, 1);
+		pdf_dict_putp_drop(annot->page->me, "Resources", dr);
+	}
+
+	/* Ensure the resource dictionary includes a font dict */
+	form_fonts = pdf_dict_gets(dr, "Font");
+	if (!form_fonts)
+	{
+		form_fonts = pdf_new_dict(doc, 1);
+		pdf_dict_puts_drop(dr, "Font", form_fonts);
+		/* form_fonts is still valid if execution continues past the above call */
+	}
+
+	fz_var(fzbuf);
+	fz_var(font);
+	fz_try(ctx)
+	{
+		unsigned char *da_str;
+		int da_len;
+		fz_rect bounds;
+
+		find_free_font_name(form_fonts, nbuf, sizeof(nbuf));
+
+		font = pdf_new_dict(doc, 5);
+		ref = pdf_new_ref(doc, font);
+		pdf_dict_puts_drop(form_fonts, nbuf, ref);
+
+		pdf_dict_puts_drop(font, "Type", pdf_new_name(doc, "Font"));
+		pdf_dict_puts_drop(font, "Subtype", pdf_new_name(doc, "Type1"));
+		pdf_dict_puts_drop(font, "BaseFont", pdf_new_name(doc, font_name));
+		pdf_dict_puts_drop(font, "Encoding", pdf_new_name(doc, "WinAnsiEncoding"));
+
+		memcpy(da_info.col, color, sizeof(float)*3);
+		da_info.col_size = 3;
+		da_info.font_name = nbuf;
+		da_info.font_size = font_size;
+
+		fzbuf = fz_new_buffer(ctx, 0);
+		pdf_fzbuf_print_da(ctx, fzbuf, &da_info);
+
+		da_len = fz_buffer_storage(ctx, fzbuf, &da_str);
+		pdf_dict_puts_drop(annot->obj, "DA", pdf_new_string(doc, (char *)da_str, da_len));
+
+		/* FIXME: should convert to WinAnsiEncoding */
+		pdf_dict_puts_drop(annot->obj, "Contents", pdf_new_string(doc, text, strlen(text)));
+
+		font_desc = pdf_load_font(doc, NULL, font, 0);
+		pdf_measure_text(ctx, font_desc, (unsigned char *)text, strlen(text), &bounds);
+
+		page_pos = *pos;
+		fz_transform_point(&page_pos, &ctm);
+
+		bounds.x0 *= font_size;
+		bounds.x1 *= font_size;
+		bounds.y0 *= font_size;
+		bounds.y1 *= font_size;
+
+		bounds.x0 += page_pos.x;
+		bounds.x1 += page_pos.x;
+		bounds.y0 += page_pos.y;
+		bounds.y1 += page_pos.y;
+
+		pdf_dict_puts_drop(annot->obj, "Rect", pdf_new_rect(doc, &bounds));
+		update_rect(ctx, annot);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(font);
+		fz_drop_buffer(ctx, fzbuf);
+		pdf_drop_font(ctx, font_desc);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}

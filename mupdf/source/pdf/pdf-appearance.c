@@ -1,5 +1,9 @@
 #include "mupdf/pdf.h"
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_ADVANCES_H
+
 #define MATRIX_COEFS (6)
 #define STRIKE_HEIGHT (0.375f)
 #define UNDERLINE_HEIGHT (0.075f)
@@ -1545,15 +1549,16 @@ void pdf_set_ink_appearance(pdf_document *doc, pdf_annot *annot)
 	fz_stroke_state *stroke = NULL;
 	fz_device *dev = NULL;
 	fz_display_list *strike_list = NULL;
+	fz_colorspace *cs = NULL;
 
 	fz_var(path);
 	fz_var(stroke);
 	fz_var(dev);
 	fz_var(strike_list);
+	fz_var(cs);
 	fz_try(ctx)
 	{
 		fz_rect rect = fz_empty_rect;
-		fz_colorspace *cs;
 		float color[4];
 		float width;
 		pdf_obj *list;
@@ -1622,10 +1627,108 @@ void pdf_set_ink_appearance(pdf_document *doc, pdf_annot *annot)
 	}
 	fz_always(ctx)
 	{
+		fz_drop_colorspace(ctx, cs);
 		fz_free_device(dev);
 		fz_drop_stroke_state(ctx, stroke);
 		fz_free_path(ctx, path);
 		fz_drop_display_list(ctx, strike_list);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+static fz_text *layout_text(fz_context *ctx, font_info *font_rec, char *str, float x, float y)
+{
+	fz_matrix tm;
+	fz_font *font = font_rec->font->font;
+	fz_text *text;
+	int mask = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
+
+	fz_scale(&tm, font_rec->da_rec.font_size, font_rec->da_rec.font_size);
+	text = fz_new_text(ctx, font, &tm, 0);
+
+	fz_try(ctx)
+	{
+
+		while (*str)
+		{
+			FT_Fixed adv;
+
+			/* FIXME: convert str from utf8 to WinAnsi */
+			int gid = FT_Get_Char_Index(font->ft_face, *str);
+			fz_add_text(ctx, text, gid, *str, x, y);
+
+			FT_Get_Advance(font->ft_face, gid, mask, &adv);
+			x += ((float)adv) * font_rec->da_rec.font_size / ((FT_Face)font->ft_face)->units_per_EM;
+
+			str++;
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_free_text(ctx, text);
+		fz_rethrow(ctx);
+	}
+
+	return text;
+}
+
+void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
+{
+	fz_context *ctx = doc->ctx;
+	const fz_matrix *page_ctm = &annot->page->ctm;
+	pdf_obj *obj = annot->obj;
+	pdf_obj *dr = pdf_dict_getp(annot->page->me, "Resources");
+	fz_display_list *dlist = NULL;
+	fz_device *dev = NULL;
+	font_info font_rec;
+	fz_text *text = NULL;
+	fz_colorspace *cs = NULL;
+
+	memset(&font_rec, 0, sizeof(font_rec));
+
+	fz_var(dlist);
+	fz_var(dev);
+	fz_var(text);
+	fz_var(cs);
+	fz_try(ctx)
+	{
+		char *contents = pdf_to_str_buf(pdf_dict_gets(obj, "Contents"));
+		char *da = pdf_to_str_buf(pdf_dict_gets(obj, "DA"));
+		fz_rect rect = annot->rect;
+		fz_point pos;
+
+		get_font_info(doc, dr, da, &font_rec);
+
+		switch (font_rec.da_rec.col_size)
+		{
+		case 1: cs = fz_device_gray(doc->ctx); break;
+		case 3: cs = fz_device_rgb(doc->ctx); break;
+		case 4: cs = fz_device_cmyk(doc->ctx); break;
+		}
+
+		/* Adjust for the descender */
+		pos.x = rect.x0;
+		pos.y = rect.y0 - font_rec.font->descent * font_rec.da_rec.font_size / 1000.0f;
+
+		text = layout_text(ctx, &font_rec, contents, pos.x, pos.y);
+
+		dlist = fz_new_display_list(ctx);
+		dev = fz_new_list_device(ctx, dlist);
+		fz_fill_text(dev, text, page_ctm, cs, font_rec.da_rec.col, 1.0f);
+
+		fz_transform_rect(&rect, page_ctm);
+		pdf_set_annot_appearance(doc, annot, &rect, dlist);
+	}
+	fz_always(ctx)
+	{
+		fz_free_device(dev);
+		fz_drop_display_list(ctx, dlist);
+		font_info_fin(ctx, &font_rec);
+		fz_free_text(ctx, text);
+		fz_drop_colorspace(ctx, cs);
 	}
 	fz_catch(ctx)
 	{
