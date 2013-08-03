@@ -663,7 +663,13 @@ RestartLayout:
             ++pageInARow;
         }
         CrashIf(pageInARow >= dimof(columnMaxWidth));
-        pageInfo->pos.x = pageOffX + (columnMaxWidth[pageInARow] - pageInfo->pos.dx) / 2;
+        // center pages in a single column but right/left align them when using two columns
+        if (1 == columns)
+            pageInfo->pos.x = pageOffX + (columnMaxWidth[0] - pageInfo->pos.dx) / 2;
+        else if (0 == pageInARow)
+            pageInfo->pos.x = pageOffX + columnMaxWidth[0] - pageInfo->pos.dx;
+        else
+            pageInfo->pos.x = pageOffX;
         // center the cover page over the first two spots in non-continuous mode
         if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
             pageInfo->pos.x = offX + windowMargin.left + (columnMaxWidth[0] + pageSpacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
