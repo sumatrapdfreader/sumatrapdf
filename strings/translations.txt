@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-67026eda55b189dec0dba71673c3081bcedc123e
+c9a573ce8708241837c7292094421764aba1be64
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -214,7 +214,7 @@ sk:&Rozšírené možnosti...
 sq:Opsionet e &avancuara...
 ta:&மேம்பட்ட விருப்பங்கள்
 tr:Gelişmiş Ayarlar
-tw:進階選項...
+tw:進階選項...(&A)
 uk:Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
 :&All selected pages
@@ -332,7 +332,7 @@ ta:பின்\tAlt+Left Arrow
 th:ถอยกลับ\tAlt+Left Arrow
 tl:Bumalik\tAlt+Left Arrow
 tr:&Geri\tAlt+Sol Ok
-tw:上一停頓頁面\tAlt+<-
+tw:上一停頓頁面(&B)\tAlt+<-
 uk:Назад\tAlt+Ліва стрілка
 uz:&Orqaga\tAlt+<-
 vn:Trở về\tAlt+Mũi tên trái
@@ -1861,6 +1861,7 @@ sr-rs:Опције
 sv:Alternativ
 ta:&விருப்பம்
 tr:&Ayarlar
+tw:選項(&O)
 uk:Налаштування
 uz:&Parametrlar
 :&Options...
@@ -6231,6 +6232,7 @@ sq:Nuk mund të shkruajë %s në disk
 sv:Kunde inte spara %s på hårddisken
 ta:%s ஐ எழுத  இயலவில்லை
 tr:Diske %s yazılamadı
+tw:無法寫入 %s 到磁碟中
 uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 :Created:
@@ -9471,6 +9473,7 @@ sr-rs:Сакриј опције
 sv:Göm Alternativ
 ta:மறை & விருப்பம்
 tr:Sakla & Seçenekler
+tw:隱藏選項(&O)
 uk:Приховати налаштування
 uz:&Parametrlarni yashirish
 vn:Thiết lập ẩn và tùy chọn
@@ -9718,6 +9721,7 @@ sq:Instaloj SumatraPDF
 sv:Installera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவு
 tr:SumatraPDF yükle
+tw:安裝 SumatraPDF
 uk:Встановити SumatraPDF
 uz:SumatraPDF o'rnatish
 :Install SumatraPDF in &folder:
@@ -9794,6 +9798,7 @@ sq:Dështoi instalimi!
 sv:Installationen misslyckades!
 ta:நிறுவல் தோல்வி!
 tr:Yükleme başarısız !
+tw:安裝失敗！
 uk:Встановлення не було успішним!
 uz:O'rnatish muvaffaqiyatsiz tugadi!
 vn:Cài đặt thất bại!
@@ -9833,6 +9838,7 @@ sq:Instalimi vijon...
 sv:Installerar...
 ta:நிறுவல் செயலில் உள்ளது...
 tr:Kurulum devam ediyor...
+tw:安裝中...
 uk:Встановлення триває...
 uz:O'rnatilmoqda...
 vn:Đang cài đặt...
@@ -10263,6 +10269,7 @@ sk:Man&ga mód
 sq:Mënyra Man&ga
 ta:மேங்கா முறை
 tr:Man&ga modu
+tw:漫畫模式(&G)
 uk:Режим манги
 uz:Man&ga usuli
 :Match Case
@@ -11150,6 +11157,7 @@ sq:Hap në %s
 sv:Öppna med %s
 ta:திற %s
 tr:%s içinde aç
+tw:以 %s 開啟
 uk:відкрити в %s
 uz:%s'da ochish
 :Open in &Adobe Reader
@@ -11423,6 +11431,7 @@ sq:Hap dokumentin në SumatraPDF...
 sv:Öppnar dokumentet med SumatraPDF...
 ta:கோப்பு சுமத்ரா PDFல் திறக்கப்படுகிறது..
 tr:Belge SumatraPDF ile açılıyor...
+tw:以 SumatraPDF 開啟文件...
 uk:Триває відкриття документа у SumatraPDF...
 uz:Hujjat SumatraPDFda ochilmoqda...
 :P&roperties
@@ -13792,6 +13801,7 @@ sq:Seleksiononi dosjen ku do të instalohet SumatraPDF:
 sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
 tr:SumatraPDF'in yükleneceği alanı seçin:
+tw:選擇 SumatraPDF 應被安裝的資料夾：
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
 uz:SumatraPDF o'rnatish uchun jildni tanlang:
 :Send by &E-mail...
@@ -14365,6 +14375,7 @@ sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
 tr:Yüklü olması gereken bazı dosyalar eksik ve ya hasar görmüş
+tw:一些要安裝的檔案已損壞或丟失
 uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
 uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
@@ -14517,6 +14528,7 @@ sq:Nis SumatraPDF
 sv:Starta SumatraPDF
 ta:சுமத்ராPDF தொடரவும்
 tr:SumatraPDF'yi başlat
+tw:啟動 SumatraPDF
 uk:Запустити SumatraPDF
 uz:SumatraPDF ishga tushirish
 vn:Mở SumatraPDF
@@ -14863,6 +14875,7 @@ sq:SumatraPDF u çinstalua
 sv:SumatraPDF är nu borttaget.
 ta:சுமத்ராPDF நிறுவல் நீக்கப்பட்டது.
 tr:SumatraPDF kaldırıldı.
+tw:已解除安裝 SumatraPDF 。
 uk:SumatraPDF було успішно видалено.
 uz:SumatraPDF o'chirildi.
 vn:SumatraPDF đã được gỡ bỏ.
@@ -15228,6 +15241,7 @@ sq:Faleminderit që zgjodhët SumatraPDF!
 sv:Tack för att du väljer SumatraPDF!
 ta:சுமத்ரா PDF தேர்வு செய்ததுக்கு நன்றி!
 tr:SumatraPDF 'i seçtiğiniz için teşekkürler !
+tw:感謝您選擇 SumatraPDF!
 uk:Дякуємо, що вибрали SumatraPDF!
 uz:SumatraPDF tanlaganingiz uchun tashakkur!
 vn:Cảm ơn vì đã chọn SumatraPDF!
@@ -15267,6 +15281,7 @@ sq:Faleminderit! SumatraPDF u instalua.
 sv:Tack! SumatraPDF är nu installerat.
 ta:நன்றி! சுமத்ரா PDF நிறுவப்பட்டு உள்ளது
 tr:Teşekkürler! SumatraPDF bilgisayarınıza kuruldu
+tw:謝謝！ SumatraPDF 已安裝。
 uk:Дякуємо! SumatraPDF було успішно встановлено.
 uz:Tashakkur! SumatraPDF o'rnatildi.
 vn:Cảm ơn bạn! SumatraPDF đã được cài đặt.
@@ -15305,6 +15320,7 @@ sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni pë
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 tr:Yükleyici hasar görmüş.Lütfen tekrar indirin.\nGeçici rahatsızlık için özür dileriz!
+tw:安裝程式已損壞。請重新下載。\n很抱歉給您帶來不便！
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
 uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
@@ -15404,6 +15420,7 @@ sq:Çinstaloj SumatraPDF
 sv:Avinstallera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவல் நீக்கு
 tr:SumatraPDF'i kaldır
+tw:解除安裝 SumatraPDF
 uk:Видалити SumatraPDF
 uz:SumatraPDFni o'chirish
 vn:Gỡ bỏ SumatraPDF
@@ -15444,6 +15461,7 @@ sq:Dështoi çinstalimi
 sv:Avinstallationen misslyckades
 ta:நிறுவல் நீக்கம் தோல்வி
 tr:Program kaldırma başarısız
+tw:解除安裝失敗
 uk:Видалення не було успішним
 uz:O'chirish muvaffaqiyatsiz tugadi
 vn:Không gỡ bỏ được
@@ -15483,6 +15501,7 @@ sq:Çinstalimi vijon...
 sv:Avinstallerar...
 ta:நிறுவல் நீக்கம் செயல்படுகிறது...
 tr:Program kaldırılıyor...
+tw:解除安裝中...
 uk:Видалення триває...
 uz:O'chirilmoqda...
 vn:Đang gỡ bỏ...
@@ -15581,6 +15600,7 @@ sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
 sv:Använd SumatraPDF som standardläsare för PDF-filer
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
 tr:SumatraPDF varsayılan PDF okuyucum olsun
+tw:使用 SumatraPDF 作為預設的 PDF 閱讀器
 uk:Використовувати SumatraPDF як переглядач по замовчуванню для PDF
 uz:SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish
 vn:Đặt SumatraPDF là trình đọc PDF mặc định
