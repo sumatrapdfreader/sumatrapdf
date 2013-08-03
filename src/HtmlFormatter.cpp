@@ -968,7 +968,7 @@ StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken *t)
         prevRule = FindStyleRule(t->tag, attr->val, attr->valLen);
         if (prevRule) rule.Merge(*prevRule);
     }
-    attr = attr = t->GetAttrByName("style");
+    attr = t->GetAttrByName("style");
     if (attr) {
         StyleRule newRule = StyleRule::Parse(attr->val, attr->valLen);
         rule.Merge(newRule);

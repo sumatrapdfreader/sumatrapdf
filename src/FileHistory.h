@@ -64,7 +64,7 @@ class FileHistory {
     }
 
 public:
-    FileHistory() { }
+    FileHistory() : states(NULL) { }
     ~FileHistory() { }
 
     void Clear(bool keepFavorites) {

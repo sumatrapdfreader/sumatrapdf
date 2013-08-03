@@ -579,9 +579,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
 
         // do the moving
         int Move(int count, SumatraUIAutomationTextRange* target, int* target_page, int* target_glyph) {
-            target = target;
-            target_page = target_page;
-            target_glyph = target_glyph;
+            this->target = target;
+            this->target_page = target_page;
+            this->target_glyph = target_glyph;
 
             int retVal = 0;
             if (count > 0) {

@@ -22,7 +22,7 @@ struct TilePosition {
 
     TilePosition(USHORT res=INVALID_TILE_RES, USHORT row=-1, USHORT col=-1) :
         res(res), row(row), col(col) { }
-    bool operator==(const TilePosition other) const {
+    bool operator==(const TilePosition& other) const {
         return res == other.res && row == other.row && col == other.col;
     }
 };
