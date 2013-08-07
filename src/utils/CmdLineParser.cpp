@@ -13,7 +13,7 @@ static const WCHAR SkipBackslashs(const WCHAR *txt)
 }
 
 /* appends the next quoted argument and returns the position after it */
-static const WCHAR *ParseQuoted(const WCHAR *arg, WStrVec *out)
+static const WCHAR *ParseQuoted(const WCHAR *arg, WStrVec& out)
 {
     AssertCrash(arg && '"' == *arg);
     arg++;
@@ -27,7 +27,7 @@ static const WCHAR *ParseQuoted(const WCHAR *arg, WStrVec *out)
             next++;
         txt.Append(*next);
     }
-    out->Append(txt.StealData());
+    out.Append(txt.StealData());
 
     if ('"' == *next)
         next++;
@@ -35,7 +35,7 @@ static const WCHAR *ParseQuoted(const WCHAR *arg, WStrVec *out)
 }
 
 /* appends the next unquoted argument and returns the position after it */
-static const WCHAR *ParseUnquoted(const WCHAR *arg, WStrVec *out)
+static const WCHAR *ParseUnquoted(const WCHAR *arg, WStrVec& out)
 {
     AssertCrash(arg && *arg && ('"' != *arg) && !str::IsWs(*arg));
 
@@ -44,14 +44,15 @@ static const WCHAR *ParseUnquoted(const WCHAR *arg, WStrVec *out)
     // we don't treat quotation marks or backslashes in non-quoted
     // arguments in any special way
     for (next = arg; *next && !str::IsWs(*next); next++);
-    out->Append(str::DupN(arg, next - arg));
+    out.Append(str::DupN(arg, next - arg));
     return next;
 }
 
 /* 'cmdLine' contains one or several arguments. Each argument can be:
- - escaped, in which case it starts with '"', ends with '"' and
-   each '"' that is part of the name is escaped with '\\'
- - unescaped, in which case it start with != '"' and ends with ' ' or '\0'
+ - quoted, in which case it starts with '"', ends with '"' (or '\0') and
+   each '"' that is part of the argument must be escaped with '\\'
+ - unquoted, in which case it doesn't start with '"' and ends with
+   white space (usually ' ') or '\0'
 */
 void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
 {
@@ -59,16 +60,16 @@ void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
         while (str::IsWs(*cmdLine))
             cmdLine++;
         if ('"' == *cmdLine)
-            cmdLine = ParseQuoted(cmdLine, &out);
+            cmdLine = ParseQuoted(cmdLine, out);
         else if ('\0' != *cmdLine)
-            cmdLine = ParseUnquoted(cmdLine, &out);
+            cmdLine = ParseUnquoted(cmdLine, out);
         else
             cmdLine = NULL;
     }
     if (cmdLine) {
         while (str::IsWs(*cmdLine))
             cmdLine++;
-        if (*cmdLine)
+        if ('\0' != *cmdLine)
             out.Append(str::Dup(cmdLine));
     }
 }
