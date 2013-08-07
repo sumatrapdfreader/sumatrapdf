@@ -361,6 +361,10 @@ GlobalPrefs = [
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents",
 		expert=True),
+	Field("DefaultPasswords", String, None,
+		"a whitespace separated list of passwords to try for opening a password protected document " +
+		"(passwords containing spaces must be quoted same as command line arguments)",
+		expert=True),
 	EmptyLine(),
 
 	Field("RememberStatePerDocument", Bool, True,

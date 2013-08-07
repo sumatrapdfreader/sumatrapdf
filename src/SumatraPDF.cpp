@@ -8,6 +8,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "CmdLineParser.h"
 #include "CrashHandler.h"
 #include "DebugLog.h"
 #include "DirIter.h"
@@ -371,9 +372,12 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file)
 class HwndPasswordUI : public PasswordUI
 {
     HWND hwnd;
+    WStrVec defaults;
 
 public:
-    HwndPasswordUI(HWND hwnd) : hwnd(hwnd) { }
+    HwndPasswordUI(HWND hwnd) : hwnd(hwnd) {
+        ParseCmdLine(gGlobalPrefs->defaultPasswords, defaults);
+    }
 
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
@@ -395,6 +399,10 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
 
     *saveKey = false;
 
+    // try the list of default passwords before asking the user
+    if (defaults.Count() > 0)
+        return defaults.Pop();
+
     if (IsStressTesting())
         return NULL;
 
@@ -408,8 +416,7 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
     }
 
     fileName = path::GetBaseName(fileName);
-    // check if window is still validity as it might have been
-    // closed by now
+    // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd))
         hwnd = GetForegroundWindow();
     bool *rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : NULL;
@@ -1767,8 +1774,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 }
 
 #ifdef SUPPORTS_AUTO_UPDATE
-#include "CmdLineParser.h"
-
 static bool AutoUpdateMain()
 {
     WStrVec argList;

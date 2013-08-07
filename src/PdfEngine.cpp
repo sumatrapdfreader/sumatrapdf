@@ -1531,7 +1531,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
     fz_stream_fingerprint(_doc->file, digest);
 
     bool ok = false, saveKey = false;
-    for (int i = 0; !ok && i < 3; i++) {
+    while (!ok) {
         ScopedMem<WCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
