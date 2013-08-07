@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c9a573ce8708241837c7292094421764aba1be64
+8d2c03a9399bf072e272ae63cb73458c23697ee3
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -211,6 +211,7 @@ pt:Opções &avançadas...
 ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
 sk:&Rozšírené možnosti...
+sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
 ta:&மேம்பட்ட விருப்பங்கள்
 tr:Gelişmiş Ayarlar
@@ -3765,6 +3766,7 @@ ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
 sk:Naozaj chcete odinštalovat SumatraPDF?
 sn:Une chokwadi chekuti urikuda kubvisa SumatraPDF?
+sp-rs:Da li sigurno želite da uklonite SumatraPDF?
 sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
@@ -5674,6 +5676,7 @@ pt:Não foi possível criar a pasta temporária
 ro:Nu s-a putut crea un director temporar
 ru:Не удалось создать временную директорию
 sk:Nie je možné vytvoriť dočasný adresár
+sp-rs:Greška prilikom kreiranja privremenog direktorijuma
 sq:Nuk mund të krijojë direktorinë e përkohshme
 sv:Kunde inte skapa en tillfällig katalog
 ta:தற்காலிக கோப்புறையினை உருவாக்க இயலவில்லை
@@ -7271,6 +7274,7 @@ pt:Erro: o SumatraPDF não foi encontrado!
 ro:Eroare: SumatraPDF nu a fost gasit!
 ru:Ошибка: SumatraPDF не найдена!
 sk:Chyba: Program SumatraPDF nebol nájdený!
+sp-rs:Greška: SumatraPDF nije pronađen!
 sq:Gabim: Nuk u gjet SumatraPDF!
 sv:Fel: Hittade inte SumatraPDF!
 ta:சுமத்ராPDF காணவில்லை
@@ -9717,6 +9721,7 @@ pt:Instalar SumatraPDF
 ro:Instalare SumatraPDF
 ru:Начать установку
 sk:Inštaluj SumatraPDF
+sp-rs:Instaliraj SumatraPDF
 sq:Instaloj SumatraPDF
 sv:Installera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவு
@@ -9794,6 +9799,7 @@ pt:A instalação falhou!
 ro:Instalare esuata!
 ru:Установка не удалась!
 sk:Inštalácia sa nepodarila!
+sp-rs:Instalacija neuspešna!
 sq:Dështoi instalimi!
 sv:Installationen misslyckades!
 ta:நிறுவல் தோல்வி!
@@ -9834,6 +9840,7 @@ pt:A instalar...
 ro:Se instaleaza...
 ru:Происходит установка...
 sk:Prebieha inštalácia...
+sp-rs:Instalacija u toku...
 sq:Instalimi vijon...
 sv:Installerar...
 ta:நிறுவல் செயலில் உள்ளது...
@@ -12727,6 +12734,7 @@ ro:Tiparire in curs.
 ru:Идёт печать.
 sk:Prebieha tlač...
 sl:Tiskanje v teku.
+sp-rs:Štampanje u toku.
 sq:Printimi vijon.
 sv:Utskrift pågår.
 ta:அச்சு பணியில் உள்ளது
@@ -12774,6 +12782,7 @@ ro:In prezent se tipareste ceva. Anulati si renuntati?
 ru:Печать продолжается. Отменить и выйти?
 sk:Prebieha tlač. Prerušiť a ukončiť tlač?
 sl:Tiskanje je še vedno v teku. Prekinem in končam?
+sp-rs:Štampanje je i dalje u toku. Obustavi i izađi?
 sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
@@ -13797,6 +13806,7 @@ pt:Escolha a pasta de instalação do SumatraPDF:
 ro:Alegeti folderul in care sa se instaleze SumatraPDF:
 ru:Укажите папку установки SumatraPDF:
 sk:Vyberte adresár, kde sa má SumatraPDF nainštalovať:
+sp-rs:Odaberite folder gde želite da instalirate SumatraPDF:
 sq:Seleksiononi dosjen ku do të instalohet SumatraPDF:
 sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
@@ -14371,6 +14381,7 @@ pt:Alguns ficheiros do instalador estão danificados
 ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
 ru:Некоторые файлы установки повреждены или отсутствуют
 sk:Niektoré inštalačné súbory sú poškodené alebo chýbajú
+sp-rs:Neki instalacioni fajlovi nedostaju ili su oštećeni
 sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
@@ -15237,6 +15248,7 @@ pt:Obrigado por ter escolhido o SumatraPDF!
 ro:Va multumim pentru ca ati ales SumatraPDF!
 ru:Благодарим Вас за выбор SumatraPDF!
 sk:Dakujeme, že ste sa rozhodli pre SumatraPDF!
+sp-rs:Hvala Vam što ste izabrali SumatraPDF!
 sq:Faleminderit që zgjodhët SumatraPDF!
 sv:Tack för att du väljer SumatraPDF!
 ta:சுமத்ரா PDF தேர்வு செய்ததுக்கு நன்றி!
@@ -15277,6 +15289,7 @@ pt:O SumatraPDF foi instalado.
 ro:Multumim! SumatraPDF a fost dezinstalat.
 ru:Благодарим Вас! SumatraPDF успешно установлена.
 sk:Ďakujeme! SumatraPDF bol nainštalovaný.
+sp-rs:Hvala Vam! SumatraPDF je uspešno instaliran.
 sq:Faleminderit! SumatraPDF u instalua.
 sv:Tack! SumatraPDF är nu installerat.
 ta:நன்றி! சுமத்ரா PDF நிறுவப்பட்டு உள்ளது
@@ -15316,6 +15329,7 @@ pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o in
 ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!
 ru:Инсталлятор испорчен. Пожалуйста, загрузите его повторно.\nИзвините за неудобства!
 sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOspravedlňujeme sa za ťažkosti!
+sp-rs:Instalacija je oštećena. Molimo skinite je ponovo. \n Žao nam je zbog neugodnosti!
 sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
@@ -15416,6 +15430,7 @@ pt:Desinstalar SumatraPDF
 ro:Dezinstalare SumatraPDF
 ru:Удалить SumatraPDF
 sk:Odinštalovanie SumatraPDF
+sp-rs:Ukloni SumatraPDF
 sq:Çinstaloj SumatraPDF
 sv:Avinstallera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவல் நீக்கு
@@ -15596,6 +15611,7 @@ pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
 ro:Folosiți SumatraPDF ca cititor implicit pentru fișiere P&DF
 ru:Использовать SumatraPDF для просмотра PDF
 sk:Použi SumatraPDF ako &predvolený PDF prehliadač
+sp-rs:Koristi SumatraPDF kao glavni PDF čitač
 sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
 sv:Använd SumatraPDF som standardläsare för PDF-filer
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து

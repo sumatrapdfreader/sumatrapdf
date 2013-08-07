@@ -10552,7 +10552,7 @@ const char * gTranslations_sr_rs =
 const char * gTranslations_sp_rs = 
   "O programu\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
-  "\0"\
+  "Napredna pode\305\241avanja...\0"\
   "Sve izabrane stranice\0"\
   "Nazad\tAlt+<-\0"\
   "Izgled knjige\tCtrl+8\0"\
@@ -10739,8 +10739,8 @@ const char * gTranslations_sp_rs =
   "\305\240tampati kao sliku (zahteva vi\305\241e memorije)\0"\
   "Opseg \305\241tampanja\0"\
   "\305\240tampa\304\215 sa navedenim imenom ne postoji\0"\
-  "\0"\
-  "\0"\
+  "\305\240tampanje u toku.\0"\
+  "\305\240tampanje je i dalje u toku. Obustavi i iza\304\221i?\0"\
   "\305\240tampanje je jo\305\241 uvek u toku. \305\275elite li da prekinete \305\241tampanje i po\304\215nete ponovo?\0"\
   "\305\240tampanje %d. stramoce od ukupno %d...\0"\
   "Problem prilikom \305\241tampanja.\0"\
