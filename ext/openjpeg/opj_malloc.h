@@ -60,7 +60,8 @@ Allocate a memory block with elements initialized to 0
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_calloc(size_t _NumOfElements, size_t _SizeOfElements);
 #else
-#define opj_calloc(num, size) calloc(num, size)
+/* SumatraPDF: don't assert when num * size overflows */
+#define opj_calloc(num, size) ((size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
 #endif
 
 /**
@@ -139,7 +140,8 @@ Reallocate memory blocks.
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
 #else
-#define opj_realloc(m, s) realloc(m, s)
+/* SumatraPDF: TODO: MSVCRT seems to assert if s is too large(?) e.g. for 2236.pdf.asan.40.1376 */
+#define opj_realloc(m, s) ((ptrdiff_t)(s) < 0 ? NULL : realloc(m, s))
 #endif
 
 /**

@@ -1665,6 +1665,8 @@ OPJ_BOOL opj_tcd_dc_level_shift_decode ( opj_tcd_t *p_tcd )
                 l_height = (l_res->y1 - l_res->y0);
                 l_stride = (l_tile_comp->x1 - l_tile_comp->x0) - l_width;
 
+                assert(l_height == 0 || l_width + l_stride <= l_tile_comp->data_size / l_height); /*MUPDF*/
+
                 if (l_img_comp->sgnd) {
                         l_min = -(1 << (l_img_comp->prec - 1));
                         l_max = (1 << (l_img_comp->prec - 1)) - 1;
