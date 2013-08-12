@@ -680,8 +680,8 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                 l_tilec->x1 = opj_int_ceildiv(l_tile->x1, l_image_comp->dx);                                                                                                                                          \
                 l_tilec->y1 = opj_int_ceildiv(l_tile->y1, l_image_comp->dy);                                                                                                                                          \
                 /* testcase 1336.pdf.asan.47.376 */ \
-                if (compno > 0 && (l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
-                                  (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0)) { \
+                if (compno > 0 && ((l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
+                                   (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0))) { \
                     fprintf(stderr, "tiles don't all have the same dimension: %d x %d and %d x %d\n", l_tilec->x1 - l_tilec->x0, l_tilec->y1 - l_tilec->y0, l_tile->comps->x1 - l_tile->comps->x0, l_tile->comps->y1 - l_tile->comps->y0); \
                     return OPJ_FALSE; \
                 } \
@@ -1664,8 +1664,6 @@ OPJ_BOOL opj_tcd_dc_level_shift_decode ( opj_tcd_t *p_tcd )
                 l_width = (l_res->x1 - l_res->x0);
                 l_height = (l_res->y1 - l_res->y0);
                 l_stride = (l_tile_comp->x1 - l_tile_comp->x0) - l_width;
-
-                assert(l_height == 0 || l_width + l_stride <= l_tile_comp->data_size / l_height); /*MUPDF*/
 
                 if (l_img_comp->sgnd) {
                         l_min = -(1 << (l_img_comp->prec - 1));

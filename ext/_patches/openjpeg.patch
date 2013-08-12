@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
 --- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
-+++ openjpeg\cio.c	Fri Jul 26 23:20:29 2013
++++ openjpeg\cio.c	Mon Aug 12 21:58:14 2013
 @@ -254,16 +254,22 @@
  }
  
@@ -26,7 +26,7 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Fri Jul 26 23:20:29 2013
++++ openjpeg\j2k.c	Mon Aug 12 21:58:14 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -340,7 +340,7 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
      _asm{
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Fri Jul 26 23:20:29 2013
++++ openjpeg\opj_malloc.h	Mon Aug 12 21:58:14 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -402,7 +402,7 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Fri Jul 26 23:20:29 2013
++++ openjpeg\tcd.c	Mon Aug 12 22:03:54 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
@@ -426,8 +426,8 @@ diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
                  l_tilec->x1 = opj_int_ceildiv(l_tile->x1, l_image_comp->dx);                                                                                                                                          \
                  l_tilec->y1 = opj_int_ceildiv(l_tile->y1, l_image_comp->dy);                                                                                                                                          \
 +                /* testcase 1336.pdf.asan.47.376 */ \
-+                if (compno > 0 && (l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
-+                                  (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0)) { \
++                if (compno > 0 && ((l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
++                                   (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0))) { \
 +                    fprintf(stderr, "tiles don't all have the same dimension: %d x %d and %d x %d\n", l_tilec->x1 - l_tilec->x0, l_tilec->y1 - l_tilec->y0, l_tile->comps->x1 - l_tile->comps->x0, l_tile->comps->y1 - l_tile->comps->y0); \
 +                    return OPJ_FALSE; \
 +                } \

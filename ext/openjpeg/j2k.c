@@ -5827,7 +5827,6 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
         if (parameters->tile_size_on) {
                 cp->tw = opj_int_ceildiv(image->x1 - cp->tx0, cp->tdx);
                 cp->th = opj_int_ceildiv(image->y1 - cp->ty0, cp->tdy);
-                assert(cp->tw * cp->th > 0); /*MUPDF*/
         } else {
                 cp->tdx = image->x1 - cp->tx0;
                 cp->tdy = image->y1 - cp->ty0;
@@ -5932,9 +5931,7 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
                 if (parameters->numpocs) {
                         /* initialisation of POC */
                         tcp->POC = 1;
-                        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
-                        assert(parameters->numpocs <= 32); /*MUPDF*/
-                        for (i = 0; i < opj_uint_min(parameters->numpocs, 32); i++) {
+                        for (i = 0; i < parameters->numpocs; i++) {
                                 if (tileno + 1 == parameters->POC[i].tile )  {
                                         opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
 
@@ -7071,16 +7068,8 @@ OPJ_BOOL opj_j2k_read_tile_header(      opj_j2k_t * p_j2k,
                         /* Read 2 bytes from the buffer as the marker size */
                         opj_read_bytes(p_j2k->m_specific_param.m_decoder.m_header_data,&l_marker_size,2);
 
-                        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
-                        if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 0) {
-                                p_j2k->m_specific_param.m_decoder.m_state = J2K_STATE_NEOC;
-                                break;
-                        }
-
                         /* Why this condition? FIXME */
                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
-                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
-                                // doesn't hold, harmless(?): assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                         }
                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */
