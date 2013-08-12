@@ -16,7 +16,7 @@ diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
    return get_bytestream_anno(file->get_merged_anno());
 diff -rPu5 libdjvu.orig\djvu_all.cpp libdjvu\djvu_all.cpp
 --- libdjvu.orig\djvu_all.cpp	Thu Jan 01 01:00:00 1970
-+++ libdjvu\djvu_all.cpp	Tue Mar 19 22:09:12 2013
++++ libdjvu\djvu_all.cpp	Tue May 14 21:21:21 2013
 @@ -0,0 +1,44 @@
 +#include "Arrays.cpp"
 +#include "atomic.cpp"
@@ -79,9 +79,24 @@ diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
  # else
  #  define DJVUAPI __declspec(dllimport)
  # endif
+diff -rPu5 libdjvu.orig\DjVuMessage.cpp libdjvu\DjVuMessage.cpp
+--- libdjvu.orig\DjVuMessage.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\DjVuMessage.cpp	Mon Aug 12 21:07:40 2013
+@@ -498,10 +498,11 @@
+ static GUTF8String
+ parse(GMap<GUTF8String,GP<lt_XMLTags> > &retval)
+ {
+   GUTF8String errors;
+   GPList<lt_XMLTags> body;
++  if (0) /* SumatraPDF: don't bother looking for messages.xml and languages.xml using broken code */
+   {
+     GList<GURL> paths=DjVuMessage::GetProfilePaths();
+     GMap<GUTF8String, void *> map;
+     GUTF8String m(MessageFile);
+     errors=getbodies(paths,m,body,map);
 diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
 --- libdjvu.orig\GException.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\GException.cpp	Fri Apr 12 12:21:01 2013
++++ libdjvu\GException.cpp	Tue May 14 21:21:21 2013
 @@ -251,10 +251,12 @@
  
  
@@ -109,7 +124,7 @@ diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
  # ifndef NOT_USING_DJVU_NAMESPACE
 diff -rPu5 libdjvu.orig\GException.h libdjvu\GException.h
 --- libdjvu.orig\GException.h	Tue May 08 04:56:53 2012
-+++ libdjvu\GException.h	Fri Apr 12 12:42:24 2013
++++ libdjvu\GException.h	Tue May 14 21:21:21 2013
 @@ -310,12 +310,13 @@
  #ifdef __GNUG__
  #define G_THROW_TYPE(msg,xtype) GExceptionHandler::emthrow \
@@ -160,7 +175,7 @@ diff -rPu5 libdjvu.orig\GURL.cpp libdjvu\GURL.cpp
  }
 diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
 --- libdjvu.orig\miniexp.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\miniexp.cpp	Fri Apr 12 12:26:15 2013
++++ libdjvu\miniexp.cpp	Tue May 14 21:21:21 2013
 @@ -899,11 +899,12 @@
  }
  

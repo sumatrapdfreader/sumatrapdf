@@ -500,6 +500,7 @@ parse(GMap<GUTF8String,GP<lt_XMLTags> > &retval)
 {
   GUTF8String errors;
   GPList<lt_XMLTags> body;
+  if (0) /* SumatraPDF: don't bother looking for messages.xml and languages.xml using broken code */
   {
     GList<GURL> paths=DjVuMessage::GetProfilePaths();
     GMap<GUTF8String, void *> map;
