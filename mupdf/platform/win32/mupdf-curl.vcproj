@@ -280,7 +280,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib"
+				AdditionalDependencies="libeay32.lib ws2_32.lib"
 				AdditionalLibraryDirectories="..\..\thirdparty\openssl\lib"
 				GenerateDebugInformation="true"
 				TargetMachine="1"

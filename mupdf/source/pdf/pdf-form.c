@@ -481,7 +481,7 @@ void pdf_update_appearance(pdf_document *doc, pdf_annot *annot)
 			pdf_update_text_markup_appearance(doc, annot, type);
 			break;
 		case FZ_ANNOT_INK:
-			pdf_set_ink_appearance(doc, annot);
+			pdf_update_ink_appearance(doc, annot);
 			break;
 		default:
 			break;
