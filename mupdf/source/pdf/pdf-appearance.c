@@ -1656,31 +1656,119 @@ void pdf_update_ink_appearance(pdf_document *doc, pdf_annot *annot)
 	}
 }
 
+static void add_text(fz_context *ctx, font_info *font_rec, fz_text *text, char *str, int str_len, float x, float y)
+{
+	fz_font *font = font_rec->font->font;
+	int mask = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
+
+	while (str_len--)
+	{
+		FT_Fixed adv;
+
+		/* FIXME: convert str from utf8 to WinAnsi */
+		int gid = FT_Get_Char_Index(font->ft_face, *str);
+		fz_add_text(ctx, text, gid, *str++, x, y);
+
+		FT_Get_Advance(font->ft_face, gid, mask, &adv);
+		x += ((float)adv) * font_rec->da_rec.font_size / ((FT_Face)font->ft_face)->units_per_EM;
+	}
+}
+
 static fz_text *layout_text(fz_context *ctx, font_info *font_rec, char *str, float x, float y)
 {
 	fz_matrix tm;
 	fz_font *font = font_rec->font->font;
 	fz_text *text;
-	int mask = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
 
 	fz_scale(&tm, font_rec->da_rec.font_size, font_rec->da_rec.font_size);
 	text = fz_new_text(ctx, font, &tm, 0);
 
 	fz_try(ctx)
 	{
+		add_text(ctx, font_rec, text, str, strlen(str), x, y);
+	}
+	fz_catch(ctx)
+	{
+		fz_free_text(ctx, text);
+		fz_rethrow(ctx);
+	}
 
-		while (*str)
+	return text;
+}
+
+static fz_text *fit_text(fz_context *ctx, font_info *font_rec, char *str, fz_rect *bounds)
+{
+	float width = bounds->x1 - bounds->x0;
+	float height = bounds->y1 - bounds->y0;
+	fz_matrix tm;
+	fz_text *text = NULL;
+	text_splitter splitter;
+	float ascender;
+
+	/* Initially aim for one-line of text */
+	font_rec->da_rec.font_size = height / font_rec->lineheight;
+
+	text_splitter_init(&splitter, font_rec, str, width, height, 1);
+
+	fz_var(text);
+	fz_try(ctx)
+	{
+		int i;
+		while (!splitter.done)
 		{
-			FT_Fixed adv;
+			/* Try a layout pass */
+			int line = 0;
+			float font_size;
+			float x = 0.0;
+			float y = 0.0;
 
-			/* FIXME: convert str from utf8 to WinAnsi */
-			int gid = FT_Get_Char_Index(font->ft_face, *str);
-			fz_add_text(ctx, text, gid, *str, x, y);
 
-			FT_Get_Advance(font->ft_face, gid, mask, &adv);
-			x += ((float)adv) * font_rec->da_rec.font_size / ((FT_Face)font->ft_face)->units_per_EM;
+			fz_free_text(ctx, text);
+			text = NULL;
+			font_size = font_rec->da_rec.font_size;
+			fz_scale(&tm, font_size, font_size);
+			text = fz_new_text(ctx, font_rec->font->font, &tm, 0);
 
-			str++;
+			text_splitter_start_pass(&splitter);
+
+			/* Layout unscaled text to a scaled-up width, so that
+			* the scaled-down text will fit the unscaled width */
+
+			while (!splitter.done && line < splitter.max_lines)
+			{
+				/* Layout a line */
+				text_splitter_start_line(&splitter);
+
+				while (!splitter.done && text_splitter_layout(ctx, &splitter))
+				{
+					if (splitter.text[splitter.text_start] != ' ')
+					{
+						float dx, dy;
+						char *word = str+splitter.text_start;
+						int wordlen = splitter.text_end-splitter.text_start;
+
+						text_splitter_move(&splitter, -line, &dx, &dy);
+						x += dx;
+						y += dy;
+						add_text(ctx, font_rec, text, word, wordlen, x, y);
+					}
+				}
+
+				line ++;
+			}
+
+			if (!splitter.done)
+				text_splitter_retry(&splitter);
+		}
+
+		/* Post process text with the scale determined by the splitter
+		 * and with the required offst */
+		fz_pre_scale(&text->trm, splitter.scale, splitter.scale);
+		ascender = font_rec->font->ascent * font_rec->da_rec.font_size * splitter.scale / 1000.0f;
+		for (i = 0; i < text->len; i++)
+		{
+			text->items[i].x = text->items[i].x * splitter.scale + bounds->x0;
+			text->items[i].y = text->items[i].y * splitter.scale + bounds->y1 - ascender;
 		}
 	}
 	fz_catch(ctx)
@@ -1746,6 +1834,201 @@ void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
 		font_info_fin(ctx, &font_rec);
 		fz_free_text(ctx, text);
 		fz_drop_colorspace(ctx, cs);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+static void draw_logo(fz_context *ctx, fz_path *path)
+{
+	/* Add signature logo here. */
+};
+
+static void rect_center(const fz_rect *rect, fz_point *c)
+{
+	c->x = (rect->x0 + rect->x1) / 2.0f;
+	c->y = (rect->y0 + rect->y1) / 2.0f;
+}
+
+static void center_rect_within_rect(const fz_rect *tofit, const fz_rect *within, fz_matrix *mat)
+{
+	float xscale = (within->x1 - within->x0) / (tofit->x1 - tofit->x0);
+	float yscale = (within->y1 - within->y0) / (tofit->y1 - tofit->y0);
+	float scale = fz_min(xscale, yscale);
+	fz_point tofit_center;
+	fz_point within_center;
+
+	rect_center(within, &within_center);
+	rect_center(tofit, &tofit_center);
+
+	/* Translate "tofit" to be centered on the origin
+	 * Scale "tofit" to a size that fits within "within"
+	 * Translate "tofit" to "within's" center
+	 * Do all the above in reverse order so that we can use the fz_pre_xx functions */
+	fz_translate(mat, within_center.x, within_center.y);
+	fz_pre_scale(mat, scale, scale);
+	fz_pre_translate(mat, -tofit_center.x, -tofit_center.y);
+}
+
+static void insert_signature_appearance_layers(pdf_document *doc, pdf_annot *annot)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *ap = pdf_dict_getp(annot->obj, "AP/N");
+	pdf_obj *main_ap = NULL;
+	pdf_obj *frm = NULL;
+	pdf_obj *n0 = NULL;
+	fz_rect bbox;
+	fz_buffer *fzbuf = NULL;
+
+	pdf_to_rect(ctx, pdf_dict_gets(ap, "BBox"), &bbox);
+
+	fz_var(main_ap);
+	fz_var(frm);
+	fz_var(n0);
+	fz_var(fzbuf);
+	fz_try(ctx)
+	{
+		main_ap = pdf_new_xobject(doc, &bbox, &fz_identity);
+		frm = pdf_new_xobject(doc, &bbox, &fz_identity);
+		n0 = pdf_new_xobject(doc, &bbox, &fz_identity);
+
+		pdf_dict_putp(main_ap, "Resources/XObject/FRM", frm);
+		fzbuf = fz_new_buffer(ctx, 8);
+		fz_buffer_printf(ctx, fzbuf, "/FRM Do");
+		pdf_update_stream(doc, pdf_to_num(main_ap), fzbuf);
+		pdf_dict_puts_drop(main_ap, "Length", pdf_new_int(doc, fzbuf->len));
+		fz_drop_buffer(ctx, fzbuf);
+		fzbuf = NULL;
+
+		pdf_dict_putp(frm, "Resources/XObject/n0", n0);
+		pdf_dict_putp(frm, "Resources/XObject/n2", ap);
+		fzbuf = fz_new_buffer(ctx, 8);
+		fz_buffer_printf(ctx, fzbuf, "q 1 0 0 1 0 0 cm /n0 Do Q q 1 0 0 1 0 0 cm /n2 Do Q");
+		pdf_update_stream(doc, pdf_to_num(frm), fzbuf);
+		pdf_dict_puts_drop(frm, "Length", pdf_new_int(doc, fzbuf->len));
+		fz_drop_buffer(ctx, fzbuf);
+		fzbuf = NULL;
+
+		fzbuf = fz_new_buffer(ctx, 8);
+		fz_buffer_printf(ctx, fzbuf, "%% DSBlank");
+		pdf_update_stream(doc, pdf_to_num(n0), fzbuf);
+		pdf_dict_puts_drop(n0, "Length", pdf_new_int(doc, fzbuf->len));
+		fz_drop_buffer(ctx, fzbuf);
+		fzbuf = NULL;
+
+		pdf_dict_putp(annot->obj, "AP/N", main_ap);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(main_ap);
+		pdf_drop_obj(frm);
+		pdf_drop_obj(n0);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, fzbuf);
+		fz_rethrow(ctx);
+	}
+}
+
+static float logo_color[3] = {1.0f, 0.85f, 0.85f};
+
+void pdf_set_signature_appearance(pdf_document *doc, pdf_annot *annot, char *name, char *dn, char *date)
+{
+	fz_context *ctx = doc->ctx;
+	const fz_matrix *page_ctm = &annot->page->ctm;
+	pdf_obj *obj = annot->obj;
+	pdf_obj *dr = pdf_dict_getp(pdf_trailer(doc), "Root/AcroForm/DR");
+	fz_display_list *dlist = NULL;
+	fz_device *dev = NULL;
+	font_info font_rec;
+	fz_text *text = NULL;
+	fz_colorspace *cs = NULL;
+	fz_path *path = NULL;
+	fz_buffer *fzbuf = NULL;
+
+	if (!dr)
+		pdf_dict_putp_drop(pdf_trailer(doc), "Root/AcroForm/DR", pdf_new_dict(doc, 1));
+
+	memset(&font_rec, 0, sizeof(font_rec));
+
+	fz_var(path);
+	fz_var(dlist);
+	fz_var(dev);
+	fz_var(text);
+	fz_var(cs);
+	fz_var(fzbuf);
+	fz_try(ctx)
+	{
+		char *da = pdf_to_str_buf(pdf_dict_gets(obj, "DA"));
+		fz_rect rect = annot->rect;
+		fz_rect logo_bounds;
+		fz_matrix logo_tm;
+		unsigned char *bufstr;
+
+		dlist = fz_new_display_list(ctx);
+		dev = fz_new_list_device(ctx, dlist);
+
+		path = fz_new_path(ctx);
+		draw_logo(ctx, path);
+		fz_bound_path(ctx, path, NULL, &fz_identity, &logo_bounds);
+		center_rect_within_rect(&logo_bounds, &rect, &logo_tm);
+		fz_concat(&logo_tm, &logo_tm, page_ctm);
+		cs = fz_device_rgb(ctx);
+		fz_fill_path(dev, path, 0, &logo_tm, cs, logo_color, 1.0f);
+		fz_drop_colorspace(ctx, cs);
+		cs = NULL;
+
+		get_font_info(doc, dr, da, &font_rec);
+
+		switch (font_rec.da_rec.col_size)
+		{
+		case 1: cs = fz_device_gray(ctx); break;
+		case 3: cs = fz_device_rgb(ctx); break;
+		case 4: cs = fz_device_cmyk(ctx); break;
+		}
+
+		/* Display the name in the left-hand half of the form field */
+		rect.x1 = (rect.x0 + rect.x1)/2.0f;
+		text = fit_text(ctx, &font_rec, name, &rect);
+		fz_fill_text(dev, text, page_ctm, cs, font_rec.da_rec.col, 1.0f);
+		fz_free_text(ctx, text);
+		text = NULL;
+
+		/* Display the distinguished name in the right-hand half */
+		fzbuf = fz_new_buffer(ctx, 256);
+		fz_buffer_printf(ctx, fzbuf, "Digitally signed by %s", name);
+		fz_buffer_printf(ctx, fzbuf, "\nDN: %s", dn);
+		if (date)
+			fz_buffer_printf(ctx, fzbuf, "\nDate: %s", date);
+		(void)fz_buffer_storage(ctx, fzbuf, &bufstr);
+		rect = annot->rect;
+		rect.x0 = (rect.x0 + rect.x1)/2.0f;
+		text = fit_text(ctx, &font_rec, (char *)bufstr, &rect);
+		fz_fill_text(dev, text, page_ctm, cs, font_rec.da_rec.col, 1.0f);
+
+		rect = annot->rect;
+		fz_transform_rect(&rect, page_ctm);
+		pdf_set_annot_appearance(doc, annot, &rect, dlist);
+
+		/* Drop the cached xobject from the annotation structure to
+		 * force a redraw on next pdf_update_page call */
+		pdf_drop_xobject(ctx, annot->ap);
+		annot->ap = NULL;
+
+		insert_signature_appearance_layers(doc, annot);
+	}
+	fz_always(ctx)
+	{
+		fz_free_device(dev);
+		fz_drop_display_list(ctx, dlist);
+		font_info_fin(ctx, &font_rec);
+		fz_free_path(ctx, path);
+		fz_free_text(ctx, text);
+		fz_drop_colorspace(ctx, cs);
+		fz_drop_buffer(ctx, fzbuf);
 	}
 	fz_catch(ctx)
 	{

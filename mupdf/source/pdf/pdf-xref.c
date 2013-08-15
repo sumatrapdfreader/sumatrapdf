@@ -1177,6 +1177,7 @@ void
 pdf_close_document(pdf_document *doc)
 {
 	fz_context *ctx;
+	pdf_unsaved_sig *usig;
 	int i;
 
 	if (!doc)
@@ -1212,6 +1213,14 @@ pdf_close_document(pdf_document *doc)
 	fz_free(ctx, doc->hint_shared_ref);
 	fz_free(ctx, doc->hint_shared);
 	fz_free(ctx, doc->hint_obj_offsets);
+
+	while ((usig = doc->unsaved_sigs) != NULL)
+	{
+		doc->unsaved_sigs = usig->next;
+		pdf_drop_obj(usig->field);
+		pdf_drop_signer(usig->signer);
+		fz_free(ctx, usig);
+	}
 
 	for (i=0; i < doc->num_type3_fonts; i++)
 	{
@@ -1792,6 +1801,8 @@ pdf_update_object(pdf_document *doc, int num, pdf_obj *newobj)
 	x->type = 'n';
 	x->ofs = 0;
 	x->obj = pdf_keep_obj(newobj);
+
+	pdf_set_obj_parent(newobj, num);
 }
 
 void

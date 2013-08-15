@@ -2271,6 +2271,117 @@ static void dump_object_details(pdf_document *doc, pdf_write_options *opts)
 }
 #endif
 
+static void presize_unsaved_signature_byteranges(pdf_document *doc)
+{
+	if (doc->unsaved_sigs)
+	{
+		/* The ByteRange objects of signatures are initially written out with
+		 * dummy values, and then overwritten later. We need to make sure their
+		 * initial form at least takes enough sufficient file space */
+		pdf_unsaved_sig *usig;
+		int n = 0;
+
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+			n++;
+
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+		{
+			/* There will be segments of bytes at the beginning, at
+			 * the end and between each consecutive pair of signatures,
+			 * hence n + 1 */
+			int i;
+			pdf_obj *byte_range = pdf_dict_getp(usig->field, "V/ByteRange");
+
+			for (i = 0; i < n+1; i++)
+			{
+				pdf_array_push_drop(byte_range, pdf_new_int(doc, INT_MAX));
+				pdf_array_push_drop(byte_range, pdf_new_int(doc, INT_MAX));
+			}
+		}
+	}
+}
+
+static void complete_signatures(pdf_document *doc, pdf_write_options *opts, char *filename)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_unsaved_sig *usig;
+	FILE *f;
+	char buf[5120];
+	int i;
+	int flen;
+	int last_end;
+
+	if (doc->unsaved_sigs)
+	{
+		pdf_obj *byte_range;
+
+		f = fopen(filename, "rb+");
+		if (!f)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to open %s to complete signatures", filename);
+
+		fseek(f, 0, SEEK_END);
+		flen = ftell(f);
+
+		/* Locate the byte ranges and contents in the saved file */
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+		{
+			char *bstr, *cstr, *fstr;
+			int pnum = pdf_obj_parent_num(pdf_dict_getp(usig->field, "V/ByteRange"));
+			fseek(f, opts->ofs_list[pnum], SEEK_SET);
+			(void)fread(buf, 1, sizeof(buf), f);
+			buf[sizeof(buf)-1] = 0;
+
+			bstr = strstr(buf, "/ByteRange");
+			cstr = strstr(buf, "/Contents");
+			fstr = strstr(buf, "/Filter");
+
+			if (bstr && cstr && fstr && bstr < cstr && cstr < fstr)
+			{
+				usig->byte_range_start = bstr - buf + 10 + opts->ofs_list[pnum];
+				usig->byte_range_end = cstr - buf + opts->ofs_list[pnum];
+				usig->contents_start = cstr - buf + 9 + opts->ofs_list[pnum];
+				usig->contents_end = fstr - buf + opts->ofs_list[pnum];
+			}
+		}
+
+		/* Recreate ByteRange with correct values. Initially store the
+		 * recreated object in the first of the unsaved signatures */
+		byte_range = pdf_new_array(doc, 4);
+		pdf_dict_putp_drop(doc->unsaved_sigs->field, "V/ByteRange", byte_range);
+
+		last_end = 0;
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+		{
+			pdf_array_push_drop(byte_range, pdf_new_int(doc, last_end));
+			pdf_array_push_drop(byte_range, pdf_new_int(doc, usig->contents_start - last_end));
+			last_end = usig->contents_end;
+		}
+		pdf_array_push_drop(byte_range, pdf_new_int(doc, last_end));
+		pdf_array_push_drop(byte_range, pdf_new_int(doc, flen - last_end));
+
+		/* Copy the new ByteRange to the other unsaved signatures */
+		for (usig = doc->unsaved_sigs->next; usig; usig = usig->next)
+			pdf_dict_putp_drop(usig->field, "V/ByteRange", pdf_copy_array(byte_range));
+
+		/* Write the byte range into buf, padding with spaces*/
+		i = pdf_sprint_obj(buf, sizeof(buf), byte_range, 1);
+		memset(buf+i, ' ', sizeof(buf)-i);
+
+		/* Write the byte range to the file */
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+		{
+			fseek(f, usig->byte_range_start, SEEK_SET);
+			fwrite(buf, 1, usig->byte_range_end - usig->byte_range_start, f);
+		}
+
+		fclose(f);
+
+		/* Write the digests into the file */
+		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+			pdf_write_digest(doc, filename, byte_range, usig->contents_start, usig->contents_end - usig->contents_start, usig->signer);
+	}
+}
+
 void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_opts)
 {
 	int lastfree;
@@ -2286,6 +2397,7 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 	ctx = doc->ctx;
 
 	pdf_finish_edit(doc);
+	presize_unsaved_signature_byteranges(doc);
 
 	xref_len = pdf_xref_len(doc);
 
@@ -2416,6 +2528,10 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 			writexref(doc, &opts, 0, xref_len, 1, 0, opts.first_xref_offset);
 		}
 
+		fclose(opts.out);
+		opts.out = NULL;
+		complete_signatures(doc, &opts, filename);
+
 		doc->dirty = 0;
 	}
 	fz_always(ctx)
@@ -2440,7 +2556,8 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		pdf_drop_obj(opts.hints_s);
 		pdf_drop_obj(opts.hints_length);
 		page_objects_list_destroy(ctx, opts.page_object_lists);
-		fclose(opts.out);
+		if (opts.out)
+			fclose(opts.out);
 		doc->freeze_updates = 0;
 	}
 	fz_catch(ctx)

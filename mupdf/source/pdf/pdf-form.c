@@ -1551,3 +1551,54 @@ int pdf_signature_widget_contents(pdf_document *doc, pdf_widget *widget, char **
 		*contents = pdf_to_str_buf(c);
 	return pdf_to_str_len(c);
 }
+
+void pdf_signature_set_value(pdf_document *doc, pdf_obj *field, pdf_signer *signer)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *v;
+	pdf_obj *indv;
+	int vnum;
+	pdf_obj *byte_range;
+	pdf_obj *contents;
+	char buf[2048];
+	pdf_unsaved_sig *unsaved_sig;
+
+	memset(buf, 0, sizeof(buf));
+
+	vnum = pdf_create_object(doc);
+	indv = pdf_new_indirect(doc, vnum, 0);
+	pdf_dict_puts_drop(field, "V", indv);
+
+	fz_var(v);
+	fz_try(ctx)
+	{
+		v = pdf_new_dict(doc, 4);
+		pdf_update_object(doc, vnum, v);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(v);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	byte_range = pdf_new_array(doc, 4);
+	pdf_dict_puts_drop(v, "ByteRange", byte_range);
+
+	contents = pdf_new_string(doc, buf, sizeof(buf));
+	pdf_dict_puts_drop(v, "Contents", contents);
+
+	pdf_dict_puts_drop(v, "Filter", pdf_new_name(doc, "Adobe.PPKLite"));
+	pdf_dict_puts_drop(v, "SubFilter", pdf_new_name(doc, "adbe.pkcs7.detached"));
+
+	/* Record details within the document structure so that contents
+	 * and byte_range can be updated with their correct values at
+	 * saving time */
+	unsaved_sig = fz_malloc_struct(doc->ctx, pdf_unsaved_sig);
+	unsaved_sig->field = pdf_keep_obj(field);
+	unsaved_sig->signer = pdf_keep_signer(signer);
+	unsaved_sig->next = doc->unsaved_sigs;
+	doc->unsaved_sigs = unsaved_sig;
+}

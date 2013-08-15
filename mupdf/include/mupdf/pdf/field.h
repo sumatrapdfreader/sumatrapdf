@@ -28,6 +28,7 @@ void pdf_field_set_border_style(pdf_document *doc, pdf_obj *field, char *text);
 void pdf_field_set_button_caption(pdf_document *doc, pdf_obj *field, char *text);
 void pdf_field_set_fill_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
 void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
+void pdf_signature_set_value(pdf_document *doc, pdf_obj *field, pdf_signer *signer);
 int pdf_field_display(pdf_document *doc, pdf_obj *field);
 char *pdf_field_name(pdf_document *doc, pdf_obj *field);
 void pdf_field_set_display(pdf_document *doc, pdf_obj *field, int d);

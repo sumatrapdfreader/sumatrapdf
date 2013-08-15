@@ -1373,6 +1373,11 @@ pdf_set_obj_parent(pdf_obj *obj, int num)
 	}
 }
 
+int pdf_obj_parent_num(pdf_obj *obj)
+{
+	return obj->parent_num;
+}
+
 pdf_obj *pdf_new_obj_from_str(pdf_document *doc, const char *src)
 {
 	pdf_obj *result;
@@ -1679,7 +1684,7 @@ static void fmt_obj(struct fmt *fmt, pdf_obj *obj)
 		fmt_puts(fmt, "<unknown object>");
 }
 
-static int
+int
 pdf_sprint_obj(char *s, int n, pdf_obj *obj, int tight)
 {
 	struct fmt fmt;

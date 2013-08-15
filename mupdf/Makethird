@@ -442,8 +442,7 @@ $(CURL_OUT)/%.o: $(CURL_DIR)/lib/%.c	| $(CURL_OUT)
 	$(CC_CMD) $(CRL_CFLAGS)
 
 CURL_CFLAGS := -I$(CURL_DIR)/include
-CURL_LIBS := -lpthread -lrt
+CURL_LIBS := $(SYS_CURL_DEPS)
 else
-CURL_CFLAGS := $(SYS_CURL_CFLAGS)
-CURL_LIBS := $(SYS_CURL_LIBS)
+NOCURL := yes
 endif

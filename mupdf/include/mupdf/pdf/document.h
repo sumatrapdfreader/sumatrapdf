@@ -180,6 +180,23 @@ struct
 }
 pdf_obj_read_state_s;
 
+typedef struct pdf_signer_s pdf_signer;
+
+/* Unsaved signature fields */
+typedef struct pdf_unsaved_sig_s pdf_unsaved_sig;
+
+struct pdf_unsaved_sig_s
+{
+	pdf_obj *field;
+	int byte_range_start;
+	int byte_range_end;
+	int contents_start;
+	int contents_end;
+	pdf_signer *signer;
+	pdf_unsaved_sig *next;
+};
+
+
 struct pdf_document_s
 {
 	fz_document super;
@@ -256,6 +273,8 @@ struct pdf_document_s
 	pdf_js *js;
 	int recalculating;
 	int dirty;
+	pdf_unsaved_sig *unsaved_sigs;
+
 	void (*update_appearance)(pdf_document *doc, pdf_annot *annot);
 
 	pdf_doc_event_cb *event_cb;

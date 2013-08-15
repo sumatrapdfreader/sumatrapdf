@@ -84,9 +84,10 @@ def main():
 	more_formats = collectFunctions("source/fitz/svg-device.c") + collectFunctions("source/fitz/output-pcl.c") + collectFunctions("source/fitz/output-pwg.c")
 	form_exports = collectFunctions("source/pdf/pdf-form.c") + collectFunctions("source/pdf/pdf-event.c") + collectFunctions("source/pdf/pdf-appearance.c") + ["pdf_access_submit_event", "pdf_init_ui_pointer_event"]
 	misc_exports = collectFunctions("source/fitz/stream-prog.c")
+	sign_exports = ["pdf_crypt_buffer", "pdf_read_pfx", "pdf_sign_signature", "pdf_signer_designated_name", "pdf_free_designated_name"]
 	
 	fitz_exports = generateExports("include/mupdf/fitz", doc_exports + more_formats + misc_exports)
-	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
+	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + sign_exports + ["pdf_open_compressed_stream"])
 	muxps_exports = generateExports("include/mupdf/xps.h", ["xps_parse_solid_color_brush", "xps_print_path"])
 	
 	list = LIBMUPDF_DEF % locals()

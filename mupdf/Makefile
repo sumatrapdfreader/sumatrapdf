@@ -239,10 +239,12 @@ $(MUVIEW_X11) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
 $(MUVIEW_X11) : $(addprefix $(OUT)/platform/x11/, x11_main.o x11_image.o pdfapp.o)
 	$(LINK_CMD) $(X11_LIBS)
 
-MUVIEW_X11_CURL := $(OUT)/mupdf-curl
+ifeq "$(NOCURL)" ""
+MUVIEW_X11_CURL := $(OUT)/mupdf-x11-curl
 $(MUVIEW_X11_CURL) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS) $(CURL_LIB)
 $(MUVIEW_X11_CURL) : $(addprefix $(OUT)/platform/x11/curl/, x11_main.o x11_image.o pdfapp.o curl_stream.o)
 	$(LINK_CMD) $(X11_LIBS) $(CURL_LIBS)
+endif
 endif
 
 ifeq "$(V8_PRESENT)" "yes"
@@ -258,7 +260,7 @@ MUVIEW := $(MUVIEW_X11)
 MUVIEW_V8 := $(MUVIEW_X11_V8)
 MUVIEW_CURL := $(MUVIEW_X11_CURL)
 
-INSTALL_APPS := $(MUDRAW) $(MUTOOL) $(MUVIEW) $(MUJSTEST_V8) $(MUVIEW_V8) $(MUVIEW_X11_CURL)
+INSTALL_APPS := $(MUDRAW) $(MUTOOL) $(MUVIEW) $(MUJSTEST_V8) $(MUVIEW_V8) $(MUVIEW_CURL)
 
 # --- Format man pages ---
 

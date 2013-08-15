@@ -471,6 +471,9 @@ EXPORTS
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key
+	pdf_keep_signer
+	pdf_drop_signer
+	pdf_write_digest
 	pdf_check_signature
 	pdf_open_document
 	pdf_open_document_with_stream
@@ -601,6 +604,8 @@ EXPORTS
 	pdf_dict_dels
 	pdf_sort_dict
 	pdf_set_obj_parent
+	pdf_obj_parent_num
+	pdf_sprint_obj
 	pdf_fprint_obj
 	pdf_to_utf8
 	pdf_to_ucs2

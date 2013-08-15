@@ -33,6 +33,8 @@ else ifeq "$(OS)" "Darwin"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
 SYS_OPENSSL_LIBS = -lcrypto
 
+SYS_CURL_DEPS = -lpthread
+
 SYS_X11_CFLAGS = -I/usr/X11R6/include
 SYS_X11_LIBS = -L/usr/X11R6/lib -lX11 -lXext
 
@@ -52,6 +54,8 @@ ifeq "$(shell pkg-config --exists libcrypto && echo yes)" "yes"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL $(shell pkg-config --cflags libcrypto)
 SYS_OPENSSL_LIBS = $(shell pkg-config --libs libcrypto)
 endif
+
+SYS_CURL_DEPS = -lpthread -lrt
 
 SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
 SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
