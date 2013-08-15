@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
 --- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
-+++ openjpeg\cio.c	Mon Aug 12 22:08:26 2013
++++ openjpeg\cio.c	Thu Aug 15 21:45:32 2013
 @@ -254,16 +254,22 @@
  }
  
@@ -26,7 +26,7 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Mon Aug 12 22:08:26 2013
++++ openjpeg\j2k.c	Thu Aug 15 21:45:32 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -340,7 +340,7 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
      _asm{
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Mon Aug 12 22:08:26 2013
++++ openjpeg\opj_malloc.h	Thu Aug 15 21:45:32 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -402,7 +402,7 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Mon Aug 12 22:08:26 2013
++++ openjpeg\tcd.c	Thu Aug 15 21:45:32 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
@@ -419,23 +419,25 @@ diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
          /*tile->numcomps = image->numcomps; */                      \
          for(compno = 0; compno < l_tile->numcomps; ++compno) {      \
                  /*fprintf(stderr, "compno = %d/%d\n", compno, l_tile->numcomps);*/                                                                                                                                \
-@@ -672,10 +677,16 @@
-                 /* border of each l_tile component (global) */      \
-                 l_tilec->x0 = opj_int_ceildiv(l_tile->x0, l_image_comp->dx);                                                                                                                                          \
-                 l_tilec->y0 = opj_int_ceildiv(l_tile->y0, l_image_comp->dy);                                                                                                                                          \
-                 l_tilec->x1 = opj_int_ceildiv(l_tile->x1, l_image_comp->dx);                                                                                                                                          \
-                 l_tilec->y1 = opj_int_ceildiv(l_tile->y1, l_image_comp->dy);                                                                                                                                          \
-+                /* testcase 1336.pdf.asan.47.376 */ \
-+                if (compno > 0 && ((l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
-+                                   (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0))) { \
-+                    fprintf(stderr, "tiles don't all have the same dimension: %d x %d and %d x %d\n", l_tilec->x1 - l_tilec->x0, l_tilec->y1 - l_tilec->y0, l_tile->comps->x1 - l_tile->comps->x0, l_tile->comps->y1 - l_tile->comps->y0); \
-+                    return OPJ_FALSE; \
-+                } \
-                 /*fprintf(stderr, "\tTile compo border = %d,%d,%d,%d\n", l_tilec->x0, l_tilec->y0,l_tilec->x1,l_tilec->y1);*/                                                                                     \
-                                                                     \
-                 l_data_size = (l_tilec->x1 - l_tilec->x0)           \
-                 * (l_tilec->y1 - l_tilec->y0) * sizeof(OPJ_UINT32 );\
-                 l_tilec->numresolutions = l_tccp->numresolutions;   \
+@@ -1571,11 +1576,17 @@
+         }
+ 
+         l_samples = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
+ 
+         if (l_tile->numcomps >= 3 ){
+-                if (l_tcp->mct == 2) {
++                /* testcase 1336.pdf.asan.47.376 */
++                if ((l_tile->comps[0].x1 - l_tile->comps[0].x0) * (l_tile->comps[0].y1 - l_tile->comps[0].y0) < (OPJ_INT32)l_samples ||
++                    (l_tile->comps[1].x1 - l_tile->comps[1].x0) * (l_tile->comps[1].y1 - l_tile->comps[1].y0) < (OPJ_INT32)l_samples ||
++                    (l_tile->comps[2].x1 - l_tile->comps[2].x0) * (l_tile->comps[2].y1 - l_tile->comps[2].y0) < (OPJ_INT32)l_samples) {
++                        fprintf(stderr, "Tiles don't all have the same dimension. Skip the MCT step.\n");
++                }
++                else if (l_tcp->mct == 2) {
+                         OPJ_BYTE ** l_data;
+ 
+                         if (! l_tcp->m_mct_decoding_matrix) {
+                                 return OPJ_TRUE;
+                         }
 @@ -1651,10 +1662,12 @@
          for (compno = 0; compno < l_tile->numcomps; compno++) {
                  l_res = l_tile_comp->resolutions + l_img_comp->resno_decoded;

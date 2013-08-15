@@ -679,12 +679,6 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                 l_tilec->y0 = opj_int_ceildiv(l_tile->y0, l_image_comp->dy);                                                                                                                                          \
                 l_tilec->x1 = opj_int_ceildiv(l_tile->x1, l_image_comp->dx);                                                                                                                                          \
                 l_tilec->y1 = opj_int_ceildiv(l_tile->y1, l_image_comp->dy);                                                                                                                                          \
-                /* testcase 1336.pdf.asan.47.376 */ \
-                if (compno > 0 && ((l_tilec->x1 - l_tilec->x0 != l_tile->comps->x1 - l_tile->comps->x0) || \
-                                   (l_tilec->y1 - l_tilec->y0 != l_tile->comps->y1 - l_tile->comps->y0))) { \
-                    fprintf(stderr, "tiles don't all have the same dimension: %d x %d and %d x %d\n", l_tilec->x1 - l_tilec->x0, l_tilec->y1 - l_tilec->y0, l_tile->comps->x1 - l_tile->comps->x0, l_tile->comps->y1 - l_tile->comps->y0); \
-                    return OPJ_FALSE; \
-                } \
                 /*fprintf(stderr, "\tTile compo border = %d,%d,%d,%d\n", l_tilec->x0, l_tilec->y0,l_tilec->x1,l_tilec->y1);*/                                                                                     \
                                                                     \
                 l_data_size = (l_tilec->x1 - l_tilec->x0)           \
@@ -1584,7 +1578,13 @@ OPJ_BOOL opj_tcd_mct_decode ( opj_tcd_t *p_tcd )
         l_samples = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
 
         if (l_tile->numcomps >= 3 ){
-                if (l_tcp->mct == 2) {
+                /* testcase 1336.pdf.asan.47.376 */
+                if ((l_tile->comps[0].x1 - l_tile->comps[0].x0) * (l_tile->comps[0].y1 - l_tile->comps[0].y0) < (OPJ_INT32)l_samples ||
+                    (l_tile->comps[1].x1 - l_tile->comps[1].x0) * (l_tile->comps[1].y1 - l_tile->comps[1].y0) < (OPJ_INT32)l_samples ||
+                    (l_tile->comps[2].x1 - l_tile->comps[2].x0) * (l_tile->comps[2].y1 - l_tile->comps[2].y0) < (OPJ_INT32)l_samples) {
+                        fprintf(stderr, "Tiles don't all have the same dimension. Skip the MCT step.\n");
+                }
+                else if (l_tcp->mct == 2) {
                         OPJ_BYTE ** l_data;
 
                         if (! l_tcp->m_mct_decoding_matrix) {
