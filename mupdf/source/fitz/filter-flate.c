@@ -58,7 +58,8 @@ read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
 			return outlen - zp->avail_out;
 		}
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1798 */
-		else if (code == Z_DATA_ERROR && zp->avail_in <= 8)
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2385 */
+		else if (code == Z_DATA_ERROR && !strcmp(zp->msg, "incorrect data check"))
 		{
 			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
 			chain->rp = chain->wp;
