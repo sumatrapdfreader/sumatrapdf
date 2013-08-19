@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8d2c03a9399bf072e272ae63cb73458c23697ee3
+b725e2b4d3c0d99bc5a138edc587bd1082e5bf24
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3074,7 +3074,7 @@ uk:&Збільшення
 uz:&Miqyos
 vn:Thu-&Phóng
 :(of %d)
-am:(%d-ը)
+am:(%d-ից)
 ar:(من %d)
 az:/ %d
 bg:(от %d)
