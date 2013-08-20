@@ -415,13 +415,15 @@ static bool LinkifyCheckMultiline(const WCHAR *pageText, const WCHAR *pos, RectI
 {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
-    // (and that doesn't start with http itself)
+    // (and that doesn't start with http or a footnote numeral)
     return
         '\n' == *pos && pos > pageText && *(pos + 1) &&
         !iswalnum(pos[-1]) && !str::IsWs(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
+        coords[pos - pageText + 1].dy >= coords[pos - pageText - 1].dy * 0.85 &&
+        coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 &&
         !str::StartsWith(pos + 1, L"http");
 }
 
