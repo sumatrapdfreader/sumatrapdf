@@ -75,6 +75,10 @@ main(int argc, char **argv)
 		else
 			realname = argv[i];
 
+		/* SumatraPDF: ignore VCS folders (such as .svn) */
+		if (*realname == '.')
+			continue;
+
 		if (strlen(realname) > (sizeof name - 1))
 		{
 			fprintf(stderr, "cmapdump: file name too long\n");
