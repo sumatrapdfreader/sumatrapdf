@@ -1872,9 +1872,8 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
-        CrashIf(secs < 0);
         // if secs < 0 => somethings wrong, so ignore that case
-        if ((secs > 0) && (secs < SECS_IN_DAY))
+        if ((secs >= 0) && (secs < SECS_IN_DAY))
             return;
     }
 
@@ -3404,7 +3403,8 @@ void OnMenuAdvancedOptions()
 #endif
 
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
-    CrashIf(!file::Exists(path));
+    // TODO: disable/hide the menu item when there's no prefs file
+    //       (happens e.g. when run in portable mode from a CD)?
     LaunchFile(path, NULL, L"open");
 }
 
