@@ -310,7 +310,7 @@ tarball:
 
 # --- Clean and Default ---
 
-tags: $(shell find include source -name '*.[ch]')
+tags: $(shell find include source platform -name '*.[ch]')
 	ctags $^
 
 all: libs apps

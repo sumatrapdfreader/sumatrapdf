@@ -4,14 +4,10 @@
 #define MAX_GLYPH_SIZE 256
 #define MAX_CACHE_SIZE (1024*1024)
 
-typedef struct fz_glyph_key_s fz_glyph_key;
+#define GLYPH_HASH_LEN 509
 
-struct fz_glyph_cache_s
-{
-	int refs;
-	fz_hash_table *hash;
-	int total;
-};
+typedef struct fz_glyph_cache_entry_s fz_glyph_cache_entry;
+typedef struct fz_glyph_key_s fz_glyph_key;
 
 struct fz_glyph_key_s
 {
@@ -23,25 +19,61 @@ struct fz_glyph_key_s
 	int aa;
 };
 
+struct fz_glyph_cache_entry_s
+{
+	fz_glyph_key key;
+	unsigned hash;
+	fz_glyph_cache_entry *lru_prev;
+	fz_glyph_cache_entry *lru_next;
+	fz_glyph_cache_entry *bucket_next;
+	fz_glyph_cache_entry *bucket_prev;
+	fz_pixmap *val;
+};
+
+struct fz_glyph_cache_s
+{
+	int refs;
+	int total;
+	fz_glyph_cache_entry *entry[GLYPH_HASH_LEN];
+	fz_glyph_cache_entry *lru_head;
+	fz_glyph_cache_entry *lru_tail;
+};
+
 void
 fz_new_glyph_cache_context(fz_context *ctx)
 {
 	fz_glyph_cache *cache;
 
 	cache = fz_malloc_struct(ctx, fz_glyph_cache);
-	fz_try(ctx)
-	{
-		cache->hash = fz_new_hash_table(ctx, 509, sizeof(fz_glyph_key), FZ_LOCK_GLYPHCACHE);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(ctx, cache);
-		fz_rethrow(ctx);
-	}
 	cache->total = 0;
 	cache->refs = 1;
 
 	ctx->glyph_cache = cache;
+}
+
+static void
+drop_glyph_cache_entry(fz_context *ctx, fz_glyph_cache_entry *entry)
+{
+	fz_glyph_cache *cache = ctx->glyph_cache;
+
+	if (entry->lru_next)
+		entry->lru_next->lru_prev = entry->lru_prev;
+	else
+		cache->lru_tail = entry->lru_prev;
+	if (entry->lru_prev)
+		entry->lru_prev->lru_next = entry->lru_next;
+	else
+		cache->lru_head = entry->lru_next;
+	cache->total -= entry->val->w * entry->val->h;
+	if (entry->bucket_next)
+		entry->bucket_next->bucket_prev = entry->bucket_prev;
+	if (entry->bucket_prev)
+		entry->bucket_prev->bucket_next = entry->bucket_next;
+	else
+		cache->entry[entry->hash] = entry->bucket_next;
+	fz_drop_font(ctx, entry->key.font);
+	fz_drop_pixmap(ctx, entry->val);
+	fz_free(ctx, entry);
 }
 
 /* The glyph cache lock is always held when this function is called. */
@@ -49,23 +81,15 @@ static void
 fz_evict_glyph_cache(fz_context *ctx)
 {
 	fz_glyph_cache *cache = ctx->glyph_cache;
-	fz_glyph_key *key;
-	fz_pixmap *pixmap;
 	int i;
 
-	for (i = 0; i < fz_hash_len(ctx, cache->hash); i++)
+	for (i = 0; i < GLYPH_HASH_LEN; i++)
 	{
-		key = fz_hash_get_key(ctx, cache->hash, i);
-		if (key->font)
-			fz_drop_font(ctx, key->font);
-		pixmap = fz_hash_get_val(ctx, cache->hash, i);
-		if (pixmap)
-			fz_drop_pixmap(ctx, pixmap);
+		while (cache->entry[i])
+			drop_glyph_cache_entry(ctx, cache->entry[i]);
 	}
 
 	cache->total = 0;
-
-	fz_empty_hash(ctx, cache->hash);
 }
 
 void
@@ -87,7 +111,6 @@ fz_drop_glyph_cache_context(fz_context *ctx)
 	if (ctx->glyph_cache->refs == 0)
 	{
 		fz_evict_glyph_cache(ctx);
-		fz_free_hash(ctx, ctx->glyph_cache->hash);
 		fz_free(ctx, ctx->glyph_cache);
 		ctx->glyph_cache = NULL;
 	}
@@ -115,6 +138,42 @@ fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix
 	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor);
 }
 
+static unsigned do_hash(unsigned char *s, int len)
+{
+	unsigned val = 0;
+	int i;
+	for (i = 0; i < len; i++)
+	{
+		val += s[i];
+		val += (val << 10);
+		val ^= (val >> 6);
+	}
+	val += (val << 3);
+	val ^= (val >> 11);
+	val += (val << 15);
+	return val;
+}
+
+static inline void
+move_to_front(fz_glyph_cache *cache, fz_glyph_cache_entry *entry)
+{
+	if (entry->lru_prev == NULL)
+		return; /* At front already */
+
+	/* Unlink */
+	entry->lru_prev->lru_next = entry->lru_next;
+	if (entry->lru_next)
+		entry->lru_next->lru_prev = entry->lru_prev;
+	else
+		cache->lru_tail = entry->lru_prev;
+	/* Relink */
+	entry->lru_next = cache->lru_head;
+	if (entry->lru_next)
+		entry->lru_next->lru_prev = entry;
+	cache->lru_head = entry;
+	entry->lru_prev = NULL;
+}
+
 /*
 	Render a glyph and return a bitmap.
 	If the glyph is too large to fit the cache we have two choices:
@@ -133,6 +192,8 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 	float size = fz_matrix_expansion(ctm);
 	int do_cache, locked, caching;
 	fz_matrix local_ctm = *ctm;
+	fz_glyph_cache_entry *entry;
+	unsigned hash;
 
 	fz_var(locked);
 	fz_var(caching);
@@ -167,12 +228,18 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 	local_ctm.f = floorf(local_ctm.f) + key.f / 256.0f;
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
-	val = fz_hash_find(ctx, cache->hash, &key);
-	if (val)
+	hash = do_hash((unsigned char *)&key, sizeof(key)) % GLYPH_HASH_LEN;
+	entry = cache->entry[hash];
+	while (entry)
 	{
-		fz_keep_pixmap(ctx, val);
-		fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-		return val;
+		if (memcmp(&entry->key, &key, sizeof(key)) == 0)
+		{
+			move_to_front(cache, entry);
+			val = fz_keep_pixmap(ctx, entry->val);
+			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
+			return val;
+		}
+		entry = entry->bucket_next;
 	}
 
 	locked = 1;
@@ -210,26 +277,51 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 		{
 			if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
 			{
-				fz_pixmap *pix;
-
 				/* If we throw an exception whilst caching,
 				 * just ignore the exception and carry on. */
 				caching = 1;
-				if (cache->total + val->w * val->h > MAX_CACHE_SIZE)
-					fz_evict_glyph_cache(ctx);
+				if (!font->ft_face)
+				{
+					/* We had to unlock. Someone else might
+					 * have rendered in the meantime */
+					entry = cache->entry[hash];
+					while (entry)
+					{
+						if (memcmp(&entry->key, &key, sizeof(key)) == 0)
+						{
+							fz_drop_pixmap(ctx, val);
+							move_to_front(cache, entry);
+							val = fz_keep_pixmap(ctx, entry->val);
+							fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
+							return val;
+						}
+						entry = entry->bucket_next;
+					}
+				}
 
-				pix = fz_hash_insert(ctx, cache->hash, &key, val);
-				if (pix)
-				{
-					fz_drop_pixmap(ctx, val);
-					val = pix;
-				}
+				entry = fz_malloc_struct(ctx, fz_glyph_cache_entry);
+				entry->key = key;
+				entry->hash = hash;
+				entry->bucket_next = cache->entry[hash];
+				if (entry->bucket_next)
+					entry->bucket_next->bucket_prev = entry;
+				cache->entry[hash] = entry;
+				entry->val = fz_keep_pixmap(ctx, val);
+				fz_keep_font(ctx, key.font);
+
+				entry->lru_next = cache->lru_head;
+				if (entry->lru_next)
+					entry->lru_next->lru_prev = entry;
 				else
+					cache->lru_tail = entry;
+				cache->lru_head = entry;
+
+				cache->total += val->w * val->h;
+				while (cache->total > MAX_CACHE_SIZE)
 				{
-					fz_keep_font(ctx, key.font);
-					cache->total += val->w * val->h;
+					drop_glyph_cache_entry(ctx, cache->lru_tail);
 				}
-				val = fz_keep_pixmap(ctx, val);
+
 			}
 		}
 	}

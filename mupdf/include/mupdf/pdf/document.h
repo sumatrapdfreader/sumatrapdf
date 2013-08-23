@@ -215,6 +215,7 @@ struct pdf_document_s
 	pdf_xref *xref_sections;
 	int xref_altered;
 	int freeze_updates;
+	int has_xref_streams;
 
 	int page_count;
 

@@ -533,6 +533,8 @@ pdf_read_new_xref_section(pdf_document *doc, fz_stream *stm, int i0, int i1, int
 			entry->gen = w2 ? c : 0;
 		}
 	}
+
+	doc->has_xref_streams = 1;
 }
 
 /* Entered with file locked, remains locked throughout. */

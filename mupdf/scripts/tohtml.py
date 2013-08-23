@@ -28,9 +28,9 @@ def load_tags():
 		if not is_public(ident):
 			continue
 		if type == 'function':
-			tags[ident] = '<a class="function" href="%s#%s">%s</a>' % (os.path.basename(file), line, ident)
+			tags[ident] = '<a class="function" href="%s#%s">%s</a>' % ("/docs/browse/" + file, line, ident)
 		if type == 'typedef' or type == 'struct':
-			tags[ident] = '<a class="typedef" href="%s#%s">%s</a>' % (os.path.basename(file), line, ident)
+			tags[ident] = '<a class="typedef" href="%s#%s">%s</a>' % ("/docs/browse/" + file, line, ident)
 	return tags
 
 tags = load_tags()
@@ -48,7 +48,7 @@ for line in sys.stdin.readlines():
 	line = line.replace("/*", '<span class="comment">/*')
 	line = line.replace("*/", '*/</span>')
 
-	line = re.sub('^#include "([a-z-]*\.h)"', '#include "<a href="\\1">\\1</a>"', line)
+	line = re.sub('^#include "([a-z-/]*\.h)"', '#include "<a href="/docs/browse/include/\\1">\\1</a>"', line)
 
 	# find identifiers and hyperlink to their definitions
 	words = re.split("(\W+)", line)

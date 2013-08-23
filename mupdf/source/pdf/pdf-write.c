@@ -1637,7 +1637,7 @@ static int filter_implies_image(pdf_document *doc, pdf_obj *o)
 	return 0;
 }
 
-static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int gen)
+static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int gen, int skip_xrefs)
 {
 	pdf_xref_entry *entry;
 	pdf_obj *obj;
@@ -1673,7 +1673,7 @@ static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int
 			pdf_drop_obj(obj);
 			return;
 		}
-		if (pdf_is_name(type) && !strcmp(pdf_to_name(type), "XRef"))
+		if (skip_xrefs && pdf_is_name(type) && !strcmp(pdf_to_name(type), "XRef"))
 		{
 			opts->use_list[num] = 0;
 			pdf_drop_obj(obj);
@@ -1862,6 +1862,134 @@ static void writexref(pdf_document *doc, pdf_write_options *opts, int from, int 
 	pdf_drop_obj(trailer);
 
 	fprintf(opts->out, "startxref\n%d\n%%%%EOF\n", startxref);
+
+	doc->has_xref_streams = 0;
+}
+
+static void writexrefstreamsubsect(pdf_document *doc, pdf_write_options *opts, pdf_obj *index, fz_buffer *fzbuf, int from, int to)
+{
+	int num;
+
+	pdf_array_push_drop(index, pdf_new_int(doc, from));
+	pdf_array_push_drop(index, pdf_new_int(doc, to - from));
+	for (num = from; num < to; num++)
+	{
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->use_list[num] ? 1 : 0);
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->ofs_list[num]>>24);
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->ofs_list[num]>>16);
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->ofs_list[num]>>8);
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->ofs_list[num]);
+		fz_write_buffer_byte(doc->ctx, fzbuf, opts->gen_list[num]);
+	}
+}
+
+static void writexrefstream(pdf_document *doc, pdf_write_options *opts, int from, int to, int first, int main_xref_offset, int startxref)
+{
+	fz_context *ctx = doc->ctx;
+	int num;
+	pdf_obj *dict = NULL;
+	pdf_obj *obj;
+	pdf_obj *w = NULL;
+	pdf_obj *index;
+	fz_buffer *fzbuf = NULL;
+
+	fz_var(dict);
+	fz_var(w);
+	fz_var(fzbuf);
+	fz_try(ctx)
+	{
+		num = pdf_create_object(doc);
+		dict = pdf_new_dict(doc, 6);
+		pdf_update_object(doc, num, dict);
+
+		opts->first_xref_entry_offset = ftell(opts->out);
+
+		to++;
+
+		if (first)
+		{
+			obj = pdf_dict_gets(pdf_trailer(doc), "Info");
+			if (obj)
+				pdf_dict_puts(dict, "Info", obj);
+
+			obj = pdf_dict_gets(pdf_trailer(doc), "Root");
+			if (obj)
+				pdf_dict_puts(dict, "Root", obj);
+
+			obj = pdf_dict_gets(pdf_trailer(doc), "ID");
+			if (obj)
+				pdf_dict_puts(dict, "ID", obj);
+		}
+
+		pdf_dict_puts_drop(dict, "Size", pdf_new_int(doc, to));
+
+		if (opts->do_incremental)
+		{
+			pdf_dict_puts_drop(dict, "Prev", pdf_new_int(doc, doc->startxref));
+			doc->startxref = startxref;
+		}
+		else
+		{
+			if (main_xref_offset != 0)
+				pdf_dict_puts_drop(dict, "Prev", pdf_new_int(doc, main_xref_offset));
+		}
+
+		pdf_dict_puts_drop(dict, "Type", pdf_new_name(doc, "XRef"));
+
+		w = pdf_new_array(doc, 3);
+		pdf_dict_puts(dict, "W", w);
+		pdf_array_push_drop(w, pdf_new_int(doc, 1));
+		pdf_array_push_drop(w, pdf_new_int(doc, 4));
+		pdf_array_push_drop(w, pdf_new_int(doc, 1));
+
+		index = pdf_new_array(doc, 2);
+		pdf_dict_puts_drop(dict, "Index", index);
+
+		opts->ofs_list[num] = opts->first_xref_entry_offset;
+
+		fzbuf = fz_new_buffer(ctx, 4*(to-from));
+
+		if (opts->do_incremental)
+		{
+			int subfrom = from;
+			int subto;
+
+			while (subfrom < to)
+			{
+				while (subfrom < to && !pdf_xref_is_incremental(doc, subfrom))
+					subfrom++;
+
+				subto = subfrom;
+				while (subto < to && pdf_xref_is_incremental(doc, subto))
+					subto++;
+
+				if (subfrom < subto)
+					writexrefstreamsubsect(doc, opts, index, fzbuf, subfrom, subto);
+
+				subfrom = subto;
+			}
+		}
+		else
+		{
+			writexrefstreamsubsect(doc, opts, index, fzbuf, from, to);
+		}
+
+		pdf_update_stream(doc, num, fzbuf);
+		pdf_dict_puts_drop(dict, "Length", pdf_new_int(doc, fz_buffer_storage(ctx, fzbuf, NULL)));
+
+		writeobject(doc, opts, num, 0, 0);
+		fprintf(opts->out, "startxref\n%d\n%%%%EOF\n", startxref);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(dict);
+		pdf_drop_obj(w);
+		fz_drop_buffer(ctx, fzbuf);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static void
@@ -1905,7 +2033,7 @@ dowriteobject(pdf_document *doc, pdf_write_options *opts, int num, int pass)
 			padto(opts->out, opts->ofs_list[num]);
 		opts->ofs_list[num] = ftell(opts->out);
 		if (!opts->do_incremental || pdf_xref_is_incremental(doc, num))
-			writeobject(doc, opts, num, opts->gen_list[num]);
+			writeobject(doc, opts, num, opts->gen_list[num], 1);
 	}
 	else
 		opts->use_list[num] = 0;
@@ -2525,7 +2653,10 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		else
 		{
 			opts.first_xref_offset = ftell(opts.out);
-			writexref(doc, &opts, 0, xref_len, 1, 0, opts.first_xref_offset);
+			if (opts.do_incremental && doc->has_xref_streams)
+				writexrefstream(doc, &opts, 0, xref_len, 1, 0, opts.first_xref_offset);
+			else
+				writexref(doc, &opts, 0, xref_len, 1, 0, opts.first_xref_offset);
 		}
 
 		fclose(opts.out);

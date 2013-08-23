@@ -708,6 +708,12 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 								break;
 							dupnames++;
 						}
+						if (etable[i] == 0)
+						{
+							char buf[10];
+							sprintf(buf, "uni%04X", aglcode);
+							etable[i] = FT_Get_Name_Index(face, buf);
+						}
 					}
 				}
 			}

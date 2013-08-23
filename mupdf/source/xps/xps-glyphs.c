@@ -54,19 +54,18 @@ xps_encode_font_char(fz_font *font, int code)
 void
 xps_measure_font_glyph(xps_document *doc, fz_font *font, int gid, xps_glyph_metrics *mtx)
 {
-	int mask = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING | FT_LOAD_IGNORE_TRANSFORM;
+	int mask = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
 	FT_Face face = font->ft_face;
 	FT_Fixed hadv, vadv;
 	fz_context *ctx = doc->ctx;
 
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
-	FT_Set_Char_Size(face, 64, 64, 72, 72);
 	FT_Get_Advance(face, gid, mask, &hadv);
 	FT_Get_Advance(face, gid, mask | FT_LOAD_VERTICAL_LAYOUT, &vadv);
 	fz_unlock(ctx, FZ_LOCK_FREETYPE);
 
-	mtx->hadv = hadv / 65536.0f;
-	mtx->vadv = vadv / 65536.0f;
+	mtx->hadv = hadv / (float)face->units_per_EM;
+	mtx->vadv = vadv / (float)face->units_per_EM;
 	mtx->vorg = face->ascender / (float) face->units_per_EM;
 }
 

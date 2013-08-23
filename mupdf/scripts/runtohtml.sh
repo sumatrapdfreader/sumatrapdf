@@ -1,16 +1,16 @@
 #!/bin/bash
 
-mkdir -p doc/source
-rm doc/source/*.html
+rm -rf docs/browse
 
-FILES="fitz/*.[ch] draw/*.[ch] pdf/*.[ch] xps/*.[ch] cbz/*.[ch] apps/*.[ch]"
+FILES=$(find include source platform -name '*.[ch]')
 
 echo running ctags to make xref
 ctags -x $FILES > tags-xref
 
 for input in $FILES
 do
-	output=doc/source/$(basename $input).html
+	output=docs/browse/$input.html
+	mkdir -p $(dirname $output)
 	echo $input $output
 	python scripts/tohtml.py < $input > $output
 done
