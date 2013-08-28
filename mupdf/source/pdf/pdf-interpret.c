@@ -183,19 +183,18 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 	if (strcmp(type, "OCG") == 0)
 	{
 		/* An Optional Content Group */
+		int default_value = 0;
 		int num = pdf_to_num(ocg);
 		int gen = pdf_to_gen(ocg);
 		int len = desc->len;
 		int i;
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
-		int hidden_default = 0;
 
+		/* by default an OCG is visible, unless it's explicitly hidden */
 		for (i = 0; i < len; i++)
 		{
 			if (desc->ocgs[i].num == num && desc->ocgs[i].gen == gen)
 			{
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
-				hidden_default = desc->ocgs[i].state == 0;
+				default_value = desc->ocgs[i].state == 0;
 				break;
 			}
 		}
@@ -240,7 +239,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		 * dicts, this is not really a problem. */
 		obj = pdf_dict_gets(ocg, "Usage");
 		if (!pdf_is_dict(obj))
-			return hidden_default;
+			return default_value;
 		/* FIXME: Should look at Zoom (and return hidden if out of
 		 * max/min range) */
 		/* FIXME: Could provide hooks to the caller to check if
@@ -250,10 +249,11 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		{
 			return 1;
 		}
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
 		if (strcmp(pdf_to_name(pdf_dict_gets(obj2, event_state)), "ON") == 0)
+		{
 			return 0;
-		return hidden_default;
+		}
+		return default_value;
 	}
 	else if (strcmp(type, "OCMD") == 0)
 	{
@@ -1181,26 +1181,21 @@ pdf_copy_gstate(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 static void
 pdf_copy_pattern_gstate(fz_context *ctx, pdf_gstate *gs, const pdf_gstate *old)
 {
-	/* SumatraPDF: fix memory leak */
-	pdf_drop_font(ctx, gs->font);
-	pdf_drop_xobject(ctx, gs->softmask);
-	fz_drop_transfer_function(ctx, gs->tr);
-	fz_drop_transfer_function(ctx, gs->softmask_tr);
-
 	gs->ctm = old->ctm;
-	gs->font = old->font;
-	gs->softmask = old->softmask;
+
+	pdf_drop_font(ctx, gs->font);
+	gs->font = pdf_keep_font(ctx, old->font);
+
+	pdf_drop_xobject(ctx, gs->softmask);
+	gs->softmask = pdf_keep_xobject(ctx, old->softmask);
 
 	fz_drop_stroke_state(ctx, gs->stroke_state);
 	gs->stroke_state = fz_keep_stroke_state(ctx, old->stroke_state);
 
-	if (gs->font)
-		pdf_keep_font(ctx, gs->font);
-	if (gs->softmask)
-		pdf_keep_xobject(ctx, gs->softmask);
-
 	/* SumatraPDF: support transfer functions */
+	fz_drop_transfer_function(ctx, gs->tr);
 	gs->tr = fz_keep_transfer_function(ctx, old->tr);
+	fz_drop_transfer_function(ctx, gs->softmask_tr);
 	gs->softmask_tr = fz_keep_transfer_function(ctx, old->softmask_tr);
 }
 

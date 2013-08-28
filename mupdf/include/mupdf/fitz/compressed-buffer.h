@@ -26,8 +26,8 @@ enum
 	FZ_IMAGE_FLATE = 7,
 	FZ_IMAGE_LZW = 8,
 	FZ_IMAGE_PNG = 9,
-	FZ_IMAGE_TIFF = 10
-	, FZ_IMAGE_JXR = 11 /* SumatraPDF: support JPEG-XR images */
+	FZ_IMAGE_TIFF = 10,
+	FZ_IMAGE_JXR = 11, /* Placeholder until supported */
 };
 
 struct fz_compression_params_s

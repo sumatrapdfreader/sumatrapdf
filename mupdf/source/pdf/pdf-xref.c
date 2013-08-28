@@ -1003,7 +1003,6 @@ pdf_read_ocg(pdf_document *doc)
 			pdf_obj *o = pdf_array_get(ocg, i);
 			desc->ocgs[i].num = pdf_to_num(o);
 			desc->ocgs[i].gen = pdf_to_gen(o);
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2011 */
 			desc->ocgs[i].state = 1;
 		}
 		doc->ocg = desc;
@@ -1165,14 +1164,20 @@ pdf_init_document(pdf_document *doc)
 		fz_warn(ctx, "Ignoring Broken Optional Content");
 	}
 
-	/* SumatraPDF: update xref->version with /Version */
-	obj = pdf_dict_getp(pdf_trailer(doc), "Root/Version");
-	if (pdf_is_name(obj))
+	fz_try(ctx)
 	{
-		int version = (int)(fz_atof(pdf_to_name(obj)) * 10 + 0.1);
-		if (version > doc->version)
-			doc->version = version;
+		char *version_str;
+		obj = pdf_dict_getp(pdf_trailer(doc), "Root/Version");
+		version_str = pdf_to_name(obj);
+		if (*version_str)
+		{
+			/* TODO: use fz_atof for parsing instead? */
+			int version = atoi(version_str) * 10 + atoi(version_str + 2);
+			if (version > doc->version)
+				doc->version = version;
+		}
 	}
+	fz_catch(ctx) { }
 }
 
 void
@@ -1328,6 +1333,8 @@ pdf_load_obj_stm(pdf_document *doc, int num, int gen, pdf_lexbuf *buf)
 			}
 
 			entry = pdf_get_xref_entry(doc, numbuf[i]);
+
+			pdf_set_obj_parent(obj, numbuf[i]);
 
 			if (entry->type == 'o' && entry->ofs == num)
 			{

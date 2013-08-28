@@ -1843,7 +1843,62 @@ void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
 
 static void draw_logo(fz_context *ctx, fz_path *path)
 {
-	/* Add signature logo here. */
+	fz_moveto(ctx, path, 122.25f, 0.0f);
+	fz_lineto(ctx, path, 122.25f, 14.249f);
+	fz_curveto(ctx, path, 125.98f, 13.842f, 129.73f, 13.518f, 133.5f, 13.277f);
+	fz_lineto(ctx, path, 133.5f, 0.0f);
+	fz_lineto(ctx, path, 122.25f, 0.0f);
+	fz_closepath(ctx, path);
+	fz_moveto(ctx, path, 140.251f, 0.0f);
+	fz_lineto(ctx, path, 140.251f, 12.935f);
+	fz_curveto(ctx, path, 152.534f, 12.477f, 165.03f, 12.899f, 177.75f, 14.249f);
+	fz_lineto(ctx, path, 177.75f, 21.749f);
+	fz_curveto(ctx, path, 165.304f, 20.413f, 152.809f, 19.871f, 140.251f, 20.348f);
+	fz_lineto(ctx, path, 140.251f, 39.0f);
+	fz_lineto(ctx, path, 133.5f, 39.0f);
+	fz_lineto(ctx, path, 133.5f, 20.704f);
+	fz_curveto(ctx, path, 129.756f, 20.956f, 126.006f, 21.302f, 122.25f, 21.749f);
+	fz_lineto(ctx, path, 122.25f, 50.999f);
+	fz_lineto(ctx, path, 177.751f, 50.999f);
+	fz_lineto(ctx, path, 177.751f, 0.0f);
+	fz_lineto(ctx, path, 140.251f, 0.0f);
+	fz_closepath(ctx, path);
+	fz_moveto(ctx, path, 23.482f, 129.419f);
+	fz_curveto(ctx, path, -20.999f, 199.258f, -0.418f, 292.039f, 69.42f, 336.519f);
+	fz_curveto(ctx, path, 139.259f, 381.0f, 232.04f, 360.419f, 276.52f, 290.581f);
+	fz_curveto(ctx, path, 321.001f, 220.742f, 300.42f, 127.961f, 230.582f, 83.481f);
+	fz_curveto(ctx, path, 160.743f, 39.0f, 67.962f, 59.581f, 23.482f, 129.419f);
+	fz_closepath(ctx, path);
+	fz_moveto(ctx, path, 254.751f, 128.492f);
+	fz_curveto(ctx, path, 303.074f, 182.82f, 295.364f, 263.762f, 237.541f, 309.165f);
+	fz_curveto(ctx, path, 179.718f, 354.568f, 93.57f, 347.324f, 45.247f, 292.996f);
+	fz_curveto(ctx, path, -3.076f, 238.668f, 4.634f, 157.726f, 62.457f, 112.323f);
+	fz_curveto(ctx, path, 120.28f, 66.92f, 206.428f, 74.164f, 254.751f, 128.492f);
+	fz_closepath(ctx, path);
+	fz_moveto(ctx, path, 111.0f, 98.999f);
+	fz_curveto(ctx, path, 87.424f, 106.253f, 68.25f, 122.249f, 51.75f, 144.749f);
+	fz_lineto(ctx, path, 103.5f, 297.749f);
+	fz_lineto(ctx, path, 213.75f, 298.499f);
+	fz_curveto(ctx, path, 206.25f, 306.749f, 195.744f, 311.478f, 185.25f, 314.249f);
+	fz_curveto(ctx, path, 164.22f, 319.802f, 141.22f, 319.775f, 120.0f, 314.999f);
+	fz_curveto(ctx, path, 96.658f, 309.745f, 77.25f, 298.499f, 55.5f, 283.499f);
+	fz_curveto(ctx, path, 69.75f, 299.249f, 84.617f, 311.546f, 102.75f, 319.499f);
+	fz_curveto(ctx, path, 117.166f, 325.822f, 133.509f, 327.689f, 149.25f, 327.749f);
+	fz_curveto(ctx, path, 164.21f, 327.806f, 179.924f, 326.532f, 193.5f, 320.249f);
+	fz_curveto(ctx, path, 213.95f, 310.785f, 232.5f, 294.749f, 245.25f, 276.749f);
+	fz_lineto(ctx, path, 227.25f, 276.749f);
+	fz_curveto(ctx, path, 213.963f, 276.749f, 197.25f, 263.786f, 197.25f, 250.499f);
+	fz_lineto(ctx, path, 197.25f, 112.499f);
+	fz_curveto(ctx, path, 213.75f, 114.749f, 228.0f, 127.499f, 241.5f, 140.999f);
+	fz_curveto(ctx, path, 231.75f, 121.499f, 215.175f, 109.723f, 197.25f, 101.249f);
+	fz_curveto(ctx, path, 181.5f, 95.249f, 168.412f, 94.775f, 153.0f, 94.499f);
+	fz_curveto(ctx, path, 139.42f, 94.256f, 120.75f, 95.999f, 111.0f, 98.999f);
+	fz_closepath(ctx, path);
+	fz_moveto(ctx, path, 125.25f, 105.749f);
+	fz_lineto(ctx, path, 125.25f, 202.499f);
+	fz_lineto(ctx, path, 95.25f, 117.749f);
+	fz_curveto(ctx, path, 105.75f, 108.749f, 114.0f, 105.749f, 125.25f, 105.749f);
+	fz_closepath(ctx, path);
 };
 
 static void rect_center(const fz_rect *rect, fz_point *c)
@@ -1933,7 +1988,8 @@ static void insert_signature_appearance_layers(pdf_document *doc, pdf_annot *ann
 	}
 }
 
-static float logo_color[3] = {1.0f, 0.85f, 0.85f};
+/* MuPDF blue */
+static float logo_color[3] = {(float)0x25/(float)0xFF, (float)0x72/(float)0xFF, (float)0xAC/(float)0xFF};
 
 void pdf_set_signature_appearance(pdf_document *doc, pdf_annot *annot, char *name, char *dn, char *date)
 {

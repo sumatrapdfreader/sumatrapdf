@@ -27,5 +27,6 @@ fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, const fz_matrix *, fz
 fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, const fz_matrix *, const fz_matrix *, fz_stroke_state *stroke, fz_irect scissor);
 void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, const fz_matrix *trm, void *gstate, int nestedDepth);
 void fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid, int nestedDepth);
+void fz_dump_glyph_cache_stats(fz_context *ctx);
 
 #endif

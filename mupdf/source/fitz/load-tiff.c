@@ -451,7 +451,6 @@ fz_decode_tiff_strips(struct tiff *tiff)
 			fz_decode_tiff_lzw(tiff, stm, wp, wlen);
 			break;
 		case 6:
-			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2347 */
 			fz_warn(tiff->ctx, "deprecated JPEG in TIFF compression not fully supported");
 			/* fall through */
 		case 7:

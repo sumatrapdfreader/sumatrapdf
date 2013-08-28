@@ -364,9 +364,9 @@ void pdf_free_designated_name(pdf_designated_name *dn)
 }
 
 
-static void add_from_bags(X509 **pX509, EVP_PKEY **pPkey, STACK_OF(PKCS12_SAFEBAG) *bags, char *pw);
+static void add_from_bags(X509 **pX509, EVP_PKEY **pPkey, STACK_OF(PKCS12_SAFEBAG) *bags, const char *pw);
 
-static void add_from_bag(X509 **pX509, EVP_PKEY **pPkey, PKCS12_SAFEBAG *bag, char *pw)
+static void add_from_bag(X509 **pX509, EVP_PKEY **pPkey, PKCS12_SAFEBAG *bag, const char *pw)
 {
 	EVP_PKEY *pkey = NULL;
 	X509 *x509 = NULL;
@@ -414,7 +414,7 @@ static void add_from_bag(X509 **pX509, EVP_PKEY **pPkey, PKCS12_SAFEBAG *bag, ch
 	}
 }
 
-static void add_from_bags(X509 **pX509, EVP_PKEY **pPkey, STACK_OF(PKCS12_SAFEBAG) *bags, char *pw)
+static void add_from_bags(X509 **pX509, EVP_PKEY **pPkey, STACK_OF(PKCS12_SAFEBAG) *bags, const char *pw)
 {
 	int i;
 
@@ -422,7 +422,7 @@ static void add_from_bags(X509 **pX509, EVP_PKEY **pPkey, STACK_OF(PKCS12_SAFEBA
 		add_from_bag(pX509, pPkey, sk_PKCS12_SAFEBAG_value(bags, i), pw);
 }
 
-pdf_signer *pdf_read_pfx(fz_context *ctx, char *pfile, char *pw)
+pdf_signer *pdf_read_pfx(fz_context *ctx, const char *pfile, const char *pw)
 {
 	BIO *pfxbio = NULL;
 	PKCS12 *p12 = NULL;
@@ -679,6 +679,18 @@ int pdf_check_signature(pdf_document *doc, pdf_widget *widget, char *file, char 
 	char *contents = NULL;
 	int contents_len;
 	int res = 0;
+	pdf_unsaved_sig *usig;
+
+	for (usig = doc->unsaved_sigs; usig; usig = usig->next)
+	{
+		if (usig->field == ((pdf_annot *)widget)->obj)
+		{
+			fz_strlcpy(ebuf, "Signed but document yet to be saved", ebufsize);
+			if (ebufsize > 0)
+				ebuf[ebufsize-1] = 0;
+			return 0;
+		}
+	}
 
 	fz_var(byte_range);
 	fz_var(res);
@@ -719,7 +731,7 @@ int pdf_check_signature(pdf_document *doc, pdf_widget *widget, char *file, char 
 	return res;
 }
 
-void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, char *sigfile, char *password)
+void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, const char *sigfile, const char *password)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_signer *signer = pdf_read_pfx(ctx, sigfile, password);
@@ -766,12 +778,21 @@ void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, char *sigfile, ch
 	}
 }
 
+int pdf_signatures_supported(void)
+{
+	return 1;
+}
+
 #else /* HAVE_OPENSSL */
 
 int pdf_check_signature(pdf_document *doc, pdf_widget *widget, char *file, char *ebuf, int ebufsize)
 {
 	fz_strlcpy(ebuf, "This version of MuPDF was built without signature support", ebufsize);
 	return 0;
+}
+
+void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, const char *sigfile, const char *password)
+{
 }
 
 pdf_signer *pdf_keep_signer(pdf_signer *signer)
@@ -785,6 +806,11 @@ void pdf_drop_signer(pdf_signer *signer)
 
 void pdf_write_digest(pdf_document *doc, char *filename, pdf_obj *byte_range, int digest_offset, int digest_length, pdf_signer *signer)
 {
+}
+
+int pdf_signatures_supported(void)
+{
+	return 0;
 }
 
 #endif /* HAVE_OPENSSL */

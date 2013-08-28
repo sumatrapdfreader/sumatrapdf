@@ -311,7 +311,7 @@ typedef struct fz_faxd_s fz_faxd;
 
 enum
 {
-	STATE_INIT,		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
+	STATE_INIT,		/* initial state, optionally waiting for EOL */
 	STATE_NORMAL,	/* neutral state, waiting for any code */
 	STATE_MAKEUP,	/* got a 1d makeup code, waiting for terminating code */
 	STATE_EOL,		/* at eol, needs output buffer space */
@@ -558,7 +558,6 @@ read_faxd(fz_stream *stm, unsigned char *buf, int len)
 	unsigned char *ep = buf + len;
 	unsigned char *tmp;
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
 	if (fax->stage == STATE_INIT && fax->end_of_line)
 	{
 		fill_bits(fax);
@@ -571,6 +570,7 @@ read_faxd(fz_stream *stm, unsigned char *buf, int len)
 		if ((fax->word >> (32 - 12)) != 1)
 			fz_throw(stm->ctx, FZ_ERROR_GENERIC, "initial EOL not found");
 	}
+
 	if (fax->stage == STATE_INIT)
 		fax->stage = STATE_NORMAL;
 
@@ -763,7 +763,6 @@ fz_open_faxd(fz_stream *chain,
 		fax->bidx = 32;
 		fax->word = 0;
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
 		fax->stage = STATE_INIT;
 		fax->a = -1;
 		fax->c = 0;

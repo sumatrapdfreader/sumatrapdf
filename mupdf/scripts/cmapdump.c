@@ -75,7 +75,7 @@ main(int argc, char **argv)
 		else
 			realname = argv[i];
 
-		/* SumatraPDF: ignore VCS folders (such as .svn) */
+		/* ignore VCS folders (such as .svn) */
 		if (*realname == '.')
 			continue;
 

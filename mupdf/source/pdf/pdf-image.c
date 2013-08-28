@@ -62,7 +62,6 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 
 		indexed = 0;
 		usecolorkey = 0;
-		mask = NULL;
 
 		if (imagemask)
 			bpc = 1;
@@ -165,14 +164,14 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 		}
 
 		image = fz_new_image(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, usecolorkey ? colorkey : NULL, NULL, mask);
+		colorspace = NULL;
+		mask = NULL;
 		image->tile = fz_decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 0, 0);
 	}
 	fz_catch(ctx)
 	{
-		/* SumatraPDF: fix memory leak */
-		if (!image)
-			fz_drop_colorspace(ctx, colorspace);
-		else
+		fz_drop_colorspace(ctx, colorspace);
+		fz_drop_image(ctx, mask);
 		fz_drop_image(ctx, image);
 		fz_rethrow(ctx);
 	}

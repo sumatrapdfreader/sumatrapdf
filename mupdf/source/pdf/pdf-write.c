@@ -2507,6 +2507,15 @@ static void complete_signatures(pdf_document *doc, pdf_write_options *opts, char
 		/* Write the digests into the file */
 		for (usig = doc->unsaved_sigs; usig; usig = usig->next)
 			pdf_write_digest(doc, filename, byte_range, usig->contents_start, usig->contents_end - usig->contents_start, usig->signer);
+
+		/* delete the unsaved_sigs records */
+		while ((usig = doc->unsaved_sigs) != NULL)
+		{
+			doc->unsaved_sigs = usig->next;
+			pdf_drop_obj(usig->field);
+			pdf_drop_signer(usig->signer);
+			fz_free(ctx, usig);
+		}
 	}
 }
 

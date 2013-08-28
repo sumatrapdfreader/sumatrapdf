@@ -112,6 +112,12 @@ fz_paint_solid_color_2(byte * restrict dp, int w, byte *color)
 	}
 }
 
+static inline int isbigendian(void)
+{
+	union { int i; char c[sizeof(int)]; } u = {1};
+	return u.c[0] != 1;
+}
+
 static inline void
 fz_paint_solid_color_4(byte * restrict dp, int w, byte *color)
 {
@@ -119,7 +125,10 @@ fz_paint_solid_color_4(byte * restrict dp, int w, byte *color)
 	int sa = FZ_EXPAND(color[3]);
 	if (sa == 0)
 		return;
-	rgba |= 0xFF000000;
+	if (isbigendian())
+		rgba |= 0x000000FF;
+	else
+		rgba |= 0xFF000000;
 	if (sa == 256)
 	{
 		while (w--)
@@ -246,7 +255,10 @@ fz_paint_span_with_color_4(byte * restrict dp, byte * restrict mp, int w, byte *
 	int sa = FZ_EXPAND(color[3]);
 	if (sa == 0)
 		return;
-	rgba |= 0xFF000000;
+	if (isbigendian())
+		rgba |= 0x000000FF;
+	else
+		rgba |= 0xFF000000;
 	mask = 0xFF00FF00;
 	rb = rgba & (mask>>8);
 	ga = (rgba & mask)>>8;

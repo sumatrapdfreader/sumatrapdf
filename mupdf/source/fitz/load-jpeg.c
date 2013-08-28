@@ -43,7 +43,6 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 	}
 }
 
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
 static inline int read_value(const unsigned char *data, int bytes, int is_big_endian)
 {
 	int value = 0;
@@ -175,9 +174,7 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		src.next_input_byte = rbuf;
 		src.bytes_in_buffer = rlen;
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
 		jpeg_save_markers(&cinfo, JPEG_APP0+1, 0xffff);
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
 		jpeg_save_markers(&cinfo, JPEG_APP0+13, 0xffff);
 
 		jpeg_read_header(&cinfo, 1);
@@ -194,16 +191,11 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		*xp = cinfo.image_width;
 		*yp = cinfo.image_height;
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2249 */
 		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp))
 			/* XPS prefers EXIF resolution to JFIF density */;
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2268 */
 		else if (extract_app13_resolution(cinfo.marker_list, xresp, yresp))
-			/* XPS prefers APP13 resolutoin to JFIF density */;
-		else
-		if (cinfo.density_unit == 1)
+			/* XPS prefers APP13 resolution to JFIF density */;
+		else if (cinfo.density_unit == 1)
 		{
 			*xresp = cinfo.X_density;
 			*yresp = cinfo.Y_density;
@@ -219,7 +211,6 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 			*yresp = 0;
 		}
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2278 */
 		if (*xresp <= 0) *xresp = 96;
 		if (*yresp <= 0) *yresp = 96;
 	}

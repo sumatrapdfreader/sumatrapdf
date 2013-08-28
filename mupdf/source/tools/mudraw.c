@@ -168,7 +168,7 @@ static int out_cs = CS_UNSET;
 static int memtrace_current = 0;
 static int memtrace_peak = 0;
 static int memtrace_total = 0;
-
+static int showmemory = 0;
 static fz_text_sheet *sheet = NULL;
 static fz_colorspace *colorspace;
 static char *filename;
@@ -937,6 +937,11 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	if (showmd5 || showtime)
 		printf("\n");
 
+	if (showmemory)
+	{
+		fz_dump_glyph_cache_stats(ctx);
+	}
+
 	fz_flush_warnings(ctx);
 
 	if (mujstest_file && needshot)
@@ -1087,7 +1092,6 @@ int main(int argc, char **argv)
 	int c;
 	fz_context *ctx;
 	fz_alloc_context alloc_ctx = { NULL, trace_malloc, trace_realloc, trace_free };
-	int tracememory = 0;
 
 	fz_var(doc);
 
@@ -1103,7 +1107,7 @@ int main(int argc, char **argv)
 		case 'b': alphabits = atoi(fz_optarg); break;
 		case 'l': showoutline++; break;
 		case 'm': showtime++; break;
-		case 'M': tracememory++; break;
+		case 'M': showmemory++; break;
 		case 't': showtext++; break;
 		case 'x': showxml++; break;
 		case '5': showmd5++; break;
@@ -1138,7 +1142,7 @@ int main(int argc, char **argv)
 			mujstest_file = fopen(mujstest_filename, "wb");
 	}
 
-	ctx = fz_new_context((tracememory == 0 ? NULL : &alloc_ctx), NULL, FZ_STORE_DEFAULT);
+	ctx = fz_new_context((showmemory == 0 ? NULL : &alloc_ctx), NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
 	{
 		fprintf(stderr, "cannot initialise context\n");
@@ -1379,7 +1383,7 @@ int main(int argc, char **argv)
 
 	fz_free_context(ctx);
 
-	if (tracememory)
+	if (showmemory)
 	{
 		printf("Total memory use = %d bytes\n", memtrace_total);
 		printf("Peak memory use = %d bytes\n", memtrace_peak);

@@ -36,7 +36,7 @@ pdf_designated_name;
 void pdf_free_designated_name(pdf_designated_name *dn);
 
 
-pdf_signer *pdf_read_pfx(fz_context *ctx, char *sigfile, char *password);
+pdf_signer *pdf_read_pfx(fz_context *ctx, const char *sigfile, const char *password);
 pdf_signer *pdf_keep_signer(pdf_signer *signer);
 void pdf_drop_signer(pdf_signer *signer);
 pdf_designated_name *pdf_signer_designated_name(pdf_signer *signer);
@@ -60,6 +60,6 @@ int pdf_check_signature(pdf_document *doc, pdf_widget *widget, char *file, char 
 /*
 	pdf_sign_signature: sign a signature form field
 */
-void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, char *sigfile, char *password);
+void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, const char *sigfile, const char *password);
 
 #endif

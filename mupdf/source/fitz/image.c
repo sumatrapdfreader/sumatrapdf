@@ -392,8 +392,8 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 	case FZ_IMAGE_TIFF:
 		tile = fz_load_tiff(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
 		break;
-	/* SumatraPDF: support JPEG-XR images */
 	case FZ_IMAGE_JXR:
+		/* SumatraPDF: support JPEG-XR images */
 		tile = fz_load_jxr(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
 		break;
 	default:
@@ -403,9 +403,14 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 		indexed = fz_colorspace_is_indexed(image->colorspace);
 		tile = fz_decomp_image_from_stream(ctx, stm, image, 0, indexed, l2factor, native_l2factor);
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
-		if (image->from_xps && image->buffer->params.type == FZ_IMAGE_JPEG && image->colorspace == fz_device_cmyk(ctx) && image->buffer->params.u.jpeg.color_transform)
+		/* CMYK JPEGs in XPS documents have to be inverted */
+		if (image->invert_cmyk_jpeg &&
+			image->buffer->params.type == FZ_IMAGE_JPEG &&
+			image->colorspace == fz_device_cmyk(ctx) &&
+			image->buffer->params.u.jpeg.color_transform)
+		{
 			fz_invert_pixmap(ctx, tile);
+		}
 
 		break;
 	}
@@ -584,6 +589,7 @@ fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 		else if (memcmp(buf, "II", 2) == 0 && buf[2] == 0xBC)
 		{
 			bc->params.type = FZ_IMAGE_JXR;
+			/* SumatraPDF: support JPEG-XR images */
 			fz_load_jxr_info(ctx, buf, len, &w, &h, &xres, &yres, &cspace);
 		}
 		else if (memcmp(buf, "MM", 2) == 0 || memcmp(buf, "II", 2) == 0)

@@ -34,6 +34,10 @@ struct fz_glyph_cache_s
 {
 	int refs;
 	int total;
+#ifndef NDEBUG
+	int num_evictions;
+	int evicted;
+#endif
 	fz_glyph_cache_entry *entry[GLYPH_HASH_LEN];
 	fz_glyph_cache_entry *lru_head;
 	fz_glyph_cache_entry *lru_tail;
@@ -78,7 +82,7 @@ drop_glyph_cache_entry(fz_context *ctx, fz_glyph_cache_entry *entry)
 
 /* The glyph cache lock is always held when this function is called. */
 static void
-fz_evict_glyph_cache(fz_context *ctx)
+do_purge(fz_context *ctx)
 {
 	fz_glyph_cache *cache = ctx->glyph_cache;
 	int i;
@@ -96,7 +100,7 @@ void
 fz_purge_glyph_cache(fz_context *ctx)
 {
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
-	fz_evict_glyph_cache(ctx);
+	do_purge(ctx);
 	fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 }
 
@@ -110,7 +114,7 @@ fz_drop_glyph_cache_context(fz_context *ctx)
 	ctx->glyph_cache->refs--;
 	if (ctx->glyph_cache->refs == 0)
 	{
-		fz_evict_glyph_cache(ctx);
+		do_purge(ctx);
 		fz_free(ctx, ctx->glyph_cache);
 		ctx->glyph_cache = NULL;
 	}
@@ -319,6 +323,10 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 				cache->total += val->w * val->h;
 				while (cache->total > MAX_CACHE_SIZE)
 				{
+#ifndef NDEBUG
+					cache->num_evictions++;
+					cache->evicted += cache->lru_tail->val->w * cache->lru_tail->val->h;
+#endif
 					drop_glyph_cache_entry(ctx, cache->lru_tail);
 				}
 
@@ -339,4 +347,15 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 	}
 
 	return val;
+}
+
+void
+fz_dump_glyph_cache_stats(fz_context *ctx)
+{
+	fz_glyph_cache *cache = ctx->glyph_cache;
+
+	printf("Glyph Cache Size: %d\n", cache->total);
+#ifndef NDEBUG
+	printf("Glyph Cache Evictions: %d (%d bytes)\n", cache->num_evictions, cache->evicted);
+#endif
 }
