@@ -111,54 +111,170 @@ fz_paint_affine_alpha_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, i
 	int k;
 	int n1 = n-1;
 
-	while (w--)
+	if (fa == 0)
 	{
 		int ui = u >> 16;
-		int vi = v >> 16;
-		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		if (ui < 0 || ui >= sw)
+			return;
+		sp += ui * n;
+		sw *= n;
+		while (w--)
 		{
-			byte *sample = sp + ((vi * sw + ui) * n);
-			int a = fz_mul255(sample[n-1], alpha);
-			int t = 255 - a;
-			for (k = 0; k < n1; k++)
-				dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
-			dp[n1] = a + fz_mul255(dp[n1], t);
+			int vi = v >> 16;
+			if (vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + (vi * sw);
+				int a = fz_mul255(sample[n-1], alpha);
+				int t = 255 - a;
+				for (k = 0; k < n1; k++)
+					dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
+				dp[n1] = a + fz_mul255(dp[n1], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += n;
 			if (hp)
-				hp[0] = a + fz_mul255(hp[0], t);
+				hp++;
+			v += fb;
 		}
-		dp += n;
-		if (hp)
-			hp++;
-		u += fa;
-		v += fb;
+	}
+	else if (fb == 0)
+	{
+		int vi = v >> 16;
+		if (vi < 0 || vi >= sh)
+			return;
+		sp += vi * sw * n;
+		while (w--)
+		{
+			int ui = u >> 16;
+			if (ui >= 0 && ui < sw)
+			{
+				byte *sample = sp + (ui * n);
+				int a = fz_mul255(sample[n-1], alpha);
+				int t = 255 - a;
+				for (k = 0; k < n1; k++)
+					dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
+				dp[n1] = a + fz_mul255(dp[n1], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += n;
+			if (hp)
+				hp++;
+			u += fa;
+		}
+	}
+	else
+	{
+		while (w--)
+		{
+			int ui = u >> 16;
+			int vi = v >> 16;
+			if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + ((vi * sw + ui) * n);
+				int a = fz_mul255(sample[n-1], alpha);
+				int t = 255 - a;
+				for (k = 0; k < n1; k++)
+					dp[k] = fz_mul255(sample[k], alpha) + fz_mul255(dp[k], t);
+				dp[n1] = a + fz_mul255(dp[n1], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += n;
+			if (hp)
+				hp++;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 
 static inline void
 fz_paint_affine_alpha_g2rgb_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int alpha, byte *hp)
 {
-	while (w--)
+	if (fa == 0)
 	{
 		int ui = u >> 16;
-		int vi = v >> 16;
-		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		if (ui < 0 || ui >= sw)
+			return;
+		sp += ui * 2;
+		sw *= 2;
+		while (w--)
 		{
-			byte *sample = sp + ((vi * sw + ui) * 2);
-			int x = fz_mul255(sample[0], alpha);
-			int a = fz_mul255(sample[1], alpha);
-			int t = 255 - a;
-			dp[0] = x + fz_mul255(dp[0], t);
-			dp[1] = x + fz_mul255(dp[1], t);
-			dp[2] = x + fz_mul255(dp[2], t);
-			dp[3] = a + fz_mul255(dp[3], t);
+			int vi = v >> 16;
+			if (vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + (vi * sw);
+				int x = fz_mul255(sample[0], alpha);
+				int a = fz_mul255(sample[1], alpha);
+				int t = 255 - a;
+				dp[0] = x + fz_mul255(dp[0], t);
+				dp[1] = x + fz_mul255(dp[1], t);
+				dp[2] = x + fz_mul255(dp[2], t);
+				dp[3] = a + fz_mul255(dp[3], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += 4;
 			if (hp)
-				hp[0] = a + fz_mul255(hp[0], t);
+				hp++;
+			v += fb;
 		}
-		dp += 4;
-		if (hp)
-			hp++;
-		u += fa;
-		v += fb;
+	}
+	else if (fb == 0)
+	{
+		int vi = v >> 16;
+		if (vi < 0 || vi >= sh)
+			return;
+		sp += vi * sw * 2;
+		while (w--)
+		{
+			int ui = u >> 16;
+			if (ui >= 0 && ui < sw)
+			{
+				byte *sample = sp + (ui * 2);
+				int x = fz_mul255(sample[0], alpha);
+				int a = fz_mul255(sample[1], alpha);
+				int t = 255 - a;
+				dp[0] = x + fz_mul255(dp[0], t);
+				dp[1] = x + fz_mul255(dp[1], t);
+				dp[2] = x + fz_mul255(dp[2], t);
+				dp[3] = a + fz_mul255(dp[3], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += 4;
+			if (hp)
+				hp++;
+			u += fa;
+		}
+	}
+	else
+	{
+		while (w--)
+		{
+			int ui = u >> 16;
+			int vi = v >> 16;
+			if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + ((vi * sw + ui) * 2);
+				int x = fz_mul255(sample[0], alpha);
+				int a = fz_mul255(sample[1], alpha);
+				int t = 255 - a;
+				dp[0] = x + fz_mul255(dp[0], t);
+				dp[1] = x + fz_mul255(dp[1], t);
+				dp[2] = x + fz_mul255(dp[2], t);
+				dp[3] = a + fz_mul255(dp[3], t);
+				if (hp)
+					hp[0] = a + fz_mul255(hp[0], t);
+			}
+			dp += 4;
+			if (hp)
+				hp++;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 
@@ -240,54 +356,281 @@ fz_paint_affine_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa,
 	int k;
 	int n1 = n-1;
 
-	while (w--)
+	if (fa == 0)
 	{
 		int ui = u >> 16;
-		int vi = v >> 16;
-		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		if (ui < 0 || ui >= sw)
+			return;
+		sp += ui*n;
+		sw *= n;
+		while (w--)
 		{
-			byte *sample = sp + ((vi * sw + ui) * n);
-			int a = sample[n1];
-			int t = 255 - a;
-			for (k = 0; k < n1; k++)
-				dp[k] = sample[k] + fz_mul255(dp[k], t);
-			dp[n1] = a + fz_mul255(dp[n1], t);
+			int vi = v >> 16;
+			if (vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + (vi * sw);
+				int a = sample[n1];
+				/* If a is 0, then sample[k] = 0 for all k, as premultiplied */
+				if (a != 0)
+				{
+					int t = 255 - a;
+					if (t == 0)
+					{
+						if (n == 4)
+						{
+							*(int *)dp = *(int *)sample;
+						}
+						else
+						{
+							for (k = 0; k < n1; k++)
+								dp[k] = sample[k];
+							dp[n1] = a;
+						}
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						for (k = 0; k < n1; k++)
+							dp[k] = sample[k] + fz_mul255(dp[k], t);
+						dp[n1] = a + fz_mul255(dp[n1], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					}
+				}
+			}
+			dp += n;
 			if (hp)
-				hp[0] = a + fz_mul255(hp[0], t);
+				hp++;
+			v += fb;
 		}
-		dp += n;
-		if (hp)
-			hp++;
-		u += fa;
-		v += fb;
+	}
+	else if (fb == 0)
+	{
+		int vi = v >> 16;
+		if (vi < 0 || vi >= sh)
+			return;
+		sp += vi * sw * n;
+		while (w--)
+		{
+			int ui = u >> 16;
+			if (ui >= 0 && ui < sw)
+			{
+				byte *sample = sp + (ui * n);
+				int a = sample[n1];
+				/* If a is 0, then sample[k] = 0 for all k, as premultiplied */
+				if (a != 0)
+				{
+					int t = 255 - a;
+					if (t == 0)
+					{
+						if (n == 4)
+						{
+							*(int *)dp = *(int *)sample;
+						}
+						else
+						{
+							for (k = 0; k < n1; k++)
+								dp[k] = sample[k];
+							dp[n1] = a;
+						}
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						for (k = 0; k < n1; k++)
+							dp[k] = sample[k] + fz_mul255(dp[k], t);
+						dp[n1] = a + fz_mul255(dp[n1], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					}
+				}
+			}
+			dp += n;
+			if (hp)
+				hp++;
+			u += fa;
+		}
+	}
+	else
+	{
+		while (w--)
+		{
+			int ui = u >> 16;
+			int vi = v >> 16;
+			if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + ((vi * sw + ui) * n);
+				int a = sample[n1];
+				/* If a is 0, then sample[k] = 0 for all k, as premultiplied */
+				if (a != 0)
+				{
+					int t = 255 - a;
+					if (t == 0)
+					{
+						if (n == 4)
+						{
+							*(int *)dp = *(int *)sample;
+						}
+						else
+						{
+							for (k = 0; k < n1; k++)
+								dp[k] = sample[k];
+							dp[n1] = a;
+						}
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						for (k = 0; k < n1; k++)
+							dp[k] = sample[k] + fz_mul255(dp[k], t);
+						dp[n1] = a + fz_mul255(dp[n1], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					} 
+				}
+			}
+			dp += n;
+			if (hp)
+				hp++;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 
 static inline void
 fz_paint_affine_solid_g2rgb_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, byte *hp)
 {
-	while (w--)
+	if (fa == 0)
 	{
 		int ui = u >> 16;
-		int vi = v >> 16;
-		if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+		if (ui < 0 || ui >= sw)
+			return;
+		sp += ui * 2;
+		sw *= 2;
+		while (w--)
 		{
-			byte *sample = sp + ((vi * sw + ui) * 2);
-			int x = sample[0];
-			int a = sample[1];
-			int t = 255 - a;
-			dp[0] = x + fz_mul255(dp[0], t);
-			dp[1] = x + fz_mul255(dp[1], t);
-			dp[2] = x + fz_mul255(dp[2], t);
-			dp[3] = a + fz_mul255(dp[3], t);
+			int vi = v >> 16;
+			if (vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + (vi * sw);
+				int a = sample[1];
+				if (a != 0)
+				{
+					int x = sample[0];
+					int t = 255 - a;
+					if (t == 0)
+					{
+						dp[0] = x;
+						dp[1] = x;
+						dp[2] = x;
+						dp[3] = a;
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						dp[0] = x + fz_mul255(dp[0], t);
+						dp[1] = x + fz_mul255(dp[1], t);
+						dp[2] = x + fz_mul255(dp[2], t);
+						dp[3] = a + fz_mul255(dp[3], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					}
+				}
+			}
+			dp += 4;
 			if (hp)
-				hp[0] = a + fz_mul255(hp[0], t);
+				hp++;
+			v += fb;
 		}
-		dp += 4;
-		if (hp)
-			hp++;
-		u += fa;
-		v += fb;
+	}
+	else if (fb == 0)
+	{
+		int vi = v >> 16;
+		if (vi < 0 || vi >= sh)
+			return;
+		sp += vi * sw * 2;
+		while (w--)
+		{
+			int ui = u >> 16;
+			if (ui >= 0 && ui < sw)
+			{
+				byte *sample = sp + (ui * 2);
+				int a = sample[1];
+				if (a != 0)
+				{
+					int x = sample[0];
+					int t = 255 - a;
+					if (t == 0)
+					{
+						dp[0] = x;
+						dp[1] = x;
+						dp[2] = x;
+						dp[3] = a;
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						dp[0] = x + fz_mul255(dp[0], t);
+						dp[1] = x + fz_mul255(dp[1], t);
+						dp[2] = x + fz_mul255(dp[2], t);
+						dp[3] = a + fz_mul255(dp[3], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					}
+				}
+			}
+			dp += 4;
+			if (hp)
+				hp++;
+			u += fa;
+		}
+	}
+	else
+	{
+		while (w--)
+		{
+			int ui = u >> 16;
+			int vi = v >> 16;
+			if (ui >= 0 && ui < sw && vi >= 0 && vi < sh)
+			{
+				byte *sample = sp + ((vi * sw + ui) * 2);
+				int a = sample[1];
+				if (a != 0)
+				{
+					int x = sample[0];
+					int t = 255 - a;
+					if (t == 0)
+					{
+						dp[0] = x;
+						dp[1] = x;
+						dp[2] = x;
+						dp[3] = a;
+						if (hp)
+							hp[0] = a;
+					}
+					else
+					{
+						dp[0] = x + fz_mul255(dp[0], t);
+						dp[1] = x + fz_mul255(dp[1], t);
+						dp[2] = x + fz_mul255(dp[2], t);
+						dp[3] = a + fz_mul255(dp[3], t);
+						if (hp)
+							hp[0] = a + fz_mul255(hp[0], t);
+					}
+				}
+			}
+			dp += 4;
+			if (hp)
+				hp++;
+			u += fa;
+			v += fb;
+		}
 	}
 }
 

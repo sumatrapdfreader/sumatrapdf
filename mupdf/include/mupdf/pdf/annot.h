@@ -56,7 +56,7 @@ struct pdf_annot_s
 	int widget_type;
 };
 
-fz_link_dest pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest);
+fz_link_dest pdf_parse_link_dest(pdf_document *doc, fz_link_kind kind, pdf_obj *dest);
 fz_link_dest pdf_parse_action(pdf_document *doc, pdf_obj *action);
 pdf_obj *pdf_lookup_dest(pdf_document *doc, pdf_obj *needle);
 pdf_obj *pdf_lookup_name(pdf_document *doc, char *which, pdf_obj *needle);

@@ -1,15 +1,20 @@
 #include "mupdf/pdf.h"
 
 static pdf_obj *
-resolve_dest_rec(pdf_document *doc, pdf_obj *dest, int depth)
+resolve_dest_rec(pdf_document *doc, pdf_obj *dest, fz_link_kind kind, int depth)
 {
 	if (depth > 10) /* Arbitrary to avoid infinite recursion */
 		return NULL;
 
 	if (pdf_is_name(dest) || pdf_is_string(dest))
 	{
-		dest = pdf_lookup_dest(doc, dest);
-		return resolve_dest_rec(doc, dest, depth+1);
+		if (kind == FZ_LINK_GOTO)
+		{
+			dest = pdf_lookup_dest(doc, dest);
+			dest = resolve_dest_rec(doc, dest, kind, depth+1);
+		}
+
+		return dest;
 	}
 
 	else if (pdf_is_array(dest))
@@ -20,7 +25,7 @@ resolve_dest_rec(pdf_document *doc, pdf_obj *dest, int depth)
 	else if (pdf_is_dict(dest))
 	{
 		dest = pdf_dict_gets(dest, "D");
-		return resolve_dest_rec(doc, dest, depth+1);
+		return resolve_dest_rec(doc, dest, kind, depth+1);
 	}
 
 	else if (pdf_is_indirect(dest))
@@ -30,13 +35,13 @@ resolve_dest_rec(pdf_document *doc, pdf_obj *dest, int depth)
 }
 
 static pdf_obj *
-resolve_dest(pdf_document *doc, pdf_obj *dest)
+resolve_dest(pdf_document *doc, pdf_obj *dest, fz_link_kind kind)
 {
-	return resolve_dest_rec(doc, dest, 0);
+	return resolve_dest_rec(doc, dest, kind, 0);
 }
 
 fz_link_dest
-pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest)
+pdf_parse_link_dest(pdf_document *doc, fz_link_kind kind, pdf_obj *dest)
 {
 	fz_link_dest ld;
 	pdf_obj *obj;
@@ -49,10 +54,27 @@ pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest)
 	int t_from_2 = 0;
 	int z_from_4 = 0;
 
-	dest = resolve_dest(doc, dest);
-	if (dest == NULL || !pdf_is_array(dest))
+	ld.kind = kind;
+	ld.ld.gotor.flags = 0;
+	ld.ld.gotor.lt.x = 0;
+	ld.ld.gotor.lt.y = 0;
+	ld.ld.gotor.rb.x = 0;
+	ld.ld.gotor.rb.y = 0;
+	ld.ld.gotor.page = -1;
+	ld.ld.gotor.dest = NULL;
+
+	dest = resolve_dest(doc, dest, kind);
+
+	if (pdf_is_name(dest))
 	{
-		ld.kind = FZ_LINK_NONE;
+		/* SumatraPDF: expose dest as UTF-8 string */
+		ld.ld.gotor.dest = fz_strdup(doc->ctx, pdf_to_name(dest));
+		return ld;
+	}
+	else if (pdf_is_string(dest))
+	{
+		/* SumatraPDF: expose dest as UTF-8 string */
+		ld.ld.gotor.dest = pdf_to_utf8(doc, dest);
 		return ld;
 	}
 
@@ -71,17 +93,6 @@ pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest)
 			return ld;
 		}
 	}
-
-	ld.kind = FZ_LINK_GOTO;
-	ld.ld.gotor.flags = 0;
-	ld.ld.gotor.lt.x = 0;
-	ld.ld.gotor.lt.y = 0;
-	ld.ld.gotor.rb.x = 0;
-	ld.ld.gotor.rb.y = 0;
-	ld.ld.gotor.file_spec = NULL;
-	ld.ld.gotor.new_window = 0;
-	/* SumatraPDF: allow to resolve against remote documents */
-	ld.ld.gotor.rname = NULL;
 
 	obj = pdf_array_get(dest, 1);
 	if (!pdf_is_name(obj))
@@ -283,7 +294,7 @@ fz_link_dest
 pdf_parse_action(pdf_document *doc, pdf_obj *action)
 {
 	fz_link_dest ld;
-	pdf_obj *obj, *dest;
+	pdf_obj *obj, *dest, *file_spec;
 	fz_context *ctx = doc->ctx;
 
 	UNUSED(ctx);
@@ -297,31 +308,33 @@ pdf_parse_action(pdf_document *doc, pdf_obj *action)
 	if (!strcmp(pdf_to_name(obj), "GoTo"))
 	{
 		dest = pdf_dict_gets(action, "D");
-		ld = pdf_parse_link_dest(doc, dest);
+		ld = pdf_parse_link_dest(doc, FZ_LINK_GOTO, dest);
 	}
 	else if (!strcmp(pdf_to_name(obj), "URI"))
 	{
 		ld.kind = FZ_LINK_URI;
 		ld.ld.uri.is_map = pdf_to_bool(pdf_dict_gets(action, "IsMap"));
 		ld.ld.uri.uri = pdf_to_utf8(doc, pdf_dict_gets(action, "URI"));
+		ld.ld.gotor.file_spec = NULL;
+		ld.ld.gotor.new_window = 0;
 	}
 	else if (!strcmp(pdf_to_name(obj), "Launch"))
 	{
 		ld.kind = FZ_LINK_LAUNCH;
-		dest = pdf_dict_gets(action, "F");
+		file_spec = pdf_dict_gets(action, "F");
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.launch.file_spec = pdf_file_spec_to_str(doc, dest);
+		ld.ld.launch.file_spec = pdf_file_spec_to_str(doc, file_spec);
 		ld.ld.launch.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support launching embedded files */
 #ifdef _WIN32
-		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
+		obj = pdf_dict_getsa(pdf_dict_gets(file_spec, "EF"), "DOS", "F");
 #else
-		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
+		obj = pdf_dict_getsa(pdf_dict_gets(file_spec, "EF"), "Unix", "F");
 #endif
 		ld.ld.launch.embedded_num = pdf_to_num(obj);
 		ld.ld.launch.embedded_gen = pdf_to_gen(obj);
 		/* SumatraPDF: support URL /Filespec */
-		ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(dest, "FS")), "URL");
+		ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(file_spec, "FS")), "URL");
 	}
 	else if (!strcmp(pdf_to_name(obj), "Named"))
 	{
@@ -334,22 +347,11 @@ pdf_parse_action(pdf_document *doc, pdf_obj *action)
 		char *rname = NULL;
 		memset(&ld, 0, sizeof(ld));
 		dest = pdf_dict_gets(action, "D");
-		if (pdf_is_array(dest))
-			ld = pdf_parse_link_dest(doc, dest);
-		else if (pdf_is_name(dest))
-			rname = fz_strdup(ctx, pdf_to_name(dest));
-		else if (pdf_is_string(dest))
-			rname = pdf_to_utf8(doc, dest);
-		if (rname || ld.kind == FZ_LINK_GOTO && ld.ld.gotor.page >= 0)
-		{
-		ld.kind = FZ_LINK_GOTOR;
-		dest = pdf_dict_gets(action, "F");
+		file_spec = pdf_dict_gets(action, "F");
+		ld = pdf_parse_link_dest(doc, FZ_LINK_GOTOR, dest);
 		/* SumatraPDF: parse full file specifications */
-		ld.ld.gotor.file_spec = pdf_file_spec_to_str(doc, dest);
+		ld.ld.gotor.file_spec = pdf_file_spec_to_str(doc, file_spec);
 		ld.ld.gotor.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
-		/* SumatraPDF: allow to resolve against remote documents */
-		ld.ld.gotor.rname = rname;
-		}
 	}
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2117 */
 	else if (!strcmp(pdf_to_name(obj), "JavaScript"))
@@ -390,10 +392,7 @@ pdf_load_link(pdf_document *doc, pdf_obj *dict, const fz_matrix *page_ctm)
 
 	obj = pdf_dict_gets(dict, "Dest");
 	if (obj)
-	{
-		dest = resolve_dest(doc, obj);
-		ld = pdf_parse_link_dest(doc, dest);
-	}
+		ld = pdf_parse_link_dest(doc, FZ_LINK_GOTO, obj);
 	else
 	{
 		action = pdf_dict_gets(dict, "A");

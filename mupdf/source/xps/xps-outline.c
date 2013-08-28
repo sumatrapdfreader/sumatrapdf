@@ -41,7 +41,7 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 				entry->dest.kind = FZ_LINK_GOTO;
 				entry->dest.ld.gotor.page = xps_lookup_link_target(doc, target);
 				/* for retrieving updated target rectangles */
-				entry->dest.ld.gotor.rname = fz_strdup(doc->ctx, target);
+				entry->dest.ld.gotor.dest = fz_strdup(doc->ctx, target);
 			}
 			else
 			{
@@ -185,7 +185,7 @@ xps_extract_anchor_info(xps_document *doc, const fz_rect *rect, char *target_uri
 			ld.kind = FZ_LINK_GOTO;
 			ld.ld.gotor.page = xps_lookup_link_target(doc, target_uri);
 			/* for retrieving updated target rectangles */
-			ld.ld.gotor.rname = fz_strdup(doc->ctx, target_uri);
+			ld.ld.gotor.dest = fz_strdup(doc->ctx, target_uri);
 		}
 		else
 		{
