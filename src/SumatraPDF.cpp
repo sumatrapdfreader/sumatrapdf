@@ -2879,7 +2879,8 @@ static void OnMenuSaveAs(WindowInfo& win)
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
     // ... as well as files containing annotations ...
-    else if (win.dm->engine->SupportsAnnotation(true)) {
+    else if (gGlobalPrefs->annotationDefaults.saveIntoDocument &&
+             win.dm->engine->SupportsAnnotation(true)) {
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
     // ... else just copy the file
@@ -2898,8 +2899,10 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
     }
     if (ok && win.userAnnots && win.userAnnotsModified) {
-        if (!win.dm->engine->SupportsAnnotation(true))
+        if (!gGlobalPrefs->annotationDefaults.saveIntoDocument ||
+            !win.dm->engine->SupportsAnnotation(true)) {
             ok = SaveFileModifictions(realDstFileName, win.userAnnots);
+        }
         if (ok && path::IsSame(srcFileName, realDstFileName))
             win.userAnnotsModified = false;
     }

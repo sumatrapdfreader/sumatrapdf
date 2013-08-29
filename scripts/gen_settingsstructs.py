@@ -220,6 +220,9 @@ AnnotationDefaults = [
 	Field("HighlightColor", Color, RGB(0xFF, 0xFF, 0x60),
 		"color used for the highlight tool (in prerelease builds, the current selection " +
 		"can be converted into a highlight annotation by pressing the 'h' key)"),
+	Field("SaveIntoDocument", Bool, True,
+		"if true, annotations are appended to PDF documents, " +
+		"else they're always saved to an external .smx file"),
 ]
 
 Favorite = [
@@ -359,7 +362,8 @@ GlobalPrefs = [
 		expert=True),
 	# TODO: remove this for release builds (until annotations are better exposed)?
 	Struct("AnnotationDefaults", AnnotationDefaults,
-		"default values for user added annotations in FixedPageUI documents",
+		"default values for user added annotations in FixedPageUI documents " +
+		"(preliminary and still subject to change)",
 		expert=True),
 	Field("DefaultPasswords", String, None,
 		"a whitespace separated list of passwords to try for opening a password protected document " +
