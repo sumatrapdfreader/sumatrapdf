@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b725e2b4d3c0d99bc5a138edc587bd1082e5bf24
+27eb147f8cde5f5cdffb924d4bcee9ec8eba4673
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -4531,7 +4531,7 @@ he:לא יכול להתקשר לאינטרנט (error %#x).
 hi:इंटरनेट से जुड़​ नहीं पा रहा है ( ग़लती %#x )
 hr:Internet nedostupan (greška %#x)
 hu:Nem sikerült kapcsolódni az Internetre (hiba %#x).
-id:Tidak bisa menghubungi Internet (kesalahan %#x).
+id:Tidak bisa terhubung ke Internet (kesalahan %#x).
 it:Impossibile connettersi a internet (errore %#x).
 ja:インターネットへ接続できません (エラー %#x)。
 ka:ინტერნეტთან დაკავშირება ვერ მოხერხდა (შეცდომა %#x).
@@ -5072,7 +5072,7 @@ he:רציף
 hi:निरन्तर
 hr:Slijedno
 hu:Folyamatos
-id:Kontinu
+id:Bersambung
 it:Pagina continua
 ja:連続
 ka:უწყვეტი
@@ -5137,7 +5137,7 @@ he:תצוגת ספר רציפה
 hi:निरंतरित पुस्तक दृश्य
 hr:Slijedni knjiški pogled
 hu:Folyamatos könyv
-id:Tampilan Buku Secara Kontinu
+id:Tampilan Buku Bersambung
 it:Vista libro continua
 ja:連続ブック ビュー
 ka:წიგნის რეჟიმი (უწყვეტი)
@@ -5200,7 +5200,7 @@ he:המשך תצוגה רציפה
 hi:निरन्तर पुस्तक
 hr:Dvije stranice slijedno
 hu:Folyamatos oldalpár
-id:Dua Halaman Kontinu
+id:Halaman Berhadapan Tersambung
 it:Pagine affiancate continue
 ja:連続見返し
 ka:ურთიერთ-საპირისპიროდ (უწყვეტი)
@@ -5615,7 +5615,7 @@ he:לא ניתן להשיג מאפייני מדפסת
 hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
-id:Gagal mendapatkan properti printer
+id:Gagal mendapatkan piranti Printer
 it:Impossibile ottenere info proprietà stampante
 ja:プリンターのプロパティを開けませんでした
 ka:პრინტერის თვისებების მიღება ვერ მოხერხდა
@@ -5808,7 +5808,7 @@ fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
 hr:Nemoguće instalirati PDF preglednik
 hu:PDF előnézet-megjelenítő telepítése sikertelen
-id:Gagal memasang penampil cepat PDF
+id:Gagal menginstal PDF pemratinjau
 it:Impossibile installare modulo anteprima PDF
 ja:PDF プレビューアをインストールできませんでした
 kr:PDF 미리보기를 설치할 수 없습니다.
@@ -6181,7 +6181,7 @@ fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 hr:Nemoguće deinstalirati dodatak za internet preglednik
 hu:Böngésző beépülő eltávolítása sikertelen
-id:Gagal menghapus plugin browser
+id:Gagal menghapus plugin untuk peramban
 it:Impossibile disinstallare il plugin del browser
 ja:ブラウザプラグインをアンインストールできませんでした
 kr:브라우저 플러그인을 제거할 수 없습니다.
@@ -6327,7 +6327,7 @@ he:קובץ נוכחי
 hi:वर्तमान फ़ाइल
 hr:Trenutna datoteka
 hu:Jelenlegi fájl
-id:Berkas sekarang
+id:Berkas ini
 it:File attuale
 ja:現在のファイル
 ka:მიმდინარე ფაილი
@@ -9669,7 +9669,7 @@ fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
-id:Install plugin untuk peram&bah Firefox, Chrome, dan Opera
+id:Install plugin untuk peram&ban Firefox, Chrome, dan Opera
 it:Installa plugin PDF per i &browser FireFox, Chrome e Opera
 ja:Firefox, Chrome, Opera へ PDF 閲覧プラグインをインストール(&b)
 kr:Firefox, Chrome 및 Opera용 PDF 브라우저 플러그인 설치(&B)
@@ -10429,7 +10429,7 @@ he:שונה:
 hi:संशोधित
 hr:Promijenjeno:
 hu:Módosítva:
-id:Dimodifikasi:
+id:Termodifikasi:
 it:Data ultima modifica:
 ja:変更日時:
 ka:შეცვლილია:
@@ -14416,7 +14416,7 @@ he:מצטער זה לא היה צריך לקרות!\n\nאנא הקלד בטל א
 hi:क्षमा करें, ऐसा नहीं होना चाहिए; अगर आप इस दुर्घटना को ठीक करने में मदद करना चाहते है : \n\n कृपया  'रद्द करें' दबाएँ |
 hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a 'Mégse' gombot, ha segíteni szeretne nekünk a hiba kijavításában.
-id:Maaf, itu tidak boleh terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab crash ini.
+id:Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.
 it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona <Annulla>.
 ja:謎のエラーが発生しました！\n\n「キャンセル」をクリックして、このエラーが起こった状況を報告して下さると助かります。
 ka:ბოდიშს გიხდით, ეს არ უნდა მომხდარიყო!\n\nთუ გსურთ რომ დაგვეხმაროთ ამ პრობლემის მოგვარებაში, გთხოვთ დააწკაპუნეთ ღილაკს 'გაუქმება'.
@@ -14822,7 +14822,7 @@ he:SumatraPDF נפלה
 hi:Sumatra पीडीएफ दुर्घटनाग्रस्त हो गया
 hr:SumatraPDF se srušio
 hu:SumatraPDF működése leállt
-id:SumatraPDF berhenti berfungsi
+id:SumatraPDF gagal
 it:SumatraPDF ha incontrato un errore irreparabile
 ja:SumatraPDF がクラッシュしました
 ka:SumatraPDF-ის მუშაობა ავარიულად დასრულდა

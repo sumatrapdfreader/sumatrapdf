@@ -6457,7 +6457,7 @@ const char * gTranslations_id =
   "Markah\0"\
   "\0"\
   "Dokumen CHM\0"\
-  "Tidak bisa menghubungi Internet (kesalahan %#x).\0"\
+  "Tidak bisa terhubung ke Internet (kesalahan %#x).\0"\
   "Batalkan\0"\
   "Tidak dapat mencetak berkas ini\0"\
   "Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.\0"\
@@ -6465,20 +6465,20 @@ const char * gTranslations_id =
   "&Periksa Versi Terbaru\0"\
   "Buku Komik\0"\
   "Kompabilitas\0"\
-  "Kontinu\0"\
-  "Tampilan Buku Secara Kontinu\0"\
-  "Dua Halaman Kontinu\0"\
+  "Bersambung\0"\
+  "Tampilan Buku Bersambung\0"\
+  "Halaman Berhadapan Tersambung\0"\
   "Bantu Alihbahasa\0"\
   "Salin &Gambar\0"\
   "Salin Alamat &Link\0"\
   "Salin &Komentar\0"\
   "Menyalin teks ditolak (menyalin sebagai gambar saja)\0"\
   "Hak Cipta\0"\
-  "Gagal mendapatkan properti printer\0"\
+  "Gagal mendapatkan piranti Printer\0"\
   "Gagal memulai printer\0"\
   "Gagal menampilkan halaman\0"\
   "Dibuat:\0"\
-  "Berkas sekarang\0"\
+  "Berkas ini\0"\
   "&Pembesaran Buatan\tCtrl+Y\0"\
   "Tampilan &Standar\0"\
   "Pembesaran &Standar\0"\
@@ -6536,7 +6536,7 @@ const char * gTranslations_id =
   "Mode komik\0"\
   "Cocokkan Ukuran Huruf\0"\
   "Dokumen Mobi\0"\
-  "Dimodifikasi:\0"\
+  "Termodifikasi:\0"\
   "Versi baru %s telah tersedia. Unduh versi baru ini?\0"\
   "Halaman Berikutnya\0"\
   "Tidak ditemukan kesamaan\0"\
@@ -6602,12 +6602,12 @@ const char * gTranslations_id =
   "Tampilkan Yang Sering Dibaca\0"\
   "Tampilkan kolom &markah jika tersedia\0"\
   "Halaman Tunggal\0"\
-  "Maaf, itu tidak boleh terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab crash ini.\0"\
+  "Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.\0"\
   "Berkas asal %s tidak mempunyai titik sinkronisasi\0"\
   "Perihal:\0"\
   "Pengaturan SumatraPDF\0"\
   "Pembaruan SumatraPDF\0"\
-  "SumatraPDF berhenti berfungsi\0"\
+  "SumatraPDF gagal\0"\
   "SumatraPDF adalah pembaca berkas PDF utama Anda\0"\
   "SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda\0"\
   "Berkas sinkronisasi tidak dapat dibuka\0"\

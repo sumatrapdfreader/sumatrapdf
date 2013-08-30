@@ -830,7 +830,7 @@ const char * gTranslations_id =
   "Tutup\0"\
   "Gagal membuat folder sementara\0"\
   "Gagal membuat folder instalasi\0"\
-  "Gagal memasang penampil cepat PDF\0"\
+  "Gagal menginstal PDF pemratinjau\0"\
   "Gagal memasang filter pencari PDF\0"\
   "Gagal memasang plugin untuk browser\0"\
   "Gagal mendeteksi folder sementara\0"\
@@ -838,7 +838,7 @@ const char * gTranslations_id =
   "Gagal menghapus shortcut\0"\
   "Gagal menghapus penampil cepat PDF\0"\
   "Gagal menghapus filter pencari PDF\0"\
-  "Gagal menghapus plugin browser\0"\
+  "Gagal menghapus plugin untuk peramban\0"\
   "Gagal menulis %s ke harddisk\0"\
   "Gagal mengkopi uninstaller ke direktori temp\0"\
   "Gagal membuat shortcut.\0"\
@@ -846,7 +846,7 @@ const char * gTranslations_id =
   "Gagal menulis info ekstensi file lanjutan ke registry\0"\
   "Gagal menulis info penghapusan program ke registry\0"\
   "Sembunyikan &Opsi\0"\
-  "Install plugin untuk peram&bah Firefox, Chrome, dan Opera\0"\
+  "Install plugin untuk peram&ban Firefox, Chrome, dan Opera\0"\
   "\0"\
   "Install SumatraPDF ke &folder:\0"\
   "Instalasi gagal!\0"\
