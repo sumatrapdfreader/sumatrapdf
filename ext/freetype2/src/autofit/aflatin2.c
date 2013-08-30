@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (body).                */
 /*                                                                         */
-/*  Copyright 2003-2012 by                                                 */
+/*  Copyright 2003-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -475,7 +475,7 @@
   af_latin2_metrics_init( AF_LatinMetrics  metrics,
                           FT_Face          face )
   {
-    FT_Error    error = AF_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_CharMap  oldmap = face->charmap;
     FT_UInt     ee;
 
@@ -507,7 +507,7 @@
     }
 
     FT_Set_Charmap( face, oldmap );
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -708,7 +708,7 @@
   {
     AF_AxisHints  axis          = &hints->axis[dim];
     FT_Memory     memory        = hints->memory;
-    FT_Error      error         = AF_Err_Ok;
+    FT_Error      error         = FT_Err_Ok;
     AF_Segment    segment       = NULL;
     AF_SegmentRec seg0;
     AF_Point*     contour       = hints->contours;
@@ -824,17 +824,17 @@
         segment->dir       = first->out_dir;
         segment->first     = first;
         segment->last      = point;
-        segment->pos       = (FT_Short)(( min_u + max_u ) >> 1);
+        segment->pos       = (FT_Short)( ( min_u + max_u ) >> 1 );
         segment->min_coord = (FT_Short) min_v;
         segment->max_coord = (FT_Short) max_v;
-        segment->height    = (FT_Short)(max_v - min_v);
+        segment->height    = (FT_Short)( max_v - min_v );
 
         /* a segment is round if it doesn't have successive */
         /* on-curve points.                                 */
         {
           AF_Point  pt   = first;
           AF_Point  last = point;
-          AF_Flags  f0   = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
+          AF_Flags  f0   = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
           AF_Flags  f1;
 
 
@@ -843,7 +843,7 @@
           for ( ; pt != last; f0 = f1 )
           {
             pt = pt->next;
-            f1 = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
+            f1 = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
 
             if ( !f0 && !f1 )
               break;
@@ -860,7 +860,7 @@
           break;
 
         /* jump to the start of the next segment, if any */
-        while ( FT_ABS(point->out_dir) != major_dir )
+        while ( FT_ABS( point->out_dir ) != major_dir )
         {
           point = point->next;
 
@@ -928,15 +928,16 @@
       FT_UInt     count    = axis->num_segments;
       FT_UInt     ii, jj;
 
-      for (ii = 0; ii < count; ii++)
+      for ( ii = 0; ii < count; ii++ )
       {
         if ( segments[ii].dir > 0 )
         {
-          for (jj = ii+1; jj < count; jj++)
+          for ( jj = ii + 1; jj < count; jj++ )
           {
             if ( segments[jj].dir < 0 )
             {
               AF_SegmentRec  tmp;
+
 
               tmp          = segments[ii];
               segments[ii] = segments[jj];
@@ -1064,7 +1065,7 @@
                                  AF_Dimension   dim )
   {
     AF_AxisHints  axis   = &hints->axis[dim];
-    FT_Error      error  = AF_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = hints->memory;
     AF_LatinAxis  laxis  = &((AF_LatinMetrics)hints->metrics)->axis[dim];
 
@@ -1098,7 +1099,7 @@
     if ( dim == AF_DIMENSION_HORZ )
     {
       if ( laxis->width_count > 0 )
-        segment_length_threshold = (laxis->standard_width * 10 ) >> 4;
+        segment_length_threshold = ( laxis->standard_width * 10 ) >> 4;
       else
         segment_length_threshold = FT_DivFix( 64, hints->y_scale );
     }
@@ -1144,10 +1145,11 @@
       {
         FT_Pos  dist = seg->serif->pos - seg->pos;
 
-        if (dist < 0)
+
+        if ( dist < 0 )
           dist = -dist;
 
-        if (dist >= laxis->standard_width >> 1)
+        if ( dist >= laxis->standard_width >> 1 )
         {
           /* unlink this serif, it is too distant from its reference stem */
           seg->serif = NULL;
@@ -1445,7 +1447,7 @@
             compare = &blue->ref;
 
           dist = edge->fpos - compare->org;
-          if (dist < 0)
+          if ( dist < 0 )
             dist = -dist;
 
           dist = FT_MulFix( dist, scale );
@@ -1549,8 +1551,8 @@
      *  In `light' hinting mode we disable horizontal hinting completely.
      *  We also do it if the face is italic.
      */
-    if ( mode == FT_RENDER_MODE_LIGHT                    ||
-         (face->style_flags & FT_STYLE_FLAG_ITALIC) != 0 )
+    if ( mode == FT_RENDER_MODE_LIGHT                      ||
+         ( face->style_flags & FT_STYLE_FLAG_ITALIC ) != 0 )
       scaler_flags |= AF_SCALER_FLAG_NO_HORIZONTAL;
 
     hints->scaler_flags = scaler_flags;
@@ -1631,8 +1633,8 @@
     FT_Int           sign     = 0;
     FT_Int           vertical = ( dim == AF_DIMENSION_VERT );
 
+    FT_UNUSED( base_flags );
 
-    FT_UNUSED(base_flags);
 
     if ( !AF_LATIN_HINTS_DO_STEM_ADJUST( hints ) ||
           axis->extra_light                      )
@@ -1762,7 +1764,7 @@
             if ( delta < 0 )
               delta = -delta;
 
-            if (delta >= 16)
+            if ( delta >= 16 )
             {
               dist = org_dist;
               if ( dist < 48 )
@@ -1816,7 +1818,7 @@
   {
     FT_UNUSED( hints );
 
-    serif->pos = base->pos + (serif->opos - base->opos);
+    serif->pos = base->pos + ( serif->opos - base->opos );
   }
 
 
@@ -1898,9 +1900,10 @@
         {
           anchor = edge;
 
-          anchor_drift = (anchor->pos - anchor->opos);
-          if (edge2)
-            anchor_drift = (anchor_drift + (edge2->pos - edge2->opos)) >> 1;
+          anchor_drift = ( anchor->pos - anchor->opos );
+          if ( edge2 )
+            anchor_drift = ( anchor_drift +
+                             ( edge2->pos - edge2->opos ) ) >> 1;
         }
       }
     }
@@ -1992,8 +1995,8 @@
 
         edge2->flags |= AF_EDGE_DONE;
 
-        anchor_drift = ( (anchor->pos - anchor->opos) +
-                         (edge2->pos - edge2->opos)) >> 1;
+        anchor_drift = ( ( anchor->pos - anchor->opos ) +
+                         ( edge2->pos - edge2->opos ) ) >> 1;
 
         FT_TRACE5(( "DRIFT: %.2f\n", anchor_drift/64.0 ));
       }
@@ -2012,8 +2015,8 @@
                    (AF_Edge_Flags)edge->flags,
                    (AF_Edge_Flags)edge2->flags );
 
-        org_left  = org_pos + ((org_len - cur_len) >> 1);
-        org_right = org_pos + ((org_len + cur_len) >> 1);
+        org_left  = org_pos + ( ( org_len - cur_len ) >> 1 );
+        org_right = org_pos + ( ( org_len + cur_len ) >> 1 );
 
         FT_TRACE5(( "ALIGN: left=%.2f right=%.2f ",
                     org_left / 64.0, org_right / 64.0 ));
@@ -2041,13 +2044,13 @@
           }
 
           /* if the span is within a single pixel, don't touch it */
-          if ( FT_PIX_FLOOR(org_left) == FT_PIX_CEIL(org_right) )
+          if ( FT_PIX_FLOOR( org_left ) == FT_PIX_CEIL( org_right ) )
           {
             FT_TRACE5(( "single pixel stem\n" ));
             goto AlignStem;
           }
 
-          if (cur_len <= 96)
+          if ( cur_len <= 96 )
           {
            /* we want to avoid the absolute worst case which is
             * when the left and right edges of the span each represent
@@ -2055,43 +2058,43 @@
             * to 25/75%, since this is much more pleasant to the eye with
             * very acceptable distortion
             */
-            FT_Pos  frac_left  = (org_left) & 63;
-            FT_Pos  frac_right = (org_right) & 63;
+            FT_Pos  frac_left  = org_left  & 63;
+            FT_Pos  frac_right = org_right & 63;
 
             if ( frac_left  >= 22 && frac_left  <= 42 &&
                  frac_right >= 22 && frac_right <= 42 )
             {
               org = frac_left;
-              fit = (org <= 32) ? 16 : 48;
-              delta = FT_ABS(fit - org);
+              fit = ( org <= 32 ) ? 16 : 48;
+              delta = FT_ABS( fit - org );
               displacements[count] = fit - org;
               scores[count++]      = delta;
-              FT_TRACE5(( "dispA=%.2f (%d) ", (fit - org) / 64.0, delta ));
+              FT_TRACE5(( "dispA=%.2f (%d) ", ( fit - org ) / 64.0, delta ));
 
               org = frac_right;
-              fit = (org <= 32) ? 16 : 48;
-              delta = FT_ABS(fit - org);
+              fit = ( org <= 32 ) ? 16 : 48;
+              delta = FT_ABS( fit - org );
               displacements[count] = fit - org;
               scores[count++]     = delta;
-              FT_TRACE5(( "dispB=%.2f (%d) ", (fit - org) / 64.0, delta ));
+              FT_TRACE5(( "dispB=%.2f (%d) ", ( fit - org ) / 64.0, delta ));
             }
           }
 
           /* snapping the left edge to the grid */
           org   = org_left;
-          fit   = FT_PIX_ROUND(org);
-          delta = FT_ABS(fit - org);
+          fit   = FT_PIX_ROUND( org );
+          delta = FT_ABS( fit - org );
           displacements[count] = fit - org;
           scores[count++]      = delta;
-          FT_TRACE5(( "dispC=%.2f (%d) ", (fit - org) / 64.0, delta ));
+          FT_TRACE5(( "dispC=%.2f (%d) ", ( fit - org ) / 64.0, delta ));
 
           /* snapping the right edge to the grid */
           org   = org_right;
-          fit   = FT_PIX_ROUND(org);
-          delta = FT_ABS(fit - org);
+          fit   = FT_PIX_ROUND( org );
+          delta = FT_ABS( fit - org );
           displacements[count] = fit - org;
           scores[count++]      = delta;
-          FT_TRACE5(( "dispD=%.2f (%d) ", (fit - org) / 64.0, delta ));
+          FT_TRACE5(( "dispD=%.2f (%d) ", ( fit - org ) / 64.0, delta ));
 
           /* now find the best displacement */
           {
@@ -2099,9 +2102,9 @@
             FT_Pos  best_disp  = displacements[0];
             FT_UInt nn;
 
-            for (nn = 1; nn < count; nn++)
+            for ( nn = 1; nn < count; nn++ )
             {
-              if (scores[nn] < best_score)
+              if ( scores[nn] < best_score )
               {
                 best_score = scores[nn];
                 best_disp  = displacements[nn];
@@ -2114,7 +2117,7 @@
         }
 
       AlignStem:
-        edge->pos  = cur_center - (cur_len >> 1);
+        edge->pos  = cur_center - ( cur_len >> 1 );
         edge2->pos = edge->pos + cur_len;
 
         FT_TRACE5(( "STEM1: %d (opos=%.2f) to %d (opos=%.2f)"

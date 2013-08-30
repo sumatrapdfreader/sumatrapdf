@@ -271,7 +271,7 @@ FT_BEGIN_HEADER
    *   miter_limit ::
    *     The miter limit for the FT_STROKER_LINEJOIN_MITER_FIXED and
    *     FT_STROKER_LINEJOIN_MITER_VARIABLE line join styles,
-   *     expressed as 16.16 fixed point value.
+   *     expressed as 16.16 fixed-point value.
    *
    * @note:
    *   The radius is expressed in the same units as the outline

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter routines to compute global hinting values (body).        */
 /*                                                                         */
-/*  Copyright 2003-2012 by                                                 */
+/*  Copyright 2003-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -55,7 +55,7 @@
   static FT_Error
   af_face_globals_compute_script_coverage( AF_FaceGlobals  globals )
   {
-    FT_Error    error       = AF_Err_Ok;
+    FT_Error    error;
     FT_Face     face        = globals->face;
     FT_CharMap  old_charmap = face->charmap;
     FT_Byte*    gscripts    = globals->glyph_scripts;
@@ -75,7 +75,7 @@
       *  Ignore this error; we simply use the fallback script.
       *  XXX: Shouldn't we rather disable hinting?
       */
-      error = AF_Err_Ok;
+      error = FT_Err_Ok;
       goto Exit;
     }
 
@@ -237,12 +237,12 @@
     FT_UInt           script     = options & 15;
     const FT_Offset   script_max = sizeof ( AF_SCRIPT_CLASSES_GET ) /
                                      sizeof ( AF_SCRIPT_CLASSES_GET[0] );
-    FT_Error          error      = AF_Err_Ok;
+    FT_Error          error      = FT_Err_Ok;
 
 
     if ( gindex >= (FT_ULong)globals->glyph_count )
     {
-      error = AF_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 

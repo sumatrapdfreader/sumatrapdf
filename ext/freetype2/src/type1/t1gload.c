@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009, 2010 by */
+/*  Copyright 1996-2006, 2008-2010, 2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,7 +61,7 @@
   {
     T1_Face   face  = (T1_Face)decoder->builder.face;
     T1_Font   type1 = &face->type1;
-    FT_Error  error = T1_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     FT_Incremental_InterfaceRec *inc =
@@ -203,7 +203,7 @@
 
     psaux->t1_decoder_funcs->done( &decoder );
 
-    return T1_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -227,7 +227,7 @@
       for ( nn = 0; nn < count; nn++ )
         advances[nn] = 0;
 
-      return T1_Err_Ok;
+      return FT_Err_Ok;
     }
 
     error = psaux->t1_decoder_funcs->init( &decoder,
@@ -261,7 +261,7 @@
         advances[nn] = 0;
     }
 
-    return T1_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -296,7 +296,7 @@
     if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
     {
-      error = T1_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 

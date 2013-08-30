@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Some convenience conversions (body).                                 */
 /*                                                                         */
-/*  Copyright 2006, 2008, 2009, 2012 by                                    */
+/*  Copyright 2006, 2008, 2009, 2012-2013 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -229,7 +229,7 @@
       if ( integral > 0x7FFF )
         have_overflow = 1;
       else
-        integral <<= 16;
+        integral = (FT_Fixed)( (FT_UInt32)integral << 16 );
     }
 
     /* read the decimal part */

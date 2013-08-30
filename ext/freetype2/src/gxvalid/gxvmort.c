@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT mort table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,       */
+/*  Copyright 2005, 2013 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -163,14 +163,15 @@
 
     };
 
-    GXV_Validate_Func  func;
-    FT_UShort          i;
+    FT_UShort  i;
 
 
     GXV_NAME_ENTER( "subtables in a chain" );
 
     for ( i = 0; i < nSubtables; i++ )
     {
+      GXV_Validate_Func  func;
+
       FT_UShort  length;
       FT_UShort  coverage;
 #ifdef GXV_LOAD_UNUSED_VARS

@@ -28,7 +28,7 @@
   FT_Get_PS_Font_Info( FT_Face          face,
                        PS_FontInfoRec*  afont_info )
   {
-    FT_Error  error = FT_Err_Invalid_Argument;
+    FT_Error  error = FT_ERR( Invalid_Argument );
 
 
     if ( face )
@@ -73,7 +73,7 @@
   FT_Get_PS_Font_Private( FT_Face         face,
                           PS_PrivateRec*  afont_private )
   {
-    FT_Error  error = FT_Err_Invalid_Argument;
+    FT_Error  error = FT_ERR( Invalid_Argument );
 
 
     if ( face )

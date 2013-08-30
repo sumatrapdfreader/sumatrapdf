@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002-2008, 2010-2011 by                                      */
+/*  Copyright 2002-2008, 2010-2011, 2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -87,7 +87,7 @@
     if ( !pfr_header_check( &face->header ) )
     {
       FT_TRACE2(( "  not a PFR font\n" ));
-      error = PFR_Err_Unknown_File_Format;
+      error = FT_THROW( Unknown_File_Format );
       goto Exit;
     }
 
@@ -111,7 +111,7 @@
     if ( face_index >= pfrface->num_faces )
     {
       FT_ERROR(( "pfr_face_init: invalid face index\n" ));
-      error = PFR_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -156,7 +156,7 @@
           else
           {
             FT_ERROR(( "pfr_face_init: font doesn't contain glyphs\n" ));
-            error = PFR_Err_Invalid_File_Format;
+            error = FT_THROW( Invalid_File_Format );
             goto Exit;
           }
         }
@@ -329,7 +329,7 @@
 
     if ( !face || gindex >= face->phy_font.num_chars )
     {
-      error = PFR_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -343,7 +343,7 @@
 
     if ( load_flags & FT_LOAD_SBITS_ONLY )
     {
-      error = PFR_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -468,7 +468,7 @@
                         FT_Vector*  kerning )
   {
     PFR_Face     face     = (PFR_Face)pfrface;
-    FT_Error     error    = PFR_Err_Ok;
+    FT_Error     error    = FT_Err_Ok;
     PFR_PhyFont  phy_font = &face->phy_font;
     FT_UInt32    code1, code2, pair;
 

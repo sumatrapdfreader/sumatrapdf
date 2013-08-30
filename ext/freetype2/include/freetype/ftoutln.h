@@ -126,8 +126,10 @@ FT_BEGIN_HEADER
   /*                   destroying the library, by @FT_Done_FreeType.       */
   /*                                                                       */
   /*    numPoints   :: The maximum number of points within the outline.    */
+  /*                   Must be smaller than or equal to 0xFFFF (65535).    */
   /*                                                                       */
   /*    numContours :: The maximum number of contours within the outline.  */
+  /*                   This value must be in the range 0 to `numPoints'.   */
   /*                                                                       */
   /* <Output>                                                              */
   /*    anoutline   :: A handle to the new outline.                        */

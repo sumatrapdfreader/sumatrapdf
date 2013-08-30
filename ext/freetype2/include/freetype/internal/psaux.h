@@ -101,6 +101,9 @@ FT_BEGIN_HEADER
   /*    capacity  :: The current size of the heap block.  Increments by    */
   /*                 1kByte chunks.                                        */
   /*                                                                       */
+  /*    init      :: Set to 0xDEADBEEF if `elements' and `lengths' have    */
+  /*                 been allocated.                                       */
+  /*                                                                       */
   /*    max_elems :: The maximum number of elements in table.              */
   /*                                                                       */
   /*    num_elems :: The current number of elements in table.              */
@@ -183,6 +186,7 @@ FT_BEGIN_HEADER
     T1_FIELD_TYPE_STRING,
     T1_FIELD_TYPE_KEY,
     T1_FIELD_TYPE_BBOX,
+    T1_FIELD_TYPE_MM_BBOX,
     T1_FIELD_TYPE_INTEGER_ARRAY,
     T1_FIELD_TYPE_FIXED_ARRAY,
     T1_FIELD_TYPE_CALLBACK,

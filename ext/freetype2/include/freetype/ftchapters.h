@@ -67,13 +67,15 @@
 /***************************************************************************/
 /*                                                                         */
 /* <Chapter>                                                               */
-/*    auto_hinter                                                          */
+/*    module_specific                                                      */
 /*                                                                         */
 /* <Title>                                                                 */
-/*    The Auto-Hinter                                                      */
+/*    Controlling FreeType Modules                                         */
 /*                                                                         */
 /* <Sections>                                                              */
 /*    auto_hinter                                                          */
+/*    cff_driver                                                           */
+/*    tt_driver                                                            */
 /*                                                                         */
 /***************************************************************************/
 

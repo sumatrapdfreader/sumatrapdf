@@ -10,7 +10,7 @@
  * accepted if you are using GCC for compilation (and probably by
  * other compilers too).
  *
- * Author: David Turner, 2005, 2006, 2008-2012
+ * Author: David Turner, 2005, 2006, 2008-2013
  *
  * This code is explicitly placed into the public domain.
  *
@@ -22,7 +22,7 @@
 #include <ctype.h>
 
 #define  PROGRAM_NAME     "apinames"
-#define  PROGRAM_VERSION  "0.1"
+#define  PROGRAM_VERSION  "0.2"
 
 #define  LINEBUFF_SIZE  1024
 
@@ -31,7 +31,8 @@ typedef enum  OutputFormat_
   OUTPUT_LIST = 0,      /* output the list of names, one per line             */
   OUTPUT_WINDOWS_DEF,   /* output a Windows .DEF file for Visual C++ or Mingw */
   OUTPUT_BORLAND_DEF,   /* output a Windows .DEF file for Borland C++         */
-  OUTPUT_WATCOM_LBC     /* output a Watcom Linker Command File                */
+  OUTPUT_WATCOM_LBC,    /* output a Watcom Linker Command File                */
+  OUTPUT_NETWARE_IMP    /* output a NetWare ImportFile                        */
 
 } OutputFormat;
 
@@ -154,8 +155,6 @@ names_dump( FILE*         out,
 
     case OUTPUT_WATCOM_LBC:
       {
-        /* we must omit the .dll suffix from the library name */
-        char         temp[512];
         const char*  dot;
 
 
@@ -166,10 +165,12 @@ names_dump( FILE*         out,
           exit( 4 );
         }
 
+        /* we must omit the .dll suffix from the library name */
         dot = strchr( dll_name, '.' );
         if ( dot != NULL )
         {
-          int  len = dot - dll_name;
+          char  temp[512];
+          int   len = dot - dll_name;
 
 
           if ( len > (int)( sizeof ( temp ) - 1 ) )
@@ -184,6 +185,16 @@ names_dump( FILE*         out,
         for ( nn = 0; nn < num_names; nn++ )
           fprintf( out, "++_%s.%s.%s\n", the_names[nn].name, dll_name,
                         the_names[nn].name );
+      }
+      break;
+
+    case OUTPUT_NETWARE_IMP:
+      {
+        if ( dll_name != NULL )
+          fprintf( out, "  (%s)\n", dll_name );
+        for ( nn = 0; nn < num_names - 1; nn++ )
+          fprintf( out, "  %s,\n", the_names[nn].name );
+        fprintf( out, "  %s\n", the_names[num_names - 1].name );
       }
       break;
 
@@ -311,6 +322,7 @@ usage( void )
    "           -w     : output .DEF file for Visual C++ and Mingw\n"
    "           -wB    : output .DEF file for Borland C++\n"
    "           -wW    : output Watcom Linker Response File\n"
+   "           -wN    : output NetWare Import File\n"
    "\n";
 
   fprintf( stderr,
@@ -392,6 +404,10 @@ int  main( int argc, const char* const*  argv )
 
           case 'W':
             format = OUTPUT_WATCOM_LBC;
+            break;
+
+          case 'N':
+            format = OUTPUT_NETWARE_IMP;
             break;
 
           case 0:

@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000-2004, 2006-2011 by
+    Copyright (C) 2000-2004, 2006-2011, 2013 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -83,7 +83,7 @@ THE SOFTWARE.
     cmap->num_encodings = (FT_UInt)face->nencodings;
     cmap->encodings     = face->encodings;
 
-    return PCF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -264,7 +264,7 @@ THE SOFTWARE.
                  FT_Parameter*  params )
   {
     PCF_Face  face  = (PCF_Face)pcfface;
-    FT_Error  error = PCF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -289,7 +289,7 @@ THE SOFTWARE.
 
         /* this didn't work, try gzip support! */
         error2 = FT_Stream_OpenGzip( &face->comp_stream, stream );
-        if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
+        if ( FT_ERR_EQ( error2, Unimplemented_Feature ) )
           goto Fail;
 
         error = error2;
@@ -304,7 +304,7 @@ THE SOFTWARE.
 
         /* this didn't work, try LZW support! */
         error3 = FT_Stream_OpenLZW( &face->comp_stream, stream );
-        if ( FT_ERROR_BASE( error3 ) == FT_Err_Unimplemented_Feature )
+        if ( FT_ERR_EQ( error3, Unimplemented_Feature ) )
           goto Fail;
 
         error = error3;
@@ -319,7 +319,7 @@ THE SOFTWARE.
 
         /* this didn't work, try Bzip2 support! */
         error4 = FT_Stream_OpenBzip2( &face->comp_stream, stream );
-        if ( FT_ERROR_BASE( error4 ) == FT_Err_Unimplemented_Feature )
+        if ( FT_ERR_EQ( error4, Unimplemented_Feature ) )
           goto Fail;
 
         error = error4;
@@ -406,7 +406,7 @@ THE SOFTWARE.
   Fail:
     FT_TRACE2(( "  not a PCF file\n" ));
     PCF_Face_Done( pcfface );
-    error = PCF_Err_Unknown_File_Format;  /* error */
+    error = FT_THROW( Unknown_File_Format );  /* error */
     goto Exit;
   }
 
@@ -424,7 +424,7 @@ THE SOFTWARE.
     size->metrics.descender   = -accel->fontDescent << 6;
     size->metrics.max_advance =  accel->maxbounds.characterWidth << 6;
 
-    return PCF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -434,7 +434,7 @@ THE SOFTWARE.
   {
     PCF_Face         face  = (PCF_Face)size->face;
     FT_Bitmap_Size*  bsize = size->face->available_sizes;
-    FT_Error         error = PCF_Err_Invalid_Pixel_Size;
+    FT_Error         error = FT_ERR( Invalid_Pixel_Size );
     FT_Long          height;
 
 
@@ -445,17 +445,17 @@ THE SOFTWARE.
     {
     case FT_SIZE_REQUEST_TYPE_NOMINAL:
       if ( height == ( ( bsize->y_ppem + 32 ) >> 6 ) )
-        error = PCF_Err_Ok;
+        error = FT_Err_Ok;
       break;
 
     case FT_SIZE_REQUEST_TYPE_REAL_DIM:
       if ( height == ( face->accel.fontAscent +
                        face->accel.fontDescent ) )
-        error = PCF_Err_Ok;
+        error = FT_Err_Ok;
       break;
 
     default:
-      error = PCF_Err_Unimplemented_Feature;
+      error = FT_THROW( Unimplemented_Feature );
       break;
     }
 
@@ -474,7 +474,7 @@ THE SOFTWARE.
   {
     PCF_Face    face   = (PCF_Face)FT_SIZE_FACE( size );
     FT_Stream   stream;
-    FT_Error    error  = PCF_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_Bitmap*  bitmap = &slot->bitmap;
     PCF_Metric  metric;
     FT_Offset   bytes;
@@ -486,7 +486,7 @@ THE SOFTWARE.
 
     if ( !face || glyph_index >= (FT_UInt)face->root.num_glyphs )
     {
-      error = PCF_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -526,13 +526,13 @@ THE SOFTWARE.
       break;
 
     default:
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
     }
 
     /* XXX: to do: are there cases that need repadding the bitmap? */
     bytes = bitmap->pitch * bitmap->rows;
 
-    error = ft_glyphslot_alloc_bitmap( slot, bytes );
+    error = ft_glyphslot_alloc_bitmap( slot, (FT_ULong)bytes );
     if ( error )
       goto Exit;
 
@@ -622,7 +622,7 @@ THE SOFTWARE.
       return 0;
     }
 
-    return PCF_Err_Invalid_Argument;
+    return FT_THROW( Invalid_Argument );
   }
 
 
@@ -699,10 +699,6 @@ THE SOFTWARE.
     0,                      /* FT_Slot_InitFunc */
     0,                      /* FT_Slot_DoneFunc */
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
     PCF_Glyph_Load,
 
     0,                      /* FT_Face_GetKerningFunc  */

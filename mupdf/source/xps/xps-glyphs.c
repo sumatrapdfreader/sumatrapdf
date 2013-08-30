@@ -542,6 +542,9 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 
 		xps_insert_font(doc, fakename, font);
 
+		/* SumatraPDF: prevent assertion in Freetype 2.5 */
+		FT_Set_Char_Size(font->ft_face, 64, 64, 72, 72);
+
 		/* NOTE: we keep part->data in the font */
 		font->ft_data = part->data;
 		font->ft_size = part->size;

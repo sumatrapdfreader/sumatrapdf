@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for pshinter module. */
 /*                                                                         */
-/*  Copyright 2009, 2012 by                                                */
+/*  Copyright 2009, 2012, 2013 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,7 +40,7 @@ FT_BEGIN_HEADER
   } PSHinterPIC;
 
 
-#define GET_PIC( lib )  ( (PSHinterPIC*)((lib)->pic_container.autofit) )
+#define GET_PIC( lib )  ( (PSHinterPIC*)( (lib)->pic_container.pshinter ) )
 
 #define PSHINTER_INTERFACE_GET  ( GET_PIC( library )->pshinter_interface )
 

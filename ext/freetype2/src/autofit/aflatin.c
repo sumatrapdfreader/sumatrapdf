@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (body).                */
 /*                                                                         */
-/*  Copyright 2003-2012 by                                                 */
+/*  Copyright 2003-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -561,7 +561,7 @@
     }
 
     FT_Set_Charmap( face, oldmap );
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -743,7 +743,7 @@
 
           if ( delta2 < 32 )
             delta2 = 0;
-          else if ( delta < 48 )
+          else if ( delta2 < 48 )
             delta2 = 32;
           else
             delta2 = 64;
@@ -795,7 +795,7 @@
   {
     AF_AxisHints   axis          = &hints->axis[dim];
     FT_Memory      memory        = hints->memory;
-    FT_Error       error         = AF_Err_Ok;
+    FT_Error       error         = FT_Err_Ok;
     AF_Segment     segment       = NULL;
     AF_SegmentRec  seg0;
     AF_Point*      contour       = hints->contours;
@@ -1107,7 +1107,7 @@
                                 AF_Dimension   dim )
   {
     AF_AxisHints  axis   = &hints->axis[dim];
-    FT_Error      error  = AF_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = hints->memory;
     AF_LatinAxis  laxis  = &((AF_LatinMetrics)hints->metrics)->axis[dim];
 
@@ -1583,7 +1583,7 @@
     hints->scaler_flags = scaler_flags;
     hints->other_flags  = other_flags;
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1787,7 +1787,7 @@
             if ( delta < 0 )
               delta = -delta;
 
-            if (delta >= 16)
+            if ( delta >= 16 )
             {
               dist = org_dist;
               if ( dist < 48 )
@@ -1914,7 +1914,7 @@
           continue;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
-        if (!anchor)
+        if ( !anchor )
           FT_TRACE5(( "  BLUE_ANCHOR: edge %d (opos=%.2f) snapped to %.2f,"
                       " was %.2f (anchor=edge %d)\n",
                       edge1 - edges, edge1->opos / 64.0, blue->fit / 64.0,
@@ -2080,7 +2080,7 @@
 
           cur_pos1 = FT_PIX_ROUND( org_center );
 
-          if (cur_len <= 64 )
+          if ( cur_len <= 64 )
           {
             u_off = 32;
             d_off = 32;

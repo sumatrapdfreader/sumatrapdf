@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for autofit module.  */
 /*                                                                         */
-/*  Copyright 2009-2012 by                                                 */
+/*  Copyright 2009-2013 by                                                 */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -80,7 +80,7 @@
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
     FT_UInt            ss;
-    FT_Error           error         = AF_Err_Ok;
+    FT_Error           error         = FT_Err_Ok;
     AFModulePIC*       container     = NULL;
     FT_Memory          memory        = library->memory;
 

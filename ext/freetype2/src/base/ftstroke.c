@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002-2006, 2008-2011 by                                      */
+/*  Copyright 2002-2006, 2008-2011, 2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -795,7 +795,7 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     memory = library->memory;
 
@@ -1954,7 +1954,7 @@
 
     if ( !stroker || border > 1 )
     {
-      error = FT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -2060,7 +2060,7 @@
 
 
     if ( !outline || !stroker )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     FT_Stroker_Rewind( stroker );
 
@@ -2238,7 +2238,7 @@
     return error;
 
   Invalid_Outline:
-    return FT_Err_Invalid_Outline;
+    return FT_THROW( Invalid_Outline );
   }
 
 
@@ -2258,7 +2258,7 @@
                    FT_Stroker   stroker,
                    FT_Bool      destroy )
   {
-    FT_Error    error   = FT_Err_Invalid_Argument;
+    FT_Error    error   = FT_ERR( Invalid_Argument );
     FT_Glyph    glyph   = NULL;
     FT_Library  library = stroker->library;
 
@@ -2334,7 +2334,7 @@
                          FT_Bool      inside,
                          FT_Bool      destroy )
   {
-    FT_Error    error   = FT_Err_Invalid_Argument;
+    FT_Error    error   = FT_ERR( Invalid_Argument );
     FT_Glyph    glyph   = NULL;
     FT_Library  library = stroker->library;
 

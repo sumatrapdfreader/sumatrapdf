@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2006, 2009-2012 by                                      */
+/*  Copyright 2000-2006, 2009-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,12 +61,12 @@
                        const FT_Matrix*  matrix,
                        const FT_Vector*  delta )
   {
-    FT_Error  error = Smooth_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 
     if ( slot->format != render->glyph_format )
     {
-      error = Smooth_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -109,11 +109,13 @@
 #ifndef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
     FT_Pos       height_org, width_org;
 #endif
-    FT_Bitmap*   bitmap;
-    FT_Memory    memory;
-    FT_Int       hmul = mode == FT_RENDER_MODE_LCD;
-    FT_Int       vmul = mode == FT_RENDER_MODE_LCD_V;
-    FT_Pos       x_shift, y_shift, x_left, y_top;
+    FT_Bitmap*   bitmap  = &slot->bitmap;
+    FT_Memory    memory  = render->root.memory;
+    FT_Int       hmul    = mode == FT_RENDER_MODE_LCD;
+    FT_Int       vmul    = mode == FT_RENDER_MODE_LCD_V;
+    FT_Pos       x_shift = 0;
+    FT_Pos       y_shift = 0;
+    FT_Pos       x_left, y_top;
 
     FT_Raster_Params  params;
 
@@ -125,14 +127,14 @@
     /* check glyph image format */
     if ( slot->format != render->glyph_format )
     {
-      error = Smooth_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
     /* check mode */
     if ( mode != required_mode )
     {
-      error = Smooth_Err_Cannot_Render_Glyph;
+      error = FT_THROW( Cannot_Render_Glyph );
       goto Exit;
     }
 
@@ -158,7 +160,7 @@
       FT_ERROR(( "ft_smooth_render_generic: glyph too large:"
                  " xMin = %d, xMax = %d\n",
                  cbox.xMin >> 6, cbox.xMax >> 6 ));
-      error = Smooth_Err_Raster_Overflow;
+      error = FT_THROW( Raster_Overflow );
       goto Exit;
     }
     else
@@ -169,14 +171,11 @@
       FT_ERROR(( "ft_smooth_render_generic: glyph too large:"
                  " yMin = %d, yMax = %d\n",
                  cbox.yMin >> 6, cbox.yMax >> 6 ));
-      error = Smooth_Err_Raster_Overflow;
+      error = FT_THROW( Raster_Overflow );
       goto Exit;
     }
     else
       height = ( cbox.yMax - cbox.yMin ) >> 6;
-
-    bitmap = &slot->bitmap;
-    memory = render->root.memory;
 
 #ifndef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
     width_org  = width;
@@ -239,7 +238,7 @@
     {
       FT_ERROR(( "ft_smooth_render_generic: glyph too large: %u x %u\n",
                  width, height ));
-      error = Smooth_Err_Raster_Overflow;
+      error = FT_THROW( Raster_Overflow );
       goto Exit;
     }
 
@@ -373,7 +372,7 @@
      */
     if ( x_left > FT_INT_MAX || y_top > FT_INT_MAX )
     {
-      error = Smooth_Err_Invalid_Pixel_Size;
+      error = FT_THROW( Invalid_Pixel_Size );
       goto Exit;
     }
 
@@ -384,7 +383,7 @@
     /* everything is fine; don't deallocate buffer */
     have_buffer = FALSE;
 
-    error = Smooth_Err_Ok;
+    error = FT_Err_Ok;
 
   Exit:
     if ( have_outline_shifted )

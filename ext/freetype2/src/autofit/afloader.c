@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter glyph loading routines (body).                           */
 /*                                                                         */
-/*  Copyright 2003-2009, 2011-2012 by                                      */
+/*  Copyright 2003-2009, 2011-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -48,7 +48,7 @@
   af_loader_reset( AF_Module  module,
                    FT_Face    face )
   {
-    FT_Error   error  = AF_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
     AF_Loader  loader = module->loader;
 
 
@@ -349,7 +349,7 @@
             if ( start_point + k >= num_base_points         ||
                                l >= (FT_UInt)num_new_points )
             {
-              error = AF_Err_Invalid_Composite;
+              error = FT_THROW( Invalid_Composite );
               goto Exit;
             }
 
@@ -387,7 +387,7 @@
 
     default:
       /* we don't support other formats (yet?) */
-      error = AF_Err_Unimplemented_Feature;
+      error = FT_THROW( Unimplemented_Feature );
     }
 
   Hint_Metrics:
@@ -502,7 +502,7 @@
 
 
     if ( !size )
-      return AF_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     FT_ZERO( &scaler );
 

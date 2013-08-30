@@ -75,7 +75,7 @@
 
 
     /* allocate pointer, clear and set global container pointer */
-    if ( FT_ALLOC ( container, sizeof ( *container ) ) )
+    if ( FT_ALLOC( container, sizeof ( *container ) ) )
       return error;
     FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->base = container;
@@ -96,12 +96,11 @@
       (ft_raccess_guess_rec*)&container->ft_raccess_guess_table );
 #endif
 
-Exit:
-    if( error )
+  Exit:
+    if ( error )
       ft_base_pic_free( library );
     return error;
   }
-
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

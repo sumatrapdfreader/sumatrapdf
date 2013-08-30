@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2012                                                    */
+/*  Copyright 1996-2013                                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,6 +21,7 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
+#include FT_TRUETYPE_DRIVER_H
 
 #include "ttgload.h"
 #include "ttpload.h"
@@ -521,7 +522,7 @@
     if ( !sfnt )
     {
       FT_ERROR(( "tt_face_init: cannot access `sfnt' module\n" ));
-      error = TT_Err_Missing_Module;
+      error = FT_THROW( Missing_Module );
       goto Exit;
     }
 
@@ -551,7 +552,7 @@
 
     /* If we are performing a simple font format check, exit immediately. */
     if ( face_index < 0 )
-      return TT_Err_Ok;
+      return FT_Err_Ok;
 
     /* Load font directory */
     error = sfnt->load_face( stream, face, face_index, num_params, params );
@@ -651,7 +652,7 @@
     return error;
 
   Bad_Format:
-    error = TT_Err_Unknown_File_Format;
+    error = FT_THROW( Unknown_File_Format );
     goto Exit;
   }
 
@@ -752,7 +753,7 @@
       exec = ( (TT_Driver)FT_FACE_DRIVER( face ) )->context;
 
     if ( !exec )
-      return TT_Err_Could_Not_Find_Context;
+      return FT_THROW( Could_Not_Find_Context );
 
     TT_Load_Context( exec, face, size );
 
@@ -805,7 +806,7 @@
       }
     }
     else
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
 
     if ( !error )
       TT_Save_Context( exec, size );
@@ -846,7 +847,7 @@
       exec = ( (TT_Driver)FT_FACE_DRIVER( face ) )->context;
 
     if ( !exec )
-      return TT_Err_Could_Not_Find_Context;
+      return FT_THROW( Could_Not_Find_Context );
 
     TT_Load_Context( exec, face, size );
 
@@ -876,7 +877,27 @@
       }
     }
     else
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
+
+    /* UNDOCUMENTED!  The MS rasterizer doesn't allow the following */
+    /* graphics state variables to be modified by the CVT program.  */
+
+    exec->GS.dualVector.x = 0x4000;
+    exec->GS.dualVector.y = 0;
+    exec->GS.projVector.x = 0x4000;
+    exec->GS.projVector.y = 0x0;
+    exec->GS.freeVector.x = 0x4000;
+    exec->GS.freeVector.y = 0x0;
+
+    exec->GS.rp0 = 0;
+    exec->GS.rp1 = 0;
+    exec->GS.rp2 = 0;
+
+    exec->GS.gep0 = 1;
+    exec->GS.gep1 = 1;
+    exec->GS.gep2 = 1;
+
+    exec->GS.loop = 1;
 
     /* save as default graphics state */
     size->GS = exec->GS;
@@ -1023,7 +1044,7 @@
   tt_size_ready_bytecode( TT_Size  size,
                           FT_Bool  pedantic )
   {
-    FT_Error  error = TT_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 
     if ( !size->bytecode_ready )
@@ -1090,7 +1111,7 @@
   tt_size_init( FT_Size  ttsize )           /* TT_Size */
   {
     TT_Size   size  = (TT_Size)ttsize;
-    FT_Error  error = TT_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
     size->bytecode_ready = 0;
@@ -1146,7 +1167,7 @@
   tt_size_reset( TT_Size  size )
   {
     TT_Face           face;
-    FT_Error          error = TT_Err_Ok;
+    FT_Error          error = FT_Err_Ok;
     FT_Size_Metrics*  metrics;
 
 
@@ -1160,7 +1181,7 @@
     *metrics = size->root.metrics;
 
     if ( metrics->x_ppem < 1 || metrics->y_ppem < 1 )
-      return TT_Err_Invalid_PPem;
+      return FT_THROW( Invalid_PPem );
 
     /* This bit flag, if set, indicates that the ppems must be       */
     /* rounded to integers.  Nearly all TrueType fonts have this bit */
@@ -1237,15 +1258,21 @@
 
 
     if ( !TT_New_Context( driver ) )
-      return TT_Err_Could_Not_Find_Context;
+      return FT_THROW( Could_Not_Find_Context );
 
+#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+    driver->interpreter_version = TT_INTERPRETER_VERSION_38;
 #else
+    driver->interpreter_version = TT_INTERPRETER_VERSION_35;
+#endif
+
+#else /* !TT_USE_BYTECODE_INTERPRETER */
 
     FT_UNUSED( ttdriver );
 
-#endif
+#endif /* !TT_USE_BYTECODE_INTERPRETER */
 
-    return TT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

@@ -94,7 +94,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    The root glyph structure contains a given glyph image plus its     */
-  /*    advance width in 16.16 fixed float format.                         */
+  /*    advance width in 16.16 fixed-point format.                         */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    library :: A handle to the FreeType library object.                */

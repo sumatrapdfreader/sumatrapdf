@@ -29,7 +29,8 @@
   ft_pic_container_init( FT_Library  library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Error  error = FT_Err_Ok;
+    FT_Error           error         = FT_Err_Ok;
+
 
     FT_MEM_SET( pic_container, 0, sizeof ( *pic_container ) );
 

@@ -1,7 +1,7 @@
 diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\freetype\config\ftstdlib.h
 --- freetype2.orig\include\freetype\config\ftstdlib.h	Sat Sep 29 09:42:15 2012
-+++ freetype2\include\freetype\config\ftstdlib.h	Fri Mar 08 19:17:33 2013
-@@ -106,10 +106,15 @@
++++ freetype2\include\freetype\config\ftstdlib.h	Fri Aug 30 20:38:21 2013
+@@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
  #define ft_ftell    ftell
@@ -12,6 +12,7 @@ diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\f
 +#undef ft_fopen
 +#define ft_fopen    ft_fopen_win32
 +#endif
++
  
    /**********************************************************************/
    /*                                                                    */
@@ -19,49 +20,33 @@ diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\f
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype\ftsystem.h
 --- freetype2.orig\include\freetype\ftsystem.h	Sat Jun 26 09:18:37 2010
-+++ freetype2\include\freetype\ftsystem.h	Fri Mar 08 19:32:51 2013
-@@ -343,5 +343,10 @@
- 
- #endif /* __FTSYSTEM_H__ */
++++ freetype2\include\freetype\ftsystem.h	Fri Aug 30 20:38:21 2013
+@@ -337,10 +337,16 @@
  
  
- /* END */
-+
+   /* */
+ 
+ 
 +/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
 +#ifdef _WIN32
 +FT_FILE* ft_fopen_win32(const char *fname, const char *mode);
 +#endif
-diff -rPu5 freetype2.orig\src\base\ftoutln.c freetype2\src\base\ftoutln.c
---- freetype2.orig\src\base\ftoutln.c	Sat Nov 17 12:35:48 2012
-+++ freetype2\src\base\ftoutln.c	Tue Dec 25 16:30:07 2012
-@@ -302,10 +302,17 @@
-     if ( !anoutline || !memory )
-       return FT_Err_Invalid_Argument;
- 
-     *anoutline = null_outline;
- 
-+    if ( numContours < 0                  ||
-+         (FT_UInt)numContours > numPoints )
-+      return FT_Err_Invalid_Argument;
 +
-+    if ( numPoints > FT_OUTLINE_POINTS_MAX )
-+      return FT_Err_Array_Too_Large;
 +
-     if ( FT_NEW_ARRAY( anoutline->points,   numPoints   ) ||
-          FT_NEW_ARRAY( anoutline->tags,     numPoints   ) ||
-          FT_NEW_ARRAY( anoutline->contours, numContours ) )
-       goto Fail;
+ FT_END_HEADER
+ 
+ #endif /* __FTSYSTEM_H__ */
+ 
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
---- freetype2.orig\src\base\ftsystem.c	Wed Jul 20 06:46:44 2011
-+++ freetype2\src\base\ftsystem.c	Fri Mar 08 19:33:49 2013
-@@ -316,5 +316,27 @@
+--- freetype2.orig\src\base\ftsystem.c	Tue May 28 23:00:03 2013
++++ freetype2\src\base\ftsystem.c	Fri Aug 30 20:38:21 2013
+@@ -315,6 +315,29 @@
+ #endif
      ft_sfree( memory );
    }
  
  
- /* END */
-+
 +/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
 +#ifdef _WIN32
 +#include <windows.h>
@@ -83,3 +68,6 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +    return file;
 +  }
 +#endif
++
++
+ /* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType character mapping table (cmap) support (body).              */
 /*                                                                         */
-/*  Copyright 2002-2010, 2012 by                                           */
+/*  Copyright 2002-2010, 2012, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -56,7 +56,7 @@
                 FT_Byte*  table )
   {
     cmap->data = table;
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -110,7 +110,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -161,7 +161,7 @@
     cmap_info->format   = 0;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -369,7 +369,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -541,7 +541,7 @@
     cmap_info->format   = 2;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -670,7 +670,7 @@
     cmap->cur_charcode = (FT_UInt32)0xFFFFFFFFUL;
     cmap->cur_gindex   = 0;
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -820,7 +820,7 @@
     FT_UInt   length = TT_NEXT_USHORT( p );
     FT_Byte   *ends, *starts, *offsets, *deltas, *glyph_ids;
     FT_UInt   num_segs;
-    FT_Error  error = SFNT_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
 
 
     if ( length < 16 )
@@ -1381,7 +1381,7 @@
     cmap_info->format   = 4;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1468,7 +1468,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1544,7 +1544,7 @@
     cmap_info->format   = 6;
     cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1716,7 +1716,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1801,7 +1801,7 @@
     cmap_info->format   = 8;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1887,7 +1887,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -1954,7 +1954,7 @@
     cmap_info->format   = 10;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2034,7 +2034,7 @@
 
     cmap->valid      = 0;
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2087,7 +2087,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2278,7 +2278,7 @@
     cmap_info->format   = 12;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2358,7 +2358,7 @@
 
     cmap->valid      = 0;
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2411,7 +2411,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2597,7 +2597,7 @@
     cmap_info->format   = 13;
     cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2720,7 +2720,7 @@
                     FT_Memory  memory )
   {
     FT_UInt32  old_max = cmap->max_results;
-    FT_Error   error   = SFNT_Err_Ok;
+    FT_Error   error   = FT_Err_Ok;
 
 
     if ( num_results > cmap->max_results )
@@ -2748,7 +2748,7 @@
     cmap->max_results    = 0;
     cmap->results        = NULL;
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2850,7 +2850,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -2888,7 +2888,7 @@
     /* subtable 14 does not define a language field */
     cmap_info->language = 0xFFFFFFFFUL;
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -3420,7 +3420,7 @@
     clazz[i] = NULL;
 
     *output_class = clazz;
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 #endif /*FT_CONFIG_OPTION_PIC*/
@@ -3442,7 +3442,7 @@
 
 
     if ( !p || p + 4 > limit )
-      return SFNT_Err_Invalid_Table;
+      return FT_THROW( Invalid_Table );
 
     /* only recognize format 0 */
     if ( TT_NEXT_USHORT( p ) != 0 )
@@ -3451,7 +3451,7 @@
       FT_ERROR(( "tt_face_build_cmaps:"
                  " unsupported `cmap' table format = %d\n",
                  TT_PEEK_USHORT( p ) ));
-      return SFNT_Err_Invalid_Table;
+      return FT_THROW( Invalid_Table );
     }
 
     num_cmaps = TT_NEXT_USHORT( p );
@@ -3490,7 +3490,7 @@
           if ( clazz->format == format )
           {
             volatile TT_ValidatorRec  valid;
-            volatile FT_Error         error = SFNT_Err_Ok;
+            volatile FT_Error         error = FT_Err_Ok;
 
 
             ft_validator_init( FT_VALIDATOR( &valid ), cmap, limit,
@@ -3538,7 +3538,7 @@
       }
     }
 
-    return SFNT_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

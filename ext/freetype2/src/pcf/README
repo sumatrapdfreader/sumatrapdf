@@ -33,7 +33,7 @@ Encodings
 
 Use `FT_Get_BDF_Charset_ID' to access the encoding and registry.
 
-The driver always exports `ft_encoding_none' as face->charmap.encoding. 
+The driver always exports `ft_encoding_none' as face->charmap.encoding.
 FT_Get_Char_Index() behavior is unmodified, that is, it converts the ULong
 value given as argument into the corresponding glyph number.
 

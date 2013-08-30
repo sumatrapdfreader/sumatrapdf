@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2009, 2011 by                                           */
+/*  Copyright 1996-2009, 2011, 2013 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -95,7 +95,7 @@
   T1_Size_Init( FT_Size  t1size )      /* T1_Size */
   {
     T1_Size            size  = (T1_Size)t1size;
-    FT_Error           error = T1_Err_Ok;
+    FT_Error           error = FT_Err_Ok;
     PSH_Globals_Funcs  funcs = T1_Size_Get_Globals_Funcs( size );
 
 
@@ -131,7 +131,7 @@
                         size->root.metrics.y_scale,
                         0, 0 );
 
-    return T1_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -326,7 +326,7 @@
     if ( !psaux )
     {
       FT_ERROR(( "T1_Face_Init: cannot access `psaux' module\n" ));
-      error = T1_Err_Missing_Module;
+      error = FT_THROW( Missing_Module );
       goto Exit;
     }
 
@@ -348,7 +348,7 @@
     if ( face_index > 0 )
     {
       FT_ERROR(( "T1_Face_Init: invalid face index\n" ));
-      error = T1_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -489,7 +489,7 @@
         if ( !error )
           root->max_advance_width = (FT_Short)FIXED_TO_INT( max_advance );
         else
-          error = T1_Err_Ok;   /* clear error */
+          error = FT_Err_Ok;   /* clear error */
       }
 
       root->max_advance_height = root->height;
@@ -517,7 +517,8 @@
         charmap.encoding    = FT_ENCODING_UNICODE;
 
         error = FT_CMap_New( cmap_classes->unicode, NULL, &charmap, NULL );
-        if ( error && FT_Err_No_Unicode_Glyph_Name != error )
+        if ( error                                      &&
+             FT_ERR_NEQ( error, No_Unicode_Glyph_Name ) )
           goto Exit;
         error = FT_Err_Ok;
 
@@ -590,7 +591,7 @@
   {
     FT_UNUSED( driver );
 
-    return T1_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

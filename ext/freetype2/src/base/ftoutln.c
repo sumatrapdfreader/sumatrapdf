@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType outline management (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2008, 2010, 2012 by                                     */
+/*  Copyright 1996-2008, 2010, 2012-2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -26,6 +26,7 @@
 #include <ft2build.h>
 #include FT_OUTLINE_H
 #include FT_INTERNAL_OBJECTS_H
+#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_TRIGONOMETRY_H
 
@@ -73,7 +74,7 @@
 
 
     if ( !outline || !func_interface )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     shift = func_interface->shift;
     delta = func_interface->delta;
@@ -286,7 +287,7 @@
     return error;
 
   Invalid_Outline:
-    return FT_Err_Invalid_Outline;
+    return FT_THROW( Invalid_Outline );
   }
 
 
@@ -300,16 +301,16 @@
 
 
     if ( !anoutline || !memory )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     *anoutline = null_outline;
 
     if ( numContours < 0                  ||
          (FT_UInt)numContours > numPoints )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( numPoints > FT_OUTLINE_POINTS_MAX )
-      return FT_Err_Array_Too_Large;
+      return FT_THROW( Array_Too_Large );
 
     if ( FT_NEW_ARRAY( anoutline->points,   numPoints   ) ||
          FT_NEW_ARRAY( anoutline->tags,     numPoints   ) ||
@@ -339,7 +340,7 @@
                   FT_Outline  *anoutline )
   {
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     return FT_Outline_New_Internal( library->memory, numPoints,
                                     numContours, anoutline );
@@ -387,7 +388,7 @@
     }
 
   Bad:
-    return FT_Err_Invalid_Argument;
+    return FT_THROW( Invalid_Argument );
   }
 
 
@@ -403,7 +404,7 @@
     if ( !source            || !target            ||
          source->n_points   != target->n_points   ||
          source->n_contours != target->n_contours )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     if ( source == target )
       return FT_Err_Ok;
@@ -442,7 +443,7 @@
       return FT_Err_Ok;
     }
     else
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
   }
 
 
@@ -455,7 +456,7 @@
     /* check for valid `outline' in FT_Outline_Done_Internal() */
 
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     return FT_Outline_Done_Internal( library->memory, outline );
   }
@@ -609,21 +610,21 @@
 
 
     if ( !library )
-      return FT_Err_Invalid_Library_Handle;
+      return FT_THROW( Invalid_Library_Handle );
 
     if ( !outline || !params )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     renderer = library->cur_renderer;
     node     = library->renderers.head;
 
     params->source = (void*)outline;
 
-    error = FT_Err_Cannot_Render_Glyph;
+    error = FT_ERR( Cannot_Render_Glyph );
     while ( renderer )
     {
       error = renderer->raster_render( renderer->raster, params );
-      if ( !error || FT_ERROR_BASE( error ) != FT_Err_Cannot_Render_Glyph )
+      if ( !error || FT_ERR_NEQ( error, Cannot_Render_Glyph ) )
         break;
 
       /* FT_Err_Cannot_Render_Glyph is returned if the render mode   */
@@ -657,7 +658,7 @@
 
 
     if ( !abitmap )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     /* other checks are delayed to FT_Outline_Render() */
 
@@ -907,7 +908,7 @@
 
 
     if ( !outline )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     xstrength /= 2;
     ystrength /= 2;
@@ -918,7 +919,7 @@
     if ( orientation == FT_ORIENTATION_NONE )
     {
       if ( outline->n_contours )
-        return FT_Err_Invalid_Argument;
+        return FT_THROW( Invalid_Argument );
       else
         return FT_Err_Ok;
     }
@@ -937,10 +938,15 @@
       v_prev  = points[last];
       v_cur   = v_first;
 
-      /* compute the incoming vector and its length */
+      /* compute incoming normalized vector */
       in.x = v_cur.x - v_prev.x;
       in.y = v_cur.y - v_prev.y;
       l_in = FT_Vector_Length( &in );
+      if ( l_in )
+      {
+        in.x = FT_DivFix( in.x, l_in );
+        in.y = FT_DivFix( in.y, l_in );
+      }
 
       for ( n = first; n <= last; n++ )
       {
@@ -949,39 +955,48 @@
         else
           v_next = v_first;
 
-        /* compute the outgoing vector and its length */
+        /* compute outgoing normalized vector */
         out.x = v_next.x - v_cur.x;
         out.y = v_next.y - v_cur.y;
         l_out = FT_Vector_Length( &out );
-
-        d = l_in * l_out + in.x * out.x + in.y * out.y;
-
-        /* shift only if turn is less then ~160 degrees */
-        if ( 16 * d > l_in * l_out )
+        if ( l_out )
         {
-          /* shift components are aligned along bisector        */
-          /* and directed according to the outline orientation. */
-          shift.x = l_out * in.y + l_in * out.y;
-          shift.y = l_out * in.x + l_in * out.x;
+          out.x = FT_DivFix( out.x, l_out );
+          out.y = FT_DivFix( out.y, l_out );
+        }
+
+        d = FT_MulFix( in.x, out.x ) + FT_MulFix( in.y, out.y );
+
+        /* shift only if turn is less than ~160 degrees */
+        if ( d > -0xF000L )
+        {
+          d = d + 0x10000L;
+
+          /* shift components are aligned along lateral bisector */
+          /* and directed according to the outline orientation.  */
+          shift.x = in.y + out.y;
+          shift.y = in.x + out.x;
 
           if ( orientation == FT_ORIENTATION_TRUETYPE )
             shift.x = -shift.x;
           else
             shift.y = -shift.y;
 
-          /* threshold strength to better handle collapsing segments */
-          l = FT_MIN( l_in, l_out );
-          q = out.x * in.y - out.y * in.x;
+          /* restrict shift magnitude to better handle collapsing segments */
+          q = FT_MulFix( out.x, in.y ) - FT_MulFix( out.y, in.x );
           if ( orientation == FT_ORIENTATION_TRUETYPE )
             q = -q;
 
-          if ( FT_MulDiv( xstrength, q, l ) < d )
+          l = FT_MIN( l_in, l_out );
+
+          /* non-strict inequalities avoid divide-by-zero when q == l == 0 */
+          if ( FT_MulFix( xstrength, q ) <= FT_MulFix( d, l ) )
             shift.x = FT_MulDiv( shift.x, xstrength, d );
           else
             shift.x = FT_MulDiv( shift.x, l, q );
 
-          
-          if ( FT_MulDiv( ystrength, q, l ) < d )
+
+          if ( FT_MulFix( ystrength, q ) <= FT_MulFix( d, l ) )
             shift.y = FT_MulDiv( shift.y, ystrength, d );
           else
             shift.y = FT_MulDiv( shift.y, l, q );
@@ -1009,6 +1024,8 @@
   FT_EXPORT_DEF( FT_Orientation )
   FT_Outline_Get_Orientation( FT_Outline*  outline )
   {
+    FT_BBox     cbox;
+    FT_Int      xshift, yshift;
     FT_Vector*  points;
     FT_Vector   v_prev, v_cur;
     FT_Int      c, n, first;
@@ -1023,6 +1040,14 @@
     /* cubic or quadratic curves, this test deals with the polygon    */
     /* only which is spanned up by the control points.                */
 
+    FT_Outline_Get_CBox( outline, &cbox );
+
+    xshift = FT_MSB( FT_ABS( cbox.xMax ) | FT_ABS( cbox.xMin ) ) - 14;
+    xshift = FT_MAX( xshift, 0 );
+
+    yshift = FT_MSB( cbox.yMax - cbox.yMin ) - 14;
+    yshift = FT_MAX( yshift, 0 );
+
     points = outline->points;
 
     first = 0;
@@ -1036,7 +1061,8 @@
       for ( n = first; n <= last; n++ )
       {
         v_cur = points[n];
-        area += ( v_cur.y - v_prev.y ) * ( v_cur.x + v_prev.x );
+        area += ( ( v_cur.y - v_prev.y ) >> yshift ) *
+                ( ( v_cur.x + v_prev.x ) >> xshift );
         v_prev = v_cur;
       }
 

@@ -339,14 +339,15 @@ FT_BEGIN_HEADER
   /* */
 
 
+/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
+#ifdef _WIN32
+FT_FILE* ft_fopen_win32(const char *fname, const char *mode);
+#endif
+
+
 FT_END_HEADER
 
 #endif /* __FTSYSTEM_H__ */
 
 
 /* END */
-
-/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
-#ifdef _WIN32
-FT_FILE* ft_fopen_win32(const char *fname, const char *mode);
-#endif

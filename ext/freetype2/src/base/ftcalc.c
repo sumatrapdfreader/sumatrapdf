@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008, 2012 by                                     */
+/*  Copyright 1996-2006, 2008, 2012-2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,7 @@
 
 #include <ft2build.h>
 #include FT_GLYPH_H
+#include FT_TRIGONOMETRY_H
 #include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
@@ -42,13 +43,9 @@
 #undef FT_MulFix
 #endif
 
-/* we need to define a 64-bits data type here */
+/* we need to emulate a 64-bit data type if a real one isn't available */
 
-#ifdef FT_LONG64
-
-  typedef FT_INT64  FT_Int64;
-
-#else
+#ifndef FT_LONG64
 
   typedef struct  FT_Int64_
   {
@@ -57,7 +54,7 @@
 
   } FT_Int64;
 
-#endif /* FT_LONG64 */
+#endif /* !FT_LONG64 */
 
 
   /*************************************************************************/
@@ -103,38 +100,56 @@
   }
 
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+  FT_BASE_DEF ( FT_Int )
+  FT_MSB( FT_UInt32 z )
+  {
+    FT_Int shift = 0;
+
+    /* determine msb bit index in `shift' */
+    if ( z >= ( 1L << 16 ) )
+    {
+      z     >>= 16;
+      shift  += 16;
+    }
+    if ( z >= ( 1L << 8 ) )
+    {
+      z     >>= 8;
+      shift  += 8;
+    }
+    if ( z >= ( 1L << 4 ) )
+    {
+      z     >>= 4;
+      shift  += 4;
+    }
+    if ( z >= ( 1L << 2 ) )
+    {
+      z     >>= 2;
+      shift  += 2;
+    }
+    if ( z >= ( 1L << 1 ) )
+    {
+      z     >>= 1;
+      shift  += 1;
+    }
+
+    return shift;
+  }
+
 
   /* documentation is in ftcalc.h */
 
-  FT_EXPORT_DEF( FT_Int32 )
-  FT_Sqrt32( FT_Int32  x )
+  FT_BASE_DEF( FT_Fixed )
+  FT_Hypot( FT_Fixed  x,
+            FT_Fixed  y )
   {
-    FT_UInt32  val, root, newroot, mask;
+    FT_Vector  v;
 
 
-    root = 0;
-    mask = (FT_UInt32)0x40000000UL;
-    val  = (FT_UInt32)x;
+    v.x = x;
+    v.y = y;
 
-    do
-    {
-      newroot = root + mask;
-      if ( newroot <= val )
-      {
-        val -= newroot;
-        root = newroot + mask;
-      }
-
-      root >>= 1;
-      mask >>= 2;
-
-    } while ( mask != 0 );
-
-    return root;
+    return FT_Vector_Length( &v );
   }
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 #ifdef FT_LONG64
@@ -163,8 +178,6 @@
   }
 
 
-#ifdef TT_USE_BYTECODE_INTERPRETER
-
   /* documentation is in ftcalc.h */
 
   FT_BASE_DEF( FT_Long )
@@ -186,8 +199,6 @@
 
     return ( s > 0 ) ? d : -d;
   }
-
-#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /* documentation is in freetype.h */
@@ -235,16 +246,25 @@
     FT_Int32   s;
     FT_UInt32  q;
 
+
     s = 1;
-    if ( a < 0 ) { a = -a; s = -1; }
-    if ( b < 0 ) { b = -b; s = -s; }
+    if ( a < 0 )
+    {
+      a = -a;
+      s = -1;
+    }
+    if ( b < 0 )
+    {
+      b = -b;
+      s = -s;
+    }
 
     if ( b == 0 )
       /* check for division by 0 */
       q = 0x7FFFFFFFL;
     else
       /* compute result directly */
-      q = (FT_UInt32)( ( ( (FT_Int64)a << 16 ) + ( b >> 1 ) ) / b );
+      q = (FT_UInt32)( ( ( (FT_UInt64)a << 16 ) + ( b >> 1 ) ) / b );
 
     return ( s < 0 ? -(FT_Long)q : (FT_Long)q );
   }
@@ -392,8 +412,6 @@
   }
 
 
-#ifdef TT_USE_BYTECODE_INTERPRETER
-
   FT_BASE_DEF( FT_Long )
   FT_MulDiv_No_Round( FT_Long  a,
                       FT_Long  b,
@@ -425,8 +443,6 @@
 
     return ( s < 0 ? -a : a );
   }
-
-#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /* documentation is in freetype.h */
@@ -552,7 +568,7 @@
     else if ( ( a >> 16 ) == 0 )
     {
       /* compute result directly */
-      q = (FT_UInt32)( ( a << 16 ) + ( b >> 1 ) ) / (FT_UInt32)b;
+      q = (FT_UInt32)( ( (FT_ULong)a << 16 ) + ( b >> 1 ) ) / (FT_UInt32)b;
     }
     else
     {
@@ -560,8 +576,8 @@
       FT_Int64  temp, temp2;
 
 
-      temp.hi  = (FT_Int32) ( a >> 16 );
-      temp.lo  = (FT_UInt32)( a << 16 );
+      temp.hi  = (FT_Int32)( a >> 16 );
+      temp.lo  = (FT_UInt32)a << 16;
       temp2.hi = 0;
       temp2.lo = (FT_UInt32)( b >> 1 );
       FT_Add64( &temp, &temp2, &temp );
@@ -727,14 +743,14 @@
 
 
     if ( !matrix )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     /* compute discriminant */
     delta = FT_MulFix( matrix->xx, matrix->yy ) -
             FT_MulFix( matrix->xy, matrix->yx );
 
     if ( !delta )
-      return FT_Err_Invalid_Argument;  /* matrix can't be inverted */
+      return FT_THROW( Invalid_Argument );  /* matrix can't be inverted */
 
     matrix->xy = - FT_DivFix( matrix->xy, delta );
     matrix->yx = - FT_DivFix( matrix->yx, delta );

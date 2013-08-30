@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for controlling the auto-hinter (specification only).   */
 /*                                                                         */
-/*  Copyright 2012 by                                                      */
+/*  Copyright 2012, 2013 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,6 +61,8 @@ FT_BEGIN_HEADER
    *   glyph-to-script-map
    *
    * @description:
+   *   *Experimental* *only*
+   *
    *   The auto-hinter provides various script modules to hint glyphs.
    *   Examples of supported scripts are Latin or CJK.  Before a glyph is
    *   auto-hinted, the Unicode character map of the font gets examined, and
@@ -113,6 +115,8 @@ FT_BEGIN_HEADER
    *   FT_AUTOHINTER_SCRIPT_XXX
    *
    * @description:
+   *   *Experimental* *only*
+   *
    *   A list of constants used for the @glyph-to-script-map property to
    *   specify the script submodule the auto-hinter should use for hinting a
    *   particular glyph.
@@ -216,7 +220,7 @@ FT_BEGIN_HEADER
    *       U+1900 - U+194F  // Limbu
    *       U+1B80 - U+1BBF  // Sundanese
    *       U+1C80 - U+1CDF  // Meetei Mayak
-   *       U+A800 - U+A82F  // Syloti Nagri 
+   *       U+A800 - U+A82F  // Syloti Nagri
    *      U+11800 - U+118DF // Sharada
    *     }
    *
@@ -236,6 +240,8 @@ FT_BEGIN_HEADER
    *   FT_Prop_GlyphToScriptMap
    *
    * @description:
+   *   *Experimental* *only*
+   *
    *   The data exchange structure for the @glyph-to-script-map property.
    *
    */
@@ -253,6 +259,8 @@ FT_BEGIN_HEADER
    *   fallback-script
    *
    * @description:
+   *   *Experimental* *only*
+   *
    *   If no auto-hinter script module can be assigned to a glyph, a
    *   fallback script gets assigned to it (see also the
    *   @glyph-to-script-map property).  By default, this is

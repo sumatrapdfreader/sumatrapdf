@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (specification).                       */
 /*                                                                         */
-/*  Copyright 1996-2007, 2010, 2012 by                                     */
+/*  Copyright 1996-2007, 2010, 2012-2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -115,14 +115,14 @@ FT_BEGIN_HEADER
   /* various fonts.  "", 0, "", NULL value indicates to match any value.   */
   /*                                                                       */
 
-#define MAX_NAME_SIZE      32
-#define MAX_CLASS_MEMBERS  100
+#define SPH_MAX_NAME_SIZE      32
+#define SPH_MAX_CLASS_MEMBERS  100
 
   typedef struct  SPH_TweakRule_
   {
-    const char      family[MAX_NAME_SIZE];
+    const char      family[SPH_MAX_NAME_SIZE];
     const FT_UInt   ppem;
-    const char      style[MAX_NAME_SIZE];
+    const char      style[SPH_MAX_NAME_SIZE];
     const FT_ULong  glyph;
 
   } SPH_TweakRule;
@@ -130,21 +130,21 @@ FT_BEGIN_HEADER
 
   typedef struct  SPH_ScaleRule_
   {
-    const char      family[MAX_NAME_SIZE];
+    const char      family[SPH_MAX_NAME_SIZE];
     const FT_UInt   ppem;
-    const char      style[MAX_NAME_SIZE];
+    const char      style[SPH_MAX_NAME_SIZE];
     const FT_ULong  glyph;
     const FT_ULong  scale;
 
   } SPH_ScaleRule;
 
 
-  typedef struct  Font_Class_
+  typedef struct  SPH_Font_Class_
   {
-    const char  name[MAX_NAME_SIZE];
-    const char  member[MAX_CLASS_MEMBERS][MAX_NAME_SIZE];
+    const char  name[SPH_MAX_NAME_SIZE];
+    const char  member[SPH_MAX_CLASS_MEMBERS][SPH_MAX_NAME_SIZE];
 
-  } Font_Class;
+  } SPH_Font_Class;
 
 #endif /* TT_CONFIG_OPTION_SUBPIXEL_HINTING */
 
@@ -269,10 +269,6 @@ FT_BEGIN_HEADER
     FT_Bool            ignore_x_mode;     /* Standard rendering mode for   */
                                           /* subpixel hinting.  On if gray */
                                           /* or subpixel hinting is on )   */
-    FT_Bool            compatibility_mode;/* Additional exceptions to      */
-                                          /* native TT rules for legacy    */
-                                          /* fonts.  Implies               */
-                                          /* ignore_x_mode.                */
 
     /* The following 4 aren't fully implemented but here for MS rasterizer */
     /* compatibility.                                                      */
@@ -282,12 +278,16 @@ FT_BEGIN_HEADER
     FT_Bool            subpixel_positioned;   /* subpixel positioned       */
                                               /* (DirectWrite ClearType)?  */
 
-    FT_Int             rasterizer_version;    /* MS rasterizer version */
+    FT_Int             rasterizer_version;    /* MS rasterizer version     */
 
-    FT_Bool            iup_called;            /* IUP called for glyph?  */
+    FT_Bool            iup_called;            /* IUP called for glyph?     */
 
-    FT_ULong           sph_tweak_flags;       /* flags to control */
-                                              /* hint tweaks      */
+    FT_ULong           sph_tweak_flags;       /* flags to control          */
+                                              /* hint tweaks               */
+
+    FT_ULong           sph_in_func_flags;     /* flags to indicate if in   */
+                                              /* special functions         */
+
 #endif /* TT_CONFIG_OPTION_SUBPIXEL_HINTING */
 
   } TT_ExecContextRec;
@@ -296,7 +296,7 @@ FT_BEGIN_HEADER
   extern const TT_GraphicsState  tt_default_graphics_state;
 
 
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#ifdef TT_USE_BYTECODE_INTERPRETER
   FT_LOCAL( FT_Error )
   TT_Goto_CodeRange( TT_ExecContext  exec,
                      FT_Int          range,
@@ -319,7 +319,7 @@ FT_BEGIN_HEADER
               FT_Long    multiplier,
               void*      _pbuff,
               FT_ULong   new_max );
-#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /*************************************************************************/
@@ -345,7 +345,7 @@ FT_BEGIN_HEADER
   TT_New_Context( TT_Driver  driver );
 
 
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#ifdef TT_USE_BYTECODE_INTERPRETER
   FT_LOCAL( FT_Error )
   TT_Done_Context( TT_ExecContext  exec );
 
@@ -361,7 +361,7 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   TT_Run_Context( TT_ExecContext  exec,
                   FT_Bool         debug );
-#endif /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER */
+#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /*************************************************************************/

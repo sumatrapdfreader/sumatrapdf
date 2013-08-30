@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2012 by                                                 */
+/*  Copyright 1996-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,6 +17,7 @@
 
 
 #include <ft2build.h>
+
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
@@ -24,11 +25,14 @@
 #include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
+#include FT_CFF_DRIVER_H
+
 #include "cffobjs.h"
 #include "cffload.h"
 #include "cffcmap.h"
-#include "cfferrs.h"
 #include "cffpic.h"
+
+#include "cfferrs.h"
 
 
   /*************************************************************************/
@@ -153,7 +157,7 @@
   cff_size_init( FT_Size  cffsize )         /* CFF_Size */
   {
     CFF_Size           size  = (CFF_Size)cffsize;
-    FT_Error           error = CFF_Err_Ok;
+    FT_Error           error = FT_Err_Ok;
     PSH_Globals_Funcs  funcs = cff_size_get_globals_funcs( size );
 
 
@@ -253,7 +257,7 @@
       }
     }
 
-    return CFF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 #endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
@@ -325,7 +329,7 @@
       }
     }
 
-    return CFF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -367,7 +371,7 @@
       }
     }
 
-    return CFF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -401,7 +405,7 @@
   remove_subset_prefix( FT_String*  name )
   {
     FT_Int32  idx             = 0;
-    FT_Int32  length          = strlen( name ) + 1;
+    FT_Int32  length          = (FT_Int32)strlen( name ) + 1;
     FT_Bool   continue_search = 1;
 
 
@@ -438,8 +442,8 @@
     FT_Int32  family_name_length, style_name_length;
 
 
-    family_name_length = strlen( family_name );
-    style_name_length  = strlen( style_name );
+    family_name_length = (FT_Int32)strlen( family_name );
+    style_name_length  = (FT_Int32)strlen( style_name );
 
     if ( family_name_length > style_name_length )
     {
@@ -496,7 +500,7 @@
     if ( !sfnt )
     {
       FT_ERROR(( "cff_face_init: cannot access `sfnt' module\n" ));
-      error = CFF_Err_Missing_Module;
+      error = FT_THROW( Missing_Module );
       goto Exit;
     }
 
@@ -518,13 +522,13 @@
       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
       {
         FT_TRACE2(( "  not an OpenType/CFF font\n" ));
-        error = CFF_Err_Unknown_File_Format;
+        error = FT_THROW( Unknown_File_Format );
         goto Exit;
       }
 
       /* if we are performing a simple font format check, exit immediately */
       if ( face_index < 0 )
-        return CFF_Err_Ok;
+        return FT_Err_Ok;
 
       sfnt_format = 1;
 
@@ -559,7 +563,7 @@
       /* rewind to start of file; we are going to load a pure-CFF font */
       if ( FT_STREAM_SEEK( 0 ) )
         goto Exit;
-      error = CFF_Err_Ok;
+      error = FT_Err_Ok;
     }
 
     /* now load and parse the CFF table in the file */
@@ -600,7 +604,7 @@
                    " cannot open CFF & CEF fonts\n"
                    "              "
                    " without the `PSNames' module\n" ));
-        error = CFF_Err_Missing_Module;
+        error = FT_THROW( Missing_Module );
         goto Exit;
       }
 
@@ -959,7 +963,8 @@
 
         error = FT_CMap_New( &CFF_CMAP_UNICODE_CLASS_REC_GET, NULL,
                              &cmaprec, NULL );
-        if ( error && FT_Err_No_Unicode_Glyph_Name != error )
+        if ( error                                      &&
+             FT_ERR_NEQ( error, No_Unicode_Glyph_Name ) )
           goto Exit;
         error = FT_Err_Ok;
 
@@ -1045,16 +1050,25 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  cff_driver_init( FT_Module  module )
+  cff_driver_init( FT_Module  module )        /* CFF_Driver */
   {
-    FT_UNUSED( module );
+    CFF_Driver  driver = (CFF_Driver)module;
 
-    return CFF_Err_Ok;
+
+    /* set default property values */
+#ifdef CFF_CONFIG_OPTION_OLD_ENGINE
+    driver->hinting_engine    = FT_CFF_HINTING_FREETYPE;
+#else
+    driver->hinting_engine    = FT_CFF_HINTING_ADOBE;
+#endif
+    driver->no_stem_darkening = FALSE;
+
+    return FT_Err_Ok;
   }
 
 
   FT_LOCAL_DEF( void )
-  cff_driver_done( FT_Module  module )
+  cff_driver_done( FT_Module  module )        /* CFF_Driver */
   {
     FT_UNUSED( module );
   }

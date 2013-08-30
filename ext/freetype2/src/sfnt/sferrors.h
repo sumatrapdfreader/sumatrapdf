@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    SFNT error codes (specification only).                               */
 /*                                                                         */
-/*  Copyright 2001, 2004, 2012 by                                          */
+/*  Copyright 2001, 2004, 2012, 2013 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,8 +32,6 @@
 #undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  SFNT_Err_
 #define FT_ERR_BASE    FT_Mod_Err_SFNT
-
-#define FT_KEEP_ERR_PREFIX
 
 #include FT_ERRORS_H
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT validation module error codes (specification only).   */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2012                                             */
+/*  Copyright 2004, 2005, 2012-2013                                        */
 /*    by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -41,9 +41,7 @@
 
 #undef  FT_ERR_PREFIX
 #define FT_ERR_PREFIX  GXV_Err_
-#define FT_ERR_BASE    FT_Mod_Err_GXV
-
-#define FT_KEEP_ERR_PREFIX
+#define FT_ERR_BASE    FT_Mod_Err_GXvalid
 
 #include FT_ERRORS_H
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004-2012 by                                                 */
+/*  Copyright 2004-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -61,9 +61,9 @@
 
 
 #define FT_Stream_FTell( stream )  \
-          ( (stream)->cursor - (stream)->base )
+          (FT_ULong)( (stream)->cursor - (stream)->base )
 #define FT_Stream_SeekSet( stream, off ) \
-              ( (stream)->cursor = (stream)->base+(off) )
+          ( (stream)->cursor = (stream)->base + (off) )
 
 
   /*************************************************************************/
@@ -91,7 +91,9 @@
   /* indicates that there is a delta for every point without needing to    */
   /* enumerate all of them.                                                */
   /*                                                                       */
-#define ALL_POINTS  (FT_UShort*)( ~0 )
+
+  /* ensure that value `0' has the same width as a pointer */
+#define ALL_POINTS  (FT_UShort*)~(FT_PtrDist)0
 
 
 #define GX_PT_POINTS_ARE_WORDS      0x80
@@ -130,7 +132,7 @@
     FT_Int     j;
     FT_Int     first;
     FT_Memory  memory = stream->memory;
-    FT_Error   error  = TT_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
 
     FT_UNUSED( error );
 
@@ -215,7 +217,7 @@
     FT_Offset  i;
     FT_UInt    j;
     FT_Memory  memory = stream->memory;
-    FT_Error   error  = TT_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
 
     FT_UNUSED( error );
 
@@ -283,7 +285,7 @@
     FT_Memory       memory = stream->memory;
     GX_Blend        blend  = face->blend;
     GX_AVarSegment  segment;
-    FT_Error        error = TT_Err_Ok;
+    FT_Error        error = FT_Err_Ok;
     FT_ULong        version;
     FT_Long         axisCount;
     FT_Int          i, j;
@@ -412,7 +414,7 @@
     if ( gvar_head.version   != (FT_Long)0x00010000L              ||
          gvar_head.axisCount != (FT_UShort)blend->mmvar->num_axis )
     {
-      error = TT_Err_Invalid_Table;
+      error = FT_THROW( Invalid_Table );
       goto Exit;
     }
 
@@ -610,7 +612,7 @@
     FT_Stream            stream = face->root.stream;
     FT_Memory            memory = face->root.memory;
     FT_ULong             table_len;
-    FT_Error             error  = TT_Err_Ok;
+    FT_Error             error  = FT_Err_Ok;
     FT_ULong             fvar_start;
     FT_Int               i, j;
     FT_MM_Var*           mmvar = NULL;
@@ -681,7 +683,7 @@
            fvar_head.offsetToData + fvar_head.axisCount * 20U +
              fvar_head.instanceCount * fvar_head.instanceSize > table_len )
       {
-        error = TT_Err_Invalid_Table;
+        error = FT_THROW( Invalid_Table );
         goto Exit;
       }
 
@@ -703,7 +705,7 @@
       mmvar->num_axis =
         fvar_head.axisCount;
       mmvar->num_designs =
-        ~0;                    /* meaningless in this context; each glyph */
+        ~0U;                   /* meaningless in this context; each glyph */
                                /* may have a different number of designs  */
                                /* (or tuples, as called by Apple)         */
       mmvar->num_namedstyles =
@@ -847,7 +849,7 @@
                    FT_UInt    num_coords,
                    FT_Fixed*  coords )
   {
-    FT_Error    error = TT_Err_Ok;
+    FT_Error    error = FT_Err_Ok;
     GX_Blend    blend;
     FT_MM_Var*  mmvar;
     FT_UInt     i;
@@ -875,14 +877,14 @@
 
     if ( num_coords != mmvar->num_axis )
     {
-      error = TT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
     for ( i = 0; i < num_coords; ++i )
       if ( coords[i] < -0x00010000L || coords[i] > 0x00010000L )
       {
-        error = TT_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Exit;
       }
 
@@ -983,7 +985,7 @@
                      FT_UInt    num_coords,
                      FT_Fixed*  coords )
   {
-    FT_Error        error      = TT_Err_Ok;
+    FT_Error        error      = FT_Err_Ok;
     FT_Fixed*       normalized = NULL;
     GX_Blend        blend;
     FT_MM_Var*      mmvar;
@@ -1004,7 +1006,7 @@
 
     if ( num_coords != mmvar->num_axis )
     {
-      error = TT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -1020,7 +1022,7 @@
     {
       if ( coords[i] > a->maximum || coords[i] < a->minimum )
       {
-        error = TT_Err_Invalid_Argument;
+        error = FT_THROW( Invalid_Argument );
         goto Exit;
       }
 
@@ -1120,7 +1122,7 @@
     {
       FT_TRACE2(( "tt_face_vary_cvt: no blend specified\n" ));
 
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
       goto Exit;
     }
 
@@ -1128,7 +1130,7 @@
     {
       FT_TRACE2(( "tt_face_vary_cvt: no `cvt ' table\n" ));
 
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
       goto Exit;
     }
 
@@ -1137,13 +1139,13 @@
     {
       FT_TRACE2(( "is missing\n" ));
 
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
       goto Exit;
     }
 
     if ( FT_FRAME_ENTER( table_len ) )
     {
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
       goto Exit;
     }
 
@@ -1152,7 +1154,7 @@
     {
       FT_TRACE2(( "bad table version\n" ));
 
-      error = TT_Err_Ok;
+      error = FT_Err_Ok;
       goto FExit;
     }
 
@@ -1323,7 +1325,7 @@
 
 
     if ( !face->doblend || blend == NULL )
-      return TT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     /* to be freed by the caller */
     if ( FT_NEW_ARRAY( delta_xy, n_points ) )
@@ -1333,7 +1335,7 @@
     if ( glyph_index >= blend->gv_glyphcnt      ||
          blend->glyphoffsets[glyph_index] ==
            blend->glyphoffsets[glyph_index + 1] )
-      return TT_Err_Ok;               /* no variation data for this glyph */
+      return FT_Err_Ok;               /* no variation data for this glyph */
 
     if ( FT_STREAM_SEEK( blend->glyphoffsets[glyph_index] )   ||
          FT_FRAME_ENTER( blend->glyphoffsets[glyph_index + 1] -
@@ -1383,7 +1385,7 @@
       }
       else if ( ( tupleIndex & GX_TI_TUPLE_INDEX_MASK ) >= blend->tuplecount )
       {
-        error = TT_Err_Invalid_Table;
+        error = FT_THROW( Invalid_Table );
         goto Fail3;
       }
       else

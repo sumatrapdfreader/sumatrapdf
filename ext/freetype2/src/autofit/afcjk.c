@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006-2012 by                                                 */
+/*  Copyright 2006-2013 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -481,7 +481,8 @@
         FT_Bool  under_ref = FT_BOOL( shoot < ref );
 
 
-        if ( (AF_CJK_BLUE_TOP == bb || AF_CJK_BLUE_RIGHT == bb) ^ under_ref )
+        if ( ( AF_CJK_BLUE_TOP == bb   ||
+               AF_CJK_BLUE_RIGHT == bb ) ^ under_ref )
           *blue_shoot = *blue_ref = ( shoot + ref ) / 2;
       }
 
@@ -566,7 +567,7 @@
 
     FT_Set_Charmap( face, oldmap );
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -702,7 +703,7 @@
     {
       AF_Point  pt   = seg->first;
       AF_Point  last = seg->last;
-      AF_Flags  f0   = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
+      AF_Flags  f0   = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
       AF_Flags  f1;
 
 
@@ -711,7 +712,7 @@
       for ( ; pt != last; f0 = f1 )
       {
         pt = pt->next;
-        f1 = (AF_Flags)(pt->flags & AF_FLAG_CONTROL);
+        f1 = (AF_Flags)( pt->flags & AF_FLAG_CONTROL );
 
         if ( !f0 && !f1 )
           break;
@@ -721,7 +722,7 @@
       }
     }
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -895,7 +896,7 @@
                               AF_Dimension   dim )
   {
     AF_AxisHints  axis   = &hints->axis[dim];
-    FT_Error      error  = AF_Err_Ok;
+    FT_Error      error  = FT_Err_Ok;
     FT_Memory     memory = hints->memory;
     AF_CJKAxis    laxis  = &((AF_CJKMetrics)hints->metrics)->axis[dim];
 
@@ -965,14 +966,15 @@
           /* can make a single edge.                                 */
           if ( link )
           {
-            AF_Segment  seg1 = edge->first;
-            AF_Segment  link1;
+            AF_Segment  seg1  = edge->first;
             FT_Pos      dist2 = 0;
 
 
             do
             {
-              link1 = seg1->link;
+              AF_Segment  link1 = seg1->link;
+
+
               if ( link1 )
               {
                 dist2 = AF_SEGMENT_DIST( link, link1 );

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for Indic scripts (body).               */
 /*                                                                         */
-/*  Copyright 2007, 2011, 2012 by                                          */
+/*  Copyright 2007, 2011-2013 by                                           */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -56,7 +56,7 @@
 
     FT_Set_Charmap( face, oldmap );
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 

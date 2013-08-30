@@ -69,7 +69,7 @@ FT_BEGIN_HEADER
 #define AF_SERVICES_GET  \
           ( GET_PIC( library )->af_services )
 #define AF_SERVICE_PROPERTIES_GET  \
-          ( GET_PIC( library)->af_service_properties )
+          ( GET_PIC( library )->af_service_properties )
 
 #define AF_SCRIPT_CLASSES_GET  \
           ( GET_PIC( FT_FACE_LIBRARY( globals->face ) )->af_script_classes )

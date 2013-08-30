@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT morx table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2005, 2008 by                                                */
+/*  Copyright 2005, 2008, 2013 by                                          */
 /*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -57,8 +57,6 @@
 
     };
 
-    GXV_Validate_Func  func;
-
     FT_UShort  i;
 
 
@@ -66,6 +64,8 @@
 
     for ( i = 0; i < nSubtables; i++ )
     {
+      GXV_Validate_Func  func;
+
       FT_ULong  length;
       FT_ULong  coverage;
 #ifdef GXV_LOAD_UNUSED_VARS

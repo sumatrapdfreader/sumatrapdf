@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008, 2010, 2012 by                               */
+/*  Copyright 1996-2006, 2008, 2010, 2012-2013 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -352,10 +352,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  FT_Face_InternalRec_
   {
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    FT_UShort           reserved1;
-    FT_Short            reserved2;
-#endif
     FT_Matrix           transform_matrix;
     FT_Vector           transform_delta;
     FT_Int              transform_flags;
@@ -367,7 +363,7 @@ FT_BEGIN_HEADER
 #endif
 
     FT_Bool             ignore_unpatented_hinter;
-    FT_UInt             refcount;
+    FT_Int              refcount;
 
   } FT_Face_InternalRec;
 
@@ -887,7 +883,7 @@ FT_BEGIN_HEADER
     FT_PIC_Container   pic_container;
 #endif
 
-    FT_UInt            refcount;
+    FT_Int             refcount;
 
   } FT_LibraryRec;
 

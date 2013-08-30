@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    High-level Type 42 driver interface (body).                          */
 /*                                                                         */
-/*  Copyright 2002-2004, 2006, 2007, 2009, 2011 by Roberto Alameda.        */
+/*  Copyright 2002-2004, 2006, 2007, 2009, 2011, 2013 by                   */
+/*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -63,7 +64,7 @@
   {
     FT_STRCPYN( buffer, face->type1.glyph_names[glyph_index], buffer_max );
 
-    return T42_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -71,13 +72,13 @@
   t42_get_name_index( T42_Face    face,
                       FT_String*  glyph_name )
   {
-    FT_Int      i;
-    FT_String*  gname;
+    FT_Int  i;
 
 
     for ( i = 0; i < face->type1.num_glyphs; i++ )
     {
-      gname = face->type1.glyph_names[i];
+      FT_String*  gname = face->type1.glyph_names[i];
+
 
       if ( glyph_name[0] == gname[0] && !ft_strcmp( glyph_name, gname ) )
         return (FT_UInt)ft_atol( (const char *)face->type1.charstrings[i] );
@@ -125,7 +126,7 @@
   {
     *afont_info = ((T42_Face)face)->type1.font_info;
 
-    return T42_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -135,7 +136,7 @@
   {
     *afont_extra = ((T42_Face)face)->type1.font_extra;
 
-    return T42_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -154,7 +155,7 @@
   {
     *afont_private = ((T42_Face)face)->type1.private_dict;
 
-    return T42_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -229,10 +230,6 @@
     T42_GlyphSlot_Init,
     T42_GlyphSlot_Done,
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
     T42_GlyphSlot_Load,
 
     0,                 /* FT_Face_GetKerningFunc  */

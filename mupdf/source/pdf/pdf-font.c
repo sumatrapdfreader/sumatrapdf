@@ -483,6 +483,7 @@ pdf_load_bullet_font(fz_context *ctx)
 		gid = FT_Get_Name_Index(fontdesc->font->ft_face, "bullet");
 		for (i = 0; i < 256; i++)
 			fontdesc->cid_to_gid[i] = gid;
+		FT_Set_Char_Size(fontdesc->font->ft_face, 1000, 1000, 72, 72);
 		pdf_set_default_hmtx(ctx, fontdesc, ft_width(ctx, fontdesc, 0));
 	}
 	fz_catch(ctx)

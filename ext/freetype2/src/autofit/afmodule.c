@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter module implementation (body).                            */
 /*                                                                         */
-/*  Copyright 2003-2006, 2009, 2011-2012 by                                */
+/*  Copyright 2003-2006, 2009, 2011-2013 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,12 +50,12 @@
                                 AF_FaceGlobals*  aglobals,
                                 AF_Module        module )
   {
-    FT_Error        error = AF_Err_Ok;
+    FT_Error        error = FT_Err_Ok;
     AF_FaceGlobals  globals;
 
 
     if ( !face )
-      return AF_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     globals = (AF_FaceGlobals)face->autohint.data;
     if ( !globals )
@@ -84,7 +84,7 @@
                    const char*  property_name,
                    const void*  value )
   {
-    FT_Error   error  = AF_Err_Ok;
+    FT_Error   error  = FT_Err_Ok;
     AF_Module  module = (AF_Module)ft_module;
 
 
@@ -110,9 +110,9 @@
       return error;
     }
 
-    FT_TRACE0(( "af_property_get: missing property `%s'\n",
+    FT_TRACE0(( "af_property_set: missing property `%s'\n",
                 property_name ));
-    return AF_Err_Missing_Property;
+    return FT_THROW( Missing_Property );
   }
 
 
@@ -121,7 +121,7 @@
                    const char*  property_name,
                    void*        value )
   {
-    FT_Error   error           = AF_Err_Ok;
+    FT_Error   error           = FT_Err_Ok;
     AF_Module  module          = (AF_Module)ft_module;
     FT_UInt    fallback_script = module->fallback_script;
 
@@ -163,7 +163,7 @@
 
     FT_TRACE0(( "af_property_get: missing property `%s'\n",
                 property_name ));
-    return AF_Err_Missing_Property;
+    return FT_THROW( Missing_Property );
   }
 
 
@@ -201,8 +201,11 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  af_autofitter_init( AF_Module  module )
+  af_autofitter_init( FT_Module  ft_module )      /* AF_Module */
   {
+    AF_Module  module = (AF_Module)ft_module;
+
+
     module->fallback_script = AF_SCRIPT_FALLBACK;
 
     return af_loader_init( module );
@@ -210,8 +213,11 @@
 
 
   FT_CALLBACK_DEF( void )
-  af_autofitter_done( AF_Module  module )
+  af_autofitter_done( FT_Module  ft_module )      /* AF_Module */
   {
+    AF_Module  module = (AF_Module)ft_module;
+
+
     af_loader_done( module );
   }
 

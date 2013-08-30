@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Arithmetic computations (specification).                             */
 /*                                                                         */
-/*  Copyright 1996-2006, 2008, 2009, 2012 by                               */
+/*  Copyright 1996-2006, 2008, 2009, 2012-2013 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -33,7 +33,7 @@ FT_BEGIN_HEADER
   /*    FT_FixedSqrt                                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Computes the square root of a 16.16 fixed point value.             */
+  /*    Computes the square root of a 16.16 fixed-point value.             */
   /*                                                                       */
   /* <Input>                                                               */
   /*    x :: The value to compute the root for.                            */
@@ -46,29 +46,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_BASE( FT_Int32 )
   FT_SqrtFixed( FT_Int32  x );
-
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Sqrt32                                                          */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Computes the square root of an Int32 integer (which will be        */
-  /*    handled as an unsigned long value).                                */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    x :: The value to compute the root for.                            */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The result of `sqrt(x)'.                                           */
-  /*                                                                       */
-  FT_EXPORT( FT_Int32 )
-  FT_Sqrt32( FT_Int32  x );
-
-#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
   /*************************************************************************/
@@ -125,7 +102,6 @@ FT_BEGIN_HEADER
    *  A variant of FT_Vector_Transform.  See comments for
    *  FT_Matrix_Multiply_Scaled.
    */
-
   FT_BASE( void )
   FT_Vector_Transform_Scaled( FT_Vector*        vector,
                               const FT_Matrix*  matrix,
@@ -154,6 +130,22 @@ FT_BEGIN_HEADER
                      FT_Pos  in_y,
                      FT_Pos  out_x,
                      FT_Pos  out_y );
+
+
+  /*
+   *  Return the most significant bit index.
+   */
+  FT_BASE( FT_Int )
+  FT_MSB( FT_UInt32  z );
+
+
+  /*
+   *  Return sqrt(x*x+y*y), which is the same as `FT_Vector_Length' but uses
+   *  two fixed-point arguments instead.
+   */
+  FT_BASE( FT_Fixed )
+  FT_Hypot( FT_Fixed  x,
+            FT_Fixed  y );
 
 
 #define INT_TO_F26DOT6( x )    ( (FT_Long)(x) << 6  )

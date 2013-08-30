@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType-specific tables loader (body).                              */
 /*                                                                         */
-/*  Copyright 1996-2002, 2004-2012 by                                      */
+/*  Copyright 1996-2002, 2004-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -72,7 +72,7 @@
 
     /* it is possible that a font doesn't have a glyf table at all */
     /* or its size is zero                                         */
-    if ( error == TT_Err_Table_Missing )
+    if ( FT_ERR_EQ( error, Table_Missing ) )
       face->glyf_len = 0;
     else if ( error )
       goto Exit;
@@ -81,7 +81,7 @@
     error = face->goto_table( face, TTAG_loca, stream, &table_len );
     if ( error )
     {
-      error = TT_Err_Locations_Missing;
+      error = FT_THROW( Locations_Missing );
       goto Exit;
     }
 
@@ -92,7 +92,7 @@
       if ( table_len >= 0x40000L )
       {
         FT_TRACE2(( "table too large\n" ));
-        error = TT_Err_Invalid_Table;
+        error = FT_THROW( Invalid_Table );
         goto Exit;
       }
       face->num_locations = table_len >> shift;
@@ -104,7 +104,7 @@
       if ( table_len >= 0x20000L )
       {
         FT_TRACE2(( "table too large\n" ));
-        error = TT_Err_Invalid_Table;
+        error = FT_THROW( Invalid_Table );
         goto Exit;
       }
       face->num_locations = table_len >> shift;
@@ -296,7 +296,7 @@
 
       face->cvt_size = 0;
       face->cvt      = NULL;
-      error          = TT_Err_Ok;
+      error          = FT_Err_Ok;
 
       goto Exit;
     }
@@ -334,7 +334,7 @@
     FT_UNUSED( face   );
     FT_UNUSED( stream );
 
-    return TT_Err_Ok;
+    return FT_Err_Ok;
 
 #endif
   }
@@ -375,7 +375,7 @@
     {
       face->font_program      = NULL;
       face->font_program_size = 0;
-      error                   = TT_Err_Ok;
+      error                   = FT_Err_Ok;
 
       FT_TRACE2(( "is missing\n" ));
     }
@@ -396,7 +396,7 @@
     FT_UNUSED( face   );
     FT_UNUSED( stream );
 
-    return TT_Err_Ok;
+    return FT_Err_Ok;
 
 #endif
   }
@@ -436,7 +436,7 @@
     {
       face->cvt_program      = NULL;
       face->cvt_program_size = 0;
-      error                  = TT_Err_Ok;
+      error                  = FT_Err_Ok;
 
       FT_TRACE2(( "is missing\n" ));
     }
@@ -457,7 +457,7 @@
     FT_UNUSED( face   );
     FT_UNUSED( stream );
 
-    return TT_Err_Ok;
+    return FT_Err_Ok;
 
 #endif
   }
@@ -495,7 +495,7 @@
     /* this table is optional */
     error = face->goto_table( face, TTAG_hdmx, stream, &table_size );
     if ( error || table_size < 8 )
-      return TT_Err_Ok;
+      return FT_Err_Ok;
 
     if ( FT_FRAME_EXTRACT( table_size, face->hdmx_table ) )
       goto Exit;
@@ -525,7 +525,7 @@
 
     if ( version != 0 || num_records > 255 || record_size > 0x10001L )
     {
-      error = TT_Err_Invalid_File_Format;
+      error = FT_THROW( Invalid_File_Format );
       goto Fail;
     }
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (body).                                 */
 /*                                                                         */
-/*  Copyright 2003-2007, 2009-2012 by                                      */
+/*  Copyright 2003-2007, 2009-2013 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,7 +39,7 @@
                              FT_Memory     memory,
                              AF_Segment   *asegment )
   {
-    FT_Error    error   = AF_Err_Ok;
+    FT_Error    error   = FT_Err_Ok;
     AF_Segment  segment = NULL;
 
 
@@ -52,7 +52,7 @@
 
       if ( old_max >= big_max )
       {
-        error = AF_Err_Out_Of_Memory;
+        error = FT_THROW( Out_Of_Memory );
         goto Exit;
       }
 
@@ -83,7 +83,7 @@
                           FT_Memory     memory,
                           AF_Edge      *anedge )
   {
-    FT_Error  error = AF_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     AF_Edge   edge  = NULL;
     AF_Edge   edges;
 
@@ -97,7 +97,7 @@
 
       if ( old_max >= big_max )
       {
-        error = AF_Err_Out_Of_Memory;
+        error = FT_THROW( Out_Of_Memory );
         goto Exit;
       }
 
@@ -265,7 +265,7 @@
       FT_TRACE7(( "Table of %s segments:\n",
                   dimension == AF_DIMENSION_HORZ ? "vertical"
                                                  : "horizontal" ));
-      if (axis->num_segments)
+      if ( axis->num_segments )
         FT_TRACE7(( "  [ index |  pos  |  dir  | from"
                     " |  to  | link | serif | edge"
                     " | height | extra |    flags    ]\n" ));
@@ -316,7 +316,7 @@
     axis          = &hints->axis[dim];
     *num_segments = axis->num_segments;
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 #ifdef __cplusplus
   }
@@ -340,20 +340,20 @@
 
 
     if ( !offset )
-      return AF_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     dim = ( dimension == 0 ) ? AF_DIMENSION_HORZ : AF_DIMENSION_VERT;
 
     axis = &hints->axis[dim];
 
     if ( idx < 0 || idx >= axis->num_segments )
-      return AF_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     seg     = &axis->segments[idx];
-    *offset = (dim == AF_DIMENSION_HORZ) ? seg->first->ox
-                                         : seg->first->oy;
+    *offset = ( dim == AF_DIMENSION_HORZ ) ? seg->first->ox
+                                           : seg->first->oy;
 
-    return AF_Err_Ok;
+    return FT_Err_Ok;
   }
 #ifdef __cplusplus
   }
@@ -593,7 +593,7 @@
   af_glyph_hints_reload( AF_GlyphHints  hints,
                          FT_Outline*    outline )
   {
-    FT_Error   error   = AF_Err_Ok;
+    FT_Error   error   = FT_Err_Ok;
     AF_Point   points;
     FT_UInt    old_max, new_max;
     FT_Fixed   x_scale = hints->x_scale;

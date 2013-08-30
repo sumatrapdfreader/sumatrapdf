@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2004, 2006, 2008, 2009, 2011 by                         */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2011, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -74,7 +74,7 @@
   {
     *afont_info = ((CID_Face)face)->cid.font_info;
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
   static FT_Error
@@ -83,7 +83,7 @@
   {
     *afont_extra = ((CID_Face)face)->font_extra;
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
   static const FT_Service_PsInfoRec  cid_service_ps_info =
@@ -118,7 +118,7 @@
     if ( supplement )
       *supplement = cid->supplement;
 
-    return CID_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -126,7 +126,7 @@
   cid_get_is_cid( CID_Face  face,
                   FT_Bool  *is_cid )
   {
-    FT_Error  error = CID_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
 
@@ -142,7 +142,7 @@
                                 FT_UInt   glyph_index,
                                 FT_UInt  *cid )
   {
-    FT_Error  error = CID_Err_Ok;
+    FT_Error  error = FT_Err_Ok;
     FT_UNUSED( face );
 
 
@@ -220,11 +220,6 @@
     cid_size_done,
     cid_slot_init,
     cid_slot_done,
-
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
 
     cid_slot_load_glyph,
 

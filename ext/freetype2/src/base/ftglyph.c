@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2005, 2007, 2008, 2010, 2012 by                         */
+/*  Copyright 1996-2005, 2007, 2008, 2010, 2012, 2013 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,6 +29,8 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
+
 #include FT_GLYPH_H
 #include FT_OUTLINE_H
 #include FT_BITMAP_H
@@ -65,7 +67,7 @@
 
     if ( slot->format != FT_GLYPH_FORMAT_BITMAP )
     {
-      error = FT_Err_Invalid_Glyph_Format;
+      error = FT_THROW( Invalid_Glyph_Format );
       goto Exit;
     }
 
@@ -166,7 +168,7 @@
     /* check format in glyph slot */
     if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
     {
-      error = FT_Err_Invalid_Glyph_Format;
+      error = FT_THROW( Invalid_Glyph_Format );
       goto Exit;
     }
 
@@ -314,7 +316,7 @@
     /* check arguments */
     if ( !target )
     {
-      error = FT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -322,7 +324,7 @@
 
     if ( !source || !source->clazz )
     {
-      error = FT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -361,12 +363,12 @@
 
 
     if ( !slot )
-      return FT_Err_Invalid_Slot_Handle;
+      return FT_THROW( Invalid_Slot_Handle );
 
     library = slot->library;
 
     if ( !aglyph )
-      return FT_Err_Invalid_Argument;
+      return FT_THROW( Invalid_Argument );
 
     /* if it is a bitmap, that's easy :-) */
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
@@ -388,7 +390,7 @@
 
     if ( !clazz )
     {
-      error = FT_Err_Invalid_Glyph_Format;
+      error = FT_THROW( Invalid_Glyph_Format );
       goto Exit;
     }
 
@@ -427,7 +429,7 @@
 
 
     if ( !glyph || !glyph->clazz )
-      error = FT_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Argument );
     else
     {
       clazz = glyph->clazz;
@@ -441,7 +443,7 @@
           FT_Vector_Transform( &glyph->advance, matrix );
       }
       else
-        error = FT_Err_Invalid_Glyph_Format;
+        error = FT_THROW( Invalid_Glyph_Format );
     }
     return error;
   }
@@ -600,7 +602,7 @@
     return error;
 
   Bad:
-    error = FT_Err_Invalid_Argument;
+    error = FT_THROW( Invalid_Argument );
     goto Exit;
   }
 

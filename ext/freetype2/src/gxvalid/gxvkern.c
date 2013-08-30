@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT kern table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007                                       */
+/*  Copyright 2004-2007, 2013                                              */
 /*  by suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -303,8 +303,6 @@
 #ifdef GXV_LOAD_UNUSED_VARS
       kernAction = FT_NEXT_USHORT( p );
       kernValue  = FT_NEXT_USHORT( p );
-#else
-      p += 4;
 #endif
     }
   }
