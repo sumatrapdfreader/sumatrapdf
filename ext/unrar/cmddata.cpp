@@ -217,13 +217,17 @@ bool CommandData::PreprocessSwitch(const wchar *Switch)
       // Ensure that correct log file name is already set
       // if we need to report an error when processing the command line.
       ProcessSwitch(Switch);
-      InitLogOptions(LogName);
+      InitLogOptions(LogName,ErrlogCharset);
     }
 #endif
     if (wcsnicomp(Switch,L"sc",2)==0)
     {
       // Process -sc before reading any file lists.
       ProcessSwitch(Switch);
+#ifndef GUI
+      if (*LogName!=0)
+        InitLogOptions(LogName,ErrlogCharset);
+#endif
     }
   }
   return true;
@@ -388,7 +392,10 @@ void CommandData::ProcessSwitch(const wchar *Switch)
         case 'P':
           EncryptHeaders=true;
           if (Switch[2]!=0)
+          {
             Password.Set(Switch+2);
+            cleandata((void *)Switch,wcslen(Switch)*sizeof(Switch[0]));
+          }
           else
             if (!Password.IsSet())
             {
@@ -627,7 +634,10 @@ void CommandData::ProcessSwitch(const wchar *Switch)
         eprintf(L"\n");
       }
       else
+      {
         Password.Set(Switch+1);
+        cleandata((void *)Switch,wcslen(Switch)*sizeof(Switch[0]));
+      }
       break;
 #ifndef SFX_MODULE
     case 'Q':
@@ -663,7 +673,6 @@ void CommandData::ProcessSwitch(const wchar *Switch)
         case '0':
           Recurse=RECURSE_WILDCARDS;
           break;
-#ifndef _WIN_CE
         case 'I':
           {
             Priority=atoiw(Switch+2);
@@ -680,7 +689,6 @@ void CommandData::ProcessSwitch(const wchar *Switch)
             SetPriority(Priority);
           }
           break;
-#endif
       }
       break;
     case 'S':
@@ -738,7 +746,7 @@ void CommandData::ProcessSwitch(const wchar *Switch)
               };
               if (!AlreadyBad)
                 if (Switch[3]==0)
-                  CommentCharset=FilelistCharset=rch;
+                  CommentCharset=FilelistCharset=ErrlogCharset=rch;
                 else
                   for (uint I=3;Switch[I]!=0 && !AlreadyBad;I++)
                     switch(toupperw(Switch[I]))
@@ -918,12 +926,12 @@ void CommandData::OutTitle()
 inline bool CmpMSGID(MSGID i1,MSGID i2)
 {
 #ifdef MSGID_INT
-  return(i1==i2);
+  return i1==i2;
 #else
   // If MSGID is const char*, we cannot compare pointers only.
   // Pointers to different instances of same string can differ,
   // so we need to compare complete strings.
-  return(strcmp(i1,i2)==0);
+  return strcmp(i1,i2)==0;
 #endif
 }
 
@@ -954,7 +962,7 @@ void CommandData::OutHelp(RAR_EXIT ExitCode)
   for (uint I=0;I<ASIZE(Help);I++)
   {
 #ifndef SFX_MODULE
-    if (Help[I]==MCHelpSwV)
+    if (CmpMSGID(Help[I],MCHelpSwV))
       continue;
 #ifndef _WIN_ALL
     static MSGID Win32Only[]={

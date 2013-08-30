@@ -16,19 +16,19 @@ const uint MaxPoolThreads=32;
 #define     USE_THREADS
 
 #ifdef _UNIX
-  #define THREAD_ATTR
-  #define THREAD_TYPE void*
+  #define NATIVE_THREAD_TYPE void*
+  typedef void* (*NATIVE_THREAD_PTR)(void *Data);
   typedef pthread_t THREAD_HANDLE;
   typedef pthread_mutex_t CRITSECT_HANDLE;
 #else
-  #define THREAD_ATTR WINAPI
-  #define THREAD_TYPE void
+  #define NATIVE_THREAD_TYPE DWORD WINAPI
+  typedef DWORD (WINAPI *NATIVE_THREAD_PTR)(void *Data);
   typedef HANDLE THREAD_HANDLE;
   typedef CRITICAL_SECTION CRITSECT_HANDLE;
 #endif
 
-typedef THREAD_TYPE (THREAD_ATTR *PTHREAD_PROC)(void *Data);
-#define THREAD_PROC(fn) THREAD_TYPE THREAD_ATTR fn(void *Data)
+typedef void (*PTHREAD_PROC)(void *Data);
+#define THREAD_PROC(fn) void fn(void *Data)
 
 uint GetNumberOfCPU();
 uint GetNumberOfThreads();
@@ -43,7 +43,7 @@ class ThreadPool
       void *Param;
     };
 
-    static THREAD_TYPE THREAD_ATTR PoolThread(void *Param);
+    static NATIVE_THREAD_TYPE PoolThread(void *Param);
   	void PoolThreadLoop();
   	bool GetQueuedTask(QueueEntry *Task);
 

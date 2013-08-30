@@ -245,20 +245,12 @@ void ComprDataIO::SetEncryption(bool Encrypt,CRYPT_METHOD Method,
      SecPassword *Password,const byte *Salt,const byte *InitV,
      uint Lg2Cnt,byte *PswCheck,byte *HashKey)
 {
+#ifndef RAR_NOCRYPT
   if (Encrypt)
-  {
-    Encryption=Password->IsSet();
-#ifndef RAR_NOCRYPT
-    Crypt.SetCryptKeys(true,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
-#endif
-  }
+    Encryption=Crypt.SetCryptKeys(true,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
   else
-  {
-    Decryption=Password->IsSet();
-#ifndef RAR_NOCRYPT
-    Decrypt.SetCryptKeys(false,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
+    Decryption=Decrypt.SetCryptKeys(false,Method,Password,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
 #endif
-  }
 }
 
 

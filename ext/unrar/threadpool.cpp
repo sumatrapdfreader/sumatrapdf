@@ -45,7 +45,7 @@ ThreadPool::ThreadPool(uint MaxThreads)
 
   for(uint I=0;I<MaxAllowedThreads;I++)
   {
-    ThreadHandles[I] = ThreadCreate( PoolThread, this);
+    ThreadHandles[I] = ThreadCreate(PoolThread, this);
 #ifdef _WIN_ALL
     if (ThreadPool::ThreadPriority!=THREAD_PRIORITY_NORMAL)
       SetThreadPriority(ThreadHandles[I],ThreadPool::ThreadPriority);
@@ -100,9 +100,10 @@ ThreadPool::~ThreadPool()
 }
 
 
-THREAD_TYPE THREAD_ATTR ThreadPool::PoolThread(void *Param)
+NATIVE_THREAD_TYPE ThreadPool::PoolThread(void *Param)
 {
   ((ThreadPool*)Param)->PoolThreadLoop();
+  return 0;
 }
 
 

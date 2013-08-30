@@ -15,7 +15,6 @@ static bool UnixSymlink(const char *Target,const wchar *LinkName)
       Log(NULL,St(MErrCreateLnkS),LinkName);
       ErrHandler.SetErrorCode(RARX_WARNING);
     }
-    mprintf(L"     "); // Provide space for "OK" message.
     return false;
   }
   // We do not set time of created symlink, because utime changes

@@ -50,7 +50,7 @@ RecVolumes3::RecVolumes3()
 
 RecVolumes3::~RecVolumes3()
 {
-  for (int I=0;I<ASIZE(SrcFile);I++)
+  for (size_t I=0;I<ASIZE(SrcFile);I++)
     delete SrcFile[I];
 #ifdef RAR_SMP
   DestroyThreadPool(RSThreadPool);
@@ -207,7 +207,7 @@ bool RecVolumes3::Restore(RAROptions *Cmd,const wchar *Name,bool Silent)
       if (Dot==NULL)
         continue;
       bool WrongParam=false;
-      for (int I=0;I<ASIZE(P);I++)
+      for (size_t I=0;I<ASIZE(P);I++)
       {
         do
         {
@@ -397,7 +397,7 @@ bool RecVolumes3::Restore(RAROptions *Cmd,const wchar *Name,bool Silent)
       else
       {
         int ReadSize=SrcFile[I]->Read(&Buf[I*RecBufferSize],RecBufferSize);
-        if (ReadSize!=RecBufferSize)
+        if ((size_t)ReadSize!=RecBufferSize)
           memset(&Buf[I*RecBufferSize+ReadSize],0,RecBufferSize-ReadSize);
         if (ReadSize>MaxRead)
           MaxRead=ReadSize;

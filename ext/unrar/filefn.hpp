@@ -33,7 +33,7 @@ bool RenameFile(const wchar *SrcName,const wchar *DestName);
 bool DelFile(const wchar *Name);
 bool DelDir(const wchar *Name);
 
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
 bool SetFileCompression(const wchar *Name,bool State);
 #endif
 

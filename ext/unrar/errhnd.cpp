@@ -15,6 +15,7 @@ void ErrorHandler::Clean()
   Silent=false;
   DoShutdown=false;
   UserBreak=false;
+  MainExit=false;
 }
 
 
@@ -265,7 +266,7 @@ void ErrorHandler::SetErrorCode(RAR_EXIT Code)
 }
 
 
-#if !defined(GUI) && !defined(_SFX_RTL_)
+#ifndef GUI
 #ifdef _WIN_ALL
 BOOL __stdcall ProcessSignal(DWORD SigType)
 #else
@@ -287,8 +288,9 @@ void _stdfunction ProcessSignal(int SigType)
 
 #ifdef _WIN_ALL
   // Let the main thread to handle 'throw' and destroy file objects.
-  Sleep(200);
-#if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE) && !defined(RARDLL)
+  for (uint I=0;!ErrHandler.MainExit && I<50;I++)
+    Sleep(100);
+#if defined(USE_RC) && !defined(SFX_MODULE) && !defined(RARDLL)
   ExtRes.UnloadDLL();
 #endif
   exit(RARX_USERBREAK);
@@ -315,7 +317,7 @@ void _stdfunction ProcessSignal(int SigType)
 void ErrorHandler::SetSignalHandlers(bool Enable)
 {
   EnableBreak=Enable;
-#if !defined(GUI) && !defined(_SFX_RTL_)
+#ifndef GUI
 #ifdef _WIN_ALL
   SetConsoleCtrlHandler(Enable ? ProcessSignal:NULL,TRUE);
 //  signal(SIGBREAK,Enable ? ProcessSignal:SIG_IGN);

@@ -2,10 +2,12 @@
 
 
 static wchar LogName[NM];
+static RAR_CHARSET LogCharset=RCH_DEFAULT;
 
-void InitLogOptions(const wchar *LogFileName)
+void InitLogOptions(const wchar *LogFileName,RAR_CHARSET CSet)
 {
   wcsncpyz(LogName,LogFileName,ASIZE(LogName));
+  LogCharset=CSet;
 }
 
 

@@ -161,7 +161,7 @@ bool FindFile::FastFind(const wchar *FindMask,FindData *fd,bool GetSymLink)
 #ifdef _WIN_ALL
 HANDLE FindFile::Win32Find(HANDLE hFind,const wchar *Mask,FindData *fd)
 {
-  WIN32_FIND_DATAW FindData;
+  WIN32_FIND_DATA FindData;
   if (hFind==INVALID_HANDLE_VALUE)
   {
     hFind=FindFirstFile(Mask,&FindData);

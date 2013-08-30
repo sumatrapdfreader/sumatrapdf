@@ -65,7 +65,7 @@ class CryptData
   public:
     CryptData();
     ~CryptData();
-    void SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,SecPassword *Password,
+    bool SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,SecPassword *Password,
          const byte *Salt,const byte *InitV,uint Lg2Cnt,
          byte *HashKey,byte *PswCheck);
     void SetAV15Encryption();

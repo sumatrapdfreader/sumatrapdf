@@ -94,6 +94,8 @@ class RAROptions
     wchar CommentFile[NM];
     RAR_CHARSET CommentCharset;
     RAR_CHARSET FilelistCharset;
+    RAR_CHARSET ErrlogCharset;
+
     wchar ArcPath[NM];
     SecPassword Password;
     bool EncryptHeaders;

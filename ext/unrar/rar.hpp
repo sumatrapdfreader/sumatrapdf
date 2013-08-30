@@ -8,9 +8,7 @@
 #include "dll.hpp"
 #endif
 
-#ifndef _WIN_CE
 #include "version.hpp"
-#endif
 #include "rartypes.hpp"
 #include "rardefs.hpp"
 #include "rarlang.hpp"

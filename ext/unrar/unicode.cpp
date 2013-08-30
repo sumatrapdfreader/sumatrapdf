@@ -207,7 +207,7 @@ byte* WideToRaw(const wchar *Src,byte *Dest,size_t SrcSize)
     if (*Src==0)
       break;
   }
-  return(Dest);
+  return Dest;
 }
 
 
@@ -216,7 +216,7 @@ wchar* RawToWide(const byte *Src,wchar *Dest,size_t DestSize)
   for (size_t I=0;I<DestSize;I++)
     if ((Dest[I]=Src[I*2]+(Src[I*2+1]<<8))==0)
       break;
-  return(Dest);
+  return Dest;
 }
 
 

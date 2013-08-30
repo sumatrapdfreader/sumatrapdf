@@ -156,8 +156,8 @@ int64 GetFreeDisk(const wchar *Name)
   GetFilePath(Name,Root,ASIZE(Root));
   char RootA[NM];
   WideToChar(Root,RootA,ASIZE(RootA));
-  struct statfs sfs;
-  if (statfs(*RootA!=0 ? RootA:".",&sfs)!=0)
+  struct statvfs sfs;
+  if (statvfs(*RootA!=0 ? RootA:".",&sfs)!=0)
     return 0;
   int64 FreeSize=sfs.f_bsize;
   FreeSize=FreeSize*sfs.f_bavail;
@@ -310,7 +310,7 @@ bool SetFileAttr(const wchar *Name,uint Attr)
 void CalcFileSum(File *SrcFile,uint *CRC32,byte *Blake2,uint Threads,int64 Size,uint Flags)
 {
   SaveFilePos SavePos(*SrcFile);
-#if !defined(SILENT) && !defined(_WIN_CE)
+#ifndef SILENT
   int64 FileLength=SrcFile->FileLength();
   if ((Flags & (CALCFSUM_SHOWTEXT|CALCFSUM_SHOWALL))!=0)
   {
@@ -345,7 +345,7 @@ void CalcFileSum(File *SrcFile,uint *CRC32,byte *Blake2,uint Threads,int64 Size,
 
     if ((++BlockCount & 0xf)==0)
     {
-#if !defined(SILENT) && !defined(_WIN_CE)
+#ifndef SILENT
       if ((Flags & CALCFSUM_SHOWALL)!=0)
         mprintf(L"\b\b\b\b%3d%%",ToPercent(BlockCount*int64(BufSize),FileLength));
 #endif
@@ -419,7 +419,7 @@ bool DelFile(const wchar *Name)
 
 
 
-#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
 bool SetFileCompression(const wchar *Name,bool State)
 {
   HANDLE hFile=CreateFile(Name,FILE_READ_DATA|FILE_WRITE_DATA,

@@ -17,7 +17,7 @@ void DestroyThreadPool(ThreadPool *Pool)
 }
 
 
-static THREAD_HANDLE ThreadCreate(PTHREAD_PROC Proc,void *Data)
+static THREAD_HANDLE ThreadCreate(NATIVE_THREAD_PTR Proc,void *Data)
 {
 #ifdef _UNIX
   pthread_attr_t attr;
@@ -25,7 +25,7 @@ static THREAD_HANDLE ThreadCreate(PTHREAD_PROC Proc,void *Data)
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   pthread_t pt;
-  int Code=pthread_create(&pt,&attr,Proc,(void*)Data);
+  int Code=pthread_create(&pt,&attr,Proc,Data);
   if (Code!=0)
   {
     wchar Msg[100];
@@ -37,7 +37,7 @@ static THREAD_HANDLE ThreadCreate(PTHREAD_PROC Proc,void *Data)
   return pt;
 #else
   DWORD ThreadId;
-  HANDLE hThread=CreateThread(NULL,0x10000,(LPTHREAD_START_ROUTINE)Proc,Data,0,&ThreadId);
+  HANDLE hThread=CreateThread(NULL,0x10000,Proc,Data,0,&ThreadId);
   if (hThread==NULL)
   {
     ErrHandler.GeneralErrMsg(L"CreateThread failed");

@@ -52,13 +52,24 @@ Archive::Archive(RAROptions *InitCmd)
 }
 
 
+Archive::~Archive()
+{
+  if (DummyCmd)
+    delete Cmd;
+}
+
 
 #ifndef SHELL_EXT
 void Archive::CheckArc(bool EnableBroken)
 {
   if (!IsArchive(EnableBroken))
   {
-    Log(FileName,St(MBadArc),FileName);
+    // If FailedHeaderDecryption is set, we already reported that archive
+    // password is incorrect.
+    if (!FailedHeaderDecryption)
+    {
+      Log(FileName,St(MBadArc),FileName);
+    }
     ErrHandler.Exit(RARX_FATAL);
   }
 }

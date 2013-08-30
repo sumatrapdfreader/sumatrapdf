@@ -38,20 +38,7 @@ int main(int argc, char *argv[])
     CommandData *Cmd=new CommandData;
 #ifdef SFX_MODULE
     wcscpy(Cmd->Command,L"X");
-    char *Switch=NULL;
-#ifdef _SFX_RTL_
-    char *CmdLine=GetCommandLineA();
-    if (CmdLine!=NULL && *CmdLine=='\"')
-      CmdLine=strchr(CmdLine+1,'\"');
-    if (CmdLine!=NULL && (CmdLine=strpbrk(CmdLine," /"))!=NULL)
-    {
-      while (IsSpace(*CmdLine))
-        CmdLine++;
-      Switch=CmdLine;
-    }
-#else
-    Switch=argc>1 ? argv[1]:NULL;
-#endif
+    char *Switch=argc>1 ? argv[1]:NULL;
     if (Switch!=NULL && Cmd->IsSwitch(Switch[0]))
     {
       int UpperCmd=etoupper(Switch[1]);
@@ -83,7 +70,7 @@ int main(int argc, char *argv[])
 #endif
 
     InitConsoleOptions(Cmd->MsgStream,Cmd->Sound);
-    InitLogOptions(Cmd->LogName);
+    InitLogOptions(Cmd->LogName,Cmd->ErrlogCharset);
     ErrHandler.SetSilent(Cmd->AllYes || Cmd->MsgStream==MSG_NULL);
     ErrHandler.SetShutdown(Cmd->Shutdown);
 
@@ -109,6 +96,7 @@ int main(int argc, char *argv[])
   if (ShutdownOnClose)
     Shutdown();
 #endif
+  ErrHandler.MainExit=true;
   return ErrHandler.GetErrorCode();
 }
 #endif

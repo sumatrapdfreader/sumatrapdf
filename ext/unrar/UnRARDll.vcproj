@@ -570,6 +570,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\blake2s.cpp"
+				>
+			</File>
+			<File
 				RelativePath="cmddata.cpp"
 				>
 			</File>

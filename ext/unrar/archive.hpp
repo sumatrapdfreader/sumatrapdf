@@ -60,6 +60,7 @@ class Archive:public File
 #endif
   public:
     Archive(RAROptions *InitCmd=NULL);
+    ~Archive();
     RARFORMAT IsSignature(const byte *D,size_t Size);
     bool IsArchive(bool EnableBroken);
     size_t SearchBlock(HEADER_TYPE HeaderType);

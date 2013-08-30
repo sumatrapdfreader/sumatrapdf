@@ -200,8 +200,8 @@ void RemoveNameFromPath(wchar *Path)
 }
 
 
-#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
-static void GetAppDataPath(wchar *Path,size_t MaxSize)
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+static void GetAppDataPath(wchar *Path,size_t MaxSize,bool Create)
 {
   LPMALLOC g_pMalloc;
   SHGetMalloc(&g_pMalloc);
@@ -213,7 +213,9 @@ static void GetAppDataPath(wchar *Path,size_t MaxSize)
   {
     AddEndSlash(Path,MaxSize);
     wcsncatz(Path,L"WinRAR",MaxSize);
-    Success=FileExist(Path) || MakeDir(Path,false,0)==MKDIR_SUCCESS;
+    Success=FileExist(Path);
+    if (!Success && Create)
+      Success=MakeDir(Path,false,0)==MKDIR_SUCCESS;
   }
   if (!Success)
   {
@@ -226,27 +228,27 @@ static void GetAppDataPath(wchar *Path,size_t MaxSize)
 
 
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
-void GetRarDataPath(wchar *Path,size_t MaxSize)
+void GetRarDataPath(wchar *Path,size_t MaxSize,bool Create)
 {
   *Path=0;
 
   HKEY hKey;
-  if (RegOpenKeyExW(HKEY_CURRENT_USER,L"Software\\WinRAR\\Paths",0,
-                    KEY_QUERY_VALUE,&hKey)==ERROR_SUCCESS)
+  if (RegOpenKeyEx(HKEY_CURRENT_USER,L"Software\\WinRAR\\Paths",0,
+                   KEY_QUERY_VALUE,&hKey)==ERROR_SUCCESS)
   {
     DWORD DataSize=(DWORD)MaxSize,Type;
-    RegQueryValueExW(hKey,L"AppData",0,&Type,(BYTE *)Path,&DataSize);
+    RegQueryValueEx(hKey,L"AppData",0,&Type,(BYTE *)Path,&DataSize);
     RegCloseKey(hKey);
   }
 
   if (*Path==0 || !FileExist(Path))
-    GetAppDataPath(Path,MaxSize);
+    GetAppDataPath(Path,MaxSize,Create);
 }
 #endif
 
 
 #ifndef SFX_MODULE
-bool EnumConfigPaths(uint Number,wchar *Path,size_t MaxSize)
+bool EnumConfigPaths(uint Number,wchar *Path,size_t MaxSize,bool Create)
 {
 #ifdef _UNIX
   static const wchar *ConfPath[]={
@@ -270,10 +272,10 @@ bool EnumConfigPaths(uint Number,wchar *Path,size_t MaxSize)
   if (Number>1)
     return false;
   if (Number==0)
-    GetRarDataPath(Path,MaxSize);
+    GetRarDataPath(Path,MaxSize,Create);
   else
   {
-    GetModuleFileNameW(NULL,Path,(DWORD)MaxSize);
+    GetModuleFileName(NULL,Path,(DWORD)MaxSize);
     RemoveNameFromPath(Path);
   }
   return true;
@@ -285,10 +287,10 @@ bool EnumConfigPaths(uint Number,wchar *Path,size_t MaxSize)
 
 
 #ifndef SFX_MODULE
-void GetConfigName(const wchar *Name,wchar *FullName,size_t MaxSize,bool CheckExist)
+void GetConfigName(const wchar *Name,wchar *FullName,size_t MaxSize,bool CheckExist,bool Create)
 {
   *FullName=0;
-  for (uint I=0;EnumConfigPaths(I,FullName,MaxSize);I++)
+  for (uint I=0;EnumConfigPaths(I,FullName,MaxSize,Create);I++)
   {
     AddEndSlash(FullName,MaxSize);
     wcsncatz(FullName,Name,MaxSize);
@@ -594,7 +596,7 @@ bool IsFullPath(const wchar *Path)
 bool IsDiskLetter(const wchar *Path)
 {
   wchar Letter=etoupperw(Path[0]);
-  return(Letter>='A' && Letter<='Z' && IsDriveDiv(Path[1]));
+  return Letter>='A' && Letter<='Z' && IsDriveDiv(Path[1]);
 }
 
 
@@ -919,6 +921,8 @@ wchar* GetWideName(const char *Name,const wchar *NameW,wchar *DestW,size_t DestS
 // characters, even if their path length is normal.
 bool GetWinLongPath(const wchar *Src,wchar *Dest,size_t MaxSize)
 {
+  if (*Src==0)
+    return false;
   const wchar *Prefix=L"\\\\?\\";
   const size_t PrefixLength=4;
   bool FullPath=IsDiskLetter(Src) && IsPathDiv(Src[2]);

@@ -18,13 +18,13 @@ void blake2sp_init( blake2sp_state *S )
   memset( S->buf, 0, sizeof( S->buf ) );
   S->buflen = 0;
 
-  blake2s_init_param( S->R, 0, 1 ); // Init root.
+  blake2s_init_param( &S->R, 0, 1 ); // Init root.
 
   for( uint i = 0; i < PARALLELISM_DEGREE; ++i )
-    blake2s_init_param( S->S[i], i, 0 ); // Init leaf.
+    blake2s_init_param( &S->S[i], i, 0 ); // Init leaf.
 
-  S->R->last_node = 1;
-  S->S[PARALLELISM_DEGREE - 1]->last_node = 1;
+  S->R.last_node = 1;
+  S->S[PARALLELISM_DEGREE - 1].last_node = 1;
 }
 
 
@@ -74,7 +74,7 @@ void blake2sp_update( blake2sp_state *S, const byte *in, size_t inlen )
     memcpy( S->buf + left, in, fill );
 
     for( size_t i = 0; i < PARALLELISM_DEGREE; ++i )
-      blake2s_update( S->S[i], S->buf + i * BLAKE2S_BLOCKBYTES, BLAKE2S_BLOCKBYTES );
+      blake2s_update( &S->S[i], S->buf + i * BLAKE2S_BLOCKBYTES, BLAKE2S_BLOCKBYTES );
 
     in += fill;
     inlen -= fill;
@@ -100,7 +100,7 @@ void blake2sp_update( blake2sp_state *S, const byte *in, size_t inlen )
 
       btd->inlen = inlen;
       btd->in = in + id__ * BLAKE2S_BLOCKBYTES;
-      btd->S = S->S[id__];
+      btd->S = &S->S[id__];
   
 #ifdef RAR_SMP
       if (ThreadNumber>1)
@@ -140,14 +140,14 @@ void blake2sp_final( blake2sp_state *S, byte *digest )
 
       if( left > BLAKE2S_BLOCKBYTES ) left = BLAKE2S_BLOCKBYTES;
 
-      blake2s_update( S->S[i], S->buf + i * BLAKE2S_BLOCKBYTES, left );
+      blake2s_update( &S->S[i], S->buf + i * BLAKE2S_BLOCKBYTES, left );
     }
 
-    blake2s_final( S->S[i], hash[i] );
+    blake2s_final( &S->S[i], hash[i] );
   }
 
   for( size_t i = 0; i < PARALLELISM_DEGREE; ++i )
-    blake2s_update( S->R, hash[i], BLAKE2S_OUTBYTES );
+    blake2s_update( &S->R, hash[i], BLAKE2S_OUTBYTES );
 
-  blake2s_final( S->R, digest );
+  blake2s_final( &S->R, digest );
 }

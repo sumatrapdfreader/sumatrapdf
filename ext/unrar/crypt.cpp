@@ -49,12 +49,12 @@ void CryptData::DecryptBlock(byte *Buf,size_t Size)
 }
 
 
-void CryptData::SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,
+bool CryptData::SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,
      SecPassword *Password,const byte *Salt,
      const byte *InitV,uint Lg2Cnt,byte *HashKey,byte *PswCheck)
 {
   if (!Password->IsSet() || Method==CRYPT_NONE)
-    return;
+    return false;
 
   CryptData::Method=Method;
 
@@ -78,13 +78,14 @@ void CryptData::SetCryptKeys(bool Encrypt,CRYPT_METHOD Method,
 #endif
     case CRYPT_RAR30:
       SetKey30(Encrypt,Password,PwdW,Salt);
-      return;
+      break;
     case CRYPT_RAR50:
       SetKey50(Encrypt,Password,PwdW,Salt,InitV,Lg2Cnt,HashKey,PswCheck);
-      return;
+      break;
   }
   cleandata(PwdA,sizeof(PwdA));
   cleandata(PwdW,sizeof(PwdW));
+  return true;
 }
 
 

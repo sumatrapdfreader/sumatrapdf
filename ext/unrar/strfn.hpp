@@ -38,7 +38,9 @@ void itoa(int64 n,char *Str);
 void itoa(int64 n,wchar *Str);
 const wchar* GetWide(const char *Src);
 const wchar* GetCmdParam(const wchar *CmdLine,wchar *Param,size_t MaxSize);
+#ifndef SILENT
 void PrintfPrepareFmt(const wchar *Org,wchar *Cvt,size_t MaxSize);
+#endif
 
 enum PASSWORD_TYPE {PASSWORD_GLOBAL,PASSWORD_FILE,PASSWORD_ARCHIVE};
 bool GetPassword(PASSWORD_TYPE Type,const wchar *FileName,SecPassword *Password);

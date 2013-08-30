@@ -129,13 +129,10 @@
 #if defined(RAR_SMP) && defined(__APPLE__)
   #include <sys/sysctl.h>
 #endif
+#ifndef SFX_MODULE
+  #include <sys/statvfs.h>
+#endif
 #if defined(__FreeBSD__) || defined (__NetBSD__) || defined (__OpenBSD__) || defined(__APPLE__)
-  #include <sys/param.h>
-  #include <sys/mount.h>
-#else
-  #ifndef SFX_MODULE
-    #include <sys/statfs.h>
-  #endif
 #endif
 #include <pwd.h>
 #include <grp.h>
@@ -236,7 +233,7 @@
   #endif
 #endif
 
-#if !defined(BIG_ENDIAN) && !defined(_WIN_CE) && defined(_WIN_ALL)
+#if !defined(BIG_ENDIAN) && defined(_WIN_ALL)
 // Allow not aligned integer access, increases speed in some operations.
 #define ALLOW_NOT_ALIGNED_INT
 #endif

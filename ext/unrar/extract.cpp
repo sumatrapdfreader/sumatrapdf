@@ -231,7 +231,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
   HEADER_TYPE HeaderType=Arc.GetHeaderType();
   if (HeaderType!=HEAD_FILE)
   {
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#ifndef SFX_MODULE
     if (HeaderType==HEAD3_OLDSERVICE && PrevExtracted)
       SetExtraInfo20(Cmd,Arc,DestFileName);
 #endif
@@ -615,12 +615,12 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
       bool BrokenFile=false;
       
       // Checksum is not calculated in skip solid mode for performance reason.
-      if (!SkipSolid && ShowChecksum)
+      if (!SkipSolid)
       {
         if (!WrongPassword && ValidCRC)
         {
 #ifndef GUI
-          if (Command!='P' && Command!='I')
+          if (Command!='P' && Command!='I' && ShowChecksum)
             mprintf(L"%s%s ",Cmd->DisablePercentage ? L" ":L"\b\b\b\b\b ",
               Arc.FileHead.FileHash.Type==HASH_NONE ? L"  ?":St(MOk));
 #endif
@@ -671,7 +671,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
           Cmd->xctime==EXTTIME_NONE ? NULL:&Arc.FileHead.ctime,
           Cmd->xatime==EXTTIME_NONE ? NULL:&Arc.FileHead.atime);
         CurFile.Close();
-#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
         if (Cmd->SetCompressedAttr &&
             (Arc.FileHead.FileAttr & FILE_ATTRIBUTE_COMPRESSED)!=0)
           SetFileCompression(CurFile.FileName,true);
@@ -966,7 +966,7 @@ void CmdExtract::ExtrCreateDir(CommandData *Cmd,Archive &Arc,const wchar *ArcFil
     }
   if (PrevExtracted)
   {
-#if defined(_WIN_ALL) && !defined(_WIN_CE) && !defined(SFX_MODULE)
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
     if (Cmd->SetCompressedAttr &&
         (Arc.FileHead.FileAttr & FILE_ATTRIBUTE_COMPRESSED)!=0 && WinNT())
       SetFileCompression(DestFileName,true);

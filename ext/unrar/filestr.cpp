@@ -17,7 +17,7 @@ bool ReadTextFile(
 
   if (Name!=NULL)
     if (Config)
-      GetConfigName(Name,FileName,ASIZE(FileName),true);
+      GetConfigName(Name,FileName,ASIZE(FileName),true,false);
     else
       wcsncpyz(FileName,Name,ASIZE(FileName));
 
@@ -30,7 +30,7 @@ bool ReadTextFile(
     {
       if (AbortOnError)
         ErrHandler.Exit(RARX_OPEN);
-      return(false);
+      return false;
     }
   }
   else
@@ -93,7 +93,7 @@ bool ReadTextFile(
         }
 
         bool Expanded=false;
-#if defined(_WIN_ALL) && !defined(_WIN_CE)
+#ifdef _WIN_ALL
         if (ExpandEnvStr && *CurStr=='%')
         {
           // Expanding environment variables in Windows version.

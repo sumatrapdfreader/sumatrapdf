@@ -34,8 +34,10 @@ enum {CODE_HUFFMAN,CODE_LZ,CODE_REPEATLZ,CODE_CACHELZ,
 
 
 enum FilterType {
+  // These values must not be changed, because we use them directly
+  // in RAR5 compression and decompression code.
   FILTER_DELTA=0, FILTER_E8, FILTER_E8E9, FILTER_ARM, 
-  FILTER_AUDIO, FILTER_RGB, FILTER_ITANIUM, FILTER_PPM /*dummy*/, FILTER_NONE
+  FILTER_AUDIO, FILTER_RGB, FILTER_ITANIUM, FILTER_PPM, FILTER_NONE
 };
 
 #endif

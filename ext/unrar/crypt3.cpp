@@ -1,6 +1,5 @@
 struct CryptKeyCacheItem
 {
-#ifndef _SFX_RTL_
   CryptKeyCacheItem()
   {
     Password.Set(L"");
@@ -12,7 +11,7 @@ struct CryptKeyCacheItem
     cleandata(AESInit,sizeof(AESInit));
     cleandata(&Password,sizeof(Password));
   }
-#endif
+
   byte AESKey[16],AESInit[16];
   SecPassword Password;
   bool SaltPresent;

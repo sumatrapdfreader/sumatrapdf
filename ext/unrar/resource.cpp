@@ -12,8 +12,7 @@ const wchar *St(MSGID StringId)
   wchar *Str=StrTable[StrNum];
   *Str=0;
   CharToWide(StringId,Str,ASIZE(StrTable[0]));
-  return(Str);
+  return Str;
 }
 #endif
-
 

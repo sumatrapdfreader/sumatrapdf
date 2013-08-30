@@ -21,7 +21,10 @@ struct blake2s_state
 {
   enum { BLAKE_ALIGNMENT = 64 };
 
-  byte ubuf[48 + 2 * BLAKE2S_BLOCKBYTES + BLAKE_ALIGNMENT];
+  // buffer and uint32 h[8], t[2], f[2];
+  enum { BLAKE_DATA_SIZE = 48 + 2 * BLAKE2S_BLOCKBYTES };
+
+  byte ubuf[BLAKE_DATA_SIZE + BLAKE_ALIGNMENT];
 
   byte   *buf;       // byte   buf[2 * BLAKE2S_BLOCKBYTES].
   uint32 *h, *t, *f; // uint32 h[8], t[2], f[2].
@@ -29,13 +32,46 @@ struct blake2s_state
   size_t   buflen;
   byte  last_node;
 
-  void init()
+  blake2s_state()
   {
-    memset( this, 0, sizeof( blake2s_state ) );
+    set_pointers();
+  }
+
+  // Required when we declare and assign in the same command.
+  blake2s_state(blake2s_state &st)
+  {
+    set_pointers();
+    *this=st;
+  }
+
+  void set_pointers()
+  {
+    // Set aligned pointers. Must be done in constructor, not in Init(),
+    // so assignments like 'blake2sp_state res=blake2ctx' work correctly
+    // even if blake2sp_init is not called for 'res'.
     buf = (byte *) ALIGN_VALUE(ubuf, BLAKE_ALIGNMENT);
     h   = (uint32 *) (buf + 2 * BLAKE2S_BLOCKBYTES);
     t   = h + 8;
     f   = t + 2;
+  }
+
+  void init()
+  {
+    memset( ubuf, 0, sizeof( ubuf ) );
+    buflen = 0;
+    last_node = 0;
+  }
+
+  // Since we use pointers, the default = would work incorrectly.
+  blake2s_state& operator = (blake2s_state &st)
+  {
+    if (this != &st)
+    {
+      memcpy(buf, st.buf, BLAKE_DATA_SIZE);
+      buflen = st.buflen;
+      last_node = st.last_node;
+    }
+    return *this;
   }
 };
 
@@ -44,10 +80,10 @@ struct blake2s_state
 class ThreadPool;
 #endif
 
-typedef struct __blake2sp_state
+struct blake2sp_state
 {
-  blake2s_state S[8][1];
-  blake2s_state R[1];
+  blake2s_state S[8];
+  blake2s_state R;
   byte buf[8 * BLAKE2S_BLOCKBYTES];
   size_t buflen;
 
@@ -55,8 +91,7 @@ typedef struct __blake2sp_state
   ThreadPool *ThPool;
   uint MaxThreads;
 #endif
-
-} blake2sp_state;
+};
 
 void blake2sp_init( blake2sp_state *S );
 void blake2sp_update( blake2sp_state *S, const byte *in, size_t inlen );

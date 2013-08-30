@@ -272,17 +272,17 @@ void RarTime::SetCurrentTime()
 }
 
 
-#if !defined(SFX_MODULE) && !defined(_WIN_CE)
+#ifndef SFX_MODULE
 const wchar *GetMonthName(int Month)
 {
 #ifdef SILENT
-  return(L"");
+  return L"";
 #else
   static MSGID MonthID[]={
          MMonthJan,MMonthFeb,MMonthMar,MMonthApr,MMonthMay,MMonthJun,
          MMonthJul,MMonthAug,MMonthSep,MMonthOct,MMonthNov,MMonthDec
   };
-  return(St(MonthID[Month]));
+  return St(MonthID[Month]);
 #endif
 }
 #endif
@@ -290,5 +290,5 @@ const wchar *GetMonthName(int Month)
 
 bool IsLeapYear(int Year)
 {
-  return((Year&3)==0 && (Year%100!=0 || Year%400==0));
+  return (Year&3)==0 && (Year%100!=0 || Year%400==0);
 }
