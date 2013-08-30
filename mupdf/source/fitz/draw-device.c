@@ -579,11 +579,7 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 			}
 			else
 			{
-				/* SumatraPDF: prevent warning C4204 */
-				fz_matrix mat;
-				mat.a = glyph->w; mat.b = 0;
-				mat.c = 0; mat.d = glyph->h;
-				mat.e = x + glyph->x; mat.f = y + glyph->y;
+				fz_matrix mat = {glyph->w, 0.0, 0.0, glyph->h, x + glyph->x, y + glyph->y};
 				fz_paint_image(state->dest, &state->scissor, state->shape, glyph, &mat, alpha * 255);
 			}
 			fz_drop_pixmap(dev->ctx, glyph);

@@ -198,6 +198,7 @@ EXPORTS
 	fz_render_stroked_glyph
 	fz_render_t3_glyph_direct
 	fz_prepare_t3_glyph
+	fz_dump_glyph_cache_stats
 	fz_new_hash_table
 	fz_empty_hash
 	fz_free_hash

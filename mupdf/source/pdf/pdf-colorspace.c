@@ -12,13 +12,22 @@ load_icc_based(pdf_document *doc, pdf_obj *dict)
 	/* SumatraPDF: support alternate colorspaces for ICCBased */
 	if (pdf_dict_gets(dict, "Alternate"))
 	{
-		fz_colorspace *cs_alt = pdf_load_colorspace(doc, pdf_dict_gets(dict, "Alternate"));
-		if (cs_alt->n != n)
+		fz_colorspace *cs_alt = NULL;
+		fz_try(doc->ctx)
 		{
-			fz_drop_colorspace(doc->ctx, cs_alt);
-			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "ICCBased /Alternate colorspace must have %d components (not %d)", n, cs_alt->n);
+			cs_alt = pdf_load_colorspace(doc, pdf_dict_gets(dict, "Alternate"));
+			if (cs_alt->n != n)
+			{
+				fz_drop_colorspace(doc->ctx, cs_alt);
+				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "ICCBased /Alternate colorspace must have %d components", n);
+			}
 		}
-		return cs_alt;
+		fz_catch(doc->ctx)
+		{
+			cs_alt = NULL;
+		}
+		if (cs_alt)
+			return cs_alt;
 	}
 
 	switch (n)

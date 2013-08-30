@@ -428,8 +428,7 @@ svg_dev_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 	fz_context *ctx = dev->ctx;
 	fz_output *out = sdev->out;
 	fz_matrix local_ctm = *ctm;
-	fz_matrix scale = { 0 };
-	scale.a = 1.0f / image->w; scale.d = 1.0f / image->h;
+	fz_matrix scale = { 1.0f/image->w, 0, 0, 1.0f/image->h, 0, 0};
 
 	fz_concat(&local_ctm, &scale, ctm);
 	fz_printf(out, "<image");
