@@ -71,3 +71,19 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
 +
  /* END */
+diff -rPu5 freetype2.orig\src\cff\cf2ft.c freetype2\src\cff\cf2ft.c
+--- freetype2.orig\src\cff\cf2ft.c	Fri Jun 07 17:08:35 2013
++++ freetype2\src\cff\cf2ft.c	Sat Aug 31 14:22:11 2013
+@@ -570,11 +570,11 @@
+   FT_LOCAL_DEF( CF2_Int )
+   cf2_initLocalRegionBuffer( CFF_Decoder*  decoder,
+                              CF2_UInt      idx,
+                              CF2_Buffer    buf )
+   {
+-    FT_ASSERT( decoder && decoder->locals );
++    FT_ASSERT( decoder && ( decoder->locals || decoder->num_locals == 0 ) );
+ 
+     FT_ZERO( buf );
+ 
+     idx += decoder->locals_bias;
+     if ( idx >= decoder->num_locals )

@@ -572,7 +572,7 @@
                              CF2_UInt      idx,
                              CF2_Buffer    buf )
   {
-    FT_ASSERT( decoder && decoder->locals );
+    FT_ASSERT( decoder && ( decoder->locals || decoder->num_locals == 0 ) );
 
     FT_ZERO( buf );
 
