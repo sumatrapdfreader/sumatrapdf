@@ -51,167 +51,6 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
          jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, 
              "DECODING USER TABLE... Flags: %d, HTOOB: %d, HTPS: %d, HTRS: %d, HTLOW: %d, HTHIGH: %d", 
              code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
-diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Fri May 24 17:23:20 2013
-+++ jbig2dec\jbig2_image.c	Fri Jul 05 13:01:57 2013
-@@ -254,19 +254,21 @@
-         return 0;
-     }
- #endif
- 
-     leftbyte = x >> 3;
--    if (leftbyte > dst->height * dst->stride)
--        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
--            "preventing heap overflow in jbig2_image_compose");
-     rightbyte = (x + w - 1) >> 3;
-     shift = x & 7;
- 
-     /* general OR case */
-     s = ss;
-     d = dd = dst->data + y*dst->stride + leftbyte;
-+    if (d < dst->data || leftbyte > dst->stride || h * dst->stride < 0 ||
-+        d - leftbyte + h * dst->stride > dst->data + dst->height * dst->stride) {
-+        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
-+            "preventing heap overflow in jbig2_image_compose");
-+    }
-     if (leftbyte == rightbyte) {
- 	mask = 0x100 - (0x100 >> w);
-         for (j = 0; j < h; j++) {
-             *d |= (*s & mask) >> shift;
-             d += dst->stride;
-diff -rPu5 jbig2dec.orig\jbig2_mmr.c jbig2dec\jbig2_mmr.c
---- jbig2dec.orig\jbig2_mmr.c	Tue Jun 11 22:53:47 2013
-+++ jbig2dec\jbig2_mmr.c	Fri Jun 14 20:49:58 2013
-@@ -860,11 +860,11 @@
- 				black_run = jbig2_decode_get_run(mmr, jbig2_mmr_black_decode, 7);
- 				a1 = a0 + white_run;
- 				a2 = a1 + black_run;
- 				if (a1 > mmr->width) a1 = mmr->width;
- 				if (a2 > mmr->width) a2 = mmr->width;
--				if (a2 < a1) return -1;
-+				if (a2 < a1 || a1 < 0) return -1;
- 				jbig2_set_bits(dst, a1, a2);
- 				a0 = a2;
- 				/* printf ("H %d %d\n", white_run, black_run); */
- 			}
- 			else
-@@ -873,11 +873,11 @@
- 				white_run = jbig2_decode_get_run(mmr, jbig2_mmr_white_decode, 8);
- 				a1 = a0 + black_run;
- 				a2 = a1 + white_run;
- 				if (a1 > mmr->width) a1 = mmr->width;
- 				if (a2 > mmr->width) a2 = mmr->width;
--				if (a1 < a0) return -1;
-+				if (a1 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, a1);
- 				a0 = a2;
- 				/* printf ("H %d %d\n", black_run, white_run); */
- 			}
- 		}
-@@ -888,11 +888,11 @@
- 			jbig2_decode_mmr_consume(mmr, 4);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			b2 = jbig2_find_changing_element(ref, b1, mmr->width);
- 			if (c)
- 			{
--				if (b2 < a0) return -1;
-+				if (b2 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b2);
- 			}
- 			a0 = b2;
- 		}
- 
-@@ -901,11 +901,11 @@
- 			/* printf ("V(0)\n"); */
- 			jbig2_decode_mmr_consume(mmr, 1);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (c)
- 			{
--				if (b1 < a0) return -1;
-+				if (b1 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1);
- 			}
- 			a0 = b1;
- 			c = !c;
- 		}
-@@ -916,11 +916,11 @@
- 			jbig2_decode_mmr_consume(mmr, 3);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 + 1 > mmr->width) break;
- 			if (c)
- 			{
--				if (b1 + 1 < a0) return -1;
-+				if (b1 + 1 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 + 1);
- 			}
- 			a0 = b1 + 1;
- 			c = !c;
- 		}
-@@ -931,11 +931,11 @@
- 			jbig2_decode_mmr_consume(mmr, 6);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 + 2 > mmr->width) break;
- 			if (c)
- 			{
--				if (b1 + 2 < a0) return -1;
-+				if (b1 + 2 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 + 2);
- 			}
- 			a0 = b1 + 2;
- 			c = !c;
- 		}
-@@ -946,11 +946,11 @@
- 			jbig2_decode_mmr_consume(mmr, 7);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 + 3 > mmr->width) break;
- 			if (c)
- 			{
--				if (b1 + 3 < a0) return -1;
-+				if (b1 + 3 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 + 3);
- 			}
- 			a0 = b1 + 3;
- 			c = !c;
- 		}
-@@ -961,11 +961,11 @@
- 			jbig2_decode_mmr_consume(mmr, 3);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 - 1 < 0) break;
- 			if (c)
- 			{
--				if (b1 - 1 < a0) return -1;
-+				if (b1 - 1 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 - 1);
- 			}
- 			a0 = b1 - 1;
- 			c = !c;
- 		}
-@@ -976,11 +976,11 @@
- 			jbig2_decode_mmr_consume(mmr, 6);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 - 2 < 0) break;
- 			if (c)
- 			{
--				if (b1 - 2 < a0) return -1;
-+				if (b1 - 2 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 - 2);
- 			}
- 			a0 = b1 - 2;
- 			c = !c;
- 		}
-@@ -991,11 +991,11 @@
- 			jbig2_decode_mmr_consume(mmr, 7);
- 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
- 			if (b1 - 3 < 0) break;
- 			if (c)
- 			{
--				if (b1 - 3 < a0) return -1;
-+				if (b1 - 3 < a0 || a0 < 0) return -1;
- 				jbig2_set_bits(dst, a0, b1 - 3);
- 			}
- 			a0 = b1 - 3;
- 			c = !c;
- 		}
 diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
 --- jbig2dec.orig\jbig2_segment.c	Fri May 24 17:23:20 2013
 +++ jbig2dec\jbig2_segment.c	Thu May 30 17:26:29 2013
@@ -229,8 +68,8 @@ diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
  int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
  			 const uint8_t *segment_data)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Tue Jun 11 22:53:47 2013
-+++ jbig2dec\jbig2_symbol_dict.c	Fri Jun 14 20:49:58 2013
+--- jbig2dec.orig\jbig2_symbol_dict.c	Sat Aug 31 16:30:05 2013
++++ jbig2dec\jbig2_symbol_dict.c	Sat Aug 31 16:36:11 2013
 @@ -440,11 +440,14 @@
                goto cleanup4;
            }
@@ -247,34 +86,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  	      } else {
            /* 6.5.8.2 refinement/aggregate symbol */
            uint32_t REFAGGNINST;
-@@ -775,25 +778,23 @@
-     int j = 0;
-     int k;
-     int exflag = 0;
-     int64_t limit = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
-     int32_t exrunlength;
--    /* SumatraPDF: prevent infinite loop */
-     int zerolength = 0;
- 
-     while (i < limit) {
-       if (params->SDHUFF)
-         exrunlength = jbig2_huffman_get(hs, SBHUFFRSIZE, &code);
-       else
-         code = jbig2_arith_int_decode(IAEX, as, &exrunlength);
-       /* SumatraPDF: prevent infinite loop */
-       zerolength = exrunlength > 0 ? 0 : zerolength + 1;
--      if (code || (exrunlength > limit - i) || (exrunlength < 0) || (zerolength > 4)) {
-+      if (code || (exrunlength > limit - i) || exflag && (exrunlength > params->SDNUMEXSYMS - j) || (exrunlength < 0) || (zerolength > 4)) {
-         if (code)
-           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-             "failed to decode exrunlength for exported symbols");
--        /* SumatraPDF: prevent infinite loop */
-         else if (exrunlength <= 0)
-           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-             "runlength too small in export symbol table (%d <= 0)\n", exrunlength);
-         else
-           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-@@ -949,11 +950,11 @@
+@@ -948,11 +951,11 @@
          params.SDHUFFDW = jbig2_build_huffman_table(ctx, huffman_params);
          ++table_index;
          break;
@@ -288,35 +100,9 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
      if (params.SDHUFFDW == NULL)
      {
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
---- jbig2dec.orig\jbig2_text.c	Wed May 29 22:46:18 2013
-+++ jbig2dec\jbig2_text.c	Fri Jul 05 12:52:10 2013
-@@ -379,11 +379,11 @@
- 		rparams.DY = (RDH >> 1) + RDY;
- 		rparams.TPGRON = 0;
- 		memcpy(rparams.grat, params->sbrat, 4);
- 		code = jbig2_decode_refinement_region(ctx, segment,
- 		    &rparams, as, refimage, GR_stats);
--		if (code < 0) goto cleanup2;
-+		if (code < 0) { jbig2_image_release(ctx, refimage); goto cleanup2; }
- 		IB = refimage;
- 
- 		jbig2_image_release(ctx, IBO);
- 
- 		/* 6.4.11 (7) */
-@@ -426,11 +426,11 @@
- 			"composing glyph id %d: %dx%d @ (%d,%d) symbol %d/%d",
- 			ID, IB->width, IB->height, x, y, NINSTANCES + 1,
- 			params->SBNUMINSTANCES);
- #endif
- 	    code = jbig2_image_compose(ctx, image, IB, x, y, params->SBCOMBOP);
--            if (code < 0) goto cleanup2;
-+	    if (code < 0) { jbig2_image_release(ctx, IB); goto cleanup2; }
- 
- 	    /* (3c.x) */
- 	    if ((!params->TRANSPOSED) && (params->REFCORNER < 2)) {
- 		CURS += IB->width -1 ;
- 	    } else if ((params->TRANSPOSED) && (params->REFCORNER & 1)) {
-@@ -849,11 +849,11 @@
+--- jbig2dec.orig\jbig2_text.c	Sat Aug 31 16:30:05 2013
++++ jbig2dec\jbig2_text.c	Sat Aug 31 16:35:02 2013
+@@ -855,11 +855,11 @@
  
      image = jbig2_image_new(ctx, region_info.width, region_info.height);
      if (image == NULL) {
@@ -329,7 +115,7 @@ diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
      ws = jbig2_word_stream_buf_new(ctx, segment_data + offset, segment->data_length - offset);
      if (ws == NULL)
      {
-@@ -949,11 +949,11 @@
+@@ -955,11 +955,11 @@
      }
      jbig2_free(ctx->allocator, as);
      jbig2_word_stream_buf_free(ctx, ws);

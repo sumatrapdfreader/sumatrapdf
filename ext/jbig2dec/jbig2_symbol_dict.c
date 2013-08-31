@@ -787,9 +787,10 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
         exrunlength = jbig2_huffman_get(hs, SBHUFFRSIZE, &code);
       else
         code = jbig2_arith_int_decode(IAEX, as, &exrunlength);
-      /* SumatraPDF: prevent infinite loop */
+      /* prevent infinite loop */
       zerolength = exrunlength > 0 ? 0 : zerolength + 1;
-      if (code || (exrunlength > limit - i) || exflag && (exrunlength > params->SDNUMEXSYMS - j) || (exrunlength < 0) || (zerolength > 4)) {
+      if (code || (exrunlength > limit - i) || (exrunlength < 0) || (zerolength > 4) ||
+          (exflag && (exrunlength > params->SDNUMEXSYMS - j))) {
         if (code)
           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "failed to decode exrunlength for exported symbols");

@@ -381,7 +381,10 @@ cleanup1:
 		memcpy(rparams.grat, params->sbrat, 4);
 		code = jbig2_decode_refinement_region(ctx, segment,
 		    &rparams, as, refimage, GR_stats);
-		if (code < 0) { jbig2_image_release(ctx, refimage); goto cleanup2; }
+		if (code < 0) {
+		    jbig2_image_release(ctx, refimage);
+		    goto cleanup2;
+		}
 		IB = refimage;
 
 		jbig2_image_release(ctx, IBO);
@@ -428,7 +431,10 @@ cleanup1:
 			params->SBNUMINSTANCES);
 #endif
 	    code = jbig2_image_compose(ctx, image, IB, x, y, params->SBCOMBOP);
-	    if (code < 0) { jbig2_image_release(ctx, IB); goto cleanup2; }
+	    if (code < 0) {
+		jbig2_image_release(ctx, IB);
+		goto cleanup2;
+	    }
 
 	    /* (3c.x) */
 	    if ((!params->TRANSPOSED) && (params->REFCORNER < 2)) {
