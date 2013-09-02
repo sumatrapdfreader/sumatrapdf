@@ -1054,6 +1054,52 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     return labels;
 }
 
+static void
+pdf_load_page_objs_rec(pdf_document *doc, pdf_obj *node, int *page_no, pdf_obj **page_objs)
+{
+    fz_context *ctx = doc->ctx;
+
+    if (pdf_mark_obj(node))
+        fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
+
+    fz_try(ctx) {
+        pdf_obj *kids = pdf_dict_gets(node, "Kids");
+        int len = pdf_array_len(kids);
+        for (int i = 0; i < len; i++) {
+            pdf_obj *kid = pdf_array_get(kids, i);
+            char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
+            if (str::Eq(type, "Page")) {
+                if (*page_no > pdf_count_pages(doc))
+                    fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
+                page_objs[*page_no - 1] = kid;
+                (*page_no)++;
+            }
+            else if (str::Eq(type, "Pages")) {
+                int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
+                if (count > 0)
+                    pdf_load_page_objs_rec(doc, kid, page_no, page_objs);
+            }
+            else {
+                fz_warn(ctx, "non-page object in page tree (%s)", type);
+            }
+        }
+    }
+    fz_always(ctx) {
+        pdf_unmark_obj(node);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
+static void
+pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
+{
+    pdf_obj *pages = pdf_dict_getp(pdf_trailer(doc), "Root/Pages");
+    int page_no = 1;
+    pdf_load_page_objs_rec(doc, pages, &page_no, page_objs);
+}
+
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -1589,13 +1635,11 @@ bool PdfEngineImpl::FinishLoading()
 
     ScopedCritSec scope(&ctxAccess);
 
-    for (int i = 0; i < PageCount(); i++) {
-        fz_try(ctx) {
-            _pageObjs[i] = pdf_lookup_page_obj(_doc, i);
-        }
-        fz_catch(ctx) {
-            fz_warn(ctx, "Couldn't load page %d", i + 1);
-        }
+    fz_try(ctx) {
+        pdf_load_page_objs(_doc, _pageObjs);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load all page objects");
     }
     fz_try(ctx) {
         outline = pdf_load_outline(_doc);
