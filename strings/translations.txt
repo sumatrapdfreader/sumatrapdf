@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-27eb147f8cde5f5cdffb924d4bcee9ec8eba4673
+68addf969b9ab15e4e00130cbacf8d9b66372d6b
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -14,6 +14,7 @@ cy:%s o %s
 cz:%s z %s
 de:%s von %s
 dk:%s af %s
+el:%s από %s
 es:%s de %s
 et:%s, kokku %s
 eu:%s -> %s-tik
@@ -191,6 +192,7 @@ cy:Dewisiadau &Uwch...
 cz:&Pokročilé možnosti...
 de:&Mehr Optionen…
 dk:&Avancerede valgmuligheder
+el:&Επιλογές για προχωρημένους
 es:Opciones &avanzadas...
 et:&Rohkem sätteid...
 eu:Au&kera Aurreratuak...
@@ -1836,6 +1838,7 @@ cy:&Dewisiadau
 cz:&Možnosti
 de:&Optionen
 dk:&Valgmuligheder
+el:&Επιλογές
 es:&Opciones
 et:&Sätted
 eu:A&ukerak
@@ -3745,6 +3748,7 @@ cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på at du vil afinstallere SumatraPDF ?
+el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
 es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
@@ -4896,6 +4900,7 @@ cy:Cau
 cz:Zavřít
 de:Schließen
 dk:Luk
+el:Κλείσιμο
 es:Cerrar
 et:Sulge
 eu:Itxi
@@ -5657,6 +5662,7 @@ cy:Methu creu cyfeiriadur dros dro
 cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
 dk:Kunne ikke oprette midlertidigt folder
+el:Αδυναμία δημιουργίας προσωρινού φακέλου
 es:No es posiblre crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
@@ -5698,6 +5704,7 @@ cy:Merhu creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Kunne ikke oprette installations folder
+el:Αδυναμία δημιουργίας φακέλου εγκατάστασης
 es:No se puede crear el directorio de instalación
 et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
@@ -5921,6 +5928,7 @@ cy:Methu canfod cyfeiriadur dros dro
 cz:Dočasná složka není dostupná
 de:Konnte das temporäre Verzeichnis nicht finden
 dk:Kunne ikke tilgå midlertidig folder
+el:Αδυναμία ανάκτησης προσωρινού φακέλου
 es:No se puede acceder al directorio temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
@@ -5944,6 +5952,7 @@ sq:Nuk mund të sigurojë direktorinë e përkohshme
 sv:Kunde inte hämta temp-katalog
 ta:தற்காலிக கோப்புறையை அடைய முடியவில்லை
 tr:Geçici dizin bulunamadı
+tw:無法獲得暫存資料夾
 uk:Не вдалося отримати розташування тимчасової папки
 uz:Vaqtinchalik direktoriyani olib bo'lmadi
 :Couldn't remove installation directory
@@ -5958,6 +5967,7 @@ cy:Methu tynnu'r cyfeiriadur gosod
 cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 dk:Kunne ikke fjerne installations folder
+el:Αδυναμία μετακίνησης φακέλου εγκατάστασης
 es:No se puede eliminar el directorio de instalación
 et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
@@ -5998,6 +6008,7 @@ cy:Methu tynnu'r llwybr byr
 cz:Nepodařilo se odstranit zástupce
 de:Konnte die Verknüpfung nicht löschen
 dk:Kunne ikke fjerne genvej
+el:Αδυναμία απομάκρυνσης συντόμευσης
 es:No se puede eliminar el acceso directo
 et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
@@ -6212,6 +6223,7 @@ cy:Methu ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
 de:Konnte %s nicht kopieren
 dk:Kunne ikke skrive %s til disk
+el:Αδυναμία εγγραφής %s στον δίσκο
 es:No se puede escribir %s al disco
 et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
@@ -7214,6 +7226,7 @@ cy:Gwall. Methu rhedeg SumatraPDF
 cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 dk:Fejl: Kan ikke køre SumatraPDF !
+el:Σφάλμα: Αδυναμία εκτέλεσης SumatraPDF !
 es:Error: ¡No se pudo ejecutar SumatraPDF!
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
@@ -7620,6 +7633,7 @@ cy:Methwyd creu llwybr byr
 cz:Vytvoření zástupce se nezdařilo
 de:Konnte keine Verknüpfung erstellen
 dk:Kunne ikke oprette genvej
+el:Αποτυχία δημιουργίας συντόμευσης
 es:No se pudo crear un acceso directo
 et:Ei õnnestu luua otseteed
 eu:Hutsegitea lasterbidea sortzerakoan
@@ -9701,6 +9715,7 @@ cy:Gosod SumatraPDF
 cz:Nainstalovat SumatraPDF
 de:Installieren
 dk:Installer SumatraPDF
+el:Εγκατάσταση SumatraPDF
 es:Instalar SumatraPDF
 et:Paigalda SumatraPDF
 eu:Ezarri SumatraPDF
@@ -9741,6 +9756,7 @@ cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
 dk:Installer SumatraPDF i &folder:
+el:Εγκατάσταση SumatraPDF σε &folder:
 es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
@@ -9779,6 +9795,7 @@ cy:Methodd y gosod!
 cz:Instalace selhala!
 de:Die Installation ist fehlgeschlagen!
 dk:Installation fejlede !
+el:Αποτυχία εγκατάστασης!
 es:¡La instalación ha fallado!
 et:Paigaldamine ebaõnnestus!
 eu:Ezarpen hutsegitea!
@@ -9820,6 +9837,7 @@ cy:Wrthi'n gosod
 cz:Probíhá instalace...
 de:Die Installation wird ausgeführt…
 dk:Installation i gang ...
+el:Εγκατάσταση σε εξέλιξη...
 es:Instalación en progreso...
 et:Toimub paigaldamine...
 eu:Ezarpena garatzen...
@@ -11141,6 +11159,7 @@ cy:Agor yn %s
 cz:Otevřít v %s
 de:Mit %s öffnen
 dk:Åben o %s
+el:Άνοιγμα σε %s
 es:Abrir en %s
 et:Ava rakenduses %s
 eu:Irekitzea %s
@@ -11414,6 +11433,7 @@ cy:Agor dogfen yn SumatraPDF...
 cz:Otevírat dokumenty v SumatraPDF...
 de:Das Dokument wird in SumatraPDF geöffnet…
 dk:Åben dokument i SumatraPDF ...
+el:Άνοιγμα εγγράφου στο SumatraPDF
 es:Abriendo documento en SumatraPDF...
 et:Dokumendi avamine rakenduses SumatraPDF...
 eu:Agiria irekitzen SumatraPDF-an...
@@ -14515,6 +14535,7 @@ cy:Cychwyn SumatraPDF
 cz:Spustit SumatraPDF
 de:SumatraPDF starten
 dk:Start SumatraPDF
+el:Έναρξη SumatraPDF
 es:Iniciar SumatraPDF
 et:Käivita SumatraPDF
 eu:Abiarazi SumatraPDF
@@ -14862,6 +14883,7 @@ cy:Mae SumatraPDF wedi ei ddadosod.
 cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
 dk:SumatraPDF er afinstalleret.
+el:Το SumatraPDF απεγκαταστάθηκε.
 es:SumatraPDF ha sido desinstalado.
 et:SumatraPDF on eemaldatud.
 eu:SumatraPDF kendu da.
@@ -14902,6 +14924,7 @@ cy:Heb ganfod gosodiad SumatraPDF.
 cz:Instalace programu SumatraPDF nebyla nalezena.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
 dk:SumatraPDF installation ikke fundet.
+el:Η εγκατάσταση του SumatraPDF δεν βρέθηκε.
 es:Instalación de SumatraPDF no encontrada.
 et:SumatraPDF paigaldust ei leitud.
 eu:SumatraPDF ezarpena ez da aurkitu.
@@ -15228,6 +15251,7 @@ cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
 dk:Tak fordi du valgte SumatraPDF !
+el:Ευχαριστούμε που διαλέξατε το SumatraPDF!
 es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
@@ -15269,6 +15293,7 @@ cy:Diolch yn fawr! Mae SumatraPDF wedi ei gosod
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
 dk:Tak ! SumatraPDF er installeret.
+el:Ευχαριστούμε! Το SumatraPDF εγκαταστάθηκε.
 es:¡Gracias! SumatraPDF ha sido instalado.
 et:Täname! SumatraPDF on paigaldatud.
 eu:Mila esker! SumatraPDF ezarri da.
@@ -15410,6 +15435,7 @@ cy:Dadosod SumatraPDF
 cz:Odinstalovat SumatraPDF
 de:Deinstallieren
 dk:Afinstaller SumatraPDF
+el:Απεγκατάσταση SumatraPDF
 es:Desinstalar SumatraPDF
 et:Eemalda SumatraPDF
 eu:Kendu SumatraPDF
@@ -15451,6 +15477,7 @@ cy:Methodd y gosod
 cz:Odinstalace programu selhala
 de:Die Deinstallation ist fehlgeschlagen
 dk:Afinstallationen fejlede
+el:Αποτυχία απεγκατάστασης
 es:Falló la desinstalación
 et:Eemaldamine ebaõnnestus
 eu:Kentze hutsegitea
@@ -15492,6 +15519,7 @@ cy:Wrthi'n dadosod...
 cz:Probíhá odinstalace...
 de:Die Deinstallation wird ausgeführt…
 dk:Afinstallation pågår ...
+el:Απεγκατάσταση σε εξέλιξη...
 es:Desinstalación en progreso...
 et:Toimub eemaldamine...
 eu:Kentzea garatzen...
@@ -15591,6 +15619,7 @@ cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF læser
+el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
 es:Usar SumatraPDF como lector PDF por &defecto
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
@@ -15875,7 +15904,7 @@ uz:XPS hujjatlari
 vn:Tập tin XPS
 :You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
-am:Սա վերջին տարբերակն է։
+am:Սա նորագույն տարբերակն է։
 ar:لديك آخر نسخة
 az:Ən son versiyanı istifadə edirsiniz.
 bg:Имате последната версия.
