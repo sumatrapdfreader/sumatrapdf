@@ -534,6 +534,9 @@
     <ClCompile Include="..\mupdf\source\fitz\getopt.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\glyph.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\halftone.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

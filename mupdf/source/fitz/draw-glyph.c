@@ -27,7 +27,7 @@ struct fz_glyph_cache_entry_s
 	fz_glyph_cache_entry *lru_next;
 	fz_glyph_cache_entry *bucket_next;
 	fz_glyph_cache_entry *bucket_prev;
-	fz_pixmap *val;
+	fz_glyph *val;
 };
 
 struct fz_glyph_cache_s
@@ -68,7 +68,7 @@ drop_glyph_cache_entry(fz_context *ctx, fz_glyph_cache_entry *entry)
 		entry->lru_prev->lru_next = entry->lru_next;
 	else
 		cache->lru_head = entry->lru_next;
-	cache->total -= entry->val->w * entry->val->h;
+	cache->total -= fz_glyph_size(ctx, entry->val);
 	if (entry->bucket_next)
 		entry->bucket_next->bucket_prev = entry->bucket_prev;
 	if (entry->bucket_prev)
@@ -76,7 +76,7 @@ drop_glyph_cache_entry(fz_context *ctx, fz_glyph_cache_entry *entry)
 	else
 		cache->entry[entry->hash] = entry->bucket_next;
 	fz_drop_font(ctx, entry->key.font);
-	fz_drop_pixmap(ctx, entry->val);
+	fz_drop_glyph(ctx, entry->val);
 	fz_free(ctx, entry);
 }
 
@@ -130,16 +130,78 @@ fz_keep_glyph_cache(fz_context *ctx)
 	return ctx->glyph_cache;
 }
 
-fz_pixmap *
-fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, fz_irect scissor)
+float
+fz_subpixel_adjust(fz_matrix *ctm, fz_matrix *subpix_ctm, unsigned char *qe, unsigned char *qf)
+{
+	float size = fz_matrix_expansion(ctm);
+	int q;
+	float pix_e, pix_f, r;
+
+	/* Quantise the subpixel positions. */
+	/* We never need more than 4 subpixel positions for glyphs - arguably
+	 * even that is too much. */
+	if (size >= 48)
+		q = 0, r = 0.5f;
+	else if (size >= 24)
+		q = 128, r = 0.25f;
+	else
+		q = 192, r = 0.125f;
+
+	/* Split translation into pixel and subpixel parts */
+	subpix_ctm->a = ctm->a;
+	subpix_ctm->b = ctm->b;
+	subpix_ctm->c = ctm->c;
+	subpix_ctm->d = ctm->d;
+	subpix_ctm->e = ctm->e + r;
+	pix_e = floorf(subpix_ctm->e);
+	subpix_ctm->e -= pix_e;
+	subpix_ctm->f = ctm->f + r;
+	pix_f = floorf(subpix_ctm->f);
+	subpix_ctm->f -= pix_f;
+
+	/* Quantise the subpixel part */
+	*qe = (int)(subpix_ctm->e * 256) & q;
+	subpix_ctm->e = *qe / 256.0f;
+	*qf = (int)(subpix_ctm->f * 256) & q;
+	subpix_ctm->f = *qf / 256.0f;
+
+	/* Reassemble the complete translation */
+	ctm->e = subpix_ctm->e + pix_e;
+	ctm->f = subpix_ctm->f + pix_f;
+
+	return size;
+}
+
+fz_glyph *
+fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, const fz_irect *scissor)
 {
 	if (font->ft_face)
 	{
+		fz_matrix subpix_trm;
+		unsigned char qe, qf;
+
 		if (stroke->dash_len > 0)
 			return NULL;
-		return fz_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, stroke);
+		(void)fz_subpixel_adjust(trm, &subpix_trm, &qe, &qf);
+		return fz_render_ft_stroked_glyph(ctx, font, gid, &subpix_trm, ctm, stroke);
 	}
 	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor);
+}
+
+fz_pixmap *
+fz_render_stroked_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, const fz_irect *scissor)
+{
+	if (font->ft_face)
+	{
+		fz_matrix subpix_trm;
+		unsigned char qe, qf;
+
+		if (stroke->dash_len > 0)
+			return NULL;
+		(void)fz_subpixel_adjust(trm, &subpix_trm, &qe, &qf);
+		return fz_render_ft_stroked_glyph_pixmap(ctx, font, gid, &subpix_trm, ctm, stroke);
+	}
+	return fz_render_glyph_pixmap(ctx, font, gid, trm, NULL, scissor);
 }
 
 static unsigned do_hash(unsigned char *s, int len)
@@ -178,33 +240,26 @@ move_to_front(fz_glyph_cache *cache, fz_glyph_cache_entry *entry)
 	entry->lru_prev = NULL;
 }
 
-/*
-	Render a glyph and return a bitmap.
-	If the glyph is too large to fit the cache we have two choices:
-	1) Return NULL so the caller can draw the glyph using an outline.
-		Only supported for freetype fonts.
-	2) Render a clipped glyph by using the scissor rectangle.
-		Only supported for type 3 fonts.
-		This must not be inserted into the cache.
- */
-fz_pixmap *
-fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, fz_colorspace *model, fz_irect scissor)
+fz_glyph *
+fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colorspace *model, const fz_irect *scissor)
 {
 	fz_glyph_cache *cache;
 	fz_glyph_key key;
-	fz_pixmap *val;
-	float size = fz_matrix_expansion(ctm);
+	fz_matrix subpix_ctm;
+	float size;
+	fz_glyph *val;
 	int do_cache, locked, caching;
-	fz_matrix local_ctm = *ctm;
 	fz_glyph_cache_entry *entry;
 	unsigned hash;
 
 	fz_var(locked);
 	fz_var(caching);
 
+	memset(&key, 0, sizeof key);
+	size = fz_subpixel_adjust(ctm, &subpix_ctm, &key.e, &key.f);
 	if (size <= MAX_GLYPH_SIZE)
 	{
-		scissor = fz_infinite_irect;
+		scissor = &fz_infinite_irect;
 		do_cache = 1;
 	}
 	else
@@ -217,19 +272,13 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 
 	cache = ctx->glyph_cache;
 
-	memset(&key, 0, sizeof key);
 	key.font = font;
 	key.gid = gid;
-	key.a = local_ctm.a * 65536;
-	key.b = local_ctm.b * 65536;
-	key.c = local_ctm.c * 65536;
-	key.d = local_ctm.d * 65536;
-	key.e = (local_ctm.e - floorf(local_ctm.e)) * 256;
-	key.f = (local_ctm.f - floorf(local_ctm.f)) * 256;
+	key.a = subpix_ctm.a * 65536;
+	key.b = subpix_ctm.b * 65536;
+	key.c = subpix_ctm.c * 65536;
+	key.d = subpix_ctm.d * 65536;
 	key.aa = fz_aa_level(ctx);
-
-	local_ctm.e = floorf(local_ctm.e) + key.e / 256.0f;
-	local_ctm.f = floorf(local_ctm.f) + key.f / 256.0f;
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	hash = do_hash((unsigned char *)&key, sizeof(key)) % GLYPH_HASH_LEN;
@@ -239,7 +288,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 		if (memcmp(&entry->key, &key, sizeof(key)) == 0)
 		{
 			move_to_front(cache, entry);
-			val = fz_keep_pixmap(ctx, entry->val);
+			val = fz_keep_glyph(ctx, entry->val);
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 			return val;
 		}
@@ -253,7 +302,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 	{
 		if (font->ft_face)
 		{
-			val = fz_render_ft_glyph(ctx, font, gid, &local_ctm, key.aa);
+			val = fz_render_ft_glyph(ctx, font, gid, &subpix_ctm, key.aa);
 		}
 		else if (font->t3procs)
 		{
@@ -268,7 +317,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 			locked = 0;
-			val = fz_render_t3_glyph(ctx, font, gid, &local_ctm, model, scissor);
+			val = fz_render_t3_glyph(ctx, font, gid, &subpix_ctm, model, scissor);
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 			locked = 1;
 		}
@@ -293,9 +342,9 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 					{
 						if (memcmp(&entry->key, &key, sizeof(key)) == 0)
 						{
-							fz_drop_pixmap(ctx, val);
+							fz_drop_glyph(ctx, val);
 							move_to_front(cache, entry);
-							val = fz_keep_pixmap(ctx, entry->val);
+							val = fz_keep_glyph(ctx, entry->val);
 							fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 							return val;
 						}
@@ -310,7 +359,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 				if (entry->bucket_next)
 					entry->bucket_next->bucket_prev = entry;
 				cache->entry[hash] = entry;
-				entry->val = fz_keep_pixmap(ctx, val);
+				entry->val = fz_keep_glyph(ctx, val);
 				fz_keep_font(ctx, key.font);
 
 				entry->lru_next = cache->lru_head;
@@ -320,12 +369,12 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 					cache->lru_tail = entry;
 				cache->lru_head = entry;
 
-				cache->total += val->w * val->h;
+				cache->total += fz_glyph_size(ctx, val);
 				while (cache->total > MAX_CACHE_SIZE)
 				{
 #ifndef NDEBUG
 					cache->num_evictions++;
-					cache->evicted += cache->lru_tail->val->w * cache->lru_tail->val->h;
+					cache->evicted += fz_glyph_size(ctx, cache->lru_tail->val);
 #endif
 					drop_glyph_cache_entry(ctx, cache->lru_tail);
 				}
@@ -344,6 +393,48 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, f
 			fz_warn(ctx, "cannot encache glyph; continuing");
 		else
 			fz_rethrow(ctx);
+	}
+
+	return val;
+}
+
+fz_pixmap *
+fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colorspace *model, const fz_irect *scissor)
+{
+	fz_pixmap *val;
+	unsigned char qe, qf;
+	fz_matrix subpix_ctm;
+	float size = fz_subpixel_adjust(ctm, &subpix_ctm, &qe, &qf);
+
+	if (size <= MAX_GLYPH_SIZE)
+	{
+		scissor = &fz_infinite_irect;
+	}
+	else
+	{
+		if (font->ft_face)
+			return NULL;
+	}
+
+	fz_try(ctx)
+	{
+		if (font->ft_face)
+		{
+			val = fz_render_ft_glyph_pixmap(ctx, font, gid, &subpix_ctm, fz_aa_level(ctx));
+		}
+		else if (font->t3procs)
+		{
+			val = fz_render_t3_glyph_pixmap(ctx, font, gid, &subpix_ctm, model, scissor);
+		}
+		else
+		{
+			fz_warn(ctx, "assert: uninitialized font structure");
+			val = NULL;
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 
 	return val;

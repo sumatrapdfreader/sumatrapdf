@@ -28,6 +28,11 @@ struct fz_output_s
 fz_output *fz_new_output_with_file(fz_context *, FILE *);
 
 /*
+	fz_new_output_to_filename: Open an output stream to a filename.
+*/
+fz_output *fz_new_output_to_filename(fz_context *, const char *filename);
+
+/*
 	fz_new_output_with_buffer: Open an output stream onto a buffer.
 
 	The stream does NOT take ownership of the buffer.
@@ -48,6 +53,11 @@ int fz_puts(fz_output *, const char *);
 	fz_write: fwrite equivalent for output streams.
 */
 int fz_write(fz_output *out, const void *data, int len);
+
+/*
+	fz_putc: putc equivalent for output streams.
+*/
+void fz_putc(fz_output *out, char c);
 
 /*
 	fz_close_output: Close a previously opened fz_output stream.

@@ -438,58 +438,32 @@ fz_adjust_ft_glyph_width(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm
 	return trm;
 }
 
-static fz_pixmap *
-fz_copy_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
+static fz_glyph *
+glyph_from_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
 {
-	fz_pixmap *pixmap;
-	int y;
-
-	pixmap = fz_new_pixmap(ctx, NULL, bitmap->width, bitmap->rows);
-	pixmap->x = left;
-	pixmap->y = top - bitmap->rows;
-
 	if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
-	{
-		for (y = 0; y < pixmap->h; y++)
-		{
-			unsigned char *out = pixmap->samples + (unsigned int)(y * pixmap->w);
-			unsigned char *in = bitmap->buffer + (unsigned int)((pixmap->h - y - 1) * bitmap->pitch);
-			unsigned char bit = 0x80;
-			int w = pixmap->w;
-			while (w--)
-			{
-				*out++ = (*in & bit) ? 255 : 0;
-				bit >>= 1;
-				if (bit == 0)
-				{
-					bit = 0x80;
-					in++;
-				}
-			}
-		}
-	}
+		return fz_new_glyph_from_1bpp_data(ctx, left, top - bitmap->rows, bitmap->width, bitmap->rows, bitmap->buffer + (bitmap->rows-1)*bitmap->pitch, -bitmap->pitch);
 	else
-	{
-		for (y = 0; y < pixmap->h; y++)
-		{
-			memcpy(pixmap->samples + (unsigned int)(y * pixmap->w),
-				bitmap->buffer + (unsigned int)((pixmap->h - y - 1) * bitmap->pitch),
-				pixmap->w);
-		}
-	}
-
-	return pixmap;
+		return fz_new_glyph_from_8bpp_data(ctx, left, top - bitmap->rows, bitmap->width, bitmap->rows, bitmap->buffer + (bitmap->rows-1)*bitmap->pitch, -bitmap->pitch);
 }
 
-/* The glyph cache lock is always taken when this is called. */
-fz_pixmap *
-fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, int aa)
+static fz_pixmap *
+pixmap_from_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
+{
+	if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
+		return fz_new_pixmap_from_1bpp_data(ctx, left, top - bitmap->rows, bitmap->width, bitmap->rows, bitmap->buffer + (bitmap->rows-1)*bitmap->pitch, -bitmap->pitch);
+	else
+		return fz_new_pixmap_from_8bpp_data(ctx, left, top - bitmap->rows, bitmap->width, bitmap->rows, bitmap->buffer + (bitmap->rows-1)*bitmap->pitch, -bitmap->pitch);
+}
+
+/* Takes the freetype lock, and returns with it held */
+static FT_GlyphSlot
+do_ft_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, int aa)
 {
 	FT_Face face = font->ft_face;
 	FT_Matrix m;
 	FT_Vector v;
 	FT_Error fterr;
-	fz_pixmap *result;
 	fz_matrix local_trm = *trm;
 
 	float strength = fz_matrix_expansion(trm) * 0.02f;
@@ -563,7 +537,6 @@ retry_unhinted:
 		if (fterr)
 		{
 			fz_warn(ctx, "freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
-			fz_unlock(ctx, FZ_LOCK_FREETYPE);
 			return NULL;
 		}
 	}
@@ -578,13 +551,26 @@ retry_unhinted:
 	if (fterr)
 	{
 		fz_warn(ctx, "freetype render glyph (gid %d): %s", gid, ft_error_string(fterr));
+		return NULL;
+	}
+	return face->glyph;
+}
+
+fz_pixmap *
+fz_render_ft_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, int aa)
+{
+	FT_GlyphSlot slot = do_ft_render_glyph(ctx, font, gid, trm, aa);
+	fz_pixmap *pixmap;
+
+	if (slot == NULL)
+	{
 		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
 	fz_try(ctx)
 	{
-		result = fz_copy_ft_bitmap(ctx, face->glyph->bitmap_left, face->glyph->bitmap_top, &face->glyph->bitmap);
+		pixmap = pixmap_from_ft_bitmap(ctx, slot->bitmap_left, slot->bitmap_top, &slot->bitmap);
 	}
 	fz_always(ctx)
 	{
@@ -595,11 +581,41 @@ retry_unhinted:
 		fz_rethrow(ctx);
 	}
 
-	return result;
+	return pixmap;
 }
 
-fz_pixmap *
-fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *state)
+/* The glyph cache lock is always taken when this is called. */
+fz_glyph *
+fz_render_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, int aa)
+{
+	FT_GlyphSlot slot = do_ft_render_glyph(ctx, font, gid, trm, aa);
+	fz_glyph *glyph;
+
+	if (slot == NULL)
+	{
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		return NULL;
+	}
+
+	fz_try(ctx)
+	{
+		glyph = glyph_from_ft_bitmap(ctx, slot->bitmap_left, slot->bitmap_top, &slot->bitmap);
+	}
+	fz_always(ctx)
+	{
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return glyph;
+}
+
+/* Takes the freetype lock, and returns with it held */
+static FT_Glyph
+do_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *state)
 {
 	FT_Face face = font->ft_face;
 	float expansion = fz_matrix_expansion(ctm);
@@ -609,8 +625,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	FT_Error fterr;
 	FT_Stroker stroker;
 	FT_Glyph glyph;
-	FT_BitmapGlyph bitmap;
-	fz_pixmap *pixmap;
 	FT_Stroker_LineJoin line_join;
 	fz_matrix local_trm = *trm;
 
@@ -631,7 +645,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	if (fterr)
 	{
 		fz_warn(ctx, "FT_Set_Char_Size: %s", ft_error_string(fterr));
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
@@ -641,7 +654,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	if (fterr)
 	{
 		fz_warn(ctx, "FT_Load_Glyph(gid %d): %s", gid, ft_error_string(fterr));
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
@@ -649,7 +661,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	if (fterr)
 	{
 		fz_warn(ctx, "FT_Stroker_New: %s", ft_error_string(fterr));
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
@@ -675,7 +686,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	{
 		fz_warn(ctx, "FT_Get_Glyph: %s", ft_error_string(fterr));
 		FT_Stroker_Done(stroker);
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
@@ -685,7 +695,6 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 		fz_warn(ctx, "FT_Glyph_Stroke: %s", ft_error_string(fterr));
 		FT_Done_Glyph(glyph);
 		FT_Stroker_Done(stroker);
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
@@ -696,14 +705,27 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	{
 		fz_warn(ctx, "FT_Glyph_To_Bitmap: %s", ft_error_string(fterr));
 		FT_Done_Glyph(glyph);
+		return NULL;
+	}
+	return glyph;
+}
+
+fz_pixmap *
+fz_render_ft_stroked_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *state)
+{
+	FT_Glyph glyph = do_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, state);
+	FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph;
+	fz_pixmap *pixmap;
+
+	if (bitmap == NULL)
+	{
 		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 		return NULL;
 	}
 
-	bitmap = (FT_BitmapGlyph)glyph;
 	fz_try(ctx)
 	{
-		pixmap = fz_copy_ft_bitmap(ctx, bitmap->left, bitmap->top, &bitmap->bitmap);
+		pixmap = pixmap_from_ft_bitmap(ctx, bitmap->left, bitmap->top, &bitmap->bitmap);
 	}
 	fz_always(ctx)
 	{
@@ -716,6 +738,36 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 	}
 
 	return pixmap;
+}
+
+fz_glyph *
+fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *state)
+{
+	FT_Glyph glyph = do_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, state);
+	FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph;
+	fz_glyph *result;
+
+	if (bitmap == NULL)
+	{
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
+		return NULL;
+	}
+
+	fz_try(ctx)
+	{
+		result = glyph_from_ft_bitmap(ctx, bitmap->left, bitmap->top, &bitmap->bitmap);
+	}
+	fz_always(ctx)
+	{
+		FT_Done_Glyph(glyph);
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return result;
 }
 
 static fz_rect *
@@ -1005,7 +1057,7 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 }
 
 fz_pixmap *
-fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_colorspace *model, fz_irect scissor)
+fz_render_t3_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_colorspace *model, const fz_irect *scissor)
 {
 	fz_display_list *list;
 	fz_matrix ctm;
@@ -1041,7 +1093,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm
 
 	fz_expand_rect(fz_bound_glyph(ctx, font, gid, trm, &bounds), 1);
 	fz_irect_from_rect(&bbox, &bounds);
-	fz_intersect_irect(&bbox, &scissor);
+	fz_intersect_irect(&bbox, scissor);
 
 	glyph = fz_new_pixmap_with_bbox(ctx, model ? model : fz_device_gray(ctx), &bbox);
 	fz_clear_pixmap(ctx, glyph);
@@ -1070,6 +1122,13 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm
 		result = glyph;
 
 	return result;
+}
+
+fz_glyph *
+fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_colorspace *model, const fz_irect *scissor)
+{
+	fz_pixmap *pixmap = fz_render_t3_glyph_pixmap(ctx, font, gid, trm, model, scissor);
+	return fz_new_glyph_from_pixmap(ctx, pixmap);
 }
 
 void

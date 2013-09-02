@@ -1311,6 +1311,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\glyph.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\halftone.c"
 					>
 				</File>
@@ -1531,6 +1535,10 @@
 					</File>
 					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\glyph-cache.h"
+						>
+					</File>
+					<File
+						RelativePath="..\mupdf\include\mupdf\fitz\glyph.h"
 						>
 					</File>
 					<File

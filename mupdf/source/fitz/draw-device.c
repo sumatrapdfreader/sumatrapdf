@@ -1,10 +1,6 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
 
-#define QUANT(x,a) (((int)((x) * (a))) / (a))
-#define HSUBPIX 5.0
-#define VSUBPIX 5.0
-
 #define STACK_SIZE 96
 
 /* Enable the following to attempt to support knockout and/or isolated
@@ -485,15 +481,18 @@ fz_draw_clip_stroke_path(fz_device *devp, fz_path *path, const fz_rect *rect, fz
 	}
 }
 
+
 static void
-draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
+draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_glyph *glyph,
 	int xorig, int yorig, const fz_irect *scissor)
 {
-	unsigned char *dp, *mp;
+	unsigned char *dp;
 	fz_irect bbox, bbox2;
 	int x, y, w, h;
+	int skip_x, skip_y;
+	fz_pixmap *msk;
 
-	fz_pixmap_bbox_no_ctx(msk, &bbox);
+	fz_glyph_bbox_no_ctx(glyph, &bbox);
 	fz_translate_irect(&bbox, xorig, yorig);
 	fz_intersect_irect(&bbox, scissor); /* scissor < dst */
 
@@ -505,19 +504,28 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	mp = msk->samples + (unsigned int)((y - msk->y - yorig) * msk->w + (x - msk->x - xorig));
+	skip_x = x - glyph->x - xorig;
+	skip_y = y - glyph->y - yorig;
+
 	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 
-	assert(msk->n == 1);
-
-	while (h--)
+	msk = glyph->pixmap;
+	if (msk == NULL)
 	{
-		if (dst->colorspace)
-			fz_paint_span_with_color(dp, mp, dst->n, w, colorbv);
-		else
-			fz_paint_span(dp, mp, 1, w, 255);
-		dp += dst->w * dst->n;
-		mp += msk->w;
+		fz_paint_glyph(colorbv, dst, dp, glyph, w, h, skip_x, skip_y);
+	}
+	else
+	{
+		unsigned char *mp = msk->samples + skip_y * msk->w + skip_x;
+		while (h--)
+		{
+			if (dst->colorspace)
+				fz_paint_span_with_color(dp, mp, dst->n, w, colorbv);
+			else
+				fz_paint_span(dp, mp, 1, w, 255);
+			dp += dst->w * dst->n;
+			mp += msk->w;
+		}
 	}
 }
 
@@ -529,12 +537,11 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 	unsigned char colorbv[FZ_MAX_COLORS + 1];
 	unsigned char shapebv;
 	float colorfv[FZ_MAX_COLORS];
-	fz_matrix tm, trm, trunc_trm;
-	fz_pixmap *glyph;
-	int i, x, y, gid;
+	fz_matrix tm, trm;
+	fz_glyph *glyph;
+	int i, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
-	fz_irect scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -556,22 +563,14 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 		tm.e = text->items[i].x;
 		tm.f = text->items[i].y;
 		fz_concat(&trm, &tm, ctm);
-		x = floorf(trm.e);
-		y = floorf(trm.f);
 
-		trunc_trm = trm;
-		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
-
-		scissor.x0 = state->scissor.x0 - x;
-		scissor.y0 = state->scissor.y0 - y;
-		scissor.x1 = state->scissor.x1 - x;
-		scissor.y1 = state->scissor.y1 - y;
-
-		glyph = fz_render_glyph(dev->ctx, text->font, gid, &trunc_trm, model, scissor);
+		glyph = fz_render_glyph(dev->ctx, text->font, gid, &trm, model, &state->scissor);
 		if (glyph)
 		{
-			if (glyph->n == 1)
+			fz_pixmap *pixmap = glyph->pixmap;
+			int x = (int)trm.e;
+			int y = (int)trm.f;
+			if (pixmap == NULL || pixmap->n == 1)
 			{
 				draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor);
 				if (state->shape)
@@ -579,10 +578,10 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 			}
 			else
 			{
-				fz_matrix mat = {glyph->w, 0.0, 0.0, glyph->h, x + glyph->x, y + glyph->y};
-				fz_paint_image(state->dest, &state->scissor, state->shape, glyph, &mat, alpha * 255);
+				fz_matrix mat = {pixmap->w, 0.0, 0.0, pixmap->h, x + pixmap->x, y + pixmap->y};
+				fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &mat, alpha * 255);
 			}
-			fz_drop_pixmap(dev->ctx, glyph);
+			fz_drop_glyph(dev->ctx, glyph);
 		}
 		else
 		{
@@ -611,12 +610,11 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke,
 	fz_draw_device *dev = devp->user;
 	unsigned char colorbv[FZ_MAX_COLORS + 1];
 	float colorfv[FZ_MAX_COLORS];
-	fz_matrix tm, trm, trunc_trm;
-	fz_pixmap *glyph;
-	int i, x, y, gid;
+	fz_matrix tm, trm;
+	fz_glyph *glyph;
+	int i, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
-	fz_irect scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -637,25 +635,16 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke,
 		tm.e = text->items[i].x;
 		tm.f = text->items[i].y;
 		fz_concat(&trm, &tm, ctm);
-		x = floorf(trm.e);
-		y = floorf(trm.f);
 
-		trunc_trm = trm;
-		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
-
-		scissor.x0 = state->scissor.x0 - x;
-		scissor.y0 = state->scissor.y0 - y;
-		scissor.x1 = state->scissor.x1 - x;
-		scissor.y1 = state->scissor.y1 - y;
-
-		glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trunc_trm, ctm, stroke, scissor);
+		glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trm, ctm, stroke, &state->scissor);
 		if (glyph)
 		{
+			int x = (int)trm.e;
+			int y = (int)trm.f;
 			draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor);
 			if (state->shape)
 				draw_glyph(colorbv, state->shape, glyph, x, y, &state->scissor);
-			fz_drop_pixmap(dev->ctx, glyph);
+			fz_drop_glyph(dev->ctx, glyph);
 		}
 		else
 		{
@@ -683,9 +672,9 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 	fz_context *ctx = dev->ctx;
 	fz_irect bbox;
 	fz_pixmap *mask, *dest, *shape;
-	fz_matrix tm, trm, trunc_trm;
-	fz_pixmap *glyph;
-	int i, x, y, gid;
+	fz_matrix tm, trm;
+	fz_glyph *glyph;
+	int i, gid;
 	fz_draw_state *state;
 	fz_colorspace *model;
 
@@ -747,8 +736,6 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 
 			for (i = 0; i < text->len; i++)
 			{
-				fz_irect scissor;
-
 				gid = text->items[i].gid;
 				if (gid < 0)
 					continue;
@@ -756,24 +743,16 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 				tm.e = text->items[i].x;
 				tm.f = text->items[i].y;
 				fz_concat(&trm, &tm, ctm);
-				x = floorf(trm.e);
-				y = floorf(trm.f);
 
-				trunc_trm = trm;
-				trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-				trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
-				scissor.x0 = bbox.x0 - x;
-				scissor.y0 = bbox.y0 - y;
-				scissor.x1 = bbox.x1 - x;
-				scissor.y1 = bbox.y1 - y;
-
-				glyph = fz_render_glyph(dev->ctx, text->font, gid, &trunc_trm, model, scissor);
+				glyph = fz_render_glyph(dev->ctx, text->font, gid, &trm, model, &state->scissor);
 				if (glyph)
 				{
+					int x = (int)trm.e;
+					int y = (int)trm.f;
 					draw_glyph(NULL, mask, glyph, x, y, &bbox);
 					if (state[1].shape)
 						draw_glyph(NULL, state[1].shape, glyph, x, y, &bbox);
-					fz_drop_pixmap(dev->ctx, glyph);
+					fz_drop_glyph(dev->ctx, glyph);
 				}
 				else
 				{
@@ -825,9 +804,9 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 	fz_context *ctx = dev->ctx;
 	fz_irect bbox;
 	fz_pixmap *mask, *dest, *shape;
-	fz_matrix tm, trm, trunc_trm;
-	fz_pixmap *glyph;
-	int i, x, y, gid;
+	fz_matrix tm, trm;
+	fz_glyph *glyph;
+	int i, gid;
 	fz_draw_state *state = push_stack(dev);
 	fz_colorspace *model = state->dest->colorspace;
 	fz_rect rect;
@@ -862,7 +841,6 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 
 			for (i = 0; i < text->len; i++)
 			{
-				fz_irect scissor;
 				gid = text->items[i].gid;
 				if (gid < 0)
 					continue;
@@ -870,25 +848,16 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 				tm.e = text->items[i].x;
 				tm.f = text->items[i].y;
 				fz_concat(&trm, &tm, ctm);
-				x = floorf(trm.e);
-				y = floorf(trm.f);
 
-				trunc_trm = trm;
-				trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-				trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
-
-				scissor.x0 = bbox.x0 - x;
-				scissor.y0 = bbox.y0 - y;
-				scissor.x1 = bbox.x1 - x;
-				scissor.y1 = bbox.y1 - y;
-
-				glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trunc_trm, ctm, stroke, scissor);
+				glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trm, ctm, stroke, &state->scissor);
 				if (glyph)
 				{
+					int x = (int)trm.e;
+					int y = (int)trm.f;
 					draw_glyph(NULL, mask, glyph, x, y, &bbox);
 					if (shape)
 						draw_glyph(NULL, shape, glyph, x, y, &bbox);
-					fz_drop_pixmap(dev->ctx, glyph);
+					fz_drop_glyph(dev->ctx, glyph);
 				}
 				else
 				{

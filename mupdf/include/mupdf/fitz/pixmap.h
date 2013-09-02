@@ -302,4 +302,7 @@ void fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int dep
 */
 void fz_md5_pixmap(fz_pixmap *pixmap, unsigned char digest[16]);
 
+fz_pixmap *fz_new_pixmap_from_8bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
+fz_pixmap *fz_new_pixmap_from_1bpp_data(fz_context *ctx, int x, int y, int w, int h, unsigned char *sp, int span);
+
 #endif

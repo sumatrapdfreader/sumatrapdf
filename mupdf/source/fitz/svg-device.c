@@ -254,7 +254,7 @@ svg_dev_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *
 	svg_dev_path(sdev, path);
 	svg_dev_fill_color(sdev, colorspace, color, alpha);
 	if (even_odd)
-		fz_printf(out, " fill-rule=\"evenodd\" ");
+		fz_printf(out, " fill-rule=\"evenodd\"");
 	fz_printf(out, "/>\n");
 }
 
@@ -285,7 +285,7 @@ svg_dev_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_o
 	svg_dev_ctm(sdev, ctm);
 	svg_dev_path(sdev, path);
 	if (even_odd)
-		fz_printf(out, " fill-rule=\"evenodd\" ");
+		fz_printf(out, " fill-rule=\"evenodd\"");
 	fz_printf(out, "/>\n</clipPath>\n<g clip-path=\"url(#cp%d)\">\n", num);
 }
 
@@ -301,7 +301,7 @@ svg_dev_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_
 
 	fz_bound_path(ctx, path, stroke, ctm, &bounds);
 
-	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\" >\n",
+	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\">\n",
 		num, bounds.x0, bounds.y0, bounds.x1 - bounds.x0, bounds.y1 - bounds.y0);
 	fz_printf(out, "<path");
 	svg_dev_ctm(sdev, ctm);
@@ -349,7 +349,7 @@ svg_dev_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accum
 
 	fz_bound_text(ctx, text, NULL, ctm, &bounds);
 
-	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\" >\n",
+	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\">\n",
 		num, bounds.x0, bounds.y0, bounds.x1 - bounds.x0, bounds.y1 - bounds.y0);
 	fz_printf(out, "<text");
 	svg_dev_fill_color(sdev, fz_device_rgb(ctx), white, 1.0f);
@@ -369,7 +369,7 @@ svg_dev_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 
 	fz_bound_text(ctx, text, NULL, ctm, &bounds);
 
-	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\" >\n",
+	fz_printf(out, "<mask id=\"ma%d\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\" maskUnits=\"userSpaceOnUse\" maskContentUnits=\"userSpaceOnUse\">\n",
 		num, bounds.x0, bounds.y0, bounds.x1 - bounds.x0, bounds.y1 - bounds.y0);
 	fz_printf(out, "<text");
 	svg_dev_stroke_state(sdev, stroke);
@@ -515,7 +515,6 @@ svg_dev_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, flo
 	svg_device *sdev = (svg_device *)dev->user;
 	fz_output *out = sdev->out;
 	fz_context *ctx = dev->ctx;
-	fz_matrix inverse;
 	int num;
 	tile *t;
 
@@ -544,19 +543,9 @@ svg_dev_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, flo
 	 * correct matrix is used on the fill.
 	 */
 
-	/* In svg, the reference tile is taken from (x,y) to (x+width,y+height)
-	 * and is repeated at (x+n*width,y+m*height) for all integer n and m.
-	 * This means that width and height correspond to xstep and ystep. */
-	fz_printf(out, "<pattern id=\"pa%d\" patternUnits=\"userSpaceOnUse\" patternContentUnits=\"userSpaceOnUse\"",
-		t->pattern);
-	fz_printf(out, " x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\">\n",
-		view->x0, view->y0, xstep, ystep);
-	/* All the pattern contents will have their own ctm applied. Let's
-	 * undo the current one to allow for this */
-	fz_invert_matrix(&inverse, ctm);
-	fz_printf(out, "<g");
-	svg_dev_ctm(sdev, &inverse);
-	fz_printf(out, ">\n");
+	/* The first thing we do is to capture the contents of the pattern
+	 * as a symbol we can reuse. */
+	fz_printf(out, "<symbol id=\"pac%d\">\n", t->pattern);
 
 	return 0;
 }
@@ -566,15 +555,64 @@ svg_dev_end_tile(fz_device *dev)
 {
 	svg_device *sdev = (svg_device *)dev->user;
 	fz_output *out = sdev->out;
-	int num;
+	int num, cp = -1;
 	tile *t;
+	fz_matrix inverse;
+	float x, y, w, h;
 
 	if (sdev->num_tiles == 0)
 		return;
 	num = --sdev->num_tiles;
 	t = &sdev->tiles[num];
 
-	fz_printf(out, "</g>\n</pattern>\n");
+	fz_printf(out, "</symbol>\n");
+
+	/* In svg, the reference tile is taken from (x,y) to (x+width,y+height)
+	 * and is repeated at (x+n*width,y+m*height) for all integer n and m.
+	 * This means that width and height generally correspond to xstep and
+	 * ystep. There are exceptional cases where we have to break this
+	 * though; when xstep/ystep are smaller than the width/height of the
+	 * pattern tile, we need to render the pattern contents several times
+	 * to ensure that the pattern tile contains everything. */
+
+	fz_printf(out, "<pattern id=\"pa%d\" patternUnits=\"userSpaceOnUse\" patternContentUnits=\"userSpaceOnUse\"",
+		t->pattern);
+	fz_printf(out, " x=\"0\" y=\"0\" width=\"%g\" height=\"%g\">\n",
+		t->step.x, t->step.y);
+
+	if (t->view.x0 > 0 || t->step.x < t->view.x1 || t->view.y0 > 0 || t->step.y < t->view.y1)
+	{
+		cp = sdev->id++;
+		fz_printf(out, "<clipPath id=\"cp%d\">\n", cp);
+		fz_printf(out, "<path d=\"M %g %g L %g %g L %g %g L %g %g Z\"/>",
+			t->view.x0, t->view.y0,
+			t->view.x1, t->view.y0,
+			t->view.x1, t->view.y1,
+			t->view.x0, t->view.y1);
+		fz_printf(out, "</clipPath>\n");
+		fz_printf(out, "<g clip-path=\"url(#cp%d)\">\n", cp);
+	}
+
+	/* All the pattern contents will have their own ctm applied. Let's
+	 * undo the current one to allow for this */
+	fz_invert_matrix(&inverse, &t->ctm);
+	fz_printf(out, "<g");
+	svg_dev_ctm(sdev, &inverse);
+	fz_printf(out, ">\n");
+
+	w = t->view.x1 - t->view.x0;
+	h = t->view.y1 - t->view.y0;
+
+	for (x = 0; x > -w; x -= t->step.x)
+		for (y = 0; y > -h; y -= t->step.y)
+			fz_printf(out, "<use x=\"%g\" y=\"%g\" xlink:href=\"#pac%d\"/>", x, y, t->pattern);
+
+	fz_printf(out, "</g>\n");
+	if (cp != -1)
+		fz_printf(out, "</g>\n");
+	fz_printf(out, "</pattern>\n");
+
+	/* Finally, fill a rectangle with the pattern. */
 	fz_printf(out, "<rect");
 	svg_dev_ctm(sdev, &t->ctm);
 	fz_printf(out, " fill=\"url(#pa%d)\" x=\"%g\" y=\"%g\" width=\"%g\" height=\"%g\"/>\n",

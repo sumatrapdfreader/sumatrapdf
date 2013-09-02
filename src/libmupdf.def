@@ -192,13 +192,27 @@ EXPORTS
 	fz_outline_ft_glyph
 	fz_outline_glyph
 	fz_render_ft_glyph
+	fz_render_ft_glyph_pixmap
 	fz_render_t3_glyph
+	fz_render_t3_glyph_pixmap
 	fz_render_ft_stroked_glyph
+	fz_render_ft_stroked_glyph_pixmap
 	fz_render_glyph
+	fz_render_glyph_pixmap
 	fz_render_stroked_glyph
+	fz_render_stroked_glyph_pixmap
 	fz_render_t3_glyph_direct
 	fz_prepare_t3_glyph
 	fz_dump_glyph_cache_stats
+	fz_subpixel_adjust
+	fz_glyph_bbox
+	fz_glyph_width
+	fz_glyph_height
+	fz_new_glyph_from_pixmap
+	fz_new_glyph_from_8bpp_data
+	fz_keep_glyph
+	fz_drop_glyph
+	fz_glyph_bbox_no_ctx
 	fz_new_hash_table
 	fz_empty_hash
 	fz_free_hash
@@ -270,17 +284,26 @@ EXPORTS
 	fz_write_png
 	fz_output_png
 	fz_image_as_png
+	fz_output_png_header
+	fz_output_png_band
+	fz_output_png_trailer
 	fz_write_pnm
+	fz_output_pnm_header
+	fz_output_pnm_band
 	fz_write_pam
+	fz_output_pam_header
+	fz_output_pam_band
 	fz_write_pbm
 
 
 	fz_write_tga
 	fz_new_output_with_file
+	fz_new_output_to_filename
 	fz_new_output_with_buffer
 	fz_printf
 	fz_puts
 	fz_write
+	fz_putc
 	fz_close_output
 	fz_new_path
 	fz_currentpoint
@@ -337,6 +360,8 @@ EXPORTS
 	fz_decode_indexed_tile
 	fz_unpack_tile
 	fz_md5_pixmap
+	fz_new_pixmap_from_8bpp_data
+	fz_new_pixmap_from_1bpp_data
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp

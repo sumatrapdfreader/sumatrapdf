@@ -530,6 +530,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\glyph.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\halftone.c"
 				>
 			</File>
@@ -998,6 +1002,10 @@
 				</File>
 				<File
 					RelativePath="..\..\include\mupdf\fitz\glyph-cache.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\mupdf\fitz\glyph.h"
 					>
 				</File>
 				<File

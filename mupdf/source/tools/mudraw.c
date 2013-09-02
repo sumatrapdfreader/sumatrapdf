@@ -165,6 +165,7 @@ static int ignore_errors = 0;
 static int output_format;
 static int append = 0;
 static int out_cs = CS_UNSET;
+static int bandheight = 0;
 static int memtrace_current = 0;
 static int memtrace_peak = 0;
 static int memtrace_total = 0;
@@ -206,6 +207,7 @@ static void usage(void)
 		"\t-f -\tfit width and/or height exactly (ignore aspect)\n"
 		"\t-c -\tcolorspace {mono,gray,grayalpha,rgb,rgba}\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
+		"\t-B -\tmaximum bandheight (pgm, ppm, pam output only)\n"
 		"\t-g\trender in grayscale\n"
 		"\t-m\tshow timing information\n"
 		"\t-M\tshow memory use summary\n"
@@ -737,8 +739,11 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		fz_irect ibounds;
 		fz_pixmap *pix = NULL;
 		int w, h;
+		fz_output *output_file = NULL;
+		fz_png_output_context *poc = NULL;
 
 		fz_var(pix);
+		fz_var(poc);
 
 		fz_bound_page(doc, page, &bounds);
 		zoom = resolution / 72;
@@ -800,85 +805,114 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		fz_rect_from_irect(&tbounds, &ibounds);
 
 		/* TODO: banded rendering and multi-page ppm */
-
 		fz_try(ctx)
 		{
 			int savealpha = (out_cs == CS_RGBA || out_cs == CS_GRAYALPHA);
+			fz_irect band_ibounds = ibounds;
+			int band, bands = 1;
+			char filename_buf[512];
+			int totalheight = ibounds.y1 - ibounds.y0;
+			int drawheight = totalheight;
 
-			pix = fz_new_pixmap_with_bbox(ctx, colorspace, &ibounds);
+			if (bandheight != 0)
+			{
+				/* Banded rendering; we'll only render to a
+				 * given height at a time. */
+				drawheight = bandheight;
+				if (totalheight > bandheight)
+					band_ibounds.y1 = band_ibounds.y0 + bandheight;
+				bands = (totalheight + bandheight-1)/bandheight;
+				tbounds.y1 = tbounds.y0 + bandheight + 2;
+			}
+
+			pix = fz_new_pixmap_with_bbox(ctx, colorspace, &band_ibounds);
 			fz_pixmap_set_resolution(pix, resolution);
-
-			if (savealpha)
-				fz_clear_pixmap(ctx, pix);
-			else
-				fz_clear_pixmap_with_value(ctx, pix, 255);
-
-			dev = fz_new_draw_device(ctx, pix);
-			if (list)
-				fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
-			else
-				fz_run_page(doc, page, dev, &ctm, &cookie);
-			fz_free_device(dev);
-			dev = NULL;
-
-			if (invert)
-				fz_invert_pixmap(ctx, pix);
-			if (gamma_value != 1)
-				fz_gamma_pixmap(ctx, pix, gamma_value);
-
-			if (savealpha)
-				fz_unmultiply_pixmap(ctx, pix);
 
 			if (output)
 			{
-				char buf[512];
-				sprintf(buf, output, pagenum);
+				sprintf(filename_buf, output, pagenum);
+				output_file = fz_new_output_to_filename(ctx, filename_buf);
 				if (output_format == OUT_PGM || output_format == OUT_PPM || output_format == OUT_PNM)
-					fz_write_pnm(ctx, pix, buf);
+					fz_output_pnm_header(output_file, pix->w, totalheight, pix->n);
 				else if (output_format == OUT_PAM)
-					fz_write_pam(ctx, pix, buf, savealpha);
+					fz_output_pam_header(output_file, pix->w, totalheight, pix->n, pix->colorspace, savealpha);
 				else if (output_format == OUT_PNG)
-					fz_write_png(ctx, pix, buf, savealpha);
-				else if (output_format == OUT_PWG)
+					poc = fz_output_png_header(output_file, pix->w, totalheight, pix->n, savealpha);
+			}
+
+			for (band = 0; band < bands; band++)
+			{
+				if (savealpha)
+					fz_clear_pixmap(ctx, pix);
+				else
+					fz_clear_pixmap_with_value(ctx, pix, 255);
+
+				dev = fz_new_draw_device(ctx, pix);
+				if (list)
+					fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
+				else
+					fz_run_page(doc, page, dev, &ctm, &cookie);
+				fz_free_device(dev);
+				dev = NULL;
+
+				if (invert)
+					fz_invert_pixmap(ctx, pix);
+				if (gamma_value != 1)
+					fz_gamma_pixmap(ctx, pix, gamma_value);
+
+				if (savealpha)
+					fz_unmultiply_pixmap(ctx, pix);
+
+				if (output)
 				{
-					if (strstr(output, "%d") != NULL)
-						append = 0;
-					if (out_cs == CS_MONO)
+					if (output_format == OUT_PGM || output_format == OUT_PPM || output_format == OUT_PNM)
+						fz_output_pnm_band(output_file, pix->w, totalheight, pix->n, band, drawheight, pix->samples);
+					else if (output_format == OUT_PAM)
+						fz_output_pam_band(output_file, pix->w, totalheight, pix->n, band, drawheight, pix->samples, savealpha);
+					else if (output_format == OUT_PNG)
+						fz_output_png_band(output_file, pix->w, totalheight, pix->n, band, drawheight, pix->samples, savealpha, poc);
+					else if (output_format == OUT_PWG)
 					{
+						if (strstr(output, "%d") != NULL)
+							append = 0;
+						if (out_cs == CS_MONO)
+						{
+							fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
+							fz_write_pwg_bitmap(ctx, bit, filename_buf, append, NULL);
+							fz_drop_bitmap(ctx, bit);
+						}
+						else
+							fz_write_pwg(ctx, pix, filename_buf, append, NULL);
+						append = 1;
+					}
+					else if (output_format == OUT_PCL)
+					{
+						fz_pcl_options options;
+
+						fz_pcl_preset(ctx, &options, "ljet4");
+
+						if (strstr(output, "%d") != NULL)
+							append = 0;
+						if (out_cs == CS_MONO)
+						{
+							fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
+							fz_write_pcl_bitmap(ctx, bit, filename_buf, append, &options);
+							fz_drop_bitmap(ctx, bit);
+						}
+						else
+							fz_write_pcl(ctx, pix, filename_buf, append, &options);
+						append = 1;
+					}
+					else if (output_format == OUT_PBM) {
 						fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
-						fz_write_pwg_bitmap(ctx, bit, buf, append, NULL);
+						fz_write_pbm(ctx, bit, filename_buf);
 						fz_drop_bitmap(ctx, bit);
 					}
-					else
-						fz_write_pwg(ctx, pix, buf, append, NULL);
-					append = 1;
+					/* SumatraPDF: support TGA as output format */
+					else if (output_format == OUT_TGA)
+						fz_write_tga(ctx, pix, filename_buf, savealpha);
 				}
-				else if (output_format == OUT_PCL)
-				{
-					fz_pcl_options options;
-
-					fz_pcl_preset(ctx, &options, "ljet4");
-
-					if (strstr(output, "%d") != NULL)
-						append = 0;
-					if (out_cs == CS_MONO)
-					{
-						fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
-						fz_write_pcl_bitmap(ctx, bit, buf, append, &options);
-						fz_drop_bitmap(ctx, bit);
-					}
-					else
-						fz_write_pcl(ctx, pix, buf, append, &options);
-					append = 1;
-				}
-				else if (output_format == OUT_PBM) {
-					fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
-					fz_write_pbm(ctx, bit, buf);
-					fz_drop_bitmap(ctx, bit);
-				}
-				/* SumatraPDF: support TGA as output format */
-				else if (output_format == OUT_TGA)
-					fz_write_tga(ctx, pix, buf, savealpha);
+				ctm.f -= drawheight;
 			}
 
 			if (showmd5)
@@ -894,9 +928,17 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		fz_always(ctx)
 		{
+			if (output)
+			{
+				if (output_format == OUT_PNG)
+					fz_output_png_trailer(output_file, poc);
+			}
+
 			fz_free_device(dev);
 			dev = NULL;
 			fz_drop_pixmap(ctx, pix);
+			if (output_file)
+				fz_close_output(output_file);
 		}
 		fz_catch(ctx)
 		{
@@ -1095,7 +1137,7 @@ int main(int argc, char **argv)
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "lo:F:p:r:R:b:c:dgmtx5G:Iw:h:fij:M")) != -1)
+	while ((c = fz_getopt(argc, argv, "lo:F:p:r:R:b:c:dgmtx5G:Iw:h:fij:MB:")) != -1)
 	{
 		switch (c)
 		{
@@ -1105,6 +1147,7 @@ int main(int argc, char **argv)
 		case 'r': resolution = atof(fz_optarg); res_specified = 1; break;
 		case 'R': rotation = atof(fz_optarg); break;
 		case 'b': alphabits = atoi(fz_optarg); break;
+		case 'B': bandheight = atoi(fz_optarg); break;
 		case 'l': showoutline++; break;
 		case 'm': showtime++; break;
 		case 'M': showmemory++; break;
@@ -1152,6 +1195,12 @@ int main(int argc, char **argv)
 	fz_set_aa_level(ctx, alphabits);
 
 	/* Determine output type */
+	if (bandheight < 0)
+	{
+		fprintf(stderr, "Bandheight must be > 0\n");
+		exit(1);
+	}
+
 	output_format = OUT_PNG;
 	if (format)
 	{
@@ -1187,6 +1236,21 @@ int main(int argc, char **argv)
 				i = 0;
 			}
 		}
+	}
+
+	if (bandheight)
+	{
+		if (output_format != OUT_PAM && output_format != OUT_PGM && output_format != OUT_PPM && output_format != OUT_PNM && output_format != OUT_PNG)
+		{
+			fprintf(stderr, "Banded operation only possible with PAM, PGM, PPM, PNM and PNG outputs\n");
+			exit(1);
+		}
+		if (showmd5)
+		{
+			fprintf(stderr, "Banded operation not compatible with MD5\n");
+			exit(1);
+		}
+
 	}
 
 	{

@@ -22,6 +22,7 @@
 #include "mupdf/fitz/store.h"
 #include "mupdf/fitz/colorspace.h"
 #include "mupdf/fitz/pixmap.h"
+#include "mupdf/fitz/glyph.h"
 #include "mupdf/fitz/bitmap.h"
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/function.h"
