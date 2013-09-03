@@ -1054,50 +1054,68 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     return labels;
 }
 
+struct PageTreeStackItem {
+    pdf_obj *kids;
+    int i, len;
+
+    PageTreeStackItem() : kids(NULL), i(-1), len(0) { }
+    PageTreeStackItem(pdf_obj *kids) : kids(kids), i(-1), len(pdf_array_len(kids)) { }
+};
+
 static void
-pdf_load_page_objs_rec(pdf_document *doc, pdf_obj *node, int *page_no, pdf_obj **page_objs)
+pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
 {
     fz_context *ctx = doc->ctx;
+    int page_no = 0;
 
-    if (pdf_mark_obj(node))
+    Vec<PageTreeStackItem> stack;
+    PageTreeStackItem top(pdf_dict_getp(pdf_trailer(doc), "Root/Pages/Kids"));
+
+    if (pdf_mark_obj(top.kids))
         fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
 
     fz_try(ctx) {
-        pdf_obj *kids = pdf_dict_gets(node, "Kids");
-        int len = pdf_array_len(kids);
-        for (int i = 0; i < len; i++) {
-            pdf_obj *kid = pdf_array_get(kids, i);
+        for (;;) {
+            top.i++;
+            if (top.i == top.len) {
+                pdf_unmark_obj(top.kids);
+                if (stack.Size() == 0)
+                    break;
+                top = stack.Pop();
+                continue;
+            }
+
+            pdf_obj *kid = pdf_array_get(top.kids, top.i);
             char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
             if (str::Eq(type, "Page")) {
-                if (*page_no > pdf_count_pages(doc))
+                if (page_no >= pdf_count_pages(doc))
                     fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
-                page_objs[*page_no - 1] = kid;
-                (*page_no)++;
+
+                page_objs[page_no] = kid;
+                page_no++;
             }
             else if (str::Eq(type, "Pages")) {
                 int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
-                if (count > 0)
-                    pdf_load_page_objs_rec(doc, kid, page_no, page_objs);
+                if (count > 0) {
+                    stack.Push(top);
+                    top = PageTreeStackItem(pdf_dict_gets(kid, "Kids"));
+
+                    if (pdf_mark_obj(top.kids))
+                        fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
+                }
             }
             else {
                 fz_warn(ctx, "non-page object in page tree (%s)", type);
             }
         }
     }
-    fz_always(ctx) {
-        pdf_unmark_obj(node);
-    }
     fz_catch(ctx) {
+        for (size_t i = 0; i < stack.Size(); i++) {
+            pdf_unmark_obj(stack.At(i).kids);
+        }
+        pdf_unmark_obj(top.kids);
         fz_rethrow(ctx);
     }
-}
-
-static void
-pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
-{
-    pdf_obj *pages = pdf_dict_getp(pdf_trailer(doc), "Root/Pages");
-    int page_no = 1;
-    pdf_load_page_objs_rec(doc, pages, &page_no, page_objs);
 }
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
@@ -1132,7 +1150,7 @@ public:
 
     virtual const WCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
-        // make sure that pdf_load_page_tree is called as soon as
+        // make sure that _doc->page_count is initialized as soon as
         // _doc is defined, so that pdf_count_pages can't throw
         return _doc ? pdf_count_pages(_doc) : 0;
     }
@@ -1790,7 +1808,7 @@ pdf_page *PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy)
         ScopedCritSec ctxScope(&ctxAccess);
         fz_var(page);
         fz_try(ctx) {
-            page = pdf_load_page(_doc, pageNo - 1);
+            page = pdf_load_page_by_obj(_doc, pageNo - 1, _pageObjs[pageNo-1]);
             _pages[pageNo-1] = page;
             LinkifyPageText(page);
             pageAnnots[pageNo-1] = ProcessPageAnnotations(page);
@@ -1978,7 +1996,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
 
     ScopedCritSec scope(&ctxAccess);
 
-    // cf. pdf_page.c's pdf_load_page
+    // cf. pdf-page.c's pdf_load_page
     fz_rect mbox = fz_empty_rect, cbox = fz_empty_rect;
     int rotate = 0;
     float userunit = 1.0;
@@ -2004,7 +2022,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     if ((rotate % 90) != 0)
         rotate = 0;
 
-    // cf. pdf_page.c's pdf_bound_page
+    // cf. pdf-page.c's pdf_bound_page
     fz_matrix ctm;
     fz_transform_rect(&mbox, fz_rotate(&ctm, (float)rotate));
 
@@ -2462,7 +2480,7 @@ WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        page = pdf_load_page(_doc, pageNo - 1);
+        page = pdf_load_page_by_obj(_doc, pageNo - 1, _pageObjs[pageNo-1]);
     }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);

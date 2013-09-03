@@ -655,6 +655,7 @@ EXPORTS
 	pdf_lookup_page_obj
 	pdf_lookup_inherited_page_item
 	pdf_load_page
+	pdf_load_page_by_obj
 	pdf_load_links
 	pdf_bound_page
 	pdf_free_page

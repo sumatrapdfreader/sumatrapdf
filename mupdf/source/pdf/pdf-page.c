@@ -355,16 +355,11 @@ pdf_load_transition(pdf_document *doc, pdf_page *page, pdf_obj *transdict)
 	page->transition.type = type;
 }
 
+/* SumatraPDF: allow working around broken pdf_lookup_page_obj */
 pdf_page *
 pdf_load_page(pdf_document *doc, int number)
 {
-	fz_context *ctx = doc->ctx;
-	pdf_page *page;
-	pdf_annot *annot;
-	pdf_obj *pageobj, *pageref, *obj;
-	fz_rect mediabox, cropbox, realbox;
-	float userunit;
-	fz_matrix mat;
+	pdf_obj *pageref;
 
 	if (doc->file_reading_linearly)
 	{
@@ -374,6 +369,23 @@ pdf_load_page(pdf_document *doc, int number)
 	}
 	else
 		pageref = pdf_lookup_page_obj(doc, number);
+
+	return pdf_load_page_by_obj(doc, number, pageref);
+}
+
+
+pdf_page *
+pdf_load_page_by_obj(pdf_document *doc, int number, pdf_obj *pageref)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_page *page;
+	pdf_annot *annot;
+	pdf_obj *pageobj, *obj;
+	fz_rect mediabox, cropbox, realbox;
+	float userunit;
+	fz_matrix mat;
+
+	/* SumatraPDF: allow working around broken pdf_lookup_page_obj */
 	pageobj = pdf_resolve_indirect(pageref);
 
 	page = fz_malloc_struct(ctx, pdf_page);

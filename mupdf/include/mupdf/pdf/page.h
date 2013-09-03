@@ -19,6 +19,9 @@ pdf_obj *pdf_lookup_inherited_page_item(pdf_document *doc, pdf_obj *node, const 
 */
 pdf_page *pdf_load_page(pdf_document *doc, int number);
 
+/* SumatraPDF: allow working around broken pdf_lookup_page_obj */
+pdf_page *pdf_load_page_by_obj(pdf_document *doc, int number, pdf_obj *page_obj);
+
 fz_link *pdf_load_links(pdf_document *doc, pdf_page *page);
 
 /*

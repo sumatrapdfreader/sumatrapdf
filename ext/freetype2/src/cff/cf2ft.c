@@ -499,7 +499,7 @@
                               CF2_UInt      idx,
                               CF2_Buffer    buf )
   {
-    FT_ASSERT( decoder && decoder->globals );
+    FT_ASSERT( decoder && ( decoder->globals || decoder->num_globals == 0 ) );
 
     FT_ZERO( buf );
 
