@@ -957,9 +957,7 @@ cleanup3:
     jbig2_word_stream_buf_free(ctx, ws);
 
 cleanup2:
-    {
-        jbig2_free(ctx->allocator, GR_stats);
-    }
+    jbig2_free(ctx->allocator, GR_stats);
     jbig2_image_release(ctx, image);
 
 cleanup1:
