@@ -284,7 +284,6 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *doc, pdf_obj *stmobj, int nu
 	}
 	fz_catch(ctx)
 	{
-		fz_close(chain);
 		fz_rethrow(ctx);
 	}
 

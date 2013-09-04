@@ -660,8 +660,10 @@ close_aesd(fz_context *ctx, void *state_)
 fz_stream *
 fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 {
-	fz_aesd *state;
+	fz_aesd *state = NULL;
 	fz_context *ctx = chain->ctx;
+
+	fz_var(state);
 
 	fz_try(ctx)
 	{
@@ -675,6 +677,8 @@ fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 	}
 	fz_catch(ctx)
 	{
+		/* SumatraPDF: fix memory leak */
+		fz_free(ctx, state);
 		fz_close(chain);
 		fz_rethrow(ctx);
 	}
