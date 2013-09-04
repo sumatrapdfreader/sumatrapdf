@@ -1,6 +1,7 @@
 #ifndef MUDPF_FITZ_H
 #define MUDPF_FITZ_H
 
+#include "mupdf/fitz/version.h"
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
 

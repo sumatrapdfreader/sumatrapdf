@@ -375,7 +375,6 @@ pdf_parse_action(pdf_document *doc, pdf_obj *action)
 static fz_link *
 pdf_load_link(pdf_document *doc, pdf_obj *dict, const fz_matrix *page_ctm)
 {
-	pdf_obj *dest = NULL;
 	pdf_obj *action;
 	pdf_obj *obj;
 	fz_rect bbox;
@@ -406,20 +405,20 @@ pdf_load_link(pdf_document *doc, pdf_obj *dict, const fz_matrix *page_ctm)
 	if (!obj && !action && (obj = pdf_dict_getp(dict, "RichMediaContent/Configurations")) != NULL)
 	{
 		obj = pdf_dict_gets(pdf_array_get(obj, 0), "Instances");
-		dest = pdf_dict_gets(pdf_array_get(obj, 0), "Asset");
-		if (dest)
+		action = pdf_dict_gets(pdf_array_get(obj, 0), "Asset");
+		if (action)
 		{
 			ld.kind = FZ_LINK_LAUNCH;
-			ld.ld.launch.file_spec = pdf_file_spec_to_str(doc, dest);
+			ld.ld.launch.file_spec = pdf_file_spec_to_str(doc, action);
 			ld.ld.launch.new_window = 1;
 #ifdef _WIN32
-			obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
+			obj = pdf_dict_getsa(pdf_dict_gets(action, "EF"), "DOS", "F");
 #else
-			obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
+			obj = pdf_dict_getsa(pdf_dict_gets(action, "EF"), "Unix", "F");
 #endif
 			ld.ld.launch.embedded_num = pdf_to_num(obj);
 			ld.ld.launch.embedded_gen = pdf_to_gen(obj);
-			ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(dest, "FS")), "URL");
+			ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(action, "FS")), "URL");
 		}
 	}
 	if (ld.kind == FZ_LINK_NONE)

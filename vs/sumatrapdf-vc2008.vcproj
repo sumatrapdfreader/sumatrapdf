@@ -1634,6 +1634,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\mupdf\include\mupdf\fitz\version.h"
+						>
+					</File>
+					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\write-document.h"
 						>
 					</File>

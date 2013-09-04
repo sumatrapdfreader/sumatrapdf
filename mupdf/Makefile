@@ -217,13 +217,17 @@ $(OUT)/cmapdump.o : source/pdf/pdf-cmap.c source/pdf/pdf-cmap-parse.c
 # --- Tools and Apps ---
 
 MUDRAW := $(addprefix $(OUT)/, mudraw)
+MUDRAW_OBJ := $(addprefix $(OUT)/tools/, mudraw.o)
+$(MUDRAW_OBJ) : $(FITZ_HDR)
 $(MUDRAW) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
-$(MUDRAW) : $(addprefix $(OUT)/tools/, mudraw.o)
+$(MUDRAW) : $(MUDRAW_OBJ)
 	$(LINK_CMD)
 
 MUTOOL := $(addprefix $(OUT)/, mutool)
+MUTOOL_OBJ := $(addprefix $(OUT)/tools/, mutool.o pdfclean.o pdfextract.o pdfinfo.o pdfposter.o pdfshow.o)
+$(MUTOOL_OBJ): $(FITZ_HDR) $(PDF_HDR)
 $(MUTOOL) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
-$(MUTOOL) : $(addprefix $(OUT)/tools/, mutool.o pdfclean.o pdfextract.o pdfinfo.o pdfposter.o pdfshow.o)
+$(MUTOOL) : $(MUTOOL_OBJ)
 	$(LINK_CMD)
 
 ifeq "$(V8_PRESENT)" "yes"
@@ -261,6 +265,13 @@ MUVIEW_V8 := $(MUVIEW_X11_V8)
 MUVIEW_CURL := $(MUVIEW_X11_CURL)
 
 INSTALL_APPS := $(MUDRAW) $(MUTOOL) $(MUVIEW) $(MUJSTEST_V8) $(MUVIEW_V8) $(MUVIEW_CURL)
+
+# --- Update version string header ---
+
+VERSION = $(shell git describe --tags)
+
+version:
+	sed -i~ -e '/FZ_VERSION /s/".*"/"'$(VERSION)'"/' include/mupdf/fitz/version.h
 
 # --- Format man pages ---
 

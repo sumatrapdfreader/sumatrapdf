@@ -434,7 +434,7 @@ FITZ_H  = $(INC_DIR)\fitz.h \
 	$(INC_DIR)\fitz\shade.h $(INC_DIR)\fitz\store.h $(INC_DIR)\fitz\stream.h \
 	$(INC_DIR)\fitz\string.h $(INC_DIR)\fitz\structured-text.h $(INC_DIR)\fitz\system.h \
 	$(INC_DIR)\fitz\text.h $(INC_DIR)\fitz\transition.h $(INC_DIR)\fitz\write-document.h \
-	$(INC_DIR)\fitz\xml.h
+	$(INC_DIR)\fitz\xml.h $(INC_DIR)\fitz\glyph.h $(INC_DIR)\fitz\version.h
 
 MUPDF_H = $(INC_DIR)\pdf.h \
 	$(INC_DIR)\pdf\annot.h $(INC_DIR)\pdf\cmap.h $(INC_DIR)\pdf\crypt.h \

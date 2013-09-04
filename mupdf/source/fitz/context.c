@@ -121,9 +121,15 @@ cleanup:
 }
 
 fz_context *
-fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store)
+fz_new_context_imp(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store, const char *version)
 {
 	fz_context *ctx;
+
+	if (strcmp(version, FZ_VERSION))
+	{
+		fprintf(stderr, "cannot create context: incompatible header (%s) and library (%s) versions", version, FZ_VERSION);
+		return NULL;
+	}
 
 	if (!alloc)
 		alloc = &fz_alloc_default;

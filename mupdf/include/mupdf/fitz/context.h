@@ -1,6 +1,7 @@
 #ifndef MUPDF_FITZ_CONTEXT_H
 #define MUPDF_FITZ_CONTEXT_H
 
+#include "mupdf/fitz/version.h"
 #include "mupdf/fitz/system.h"
 
 /*
@@ -155,7 +156,9 @@ enum {
 
 	Does not throw exceptions, but may return NULL.
 */
-fz_context *fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store);
+fz_context *fz_new_context_imp(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store, const char *version);
+
+#define fz_new_context(alloc, locks, max_store) fz_new_context_imp(alloc, locks, max_store, FZ_VERSION)
 
 /*
 	fz_clone_context: Make a clone of an existing context.

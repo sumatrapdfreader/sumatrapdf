@@ -68,7 +68,7 @@ EXPORTS
 	fz_caught
 	fz_rethrow_if
 	fz_flush_warnings
-	fz_new_context
+	fz_new_context_imp
 	fz_clone_context
 	fz_free_context
 	fz_aa_level
@@ -431,6 +431,7 @@ EXPORTS
 	fz_clone_text
 	fz_print_text
 	fz_generate_transition
+
 
 	fz_parse_xml
 	fz_xml_next
