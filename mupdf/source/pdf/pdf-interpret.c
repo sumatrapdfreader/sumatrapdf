@@ -400,7 +400,7 @@ struct softmask_save_s
 };
 
 static pdf_gstate *
-begin_softmask(pdf_csi * csi, softmask_save *save, int for_group)
+begin_softmask(pdf_csi * csi, softmask_save *save)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_xobject *softmask = gstate->softmask;
@@ -466,14 +466,6 @@ begin_softmask(pdf_csi * csi, softmask_save *save, int for_group)
 
 	gstate = csi->gstate + csi->gtop;
 	gstate->ctm = save_ctm;
-	/* SumatraPDF: fix memory leak */
-	gstate->softmask = save->softmask;
-	/* SumatraPDF: fix regression in Bug6901014_CityMap-evince.pdf */
-	if (!for_group)
-	{
-		gstate->softmask = NULL;
-		pdf_drop_xobject(ctx, save->softmask);
-	}
 
 	return gstate;
 }
@@ -486,6 +478,7 @@ end_softmask(pdf_csi *csi, softmask_save *save)
 	if (save->softmask == NULL)
 		return;
 
+	gstate->softmask = save->softmask;
 	gstate->softmask_ctm = save->ctm;
 	fz_pop_clip(csi->dev);
 }
@@ -493,7 +486,7 @@ end_softmask(pdf_csi *csi, softmask_save *save)
 static void
 pdf_begin_group(pdf_csi *csi, const fz_rect *bbox, softmask_save *softmask)
 {
-	pdf_gstate *gstate = begin_softmask(csi, softmask, 1);
+	pdf_gstate *gstate = begin_softmask(csi, softmask);
 
 	/* SumatraPDF: support transfer functions */
 	if (gstate->blendmode || gstate->tr)
@@ -1665,7 +1658,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 		{
 			fz_rect bbox = xobj->bbox;
 			fz_transform_rect(&bbox, &gstate->ctm);
-			gstate = begin_softmask(csi, &softmask, 0);
+			gstate = begin_softmask(csi, &softmask);
 
 			fz_begin_group(csi->dev, &bbox,
 				xobj->isolated, xobj->knockout, gstate->blendmode, gstate->fill.alpha);
@@ -1675,8 +1668,9 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 			gstate->fill.alpha = 1;
 		}
 
-		/* clip to the bounds */
+		pdf_gsave(csi); /* Save here so the clippath doesn't persist */
 
+		/* clip to the bounds */
 		fz_moveto(ctx, csi->path, xobj->bbox.x0, xobj->bbox.y0);
 		fz_lineto(ctx, csi->path, xobj->bbox.x1, xobj->bbox.y0);
 		fz_lineto(ctx, csi->path, xobj->bbox.x1, xobj->bbox.y1);
@@ -1694,6 +1688,15 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	}
 	fz_always(ctx)
 	{
+		pdf_grestore(csi); /* Remove the clippath */
+
+		/* wrap up transparency stacks */
+		if (xobj->transparency)
+		{
+			fz_end_group(csi->dev);
+			end_softmask(csi, &softmask);
+		}
+
 		csi->gstate[csi->gparent].ctm = gparent_save_ctm;
 		csi->gparent = gparent_save;
 
@@ -1706,13 +1709,6 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 		}
 
 		pdf_unmark_obj(xobj->me);
-
-		/* wrap up transparency stacks */
-		if (xobj->transparency)
-		{
-			fz_end_group(csi->dev);
-			end_softmask(csi, &softmask);
-		}
 	}
 	fz_catch(ctx)
 	{
