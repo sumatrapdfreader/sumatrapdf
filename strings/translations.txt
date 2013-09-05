@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-68addf969b9ab15e4e00130cbacf8d9b66372d6b
+d1fd1158e3a07df3d3f640339d093d702dd18cd5
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -4393,7 +4393,7 @@ vn:Chỉ dấu sách
 :Bytes
 am:Բայթ
 ar:بايت
-az:Bayt
+az:bayt
 bg:Байтове
 bn:বাইটসমূহ
 br:Bytes
