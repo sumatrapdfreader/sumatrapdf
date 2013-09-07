@@ -688,10 +688,16 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		FILE *file;
 		fz_output *out;
 
-		sprintf(buf, output, pagenum);
-		file = fopen(buf, "wb");
-		if (file == NULL)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file '%s': %s", buf, strerror(errno));
+		if (!strcmp(output, "-"))
+			file = stdout;
+		else
+		{
+			sprintf(buf, output, pagenum);
+			file = fopen(buf, "wb");
+			if (file == NULL)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file '%s': %s", buf, strerror(errno));
+		}
+
 		out = fz_new_output_with_file(ctx, file);
 
 		fz_bound_page(doc, page, &bounds);
@@ -715,7 +721,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			fz_free_device(dev);
 			dev = NULL;
 			fz_close_output(out);
-			fclose(file);
+			if (file != stdout)
+				fclose(file);
 		}
 		fz_catch(ctx)
 		{
@@ -830,8 +837,14 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 			if (output)
 			{
-				sprintf(filename_buf, output, pagenum);
-				output_file = fz_new_output_to_filename(ctx, filename_buf);
+				if (!strcmp(output, "-"))
+					output_file = fz_new_output_with_file(ctx, stdout);
+				else
+				{
+					sprintf(filename_buf, output, pagenum);
+					output_file = fz_new_output_to_filename(ctx, filename_buf);
+				}
+
 				if (output_format == OUT_PGM || output_format == OUT_PPM || output_format == OUT_PNM)
 					fz_output_pnm_header(output_file, pix->w, totalheight, pix->n);
 				else if (output_format == OUT_PAM)

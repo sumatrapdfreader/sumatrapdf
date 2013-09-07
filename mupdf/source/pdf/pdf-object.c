@@ -1286,6 +1286,7 @@ pdf_obj_memo(pdf_obj *obj, int *memo)
 
 int pdf_obj_is_dirty(pdf_obj *obj)
 {
+	RESOLVE(obj);
 	if (!obj)
 		return 0;
 	return !!(obj->flags & PDF_FLAGS_DIRTY);
@@ -1293,6 +1294,7 @@ int pdf_obj_is_dirty(pdf_obj *obj)
 
 void pdf_dirty_obj(pdf_obj *obj)
 {
+	RESOLVE(obj);
 	if (!obj)
 		return;
 	obj->flags |= PDF_FLAGS_DIRTY;
