@@ -1337,6 +1337,14 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *doc, pdf_obj *di
 		if (fontdesc->descent == 0.0f)
 			fontdesc->descent = 1000.0f * face->descender / face->units_per_EM;
 	}
+
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2404 */
+	if (!(fontdesc->flags & PDF_FD_SYMBOLIC) &&
+		face && face->num_charmaps > 0 && face->charmaps[0]->encoding == FT_ENCODING_MS_SYMBOL &&
+		!strncmp(fontdesc->font->name, "Symbol", 6))
+	{
+		fontdesc->flags |= PDF_FD_SYMBOLIC;
+	}
 }
 
 static void
