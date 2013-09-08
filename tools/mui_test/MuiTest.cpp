@@ -9,6 +9,8 @@
 
 #include "DebugLog.h"
 
+//#include <d3d10_1.h>
+
 using namespace Gdiplus;
 
 // point is a pixel * dpi factor, where 1 pixel == 1 point at 72 dpi
@@ -152,26 +154,48 @@ void InitGraphicsMode(Graphics *g)
     g->SetPixelOffsetMode(PixelOffsetModeHalf);
 }
 
-class GdiplusGfx : public Gfx
+class GfxDirectDraw : public Gfx
+{
+
+public:
+    GfxDirectDraw(HDC dc) {
+    }
+    virtual ~GfxDirectDraw() {
+    }
+    virtual void DrawRect(const GfxRect& r, GfxCol col, float width);
+    virtual void DrawFilledRect(const GfxRect& r, GfxCol col);
+};
+
+void GfxDirectDraw::DrawRect(const GfxRect& r, GfxCol col, float width)
+{
+
+}
+
+void GfxDirectDraw::DrawFilledRect(const GfxRect& r, GfxCol col)
+{
+
+}
+
+class GfxGdiPlus : public Gfx
 {
     Gdiplus::Graphics *g;
     HDC dc;
 
 public:
-    GdiplusGfx(HDC dc) {
+    GfxGdiPlus(HDC dc) {
         g = Gdiplus::Graphics::FromHDC(dc);
         InitGraphicsMode(g);
         PixelOffsetMode pm = g->GetPixelOffsetMode();
         plogf("pm = %d", (int)pm);
     }
-    virtual ~GdiplusGfx() {
+    virtual ~GfxGdiPlus() {
         delete g;
     }
     virtual void DrawRect(const GfxRect& r, GfxCol col, float width);
     virtual void DrawFilledRect(const GfxRect& r, GfxCol col);
 };
 
-void GdiplusGfx::DrawFilledRect(const GfxRect& r, GfxCol col)
+void GfxGdiPlus::DrawFilledRect(const GfxRect& r, GfxCol col)
 {
     SolidBrush br(GfxColToARGB(col));
 #if 0
@@ -185,7 +209,7 @@ void GdiplusGfx::DrawFilledRect(const GfxRect& r, GfxCol col)
     g->FillRectangle(&br, r2);
 }
 
-void GdiplusGfx::DrawRect(const GfxRect& r, GfxCol col, float width)
+void GfxGdiPlus::DrawRect(const GfxRect& r, GfxCol col, float width)
 {
     Pen p(Color(GfxColToARGB(col)), width);
     PenAlignment a = p.GetAlignment();
@@ -204,9 +228,9 @@ void GdiplusGfx::DrawRect(const GfxRect& r, GfxCol col, float width)
     g->DrawRectangle(&p, r2);
 }
 
-Gfx *CreateGdiplusGfx(HDC dc)
+Gfx *CreateGfxGdiPlus(HDC dc)
 {
-    return new GdiplusGfx(dc);
+    return new GfxGdiPlus(dc);
 }
 
 class Painter
@@ -221,7 +245,7 @@ void Painter::OnWmPaint(HWND hwnd)
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
 
-    gfx = CreateGdiplusGfx(dc);
+    gfx = CreateGfxGdiPlus(dc);
     ClientRect cr(hwnd);
     gfx->SetSize(cr.dx, cr.dy); // TODO: get it from HDC and set during creation
 
