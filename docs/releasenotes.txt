@@ -5,6 +5,8 @@ Next version:
 
 2.4 (????-??-???):
 
+* F9 - show/hide menu
+* F8 - show/hide toolbar
 * support screen readers etc. via UI automation (disabled in release builds)
 * support WebP images
 

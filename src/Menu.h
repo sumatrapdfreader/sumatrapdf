@@ -38,6 +38,7 @@ void  OnMenuCustomZoom(WindowInfo* win);
 UINT  MenuIdFromVirtualZoom(float virtualZoom);
 void  UpdateMenu(WindowInfo *win, HMENU m);
 void  UpdateMenu(EbookWindow *win, HMENU m);
+void  ShowHideMenuBar(WindowInfo *win);
 
 /* Define if you want to display an additional debug menu */
 #if defined(DEBUG)

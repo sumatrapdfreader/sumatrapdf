@@ -91,7 +91,7 @@ static MenuDef menuDefView[] = {
     { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
-    { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0 },
+    { _TRN("Show &Toolbar"),            IDM_VIEW_SHOW_HIDE_TOOLBAR, 0 },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
@@ -720,4 +720,21 @@ void UpdateMenu(EbookWindow *win, HMENU m)
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
         RebuildFileMenuForEbookUI(m, win);
+}
+
+// show/hide top-level menu bar. This doesn't persist across launches
+// so that accidental removal of the menu isn't catastrophic
+void ShowHideMenuBar(WindowInfo *win)
+{
+    if (win->presentation || win->fullScreen)
+        return;
+
+    CrashIf(!win->menu);
+    HWND hwnd = win->hwndFrame;
+    HMENU m = GetMenu(hwnd);
+    if (m) {
+        SetMenu(hwnd, NULL);
+    } else {
+        SetMenu(hwnd, win->menu);
+    }
 }

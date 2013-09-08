@@ -4996,6 +4996,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             OnMenuViewShowHideToolbar();
             break;
 
+        case IDM_VIEW_SHOW_HIDE_MENUBAR:
+            ShowHideMenuBar(win);
+            break;
+
         case IDM_CHANGE_LANGUAGE:
             OnMenuChangeLanguage(win->hwndFrame);
             break;
