@@ -75,37 +75,37 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, float fla
 	float cy = 0;
 	float bx = 0;
 	float by = 0;
-	int i = 0;
+	int i = 0, k = 0;
 
-	while (i < path->len)
+	while (i < path->cmd_len)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
 			/* implicit closepath before moveto */
 			if (cx != bx || cy != by)
 				line(gel, ctm, cx, cy, bx, by);
-			x1 = path->items[i++].v;
-			y1 = path->items[i++].v;
+			x1 = path->coords[k++];
+			y1 = path->coords[k++];
 			cx = bx = x1;
 			cy = by = y1;
 			break;
 
 		case FZ_LINETO:
-			x1 = path->items[i++].v;
-			y1 = path->items[i++].v;
+			x1 = path->coords[k++];
+			y1 = path->coords[k++];
 			line(gel, ctm, cx, cy, x1, y1);
 			cx = x1;
 			cy = y1;
 			break;
 
 		case FZ_CURVETO:
-			x1 = path->items[i++].v;
-			y1 = path->items[i++].v;
-			x2 = path->items[i++].v;
-			y2 = path->items[i++].v;
-			x3 = path->items[i++].v;
-			y3 = path->items[i++].v;
+			x1 = path->coords[k++];
+			y1 = path->coords[k++];
+			x2 = path->coords[k++];
+			y2 = path->coords[k++];
+			x3 = path->coords[k++];
+			y3 = path->coords[k++];
 			bezier(gel, ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3, 0);
 			cx = x3;
 			cy = y3;
@@ -550,7 +550,7 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3;
-	int i;
+	int i, k;
 
 	s.gel = gel;
 	s.ctm = ctm;
@@ -572,39 +572,38 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke
 
 	s.cap = stroke->start_cap;
 
-	i = 0;
-
-	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
+	if (path->cmd_len > 0 && path->cmds[0] != FZ_MOVETO)
 		return;
 
 	p0.x = p0.y = 0;
 
-	while (i < path->len)
+	i = k = 0;
+	while (i < path->cmd_len)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
 			fz_stroke_flush(&s, stroke->start_cap, stroke->end_cap);
 			fz_stroke_moveto(&s, p1);
 			p0 = p1;
 			break;
 
 		case FZ_LINETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
 			fz_stroke_lineto(&s, p1, 0);
 			p0 = p1;
 			break;
 
 		case FZ_CURVETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
-			p2.x = path->items[i++].v;
-			p2.y = path->items[i++].v;
-			p3.x = path->items[i++].v;
-			p3.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
+			p2.x = path->coords[k++];
+			p2.y = path->coords[k++];
+			p3.x = path->coords[k++];
+			p3.y = path->coords[k++];
 			fz_stroke_bezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0);
 			p0 = p3;
 			break;
@@ -757,7 +756,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	struct sctx s;
 	fz_point p0, p1, p2, p3, beg;
 	float phase_len, max_expand;
-	int i;
+	int i, k;
 
 	s.gel = gel;
 	s.ctm = ctm;
@@ -779,7 +778,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 
 	s.cap = stroke->start_cap;
 
-	if (path->len > 0 && path->items[0].k != FZ_MOVETO)
+	if (path->cmd_len > 0 && path->cmds[0] != FZ_MOVETO)
 		return;
 
 	phase_len = 0;
@@ -796,33 +795,33 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	}
 
 	p0.x = p0.y = 0;
-	i = 0;
+	i = k = 0;
 
-	while (i < path->len)
+	while (i < path->cmd_len)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
 			fz_dash_moveto(&s, p1, stroke->start_cap, stroke->end_cap);
 			beg = p0 = p1;
 			break;
 
 		case FZ_LINETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
 			fz_dash_lineto(&s, p1, stroke->dash_cap, 0);
 			p0 = p1;
 			break;
 
 		case FZ_CURVETO:
-			p1.x = path->items[i++].v;
-			p1.y = path->items[i++].v;
-			p2.x = path->items[i++].v;
-			p2.y = path->items[i++].v;
-			p3.x = path->items[i++].v;
-			p3.y = path->items[i++].v;
+			p1.x = path->coords[k++];
+			p1.y = path->coords[k++];
+			p2.x = path->coords[k++];
+			p2.y = path->coords[k++];
+			p3.x = path->coords[k++];
+			p3.y = path->coords[k++];
 			fz_dash_bezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0, stroke->dash_cap);
 			p0 = p3;
 			break;

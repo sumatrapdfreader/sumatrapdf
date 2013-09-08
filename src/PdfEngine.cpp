@@ -630,10 +630,10 @@ static void fz_inspection_handle_path(fz_device *dev, fz_path *path, bool clippi
 {
     ListInspectionData *data = (ListInspectionData *)dev->user;
     if (!clipping)
-        data->path_len += path->len;
+        data->path_len += path->cmd_len + path->coord_len;
     else
-        data->clip_path_len += path->len;
-    data->mem_estimate += path->cap * sizeof(fz_path_item);
+        data->clip_path_len += path->cmd_len + path->coord_len;
+    data->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
 }
 
 static void fz_inspection_handle_text(fz_device *dev, fz_text *text)
@@ -644,7 +644,7 @@ static void fz_inspection_handle_text(fz_device *dev, fz_text *text)
 static void fz_inspection_handle_image(fz_device *dev, fz_image *image)
 {
     int n = image->colorspace ? image->colorspace->n + 1 : 1;
-    ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * n;
+    ((ListInspectionData *)dev->user)->mem_estimate += sizeof(fz_image) + image->w * image->h * n;
 }
 
 extern "C" static void

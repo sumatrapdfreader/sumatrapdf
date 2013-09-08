@@ -367,30 +367,30 @@ pdf_dev_path(pdf_device *pdev, fz_path *path)
 	fz_context *ctx = pdev->ctx;
 	gstate *gs = CURRENT_GSTATE(pdev);
 	float x, y;
-	int i = 0;
-	while (i < path->len)
+	int i = 0, k = 0;
+	while (i < path->cmd_len)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_buffer_printf(ctx, gs->buf, "%f %f m\n", x, y);
 			break;
 		case FZ_LINETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_buffer_printf(ctx, gs->buf, "%f %f l\n", x, y);
 			break;
 		case FZ_CURVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_buffer_printf(ctx, gs->buf, "%f %f ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_buffer_printf(ctx, gs->buf, "%f %f ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_buffer_printf(ctx, gs->buf, "%f %f c\n", x, y);
 			break;
 		case FZ_CLOSE_PATH:

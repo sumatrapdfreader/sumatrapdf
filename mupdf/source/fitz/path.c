@@ -7,10 +7,11 @@ fz_new_path(fz_context *ctx)
 	fz_path *path;
 
 	path = fz_malloc_struct(ctx, fz_path);
-	path->len = 0;
-	path->cap = 0;
-	path->items = NULL;
-	path->last = -1;
+	path->last_cmd = 0;
+	path->current.x = 0;
+	path->current.y = 0;
+	path->begin.x = 0;
+	path->begin.y = 0;
 
 	return path;
 }
@@ -24,13 +25,20 @@ fz_clone_path(fz_context *ctx, fz_path *old)
 	path = fz_malloc_struct(ctx, fz_path);
 	fz_try(ctx)
 	{
-		path->len = old->len;
-		path->cap = old->len;
-		path->items = fz_malloc_array(ctx, path->cap, sizeof(fz_path_item));
-		memcpy(path->items, old->items, sizeof(fz_path_item) * path->len);
+		path->cmd_len = old->cmd_len;
+		path->cmd_cap = old->cmd_len;
+		path->cmds = fz_malloc_array(ctx, path->cmd_cap, sizeof(unsigned char));
+		memcpy(path->cmds, old->cmds, sizeof(unsigned char) * path->cmd_len);
+
+		path->coord_len = old->coord_len;
+		path->coord_cap = old->coord_len;
+		path->coords = fz_malloc_array(ctx, path->coord_cap, sizeof(float));
+		memcpy(path->coords, old->coords, sizeof(float) * path->coord_len);
 	}
 	fz_catch(ctx)
 	{
+		fz_free(ctx, path->cmds);
+		fz_free(ctx, path->coords);
 		fz_free(ctx, path);
 		fz_rethrow(ctx);
 	}
@@ -43,101 +51,86 @@ fz_free_path(fz_context *ctx, fz_path *path)
 {
 	if (path == NULL)
 		return;
-	fz_free(ctx, path->items);
+	fz_free(ctx, path->cmds);
+	fz_free(ctx, path->coords);
 	fz_free(ctx, path);
 }
 
 static void
-grow_path(fz_context *ctx, fz_path *path, int n)
+push_cmd(fz_context *ctx, fz_path *path, int cmd)
 {
-	int newcap = path->cap;
-	if (path->len + n <= path->cap)
+	if (path->cmd_len + 1 >= path->cmd_cap)
 	{
-		path->last = path->len;
-		return;
+		int new_cmd_cap = fz_maxi(16, path->cmd_cap * 2);
+		path->cmds = fz_resize_array(ctx, path->cmds, new_cmd_cap, sizeof(unsigned char));
+		path->cmd_cap = new_cmd_cap;
 	}
-	while (path->len + n > newcap)
-		newcap = newcap + 36;
-	path->items = fz_resize_array(ctx, path->items, newcap, sizeof(fz_path_item));
-	path->cap = newcap;
-	path->last = path->len;
+
+	path->cmds[path->cmd_len++] = cmd;
+	path->last_cmd = cmd;
+}
+
+static void
+push_coord(fz_context *ctx, fz_path *path, float x, float y)
+{
+	if (path->coord_len + 2 >= path->coord_cap)
+	{
+		int new_coord_cap = fz_maxi(32, path->coord_cap * 2);
+		path->coords = fz_resize_array(ctx, path->coords, new_coord_cap, sizeof(float));
+		path->coord_cap = new_coord_cap;
+	}
+
+	path->coords[path->coord_len++] = x;
+	path->coords[path->coord_len++] = y;
+
+	path->current.x = x;
+	path->current.y = y;
 }
 
 fz_point
 fz_currentpoint(fz_context *ctx, fz_path *path)
 {
-	fz_point c, m;
-	int i;
-
-	c.x = c.y = m.x = m.y = 0;
-	i = 0;
-
-	while (i < path->len)
-	{
-		switch (path->items[i++].k)
-		{
-		case FZ_MOVETO:
-			m.x = c.x = path->items[i++].v;
-			m.y = c.y = path->items[i++].v;
-			break;
-		case FZ_LINETO:
-			c.x = path->items[i++].v;
-			c.y = path->items[i++].v;
-			break;
-		case FZ_CURVETO:
-			i += 4;
-			c.x = path->items[i++].v;
-			c.y = path->items[i++].v;
-			break;
-		case FZ_CLOSE_PATH:
-			c = m;
-		}
-	}
-
-	return c;
+	return path->current;
 }
 
 void
 fz_moveto(fz_context *ctx, fz_path *path, float x, float y)
 {
-	if (path->last >= 0 && path->items[path->last].k == FZ_MOVETO)
+	if (path->cmd_len > 0 && path->last_cmd == FZ_MOVETO)
 	{
-		/* No point in having MOVETO then MOVETO */
-		path->len = path->last;
+		/* Collapse moveto followed by moveto. */
+		path->coords[path->coord_len-2] = x;
+		path->coords[path->coord_len-1] = y;
+		path->current.x = x;
+		path->current.y = y;
+		path->begin = path->current;
+		return;
 	}
-	grow_path(ctx, path, 3);
-	path->items[path->len++].k = FZ_MOVETO;
-	path->items[path->len++].v = x;
-	path->items[path->len++].v = y;
+
+	push_cmd(ctx, path, FZ_MOVETO);
+	push_coord(ctx, path, x, y);
+
+	path->begin = path->current;
 }
 
 void
 fz_lineto(fz_context *ctx, fz_path *path, float x, float y)
 {
-	float x0, y0;
+	float x0 = path->current.x;
+	float y0 = path->current.y;
 
-	if (path->last < 0)
+	if (path->cmd_len == 0)
 	{
 		fz_warn(ctx, "lineto with no current point");
 		return;
 	}
-	if (path->items[path->last].k == FZ_CLOSE_PATH)
-	{
-		x0 = path->items[path->last-2].v;
-		y0 = path->items[path->last-1].v;
-	}
-	else
-	{
-		x0 = path->items[path->len-2].v;
-		y0 = path->items[path->len-1].v;
-	}
+
 	/* Anything other than MoveTo followed by LineTo the same place is a nop */
-	if (path->items[path->last].k != FZ_MOVETO && x0 == x && y0 == y)
+	if (path->last_cmd != FZ_MOVETO && x0 == x && y0 == y)
 		return;
-	grow_path(ctx, path, 3);
-	path->items[path->len++].k = FZ_LINETO;
-	path->items[path->len++].v = x;
-	path->items[path->len++].v = y;
+
+	push_cmd(ctx, path, FZ_LINETO);
+	push_coord(ctx, path, x, y);
 }
 
 void
@@ -146,22 +139,13 @@ fz_curveto(fz_context *ctx, fz_path *path,
 	float x2, float y2,
 	float x3, float y3)
 {
-	float x0, y0;
+	float x0 = path->current.x;
+	float y0 = path->current.y;
 
-	if (path->last < 0)
+	if (path->cmd_len == 0)
 	{
 		fz_warn(ctx, "curveto with no current point");
 		return;
-	}
-	if (path->items[path->last].k == FZ_CLOSE_PATH)
-	{
-		x0 = path->items[path->last-2].v;
-		y0 = path->items[path->last-1].v;
-	}
-	else
-	{
-		x0 = path->items[path->len-2].v;
-		y0 = path->items[path->len-1].v;
 	}
 
 	/* Check for degenerate cases: */
@@ -170,7 +154,7 @@ fz_curveto(fz_context *ctx, fz_path *path,
 		if (x2 == x3 && y2 == y3)
 		{
 			/* If (x1,y1)==(x2,y2) and prev wasn't a moveto, then skip */
-			if (x1 == x2 && y1 == y2 && path->items[path->last].k != FZ_MOVETO)
+			if (x1 == x2 && y1 == y2 && path->last_cmd != FZ_MOVETO)
 				return;
 			/* Otherwise a line will suffice */
 			fz_lineto(ctx, path, x3, y3);
@@ -190,35 +174,24 @@ fz_curveto(fz_context *ctx, fz_path *path,
 		return;
 	}
 
-	grow_path(ctx, path, 7);
-	path->items[path->len++].k = FZ_CURVETO;
-	path->items[path->len++].v = x1;
-	path->items[path->len++].v = y1;
-	path->items[path->len++].v = x2;
-	path->items[path->len++].v = y2;
-	path->items[path->len++].v = x3;
-	path->items[path->len++].v = y3;
+	push_cmd(ctx, path, FZ_CURVETO);
+	push_coord(ctx, path, x1, y1);
+	push_coord(ctx, path, x2, y2);
+	push_coord(ctx, path, x3, y3);
 }
 
 void
 fz_curvetov(fz_context *ctx, fz_path *path, float x2, float y2, float x3, float y3)
 {
-	float x1, y1;
-	if (path->last < 0)
+	float x1 = path->current.x;
+	float y1 = path->current.y;
+
+	if (path->cmd_len == 0)
 	{
 		fz_warn(ctx, "curvetov with no current point");
 		return;
 	}
-	if (path->items[path->last].k == FZ_CLOSE_PATH)
-	{
-		x1 = path->items[path->last-2].v;
-		y1 = path->items[path->last-1].v;
-	}
-	else
-	{
-		x1 = path->items[path->len-2].v;
-		y1 = path->items[path->len-1].v;
-	}
+
 	fz_curveto(ctx, path, x1, y1, x2, y2, x3, y3);
 }
 
@@ -231,16 +204,19 @@ fz_curvetoy(fz_context *ctx, fz_path *path, float x1, float y1, float x3, float 
 void
 fz_closepath(fz_context *ctx, fz_path *path)
 {
-	if (path->last < 0)
+	if (path->cmd_len == 0)
 	{
 		fz_warn(ctx, "closepath with no current point");
 		return;
 	}
+
 	/* CLOSE following a CLOSE is a NOP */
-	if (path->items[path->last].k == FZ_CLOSE_PATH)
+	if (path->last_cmd == FZ_CLOSE_PATH)
 		return;
-	grow_path(ctx, path, 1);
-	path->items[path->len++].k = FZ_CLOSE_PATH;
+
+	push_cmd(ctx, path, FZ_CLOSE_PATH);
+
+	path->current = path->begin;
 }
 
 static inline fz_rect *bound_expand(fz_rect *r, const fz_point *p)
@@ -256,55 +232,51 @@ fz_rect *
 fz_bound_path(fz_context *ctx, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r)
 {
 	fz_point p;
-	int i = 0;
+	int i = 0, k = 0;
 
 	/* If the path is empty, return the empty rectangle here - don't wait
-	 * for it to be expanded in the stroked case below. */
-	if (path->len == 0)
-	{
-		*r = fz_empty_rect;
-		return r;
-	}
-	/* A path must start with a moveto - and if that's all there is
+	 * for it to be expanded in the stroked case below.
+	 * A path must start with a moveto - and if that's all there is
 	 * then the path is empty. */
-	if (path->len == 3)
+	if (path->cmd_len == 0 || path->cmd_len == 1)
 	{
 		*r = fz_empty_rect;
 		return r;
 	}
 
-	p.x = path->items[1].v;
-	p.y = path->items[2].v;
+	/* Initial moveto point */
+	p.x = path->coords[0];
+	p.y = path->coords[1];
 	fz_transform_point(&p, ctm);
 	r->x0 = r->x1 = p.x;
 	r->y0 = r->y1 = p.y;
 
-	while (i < path->len)
+	while (i < path->cmd_len)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_CURVETO:
-			p.x = path->items[i++].v;
-			p.y = path->items[i++].v;
+			p.x = path->coords[k++];
+			p.y = path->coords[k++];
 			bound_expand(r, fz_transform_point(&p, ctm));
-			p.x = path->items[i++].v;
-			p.y = path->items[i++].v;
+			p.x = path->coords[k++];
+			p.y = path->coords[k++];
 			bound_expand(r, fz_transform_point(&p, ctm));
-			p.x = path->items[i++].v;
-			p.y = path->items[i++].v;
+			p.x = path->coords[k++];
+			p.y = path->coords[k++];
 			bound_expand(r, fz_transform_point(&p, ctm));
 			break;
 		case FZ_MOVETO:
-			if (i + 2 == path->len)
+			if (k + 2 == path->coord_len)
 			{
 				/* Trailing Moveto - cannot affect bbox */
-				i += 2;
+				k += 2;
 				break;
 			}
 			/* fallthrough */
 		case FZ_LINETO:
-			p.x = path->items[i++].v;
-			p.y = path->items[i++].v;
+			p.x = path->coords[k++];
+			p.y = path->coords[k++];
 			bound_expand(r, fz_transform_point(&p, ctm));
 			break;
 		case FZ_CLOSE_PATH:
@@ -346,28 +318,9 @@ fz_adjust_rect_for_stroke(fz_rect *r, const fz_stroke_state *stroke, const fz_ma
 void
 fz_transform_path(fz_context *ctx, fz_path *path, const fz_matrix *ctm)
 {
-	int k, i = 0;
-
-	while (i < path->len)
-	{
-		switch (path->items[i++].k)
-		{
-		case FZ_CURVETO:
-			for (k = 0; k < 3; k++)
-			{
-				fz_transform_point((fz_point *)(void *)&path->items[i].v, ctm);
-				i += 2;
-			}
-			break;
-		case FZ_MOVETO:
-		case FZ_LINETO:
-			fz_transform_point((fz_point *)(void *)&path->items[i].v, ctm);
-			i += 2;
-			break;
-		case FZ_CLOSE_PATH:
-			break;
-		}
-	}
+	int i;
+	for (i = 0; i < path->coord_len; i += 2)
+		fz_transform_point((fz_point *)&path->coords[i], ctm);
 }
 
 #ifndef NDEBUG
@@ -375,33 +328,33 @@ void
 fz_print_path(fz_context *ctx, FILE *out, fz_path *path, int indent)
 {
 	float x, y;
-	int i = 0;
+	int i = 0, k = 0;
 	int n;
-	while (i < path->len)
+	while (i < path->cmd_len)
 	{
 		for (n = 0; n < indent; n++)
 			fputc(' ', out);
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fprintf(out, "%g %g m\n", x, y);
 			break;
 		case FZ_LINETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fprintf(out, "%g %g l\n", x, y);
 			break;
 		case FZ_CURVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fprintf(out, "%g %g ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fprintf(out, "%g %g ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fprintf(out, "%g %g c\n", x, y);
 			break;
 		case FZ_CLOSE_PATH:

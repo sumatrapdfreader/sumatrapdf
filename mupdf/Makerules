@@ -3,6 +3,7 @@
 OS ?= $(shell uname)
 OS := $(OS:MINGW%=MINGW)
 OS := $(OS:Windows_NT=MINGW)
+OS := $(OS:Darwin=MACOS)
 
 CFLAGS += -Wall
 
@@ -29,7 +30,7 @@ ifeq "$(OS)" "MINGW"
 NOX11 ?= yes
 
 # Mac OS X doesn't have pkg-config so we hard code paths.
-else ifeq "$(OS)" "Darwin"
+else ifeq "$(OS)" "MACOS"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
 SYS_OPENSSL_LIBS = -lcrypto
 
@@ -45,10 +46,13 @@ SYS_JBIG2DEC_LIBS = -ljbig2dec
 SYS_JPEG_LIBS = -ljpeg
 SYS_ZLIB_LIBS = -lz
 
-RANLIB_CMD = ranlib $@
+CC = xcrun cc
+AR = xcrun ar
+LD = xcrun ld
+RANLIB_CMD = xcrun ranlib $@
 
-# Other Unixes use pkg-config for system libraries.
-else
+# Linux uses pkg-config for system libraries.
+else ifeq "$(OS)" "Linux"
 
 ifeq "$(shell pkg-config --exists libcrypto && echo yes)" "yes"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL $(shell pkg-config --cflags libcrypto)
@@ -126,9 +130,10 @@ endif
 # The following section works for both device and simulator builds.
 
 ifeq "$(OS)" "ios"
-CC = $(PLATFORM_DEVELOPER_BIN_DIR)/gcc
-AR = $(PLATFORM_DEVELOPER_BIN_DIR)/ar
-RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
+CC = xcrun cc
+AR = xcrun ar
+LD = xcrun ld
+RANLIB_CMD = xcrun ranlib $@
 CROSSCOMPILE=yes
 endif
 

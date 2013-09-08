@@ -17,14 +17,12 @@
 typedef struct fz_path_s fz_path;
 typedef struct fz_stroke_state_s fz_stroke_state;
 
-typedef union fz_path_item_s fz_path_item;
-
-typedef enum fz_path_item_kind_e
+typedef enum fz_path_command_e
 {
-	FZ_MOVETO,
-	FZ_LINETO,
-	FZ_CURVETO,
-	FZ_CLOSE_PATH
+	FZ_MOVETO = 'M',
+	FZ_LINETO = 'L',
+	FZ_CURVETO = 'C',
+	FZ_CLOSE_PATH = 'Z',
 } fz_path_item_kind;
 
 typedef enum fz_linecap_e
@@ -43,17 +41,15 @@ typedef enum fz_linejoin_e
 	FZ_LINEJOIN_MITER_XPS = 3
 } fz_linejoin;
 
-union fz_path_item_s
-{
-	fz_path_item_kind k;
-	float v;
-};
-
 struct fz_path_s
 {
-	int len, cap;
-	fz_path_item *items;
-	int last;
+	int cmd_len, cmd_cap;
+	unsigned char *cmds;
+	int coord_len, coord_cap;
+	float *coords;
+	fz_point current;
+	fz_point begin;
+	int last_cmd;
 };
 
 struct fz_stroke_state_s

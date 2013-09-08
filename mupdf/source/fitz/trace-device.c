@@ -30,33 +30,32 @@ static void
 fz_trace_path(fz_path *path, int indent)
 {
 	float x, y;
-	int i = 0;
-	int n;
-	while (i < path->len)
+	int i = 0, k = 0, n;
+	while (i < path->cmd_len)
 	{
 		for (n = 0; n < indent; n++)
 			putchar(' ');
-		switch (path->items[i++].k)
+		switch (path->cmds[i++])
 		{
 		case FZ_MOVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			printf("<moveto x=\"%g\" y=\"%g\"/>\n", x, y);
 			break;
 		case FZ_LINETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			printf("<lineto x=\"%g\" y=\"%g\"/>\n", x, y);
 			break;
 		case FZ_CURVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			printf("<curveto x1=\"%g\" y1=\"%g\"", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			printf(" x2=\"%g\" y2=\"%g\"", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			printf(" x3=\"%g\" y3=\"%g\"/>\n", x, y);
 			break;
 		case FZ_CLOSE_PATH:

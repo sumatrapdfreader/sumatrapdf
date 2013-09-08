@@ -32,31 +32,31 @@ svg_dev_path(svg_device *sdev, fz_path *path)
 {
 	fz_output *out = sdev->out;
 	float x, y;
-	int i = 0;
+	int i, k;
 	fz_printf(out, " d=\"");
-	while (i < path->len)
+	for (i = 0, k = 0; i < path->cmd_len; i++)
 	{
-		switch (path->items[i++].k)
+		switch (path->cmds[i])
 		{
 		case FZ_MOVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_printf(out, "M %g %g ", x, y);
 			break;
 		case FZ_LINETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_printf(out, "L %g %g ", x, y);
 			break;
 		case FZ_CURVETO:
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_printf(out, "C %g %g ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_printf(out, "%g %g ", x, y);
-			x = path->items[i++].v;
-			y = path->items[i++].v;
+			x = path->coords[k++];
+			y = path->coords[k++];
 			fz_printf(out, "%g %g ", x, y);
 			break;
 		case FZ_CLOSE_PATH:
