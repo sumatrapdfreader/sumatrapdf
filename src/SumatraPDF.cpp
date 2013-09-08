@@ -3386,8 +3386,11 @@ void OnMenuChangeLanguage(HWND hwnd)
     SetCurrentLanguageAndRefreshUi(newLangCode);
 }
 
-static void OnMenuViewShowHideToolbar()
+static void OnMenuViewShowHideToolbar(WindowInfo *win)
 {
+    if (win->presentation || win->fullScreen)
+        return;
+
     gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
     ShowOrHideToolbarGlobally();
 }
@@ -4993,7 +4996,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
-            OnMenuViewShowHideToolbar();
+            OnMenuViewShowHideToolbar(win);
             break;
 
         case IDM_VIEW_SHOW_HIDE_MENUBAR:
