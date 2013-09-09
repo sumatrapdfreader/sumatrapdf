@@ -3261,9 +3261,15 @@ xps_bound_page_quick_and_dirty(xps_document *doc, int number)
 
     const char *data = (const char *)part->data;
     size_t data_size = part->size;
+
     ScopedMem<char> dataUtf8;
+    if (str::StartsWith(data, UTF16BE_BOM)) {
+        for (int i = 0; i < part->size; i += 2) {
+            Swap(part->data[i], part->data[i+1]);
+        }
+    }
     if (str::StartsWith(data, UTF16_BOM)) {
-        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2)));
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2), part->size - 2));
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
     }
@@ -3351,7 +3357,7 @@ xps_extract_doc_props(xps_document *doc)
 
     bool has_correct_root = false;
     for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
-        if (str::Eq(fz_xml_tag(item), "Relationship") && fz_xml_att(item, "Type") &&
+        if (str::Eq(fz_xml_tag(item), "Relationship") &&
             str::Eq(fz_xml_att(item, "Type"), REL_CORE_PROPERTIES) && fz_xml_att(item, "Target")) {
             char path[1024];
             xps_resolve_url(path, "", fz_xml_att(item, "Target"), nelem(path));
