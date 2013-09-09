@@ -9,6 +9,8 @@ extern "C" {
 #include "PdfEngine.h"
 
 #include "FileUtil.h"
+#include "HtmlPullParser.h"
+#include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
@@ -95,15 +97,12 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
     }
     fz_pixmap *bgrPixmap = NULL;
     if (bmpData && pixmap->n == 4 &&
-        pixmap->colorspace == fz_device_rgb(ctx))
-    {
+        pixmap->colorspace == fz_device_rgb(ctx)) {
         unsigned char *dest = bmpData;
         unsigned char *source = pixmap->samples;
 
-        for (int j = 0; j < h; j++)
-        {
-            for (int i = 0; i < w; i++)
-            {
+        for (int j = 0; j < h; j++) {
+            for (int i = 0; i < w; i++) {
                 RGBQUAD c = { 0 };
 
                 c.rgbRed = *source++;
@@ -117,8 +116,7 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
                     if (*(int *)&bmi->bmiColors[k] == *(int *)&c)
                         break;
                 /* add it to the palette if it isn't in there and if there's still space left */
-                if (k == paletteSize)
-                {
+                if (k == paletteSize) {
                     if (k >= 256)
                         goto ProducingPaletteDone;
                     *(int *)&bmi->bmiColors[paletteSize] = *(int *)&c;
@@ -1428,8 +1426,7 @@ public:
     PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
 
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
-                                unsigned char decryptionKeyOut[32], bool *saveKey)
-    {
+                                unsigned char decryptionKeyOut[32], bool *saveKey) {
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
         return NULL;
@@ -3242,11 +3239,154 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
     return engine;
 }
 
-///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
+///// XPS-specific extensions to Fitz/MuXPS /////
 
 extern "C" {
 #include <mupdf/xps.h>
 }
+
+// TODO: use http://schemas.openxps.org/oxps/v1.0 as well once NS actually matters
+#define NS_XPS_MICROSOFT "http://schemas.microsoft.com/xps/2005/06"
+
+fz_rect
+xps_bound_page_quick_and_dirty(xps_document *doc, int number)
+{
+    xps_page *page = doc->first_page;
+    for (int n = 0; n < number && page; n++)
+        page = page->next;
+
+    xps_part *part = page ? xps_read_part(doc, page->name) : NULL;
+    if (!part)
+        return fz_empty_rect;
+
+    const char *data = (const char *)part->data;
+    size_t data_size = part->size;
+    ScopedMem<char> dataUtf8;
+    if (str::StartsWith(data, UTF16_BOM)) {
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2)));
+        data = dataUtf8;
+        data_size = str::Len(dataUtf8);
+    }
+    else if (str::StartsWith(data, UTF8_BOM)) {
+        data += 3;
+        data_size -= 3;
+    }
+
+    HtmlPullParser p(data, data_size);
+    HtmlToken *tok = p.Next();
+    fz_rect bounds = fz_empty_rect;
+    if (tok && tok->IsStartTag() && tok->NameIsNS("FixedPage", NS_XPS_MICROSOFT)) {
+        AttrInfo *attr = tok->GetAttrByNameNS("Width", NS_XPS_MICROSOFT);
+        if (attr)
+            bounds.x1 = fz_atof(attr->val) * 72.0f / 96.0f;
+        attr = tok->GetAttrByNameNS("Height", NS_XPS_MICROSOFT);
+        if (attr)
+            bounds.y1 = fz_atof(attr->val) * 72.0f / 96.0f;
+    }
+
+    xps_free_part(doc, part);
+
+    return bounds;
+}
+
+class xps_doc_props {
+public:
+    ScopedMem<WCHAR> title;
+    ScopedMem<WCHAR> author;
+    ScopedMem<WCHAR> subject;
+    ScopedMem<WCHAR> creation_date;
+    ScopedMem<WCHAR> modification_date;
+};
+
+static fz_xml *
+xps_open_and_parse(xps_document *doc, char *path)
+{
+    fz_xml *root = NULL;
+    xps_part *part = xps_read_part(doc, path);
+
+    fz_try(doc->ctx) {
+        root = fz_parse_xml(doc->ctx, part->data, part->size);
+    }
+    fz_always(doc->ctx) {
+        xps_free_part(doc, part);
+    }
+    fz_catch(doc->ctx) {
+        fz_rethrow(doc->ctx);
+    }
+
+    return root;
+}
+
+static WCHAR *
+xps_get_core_prop(fz_context *ctx, fz_xml *item)
+{
+    fz_xml *text = fz_xml_down(item);
+
+    if (!text)
+        return NULL;
+    if (!fz_xml_text(text) || fz_xml_next(text)) {
+        fz_warn(ctx, "non-text content for property %s", fz_xml_tag(item));
+        return NULL;
+    }
+
+    char *start, *end;
+    for (start = fz_xml_text(text); str::IsWs(*start); start++);
+    for (end = start + strlen(start); end > start && str::IsWs(*(end - 1)); end--);
+
+    return str::conv::FromHtmlUtf8(start, end - start);
+}
+
+#define REL_CORE_PROPERTIES \
+    "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
+
+xps_doc_props *
+xps_extract_doc_props(xps_document *doc)
+{
+    fz_xml *root = xps_open_and_parse(doc, "/_rels/.rels");
+
+    if (!root || !str::Eq(fz_xml_tag(root), "Relationships")) {
+        fz_free_xml(doc->ctx, root);
+        fz_throw(doc->ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
+    }
+
+    bool has_correct_root = false;
+    for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
+        if (str::Eq(fz_xml_tag(item), "Relationship") && fz_xml_att(item, "Type") &&
+            str::Eq(fz_xml_att(item, "Type"), REL_CORE_PROPERTIES) && fz_xml_att(item, "Target")) {
+            char path[1024];
+            xps_resolve_url(path, "", fz_xml_att(item, "Target"), nelem(path));
+            fz_free_xml(doc->ctx, root);
+            root = xps_open_and_parse(doc, path);
+            has_correct_root = true;
+            break;
+        }
+    }
+
+    if (!has_correct_root) {
+        fz_free_xml(doc->ctx, root);
+        return NULL;
+    }
+
+    xps_doc_props *props = new xps_doc_props();
+
+    for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
+        if (str::Eq(fz_xml_tag(item), "dc:title") && !props->title)
+            props->title.Set(xps_get_core_prop(doc->ctx, item));
+        else if (str::Eq(fz_xml_tag(item), "dc:creator") && !props->author)
+            props->author.Set(xps_get_core_prop(doc->ctx, item));
+        else if (str::Eq(fz_xml_tag(item), "dc:subject") && !props->subject)
+            props->subject.Set(xps_get_core_prop(doc->ctx, item));
+        else if (str::Eq(fz_xml_tag(item), "dcterms:created") && !props->creation_date)
+            props->creation_date.Set(xps_get_core_prop(doc->ctx, item));
+        else if (str::Eq(fz_xml_tag(item), "dcterms:modified") && !props->modification_date)
+            props->modification_date.Set(xps_get_core_prop(doc->ctx, item));
+    }
+    fz_free_xml(doc->ctx, root);
+
+    return props;
+}
+
+///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 struct XpsPageRun {
     xps_page *page;
@@ -3466,7 +3606,7 @@ XpsEngineImpl::~XpsEngineImpl()
     }
 
     fz_free_outline(ctx, _outline);
-    xps_free_doc_props(ctx, _info);
+    delete _info;
 
     if (imageRects) {
         for (int i = 0; i < PageCount(); i++)
@@ -4099,15 +4239,14 @@ WCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
     if (!_info)
         return NULL;
 
-    char *value = NULL;
     switch (prop) {
-    case Prop_Title: value = _info->title; break;
-    case Prop_Author: value = _info->author; break;
-    case Prop_Subject: value = _info->subject; break;
-    case Prop_CreationDate: value = _info->creation_date; break;
-    case Prop_ModificationDate: value = _info->modification_date; break;
+    case Prop_Title: return str::Dup(_info->title);
+    case Prop_Author: return str::Dup(_info->author);
+    case Prop_Subject: return str::Dup(_info->subject);
+    case Prop_CreationDate: return str::Dup(_info->creation_date);
+    case Prop_ModificationDate: return str::Dup(_info->modification_date);
+    default: return NULL;
     }
-    return value ? str::conv::FromUtf8(value) : NULL;
 };
 
 bool XpsEngineImpl::SupportsAnnotation(bool forSaving) const

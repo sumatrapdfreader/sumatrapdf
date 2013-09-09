@@ -357,7 +357,8 @@ $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mu
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h $B\mupdf\include\mupdf\pdf\xref.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\xps.h $B\src\BaseEngine.h $B\src\PdfEngine.h
 $(OS)\PdfEngine.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
-$(OS)\PdfEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OS)\PdfEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h
+$(OS)\PdfEngine.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\TrivialHtmlParser.h
 $(OS)\PdfEngine.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\utils\ZipUtil.h
 $(OS)\PdfSync.obj: $B\src\BaseEngine.h $B\src\PdfEngine.h $B\src\PdfSync.h
 $(OS)\PdfSync.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h

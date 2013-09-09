@@ -12,12 +12,6 @@
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
-inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
-{
-    ScopedMem<char> tmp(str::DupN(s, len));
-    return DecodeHtmlEntitites(tmp, CP_UTF8);
-}
-
 static char *DecodeTextToUtf8(const char *s)
 {
     ScopedMem<char> tmp;
@@ -471,7 +465,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
                 }
             }
             href.Set(NormalizeURL(href, pagePath));
-            ScopedMem<WCHAR> itemSrc(FromHtmlUtf8(href, str::Len(href)));
+            ScopedMem<WCHAR> itemSrc(str::conv::FromHtmlUtf8(href, str::Len(href)));
             ScopedMem<WCHAR> itemText(str::conv::FromUtf8(text));
             str::NormalizeWS(itemText);
             visitor->Visit(itemText, itemSrc, level);
@@ -512,14 +506,14 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
             if ((tok = parser.Next()) == NULL || tok->IsError())
                 break;
             if (tok->IsText())
-                itemText.Set(FromHtmlUtf8(tok->s, tok->sLen));
+                itemText.Set(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
         }
         else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS)) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
                 ScopedMem<char> src(str::DupN(attrInfo->val, attrInfo->valLen));
                 src.Set(NormalizeURL(src, pagePath));
-                itemSrc.Set(FromHtmlUtf8(src, str::Len(src)));
+                itemSrc.Set(str::conv::FromHtmlUtf8(src, str::Len(src)));
             }
         }
     }
@@ -836,7 +830,7 @@ Fallback:
         // <BOOKMARK NAME="Contents">
         AttrInfo *attr = tok->GetAttrByName("NAME");
         if (attr && attr->valLen > 0) {
-            tocEntries.Append(FromHtmlUtf8(attr->val, attr->valLen));
+            tocEntries.Append(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
             builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Count());
             return tok->s + tok->sLen;
         }
@@ -1095,7 +1089,7 @@ bool HtmlDoc::Load()
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText())
-                title.Set(FromHtmlUtf8(tok->s, tok->sLen));
+                title.Set(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
         }
         else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
             AttrInfo *attrName = tok->GetAttrByName("name");
@@ -1103,11 +1097,11 @@ bool HtmlDoc::Load()
             if (!attrName || !attrValue)
                 /* ignore this tag */;
             else if (attrName->ValIs("author"))
-                author.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+                author.Set(str::conv::FromHtmlUtf8(attrValue->val, attrValue->valLen));
             else if (attrName->ValIs("date"))
-                date.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+                date.Set(str::conv::FromHtmlUtf8(attrValue->val, attrValue->valLen));
             else if (attrName->ValIs("copyright"))
-                copyright.Set(FromHtmlUtf8(attrValue->val, attrValue->valLen));
+                copyright.Set(str::conv::FromHtmlUtf8(attrValue->val, attrValue->valLen));
         }
     }
 

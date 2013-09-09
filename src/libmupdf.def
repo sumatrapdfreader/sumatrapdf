@@ -737,7 +737,6 @@ EXPORTS
 	xps_run_page
 	xps_load_links
 	xps_free_page
-	xps_bound_page_quick_and_dirty
 	xps_load_outline
 	xps_strcasecmp
 	xps_resolve_url
@@ -788,8 +787,6 @@ EXPORTS
 	xps_clip
 	xps_lookup_alternate_content
 	xps_extract_anchor_info
-	xps_extract_doc_props
-	xps_free_doc_props
 
 ; jpeg exports (required for libdjvu)
 

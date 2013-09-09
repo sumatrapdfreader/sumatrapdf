@@ -41,18 +41,6 @@ void SetDefaultEbookFont(const WCHAR *name, float size)
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
 
-namespace str {
-    namespace conv {
-
-inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
-{
-    ScopedMem<char> tmp(str::DupN(s, len));
-    return DecodeHtmlEntitites(tmp, CP_UTF8);
-}
-
-    }
-}
-
 inline bool IsExternalUrl(const WCHAR *url)
 {
     return str::FindChar(url, ':') != NULL;
