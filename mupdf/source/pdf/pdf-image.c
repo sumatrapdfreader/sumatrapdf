@@ -91,9 +91,7 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 			}
 
 			colorspace = pdf_load_colorspace(doc, obj);
-
-			if (!strcmp(colorspace->name, "Indexed"))
-				indexed = 1;
+			indexed = fz_colorspace_is_indexed(colorspace);
 
 			n = colorspace->n;
 		}
@@ -244,7 +242,7 @@ pdf_load_jpx(pdf_document *doc, pdf_obj *dict, int forcemask)
 		if (obj)
 		{
 			colorspace = pdf_load_colorspace(doc, obj);
-			indexed = !strcmp(colorspace->name, "Indexed");
+			indexed = fz_colorspace_is_indexed(colorspace);
 		}
 
 		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace, indexed);

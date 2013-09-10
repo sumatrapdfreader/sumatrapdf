@@ -158,12 +158,10 @@ EXPORTS
 	fz_open_ahxd
 	fz_open_rld
 	fz_open_dctd
-	fz_open_resized_dctd
 	fz_open_faxd
 	fz_open_flated
 	fz_open_lzwd
 	fz_open_predict
-	fz_dctd_set_common_tables
 	fz_load_jbig2_globals
 	fz_free_jbig2_globals_imp
 	fz_open_jbig2d

@@ -1390,7 +1390,6 @@ pdf_set_color(pdf_csi *csi, int what, float *v)
 	{
 	case PDF_MAT_PATTERN:
 	case PDF_MAT_COLOR:
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1879 */
 		if (fz_colorspace_is_indexed(mat->colorspace))
 		{
 			mat->v[0] = v[0] / 255;

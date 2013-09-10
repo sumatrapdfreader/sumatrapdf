@@ -6,8 +6,33 @@ static fz_colorspace *
 load_icc_based(pdf_document *doc, pdf_obj *dict)
 {
 	int n;
+	pdf_obj *obj;
+	fz_context *ctx = doc->ctx;
 
 	n = pdf_to_int(pdf_dict_gets(dict, "N"));
+	obj = pdf_dict_gets(dict, "Alternate");
+
+	if (obj)
+	{
+		fz_colorspace *cs_alt = NULL;
+
+		fz_try(ctx)
+		{
+			cs_alt = pdf_load_colorspace(doc, obj);
+			if (cs_alt->n != n)
+			{
+				fz_drop_colorspace(ctx, cs_alt);
+				fz_throw(ctx, FZ_ERROR_GENERIC, "ICCBased /Alternate colorspace must have %d components", n);
+			}
+		}
+		fz_catch(ctx)
+		{
+			cs_alt = NULL;
+		}
+
+		if (cs_alt)
+			return cs_alt;
+	}
 
 	/* SumatraPDF: support alternate colorspaces for ICCBased */
 	if (pdf_dict_gets(dict, "Alternate"))
@@ -32,12 +57,12 @@ load_icc_based(pdf_document *doc, pdf_obj *dict)
 
 	switch (n)
 	{
-	case 1: return fz_device_gray(doc->ctx);
-	case 3: return fz_device_rgb(doc->ctx);
-	case 4: return fz_device_cmyk(doc->ctx);
+	case 1: return fz_device_gray(ctx);
+	case 3: return fz_device_rgb(ctx);
+	case 4: return fz_device_cmyk(ctx);
 	}
 
-	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "syntaxerror: ICCBased must have 1, 3 or 4 components");
+	fz_throw(ctx, FZ_ERROR_GENERIC, "syntaxerror: ICCBased must have 1, 3 or 4 components");
 	return NULL; /* Stupid MSVC */
 }
 

@@ -34,7 +34,7 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *
 	case FZ_IMAGE_JPEG:
 		if (*l2factor > 3)
 			*l2factor = 3;
-		return fz_open_resized_dctd(chain, params->u.jpeg.color_transform, *l2factor);
+		return fz_open_dctd(chain, params->u.jpeg.color_transform, *l2factor, NULL);
 	case FZ_IMAGE_RLD:
 		*l2factor = 0;
 		return fz_open_rld(chain);
