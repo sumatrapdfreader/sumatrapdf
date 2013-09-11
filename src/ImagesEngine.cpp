@@ -775,6 +775,7 @@ static char *GetTextContent(HtmlPullParser& parser)
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
 void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
 {
+    // TODO: convert UTF-16 data and skip UTF-8 BOM
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken *tok;
     while ((tok = parser.Next()) != NULL && !tok->IsError()) {

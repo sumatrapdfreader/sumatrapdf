@@ -3249,7 +3249,7 @@ extern "C" {
 #define NS_XPS_MICROSOFT "http://schemas.microsoft.com/xps/2005/06"
 
 fz_rect
-xps_bound_page_quick_and_dirty(xps_document *doc, int number)
+xps_bound_page_quick(xps_document *doc, int number)
 {
     xps_page *page = doc->first_page;
     for (int n = 0; n < number && page; n++)
@@ -3269,7 +3269,7 @@ xps_bound_page_quick_and_dirty(xps_document *doc, int number)
         }
     }
     if (str::StartsWith(data, UTF16_BOM)) {
-        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2), part->size - 2));
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2), part->size / 2 - 1));
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
     }
@@ -3954,7 +3954,7 @@ RectD XpsEngineImpl::PageMediabox(int pageNo)
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
-            mbox = fz_rect_to_RectD(xps_bound_page_quick_and_dirty(_doc, pageNo-1));
+            mbox = fz_rect_to_RectD(xps_bound_page_quick(_doc, pageNo-1));
         }
         fz_catch(ctx) { }
         if (!mbox.IsEmpty()) {
