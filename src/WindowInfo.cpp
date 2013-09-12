@@ -135,9 +135,9 @@ void WindowInfo::ToggleZoom()
 
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
-    assert(this->dm);
+    CrashIf(!this->dm);
     if (!this->IsDocLoaded()) return;
-    assert(!this->linkOnLastButtonDown);
+    CrashIf(this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
     if (0 != dx)
         this->dm->ScrollXBy(dx);
