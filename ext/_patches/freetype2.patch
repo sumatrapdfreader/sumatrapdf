@@ -100,3 +100,24 @@ diff -rPu5 freetype2.orig\src\cff\cf2ft.c freetype2\src\cff\cf2ft.c
  
      idx += decoder->locals_bias;
      if ( idx >= decoder->num_locals )
+diff -rPu5 freetype2.orig\src\type1\t1parse.c freetype2\src\type1\t1parse.c
+--- freetype2.orig\src\type1\t1parse.c	Thu Jun 06 07:26:16 2013
++++ freetype2\src\type1\t1parse.c	Fri Sep 13 15:21:26 2013
+@@ -402,14 +402,16 @@
+ 
+       /* according to the Type1 spec, the first cipher byte must not be  */
+       /* an ASCII whitespace character code (blank, tab, carriage return */
+       /* or line feed).  We have seen Type 1 fonts with two line feed    */
+       /* characters...  So skip now all whitespace character codes.      */
++      /* SumatraPDF: stop at \r if it's not used for EOL - cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2408 */
++      c = !memchr(cur, '\n', limit - cur) || memchr(cur, '\n', limit - cur) > memchr(cur, '\r', limit - cur);
+       while ( cur < limit       &&
+               ( *cur == ' '  ||
+                 *cur == '\t' ||
+-                *cur == '\r' ||
++                ( c && *cur == '\r' ) ||
+                 *cur == '\n' ) )
+         ++cur;
+       if ( cur >= limit )
+       {
+         FT_ERROR(( "T1_Get_Private_Dict:"

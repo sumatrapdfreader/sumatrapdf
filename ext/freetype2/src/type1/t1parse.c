@@ -404,10 +404,12 @@
       /* an ASCII whitespace character code (blank, tab, carriage return */
       /* or line feed).  We have seen Type 1 fonts with two line feed    */
       /* characters...  So skip now all whitespace character codes.      */
+      /* SumatraPDF: stop at \r if it's not used for EOL - cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2408 */
+      c = !memchr(cur, '\n', limit - cur) || memchr(cur, '\n', limit - cur) > memchr(cur, '\r', limit - cur);
       while ( cur < limit       &&
               ( *cur == ' '  ||
                 *cur == '\t' ||
-                *cur == '\r' ||
+                ( c && *cur == '\r' ) ||
                 *cur == '\n' ) )
         ++cur;
       if ( cur >= limit )
