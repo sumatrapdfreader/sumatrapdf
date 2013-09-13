@@ -1500,7 +1500,7 @@ fz_draw_begin_group(fz_device *devp, const fz_rect *rect, int isolated, int knoc
 {
 	fz_draw_device *dev = devp->user;
 	fz_irect bbox;
-	fz_pixmap *dest, *shape;
+	fz_pixmap *dest;
 	fz_context *ctx = dev->ctx;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
@@ -1533,12 +1533,12 @@ fz_draw_begin_group(fz_device *devp, const fz_rect *rect, int isolated, int knoc
 		{
 			/* We can render direct to any existing shape plane.
 			 * If there isn't one, we don't need to make one. */
-			state[1].shape =shape = state[0].shape;
+			state[1].shape = state[0].shape;
 		}
 		else
 		{
-			state[1].shape = shape = fz_new_pixmap_with_bbox(ctx, NULL, &bbox);
-			fz_clear_pixmap(dev->ctx, shape);
+			state[1].shape = fz_new_pixmap_with_bbox(ctx, NULL, &bbox);
+			fz_clear_pixmap(dev->ctx, state[1].shape);
 		}
 
 		state[1].alpha = alpha;

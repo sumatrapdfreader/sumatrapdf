@@ -988,6 +988,32 @@ dehyphenate(fz_text_span *s1, fz_text_span *s2)
 	s2->spacing = 0;
 }
 
+#ifdef DEBUG_ALIGN
+static void
+dump_span(fz_text_span *span)
+{
+}
+
+static void
+dump_line(fz_text_line *line)
+{
+	fz_text_span *span;
+
+	if (!line)
+		return;
+	printf("d=%g: ", line->distance);
+
+	span = line->first_span;
+	while (span)
+	{
+		dump_span(span);
+		span = span->next;
+	}
+
+	printf("\n");
+}
+#endif
+
 void
 fz_analyze_text(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 {
@@ -1042,7 +1068,7 @@ fz_analyze_text(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 						/* Have we had this style before? */
 						int match = 0;
 						fz_text_span *span2;
-						for (span2 = line->first_span; span2; span2 = span2->next)
+						for (span2 = line->first_span; span2 != span; span2 = span2->next)
 						{
 							int char_num2;
 							for (char_num2 = 0; char_num2 < span2->len; char_num2++)
@@ -1107,7 +1133,7 @@ list_entry:
 				continue;
 
 #ifdef DEBUG_LINE_HEIGHTS
-			printf("line height=%g nspans=%d\n", line->distance, line->len);
+			printf("line height=%g\n", line->distance);
 #endif
 			for (span = line->first_span; span; span = span->next)
 			{
@@ -1388,7 +1414,7 @@ force_paragraph:
 					int try_dehyphen = -1;
 					fz_text_span *prev_span = NULL;
 					span = line->first_span;
-					while (span)
+					while (span && *prev_line_span)
 					{
 						/* Skip forwards through the original
 						 * line, until we find a place where
@@ -1417,10 +1443,15 @@ force_paragraph:
 							prev_span = *prev_line_span = span;
 							span = span->next;
 							(*prev_line_span)->next = next;
-							prev_line_span = &span->next;
+							prev_line_span = &(*prev_line_span)->next;
 						}
 					}
-					while (span || *prev_line_span);
+					if (span)
+					{
+						*prev_line_span = span;
+						prev_line->last_span = line->last_span;
+					}
+
 					line->first_span = NULL;
 					line->last_span = NULL;
 				}

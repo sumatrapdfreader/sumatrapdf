@@ -344,7 +344,7 @@ fz_buffer_cat_pdf_string(fz_context *ctx, fz_buffer *buffer, const char *text)
 			*d++ = c;
 		}
 	}
-	*d++ = ')';
+	*d = ')';
 	buffer->len += len;
 }
 

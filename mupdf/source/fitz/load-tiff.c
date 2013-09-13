@@ -783,7 +783,7 @@ fz_pixmap *
 fz_load_tiff(fz_context *ctx, unsigned char *buf, int len)
 {
 	fz_pixmap *image;
-	struct tiff tiff;
+	struct tiff tiff = { 0 };
 
 	fz_try(ctx)
 	{
@@ -844,7 +844,7 @@ fz_load_tiff(fz_context *ctx, unsigned char *buf, int len)
 void
 fz_load_tiff_info(fz_context *ctx, unsigned char *buf, int len, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
 {
-	struct tiff tiff;
+	struct tiff tiff = { 0 };
 
 	fz_try(ctx)
 	{

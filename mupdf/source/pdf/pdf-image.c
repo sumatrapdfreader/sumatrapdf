@@ -247,7 +247,7 @@ pdf_load_jpx(pdf_document *doc, pdf_obj *dict, int forcemask)
 
 		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace, indexed);
 
-		if (img && colorspace == NULL)
+		if (colorspace == NULL)
 			colorspace = fz_keep_colorspace(ctx, img->colorspace);
 
 		fz_drop_buffer(ctx, buf);

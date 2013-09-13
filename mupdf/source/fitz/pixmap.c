@@ -650,7 +650,6 @@ fz_output_png_header(fz_output *out, int w, int h, int n, int savealpha)
 	unsigned char head[13];
 	fz_context *ctx;
 	int color;
-	int sn, dn;
 	fz_png_output_context *poc;
 
 	if (!out)
@@ -663,12 +662,10 @@ fz_output_png_header(fz_output *out, int w, int h, int n, int savealpha)
 
 	poc = fz_malloc_struct(ctx, fz_png_output_context);
 
-	sn = n;
-	dn = n;
-	if (!savealpha && dn > 1)
-		dn--;
+	if (!savealpha && n > 1)
+		n--;
 
-	switch (dn)
+	switch (n)
 	{
 	default:
 	case 1: color = 0; break;

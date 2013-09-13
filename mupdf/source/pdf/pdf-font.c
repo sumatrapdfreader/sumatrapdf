@@ -582,7 +582,7 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
 
 				face = fontdesc->font->ft_face;
-				kind = ft_kind(face);
+				/* kind = ft_kind(face); */
 				goto skip_encoding;
 			}
 		}

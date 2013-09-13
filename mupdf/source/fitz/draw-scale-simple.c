@@ -1469,7 +1469,7 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 			*/
 			int row_index = contrib_rows->index[row];
 			int row_min = contrib_rows->index[row_index++];
-			int row_len = contrib_rows->index[row_index++];
+			int row_len = contrib_rows->index[row_index];
 			while (max_row < row_min+row_len)
 			{
 				/* Scale another row */

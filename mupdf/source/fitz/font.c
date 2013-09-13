@@ -943,6 +943,7 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *tr
 		FT_Outline_Translate(&face->glyph->outline, -strength * 32, -strength * 32);
 	}
 
+	cc.path = NULL;
 	fz_try(ctx)
 	{
 		cc.ctx = ctx;

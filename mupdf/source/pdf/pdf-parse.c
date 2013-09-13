@@ -244,7 +244,7 @@ pdf_parse_array(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 	int a = 0, b = 0, n = 0;
 	pdf_token tok;
 	fz_context *ctx = file->ctx;
-	pdf_obj *op;
+	pdf_obj *op = NULL;
 
 	fz_var(obj);
 

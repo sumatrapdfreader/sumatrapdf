@@ -144,7 +144,7 @@ static int xml_parse_entity(int *c, char *a)
 		*c = '"';
 		return 6;
 	}
-	*c = *a++;
+	*c = *a;
 	return 1;
 }
 
@@ -290,7 +290,7 @@ parse_comment:
 	if (*p == '[') goto parse_cdata;
 	if (*p++ != '-') return "syntax error in comment (<! not followed by --)";
 	if (*p++ != '-') return "syntax error in comment (<!- not followed by -)";
-	mark = p;
+	/* mark = p; */
 	while (*p) {
 		if (p[0] == '-' && p[1] == '-' && p[2] == '>') {
 			p += 3;
@@ -304,7 +304,7 @@ parse_cdata:
 	if (p[1] != 'C' || p[2] != 'D' || p[3] != 'A' || p[4] != 'T' || p[5] != 'A' || p[6] != '[')
 		return "syntax error in CDATA section";
 	p += 7;
-	mark = p;
+	/* mark = p; */
 	while (*p) {
 		if (p[0] == ']' && p[1] == ']' && p[2] == '>') {
 			p += 3;
@@ -326,7 +326,7 @@ parse_processing_instruction:
 
 parse_closing_element:
 	while (iswhite(*p)) ++p;
-	mark = p;
+	/* mark = p; */
 	while (isname(*p)) ++p;
 	while (iswhite(*p)) ++p;
 	if (*p != '>')

@@ -80,7 +80,7 @@ static void da_check_stack(float *stack, int *top)
 
 void pdf_parse_da(fz_context *ctx, char *da, pdf_da_info *di)
 {
-	float stack[32];
+	float stack[32] = { 0.0f };
 	int top = 0;
 	pdf_token tok;
 	char *name = NULL;

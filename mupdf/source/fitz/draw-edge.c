@@ -922,7 +922,6 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, const fz_irect *clip,
 			y += height;
 			if (y >= clip->y0)
 			{
-				height -= y - clip->y0;
 				y = clip->y0;
 				break;
 			}

@@ -56,6 +56,7 @@ fz_text_char_bbox(fz_rect *bbox, fz_text_span *span, int i)
 	if (!span || i >= span->len)
 	{
 		*bbox = fz_empty_rect;
+		return bbox;
 	}
 	ch = &span->text[i];
 	if (i == span->len-1)
@@ -624,7 +625,9 @@ fz_add_text_char_imp(fz_context *ctx, fz_text_device *dev, fz_text_style *style,
 		else
 		{
 			can_append = 0;
+#ifdef DEBUG_SPANS
 			spacing = 0;
+#endif
 		}
 	}
 

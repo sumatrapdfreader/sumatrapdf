@@ -254,6 +254,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 
 	fz_var(locked);
 	fz_var(caching);
+	fz_var(val);
 
 	memset(&key, 0, sizeof key);
 	size = fz_subpixel_adjust(ctm, &subpix_ctm, &key.e, &key.f);
@@ -297,6 +298,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 
 	locked = 1;
 	caching = 0;
+	val = NULL;
 
 	fz_try(ctx)
 	{
@@ -324,7 +326,6 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 		else
 		{
 			fz_warn(ctx, "assert: uninitialized font structure");
-			val = NULL;
 		}
 		if (val && do_cache)
 		{
@@ -345,8 +346,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 							fz_drop_glyph(ctx, val);
 							move_to_front(cache, entry);
 							val = fz_keep_glyph(ctx, entry->val);
-							fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-							return val;
+							goto unlock_and_return_val;
 						}
 						entry = entry->bucket_next;
 					}
@@ -380,6 +380,9 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 				}
 
 			}
+		}
+unlock_and_return_val:
+		{
 		}
 	}
 	fz_always(ctx)

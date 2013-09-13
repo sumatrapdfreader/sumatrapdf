@@ -477,7 +477,8 @@ pdf_compute_hardened_hash_r6(fz_context *ctx, unsigned char *password, int pwlen
 		/* Step 2: repeat password and data block 64 times */
 		memcpy(data, password, pwlen);
 		memcpy(data + pwlen, block, block_size);
-		memcpy(data + pwlen + block_size, ownerkey, ownerkey ? 48 : 0);
+		if (ownerkey)
+			memcpy(data + pwlen + block_size, ownerkey, 48);
 		data_len = pwlen + block_size + (ownerkey ? 48 : 0);
 		for (j = 1; j < 64; j++)
 			memcpy(data + j * data_len, data, data_len);

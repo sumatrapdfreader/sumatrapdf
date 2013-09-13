@@ -1708,11 +1708,11 @@ static void writeobject(pdf_document *doc, pdf_write_options *opts, int num, int
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
 			if (o = pdf_dict_gets(obj, "Type"), !strcmp(pdf_to_name(o), "FontDescriptor"))
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
-			if ((o = pdf_dict_gets(obj, "Length1")) != NULL)
+			if (pdf_dict_gets(obj, "Length1") != NULL)
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
-			if ((o = pdf_dict_gets(obj, "Length2")) != NULL)
+			if (pdf_dict_gets(obj, "Length2") != NULL)
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
-			if ((o = pdf_dict_gets(obj, "Length3")) != NULL)
+			if (pdf_dict_gets(obj, "Length3") != NULL)
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
 			if (o = pdf_dict_gets(obj, "Subtype"), !strcmp(pdf_to_name(o), "Type1C"))
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
@@ -2104,7 +2104,7 @@ make_page_offset_hints(pdf_document *doc, pdf_write_options *opts, fz_buffer *bu
 	int min_page_length, max_page_length;
 	int objs_per_page_bits;
 	int min_shared_object, max_shared_object;
-	int max_shared_object_refs;
+	int max_shared_object_refs = 0;
 	int min_shared_length, max_shared_length;
 	page_objects **pop = &opts->page_object_lists->page[0];
 	int page_len_bits, shared_object_bits, shared_object_id_bits;

@@ -257,7 +257,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 	int num = 0;
 	int gen = 0;
 	int tmpofs, numofs = 0, genofs = 0;
-	int stm_len, stm_ofs = 0;
+	int stm_len, stm_ofs;
 	pdf_token tok;
 	int next;
 	int i, n, c;
@@ -339,6 +339,8 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 			{
 				fz_try(ctx)
 				{
+					stm_len = 0;
+					stm_ofs = 0;
 					tok = pdf_repair_obj(doc, buf, &stm_ofs, &stm_len, &encrypt, &id, NULL, &tmpofs);
 				}
 				fz_catch(ctx)

@@ -170,7 +170,7 @@ xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *a
 		int x0, y0, x1, y1;
 		fz_matrix invctm;
 		fz_rect local_area = *area;
-		area = fz_transform_rect(&local_area, fz_invert_matrix(&invctm, &transform));
+		fz_transform_rect(&local_area, fz_invert_matrix(&invctm, &transform));
 		/* SumatraPDF: make sure that the intended area is covered */
 		{
 			fz_point tl;

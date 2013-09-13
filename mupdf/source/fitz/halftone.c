@@ -158,7 +158,7 @@ static void do_threshold_1(unsigned char *ht_line, unsigned char *pixmap, unsign
 	}
 	while (--w);
 	if (bit != 0x80)
-		*out++ = h;
+		*out = h;
 }
 
 fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)

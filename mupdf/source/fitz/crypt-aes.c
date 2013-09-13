@@ -325,7 +325,7 @@ int aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
 	*RK++ = *SK++;
 	*RK++ = *SK++;
 	*RK++ = *SK++;
-	*RK++ = *SK++;
+	*RK = *SK;
 
 	memset( &cty, 0, sizeof( aes_context ) );
 	return 0;
@@ -428,7 +428,7 @@ void aes_crypt_ecb( aes_context *ctx,
 			( RSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
 			( RSb[ ( Y3 >> 24 ) & 0xFF ] << 24 );
 
-		X3 = *RK++ ^ ( RSb[ ( Y3 ) & 0xFF ] ) ^
+		X3 = *RK ^ ( RSb[ ( Y3 ) & 0xFF ] ) ^
 			( RSb[ ( Y2 >> 8 ) & 0xFF ] << 8 ) ^
 			( RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
 			( RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
@@ -458,7 +458,7 @@ void aes_crypt_ecb( aes_context *ctx,
 			( FSb[ ( Y0 >> 16 ) & 0xFF ] << 16 ) ^
 			( FSb[ ( Y1 >> 24 ) & 0xFF ] << 24 );
 
-		X3 = *RK++ ^ ( FSb[ ( Y3 ) & 0xFF ] ) ^
+		X3 = *RK ^ ( FSb[ ( Y3 ) & 0xFF ] ) ^
 			( FSb[ ( Y0 >> 8 ) & 0xFF ] << 8 ) ^
 			( FSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
 			( FSb[ ( Y2 >> 24 ) & 0xFF ] << 24 );
