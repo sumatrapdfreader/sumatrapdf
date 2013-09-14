@@ -645,10 +645,6 @@ EXPORTS
 	pdf_new_pdf_device
 	pdf_write_document
 	pdf_localise_page_resources
-	pdf_file_update_start
-	pdf_file_update_start_w
-	pdf_file_update_append
-	pdf_file_update_end
 	pdf_lookup_page_number
 	pdf_count_pages
 	pdf_lookup_page_obj

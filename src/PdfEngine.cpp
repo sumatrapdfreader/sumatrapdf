@@ -2793,29 +2793,30 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     return SaveUserAnnots(copyFileName);
 }
 
-static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_list *list, pdf_page *page, int next_num, PageAnnotation& annot, pdf_obj *annots)
+static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, PageAnnotation& annot, pdf_obj *annots)
 {
     static const char *obj_dict = "<<\
     /Type /Annot /Subtype /%s\
     /Rect [%f %f %f %f]\
     /C [%f %f %f]\
     /P %d %d R\
-    /AP << /N %d 0 R >>\
+    /QuadPoints %s\
+    /AP << >>\
 >>";
     static const char *obj_quad_tpl = "[%f %f %f %f %f %f %f %f]";
     static const char *ap_dict = "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState /ca %.f /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
-    static const char *ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q";
-    static const char *ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q";
-    static const char *ap_strikeout = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 %f m %f %f l S Q";
-    static const char *ap_squiggly = "q /DeviceRGB CS %f %f %f RG 0.5 w [1] 1.5 d 0 0.25 m %f 0.25 l S [1] 0.5 d 0 0.75 m %f 0.75 l S Q";
+    static const char *ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q\n";
+    static const char *ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q\n";
+    static const char *ap_strikeout = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 %f m %f %f l S Q\n";
+    static const char *ap_squiggly = "q /DeviceRGB CS %f %f %f RG 0.5 w [1] 1.5 d 0 0.25 m %f 0.25 l S [1] 0.5 d 0 0.75 m %f 0.75 l S Q\n";
 
     fz_context *ctx = doc->ctx;
-    pdf_obj *annot_obj = NULL, *obj = NULL;
-    fz_buffer *buf = NULL;
+    pdf_obj *annot_obj = NULL, *ap_obj = NULL;
+    fz_buffer *ap_buf = NULL;
 
     fz_var(annot_obj);
-    fz_var(obj);
-    fz_var(buf);
+    fz_var(ap_obj);
+    fz_var(ap_buf);
 
     const char *subtype = Annot_Highlight == annot.type ? "Highlight" :
                           Annot_Underline == annot.type ? "Underline" :
@@ -2832,13 +2833,6 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
     if ((rotation % 180) == 90)
         Swap(dx, dy);
     float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
-    pdf_obj *page_obj = pdf_lookup_page_obj(doc, annot.pageNo - 1);
-    ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
-        r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
-        pdf_to_num(page_obj), pdf_to_gen(page_obj), //P
-        next_num));
-    ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
-    ScopedMem<char> annot_ap_stream;
     // rotate the QuadPoints to match the page
     ScopedMem<char> quad_tpl;
     if (0 == rotation)
@@ -2849,56 +2843,74 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
     else // if (270 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
+    ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
+        r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
+        pdf_to_num(page->me), pdf_to_gen(page->me), //P
+        quad_tpl));
+    ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
+    ScopedMem<char> annot_ap_stream;
 
     fz_try(ctx) {
         annot_obj = pdf_new_obj_from_str(doc, annot_tpl);
-        pdf_dict_puts_drop(annot_obj, "QuadPoints", pdf_new_obj_from_str(doc, quad_tpl));
-        if (!doc->crypt) {
-            // create the appearance stream (unencrypted) and append it to the file
-            obj = pdf_new_obj_from_str(doc, annot_ap_dict);
-            switch (annot.type) {
-            case Annot_Highlight:
-                annot_ap_stream.Set(str::Format(ap_highlight, rgb[0], rgb[1], rgb[2], dx, dy));
-                break;
-            case Annot_Underline:
-                annot_ap_stream.Set(str::Format(ap_underline, rgb[0], rgb[1], rgb[2], dx));
-                break;
-            case Annot_StrikeOut:
-                annot_ap_stream.Set(str::Format(ap_strikeout, rgb[0], rgb[1], rgb[2], dy / 2, dx, dy / 2));
-                break;
-            case Annot_Squiggly:
-                annot_ap_stream.Set(str::Format(ap_squiggly, rgb[0], rgb[1], rgb[2], dx, dx));
-                break;
-            }
-            if (annot.type != Annot_Highlight)
-                pdf_dict_dels(pdf_dict_gets(obj, "Resources"), "ExtGState");
-            if (rotation) {
-                fz_matrix rot;
-                pdf_dict_puts_drop(obj, "Matrix", pdf_new_matrix(doc, fz_rotate(&rot, rotation)));
-            }
-            buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
-            memcpy(buf->data, annot_ap_stream, (buf->len = (int)str::Len(annot_ap_stream)));
-            pdf_file_update_append(list, obj, next_num++, 0, buf);
-        }
-        else {
-            // have the viewer create an appearance stream itself for encrypted documents
-            pdf_dict_dels(annot_obj, "AP");
-        }
-        // append a reference to the annotation to the page's /Annots entry
-        pdf_array_push_drop(annots, pdf_new_indirect(doc, next_num, 0));
         // append the annotation to the file
-        pdf_file_update_append(list, annot_obj, next_num++, 0, NULL);
-    }
-    fz_always(ctx) {
-        pdf_drop_obj(annot_obj);
-        pdf_drop_obj(obj);
-        fz_drop_buffer(ctx, buf);
+        int num = pdf_create_object(doc);
+        pdf_update_object(doc, num, annot_obj);
+        pdf_array_push_drop(annots, pdf_new_indirect(doc, num, 0));
     }
     fz_catch(ctx) {
-        fz_rethrow(ctx);
+        pdf_drop_obj(annot_obj);
+        return false;
     }
 
-    return next_num;
+    if (doc->crypt) {
+        // since we don't encrypt the appearance stream, for encrypted documents
+        // the readers will have to synthesize an appearance stream themselves
+        pdf_drop_obj(annot_obj);
+        return true;
+    }
+
+    fz_try(ctx) {
+        // create the appearance stream (unencrypted) and append it to the file
+        ap_obj = pdf_new_obj_from_str(doc, annot_ap_dict);
+        switch (annot.type) {
+        case Annot_Highlight:
+            annot_ap_stream.Set(str::Format(ap_highlight, rgb[0], rgb[1], rgb[2], dx, dy));
+            break;
+        case Annot_Underline:
+            annot_ap_stream.Set(str::Format(ap_underline, rgb[0], rgb[1], rgb[2], dx));
+            break;
+        case Annot_StrikeOut:
+            annot_ap_stream.Set(str::Format(ap_strikeout, rgb[0], rgb[1], rgb[2], dy / 2, dx, dy / 2));
+            break;
+        case Annot_Squiggly:
+            annot_ap_stream.Set(str::Format(ap_squiggly, rgb[0], rgb[1], rgb[2], dx, dx));
+            break;
+        }
+        if (annot.type != Annot_Highlight)
+            pdf_dict_dels(pdf_dict_gets(ap_obj, "Resources"), "ExtGState");
+        if (rotation) {
+            fz_matrix rot;
+            pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(doc, fz_rotate(&rot, rotation)));
+        }
+        ap_buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
+        memcpy(ap_buf->data, annot_ap_stream, (ap_buf->len = (int)str::Len(annot_ap_stream)));
+        pdf_dict_puts_drop(ap_obj, "Length", pdf_new_int(doc, ap_buf->len));
+        // append the appearance stream to the file
+        int num = pdf_create_object(doc);
+        pdf_update_object(doc, num, ap_obj);
+        pdf_update_stream(doc, num, ap_buf);
+        pdf_dict_puts_drop(pdf_dict_gets(annot_obj, "AP"), "N", pdf_new_indirect(doc, num, 0));
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ap_obj);
+        fz_drop_buffer(ctx, ap_buf);
+        pdf_drop_obj(annot_obj);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
+
+    return true;
 }
 
 bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
@@ -2910,62 +2922,41 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
     ScopedCritSec scope2(&ctxAccess);
 
     bool ok = true;
-    pdf_obj *obj = NULL, *annots_new = NULL;
-    pdf_file_update_list *list = NULL;
-    int next_num = pdf_xref_len(_doc);
-
-    fz_var(obj);
-    fz_var(annots_new);
-    fz_var(list);
+    ScopedMem<char> pathUtf8(str::conv::ToUtf8(fileName));
+    Vec<PageAnnotation> pageAnnots;
 
     fz_try(ctx) {
-        list = pdf_file_update_start_w(_doc, fileName, next_num + PageCount() * 2 + userAnnots.Count() * 2);
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            pdf_page *page = GetPdfPage(pageNo);
             // TODO: this will skip annotations for broken documents
-            if (!GetPdfPage(pageNo) || !pdf_to_num(_pageObjs[pageNo - 1])) {
+            if (!page || !pdf_to_num(_pageObjs[pageNo - 1])) {
                 ok = false;
                 break;
             }
-            Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+            pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
             if (pageAnnots.Count() == 0)
                 continue;
             // get the page's /Annots array for appending
             pdf_obj *annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
-            if (pdf_is_array(annots))
-                annots_new = pdf_copy_array(annots);
-            else
-                annots_new = pdf_new_array(_doc, pageAnnots.Count());
+            if (!pdf_is_array(annots)) {
+                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_array(_doc, pageAnnots.Count()));
+                annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
+            }
+            if (!pdf_is_indirect(annots)) {
+                // make /Annots indirect for the current /Page
+                int num = pdf_create_object(_doc);
+                pdf_update_object(_doc, num, annots);
+                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_indirect(_doc, num, 0));
+            }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.Count(); i++) {
-                next_num = pdf_file_update_add_annotation(_doc, list,
-                    GetPdfPage(pageNo), next_num, pageAnnots.At(i), annots_new);
-            }
-            // write the updated /Annots array back to the file
-            if (pdf_is_indirect(annots)) {
-                pdf_file_update_append(list, annots_new, pdf_to_num(annots), pdf_to_gen(annots), NULL);
-            }
-            else {
-                // make /Annots indirect for the current /Page
-                obj = pdf_copy_dict(_pageObjs[pageNo - 1]);
-                pdf_dict_puts_drop(obj, "Annots", pdf_new_indirect(_doc, next_num, 0));
-                pdf_file_update_append(list, obj, pdf_to_num(_pageObjs[pageNo - 1]), pdf_to_gen(_pageObjs[pageNo - 1]), NULL);
-                pdf_drop_obj(obj);
-                obj = NULL;
-                pdf_file_update_append(list, annots_new, next_num++, 0, NULL);
+                ok &= pdf_file_update_add_annotation(_doc, page, pageAnnots.At(i), annots);
             }
         }
-    }
-    fz_always(ctx) {
-        pdf_drop_obj(obj);
-        pdf_drop_obj(annots_new);
-        if (list) {
-            // write xref, trailer and startxref entries and clean up
-            fz_try(ctx) {
-                pdf_file_update_end(list, pdf_trailer(_doc), _doc->startxref);
-            }
-            fz_catch(ctx) {
-                ok = false;
-            }
+        if (ok) {
+            fz_write_options opts = { 0 };
+            opts.do_incremental = 1;
+            pdf_write_document(_doc, pathUtf8, &opts);
         }
     }
     fz_catch(ctx) {
