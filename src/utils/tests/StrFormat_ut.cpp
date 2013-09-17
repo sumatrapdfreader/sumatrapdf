@@ -18,5 +18,8 @@ void StrFormatTest()
     StrFormatCheck(str::Fmt("{0}", 1), "1");
     StrFormatCheck(str::Fmt("{03foo{0}", 255), "{03foo255");
     StrFormatCheck(str::Fmt("be{0}af", -1), "be-1af");
-    //StrFormatCheck(str::Fmt("{1}-{0}", "so", L"r"), "r-so");
+    // TODO: don't understand why have to use str::Arg() to resolve compiler's
+    // ambiguity about which of 2 str::Fmt() calls I'm trying to use. Should be
+    // clear from 
+    StrFormatCheck(str::Fmt("{1}-{0}", str::Arg("so"), str::Arg(L"r")), "r-so");
 }

@@ -174,7 +174,9 @@ static void SerializeArg(Str<char>& s, const Arg *arg)
     } else if (arg->tp == Arg::Int) {
         s.AppendFmt("%d", arg->i);
     } else if (arg->tp == Arg::WStr) {
-        CrashIf(true); // TODO: write me
+        // TODO: optimize by using a stack if possible
+        char *sUtf8 = str::conv::ToUtf8(arg->ws);
+        s.AppendAndFree(sUtf8);
     } else {
         CrashIf(true);
     }
