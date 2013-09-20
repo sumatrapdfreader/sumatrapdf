@@ -183,7 +183,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             enterPresentation = true;
         }
         else if (is_arg("-fullscreen")) {
-            enterFullscreen = true;
+            enterFullScreen = true;
         }
         else if (is_arg_with_param("-view")) {
             ParseViewMode(&startView, argList.At(++n));

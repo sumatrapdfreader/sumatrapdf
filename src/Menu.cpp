@@ -738,7 +738,7 @@ void UpdateMenu(EbookWindow *win, HMENU m)
 // so that accidental removal of the menu isn't catastrophic
 void ShowHideMenuBar(WindowInfo *win)
 {
-    if (win->presentation || win->fullScreen)
+    if (win->presentation || win->isFullScreen)
         return;
 
     CrashIf(!win->menu);

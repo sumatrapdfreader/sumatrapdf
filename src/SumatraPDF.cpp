@@ -164,8 +164,8 @@ static FileExistenceChecker *       gFileExistenceChecker = NULL;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
-static void EnterFullscreen(WindowInfo& win, bool presentation=false);
-static void ExitFullscreen(WindowInfo& win);
+static void EnterFullScreen(WindowInfo& win, bool presentation=false);
+static void ExitFullScreen(WindowInfo& win);
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 bool HasPermission(int permission)
@@ -424,7 +424,7 @@ static void RememberDefaultWindowPosition(WindowInfo& win)
 {
     if (win.presentation)
         gGlobalPrefs->windowState = win.windowStateBeforePresentation;
-    else if (win.fullScreen)
+    else if (win.isFullScreen)
         gGlobalPrefs->windowState = WIN_STATE_FULLSCREEN;
     else if (IsZoomed(win.hwndFrame))
         gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
@@ -837,7 +837,7 @@ static void RebuildMenuBarForWindow(WindowInfo *win)
 {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
-    if (!win->presentation && !win->fullScreen)
+    if (!win->presentation && !win->isFullScreen)
         SetMenu(win->hwndFrame, win->menu);
     DestroyMenu(oldMenu);
 }
@@ -1093,7 +1093,7 @@ Error:
     }
     // This should only happen after everything else is ready
     if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen)
-        EnterFullscreen(*win);
+        EnterFullScreen(*win);
     if (!args.isNewWindow && win->presentation && win->dm)
         win->dm->SetPresentationMode(true);
 
@@ -1115,7 +1115,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     UpdateDisplayStateWindowRect(*win, *ds);
     UpdateSidebarDisplayState(win, ds);
     // Set the windows state based on the actual window's placement
-    ds->windowState = win->fullScreen ? WIN_STATE_FULLSCREEN
+    ds->windowState = win->isFullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
@@ -1253,7 +1253,7 @@ static WindowInfo* CreateWindowInfo()
 
 WindowInfo *CreateAndShowWindowInfo()
 {
-    bool enterFullscreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState);
+    bool enterFullScreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState);
     WindowInfo *win = CreateWindowInfo();
     if (!win)
         return NULL;
@@ -1265,8 +1265,8 @@ WindowInfo *CreateAndShowWindowInfo()
         ShowWindow(win->hwndFrame, SW_SHOW);
     UpdateWindow(win->hwndFrame);
 
-    if (enterFullscreen)
-        EnterFullscreen(*win);
+    if (enterFullScreen)
+        EnterFullScreen(*win);
     return win;
 }
 
@@ -2401,7 +2401,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         win.RepaintAsync();
     }
     /* in presentation mode, change pages on left/right-clicks */
-    else if (win.fullScreen || PM_ENABLED == win.presentation) {
+    else if (win.isFullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
             win.dm->GoToPrevPage(0);
         else
@@ -2414,7 +2414,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if ((win.fullScreen || win.presentation) && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
+    if ((win.isFullScreen || win.presentation) && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
         // in presentation and fullscreen modes, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
         OnMouseLeftButtonDown(win, x, y, key);
@@ -2522,7 +2522,7 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     if (didDragMouse)
         /* pass */;
-    else if (win.fullScreen || PM_ENABLED == win.presentation) {
+    else if (win.isFullScreen || PM_ENABLED == win.presentation) {
         if ((key & MK_CONTROL))
             OnContextMenu(&win, x, y);
         else if ((key & MK_SHIFT))
@@ -2539,7 +2539,7 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
 {
-    if ((win.fullScreen || win.presentation) && !(key & ~MK_RBUTTON)) {
+    if ((win.isFullScreen || win.presentation) && !(key & ~MK_RBUTTON)) {
         // in presentation and fullscreen modes, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
         OnMouseRightButtonDown(win, x, y, key);
@@ -2705,7 +2705,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)
-        ExitFullscreen(*win);
+        ExitFullScreen(*win);
 
     bool lastWindow = (1 == TotalWindowsCount());
     // hide the window before saving prefs (closing seems slightly faster that way)
@@ -3328,7 +3328,7 @@ static void AdjustWindowEdge(WindowInfo& win)
     // would otherwise touch the screen's edge, making the scrollbar much
     // easier to hit with the mouse (cf. Fitts' law)
     // TODO: should we just always remove the canvas' edge?
-    if (IsZoomed(win.hwndFrame) || win.fullScreen || win.presentation || gPluginMode)
+    if (IsZoomed(win.hwndFrame) || win.isFullScreen || win.presentation || gPluginMode)
         newStyle &= ~WS_EX_STATICEDGE;
     else
         newStyle |= WS_EX_STATICEDGE;
@@ -3342,7 +3342,7 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs->showToolbar && !(win->presentation || win->fullScreen)) {
+    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen)) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
@@ -3353,7 +3353,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 
-    if (win->presentation || win->fullScreen) {
+    if (win->presentation || win->isFullScreen) {
         RectI fullscreen = GetFullscreenRect(win->hwndFrame);
         WindowRect rect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
@@ -3383,7 +3383,7 @@ void OnMenuChangeLanguage(HWND hwnd)
 
 static void OnMenuViewShowHideToolbar(WindowInfo *win)
 {
-    if (win->presentation || win->fullScreen)
+    if (win->presentation || win->isFullScreen)
         return;
 
     gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
@@ -3515,7 +3515,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win.fullScreen && !win.presentation) {
+    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -3531,16 +3531,16 @@ static void OnMenuGoToPage(WindowInfo& win)
         win.dm->GoToPage(newPageNo, 0, true);
 }
 
-static void EnterFullscreen(WindowInfo& win, bool presentation)
+static void EnterFullScreen(WindowInfo& win, bool presentation)
 {
     if (!HasPermission(Perm_FullscreenAccess))
         return;
 
-    if ((presentation ? win.presentation : win.fullScreen) ||
+    if ((presentation ? win.presentation : win.isFullScreen) ||
         !IsWindowVisible(win.hwndFrame) || gPluginMode)
         return;
 
-    assert(presentation ? !win.fullScreen : !win.presentation);
+    AssertCrash(presentation ? !win.isFullScreen : !win.presentation);
     if (presentation) {
         assert(win.dm);
         if (!win.IsDocLoaded())
@@ -3556,7 +3556,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
         SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
-        win.fullScreen = true;
+        win.isFullScreen = true;
         win.tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
     }
 
@@ -3568,12 +3568,12 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     }
 
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
-    if (!presentation || !win.fullScreen)
-        win.prevStyle = ws;
+    if (!presentation || !win.isFullScreen)
+        win.nonFullScreenWindowStyle = ws;
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
-    win.frameRc = WindowRect(win.hwndFrame);
+    win.nonFullScreenFrameRect = WindowRect(win.hwndFrame);
     RectI rect = GetFullscreenRect(win.hwndFrame);
 
     SetMenu(win.hwndFrame, NULL);
@@ -3591,9 +3591,9 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
-static void ExitFullscreen(WindowInfo& win)
+static void ExitFullScreen(WindowInfo& win)
 {
-    if (!win.fullScreen && !win.presentation)
+    if (!win.isFullScreen && !win.presentation)
         return;
 
     bool wasPresentation = PM_DISABLED != win.presentation;
@@ -3602,7 +3602,7 @@ static void ExitFullscreen(WindowInfo& win)
         win.presentation = PM_DISABLED;
     }
     else
-        win.fullScreen = false;
+        win.isFullScreen = false;
 
     if (wasPresentation) {
         KillTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID);
@@ -3617,24 +3617,24 @@ static void ExitFullscreen(WindowInfo& win)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
 
-    SetWindowLong(win.hwndFrame, GWL_STYLE, win.prevStyle);
+    SetWindowLong(win.hwndFrame, GWL_STYLE, win.nonFullScreenWindowStyle);
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, flags);
-    MoveWindow(win.hwndFrame, win.frameRc);
-    CrashIf(WindowRect(win.hwndFrame) != win.frameRc);
+    MoveWindow(win.hwndFrame, win.nonFullScreenFrameRect);
+    CrashIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
 }
 
 static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
 {
-    bool enterFullscreen = presentation ? !win.presentation : !win.fullScreen;
+    bool enterFullScreen = presentation ? !win.presentation : !win.isFullScreen;
 
-    if (!win.presentation && !win.fullScreen)
+    if (!win.presentation && !win.isFullScreen)
         RememberDefaultWindowPosition(win);
     else
-        ExitFullscreen(win);
+        ExitFullScreen(win);
 
-    if (enterFullscreen && (!presentation || win.IsDocLoaded()))
-        EnterFullscreen(win, presentation);
+    if (enterFullScreen && (!presentation || win.IsDocLoaded()))
+        EnterFullScreen(win, presentation);
 }
 
 static void OnMenuViewPresentation(WindowInfo& win)
@@ -3646,7 +3646,7 @@ void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->fullScreen && !win->presentation &&
+    bool hasToolbar = !win->isFullScreen && !win->presentation &&
                       gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
@@ -3827,7 +3827,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs->escToExit)
             CloseWindow(&win, true);
-        else if (win.fullScreen)
+        else if (win.isFullScreen)
             OnMenuViewFullscreen(win);
         else if (win.showSelection)
             ClearSearchResult(&win);
@@ -3928,7 +3928,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs->showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
+        if (!gGlobalPrefs->showToolbar || win.isFullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
             ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -4023,7 +4023,7 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -4065,7 +4065,7 @@ static void ResizeFav(WindowInfo *win)
 
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -4227,7 +4227,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
-    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
     int dy = rFrame.dy - toolbarDy;
 
@@ -5333,9 +5333,9 @@ InitMouseWheelInfo:
                 // in tablets it's possible to rotate the screen. if we're
                 // in full screen, resize our window to match new screen size
                 if (win->presentation)
-                    EnterFullscreen(*win, true);
-                else if (win->fullScreen)
-                    EnterFullscreen(*win, false);
+                    EnterFullScreen(*win, true);
+                else if (win->isFullScreen)
+                    EnterFullScreen(*win, false);
             }
 
             return 0;
@@ -5392,7 +5392,7 @@ InitMouseWheelInfo:
             break;
 
         case WM_MOUSEACTIVATE:
-            if (win && (win->presentation || win->fullScreen) && hwnd != GetForegroundWindow())
+            if (win && (win->presentation || win->isFullScreen) && hwnd != GetForegroundWindow())
                 return MA_ACTIVATEANDEAT;
             return MA_ACTIVATE;
 

@@ -34,7 +34,7 @@ public:
     COLORREF    textColor;
     COLORREF    backgroundColor;
     bool        enterPresentation;
-    bool        enterFullscreen;
+    bool        enterFullScreen;
     DisplayMode startView;
     float       startZoom;
     PointI      startScroll;
@@ -60,7 +60,7 @@ public:
         escToExit(false), reuseInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1), inverseSearchCmdLine(NULL),
         restrictedUse(false), pluginURL(NULL),
-        enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
+        enterPresentation(false), enterFullScreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false), cbxMangaMode(false),
         forwardSearchOrigin(NULL), forwardSearchLine(0),

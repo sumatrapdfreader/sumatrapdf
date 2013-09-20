@@ -175,7 +175,7 @@ void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->presentation || win->fullScreen)
+        if (win->presentation || win->isFullScreen)
             continue;
         if (gGlobalPrefs->showToolbar) {
             ShowWindow(win->hwndReBar, SW_SHOW);
