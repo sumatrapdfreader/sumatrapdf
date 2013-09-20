@@ -292,11 +292,6 @@ static bool SendAsEmailAttachment(WindowInfo *win)
     return SUCCEEDED(hr);
 }
 
-inline void MoveWindow(HWND hwnd, RectI rect)
-{
-    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
-}
-
 void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
     CrashIf(!win->IsDocLoaded());
@@ -3626,7 +3621,7 @@ static void ExitFullscreen(WindowInfo& win)
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, flags);
     MoveWindow(win.hwndFrame, win.frameRc);
-    assert(WindowRect(win.hwndFrame) == win.frameRc);
+    CrashIf(WindowRect(win.hwndFrame) != win.frameRc);
 }
 
 static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)

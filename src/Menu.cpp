@@ -97,6 +97,10 @@ static MenuDef menuDefView[] = {
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
 };
 
+static MenuDef menuDefViewEbook[] = {
+    { _TRN("F&ullscreen\tCtrl+L"),          IDM_VIEW_FULLSCREEN,        0 },
+};
+
 static MenuDef menuDefGoTo[] = {
     { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
@@ -685,15 +689,23 @@ HMENU BuildMenu(EbookWindow *win)
 {
     HMENU mainMenu = CreateMenu();
     int filter = MF_NOT_FOR_EBOOK_UI;
+
     HMENU m = CreateMenu();
     RebuildFileMenuForEbookUI(m, win);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
+
+    m = BuildMenuFromMenuDef(menuDefViewEbook, dimof(menuDefViewEbook), CreateMenu(), filter);
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
+
     m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
+
 #ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebugEbooks, dimof(menuDefDebugEbooks), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");

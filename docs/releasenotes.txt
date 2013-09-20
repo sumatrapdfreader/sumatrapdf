@@ -5,9 +5,9 @@ Next version:
 
 2.4 (????-??-???):
 
+* full-screen mode for ebooks (Ctrl-L)
 * F9 - show/hide menu
 * F8 - show/hide toolbar
-* support screen readers etc. via UI automation (disabled in release builds)
 * support WebP images
 
 2.3.2 (2013-05-25):

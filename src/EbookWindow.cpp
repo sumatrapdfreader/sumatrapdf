@@ -86,6 +86,36 @@ static void OnToggleBbox(EbookWindow *win)
 }
 #endif
 
+static void EnterFullScreen(EbookWindow *win)
+{
+    CrashIf(win->isFullScreen);
+    win->isFullScreen = true;
+    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    win->nonFullScreenWindowStyle = ws;
+    ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    ws |= WS_MAXIMIZE;
+    win->nonFullScreenFrameRect = WindowRect(win->hwndFrame);
+    RectI rect = GetFullscreenRect(win->hwndFrame);
+    win->menu = GetMenu(win->hwndFrame); // TODO: possibly set this earlier
+    SetMenu(win->hwndFrame, NULL);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
+    SetWindowPos(win->hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
+    // Make sure that no toolbar/sidebar keeps the focus
+    SetFocus(win->hwndFrame);
+}
+
+static void ExitFullScreen(EbookWindow *win)
+{
+    CrashIf(!win->isFullScreen);
+    win->isFullScreen = false;
+    SetMenu(win->hwndFrame, win->menu);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
+    UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
+    SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, flags);
+    MoveWindow(win->hwndFrame, win->nonFullScreenFrameRect);
+    CrashIf(WindowRect(win->hwndFrame) != win->nonFullScreenFrameRect);
+}
+
 // closes a physical window, deletes the EbookWindow object and removes it
 // from the global list of windows
 void DeleteEbookWindow(EbookWindow *win, bool forceDelete)
@@ -111,6 +141,8 @@ void DeleteEbookWindow(EbookWindow *win, bool forceDelete)
 // we create an about window
 static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
 {
+    if (win->isFullScreen)
+        ExitFullScreen(win);
     DeleteEbookWindow(win, forceClose);
     if (TotalWindowsCount() > 0)
         return;
@@ -171,6 +203,8 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     case VK_ESCAPE:
         if (gGlobalPrefs->escToExit)
             CloseEbookWindow(win, true, true);
+        else if (win->isFullScreen)
+            ExitFullScreen(win);
         break;
     default:
         return DefWindowProc(win->hwndFrame, msg, key, lParam);
@@ -182,11 +216,8 @@ static void RebuildMenuBarForEbookWindow(EbookWindow *win)
 {
     HMENU oldMenu = GetMenu(win->hwndFrame);
     HMENU newMenu = BuildMenu(win);
-#if 0 // TODO: support fullscreen mode when we have it
-    if (!win->presentation && !win->fullScreen)
-        SetMenu(win->hwndFrame, win->menu);
-#endif
-    SetMenu(win->hwndFrame, newMenu);
+    if (!win->isFullScreen)
+        SetMenu(win->hwndFrame, newMenu);
     DestroyMenu(oldMenu);
 }
 
@@ -287,6 +318,14 @@ static void OnMenuGoToPage(EbookWindow *win)
         win->ebookController->GoToPage(newPageNo);
 }
 
+static void OnMenuViewFullscreen(EbookWindow* win)
+{
+    if (win->isFullScreen)
+        ExitFullScreen(win);
+    else
+        EnterFullScreen(win);
+}
+
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     CrashIf(!win);
@@ -383,6 +422,14 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
             break;
 #endif
+
+        // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
+        // presentation mode and Shift-Ctrl-L named as fullscreen mode
+        // in ebook mode there's only fullscreeen mode and I want the simpler
+        // Ctrl-L shortcut, which sends IDM_VIEW_PRESENTATION_MODE cmd
+        case IDM_VIEW_PRESENTATION_MODE:
+            OnMenuViewFullscreen(win);
+            break;
 
         case IDM_ABOUT:
             OnMenuAbout();

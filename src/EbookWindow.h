@@ -16,15 +16,19 @@ namespace mui { class HwndWrapper; }
 class EbookWindow {
 public:
     EbookWindow() : hwndFrame(NULL), ebookControls(NULL),
-        hwndWrapper(NULL), ebookController(NULL) {
+        hwndWrapper(NULL), ebookController(NULL), isFullScreen(false) {
         touchState.panStarted = false;
     }
     ~EbookWindow() { }
 
     HWND                hwndFrame;
+    HMENU               menu;
     EbookControls *     ebookControls;
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
+    bool                isFullScreen;
+    RectI               nonFullScreenFrameRect;
+    long                nonFullScreenWindowStyle;
     TouchState          touchState;
     const WCHAR *       LoadedFilePath() const;
 };
