@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d1fd1158e3a07df3d3f640339d093d702dd18cd5
+ca9eb6dfc211b6997e26144786b26da88f10aaa3
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -63,7 +63,7 @@ cz:&O programu
 de:&Über SumatraPDF
 dk:&Om
 el:&Σχετικά
-es:&Acerca de...
+es:&Acerca de
 et:&Programmi teave
 eu:&Honi buruz...
 fa:&درباره
@@ -294,7 +294,7 @@ cz:Z&pět\tAlt+Šipka vlevo
 de:&Zurück\tAlt+<-
 dk:&Tilbage\tAlt+<-
 el:&Πίσω\tAlt+<-
-es:A&trás\tAlt+<-
+es:A&trás\tAlt+Izq
 et:&Tagasi\tAlt+Vasaknool
 eu:A&tzera\tAlt+Ezker Gezia
 fa:&عقب\tAlt+←
@@ -3631,7 +3631,7 @@ cz:Všechny podporované dokumenty
 de:Alle unterstützten Dokumente
 dk:Alle understøttede dokumenter
 el:Όλα τα υποστηριζόμενα έγγραφα
-es:Todos los documentos soportados
+es:Todos los documentos compatibles
 et:Kõik toetatud vormingud
 eu:Sostengatutako agiri guztiak
 fa:همه‌ی اسناد پشتیبانی شده
@@ -3749,7 +3749,7 @@ cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på at du vil afinstallere SumatraPDF ?
 el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
-es:¿Está seguro de querer desinstalar SumatraPDF?
+es:¿Está seguro de que quiere desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
@@ -4292,7 +4292,7 @@ cz:Zástupce záložky na straně %s souboru %s
 de:Lesezeichen-Verknüpfung zu Seite %s von %s
 dk:Gem genvej til side %s af %s
 el:Συντόμευση σελιδοδείκτη στη σελίδα %s του %s
-es:Marcar atajo a pagina %s de %s
+es:Marcar atajo a la página %s de %s
 et:Tee järjehoidja otsetee leheküljele %s/%s
 eu:Lastermarka lasterbidea %s orrialdeari %s-tik
 fa:میانبر به نشانه‌گذاری صفحه‌ی %s از %s
@@ -4841,7 +4841,7 @@ es:&Buscar actualizaciones
 et:Vaata, kas on &uuendusi
 eu:&Egiaztatu Eguneraketak
 fa:بررسی برای نسخه‌ی &جدیدتر
-fi:Tarkista, onko &päivityksiä saatavilla
+fi:Tarkista &päivitysten saatavuus...
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
@@ -5260,7 +5260,7 @@ cz:Zaslat překlad
 de:Übersetzung beisteuern
 dk:Bidrag med oversættelse
 el:Βοηθήστε στη Μετάφραση
-es:Contribuir en la traducción
+es:Contribuir con una traducción
 et:Osale tõlkimises
 eu:Lagundu Itzultzen
 fa:در ترجمه‌ی این برنامه کمک کنید
@@ -5558,6 +5558,7 @@ es:Derechos de autor:
 et:Autoriõigus:
 eu:Copyrighta:
 fa:حقّ نشر
+fi:Copyright:
 fr:Copyright :
 ga:Cóipcheart:
 he:זכויות יוצרים
@@ -5888,7 +5889,7 @@ cy:Methu gosod ategyn porwr
 cz:Nepodařilo se nainstalovat rozšíření do prohlížeče
 de:Konnte das Browser-Plugin nicht installieren
 dk:Kunne ikke installere browser plugin
-es:No es posible instalar el plugin del navegador
+es:No se puede instalar el complemento del navegador
 et:Ei suudetud paigaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina ezartzea
 fa:عدم توانایی در نصب پلاگین بروسر
@@ -6505,7 +6506,7 @@ cz:Výchozí &zvětšení:
 de:Standard&vergrößerung:
 dk:Standard &Zoom
 el:Προκαθορισμένο &Ζουμ:
-es:&Zoom por defecto:
+es:Am&pliación predeterminada:
 et:Vaike&suurendus:
 eu:Berezko &Zooma:
 fa:&ابعاد نمایش پیش‌فرض:
@@ -6929,7 +6930,7 @@ cz:EPUB dokumenty
 de:EPUB E-Bücher
 dk:EPUB-dokumenter
 el:Έγγραφα EPUB
-es:Libros en formato EPUB
+es:Libros electrónicos en EPUB
 et:EPUB-dokumendid
 eu:EPUB agiriak
 fa:EPUB اسناد
@@ -7404,7 +7405,7 @@ cz:V&před\tAlt+Šipka vpravo
 de:Vor&wärts\tAlt+->
 dk:F&remad\tAlt+->
 el:Εμπ&ρός\tAlt+->
-es:Adelante\tAlt+->
+es:Adelante\tAlt+Der
 et:E&dasi\tAlt+Paremnool
 eu:A&urrera\tAlt+Eskuin Gezia
 fa:&جلو\tAlt+→
@@ -7833,6 +7834,7 @@ dk:Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen
 es:Fallo al escribir información de la extensión de archivo en el registro
 et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
+fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
 hr:Neuspjeh kod zapisivanja produženih informacija nastavka datoteke u registru
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
@@ -9469,7 +9471,7 @@ es:Menos &opciones
 et:Peida &sätted
 eu:Ezkutatu A&ukerak
 fa:مخفی & تنظیمات
-fi:Piilota &asetukset
+fi:Piilota
 fr:Masque les &options
 hr:Sakrij postavke
 hu:Beállítások elrejtése
@@ -9950,7 +9952,7 @@ dk:Lad Windows skrivebord Søge &søg PDF dokumenter
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
-fi:Anna Windowsin työpöydän hakutoiminnon &etsiä PDF-asiakirjoista
+fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
@@ -12237,7 +12239,7 @@ cy:Cau %s i barhau!
 cz:Prosím ukončete %s pro pokračování!
 de:Bitte schliessen Sie %s vor der Installation!
 dk:Luk venligst %s for at fortsætte !
-es:¡Para continuar es necesario cerrar %s!
+es:Necesita cerrar %s para continuar.
 et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
 fi:Sulje %s jatkaaksesi!
@@ -12826,7 +12828,7 @@ cz:Tisk je stále probíhá. Přerušit a začít znovu?
 de:Bestehenden Druckvorgang abbrechen und neu beginnen?
 dk:Udskrift pågår stadig. Afbryd og start forfra?
 el:Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθεί και να ξεκινήσει πάλι;
-es:Se esta imprimiendo. ¿Abortar y empezar de nuevo?
+es:Se esta imprimiendo. ¿Cancelar y empezar de nuevo?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 fa:در حال چاپ کردن.انصراف و شروع مجدد؟
@@ -14540,7 +14542,7 @@ es:Iniciar SumatraPDF
 et:Käivita SumatraPDF
 eu:Abiarazi SumatraPDF
 fa:اجرای sumatra pdf
-fi:Käynnistä SumatraPDF
+fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
 hr:Pokreni SumatraPDF
 hu:SumatraPDF indítása
@@ -14884,7 +14886,7 @@ cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
 dk:SumatraPDF er afinstalleret.
 el:Το SumatraPDF απεγκαταστάθηκε.
-es:SumatraPDF ha sido desinstalado.
+es:Se ha desinstalado SumatraPDF.
 et:SumatraPDF on eemaldatud.
 eu:SumatraPDF kendu da.
 fa:پاک شد sumatra pdf
@@ -15256,7 +15258,7 @@ es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
 fa:sumatra pdf با تشکر از شما جهت انتخاب
-fi:Kiitos että valitsit SumatraPDF:n!
+fi:Kiitos, että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
@@ -15620,7 +15622,7 @@ cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF læser
 el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
-es:Usar SumatraPDF como lector PDF por &defecto
+es:Usar SumatraPDF como el lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از

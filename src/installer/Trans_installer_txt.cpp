@@ -663,25 +663,25 @@ const char * gTranslations_fi =
   "Poisto-ohjelman kopioiminen v\303\244liaikaiskansioon ep\303\244onnistui\0"\
   "Pikakuvakkeen luominen ep\303\244onnistui\0"\
   "Poisto-ohjelman rekisteriavainten poistaminen ep\303\244onnistui\0"\
-  "\0"\
+  "Tiedostop\303\244\303\244tetietojen kirjoittaminen rekisteriin ep\303\244onnistui\0"\
   "Poistamistietojen kirjoittaminen rekisteriin ep\303\244onnistui\0"\
-  "Piilota &asetukset\0"\
+  "Piilota\0"\
   "Asenna PDF-liit\303\244nn\303\244inen selaimille Firefox, Chrome ja Opera\0"\
   "Asenna SumatraPDF\0"\
   "Asenna SumatraPDF kansioon:\0"\
   "Asentaminen ep\303\244onnistui!\0"\
   "Asennus k\303\244ynniss\303\244...\0"\
-  "Anna Windowsin ty\303\266p\303\266yd\303\244n hakutoiminnon &etsi\303\244 PDF-asiakirjoista\0"\
+  "&Anna Windowsin hakutoiminnon etsi\303\244 PDF-asiakirjoista\0"\
   "Anna Windowsin n\303\244ytt\303\244\303\244 &esikatselukuvat PDF-asiakirjoille\0"\
   "Sulje %s jatkaaksesi!\0"\
   "Valitse kansio, johon SumatraPDF asennetaan:\0"\
   "Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat\0"\
-  "K\303\244ynnist\303\244 SumatraPDF\0"\
+  "Avaa SumatraPDF\0"\
   "SumatraPDF %s asennusohjelma\0"\
   "SumatraPDF %s poisto-ohjelma\0"\
   "SumatraPDF on poistettu.\0"\
   "SumatraPDF-asennusta ei l\303\266ytynyt.\0"\
-  "Kiitos ett\303\244 valitsit SumatraPDF:n!\0"\
+  "Kiitos, ett\303\244 valitsit SumatraPDF:n!\0"\
   "Kiitos! SumatraPDF asennettiin.\0"\
   "Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi h\303\244iri\303\266!\0"\
   "Poista SumatraPDF\0"\
@@ -1366,13 +1366,13 @@ const char * gTranslations_sk =
 
 const char * gTranslations_es = 
   "&Opciones\0"\
-  "\302\277Est\303\241 seguro de querer desinstalar SumatraPDF?\0"\
+  "\302\277Est\303\241 seguro de que quiere desinstalar SumatraPDF?\0"\
   "Cerrar\0"\
   "No es posiblre crear la carpeta temporal\0"\
   "No se puede crear el directorio de instalaci\303\263n\0"\
   "No se puede instalar previsualizador PDF\0"\
   "No se puede instalar el filtro buscador PDF\0"\
-  "No es posible instalar el plugin del navegador\0"\
+  "No se puede instalar el complemento del navegador\0"\
   "No se puede acceder al directorio temporal\0"\
   "No se puede eliminar el directorio de instalaci\303\263n\0"\
   "No se puede eliminar el acceso directo\0"\
@@ -1393,13 +1393,13 @@ const char * gTranslations_es =
   "Instalaci\303\263n en progreso...\0"\
   "Permitir que la b\303\272squeda de Windows encuentre documentos PDF\0"\
   "Mostrar miniaturas en los iconos de documentos &PDF\0"\
-  "\302\241Para continuar es necesario cerrar %s!\0"\
+  "Necesita cerrar %s para continuar.\0"\
   "Seleccione la carpeta de instalaci\303\263n de SumatraPDF:\0"\
   "Algunos de los archivos que van a ser instalados estan da\303\261ados o no se encuentran\0"\
   "Iniciar SumatraPDF\0"\
   "Instalador de SumatraPDF %s\0"\
   "Desinstalador de SumatraPDF %s\0"\
-  "SumatraPDF ha sido desinstalado.\0"\
+  "Se ha desinstalado SumatraPDF.\0"\
   "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
   "\302\241Gracias por elegir a SumatraPDF!\0"\
   "\302\241Gracias! SumatraPDF ha sido instalado.\0"\
@@ -1407,7 +1407,7 @@ const char * gTranslations_es =
   "Desinstalar SumatraPDF\0"\
   "Fall\303\263 la desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en progreso...\0"\
-  "Usar SumatraPDF como lector PDF por &defecto\0";
+  "Usar SumatraPDF como el lector PDF pre&determinado\0";
 
 const char * gTranslations_sv = 
   "Alternativ\0"\
