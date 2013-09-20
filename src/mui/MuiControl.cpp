@@ -285,10 +285,14 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
     CrashIf(!IsVisible());
 }
 
+// returns true if the style of control has changed
 bool Control::SetStyle(Style *style)
 {
     bool changed;
+    CachedStyle *currStyle = cachedStyle;
     cachedStyle = CacheStyle(style, &changed);
+    if (currStyle != cachedStyle)
+        changed = true;
     if (changed)
         RequestRepaint(this);
     return changed;
