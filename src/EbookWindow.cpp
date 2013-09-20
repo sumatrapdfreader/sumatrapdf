@@ -96,17 +96,16 @@ static void EnterFullScreen(EbookWindow *win)
     ws |= WS_MAXIMIZE;
     win->nonFullScreenFrameRect = WindowRect(win->hwndFrame);
     RectI rect = GetFullscreenRect(win->hwndFrame);
-    win->menu = GetMenu(win->hwndFrame); // TODO: possibly set this earlier
     SetMenu(win->hwndFrame, NULL);
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win->hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
-    // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win->hwndFrame);
 }
 
 static void ExitFullScreen(EbookWindow *win)
 {
     CrashIf(!win->isFullScreen);
+    CrashIf(!win->menu);
     win->isFullScreen = false;
     SetMenu(win->hwndFrame, win->menu);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
@@ -214,10 +213,10 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 
 static void RebuildMenuBarForEbookWindow(EbookWindow *win)
 {
-    HMENU oldMenu = GetMenu(win->hwndFrame);
-    HMENU newMenu = BuildMenu(win);
+    HMENU oldMenu = win->menu;
+    win->menu = BuildMenu(win);
     if (!win->isFullScreen)
-        SetMenu(win->hwndFrame, newMenu);
+        SetMenu(win->hwndFrame, win->menu);
     DestroyMenu(oldMenu);
 }
 
@@ -326,6 +325,23 @@ static void OnMenuViewFullscreen(EbookWindow* win)
         EnterFullScreen(win);
 }
 
+// show/hide top-level menu bar. This doesn't persist across launches
+// so that accidental removal of the menu isn't catastrophic
+void ShowHideMenuBar(EbookWindow *win)
+{
+    CrashIf(!win->menu);
+    if (win->isFullScreen)
+        return;
+
+    HWND hwnd = win->hwndFrame;
+    HMENU m = GetMenu(hwnd);
+    if (m) {
+        SetMenu(hwnd, NULL);
+    } else {
+        SetMenu(hwnd, win->menu);
+    }
+}
+
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     CrashIf(!win);
@@ -422,6 +438,10 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
             break;
 #endif
+
+        case IDM_VIEW_SHOW_HIDE_MENUBAR:
+            ShowHideMenuBar(win);
+            break;
 
         // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
         // presentation mode and Shift-Ctrl-L named as fullscreen mode
@@ -715,7 +735,8 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     gEbookWindows.Append(win);
     win::SetText(win->hwndFrame, winTitle);
-    SetMenu(hwnd, BuildMenu(win));
+    win->menu = BuildMenu(win);
+    SetMenu(hwnd, win->menu);
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetDoc(doc, startReparseIdx);
