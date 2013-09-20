@@ -1,8 +1,8 @@
 Major user-visible changes in each release:
-2.3 - text support (in it's own ui)
-2.4 - hex display (can show any file in hex/text view; it's own ui)
+2.5 - text support (in it's own ui)
+2.6 - hex display (can show any file in hex/text view; it's own ui)
 
-More detailed list for 2.3:
+More detailed list for 2.5:
 - refactor LoadDocument() so that more code is shared between
   engine/ebook UIs and so that it loads documents in the
   background thread
@@ -23,7 +23,6 @@ A random list of things to implement sooner or later:
 - ebook ui: links
 - mobi: lists (ul, li)
 - ebook ui: search
-- ebook ui: fullscreen
 - ebook ui: printing
 - ebook ui: allow to change default font name/size, remember it
         for a given document in preferences
