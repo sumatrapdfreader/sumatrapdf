@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ca9eb6dfc211b6997e26144786b26da88f10aaa3
+6987719eafebeb6925a5073c9f10bf714d4167e1
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -7448,6 +7448,57 @@ tw:下一停頓頁面(&O)\tAlt+->
 uk:Вперед\tAlt+Права стрілка
 uz:&Oldinga\tAlt+->
 vn:Tiếp tục\tAlt+Mũi tên phải
+:F&ullscreen\tCtrl+L
+am:Ամ&բողջ էկրանով\tCtrl+L
+ar:بحجم الشاشة\tCtrl+L
+az:Tam ek&ran\tCtrl+L
+bg:&Цял Екран\tCtrl+L
+br:Tela cheia\tCtrl+L
+bs:Cijeli ekran\tCtrl+L
+ca-xv:Pantalla &completa\tCtrl+L
+ca:Pantalla &completa\tCtrl+L
+cn:全屏(&U)\tCtrl+L
+cy:Sgrin Lawn\tCtrl+L
+cz:&Celá obrazovka\tCtrl+L
+de:&Vollbild\tStrg+L
+dk:F&uldskærmsvisning\tCtrl+L
+el:&Πλήρης Οθόνη\tCtrl+L
+es:Pantalla completa\tCtrl+L
+et:&Täisekraanvaade\tCtrl+L
+eu:&Ikusleiho-osoan\tKtrl+L
+fa:&تمام‌صفحه\tCtrl+L
+fi:Koko &näyttö\tCtrl+L
+fr:Plein  écran\tCtrl+L
+ga:Lánscáileán\tCtrl+L
+he:מסך מלא\tCtrl+L
+hi:पूरा परदा\tCtrl+L
+hr:Cijeli zaslon\tCtrl+L
+hu:Teljes képernyő\tCtrl+L
+id:Selayar Penuh\tCtrl+L
+it:S&chermo intero\t<Ctrl>+L
+ja:全画面表示(&U)\tCtrl+L
+kr:전체 화면(&U)\tCtrl+L
+ku:پڕ&بەشاشە\tCtrl+L
+mk:На цел екран\tCtrl+L
+ne:पू&र्णस्क्रिन\tCtrl+L
+nl:Volledig scherm\tCtrl+L
+no:Fullskjerm\tCtrl+L
+pl:Pełny ekran\tCtrl+L
+pt:Ecrã co&mpleto\tCtrl+L
+ro:Tot ecranul\tCtrl+L
+ru:Полный &экран\tCtrl+L
+sk:&Na celú obrazovku\tCtrl+L
+sl:Celozaslonsko\tCtrl+L
+sp-rs:Ceo ekran\tCtrl+L
+sq:Ekran i p&lotë\tCtrl+L
+sr-rs:Цео екран\tCtrl+L
+sv:Fullskärm\tCtrl+L
+ta:முழுத்திரை
+tr:&Tam Ekran\tCtrl+L
+tw:全螢幕顯示(&U)\tCtrl+L
+uk:На цілий екран\tCtrl+L
+uz:To'liq &ekran\tCtrl+L
+vn:Toàn màn hình\tCtrl+L
 :F&ullscreen\tCtrl+Shift+L
 af:Volskerm\tCtrl+Shift+L
 am:Ամ&բողջ էկրանով\tCtrl+Shift+L
