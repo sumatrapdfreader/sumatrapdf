@@ -128,6 +128,7 @@ Error: SumatraPDF hasn't been found!
 Error: The document couldn't be downloaded!
 F&avorites
 F&orward\tAlt+Right Arrow
+F&ullscreen\tCtrl+L
 F&ullscreen\tCtrl+Shift+L
 Facing
 Failed to copy uninstaller to temp directory
