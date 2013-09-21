@@ -6,9 +6,12 @@ Next version:
 2.4 (????-??-???):
 
 * full-screen mode for ebooks (Ctrl-L)
-* F9 - show/hide menu
-* F8 - show/hide toolbar
+* new key bindings:
+  * F9 - show/hide menu
+  * F8 - show/hide toolbar
 * support WebP images
+* support for RAR5 compressed comic books
+* fixed multiple crashes
 
 2.3.2 (2013-05-25):
 
