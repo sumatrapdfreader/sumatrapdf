@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6987719eafebeb6925a5073c9f10bf714d4167e1
+415ecd8f2622d8fcba1895c8b7ca3b3d3a206bf4
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -215,6 +215,7 @@ ru:&Расширенные настройки...
 sk:&Rozšírené možnosti...
 sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
+sv:&Avancerade Inställningar
 ta:&மேம்பட்ட விருப்பங்கள்
 tr:Gelişmiş Ayarlar
 tw:進階選項...(&A)
@@ -6378,7 +6379,7 @@ bg:Увеличение по &избор...\tCtrl+Y
 br:&Zoom personalizado...\tCtrl+Y
 bs:&Prilagođeno uvećanje...\tCtrl+Y
 ca-xv:Zoom &predeterminat..\tCtrl+Y
-ca:Zoom &predeterminat..\tCtrl+Y
+ca:Escala &predeterminada…\tCtrl+Y
 cn:自定义缩放(&Z)...\tCtrl+Y
 cy:&Addasu Chwyddo...\tCtrl+Y
 cz:Vlastní &měřítko...\tCtrl+Y
@@ -6679,7 +6680,7 @@ bg:DjVu документи
 br:Documentos DjVu
 bs:DjVu dokumenti
 ca-xv:Documents djvu
-ca:Documents djvu
+ca:Documents DjVu
 cn:DjVu 文件
 cy:Dogfennau DjVu
 cz:DjVu dokumenty
@@ -9842,7 +9843,7 @@ ar:فشل في تنصيب البرنامج
 az:Quraşdırma baş tutmadı!
 br:Falha na instalação!
 ca-xv:La instal·lació ha fallat!
-ca:La instal·lació ha fallat!
+ca:La instal·lació ha fallat.
 cn:安装失败!
 cy:Methodd y gosod!
 cz:Instalace selhala!
@@ -10345,6 +10346,7 @@ ro:Mod man&ga
 ru:Режим Man&ga
 sk:Man&ga mód
 sq:Mënyra Man&ga
+sv:Man&ga Läge
 ta:மேங்கா முறை
 tr:Man&ga modu
 tw:漫畫模式(&G)
@@ -12560,7 +12562,7 @@ bg:Отпечатай
 br:Imprimir
 bs:Štampaj
 ca-xv:Impressora
-ca:Impressora
+ca:Imprimeix
 cn:打印
 cy:Argraffu
 cz:Tisk...
@@ -16510,7 +16512,7 @@ sl:tiskanje dokumenta
 sp-rs:štampanje dokumenta
 sq:printimi i dokumentit
 sr-rs:штампање документа
-sv:skriver ut dokumentet
+sv:skriver ut dokument
 ta:கோப்பு அக்சிடப்படுகிறது
 tl:ipini-print ang dokumento
 tr:belge yazdırılıyor

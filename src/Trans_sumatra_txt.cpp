@@ -2077,12 +2077,12 @@ const char * gTranslations_ca =
   "No es pot representar la p\303\240gina\0"\
   "Creat:\0"\
   "Fitxer actual\0"\
-  "Zoom &predeterminat..\tCtrl+Y\0"\
+  "Escala &predeterminada\342\200\246\tCtrl+Y\0"\
   "&Visualitzaci\303\263 predeterminada:\0"\
   "&Zoom predeterminat\0"\
   "No es pot canviar el lector de PDF predeterminat en mode portable.\0"\
   "Permisos denegats:\0"\
-  "Documents djvu\0"\
+  "Documents DjVu\0"\
   "Propietats del document\0"\
   "Baixa\0"\
   "S&urt\tCtrl+Q\0"\
@@ -2169,7 +2169,7 @@ const char * gTranslations_ca =
   "Documents Postscript\0"\
   "Pr&esentaci\303\263\tCtrl+L\0"\
   "P\303\240gina anterior\0"\
-  "Impressora\0"\
+  "Imprimeix\0"\
   "Imprimeix com a &imatge (requereix m\303\251s mem\303\262ria)\0"\
   "Interval d'impressi\303\263\0"\
   "No existeix cap impressora amb el nom prove\303\257t\0"\
@@ -11579,7 +11579,7 @@ const char * gTranslations_es =
 const char * gTranslations_sv = 
   "&Om\0"\
   "&Verklig storlek\tCtrl+1\0"\
-  "\0"\
+  "&Avancerade Inst\303\244llningar\0"\
   "&Alla valda sidor\0"\
   "Tillbaka\tAlt+Pil v\303\244nster\0"\
   "&Bokvy\tCtrl+8\0"\
@@ -11726,7 +11726,7 @@ const char * gTranslations_sv =
   "\0"\
   "St\303\244lla in SumatraPDF som standardprogram f\303\266r PDF-filer?\0"\
   "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF\0"\
-  "\0"\
+  "Man&ga L\303\244ge\0"\
   "Matcha versaler/gemener\0"\
   "Mobi-dokument\0"\
   "\303\204ndrad:\0"\
@@ -11820,7 +11820,7 @@ const char * gTranslations_sv =
   "Zoomfaktor\0"\
   "[\303\204ndringar detekterade; uppdaterar] %s\0"\
   "kopierar text\0"\
-  "skriver ut dokumentet\0";
+  "skriver ut dokument\0";
 
 const char * gTranslations_ta = 
   "\340\256\252\340\256\261\340\257\215\340\256\261\340\256\277\0"\

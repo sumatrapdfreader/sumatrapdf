@@ -309,7 +309,7 @@ const char * gTranslations_ca =
   "Instal\302\267la el &connector PDF pels navegadors Firefox, Chrome i Opera\0"\
   "Instal\302\267la el SumatraPDF\0"\
   "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
-  "La instal\302\267laci\303\263 ha fallat!\0"\
+  "La instal\302\267laci\303\263 ha fallat.\0"\
   "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
   "Permet al Windows Desktop Search &cercar als documents PDF\0"\
   "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents PDF\0"\
