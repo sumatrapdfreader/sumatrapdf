@@ -20,6 +20,14 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+void MenuUpdateDisplayMode(EbookWindow *win)
+{
+    UINT id = IDM_VIEW_FACING;
+    if (win->isSinglePage)
+        id = IDM_VIEW_SINGLE_PAGE;
+    CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
+}
+
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();
@@ -98,6 +106,9 @@ static MenuDef menuDefView[] = {
 };
 
 static MenuDef menuDefViewEbook[] = {
+    { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       0 },
+    { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            0 },
+    { SEP_ITEM,                             0,                          0 },
     { _TRN("F&ullscreen\tCtrl+L"),          IDM_VIEW_FULLSCREEN,        0 },
 };
 
@@ -405,7 +416,8 @@ static bool IsFileCloseMenuEnabled()
     return false;
 }
 
-void MenuUpdateStateForWindow(WindowInfo* win) {
+void MenuUpdateStateForWindow(WindowInfo* win)
+{
     // those menu items will be disabled if no document is opened, enabled otherwise
     static UINT menusToDisableIfNoDocument[] = {
         IDM_VIEW_ROTATE_LEFT, IDM_VIEW_ROTATE_RIGHT, IDM_GOTO_NEXT_PAGE, IDM_GOTO_PREV_PAGE,
@@ -715,6 +727,7 @@ HMENU BuildMenu(EbookWindow *win)
 
 void UpdateMenu(WindowInfo *win, HMENU m)
 {
+    CrashIf(!win);
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
         RebuildFileMenu(win, m);
@@ -723,8 +736,7 @@ void UpdateMenu(WindowInfo *win, HMENU m)
         BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);
         RebuildFavMenu(win, m);
     }
-    if (win)
-        MenuUpdateStateForWindow(win);
+    MenuUpdateStateForWindow(win);
 }
 
 void UpdateMenu(EbookWindow *win, HMENU m)
@@ -732,6 +744,8 @@ void UpdateMenu(EbookWindow *win, HMENU m)
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
         RebuildFileMenuForEbookUI(m, win);
+    else if (id == menuDefViewEbook[0].id)
+        MenuUpdateDisplayMode(win);
 }
 
 // show/hide top-level menu bar. This doesn't persist across launches

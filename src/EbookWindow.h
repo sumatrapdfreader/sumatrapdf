@@ -16,7 +16,9 @@ namespace mui { class HwndWrapper; }
 class EbookWindow {
 public:
     EbookWindow() : hwndFrame(NULL), menu(NULL), ebookControls(NULL),
-        hwndWrapper(NULL), ebookController(NULL), isFullScreen(false) {
+        hwndWrapper(NULL), ebookController(NULL), isFullScreen(false),
+        isSinglePage(true)
+    {
         touchState.panStarted = false;
     }
     ~EbookWindow() { }
@@ -27,6 +29,7 @@ public:
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
     bool                isFullScreen;
+    bool                isSinglePage;
     RectI               nonFullScreenFrameRect;
     long                nonFullScreenWindowStyle;
     TouchState          touchState;

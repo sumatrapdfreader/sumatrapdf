@@ -503,6 +503,12 @@ static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
     // switch between the interfaces); we get reasonable
     // defaults from DisplayState's constructor anyway
     ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
+#if 0
+    if (win->isSinglePage)
+        ds->displayMode = DM_SINGLE_PAGE;
+    else
+        ds->displayMode = DM_
+#endif
 }
 
 static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)

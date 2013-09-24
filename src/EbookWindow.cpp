@@ -342,6 +342,18 @@ void ShowHideMenuBar(EbookWindow *win)
     }
 }
 
+static void OnMenuViewSinglePage(EbookWindow *win)
+{
+    CrashIf(win->isSinglePage);
+    win->isSinglePage = true;
+}
+
+static void OnMenuViewFacing(EbookWindow *win)
+{
+    CrashIf(!win->isSinglePage);
+    win->isSinglePage = false;
+}
+
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     CrashIf(!win);
@@ -443,7 +455,15 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             ShowHideMenuBar(win);
             break;
 
-        // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
+        case IDM_VIEW_SINGLE_PAGE:
+            OnMenuViewSinglePage(win);
+            break;
+
+        case IDM_VIEW_FACING:
+            OnMenuViewFacing(win);
+            break;
+
+            // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
         // presentation mode and Shift-Ctrl-L named as fullscreen mode
         // in ebook mode there's only fullscreeen mode and I want the simpler
         // Ctrl-L shortcut, which sends IDM_VIEW_PRESENTATION_MODE cmd
