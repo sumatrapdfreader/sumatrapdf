@@ -98,7 +98,7 @@ int pdf_xref_len(pdf_document *doc)
 	/* Return the length of the document's final xref section */
 	pdf_xref *xref = &doc->xref_sections[0];
 
-	return xref->len;
+	return xref == NULL ? 0 : xref->len;
 }
 
 /* Used while reading the individual xref sections from a file */
@@ -363,6 +363,8 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 		if (!s)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "invalid range marker in xref");
 		len = fz_atoi(fz_strsep(&s, " "));
+		if (len <= 0)
+			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "xref range marker must be positive");
 
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')
