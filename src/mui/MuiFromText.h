@@ -26,7 +26,9 @@ Control *       FindControlNamed(const ParsedMui& muiInfo, const char *name);
 ILayout *       FindLayoutNamed(const ParsedMui& muiInfo, const char *name);
 
 typedef Control * (*ControlCreatorFunc)(TxtNode *);
-
 void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator);
 void FreeControlCreators();
 
+typedef ILayout * (*LayoutCreatorFunc)(TxtNode *);
+void RegisterLayoutCreatorFor(const char *layoutName, LayoutCreatorFunc creator);
+void FreeLayoutCreators();

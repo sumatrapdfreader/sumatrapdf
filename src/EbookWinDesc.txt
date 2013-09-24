@@ -76,6 +76,24 @@ EbookPage [
     style: stylePage
 ]
 
+EbookPage [
+    name: page1
+    style: stylePage
+]
+
+EbookPage [
+    name: page2
+    style: stylePage
+]
+
+PagesLayout [
+    name: pages
+    children [
+        page1
+        page2
+    ]
+]
+
 HorizontalLayout [
     name: top
     children [
