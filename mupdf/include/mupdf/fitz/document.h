@@ -23,7 +23,7 @@ struct fz_document_s
 {
 	void (*close)(fz_document *);
 	int (*needs_password)(fz_document *doc);
-	int (*authenticate_password)(fz_document *doc, char *password);
+	int (*authenticate_password)(fz_document *doc, const char *password);
 	fz_outline *(*load_outline)(fz_document *doc);
 	int (*count_pages)(fz_document *doc);
 	fz_page *(*load_page)(fz_document *doc, int number);
@@ -94,7 +94,7 @@ int fz_needs_password(fz_document *doc);
 
 	Does not throw exceptions.
 */
-int fz_authenticate_password(fz_document *doc, char *password);
+int fz_authenticate_password(fz_document *doc, const char *password);
 
 /*
 	fz_load_outline: Load the hierarchical document outline.

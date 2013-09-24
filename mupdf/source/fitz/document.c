@@ -111,7 +111,7 @@ fz_needs_password(fz_document *doc)
 }
 
 int
-fz_authenticate_password(fz_document *doc, char *password)
+fz_authenticate_password(fz_document *doc, const char *password)
 {
 	if (doc && doc->authenticate_password)
 		return doc->authenticate_password(doc, password);
