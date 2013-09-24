@@ -809,7 +809,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     if (!ShouldSaveThumbnail(ds))
         return;
 
-    assert(win.IsDocLoaded() && win.dm->engine);
+    AssertCrash(win.IsDocLoaded() && win.dm->engine);
     if (!win.IsDocLoaded() || !win.dm->engine) return;
 
     // don't create thumbnails for password protected documents
@@ -951,7 +951,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     if (win->dm || args.allowFailure)
         ClearTocBox(win);
 
-    assert(!win->IsAboutWindow() && win->IsDocLoaded() == (win->dm != NULL));
+    AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->dm != NULL));
     /* see http://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
@@ -1076,7 +1076,7 @@ Error:
         ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
         // if the window isn't shown and win.canvasRc is still empty, zoom
         // has not been determined yet
-        assert(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
+        AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
         if (args.showWin || ss.page != 1)
             win->dm->SetScrollState(ss);
         UpdateToolbarState(win);
@@ -1210,7 +1210,7 @@ static WindowInfo* CreateWindowInfo()
     if (!hwndFrame)
         return NULL;
 
-    assert(NULL == FindWindowInfoByHwnd(hwndFrame));
+    AssertCrash(NULL == FindWindowInfoByHwnd(hwndFrame));
     WindowInfo *win = new WindowInfo(hwndFrame);
 
     win->hwndCanvas = CreateWindowEx(
@@ -1228,7 +1228,7 @@ static WindowInfo* CreateWindowInfo()
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
-    assert(!win->menu);
+    AssertCrash(!win->menu);
     win->menu = BuildMenu(win);
     SetMenu(win->hwndFrame, win->menu);
 
@@ -1539,7 +1539,7 @@ WindowInfo* LoadDocument(LoadArgs& args)
 // The current page edit box is updated with the current page number
 void WindowInfo::PageNoChanged(int pageNo)
 {
-    assert(dm && dm->PageCount() > 0);
+    AssertCrash(dm && dm->PageCount() > 0);
     if (!dm || dm->PageCount() == 0)
         return;
 
@@ -1570,7 +1570,7 @@ void WindowInfo::PageNoChanged(int pageNo)
 
 bool DoCachePageRendering(WindowInfo *win, int pageNo)
 {
-    assert(win->dm && win->dm->engine);
+    AssertCrash(win->dm && win->dm->engine);
     if (!win->dm || !win->dm->engine || !win->dm->engine->IsImageCollection())
         return true;
 
@@ -1584,7 +1584,7 @@ bool DoCachePageRendering(WindowInfo *win, int pageNo)
 /* Send the request to render a given page to a rendering thread */
 void WindowInfo::RequestRendering(int pageNo)
 {
-    assert(dm);
+    AssertCrash(dm);
     if (!dm) return;
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
@@ -1597,7 +1597,7 @@ void WindowInfo::RequestRendering(int pageNo)
 
 void WindowInfo::CleanUp(DisplayModel *dm)
 {
-    assert(dm);
+    AssertCrash(dm);
     if (!dm)
         return;
 
@@ -1681,7 +1681,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
        see this dialog */
     if (!gGlobalPrefs->associateSilently) {
         INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
-        assert(IDYES == result || IDNO == result);
+        AssertCrash(IDYES == result || IDNO == result);
         str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : NULL);
     }
     // for now, .pdf is the only choice
@@ -2041,7 +2041,7 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
 static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 {
     DisplayModel* dm = win.dm;
-    assert(dm);
+    AssertCrash(dm);
     if (!dm) return;
 
     bool paintOnBlackWithoutShadow = win.presentation ||
@@ -2108,7 +2108,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio)
             continue;
-        assert(pageInfo->shown);
+        AssertCrash(pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -2247,7 +2247,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
     if (!win.IsDocLoaded())
         return;
-    assert(win.dm);
+    AssertCrash(win.dm);
 
     if (win.presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
@@ -2315,12 +2315,12 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         win.mouseAction = MA_IDLE;
         return;
     }
-    assert(win.mouseAction == MA_IDLE);
-    assert(win.dm);
+    AssertCrash(win.mouseAction == MA_IDLE);
+    AssertCrash(win.dm);
 
     SetFocus(win.hwndFrame);
 
-    assert(!win.linkOnLastButtonDown);
+    AssertCrash(!win.linkOnLastButtonDown);
     PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->GetType() == Element_Link)
         win.linkOnLastButtonDown = pageEl;
@@ -2369,10 +2369,10 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     if (!win.IsDocLoaded())
         return;
 
-    assert(win.dm);
+    AssertCrash(win.dm);
     if (MA_IDLE == win.mouseAction || MA_DRAGGING_RIGHT == win.mouseAction)
         return;
-    assert(MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction || MA_DRAGGING == win.mouseAction);
+    AssertCrash(MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction || MA_DRAGGING == win.mouseAction);
 
     bool didDragMouse = !win.dragStartPending ||
         abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
@@ -2494,7 +2494,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         win.mouseAction = MA_IDLE;
     else if (win.mouseAction != MA_IDLE)
         return;
-    assert(win.dm);
+    AssertCrash(win.dm);
 
     SetFocus(win.hwndFrame);
 
@@ -2515,7 +2515,7 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         return;
     }
 
-    assert(win.dm);
+    AssertCrash(win.dm);
     if (MA_DRAGGING_RIGHT != win.mouseAction)
         return;
 
@@ -2735,7 +2735,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 
     if (lastWindow && quitIfLast) {
-        assert(0 == gWindows.Count());
+        AssertCrash(0 == gWindows.Count());
         PostQuitMessage(0);
     } else if (lastWindow && !quitIfLast) {
         CrashIf(!gWindows.Contains(win));
@@ -2770,7 +2770,7 @@ static bool AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
-    assert(win.dm);
+    AssertCrash(win.dm);
     if (!win.IsDocLoaded()) return;
 
     const WCHAR *srcFileName = win.dm->FilePath();
@@ -2781,7 +2781,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         srcFileName = urlName ? urlName : L"filename";
     }
 
-    assert(srcFileName);
+    AssertCrash(srcFileName);
     if (!srcFileName) return;
 
     // Can't save a document's content as plain text if text copying isn't allowed
@@ -3211,7 +3211,7 @@ void OnMenuOpen(const SumatraWindow& win)
 
 static void BrowseFolder(WindowInfo& win, bool forward)
 {
-    assert(win.loadedFilePath);
+    AssertCrash(win.loadedFilePath);
     if (win.IsAboutWindow()) return;
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
 
@@ -3548,7 +3548,7 @@ static void EnterFullScreen(WindowInfo& win, bool presentation)
 
     AssertCrash(presentation ? !win.isFullScreen : !win.presentation);
     if (presentation) {
-        assert(win.dm);
+        AssertCrash(win.dm);
         if (!win.IsDocLoaded())
             return;
 
@@ -4007,7 +4007,7 @@ static void ResizeSidebar(WindowInfo *win)
 
     ClientRect rToc(win->hwndTocBox);
     ClientRect rFav(win->hwndFavBox);
-    assert(rToc.dx == rFav.dx);
+    AssertCrash(rToc.dx == rFav.dx);
     ClientRect rFrame(win->hwndFrame);
 
     // make sure to keep this in sync with the calculations in SetSidebarVisibility
@@ -4035,8 +4035,8 @@ static void ResizeSidebar(WindowInfo *win)
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
     // to convert it into coordinates relative to hwndFrame:
-    assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
-    //assert(totalDy == (rToc.dy + rFav.dy));
+    AssertCrash(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
+    //AssertCrash(totalDy == (rToc.dy + rFav.dy));
 
     MoveWindow(win->hwndTocBox,      0, y,                           sidebarDx, rToc.dy, TRUE);
     MoveWindow(win->hwndFavSplitter, 0, y + rToc.dy,                 sidebarDx, favSplitterDy, TRUE);
@@ -4056,7 +4056,7 @@ static void ResizeFav(WindowInfo *win)
 
     ClientRect rToc(win->hwndTocBox);
     ClientRect rFav(win->hwndFavBox);
-    assert(rToc.dx == rFav.dx);
+    AssertCrash(rToc.dx == rFav.dx);
     ClientRect rFrame(win->hwndFrame);
     int tocDx = rToc.dx;
 
@@ -4077,10 +4077,10 @@ static void ResizeFav(WindowInfo *win)
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
     // to convert it into coordinates relative to hwndFrame:
-    assert(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
-    //assert(totalDy == (rToc.dy + rFav.dy));
+    AssertCrash(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
+    //AssertCrash(totalDy == (rToc.dy + rFav.dy));
     int favDy = totalDy - tocDy - SPLITTER_DY;
-    assert(favDy >= 0);
+    AssertCrash(favDy >= 0);
 
     MoveWindow(win->hwndTocBox,      0, y,                       tocDx, tocDy,       TRUE);
     MoveWindow(win->hwndFavSplitter, 0, y + tocDy,               tocDx, SPLITTER_DY, TRUE);
@@ -4154,7 +4154,7 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
     SizeI size = TextSizeInHwnd(hwndTitle, title);
 
     WindowInfo *win = FindWindowInfoByHwnd(hwndContainer);
-    assert(win);
+    AssertCrash(win);
     int offset = win ? (int)(2 * win->uiDPIFactor) : 2;
     if (size.dy < 16)
         size.dy = 16;
