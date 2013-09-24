@@ -51,7 +51,7 @@ void FreeControlCreators()
     }
 }
 
-Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
+Button *FindButtonNamed(const ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.buttons.Count(); i++) {
         Button *c = muiInfo.buttons.At(i);
@@ -61,7 +61,7 @@ Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
     return NULL;
 }
 
-ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
+ButtonVector *FindButtonVectorNamed(const ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.vecButtons.Count(); i++) {
         ButtonVector *c = muiInfo.vecButtons.At(i);
@@ -71,7 +71,7 @@ ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
     return NULL;
 }
 
-ScrollBar *FindScrollBarNamed(ParsedMui& muiInfo, const char *name)
+ScrollBar *FindScrollBarNamed(const ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.scrollBars.Count(); i++) {
         ScrollBar *c = muiInfo.scrollBars.At(i);
@@ -81,7 +81,7 @@ ScrollBar *FindScrollBarNamed(ParsedMui& muiInfo, const char *name)
     return NULL;
 }
 
-Control *FindControlNamed(ParsedMui& muiInfo, const char *name)
+Control *FindControlNamed(const ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.allControls.Count(); i++) {
         Control *c = muiInfo.allControls.At(i);
@@ -91,7 +91,7 @@ Control *FindControlNamed(ParsedMui& muiInfo, const char *name)
     return NULL;
 }
 
-ILayout *FindLayoutNamed(ParsedMui& muiInfo, const char *name)
+ILayout *FindLayoutNamed(const ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.layouts.Count(); i++) {
         ILayout *l = muiInfo.layouts.At(i);
