@@ -1226,29 +1226,29 @@ fz_md5_pixmap(fz_pixmap *pix, unsigned char digest[16])
 }
 
 /* SumatraPDF: Write pixmap to TGA file (with or without alpha channel) */
-static inline void tga_put_pixel(unsigned char *data, int n, int is_bgr, FILE *fp)
+static inline void tga_put_pixel(unsigned char *data, int n, int is_bgr, fz_output *out)
 {
 	if (n >= 3 && !is_bgr)
 	{
-		putc(data[2], fp);
-		putc(data[1], fp);
-		putc(data[0], fp);
+		fz_putc(out, data[2]);
+		fz_putc(out, data[1]);
+		fz_putc(out, data[0]);
 		if (n == 4)
-			putc(data[3], fp);
+			fz_putc(out, data[3]);
 		return;
 	}
 	if (n == 2)
 	{
-		putc(data[0], fp);
-		putc(data[0], fp);
+		fz_putc(out, data[0]);
+		fz_putc(out, data[0]);
 	}
-	fwrite(data, 1, n, fp);
+	fz_write(out, data, n);
 }
 
 void
 fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
-	FILE *fp;
+	fz_output *out;
 	unsigned char head[18];
 	int n = pixmap->n;
 	int d = savealpha || n == 1 ? n : n - 1;
@@ -1261,9 +1261,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as tga");
 	}
 
-	fp = fopen(filename, "wb");
-	if (!fp)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file '%s': %s", filename, strerror(errno));
+	out = fz_new_output_to_filename(ctx, filename);
 
 	memset(head, 0, sizeof(head));
 	head[2] = n == 4 ? 10 : 11;
@@ -1274,7 +1272,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	if (savealpha && d == 2)
 		head[16] = 32;
 
-	fwrite(head, sizeof(head), 1, fp);
+	fz_write(out, head, sizeof(head));
 	for (k = 1; k <= pixmap->h; k++)
 	{
 		int i, j;
@@ -1284,21 +1282,21 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 			for (; i + j < pixmap->w && j < 128 && !memcmp(line + i * n, line + (i + j) * n, d); j++);
 			if (j > 1)
 			{
-				putc(j - 1 + 128, fp);
-				tga_put_pixel(line + i * n, d, is_bgr, fp);
+				fz_putc(out, j - 1 + 128);
+				tga_put_pixel(line + i * n, d, is_bgr, out);
 			}
 			else
 			{
 				for (; i + j < pixmap->w && j <= 128 && memcmp(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
 				if (i + j < pixmap->w || j > 128)
 					j--;
-				putc(j - 1, fp);
+				fz_putc(out, j - 1);
 				for (; j > 0; j--, i++)
-					tga_put_pixel(line + i * n, d, is_bgr, fp);
+					tga_put_pixel(line + i * n, d, is_bgr, out);
 			}
 		}
 	}
-	fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, fp);
+	fz_write(out, "\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 26);
 
-	fclose(fp);
+	fz_close_output(out);
 }

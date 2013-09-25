@@ -33,7 +33,7 @@ typedef struct {
 } MirrorPair;
 
 typedef struct {
-	int start;
+	unsigned int start;
 	short count, index;
 } Reindex;
 
@@ -91,9 +91,9 @@ static int get_comp_index(unsigned int code, const Reindex *idx)
 
 	for (i = 0; idx[i].start; i++) {
 		const Reindex *cur = &idx[i];
-		if (code < (unsigned)cur->start)
+		if (code < cur->start)
 			return -1;
-		if (code <= (unsigned)cur->start + cur->count) {
+		if (code <= cur->start + cur->count) {
 			return cur->index + (code - cur->start);
 		}
 	}
