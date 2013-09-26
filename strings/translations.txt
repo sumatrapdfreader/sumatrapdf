@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-415ecd8f2622d8fcba1895c8b7ca3b3d3a206bf4
+3116716bd2331449c86889ed7c89b17de27d5c08
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -7164,7 +7164,7 @@ vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 :Error loading %s
 am:Բացման սխալ %s
 ar:خطأ في تحميل %s
-az:%s yüklənməsində xəta baş verdi
+az:%s faylının yüklənməsində xəta baş verdi
 bg:Грешка при зареждане на %s
 br:Erro ao carregar %s
 bs:Greška pri učitavanju %s
@@ -16447,7 +16447,7 @@ no:kopierer tekst
 pl:kopiowanie tekstu
 pt:cópia de texto
 ro:se copiază textul
-ru:копируется текст
+ru:копирование текста
 si:අකුරු පිටපත්කරන්න
 sk:prebieha kopírovanie textu
 sl:kopiranje besedila
@@ -16505,7 +16505,7 @@ no:skriver ut dokument
 pl:drukowanie dokumentu
 pt:imprimir documento
 ro:se imprimă documentul
-ru:печатается документ
+ru:печать документа
 si:ලේඛනය මුද්‍රණය
 sk:prebieha tlač dokumentu
 sl:tiskanje dokumenta
