@@ -299,16 +299,14 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
 {
     const uint8_t *base = (const uint8_t *)data;
     const char *fieldName = info->fieldNames;
-    for (size_t i = 0; i < info->fieldCount; i++) {
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') ||
                 str::FindChar(fieldName, '[') || str::FindChar(fieldName, ']') ||
                 NeedsEscaping(fieldName));
 #if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
-        if (Type_Prerelease == field.type) {
-            fieldName += str::Len(fieldName) + 1;
+        if (Type_Prerelease == field.type)
             continue;
-        }
 #endif
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
             Indent(out, indent);
@@ -355,7 +353,6 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
                 out.RemoveAt(offset, out.Size() - offset);
         }
         MarkFieldKnown(prevNode, fieldName, field.type);
-        fieldName += str::Len(fieldName) + 1;
     }
     SerializeUnknownFields(out, prevNode, indent);
 }
@@ -366,7 +363,7 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
         base = AllocArray<uint8_t>(info->structSize);
 
     const char *fieldName = info->fieldNames;
-    for (size_t i = 0; i < info->fieldCount; i++) {
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
@@ -395,7 +392,6 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
             if (useDefaults || value)
                 DeserializeField(field, base, value);
         }
-        fieldName += str::Len(fieldName) + 1;
     }
     return base;
 }
@@ -440,7 +436,7 @@ void FreeStruct(const StructInfo *info, void *strct)
     free(strct);
 }
 
-// TODO: keep Benc deserialization for at least two minor releases (ideally at least a year)
+// TODO: keep Benc deserialization for at least three minor releases (ideally at least a year)
 
 #include "BencUtil.h"
 
@@ -450,7 +446,7 @@ static void *DeserializeStructBencRec(const StructInfo *info, BencDict *dict, ui
         base = AllocArray<uint8_t>(info->structSize);
 
     const char *fieldName = info->fieldNames;
-    for (size_t i = 0; i < info->fieldCount; i++) {
+    for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
         uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type) {
@@ -511,7 +507,6 @@ static void *DeserializeStructBencRec(const StructInfo *info, BencDict *dict, ui
         else {
             CrashIf(field.type != Type_Prerelease);
         }
-        fieldName += str::Len(fieldName) + 1;
     }
     return base;
 }

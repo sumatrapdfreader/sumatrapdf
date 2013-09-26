@@ -250,6 +250,9 @@ struct GlobalPrefs {
     // password protected document (passwords containing spaces must be
     // quoted same as command line arguments)
     WCHAR * defaultPasswords;
+    // if true, a document will be reloaded automatically whenever it's
+    // changed (currently doesn't work for documents shown in the ebook UI)
+    bool reloadModifiedDocuments;
     // if true, we store display settings for each document separately
     // (i.e. everything after UseDefaultState in FileStates)
     bool rememberStatePerDocument;
@@ -483,6 +486,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, forwardSearch),            Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
     { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
     { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, reloadModifiedDocuments),  Type_Bool,       true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, uiLanguage),               Type_Utf8String, NULL                                                                                                                  },
@@ -509,7 +513,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 41, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 42, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0ReloadModifiedDocuments\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 

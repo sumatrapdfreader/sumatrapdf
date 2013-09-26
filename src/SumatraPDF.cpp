@@ -1509,7 +1509,10 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     FileWatcherUnsubscribe(win->watcher);
-    win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
+    win->watcher = NULL;
+
+    if (gGlobalPrefs->reloadModifiedDocuments)
+        win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));

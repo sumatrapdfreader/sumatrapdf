@@ -370,6 +370,10 @@ GlobalPrefs = [
 		"a whitespace separated list of passwords to try for opening a password protected document " +
 		"(passwords containing spaces must be quoted same as command line arguments)",
 		expert=True),
+	Field("ReloadModifiedDocuments", Bool, True,
+		"if true, a document will be reloaded automatically whenever it's changed " +
+		"(currently doesn't work for documents shown in the ebook UI)",
+		expert=True),
 	EmptyLine(),
 
 	Field("RememberStatePerDocument", Bool, True,
