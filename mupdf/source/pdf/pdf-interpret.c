@@ -1372,6 +1372,14 @@ pdf_set_colorspace(pdf_csi *csi, int what, fz_colorspace *colorspace)
 	mat->v[1] = 0;
 	mat->v[2] = 0;
 	mat->v[3] = 1;
+
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694618 */
+	if (pdf_is_tint_colorspace(colorspace))
+	{
+		int i;
+		for (i = 0; i < colorspace->n; i++)
+			mat->v[i] = 1.0f;
+	}
 }
 
 static void

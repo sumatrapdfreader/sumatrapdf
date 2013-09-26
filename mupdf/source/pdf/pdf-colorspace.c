@@ -167,6 +167,13 @@ load_separation(pdf_document *doc, pdf_obj *array)
 	return cs;
 }
 
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694618 */
+int
+pdf_is_tint_colorspace(fz_colorspace *cs)
+{
+	return cs && cs->to_rgb == separation_to_rgb;
+}
+
 static fz_colorspace *
 load_indexed(pdf_document *doc, pdf_obj *array)
 {
