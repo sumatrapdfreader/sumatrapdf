@@ -74,7 +74,7 @@ CFLAGS = $(CFLAGS) /wd6211
 CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-UTILS_CFLAGS = $(CFLAGS) \
+UTILS_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
 	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp
 
