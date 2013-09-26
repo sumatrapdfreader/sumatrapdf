@@ -243,7 +243,7 @@ def gen_struct(struct, comment=None, indent=""):
     first = True
     inside_expert = False
     for field in struct.default:
-        if field.internal or type(field) is gen_settingsstructs.Comment:
+        if field.internal or type(field) is gen_settingsstructs.Comment or field.prerelease:
             continue
         start_idx = len(lines)
         if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":

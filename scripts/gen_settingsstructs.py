@@ -20,11 +20,12 @@ String = Type("String", "WCHAR *")
 Utf8String = Type("Utf8String", "char *")
 
 class Field(object):
-	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None):
+	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None, prerelease=False):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 		self.expert = expert # "expert" prefs are the ones not exposed by the UI
 		self.docComment = doc or comment
+		self.prerelease = prerelease # prefs which aren't written out in release builds
 
 	def cdefault(self, built):
 		if self.type is Bool:
@@ -39,7 +40,7 @@ class Field(object):
 			return '(intptr_t)L"%s"' % self.default if self.default is not None else "NULL"
 		if self.type is Utf8String:
 			return '(intptr_t)"%s"' % self.default.encode("utf-8") if self.default is not None else "NULL"
-		if self.type.name in ["Struct", "Array", "Compact"]:
+		if self.type.name in ["Struct", "Array", "Compact", "Prerelease"]:
 			id = built.count(self.structName)
 			return "(intptr_t)&g%sInfo" % (self.structName + ("" if not id else "_%d_" % id))
 		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
@@ -74,10 +75,11 @@ class Field(object):
 		assert False
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None):
+	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None, prerelease=False):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc)
-		if compact: self.type.name = "Compact"
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc, prerelease)
+		if prerelease: self.type.name = "Prerelease"
+		elif compact: self.type.name = "Compact"
 
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False):
@@ -360,11 +362,10 @@ GlobalPrefs = [
 		"customization options for how we show forward search results (used from " +
 		"LaTeX editors)",
 		expert=True),
-	# TODO: remove this for release builds (until annotations are better exposed)?
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +
 		"(preliminary and still subject to change)",
-		expert=True),
+		expert=True, prerelease=True),
 	Field("DefaultPasswords", String, None,
 		"a whitespace separated list of passwords to try for opening a password protected document " +
 		"(passwords containing spaces must be quoted same as command line arguments)",
