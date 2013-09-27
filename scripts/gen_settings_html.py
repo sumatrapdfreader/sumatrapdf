@@ -236,14 +236,12 @@ def gen_comment(comment, start, first=False):
     s += '</span>'
     return [s]
 
-def gen_struct(struct, comment=None, indent=""):
+def gen_struct(struct, indent="", prerelease=False):
     lines = []
-    if comment:
-        lines += gen_comment(comment, "") + [""]
     first = True
     inside_expert = False
     for field in struct.default:
-        if field.internal or type(field) is gen_settingsstructs.Comment or field.prerelease:
+        if field.internal or type(field) is gen_settingsstructs.Comment or not prerelease and field.prerelease:
             continue
         start_idx = len(lines)
         if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
@@ -251,13 +249,13 @@ def gen_struct(struct, comment=None, indent=""):
             indent2 = indent + indent_str[:len(indent_str)/2]
             start = "%s%s [\n%s[" % (indent, field.name, indent2)
             end = "%s]\n%s]" % (indent2, indent)
-            inside = gen_struct(field, None, indent + indent_str)
+            inside = gen_struct(field, indent + indent_str, prerelease)
             lines += [start, inside, end]
         elif type(field) is gen_settingsstructs.Struct and not field.type.name == "Compact":
             lines += gen_comment(field.docComment, indent, first)
             start = "%s%s [" % (indent, field.name)
             end = "%s]" % indent
-            inside = gen_struct(field, None, indent + indent_str)
+            inside = gen_struct(field, indent + indent_str, prerelease)
             lines += [start, inside, end]
         else:
             s = field.inidefault(commentChar="").lstrip()

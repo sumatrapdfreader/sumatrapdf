@@ -21,12 +21,12 @@
 #include "UITask.h"
 #include "WindowInfo.h"
 
+#define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
+#define LEGACY_FILE_NAME    L"sumatrapdfprefs.dat"
+
 GlobalPrefs *        gGlobalPrefs = NULL;
 
 static WatchedFile * gWatchedSettingsFile = NULL;
-#ifdef USER_PREFS_FILE_NAME
-static WatchedFile * gWatchedUserSettingsFile = NULL;
-#endif
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
@@ -200,12 +200,17 @@ static int cmpFloat(const void *a, const void *b)
 
 namespace prefs {
 
+WCHAR *GetSettingsPath()
+{
+    return AppGenDataFilename(PREFS_FILE_NAME);
+}
+
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool Load()
 {
     CrashIf(gGlobalPrefs);
 
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(GetSettingsPath());
     ScopedMem<char> prefsData(file::ReadAll(path, NULL));
     gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
@@ -218,7 +223,7 @@ bool Load()
 #endif
 
     if (!file::Exists(path)) {
-        ScopedMem<WCHAR> bencPath(AppGenDataFilename(L"sumatrapdfprefs.dat"));
+        ScopedMem<WCHAR> bencPath(AppGenDataFilename(LEGACY_FILE_NAME));
         ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
         // the old format used the inverted meaning for this pref
         gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
@@ -234,14 +239,6 @@ bool Load()
             conv::FromZoom(&(*ds)->zoom, zoom);
         }
     }
-
-#ifdef ENABLE_SUMATRAPDF_USER_INI
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
-    if (file::Exists(userPath)) {
-        ScopedMem<char> userPrefsData(file::ReadAll(userPath, NULL));
-        DeserializeStruct(&gGlobalPrefsInfo, userPrefsData, gGlobalPrefs);
-    }
-#endif
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start
@@ -308,7 +305,7 @@ bool Save()
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, conv::FromDisplayMode(gGlobalPrefs->defaultDisplayModeEnum));
     conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(GetSettingsPath());
     CrashIf(!path);
     if (!path)
         return false;
@@ -356,7 +353,7 @@ bool Save()
 // or if they are edited by the user using a text editor
 bool Reload(bool forceReload)
 {
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(GetSettingsPath());
     if (!file::Exists(path))
         return false;
 
@@ -399,16 +396,16 @@ bool Reload(bool forceReload)
 }
 
 class SettingsFileObserver : public FileChangeObserver, public UITask {
-    bool forceReload;
 public:
-    SettingsFileObserver(bool forceReload=false) : forceReload(forceReload) { }
+    SettingsFileObserver() { }
 
     virtual void OnFileChanged() {
         // don't Reload directly so as to prevent potential race conditions
-        uitask::Post(new SettingsFileObserver(forceReload));
+        uitask::Post(new SettingsFileObserver());
     }
+
     virtual void Execute() {
-        prefs::Reload(forceReload);
+        prefs::Reload();
     }
 };
 
@@ -418,23 +415,13 @@ void RegisterForFileChanges()
         return;
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(GetSettingsPath());
     gWatchedSettingsFile = FileWatcherSubscribe(path, new SettingsFileObserver());
-
-#ifdef ENABLE_SUMATRAPDF_USER_INI
-    CrashIf(gWatchedUserSettingsFile);
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
-    if (file::Exists(userPath))
-        gWatchedUserSettingsFile = FileWatcherSubscribe(userPath, new SettingsFileObserver(true));
-#endif
 }
 
 void UnregisterForFileChanges()
 {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
-#ifdef ENABLE_SUMATRAPDF_USER_INI
-    FileWatcherUnsubscribe(gWatchedUserSettingsFile);
-#endif
 }
 
 namespace conv {

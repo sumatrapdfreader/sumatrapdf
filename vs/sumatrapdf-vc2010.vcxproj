@@ -485,12 +485,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\EbookWinDesc.txt" />
+    <None Include="..\src\sample_mobi.html" />
     <None Include="..\src\mui\mui-todo.txt" />
     <None Include="..\docs\codingstyle.txt" />
     <None Include="..\docs\mui-html-fusion.txt" />
     <None Include="..\docs\releasenotes.txt" />
     <None Include="..\docs\releaseplan.txt" />
-    <None Include="..\docs\SumatraPDF-user.ini" />
+    <None Include="..\docs\settings.html" />
     <None Include="..\docs\sumatrapdfrestrict.ini" />
     <None Include="..\docs\wishlist.txt" />
     <None Include="..\src\dragcursor.cur" />

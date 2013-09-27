@@ -672,6 +672,7 @@ EXPORTS
 	pdf_remove_item
 	pdf_load_function
 	pdf_load_colorspace
+	pdf_is_tint_colorspace
 	pdf_load_shading
 	pdf_load_inline_image
 	pdf_is_jpx_image

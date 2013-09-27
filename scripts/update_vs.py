@@ -33,7 +33,7 @@ def is_any_file(path):
     return True
 
 def is_none_file(path):
-    return ext(path) in [".txt", ".ini", ".asm", ".msvc", ".bmp", ".cur", ".ico"]
+    return ext(path) in [".txt", ".ini", ".html", ".asm", ".msvc", ".bmp", ".cur", ".ico"]
 
 def is_manifest_file(path):
     return ext(path) in [".manifest"]
@@ -47,7 +47,7 @@ def is_resources_group_file(path):
     return ext(path) in [".rc", ".bmp", ".cur", ".ico"]
 
 def is_docs_file(path):
-    return ext(path) in [".txt", ".ini"]
+    return ext(path) in [".txt", ".ini", ".html"]
 
 def is_c_or_docs_file(path):
     return is_c_src_file(path) or is_docs_file(path)

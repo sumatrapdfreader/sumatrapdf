@@ -4,11 +4,6 @@
 #ifndef AppPrefs_h
 #define AppPrefs_h
 
-#define PREFS_FILE_NAME         L"SumatraPDF-settings.txt"
-#ifdef ENABLE_SUMATRAPDF_USER_INI
-#define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
-#endif
-
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remembered position and size */
@@ -24,6 +19,8 @@ extern GlobalPrefs *gGlobalPrefs;
 void DeleteGlobalPrefs(GlobalPrefs *globalPrefs);
 
 namespace prefs {
+
+WCHAR *GetSettingsPath();
 
 bool Load();
 bool Save();

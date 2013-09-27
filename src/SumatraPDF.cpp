@@ -3404,15 +3404,7 @@ void OnMenuAdvancedOptions()
     if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
         return;
 
-#ifdef ENABLE_SUMATRAPDF_USER_INI
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
-    if (file::Exists(userPath)) {
-        LaunchFile(userPath, NULL, L"open");
-        return;
-    }
-#endif
-
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(prefs::GetSettingsPath());
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     LaunchFile(path, NULL, L"open");

@@ -523,23 +523,9 @@ def BuildMetaData(struct, built=[]):
 	lines.append("static %sStructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % ("const " if fullName != "FileState" else "", fullName, struct.structName, len(names), fullName, "\\0".join(names)))
 	return "\n".join(lines)
 
-def AssembleDefaults(struct, topLevelComment=None):
-	lines, more = [], []
-	if topLevelComment:
-		lines += FormatComment(topLevelComment, ";") + [""]
-	for field in struct.default:
-		if field.internal or type(field) is Comment:
-			continue
-		if topLevelComment and not field.expert:
-			continue
-		if type(field) in [Struct, Array] and not field.type.name == "Compact":
-			assert topLevelComment
-			more.append("\n".join(FormatComment(field.docComment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
-		else:
-			lines += FormatComment(field.docComment, ";") + [field.inidefault()]
-	if more:
-		lines += [""] + more
-	return "\n".join(lines) + "\n"
+def GenerateSettingsHtml():
+	from gen_settings_html import html_tmpl, gen_struct, gen_settingsstructs
+	return html_tmpl.replace("%INSIDE%", gen_struct(gen_settingsstructs.GlobalPrefs, prerelease=True))
 
 SettingsStructs_Header = """\
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
@@ -572,13 +558,8 @@ def main():
 	content = SettingsStructs_Header % locals()
 	open("src/SettingsStructs.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 
-	content = AssembleDefaults(GlobalPrefs,
-		"You can use this file to modify experimental and expert settings not changeable " +
-		"through the UI instead of modifying SumatraPDF-settings.txt directly. Just copy " +
-		"this file alongside SumatraPDF-settings.txt and change the values below. " +
-		"They will overwrite the corresponding settings in SumatraPDF-settings.txt at every startup.")
-	content = "# Warning: This file only works for builds compiled with ENABLE_SUMATRAPDF_USER_INI !\n\n" + content
-	open("docs/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
+	content = GenerateSettingsHtml()
+	open("docs/settings.html", "wb").write(content.replace("\n", "\r\n"))
 
 	beforeUseDefaultState = True
 	for field in FileSettings:
