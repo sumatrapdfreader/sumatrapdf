@@ -234,10 +234,6 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 		samples = fz_malloc_array(ctx, h, stride);
 
 		len = fz_read(stm, samples, h * stride);
-		if (len < 0)
-		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read image data");
-		}
 
 		/* Make sure we read the EOF marker (for inline images only) */
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1980 */

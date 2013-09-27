@@ -1920,7 +1920,6 @@ static void writexrefstream(pdf_document *doc, pdf_write_options *opts, int from
 			if (obj)
 				pdf_dict_puts(dict, "ID", obj);
 
-			/* SumatraPDF: preserve /Encrypt in order not to break encrypted documents */
 			if (opts->do_incremental)
 			{
 				obj = pdf_dict_gets(pdf_trailer(doc), "Encrypt");

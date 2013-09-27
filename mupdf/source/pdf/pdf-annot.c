@@ -315,8 +315,6 @@ pdf_parse_action(pdf_document *doc, pdf_obj *action)
 		ld.kind = FZ_LINK_URI;
 		ld.ld.uri.is_map = pdf_to_bool(pdf_dict_gets(action, "IsMap"));
 		ld.ld.uri.uri = pdf_to_utf8(doc, pdf_dict_gets(action, "URI"));
-		ld.ld.gotor.file_spec = NULL;
-		ld.ld.gotor.new_window = 0;
 	}
 	else if (!strcmp(pdf_to_name(obj), "Launch"))
 	{
@@ -334,7 +332,7 @@ pdf_parse_action(pdf_document *doc, pdf_obj *action)
 		ld.ld.launch.embedded_num = pdf_to_num(obj);
 		ld.ld.launch.embedded_gen = pdf_to_gen(obj);
 		/* SumatraPDF: support URL /Filespec */
-		ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(file_spec, "FS")), "URL");
+		ld.ld.launch.is_uri = !obj && !strcmp(pdf_to_name(pdf_dict_gets(file_spec, "FS")), "URL");
 	}
 	else if (!strcmp(pdf_to_name(obj), "Named"))
 	{
@@ -415,7 +413,7 @@ pdf_load_link(pdf_document *doc, pdf_obj *dict, const fz_matrix *page_ctm)
 #endif
 			ld.ld.launch.embedded_num = pdf_to_num(obj);
 			ld.ld.launch.embedded_gen = pdf_to_gen(obj);
-			ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(action, "FS")), "URL");
+			ld.ld.launch.is_uri = !obj && !strcmp(pdf_to_name(pdf_dict_gets(action, "FS")), "URL");
 		}
 	}
 	if (ld.kind == FZ_LINK_NONE)

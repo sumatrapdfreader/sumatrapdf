@@ -19,7 +19,6 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 {
 	pdf_token tok;
 	int stm_len;
-	int n;
 	fz_stream *file = doc->file;
 	fz_context *ctx = file->ctx;
 
@@ -134,9 +133,7 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 			fz_seek(file, *stmofsp, 0);
 		}
 
-		n = fz_read(file, (unsigned char *) buf->scratch, 9);
-		if (n < 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read from file");
+		(void)fz_read(file, (unsigned char *) buf->scratch, 9);
 
 		while (memcmp(buf->scratch, "endstream", 9) != 0)
 		{
@@ -285,8 +282,6 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 		/* look for '%PDF' version marker within first kilobyte of file */
 		n = fz_read(doc->file, (unsigned char *)buf->scratch, fz_mini(buf->size, 1024));
-		if (n < 0)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot read from file");
 
 		fz_seek(doc->file, 0, 0);
 		for (i = 0; i < n - 4; i++)

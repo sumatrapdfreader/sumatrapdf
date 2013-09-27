@@ -40,7 +40,7 @@ static const suffix_t suffix_table[] =
 	{ ".pwg", OUT_PWG },
 	{ ".pcl", OUT_PCL },
 	{ ".pdf", OUT_PDF },
-	{ ".tga", OUT_TGA }, /* SumatraPDF: support TGA as output format */
+	{ ".tga", OUT_TGA },
 #ifdef GDI_PLUS_BMP_RENDERER
 	{ ".bmp", OUT_BMP },
 #endif
@@ -85,10 +85,11 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_SVG, CS_RGB, { CS_RGB } },
 	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } },
 	{ OUT_PCL, CS_MONO, { CS_MONO } },
-	{ OUT_PDF, CS_RGB, { CS_RGB } }
-	/* SumatraPDF: support TGA as output format */
-	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+	{ OUT_PDF, CS_RGB, { CS_RGB } },
+	{ OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+#ifdef GDI_PLUS_BMP_RENDERER
 	{ OUT_BMP, CS_RGB, { CS_RGB } },
+#endif
 };
 
 /*
@@ -194,12 +195,7 @@ static void usage(void)
 		"usage: mudraw [options] input [pages]\n"
 		"\t-o -\toutput filename (%%d for page number)\n"
 		"\t-F -\toutput format (if no -F, -o will be examined)\n"
-#ifdef GDI_PLUS_BMP_RENDERER
-		"\t\tsupported formats: pgm, ppm, pam, png, pbm, tga, bmp\n"
-#else
-		/* SumatraPDF: support TGA as output format */
 		"\t\tsupported formats: pgm, ppm, pam, png, pbm, tga\n"
-#endif
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
 		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
@@ -921,9 +917,10 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 						fz_write_pbm(ctx, bit, filename_buf);
 						fz_drop_bitmap(ctx, bit);
 					}
-					/* SumatraPDF: support TGA as output format */
 					else if (output_format == OUT_TGA)
+					{
 						fz_write_tga(ctx, pix, filename_buf, savealpha);
+					}
 				}
 				ctm.f -= drawheight;
 			}

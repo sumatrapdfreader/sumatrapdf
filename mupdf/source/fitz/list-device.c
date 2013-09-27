@@ -118,10 +118,10 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 		list->top++;
 		break;
 	case FZ_CMD_CLIP_TEXT:
-		/* SumatraPDF: don't reset the clip rect for accumulated text */
+		/* don't reset the clip rect for accumulated text */
 		if (node->flag == 2)
 			break;
-		/* fall through */
+		/* fallthrough */
 	case FZ_CMD_END_MASK:
 	case FZ_CMD_CLIP_STROKE_TEXT:
 		if (list->top < STACK_SIZE)

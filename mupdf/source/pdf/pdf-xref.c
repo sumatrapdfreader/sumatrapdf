@@ -309,8 +309,6 @@ pdf_read_start_xref(pdf_document *doc)
 	fz_seek(doc->file, t, SEEK_SET);
 
 	n = fz_read(doc->file, buf, sizeof buf);
-	if (n < 0)
-		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot read from file");
 
 	for (i = n - 9; i >= 0; i--)
 	{
@@ -467,8 +465,8 @@ pdf_read_old_xref(pdf_document *doc, pdf_lexbuf *buf)
 		{
 			pdf_xref_entry *entry = pdf_get_populating_xref_entry(doc, i);
 			n = fz_read(doc->file, (unsigned char *) buf->scratch, 20);
-			if (n < 0)
-				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot read xref table");
+			if (n != 20)
+				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "unexpected EOF in xref table");
 			if (!entry->type)
 			{
 				s = buf->scratch;

@@ -188,10 +188,12 @@ fz_decode_tiff_jpeg(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int 
 {
 	fz_stream *stm;
 	fz_stream *jpegtables = NULL;
+	int color_transform = -1; /* unset */
 	if (tiff->jpegtables && (int)tiff->jpegtableslen > 0)
 		jpegtables = fz_open_memory(tiff->ctx, tiff->jpegtables, (int)tiff->jpegtableslen);
-	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2370 */
-	stm = fz_open_dctd(chain, tiff->photometric != 2 && tiff->photometric != 3 ? -1 : 0, 0, jpegtables);
+	if (tiff->photometric == 2 /* RGB */ || tiff->photometric == 3 /* RGBPal */)
+		color_transform = 0;
+	stm = fz_open_dctd(chain, color_transform, 0, jpegtables);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }

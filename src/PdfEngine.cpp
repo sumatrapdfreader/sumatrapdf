@@ -931,7 +931,7 @@ fz_outline *pdf_loadattachments(pdf_document *doc)
         node->dest.ld.launch.new_window = 1;
         node->dest.ld.launch.embedded_num = pdf_to_num(embedded);
         node->dest.ld.launch.embedded_gen = pdf_to_gen(embedded);
-        node->dest.ld.launch.is_url = 0;
+        node->dest.ld.launch.is_uri = 0;
     }
     pdf_drop_obj(dict);
 
@@ -2366,7 +2366,7 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
                 ld.ld.launch.new_window = 1;
                 ld.ld.launch.embedded_num = pdf_to_num(embedded);
                 ld.ld.launch.embedded_gen = pdf_to_gen(embedded);
-                ld.ld.launch.is_url = 0;
+                ld.ld.launch.is_uri = 0;
                 fz_transform_rect(&rect, &page->ctm);
                 // add links in top-to-bottom order (i.e. last-to-first)
                 fz_link *link = fz_new_link(ctx, &rect, ld);
@@ -3131,7 +3131,7 @@ PageDestType PdfLink::GetDestType() const
     case FZ_LINK_LAUNCH:
         if (link->ld.launch.embedded_num)
             return Dest_LaunchEmbedded;
-        if (link->ld.launch.is_url)
+        if (link->ld.launch.is_uri)
             return Dest_LaunchURL;
         return Dest_LaunchFile;
     case FZ_LINK_GOTOR:

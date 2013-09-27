@@ -15,7 +15,6 @@ void pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
 fz_function *pdf_load_function(pdf_document *doc, pdf_obj *ref, int in, int out);
 
 fz_colorspace *pdf_load_colorspace(pdf_document *doc, pdf_obj *obj);
-/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694618 */
 int pdf_is_tint_colorspace(fz_colorspace *cs);
 
 fz_shade *pdf_load_shading(pdf_document *doc, pdf_obj *obj);
