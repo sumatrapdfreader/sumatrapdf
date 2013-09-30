@@ -94,7 +94,7 @@ public:
     }
 };
 
-static RectI ExtractPSPageSize(const WCHAR *fileName)
+static RectI ExtractDSCPageSize(const WCHAR *fileName)
 {
     char header[1024];
     if (!file::ReadAll(fileName, header, sizeof(header)))
@@ -103,11 +103,17 @@ static RectI ExtractPSPageSize(const WCHAR *fileName)
     if (!str::StartsWith(header, "%!PS-Adobe-"))
         return RectI();
 
+    // PostScript creators are supposed to set the page size
+    // e.g. through a setpagedevice call in PostScript code,
+    // some creators however fail to do so and only indicate
+    // the page size in a DSC BoundingBox comment.
     char *nl = header;
+    geomutil::RectT<float> bbox;
     while ((nl = strchr(nl + 1, '\n')) != NULL && '%' == nl[1]) {
-        RectI bbox;
-        if (str::Parse(nl, "\n%%%%BoundingBox: 0 0 %d %d", &bbox.dx, &bbox.dy))
-            return bbox;
+        if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
+            str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
+            return bbox.Convert<int>();
+        }
     }
 
     return RectI();
@@ -123,10 +129,9 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
 
-    // some PS documents fail to set the desired page size,
-    // try to extract it from the DSC if available
+    // try to help Ghostscript determine the intended page size
     ScopedMem<WCHAR> psSetup;
-    RectI page = ExtractPSPageSize(fileName);
+    RectI page = ExtractDSCPageSize(fileName);
     if (!page.IsEmpty())
         psSetup.Set(str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy));
 
