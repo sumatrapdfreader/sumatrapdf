@@ -3181,7 +3181,8 @@ RectD PdfLink::GetDestRect() const
         if (result.IsEmpty())
             result.dx = result.dy = 0.1;
     }
-    else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h) {
+    else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h &&
+        (link->ld.gotor.flags & fz_link_flag_l_valid)) {
         // /FitH or /FitBH link
         result.y = lt.y;
     }
