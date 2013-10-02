@@ -556,7 +556,7 @@ const char * gTranslations_dk =
 
 const char * gTranslations_nl = 
   "&Opties\0"\
-  "Bent u zeker SumatraPDF te willen desinstalleren?\0"\
+  "Bent u zeker dat u SumatraPDF wilt verwijderen?\0"\
   "Sluiten\0"\
   "Kon tijdelijke folder niet aanmaken\0"\
   "Kon de installatie folder niet aanmaken\0"\
@@ -566,17 +566,17 @@ const char * gTranslations_nl =
   "Kon tijdelijke folder niet verkrijgen\0"\
   "Kon installatie folder niet verwijderen\0"\
   "Kon snelkoppeling niet verwijderen\0"\
-  "Kon PDF voorbeeld niet deinstalleren\0"\
+  "Kon PDF-voorbeeldweergever niet verwijderen\0"\
   "Kon PDF zoek filter niet de\303\257nstalleren\0"\
-  "Kon browser plugin niet de\303\257nstalleren\0"\
+  "Kon browserplugin niet verwijderen\0"\
   "Kon %s niet op schijf wegschrijven\0"\
   "Kon deinstallatie programma niet kopieren naar tijdelijke folder\0"\
   "Kon snelkoppeling niet aanmaken\0"\
   "Kon deinstallatie register sleutels niet verwijderen\0"\
   "Kon uitgebreide bestandsextensie informatie niet wegschrijven in register\0"\
-  "Kon deinstallatie informatie niet wegschrijven in register\0"\
+  "Kan de\303\257nstallatie-informatie niet wegschrijven in het register\0"\
   "Verberg &Opties\0"\
-  "Installeer PDF &browser plugin voor Firefox, Chrome en Opera\0"\
+  "Installeer de PDF-&browserplugins voor Firefox, Chrome en Opera\0"\
   "Installeer SumatraPDF\0"\
   "Installeer SumatraPDF in &folder\0"\
   "Installatie mislukt!\0"\
@@ -590,10 +590,10 @@ const char * gTranslations_nl =
   "SumatraPDF %s installatieprogramma\0"\
   "SumatraPDF %s deinstallatieprogramma\0"\
   "SumatraPDF werd verwijderd.\0"\
-  "SumatraPDF installatie niet gevonden.\0"\
+  "SumatraPDF-installatie niet gevonden.\0"\
   "Dank u om voor SumatraPDF te kiezen!\0"\
   "Dank u! SumatraPDF werd geinstalleerd.\0"\
-  "Het installatie programma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!\0"\
+  "Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!\0"\
   "Deinstalleer SumatraPDF\0"\
   "Deinstallatie mislukt\0"\
   "Deinstallatie is bezig...\0"\

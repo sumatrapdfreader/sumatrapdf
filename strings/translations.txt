@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3116716bd2331449c86889ed7c89b17de27d5c08
+c45e77a9de64084eac12ed2024986c7f89177620
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3764,7 +3764,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
-nl:Bent u zeker SumatraPDF te willen desinstalleren?
+nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
@@ -6124,7 +6124,7 @@ ja:PDF プレビューアをアンインストールできませんでした
 kr:PDF 미리보기를 제거할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
 mk:Не можам да го избришам прикажувачот на PDF
-nl:Kon PDF voorbeeld niet deinstalleren
+nl:Kon PDF-voorbeeldweergever niet verwijderen
 pl:Nie można usunąć podglądu PDF
 pt:Não foi possível desinstalar a antevisão de PDF
 ro:Nu s-a putut dezinstala previzualizatorul PDF
@@ -6200,7 +6200,7 @@ ja:ブラウザプラグインをアンインストールできませんでし�
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
 mk:Не можам да го избришам додатокот за прелистувачи
-nl:Kon browser plugin niet deïnstalleren
+nl:Kon browserplugin niet verwijderen
 pl:Nie można usunąć wtyczki do przeglądarek
 pt:Não foi possível desinstalar o plugin do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
@@ -7933,7 +7933,7 @@ ja:アンインストール情報をレジストリに書き込むのに失敗�
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
-nl:Kon deinstallatie informatie niet wegschrijven in register
+nl:Kan deïnstallatie-informatie niet wegschrijven in het register
 pl:Nie można zapisać informacji o usunięciu programu do rejestru
 pt:Falha ao escrever as informações de desinstalação no registo
 ro:Eroare la scrierea informatiilor de dezinstalare in registri
@@ -7964,6 +7964,7 @@ es:Visualización rápida en Web
 et:Kiire veebivaade
 eu:Web Ikuspen Azkarra
 fa:تماشای بی درنگ
+fi:Nopea web-näkymä
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 he:הצגת רשת מהירה
@@ -8083,7 +8084,7 @@ ja:フィクション文章
 kr:FictionBook 문서
 ku:FictionBook بەڵگەنامەکانی
 mk:Документи на FictionBook
-nl:FictionBook documenten
+nl:FictionBookdocumenten
 no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 pt:Livros de ficção
@@ -9743,7 +9744,7 @@ ja:Firefox, Chrome, Opera へ PDF 閲覧プラグインをインストール(&b)
 kr:Firefox, Chrome 및 Opera용 PDF 브라우저 플러그인 설치(&B)
 ku:بۆ فایەرفۆکس، کرۆم و ئۆپێرا& PDF دابەزاندنی پێوەکراوی
 mk:Инсталирај додаток за PDF во Firefox, Chrome и Opera
-nl:Installeer PDF &browser plugin voor Firefox, Chrome en Opera
+nl:Installeer de PDF-&browserplugins voor Firefox, Chrome en Opera
 pl:Zainstaluj &wtyczkę PDF do przeglądarek Firefox, Chrome i Opera
 pt:Instalar o pl&ugin de navegador para o Chrome, Firefox e Opera
 ro:Instaleaza plugin-ul PDF pentru browser-ul Firefox, Chrome si Opera
@@ -10340,6 +10341,7 @@ ja:漫画モード(&G)
 kr:만화 방식(&G)
 ku:Man&ga شێوازی
 mk:Режим за Man&ga
+nl:Man&gamodus
 pl:Tryb mangi
 pt:Modo man&ga
 ro:Mod man&ga
@@ -11219,6 +11221,7 @@ es:Abrir en %s
 et:Ava rakenduses %s
 eu:Irekitzea %s
 fa:%s بازشدن در
+fi:Avaa ohjelmassa %s
 fr:Ouvrir dans %s
 hr:Otvori u %s
 hu:Megnyitás %s
@@ -14994,7 +14997,7 @@ ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치를 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
 mk:Не најдов инсталации на SumatraPDF.
-nl:SumatraPDF installatie niet gevonden.
+nl:SumatraPDF-installatie niet gevonden.
 pl:Program SumatraPDF nie został znaleziony.
 pt:O SumatraPDF não foi encontrado.
 ro:Nu s-a gasit instalarea SumatraPDF.
@@ -15203,6 +15206,7 @@ es:PDF etiquetado
 et:Siltidega PDF
 eu:PDF etiketatua
 fa:نشان دار  PDF
+fi:Merkitty PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 he:PDF מתוייג
@@ -15403,7 +15407,7 @@ ja:インストーラが破損しています。もう一度ダウンロード�
 kr:설치 관리자가 손상됐습니다. 다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
-nl:Het installatie programma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
+nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
 pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o inconveniente.
 ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!

@@ -3822,7 +3822,7 @@ const char * gTranslations_nl =
   "Fout bij opslaan bestand\0"\
   "Snelle browserweergave\0"\
   "Favorieten\0"\
-  "FictionBook documenten\0"\
+  "FictionBookdocumenten\0"\
   "Bestand %s niet gevonden\0"\
   "Bestandsgrootte\0"\
   "Bestand:\0"\
@@ -3854,7 +3854,7 @@ const char * gTranslations_nl =
   "\0"\
   "SumatraPDF als standaardlezer van PDF-bestanden instellen?\0"\
   "SumatraPDF als standaard PDF-lezer instellen\0"\
-  "\0"\
+  "Man&gamodus\0"\
   "Hoofdlettergevoelig\0"\
   "Mobi-documenten\0"\
   "Aangepast:\0"\
@@ -4312,7 +4312,7 @@ const char * gTranslations_fi =
   "Rinnakkain\0"\
   "Tiedoston uudelleennime\303\244minen ep\303\244onnistui!\0"\
   "Tiedoston tallennus ep\303\244onnistui\0"\
-  "\0"\
+  "Nopea web-n\303\244kym\303\244\0"\
   "suosikit\0"\
   "FictionBook-asiakirjat\0"\
   "Tiedosto %s ei l\303\266ydy\0"\
@@ -4361,7 +4361,7 @@ const char * gTranslations_fi =
   "Avaa\0"\
   "Avaa PDF-XChange\0"\
   "Avaa asiakirja...\0"\
-  "\0"\
+  "Avaa ohjelmassa %s\0"\
   "Avaa &Adobe Readerissa\0"\
   "Avaa &Foxit Readerissa\0"\
   "Avaa Microsoft HTML Help\0"\
@@ -4424,7 +4424,7 @@ const char * gTranslations_fi =
   "SumatraPDF on p\303\244\303\244-PDF-lukijasi\0"\
   "SumatraPDF:n pit\303\244isi nyt olla p\303\244\303\244-PDF-lukijasi\0"\
   "Synkronisointitiedostoa ei voitu avata\0"\
-  "\0"\
+  "Merkitty PDF\0"\
   "Tekstiasiakirjat\0"\
   "Otsikko:\0"\
   "Tuntematon l\303\244hdetiedosto (%s)\0"\
