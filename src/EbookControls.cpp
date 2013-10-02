@@ -183,14 +183,43 @@ void DestroyEbookControls(EbookControls* ctrls)
     delete ctrls;
 }
 
+// PagesLayout is for 2 controls separated with a space:
+// [ ctrl1 ][ spaceDx ][ ctrl2]
+// It sets the size of child controls to fit within its space
+// One of the controls can be hidden, in which case it takes
+// all the space
 class PagesLayout : public ILayout
 {
 protected:
-    Size                        desiredSize;
+    Size                       desiredSize;
+    Control                    ctrl1;
+    Control                    ctrl2;
+    int                        spaceDx;
+
 public:
     virtual ~PagesLayout();
     virtual Size DesiredSize() { return desiredSize; }
 
-    virtual Size Measure(const Size availableSize) { return desiredSize; };
-    virtual void Arrange(const Rect finalRect) { CrashIf(true); }
+    virtual Size Measure(const Size availableSize);
+    virtual void Arrange(const Rect finalRect);
 };
+
+Size PagesLayout::Measure(const Size availableSize)
+{
+    desiredSize = availableSize;
+    return desiredSize;
+}
+
+void PagesLayout::Arrange(const Rect finalRect)
+{
+    CrashIf(true);
+    int dx = desiredSize.Width;
+    if (ctrl1.IsVisible() && ctrl2.IsVisible()) {
+        dx = (dx / 2) - spaceDx;
+        if (dx < 0)
+            dx = 0;
+    }
+
+
+}
+
