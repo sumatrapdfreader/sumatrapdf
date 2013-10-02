@@ -3,11 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.4 (????-??-???):
+2.5 (???-??-??):
+
+2.4 (2013-10-01):
 
 * full-screen mode for ebooks (Ctrl-L)
 * new key bindings:
-  * F9 - show/hide menu
+  * F9 - show/hide menu (not remembered after quitting)
   * F8 - show/hide toolbar
 * support WebP images
 * support for RAR5 compressed comic books
