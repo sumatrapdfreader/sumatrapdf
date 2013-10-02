@@ -579,7 +579,7 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 			else
 			{
 				fz_matrix mat = {pixmap->w, 0.0, 0.0, pixmap->h, x + pixmap->x, y + pixmap->y};
-				fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &mat, alpha * 255);
+				fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &mat, alpha * 255, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES));
 			}
 			fz_drop_glyph(dev->ctx, glyph);
 		}
@@ -1111,7 +1111,7 @@ fz_draw_fill_image(fz_device *devp, fz_image *image, const fz_matrix *ctm, float
 			pixmap = converted;
 		}
 
-		if (dx < pixmap->w && dy < pixmap->h)
+		if (dx < pixmap->w && dy < pixmap->h && !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES))
 		{
 			int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
 			scaled = fz_transform_pixmap(dev, pixmap, &local_ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
@@ -1144,7 +1144,7 @@ fz_draw_fill_image(fz_device *devp, fz_image *image, const fz_matrix *ctm, float
 			}
 		}
 
-		fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &local_ctm, alpha * 255);
+		fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &local_ctm, alpha * 255, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES));
 
 		if (state->blendmode & FZ_BLEND_KNOCKOUT)
 			fz_knockout_end(dev);
@@ -1216,7 +1216,7 @@ fz_draw_fill_image_mask(fz_device *devp, fz_image *image, const fz_matrix *ctm,
 			colorbv[i] = colorfv[i] * 255;
 		colorbv[i] = alpha * 255;
 
-		fz_paint_image_with_color(state->dest, &state->scissor, state->shape, pixmap, &local_ctm, colorbv);
+		fz_paint_image_with_color(state->dest, &state->scissor, state->shape, pixmap, &local_ctm, colorbv, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES));
 
 		if (scaled)
 			fz_drop_pixmap(dev->ctx, scaled);
@@ -1322,7 +1322,7 @@ fz_draw_clip_image_mask(fz_device *devp, fz_image *image, const fz_rect *rect, c
 			if (scaled)
 				pixmap = scaled;
 		}
-		fz_paint_image(mask, &bbox, state->shape, pixmap, &local_ctm, 255);
+		fz_paint_image(mask, &bbox, state->shape, pixmap, &local_ctm, 255, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES));
 	}
 	fz_always(ctx)
 	{

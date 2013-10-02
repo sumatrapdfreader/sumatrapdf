@@ -180,6 +180,7 @@ enum
 	/* Hints */
 	FZ_IGNORE_IMAGE = 1,
 	FZ_IGNORE_SHADE = 2,
+	FZ_DONT_INTERPOLATE_IMAGES = 4,
 };
 
 /*

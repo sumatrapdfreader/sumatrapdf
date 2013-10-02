@@ -941,7 +941,7 @@ fz_gridfit_matrix(fz_matrix *m)
 /* Draw an image with an affine transform on destination */
 
 static void
-fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, byte *color, int alpha)
+fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, byte *color, int alpha, int lerp_allowed)
 {
 	byte *dp, *sp, *hp;
 	int u, v, fa, fb, fc, fd;
@@ -961,11 +961,11 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 	dolerp = 0;
 	is_rectilinear = fz_is_rectilinear(&local_ctm);
 	if (!is_rectilinear)
-		dolerp = 1;
+		dolerp = lerp_allowed;
 	if (sqrtf(local_ctm.a * local_ctm.a + local_ctm.b * local_ctm.b) > img->w)
-		dolerp = 1;
+		dolerp = lerp_allowed;
 	if (sqrtf(local_ctm.c * local_ctm.c + local_ctm.d * local_ctm.d) > img->h)
-		dolerp = 1;
+		dolerp = lerp_allowed;
 
 	/* except when we shouldn't, at large magnifications */
 	if (!img->interpolate)
@@ -1085,15 +1085,15 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 }
 
 void
-fz_paint_image_with_color(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, byte *color)
+fz_paint_image_with_color(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, byte *color, int lerp_allowed)
 {
 	assert(img->n == 1);
-	fz_paint_image_imp(dst, scissor, shape, img, ctm, color, 255);
+	fz_paint_image_imp(dst, scissor, shape, img, ctm, color, 255, lerp_allowed);
 }
 
 void
-fz_paint_image(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, int alpha)
+fz_paint_image(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, int alpha, int lerp_allowed)
 {
 	assert(dst->n == img->n || (dst->n == 4 && img->n == 2));
-	fz_paint_image_imp(dst, scissor, shape, img, ctm, NULL, alpha);
+	fz_paint_image_imp(dst, scissor, shape, img, ctm, NULL, alpha, lerp_allowed);
 }

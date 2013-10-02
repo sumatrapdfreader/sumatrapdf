@@ -857,6 +857,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					fz_clear_pixmap_with_value(ctx, pix, 255);
 
 				dev = fz_new_draw_device(ctx, pix);
+				if (alphabits == 0)
+					fz_enable_device_hints(dev, FZ_DONT_INTERPOLATE_IMAGES);
 				if (list)
 					fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
 				else

@@ -317,10 +317,11 @@ public:
 	TempFile *tempFiles;
 	float *t3color;
 	bool transparency, started;
+	int *devHints;
 
 	userData(fz_context *ctx, HDC hDC, const fz_rect *clip) : stack(new userDataStackItem()),
 		ctx(ctx), outlines(NULL), fontCollections(NULL), tempFiles(NULL), t3color(NULL),
-		transparency(false), started(false)
+		transparency(false), started(false), devHints(NULL)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
@@ -677,11 +678,12 @@ public:
 		};
 		
 		float scale = hypotf(hypotf(ctm->a, ctm->b), hypotf(ctm->c, ctm->d)) / hypotf(image->w, image->h);
-		// cf. fz_paint_image_imp in draw/imagedraw.c for when (not) to interpolate
+		// cf. fz_paint_image_imp in draw-affine.c for when (not) to interpolate
 		bool downscale = hypotf(ctm->a, ctm->b) < image->w && hypotf(ctm->c, ctm->d) < image->h;
 		bool alwaysInterpolate = downscale ||
 			hypotf(ctm->a, ctm->b) > image->w && hypotf(ctm->c, ctm->d) > image->h &&
-			hypotf(ctm->a, ctm->b) < 2 * image->w && hypotf(ctm->c, ctm->d) < 2 * image->h;
+			hypotf(ctm->a, ctm->b) < 2 * image->w && hypotf(ctm->c, ctm->d) < 2 * image->h &&
+			!(devHints && (*devHints & FZ_DONT_INTERPOLATE_IMAGES));
 		
 		if (!image->interpolate && !alwaysInterpolate && scale > 1.0 && fz_maxi(image->w, image->h) < 200 && fz_is_rectilinear(ctm))
 		{
@@ -1054,7 +1056,7 @@ gdiplus_get_path(fz_path *path, const fz_matrix *ctm, bool has_caps, int evenodd
 	}
 	assert(len <= (path->coord_len + path->cmd_len) / 2);
 	
-	// clipping intermittently fails for overly large regions (cf. pathscan.c::fz_insertgel)
+	// clipping intermittently fails for overly large regions (cf. fz_insert_gel in draw-edge.c)
 	fz_rect BBOX_BOUNDS = { -(1<<20), -(1<<20) , (1<<20), (1<<20) };
 	fz_matrix invctm;
 	fz_transform_rect(&BBOX_BOUNDS, fz_invert_matrix(&invctm, ctm));
@@ -1748,6 +1750,7 @@ fz_new_gdiplus_device(fz_context *ctx, void *dc, const fz_rect *base_clip)
 	fz_synchronize_end();
 	
 	fz_device *dev = fz_new_device(ctx, new userData(ctx, (HDC)dc, base_clip));
+	((userData *)dev->user)->devHints = &dev->hints;
 	dev->free_user = fz_gdiplus_free_user;
 	
 	dev->fill_path = fz_gdiplus_fill_path;

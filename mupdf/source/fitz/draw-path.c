@@ -138,9 +138,11 @@ struct sctx
 	int dot;
 	int from_bezier;
 
+	fz_rect rect;
 	const float *dash_list;
 	float dash_phase;
 	int dash_len;
+	float dash_total;
 	int toggle, cap;
 	int offset;
 	float phase;
@@ -646,16 +648,160 @@ fz_dash_moveto(struct sctx *s, fz_point a, fz_linecap start_cap, fz_linecap end_
 static void
 fz_dash_lineto(struct sctx *s, fz_point b, int dash_cap, int from_bezier)
 {
-	float dx, dy;
-	float total, used, ratio;
+	float dx, dy, d;
+	float total, used, ratio, tail;
 	fz_point a;
 	fz_point m;
+	fz_point old_b;
+	int n;
 
 	a = s->cur;
 	dx = b.x - a.x;
 	dy = b.y - a.y;
-	total = sqrtf(dx * dx + dy * dy);
 	used = 0;
+	tail = 0;
+	total = sqrtf(dx * dx + dy * dy);
+
+	/* If a is off screen, bring it onto the screen. First
+	 * horizontally... */
+	if ((d = s->rect.x0 - a.x) > 0)
+	{
+		if (b.x < s->rect.x0)
+		{
+			/* Entirely off screen */
+			tail = total;
+			old_b = b;
+			goto adjust_for_tail;
+		}
+		a.x = s->rect.x0;	/* d > 0, dx > 0 */
+		goto a_moved_horizontally;
+	}
+	else if (d < 0 && (d = (s->rect.x1 - a.x)) < 0)
+	{
+		if (b.x > s->rect.x1)
+		{
+			/* Entirely off screen */
+			tail = total;
+			old_b = b;
+			goto adjust_for_tail;
+		}
+		a.x = s->rect.x1;	/* d < 0, dx < 0 */
+a_moved_horizontally:	/* d and dx have the same sign */
+		a.y += dy * d/dx;
+		used = total * d/dx;
+		total -= used;
+		dx = b.x - a.x;
+		dy = b.y - a.y;
+	}
+	/* Then vertically... */
+	if ((d = s->rect.y0 - a.y) > 0)
+	{
+		if (b.y < s->rect.y0)
+		{
+			/* Entirely off screen */
+			tail = total;
+			old_b = b;
+			goto adjust_for_tail;
+		}
+		a.y = s->rect.y0;	/* d > 0, dy > 0 */
+		goto a_moved_vertically;
+	}
+	else if (d < 0 && (d = (s->rect.y1 - a.y)) < 0)
+	{
+		if (b.y > s->rect.y1)
+		{
+			/* Entirely off screen */
+			tail = total;
+			old_b = b;
+			goto adjust_for_tail;
+		}
+		a.y = s->rect.y1;	/* d < 0, dy < 0 */
+a_moved_vertically:	/* d and dy have the same sign */
+		a.x += dx * d/dy;
+		d = total * d/dy;
+		total -= d;
+		used += d;
+		dx = b.x - a.x;
+		dy = b.y - a.y;
+	}
+	if (used != 0.0f)
+	{
+		/* Update the position in the dash array */
+		if (s->toggle)
+		{
+			fz_stroke_lineto(s, a, from_bezier);
+		}
+		else
+		{
+			fz_stroke_flush(s, s->cap, dash_cap);
+			s->cap = dash_cap;
+			fz_stroke_moveto(s, a);
+		}
+		used += s->phase;
+		n = used/s->dash_total;
+		used -= n*s->dash_total;
+		if (n & s->dash_len & 1)
+			s->toggle = !s->toggle;
+		while (used >= s->dash_list[s->offset])
+		{
+			used -= s->dash_list[s->offset];
+			s->offset++;
+			if (s->offset == s->dash_len)
+				s->offset = 0;
+			s->toggle = !s->toggle;
+		}
+		if (s->toggle)
+		{
+			fz_stroke_lineto(s, a, from_bezier);
+		}
+		else
+		{
+			fz_stroke_flush(s, s->cap, dash_cap);
+			s->cap = dash_cap;
+			fz_stroke_moveto(s, a);
+		}
+		s->phase = used;
+		used = 0;
+	}
+
+	/* Now if b.x is off screen, bring it back */
+	if ((d = b.x - s->rect.x0) < 0)
+	{
+		old_b = b;
+		b.x = s->rect.x0;	/* d < 0, dx < 0 */
+		goto b_moved_horizontally;
+	}
+	else if (d > 0 && (d = (b.x - s->rect.x1)) > 0)
+	{
+		old_b = b;
+		b.x = s->rect.x1;	/* d > 0, dx > 0 */
+b_moved_horizontally:	/* d and dx have the same sign */
+		b.y -= dy * d/dx;
+		tail = total * d/dx;
+		total -= tail;
+		dx = b.x - a.x;
+		dy = b.y - a.y;
+	}
+	/* Then vertically... */
+	if ((d = b.y - s->rect.y0) < 0)
+	{
+		old_b = b;
+		b.y = s->rect.y0;	/* d < 0, dy < 0 */
+		goto b_moved_vertically;
+	}
+	else if (d > 0 && (d = (b.y - s->rect.y1)) > 0)
+	{
+		float t;
+		old_b = b;
+		b.y = s->rect.y1;	/* d > 0, dy > 0 */
+b_moved_vertically:	/* d and dy have the same sign */
+		b.x -= dx * d/dy;
+		t = total * d/dy;
+		tail += t;
+		total -= t;
+		dx = b.x - a.x;
+		dy = b.y - a.y;
+	}
 
 	while (total - used > s->dash_list[s->offset] - s->phase)
 	{
@@ -684,11 +830,54 @@ fz_dash_lineto(struct sctx *s, fz_point b, int dash_cap, int from_bezier)
 
 	s->phase += total - used;
 
-	s->cur = b;
-
-	if (s->toggle)
+	if (tail == 0.0f)
 	{
-		fz_stroke_lineto(s, b, from_bezier);
+		s->cur = b;
+
+		if (s->toggle)
+		{
+			fz_stroke_lineto(s, b, from_bezier);
+		}
+	}
+	else
+	{
+adjust_for_tail:
+		s->cur = old_b;
+		/* Update the position in the dash array */
+		if (s->toggle)
+		{
+			fz_stroke_lineto(s, old_b, from_bezier);
+		}
+		else
+		{
+			fz_stroke_flush(s, s->cap, dash_cap);
+			s->cap = dash_cap;
+			fz_stroke_moveto(s, old_b);
+		}
+		tail += s->phase;
+		n = tail/s->dash_total;
+		tail -= n*s->dash_total;
+		if (n & s->dash_len & 1)
+			s->toggle = !s->toggle;
+		while (tail > s->dash_list[s->offset])
+		{
+			tail -= s->dash_list[s->offset];
+			s->offset++;
+			if (s->offset == s->dash_len)
+				s->offset = 0;
+			s->toggle = !s->toggle;
+		}
+		if (s->toggle)
+		{
+			fz_stroke_lineto(s, old_b, from_bezier);
+		}
+		else
+		{
+			fz_stroke_flush(s, s->cap, dash_cap);
+			s->cap = dash_cap;
+			fz_stroke_moveto(s, old_b);
+		}
+		s->phase = tail;
 	}
 }
 
@@ -757,6 +946,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	fz_point p0, p1, p2, p3, beg;
 	float phase_len, max_expand;
 	int i, k;
+	fz_matrix inv;
 
 	s.gel = gel;
 	s.ctm = ctm;
@@ -787,12 +977,22 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2339 */
 	if (stroke->dash_len > 0 && phase_len == 0.0f)
 		return;
+	fz_gel_scissor(gel, &s.rect);
+	if (fz_try_invert_matrix(&inv, ctm))
+		return;
+	fz_transform_rect(&s.rect, &inv);
+	s.rect.x0 -= linewidth;
+	s.rect.x1 += linewidth;
+	s.rect.y0 -= linewidth;
+	s.rect.y1 += linewidth;
+
 	max_expand = fz_matrix_max_expansion(ctm);
 	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
 	{
 		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
 		return;
 	}
+	s.dash_total = phase_len;
 
 	p0.x = p0.y = 0;
 	i = k = 0;

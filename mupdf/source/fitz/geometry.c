@@ -214,6 +214,25 @@ fz_invert_matrix(fz_matrix *dst, const fz_matrix *src)
 }
 
 int
+fz_try_invert_matrix(fz_matrix *dst, const fz_matrix *src)
+{
+	/* Be careful to cope with dst == src */
+	float a = src->a;
+	float det = a * src->d - src->b * src->c;
+	if (det >= -FLT_EPSILON && det <= FLT_EPSILON)
+		return 1;
+	det = 1 / det;
+	dst->a = src->d * det;
+	dst->b = -src->b * det;
+	dst->c = -src->c * det;
+	dst->d = a * det;
+	a = -src->e * dst->a - src->f * dst->c;
+	dst->f = -src->e * dst->b - src->f * dst->d;
+	dst->e = a;
+	return 0;
+}
+
+int
 fz_is_rectilinear(const fz_matrix *m)
 {
 	return (fabsf(m->b) < FLT_EPSILON && fabsf(m->c) < FLT_EPSILON) ||

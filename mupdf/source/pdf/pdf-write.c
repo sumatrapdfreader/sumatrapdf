@@ -2533,9 +2533,13 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 	pdf_write_options opts = { 0 };
 	fz_context *ctx;
 	int xref_len;
+	fz_write_options fz_opts_defaults = { 0 };
 
 	if (!doc)
 		return;
+
+	if (!fz_opts)
+		fz_opts = &fz_opts_defaults;
 
 	doc->freeze_updates = 1;
 	ctx = doc->ctx;
@@ -2561,11 +2565,11 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 
 	fz_try(ctx)
 	{
-		opts.do_incremental = fz_opts ? fz_opts->do_incremental : 0;
-		opts.do_expand = fz_opts ? fz_opts->do_expand : 0;
-		opts.do_garbage = fz_opts ? fz_opts->do_garbage : 0;
-		opts.do_ascii = fz_opts ? fz_opts->do_ascii: 0;
-		opts.do_linear = fz_opts ? fz_opts->do_linear: 0;
+		opts.do_incremental = fz_opts->do_incremental;
+		opts.do_expand = fz_opts->do_expand;
+		opts.do_garbage = fz_opts->do_garbage;
+		opts.do_ascii = fz_opts->do_ascii;
+		opts.do_linear = fz_opts->do_linear;
 		opts.start = 0;
 		opts.main_xref_offset = INT_MIN;
 		/* We deliberately make these arrays long enough to cope with

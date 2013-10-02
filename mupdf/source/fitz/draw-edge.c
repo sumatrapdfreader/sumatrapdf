@@ -254,6 +254,19 @@ fz_bound_gel(const fz_gel *gel, fz_irect *bbox)
 	return bbox;
 }
 
+fz_rect *
+fz_gel_scissor(const fz_gel *gel, fz_rect *r)
+{
+	fz_aa_context *ctxaa = gel->ctx->aa;
+
+	r->x0 = gel->clip.x0 / fz_aa_hscale;
+	r->x1 = gel->clip.x1 / fz_aa_vscale;
+	r->y0 = gel->clip.y0 / fz_aa_hscale;
+	r->y1 = gel->clip.y1 / fz_aa_vscale;
+
+	return r;
+}
+
 enum { INSIDE, OUTSIDE, LEAVE, ENTER };
 
 #define clip_lerp_y(v,m,x0,y0,x1,y1,t) clip_lerp_x(v,m,y0,x0,y1,x1,t)

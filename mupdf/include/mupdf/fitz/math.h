@@ -400,6 +400,20 @@ fz_matrix *fz_pre_translate(fz_matrix *m, float tx, float ty);
 fz_matrix *fz_invert_matrix(fz_matrix *inverse, const fz_matrix *matrix);
 
 /*
+	fz_try_invert_matrix: Attempt to create an inverse matrix.
+
+	inverse: Place to store inverse matrix.
+
+	matrix: Matrix to invert. A degenerate matrix, where the
+	determinant is equal to zero, can not be inverted.
+
+	Returns 1 if matrix is degenerate (singular), or 0 otherwise.
+
+	Does not throw exceptions.
+*/
+ int fz_try_invert_matrix(fz_matrix *inverse, const fz_matrix *matrix);
+
+/*
 	fz_is_rectilinear: Check if a transformation is rectilinear.
 
 	Rectilinear means that no shearing is present and that any
