@@ -244,22 +244,24 @@ def gen_struct(struct, indent="", prerelease=False):
         if field.internal or type(field) is gen_settingsstructs.Comment or not prerelease and field.prerelease:
             continue
         start_idx = len(lines)
+        comment = field.docComment
+        if field.version != "2.3":
+            comment += " (introduced in version %s)" % field.version
+        lines += gen_comment(comment, indent, first)
         if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
-            lines += gen_comment(field.docComment, indent, first)
             indent2 = indent + indent_str[:len(indent_str)/2]
             start = "%s%s [\n%s[" % (indent, field.name, indent2)
             end = "%s]\n%s]" % (indent2, indent)
             inside = gen_struct(field, indent + indent_str, prerelease)
             lines += [start, inside, end]
         elif type(field) is gen_settingsstructs.Struct and not field.type.name == "Compact":
-            lines += gen_comment(field.docComment, indent, first)
             start = "%s%s [" % (indent, field.name)
             end = "%s]" % indent
             inside = gen_struct(field, indent + indent_str, prerelease)
             lines += [start, inside, end]
         else:
             s = field.inidefault(commentChar="").lstrip()
-            lines += gen_comment(field.docComment, indent, first) + [indent + s]
+            lines += [indent + s]
         first = False
         if field.expert and not inside_expert:
             lines[start_idx] = '<div>' + lines[start_idx]

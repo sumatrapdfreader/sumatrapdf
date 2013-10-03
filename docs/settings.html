@@ -98,7 +98,8 @@ FixedPageUI [
     <span class=cm><a href="#color">color</a> value with which white (background) will be substituted</span>
     BackgroundColor = #ffffff
 
-    <span class=cm><a href="#color">color</a> value for the text selection rectangle (also used to highlight found text)</span>
+    <span class=cm><a href="#color">color</a> value for the text selection rectangle (also used to highlight found text) (introduced in 
+    version 2.4)</span>
     SelectionColor = #f5fc0c
 
     <span class=cm>top, right, bottom and left margin (in that order) between window and document</span>
@@ -202,6 +203,14 @@ ForwardSearch [
     HighlightPermanent = false
 ]
 
+<span class=cm>a whitespace separated list of passwords to try for opening a password protected document (passwords 
+containing spaces must be quoted same as command line arguments) (introduced in version 2.4)</span>
+DefaultPasswords =
+
+<span class=cm>if true, a document will be reloaded automatically whenever it's changed (currently doesn't work for 
+documents shown in the ebook UI) (introduced in version 2.5)</span>
+ReloadModifiedDocuments = true
+
 <span class=cm>default values for user added annotations in FixedPageUI documents (preliminary and still subject to 
 change)</span>
 AnnotationDefaults [
@@ -213,14 +222,6 @@ AnnotationDefaults [
     .smx file</span>
     SaveIntoDocument = true
 ]
-
-<span class=cm>a whitespace separated list of passwords to try for opening a password protected document (passwords 
-containing spaces must be quoted same as command line arguments)</span>
-DefaultPasswords =
-
-<span class=cm>if true, a document will be reloaded automatically whenever it's changed (currently doesn't work for 
-documents shown in the ebook UI)</span>
-ReloadModifiedDocuments = true
 </div>
 <span class=cm>if true, we store display settings for each document separately (i.e. everything after 
 UseDefaultState in FileStates)</span>

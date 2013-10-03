@@ -20,11 +20,12 @@ String = Type("String", "WCHAR *")
 Utf8String = Type("Utf8String", "char *")
 
 class Field(object):
-	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None, prerelease=False):
+	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None, version=None, prerelease=False):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 		self.expert = expert # "expert" prefs are the ones not exposed by the UI
 		self.docComment = doc or comment
+		self.version = version or "2.3" # version in which this setting was introduced
 		self.prerelease = prerelease # prefs which aren't written out in release builds
 
 	def cdefault(self, built):
@@ -75,27 +76,27 @@ class Field(object):
 		assert False
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None, prerelease=False):
+	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None, version=None, prerelease=False):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc, prerelease)
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc, version, prerelease)
 		if prerelease: self.type.name = "Prerelease"
 		elif compact: self.type.name = "Compact"
 
 class Array(Field):
-	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False):
+	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, version=None):
 		self.structName = structName or name
 		if not structName and name.endswith("s"):
 			# trim plural 's' from struct name
 			self.structName = name[:-1]
-		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert)
+		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert, None, version)
 
 class CompactArray(Field):
-	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None):
-		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert, doc)
+	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None, version=None):
+		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert, doc, version)
 
 class Comment(Field):
-	def __init__(self, comment, expert=False):
-		super(Comment, self).__init__("", Type("Comment", None), None, comment, False, expert, None)
+	def __init__(self, comment, expert=False, version=None):
+		super(Comment, self).__init__("", Type("Comment", None), None, comment, False, expert)
 
 def EmptyLine(expert=False):
 	return Comment(None, expert)
@@ -166,7 +167,7 @@ FixedPageUI = [
 	Field("BackgroundColor", Color, RGB(0xFF, 0xFF, 0xFF),
 		"color value with which white (background) will be substituted"),
 	Field("SelectionColor", Color, RGB(0xF5, 0xFC, 0x0C),
-		"color value for the text selection rectangle (also used to highlight found text)"),
+		"color value for the text selection rectangle (also used to highlight found text)", version="2.4"),
 	Struct("WindowMargin", WindowMargin_FixedPageUI,
 		"top, right, bottom and left margin (in that order) between window and document",
 		compact=True),
@@ -362,18 +363,18 @@ GlobalPrefs = [
 		"customization options for how we show forward search results (used from " +
 		"LaTeX editors)",
 		expert=True),
+	Field("DefaultPasswords", String, None,
+		"a whitespace separated list of passwords to try for opening a password protected document " +
+		"(passwords containing spaces must be quoted same as command line arguments)",
+		expert=True, version="2.4"),
+	Field("ReloadModifiedDocuments", Bool, True,
+		"if true, a document will be reloaded automatically whenever it's changed " +
+		"(currently doesn't work for documents shown in the ebook UI)",
+		expert=True, version="2.5"),
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +
 		"(preliminary and still subject to change)",
 		expert=True, prerelease=True),
-	Field("DefaultPasswords", String, None,
-		"a whitespace separated list of passwords to try for opening a password protected document " +
-		"(passwords containing spaces must be quoted same as command line arguments)",
-		expert=True),
-	Field("ReloadModifiedDocuments", Bool, True,
-		"if true, a document will be reloaded automatically whenever it's changed " +
-		"(currently doesn't work for documents shown in the ebook UI)",
-		expert=True),
 	EmptyLine(),
 
 	Field("RememberStatePerDocument", Bool, True,
