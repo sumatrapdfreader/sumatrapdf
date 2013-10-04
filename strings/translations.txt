@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c45e77a9de64084eac12ed2024986c7f89177620
+c3ac63eeb04cf0d540b7f99dcf94110cfdf4003c
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -541,7 +541,7 @@ es:&Copiar selección\tCtrl+C
 et:K&opeeri valik\tCtrl+C
 eu:&Kopiatu Hautapena\tKtrl+C
 fa:&رونوشت از انتخاب شده
-fi:Kopioi valinta\tCtrl+C
+fi:Ko&pioi valinta\tCtrl+C
 fr:&Copier la sélection
 fy-nl:Kopiearje seleksje\tCtrl+C
 ga:&Macasamhlaigh an Roghnúchán\tCtrl+C
@@ -3031,7 +3031,7 @@ es:&Zoom
 et:&Suurendus
 eu:&Zooma
 fa:&تغییر ابعاد نمایش
-fi:&Kohdista
+fi:&Zoomaus
 fr:&Zoom
 fy-nl:&Zoom
 ga:&Formhéadú
@@ -3337,7 +3337,7 @@ es:Añadir página %s a favoritos
 et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به موارد برگزیده
-fi:Lisää sivu %s suosikkeihin
+fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
 gl:Engadir páxina %s aos favoritos
@@ -3513,7 +3513,7 @@ es:Avanzado
 et:Muud
 eu:Aurreratua
 fa:امکانات پیشرفته
-fi:Kehittynyt
+fi:Lisäasetukset
 fr:Avancé
 fy-nl:Avansearre
 ga:Ardroghanna
@@ -3754,7 +3754,7 @@ es:¿Está seguro de que quiere desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
-fi:Oletko varma että haluat poistaa SumatraPDF:n?
+fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
@@ -4177,7 +4177,7 @@ es:&Marcadores\tF12
 et:Jär&jehoidjad\tF12
 eu:&Gogokoenak\tF12
 fa:ن&شانه‌ی صفحه‌ها\tF12
-fi:Kirjanmerkit\tF12
+fi:K&irjanmerkit\tF12
 fr:Signets\tF12
 fy-nl:Blêdwizers\tF12
 ga:Ceanáin\tF12
@@ -4652,7 +4652,7 @@ es:No se puede imprimir este archivo
 et:Faili printimine ebaõnnestus
 eu:Ezinezkoa agiri hau irarkitzea
 fa:نمی‌توان این پرونده را چاپ کرد
-fi:Tämän tiedoston tulostus epäonnistui
+fi:Tämän tiedoston tulostaminen epäonnistui
 fr:Impossible d'imprimer ce fichier
 fy-nl:Dit bestân kin net ôfdrukt wurde
 ga:Ní féidir an comhad seo a chlóbhualadh
@@ -4712,7 +4712,7 @@ es:No se puede iniciar el comando de búsqueda inversa. Verifique la línea de c
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
 eu:Ezinezkoa alderantzizko bilaketa komandoa hastea. Mesedez, egiaztatu komando lerroa ezarpenetan.
 fa:جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
-fi:Käänteisen hakukomennon aloitus epäonnistui. Tarkista komentorivi asetuksissa.
+fi:Käänteisen hakukomennon aloittaminen epäonnistui. Tarkista komentorivi asetuksista.
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 fy-nl:Kin de omkearde sykrjochting net starte. Kontrolearje de opdrachtrigel yn de ynstellingen.
 ga:Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
@@ -4842,7 +4842,7 @@ es:&Buscar actualizaciones
 et:Vaata, kas on &uuendusi
 eu:&Egiaztatu Eguneraketak
 fa:بررسی برای نسخه‌ی &جدیدتر
-fi:Tarkista &päivitysten saatavuus...
+fi:Tarkista &päivitysten saatavuus
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
@@ -5134,7 +5134,7 @@ es:Vista continua de libro
 et:Jätkuv raamatuvaade
 eu:Liburu Ikuspegi Jarraia
 fa:نمایش کتابی‌ پیوسته
-fi:Jatkuva kirjanäkymä
+fi:Kirjanäkymä, peräkkäin
 fr:Vue continue, comme un livre
 fy-nl:Fierder mei boekbyld
 ga:Leabhar-amharc leanúnach
@@ -5755,7 +5755,7 @@ es:No se pudo inicializar la impresora
 et:Printerit ei saa lähtestada
 eu:Ezinezkoa irarkailua abiaraztea
 fa:متأسفانه چاپگر منتخب در دسترس نیست
-fi:Tulostinta ei voida valmistella
+fi:Tulostimen valmistelu epäonnistui
 fr:Impossible d'initialiser l'imprimante
 fy-nl:Kin de printer net inisjalisearje
 ga:Níorbh fhéidir an clóire a thúsú
@@ -6272,7 +6272,7 @@ es:Creado:
 et:Loodud:
 eu:Sortua:
 fa:زمان ایجاد:
-fi:Tehty:
+fi:Luotu:
 fr:Créé le :
 fy-nl:Makke:
 ga:Cruthaithe:
@@ -6390,7 +6390,7 @@ es:&Zoom personalizado...\tCtrl+Y
 et:&Muu suurendus...\tCtrl+Y
 eu:Egile Zoo&ma...\tKtrl+Y
 fa:ابعاد نمایش &سفارشی...\tCtrl+Y
-fi:&Mukautettu lähennys...\tCtrl+Y
+fi:&Mukautettu zoomaustaso...\tCtrl+Y
 fr:&Zoom personnalisé...\tCtrl+Y
 fy-nl:&Oanpaste Zoom...\tCtrl+Y
 ga:Formhéadú saincheaptha...\tCtrl+Y
@@ -6511,7 +6511,7 @@ es:Am&pliación predeterminada:
 et:Vaike&suurendus:
 eu:Berezko &Zooma:
 fa:&ابعاد نمایش پیش‌فرض:
-fi:Oletus&lähennys:
+fi:Oletus&zoomaus:
 fr:&Zoom par défaut :
 fy-nl:Standert &Zoom:
 ga:Formhéadú réamhshocraithe:
@@ -6572,7 +6572,7 @@ es:No se puede cambiar el lector PDF predeterminado en modo portátil
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
 fa:خواننده‌ی پیش‌فرض پرونده‌های PDF را نمی‌توان در نسخه‌ی همراه تغییر داد.
-fi:Pää-PDF-lukijaa ei voida muuttaa kannettavassa tilassa
+fi:PDF-oletuslukijaa ei voi vaihtaa kannettavassa tilassa
 fr:Le lecteur de PDF ne peut être changé en mode portable
 fy-nl:Standert PDF-lêzer kin net oanpast wurde yn portable moadus
 ga:Ní féidir an léitheoir PDF réamhshocraithe a athrú sa mhodh soghluaiste
@@ -7124,7 +7124,7 @@ es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer 
 et:Sisesta käsurida, mis käivitatakse, kui teed topeltklõpsu PDF dokumendil:
 eu:Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
 fa:خط دستور را برای فراخوانی هنگام کلیک روی پرونده‌ی PDF وارد کنید:
-fi:Anna komentorivin komento joka ajetaan PDF-asiakirjaa kaksoisnapsautettaessa:
+fi:Anna komentorivin komento, joka ajetaan kun PDF-asiakirjaa kaksoisnapsautetaan:
 fr:Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
 ga:Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar cháipéis PDF:
 gl:Introduza a liña de comandos a invocar cando faga dobre-click sobre o documento PDF:
@@ -7269,6 +7269,7 @@ cy:Gwall: Heb ganfod SumatraPDF!
 cz:Chyba: Program SumatraPDF nebyl nalezen!
 de:Fehler: SumatraPDF ist unaufindbar!
 dk:Fejl: SumatraPDF ikke fundet !
+el:Σφάλμα: Το SumatraPDF δεν βρέθηκε!
 es:Error: ¡SumatraPDF no ha sido encontrado!
 et:Viga: Ei leitud rakendust SumatraPDF
 eu:Akatsa: SumatraPDF ez da aurkitu!
@@ -7310,11 +7311,12 @@ cy:Gwall: Nid oedd modd llwytho'r ddogfen i lawr!
 cz:Chyba: Stažení dokumentu se nezdařilo!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 dk:Fejl: Dokumentet kunne ikke hentes !
+el:Σφάλμα: Η λήψη του εγγράφου απέτυχε!
 es:Error: ¡El documento no pudo ser descargado!
 et:Viga: Dokumenti ei suudetud alla laadida!
 eu:Akatsa: Agiria ezin da jeitsi!
 fa:خطا : عدم توانایی در دانلود متن
-fi:Virhe: tiedoston lataaminen epäonnistui!
+fi:Virhe: asiakirjan lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
 hr:Greška: Dokument nije moguće preuzeti!
 hu:Hiba: a dokumentum letöltése sikertelen!
@@ -10206,7 +10208,7 @@ es:¿Convertir SumatraPDF en la aplicación predeterminada para archivos PDF?
 et:Tee SumatraPDF PDF-failide vaikerakenduseks?
 eu:Egin SumatraPFD berezko aplikazioa PDF agirientzat?
 fa:پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
-fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma?
+fi:Tee SumatraPDF:stä PDF-asiakirjojen oletuslukuohjelma?
 fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 fy-nl:SumatraPDF as standertlêzer fan PDF-bestannen ynstelle?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
@@ -10271,7 +10273,7 @@ es:Convertir SumatraPDF el lector PDF predeterminado
 et:Tee SumatraPDF PDF-failide vaikerakenduseks
 eu:Egin SumatraPDF nire berezko PDF irakurlea
 fa:انتخاب SumatraPDF به عنوان برنامه‌ی پیش‌فرض من برای خواندن اسناد PDF
-fi:Tee SumatraPDF:stä PDF-tiedostojen oletuslukuohjelma
+fi:Tee SumatraPDF:stä PDF-asiakirjojen oletuslukuohjelma
 fr:Définir SumatraPDF comme lecteur PDF par défaut
 fy-nl:SumatraPDF as standert PDF-lêzer ynstelle
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
@@ -11942,7 +11944,7 @@ es:Página...\tCtrl+G
 et:&Lehekülg...\tCtrl+G
 eu:&Orrialdea...\tKtrl+G
 fa:&صفحه‌ی...\tCtrl+G
-fi:S&ivulle...\tCtrl+G
+fi:Si&vulle...\tCtrl+G
 fr:Pa&ge...\tCtrl+G
 fy-nl:Side...\tCtrl+G
 ga:Leathanach...\tCtrl+G
@@ -12295,6 +12297,7 @@ cy:Cau %s i barhau!
 cz:Prosím ukončete %s pro pokračování!
 de:Bitte schliessen Sie %s vor der Installation!
 dk:Luk venligst %s for at fortsætte !
+el:Παρακαλώ κλείστε %s για να συνεχίσετε!
 es:Necesita cerrar %s para continuar.
 et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
@@ -13175,7 +13178,7 @@ es:Eliminar de favoritos
 et:Kustuta lemmikutest
 eu:Kendu Gogokoenetatik
 fa:حذف از موارد برگزیده
-fi:Poista suosikeista
+fi:&Poista suosikeista
 fr:Enlever des favoris
 ga:Bain ó na ceanáin
 gl:Eliminar de favoritos
@@ -14152,7 +14155,7 @@ es:Mostrar páginas de forma continua
 et:Näita &lehekülgi pidevana
 eu:&Erakutsi Orrialdeak Jarraian
 fa:نمایش &پیوسته‌ی صفحات
-fi:Näytä &sivut jatkuvasti
+fi:Näytä &sivut peräkkäin
 fr:&Vue continue
 fy-nl:Toan sides kontinue
 ga:Teaspáin na leathanaigh go leanúnach
@@ -14211,7 +14214,7 @@ es:Mostrar favoritos
 et:Näita lemmikuid
 eu:Erakutsi Gogokoenak
 fa:نشان دادن موارد برگزیده
-fi:Näytä suosikit
+fi:&Näytä suosikit
 fr:Voir Favoris
 ga:Taispeáin Ceanáin
 gl:Amosar Favoritos
@@ -14542,7 +14545,7 @@ es:El archivo de origen %s no posee un punto de sincronización
 et:Lähtefailil %s puudub sünkroniseerimispunkt
 eu:%s iturburu agiriak ez du aldiberetze punturik
 fa:پرونده‌ی %s نقاط همگام‌سازی ندارد
-fi:Lähdetiedostolla %s ei ole synkronisaatiopistettä
+fi:Lähdetiedostolla %s ei ole synkronointikohtaa
 fr:Le fichier source %s n'a pas de point de synchronisation
 fy-nl:Bestân %s hat gjin syngronisaasjepunt
 ga:Níl láthair comhaimsearatha ag an gcomhad foinse %s
@@ -15029,7 +15032,7 @@ es:SumatraPDF es el lector PDF predeterminado
 et:SumatraPDF on vaikimisi PDF-lehitseja
 eu:SumatraPDF zure berezko PDF irakurlea da
 fa:SumatraPDF برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شماست
-fi:SumatraPDF on pää-PDF-lukijasi
+fi:SumatraPDF on oletuslukijasi PDF-asiakirjoille
 fr:SumatraPDF est votre lecteur de PDF
 fy-nl:SumatraPDF is de standart PDF-lêzer
 ga:Is é SumatraPDF do léitheoir PDF réamhshocraithe
@@ -15089,7 +15092,7 @@ es:A partir de ahora SumatraPDF será el lector PDF predeterminado
 et:SumatraPDF peaks nüüd olema vaikimisi PDF-lehitseja
 eu:SumatraPDF orain zure berezko PDF irakurlea izan beharko litzake
 fa:اکنون SumatraPDF باید برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شما باشد
-fi:SumatraPDF:n pitäisi nyt olla pää-PDF-lukijasi
+fi:SumatraPDF:n pitäisi nyt olla oletuslukijasi PDF-asiakirjoille
 fr:SumatraPDF doit maintenant être votre lecteur de PDF par défaut
 fy-nl:SumatraPDF soe no de standert PDF-lêzer wêze moatte
 ga:Ba chóir go mbeadh SumatraPDF mar an léitheoir PDF réamhshocraithe agat
@@ -15683,7 +15686,7 @@ es:Usar SumatraPDF como el lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از
-fi:Käytä SumatraPDF:ää PDF-tiedostojen oletuslukijana
+fi:Käytä SumatraPDF:ää PDF-asiakirjojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hr:Koristi SumatraPDF kao zadani PDF preglednik
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
@@ -16113,7 +16116,7 @@ es:Ampliar
 et:Suurenda
 eu:Zooma
 fa:ابعاد نمایش
-fi:Lähennä
+fi:Zoomaus
 fr:Zoom
 fy-nl:Zoom
 ga:Formhéadú
@@ -16175,7 +16178,7 @@ es:Acercar zoom
 et:Suurenda
 eu:Zooma Handitu
 fa:بزرگ نمایی
-fi:Kohdenna lähemmäksi
+fi:Lähennä
 fr:Zoom avant
 fy-nl:Ynzoome
 ga:Gluais isteach
@@ -16243,7 +16246,7 @@ es:Alejar zoom
 et:Vähenda
 eu:Zooma Gutxitu
 fa:کوچک نمایی
-fi:Loitonna kauemmaksi
+fi:Loitonna
 fr:Zoom arrière
 fy-nl:Utzoome
 ga:Gluais amach
@@ -16308,7 +16311,7 @@ es:Proporción de zoom
 et:Suurendusaste
 eu:Zomm ezaugarria
 fa:ضریب ابعاد نمایش
-fi:Lähennyskerroin
+fi:Zoomaustaso
 fr:Facteur de zoom
 fy-nl:Zoomfaktor
 ga:Fachtóir formhéadaithe

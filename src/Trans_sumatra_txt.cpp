@@ -4205,7 +4205,7 @@ const char * gTranslations_fi =
   "&Kirjan\303\244kym\303\244\tCtrl+8\0"\
   "&Sulje\tCtrl+W\0"\
   "Kopioi &valinta\0"\
-  "Kopioi valinta\tCtrl+C\0"\
+  "Ko&pioi valinta\tCtrl+C\0"\
   "\303\204&l\303\244 kysy uudestaan\0"\
   "Vain pa&rilliset sivut\0"\
   "&Rinnakkain\tCtrl+7\0"\
@@ -4245,15 +4245,15 @@ const char * gTranslations_fi =
   "&K\303\244yt\303\244 alkuper\303\244isi\303\244 sivukokoja\0"\
   "&N\303\244yt\303\244\0"\
   "&Kyll\303\244\0"\
-  "&Kohdista\0"\
+  "&Zoomaus\0"\
   "(%d:st\303\244)\0"\
   "(sivu %s)\0"\
   "Tietoja SumatraPDF:st\303\244\0"\
   "Lis\303\244\303\244 suosikki\0"\
-  "Lis\303\244\303\244 sivu %s suosikkeihin\0"\
+  "&Lis\303\244\303\244 sivu %s suosikkeihin\0"\
   "Lis\303\244\303\244 sivu %s suosikkeihin (valinnaisella) nimell\303\244:\0"\
   "Lis\303\244\303\244 suosikkeihin\0"\
-  "Kehittynyt\0"\
+  "Lis\303\244asetukset\0"\
   "Kaikki tiedostot\0"\
   "Kaikki tuetut asiakirjat\0"\
   "Ohjelma:\0"\
@@ -4263,7 +4263,7 @@ const char * gTranslations_fi =
   "Automaattinen\0"\
   "Tarkista p\303\244&ivitykset automaattisesti\0"\
   "Kirjan\303\244kym\303\244\0"\
-  "Kirjanmerkit\tF12\0"\
+  "K&irjanmerkit\tF12\0"\
   "Pikakuvakkeet\0"\
   "Tee pikakuvake sivulle %s/%s\0"\
   "Kirjanmerkit\0"\
@@ -4271,14 +4271,14 @@ const char * gTranslations_fi =
   "CHM-asiakirjat\0"\
   "Internetiin yhdist\303\244minen ep\303\244onnistui (virhe %#x).\0"\
   "Peruuta\0"\
-  "T\303\244m\303\244n tiedoston tulostus ep\303\244onnistui\0"\
-  "K\303\244\303\244nteisen hakukomennon aloitus ep\303\244onnistui. Tarkista komentorivi asetuksissa.\0"\
+  "T\303\244m\303\244n tiedoston tulostaminen ep\303\244onnistui\0"\
+  "K\303\244\303\244nteisen hakukomennon aloittaminen ep\303\244onnistui. Tarkista komentorivi asetuksista.\0"\
   "Valitse kieli (Change Language)\0"\
-  "Tarkista &p\303\244ivitysten saatavuus...\0"\
+  "Tarkista &p\303\244ivitysten saatavuus\0"\
   "Sarjakuvat\0"\
   "Yhteensopivuus\0"\
   "Per\303\244kk\303\244in\0"\
-  "Jatkuva kirjan\303\244kym\303\244\0"\
+  "Kirjan\303\244kym\303\244, per\303\244kk\303\244in\0"\
   "Per\303\244kk\303\244in ja rinnakkain\0"\
   "Osallistu suomennosprojektiin\0"\
   "Kopioi &kuva\0"\
@@ -4287,14 +4287,14 @@ const char * gTranslations_fi =
   "Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)\0"\
   "\0"\
   "Tulostimen ominaisuuksia ei voinut lukea\0"\
-  "Tulostinta ei voida valmistella\0"\
+  "Tulostimen valmistelu ep\303\244onnistui\0"\
   "Sivun tulkinta ep\303\244onnistui\0"\
-  "Tehty:\0"\
+  "Luotu:\0"\
   "Nykyinen tiedosto\0"\
-  "&Mukautettu l\303\244hennys...\tCtrl+Y\0"\
+  "&Mukautettu zoomaustaso...\tCtrl+Y\0"\
   "Oletus&tyyli:\0"\
-  "Oletus&l\303\244hennys:\0"\
-  "P\303\244\303\244-PDF-lukijaa ei voida muuttaa kannettavassa tilassa\0"\
+  "Oletus&zoomaus:\0"\
+  "PDF-oletuslukijaa ei voi vaihtaa kannettavassa tilassa\0"\
   "Kielletyt oikeudet:\0"\
   "DjVu-asiakirjat\0"\
   "Asiakirjan ominaisuudet\0"\
@@ -4303,7 +4303,7 @@ const char * gTranslations_fi =
   "EPUB-asiakirjat\0"\
   "Kirjoita salasana\0"\
   "Kirjoita tiedoston %s salasana\0"\
-  "Anna komentorivin komento joka ajetaan PDF-asiakirjaa kaksoisnapsautettaessa:\0"\
+  "Anna komentorivin komento, joka ajetaan kun PDF-asiakirjaa kaksoisnapsautetaan:\0"\
   "Virhe ladattaessa: %s\0"\
   "S&uosikit\0"\
   "Se&uraava\tAlt+Oikea nuoli\0"\
@@ -4344,8 +4344,8 @@ const char * gTranslations_fi =
   "Kt\0"\
   "Ladataan tiedostoa %s...\0"\
   "Mt\0"\
-  "Tee SumatraPDF:st\303\244 PDF-tiedostojen oletuslukuohjelma?\0"\
-  "Tee SumatraPDF:st\303\244 PDF-tiedostojen oletuslukuohjelma\0"\
+  "Tee SumatraPDF:st\303\244 PDF-asiakirjojen oletuslukuohjelma?\0"\
+  "Tee SumatraPDF:st\303\244 PDF-asiakirjojen oletuslukuohjelma\0"\
   "Man&ga-moodi\0"\
   "Sama kirjainkoko\0"\
   "Mobi-asiakirjat\0"\
@@ -4373,7 +4373,7 @@ const char * gTranslations_fi =
   "PDF-tuottaja:\0"\
   "PDF-versio:\0"\
   "PDF-asiakirjat\0"\
-  "S&ivulle...\tCtrl+G\0"\
+  "Si&vulle...\tCtrl+G\0"\
   "Sivu %s\0"\
   "Sivun koko:\0"\
   "Sivunumeroa %u ei ole olemassa\0"\
@@ -4394,7 +4394,7 @@ const char * gTranslations_fi =
   "Tulostusongelma\0"\
   "&Uudelleennime\303\244...\tF2\0"\
   "Muista &avatut tiedostot\0"\
-  "Poista suosikeista\0"\
+  "&Poista suosikeista\0"\
   "Poista sivu %s suosikeista\0"\
   "Uudelleennime\303\244\0"\
   "Korvaa asiakirjan &v\303\244rit Windowsin v\303\244riteemalla\0"\
@@ -4410,19 +4410,19 @@ const char * gTranslations_fi =
   "Aseta k\303\244\303\244nteinen haku komentorivill\303\244\0"\
   "N\303\244yt\303\244 &Kirjanmerkit\0"\
   "N\303\244yt\303\244 &ty\303\266kalupalkki\0"\
-  "N\303\244yt\303\244 &sivut jatkuvasti\0"\
-  "N\303\244yt\303\244 suosikit\0"\
+  "N\303\244yt\303\244 &sivut per\303\244kk\303\244in\0"\
+  "&N\303\244yt\303\244 suosikit\0"\
   "N\303\244yt\303\244 usein luetut\0"\
   "N\303\244yt\303\244 &kirjanmerkit sivupalkissa, kun saatavilla\0"\
   "Yksitt\303\244inen sivu\0"\
   "Pahoittelut, jotain odottamatonta tapahtui!\n\nPaina 'Peruuta' jos haluat auttaa tekij\303\266it\303\244 korjaamaan t\303\244m\303\244n virheen.\0"\
-  "L\303\244hdetiedostolla %s ei ole synkronisaatiopistett\303\244\0"\
+  "L\303\244hdetiedostolla %s ei ole synkronointikohtaa\0"\
   "Otsikko:\0"\
   "SumatraPDF:n asetukset\0"\
   "SumatraPDF:n p\303\244ivitys\0"\
   "SumatraPDF kaatui\0"\
-  "SumatraPDF on p\303\244\303\244-PDF-lukijasi\0"\
-  "SumatraPDF:n pit\303\244isi nyt olla p\303\244\303\244-PDF-lukijasi\0"\
+  "SumatraPDF on oletuslukijasi PDF-asiakirjoille\0"\
+  "SumatraPDF:n pit\303\244isi nyt olla oletuslukijasi PDF-asiakirjoille\0"\
   "Synkronisointitiedostoa ei voitu avata\0"\
   "Merkitty PDF\0"\
   "Tekstiasiakirjat\0"\
@@ -4434,10 +4434,10 @@ const char * gTranslations_fi =
   "XPS-asiakirjat\0"\
   "Sinulla on uusin versio.\0"\
   "Sinulla on versio %s\0"\
+  "Zoomaus\0"\
   "L\303\244henn\303\244\0"\
-  "Kohdenna l\303\244hemm\303\244ksi\0"\
-  "Loitonna kauemmaksi\0"\
-  "L\303\244hennyskerroin\0"\
+  "Loitonna\0"\
+  "Zoomaustaso\0"\
   "[Muutoksia tunnistettiin; p\303\244ivitet\303\244\303\244n] %s\0"\
   "Kopioidaan teksti\303\244\0"\
   "tulostetaan asiakirjaa\0";

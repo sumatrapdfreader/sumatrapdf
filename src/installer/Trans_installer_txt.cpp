@@ -646,7 +646,7 @@ const char * gTranslations_et =
 
 const char * gTranslations_fi = 
   "&Asetukset\0"\
-  "Oletko varma ett\303\244 haluat poistaa SumatraPDF:n?\0"\
+  "Oletko varma, ett\303\244 haluat poistaa SumatraPDF:n?\0"\
   "Sulje\0"\
   "V\303\244liaikaiskansion luominen ep\303\244onnistui\0"\
   "Asennuskansion luominen ep\303\244onnistui\0"\
@@ -687,7 +687,7 @@ const char * gTranslations_fi =
   "Poista SumatraPDF\0"\
   "Poistaminen ep\303\244onnistui\0"\
   "Poistaminen k\303\244ynniss\303\244...\0"\
-  "K\303\244yt\303\244 SumatraPDF:\303\244\303\244 PDF-tiedostojen oletuslukijana\0";
+  "K\303\244yt\303\244 SumatraPDF:\303\244\303\244 PDF-asiakirjojen oletuslukijana\0";
 
 const char * gTranslations_fr = 
   "\0"\
