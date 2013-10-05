@@ -542,11 +542,11 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
       bool FileCreateMode=!TestMode && !SkipSolid && Command!='P';
       bool ShowChecksum=true; // Display checksum verification result.
 
+      bool LinkSuccess=true; // Assume success for test mode.
       if (LinkEntry)
       {
         FILE_SYSTEM_REDIRECT Type=Arc.FileHead.RedirType;
 
-        bool LinkSuccess=true; // Assume success for test mode.
         if (Type==FSREDIR_HARDLINK || Type==FSREDIR_FILECOPY)
         {
           wchar NameExisting[NM];
@@ -653,7 +653,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 #endif
 
       if (!TestMode && !WrongPassword && (Command=='X' || Command=='E') &&
-          (!LinkEntry || Arc.FileHead.RedirType==FSREDIR_FILECOPY) && 
+          (!LinkEntry || Arc.FileHead.RedirType==FSREDIR_FILECOPY && LinkSuccess) && 
           (!BrokenFile || Cmd->KeepBroken))
       {
         // We could preallocate more space that really written to broken file.

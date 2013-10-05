@@ -75,7 +75,13 @@ void ExtractACL(Archive &Arc,const wchar *FileName)
     si|=SACL_SECURITY_INFORMATION;
   SECURITY_DESCRIPTOR *sd=(SECURITY_DESCRIPTOR *)&SubData[0];
 
-  int SetCode=SetFileSecurityW(FileName,si,sd);
+  int SetCode=SetFileSecurity(FileName,si,sd);
+  if (!SetCode)
+  {
+    wchar LongName[NM];
+    if (GetWinLongPath(FileName,LongName,ASIZE(LongName)))
+      SetCode=SetFileSecurity(LongName,si,sd);
+  }
 
   if (!SetCode)
   {

@@ -365,6 +365,9 @@ size_t Archive::ReadHeader15()
                 RecoveryPercent++;
             }
           }
+
+          if (hd->CmpName(SUBHEAD_TYPE_CMT))
+            MainComment=true;
         }
         if ((hd->Flags & LHD_SALT)!=0)
           Raw.GetB(hd->Salt,SIZE_SALT30);
@@ -741,6 +744,24 @@ size_t Archive::ReadHeader50()
 
         if (ExtraSize!=0)
           ProcessExtra50(&Raw,(size_t)ExtraSize,&MainHead);
+
+#ifdef USE_QOPEN
+        if (MainHead.Locator && MainHead.QOpenOffset>0 && Cmd->QOpenMode!=QOPEN_NONE)
+        {
+          // We seek to QO block in the end of archive when processing
+          // QOpen.Load, so we need to preserve current block positions
+          // to not break normal archive processing by calling function.
+          int64 SaveCurBlockPos=CurBlockPos,SaveNextBlockPos=NextBlockPos;
+          HEADER_TYPE SaveCurHeaderType=CurHeaderType;
+          
+          QOpen.Init(this,false);
+          QOpen.Load(MainHead.QOpenOffset);
+
+          CurBlockPos=SaveCurBlockPos;
+          NextBlockPos=SaveNextBlockPos;
+          CurHeaderType=SaveCurHeaderType;
+        }
+#endif
       }
       break;
     case HEAD_FILE:
@@ -819,6 +840,9 @@ size_t Archive::ReadHeader50()
 #endif
           ConvertFileHeader(hd);
         }
+
+        if (!FileBlock && hd->CmpName(SUBHEAD_TYPE_CMT))
+          MainComment=true;
 
           
         if (BadCRC)

@@ -270,7 +270,27 @@ void ListFileHeader(Archive &Arc,FileHeader &hd,bool &TitleShown,bool Verbose,bo
         }
       mprintf(L"\n%12ls: %ls",St(MListType),Type);
       if (hd.RedirType!=FSREDIR_NONE)
-        mprintf(L"\n%12ls: %ls",St(MListTarget),hd.RedirName);
+        if (Format==RARFMT15)
+        {
+          char LinkTargetA[NM];
+          if (Arc.FileHead.Encrypted)
+          {
+            // Link data are encrypted. We would need to ask for password
+            // and initialize decryption routine to display the link target.
+            strncpyz(LinkTargetA,"*<-?->",ASIZE(LinkTargetA));
+          }
+          else
+          {
+            int DataSize=(int)Min(hd.PackSize,ASIZE(LinkTargetA)-1);
+            Arc.Read(LinkTargetA,DataSize);
+            LinkTargetA[DataSize > 0 ? DataSize : 0] = 0;
+          }
+          wchar LinkTarget[NM];
+          CharToWide(LinkTargetA,LinkTarget,ASIZE(LinkTarget));
+          mprintf(L"\n%12ls: %ls",St(MListTarget),LinkTarget);
+        }
+        else
+          mprintf(L"\n%12ls: %ls",St(MListTarget),hd.RedirName);
     }
     if (!hd.Dir)
     {

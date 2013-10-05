@@ -168,6 +168,7 @@ class RAROptions
 
 
 
+
 #ifdef RARDLL
     wchar DllDestName[NM];
     int DllOpMode;

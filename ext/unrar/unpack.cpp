@@ -145,10 +145,18 @@ void Unpack::DoUnpack(int Method,bool Solid)
     case 0: // RAR 5.0 compression algorithm 0.
 #ifdef RAR_SMP
       if (MaxUserThreads>1)
-        {
-          Unpack5MT(Solid);
-          break;
-        }
+      {
+//      We do not use the multithreaded unpack routine to repack RAR archives
+//      in 'suspended' mode, because unlike the single threaded code it can
+//      write more than one dictionary for same loop pass. So we would need
+//      larger buffers of unknown size. Also we do not support multithreading
+//      in fragmented window mode.
+          if (!Fragmented)
+          {
+            Unpack5MT(Solid);
+            break;
+          }
+      }
 #endif
       Unpack5(Solid);
       break;

@@ -131,6 +131,7 @@ RARFORMAT Archive::IsSignature(const byte *D,size_t Size)
 bool Archive::IsArchive(bool EnableBroken)
 {
   Encrypted=false;
+  BrokenHeader=false; // Might be left from previous volume.
 #ifdef USE_QOPEN
   QOpen.Unload();
 #endif
@@ -201,8 +202,15 @@ bool Archive::IsArchive(bool EnableBroken)
     MarkHead.HeadSize=SIZEOF_MARKHEAD3;
 
   // Skip the archive encryption header if any and read the main header.
-  while (ReadHeader()!=0 && GetHeaderType()!=HEAD_MAIN)
+  while (ReadHeader()!=0)
+  {
+    HEADER_TYPE Type=GetHeaderType();
+    // In RAR 5.0 we need to quit after reading HEAD_CRYPT if we wish to
+    // avoid the password prompt.
+    if (Type==HEAD_MAIN || SilentOpen && Type==HEAD_CRYPT)
+      break;
     SeekToNext();
+  }
 
   // This check allows to make RS based recovery even if password is incorrect.
   // But we should not do it for EnableBroken or we'll get 'not RAR archive'
@@ -247,18 +255,13 @@ bool Archive::IsArchive(bool EnableBroken)
 
   MainComment=MainHead.CommentInHeader;
 
-#ifdef USE_QOPEN
-  if (MainHead.Locator && MainHead.QOpenOffset>0 && Cmd->QOpenMode!=QOPEN_NONE)
-  {
-    QOpen.Init(this,false);
-    QOpen.Load(MainHead.QOpenOffset);
-  }
-#endif
-
   // If we process non-encrypted archive or can request a password,
   // we set 'first volume' flag based on file attributes below.
   // It is necessary for RAR 2.x archives, which did not have 'first volume'
-  // flag in main header.
+  // flag in main header. Also for all RAR formats we need to scan until
+  // first file header to set "comment" flag when reading service header.
+  // Unless we are in silent mode, we need to know about presence of comment
+  // immediately after IsArchive call.
   if (!SilentOpen || !Encrypted)
   {
     SaveFilePos SavePos(*this);
@@ -268,11 +271,7 @@ bool Archive::IsArchive(bool EnableBroken)
     {
       HEADER_TYPE HeaderType=GetHeaderType();
       if (HeaderType==HEAD_SERVICE)
-      {
-        if (SubHead.CmpName(SUBHEAD_TYPE_CMT))
-          MainComment=true;
         FirstVolume=!SubHead.SplitBefore;
-      }
       else
       {
         FirstVolume=HeaderType==HEAD_FILE && !FileHead.SplitBefore;

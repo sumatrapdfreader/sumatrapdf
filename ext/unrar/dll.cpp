@@ -1,5 +1,4 @@
 #include "rar.hpp"
-#include "dll.hpp"
 
 static int RarErrorToDll(RAR_EXIT ErrCode);
 
@@ -339,6 +338,10 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
       }
       Data->Arc.Seek(Data->Arc.CurBlockPos,SEEK_SET);
     }
+  }
+  catch (std::bad_alloc)
+  {
+    return ERAR_NO_MEMORY;
   }
   catch (RAR_EXIT ErrCode)
   {

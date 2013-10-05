@@ -32,6 +32,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,wchar Comma
   if (DataIO!=NULL)
     DataIO->ProcessedArcSize+=Arc.FileLength();
 
+
   Arc.Close();
 
   wchar NextName[NM];

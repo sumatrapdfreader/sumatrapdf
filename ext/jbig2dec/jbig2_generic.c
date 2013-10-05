@@ -909,8 +909,12 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 					 as, image, GB_stats);
     }
 
-  jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
-			image, rsi.x, rsi.y, rsi.op);
+  if (code >= 0)
+    jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
+			  image, rsi.x, rsi.y, rsi.op);
+  else
+    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		"error while decoding immediate_generic_region");
 
 cleanup:
   jbig2_free(ctx->allocator, as);

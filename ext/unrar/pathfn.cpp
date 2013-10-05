@@ -973,6 +973,10 @@ bool GetWinLongPath(const wchar *Src,wchar *Dest,size_t MaxSize)
         return false;
       wcsncpy(Dest,Prefix,PrefixLength);
       wcscpy(Dest+PrefixLength,CurDir);
+
+      if (Src[0]=='.' && IsPathDiv(Src[1])) // Remove leading .\ in pathname.
+        Src+=2;
+
       wcsncatz(Dest,Src,MaxSize);
       return true;
     }
