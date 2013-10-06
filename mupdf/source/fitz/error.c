@@ -28,6 +28,16 @@ void fz_flush_warnings(fz_context *ctx)
 }
 
 /* SumatraPDF: add filename and line number to errors and warnings */
+static inline char *get_base_name(char *path)
+{
+#ifdef _WIN32
+	char *last_sep = strrchr(path, '\\');
+#else
+	char *last_sep = strrchr(path, '/');
+#endif
+	return last_sep ? last_sep + 1 : path;
+}
+
 void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
@@ -48,7 +58,7 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 	else
 	{
 		fz_flush_warnings(ctx);
-		fprintf(stderr, "- %s:%d: %s\n", file, line, buf);
+		fprintf(stderr, "- %s:%d: %s\n", get_base_name(file), line, buf);
 		LOGE("warning: %s\n", buf);
 		fz_strlcpy(ctx->warn->message, buf, sizeof ctx->warn->message);
 		ctx->warn->count = 1;
@@ -127,7 +137,7 @@ int fz_push_try(fz_error_context *ex)
 	strcpy(ex->message, "exception stack overflow!");
 	ex->stack[ex->top].code = 2;
 	/* SumatraPDF: add filename and line number to errors and warnings */
-	fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
+	fprintf(stderr, "! %s:%d: %s\n", get_base_name(__FILE__), __LINE__, ex->message);
 	LOGE("error: %s\n", ex->message);
 	return 0;
 }
@@ -154,7 +164,7 @@ void fz_throw_imp(fz_context *ctx, char *file, int line, int code, const char *f
 	va_end(args);
 
 	fz_flush_warnings(ctx);
-	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
+	fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
 	LOGE("error: %s\n", ctx->error->message);
 #ifdef USE_OUTPUT_DEBUG_STRING
 	OutputDebugStringA("error: ");
@@ -183,7 +193,7 @@ void fz_rethrow_message_imp(fz_context *ctx, char *file, int line, const char *f
 	va_end(args);
 
 	fz_flush_warnings(ctx);
-	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
+	fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
 	LOGE("error: %s\n", ctx->error->message);
 #ifdef USE_OUTPUT_DEBUG_STRING
 	OutputDebugStringA("error: ");

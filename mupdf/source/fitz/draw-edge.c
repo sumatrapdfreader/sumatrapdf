@@ -224,6 +224,7 @@ fz_reset_gel(fz_gel *gel, const fz_irect *clip)
 	gel->bbox.x1 = gel->bbox.y1 = BBOX_MIN;
 
 	gel->len = 0;
+	gel->alen = 0;
 }
 
 void
