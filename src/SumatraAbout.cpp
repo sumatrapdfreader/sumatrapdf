@@ -718,6 +718,9 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
     // in the fingerprint (much quicker than hashing the entire file's
     // content), but that's too expensive for files on slow drives
     unsigned char digest[16];
+    // TODO: why is this happening? Seen in crash reports e.g. 35043
+    if (!filePath)
+        return NULL;
     ScopedMem<char> pathU(str::conv::ToUtf8(filePath));
     if (!pathU)
         return NULL;
