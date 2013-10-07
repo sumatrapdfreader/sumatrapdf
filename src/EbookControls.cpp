@@ -117,10 +117,38 @@ Control *CreatePageControl(TxtNode *structDef)
     return c;
 }
 
-ILayout *CreatePagesLayout(TxtNode *structDef)
+// TODO: change PagesLayout to a struct: name, page1, page2
+// and deserialize it like DeserializeEbookPageDef()
+ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
 {
-    // TODO: write me
-    return NULL;
+    CrashIf(!structDef->IsStructWithName("PagesLayout"));
+    PageControl *pages[2] = { 0 };
+    char *layoutName = NULL;
+    for (size_t i = 0; i < structDef->children->Count(); i++) {
+        TxtNode *n = structDef->children->At(i);
+        if (n->IsTextWithKey("name")) {
+            layoutName = n->ValDup();
+        } else if (n->IsStructWithName("children")) {
+            size_t childCount = n->children->Count();
+            CrashIf(childCount != 2);
+            for (size_t j = 0; j < childCount; j++) {
+                TxtNode *n2 = n->children->At(j);
+                CrashIf(!n2->IsText());
+                ScopedMem<char> name(n2->ValDup());
+                Control *page = FindControlNamed(*parsedMui, name.Get());
+                CrashIf(!page);
+                pages[j] = static_cast<PageControl*>(page);
+            }
+        }
+    }
+    CrashIf(pages[0] == NULL);
+    CrashIf(pages[1] == NULL);
+    PagesLayout *layout = new PagesLayout(pages[0], pages[1]);
+    if (layoutName) {
+        layout->SetName(layoutName);
+        free(layoutName);
+    }
+    return layout;
 }
 
 void SetMainWndBgCol(EbookControls *ctrls)
@@ -156,10 +184,11 @@ EbookControls *CreateEbookControls(HWND hwnd)
     ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
     ctrls->progress->hCursor = gCursorHand;
-    ctrls->page = static_cast<PageControl *>(FindControlNamed(*muiDef, "page"));
-    CrashIf(!ctrls->page);
+
     ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);
+    ctrls->pagesLayout = static_cast<PagesLayout*>(FindLayoutNamed(*muiDef, "pagesLayout"));
+    CrashIf(!ctrls->pagesLayout);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->SetMinSize(Size(320, 200));
@@ -183,27 +212,6 @@ void DestroyEbookControls(EbookControls* ctrls)
     delete ctrls;
 }
 
-// PagesLayout is for 2 controls separated with a space:
-// [ ctrl1 ][ spaceDx ][ ctrl2]
-// It sets the size of child controls to fit within its space
-// One of the controls can be hidden, in which case it takes
-// all the space
-class PagesLayout : public ILayout
-{
-protected:
-    Size                       desiredSize;
-    Control                    ctrl1;
-    Control                    ctrl2;
-    int                        spaceDx;
-
-public:
-    virtual ~PagesLayout();
-    virtual Size DesiredSize() { return desiredSize; }
-
-    virtual Size Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect);
-};
-
 Size PagesLayout::Measure(const Size availableSize)
 {
     desiredSize = availableSize;
@@ -212,14 +220,31 @@ Size PagesLayout::Measure(const Size availableSize)
 
 void PagesLayout::Arrange(const Rect finalRect)
 {
-    CrashIf(true);
-    int dx = desiredSize.Width;
-    if (ctrl1.IsVisible() && ctrl2.IsVisible()) {
-        dx = (dx / 2) - spaceDx;
-        if (dx < 0)
-            dx = 0;
+    // only page2 can be hidden
+    CrashIf(!page1->IsVisible());
+
+    // if only page1 visible, give it the whole area
+    if (!page2->IsVisible()) {
+        page1->Arrange(finalRect);
+        return;
     }
 
-
+    // when both visible, give them equally sized areas
+    // with spaceDx between them
+    int dx = desiredSize.Width;
+    if (page2->IsVisible()) {
+        dx = (dx / 2) - spaceDx;
+        // protect against excessive spaceDx values
+        if (dx <= 100) {
+            spaceDx = 0;
+            dx = dx /2;
+            CrashIf(dx < 10);
+        }
+    }
+    Rect r = finalRect;
+    r.Width = dx;
+    page1->Arrange(r);
+    r.X = r.X + dx + spaceDx;
+    page2->Arrange(r);
 }
 

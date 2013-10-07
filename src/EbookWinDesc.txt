@@ -72,11 +72,6 @@ ScrollBar [
 ]
 
 EbookPage [
-    name: page
-    style: stylePage
-]
-
-EbookPage [
     name: page1
     style: stylePage
 ]
@@ -87,7 +82,7 @@ EbookPage [
 ]
 
 PagesLayout [
-    name: pages
+    name: pagesLayout
     children [
         page1
         page2
@@ -98,7 +93,7 @@ HorizontalLayout [
     name: top
     children [
         prevButton self 1 bottom
-        page 1 1 top
+        pagesLayout 1 1 top
         nextButton self 1 center
     ]
 ]

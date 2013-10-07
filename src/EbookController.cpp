@@ -219,7 +219,11 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
     em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
     em->EventsForName("prev")->Clicked.connect(this, &EbookController::ClickedPrev);
     em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
-    em->EventsForControl(ctrls->page)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+    PageControl *page1 = ctrls->pagesLayout->GetPage1();
+    em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+    PageControl *page2 = ctrls->pagesLayout->GetPage2();
+    em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+    SetSinglePage(); // TODO: for now we force single page mode
     UpdateStatus();
 }
 
@@ -259,7 +263,8 @@ void EbookController::StopFormattingThread()
 
 void EbookController::CloseCurrentDocument()
 {
-    ctrls->page->SetPage(NULL);
+    ctrls->pagesLayout->GetPage1()->SetPage(NULL);
+    ctrls->pagesLayout->GetPage2()->SetPage(NULL);
     StopFormattingThread();
     DeletePageShown();
     DeletePages(&pagesFromBeginning);
@@ -342,7 +347,7 @@ void EbookController::ShowPage(HtmlPage *pd, bool deleteWhenDone)
     DeletePageShown();
     pageShown = pd;
     deletePageShown = deleteWhenDone;
-    ctrls->page->SetPage(pageShown);
+    ctrls->pagesLayout->GetPage1()->SetPage(pageShown);
 
     UpdateCurrPageNoForPage(pageShown);
     UpdateStatus();
@@ -479,7 +484,7 @@ HtmlPage *EbookController::PreserveTempPageShown()
 
 void EbookController::TriggerBookFormatting()
 {
-    Size s = ctrls->page->GetDrawableSize();
+    Size s = ctrls->pagesLayout->GetPage1()->GetDrawableSize();
     SizeI size(s.Width, s.Height);
     if (size.IsEmpty()) {
         // we haven't been sized yet
@@ -532,7 +537,7 @@ void EbookController::OnLayoutTimer()
 
 void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 {
-    CrashIf(c != ctrls->page);
+    CrashIf(!(c == ctrls->pagesLayout->GetPage1() || c==ctrls->pagesLayout->GetPage2()));
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
     RestartLayoutTimer(this);
@@ -691,4 +696,22 @@ int EbookController::CurrPageReparseIdx() const
     if (!pageShown)
         return 0;
     return pageShown->reparseIdx;
+}
+
+// single vs. double is detected by checking if page2 is visible or not
+void EbookController::SetSinglePage()
+{
+    ctrls->pagesLayout->GetPage2()->Hide();
+}
+
+void EbookController::SetDoublePage()
+{
+    // TODO: we don't support this yet. Currently only the first page
+    // is shown
+    ctrls->pagesLayout->GetPage2()->Show();
+}
+
+bool EbookController::IsSinglePage() const
+{
+    return !ctrls->pagesLayout->GetPage2()->IsVisible();
 }

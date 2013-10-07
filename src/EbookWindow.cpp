@@ -344,14 +344,14 @@ void ShowHideMenuBar(EbookWindow *win)
 
 static void OnMenuViewSinglePage(EbookWindow *win)
 {
-    CrashIf(win->isSinglePage);
-    win->isSinglePage = true;
+    CrashIf(win->ebookController->IsSinglePage());
+    win->ebookController->SetSinglePage();
 }
 
 static void OnMenuViewFacing(EbookWindow *win)
 {
-    CrashIf(!win->isSinglePage);
-    win->isSinglePage = false;
+    CrashIf(!win->ebookController->IsSinglePage());
+    win->ebookController->SetDoublePage();
 }
 
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)

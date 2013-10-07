@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "DisplayModel.h"
+#include "EbookController.h"
 #include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
@@ -23,7 +24,7 @@
 void MenuUpdateDisplayMode(EbookWindow *win)
 {
     UINT id = IDM_VIEW_FACING;
-    if (win->isSinglePage)
+    if (win->ebookController->IsSinglePage())
         id = IDM_VIEW_SINGLE_PAGE;
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
 }

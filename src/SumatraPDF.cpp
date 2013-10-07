@@ -504,10 +504,10 @@ static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
     // defaults from DisplayState's constructor anyway
     ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
 #if 0
-    if (win->isSinglePage)
+    if (win->ebookControler->IsSinglePage)
         ds->displayMode = DM_SINGLE_PAGE;
     else
-        ds->displayMode = DM_
+        ds->displayMode = DM_FACING;
 #endif
 }
 

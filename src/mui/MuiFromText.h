@@ -29,6 +29,6 @@ typedef Control * (*ControlCreatorFunc)(TxtNode *);
 void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator);
 void FreeControlCreators();
 
-typedef ILayout * (*LayoutCreatorFunc)(TxtNode *);
+typedef ILayout * (*LayoutCreatorFunc)(ParsedMui *, TxtNode *);
 void RegisterLayoutCreatorFor(const char *layoutName, LayoutCreatorFunc creator);
 void FreeLayoutCreators();

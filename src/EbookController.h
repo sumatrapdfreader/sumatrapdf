@@ -112,6 +112,10 @@ public:
     void GoToLastPage();
     Doc  GetDoc() const { return doc; }
     int  CurrPageReparseIdx() const;
+
+    void SetSinglePage();
+    void SetDoublePage();
+    bool IsSinglePage() const;
 };
 
 void LoadEbookAsync(const WCHAR *fileName, const SumatraWindow &win);

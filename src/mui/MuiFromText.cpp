@@ -472,7 +472,7 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
 
             LayoutCreatorFunc layoutCreatorFunc = FindLayoutCreatorFuncFor(keyName);
             CrashIf(!layoutCreatorFunc);
-            ILayout *layout = layoutCreatorFunc(node);
+            ILayout *layout = layoutCreatorFunc(&res, node);
             if (layout)
                 res.layouts.Append(layout);
         }
