@@ -210,7 +210,7 @@ MAIN_UI_OBJS = \
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
-	$(ENGINES_LIB) $(UTILS_LIB) $(MUI_LIB) $(SYNCTEX_OBJS) $(LZSA_OBJS)
+	$(UTILS_LIB) $(MUI_LIB) $(ENGINES_LIB) $(SYNCTEX_OBJS) $(LZSA_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
@@ -268,11 +268,11 @@ cleanmupdf: force
 cleanall: force
 	-rmdir /S /Q obj-dbg obj-rel
 
-SumatraPDF:    $(OS) $(LIBMUPDF_DLL) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
+SumatraPDF:    $(OS) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
 Installer:     $(OS) $(INSTALLER_APP)
 Uninstaller:   $(OS) $(UNINSTALLER_APP)
-PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
-PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
+PDFFilter:     $(OS) $(PDFFILTER_DLL)
+PdfPreview:    $(OS) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
@@ -293,14 +293,16 @@ $(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h
 $(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
+$(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(LIBMUPDF_RES): $(SRCDIR)\libmupdf.rc $(SRCDIR)\Version.h
 	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\libmupdf.rc
 
 $(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
 	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
+
+$(LIBMUPDF_LIB): $(LIBMUPDF_DLL)
 
 $(O)\InstallerData.dat:
 	echo Use scripts\build.py for creating the file $@
