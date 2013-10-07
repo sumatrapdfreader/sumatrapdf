@@ -216,7 +216,10 @@ void Control::Show()
     if (IsVisible())
         return; // perf: avoid unnecessary repaints
     bit::Clear(stateBits, IsHiddenBit);
-    RequestRepaint(this);
+    // showing/hiding controls might affect layout, so we need
+    // to re-do layout.
+    // Note: not sure if have to RequestRepaint(this) as well
+    RequestLayout(this);
 }
 
 void Control::Hide()
