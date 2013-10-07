@@ -8,6 +8,7 @@
 #include "BitManip.h"
 #include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
+#include "PagesLayoutDef.h"
 #include "resource.h"
 #include "TxtParser.h"
 #include "WinUtil.h"
@@ -117,37 +118,18 @@ Control *CreatePageControl(TxtNode *structDef)
     return c;
 }
 
-// TODO: change PagesLayout to a struct: name, page1, page2
-// and deserialize it like DeserializeEbookPageDef()
 ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
 {
     CrashIf(!structDef->IsStructWithName("PagesLayout"));
-    PageControl *pages[2] = { 0 };
-    char *layoutName = NULL;
-    for (size_t i = 0; i < structDef->children->Count(); i++) {
-        TxtNode *n = structDef->children->At(i);
-        if (n->IsTextWithKey("name")) {
-            layoutName = n->ValDup();
-        } else if (n->IsStructWithName("children")) {
-            size_t childCount = n->children->Count();
-            CrashIf(childCount != 2);
-            for (size_t j = 0; j < childCount; j++) {
-                TxtNode *n2 = n->children->At(j);
-                CrashIf(!n2->IsText());
-                ScopedMem<char> name(n2->ValDup());
-                Control *page = FindControlNamed(*parsedMui, name.Get());
-                CrashIf(!page);
-                pages[j] = static_cast<PageControl*>(page);
-            }
-        }
-    }
-    CrashIf(pages[0] == NULL);
-    CrashIf(pages[1] == NULL);
-    PagesLayout *layout = new PagesLayout(pages[0], pages[1]);
-    if (layoutName) {
-        layout->SetName(layoutName);
-        free(layoutName);
-    }
+    PagesLayoutDef *def = DeserializePagesLayoutDef(structDef);
+    CrashIf(!def->page1 || !def->page2);
+    PageControl *page1 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page1));
+    PageControl *page2 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page2));
+    CrashIf(!page1 || !page2);
+    PagesLayout *layout = new PagesLayout(page1, page2, def->spaceDx);
+    if (def->name)
+        layout->SetName(def->name);
+    FreePagesLayoutDef(def);
     return layout;
 }
 

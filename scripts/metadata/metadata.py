@@ -63,6 +63,9 @@ class I32(Type):
     c_type_class = "int32_t"
     type_enum = "TYPE_I32"
 
+    def __init__(self, def_val=0):
+        super(I32, self).__init__(def_val)
+
     def is_valid_val(self, val):
         return is_valid_signed(32, val)
 

@@ -97,6 +97,7 @@
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
+    <ClCompile Include="..\src\PagesLayoutDef.cpp" />
     <ClCompile Include="..\src\ParseCommandLine.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
@@ -349,6 +350,7 @@
     <ClInclude Include="..\src\HtmlFormatter.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\Notifications.h" />
+    <ClInclude Include="..\src\PagesLayoutDef.h" />
     <ClInclude Include="..\src\ParseCommandLine.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />

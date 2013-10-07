@@ -83,10 +83,9 @@ EbookPage [
 
 PagesLayout [
     name: pagesLayout
-    children [
-        page1
-        page2
-    ]
+    page1: page1
+    page2: page2
+    spaceDx: 12
 ]
 
 HorizontalLayout [

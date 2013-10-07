@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-from metadata import Struct, Field, String, WString, Array, Compact
+from metadata import Struct, Field, String, WString, I32, Array, Compact
 from gen_txt import gen_for_top_level_vals, set_whitespace
 
 import sys
@@ -65,6 +65,14 @@ class VerticalLayoutDef(Struct):
         Field("children", Array(DirectionalLayoutDataDef, []), Compact),
     ]
 
+class PagesLayoutDef(Struct):
+    fields = [
+        Field("name", String(None)),
+        Field("page1", String(None)),
+        Field("page2", String(None)),
+        Field("spaceDx", I32(4))
+    ]
+
 def gen_mui():
     dst_dir = mui_src_dir()
     structs = [
@@ -78,6 +86,9 @@ def gen_mui():
 
     file_path_base = os.path.join(src_dir(), "MuiEbookPageDef")
     gen_for_top_level_vals([EbookPageDef()], file_path_base)
+
+    file_path_base = os.path.join(src_dir(), "PagesLayoutDef")
+    gen_for_top_level_vals([PagesLayoutDef()], file_path_base)
 
 def main():
     gen_mui()

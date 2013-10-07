@@ -67,6 +67,7 @@ public:
     PagesLayout(PageControl *p1, PageControl *p2, int dx = 8) {
         page1 = p1;
         page2 = p2;
+        CrashIf(dx < 0);
         spaceDx = dx;
     }
     virtual ~PagesLayout() { }

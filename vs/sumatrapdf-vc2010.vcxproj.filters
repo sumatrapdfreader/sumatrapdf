@@ -96,6 +96,9 @@
     <ClCompile Include="..\src\Notifications.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PagesLayoutDef.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ParseCommandLine.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -846,6 +849,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Notifications.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PagesLayoutDef.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ParseCommandLine.h">
