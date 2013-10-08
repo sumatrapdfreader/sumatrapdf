@@ -1278,6 +1278,9 @@
     <None Include="..\docs\sumatrapdfrestrict.ini">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\docs\wishlist-lua.txt">
+      <Filter>docs</Filter>
+    </None>
     <None Include="..\docs\wishlist.txt">
       <Filter>docs</Filter>
     </None>

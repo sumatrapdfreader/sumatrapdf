@@ -885,6 +885,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\PagesLayoutDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\PagesLayoutDef.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\Print.cpp"
 					>
 				</File>
