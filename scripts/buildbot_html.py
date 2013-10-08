@@ -65,6 +65,10 @@ def group_by_ver(files):
         res.append([curr_ver, curr_ver_names])
     return res
 
+# TODO: would be nicer if "sumatrapdf_buildbot" wasn't hard-coded, but don't know
+# how to get this reliably
+g_buildbot_src_path = "sumatrapdf_buildbot\\"
+
 # Turn:
 # c:\users\kkowalczyk\src\sumatrapdf\src\utils\allocator.h(156) : warning C6011: Dereferencing NULL pointer 'node'. : Lines: 149, 150, 151, 153, 154, 156
 # Into:
@@ -75,10 +79,11 @@ def htmlize_error_lines(lines, ver):
     sumatra_errors = []
     mupdf_errors = []
     ext_errors = []
-    # TODO: would be nicer if "sumatrapdf_buildbot" wasn't hard-coded, but don't know
-    # how to get this reliably
-    rel_path_start = lines[0].find("sumatrapdf_buildbot\\") + len("sumatrapdf_buildbot\\")
     for l in lines:
+        if g_buildbot_src_path not in l:
+            ext_errors.append(l) # system includes
+            continue
+        rel_path_start = l.find(g_buildbot_src_path) + len(g_buildbot_src_path)
         l = l[rel_path_start:]
         err_start = l.find(" : ")
         src = l[:err_start]
@@ -88,7 +93,7 @@ def htmlize_error_lines(lines, ver):
         if l.startswith("src\\"):     sumatra_errors.append(s)
         elif l.startswith("mupdf\\"): mupdf_errors.append(s)
         elif l.startswith("ext\\"):   ext_errors.append(s)
-        else: ext_errors.append(s) # everything else we don't recognize, like errors in system includes
+        else: ext_errors.append(s) # shouldn't really happen (handled earlier), but...
     return (sumatra_errors, mupdf_errors, ext_errors)
 
 def stats_for_previous_successful_build(ver, stats_for_ver):
