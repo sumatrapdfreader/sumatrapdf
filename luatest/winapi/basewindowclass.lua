@@ -318,6 +318,9 @@ function BaseWindow:show()
 		ShowWindow(self.hwnd, SW_SHOW)
 	end
 	UpdateWindow(self.hwnd)
+	--TODO: Invalidate shouldn't be necessary, I think, but apparently it is
+	--or else there is no repaint on first show
+	self:invalidate()
 end
 
 function BaseWindow:hide()

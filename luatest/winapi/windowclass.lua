@@ -12,6 +12,8 @@ Window = subclass({
 		noclose = CS_NOCLOSE, --disable close button and ALT+F4
 		dropshadow = CS_DROPSHADOW, --only for non-movable windows
 		own_dc = CS_OWNDC, --for opengl or other purposes
+		hredraw = CS_HREDRAW,
+		vredraw = CS_VREDRAW,
 	},
 	__style_bitmask = bitmask{ --only static, frame styles here
 		border = WS_BORDER,
@@ -33,6 +35,9 @@ Window = subclass({
 		--class style bits
 		noclose = false,
 		dropshadow = false,
+		own_dc = false,
+		hredraw = true,
+		vredraw = true,
 		--window style bits
 		border = true,
 		titlebar = true,
