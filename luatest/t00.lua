@@ -26,12 +26,10 @@ function c:on_paint(hdc)
 	local r = c:get_client_rect()
 	print(r)
 	winapi.FillRect(hdc, r, brWhite)
-	local dx = (r.right - r.left)
-	local newDx = dx / 2
-	local dy = (r.bottom - r.top)
-	local newDy = dy / 2
-	local x = (dx - newDx) / 2
-	local y = (dy - newDy) / 2
+	local newDx = r.w / 2
+	local newDy = r.h / 2
+	local x = (r.w - newDx) / 2
+	local y = (r.h - newDy) / 2
 	r = winapi.RECT(x, y, x + newDx, y + newDy)
 	winapi.FillRect(hdc, r, brBlack)
 	--winapi.SelectObject(hdc, prev1)
