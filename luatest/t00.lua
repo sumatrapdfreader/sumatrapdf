@@ -1,8 +1,3 @@
--- ffi = require'ffi'
--- require'winapi.windowclass'
--- require'winapi.messageloop'
--- require'winapi.icon'
--- require'winapi.font'
 local winapi = require'winapi'
 require'winapi.messageloop'
 require'winapi.vkcodes'
