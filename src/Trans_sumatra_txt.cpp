@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   54
+#define LANGS_COUNT   55
 #define STRINGS_COUNT 244
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -8378,6 +8378,252 @@ const char * gTranslations_mk =
   "\320\272\320\276\320\277\320\270\321\200\320\260\320\274 \321\202\320\265\320\272\321\201\321\202\0"\
   "\320\277\320\265\321\207\320\260\321\202\320\260\320\274 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\0";
 
+const char * gTranslations_my = 
+  "&Mengenai\0"\
+  "&Saiz sebenar\tCtrl+1\0"\
+  "&Tetapan terperinci...\0"\
+  "&Semua mukasurat pilihan\0"\
+  "&Kembali\tAlt+Left Arrow\0"\
+  "Lihat &buku\tCtrl+8\0"\
+  "&Tutup\tCtrl+W\0"\
+  "&Salin Pilihan\0"\
+  "&Salin pilihan\tCtrl+C\0"\
+  "&Jangan tanya saya lagi\0"\
+  "&Mukasurat genap sahaja\0"\
+  "&Menghadap\tCtrl+7\0"\
+  "&Fail\0"\
+  "&carian:\0"\
+  "&Halaman pertama\tHome\0"\
+  "&Muatkan halaman pada kawasan boleh cetak\0"\
+  "&Pergi\0"\
+  "&Pergi ke halaman:\0"\
+  "&Bantuan\0"\
+  "&Halaman terakhir\0"\
+  "&Pembesaran:\0"\
+  "\0"\
+  "&Padan case\0"\
+  "&Halaman seterusnya\t->\0"\
+  "&Tidak\0"\
+  "&Tidak, terima kasih\0"\
+  "&Mukasurat ganjil sahaja\0"\
+  "&Buka dokumen\0"\
+  "&Buka...\tCtrl+O\0"\
+  "&Pilihan...\0"\
+  "&Kata laluan\0"\
+  "&Pin Dokumen\0"\
+  "&Halaman sebelumnya\t<-\0"\
+  "&Cetak...\0"\
+  "&Cetak...\tCtrl+P\0"\
+  "&Cetak... (dinafikan)\0"\
+  "&Ingat katalaluan untuk dokumen ini\0"\
+  "&Ingat tetapan-tetapan ini untuk setiap dokumen\0"\
+  "&Buang dokumen\0"\
+  "&Simpan Sebagai...\0"\
+  "&Simpan sebagai...\tCtrl+S\0"\
+  "&Tetapan\0"\
+  "&Kecilkan muka surat ke kawasan cetak (jika perlu)\0"\
+  "&Halaman Tunggal\tCtrl+6\0"\
+  "&Langkau versi ini\0"\
+  "&Gunakan saiz halaman asal\0"\
+  "&Lihat\0"\
+  "&Ya\0"\
+  "&Fokus\0"\
+  "(dari %d)\0"\
+  "(halaman %s)\0"\
+  "Mengenai SumatraPDF\0"\
+  "Tambah pada Kegemaran\0"\
+  "Tambahkan halaman %s pada kegemaran\0"\
+  "Tambah halaman %s pada kegemaran dengan nama (pilihan):\0"\
+  "Tambah pada kegemaran\0"\
+  "Lanjutan\0"\
+  "Semua fail\0"\
+  "Semua dokumen yang disokong\0"\
+  "Aplikasi\0"\
+  "Kaitkan dengan fail PDF?\0"\
+  "Lampiran: %s\0"\
+  "Pengarang\0"\
+  "Automatik\0"\
+  "Semak &kemas kini secara automatik\0"\
+  "Paparan buku\0"\
+  "Penanda\tF12\0"\
+  "Pintasan Penanda\0"\
+  "Bookmark shortcut ke halaman %s daripada %s\0"\
+  "Penanda\0"\
+  "\0"\
+  "Dokumen CHM\0"\
+  "Gagal menyambung ke Internet (ralat %#x).\0"\
+  "Batal\0"\
+  "Tidak boleh cetak fail ini\0"\
+  "Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.\0"\
+  "Tukar bahasa (Change Language)\0"\
+  "Semak &Kemaskini\0"\
+  "Buku komik\0"\
+  "Kesesuaian\0"\
+  "Bersambung\0"\
+  "Paparan buku berterusan\0"\
+  "Dua belah mukasurat bersambung\0"\
+  "Menyumbangkan alihbahasa\0"\
+  "Salin &Imej\0"\
+  "Salin &Alamat Pautan\0"\
+  "Salin Ko&men\0"\
+  "Salinan teks telah ditolak (menyalin sebagai imej sahaja)\0"\
+  "Hakcipta\0"\
+  "Gagal mendapatkan maklumat Pencetak\0"\
+  "Tidak dapat memulakan pencetak\0"\
+  "Tidak dapat memuatkan halaman\0"\
+  "Dicipta:\0"\
+  "Fail semasa\0"\
+  "\0"\
+  "Default &Susunatur:\0"\
+  "Default &Zum:\0"\
+  "Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih\0"\
+  "Kebenaran Dinafikan:\0"\
+  "Dokumen DjVu\0"\
+  "Maklumat Dokumen\0"\
+  "Muat turun\0"\
+  "&Keluar\tCtrl+Q\0"\
+  "Ebook EPUB\0"\
+  "Masukkan kata laluan\0"\
+  "Masukkan kata laluan untuk %s\0"\
+  "Masukkan baris arahan untuk digunakan apabila anda klik dua kali pada dokumen PDF:\0"\
+  "Ralat memuatkan %s\0"\
+  "Kegem&aran\0"\
+  "F&orward \t alt + Panah Kanan\0"\
+  "\0"\
+  "Mukasurat Penuh\tCtrl+Shift+L\0"\
+  "Dua belah mukasurat\0"\
+  "Gagal menamakan semula fail!\0"\
+  "Gagal menyimpan fail\0"\
+  "Paparan Web Cepat\0"\
+  "Kegemaran\0"\
+  "Dokumen FictionBook\0"\
+  "Fail %s tidak dijumpai\0"\
+  "Saiz fail:\0"\
+  "Fail:\0"\
+  "Cari...\tCtrl+F\0"\
+  "Cari\0"\
+  "Cari seterusnya\0"\
+  "Cari sebelumnya\0"\
+  "Cari:\0"\
+  "Fit &Kandungan\tCtrl +3\0"\
+  "&Muatkan mukasurat\tCtrl+0\0"\
+  "&Muatkan lebar\tCtrl+2\0"\
+  "Muatkan Kandungan\0"\
+  "Muatkan mukasurat\0"\
+  "Muatkan lebar\0"\
+  "Muatkan Lebar dan Paparkan Halaman Berterusan\0"\
+  "Muatkan Halaman Tunggal\0"\
+  "Fon:\0"\
+  "Format buku ... %d halaman\0"\
+  "Menjumpai teks pada halaman %s\0"\
+  "Found teks pada halaman %s (lagi)\0"\
+  "Kerap Dibaca\0"\
+  "\0"\
+  "Pergi ke mukasurat\0"\
+  "Sembunyikan Bacaan Kerap\0"\
+  "Petunjuk: Gunakan kekunci F3 untuk mencari semula\0"\
+  "Imej Fail (*.%s)\0"\
+  "\0"\
+  "Memuatkan fail %s...\0"\
+  "\0"\
+  "Jadikan aplikasi SumatraPDF pembaca utama bagi fail PDF?\0"\
+  "Jadikan SumatraPDF pembaca utama PDF\0"\
+  "Mode Man&ga\0"\
+  "Hampir sama\0"\
+  "Dokumen Mobi\0"\
+  "Diubah:\0"\
+  "Versi terbaru %s tersedia. Muat turun versi terbaru?\0"\
+  "Mukasurat seterusnya\0"\
+  "Tiada padanan dijumpai\0"\
+  "Tiada hasil ditemui di sekitar baris %u dalam fail %s\0"\
+  "Tiada fail penyegerakan ditemui\0"\
+  "Tiada maklumat penyelarasan pada kedudukan ini\0"\
+  "Jumlah mukasurat:\0"\
+  "\0"\
+  "Buka\0"\
+  "Buka &menggunakan PDF-XChange\0"\
+  "Buka dokumen...\0"\
+  "Buka dalam %s\0"\
+  "Buka menggunakan &Adobe Reader\0"\
+  "Buka dengan &Foxit Reader\0"\
+  "Buka menggunakan &Microsoft HTML Help\0"\
+  "Buka menggunakan &Microsoft XPS-Viewer\0"\
+  "\0"\
+  "\0"\
+  "Dokumen PDF\0"\
+  "Pengoptimuman PDF:\0"\
+  "\0"\
+  "Versi PDF:\0"\
+  "Dokumen-dokumen PDF\0"\
+  "Mukasurat...\tCtrl+G\0"\
+  "Halaman %s\0"\
+  "Saiz mukasurat\0"\
+  "Halaman bilangan\302\240%u tidak wujud\0"\
+  "Skala halaman\0"\
+  "Mukasurat:\0"\
+  "Sila tunggu - memaparkan...\0"\
+  "Dokumen PostScript\0"\
+  "P&embentangan\tCtrl + L\0"\
+  "Mukasurat sebelumnya\0"\
+  "Cetak\0"\
+  "Cetak sebagai &imej (memerlukan memori yang lebih)\0"\
+  "Cetak julat\0"\
+  "Pencetak dengan nama yang diberikan tidak wujud\0"\
+  "Cetakan sedang dijalankan.\0"\
+  "Cetakan sedang dilakukan. Batal dan Henti?\0"\
+  "Cetakan masih lagi dijalankan. Batalkan dan mulakan semula?\0"\
+  "Mencetak halaman %d daripada %d...\0"\
+  "Masalah mencetak\0"\
+  "&Nama semula ... \ tF2\0"\
+  "Ingat &fail yang telah dibuka\0"\
+  "Keluarkan daripada kegemaran\0"\
+  "Padam halaman %s dari kegemaran\0"\
+  "Namakan sebagai\0"\
+  "Menggantikan dokumen &warna dengan skim warna Windows\0"\
+  "Ubah ke kiri\tCtrl+Shift+-\0"\
+  "Ubah ke kanan\tCtrl+Shift++\0"\
+  "Simpan sebagai\0"\
+  "Simpan S&hortcut...\tCtrl+Shift+S\0"\
+  "Mencari %d dari %d...\0"\
+  "Pilih &Semua\0"\
+  "Pilih Semu&a\tCtrl+A\0"\
+  "Pilih kandungan dengan Ctrl + butang kiri tetikus\0"\
+  "Hantar melalui &Emel...\0"\
+  "Tetapkan pencarian songsang baris arahan\0"\
+  "Papar &Bookmark\0"\
+  "Tunjukkan Bar Alat\0"\
+  "Papar mukasurat secara berterusan\0"\
+  "Papar kegemaran\0"\
+  "Paparkan dokuman yang kerap dibaca\0"\
+  "Tunjukkan &bookmark sidebar apabila ada\0"\
+  "Satu Mukasurat\0"\
+  "Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.\0"\
+  "Sumber fail %s tidak mempunyai titik penyegerakan\0"\
+  "Subjek\0"\
+  "Tetapan-tetapan SumatraPDF\0"\
+  "Kemaskini SumatraPDF\0"\
+  "\0"\
+  "SumatraPDF ialah pembaca PDF utama anda\0"\
+  "SumatraPDF kini harus menjadi pembaca utama PDF anda\0"\
+  "File penyegerakan tidak boleh dibuka\0"\
+  "PDF ditanda\0"\
+  "Dokumen teks\0"\
+  "Tajuk:\0"\
+  "Fail sumber tidak diketahui (%s)\0"\
+  "Lihat\0"\
+  "&Lawat lamanweb\0"\
+  "Amaran\0"\
+  "Dokumen XPS\0"\
+  "Anda mempunyai versi terkini.\0"\
+  "Versi anda %s\0"\
+  "Zum\0"\
+  "Fokus ke dalam\0"\
+  "Fokus ke luar\0"\
+  "Faktor zoom\0"\
+  "[Perubahan dikesan; refresh semula] %s\0"\
+  "menyalin teks\0"\
+  "mencetak dokumen\0";
+
 const char * gTranslations_ne = 
   "SumatraPDF &\340\244\254\340\244\276\340\244\260\340\245\207\340\244\256\340\244\276\0"\
   "&\340\244\270\340\244\271\340\245\200 \340\244\206\340\244\225\340\244\276\340\244\260\tCtrl+1\0"\
@@ -13334,6 +13580,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ku, 
   gTranslations_lt, 
   gTranslations_mk, 
+  gTranslations_my, 
   gTranslations_ne, 
   gTranslations_no, 
   gTranslations_fa, 
@@ -13393,6 +13640,7 @@ const char *gLangCodes =   "en\0" \
   "ku\0" \
   "lt\0" \
   "mk\0" \
+  "my\0" \
   "ne\0" \
   "no\0" \
   "fa\0" \
@@ -13448,6 +13696,7 @@ const char *gLangNames =   "English\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
   "Lithuanian (Lietuvi\305\263)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
+  "Malaysian (Bahasa Melayu)\0" \
   "Nepali (\340\244\250\340\245\207\340\244\252\340\244\276\340\244\262\340\245\200)\0" \
   "Norwegian (Norsk)\0" \
   "Persian (\331\201\330\247\330\261\330\263\333\214)\0" \
@@ -13515,6 +13764,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
   _LANGID(LANG_LITHUANIAN),
   _LANGID(LANG_MACEDONIAN),
+  _LANGID(LANG_MALAY),
   _LANGID(LANG_NEPALI),
   MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
   _LANGID(LANG_FARSI),
@@ -13540,7 +13790,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (23 == idx) || (31 == idx) || (36 == idx);
+  return (2 == idx) || (23 == idx) || (31 == idx) || (37 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   38
+#define LANGS_COUNT   39
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1139,6 +1139,51 @@ const char * gTranslations_mk =
   "\320\221\321\200\320\270\321\210\320\265\321\232\320\265\321\202\320\276 \320\265 \320\262\320\276 \321\202\320\265\320\272...\0"\
   "\320\232\320\276\321\200\320\270\321\201\321\202\320\270 \320\263\320\276 SumatraPDF \320\272\320\260\320\272\320\276 &\320\276\321\201\320\275\320\276\320\262\320\265\320\275 \321\207\320\270\321\202\320\260\321\207 \320\275\320\260 PDF\0";
 
+const char * gTranslations_my = 
+  "&Tetapan\0"\
+  "Adakah anda pasti anda mahu membuang SumatraPDF?\0"\
+  "Tutup\0"\
+  "Tidak dapat mencipta direktori sementara\0"\
+  "Tidak dapat mencipta direktori pemasangan\0"\
+  "Tidak dapat memasang previewer PDF\0"\
+  "Tidak dapat memasang penapis carian PDF\0"\
+  "Tidak dapat memasang pelayar plugin\0"\
+  "Tidak boleh mendapatkan direktori sementara\0"\
+  "Tidak dapat memadamkan direktori pemasangan\0"\
+  "Tidak dapat membuang shortcut\0"\
+  "Tidak dapat membuang previewer PDF\0"\
+  "Tidak dapat memadam penapis carian PDF\0"\
+  "Tidak dapat membuang pelayar plugin\0"\
+  "Tidak boleh memasukkan data %s ke cakera\0"\
+  "Gagal untuk menyalin uninstaller untuk direktori sementara\0"\
+  "Gagal untuk mencipta shortcut\0"\
+  "Gagal untuk memadam kekunci pendaftaran uninstaller\0"\
+  "Gagal menulis fail lanjutan maklumat tambahan ke dalam registry\0"\
+  "Gagal untuk menulis maklumat pemasangan untuk registry\0"\
+  "Sembunyi &Tetapan\0"\
+  "Pasang PDF &pelayar plugin untuk Firefox, Chrome dan Opera\0"\
+  "Pasang SumatraPDF\0"\
+  "Pasang SumatraPDF dalam &folder\0"\
+  "Pemasangan gagal!\0"\
+  "Pemasangan sedang dijalankan...\0"\
+  "Biarkan Windows Desktop Search &mencari dokumen PDF\0"\
+  "Biarkan Windows menunjukkan &preview dokumen PDF\0"\
+  "Sila tutup\302\240%s untuk meneruskan!\0"\
+  "Pilih folder di mana SumatraPDF harus dipasang:\0"\
+  "Sesetengah fail yang akan dipasang akan rosak atau hilang\0"\
+  "Mula SumatraPDF\0"\
+  "Installer SumatraPDF %s\0"\
+  "\0"\
+  "SumatraPDF telah dibuang.\0"\
+  "Pemasangan SumatraPDF tidak dijumpai.\0"\
+  "Terima kasih kerana memilih SumatraPDF!\0"\
+  "Terima kasih! SumatraPDF sudah dipasang pada komputer anda.\0"\
+  "Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!\0"\
+  "Membuang SumatraPDF\0"\
+  "Penyahpasangan gagal\0"\
+  "Penyahpasangan sedang dijalankan ...\0"\
+  "Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda\0";
+
 const char * gTranslations_pl = 
   "&Opcje\0"\
   "Czy na pewno chcesz usun\304\205\304\207 SumatraPDF?\0"\
@@ -1751,6 +1796,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_kr, 
   gTranslations_ku, 
   gTranslations_mk, 
+  gTranslations_my, 
   gTranslations_pl, 
   gTranslations_br, 
   gTranslations_pt, 
@@ -1794,6 +1840,7 @@ const char *gLangCodes =   "en\0" \
   "kr\0" \
   "ku\0" \
   "mk\0" \
+  "my\0" \
   "pl\0" \
   "br\0" \
   "pt\0" \
@@ -1833,6 +1880,7 @@ const char *gLangNames =   "English\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
+  "Malaysian (Bahasa Melayu)\0" \
   "Polish (Polski)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
   "Portuguese - Portugal (Portugu\303\252s)\0" \
@@ -1884,6 +1932,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_KOREAN),
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
   _LANGID(LANG_MACEDONIAN),
+  _LANGID(LANG_MALAY),
   _LANGID(LANG_POLISH),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
   _LANGID(LANG_PORTUGUESE),
