@@ -1006,13 +1006,14 @@ void HtmlFormatter::HandleTagStyle(HtmlToken *t)
     if (attr && !attr->ValIs("text/css"))
         return;
 
-    const char *start = t->s + t->sLen + 2;
+    const char *start = t->s + t->sLen + 1;
     while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
     if (!t || !t->IsEndTag() || Tag_Style != t->tag)
         return;
     const char *end = t->s - 2;
+    CrashIf(start > end);
     ParseStyleSheet(start, end - start);
 }
 
