@@ -843,7 +843,7 @@ static void RebuildMenuBarForWindow(WindowInfo *win)
 {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
-    if (!win->presentation && !win->isFullScreen)
+    if (!win->presentation && !win->isFullScreen && !win->isMenuHidden)
         SetMenu(win->hwndFrame, win->menu);
     DestroyMenu(oldMenu);
 }
@@ -3616,7 +3616,8 @@ static void ExitFullScreen(WindowInfo& win)
 
     if (gGlobalPrefs->showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
-    SetMenu(win.hwndFrame, win.menu);
+    if (!win.isMenuHidden)
+        SetMenu(win.hwndFrame, win.menu);
 
     SetWindowLong(win.hwndFrame, GWL_STYLE, win.nonFullScreenWindowStyle);
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;

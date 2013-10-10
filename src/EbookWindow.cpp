@@ -107,7 +107,8 @@ static void ExitFullScreen(EbookWindow *win)
     CrashIf(!win->isFullScreen);
     CrashIf(!win->menu);
     win->isFullScreen = false;
-    SetMenu(win->hwndFrame, win->menu);
+    if (!win->isMenuHidden)
+        SetMenu(win->hwndFrame, win->menu);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, flags);
@@ -140,6 +141,7 @@ void DeleteEbookWindow(EbookWindow *win, bool forceDelete)
 // we create an about window
 static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
 {
+    bool hideMenu = win->isMenuHidden;
     if (win->isFullScreen)
         ExitFullScreen(win);
     DeleteEbookWindow(win, forceClose);
@@ -155,6 +157,10 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     if (!w) {
         PostQuitMessage(0);
         return;
+    }
+    if (hideMenu) {
+        w->isMenuHidden = true;
+        SetMenu(w->hwndFrame, NULL);
     }
 }
 
@@ -215,7 +221,7 @@ static void RebuildMenuBarForEbookWindow(EbookWindow *win)
 {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
-    if (!win->isFullScreen)
+    if (!win->isFullScreen && !win->isMenuHidden)
         SetMenu(win->hwndFrame, win->menu);
     DestroyMenu(oldMenu);
 }
@@ -327,19 +333,18 @@ static void OnMenuViewFullscreen(EbookWindow* win)
 
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
-void ShowHideMenuBar(EbookWindow *win)
+static void ShowHideMenuBar(EbookWindow *win, bool temporary=false)
 {
     CrashIf(!win->menu);
     if (win->isFullScreen)
         return;
 
     HWND hwnd = win->hwndFrame;
-    HMENU m = GetMenu(hwnd);
-    if (m) {
-        SetMenu(hwnd, NULL);
-    } else {
-        SetMenu(hwnd, win->menu);
-    }
+    bool hideMenu = GetMenu(hwnd) != NULL;
+    SetMenu(hwnd, hideMenu ? NULL : win->menu);
+
+    if (!temporary)
+        win->isMenuHidden = hideMenu;
 }
 
 static void OnMenuViewSinglePage(EbookWindow *win)
@@ -549,6 +554,18 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_GESTURE:
             return OnGesture(win, msg, wParam, lParam);
 
+        case WM_SYSCOMMAND:
+            // temporarily show the menu bar if it has been hidden
+            if (wParam == SC_KEYMENU && win->isMenuHidden)
+                ShowHideMenuBar(win, true);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_EXITMENULOOP:
+            // hide the menu bar again if it was shown only temporarily
+            if (win->isMenuHidden)
+                ShowHideMenuBar(win, true);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
         case WM_TIMER:
             OnTimer(win, wParam);
             break;
@@ -756,7 +773,9 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     gEbookWindows.Append(win);
     win::SetText(win->hwndFrame, winTitle);
     win->menu = BuildMenu(win);
-    SetMenu(hwnd, win->menu);
+    win->isMenuHidden = winInfo->isMenuHidden;
+    if (!win->isMenuHidden)
+        SetMenu(hwnd, win->menu);
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetDoc(doc, startReparseIdx);
