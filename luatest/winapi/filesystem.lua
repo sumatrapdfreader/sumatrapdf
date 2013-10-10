@@ -1,11 +1,70 @@
---setfenv(1, require'winapi')
---require'winapi.wintypes'
-require'winapi.wintypes'
+setfenv(1, require'winapi')
 
 local ffi = require'ffi'
 
 ffi.cdef[[
 static const int MAX_PATH = 260;
+
+typedef struct _OVERLAPPED {
+    ULONG_PTR Internal;
+    ULONG_PTR InternalHigh;
+    union {
+        struct {
+            DWORD Offset;
+            DWORD OffsetHigh;
+        };
+
+        PVOID Pointer;
+    };
+
+    HANDLE hEvent;
+} OVERLAPPED, *LPOVERLAPPED;
+
+typedef
+void (* LPOVERLAPPED_COMPLETION_ROUTINE)(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    LPOVERLAPPED lpOverlapped
+    );
+
+typedef void * __ptr64 PVOID64;
+
+
+typedef union _FILE_SEGMENT_ELEMENT {
+    PVOID64 Buffer;
+    ULONGLONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+
+typedef enum _FILE_INFO_BY_HANDLE_CLASS {
+    FileBasicInfo,
+    FileStandardInfo,
+    FileNameInfo,
+    FileRenameInfo,
+    FileDispositionInfo,
+    FileAllocationInfo,
+    FileEndOfFileInfo,
+    FileStreamInfo,
+    FileCompressionInfo,
+    FileAttributeTagInfo,
+    FileIdBothDirectoryInfo,
+    FileIdBothDirectoryRestartInfo,
+    FileIoPriorityHintInfo,
+    FileRemoteProtocolInfo,
+    MaximumFileInfoByHandleClass
+} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+
+typedef struct _BY_HANDLE_FILE_INFORMATION {
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD dwVolumeSerialNumber;
+    DWORD nFileSizeHigh;
+    DWORD nFileSizeLow;
+    DWORD nNumberOfLinks;
+    DWORD nFileIndexHigh;
+    DWORD nFileIndexLow;
+} BY_HANDLE_FILE_INFORMATION, *PBY_HANDLE_FILE_INFORMATION, *LPBY_HANDLE_FILE_INFORMATION;
 
 typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;
@@ -286,12 +345,6 @@ GetFileAttributesExW(
      LPVOID lpFileInformation
     );
 
-BOOL
-GetFileInformationByHandle(
-    HANDLE hFile,
-    LPBY_HANDLE_FILE_INFORMATION lpFileInformation
-    );
-
 DWORD
 GetFileSize(
           HANDLE hFile,
@@ -526,6 +579,12 @@ SetFileAttributesW(
     );
 
 BOOL
+GetFileInformationByHandle(
+    HANDLE hFile,
+    LPBY_HANDLE_FILE_INFORMATION lpFileInformation
+    );
+
+BOOL
 SetFileInformationByHandle(
       HANDLE hFile,
       FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
@@ -617,9 +676,18 @@ function IsValidFileHandle(h)
     return true
 end
 
+typeShown = false
+
+local function showType(v)
+    if typeShown then return end
+    typeShown = true
+    local tp = ffi.typeof(v)
+    print(tp)
+end
+
 function FindFiles(filePattern)
     filePattern = filePattern or "\\*"
-    local filePatternW = wcs32(filePattern)
+    local filePatternW = wcs(filePattern)
     local findFileData = ffi.new("WIN32_FIND_DATAW")
     local files = {}
     local h = C.FindFirstFileW(filePatternW, findFileData)
@@ -627,9 +695,14 @@ function FindFiles(filePattern)
 
     local ok = 1
     while ok ~= 0 do
-        local file = mbcs(findFileData.cFileName)
+        local name = findFileData.cFileName
+        -- TODO: dodgy. Why does mbs() apparently works on LOGFONT's lfFaceName
+        -- in font.lua?
+        name = ffi.cast("WCHAR*", name)
+        -- showType(name)
+        local file = mbs(name)
         table.insert(files, file)
-        ok = c.FindNextFileW(h, findFileData)
+        ok = C.FindNextFileW(h, findFileData)
     end
     C.FindClose(h)
     return files
