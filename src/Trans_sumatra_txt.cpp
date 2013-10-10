@@ -4689,15 +4689,15 @@ const char * gTranslations_fr =
   "impression du document\0";
 
 const char * gTranslations_gl = 
-  "Arred&or de\0"\
-  "&Tama\303\261o real\tCtrl+1\0"\
-  "\0"\
+  "A&cerca de\0"\
+  "&Tama\303\261o actual\tCtrl+1\0"\
+  "&Opci\303\263ns avanzadas...\0"\
   "&Todas as p\303\241xinas seleccionadas\0"\
-  "&Atr\303\241s\tAlt+Flecha esquerda\0"\
+  "&Atr\303\241s\tAlt+Frecha esquerda\0"\
   "Vista de &libro\tCtrl+8\0"\
   "&Pechar\tCtrl+W\0"\
-  "&Copiar Selecci\303\263n\0"\
-  "&Copiar Selecci\303\263n\tCtrl+C\0"\
+  "&Copiar a selecci\303\263n\0"\
+  "&Copiar selecci\303\263n\tCtrl+C\0"\
   "Non preguntar de novo\0"\
   "&P\303\241xinas pares s\303\263\0"\
   "&D\303\272as p\303\241xinas\tCtrl+7\0"\
@@ -4729,7 +4729,7 @@ const char * gTranslations_gl =
   "&Lembrar estes axustes para cada documento\0"\
   "&Borrar Documento\0"\
   "&Gardar como...\0"\
-  "&Salvar como...\tCtrl+S\0"\
+  "&Gardar como...\tCtrl+S\0"\
   "&Axustes\0"\
   "&Reducir p\303\241xinas \303\241 \303\241rea imprimible (se for necesario)\0"\
   "&P\303\241xina \303\272nica\tCtrl+6\0"\
@@ -4737,23 +4737,23 @@ const char * gTranslations_gl =
   "&Usar tama\303\261os de p\303\241xina orixinais\0"\
   "&Ver\0"\
   "&Si\0"\
-  "\0"\
+  "&Ampliar\0"\
   "(de %d)\0"\
   "(p\303\241xina %s)\0"\
-  "Arredor do SumatraPDF\0"\
-  "Engadir Favorito\0"\
-  "Engadir p\303\241xina %s aos favoritos\0"\
+  "Aceca de SumatraPDF\0"\
+  "Engadir favorito\0"\
+  "Engadir a p\303\241xina %s aos favoritos\0"\
   "Engadir p\303\241xina %s aos favoritos  cun nome (opcional):\0"\
   "Engadir a favoritos\0"\
   "Avanzado\0"\
-  "Todos os arquivos\0"\
-  "Todos os documentos admitidos\0"\
+  "Todos os ficheiros\0"\
+  "Todos os documentos soportados\0"\
   "Aplicaci\303\263n:\0"\
-  "Asociar con arquivos PDF?\0"\
+  "Asociar con ficheiros PDF?\0"\
   "Adxunto: %s\0"\
   "Autor:\0"\
   "Autom\303\241tico\0"\
-  "Comprobar actualizaci\303\263ns autom\303\241ticamente\0"\
+  "Comprobar se hai &actualizaci\303\263ns autom\303\241ticamente\0"\
   "Vista Libro\0"\
   "Preferidos\tF12\0"\
   "Atallos de marcadores\0"\
@@ -4764,28 +4764,28 @@ const char * gTranslations_gl =
   "Non se pode conectar a Internet (error %#x).\0"\
   "Cancelar\0"\
   "Non se pode imprimir este ficheiro\0"\
-  "Non se pode iniciar comando de b\303\272squeda inversa. Por favor, revisa a li\303\261a de comandos nos axustes.\0"\
-  "Cambiar lingua (Change Language)\0"\
-  "&Comprobar nova versi\303\263n\0"\
+  "Non se pode iniciar o comando de b\303\272squeda inversa. Revisa a li\303\261a de comandos na confiiguraci\303\263n.\0"\
+  "Cambiar a lingua\0"\
+  "Buscar a&ctualizaci\303\263ns\0"\
   "Albumes de c\303\263mic\0"\
-  "\0"\
+  "Compatibilidade\0"\
   "Cont\303\255nuo\0"\
   "Vista continua de libro\0"\
   "P\303\241xina dobre continua\0"\
-  "Contribuir na traducci\303\263n\0"\
+  "Axudar coa traducci\303\263n\0"\
+  "Copiar a &imaxe\0"\
+  "Copar o enderezo da &ligaz\303\263n\0"\
+  "Copiar o co&mentario\0"\
+  "Impediuse copiar texto (estase a copiar s\303\263 como imaxe)\0"\
   "\0"\
-  "Copar enderezo da ligaz\303\263n\0"\
-  "Copiar Co&mentario\0"\
-  "Copiar texto foi denegado (copiando s\303\263 coma imaxe)\0"\
-  "\0"\
-  "Non se poden obter as propiedades da impresora\0"\
+  "Non se puideron obter as propiedades da impresora\0"\
   "Non se pode inicializar a impresora\0"\
-  "Non se pode compo\303\261er a p\303\241xina\0"\
+  "Non se pode xerar a vista da p\303\241xina\0"\
   "Creado:\0"\
   "Ficheiro actual\0"\
   "&Aumento a medida...\tCtrl+Y\0"\
   "Disposici\303\263n por defecto:\0"\
-  "Aumento por defecto:\0"\
+  "&Aumento por defecto:\0"\
   "O lector de PDF por defecto non pode trocarse en modo portable\0"\
   "Permisos denegados:\0"\
   "Documentos DjVu\0"\
@@ -4793,20 +4793,20 @@ const char * gTranslations_gl =
   "Descargar\0"\
   "Sai&r\tCtrl+Q\0"\
   "Documentos EPUB\0"\
-  "Introduza o contrasinal\0"\
+  "Introduce o contrasinal\0"\
   "Introduza contrasinal para %s\0"\
   "Introduza a li\303\261a de comandos a invocar cando faga dobre-click sobre o documento PDF:\0"\
   "Erro cargando %s\0"\
   "F&avoritos\0"\
   "Adiante\tAlt+Right Arrow\0"\
-  "\0"\
+  "&Pantalla completa\tCtrl+L\0"\
   "A toda pantalla\tCtrl+Shift+L\0"\
   "P\303\241xina dobre\0"\
-  "\0"\
+  "Fallouse ao renomear o ficheiro\0"\
   "Erro ao salvar o arquivo.\0"\
-  "\0"\
+  "Vista web r\303\241pida\0"\
   "Favoritos\0"\
-  "\0"\
+  "Documentos FictionBook\0"\
   "Ficheiro %s non atopado\0"\
   "Tama\303\261o de arquivo:\0"\
   "Ficheiro:\0"\
@@ -4823,8 +4823,8 @@ const char * gTranslations_gl =
   "Axustar ao ancho\0"\
   "Axustar ancho e amosar p\303\241xinas seguidas\0"\
   "Axustar a p\303\241xina \303\272nica\0"\
-  "\0"\
-  "\0"\
+  "Fontes:\0"\
+  "D\303\241ndolle formato ao libro... %d p\303\241xinas\0"\
   "Atopado texto na p\303\241xina %s\0"\
   "Atopado texto na p\303\241xina %s (de novo)\0"\
   "Lido decote\0"\
@@ -4834,11 +4834,11 @@ const char * gTranslations_gl =
   "Usar \"F3\" para amosar seguinte resultado\0"\
   "Ficheiros de imaxe (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Cargando o ficheiro %s...\0"\
   "\0"\
   "Facer o SumatraPDF a aplicaci\303\263n por defecto para arquivos PDF?\0"\
   "Facer do SumatraPDF o leitor PDF por defecto\0"\
-  "\0"\
+  "Modo Man&ga\0"\
   "Coincidir mai\303\272sculas e min\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
@@ -4853,7 +4853,7 @@ const char * gTranslations_gl =
   "Abrir\0"\
   "Abrir no PDF-XChange\0"\
   "Abrir un documento...\0"\
-  "\0"\
+  "Abrir en %s\0"\
   "Abrir no &Adobe Reader\0"\
   "Abrir no &Foxit Reader\0"\
   "Abrir no Microsoft HTML Help\0"\
@@ -4861,7 +4861,7 @@ const char * gTranslations_gl =
   "P&ropiedades\0"\
   "P&ropiedades\tCtrl+D\0"\
   "Documento PDF\0"\
-  "\0"\
+  "Optimizaci\303\263n de PDF:\0"\
   "Productor do PDF:\0"\
   "Versi\303\263n PDF:\0"\
   "Documentos PDF\0"\
@@ -4876,20 +4876,20 @@ const char * gTranslations_gl =
   "Pr&esentaci\303\263n\tCtrl+L\0"\
   "P\303\241xina anterior\0"\
   "Imprimir\0"\
-  "\0"\
+  "Imprimir como &imaxe (precisar\303\241 de m\303\241is memoria)\0"\
   "Imprimir un rango\0"\
   "A impresora co nome indicado non existe\0"\
-  "\0"\
-  "\0"\
+  "Impresi\303\263n en curso.\0"\
+  "Ainda se est\303\241 imprimindo. Quere detela e sa\303\255r?\0"\
   "A impresi\303\263n est\303\241 a\303\255nda en curso. Detela e recomezar?\0"\
   "Imprimir p\303\241xina %d de %d...\0"\
   "Problema de impresi\303\263n.\0"\
-  "\0"\
+  "Re&nomear...\tF2\0"\
   "Lembrar ficheiros abertos\0"\
   "Eliminar de favoritos\0"\
   "Eliminar p\303\241xina %s de favoritos\0"\
-  "\0"\
-  "\0"\
+  "Renomear como\0"\
+  "Cambiar as &cores do documento pola paleta de cores de Windows\0"\
   "Xirar \303\241 esquerda\tCtrl+Shift+-\0"\
   "Xirar \303\241 dereita\tCtrl+Shift++\0"\
   "Salvar como\0"\
@@ -4900,7 +4900,7 @@ const char * gTranslations_gl =
   "Seleccionar contido con Ctrl+bot\303\263n esquerdo do rato\0"\
   "Enviar por email...\0"\
   "Establecer procura inversa\0"\
-  "\0"\
+  "Mostrar os &marcadores\0"\
   "Amosar barra de ferramentas\0"\
   "Amosar p\303\241xinas seguidas\0"\
   "Amosar Favoritos\0"\
@@ -4916,7 +4916,7 @@ const char * gTranslations_gl =
   "SumatraPDF \303\251 o seu lector de PDF por defecto\0"\
   "SumatraPDF ser\303\241 agora o seu lector de PDF por defecto\0"\
   "O ficheiro de sincronizaci\303\263n non pode abrirse\0"\
-  "\0"\
+  "PDF etiquetado\0"\
   "Documentos de texto\0"\
   "T\303\255tulo:\0"\
   "Ficheiros de orixe desco\303\261ecidos (%s)\0"\
@@ -4924,9 +4924,9 @@ const char * gTranslations_gl =
   "Visitar o &Website\0"\
   "Aviso\0"\
   "Documentos XPS\0"\
-  "Ten vostede a \303\272ltima versi\303\263n\0"\
-  "A s\303\272a versi\303\263n \303\251 %s\0"\
-  "\0"\
+  "Tes a \303\272ltima versi\303\263n\0"\
+  "A versi\303\263n actual \303\251 %s\0"\
+  "Ampliar\0"\
   "Achegar zoom\0"\
   "Afastar zoom\0"\
   "Factor de aumento\0"\

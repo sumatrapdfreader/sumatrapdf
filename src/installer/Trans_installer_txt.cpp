@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   37
+#define LANGS_COUNT   38
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -733,6 +733,51 @@ const char * gTranslations_fr =
   "\303\211chec de la d\303\251sinstallation\0"\
   "D\303\251sinstallation en cours\342\200\246\0"\
   "Choisir SumatraPDF comme lecteur PDF par &d\303\251faut\0";
+
+const char * gTranslations_gl = 
+  "&Opci\303\263ns\0"\
+  "Seguro que queres desinstalar SumatraPDF?\0"\
+  "Pechar\0"\
+  "Non se puido crear o cartafol temporal\0"\
+  "Non se puido crear o cartafol de instalaci\303\263n\0"\
+  "Non se puido instalado o previsualizador de PDF\0"\
+  "Non se puido instalar o filtro de busca de PDF\0"\
+  "Non se puido instalar o engadido para o navegador\0"\
+  "Non se puido obter o cartafol temporal\0"\
+  "Non se puido eliminar o cartafol de instalaci\303\263n\0"\
+  "Non se puido eliminar o atallo\0"\
+  "Non se puido desinstalar o previsualizador de PDFs\0"\
+  "Non se puido desinstalar o filtro de buscas de PDF\0"\
+  "Non se puido desinstalar o engadido do navegador\0"\
+  "Non se puido escribir %s no disco\0"\
+  "Fallou a copia do desinstalador no cartafol temporal\0"\
+  "Fallou a creaci\303\263n do atallo\0"\
+  "Fallou o borrado das claves de rexistro\0"\
+  "Non se puido escribir a informaci\303\263n de extensi\303\263n do ficheiro no rexistro\0"\
+  "Fallouse ao escribir a informaci\303\263n de desintalaci\303\263n no rexistro\0"\
+  "Agochar as &opci\303\263ns\0"\
+  "Instalar o engadido de &navegador de PDFs para Firefox, Chrome e Opera\0"\
+  "Instalar SumatraPDF\0"\
+  "Instalar SumatraPDF no &cartafol:\0"\
+  "Fallou a instalaci\303\263n!\0"\
+  "Instalaci\303\263n en curso...\0"\
+  "Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF\0"\
+  "Deixar que Windows mostre &previsualizaci\303\263ns de documentos PDF\0"\
+  "Peche %s para continuar\0"\
+  "Escolla o cartafol onde quere instalar SumatraPDF\0"\
+  "Alg\303\272ns ficheiros que se precisan instalar est\303\241n danados ou faltan\0"\
+  "Iniciar SumatraPDF\0"\
+  "Instalador %s SumatraPDF\0"\
+  "Desinstalador %s SumatraPDF\0"\
+  "Desintalouse SumatraPDF\0"\
+  "Non se atopou ningunha instalaci\303\263n de SumatraPDF.\0"\
+  "Graci\303\261as por escoller SumatraPDF!\0"\
+  "Parab\303\251ns! Xa tes SumatraPDF instalado.\0"\
+  "O instalador est\303\241 corrompido. Desc\303\241rgao de novo.\0"\
+  "Desinstalar SumatraPDF\0"\
+  "Fallou a desinstalaci\303\263n\0"\
+  "Desinstalaci\303\263n en procreso...\0"\
+  "Emprega SumatraPDF como o lector de PDF por &defecto\0";
 
 const char * gTranslations_de = 
   "&Optionen\0"\
@@ -1697,6 +1742,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_et, 
   gTranslations_fi, 
   gTranslations_fr, 
+  gTranslations_gl, 
   gTranslations_de, 
   gTranslations_hu, 
   gTranslations_id, 
@@ -1739,6 +1785,7 @@ const char *gLangCodes =   "en\0" \
   "et\0" \
   "fi\0" \
   "fr\0" \
+  "gl\0" \
   "de\0" \
   "hu\0" \
   "id\0" \
@@ -1777,6 +1824,7 @@ const char *gLangNames =   "English\0" \
   "Estonian (Eesti)\0" \
   "Finnish (Suomi)\0" \
   "French (Fran\303\247ais)\0" \
+  "Galician (Galego)\0" \
   "German (Deutsch)\0" \
   "Hungarian (Magyar)\0" \
   "Indonesian (Bahasa Indonesia)\0" \
@@ -1827,6 +1875,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ESTONIAN),
   _LANGID(LANG_FINNISH),
   _LANGID(LANG_FRENCH),
+  _LANGID(LANG_GALICIAN),
   _LANGID(LANG_GERMAN),
   _LANGID(LANG_HUNGARIAN),
   _LANGID(LANG_INDONESIAN),
@@ -1853,7 +1902,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (22 == idx);
+  return (2 == idx) || (23 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

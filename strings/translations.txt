@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c3ac63eeb04cf0d540b7f99dcf94110cfdf4003c
+4fcf56abf6c36e0463c9b610e1fc3c28997484e8
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -20,6 +20,7 @@ et:%s, kokku %s
 eu:%s -> %s-tik
 fi:%s / %s
 fr:%s de %s
+gl:%s de %s
 hr:%s od %s
 hu:%s/%s
 id:%s dari %s
@@ -28,6 +29,7 @@ ja:%s 中 %s
 kr:%s / %s
 ku:%s لە %s
 mk:%s од %s
+my:%s daripada %s
 nl:%s van %s
 pl:%s z %s
 pt:%s de %s
@@ -71,7 +73,7 @@ fi:&Tietoja
 fr:&À propos
 fy-nl:&Oer
 ga:Maidir le
-gl:Arred&or de
+gl:A&cerca de
 he:אודות
 hi:बारे में(&A)
 hr:&O programu...
@@ -139,7 +141,7 @@ fi:&Todellinen koko\tCtrl+1
 fr:&Taille réelle\tCtrl+1
 fy-nl:Wiere grutte\tCtrl+1
 ga:&Fíormhéid\tCtrl+1
-gl:&Tamaño real\tCtrl+1
+gl:&Tamaño actual\tCtrl+1
 he:גודל מקור\tCtrl+1
 hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
@@ -199,6 +201,7 @@ eu:Au&kera Aurreratuak...
 fa:تنظیمات پیشرفته
 fi:&Lisäasetukset...
 fr:Options &avancées…
+gl:&Opcións avanzadas...
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
@@ -207,6 +210,7 @@ ja:詳細設定(&A)
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
 mk:&Напредни oпции...
+my:&Tetapan terperinci...
 nl:&geavanceerde opties
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
@@ -303,7 +307,7 @@ fi:&Takaisin\tAlt+Vasen nuoli
 fr:&Retour\tAlt+<-
 fy-nl:Tebek\tAlt+<-
 ga:&Siar\tAlt+Saighead Ar Clé
-gl:&Atrás\tAlt+Flecha esquerda
+gl:&Atrás\tAlt+Frecha esquerda
 he:חזור\tAlt+<-
 hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
@@ -486,7 +490,7 @@ fa:&رونوشت از انتخاب شده
 fi:Kopioi &valinta
 fr:&Copier la sélection
 ga:&Macasamhlaigh an Roghnúchán
-gl:&Copiar Selección
+gl:&Copiar a selección
 he:העתק בחירה
 hi:च&यनित का नक़ल करें
 hr:&Kopiraj obilježeno
@@ -545,7 +549,7 @@ fi:Ko&pioi valinta\tCtrl+C
 fr:&Copier la sélection
 fy-nl:Kopiearje seleksje\tCtrl+C
 ga:&Macasamhlaigh an Roghnúchán\tCtrl+C
-gl:&Copiar Selección\tCtrl+C
+gl:&Copiar selección\tCtrl+C
 he:העתק בחירה\tCtrl+C
 hi:च&यनित का नक़ल करें\tCtrl+C
 hr:Kopiraj odabir\tCtrl+C
@@ -1846,6 +1850,7 @@ eu:A&ukerak
 fa:&تنظیمات
 fi:&Asetukset
 fr:&Options
+gl:&Opcións
 hr:P&ostavke
 hu:&Beállítások
 id:Pilihan
@@ -2546,7 +2551,7 @@ fi:Tallenna &nimellä...\tCtrl+S
 fr:&Enregistrer sous...\tCtrl+S
 fy-nl:&Bewarje as...\tCtrl+S
 ga:Cuir i dtaisce mar...\tCtrl+S
-gl:&Salvar como...\tCtrl+S
+gl:&Gardar como...\tCtrl+S
 he:שמירה בשם...\tCtrl+S
 hi:इस तरह संभालें(&S)\tCtrl+S
 hr:&Spremi kao...\tCtrl+S
@@ -3035,7 +3040,7 @@ fi:&Zoomaus
 fr:&Zoom
 fy-nl:&Zoom
 ga:&Formhéadú
-gl:&Zoom
+gl:&Ampliar
 he:זום
 hi:&बडा करें
 hr:&Uvećaj
@@ -3216,7 +3221,7 @@ fi:Tietoja SumatraPDF:stä
 fr:À propos de SumatraPDF
 fy-nl:Oer SumatraPDF
 ga:Maidir le SumatraPDF
-gl:Arredor do SumatraPDF
+gl:Aceca de SumatraPDF
 he:PDF אודות סומטרה
 hi:Sumatra PDF के बारे में
 hr:O SumatriPDF
@@ -3282,7 +3287,7 @@ fa:افزودن به موارد برگزیده
 fi:Lisää suosikki
 fr:Ajouter aux favoris
 ga:Cuir ceanán leis
-gl:Engadir Favorito
+gl:Engadir favorito
 he:הוסף מועדף
 hi:पसंदीदा सूचि जोड़ें
 hr:Dodaj favorita
@@ -3340,7 +3345,7 @@ fa:افزودن صفحه‌ی %s به موارد برگزیده
 fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
-gl:Engadir páxina %s aos favoritos
+gl:Engadir a páxina %s aos favoritos
 he:למועדפים %s הוסף עמוד
 hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
@@ -3579,7 +3584,7 @@ fi:Kaikki tiedostot
 fr:Tous les fichiers
 fy-nl:Alle bestannen
 ga:Gach comhad
-gl:Todos os arquivos
+gl:Todos os ficheiros
 he:כל הקבצים
 hi:सभी फाइलें
 hr:Sve datoteke
@@ -3639,7 +3644,7 @@ fa:همه‌ی اسناد پشتیبانی شده
 fi:Kaikki tuetut asiakirjat
 fr:Tous les documents pris en charge
 ga:Gach cáipéis inléite
-gl:Todos os documentos admitidos
+gl:Todos os documentos soportados
 he:כל המסמכים הנתמכים
 hi:सभी समर्थित दस्तावेज़
 hr:Svi podržani dokumenti
@@ -3756,6 +3761,7 @@ eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
 fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
+gl:Seguro que queres desinstalar SumatraPDF?
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 id:Anda yakin untuk menghapus instalasi SumatraPDF?
@@ -3764,6 +3770,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
+my:Adakah anda pasti anda mahu membuang SumatraPDF?
 nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
@@ -3806,7 +3813,7 @@ fi:Tiedostosidos PDF-tiedostoihin?
 fr:Associer aux fichiers PDF ?
 fy-nl:Assosjearje mei PDF-bestannen?
 ga:Comhthiomsaigh le comhaid PDF?
-gl:Asociar con arquivos PDF?
+gl:Asociar con ficheiros PDF?
 he:?PDF לשייך לקבצי
 hi:PDF फाईलों से संबंध बनाइए?
 hr:Asocirati sa PDF datotekama?
@@ -4056,7 +4063,7 @@ fi:Tarkista pä&ivitykset automaattisesti
 fr:Vérifier &automatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
-gl:Comprobar actualizacións automáticamente
+gl:Comprobar se hai &actualizacións automáticamente
 he:בדוק אוטומטית לעדכונים
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
@@ -4716,7 +4723,7 @@ fi:Käänteisen hakukomennon aloittaminen epäonnistui. Tarkista komentorivi ase
 fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuillez vérifier la ligne de commande spécifiée dans les options.
 fy-nl:Kin de omkearde sykrjochting net starte. Kontrolearje de opdrachtrigel yn de ynstellingen.
 ga:Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
-gl:Non se pode iniciar comando de búsqueda inversa. Por favor, revisa a liña de comandos nos axustes.
+gl:Non se pode iniciar o comando de búsqueda inversa. Revisa a liña de comandos na confiiguración.
 he:לא ניתן להריץ פקודת חיפוש הפוך. אנא בדוק הפקודה בהגדרות
 hi:उलटा खोज कमांड शुरू हो पा रहा । कृपया सेटिंग्स में कमांड लाइन की जाँच करें ।
 hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
@@ -4779,7 +4786,7 @@ fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
-gl:Cambiar lingua (Change Language)
+gl:Cambiar a lingua
 he:שנה שפה (Change language)
 hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
@@ -4846,7 +4853,7 @@ fi:Tarkista &päivitysten saatavuus
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
-gl:&Comprobar nova versión
+gl:Buscar a&ctualizacións
 he:בדוק לגרסה חדשה
 hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
@@ -4908,6 +4915,7 @@ eu:Itxi
 fa:بستن
 fi:Sulje
 fr:Fermer
+gl:Pechar
 hi:Close
 hr:Zatvori
 hu:Bezár
@@ -5015,6 +5023,7 @@ fa:سازگاری
 fi:Yhteensopivuus
 fr:Compatibilité
 ga:Comhoiriúnacht
+gl:Compatibilidade
 he:תאימות
 hi:अनुकूल
 hr:Kompatibilnost
@@ -5269,7 +5278,7 @@ fi:Osallistu suomennosprojektiin
 fr:Contribuer à la traduction
 fy-nl:Help mei oersetten
 ga:Aistrigh é seo
-gl:Contribuir na traducción
+gl:Axudar coa traducción
 he:עזור לתרגם
 hi:अनुवाद करने में मदद करें
 hr:Pomozi prijevodom
@@ -5333,6 +5342,7 @@ fa:رونوشت از &عکس
 fi:Kopioi &kuva
 fr:Copier l'&image
 ga:Macasamhlaigh &Íomhánna
+gl:Copiar a &imaxe
 he:העתק תמונה
 hi:&छवि नक़ल करें
 hr:Kopiraj Sl&iku
@@ -5388,7 +5398,7 @@ fa:رونوشت از نشانی &پیوند
 fi:Kopioi &linkin osoite
 fr:Copier l'adresse du &lien
 ga:Macasamhlaigh seoladh an naisc
-gl:Copar enderezo da ligazón
+gl:Copar o enderezo da &ligazón
 he:העתק כתובת קישור
 hi:&लिंक पता नक़ल करें
 hr:Kopiraj adresu &linka
@@ -5445,7 +5455,7 @@ fa:رونوشت از تو&ضیح
 fi:Kopioi kommentti
 fr:Copier le co&mmentaire
 ga:Macasamhlaigh an nóta tráchta
-gl:Copiar Co&mentario
+gl:Copiar o co&mentario
 he:העתק הערה
 hi:&टिप्पणी नक़ल करें
 hr:Kopiraj ko&mentar
@@ -5503,7 +5513,7 @@ fa:رونوشت‌گیری از متن ممنوع است (رونوشت فقط ب
 fi:Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
 fr:La copie de texte est refusée (seule une capture d’écran est faite)
 ga:Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
-gl:Copiar texto foi denegado (copiando só coma imaxe)
+gl:Impediuse copiar texto (estase a copiar só como imaxe)
 he:העתקת טקסט נדחית (מועתק רק כתמונה)
 hi:टेक्स्ट कि प्रतियां बनाने से अस्वीकृत ( केवल छवि के रूप में प्रतिलिपिकरण )
 hr:Kopiranje teksta je nemoguće (kopirano kao slika)
@@ -5562,6 +5572,7 @@ fa:حقّ نشر
 fi:Copyright:
 fr:Copyright :
 ga:Cóipcheart:
+gl:Copyright:
 he:זכויות יוצרים
 hi:पाठाधिकार
 hr:Autorsko pravo
@@ -5617,7 +5628,7 @@ fa:نمی‌توان خصوصیات چاپگر را به دست آورد
 fi:Tulostimen ominaisuuksia ei voinut lukea
 fr:Impossible d'obtenir les propriétés de l'imprimante
 ga:Níorbh fhéidir airíonna an chlóire a fháil
-gl:Non se poden obter as propiedades da impresora
+gl:Non se puideron obter as propiedades da impresora
 he:לא ניתן להשיג מאפייני מדפסת
 hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
@@ -5670,6 +5681,7 @@ et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
+gl:Non se puido crear o cartafol temporal
 hr:Nemoguće napraviti privremenu mapu
 hu:Ideiglenes könyvtár létrehozása sikertelen
 id:Gagal membuat folder sementara
@@ -5678,6 +5690,7 @@ ja:一時ディレクトリを作成できませんでした
 kr:임시 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 mk:Не можам да создадам привремена папка
+my:Tidak dapat mencipta direktori sementara
 nl:Kon tijdelijke folder niet aanmaken
 pl:Nie można utworzyć katalogu tymczasowego
 pt:Não foi possível criar a pasta temporária
@@ -5713,6 +5726,7 @@ eu:Ezinezkoa ezarpen zuzenbidea sortzea
 fa:عدم توانایی در ایجاد پوشه نصب
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
+gl:Non se puido crear o cartafol de instalación
 hr:Nemoguće napraviti instalacijsku mapu
 hu:Telepítési könyvtár létrehozása sikertelen
 id:Gagal membuat folder instalasi
@@ -5815,6 +5829,7 @@ eu:Ezinezkoa PDF aurreikustatzailea ezartzea
 fa:pdf عدم توانایی در نصب پیش نمایش
 fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
+gl:Non se puido instalado o previsualizador de PDF
 hr:Nemoguće instalirati PDF preglednik
 hu:PDF előnézet-megjelenítő telepítése sikertelen
 id:Gagal menginstal PDF pemratinjau
@@ -5823,6 +5838,7 @@ ja:PDF プレビューアをインストールできませんでした
 kr:PDF 미리보기를 설치할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
 mk:Не можам да инсталирам прикажувачот на PDF
+my:Tidak dapat memasang previewer PDF
 nl:Kon PDF voorbeeld niet installeren
 pl:Nie można zainstalować podglądu PDF
 pt:Não foi possível instalar o antevisão de PDF
@@ -5856,6 +5872,7 @@ eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
 fa:عدم توانایی در نصب فیلتر جستجوی pdf
 fi:PDF-hakusuodattimen asentaminen epäonnistui
 fr:Impossible d'installer le filtre de recherche PDF
+gl:Non se puido instalar o filtro de busca de PDF
 hr:Nemoguće instalirati PDF filter pretraživanja
 hu:PDF keresési szűrő telepítése sikertelen
 id:Gagal memasang filter pencari PDF
@@ -5864,6 +5881,7 @@ ja:PDF 検索フィルタをインストールできませんでした
 kr:PDF 검색 필터를 설치할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
 mk:Не можам да инсталирам филтер за пребарување на PDF
+my:Tidak dapat memasang penapis carian PDF
 nl:Kon PDF zoek filter niet installeren
 pl:Nie można zainstalować filtru przeszukiwania PDF
 pt:Não foi possível instalar o filtro de procuras
@@ -5896,6 +5914,7 @@ eu:Ezinezkoa nabigatzaile plugina ezartzea
 fa:عدم توانایی در نصب پلاگین بروسر
 fi:Selainliitännäisen asentaminen epäonnistui
 fr:Impossible d'installer le plug-in du navigateur
+gl:Non se puido instalar o engadido para o navegador
 hr:Nemoguće instalirati dodatak za internet preglednik
 hu:Böngésző beépülő telepítése sikertelen
 id:Gagal memasang plugin untuk browser
@@ -5904,6 +5923,7 @@ ja:ブラウザプラグインをインストールできませんでした
 kr:브라우저 플러그인을 설치할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ دابەزێندرێت
 mk:Не можам да го инсталирам додатокот за прелистувачи
+my:Tidak dapat memasang pelayar plugin
 nl:Kon browser invoegmodule niet installeren
 pl:Nie można zainstalować wtyczki do przeglądarek
 pt:Não foi possível instalar o plugin do navegador
@@ -5936,6 +5956,7 @@ et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
 fi:Väliaikaishakemiston käyttäminen epäonnistui
 fr:Impossible d'obtenir un répertoire temporaire
+gl:Non se puido obter o cartafol temporal
 hr:Nemoguće dobiti privremenu mapu
 hu:Ideiglenes könyvtár nem érhető el
 id:Gagal mendeteksi folder sementara
@@ -5944,6 +5965,7 @@ ja:一時ディレクトリを確保できませんでした
 kr:임시 디렉토리를 가져올 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
 mk:Не можам да пристапам до привремената папка
+my:Tidak boleh mendapatkan direktori sementara
 nl:Kon tijdelijke folder niet verkrijgen
 pl:Nie można uzyskać katalogu tymczasowego
 pt:Não foi possível obter a pasta temporária
@@ -5975,6 +5997,7 @@ et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
+gl:Non se puido eliminar o cartafol de instalación
 hr:Nemoguće ukloniti instalacijsku mapu
 hu:Telepítési könyvtár eltávolítása sikertelen
 id:Gagal menghapus folder instalasi
@@ -6016,6 +6039,7 @@ et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
 fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
+gl:Non se puido eliminar o atallo
 hr:Nemoguće ukloniti prečac
 hu:Parancsikon eltávolítása sikertelen
 id:Gagal menghapus shortcut
@@ -6062,7 +6086,7 @@ fi:Sivun tulkinta epäonnistui
 fr:Impossible de générer la page
 fy-nl:Dizze side kin net werjûn wurde
 ga:Níorbh fhéidir an leathanach a chóiriú
-gl:Non se pode compoñer a páxina
+gl:Non se pode xerar a vista da páxina
 he:לא ניתן להציג הדף
 hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
@@ -6116,6 +6140,7 @@ et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
 fi:PDF-esikatselijan poistaminen epäonnistui
 fr:Impossible de désinstaller l'aperçu PDF
+gl:Non se puido desinstalar o previsualizador de PDFs
 hr:Nemoguće deinstalirati PDF preglednik
 hu:PDF előnézet-megjelenítő eltávolítása sikertelen
 id:Gagal menghapus penampil cepat PDF
@@ -6154,6 +6179,7 @@ et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
 fi:PDF-hakusuodattimen poistaminen epäonnistui
 fr:Impossible de désinstaller le filtre de recherche PDF
+gl:Non se puido desinstalar o filtro de buscas de PDF
 hr:Nemoguće deinstalirati PDF filter pretraživnja
 hu:PDF keresési szűrő eltávolítása sikertelen
 id:Gagal menghapus filter pencari PDF
@@ -6162,6 +6188,7 @@ ja:PDF 検索フィルタをアンインストールできませんでした
 kr:PDF 검색 필터를 제거할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
 mk:Не можам да го избришам филтерот за пребарување на PDF
+my:Tidak dapat memadam penapis carian PDF
 nl:Kon PDF zoek filter niet deïnstalleren
 pl:Nie można usunąć filtru przeszukiwania PDF
 pt:Não foi possível desinstalar o filtro de procura
@@ -6192,6 +6219,7 @@ et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
 fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
+gl:Non se puido desinstalar o engadido do navegador
 hr:Nemoguće deinstalirati dodatak za internet preglednik
 hu:Böngésző beépülő eltávolítása sikertelen
 id:Gagal menghapus plugin untuk peramban
@@ -6231,6 +6259,7 @@ et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
 fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
+gl:Non se puido escribir %s no disco
 hr:Nemoguće zapisati %s na disk
 hu:%s lemezre írása sikertelen
 id:Gagal menulis %s ke harddisk
@@ -6515,7 +6544,7 @@ fi:Oletus&zoomaus:
 fr:&Zoom par défaut :
 fy-nl:Standert &Zoom:
 ga:Formhéadú réamhshocraithe:
-gl:Aumento por defecto:
+gl:&Aumento por defecto:
 he:זום ברירת ברירת מחדל:
 hi:डिफ़ॉल्ट पृष्ठ &आकार:
 hr:Pretpostavljeno &uvećanje:
@@ -6997,7 +7026,7 @@ fi:Kirjoita salasana
 fr:Entrer le mot de passe
 fy-nl:Wachtwurd ynfiere
 ga:Cuir isteach focal faire
-gl:Introduza o contrasinal
+gl:Introduce o contrasinal
 he:הכנס סיסמה
 hi:पहचान शब्द भरें
 hr:Unesi lozinku
@@ -7235,6 +7264,7 @@ eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fa:sumatra pdf خطا: عدم توانایی در اجرای
 fi:Virhe: SumatraPDF:n käynnistäminen epäonnistui!
 fr:Erreur : impossible de lancer SumatraPDF !
+gl:Erro: non se puido executar SumatraPDF!
 hr:Greška: Nemoguće pokrenuti SumatraPDF
 hu:Hiba: SumatraPDF futtatása sikertelen!
 id:Kesalahan: Tidak bisa menjalankan SumatraPDF.
@@ -7276,6 +7306,7 @@ eu:Akatsa: SumatraPDF ez da aurkitu!
 fa:خطا :sumatra pdf پیدا نشد
 fi:Virhe: SumatraPDF ei löytynyt!
 fr:Erreur : SumatraPDF non trouvé !
+gl:Erro: non se atopou SumatraPDF!
 hr:Greška: SumatraPDF nije pronađena
 hu:Hiba: SumatraPDF nem található!
 id:Kesalahan: SumatraPDF tidak ditemukan.
@@ -7318,6 +7349,7 @@ eu:Akatsa: Agiria ezin da jeitsi!
 fa:خطا : عدم توانایی در دانلود متن
 fi:Virhe: asiakirjan lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
+gl:Erro: o documento non se puido descargar!
 hr:Greška: Dokument nije moguće preuzeti!
 hu:Hiba: a dokumentum letöltése sikertelen!
 id:Kesalahan: file tidak dapat diunduh.
@@ -7473,6 +7505,7 @@ fa:&تمام‌صفحه\tCtrl+L
 fi:Koko &näyttö\tCtrl+L
 fr:Plein  écran\tCtrl+L
 ga:Lánscáileán\tCtrl+L
+gl:&Pantalla completa\tCtrl+L
 he:מסך מלא\tCtrl+L
 hi:पूरा परदा\tCtrl+L
 hr:Cijeli zaslon\tCtrl+L
@@ -7655,6 +7688,7 @@ et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
 fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
+gl:Fallou a copia do desinstalador no cartafol temporal
 hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
 id:Gagal mengkopi uninstaller ke direktori temp
@@ -7695,6 +7729,7 @@ eu:Hutsegitea lasterbidea sortzerakoan
 fa:خطا در ایجاد فایل میانبر
 fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
+gl:Fallou a creación do atallo
 hr:Neuspjeh u kreiranju prečaca
 hu:Nem sikerült létrehozni a parancsikont
 id:Gagal membuat shortcut.
@@ -7733,6 +7768,7 @@ et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
+gl:Fallou o borrado das claves de rexistro
 hr:Neuspjeh kod brisanja ključeva registra deinstalatera
 hu:Az eltávolító registry kulcsainak törlése sikertelen
 id:Gagal menghapus kunci registry uninstaller
@@ -7775,6 +7811,7 @@ fa:تغییر نام پرونده با شکست مواجه شد!
 fi:Tiedoston uudelleennimeäminen epäonnistui!
 fr:Impossible de renommer le fichier!
 ga:Theip ar athainmniú an chomhaid!
+gl:Fallouse ao renomear o ficheiro
 he:פעולת שינוי שם הקובץ נכשלה!
 hi:फ़ाइल का नाम बदलने मे असफ़ल​ !
 hr:Neuspjeh u preimenovanju datoteke!
@@ -7890,6 +7927,7 @@ et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
+gl:Non se puido escribir a información de extensión do ficheiro no rexistro
 hr:Neuspjeh kod zapisivanja produženih informacija nastavka datoteke u registru
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
 id:Gagal menulis info ekstensi file lanjutan ke registry
@@ -7927,6 +7965,7 @@ et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
+gl:Fallouse ao escribir a información de desintalación no rexistro
 hr:Neuspjeh kod zapisivanja deinstalacijskih informacija u registar
 hu:Eltávolítással kapcsolatos információk registry-be írása sikertelen
 id:Gagal menulis info penghapusan program ke registry
@@ -7969,6 +8008,7 @@ fa:تماشای بی درنگ
 fi:Nopea web-näkymä
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
+gl:Vista web rápida
 he:הצגת רשת מהירה
 hi:तीव्र वेब दर्शन
 hr:Brzi Web prikaz
@@ -8076,6 +8116,7 @@ eu:FikzioLiburu agiriak
 fa:اسناد کتاب تخیلی
 fi:FictionBook-asiakirjat
 fr:Documents FictionBook
+gl:Documentos FictionBook
 he:מסמכי FictionBook
 hi:गल्प बुक दस्तावेजों
 hr:FictionBook dokumenti
@@ -9125,6 +9166,7 @@ fa:قلم‌ها:
 fi:Fontit:
 fr:Polices :
 ga:Clófhoirne:
+gl:Fontes:
 he:גופנים
 hi:अक्षर का आकर
 hr:Fontovi:
@@ -9178,6 +9220,7 @@ fa:قالب‌بندی کتاب... %d صفحه
 fi:Muotoillaan kirjaa... %d sivua
 fr:Mise en forme du livre... %d pages
 ga:Ag formáidiú an leabhair... %d leathanach
+gl:Dándolle formato ao libro... %d páxinas
 he:מעצב את הספר... %d עמודים
 hi:किताब स्वरूपित हो रहा... %d पृष्ठ
 hr:Oblikovanje knjige... %d stranica
@@ -9528,6 +9571,7 @@ eu:Ezkutatu A&ukerak
 fa:مخفی & تنظیمات
 fi:Piilota
 fr:Masque les &options
+gl:Agochar as &opcións
 hr:Sakrij postavke
 hu:Beállítások elrejtése
 id:Sembunyikan &Opsi
@@ -9738,6 +9782,7 @@ eu:Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat
 fa:برای فایرفاکس و کروم و اپرا pdf نصب پلاگین
 fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
+gl:Instalar o engadido de &navegador de PDFs para Firefox, Chrome e Opera
 hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
 id:Install plugin untuk peram&ban Firefox, Chrome, dan Opera
@@ -9779,6 +9824,7 @@ eu:Ezarri SumatraPDF
 fa:sumatra pdf نصب
 fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
+gl:Instalar SumatraPDF
 hr:Instaliraj SumatraPDF
 hu:SumatraPDF telepítése
 id:Install SumatraPDF
@@ -9820,6 +9866,7 @@ eu:Ezarri Su&matraPDF agiritegi honetan:
 fa:در &پوشه sumatra pdf نصب
 fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
+gl:Instalar SumatraPDF no &cartafol:
 hr:Instaliraj SumatraPDF u &mapu:
 hu:SumatraPDF telepítése a következő &könyvtárba:
 id:Install SumatraPDF ke &folder:
@@ -9859,6 +9906,7 @@ eu:Ezarpen hutsegitea!
 fa:ایراد در نصب
 fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
+gl:Fallou a instalación!
 hr:Instalacija nije uspjela!
 hu:Telepítés sikertelen!
 id:Instalasi gagal!
@@ -9901,6 +9949,7 @@ eu:Ezarpena garatzen...
 fa:نصب در حال بارگذاری
 fi:Asennus käynnissä...
 fr:Installation en cours…
+gl:Instalación en curso...
 hr:Instaliranje...
 hu:Telepítés folyamatban...
 id:Instalasi sedang berlangsung...
@@ -10009,6 +10058,7 @@ et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
+gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 id:Izinkan Windows Desktop Search mencari dokumen PDF
@@ -10046,6 +10096,7 @@ et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
+gl:Deixar que Windows mostre &previsualizacións de documentos PDF
 hr:Neka Windows prikazuje &pregled PDF dokumenata
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 id:Izinkan Windows menampilkan dokumen PDF
@@ -10088,6 +10139,7 @@ fa:در حال بازکردن پرونده‌ی %s...
 fi:Ladataan tiedostoa %s...
 fr:Chargement du fichier %s...
 ga:Ag luchtú an comhad %s...
+gl:Cargando o ficheiro %s...
 he:פותח קובץ %s...
 hi:%s फाइल लोड हो रहा
 hr:Pokretanje datoteke %s...
@@ -10335,6 +10387,7 @@ et:Man&garežiim
 eu:Ma&nga Modua
 fi:Man&ga-moodi
 fr:Mode man&ga
+gl:Modo Man&ga
 hr:Man&ga način
 hu:Manga mód
 id:Mode komik
@@ -11225,6 +11278,7 @@ eu:Irekitzea %s
 fa:%s بازشدن در
 fi:Avaa ohjelmassa %s
 fr:Ouvrir dans %s
+gl:Abrir en %s
 hr:Otvori u %s
 hu:Megnyitás %s
 id:Buka di %s
@@ -11500,6 +11554,7 @@ eu:Agiria irekitzen SumatraPDF-an...
 fa:sumatra pdf باز کردن متن در
 fi:Avataan asiakirjaa SumatraPDF:ssä...
 fr:Ouverture du document dans SumatraPDF…
+gl:Abrindo o documento en SumatraPDF...
 hr:Otvaranje dokumenta u SumatraPDF...
 hu:Dokumentum megnyitása SumatraPDF-ben...
 id:Membuka dokumen menggunakan SumatraPDF
@@ -11717,6 +11772,7 @@ fa:PDF بهینه سازی
 fi:PDF-optimoinnit:
 fr:Optimisations PDF
 ga:Optimisations PDF
+gl:Optimización de PDF:
 he:אופטימיזציות PDF:
 hi:पीडीएफ अनुकूलन:
 hr:PDF optimizacija:
@@ -12303,6 +12359,7 @@ et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
 fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
+gl:Peche %s para continuar
 hr:Molim zatvorite %s za nastavak!
 hu:A(z) %s bezárása szükséges a folytatáshoz!
 id:Silakan tutup %s untuk melanjutkan.
@@ -12638,6 +12695,7 @@ fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌
 fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
+gl:Imprimir como &imaxe (precisará de máis memoria)
 he:הדפס כתמונה (צורך יותר זכרון)
 hi:छवि के रूप में छापें (अधिक स्मृति की आवश्यकता होगी)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
@@ -12797,6 +12855,7 @@ eu:Irarketa garatzen.
 fa:در حال چاپ شدن.
 fi:Tulostaminen käynnissä.
 fr:Impression en cours
+gl:Impresión en curso.
 he:נשלח להדפסה
 hi:छपाई में प्रगति.
 hr:Ispis u tijeku.
@@ -12845,6 +12904,7 @@ eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
 fa:در حال چاپ شدن. انصراف و خروج؟
 fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
 fr:Impression toujours en cours. Annuler et quitter ?
+gl:Ainda se está imprimindo. Quere detela e saír?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
 hi:छपाई अभी भी प्रगति पर है | रद्द किजिये और दें छोड़ दें ?
 hr:Ispis u tijeku. Prekinite i izađite?
@@ -13070,6 +13130,7 @@ fa:تغییر  &نام...\tF2
 fi:&Uudelleennimeä...\tF2
 fr:Re&nommer...\tF2
 ga:Athainmnigh...\tF2
+gl:Re&nomear...\tF2
 he:שנה שם...\tF2
 hi:&नाम बदलें...\tF2
 hr:Preime&novati...\tF2
@@ -13291,6 +13352,7 @@ fa:تغییر نام به
 fi:Uudelleennimeä
 fr:Renommer En
 ga:Athainmnigh chuig
+gl:Renomear como
 he:שנה שם ל
 hi:नाम बदल कर​
 hr:Preimenuj u
@@ -13344,6 +13406,7 @@ fa:جایگزینی &رنگ‌های سند با طرح رنگ ویندوز
 fi:Korvaa asiakirjan &värit Windowsin väriteemalla
 fr:Remplacer les &couleurs du document par le schéma de couleurs Windows
 ga:Ionadaigh dathanna na cáipéise le córas dathanna Windows
+gl:Cambiar as &cores do documento pola paleta de cores de Windows
 he:החלף את צבעי המסמך עם ערכת צבעי חלונות
 hi:Windows रंग योजना के साथ दस्तावेज़ रंग बदलें
 hr:Zamijeni boje dokumenta s postavkama &Windows boja
@@ -13873,6 +13936,7 @@ et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
 fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
+gl:Escolla o cartafol onde quere instalar SumatraPDF
 hr:Odaberite mapu gdje bi trebalo instalirati SumatraPDF:
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 id:Pilih folder instalasi SumatraPDF:
@@ -14040,6 +14104,7 @@ fa:ن&شانه‌ها را نشان بده
 fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
+gl:Mostrar os &marcadores
 he:הראה סימניות
 hi:बुकमार्क दिखाएँ (&B)
 hr:Prikaži &oznake
@@ -14448,6 +14513,7 @@ eu:Ezarritako zenbait agiri hondatuta edo galduta daude
 fa:بخشی از فایهای نصب شده خراب شده و یا گم شده
 fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
+gl:Algúns ficheiros que se precisan instalar están danados ou faltan
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
 id:Beberapa file yang di-install rusak atau terhapus.
@@ -14603,6 +14669,7 @@ eu:Abiarazi SumatraPDF
 fa:اجرای sumatra pdf
 fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
+gl:Iniciar SumatraPDF
 hr:Pokreni SumatraPDF
 hu:SumatraPDF indítása
 id:Jalankan SumatraPDF
@@ -14703,6 +14770,7 @@ eu:SumatraPDF %s Ezartzailea
 fa:نصب کننده sumatra pdf %s
 fi:SumatraPDF %s asennusohjelma
 fr:Installeur de SumatraPDF %s
+gl:Instalador %s SumatraPDF
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
 id:Pasang SumatraPDF %s
@@ -14741,6 +14809,7 @@ eu:SumatraPDF %s Kentzailea
 fa:حذف کننده sumatra pdf %s
 fi:SumatraPDF %s poisto-ohjelma
 fr:Désinstalleur de SumatraPDF %s
+gl:Desinstalador %s SumatraPDF
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
 id:Hapus SumatraPDF %s
@@ -14951,6 +15020,7 @@ eu:SumatraPDF kendu da.
 fa:پاک شد sumatra pdf
 fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
+gl:Desintalouse SumatraPDF
 hr:SumatraPDF je deinstaliran.
 hu:SumatraPDF eltávolítása befejeződött.
 id:SumatraPDF telah di-uninstall.
@@ -14992,6 +15062,7 @@ eu:SumatraPDF ezarpena ez da aurkitu.
 fa:نصب شده sumatra pdf پیدا نشد.
 fi:SumatraPDF-asennusta ei löytynyt.
 fr:Installation de SumatraPDF non trouvée
+gl:Non se atopou ningunha instalación de SumatraPDF.
 hr:SumatraPDF instalacija nije pronađena.
 hu:SumatraPDF telepítő nem található.
 id:Instalasi SumatraPDF tidak ditemukan.
@@ -15212,6 +15283,7 @@ fa:نشان دار  PDF
 fi:Merkitty PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
+gl:PDF etiquetado
 he:PDF מתוייג
 hi:टैग की गईं पीडीएफ
 hr:Strukturirani PDF
@@ -15320,6 +15392,7 @@ eu:Mila esker SumatraPDF hautatzeagaitik!
 fa:sumatra pdf با تشکر از شما جهت انتخاب
 fi:Kiitos, että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
+gl:Graciñas por escoller SumatraPDF!
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
 id:Terima kasih telah memakai SumatraPDF!
@@ -15362,6 +15435,7 @@ eu:Mila esker! SumatraPDF ezarri da.
 fa:با تشکر ! sumapra pdf نصب شد
 fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
+gl:Parabéns! Xa tes SumatraPDF instalado.
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 id:Terima kasih. SumatraPDF telah berhasil ter-install.
@@ -15370,6 +15444,7 @@ ja:ありがとう！SumatraPDF はインストールされました。
 kr:야호! SumatraPDF가 설치됐습니다.
 ku:سوپاس! SumatraPDF دابەزێنرا.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
+my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 nl:Dank u! SumatraPDF werd geinstalleerd.
 pl:Program SumatraPDF został zainstalowany.
 pt:O SumatraPDF foi instalado.
@@ -15402,6 +15477,7 @@ et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust eb
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
+gl:O instalador está corrompido. Descárgao de novo.
 hr:Instaler je oštećen. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
 id:Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!
@@ -15504,6 +15580,7 @@ eu:Kendu SumatraPDF
 fa:پاک کردن sumatra pdf
 fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
+gl:Desinstalar SumatraPDF
 hr:Deinstaliraj SumatraPDF
 hu:SumatraPDF eltávolítása
 id:Uninstall SumatraPDF
@@ -15546,6 +15623,7 @@ eu:Kentze hutsegitea
 fa:خطا در پاک کردن
 fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
+gl:Fallou a desinstalación
 hr:Deinstalacija nije uspjela
 hu:Eltávolítás sikertelen
 id:Proses uninstall gagal.
@@ -15588,6 +15666,7 @@ eu:Kentzea garatzen...
 fa:حذف شدن در حال بارگذاری
 fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
+gl:Desinstalación en procreso...
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
 id:Proses uninstall sedang berjalan...
@@ -15688,6 +15767,7 @@ eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از
 fi:Käytä SumatraPDF:ää PDF-asiakirjojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
+gl:Emprega SumatraPDF como o lector de PDF por &defecto
 hr:Koristi SumatraPDF kao zadani PDF preglednik
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
 id:Gunakan SumatraPDF sebagai pembaca PDF standar.
@@ -15990,7 +16070,7 @@ fi:Sinulla on uusin versio.
 fr:Vous avez la dernière version.
 fy-nl:Jo brûke de meast resinte ferzje.
 ga:Tá an leagan is úire agat.
-gl:Ten vostede a última versión
+gl:Tes a última versión
 he:ברשותך המדורה האחרונה
 hi:आपके पास पहले से ही नवीनतम संसकरण है
 hr:Imate najnoviju inačicu.
@@ -16057,7 +16137,7 @@ fi:Sinulla on versio %s
 fr:Votre version est la %s
 fy-nl:Jo hawwe ferzje %s
 ga:Tá leagan %s agat
-gl:A súa versión é %s
+gl:A versión actual é %s
 he:%s המהדורה שברשותך היא
 hi:आपके पास  %s संसकरण है
 hr:Imate inačicu %s
@@ -16120,7 +16200,7 @@ fi:Zoomaus
 fr:Zoom
 fy-nl:Zoom
 ga:Formhéadú
-gl:Zoom
+gl:Ampliar
 he:זום
 hi:ज़ूम
 hr:Uvećanje
