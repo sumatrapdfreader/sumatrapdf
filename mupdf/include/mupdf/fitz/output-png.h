@@ -25,7 +25,9 @@ void fz_output_png(fz_output *out, const fz_pixmap *pixmap, int savealpha);
 /*
 	Get an image as a png in a buffer.
 */
-fz_buffer *fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h);
+fz_buffer *fz_new_png_from_image(fz_context *ctx, fz_image *image, int w, int h);
+
+fz_buffer *fz_new_png_from_pixmap(fz_context *ctx, fz_pixmap *pixmap);
 
 typedef struct fz_png_output_context_s fz_png_output_context;
 

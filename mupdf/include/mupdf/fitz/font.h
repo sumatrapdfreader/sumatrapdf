@@ -78,6 +78,8 @@ void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, fl
 fz_rect *fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_rect *r);
 int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 
+void fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, struct fz_device_s *dev);
+
 void fz_decouple_type3_font(fz_context *ctx, fz_font *font, void *t3doc);
 
 #ifndef NDEBUG

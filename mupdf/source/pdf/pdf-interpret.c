@@ -636,7 +636,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		if (csi->clip)
 		{
 			gstate->clip_depth++;
-			fz_clip_path(csi->dev, path, NULL, csi->clip_even_odd, &gstate->ctm);
+			fz_clip_path(csi->dev, path, &bbox, csi->clip_even_odd, &gstate->ctm);
 			csi->clip = 0;
 		}
 
@@ -670,7 +670,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			case PDF_MAT_PATTERN:
 				if (gstate->fill.pattern)
 				{
-					fz_clip_path(csi->dev, path, NULL, even_odd, &gstate->ctm);
+					fz_clip_path(csi->dev, path, &bbox, even_odd, &gstate->ctm);
 					pdf_show_pattern(csi, gstate->fill.pattern, &csi->gstate[gstate->fill.gstate_num], &bbox, PDF_FILL);
 					fz_pop_clip(csi->dev);
 				}
@@ -678,7 +678,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			case PDF_MAT_SHADE:
 				if (gstate->fill.shade)
 				{
-					fz_clip_path(csi->dev, path, NULL, even_odd, &gstate->ctm);
+					fz_clip_path(csi->dev, path, &bbox, even_odd, &gstate->ctm);
 					/* The cluster and page 2 of patterns.pdf shows that fz_fill_shade should NOT be called with gstate->ctm. */
 					fz_fill_shade(csi->dev, gstate->fill.shade, &csi->gstate[gstate->fill.gstate_num].ctm, gstate->fill.alpha);
 					fz_pop_clip(csi->dev);

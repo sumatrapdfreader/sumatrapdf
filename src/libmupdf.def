@@ -177,6 +177,7 @@ EXPORTS
 	fz_set_font_bbox
 	fz_bound_glyph
 	fz_glyph_cacheable
+	fz_run_t3_glyph
 	fz_decouple_type3_font
 	fz_eval_function
 	fz_keep_function
@@ -281,7 +282,8 @@ EXPORTS
 
 	fz_write_png
 	fz_output_png
-	fz_image_as_png
+	fz_new_png_from_image
+	fz_new_png_from_pixmap
 	fz_output_png_header
 	fz_output_png_band
 	fz_output_png_trailer

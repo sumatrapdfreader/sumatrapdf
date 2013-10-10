@@ -806,24 +806,28 @@ fz_output_png_trailer(fz_output *out, fz_png_output_context *poc)
 	putchunk("IEND", block, 0, out);
 }
 
-
-fz_buffer *
-fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h)
+/* We use an auxiliary function to do pixmap_as_png, as it can enable us to
+ * drop pix early in the case where we have to convert, potentially saving
+ * us having to have 2 copies of the pixmap and a buffer open at once. */
+static fz_buffer *
+png_from_pixmap(fz_context *ctx, fz_pixmap *pix, int drop)
 {
-	fz_pixmap *pix = fz_image_get_pixmap(ctx, image, image->w, image->h);
 	fz_buffer *buf = NULL;
 	fz_output *out;
+	fz_pixmap *pix2 = NULL;
 
 	fz_var(buf);
 	fz_var(out);
+	fz_var(pix2);
 
 	fz_try(ctx)
 	{
-		if (pix->colorspace != fz_device_gray(ctx) || pix->colorspace != fz_device_rgb(ctx))
+		if (pix->colorspace && pix->colorspace != fz_device_gray(ctx) && pix->colorspace != fz_device_rgb(ctx))
 		{
-			fz_pixmap *pix2 = fz_new_pixmap(ctx, fz_device_rgb(ctx), pix->w, pix->h);
+			pix2 = fz_new_pixmap(ctx, fz_device_rgb(ctx), pix->w, pix->h);
 			fz_convert_pixmap(ctx, pix2, pix);
-			fz_drop_pixmap(ctx, pix);
+			if (drop)
+				fz_drop_pixmap(ctx, pix);
 			pix = pix2;
 		}
 		buf = fz_new_buffer(ctx, 1024);
@@ -832,8 +836,8 @@ fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h)
 	}
 	fz_always(ctx)
 	{
+		fz_drop_pixmap(ctx, drop ? pix : pix2);
 		fz_close_output(out);
-		fz_drop_pixmap(ctx, pix);
 	}
 	fz_catch(ctx)
 	{
@@ -841,6 +845,20 @@ fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h)
 		fz_rethrow(ctx);
 	}
 	return buf;
+}
+
+fz_buffer *
+fz_new_png_from_image(fz_context *ctx, fz_image *image, int w, int h)
+{
+	fz_pixmap *pix = fz_image_get_pixmap(ctx, image, image->w, image->h);
+
+	return png_from_pixmap(ctx, pix, 1);
+}
+
+fz_buffer *
+fz_new_png_from_pixmap(fz_context *ctx, fz_pixmap *pix)
+{
+	return png_from_pixmap(ctx, pix, 0);
 }
 
 /*

@@ -19,6 +19,7 @@ fz_free_device(fz_device *dev)
 		return;
 	if (dev->free_user)
 		dev->free_user(dev);
+	fz_free(dev->ctx, dev->scissor);
 	fz_free(dev->ctx, dev);
 }
 
@@ -46,6 +47,60 @@ fz_end_page(fz_device *dev)
 {
 	if (dev->end_page)
 		dev->end_page(dev);
+}
+
+static void
+push_clip_stack(fz_device *dev, const fz_rect *rect)
+{
+	if (dev->scissor_len == dev->scissor_cap)
+	{
+		int newmax = dev->scissor_cap * 2;
+		if (newmax == 0)
+			newmax = 4;
+		dev->scissor = fz_resize_array(dev->ctx, dev->scissor, newmax, sizeof(*dev->scissor));
+		dev->scissor_cap = newmax;
+	}
+	if (dev->scissor_len == 0)
+		dev->scissor[0] = *rect;
+	else
+	{
+		dev->scissor[dev->scissor_len+1] = dev->scissor[dev->scissor_len];
+		fz_intersect_rect(&dev->scissor[dev->scissor_len], rect);
+	}
+	dev->scissor_len++;
+}
+
+static void
+push_clip_stack_accumulate(fz_device *dev, const fz_rect *rect, int accumulate)
+{
+	if (accumulate <= 1)
+	{
+		dev->scissor_accumulator = *rect;
+		if (dev->scissor_len == dev->scissor_cap)
+		{
+			int newmax = dev->scissor_cap * 2;
+			if (newmax == 0)
+				newmax = 4;
+			dev->scissor = fz_resize_array(dev->ctx, dev->scissor, newmax, sizeof(*dev->scissor));
+			dev->scissor_cap = newmax;
+		}
+		fz_intersect_rect(&dev->scissor[dev->scissor_len], rect);
+		dev->scissor_len++;
+	}
+	else
+	{
+		if (dev->scissor_len <= 0)
+			return;
+		fz_union_rect(&dev->scissor_accumulator, rect);
+		fz_intersect_rect(&dev->scissor[dev->scissor_len-1], &dev->scissor_accumulator);
+	}
+}
+
+static void
+pop_clip_stack(fz_device *dev)
+{
+	if (dev->scissor_len > 0)
+		dev->scissor_len--;
 }
 
 void
@@ -81,6 +136,17 @@ fz_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_odd, c
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		{
+			if (rect == NULL)
+			{
+				fz_rect bbox;
+				fz_bound_path(ctx, path, NULL, ctm, &bbox);
+				push_clip_stack(dev, &bbox);
+			}
+			else
+				push_clip_stack(dev, rect);
+		}
 		if (dev->clip_path)
 			dev->clip_path(dev, path, rect, even_odd, ctm);
 	}
@@ -105,6 +171,17 @@ fz_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_strok
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		{
+			if (rect == NULL)
+			{
+				fz_rect bbox;
+				fz_bound_path(ctx, path, stroke, ctm, &bbox);
+				push_clip_stack(dev, &bbox);
+			}
+			else
+				push_clip_stack(dev, rect);
+		}
 		if (dev->clip_stroke_path)
 			dev->clip_stroke_path(dev, path, rect, stroke, ctm);
 	}
@@ -150,6 +227,12 @@ fz_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accumulate
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		{
+			fz_rect bbox;
+			fz_bound_text(ctx, text, NULL, ctm, &bbox);
+			push_clip_stack_accumulate(dev, &bbox, accumulate);
+		}
 		if (dev->clip_text)
 			dev->clip_text(dev, text, ctm, accumulate);
 	}
@@ -176,6 +259,12 @@ fz_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, cons
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		{
+			fz_rect bbox;
+			fz_bound_text(ctx, text, stroke, ctm, &bbox);
+			push_clip_stack_accumulate(dev, &bbox, 0);
+		}
 		if (dev->clip_stroke_text)
 			dev->clip_stroke_text(dev, text, stroke, ctm);
 	}
@@ -206,6 +295,8 @@ fz_pop_clip(fz_device *dev)
 			fz_throw(dev->ctx, FZ_ERROR_GENERIC, "%s", dev->errmess);
 		return;
 	}
+	if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		pop_clip_stack(dev);
 	if (dev->pop_clip)
 		dev->pop_clip(dev);
 }
@@ -251,6 +342,8 @@ fz_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, const f
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+			push_clip_stack(dev, rect);
 		if (dev->clip_image_mask)
 			dev->clip_image_mask(dev, image, rect, ctm);
 	}
@@ -275,6 +368,8 @@ fz_begin_mask(fz_device *dev, const fz_rect *area, int luminosity, fz_colorspace
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+			push_clip_stack(dev, area);
 		if (dev->begin_mask)
 			dev->begin_mask(dev, area, luminosity, colorspace, bc);
 	}
@@ -311,6 +406,8 @@ fz_begin_group(fz_device *dev, const fz_rect *area, int isolated, int knockout, 
 
 	fz_try(ctx)
 	{
+		if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+			push_clip_stack(dev, area);
 		if (dev->begin_group)
 			dev->begin_group(dev, area, isolated, knockout, blendmode, alpha);
 	}
@@ -334,6 +431,8 @@ fz_end_group(fz_device *dev)
 	}
 	if (dev->end_group)
 		dev->end_group(dev);
+	if (dev->hints & FZ_MAINTAIN_SCISSOR_STACK)
+		pop_clip_stack(dev);
 }
 
 void

@@ -116,6 +116,11 @@ struct fz_device_s
 
 	int error_depth;
 	char errmess[256];
+
+	int scissor_len;
+	int scissor_cap;
+	fz_rect *scissor;
+	fz_rect scissor_accumulator;
 };
 
 void fz_begin_page(fz_device *dev, const fz_rect *rect, const fz_matrix *ctm);
@@ -181,6 +186,7 @@ enum
 	FZ_IGNORE_IMAGE = 1,
 	FZ_IGNORE_SHADE = 2,
 	FZ_DONT_INTERPOLATE_IMAGES = 4,
+	FZ_MAINTAIN_SCISSOR_STACK = 8,
 };
 
 /*

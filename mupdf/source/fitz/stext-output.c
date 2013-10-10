@@ -258,7 +258,7 @@ fz_print_text_page_html(fz_context *ctx, fz_output *out, fz_text_page *page)
 				break;
 			default:
 				{
-					fz_buffer *buf = fz_image_as_png(ctx, image->image, image->image->w, image->image->h);
+					fz_buffer *buf = fz_new_png_from_image(ctx, image->image, image->image->w, image->image->h);
 					fz_printf(out, "image/png;base64,");
 					send_data_base64(out, buf);
 					fz_drop_buffer(ctx, buf);

@@ -1057,11 +1057,24 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 	return bounds;
 }
 
+void
+fz_run_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_device *dev)
+{
+	fz_display_list *list;
+	fz_matrix ctm;
+
+	list = font->t3lists[gid];
+	if (!list)
+		return;
+
+	fz_concat(&ctm, &font->t3matrix, trm);
+	fz_run_display_list(list, dev, &ctm, &fz_infinite_rect, NULL);
+}
+
 fz_pixmap *
 fz_render_t3_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_colorspace *model, const fz_irect *scissor)
 {
 	fz_display_list *list;
-	fz_matrix ctm;
 	fz_rect bounds;
 	fz_irect bbox;
 	fz_device *dev;
@@ -1099,10 +1112,19 @@ fz_render_t3_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, const fz_matr
 	glyph = fz_new_pixmap_with_bbox(ctx, model ? model : fz_device_gray(ctx), &bbox);
 	fz_clear_pixmap(ctx, glyph);
 
-	fz_concat(&ctm, &font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
-	fz_run_display_list(list, dev, &ctm, &fz_infinite_rect, NULL);
-	fz_free_device(dev);
+	fz_try(ctx)
+	{
+		fz_run_t3_glyph(ctx, font, gid, trm, dev);
+	}
+	fz_always(ctx)
+	{
+		fz_free_device(dev);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
 	if (!model)
 	{
