@@ -158,10 +158,8 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
         PostQuitMessage(0);
         return;
     }
-    if (hideMenu) {
-        w->isMenuHidden = true;
-        SetMenu(w->hwndFrame, NULL);
-    }
+    w->isMenuHidden = hideMenu;
+    SetMenu(w->hwndFrame, hideMenu ? NULL : w->menu);
 }
 
 static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -773,7 +771,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     gEbookWindows.Append(win);
     win::SetText(win->hwndFrame, winTitle);
     win->menu = BuildMenu(win);
-    win->isMenuHidden = winInfo->isMenuHidden;
+    win->isMenuHidden = winInfo ? winInfo->isMenuHidden : !gGlobalPrefs->showMenubar;
     if (!win->isMenuHidden)
         SetMenu(hwnd, win->menu);
 

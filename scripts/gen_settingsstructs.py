@@ -346,6 +346,10 @@ GlobalPrefs = [
 		"list of additional external viewers for various file types " +
 		"(can have multiple entries for the same format)",
 		expert=True),
+	Field("ShowMenubar", Bool, True,
+		"if false, the menu bar will be hidden for all newly opened windows " +
+		"(use F9 to show it until the window closes or Alt to show it just briefly)",
+		expert=True, version="2.5"),
 	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +

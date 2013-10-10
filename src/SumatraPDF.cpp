@@ -1230,7 +1230,9 @@ static WindowInfo* CreateWindowInfo()
 
     AssertCrash(!win->menu);
     win->menu = BuildMenu(win);
-    SetMenu(win->hwndFrame, win->menu);
+    win->isMenuHidden = !gGlobalPrefs->showMenubar;
+    if (!win->isMenuHidden)
+        SetMenu(win->hwndFrame, win->menu);
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
