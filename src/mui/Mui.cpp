@@ -53,6 +53,7 @@ void Initialize()
 void Destroy()
 {
     FreeControlCreators();
+    FreeLayoutCreators();
     css::Destroy();
     DestroyBase();
 }

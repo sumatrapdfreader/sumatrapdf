@@ -190,6 +190,7 @@ void DestroyEbookControls(EbookControls* ctrls)
 {
     delete ctrls->mainWnd;
     delete ctrls->topPart;
+    delete ctrls->pagesLayout;
     delete ctrls->muiDef;
     delete ctrls;
 }
