@@ -560,7 +560,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
-            if (win->isMenuHidden)
+            if (!wParam && win->isMenuHidden)
                 ShowHideMenuBar(win, true);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
