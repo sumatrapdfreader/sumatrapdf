@@ -8574,7 +8574,7 @@ const char * gTranslations_my =
   "Cetakan masih lagi dijalankan. Batalkan dan mulakan semula?\0"\
   "Mencetak halaman %d daripada %d...\0"\
   "Masalah mencetak\0"\
-  "&Nama semula ... \ tF2\0"\
+  "&Nama semula ...\tF2\0"\
   "Ingat &fail yang telah dibuka\0"\
   "Keluarkan daripada kegemaran\0"\
   "Padam halaman %s dari kegemaran\0"\

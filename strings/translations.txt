@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3b1687fd783700ee370509b6e18cec265fa6b12a
+bf9159f97fb69d4ff94a7205b67318ac140df274
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -13218,7 +13218,7 @@ ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
 ku:گۆڕینی &ناو...\tF2
 mk:Преименувај... \tF2
-my:&Nama semula ... \ tF2
+my:&Nama semula ...\tF2
 ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
 no:Gi nytt &navn... \tF2
