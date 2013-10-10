@@ -110,6 +110,7 @@ public:
 
     bool            infotipVisible;
     HMENU           menu;
+    bool            isMenuHidden; // not persisted at shutdown
 
     int             dpi;
     float           uiDPIFactor;

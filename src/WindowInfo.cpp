@@ -17,7 +17,7 @@
 #include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    dm(NULL), menu(NULL), hwndFrame(hwnd),
+    dm(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocVisible(false), tocRoot(NULL), tocKeepSelection(false),
     isFullScreen(false), presentation(PM_DISABLED), tocBeforeFullScreen(false),

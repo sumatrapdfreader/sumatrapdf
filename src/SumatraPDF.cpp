@@ -5310,6 +5310,18 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
+        case WM_SYSCOMMAND:
+            // temporarily show the menu bar if it has been hidden
+            if (wParam == SC_KEYMENU && win->isMenuHidden)
+                ShowHideMenuBar(win, true);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_EXITMENULOOP:
+            // hide the menu bar again if it was shown only temporarily
+            if (win->isMenuHidden)
+                ShowHideMenuBar(win, true);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
         case WM_CONTEXTMENU:
             // opening the context menu with a keyboard doesn't call the canvas'
             // WM_CONTEXTMENU, as it never has the focus (mouse right-clicks are
