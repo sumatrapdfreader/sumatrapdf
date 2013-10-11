@@ -428,12 +428,12 @@ static void GetMachineName(str::Str<char>& s)
     free(s2);
 }
 
-#define GFX_DRIVER_KEY_FMT L"SYSTEM\\ControlSet001\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
+#define GFX_DRIVER_KEY_FMT L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
 static void GetGraphicsDriverInfo(str::Str<char>& s)
 {
     // the info is in registry in:
-    // HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}}\0000\
+    // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
     //   DriverDesc REG_SZ
     //   DriverVersion REG_SZ
@@ -448,16 +448,17 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
         if (!v1)
             break;
         ScopedMem<char> v1a(str::conv::ToUtf8(v1));
-        s.AppendFmt("Graphics driver %d\r\n  DriverDesc: %s\r\n", i, v1);
+        s.AppendFmt("Graphics driver %d\r\n", i);
+        s.AppendFmt("  DriverDesc:         %s\r\n", v1);
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
         if (v1) {
             v1a.Set(str::conv::ToUtf8(v1));
-            s.AppendFmt("DriverVersion: %s\r\n", v1a);
+            s.AppendFmt("  DriverVersion:      %s\r\n", v1a);
         }
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
         if (v1) {
             v1a.Set(str::conv::ToUtf8(v1));
-            s.AppendFmt("UserModeDriverName: %s\r\n", v1a);
+            s.AppendFmt("  UserModeDriverName: %s\r\n", v1a);
         }
     }
 }
