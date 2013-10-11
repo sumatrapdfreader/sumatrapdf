@@ -428,6 +428,40 @@ static void GetMachineName(str::Str<char>& s)
     free(s2);
 }
 
+#define GFX_DRIVER_KEY_FMT L"SYSTEM\\ControlSet001\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
+
+static void GetGraphicsDriverInfo(str::Str<char>& s)
+{
+    // the info is in registry in:
+    // HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Class\{4D36E968-E325-11CE-BFC1-08002BE10318}}\0000\
+    //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
+    //   DriverDesc REG_SZ
+    //   DriverVersion REG_SZ
+    //   UserModeDriverName REG_MULTI_SZ
+    //
+    // There can be more than one driver, they are in 0000, 0001 etc.
+    for (int i=0; ; i++)
+    {
+        ScopedMem<WCHAR> key(str::Format(GFX_DRIVER_KEY_FMT, i));
+        ScopedMem<WCHAR> v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
+        // I assume that if I can't read the value, there are no more drivers
+        if (!v1)
+            break;
+        ScopedMem<char> v1a(str::conv::ToUtf8(v1));
+        s.AppendFmt("Graphics driver %d\r\n  DriverDesc: %s\r\n", i, v1);
+        v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
+        if (v1) {
+            v1a.Set(str::conv::ToUtf8(v1));
+            s.AppendFmt("DriverVersion: %s\r\n", v1a);
+        }
+        v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
+        if (v1) {
+            v1a.Set(str::conv::ToUtf8(v1));
+            s.AppendFmt("UserModeDriverName: %s\r\n", v1a);
+        }
+    }
+}
+
 static void GetLanguage(str::Str<char>& s)
 {
     char country[32] = { 0 }, lang[32] = { 0 };
@@ -454,10 +488,9 @@ static void GetSystemInfo(str::Str<char>& s)
 
     GetMachineName(s);
     GetLanguage(s);
+    GetGraphicsDriverInfo(s);
 
     // Note: maybe more information, like:
-    // * amount of memory used by Sumatra,
-    // * graphics card and its driver version
     // * processor capabilities (mmx, sse, sse2 etc.)
 }
 
