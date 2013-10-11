@@ -108,24 +108,22 @@ void MobiFormatter::HandleSpacing_Mobi(HtmlToken *t)
 // where recindex is the record number of pdb record
 // that holds the image (within image record array, not a
 // global record)
-// TODO: handle alt attribute (?)
 void MobiFormatter::HandleTagImg(HtmlToken *t)
 {
     // we allow formatting raw html which can't require doc
     if (!doc)
         return;
-
+    ImageData *img = NULL;
     AttrInfo *attr = t->GetAttrByName("recindex");
-    if (!attr)
-        return;
-    int n = 0;
-    if (!str::Parse(attr->val, attr->valLen, "%d", &n))
-        return;
-    ImageData *img = doc->GetImage(n);
-    if (!img)
-        return;
-
-    EmitImage(img);
+    if (attr) {
+        int n;
+        if (str::Parse(attr->val, attr->valLen, "%d", &n))
+            img = doc->GetImage(n);
+    }
+    if (img)
+        EmitImage(img);
+    else if ((attr = t->GetAttrByName("alt")) != NULL)
+        HandleText(attr->val, attr->valLen);
 }
 
 void MobiFormatter::HandleHtmlTag(HtmlToken *t)
@@ -159,13 +157,16 @@ void EpubFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!epubDoc);
     if (t->IsEndTag())
         return;
+    ImageData *img = NULL;
     AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = epubDoc->GetImageData(src, pagePath);
+    if (attr) {
+        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        img = epubDoc->GetImageData(src, pagePath);
+    }
     if (img)
         EmitImage(img);
+    else if ((attr = t->GetAttrByName("alt")) != NULL)
+        HandleText(attr->val, attr->valLen);
 }
 
 void EpubFormatter::HandleTagPagebreak(HtmlToken *t)
@@ -270,11 +271,12 @@ void Fb2Formatter::HandleTagImg(HtmlToken *t)
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
         return;
+    ImageData *img = NULL;
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = fb2Doc->GetImageData(src);
+    if (attr) {
+        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        img = fb2Doc->GetImageData(src);
+    }
     if (img)
         EmitImage(img);
 }
@@ -345,13 +347,16 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!htmlDoc);
     if (t->IsEndTag())
         return;
+    ImageData *img = NULL;
     AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = htmlDoc->GetImageData(src);
+    if (attr) {
+        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        img = htmlDoc->GetImageData(src);
+    }
     if (img)
         EmitImage(img);
+    else if ((attr = t->GetAttrByName("alt")) != NULL)
+        HandleText(attr->val, attr->valLen);
 }
 
 void HtmlFileFormatter::HandleTagLink(HtmlToken *t)

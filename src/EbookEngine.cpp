@@ -1302,13 +1302,16 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!chmDoc);
     if (t->IsEndTag())
         return;
+    ImageData *img = NULL;
     AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = chmDoc->GetImageData(src, pagePath);
+    if (attr) {
+        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        img = chmDoc->GetImageData(src, pagePath);
+    }
     if (img)
         EmitImage(img);
+    else if ((attr = t->GetAttrByName("alt")) != NULL)
+        HandleText(attr->val, attr->valLen);
 }
 
 void ChmFormatter::HandleTagPagebreak(HtmlToken *t)

@@ -168,6 +168,7 @@ protected:
     void UpdateTagNesting(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
+    void HandleText(const char *s, size_t sLen);
     // blank convenience methods to override
     virtual void HandleTagImg(HtmlToken *t) { }
     virtual void HandleTagPagebreak(HtmlToken *t) { }

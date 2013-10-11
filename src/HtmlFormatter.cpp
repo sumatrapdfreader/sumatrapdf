@@ -1195,9 +1195,13 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
 void HtmlFormatter::HandleText(HtmlToken *t)
 {
     CrashIf(!t->IsText());
-    bool skipped;
-    const char *curr = t->s;
-    const char *end = t->s + t->sLen;
+    HandleText(t->s, t->sLen);
+}
+
+void HtmlFormatter::HandleText(const char *s, size_t sLen)
+{
+    const char *curr = s;
+    const char *end = s + sLen;
 
     if (preFormatted) {
         // don't collapse whitespace and respect text newlines
@@ -1222,7 +1226,7 @@ void HtmlFormatter::HandleText(HtmlToken *t)
     while (curr < end) {
         // collapse multiple, consecutive white-spaces into a single space
         currReparseIdx = curr - htmlParser->Start();
-        skipped = SkipWs(curr, end);
+        bool skipped = SkipWs(curr, end);
         if (skipped)
             EmitElasticSpace();
 
