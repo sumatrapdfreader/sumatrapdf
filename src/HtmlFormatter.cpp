@@ -602,12 +602,12 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs)
     return imageY != -1;
 }
 
-void HtmlFormatter::EmitImage(ImageData *img)
+bool HtmlFormatter::EmitImage(ImageData *img)
 {
     CrashIf(!img->data);
     Size imgSize = BitmapSizeFromData(img->data, img->len);
     if (imgSize.Empty())
-        return;
+        return false;
 
     SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
     // move overly large images to a new line (if they don't fit entirely)
@@ -637,6 +637,8 @@ void HtmlFormatter::EmitImage(ImageData *img)
     RectF bbox(PointF(currX, 0), newSize);
     AppendInstr(DrawInstr::Image(img->data, img->len, bbox));
     currX += bbox.Width;
+
+    return true;
 }
 
 // add horizontal line (<hr> in html terms)

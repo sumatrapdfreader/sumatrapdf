@@ -1302,15 +1302,14 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!chmDoc);
     if (t->IsEndTag())
         return;
-    ImageData *img = NULL;
+    bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        img = chmDoc->GetImageData(src, pagePath);
+        ImageData *img = chmDoc->GetImageData(src, pagePath);
+        needAlt = !img || !EmitImage(img);
     }
-    if (img)
-        EmitImage(img);
-    else if ((attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
         HandleText(attr->val, attr->valLen);
 }
 

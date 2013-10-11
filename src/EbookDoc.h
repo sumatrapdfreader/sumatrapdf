@@ -162,6 +162,7 @@ class HtmlDoc {
     ScopedMem<WCHAR> copyright;
 
     bool Load();
+    char *LoadURL(const char *url, size_t *lenOut);
 
 public:
     HtmlDoc(const WCHAR *fileName);

@@ -114,10 +114,10 @@ inline char decode64(char c)
     return -1;
 }
 
-static char *Base64Decode(const char *s, const char *end, size_t *len)
+static char *Base64Decode(const char *s, size_t sLen, size_t *lenOut)
 {
-    size_t bound = (end - s) * 3 / 4;
-    char *result = AllocArray<char>(bound);
+    const char *end = s + sLen;
+    char *result = AllocArray<char>(sLen * 3 / 4);
     char *curr = result;
     unsigned char c = 0;
     int step = 0;
@@ -136,8 +136,8 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
         case 3: *curr++ = (c << 6) | (n >> 0); break;
         }
     }
-    if (len)
-        *len = curr - result;
+    if (lenOut)
+        *lenOut = curr - result;
     return result;
 }
 
@@ -149,6 +149,19 @@ static inline void AppendChar(str::Str<char>& htmlData, char c)
     case '"': htmlData.Append("&quot;"); break;
     default:  htmlData.Append(c); break;
     }
+}
+
+static char *DecodeDataURI(const char *url, size_t *lenOut)
+{
+    const char *comma = str::FindChar(url, ',');
+    if (!comma)
+        return NULL;
+    const char *data = comma + 1;
+    if (comma - url >= 12 && str::EqN(comma - 7, ";base64", 7))
+        return Base64Decode(data, str::Len(data), lenOut);
+    if (lenOut)
+        *lenOut = str::Len(data);
+    return str::Dup(data);
 }
 
 /* ********** EPUB ********** */
@@ -708,7 +721,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
         return;
 
     ImageData2 data = { 0 };
-    data.base.data = Base64Decode(tok->s, tok->s + tok->sLen, &data.base.len);
+    data.base.data = Base64Decode(tok->s, tok->sLen, &data.base.len);
     if (!data.base.data)
         return;
     data.id = str::Join("#", id);
@@ -1123,10 +1136,8 @@ ImageData *HtmlDoc::GetImageData(const char *id)
             return &images.At(i).base;
     }
 
-    ScopedMem<WCHAR> path(str::conv::FromUtf8(url));
-    str::TransChars(path, L"/", L"\\");
     ImageData2 data = { 0 };
-    data.base.data = file::ReadAll(path, &data.base.len);
+    data.base.data = LoadURL(url, &data.base.len);
     if (!data.base.data)
         return NULL;
     data.id = url.StealData();
@@ -1138,6 +1149,15 @@ char *HtmlDoc::GetFileData(const char *relPath, size_t *lenOut)
 {
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
     str::UrlDecodeInPlace(url);
+    return LoadURL(url, lenOut);
+}
+
+char *HtmlDoc::LoadURL(const char *url, size_t *lenOut)
+{
+    if (str::StartsWith(url, "data:"))
+        return DecodeDataURI(url, lenOut);
+    if (str::FindChar(url, ':'))
+        return NULL;
     ScopedMem<WCHAR> path(str::conv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");
     return file::ReadAll(path, lenOut);

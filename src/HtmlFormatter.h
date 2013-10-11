@@ -183,7 +183,7 @@ protected:
     bool  FlushCurrLine(bool isParagraphBreak);
     void  UpdateLinkBboxes(HtmlPage *page);
 
-    void  EmitImage(ImageData *img);
+    bool  EmitImage(ImageData *img);
     void  EmitHr();
     void  EmitTextRun(const char *s, const char *end);
     void  EmitElasticSpace();

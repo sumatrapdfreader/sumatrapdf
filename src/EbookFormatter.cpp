@@ -113,16 +113,16 @@ void MobiFormatter::HandleTagImg(HtmlToken *t)
     // we allow formatting raw html which can't require doc
     if (!doc)
         return;
-    ImageData *img = NULL;
+    bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("recindex");
     if (attr) {
         int n;
-        if (str::Parse(attr->val, attr->valLen, "%d", &n))
-            img = doc->GetImage(n);
+        if (str::Parse(attr->val, attr->valLen, "%d", &n)) {
+            ImageData *img = doc->GetImage(n);
+            needAlt = !img || !EmitImage(img);
+        }
     }
-    if (img)
-        EmitImage(img);
-    else if ((attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
         HandleText(attr->val, attr->valLen);
 }
 
@@ -157,15 +157,14 @@ void EpubFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!epubDoc);
     if (t->IsEndTag())
         return;
-    ImageData *img = NULL;
+    bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        img = epubDoc->GetImageData(src, pagePath);
+        ImageData *img = epubDoc->GetImageData(src, pagePath);
+        needAlt = !img || !EmitImage(img);
     }
-    if (img)
-        EmitImage(img);
-    else if ((attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
         HandleText(attr->val, attr->valLen);
 }
 
@@ -347,15 +346,14 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
     CrashIf(!htmlDoc);
     if (t->IsEndTag())
         return;
-    ImageData *img = NULL;
+    bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        img = htmlDoc->GetImageData(src);
+        ImageData *img = htmlDoc->GetImageData(src);
+        needAlt = !img || !EmitImage(img);
     }
-    if (img)
-        EmitImage(img);
-    else if ((attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
         HandleText(attr->val, attr->valLen);
 }
 
