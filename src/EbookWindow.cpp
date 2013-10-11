@@ -329,22 +329,6 @@ static void OnMenuViewFullscreen(EbookWindow* win)
         EnterFullScreen(win);
 }
 
-// show/hide top-level menu bar. This doesn't persist across launches
-// so that accidental removal of the menu isn't catastrophic
-static void ShowHideMenuBar(EbookWindow *win, bool temporary=false)
-{
-    CrashIf(!win->menu);
-    if (win->isFullScreen)
-        return;
-
-    HWND hwnd = win->hwndFrame;
-    bool hideMenu = GetMenu(hwnd) != NULL;
-    SetMenu(hwnd, hideMenu ? NULL : win->menu);
-
-    if (!temporary)
-        win->isMenuHidden = hideMenu;
-}
-
 static void OnMenuViewSinglePage(EbookWindow *win)
 {
     CrashIf(win->ebookController->IsSinglePage());
@@ -561,7 +545,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
             if (!wParam && win->isMenuHidden)
-                ShowHideMenuBar(win, true);
+                SetMenu(hwnd, NULL);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_TIMER:

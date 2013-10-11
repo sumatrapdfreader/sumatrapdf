@@ -5322,7 +5322,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
             if (!wParam && win->isMenuHidden)
-                ShowHideMenuBar(win, true);
+                SetMenu(hwnd, NULL);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CONTEXTMENU:

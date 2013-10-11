@@ -751,16 +751,40 @@ void UpdateMenu(EbookWindow *win, HMENU m)
 
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
-void ShowHideMenuBar(WindowInfo *win, bool temporary)
+void ShowHideMenuBar(WindowInfo *win, bool showTemporarily)
 {
+    CrashIf(!win->menu);
     if (win->presentation || win->isFullScreen)
         return;
 
-    CrashIf(!win->menu);
     HWND hwnd = win->hwndFrame;
-    bool hideMenu = GetMenu(hwnd) != NULL;
-    SetMenu(hwnd, hideMenu ? NULL : win->menu);
 
-    if (!temporary)
-        win->isMenuHidden = hideMenu;
+    if (showTemporarily) {
+        SetMenu(hwnd, win->menu);
+        return;
+    }
+
+    bool hideMenu = !showTemporarily && GetMenu(hwnd) != NULL;
+    SetMenu(hwnd, hideMenu ? NULL : win->menu);
+    win->isMenuHidden = hideMenu;
+}
+
+// show/hide top-level menu bar. This doesn't persist across launches
+// so that accidental removal of the menu isn't catastrophic
+void ShowHideMenuBar(EbookWindow *win, bool showTemporarily)
+{
+    CrashIf(!win->menu);
+    if (win->isFullScreen)
+        return;
+
+    HWND hwnd = win->hwndFrame;
+
+    if (showTemporarily) {
+        SetMenu(hwnd, win->menu);
+        return;
+    }
+
+    bool hideMenu = !showTemporarily && GetMenu(hwnd) != NULL;
+    SetMenu(hwnd, hideMenu ? NULL : win->menu);
+    win->isMenuHidden = hideMenu;
 }
