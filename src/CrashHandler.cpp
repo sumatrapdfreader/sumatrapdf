@@ -41,7 +41,7 @@ extern void CrashHandlerMessage();
 extern void GetProgramInfo(str::Str<char>& s);
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
-For multi-thread safety, there is a per-heap lock taken insid HeapAlloc() etc.
+For multi-thread safety, there is a per-heap lock taken by HeapAlloc() etc.
 It's possible that a crash originates from  inside such functions after a lock
 has been taken. If we then try to allocate memory from the same heap, we'll
 deadlock and won't send crash report.
