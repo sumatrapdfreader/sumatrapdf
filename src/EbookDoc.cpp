@@ -12,32 +12,12 @@
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
-static char *DecodeTextToUtf8(const char *s)
-{
-    ScopedMem<char> tmp;
-    int one = 1;
-    bool isBE = !*(char *)&one;
-    if (str::StartsWith(s, isBE ? UTF16_BOM : UTF16BE_BOM)) {
-        // swap endianness to match the local architecture's
-        size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
-        tmp.Set((char *)memdup(s, byteCount));
-        for (size_t i = 0; i < byteCount; i += 2) {
-            Swap(tmp[i], tmp[i+1]);
-        }
-        s = tmp;
-    }
-    if (str::StartsWith(s, isBE ? UTF16BE_BOM : UTF16_BOM))
-        return str::ToMultiByte((WCHAR *)s, CP_UTF8);
-    if (str::StartsWith(s, UTF8_BOM))
-        return str::Dup(s);
-    UINT codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
-    return str::ToMultiByte(s, codePage, CP_UTF8);
-}
-
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure
 static UINT GetCodepageFromPI(const char *xmlPI)
 {
+    if (!str::StartsWith(xmlPI, "<?xml"))
+        return CP_ACP;
     const char *xmlPIEnd = str::Find(xmlPI, "?>");
     if (!xmlPIEnd)
         return CP_ACP;
@@ -62,6 +42,27 @@ static UINT GetCodepageFromPI(const char *xmlPI)
             return encodings[i].codePage;
     }
     return CP_ACP;
+}
+
+static char *DecodeTextToUtf8(const char *s, bool isXML=false)
+{
+    ScopedMem<char> tmp;
+    if (str::StartsWith(s, UTF16BE_BOM)) {
+        size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
+        tmp.Set((char *)memdup(s, byteCount));
+        for (size_t i = 0; i < byteCount; i += 2) {
+            Swap(tmp[i], tmp[i+1]);
+        }
+        s = tmp;
+    }
+    if (str::StartsWith(s, UTF16_BOM))
+        return str::ToMultiByte((WCHAR *)(s + 2), CP_UTF8);
+    if (str::StartsWith(s, UTF8_BOM))
+        return str::Dup(s + 3);
+    UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
+    if (CP_ACP == codePage)
+        codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
+    return str::ToMultiByte(s, codePage, CP_UTF8);
 }
 
 char *NormalizeURL(const char *url, const char *base)
@@ -306,6 +307,9 @@ bool EpubDoc::Load()
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         str::UrlDecodeInPlace(fullPath);
         ScopedMem<char> html(zip.GetFileDataByName(fullPath));
+        if (!html)
+            continue;
+        html.Set(DecodeTextToUtf8(html, true));
         if (!html)
             continue;
         // insert explicit page-breaks between sections including
@@ -617,33 +621,26 @@ Fb2Doc::~Fb2Doc()
 
 bool Fb2Doc::Load()
 {
-    size_t len;
     ScopedMem<char> data;
     if (stream && !fileName) {
-        data.Set((char *)GetDataFromStream(stream, &len));
+        data.Set((char *)GetDataFromStream(stream, NULL));
     }
     else {
         CrashIf(!fileName);
         ZipFile archive(fileName);
         isZipped = archive.GetFileCount() == 1;
         if (isZipped)
-            data.Set(archive.GetFileDataByIdx(0, &len));
+            data.Set(archive.GetFileDataByIdx(0));
         else
-            data.Set(file::ReadAll(fileName, &len));
+            data.Set(file::ReadAll(fileName, NULL));
     }
     if (!data)
         return false;
+    data.Set(DecodeTextToUtf8(data, true));
+    if (!data)
+        return false;
 
-    const char *xmlPI = str::Find(data, "<?xml");
-    if (xmlPI) {
-        UINT cp = GetCodepageFromPI(xmlPI);
-        if (cp != CP_ACP && cp != CP_UTF8) {
-            data.Set(str::ToMultiByte(data, cp, CP_UTF8));
-            len = str::Len(data);
-        }
-    }
-
-    HtmlPullParser parser(data, len);
+    HtmlPullParser parser(data, str::Len(data));
     HtmlToken *tok;
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
@@ -1082,13 +1079,7 @@ bool HtmlDoc::Load()
     ScopedMem<char> data(file::ReadAll(fileName, NULL));
     if (!data)
         return false;
-    if (str::StartsWith(data.Get(), "<?xml")) {
-        UINT cp = GetCodepageFromPI(data);
-        if (cp != CP_ACP)
-            htmlData.Set(str::ToMultiByte(data, cp, CP_UTF8));
-    }
-    if (!htmlData)
-        htmlData.Set(DecodeTextToUtf8(data));
+    htmlData.Set(DecodeTextToUtf8(data, true));
     if (!htmlData)
         return false;
 
@@ -1309,15 +1300,12 @@ bool TxtDoc::Load()
     int rfc;
     isRFC = str::Parse(path::GetBaseName(fileName), L"rfc%d.txt%$", &rfc) != NULL;
 
-    const char *curr = text;
-    if (str::StartsWith(text.Get(), UTF8_BOM))
-        curr += 3;
     const char *linkEnd = NULL;
     bool rfcHeader = false;
     int sectionCount = 0;
 
     htmlData.Append("<pre>");
-    while (*curr) {
+    for (const char *curr = text; *curr; curr++) {
         // similar logic to LinkifyText in PdfEngine.cpp
         if (linkEnd == curr) {
             htmlData.Append("</a>");
@@ -1344,7 +1332,6 @@ bool TxtDoc::Load()
             // only insert pagebreaks if not at the very beginning or end
             if (curr > text && *(curr + 2) && (*(curr + 3) || *(curr + 2) != '\n'))
                 htmlData.Append("<pagebreak />");
-            curr++;
             continue;
         }
 
@@ -1364,7 +1351,6 @@ bool TxtDoc::Load()
         }
 
         AppendChar(htmlData, *curr);
-        curr++;
     }
     if (linkEnd)
         htmlData.Append("</a>");
