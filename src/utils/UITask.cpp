@@ -28,7 +28,7 @@ namespace uitask {
 static HWND gTaskDispatchHwnd = NULL;
 
 #define UITASK_CLASS_NAME   L"UITask_Wnd_Class"
-#define WM_EXECUTE_TASK       (WM_USER + 1)
+#define WM_EXECUTE_TASK     (WM_USER + 1)
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -83,7 +83,7 @@ void Post(UITask *task)
 }
 
 // arg can be NULL
-void Post(UITaskFuncPtr func, void *arg)
+void PostFunc(UITaskFuncPtr func, void *arg)
 {
     CrashIf(!func);
     Post(new UITaskFunc(func, arg));

@@ -33,7 +33,7 @@ void    DrainQueue();
 // as soon as possible on ui thread.
 void    Post(UITask *);
 
-void    Post(UITaskFuncPtr, void *arg);
+void    PostFunc(UITaskFuncPtr, void *arg);
 }
 
 #endif
