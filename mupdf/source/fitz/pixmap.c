@@ -820,6 +820,9 @@ png_from_pixmap(fz_context *ctx, fz_pixmap *pix, int drop)
 	fz_var(out);
 	fz_var(pix2);
 
+	if (pix->w == 0 || pix->h == 0)
+		return NULL;
+
 	fz_try(ctx)
 	{
 		if (pix->colorspace && pix->colorspace != fz_device_gray(ctx) && pix->colorspace != fz_device_rgb(ctx))
@@ -832,7 +835,7 @@ png_from_pixmap(fz_context *ctx, fz_pixmap *pix, int drop)
 		}
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
-		fz_output_png(out, pix, 0);
+		fz_output_png(out, pix, 1);
 	}
 	fz_always(ctx)
 	{

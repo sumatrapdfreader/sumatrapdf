@@ -160,7 +160,8 @@ int main(int argc, char **argv)
 
 	fz_context *ctx = fz_new_context(NULL, &locks, FZ_STORE_UNLIMITED);
 
-	// Open the PDF, XPS or CBZ document.
+	// Open the PDF, XPS or CBZ document. Note, this binds doc to ctx.
+	// You must only ever use doc with ctx - never a clone of it!
 
 	fz_document *doc = fz_open_document(ctx, filename);
 
@@ -174,7 +175,9 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < threads; i++)
 	{
-		// Load the relevant page for each thread.
+		// Load the relevant page for each thread. Note, that this
+		// cannot be done on the worker threads, as each use of doc
+		// uses ctx, and only one thread can be using ctx at a time.
 
 		fz_page *page = fz_load_page(doc, i);
 
@@ -185,7 +188,9 @@ int main(int argc, char **argv)
 		fz_bound_page(doc, page, &bbox);
 
 		// Create a display list that will hold the drawing
-		// commands for the page.
+		// commands for the page. Once we have the display list
+		// this can safely be used on any other thread as it is
+		// not bound to a given context.
 
 		fz_display_list *list = fz_new_display_list(ctx);
 

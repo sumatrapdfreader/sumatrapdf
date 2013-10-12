@@ -726,11 +726,11 @@ svg_dev_fill_shade(fz_device *dev, fz_shade *shade, const fz_matrix *ctm, float 
 	if (dev->scissor_len == 0)
 		return;
 
-	if (fz_is_infinite_rect(&shade->bbox))
-		fz_round_rect(&bbox, &dev->scissor[dev->scissor_len-1]);
-	else
-		fz_round_rect(&bbox, fz_intersect_rect(fz_bound_shade(ctx, shade, ctm, &rect), &dev->scissor[dev->scissor_len-1]));
+	fz_round_rect(&bbox, fz_intersect_rect(fz_bound_shade(ctx, shade, ctm, &rect), &dev->scissor[dev->scissor_len-1]));
+	if (fz_is_empty_irect(&bbox))
+		return;
 	pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), &bbox);
+	fz_clear_pixmap(ctx, pix);
 
 	fz_try(ctx)
 	{
@@ -858,13 +858,20 @@ svg_dev_end_mask(fz_device *dev)
 static void
 svg_dev_begin_group(fz_device *dev, const fz_rect *bbox, int isolated, int knockout, int blendmode, float alpha)
 {
+	svg_device *sdev = (svg_device *)dev->user;
+	fz_output *out = sdev->out;
 
+	/* SVG 1.1 doesn't support adequate blendmodes/knockout etc, so just ignore it for now */
+	fz_printf(out, "<g>\n");
 }
 
 static void
 svg_dev_end_group(fz_device *dev)
 {
+	svg_device *sdev = (svg_device *)dev->user;
+	fz_output *out = sdev->out;
 
+	fz_printf(out, "</g>\n");
 }
 
 static int

@@ -5,6 +5,8 @@ Contents
 * Common function arguments
 * Error Handling
 * Multi-threading
+* Cloning the context
+* Bound contexts
 
 Basic MuPDF usage example
 =========================
@@ -207,7 +209,8 @@ multi-threaded operations run smoothly:
 
 	Most of the time it is simplest to just use a different
 	context for every thread; just create a new context at the
-	same time as you create the thread.
+	same time as you create the thread. For more details see
+	"Cloning the context" below.
 
 2)	"The document is bound to the context with which it is created."
 
@@ -215,7 +218,7 @@ multi-threaded operations run smoothly:
 	context; this means that only 1 thread can ever be accessing
 	the document at once. This does not mean that the document can
 	only ever be used from one thread, though in many cases this
-	is the simplest structure overall.
+	is the simplest structure overall. See "Bound contexts" below.
 
 3)	"Any device is bound to the context with which it is created."
 
@@ -224,7 +227,7 @@ multi-threaded operations run smoothly:
 	a document, it should be created with the same context as that
 	document was. This does not mean that the device can only ever
 	be used from one thread, though in many cases this is the
-	simplest structure overall.
+	simplest structure overall. See "Bound contexts" below.
 
 So, how does a multi-threaded example differ from a non-multithreaded
 one?
@@ -244,7 +247,9 @@ To make subsequent contexts, the user should NOT call fz_new_context
 again (as this will fail to share important resources such as the
 store and glyphcache), but should rather call fz_clone_context.
 Each of these cloned contexts can be freed by fz_free_context as
-usual.
+usual. They will share the important data structures (like store,
+glyph cache etc) with the original context, but will have their
+own exception stacks.
 
 To open a document, call fz_open_document as usual, passing a context
 and a filename; this context is bound to the document. All future
@@ -266,3 +271,86 @@ the long run.
 
 For an example of how to do multi-threading see doc/multi-threaded.c
 which has a main thread and one rendering thread per page.
+
+Cloning the context
+===================
+
+As described above, every context contains an exception stack which is
+manipulated during the course of nested fz_try/fz_catches. For obvious
+reasons the same exception stack cannot be used from more than one
+thread at a time.
+
+If, however, we simply created a new context (using fz_new_context) for
+every thread, we would end up with separate stores/glyph caches etc,
+which is not (generally) what is desired. MuPDF therefore provides a
+mechanism for "cloning" a context. This creates a new context that
+shares everything with the given context, except for the exception
+stack.
+
+A commonly used general scheme is therefore to create a 'base' context
+at program start up, and to clone this repeatedly to get new contexts
+that can be used on new threads.
+
+Bound contexts
+==============
+
+Certain objects, bind themselves to the context with which they are
+created. For instance, when a document (or device) is created it
+remembers the context which it was initially passed. The advantage
+of this is that any subsequent calls to the document do not need a
+context to be passed (and internally, we only need to pass a document
+pointer around rather than both a document and a context pointer).
+
+The downside to this is that care must be taken to only use the
+document pointer with the same context. For example consider the
+following pseudo code:
+
+	// Create the base context
+	base_ctx = fz_new_context(...);
+
+	// Open the document. doc remembers ctx.
+	doc = fz_open_document(ctx, ...);
+
+	// Create a new context, possibly to use in another thread
+	ctx2 = fz_clone_context(ctx);
+
+	// Get a page using that new context
+	fz_try(ctx2)
+	{
+		page = fz_load_page(doc, page_number);
+	}
+	fz_catch(ctx2)
+	{
+		// handle the error
+		...
+	}
+
+On the face of it, this seems fine, until you consider what happens
+internally to fz_load_page. The internals of fz_load_page will use
+error handling too, and so will fz_throw in some circumstances (and
+will probably do fz_try/fz_catch for themselves). In order to do so,
+they will retrieve the ctx that doc was created with - in the above
+example this will be base_ctx.
+
+This means that in the case of an error being thrown from within
+fz_load_page we'll end up with something like the following:
+
+	fz_try(ctx2)
+	{
+		...
+		// inside fz_load_page, an error occurs
+		fz_throw(base_ctx, ... };
+		...
+
+	}
+	fz_catch(ctx2)
+	{
+		// Handle the error
+	}
+
+The error will be thrown using the exception stack from base_ctx, but
+the caller has set up the code to catch the error using the exception
+stack from ctx2. Code that gets this wrong may well appear to work
+perfectly well for long periods, and then only fail with files that
+raise errors in particular places. This will cause the program to
+terminate abnormally (or crash), and can be very hard to debug.

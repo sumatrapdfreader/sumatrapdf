@@ -64,7 +64,7 @@ push_clip_stack(fz_device *dev, const fz_rect *rect)
 		dev->scissor[0] = *rect;
 	else
 	{
-		dev->scissor[dev->scissor_len+1] = dev->scissor[dev->scissor_len];
+		dev->scissor[dev->scissor_len] = dev->scissor[dev->scissor_len-1];
 		fz_intersect_rect(&dev->scissor[dev->scissor_len], rect);
 	}
 	dev->scissor_len++;
