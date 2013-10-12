@@ -12,9 +12,9 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
-#define PROPERTIES_RECT_PADDING     8
-#define PROPERTIES_TXT_DY_PADDING 2
+#define PROPERTIES_LEFT_RIGHT_SPACE_DX  8
+#define PROPERTIES_RECT_PADDING         8
+#define PROPERTIES_TXT_DY_PADDING       2
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
@@ -150,20 +150,38 @@ static WCHAR *FormatFileSize(size_t size)
     return str::Format(L"%s (%s %s)", n1, n2, _TR("Bytes"));
 }
 
-// format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
+// format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
 static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
 {
     RectD mediabox = engine->PageMediabox(pageNo);
-    SizeD size = engine->Transform(mediabox, pageNo, 1.0, rotation).Size();
+    SizeD size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
+
+    const WCHAR *formatName = L"";
+    SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
+    // common ISO 216 formats (metric)
+    if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
+        formatName = L" (A4)";
+    else if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
+        formatName = L" (A3)";
+    else if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
+        formatName = L" (A5)";
+    // common US/ANSI formats (imperial)
+    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
+        formatName = L" (Letter)";
+    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
+        formatName = L" (Legal)";
+    else if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
+        formatName = L" (Tabloid)";
 
     WCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
     double unitsPerInch = isMetric ? 2.54 : 1.0;
+    const WCHAR *unit = isMetric ? L"cm" : L"in";
 
-    double width = size.dx * unitsPerInch / engine->GetFileDPI();
-    double height = size.dy * unitsPerInch / engine->GetFileDPI();
+    double width = size.dx * unitsPerInch;
+    double height = size.dy * unitsPerInch;
     if (((int)(width * 100)) % 100 == 99)
         width += 0.01;
     if (((int)(height * 100)) % 100 == 99)
@@ -172,7 +190,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
     ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
-    return str::Format(L"%s x %s %s", strWidth, strHeight, isMetric ? L"cm" : L"in");
+    return str::Format(L"%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
 
 static WCHAR *FormatPdfFileStructure(Doc doc)
