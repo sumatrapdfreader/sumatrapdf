@@ -137,15 +137,16 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 class GoToTocLinkTask : public UITask
 {
     DocTocItem *tocItem;
-    HTREEITEM hItem;
     WindowInfo *win;
+    DisplayModel *dm;
 
 public:
-    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, HTREEITEM hItem) :
-        win(win), tocItem(tocItem), hItem(hItem) { }
+    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, DisplayModel *dm) :
+        win(win), tocItem(tocItem), dm(dm) { }
 
     virtual void Execute() {
-        if (!WindowInfoStillValid(win) || !win->IsDocLoaded() || !tocItem)
+        // tocItem is invalid if the DisplayModel has been replaced
+        if (!WindowInfoStillValid(win) || !win->tocLoaded || win->dm != dm)
             return;
 
         // make sure that the tree item that the user selected
@@ -173,7 +174,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
         return;
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        uitask::Post(new GoToTocLinkTask(win, tocItem, hItem));
+        uitask::Post(new GoToTocLinkTask(win, tocItem, win->dm));
     }
 }
 

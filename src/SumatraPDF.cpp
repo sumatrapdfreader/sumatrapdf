@@ -2637,6 +2637,8 @@ void CloseDocumentInWindow(WindowInfo *win)
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ClearTocBox(win);
     AbortFinding(win, true);
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = NULL;
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
     delete win->dm;
@@ -2648,6 +2650,7 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->userAnnots = NULL;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
     UpdateToolbarPageText(win, 0);
