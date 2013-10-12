@@ -1235,7 +1235,8 @@ void HtmlFormatter::HandleText(const char *s, size_t sLen)
         const char *text = curr;
         currReparseIdx = curr - htmlParser->Start();
         skipped = SkipNonWs(curr, end);
-        if (skipped)
+        // don't emit a single 'zero width no break space' (U+FEFF/UTF8_BOM)
+        if (skipped && (curr - text != 3 || !str::EqN(text, UTF8_BOM, 3)))
             EmitTextRun(text, curr);
     }
 }
