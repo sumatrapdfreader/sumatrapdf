@@ -4317,10 +4317,15 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
             if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
                 win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
                 SetCursor(gCursorHand);
-                return TRUE;
             }
+            else {
+                win.DeleteInfotip();
+                SetCursor(gCursorArrow);
+            }
+            return TRUE;
         }
     }
+
     if (!win.IsDocLoaded()) {
         win.DeleteInfotip();
         return FALSE;
