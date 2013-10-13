@@ -104,7 +104,7 @@ static void Test02()
     HtmlToken *t = parser.Next();
     utassert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
-    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "Last paragraph"));
+    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "Last paragraph"));
 }
 
 static void Test03()
@@ -112,11 +112,11 @@ static void Test03()
     const char *s = "a < b > c <> d <";
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
-    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "a "));
+    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "a "));
     t = parser.Next();
-    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "< b > c "));
+    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "< b > c "));
     t = parser.Next();
-    utassert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "<> d "));
+    utassert(t && t->IsText() && str::EqNIx(t->s, t->sLen, "<> d "));
     t = parser.Next();
     utassert(t && t->IsError() && HtmlToken::UnclosedTag == t->error);
     t = parser.Next();

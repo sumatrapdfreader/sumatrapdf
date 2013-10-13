@@ -8,10 +8,10 @@
 #include "UtAssert.h"
 
 static inline bool IsPropVal(const CssProperty *prop, const char *val) {
-    return StrEqNIx(prop->s, prop->sLen, val);
+    return str::EqNIx(prop->s, prop->sLen, val);
 }
 static inline bool IsSelector(const CssSelector *sel, const char *val) {
-    return StrEqNIx(sel->s, sel->sLen, val);
+    return str::EqNIx(sel->s, sel->sLen, val);
 }
 
 static void Test01()
@@ -69,7 +69,7 @@ static void Test03()
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_Any == sel->tag && IsSelector(sel, ".green") && StrEqNIx(sel->clazz, sel->clazzLen, "green"));
+    utassert(sel && Tag_Any == sel->tag && IsSelector(sel, ".green") && str::EqNIx(sel->clazz, sel->clazzLen, "green"));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, "green"));
     prop = parser.NextProperty();
@@ -78,7 +78,7 @@ static void Test03()
     ok = parser.NextRule();
     utassert(ok);
     sel = parser.NextSelector();
-    utassert(sel && Tag_P == sel->tag && IsSelector(sel, "p.green") && StrEqNIx(sel->clazz, sel->clazzLen, "green"));
+    utassert(sel && Tag_P == sel->tag && IsSelector(sel, "p.green") && str::EqNIx(sel->clazz, sel->clazzLen, "green"));
     prop = parser.NextProperty();
     utassert(prop && Css_Color == prop->type && IsPropVal(prop, "rgb(0,128,0)"));
     prop = parser.NextProperty();
