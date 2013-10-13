@@ -1,3 +1,4 @@
+require'setupluafiles'
 local winapi = require'winapi'
 require'winapi.window'
 

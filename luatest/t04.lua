@@ -1,6 +1,7 @@
 -- test gdiplus.lua
+require'setupluafiles'
 local winapi = require'winapi'
-require'winapi.gdiplus'
+require'gdiplus'
 local ffi = require'ffi'
 local C = ffi.C
 

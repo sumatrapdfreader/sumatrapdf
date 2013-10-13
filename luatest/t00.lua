@@ -1,9 +1,9 @@
+require'setupluafiles'
 local winapi = require'winapi'
+require'mywin'
 require'winapi.messageloop'
-require'winapi.vkcodes'
-require'winapi.keyboard'
 
-local c = winapi.Window{title = 'Main',
+local c = winapi.MyWindow{title = 'Main',
 	help_button = false, maximize_button = true, minimize_button = true,
 	autoquit = true, w = 500, h = 300, visible = false}
 c:show()

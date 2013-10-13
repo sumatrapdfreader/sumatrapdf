@@ -187,7 +187,7 @@ bool EbookFormattingThread::Format(int reparseIdx)
         pages[pageCount++] = pd;
         ++totalPageCount;
         // we send first 5 pages one by one and the rest in batches to minimize user-visible
-        // latency but also not overload ui thread
+        // latency and to not overload ui thread
         SendPagesIfNecessary(totalPageCount < 5, false, fromBeginning);
         CrashIf(pageCount >= dimof(pages));
     }
