@@ -388,7 +388,7 @@ def test_build_html_index():
     print("after write")
     sys.exit(1)
 
-g_email_to = ["kkowalczyk@gmail.com"]
+g_email_to = ["kkowalczyk@gmail.com", "zeniko@gmail.com"]
 
 def email_tests_failed(ver, err):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
