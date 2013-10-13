@@ -440,6 +440,18 @@ void StrTest()
         }
     }
 
+    utassert(!str::IsDigit('/'));
+    utassert(str::IsDigit('0'));
+    utassert(str::IsDigit('5'));
+    utassert(str::IsDigit('9'));
+    utassert(!str::IsDigit(':'));
+
+    utassert(!str::IsDigit((WCHAR)'/'));
+    utassert(str::IsDigit((WCHAR)'0'));
+    utassert(str::IsDigit((WCHAR)'5'));
+    utassert(str::IsDigit((WCHAR)'9'));
+    utassert(!str::IsDigit((WCHAR)':'));
+
     StrReplaceTest();
     StrSeqTest();
 }

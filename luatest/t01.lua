@@ -40,7 +40,7 @@ local function printHwndInfo(hwnd)
 	local dy = r.bottom - r.top
 	local n = windowNesting(hwnd)
 	local s = spaces(n)
-	print(string.format("%s%dx%d", s, dx, dy), txt)
+	print(string.format("%s%4dx%4d", s, dx, dy), txt)
 end
 
 local function printHwndInfo2(hwnd, indent)
@@ -54,7 +54,7 @@ local function printHwndInfo2(hwnd, indent)
 	local dy = r.bottom - r.top
 	local n = windowNesting(hwnd)
 	local s = spaces(indent)
-	print(string.format("%s%dx%d", s, dx, dy), txt)
+	print(string.format("%s%4d x%5d", s, dx, dy), txt)
 end
 
 local function printChildHwndInfo(idx, hwnd)
@@ -75,9 +75,18 @@ local function printWindows2()
 	local function printTopLevel(idx, hwnd)
 		printHwndInfo2(hwnd, 0)
 		local indent = 1
-
 	end
 	table.foreach(topLevelWindows, printTopLevelHwndInfo)
 end
 
-printWindows()
+local function printTopLevelWindows()
+	local topLevelWindows = winapi.EnumChildWindows(nil)
+	local function printTopLevel(idx, hwnd)
+		printHwndInfo2(hwnd, 0)
+		local indent = 1
+	end
+	table.foreach(topLevelWindows, printTopLevel)
+end
+
+printTopLevelWindows()
+-- printWindows()
