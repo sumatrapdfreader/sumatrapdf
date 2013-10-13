@@ -105,15 +105,14 @@ WCHAR * Format(const WCHAR *fmt, ...);
 inline bool IsWs(char c) { return ' ' == c || '\t' <= c && c <= '\r'; }
 inline bool IsWs(WCHAR c) { return iswspace(c); }
 
-// TODO: write a bench to verify
+// Note: I tried an optimization: return (unsigned)(c - '0') < 10;
+// but it seems to mis-compile in release builds
 inline bool IsDigit(char c) {
-    // equivalent to '0' <= c && c <= '9', but faster due to less comparisons
-    return (unsigned)(c - '0') < 10;
+    return '0' <= c && c <= '9';
 }
 
 inline bool IsDigit(WCHAR c) {
-    // equivalent to '0' <= c && c <= '9', but faster due to less comparisons
-    return (unsigned)(c - '0') < 10;
+    return '0' <= c && c <= '9';
 }
 
 size_t  TrimWS(WCHAR *s, TrimOpt opt=TrimBoth);
