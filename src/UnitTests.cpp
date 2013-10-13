@@ -165,15 +165,8 @@ static void UrlExtractTest()
     fileName.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
     utassert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
 }
+#endif
 
-void SumatraPDF_UnitTests()
-{
-    ParseCommandLineTest();
-    versioncheck_test();
-    BenchRangeTest();
-    UrlExtractTest();
-}
-#else
 static void hexstrTest()
 {
     unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
@@ -201,5 +194,10 @@ static void hexstrTest()
 void SumatraPDF_UnitTests()
 {
     hexstrTest();
-}
+#if 0
+    ParseCommandLineTest();
+    versioncheck_test();
+    BenchRangeTest();
+    UrlExtractTest();
 #endif
+}

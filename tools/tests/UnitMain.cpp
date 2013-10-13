@@ -15,6 +15,7 @@ extern void SvgPath_UnitTests();
 extern void BaseUtilTest();
 extern void BencTest();
 extern void ByteOrderTests();
+extern void CmdLineParserTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
 extern void FileUtilTest();
@@ -37,6 +38,7 @@ int main(int argc, char **argv)
     BaseUtilTest();
     BencTest();
     ByteOrderTests();
+    CmdLineParserTest();
     CssParser_UnitTests();
     DictTest();
     FileUtilTest();
