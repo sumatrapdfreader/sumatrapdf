@@ -195,7 +195,7 @@ char *ResolveHtmlEntities(const char *s, size_t len)
 
 bool AttrInfo::NameIs(const char *s) const
 {
-    return StrEqNIx(name, nameLen, s);
+    return str::EqNIx(name, nameLen, s);
 }
 
 // for now just ignores any namespace qualifier
@@ -206,12 +206,12 @@ bool AttrInfo::NameIsNS(const char *s, const char *ns) const
     CrashIf(!ns);
     const char *nameStart = (const char *)memchr(name, ':', nameLen);
     nameStart = nameStart ? nameStart + 1 : name;
-    return StrEqNIx(nameStart, nameLen - (nameStart - name), s);
+    return str::EqNIx(nameStart, nameLen - (nameStart - name), s);
 }
 
 bool AttrInfo::ValIs(const char *s) const
 {
-    return StrEqNIx(val, valLen, s);
+    return str::EqNIx(val, valLen, s);
 }
 
 void HtmlToken::SetTag(TokenType new_type, const char *new_s, const char *end)
@@ -252,7 +252,7 @@ bool HtmlToken::NameIsNS(const char *name, const char *ns) const
     CrashIf(!ns);
     const char *nameStart = (const char *)memchr(s, ':', nLen);
     nameStart = nameStart ? nameStart + 1 : s;
-    return StrEqNIx(nameStart, nLen - (nameStart - s), name);
+    return str::EqNIx(nameStart, nLen - (nameStart - s), name);
 }
 
 // reparse point is an address within html that we can
