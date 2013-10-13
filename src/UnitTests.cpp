@@ -2,10 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "AppTools.h"
+#include "AppUtil.h"
 #include "FileUtil.h"
-#include "ParseCommandLine.h"
-#include "StressTesting.h"
 #include "WinUtil.h"
 
 // must be last due to assert() over-write
@@ -15,6 +13,9 @@
 // either have to pull all the code in or make it more independent
 
 #if 0
+#include "ParseCommandLine.h"
+#include "StressTesting.h"
+
 static void ParseCommandLineTest()
 {
     {
@@ -113,6 +114,25 @@ static void ParseCommandLineTest()
     }
 }
 
+static void BenchRangeTest()
+{
+    utassert(IsBenchPagesInfo(L"1"));
+    utassert(IsBenchPagesInfo(L"2-4"));
+    utassert(IsBenchPagesInfo(L"5,7"));
+    utassert(IsBenchPagesInfo(L"6,8,"));
+    utassert(IsBenchPagesInfo(L"1-3,4,6-9,13"));
+    utassert(IsBenchPagesInfo(L"2-"));
+    utassert(IsBenchPagesInfo(L"loadonly"));
+
+    utassert(!IsBenchPagesInfo(L""));
+    utassert(!IsBenchPagesInfo(L"-2"));
+    utassert(!IsBenchPagesInfo(L"2--4"));
+    utassert(!IsBenchPagesInfo(L"4-2"));
+    utassert(!IsBenchPagesInfo(L"1-3,loadonly"));
+    utassert(!IsBenchPagesInfo(NULL));
+}
+#endif
+
 static void versioncheck_test()
 {
     utassert(IsValidProgramVersion("1"));
@@ -131,24 +151,6 @@ static void versioncheck_test()
     utassert(CompareVersion(L"1.3.0", L"2662") < 0);
 }
 
-static void BenchRangeTest()
-{
-    utassert(IsBenchPagesInfo(L"1"));
-    utassert(IsBenchPagesInfo(L"2-4"));
-    utassert(IsBenchPagesInfo(L"5,7"));
-    utassert(IsBenchPagesInfo(L"6,8,"));
-    utassert(IsBenchPagesInfo(L"1-3,4,6-9,13"));
-    utassert(IsBenchPagesInfo(L"2-"));
-    utassert(IsBenchPagesInfo(L"loadonly"));
-
-    utassert(!IsBenchPagesInfo(L""));
-    utassert(!IsBenchPagesInfo(L"-2"));
-    utassert(!IsBenchPagesInfo(L"2--4"));
-    utassert(!IsBenchPagesInfo(L"4-2"));
-    utassert(!IsBenchPagesInfo(L"1-3,loadonly"));
-    utassert(!IsBenchPagesInfo(NULL));
-}
-
 static void UrlExtractTest()
 {
     utassert(!ExtractFilenameFromURL(L""));
@@ -165,7 +167,6 @@ static void UrlExtractTest()
     fileName.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
     utassert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
 }
-#endif
 
 static void hexstrTest()
 {
@@ -193,11 +194,11 @@ static void hexstrTest()
 
 void SumatraPDF_UnitTests()
 {
-    hexstrTest();
 #if 0
     ParseCommandLineTest();
-    versioncheck_test();
     BenchRangeTest();
-    UrlExtractTest();
 #endif
+    versioncheck_test();
+    UrlExtractTest();
+    hexstrTest();
 }

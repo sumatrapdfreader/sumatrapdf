@@ -199,7 +199,7 @@ MAIN_UI_OBJS = \
 	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
-	$(OS)\AppTools.obj $(OS)\TableOfContents.obj \
+	$(OS)\AppTools.obj $(OS)\AppUtil.obj $(OS)\TableOfContents.obj \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj $(OS)\Selection.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \

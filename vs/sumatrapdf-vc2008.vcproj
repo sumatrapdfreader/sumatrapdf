@@ -973,6 +973,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\AppUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\AppUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\CrashHandler.cpp"
 					>
 				</File>

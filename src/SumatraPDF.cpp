@@ -8,6 +8,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "AppUtil.h"
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
 #include "DebugLog.h"

@@ -138,6 +138,7 @@ solution "all_tests"
       --"src/AppTools.*",
       --"src/ParseCommandLine.*",
       --"src/StressTesting.*",
+      "src/AppUtil*",
       "src/UnitTests.cpp",
       "src/mui/SvgPath*",
       "tools/tests/UnitMain.cpp"

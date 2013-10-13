@@ -66,6 +66,9 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\AppUtil.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -816,6 +819,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\AppTools.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\AppUtil.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">

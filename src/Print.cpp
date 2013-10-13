@@ -5,7 +5,7 @@
 #include "Print.h"
 
 #include "AppPrefs.h"
-#include "AppTools.h"
+#include "AppUtil.h"
 #include "Doc.h"
 #include "FileUtil.h"
 #include "Notifications.h"
