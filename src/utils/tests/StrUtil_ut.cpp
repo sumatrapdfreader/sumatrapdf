@@ -63,21 +63,29 @@ static void StrSeqTest()
 
 static void StrIsDigitTest()
 {
-    utassert(!str::IsDigit('/'));
-    utassert(str::IsDigit('0'));
-    utassert(str::IsDigit('5'));
-    utassert(str::IsDigit('9'));
-    utassert(!str::IsDigit(':'));
-    utassert(!str::IsDigit('.'));
-    utassert(!str::IsDigit('b'));
+    const char *nonDigits = "/:.bz{}";
+    const char *digits = "0123456789";
+    for (size_t i = 0; i < str::Len(nonDigits); i++) {
+#if 0
+        if (str::IsDigit(nonDigits[i])) {
+            char c = nonDigits[i];
+            printf("%c is incorrectly determined as a digit\n", c);
+        }
+#endif
+        utassert(!str::IsDigit(nonDigits[i]));
+    }
+    for (size_t i = 0; i < str::Len(digits); i++) {
+        utassert(str::IsDigit(digits[i]));
+    }
 
-    utassert(!str::IsDigit((WCHAR)'/'));
-    utassert(str::IsDigit((WCHAR)'0'));
-    utassert(str::IsDigit((WCHAR)'5'));
-    utassert(str::IsDigit((WCHAR)'9'));
-    utassert(!str::IsDigit((WCHAR)':'));
-    utassert(!str::IsDigit((WCHAR)'.'));
-    utassert(!str::IsDigit((WCHAR)'b'));
+    const WCHAR *nonDigitsW = L"/:.bz{}";
+    const WCHAR *digitsW = L"0123456789";
+    for (size_t i = 0; i < str::Len(nonDigitsW); i++) {
+        utassert(!str::IsDigit(nonDigitsW[i]));
+    }
+    for (size_t i = 0; i < str::Len(digitsW); i++) {
+        utassert(str::IsDigit(digitsW[i]));
+    }
 }
 
 void StrTest()

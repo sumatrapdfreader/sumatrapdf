@@ -56,5 +56,6 @@ int main(int argc, char **argv)
     WinUtilTest();
     SumatraPDF_UnitTests();
     SvgPath_UnitTests();
-    return utassert_print_results();
+    int res = utassert_print_results();
+    return res;
 }
