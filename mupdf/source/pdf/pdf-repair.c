@@ -588,7 +588,8 @@ pdf_repair_obj_stms(pdf_document *doc)
 			}
 			fz_catch(ctx)
 			{
-				fz_rethrow(ctx);
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2436 */
+				fz_warn(ctx, "ignoring broken object stream (%d 0 R)", i);
 			}
 		}
 	}
