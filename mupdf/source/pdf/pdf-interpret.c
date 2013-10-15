@@ -609,6 +609,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	fz_path *path;
 	fz_rect bbox;
 	softmask_save softmask = { NULL };
+	int knockout_group = 0;
 
 	if (dostroke) {
 		if (csi->dev->flags & (FZ_DEVFLAG_STROKECOLOR_UNDEFINED | FZ_DEVFLAG_LINEJOIN_UNDEFINED | FZ_DEVFLAG_LINEWIDTH_UNDEFINED))
@@ -645,6 +646,25 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 
 		if (dofill || dostroke)
 			pdf_begin_group(csi, &bbox, &softmask);
+
+		/* SumatraPDF: prevent regression (e.g. in blend mode 10.pdf and annotations galore.pdf) */
+		if (dofill && dostroke && 0)
+		{
+			/* We may need to push a knockout group */
+			if (gstate->stroke.alpha == 0)
+			{
+				/* No need for group, as stroke won't do anything */
+			}
+			else if (gstate->stroke.alpha == 1.0f && gstate->blendmode == FZ_BLEND_NORMAL)
+			{
+				/* No need for group, as stroke won't show up */
+			}
+			else
+			{
+				knockout_group = 1;
+				fz_begin_group(csi->dev, &bbox, 0, 1, FZ_BLEND_NORMAL, 1);
+			}
+		}
 
 		if (dofill)
 		{
@@ -715,6 +735,9 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				break;
 			}
 		}
+
+		if (knockout_group)
+			fz_end_group(csi->dev);
 
 		if (dofill || dostroke)
 			pdf_end_group(csi, &softmask);

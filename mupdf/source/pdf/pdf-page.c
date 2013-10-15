@@ -601,7 +601,7 @@ pdf_insert_page(pdf_document *doc, pdf_page *page, int at)
 			pdf_array_insert(kids, page_ref, i);
 		}
 
-		pdf_dict_puts(page->me, "Parent", page_ref);
+		pdf_dict_puts(page->me, "Parent", parent);
 
 		/* Adjust page counts */
 		while (parent)

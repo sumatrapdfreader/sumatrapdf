@@ -1333,13 +1333,33 @@ fz_device *pdf_new_pdf_device(pdf_document *doc, pdf_obj *contents, pdf_obj *res
 
 fz_device *pdf_page_write(pdf_document *doc, pdf_page *page)
 {
+	fz_context *ctx = doc->ctx;
 	pdf_obj *resources = pdf_dict_gets(page->me, "Resources");
 	fz_matrix ctm;
 	fz_pre_translate(fz_scale(&ctm, 1, -1), 0, page->mediabox.y0-page->mediabox.y1);
+
 	if (resources == NULL)
 	{
 		resources = pdf_new_dict(doc, 0);
 		pdf_dict_puts_drop(page->me, "Resources", resources);
+	}
+
+	if (page->contents == NULL)
+	{
+		pdf_obj *obj = pdf_new_dict(doc, 0);
+		fz_try(ctx)
+		{
+			page->contents = pdf_new_ref(doc, obj);
+			pdf_dict_puts(page->me, "Contents", obj);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(obj);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
 	}
 
 	return pdf_new_pdf_device(doc, page->contents, resources, &ctm);

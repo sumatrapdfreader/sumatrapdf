@@ -160,7 +160,7 @@ fz_knockout_begin(fz_draw_device *dev)
 			fz_clear_pixmap(ctx, dest);
 	}
 
-	if (state->blendmode == 0 && isolated)
+	if ((state->blendmode & FZ_BLEND_MODEMASK) == 0 && isolated)
 	{
 		/* We can render direct to any existing shape plane. If there
 		 * isn't one, we don't need to make one. */

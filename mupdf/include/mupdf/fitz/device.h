@@ -73,6 +73,27 @@ enum
 int fz_lookup_blendmode(char *name);
 char *fz_blendmode_name(int blendmode);
 
+typedef struct fz_device_container_stack_s fz_device_container_stack;
+
+struct fz_device_container_stack_s
+{
+	fz_rect scissor;
+	int flags;
+	int user;
+};
+
+enum
+{
+	fz_device_container_stack_is_clip_path = 1,
+	fz_device_container_stack_is_clip_stroke_path = 2,
+	fz_device_container_stack_is_clip_text = 4,
+	fz_device_container_stack_is_clip_stroke_text = 8,
+	fz_device_container_stack_is_clip_image_mask = 16,
+	fz_device_container_stack_in_mask = 32,
+	fz_device_container_stack_is_mask = 64,
+	fz_device_container_stack_is_group = 128,
+};
+
 struct fz_device_s
 {
 	int hints;
@@ -117,9 +138,9 @@ struct fz_device_s
 	int error_depth;
 	char errmess[256];
 
-	int scissor_len;
-	int scissor_cap;
-	fz_rect *scissor;
+	int container_len;
+	int container_cap;
+	fz_device_container_stack *container;
 	fz_rect scissor_accumulator;
 };
 
@@ -186,7 +207,7 @@ enum
 	FZ_IGNORE_IMAGE = 1,
 	FZ_IGNORE_SHADE = 2,
 	FZ_DONT_INTERPOLATE_IMAGES = 4,
-	FZ_MAINTAIN_SCISSOR_STACK = 8,
+	FZ_MAINTAIN_CONTAINER_STACK = 8,
 };
 
 /*
