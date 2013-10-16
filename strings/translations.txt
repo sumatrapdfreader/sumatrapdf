@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bf9159f97fb69d4ff94a7205b67318ac140df274
+bb75661f973405d0045182a6f3a1f7624335d907
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -963,7 +963,7 @@ uk:Перша сторінка\tHome
 uz:&Birinchi bet\tHome
 vn:Trang đầu\tHome
 :&Fit pages to printable area
-am:&Հարմարեցնել էջերը տպման համար
+am:&Հարմարեցնել էջերը տպելու համար
 ar:&محاذاة الصفحات لموافقة مساحة الطباعة
 az:Səhifələri çap sa&həsinə sığışdır
 bg:&Оразмери страниците в полето за отпечатване
@@ -14521,7 +14521,7 @@ uz:Mavjud bo'lganda &xatcho'plar panelini ko'rsatish
 vn:Hiện chỉ dấu sách nếu có
 :Single Page
 af:Enkele Bladsy
-am:&Մեկ էջ
+am:Մեկ էջ
 ar:صفحة واحدة
 az:Tək səhifə
 bg:Една страница
