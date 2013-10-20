@@ -311,10 +311,10 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, bool silent=false)
+void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f, bool silent=false)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-        RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
+        RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, 0);
         if (!bmp || silent) {
             delete bmp;
             continue;
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:
-        ErrOut("%s <filename> [-pwd <password>][-full][-alt][-render <path-%%d.tga>]\n",
+        ErrOut("%s <filename> [-pwd <password>][-full][-render <path-%%d.tga>]\n",
             path::GetBaseName(argList.At(0)));
         return 2;
     }
@@ -384,6 +384,7 @@ Usage:
     bool fullDump = false;
     WCHAR *password = NULL;
     WCHAR *renderPath = NULL;
+    float renderZoom = 1.f;
     bool useAlternateHandlers = false;
     bool loadOnly = false, silent = false;
     int breakAlloc = 0;
@@ -393,8 +394,16 @@ Usage:
             fullDump = true;
         else if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count())
             password = argList.At(++i);
-        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count())
+        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count()) {
+            // optional zoom argument (e.g. -render 50% file.pdf)
+            float zoom;
+            if (i + 2 < argList.Count() && str::Parse(argList.At(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+                renderZoom = zoom / 100.f;
+                i++;
+            }
             renderPath = argList.At(++i);
+        }
+        // -alt is for debugging alternate rendering methods
         else if (str::Eq(argList.At(i), L"-alt"))
             useAlternateHandlers = true;
         // -loadonly and -silent are only meant for profiling
@@ -441,7 +450,7 @@ Usage:
     if (!loadOnly)
         DumpData(engine, fullDump);
     if (renderPath)
-        RenderDocument(engine, renderPath, silent);
+        RenderDocument(engine, renderPath, renderZoom, silent);
     delete engine;
 
 #ifdef DEBUG
