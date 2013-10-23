@@ -686,10 +686,12 @@ static int GetPolicies(bool isRestricted)
 void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
-    if (!ds || !bmp) {
+    CrashIf(!ds || bmp && bmp->Size().IsEmpty());
+    if (!ds || !bmp || bmp->Size().IsEmpty()) {
         delete bmp;
         return;
     }
+    delete ds->thumbnail;
     ds->thumbnail = bmp;
     SaveThumbnail(*ds);
 }

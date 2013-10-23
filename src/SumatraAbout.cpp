@@ -806,8 +806,14 @@ static bool LoadThumbnail(DisplayState& ds)
     if (!bmpPath)
         return false;
 
-    ds.thumbnail = LoadRenderedBitmap(bmpPath);
-    return ds.thumbnail != NULL;
+    RenderedBitmap *bmp = LoadRenderedBitmap(bmpPath);
+    if (!bmp || bmp->Size().IsEmpty()) {
+        delete bmp;
+        return false;
+    }
+
+    ds.thumbnail = bmp;
+    return true;
 }
 
 bool HasThumbnail(DisplayState& ds)
