@@ -32,10 +32,8 @@ void    FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const WCHAR *clsNa
 inline void MoveWindow(HWND hwnd, RectI rect) { MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE); }
 
 bool   IsAppThemed();
-WORD   GetWindowsVersion();
 bool   IsRunningInWow64();
-
-inline bool IsVistaOrGreater() { return GetWindowsVersion() >= 0x0600; }
+bool   IsVistaOrGreater();
 
 void   LogLastError(DWORD err=0);
 bool   RegKeyExists(HKEY keySub, const WCHAR *keyName);

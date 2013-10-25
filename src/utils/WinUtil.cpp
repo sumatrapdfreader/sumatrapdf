@@ -62,10 +62,15 @@ bool IsAppThemed()
     return false;
 }
 
-WORD GetWindowsVersion()
+/* Vista is major: 6, minor: 0 */
+bool IsVistaOrGreater()
 {
-    DWORD ver = GetVersion();
-    return MAKEWORD(HIBYTE(ver), LOBYTE(ver));
+    OSVERSIONINFOEX osver = { 0 };
+    ULONGLONG condMask = 0;
+    osver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    osver.dwMajorVersion = 6;
+    VER_SET_CONDITION(condMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    return VerifyVersionInfo(&osver, VER_MAJORVERSION, condMask);
 }
 
 bool IsRunningInWow64()
