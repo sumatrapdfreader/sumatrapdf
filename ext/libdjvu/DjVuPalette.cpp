@@ -14,7 +14,7 @@
 //C- but WITHOUT ANY WARRANTY; without even the implied warranty of
 //C- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //C- GNU General Public License for more details.
-//C-
+//C- 
 //C- DjVuLibre-3.5 is derived from the DjVu(r) Reference Library from
 //C- Lizardtech Software.  Lizardtech Software has authorized us to
 //C- replace the original DjVu(r) Reference Library notice by the following
@@ -35,16 +35,16 @@
 //C- | The computer code originally released by LizardTech under this
 //C- | license and unmodified by other parties is deemed "the LIZARDTECH
 //C- | ORIGINAL CODE."  Subject to any third party intellectual property
-//C- | claims, LizardTech grants recipient a worldwide, royalty-free,
-//C- | non-exclusive license to make, use, sell, or otherwise dispose of
-//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the
-//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
-//C- | General Public License.   This grant only confers the right to
-//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
-//C- | the extent such infringement is reasonably necessary to enable
-//C- | recipient to make, have made, practice, sell, or otherwise dispose
-//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
-//C- | any greater extent that may be necessary to utilize further
+//C- | claims, LizardTech grants recipient a worldwide, royalty-free, 
+//C- | non-exclusive license to make, use, sell, or otherwise dispose of 
+//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
+//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
+//C- | General Public License.   This grant only confers the right to 
+//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
+//C- | the extent such infringement is reasonably necessary to enable 
+//C- | recipient to make, have made, practice, sell, or otherwise dispose 
+//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
+//C- | any greater extent that may be necessary to utilize further 
 //C- | modifications or combinations.
 //C- |
 //C- | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -90,19 +90,18 @@ namespace DJVU {
 #define MAXPALETTESIZE 65535 // Limit for a 16 bit unsigned read.
 
 
-inline unsigned char
-umax(unsigned char a, unsigned char b)
+inline unsigned char 
+umax(unsigned char a, unsigned char b) 
 { return (a>b) ? a : b; }
 
-inline unsigned char
-umin(unsigned char a, unsigned char b)
+inline unsigned char 
+umin(unsigned char a, unsigned char b) 
 { return (a>b) ? b : a; }
-
 
 /* SumatraPDF: in VS 2013 math.h already defines fmin */
 #if !defined(_MSC_VER) || (_MSC_VER < 1800)
-inline float
-fmin(float a, float b)
+inline float 
+fmin(float a, float b) 
 { return (a>b) ? b : a; }
 #endif
 
@@ -122,7 +121,7 @@ DjVuPalette::~DjVuPalette()
   delete pmap;
 }
 
-DjVuPalette&
+DjVuPalette& 
 DjVuPalette::operator=(const DjVuPalette &ref)
 {
   if (this != &ref)
@@ -181,7 +180,7 @@ struct PData
   int w;
 };
 
-struct PBox
+struct PBox 
 {
   PData *data;
   int colors;
@@ -229,10 +228,10 @@ DjVuPalette::compute_palette(int maxcolors, int minboxsize)
     G_THROW( ERR_MSG("DjVuPalette.no_color") );
   if (maxcolors<1 || maxcolors>MAXPALETTESIZE)
     G_THROW( ERR_MSG("DjVuPalette.many_colors") );
-
-  // Paul Heckbert: "Color Image Quantization for Frame Buffer Display",
+  
+  // Paul Heckbert: "Color Image Quantization for Frame Buffer Display", 
   // SIGGRAPH '82 Proceedings, page 297.  (also in ppmquant)
-
+  
   // Collect histogram colors
   int sum = 0;
   int ncolors = 0;
@@ -264,7 +263,7 @@ DjVuPalette::compute_palette(int maxcolors, int minboxsize)
       // Find suitable box
       GPosition p;
       for (p=boxes; p; ++p)
-        if (boxes[p].colors>=2 && boxes[p].boxsize>minboxsize)
+        if (boxes[p].colors>=2 && boxes[p].boxsize>minboxsize) 
           break;
       if (! p)
         break;
@@ -287,7 +286,7 @@ DjVuPalette::compute_palette(int maxcolors, int minboxsize)
         }
       }
       // Determine split direction and sort
-      int bl = pmax[0]-pmin[0];
+      int bl = pmax[0]-pmin[0]; 
       int gl = pmax[1]-pmin[1];
       int rl = pmax[2]-pmin[2];
       splitbox.boxsize = (bl>gl ? (rl>bl ? rl : bl) : (rl>gl ? rl : gl));
@@ -361,7 +360,7 @@ DjVuPalette::compute_palette(int maxcolors, int minboxsize)
 
 
 
-int
+int 
 DjVuPalette::compute_pixmap_palette(const GPixmap &pm, int ncolors, int minboxsize)
 {
   // Prepare histogram
@@ -394,7 +393,7 @@ DjVuPalette::allocate_pmap()
     pmap = new GMap<int,int>;
 }
 
-int
+int 
 DjVuPalette::color_to_index_slow(const unsigned char *bgr)
 {
   PColor *pal = palette;
@@ -431,7 +430,7 @@ DjVuPalette::color_to_index_slow(const unsigned char *bgr)
 
 #ifndef NEED_DECODER_ONLY
 
-void
+void 
 DjVuPalette::quantize(GPixmap &pm)
 {
   { // extra nesting for windows
@@ -444,7 +443,7 @@ DjVuPalette::quantize(GPixmap &pm)
   }
 }
 
-int
+int 
 DjVuPalette::compute_palette_and_quantize(GPixmap &pm, int maxcolors, int minboxsize)
 {
   int result = compute_pixmap_palette(pm, maxcolors, minboxsize);
@@ -452,7 +451,7 @@ DjVuPalette::compute_palette_and_quantize(GPixmap &pm, int maxcolors, int minbox
   return result;
 }
 
-void
+void 
 DjVuPalette::color_correct(double corr)
 {
   const int palettesize = palette.size();
@@ -463,7 +462,7 @@ DjVuPalette::color_correct(double corr)
       GTArray<GPixel> pix(0,palettesize-1);
       GPixel *r = pix;
       PColor *q = palette;
-      for (i=0; i<palettesize; i++)
+      for (i=0; i<palettesize; i++) 
         {
           r[i].b = q[i].p[0];
           r[i].g = q[i].p[1];
@@ -472,7 +471,7 @@ DjVuPalette::color_correct(double corr)
       // Apply color correction
       GPixmap::color_correct(corr, r, palettesize);
       // Restore colors
-      for (i=0; i<palettesize; i++)
+      for (i=0; i<palettesize; i++) 
         {
           q[i].p[0] = r[i].b;
           q[i].p[1] = r[i].g;
@@ -504,7 +503,7 @@ DjVuPalette::encode_rgb_entries(ByteStream &bs) const
   }
 }
 
-void
+void 
 DjVuPalette::encode(GP<ByteStream> gbs) const
 {
   ByteStream &bs=*gbs;
@@ -537,7 +536,7 @@ DjVuPalette::encode(GP<ByteStream> gbs) const
     }
 }
 
-void
+void 
 DjVuPalette::decode_rgb_entries(ByteStream &bs, const int palettesize)
 {
   palette.resize(0,palettesize-1);
@@ -554,7 +553,7 @@ DjVuPalette::decode_rgb_entries(ByteStream &bs, const int palettesize)
   }
 }
 
-void
+void 
 DjVuPalette::decode(GP<ByteStream> gbs)
 {
   ByteStream &bs=*gbs;
@@ -598,7 +597,7 @@ DjVuPalette::decode(GP<ByteStream> gbs)
         {
           short s = bsb.read16();
           if (s<0 || s>=palettesize)
-            G_THROW( ERR_MSG("DjVuPalette.bad_palette") );
+            G_THROW( ERR_MSG("DjVuPalette.bad_palette") );        
           colordata[d] = s;
         }
       }

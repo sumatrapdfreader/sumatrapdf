@@ -94,6 +94,26 @@ diff -rPu5 libdjvu.orig\DjVuMessage.cpp libdjvu\DjVuMessage.cpp
      GMap<GUTF8String, void *> map;
      GUTF8String m(MessageFile);
      errors=getbodies(paths,m,body,map);
+diff -rPu5 libdjvu.orig\DjVuPalette.cpp libdjvu\DjVuPalette.cpp
+--- libdjvu.orig\DjVuPalette.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\DjVuPalette.cpp	Fri Oct 25 13:39:08 2013
+@@ -96,13 +96,16 @@
+ 
+ inline unsigned char 
+ umin(unsigned char a, unsigned char b) 
+ { return (a>b) ? b : a; }
+ 
++/* SumatraPDF: in VS 2013 math.h already defines fmin */
++#if !defined(_MSC_VER) || (_MSC_VER < 1800)
+ inline float 
+ fmin(float a, float b) 
+ { return (a>b) ? b : a; }
++#endif
+ 
+ 
+ 
+ // ------- DJVUPALETTE
+ 
 diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
 --- libdjvu.orig\GException.cpp	Tue May 08 04:56:53 2012
 +++ libdjvu\GException.cpp	Tue May 14 21:21:21 2013

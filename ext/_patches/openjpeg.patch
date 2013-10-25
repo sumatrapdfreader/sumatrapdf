@@ -324,12 +324,17 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define USE_JPIP
 diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
 --- openjpeg.orig\opj_includes.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_includes.h	Fri Jul 26 13:49:55 2013
-@@ -130,11 +130,11 @@
++++ openjpeg\opj_includes.h	Fri Oct 25 13:42:39 2013
+@@ -127,14 +127,14 @@
+ 	#else
+ 		#define restrict /* restrict */
+ 	#endif
  #endif
  
- /* MSVC and Borland C do not have lrintf */
- #if defined(_MSC_VER) || defined(__BORLANDC__)
+-/* MSVC and Borland C do not have lrintf */
+-#if defined(_MSC_VER) || defined(__BORLANDC__)
++/* SumatraPDF: MSVC before 2013 and Borland C do not have lrintf */
++#if defined(_MSC_VER) && (_MSC_VER < 1800) || defined(__BORLANDC__)
  static INLINE long lrintf(float f){
 -#ifdef _M_X64
 +#ifndef _M_IX86
