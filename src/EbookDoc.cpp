@@ -262,6 +262,7 @@ bool EpubDoc::Load()
             images.Append(data);
         }
         else if (str::Eq(mediatype, L"application/xhtml+xml") ||
+                 str::Eq(mediatype, L"application/html+xml") ||
                  str::Eq(mediatype, L"application/x-dtbncx+xml") ||
                  str::Eq(mediatype, L"text/html") ||
                  str::Eq(mediatype, L"text/xml")) {
