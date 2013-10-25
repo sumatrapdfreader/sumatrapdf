@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
- * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France 
+ * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -103,8 +103,8 @@
 #endif
 
 /*
-The inline keyword is supported by C99 but not by C90. 
-Most compilers implement their own version of this keyword ... 
+The inline keyword is supported by C99 but not by C90.
+Most compilers implement their own version of this keyword ...
 */
 #ifndef INLINE
 	#if defined(_MSC_VER)
@@ -113,9 +113,9 @@ Most compilers implement their own version of this keyword ...
 		#define INLINE __inline__
 	#elif defined(__MWERKS__)
 		#define INLINE inline
-	#else 
+	#else
 		/* add other compilers here ... */
-		#define INLINE 
+		#define INLINE
 	#endif /* defined(<Compiler>) */
 #endif /* INLINE */
 
@@ -129,19 +129,19 @@ Most compilers implement their own version of this keyword ...
 	#endif
 #endif
 
-/* MSVC and Borland C do not have lrintf */
-#if defined(_MSC_VER) || defined(__BORLANDC__)
+/* MSVC before 2013 not have lrintf */
+#if defined(_MSC_VER) && (_MSC_VER < 1800)
 static INLINE long lrintf(float f){
 #ifndef _M_IX86
     return (long)((f>0.0f) ? (f + 0.5f):(f -0.5f));
 #else
     int i;
- 
+
     _asm{
         fld f
         fistp i
     };
- 
+
     return i;
 #endif
 }
