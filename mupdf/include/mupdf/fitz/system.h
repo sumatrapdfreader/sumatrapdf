@@ -88,7 +88,10 @@ typedef unsigned __int64 uint64_t;
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
+/* SumatraPDF: VS 2013 has isnan in math.h */
+#if _MSC_VER < 1800
 #define isnan _isnan
+#endif
 #define hypotf _hypotf
 
 #define fopen fz_fopen_utf8
