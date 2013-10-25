@@ -398,6 +398,9 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     }
 
     ScopedMem<char> url(NormalizeURL(id, pagePath));
+    // some EPUB producers use wrong path separators
+    if (str::FindChar(url, '\\'))
+        str::TransChars(url, "\\", "/");
     for (size_t i = 0; i < images.Count(); i++) {
         ImageData2 *img = &images.At(i);
         if (str::Eq(img->id, url)) {
@@ -407,6 +410,19 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
                 return &img->base;
         }
     }
+
+    // try to also load images which aren't registered in the manifest
+    ImageData2 data = { 0 };
+    ScopedMem<WCHAR> imgPath(str::conv::FromUtf8(url));
+    str::UrlDecodeInPlace(imgPath);
+    data.idx = zip.GetFileIndex(imgPath);
+    if (data.idx != (size_t)-1) {
+        data.id = str::Dup(url);
+        data.base.data = zip.GetFileDataByIdx(data.idx, &data.base.len);
+        images.Append(data);
+        return &images.Last().base;
+    }
+
     return NULL;
 }
 
