@@ -695,6 +695,11 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         TilePosition tile = queue.At(0);
         queue.RemoveAt(0);
         RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
+        if (tileOnScreen.IsEmpty()) {
+            // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
+            renderDelayMin = min(RENDER_DELAY_FAILED, renderDelayMin);
+            continue;
+        }
         tileOnScreen = pageInfo->pageOnScreen.Intersect(tileOnScreen);
         RectI isect = bounds.Intersect(tileOnScreen);
         if (isect.IsEmpty())
