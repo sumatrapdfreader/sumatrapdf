@@ -1085,14 +1085,14 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
 
             pdf_obj *kid = pdf_array_get(top.kids, top.i);
             char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
-            if (str::Eq(type, "Page")) {
+            if (str::Eq(type, "Page") || str::IsEmpty(type) && pdf_dict_gets(kid, "MediaBox")) {
                 if (page_no >= pdf_count_pages(doc))
                     fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
 
                 page_objs[page_no] = kid;
                 page_no++;
             }
-            else if (str::Eq(type, "Pages")) {
+            else if (str::Eq(type, "Pages") || str::IsEmpty(type) && pdf_dict_gets(kid, "Kids")) {
                 int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
                 if (count > 0) {
                     stack.Push(top);
