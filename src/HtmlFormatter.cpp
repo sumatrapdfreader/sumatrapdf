@@ -1017,6 +1017,7 @@ void HtmlFormatter::HandleTagStyle(HtmlToken *t)
     const char *end = t->s - 2;
     CrashIf(start > end);
     ParseStyleSheet(start, end - start);
+    UpdateTagNesting(t);
 }
 
 // returns true if prev can't contain curr and should thus be closed
@@ -1243,7 +1244,7 @@ void HtmlFormatter::HandleText(const char *s, size_t sLen)
 // we ignore the content of <head>, <script>, <style> and <title> tags
 bool HtmlFormatter::IgnoreText()
 {
-    for (HtmlTag *tag = htmlParser->tagNesting.IterStart(); tag; tag = htmlParser->tagNesting.IterNext()) {
+    for (HtmlTag *tag = tagNesting.IterStart(); tag; tag = tagNesting.IterNext()) {
         if ((Tag_Head == *tag) ||
             (Tag_Script == *tag) ||
             (Tag_Style == *tag) ||

@@ -312,7 +312,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         HandleAnchorAttr(t);
     }
     else if (Tag_P == t->tag) {
-        if (!htmlParser->tagNesting.Contains(Tag_Title))
+        if (!tagNesting.Contains(Tag_Title))
             HtmlFormatter::HandleHtmlTag(t);
     }
     else if (Tag_Image == t->tag) {
