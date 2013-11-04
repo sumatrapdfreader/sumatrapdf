@@ -237,7 +237,7 @@ protected:
     bool                preFormatted;
     // set if the reading direction is RTL
     bool                dirRtl;
-    // TODO: HtmlPullParser::tagNesting is updated too soon for our purposes
+    // list of currently opened tags for auto-closing when needed
     Vec<HtmlTag>        tagNesting;
     bool                keepTagNesting;
     // set from CSS and to be checked by the individual tag handlers
