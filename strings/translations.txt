@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bb75661f973405d0045182a6f3a1f7624335d907
+fa1ae233d9da91f6e6554e7de742b6f10b1e65af
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -112,7 +112,7 @@ th:เกี่ยวกับ
 tl:Tungkol S&a...
 tr:&Hakkında
 tw:關於(&A)
-uk:П&ро програму...
+uk:Про програму...
 uz:&Dastur haqida
 vn:Giới thiệu
 :&Actual Size\tCtrl+1
