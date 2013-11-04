@@ -20,7 +20,7 @@ enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
 enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_PDF, OUT_TGA, OUT_BMP };
 
-enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA };
+enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA, CS_CMYK, CS_CMYK_ALPHA };
 
 typedef struct
 {
@@ -59,12 +59,15 @@ static const cs_name_t cs_name_table[] =
 	{ "g", CS_GRAY },
 	{ "gray", CS_GRAY },
 	{ "grey", CS_GRAY },
-	{ "ga", CS_GRAYALPHA },
-	{ "grayalpha", CS_GRAYALPHA },
-	{ "greyalpha", CS_GRAYALPHA },
+	{ "ga", CS_GRAY_ALPHA },
+	{ "grayalpha", CS_GRAY_ALPHA },
+	{ "greyalpha", CS_GRAY_ALPHA },
 	{ "rgb", CS_RGB },
-	{ "rgba", CS_RGBA },
-	{ "rgbalpha", CS_RGBA }
+	{ "rgba", CS_RGB_ALPHA },
+	{ "rgbalpha", CS_RGB_ALPHA },
+	{ "cmyk", CS_CMYK },
+	{ "cmyka", CS_CMYK_ALPHA },
+	{ "cmykalpha", CS_CMYK_ALPHA },
 };
 
 typedef struct
@@ -76,17 +79,17 @@ typedef struct
 
 static const format_cs_table_t format_cs_table[] =
 {
-	{ OUT_PNG, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+	{ OUT_PNG, CS_RGB, { CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA } },
 	{ OUT_PPM, CS_RGB, { CS_GRAY, CS_RGB } },
 	{ OUT_PNM, CS_GRAY, { CS_GRAY, CS_RGB } },
-	{ OUT_PAM, CS_RGBA, { CS_RGBA } },
+	{ OUT_PAM, CS_RGB_ALPHA, { CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA, CS_CMYK, CS_CMYK_ALPHA } },
 	{ OUT_PGM, CS_GRAY, { CS_GRAY, CS_RGB } },
 	{ OUT_PBM, CS_MONO, { CS_MONO } },
 	{ OUT_SVG, CS_RGB, { CS_RGB } },
-	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } },
+	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB, CS_CMYK } },
 	{ OUT_PCL, CS_MONO, { CS_MONO } },
 	{ OUT_PDF, CS_RGB, { CS_RGB } },
-	{ OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+	{ OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA } },
 #ifdef GDI_PLUS_BMP_RENDERER
 	{ OUT_BMP, CS_RGB, { CS_RGB } },
 #endif
@@ -195,16 +198,16 @@ static void usage(void)
 		"usage: mudraw [options] input [pages]\n"
 		"\t-o -\toutput filename (%%d for page number)\n"
 		"\t-F -\toutput format (if no -F, -o will be examined)\n"
-		"\t\tsupported formats: pgm, ppm, pam, png, pbm, tga\n"
+		"\t\tsupported formats: png, tga, pnm, pam, pwg, pcl, svg, pdf\n"
 		"\t-p -\tpassword\n"
 		"\t-r -\tresolution in dpi (default: 72)\n"
 		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
 		"\t-h -\theight (in pixels) (maximum height if -r is specified)\n"
 		"\t-f -\tfit width and/or height exactly (ignore aspect)\n"
-		"\t-c -\tcolorspace {mono,gray,grayalpha,rgb,rgba}\n"
+		"\t-c -\tcolorspace {mono,gray,grayalpha,rgb,rgba,cmyk,cmykalpha}\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-B -\tmaximum bandheight (pgm, ppm, pam output only)\n"
-		"\t-g\trender in grayscale\n"
+		"\t-g\trender in grayscale (equivalent to: -c gray)\n"
 		"\t-m\tshow timing information\n"
 		"\t-M\tshow memory use summary\n"
 		"\t-t\tshow text (-tt for xml, -ttt for more verbose xml)\n"
@@ -810,7 +813,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		/* TODO: banded rendering and multi-page ppm */
 		fz_try(ctx)
 		{
-			int savealpha = (out_cs == CS_RGBA || out_cs == CS_GRAYALPHA);
+			int savealpha = (out_cs == CS_GRAY_ALPHA || out_cs == CS_RGB_ALPHA || out_cs == CS_CMYK_ALPHA);
 			fz_irect band_ibounds = ibounds;
 			int band, bands = 1;
 			char filename_buf[512];
@@ -844,7 +847,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 				if (output_format == OUT_PGM || output_format == OUT_PPM || output_format == OUT_PNM)
 					fz_output_pnm_header(output_file, pix->w, totalheight, pix->n);
 				else if (output_format == OUT_PAM)
-					fz_output_pam_header(output_file, pix->w, totalheight, pix->n, pix->colorspace, savealpha);
+					fz_output_pam_header(output_file, pix->w, totalheight, pix->n, savealpha);
 				else if (output_format == OUT_PNG)
 					poc = fz_output_png_header(output_file, pix->w, totalheight, pix->n, savealpha);
 			}
@@ -1292,12 +1295,16 @@ int main(int argc, char **argv)
 	{
 	case CS_MONO:
 	case CS_GRAY:
-	case CS_GRAYALPHA:
+	case CS_GRAY_ALPHA:
 		colorspace = fz_device_gray(ctx);
 		break;
 	case CS_RGB:
-	case CS_RGBA:
+	case CS_RGB_ALPHA:
 		colorspace = fz_device_rgb(ctx);
+		break;
+	case CS_CMYK:
+	case CS_CMYK_ALPHA:
+		colorspace = fz_device_cmyk(ctx);
 		break;
 	default:
 		fprintf(stderr, "Unknown colorspace!\n");

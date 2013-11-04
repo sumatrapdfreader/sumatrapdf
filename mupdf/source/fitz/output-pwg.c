@@ -58,7 +58,14 @@ output_header(fz_output *out, const fz_pwg_options *pwg, int xres, int yres, int
 	fz_write_int32be(out, bpp); /* Bits per pixel */
 	fz_write_int32be(out, (w * bpp + 7)/8); /* Bytes per line */
 	fz_write_int32be(out, 0); /* Chunky pixels */
-	fz_write_int32be(out, bpp == 1 ? 3 /* Black */ : (bpp == 8 ? 18 /* Sgray */ : 19 /* Srgb */)); /* Colorspace */
+	switch (bpp)
+	{
+	case 1: fz_write_int32be(out, 3); /* Black */ break;
+	case 8: fz_write_int32be(out, 18); /* Sgray */ break;
+	case 24: fz_write_int32be(out, 19); /* Srgb */ break;
+	case 32: fz_write_int32be(out, 6); /* Cmyk */ break;
+	default: fz_throw(out->ctx, FZ_ERROR_GENERIC, "pixmap bpp must be 1, 8, 24 or 32 to write as pwg");
+	}
 	fz_write_int32be(out, pwg ? pwg->compression : 0);
 	fz_write_int32be(out, pwg ? pwg->row_count : 0);
 	fz_write_int32be(out, pwg ? pwg->row_feed : 0);
@@ -91,12 +98,12 @@ fz_output_pwg_page(fz_output *out, const fz_pixmap *pixmap, const fz_pwg_options
 
 	ctx = out->ctx;
 
-	if (pixmap->n != 1 && pixmap->n != 2 && pixmap->n != 4)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or rgb to write as pwg");
+	if (pixmap->n != 1 && pixmap->n != 2 && pixmap->n != 4 && pixmap->n != 5)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale, rgb or cmyk to write as pwg");
 
 	sn = pixmap->n;
 	dn = pixmap->n;
-	if (dn == 2 || dn == 4)
+	if (dn > 1)
 		dn--;
 
 	output_header(out, pwg, pixmap->xres, pixmap->yres, pixmap->w, pixmap->h, dn*8);

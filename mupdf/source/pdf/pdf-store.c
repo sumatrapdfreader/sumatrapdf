@@ -9,6 +9,7 @@ pdf_make_hash_key(fz_store_hash *hash, void *key_)
 		return 0;
 	hash->u.i.i0 = pdf_to_num(key);
 	hash->u.i.i1 = pdf_to_gen(key);
+	hash->u.i.ptr = pdf_get_indirect_document(key);
 	return 1;
 }
 

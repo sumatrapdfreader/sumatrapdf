@@ -814,7 +814,6 @@ pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int 
 			pdf_dict_puts_drop(group, "S", pdf_new_name(doc, "Transparency"));
 			pdf_dict_puts_drop(group, "K", pdf_new_bool(doc, knockout));
 			pdf_dict_puts_drop(group, "I", pdf_new_bool(doc, isolated));
-			pdf_dict_puts_drop(group, "K", pdf_new_bool(doc, knockout));
 			pdf_dict_puts_drop(group, "BM", pdf_new_name(doc, fz_blendmode_name(blendmode)));
 			if (!colorspace)
 			{}
@@ -1350,7 +1349,7 @@ fz_device *pdf_page_write(pdf_document *doc, pdf_page *page)
 		fz_try(ctx)
 		{
 			page->contents = pdf_new_ref(doc, obj);
-			pdf_dict_puts(page->me, "Contents", obj);
+			pdf_dict_puts(page->me, "Contents", page->contents);
 		}
 		fz_always(ctx)
 		{

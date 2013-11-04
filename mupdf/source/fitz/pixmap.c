@@ -144,6 +144,27 @@ fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 void
 fz_clear_pixmap_with_value(fz_context *ctx, fz_pixmap *pix, int value)
 {
+	/* CMYK needs special handling (and potentially any other subtractive colorspaces) */
+	if (pix->colorspace && pix->colorspace->n == 4)
+	{
+		int x, y;
+		unsigned char *s = pix->samples;
+
+		value = 255 - value;
+		for (y = 0; y < pix->h; y++)
+		{
+			for (x = 0; x < pix->w; x++)
+			{
+				*s++ = 0;
+				*s++ = 0;
+				*s++ = 0;
+				*s++ = value;
+				*s++ = 255;
+			}
+		}
+		return;
+	}
+
 	if (value == 255)
 	{
 		memset(pix->samples, 255, (unsigned int)(pix->w * pix->h * pix->n));
@@ -282,14 +303,39 @@ fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, con
 
 	destspan = dest->w * dest->n;
 	destp = dest->samples + (unsigned int)(destspan * (local_b.y0 - dest->y) + dest->n * (local_b.x0 - dest->x));
+
+	/* CMYK needs special handling (and potentially any other subtractive colorspaces) */
+	if (dest->colorspace && dest->colorspace->n == 4)
+	{
+		value = 255 - value;
+		do
+		{
+			unsigned char *s = destp;
+			for (x = 0; x < w; x++)
+			{
+				*s++ = 0;
+				*s++ = 0;
+				*s++ = 0;
+				*s++ = value;
+				*s++ = 255;
+			}
+			destp += destspan;
+		}
+		while (--y);
+		return;
+	}
+
 	if (value == 255)
+	{
 		do
 		{
 			memset(destp, 255, (unsigned int)(w * dest->n));
 			destp += destspan;
 		}
 		while (--y);
+	}
 	else
+	{
 		do
 		{
 			unsigned char *s = destp;
@@ -302,6 +348,7 @@ fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *dest, int value, con
 			destp += destspan;
 		}
 		while (--y);
+	}
 }
 
 void
@@ -499,7 +546,7 @@ fz_write_pnm(fz_context *ctx, fz_pixmap *pixmap, char *filename)
  */
 
 void
-fz_output_pam_header(fz_output *out, int w, int h, int n, fz_colorspace *cs, int savealpha)
+fz_output_pam_header(fz_output *out, int w, int h, int n, int savealpha)
 {
 	int sn = n;
 	int dn = n;
@@ -511,15 +558,12 @@ fz_output_pam_header(fz_output *out, int w, int h, int n, fz_colorspace *cs, int
 	fz_printf(out, "HEIGHT %d\n", h);
 	fz_printf(out, "DEPTH %d\n", dn);
 	fz_printf(out, "MAXVAL 255\n");
-	if (cs)
-		fz_printf(out, "# COLORSPACE %s\n", cs->name);
-	switch (dn)
-	{
-	case 1: fz_printf(out, "TUPLTYPE GRAYSCALE\n"); break;
-	case 2: if (sn == 2) fz_printf(out, "TUPLTYPE GRAYSCALE_ALPHA\n"); break;
-	case 3: if (sn == 4) fz_printf(out, "TUPLTYPE RGB\n"); break;
-	case 4: if (sn == 4) fz_printf(out, "TUPLTYPE RGB_ALPHA\n"); break;
-	}
+	if (dn == 1) fz_printf(out, "TUPLTYPE GRAYSCALE\n");
+	else if (dn == 2 && sn == 2) fz_printf(out, "TUPLTYPE GRAYSCALE_ALPHA\n");
+	else if (dn == 3 && sn == 4) fz_printf(out, "TUPLTYPE RGB\n");
+	else if (dn == 4 && sn == 4) fz_printf(out, "TUPLTYPE RGB_ALPHA\n");
+	else if (dn == 4 && sn == 5) fz_printf(out, "TUPLTYPE CMYK\n");
+	else if (dn == 5 && sn == 5) fz_printf(out, "TUPLTYPE CMYK_ALPHA\n");
 	fz_printf(out, "ENDHDR\n");
 }
 
@@ -554,7 +598,7 @@ void
 fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
 	fz_output *out = fz_new_output_to_filename(ctx, filename);
-	fz_output_pam_header(out, pixmap->w, pixmap->h, pixmap->n, pixmap->colorspace, savealpha);
+	fz_output_pam_header(out, pixmap->w, pixmap->h, pixmap->n, savealpha);
 	fz_output_pam_band(out, pixmap->w, pixmap->h, pixmap->n, 0, pixmap->h, pixmap->samples, savealpha);
 	fz_close_output(out);
 }

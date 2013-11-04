@@ -319,7 +319,7 @@ static void fast_gray_to_cmyk(fz_pixmap *dst, fz_pixmap *src)
 		d[0] = 0;
 		d[1] = 0;
 		d[2] = 0;
-		d[3] = s[0];
+		d[3] = 255 - s[0];
 		d[4] = s[1];
 		s += 2;
 		d += 5;
@@ -1040,7 +1040,7 @@ g2cmyk(fz_color_converter *cc, float *dv, float *sv)
 	dv[0] = 0;
 	dv[1] = 0;
 	dv[2] = 0;
-	dv[3] = sv[0];
+	dv[3] = 1 - sv[0];
 }
 
 static void
@@ -1185,7 +1185,6 @@ void
 fz_convert_color(fz_context *ctx, fz_colorspace *ds, float *dv, fz_colorspace *ss, float *sv)
 {
 	fz_color_converter cc;
-
 	fz_lookup_color_converter(&cc, ctx, ds, ss);
 	cc.convert(&cc, dv, sv);
 }

@@ -910,6 +910,7 @@ hail_mary_make_hash_key(fz_store_hash *hash, void *key_)
 {
 	hash->u.i.i0 = 0;
 	hash->u.i.i1 = 0;
+	hash->u.i.ptr = NULL;
 	return 1;
 }
 

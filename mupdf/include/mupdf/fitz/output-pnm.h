@@ -24,7 +24,7 @@ void fz_output_pnm_band(fz_output *out, int w, int h, int n, int band, int bandh
 */
 void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
 
-void fz_output_pam_header(fz_output *out, int w, int h, int n, fz_colorspace *cs, int savealpha);
+void fz_output_pam_header(fz_output *out, int w, int h, int n, int savealpha);
 void fz_output_pam_band(fz_output *out, int w, int h, int n, int band, int bandheight, unsigned char *sp, int savealpha);
 
 /*

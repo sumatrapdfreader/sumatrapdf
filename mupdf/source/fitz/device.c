@@ -86,6 +86,10 @@ push_clip_stack_accumulate(fz_device *dev, const fz_rect *rect, int accumulate)
 			dev->container = fz_resize_array(dev->ctx, dev->container, newmax, sizeof(*dev->container));
 			dev->container_cap = newmax;
 		}
+		if (dev->container_len > 0)
+			dev->container[dev->container_len].scissor = dev->container[dev->container_len-1].scissor;
+		else
+			dev->container[dev->container_len].scissor = fz_infinite_rect;
 		fz_intersect_rect(&dev->container[dev->container_len].scissor, rect);
 		dev->container[dev->container_len].flags = fz_device_container_stack_is_clip_text;
 		dev->container[dev->container_len].user = 0;
