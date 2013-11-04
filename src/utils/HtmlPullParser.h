@@ -82,8 +82,6 @@ class HtmlPullParser {
     HtmlToken      currToken;
 
 public:
-    Vec<HtmlTag>   tagNesting;
-
     HtmlPullParser(const char *s, size_t len) : currPos(s), end(s + len), start(s), len(len) { }
     HtmlPullParser(const char *s, const char *end) : currPos(s), end(end), start(s), len(end - s) { }
 

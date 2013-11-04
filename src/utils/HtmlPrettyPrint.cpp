@@ -45,10 +45,13 @@ static bool IsWsText(const char *s, size_t len)
 
 char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
 {
+    if ((size_t)-1 == len)
+        len = str::Len(s);
+
     str::Str<char> res(len);
     HtmlPullParser parser(s, len);
+    Vec<HtmlTag> tagNesting;
     HtmlToken *t;
-    size_t nesting = 0;
     while ((t = parser.Next()) != NULL && !t->IsError()) {
         if (t->IsText()) {
             // TODO: normalize whitespace instead?
@@ -58,12 +61,23 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
         if (!t->IsTag())
             continue;
 
-        HtmlAddWithNesting(&res, t, nesting);
+        HtmlAddWithNesting(&res, t, tagNesting.Count());
 
-        // determine the next tag's nesting before the
-        // call to UpdateTagNesting so that the tag
-        // itself is not yet in tagNesting
-        nesting = parser.tagNesting.Count();
+        if (t->IsStartTag()) {
+            if (!IsTagSelfClosing(t->tag))
+                tagNesting.Append(t->tag);
+        }
+        else if (t->IsEndTag()) {
+            // when closing a tag, if the top tag doesn't match but
+            // there are only potentially self-closing tags on the
+            // stack between the matching tag, we pop all of them
+            if (tagNesting.Contains(t->tag)) {
+                while (tagNesting.Last() != t->tag)
+                    tagNesting.Pop();
+            }
+            if (tagNesting.Count() > 0 && tagNesting.Last() == t->tag)
+                tagNesting.Pop();
+        }
     }
     lenOut = res.Count();
     return res.StealData();

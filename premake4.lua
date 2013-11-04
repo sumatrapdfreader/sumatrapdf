@@ -123,6 +123,7 @@ solution "all_tests"
       "src/utils/DebugLog*",
       "src/utils/FileUtil*",
       "src/utils/HtmlParserLookup*",
+      "src/utils/HtmlPrettyPrint*",
       "src/utils/HtmlPullParser*",
       "src/utils/JsonParser*",
       "src/utils/SettingsUtil*",

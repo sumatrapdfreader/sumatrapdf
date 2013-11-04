@@ -4,11 +4,6 @@
 #include "BaseUtil.h"
 #include "HtmlPullParser.h"
 
-/* TODO: We could extend the parser to allow navigating the tree (go to a prev/next sibling, go
-to a parent) without explicitly building a tree in memory. I think all we need to do is to extend
-tagNesting to also remember the position in html of the tag. Given this information we should be
-able to navigate the tree by reparsing.*/
-
 // returns -1 if didn't find
 int HtmlEntityNameToRune(const char *name, size_t nameLen)
 {
@@ -367,38 +362,6 @@ static bool SkipUntilTagEnd(const char*& s, const char *end)
     return false;
 }
 
-// record the tag for the purpose of building current state
-// of html tree
-static void RecordStartTag(Vec<HtmlTag>* tagNesting, HtmlTag tag)
-{
-    if (!IsTagSelfClosing(tag))
-        tagNesting->Append(tag);
-}
-
-// remove the tag from state of html tree
-static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
-{
-    // when closing a tag, if the top tag doesn't match but
-    // there are only potentially self-closing tags on the
-    // stack between the matching tag, we pop all of them
-    if (tagNesting->Contains(tag)) {
-        while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
-            tagNesting->Pop();
-    }
-    if (tagNesting->Count() > 0 && tagNesting->Last() == tag) {
-        tagNesting->Pop();
-    }
-}
-
-static void UpdateTagNesting(Vec<HtmlTag> *tagNesting, HtmlToken *t)
-{
-    // update the current state of html tree
-    if (t->IsStartTag())
-        RecordStartTag(tagNesting, t->tag);
-    else if (t->IsEndTag())
-        RecordEndTag(tagNesting, t->tag);
-}
-
 // Returns next part of html or NULL if finished
 HtmlToken *HtmlPullParser::Next()
 {
@@ -460,6 +423,5 @@ Next:
         currToken.SetTag(HtmlToken::StartTag, start, currPos);
     }
     ++currPos;
-    UpdateTagNesting(&tagNesting, &currToken);
     return &currToken;
 }
