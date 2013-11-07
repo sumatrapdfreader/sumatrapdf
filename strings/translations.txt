@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fa1ae233d9da91f6e6554e7de742b6f10b1e65af
+b048a8d897bb3763864173339aef4708b2077a6d
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -185,6 +185,7 @@ uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
 :&Advanced Options...
 am:&Ընդլայնված կարգավորումներ..
+ar:خيارات متقدمة
 az:&Əlavə seçimlər...
 br:Opções &Avançadas...
 ca-xv:Opcions &avançades...
