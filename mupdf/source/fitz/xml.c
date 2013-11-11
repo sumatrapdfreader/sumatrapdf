@@ -28,26 +28,31 @@ static inline void indent(int n)
 
 void fz_debug_xml(fz_xml *item, int level)
 {
-	while (item) {
-		if (item->text) {
-			printf("%s\n", item->text);
-		} else {
-			struct attribute *att;
+	if (item->text)
+	{
+		printf("%s\n", item->text);
+	}
+	else
+	{
+		fz_xml *child;
+		struct attribute *att;
+
+		indent(level);
+		printf("<%s", item->name);
+		for (att = item->atts; att; att = att->next)
+			printf(" %s=\"%s\"", att->name, att->value);
+		if (item->down)
+		{
+			printf(">\n");
+			for (child = item->down; child; child = child->next)
+				fz_debug_xml(child, level + 1);
 			indent(level);
-			printf("<%s", item->name);
-			for (att = item->atts; att; att = att->next)
-				printf(" %s=\"%s\"", att->name, att->value);
-			if (item->down) {
-				printf(">\n");
-				fz_debug_xml(item->down, level + 1);
-				indent(level);
-				printf("</%s>\n", item->name);
-			}
-			else {
-				printf("/>\n");
-			}
+			printf("</%s>\n", item->name);
 		}
-		item = item->next;
+		else
+		{
+			printf("/>\n");
+		}
 	}
 }
 
@@ -288,6 +293,7 @@ parse_element:
 
 parse_comment:
 	if (*p == '[') goto parse_cdata;
+	if (*p == 'D' && !memcmp(p, "DOCTYPE", 7)) goto parse_declaration;
 	if (*p++ != '-') return "syntax error in comment (<! not followed by --)";
 	if (*p++ != '-') return "syntax error in comment (<!- not followed by -)";
 	/* mark = p; */
@@ -299,6 +305,10 @@ parse_comment:
 		++p;
 	}
 	return "end of data in comment";
+
+parse_declaration:
+	while (*p) if (*p++ == '>') goto parse_text;
+	return "end of data in declaration";
 
 parse_cdata:
 	if (p[1] != 'C' || p[2] != 'D' || p[3] != 'A' || p[4] != 'T' || p[5] != 'A' || p[6] != '[')

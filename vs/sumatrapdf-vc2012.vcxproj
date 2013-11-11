@@ -257,6 +257,7 @@
     <ClCompile Include="..\mupdf\source\fitz\time.c" />
     <ClCompile Include="..\mupdf\source\fitz\trace-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\transition.c" />
+    <ClCompile Include="..\mupdf\source\fitz\tree.c" />
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />

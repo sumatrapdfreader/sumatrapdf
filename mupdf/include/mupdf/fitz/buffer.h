@@ -57,9 +57,14 @@ struct fz_buffer_s
 fz_buffer *fz_new_buffer(fz_context *ctx, int capacity);
 
 /*
-	fz_new_buffer: Create a new buffer.
+	fz_new_buffer_from_data: Create a new buffer with existing data.
 
-	capacity: Initial capacity.
+	data: Pointer to existing data.
+	size: Size of existing data.
+
+	Takes ownership of data. Does not make a copy. Calls fz_free on the
+	data when the buffer is deallocated. Do not use 'data' after passing
+	to this function.
 
 	Returns pointer to new buffer. Throws exception on allocation
 	failure.

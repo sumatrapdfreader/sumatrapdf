@@ -924,7 +924,7 @@ xps_parse_path(xps_document *doc, const fz_matrix *ctm, char *base_uri, xps_reso
 					s++;
 			}
 		}
-		stroke = fz_new_stroke_state_with_len(doc->ctx, dash_len);
+		stroke = fz_new_stroke_state_with_dash_len(doc->ctx, dash_len);
 		stroke->start_cap = xps_parse_line_cap(stroke_start_line_cap_att);
 		stroke->dash_cap = xps_parse_line_cap(stroke_dash_cap_att);
 		stroke->end_cap = xps_parse_line_cap(stroke_end_line_cap_att);

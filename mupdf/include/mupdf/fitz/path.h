@@ -81,12 +81,15 @@ fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 fz_rect *fz_bound_path(fz_context *ctx, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
 fz_rect *fz_adjust_rect_for_stroke(fz_rect *r, const fz_stroke_state *stroke, const fz_matrix *ctm);
 
+extern const fz_stroke_state fz_default_stroke_state;
+
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
-fz_stroke_state *fz_new_stroke_state_with_len(fz_context *ctx, int len);
+fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
 fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
 void fz_drop_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
 fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared);
-fz_stroke_state *fz_unshare_stroke_state_with_len(fz_context *ctx, fz_stroke_state *shared, int len);
+fz_stroke_state *fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_stroke_state *shared, int len);
+fz_stroke_state *fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
 
 #ifndef NDEBUG
 void fz_print_path(fz_context *ctx, FILE *out, fz_path *, int indent);

@@ -218,14 +218,25 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 static void
 pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int mono, int serif, int bold, int italic)
 {
-	unsigned char *data;
-	unsigned int len;
+	fz_buffer *buffer;
 
-	data = pdf_lookup_substitute_font(mono, serif, bold, italic, &len);
-	if (!data)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find substitute font");
+	buffer = fz_load_system_font(ctx, fontname);
+	if (buffer)
+	{
+		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buffer, 0, 1);
+		fz_drop_buffer(ctx, buffer);
+	}
+	else
+	{
+		unsigned char *data;
+		unsigned int len;
 
-	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
+		data = pdf_lookup_substitute_font(mono, serif, bold, italic, &len);
+		if (!data)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find substitute font");
+
+		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
+	}
 
 	fontdesc->font->ft_substitute = 1;
 	fontdesc->font->ft_bold = bold && !ft_is_bold(fontdesc->font->ft_face);
@@ -357,7 +368,8 @@ pdf_load_embedded_font(pdf_document *doc, pdf_font_desc *fontdesc, char *fontnam
 
 	fz_try(ctx)
 	{
-		fontdesc->font = fz_new_font_from_memory(ctx, fontname, buf->data, buf->len, 0, 1);
+		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buf, 0, 1);
+		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
@@ -365,11 +377,6 @@ pdf_load_embedded_font(pdf_document *doc, pdf_font_desc *fontdesc, char *fontnam
 		fz_rethrow_message(ctx, "cannot load embedded font (%d %d R)", pdf_to_num(stmref), pdf_to_gen(stmref));
 	}
 	fontdesc->size += buf->len;
-
-	/* save the buffer so we can free it later */
-	fontdesc->font->ft_data = buf->data;
-	fontdesc->font->ft_size = buf->len;
-	fz_free(ctx, buf); /* only free the fz_buffer struct, not the contained data */
 
 	fontdesc->is_embedded = 1;
 }

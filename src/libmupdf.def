@@ -169,8 +169,11 @@ EXPORTS
 	fz_new_font_context
 	fz_keep_font_context
 	fz_drop_font_context
+	fz_install_load_system_font_func
+	fz_load_system_font
 	fz_new_type3_font
 	fz_new_font_from_memory
+	fz_new_font_from_buffer
 	fz_new_font_from_file
 	fz_keep_font
 	fz_drop_font
@@ -319,11 +322,12 @@ EXPORTS
 	fz_bound_path
 	fz_adjust_rect_for_stroke
 	fz_new_stroke_state
-	fz_new_stroke_state_with_len
+	fz_new_stroke_state_with_dash_len
 	fz_keep_stroke_state
 	fz_drop_stroke_state
 	fz_unshare_stroke_state
-	fz_unshare_stroke_state_with_len
+	fz_unshare_stroke_state_with_dash_len
+	fz_clone_stroke_state
 	fz_pixmap_bbox
 	fz_pixmap_width
 	fz_pixmap_height
@@ -431,6 +435,10 @@ EXPORTS
 	fz_clone_text
 	fz_print_text
 	fz_generate_transition
+	fz_tree_lookup
+	fz_tree_insert
+	fz_free_tree
+	fz_debug_tree
 
 
 	fz_parse_xml

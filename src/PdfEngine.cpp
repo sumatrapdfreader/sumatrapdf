@@ -830,7 +830,7 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
             fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
             fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
             fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
-            stroke = fz_new_stroke_state_with_len(dev->ctx, 2);
+            stroke = fz_new_stroke_state_with_dash_len(dev->ctx, 2);
             stroke->linewidth = 0.5f;
             stroke->dash_list[stroke->dash_len++] = 1;
             stroke->dash_list[stroke->dash_len++] = 1;

@@ -31,9 +31,9 @@ fz_new_font(fz_context *ctx, char *name, int use_glyph_bbox, int glyph_count)
 	font->ft_italic = 0;
 	font->ft_hint = 0;
 
-	font->ft_file = NULL;
-	font->ft_data = NULL;
+	font->ft_buffer = NULL;
 	font->ft_size = 0;
+	font->ft_file = NULL; /* SumatraPDF: path of font file for fonts loaded from external files */
 
 	font->t3matrix = fz_identity;
 	font->t3resources = NULL;
@@ -151,8 +151,8 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 		fz_drop_freetype(ctx);
 	}
 
-	fz_free(ctx, font->ft_file);
-	fz_free(ctx, font->ft_data);
+	fz_drop_buffer(ctx, font->ft_buffer);
+	fz_free(ctx, font->ft_file); /* SumatraPDF: path of font file for fonts loaded from external files */
 	fz_free(ctx, font->bbox_table);
 	fz_free(ctx, font->width_table);
 	fz_free(ctx, font);
@@ -193,6 +193,7 @@ struct fz_font_context_s {
 	int ctx_refs;
 	FT_Library ftlib;
 	int ftlib_refs;
+	fz_load_system_font_func load_font;
 };
 
 #undef __FTERRORS_H__
@@ -212,6 +213,7 @@ void fz_new_font_context(fz_context *ctx)
 	ctx->font->ctx_refs = 1;
 	ctx->font->ftlib = NULL;
 	ctx->font->ftlib_refs = 0;
+	ctx->font->load_font = NULL;
 }
 
 fz_font_context *
@@ -235,6 +237,18 @@ void fz_drop_font_context(fz_context *ctx)
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 	if (drop == 0)
 		fz_free(ctx, ctx->font);
+}
+
+void fz_install_load_system_font_func(fz_context *ctx, fz_load_system_font_func f)
+{
+	ctx->font->load_font = f;
+}
+
+fz_buffer *fz_load_system_font(fz_context *ctx, const char *name)
+{
+	if (ctx->font->load_font)
+		return ctx->font->load_font(ctx, name);
+	return NULL;
 }
 
 static const struct ft_error ft_errors[] =
@@ -399,6 +413,14 @@ fz_new_font_from_memory(fz_context *ctx, char *name, unsigned char *data, int le
 		(float) face->bbox.xMax / face->units_per_EM,
 		(float) face->bbox.yMax / face->units_per_EM);
 
+	return font;
+}
+
+fz_font *
+fz_new_font_from_buffer(fz_context *ctx, char *name, fz_buffer *buffer, int index, int use_glyph_bbox)
+{
+	fz_font *font = fz_new_font_from_memory(ctx, name, buffer->data, buffer->len, index, use_glyph_bbox);
+	font->ft_buffer = fz_keep_buffer(ctx, buffer); /* remember buffer so we can drop it when we free the font */
 	return font;
 }
 

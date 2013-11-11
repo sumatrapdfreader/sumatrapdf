@@ -549,7 +549,7 @@ pdf_dev_font(pdf_device *pdev, fz_font *font, float size)
 	if (gs->font >= 0 && pdev->fonts[gs->font].font == font)
 		return;
 
-	if (font->ft_data != NULL || font->ft_substitute)
+	if (font->ft_buffer != NULL || font->ft_substitute)
 		fz_throw(pdev->ctx, FZ_ERROR_GENERIC, "pdf device supports only base 14 fonts currently");
 
 	/* Have we sent such a font before? */

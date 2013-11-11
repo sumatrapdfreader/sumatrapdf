@@ -1119,7 +1119,7 @@ static Font *
 gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 {
 	userData *user = (userData *)dev->user;
-	if (!font->ft_data && !font->ft_file)
+	if (!font->ft_buffer && !font->ft_file)
 		return NULL;
 	if (font->ft_bold || font->ft_italic)
 		return NULL;
@@ -1136,13 +1136,13 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		Status status = Ok;
 		// cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2212
 		// and https://code.google.com/p/sumatrapdf/issues/detail?id=2311
-		if (font->ft_data && font->ft_size > 4 && memcmp(font->ft_data, "true", 4) != 0)
+		if (font->ft_buffer && font->ft_buffer->len > 4 && memcmp(font->ft_buffer->data, "true", 4) != 0)
 		{
 #if 0
 			// TODO: memory fonts seem to get substituted in release builds
-			status = collection->AddMemoryFont(font->ft_data, font->ft_size);
+			status = collection->AddMemoryFont(font->ft_buffer->data, font->ft_buffer->len);
 #else
-			user->tempFiles = new TempFile(font->ft_data, font->ft_size, user->tempFiles);
+			user->tempFiles = new TempFile(font->ft_buffer->data, font->ft_buffer->len, user->tempFiles);
 			if (*user->tempFiles->path)
 				status = collection->AddFontFile(user->tempFiles->path);
 #endif

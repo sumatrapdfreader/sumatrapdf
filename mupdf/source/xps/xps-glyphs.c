@@ -522,7 +522,9 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 
 		fz_try(doc->ctx)
 		{
-			font = fz_new_font_from_memory(doc->ctx, NULL, part->data, part->size, subfontid, 1);
+			fz_buffer *buf = fz_new_buffer_from_data(doc->ctx, part->data, part->size);
+			font = fz_new_font_from_buffer(doc->ctx, NULL, buf, subfontid, 1);
+			fz_drop_buffer(doc->ctx, buf);
 		}
 		fz_catch(doc->ctx)
 		{
@@ -545,9 +547,7 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 		/* SumatraPDF: prevent assertion in Freetype 2.5 */
 		FT_Set_Char_Size(font->ft_face, 64, 64, 72, 72);
 
-		/* NOTE: we keep part->data in the font */
-		font->ft_data = part->data;
-		font->ft_size = part->size;
+		/* NOTE: we already saved part->data in the buffer in the font */
 		fz_free(doc->ctx, part->name);
 		fz_free(doc->ctx, part);
 	}

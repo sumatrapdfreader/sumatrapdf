@@ -1459,6 +1459,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\tree.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\ucdn.c"
 					>
 				</File>
@@ -1647,6 +1651,10 @@
 					</File>
 					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\transition.h"
+						>
+					</File>
+					<File
+						RelativePath="..\mupdf\include\mupdf\fitz\tree.h"
 						>
 					</File>
 					<File

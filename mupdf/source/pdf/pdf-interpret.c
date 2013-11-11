@@ -1841,7 +1841,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 			{
 				pdf_obj *dashes = pdf_array_get(val, 0);
 				int len = pdf_array_len(dashes);
-				gstate->stroke_state = fz_unshare_stroke_state_with_len(ctx, gstate->stroke_state, len);
+				gstate->stroke_state = fz_unshare_stroke_state_with_dash_len(ctx, gstate->stroke_state, len);
 				gstate->stroke_state->dash_len = len;
 				for (k = 0; k < len; k++)
 					gstate->stroke_state->dash_list[k] = pdf_to_real(pdf_array_get(dashes, k));
@@ -2503,7 +2503,7 @@ static void pdf_run_d(pdf_csi *csi)
 
 	array = csi->obj;
 	len = pdf_array_len(array);
-	gstate->stroke_state = fz_unshare_stroke_state_with_len(csi->dev->ctx, gstate->stroke_state, len);
+	gstate->stroke_state = fz_unshare_stroke_state_with_dash_len(csi->dev->ctx, gstate->stroke_state, len);
 	gstate->stroke_state->dash_len = len;
 	for (i = 0; i < len; i++)
 		gstate->stroke_state->dash_list[i] = pdf_to_real(pdf_array_get(array, i));

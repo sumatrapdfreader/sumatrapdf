@@ -854,7 +854,6 @@ static void
 svg_dev_begin_mask(fz_device *dev, const fz_rect *bbox, int luminosity, fz_colorspace *colorspace, float *color)
 {
 	svg_device *sdev = (svg_device *)dev->user;
-	fz_context *ctx = dev->ctx;
 	fz_output *out;
 	int mask = sdev->id++;
 
@@ -869,7 +868,6 @@ static void
 svg_dev_end_mask(fz_device *dev)
 {
 	svg_device *sdev = (svg_device *)dev->user;
-	fz_context *ctx = dev->ctx;
 	fz_output *out = sdev->out;
 	int mask = 0;
 

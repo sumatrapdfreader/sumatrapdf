@@ -89,6 +89,7 @@ struct pdf_page_s
 	pdf_obj *contents;
 	fz_link *links;
 	pdf_annot *annots;
+	pdf_annot **annot_tailp;
 	pdf_annot *changed_annots;
 	pdf_annot *deleted_annots;
 	pdf_annot *tmp_annots;

@@ -67,6 +67,7 @@ ALL_DIR += $(OUT)/cbz
 ALL_DIR += $(OUT)/img
 ALL_DIR += $(OUT)/tools
 ALL_DIR += $(OUT)/platform/x11
+ALL_DIR += $(OUT)/platform/x11/curl
 
 FITZ_HDR := include/mupdf/fitz.h $(wildcard include/mupdf/fitz/*.h)
 PDF_HDR := include/mupdf/pdf.h $(wildcard include/mupdf/pdf/*.h)
@@ -142,10 +143,9 @@ $(OUT)/%.o : scripts/%.c | $(OUT)
 	$(CC_CMD)
 
 $(OUT)/platform/x11/%.o : platform/x11/%.c | $(ALL_DIR)
-	$(CC_CMD) $(X11_CFLAGS) $(CURL_CFLAGS)
+	$(CC_CMD) $(X11_CFLAGS)
 
 $(OUT)/platform/x11/curl/%.o : platform/x11/%.c | $(ALL_DIR)
-	mkdir -p $(OUT)/platform/x11/curl
 	$(CC_CMD) $(X11_CFLAGS) $(CURL_CFLAGS) -DHAVE_CURL
 
 .PRECIOUS : $(OUT)/%.o # Keep intermediates from chained rules

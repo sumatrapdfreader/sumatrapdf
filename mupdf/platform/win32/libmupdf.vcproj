@@ -662,6 +662,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\tree.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\ucdn.c"
 				>
 			</File>

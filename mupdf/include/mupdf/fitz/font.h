@@ -36,9 +36,9 @@ struct fz_font_s
 	int ft_hint; /* ... force hinting for DynaLab fonts */
 
 	/* origin of font data */
-	char *ft_file;
-	unsigned char *ft_data;
+	fz_buffer *ft_buffer;
 	int ft_size;
+	char *ft_file; /* SumatraPDF: path of font file for fonts loaded from external files */
 
 	fz_matrix t3matrix;
 	void *t3resources;
@@ -66,9 +66,14 @@ void fz_new_font_context(fz_context *ctx);
 fz_font_context *fz_keep_font_context(fz_context *ctx);
 void fz_drop_font_context(fz_context *ctx);
 
+typedef fz_buffer *(*fz_load_system_font_func)(fz_context *ctx, const char *name);
+void fz_install_load_system_font_func(fz_context *ctx, fz_load_system_font_func f);
+fz_buffer *fz_load_system_font(fz_context *ctx, const char *name);
+
 fz_font *fz_new_type3_font(fz_context *ctx, char *name, const fz_matrix *matrix);
 
 fz_font *fz_new_font_from_memory(fz_context *ctx, char *name, unsigned char *data, int len, int index, int use_glyph_bbox);
+fz_font *fz_new_font_from_buffer(fz_context *ctx, char *name, fz_buffer *buffer, int index, int use_glyph_bbox);
 fz_font *fz_new_font_from_file(fz_context *ctx, char *name, char *path, int index, int use_glyph_bbox);
 
 fz_font *fz_keep_font(fz_context *ctx, fz_font *font);
