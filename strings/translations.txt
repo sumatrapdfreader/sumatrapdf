@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b048a8d897bb3763864173339aef4708b2077a6d
+ee8106cbc28d8e5a221fa9b84bda6374deb23067
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3330,7 +3330,7 @@ sr-rs:Додавање у одабир
 sv:Lägg till favorit
 ta:விருப்பகளில்  சேர்
 th:เพิ่มรายการโปรด
-tr:Sık kullanılanı ekle
+tr:Sık kullanılanlara ekle
 tw:新增我的最愛
 uk:Додати закладку
 uz:Tanlanganlarga qo'shish

@@ -12367,7 +12367,7 @@ const char * gTranslations_tr =
   "(toplam %d)\0"\
   "(sayfa %s)\0"\
   "SumatraPDF hakk\304\261nda\0"\
-  "S\304\261k kullan\304\261lan\304\261 ekle\0"\
+  "S\304\261k kullan\304\261lanlara ekle\0"\
   "Sayfa %s s\304\261k kullan\304\261lanlara ekle\0"\
   "Sayfa %s s\304\261k kullan\304\261lanlara (tercihe ba\304\237l\304\261) isimle ekle:\0"\
   "S\304\261k kullan\304\261lanlara ekle\0"\
