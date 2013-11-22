@@ -527,10 +527,17 @@ parseTTF(fz_stream *file, int offset, int index, const char *path)
 		}
 	}
 
-	// TODO: is there a better way to distinguish Arial Caps from Arial proper?
-	// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
-	if (!strcmp(szPSName, "ArialMT") && (strstr(path, "caps") || strstr(path, "Caps")))
-		fz_throw(file->ctx, FZ_ERROR_GENERIC, "ignore %s, as it can't be distinguished from Arial,Regular", path);
+	// try to prevent non-Arial fonts from accidentally substituting Arial
+	if (!strcmp(szPSName, "ArialMT"))
+	{
+		// cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2471
+		if (strcmp(szTTName, "Arial") != 0)
+			szPSName[0] = '\0';
+		// TODO: is there a better way to distinguish Arial Caps from Arial proper?
+		// cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1290
+		else if (strstr(path, "caps") || strstr(path, "Caps"))
+			fz_throw(file->ctx, FZ_ERROR_GENERIC, "ignore %s, as it can't be distinguished from Arial,Regular", path);
+	}
 
 	if (szPSName[0])
 		insert_mapping(file->ctx, &fontlistMS, szPSName, path, index);
