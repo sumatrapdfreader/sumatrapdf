@@ -310,7 +310,7 @@ str_ends_with(const char *str, const char *end)
 	return len1 >= len2 && !strcmp(str + len1 - len2, end);
 }
 
-static pdf_fontmapMS*
+static pdf_fontmapMS *
 pdf_find_windows_font_path(const char *fontname)
 {
 	return bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), lookup_compare);
@@ -401,7 +401,7 @@ grow_system_font_list(fz_context *ctx, pdf_fontlistMS *fl)
 }
 
 static void
-insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, const char *facename, const char *path, int index)
+append_mapping(fz_context *ctx, pdf_fontlistMS *fl, const char *facename, const char *path, int index)
 {
 	if (fl->len == fl->cap)
 		grow_system_font_list(ctx, fl);
@@ -540,7 +540,7 @@ parseTTF(fz_stream *file, int offset, int index, const char *path)
 	}
 
 	if (szPSName[0])
-		insert_mapping(file->ctx, &fontlistMS, szPSName, path, index);
+		append_mapping(file->ctx, &fontlistMS, szPSName, path, index);
 	if (szTTName[0])
 	{
 		// derive a PostScript-like name and add it, if it's different from the font's
@@ -548,13 +548,13 @@ parseTTF(fz_stream *file, int offset, int index, const char *path)
 		makeFakePSName(szTTName, szStyle);
 		// compare the two names before adding this one
 		if (lookup_compare(szTTName, szPSName))
-			insert_mapping(file->ctx, &fontlistMS, szTTName, path, index);
+			append_mapping(file->ctx, &fontlistMS, szTTName, path, index);
 	}
 	if (szCJKName[0])
 	{
 		makeFakePSName(szCJKName, szStyle);
 		if (lookup_compare(szCJKName, szPSName) && lookup_compare(szCJKName, szTTName))
-			insert_mapping(file->ctx, &fontlistMS, szCJKName, path, index);
+			append_mapping(file->ctx, &fontlistMS, szCJKName, path, index);
 	}
 }
 
@@ -677,14 +677,6 @@ create_system_font_list(fz_context *ctx)
 	WCHAR szFontDir[MAX_PATH];
 	UINT cch;
 
-#ifdef DEBUG
-	// allow to overwrite system fonts for debugging purposes
-	// (either pass a full path or a search pattern such as "fonts\*.ttf")
-	cch = GetEnvironmentVariable(L"MUPDF_FONTS_PATTERN", szFontDir, nelem(szFontDir));
-	if (0 < cch && cch < nelem(szFontDir))
-		extend_system_font_list(ctx, szFontDir);
-#endif
-
 	cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
 	if (0 < cch && cch < nelem(szFontDir) - 12)
 	{
@@ -709,6 +701,24 @@ create_system_font_list(fz_context *ctx)
 
 	// sort the font list, so that it can be searched binarily
 	qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
+
+#ifdef DEBUG
+	// allow to overwrite system fonts for debugging purposes
+	// (either pass a full path or a search pattern such as "fonts\*.ttf")
+	cch = GetEnvironmentVariable(L"MUPDF_FONTS_PATTERN", szFontDir, nelem(szFontDir));
+	if (0 < cch && cch < nelem(szFontDir))
+	{
+		int i, prev_len = fontlistMS.len;
+		extend_system_font_list(ctx, szFontDir);
+		for (i = prev_len; i < fontlistMS.len; i++)
+		{
+			pdf_fontmapMS *entry = bsearch(fontlistMS.fontmap[i].fontface, fontlistMS.fontmap, prev_len, sizeof(pdf_fontmapMS), lookup_compare);
+			if (entry)
+				*entry = fontlistMS.fontmap[i];
+		}
+		qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(pdf_fontmapMS), _stricmp);
+	}
+#endif
 
 	// make sure to clean up after ourselves
 	atexit(destroy_system_font_list);
