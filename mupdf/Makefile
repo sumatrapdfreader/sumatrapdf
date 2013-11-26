@@ -162,7 +162,7 @@ CMAP_GB_SRC := $(wildcard resources/cmaps/gb/*)
 CMAP_JAPAN_SRC := $(wildcard resources/cmaps/japan/*)
 CMAP_KOREA_SRC := $(wildcard resources/cmaps/korea/*)
 
-FONT_BASE14_SRC := $(wildcard resources/fonts/*.cff)
+FONT_BASE14_SRC := $(wildcard resources/fonts/urw/*.cff)
 FONT_DROID_SRC := resources/fonts/droid/DroidSans.ttf resources/fonts/droid/DroidSansMono.ttf
 FONT_CJK_SRC := resources/fonts/droid/DroidSansFallback.ttf
 FONT_CJK_FULL_SRC := resources/fonts/droid/DroidSansFallbackFull.ttf

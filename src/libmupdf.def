@@ -182,6 +182,8 @@ EXPORTS
 	fz_glyph_cacheable
 	fz_run_t3_glyph
 	fz_decouple_type3_font
+	fz_advance_glyph
+	fz_encode_character
 	fz_eval_function
 	fz_keep_function
 	fz_drop_function

@@ -1695,7 +1695,6 @@ pdf_load_function(pdf_document *doc, pdf_obj *dict, int in, int out)
 			break;
 
 		default:
-			fz_free(ctx, func);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "unknown function type (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 		}
 

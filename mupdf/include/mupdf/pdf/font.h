@@ -111,7 +111,7 @@ void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings,
 
 int pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid);
 
-unsigned char *pdf_lookup_builtin_font(char *name, unsigned int *len);
+unsigned char *pdf_lookup_builtin_font(const char *name, unsigned int *len);
 unsigned char *pdf_lookup_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
 unsigned char *pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len);
 

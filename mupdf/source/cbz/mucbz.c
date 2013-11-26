@@ -163,14 +163,6 @@ cbz_read_zip_entry(cbz_document *doc, int offset, int *sizep)
 	return NULL; /* not reached */
 }
 
-static int
-cbz_compare_entries(const void *a_, const void *b_)
-{
-	const cbz_entry *a = a_;
-	const cbz_entry *b = b_;
-	return strcmp(a->name, b->name);
-}
-
 static void
 cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 {
@@ -230,8 +222,6 @@ cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 		fz_seek(file, metasize, 1);
 		fz_seek(file, commentsize, 1);
 	}
-
-	qsort(doc->entry, count, sizeof(cbz_entry), cbz_compare_entries);
 
 	doc->page_count = 0;
 	doc->page = fz_malloc_array(ctx, count, sizeof(int));
