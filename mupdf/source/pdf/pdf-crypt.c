@@ -689,8 +689,8 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 		memcpy(userpass, crypt->o, 32);
 		for (x = 0; x < 20; x++)
 		{
-			for (i = 0; i < n; i++)
-				xor[i] = key[i] ^ (19 - x);
+			for (i = 0; i < 32; i++)
+				xor[i] = pwbuf[i] ^ (19 - x);
 			fz_arc4_init(&arc4, xor, n);
 			fz_arc4_encrypt(&arc4, userpass, userpass, 32);
 		}

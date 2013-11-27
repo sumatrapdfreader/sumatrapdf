@@ -220,7 +220,11 @@ static void fz_knockout_end(fz_draw_device *dev)
 	else
 		fz_blend_pixmap(state[0].dest, state[1].dest, 255, blendmode, isolated, state[1].shape);
 
-	fz_drop_pixmap(dev->ctx, state[1].dest);
+	/* The following test should not be required, but just occasionally
+	 * errors can cause the stack to get out of sync, and this saves our
+	 * bacon. */
+	if (state[0].dest != state[1].dest)
+		fz_drop_pixmap(dev->ctx, state[1].dest);
 	if (state[0].shape != state[1].shape)
 	{
 		if (state[0].shape)
@@ -1354,8 +1358,13 @@ fz_draw_pop_clip(fz_device *devp)
 			fz_paint_pixmap_with_mask(state[0].shape, state[1].shape, state[1].mask);
 			fz_drop_pixmap(dev->ctx, state[1].shape);
 		}
-		fz_drop_pixmap(dev->ctx, state[1].mask);
-		fz_drop_pixmap(dev->ctx, state[1].dest);
+		/* The following tests should not be required, but just occasionally
+		 * errors can cause the stack to get out of sync, and this might save
+		 * our bacon. */
+		if (state[0].mask != state[1].mask)
+			fz_drop_pixmap(dev->ctx, state[1].mask);
+		if (state[0].dest != state[1].dest)
+			fz_drop_pixmap(dev->ctx, state[1].dest);
 #ifdef DUMP_GROUP_BLENDS
 		fz_dump_blend(dev->ctx, state[0].dest, " to get ");
 		if (state[0].shape)
@@ -1581,7 +1590,11 @@ fz_draw_end_group(fz_device *devp)
 	else
 		fz_blend_pixmap(state[0].dest, state[1].dest, alpha * 255, blendmode, isolated, state[1].shape);
 
-	fz_drop_pixmap(dev->ctx, state[1].dest);
+	/* The following test should not be required, but just occasionally
+	 * errors can cause the stack to get out of sync, and this might save
+	 * our bacon. */
+	if (state[0].dest != state[1].dest)
+		fz_drop_pixmap(dev->ctx, state[1].dest);
 	if (state[0].shape != state[1].shape)
 	{
 		if (state[0].shape)
@@ -1949,8 +1962,13 @@ fz_draw_end_tile(fz_device *devp)
 		/* Do nothing */
 	}
 
-	fz_drop_pixmap(dev->ctx, state[1].dest);
-	fz_drop_pixmap(dev->ctx, state[1].shape);
+	/* The following tests should not be required, but just occasionally
+	 * errors can cause the stack to get out of sync, and this might save
+	 * our bacon. */
+	if (state[0].dest != state[1].dest)
+		fz_drop_pixmap(dev->ctx, state[1].dest);
+	if (state[0].shape != state[1].shape)
+		fz_drop_pixmap(dev->ctx, state[1].shape);
 #ifdef DUMP_GROUP_BLENDS
 	fz_dump_blend(dev->ctx, state[0].dest, " to get ");
 	if (state[0].shape)

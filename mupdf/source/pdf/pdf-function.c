@@ -1077,7 +1077,7 @@ eval_sample_func(fz_context *ctx, pdf_function *func, float *in, float *out)
 
 	scale[0] = func->base.n;
 	for (i = 1; i < func->base.m; i++)
-		scale[i] = scale[i - 1] * func->u.sa.size[i];
+		scale[i] = scale[i - 1] * func->u.sa.size[i - 1];
 
 	for (i = 0; i < func->base.n; i++)
 	{
