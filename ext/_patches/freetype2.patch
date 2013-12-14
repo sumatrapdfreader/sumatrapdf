@@ -1,6 +1,6 @@
-diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\freetype\config\ftstdlib.h
---- freetype2.orig\include\freetype\config\ftstdlib.h	Sat Sep 29 09:42:15 2012
-+++ freetype2\include\freetype\config\ftstdlib.h	Fri Aug 30 20:38:21 2013
+diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\ftstdlib.h
+--- freetype2.orig\include\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
++++ freetype2\include\config\ftstdlib.h	Sat Dec 14 16:42:05 2013
 @@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -18,9 +18,9 @@ diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\f
    /*                                                                    */
    /*                             sorting                                */
    /*                                                                    */
-diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype\ftsystem.h
---- freetype2.orig\include\freetype\ftsystem.h	Sat Jun 26 09:18:37 2010
-+++ freetype2\include\freetype\ftsystem.h	Fri Aug 30 20:38:21 2013
+diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
+--- freetype2.orig\include\ftsystem.h	Sat Jun 26 08:18:37 2010
++++ freetype2\include\ftsystem.h	Sat Dec 14 16:42:05 2013
 @@ -337,10 +337,16 @@
  
  
@@ -39,8 +39,8 @@ diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype
  
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
---- freetype2.orig\src\base\ftsystem.c	Tue May 28 23:00:03 2013
-+++ freetype2\src\base\ftsystem.c	Fri Aug 30 20:38:21 2013
+--- freetype2.orig\src\base\ftsystem.c	Tue May 28 22:00:03 2013
++++ freetype2\src\base\ftsystem.c	Sat Dec 14 16:42:05 2013
 @@ -315,6 +315,29 @@
  #endif
      ft_sfree( memory );
@@ -71,38 +71,9 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
 +
  /* END */
-diff -rPu5 freetype2.orig\src\cff\cf2ft.c freetype2\src\cff\cf2ft.c
---- freetype2.orig\src\cff\cf2ft.c	Fri Jun 07 17:08:35 2013
-+++ freetype2\src\cff\cf2ft.c	Tue Sep 03 20:31:32 2013
-@@ -497,11 +497,11 @@
-   FT_LOCAL_DEF( CF2_Int )
-   cf2_initGlobalRegionBuffer( CFF_Decoder*  decoder,
-                               CF2_UInt      idx,
-                               CF2_Buffer    buf )
-   {
--    FT_ASSERT( decoder && decoder->globals );
-+    FT_ASSERT( decoder && ( decoder->globals || decoder->num_globals == 0 ) );
- 
-     FT_ZERO( buf );
- 
-     idx += decoder->globals_bias;
-     if ( idx >= decoder->num_globals )
-@@ -570,11 +570,11 @@
-   FT_LOCAL_DEF( CF2_Int )
-   cf2_initLocalRegionBuffer( CFF_Decoder*  decoder,
-                              CF2_UInt      idx,
-                              CF2_Buffer    buf )
-   {
--    FT_ASSERT( decoder && decoder->locals );
-+    FT_ASSERT( decoder && ( decoder->locals || decoder->num_locals == 0 ) );
- 
-     FT_ZERO( buf );
- 
-     idx += decoder->locals_bias;
-     if ( idx >= decoder->num_locals )
 diff -rPu5 freetype2.orig\src\type1\t1parse.c freetype2\src\type1\t1parse.c
---- freetype2.orig\src\type1\t1parse.c	Thu Jun 06 07:26:16 2013
-+++ freetype2\src\type1\t1parse.c	Fri Sep 13 15:21:26 2013
+--- freetype2.orig\src\type1\t1parse.c	Thu Jun 06 06:26:16 2013
++++ freetype2\src\type1\t1parse.c	Sat Dec 14 16:42:05 2013
 @@ -402,14 +402,16 @@
  
        /* according to the Type1 spec, the first cipher byte must not be  */

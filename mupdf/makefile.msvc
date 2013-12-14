@@ -128,7 +128,7 @@ ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DI
 
 # 4703 - potentially uninitialized local variable (frequent with vs 2012)
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
-	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4703 /wd4996
+	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4244 /wd4703 /wd4996
 
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2_DIR)
 JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4018 /wd4244 /wd4701 /wd4996
@@ -179,7 +179,7 @@ FT_OBJS = \
 	$(OFT)\ftsystem.obj $(OFT)\fttype1.obj $(OFT)\ftxf86.obj $(OFT)\cff.obj \
 	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
 	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
-	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj
+	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj $(OFT)\ftgzip.obj
 !if "$(CFG)"=="dbg"
 FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
 !endif
@@ -326,6 +326,9 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\cid}.c{$(OFT)}.obj::
+	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
+
+{$(FREETYPE_DIR)\src\gzip}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\otvalid}.c{$(OFT)}.obj::

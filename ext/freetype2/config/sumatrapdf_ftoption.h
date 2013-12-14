@@ -5,7 +5,7 @@
 #error "This header must be included before the default configuration header!"
 #endif
 
-#include <freetype/config/ftconfig.h>
+#include <config/ftconfig.h>
 
 FT_BEGIN_HEADER
 

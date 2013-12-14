@@ -33,7 +33,7 @@
 
 #define FT_CONFIG_CONFIG_H  <sumatrapdf_ftoption.h>
 #define FT_CONFIG_MODULES_H <sumatrapdf_ftmodule.h>
-#include <freetype/config/ftheader.h>
+#include <config/ftheader.h>
 
 #endif /* __FT2_BUILD_GENERIC_H__ */
 
