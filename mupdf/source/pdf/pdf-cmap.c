@@ -499,12 +499,16 @@ pdf_lookup_cmap_full(pdf_cmap *cmap, int cpt, int *out)
  * multi-byte encoded string.
  */
 int
-pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, int *cpt)
+pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, int *cpt)
 {
 	int k, n, c;
+	int len = end - buf;
+
+	if (len > 4)
+		len = 4;
 
 	c = 0;
-	for (n = 0; n < 4; n++)
+	for (n = 0; n < len; n++)
 	{
 		c = (c << 8) | buf[n];
 		for (k = 0; k < cmap->codespace_len; k++)

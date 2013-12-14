@@ -1119,7 +1119,7 @@ static Font *
 gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 {
 	userData *user = (userData *)dev->user;
-	if (!font->ft_buffer && !font->ft_file)
+	if (!font->ft_buffer && !font->ft_filepath)
 		return NULL;
 	if (font->ft_bold || font->ft_italic)
 		return NULL;
@@ -1147,10 +1147,10 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 				status = collection->AddFontFile(user->tempFiles->path);
 #endif
 		}
-		else if (font->ft_file)
+		else if (font->ft_filepath)
 		{
 			WCHAR fontPath[MAX_PATH];
-			MultiByteToWideChar(CP_UTF8, 0, font->ft_file, -1, fontPath, nelem(fontPath));
+			MultiByteToWideChar(CP_UTF8, 0, font->ft_filepath, -1, fontPath, nelem(fontPath));
 			status = collection->AddFontFile(fontPath);
 		}
 		assert(status == Ok || collection->GetFamilyCount() == 0);

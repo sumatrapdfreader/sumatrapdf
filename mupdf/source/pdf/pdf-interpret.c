@@ -1042,7 +1042,7 @@ pdf_show_string(pdf_csi *csi, unsigned char *buf, int len)
 
 	while (buf < end)
 	{
-		int w = pdf_decode_cmap(fontdesc->encoding, buf, &cpt);
+		int w = pdf_decode_cmap(fontdesc->encoding, buf, end, &cpt);
 		buf += w;
 
 		cid = pdf_lookup_cmap(fontdesc->encoding, cpt);

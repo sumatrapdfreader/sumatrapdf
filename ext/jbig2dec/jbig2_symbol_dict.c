@@ -925,7 +925,6 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
       default:
 	return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 	    "symbol dictionary specified invalid huffman table");
-	break;
     }
     if (params.SDHUFFDH == NULL)
     {
@@ -953,9 +952,9 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
         break;
       case 2:
       default:
-	jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 	    "symbol dictionary specified invalid huffman table");
-	break;
+        goto cleanup; /* Jump direct to cleanup to avoid 2 errors being given */
     }
     if (params.SDHUFFDW == NULL)
     {
@@ -1050,9 +1049,10 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   params.SDNUMNEWSYMS = jbig2_get_uint32(segment_data + offset + 4);
   offset += 8;
 
+  /* SumatraPDF: tolerate empty symbols dictionaries */
   jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
-	      "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
-	      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
+    "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
+    flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
 
   /* 7.4.2.2 (2) */
   {

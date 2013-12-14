@@ -1943,6 +1943,12 @@ static OPJ_BOOL opj_j2k_read_siz(opj_j2k_t *p_j2k,
                 return OPJ_FALSE;
         }
 
+        /* testcase 1610.pdf.SIGSEGV.59c.681 */
+        if (((OPJ_UINT64)l_image->x1) * ((OPJ_UINT64)l_image->y1) != (l_image->x1 * l_image->y1)) {
+                opj_event_msg(p_manager, EVT_ERROR, "Prevent buffer overflow (x1: %d, y1: %d)", l_image->x1, l_image->y1);
+                return OPJ_FALSE;
+        }
+
 #ifdef USE_JPWL
         if (l_cp->correct) {
                 /* if JPWL is on, we check whether TX errors have damaged

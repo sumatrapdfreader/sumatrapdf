@@ -9,7 +9,7 @@
 FREETYPE_DIR := thirdparty/freetype
 JBIG2DEC_DIR := thirdparty/jbig2dec
 JPEG_DIR := thirdparty/jpeg
-OPENJPEG_DIR := thirdparty/openjpeg
+OPENJPEG_DIR := thirdparty/openjpeg/libopenjpeg
 OPENSSL_DIR := thirdparty/openssl
 ZLIB_DIR := thirdparty/zlib
 CURL_DIR := thirdparty/curl
@@ -108,7 +108,7 @@ $(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(FREETYPE_OUT)
 $(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(FREETYPE_OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 
-FREETYPE_CFLAGS := -I$(FREETYPE_DIR)/include
+FREETYPE_CFLAGS := -Iscripts/freetype -I$(FREETYPE_DIR)/include
 else
 FREETYPE_CFLAGS := $(SYS_FREETYPE_CFLAGS)
 FREETYPE_LIBS := $(SYS_FREETYPE_LIBS)
@@ -194,7 +194,7 @@ $(JPEG_OUT):
 $(JPEG_OUT)/%.o: $(JPEG_DIR)/%.c | $(JPEG_OUT)
 	$(CC_CMD) -Dmain=xxxmain
 
-JPEG_CFLAGS := -I$(JPEG_DIR)
+JPEG_CFLAGS := -Iscripts/jpeg -I$(JPEG_DIR)
 else
 JPEG_CFLAGS := $(SYS_JPEG_CFLAGS)
 JPEG_LIBS := $(SYS_JPEG_LIBS)
@@ -202,7 +202,7 @@ endif
 
 # --- OpenJPEG ---
 
-ifneq "$(wildcard $(OPENJPEG_DIR)/README)" ""
+ifneq "$(wildcard $(OPENJPEG_DIR)/CMakeLists.txt)" ""
 
 OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 OPENJPEG_OUT := $(OUT)/openjpeg
@@ -235,10 +235,10 @@ OPENJPEG_SRC := \
 $(OPENJPEG_LIB): $(addprefix $(OPENJPEG_OUT)/, $(OPENJPEG_SRC:%.c=%.o))
 $(OPENJPEG_OUT):
 	$(MKDIR_CMD)
-$(OPENJPEG_OUT)/%.o: $(OPENJPEG_DIR)/src/lib/openjp2/%.c | $(OPENJPEG_OUT)
+$(OPENJPEG_OUT)/%.o: $(OPENJPEG_DIR)/%.c | $(OPENJPEG_OUT)
 	$(CC_CMD) -DOPJ_STATIC -DOPJ_HAVE_STDINT_H
 
-OPENJPEG_CFLAGS += -I$(OPENJPEG_DIR)/src/lib/openjp2
+OPENJPEG_CFLAGS += -Iscripts/openjpeg -I$(OPENJPEG_DIR)
 else
 OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
 OPENJPEG_LIBS := $(SYS_OPENJPEG_LIBS)

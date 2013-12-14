@@ -369,11 +369,13 @@ pdf_load_embedded_font(pdf_document *doc, pdf_font_desc *fontdesc, char *fontnam
 	fz_try(ctx)
 	{
 		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buf, 0, 1);
+	}
+	fz_always(ctx)
+	{
 		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_buffer(ctx, buf);
 		fz_rethrow_message(ctx, "cannot load embedded font (%d %d R)", pdf_to_num(stmref), pdf_to_gen(stmref));
 	}
 	fontdesc->size += buf->len;
@@ -1110,7 +1112,7 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 				else if (!strcmp(collection, "Adobe-Korea1"))
 					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
 				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2318 */
-				else if (!strcmp(collection, "Adobe-Identity") && fontdesc->font->ft_file)
+				else if (!strcmp(collection, "Adobe-Identity") && fontdesc->font->ft_filepath)
 					fontdesc->font->ft_substitute = 0;
 			}
 		}

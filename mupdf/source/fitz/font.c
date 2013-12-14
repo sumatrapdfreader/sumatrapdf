@@ -33,8 +33,7 @@ fz_new_font(fz_context *ctx, const char *name, int use_glyph_bbox, int glyph_cou
 	font->ft_hint = 0;
 
 	font->ft_buffer = NULL;
-	font->ft_size = 0;
-	font->ft_file = NULL; /* SumatraPDF: path of font file for fonts loaded from external files */
+	font->ft_filepath = NULL;
 
 	font->t3matrix = fz_identity;
 	font->t3resources = NULL;
@@ -153,7 +152,7 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 	}
 
 	fz_drop_buffer(ctx, font->ft_buffer);
-	fz_free(ctx, font->ft_file); /* SumatraPDF: path of font file for fonts loaded from external files */
+	fz_free(ctx, font->ft_filepath);
 	fz_free(ctx, font->bbox_table);
 	fz_free(ctx, font->width_table);
 	fz_free(ctx, font);
@@ -380,6 +379,7 @@ fz_new_font_from_file(fz_context *ctx, const char *name, const char *path, int i
 		(float) face->bbox.yMin / face->units_per_EM,
 		(float) face->bbox.xMax / face->units_per_EM,
 		(float) face->bbox.yMax / face->units_per_EM);
+	font->ft_filepath = fz_strdup(ctx, path);
 
 	return font;
 }

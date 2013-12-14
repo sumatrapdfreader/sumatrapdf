@@ -1,0 +1,31 @@
+diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
+--- jbig2dec.orig\jbig2_symbol_dict.c	Sat Dec 14 16:00:01 2013
++++ jbig2dec\jbig2_symbol_dict.c	Sat Dec 14 16:22:52 2013
+@@ -1047,23 +1047,14 @@
+   params.SDNUMEXSYMS = jbig2_get_uint32(segment_data + offset);
+   /* 7.4.2.1.5 */
+   params.SDNUMNEWSYMS = jbig2_get_uint32(segment_data + offset + 4);
+   offset += 8;
+ 
+-  if (params.SDNUMEXSYMS == 0 || params.SDNUMNEWSYMS == 0)
+-  {
+-    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+-      "empty symbol dictionary, flags=%04x, %u exported syms, %u new syms",
+-      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
+-    goto cleanup;
+-  }
+-  else
+-  {
+-    jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
+-      "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
+-      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
+-  }
++  /* SumatraPDF: tolerate empty symbols dictionaries */
++  jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
++    "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
++    flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
+ 
+   /* 7.4.2.2 (2) */
+   {
+     int n_dicts = jbig2_sd_count_referred(ctx, segment);
+     Jbig2SymbolDict **dicts = NULL;

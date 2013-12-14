@@ -12,7 +12,7 @@ default: all
 # Do not specify CFLAGS or LIBS on the make invocation line - specify
 # XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
 # set a variable that was set on the command line.
-CFLAGS += $(XCFLAGS) -Iinclude -Iscripts -I$(GEN)
+CFLAGS += $(XCFLAGS) -Iinclude -I$(GEN)
 LIBS += $(XLIBS) -lm
 
 include Makerules

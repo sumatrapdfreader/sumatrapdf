@@ -16,6 +16,3 @@
  * ==== YOU CAN NOT COMPILE WITHOUT IT. ====
  * === DO NOT FORGET TO CHANGE 'config.nix' APPROPRIATELY. ====
 */
-
-
-
