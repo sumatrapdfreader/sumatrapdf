@@ -2,11 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "WinUtil.h"
 #include "CPdfFilter.h"
 #include "PdfEngine.h"
-
-extern HINSTANCE g_hInstance;
+#include "WinUtil.h"
 
 VOID CPdfFilter::CleanUp()
 {

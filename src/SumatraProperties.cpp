@@ -64,10 +64,10 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const WCHAR *xpsDate, SYSTEMTIME *timeOut)
+static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const WCHAR *end = str::Parse(xpsDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const WCHAR *end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
         str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     return end != NULL;

@@ -402,6 +402,9 @@
     <ClCompile Include="..\src\browserplugin\Trans_browserplugin_txt.cpp">
       <Filter>browser_plugin</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ifilter\CPdfFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
@@ -1210,6 +1213,9 @@
     </ClInclude>
     <ClInclude Include="..\src\browserplugin\npapi\nptypes.h">
       <Filter>browser_plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ifilter\CEpubFilter.h">
+      <Filter>ifilter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ifilter\CPdfFilter.h">
       <Filter>ifilter</Filter>

@@ -157,6 +157,7 @@ jbig2_sd_count_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
         if (rsegment && ((rsegment->flags & 63) == 0) &&
             rsegment->result &&
+            (((Jbig2SymbolDict *)rsegment->result)->n_symbols > 0) &&
             ((*((Jbig2SymbolDict *)rsegment->result)->glyphs) != NULL))
             n_dicts++;
     }
@@ -1049,7 +1050,6 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   params.SDNUMNEWSYMS = jbig2_get_uint32(segment_data + offset + 4);
   offset += 8;
 
-  /* SumatraPDF: tolerate empty symbols dictionaries */
   jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
     "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
     flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);

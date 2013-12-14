@@ -199,6 +199,7 @@
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\browserplugin\npPdfViewer.cpp" />
     <ClCompile Include="..\src\browserplugin\Trans_browserplugin_txt.cpp" />
+    <ClCompile Include="..\src\ifilter\CEpubFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CPdfFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CTeXFilter.cpp" />
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />
@@ -470,6 +471,7 @@
     <ClInclude Include="..\src\browserplugin\npapi\npfunctions.h" />
     <ClInclude Include="..\src\browserplugin\npapi\npruntime.h" />
     <ClInclude Include="..\src\browserplugin\npapi\nptypes.h" />
+    <ClInclude Include="..\src\ifilter\CEpubFilter.h" />
     <ClInclude Include="..\src\ifilter\CPdfFilter.h" />
     <ClInclude Include="..\src\ifilter\CTeXFilter.h" />
     <ClInclude Include="..\src\ifilter\FilterBase.h" />

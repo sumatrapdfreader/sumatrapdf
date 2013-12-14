@@ -1,7 +1,19 @@
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Sat Dec 14 16:00:01 2013
-+++ jbig2dec\jbig2_symbol_dict.c	Sat Dec 14 16:22:52 2013
-@@ -1047,23 +1047,14 @@
++++ jbig2dec\jbig2_symbol_dict.c	Sat Dec 14 18:43:36 2013
+@@ -155,10 +155,11 @@
+ 
+     for (index = 0; index < segment->referred_to_segment_count; index++) {
+         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
+         if (rsegment && ((rsegment->flags & 63) == 0) &&
+             rsegment->result &&
++            (((Jbig2SymbolDict *)rsegment->result)->n_symbols > 0) &&
+             ((*((Jbig2SymbolDict *)rsegment->result)->glyphs) != NULL))
+             n_dicts++;
+     }
+ 
+     return (n_dicts);
+@@ -1047,23 +1048,13 @@
    params.SDNUMEXSYMS = jbig2_get_uint32(segment_data + offset);
    /* 7.4.2.1.5 */
    params.SDNUMNEWSYMS = jbig2_get_uint32(segment_data + offset + 4);
@@ -20,7 +32,6 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 -      "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
 -      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
 -  }
-+  /* SumatraPDF: tolerate empty symbols dictionaries */
 +  jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
 +    "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
 +    flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);

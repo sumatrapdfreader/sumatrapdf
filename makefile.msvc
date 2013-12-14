@@ -241,9 +241,21 @@ ENGINEDUMP_OBJS = \
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
 
+!if "$(CFG)"=="dbg"
+# build all optional IFilters for debug builds
+BUILD_TEX_IFILTER = 1
+BUILD_EPUB_IFILTER = 1
+!endif
+
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
+!endif
+
+!if "$(BUILD_EPUB_IFILTER)"!=""
+PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CEpubFilter.obj \
+	$(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj
+PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_EPUB_IFILTER"
 !endif
 
 !if "$(BUILD_XPS_PREVIEW)"!=""

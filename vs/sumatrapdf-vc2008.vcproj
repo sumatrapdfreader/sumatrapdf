@@ -2026,6 +2026,14 @@
 					RelativePath="..\src\ifilter\PdfFilterDll.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\src\ifilter\CEpubFilter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\ifilter\CEpubFilter.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Previewer"
