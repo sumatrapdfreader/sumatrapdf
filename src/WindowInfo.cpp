@@ -233,14 +233,20 @@ void LinkHandler::GotoLink(PageDestination *link)
     else if (Dest_LaunchURL == type) {
         if (!path)
             /* ignore missing URLs */;
-        else if (!str::FindChar(path, ':')) {
-            // treat relative URIs as file paths
-            // LaunchFile will reject unsupported file types
-            LaunchFile(path, NULL);
-        }
         else {
-            // LaunchBrowser will reject unsupported URI schemes
-            LaunchBrowser(path);
+            WCHAR *colon = str::FindChar(path, ':');
+            WCHAR *hash = str::FindChar(path, '#');
+            if (!colon || colon > hash) {
+                // treat relative URIs as file paths (without fragment identifier)
+                if (hash)
+                    *hash = '\0';
+                // LaunchFile will reject unsupported file types
+                LaunchFile(path, NULL);
+            }
+            else {
+                // LaunchBrowser will reject unsupported URI schemes
+                LaunchBrowser(path);
+            }
         }
     }
     else if (Dest_LaunchEmbedded == type) {

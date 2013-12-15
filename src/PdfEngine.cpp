@@ -3024,10 +3024,11 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR *label) const
 
 static bool IsRelativeURI(const WCHAR *uri)
 {
-    const WCHAR *colon = str::FindChar(uri, ':');
-    const WCHAR *slash = str::FindChar(uri, '/');
-
-    return !colon || (slash && colon > slash);
+    const WCHAR *c = uri;
+    while (*c && *c != ':' && *c != '/' && *c != '?' && *c != '#') {
+        c++;
+    }
+    return *c != ':';
 }
 
 WCHAR *PdfLink::GetValue() const
