@@ -6934,7 +6934,7 @@ const char * gTranslations_it =
   "&Apri...\tCtrl+O\0"\
   "&Opzioni...\0"\
   "\0"\
-  "&PIN documento\0"\
+  "&Attacca il documento (Pin)\0"\
   "&Pagina precedente\t<Freccia sinistra>\0"\
   "&Stampa\0"\
   "Stam&pa...\tCtrl+P\0"\
@@ -6979,7 +6979,7 @@ const char * gTranslations_it =
   "Annulla\0"\
   "Impossibile stampare questo file\0"\
   "Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.\0"\
-  "Lingua interfaccia (Change language)\0"\
+  "Lingua dell'interfaccia\0"\
   "Controlla &aggiornamenti\0"\
   "Fumetti\0"\
   "Compatibilit\303\240\0"\
@@ -6990,7 +6990,7 @@ const char * gTranslations_it =
   "Copia &immagine\0"\
   "Copia indirizzo co&llegamento\0"\
   "Copia co&mmento\0"\
-  "Impossibile copiare il testo (copio solo come immagine)\0"\
+  "Impossibile copiare il testo (copiare solo come immagine)\0"\
   "\0"\
   "Impossibile ottenere info propriet\303\240 stampante\0"\
   "Impossibile inizializzare la stampante\0"\
@@ -7000,7 +7000,7 @@ const char * gTranslations_it =
   "Ingrandimento personali&zzato\t<Ctrl>+Y\0"\
   "&Vista predefinita:\0"\
   "&Ingrandimento predefinito:\0"\
-  "Il lettore PDF predefinito non \303\250 modificabile in modalit\303\240 \"portable\"\0"\
+  "Il lettore PDF predefinito non \303\250 modificabile in modalit\303\240 portatile\0"\
   "Permessi rifiutati:\0"\
   "Documenti DjVu\0"\
   "Propriet\303\240 del documento\0"\
@@ -7009,7 +7009,7 @@ const char * gTranslations_it =
   "Documenti EPUB\0"\
   "Inserisci password\0"\
   "Inserisci password per %s\0"\
-  "Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:\0"\
+  "Inserire la linea di comando da eseguire quando si fa doppio clic su un documento PDF:\0"\
   "Errore nel caricamento di %s\0"\
   "&Preferiti\0"\
   "A&vanti\t<Alt>+<Freccia destra>\0"\
@@ -7029,19 +7029,19 @@ const char * gTranslations_it =
   "Trova successivo\0"\
   "Trova precedente\0"\
   "Trova:\0"\
-  "Adatta a &contenuto\t<Ctrl>+3\0"\
+  "Adatta al &contenuto\t<Ctrl>+3\0"\
   "&Pagina intera\t<Ctrl>+0\0"\
-  "Adatta a &larghezza pagina\t<Ctrl>+2\0"\
-  "Adatta a contenuto\0"\
-  "Adatta a pagina\0"\
-  "Adatta a larghezza pagina\0"\
+  "Adatta alla &larghezza della pagina\t<Ctrl>+2\0"\
+  "Adatta al contenuto\0"\
+  "Adatta alla pagina\0"\
+  "Adatta alla larghezza della pagina\0"\
   "Adatta alla larghezza e visualizza le pagine in modo continuo\0"\
   "Visualizza una pagina singola\0"\
   "Font:\0"\
   "Formattazione del libro ... %d pagine\0"\
   "Testo trovato a pagina %s\0"\
   "Trovato testo alla pagina %s (ancora)\0"\
-  "Aperti recentemente\0"\
+  "Letti frequentemente\0"\
   "\0"\
   "Vai a pagina\0"\
   "Nascondi letto frequentemente\0"\
@@ -7094,7 +7094,7 @@ const char * gTranslations_it =
   "Stampa intervallo\0"\
   "La stampante con quel nome non esiste\0"\
   "Stampa in corso...\0"\
-  "La stampa \303\250 ancora in corso. Vuoi interromperla e uscire?\0"\
+  "La stampa \303\250 ancora in corso. Interrompere e uscire?\0"\
   "La stampa \303\250 in corso. Interrompere e ricominciare?\0"\
   "Stampa pagina %d di %d...\0"\
   "Problemi di stampa.\0"\

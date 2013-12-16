@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ee8106cbc28d8e5a221fa9b84bda6374deb23067
+2b31cec09d0a779ce8a4bc7606c44d2404f6bbe9
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -2028,7 +2028,7 @@ hi:दस्तावेज़ &जड़ें
 hr:&Pričvrsti dokument
 hu:Lista elejére
 id:&Pin Dokumen
-it:&PIN documento
+it:&Attacca il documento (Pin)
 ja:ドキュメントをピンする&(P)
 ka:დოკუმენიტს &მიმაგრება
 kr:문서 고정(&P)
@@ -3778,7 +3778,7 @@ gl:Seguro que queres desinstalar SumatraPDF?
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 id:Anda yakin untuk menghapus instalasi SumatraPDF?
-it:Sei sicuro di voler disinstallare SumatraPDF?
+it:Siete sicuri di voler disinstallare SumatraPDF?
 ja:SumatraPDFを本当にアンインストールしますか？
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
@@ -4806,7 +4806,7 @@ hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Lingua interfaccia (Change language)
+it:Lingua dell'interfaccia
 ja:言語の変更 (Change Language)
 ka:ენის შეცვლა (Change Language)
 kr:언어 바꾸기(Change Language)
@@ -5534,7 +5534,7 @@ hi:टेक्स्ट कि प्रतियां बनाने से 
 hr:Kopiranje teksta je nemoguće (kopirano kao slika)
 hu:Szöveg másolása tiltott (csak képként másolva)
 id:Menyalin teks ditolak (menyalin sebagai gambar saja)
-it:Impossibile copiare il testo (copio solo come immagine)
+it:Impossibile copiare il testo (copiare solo come immagine)
 ja:テキストのコピーは拒否されました (イメージとしてのコピーのみ)
 ka:ტექსტის კოპირება აკრძალულია (კოპირდება როგორც სურათი)
 kr:문자열 복사가 거부됐습니다. (이미지만 복사합니다.)
@@ -6634,7 +6634,7 @@ hi:डिफ़ॉल्ट पीडीएफ रीडर पोर्टे�
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 id:Pembaca PDF utama tidak dapat diubah dalam mode portabel
-it:Il lettore PDF predefinito non è modificabile in modalità "portable"
+it:Il lettore PDF predefinito non è modificabile in modalità portatile
 ja:ポータブル モードでは変更できません
 ka:პორტატულ რეჟიმში, PDF-ის წამკითხველად დაყენება შეუძლებელია
 kr:포터블 방식에서는 기본 PDF 리더로 바꿀 수 없습니다.
@@ -7186,7 +7186,7 @@ hi:पीडीएफ दस्तावेज़ पर डबल क्लि�
 hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
-it:Inserire la linea di comando da eseguire quando fai doppio clic su un documento PDF:
+it:Inserire la linea di comando da eseguire quando si fa doppio clic su un documento PDF:
 ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
@@ -8710,7 +8710,7 @@ hi:सामग्री को फ़िट करें \tCtrl+3
 hr:Namjesti po &sadržaju\tCtrl+3
 hu:&Tartalom\tCtrl+3
 id:Sesuaikan Dengan &Konten\tCtrl+3
-it:Adatta a &contenuto\t<Ctrl>+3
+it:Adatta al &contenuto\t<Ctrl>+3
 ja:内容に合わせる(&C)\tCtrl+3
 ka:&შიგთავსის მიხედვით\tCtrl+3
 kr:내용에 맞춤(&C)\tCtrl+3
@@ -8839,7 +8839,7 @@ hi:चौड़ाई के अनुसार(&h)\tCtrl+2
 hr:&Namjesti po širini\tCtrl+2
 hu:Oldal&szélesség\tCtrl+2
 id:Sesuaikan Dengan &Lebar\tCtrl+2
-it:Adatta a &larghezza pagina\t<Ctrl>+2
+it:Adatta alla &larghezza della pagina\t<Ctrl>+2
 ja:幅に合わせる(&W)\tCtrl+2
 ka:&სიგანეზე მორგება\tCtrl+2
 kr:너비(가로) 맞춤(&H)\tCtrl+2
@@ -8903,7 +8903,7 @@ hi:सामग्री को अटाना
 hr:Namjesti po sadržaju
 hu:Tartalom
 id:Sesuaikan Dengan Konten
-it:Adatta a contenuto
+it:Adatta al contenuto
 ja:内容に合わせる
 ka:შიგთავსის მიხედვით
 kr:내용에 맞춤
@@ -8964,7 +8964,7 @@ hi:अनुरूप करें
 hr:Prilagodi stranici
 hu:Teljes oldal
 id:Sesuaikan Dengan Halaman
-it:Adatta a pagina
+it:Adatta alla pagina
 ja:ページに合わせる
 ka:გვერდის ზომაზე მორგება
 kr:페이지(세로) 맞춤
@@ -9032,7 +9032,7 @@ hi:चौड़ाई के अनुसार
 hr:Namjesti po širini
 hu:Oldalszélesség
 id:Sesuaikan Dengan Lebar
-it:Adatta a larghezza pagina
+it:Adatta alla larghezza della pagina
 ja:幅に合わせる
 ka:სიგანეზე მორგება
 kr:너비(가로) 맞춤
@@ -9432,7 +9432,7 @@ hi:अक्सर पढ़ें जाने वाले
 hr:Najčešće čitano
 hu:Leggyakrabban olvasott fájlok
 id:Yang Sering Dibaca
-it:Aperti recentemente
+it:Letti frequentemente
 ja:よく読むファイル
 ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
@@ -12986,7 +12986,7 @@ hi:छपाई अभी भी प्रगति पर है | रद्द
 hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
-it:La stampa è ancora in corso. Vuoi interromperla e uscire?
+it:La stampa è ancora in corso. Interrompere e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 kr:인쇄가 아직 진행 중입니다. 중지하고 끝낼까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
@@ -15167,7 +15167,7 @@ gl:Non se atopou ningunha instalación de SumatraPDF.
 hr:SumatraPDF instalacija nije pronađena.
 hu:SumatraPDF telepítő nem található.
 id:Instalasi SumatraPDF tidak ditemukan.
-it:Installazion3 SumatraPDF non trovata.
+it:Installazione SumatraPDF non trovata.
 ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치를 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری

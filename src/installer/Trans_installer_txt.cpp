@@ -916,7 +916,7 @@ const char * gTranslations_id =
 
 const char * gTranslations_it = 
   "&Opzioni\0"\
-  "Sei sicuro di voler disinstallare SumatraPDF?\0"\
+  "Siete sicuri di voler disinstallare SumatraPDF?\0"\
   "Chiudi\0"\
   "Impossibile creare la cartella temporanea\0"\
   "Impossibile creare la cartella di installazione\0"\
@@ -950,7 +950,7 @@ const char * gTranslations_it =
   "Installazione SumatraPDF %s\0"\
   "Disinstallazione SumatraPDF %s\0"\
   "SumatraPDF \303\250 stata completamente disinstallato.\0"\
-  "Installazion3 SumatraPDF non trovata.\0"\
+  "Installazione SumatraPDF non trovata.\0"\
   "Grazie per aver scelto SumatraPDF!\0"\
   "Grazie! SumatraPDF installato correttamente.\0"\
   "Il programma di installazione \303\250 danneggiato. Riscaricalo nuovamente.\nSiamo spiacenti per l'incoveniente!\0"\
