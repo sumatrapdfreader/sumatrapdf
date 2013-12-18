@@ -818,6 +818,7 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
         if (FAILED(res) || read != ULONG_MAX)
             return false;
         len -= ULONG_MAX;
+        buffer = (char *)buffer + ULONG_MAX;
     }
 #endif
     res = stream->Read(buffer, (ULONG)len, &read);
