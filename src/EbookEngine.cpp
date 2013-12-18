@@ -66,7 +66,7 @@ public:
     virtual ~EbookEngine();
 
     virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pages ? pages->Count() : 0; }
+    virtual int PageCount() const { return pages ? (int)pages->Count() : 0; }
 
     virtual RectD PageMediabox(int pageNo) { return pageRect; }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {

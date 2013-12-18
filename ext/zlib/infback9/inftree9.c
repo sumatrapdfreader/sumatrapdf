@@ -256,7 +256,7 @@ unsigned short FAR *work;
                 drop = root;
 
             /* increment past last table */
-            next += 1U << curr;
+            next += (size_t)1 << curr; /* SumatraPDF: prevent C4334 */
 
             /* determine length of next table */
             curr = len - drop;

@@ -130,6 +130,8 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
 
     if (dataLen < HEADER_START_SIZE)
         return false;
+    if (dataLen > (uint32_t)-1)
+        return false;
 
     uint32_t magic_id = Read4Skip(&data);
     if (magic_id != LZMA_MAGIC_ID)
@@ -163,7 +165,7 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
     if (data + 4 > dataEnd)
         return false;
 
-    size_t headerSize = data - archiveHeader;
+    uint32_t headerSize = (uint32_t)(data - archiveHeader);
     uint32_t headerCrc32 = Read4Skip(&data);
     uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, headerSize);
     if (headerCrc32 != realCrc)

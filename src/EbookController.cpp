@@ -293,19 +293,23 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 // returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
 // returns 0 if not found
-static size_t PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
+static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
     if (!pages)
         return 0;
     for (size_t i = 0; i < pages->Count(); i++) {
         HtmlPage *pd = pages->At(i);
+        // TODO: this is really only theoretically possible - skip the test?
+        CrashIf(i > INT_MAX);
+        if (i > INT_MAX)
+            return INT_MAX;
         if (pd->reparseIdx == reparseIdx)
-            return i + 1;
+            return (int)i + 1;
         // this is the first page whose content is after reparseIdx, so
         // the page contining reparseIdx must be the one before
         if (pd->reparseIdx > reparseIdx) {
             CrashIf(0 == i);
-            return i;
+            return (int)i;
         }
     }
     return 0;
@@ -564,7 +568,7 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
     // beginnign, but happened in real life, crash 1096004
     if (!GetPagesFromBeginning())
         return;
-    int pageCount = GetPagesFromBeginning()->Count();
+    int pageCount = (int)GetPagesFromBeginning()->Count();
     int newPageNo = IntFromPerc(pageCount, perc) + 1;
     GoToPage(newPageNo);
 }
@@ -609,7 +613,7 @@ void EbookController::UpdateStatus()
     ScopedMem<WCHAR> s(str::Format(L"%s %d / %d", _TR("Page:"), currPageNo, pageCount));
     ctrls->status->SetText(s);
     if (GetPagesFromBeginning())
-        ctrls->progress->SetFilled(PercFromInt(GetPagesFromBeginning()->Count(), currPageNo));
+        ctrls->progress->SetFilled(PercFromInt((int)GetPagesFromBeginning()->Count(), currPageNo));
     else
         ctrls->progress->SetFilled(0.f);
 }
@@ -620,7 +624,7 @@ void EbookController::GoToPage(int newPageNo)
         return;
     if (!GetPagesFromBeginning())
         return;
-    if ((size_t)newPageNo > GetPagesFromBeginning()->Count())
+    if (newPageNo > (int)GetPagesFromBeginning()->Count())
         return;
     ShowPage(GetPagesFromBeginning()->At(newPageNo - 1), false);
     // even if we were showing a page from pagesFromPage before, we've
@@ -632,7 +636,7 @@ void EbookController::GoToPage(int newPageNo)
 void EbookController::GoToLastPage()
 {
     if (GetPagesFromBeginning())
-        GoToPage(GetPagesFromBeginning()->Count());
+        GoToPage((int)GetPagesFromBeginning()->Count());
 }
 
 bool EbookController::GoOnePageForward(Vec<HtmlPage*> *pages)

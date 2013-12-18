@@ -35,10 +35,10 @@ struct Slice {
 
     char PrevChar() const;
     char CurrChar() const;
-    int SkipWsUntilNewline();
-    int SkipUntil(char toFind);
-    int SkipNonWs();
-    int Skip(int n);
+    ptrdiff_t SkipWsUntilNewline();
+    ptrdiff_t SkipUntil(char toFind);
+    ptrdiff_t SkipNonWs();
+    ptrdiff_t Skip(int n);
     void ZeroCurr();
 };
 

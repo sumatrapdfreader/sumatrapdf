@@ -70,6 +70,10 @@ void TextSearch::SetText(const WCHAR *text)
 
     if (str::EndsWith(this->findText, L" "))
         this->findText[str::Len(this->findText) - 1] = '\0';
+#ifdef _WIN64
+    if (str::Len(this->findText) >= INT_MAX)
+        this->findText[INT_MAX] = 0;
+#endif
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
@@ -102,7 +106,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
     SetText(selection);
 
     findPage = min(startPage, endPage);
-    findIndex = (findPage == startPage ? startGlyph : endGlyph) + str::Len(findText);
+    findIndex = (findPage == startPage ? startGlyph : endGlyph) + (int)str::Len(findText);
     pageText = textCache->GetData(findPage);
     forward = true;
 }

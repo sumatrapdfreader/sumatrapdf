@@ -54,7 +54,7 @@ struct FmtInfo {
     int tp;
     // if tp is Verbatim
     const char *start;
-    int len;
+    size_t len;
 
     // if tp is Positional
     int positionalArgNo;
@@ -199,7 +199,7 @@ char *Fmt(const char *fmt, const Arg& a0, const Arg& a1, const Arg& a2, const Ar
         if (fmtParts[i].tp == FmtInfo::Verbatim) {
             // TODO: unescape \{ ?
             const char *s = fmtParts[i].start;
-            int len = fmtParts[i].len;
+            size_t len = fmtParts[i].len;
             res.Append(s, len);
         } else if (fmtParts[i].tp == FmtInfo::Positional) {
             const Arg *arg = args[fmtParts[i].positionalArgNo];

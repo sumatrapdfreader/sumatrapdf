@@ -19,7 +19,7 @@ inline bool IsWsNoNewline(char c)
 }
 
 // returns number of characters skipped
-int Slice::SkipWsUntilNewline()
+ptrdiff_t Slice::SkipWsUntilNewline()
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
@@ -30,7 +30,7 @@ int Slice::SkipWsUntilNewline()
 }
 
 // returns number of characters skipped
-int Slice::SkipNonWs()
+ptrdiff_t Slice::SkipNonWs()
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
@@ -41,7 +41,7 @@ int Slice::SkipNonWs()
 }
 
 // advances to a given character or end
-int Slice::SkipUntil(char toFind)
+ptrdiff_t Slice::SkipUntil(char toFind)
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
@@ -67,7 +67,7 @@ char Slice::CurrChar() const
 
 // skip up to n characters
 // returns the number of characters skipped
-int Slice::Skip(int n)
+ptrdiff_t Slice::Skip(int n)
 {
     char *start = curr;
     while ((curr < end) && (n > 0)) {
@@ -84,4 +84,3 @@ void Slice::ZeroCurr()
 }
 
 } // namespace str
-

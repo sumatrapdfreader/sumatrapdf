@@ -133,7 +133,7 @@ public:
 
     // if layouting everything at once, MeasureTextAccurate is too slow,
     // so measureAlgo allows to choose a quicker text measurer instead
-    RectF        (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
+    RectF        (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len);
 
     const char *    htmlStr;
     size_t          htmlStrLen;
@@ -220,7 +220,7 @@ protected:
     ScopedMem<WCHAR>    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
-    RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
+    RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len);
 
     // style stack of the current line
     Vec<DrawStyle>      styleStack;
@@ -246,14 +246,14 @@ protected:
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;
     // reparse point of the first instructions in a current line
-    int                 currLineReparseIdx;
+    ptrdiff_t           currLineReparseIdx;
     HtmlPage *          currPage;
 
     // for tracking whether we're currently inside <a> tag
     size_t              currLinkIdx;
 
     // reparse point for the current HtmlToken
-    int                 currReparseIdx;
+    ptrdiff_t           currReparseIdx;
 
     HtmlPullParser *    htmlParser;
 

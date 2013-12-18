@@ -387,8 +387,8 @@ bool Reload(bool forceReload)
     UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 
-    int n = gEbookWindows.Count();
-    for (int i=0; i < n; i++) {
+    size_t n = gEbookWindows.Count();
+    for (size_t i = 0; i < n; i++) {
         EbookWindowRefreshUI(gEbookWindows.At(i));
     }
 

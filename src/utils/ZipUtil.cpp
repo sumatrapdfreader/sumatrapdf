@@ -268,12 +268,17 @@ bool ZipCreator::AddFileFromDir(const WCHAR *filePath, const WCHAR *dir)
 
 static bool AppendFileToZip(zipFile& zf, const WCHAR *nameInZip, const char *fileData, size_t fileSize)
 {
+#ifdef _WIN64
+    CrashIf(fileSize > UINT_MAX);
+    if (fileSize > UINT_MAX)
+        return false;
+#endif
     ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
     str::TransChars(nameInZipUtf, "\\", "/");
     zip_fileinfo zi = { 0 };
     int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
     if (ZIP_OK == err) {
-        err = zipWriteInFileInZip(zf, fileData, fileSize);
+        err = zipWriteInFileInZip(zf, fileData, (unsigned int)fileSize);
         if (ZIP_OK == err)
             err = zipCloseFileInZip(zf);
         else

@@ -167,7 +167,7 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     int y = offY + pad.top + (int)s->borderWidth.top;
     Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
     Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-    gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
+    gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
 ButtonVector::ButtonVector()

@@ -2947,7 +2947,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
             // get the page's /Annots array for appending
             pdf_obj *annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
             if (!pdf_is_array(annots)) {
-                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_array(_doc, pageAnnots.Count()));
+                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_array(_doc, (int)pageAnnots.Count()));
                 annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
             }
             if (!pdf_is_indirect(annots)) {

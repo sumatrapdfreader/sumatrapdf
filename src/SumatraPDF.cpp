@@ -213,9 +213,9 @@ bool LaunchBrowser(const WCHAR *url)
         HWND plugin = gWindows.At(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
-        if (!parent || !urlUtf8)
+        if (!parent || !urlUtf8 || str::Len(urlUtf8) > 4096)
             return false;
-        COPYDATASTRUCT cds = { 0x4C5255 /* URL */, str::Len(urlUtf8) + 1, urlUtf8.Get() };
+        COPYDATASTRUCT cds = { 0x4C5255 /* URL */, (DWORD)str::Len(urlUtf8) + 1, urlUtf8.Get() };
         return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -5445,7 +5445,7 @@ static int RunMessageLoop()
         DispatchMessage(&msg);
     }
 
-    return msg.wParam;
+    return (int)msg.wParam;
 }
 
 void GetProgramInfo(str::Str<char>& s)

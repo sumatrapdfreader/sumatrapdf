@@ -309,7 +309,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     // return all pages' ranges that are even partially visible
     Vec<SumatraUIAutomationTextRange*> rangeArray;
     SumatraUIAutomationPageProvider* it = child_first;
-    while (it) {
+    while (it && rangeArray.Size() > ULONG_MAX) {
         if (it->dm->GetPageInfo(it->pageNum) &&
             it->dm->GetPageInfo(it->pageNum)->shown &&
             it->dm->GetPageInfo(it->pageNum)->visibleRatio > 0.0f) {
@@ -317,8 +317,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
         }
         it = it->sibling_next;
     }
+    CrashIf(ULONG_MAX == rangeArray.Size());
 
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, rangeArray.Size());
+    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.Size());
     if (!psa) {
         for (size_t i = 0; i < rangeArray.Size(); i++) {
             rangeArray[i]->Release();

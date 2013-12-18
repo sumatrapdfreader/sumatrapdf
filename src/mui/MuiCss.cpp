@@ -474,7 +474,7 @@ Style* Style::GetInheritsFrom() const
 // Identity is a way to track changes to Style
 size_t Style::GetIdentity() const
 {
-    int identity = gen;
+    size_t identity = gen;
     Style *curr = inheritsFrom;
     while (curr) {
         identity += curr->gen;

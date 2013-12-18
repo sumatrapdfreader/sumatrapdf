@@ -404,7 +404,11 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     const WCHAR *imgExt = GfxFileExtFromData(data, dataLen);
     ScopedMem<WCHAR> mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
-    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
+#ifdef _WIN64
+    // not going to report data in parts for unexpectedly huge webpages
+    CrashIf(dataLen > ULONG_MAX);
+#endif
+    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, (ULONG)dataLen, (ULONG)dataLen);
     pIProtSink->ReportResult(S_OK, 200, NULL);
     return S_OK;
 }
@@ -416,9 +420,9 @@ STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
     size_t dataAvail = dataLen - dataCurrPos;
     if (0 == dataAvail)
         return S_FALSE;
-    size_t toRead = cb;
+    ULONG toRead = cb;
     if (toRead > dataAvail)
-        toRead = dataAvail;
+        toRead = (ULONG)dataAvail;
     char *dataToRead = data + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;

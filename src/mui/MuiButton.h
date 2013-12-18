@@ -39,7 +39,7 @@ public:
     void    SetStyles(Style *def, Style *mouseOver);
 
     WCHAR *         text;
-    size_t          textDx; // cached measured text width
+    int             textDx; // cached measured text width
 };
 
 // TODO: maybe should combine Button and ButtonVector into one?

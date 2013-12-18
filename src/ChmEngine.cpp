@@ -86,7 +86,7 @@ public:
     }
 
     virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pages.Count(); }
+    virtual int PageCount() const { return (int)pages.Count(); }
     virtual RectD PageMediabox(int pageNo) { return RectD(); }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
@@ -334,7 +334,7 @@ class ChmTocBuilder : public EbookTocVisitor {
             return 0;
 
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-        int pageNo = pages->Count() + 1;
+        int pageNo = (int)pages->Count() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
             pages->Append(plainUrl.StealData());
@@ -349,7 +349,7 @@ public:
     ChmTocBuilder(ChmDoc *doc, WStrList *pages, Vec<ChmTocTraceItem> *tocTrace, Allocator *allocator) :
         doc(doc), pages(pages), tocTrace(tocTrace), allocator(allocator)
         {
-            for (size_t i = 0; i < pages->Count(); i++) {
+            for (int i = 0; i < (int)pages->Count(); i++) {
                 const WCHAR *url = pages->At(i);
                 bool inserted = urlsSet.Insert(url, i + 1, NULL);
                 CrashIf(!inserted);

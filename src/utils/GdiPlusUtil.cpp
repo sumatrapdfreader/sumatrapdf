@@ -14,9 +14,9 @@ using namespace Gdiplus;
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width
-RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, int len)
 {
-    CrashIf(0 == len);
+    CrashIf(0 >= len);
     FixedArray<Region, 1024> regionBuf(len);
     Region *r = regionBuf.Get();
     StringFormat sf(StringFormat::GenericTypographic());
@@ -24,7 +24,7 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
     RectF layoutRect;
     FixedArray<CharacterRange, 1024> charRangesBuf(len);
     CharacterRange *charRanges = charRangesBuf.Get();
-    for (size_t i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         charRanges[i].First = i;
         charRanges[i].Length = 1;
     }
@@ -34,7 +34,7 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
     RectF bbox;
     REAL maxDy = 0;
     REAL totalDx = 0;
-    for (size_t i = 0; i < len; i++) {
+    for (int i = 0; i < len; i++) {
         r[i].GetBounds(&bbox, g);
         if (bbox.Height > maxDy)
             maxDy = bbox.Height;
@@ -51,7 +51,7 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, size_t len)
 #define PER_STR_DX_ADJUST  1.f
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len)
 {
     if (0 == len)
         return RectF(0, 0, 0, 0); // TODO: should set height to font's height
@@ -74,7 +74,7 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
 }
 
 // this usually reports size that is too large
-RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, int len)
 {
     RectF bbox;
     PointF pz(0,0);
@@ -82,8 +82,10 @@ RectF MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, size_t len)
     return bbox;
 }
 
-RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, int len)
 {
+    CrashIf(0 >= len);
+
     static Vec<Font *> fontCache;
     static Vec<bool> fixCache;
 
@@ -105,7 +107,7 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
     // most documents look good enough with these adjustments
     if (!fixCache.At(idx)) {
         REAL correct = 0;
-        for (size_t i = 0; i < len; i++) {
+        for (int i = 0; i < len; i++) {
             switch (s[i]) {
             case 'i': case 'l': correct += 0.2f; break;
             case 't': case 'f': case 'I': correct += 0.1f; break;
@@ -122,10 +124,11 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len, TextMeasureA
 {
     if (-1 == len)
         len = str::Len(s);
+    CrashIf(len > INT_MAX);
     if (algo)
-        return algo(g, f, s, len);
+        return algo(g, f, s, (int)len);
     //RectF bbox = MeasureTextStandard(g, f, s, len);
-    RectF bbox = MeasureTextAccurate(g, f, s, len);
+    RectF bbox = MeasureTextAccurate(g, f, s, (int)len);
     //RectF bbox = MeasureTextAccurate2(g, f, s, len);
     return bbox;
 }
@@ -136,13 +139,13 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len, TextMeasureA
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-int StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo)
+size_t StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo)
 {
     RectF r = MeasureText(g, f, s, len, algo);
     if (r.Width <= dx)
         return len;
     // make the best guess of the length that fits
-    size_t n = (int)((dx / r.Width) * (float)len);
+    size_t n = (size_t)((dx / r.Width) * (float)len);
     CrashIf((0 == n) || (n > len));
     r = MeasureText(g, f, s, n, algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx

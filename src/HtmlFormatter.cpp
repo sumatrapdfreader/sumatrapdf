@@ -60,7 +60,7 @@ Control objects further to make allocating hundreds of them cheaper or introduce
 other base element(s) with less functionality and less overhead).
 */
 
-bool ValidReparseIdx(int idx, HtmlPullParser *parser)
+bool ValidReparseIdx(ptrdiff_t idx, HtmlPullParser *parser)
 {
     if ((idx < 0) || (idx > (int)parser->Len()))
         return false;
@@ -533,7 +533,8 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         // so we have to carry over some state (like current font)
         CrashIf(!CurrFont());
         EmitNewPage();
-        currPage->reparseIdx = currLineReparseIdx;
+        CrashIf(currLineReparseIdx > INT_MAX);
+        currPage->reparseIdx = (int)currLineReparseIdx;
         createdPage = true;
     }
     SetYPos(currLineInstr, currY + currLineTopPadding);
@@ -560,7 +561,8 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
 
 void HtmlFormatter::EmitNewPage()
 {
-    currPage = new HtmlPage(currReparseIdx);
+    CrashIf(currReparseIdx > INT_MAX);
+    currPage = new HtmlPage((int)currReparseIdx);
     currPage->instructions.Append(DrawInstr::SetFont(nextPageStyle.font));
     currY = 0.f;
 }
@@ -728,10 +730,10 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
             break;
         }
 
-        int lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX(), measureAlgo);
+        size_t lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX(), measureAlgo);
         // try to prevent a break in the middle of a word
         if (iswalnum(buf[lenThatFits])) {
-            for (int len = lenThatFits; len > 0; len--) {
+            for (size_t len = lenThatFits; len > 0; len--) {
                 if (!iswalnum(buf[len-1])) {
                     lenThatFits = len;
                     break;
@@ -743,7 +745,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
         // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
-        for (int i = lenThatFits - 1; i >= 0; i--) {
+        for (size_t i = lenThatFits - 1; i >= 0; i--) {
             lenThatFits += buf[i] < 0x80 ? 0 : buf[i] < 0x800 ? 1 : 2;
         }
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
@@ -1359,7 +1361,7 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
                 g->DrawRectangle(&debugPen, bbox);
             g->DrawLine(&linePen, p1, p2);
         } else if (InstrString == i->type) {
-            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
@@ -1386,7 +1388,7 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
         } else if (InstrRtlString == i->type) {
-            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);

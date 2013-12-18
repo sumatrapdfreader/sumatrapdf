@@ -31,7 +31,7 @@ static LONG g_gdiplusUsage = 0;
 static ColorPalette *
 gdiplus_create_grayscale_palette(fz_context *ctx, int depth)
 {
-	ColorPalette * palette = (ColorPalette *)fz_malloc(ctx, sizeof(ColorPalette) + (1 << depth) * sizeof(ARGB));
+	ColorPalette * palette = (ColorPalette *)fz_malloc(ctx, sizeof(ColorPalette) + ((size_t)1 << depth) * sizeof(ARGB));
 	
 	palette->Flags = PaletteFlagsGrayScale;
 	palette->Count = 1 << depth;

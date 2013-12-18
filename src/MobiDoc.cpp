@@ -577,7 +577,9 @@ bool MobiDoc::ParseHeader()
             recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec + 1 + i, &huffRecSize);
             if (!recData)
                 return false;
-            if (!huffDic->AddCdicData((uint8*)recData, huffRecSize))
+            if (huffRecSize > (uint32)-1)
+                return false;
+            if (!huffDic->AddCdicData((uint8*)recData, (uint32)huffRecSize))
                 return false;
         }
     }

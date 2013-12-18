@@ -69,7 +69,7 @@ bool PdbReader::ParseHeader()
         recOffsets.Append(off);
     }
     // add sentinel value to simplify use
-    recOffsets.Append(dataSize);
+    recOffsets.Append((uint32_t)min(dataSize, (uint32_t)-1));
 
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {

@@ -445,11 +445,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     selection.SelectUpTo(endPage, endGlyph);
     
     ScopedMem<WCHAR> selected_text(selection.ExtractText(L"\r\n"));
-    int selected_text_length = str::Len(selected_text);
+    size_t selected_text_length = str::Len(selected_text);
 
     // -1 and [0, inf) are allowed
     if (maxLength > -2) {
-        if (maxLength != -1 && selected_text_length > maxLength)
+        if (maxLength != -1 && selected_text_length > (size_t)maxLength)
             selected_text[maxLength] = '\0'; // truncate
         
         *text = SysAllocString(selected_text);

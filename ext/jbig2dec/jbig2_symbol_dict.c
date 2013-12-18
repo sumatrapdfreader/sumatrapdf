@@ -1051,8 +1051,8 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   offset += 8;
 
   jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
-    "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
-    flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
+	      "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
+	      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
 
   /* 7.4.2.2 (2) */
   {

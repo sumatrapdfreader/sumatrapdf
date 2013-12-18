@@ -746,7 +746,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
         if (-1 == typeNo) {
             fileExts.Append(str::Dup(ext));
             filesPerType.Append(new WStrVec());
-            typeNo = filesPerType.Count() - 1;
+            typeNo = (int)filesPerType.Count() - 1;
         }
         filesPerType.At(typeNo)->Append(str::Dup(file));
     }

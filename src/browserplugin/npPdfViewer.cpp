@@ -173,7 +173,7 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 
 /* ::::: Auxiliary Methods ::::: */
 
-bool GetExePath(WCHAR *lpPath, size_t len)
+bool GetExePath(WCHAR *lpPath, DWORD len)
 {
     // Search the plugin's directory first
     GetModuleFileName(g_hInstance, lpPath, len - 2);
@@ -267,7 +267,7 @@ int cmpWcharPtrs(const void *a, const void *b)
 const WCHAR *Translate(const WCHAR *s)
 {
     const WCHAR **res = (const WCHAR **)bsearch(&s, gTranslations, gTranslationsCount, sizeof(s), cmpWcharPtrs);
-    int idx = gTranslationIdx + res - gTranslations;
+    int idx = gTranslationIdx + (int)(res - gTranslations);
     return res && gTranslations[idx] ? gTranslations[idx] : s;
 }
 
