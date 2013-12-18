@@ -279,7 +279,7 @@ void StrTest()
 #undef TEST_STRING
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
-    utassert(iswdigit(L'\xB2') && !str::IsDigit(L'\xB2'));
+    utassert(iswdigit(L'\u0660') && !str::IsDigit(L'\xB2'));
 
     utassert(str::CmpNatural(L".hg", L"2.pdf") < 0);
     utassert(str::CmpNatural(L"100.pdf", L"2.pdf") > 0);
@@ -430,7 +430,7 @@ void StrTest()
 
     {
         char buf[6] = { 0 };
-        int cnt = str::BufAppend(buf, dimof(buf), "");
+        size_t cnt = str::BufAppend(buf, dimof(buf), "");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf, dimof(buf), "1234");
         utassert(4 == cnt);
@@ -445,7 +445,7 @@ void StrTest()
 
     {
         WCHAR buf[6] = { 0 };
-        int cnt = str::BufAppend(buf, dimof(buf), L"");
+        size_t cnt = str::BufAppend(buf, dimof(buf), L"");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf, dimof(buf), L"1234");
         utassert(4 == cnt);

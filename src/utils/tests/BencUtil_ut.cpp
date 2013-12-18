@@ -219,7 +219,7 @@ static void BencTestArrayAppend()
     for (size_t i = 1; i <= ITERATION_COUNT; i++) {
         BencInt *obj = array->GetInt(i - 1);
         utassert(obj && obj->Type() == BT_INT);
-        utassert(obj->Value() == i);
+        utassert(obj->Value() == (int64_t)i);
         utassert(!array->GetString(i - 1));
         utassert(!array->GetArray(i - 1));
         utassert(!array->GetDict(i - 1));

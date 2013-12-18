@@ -812,10 +812,16 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
     if (FAILED(res))
         return false;
     ULONG read;
-    res = stream->Read(buffer, len, &read);
-    if (read < len)
-        ((char *)buffer)[read] = '\0';
-    return SUCCEEDED(res);
+#ifdef _WIN64
+    for (; len > ULONG_MAX; len -= ULONG_MAX) {
+        res = stream->Read(buffer, ULONG_MAX, &read);
+        if (FAILED(res) || read != ULONG_MAX)
+            return false;
+        len -= ULONG_MAX;
+    }
+#endif
+    res = stream->Read(buffer, (ULONG)len, &read);
+    return SUCCEEDED(res) && read == len;
 }
 
 UINT GuessTextCodepage(const char *data, size_t len, UINT default)

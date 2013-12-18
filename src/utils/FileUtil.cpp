@@ -294,7 +294,7 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
         return NULL;
     size_t size = (size_t)size64;
 #ifdef _WIN64
-    CrashIf(size != size64);
+    CrashIf(size != (size_t)size64);
 #else
     if (size != size64)
         return NULL;
