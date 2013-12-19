@@ -191,7 +191,9 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		   some reason, Poppler doesn't seem to have this problem */
 		fz_try(ctx)
 		{
-			pdf_load_windows_font(ctx, fontdesc, fontname);
+			fontdesc->font = pdf_load_windows_font(ctx, fontname);
+			if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
+				fontdesc->flags |= PDF_FD_SYMBOLIC;
 		}
 		fz_catch(ctx) { }
 		if (fontdesc->font)
@@ -216,9 +218,28 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 }
 
 static void
-pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int mono, int serif, int bold, int italic)
+pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int mono, int serif, int bold, int italic, int has_encoding)
 {
 	fz_buffer *buffer;
+
+#ifdef _WIN32
+	/* SumatraPDF: try to find a matching system font before falling back to a built-in one */
+	fz_try(ctx)
+	{
+		fontdesc->font = pdf_load_windows_font(ctx, fontname);
+		if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
+			fontdesc->flags |= PDF_FD_SYMBOLIC;
+		fontdesc->font->ft_substitute = 1;
+		/* TODO: setting ft_bold and ft_italic as below produces worse results */
+	}
+	fz_catch(ctx) { }
+	if (fontdesc->font)
+		return;
+#endif
+
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
+	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "encoding-less symbolic font '%s' is missing", fontname);
 
 	buffer = fz_load_system_font(ctx, fontname);
 	if (buffer)
@@ -250,27 +271,24 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 	unsigned int len;
 
 #ifdef _WIN32
+	/* SumatraPDF: try to find a matching system font before falling back to an approximate one */
+	fz_try(ctx)
+	{
+		fontdesc->font = pdf_load_windows_font(ctx, fontname);
+		fontdesc->font->ft_substitute = 1;
+	}
+	fz_catch(ctx) { }
+	if (fontdesc->font)
+		return;
 	/* SumatraPDF: Try to fall back to a reasonable system font */
 	fz_try(ctx)
 	{
-		pdf_load_similar_cjk_font(ctx, fontdesc, ros, serif);
-	}
-	fz_catch(ctx)
-	{
-#ifdef NOCJKFONT
-		/* If no CJK fallback font is builtin, maybe one has been shipped separately */
-		fz_try(ctx)
-		{
-			pdf_load_windows_font(ctx, fontdesc, "DroidSansFallback");
-		}
-		fz_catch(ctx) { }
-#endif
-	}
-	if (fontdesc->font)
-	{
+		fontdesc->font = pdf_load_similar_cjk_font(ctx, ros, serif);
 		fontdesc->font->ft_substitute = 1;
-		return;
 	}
+	fz_catch(ctx) { }
+	if (fontdesc->font)
+		return;
 #endif
 
 	data = pdf_lookup_substitute_cjk_font(ros, serif, &len);
@@ -290,20 +308,6 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 	int italic = 0;
 	int serif = 0;
 	int mono = 0;
-
-#ifdef _WIN32
-	/* SumatraPDF: try to find a matching system font before falling back to a built-in one */
-	fz_try(ctx)
-	{
-		pdf_load_windows_font(ctx, fontdesc, fontname);
-		/* TODO: this seems to be required at least for MS-Mincho - why? */
-		if (collection)
-			fontdesc->font->ft_substitute = 1;
-	}
-	fz_catch(ctx) { }
-	if (fontdesc->font)
-		return;
-#endif
 
 	if (strstr(fontname, "Bold"))
 		bold = 1;
@@ -338,16 +342,12 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 		{
 			if (strcmp(collection, "Adobe-Identity") != 0)
 				fz_warn(ctx, "unknown cid collection: %s", collection);
-			pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic);
+			pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic, 1);
 		}
 	}
 	else
 	{
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
-		if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "encoding-less symbolic font '%s' is missing", fontname);
-
-		pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic);
+		pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic, has_encoding);
 	}
 }
 

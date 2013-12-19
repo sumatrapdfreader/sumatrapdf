@@ -724,8 +724,8 @@ create_system_font_list(fz_context *ctx)
 	atexit(destroy_system_font_list);
 }
 
-void
-pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
+fz_font *
+pdf_load_windows_font(fz_context *ctx, char *fontname)
 {
 	pdf_fontmapMS *found = NULL;
 	char *comma, *orig_name = fontname;
@@ -799,53 +799,66 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 		}
 	}
 
-	if (found && (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats")))
-		font->flags |= PDF_FD_SYMBOLIC;
-
 	fz_free(ctx, fontname);
 	if (!found)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
 
 	fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
 
-	font->font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
+	return fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
 		strcmp(found->fontface, "DroidSansFallback") != 0);
 }
 
-void
-pdf_load_similar_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, int ros, int serif)
+fz_font *
+pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 {
-	if (serif)
+	fz_font *font;
+
+	fz_try(ctx)
 	{
-		switch (ros)
+		if (serif)
 		{
-		case PDF_ROS_CNS: pdf_load_windows_font(ctx, fontdesc, "MingLiU"); break;
-		case PDF_ROS_GB: pdf_load_windows_font(ctx, fontdesc, "SimSun"); break;
-		case PDF_ROS_JAPAN: pdf_load_windows_font(ctx, fontdesc, "MS-Mincho"); break;
-		case PDF_ROS_KOREA: pdf_load_windows_font(ctx, fontdesc, "Batang"); break;
-		default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
+			switch (ros)
+			{
+			case PDF_ROS_CNS: font = pdf_load_windows_font(ctx, "MingLiU"); break;
+			case PDF_ROS_GB: font = pdf_load_windows_font(ctx, "SimSun"); break;
+			case PDF_ROS_JAPAN: font = pdf_load_windows_font(ctx, "MS-Mincho"); break;
+			case PDF_ROS_KOREA: font = pdf_load_windows_font(ctx, "Batang"); break;
+			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
+			}
+		}
+		else
+		{
+			switch (ros)
+			{
+			case PDF_ROS_CNS: font = pdf_load_windows_font(ctx, "DFKaiShu-SB-Estd-BF"); break;
+			case PDF_ROS_GB:
+				fz_try(ctx)
+				{
+					font = pdf_load_windows_font(ctx, "KaiTi");
+				}
+				fz_catch(ctx)
+				{
+					font = pdf_load_windows_font(ctx, "KaiTi_GB2312");
+				}
+				break;
+			case PDF_ROS_JAPAN: font = pdf_load_windows_font(ctx, "MS-Gothic"); break;
+			case PDF_ROS_KOREA: font = pdf_load_windows_font(ctx, "Gulim"); break;
+			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
+			}
 		}
 	}
-	else
+	fz_catch(ctx)
 	{
-		switch (ros)
-		{
-		case PDF_ROS_CNS: pdf_load_windows_font(ctx, fontdesc, "DFKaiShu-SB-Estd-BF"); break;
-		case PDF_ROS_GB:
-			fz_try(ctx)
-			{
-				pdf_load_windows_font(ctx, fontdesc, "KaiTi");
-			}
-			fz_catch(ctx)
-			{
-				pdf_load_windows_font(ctx, fontdesc, "KaiTi_GB2312");
-			}
-			break;
-		case PDF_ROS_JAPAN: pdf_load_windows_font(ctx, fontdesc, "MS-Gothic"); break;
-		case PDF_ROS_KOREA: pdf_load_windows_font(ctx, fontdesc, "Gulim"); break;
-		default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
-		}
+#ifdef NOCJKFONT
+		/* If no CJK fallback font is builtin, maybe one has been shipped separately */
+		font = pdf_load_windows_font(ctx, "DroidSansFallback");
+#else
+		fz_rethrow(ctx);
+#endif
 	}
+
+	return font;
 }
 
 #endif
