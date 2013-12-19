@@ -745,8 +745,8 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
         // TODO: this usually fails for non-BMP characters (i.e. hardly ever)
-        for (size_t i = lenThatFits - 1; i >= 0; i--) {
-            lenThatFits += buf[i] < 0x80 ? 0 : buf[i] < 0x800 ? 1 : 2;
+        for (size_t i = lenThatFits; i > 0; i--) {
+            lenThatFits += buf[i-1] < 0x80 ? 0 : buf[i-1] < 0x800 ? 1 : 2;
         }
         AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
         currX += bbox.Width;
