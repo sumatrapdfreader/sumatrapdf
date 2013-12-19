@@ -854,6 +854,7 @@ void pdf_drop_js(pdf_js *js)
 		fz_context *ctx = js->doc->ctx;
 		fz_free(ctx, js->event.value);
 		pdf_jsimp_drop_type(js->imp, js->apptype);
+		pdf_jsimp_drop_type(js->imp, js->eventtype);
 		pdf_jsimp_drop_type(js->imp, js->fieldtype);
 		pdf_jsimp_drop_type(js->imp, js->doctype);
 		pdf_drop_jsimp(js->imp);

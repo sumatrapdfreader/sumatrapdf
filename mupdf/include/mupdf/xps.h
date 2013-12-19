@@ -119,14 +119,6 @@ void xps_read_page_list(xps_document *doc);
 void xps_print_page_list(xps_document *doc);
 void xps_free_page_list(xps_document *doc);
 
-int xps_count_pages(xps_document *doc);
-xps_page *xps_load_page(xps_document *doc, int number);
-fz_link *xps_load_links(xps_document *doc, xps_page *page);
-fz_rect *xps_bound_page(xps_document *doc, xps_page *page, fz_rect *rect);
-void xps_free_page(xps_document *doc, xps_page *page);
-
-fz_outline *xps_load_outline(xps_document *doc);
-
 int xps_lookup_link_target(xps_document *doc, char *target_uri);
 void xps_add_link(xps_document *doc, const fz_rect *area, char *base_uri, char *target_uri);
 

@@ -740,6 +740,9 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, pdf_ui_event *ui_event)
 	fz_point *pt = &(ui_event->event.pointer.pt);
 	int changed = 0;
 
+	if (page == NULL)
+		return 0;
+
 	for (annot = page->annots; annot; annot = annot->next)
 	{
 		if (pt->x >= annot->pagerect.x0 && pt->x <= annot->pagerect.x1)

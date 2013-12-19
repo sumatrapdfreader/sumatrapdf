@@ -756,12 +756,6 @@ EXPORTS
 	xps_read_page_list
 	xps_print_page_list
 	xps_free_page_list
-	xps_count_pages
-	xps_load_page
-	xps_load_links
-	xps_bound_page
-	xps_free_page
-	xps_load_outline
 	xps_lookup_link_target
 	xps_add_link
 	xps_lookup_link_target_obj

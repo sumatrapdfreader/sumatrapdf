@@ -36,7 +36,6 @@ struct pdf_crypt_s
 	int encrypt_metadata;
 
 	unsigned char key[32]; /* decryption key generated from password */
-	fz_context *ctx;
 };
 
 static void pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, char *name);
@@ -954,7 +953,6 @@ pdf_open_crypt_imp(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, i
 	unsigned char key[32];
 	int len;
 
-	crypt->ctx = chain->ctx;
 	len = pdf_compute_object_key(crypt, stmf, num, gen, key, 32);
 
 	if (stmf->method == PDF_CRYPT_RC4)

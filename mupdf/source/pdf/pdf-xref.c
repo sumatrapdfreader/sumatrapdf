@@ -638,7 +638,6 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 	return trailer;
 }
 
-/* File is locked on entry, and exit (but may be dropped in the middle) */
 static pdf_obj *
 pdf_read_xref(pdf_document *doc, int ofs, pdf_lexbuf *buf)
 {

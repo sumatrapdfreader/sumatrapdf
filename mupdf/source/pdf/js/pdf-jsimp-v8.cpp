@@ -1,7 +1,5 @@
 /*
- * This is a dummy JavaScript engine. It cheats by recognising the specific
- * strings in calc.pdf, and hence will work only for that file. It is for
- * testing only.
+	This file contains the v8 implementation of the pdf_jsimp API
  */
 
 extern "C" {

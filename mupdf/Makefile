@@ -93,6 +93,7 @@ XPS_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(XPS_SRC))))
 CBZ_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(CBZ_SRC))))
 IMG_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(IMG_SRC))))
 
+PDF_JS_JSCORE_OBJ := $(OUT)/pdf/js/pdf-js.o $(OUT)/pdf/js/pdf-jsimp-jscore.o
 PDF_JS_V8_OBJ := $(OUT)/pdf/js/pdf-js.o $(OUT)/pdf/js/pdf-jsimp-cpp.o $(OUT)/pdf/js/pdf-jsimp-v8.o
 PDF_JS_NONE_OBJ := $(OUT)/pdf/js/pdf-js-none.o
 
@@ -102,6 +103,7 @@ $(XPS_OBJ) : $(FITZ_HDR) $(XPS_HDR) $(XPS_SRC_HDR)
 $(CBZ_OBJ) : $(FITZ_HDR) $(CBZ_HDR) $(CBZ_SRC_HDR)
 $(IMG_OBJ) : $(FITZ_HDR) $(IMG_HDR) $(IMG_SRC_HDR)
 
+$(PDF_JS_JSCORE_OBJ) : $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
 $(PDF_JS_V8_OBJ) : $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
 $(PDF_JS_NONE_OBJ) :=  $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
 
@@ -118,7 +120,12 @@ MUPDF_JS_V8_LIB := $(OUT)/libmupdf-js-v8.a
 $(MUPDF_JS_V8_LIB) : $(PDF_JS_V8_OBJ)
 endif
 
-INSTALL_LIBS := $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(MUPDF_JS_V8_LIB)
+ifeq "$(JSCORE_PRESENT)" "yes"
+MUPDF_JS_JSCORE_LIB := $(OUT)/libmupdf-js-jscore.a
+$(MUPDF_JS_JSCORE_LIB) : $(PDF_JS_JSCORE_OBJ)
+endif
+
+INSTALL_LIBS := $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(MUPDF_JS_V8_LIB) $(MUPDF_JS_JSCORE_LIB)
 
 # --- Rules ---
 
