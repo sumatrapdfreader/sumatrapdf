@@ -14,6 +14,8 @@ CFG=dbg
 !endif
 !if "$(PLATFORM)"==""
 PLATFORM=X86
+!elseif "$(PLATFORM)"=="x64" || "$(TARGET_CPU)"=="x64"
+PLATFORM = X64
 !endif
 
 # O is directory where object and binary files go

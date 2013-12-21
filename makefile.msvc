@@ -21,6 +21,10 @@ CFG=dbg
 BASEDIR=.
 !endif
 
+!if "$(PLATFORM)"=="x64" || "$(TARGET_CPU)"=="x64"
+PLATFORM = X64
+!endif
+
 # O is directory where object and binary files go
 O = $(BASEDIR)\obj-$(CFG)
 
@@ -245,6 +249,10 @@ MEMTRACE_OBJS = \
 # build all optional IFilters for debug builds
 BUILD_TEX_IFILTER = 1
 BUILD_EPUB_IFILTER = 1
+# build all optional previews for debug builds
+BUILD_XPS_PREVIEW = 1
+BUILD_CBZ_PREVIEW = 1
+BUILD_TGA_PREVIEW = 1
 !endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""

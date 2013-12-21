@@ -108,7 +108,7 @@ static void DrawSumatraPDF(HDC hdc, PointI pt)
 #ifdef ABOUT_USE_LESS_COLORS
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
-    TextOut(hdc, pt.x, pt.y, txt, str::Len(txt));
+    TextOut(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
 #else
     // colorful version
     COLORREF cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
