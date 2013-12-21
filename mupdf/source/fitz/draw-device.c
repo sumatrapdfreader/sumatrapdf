@@ -556,8 +556,8 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 		if (glyph)
 		{
 			fz_pixmap *pixmap = glyph->pixmap;
-			int x = (int)trm.e;
-			int y = (int)trm.f;
+			int x = floorf(trm.e);
+			int y = floorf(trm.f);
 			if (pixmap == NULL || pixmap->n == 1)
 			{
 				draw_glyph(colorbv, state->dest, glyph, x, y, &state->scissor);
