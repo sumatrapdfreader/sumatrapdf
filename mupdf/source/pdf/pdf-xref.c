@@ -389,10 +389,10 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 		trailer = pdf_parse_dict(doc, doc->file, buf);
 
 		size = pdf_to_int(pdf_dict_gets(trailer, "Size"));
+		/* SumatraPDF: fix memory leak */
+		pdf_drop_obj(trailer);
 		if (!size)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "trailer missing Size entry");
-
-		pdf_drop_obj(trailer);
 	}
 	fz_catch(doc->ctx)
 	{
