@@ -837,10 +837,10 @@ OPJ_BOOL opj_t2_read_packet_header( opj_t2_t* p_t2,
         if (p_tcp->csty & J2K_CP_CSTY_SOP) {
                 if (p_max_length < 6) {
                         /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Not enough space for expected SOP marker\n"); */
-                        printf("Not enough space for expected SOP marker\n");
+                        fprintf(stderr, "Not enough space for expected SOP marker\n");
                 } else if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
                         /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
-                        printf("Expected SOP marker\n");
+                        fprintf(stderr, "Expected SOP marker\n");
                 } else {
                         l_current_data += 6;
                 }
@@ -890,7 +890,7 @@ OPJ_BOOL opj_t2_read_packet_header( opj_t2_t* p_t2,
                 /* EPH markers */
                 if (p_tcp->csty & J2K_CP_CSTY_EPH) {
                         if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-                                printf("Error : expected EPH marker\n");
+                                fprintf(stderr, "Error : expected EPH marker\n");
                         } else {
                                 l_header_data += 2;
                         }

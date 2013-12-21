@@ -382,7 +382,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
 --- openjpeg.orig\t2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\t2.c	Sat Dec 14 16:03:57 2013
++++ openjpeg\t2.c	Sat Dec 21 17:54:43 2013
 @@ -833,12 +833,16 @@
          }
  
@@ -393,15 +393,28 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
 -                        /* TODO opj_event_msg(t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
 +                if (p_max_length < 6) {
 +                        /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Not enough space for expected SOP marker\n"); */
-+                        printf("Not enough space for expected SOP marker\n");
++                        fprintf(stderr, "Not enough space for expected SOP marker\n");
 +                } else if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
 +                        /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
-+                        printf("Expected SOP marker\n");
++                        fprintf(stderr, "Expected SOP marker\n");
                  } else {
                          l_current_data += 6;
                  }
  
                  /** TODO : check the Nsop value */
+@@ -884,11 +888,11 @@
+                 opj_bio_destroy(l_bio);
+ 
+                 /* EPH markers */
+                 if (p_tcp->csty & J2K_CP_CSTY_EPH) {
+                         if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
+-                                printf("Error : expected EPH marker\n");
++                                fprintf(stderr, "Error : expected EPH marker\n");
+                         } else {
+                                 l_header_data += 2;
+                         }
+                 }
+ 
 @@ -979,10 +983,15 @@
                          n = l_cblk->numnewpasses;
  
