@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2b31cec09d0a779ce8a4bc7606c44d2404f6bbe9
+55d34e13c048c735c81b767b1e4a92d28a5648e5
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -2178,7 +2178,7 @@ tl:I-&print
 tr:&Yazdır...
 tw:列印...(&P)
 uk:Друк...
-uz:&Bosib chiqarish...
+uz:&Chop etish...
 vn:In...
 :&Print... (denied)
 am:&Տպել... (մերժված)
@@ -2235,7 +2235,7 @@ tl:&I-print... (hindi maaari)
 tr:&Baskı... (reddedildi)
 tw:列印(&P)... (已中斷)
 uk:Друк... (відхилено)
-uz:&Bosib chiqarish... (ruxsat etilmagan)
+uz:&Chop etish... (ruxsat etilmagan)
 vn:&In... (bị từ chối)
 :&Print...\tCtrl+P
 af:&Druk\tCtrl+P
@@ -2303,7 +2303,7 @@ tl:I-&print\tCtrl+P
 tr:&Yazdır...\tCtrl+P
 tw:列印(&P)...\tCtrl+P
 uk:&Друкувати...\tCtrl+P
-uz:&Bosib chiqarish\tCtrl+P
+uz:&Chop etish\tCtrl+P
 vn:In...\tCtrl+P
 :&Remember the password for this document
 am:&Հիշել ֆայլի գաղտնաբառը
@@ -4712,7 +4712,7 @@ tl:Hindi mai-print ang file
 tr:Bu dosyanın yazıcıdan dökümü yapılamaz
 tw:無法列印檔案
 uk:Не можу надрукувати цей файл
-uz:Faylni bosib chiqarib bo'lmadi
+uz:Faylni chop etib bo'lmadi
 vn:Không in được tập tin này
 :Cannot start inverse search command. Please check the command line in the settings.
 am:Հնարավոր չէ որոնել։Ստուգեք հրամանների տողի կարգավորումները։
@@ -12744,7 +12744,7 @@ ta:அச்சிட்டு
 tr:Yazdır
 tw:列印
 uk:Друк
-uz:Bosib chiqarish
+uz:Chop etish
 vn:In
 :Print as &image (requires more memory)
 am:Տպել որպես &նկար (պահանջում է լր. հիշողություն)
@@ -12797,7 +12797,7 @@ ta:படத்தை போன்று அச்சிடு (நினைவ�
 tr:Resim olarak bas (daha çok hafıza gerektirir)
 tw:列印成圖像 (需要更多的記憶體) (&I)
 uk:Роздрукувати як зображення
-uz:&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)
+uz:&Rasm sifatida chop etish (ko'proq xotirani talab qiladi)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
 am:Տպելու կարգը
@@ -12853,7 +12853,7 @@ tl:Mga ipi-print na pahina
 tr:Baskı aralığı
 tw:列印範圍
 uk:Межі друку
-uz:Bosib chiqarish diapazoni
+uz:Chop etish diapazoni
 vn:Giới hạn vùng in
 :Printer with given name doesn't exist
 am:Այս անվամբ տպիչ գոյություն չունի
@@ -12957,7 +12957,7 @@ ta:அச்சு பணியில் உள்ளது
 tr:Baskı devam ediyor.
 tw:正在列印
 uk:Триває друк.
-uz:Bosib chiqarilmoqda.
+uz:Chop etilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
 am:Տպվում է: Ընդհատե՞լ և փակել:
@@ -13006,7 +13006,7 @@ ta:அச்சடித்தல் செயலில் உள்ளது. �
 tr:Yazdırma sürüyor. İptal edip çıkmak istiyor musunuz?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
-uz:Bosib chiqarilmoqda. To'xtatilib dasturdan chiqilsinmi?
+uz:Chop etilmoqda. To'xtatilib dasturdan chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
@@ -13061,7 +13061,7 @@ ta:அச்சிடுதல் செயல்பாட்டில் உள
 tr:Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
 tw:正在列印，是否要放棄並重新設定？
 uk:Друк ще не завершено. Перервати та розпочати знову?
-uz:Bosib chiqarish tugatilmagan. To'xtatilib qaytadan boshlansinmi?
+uz:Chop etilmoqda. To'xtatilib qaytadan boshlansinmi?
 vn:Vẫn còn đang in. Thoát và bắt đầu lại?
 :Printing page %d of %d...
 am:Տպվում է %d էջը %d-ից...
@@ -13116,7 +13116,7 @@ ta:அச்சிடும் பக்கம் %d உள் %d
 tr:Sayfa %d %d yazdırılıyor...
 tw:列印第 %d 頁（共 %d 頁）
 uk:Друк сторінок з %d до %d...
-uz:%d betni %d dan bosib chiqarilmoqda...
+uz:%d betni %d dan chop etilmoqda...
 vn:Đang in trang %d trên %d...
 :Printing problem.
 af:Druk Probleem.
@@ -13184,7 +13184,7 @@ tl:May Problema sa Pagpi-print.
 tr:Yazdırma problemi.
 tw:列印問題
 uk:Помилка друкування.
-uz:Bosib chiqarish muammosi.
+uz:Chop etish muammosi.
 vn:Lỗi in.
 :Re&name...\tF2
 am:Ան&վանափոխել...\tF2
@@ -16718,5 +16718,5 @@ tl:ipini-print ang dokumento
 tr:belge yazdırılıyor
 tw:文件列印中
 uk:друк документа
-uz:hujjatni bosib chiqarish
+uz:hujjatni chop etish
 vn:đang in tập tin

@@ -12840,9 +12840,9 @@ const char * gTranslations_uz =
   "&Maxfiy so'z:\0"\
   "&Hujjatni eslab qolish\0"\
   "&Oldingi bet\t<-\0"\
-  "&Bosib chiqarish...\0"\
-  "&Bosib chiqarish\tCtrl+P\0"\
-  "&Bosib chiqarish... (ruxsat etilmagan)\0"\
+  "&Chop etish...\0"\
+  "&Chop etish\tCtrl+P\0"\
+  "&Chop etish... (ruxsat etilmagan)\0"\
   "&Ushbu hujjatning maxfiy so'zini eslab qolish\0"\
   "&Ushbu parametrlarni har qaysi hujjat uchun eslab qolish\0"\
   "&Hujjatni o'chirish\0"\
@@ -12881,7 +12881,7 @@ const char * gTranslations_uz =
   "CHM hujjatlari\0"\
   "Internet ulanmagan (xato %#x).\0"\
   "Bekor qilish\0"\
-  "Faylni bosib chiqarib bo'lmadi\0"\
+  "Faylni chop etib bo'lmadi\0"\
   "Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.\0"\
   "Tilni o'zgartirish (Change Language)\0"\
   "&Yangi versiyani tekshirish\0"\
@@ -12993,15 +12993,15 @@ const char * gTranslations_uz =
   "Postscript hujjatlari\0"\
   "&Namoyish\tCtrl+L\0"\
   "Oldingi bet\0"\
-  "Bosib chiqarish\0"\
-  "&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)\0"\
-  "Bosib chiqarish diapazoni\0"\
+  "Chop etish\0"\
+  "&Rasm sifatida chop etish (ko'proq xotirani talab qiladi)\0"\
+  "Chop etish diapazoni\0"\
   "Bunday printer mavjud emas\0"\
-  "Bosib chiqarilmoqda.\0"\
-  "Bosib chiqarilmoqda. To'xtatilib dasturdan chiqilsinmi?\0"\
-  "Bosib chiqarish tugatilmagan. To'xtatilib qaytadan boshlansinmi?\0"\
-  "%d betni %d dan bosib chiqarilmoqda...\0"\
-  "Bosib chiqarish muammosi.\0"\
+  "Chop etilmoqda.\0"\
+  "Chop etilmoqda. To'xtatilib dasturdan chiqilsinmi?\0"\
+  "Chop etilmoqda. To'xtatilib qaytadan boshlansinmi?\0"\
+  "%d betni %d dan chop etilmoqda...\0"\
+  "Chop etish muammosi.\0"\
   "&Nomini o'zgartirish...\tF2\0"\
   "&Ochilgan fayllarni eslab qolish\0"\
   "Tanlanganlardan o'chirish\0"\
@@ -13050,7 +13050,7 @@ const char * gTranslations_uz =
   "Miqyos omili\0"\
   "[O'zgarishlar aniqlangan; yangilanmoqda] %s\0"\
   "matnni nusxa olish\0"\
-  "hujjatni bosib chiqarish\0";
+  "hujjatni chop etish\0";
 
 const char * gTranslations_vn = 
   "Gi\341\273\233i thi\341\273\207u\0"\
