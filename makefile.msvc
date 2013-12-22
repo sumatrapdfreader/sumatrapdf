@@ -30,7 +30,7 @@ O = $(BASEDIR)\obj-$(CFG)
 
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
-O = $(BASEDIR)\$(O)64
+O = $(O)64
 !endif
 
 !if "$(MUPDF_DIR)"==""

@@ -1,14 +1,30 @@
 diff -rPu5 zlib.orig\infback9\inftree2.h zlib\infback9\inftree2.h
 --- zlib.orig\infback9\inftree2.h	Thu Jan 01 01:00:00 1970
-+++ zlib\infback9\inftree2.h	Wed May 08 21:15:55 2013
++++ zlib\infback9\inftree2.h	Tue May 14 20:21:21 2013
 @@ -0,0 +1,4 @@
 +/* SumatraPDF: support Deflate64 */
 +extern int inflate_table9 OF((codetype type, unsigned short FAR *lens,
 +                             unsigned codes, code FAR * FAR *table,
 +                             unsigned FAR *bits, unsigned short FAR *work));
+diff -rPu5 zlib.orig\infback9\inftree9.c zlib\infback9\inftree9.c
+--- zlib.orig\infback9\inftree9.c	Sun Apr 28 23:57:10 2013
++++ zlib\infback9\inftree9.c	Wed Dec 18 13:33:15 2013
+@@ -254,11 +254,11 @@
+             /* if first time, transition to sub-tables */
+             if (drop == 0)
+                 drop = root;
+ 
+             /* increment past last table */
+-            next += 1U << curr;
++            next += (size_t)1 << curr; /* SumatraPDF: prevent C4334 */
+ 
+             /* determine length of next table */
+             curr = len - drop;
+             left = (int)(1 << curr);
+             while (curr + drop < max) {
 diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
---- zlib.orig\inflate.c	Mon Aug 13 09:02:40 2012
-+++ zlib\inflate.c	Wed May 08 21:15:55 2013
+--- zlib.orig\inflate.c	Mon Aug 13 08:02:40 2012
++++ zlib\inflate.c	Tue May 14 20:21:21 2013
 @@ -82,10 +82,15 @@
  
  #include "zutil.h"
@@ -160,8 +176,8 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  NEEDBITS(state->extra);
                  state->length += BITS(state->extra);
 diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
---- zlib.orig\inflate.h	Sat Dec 26 02:32:08 2009
-+++ zlib\inflate.h	Wed May 08 21:15:55 2013
+--- zlib.orig\inflate.h	Sat Dec 26 01:32:08 2009
++++ zlib\inflate.h	Tue May 14 20:21:21 2013
 @@ -75,10 +75,14 @@
                  LIT -> LEN
      Process trailer:
@@ -186,8 +202,8 @@ diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
 +    inflate_table_func *inflate_table; /* SumatraPDF: support Deflate64 */
  };
 diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
---- zlib.orig\minizip\iowin32.c	Mon Apr 29 00:57:11 2013
-+++ zlib\minizip\iowin32.c	Sat May 11 21:07:57 2013
+--- zlib.orig\minizip\iowin32.c	Sun Apr 28 23:57:11 2013
++++ zlib\minizip\iowin32.c	Tue May 14 20:21:21 2013
 @@ -25,11 +25,11 @@
  #define INVALID_SET_FILE_POINTER ((DWORD)-1)
  #endif
@@ -229,7 +245,7 @@ diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
          }
 diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 --- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.c	Sat Jan 21 16:18:29 2012
++++ zlib\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
 @@ -0,0 +1,103 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -336,7 +352,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 +}
 diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 --- zlib.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.h	Sat Jan 21 16:18:39 2012
++++ zlib\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
 @@ -0,0 +1,14 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -354,7 +370,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 --- zlib.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.c	Sat Feb 04 07:36:16 2012
++++ zlib\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
 @@ -0,0 +1,27 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -385,7 +401,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 +}
 diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 --- zlib.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.h	Sat Feb 04 07:42:30 2012
++++ zlib\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
 @@ -0,0 +1,28 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -416,8 +432,8 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +}
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
---- zlib.orig\minizip\unzip.c	Sun Feb 24 09:32:30 2013
-+++ zlib\minizip\unzip.c	Wed May 08 21:52:28 2013
+--- zlib.orig\minizip\unzip.c	Sun Feb 24 08:32:30 2013
++++ zlib\minizip\unzip.c	Tue May 14 20:21:21 2013
 @@ -106,10 +106,15 @@
  
  #ifndef UNZ_MAXFILENAMEINZIP
@@ -544,8 +560,8 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        {
          TRYFREE(pfile_in_zip_read_info);
 diff -rPu5 zlib.orig\minizip\unzip.h zlib\minizip\unzip.h
---- zlib.orig\minizip\unzip.h	Mon Jul 09 01:34:08 2012
-+++ zlib\minizip\unzip.h	Wed May 08 21:15:55 2013
+--- zlib.orig\minizip\unzip.h	Mon Jul 09 00:34:08 2012
++++ zlib\minizip\unzip.h	Tue May 14 20:21:21 2013
 @@ -57,10 +57,12 @@
  
  #ifdef HAVE_BZIP2
