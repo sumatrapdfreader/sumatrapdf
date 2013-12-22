@@ -236,7 +236,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         else {
             WCHAR *colon = str::FindChar(path, ':');
             WCHAR *hash = str::FindChar(path, '#');
-            if (!colon || colon > hash) {
+            if (!colon || (hash && colon > hash)) {
                 // treat relative URIs as file paths (without fragment identifier)
                 if (hash)
                     *hash = '\0';
