@@ -283,7 +283,7 @@ def gen_vcxproj_part(files):
     for file_type_name in sorted(file_type_to_files):
         ft_files = file_type_to_files[file_type_name]
         lines += gen_vcxproj_part_item_group(file_type_name, ft_files)
-    return "\n".join(lines)
+    return "\r\n".join(lines)
 
 # generate:
 #  <ItemGroup>
@@ -323,7 +323,7 @@ def gen_vcxproj_filters_part(filters, files):
     lines = []
     lines += gen_vcxproj_filters_1(filters)
     lines += gen_vcxproj_filters_2(files)
-    return "\n".join(lines)
+    return "\r\n".join(lines)
 
 def read_file_utf8(path):
     with codecs.open(path, "r", "utf-8") as fo:
