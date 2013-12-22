@@ -1,0 +1,29 @@
+diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
+--- jbig2dec.orig\jbig2.c	Tue Sep 03 07:53:07 2013
++++ jbig2dec\jbig2.c	Sun Dec 22 22:35:38 2013
+@@ -59,11 +59,11 @@
+ void *
+ jbig2_alloc (Jbig2Allocator *allocator, size_t size, size_t num)
+ {
+   /* check for integer multiplication overflow */
+   int64_t check = ((int64_t)num)*((int64_t)size);
+-  if (check != (int)check)
++  if (check != (int)check || check < 0)
+     return NULL;
+   else
+     return allocator->alloc (allocator, (int)check);
+ }
+ 
+@@ -76,11 +76,11 @@
+ void *
+ jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size, size_t num)
+ {
+   /* check for integer multiplication overflow */
+   int64_t check = ((int64_t)num)*((int64_t)size);
+-  if (check != (int)check)
++  if (check != (int)check || check < 0)
+     return NULL;
+   else
+     return allocator->realloc (allocator, p, (int)check);
+ }
+ 
