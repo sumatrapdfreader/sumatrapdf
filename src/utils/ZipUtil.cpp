@@ -128,17 +128,18 @@ char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (err != UNZ_OK)
         return NULL;
 
-    size_t len2 = (size_t)fileinfo.At(fileindex).uncompressed_size;
+    unsigned int len2 = (unsigned int)fileinfo.At(fileindex).uncompressed_size;
     // overflow check
     if (len2 != fileinfo.At(fileindex).uncompressed_size ||
-        len2 + sizeof(WCHAR) < sizeof(WCHAR)) {
+        len2 + sizeof(WCHAR) < sizeof(WCHAR) ||
+        len2 / 1024 > fileinfo.At(fileindex).compressed_size) {
         unzCloseCurrentFile(uf);
         return NULL;
     }
 
     char *result = (char *)Allocator::Alloc(allocator, len2 + sizeof(WCHAR));
     if (result) {
-        unsigned int readBytes = unzReadCurrentFile(uf, result, (unsigned int)len2);
+        unsigned int readBytes = unzReadCurrentFile(uf, result, len2);
         // zero-terminate for convenience
         result[len2] = result[len2 + 1] = '\0';
         if (readBytes != len2) {
