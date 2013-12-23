@@ -1,29 +1,39 @@
 diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
 --- jbig2dec.orig\jbig2.c	Tue Sep 03 07:53:07 2013
-+++ jbig2dec\jbig2.c	Sun Dec 22 22:35:38 2013
-@@ -59,11 +59,11 @@
++++ jbig2dec\jbig2.c	Mon Dec 23 11:14:52 2013
+@@ -58,15 +58,13 @@
+ 
  void *
  jbig2_alloc (Jbig2Allocator *allocator, size_t size, size_t num)
  {
    /* check for integer multiplication overflow */
-   int64_t check = ((int64_t)num)*((int64_t)size);
+-  int64_t check = ((int64_t)num)*((int64_t)size);
 -  if (check != (int)check)
-+  if (check != (int)check || check < 0)
++  if (num > 0 && size >= (size_t)-0x100 / num)
      return NULL;
-   else
-     return allocator->alloc (allocator, (int)check);
+-  else
+-    return allocator->alloc (allocator, (int)check);
++  return allocator->alloc(allocator, size * num);
  }
  
-@@ -76,11 +76,11 @@
+ void
+ jbig2_free (Jbig2Allocator *allocator, void *p)
+ {
+@@ -75,15 +73,13 @@
+ 
  void *
  jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size, size_t num)
  {
    /* check for integer multiplication overflow */
-   int64_t check = ((int64_t)num)*((int64_t)size);
+-  int64_t check = ((int64_t)num)*((int64_t)size);
 -  if (check != (int)check)
-+  if (check != (int)check || check < 0)
++  if (num > 0 && size >= (size_t)-0x100 / num)
      return NULL;
-   else
-     return allocator->realloc (allocator, p, (int)check);
+-  else
+-    return allocator->realloc (allocator, p, (int)check);
++  return allocator->realloc(allocator, p, size * num);
  }
  
+ static int
+ jbig2_default_error(void *data, const char *msg,
+                     Jbig2Severity severity, int32_t seg_idx)

@@ -60,11 +60,9 @@ void *
 jbig2_alloc (Jbig2Allocator *allocator, size_t size, size_t num)
 {
   /* check for integer multiplication overflow */
-  int64_t check = ((int64_t)num)*((int64_t)size);
-  if (check != (int)check || check < 0)
+  if (num > 0 && size >= (size_t)-0x100 / num)
     return NULL;
-  else
-    return allocator->alloc (allocator, (int)check);
+  return allocator->alloc(allocator, size * num);
 }
 
 void
@@ -77,11 +75,9 @@ void *
 jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size, size_t num)
 {
   /* check for integer multiplication overflow */
-  int64_t check = ((int64_t)num)*((int64_t)size);
-  if (check != (int)check || check < 0)
+  if (num > 0 && size >= (size_t)-0x100 / num)
     return NULL;
-  else
-    return allocator->realloc (allocator, p, (int)check);
+  return allocator->realloc(allocator, p, size * num);
 }
 
 static int
