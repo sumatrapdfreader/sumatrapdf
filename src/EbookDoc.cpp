@@ -417,10 +417,12 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     str::UrlDecodeInPlace(imgPath);
     data.idx = zip.GetFileIndex(imgPath);
     if (data.idx != (size_t)-1) {
-        data.id = str::Dup(url);
         data.base.data = zip.GetFileDataByIdx(data.idx, &data.base.len);
-        images.Append(data);
-        return &images.Last().base;
+        if (data.base.data) {
+            data.id = str::Dup(url);
+            images.Append(data);
+            return &images.Last().base;
+        }
     }
 
     return NULL;
