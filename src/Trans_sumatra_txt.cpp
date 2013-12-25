@@ -11333,14 +11333,14 @@ const char * gTranslations_sk =
 const char * gTranslations_sl = 
   "&O programu\0"\
   "&Dejanska velikost\tCtrl+1\0"\
-  "\0"\
+  "N&apredne mo\305\276nosti \342\200\246\0"\
   "&Vse izbrane strani\0"\
   "&Nazaj\tAlt+Leva pu\305\241\304\215ica\0"\
   "Knji\305\276ni pogled\tCtrl+8\0"\
   "&Zapri\tCtrl+W\0"\
   "Kopiraj izbor\0"\
   "Kopiraj izbor\tCtrl+C\0"\
-  "&Ne spra\305\241uj ve\304\215\0"\
+  "&Ne spra\305\241uj me ve\304\215\0"\
   "Samo &parne strani\0"\
   "Dvostransko\tCtrl+7\0"\
   "&Datoteka\0"\
@@ -11351,7 +11351,7 @@ const char * gTranslations_sl =
   "Pojdi na &stran:\0"\
   "Po&mo\304\215\0"\
   "Zadnja stran\tEnd\0"\
-  "&Pove\304\215anje:\0"\
+  "&Pove\304\215ava:\0"\
   "P&riro\304\215nik\0"\
   "Razlikuj &med velikimi/malimi \304\215rkami\0"\
   "Naslednja stran\tPu\305\241\304\215ica desno\0"\
@@ -11391,13 +11391,13 @@ const char * gTranslations_sl =
   "Vse datoteke\0"\
   "Vse podprte dokumente\0"\
   "Aplikacija:\0"\
-  "Pove\305\276em z datotekami PDF?\0"\
+  "Pove\305\276em s PDF datotekami?\0"\
   "Priponka: %s\0"\
   "Avtor:\0"\
   "Samodejno\0"\
   "&Samodejno preveri za posodobitve\0"\
   "Knji\305\276ni pogled\0"\
-  "Zaznamki\tF12\0"\
+  "Zazna&mki\tF12\0"\
   "Zaznamki bli\305\276njic\0"\
   "Zaznamek bli\305\276njice na stran %s od %s\0"\
   "Zaznamki\0"\
@@ -11420,9 +11420,9 @@ const char * gTranslations_sl =
   "Kopiraj ko&mentar\0"\
   "Kopiranje besedila je bilo zavrnjeno (kopiranje samo kot slika)\0"\
   "Avtorske pravice:\0"\
-  "Ne morem dobiti Lastnosti tiskalnika\0"\
-  "Tiskalnika ni mogo\304\215e inicializirati\0"\
-  "Strani ni mogo\304\215e upodobiti\0"\
+  "Ni bilo mogo\304\215e dobiti Lastnosti tiskalnika\0"\
+  "Ni bilo mogo\304\215e inicializirati tiskalnika\0"\
+  "Ni bilo mogo\304\215e upodobiti strani\0"\
   "Ustvarjeno:\0"\
   "Trenutna datoteka\0"\
   "Pove\304\215ava po &meri \342\200\246\tCtrl+Y\0"\
@@ -11452,8 +11452,8 @@ const char * gTranslations_sl =
   "Datoteka %s ni bila najdena\0"\
   "Velikost datoteke:\0"\
   "Datoteka:\0"\
-  "I\305\241\304\215i \342\200\246\tCtrl+F\0"\
-  "I\305\241\304\215i\0"\
+  "Naj&di \342\200\246\tCtrl+F\0"\
+  "Najdi\0"\
   "Najdi naslednje\0"\
   "Najdi prej\305\241nje\0"\
   "Najdi:\0"\
@@ -11473,14 +11473,14 @@ const char * gTranslations_sl =
   "\0"\
   "Pojdi na stran\0"\
   "Skrij pogosto brane\0"\
-  "Namig: Uporabite tipko F3 za ponovno iskanje\0"\
+  "Namig: uporabite tipko F3 za ponovno iskanje\0"\
   "Slikovne datoteke (*.%s)\0"\
   "\0"\
   "Nalaganje datoteke %s \342\200\246\0"\
   "\0"\
   "Naj bo SumatraPDF privezti program za datoteke PDF?\0"\
   "SumatraPDF naj bo privzeti bralnik PDF\0"\
-  "\0"\
+  "Na\304\215in Man&ga\0"\
   "Razlikuj med velikimi/malimi \304\215rkami\0"\
   "Mobi dokumenti\0"\
   "Spremenjeno:\0"\
@@ -11495,7 +11495,7 @@ const char * gTranslations_sl =
   "Odpri\0"\
   "Odpri s programom PDF-XChange\0"\
   "Odpri dokument \342\200\246\0"\
-  "\0"\
+  "Odpri v %s\0"\
   "Odpri s programom &Adobe Reader\0"\
   "Odpri s programom &Foxit Reader\0"\
   "Odpri s programom Microsoft HTML Help\0"\

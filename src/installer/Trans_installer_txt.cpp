@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   39
+#define LANGS_COUNT   40
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1454,6 +1454,51 @@ const char * gTranslations_sk =
   "Prebieha odin\305\241talovanie...\0"\
   "Pou\305\276i SumatraPDF ako &predvolen\303\275 PDF prehliada\304\215\0";
 
+const char * gTranslations_sl = 
+  "M&o\305\276nosti\0"\
+  "Ali ste prepri\304\215ani, da \305\276elite odstraniti SumatraPDF?\0"\
+  "Zapri\0"\
+  "Ni bilo mogo\304\215e ustvariti za\304\215asne mape\0"\
+  "Ni bilo mogo\304\215e ustvariti mape za namestitev\0"\
+  "Ni bilo mogo\304\215e namestiti predogleda za PDF\0"\
+  "Ni bilo mogo\304\215e namestiti filtra za PDF iskanje\0"\
+  "Ni bilo mogo\304\215e namestiti vti\304\215nika za brskalnik\0"\
+  "Ni bilo mogo\304\215e pridobiti za\304\215asne mape\0"\
+  "Ni bilo mogo\304\215e odstraniti namestitvene mape\0"\
+  "Ni bilo mogo\304\215e odstraniti bli\305\276njice\0"\
+  "Ni bilo mogo\304\215e odstraniti predogleda za PDF\0"\
+  "Ni bilo mogo\304\215e odstraniti filtra za PDF iskanje\0"\
+  "Ni bilo mogo\304\215e odstraniti vti\304\215nika za brskalnik\0"\
+  "Ni bilo mogo\304\215e napisati %s na disk\0"\
+  "Kopiranje odstranjevalnega programa v za\304\215asno mapo ni uspelo\0"\
+  "Ustvarjanje bli\305\276njice ni uspelo\0"\
+  "Brisanje registrskih klju\304\215ev odstranjevalnega programa ni uspelo\0"\
+  "Pisanje v register informacij o raz\305\241irjenem podalj\305\241ku datoteke ni uspelo\0"\
+  "Pisanje v register informacij o odstranitvi ni uspelo\0"\
+  "Skrij M&o\305\276nosti\0"\
+  "Namesti PDF vti\304\215nik za brskalnik Firefox, Chrome in Opera\0"\
+  "Namesti SumatraPDF\0"\
+  "Namesti SumatraPDF v mapo:\0"\
+  "Namestitev ni uspela!\0"\
+  "Namestitev poteka \342\200\246\0"\
+  "Naj Windows Desktop Search i\305\241\304\215e PDF dokumente\0"\
+  "Naj Windows prikazuje predogled PDF dokumentov\0"\
+  "Prosimo, izberite %s za nadaljevati!\0"\
+  "Izberite mapo, kjer naj se namesti SumatraPDF:\0"\
+  "Nekatere datoteke za namestitev so po\305\241kodovane ali manjkajo\0"\
+  "Za\305\276eni SumatraPDF\0"\
+  "SumatraPDF %s namestitev\0"\
+  "SumatraPDF %s odstranitev\0"\
+  "SumatraPDF je bil odstranjen.\0"\
+  "SumatraPDF namestitve ni mogo\304\215e najti.\0"\
+  "Hvala, ker ste izbrali SumatraPDF!\0"\
+  "Hvala! SumatraPDF je bil name\305\241\304\215en.\0"\
+  "Namestitveni program je po\305\241kodovan. Prosimo, da ga ponovno prenesete.\nOpravi\304\215ujemo se za nev\305\241e\304\215nost!\0"\
+  "Odstrani SumatraPDF\0"\
+  "Odstranitev ni uspela\0"\
+  "Odstranjevanje poteka \342\200\246\0"\
+  "Uporabi SumatraPDF kot privzeti P&DF prikazovalnik\0";
+
 const char * gTranslations_es = 
   "&Opciones\0"\
   "\302\277Est\303\241 seguro de que quiere desinstalar SumatraPDF?\0"\
@@ -1803,6 +1848,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ro, 
   gTranslations_ru, 
   gTranslations_sk, 
+  gTranslations_sl, 
   gTranslations_es, 
   gTranslations_sv, 
   gTranslations_ta, 
@@ -1847,6 +1893,7 @@ const char *gLangCodes =   "en\0" \
   "ro\0" \
   "ru\0" \
   "sk\0" \
+  "sl\0" \
   "es\0" \
   "sv\0" \
   "ta\0" \
@@ -1887,6 +1934,7 @@ const char *gLangNames =   "English\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
   "Slovak (Sloven\304\215ina)\0" \
+  "Slovenian (Sloven\305\241\304\215ina)\0" \
   "Spanish (Espa\303\261ol)\0" \
   "Swedish (Svenska)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
@@ -1939,6 +1987,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
   _LANGID(LANG_SLOVAK),
+  _LANGID(LANG_SLOVENIAN),
   _LANGID(LANG_SPANISH),
   _LANGID(LANG_SWEDISH),
   _LANGID(LANG_TAMIL),
