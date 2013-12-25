@@ -635,15 +635,13 @@ pdf_page *
 pdf_create_page(pdf_document *doc, fz_rect mediabox, int res, int rotate)
 {
 	pdf_page *page = NULL;
-	pdf_obj *pageobj, *obj;
+	pdf_obj *pageobj;
 	float userunit = 1;
 	fz_context *ctx = doc->ctx;
 	fz_matrix ctm, tmp;
 	fz_rect realbox;
 
 	page = fz_malloc_struct(ctx, pdf_page);
-	obj = NULL;
-	fz_var(obj);
 
 	fz_try(ctx)
 	{
@@ -678,16 +676,12 @@ pdf_create_page(pdf_document *doc, fz_rect mediabox, int res, int rotate)
 		fz_pre_scale(fz_translate(&tmp, -realbox.x0, -realbox.y0), userunit, userunit);
 		fz_concat(&ctm, &ctm, &tmp);
 		page->ctm = ctm;
-		obj = pdf_new_dict(doc, 4);
-		page->contents = pdf_new_ref(doc, obj);
-		pdf_drop_obj(obj);
-		obj = NULL;
-		pdf_dict_puts(pageobj, "Contents", page->contents);
+		/* Do not create a Contents, as an empty Contents dict is not
+		 * valid. See Bug 694712 */
 	}
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(page->me);
-		pdf_drop_obj(obj);
 		fz_free(ctx, page);
 		fz_rethrow_message(ctx, "Failed to create page");
 	}

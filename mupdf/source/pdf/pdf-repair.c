@@ -234,7 +234,6 @@ pdf_repair_obj_stm(pdf_document *doc, int num, int gen)
 	}
 }
 
-/* Entered with file locked, remains locked throughout. */
 void
 pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 {
@@ -266,6 +265,10 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 	fz_var(info);
 	fz_var(list);
 	fz_var(obj);
+
+	if (doc->repair_attempted)
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "Repair failed already - not trying again");
+	doc->repair_attempted = 1;
 
 	doc->dirty = 1;
 	/* Can't support incremental update after repair */
@@ -477,6 +480,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		entry->ofs = 0;
 		entry->gen = 65535;
 		entry->stm_ofs = 0;
+		pdf_drop_obj(entry->obj); /* SumatraPDF: fix memory leak */
 		entry->obj = NULL;
 
 		next = 0;

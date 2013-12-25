@@ -1116,7 +1116,7 @@ pdf_dict_putp(pdf_obj *obj, const char *keys, pdf_obj *val)
 	pdf_obj *cobj = NULL;
 
 	if (strlen(keys)+1 > 256)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "buffer overflow in pdf_dict_getp");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "buffer overflow in pdf_dict_putp");
 
 	strcpy(buf, keys);
 

@@ -1089,7 +1089,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
                 if (page_no >= pdf_count_pages(doc))
                     fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
 
-                page_objs[page_no] = kid;
+                page_objs[page_no] = pdf_keep_obj(kid);
                 page_no++;
             }
             else if (str::Eq(type, "Pages") || str::IsEmpty(type) && pdf_dict_gets(kid, "Kids")) {
@@ -1374,12 +1374,16 @@ PdfEngineImpl::~PdfEngineImpl()
 
     if (_pages) {
         for (int i = 0; i < PageCount(); i++) {
-            if (_pages[i])
-                pdf_free_page(_doc, _pages[i]);
+            pdf_free_page(_doc, _pages[i]);
         }
         free(_pages);
     }
-    free(_pageObjs);
+    if (_pageObjs) {
+        for (int i = 0; i < PageCount(); i++) {
+            pdf_drop_obj(_pageObjs[i]);
+        }
+        free(_pageObjs);
+    }
 
     fz_free_outline(ctx, outline);
     fz_free_outline(ctx, attachments);

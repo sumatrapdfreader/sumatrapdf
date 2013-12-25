@@ -522,8 +522,8 @@ do_ft_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm
 		/* enable grid fitting for non-antialiased rendering */
 		float scale = fz_matrix_expansion(&local_trm);
 		m.xx = local_trm.a * 65536 / scale;
-		m.xy = local_trm.b * 65536 / scale;
-		m.yx = local_trm.c * 65536 / scale;
+		m.yx = local_trm.b * 65536 / scale;
+		m.xy = local_trm.c * 65536 / scale;
 		m.yy = local_trm.d * 65536 / scale;
 		v.x = 0;
 		v.y = 0;

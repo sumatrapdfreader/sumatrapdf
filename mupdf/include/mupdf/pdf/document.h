@@ -218,6 +218,8 @@ struct pdf_document_s
 
 	int page_count;
 
+	int repair_attempted;
+
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;
 	int file_length;

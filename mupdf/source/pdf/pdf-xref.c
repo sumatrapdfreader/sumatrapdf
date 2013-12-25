@@ -562,7 +562,7 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 	{
 		pdf_xref_entry *entry;
 		int ofs = fz_tell(doc->file);
-		trailer = pdf_parse_ind_obj(doc, doc->file, buf, &num, &gen, &stm_ofs);
+		trailer = pdf_parse_ind_obj(doc, doc->file, buf, &num, &gen, &stm_ofs, NULL);
 		entry = pdf_get_populating_xref_entry(doc, num);
 		entry->ofs = ofs;
 		entry->gen = gen;
@@ -832,7 +832,7 @@ pdf_load_linear(pdf_document *doc)
 	{
 		pdf_xref_entry *entry;
 
-		dict = pdf_parse_ind_obj(doc, doc->file, &doc->lexbuf.base, &num, &gen, &stmofs);
+		dict = pdf_parse_ind_obj(doc, doc->file, &doc->lexbuf.base, &num, &gen, &stmofs, NULL);
 		if (!pdf_is_dict(dict))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to read linearized dictionary");
 		o = pdf_dict_gets(dict, "Linearized");
@@ -1611,13 +1611,18 @@ void
 pdf_cache_object(pdf_document *doc, int num, int gen)
 {
 	pdf_xref_entry *x;
-	int rnum, rgen;
+	int rnum, rgen, try_repair;
 	fz_context *ctx = doc->ctx;
+
+	fz_var(try_repair);
 
 	if (num < 0 || num >= pdf_xref_len(doc))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "object out of range (%d %d R); xref size %d", num, gen, pdf_xref_len(doc));
 
 object_updated:
+	try_repair = 0;
+	rnum = num;
+
 	x = pdf_get_xref_entry(doc, num);
 
 	if (x->obj)
@@ -1634,18 +1639,37 @@ object_updated:
 		fz_try(ctx)
 		{
 			x->obj = pdf_parse_ind_obj(doc, doc->file, &doc->lexbuf.base,
-					&rnum, &rgen, &x->stm_ofs);
+					&rnum, &rgen, &x->stm_ofs, &try_repair);
 		}
 		fz_catch(ctx)
 		{
-			fz_rethrow_message(ctx, "cannot parse object (%d %d R)", num, gen);
+			if (!try_repair || fz_caught(ctx) == FZ_ERROR_TRYLATER)
+				fz_rethrow(ctx);
 		}
 
-		if (rnum != num)
+		if (!try_repair && rnum != num)
 		{
 			pdf_drop_obj(x->obj);
 			x->obj = NULL;
-			fz_rethrow_message(ctx, "found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
+			try_repair = 1;
+		}
+
+		if (try_repair)
+		{
+			fz_try(ctx)
+			{
+				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694863 */
+				doc->repair_attempted = 1;
+				pdf_repair_xref(doc, &doc->lexbuf.base);
+			}
+			fz_catch(ctx)
+			{
+				if (rnum == num)
+					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot parse object (%d %d R)", num, gen);
+				else
+					fz_throw(ctx, FZ_ERROR_GENERIC, "found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
+			}
+			goto object_updated;
 		}
 
 		if (doc->crypt)

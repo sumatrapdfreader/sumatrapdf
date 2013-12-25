@@ -330,8 +330,10 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	h = ibounds.y1 - ibounds.y0;
 
 	dc_main = GetDC(NULL);
-	dc = CreateCompatibleDC(dc_main);
 	hbmp = CreateCompatibleBitmap(dc_main, w, h);
+	if (!hbmp)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "failed to create a %d x %d bitmap for page %d", w, h, pagenum);
+	dc = CreateCompatibleDC(dc_main);
 	DeleteObject(SelectObject(dc, hbmp));
 
 	SetRect(&rc, 0, 0, w, h);
@@ -356,7 +358,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	bmp_data_len = output_format == OUT_TGA ? w * h * 4 : ((w * 3 + 3) / 4) * 4 * h;
 	bmp_data = fz_malloc(ctx, bmp_data_len);
 	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot draw page %d in PDF file '%s'", pagenum, filename);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot draw page %d", pagenum, filename);
 
 	DeleteDC(dc);
 	ReleaseDC(NULL, dc_main);

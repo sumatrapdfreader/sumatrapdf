@@ -63,7 +63,6 @@ typedef struct group_entry_s group_entry;
 
 struct group_entry_s
 {
-	int blendmode;
 	int alpha;
 	int isolated;
 	int knockout;
@@ -767,7 +766,7 @@ pdf_dev_end_text(pdf_device *pdev)
 }
 
 static int
-pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int isolated, int knockout, int blendmode, float alpha, fz_colorspace *colorspace)
+pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int isolated, int knockout, float alpha, fz_colorspace *colorspace)
 {
 	fz_context *ctx = pdev->ctx;
 	pdf_document *doc = pdev->doc;
@@ -782,7 +781,7 @@ pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int 
 	for(num = 0; num < pdev->num_groups; num++)
 	{
 		group_entry *g = &pdev->groups[num];
-		if (g->isolated == isolated && g->knockout == knockout && g->blendmode == blendmode && g->alpha == alpha && g->colorspace == colorspace)
+		if (g->isolated == isolated && g->knockout == knockout && g->alpha == alpha && g->colorspace == colorspace)
 		{
 			group_ref = pdev->groups[num].ref;
 			break;
@@ -803,7 +802,6 @@ pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int 
 		pdev->num_groups++;
 		pdev->groups[num].isolated = isolated;
 		pdev->groups[num].knockout = knockout;
-		pdev->groups[num].blendmode = blendmode;
 		pdev->groups[num].alpha = alpha;
 		pdev->groups[num].colorspace = fz_keep_colorspace(ctx, colorspace);
 		pdev->groups[num].ref = NULL;
@@ -814,7 +812,6 @@ pdf_dev_new_form(pdf_obj **form_ref, pdf_device *pdev, const fz_rect *bbox, int 
 			pdf_dict_puts_drop(group, "S", pdf_new_name(doc, "Transparency"));
 			pdf_dict_puts_drop(group, "K", pdf_new_bool(doc, knockout));
 			pdf_dict_puts_drop(group, "I", pdf_new_bool(doc, isolated));
-			pdf_dict_puts_drop(group, "BM", pdf_new_name(doc, fz_blendmode_name(blendmode)));
 			if (!colorspace)
 			{}
 			else if (colorspace->n == 1)
@@ -1098,7 +1095,7 @@ pdf_dev_begin_mask(fz_device *dev, const fz_rect *bbox, int luminosity, fz_color
 	pdf_dev_end_text(pdev);
 
 	/* Make a new form to contain the contents of the softmask */
-	pdf_dev_new_form(&form_ref, pdev, bbox, 0, 0, 0, 1, colorspace);
+	pdf_dev_new_form(&form_ref, pdev, bbox, 0, 0, 1, colorspace);
 
 	fz_try(ctx)
 	{
@@ -1169,17 +1166,34 @@ pdf_dev_begin_group(fz_device *dev, const fz_rect *bbox, int isolated, int knock
 {
 	pdf_device *pdev = (pdf_device *)dev->user;
 	fz_context *ctx = pdev->ctx;
+	pdf_document *doc = pdev->doc;
 	int num;
 	pdf_obj *form_ref;
 	gstate *gs;
 
 	pdf_dev_end_text(pdev);
 
-	num = pdf_dev_new_form(&form_ref, pdev, bbox, isolated, knockout, blendmode, alpha, NULL);
+	num = pdf_dev_new_form(&form_ref, pdev, bbox, isolated, knockout, alpha, NULL);
+
+	/* Do we have an appropriate blending extgstate already? */
+	{
+		char text[32];
+		pdf_obj *obj;
+		snprintf(text, sizeof(text), "ExtGState/BlendMode%d", blendmode);
+		obj = pdf_dict_getp(pdev->resources, text);
+		if (obj == NULL)
+		{
+			/* No, better make one */
+			obj = pdf_new_dict(pdev->doc, 2);
+			pdf_dict_puts_drop(obj, "Type", pdf_new_name(doc, "ExtGState"));
+			pdf_dict_puts_drop(obj, "BM", pdf_new_name(doc, fz_blendmode_name(blendmode)));
+			pdf_dict_putp_drop(pdev->resources, text, obj);
+		}
+	}
 
 	/* Add the call to this group */
 	gs = CURRENT_GSTATE(pdev);
-	fz_buffer_printf(dev->ctx, gs->buf, "/Fm%d Do\n", num);
+	fz_buffer_printf(dev->ctx, gs->buf, "/BlendMode%d gs /Fm%d Do\n", blendmode, num);
 
 	/* Now, everything we get until the end of group needs to go into a
 	 * new buffer, which will be the stream contents for the form. */
