@@ -593,6 +593,10 @@ fz_add_text_char_imp(fz_context *ctx, fz_text_device *dev, fz_text_style *style,
 		delta.x = trm->e - dev->cur_span->max.x;
 		delta.y = trm->f - dev->cur_span->max.y;
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2486 */
+		if (delta.x < 0 && delta.x > (dev->cur_span->text[dev->cur_span->len-1].p.x - dev->cur_span->max.x) * 0.85)
+			delta.x = 0;
+
 		/* The transform has not changed, so we know we're in the same
 		 * direction. Calculate 2 distances; how far off the previous
 		 * baseline we are, together with how far along the baseline
