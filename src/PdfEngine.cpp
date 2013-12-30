@@ -418,16 +418,16 @@ static bool LinkifyCheckMultiline(const WCHAR *pageText, const WCHAR *pos, RectI
         '\n' == *pos && pos > pageText && *(pos + 1) &&
         !iswalnum(pos[-1]) && !str::IsWs(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
-        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
+        coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y + coords[pos - pageText - 1].dy * 0.35 &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
         coords[pos - pageText + 1].dy >= coords[pos - pageText - 1].dy * 0.85 &&
         coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 &&
         !str::StartsWith(pos + 1, L"http");
 }
 
-static const WCHAR *LinkifyFindEnd(const WCHAR *start, bool atStart)
+static const WCHAR *LinkifyFindEnd(const WCHAR *start, WCHAR prevChar)
 {
-    const WCHAR *end;
+    const WCHAR *end, *quote;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
     for (end = start; *end && !str::IsWs(*end); end++);
@@ -436,30 +436,30 @@ static const WCHAR *LinkifyFindEnd(const WCHAR *start, bool atStart)
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
     if (')' == end[-1] && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end))
         end--;
-    // cut the link at the first double quote if it's also preceded by one
-    if (!atStart && start[-1] == '"' && str::FindChar(start, '"') && str::FindChar(start, '"') < end)
-        end = str::FindChar(start, '"');
+    // cut the link at the first quotation mark, if it's also preceded by one
+    if (('"' == prevChar || '\'' == prevChar) && (quote = str::FindChar(start, prevChar)) != NULL && quote < end)
+        end = quote;
 
     return end;
 }
 
-static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageText, const WCHAR *start, RectI *coords)
+static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageText, const WCHAR *start, const WCHAR *next, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
     ScopedMem<WCHAR> uri(list->links.At(lastIx));
-    const WCHAR *end = start;
+    const WCHAR *end = next;
     bool multiline = false;
 
     do {
-        end = LinkifyFindEnd(start, start == pageText);
+        end = LinkifyFindEnd(next, start > pageText ? start[-1] : ' ');
         multiline = LinkifyCheckMultiline(pageText, end, coords);
 
-        ScopedMem<WCHAR> part(str::DupN(start, end - start));
+        ScopedMem<WCHAR> part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
-        RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
+        RectI bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
 
-        start = end + 1;
+        next = end + 1;
     } while (multiline);
 
     // update the link URL for all partial links
@@ -527,11 +527,11 @@ static LinkRectList *LinkifyText(const WCHAR *pageText, RectI *coords)
             // or an alphanumeric character (indicates part of a different protocol)
         }
         else if ('h' == *start && str::Parse(start, L"http%?s://")) {
-            end = LinkifyFindEnd(start, start == pageText);
+            end = LinkifyFindEnd(start, start > pageText ? start[-1] : ' ');
             multiline = LinkifyCheckMultiline(pageText, end, coords);
         }
         else if ('w' == *start && str::StartsWith(start, L"www.")) {
-            end = LinkifyFindEnd(start, start == pageText);
+            end = LinkifyFindEnd(start, start > pageText ? start[-1] : ' ');
             multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = L"http://";
             // ignore www. links without a top-level domain
@@ -550,7 +550,7 @@ static LinkRectList *LinkifyText(const WCHAR *pageText, RectI *coords)
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
         if (multiline)
-            end = LinkifyMultilineText(list, pageText, end + 1, coords);
+            end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
 
         start = end;
     }
