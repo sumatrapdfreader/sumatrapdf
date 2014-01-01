@@ -66,9 +66,6 @@ CFLAGSOPT = $(CFLAGSOPT) /I$(SRCDIR)/utils/msvc
 CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 # Suppress warning C4800: forcing value to bool 'true' or 'false'
 CFLAGS = $(CFLAGS) /wd4800
-# Supress warning about deprecated functions to make it compilable
-# with VS 2013 (GetVersion() and GetVersionEx() are marked as deprecated)
-CFLAGS = $(CFLAGS) /wd4996
 
 !if "$(WITH_ANALYZE)"=="yes"
 CFLAGS = /analyze:WX- $(CFLAGS)

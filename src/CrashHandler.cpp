@@ -349,7 +349,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static char *OsNameFromVer(OSVERSIONINFOEX ver)
+static const char *OsNameFromVer(OSVERSIONINFOEX ver)
 {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
         return "9x";
@@ -375,17 +375,22 @@ static void GetOsVersion(str::Str<char>& s)
     OSVERSIONINFOEX ver;
     ZeroMemory(&ver, sizeof(ver));
     ver.dwOSVersionInfoSize = sizeof(ver);
+#pragma warning(push)
+#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
+    // starting with Windows 8.1, GetVersionEx will report a wrong version number
+    // unless the OS's GUID has been explicitly added to the compatibility manifest
     BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+#pragma warning(pop)
     if (!ok)
         return;
-    char *os = OsNameFromVer(ver);
+    const char *os = OsNameFromVer(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = ver.dwBuildNumber & 0xFFFF;
 #ifdef _WIN64
-    char *arch = "64-bit";
+    const char *arch = "64-bit";
 #else
-    char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
+    const char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
 #endif
     if (0 == servicePackMajor)
         s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
