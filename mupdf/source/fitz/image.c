@@ -235,24 +235,6 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 
 		len = fz_read(stm, samples, h * stride);
 
-		/* Make sure we read the EOF marker (for inline images only) */
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1980 */
-		if (in_line && 0)
-		{
-			unsigned char tbuf[512];
-			fz_try(ctx)
-			{
-				int tlen = fz_read(stm, tbuf, sizeof tbuf);
-				if (tlen > 0)
-					fz_warn(ctx, "ignoring garbage at end of image");
-			}
-			fz_catch(ctx)
-			{
-				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-				fz_warn(ctx, "ignoring error at end of image");
-			}
-		}
-
 		/* Pad truncated images */
 		if (len < stride * h)
 		{

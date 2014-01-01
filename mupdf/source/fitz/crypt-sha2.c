@@ -19,30 +19,22 @@ static inline int isbigendian(void)
 
 static inline unsigned int bswap32(unsigned int num)
 {
-	if (!isbigendian())
-	{
-		return	( (((num) << 24))
-			| (((num) << 8) & 0x00FF0000)
-			| (((num) >> 8) & 0x0000FF00)
-			| (((num) >> 24)) );
-	}
-	return num;
+	return	( (((num) << 24))
+		| (((num) << 8) & 0x00FF0000)
+		| (((num) >> 8) & 0x0000FF00)
+		| (((num) >> 24)) );
 }
 
 static inline uint64_t bswap64(uint64_t num)
 {
-	if (!isbigendian())
-	{
-		return ( (((num) << 56))
-				| (((num) << 40) & 0x00FF000000000000ULL)
-				| (((num) << 24) & 0x0000FF0000000000ULL)
-				| (((num) << 8) & 0x000000FF00000000ULL)
-				| (((num) >> 8) & 0x00000000FF000000ULL)
-				| (((num) >> 24) & 0x0000000000FF0000ULL)
-				| (((num) >> 40) & 0x000000000000FF00ULL)
-				| (((num) >> 56)) );
-	}
-	return num;
+	return ( (((num) << 56))
+		| (((num) << 40) & 0x00FF000000000000ULL)
+		| (((num) << 24) & 0x0000FF0000000000ULL)
+		| (((num) << 8) & 0x000000FF00000000ULL)
+		| (((num) >> 8) & 0x00000000FF000000ULL)
+		| (((num) >> 24) & 0x0000000000FF0000ULL)
+		| (((num) >> 40) & 0x000000000000FF00ULL)
+		| (((num) >> 56)) );
 }
 
 /* At least on x86, GCC is able to optimize this to a rotate instruction. */
@@ -97,17 +89,17 @@ static const unsigned int SHA256_K[64] = {
 };
 
 static void
-transform256(unsigned int state[8], const unsigned int data_xe[16])
+transform256(unsigned int state[8], unsigned int data[16])
 {
 	const unsigned int *K = SHA256_K;
-	unsigned int data[16];
 	unsigned int W[16];
 	unsigned int T[8];
 	unsigned int j;
 
 	/* ensure big-endian integers */
-	for (j = 0; j < 16; j++)
-		data[j] = bswap32(data_xe[j]);
+	if (!isbigendian())
+		for (j = 0; j < 16; j++)
+			data[j] = bswap32(data[j]);
 
 	/* Copy state[] to working vars. */
 	memcpy(T, state, sizeof(T));
@@ -198,12 +190,23 @@ void fz_sha256_final(fz_sha256 *context, unsigned char digest[32])
 	context->count[1] = (context->count[1] << 3) + (context->count[0] >> 29);
 	context->count[0] = context->count[0] << 3;
 
-	context->buffer.u32[14] = bswap32(context->count[1]);
-	context->buffer.u32[15] = bswap32(context->count[0]);
+	if (!isbigendian())
+	{
+		context->buffer.u32[14] = bswap32(context->count[1]);
+		context->buffer.u32[15] = bswap32(context->count[0]);
+	}
+	else
+	{
+		context->buffer.u32[14] = context->count[1];
+		context->buffer.u32[15] = context->count[0];
+	}
 	transform256(context->state, context->buffer.u32);
 
-	for (j = 0; j < 8; j++)
-		((unsigned int *)digest)[j] = bswap32(context->state[j]);
+	if (!isbigendian())
+		for (j = 0; j < 8; j++)
+			context->state[j] = bswap32(context->state[j]);
+
+	memcpy(digest, &context->state[0], 32);
 	memset(context, 0, sizeof(fz_sha256));
 }
 
@@ -258,17 +261,17 @@ static const uint64_t SHA512_K[80] = {
 };
 
 static void
-transform512(uint64_t state[8], const uint64_t data_xe[16])
+transform512(uint64_t state[8], uint64_t data[16])
 {
 	const uint64_t *K = SHA512_K;
-	uint64_t data[16];
 	uint64_t W[16];
 	uint64_t T[8];
 	unsigned int j;
 
 	/* ensure big-endian integers */
-	for (j = 0; j < 16; j++)
-		data[j] = bswap64(data_xe[j]);
+	if (!isbigendian())
+		for (j = 0; j < 16; j++)
+			data[j] = bswap64(data[j]);
 
 	/* Copy state[] to working vars. */
 	memcpy(T, state, sizeof(T));
@@ -359,12 +362,23 @@ void fz_sha512_final(fz_sha512 *context, unsigned char digest[64])
 	context->count[1] = (context->count[1] << 3) + (context->count[0] >> 29);
 	context->count[0] = context->count[0] << 3;
 
-	context->buffer.u64[14] = bswap64(context->count[1]);
-	context->buffer.u64[15] = bswap64(context->count[0]);
+	if (!isbigendian())
+	{
+		context->buffer.u64[14] = bswap64(context->count[1]);
+		context->buffer.u64[15] = bswap64(context->count[0]);
+	}
+	else
+	{
+		context->buffer.u64[14] = context->count[1];
+		context->buffer.u64[15] = context->count[0];
+	}
 	transform512(context->state, context->buffer.u64);
 
-	for (j = 0; j < 8; j++)
-		((uint64_t *)digest)[j] = bswap64(context->state[j]);
+	if (!isbigendian())
+		for (j = 0; j < 8; j++)
+			context->state[j] = bswap64(context->state[j]);
+
+	memcpy(digest, &context->state[0], 64);
 	memset(context, 0, sizeof(fz_sha512));
 }
 

@@ -462,8 +462,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		for (i = 0; i < listlen; i++)
 		{
 			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
-			/* SumatraPDF: fix memory leak in 3324.pdf.asan.3.2585 */
-			if (list[i].num <= 0)
+			if (list[i].num == -1)
 				continue;
 
 			entry = pdf_get_populating_xref_entry(doc, list[i].num);
@@ -491,7 +490,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		entry->ofs = 0;
 		entry->gen = 65535;
 		entry->stm_ofs = 0;
-		entry->obj = NULL;
+		/* SumatraPDF: fix memory leak in 3324.pdf.asan.3.2585 */
 
 		next = 0;
 		for (i = pdf_xref_len(doc) - 1; i >= 0; i--)
@@ -596,15 +595,11 @@ pdf_repair_obj_stms(pdf_document *doc)
 				if (!strcmp(pdf_to_name(pdf_dict_gets(dict, "Type")), "ObjStm"))
 					pdf_repair_obj_stm(doc, i, 0);
 			}
-			fz_always(ctx)
-			{
-				pdf_drop_obj(dict);
-			}
 			fz_catch(ctx)
 			{
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2436 */
 				fz_warn(ctx, "ignoring broken object stream (%d 0 R)", i);
 			}
+			pdf_drop_obj(dict);
 		}
 	}
 
