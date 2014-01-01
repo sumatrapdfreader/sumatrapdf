@@ -1,4 +1,4 @@
-; Copyright 2013 the ucrt project authors (see AUTHORS file)
+; Copyright 2014 the ucrt project authors (see AUTHORS file)
 ; License: Simplified BSD (see COPYING.BSD)
 
 ; many of the functions here are redirects to functions in msvcrt.dll (or some

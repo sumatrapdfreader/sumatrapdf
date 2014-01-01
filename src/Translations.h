@@ -1,4 +1,4 @@
-/* Copyright 2013 Krzysztof Kowalczyk.
+/* Copyright 2014 Krzysztof Kowalczyk.
    License: BSD */
 
 #ifndef Translations_h

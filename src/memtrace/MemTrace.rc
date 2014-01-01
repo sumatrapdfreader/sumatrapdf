@@ -16,7 +16,7 @@ BEGIN
     BEGIN
       VALUE "FileDescription",  "MemTrace"
       VALUE "FileVersion",      "1.0"
-      VALUE "LegalCopyright",   "Copyright 2012-2013 all authors (BSD)"
+      VALUE "LegalCopyright",   "Copyright 2012-2014 all authors (BSD)"
       VALUE "OriginalFilename", "memtrace.dll"
       VALUE "ProductName",      "MemTrace"
       VALUE "ProductVersion",   "1.0"

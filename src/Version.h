@@ -1,4 +1,4 @@
-/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #ifndef Version_h
@@ -55,7 +55,7 @@
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
-#define COPYRIGHT_STR      "Copyright 2006-2013 all authors (GPLv3)"
+#define COPYRIGHT_STR      "Copyright 2006-2014 all authors (GPLv3)"
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
 
 #endif

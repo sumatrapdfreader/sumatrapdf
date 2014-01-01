@@ -1,5 +1,5 @@
 ﻿// GDI+ rendering device for MuPDF
-// Copyright (C) 2010 - 2013  Simon Bünzli <zeniko@gmail.com>
+// Copyright (C) 2010 - 2014  Simon Bünzli <zeniko@gmail.com>
 
 // This file is licensed under AGPLv3 (see ../../COPYING)
 
