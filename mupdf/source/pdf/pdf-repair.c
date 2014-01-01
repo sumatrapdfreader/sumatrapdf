@@ -462,7 +462,8 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		for (i = 0; i < listlen; i++)
 		{
 			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
-			if (list[i].num == -1)
+			/* SumatraPDF: fix memory leak in 3324.pdf.asan.3.2585 */
+			if (list[i].num <= 0)
 				continue;
 
 			entry = pdf_get_populating_xref_entry(doc, list[i].num);
@@ -490,7 +491,6 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		entry->ofs = 0;
 		entry->gen = 65535;
 		entry->stm_ofs = 0;
-		pdf_drop_obj(entry->obj); /* SumatraPDF: fix memory leak */
 		entry->obj = NULL;
 
 		next = 0;
