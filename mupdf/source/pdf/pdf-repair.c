@@ -440,6 +440,19 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 		/* make xref reasonable */
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
+		{
+			int *bitfield = fz_calloc(ctx, maxnum / 32 + 1, sizeof(int));
+			for (i = listlen - 1; i >= 0; i--)
+			{
+				if (!(bitfield[list[i].num / 32] & (1 << (list[i].num % 32))))
+					bitfield[list[i].num / 32] |= (1 << (list[i].num % 32));
+				else
+					list[i].num = -1;
+			}
+			fz_free(ctx, bitfield);
+		}
+
 		/*
 			Dummy access to entry to assure sufficient space in the xref table
 			and avoid repeated reallocs in the loop
@@ -448,19 +461,16 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 		for (i = 0; i < listlen; i++)
 		{
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
+			if (list[i].num == -1)
+				continue;
+
 			entry = pdf_get_populating_xref_entry(doc, list[i].num);
 			entry->type = 'n';
 			entry->ofs = list[i].ofs;
 			entry->gen = list[i].gen;
 
 			entry->stm_ofs = list[i].stm_ofs;
-
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1841 */
-			if (entry->obj)
-			{
-				pdf_drop_obj(entry->obj);
-				entry->obj = NULL;
-			}
 
 			/* correct stream length for unencrypted documents */
 			if (!encrypt && list[i].stm_len >= 0)

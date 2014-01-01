@@ -1658,8 +1658,6 @@ object_updated:
 		{
 			fz_try(ctx)
 			{
-				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694863 */
-				doc->repair_attempted = 1;
 				pdf_repair_xref(doc, &doc->lexbuf.base);
 			}
 			fz_catch(ctx)
