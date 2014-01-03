@@ -625,13 +625,14 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
+static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced, LPDEVMODE devMode)
 {
     WStrVec rangeList;
     if (settings)
         rangeList.Split(settings, L",", true);
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
+        int val;
         PRINTPAGERANGE pr;
         if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
@@ -654,6 +655,12 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
             advanced.scale = PrintScaleFit;
         else if (str::Eq(rangeList.At(i), L"compat"))
             advanced.asImage = true;
+        else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000)
+            devMode->dmCopies = (short)val;
+        else if (str::Eq(rangeList.At(i), L"duplex") || str::Eq(rangeList.At(i), L"duplexlong"))
+            devMode->dmDuplex = DMDUP_VERTICAL;
+        else if (str::Eq(rangeList.At(i), L"duplexshort"))
+            devMode->dmDuplex = DMDUP_HORIZONTAL;
     }
 
     if (ranges.Count() == 0) {
@@ -736,7 +743,7 @@ bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, co
     {
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
-        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced);
+        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode);
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
