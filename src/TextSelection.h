@@ -17,6 +17,9 @@ class PageTextCache {
     RectI    ** coords;
     WCHAR    ** text;
     int       * lens;
+#ifdef DEBUG
+    size_t      debug_size;
+#endif
 
     CRITICAL_SECTION access;
 

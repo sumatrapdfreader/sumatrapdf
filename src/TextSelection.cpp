@@ -10,6 +10,9 @@ PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)
     coords = AllocArray<RectI *>(count);
     text = AllocArray<WCHAR *>(count);
     lens = AllocArray<int>(count);
+#ifdef DEBUG
+    debug_size = count * (sizeof(RectI *) + sizeof(WCHAR *) + sizeof(int));
+#endif
 
     InitializeCriticalSection(&access);
 }
@@ -50,6 +53,9 @@ const WCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
         else {
             lens[pageNo - 1] = (int)str::Len(text[pageNo - 1]);
         }
+#ifdef DEBUG
+        debug_size += (lens[pageNo - 1] + 1) * (sizeof(WCHAR) + sizeof(RectI));
+#endif
     }
 
     if (lenOut)
