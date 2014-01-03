@@ -54,7 +54,7 @@ pdf_load_jbig2_globals(pdf_document *doc, pdf_obj *dict)
 	fz_buffer *buf = NULL;
 	fz_var(buf);
 
-	if ((globals = pdf_find_item(doc->ctx, fz_free_jbig2_globals_imp, dict)))
+	if ((globals = pdf_find_item(doc->ctx, fz_free_jbig2_globals_imp, dict)) != NULL)
 	{
 		return globals;
 	}

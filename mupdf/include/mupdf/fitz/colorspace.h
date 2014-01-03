@@ -105,9 +105,13 @@ struct fz_color_converter_s
 	fz_context *ctx;
 	fz_colorspace *ds;
 	fz_colorspace *ss;
+	void *opaque;
 };
 
 void fz_lookup_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss);
+
+void fz_init_cached_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ds, fz_colorspace *ss);
+void fz_fin_cached_color_converter(fz_color_converter *cc);
 
 /* SumatraPDF: support transfer functions */
 typedef struct fz_transfer_function_s fz_transfer_function;

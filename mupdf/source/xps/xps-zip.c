@@ -686,6 +686,14 @@ xps_meta(xps_document *doc, int key, void *ptr, int size)
 }
 
 static void
+xps_rebind(xps_document *doc, fz_context *ctx)
+{
+	doc->ctx = ctx;
+	fz_rebind_stream(doc->file, ctx);
+	fz_rebind_device(doc->dev, ctx);
+}
+
+static void
 xps_init_document(xps_document *doc)
 {
 	doc->super.close = (void*)xps_close_document;
@@ -697,4 +705,5 @@ xps_init_document(xps_document *doc)
 	doc->super.run_page_contents = (void*)xps_run_page;
 	doc->super.free_page = (void*)xps_free_page;
 	doc->super.meta = (void*)xps_meta;
+	doc->super.rebind = (void*)xps_rebind;
 }

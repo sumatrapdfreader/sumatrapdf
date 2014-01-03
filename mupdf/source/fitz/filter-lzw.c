@@ -174,6 +174,13 @@ close_lzwd(fz_context *ctx, void *state_)
 	fz_free(ctx, lzw);
 }
 
+static fz_stream *
+rebind_lzwd(fz_stream *s)
+{
+	fz_lzwd *state = s->state;
+	return state->chain;
+}
+
 /* Default: early_change = 1 */
 fz_stream *
 fz_open_lzwd(fz_stream *chain, int early_change)
@@ -221,5 +228,5 @@ fz_open_lzwd(fz_stream *chain, int early_change)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, lzw, read_lzwd, close_lzwd);
+	return fz_new_stream(ctx, lzw, read_lzwd, close_lzwd, rebind_lzwd);
 }

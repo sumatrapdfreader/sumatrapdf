@@ -92,18 +92,20 @@ struct fz_vertex_s
 
 typedef struct fz_mesh_processor_s fz_mesh_processor;
 
+typedef void (fz_mesh_prepare_fn)(void *arg, fz_vertex *v);
 typedef void (fz_mesh_process_fn)(void *arg, fz_vertex *av, fz_vertex *bv, fz_vertex *cv);
 
 struct fz_mesh_processor_s {
 	fz_context *ctx;
 	fz_shade *shade;
+	fz_mesh_prepare_fn *prepare;
 	fz_mesh_process_fn *process;
 	void *process_arg;
 	int ncomp;
 };
 
 void fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,
-			fz_mesh_process_fn *process, void *process_arg);
+			fz_mesh_prepare_fn *prepare, fz_mesh_process_fn *process, void *process_arg);
 
 #ifndef NDEBUG
 void fz_print_shade(fz_context *ctx, FILE *out, fz_shade *shade);

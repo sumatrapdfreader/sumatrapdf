@@ -144,7 +144,7 @@ fz_open_fd_progressive(fz_context *ctx, int fd, int bps)
 
 	fz_try(ctx)
 	{
-		stm = fz_new_stream(ctx, state, read_prog, close_prog);
+		stm = fz_new_stream(ctx, state, read_prog, close_prog, NULL);
 	}
 	fz_catch(ctx)
 	{

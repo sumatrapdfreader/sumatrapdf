@@ -1,9 +1,20 @@
 #include "mupdf/fitz.h"
 
+void fz_rebind_stream(fz_stream *stm, fz_context *ctx)
+{
+	if (stm == NULL || stm->ctx == ctx)
+		return;
+	do {
+		stm->ctx = ctx;
+		stm = (stm->rebind == NULL ? NULL : stm->rebind(stm));
+	} while (stm != NULL);
+}
+
 fz_stream *
 fz_new_stream(fz_context *ctx, void *state,
-	int(*read)(fz_stream *stm, unsigned char *buf, int len),
-	void(*close)(fz_context *ctx, void *state))
+	fz_stream_read_fn *read,
+	fz_stream_close_fn *close,
+	fz_stream_rebind_fn *rebind)
 {
 	fz_stream *stm;
 
@@ -34,6 +45,7 @@ fz_new_stream(fz_context *ctx, void *state,
 	stm->read = read;
 	stm->close = close;
 	stm->seek = NULL;
+	stm->rebind = rebind;
 	stm->reopen = NULL;
 	stm->ctx = ctx;
 
@@ -113,7 +125,7 @@ fz_open_fd(fz_context *ctx, int fd)
 
 	fz_try(ctx)
 	{
-		stm = fz_new_stream(ctx, state, read_file, close_file);
+		stm = fz_new_stream(ctx, state, read_file, close_file, NULL);
 	}
 	fz_catch(ctx)
 	{
@@ -212,7 +224,7 @@ fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 	fz_stream *stm;
 
 	fz_keep_buffer(ctx, buf);
-	stm = fz_new_stream(ctx, buf, read_buffer, close_buffer);
+	stm = fz_new_stream(ctx, buf, read_buffer, close_buffer, NULL);
 	stm->seek = seek_buffer;
 	stm->reopen = reopen_buffer;
 
@@ -231,7 +243,7 @@ fz_open_memory(fz_context *ctx, unsigned char *data, int len)
 {
 	fz_stream *stm;
 
-	stm = fz_new_stream(ctx, NULL, read_buffer, close_buffer);
+	stm = fz_new_stream(ctx, NULL, read_buffer, close_buffer, NULL);
 	stm->seek = seek_buffer;
 	stm->reopen = reopen_buffer;
 

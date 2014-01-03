@@ -136,6 +136,13 @@ image_meta(image_document *doc, int key, void *ptr, int size)
 }
 
 static void
+image_rebind(image_document *doc, fz_context *ctx)
+{
+	doc->ctx = ctx;
+	fz_rebind_stream(doc->file, ctx);
+}
+
+static void
 image_init_document(image_document *doc)
 {
 	doc->super.close = (void*)image_close_document;
@@ -145,4 +152,5 @@ image_init_document(image_document *doc)
 	doc->super.run_page_contents = (void*)image_run_page;
 	doc->super.free_page = (void*)image_free_page;
 	doc->super.meta = (void*)image_meta;
+	doc->super.rebind = (void*)image_rebind;
 }

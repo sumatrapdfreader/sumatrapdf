@@ -86,6 +86,13 @@ close_flated(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
+static fz_stream *
+rebind_flated(fz_stream *s)
+{
+	fz_flate *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_flated(fz_stream *chain)
 {
@@ -119,5 +126,5 @@ fz_open_flated(fz_stream *chain)
 		fz_close(chain);
 		fz_rethrow(ctx);
 	}
-	return fz_new_stream(ctx, state, read_flated, close_flated);
+	return fz_new_stream(ctx, state, read_flated, close_flated, rebind_flated);
 }

@@ -68,6 +68,8 @@ void fz_putc(fz_output *out, char c);
 */
 void fz_close_output(fz_output *);
 
+void fz_rebind_output(fz_output *, fz_context *ctx);
+
 static inline int fz_write_int32be(fz_output *out, int x)
 {
 	char data[4];

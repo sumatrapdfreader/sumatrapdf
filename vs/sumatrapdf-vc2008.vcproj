@@ -1995,6 +1995,14 @@
 				Name="IFilter"
 				>
 				<File
+					RelativePath="..\src\ifilter\CEpubFilter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\ifilter\CEpubFilter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\ifilter\CPdfFilter.cpp"
 					>
 				</File>
@@ -2024,14 +2032,6 @@
 				</File>
 				<File
 					RelativePath="..\src\ifilter\PdfFilterDll.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\ifilter\CEpubFilter.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\ifilter\CEpubFilter.h"
 					>
 				</File>
 			</Filter>

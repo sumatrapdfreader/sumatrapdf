@@ -712,7 +712,7 @@ pdf_dev_text(pdf_device *pdev, fz_text *text, float size)
 		}
 
 		fz_buffer_printf(pdev->ctx, gs->buf, "<");
-		for (i = i; i < j; i++)
+		for (/* i from its current value */; i < j; i++)
 		{
 			/* FIXME: should use it->gid, rather than it->ucs, and convert
 			* to the correct encoding */
@@ -1277,6 +1277,16 @@ pdf_dev_free_user(fz_device *dev)
 	fz_free(ctx, pdev);
 }
 
+static void
+pdf_dev_rebind(fz_device *dev)
+{
+	pdf_device *pdev = dev->user;
+
+	/* SumatraPDF: prevent dependency on fitz/document.c */
+	if (pdev->doc && pdev->doc->super.rebind)
+		pdev->doc->super.rebind(&pdev->doc->super, dev->ctx);
+}
+
 fz_device *pdf_new_pdf_device(pdf_document *doc, pdf_obj *contents, pdf_obj *resources, const fz_matrix *ctm)
 {
 	fz_context *ctx = doc->ctx;
@@ -1313,6 +1323,7 @@ fz_device *pdf_new_pdf_device(pdf_document *doc, pdf_obj *contents, pdf_obj *res
 		fz_rethrow(ctx);
 	}
 
+	dev->rebind = pdf_dev_rebind;
 	dev->free_user = pdf_dev_free_user;
 
 	dev->fill_path = pdf_dev_fill_path;

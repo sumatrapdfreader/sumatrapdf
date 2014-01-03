@@ -529,6 +529,69 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 	}
 }
 
+pdf_token
+pdf_lex_no_string(fz_stream *f, pdf_lexbuf *buf)
+{
+	while (1)
+	{
+		int c = fz_read_byte(f);
+		switch (c)
+		{
+		case EOF:
+			return PDF_TOK_EOF;
+		case IS_WHITE:
+			lex_white(f);
+			break;
+		case '%':
+			lex_comment(f);
+			break;
+		case '/':
+			lex_name(f, buf);
+			return PDF_TOK_NAME;
+		case '(':
+			continue;
+		case ')':
+			continue;
+		case '<':
+			c = fz_read_byte(f);
+			if (c == '<')
+			{
+				return PDF_TOK_OPEN_DICT;
+			}
+			else
+			{
+				continue;
+			}
+		case '>':
+			c = fz_read_byte(f);
+			if (c == '>')
+			{
+				return PDF_TOK_CLOSE_DICT;
+			}
+			if (c == EOF)
+			{
+				return PDF_TOK_EOF;
+			}
+			fz_unread_byte(f);
+			continue;
+		case '[':
+			return PDF_TOK_OPEN_ARRAY;
+		case ']':
+			return PDF_TOK_CLOSE_ARRAY;
+		case '{':
+			return PDF_TOK_OPEN_BRACE;
+		case '}':
+			return PDF_TOK_CLOSE_BRACE;
+		case IS_NUMBER:
+			return lex_number(f, buf, c);
+		default: /* isregular: !isdelim && !iswhite && c != EOF */
+			fz_unread_byte(f);
+			lex_name(f, buf);
+			return pdf_token_from_keyword(buf->scratch);
+		}
+	}
+}
+
 void pdf_print_token(fz_context *ctx, fz_buffer *fzbuf, int tok, pdf_lexbuf *buf)
 {
 	switch (tok)

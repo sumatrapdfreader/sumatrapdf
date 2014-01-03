@@ -102,6 +102,13 @@ fz_close_document(fz_document *doc)
 		doc->close(doc);
 }
 
+void
+fz_rebind_document(fz_document *doc, fz_context *ctx)
+{
+	if (doc != NULL && doc->rebind != NULL)
+		doc->rebind(doc, ctx);
+}
+
 int
 fz_needs_password(fz_document *doc)
 {

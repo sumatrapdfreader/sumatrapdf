@@ -36,6 +36,16 @@ fz_disable_device_hints(fz_device *dev, int hints)
 }
 
 void
+fz_rebind_device(fz_device *dev, fz_context *ctx)
+{
+	if (dev == NULL)
+		return;
+	dev->ctx = ctx;
+	if (dev->rebind)
+		dev->rebind(dev);
+}
+
+void
 fz_begin_page(fz_device *dev, const fz_rect *rect, const fz_matrix *ctm)
 {
 	if (dev->begin_page)

@@ -40,6 +40,13 @@ close_null(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_null(fz_stream *s)
+{
+	struct null_filter *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_null(fz_stream *chain, int len, int offset)
 {
@@ -61,7 +68,7 @@ fz_open_null(fz_stream *chain, int len, int offset)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_null, close_null);
+	return fz_new_stream(ctx, state, read_null, close_null, rebind_null);
 }
 
 /* Concat filter concatenates several streams into one */
@@ -150,6 +157,21 @@ close_concat(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
+static fz_stream *
+rebind_concat(fz_stream *s)
+{
+	struct concat_filter *state = s->state;
+	int i;
+
+	if (state->current >= state->count)
+		return NULL;
+	for (i = state->current; i < state->count-1; i++)
+	{
+		fz_rebind_stream(state->chain[i], s->ctx);
+	}
+	return state->chain[i];
+}
+
 fz_stream *
 fz_open_concat(fz_context *ctx, int len, int pad)
 {
@@ -162,7 +184,7 @@ fz_open_concat(fz_context *ctx, int len, int pad)
 	state->pad = pad;
 	state->ws = 0; /* We never send padding byte at the start */
 
-	return fz_new_stream(ctx, state, read_concat, close_concat);
+	return fz_new_stream(ctx, state, read_concat, close_concat, rebind_concat);
 }
 
 void
@@ -268,6 +290,13 @@ close_ahxd(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_ahxd(fz_stream *s)
+{
+	fz_ahxd *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_ahxd(fz_stream *chain)
 {
@@ -286,7 +315,7 @@ fz_open_ahxd(fz_stream *chain)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_ahxd, close_ahxd);
+	return fz_new_stream(ctx, state, read_ahxd, close_ahxd, rebind_ahxd);
 }
 
 /* ASCII 85 Decode */
@@ -418,6 +447,13 @@ close_a85d(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_a85d(fz_stream *s)
+{
+	fz_a85d *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_a85d(fz_stream *chain)
 {
@@ -438,7 +474,7 @@ fz_open_a85d(fz_stream *chain)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_a85d, close_a85d);
+	return fz_new_stream(ctx, state, read_a85d, close_a85d, rebind_a85d);
 }
 
 /* Run Length Decode */
@@ -514,6 +550,13 @@ close_rld(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_rld(fz_stream *s)
+{
+	fz_rld *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_rld(fz_stream *chain)
 {
@@ -534,7 +577,7 @@ fz_open_rld(fz_stream *chain)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_rld, close_rld);
+	return fz_new_stream(ctx, state, read_rld, close_rld, rebind_rld);
 }
 
 /* RC4 Filter */
@@ -566,6 +609,13 @@ close_arc4(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_arc4c(fz_stream *s)
+{
+	fz_arc4c *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_arc4(fz_stream *chain, unsigned char *key, unsigned keylen)
 {
@@ -584,7 +634,7 @@ fz_open_arc4(fz_stream *chain, unsigned char *key, unsigned keylen)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_arc4, close_arc4);
+	return fz_new_stream(ctx, state, read_arc4, close_arc4, rebind_arc4c);
 }
 
 /* AES Filter */
@@ -657,6 +707,13 @@ close_aesd(fz_context *ctx, void *state_)
 	fz_close(chain);
 }
 
+static fz_stream *
+rebind_aesd(fz_stream *s)
+{
+	fz_aesd *state = s->state;
+	return state->chain;
+}
+
 fz_stream *
 fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 {
@@ -682,5 +739,5 @@ fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_aesd, close_aesd);
+	return fz_new_stream(ctx, state, read_aesd, close_aesd, rebind_aesd);
 }

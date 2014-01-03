@@ -18,6 +18,7 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 	fz_colorspace *colorspace = NULL;
 	float decode[FZ_MAX_COLORS * 2];
 	int colorkey[FZ_MAX_COLORS * 2];
+	int stride;
 
 	int i;
 	fz_context *ctx = doc->ctx;
@@ -139,7 +140,7 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 		}
 
 		/* Now, do we load a ref, or do we load the actual thing? */
-		if (!cstm)
+		if (cstm == NULL)
 		{
 			/* Just load the compressed image data now and we can
 			 * decode it on demand. */
@@ -151,20 +152,13 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 		}
 
 		/* We need to decompress the image now */
-		if (cstm)
-		{
-			int stride = (w * n * bpc + 7) / 8;
-			stm = pdf_open_inline_stream(doc, dict, stride * h, cstm, NULL);
-		}
-		else
-		{
-			stm = pdf_open_stream(doc, pdf_to_num(dict), pdf_to_gen(dict));
-		}
+		stride = (w * n * bpc + 7) / 8;
+		stm = pdf_open_inline_stream(doc, dict, stride * h, cstm, NULL);
 
 		image = fz_new_image(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, usecolorkey ? colorkey : NULL, NULL, mask);
 		colorspace = NULL;
 		mask = NULL;
-		image->tile = fz_decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 0, 0);
+		image->tile = fz_decomp_image_from_stream(ctx, stm, image, indexed, 0, 0);
 	}
 	fz_catch(ctx)
 	{

@@ -377,7 +377,7 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
     stream->AddRef();
 
-    fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream);
+    fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream, NULL);
     stm->seek = seek_istream;
     stm->reopen = reopen_istream;
     return stm;
@@ -1103,7 +1103,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
                 }
             }
             else {
-                fz_warn(ctx, "non-page object in page tree (%s)", type);
+                fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree (%s)", type);
             }
         }
     }

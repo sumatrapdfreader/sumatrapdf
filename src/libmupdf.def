@@ -52,6 +52,8 @@ EXPORTS
 	fz_keep_colorspace_context
 	fz_drop_colorspace_context
 	fz_lookup_color_converter
+	fz_init_cached_color_converter
+	fz_fin_cached_color_converter
 	fz_keep_transfer_function
 	fz_drop_transfer_function
 	fz_compressed_buffer_size
@@ -108,6 +110,7 @@ EXPORTS
 	aes_crypt_cbc
 	fz_lookup_blendmode
 	fz_blendmode_name
+	fz_rebind_device
 	fz_begin_page
 	fz_end_page
 	fz_fill_path
@@ -310,6 +313,7 @@ EXPORTS
 	fz_write
 	fz_putc
 	fz_close_output
+	fz_rebind_output
 	fz_new_path
 	fz_currentpoint
 	fz_moveto
@@ -396,6 +400,7 @@ EXPORTS
 	fz_read
 	fz_read_all
 	fz_stream_meta
+	fz_rebind_stream
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
@@ -674,6 +679,7 @@ EXPORTS
 	pdf_lexbuf_fin
 	pdf_lexbuf_grow
 	pdf_lex
+	pdf_lex_no_string
 	pdf_parse_array
 	pdf_parse_dict
 	pdf_parse_stm_obj

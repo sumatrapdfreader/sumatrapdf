@@ -413,6 +413,13 @@ cbz_meta(cbz_document *doc, int key, void *ptr, int size)
 }
 
 static void
+cbz_rebind(cbz_document *doc, fz_context *ctx)
+{
+	doc->ctx = ctx;
+	fz_rebind_stream(doc->file, ctx);
+}
+
+static void
 cbz_init_document(cbz_document *doc)
 {
 	doc->super.close = (void*)cbz_close_document;
@@ -422,4 +429,5 @@ cbz_init_document(cbz_document *doc)
 	doc->super.run_page_contents = (void*)cbz_run_page;
 	doc->super.free_page = (void*)cbz_free_page;
 	doc->super.meta = (void*)cbz_meta;
+	doc->super.rebind = (void *)cbz_rebind;
 }

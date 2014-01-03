@@ -2,13 +2,13 @@
 
 #define SWAP(a,b) {fz_vertex *t = (a); (a) = (b); (b) = t;}
 
-static void
+static inline void
 paint_tri(fz_mesh_processor *painter, fz_vertex *v0, fz_vertex *v1, fz_vertex *v2)
 {
 	painter->process(painter->process_arg, v0, v1, v2);
 }
 
-static void
+static inline void
 paint_quad(fz_mesh_processor *painter, fz_vertex *v0, fz_vertex *v1, fz_vertex *v2, fz_vertex *v3)
 {
 	/* For a quad with corners (in clockwise or anticlockwise order) are
@@ -64,9 +64,11 @@ fz_process_mesh_type1(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 		fz_transform_point(&v[0].p, &local_ctm);
 		memcpy(v[0].c, p, n*sizeof(float));
 		p += n;
+		painter->prepare(painter->process_arg, &v[0]);
 		v[1].p.x = x; v[1].p.y = yn;
 		fz_transform_point(&v[1].p, &local_ctm);
 		memcpy(v[1].c, p + xdivs*n, n*sizeof(float));
+		painter->prepare(painter->process_arg, &v[1]);
 		for (xx = 0; xx < xdivs; xx++)
 		{
 			x = x0 + (x1 - x0) * (xx + 1) / xdivs;
@@ -75,9 +77,11 @@ fz_process_mesh_type1(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 			fz_transform_point(&vn[0].p, &local_ctm);
 			memcpy(vn[0].c, p, n*sizeof(float));
 			p += n;
+			painter->prepare(painter->process_arg, &vn[0]);
 			vn[1].p.x = x; vn[1].p.y = yn;
 			fz_transform_point(&vn[1].p, &local_ctm);
 			memcpy(vn[1].c, p + xdivs*n, n*sizeof(float));
+			painter->prepare(painter->process_arg, &vn[1]);
 
 			paint_quad(painter, &v[0], &vn[0], &vn[1], &v[1]);
 			SWAP(v,vn);
@@ -127,6 +131,10 @@ fz_process_mesh_type2(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	v2.c[0] = 0;
 	v3.c[0] = 1;
 
+	painter->prepare(painter->process_arg, &v0);
+	painter->prepare(painter->process_arg, &v1);
+	painter->prepare(painter->process_arg, &v2);
+	painter->prepare(painter->process_arg, &v3);
 	paint_quad(painter, &v0, &v2, &v3, &v1);
 
 	if (shade->u.l_or_r.extend[0])
@@ -139,9 +147,9 @@ fz_process_mesh_type2(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 
 		e0.c[0] = 0;
 		e1.c[0] = 0;
-		v0.c[0] = 0;
-		v2.c[0] = 0;
 
+		painter->prepare(painter->process_arg, &e0);
+		painter->prepare(painter->process_arg, &e1);
 		paint_quad(painter, &e0, &v0, &v2, &e1);
 	}
 
@@ -155,9 +163,9 @@ fz_process_mesh_type2(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 
 		e0.c[0] = 1;
 		e1.c[0] = 1;
-		v1.c[0] = 1;
-		v3.c[0] = 1;
 
+		painter->prepare(painter->process_arg, &e0);
+		painter->prepare(painter->process_arg, &e1);
 		paint_quad(painter, &e0, &v1, &v3, &e1);
 	}
 }
@@ -207,6 +215,14 @@ fz_paint_annulus(const fz_matrix *ctm,
 		b2.c[0] = c1;
 		b3.c[0] = c1;
 
+		painter->prepare(painter->process_arg, &t0);
+		painter->prepare(painter->process_arg, &t1);
+		painter->prepare(painter->process_arg, &t2);
+		painter->prepare(painter->process_arg, &t3);
+		painter->prepare(painter->process_arg, &b0);
+		painter->prepare(painter->process_arg, &b1);
+		painter->prepare(painter->process_arg, &b2);
+		painter->prepare(painter->process_arg, &b3);
 		paint_quad(painter, &t0, &t2, &t3, &t1);
 		paint_quad(painter, &b0, &b2, &b3, &b1);
 	}
@@ -296,6 +312,7 @@ fz_process_mesh_type4(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 			fz_transform_point(&vd->p, ctm);
 			for (i = 0; i < ncomp; i++)
 				vd->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
+			painter->prepare(painter->process_arg, vd);
 
 			switch (flag)
 			{
@@ -308,6 +325,7 @@ fz_process_mesh_type4(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				fz_transform_point(&vb->p, ctm);
 				for (i = 0; i < ncomp; i++)
 					vb->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
+				painter->prepare(painter->process_arg, vb);
 
 				fz_read_bits(stream, bpflag);
 				vc->p.x = read_sample(stream, bpcoord, x0, x1);
@@ -315,6 +333,7 @@ fz_process_mesh_type4(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				fz_transform_point(&vc->p, ctm);
 				for (i = 0; i < ncomp; i++)
 					vc->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
+				painter->prepare(painter->process_arg, vc);
 
 				paint_tri(painter, va, vb, vc);
 				break;
@@ -381,6 +400,7 @@ fz_process_mesh_type5(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				fz_transform_point(&buf[i].p, ctm);
 				for (k = 0; k < ncomp; k++)
 					buf[i].c[k] = read_sample(stream, bpcomp, c0[k], c1[k]);
+				painter->prepare(painter->process_arg, &buf[i]);
 			}
 
 			if (!first)
@@ -431,6 +451,10 @@ triangulate_patch(fz_mesh_processor *painter, tensor_patch p)
 	v3.p = p.pole[3][0];
 	memcpy(v3.c, p.color[3], col_len);
 
+	painter->prepare(painter->process_arg, &v0);
+	painter->prepare(painter->process_arg, &v1);
+	painter->prepare(painter->process_arg, &v2);
+	painter->prepare(painter->process_arg, &v3);
 	paint_quad(painter, &v0, &v1, &v2, &v3);
 }
 
@@ -889,12 +913,13 @@ fz_process_mesh_type7(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 
 void
 fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,
-		fz_mesh_process_fn *process, void *process_arg)
+		fz_mesh_prepare_fn *prepare, fz_mesh_process_fn *process, void *process_arg)
 {
 	fz_mesh_processor painter;
 
 	painter.ctx = ctx;
 	painter.shade = shade;
+	painter.prepare = prepare;
 	painter.process = process;
 	painter.process_arg = process_arg;
 	painter.ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);

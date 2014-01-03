@@ -38,6 +38,7 @@ struct fz_document_s
 	fz_annot *(*next_annot)(fz_document *doc, fz_annot *annot);
 	fz_rect *(*bound_annot)(fz_document *doc, fz_annot *annot, fz_rect *rect);
 	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
+	void (*rebind)(fz_document *doc, fz_context *ctx);
 };
 
 /*
@@ -226,5 +227,7 @@ void fz_free_page(fz_document *doc, fz_page *page);
 	Does not throw exceptions.
 */
 fz_transition *fz_page_presentation(fz_document *doc, fz_page *page, float *duration);
+
+void fz_rebind_document(fz_document *doc, fz_context *ctx);
 
 #endif

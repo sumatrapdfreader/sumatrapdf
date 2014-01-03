@@ -103,6 +103,8 @@ struct fz_device_s
 	void (*free_user)(fz_device *);
 	fz_context *ctx;
 
+	void (*rebind)(fz_device *);
+
 	void (*begin_page)(fz_device *, const fz_rect *rect, const fz_matrix *ctm);
 	void (*end_page)(fz_device *);
 
@@ -144,6 +146,7 @@ struct fz_device_s
 	fz_rect scissor_accumulator;
 };
 
+void fz_rebind_device(fz_device *dev, fz_context *ctx);
 void fz_begin_page(fz_device *dev, const fz_rect *rect, const fz_matrix *ctm);
 void fz_end_page(fz_device *dev);
 void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);

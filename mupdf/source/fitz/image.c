@@ -180,8 +180,8 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, fz_image *image, int indexe
 		/* decompress the image in bands of 256 lines */
 		for (part_h = h; part_h > 0; part_h -= band >> l2factor)
 		{
-			image->h = part_h > band >> l2factor ? band : (orig_h - 1) % band + 1;
-			part = fz_decomp_image_from_stream(ctx, fz_keep_stream(stm), image, -1, indexed, l2factor, native_l2factor);
+			image->h = part_h > band >> l2factor ? band : ((orig_h - 1) % band) + 1;
+			part = fz_decomp_image_from_stream(ctx, fz_keep_stream(stm), image, -1 - indexed, l2factor, native_l2factor);
 			memcpy(tile->samples + (h - part_h) * tile->w * tile->n, part->samples, part->h * part->w * part->n);
 			tile->has_alpha |= part->has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 			fz_drop_pixmap(ctx, part);
@@ -208,7 +208,7 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, fz_image *image, int indexe
 
 
 fz_pixmap *
-fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, int in_line, int indexed, int l2factor, int native_l2factor)
+fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, int indexed, int l2factor, int native_l2factor)
 {
 	fz_pixmap *tile = NULL;
 	int stride, len, i;
@@ -216,12 +216,16 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 	int f = 1<<native_l2factor;
 	int w = (image->w + f-1) >> native_l2factor;
 	int h = (image->h + f-1) >> native_l2factor;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
+	int is_banded = indexed < 0;
 
 	fz_var(tile);
 	fz_var(samples);
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
-	if (l2factor - native_l2factor > 0 && image->w > (1 << 8) && in_line != -1)
+	if (is_banded)
+		indexed = -1 - indexed;
+	else if (l2factor - native_l2factor > 0 && image->w > (1 << 8))
 		return decomp_image_banded(ctx, stm, image, indexed, l2factor, native_l2factor);
 
 	fz_try(ctx)
@@ -274,7 +278,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 		}
 
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
-		if (image->usecolorkey && image->mask && in_line != -1)
+		if (image->usecolorkey && image->mask && !is_banded)
 			fz_unblend_masked_tile(ctx, tile, image);
 	}
 	fz_always(ctx)
@@ -379,7 +383,7 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 		stm = fz_open_image_decomp_stream(ctx, image->buffer, &native_l2factor);
 
 		indexed = fz_colorspace_is_indexed(image->colorspace);
-		tile = fz_decomp_image_from_stream(ctx, stm, image, 0, indexed, l2factor, native_l2factor);
+		tile = fz_decomp_image_from_stream(ctx, stm, image, indexed, l2factor, native_l2factor);
 
 		/* CMYK JPEGs in XPS documents have to be inverted */
 		if (image->invert_cmyk_jpeg &&

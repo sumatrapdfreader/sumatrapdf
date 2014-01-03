@@ -1,5 +1,11 @@
 #include "mupdf/fitz.h"
 
+void fz_rebind_output(fz_output *out, fz_context *ctx)
+{
+	if (out != NULL)
+		out->ctx = ctx;
+}
+
 static int
 file_printf(fz_output *out, const char *fmt, va_list ap)
 {

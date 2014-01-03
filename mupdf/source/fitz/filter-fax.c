@@ -760,6 +760,13 @@ close_faxd(fz_context *ctx, void *state_)
 	fz_free(ctx, fax);
 }
 
+static fz_stream *
+rebind_faxd(fz_stream *s)
+{
+	fz_faxd *state = s->state;
+	return state->chain;
+}
+
 /* Default: columns = 1728, end_of_block = 1, the rest = 0 */
 fz_stream *
 fz_open_faxd(fz_stream *chain,
@@ -818,5 +825,5 @@ fz_open_faxd(fz_stream *chain,
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, fax, read_faxd, close_faxd);
+	return fz_new_stream(ctx, fax, read_faxd, close_faxd, rebind_faxd);
 }

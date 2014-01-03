@@ -311,7 +311,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 			fz_try(ctx)
 			{
-				tok = pdf_lex(doc->file, buf);
+				tok = pdf_lex_no_string(doc->file, buf);
 			}
 			fz_catch(ctx)
 			{
@@ -327,6 +327,12 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 			if (tok == PDF_TOK_INT)
 			{
+				if (buf->i < 0)
+				{
+					num = 0;
+					gen = 0;
+					continue;
+				}
 				numofs = genofs;
 				num = gen;
 				genofs = tmpofs;
@@ -380,7 +386,9 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 				goto have_next_token;
 			}
 
-			/* trailer dictionary */
+			/* If we find a dictionary it is probably the trailer,
+			 * but could be a stream (or bogus) dictionary caused
+			 * by a corrupt file. */
 			else if (tok == PDF_TOK_OPEN_DICT)
 			{
 				fz_try(ctx)
@@ -390,13 +398,11 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 				fz_catch(ctx)
 				{
 					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-					/* If we haven't seen a root yet, there is nothing
-					 * we can do, but give up. Otherwise, we'll make
-					 * do. */
-					if (!root)
-						fz_rethrow(ctx);
-					fz_warn(ctx, "cannot parse trailer dictionary - ignoring rest of file");
-					break;
+					/* If this was the real trailer dict
+					 * it was broken, in which case we are
+					 * in trouble. Keep going though in
+					 * case this was just a bogus dict. */
+					continue;
 				}
 
 				obj = pdf_dict_gets(dict, "Encrypt");
@@ -431,11 +437,16 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 				obj = NULL;
 			}
 
-			else if (tok == PDF_TOK_ERROR)
-				fz_read_byte(doc->file);
-
 			else if (tok == PDF_TOK_EOF)
 				break;
+			else
+			{
+				if (tok == PDF_TOK_ERROR)
+					fz_read_byte(doc->file);
+				num = 0;
+				gen = 0;
+			}
+
 		}
 
 		/* make xref reasonable */
@@ -490,7 +501,6 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 		entry->ofs = 0;
 		entry->gen = 65535;
 		entry->stm_ofs = 0;
-		/* SumatraPDF: fix memory leak in 3324.pdf.asan.3.2585 */
 
 		next = 0;
 		for (i = pdf_xref_len(doc) - 1; i >= 0; i--)

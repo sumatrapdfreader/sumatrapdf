@@ -1027,6 +1027,15 @@ svg_dev_free_user(fz_device *dev)
 	fz_free(ctx, sdev);
 }
 
+void svg_rebind(fz_device *dev)
+{
+	svg_device *sdev = dev->user;
+
+	sdev->ctx = dev->ctx;
+	fz_rebind_output(sdev->out, sdev->ctx);
+	fz_rebind_output(sdev->out_store, sdev->ctx);
+}
+
 fz_device *fz_new_svg_device(fz_context *ctx, fz_output *out, float page_width, float page_height)
 {
 	svg_device *sdev = fz_malloc_struct(ctx, svg_device);
@@ -1047,6 +1056,7 @@ fz_device *fz_new_svg_device(fz_context *ctx, fz_output *out, float page_width, 
 		fz_rethrow(ctx);
 	}
 
+	dev->rebind = svg_rebind;
 	dev->free_user = svg_dev_free_user;
 
 	dev->fill_path = svg_dev_fill_path;

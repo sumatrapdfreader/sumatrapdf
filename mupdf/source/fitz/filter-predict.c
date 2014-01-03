@@ -190,6 +190,13 @@ close_predict(fz_context *ctx, void *state_)
 	fz_free(ctx, state);
 }
 
+static fz_stream *
+rebind_predict(fz_stream *s)
+{
+	fz_predict *state = s->state;
+	return state->chain;
+}
+
 /* Default values: predictor = 1, columns = 1, colors = 1, bpc = 8 */
 fz_stream *
 fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bpc)
@@ -252,5 +259,5 @@ fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bp
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_predict, close_predict);
+	return fz_new_stream(ctx, state, read_predict, close_predict, rebind_predict);
 }

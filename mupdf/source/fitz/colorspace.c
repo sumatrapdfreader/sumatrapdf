@@ -1288,6 +1288,88 @@ fz_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
 	return dst;
 }
 
+typedef struct fz_cached_color_converter
+{
+	fz_color_converter base;
+	fz_hash_table *hash;
+
+}
+fz_cached_color_converter;
+
+static void fz_cached_color_convert(fz_color_converter *cc_, float *ds, float *ss)
+{
+	fz_cached_color_converter *cc = cc_->opaque;
+	fz_context *ctx = cc->base.ctx;
+	void *val = fz_hash_find(ctx, cc->hash, ss);
+	int n = cc->base.ds->n * sizeof(float);
+	fz_color_converter *base_cc = &cc->base;
+
+	if (val)
+	{
+		memcpy(ds, val, n);
+		return;
+	}
+
+	base_cc->convert(base_cc, ds, ss);
+	val = fz_malloc(ctx, n);
+	memcpy(val, ds, n);
+	fz_try(ctx)
+	{
+		fz_hash_insert(ctx, cc->hash, ss, val);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, val);
+	}
+}
+
+void fz_init_cached_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ds, fz_colorspace *ss)
+{
+	int n = ss->n;
+	fz_cached_color_converter *cached = fz_malloc_struct(ctx, fz_cached_color_converter);
+
+	fz_try(ctx)
+	{
+		fz_lookup_color_converter(&cached->base, ctx, ds, ss);
+		cached->hash = fz_new_hash_table(ctx, 256, n * sizeof(float), -1);
+		cc->convert = fz_cached_color_convert;
+		cc->ctx = ctx;
+		cc->ds = ds;
+		cc->ss = ss;
+		cc->opaque = cached;
+	}
+	fz_catch(ctx)
+	{
+		fz_free_hash(ctx, cached->hash);
+		fz_rethrow(ctx);
+	}
+}
+
+void fz_fin_cached_color_converter(fz_color_converter *cc_)
+{
+	fz_cached_color_converter *cc;
+	fz_context *ctx;
+	int i, n;
+
+	if (cc_ == NULL)
+		return;
+	cc = cc_->opaque;
+	if (cc == NULL)
+		return;
+	cc_->opaque = NULL;
+	ctx = cc_->ctx;
+
+	n = fz_hash_len(ctx, cc->hash);
+	for (i = 0; i < n; i++)
+	{
+		void *v = fz_hash_get_val(ctx, cc->hash, i);
+		if (v)
+			fz_free(ctx, v);
+	}
+	fz_free_hash(ctx, cc->hash);
+	fz_free(ctx, cc);
+}
+
 /* SumatraPDF: support transfer functions */
 fz_transfer_function *
 fz_keep_transfer_function(fz_context *ctx, fz_transfer_function *tr)

@@ -341,6 +341,9 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 	int c;
 	int size;
 	int ofs;
+	pdf_obj *trailer = NULL;
+
+	fz_var(trailer);
 
 	/* Record the current file read offset so that we can reinstate it */
 	ofs = fz_tell(doc->file);
@@ -377,7 +380,6 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 
 	fz_try(doc->ctx)
 	{
-		pdf_obj *trailer;
 		tok = pdf_lex(doc->file, buf);
 		if (tok != PDF_TOK_TRAILER)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "expected trailer marker");
@@ -389,10 +391,12 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 		trailer = pdf_parse_dict(doc, doc->file, buf);
 
 		size = pdf_to_int(pdf_dict_gets(trailer, "Size"));
-		/* SumatraPDF: fix memory leak */
-		pdf_drop_obj(trailer);
 		if (!size)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "trailer missing Size entry");
+	}
+	fz_always(doc->ctx)
+	{
+		pdf_drop_obj(trailer);
 	}
 	fz_catch(doc->ctx)
 	{
@@ -1937,6 +1941,13 @@ pdf_page_presentation(pdf_document *doc, pdf_page *page, float *duration)
 	return &page->transition;
 }
 
+static void
+pdf_rebind(pdf_document *doc, fz_context *ctx)
+{
+	doc->ctx = ctx;
+	fz_rebind_stream(doc->file, ctx);
+}
+
 /*
 	Initializers for the fz_document interface.
 
@@ -1969,6 +1980,7 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.meta = (void*)pdf_meta;
 	doc->super.page_presentation = (void*)pdf_page_presentation;
 	doc->super.write = (void*)pdf_write_document;
+	doc->super.rebind = (void*)pdf_rebind;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(file);

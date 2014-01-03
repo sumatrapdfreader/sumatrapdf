@@ -139,6 +139,16 @@ enum
 
 int fz_stream_meta(fz_stream *stm, int key, int size, void *ptr);
 
+void fz_rebind_stream(fz_stream *stm, fz_context *ctx);
+
+typedef int (fz_stream_read_fn)(fz_stream *stm, unsigned char *buf, int len);
+typedef void (fz_stream_close_fn)(fz_context *ctx, void *state);
+typedef void (fz_stream_seek_fn)(fz_stream *stm, int offset, int whence);
+typedef int (fz_stream_meta_fn)(fz_stream *stm, int key, int size, void *ptr);
+typedef fz_stream *(fz_stream_rebind_fn)(fz_stream *stm);
+/* SumatraPDF: allow to clone a stream */
+typedef fz_stream *(fz_stream_reopen_fn)(fz_context *ctx, fz_stream *stm);
+
 struct fz_stream_s
 {
 	fz_context *ctx;
@@ -150,16 +160,20 @@ struct fz_stream_s
 	int bits;
 	unsigned char *bp, *rp, *wp, *ep;
 	void *state;
-	int (*read)(fz_stream *stm, unsigned char *buf, int len);
-	void (*close)(fz_context *ctx, void *state);
-	void (*seek)(fz_stream *stm, int offset, int whence);
-	/* SumatraPDF: allow to clone a stream */
-	fz_stream *(*reopen)(fz_context *ctx, fz_stream *stm);
-	int (*meta)(fz_stream *stm, int key, int size, void *ptr);
+	fz_stream_read_fn *read;
+	fz_stream_close_fn *close;
+	fz_stream_seek_fn *seek;
+	fz_stream_meta_fn *meta;
+	fz_stream_rebind_fn *rebind;
+	fz_stream_reopen_fn *reopen; /* SumatraPDF: allow to clone a stream */
 	unsigned char buf[4096];
 };
 
-fz_stream *fz_new_stream(fz_context *ctx, void*, int(*)(fz_stream*, unsigned char*, int), void(*)(fz_context *, void *));
+fz_stream *fz_new_stream(fz_context *ctx,
+			 void *state,
+			 fz_stream_read_fn *read,
+			 fz_stream_close_fn *close,
+			 fz_stream_rebind_fn *rebind);
 fz_stream *fz_keep_stream(fz_stream *stm);
 void fz_fill_buffer(fz_stream *stm);
 

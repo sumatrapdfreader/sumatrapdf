@@ -238,6 +238,13 @@ skip:
 	fz_free(ctx, state);
 }
 
+static fz_stream *
+rebind_dctd(fz_stream *s)
+{
+	fz_dctd *state = s->state;
+	return state->chain;
+}
+
 /* Default: color_transform = -1 (unset), l2factor = 0, jpegtables = NULL */
 fz_stream *
 fz_open_dctd(fz_stream *chain, int color_transform, int l2factor, fz_stream *jpegtables)
@@ -266,5 +273,5 @@ fz_open_dctd(fz_stream *chain, int color_transform, int l2factor, fz_stream *jpe
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_dctd, close_dctd);
+	return fz_new_stream(ctx, state, read_dctd, close_dctd, rebind_dctd);
 }
