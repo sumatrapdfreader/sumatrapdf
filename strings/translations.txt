@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2eddeb62308e63ea24a7651b7cceac9998d68144
+9ee2d9a3066f8b67c9a6252a30edf62bcacd9827
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -1393,7 +1393,7 @@ pa:ਮਦੱਦ ਕਤਾਬ(&M)
 pl:Instrukcja o&bsługi
 pt:&Manual
 ro:Manual
-ru:&Руководство
+ru:&Руководство пользователя
 si:&අත්පොත (M)
 sk:&Príručka
 sl:P&riročnik
@@ -5127,7 +5127,7 @@ pa:ਲਗਾਤਾਰ
 pl:Pojedyncza strona - układ ciągły
 pt:Uma página contínua
 ro:Continuu
-ru:Разрешить прокрутку
+ru:Прокрутка постранично
 si:අඛණ්ඩව
 sk:Priebežne
 sl:Nepretrgano
