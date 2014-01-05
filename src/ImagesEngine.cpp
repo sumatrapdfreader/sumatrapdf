@@ -443,6 +443,11 @@ public:
     virtual bool HasTocTree() const { return true; }
     virtual DocTocItem *GetTocTree();
 
+    // TODO: better handle the case where images have different resolutions
+    virtual float GetFileDPI() const {
+        return pages.At(0) ? pages.At(0)->GetHorizontalResolution() : 96.0f;
+    }
+
 protected:
     bool LoadImageDir(const WCHAR *dirName);
 
@@ -478,6 +483,9 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
 
     pages.AppendBlanks(pageFileNames.Count());
     mediaboxes.AppendBlanks(pageFileNames.Count());
+
+    // load first image for GetFileDPI
+    LoadImage(1);
 
     return true;
 }

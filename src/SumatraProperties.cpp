@@ -409,8 +409,8 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     int64 fileSize = file::GetSize(doc.GetFilePath());
     if (-1 == fileSize && doc.IsEngine()) {
         size_t fileSizeT;
-        free(doc.AsEngine()->GetFileData(&fileSizeT));
-        fileSize = fileSizeT;
+        if (ScopedMem<unsigned char>(doc.AsEngine()->GetFileData(&fileSizeT)))
+            fileSize = fileSizeT;
     }
     if (-1 != fileSize) {
         str = FormatFileSize((size_t)fileSize);
