@@ -562,6 +562,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\load-jxr.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\load-png.c"
 				>
 			</File>

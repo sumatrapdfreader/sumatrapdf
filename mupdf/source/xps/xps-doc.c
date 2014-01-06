@@ -520,7 +520,6 @@ xps_load_page(xps_document *doc, int number)
 	}
 
 	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find page %d", number + 1);
-	return NULL;
 }
 
 fz_rect *

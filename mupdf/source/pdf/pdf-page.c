@@ -64,8 +64,7 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 			{
 				pdf_obj *kid = pdf_array_get(kids, i);
 				char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2460 */
-				if (!strcmp(type, "Page") || !*type && pdf_dict_gets(kid, "MediaBox"))
+				if (!strcmp(type, "Page") || (!*type && pdf_dict_gets(kid, "MediaBox")))
 				{
 					if (*skip == 0)
 					{
@@ -79,7 +78,7 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 						(*skip)--;
 					}
 				}
-				else if (!strcmp(type, "Pages") || !*type && pdf_dict_gets(kid, "Kids"))
+				else if (!strcmp(type, "Pages") || (!*type && pdf_dict_gets(kid, "Kids")))
 				{
 					int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
 					if (*skip < count)
@@ -94,7 +93,7 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 				}
 				else
 				{
-					fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree");
+					fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree (%s)", type);
 				}
 			}
 		}

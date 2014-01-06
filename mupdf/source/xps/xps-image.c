@@ -161,7 +161,7 @@ xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 	{
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
 		key = xps_new_image_key(doc->ctx, part->name);
-		if (!(image = fz_find_item(doc->ctx, fz_free_image, key, &xps_image_store_type)))
+		if ((image = fz_find_item(doc->ctx, fz_free_image, key, &xps_image_store_type)) == NULL)
 		{
 
 		image = xps_load_image(doc->ctx, part);

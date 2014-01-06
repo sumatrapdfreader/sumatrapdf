@@ -1963,24 +1963,24 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 {
 	pdf_document *doc = fz_malloc_struct(ctx, pdf_document);
 
-	doc->super.close = (void*)pdf_close_document;
-	doc->super.needs_password = (void*)pdf_needs_password;
-	doc->super.authenticate_password = (void*)pdf_authenticate_password;
-	doc->super.load_outline = (void*)pdf_load_outline;
-	doc->super.count_pages = (void*)pdf_count_pages;
-	doc->super.load_page = (void*)pdf_load_page;
-	doc->super.load_links = (void*)pdf_load_links;
-	doc->super.bound_page = (void*)pdf_bound_page;
-	doc->super.first_annot = (void*)pdf_first_annot;
-	doc->super.next_annot = (void*)pdf_next_annot;
-	doc->super.bound_annot = (void*)pdf_bound_annot;
+	doc->super.close = (fz_document_close_fn *)pdf_close_document;
+	doc->super.needs_password = (fz_document_needs_password_fn *)pdf_needs_password;
+	doc->super.authenticate_password = (fz_document_authenticate_password_fn *)pdf_authenticate_password;
+	doc->super.load_outline = (fz_document_load_outline_fn *)pdf_load_outline;
+	doc->super.count_pages = (fz_document_count_pages_fn *)pdf_count_pages;
+	doc->super.load_page = (fz_document_load_page_fn *)pdf_load_page;
+	doc->super.load_links = (fz_document_load_links_fn *)pdf_load_links;
+	doc->super.bound_page = (fz_document_bound_page_fn *)pdf_bound_page;
+	doc->super.first_annot = (fz_document_first_annot_fn *)pdf_first_annot;
+	doc->super.next_annot = (fz_document_next_annot_fn *)pdf_next_annot;
+	doc->super.bound_annot = (fz_document_bound_annot_fn *)pdf_bound_annot;
 	doc->super.run_page_contents = NULL; /* see pdf_xref_aux.c */
 	doc->super.run_annot = NULL; /* see pdf_xref_aux.c */
-	doc->super.free_page = (void*)pdf_free_page;
-	doc->super.meta = (void*)pdf_meta;
-	doc->super.page_presentation = (void*)pdf_page_presentation;
-	doc->super.write = (void*)pdf_write_document;
-	doc->super.rebind = (void*)pdf_rebind;
+	doc->super.free_page = (fz_document_free_page_fn *)pdf_free_page;
+	doc->super.meta = (fz_document_meta_fn *)pdf_meta;
+	doc->super.page_presentation = (fz_document_page_presentation_fn *)pdf_page_presentation;
+	doc->super.write = (fz_document_write_fn *)pdf_write_document;
+	doc->super.rebind = (fz_document_rebind_fn *)pdf_rebind;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(file);
@@ -2370,7 +2370,7 @@ pdf_obj *pdf_progressive_advance(pdf_document *doc, int pagenum)
 
 pdf_document *pdf_specifics(fz_document *doc)
 {
-	return (pdf_document *)((doc && doc->close == (void *)pdf_close_document) ? doc : NULL);
+	return (pdf_document *)((doc && doc->close == (fz_document_close_fn *)pdf_close_document) ? doc : NULL);
 }
 
 pdf_document *pdf_create_document(fz_context *ctx)

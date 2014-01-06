@@ -5,7 +5,7 @@ fz_strsep(char **stringp, const char *delim)
 {
 	char *ret = *stringp;
 	if (!ret) return NULL;
-	if ((*stringp = strpbrk(*stringp, delim)))
+	if ((*stringp = strpbrk(*stringp, delim)) != NULL)
 		*((*stringp)++) = '\0';
 	return ret;
 }

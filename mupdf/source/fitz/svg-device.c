@@ -682,7 +682,10 @@ svg_dev_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 	fz_context *ctx = dev->ctx;
 	fz_output *out = sdev->out;
 	fz_matrix local_ctm = *ctm;
-	fz_matrix scale = { 1.0f/image->w, 0, 0, 1.0f/image->h, 0, 0};
+	fz_matrix scale = { 0 };
+
+	scale.a = 1.0f / image->w;
+	scale.d = 1.0f / image->h;
 
 	fz_concat(&local_ctm, &scale, ctm);
 	if (alpha != 1.0f)
@@ -767,8 +770,11 @@ fz_colorspace *colorspace, float *color, float alpha)
 	fz_context *ctx = dev->ctx;
 	fz_output *out;
 	fz_matrix local_ctm = *ctm;
-	fz_matrix scale = { 1.0f/image->w, 0, 0, 1.0f/image->h, 0, 0};
+	fz_matrix scale = { 0 };
 	int mask = sdev->id++;
+
+	scale.a = 1.0f / image->w;
+	scale.d = 1.0f / image->h;
 
 	fz_concat(&local_ctm, &scale, ctm);
 	out = start_def(sdev);
@@ -808,8 +814,11 @@ svg_dev_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, co
 	fz_context *ctx = dev->ctx;
 	fz_output *out;
 	fz_matrix local_ctm = *ctm;
-	fz_matrix scale = { 1.0f/image->w, 0, 0, 1.0f/image->h, 0, 0};
+	fz_matrix scale = { 0 };
 	int mask = sdev->id++;
+
+	scale.a = 1.0f / image->w;
+	scale.d = 1.0f / image->h;
 
 	fz_concat(&local_ctm, &scale, ctm);
 	out = start_def(sdev);

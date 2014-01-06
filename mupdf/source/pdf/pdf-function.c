@@ -1626,7 +1626,7 @@ pdf_load_function(pdf_document *doc, pdf_obj *dict, int in, int out)
 	if (pdf_obj_marked(dict))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "Recursion in function definition");
 
-	if ((func = pdf_find_item(ctx, pdf_free_function_imp, dict)))
+	if ((func = pdf_find_item(ctx, pdf_free_function_imp, dict)) != NULL)
 	{
 		return (fz_function *)func;
 	}

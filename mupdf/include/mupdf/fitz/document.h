@@ -19,26 +19,45 @@ typedef struct fz_annot_s fz_annot;
 // TODO: move out of this interface (it's pdf specific)
 typedef struct fz_write_options_s fz_write_options;
 
+typedef void (fz_document_close_fn)(fz_document *doc);
+typedef int (fz_document_needs_password_fn)(fz_document *doc);
+typedef int (fz_document_authenticate_password_fn)(fz_document *doc, const char *password);
+typedef fz_outline *(fz_document_load_outline_fn)(fz_document *doc);
+typedef int (fz_document_count_pages_fn)(fz_document *doc);
+typedef fz_page *(fz_document_load_page_fn)(fz_document *doc, int number);
+typedef fz_link *(fz_document_load_links_fn)(fz_document *doc, fz_page *page);
+typedef fz_rect *(fz_document_bound_page_fn)(fz_document *doc, fz_page *page, fz_rect *);
+typedef void (fz_document_run_page_contents_fn)(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
+typedef void (fz_document_run_annot_fn)(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
+typedef void (fz_document_free_page_fn)(fz_document *doc, fz_page *page);
+typedef int (fz_document_meta_fn)(fz_document *doc, int key, void *ptr, int size);
+typedef fz_transition *(fz_document_page_presentation_fn)(fz_document *doc, fz_page *page, float *duration);
+typedef fz_annot *(fz_document_first_annot_fn)(fz_document *doc, fz_page *page);
+typedef fz_annot *(fz_document_next_annot_fn)(fz_document *doc, fz_annot *annot);
+typedef fz_rect *(fz_document_bound_annot_fn)(fz_document *doc, fz_annot *annot, fz_rect *rect);
+typedef void (fz_document_write_fn)(fz_document *doc, char *filename, fz_write_options *opts);
+typedef void (fz_document_rebind_fn)(fz_document *doc, fz_context *ctx);
+
 struct fz_document_s
 {
-	void (*close)(fz_document *);
-	int (*needs_password)(fz_document *doc);
-	int (*authenticate_password)(fz_document *doc, const char *password);
-	fz_outline *(*load_outline)(fz_document *doc);
-	int (*count_pages)(fz_document *doc);
-	fz_page *(*load_page)(fz_document *doc, int number);
-	fz_link *(*load_links)(fz_document *doc, fz_page *page);
-	fz_rect *(*bound_page)(fz_document *doc, fz_page *page, fz_rect *);
-	void (*run_page_contents)(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
-	void (*run_annot)(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
-	void (*free_page)(fz_document *doc, fz_page *page);
-	int (*meta)(fz_document *doc, int key, void *ptr, int size);
-	fz_transition *(*page_presentation)(fz_document *doc, fz_page *page, float *duration);
-	fz_annot *(*first_annot)(fz_document *doc, fz_page *page);
-	fz_annot *(*next_annot)(fz_document *doc, fz_annot *annot);
-	fz_rect *(*bound_annot)(fz_document *doc, fz_annot *annot, fz_rect *rect);
-	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
-	void (*rebind)(fz_document *doc, fz_context *ctx);
+	fz_document_close_fn *close;
+	fz_document_needs_password_fn *needs_password;
+	fz_document_authenticate_password_fn *authenticate_password;
+	fz_document_load_outline_fn *load_outline;
+	fz_document_count_pages_fn *count_pages;
+	fz_document_load_page_fn *load_page;
+	fz_document_load_links_fn *load_links;
+	fz_document_bound_page_fn *bound_page;
+	fz_document_run_page_contents_fn *run_page_contents;
+	fz_document_run_annot_fn *run_annot;
+	fz_document_free_page_fn *free_page;
+	fz_document_meta_fn *meta;
+	fz_document_page_presentation_fn *page_presentation;
+	fz_document_first_annot_fn *first_annot;
+	fz_document_next_annot_fn *next_annot;
+	fz_document_bound_annot_fn *bound_annot;
+	fz_document_write_fn *write;
+	fz_document_rebind_fn *rebind;
 };
 
 /*

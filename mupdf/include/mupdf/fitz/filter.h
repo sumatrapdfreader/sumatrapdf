@@ -4,7 +4,10 @@
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/buffer.h"
+#include "mupdf/fitz/store.h"
 #include "mupdf/fitz/stream.h"
+
+typedef struct fz_jbig2_globals_s fz_jbig2_globals;
 
 fz_stream *fz_open_copy(fz_stream *chain);
 fz_stream *fz_open_null(fz_stream *chain, int len, int offset);
@@ -22,12 +25,9 @@ fz_stream *fz_open_faxd(fz_stream *chain,
 fz_stream *fz_open_flated(fz_stream *chain);
 fz_stream *fz_open_lzwd(fz_stream *chain, int early_change);
 fz_stream *fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bpc);
+fz_stream *fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals);
 
-/* SumatraPDF: reuse JBIG2Globals */
-#include "mupdf/fitz/store.h"
-typedef struct fz_jbig2_globals_s fz_jbig2_globals;
 fz_jbig2_globals *fz_load_jbig2_globals(fz_context *ctx, unsigned char *data, int size);
 void fz_free_jbig2_globals_imp(fz_context *ctx, fz_storable *globals);
-fz_stream *fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals);
 
 #endif

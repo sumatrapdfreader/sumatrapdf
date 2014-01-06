@@ -4,18 +4,11 @@
 
 typedef struct fz_jbig2d_s fz_jbig2d;
 
-/* SumatraPDF: reuse JBIG2Globals */
 struct fz_jbig2_globals_s
 {
 	fz_storable storable;
 	Jbig2GlobalCtx *gctx;
 };
-
-static void
-fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals)
-{
-	fz_drop_storable(ctx, &globals->storable);
-}
 
 struct fz_jbig2d_s
 {
@@ -25,6 +18,12 @@ struct fz_jbig2d_s
 	Jbig2Image *page;
 	int idx;
 };
+
+static void
+fz_drop_jbig2_globals(fz_context *ctx, fz_jbig2_globals *globals)
+{
+	fz_drop_storable(ctx, &globals->storable);
+}
 
 static void
 close_jbig2d(fz_context *ctx, void *state_)
@@ -83,7 +82,6 @@ rebind_jbig2d(fz_stream *s)
 	return state->chain;
 }
 
-/* SumatraPDF: warn about jbig2dec issues */
 static int
 error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_idx)
 {
@@ -95,7 +93,6 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 	return 0;
 }
 
-/* SumatraPDF: reuse JBIG2Globals */
 fz_jbig2_globals *
 fz_load_jbig2_globals(fz_context *ctx, unsigned char *data, int size)
 {
@@ -130,7 +127,6 @@ fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals)
 	{
 		state = fz_malloc_struct(chain->ctx, fz_jbig2d);
 		state->ctx = NULL;
-		/* SumatraPDF: reuse JBIG2Globals */
 		state->gctx = globals;
 		state->chain = chain;
 		state->ctx = jbig2_ctx_new(NULL, JBIG2_OPTIONS_EMBEDDED, globals ? globals->gctx : NULL, error_callback, ctx);
@@ -141,8 +137,7 @@ fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals)
 	{
 		if (state)
 		{
-			if (state->gctx)
-				fz_drop_jbig2_globals(ctx, state->gctx);
+			fz_drop_jbig2_globals(ctx, state->gctx);
 			if (state->ctx)
 				jbig2_ctx_free(state->ctx);
 		}

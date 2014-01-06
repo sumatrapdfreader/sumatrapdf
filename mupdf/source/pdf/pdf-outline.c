@@ -38,9 +38,9 @@ pdf_load_outline_imp(pdf_document *doc, pdf_obj *dict)
 			fz_try(ctx)
 			{
 
-			if ((obj = pdf_dict_gets(dict, "Dest")))
+			if ((obj = pdf_dict_gets(dict, "Dest")) != NULL)
 				node->dest = pdf_parse_link_dest(doc, FZ_LINK_GOTO, obj);
-			else if ((obj = pdf_dict_gets(dict, "A")))
+			else if ((obj = pdf_dict_gets(dict, "A")) != NULL)
 				node->dest = pdf_parse_action(doc, obj);
 
 			}

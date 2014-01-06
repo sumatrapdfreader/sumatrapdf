@@ -165,9 +165,9 @@ EXPORTS
 	fz_open_flated
 	fz_open_lzwd
 	fz_open_predict
+	fz_open_jbig2d
 	fz_load_jbig2_globals
 	fz_free_jbig2_globals_imp
-	fz_open_jbig2d
 	ft_error_string
 	fz_new_font_context
 	fz_keep_font_context
@@ -245,10 +245,10 @@ EXPORTS
 	fz_load_jpx
 	fz_load_png
 	fz_load_tiff
+	fz_load_jxr
 	fz_load_jpeg_info
 	fz_load_png_info
 	fz_load_tiff_info
-	fz_load_jxr
 	fz_load_jxr_info
 	fz_new_link
 	fz_keep_link

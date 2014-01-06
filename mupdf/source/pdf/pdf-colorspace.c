@@ -42,7 +42,6 @@ load_icc_based(pdf_document *doc, pdf_obj *dict)
 	}
 
 	fz_throw(ctx, FZ_ERROR_GENERIC, "syntaxerror: ICCBased must have 1, 3 or 4 components");
-	return NULL; /* Stupid MSVC */
 }
 
 /* Lab */
@@ -351,7 +350,6 @@ pdf_load_colorspace_imp(pdf_document *doc, pdf_obj *obj)
 	}
 
 	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "syntaxerror: could not parse color space (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
-	return NULL; /* Stupid MSVC */
 }
 
 fz_colorspace *
@@ -360,7 +358,7 @@ pdf_load_colorspace(pdf_document *doc, pdf_obj *obj)
 	fz_context *ctx = doc->ctx;
 	fz_colorspace *cs;
 
-	if ((cs = pdf_find_item(ctx, fz_free_colorspace_imp, obj)))
+	if ((cs = pdf_find_item(ctx, fz_free_colorspace_imp, obj)) != NULL)
 	{
 		return cs;
 	}

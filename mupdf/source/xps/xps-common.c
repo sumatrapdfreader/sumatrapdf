@@ -18,7 +18,7 @@ xps_lookup_alternate_content(fz_xml *node)
 			char list[64];
 			char *next = list, *item;
 			fz_strlcpy(list, fz_xml_att(node, "Requires"), sizeof(list));
-			while ((item = fz_strsep(&next, " \t\r\n")) && (!*item || !strcmp(item, "xps")));
+			while ((item = fz_strsep(&next, " \t\r\n")) != NULL && (!*item || !strcmp(item, "xps")));
 			if (!item)
 				return fz_xml_down(node);
 		}

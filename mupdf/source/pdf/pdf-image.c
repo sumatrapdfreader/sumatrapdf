@@ -293,7 +293,7 @@ pdf_load_image(pdf_document *doc, pdf_obj *dict)
 	fz_context *ctx = doc->ctx;
 	fz_image *image;
 
-	if ((image = pdf_find_item(ctx, fz_free_image, dict)))
+	if ((image = pdf_find_item(ctx, fz_free_image, dict)) != NULL)
 	{
 		return (fz_image *)image;
 	}

@@ -566,7 +566,9 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 			}
 			else
 			{
-				fz_matrix mat = {pixmap->w, 0.0, 0.0, pixmap->h, x + pixmap->x, y + pixmap->y};
+				fz_matrix mat;
+				mat.a = pixmap->w; mat.b = mat.c = 0; mat.d = pixmap->h;
+				mat.e = x + pixmap->x; mat.f = y + pixmap->y;
 				fz_paint_image(state->dest, &state->scissor, state->shape, pixmap, &mat, alpha * 255, !(devp->hints & FZ_DONT_INTERPOLATE_IMAGES));
 			}
 			fz_drop_glyph(dev->ctx, glyph);

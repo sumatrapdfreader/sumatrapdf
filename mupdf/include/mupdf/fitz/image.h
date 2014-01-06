@@ -83,13 +83,11 @@ struct fz_image_s
 fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs, int indexed);
 fz_pixmap *fz_load_png(fz_context *ctx, unsigned char *data, int size);
 fz_pixmap *fz_load_tiff(fz_context *ctx, unsigned char *data, int size);
+fz_pixmap *fz_load_jxr(fz_context *ctx, unsigned char *data, int size);
 
 void fz_load_jpeg_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 void fz_load_png_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 void fz_load_tiff_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
-
-/* SumatraPDF: support JPEG-XR images */
-fz_pixmap *fz_load_jxr(fz_context *ctx, unsigned char *data, int size);
 void fz_load_jxr_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 
 #endif

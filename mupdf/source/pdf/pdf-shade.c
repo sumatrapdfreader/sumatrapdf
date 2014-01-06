@@ -456,7 +456,7 @@ pdf_load_shading(pdf_document *doc, pdf_obj *dict)
 	fz_context *ctx = doc->ctx;
 	fz_shade *shade;
 
-	if ((shade = pdf_find_item(ctx, fz_free_shade_imp, dict)))
+	if ((shade = pdf_find_item(ctx, fz_free_shade_imp, dict)) != NULL)
 	{
 		return shade;
 	}

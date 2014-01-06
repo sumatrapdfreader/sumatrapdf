@@ -9,9 +9,6 @@
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
 
-struct timeval;
-struct timezone;
-
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
 	FILETIME ft;

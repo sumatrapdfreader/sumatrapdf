@@ -1,6 +1,7 @@
+#include "mupdf/fitz.h"
+
 /* SumatraPDF: support JPEG-XR images */
 
-#include "mupdf/fitz.h"
 #ifdef _WIN32
 #define COBJMACROS
 #include <wincodec.h>

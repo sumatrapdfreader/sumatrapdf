@@ -40,7 +40,7 @@ pdf_load_xobject(pdf_document *doc, pdf_obj *dict)
 	pdf_obj *obj;
 	fz_context *ctx = doc->ctx;
 
-	if ((form = pdf_find_item(ctx, pdf_free_xobject_imp, dict)))
+	if ((form = pdf_find_item(ctx, pdf_free_xobject_imp, dict)) != NULL)
 	{
 		return form;
 	}

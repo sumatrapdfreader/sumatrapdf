@@ -406,7 +406,6 @@ xps_read_zip_part(xps_document *doc, char *partname)
 	}
 
 	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find part '%s'", partname);
-	return NULL;
 }
 
 static int
@@ -502,7 +501,6 @@ xps_read_dir_part(xps_document *doc, char *name)
 	}
 
 	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find part '%s'", name);
-	return NULL;
 }
 
 static int
@@ -696,14 +694,14 @@ xps_rebind(xps_document *doc, fz_context *ctx)
 static void
 xps_init_document(xps_document *doc)
 {
-	doc->super.close = (void*)xps_close_document;
-	doc->super.load_outline = (void*)xps_load_outline;
-	doc->super.count_pages = (void*)xps_count_pages;
-	doc->super.load_page = (void*)xps_load_page;
-	doc->super.load_links = (void*)xps_load_links;
-	doc->super.bound_page = (void*)xps_bound_page;
-	doc->super.run_page_contents = (void*)xps_run_page;
-	doc->super.free_page = (void*)xps_free_page;
-	doc->super.meta = (void*)xps_meta;
-	doc->super.rebind = (void*)xps_rebind;
+	doc->super.close = (fz_document_close_fn *)xps_close_document;
+	doc->super.load_outline = (fz_document_load_outline_fn *)xps_load_outline;
+	doc->super.count_pages = (fz_document_count_pages_fn *)xps_count_pages;
+	doc->super.load_page = (fz_document_load_page_fn *)xps_load_page;
+	doc->super.load_links = (fz_document_load_links_fn *)xps_load_links;
+	doc->super.bound_page = (fz_document_bound_page_fn *)xps_bound_page;
+	doc->super.run_page_contents = (fz_document_run_page_contents_fn *)xps_run_page;
+	doc->super.free_page = (fz_document_free_page_fn *)xps_free_page;
+	doc->super.meta = (fz_document_meta_fn *)xps_meta;
+	doc->super.rebind = (fz_document_rebind_fn *)xps_rebind;
 }

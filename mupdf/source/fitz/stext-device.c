@@ -1099,13 +1099,13 @@ static void
 fz_text_fill_image_mask(fz_device *dev, fz_image *img, const fz_matrix *ctm,
 		fz_colorspace *cspace, float *color, float alpha)
 {
+	/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet */
+#if 0
+
 	fz_text_device *tdev = dev->user;
 	fz_text_page *page = tdev->page;
 	fz_image_block *block;
 	fz_context *ctx = dev->ctx;
-
-	/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet */
-	return;
 
 	/* If the alpha is less than 50% then it's probably a watermark or
 	 * effect or something. Skip it */
@@ -1127,6 +1127,8 @@ fz_text_fill_image_mask(fz_device *dev, fz_image *img, const fz_matrix *ctm,
 	if (cspace)
 		memcpy(block->colors, color, sizeof(block->colors[0])*cspace->n);
 	page->len++;
+
+#endif
 }
 
 static void

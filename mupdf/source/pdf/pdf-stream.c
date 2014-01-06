@@ -46,32 +46,33 @@ pdf_stream_has_crypt(fz_context *ctx, pdf_obj *stm)
 	return 0;
 }
 
-/* SumatraPDF: reuse JBIG2Globals */
 static fz_jbig2_globals *
 pdf_load_jbig2_globals(pdf_document *doc, pdf_obj *dict)
 {
 	fz_jbig2_globals *globals;
+	fz_context *ctx = doc->ctx;
 	fz_buffer *buf = NULL;
+
 	fz_var(buf);
 
-	if ((globals = pdf_find_item(doc->ctx, fz_free_jbig2_globals_imp, dict)) != NULL)
+	if ((globals = pdf_find_item(ctx, fz_free_jbig2_globals_imp, dict)) != NULL)
 	{
 		return globals;
 	}
 
-	fz_try(doc->ctx)
+	fz_try(ctx)
 	{
 		buf = pdf_load_stream(doc, pdf_to_num(dict), pdf_to_gen(dict));
-		globals = fz_load_jbig2_globals(doc->ctx, buf->data, buf->len);
-		pdf_store_item(doc->ctx, dict, globals, buf->len);
+		globals = fz_load_jbig2_globals(ctx, buf->data, buf->len);
+		pdf_store_item(ctx, dict, globals, buf->len);
 	}
-	fz_always(doc->ctx)
+	fz_always(ctx)
 	{
-		fz_drop_buffer(doc->ctx, buf);
+		fz_drop_buffer(ctx, buf);
 	}
-	fz_catch(doc->ctx)
+	fz_catch(ctx)
 	{
-		fz_rethrow(doc->ctx);
+		fz_rethrow(ctx);
 	}
 
 	return globals;
@@ -192,7 +193,6 @@ build_filter(fz_stream *chain, pdf_document *doc, pdf_obj *f, pdf_obj *p, int nu
 
 	else if (!strcmp(s, "JBIG2Decode"))
 	{
-		/* SumatraPDF: reuse JBIG2Globals */
 		fz_jbig2_globals *globals = NULL;
 		pdf_obj *obj = pdf_dict_gets(p, "JBIG2Globals");
 		if (pdf_is_indirect(obj))

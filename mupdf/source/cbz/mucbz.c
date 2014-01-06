@@ -160,7 +160,6 @@ cbz_read_zip_entry(cbz_document *doc, int offset, int *sizep)
 	}
 
 	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown zip method: %d", method);
-	return NULL; /* not reached */
 }
 
 static void
@@ -422,12 +421,12 @@ cbz_rebind(cbz_document *doc, fz_context *ctx)
 static void
 cbz_init_document(cbz_document *doc)
 {
-	doc->super.close = (void*)cbz_close_document;
-	doc->super.count_pages = (void*)cbz_count_pages;
-	doc->super.load_page = (void*)cbz_load_page;
-	doc->super.bound_page = (void*)cbz_bound_page;
-	doc->super.run_page_contents = (void*)cbz_run_page;
-	doc->super.free_page = (void*)cbz_free_page;
-	doc->super.meta = (void*)cbz_meta;
-	doc->super.rebind = (void *)cbz_rebind;
+	doc->super.close = (fz_document_close_fn *)cbz_close_document;
+	doc->super.count_pages = (fz_document_count_pages_fn *)cbz_count_pages;
+	doc->super.load_page = (fz_document_load_page_fn *)cbz_load_page;
+	doc->super.bound_page = (fz_document_bound_page_fn *)cbz_bound_page;
+	doc->super.run_page_contents = (fz_document_run_page_contents_fn *)cbz_run_page;
+	doc->super.free_page = (fz_document_free_page_fn *)cbz_free_page;
+	doc->super.meta = (fz_document_meta_fn *)cbz_meta;
+	doc->super.rebind = (fz_document_rebind_fn *)cbz_rebind;
 }

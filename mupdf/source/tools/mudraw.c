@@ -1087,7 +1087,6 @@ parse_colorspace(const char *name)
 	}
 	fprintf(stderr, "Unknown colorspace \"%s\"\n", name);
 	exit(1);
-	return -1;
 }
 
 static void *

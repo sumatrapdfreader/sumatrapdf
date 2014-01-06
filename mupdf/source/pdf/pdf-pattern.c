@@ -39,7 +39,7 @@ pdf_load_pattern(pdf_document *doc, pdf_obj *dict)
 	pdf_obj *obj;
 	fz_context *ctx = doc->ctx;
 
-	if ((pat = pdf_find_item(ctx, pdf_free_pattern_imp, dict)))
+	if ((pat = pdf_find_item(ctx, pdf_free_pattern_imp, dict)) != NULL)
 	{
 		return pat;
 	}

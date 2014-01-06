@@ -518,7 +518,6 @@ pdf_parse_stm_obj(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 	case PDF_TOK_INT: return pdf_new_int(doc, buf->i); break;
 	default: fz_throw(ctx, FZ_ERROR_GENERIC, "unknown token in object stream");
 	}
-	return NULL; /* Stupid MSVC */
 }
 
 pdf_obj *
