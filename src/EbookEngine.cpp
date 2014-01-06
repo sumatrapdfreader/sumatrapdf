@@ -41,9 +41,11 @@ void SetDefaultEbookFont(const WCHAR *name, float size)
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
 
-inline bool IsExternalUrl(const WCHAR *url)
+inline bool IsAbsoluteUrl(const WCHAR *url)
 {
-    return str::FindChar(url, ':') != NULL;
+    const WCHAR *colon = str::FindChar(url, ':');
+    const WCHAR *hash = str::FindChar(url, '#');
+    return colon && (!hash || hash > colon);
 }
 
 struct PageAnchor {
@@ -533,23 +535,19 @@ void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)
 
 PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
-    // internal links don't start with a protocol
-    bool isInternal = !memchr(link->str.s, ':', link->str.len);
-    if (!isInternal)
+    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    if (IsAbsoluteUrl(url))
         return new EbookLink(link, rect, NULL, pageNo);
 
-    ScopedMem<WCHAR> id;
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
         ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-        ScopedMem<char> url(str::DupN(link->str.s, link->str.len));
-        url.Set(NormalizeURL(url, basePath));
-        id.Set(str::conv::FromUtf8(url));
+        ScopedMem<char> relPath(str::DupN(link->str.s, link->str.len));
+        ScopedMem<char> absPath(NormalizeURL(relPath, basePath));
+        url.Set(str::conv::FromUtf8(absPath));
     }
-    else
-        id.Set(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
 
-    PageDestination *dest = GetNamedDest(id);
+    PageDestination *dest = GetNamedDest(url);
     if (!dest)
         return NULL;
     return new EbookLink(link, rect, dest, pageNo);
@@ -717,7 +715,7 @@ public:
         PageDestination *dest;
         if (!url)
             dest = NULL;
-        else if (IsExternalUrl(url))
+        else if (IsAbsoluteUrl(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else if (str::FindChar(url, '%')) {
             ScopedMem<WCHAR> decodedUrl(str::Dup(url));
@@ -1128,7 +1126,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
                 itemLink.Set(NULL);
                 continue;
             }
-            if (IsExternalUrl(itemLink))
+            if (IsAbsoluteUrl(itemLink))
                 dest = new SimpleDest2(0, RectD(), itemLink.StealData());
             else
                 dest = GetNamedDest(itemLink);
@@ -1351,8 +1349,11 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
 
 /* BaseEngine for handling CHM documents */
 
+class ChmEmbeddedDest;
+
 class Chm2EngineImpl : public EbookEngine, public Chm2Engine {
     friend Chm2Engine;
+    friend ChmEmbeddedDest;
 
 public:
     Chm2EngineImpl() : EbookEngine(), doc(NULL), dataCache(NULL) {
@@ -1384,6 +1385,9 @@ protected:
     bool Load(const WCHAR *fileName);
 
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
+
+    virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
+    bool SaveEmbedded(LinkSaverUI& saveUI, const char *path);
 };
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
@@ -1461,7 +1465,7 @@ public:
     }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
-        if (!url || IsExternalUrl(url))
+        if (!url || IsAbsoluteUrl(url))
             return;
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
         if (added.FindI(plainUrl) != -1)
@@ -1516,6 +1520,51 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
         doc->ParseIndex(&builder);
     }
     return builder.GetRoot();
+}
+
+class ChmEmbeddedDest : public PageDestination {
+    Chm2EngineImpl *engine;
+    ScopedMem<char> path;
+
+public:
+    ChmEmbeddedDest(Chm2EngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
+
+    virtual PageDestType GetDestType() const { return Dest_LaunchEmbedded; }
+    virtual int GetDestPageNo() const { return 0; }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual WCHAR *GetDestValue() const {
+        if (str::FindChar(path, '/'))
+            return str::conv::FromUtf8(str::FindCharLast(path, '/') + 1);
+        return str::conv::FromUtf8(path);
+    }
+
+    virtual bool SaveEmbedded(LinkSaverUI& saveUI) { return engine->SaveEmbedded(saveUI, path); }
+};
+
+PageElement *Chm2EngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
+{
+    PageElement *linkEl = EbookEngine::CreatePageLink(link, rect, pageNo);
+    if (linkEl)
+        return linkEl;
+
+    DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
+    ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+    ScopedMem<char> url(str::DupN(link->str.s, link->str.len));
+    url.Set(NormalizeURL(url, basePath));
+    if (!doc->HasData(url))
+        return NULL;
+
+    PageDestination *dest = new ChmEmbeddedDest(this, url);
+    return new EbookLink(link, rect, dest, pageNo);
+}
+
+bool Chm2EngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char *path)
+{
+    size_t len;
+    ScopedMem<unsigned char> data(doc->GetData(path, &len));
+    if (!data)
+        return false;
+    return saveUI.SaveEmbedded(data, len);
 }
 
 bool Chm2Engine::IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -1672,11 +1721,13 @@ public:
 
 PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
-    bool isInternal = !memchr(link->str.s, ':', link->str.len);
-    if (!isInternal || !link->str.len || '#' == *link->str.s)
-        return EbookEngine::CreatePageLink(link, rect, pageNo);
+    if (0 == link->str.len)
+        return NULL;
 
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    if (IsAbsoluteUrl(url) || '#' == *url)
+        return EbookEngine::CreatePageLink(link, rect, pageNo);
+
     PageDestination *dest = new RemoteHtmlDest(url);
     return new EbookLink(link, rect, dest, pageNo, true);
 }

@@ -2935,6 +2935,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
 
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : L"");
+    CrashIf(fileName && str::FindChar(fileName, '/'));
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
