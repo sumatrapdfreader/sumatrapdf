@@ -208,6 +208,12 @@ void WindowInfo::FocusFrame(bool always)
         SetFocus(hwndFrame);
 }
 
+void WindowInfo::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
+{
+    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+    LinkSaver(*this, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
+}
+
 BaseEngine *LinkHandler::engine() const
 {
     if (!owner || !owner->dm)

@@ -68,7 +68,7 @@ public:
 class ChmCacheEntry {
 public:
     const WCHAR *url; // owned by ChmEngineImpl::poolAllocator
-    char *data;
+    unsigned char *data;
     size_t size;
 
     ChmCacheEntry(const WCHAR *url) : url(url), data(NULL), size(0) { }
@@ -161,7 +161,8 @@ public:
     virtual bool OnBeforeNavigate(const WCHAR *url, bool newWindow);
     virtual void OnDocumentComplete(const WCHAR *url);
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
-    virtual bool GetDataForUrl(const WCHAR *url, char **data, size_t *len);
+    virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len);
+    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len);
 
 protected:
     WCHAR *fileName;
@@ -395,23 +396,29 @@ ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const WCHAR *url)
 }
 
 // Load and cache data for a given url inside CHM file.
-bool ChmEngineImpl::GetDataForUrl(const WCHAR *url, char **data, size_t *len)
+const unsigned char *ChmEngineImpl::GetDataForUrl(const WCHAR *url, size_t *len)
 {
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
-        e->data = (char *)doc->GetData(urlUtf8, &e->size);
+        e->data = doc->GetData(urlUtf8, &e->size);
         if (!e->data) {
             delete e;
-            return false;
+            return NULL;
         }
         urlDataCache.Append(e);
     }
-    *data = e->data;
-    *len = e->size;
-    return true;
+    if (len)
+        *len = e->size;
+    return e->data;
+}
+
+void ChmEngineImpl::DownloadData(const WCHAR *url, const unsigned char *data, size_t len)
+{
+    if (navCb)
+        navCb->SaveDownload(url, data, len);
 }
 
 PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)

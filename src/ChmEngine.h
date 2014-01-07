@@ -18,6 +18,8 @@ public:
     // (if always == false, then focus is only moved if it's inside
     // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
+    // tell the UI to let the user save the provided data to a file
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
 };
 
 class ChmEngine : public BaseEngine {

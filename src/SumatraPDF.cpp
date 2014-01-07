@@ -726,6 +726,7 @@ public:
 
     virtual void LaunchBrowser(const WCHAR *url) { }
     virtual void FocusFrame(bool always) { }
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) { }
 };
 
 // Create a thumbnail of chm document by loading it again and rendering
@@ -2928,7 +2929,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         free(realDstFileName);
 }
 
-bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
+bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;

@@ -88,6 +88,7 @@ class HW_DWebBrowserEvents2;
 class HW_IAdviseSink2;
 class HW_IDocHostUIHandler;
 class HW_IDropTarget;
+class HW_IServiceProvider;
 
 inline void VariantSetBool(VARIANT *res, bool val)
 {
@@ -117,6 +118,7 @@ class FrameSite : public IUnknown
     friend class HW_IAdviseSink2;
     friend class HW_IDocHostUIHandler;
     friend class HW_IDropTarget;
+    friend class HW_IServiceProvider;
 
 public:
     FrameSite(HtmlWindow * win);
@@ -140,6 +142,7 @@ protected:
     HW_IAdviseSink2 *               adviseSink2;
     HW_IDocHostUIHandler *          docHostUIHandler;
     HW_IDropTarget *                dropTarget;
+    HW_IServiceProvider *           serviceProvider;
 
     HtmlWindow * htmlWindow;
 
@@ -280,7 +283,7 @@ protected:
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    char * data;
+    const unsigned char *data;
     size_t dataLen;
     size_t dataCurrPos;
 };
@@ -397,11 +400,11 @@ STDMETHODIMP HW_IInternetProtocol::Start(
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
         return INET_E_OBJECT_NOT_FOUND;
-    ok = win->htmlWinCb->GetDataForUrl(urlRest, &data, &dataLen);
-    if (!ok)
+    data = win->htmlWinCb->GetDataForUrl(urlRest, &dataLen);
+    if (!data)
         return INET_E_DATA_NOT_AVAILABLE;
 
-    const WCHAR *imgExt = GfxFileExtFromData(data, dataLen);
+    const WCHAR *imgExt = GfxFileExtFromData((const char *)data, dataLen);
     ScopedMem<WCHAR> mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64
@@ -423,7 +426,7 @@ STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
     ULONG toRead = cb;
     if (toRead > dataAvail)
         toRead = (ULONG)dataAvail;
-    char *dataToRead = data + dataCurrPos;
+    const unsigned char *dataToRead = data + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
     *pcbRead = toRead;
@@ -813,6 +816,108 @@ public:
     }
 };
 
+#ifndef __IDownloadManager_INTERFACE_DEFINED__
+#define __IDownloadManager_INTERFACE_DEFINED__
+
+#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+DEFINE_GUID_STATIC(IID_IDownloadManager, 0x988934a4, 0x064b, 0x11d3, 0xbb, 0x80, 0x0, 0x10, 0x4b, 0x35, 0xe7, 0xf9);
+#define SID_SDownloadManager IID_IDownloadManager
+
+MIDL_INTERFACE("988934A4-064B-11D3-BB80-00104B35E7F9")
+IDownloadManager : public IUnknown
+{
+public:
+    virtual STDMETHODIMP Download(IMoniker __RPC_FAR *pmk, IBindCtx __RPC_FAR *pbc, DWORD dwBindVerb,
+                                  LONG grfBINDF, BINDINFO __RPC_FAR *pBindInfo, LPCOLESTR pszHeaders,
+                                  LPCOLESTR pszRedir, UINT uiCP) = 0;
+};
+
+#endif
+
+class HW_IDownloadManager : public IDownloadManager
+{
+    LONG refCount;
+
+public:
+    HW_IDownloadManager() : refCount(1) { }
+    ~HW_IDownloadManager() { }
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
+        static const QITAB qit[] = {
+            QITABENT(HW_IDownloadManager, IDownloadManager),
+            { 0 }
+        };
+        return QISearch(this, qit, riid, ppv);
+    }
+    ULONG STDMETHODCALLTYPE AddRef() {
+        return InterlockedIncrement(&refCount);
+    }
+    ULONG STDMETHODCALLTYPE Release() {
+        LONG res = InterlockedDecrement(&refCount);
+        CrashIf(res < 0);
+        if (0 == res)
+            delete this;
+        return res;
+    }
+
+    // IDownloadManager
+    STDMETHODIMP Download(IMoniker __RPC_FAR *pmk, IBindCtx __RPC_FAR *pbc, DWORD dwBindVerb,
+                          LONG grfBINDF, BINDINFO __RPC_FAR *pBindInfo, LPCOLESTR pszHeaders,
+                          LPCOLESTR pszRedir, UINT uiCP) {
+        LPOLESTR urlToFile;
+        HRESULT hr = pmk->GetDisplayName(pbc, NULL, &urlToFile);
+        if (FAILED(hr))
+            return hr;
+        // parse the URL (only internal its:// URLs are supported)
+        int htmlWindowId;
+        ScopedMem<WCHAR> urlRest;
+        bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
+        // free urlToFile using IMalloc::Free
+        IMalloc *pMalloc;
+        if (SUCCEEDED(CoGetMalloc(1, &pMalloc)))
+            pMalloc->Free(urlToFile);
+        else
+            CoTaskMemFree(urlToFile);
+        if (!ok)
+            return INET_E_INVALID_URL;
+        // fetch the data
+        HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
+        if (!win || !win->htmlWinCb)
+            return INET_E_OBJECT_NOT_FOUND;
+        size_t len;
+        const unsigned char *data = win->htmlWinCb->GetDataForUrl(urlRest, &len);
+        if (!data)
+            return INET_E_DATA_NOT_AVAILABLE;
+        // ask the UI to let the user save the file
+        win->htmlWinCb->DownloadData(urlRest, data, len);
+        return S_OK;
+    }
+};
+
+class HW_IServiceProvider : public IServiceProvider
+{
+    FrameSite * fs;
+public:
+    HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
+    ~HW_IServiceProvider() {}
+
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
+
+    // IServiceProvider
+    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void **ppv) {
+        if (guidService == SID_SDownloadManager) {
+            ScopedComPtr<IDownloadManager> dm(new HW_IDownloadManager());
+            return dm->QueryInterface(riid, ppv);
+        }
+        return E_NOINTERFACE;
+    }
+};
+
 class HtmlMoniker : public IMoniker
 {
 public:
@@ -1185,7 +1290,7 @@ void HtmlWindow::SetVisible(bool visible)
 }
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
-// (will be called from OnBeforeNavigate()
+// (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(const WCHAR *url)
 {
     ScopedMem<WCHAR> fullUrl(str::Format(L"its://%d/%s", windowId, url));
@@ -1440,10 +1545,12 @@ FrameSite::FrameSite(HtmlWindow * win)
     adviseSink2                 = new HW_IAdviseSink2(this);
     docHostUIHandler            = new HW_IDocHostUIHandler(this);
     dropTarget                  = new HW_IDropTarget(this);
+    serviceProvider             = new HW_IServiceProvider(this);
 }
 
 FrameSite::~FrameSite()
 {
+    delete serviceProvider;
     delete dropTarget;
     delete docHostUIHandler;
     delete adviseSink2;
@@ -1494,6 +1601,8 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
         *ppv = docHostUIHandler;
     else if (riid == IID_IDropTarget)
         *ppv = dropTarget;
+    else if (riid == IID_IServiceProvider)
+        *ppv = serviceProvider;
     else
         return E_NOINTERFACE;
     if (!*ppv)

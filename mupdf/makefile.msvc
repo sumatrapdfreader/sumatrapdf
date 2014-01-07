@@ -440,14 +440,16 @@ FITZ_H  = $(INC_DIR)\fitz.h \
 	$(INC_DIR)\fitz\shade.h $(INC_DIR)\fitz\store.h $(INC_DIR)\fitz\stream.h \
 	$(INC_DIR)\fitz\string.h $(INC_DIR)\fitz\structured-text.h $(INC_DIR)\fitz\system.h \
 	$(INC_DIR)\fitz\text.h $(INC_DIR)\fitz\transition.h $(INC_DIR)\fitz\write-document.h \
-	$(INC_DIR)\fitz\xml.h $(INC_DIR)\fitz\glyph.h $(INC_DIR)\fitz\version.h
+	$(INC_DIR)\fitz\xml.h $(INC_DIR)\fitz\glyph.h $(INC_DIR)\fitz\version.h \
+	$(INC_DIR)\fitz\tree.h
 
 MUPDF_H = $(INC_DIR)\pdf.h \
 	$(INC_DIR)\pdf\annot.h $(INC_DIR)\pdf\cmap.h $(INC_DIR)\pdf\crypt.h \
 	$(INC_DIR)\pdf\document.h $(INC_DIR)\pdf\event.h $(INC_DIR)\pdf\field.h \
 	$(INC_DIR)\pdf\font.h $(INC_DIR)\pdf\javascript.h $(INC_DIR)\pdf\object.h \
 	$(INC_DIR)\pdf\output-pdf.h $(INC_DIR)\pdf\page.h $(INC_DIR)\pdf\parse.h \
-	$(INC_DIR)\pdf\resource.h $(INC_DIR)\pdf\widget.h $(INC_DIR)\pdf\xref.h
+	$(INC_DIR)\pdf\resource.h $(INC_DIR)\pdf\widget.h $(INC_DIR)\pdf\xref.h \
+	$(INC_DIR)\pdf\appearance.h
 
 MUXPS_H = $(INC_DIR)\xps.h
 MUOTH_H = $(INC_DIR)\cbz.h $(INC_DIR)\img.h

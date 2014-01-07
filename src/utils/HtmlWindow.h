@@ -21,12 +21,15 @@ public:
     virtual void OnDocumentComplete(const WCHAR *url) = 0;
 
     // allows for providing data for a given url.
-    // returning false means data wasn't provided.
-    virtual bool GetDataForUrl(const WCHAR *url, char **data, size_t *len) = 0;
+    // returning NULL means data wasn't provided.
+    virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
     virtual void OnLButtonDown() = 0;
+
+    // called when a file can't be displayed and has to be downloaded instead
+    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) = 0;
 };
 
 // HtmlWindow embeds a web browser (Internet Explorer) control

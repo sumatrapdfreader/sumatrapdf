@@ -1532,11 +1532,7 @@ public:
     virtual PageDestType GetDestType() const { return Dest_LaunchEmbedded; }
     virtual int GetDestPageNo() const { return 0; }
     virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const {
-        if (str::FindChar(path, '/'))
-            return str::conv::FromUtf8(str::FindCharLast(path, '/') + 1);
-        return str::conv::FromUtf8(path);
-    }
+    virtual WCHAR *GetDestValue() const { return str::conv::FromUtf8(path::GetBaseName(path)); }
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI) { return engine->SaveEmbedded(saveUI, path); }
 };

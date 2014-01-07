@@ -227,6 +227,7 @@ public:
     virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const WCHAR *url);
     virtual void FocusFrame(bool always);
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
     virtual void Repaint() { RepaintAsync(); };
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RequestRendering(int pageNo);
@@ -255,7 +256,7 @@ class LinkSaver : public LinkSaverUI {
 public:
     LinkSaver(WindowInfo& win, const WCHAR *fileName) : owner(&win), fileName(fileName) { }
 
-    virtual bool SaveEmbedded(unsigned char *data, size_t cbCount);
+    virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount);
 };
 
 #endif
