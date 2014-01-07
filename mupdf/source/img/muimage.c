@@ -154,3 +154,34 @@ image_init_document(image_document *doc)
 	doc->super.meta = (fz_document_meta_fn *)image_meta;
 	doc->super.rebind = (fz_document_rebind_fn *)image_rebind;
 }
+
+static int
+image_recognize(fz_context *doc, const char *magic)
+{
+	char *ext = strrchr(magic, '.');
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".png") || !fz_strcasecmp(ext, ".jpg") ||
+			!fz_strcasecmp(ext, ".jpeg") || !fz_strcasecmp(ext, ".jfif") ||
+			!fz_strcasecmp(ext, ".jfif-tbnl") || !fz_strcasecmp(ext, ".jpe") ||
+			!fz_strcasecmp(ext, ".tif") || !fz_strcasecmp(ext, ".tiff"))
+			return 100;
+	}
+	if (!strcmp(magic, "png") || !strcmp(magic, "image/png") ||
+		!strcmp(magic, "jpg") || !strcmp(magic, "image/jpeg") ||
+		!strcmp(magic, "jpeg") || !strcmp(magic, "image/pjpeg") ||
+		!strcmp(magic, "jpe") || !strcmp(magic, "jfif") ||
+		!strcmp(magic, "tif") || !strcmp(magic, "image/tiff") ||
+		!strcmp(magic, "tiff") || !strcmp(magic, "image/x-tiff"))
+		return 100;
+
+	return 0;
+}
+
+fz_document_handler img_document_handler =
+{
+	(fz_document_recognize_fn *)&image_recognize,
+	(fz_document_open_fn *)&image_open_document,
+	(fz_document_open_with_stream_fn *)&image_open_document_with_stream
+};

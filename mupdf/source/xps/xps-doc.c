@@ -541,3 +541,28 @@ xps_free_page(xps_document *doc, xps_page *page)
 		fz_free_xml(doc->ctx, page->root);
 	page->root = NULL;
 }
+
+static int
+xps_recognize(fz_context *doc, const char *magic)
+{
+	char *ext = strrchr(magic, '.');
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels") || !fz_strcasecmp(ext, ".oxps"))
+			return 100;
+	}
+	if (!strcmp(magic, "xps") || !strcmp(magic, "oxps") ||
+		!strcmp(magic, "application/vnd.ms-xpsdocument") ||
+		!strcmp(magic, "application/oxps"))
+		return 100;
+
+	return 0;
+}
+
+fz_document_handler xps_document_handler =
+{
+	(fz_document_recognize_fn *)&xps_recognize,
+	(fz_document_open_fn *)&xps_open_document,
+	(fz_document_open_with_stream_fn *)&xps_open_document_with_stream
+};

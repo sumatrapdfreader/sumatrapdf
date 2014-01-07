@@ -434,6 +434,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\document-all.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\document.c"
 				>
 			</File>
@@ -986,6 +990,10 @@
 				</File>
 				<File
 					RelativePath="..\..\include\mupdf\fitz\display-list.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\fitz\document-no-run.c"
 					>
 				</File>
 				<File

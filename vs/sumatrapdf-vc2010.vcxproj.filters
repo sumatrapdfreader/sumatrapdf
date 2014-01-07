@@ -471,6 +471,12 @@
     <ClCompile Include="..\mupdf\source\fitz\device.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\document-all.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\document-no-run.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\document.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

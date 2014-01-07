@@ -246,3 +246,16 @@ fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx)
 {
 	return NULL;
 }
+
+void fz_new_document_handler_context(fz_context *ctx)
+{
+}
+
+void fz_drop_document_handler_context(fz_context *ctx)
+{
+}
+
+fz_document_handler_context *fz_keep_document_handler_context(fz_context *ctx)
+{
+	return NULL;
+}

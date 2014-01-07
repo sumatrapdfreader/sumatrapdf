@@ -13,6 +13,7 @@
 	Document interface
 */
 typedef struct fz_document_s fz_document;
+typedef struct fz_document_handler_s fz_document_handler;
 typedef struct fz_page_s fz_page;
 typedef struct fz_annot_s fz_annot;
 
@@ -59,6 +60,28 @@ struct fz_document_s
 	fz_document_write_fn *write;
 	fz_document_rebind_fn *rebind;
 };
+
+typedef fz_document *(fz_document_open_fn)(fz_context *ctx, const char *filename);
+typedef fz_document *(fz_document_open_with_stream_fn)(fz_context *ctx, fz_stream *stream);
+typedef int (fz_document_recognize_fn)(fz_context *ctx, const char *magic);
+
+struct fz_document_handler_s
+{
+	fz_document_recognize_fn *recognize;
+	fz_document_open_fn *open;
+	fz_document_open_with_stream_fn *open_with_stream;
+};
+
+extern fz_document_handler pdf_document_handler;
+extern fz_document_handler pdf_no_run_document_handler;
+extern fz_document_handler xps_document_handler;
+extern fz_document_handler cbz_document_handler;
+extern fz_document_handler img_document_handler;
+
+void fz_register_document_handler(fz_context *ctx, const fz_document_handler *handler);
+
+void fz_register_document_handlers(fz_context *ctx);
+void fz_register_no_run_document_handlers(fz_context *ctx);
 
 /*
 	fz_open_document: Open a PDF, XPS or CBZ document.

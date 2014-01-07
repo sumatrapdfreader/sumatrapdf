@@ -535,6 +535,7 @@ EXPORTS
 	pdf_delete_page_range
 	pdf_page_write
 	pdf_finish_edit
+	pdf_recognize
 
 	pdf_get_inheritable
 	pdf_get_field_flags

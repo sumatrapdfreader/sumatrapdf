@@ -1,17 +1,66 @@
 #include "mupdf/fitz.h"
 
-/* Yuck! Promiscuous we are. */
-extern struct pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
-extern struct xps_document *xps_open_document(fz_context *ctx, const char *filename);
-extern struct cbz_document *cbz_open_document(fz_context *ctx, const char *filename);
-extern struct image_document *image_open_document(fz_context *ctx, const char *filename);
-
-extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
-extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
-extern struct cbz_document *cbz_open_document_with_stream(fz_context *ctx, fz_stream *file);
-extern struct image_document *image_open_document_with_stream(fz_context *ctx, fz_stream *file);
-
 extern int pdf_js_supported(void);
+
+enum
+{
+	FZ_DOCUMENT_HANDLER_MAX = 10
+};
+
+struct fz_document_handler_context_s
+{
+	int refs;
+	int count;
+	const fz_document_handler *handler[FZ_DOCUMENT_HANDLER_MAX];
+};
+
+void fz_new_document_handler_context(fz_context *ctx)
+{
+	ctx->handler = fz_malloc_struct(ctx, fz_document_handler_context);
+	ctx->handler->refs = 1;
+}
+
+fz_document_handler_context *fz_keep_document_handler_context(fz_context *ctx)
+{
+	if (!ctx || !ctx->handler)
+		return NULL;
+	ctx->handler->refs++;
+	return ctx->handler;
+}
+
+void fz_drop_document_handler_context(fz_context *ctx)
+{
+	if (!ctx || !ctx->handler)
+		return;
+
+	if (--ctx->handler->refs != 0)
+		return;
+
+	fz_free(ctx, ctx->handler);
+	ctx->handler = NULL;
+}
+
+void fz_register_document_handler(fz_context *ctx, const fz_document_handler *handler)
+{
+	fz_document_handler_context *dc;
+	int i;
+
+	if (!ctx || !handler)
+		return;
+
+	dc = ctx->handler;
+	if (dc == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Document handler list not found");
+
+	for (i = 0; i < dc->count; i++)
+		if (dc->handler[i] == handler)
+			return;
+
+	if (dc->count >= FZ_DOCUMENT_HANDLER_MAX)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Too many document handlers");
+
+	dc->handler[dc->count++] = handler;
+}
 
 static inline int fz_tolower(int c)
 {
@@ -20,7 +69,7 @@ static inline int fz_tolower(int c)
 	return c;
 }
 
-static inline int fz_strcasecmp(const char *a, const char *b)
+int fz_strcasecmp(const char *a, const char *b)
 {
 	while (fz_tolower(*a) == fz_tolower(*b))
 	{
@@ -34,65 +83,65 @@ static inline int fz_strcasecmp(const char *a, const char *b)
 fz_document *
 fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream)
 {
-	char *ext = strrchr(magic, '.');
+	int i, score;
+	int best_i, best_score;
+	fz_document_handler_context *dc;
 
-	if (ext)
+	if (ctx == NULL || magic == NULL || stream == NULL)
+		return NULL;
+
+	dc = ctx->handler;
+	if (dc->count == 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "No document handlers registered");
+
+	best_i = -1;
+	best_score = 0;
+	for (i = 0; i < dc->count; i++)
 	{
-		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels") || !fz_strcasecmp(ext, ".oxps"))
-			return (fz_document*) xps_open_document_with_stream(ctx, stream);
-		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
-			return (fz_document*) cbz_open_document_with_stream(ctx, stream);
-		if (!fz_strcasecmp(ext, ".pdf"))
-			return (fz_document*) pdf_open_document_with_stream(ctx, stream);
-		if (!fz_strcasecmp(ext, ".png") || !fz_strcasecmp(ext, ".jpg") ||
-			!fz_strcasecmp(ext, ".jpeg") || !fz_strcasecmp(ext, ".jfif") ||
-			!fz_strcasecmp(ext, ".jfif-tbnl") || !fz_strcasecmp(ext, ".jpe") ||
-			!fz_strcasecmp(ext, ".tif") || !fz_strcasecmp(ext, ".tiff"))
-			return (fz_document*) image_open_document_with_stream(ctx, stream);
+		score = dc->handler[i]->recognize(ctx, magic);
+		if (best_score < score)
+		{
+			best_score = score;
+			best_i = i;
+		}
 	}
 
-	if (!strcmp(magic, "cbz") || !strcmp(magic, "application/x-cbz"))
-		return (fz_document*) cbz_open_document_with_stream(ctx, stream);
-	if (!strcmp(magic, "xps") || !strcmp(magic, "oxps") ||
-		!strcmp(magic, "application/vnd.ms-xpsdocument") ||
-		!strcmp(magic, "application/oxps"))
-		return (fz_document*) xps_open_document_with_stream(ctx, stream);
-	if (!strcmp(magic, "pdf") || !strcmp(magic, "application/pdf"))
-		return (fz_document*) pdf_open_document_with_stream(ctx, stream);
-	if (!strcmp(magic, "png") || !strcmp(magic, "image/png") ||
-		!strcmp(magic, "jpg") || !strcmp(magic, "image/jpeg") ||
-		!strcmp(magic, "jpeg") || !strcmp(magic, "image/pjpeg") ||
-		!strcmp(magic, "jpe") || !strcmp(magic, "jfif") ||
-		!strcmp(magic, "tif") || !strcmp(magic, "image/tiff") ||
-		!strcmp(magic, "tiff") || !strcmp(magic, "image/x-tiff"))
-		return (fz_document*) image_open_document_with_stream(ctx, stream);
+	if (best_i >= 0)
+		return dc->handler[best_i]->open_with_stream(ctx, stream);
 
-	/* last guess: pdf */
-	return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+	return NULL;
 }
 
 fz_document *
 fz_open_document(fz_context *ctx, const char *filename)
 {
-	char *ext = strrchr(filename, '.');
+	int i, score;
+	int best_i, best_score;
+	fz_document_handler_context *dc;
 
-	if (ext)
+	if (ctx == NULL || filename == NULL)
+		return NULL;
+
+	dc = ctx->handler;
+	if (dc->count == 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "No document handlers registered");
+
+	best_i = -1;
+	best_score = 0;
+	for (i = 0; i < dc->count; i++)
 	{
-		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels") || !fz_strcasecmp(ext, ".oxps"))
-			return (fz_document*) xps_open_document(ctx, filename);
-		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
-			return (fz_document*) cbz_open_document(ctx, filename);
-		if (!fz_strcasecmp(ext, ".pdf"))
-			return (fz_document*) pdf_open_document(ctx, filename);
-		if (!fz_strcasecmp(ext, ".png") || !fz_strcasecmp(ext, ".jpg") ||
-			!fz_strcasecmp(ext, ".jpeg") || !fz_strcasecmp(ext, ".jpe") ||
-			!fz_strcasecmp(ext, ".jfif") || !fz_strcasecmp(ext, ".jfif-tbnl") ||
-			!fz_strcasecmp(ext, ".tif") || !fz_strcasecmp(ext, ".tiff"))
-			return (fz_document*) image_open_document(ctx, filename);
+		score = dc->handler[i]->recognize(ctx, filename);
+		if (best_score < score)
+		{
+			best_score = score;
+			best_i = i;
+		}
 	}
 
-	/* last guess: pdf */
-	return (fz_document*) pdf_open_document(ctx, filename);
+	if (best_i >= 0)
+		return dc->handler[best_i]->open(ctx, filename);
+
+	return NULL;
 }
 
 void

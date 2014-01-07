@@ -18,6 +18,7 @@ typedef struct fz_aa_context_s fz_aa_context;
 typedef struct fz_locks_context_s fz_locks_context;
 typedef struct fz_store_s fz_store;
 typedef struct fz_glyph_cache_s fz_glyph_cache;
+typedef struct fz_document_handler_context_s fz_document_handler_context;
 typedef struct fz_context_s fz_context;
 
 struct fz_alloc_context_s
@@ -112,6 +113,7 @@ struct fz_context_s
 	fz_aa_context *aa;
 	fz_store *store;
 	fz_glyph_cache *glyph_cache;
+	fz_document_handler_context *handler;
 };
 
 /*
@@ -420,6 +422,10 @@ fz_context *fz_clone_context_internal(fz_context *ctx);
 void fz_new_aa_context(fz_context *ctx);
 void fz_free_aa_context(fz_context *ctx);
 void fz_copy_aa_context(fz_context *dst, fz_context *src);
+
+void fz_new_document_handler_context(fz_context *ctx);
+void fz_drop_document_handler_context(fz_context *ctx);
+fz_document_handler_context *fz_keep_document_handler_context(fz_context *ctx);
 
 /* Default allocator */
 extern fz_alloc_context fz_alloc_default;

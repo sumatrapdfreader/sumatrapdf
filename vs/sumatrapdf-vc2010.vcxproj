@@ -222,6 +222,8 @@
     <ClCompile Include="..\mupdf\source\fitz\crypt-md5.c" />
     <ClCompile Include="..\mupdf\source\fitz\crypt-sha2.c" />
     <ClCompile Include="..\mupdf\source\fitz\device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\document-all.c" />
+    <ClCompile Include="..\mupdf\source\fitz\document-no-run.c" />
     <ClCompile Include="..\mupdf\source\fitz\document.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-affine.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-blend.c" />

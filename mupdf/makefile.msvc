@@ -256,7 +256,8 @@ FITZ_OBJS = \
 	$(OFZ)\stext-search.obj $(OFZ)\store.obj $(OFZ)\stream-open.obj $(OFZ)\stream-read.obj \
 	$(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
 	$(OFZ)\trace-device.obj $(OFZ)\transition.obj $(OFZ)\ucdn.obj $(OFZ)\xml.obj \
-	$(OFZ)\glyph.obj $(OFZ)\tree.obj $(OFZ)\gdiplus-device.obj
+	$(OFZ)\glyph.obj $(OFZ)\tree.obj $(OFZ)\document.obj \
+	$(OFZ)\gdiplus-device.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf-annot.obj $(OP)\pdf-cmap-load.obj $(OP)\pdf-cmap-parse.obj $(OP)\pdf-cmap-table.obj \
@@ -280,7 +281,7 @@ LIBS_OBJS = \
 	$(FITZ_OBJS) $(DRAW_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
 
 MUDOC_OBJS = \
-	$(OFZ)\document.obj $(OX)\mucbz.obj $(OX)\muimage.obj \
+	$(OX)\mucbz.obj $(OX)\muimage.obj $(OFZ)\document-all.obj $(OFZ)\document-no-run.obj \
 	$(OFZ)\svg-device.obj $(OFZ)\output-pcl.obj $(OFZ)\output-pwg.obj \
 	$(OFZ)\stream-prog.obj
 

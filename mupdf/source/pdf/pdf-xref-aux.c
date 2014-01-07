@@ -27,3 +27,10 @@ pdf_open_document(fz_context *ctx, const char *filename)
 	doc->update_appearance = pdf_update_appearance;
 	return doc;
 }
+
+fz_document_handler pdf_document_handler =
+{
+	(fz_document_recognize_fn *)&pdf_recognize,
+	(fz_document_open_fn *)&pdf_open_document,
+	(fz_document_open_with_stream_fn *)&pdf_open_document_with_stream
+};

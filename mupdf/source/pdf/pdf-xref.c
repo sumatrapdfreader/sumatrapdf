@@ -1,4 +1,5 @@
 #include "mupdf/pdf.h"
+#include "mupdf/fitz/document.h"
 
 #undef DEBUG_PROGESSIVE_ADVANCE
 
@@ -2417,3 +2418,26 @@ pdf_document *pdf_create_document(fz_context *ctx)
 	}
 	return doc;
 }
+
+int
+pdf_recognize(fz_context *doc, const char *magic)
+{
+	char *ext = strrchr(magic, '.');
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".pdf"))
+			return 100;
+	}
+	if (!strcmp(magic, "pdf") || !strcmp(magic, "application/pdf"))
+		return 100;
+
+	return 1;
+}
+
+fz_document_handler pdf_no_run_document_handler =
+{
+	(fz_document_recognize_fn *)&pdf_recognize,
+	(fz_document_open_fn *)&pdf_open_document_no_run,
+	(fz_document_open_with_stream_fn *)&pdf_open_document_no_run_with_stream
+};

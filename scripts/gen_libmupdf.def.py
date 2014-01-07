@@ -80,7 +80,7 @@ def main():
 	os.chdir("mupdf")
 	
 	# don't include/export doc_* functions, support for additional input/output formats and form support
-	doc_exports = collectFunctions("source/fitz/document.c") + ["fz_get_annot_type"]
+	doc_exports = collectFunctions("source/fitz/document.c") + collectFunctions("source/fitz/document-all.c") + collectFunctions("source/fitz/document-no-run.c") + ["fz_get_annot_type"]
 	more_formats = collectFunctions("source/fitz/svg-device.c") + collectFunctions("source/fitz/output-pcl.c") + collectFunctions("source/fitz/output-pwg.c")
 	form_exports = collectFunctions("source/pdf/pdf-form.c") + collectFunctions("source/pdf/pdf-event.c") + collectFunctions("source/pdf/pdf-appearance.c") + ["pdf_access_submit_event", "pdf_init_ui_pointer_event"]
 	misc_exports = collectFunctions("source/fitz/stream-prog.c")

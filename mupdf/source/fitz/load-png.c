@@ -452,6 +452,13 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, unsigned in
 			p += size + 12;
 			total -= size + 12;
 		}
+		if (stm.avail_out != 0)
+		{
+			memset(stm.next_out, 0xff, stm.avail_out);
+			fz_warn(ctx, "missing pixel data in png image; possibly truncated");
+		}
+		else if (total <= 8)
+			fz_warn(ctx, "missing IEND chunk in png image; possibly truncated");
 	}
 	fz_catch(ctx)
 	{

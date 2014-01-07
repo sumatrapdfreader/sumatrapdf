@@ -1352,6 +1352,8 @@ int main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
+		fz_register_document_handlers(ctx);
+
 		while (fz_optind < argc)
 		{
 			fz_try(ctx)

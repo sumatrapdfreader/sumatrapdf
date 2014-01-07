@@ -308,4 +308,6 @@ fz_device *pdf_page_write(pdf_document *doc, pdf_page *page);
 
 void pdf_finish_edit(pdf_document *doc);
 
+int pdf_recognize(fz_context *doc, const char *magic);
+
 #endif

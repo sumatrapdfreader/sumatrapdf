@@ -430,3 +430,26 @@ cbz_init_document(cbz_document *doc)
 	doc->super.meta = (fz_document_meta_fn *)cbz_meta;
 	doc->super.rebind = (fz_document_rebind_fn *)cbz_rebind;
 }
+
+static int
+cbz_recognize(fz_context *doc, const char *magic)
+{
+	char *ext = strrchr(magic, '.');
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
+			return 100;
+	}
+	if (!strcmp(magic, "cbz") || !strcmp(magic, "application/x-cbz"))
+		return 100;
+
+	return 0;
+}
+
+fz_document_handler cbz_document_handler =
+{
+	(fz_document_recognize_fn *)&cbz_recognize,
+	(fz_document_open_fn *)&cbz_open_document,
+	(fz_document_open_with_stream_fn *)&cbz_open_document_with_stream
+};

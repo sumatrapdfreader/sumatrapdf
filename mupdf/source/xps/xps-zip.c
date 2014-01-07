@@ -169,6 +169,12 @@ xps_read_zip_entry(xps_document *doc, xps_entry *ent, unsigned char *outbuf)
 		}
 
 		fz_free(ctx, inbuf);
+
+		if (stream.avail_out > 0)
+		{
+			fz_warn(ctx, "Truncated zipfile entry found, possibly corrupt data");
+			memset(stream.next_out, 0, stream.avail_out);
+		}
 	}
 	else
 	{

@@ -1227,6 +1227,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\document-all.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\source\fitz\document-no-run.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\document.c"
 					>
 				</File>
