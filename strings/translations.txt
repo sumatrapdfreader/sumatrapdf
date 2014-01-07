@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9ee2d9a3066f8b67c9a6252a30edf62bcacd9827
+75b8523757d76d9ede2c11fb69088016b42439f2
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3778,6 +3778,7 @@ fa:شما مطمئن هستید که می خواهید سوماترا پی دی 
 fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 gl:Seguro que queres desinstalar SumatraPDF?
+hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 id:Anda yakin untuk menghapus instalasi SumatraPDF?
@@ -5703,6 +5704,7 @@ eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
 gl:Non se puido crear o cartafol temporal
+hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti privremenu mapu
 hu:Ideiglenes könyvtár létrehozása sikertelen
 id:Gagal membuat folder sementara
@@ -5749,6 +5751,7 @@ fa:عدم توانایی در ایجاد پوشه نصب
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
 gl:Non se puido crear o cartafol de instalación
+hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti instalacijsku mapu
 hu:Telepítési könyvtár létrehozása sikertelen
 id:Gagal membuat folder instalasi
@@ -14805,6 +14808,7 @@ fa:اجرای sumatra pdf
 fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
 gl:Iniciar SumatraPDF
+hi:SumatraPDF शुरू
 hr:Pokreni SumatraPDF
 hu:SumatraPDF indítása
 id:Jalankan SumatraPDF
