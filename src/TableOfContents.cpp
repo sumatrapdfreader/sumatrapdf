@@ -202,7 +202,8 @@ void ToggleTocBox(WindowInfo *win)
         SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     } else {
         SetSidebarVisibility(win, true,  gGlobalPrefs->showFavorites);
-        SetFocus(win->hwndTocTree);
+        if (win->tocVisible)
+            SetFocus(win->hwndTocTree);
     }
 }
 

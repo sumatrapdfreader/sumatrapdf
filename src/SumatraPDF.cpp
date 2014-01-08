@@ -2416,7 +2416,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         win.RepaintAsync();
     }
     /* in presentation mode, change pages on left/right-clicks */
-    else if (win.isFullScreen || PM_ENABLED == win.presentation) {
+    else if (PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
             win.dm->GoToPrevPage(0);
         else
@@ -2429,8 +2429,8 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if ((win.isFullScreen || win.presentation) && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
-        // in presentation and fullscreen modes, left clicks turn the page,
+    if (win.presentation && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
+        // in presentation mode, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
         OnMouseLeftButtonDown(win, x, y, key);
         return;
@@ -2537,7 +2537,7 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     if (didDragMouse)
         /* pass */;
-    else if (win.isFullScreen || PM_ENABLED == win.presentation) {
+    else if (PM_ENABLED == win.presentation) {
         if ((key & MK_CONTROL))
             OnContextMenu(&win, x, y);
         else if ((key & MK_SHIFT))
@@ -2554,8 +2554,8 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
 {
-    if ((win.isFullScreen || win.presentation) && !(key & ~MK_RBUTTON)) {
-        // in presentation and fullscreen modes, right clicks turn the page,
+    if (win.presentation && !(key & ~MK_RBUTTON)) {
+        // in presentation mode, right clicks turn the page,
         // make two quick right clicks (AKA one double-click) turn two pages
         OnMouseRightButtonDown(win, x, y, key);
         return;
@@ -5421,7 +5421,7 @@ InitMouseWheelInfo:
             break;
 
         case WM_MOUSEACTIVATE:
-            if (win && (win->presentation || win->isFullScreen) && hwnd != GetForegroundWindow())
+            if (win && win->presentation && hwnd != GetForegroundWindow())
                 return MA_ACTIVATEANDEAT;
             return MA_ACTIVATE;
 
