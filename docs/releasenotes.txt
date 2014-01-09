@@ -3,7 +3,11 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.5 (???-??-??):
+2.5 (2014-??-??):
+
+* left/right clicking no longer changes pages in fullscreen mode
+  (use Presentation mode if you rely on this feature)
+* fixed multiple crashes
 
 2.4 (2013-10-01):
 
