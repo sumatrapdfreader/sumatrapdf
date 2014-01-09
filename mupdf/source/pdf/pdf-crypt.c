@@ -97,6 +97,12 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		pdf_free_crypt(ctx, crypt);
 		fz_throw(ctx, FZ_ERROR_GENERIC, "encryption dictionary missing version and revision value");
 	}
+	if (crypt->r < 1 || crypt->r > 6)
+	{
+		int r = crypt->r;
+		pdf_free_crypt(ctx, crypt);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "unknown crypt revision %d", r);
+	}
 
 	obj = pdf_dict_gets(dict, "O");
 	if (pdf_is_string(obj) && pdf_to_str_len(obj) == 32)
@@ -312,7 +318,7 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 	if ((cf->length % 8) != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid key length: %d", cf->length);
 
-	if ((crypt->r == 1 || crypt->r == 2 || crypt->r == 4) &&
+	if ((crypt->r == 1 || crypt->r == 2 || crypt->r == 3 || crypt->r == 4) &&
 		(cf->length < 0 || cf->length > 128))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid key length: %d", cf->length);
 	if ((crypt->r == 5 || crypt->r == 6) && cf->length != 256)

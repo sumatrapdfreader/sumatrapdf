@@ -1690,6 +1690,7 @@ object_updated:
 			{
 				fz_rethrow_message(ctx, "cannot load object stream containing object (%d %d R)", num, gen);
 			}
+			x = pdf_get_xref_entry(doc, num);
 			if (!x->obj)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "object (%d %d R) was not found in its object stream", num, gen);
 		}

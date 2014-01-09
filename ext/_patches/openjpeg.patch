@@ -24,6 +24,22 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  
  OPJ_SIZE_T opj_stream_read_data (opj_stream_private_t * p_stream,OPJ_BYTE * p_buffer, OPJ_SIZE_T p_size, opj_event_mgr_t * p_event_mgr)
  {
+diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
+--- openjpeg.orig\event.c	Sat May 18 19:52:42 2013
++++ openjpeg\event.c	Thu Jan 09 01:20:16 2014
+@@ -116,11 +116,11 @@
+ 		va_start(arg, fmt);
+ 		/* check the length of the format string */
+ 		str_length = (strlen(fmt) > OPJ_MSG_SIZE) ? OPJ_MSG_SIZE : strlen(fmt);
+         (void)str_length;
+ 		/* parse the format string and put the result in 'message' */
+-		vsprintf(message, fmt, arg); /* UniPG */
++		vsnprintf(message, OPJ_MSG_SIZE, fmt, arg); /* UniPG */
+ 		/* deinitialize the optional parameter list */
+ 		va_end(arg);
+ 
+ 		/* output the message to the user program */
+ 		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 19:52:42 2013
 +++ openjpeg\j2k.c	Sat Dec 14 16:04:33 2013
@@ -191,7 +207,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\jp2.c	Fri Jul 26 22:20:28 2013
++++ openjpeg\jp2.c	Thu Jan 09 21:39:50 2014
 @@ -774,10 +774,17 @@
  			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
  
@@ -227,7 +243,81 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  		max = new_comps[pcol].w * new_comps[pcol].h;
  
  		for(j = 0; j < max; ++j)
-@@ -958,10 +971,17 @@
+@@ -835,28 +848,38 @@
+ 	OPJ_BYTE *channel_size, *channel_sign;
+ 	OPJ_UINT32 *entries;
+ 	OPJ_UINT16 nr_entries,nr_channels;
+ 	OPJ_UINT16 i, j;
+ 	OPJ_UINT32 l_value;
++	/* SumatraPDF: prevent access violation */
++	OPJ_BYTE *orig_header_data = p_pclr_header_data;
+ 
+ 	/* preconditions */
+ 	assert(p_pclr_header_data != 00);
+ 	assert(jp2 != 00);
+ 	assert(p_manager != 00);
+     (void)p_pclr_header_size;
+ 
+ 	if(jp2->color.jp2_pclr)
+ 		return OPJ_FALSE;
+ 
++	/* SumatraPDF: prevent access violation */
++	if (p_pclr_header_size < 3)
++		return OPJ_FALSE;
++
+ 	opj_read_bytes(p_pclr_header_data, &l_value , 2);	/* NE */
+ 	p_pclr_header_data += 2;
+ 	nr_entries = (OPJ_UINT16) l_value;
+ 
+ 	opj_read_bytes(p_pclr_header_data, &l_value , 1);	/* NPC */
+ 	++p_pclr_header_data;
+ 	nr_channels = (OPJ_UINT16) l_value;
+ 
++	/* SumatraPDF: prevent access violation */
++	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= UINT_MAX / nr_channels)
++		return OPJ_FALSE;
++
+ 	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
+     if (!entries)
+         return OPJ_FALSE;
+ 	channel_size = (OPJ_BYTE*) opj_malloc(nr_channels);
+     if (!channel_size)
+@@ -899,10 +922,16 @@
+ 	}
+ 
+ 	for(j = 0; j < nr_entries; ++j) {
+ 		for(i = 0; i < nr_channels; ++i) {
+ 			OPJ_INT32 bytes_to_read = (channel_size[i]+7)>>3;
++			/* SumatraPDF: prevent assertion in opj_read_bytes */
++			if (bytes_to_read > sizeof(OPJ_UINT32))
++				bytes_to_read = sizeof(OPJ_UINT32);
++			/* SumatraPDF: prevent access violation */
++			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + bytes_to_read)
++				return OPJ_FALSE;
+ 
+ 			opj_read_bytes(p_pclr_header_data, &l_value , bytes_to_read);	/* Cji */
+ 			p_pclr_header_data += bytes_to_read;
+ 			*entries = (OPJ_UINT32) l_value;
+ 			entries++;
+@@ -940,10 +969,17 @@
+ 	if(jp2->color.jp2_pclr->cmap) {
+ 		opj_event_msg(p_manager, EVT_ERROR, "Only one CMAP box is allowed.\n");
+ 		return OPJ_FALSE;
+ 	}
+ 
++	/* SumatraPDF: prevent access violation */
++	nr_channels = jp2->color.jp2_pclr->nr_channels;
++	if (p_cmap_header_size < (OPJ_UINT32)nr_channels * 4) {
++		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CMAP box.\n");
++		return OPJ_FALSE;
++	}
++
+ 	nr_channels = jp2->color.jp2_pclr->nr_channels;
+ 	cmap = (opj_jp2_cmap_comp_t*) opj_malloc(nr_channels * sizeof(opj_jp2_cmap_comp_t));
+     if (!cmap)
+         return OPJ_FALSE;
+ 
+@@ -958,10 +994,17 @@
  		cmap[i].mtyp = (OPJ_BYTE) l_value;
  
  		opj_read_bytes(p_cmap_header_data, &l_value, 1);			/* PCOL^i */
@@ -245,7 +335,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	jp2->color.jp2_pclr->cmap = cmap;
  
  	return OPJ_TRUE;
-@@ -981,10 +1001,17 @@
+@@ -981,10 +1024,17 @@
  		if((asoc = info[i].asoc) == 0) continue;
  
  		cn = info[i].cn; 
@@ -263,7 +353,38 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  			opj_image_comp_t saved;
  
  			memcpy(&saved, &image->comps[cn], sizeof(opj_image_comp_t));
-@@ -1095,14 +1122,18 @@
+@@ -1020,18 +1070,30 @@
+ 
+ 	/* Part 1, I.5.3.6: 'The shall be at most one Channel Definition box
+ 	 * inside a JP2 Header box.'*/
+ 	if(jp2->color.jp2_cdef) return OPJ_FALSE;
+ 
++	/* SumatraPDF: prevent access violation */
++	if (p_cdef_header_size < 2) {
++		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
++		return OPJ_FALSE;
++	}
++
+ 	opj_read_bytes(p_cdef_header_data,&l_value ,2);			/* N */
+ 	p_cdef_header_data+= 2;
+ 
+ 	if ( (OPJ_UINT16)l_value == 0){ /* szukw000: FIXME */
+ 		opj_event_msg(p_manager, EVT_ERROR, "Number of channel description is equal to zero in CDEF box.\n");
+ 		return OPJ_FALSE;
+ 	}
+ 
++	/* SumatraPDF: prevent access violation */
++	if (p_cdef_header_size < 2 + (OPJ_UINT32)(OPJ_UINT16)l_value * 6) {
++		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
++		return OPJ_FALSE;
++	}
++
+ 	cdef_info = (opj_jp2_cdef_info_t*) opj_malloc(l_value * sizeof(opj_jp2_cdef_info_t));
+     if (!cdef_info)
+         return OPJ_FALSE;
+ 
+ 	jp2->color.jp2_cdef = (opj_jp2_cdef_t*)opj_malloc(sizeof(opj_jp2_cdef_t));
+@@ -1095,14 +1157,18 @@
  
  	opj_read_bytes(p_colr_header_data,&jp2->approx ,1);			/* APPROX */
  	++p_colr_header_data;
@@ -284,7 +405,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
          
          jp2->color.jp2_has_colr = 1;
  	}
-@@ -1683,18 +1714,24 @@
+@@ -1683,18 +1749,24 @@
  		else if	(box.length == 0) {
  			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
  			opj_free(l_current_data);
@@ -351,7 +472,7 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
      _asm{
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_malloc.h	Thu Aug 15 20:45:32 2013
++++ openjpeg\opj_malloc.h	Mon Dec 23 11:14:06 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -360,7 +481,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  #else
 -#define opj_calloc(num, size) calloc(num, size)
 +/* SumatraPDF: don't assert when num * size overflows */
-+#define opj_calloc(num, size) ((size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
++#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
  #endif
  
  /**

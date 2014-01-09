@@ -850,6 +850,8 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	OPJ_UINT16 nr_entries,nr_channels;
 	OPJ_UINT16 i, j;
 	OPJ_UINT32 l_value;
+	/* SumatraPDF: prevent access violation */
+	OPJ_BYTE *orig_header_data = p_pclr_header_data;
 
 	/* preconditions */
 	assert(p_pclr_header_data != 00);
@@ -860,6 +862,10 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	if(jp2->color.jp2_pclr)
 		return OPJ_FALSE;
 
+	/* SumatraPDF: prevent access violation */
+	if (p_pclr_header_size < 3)
+		return OPJ_FALSE;
+
 	opj_read_bytes(p_pclr_header_data, &l_value , 2);	/* NE */
 	p_pclr_header_data += 2;
 	nr_entries = (OPJ_UINT16) l_value;
@@ -867,6 +873,10 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	opj_read_bytes(p_pclr_header_data, &l_value , 1);	/* NPC */
 	++p_pclr_header_data;
 	nr_channels = (OPJ_UINT16) l_value;
+
+	/* SumatraPDF: prevent access violation */
+	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= UINT_MAX / nr_channels)
+		return OPJ_FALSE;
 
 	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
     if (!entries)
@@ -914,6 +924,12 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	for(j = 0; j < nr_entries; ++j) {
 		for(i = 0; i < nr_channels; ++i) {
 			OPJ_INT32 bytes_to_read = (channel_size[i]+7)>>3;
+			/* SumatraPDF: prevent assertion in opj_read_bytes */
+			if (bytes_to_read > sizeof(OPJ_UINT32))
+				bytes_to_read = sizeof(OPJ_UINT32);
+			/* SumatraPDF: prevent access violation */
+			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + bytes_to_read)
+				return OPJ_FALSE;
 
 			opj_read_bytes(p_pclr_header_data, &l_value , bytes_to_read);	/* Cji */
 			p_pclr_header_data += bytes_to_read;
@@ -952,6 +968,13 @@ OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
 	*/
 	if(jp2->color.jp2_pclr->cmap) {
 		opj_event_msg(p_manager, EVT_ERROR, "Only one CMAP box is allowed.\n");
+		return OPJ_FALSE;
+	}
+
+	/* SumatraPDF: prevent access violation */
+	nr_channels = jp2->color.jp2_pclr->nr_channels;
+	if (p_cmap_header_size < (OPJ_UINT32)nr_channels * 4) {
+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CMAP box.\n");
 		return OPJ_FALSE;
 	}
 
@@ -1049,11 +1072,23 @@ OPJ_BOOL opj_jp2_read_cdef(	opj_jp2_t * jp2,
 	 * inside a JP2 Header box.'*/
 	if(jp2->color.jp2_cdef) return OPJ_FALSE;
 
+	/* SumatraPDF: prevent access violation */
+	if (p_cdef_header_size < 2) {
+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
+		return OPJ_FALSE;
+	}
+
 	opj_read_bytes(p_cdef_header_data,&l_value ,2);			/* N */
 	p_cdef_header_data+= 2;
 
 	if ( (OPJ_UINT16)l_value == 0){ /* szukw000: FIXME */
 		opj_event_msg(p_manager, EVT_ERROR, "Number of channel description is equal to zero in CDEF box.\n");
+		return OPJ_FALSE;
+	}
+
+	/* SumatraPDF: prevent access violation */
+	if (p_cdef_header_size < 2 + (OPJ_UINT32)(OPJ_UINT16)l_value * 6) {
+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
 		return OPJ_FALSE;
 	}
 

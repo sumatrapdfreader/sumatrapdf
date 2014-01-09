@@ -2,8 +2,6 @@
 
 /* TODO: check if this works with 16bpp images */
 
-enum { MAXC = 32 };
-
 typedef struct fz_predict_s fz_predict;
 
 struct fz_predict_s
@@ -61,7 +59,7 @@ static inline int paeth(int a, int b, int c)
 static void
 fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int len)
 {
-	int left[MAXC];
+	int left[FZ_MAX_COLORS];
 	int i, k;
 	const int mask = (1 << state->bpc)-1;
 
@@ -88,6 +86,9 @@ fz_predict_png(fz_predict *state, unsigned char *out, unsigned char *in, int len
 	int bpp = state->bpp;
 	int i;
 	unsigned char *ref = state->ref;
+
+	if (bpp > len)
+		bpp = len;
 
 	switch (predictor)
 	{
@@ -217,6 +218,13 @@ fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bp
 
 	fz_try(ctx)
 	{
+		if (bpc != 1 && bpc != 2 && bpc != 4 && bpc != 8 && bpc != 16)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid number of bits per component: %d", bpc);
+		if (colors > FZ_MAX_COLORS)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "too many color components (%d > %d)", colors, FZ_MAX_COLORS);
+		if (columns >= INT_MAX / (bpc * colors))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "too many columns lead to an integer overflow (%d)", columns);
+
 		state = fz_malloc_struct(ctx, fz_predict);
 		state->in = NULL;
 		state->out = NULL;

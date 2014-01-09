@@ -780,6 +780,9 @@ fz_open_faxd(fz_stream *chain,
 
 	fz_try(ctx)
 	{
+		if (columns < 0 || columns >= INT_MAX - 7)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "too many columns lead to an integer overflow (%d)", columns);
+
 		fax = fz_malloc_struct(ctx, fz_faxd);
 		fax->chain = chain;
 

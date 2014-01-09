@@ -118,7 +118,7 @@ OPJ_BOOL opj_event_msg(opj_event_mgr_t* p_event_mgr, OPJ_INT32 event_type, const
 		str_length = (strlen(fmt) > OPJ_MSG_SIZE) ? OPJ_MSG_SIZE : strlen(fmt);
         (void)str_length;
 		/* parse the format string and put the result in 'message' */
-		vsprintf(message, fmt, arg); /* UniPG */
+		vsnprintf(message, OPJ_MSG_SIZE, fmt, arg); /* UniPG */
 		/* deinitialize the optional parameter list */
 		va_end(arg);
 

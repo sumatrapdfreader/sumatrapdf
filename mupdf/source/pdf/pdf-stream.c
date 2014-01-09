@@ -298,12 +298,22 @@ pdf_open_filter(fz_stream *chain, pdf_document *doc, pdf_obj *stmobj, int num, i
 
 	chain = pdf_open_raw_filter(chain, doc, stmobj, num, num, gen, offset);
 
+	fz_var(chain);
+
 	fz_try(doc->ctx)
 	{
 		if (pdf_is_name(filters))
-			chain = build_filter(chain, doc, filters, params, num, gen, imparams);
+		{
+			fz_stream *chain2 = chain;
+			chain = NULL;
+			chain = build_filter(chain2, doc, filters, params, num, gen, imparams);
+		}
 		else if (pdf_array_len(filters) > 0)
-			chain = build_filter_chain(chain, doc, filters, params, num, gen, imparams);
+		{
+			fz_stream *chain2 = chain;
+			chain = NULL;
+			chain = build_filter_chain(chain2, doc, filters, params, num, gen, imparams);
+		}
 	}
 	fz_catch(doc->ctx)
 	{
@@ -355,10 +365,9 @@ pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num
 	if (num < 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
-	x = pdf_get_xref_entry(doc, num);
-
 	pdf_cache_object(doc, num, gen);
 
+	x = pdf_get_xref_entry(doc, num);
 	if (x->stm_ofs == 0)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object is not a stream");
 
@@ -373,10 +382,9 @@ pdf_open_image_stream(pdf_document *doc, int num, int gen, int orig_num, int ori
 	if (num < 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
-	x = pdf_get_xref_entry(doc, num);
-
 	pdf_cache_object(doc, num, gen);
 
+	x = pdf_get_xref_entry(doc, num);
 	if (x->stm_ofs == 0 && x->stm_buf == NULL)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object is not a stream");
 

@@ -817,6 +817,10 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 			}
 			if (cmp != 0)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "unknown operator: '%s'", buf->scratch);
+			if (a == PS_OP_IFELSE)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "illegally positioned ifelse operator in function");
+			if (a == PS_OP_IF)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "illegally positioned if operator in function");
 
 			resize_code(ctx, func, *codeptr);
 			func->u.p.code[*codeptr].type = PS_OPERATOR;

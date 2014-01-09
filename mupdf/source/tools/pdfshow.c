@@ -4,6 +4,8 @@
 
 #include "mupdf/pdf.h"
 
+static FILE *out = NULL;
+
 static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 static int showbinary = 0;
@@ -16,6 +18,7 @@ static void usage(void)
 	fprintf(stderr, "\t-b\tprint streams as binary data\n");
 	fprintf(stderr, "\t-e\tprint encoded streams (don't decode)\n");
 	fprintf(stderr, "\t-p\tpassword\n");
+	fprintf(stderr, "\t-o\toutput file\n");
 	exit(1);
 }
 
@@ -23,9 +26,9 @@ static void showtrailer(void)
 {
 	if (!doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no file specified");
-	printf("trailer\n");
-	pdf_fprint_obj(stdout, pdf_trailer(doc), 0);
-	printf("\n");
+	fprintf(out, "trailer\n");
+	pdf_fprint_obj(out, pdf_trailer(doc), 0);
+	fprintf(out, "\n");
 }
 
 static void showencrypt(void)
@@ -37,9 +40,9 @@ static void showencrypt(void)
 	encrypt = pdf_dict_gets(pdf_trailer(doc), "Encrypt");
 	if (!encrypt)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "document not encrypted");
-	printf("encryption dictionary\n");
-	pdf_fprint_obj(stdout, pdf_resolve_indirect(encrypt), 0);
-	printf("\n");
+	fprintf(out, "encryption dictionary\n");
+	pdf_fprint_obj(out, pdf_resolve_indirect(encrypt), 0);
+	fprintf(out, "\n");
 }
 
 static void showxref(void)
@@ -47,7 +50,7 @@ static void showxref(void)
 	if (!doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no file specified");
 	pdf_print_xref(doc);
-	printf("\n");
+	fprintf(out, "\n");
 }
 
 static void showpagetree(void)
@@ -63,9 +66,9 @@ static void showpagetree(void)
 	for (i = 0; i < count; i++)
 	{
 		ref = pdf_lookup_page_obj(doc, i);
-		printf("page %d = %d %d R\n", i + 1, pdf_to_num(ref), pdf_to_gen(ref));
+		fprintf(out, "page %d = %d %d R\n", i + 1, pdf_to_num(ref), pdf_to_gen(ref));
 	}
-	printf("\n");
+	fprintf(out, "\n");
 }
 
 static void showsafe(unsigned char *buf, int n)
@@ -110,7 +113,7 @@ static void showstream(int num, int gen)
 		if (n == 0)
 			break;
 		if (showbinary)
-			fwrite(buf, 1, n, stdout);
+			fwrite(buf, 1, n, out);
 		else
 			showsafe(buf, n);
 	}
@@ -135,19 +138,19 @@ static void showobject(int num, int gen)
 		}
 		else
 		{
-			printf("%d %d obj\n", num, gen);
-			pdf_fprint_obj(stdout, obj, 0);
-			printf("stream\n");
+			fprintf(out, "%d %d obj\n", num, gen);
+			pdf_fprint_obj(out, obj, 0);
+			fprintf(out, "stream\n");
 			showstream(num, gen);
-			printf("endstream\n");
-			printf("endobj\n\n");
+			fprintf(out, "endstream\n");
+			fprintf(out, "endobj\n\n");
 		}
 	}
 	else
 	{
-		printf("%d %d obj\n", num, gen);
-		pdf_fprint_obj(stdout, obj, 0);
-		printf("endobj\n\n");
+		fprintf(out, "%d %d obj\n", num, gen);
+		pdf_fprint_obj(out, obj, 0);
+		fprintf(out, "endobj\n\n");
 	}
 
 	pdf_drop_obj(obj);
@@ -176,30 +179,32 @@ static void showgrep(char *filename)
 
 			pdf_sort_dict(obj);
 
-			printf("%s:%d: ", filename, i);
-			pdf_fprint_obj(stdout, obj, 1);
+			fprintf(out, "%s:%d: ", filename, i);
+			pdf_fprint_obj(out, obj, 1);
 
 			pdf_drop_obj(obj);
 		}
 	}
 
-	printf("%s:trailer: ", filename);
-	pdf_fprint_obj(stdout, pdf_trailer(doc), 1);
+	fprintf(out, "%s:trailer: ", filename);
+	pdf_fprint_obj(out, pdf_trailer(doc), 1);
 }
 
 int pdfshow_main(int argc, char **argv)
 {
 	char *password = NULL; /* don't throw errors if encrypted */
-	char *filename;
+	char *filename = NULL;
+	char *output = NULL;
 	int c;
 
-	while ((c = fz_getopt(argc, argv, "p:be")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:o:be")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'b': showbinary = 1; break;
 		case 'e': showdecode = 0; break;
+		case 'o': output = fz_optarg; break;
 		default: usage(); break;
 		}
 	}
@@ -208,6 +213,17 @@ int pdfshow_main(int argc, char **argv)
 		usage();
 
 	filename = argv[fz_optind++];
+
+	out = stdout;
+	if (output)
+	{
+		out = fopen(output, "wb");
+		if (!out)
+		{
+			fprintf(stderr, "cannot open output file: '%s'\n", output);
+			exit(1);
+		}
+	}
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
@@ -244,6 +260,9 @@ int pdfshow_main(int argc, char **argv)
 	fz_catch(ctx)
 	{
 	}
+
+	if (out != stdout)
+		fclose(out);
 
 	pdf_close_document(doc);
 	fz_free_context(ctx);

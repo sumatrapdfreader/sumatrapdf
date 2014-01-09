@@ -1811,6 +1811,10 @@ void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
 
 	memset(&font_rec, 0, sizeof(font_rec));
 
+	/* Set some sane defaults in case the parsing of the font_rec fails */
+	font_rec.da_rec.col_size = 1; /* Default to greyscale */
+	font_rec.da_rec.font_size = 12; /* Default to 12 point */
+
 	fz_var(dlist);
 	fz_var(dev);
 	fz_var(text);
@@ -1826,7 +1830,7 @@ void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
 
 		switch (font_rec.da_rec.col_size)
 		{
-		case 1: cs = fz_device_gray(doc->ctx); break;
+		default: cs = fz_device_gray(doc->ctx); break;
 		case 3: cs = fz_device_rgb(doc->ctx); break;
 		case 4: cs = fz_device_cmyk(doc->ctx); break;
 		}
