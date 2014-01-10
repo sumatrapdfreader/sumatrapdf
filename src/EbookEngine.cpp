@@ -824,7 +824,10 @@ DocTocItem *EpubEngineImpl::GetTocTree()
 {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    return builder.GetRoot();
+    EbookTocItem *root = builder.GetRoot();
+    if (root)
+        root->OpenSingleNode();
+    return root;
 }
 
 bool EpubEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -948,7 +951,6 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
                 PageDestination *dest = GetNamedDest(name);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = titleCount;
-                item->open = level <= 2;
                 AppendTocItem(root, item, level);
             }
             inTitle = false;
@@ -962,6 +964,8 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
         }
     }
 
+    if (root)
+        root->OpenSingleNode();
     return root;
 }
 
@@ -1132,7 +1136,6 @@ DocTocItem *MobiEngineImpl::GetTocTree()
                 dest = GetNamedDest(itemLink);
             EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
             item->id = ++idCounter;
-            item->open = itemLevel <= 2;
             AppendTocItem(root, item, itemLevel);
             itemLink.Set(NULL);
         }
@@ -1144,6 +1147,8 @@ DocTocItem *MobiEngineImpl::GetTocTree()
         }
     }
 
+    if (root)
+        root->OpenSingleNode();
     return root;
 }
 

@@ -53,7 +53,6 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 			entry->next = NULL;
 
 			this_level = level ? atoi(level) : 1;
-			entry->is_open = this_level == 1; /* SumatraPDF: support expansion states */
 
 			if (!head)
 			{
@@ -70,6 +69,13 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 
 			last_level = this_level;
 		}
+	}
+	/* SumatraPDF: support expansion states */
+	if (head && !head->next || !head->next->next)
+	{
+		head->is_open = 1;
+		if (head->next)
+			head->next->is_open = 1;
 	}
 	return head;
 }

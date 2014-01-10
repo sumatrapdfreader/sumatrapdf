@@ -172,7 +172,7 @@ public:
     DocTocItem *next;
 
     DocTocItem(WCHAR *title, int pageNo=0) :
-        title(title), open(true), pageNo(pageNo), id(0), child(NULL), next(NULL), last(NULL) { }
+        title(title), open(false), pageNo(pageNo), id(0), child(NULL), next(NULL), last(NULL) { }
 
     virtual ~DocTocItem() {
         delete child;
@@ -185,11 +185,19 @@ public:
         free(title);
     }
 
-    void AddSibling(DocTocItem *sibling)
-    {
+    void AddSibling(DocTocItem *sibling) {
         DocTocItem *item;
         for (item = last ? last : this; item->next; item = item->next);
         last = item->next = sibling;
+    }
+
+    void OpenSingleNode() {
+        // only open (root level) ToC nodes if there's at most two
+        if (!next || !next->next) {
+            open = true;
+            if (next)
+                next->open = true;
+        }
     }
 
     // returns the destination this ToC item points to
