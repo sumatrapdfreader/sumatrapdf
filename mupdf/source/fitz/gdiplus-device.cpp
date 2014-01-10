@@ -1417,6 +1417,17 @@ gdiplus_run_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, Brush *bru
 		return;
 	}
 	
+	/* consistently use either GDI+ or FreeType for a line of text */
+	for (int i = 0; i < text->len; i++)
+	{
+		WCHAR out = ft_get_charcode(text->font, &text->items[i]);
+		if (!out)
+		{
+			gdiplus_render_text(dev, text, ctm, brush);
+			return;
+		}
+	}
+	
 	Graphics *graphics = ((userData *)dev->user)->graphics;
 	
 	FT_Face face = (FT_Face)text->font->ft_face;
@@ -1434,7 +1445,7 @@ gdiplus_run_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, Brush *bru
 	{
 		WCHAR out = ft_get_charcode(text->font, &text->items[i]);
 		/* graphics->DrawString seems to always render ' ' as blank spaces */
-		if (!out || out == ' ')
+		if (out == ' ')
 		{
 			fz_text t2 = *text;
 			t2.len = 1;
