@@ -236,13 +236,26 @@ build_filter_chain(fz_stream *chain, pdf_document *doc, pdf_obj *fs, pdf_obj *ps
 	pdf_obj *f;
 	pdf_obj *p;
 	int i, n;
+	fz_context *ctx = chain->ctx;
 
-	n = pdf_array_len(fs);
-	for (i = 0; i < n; i++)
+	fz_try(ctx)
 	{
-		f = pdf_array_get(fs, i);
-		p = pdf_array_get(ps, i);
-		chain = build_filter(chain, doc, f, p, num, gen, (i == n-1 ? params : NULL));
+		n = pdf_array_len(fs);
+		for (i = 0; i < n; i++)
+		{
+			fz_stream *chain2;
+
+			f = pdf_array_get(fs, i);
+			p = pdf_array_get(ps, i);
+			chain2 = chain;
+			chain = NULL;
+			chain = build_filter(chain2, doc, f, p, num, gen, (i == n-1 ? params : NULL));
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_close(chain);
+		fz_rethrow(ctx);
 	}
 
 	return chain;

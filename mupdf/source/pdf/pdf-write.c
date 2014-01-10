@@ -711,6 +711,7 @@ static void compactxref(pdf_document *doc, pdf_write_options *opts)
 static void renumberobj(pdf_document *doc, pdf_write_options *opts, pdf_obj *obj)
 {
 	int i;
+	int xref_len = pdf_xref_len(doc);
 
 	if (pdf_is_dict(obj))
 	{
@@ -721,7 +722,11 @@ static void renumberobj(pdf_document *doc, pdf_write_options *opts, pdf_obj *obj
 			pdf_obj *val = pdf_dict_get_val(obj, i);
 			if (pdf_is_indirect(val))
 			{
-				val = pdf_new_indirect(doc, opts->renumber_map[pdf_to_num(val)], 0);
+				int o = pdf_to_num(val);
+				if (o >= xref_len)
+					val = pdf_new_null(doc);
+				else
+					val = pdf_new_indirect(doc, opts->renumber_map[o], 0);
 				pdf_dict_put(obj, key, val);
 				pdf_drop_obj(val);
 			}
@@ -740,7 +745,11 @@ static void renumberobj(pdf_document *doc, pdf_write_options *opts, pdf_obj *obj
 			pdf_obj *val = pdf_array_get(obj, i);
 			if (pdf_is_indirect(val))
 			{
-				val = pdf_new_indirect(doc, opts->renumber_map[pdf_to_num(val)], 0);
+				int o = pdf_to_num(val);
+				if (o >= xref_len)
+					val = pdf_new_null(doc);
+				else
+					val = pdf_new_indirect(doc, opts->renumber_map[o], 0);
 				pdf_array_put(obj, i, val);
 				pdf_drop_obj(val);
 			}

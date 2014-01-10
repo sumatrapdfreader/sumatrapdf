@@ -37,3 +37,18 @@ diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
  static int
  jbig2_default_error(void *data, const char *msg,
                      Jbig2Severity severity, int32_t seg_idx)
+diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
+--- jbig2dec.orig\jbig2_symbol_dict.c	Wed Dec 18 13:48:36 2013
++++ jbig2dec\jbig2_symbol_dict.c	Fri Jan 10 22:25:21 2014
+@@ -184,10 +184,11 @@
+     }
+ 
+     for (index = 0; index < segment->referred_to_segment_count; index++) {
+         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
+         if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result &&
++            (((Jbig2SymbolDict *)rsegment->result)->n_symbols > 0) &&
+             ((*((Jbig2SymbolDict *)rsegment->result)->glyphs) != NULL)) {
+             /* add this referred to symbol dictionary */
+             dicts[dindex++] = (Jbig2SymbolDict *)rsegment->result;
+         }
+     }
