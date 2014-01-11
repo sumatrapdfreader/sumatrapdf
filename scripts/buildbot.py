@@ -482,7 +482,7 @@ def buildbot_loop():
             continue
         if g_time_of_last_build is not None:
             timedelta = datetime.datetime.now() - g_time_of_last_build
-            if timedelta.seconds > TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS:
+            if timedelta.total_seconds() > TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS:
                 build_pre_release()
                 g_time_of_last_build = None
         print("Sleeping for 15 minutes")
