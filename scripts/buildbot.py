@@ -455,6 +455,7 @@ def build_version_retry(ver, try_count = 2):
         return
 
 def buildbot_loop():
+    global g_time_of_last_build
     while True:
         # util.get_svn_versions() might throw an exception due to
         # temporary network problems, so retry
