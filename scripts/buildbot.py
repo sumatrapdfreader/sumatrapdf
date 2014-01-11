@@ -8,7 +8,7 @@ efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
 
 import shutil, time, datetime, cPickle, traceback
-import s3, util, efiparse
+import s3, util, efiparse, build
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
 from util import load_config, run_cmd, strip_empty_lines
@@ -28,9 +28,6 @@ TODO:
    hard. One option would be to run efi on an executable compiled with less
    aggressive optimization. Another would be to post-process the result
    and use heuristic to suppress bogus changes
- - should also do pre-release builds if there was a new checkin since the last uploaded
-   build but is different that than build and there was no checkin for at least 4hr
-   (all those rules are to ensure we don't create pre-release builds too frequently)
 """
 
 class Stats(Serializable):
@@ -62,6 +59,8 @@ def str2bool(s):
     if s.lower() in ("false", "0"): return False
     assert(False)
 
+TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*4  # 4hrs
+g_time_of_last_build = None
 g_cache_dir = create_dir(os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
 g_stats_cache_dir = create_dir(os.path.join(g_cache_dir, "stats"))
 g_logs_cache_dir = create_dir(os.path.join(g_cache_dir, "logs"))
@@ -479,9 +478,23 @@ def buildbot_loop():
         # don't sleep if we built something in this cycle. a new checkin might
         # have happened while we were working
         if revs_built > 0:
+            g_time_of_last_build = datetime.datetime.now()
             continue
+        if g_time_of_last_build is not None:
+            timedelta = datetime.datetime.now() - g_time_of_last_build
+            if timedelta.seconds > TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS:
+                build_pre_release()
+                g_time_of_last_build = None
         print("Sleeping for 15 minutes")
         time.sleep(60*15) # 15 mins
+
+
+def build_pre_release():
+    try:
+        print("Building pre-release")
+        build.build_pre_release()
+    except:
+        pass
 
 def test_email_tests_failed():
     email_tests_failed("200", "hello")

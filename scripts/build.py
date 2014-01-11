@@ -198,9 +198,11 @@ def sign(file_path, cert_pwd):
  "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
   os.chdir(curr_dir)
 
+
 def print_run_resp(out, err):
   if len(out) > 0: print(out)
   if len(err) > 0: print(err)
+
 
 def zip_one_file(dir, to_pack, zip_name):
   verify_path_exists(dir)
@@ -229,22 +231,10 @@ def zip_one_file(dir, to_pack, zip_name):
   verify_path_exists(zip_name)
   os.chdir(curr_dir)
 
-def main():
-  args = sys.argv[1:]
-  upload               = test_for_flag(args, "-upload")
-  upload_tmp           = test_for_flag(args, "-uploadtmp")
-  testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
-  build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
-  build_rel_installer  = test_for_flag(args, "-testrelinst")
-  build_prerelease     = test_for_flag(args, "-prerelease")
-  skip_transl_update   = test_for_flag(args, "-noapptrans")
-  svn_revision         = test_for_flag(args, "-svn-revision", True)
-  target_platform      = test_for_flag(args, "-platform", True)
 
-  if len(args) != 0:
-    usage()
+def build(upload, upload_tmp, testing, build_test_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
+
   verify_started_in_right_directory()
-
   if build_prerelease:
     if svn_revision is None:
       run_cmd_throw("svn", "update")
@@ -382,6 +372,27 @@ def main():
 
   # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
   # manually to: "%s\n" % ver
+
+def build_pre_release():
+  build(upload=False, upload_tmp=False, testing=False, build_test_installer=False,
+    build_rel_installer=False, build_prerelease=True, skip_transl_update=True,
+    svn_revision=None, target_platform=None)
+
+def main():
+  args = sys.argv[1:]
+  upload               = test_for_flag(args, "-upload")
+  upload_tmp           = test_for_flag(args, "-uploadtmp")
+  testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
+  build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
+  build_rel_installer  = test_for_flag(args, "-testrelinst")
+  build_prerelease     = test_for_flag(args, "-prerelease")
+  skip_transl_update   = test_for_flag(args, "-noapptrans")
+  svn_revision         = test_for_flag(args, "-svn-revision", True)
+  target_platform      = test_for_flag(args, "-platform", True)
+
+  if len(args) != 0:
+    usage()
+  build(upload, upload_tmp, testing, build_test_installer, build_prerelease, skip_transl_update, svn_revision, target_platform)
 
 def test_zip():
   dir = "obj-rel"
