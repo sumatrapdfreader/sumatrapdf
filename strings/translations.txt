@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-75b8523757d76d9ede2c11fb69088016b42439f2
+607d7a24e01c0834aa2894b5b6f25b6c23e9770d
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -10126,7 +10126,7 @@ vn:KB
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
 ar:السماح لويندوز بالبحث في ملفات PDF
-az:PDF sənədlərinin Windows Desktop Search vasitəsilə a&xtarılması
+az:PDF sənədlərini Windows Desktop Search vasitəsilə a&xtar
 br:Permitir que o Windows faça a bu&sca em documentos PDF
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
@@ -10166,7 +10166,7 @@ uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
 :Let Windows show &previews of PDF documents
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
 ar:السماح لويندوز عرض صور معاينة PDF
-az:PDF sənədlərinin Windows alətləri vasitəsilə &görüntülənməsi
+az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 br:Permitir que o Windows &pré-visualize documentos PDF
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar &visualitzacions prèvies dels documents PDF

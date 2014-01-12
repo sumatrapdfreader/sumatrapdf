@@ -221,8 +221,8 @@ const char * gTranslations_az =
   "SumatraPDF-i bu &qovluqda qura\305\237d\304\261r:\0"\
   "Qura\305\237d\304\261rma ba\305\237 tutmad\304\261!\0"\
   "Qura\305\237d\304\261rma davam edir...\0"\
-  "PDF s\311\231n\311\231dl\311\231rinin Windows Desktop Search vasit\311\231sil\311\231 a&xtar\304\261lmas\304\261\0"\
-  "PDF s\311\231n\311\231dl\311\231rinin Windows al\311\231tl\311\231ri vasit\311\231sil\311\231 &g\303\266r\303\274nt\303\274l\311\231nm\311\231si\0"\
+  "PDF s\311\231n\311\231dl\311\231rini Windows Desktop Search vasit\311\231sil\311\231 a&xtar\0"\
+  "PDF s\311\231n\311\231dl\311\231rini Windows al\311\231tl\311\231ri vasit\311\231sil\311\231 &g\303\266r\303\274nt\303\274l\311\231\0"\
   "Davam etm\311\231k \303\274\303\247\303\274n %s ba\304\237lay\304\261n!\0"\
   "SumatraPDF-in qura\305\237d\304\261r\304\261laca\304\237\304\261 qovlu\304\237u se\303\247in:\0"\
   "B\311\231zi qura\305\237d\304\261r\304\261lacaq fayllar z\311\231d\311\231l\311\231nmi\305\237dir v\311\231 ya yoxdur\0"\
