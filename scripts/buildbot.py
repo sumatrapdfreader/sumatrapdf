@@ -59,7 +59,7 @@ def str2bool(s):
     if s.lower() in ("false", "0"): return False
     assert(False)
 
-TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*4  # 4hrs
+TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*15  # 4hrs
 g_time_of_last_build = None
 g_cache_dir = create_dir(os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
 g_stats_cache_dir = create_dir(os.path.join(g_cache_dir, "stats"))
@@ -481,12 +481,17 @@ def buildbot_loop():
         if revs_built > 0:
             g_time_of_last_build = datetime.datetime.now()
             continue
+        secs_until_prerelease = None
         if g_time_of_last_build is not None:
-            timedelta = datetime.datetime.now() - g_time_of_last_build
-            if timedelta.total_seconds() > TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS:
+            td = datetime.datetime.now() - g_time_of_last_build
+            secs_until_prerelease = TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS - int(td.total_seconds())
+            if  secs_until_prerelease < 0:
                 build_pre_release()
                 g_time_of_last_build = None
-        print("Sleeping for 15 minutes")
+        if secs_until_prerelease is not None:
+            print("Sleeping for 15 minutes, %d seconds until pre-release" % secs_until_prerelease)
+        else:
+            print("Sleeping for 15 minutes")
         time.sleep(60*15) # 15 mins
 
 
@@ -494,8 +499,9 @@ def build_pre_release():
     try:
         print("Building pre-release")
         build.build_pre_release()
-    except:
-        pass
+    except Exception, e:
+        print(str(e))
+        traceback.print_exc()
 
 def test_email_tests_failed():
     email_tests_failed("200", "hello")
@@ -520,4 +526,5 @@ def main():
     buildbot_loop()
 
 if __name__ == "__main__":
-    main()
+    build_pre_release()
+    #main()

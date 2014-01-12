@@ -231,8 +231,7 @@ def zip_one_file(dir, to_pack, zip_name):
   verify_path_exists(zip_name)
   os.chdir(curr_dir)
 
-
-def build(upload, upload_tmp, testing, build_test_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
+def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
 
   verify_started_in_right_directory()
   if build_prerelease:
@@ -392,7 +391,7 @@ def main():
 
   if len(args) != 0:
     usage()
-  build(upload, upload_tmp, testing, build_test_installer, build_prerelease, skip_transl_update, svn_revision, target_platform)
+  build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform)
 
 def test_zip():
   dir = "obj-rel"
