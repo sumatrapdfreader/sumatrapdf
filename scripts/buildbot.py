@@ -526,5 +526,4 @@ def main():
     buildbot_loop()
 
 if __name__ == "__main__":
-    build_pre_release()
-    #main()
+    main()
