@@ -820,10 +820,10 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 		{
 			switch (ros)
 			{
-			case PDF_ROS_CNS: font = pdf_load_windows_font(ctx, "MingLiU"); break;
-			case PDF_ROS_GB: font = pdf_load_windows_font(ctx, "SimSun"); break;
-			case PDF_ROS_JAPAN: font = pdf_load_windows_font(ctx, "MS-Mincho"); break;
-			case PDF_ROS_KOREA: font = pdf_load_windows_font(ctx, "Batang"); break;
+			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "MingLiU"); break;
+			case FZ_ADOBE_GB_1: font = pdf_load_windows_font(ctx, "SimSun"); break;
+			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Mincho"); break;
+			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Batang"); break;
 			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
 			}
 		}
@@ -831,8 +831,8 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 		{
 			switch (ros)
 			{
-			case PDF_ROS_CNS: font = pdf_load_windows_font(ctx, "DFKaiShu-SB-Estd-BF"); break;
-			case PDF_ROS_GB:
+			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "DFKaiShu-SB-Estd-BF"); break;
+			case FZ_ADOBE_GB_1:
 				fz_try(ctx)
 				{
 					font = pdf_load_windows_font(ctx, "KaiTi");
@@ -842,8 +842,8 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 					font = pdf_load_windows_font(ctx, "KaiTi_GB2312");
 				}
 				break;
-			case PDF_ROS_JAPAN: font = pdf_load_windows_font(ctx, "MS-Gothic"); break;
-			case PDF_ROS_KOREA: font = pdf_load_windows_font(ctx, "Gulim"); break;
+			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Gothic"); break;
+			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Gulim"); break;
 			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
 			}
 		}

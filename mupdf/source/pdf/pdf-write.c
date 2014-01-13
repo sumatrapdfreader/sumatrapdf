@@ -723,7 +723,7 @@ static void renumberobj(pdf_document *doc, pdf_write_options *opts, pdf_obj *obj
 			if (pdf_is_indirect(val))
 			{
 				int o = pdf_to_num(val);
-				if (o >= xref_len)
+				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
 					val = pdf_new_null(doc);
 				else
 					val = pdf_new_indirect(doc, opts->renumber_map[o], 0);
@@ -746,7 +746,7 @@ static void renumberobj(pdf_document *doc, pdf_write_options *opts, pdf_obj *obj
 			if (pdf_is_indirect(val))
 			{
 				int o = pdf_to_num(val);
-				if (o >= xref_len)
+				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
 					val = pdf_new_null(doc);
 				else
 					val = pdf_new_indirect(doc, opts->renumber_map[o], 0);
@@ -779,11 +779,18 @@ static void renumberobjs(pdf_document *doc, pdf_write_options *opts)
 		renumberobj(doc, opts, pdf_trailer(doc));
 		for (num = 0; num < xref_len; num++)
 		{
-			pdf_obj *obj = pdf_get_xref_entry(doc, num)->obj;
+			pdf_obj *obj;
+			int to = opts->renumber_map[num];
+
+			/* If object is going to be dropped, don't bother renumbering */
+			if (to == 0)
+				continue;
+
+			obj = pdf_get_xref_entry(doc, num)->obj;
 
 			if (pdf_is_indirect(obj))
 			{
-				obj = pdf_new_indirect(doc, opts->renumber_map[pdf_to_num(obj)], 0);
+				obj = pdf_new_indirect(doc, to, 0);
 				pdf_update_object(doc, num, obj);
 				pdf_drop_obj(obj);
 			}

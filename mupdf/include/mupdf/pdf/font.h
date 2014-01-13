@@ -18,8 +18,6 @@ enum
 	PDF_FD_FORCE_BOLD = 1 << 18
 };
 
-enum { PDF_ROS_CNS, PDF_ROS_GB, PDF_ROS_JAPAN, PDF_ROS_KOREA };
-
 void pdf_load_encoding(char **estrings, char *encoding);
 int pdf_lookup_agl(char *name);
 const char **pdf_lookup_agl_duplicates(int ucs);

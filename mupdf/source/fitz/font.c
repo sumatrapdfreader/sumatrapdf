@@ -194,6 +194,7 @@ struct fz_font_context_s {
 	FT_Library ftlib;
 	int ftlib_refs;
 	fz_load_system_font_func load_font;
+	fz_load_system_cjk_font_func load_cjk_font;
 };
 
 #undef __FTERRORS_H__
@@ -239,16 +240,48 @@ void fz_drop_font_context(fz_context *ctx)
 		fz_free(ctx, ctx->font);
 }
 
-void fz_install_load_system_font_func(fz_context *ctx, fz_load_system_font_func f)
+void fz_install_load_system_font_funcs(fz_context *ctx, fz_load_system_font_func f, fz_load_system_cjk_font_func f_cjk)
 {
 	ctx->font->load_font = f;
+	ctx->font->load_cjk_font = f_cjk;
 }
 
-fz_buffer *fz_load_system_font(fz_context *ctx, const char *name)
+fz_font *fz_load_system_font(fz_context *ctx, const char *name, int is_substitute)
 {
+	fz_font *font = NULL;
+
 	if (ctx->font->load_font)
-		return ctx->font->load_font(ctx, name);
-	return NULL;
+	{
+		fz_try(ctx)
+		{
+			font = ctx->font->load_font(ctx, name, is_substitute);
+		}
+		fz_catch(ctx)
+		{
+			font = NULL;
+		}
+	}
+
+	return font;
+}
+
+fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int serif)
+{
+	fz_font *font = NULL;
+
+	if (ctx->font->load_cjk_font)
+	{
+		fz_try(ctx)
+		{
+			font = ctx->font->load_cjk_font(ctx, name, ros, serif);
+		}
+		fz_catch(ctx)
+		{
+			font = NULL;
+		}
+	}
+
+	return font;
 }
 
 static const struct ft_error ft_errors[] =

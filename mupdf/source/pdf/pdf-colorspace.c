@@ -198,7 +198,6 @@ load_indexed(pdf_document *doc, pdf_obj *array)
 		n = base->n * (high + 1);
 		lookup = fz_malloc_array(ctx, 1, n);
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2477 */
 		if (pdf_is_string(lookupobj) && pdf_to_str_len(lookupobj) >= n)
 		{
 			unsigned char *buf = (unsigned char *) pdf_to_str_buf(lookupobj);

@@ -172,8 +172,9 @@ EXPORTS
 	fz_new_font_context
 	fz_keep_font_context
 	fz_drop_font_context
-	fz_install_load_system_font_func
+	fz_install_load_system_font_funcs
 	fz_load_system_font
+	fz_load_system_cjk_font
 	fz_new_type3_font
 	fz_new_font_from_memory
 	fz_new_font_from_buffer

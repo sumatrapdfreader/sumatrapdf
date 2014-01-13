@@ -158,6 +158,10 @@ pdf_new_indirect(pdf_document *doc, int num, int gen)
 {
 	pdf_obj *obj;
 	fz_context *ctx = doc->ctx;
+
+	if (num <= 0 || gen < 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid num (%d) or gen (%d) for indirection", num, gen);
+
 	obj = Memento_label(fz_malloc(ctx, sizeof(pdf_obj)), "pdf_obj(indirect)");
 	obj->doc = doc;
 	obj->refs = 1;

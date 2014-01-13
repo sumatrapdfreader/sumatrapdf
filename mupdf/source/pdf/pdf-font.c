@@ -175,13 +175,12 @@ static int lookup_mre_code(char *name)
 static void
 pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 {
-	unsigned char *data;
-	unsigned int len;
 	FT_Face face;
 
 #ifdef _WIN32
 	/* SumatraPDF: prefer system fonts unless a base font is explicitly requested */
 	char *clean_name = clean_font_name(fontname);
+	unsigned int len;
 	if (!pdf_lookup_builtin_font(fontname, &len) &&
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
 		(clean_name == fontname || strncmp(clean_name, "Times-", 6) != 0))
@@ -203,11 +202,20 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 
 	fontname = clean_font_name(fontname);
 
-	data = pdf_lookup_builtin_font(fontname, &len);
-	if (!data)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin font: '%s'", fontname);
+	fontdesc->font = fz_load_system_font(ctx, fontname, 0);
+	if (!fontdesc->font)
+	{
+		unsigned char *data;
+		unsigned int len;
 
-	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
+		fontname = clean_font_name(fontname);
+
+		data = pdf_lookup_builtin_font(fontname, &len);
+		if (!data)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin font: '%s'", fontname);
+
+		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
+	}
 
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
 		fontdesc->flags |= PDF_FD_SYMBOLIC;
@@ -220,8 +228,6 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 static void
 pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int mono, int serif, int bold, int italic, int has_encoding)
 {
-	fz_buffer *buffer;
-
 #ifdef _WIN32
 	/* SumatraPDF: try to find a matching system font before falling back to a built-in one */
 	fz_try(ctx)
@@ -241,13 +247,8 @@ pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontnam
 	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "encoding-less symbolic font '%s' is missing", fontname);
 
-	buffer = fz_load_system_font(ctx, fontname);
-	if (buffer)
-	{
-		fontdesc->font = fz_new_font_from_buffer(ctx, fontname, buffer, 0, 1);
-		fz_drop_buffer(ctx, buffer);
-	}
-	else
+	fontdesc->font = fz_load_system_font(ctx, fontname, 1);
+	if (!fontdesc->font)
 	{
 		unsigned char *data;
 		unsigned int len;
@@ -267,9 +268,6 @@ pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontnam
 static void
 pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int ros, int serif)
 {
-	unsigned char *data;
-	unsigned int len;
-
 #ifdef _WIN32
 	/* SumatraPDF: try to find a matching system font before falling back to an approximate one */
 	fz_try(ctx)
@@ -291,12 +289,19 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 		return;
 #endif
 
-	data = pdf_lookup_substitute_cjk_font(ros, serif, &len);
-	if (!data)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin CJK font");
+	fontdesc->font = fz_load_system_cjk_font(ctx, fontname, ros, serif);
+	if (!fontdesc->font)
+	{
+		unsigned char *data;
+		unsigned int len;
 
-	/* a glyph bbox cache is too big for droid sans fallback (51k glyphs!) */
-	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 0);
+		data = pdf_lookup_substitute_cjk_font(ros, serif, &len);
+		if (!data)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin CJK font");
+
+		/* a glyph bbox cache is too big for droid sans fallback (51k glyphs!) */
+		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 0);
+	}
 
 	fontdesc->font->ft_substitute = 1;
 }
@@ -331,13 +336,13 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 	if (collection)
 	{
 		if (!strcmp(collection, "Adobe-CNS1"))
-			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, PDF_ROS_CNS, serif);
+			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, FZ_ADOBE_CNS_1, serif);
 		else if (!strcmp(collection, "Adobe-GB1"))
-			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, PDF_ROS_GB, serif);
+			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, FZ_ADOBE_GB_1, serif);
 		else if (!strcmp(collection, "Adobe-Japan1"))
-			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, PDF_ROS_JAPAN, serif);
+			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, FZ_ADOBE_JAPAN_1, serif);
 		else if (!strcmp(collection, "Adobe-Korea1"))
-			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, PDF_ROS_KOREA, serif);
+			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, FZ_ADOBE_KOREA_1, serif);
 		else
 		{
 			if (strcmp(collection, "Adobe-Identity") != 0)

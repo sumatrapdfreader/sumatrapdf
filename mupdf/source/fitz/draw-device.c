@@ -752,18 +752,17 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 						fz_pixmap *old_dest;
 						float white = 1;
 
-						state = &dev->stack[dev->top];
-						old_dest = state[0].dest;
-						state[0].dest = state[0].mask;
-						state[0].mask = NULL;
+						old_dest = state[1].dest;
+						state[1].dest = state[1].mask;
+						state[1].mask = NULL;
 						fz_try(ctx)
 						{
 							fz_draw_fill_path(devp, path, 0, &fz_identity, fz_device_gray(ctx), &white, 1);
 						}
 						fz_always(ctx)
 						{
-							state[0].mask = state[0].dest;
-							state[0].dest = old_dest;
+							state[1].mask = state[1].dest;
+							state[1].dest = old_dest;
 							fz_free_path(dev->ctx, path);
 						}
 						fz_catch(ctx)
