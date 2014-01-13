@@ -59,7 +59,7 @@ def str2bool(s):
     if s.lower() in ("false", "0"): return False
     assert(False)
 
-TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*15  # 4hrs
+TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*8  # 8hrs
 g_time_of_last_build = None
 g_cache_dir = create_dir(os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
 g_stats_cache_dir = create_dir(os.path.join(g_cache_dir, "stats"))
