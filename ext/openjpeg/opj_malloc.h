@@ -48,7 +48,8 @@ Allocate an uninitialized memory block
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_malloc(size_t size);
 #else
-#define opj_malloc(size) malloc(size)
+/* SumatraPDF: don't assert for huge sizes */
+#define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
 #endif
 
 /**
@@ -140,8 +141,8 @@ Reallocate memory blocks.
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
 #else
-/* SumatraPDF: TODO: MSVCRT seems to assert if s is too large(?) e.g. for 2236.pdf.asan.40.1376 */
-#define opj_realloc(m, s) ((ptrdiff_t)(s) < 0 ? NULL : realloc(m, s))
+/* SumatraPDF: don't assert for huge sizes (e.g. for 2236.pdf.asan.40.1376 ) */
+#define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
 #endif
 
 /**

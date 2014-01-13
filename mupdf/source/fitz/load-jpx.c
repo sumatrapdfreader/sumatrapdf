@@ -146,6 +146,11 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 
 	for (k = 1; k < (int)jpx->numcomps; k++)
 	{
+		if (!jpx->comps[k].data)
+		{
+			opj_image_destroy(jpx);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "image components are missing data");
+		}
 		if (jpx->comps[k].w != jpx->comps[0].w)
 		{
 			opj_image_destroy(jpx);

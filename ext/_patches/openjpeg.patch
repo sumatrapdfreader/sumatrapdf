@@ -207,43 +207,90 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\jp2.c	Thu Jan 09 21:39:50 2014
-@@ -774,10 +774,17 @@
- 			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
++++ openjpeg\jp2.c	Sun Jan 12 22:31:01 2014
+@@ -750,10 +750,81 @@
+ 	if(color->jp2_pclr->cmap) opj_free(color->jp2_pclr->cmap);
  
- 	for(i = 0; i < nr_channels; ++i) {
- 		pcol = cmap[i].pcol; cmp = cmap[i].cmp;
+     opj_free(color->jp2_pclr); color->jp2_pclr = NULL;
+ }
  
-+		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
-+		if (cmp >= image->numcomps) {
-+			/* TODO: is there a better place to validate the channel index? */
-+			fprintf(stderr, "invalid channel index %d\n", cmp);
-+			cmp = 0;
++static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, opj_event_mgr_t *p_manager)
++{
++	OPJ_UINT16 i;
++
++	/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
++	if (color->jp2_cdef) {
++		opj_jp2_cdef_info_t *info = color->jp2_cdef->info;
++		OPJ_UINT16 n = color->jp2_cdef->n;
++
++		for (i = 0; i < n; i++) {
++			if (info[i].cn >= image->numcomps) {
++				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].cn, image->numcomps);
++				return OPJ_FALSE;
++			}
++			if (info[i].asoc > 0 && (OPJ_UINT32)(info[i].asoc - 1) >= image->numcomps) {
++				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].asoc - 1, image->numcomps);
++				return OPJ_FALSE;
++			}
++		}
++	}
++
++	/* testcases 451.pdf.SIGSEGV.f4c.3723, 451.pdf.SIGSEGV.5b5.3723 and
++	   66ea31acbb0f23a2bbc91f64d69a03f5_signal_sigsegv_13937c0_7030_5725.pdf */
++	if (color->jp2_pclr && color->jp2_pclr->cmap) {
++		OPJ_UINT16 nr_channels = color->jp2_pclr->nr_channels;
++		opj_jp2_cmap_comp_t *cmap = color->jp2_pclr->cmap;
++		OPJ_BOOL *pcol_usage, is_sane = OPJ_TRUE;
++
++		/* verify that all original components match an existing one */
++		for (i = 0; i < nr_channels; i++) {
++			if (cmap[i].cmp >= image->numcomps) {
++				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", cmap[i].cmp, image->numcomps);
++				is_sane = OPJ_FALSE;
++			}
 +		}
 +
- 		new_comps[pcol] = old_comps[cmp];
- 
- 		/* Direct use */
- 		if(cmap[i].mtyp == 0){
- 			old_comps[cmp].data = NULL; continue;
-@@ -796,10 +803,16 @@
- 		/* Direct use: */
- 		if(cmap[i].mtyp == 0) continue;
- 
- 		/* Palette mapping: */
- 		cmp = cmap[i].cmp; pcol = cmap[i].pcol;
-+		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
-+		if (cmp >= image->numcomps) {
-+			/* TODO: is there a better place to validate the channel index? */
-+			fprintf(stderr, "invalid channel index %d\n", cmp);
-+			cmp = 0;
++		pcol_usage = opj_calloc(nr_channels, sizeof(OPJ_BOOL));
++		if (!pcol_usage) {
++			opj_event_msg(p_manager, EVT_ERROR, "Unexpected OOM.\n");
++			return OPJ_FALSE;
 +		}
- 		src = old_comps[cmp].data;
- 		dst = new_comps[pcol].data;
- 		max = new_comps[pcol].w * new_comps[pcol].h;
- 
- 		for(j = 0; j < max; ++j)
-@@ -835,28 +848,38 @@
++		/* verify that no component is targeted more than once */
++		for (i = 0; i < nr_channels; i++) {
++			OPJ_UINT16 pcol = cmap[i].pcol;
++			if (pcol >= nr_channels) {
++				opj_event_msg(p_manager, EVT_ERROR, "Invalid component/palette index for direct mapping %d.\n", pcol);
++				is_sane = OPJ_FALSE;
++			}
++			else if (pcol_usage[pcol]) {
++				opj_event_msg(p_manager, EVT_ERROR, "Component %d is mapped twice.\n", pcol);
++				is_sane = OPJ_FALSE;
++			}
++			else
++				pcol_usage[pcol] = OPJ_TRUE;
++		}
++		/* verify that all components are targeted at least once */
++		for (i = 0; i < nr_channels; i++) {
++			if (!pcol_usage[i]) {
++				opj_event_msg(p_manager, EVT_ERROR, "Component %d doesn't have a mapping.\n", i);
++				is_sane = OPJ_FALSE;
++			}
++		}
++		opj_free(pcol_usage);
++		if (!is_sane) {
++			return OPJ_FALSE;
++		}
++	}
++
++	return OPJ_TRUE;
++}
++
+ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
+ {
+ 	opj_image_comp_t *old_comps, *new_comps;
+ 	OPJ_BYTE *channel_size, *channel_sign;
+ 	OPJ_UINT32 *entries;
+@@ -835,28 +906,38 @@
  	OPJ_BYTE *channel_size, *channel_sign;
  	OPJ_UINT32 *entries;
  	OPJ_UINT16 nr_entries,nr_channels;
@@ -274,7 +321,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	nr_channels = (OPJ_UINT16) l_value;
  
 +	/* SumatraPDF: prevent access violation */
-+	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= UINT_MAX / nr_channels)
++	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= (OPJ_UINT32)-1 / nr_channels)
 +		return OPJ_FALSE;
 +
  	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
@@ -282,7 +329,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
          return OPJ_FALSE;
  	channel_size = (OPJ_BYTE*) opj_malloc(nr_channels);
      if (!channel_size)
-@@ -899,10 +922,16 @@
+@@ -899,10 +980,16 @@
  	}
  
  	for(j = 0; j < nr_entries; ++j) {
@@ -299,61 +346,25 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  			p_pclr_header_data += bytes_to_read;
  			*entries = (OPJ_UINT32) l_value;
  			entries++;
-@@ -940,10 +969,17 @@
+@@ -940,11 +1027,17 @@
  	if(jp2->color.jp2_pclr->cmap) {
  		opj_event_msg(p_manager, EVT_ERROR, "Only one CMAP box is allowed.\n");
  		return OPJ_FALSE;
  	}
  
 +	/* SumatraPDF: prevent access violation */
-+	nr_channels = jp2->color.jp2_pclr->nr_channels;
+ 	nr_channels = jp2->color.jp2_pclr->nr_channels;
 +	if (p_cmap_header_size < (OPJ_UINT32)nr_channels * 4) {
 +		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CMAP box.\n");
 +		return OPJ_FALSE;
 +	}
 +
- 	nr_channels = jp2->color.jp2_pclr->nr_channels;
  	cmap = (opj_jp2_cmap_comp_t*) opj_malloc(nr_channels * sizeof(opj_jp2_cmap_comp_t));
      if (!cmap)
          return OPJ_FALSE;
  
-@@ -958,10 +994,17 @@
- 		cmap[i].mtyp = (OPJ_BYTE) l_value;
  
- 		opj_read_bytes(p_cmap_header_data, &l_value, 1);			/* PCOL^i */
- 		++p_cmap_header_data;
- 		cmap[i].pcol = (OPJ_BYTE) l_value;
-+
-+		/* testcase 451.pdf.SIGSEGV.5b5.3723 */
-+		if (cmap[i].pcol >= nr_channels) {
-+			opj_event_msg(p_manager, EVT_ERROR, "Invalid palette index %d.\n", l_value);
-+			opj_free(cmap);
-+			return OPJ_FALSE;
-+		}
- 	}
- 
- 	jp2->color.jp2_pclr->cmap = cmap;
- 
- 	return OPJ_TRUE;
-@@ -981,10 +1024,17 @@
- 		if((asoc = info[i].asoc) == 0) continue;
- 
- 		cn = info[i].cn; 
-         acn = asoc - 1;
- 
-+		/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
-+		if (cn != acn && (cn >= image->numcomps || acn >= image->numcomps)) {
-+			/* TODO: is there a better place to validate these indices? */
-+			fprintf(stderr, "invalid component index %d/%d\n", cn, acn);
-+			cn = acn = 0;
-+		}
-+
- 		if(cn != acn)
- 		{
- 			opj_image_comp_t saved;
- 
- 			memcpy(&saved, &image->comps[cn], sizeof(opj_image_comp_t));
-@@ -1020,18 +1070,30 @@
+@@ -1020,18 +1113,30 @@
  
  	/* Part 1, I.5.3.6: 'The shall be at most one Channel Definition box
  	 * inside a JP2 Header box.'*/
@@ -384,7 +395,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
          return OPJ_FALSE;
  
  	jp2->color.jp2_cdef = (opj_jp2_cdef_t*)opj_malloc(sizeof(opj_jp2_cdef_t));
-@@ -1095,14 +1157,18 @@
+@@ -1095,14 +1200,18 @@
  
  	opj_read_bytes(p_colr_header_data,&jp2->approx ,1);			/* APPROX */
  	++p_colr_header_data;
@@ -405,7 +416,21 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
          
          jp2->color.jp2_has_colr = 1;
  	}
-@@ -1683,18 +1749,24 @@
+@@ -1152,10 +1261,13 @@
+ 		opj_event_msg(p_manager, EVT_ERROR, "Failed to decode the codestream in the JP2 file\n");
+ 		return OPJ_FALSE;
+ 	}
+ 
+     if (!jp2->ignore_pclr_cmap_cdef){
++	    if (!opj_jp2_check_color(p_image, &(jp2->color), p_manager)) {
++		    return OPJ_FALSE;
++	    }
+ 
+ 	    /* Set Image Color Space */
+ 	    if (jp2->enumcs == 16)
+ 		    p_image->color_space = OPJ_CLRSPC_SRGB;
+ 	    else if (jp2->enumcs == 17)
+@@ -1683,18 +1795,24 @@
  		else if	(box.length == 0) {
  			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
  			opj_free(l_current_data);
@@ -425,12 +450,27 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  			if (l_current_data_size > l_last_data_size) {
  				OPJ_BYTE* new_current_data = (OPJ_BYTE*)opj_realloc(l_current_data,l_current_data_size);
 -				if (!l_current_data){
-+				if (!new_current_data){
++				if (!new_current_data) {
  					opj_free(l_current_data);
                      opj_event_msg(p_manager, EVT_ERROR, "Not enough memory to handle jpeg2000 box\n");
  					return OPJ_FALSE;
  				}
                  l_current_data = new_current_data;
+@@ -2329,10 +2447,14 @@
+ 
+ 	opj_event_msg(p_manager, EVT_WARNING, "JP2 box which are after the codestream will not be read by this function.\n");
+ 
+ 	if (! opj_j2k_get_tile(p_jp2->j2k, p_stream, p_image, p_manager, tile_index) ){
+ 		opj_event_msg(p_manager, EVT_ERROR, "Failed to decode the codestream in the JP2 file\n");
++		return OPJ_FALSE;
++	}
++
++	if (!opj_jp2_check_color(p_image, &(p_jp2->color), p_manager)) {
+ 		return OPJ_FALSE;
+ 	}
+ 
+ 	/* Set Image Color Space */
+ 	if (p_jp2->enumcs == 16)
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
 +++ openjpeg\opj_config.h	Sun May 19 02:54:43 2013
@@ -472,8 +512,22 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
      _asm{
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_malloc.h	Mon Dec 23 11:14:06 2013
-@@ -58,11 +58,12 @@
++++ openjpeg\opj_malloc.h	Sun Jan 12 22:07:10 2014
+@@ -46,11 +46,12 @@
+ @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
+ */
+ #ifdef ALLOC_PERF_OPT
+ void * OPJ_CALLCONV opj_malloc(size_t size);
+ #else
+-#define opj_malloc(size) malloc(size)
++/* SumatraPDF: don't assert for huge sizes */
++#define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
+ #endif
+ 
+ /**
+ Allocate a memory block with elements initialized to 0
+ @param num Blocks to allocate
+@@ -58,11 +59,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
  #ifdef ALLOC_PERF_OPT
@@ -487,15 +541,15 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  /**
  Allocate memory aligned to a 16 byte boundry
  @param size Bytes to allocate
-@@ -137,11 +138,12 @@
+@@ -137,11 +139,12 @@
  @return Returns a void pointer to the reallocated (and possibly moved) memory block
  */
  #ifdef ALLOC_PERF_OPT
  void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
  #else
 -#define opj_realloc(m, s) realloc(m, s)
-+/* SumatraPDF: TODO: MSVCRT seems to assert if s is too large(?) e.g. for 2236.pdf.asan.40.1376 */
-+#define opj_realloc(m, s) ((ptrdiff_t)(s) < 0 ? NULL : realloc(m, s))
++/* SumatraPDF: don't assert for huge sizes (e.g. for 2236.pdf.asan.40.1376 ) */
++#define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
  #endif
  
  /**

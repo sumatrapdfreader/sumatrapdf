@@ -752,6 +752,77 @@ void opj_jp2_free_pclr(opj_jp2_color_t *color)
     opj_free(color->jp2_pclr); color->jp2_pclr = NULL;
 }
 
+static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, opj_event_mgr_t *p_manager)
+{
+	OPJ_UINT16 i;
+
+	/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
+	if (color->jp2_cdef) {
+		opj_jp2_cdef_info_t *info = color->jp2_cdef->info;
+		OPJ_UINT16 n = color->jp2_cdef->n;
+
+		for (i = 0; i < n; i++) {
+			if (info[i].cn >= image->numcomps) {
+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].cn, image->numcomps);
+				return OPJ_FALSE;
+			}
+			if (info[i].asoc > 0 && (OPJ_UINT32)(info[i].asoc - 1) >= image->numcomps) {
+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].asoc - 1, image->numcomps);
+				return OPJ_FALSE;
+			}
+		}
+	}
+
+	/* testcases 451.pdf.SIGSEGV.f4c.3723, 451.pdf.SIGSEGV.5b5.3723 and
+	   66ea31acbb0f23a2bbc91f64d69a03f5_signal_sigsegv_13937c0_7030_5725.pdf */
+	if (color->jp2_pclr && color->jp2_pclr->cmap) {
+		OPJ_UINT16 nr_channels = color->jp2_pclr->nr_channels;
+		opj_jp2_cmap_comp_t *cmap = color->jp2_pclr->cmap;
+		OPJ_BOOL *pcol_usage, is_sane = OPJ_TRUE;
+
+		/* verify that all original components match an existing one */
+		for (i = 0; i < nr_channels; i++) {
+			if (cmap[i].cmp >= image->numcomps) {
+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", cmap[i].cmp, image->numcomps);
+				is_sane = OPJ_FALSE;
+			}
+		}
+
+		pcol_usage = opj_calloc(nr_channels, sizeof(OPJ_BOOL));
+		if (!pcol_usage) {
+			opj_event_msg(p_manager, EVT_ERROR, "Unexpected OOM.\n");
+			return OPJ_FALSE;
+		}
+		/* verify that no component is targeted more than once */
+		for (i = 0; i < nr_channels; i++) {
+			OPJ_UINT16 pcol = cmap[i].pcol;
+			if (pcol >= nr_channels) {
+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component/palette index for direct mapping %d.\n", pcol);
+				is_sane = OPJ_FALSE;
+			}
+			else if (pcol_usage[pcol]) {
+				opj_event_msg(p_manager, EVT_ERROR, "Component %d is mapped twice.\n", pcol);
+				is_sane = OPJ_FALSE;
+			}
+			else
+				pcol_usage[pcol] = OPJ_TRUE;
+		}
+		/* verify that all components are targeted at least once */
+		for (i = 0; i < nr_channels; i++) {
+			if (!pcol_usage[i]) {
+				opj_event_msg(p_manager, EVT_ERROR, "Component %d doesn't have a mapping.\n", i);
+				is_sane = OPJ_FALSE;
+			}
+		}
+		opj_free(pcol_usage);
+		if (!is_sane) {
+			return OPJ_FALSE;
+		}
+	}
+
+	return OPJ_TRUE;
+}
+
 void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 {
 	opj_image_comp_t *old_comps, *new_comps;
@@ -776,13 +847,6 @@ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 	for(i = 0; i < nr_channels; ++i) {
 		pcol = cmap[i].pcol; cmp = cmap[i].cmp;
 
-		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
-		if (cmp >= image->numcomps) {
-			/* TODO: is there a better place to validate the channel index? */
-			fprintf(stderr, "invalid channel index %d\n", cmp);
-			cmp = 0;
-		}
-
 		new_comps[pcol] = old_comps[cmp];
 
 		/* Direct use */
@@ -805,12 +869,6 @@ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 
 		/* Palette mapping: */
 		cmp = cmap[i].cmp; pcol = cmap[i].pcol;
-		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
-		if (cmp >= image->numcomps) {
-			/* TODO: is there a better place to validate the channel index? */
-			fprintf(stderr, "invalid channel index %d\n", cmp);
-			cmp = 0;
-		}
 		src = old_comps[cmp].data;
 		dst = new_comps[pcol].data;
 		max = new_comps[pcol].w * new_comps[pcol].h;
@@ -875,7 +933,7 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	nr_channels = (OPJ_UINT16) l_value;
 
 	/* SumatraPDF: prevent access violation */
-	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= UINT_MAX / nr_channels)
+	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= (OPJ_UINT32)-1 / nr_channels)
 		return OPJ_FALSE;
 
 	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
@@ -978,7 +1036,6 @@ OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
 		return OPJ_FALSE;
 	}
 
-	nr_channels = jp2->color.jp2_pclr->nr_channels;
 	cmap = (opj_jp2_cmap_comp_t*) opj_malloc(nr_channels * sizeof(opj_jp2_cmap_comp_t));
     if (!cmap)
         return OPJ_FALSE;
@@ -996,13 +1053,6 @@ OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
 		opj_read_bytes(p_cmap_header_data, &l_value, 1);			/* PCOL^i */
 		++p_cmap_header_data;
 		cmap[i].pcol = (OPJ_BYTE) l_value;
-
-		/* testcase 451.pdf.SIGSEGV.5b5.3723 */
-		if (cmap[i].pcol >= nr_channels) {
-			opj_event_msg(p_manager, EVT_ERROR, "Invalid palette index %d.\n", l_value);
-			opj_free(cmap);
-			return OPJ_FALSE;
-		}
 	}
 
 	jp2->color.jp2_pclr->cmap = cmap;
@@ -1025,13 +1075,6 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 
 		cn = info[i].cn; 
         acn = asoc - 1;
-
-		/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
-		if (cn != acn && (cn >= image->numcomps || acn >= image->numcomps)) {
-			/* TODO: is there a better place to validate these indices? */
-			fprintf(stderr, "invalid component index %d/%d\n", cn, acn);
-			cn = acn = 0;
-		}
 
 		if(cn != acn)
 		{
@@ -1220,6 +1263,9 @@ OPJ_BOOL opj_jp2_decode(opj_jp2_t *jp2,
 	}
 
     if (!jp2->ignore_pclr_cmap_cdef){
+	    if (!opj_jp2_check_color(p_image, &(jp2->color), p_manager)) {
+		    return OPJ_FALSE;
+	    }
 
 	    /* Set Image Color Space */
 	    if (jp2->enumcs == 16)
@@ -1764,7 +1810,7 @@ OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 		if (l_current_handler != 00) {
 			if (l_current_data_size > l_last_data_size) {
 				OPJ_BYTE* new_current_data = (OPJ_BYTE*)opj_realloc(l_current_data,l_current_data_size);
-				if (!new_current_data){
+				if (!new_current_data) {
 					opj_free(l_current_data);
                     opj_event_msg(p_manager, EVT_ERROR, "Not enough memory to handle jpeg2000 box\n");
 					return OPJ_FALSE;
@@ -2403,6 +2449,10 @@ OPJ_BOOL opj_jp2_get_tile(	opj_jp2_t *p_jp2,
 
 	if (! opj_j2k_get_tile(p_jp2->j2k, p_stream, p_image, p_manager, tile_index) ){
 		opj_event_msg(p_manager, EVT_ERROR, "Failed to decode the codestream in the JP2 file\n");
+		return OPJ_FALSE;
+	}
+
+	if (!opj_jp2_check_color(p_image, &(p_jp2->color), p_manager)) {
 		return OPJ_FALSE;
 	}
 
