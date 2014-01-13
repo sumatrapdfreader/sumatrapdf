@@ -724,11 +724,29 @@ create_system_font_list(fz_context *ctx)
 	atexit(destroy_system_font_list);
 }
 
-fz_font *
-pdf_load_windows_font(fz_context *ctx, char *fontname)
+static fz_font *
+pdf_load_windows_font(fz_context *ctx, const char *orig_name, int is_substitute)
 {
 	pdf_fontmapMS *found = NULL;
-	char *comma, *orig_name = fontname;
+	char *comma, *fontname;
+	fz_font *font;
+
+	if (!is_substitute)
+	{
+		const char *clean_name;
+
+		/* TODO: the metrics for Times-Roman and Courier don't match
+		   those of Windows' Times New Roman and Courier New; for
+		   some reason, Poppler doesn't seem to have this problem */
+		unsigned int len;
+		if (pdf_lookup_builtin_font(orig_name, &len))
+			return NULL;
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
+		clean_name = pdf_clean_base14_name(orig_name);
+		if (clean_name != orig_name && !strncmp(clean_name, "Times-", 6))
+			return NULL;
+	}
 
 	fz_synchronize_begin();
 	if (fontlistMS.len == 0)
@@ -744,7 +762,7 @@ pdf_load_windows_font(fz_context *ctx, char *fontname)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
 
 	// work on a normalized copy of the font name
-	fontname = fz_strdup(ctx, fontname);
+	fontname = fz_strdup(ctx, orig_name);
 	remove_spaces(fontname);
 
 	// first, try to find the exact font name (including appended style information)
@@ -805,25 +823,40 @@ pdf_load_windows_font(fz_context *ctx, char *fontname)
 
 	fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
 
-	return fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
+	font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
 		strcmp(found->fontface, "DroidSansFallback") != 0);
+	font->ft_substitute = is_substitute;
+	return font;
 }
 
-fz_font *
-pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
+static fz_font *
+pdf_load_windows_cjk_font(fz_context *ctx, const char *fontname, int ros, int serif)
 {
 	fz_font *font;
 
+	/* try to find a matching system font before falling back to an approximate one */
+	fz_try(ctx)
+	{
+		font = pdf_load_windows_font(ctx, fontname, 1);
+	}
+	fz_catch(ctx)
+	{
+		font = NULL;
+	}
+	if (font)
+		return font;
+
+	/* try to fall back to a reasonable system font */
 	fz_try(ctx)
 	{
 		if (serif)
 		{
 			switch (ros)
 			{
-			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "MingLiU"); break;
-			case FZ_ADOBE_GB_1: font = pdf_load_windows_font(ctx, "SimSun"); break;
-			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Mincho"); break;
-			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Batang"); break;
+			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "MingLiU", 1); break;
+			case FZ_ADOBE_GB_1: font = pdf_load_windows_font(ctx, "SimSun", 1); break;
+			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Mincho", 1); break;
+			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Batang", 1); break;
 			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
 			}
 		}
@@ -831,19 +864,19 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 		{
 			switch (ros)
 			{
-			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "DFKaiShu-SB-Estd-BF"); break;
+			case FZ_ADOBE_CNS_1: font = pdf_load_windows_font(ctx, "DFKaiShu-SB-Estd-BF", 1); break;
 			case FZ_ADOBE_GB_1:
 				fz_try(ctx)
 				{
-					font = pdf_load_windows_font(ctx, "KaiTi");
+					font = pdf_load_windows_font(ctx, "KaiTi", 1);
 				}
 				fz_catch(ctx)
 				{
-					font = pdf_load_windows_font(ctx, "KaiTi_GB2312");
+					font = pdf_load_windows_font(ctx, "KaiTi_GB2312", 1);
 				}
 				break;
-			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Gothic"); break;
-			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Gulim"); break;
+			case FZ_ADOBE_JAPAN_1: font = pdf_load_windows_font(ctx, "MS-Gothic", 1); break;
+			case FZ_ADOBE_KOREA_1: font = pdf_load_windows_font(ctx, "Gulim", 1); break;
 			default: fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
 			}
 		}
@@ -852,7 +885,7 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 	{
 #ifdef NOCJKFONT
 		/* If no CJK fallback font is builtin, maybe one has been shipped separately */
-		font = pdf_load_windows_font(ctx, "DroidSansFallback");
+		font = pdf_load_windows_font(ctx, "DroidSansFallback", 1);
 #else
 		fz_rethrow(ctx);
 #endif
@@ -862,3 +895,10 @@ pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif)
 }
 
 #endif
+
+void pdf_install_load_system_font_funcs(fz_context *ctx)
+{
+#ifdef _WIN32
+	fz_install_load_system_font_funcs(ctx, pdf_load_windows_font, pdf_load_windows_cjk_font);
+#endif
+}

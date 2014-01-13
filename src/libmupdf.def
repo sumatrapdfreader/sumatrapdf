@@ -563,8 +563,8 @@ EXPORTS
 	pdf_load_type3_glyphs
 	pdf_load_font
 	pdf_load_hail_mary_font
-	pdf_load_windows_font
-	pdf_load_similar_cjk_font
+	pdf_clean_base14_name
+	pdf_install_load_system_font_funcs
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font

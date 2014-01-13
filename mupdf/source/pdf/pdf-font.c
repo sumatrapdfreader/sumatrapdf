@@ -79,6 +79,13 @@ static char *clean_font_name(char *fontname)
 	return fontname;
 }
 
+/* SumatraPDF: expose clean_font_name */
+const char *
+pdf_clean_base14_name(const char *fontname)
+{
+	return clean_font_name((char *)fontname);
+}
+
 /*
  * FreeType and Rendering glue
  */
@@ -173,36 +180,11 @@ static int lookup_mre_code(char *name)
  */
 
 static void
-pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
+pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int is_base14)
 {
 	FT_Face face;
 
-#ifdef _WIN32
-	/* SumatraPDF: prefer system fonts unless a base font is explicitly requested */
-	char *clean_name = clean_font_name(fontname);
-	unsigned int len;
-	if (!pdf_lookup_builtin_font(fontname, &len) &&
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
-		(clean_name == fontname || strncmp(clean_name, "Times-", 6) != 0))
-	{
-		/* TODO: the metrics for Times-Roman and Courier don't match
-		   those of Windows' Times New Roman and Courier New; for
-		   some reason, Poppler doesn't seem to have this problem */
-		fz_try(ctx)
-		{
-			fontdesc->font = pdf_load_windows_font(ctx, fontname);
-			if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
-				fontdesc->flags |= PDF_FD_SYMBOLIC;
-		}
-		fz_catch(ctx) { }
-		if (fontdesc->font)
-			return;
-	}
-#endif
-
-	fontname = clean_font_name(fontname);
-
-	fontdesc->font = fz_load_system_font(ctx, fontname, 0);
+	fontdesc->font = fz_load_system_font(ctx, fontname, !is_base14);
 	if (!fontdesc->font)
 	{
 		unsigned char *data;
@@ -228,67 +210,33 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 static void
 pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int mono, int serif, int bold, int italic, int has_encoding)
 {
-#ifdef _WIN32
-	/* SumatraPDF: try to find a matching system font before falling back to a built-in one */
-	fz_try(ctx)
-	{
-		fontdesc->font = pdf_load_windows_font(ctx, fontname);
-		if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
-			fontdesc->flags |= PDF_FD_SYMBOLIC;
-		fontdesc->font->ft_substitute = 1;
-		/* TODO: setting ft_bold and ft_italic as below produces worse results */
-	}
-	fz_catch(ctx) { }
-	if (fontdesc->font)
-		return;
-#endif
-
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
-	if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "encoding-less symbolic font '%s' is missing", fontname);
-
 	fontdesc->font = fz_load_system_font(ctx, fontname, 1);
 	if (!fontdesc->font)
 	{
 		unsigned char *data;
 		unsigned int len;
 
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
+		if ((fontdesc->flags & PDF_FD_SYMBOLIC) && !has_encoding)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "encoding-less symbolic font '%s' is missing", fontname);
+
 		data = pdf_lookup_substitute_font(mono, serif, bold, italic, &len);
 		if (!data)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find substitute font");
 
 		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
+
+		/* SumatraPDF: TODO: setting ft_bold and ft_italic for system fonts produces worse results */
+		fontdesc->font->ft_bold = bold && !ft_is_bold(fontdesc->font->ft_face);
+		fontdesc->font->ft_italic = italic && !ft_is_italic(fontdesc->font->ft_face);
 	}
 
 	fontdesc->font->ft_substitute = 1;
-	fontdesc->font->ft_bold = bold && !ft_is_bold(fontdesc->font->ft_face);
-	fontdesc->font->ft_italic = italic && !ft_is_italic(fontdesc->font->ft_face);
 }
 
 static void
 pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, int ros, int serif)
 {
-#ifdef _WIN32
-	/* SumatraPDF: try to find a matching system font before falling back to an approximate one */
-	fz_try(ctx)
-	{
-		fontdesc->font = pdf_load_windows_font(ctx, fontname);
-		fontdesc->font->ft_substitute = 1;
-	}
-	fz_catch(ctx) { }
-	if (fontdesc->font)
-		return;
-	/* SumatraPDF: Try to fall back to a reasonable system font */
-	fz_try(ctx)
-	{
-		fontdesc->font = pdf_load_similar_cjk_font(ctx, ros, serif);
-		fontdesc->font->ft_substitute = 1;
-	}
-	fz_catch(ctx) { }
-	if (fontdesc->font)
-		return;
-#endif
-
 	fontdesc->font = fz_load_system_cjk_font(ctx, fontname, ros, serif);
 	if (!fontdesc->font)
 	{
@@ -490,7 +438,7 @@ pdf_load_bullet_font(fz_context *ctx)
 
 	fz_try(ctx)
 	{
-		pdf_load_builtin_font(ctx, fontdesc, "Symbol");
+		pdf_load_builtin_font(ctx, fontdesc, "Symbol", 1);
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
 		fontdesc->cid_to_gid_len = 256;
 		fontdesc->cid_to_gid = fz_malloc_array(ctx, 256, sizeof(unsigned short));
@@ -550,7 +498,7 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 		if (descriptor)
 			pdf_load_font_descriptor(fontdesc, doc, descriptor, NULL, basefont, 0, pdf_dict_gets(dict, "Encoding") != NULL);
 		else
-			pdf_load_builtin_font(ctx, fontdesc, basefont);
+			pdf_load_builtin_font(ctx, fontdesc, basefont, 1);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
 		}
 		fz_catch(ctx)
@@ -1322,16 +1270,16 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *doc, pdf_obj *di
 		{
 			fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			fz_warn(ctx, "ignored error when loading embedded font; attempting to load system font");
-			if (origname != fontname && !iscidfont)
-				pdf_load_builtin_font(ctx, fontdesc, fontname);
+			if (origname != clean_font_name(fontname) && !iscidfont)
+				pdf_load_builtin_font(ctx, fontdesc, fontname, 0);
 			else
 				pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
 		}
 	}
 	else
 	{
-		if (origname != fontname && !iscidfont)
-			pdf_load_builtin_font(ctx, fontdesc, fontname);
+		if (origname != clean_font_name(fontname) && !iscidfont)
+			pdf_load_builtin_font(ctx, fontdesc, fontname, 0);
 		else
 			pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
 	}

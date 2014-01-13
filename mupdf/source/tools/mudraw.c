@@ -1210,6 +1210,9 @@ int main(int argc, char **argv)
 
 	fz_set_aa_level(ctx, alphabits);
 
+	/* SumatraPDF: use locally installed fonts */
+	pdf_install_load_system_font_funcs(ctx);
+
 	/* Determine output type */
 	if (bandheight < 0)
 	{

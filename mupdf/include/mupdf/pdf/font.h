@@ -119,8 +119,8 @@ pdf_font_desc *pdf_load_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj, int 
 pdf_font_desc *pdf_load_hail_mary_font(pdf_document *doc);
 
 /* SumatraPDF: use locally installed fonts */
-fz_font *pdf_load_windows_font(fz_context *ctx, char *fontname);
-fz_font *pdf_load_similar_cjk_font(fz_context *ctx, int ros, int serif);
+const char *pdf_clean_base14_name(const char *fontname);
+void pdf_install_load_system_font_funcs(fz_context *ctx);
 
 pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);

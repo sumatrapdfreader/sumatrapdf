@@ -1364,6 +1364,8 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 
+    pdf_install_load_system_font_funcs(ctx);
+
     AssertCrash(!pdf_js_supported());
 }
 
