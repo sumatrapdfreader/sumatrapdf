@@ -48,7 +48,7 @@ Allocate an uninitialized memory block
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_malloc(size_t size);
 #else
-/* SumatraPDF: don't assert for huge sizes */
+/* prevent assertion on overflow for MSVC */
 #define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
 #endif
 
@@ -61,7 +61,7 @@ Allocate a memory block with elements initialized to 0
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_calloc(size_t _NumOfElements, size_t _SizeOfElements);
 #else
-/* SumatraPDF: don't assert when num * size overflows */
+/* prevent assertion on overflow for MSVC */
 #define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
 #endif
 
@@ -141,7 +141,7 @@ Reallocate memory blocks.
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
 #else
-/* SumatraPDF: don't assert for huge sizes (e.g. for 2236.pdf.asan.40.1376 ) */
+/* prevent assertion on overflow for MSVC */
 #define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
 #endif
 

@@ -121,7 +121,6 @@ int jbig2_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
     char *end = (char *)(segment_data + segment->data_length);
     Jbig2Metadata *comment;
     char *key, *value;
-    int key_length, value_length;
 
     jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
         "ASCII comment data");
@@ -133,14 +132,15 @@ int jbig2_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
         return -1;
     }
     /* loop over the segment data pulling out the key,value pairs */
-    while(*s && s < end) {
-        key_length = strlen(s) + 1;
-        key = s; s += key_length;
-        if (s >= end) goto too_short;
-        value_length = strlen(s) + 1;
-        value = s; s += value_length;
-        if (s >= end) goto too_short;
-        jbig2_metadata_add(ctx, comment, key, key_length, value, value_length);
+    while (s < end && *s) {
+        key = s;
+        value = memchr(key, '0', end - key);
+        if (!value) goto too_short;
+        value++;
+        s = memchr(value, '0', end - value);
+        if (!s) goto too_short;
+        s++;
+        jbig2_metadata_add(ctx, comment, key, value - key, value, s - value);
         jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
             "'%s'\t'%s'", key, value);
     }

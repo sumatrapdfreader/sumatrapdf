@@ -129,10 +129,10 @@ Most compilers implement their own version of this keyword ...
 	#endif
 #endif
 
-/* SumatraPDF: MSVC before 2013 and Borland C do not have lrintf */
+/* MSVC before 2013 and Borland C do not have lrintf */
 #if defined(_MSC_VER) && (_MSC_VER < 1800) || defined(__BORLANDC__)
 static INLINE long lrintf(float f){
-#ifndef _M_IX86
+#if defined(_M_X64) || defined(_M_ARM_FP)
     return (long)((f>0.0f) ? (f + 0.5f):(f -0.5f));
 #else
     int i;

@@ -256,7 +256,6 @@ void OPJ_CALLCONV opj_stream_set_skip_function(opj_stream_t* p_stream, opj_strea
 void OPJ_CALLCONV opj_stream_set_user_data(opj_stream_t* p_stream, void * p_data)
 {
 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
-	/* SumatraPDF: for consistency with opj_stream_set_* */
 	if (!l_stream)
 		return;
 	l_stream->m_user_data = p_data;
@@ -265,7 +264,6 @@ void OPJ_CALLCONV opj_stream_set_user_data(opj_stream_t* p_stream, void * p_data
 void OPJ_CALLCONV opj_stream_set_user_data_length(opj_stream_t* p_stream, OPJ_UINT64 data_length)
 {
 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
-	/* SumatraPDF: for consistency with opj_stream_set_* */
 	if (!l_stream)
 		return;
 	l_stream->m_user_data_length = data_length;

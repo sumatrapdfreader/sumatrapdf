@@ -908,7 +908,6 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	OPJ_UINT16 nr_entries,nr_channels;
 	OPJ_UINT16 i, j;
 	OPJ_UINT32 l_value;
-	/* SumatraPDF: prevent access violation */
 	OPJ_BYTE *orig_header_data = p_pclr_header_data;
 
 	/* preconditions */
@@ -920,7 +919,6 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	if(jp2->color.jp2_pclr)
 		return OPJ_FALSE;
 
-	/* SumatraPDF: prevent access violation */
 	if (p_pclr_header_size < 3)
 		return OPJ_FALSE;
 
@@ -932,7 +930,6 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	++p_pclr_header_data;
 	nr_channels = (OPJ_UINT16) l_value;
 
-	/* SumatraPDF: prevent access violation */
 	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= (OPJ_UINT32)-1 / nr_channels)
 		return OPJ_FALSE;
 
@@ -982,10 +979,9 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	for(j = 0; j < nr_entries; ++j) {
 		for(i = 0; i < nr_channels; ++i) {
 			OPJ_INT32 bytes_to_read = (channel_size[i]+7)>>3;
-			/* SumatraPDF: prevent assertion in opj_read_bytes */
+
 			if (bytes_to_read > sizeof(OPJ_UINT32))
 				bytes_to_read = sizeof(OPJ_UINT32);
-			/* SumatraPDF: prevent access violation */
 			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + bytes_to_read)
 				return OPJ_FALSE;
 
@@ -1029,7 +1025,6 @@ OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
 		return OPJ_FALSE;
 	}
 
-	/* SumatraPDF: prevent access violation */
 	nr_channels = jp2->color.jp2_pclr->nr_channels;
 	if (p_cmap_header_size < (OPJ_UINT32)nr_channels * 4) {
 		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CMAP box.\n");
@@ -1071,7 +1066,12 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 	for(i = 0; i < n; ++i)
 	{
 		/* WATCH: acn = asoc - 1 ! */
-		if((asoc = info[i].asoc) == 0) continue;
+		if((asoc = info[i].asoc) == 0)
+                {
+                    if (i < image->numcomps)
+                        image->comps[i].alpha = info[i].typ;
+                    continue;
+                }
 
 		cn = info[i].cn; 
         acn = asoc - 1;
@@ -1087,6 +1087,8 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 			info[i].asoc = cn + 1;
 			info[acn].asoc = info[acn].cn + 1;
 		}
+
+		image->comps[cn].alpha = info[i].typ;
 	}
 
 	if(color->jp2_cdef->info) opj_free(color->jp2_cdef->info);
@@ -1115,7 +1117,6 @@ OPJ_BOOL opj_jp2_read_cdef(	opj_jp2_t * jp2,
 	 * inside a JP2 Header box.'*/
 	if(jp2->color.jp2_cdef) return OPJ_FALSE;
 
-	/* SumatraPDF: prevent access violation */
 	if (p_cdef_header_size < 2) {
 		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
 		return OPJ_FALSE;
@@ -1129,7 +1130,6 @@ OPJ_BOOL opj_jp2_read_cdef(	opj_jp2_t * jp2,
 		return OPJ_FALSE;
 	}
 
-	/* SumatraPDF: prevent access violation */
 	if (p_cdef_header_size < 2 + (OPJ_UINT32)(OPJ_UINT16)l_value * 6) {
 		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
 		return OPJ_FALSE;
@@ -1274,6 +1274,8 @@ OPJ_BOOL opj_jp2_decode(opj_jp2_t *jp2,
 		    p_image->color_space = OPJ_CLRSPC_GRAY;
 	    else if (jp2->enumcs == 18)
 		    p_image->color_space = OPJ_CLRSPC_SYCC;
+            else if (jp2->enumcs == 24)
+                    p_image->color_space = OPJ_CLRSPC_EYCC;
 	    else
 		    p_image->color_space = OPJ_CLRSPC_UNKNOWN;
 
