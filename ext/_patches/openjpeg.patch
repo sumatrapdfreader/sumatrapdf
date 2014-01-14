@@ -40,7 +40,7 @@ diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
  		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 19:52:42 2013
-+++ openjpeg\j2k.c	Sat Dec 14 16:04:33 2013
++++ openjpeg\j2k.c	Tue Jan 14 23:10:24 2014
 @@ -1930,10 +1930,27 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -86,7 +86,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
          l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
  
  #ifdef USE_JPWL
-@@ -3962,27 +3985,21 @@
+@@ -3962,24 +3985,23 @@
                  ++p_header_data;
  
                  if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
@@ -109,19 +109,29 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                          l_tcp->m_nb_tile_parts = l_num_parts;
                  }
  
--                /* If know the number of tile part header we will check if we didn't read the last*/
--                if (l_tcp->m_nb_tile_parts) {
+                 /* If know the number of tile part header we will check if we didn't read the last*/
+                 if (l_tcp->m_nb_tile_parts) {
 -                        if (l_tcp->m_nb_tile_parts == (l_current_part + 1)) {
--                                p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
--                        }
--                }
-+                assert(!l_tcp->m_nb_tile_parts || l_current_part < l_tcp->m_nb_tile_parts); /*MUPDF*/
++                        if (l_tcp->m_nb_tile_parts == l_current_part) {
+                                 p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
+                         }
+                 }
  
                  if (!p_j2k->m_specific_param.m_decoder.m_last_tile_part){
-                         /* Keep the size of data to skip after this marker */
-                         p_j2k->m_specific_param.m_decoder.m_sot_length = l_tot_len - 12; /* SOT_marker_size = 12 */
-                 }
-@@ -4434,10 +4451,18 @@
+@@ -4044,11 +4066,11 @@
+                                                                         sizeof(opj_tp_index_t));
+                                         }
+ 
+                                         if ( l_current_part >= p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps ){
+                                                 opj_tp_index_t *new_tp_index;
+-                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps += 10;
++                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps = l_current_part + 1;
+                                                 new_tp_index = (opj_tp_index_t *) opj_realloc(
+                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index,
+                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps * sizeof(opj_tp_index_t));
+                                                 if (! new_tp_index) {
+                                                         opj_free(p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index);
+@@ -4434,10 +4456,18 @@
                          }
                  }
          };
@@ -140,34 +150,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
          return OPJ_TRUE;
  
-@@ -5806,10 +5831,11 @@
-         */
- 
-         if (parameters->tile_size_on) {
-                 cp->tw = opj_int_ceildiv(image->x1 - cp->tx0, cp->tdx);
-                 cp->th = opj_int_ceildiv(image->y1 - cp->ty0, cp->tdy);
-+                assert(cp->tw * cp->th > 0); /*MUPDF*/
-         } else {
-                 cp->tdx = image->x1 - cp->tx0;
-                 cp->tdy = image->y1 - cp->ty0;
-         }
- 
-@@ -5910,11 +5936,13 @@
-                 tcp->POC = 0;
- 
-                 if (parameters->numpocs) {
-                         /* initialisation of POC */
-                         tcp->POC = 1;
--                        for (i = 0; i < parameters->numpocs; i++) {
-+                        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
-+                        assert(parameters->numpocs <= 32); /*MUPDF*/
-+                        for (i = 0; i < opj_uint_min(parameters->numpocs, 32); i++) {
-                                 if (tileno + 1 == parameters->POC[i].tile )  {
-                                         opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
- 
-                                         tcp_poc->resno0         = parameters->POC[numpocs_tile].resno0;
-                                         tcp_poc->compno0        = parameters->POC[numpocs_tile].compno0;
-@@ -7047,12 +7075,20 @@
+@@ -7047,10 +7077,16 @@
                          }
  
                          /* Read 2 bytes from the buffer as the marker size */
@@ -181,13 +164,9 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 +
                          /* Why this condition? FIXME */
                          if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
-+                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
-+                                // doesn't hold, harmless(?): assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
                                  p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                          }
                          l_marker_size -= 2; /* Subtract the size of the marker ID already read */
- 
-                         /* Get the marker handler from the marker ID */
 @@ -7438,10 +7474,14 @@
                                  l_offset_y1_src = l_res->y1 - l_y1_dest;
                          }

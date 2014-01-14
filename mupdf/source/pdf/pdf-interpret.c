@@ -332,19 +332,20 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 static fz_transfer_function *
 pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 {
+	fz_context *ctx = doc->ctx;
 	fz_transfer_function *tr;
 
 	if (pdf_is_name(obj))
 	{
 		if (strcmp(pdf_to_name(obj), "Identity") && (!is_tr2 || strcmp(pdf_to_name(obj), "Default")))
-			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "unknown transfer function %s", pdf_to_name(obj));
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unknown transfer function %s", pdf_to_name(obj));
 		return NULL;
 	}
 
-	tr = fz_malloc_struct(doc->ctx, fz_transfer_function);
+	tr = fz_malloc_struct(ctx, fz_transfer_function);
 	FZ_INIT_STORABLE(tr, 1, fz_free);
 
-	fz_try(doc->ctx)
+	fz_try(ctx)
 	{
 		fz_function *func;
 		float in, out;
@@ -359,10 +360,10 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 				for (i = 0; i < 256; i++)
 				{
 					in = i / 255.0f;
-					fz_eval_function(doc->ctx, func, &in, 1, &out, 1);
+					fz_eval_function(ctx, func, &in, 1, &out, 1);
 					tr->function[n][i] = (int)(out * 255 + 0.5f);
 				}
-				fz_drop_function(doc->ctx, func);
+				fz_drop_function(ctx, func);
 			}
 		}
 		else
@@ -371,17 +372,17 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 			for (i = 0; i < 256; i++)
 			{
 				in = i / 255.0f;
-				fz_eval_function(doc->ctx, func, &in, 1, &out, 1);
+				fz_eval_function(ctx, func, &in, 1, &out, 1);
 				for (n = 0; n < 4; n++)
 					tr->function[n][i] = (int)(out * 255 + 0.5f);
 			}
-			fz_drop_function(doc->ctx, func);
+			fz_drop_function(ctx, func);
 		}
 	}
-	fz_catch(doc->ctx)
+	fz_catch(ctx)
 	{
-		fz_drop_transfer_function(doc->ctx, tr);
-		fz_rethrow(doc->ctx);
+		fz_drop_transfer_function(ctx, tr);
+		fz_rethrow(ctx);
 	}
 
 	return tr;
@@ -455,6 +456,7 @@ begin_softmask(pdf_csi * csi, softmask_save *save)
 	if (tr)
 	{
 		fz_apply_transfer_function(csi->dev, tr, 1);
+		gstate = csi->gstate + csi->gtop;
 		gstate->softmask_tr = tr;
 	}
 
@@ -3087,6 +3089,7 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	pdf_lexbuf *buf;
 	int save_in_text;
 	int save_gbot;
+	pdf_obj *save_obj;
 
 	fz_var(buf);
 
@@ -3099,9 +3102,16 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	csi->in_text = 0;
 	save_gbot = csi->gbot;
 	csi->gbot = csi->gtop;
+	save_obj = csi->obj;
+	csi->obj = NULL;
 	fz_try(ctx)
 	{
 		pdf_run_stream(csi, rdb, file, buf);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(csi->obj);
+		csi->obj = save_obj;
 	}
 	fz_catch(ctx)
 	{

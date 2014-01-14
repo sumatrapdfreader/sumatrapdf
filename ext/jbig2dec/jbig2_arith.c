@@ -379,6 +379,12 @@ jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx)
     }
 }
 
+int
+jbig2_arith_get_offset(Jbig2ArithState *as)
+{
+  return as->offset;
+}
+
 #ifdef TEST
 
 static int

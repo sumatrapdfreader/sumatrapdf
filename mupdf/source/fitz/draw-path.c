@@ -134,7 +134,7 @@ struct sctx
 	float miterlimit;
 	fz_point beg[2];
 	fz_point seg[2];
-	int sn, bn;
+	int sn;
 	int dot;
 	int from_bezier;
 
@@ -249,18 +249,31 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 
 	len0 = dx0 * dx0 + dy0 * dy0;
 	if (len0 < FLT_EPSILON)
+	{
 		linejoin = FZ_LINEJOIN_BEVEL;
+		dlx0 = 0;
+		dly0 = 0;
+	}
+	else
+	{
+		scale = linewidth / sqrtf(len0);
+		dlx0 = dy0 * scale;
+		dly0 = -dx0 * scale;
+	}
+
 	len1 = dx1 * dx1 + dy1 * dy1;
 	if (len1 < FLT_EPSILON)
+	{
 		linejoin = FZ_LINEJOIN_BEVEL;
-
-	scale = linewidth / sqrtf(len0);
-	dlx0 = dy0 * scale;
-	dly0 = -dx0 * scale;
-
-	scale = linewidth / sqrtf(len1);
-	dlx1 = dy1 * scale;
-	dly1 = -dx1 * scale;
+		dlx1 = 0;
+		dly1 = 0;
+	}
+	else
+	{
+		scale = linewidth / sqrtf(len1);
+		dlx1 = dy1 * scale;
+		dly1 = -dx1 * scale;
+	}
 
 	dmx = (dlx0 + dlx1) * 0.5f;
 	dmy = (dly0 + dly1) * 0.5f;
@@ -429,7 +442,6 @@ fz_stroke_moveto(struct sctx *s, fz_point cur)
 	s->seg[0] = cur;
 	s->beg[0] = cur;
 	s->sn = 1;
-	s->bn = 1;
 	s->dot = 0;
 	s->from_bezier = 0;
 }
@@ -455,12 +467,13 @@ fz_stroke_lineto(struct sctx *s, fz_point cur, int from_bezier)
 		s->seg[0] = s->seg[1];
 		s->seg[1] = cur;
 	}
+	else
+	{
+		s->seg[1] = cur;
+		s->beg[1] = cur;
+		s->sn = 2;
+	}
 	s->from_bezier = from_bezier;
-
-	if (s->sn == 1)
-		s->seg[s->sn++] = cur;
-	if (s->bn == 1)
-		s->beg[s->bn++] = cur;
 }
 
 static void
@@ -468,13 +481,9 @@ fz_stroke_closepath(struct sctx *s)
 {
 	if (s->sn == 2)
 	{
-		/* SumatraPDF: prevent rendering artifacts from line joins */
-		float dx = s->beg[0].x - s->seg[1].x, dy = s->beg[0].y - s->seg[1].y;
 		fz_stroke_lineto(s, s->beg[0], 0);
 		if (s->seg[1].x == s->beg[0].x && s->seg[1].y == s->beg[0].y)
 			fz_add_line_join(s, s->seg[0], s->beg[0], s->beg[1], 0);
-		else if (dx * dx + dy * dy < FLT_EPSILON)
-			fz_stroke_flush(s, FZ_LINECAP_BUTT, FZ_LINECAP_BUTT);
 		else
 			fz_add_line_join(s, s->seg[1], s->beg[0], s->beg[1], 0);
 	}
@@ -484,7 +493,6 @@ fz_stroke_closepath(struct sctx *s)
 	}
 
 	s->seg[0] = s->beg[0];
-	s->bn = 1;
 	s->sn = 1;
 	s->dot = 0;
 	s->from_bezier = 0;
@@ -562,7 +570,6 @@ fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke
 	s.linewidth = linewidth * 0.5f; /* hairlines use a different value from the path value */
 	s.miterlimit = stroke->miterlimit;
 	s.sn = 0;
-	s.bn = 0;
 	s.dot = 0;
 
 	s.dash_list = NULL;
@@ -956,7 +963,6 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	s.linewidth = linewidth * 0.5f;
 	s.miterlimit = stroke->miterlimit;
 	s.sn = 0;
-	s.bn = 0;
 	s.dot = 0;
 
 	s.dash_list = stroke->dash_list;

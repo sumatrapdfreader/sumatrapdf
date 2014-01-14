@@ -361,6 +361,12 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	  "error or OOB decoding height class delta (%d)\n", code);
       }
 
+      if (!params->SDHUFF && jbig2_arith_get_offset(as) >= size) {
+          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+              "prevent DOS while decoding height classes");
+          goto cleanup2;
+      }
+
       /* 6.5.5 (4b) */
       HCHEIGHT = HCHEIGHT + HCDH;
       SYMWIDTH = 0;

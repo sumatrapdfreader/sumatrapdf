@@ -1,0 +1,73 @@
+diff -rPu5 jbig2dec.orig\jbig2_arith.c jbig2dec\jbig2_arith.c
+--- jbig2dec.orig\jbig2_arith.c	Mon May 27 05:44:25 2013
++++ jbig2dec\jbig2_arith.c	Tue Jan 14 22:06:58 2014
+@@ -377,10 +377,16 @@
+ 	return -1;
+       return D;
+     }
+ }
+ 
++int
++jbig2_arith_get_offset(Jbig2ArithState *as)
++{
++  return as->offset;
++}
++
+ #ifdef TEST
+ 
+ static int
+ test_get_word (Jbig2WordStream *self, int offset, uint32_t *word)
+ {
+diff -rPu5 jbig2dec.orig\jbig2_arith.h jbig2dec\jbig2_arith.h
+--- jbig2dec.orig\jbig2_arith.h	Fri May 24 16:23:20 2013
++++ jbig2dec\jbig2_arith.h	Tue Jan 14 22:00:49 2014
+@@ -31,6 +31,8 @@
+ 
+ /* decode a bit */
+ bool
+ jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx);
+ 
+-
++/* return the state's offset (for sanity checks) */
++int
++jbig2_arith_get_offset(Jbig2ArithState *as);
+diff -rPu5 jbig2dec.orig\jbig2_generic.c jbig2dec\jbig2_generic.c
+--- jbig2dec.orig\jbig2_generic.c	Sat Oct 05 08:11:14 2013
++++ jbig2dec\jbig2_generic.c	Tue Jan 14 21:34:08 2014
+@@ -758,10 +758,16 @@
+ 			    Jbig2Image *image,
+ 			    Jbig2ArithCx *GB_stats)
+ {
+   const int8_t *gbat = params->gbat;
+ 
++  if (image->stride * image->height > (1 << 24) && segment->data_length < image->stride * image->height / 256) {
++    return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++                       "region is far larger than data provided (%d << %d), aborting to prevent DOS",
++                       segment->data_length, image->stride * image->height);
++  }
++
+   if (!params->MMR && params->TPGDON) 
+      return jbig2_decode_generic_region_TPGDON(ctx, segment, params, 
+ 		as, image, GB_stats);
+ 
+   if (!params->MMR && params->GBTEMPLATE == 0) {
+diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
+--- jbig2dec.orig\jbig2_symbol_dict.c	Tue Jan 14 08:11:54 2014
++++ jbig2dec\jbig2_symbol_dict.c	Tue Jan 14 22:01:04 2014
+@@ -359,10 +359,16 @@
+       if (code != 0) {
+ 	jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+ 	  "error or OOB decoding height class delta (%d)\n", code);
+       }
+ 
++      if (!params->SDHUFF && jbig2_arith_get_offset(as) >= size) {
++          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++              "prevent DOS while decoding height classes");
++          goto cleanup2;
++      }
++
+       /* 6.5.5 (4b) */
+       HCHEIGHT = HCHEIGHT + HCDH;
+       SYMWIDTH = 0;
+       TOTWIDTH = 0;
+       HCFIRSTSYM = NSYMSDECODED;

@@ -3997,7 +3997,12 @@ OPJ_BOOL opj_j2k_read_sot ( opj_j2k_t *p_j2k,
                         l_tcp->m_nb_tile_parts = l_num_parts;
                 }
 
-                assert(!l_tcp->m_nb_tile_parts || l_current_part < l_tcp->m_nb_tile_parts); /*MUPDF*/
+                /* If know the number of tile part header we will check if we didn't read the last*/
+                if (l_tcp->m_nb_tile_parts) {
+                        if (l_tcp->m_nb_tile_parts == l_current_part) {
+                                p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
+                        }
+                }
 
                 if (!p_j2k->m_specific_param.m_decoder.m_last_tile_part){
                         /* Keep the size of data to skip after this marker */
@@ -4063,7 +4068,7 @@ OPJ_BOOL opj_j2k_read_sot ( opj_j2k_t *p_j2k,
 
                                         if ( l_current_part >= p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps ){
                                                 opj_tp_index_t *new_tp_index;
-                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps += 10;
+                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps = l_current_part + 1;
                                                 new_tp_index = (opj_tp_index_t *) opj_realloc(
                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index,
                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps * sizeof(opj_tp_index_t));
@@ -5833,7 +5838,6 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
         if (parameters->tile_size_on) {
                 cp->tw = opj_int_ceildiv(image->x1 - cp->tx0, cp->tdx);
                 cp->th = opj_int_ceildiv(image->y1 - cp->ty0, cp->tdy);
-                assert(cp->tw * cp->th > 0); /*MUPDF*/
         } else {
                 cp->tdx = image->x1 - cp->tx0;
                 cp->tdy = image->y1 - cp->ty0;
@@ -5938,9 +5942,7 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
                 if (parameters->numpocs) {
                         /* initialisation of POC */
                         tcp->POC = 1;
-                        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
-                        assert(parameters->numpocs <= 32); /*MUPDF*/
-                        for (i = 0; i < opj_uint_min(parameters->numpocs, 32); i++) {
+                        for (i = 0; i < parameters->numpocs; i++) {
                                 if (tileno + 1 == parameters->POC[i].tile )  {
                                         opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
 
@@ -7085,8 +7087,6 @@ OPJ_BOOL opj_j2k_read_tile_header(      opj_j2k_t * p_j2k,
 
                         /* Why this condition? FIXME */
                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
-                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
-                                // doesn't hold, harmless(?): assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                         }
                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */
