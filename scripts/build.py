@@ -373,7 +373,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
   # manually to: "%s\n" % ver
 
 def build_pre_release():
-  build(upload=False, upload_tmp=False, testing=False, build_test_installer=False,
+  build(upload=True, upload_tmp=False, testing=False, build_test_installer=False,
     build_rel_installer=False, build_prerelease=True, skip_transl_update=True,
     svn_revision=None, target_platform=None)
 
