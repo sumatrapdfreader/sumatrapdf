@@ -1290,6 +1290,9 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *doc, pdf_obj *di
 	{
 		if (FT_IS_TRICKY(face) || is_dynalab(fontdesc->font->name))
 			fontdesc->font->ft_hint = 1;
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2489 */
+		else if (!strcmp(fontdesc->font->name, "\xBC\xD0\xB7\xA2\xC5\xE9"))
+			fontdesc->font->ft_hint = 1;
 
 		if (fontdesc->ascent == 0.0f)
 			fontdesc->ascent = 1000.0f * face->ascender / face->units_per_EM;
