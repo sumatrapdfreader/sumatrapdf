@@ -118,7 +118,7 @@ Divide an integer by a power of 2 and round upwards
 @return Returns a divided by 2^b
 */
 static INLINE OPJ_INT32 opj_int_ceildivpow2(OPJ_INT32 a, OPJ_INT32 b) {
-	return (a + (1 << b) - 1) >> b;
+	return (a + (int64_t)(1 << b) - 1) >> b;
 }
 /**
 Divide an integer by a power of 2 and round downwards

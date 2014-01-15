@@ -243,6 +243,11 @@ pdf_load_jpx(pdf_document *doc, pdf_obj *dict, int forcemask)
 
 		if (colorspace == NULL)
 			colorspace = fz_keep_colorspace(ctx, img->colorspace);
+		else if (colorspace != img->colorspace)
+		{
+			fz_drop_colorspace(ctx, colorspace);
+			colorspace = NULL;
+		}
 
 		fz_drop_buffer(ctx, buf);
 		buf = NULL;

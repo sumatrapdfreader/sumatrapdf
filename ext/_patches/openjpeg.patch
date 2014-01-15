@@ -40,7 +40,7 @@ diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
  		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 19:52:42 2013
-+++ openjpeg\j2k.c	Tue Jan 14 23:10:24 2014
++++ openjpeg\j2k.c	Wed Jan 15 00:36:43 2014
 @@ -1930,10 +1930,27 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -554,9 +554,25 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
      int i;
   
      _asm{
+diff -rPu5 openjpeg.orig\opj_intmath.h openjpeg\opj_intmath.h
+--- openjpeg.orig\opj_intmath.h	Sat May 18 19:52:42 2013
++++ openjpeg\opj_intmath.h	Wed Jan 15 01:57:07 2014
+@@ -116,11 +116,11 @@
+ /**
+ Divide an integer by a power of 2 and round upwards
+ @return Returns a divided by 2^b
+ */
+ static INLINE OPJ_INT32 opj_int_ceildivpow2(OPJ_INT32 a, OPJ_INT32 b) {
+-	return (a + (1 << b) - 1) >> b;
++	return (a + (int64_t)(1 << b) - 1) >> b;
+ }
+ /**
+ Divide an integer by a power of 2 and round downwards
+ @return Returns a divided by 2^b
+ */
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_malloc.h	Tue Jan 14 00:22:36 2014
++++ openjpeg\opj_malloc.h	Wed Jan 15 00:39:32 2014
 @@ -46,11 +46,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -565,7 +581,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  #else
 -#define opj_malloc(size) malloc(size)
 +/* prevent assertion on overflow for MSVC */
-+#define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
++#define opj_malloc(size) ((size_t)(size) >= (size_t)0x7ffdefff ? NULL : malloc(size))
  #endif
  
  /**
@@ -579,7 +595,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  #else
 -#define opj_calloc(num, size) calloc(num, size)
 +/* prevent assertion on overflow for MSVC */
-+#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
++#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)0x7ffdefff / (size_t)(size) ? NULL : calloc(num, size))
  #endif
  
  /**
@@ -593,7 +609,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  #else
 -#define opj_realloc(m, s) realloc(m, s)
 +/* prevent assertion on overflow for MSVC */
-+#define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
++#define opj_realloc(m, s) ((size_t)(s) >= (size_t)0x7ffdefff ? NULL : realloc(m, s))
  #endif
  
  /**
@@ -664,7 +680,7 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 19:52:42 2013
-+++ openjpeg\tcd.c	Thu Aug 15 20:45:32 2013
++++ openjpeg\tcd.c	Wed Jan 15 02:03:58 2014
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \

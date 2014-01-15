@@ -1939,7 +1939,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		}
 
 		/* SumatraPDF: support transfer functions */
-		else if (!strcmp(s, "TR") || !strcmp(s, "TR2"))
+		else if ((!strcmp(s, "TR") && !pdf_dict_gets(extgstate, "TR2")) || !strcmp(s, "TR2"))
 		{
 			fz_drop_transfer_function(ctx, gstate->tr);
 			gstate->tr = NULL;

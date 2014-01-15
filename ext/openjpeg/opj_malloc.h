@@ -49,7 +49,7 @@ Allocate an uninitialized memory block
 void * OPJ_CALLCONV opj_malloc(size_t size);
 #else
 /* prevent assertion on overflow for MSVC */
-#define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
+#define opj_malloc(size) ((size_t)(size) >= (size_t)0x7ffdefff ? NULL : malloc(size))
 #endif
 
 /**
@@ -62,7 +62,7 @@ Allocate a memory block with elements initialized to 0
 void * OPJ_CALLCONV opj_calloc(size_t _NumOfElements, size_t _SizeOfElements);
 #else
 /* prevent assertion on overflow for MSVC */
-#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
+#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)0x7ffdefff / (size_t)(size) ? NULL : calloc(num, size))
 #endif
 
 /**
@@ -142,7 +142,7 @@ Reallocate memory blocks.
 void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
 #else
 /* prevent assertion on overflow for MSVC */
-#define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
+#define opj_realloc(m, s) ((size_t)(s) >= (size_t)0x7ffdefff ? NULL : realloc(m, s))
 #endif
 
 /**
