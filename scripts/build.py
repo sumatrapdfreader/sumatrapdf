@@ -191,7 +191,8 @@ def sign(file_path, cert_pwd):
   file_name = os.path.basename(file_path)
   cert_src = os.path.join("scripts", "cert.pfx")
   cert_dest = os.path.join(file_dir, "cert.pfx")
-  if not os.path.exists(cert_dest): shutil.copy(cert_src, cert_dest)
+  if not os.path.exists(cert_dest):
+    shutil.copy(cert_src, cert_dest)
   curr_dir = os.getcwd()
   os.chdir(file_dir)
   run_cmd_throw("signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",

@@ -8,7 +8,7 @@ efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
 
 import shutil, time, datetime, cPickle, traceback
-import s3, util, efiparse, build
+import s3, util, util2, efiparse, build
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
 from util import load_config, run_cmd, strip_empty_lines
@@ -51,13 +51,16 @@ class Stats(Serializable):
     def __init__(self, read_from_file=None):
         Serializable.__init__(self, Stats.fields, Stats.fields_no_serialize, read_from_file)
 
+
 def file_size(p):
   return os.path.getsize(p)
+
 
 def str2bool(s):
     if s.lower() in ("true", "1"): return True
     if s.lower() in ("false", "0"): return False
     assert(False)
+
 
 TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*8  # 8hrs
 g_time_of_last_build = None
@@ -68,8 +71,17 @@ def get_cache_dir(): return g_cache_dir
 def get_stats_cache_dir(): return g_stats_cache_dir
 def get_logs_cache_dir(): return g_logs_cache_dir
 
+
+@util2.memoize
+def cert_path():
+    scripts_dir = os.path.realpath(os.path.dirname(__file__))
+    cert_path = os.path.join(scripts_dir, "cert.pfx")
+    return verify_path_exists(cert_path)
+
+
 def logs_efi_out_path(ver):
     return os.path.join(get_logs_cache_dir(), str(ver) + "_efi.txt.bz2")
+
 
 # logs are only kept for potential troubleshooting and they're quite big,
 # so we delete old files (we keep logs for the last $to_keep revisions)
@@ -89,6 +101,7 @@ def delete_old_logs(to_keep=10):
             p = os.path.join(get_logs_cache_dir(), f)
             os.remove(p)
 
+
 # return Stats object or None if we don't have it for this version
 def stats_for_ver(ver):
     local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
@@ -99,6 +112,7 @@ def stats_for_ver(ver):
         assert(os.path.exists(local_path))
     return Stats(local_path)
 
+
 def previous_successful_build_ver(ver):
     ver = int(ver) - 1
     while True:
@@ -107,9 +121,11 @@ def previous_successful_build_ver(ver):
         if not stats.rel_failed: return ver
         ver -= 1
 
+
 # We cache results of running svn log in a dict mapping
 # version to string returned by svn log
 g_svn_log_per_ver = None
+
 
 def load_svn_log_data():
     try:
@@ -127,11 +143,13 @@ def load_svn_log_data():
         file_remove_try_hard(path)
         return {}
 
+
 def save_svn_log_data(data):
     p = os.path.join(get_cache_dir(), "snv_log.dat")
     fo = open(p, "wb")
     cPickle.dump(data, fo, protocol=cPickle.HIGHEST_PROTOCOL)
     fo.close()
+
 
 def checkin_comment_for_ver(ver):
     global g_svn_log_per_ver
@@ -149,6 +167,7 @@ def checkin_comment_for_ver(ver):
         return "not a source code change"
     return res[1]
 
+
 # return true if we already have results for a given build number in s3
 def has_already_been_built(ver):
     s3_dir = "sumatrapdf/buildbot/"
@@ -160,6 +179,7 @@ def has_already_been_built(ver):
             return True
     return False
 
+
 def verify_efi_present():
     try:
         (out, err, errcode) = util.run_cmd("efi.exe")
@@ -170,13 +190,16 @@ def verify_efi_present():
         print("efi.exe created unexpected output:\n%s" % out)
         sys.exit(1)
 
+
 def file_size_in_obj(file_name):
     return file_size(os.path.join("obj-rel", file_name))
+
 
 def clean_release():
     shutil.rmtree("obj-rel", ignore_errors=True)
     shutil.rmtree("vs-premake", ignore_errors=True)
     shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
+
 
 def build_release(stats, ver):
     config = "CFG=rel"
@@ -211,6 +234,7 @@ def build_release(stats, ver):
     p = os.path.join(obj_dir, "Installer.exe")
     stats.rel_installer_exe_size = file_size(p)
 
+
 def build_analyze(stats, ver):
     config = "CFG=rel"
     obj_dir = "obj-rel"
@@ -226,9 +250,11 @@ def build_analyze(stats, ver):
     s = out + "\n====STDERR:\n" + err
     open(log_path, "w").write(strip_empty_lines(s))
 
+
 def svn_update_to_ver(ver):
     run_cmd_throw("svn", "update", "-r" + ver)
     rebuild_trans_src_path_cache()
+
 
 # runs efi.exe on obj-rel/SumatraPDF.exe, stores the data in obj-rel/efi.txt.bz2
 # and uploads to s3 as efi.txt.bz2
@@ -290,6 +316,7 @@ def efi_diff_as_txt(diff, max=-1):
             lines.append("%4d : %s" % (size, sym.full_name()))
     return "\n".join(lines)
 
+
 # builds efi diff between this version and previous succesful version
 # and uploads as efi_diff.txt
 def build_and_upload_efi_txt_diff(ver):
@@ -312,6 +339,7 @@ def build_and_upload_efi_txt_diff(ver):
     s = s + "\n" + efi_diff_as_txt(diff)
     s3dir = "sumatrapdf/buildbot/%s/" % str(ver)
     s3.upload_data_public_with_content_type(s, s3dir + "efi_diff.txt", silent=True)
+
 
 # TODO: maybe add debug build and 64bit release?
 # skip_release is just for testing
@@ -378,6 +406,7 @@ def build_version(ver, skip_release=False):
     else:
         print("Tests passed!")
 
+
 def test_build_html_index():
     print("test_build_html_index()")
     html = build_index_html(stats_for_ver, checkin_comment_for_ver)
@@ -387,7 +416,9 @@ def test_build_html_index():
     print("after write")
     sys.exit(1)
 
+
 g_email_to = ["kkowalczyk@gmail.com", "zeniko@gmail.com"]
+
 
 def email_tests_failed(ver, err):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
@@ -406,6 +437,7 @@ def email_tests_failed(ver, err):
     body += "Error: %s\n\n" % err
     util.sendmail(sender, senderpwd, g_email_to, subject, body)
 
+
 def email_build_failed(ver):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
@@ -421,6 +453,7 @@ def email_build_failed(ver):
     body += "Buildbot: %s\n\n" % buildbot_index_url
     util.sendmail(sender, senderpwd, g_email_to, subject, body)
 
+
 # for testing
 def build_curr(force=False):
     (local_ver, latest_ver) = util.get_svn_versions()
@@ -429,6 +462,7 @@ def build_curr(force=False):
             build_version(local_ver)
     else:
         print("We have already built revision %s" % local_ver)
+
 
 def build_version_retry(ver, try_count = 2):
     # it can happen we get a valid but intermitten exception e.g.
@@ -453,6 +487,7 @@ def build_version_retry(ver, try_count = 2):
                 raise
             time.sleep(60)
         return
+
 
 def buildbot_loop():
     global g_time_of_last_build
@@ -481,33 +516,39 @@ def buildbot_loop():
         if revs_built > 0:
             g_time_of_last_build = datetime.datetime.now()
             continue
+
         secs_until_prerelease = None
         if g_time_of_last_build is not None:
             td = datetime.datetime.now() - g_time_of_last_build
             secs_until_prerelease = TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS - int(td.total_seconds())
-            if  secs_until_prerelease < 0:
+            if secs_until_prerelease < 0:
                 build_pre_release()
                 g_time_of_last_build = None
-        if secs_until_prerelease is not None:
-            print("Sleeping for 15 minutes, %d seconds until pre-release" % secs_until_prerelease)
-        else:
-            print("Sleeping for 15 minutes")
+
+        print("Sleeping for 15 minutes, %s seconds until pre-release" % str(secs_until_prerelease))
         time.sleep(60*15) # 15 mins
 
 
 def build_pre_release():
     try:
+        cert_dst_path = os.path.join("scripts", "cert.pfx")
+        if not os.path.exists(cert_dst_path):
+            shutil.copyfile(cert_path(), cert_dst_path)
         print("Building pre-release")
         build.build_pre_release()
     except Exception, e:
         print(str(e))
         traceback.print_exc()
+        raise
+
 
 def test_email_tests_failed():
     email_tests_failed("200", "hello")
     sys.exit(1)
 
+
 def main():
+    cert_path()  # early check and ensures value is memoized
     verify_efi_present()
     verify_started_in_right_directory()
     # to avoid problems, we build a separate source tree, just for the buildbot
