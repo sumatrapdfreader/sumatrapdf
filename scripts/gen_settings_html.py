@@ -198,9 +198,9 @@ def extract_url(s):
     url = s[word_end+2:-1]
     return [word, url]
 
-def gen_comment(comment, start, first=False):
+def gen_comment(comment, field_id, start, first=False):
     line_len = 100
-    s = start + '<span class=cm>'
+    s = start + '<span class=cm id="%s">' % field_id
     if not first:
         s = "\n" + s
     left = line_len - len(start)
@@ -247,7 +247,8 @@ def gen_struct(struct, indent="", prerelease=False):
         comment = field.docComment
         if field.version != "2.3":
             comment += " (introduced in version %s)" % field.version
-        lines += gen_comment(comment, indent, first)
+        field_id = struct.name + "_" + field.name if indent else field.name
+        lines += gen_comment(comment, field_id, indent, first)
         if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
             indent2 = indent + indent_str[:len(indent_str)/2]
             start = "%s%s [\n%s[" % (indent, field.name, indent2)
