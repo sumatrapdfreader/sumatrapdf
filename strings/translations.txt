@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-607d7a24e01c0834aa2894b5b6f25b6c23e9770d
+b58efaa9f547fd04e90024a17520ecc5d1e98d3a
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -199,7 +199,7 @@ dk:&Avancerede valgmuligheder
 el:&Επιλογές για προχωρημένους
 es:Opciones &avanzadas...
 et:&Rohkem sätteid...
-eu:Au&kera Aurreratuak...
+eu:Au&kera aurreratuak...
 fa:تنظیمات پیشرفته
 fi:&Lisäasetukset...
 fr:Options &avancées…
@@ -4734,7 +4734,7 @@ cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazo
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
 dk:Kan ikke starte invers søgekommando. Tjek venligst kommandolinjen i indstillingerne.
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
-es:No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en la configuración.
+es:No se puede iniciar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
 eu:Ezinezkoa alderantzizko bilaketa komandoa hastea. Mesedez, egiaztatu komando lerroa ezarpenetan.
 fa:جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
@@ -6294,7 +6294,7 @@ cz:Nelze zapsat %s na disk
 de:Konnte %s nicht kopieren
 dk:Kunne ikke skrive %s til disk
 el:Αδυναμία εγγραφής %s στον δίσκο
-es:No se puede escribir %s al disco
+es:No se puede escribir %s en el disco
 et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
 fi:Levylle kirjoittaminen epäonnistui: %s
@@ -7062,7 +7062,7 @@ cz:Zadejte heslo
 de:Bitte Passwort eingeben
 dk:Indtast kodeord
 el:Εισάγετε κωδικό
-es:Introduzca contraseña
+es:Escriba la contraseña
 et:Sisesta salasõna
 eu:Idatzi sarhitza
 fa:کلمه‌ی عبور را وارد کنید
@@ -7303,7 +7303,7 @@ cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 dk:Fejl: Kan ikke køre SumatraPDF !
 el:Σφάλμα: Αδυναμία εκτέλεσης SumatraPDF !
-es:Error: ¡No se pudo ejecutar SumatraPDF!
+es:Error: no se pudo ejecutar SumatraPDF.
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fa:sumatra pdf خطا: عدم توانایی در اجرای
@@ -7392,7 +7392,7 @@ cz:Chyba: Stažení dokumentu se nezdařilo!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 dk:Fejl: Dokumentet kunne ikke hentes !
 el:Σφάλμα: Η λήψη του εγγράφου απέτυχε!
-es:Error: ¡El documento no pudo ser descargado!
+es:Error: no se pudo descargar el documento.
 et:Viga: Dokumenti ei suudetud alla laadida!
 eu:Akatsa: Agiria ezin da jeitsi!
 fa:خطا : عدم توانایی در دانلود متن
@@ -8225,7 +8225,7 @@ cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
 dk:Fil %s ikke fundet
 el:Το αρχείο %s δε βρέθηκε
-es:El archivo %s no se encuentra
+es:No se encontró el archivo %s
 et:Faili %s ei leitud
 eu:%s agiria ez da aurkitu
 fa:پرونده %s پیدا نشد
@@ -8853,7 +8853,7 @@ cz:&Podle šířky\tCtrl+2
 de:An &Breite anpassen\tStrg+2
 dk:Tilpas &bredde\tCtrl+2
 el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
-es:Ajustar a a&ncho de página\tCtrl+2
+es:Ajustar a a&nchura\tCtrl+2
 et:Lehekülje &laiuse sobitamine\tCtrl+2
 eu:Finkatu &Zabalera\tKtrl+2
 fa:به بزرگی &پهنای پنجره\tCtrl+2
@@ -13063,7 +13063,7 @@ cz:Tisk je stále probíhá. Přerušit a začít znovu?
 de:Bestehenden Druckvorgang abbrechen und neu beginnen?
 dk:Udskrift pågår stadig. Afbryd og start forfra?
 el:Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθεί και να ξεκινήσει πάλι;
-es:Se esta imprimiendo. ¿Cancelar y empezar de nuevo?
+es:La impresión está en progreso. ¿Quiere interrumpirla e iniciar de nuevo?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 fa:در حال چاپ کردن.انصراف و شروع مجدد؟
@@ -15975,7 +15975,7 @@ cz:Zobrazení
 de:Ansicht
 dk:Vis
 el:Προβολή
-es:Opciones de visualización
+es:Visualización
 et:Vaade
 eu:Ikusi
 fa:نمایش
@@ -16295,7 +16295,7 @@ cz:Používáte verzi %s
 de:Sie haben Version %s.
 dk:Du har version %s
 el:Έχετε την έκδοση %s
-es:Versión en uso: %s
+es:La versión actual es: %s
 et:Kasutusel on versioon %s
 eu:%s bertsioa duzu
 fa:شما نسخه‌ی %s را دارید

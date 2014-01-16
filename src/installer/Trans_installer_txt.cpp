@@ -1514,7 +1514,7 @@ const char * gTranslations_es =
   "No se puede desinstalar el previsualizador PDF\0"\
   "No se puede desinstalar el filtro buscador PDF\0"\
   "No se puede desinstalar el plugin del navegador\0"\
-  "No se puede escribir %s al disco\0"\
+  "No se puede escribir %s en el disco\0"\
   "Error al copiar el desinstalador al directorio temporal\0"\
   "No se pudo crear un acceso directo\0"\
   "Error al eliminar las claves del registro del desinstalador\0"\

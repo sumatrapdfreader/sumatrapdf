@@ -1247,7 +1247,7 @@ const char * gTranslations_az =
 const char * gTranslations_eu = 
   "&Honi buruz...\0"\
   "&Oraingo Neurria\tKtrl+1\0"\
-  "Au&kera Aurreratuak...\0"\
+  "Au&kera aurreratuak...\0"\
   "&Hautatutako orrialde guztiak\0"\
   "A&tzera\tAlt+Ezker Gezia\0"\
   "&Liburu Ikuspegia\tKtrl+8\0"\
@@ -11652,7 +11652,7 @@ const char * gTranslations_es =
   "No se puede conectar a Internet (error %#x).\0"\
   "Cancelar\0"\
   "No se puede imprimir este archivo\0"\
-  "No se puede iniciar el comando de b\303\272squeda inversa. Verifique la l\303\255nea de comandos en la configuraci\303\263n.\0"\
+  "No se puede iniciar la orden de b\303\272squeda inversa. Compruebe la l\303\255nea de \303\263rdenes en la configuraci\303\263n.\0"\
   "Cambiar idioma (Change Language)\0"\
   "&Buscar actualizaciones\0"\
   "C\303\263mics\0"\
@@ -11681,7 +11681,7 @@ const char * gTranslations_es =
   "Descargar\0"\
   "&Salir\tCtrl+Q\0"\
   "Libros electr\303\263nicos en EPUB\0"\
-  "Introduzca contrase\303\261a\0"\
+  "Escriba la contrase\303\261a\0"\
   "Introduzca contrase\303\261a para %s\0"\
   "Introduzca los par\303\241metros de l\303\255nea de comandos que se ejecutar\303\241n al hacer doble-clic en el documento PDF:\0"\
   "Error al cargar %s\0"\
@@ -11695,7 +11695,7 @@ const char * gTranslations_es =
   "Visualizaci\303\263n r\303\241pida en Web\0"\
   "Favoritos\0"\
   "Documentos FictionBook\0"\
-  "El archivo %s no se encuentra\0"\
+  "No se encontr\303\263 el archivo %s\0"\
   "Tama\303\261o de archivo:\0"\
   "Archivo:\0"\
   "Buscar...\tCtrl+F\0"\
@@ -11705,7 +11705,7 @@ const char * gTranslations_es =
   "Buscar:\0"\
   "Ajustar a &contenido\tCtrl+3\0"\
   "Ajustar a &p\303\241gina\tCtrl+0\0"\
-  "Ajustar a a&ncho de p\303\241gina\tCtrl+2\0"\
+  "Ajustar a a&nchura\tCtrl+2\0"\
   "Ajustar a contenido\0"\
   "Ajustar a p\303\241gina\0"\
   "Ajustar a ancho de p\303\241gina\0"\
@@ -11769,7 +11769,7 @@ const char * gTranslations_es =
   "La impresora con el nombre especificado no existe\0"\
   "Impresi\303\263n en progreso.\0"\
   "Impresi\303\263n a\303\272n en progreso. \302\277Cancelar y salir?\0"\
-  "Se esta imprimiendo. \302\277Cancelar y empezar de nuevo?\0"\
+  "La impresi\303\263n est\303\241 en progreso. \302\277Quiere interrumpirla e iniciar de nuevo?\0"\
   "Imprimiendo p\303\241gina %d de %d...\0"\
   "Problema de impresi\303\263n.\0"\
   "Re&nombrar...\tF2\0"\
@@ -11808,12 +11808,12 @@ const char * gTranslations_es =
   "Documentos de texto\0"\
   "T\303\255tulo:\0"\
   "Archivo de origen desconocido (%s)\0"\
-  "Opciones de visualizaci\303\263n\0"\
+  "Visualizaci\303\263n\0"\
   "Visitar sitio &Web\0"\
   "Advertencia\0"\
   "Documentos XPS\0"\
   "Esta es la \303\272ltima versi\303\263n disponible.\0"\
-  "Versi\303\263n en uso: %s\0"\
+  "La versi\303\263n actual es: %s\0"\
   "Ampliar\0"\
   "Acercar zoom\0"\
   "Alejar zoom\0"\
