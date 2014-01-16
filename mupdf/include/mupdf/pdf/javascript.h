@@ -39,9 +39,6 @@ enum
 	JS_TYPE_BOOLEAN
 };
 
-/* SumatraPDF: don't declare functions that aren't linked */
-#ifndef NDEBUG
-
 pdf_jsimp *pdf_new_jsimp(fz_context *ctx, void *jsctx);
 void pdf_drop_jsimp(pdf_jsimp *imp);
 
@@ -69,7 +66,5 @@ pdf_jsimp_obj *pdf_jsimp_property(pdf_jsimp *imp, pdf_jsimp_obj *obj, char *prop
 
 void pdf_jsimp_execute(pdf_jsimp *imp, char *code);
 void pdf_jsimp_execute_count(pdf_jsimp *imp, char *code, int count);
-
-#endif
 
 #endif

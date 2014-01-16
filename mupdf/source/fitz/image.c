@@ -442,7 +442,7 @@ fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image *mask)
 		image->w = pixmap->w;
 		image->h = pixmap->h;
 		image->n = pixmap->n;
-		image->colorspace = pixmap->colorspace;
+		image->colorspace = fz_keep_colorspace(ctx, pixmap->colorspace);
 		image->bpc = 8;
 		image->buffer = NULL;
 		image->get_pixmap = fz_image_get_pixmap;
@@ -453,6 +453,7 @@ fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image *mask)
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_pixmap(ctx, pixmap);
 		fz_drop_image(ctx, mask);
 		fz_rethrow(ctx);
 	}
