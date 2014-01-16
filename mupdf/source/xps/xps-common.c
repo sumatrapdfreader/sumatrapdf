@@ -274,6 +274,12 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		*p++ = 0;
 		n = count_commas(p) + 1;
 		i = 0;
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694957 */
+		if (n > FZ_MAX_COLORS)
+		{
+			fz_warn(doc->ctx, "too many color components (%d > %d)", n, FZ_MAX_COLORS);
+			n = FZ_MAX_COLORS;
+		}
 		while (i < n)
 		{
 			samples[i++] = fz_atof(p);
