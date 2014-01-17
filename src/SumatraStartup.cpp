@@ -215,6 +215,13 @@ static bool SetupPluginMode(CommandLineInfo& i)
     while (i.fileNames.Count() > 1) {
         free(i.fileNames.Pop());
     }
+
+    // don't save preferences for plugin windows (and don't allow fullscreen mode)
+    // TODO: Perm_DiskAccess is required for saving viewed files and
+    //       Perm_InternetAccess is required for crash reports
+    // (they can still be disabled through sumatrapdfrestrict.ini or -restrict)
+    gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~(Perm_SavePreferences | Perm_FullscreenAccess);
+
     i.reuseInstance = i.exitWhenDone = false;
     gGlobalPrefs->reuseInstance = false;
     // always display the toolbar when embedded (as there's no menubar in that case)

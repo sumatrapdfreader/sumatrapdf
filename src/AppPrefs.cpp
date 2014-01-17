@@ -215,13 +215,6 @@ bool Load()
     gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
-#ifdef DISABLE_EBOOK_UI
-    if (!file::Exists(path)) {
-        gGlobalPrefs->ebookUI.useFixedPageUI = true;
-        gGlobalPrefs->chmUI.useFixedPageUI = true;
-    }
-#endif
-
     if (!file::Exists(path)) {
         ScopedMem<WCHAR> bencPath(AppGenDataFilename(LEGACY_FILE_NAME));
         ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
@@ -238,6 +231,10 @@ bool Load()
             str::ReplacePtr(&(*ds)->zoom, NULL);
             conv::FromZoom(&(*ds)->zoom, zoom);
         }
+#ifdef DISABLE_EBOOK_UI
+        gGlobalPrefs->ebookUI.useFixedPageUI = true;
+        gGlobalPrefs->chmUI.useFixedPageUI = true;
+#endif
     }
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
@@ -283,10 +280,6 @@ bool Load()
 // the list of recently opened documents in sync)
 bool Save()
 {
-    // don't save preferences for plugin windows
-    if (gPluginMode)
-        return false;
-
     // don't save preferences without the proper permission
     if (!HasPermission(Perm_SavePreferences))
         return false;
@@ -411,7 +404,7 @@ public:
 
 void RegisterForFileChanges()
 {
-    if (gPluginMode || !HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_SavePreferences))
         return;
 
     CrashIf(gWatchedSettingsFile); // only call me once
