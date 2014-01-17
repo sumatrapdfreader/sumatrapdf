@@ -44,6 +44,30 @@ static UINT GetCodepageFromPI(const char *xmlPI)
     return CP_ACP;
 }
 
+static bool IsValidUtf8(const char *string)
+{
+    for (const unsigned char *s = (const unsigned char *)string; *s; s++) {
+        int skip;
+        if (*s < 0x80)
+            skip = 0;
+        else if (*s < 0xC0)
+            return false;
+        else if (*s < 0xE0)
+            skip = 1;
+        else if (*s < 0xF0)
+            skip = 2;
+        else if (*s < 0xF5)
+            skip = 3;
+        else
+            return false;
+        while (skip-- > 0) {
+            if ((*++s & 0xC0) != 0x80)
+                return false;
+        }
+    }
+    return true;
+}
+
 static char *DecodeTextToUtf8(const char *s, bool isXML=false)
 {
     ScopedMem<char> tmp;
@@ -60,6 +84,8 @@ static char *DecodeTextToUtf8(const char *s, bool isXML=false)
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
+    if (CP_ACP == codePage && IsValidUtf8(s))
+        return str::Dup(s);
     if (CP_ACP == codePage)
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
     return str::ToMultiByte(s, codePage, CP_UTF8);
