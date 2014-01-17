@@ -252,6 +252,12 @@ WCHAR *GetTempPath(const WCHAR *filePrefix)
 
 namespace file {
 
+HANDLE OpenReadOnly(const WCHAR *filePath)
+{
+    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+}
+
 bool Exists(const WCHAR *filePath)
 {
     if (NULL == filePath)
@@ -273,8 +279,7 @@ int64 GetSize(const WCHAR *filePath)
     CrashIf(!filePath);
     if (!filePath) return -1;
 
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    ScopedHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE)
         return -1;
 
@@ -332,8 +337,7 @@ char *ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator
 
 bool ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    ScopedHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE)
         return false;
 
@@ -372,8 +376,7 @@ bool Delete(const WCHAR *filePath)
 FILETIME GetModificationTime(const WCHAR *filePath)
 {
     FILETIME lastMod = { 0 };
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    ScopedHandle h(OpenReadOnly(filePath));
     if (h != INVALID_HANDLE_VALUE)
         GetFileTime(h, NULL, NULL, &lastMod);
     return lastMod;

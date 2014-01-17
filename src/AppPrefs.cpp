@@ -344,14 +344,34 @@ bool Save()
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
-bool Reload(bool forceReload)
+bool Reload()
 {
     ScopedMem<WCHAR> path(GetSettingsPath());
     if (!file::Exists(path))
         return false;
 
+    // make sure that the settings file is readable - else wait
+    // a short while to prevent accidental dataloss
+    int tryAgainCount = 3;
+    HANDLE h = file::OpenReadOnly(path);
+    while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
+        Sleep(100);
+        h = file::OpenReadOnly(path);
+    }
+    if (INVALID_HANDLE_VALUE == h) {
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+        ScopedMem<WCHAR> msg(str::Format(L"Please press OK and report that \"tryAgainCount==%d\" (without Google account, please first click on one of the forum links).", tryAgainCount));
+        int res = MessageBox(NULL, msg, L"Developers asking for input", MB_ICONWARNING | MB_OKCANCEL);
+        if (IDOK == res)
+            LaunchBrowser(L"https://code.google.com/p/sumatrapdf/issues/detail?id=2500");
+#endif
+        return false;
+    }
+
+    ScopedHandle hScope(h);
+
     FILETIME time = file::GetModificationTime(path);
-    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate) && !forceReload)
+    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate))
         return true;
 
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));

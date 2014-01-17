@@ -333,8 +333,7 @@ STATIC_ASSERT(sizeof(DjVuInfoChunk) == 10, djvuInfoChunkSize);
 
 bool DjVuEngineImpl::LoadMediaboxes()
 {
-    ScopedHandle h(CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    ScopedHandle h(file::OpenReadOnly(fileName));
     if (h == INVALID_HANDLE_VALUE)
         return false;
     char buffer[16];

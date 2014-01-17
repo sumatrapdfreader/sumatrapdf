@@ -24,7 +24,7 @@ WCHAR *GetSettingsPath();
 
 bool Load();
 bool Save();
-bool Reload(bool forceReload=false);
+bool Reload();
 
 void RegisterForFileChanges();
 void UnregisterForFileChanges();

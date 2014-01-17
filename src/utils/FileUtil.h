@@ -44,6 +44,8 @@ bool         StartsWith(const WCHAR *filePath, const char *magicNumber, size_t l
 int          GetZoneIdentifier(const WCHAR *filePath);
 bool         SetZoneIdentifier(const WCHAR *filePath, int zoneId=URLZONE_INTERNET);
 
+HANDLE       OpenReadOnly(const WCHAR *filePath);
+
 }
 
 namespace dir {
