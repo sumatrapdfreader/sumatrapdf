@@ -89,7 +89,7 @@ xps_begin_opacity(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 		if (scb_color_att)
 		{
 			fz_colorspace *colorspace;
-			float samples[32];
+			float samples[FZ_MAX_COLORS];
 			xps_parse_color(doc, base_uri, scb_color_att, &colorspace, samples);
 			opacity = opacity * samples[0];
 		}
@@ -208,12 +208,13 @@ void
 xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		fz_colorspace **csp, float *samples)
 {
+	fz_context *ctx = doc->ctx;
 	char *p;
 	int i, n;
 	char buf[1024];
 	char *profile;
 
-	*csp = fz_device_rgb(doc->ctx);
+	*csp = fz_device_rgb(ctx);
 
 	samples[0] = 1;
 	samples[1] = 0;
@@ -259,7 +260,7 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		profile = strchr(buf, ' ');
 		if (!profile)
 		{
-			fz_warn(doc->ctx, "cannot find icc profile uri in '%s'", string);
+			fz_warn(ctx, "cannot find icc profile uri in '%s'", string);
 			return;
 		}
 
@@ -267,19 +268,18 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		p = strchr(profile, ' ');
 		if (!p)
 		{
-			fz_warn(doc->ctx, "cannot find component values in '%s'", profile);
+			fz_warn(ctx, "cannot find component values in '%s'", profile);
 			return;
 		}
 
 		*p++ = 0;
 		n = count_commas(p) + 1;
-		i = 0;
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=694957 */
 		if (n > FZ_MAX_COLORS)
 		{
-			fz_warn(doc->ctx, "too many color components (%d > %d)", n, FZ_MAX_COLORS);
+			fz_warn(ctx, "ignoring %d color components (max %d allowed)", n - FZ_MAX_COLORS, FZ_MAX_COLORS);
 			n = FZ_MAX_COLORS;
 		}
+		i = 0;
 		while (i < n)
 		{
 			samples[i++] = fz_atof(p);
@@ -298,10 +298,10 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		/* TODO: load ICC profile */
 		switch (n)
 		{
-		case 2: *csp = fz_device_gray(doc->ctx); break;
-		case 4: *csp = fz_device_rgb(doc->ctx); break;
-		case 5: *csp = fz_device_cmyk(doc->ctx); break;
-		default: *csp = fz_device_gray(doc->ctx); break;
+		case 2: *csp = fz_device_gray(ctx); break;
+		case 4: *csp = fz_device_rgb(ctx); break;
+		case 5: *csp = fz_device_cmyk(ctx); break;
+		default: *csp = fz_device_gray(ctx); break;
 		}
 	}
 }

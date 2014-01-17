@@ -47,6 +47,7 @@ struct pdf_xref_s
 	int len;
 	pdf_xref_entry *table;
 	pdf_obj *trailer;
+	pdf_obj *pre_repair_trailer;
 };
 
 void pdf_cache_object(pdf_document *doc, int num, int gen);

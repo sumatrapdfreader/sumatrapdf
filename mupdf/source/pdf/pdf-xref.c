@@ -41,6 +41,7 @@ static void pdf_free_xref_sections(pdf_document *doc)
 		}
 
 		fz_free(ctx, xref->table);
+		pdf_drop_obj(xref->pre_repair_trailer);
 		pdf_drop_obj(xref->trailer);
 	}
 
@@ -76,6 +77,7 @@ static void pdf_populate_next_xref_level(pdf_document *doc)
 	xref->len = 0;
 	xref->table = NULL;
 	xref->trailer = NULL;
+	xref->pre_repair_trailer = NULL;
 }
 
 pdf_obj *pdf_trailer(pdf_document *doc)
@@ -90,7 +92,11 @@ void pdf_set_populating_xref_trailer(pdf_document *doc, pdf_obj *trailer)
 {
 	/* Update the trailer of the xref section being populated */
 	pdf_xref *xref = &doc->xref_sections[doc->num_xref_sections - 1];
-	pdf_drop_obj(xref->trailer);
+	if (xref->trailer)
+	{
+		pdf_drop_obj(xref->pre_repair_trailer);
+		xref->pre_repair_trailer = xref->trailer;
+	}
 	xref->trailer = pdf_keep_obj(trailer);
 }
 
@@ -186,6 +192,7 @@ static void ensure_incremental_xref(pdf_document *doc)
 			/* xref->len is already correct */
 			xref->table = new_table;
 			xref->trailer = trailer;
+			xref->pre_repair_trailer = NULL;
 			doc->num_xref_sections++;
 			doc->xref_altered = 1;
 		}
@@ -292,7 +299,7 @@ pdf_load_version(pdf_document *doc)
 	if (memcmp(buf, "%PDF-", 5) != 0)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot recognize version marker");
 
-	doc->version = atoi(buf + 5) * 10 + atoi(buf + 7);
+	doc->version = 10 * (fz_atof(buf+5) + 0.05);
 }
 
 static void
@@ -1177,8 +1184,7 @@ pdf_init_document(pdf_document *doc)
 		version_str = pdf_to_name(obj);
 		if (*version_str)
 		{
-			/* TODO: use fz_atof for parsing instead? */
-			int version = atoi(version_str) * 10 + atoi(version_str + 2);
+			int version = 10 * (fz_atof(version_str) + 0.05);
 			if (version > doc->version)
 				doc->version = version;
 		}

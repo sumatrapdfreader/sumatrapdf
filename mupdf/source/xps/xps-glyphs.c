@@ -597,7 +597,7 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 
 	if (fill_att)
 	{
-		float samples[32];
+		float samples[FZ_MAX_COLORS];
 		fz_colorspace *colorspace;
 
 		xps_parse_color(doc, base_uri, fill_att, &colorspace, samples);

@@ -39,7 +39,7 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, fz_xml *node,
 	struct stop *stops, int maxcount)
 {
 	fz_colorspace *colorspace;
-	float sample[8];
+	float sample[FZ_MAX_COLORS];
 	float rgb[3];
 	int before, after;
 	int count;
