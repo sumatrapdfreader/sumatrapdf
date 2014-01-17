@@ -358,15 +358,16 @@ bool Reload()
         Sleep(100);
         h = file::OpenReadOnly(path);
     }
-    if (INVALID_HANDLE_VALUE == h) {
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+    if (tryAgainCount != 3) {
         ScopedMem<WCHAR> msg(str::Format(L"Please press OK and report that \"tryAgainCount==%d\" (without Google account, please first click on one of the forum links).", tryAgainCount));
         int res = MessageBox(NULL, msg, L"Developers asking for input", MB_ICONWARNING | MB_OKCANCEL);
         if (IDOK == res)
             LaunchBrowser(L"https://code.google.com/p/sumatrapdf/issues/detail?id=2500");
-#endif
-        return false;
     }
+#endif
+    if (INVALID_HANDLE_VALUE == h)
+        return false;
 
     ScopedHandle hScope(h);
 
