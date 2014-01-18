@@ -342,7 +342,7 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 	/* Ensure our expectations for tile size are reasonable */
 	if (w < 0 || w > image->w)
 		w = image->w;
-	if (w < 0 || h > image->h)
+	if (h < 0 || h > image->h)
 		h = image->h;
 
 	/* What is our ideal factor? */

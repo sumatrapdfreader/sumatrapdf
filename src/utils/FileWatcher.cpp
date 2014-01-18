@@ -160,7 +160,6 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
         // file notifications to be ignored. (This happens for instance for
         // PDF files produced by pdftex from small.tex document)
         wf->observer->OnFileChanged();
-        return;
     }
 }
 
