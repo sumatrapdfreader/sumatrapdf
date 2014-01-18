@@ -352,22 +352,16 @@ bool Reload()
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
-    int tryAgainCount = 3;
+    int tryAgainCount = 5;
     HANDLE h = file::OpenReadOnly(path);
     while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
-        Sleep(100);
+        Sleep(200);
         h = file::OpenReadOnly(path);
     }
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (tryAgainCount != 3) {
-        ScopedMem<WCHAR> msg(str::Format(L"Please press OK and report that \"tryAgainCount==%d\" (without Google account, please first click on one of the forum links).", tryAgainCount));
-        int res = MessageBox(NULL, msg, L"Developers asking for input", MB_ICONWARNING | MB_OKCANCEL);
-        if (IDOK == res)
-            LaunchBrowser(L"https://code.google.com/p/sumatrapdf/issues/detail?id=2500");
-    }
-#endif
-    if (INVALID_HANDLE_VALUE == h)
+    if (INVALID_HANDLE_VALUE == h) {
+        // prefer not reloading to resetting all settings
         return false;
+    }
 
     ScopedHandle hScope(h);
 
