@@ -1625,7 +1625,6 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages(false);
 

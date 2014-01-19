@@ -2872,7 +2872,8 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     ScopedMem<WCHAR> errorMsg;
     // Extract all text when saving as a plain text file
-    if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt")) {
+    if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt") &&
+        (2 == ofn.nFilterIndex || Engine_Txt != win.dm->engineType)) {
         str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++) {
             WCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export);
