@@ -311,14 +311,15 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
     pages.Append(bmp);
     assert(pages.Count() == 1);
 
-    if (str::Eq(fileExt, L".tif")) {
-        // extract all frames from multi-page TIFFs
-        UINT frames = bmp->GetFrameCount(&FrameDimensionPage);
+    // extract all frames from multi-page TIFFs and animated GIFs
+    if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
+        const GUID *frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
+        UINT frames = bmp->GetFrameCount(frameDimension);
         for (UINT i = 1; i < frames; i++) {
             Bitmap *frame = bmp->Clone(0, 0, bmp->GetWidth(), bmp->GetHeight(), PixelFormat32bppARGB);
             if (!frame)
                 continue;
-            Status ok = frame->SelectActiveFrame(&FrameDimensionPage, i);
+            Status ok = frame->SelectActiveFrame(frameDimension, i);
             if (Ok == ok)
                 pages.Append(frame);
             else
