@@ -24,15 +24,18 @@ static fz_tree *fz_tree_new_node(fz_context *ctx, const char *key, void *value)
 
 void *fz_tree_lookup(fz_context *ctx, fz_tree *node, const char *key)
 {
-	if (node && node != &sentinel)
+	if (node)
 	{
-		int c = strcmp(key, node->key);
-		if (c == 0)
-			return node->value;
-		else if (c < 0)
-			return fz_tree_lookup(ctx, node->left, key);
-		else
-			return fz_tree_lookup(ctx, node->right, key);
+		while (node != &sentinel)
+		{
+			int c = strcmp(key, node->key);
+			if (c == 0)
+				return node->value;
+			else if (c < 0)
+				node = node->left;
+			else
+				node = node->right;
+		}
 	}
 	return NULL;
 }

@@ -1,10 +1,12 @@
-var MuPDF = new Array();
+var MuPDF = {};
 
-MuPDF.monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-MuPDF.dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+MuPDF.monthName = [
+	'January', 'February', 'March', 'April', 'May', 'June',
+	'July', 'August', 'September', 'October', 'November', 'December' ];
 
-MuPDF.shortMonthName = new Array();
+MuPDF.dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+MuPDF.shortMonthName = [];
 for (var i = 0; i < MuPDF.monthName.length; i++)
 	MuPDF.shortMonthName.push(MuPDF.monthName[i].substr(0,3));
 
@@ -14,14 +16,12 @@ MuPDF.monthPattern.compile('('+MuPDF.shortMonthName.join('|')+')');
 MuPDF.padZeros = function(num, places)
 {
 	var s = num.toString();
-
 	if (s.length < places)
 		s = new Array(places-s.length+1).join('0') + s;
-
 	return s;
 }
 
-MuPDF.convertCase = function(str,cmd)
+MuPDF.convertCase = function(str, cmd)
 {
 	switch (cmd)
 	{
@@ -32,32 +32,37 @@ MuPDF.convertCase = function(str,cmd)
 }
 
 /* display must be kept in sync with an enum in pdf_form.c */
-var display = new Array();
-display.visible = 0;
-display.hidden = 1;
-display.noPrint = 2;
-display.noView = 3;
-var border = new Array();
-border.s = "Solid";
-border.d = "Dashed";
-border.b = "Beveled";
-border.i = "Inset";
-border.u = "Underline";
-var color = new Array();
-color.transparent = [ "T" ];
-color.black = [ "G", 0];
-color.white = [ "G", 1];
-color.red = [ "RGB", 1,0,0 ];
-color.green = [ "RGB", 0,1,0 ];
-color.blue = [ "RGB", 0,0,1 ];
-color.cyan = [ "CMYK", 1,0,0,0 ];
-color.magenta = [ "CMYK", 0,1,0,0 ];
-color.yellow = [ "CMYK", 0,0,1,0 ];
-color.dkGray = [ "G", 0.25];
-color.gray = [ "G", 0.5];
-color.ltGray = [ "G", 0.75];
+var display = {
+	visible: 0,
+	hidden: 1,
+	noPrint: 2,
+	noView: 3,
+};
 
-var util = new Array();
+var border = {
+	s: "Solid",
+	d: "Dashed",
+	b: "Beveled",
+	i: "Inset",
+	u: "Underline",
+};
+
+var color = {
+	transparent: [ "T" ],
+	black: [ "G", 0 ],
+	white: [ "G", 1 ],
+	red: [ "RGB", 1,0,0 ],
+	green: [ "RGB", 0,1,0 ],
+	blue: [ "RGB", 0,0,1 ],
+	cyan: [ "CMYK", 1,0,0,0 ],
+	magenta: [ "CMYK", 0,1,0,0 ],
+	yellow: [ "CMYK", 0,0,1,0 ],
+	dkGray: [ "G", 0.25 ],
+	gray: [ "G", 0.5 ],
+	ltGray: [ "G", 0.75 ],
+};
+
+var util = {};
 
 util.printd = function(fmt, d)
 {
@@ -715,16 +720,16 @@ function AFNumber_Format(nDec,sepStyle,negStyle,currStyle,strCurrency,bCurrencyP
 
 	switch (groups.length)
 	{
-	case 0:
-		return;
-	case 1:
-		fracpart = '';
-		intpart = groups[0];
-		break;
-	default:
-		fracpart = groups.pop();
-		intpart = groups.join('');
-		break;
+		case 0:
+			return;
+		case 1:
+			fracpart = '';
+			intpart = groups[0];
+			break;
+		default:
+			fracpart = groups.pop();
+			intpart = groups.join('');
+			break;
 	}
 
 	// Remove leading zeros
@@ -759,15 +764,15 @@ function AFNumber_Format(nDec,sepStyle,negStyle,currStyle,strCurrency,bCurrencyP
 	{
 		switch (negStyle)
 		{
-		case 0:
-			intpart = '-'+intpart;
-			break;
-		case 1:
-			break;
-		case 2:
-		case 3:
-			intpart = '('+intpart+')';
-			break;
+			case 0:
+				intpart = '-'+intpart;
+				break;
+			case 1:
+				break;
+			case 2:
+			case 3:
+				intpart = '('+intpart+')';
+				break;
 		}
 	}
 
