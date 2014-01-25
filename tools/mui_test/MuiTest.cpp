@@ -281,6 +281,7 @@ public:
     ~EventHandler() {
         hwnd = 0;
         UnregisterEventHandler(this);
+        delete painter;
     }
 
     LRESULT HandleMsg(UINT msg, WPARAM wparam, LPARAM lparam, bool& handled);

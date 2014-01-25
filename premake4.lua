@@ -12,8 +12,8 @@ function solution_common()
   -- FatalWarnings - compiler warnigs are errors'
   -- NoMinimalRebuild - disable /Gm because it clashes with /MP
   flags {
-   "Symbols", "StaticRuntime", "ExtraWarnings", "FatalWarnings",
-   "NoRTTI", "Unicode", "NoExceptions", "NoMinimalRebuild"
+    "Symbols", "StaticRuntime", "ExtraWarnings", "FatalWarnings",
+    "NoRTTI", "Unicode", "NoExceptions", "NoMinimalRebuild"
   }
 
   configuration "Debug"
@@ -21,12 +21,12 @@ function solution_common()
     defines { "_DEBUG", "DEBUG" }
 
   configuration "Release"
-     targetdir "obj-rel"
-     flags { "Optimize" }
-     defines { "NDEBUG" }
-     -- 4189 - variable not used, happens with CrashIf() macros that are no-op
-     --        in release builds
-     buildoptions { "/wd4189" }
+    targetdir "obj-rel"
+    flags { "Optimize" }
+    defines { "NDEBUG" }
+    -- 4189 - variable not used, happens with CrashIf() macros that are no-op
+    --        in release builds
+    buildoptions { "/wd4189" }
 
   configuration {"vs*"}
     -- defines { "_WIN32", "WIN32", "WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
@@ -54,6 +54,7 @@ solution "sertxt"
       "tools/sertxt_test/*.txt",
       "src/utils/BaseUtil*",
       "src/utils/FileUtil*",
+      "src/utils/SerializeTxt*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",
       "src/utils/TxtParser*",
@@ -156,6 +157,7 @@ solution "muitest"
     language "C++"
 
     flags { "NoManifest", "WinMain" }
+    defines { "NO_LIBWEBP" } -- building without WebP support (for compilation speed)
 
     files {
       "tools/mui_test/*",
@@ -171,7 +173,7 @@ solution "muitest"
       "src/utils/StrUtil*",
       "src/utils/TgaReader*",
       "src/utils/TxtParser*",
-      "src/utils/WebpReader.h", -- building without WebP support (for compilation speed)
+      "src/utils/WebpReader*",
       "src/utils/WinUtil*",
       "src/mui/*.h",
       "src/mui/*.cpp",

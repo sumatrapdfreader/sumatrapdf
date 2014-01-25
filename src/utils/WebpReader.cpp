@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "WebpReader.h"
+
+#ifndef NO_LIBWEBP
+
 #include <webp/decode.h>
 using namespace Gdiplus;
 
@@ -41,3 +44,13 @@ Bitmap *ImageFromData(const char *data, size_t len)
 }
 
 }
+
+#else
+
+namespace webp {
+bool HasSignature(const char *data, size_t len) { return false; }
+Gdiplus::Size SizeFromData(const char *data, size_t len) { return Gdiplus::Size(); }
+Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return NULL; }
+}
+
+#endif
