@@ -170,6 +170,7 @@
     <ClCompile Include="..\src\utils\FileTransactions.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\FileWatcher.cpp" />
+    <ClCompile Include="..\src\utils\FzImgReader.cpp" />
     <ClCompile Include="..\src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="..\src\utils\HtmlParserLookup.cpp" />
     <ClCompile Include="..\src\utils\HtmlPrettyPrint.cpp" />
@@ -433,6 +434,7 @@
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\FileWatcher.h" />
     <ClInclude Include="..\src\utils\FrameTimeoutCalculator.h" />
+    <ClInclude Include="..\src\utils\FzImgReader.h" />
     <ClInclude Include="..\src\utils\GdiPlusUtil.h" />
     <ClInclude Include="..\src\utils\GeomUtil.h" />
     <ClInclude Include="..\src\utils\HtmlParserLookup.h" />

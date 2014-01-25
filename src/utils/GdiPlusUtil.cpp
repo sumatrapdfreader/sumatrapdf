@@ -7,6 +7,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 #include "ByteReader.h"
+#include "FzImgReader.h"
 #include "TgaReader.h"
 #include "WebpReader.h"
 #include "WinUtil.h"
@@ -358,12 +359,19 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         delete bmp;
         bmp = NULL;
     }
-    // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
-    if (bmp && Img_JPEG == format && 0 == bmp->GetWidth() && 0 == bmp->GetHeight()) {
-        delete bmp;
-        LARGE_INTEGER zero = { 0 };
-        stream->Seek(zero, STREAM_SEEK_SET, NULL);
-        bmp = WICDecodeImageFromStream(stream);
+    if (bmp && Img_JPEG == format) {
+        Status ok = GenericError;
+        // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
+        if (bmp->GetWidth() > 0 && bmp->GetHeight() > 0) {
+            // GDI+ apparently succeeds when loading an arithmetically encoded JPEG
+            // but fails to render it after all - use libjpeg-turbo for that case as well
+            Color c;
+            ok = bmp->GetPixel(0, 0, &c);
+        }
+        if (ok != Ok) {
+            delete bmp;
+            bmp = fitz::ImageFromData(data, len);
+        }
     }
     return bmp;
 }

@@ -80,7 +80,7 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 
 UTILS_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp
+	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp /I$(MUPDF_DIR)\include
 
 SUMATRA_CFLAGS = $(UTILS_CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(MUPDF_DIR)\include \
@@ -165,7 +165,7 @@ UTILS_OBJS = \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj \
-	$(OU)\WebpReader.obj $(WEBP_OBJS)
+	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj

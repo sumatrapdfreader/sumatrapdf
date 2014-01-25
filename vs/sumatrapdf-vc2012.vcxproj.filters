@@ -315,6 +315,9 @@
     <ClCompile Include="..\src\utils\FileWatcher.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\FzImgReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\GdiPlusUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1098,6 +1101,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\FrameTimeoutCalculator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FzImgReader.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\GdiPlusUtil.h">

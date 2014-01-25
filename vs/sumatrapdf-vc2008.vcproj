@@ -119,6 +119,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\FzImgReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\FzImgReader.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>

@@ -157,7 +157,8 @@ solution "muitest"
     language "C++"
 
     flags { "NoManifest", "WinMain" }
-    defines { "NO_LIBWEBP" } -- building without WebP support (for compilation speed)
+    -- building without MuPDF and WebP support (for compilation speed)
+    defines { "NO_LIBMUPDF", "NO_LIBWEBP" }
 
     files {
       "tools/mui_test/*",
@@ -166,6 +167,7 @@ solution "muitest"
       "src/utils/Dict*",
       "src/utils/DebugLog*",
       "src/utils/FileUtil*",
+      "src/utils/FzImgReader*",
       "src/utils/GdiPlusUtil*",
       "src/utils/HtmlParserLookup*",
       "src/utils/SerializeTxt*",
