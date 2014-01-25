@@ -39,7 +39,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
                       fz_device_gray(ctx) == cs ? PixelFormat32bppARGB :
                       fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK :
                       PixelFormatUndefined;
-    if (PixelFormatUndefined == fmt || w <= 0 || h <= 0) {
+    if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
         fz_close(stm);
         fz_drop_colorspace(ctx, cs);
         return NULL;
@@ -64,8 +64,8 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
         for (int y = 0; y < h; y++) {
             unsigned char *line = (unsigned char *)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w * 4; x += 4) {
-                int len = fz_read(stm, line + x, cs->n);
-                if (len != cs->n)
+                int read = fz_read(stm, line + x, cs->n);
+                if (read != cs->n)
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
                 if (3 == cs->n) { // RGB -> BGRA
                     Swap(line[x], line[x + 2]);
