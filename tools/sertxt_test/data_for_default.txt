@@ -1,2 +1,0 @@
-﻿; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation
-b_false: false

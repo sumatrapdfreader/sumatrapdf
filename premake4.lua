@@ -42,31 +42,6 @@ function solution_common()
     }
 end
 
-solution "sertxt"
-  solution_common()
-
-  project "sertxt_test"
-    kind "ConsoleApp"
-    language "C++"
-    files {
-      "tools/sertxt_test/*.h",
-      "tools/sertxt_test/*.cpp",
-      "tools/sertxt_test/*.txt",
-      "src/utils/BaseUtil*",
-      "src/utils/FileUtil*",
-      "src/utils/SerializeTxt*",
-      "src/utils/StrSlice*",
-      "src/utils/StrUtil*",
-      "src/utils/TxtParser*",
-      "src/utils/VarintGob*",
-    }
-    excludes
-    {
-      "src/utils/*_ut.cpp",
-    }
-    includedirs { "src/utils", "src/utils/msvc" }
-    links { "Shlwapi" }
-
 solution "efi"
   solution_common()
 
@@ -148,42 +123,3 @@ solution "all_tests"
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
-
-solution "muitest"
-  solution_common()
-
-  project "muitest"
-    kind "WindowedApp"
-    language "C++"
-
-    flags { "NoManifest", "WinMain" }
-    -- building without MuPDF and WebP support (for compilation speed)
-    defines { "NO_LIBMUPDF", "NO_LIBWEBP" }
-
-    files {
-      "tools/mui_test/*",
-      "src/utils/BaseUtil*",
-      "src/utils/BitManip.h",
-      "src/utils/Dict*",
-      "src/utils/DebugLog*",
-      "src/utils/FileUtil*",
-      "src/utils/FzImgReader*",
-      "src/utils/GdiPlusUtil*",
-      "src/utils/HtmlParserLookup*",
-      "src/utils/SerializeTxt*",
-      "src/utils/StrSlice*",
-      "src/utils/StrUtil*",
-      "src/utils/TgaReader*",
-      "src/utils/TxtParser*",
-      "src/utils/WebpReader*",
-      "src/utils/WinUtil*",
-      "src/mui/*.h",
-      "src/mui/*.cpp",
-    }
-    excludes
-    {
-      "src/mui/*_ut.cpp",
-      "src/mui/MiniMui*",
-    }
-    includedirs { "src", "src/utils", "src/utils/msvc", "src/mui"}
-    links { "gdiplus", "comctl32", "shlwapi", "Version", "WindowsCodecs" }
