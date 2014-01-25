@@ -16,76 +16,98 @@ using namespace Gdiplus;
 
 namespace fitz {
 
+static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
+{
+    int w, h, xres, yres;
+    fz_colorspace *cs = NULL;
+    fz_stream *stm = NULL;
+
+    fz_var(cs);
+    fz_var(stm);
+
+    fz_try(ctx) {
+        fz_load_jpeg_info(ctx, (unsigned char *)data, len, &w, &h, &xres, &yres, &cs);
+        stm = fz_open_memory(ctx, (unsigned char *)data, len);
+        stm = fz_open_dctd(stm, -1, 0, NULL);
+    }
+    fz_catch(ctx) {
+        fz_drop_colorspace(ctx, cs);
+        cs = NULL;
+    }
+
+    PixelFormat fmt = fz_device_rgb(ctx) == cs ? PixelFormat32bppARGB :
+                      fz_device_gray(ctx) == cs ? PixelFormat32bppARGB :
+                      fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK :
+                      PixelFormatUndefined;
+    if (PixelFormatUndefined == fmt) {
+        fz_close(stm);
+        fz_drop_colorspace(ctx, cs);
+        return NULL;
+    }
+
+    Bitmap bmp(w, h, fmt);
+    bmp.SetResolution(xres, yres);
+
+    Rect bmpRect(0, 0, w, h);
+    BitmapData bmpData;
+    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, fmt, &bmpData);
+    if (ok != Ok) {
+        fz_close(stm);
+        fz_drop_colorspace(ctx, cs);
+        return NULL;
+    }
+
+    fz_var(bmp);
+    fz_var(bmpRect);
+
+    fz_try(ctx) {
+        for (int y = 0; y < h; y++) {
+            unsigned char *data = (unsigned char *)bmpData.Scan0 + y * bmpData.Stride;
+            for (int x = 0; x < w * 4; x += 4) {
+                int len = fz_read(stm, data + x, cs->n);
+                if (len != cs->n)
+                    fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
+                if (3 == cs->n) { // RGB -> BGRA
+                    Swap(data[x], data[x + 2]);
+                    data[x + 3] = 0xFF;
+                }
+                else if (1 == cs->n) { // gray -> BGRA
+                    data[x + 1] = data[x + 2] = data[x];
+                    data[x + 3] = 0xFF;
+                }
+                else if (4 == cs->n) { // CMYK color inversion
+                    for (int k = 0; k < 4; k++)
+                        data[x + k] = 255 - data[x + k];
+                }
+            }
+        }
+    }
+    fz_always(ctx) {
+        bmp.UnlockBits(&bmpData);
+        fz_close(stm);
+        fz_drop_colorspace(ctx, cs);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
+
+    // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
+    return bmp.Clone(0, 0, w, h, fmt);
+}
+
 Bitmap *ImageFromData(const char *data, size_t len)
 {
-    if (len > INT_MAX)
+    if (len > INT_MAX || len < 8)
         return NULL;
 
     fz_context *ctx = fz_new_context(NULL, NULL, 0);
     if (!ctx)
         return NULL;
 
-    int w, h, xres, yres;
-
-    fz_image *img = NULL;
-    fz_buffer *buf = NULL;
-    fz_pixmap *pix, *pix_argb;
-
-    fz_var(img);
-    fz_var(buf);
-
-    fz_try(ctx) {
-        buf = fz_new_buffer(ctx, (int)len);
-        memcpy(buf->data, data, (buf->len = (int)len));
-        img = fz_new_image_from_buffer(ctx, buf);
-        w = img->w; h = img->h; xres = img->xres; yres = img->yres;
-        pix = fz_new_pixmap_from_image(ctx, img, 0, 0);
-    }
-    fz_always(ctx) {
-        fz_drop_image(ctx, img);
-        fz_drop_buffer(ctx, buf);
-    }
-    fz_catch(ctx) {
-        pix = NULL;
-    }
-    CrashIf(pix && (w != pix->w || h != pix->h));
-    if (!pix || w != pix->w || h != pix->h) {
-        fz_drop_pixmap(ctx, pix);
-        fz_free_context(ctx);
-        return NULL;
-    }
-
-    Bitmap bmp(w, h, PixelFormat32bppARGB);
-    Rect bmpRect(0, 0, w, h);
-    BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
-    if (ok != Ok || bmpData.Stride != w * 4) {
-        CrashIf(Ok == ok && bmpData.Stride != w * 4);
-        fz_drop_pixmap(ctx, pix);
-        fz_free_context(ctx);
-        return NULL;
-    }
-    bmp.SetResolution(xres, yres);
-
-    fz_try(ctx) {
-        pix_argb = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, (unsigned char *)bmpData.Scan0);
-        fz_convert_pixmap(ctx, pix_argb, pix);
-    }
-    fz_always(ctx) {
-        fz_drop_pixmap(ctx, pix);
-    }
-    fz_catch(ctx) {
-        pix_argb = NULL;
-    }
-    bmp.UnlockBits(&bmpData);
-
     Bitmap *result = NULL;
-    if (pix_argb) {
-        // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
-        result = bmp.Clone(0, 0, pix_argb->w, pix_argb->h, PixelFormat32bppARGB);
-    }
+    if (str::StartsWith(data, "\xFF\xD8"))
+        result = ImageFromJpegData(ctx, data, (int)len);
 
-    fz_drop_pixmap(ctx, pix_argb);
     fz_free_context(ctx);
 
     return result;
