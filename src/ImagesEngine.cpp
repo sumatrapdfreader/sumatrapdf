@@ -396,7 +396,8 @@ bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, L".tga") ||
            str::EndsWithI(fileName, L".jxr") || str::EndsWithI(fileName, L".hdp") ||
                                                 str::EndsWithI(fileName, L".wdp") ||
-           str::EndsWithI(fileName, L".webp");
+           str::EndsWithI(fileName, L".webp")||
+           str::EndsWithI(fileName, L".jp2");
 }
 
 ImageEngine *ImageEngine::CreateFromFile(const WCHAR *fileName)

@@ -7,6 +7,7 @@ Next version:
 
 * left/right clicking no longer changes pages in fullscreen mode
   (use Presentation mode if you rely on this feature)
+* support JP2 images
 * fixed multiple crashes
 
 2.4 (2013-10-01):

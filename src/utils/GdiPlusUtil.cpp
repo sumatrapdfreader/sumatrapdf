@@ -289,12 +289,12 @@ static Bitmap *WICDecodeImageFromStream(IStream *stream)
 
 enum ImgFormat {
     Img_Unknown, Img_BMP, Img_GIF, Img_JPEG,
-    Img_JXR, Img_PNG, Img_TGA, Img_TIFF, Img_WebP,
+    Img_JXR, Img_PNG, Img_TGA, Img_TIFF, Img_WebP, Img_JP2,
 };
 
 static ImgFormat GfxFormatFromData(const char *data, size_t len)
 {
-    if (!data || len < 8)
+    if (!data || len < 12)
         return Img_Unknown;
     // check the most common formats first
     if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A"))
@@ -313,6 +313,8 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_JXR;
     if (webp::HasSignature(data, len))
         return Img_WebP;
+    if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
+        return Img_JP2;
     return Img_Unknown;
 }
 
@@ -327,6 +329,7 @@ const WCHAR *GfxFileExtFromData(const char *data, size_t len)
     case Img_TGA:  return L".tga";
     case Img_TIFF: return L".tif";
     case Img_WebP: return L".webp";
+    case Img_JP2:  return L".jp2";
     default:       return NULL;
     }
 }
@@ -347,6 +350,8 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         return tga::ImageFromData(data, len);
     if (Img_WebP == format)
         return webp::ImageFromData(data, len);
+    if (Img_JP2 == format)
+        return fitz::ImageFromData(data, len);
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
@@ -480,6 +485,29 @@ Size BitmapSizeFromData(const char *data, size_t len)
         }
         else {
             result = webp::SizeFromData(data, len);
+        }
+        break;
+    case Img_JP2:
+        if (len >= 32) {
+            size_t ix = 0;
+            while (ix < len - 32) {
+                uint32_t lbox = r.DWordBE(ix);
+                uint32_t tbox = r.DWordBE(ix + 4);
+                if (0x6A703268 /* jp2h */ == tbox) {
+                    ix += 8;
+                    if (r.DWordBE(ix) == 24 && r.DWordBE(ix + 4) == 0x69686472 /* ihdr */) {
+                        result.Width = r.DWordBE(ix + 16);
+                        result.Height = r.DWordBE(ix + 12);
+                    }
+                    break;
+                }
+                else if (lbox != 0 && ix < UINT32_MAX - lbox) {
+                    ix += lbox;
+                }
+                else {
+                    break;
+                }
+            }
         }
         break;
     }

@@ -71,6 +71,14 @@ OPJ_BOOL stream_seek(OPJ_OFF_T seek_pos, void * p_user_data)
 	return OPJ_TRUE;
 }
 
+static inline unsigned int read_value(const unsigned char *data, int bytes)
+{
+	unsigned int value = 0;
+	for (; bytes > 0; bytes--)
+		value = (value << 8) | *data++;
+	return value;
+}
+
 fz_pixmap *
 fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs, int indexed)
 {
@@ -245,6 +253,50 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 			img = tmp;
 		}
 		fz_premultiply_pixmap(ctx, img);
+	}
+
+	/* SumatraPDF: extract image resolution (TODO: make openjpeg do this) */
+	if (format == OPJ_CODEC_JP2)
+	{
+		unsigned char *base = data;
+		int rest = size, ix = 0, level = 0;
+		while (ix < rest - 8)
+		{
+			int lbox = read_value(base + ix, 4);
+			unsigned int tbox = read_value(base + ix + 4, 4);
+			if (lbox < 0 || lbox > rest - ix)
+			{
+				fz_warn(ctx, "impossibly large JP2 box (%x, %d)", tbox, lbox);
+				break;
+			}
+			if (level == 0 && tbox == 0x6A703268 /* jp2h */ || level == 1 && tbox == 0x72657320 /* res  */)
+			{
+				base += ix + 8;
+				rest = lbox - 8;
+				ix = 0;
+				level++;
+			}
+			else if (level == 2 && tbox == 0x72657363 /* resc */ && lbox == 18 && rest - ix >= 18)
+			{
+				int vrn = read_value(base + ix + 8 + 0, 2);
+				int vrd = read_value(base + ix + 8 + 2, 2);
+				int hrn = read_value(base + ix + 8 + 4, 2);
+				int hrd = read_value(base + ix + 8 + 6, 2);
+				int vre = (char)base[8], hre = (char)base[9];
+				img->xres = (int)((float)hrn / hrd * pow(10, hre - 2) * 2.54f);
+				img->yres = (int)((float)vrn / vrd * pow(10, vre - 2) * 2.54f);
+				if (img->xres <= 0 || img->yres <= 0)
+				{
+					fz_warn(ctx, "invalid image resolution (%d, %d)", img->xres, img->yres);
+					img->xres = img->yres = 96;
+				}
+				break;
+			}
+			else
+			{
+				ix += lbox;
+			}
+		}
 	}
 
 	return img;
