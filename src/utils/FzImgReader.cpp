@@ -18,7 +18,7 @@ namespace fitz {
 
 static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
 {
-    int w, h, xres, yres;
+    int w = 0, h = 0, xres = 0, yres = 0;
     fz_colorspace *cs = NULL;
     fz_stream *stm = NULL;
 
@@ -39,7 +39,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
                       fz_device_gray(ctx) == cs ? PixelFormat32bppARGB :
                       fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK :
                       PixelFormatUndefined;
-    if (PixelFormatUndefined == fmt) {
+    if (PixelFormatUndefined == fmt || w <= 0 || h <= 0) {
         fz_close(stm);
         fz_drop_colorspace(ctx, cs);
         return NULL;
@@ -62,22 +62,22 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
 
     fz_try(ctx) {
         for (int y = 0; y < h; y++) {
-            unsigned char *data = (unsigned char *)bmpData.Scan0 + y * bmpData.Stride;
+            unsigned char *line = (unsigned char *)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w * 4; x += 4) {
-                int len = fz_read(stm, data + x, cs->n);
+                int len = fz_read(stm, line + x, cs->n);
                 if (len != cs->n)
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
                 if (3 == cs->n) { // RGB -> BGRA
-                    Swap(data[x], data[x + 2]);
-                    data[x + 3] = 0xFF;
+                    Swap(line[x], line[x + 2]);
+                    line[x + 3] = 0xFF;
                 }
                 else if (1 == cs->n) { // gray -> BGRA
-                    data[x + 1] = data[x + 2] = data[x];
-                    data[x + 3] = 0xFF;
+                    line[x + 1] = line[x + 2] = line[x];
+                    line[x + 3] = 0xFF;
                 }
                 else if (4 == cs->n) { // CMYK color inversion
                     for (int k = 0; k < 4; k++)
-                        data[x + k] = 255 - data[x + k];
+                        line[x + k] = 255 - line[x + k];
                 }
             }
         }
