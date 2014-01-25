@@ -14,9 +14,7 @@
 #include "./dsp.h"
 #include "./yuv.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
+#include <assert.h>
 
 //------------------------------------------------------------------------------
 // Fancy upsampler
@@ -45,11 +43,12 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
   const int last_pixel_pair = (len - 1) >> 1;                                  \
   uint32_t tl_uv = LOAD_UV(top_u[0], top_v[0]);   /* top-left sample */        \
   uint32_t l_uv  = LOAD_UV(cur_u[0], cur_v[0]);   /* left-sample */            \
-  if (top_y) {                                                                 \
+  assert(top_y != NULL);                                                       \
+  {                                                                            \
     const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;                \
     FUNC(top_y[0], uv0 & 0xff, (uv0 >> 16), top_dst);                          \
   }                                                                            \
-  if (bottom_y) {                                                              \
+  if (bottom_y != NULL) {                                                      \
     const uint32_t uv0 = (3 * l_uv + tl_uv + 0x00020002u) >> 2;                \
     FUNC(bottom_y[0], uv0 & 0xff, (uv0 >> 16), bottom_dst);                    \
   }                                                                            \
@@ -60,7 +59,7 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
     const uint32_t avg = tl_uv + t_uv + l_uv + uv + 0x00080008u;               \
     const uint32_t diag_12 = (avg + 2 * (t_uv + l_uv)) >> 3;                   \
     const uint32_t diag_03 = (avg + 2 * (tl_uv + uv)) >> 3;                    \
-    if (top_y) {                                                               \
+    {                                                                          \
       const uint32_t uv0 = (diag_12 + tl_uv) >> 1;                             \
       const uint32_t uv1 = (diag_03 + t_uv) >> 1;                              \
       FUNC(top_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                          \
@@ -68,7 +67,7 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
       FUNC(top_y[2 * x - 0], uv1 & 0xff, (uv1 >> 16),                          \
            top_dst + (2 * x - 0) * XSTEP);                                     \
     }                                                                          \
-    if (bottom_y) {                                                            \
+    if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (diag_03 + l_uv) >> 1;                              \
       const uint32_t uv1 = (diag_12 + uv) >> 1;                                \
       FUNC(bottom_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                       \
@@ -80,12 +79,12 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
     l_uv = uv;                                                                 \
   }                                                                            \
   if (!(len & 1)) {                                                            \
-    if (top_y) {                                                               \
+    {                                                                          \
       const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;              \
       FUNC(top_y[len - 1], uv0 & 0xff, (uv0 >> 16),                            \
            top_dst + (len - 1) * XSTEP);                                       \
     }                                                                          \
-    if (bottom_y) {                                                            \
+    if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (3 * l_uv + tl_uv + 0x00020002u) >> 2;              \
       FUNC(bottom_y[len - 1], uv0 & 0xff, (uv0 >> 16),                         \
            bottom_dst + (len - 1) * XSTEP);                                    \
@@ -168,7 +167,8 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bot_y,              \
                       uint8_t* top_dst, uint8_t* bot_dst, int len) {           \
   const int half_len = len >> 1;                                               \
   int x;                                                                       \
-  if (top_dst != NULL) {                                                       \
+  assert(top_dst != NULL);                                                     \
+  {                                                                            \
     for (x = 0; x < half_len; ++x) {                                           \
       FUNC(top_y[2 * x + 0], top_u[x], top_v[x], top_dst + 8 * x + 0);         \
       FUNC(top_y[2 * x + 1], top_u[x], top_v[x], top_dst + 8 * x + 4);         \
@@ -364,6 +364,3 @@ void WebPInitPremultiply(void) {
 #endif  // FANCY_UPSAMPLING
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

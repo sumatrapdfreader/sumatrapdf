@@ -14,10 +14,6 @@
 #include "./dsp.h"
 #include "../dec/vp8i.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // run-time tables (~4k)
 
@@ -61,6 +57,14 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
 #define STORE(x, y, v) \
   dst[x + y * BPS] = clip_8b(dst[x + y * BPS] + ((v) >> 3))
 
+#define STORE2(y, dc, d, c) do {    \
+  const int DC = (dc);              \
+  STORE(0, y, DC + (d));            \
+  STORE(1, y, DC + (c));            \
+  STORE(2, y, DC - (c));            \
+  STORE(3, y, DC - (d));            \
+} while (0)
+
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 #define MUL(a, b) (((a) * (b)) >> 16)
@@ -103,7 +107,21 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
     dst += BPS;
   }
 }
+
+// Simplified transform when only in[0], in[1] and in[4] are non-zero
+static void TransformAC3(const int16_t* in, uint8_t* dst) {
+  const int a = in[0] + 4;
+  const int c4 = MUL(in[4], kC2);
+  const int d4 = MUL(in[4], kC1);
+  const int c1 = MUL(in[1], kC2);
+  const int d1 = MUL(in[1], kC1);
+  STORE2(0, a + d4, d1, c1);
+  STORE2(1, a + c4, d1, c1);
+  STORE2(2, a - c4, d1, c1);
+  STORE2(3, a - d4, d1, c1);
+}
 #undef MUL
+#undef STORE2
 
 static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
   TransformOne(in, dst);
@@ -679,6 +697,7 @@ static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
 //------------------------------------------------------------------------------
 
 VP8DecIdct2 VP8Transform;
+VP8DecIdct VP8TransformAC3;
 VP8DecIdct VP8TransformUV;
 VP8DecIdct VP8TransformDC;
 VP8DecIdct VP8TransformDCUV;
@@ -706,6 +725,7 @@ void VP8DspInit(void) {
   VP8TransformUV = TransformUV;
   VP8TransformDC = TransformDC;
   VP8TransformDCUV = TransformDCUV;
+  VP8TransformAC3 = TransformAC3;
 
   VP8VFilter16 = VFilter16;
   VP8HFilter16 = HFilter16;
@@ -734,6 +754,3 @@ void VP8DspInit(void) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

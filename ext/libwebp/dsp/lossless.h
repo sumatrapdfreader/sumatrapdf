@@ -18,9 +18,29 @@
 #include "../webp/types.h"
 #include "../webp/decode.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
+
+//------------------------------------------------------------------------------
+//
+
+typedef uint32_t (*VP8LPredClampedAddSubFunc)(uint32_t c0, uint32_t c1,
+                                              uint32_t c2);
+typedef uint32_t (*VP8LPredSelectFunc)(uint32_t c0, uint32_t c1, uint32_t c2);
+typedef void (*VP8LSubtractGreenFromBlueAndRedFunc)(uint32_t* argb_data,
+                                                    int num_pixs);
+typedef void (*VP8LAddGreenToBlueAndRedFunc)(uint32_t* data_start,
+                                             const uint32_t* data_end);
+
+extern VP8LPredClampedAddSubFunc VP8LClampedAddSubtractFull;
+extern VP8LPredClampedAddSubFunc VP8LClampedAddSubtractHalf;
+extern VP8LPredSelectFunc VP8LSelect;
+extern VP8LSubtractGreenFromBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+extern VP8LAddGreenToBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+
+// Must be called before calling any of the above methods.
+void VP8LDspInit(void);
 
 //------------------------------------------------------------------------------
 // Image transforms.
@@ -41,9 +61,6 @@ void VP8LInverseTransform(const struct VP8LTransform* const transform,
 void VP8LColorIndexInverseTransformAlpha(
     const struct VP8LTransform* const transform, int y_start, int y_end,
     const uint8_t* src, uint8_t* dst);
-
-// Subtracts green from blue and red channels.
-void VP8LSubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs);
 
 void VP8LResidualImage(int width, int height, int bits,
                        uint32_t* const argb, uint32_t* const argb_scratch,
@@ -72,8 +89,8 @@ static WEBP_INLINE uint32_t VP8LSubSampleSize(uint32_t size,
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
 extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];
-extern float VP8LFastLog2Slow(int v);
-extern float VP8LFastSLog2Slow(int v);
+float VP8LFastLog2Slow(int v);
+float VP8LFastSLog2Slow(int v);
 static WEBP_INLINE float VP8LFastLog2(int v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : VP8LFastLog2Slow(v);
 }
@@ -82,6 +99,105 @@ static WEBP_INLINE float VP8LFastSLog2(int v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2Table[v] : VP8LFastSLog2Slow(v);
 }
 
+// -----------------------------------------------------------------------------
+// PrefixEncode()
+
+// use GNU builtins where available.
+#if defined(__GNUC__) && \
+    ((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  return 31 ^ __builtin_clz(n);
+}
+#elif defined(_MSC_VER) && _MSC_VER > 1310 && \
+      (defined(_M_X64) || defined(_M_IX86))
+#include <intrin.h>
+#pragma intrinsic(_BitScanReverse)
+
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  unsigned long first_set_bit;
+  _BitScanReverse(&first_set_bit, n);
+  return first_set_bit;
+}
+#else
+// Returns (int)floor(log2(n)). n must be > 0.
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  int log = 0;
+  uint32_t value = n;
+  int i;
+
+  for (i = 4; i >= 0; --i) {
+    const int shift = (1 << i);
+    const uint32_t x = value >> shift;
+    if (x != 0) {
+      value = x;
+      log += shift;
+    }
+  }
+  return log;
+}
+#endif
+
+static WEBP_INLINE int VP8LBitsLog2Ceiling(uint32_t n) {
+  const int log_floor = BitsLog2Floor(n);
+  if (n == (n & ~(n - 1)))  // zero or a power of two.
+    return log_floor;
+  else
+    return log_floor + 1;
+}
+
+// Splitting of distance and length codes into prefixes and
+// extra bits. The prefixes are encoded with an entropy code
+// while the extra bits are stored just as normal bits.
+static WEBP_INLINE void VP8LPrefixEncodeBitsNoLUT(int distance, int* const code,
+                                                  int* const extra_bits) {
+  const int highest_bit = BitsLog2Floor(--distance);
+  const int second_highest_bit = (distance >> (highest_bit - 1)) & 1;
+  *extra_bits = highest_bit - 1;
+  *code = 2 * highest_bit + second_highest_bit;
+}
+
+static WEBP_INLINE void VP8LPrefixEncodeNoLUT(int distance, int* const code,
+                                              int* const extra_bits,
+                                              int* const extra_bits_value) {
+  const int highest_bit = BitsLog2Floor(--distance);
+  const int second_highest_bit = (distance >> (highest_bit - 1)) & 1;
+  *extra_bits = highest_bit - 1;
+  *extra_bits_value = distance & ((1 << *extra_bits) - 1);
+  *code = 2 * highest_bit + second_highest_bit;
+}
+
+#define PREFIX_LOOKUP_IDX_MAX   512
+typedef struct {
+  int8_t code_;
+  int8_t extra_bits_;
+} VP8LPrefixCode;
+
+// These tables are derived using VP8LPrefixEncodeNoLUT.
+extern const VP8LPrefixCode kPrefixEncodeCode[PREFIX_LOOKUP_IDX_MAX];
+extern const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX];
+static WEBP_INLINE void VP8LPrefixEncodeBits(int distance, int* const code,
+                                             int* const extra_bits) {
+  if (distance < PREFIX_LOOKUP_IDX_MAX) {
+    const VP8LPrefixCode prefix_code = kPrefixEncodeCode[distance];
+    *code = prefix_code.code_;
+    *extra_bits = prefix_code.extra_bits_;
+  } else {
+    VP8LPrefixEncodeBitsNoLUT(distance, code, extra_bits);
+  }
+}
+
+static WEBP_INLINE void VP8LPrefixEncode(int distance, int* const code,
+                                         int* const extra_bits,
+                                         int* const extra_bits_value) {
+  if (distance < PREFIX_LOOKUP_IDX_MAX) {
+    const VP8LPrefixCode prefix_code = kPrefixEncodeCode[distance];
+    *code = prefix_code.code_;
+    *extra_bits = prefix_code.extra_bits_;
+    *extra_bits_value = kPrefixEncodeExtraBitsValue[distance];
+  } else {
+    VP8LPrefixEncodeNoLUT(distance, code, extra_bits, extra_bits_value);
+  }
+}
 
 // In-place difference of each component with mod 256.
 static WEBP_INLINE uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
@@ -97,7 +213,7 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

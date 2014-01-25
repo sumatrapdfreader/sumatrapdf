@@ -53,8 +53,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libwebputils_la_LIBADD =
-am__objects_1 = bit_reader.lo color_cache.lo filters.lo huffman.lo \
-	quant_levels_dec.lo rescaler.lo thread.lo utils.lo
+am__objects_1 = alpha_processing.lo bit_reader.lo color_cache.lo \
+	filters.lo huffman.lo quant_levels_dec.lo rescaler.lo \
+	random.lo thread.lo utils.lo
 am__objects_2 = bit_writer.lo huffman_encode.lo quant_levels.lo
 am_libwebputils_la_OBJECTS = $(am__objects_1) $(am__objects_2)
 libwebputils_la_OBJECTS = $(am_libwebputils_la_OBJECTS)
@@ -62,10 +63,11 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 libwebputilsdecode_la_LIBADD =
-am__libwebputilsdecode_la_SOURCES_DIST = bit_reader.c bit_reader.h \
-	color_cache.c color_cache.h filters.c filters.h huffman.c \
-	huffman.h quant_levels_dec.c quant_levels_dec.h rescaler.c \
-	rescaler.h thread.c thread.h utils.c utils.h
+am__libwebputilsdecode_la_SOURCES_DIST = alpha_processing.c \
+	alpha_processing.h bit_reader.c bit_reader.h color_cache.c \
+	color_cache.h filters.c filters.h huffman.c huffman.h \
+	quant_levels_dec.c quant_levels_dec.h rescaler.c rescaler.h \
+	random.c random.h thread.c thread.h utils.c utils.h
 @BUILD_LIBWEBPDECODER_TRUE@am_libwebputilsdecode_la_OBJECTS =  \
 @BUILD_LIBWEBPDECODER_TRUE@	$(am__objects_1)
 libwebputilsdecode_la_OBJECTS = $(am_libwebputilsdecode_la_OBJECTS)
@@ -272,9 +274,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebputils.la $(am__append_1)
 common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
-COMMON_SOURCES = bit_reader.c bit_reader.h color_cache.c color_cache.h \
-	filters.c filters.h huffman.c huffman.h quant_levels_dec.c \
-	quant_levels_dec.h rescaler.c rescaler.h thread.c thread.h \
+COMMON_SOURCES = alpha_processing.c alpha_processing.h bit_reader.c \
+	bit_reader.h color_cache.c color_cache.h filters.c filters.h \
+	huffman.c huffman.h quant_levels_dec.c quant_levels_dec.h \
+	rescaler.c rescaler.h random.c random.h thread.c thread.h \
 	utils.c utils.h
 ENC_SOURCES = bit_writer.c bit_writer.h huffman_encode.c \
 	huffman_encode.h quant_levels.c quant_levels.h
@@ -334,6 +337,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alpha_processing.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bit_reader.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bit_writer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/color_cache.Plo@am__quote@
@@ -342,6 +346,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/huffman_encode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quant_levels.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/quant_levels_dec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/random.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rescaler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@

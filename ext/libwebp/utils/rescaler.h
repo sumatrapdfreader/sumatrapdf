@@ -14,7 +14,7 @@
 #ifndef WEBP_UTILS_RESCALER_H_
 #define WEBP_UTILS_RESCALER_H_
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -38,13 +38,19 @@ typedef struct {
 } WebPRescaler;
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
-void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
+void WebPRescalerInit(WebPRescaler* const rescaler,
+                      int src_width, int src_height,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,
                       int num_channels,
                       int x_add, int x_sub,
                       int y_add, int y_sub,
                       int32_t* const work);
+
+// Returns the number of input lines needed next to produce one output line,
+// considering that the maximum available input lines are 'max_num_lines'.
+int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
+                           int max_num_lines);
 
 // Import a row of data and save its contribution in the rescaler.
 // 'channel' denotes the channel number to be imported.
@@ -64,14 +70,14 @@ int WebPRescalerHasPendingOutput(const WebPRescaler* const rescaler) {
 
 // Export one row from rescaler. Returns the pointer where output was written,
 // or NULL if no row was pending.
-uint8_t* WebPRescalerExportRow(WebPRescaler* const wrk);
+uint8_t* WebPRescalerExportRow(WebPRescaler* const rescaler);
 
 // Export as many rows as possible. Return the numbers of rows written.
-int WebPRescalerExport(WebPRescaler* const wrk);
+int WebPRescalerExport(WebPRescaler* const rescaler);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

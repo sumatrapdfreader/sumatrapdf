@@ -261,9 +261,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebpdecode.la
-libwebpdecode_la_SOURCES = alpha.c buffer.c decode_vp8.h frame.c \
-	idec.c io.c layer.c quant.c tree.c vp8.c vp8i.h vp8l.c vp8li.h \
-	webp.c webpi.h
+libwebpdecode_la_SOURCES = alpha.c alphai.h buffer.c decode_vp8.h \
+	frame.c idec.c io.c layer.c quant.c tree.c vp8.c vp8i.h vp8l.c \
+	vp8li.h webp.c webpi.h
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/types.h
 noinst_HEADERS = ../webp/format_constants.h
 libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)

@@ -14,7 +14,7 @@
 #ifndef WEBP_DEC_WEBPI_H_
 #define WEBP_DEC_WEBPI_H_
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -109,7 +109,7 @@ void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

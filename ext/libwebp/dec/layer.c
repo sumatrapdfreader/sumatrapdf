@@ -16,10 +16,6 @@
 
 #include "./vp8i.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 
 int VP8DecodeLayer(VP8Decoder* const dec) {
@@ -32,6 +28,3 @@ int VP8DecodeLayer(VP8Decoder* const dec) {
   return 1;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

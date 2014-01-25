@@ -9,6 +9,8 @@ common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
 
 COMMON_SOURCES =
+COMMON_SOURCES += alpha_processing.c
+COMMON_SOURCES += alpha_processing.h
 COMMON_SOURCES += bit_reader.c
 COMMON_SOURCES += bit_reader.h
 COMMON_SOURCES += color_cache.c
@@ -21,6 +23,8 @@ COMMON_SOURCES += quant_levels_dec.c
 COMMON_SOURCES += quant_levels_dec.h
 COMMON_SOURCES += rescaler.c
 COMMON_SOURCES += rescaler.h
+COMMON_SOURCES += random.c
+COMMON_SOURCES += random.h
 COMMON_SOURCES += thread.c
 COMMON_SOURCES += thread.h
 COMMON_SOURCES += utils.c

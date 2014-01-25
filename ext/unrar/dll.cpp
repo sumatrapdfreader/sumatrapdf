@@ -73,7 +73,16 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     }
     if (!Data->Arc.IsArchive(false))
     {
-      r->OpenResult=Data->Cmd.DllError!=0 ? Data->Cmd.DllError:ERAR_BAD_ARCHIVE;
+      if (Data->Cmd.DllError!=0)
+        r->OpenResult=Data->Cmd.DllError;
+      else
+      {
+        RAR_EXIT ErrCode=ErrHandler.GetErrorCode();
+        if (ErrCode!=RARX_SUCCESS && ErrCode!=RARX_WARNING)
+          r->OpenResult=RarErrorToDll(ErrCode);
+        else
+          r->OpenResult=ERAR_BAD_ARCHIVE;
+      }
       delete Data;
       return NULL;
     }
@@ -186,7 +195,16 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
         }
         else
           return ERAR_EOPEN;
-      return(Data->Arc.BrokenHeader ? ERAR_BAD_DATA:ERAR_END_ARCHIVE);
+
+      if (Data->Arc.BrokenHeader)
+        return ERAR_BAD_DATA;
+
+      // Might be necessary if RARSetPassword is still called instead of
+      // open callback for RAR5 archives and if password is invalid.
+      if (Data->Arc.FailedHeaderDecryption)
+        return ERAR_BAD_PASSWORD;
+      
+      return ERAR_END_ARCHIVE;
     }
     FileHeader *hd=&Data->Arc.FileHead;
     if (Data->OpenMode==RAR_OM_LIST && hd->SplitBefore)
@@ -197,7 +215,7 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
       else
         return Code;
     }
-    wcsncpy(D->ArcNameW,hd->FileName,ASIZE(D->ArcNameW));
+    wcsncpy(D->ArcNameW,Data->Arc.FileName,ASIZE(D->ArcNameW));
     WideToChar(D->ArcNameW,D->ArcName,ASIZE(D->ArcName));
 
     wcsncpy(D->FileNameW,hd->FileName,ASIZE(D->FileNameW));
@@ -419,6 +437,8 @@ static int RarErrorToDll(RAR_EXIT ErrCode)
       return ERAR_ECREATE;
     case RARX_MEMORY:
       return ERAR_NO_MEMORY;
+    case RARX_BADPWD:
+      return ERAR_BAD_PASSWORD;
     case RARX_SUCCESS:
       return ERAR_SUCCESS; // 0.
     default:

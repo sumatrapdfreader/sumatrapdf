@@ -13,10 +13,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_SSE2)
 #include <stdlib.h>  // for abs()
 #include <emmintrin.h>
@@ -456,7 +452,7 @@ static void FTransformSSE2(const uint8_t* src, const uint8_t* ref,
 }
 
 static void FTransformWHTSSE2(const int16_t* in, int16_t* out) {
-  int16_t tmp[16];
+  int32_t tmp[16];
   int i;
   for (i = 0; i < 4; ++i, in += 64) {
     const int a0 = (in[0 * 16] + in[2 * 16]);
@@ -469,22 +465,22 @@ static void FTransformWHTSSE2(const int16_t* in, int16_t* out) {
     tmp[3 + i * 4] = a0 - a1;
   }
   {
-    const __m128i src0 = _mm_loadl_epi64((__m128i*)&tmp[0]);
-    const __m128i src1 = _mm_loadl_epi64((__m128i*)&tmp[4]);
-    const __m128i src2 = _mm_loadl_epi64((__m128i*)&tmp[8]);
-    const __m128i src3 = _mm_loadl_epi64((__m128i*)&tmp[12]);
-    const __m128i a0 = _mm_add_epi16(src0, src2);
-    const __m128i a1 = _mm_add_epi16(src1, src3);
-    const __m128i a2 = _mm_sub_epi16(src1, src3);
-    const __m128i a3 = _mm_sub_epi16(src0, src2);
-    const __m128i b0 = _mm_srai_epi16(_mm_adds_epi16(a0, a1), 1);
-    const __m128i b1 = _mm_srai_epi16(_mm_adds_epi16(a3, a2), 1);
-    const __m128i b2 = _mm_srai_epi16(_mm_subs_epi16(a3, a2), 1);
-    const __m128i b3 = _mm_srai_epi16(_mm_subs_epi16(a0, a1), 1);
-    _mm_storel_epi64((__m128i*)&out[ 0], b0);
-    _mm_storel_epi64((__m128i*)&out[ 4], b1);
-    _mm_storel_epi64((__m128i*)&out[ 8], b2);
-    _mm_storel_epi64((__m128i*)&out[12], b3);
+    const __m128i src0 = _mm_loadu_si128((__m128i*)&tmp[0]);
+    const __m128i src1 = _mm_loadu_si128((__m128i*)&tmp[4]);
+    const __m128i src2 = _mm_loadu_si128((__m128i*)&tmp[8]);
+    const __m128i src3 = _mm_loadu_si128((__m128i*)&tmp[12]);
+    const __m128i a0 = _mm_add_epi32(src0, src2);
+    const __m128i a1 = _mm_add_epi32(src1, src3);
+    const __m128i a2 = _mm_sub_epi32(src1, src3);
+    const __m128i a3 = _mm_sub_epi32(src0, src2);
+    const __m128i b0 = _mm_srai_epi32(_mm_add_epi32(a0, a1), 1);
+    const __m128i b1 = _mm_srai_epi32(_mm_add_epi32(a3, a2), 1);
+    const __m128i b2 = _mm_srai_epi32(_mm_sub_epi32(a3, a2), 1);
+    const __m128i b3 = _mm_srai_epi32(_mm_sub_epi32(a0, a1), 1);
+    const __m128i out0 = _mm_packs_epi32(b0, b1);
+    const __m128i out1 = _mm_packs_epi32(b2, b3);
+    _mm_storeu_si128((__m128i*)&out[0], out0);
+    _mm_storeu_si128((__m128i*)&out[8], out1);
   }
 }
 
@@ -644,7 +640,7 @@ static int TTransformSSE2(const uint8_t* inA, const uint8_t* inB,
   __m128i tmp_0, tmp_1, tmp_2, tmp_3;
   const __m128i zero = _mm_setzero_si128();
 
-  // Load, combine and tranpose inputs.
+  // Load, combine and transpose inputs.
   {
     const __m128i inA_0 = _mm_loadl_epi64((__m128i*)&inA[BPS * 0]);
     const __m128i inA_1 = _mm_loadl_epi64((__m128i*)&inA[BPS * 1]);
@@ -830,8 +826,6 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   const __m128i bias8 = _mm_loadu_si128((__m128i*)&mtx->bias_[8]);
   const __m128i q0 = _mm_loadu_si128((__m128i*)&mtx->q_[0]);
   const __m128i q8 = _mm_loadu_si128((__m128i*)&mtx->q_[8]);
-  const __m128i zthresh0 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[0]);
-  const __m128i zthresh8 = _mm_loadu_si128((__m128i*)&mtx->zthresh_[8]);
 
   // sign(in) = in >> 15  (0x0000 if positive, 0xffff if negative)
   const __m128i sign0 = _mm_srai_epi16(in0, 15);
@@ -894,17 +888,8 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   in0 = _mm_mullo_epi16(out0, q0);
   in8 = _mm_mullo_epi16(out8, q8);
 
-  // if (coeff <= mtx->zthresh_) {in=0; out=0;}
-  {
-    __m128i cmp0 = _mm_cmpgt_epi16(coeff0, zthresh0);
-    __m128i cmp8 = _mm_cmpgt_epi16(coeff8, zthresh8);
-    in0 = _mm_and_si128(in0, cmp0);
-    in8 = _mm_and_si128(in8, cmp8);
-    _mm_storeu_si128((__m128i*)&in[0], in0);
-    _mm_storeu_si128((__m128i*)&in[8], in8);
-    out0 = _mm_and_si128(out0, cmp0);
-    out8 = _mm_and_si128(out8, cmp8);
-  }
+  _mm_storeu_si128((__m128i*)&in[0], in0);
+  _mm_storeu_si128((__m128i*)&in[8], in8);
 
   // zigzag the output before storing it.
   //
@@ -941,6 +926,11 @@ static int QuantizeBlockSSE2(int16_t in[16], int16_t out[16],
   }
 }
 
+static int QuantizeBlockWHTSSE2(int16_t in[16], int16_t out[16],
+                                const VP8Matrix* const mtx) {
+  return QuantizeBlockSSE2(in, out, 0, mtx);
+}
+
 #endif   // WEBP_USE_SSE2
 
 //------------------------------------------------------------------------------
@@ -952,6 +942,7 @@ void VP8EncDspInitSSE2(void) {
 #if defined(WEBP_USE_SSE2)
   VP8CollectHistogram = CollectHistogramSSE2;
   VP8EncQuantizeBlock = QuantizeBlockSSE2;
+  VP8EncQuantizeBlockWHT = QuantizeBlockWHTSSE2;
   VP8ITransform = ITransformSSE2;
   VP8FTransform = FTransformSSE2;
   VP8FTransformWHT = FTransformWHTSSE2;
@@ -964,6 +955,3 @@ void VP8EncDspInitSSE2(void) {
 #endif   // WEBP_USE_SSE2
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

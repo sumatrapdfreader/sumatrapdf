@@ -40,7 +40,7 @@ diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
  		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 19:52:42 2013
-+++ openjpeg\j2k.c	Wed Jan 15 00:36:43 2014
++++ openjpeg\j2k.c	Sun Jan 26 00:18:57 2014
 @@ -1930,10 +1930,27 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -617,7 +617,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
 --- openjpeg.orig\t2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\t2.c	Sat Dec 21 17:54:43 2013
++++ openjpeg\t2.c	Sun Jan 26 00:10:16 2014
 @@ -833,12 +833,16 @@
          }
  
@@ -637,20 +637,24 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                  }
  
                  /** TODO : check the Nsop value */
-@@ -884,11 +888,11 @@
+@@ -883,12 +887,14 @@
+                 l_header_data += opj_bio_numbytes(l_bio);
                  opj_bio_destroy(l_bio);
  
                  /* EPH markers */
                  if (p_tcp->csty & J2K_CP_CSTY_EPH) {
-                         if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
+-                        if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
 -                                printf("Error : expected EPH marker\n");
++                        if (p_max_length < 2) {
++                                fprintf(stderr, "Not enough space for expected EPH marker\n");
++                        } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
 +                                fprintf(stderr, "Error : expected EPH marker\n");
                          } else {
                                  l_header_data += 2;
                          }
                  }
  
-@@ -979,10 +983,15 @@
+@@ -979,10 +985,15 @@
                          n = l_cblk->numnewpasses;
  
                          do {
@@ -666,7 +670,22 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                  if (n > 0) {
                                          ++l_segno;
  
-@@ -1114,10 +1123,11 @@
+@@ -1007,11 +1018,13 @@
+         l_header_data += opj_bio_numbytes(l_bio);
+         opj_bio_destroy(l_bio);
+ 
+         /* EPH markers */
+         if (p_tcp->csty & J2K_CP_CSTY_EPH) {
+-                if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
++                if (p_max_length < 2) {
++                        fprintf(stderr, "Not enough space for expected EPH marker\n");
++                } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
+                         /* TODO opj_event_msg(t2->cinfo->event_mgr, EVT_ERROR, "Expected EPH marker\n"); */
+                 } else {
+                         l_header_data += 2;
+                 }
+         }
+@@ -1114,10 +1127,11 @@
                                  /* Check if the cblk->data have allocated enough memory */
                                  if ((l_cblk->data_current_size + l_seg->newlen) > l_cblk->data_max_size) {
                                      OPJ_BYTE* new_cblk_data = (OPJ_BYTE*) opj_realloc(l_cblk->data, l_cblk->data_current_size + l_seg->newlen);

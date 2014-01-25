@@ -16,10 +16,6 @@
 #include "./color_cache.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // VP8LColorCache.
 
@@ -41,6 +37,3 @@ void VP8LColorCacheClear(VP8LColorCache* const cc) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}
-#endif

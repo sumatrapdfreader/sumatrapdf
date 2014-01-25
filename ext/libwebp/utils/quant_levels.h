@@ -18,7 +18,7 @@
 
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -29,7 +29,7 @@ extern "C" {
 int QuantizeLevels(uint8_t* const data, int width, int height, int num_levels,
                    uint64_t* const sse);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

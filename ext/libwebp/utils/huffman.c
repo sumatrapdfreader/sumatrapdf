@@ -13,13 +13,14 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "./huffman.h"
 #include "../utils/utils.h"
 #include "../webp/format_constants.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
+// Uncomment the following to use look-up table for ReverseBits()
+// (might be faster on some platform)
+// #define USE_LUT_REVERSE_BITS
 
 #define NON_EXISTENT_SYMBOL (-1)
 
@@ -52,11 +53,14 @@ static int TreeInit(HuffmanTree* const tree, int num_leaves) {
   // Note that a Huffman tree is a full binary tree; and in a full binary tree
   // with L leaves, the total number of nodes N = 2 * L - 1.
   tree->max_nodes_ = 2 * num_leaves - 1;
+  assert(tree->max_nodes_ < (1 << 16));   // limit for the lut_jump_ table
   tree->root_ = (HuffmanTreeNode*)WebPSafeMalloc((uint64_t)tree->max_nodes_,
                                                  sizeof(*tree->root_));
   if (tree->root_ == NULL) return 0;
   TreeNodeInit(tree->root_);  // Initialize root.
   tree->num_nodes_ = 1;
+  memset(tree->lut_bits_, 255, sizeof(tree->lut_bits_));
+  memset(tree->lut_jump_, 0, sizeof(tree->lut_jump_));
   return 1;
 }
 
@@ -117,10 +121,54 @@ int HuffmanCodeLengthsToCodes(const int* const code_lengths,
   return 1;
 }
 
+#ifndef USE_LUT_REVERSE_BITS
+
+static int ReverseBitsShort(int bits, int num_bits) {
+  int retval = 0;
+  int i;
+  assert(num_bits <= 8);   // Not a hard requirement, just for coherency.
+  for (i = 0; i < num_bits; ++i) {
+    retval <<= 1;
+    retval |= bits & 1;
+    bits >>= 1;
+  }
+  return retval;
+}
+
+#else
+
+static const uint8_t kReversedBits[16] = {  // Pre-reversed 4-bit values.
+  0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+  0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
+};
+
+static int ReverseBitsShort(int bits, int num_bits) {
+  const uint8_t v = (kReversedBits[bits & 0xf] << 4) | kReversedBits[bits >> 4];
+  assert(num_bits <= 8);
+  return v >> (8 - num_bits);
+}
+
+#endif
+
 static int TreeAddSymbol(HuffmanTree* const tree,
                          int symbol, int code, int code_length) {
+  int step = HUFF_LUT_BITS;
+  int base_code;
   HuffmanTreeNode* node = tree->root_;
   const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
+  assert(symbol == (int16_t)symbol);
+  if (code_length <= HUFF_LUT_BITS) {
+    int i;
+    base_code = ReverseBitsShort(code, code_length);
+    for (i = 0; i < (1 << (HUFF_LUT_BITS - code_length)); ++i) {
+      const int idx = base_code | (i << code_length);
+      tree->lut_symbol_[idx] = (int16_t)symbol;
+      tree->lut_bits_[idx] = code_length;
+    }
+  } else {
+    base_code = ReverseBitsShort((code >> (code_length - HUFF_LUT_BITS)),
+                                 HUFF_LUT_BITS);
+  }
   while (code_length-- > 0) {
     if (node >= max_node) {
       return 0;
@@ -128,14 +176,17 @@ static int TreeAddSymbol(HuffmanTree* const tree,
     if (NodeIsEmpty(node)) {
       if (IsFull(tree)) return 0;    // error: too many symbols.
       AssignChildren(tree, node);
-    } else if (HuffmanTreeNodeIsLeaf(node)) {
+    } else if (!HuffmanTreeNodeIsNotLeaf(node)) {
       return 0;  // leaf is already occupied.
     }
     node += node->children_ + ((code >> code_length) & 1);
+    if (--step == 0) {
+      tree->lut_jump_[base_code] = (int16_t)(node - tree->root_);
+    }
   }
   if (NodeIsEmpty(node)) {
     node->children_ = 0;      // turn newly created node into a leaf.
-  } else if (!HuffmanTreeNodeIsLeaf(node)) {
+  } else if (HuffmanTreeNodeIsNotLeaf(node)) {
     return 0;   // trying to assign a symbol to already used code.
   }
   node->symbol_ = symbol;  // Add symbol in this node.
@@ -235,6 +286,3 @@ int HuffmanTreeBuildExplicit(HuffmanTree* const tree,
   return ok;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

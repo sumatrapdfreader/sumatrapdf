@@ -13,10 +13,6 @@
 
 #include "./dsp.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #if defined(WEBP_USE_NEON)
 
 #include "../enc/vp8enci.h"
@@ -493,7 +489,7 @@ static int Disto4x4(const uint8_t* const a, const uint8_t* const b,
     // q12/14 tmp[12-15]
 
     // These are still in 01 45 23 67 order. We fix it easily in the addition
-    // case but the subtraction propegates them.
+    // case but the subtraction propagates them.
     "vswp            d3, d27                  \n"
     "vswp            d19, d31                 \n"
 
@@ -634,6 +630,3 @@ void VP8EncDspInitNEON(void) {
 #endif   // WEBP_USE_NEON
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

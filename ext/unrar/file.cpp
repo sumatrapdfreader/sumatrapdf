@@ -60,15 +60,28 @@ bool File::Open(const wchar *Name,uint Mode)
   DWORD LastError;
   if (hNewFile==BAD_HANDLE)
   {
-    // Following CreateFile("\\?\path") call can change the last error code
-    // from "not found" to "access denied" for relative paths like "..\path".
-    // But we need the correct "not found" code to create a new archive
-    // if existing one is not found. So we preserve the code here.
     LastError=GetLastError();
 
     wchar LongName[NM];
     if (GetWinLongPath(Name,LongName,ASIZE(LongName)))
+    {
       hNewFile=CreateFile(LongName,Access,ShareMode,NULL,OPEN_EXISTING,Flags,NULL);
+
+      // For archive names longer than 260 characters first CreateFile
+      // (without \\?\) fails and sets LastError to 3 (access denied).
+      // We need the correct "file not found" error code to decide
+      // if we create a new archive or quit with "cannot create" error.
+      // So we need to check the error code after \\?\ CreateFile again,
+      // otherwise we'll fail to create new archives with long names.
+      // But we cannot simply assign the new code to LastError,
+      // because it would break "..\arcname.rar" relative names processing.
+      // First CreateFile returns the correct "file not found" code for such
+      // names, but "\\?\" CreateFile returns ERROR_INVALID_NAME treating
+      // dots as a directory name. So we check only for "file not found"
+      // error here and for other errors use the first CreateFile result.
+      if (GetLastError()==ERROR_FILE_NOT_FOUND)
+        LastError=ERROR_FILE_NOT_FOUND;
+    }
   }
 
   if (hNewFile==BAD_HANDLE && LastError==ERROR_FILE_NOT_FOUND)
@@ -188,23 +201,25 @@ bool File::WCreate(const wchar *Name,uint Mode)
 bool File::Close()
 {
   bool Success=true;
-  if (HandleType!=FILE_HANDLENORMAL)
-    HandleType=FILE_HANDLENORMAL;
-  else
-    if (hFile!=BAD_HANDLE)
+
+  if (hFile!=BAD_HANDLE)
+  {
+    if (!SkipClose)
     {
-      if (!SkipClose)
-      {
 #ifdef _WIN_ALL
+      // We use the standard system handle for stdout in Windows
+      // and it must not  be closed here.
+      if (HandleType==FILE_HANDLENORMAL)
         Success=CloseHandle(hFile)==TRUE;
 #else
-        Success=fclose(hFile)!=EOF;
+      Success=fclose(hFile)!=EOF;
 #endif
-      }
-      hFile=BAD_HANDLE;
-      if (!Success && AllowExceptions)
-        ErrHandler.CloseError(FileName);
     }
+    hFile=BAD_HANDLE;
+  }
+  HandleType=FILE_HANDLENORMAL;
+  if (!Success && AllowExceptions)
+    ErrHandler.CloseError(FileName);
   return Success;
 }
 
@@ -250,24 +265,16 @@ void File::Write(const void *Data,size_t Size)
 {
   if (Size==0)
     return;
-  if (HandleType!=FILE_HANDLENORMAL)
-    switch(HandleType)
-    {
-      case FILE_HANDLESTD:
+  if (HandleType==FILE_HANDLESTD)
+  {
 #ifdef _WIN_ALL
-        hFile=GetStdHandle(STD_OUTPUT_HANDLE);
+    hFile=GetStdHandle(STD_OUTPUT_HANDLE);
 #else
-        hFile=stdout;
+    // Cannot use the standard stdout here, because it already has wide orientation.
+    if (hFile==BAD_HANDLE)
+      hFile=fdopen(dup(1),"w"); // Open new stdout stream.
 #endif
-        break;
-      case FILE_HANDLEERR:
-#ifdef _WIN_ALL
-        hFile=GetStdHandle(STD_ERROR_HANDLE);
-#else
-        hFile=stderr;
-#endif
-        break;
-    }
+  }
   while (1)
   {
     bool Success=false;

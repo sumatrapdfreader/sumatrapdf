@@ -16,7 +16,7 @@
 
 #include "../webp/decode.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -132,7 +132,8 @@ static WEBP_INLINE int VP8InitIo(VP8Io* const io) {
   return VP8InitIoInternal(io, WEBP_DECODER_ABI_VERSION);
 }
 
-// Start decoding a new picture. Returns true if ok.
+// Decode the VP8 frame header. Returns true if ok.
+// Note: 'io->data' must be pointing to the start of the VP8 frame header.
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io);
 
 // Decode a picture. Will call VP8GetHeaders() if it wasn't done already.
@@ -177,7 +178,7 @@ WEBP_EXTERN(int) VP8LGetInfo(
     const uint8_t* data, size_t data_size,  // data available so far
     int* const width, int* const height, int* const has_alpha);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

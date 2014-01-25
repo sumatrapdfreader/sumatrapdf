@@ -49,6 +49,7 @@ Archive::Archive(RAROptions *InitCmd)
   NewArchive=false;
 
   SilentOpen=false;
+
 }
 
 
@@ -201,6 +202,15 @@ bool Archive::IsArchive(bool EnableBroken)
   else
     MarkHead.HeadSize=SIZEOF_MARKHEAD3;
 
+#ifdef RARDLL
+  // If callback function is not set, we cannot get the password,
+  // so we skip the initial header processing for encrypted header archive.
+  // It leads to skipped archive comment, but the rest of archive data
+  // is processed correctly.
+  if (Cmd->Callback==NULL)
+    SilentOpen=true;
+#endif
+
   // Skip the archive encryption header if any and read the main header.
   while (ReadHeader()!=0)
   {
@@ -244,15 +254,6 @@ bool Archive::IsArchive(bool EnableBroken)
   }
 */
 
-#ifdef RARDLL
-  // If callback function is not set, we cannot get the password,
-  // so we skip the initial header processing for encrypted header archive.
-  // It leads to skipped archive comment, but the rest of archive data
-  // is processed correctly.
-  if (Cmd->Callback==NULL)
-    SilentOpen=true;
-#endif
-
   MainComment=MainHead.CommentInHeader;
 
   // If we process non-encrypted archive or can request a password,
@@ -271,10 +272,10 @@ bool Archive::IsArchive(bool EnableBroken)
     {
       HEADER_TYPE HeaderType=GetHeaderType();
       if (HeaderType==HEAD_SERVICE)
-        FirstVolume=!SubHead.SplitBefore;
+        FirstVolume=Volume && !SubHead.SplitBefore;
       else
       {
-        FirstVolume=HeaderType==HEAD_FILE && !FileHead.SplitBefore;
+        FirstVolume=Volume && HeaderType==HEAD_FILE && !FileHead.SplitBefore;
         break;
       }
       SeekToNext();

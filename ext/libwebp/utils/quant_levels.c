@@ -16,10 +16,6 @@
 
 #include "./quant_levels.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define NUM_SYMBOLS     256
 
 #define MAX_ITER  6             // Maximum number of convergence steps.
@@ -142,6 +138,3 @@ int QuantizeLevels(uint8_t* const data, int width, int height,
   return 1;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

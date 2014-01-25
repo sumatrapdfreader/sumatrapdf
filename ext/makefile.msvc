@@ -124,7 +124,8 @@ WEBP_OBJS = \
 	$(OWP)\upsampling_sse2.obj $(OWP)\yuv.obj \
 	$(OWP)\bit_reader.obj $(OWP)\color_cache.obj $(OWP)\filters.obj \
 	$(OWP)\huffman.obj $(OWP)\quant_levels_dec.obj $(OWP)\rescaler.obj \
-	$(OWP)\thread.obj $(OWP)\utils.obj
+	$(OWP)\thread.obj $(OWP)\utils.obj $(OWP)\alpha_processing.obj \
+	$(OWP)\random.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)

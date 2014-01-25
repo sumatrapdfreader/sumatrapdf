@@ -27,7 +27,7 @@ static int ValuesShouldBeCollapsedToStrideAverage(int a, int b) {
 }
 
 // Change the population counts in a way that the consequent
-// Hufmann tree compression, especially its RLE-part, give smaller output.
+// Huffman tree compression, especially its RLE-part, give smaller output.
 static int OptimizeHuffmanForRle(int length, int* const counts) {
   uint8_t* good_for_rle;
   // 1) Let's make the Huffman code more compatible with rle encoding.

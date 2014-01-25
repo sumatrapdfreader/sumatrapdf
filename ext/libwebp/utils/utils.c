@@ -14,10 +14,6 @@
 #include <stdlib.h>
 #include "./utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // Checked memory allocation
 
@@ -44,6 +40,3 @@ void* WebPSafeCalloc(uint64_t nmemb, size_t size) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

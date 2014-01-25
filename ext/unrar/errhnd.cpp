@@ -254,6 +254,10 @@ void ErrorHandler::SetErrorCode(RAR_EXIT Code)
       if (ExitCode==RARX_SUCCESS)
         ExitCode=Code;
       break;
+    case RARX_CRC:
+      if (ExitCode!=RARX_BADPWD)
+        ExitCode=Code;
+      break;
     case RARX_FATAL:
       if (ExitCode==RARX_SUCCESS || ExitCode==RARX_WARNING)
         ExitCode=RARX_FATAL;
@@ -338,7 +342,7 @@ void ErrorHandler::Throw(RAR_EXIT Code)
   if (Code!=RARX_SUCCESS && Code!=RARX_USERERROR)
     mprintf(L"\n%s\n",St(MProgAborted));
 #endif
-  ErrHandler.SetErrorCode(Code);
+  SetErrorCode(Code);
   throw Code;
 }
 

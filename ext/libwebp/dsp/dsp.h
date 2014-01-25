@@ -16,14 +16,15 @@
 
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 //------------------------------------------------------------------------------
 // CPU detection
 
-#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+#if defined(_MSC_VER) && _MSC_VER > 1310 && \
+    (defined(_M_X64) || defined(_M_IX86))
 #define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
 #endif
 
@@ -85,6 +86,11 @@ typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
                                 int n, const struct VP8Matrix* const mtx);
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
 
+// specific to 2nd transform:
+typedef int (*VP8QuantizeBlockWHT)(int16_t in[16], int16_t out[16],
+                                   const struct VP8Matrix* const mtx);
+extern VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
+
 // Collect histogram for susceptibility calculation and accumulate in histo[].
 struct VP8Histogram;
 typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
@@ -102,6 +108,7 @@ typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
 // when doing two transforms, coeffs is actually int16_t[2][16].
 typedef void (*VP8DecIdct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
 extern VP8DecIdct2 VP8Transform;
+extern VP8DecIdct VP8TransformAC3;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;
@@ -146,6 +153,8 @@ void VP8DspInit(void);
 
 #define FANCY_UPSAMPLING   // undefined to remove fancy upsampling support
 
+// Convert a pair of y/u/v lines together to the output rgb/a colorspace.
+// bottom_y can be NULL if only one line of output is needed (at top/bottom).
 typedef void (*WebPUpsampleLinePairFunc)(
     const uint8_t* top_y, const uint8_t* bottom_y,
     const uint8_t* top_u, const uint8_t* top_v,
@@ -208,7 +217,7 @@ void WebPInitPremultiplyNEON(void);
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }    // extern "C"
 #endif
 

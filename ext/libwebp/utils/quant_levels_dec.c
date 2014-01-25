@@ -13,18 +13,12 @@
 
 #include "./quant_levels_dec.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
-int DequantizeLevels(uint8_t* const data, int width, int height) {
-  if (data == NULL || width <= 0 || height <= 0) return 0;
-  (void)data;
-  (void)width;
-  (void)height;
+int DequantizeLevels(uint8_t* const data, int width, int height,
+                     int row, int num_rows) {
+  if (data == NULL || width <= 0 || height <= 0 || row < 0 || num_rows < 0 ||
+      row + num_rows > height) {
+    return 0;
+  }
   return 1;
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

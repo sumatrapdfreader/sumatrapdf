@@ -17,10 +17,6 @@
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #define RFIX 30
 #define MULT_FIX(x, y) (((int64_t)(x) * (y) + (1 << (RFIX - 1))) >> RFIX)
 
@@ -123,6 +119,11 @@ uint8_t* WebPRescalerExportRow(WebPRescaler* const wrk) {
 //------------------------------------------------------------------------------
 // all-in-one calls
 
+int WebPRescaleNeededLines(const WebPRescaler* const wrk, int max_num_lines) {
+  const int num_lines = (wrk->y_accum + wrk->y_sub - 1) / wrk->y_sub;
+  return (num_lines > max_num_lines) ? max_num_lines : num_lines;
+}
+
 int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
                        const uint8_t* src, int src_stride) {
   int total_imported = 0;
@@ -149,6 +150,3 @@ int WebPRescalerExport(WebPRescaler* const rescaler) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

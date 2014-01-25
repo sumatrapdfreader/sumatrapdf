@@ -53,7 +53,6 @@ void GetReparsePoint(const wchar *Name,FileHeader *hd)
   if (hFile==INVALID_HANDLE_VALUE)
   {
     ErrHandler.OpenErrorMsg(NULL,Name);
-    ErrHandler.SysErrMsg();
     ErrHandler.SetErrorCode(RARX_OPEN);
     return;
   }

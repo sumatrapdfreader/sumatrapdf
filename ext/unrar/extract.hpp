@@ -7,7 +7,7 @@ class CmdExtract
 {
   private:
     EXTRACT_ARC_CODE ExtractArchive(CommandData *Cmd);
-    bool ExtractFileCopy(File &New,wchar *ArcName,wchar *NameNew,wchar *NameExisting,size_t NameExistingSize);
+    bool ExtractFileCopy(CommandData *Cmd,File &New,wchar *ArcName,wchar *NameNew,wchar *NameExisting,size_t NameExistingSize);
     void ExtrPrepareName(CommandData *Cmd,Archive &Arc,const wchar *ArcFileName,wchar *DestName,size_t DestSize);
 #ifdef RARDLL
     bool ExtrDllGetPassword(CommandData *Cmd);

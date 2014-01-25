@@ -13,10 +13,6 @@
 
 #include "./bit_reader.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 #ifndef USE_RIGHT_JUSTIFY
 #define MK(X) (((range_t)(X) << (BITS)) | (MASK))
 #else
@@ -179,7 +175,7 @@ void VP8LFillBitWindow(VP8LBitReader* const br) {
     }
 #endif
     ShiftBytes(br);       // Slow path.
-    if (br->pos_ == br->len_ && br->bit_pos_ == LBITS) {
+    if (br->pos_ == br->len_ && br->bit_pos_ >= LBITS) {
       br->eos_ = 1;
     }
   }
@@ -209,6 +205,3 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

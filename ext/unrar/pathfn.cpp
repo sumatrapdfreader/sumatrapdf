@@ -424,7 +424,7 @@ void MakeNameUsable(char *Name,bool Extended)
 #ifndef _UNIX
     if (s-Name>1 && *s==':')
       *s='_';
-    if ((*s==' ' || *s=='.') && IsPathDiv(s[1]))
+    if ((*s==' ' || *s=='.' && s>Name && !IsPathDiv(s[-1]) && s[-1]!='.') && IsPathDiv(s[1]))
       *s='_';
 #endif
   }
@@ -440,7 +440,7 @@ void MakeNameUsable(wchar *Name,bool Extended)
 #ifndef _UNIX
     if (s-Name>1 && *s==':')
       *s='_';
-    if ((*s==' ' || *s=='.') && IsPathDiv(s[1]))
+    if ((*s==' ' || *s=='.' && s>Name && !IsPathDiv(s[-1]) && s[-1]!='.') && IsPathDiv(s[1]))
       *s='_';
 #endif
   }

@@ -88,7 +88,8 @@ void Archive::UnexpEndArcMsg()
   // If block positions are equal to file size, this is not an error.
   // It can happen when we reached the end of older RAR 1.5 archive,
   // which did not have the end of archive block.
-  if (CurBlockPos>ArcSize || NextBlockPos>ArcSize)
+  if (CurBlockPos>ArcSize || NextBlockPos>ArcSize || 
+      CurBlockPos!=ArcSize && NextBlockPos!=ArcSize && Format==RARFMT50)
   {
 #ifndef SHELL_EXT
     Log(FileName,St(MLogUnexpEOF));
@@ -609,7 +610,11 @@ size_t Archive::ReadHeader50()
   // resulting in 2 MB maximum header size, so here we read 4 byte CRC32
   // followed by 3 bytes or less of header size.
   const size_t FirstReadSize=7;
-  Raw.Read(FirstReadSize);
+  if (Raw.Read(FirstReadSize)<FirstReadSize)
+  {
+    UnexpEndArcMsg();
+    return 0;
+  }
 
   ShortBlock.Reset();
   ShortBlock.HeadCRC=Raw.Get4();
@@ -618,7 +623,7 @@ size_t Archive::ReadHeader50()
 
   if (BlockSize==0 || SizeBytes==0)
   {
-    UnexpEndArcMsg(); // Incomplete or broken block size field.
+    BrokenHeaderMsg();
     return 0;
   }
 

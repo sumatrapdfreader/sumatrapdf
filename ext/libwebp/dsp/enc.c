@@ -11,13 +11,11 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>  // for abs()
+
 #include "./dsp.h"
 #include "../enc/vp8enci.h"
-
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
 
 static WEBP_INLINE uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
@@ -190,7 +188,7 @@ static void ITransformWHT(const int16_t* in, int16_t* out) {
 
 static void FTransformWHT(const int16_t* in, int16_t* out) {
   // input is 12b signed
-  int16_t tmp[16];
+  int32_t tmp[16];
   int i;
   for (i = 0; i < 4; ++i, in += 64) {
     const int a0 = (in[0 * 16] + in[2 * 16]);  // 13b
@@ -652,6 +650,31 @@ static int QuantizeBlock(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
+static int QuantizeBlockWHT(int16_t in[16], int16_t out[16],
+                            const VP8Matrix* const mtx) {
+  int n, last = -1;
+  for (n = 0; n < 16; ++n) {
+    const int j = kZigzag[n];
+    const int sign = (in[j] < 0);
+    const int coeff = sign ? -in[j] : in[j];
+    assert(mtx->sharpen_[j] == 0);
+    if (coeff > mtx->zthresh_[j]) {
+      const int Q = mtx->q_[j];
+      const int iQ = mtx->iq_[j];
+      const int B = mtx->bias_[j];
+      out[n] = QUANTDIV(coeff, iQ, B);
+      if (out[n] > MAX_LEVEL) out[n] = MAX_LEVEL;
+      if (sign) out[n] = -out[n];
+      in[j] = out[n] * Q;
+      if (out[n]) last = n;
+    } else {
+      out[n] = 0;
+      in[j] = 0;
+    }
+  }
+  return (last >= 0);
+}
+
 //------------------------------------------------------------------------------
 // Block copy
 
@@ -686,6 +709,7 @@ VP8Metric VP8SSE4x4;
 VP8WMetric VP8TDisto4x4;
 VP8WMetric VP8TDisto16x16;
 VP8QuantizeBlock VP8EncQuantizeBlock;
+VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 VP8BlockCopy VP8Copy4x4;
 
 extern void VP8EncDspInitSSE2(void);
@@ -710,6 +734,7 @@ void VP8EncDspInit(void) {
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
   VP8EncQuantizeBlock = QuantizeBlock;
+  VP8EncQuantizeBlockWHT = QuantizeBlockWHT;
   VP8Copy4x4 = Copy4x4;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
@@ -726,6 +751,3 @@ void VP8EncDspInit(void) {
   }
 }
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

@@ -16,7 +16,7 @@
 
 #include "../webp/types.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -42,7 +42,7 @@ int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
 int VP8LCreateHuffmanTree(int* const histogram, int tree_depth_limit,
                           HuffmanTreeCode* const tree);
 
-#if defined(__cplusplus) || defined(c_plusplus)
+#ifdef __cplusplus
 }
 #endif
 

@@ -17,10 +17,6 @@
 #include "./webpi.h"
 #include "../utils/utils.h"
 
-#if defined(__cplusplus) || defined(c_plusplus)
-extern "C" {
-#endif
-
 //------------------------------------------------------------------------------
 // WebPDecBuffer
 
@@ -212,6 +208,3 @@ void WebPGrabDecBuffer(WebPDecBuffer* const src, WebPDecBuffer* const dst) {
 
 //------------------------------------------------------------------------------
 
-#if defined(__cplusplus) || defined(c_plusplus)
-}    // extern "C"
-#endif

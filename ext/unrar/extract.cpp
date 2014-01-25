@@ -555,7 +555,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
             if (Type==FSREDIR_HARDLINK)
               LinkSuccess=ExtractHardlink(DestFileName,NameExisting,ASIZE(NameExisting));
             else
-              LinkSuccess=ExtractFileCopy(CurFile,Arc.FileName,DestFileName,NameExisting,ASIZE(NameExisting));
+              LinkSuccess=ExtractFileCopy(Cmd,CurFile,Arc.FileName,DestFileName,NameExisting,ASIZE(NameExisting));
         }
         else
           if (Type==FSREDIR_UNIXSYMLINK || Type==FSREDIR_WINSYMLINK || Type==FSREDIR_JUNCTION)
@@ -615,12 +615,12 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
       bool BrokenFile=false;
       
       // Checksum is not calculated in skip solid mode for performance reason.
-      if (!SkipSolid)
+      if (!SkipSolid && ShowChecksum)
       {
         if (!WrongPassword && ValidCRC)
         {
 #ifndef GUI
-          if (Command!='P' && Command!='I' && ShowChecksum)
+          if (Command!='P' && Command!='I')
             mprintf(L"%s%s ",Cmd->DisablePercentage ? L" ":L"\b\b\b\b\b ",
               Arc.FileHead.FileHash.Type==HASH_NONE ? L"  ?":St(MOk));
 #endif
@@ -643,7 +643,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
           // If we already have ERAR_EOPEN as result of missing volume,
           // we should not replace it with less precise ERAR_BAD_DATA.
           if (Cmd->DllError!=ERAR_EOPEN)
-            Cmd->DllError=ERAR_BAD_DATA;
+            Cmd->DllError=WrongPassword ? ERAR_BAD_PASSWORD : ERAR_BAD_DATA;
 #endif
         }
       }
@@ -706,7 +706,7 @@ bool CmdExtract::ExtractCurrentFile(CommandData *Cmd,Archive &Arc,size_t HeaderS
 
 void CmdExtract::UnstoreFile(ComprDataIO &DataIO,int64 DestUnpSize)
 {
-  Array<byte> Buffer(0x100000);
+  Array<byte> Buffer(0x40000);
   while (1)
   {
     uint Code=DataIO.UnpRead(&Buffer[0],Buffer.Size());
@@ -720,7 +720,7 @@ void CmdExtract::UnstoreFile(ComprDataIO &DataIO,int64 DestUnpSize)
 }
 
 
-bool CmdExtract::ExtractFileCopy(File &New,wchar *ArcName,wchar *NameNew,wchar *NameExisting,size_t NameExistingSize)
+bool CmdExtract::ExtractFileCopy(CommandData *Cmd,File &New,wchar *ArcName,wchar *NameNew,wchar *NameExisting,size_t NameExistingSize)
 {
 #ifdef _WIN_ALL
   UnixSlashToDos(NameExisting,NameExisting,NameExistingSize);
@@ -733,6 +733,9 @@ bool CmdExtract::ExtractFileCopy(File &New,wchar *ArcName,wchar *NameNew,wchar *
     ErrHandler.OpenErrorMsg(ArcName,NameExisting);
     Log(ArcName,St(MCopyError),NameExisting,NameNew);
     Log(ArcName,St(MCopyErrorHint));
+#ifdef RARDLL
+    Cmd->DllError=ERAR_EREFERENCE;
+#endif
     return false;
   }
 
