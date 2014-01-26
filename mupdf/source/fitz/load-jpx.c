@@ -278,10 +278,10 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 			}
 			else if (level == 2 && tbox == 0x72657363 /* resc */ && lbox == 18 && rest - ix >= 18)
 			{
-				int vrn = read_value(base + ix + 8 + 0, 2);
-				int vrd = read_value(base + ix + 8 + 2, 2);
-				int hrn = read_value(base + ix + 8 + 4, 2);
-				int hrd = read_value(base + ix + 8 + 6, 2);
+				int vrn = read_value((base += ix + 8), 2);
+				int vrd = read_value(base + 2, 2);
+				int hrn = read_value(base + 4, 2);
+				int hrd = read_value(base + 6, 2);
 				int vre = (char)base[8], hre = (char)base[9];
 				img->xres = (int)((float)hrn / hrd * pow(10, hre - 2) * 2.54f);
 				img->yres = (int)((float)vrn / vrd * pow(10, vre - 2) * 2.54f);
