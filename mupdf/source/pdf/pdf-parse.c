@@ -26,13 +26,20 @@ pdf_to_matrix(fz_context *ctx, pdf_obj *array, fz_matrix *m)
 	return m;
 }
 
-/* SumatraPDF: replace undefined control characters with a space */
-static inline unsigned short
-pdf_replace_undefined(unsigned short ucs)
+/* SumatraPDF: detect UTF-8 strings and use them as is */
+static int
+pdf_is_valid_utf8(const unsigned char *data, const unsigned char *data_end)
 {
-	if (0x00 < ucs && ucs < 0x20 && ucs != '\t' && ucs != '\n' && ucs != '\r')
-		return ' ';
-	return ucs;
+	for (; data < data_end; data++)
+	{
+		int skip = *data < 0x80 ? 0 : *data < 0xC0 ? -1 : *data < 0xE0 ? 1 : *data < 0xF0 ? 2 : *data < 0xF5 ? 3 : -1;
+		if (skip == -1)
+			return 0;
+		while (skip-- > 0)
+			if (++data >= data_end || (*data & 0xC0) != 0x80)
+				return 0;
+	}
+	return 1;
 }
 
 /* Convert Unicode/PdfDocEncoding string into utf-8 */
@@ -98,6 +105,14 @@ pdf_to_utf8(pdf_document *doc, pdf_obj *src)
 				dstptr += fz_runetochar(dstptr, ucs);
 			}
 		}
+		/* SumatraPDF: detect UTF-8 strings and use them as is */
+		/* TODO: also detect UTF-8 strings in pdf_to_ucs2(_buf)? */
+		else if (pdf_is_valid_utf8(srcptr, srcptr + srclen))
+		{
+			dst = fz_malloc(ctx, srclen + 1);
+			memcpy(dst, srcptr, srclen);
+			dstptr = dst + srclen;
+		}
 		else
 		{
 			for (i = 0; i < srclen; i++)
@@ -107,7 +122,7 @@ pdf_to_utf8(pdf_document *doc, pdf_obj *src)
 
 			for (i = 0; i < srclen; i++)
 			{
-				ucs = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
+				ucs = pdf_doc_encoding[srcptr[i]];
 				dstptr += fz_runetochar(dstptr, ucs);
 			}
 		}
@@ -151,7 +166,7 @@ pdf_to_ucs2(pdf_document *doc, pdf_obj *src)
 	{
 		dstptr = dst = fz_malloc_array(ctx, srclen + 1, sizeof(short));
 		for (i = 0; i < srclen; i++)
-			*dstptr++ = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
+			*dstptr++ = pdf_doc_encoding[srcptr[i]];
 	}
 
 	*dstptr = '\0';
@@ -181,7 +196,7 @@ pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src)
 	else
 	{
 		for (i = 0; i < srclen; i++)
-			*dstptr++ = pdf_replace_undefined(pdf_doc_encoding[srcptr[i]]);
+			*dstptr++ = pdf_doc_encoding[srcptr[i]];
 	}
 
 	*dstptr = '\0';

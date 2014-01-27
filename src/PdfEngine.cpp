@@ -894,6 +894,16 @@ inline WCHAR *FromPdf(pdf_obj *obj)
     }
 }
 
+// some PDF documents contain control characters in outline titles or /Info properties
+WCHAR *pdf_clean_string(WCHAR *string)
+{
+    for (WCHAR *c = string; *c; c++) {
+        if (*c < 0x20 && *c != '\n' && *c != '\r' && *c != '\t')
+            *c = ' ';
+    }
+    return string;
+}
+
 pdf_obj *pdf_copy_str_dict(pdf_document *doc, pdf_obj *dict)
 {
     pdf_obj *copy = pdf_copy_dict(dict);
@@ -1737,7 +1747,7 @@ PdfTocItem *PdfEngineImpl::BuildTocTree(fz_outline *entry, int& idCounter)
     PdfTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
-        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
+        WCHAR *name = entry->title ? pdf_clean_string(str::conv::FromUtf8(entry->title)) : str::Dup(L"");
         PdfTocItem *item = new PdfTocItem(name, PdfLink(this, &entry->dest));
         item->open = entry->is_open;
         item->id = ++idCounter;
@@ -2709,7 +2719,7 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
             // _info is guaranteed not to contain any indirect references,
             // so no need for ctxAccess
             pdf_obj *obj = pdf_dict_gets(_info, pdfPropNames[i].name);
-            return obj ? str::conv::FromPdf(obj) : NULL;
+            return obj ? pdf_clean_string(str::conv::FromPdf(obj)) : NULL;
         }
     }
     return NULL;
