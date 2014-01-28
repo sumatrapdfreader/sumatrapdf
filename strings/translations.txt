@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b58efaa9f547fd04e90024a17520ecc5d1e98d3a
+7680c710cf41f47b096efde4cb00be3001bf2c42
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3312,7 +3312,7 @@ id:Tambah Favorit
 it:Aggiungi ai Preferiti
 ja:お気に入りに追加
 ka:რჩეულებში დამატება
-kr:즐겨찾기 추가
+kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
 lt:Sukurti žymą
 mk:Додај омилен
