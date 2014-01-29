@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7680c710cf41f47b096efde4cb00be3001bf2c42
+dbe235551d10d23284d20fad2f0e7b6c8842a3e1
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -4489,7 +4489,7 @@ ca-xv:Documents CHM
 ca:Documents CHM
 cn:CHM 文档
 cy:Dogfennau CHM
-cz:CHM dokumenty
+cz:Dokumenty CHM
 de:CHM Hilfe-Dateien
 dk:CHM-dokumenter
 el:Έγγραφα CHM
@@ -5847,7 +5847,7 @@ ca-xv:No es pot instal·lar el visor ràpid de PDF
 ca:No es pot instal·lar el visor ràpid de PDF
 cn:无法安装PDF文件预临览
 cy:Mehu gosod rhagolygwr PDF
-cz:Nelze nainstalova PDF prohlížeč
+cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
 dk:Kunne ikke installere PDF viser
 es:No se puede instalar previsualizador PDF
@@ -5977,7 +5977,7 @@ ca-xv:No es pot obtindre el directori temporal
 ca:No es pot obtenir el directori temporal
 cn:无法得到暂存目录
 cy:Methu canfod cyfeiriadur dros dro
-cz:Dočasná složka není dostupná
+cz:Dočasný adresář není dostupný
 de:Konnte das temporäre Verzeichnis nicht finden
 dk:Kunne ikke tilgå midlertidig folder
 el:Αδυναμία ανάκτησης προσωρινού φακέλου
@@ -6755,7 +6755,7 @@ ca-xv:Documents djvu
 ca:Documents DjVu
 cn:DjVu 文件
 cy:Dogfennau DjVu
-cz:DjVu dokumenty
+cz:Dokumenty DjVu
 de:DjVu-Dokumente
 dk:DjVu-dokumenter
 el:Έγγραφα DjVu
@@ -7734,7 +7734,7 @@ ca-xv:No es pot copiar el desinstal·lador al directori temporal
 ca:No es pot copiar el desinstal·lador al directori temporal
 cn:无法将安装程序复制到暂存目录
 cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
-cz:Nepodařilo se zkopírovat odinstalační program do dočasné složky
+cz:Nezdařilo se zkopírovat odinstalační program do dočasného adresáře
 de:Konnte das Deinstallationsprogramm nicht kopieren
 dk:Kunne ikke kopiere fra midlertidig folder
 es:Error al copiar el desinstalador al directorio temporal
@@ -7916,7 +7916,7 @@ ca-xv:S'ha produït un error en guardar el fitxer.
 ca:S'ha produït un error en desar el fitxer.
 cn:保存文件失败
 cy:Methwyd cadw ffeil
-cz:Při ukládání došlo k chybě
+cz:Soubor se nepodařilo uložit
 de:Die Datei konnte nicht neu gespeichert werden!
 dk:Kunne ikke gemme filen
 el:Αποτυχία αποθήκευσης αρχείου
@@ -9974,7 +9974,7 @@ ca-xv:La instal·lació ha fallat!
 ca:La instal·lació ha fallat.
 cn:安装失败!
 cy:Methodd y gosod!
-cz:Instalace selhala!
+cz:Instalace se nezdařila!
 de:Die Installation ist fehlgeschlagen!
 dk:Installation fejlede !
 el:Αποτυχία εγκατάστασης!
@@ -10466,7 +10466,7 @@ ca-xv:Mode man&ga
 ca:Mode man&ga
 cn:漫画模式(&G)
 cy:Modd &Manga
-cz:Man&ga mód
+cz:Man&ga režim
 de:Lese&richtung umkehren
 dk:Man&ga tilstand
 es:Modo man&ga
@@ -10575,7 +10575,7 @@ ca-xv:Documents Mobi
 ca:Documents Mobi
 cn:Mobi 文档
 cy:Dogfennau Mobi
-cz:Mobi dokumenty
+cz:Dokumenty Mobi
 de:Kindle E-Bücher
 dk:Mobi documenter
 el:Έγγραφα Mobi
@@ -10886,7 +10886,7 @@ ca-xv:No s'ha trobat cap resultat de la cerca vàlid a la línia %u al fitxer %s
 ca:No s'ha trobat cap resultat de cerca vàlid a la línia %u al fitxer %s
 cn:第 %u 行附近未找到同步记录 (文件: %s)
 cy:Dim canlyniad o liell %u yn ffeil %s
-cz:Kolem řádku %u v souboru %s nenalezen žádný výsledek
+cz:Kolem řádku %u v souboru %s nebyl nalezen žádný výsledek
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
 dk:Intet resultat fundet omkring linje %u i filen %s
 el:Δε βρέθηκε αποτέλεσμα στη γραμμή %u του αρχείου %s
@@ -10942,7 +10942,7 @@ ca-xv:No s'ha trobat el fitxer de sincronització
 ca:No s'ha trobat el fitxer de sincronització
 cn:未发现同步文件
 cy:Heb ganfod ffeil cydweddu
-cz:Soubor synchronizace nenalezen
+cz:Soubor synchronizace nebyl nalezen
 de:Synchronisationsdatei nicht gefunden
 dk:Ingen synkroniseringsfil fundet
 el:Δε βρέθηκε αρχείο συγχρονισμού
@@ -11806,7 +11806,7 @@ ca-xv:Document PDF
 ca:Document PDF
 cn:PDF 文档
 cy:Dogfen PDF
-cz:PDF dokument
+cz:Dokument PDF
 de:PDF-Dokument
 dk:PDF dokument
 el:Αρχείο PDF
@@ -12036,7 +12036,7 @@ ca-xv:Documents PDF
 ca:Documents PDF
 cn:PDF 文档
 cy:Dogfennau PDF
-cz:PDF dokumenty
+cz:Dokumenty PDF
 de:PDF-Dokumente
 dk:PDF dokumenter
 el:Αρχεία PDF
@@ -12562,7 +12562,7 @@ ca-xv:Documents Postscript
 ca:Documents Postscript
 cn:Postscript 文件
 cy:Dogfennau postscript
-cz:PostScript dokumenty
+cz:Dokumenty PostScript
 de:Postscript-Dokumente
 dk:Postscript dokumenter
 el:Έγγραφα Postscript
@@ -15772,7 +15772,7 @@ ca-xv:La desinstal·lació ha fallat
 ca:La desinstal·lació ha fallat
 cn:卸载失败
 cy:Methodd y gosod
-cz:Odinstalace programu selhala
+cz:Odinstalace programu se nezdařila
 de:Die Deinstallation ist fehlgeschlagen
 dk:Afinstallationen fejlede
 el:Αποτυχία απεγκατάστασης
@@ -15921,7 +15921,7 @@ ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
 ca:Usa el SumatraPDF com a visor PDF &predeterminat
 cn:将SumatraPDF设为&缺省PDF阅读器
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
-cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
+cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF læser
 el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
@@ -16165,7 +16165,7 @@ ca-xv:Documents XPS
 ca:Documents XPS
 cn:XPS 文件
 cy:Dogfennau XPS
-cz:XPS dokumenty
+cz:Dokumenty XPS
 de:XPS-Dokumente
 dk:XPS-dokumenter
 el:Έγγραφα XPS

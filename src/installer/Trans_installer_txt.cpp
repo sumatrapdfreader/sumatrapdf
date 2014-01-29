@@ -470,17 +470,17 @@ const char * gTranslations_cz =
   "Zav\305\231\303\255t\0"\
   "Nepoda\305\231ilo se vytvo\305\231it do\304\215asn\303\275 adres\303\241\305\231\0"\
   "Nepoda\305\231ilo se vytvo\305\231it adres\303\241\305\231 pro instalaci\0"\
-  "Nelze nainstalova PDF prohl\303\255\305\276e\304\215\0"\
+  "Nelze nainstalovat PDF prohl\303\255\305\276e\304\215\0"\
   "Nelze nainstalovat vyhled\303\241vac\303\255 PDF filtr\0"\
   "Nepoda\305\231ilo se nainstalovat roz\305\241\303\255\305\231en\303\255 do prohl\303\255\305\276e\304\215e\0"\
-  "Do\304\215asn\303\241 slo\305\276ka nen\303\255 dostupn\303\241\0"\
+  "Do\304\215asn\303\275 adres\303\241\305\231 nen\303\255 dostupn\303\275\0"\
   "Nepoda\305\231ilo se odstranit adres\303\241\305\231 pro instalaci\0"\
   "Nepoda\305\231ilo se odstranit z\303\241stupce\0"\
   "Nelze odinstalovat PDF prohl\303\255\305\276e\304\215\0"\
   "Nelze odinstalovavat vyhled\303\241vac\303\255 PDF filtr\0"\
   "Nepoda\305\231ilo se odinstalovat roz\305\241\303\255\305\231en\303\255 z prohl\303\255\305\276e\304\215e\0"\
   "Nelze zapsat %s na disk\0"\
-  "Nepoda\305\231ilo se zkop\303\255rovat odinstala\304\215n\303\255 program do do\304\215asn\303\251 slo\305\276ky\0"\
+  "Nezda\305\231ilo se zkop\303\255rovat odinstala\304\215n\303\255 program do do\304\215asn\303\251ho adres\303\241\305\231e\0"\
   "Vytvo\305\231en\303\255 z\303\241stupce se nezda\305\231ilo\0"\
   "Nepoda\305\231ilo se smazat odinsla\304\215n\303\255 z\303\241znamy z registru\0"\
   "Nepoda\305\231ilo se zapsat informace o p\305\231\303\255pon\304\233 souboru do registru\0"\
@@ -489,7 +489,7 @@ const char * gTranslations_cz =
   "Instalovat PDF dopln\304\233k pro prohl\303\255\305\276e\304\215e Firefox, Chrome a Opera\0"\
   "Nainstalovat SumatraPDF\0"\
   "Nainstalovat SumatraPDF do &slo\305\276ky:\0"\
-  "Instalace selhala!\0"\
+  "Instalace se nezda\305\231ila!\0"\
   "Prob\303\255h\303\241 instalace...\0"\
   "Nechte Windows Desktop Search &prohled\303\241vat PDF dokumenty\0"\
   "Nechte Windows zobrazit &n\303\241hledy PDF dokument\305\257\0"\
@@ -505,9 +505,9 @@ const char * gTranslations_cz =
   "D\304\233kujeme! Program SumatraPDF byl nainstalov\303\241n.\0"\
   "Instala\304\215n\303\255 program byl nejsp\303\255\305\241e po\305\241kozen. St\303\241hn\304\233te si jej pros\303\255m znovu. \nOmlouv\303\241me se za zp\305\257soben\303\251 nep\305\231\303\255jemnosti!\0"\
   "Odinstalovat SumatraPDF\0"\
-  "Odinstalace programu selhala\0"\
+  "Odinstalace programu se nezda\305\231ila\0"\
   "Prob\303\255h\303\241 odinstalace...\0"\
-  "Pou\305\276ij SumatraPDF jako &v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0";
+  "Pou\305\276\303\255t SumatraPDF jako &v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0";
 
 const char * gTranslations_dk = 
   "&Valgmuligheder\0"\

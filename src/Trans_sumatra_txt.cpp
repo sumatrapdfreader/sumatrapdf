@@ -3284,7 +3284,7 @@ const char * gTranslations_cz =
   "Z\303\241stupce z\303\241lo\305\276ky na stran\304\233 %s souboru %s\0"\
   "Z\303\241lo\305\276ky\0"\
   "bajt\305\257\0"\
-  "CHM dokumenty\0"\
+  "Dokumenty CHM\0"\
   "Nelze se p\305\231ipojit k Internetu (chyba %#x).\0"\
   "Storno\0"\
   "Tento soubor nelze vytisknout\0"\
@@ -3312,7 +3312,7 @@ const char * gTranslations_cz =
   "V\303\275choz\303\255 &zv\304\233t\305\241en\303\255:\0"\
   "V p\305\231enosn\303\251m re\305\276imu nelze m\304\233nit v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0"\
   "Odep\305\231en\303\241 opr\303\241vn\304\233n\303\255:\0"\
-  "DjVu dokumenty\0"\
+  "Dokumenty DjVu\0"\
   "Vlastnosti dokumentu\0"\
   "St\303\241hnout\0"\
   "&Konec\tCtrl+Q\0"\
@@ -3327,7 +3327,7 @@ const char * gTranslations_cz =
   "&Cel\303\241 obrazovka\tCtrl+Shift+L\0"\
   "Dvojstr\303\241nky\0"\
   "Soubor se nepoda\305\231ilo p\305\231ejmenovat!\0"\
-  "P\305\231i ukl\303\241d\303\241n\303\255 do\305\241lo k chyb\304\233\0"\
+  "Soubor se nepoda\305\231ilo ulo\305\276it\0"\
   "Rychl\303\251 zobrazov\303\241n\303\255 z webu\0"\
   "Obl\303\255ben\303\251 polo\305\276ky\0"\
   "Dokumenty FictionBook\0"\
@@ -3362,15 +3362,15 @@ const char * gTranslations_cz =
   "\0"\
   "Nastavit SumatraPDF jako v\303\275choz\303\255 prohl\303\255\305\276e\304\215 PDF soubor\305\257?\0"\
   "Nastavit SumatraPDF jako v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0"\
-  "Man&ga m\303\263d\0"\
+  "Man&ga re\305\276im\0"\
   "Rozli\305\241ovat velikost p\303\255smen\0"\
-  "Mobi dokumenty\0"\
+  "Dokumenty Mobi\0"\
   "Zm\304\233n\304\233no:\0"\
   "Nov\303\241 verze %s je k dispozici. St\303\241hnout novou verzi?\0"\
   "Dal\305\241\303\255 str\303\241nka\0"\
   "\305\275\303\241dn\303\241 polo\305\276ka nebyla nalezena\0"\
-  "Kolem \305\231\303\241dku %u v souboru %s nenalezen \305\276\303\241dn\303\275 v\303\275sledek\0"\
-  "Soubor synchronizace nenalezen\0"\
+  "Kolem \305\231\303\241dku %u v souboru %s nebyl nalezen \305\276\303\241dn\303\275 v\303\275sledek\0"\
+  "Soubor synchronizace nebyl nalezen\0"\
   "Na t\303\251to pozici nen\303\255 informace o synchronizaci\0"\
   "Po\304\215et str\303\241nek:\0"\
   "\0"\
@@ -3384,11 +3384,11 @@ const char * gTranslations_cz =
   "Otev\305\231\303\255t v programu Microsoft XPS-Viewer\0"\
   "&Vlastnosti\0"\
   "&Vlastnosti...\tCtrl+D\0"\
-  "PDF dokument\0"\
+  "Dokument PDF\0"\
   "Optimalizace PDF:\0"\
   "Producent PDF:\0"\
   "Verze PDF:\0"\
-  "PDF dokumenty\0"\
+  "Dokumenty PDF\0"\
   "Str\303\241n&ka...\tCtrl+G\0"\
   "Str\303\241nka %s\0"\
   "Velikost str\303\241nky:\0"\
@@ -3396,7 +3396,7 @@ const char * gTranslations_cz =
   "M\304\233\305\231\303\255tko str\303\241nky\0"\
   "Str\303\241nka:\0"\
   "Pros\303\255m \304\215ekejte, prob\303\255h\303\241 vykreslov\303\241n\303\255...\0"\
-  "PostScript dokumenty\0"\
+  "Dokumenty PostScript\0"\
   "Pr&ezentace\tCtrl+L\0"\
   "P\305\231edchoz\303\255 str\303\241nka\0"\
   "Tisk...\0"\
@@ -3447,7 +3447,7 @@ const char * gTranslations_cz =
   "Zobrazen\303\255\0"\
   "Nav\305\241t\303\255vit &webovou str\303\241nku\0"\
   "Upozorn\304\233n\303\255\0"\
-  "XPS dokumenty\0"\
+  "Dokumenty XPS\0"\
   "Pou\305\276\303\255v\303\241te nejnov\304\233j\305\241\303\255 verzi.\0"\
   "Pou\305\276\303\255v\303\241te verzi %s\0"\
   "Zv\304\233t\305\241en\303\255\0"\
