@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-dbe235551d10d23284d20fad2f0e7b6c8842a3e1
+54f551822009686d7b8ae866363341d78f696094
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -222,6 +222,7 @@ sk:&Rozšírené možnosti...
 sl:N&apredne možnosti …
 sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
+sr-rs:&Напредне опције
 sv:&Avancerade Inställningar
 ta:&மேம்பட்ட விருப்பங்கள்
 tr:Gelişmiş Ayarlar
@@ -3798,6 +3799,7 @@ sl:Ali ste prepričani, da želite odstraniti SumatraPDF?
 sn:Une chokwadi chekuti urikuda kubvisa SumatraPDF?
 sp-rs:Da li sigurno želite da uklonite SumatraPDF?
 sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
+sr-rs:Да ли желите деинсталацију СуматраПДФ
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 tr:SumatraPDF'yi bilgisayarınızdan kaldırmak istediğinize emin misiniz ?
@@ -5723,6 +5725,7 @@ sk:Nie je možné vytvoriť dočasný adresár
 sl:Ni bilo mogoče ustvariti začasne mape
 sp-rs:Greška prilikom kreiranja privremenog direktorijuma
 sq:Nuk mund të krijojë direktorinë e përkohshme
+sr-rs:Привремени директоријум се не може креирати
 sv:Kunde inte skapa en tillfällig katalog
 ta:தற்காலிக கோப்புறையினை உருவாக்க இயலவில்லை
 tr:Geçici dizin oluşturulamadı
@@ -5768,7 +5771,9 @@ ro:Nu s-a putut crea directorul de instalare
 ru:Не удалось создать директорию для установки
 sk:Nie je možné vytvoriť inštalačný adresár
 sl:Ni bilo mogoče ustvariti mape za namestitev
+sp-rs:Немогуће креирати инсталациони директоријум
 sq:Nuk mund të krijojë direktorinë për instalimin
+sr-rs:Инсталациони директоријум се не може креирати
 sv:Kunde inte skapa installationsmappen
 ta:நிறுவல் கோப்புறையினை உருவாக்க இயலவில்லை
 tr:Kurulum dizini oluşturulamadı
@@ -5873,7 +5878,9 @@ ro:Nu s-a putut instala previzualizatorul PDF
 ru:Не удалось установить просмотрщик PDF
 sk:Nie je možné nainštalovať PDF prehliadač rýchlych náhľadov
 sl:Ni bilo mogoče namestiti predogleda za PDF
+sp-rs:Немогуће инсталирати ПДФ прегледач
 sq:Nuk mund të instalojë parashikuesin e PDF-ve
+sr-rs:Прегледач ПДФ немогуће инсталирати
 sv:Kunde inte installera förhandstitt av PDF:er
 ta:PDF முன்னோட்டம் நிறுவ இயலவில்லை
 tr:PDF ön zileyici yüklenemedi
@@ -5917,7 +5924,9 @@ ro:Nu s-a putut instala filtrul de cautare PDF
 ru:Не удалось установить фильтр поиска PDF
 sk:Nie je možné nainštalovať PDF vyhľadávací filter
 sl:Ni bilo mogoče namestiti filtra za PDF iskanje
+sp-rs:Немогуће инсталирати ПДФ филтер претраге
 sq:Nuk mund të instalojë kërkuesin e PDF-ve
+sr-rs:Немогуће инсталирати филтер за претрагу
 sv:Kunde inte installera sökfilter för PDF
 ta:PDF தேடலை நிறுவ இயலவில்லை
 tr:PDF arama filtresi yüklenemedi
@@ -5960,7 +5969,9 @@ ro:Nu s-a putut instala plugin-ul pentru browser
 ru:Не удалось установить плагин браузера
 sk:Nie je možné nainštalovať plugin do prehliadača
 sl:Ni bilo mogoče namestiti vtičnika za brskalnik
+sp-rs:Немогуће креирати плугин Интернет прегледача
 sq:Nuk mund të instalojë spinën për shfletuesin
+sr-rs:Немогуће инсталитрети додатак за претраживач
 sv:Kunde inte installera insticksprogrammet i webbläsaren
 ta:உலாவி உள்இடுக்கைகளை நிறுவ இயலவில்லை
 tr:Tarayıcı eklentisi yüklenemedi
@@ -6003,7 +6014,9 @@ ro:Nu s-a putut obtine directorul temporar
 ru:Не удалось определить временную директорию
 sk:Požiadavka na dočasný adresár bola neúspešná
 sl:Ni bilo mogoče pridobiti začasne mape
+sp-rs:Немогућ приступ привременом директоријуму
 sq:Nuk mund të sigurojë direktorinë e përkohshme
+sr-rs:Немогућ приступ привременом директоријуму
 sv:Kunde inte hämta temp-katalog
 ta:தற்காலிக கோப்புறையை அடைய முடியவில்லை
 tr:Geçici dizin bulunamadı
@@ -6045,7 +6058,9 @@ ro:Nu s-a putut sterge directorul de instalare
 ru:Не удалось удалить директорию установки
 sk:Nie je možné odstrániť inštalačný adresár
 sl:Ni bilo mogoče odstraniti namestitvene mape
+sp-rs:Немогућ уклонити инсталациони директоријум
 sq:Nuk mund të heqë direktorinë e përkohshme
+sr-rs:Немогуће уклонити привремени директоријум
 sv:Kunde inte ta bort installationsmappen
 ta:நிறுவிய கோப்புறையை நீக்க முடியவில்லை
 tr:Kurulum dizini kaldırılamadı
@@ -6089,7 +6104,9 @@ ro:Nu s-au putut sterge scurtatura
 ru:Не удалось удалить ярлык
 sk:Nie je možné odstrániť odkaz
 sl:Ni bilo mogoče odstraniti bližnjice
+sp-rs:Немогуће уклонити скраћеницу
 sq:Nuk mund të heqë shkurtoren
+sr-rs:Немогуће уклониити скраћеницу
 sv:Kunde inte ta bort genvägen
 ta:சுருக்கு வழியை நீக்க முடியவில்லை
 tr:Kısayol silinemedi
@@ -6192,7 +6209,9 @@ ro:Nu s-a putut dezinstala previzualizatorul PDF
 ru:Не удалось удалить просмотрщик PDF
 sk:Nie je možné odinštalovať PDF prehliadač rýchlych náhľadov
 sl:Ni bilo mogoče odstraniti predogleda za PDF
+sp-rs:Немогуће деинсталирати ПДФ прегледач
 sq:Nuk mund të çinstalojë parashikuesin e PDF-ve
+sr-rs:Немогуће деинсталирати ПДФ прегледач
 sv:Kunde inte avinstallera förhandstitt på PDF:er
 ta:PDF முன்னோட்டத்தை நீக்க முடியவில்லை
 tr:PDF önizleyicisi kaldırılamadı
@@ -6233,7 +6252,9 @@ ro:Nu s-a putut dezinstala filtrul de cautare PDF
 ru:Не удалось удалить фильтр поиска PDF
 sk:Nie je možné odinštalovať PDF vyhľadávací filter
 sl:Ni bilo mogoče odstraniti filtra za PDF iskanje
+sp-rs:Немогуће деинсталирати ПДФ филтер претраге
 sq:Nuk mund të çinstalojë kërkuesin e PDF-ve
+sr-rs:Немогућа деинсталација ПДФ филтер претраге
 sv:Kunde inte avinstallera sökfiltret för PDF:er
 ta:PDF தேடலை நீக்க முடியவில்லை
 tr:PDF arama filtresi kaldırılamadı
@@ -6274,7 +6295,9 @@ ro:Nu s-a putut dezinstala plugin-ul de browser
 ru:Не удалось удалить плагин браузера
 sk:Nie je možné odinštalovať plugin prehliadača
 sl:Ni bilo mogoče odstraniti vtičnika za brskalnik
+sp-rs:Немогуће деинсталирати плугин Инттернет прегледача
 sq:Nuk mund të çinstalojë spinën për shfletuesin
+sr-rs:Немогуће уклонити плугин за прегледач
 sv:Kunde inte avinstallera webbläsarens insticksprogram
 ta:உலாவி உள்இடுக்கைளை நீக்க முடியவில்லை
 tr:Tarayıcı eklentisi silinemedi
@@ -6316,7 +6339,9 @@ ro:Nu s-a putut scrie %s pe disc
 ru:Не удалось записать %s на диск
 sk:Nie je možné zapísať %s na disk
 sl:Ni bilo mogoče napisati %s na disk
+sp-rs:Немогућ упис %s на диск
 sq:Nuk mund të shkruajë %s në disk
+sr-rs:Немогућ упис %s на диск
 sv:Kunde inte spara %s på hårddisken
 ta:%s ஐ எழுத  இயலவில்லை
 tr:Diske %s yazılamadı
@@ -7326,7 +7351,9 @@ ro:Eroare: Nu s-a putut porni Sumatra PDF!
 ru:Ошибка: не удалось запустить SumatraPDF!
 sk:Chyba: Nie je možné spustiť SumatraPDF!
 sl:Napaka: ni bilo mogoče zagnati SumatraPDF!
+sp-rs:Грешка: Немогућ старт СуматраПДФ
 sq:Gabim: Nuk mund të hapë SumatraPDF!
+sr-rs:Грешка: Немогуће покретање СуматраПДФ
 sv:Fel: Kunde inte starta SumatraPDF!
 ta:சுமத்ரா PDFஐ இயங்கவில்லை
 tr:Hata: SumatraPDF çalıştırılamadı!
@@ -7372,6 +7399,7 @@ sk:Chyba: Program SumatraPDF nebol nájdený!
 sl:Napaka: ni bilo mogoče najti SumatraPDF!
 sp-rs:Greška: SumatraPDF nije pronađen!
 sq:Gabim: Nuk u gjet SumatraPDF!
+sr-rs:Грешка: СуматраПДФ није пронађен!
 sv:Fel: Hittade inte SumatraPDF!
 ta:சுமத்ராPDF காணவில்லை
 tr:Hata: SumatraPDF bulunamadı!
@@ -7415,7 +7443,9 @@ ro:Eroare: Documentul nu s-a putut descarca!
 ru:Ошибка: не удалось загрузить документ!
 sk:Chyba: Stiahnutie súboru sa nepodarilo!
 sl:Napaka: ni bilo mogoče prenesti dokumenta!
+sp-rs:Грешка: Документ се не може преузети!
 sq:Gabim: Nuk mund të shkarkohet dokumenti!
+sr-rs:Граешка: Документ се не може скинути!
 sv:Fel: Dokumentet kunde inte laddas ner!
 ta:பிழை: கோப்பை பதிவிறக்கம் செய்ய முடியவில்லை
 tr:Hata: Belge indirilemedi!
@@ -7759,7 +7789,9 @@ ro:Eroare la copierea dezinstalatorului in directorul temporar
 ru:Не удалось скопировать деинсталлятор во временную директорию
 sk:Kopírovanie odinštalátora do dočasného adresára bolo neúspešné
 sl:Kopiranje odstranjevalnega programa v začasno mapo ni uspelo
+sp-rs:Неуспело копирање деинсталера у привремени директоријум
 sq:Dështoi kopjimi i çinstaluesit te direktoria e përkohshme
+sr-rs:Неуспело копирање деинсталера у привремени директоријум
 sv:Misslyckades med att kopiera avinstalleraren till temp-katalogen
 ta:நிறுவி நீக்கலை தற்காலிக கோப்புறையில் இருந்து நகலெடுத்தல் தோல்வி
 tr:Kaldırıcıyı geçici dizine kopyalama başarısız oldu
@@ -7802,7 +7834,9 @@ ro:Eroare la crearea unei scurtaturi
 ru:Не удалось создать ярлык
 sk:Vytvorenie odkazu bolo neúspešné
 sl:Ustvarjanje bližnjice ni uspelo
+sp-rs:Неуспало креирање скраћенице
 sq:Dështoi krijimi i shkurtores
+sr-rs:Неуспело креирање скраћенице!
 sv:Misslyckades med att skapa genväg
 ta:சுருக்கு வழி அமைதல் தோல்வி
 tr:Kısayol oluşturulamadı
@@ -7843,7 +7877,9 @@ ro:Eroare la stergerea inregistrarilor de dezinstalare din registri
 ru:Не удалось удалить ключи регистра для деинсталлятора
 sk:Vymazanie odinštalačných kľúčov v registroch bolo neúspešné
 sl:Brisanje registrskih ključev odstranjevalnega programa ni uspelo
+sp-rs:Неуспело брисање регистри клјучева деинсталера
 sq:Dështoi fshirja e çinstaluesit nga regjistri
+sr-rs:Неуспело брисање кључева из регистри базе
 sv:Misslyckades med att ta bort registernycklar
 ta:நிறுவி நீக்கியின் பதிவை அழிக்க முடியவில்லை
 tr:Kaldırıcı kayıt defteri anahtarlarını silemedi
@@ -8004,7 +8040,9 @@ ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
 ru:Не удалось записать полную информацию о расширении файла в регистр
 sk:Zápis rozšírených informácií o prípone súboru do registrov bolo neúspešné
 sl:Pisanje v register informacij o razširjenem podaljšku datoteke ni uspelo
+sp-rs:Неуспели упиис проширене екстензије фајла у регистри
 sq:Dështoi shkrimi në regjistër i informacionit të zgjeruar për skedën.
+sr-rs:Неуспео упис проширене екстензије фајла у регистри базу
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
 tr:Kayıt defterine genişletimiş dosya uzantısı yazma başarısız oldu
@@ -8044,7 +8082,9 @@ ro:Eroare la scrierea informatiilor de dezinstalare in registri
 ru:Не удалось записать информацию для деинсталлятора в регистр
 sk:Uloženie informácií pre odinštalovanie do registrov bolo neúspešné
 sl:Pisanje v register informacij o odstranitvi ni uspelo
+sp-rs:Неуспели упис инсталационих информација у регистри
 sq:Dështoi shkrimi në regjistër i informacionit për çinstalimin
+sr-rs:Неуспео упис информација о деинсталацији у регистри базу
 sv:Missluckades spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
 tr:Kayıt defterine kaldırma bilgisi yazma işi başarısız oldu
@@ -9871,7 +9911,9 @@ ro:Instaleaza plugin-ul PDF pentru browser-ul Firefox, Chrome si Opera
 ru:Установить &плагин PDF для Firefox, Chrome и Opera
 sk:Inštaluj PDF pluginy pre &prehliadače Firefox, Chrome a Opera
 sl:Namesti PDF vtičnik za brskalnik Firefox, Chrome in Opera
+sp-rs:Инсталација ПДФ &прегледач плугин за Фајрфокс, Хром и Оперу
 sq:Instaloj spinën PDF për &shfletuesin Firefox, Chrome dhe Opera
+sr-rs:Инсталација ПДФ &претраживач плугина за Фајерфокс
 sv:Installera insticksprogram för PDF i webbläsarna Firefox, Chrome och Opera
 ta:பயர்பாக்ஸ், குரோம், ஒபேரா உலாவிகளில் PDF உள்இடுக்கைகள் நிறுவக
 tr:Firefox, Chrome ve Opera için &tarayıcı eklentisi yükle
@@ -9917,6 +9959,7 @@ sk:Inštaluj SumatraPDF
 sl:Namesti SumatraPDF
 sp-rs:Instaliraj SumatraPDF
 sq:Instaloj SumatraPDF
+sr-rs:Инсталација СуматраПДФ
 sv:Installera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவு
 tr:SumatraPDF yükle
@@ -9959,7 +10002,9 @@ ro:Instalare SumatraPDF in &folderul:
 ru:Установить SumatraPDF в &папку:
 sk:Inštaluj SumatraPDF do &adresára:
 sl:Namesti SumatraPDF v mapo:
+sp-rs:Инсталација СуматраПДФ у &фолдер
 sq:Instaloj SumatraPDF në &dosje:
+sr-rs:Инсталација СуматраПДФ
 sv:Installera SumatraPDF i katalog:
 ta:சுமத்ராPDFஐ &கோப்புறையில் நிறுவவும்:
 tr:&folder klasörüne SumatraPDF'yi yükle
@@ -10003,6 +10048,7 @@ sk:Inštalácia sa nepodarila!
 sl:Namestitev ni uspela!
 sp-rs:Instalacija neuspešna!
 sq:Dështoi instalimi!
+sr-rs:Инсталација неуспела!
 sv:Installationen misslyckades!
 ta:நிறுவல் தோல்வி!
 tr:Yükleme başarısız !
@@ -10048,6 +10094,7 @@ sk:Prebieha inštalácia...
 sl:Namestitev poteka …
 sp-rs:Instalacija u toku...
 sq:Instalimi vijon...
+sr-rs:Инсталација у току...
 sv:Installerar...
 ta:நிறுவல் செயலில் உள்ளது...
 tr:Kurulum devam ediyor...
@@ -10158,6 +10205,7 @@ ru:&Поиск файлов PDF с помощью Windows Desktop Search
 sk:Povoliť, aby Windows Desktop Search &vyhľadával PDF dokumenty
 sl:Naj Windows Desktop Search išče PDF dokumente
 sq:Lejoj Windows Desktop Search të &kërkojë dokumentet PDF
+sr-rs:Претрага Windows Desktop &претрага ПДФ документа
 sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
 tr:PDF belgelrini aramak için Windows Masaüstü Aramaya izin ver
@@ -10198,6 +10246,7 @@ ru:&Просмотр документов PDF средствами Windows
 sk:Povoliť, aby Windows zobrazoval &náhľad PDF dokumentov
 sl:Naj Windows prikazuje predogled PDF dokumentov
 sq:Lejoj Windows Desktop Search të &parashikojë dokumentet PDF
+sr-rs:Windows &приказ ПДФ документа
 sv:Visa förhandstitt av PDF-dokument i Windows
 ta:விண்டாஸ் PDF கோப்புகளை காண்பிக்க &முன்னோட்டம் செய்யட்டும்
 tr:PDF belgelerini görüntülemek ve önizleme için Windows'a izin ver
@@ -10492,6 +10541,7 @@ ru:Режим Man&ga
 sk:Man&ga mód
 sl:Način Man&ga
 sq:Mënyra Man&ga
+sr-rs:Ман&га мод
 sv:Man&ga Läge
 ta:மேங்கா முறை
 tr:Man&ga modu
@@ -11391,6 +11441,7 @@ ru:Открыть в %s
 sk:Otvoriť v %s
 sl:Odpri v %s
 sq:Hap në %s
+sr-rs:Отворити у %s
 sv:Öppna med %s
 ta:திற %s
 tr:%s içinde aç
@@ -11673,6 +11724,7 @@ ru:Открытие документа в SumatraPDF...
 sk:Otvárať dokument v SumatraPDF...
 sl:Odpiranje dokumenta v SumatraPDF …
 sq:Hap dokumentin në SumatraPDF...
+sr-rs:Отварање документа у СуматраПДФ
 sv:Öppnar dokumentet med SumatraPDF...
 ta:கோப்பு சுமத்ரா PDFல் திறக்கப்படுகிறது..
 tr:Belge SumatraPDF ile açılıyor...
@@ -12486,6 +12538,7 @@ ru:Для продолжения, закройте %s !
 sk:Prosím zatvorte %s pre pokračovanie!
 sl:Prosimo, izberite %s za nadaljevati!
 sq:Ju lutemi, mbyllni %s për të vazhduar!
+sr-rs:Затворите %s за наставак!
 sv:Vänligen stäng %s innan du fortsätter!
 ta:தயவு செய்து %s மூடிவிட்டு தொடரவும்!
 tr:Devam etmek için %s kapatın!
@@ -12992,6 +13045,7 @@ sk:Prebieha tlač...
 sl:Tiskanje v teku.
 sp-rs:Štampanje u toku.
 sq:Printimi vijon.
+sr-rs:Штампање у току!
 sv:Utskrift pågår.
 ta:அச்சு பணியில் உள்ளது
 tr:Baskı devam ediyor.
@@ -13041,6 +13095,7 @@ sk:Prebieha tlač. Prerušiť a ukončiť tlač?
 sl:Tiskanje je še vedno v teku. Prekinem in končam?
 sp-rs:Štampanje je i dalje u toku. Obustavi i izađi?
 sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
+sr-rs:Штампање је и даље у току. Завршити и прекинути?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
 tr:Yazdırma sürüyor. İptal edip çıkmak istiyor musunuz?
@@ -13150,7 +13205,7 @@ sk:Tlač strany %d z %d...
 sl:Tiskanje strani %d od %d …
 sp-rs:Štampanje %d. stramoce od ukupno %d...
 sq:Printon faqen %d nga %d...
-sr-rs:Штампање %d. страмоце од укупно %d...
+sr-rs:Штампање %d. странице од укупно %d...
 sv:Skriver ut sida %d av %d...
 ta:அச்சிடும் பக்கம் %d உள் %d
 tr:Sayfa %d %d yazdırılıyor...
@@ -14082,6 +14137,7 @@ sk:Vyberte adresár, kde sa má SumatraPDF nainštalovať:
 sl:Izberite mapo, kjer naj se namesti SumatraPDF:
 sp-rs:Odaberite folder gde želite da instalirate SumatraPDF:
 sq:Seleksiononi dosjen ku do të instalohet SumatraPDF:
+sr-rs:Одабрати фолдер за инсталацију СуматраПДФ
 sv:Välj en katalog där SumatraPDF ska installeras:
 ta:சுமத்ராPDF நிறுவல் கோப்புறை தேர்வு செய்க:
 tr:SumatraPDF'in yükleneceği alanı seçin:
@@ -14666,6 +14722,7 @@ sk:Niektoré inštalačné súbory sú poškodené alebo chýbajú
 sl:Nekatere datoteke za namestitev so poškodovane ali manjkajo
 sp-rs:Neki instalacioni fajlovi nedostaju ili su oštećeni
 sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
+sr-rs:Неки инсталациони фајлови су оштећени или недостају
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
 tr:Yüklü olması gereken bazı dosyalar eksik ve ya hasar görmüş
@@ -14826,6 +14883,7 @@ ru:Пуск SumatraPDF
 sk:Spustiť SumatraPDF
 sl:Zaženi SumatraPDF
 sq:Nis SumatraPDF
+sr-rs:Старовати СуматраПДФ
 sv:Starta SumatraPDF
 ta:சுமத்ராPDF தொடரவும்
 tr:SumatraPDF'yi başlat
@@ -14929,6 +14987,7 @@ ru:Инсталлятор SumatraPDF %s
 sk:SumatraPDF %s inštalátor
 sl:SumatraPDF %s namestitev
 sq:Instaluesi i SumatraPDF %s
+sr-rs:СуматраПДФ %s инсталација
 sv:Installationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவி
 tr:SumatraPDF %s yükleyici
@@ -14970,6 +15029,7 @@ ru:Деинсталлятор SumatraPDF %s
 sk:SumatraPDF %s odinštalátor
 sl:SumatraPDF %s odstranitev
 sq:Çinstaluesi i SumatraPDF %s
+sr-rs:СуматраПДФ %s деинсталација
 sv:Avinstallationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவல்நீக்கி
 tr:SumatraPDF %s Kaldırıcı
@@ -15184,6 +15244,7 @@ ru:SumatraPDF удалена.
 sk:Program SumatraPDF bol odinštalovaný.
 sl:SumatraPDF je bil odstranjen.
 sq:SumatraPDF u çinstalua
+sr-rs:СуматраПДФ деинсталиран
 sv:SumatraPDF är nu borttaget.
 ta:சுமத்ராPDF நிறுவல் நீக்கப்பட்டது.
 tr:SumatraPDF kaldırıldı.
@@ -15228,6 +15289,7 @@ ru:Установка SumatraPDF не найдена.
 sk:Inštalácia programu SumatraPDF nebola nájdená.
 sl:SumatraPDF namestitve ni mogoče najti.
 sq:Nuk u gjet SumatraPDF i instaluar.
+sr-rs:СуматраПДФ инсталација није пронађена
 sv:Kunde inte hitta SumatraPDF-installation.
 ta:சுமத்ராPDF நிறுவல் கிடைக்கவில்லை.
 tr:SumatraPDF kurulum dosyası bulunamadı.
@@ -15563,6 +15625,7 @@ sk:Dakujeme, že ste sa rozhodli pre SumatraPDF!
 sl:Hvala, ker ste izbrali SumatraPDF!
 sp-rs:Hvala Vam što ste izabrali SumatraPDF!
 sq:Faleminderit që zgjodhët SumatraPDF!
+sr-rs:Хвала на избору СуматраПДФ
 sv:Tack för att du väljer SumatraPDF!
 ta:சுமத்ரா PDF தேர்வு செய்ததுக்கு நன்றி!
 tr:SumatraPDF 'i seçtiğiniz için teşekkürler !
@@ -15608,6 +15671,7 @@ sk:Ďakujeme! SumatraPDF bol nainštalovaný.
 sl:Hvala! SumatraPDF je bil nameščen.
 sp-rs:Hvala Vam! SumatraPDF je uspešno instaliran.
 sq:Faleminderit! SumatraPDF u instalua.
+sr-rs:СуматраПДФ инсталиран. Хвала!
 sv:Tack! SumatraPDF är nu installerat.
 ta:நன்றி! சுமத்ரா PDF நிறுவப்பட்டு உள்ளது
 tr:Teşekkürler! SumatraPDF bilgisayarınıza kuruldu
@@ -15651,6 +15715,7 @@ sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOsp
 sl:Namestitveni program je poškodovan. Prosimo, da ga ponovno prenesete.\nOpravičujemo se za nevšečnost!
 sp-rs:Instalacija je oštećena. Molimo skinite je ponovo. \n Žao nam je zbog neugodnosti!
 sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
+sr-rs:Инсталација је оштећена. Скинути је поново. \s Извињавамо се.
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 tr:Yükleyici hasar görmüş.Lütfen tekrar indirin.\nGeçici rahatsızlık için özür dileriz!
@@ -15756,6 +15821,7 @@ sk:Odinštalovanie SumatraPDF
 sl:Odstrani SumatraPDF
 sp-rs:Ukloni SumatraPDF
 sq:Çinstaloj SumatraPDF
+sr-rs:Деинсталирање СуматраПДФ
 sv:Avinstallera SumatraPDF
 ta:சுமத்ராPDFஐ நிறுவல் நீக்கு
 tr:SumatraPDF'i kaldır
@@ -15801,6 +15867,7 @@ si:ඉවත්කිරීම අසාර්ථක විය
 sk:Odinštalovanie sa nepodarilo
 sl:Odstranitev ni uspela
 sq:Dështoi çinstalimi
+sr-rs:Деинсталирање неуспело
 sv:Avinstallationen misslyckades
 ta:நிறுவல் நீக்கம் தோல்வி
 tr:Program kaldırma başarısız
@@ -15845,6 +15912,7 @@ ru:Происходит удаление...
 sk:Prebieha odinštalovanie...
 sl:Odstranjevanje poteka …
 sq:Çinstalimi vijon...
+sr-rs:Деинсталирање у току ...
 sv:Avinstallerar...
 ta:நிறுவல் நீக்கம் செயல்படுகிறது...
 tr:Program kaldırılıyor...
@@ -15950,6 +16018,7 @@ sk:Použi SumatraPDF ako &predvolený PDF prehliadač
 sl:Uporabi SumatraPDF kot privzeti P&DF prikazovalnik
 sp-rs:Koristi SumatraPDF kao glavni PDF čitač
 sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
+sr-rs:СуматраПДФ је &подразумевани прегледач
 sv:Använd SumatraPDF som standardläsare för PDF-filer
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
 tr:SumatraPDF varsayılan PDF okuyucum olsun
