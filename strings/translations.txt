@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-54f551822009686d7b8ae866363341d78f696094
+fe1cdd5a7a3b624b8399140ea5a0671f5c0d5387
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -15715,7 +15715,7 @@ sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOsp
 sl:Namestitveni program je poškodovan. Prosimo, da ga ponovno prenesete.\nOpravičujemo se za nevšečnost!
 sp-rs:Instalacija je oštećena. Molimo skinite je ponovo. \n Žao nam je zbog neugodnosti!
 sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
-sr-rs:Инсталација је оштећена. Скинути је поново. \s Извињавамо се.
+sr-rs:Инсталација је оштећена. Скинути је поново. \n Извињавамо се.
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 tr:Yükleyici hasar görmüş.Lütfen tekrar indirin.\nGeçici rahatsızlık için özür dileriz!
