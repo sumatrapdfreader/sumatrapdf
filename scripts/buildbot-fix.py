@@ -5,7 +5,9 @@
 # This tool fixes such problems by deleting files from s3 and cache, so that
 # they can be re-generated
 
-import sys, os, s3
+import sys
+import os
+import s3
 from util import file_remove_try_hard, verify_path_exists, run_cmd_throw, load_config
 from buildbot import get_stats_cache_dir
 from buildbot import verify_started_in_right_directory
@@ -14,11 +16,15 @@ from buildbot import verify_started_in_right_directory
 g_dry_run = False
 
 # convert string in the form "7178.txt" => 7178
+
+
 def stats_txt_name_to_svn_no(s):
     return int(s.split(".")[0])
 
 # cached
 g_s3_files = None
+
+
 def get_s3_files():
     global g_s3_files
     if g_s3_files == None:
@@ -27,6 +33,8 @@ def get_s3_files():
     return g_s3_files
 
 g_s3_files_dict = None
+
+
 def get_s3_files_dict():
     global g_s3_files_dict
     if g_s3_files_dict == None:
@@ -36,17 +44,20 @@ def get_s3_files_dict():
             g_s3_files_dict[f] = True
     return g_s3_files_dict
 
+
 def get_s3_vers():
     files = get_s3_files()
     vers = {}
     for f in files:
         parts = f.split("/")
-        if len(parts) != 4: continue
+        if len(parts) != 4:
+            continue
         ver = int(parts[2])
         vers[ver] = True
     res = vers.keys()
     res.sort()
     return res
+
 
 def valid_s3_ver(ver):
     files = get_s3_files_dict()
@@ -56,11 +67,16 @@ def valid_s3_ver(ver):
         print("ver %d invalid because s3 file %s not present" % (ver, name))
         return False
     name = s3Dir + "analyze.html"
-    if name in files: return True
+    if name in files:
+        return True
     name = s3Dir + "release_build_log.txt"
-    if name in files: return True
-    print("ver %d invalid because neither analyze.html nor release_build_log.txt not present in %s" % (ver, s3Dir))
+    if name in files:
+        return True
+    print(
+        "ver %d invalid because neither analyze.html nor release_build_log.txt not present in %s" %
+        (ver, s3Dir))
     return False
+
 
 def s3_files_for_ver(ver):
     files = get_s3_files()
@@ -70,6 +86,7 @@ def s3_files_for_ver(ver):
         if f.startswith(s3_dir):
             res.append(f)
     return res
+
 
 def delete_ver(ver):
     print("deleting ver %d" % ver)
@@ -87,6 +104,8 @@ def delete_ver(ver):
 
 # delete all stats.txt files cached locally and all files from s3 for
 # a given version and later
+
+
 def fix_from_ver(ver, all_vers, all_vers_s3):
     to_delete = {}
     for v in all_vers:
@@ -96,7 +115,7 @@ def fix_from_ver(ver, all_vers, all_vers_s3):
         if v >= ver:
             to_delete[v] = True
     to_delete = to_delete.keys()
-    if len(to_delete) > 10: # safety check
+    if len(to_delete) > 10:  # safety check
         to_delete.sort()
         to_delete.reverse()
         print(to_delete)
@@ -112,6 +131,7 @@ def fix_from_ver(ver, all_vers, all_vers_s3):
     run_cmd_throw("svn", "update", "-r", str(ver))
     print("Finished fixing")
     sys.exit(1)
+
 
 def fix():
     verify_started_in_right_directory()

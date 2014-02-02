@@ -17,7 +17,8 @@ lots of calls make analyzing the raw output difficult. It might be applicable
 in other scenarios.
 """
 
-import os, sys
+import os
+import sys
 
 # if True, will indent callstacks with Release() with spaces, to make
 # it easier to tell them from AddRef callstacks
@@ -25,7 +26,10 @@ g_indent_release = True
 
 g_scripts_dir = os.path.dirname(os.path.realpath(__file__))
 
-def top_dir(): return os.path.dirname(g_scripts_dir)
+
+def top_dir():
+    return os.path.dirname(g_scripts_dir)
+
 
 def verify_file_exists(path):
     if not os.path.exists(path):
@@ -38,9 +42,12 @@ Turns:
 into:
 sumatrapdf.exe!dbghelp::LogCallstack+0x39 c:\users\kkowalczyk\src\sumatrapdf\src\utils\dbghelpdyn.cpp+497
 """
+
+
 def shorten_cs_line(s):
     parts = s.split(" ", 3)
     return parts[2]
+
 
 def iter_callstacks(file_path):
     curr = []
@@ -59,18 +66,23 @@ def iter_callstacks(file_path):
     if len(curr) > 0:
         yield curr
 
+
 def is_release(txt):
     lines = txt.split("\n")
     return len(lines) > 0 and "::Release+" in lines[0]
+
 
 def fmt_release(txt):
     lines = txt.split("\n")
     return "    " + "\n    ".join(lines)
 
+
 class CallStack(object):
+
     def __init__(self, txt):
         self.txt = txt
         self.count = 1
+
 
 def cs_add_or_inc_count(callstacks, txt):
     for cs in callstacks:
@@ -79,12 +91,14 @@ def cs_add_or_inc_count(callstacks, txt):
             return
     callstacks.append(CallStack(txt))
 
+
 def parse_callstacks(file_path):
     callstacks = []
     for cs_lines in iter_callstacks(file_path):
         txt = "\n".join(cs_lines)
         cs_add_or_inc_count(callstacks, txt)
     return callstacks
+
 
 def save_callstacks(file_path, callstacks):
     fo = open(file_path, "w")
@@ -95,6 +109,7 @@ def save_callstacks(file_path, callstacks):
             txt = fmt_release(txt)
         fo.write(txt + "\n\n")
     fo.close()
+
 
 def main():
     file_name = os.path.join(top_dir(), "obj-dbg", "callstacks.txt")

@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-import os, sys, string, httplib, urllib, util
+import os
+import sys
+import string
+import httplib
+import urllib
+import util
 from trans_gen import extract_strings_from_c_files
 
 # Extracts english strings from the source code and uploads them
@@ -15,21 +20,28 @@ else:
     SERVER = "www.apptranslator.org"
     PORT = 80
 
+
 def lastUploadedFilePath():
     return os.path.join(g_strings_dir, "last_uploaded.txt")
 
+
 def lastUploaded():
     f = lastUploadedFilePath()
-    if not os.path.exists(f): return ""
+    if not os.path.exists(f):
+        return ""
     return open(f, "rb").read()
+
 
 def saveLastUploaded(s):
     open(lastUploadedFilePath(), "wb").write(s)
 
+
 def uploadStringsToServer(strings, secret):
     print("Uploading strings to the server...")
-    params = urllib.urlencode({'strings': strings, 'app': 'SumatraPDF', 'secret': secret})
-    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+    params = urllib.urlencode(
+        {'strings': strings, 'app': 'SumatraPDF', 'secret': secret})
+    headers = {"Content-type": "application/x-www-form-urlencoded",
+               "Accept": "text/plain"}
     conn = httplib.HTTPConnection(SERVER, PORT)
     conn.request("POST", "/uploadstrings", params, headers)
     resp = conn.getresponse()
@@ -39,8 +51,10 @@ def uploadStringsToServer(strings, secret):
     conn.close()
     print("Upload done")
 
+
 def uploadStringsIfChanged(skip_svn_check=False):
-    # needs to have upload secret to protect apptranslator.org server from abuse
+    # needs to have upload secret to protect apptranslator.org server from
+    # abuse
     config = util.load_config()
     uploadsecret = config.trans_ul_secret
     if None is uploadsecret:
@@ -60,10 +74,13 @@ def uploadStringsIfChanged(skip_svn_check=False):
         try:
             (local_ver, latest_ver) = util.get_svn_versions()
         except:
-            print("Skipping string upload because SVN isn't available to check for up-to-date-ness")
+            print(
+                "Skipping string upload because SVN isn't available to check for up-to-date-ness")
             return
         if int(latest_ver) > int(local_ver):
-            print("Skipping string upload because your local version (%s) is older than latest in svn (%s)" % (local_ver, latest_ver))
+            print(
+                "Skipping string upload because your local version (%s) is older than latest in svn (%s)" %
+                (local_ver, latest_ver))
             return
 
     strings = extract_strings_from_c_files()
@@ -72,7 +89,8 @@ def uploadStringsIfChanged(skip_svn_check=False):
     s = s.encode("utf8")
 
     if lastUploaded() == s:
-        print("Skipping upload because strings haven't changed since last upload")
+        print(
+            "Skipping upload because strings haven't changed since last upload")
     else:
         uploadStringsToServer(s, uploadsecret)
         saveLastUploaded(s)

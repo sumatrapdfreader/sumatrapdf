@@ -2,13 +2,22 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import sys, os
+import sys
+import os
 # assumes is being run as ./scripts/buildbot.py
 efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
 
-import shutil, time, datetime, cPickle, traceback
-import s3, util, util2, efiparse, build
+import shutil
+import time
+import datetime
+import cPickle
+import traceback
+import s3
+import util
+import util2
+import efiparse
+import build
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
 from util import load_config, run_cmd, strip_empty_lines
@@ -30,46 +39,60 @@ TODO:
    and use heuristic to suppress bogus changes
 """
 
+
 class Stats(Serializable):
     fields = {
-        "analyze_sumatra_warnings_count" : 0,
-        "analyze_mupdf_warnings_count" : 0,
-        "analyze_ext_warnings_count" : 0,
-        "rel_sumatrapdf_exe_size" : 0,
-        "rel_sumatrapdf_no_mupdf_exe_size" : 0,
-        "rel_installer_exe_size" : 0,
-        "rel_libmupdf_dll_size" : 0,
-        "rel_nppdfviewer_dll_size" : 0,
-        "rel_pdffilter_dll_size" : 0,
-        "rel_pdfpreview_dll_size" : 0,
-        "rel_failed" : False,
+        "analyze_sumatra_warnings_count": 0,
+        "analyze_mupdf_warnings_count": 0,
+        "analyze_ext_warnings_count": 0,
+        "rel_sumatrapdf_exe_size": 0,
+        "rel_sumatrapdf_no_mupdf_exe_size": 0,
+        "rel_installer_exe_size": 0,
+        "rel_libmupdf_dll_size": 0,
+        "rel_nppdfviewer_dll_size": 0,
+        "rel_pdffilter_dll_size": 0,
+        "rel_pdfpreview_dll_size": 0,
+        "rel_failed": False,
         "rel_build_log": "",
-        "analyze_out" : "",
+        "analyze_out": "",
     }
     fields_no_serialize = ["rel_build_log", "analyze_out"]
 
     def __init__(self, read_from_file=None):
-        Serializable.__init__(self, Stats.fields, Stats.fields_no_serialize, read_from_file)
+        Serializable.__init__(self, Stats.fields,
+                              Stats.fields_no_serialize, read_from_file)
 
 
 def file_size(p):
-  return os.path.getsize(p)
+    return os.path.getsize(p)
 
 
 def str2bool(s):
-    if s.lower() in ("true", "1"): return True
-    if s.lower() in ("false", "0"): return False
+    if s.lower() in ("true", "1"):
+        return True
+    if s.lower() in ("false", "0"):
+        return False
     assert(False)
 
 
-TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60*60*8  # 8hrs
+TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60 * 60 * 8  # 8hrs
 g_time_of_last_build = None
-g_cache_dir = create_dir(os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
+g_cache_dir = create_dir(
+    os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
 g_stats_cache_dir = create_dir(os.path.join(g_cache_dir, "stats"))
 g_logs_cache_dir = create_dir(os.path.join(g_cache_dir, "logs"))
-def get_cache_dir(): return g_cache_dir
-def get_stats_cache_dir(): return g_stats_cache_dir
-def get_logs_cache_dir(): return g_logs_cache_dir
+
+
+def get_cache_dir():
+    return g_cache_dir
+
+
+def get_stats_cache_dir():
+    return g_stats_cache_dir
+
+
+def get_logs_cache_dir():
+    return g_logs_cache_dir
 
 
 @util2.memoize
@@ -90,9 +113,10 @@ def delete_old_logs(to_keep=10):
     versions = []
     for f in files:
         ver = int(f.split("_")[0])
-        if ver not in versions: versions.append(ver)
+        if ver not in versions:
+            versions.append(ver)
     versions.sort(reverse=True)
-    if len(versions) <= to_keep :
+    if len(versions) <= to_keep:
         return
     to_delete = versions[to_keep:]
     for f in files:
@@ -107,7 +131,8 @@ def stats_for_ver(ver):
     local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
     if not os.path.exists(local_path):
         s3_path = "sumatrapdf/buildbot/%s/stats.txt" % ver
-        if not s3.exists(s3_path): return None
+        if not s3.exists(s3_path):
+            return None
         s3.download_to_file(s3_path, local_path)
         assert(os.path.exists(local_path))
     return Stats(local_path)
@@ -117,8 +142,10 @@ def previous_successful_build_ver(ver):
     ver = int(ver) - 1
     while True:
         stats = stats_for_ver(str(ver))
-        if None == stats: return 0
-        if not stats.rel_failed: return ver
+        if None == stats:
+            return 0
+        if not stats.rel_failed:
+            return ver
         ver -= 1
 
 
@@ -157,7 +184,8 @@ def checkin_comment_for_ver(ver):
     if g_svn_log_per_ver is None:
         g_svn_log_per_ver = load_svn_log_data()
     if ver not in g_svn_log_per_ver:
-        # TODO: retry few times to make it robust against temporary network failures
+        # TODO: retry few times to make it robust against temporary network
+        # failures
         (out, err) = run_cmd_throw("svn", "log", "-r%s" % ver, "-v")
         g_svn_log_per_ver[ver] = out
         save_svn_log_data(g_svn_log_per_ver)
@@ -208,7 +236,8 @@ def build_release(stats, ver):
     platform = "PLATFORM=X86"
 
     clean_release()
-    (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+    (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc",
+                                  config, extcflags, platform, "all_sumatrapdf")
 
     log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
     build_log = out + "\n====STDERR:\n" + err
@@ -223,14 +252,16 @@ def build_release(stats, ver):
         return
 
     stats.rel_sumatrapdf_exe_size = file_size_in_obj("SumatraPDF.exe")
-    stats.rel_sumatrapdf_no_mupdf_exe_size = file_size_in_obj("SumatraPDF-no-MuPDF.exe")
+    stats.rel_sumatrapdf_no_mupdf_exe_size = file_size_in_obj(
+        "SumatraPDF-no-MuPDF.exe")
     stats.rel_libmupdf_dll_size = file_size_in_obj("libmupdf.dll")
     stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll")
     stats.rel_pdffilter_dll_size = file_size_in_obj("PdfFilter.dll")
     stats.rel_pdfpreview_dll_size = file_size_in_obj("PdfPreview.dll")
 
     build_installer_data(obj_dir)
-    run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
+    run_cmd_throw("nmake", "-f", "makefile.msvc",
+                  "Installer", config, platform, extcflags)
     p = os.path.join(obj_dir, "Installer.exe")
     stats.rel_installer_exe_size = file_size(p)
 
@@ -243,7 +274,8 @@ def build_analyze(stats, ver):
 
     shutil.rmtree(obj_dir, ignore_errors=True)
     shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
-    (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
+    (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc",
+                                  "WITH_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
     stats.analyze_out = out
 
     log_path = os.path.join(get_logs_cache_dir(), ver + "_analyze_log.txt")
@@ -268,6 +300,7 @@ def build_and_upload_efi_out(ver):
     shutil.copyfile("efi.txt.bz2", logs_efi_out_path(ver))
     os.chdir("..")
 
+
 def get_efi_out(ver):
     ver = str(ver)
     p = logs_efi_out_path(ver)
@@ -277,6 +310,7 @@ def get_efi_out(ver):
     # that it was build on this machine, so the results should still be in logs
     # cache
     return None
+
 
 def efi_diff_as_txt(diff, max=-1):
     lines = []
@@ -338,7 +372,8 @@ def build_and_upload_efi_txt_diff(ver):
     s = str(diff)
     s = s + "\n" + efi_diff_as_txt(diff)
     s3dir = "sumatrapdf/buildbot/%s/" % str(ver)
-    s3.upload_data_public_with_content_type(s, s3dir + "efi_diff.txt", silent=True)
+    s3.upload_data_public_with_content_type(
+        s, s3dir + "efi_diff.txt", silent=True)
 
 
 # TODO: maybe add debug build and 64bit release?
@@ -366,8 +401,10 @@ def build_version(ver, skip_release=False):
         dur = datetime.datetime.now() - start_time
         print("%s for release build" % str(dur))
         if stats.rel_failed:
-            run_analyze = False # don't bother running analyze if release failed
-            s3.upload_data_public_with_content_type(stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
+            # don't bother running analyze if release failed
+            run_analyze = False
+            s3.upload_data_public_with_content_type(
+                stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
 
     if not stats.rel_failed:
         build_and_upload_efi_out(ver)
@@ -380,7 +417,8 @@ def build_version(ver, skip_release=False):
         html = gen_analyze_html(stats, ver)
         p = os.path.join(get_logs_cache_dir(), "%s_analyze.html" % str(ver))
         open(p, "w").write(html)
-        s3.upload_data_public_with_content_type(html, s3dir + "analyze.html", silent=True)
+        s3.upload_data_public_with_content_type(
+            html, s3dir + "analyze.html", silent=True)
 
     if not stats.rel_failed:
         build_and_upload_efi_txt_diff(ver)
@@ -389,18 +427,22 @@ def build_version(ver, skip_release=False):
     # before/dufing uploading stats.txt. Would have to implement transactional
     # multi-upload to be robust aginst that, so will just let it be
     stats_txt = stats.to_s()
-    s3.upload_data_public_with_content_type(stats_txt, s3dir + "stats.txt", silent=True)
+    s3.upload_data_public_with_content_type(
+        stats_txt, s3dir + "stats.txt", silent=True)
     html = build_index_html(stats_for_ver, checkin_comment_for_ver)
-    s3.upload_data_public_with_content_type(html, "sumatrapdf/buildbot/index.html", silent=True)
+    s3.upload_data_public_with_content_type(
+        html, "sumatrapdf/buildbot/index.html", silent=True)
     json_s = build_sizes_json(get_stats_cache_dir, stats_for_ver)
-    s3.upload_data_public_with_content_type(json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
+    s3.upload_data_public_with_content_type(
+        json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
     if stats.rel_failed:
         email_build_failed(ver)
-        return # don't run tests if build fails
+        return  # don't run tests if build fails
 
     err = runtests.run_tests()
     if err != None:
-        s3.upload_data_public_with_content_type(err, s3dir + "tests_error.txt", silent=True)
+        s3.upload_data_public_with_content_type(
+            err, s3dir + "tests_error.txt", silent=True)
         email_tests_failed(ver, err)
         print("Tests failed. Error message:\n" + err)
     else:
@@ -459,12 +501,12 @@ def build_curr(force=False):
     (local_ver, latest_ver) = util.get_svn_versions()
     print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
     if not has_already_been_built(local_ver) or force:
-            build_version(local_ver)
+        build_version(local_ver)
     else:
         print("We have already built revision %s" % local_ver)
 
 
-def build_version_retry(ver, try_count = 2):
+def build_version_retry(ver, try_count=2):
     # it can happen we get a valid but intermitten exception e.g.
     # due to svn command failing due to server hiccup
     # in that case we'll retry, waiting 1 min in between,
@@ -509,7 +551,7 @@ def buildbot_loop():
                 revs_built += 1
             else:
                 print("We have already built revision %s" % local_ver)
-            local_ver = str(int(local_ver)+1)
+            local_ver = str(int(local_ver) + 1)
         delete_old_logs()
         # don't sleep if we built something in this cycle. a new checkin might
         # have happened while we were working
@@ -520,13 +562,15 @@ def buildbot_loop():
         secs_until_prerelease = None
         if g_time_of_last_build is not None:
             td = datetime.datetime.now() - g_time_of_last_build
-            secs_until_prerelease = TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS - int(td.total_seconds())
+            secs_until_prerelease = TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS - \
+                int(td.total_seconds())
             if secs_until_prerelease < 0:
                 build_pre_release()
                 g_time_of_last_build = None
 
-        print("Sleeping for 15 minutes, %s seconds until pre-release" % str(secs_until_prerelease))
-        time.sleep(60*15) # 15 mins
+        print("Sleeping for 15 minutes, %s seconds until pre-release" %
+              str(secs_until_prerelease))
+        time.sleep(60 * 15)  # 15 mins
 
 
 def build_pre_release():
@@ -559,11 +603,11 @@ def main():
     s3.set_bucket("kjkpub")
     os.chdir(src_path)
 
-    #test_email_tests_failed()
+    # test_email_tests_failed()
     #build_version("8190", skip_release=True)
-    #test_build_html_index()
-    #build_sizes_json()
-    #build_curr(force=True)
+    # test_build_html_index()
+    # build_sizes_json()
+    # build_curr(force=True)
     buildbot_loop()
 
 if __name__ == "__main__":

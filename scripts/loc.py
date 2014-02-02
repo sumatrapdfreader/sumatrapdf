@@ -17,15 +17,21 @@ DIRS = ["src",
         pj("src", "previewer"),
         ]
 
+
 def is_blacklisted(name):
     if name in ["DialogSizer.cpp", "DialogSizer.h",
-        "UtilTests.cpp", "UnitTests.cpp"]: return True
-    if name.endswith("_ut.cpp"): return True
-    if name.endswith("_txt.cpp"): return True # translation files
+                "UtilTests.cpp", "UnitTests.cpp"]:
+            return True
+    if name.endswith("_ut.cpp"):
+        return True
+    if name.endswith("_txt.cpp"):
+        return True  # translation files
     return False
+
 
 def count_file(name):
     return (name.endswith(".cpp") or name.endswith(".h")) and not is_blacklisted(name)
+
 
 def loc_for_file(filePath):
     loc = 0
@@ -34,17 +40,21 @@ def loc_for_file(filePath):
             loc += 1
     return loc
 
+
 def get_locs_for_dir(srcDir, dir):
     d = pj(srcDir, dir)
     files = os.listdir(dir)
     locs_per_file = {}
     for f in files:
-        if not count_file(f): continue
+        if not count_file(f):
+            continue
         locs_per_file[f] = loc_for_file(pj(d, f))
     return locs_per_file
 
+
 def get_dir_loc(locs_per_file):
     return sum(locs_per_file.values())
+
 
 def main():
     # we assume the script is run from top-level directory as

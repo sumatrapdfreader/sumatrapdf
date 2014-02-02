@@ -12,7 +12,9 @@ The conventions are:
    an error message pin-pointing the problem. stderr is used by
    buildbot. stdout can be used for interactive use
 """
-import os, util
+import os
+import util
+
 
 def is_vs2008():
     # vcbuild.exe no longer exists for VS2010 and later
@@ -21,6 +23,7 @@ def is_vs2008():
         return errcode == 0
     except:
         return False
+
 
 def run_premake(action="vs2010"):
     try:
@@ -31,22 +34,29 @@ def run_premake(action="vs2010"):
         return "premake4.exe not in %PATH%"
     return None
 
+
 def is_test_exe(file_name):
     return file_name.startswith("test_") and file_name.endswith(".exe")
+
 
 def is_empty_str(s):
     return s == None or len(s) == 0
 
+
 def fmt_out_err(out, err):
     if is_empty_str(out) and is_empty_str(err):
         return ""
-    if is_empty_str(out): return err
-    if is_empty_str(err): return out
+    if is_empty_str(out):
+        return err
+    if is_empty_str(err):
+        return out
     return out + "\n" + err
 
 # returns None if all tests succeeded or an error string if one
 # or more tests failed
 # assumes current directory is top-level sumatra dir
+
+
 def run_tests2():
     if not os.path.exists("premake4.lua"):
         return "premake4.lua doesn't exist in current directory (%s)" % os.getcwd()
@@ -64,14 +74,16 @@ def run_tests2():
         return "util.kill_msbuild() failed"
     if vs_action == "vs2010":
         try:
-            (out, err, errcode) = util.run_cmd("devenv", "all_tests.sln", "/build", "Release")
+            (out, err, errcode) = util.run_cmd("devenv",
+                                               "all_tests.sln", "/build", "Release")
             if errcode != 0:
                 return "devenv.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
         except:
             return "devenv.exe not found"
     else:
         try:
-            (out, err, errcode) = util.run_cmd("vcbuild", "all_tests.sln", "Release^|Win32")
+            (out, err, errcode) = util.run_cmd("vcbuild",
+                                               "all_tests.sln", "Release^|Win32")
             if errcode != 0:
                 return "vcbuild.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
         except:
@@ -90,11 +102,13 @@ def run_tests2():
             return "%s failed to run" % f
     return None
 
+
 def run_tests():
     d = os.getcwd()
     res = run_tests2()
     os.chdir(d)
     return res
+
 
 def main():
     err = run_tests()

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-import os, util2, gen_settingsstructs, trans_langs
+import os
+import util2
+import gen_settingsstructs
+import trans_langs
 
 """
 TODO:
@@ -188,15 +191,18 @@ indent_str = "    "
 
 # if s in the form: "foo](bar.html)", returns ["foo", "bar.html"].
 # otherwise returns ["foo"]
+
+
 def extract_url(s):
     if not s.endswith(")"):
         return [s]
     word_end = s.find("]")
     assert word_end != -1
     word = s[:word_end]
-    assert s[word_end+1] == "("
-    url = s[word_end+2:-1]
+    assert s[word_end + 1] == "("
+    url = s[word_end + 2:-1]
     return [word, url]
+
 
 def gen_comment(comment, field_id, start, first=False):
     line_len = 100
@@ -236,6 +242,7 @@ def gen_comment(comment, field_id, start, first=False):
     s += '</span>'
     return [s]
 
+
 def gen_struct(struct, indent="", prerelease=False):
     lines = []
     first = True
@@ -250,7 +257,7 @@ def gen_struct(struct, indent="", prerelease=False):
         field_id = struct.name + "_" + field.name if indent else field.name
         lines += gen_comment(comment, field_id, indent, first)
         if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
-            indent2 = indent + indent_str[:len(indent_str)/2]
+            indent2 = indent + indent_str[:len(indent_str) / 2]
             start = "%s%s [\n%s[" % (indent, field.name, indent2)
             end = "%s]\n%s]" % (indent2, indent)
             inside = gen_struct(field, indent + indent_str, prerelease)
@@ -271,16 +278,22 @@ def gen_struct(struct, indent="", prerelease=False):
         inside_expert = field.expert
     return "\n".join(lines)
 
+
 class Lang(object):
+
     def __init__(self, name, code):
         self.name = name
         self.code = code
 
+
 def blog_dir():
     script_dir = os.path.realpath(os.path.dirname(__file__))
-    blog_dir = os.path.realpath(os.path.join(script_dir, "..", "..", "web", "blog", "www", "software", "sumatrapdf"))
-    if os.path.exists(blog_dir): return blog_dir
+    blog_dir = os.path.realpath(
+        os.path.join(script_dir, "..", "..", "web", "blog", "www", "software", "sumatrapdf"))
+    if os.path.exists(blog_dir):
+        return blog_dir
     return None
+
 
 def gen_langs_html():
     langs = trans_langs.g_langs
@@ -298,6 +311,7 @@ def gen_langs_html():
     if blog_dir():
         p = os.path.join(blog_dir(), file_name)
         open(p, "w").write(s)
+
 
 def gen_html():
     prefs = gen_settingsstructs.GlobalPrefs

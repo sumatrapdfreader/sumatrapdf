@@ -23,38 +23,51 @@ Maybe:
    http://msdn.microsoft.com/en-US/library/b2x2t313(v=vs.80).aspx)
 """
 
-import sys, os
+import sys
+import os
 # assumes is being run as ./scripts/efi_cmp.py
 efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
 
-import os, sys, shutil, util, efiparse
+import os
+import sys
+import shutil
+import util
+import efiparse
 
 g_top_dir = os.path.realpath("..")
 
-g_src_dir = os.path.join(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
+g_src_dir = os.path.join(
+    os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
+
 
 def sum_efi_dir():
     return os.path.join(g_top_dir, "sumatrapdf_efi")
 
+
 def sumatra_dir():
     return os.path.joing()
+
 
 def sum_efi_cache_dir(ver):
     # make it outside of sumatrapdf_efi directory?
     d = os.path.join(sum_efi_dir(), "efi_cache", str(ver))
     return util.create_dir(d)
 
+
 def efi_result_file(ver):
     return os.path.join(sum_efi_cache_dir(ver), "efi.txt")
 
+
 def efi_result_bz2_file(ver):
     return os.path.join(sum_efi_cache_dir(ver), "efi.txt.bz2")
+
 
 def usage():
     name = os.path.basename(__file__)
     print("Usage: %s $svn_ver1 $svn_ver2" % name)
     sys.exit(1)
+
 
 def verify_efi_present():
     try:
@@ -67,12 +80,16 @@ def verify_efi_present():
         sys.exit(1)
 
 g_build_artifacts = ["SumatraPDF.exe", "SumatraPDF.pdb"]
+
+
 def already_built(ver):
     d = sum_efi_cache_dir(ver)
     for f in g_build_artifacts:
         p = os.path.join(d, f)
-        if not os.path.exists(p): return False
+        if not os.path.exists(p):
+            return False
     return True
+
 
 def build_clean(ver):
     config = "CFG=rel"
@@ -81,7 +98,9 @@ def build_clean(ver):
     platform = "PLATFORM=X86"
     shutil.rmtree(obj_dir, ignore_errors=True)
     shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
-    (out, err, errcode) = util.run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+    (out, err, errcode) = util.run_cmd("nmake", "-f",
+                                       "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+
 
 def build_ver(ver):
     print("Building release version %d" % ver)
@@ -99,17 +118,21 @@ def build_ver(ver):
         dst = os.path.join(sum_efi_cache_dir(ver), f)
         shutil.copyfile(src, dst)
 
+
 def build_efi_result(ver):
     path = efi_result_file(ver)
-    if os.path.exists(path): return # was already done
+    if os.path.exists(path):
+        return  # was already done
     os.chdir(sum_efi_cache_dir(ver))
     util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
     util.bz_file_compress("efi.txt", "efi.txt.bz2")
+
 
 def build_efi_result_current():
     os.chdir("obj-rel")
     util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
     util.bz_file_compress("efi.txt", "efi.txt.bz2")
+
 
 def print_side_by_size(diff):
     added = diff.added
@@ -117,21 +140,26 @@ def print_side_by_size(diff):
     n = max(len(added), len(removed))
     rows = [["", "added", "", "removed"]]
     for i in range(n):
-        s1 = ""; n1 = ""
+        s1 = ""
+        n1 = ""
         if i < len(added):
             sym = added[i]
             s1 = str(sym.size)
             n1 = sym.full_name()
-        s2 = ""; n2 = ""
+        s2 = ""
+        n2 = ""
         if i < len(removed):
             sym = removed[i]
             s2 = str(sym.size)
             n2 = sym.full_name()
         rows.append([s1, n1, s2, n2])
-    rows = util.fmt_rows(rows, [util.FMT_LEFT, util.FMT_RIGHT, util.FMT_LEFT, util.FMT_RIGHT])
-    lines = ["  %s : %s | %s : %s" % (e1, e2, e3, e4) for (e1, e2, e3, e4) in rows]
+    rows = util.fmt_rows(
+        rows, [util.FMT_LEFT, util.FMT_RIGHT, util.FMT_LEFT, util.FMT_RIGHT])
+    lines = ["  %s : %s | %s : %s" % (e1, e2, e3, e4)
+             for (e1, e2, e3, e4) in rows]
     s = "\n".join(lines)
     print(s)
+
 
 def diff_as_str(diff, max=-1):
     lines = []
@@ -168,6 +196,7 @@ def diff_as_str(diff, max=-1):
             lines.append(s)
     return "\n".join(lines)
 
+
 def diff_efi(efi1_path, efi2_path):
     obj_file_splitters = ["obj-rel\\", "INTEL\\"]
     efi1 = efiparse.parse_file(efi1_path, obj_file_splitters)
@@ -184,6 +213,8 @@ def diff_efi(efi1_path, efi2_path):
 # compare the build of the current state of the tree (including changes not
 # checked in) with the last svn revision.
 # last svn revision is built in ../sumatrapdf_efi
+
+
 def cmp_with_last():
     os.chdir(sum_efi_dir())
     (local_ver, latest_ver) = util.get_svn_versions()
@@ -197,6 +228,7 @@ def cmp_with_last():
     print(s)
     with open("last_efi_cmp.txt", "w") as fo:
         fo.write(s)
+
 
 def main():
     # early checks

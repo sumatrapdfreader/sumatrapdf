@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 
-import os, re, util2, codecs, trans_langs, bz2, zlib
+import os
+import re
+import util2
+import codecs
+import trans_langs
+import bz2
+import zlib
+
 
 class Lang(object):
+
     def __init__(self, desc):
         assert len(desc) <= 4
         self.desc = desc
-        self.code = desc[0] # "af"
-        self.name = desc[1] # "Afrikaans"
+        self.code = desc[0]  # "af"
+        self.name = desc[1]  # "Afrikaans"
         self.ms_lang_id = desc[2]
         self.isRtl = False
         if len(desc) > 3:
@@ -19,6 +27,7 @@ class Lang(object):
         self.code_safe = self.code.replace("-", "_")
         self.c_translations_array_name = "gTranslations_" + self.code_safe
         self.translations = []
+
 
 def get_lang_objects(langs_defs):
     return [Lang(desc) for desc in langs_defs]
@@ -34,6 +43,7 @@ C_DIRS_TO_PROCESS = [".", "installer", "browserplugin"]
 # produce a simpler format for these dirs
 C_SIMPLE_FORMAT_DIRS = ["browserplugin"]
 
+
 def should_translate(file_name):
     file_name = file_name.lower()
     return file_name.endswith(".cpp")
@@ -41,9 +51,11 @@ def should_translate(file_name):
 C_FILES_TO_PROCESS = []
 for dir in C_DIRS_TO_PROCESS:
     d = os.path.join(SRC_DIR, dir)
-    C_FILES_TO_PROCESS += [os.path.join(d, f) for f in os.listdir(d) if should_translate(f)]
+    C_FILES_TO_PROCESS += [os.path.join(d, f)
+                           for f in os.listdir(d) if should_translate(f)]
 
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
+
 
 def extract_strings_from_c_files(with_paths=False):
     strings = []
@@ -51,7 +63,8 @@ def extract_strings_from_c_files(with_paths=False):
         file_content = open(f, "r").read()
         file_strings = re.findall(TRANSLATION_PATTERN, file_content)
         if with_paths:
-            strings += [(s, os.path.basename(os.path.dirname(f))) for s in file_strings]
+            strings += [(s, os.path.basename(os.path.dirname(f)))
+                        for s in file_strings]
         else:
             strings += file_strings
     return util2.uniquify(strings)
@@ -105,9 +118,12 @@ bool IsLanguageRtL(int index)
 
 # use octal escapes because hexadecimal ones can consist of
 # up to four characters, e.g. \xABc isn't the same as \253c
+
+
 def c_oct(c):
     o = "00" + oct(ord(c))
     return "\\" + o[-3:]
+
 
 def c_escape(txt):
     if txt is None:
@@ -118,6 +134,7 @@ def c_escape(txt):
     txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
     return '"%s"' % txt
 
+
 def c_escape_for_compact(txt):
     if txt is None:
         return '"\\0"'
@@ -126,6 +143,7 @@ def c_escape_for_compact(txt):
     # and all non-7-bit characters of the UTF-8 encoded string
     txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
     return '"%s\\0"' % txt
+
 
 def get_trans_for_lang(strings_dict, keys, lang_arg):
     if lang_arg == "en":
@@ -146,17 +164,23 @@ def get_trans_for_lang(strings_dict, keys, lang_arg):
         return None
     return trans
 
-def lang_sort_func(x,y):
+
+def lang_sort_func(x, y):
     # special case: default language is first
-    if x[0] == "en": return -1
-    if y[0] == "en": return 1
+    if x[0] == "en":
+        return -1
+    if y[0] == "en":
+        return 1
     return cmp(x[1], y[1])
 
 # correctly sorts strings containing escaped tabulators
+
+
 def key_sort_func(a, b):
     return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
 
 g_incomplete_langs = None
+
 
 def build_trans_for_langs(langs, strings_dict, keys):
     global g_incomplete_langs
@@ -225,11 +249,15 @@ const LANGID *GetLangIds() { return &gLangIds[0]; }
 } // namespace trans
 """
 
-# generate unique names for translations files for each binary, to simplify build
+# generate unique names for translations files for each binary, to
+# simplify build
+
+
 def file_name_from_dir_name(dir_name):
     if dir_name == ".":
         return "Trans_sumatra_txt.cpp"
     return "Trans_%s_txt.cpp" % dir_name
+
 
 def build_translations(langs):
     for lang in langs[1:]:
@@ -245,12 +273,15 @@ def build_translations(langs):
         lang.seq_zip = zlib.compress(seq, 9)
         lang.seq_bzip = bz2.compress(seq, 9)
 
+
 def gen_translations(langs):
     lines = []
     for lang in langs[1:]:
         s = "\\\n".join(lang.c_escaped_lines)
-        lines.append("const char * %s = \n%s;\n" % (lang.c_translations_array_name, s))
+        lines.append("const char * %s = \n%s;\n" %
+                     (lang.c_translations_array_name, s))
     return "\n".join(lines)
+
 
 def gen_trans_compressed_for_lang(lang):
     lines = []
@@ -292,6 +323,7 @@ static const char *gTranslations[LANGS_COUNT] = {
 const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx]; }
 """
 
+
 def gen_translations_compressed(langs):
     lines = []
     sizes = ["0", "0"]
@@ -304,7 +336,11 @@ def gen_translations_compressed(langs):
     return (translations, compressed_sizes)
 
 # what percentage of total is x (x=60 is 60% of total=100)
-def perc(total, x): return x * 100.0 / total
+
+
+def perc(total, x):
+    return x * 100.0 / total
+
 
 def print_stats(langs):
     uncompressed = 0
@@ -319,30 +355,42 @@ def print_stats(langs):
     savezip = uncompressed - compressed_zip
     savebzip = uncompressed - compressed_bzip
     savebzip_over_zip = savebzip - savezip
-    vals = (uncompressed, compressed_zip, pzip, savezip, compressed_bzip, pbzip, savebzip, savebzip_over_zip)
-    print("\nLen: %d zip: %d %.2f%% (-%d), bzip: %d %.2f%% (-%d), bzip over zip: %d" % vals)
+    vals = (uncompressed, compressed_zip, pzip, savezip,
+            compressed_bzip, pbzip, savebzip, savebzip_over_zip)
+    print(
+        "\nLen: %d zip: %d %.2f%% (-%d), bzip: %d %.2f%% (-%d), bzip over zip: %d" %
+        vals)
+
 
 def print_incomplete_langs(dir_name):
     langs = ", ".join([lang.code for lang in g_incomplete_langs])
-    count = "%d out of %d" % (len(g_incomplete_langs), len(trans_langs.g_langs))
-    print("\nIncomplete langs in %s: %s %s" % (file_name_from_dir_name(dir_name), count, langs))
+    count = "%d out of %d" % (
+        len(g_incomplete_langs), len(trans_langs.g_langs))
+    print("\nIncomplete langs in %s: %s %s" %
+          (file_name_from_dir_name(dir_name), count, langs))
+
 
 def gen_c_code_for_dir(strings_dict, keys, dir_name, compressed=False):
     langs = get_lang_objects(sorted(trans_langs.g_langs, cmp=lang_sort_func))
     assert "en" == langs[0].code
     langs = build_trans_for_langs(langs, strings_dict, keys)
 
-    langcodes = " \\\n".join(["  %s" % c_escape_for_compact(lang.code) for lang in langs])
+    langcodes = " \\\n".join(["  %s" % c_escape_for_compact(lang.code)
+                             for lang in langs])
 
-    langnames = " \\\n".join(["  %s" % c_escape_for_compact(lang.name) for lang in langs])
+    langnames = " \\\n".join(["  %s" % c_escape_for_compact(lang.name)
+                             for lang in langs])
     langids = ",\n".join(["  %s" % lang.ms_lang_id for lang in langs])
 
-    rtl_info = ["(%d == idx)" % langs.index(lang) for lang in langs if lang.isRtl]
+    rtl_info = ["(%d == idx)" % langs.index(lang)
+                for lang in langs if lang.isRtl]
     islangrtl = "return %s;" % (" || ".join(rtl_info) or "false")
 
     build_translations(langs)
 
-    translations_refs = "  NULL,\n" + ", \n".join(["  %s" % lang.c_translations_array_name for lang in langs[1:]])
+    translations_refs = "  NULL,\n" + \
+        ", \n".join(["  %s" %
+                    lang.c_translations_array_name for lang in langs[1:]])
     if compressed:
         (translations, compressed_sizes) = gen_translations_compressed(langs)
         translations = compressed_tmpl % locals()
@@ -356,11 +404,13 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name, compressed=False):
     langs_count = len(langs)
     translations_count = len(keys)
     file_content = compact_c_tmpl % locals()
-    file_path = os.path.join(SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
+    file_path = os.path.join(
+        SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
     file(file_path, "wb").write(file_content)
 
     print_incomplete_langs(dir_name)
-    #print_stats(langs)
+    # print_stats(langs)
+
 
 def gen_c_code_simple(strings_dict, keys, dir_name):
     langs = get_lang_objects(sorted(trans_langs.g_langs, cmp=lang_sort_func))
@@ -370,22 +420,28 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
     lines = []
     for lang in langs:
         lines.append('  /* Translations for language %s */' % lang.code)
-        lines += ['  L"%s",' % t.replace('"', '\\"') if t else '  NULL,' for t in lang.translations]
+        lines += ['  L"%s",' %
+                  t.replace('"', '\\"') if t else '  NULL,' for t in lang.translations]
         lines.append("")
     lines.pop()
     translations = "\n".join(lines)
 
     langs_grp = ['"%s"' % lang.code for lang in langs] + ["NULL"]
-    langs_list = ",\n    ".join([", ".join(grp) for grp in util2.group(langs_grp, 10)])
-    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs if lang.ms_lang_id != "(LANGID)-1"] + ["default: return -1;"])
-    rtl_lang_cmp = " || ".join(["%d == index" % (langs.index(lang) * len(keys)) for lang in langs if lang.isRtl]) or "false"
+    langs_list = ",\n    ".join([", ".join(grp)
+                                for grp in util2.group(langs_grp, 10)])
+    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys))
+                                     for lang in langs if lang.ms_lang_id != "(LANGID)-1"] + ["default: return -1;"])
+    rtl_lang_cmp = " || ".join(["%d == index" % (langs.index(lang) * len(keys))
+                               for lang in langs if lang.isRtl]) or "false"
 
     translations_count = len(keys)
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()
-    file_name = os.path.join(SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
+    file_name = os.path.join(
+        SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
     file(file_name, "wb").write(file_content)
 
     print_incomplete_langs(dir_name)
+
 
 def gen_c_code(strings_dict, strings):
     for dir in C_DIRS_TO_PROCESS:
@@ -395,6 +451,7 @@ def gen_c_code(strings_dict, strings):
             gen_c_code_for_dir(strings_dict, keys, dir)
         else:
             gen_c_code_simple(strings_dict, keys, dir)
+
 
 def main():
     import trans_download
