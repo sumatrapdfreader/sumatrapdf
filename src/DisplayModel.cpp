@@ -375,33 +375,33 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
         int first = FirstPageInARowNo(pageNo, columns, DisplayModeShowCover(GetDisplayMode()));
         int last = LastPageInARowNo(pageNo, columns, DisplayModeShowCover(GetDisplayMode()), PageCount());
+        RectD box;
         for (int i = first; i <= last; i++) {
             PageInfo *pageInfo = GetPageInfo(i);
-            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
-            row.dx += pageBox.dx;
-
             if (pageInfo->contentBox.IsEmpty())
                 pageInfo->contentBox = engine->PageContentBox(i);
-            RectD rotatedContent = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
-            if (i == first && !rotatedContent.IsEmpty())
-                row.dx -= (rotatedContent.x - pageBox.x);
-            if (i == last && !rotatedContent.IsEmpty())
-                row.dx -= (pageBox.BR().x - rotatedContent.BR().x);
 
-            SizeD pageSize = PageSizeAfterRotation(i, true);
-            if (row.dy < pageSize.dy)
-                row.dy = pageSize.dy;
+            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
+            RectD contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
+            if (contentBox.IsEmpty())
+                contentBox = pageBox;
+
+            contentBox.x += row.dx;
+            box = box.Union(contentBox);
+            row.dx += pageBox.dx + pageSpacing.dx;
         }
+        row = box.Size();
     } else {
         row = PageSizeAfterRotation(pageNo, fitToContent);
         row.dx *= columns;
+        row.dx += pageSpacing.dx * (columns - 1);
     }
 
     assert(!RectD(PointD(), row).IsEmpty());
     if (RectD(PointD(), row).IsEmpty())
         return 0;
 
-    int areaForPagesDx = viewPort.dx - windowMargin.left - windowMargin.right - pageSpacing.dx * (columns - 1);
+    int areaForPagesDx = viewPort.dx - windowMargin.left - windowMargin.right;
     int areaForPagesDy = viewPort.dy - windowMargin.top - windowMargin.bottom;
     if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
