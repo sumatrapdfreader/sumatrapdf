@@ -123,7 +123,7 @@ def create_lzsa_archive(dir, archiveName, files):
     for f in files:
         f = get_real_name(f)
         src = os.path.join(dir, f)
-        dst = src + ".lzsa"
+        dst = src + ".lzma"
         if not os.path.exists(dst) or is_more_recent(src, dst):
             lzma_compress(src, dst)
 
