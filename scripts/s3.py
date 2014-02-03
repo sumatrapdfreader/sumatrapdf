@@ -92,5 +92,4 @@ def exists(remote_path):
 def verify_doesnt_exist(remote_path):
     if not exists(remote_path):
         return
-    log("'%s' already exists in s3" % remote_path)
-    sys.exit(1)
+    raise BaseException("'%s' already exists in s3" % remote_path)
