@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   41
+#define LANGS_COUNT   42
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1454,6 +1454,51 @@ const char * gTranslations_sr_rs =
   "\320\224\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\232\320\265 \321\203 \321\202\320\276\320\272\321\203 ...\0"\
   "\320\241\321\203\320\274\320\260\321\202\321\200\320\260\320\237\320\224\320\244 \321\230\320\265 &\320\277\320\276\320\264\321\200\320\260\320\267\321\203\320\274\320\265\320\262\320\260\320\275\320\270 \320\277\321\200\320\265\320\263\320\273\320\265\320\264\320\260\321\207\0";
 
+const char * gTranslations_sp_rs = 
+  "Opcije\0"\
+  "Da li sigurno \305\276elite da uklonite SumatraPDF?\0"\
+  "Zatvori\0"\
+  "Gre\305\241ka prilikom kreiranja privremenog direktorijuma\0"\
+  "Nemogu\304\207e kreirati instalacioni direktorijum\0"\
+  "Nemogu\304\207e instalirati PDF pregleda\304\215\0"\
+  "Nemogu\304\207e instalirati PDF filter pretrage\0"\
+  "Nemogu\304\207e kreirati plugin Internet pregleda\304\215a\0"\
+  "Nemogu\304\207 pristup privremenom direktorijumu\0"\
+  "Nemogu\304\207e ukloniti instalacioni direktorijum\0"\
+  "Nemogu\304\207e ukloniti skra\304\207enicu\0"\
+  "Nemogu\304\207e deinstalirati PDF pregleda\304\215\0"\
+  "Nemogu\304\207e deinstalirati PDF filter pretrage\0"\
+  "Nemogu\304\207e deinstalirati plugin Internet pregleda\304\215a\0"\
+  "Nemogu\304\207 upis %s na disk\0"\
+  "Neuspelo kopiranje deinstalera u privremeni direktorijum\0"\
+  "Neuspelo kreiranje skra\304\207enice\0"\
+  "Neuspelo brisanje registri klju\304\215eva deinstalera\0"\
+  "Neuspeli upis pro\305\241irene ekstenzije fajla u registri\0"\
+  "Neuspeli upis instalacionih informacija u registri\0"\
+  "Sakrij opcije\0"\
+  "Instalacija PDF plugin \304\215ita\304\215 za Firefox, Chrome i Opera\0"\
+  "Instaliraj SumatraPDF\0"\
+  "Instalacija SumatraPDF u folder\0"\
+  "Instalacija neuspe\305\241na!\0"\
+  "Instalacija u toku...\0"\
+  "Pretraga Windows Desktop pretraga PDF dokumenta\0"\
+  "Windows &prikaz PDF dokumenta\0"\
+  "Zatvorite %s za nastavak!\0"\
+  "Odaberite folder gde \305\276elite da instalirate SumatraPDF:\0"\
+  "Neki instalacioni fajlovi nedostaju ili su o\305\241te\304\207eni\0"\
+  "Startovati sumatraPDF\0"\
+  "SumatraPDF %s instalacija\0"\
+  "SumatraPDF %s deinstalacija\0"\
+  "SumatraPDF deinstaliran\0"\
+  "SumatraPDF instalacija nije prona\304\221ena\0"\
+  "Hvala Vam \305\241to ste izabrali SumatraPDF!\0"\
+  "Hvala Vam! SumatraPDF je uspe\305\241no instaliran.\0"\
+  "Instalacija je o\305\241te\304\207ena. Molimo preuzmite je ponovo. \n \305\275ao nam je zbog neugodnosti!\0"\
+  "Ukloni SumatraPDF\0"\
+  "Deinstaliranje neuspelo\0"\
+  "Deinstaliranje u toku ...\0"\
+  "Koristi SumatraPDF kao glavni PDF \304\215ita\304\215\0";
+
 const char * gTranslations_sk = 
   "&Mo\305\276nosti\0"\
   "Naozaj chcete odin\305\241talovat SumatraPDF?\0"\
@@ -1893,6 +1938,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ro, 
   gTranslations_ru, 
   gTranslations_sr_rs, 
+  gTranslations_sp_rs, 
   gTranslations_sk, 
   gTranslations_sl, 
   gTranslations_es, 
@@ -1939,6 +1985,7 @@ const char *gLangCodes =   "en\0" \
   "ro\0" \
   "ru\0" \
   "sr-rs\0" \
+  "sp-rs\0" \
   "sk\0" \
   "sl\0" \
   "es\0" \
@@ -1981,6 +2028,7 @@ const char *gLangNames =   "English\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
   "Serbian (Cyrillic)\0" \
+  "Serbian (Latin)\0" \
   "Slovak (Sloven\304\215ina)\0" \
   "Slovenian (Sloven\305\241\304\215ina)\0" \
   "Spanish (Espa\303\261ol)\0" \
@@ -2035,6 +2083,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
   MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC),
+  MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN),
   _LANGID(LANG_SLOVAK),
   _LANGID(LANG_SLOVENIAN),
   _LANGID(LANG_SPANISH),

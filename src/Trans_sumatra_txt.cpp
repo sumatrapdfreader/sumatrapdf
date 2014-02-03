@@ -10595,7 +10595,7 @@ const char * gTranslations_ru =
 const char * gTranslations_sr_rs = 
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203\0"\
   "\320\241\321\202\320\262\320\260\321\200\320\275\320\260 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260\tCtrl+1\0"\
-  "&\320\235\320\260\320\277\321\200\320\265\320\264\320\275\320\265 \320\276\320\277\321\206\320\270\321\230\320\265\0"\
+  "\320\235\320\260\320\277\321\200\320\265\320\264\320\275\320\265 \320\276\320\277\321\206\320\270\321\230\320\265\0"\
   "\320\241\320\262\320\265 \320\270\320\267\320\260\320\261\321\200\320\260\320\275\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\265\0"\
   "\320\235\320\260\320\267\320\260\320\264\tAlt+<-\0"\
   "\320\230\320\267\320\263\320\273\320\265\320\264 \320\272\321\232\320\270\320\263\320\265\tCtrl+8\0"\
@@ -10988,7 +10988,7 @@ const char * gTranslations_sp_rs =
   "\0"\
   "Postaviti SumatraPDF kao podrazumevanu aplikaciju za PDF datoteke?\0"\
   "Neka SumatraPFD bude podrazumevani PDF \304\215ita\304\215\0"\
-  "\0"\
+  "Manga mod\0"\
   "Razlikuj mala i velika slova\0"\
   "Mobi dokumenti\0"\
   "Izmenjena:\0"\
@@ -11003,7 +11003,7 @@ const char * gTranslations_sp_rs =
   "Otvori\0"\
   "Otvori u programu PDF-XChange\0"\
   "Otvori dokument...\0"\
-  "\0"\
+  "Otvoriti u %s\0"\
   "Otvori u programu Adobe Reader\0"\
   "Otvori u programu Foxit Reader\0"\
   "Otvori u programu Microsoft HTML Help\0"\
@@ -11030,16 +11030,16 @@ const char * gTranslations_sp_rs =
   "Opseg \305\241tampanja\0"\
   "\305\240tampa\304\215 sa navedenim imenom ne postoji\0"\
   "\305\240tampanje u toku.\0"\
-  "\305\240tampanje je i dalje u toku. Obustavi i iza\304\221i?\0"\
+  "\305\240tampanje je i dalje u toku. Obustaviti i iza\304\207i?\0"\
   "\305\240tampanje je jo\305\241 uvek u toku. \305\275elite li da prekinete \305\241tampanje i po\304\215nete ponovo?\0"\
-  "\305\240tampanje %d. stramoce od ukupno %d...\0"\
+  "\305\240tampanje %d. stranice od ukupno %d...\0"\
   "Problem prilikom \305\241tampanja.\0"\
   "Preimenuj...\tF2\0"\
   "Zapamti otvarane datoteke\0"\
   "Ukloni iz odabranih\0"\
   "Ukloni stranicu %s iz odabranih\0"\
   "Preimenuj u\0"\
-  "\0"\
+  "Zameni boje dokumenta Windows kolor \305\241emom\0"\
   "Rotiraj ulevo\tCtrl+Shift+-\0"\
   "Rotiraj udesno\tCtrl+Shift++\0"\
   "Sa\304\215uvaj kao\0"\
@@ -11050,7 +11050,7 @@ const char * gTranslations_sp_rs =
   "Izaberite sadr\305\276aj koriste\304\207i Ctrl + levo dugme mi\305\241a\0"\
   "Po\305\241alji putem e-po\305\241te...\0"\
   "Omogu\304\207i inverznu pretragu\0"\
-  "\0"\
+  "Prika\305\276i Obele\305\276iva\304\215e\0"\
   "Traka sa alatkama\0"\
   "Prika\305\276i stranice bez prekida\0"\
   "Prika\305\276i odabrane stranice\0"\

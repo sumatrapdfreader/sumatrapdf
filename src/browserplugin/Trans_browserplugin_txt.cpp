@@ -362,13 +362,13 @@ const WCHAR * const gTranslations[] = {
 
   /* Translations for language sp-rs */
   L"%s od %s",
-  L"Грешка: Немогућ старт СуматраПДФ",
+  L"Greška: Nemoguć start SumatraPDF",
   L"Greška: SumatraPDF nije pronađen!",
-  L"Грешка: Документ се не може преузети!",
+  L"Greška: Dokument se ne može preuzeti!",
   NULL,
   L"kB",
   NULL,
-  NULL,
+  L"Otvaranje dokumenta u SumatraPDF",
 
   /* Translations for language sk */
   L"%s z %s",
