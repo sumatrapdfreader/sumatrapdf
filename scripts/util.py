@@ -103,20 +103,18 @@ def subprocess_flags():
         return 0x8000000  # win32con.CREATE_NO_WINDOW?
     return 0
 
+
 # Apparently shell argument to Popen it must be False on unix/mac and True
 # on windows
-
-
 def shell_arg():
     if os.name == "nt":
         return True
     return False
 
+
 # will throw an exception if a command doesn't exist
 # otherwise returns a tuple:
 # (stdout, stderr, errcode)
-
-
 def run_cmd(*args):
     cmd = " ".join(args)
     print("run_cmd: '%s'" % cmd)
@@ -125,9 +123,8 @@ def run_cmd(*args):
     res = cmdproc.communicate()
     return (res[0], res[1], cmdproc.returncode)
 
+
 # like run_cmd() but throws an exception if command returns non-0 error code
-
-
 def run_cmd_throw(*args):
     cmd = " ".join(args)
     print("run_cmd_throw: '%s'" % cmd)
@@ -145,10 +142,9 @@ def run_cmd_throw(*args):
         raise Exception("'%s' failed with error code %d" % (cmd, errcode))
     return (res[0], res[1])
 
+
 # work-around a problem with running devenv from command-line:
 # http://social.msdn.microsoft.com/Forums/en-US/msbuild/thread/9d8b9d4a-c453-4f17-8dc6-838681af90f4
-
-
 def kill_msbuild():
     (stdout, stderr, err) = run_cmd("taskkill", "/F", "/IM", "msbuild.exe")
     if err not in (0, 128):  # 0 is no error, 128 is 'process not found'
@@ -156,10 +152,9 @@ def kill_msbuild():
         print("exiting")
         sys.exit(1)
 
+
 # Parse output of svn info and return revision number indicated by
 # "Last Changed Rev" field or, if that doesn't exist, by "Revision" field
-
-
 def parse_svninfo_out(txt):
     ver = re.findall(r'(?m)^Last Changed Rev: (\d+)', txt)
     if ver:
@@ -169,9 +164,8 @@ def parse_svninfo_out(txt):
         return ver[0]
     raise Exception("parse_svn_info_out() failed to parse '%s'" % txt)
 
+
 # returns local and latest (on the server) svn versions
-
-
 def get_svn_versions():
     (out, err) = run_cmd_throw("svn", "info")
     ver_local = str(parse_svninfo_out(out))
@@ -179,6 +173,7 @@ def get_svn_versions():
                                "https://sumatrapdf.googlecode.com/svn/trunk")
     ver_latest = str(parse_svninfo_out(out))
     return ver_local, ver_latest
+
 
 # Parse output of "svn log -r${rev} -v", which looks sth. like this:
 #------------------------------------------------------------------------
@@ -193,8 +188,6 @@ def get_svn_versions():
 # Returns a tuple:
 # (user, comment, modified, added, deleted)
 # or None in case this is not a source checkin (but e.g. a wiki page edit)
-
-
 def parse_svnlog_out(txt):
     lines = [l.strip() for l in txt.split("\n")]
     # remove empty line at the end
@@ -275,10 +268,9 @@ def parse_svnlog_out_test2(startrev=1, endrev=6700):
                 (user, comment, str(modified), str(added), str(deleted)))
         rev -= 1
 
+
 # version line is in the format:
 # define CURR_VERSION 1.1
-
-
 def extract_sumatra_version(file_path):
     content = open(file_path).read()
     ver = re.findall(r'CURR_VERSION (\d+(?:\.\d+)*)', content)[0]
@@ -298,7 +290,7 @@ def file_remove_try_hard(path):
         removeRetryCount += 1
 
 
-def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
+def zip_file(dst_zip_file, src_path, in_zip_name=None, compress=True, append=False):
     mode = "w"
     if append:
         mode = "a"
@@ -306,9 +298,9 @@ def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
         zf = zipfile.ZipFile(dst_zip_file, mode, zipfile.ZIP_DEFLATED)
     else:
         zf = zipfile.ZipFile(dst_zip_file, mode, zipfile.ZIP_STORED)
-    if src_name is None:
-        src_name = os.path.basename(src)
-    zf.write(src, src_name)
+    if in_zip_name is None:
+        in_zip_name = os.path.basename(src_path)
+    zf.write(src_path, in_zip_name)
     zf.close()
 
 
@@ -403,6 +395,7 @@ class Serializable(object):
             return self.fields[k]
         return super(Serializable, self).__getattribute__(k)
 
+
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
@@ -428,12 +421,11 @@ def sendmail(sender, senderpwd, to, subject, body):
     mailServer.sendmail(sender, to, msg)
     mailServer.close()
 
+
 # Some operations, like uploading to s3, require knowing s3 credential
 # We store all such information that cannot be publicly known in a file
 # config.py. This object is just a wrapper to documents the fields
 # and given default values if config.py doesn't exist
-
-
 class Config(object):
 
     def __init__(self):
@@ -472,9 +464,8 @@ class Config(object):
             return False
         return True
 
+
 g_config = None
-
-
 def load_config():
     global g_config
     if g_config != None:
@@ -523,9 +514,8 @@ def gob_varint_encode(i):
         i = i << 1
     return gob_uvarint_encode(i)
 
+
 # data generated with UtilTests.cpp (define GEN_PYTHON_TESTS to 1)
-
-
 def test_gob():
     assert gob_varint_encode(0) == chr(0)
     assert gob_varint_encode(1) == chr(2)
@@ -585,9 +575,8 @@ def test_gob():
     assert gob_uvarint_encode(4294967295) == chr(252) + \
         chr(255) + chr(255) + chr(255) + chr(255)
 
+
 # for easy generation of the compact form of storing strings in C
-
-
 class SeqStrings(object):
 
     def __init__(self):
@@ -613,9 +602,8 @@ class SeqStrings(object):
             self.strings_seq = self.strings_seq + s + chr(0)
         return self.strings[s]
 
+
 (FMT_NONE, FMT_LEFT, FMT_RIGHT) = (0, 1, 2)
-
-
 def get_col_fmt(col_fmt, col):
     if col >= len(col_fmt):
         return FMT_NONE
@@ -630,6 +618,7 @@ def fmt_str(s, max, fmt):
         return s + " " * add
     return s
 
+
 """
 [
   ["a",  "bc",   "def"],
@@ -641,8 +630,6 @@ def fmt_str(s, max, fmt):
   ["ab", "fabo", "d  "]
 ]
 """
-
-
 def fmt_rows(rows, col_fmt=[]):
     col_max_len = {}
     for row in rows:

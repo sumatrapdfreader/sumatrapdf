@@ -90,7 +90,7 @@ def get_in_archive_name(f):
         return f[1]
     return f
 
-g_lzma_archive_magic_id = 0x4c7a5341
+g_lzsa_archive_magic_id = 0x4c7a5341
 
 
 def get_file_crc32(path):
@@ -120,23 +120,21 @@ You can over-write the file name in the archive by using list instead of
 a string in files: ["foo.txt", "bar.txt"] will add file "foo.txt" under name
 "bar.txt"
 """
-
-
-def create_lzma_archive(dir, archiveName, files):
+def create_lzsa_archive(dir, archiveName, files):
     for f in files:
         f = get_real_name(f)
         src = os.path.join(dir, f)
-        dst = src + ".lzma"
+        dst = src + ".lzsa"
         if not os.path.exists(dst) or is_more_recent(src, dst):
             lzma_compress(src, dst)
 
-    d = struct.pack("<II", g_lzma_archive_magic_id, len(files))
+    d = struct.pack("<II", g_lzsa_archive_magic_id, len(files))
     for f in files:
         real_name = get_real_name(f)
         path = os.path.join(dir, real_name)
         d += struct.pack("<I", os.path.getsize(path))
-        d += struct.pack("<I", os.path.getsize(path + ".lzma"))
-        d += struct.pack("<I", get_file_crc32(path + ".lzma"))
+        d += struct.pack("<I", os.path.getsize(path + ".lzsa"))
+        d += struct.pack("<I", get_file_crc32(path + ".lzsa"))
         d += struct.pack("<Q",
                          int((os.path.getmtime(path) + 11644473600L) * 10000000))
         f = get_in_archive_name(f)
@@ -149,16 +147,15 @@ def create_lzma_archive(dir, archiveName, files):
         fo.write(d)
         for f in files:
             f = get_real_name(f)
-            path = os.path.join(dir, f) + ".lzma"
+            path = os.path.join(dir, f) + ".lzsa"
             with open(path, "rb") as fi:
                 d = fi.read()
                 fo.write(d)
     print("Created archive: %s" % archive_path)
     return archive_path
 
+
 # build installer data, will be included as part of Installer.exe resources
-
-
 def build_installer_data(dir):
     src = os.path.join("mupdf", "resources", "fonts",
                        "droid", "DroidSansFallback.ttf")
@@ -180,14 +177,23 @@ def build_installer_data(dir):
     util.delete_file(installer_res)
 
 
-def create_pdb_archive(dir, archive_name):
+def create_pdb_lzma_archive(dir, archive_name):
     files = ["libmupdf.pdb", "Installer.pdb",
              "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
     return create_lzma_archive(dir, archive_name, files)
 
+
+def create_pdb_zip_archive(dir, archive_name):
+    archive_path = os.path.join(dir, archive_name)
+    files = ["libmupdf.pdb", "Installer.pdb",
+             "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
+    for file_name in files:
+        file_path = os.path.join(dir, file_name)
+        zip_file(archive_name, file_path, file_name, compress=True, append=True)
+    return archive_path
+
+
 # delete all but the last 3 pre-release builds in order to use less s3 storage
-
-
 def delete_old_pre_release_builds():
     s3Dir = "sumatrapdf/prerel/"
     keys = s3.list(s3Dir)
@@ -252,7 +258,8 @@ def zip_one_file(dir, to_pack, zip_name):
         # -11 for zopfil compression
         # --keep to not delete the source file
         # --zip to create a single-file zip archive
-        # we don't control the name of the file pigz will create
+        # we can't control the name of the file pigz will create, so rename
+        # to desired name after it's created
         pigz_dst = to_pack + ".zip"
         util.delete_file(pigz_dst)
         run_cmd_throw("pigz", "-11", "--keep", "--zip", to_pack)
@@ -318,10 +325,12 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     s3_prefix = "%s/%s" % (s3_dir, filename_base)
     s3_exe = s3_prefix + ".exe"
     s3_installer = s3_prefix + "-install.exe"
+    s3_pdb_lzma = s3_prefx + ".pdb.lzsa"
     s3_pdb_zip = s3_prefix + ".pdb.zip"
     s3_exe_zip = s3_prefix + ".zip"
 
-    s3_files = [s3_exe, s3_installer, s3_pdb_zip]
+    # TODO: re-s3_pdb_zip
+    s3_files = [s3_exe, s3_installer, s3_pdb_lzma]
     if not build_prerelease:
         s3_files.append(s3_exe_zip)
 
@@ -373,7 +382,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if upload:
         sign(installer, cert_pwd)
 
-    pdb_archive = create_pdb_archive(obj_dir, "%s.pdb.lzma" % filename_base)
+    pdb_lzma_archive = create_pdb_lzma_archive(obj_dir, "%s.pdb.lzma" % filename_base)
+    pdb_zip_archive = create_pdb_zip_archive(obj_dir, "%s.pdb.zip" % filename_base)
 
     builds_dir = os.path.join("builds", ver)
     if os.path.exists(builds_dir):
@@ -382,7 +392,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
 
     copy_to_dst_dir(exe, builds_dir)
     copy_to_dst_dir(installer, builds_dir)
-    copy_to_dst_dir(pdb_archive, builds_dir)
+    copy_to_dst_dir(pdb_lzma_archive, builds_dir)
+    copy_to_dst_dir(pdb_zip_archive, builds_dir)
 
     # package portable version in a .zip file
     if not build_prerelease:
@@ -403,7 +414,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
     s3.upload_file_public(installer, s3_installer)
-    s3.upload_file_public(pdb_archive, s3_pdb_zip)
+    s3.upload_file_public(pdb_lzma_archive, s3_pdb_lzma)
+    s3.upload_file_public(pdb_zip_archive, s3_pdb_zip)
     s3.upload_file_public(exe, s3_exe)
 
     if build_prerelease:

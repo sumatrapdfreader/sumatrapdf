@@ -22,9 +22,9 @@
 
 #ifndef SYMBOL_DOWNLOAD_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER)) L".pdb.zip"
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER)) L".pdb.lzma"
 #else
-#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION)) L".pdb.zip"
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION)) L".pdb.lzma"
 #endif
 #endif
 
