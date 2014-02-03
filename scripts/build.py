@@ -91,13 +91,12 @@ def get_in_archive_name(f):
     return f
 
 g_lzsa_archive_magic_id = 0x4c7a5341
-
-
 def get_file_crc32(path):
     with open(path, "rb") as fo:
         d = fo.read()
     checksum = crc32(d, 0)
     return checksum & 0xFFFFFFFF
+
 
 """
 Create a simple lzma archive in format:
@@ -133,8 +132,8 @@ def create_lzsa_archive(dir, archiveName, files):
         real_name = get_real_name(f)
         path = os.path.join(dir, real_name)
         d += struct.pack("<I", os.path.getsize(path))
-        d += struct.pack("<I", os.path.getsize(path + ".lzsa"))
-        d += struct.pack("<I", get_file_crc32(path + ".lzsa"))
+        d += struct.pack("<I", os.path.getsize(path + ".lzma"))
+        d += struct.pack("<I", get_file_crc32(path + ".lzma"))
         d += struct.pack("<Q",
                          int((os.path.getmtime(path) + 11644473600L) * 10000000))
         f = get_in_archive_name(f)
@@ -147,7 +146,7 @@ def create_lzsa_archive(dir, archiveName, files):
         fo.write(d)
         for f in files:
             f = get_real_name(f)
-            path = os.path.join(dir, f) + ".lzsa"
+            path = os.path.join(dir, f) + ".lzma"
             with open(path, "rb") as fi:
                 d = fi.read()
                 fo.write(d)
@@ -190,6 +189,7 @@ def create_pdb_zip_archive(dir, archive_name):
     for file_name in files:
         file_path = os.path.join(dir, file_name)
         zip_file(archive_name, file_path, file_name, compress=True, append=True)
+    print("Created zip archive: %s" % archive_path)
     return archive_path
 
 
