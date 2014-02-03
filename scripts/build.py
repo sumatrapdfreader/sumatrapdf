@@ -172,15 +172,15 @@ def build_installer_data(dir):
         ["SumatraPDF-no-MuPDF.exe", "SumatraPDF.exe"], "DroidSansFallback.ttf",
         "libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll",
         "uninstall.exe"]
-    create_lzma_archive(dir, "InstallerData.dat", files)
+    create_lzsa_archive(dir, "InstallerData.dat", files)
     installer_res = os.path.join(dir, "sumatrapdf", "Installer.res")
     util.delete_file(installer_res)
 
 
-def create_pdb_lzma_archive(dir, archive_name):
+def create_pdb_lzsa_archive(dir, archive_name):
     files = ["libmupdf.pdb", "Installer.pdb",
              "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
-    return create_lzma_archive(dir, archive_name, files)
+    return create_lzsa_archive(dir, archive_name, files)
 
 
 def create_pdb_zip_archive(dir, archive_name):
@@ -325,12 +325,11 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     s3_prefix = "%s/%s" % (s3_dir, filename_base)
     s3_exe = s3_prefix + ".exe"
     s3_installer = s3_prefix + "-install.exe"
-    s3_pdb_lzma = s3_prefx + ".pdb.lzsa"
+    s3_pdb_lzsa = s3_prefix + ".pdb.lzsa"
     s3_pdb_zip = s3_prefix + ".pdb.zip"
     s3_exe_zip = s3_prefix + ".zip"
 
-    # TODO: re-s3_pdb_zip
-    s3_files = [s3_exe, s3_installer, s3_pdb_lzma]
+    s3_files = [s3_exe, s3_installer, s3_pdb_lzsa, s3_pdb_zip]
     if not build_prerelease:
         s3_files.append(s3_exe_zip)
 
@@ -382,7 +381,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if upload:
         sign(installer, cert_pwd)
 
-    pdb_lzma_archive = create_pdb_lzma_archive(obj_dir, "%s.pdb.lzma" % filename_base)
+    pdb_lzsa_archive = create_pdb_lzsa_archive(obj_dir, "%s.pdb.lzsa" % filename_base)
     pdb_zip_archive = create_pdb_zip_archive(obj_dir, "%s.pdb.zip" % filename_base)
 
     builds_dir = os.path.join("builds", ver)
@@ -392,7 +391,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
 
     copy_to_dst_dir(exe, builds_dir)
     copy_to_dst_dir(installer, builds_dir)
-    copy_to_dst_dir(pdb_lzma_archive, builds_dir)
+    copy_to_dst_dir(pdb_lzsa_archive, builds_dir)
     copy_to_dst_dir(pdb_zip_archive, builds_dir)
 
     # package portable version in a .zip file
@@ -414,7 +413,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
     s3.upload_file_public(installer, s3_installer)
-    s3.upload_file_public(pdb_lzma_archive, s3_pdb_lzma)
+    s3.upload_file_public(pdb_lzsa_archive, s3_pdb_lzsa)
     s3.upload_file_public(pdb_zip_archive, s3_pdb_zip)
     s3.upload_file_public(exe, s3_exe)
 
