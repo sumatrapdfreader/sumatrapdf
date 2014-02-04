@@ -11,7 +11,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
 WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
-void   DDEExecute(LPCWSTR server, LPCWSTR topic, LPCWSTR command);
+bool   DDEExecute(LPCWSTR server, LPCWSTR topic, LPCWSTR command);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

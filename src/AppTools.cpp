@@ -339,42 +339,39 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
     return 0;
 }
 
-void DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command)
+bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command)
 {
-    unsigned long inst = 0;
+    DWORD inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
-    HDDEDATA hddedata = NULL;
+    bool ok = false;
 
-#ifdef _WIN64
-    CrashIf(str::Len(command) >= (DWORD)-1);
-    if (str::Len(command) >= (DWORD)-1)
-        return;
-#endif
-    UINT result = DdeInitialize(&inst, &DdeCallback, APPCMD_CLIENTONLY, 0);
+    CrashIf(str::Len(command) >= INT_MAX - 1);
+    if (str::Len(command) >= INT_MAX - 1)
+        return false;
+
+    UINT result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR)
-        goto Exit;
+        return false;
+
     hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
     if (!hszServer)
         goto Exit;
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic)
         goto Exit;
-    hconv = DdeConnect(inst, hszServer, hszTopic, 0);
+    hconv = DdeConnect(inst, hszServer, hszTopic, NULL);
     if (!hconv)
         goto Exit;
-    DWORD cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, cbLen, 0, 0, CF_UNICODETEXT, 0);
-    if (!hddedata)
-        goto Exit;
 
-    HDDEDATA answer = DdeClientTransaction((BYTE*)hddedata, (DWORD)-1, hconv, 0, 0, XTYP_EXECUTE, 10000, 0);
-    if (answer)
+    DWORD cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
+    HDDEDATA answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, NULL);
+    if (answer) {
         DdeFreeDataHandle(answer);
+        ok = true;
+    }
 
 Exit:
-    if (hddedata)
-        DdeFreeDataHandle(hddedata);
     if (hconv)
         DdeDisconnect(hconv);
     if (hszTopic)
@@ -382,6 +379,8 @@ Exit:
     if (hszServer)
         DdeFreeStringHandle(inst, hszServer);
     DdeUninitialize(inst);
+
+    return ok;
 }
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
