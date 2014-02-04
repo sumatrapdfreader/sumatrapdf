@@ -827,39 +827,54 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_mat
 }
 
 static fz_rect *
-fz_bound_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_rect *bounds)
+fz_bound_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_rect *bounds)
 {
 	FT_Face face = font->ft_face;
 	FT_Error fterr;
 	FT_BBox cbox;
 	FT_Matrix m;
 	FT_Vector v;
+	int ft_flags;
 
 	// TODO: refactor loading into fz_load_ft_glyph
 	// TODO: cache results
 
-	float strength = fz_matrix_expansion(trm) * 0.02f;
-	fz_matrix local_trm = *trm;
+	const int scale = face->units_per_EM;
+	const float recip = 1 / (float)scale;
+	const float strength = 0.02f;
+	fz_matrix local_trm = fz_identity;
 
 	fz_adjust_ft_glyph_width(ctx, font, gid, &local_trm);
 
 	if (font->ft_italic)
 		fz_pre_shear(&local_trm, SHEAR, 0);
 
-	m.xx = local_trm.a * 64; /* should be 65536 */
-	m.yx = local_trm.b * 64;
-	m.xy = local_trm.c * 64;
-	m.yy = local_trm.d * 64;
-	v.x = local_trm.e * 64;
-	v.y = local_trm.f * 64;
+	m.xx = local_trm.a * 65536;
+	m.yx = local_trm.b * 65536;
+	m.xy = local_trm.c * 65536;
+	m.yy = local_trm.d * 65536;
+	v.x = local_trm.e * 65536;
+	v.y = local_trm.f * 65536;
+
+	if (font->ft_hint)
+	{
+		ft_flags = FT_LOAD_NO_BITMAP;
+	}
+	else
+	{
+		ft_flags = FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING;
+	}
 
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
-	fterr = FT_Set_Char_Size(face, 65536, 65536, 72, 72); /* should be 64, 64 */
+	/* Set the char size to scale=face->units_per_EM to effectively give
+	 * us unscaled results. This avoids quantisation. We then apply the
+	 * scale ourselves below. */
+	fterr = FT_Set_Char_Size(face, scale, scale, 72, 72);
 	if (fterr)
 		fz_warn(ctx, "freetype setting character size: %s", ft_error_string(fterr));
 	FT_Set_Transform(face, &m, &v);
 
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+	fterr = FT_Load_Glyph(face, gid, ft_flags);
 	if (fterr)
 	{
 		fz_warn(ctx, "freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -871,16 +886,16 @@ fz_bound_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 
 	if (font->ft_bold)
 	{
-		FT_Outline_Embolden(&face->glyph->outline, strength * 64);
-		FT_Outline_Translate(&face->glyph->outline, -strength * 32, -strength * 32);
+		FT_Outline_Embolden(&face->glyph->outline, strength * scale);
+		FT_Outline_Translate(&face->glyph->outline, -strength * 0.5 * scale, -strength * 0.5 * scale);
 	}
 
 	FT_Outline_Get_CBox(&face->glyph->outline, &cbox);
 	fz_unlock(ctx, FZ_LOCK_FREETYPE);
-	bounds->x0 = cbox.xMin / 64.0f;
-	bounds->y0 = cbox.yMin / 64.0f;
-	bounds->x1 = cbox.xMax / 64.0f;
-	bounds->y1 = cbox.yMax / 64.0f;
+	bounds->x0 = cbox.xMin * recip;
+	bounds->y0 = cbox.yMin * recip;
+	bounds->x1 = cbox.xMax * recip;
+	bounds->y1 = cbox.yMax * recip;
 
 	if (fz_is_empty_rect(bounds))
 	{
@@ -896,57 +911,80 @@ fz_bound_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 struct closure {
 	fz_context *ctx;
 	fz_path *path;
-	float x, y;
+	fz_matrix trm;
 };
 
-static int move_to(const FT_Vector *p, void *cc)
+static int move_to(const FT_Vector *p, void *cc_)
 {
-	fz_context *ctx = ((struct closure *)cc)->ctx;
-	fz_path *path = ((struct closure *)cc)->path;
-	float tx = ((struct closure *)cc)->x;
-	float ty = ((struct closure *)cc)->y;
-	fz_moveto(ctx, path, tx + p->x / 64.0f, ty + p->y / 64.0f);
+	struct closure *cc = (struct closure *)cc_;
+	fz_context *ctx = cc->ctx;
+	fz_path *path = cc->path;
+	fz_point pt;
+
+	pt.x = p->x;
+	pt.y = p->y;
+	fz_transform_point(&pt, &cc->trm);
+	fz_moveto(ctx, path, pt.x, pt.y);
 	return 0;
 }
 
-static int line_to(const FT_Vector *p, void *cc)
+static int line_to(const FT_Vector *p, void *cc_)
 {
-	fz_context *ctx = ((struct closure *)cc)->ctx;
-	fz_path *path = ((struct closure *)cc)->path;
-	float tx = ((struct closure *)cc)->x;
-	float ty = ((struct closure *)cc)->y;
-	fz_lineto(ctx, path, tx + p->x / 64.0f, ty + p->y / 64.0f);
+	struct closure *cc = (struct closure *)cc_;
+	fz_context *ctx = cc->ctx;
+	fz_path *path = cc->path;
+	fz_point pt;
+
+	pt.x = p->x;
+	pt.y = p->y;
+	fz_transform_point(&pt, &cc->trm);
+	fz_lineto(ctx, path, pt.x, pt.y);
 	return 0;
 }
 
-static int conic_to(const FT_Vector *c, const FT_Vector *p, void *cc)
+static int conic_to(const FT_Vector *c, const FT_Vector *p, void *cc_)
 {
-	fz_context *ctx = ((struct closure *)cc)->ctx;
-	fz_path *path = ((struct closure *)cc)->path;
-	float tx = ((struct closure *)cc)->x;
-	float ty = ((struct closure *)cc)->y;
+	struct closure *cc = (struct closure *)cc_;
+	fz_context *ctx = cc->ctx;
+	fz_path *path = cc->path;
+	fz_point ct, pt;
 	fz_point s, c1, c2;
-	float cx = tx + c->x / 64.0f, cy = ty + c->y / 64.0f;
-	float px = tx + p->x / 64.0f, py = ty + p->y / 64.0f;
+
+	ct.x = c->x;
+	ct.y = c->y;
+	fz_transform_point(&ct, &cc->trm);
+	pt.x = p->x;
+	pt.y = p->y;
+	fz_transform_point(&pt, &cc->trm);
+
 	s = fz_currentpoint(ctx, path);
-	c1.x = (s.x + cx * 2) / 3;
-	c1.y = (s.y + cy * 2) / 3;
-	c2.x = (px + cx * 2) / 3;
-	c2.y = (py + cy * 2) / 3;
-	fz_curveto(ctx, path, c1.x, c1.y, c2.x, c2.y, px, py);
+	c1.x = (s.x + ct.x * 2) / 3;
+	c1.y = (s.y + ct.y * 2) / 3;
+	c2.x = (pt.x + ct.x * 2) / 3;
+	c2.y = (pt.y + ct.y * 2) / 3;
+
+	fz_curveto(ctx, path, c1.x, c1.y, c2.x, c2.y, pt.x, pt.y);
 	return 0;
 }
 
-static int cubic_to(const FT_Vector *c1, const FT_Vector *c2, const FT_Vector *p, void *cc)
+static int cubic_to(const FT_Vector *c1, const FT_Vector *c2, const FT_Vector *p, void *cc_)
 {
-	fz_context *ctx = ((struct closure *)cc)->ctx;
-	fz_path *path = ((struct closure *)cc)->path;
-	float tx = ((struct closure *)cc)->x;
-	float ty = ((struct closure *)cc)->y;
-	fz_curveto(ctx, path,
-		tx + c1->x/64.0f, ty + c1->y/64.0f,
-		tx + c2->x/64.0f, ty + c2->y/64.0f,
-		tx + p->x/64.0f, ty + p->y/64.0f);
+	struct closure *cc = (struct closure *)cc_;
+	fz_context *ctx = cc->ctx;
+	fz_path *path = cc->path;
+	fz_point c1t, c2t, pt;
+
+	c1t.x = c1->x;
+	c1t.y = c1->y;
+	fz_transform_point(&c1t, &cc->trm);
+	c2t.x = c2->x;
+	c2t.y = c2->y;
+	fz_transform_point(&c2t, &cc->trm);
+	pt.x = p->x;
+	pt.y = p->y;
+	fz_transform_point(&pt, &cc->trm);
+
+	fz_curveto(ctx, path, c1t.x, c1t.y, c2t.x, c2t.y, pt.x, pt.y);
 	return 0;
 }
 
@@ -959,33 +997,34 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *tr
 {
 	struct closure cc;
 	FT_Face face = font->ft_face;
-	FT_Matrix m;
-	FT_Vector v;
 	int fterr;
 	fz_matrix local_trm = *trm;
+	int ft_flags;
 
-	float strength = fz_matrix_expansion(trm) * 0.02f;
+	const int scale = face->units_per_EM;
+	const float recip = 1 / (float)scale;
+	const float strength = 0.02f;
 
 	fz_adjust_ft_glyph_width(ctx, font, gid, &local_trm);
 
 	if (font->ft_italic)
 		fz_pre_shear(&local_trm, SHEAR, 0);
 
-	m.xx = local_trm.a * 64; /* should be 65536 */
-	m.yx = local_trm.b * 64;
-	m.xy = local_trm.c * 64;
-	m.yy = local_trm.d * 64;
-	v.x = 0;
-	v.y = 0;
-
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
 
-	fterr = FT_Set_Char_Size(face, 65536, 65536, 72, 72); /* should be 64, 64 */
-	if (fterr)
-		fz_warn(ctx, "freetype setting character size: %s", ft_error_string(fterr));
-	FT_Set_Transform(face, &m, &v);
+	if (font->ft_hint)
+	{
+		ft_flags = FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM;
+		fterr = FT_Set_Char_Size(face, scale, scale, 72, 72);
+		if (fterr)
+			fz_warn(ctx, "freetype setting character size: %s", ft_error_string(fterr));
+	}
+	else
+	{
+		ft_flags = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
+	}
 
-	fterr = FT_Load_Glyph(face, gid, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+	fterr = FT_Load_Glyph(face, gid, ft_flags);
 	if (fterr)
 	{
 		fz_warn(ctx, "freetype load glyph (gid %d): %s", gid, ft_error_string(fterr));
@@ -995,8 +1034,8 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *tr
 
 	if (font->ft_bold)
 	{
-		FT_Outline_Embolden(&face->glyph->outline, strength * 64);
-		FT_Outline_Translate(&face->glyph->outline, -strength * 32, -strength * 32);
+		FT_Outline_Embolden(&face->glyph->outline, strength * scale);
+		FT_Outline_Translate(&face->glyph->outline, -strength * 0.5 * scale, -strength * 0.5 * scale);
 	}
 
 	cc.path = NULL;
@@ -1004,9 +1043,8 @@ fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *tr
 	{
 		cc.ctx = ctx;
 		cc.path = fz_new_path(ctx);
-		cc.x = local_trm.e;
-		cc.y = local_trm.f;
-		fz_moveto(ctx, cc.path, cc.x, cc.y);
+		fz_concat(&cc.trm, fz_scale(&cc.trm, recip, recip), &local_trm);
+		fz_moveto(ctx, cc.path, cc.trm.e, cc.trm.f);
 		FT_Outline_Decompose(&face->glyph->outline, &outline_funcs, &cc);
 		fz_closepath(ctx, cc.path);
 	}
@@ -1276,7 +1314,7 @@ fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz
 		if (fz_is_infinite_rect(&font->bbox_table[gid]))
 		{
 			if (font->ft_face)
-				fz_bound_ft_glyph(ctx, font, gid, &fz_identity, &font->bbox_table[gid]);
+				fz_bound_ft_glyph(ctx, font, gid, &font->bbox_table[gid]);
 			else if (font->t3lists)
 				fz_bound_t3_glyph(ctx, font, gid, &fz_identity, &font->bbox_table[gid]);
 			else

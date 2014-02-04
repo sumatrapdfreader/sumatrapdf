@@ -312,7 +312,7 @@ svg_dev_text_as_paths_defs(fz_device *dev, fz_text *text, const fz_matrix *ctm)
 	fz_output *out = sdev->out;
 	int i, font_idx;
 	font *fnt;
-	fz_matrix shift = { 1, 0, 0, 1, 0, 0};
+	fz_matrix shift = fz_identity;
 
 	for (font_idx = 0; font_idx < sdev->num_fonts; font_idx++)
 	{
@@ -360,20 +360,26 @@ svg_dev_text_as_paths_defs(fz_device *dev, fz_text *text, const fz_matrix *ctm)
 			/* Need to send this one */
 			fz_rect rect;
 			fz_path *path;
-			fz_bound_glyph(ctx, text->font, gid, &fz_identity, &rect);
-			shift.e = -rect.x0;
-			shift.f = -rect.y0;
-			out = start_def(sdev);
-			fz_printf(out, "<symbol id=\"font_%x_%x\">", fnt->id, gid);
-			path = fz_outline_glyph(sdev->ctx, text->font, gid, &shift);
+			path = fz_outline_glyph(sdev->ctx, text->font, gid, &fz_identity);
 			if (path)
 			{
+				fz_bound_path(ctx, path, NULL, &fz_identity, &rect);
+				shift.e = -rect.x0;
+				shift.f = -rect.y0;
+				fz_transform_path(ctx, path, &shift);
+				out = start_def(sdev);
+				fz_printf(out, "<symbol id=\"font_%x_%x\">", fnt->id, gid);
 				fz_printf(out, "<path");
 				svg_dev_path(sdev, path);
 				fz_printf(out, "/>\n");
 			}
 			else
 			{
+				fz_bound_glyph(ctx, text->font, gid, &fz_identity, &rect);
+				shift.e = -rect.x0;
+				shift.f = -rect.y0;
+				out = start_def(sdev);
+				fz_printf(out, "<symbol id=\"font_%x_%x\">", fnt->id, gid);
 				fz_run_t3_glyph(ctx, text->font, gid, &shift, dev);
 			}
 			fz_printf(out, "</symbol>");
