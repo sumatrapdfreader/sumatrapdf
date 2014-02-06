@@ -486,7 +486,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     Vec<PRINTPAGERANGE> ranges;
     PRINTER_INFO_2 printerInfo = { 0 };
 
-    if (!HasPermission(Perm_PrinterAccess)) return;
+    if (!HasPermission(Perm_PrinterAccess))
+        return;
 
     DisplayModel *dm = win->dm;
     assert(dm);
@@ -499,11 +500,6 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         return;
 #endif
 
-    if (win->IsChm()) {
-        win->dm->AsChmEngine()->PrintCurrentPage();
-        return;
-    }
-
     if (win->printThread) {
         int res = MessageBox(win->hwndFrame, 
                              _TR("Printing is still in progress. Abort and start over?"),
@@ -513,6 +509,21 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             return;
     }
     AbortPrinting(win);
+
+    // the Print dialog allows access to the file system, so fall back
+    // to printing the entire document without dialog if that isn't desired
+    if (!HasPermission(Perm_DiskAccess)) {
+        if (win->IsChm())
+            dm->AsChmEngine()->PrintCurrentPage(false);
+        else
+            PrintFile(dm->engine);
+        return;
+    }
+
+    if (win->IsChm()) {
+        dm->AsChmEngine()->PrintCurrentPage(true);
+        return;
+    }
 
     PRINTDLGEX pd;
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
@@ -669,19 +680,15 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
     }
 }
 
-bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, const WCHAR *settings)
+bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const WCHAR *settings)
 {
     bool ok = false;
     if (!HasPermission(Perm_PrinterAccess))
         return false;
 
-    ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
-    BaseEngine *engine = EngineManager::CreateEngine(fileName2, true /* prefer Chm2Engine */);
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (engine && !engine->AllowsPrinting()) {
-        delete engine;
+    if (engine && !engine->AllowsPrinting())
         engine = NULL;
-    }
 #endif
     if (!engine) {
         if (displayErrors)
@@ -689,9 +696,15 @@ bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, co
         return false;
     }
 
+    ScopedMem<WCHAR> defaultPrinter;
+    if (!printerName) {
+        defaultPrinter.Set(GetDefaultPrinterName());
+        printerName = defaultPrinter;
+    }
+
     HANDLE printer;
     BOOL res = OpenPrinter(printerName, &printer, NULL);
-    if (0 == res) {
+    if (!res) {
         if (displayErrors)
             MessageBoxWarning(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
         return false;
@@ -704,7 +717,7 @@ bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, co
     ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2 *)AllocArray<BYTE>(needed));
     if (infoData)
         res = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
-    if ((0 == res) || !infoData || needed <= sizeof(PRINTER_INFO_2))
+    if (!res || !infoData || needed <= sizeof(PRINTER_INFO_2))
         goto Exit;
 
     LONG structSize = DocumentProperties(NULL,
@@ -755,6 +768,14 @@ Exit:
     free(devMode);
     if (printer)
         ClosePrinter(printer);
+    return ok;
+}
+
+bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, const WCHAR *settings)
+{
+    ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
+    BaseEngine *engine = EngineManager::CreateEngine(fileName2, true /* prefer Chm2Engine */);
+    bool ok = PrintFile(engine, printerName, displayErrors, settings);
     delete engine;
     return ok;
 }

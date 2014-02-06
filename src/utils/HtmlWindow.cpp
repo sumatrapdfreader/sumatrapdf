@@ -1336,9 +1336,10 @@ void HtmlWindow::SetZoomPercent(int zoom)
                        &vtIn, &vtOut);
 }
 
-void HtmlWindow::PrintCurrentPage()
+void HtmlWindow::PrintCurrentPage(bool showUI)
 {
-    webBrowser->ExecWB(OLECMDID_PRINT, OLECMDEXECOPT_PROMPTUSER, NULL, NULL);
+    OLECMDEXECOPT cmdexecopt = showUI ? OLECMDEXECOPT_PROMPTUSER : OLECMDEXECOPT_DONTPROMPTUSER;
+    webBrowser->ExecWB(OLECMDID_PRINT, cmdexecopt, NULL, NULL);
 }
 
 void HtmlWindow::FindInCurrentPage()

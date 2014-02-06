@@ -72,7 +72,7 @@ public:
     void SetHtml(const char *s, size_t len=-1);
     void GoBack();
     void GoForward();
-    void PrintCurrentPage();
+    void PrintCurrentPage(bool showUI);
     void SetZoomPercent(int zoom);
     int  GetZoomPercent();
     void FindInCurrentPage();

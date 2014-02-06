@@ -31,7 +31,7 @@ public:
     virtual void GoToDestination(PageDestination *link) = 0;
     virtual RenderedBitmap *TakeScreenshot(RectI area, SizeI targetSize) = 0;
 
-    virtual void PrintCurrentPage() = 0;
+    virtual void PrintCurrentPage(bool showUI) = 0;
     virtual void FindInCurrentPage() = 0;
     virtual bool CanNavigate(int dir) = 0;
     virtual void Navigate(int dir) = 0;

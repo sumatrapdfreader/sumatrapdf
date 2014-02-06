@@ -145,7 +145,7 @@ public:
     virtual void GoToDestination(PageDestination *link);
     virtual RenderedBitmap *TakeScreenshot(RectI area, SizeI targetSize);
 
-    virtual void PrintCurrentPage() { if (htmlWindow) htmlWindow->PrintCurrentPage(); }
+    virtual void PrintCurrentPage(bool showUI) { if (htmlWindow) htmlWindow->PrintCurrentPage(showUI); }
     virtual void FindInCurrentPage() { if (htmlWindow) htmlWindow->FindInCurrentPage(); }
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);

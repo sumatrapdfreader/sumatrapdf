@@ -217,7 +217,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     }
 
     // don't save preferences for plugin windows (and don't allow fullscreen mode)
-    // TODO: Perm_DiskAccess is required for saving viewed files and
+    // TODO: Perm_DiskAccess is required for saving viewed files and printing and
     //       Perm_InternetAccess is required for crash reports
     // (they can still be disabled through sumatrapdfrestrict.ini or -restrict)
     gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~(Perm_SavePreferences | Perm_FullscreenAccess);
