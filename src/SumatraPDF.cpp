@@ -2393,7 +2393,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     PointD ptPage = win.dm->CvtFromScreen(PointI(x, y));
     // TODO: win.linkHandler->GotoLink might spin the event loop
-    PageElement *activeLink = win.linkOnLastButtonDown;
+    PageElement *link = win.linkOnLastButtonDown;
     win.linkOnLastButtonDown = NULL;
     win.mouseAction = MA_IDLE;
 
@@ -2403,9 +2403,17 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
         win.ChangePresentationMode(PM_ENABLED);
     /* follow an active link */
-    else if (activeLink && activeLink->GetRect().Contains(ptPage)) {
-        win.linkHandler->GotoLink(activeLink->AsLink());
+    else if (link && link->GetRect().Contains(ptPage)) {
+        PageDestination *dest = link->AsLink();
+        win.linkHandler->GotoLink(dest);
         SetCursor(gCursorArrow);
+        // highlight the clicked link (as a reminder of the last action once the user returns)
+        if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
+            DeleteOldSelectionInfo(&win, true);
+            win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, win.dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
+            win.showSelection = win.selectionOnPage != NULL;
+            win.RepaintAsync();
+        }
     }
     /* if we had a selection and this was just a click, hide the selection */
     else if (win.showSelection)
@@ -2423,7 +2431,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
             win.dm->GoToNextPage(0);
     }
 
-    delete activeLink;
+    delete link;
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
