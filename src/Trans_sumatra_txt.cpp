@@ -1493,7 +1493,7 @@ const char * gTranslations_eu =
 const char * gTranslations_bs = 
   "&O programu...\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
-  "\0"\
+  "N&apredne opcije...\0"\
   "Sve ozna\304\215ene str&anice\0"\
   "Nazad\tAlt+<-\0"\
   "&Knji\305\241ki pregled\tCtrl+8\0"\
@@ -1640,7 +1640,7 @@ const char * gTranslations_bs =
   "\0"\
   "Postavi SumatraPDF za glavnu aplikaciju za PDF fajlove?\0"\
   "U\304\215ini SumatraPDF mojim glavnim \304\215ita\304\215em PDF fajlova\0"\
-  "\0"\
+  "Man&ga re\305\276im\0"\
   "Razlikuj velika i mala slova\0"\
   "Mobi dokumenti\0"\
   "Izmijenjeno:\0"\
@@ -1655,7 +1655,7 @@ const char * gTranslations_bs =
   "Otvori\0"\
   "Otvori u PDF-XChange\0"\
   "Otvori dokument...\0"\
-  "\0"\
+  "Otvori u %s\0"\
   "Otvori u &Adobe Readeru\0"\
   "Otvori u &Foxit Readeru\0"\
   "Otvori u Microsoft HTML Help\0"\
