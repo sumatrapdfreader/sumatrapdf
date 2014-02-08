@@ -804,6 +804,15 @@ pdf_load_xref(pdf_document *doc, pdf_lexbuf *buf)
 	if (pdf_xref_len(doc) == 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "found xref was empty");
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2517 */
+	if (pdf_get_xref_entry(doc, 0)->type == 0)
+	{
+		pdf_xref_entry *entry = pdf_get_xref_entry(doc, 0);
+		entry->type = 'f';
+		entry->gen = 65535;
+		fz_warn(ctx, "object number 0 is missing from xref");
+	}
+
 	/* broken pdfs where first object is not free */
 	if (pdf_get_xref_entry(doc, 0)->type != 'f')
 		fz_throw(ctx, FZ_ERROR_GENERIC, "first object in xref is not free");
