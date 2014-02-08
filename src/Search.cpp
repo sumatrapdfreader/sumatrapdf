@@ -419,6 +419,15 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         return true;
     }
 
+    if (!file::Exists(srcfilepath)) {
+        // if the source file is missing, check if it's been moved to the same place as
+        // the PDF document (which happens if all files are moved together)
+        ScopedMem<WCHAR> altsrcpath(path::GetDir(win->loadedFilePath));
+        altsrcpath.Set(path::Join(altsrcpath, path::GetBaseName(srcfilepath)));
+        if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath))
+            srcfilepath.Set(altsrcpath.StealData());
+    }
+
     WCHAR *inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
     if (!inverseSearch)
         // Detect a text editor and use it as the default inverse search handler for now
