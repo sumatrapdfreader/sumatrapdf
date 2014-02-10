@@ -8,10 +8,9 @@ MuPDF.dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday
 
 MuPDF.shortMonthName = [];
 for (var i = 0; i < MuPDF.monthName.length; i++)
-	MuPDF.shortMonthName.push(MuPDF.monthName[i].substr(0,3));
+	MuPDF.shortMonthName.push(MuPDF.monthName[i].substring(0,3));
 
-MuPDF.monthPattern = new RegExp();
-MuPDF.monthPattern.compile('('+MuPDF.shortMonthName.join('|')+')');
+MuPDF.monthPattern = new RegExp('('+MuPDF.shortMonthName.join('|')+')');
 
 MuPDF.padZeros = function(num, places)
 {
@@ -80,11 +79,11 @@ util.printd = function(fmt, d)
 		switch(tokens[i])
 		{
 			case 'mmmm': res += MuPDF.monthName[d.getMonth()]; break;
-			case 'mmm': res += MuPDF.monthName[d.getMonth()].substr(0,3); break;
+			case 'mmm': res += MuPDF.monthName[d.getMonth()].substring(0,3); break;
 			case 'mm': res += MuPDF.padZeros(d.getMonth()+1, 2); break;
 			case 'm': res += d.getMonth()+1; break;
 			case 'dddd': res += MuPDF.dayName[d.getDay()]; break;
-			case 'ddd': res += MuPDF.dayName[d.getDay()].substr(0,3); break;
+			case 'ddd': res += MuPDF.dayName[d.getDay()].substring(0,3); break;
 			case 'dd': res += MuPDF.padZeros(d.getDate(), 2); break;
 			case 'd': res += d.getDate(); break;
 			case 'yyyy': res += d.getFullYear(); break;
@@ -153,7 +152,7 @@ util.printx = function(fmt, val)
 			case '?':
 				if (!val) return res;
 				res += MuPDF.convertCase(val.charAt(0),cs);
-				val = val.substr(1);
+				val = val.substring(1);
 				break;
 
 			case '=':
@@ -277,7 +276,7 @@ util.printf = function()
 								// Matched string includes the dot, so make it
 								// prec+1 in length
 								if (frac.length > prec+1)
-									frac = frac.substr(0, prec+1);
+									frac = frac.substring(0, prec+1);
 								else if(frac.length < prec+1)
 									frac += new Array(prec+1-frac.length+1).join('0');
 
@@ -446,7 +445,7 @@ function AFParseDateEx(d, fmt)
 		order = order.replace('m','');
 	}
 
-	order = order.substr(0, nums.length);
+	order = order.substring(0, nums.length);
 
 	// If year and month specified but not date then use the 1st
 	if (order == "ym" || (order == "y" && text_month))
@@ -553,7 +552,7 @@ function AFSpecial_KeystrokeEx(fmt)
 					break;
 				res += fmt.charAt(i);
 				if (val && val.charAt(0) == fmt.charAt(i))
-					val = val.substr(1);
+					val = val.substring(1);
 				break;
 
 			case 'X':
@@ -564,7 +563,7 @@ function AFSpecial_KeystrokeEx(fmt)
 					break;
 				}
 				res += MuPDF.convertCase(m[0],cs);
-				val = val.substr(1);
+				val = val.substring(1);
 				break;
 
 			case 'A':
@@ -575,7 +574,7 @@ function AFSpecial_KeystrokeEx(fmt)
 					break;
 				}
 				res += MuPDF.convertCase(m[0],cs);
-				val = val.substr(1);
+				val = val.substring(1);
 				break;
 
 			case '9':
@@ -586,7 +585,7 @@ function AFSpecial_KeystrokeEx(fmt)
 					break;
 				}
 				res += m[0];
-				val = val.substr(1);
+				val = val.substring(1);
 				break;
 
 			case '*':
@@ -601,7 +600,7 @@ function AFSpecial_KeystrokeEx(fmt)
 					break;
 				}
 				res += MuPDF.convertCase(val.charAt(0),cs);
-				val = val.substr(1);
+				val = val.substring(1);
 				break;
 
 			case '=':
@@ -613,7 +612,7 @@ function AFSpecial_KeystrokeEx(fmt)
 			default:
 				res += fmt.charAt(i);
 				if (val && val.charAt(0) == fmt.charAt(i))
-					val = val.substr(1);
+					val = val.substring(1);
 				break;
 		}
 
@@ -750,7 +749,7 @@ function AFNumber_Format(nDec,sepStyle,negStyle,currStyle,strCurrency,bCurrencyP
 
 	// Adjust fractional part to correct number of decimal places
 	fracpart += new Array(nDec+1).join('0');
-	fracpart = fracpart.substr(0,nDec);
+	fracpart = fracpart.substring(0,nDec);
 
 	if (fracpart)
 		intpart += point+fracpart;

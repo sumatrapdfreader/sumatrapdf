@@ -35,6 +35,7 @@ int pdf_is_null(pdf_obj *obj);
 int pdf_is_bool(pdf_obj *obj);
 int pdf_is_int(pdf_obj *obj);
 int pdf_is_real(pdf_obj *obj);
+int pdf_is_number(pdf_obj *obj);
 int pdf_is_name(pdf_obj *obj);
 int pdf_is_string(pdf_obj *obj);
 int pdf_is_array(pdf_obj *obj);
@@ -109,6 +110,7 @@ int pdf_obj_parent_num(pdf_obj *obj);
 
 int pdf_sprint_obj(char *s, int n, pdf_obj *obj, int tight);
 int pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight);
+int pdf_output_obj(fz_output *out, pdf_obj *obj);
 
 #ifndef NDEBUG
 void pdf_print_obj(pdf_obj *obj);

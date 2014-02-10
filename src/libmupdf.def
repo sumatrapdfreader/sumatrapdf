@@ -599,6 +599,7 @@ EXPORTS
 	pdf_is_bool
 	pdf_is_int
 	pdf_is_real
+	pdf_is_number
 	pdf_is_name
 	pdf_is_string
 	pdf_is_array
@@ -651,6 +652,7 @@ EXPORTS
 	pdf_obj_parent_num
 	pdf_sprint_obj
 	pdf_fprint_obj
+	pdf_output_obj
 	pdf_to_utf8
 	pdf_to_ucs2
 	pdf_to_utf8_name

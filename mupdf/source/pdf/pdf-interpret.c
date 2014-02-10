@@ -75,6 +75,11 @@ struct pdf_csi_s
 	/* usage mode for optional content groups */
 	char *event; /* "View", "Print", "Export" */
 
+	/* Current resource dict and file. These are in here to reduce param
+	 * passing. */
+	pdf_obj *rdb;
+	fz_stream *file;
+
 	/* interpreter stack */
 	pdf_obj *obj;
 	char name[256];
@@ -1954,9 +1959,10 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
  * Operators
  */
 
-static void pdf_run_BDC(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_BDC(pdf_csi *csi)
 {
 	pdf_obj *ocg;
+	pdf_obj *rdb = csi->rdb;
 
 	/* If we are already in a hidden OCG, then we'll still be hidden -
 	 * just increment the depth so we pop back to visibility when we've
@@ -1983,9 +1989,11 @@ static void pdf_run_BDC(pdf_csi *csi, pdf_obj *rdb)
 		csi->in_hidden_ocg++;
 }
 
-static void pdf_run_BI(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
+static void pdf_run_BI(pdf_csi *csi)
 {
 	fz_context *ctx = csi->dev->ctx;
+	pdf_obj *rdb = csi->rdb;
+	fz_stream *file = csi->file;
 	int ch;
 	fz_image *img;
 	pdf_obj *obj;
@@ -2057,11 +2065,12 @@ static void pdf_run_Bstar(pdf_csi *csi)
 	pdf_show_path(csi, 0, 1, 1, 1);
 }
 
-static void pdf_run_cs_imp(pdf_csi *csi, pdf_obj *rdb, int what)
+static void pdf_run_cs_imp(pdf_csi *csi, int what)
 {
 	fz_context *ctx = csi->dev->ctx;
 	fz_colorspace *colorspace;
 	pdf_obj *obj, *dict;
+	pdf_obj *rdb = csi->rdb;
 
 	if (!strcmp(csi->name, "Pattern"))
 	{
@@ -2092,30 +2101,31 @@ static void pdf_run_cs_imp(pdf_csi *csi, pdf_obj *rdb, int what)
 	}
 }
 
-static void pdf_run_CS(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_CS(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
 
-	pdf_run_cs_imp(csi, rdb, PDF_STROKE);
+	pdf_run_cs_imp(csi, PDF_STROKE);
 }
 
-static void pdf_run_cs(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_cs(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
 
-	pdf_run_cs_imp(csi, rdb, PDF_FILL);
+	pdf_run_cs_imp(csi, PDF_FILL);
 }
 
 static void pdf_run_DP(pdf_csi *csi)
 {
 }
 
-static void pdf_run_Do(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_Do(pdf_csi *csi)
 {
 	fz_context *ctx = csi->dev->ctx;
 	pdf_obj *dict;
 	pdf_obj *obj;
 	pdf_obj *subtype;
+	pdf_obj *rdb = csi->rdb;
 
 	dict = pdf_dict_gets(rdb, "XObject");
 	if (!dict)
@@ -2267,13 +2277,14 @@ static void pdf_run_S(pdf_csi *csi)
 	pdf_show_path(csi, 0, 0, 1, 0);
 }
 
-static void pdf_run_SC_imp(pdf_csi *csi, pdf_obj *rdb, int what, pdf_material *mat)
+static void pdf_run_SC_imp(pdf_csi *csi, int what, pdf_material *mat)
 {
 	fz_context *ctx = csi->dev->ctx;
 	pdf_obj *patterntype;
 	pdf_obj *dict;
 	pdf_obj *obj;
 	int kind;
+	pdf_obj *rdb = csi->rdb;
 
 	kind = mat->kind;
 	if (csi->name[0])
@@ -2325,18 +2336,20 @@ static void pdf_run_SC_imp(pdf_csi *csi, pdf_obj *rdb, int what, pdf_material *m
 	mat->gstate_num = csi->gparent;
 }
 
-static void pdf_run_SC(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_SC(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+
 	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
-	pdf_run_SC_imp(csi, rdb, PDF_STROKE, &gstate->stroke);
+	pdf_run_SC_imp(csi, PDF_STROKE, &gstate->stroke);
 }
 
-static void pdf_run_sc(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_sc(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+
 	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
-	pdf_run_SC_imp(csi, rdb, PDF_FILL, &gstate->fill);
+	pdf_run_SC_imp(csi, PDF_FILL, &gstate->fill);
 }
 
 static void pdf_run_Tc(pdf_csi *csi)
@@ -2365,9 +2378,10 @@ static void pdf_run_TL(pdf_csi *csi)
 	gstate->leading = csi->stack[0];
 }
 
-static void pdf_run_Tf(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_Tf(pdf_csi *csi)
 {
 	fz_context *ctx = csi->dev->ctx;
+	pdf_obj *rdb = csi->rdb;
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	pdf_obj *dict;
 	pdf_obj *obj;
@@ -2553,11 +2567,12 @@ static void pdf_run_g(pdf_csi *csi)
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
 
-static void pdf_run_gs(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_gs(pdf_csi *csi)
 {
 	pdf_obj *dict;
 	pdf_obj *obj;
 	fz_context *ctx = csi->dev->ctx;
+	pdf_obj *rdb = csi->rdb;
 
 	dict = pdf_dict_gets(rdb, "ExtGState");
 	if (!dict)
@@ -2648,14 +2663,15 @@ static void pdf_run_ri(pdf_csi *csi)
 {
 }
 
-static void pdf_run(pdf_csi *csi)
+static void pdf_run_s(pdf_csi *csi)
 {
 	pdf_show_path(csi, 1, 0, 1, 0);
 }
 
-static void pdf_run_sh(pdf_csi *csi, pdf_obj *rdb)
+static void pdf_run_sh(pdf_csi *csi)
 {
 	fz_context *ctx = csi->dev->ctx;
+	pdf_obj *rdb = csi->rdb;
 	pdf_obj *dict;
 	pdf_obj *obj;
 	fz_shade *shd;
@@ -2750,7 +2766,7 @@ static void pdf_run_dquote(pdf_csi *csi)
 #define C(a,b,c) (a | b << 8 | c << 16)
 
 static int
-pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
+pdf_run_keyword(pdf_csi *csi, char *buf)
 {
 	fz_context *ctx = csi->dev->ctx;
 	int key;
@@ -2773,19 +2789,17 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case A('\''): pdf_run_squote(csi); break;
 	case A('B'): pdf_run_B(csi); break;
 	case B('B','*'): pdf_run_Bstar(csi); break;
-	case C('B','D','C'): pdf_run_BDC(csi, rdb); break;
-	case B('B','I'):
-		pdf_run_BI(csi, rdb, file);
-		break;
+	case C('B','D','C'): pdf_run_BDC(csi); break;
+	case B('B','I'): pdf_run_BI(csi); break;
 	case C('B','M','C'): pdf_run_BMC(csi); break;
 	case B('B','T'): pdf_run_BT(csi); break;
 	case B('B','X'): pdf_run_BX(csi); break;
-	case B('C','S'): pdf_run_CS(csi, rdb); break;
+	case B('C','S'): pdf_run_CS(csi); break;
 	case B('D','P'): pdf_run_DP(csi); break;
 	case B('D','o'):
 		fz_try(ctx)
 		{
-			pdf_run_Do(csi, rdb);
+			pdf_run_Do(csi);
 		}
 		fz_catch(ctx)
 		{
@@ -2804,8 +2818,8 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case A('Q'): pdf_run_Q(csi); break;
 	case B('R','G'): pdf_run_RG(csi); break;
 	case A('S'): pdf_run_S(csi); break;
-	case B('S','C'): pdf_run_SC(csi, rdb); break;
-	case C('S','C','N'): pdf_run_SC(csi, rdb); break;
+	case B('S','C'): pdf_run_SC(csi); break;
+	case C('S','C','N'): pdf_run_SC(csi); break;
 	case B('T','*'): pdf_run_Tstar(csi); break;
 	case B('T','D'): pdf_run_TD(csi); break;
 	case B('T','J'): pdf_run_TJ(csi); break;
@@ -2815,7 +2829,7 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case B('T','f'):
 		fz_try(ctx)
 		{
-			pdf_run_Tf(csi, rdb);
+			pdf_run_Tf(csi);
 		}
 		fz_catch(ctx)
 		{
@@ -2834,7 +2848,7 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case B('b','*'): pdf_run_bstar(csi); break;
 	case A('c'): pdf_run_c(csi); break;
 	case B('c','m'): pdf_run_cm(csi); break;
-	case B('c','s'): pdf_run_cs(csi, rdb); break;
+	case B('c','s'): pdf_run_cs(csi); break;
 	case A('d'): pdf_run_d(csi); break;
 	case B('d','0'): pdf_run_d0(csi); break;
 	case B('d','1'): pdf_run_d1(csi); break;
@@ -2844,7 +2858,7 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case B('g','s'):
 		fz_try(ctx)
 		{
-			pdf_run_gs(csi, rdb);
+			pdf_run_gs(csi);
 		}
 		fz_catch(ctx)
 		{
@@ -2862,13 +2876,13 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 	case B('r','e'): pdf_run_re(csi); break;
 	case B('r','g'): pdf_run_rg(csi); break;
 	case B('r','i'): pdf_run_ri(csi); break;
-	case A('s'): pdf_run(csi); break;
-	case B('s','c'): pdf_run_sc(csi, rdb); break;
-	case C('s','c','n'): pdf_run_sc(csi, rdb); break;
+	case A('s'): pdf_run_s(csi); break;
+	case B('s','c'): pdf_run_sc(csi); break;
+	case C('s','c','n'): pdf_run_sc(csi); break;
 	case B('s','h'):
 		fz_try(ctx)
 		{
-			pdf_run_sh(csi, rdb);
+			pdf_run_sh(csi);
 		}
 		fz_catch(ctx)
 		{
@@ -2890,18 +2904,18 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 }
 
 static void
-pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
+pdf_run_stream(pdf_csi *csi, pdf_lexbuf *buf)
 {
 	fz_context *ctx = csi->dev->ctx;
+	fz_stream *file = csi->file;
 	pdf_token tok = PDF_TOK_ERROR;
-	int in_array;
+	int in_text_array = 0;
 	int ignoring_errors = 0;
 
 	/* make sure we have a clean slate if we come here from flush_text */
 	pdf_clear_stack(csi);
-	in_array = 0;
 
-	fz_var(in_array);
+	fz_var(in_text_array);
 	fz_var(tok);
 
 	if (csi->cookie)
@@ -2929,39 +2943,45 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 
 				tok = pdf_lex(file, buf);
 
-				if (in_array)
+				if (in_text_array)
 				{
-					if (tok == PDF_TOK_CLOSE_ARRAY)
+					switch(tok)
 					{
-						in_array = 0;
-					}
-					else if (tok == PDF_TOK_REAL)
-					{
-						pdf_gstate *gstate = csi->gstate + csi->gtop;
-						pdf_show_space(csi, -buf->f * gstate->size * 0.001f);
-					}
-					else if (tok == PDF_TOK_INT)
-					{
-						pdf_gstate *gstate = csi->gstate + csi->gtop;
-						pdf_show_space(csi, -buf->i * gstate->size * 0.001f);
-					}
-					else if (tok == PDF_TOK_STRING)
-					{
-						pdf_show_string(csi, (unsigned char *)buf->scratch, buf->len);
-					}
-					else if (tok == PDF_TOK_KEYWORD)
-					{
-						if (!strcmp(buf->scratch, "Tw") || !strcmp(buf->scratch, "Tc"))
-							fz_warn(ctx, "ignoring keyword '%s' inside array", buf->scratch);
-						else
-							fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error in array");
-					}
-					else if (tok == PDF_TOK_EOF)
+					case PDF_TOK_CLOSE_ARRAY:
+						in_text_array = 0;
 						break;
-					else
+					case PDF_TOK_REAL:
+						pdf_array_push_drop(csi->obj, pdf_new_real(csi->doc, buf->f));
+						break;
+					case PDF_TOK_INT:
+						pdf_array_push_drop(csi->obj, pdf_new_int(csi->doc, buf->i));
+						break;
+					case PDF_TOK_STRING:
+						pdf_array_push_drop(csi->obj, pdf_new_string(csi->doc, buf->scratch, buf->len));
+						break;
+					case PDF_TOK_EOF:
+						break;
+					case PDF_TOK_KEYWORD:
+						if (!strcmp(buf->scratch, "Tw") || !strcmp(buf->scratch, "Tc"))
+						{
+							int l = pdf_array_len(csi->obj);
+							if (l > 0)
+							{
+								pdf_obj *o = pdf_array_get(csi->obj, l-1);
+								if (pdf_is_number(o))
+								{
+									csi->stack[0] = pdf_to_real(o);
+									pdf_array_delete(csi->obj, l-1);
+									if (pdf_run_keyword(csi, buf->scratch) == 0)
+										break;
+								}
+							}
+						}
+						/* Deliberate Fallthrough! */
+					default:
 						fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error in array");
+					}
 				}
-
 				else switch (tok)
 				{
 				case PDF_TOK_ENDSTREAM:
@@ -2970,18 +2990,19 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 					break;
 
 				case PDF_TOK_OPEN_ARRAY:
-					if (!csi->in_text)
+					if (csi->obj)
 					{
-						if (csi->obj)
-						{
-							pdf_drop_obj(csi->obj);
-							csi->obj = NULL;
-						}
-						csi->obj = pdf_parse_array(csi->doc, file, buf);
+						pdf_drop_obj(csi->obj);
+						csi->obj = NULL;
+					}
+					if (csi->in_text)
+					{
+						in_text_array = 1;
+						csi->obj = pdf_new_array(csi->doc, 4);
 					}
 					else
 					{
-						in_array = 1;
+						csi->obj = pdf_parse_array(csi->doc, file, buf);
 					}
 					break;
 
@@ -3035,7 +3056,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 
 				case PDF_TOK_KEYWORD:
 					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1982 */
-					if (pdf_run_keyword(csi, rdb, file, buf->scratch) && buf->len > 8)
+					if (pdf_run_keyword(csi, buf->scratch) && buf->len > 8)
 					{
 						tok = PDF_TOK_EOF;
 					}
@@ -3072,7 +3093,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 			}
 			/* If we do catch an error, then reset ourselves to a
 			 * base lexing state */
-			in_array = 0;
+			in_text_array = 0;
 			/* SumatraPDF: clear the stack on errors */
 			pdf_clear_stack(csi);
 		}
@@ -3092,6 +3113,8 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	int save_in_text;
 	int save_gbot;
 	pdf_obj *save_obj;
+	pdf_obj *save_rdb = csi->rdb;
+	fz_stream *save_file = csi->file;
 
 	fz_var(buf);
 
@@ -3106,14 +3129,20 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	csi->gbot = csi->gtop;
 	save_obj = csi->obj;
 	csi->obj = NULL;
+	csi->rdb = rdb;
+	csi->file = file;
 	fz_try(ctx)
 	{
-		pdf_run_stream(csi, rdb, file, buf);
+		pdf_run_stream(csi, buf);
 	}
 	fz_always(ctx)
 	{
 		pdf_drop_obj(csi->obj);
 		csi->obj = save_obj;
+		csi->rdb = save_rdb;
+		csi->file = save_file;
+		pdf_lexbuf_fin(buf);
+		fz_free(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
@@ -3124,8 +3153,6 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 		pdf_grestore(csi);
 	csi->gbot = save_gbot;
 	csi->in_text = save_in_text;
-	pdf_lexbuf_fin(buf);
-	fz_free(ctx, buf);
 }
 
 static void

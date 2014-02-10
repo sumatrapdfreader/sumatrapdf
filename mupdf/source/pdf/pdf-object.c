@@ -218,6 +218,12 @@ int pdf_is_real(pdf_obj *obj)
 	return obj ? obj->kind == PDF_REAL : 0;
 }
 
+int pdf_is_number(pdf_obj *obj)
+{
+	RESOLVE(obj);
+	return obj ? (obj->kind == PDF_REAL || obj->kind == PDF_INT) : 0;
+}
+
 int pdf_is_string(pdf_obj *obj)
 {
 	RESOLVE(obj);
@@ -1732,6 +1738,29 @@ pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight)
 		pdf_sprint_obj(ptr, n + 1, obj, tight);
 		fputs(ptr, fp);
 		fputc('\n', fp);
+		fz_free(obj->doc->ctx, ptr);
+	}
+	return n;
+}
+
+int pdf_output_obj(fz_output *out, pdf_obj *obj)
+{
+	char buf[1024];
+	char *ptr;
+	int n;
+	int tight = 1;
+
+	n = pdf_sprint_obj(NULL, 0, obj, tight);
+	if ((n + 1) < sizeof buf)
+	{
+		pdf_sprint_obj(buf, sizeof buf, obj, tight);
+		fz_printf(out, "%s\n", buf);
+	}
+	else
+	{
+		ptr = fz_malloc(obj->doc->ctx, n + 1);
+		pdf_sprint_obj(ptr, n + 1, obj, tight);
+		fz_printf(out, "%s\n", ptr);
 		fz_free(obj->doc->ctx, ptr);
 	}
 	return n;
