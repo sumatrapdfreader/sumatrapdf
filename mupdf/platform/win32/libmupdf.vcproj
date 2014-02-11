@@ -1122,6 +1122,14 @@
 				</File>
 			</Filter>
 		</Filter>
+		<Filter
+			Name="tiff"
+			>
+			<File
+				RelativePath="..\..\source\tiff\mutiff.c"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

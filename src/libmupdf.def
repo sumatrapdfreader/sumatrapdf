@@ -251,6 +251,8 @@ EXPORTS
 	fz_load_png_info
 	fz_load_tiff_info
 	fz_load_jxr_info
+	fz_load_tiff_subimage_count
+	fz_load_tiff_subimage
 	fz_new_link
 	fz_keep_link
 	fz_drop_link

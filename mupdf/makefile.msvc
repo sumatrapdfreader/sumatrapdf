@@ -281,7 +281,7 @@ LIBS_OBJS = \
 	$(FITZ_OBJS) $(DRAW_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
 
 MUDOC_OBJS = \
-	$(OX)\mucbz.obj $(OX)\muimage.obj $(OFZ)\document-all.obj $(OFZ)\document-no-run.obj \
+	$(OX)\mucbz.obj $(OX)\muimage.obj $(OX)\mutiff.obj $(OFZ)\document-all.obj $(OFZ)\document-no-run.obj \
 	$(OFZ)\svg-device.obj $(OFZ)\output-pcl.obj $(OFZ)\output-pwg.obj \
 	$(OFZ)\stream-prog.obj
 
@@ -407,6 +407,9 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 {$(MUPDF_DIR)\source\img}.c{$(OX)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
+{$(MUPDF_DIR)\source\tiff}.c{$(OX)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
+
 # files that might have to be generated first:
 
 MUPDF_CMAP_TABLES = $(MUPDF_GEN_DIR)\gen_cmap_cns.h $(MUPDF_GEN_DIR)\gen_cmap_gb.h \
@@ -453,7 +456,7 @@ MUPDF_H = $(INC_DIR)\pdf.h \
 	$(INC_DIR)\pdf\appearance.h
 
 MUXPS_H = $(INC_DIR)\xps.h
-MUOTH_H = $(INC_DIR)\cbz.h $(INC_DIR)\img.h
+MUOTH_H = $(INC_DIR)\cbz.h $(INC_DIR)\img.h $(INC_DIR)\tiff.h
 
 $(FITZ_OBJS): $(FITZ_H)
 $(MUPDF_OBJS): $(FITZ_H) $(MUPDF_H)

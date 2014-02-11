@@ -90,4 +90,7 @@ void fz_load_png_info(fz_context *ctx, unsigned char *data, int size, int *w, in
 void fz_load_tiff_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 void fz_load_jxr_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 
+int fz_load_tiff_subimage_count(fz_context *ctx, unsigned char *buf, int len);
+fz_pixmap *fz_load_tiff_subimage(fz_context *ctx, unsigned char *buf, int len, int subimage);
+
 #endif

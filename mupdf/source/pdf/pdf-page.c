@@ -621,11 +621,22 @@ pdf_insert_page(pdf_document *doc, pdf_page *page, int at)
 	{
 		if (count == 0)
 		{
-			/* TODO: create new page tree? */
-			fz_throw(ctx, FZ_ERROR_GENERIC, "empty page tree, cannot insert page");
+			pdf_obj *root = pdf_dict_gets(pdf_trailer(doc), "Root");
+			parent = pdf_dict_gets(root, "Pages");
+			if (!parent)
+				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find page tree");
+
+			kids = pdf_dict_gets(parent, "Kids");
+			if (!kids)
+				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "malformed page tree");
+
+			pdf_array_insert(kids, page_ref, 0);
 		}
 		else if (at >= count)
 		{
+			if (at == INT_MAX)
+				at = count;
+
 			if (at > count)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot insert page beyond end of page tree");
 

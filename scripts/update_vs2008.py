@@ -27,6 +27,7 @@ SOURCE_EXTS = [".cpp", ".c", ".h", ".rc"]
 EXCLUDE = [
 	pjoin("mupdf", "include", "mupdf", "cbz.h"),
 	pjoin("mupdf", "include", "mupdf", "img.h"),
+	pjoin("mupdf", "include", "mupdf", "tiff.h"),
 ]
 
 class XmlNode:
