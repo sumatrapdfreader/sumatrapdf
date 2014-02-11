@@ -3735,7 +3735,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         isShift && isCtrl &&
         win->loadedFilePath && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
-        // so special-case it before the win.IsDocLoaded() check
+        // so special-case it before the win->IsDocLoaded() check
         BrowseFolder(*win, VK_RIGHT == key);
         return true;
     }
@@ -3749,8 +3749,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     bool isPageUp = (isCtrl && (VK_UP == key));
     if (!isChm)
-        isPageUp |= (VK_PRIOR == key);
-
+        isPageUp |= (VK_PRIOR == key) && !isCtrl;
     if (isPageUp) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
@@ -3762,7 +3761,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     bool isPageDown = (isCtrl && (VK_DOWN == key));
     if (!isChm)
-        isPageDown |= (VK_NEXT == key);
+        isPageDown |= (VK_NEXT == key) && !isCtrl;
     if (isPageDown) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
@@ -3793,6 +3792,10 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
             SendMessage(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
         else
             win->dm->GoToNextPage(0);
+    } else if (VK_PRIOR == key && isCtrl) {
+        win->dm->GoToPrevPage(0);
+    } else if (VK_NEXT == key && isCtrl) {
+        win->dm->GoToNextPage(0);
     } else if (VK_HOME == key && isCtrl) {
         win->dm->GoToFirstPage();
     } else if (VK_END == key && isCtrl) {
@@ -3802,12 +3805,12 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (win->dm->NeedHScroll())
+        if (win->dm->NeedHScroll() && !isCtrl)
             SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGELEFT : SB_LINELEFT, 0);
         else
             win->dm->GoToPrevPage(0);
     } else if (VK_RIGHT == key) {
-        if (win->dm->NeedHScroll())
+        if (win->dm->NeedHScroll() && !isCtrl)
             SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGERIGHT : SB_LINERIGHT, 0);
         else
             win->dm->GoToNextPage(0);
