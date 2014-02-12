@@ -2632,6 +2632,11 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		if (opts.do_garbage >= 2 || opts.do_linear)
 			renumberobjs(doc, &opts);
 
+		/* SumatraPDF: Truncate the xref after compacting and renumbering */
+		if (opts.do_garbage >= 2 && !opts.do_incremental)
+			while (xref_len > 0 && !opts.use_list[xref_len-1])
+				xref_len--;
+
 		if (opts.do_linear)
 		{
 			linearize(doc, &opts);
