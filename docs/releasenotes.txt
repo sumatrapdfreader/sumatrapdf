@@ -5,9 +5,12 @@ Next version:
 
 2.5 (2014-??-??):
 
+* new keybindings:
+  * Ctrl+PgDn, Ctrl+Right - go to next page
+  * Ctrl+PgUp, Ctrl+Left = go to previous page
+* support JP2 images
 * left/right clicking no longer changes pages in fullscreen mode
   (use Presentation mode if you rely on this feature)
-* support JP2 images
 * fixed multiple crashes
 
 2.4 (2013-10-01):
