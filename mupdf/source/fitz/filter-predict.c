@@ -67,6 +67,15 @@ fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int le
 		left[k] = 0;
 	memset(out, 0, state->stride);
 
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2518 */
+	if (state->bpc == 8)
+	{
+		for (i = 0; i < state->columns; i++)
+			for (k = 0; k < state->colors; k++)
+				left[k] = *out++ = ((char)*in++ + left[k]) & 0xFF;
+		return;
+	}
+
 	for (i = 0; i < state->columns; i++)
 	{
 		for (k = 0; k < state->colors; k++)
@@ -173,8 +182,11 @@ read_predict(fz_stream *stm, unsigned char *buf, int len)
 		state->rp = state->out;
 		state->wp = state->out + n - ispng;
 
-		while (state->rp < state->wp && p < ep)
-			*p++ = *state->rp++;
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2518 */
+		n = fz_mini(state->wp - state->rp, ep - p);
+		memcpy(p, state->rp, n);
+		p += n;
+		state->rp += n;
 	}
 
 	return p - buf;
