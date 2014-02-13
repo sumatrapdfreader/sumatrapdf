@@ -1274,6 +1274,12 @@
           {
             charcode = (FT_Int)T1_ToInt( parser );
             T1_Skip_Spaces( parser );
+            /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
+            if (cur == parser->root.cursor)
+            {
+              parser->root.error = FT_THROW( Unknown_File_Format );
+              return;
+            }
           }
 
           cur = parser->root.cursor;

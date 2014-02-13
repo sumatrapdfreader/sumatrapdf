@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\ftstdlib.h
 --- freetype2.orig\include\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
-+++ freetype2\include\config\ftstdlib.h	Sat Dec 14 16:42:05 2013
++++ freetype2\include\config\ftstdlib.h	Sat Dec 14 17:05:21 2013
 @@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -20,7 +20,7 @@ diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\fts
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
 --- freetype2.orig\include\ftsystem.h	Sat Jun 26 08:18:37 2010
-+++ freetype2\include\ftsystem.h	Sat Dec 14 16:42:05 2013
++++ freetype2\include\ftsystem.h	Sat Dec 14 17:05:21 2013
 @@ -337,10 +337,16 @@
  
  
@@ -71,6 +71,26 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
 +
  /* END */
+diff -rPu5 freetype2.orig\src\type1\t1load.c freetype2\src\type1\t1load.c
+--- freetype2.orig\src\type1\t1load.c	Thu Aug 01 10:59:00 2013
++++ freetype2\src\type1\t1load.c	Thu Feb 13 21:55:33 2014
+@@ -1272,10 +1272,16 @@
+             charcode = n;
+           else
+           {
+             charcode = (FT_Int)T1_ToInt( parser );
+             T1_Skip_Spaces( parser );
++            /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
++            if (cur == parser->root.cursor)
++            {
++              parser->root.error = FT_THROW( Unknown_File_Format );
++              return;
++            }
+           }
+ 
+           cur = parser->root.cursor;
+ 
+           if ( cur + 2 < limit && *cur == '/' && n < count )
 diff -rPu5 freetype2.orig\src\type1\t1parse.c freetype2\src\type1\t1parse.c
 --- freetype2.orig\src\type1\t1parse.c	Thu Jun 06 06:26:16 2013
 +++ freetype2\src\type1\t1parse.c	Sat Dec 14 16:42:05 2013
