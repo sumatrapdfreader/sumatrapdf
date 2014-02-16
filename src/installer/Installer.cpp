@@ -823,7 +823,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
-    win::GetHwndDpi(NULL, &gUiDPIFactor);
+    win::GetHwndDpi(HWND_DESKTOP, &gUiDPIFactor);
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     CreateMainWindow();

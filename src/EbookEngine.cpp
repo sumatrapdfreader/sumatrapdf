@@ -16,6 +16,7 @@ using namespace Gdiplus;
 #include "MiniMui.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
+#include "WinUtil.h"
 #include "ZipUtil.h"
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
@@ -28,6 +29,13 @@ static float gDefaultFontSize = 10.f;
 static const WCHAR *GetDefaultFontName()
 {
     return gDefaultFontName ? gDefaultFontName : L"Georgia";
+}
+
+static float GetDefaultFontSize()
+{
+    // fonts are scaled at higher DPI settings,
+    // undo this here for (mostly) consistent results
+    return gDefaultFontSize * 96 / win::GetHwndDpi(HWND_DESKTOP);
 }
 
 void SetDefaultEbookFont(const WCHAR *name, float size)
@@ -121,8 +129,6 @@ protected:
     CRITICAL_SECTION pagesAccess;
     // access to userAnnots is protected by pagesAccess
     Vec<PageAnnotation> userAnnots;
-    // needed to undo the DPI specific UnitPoint-UnitPixel conversion
-    int currFontDpi;
     // page dimensions can vary between filetypes
     RectD pageRect;
     float pageBorder;
@@ -131,7 +137,6 @@ protected:
         GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
     }
     bool ExtractPageAnchors();
-    void FixFontSizeForResolution(HDC hDC);
     WCHAR *ExtractFontList();
 
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
@@ -229,7 +234,7 @@ public:
 
 EbookEngine::EbookEngine() : fileName(NULL), pages(NULL),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
-    pageBorder(0.4f * GetFileDPI()), currFontDpi(96)
+    pageBorder(0.4f * GetFileDPI())
 {
     InitializeCriticalSection(&pagesAccess);
 }
@@ -310,34 +315,6 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     }
 
     return new RenderedBitmap(hbmp, screen.Size());
-}
-
-void EbookEngine::FixFontSizeForResolution(HDC hDC)
-{
-    int dpi = GetDeviceCaps(hDC, LOGPIXELSY);
-    if (dpi == currFontDpi)
-        return;
-
-    ScopedCritSec scope(&pagesAccess);
-
-    float dpiFactor = 1.0f * currFontDpi / dpi;
-    Graphics g(hDC);
-    LOGFONTW lfw;
-
-    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-        Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
-        for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-            if (InstrSetFont == i->type) {
-                Status ok = i->font->GetLogFontW(&g, &lfw);
-                if (Ok == ok) {
-                    REAL newSize = i->font->GetSize() * dpiFactor;
-                    FontStyle newStyle = (FontStyle)i->font->GetStyle();
-                    i->font = mui::GetCachedFont(lfw.lfFaceName, newSize, newStyle);
-                }
-            }
-        }
-    }
-    currFontDpi = dpi;
 }
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
@@ -433,7 +410,6 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
         *cookie_out = cookie = new EbookAbortCookie();
 
     ScopedCritSec scope(&pagesAccess);
-    FixFontSizeForResolution(hDC);
     DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);
@@ -802,7 +778,7 @@ bool EpubEngineImpl::FinishLoading()
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -900,7 +876,7 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1028,7 +1004,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1206,7 +1182,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1501,7 +1477,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1623,7 +1599,7 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
 
     pages = HtmlFormatter(&args).FormatAllPages(false);
@@ -1691,7 +1667,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
@@ -1797,7 +1773,7 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
-    args.fontSize = gDefaultFontSize;
+    args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
 
     pages = TxtFormatter(&args).FormatAllPages(false);

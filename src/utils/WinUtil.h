@@ -114,7 +114,7 @@ inline void SetText(HWND hwnd, const WCHAR *txt)
     SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
-int GetHwndDpi(HWND hwnd, float *uiDPIFactor);
+int GetHwndDpi(HWND hwnd, float *uiDPIFactor=NULL);
 int GlobalDpiAdjust(int value);
 int GlobalDpiAdjust(float value);
 

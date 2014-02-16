@@ -889,7 +889,7 @@ int GlobalDpiAdjust(int value)
 {
     static float dpiFactor = 0.f;
     if (0.f == dpiFactor) {
-        win::GetHwndDpi(NULL, &dpiFactor);
+        win::GetHwndDpi(HWND_DESKTOP, &dpiFactor);
         if (0.f == dpiFactor)
             dpiFactor = 1.f;
     }
@@ -900,7 +900,7 @@ int GlobalDpiAdjust(float value)
 {
     static float dpiFactor = 0.f;
     if (0.f == dpiFactor) {
-        win::GetHwndDpi(NULL, &dpiFactor);
+        win::GetHwndDpi(HWND_DESKTOP, &dpiFactor);
         if (0.f == dpiFactor)
             dpiFactor = 1.f;
     }
