@@ -524,7 +524,6 @@ static void OnPaintProperties(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-// returns true if properties have been copied to the clipboard
 static void CopyPropertiesToClipboard(HWND hwnd)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);

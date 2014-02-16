@@ -379,6 +379,28 @@ static void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
+static void CopyAboutInfoToClipboard(HWND hwnd)
+{
+    str::Str<WCHAR> info(512);
+    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
+    for (size_t i = info.Size() - 2; i > 0; i--) {
+        info.Append('-');
+    }
+    info.Append(L"\r\n");
+    // concatenate all the information into a single string
+    // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
+    size_t maxLen = 0;
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        maxLen = max(maxLen, str::Len(el->leftTxt));
+    }
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+        for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--)
+            info.Append(' ');
+        info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
+    }
+    CopyTextToClipboard(info.LendData());
+}
+
 const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
     if (!HasPermission(Perm_DiskAccess))
@@ -474,6 +496,11 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_CHAR:
             if (VK_ESCAPE == wParam)
                 DestroyWindow(hwnd);
+            break;
+
+        case WM_COMMAND:
+            if (IDM_COPY_SELECTION == LOWORD(wParam))
+                CopyAboutInfoToClipboard(hwnd);
             break;
 
         case WM_DESTROY:

@@ -271,6 +271,30 @@ static void DestroyAboutMuiWindow()
     gButtonUrlHandler = NULL;
 }
 
+static void CopyAboutInfoToClipboard(HWND hwnd)
+{
+    str::Str<WCHAR> info(512);
+    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
+    for (size_t i = info.Size() - 2; i > 0; i--) {
+        info.Append('-');
+    }
+    info.Append(L"\r\n");
+    // concatenate all the information into a single string
+    // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
+    size_t maxLen = 0;
+    for (size_t i = 0; i < dimof(gAboutLayoutInfo); i++) {
+        AboutLayoutInfoEl& el = gAboutLayoutInfo[i];
+        maxLen = max(maxLen, str::Len(el.leftTxt));
+    }
+    for (size_t i = 0; i < dimof(gAboutLayoutInfo); i++) {
+        AboutLayoutInfoEl& el = gAboutLayoutInfo[i];
+        for (size_t j = maxLen - str::Len(el.leftTxt); j > 0; j--)
+            info.Append(' ');
+        info.AppendFmt(L"%s: %s\r\n", el.leftTxt, el.url ? el.url : el.rightTxt);
+    }
+    CopyTextToClipboard(info.LendData());
+}
+
 static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (mainWnd) {
@@ -288,6 +312,11 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_CREATE:
             CreateAboutMuiWindow(hwnd);
+            break;
+
+        case WM_COMMAND:
+            if (IDM_COPY_SELECTION == LOWORD(wParam))
+                CopyAboutInfoToClipboard(hwnd);
             break;
 
         case WM_DESTROY:
@@ -328,4 +357,3 @@ void OnMenuAbout2()
     ShowWindow(gHwndAbout2, SW_SHOW);
 
 }
-
