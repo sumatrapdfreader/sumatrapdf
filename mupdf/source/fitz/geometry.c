@@ -271,6 +271,14 @@ fz_transform_point(fz_point *restrict p, const fz_matrix *restrict m)
 }
 
 fz_point *
+fz_transform_point_xy(fz_point *restrict p, const fz_matrix *restrict m, float x, float y)
+{
+	p->x = x * m->a + y * m->c + m->e;
+	p->y = x * m->b + y * m->d + m->f;
+	return p;
+}
+
+fz_point *
 fz_transform_vector(fz_point *restrict p, const fz_matrix *restrict m)
 {
 	float x = p->x;

@@ -129,7 +129,7 @@ struct fz_rect_s
 */
 static inline fz_point *fz_rect_min(fz_rect *f)
 {
-	return (fz_point *)(void *)&f->x0;
+	return (fz_point *)&f->x0;
 }
 
 /*
@@ -137,7 +137,7 @@ static inline fz_point *fz_rect_min(fz_rect *f)
 */
 static inline fz_point *fz_rect_max(fz_rect *f)
 {
-	return (fz_point *)(void *)&f->x1;
+	return (fz_point *)&f->x1;
 }
 
 /*
@@ -561,6 +561,7 @@ fz_irect *fz_translate_irect(fz_irect *a, int xoff, int yoff);
 	Does not throw exceptions.
 */
 fz_point *fz_transform_point(fz_point *restrict point, const fz_matrix *restrict transform);
+fz_point *fz_transform_point_xy(fz_point *restrict point, const fz_matrix *restrict transform, float x, float y);
 
 /*
 	fz_transform_vector: Apply a transformation to a vector.

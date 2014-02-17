@@ -741,29 +741,37 @@ void pdf_sign_signature(pdf_document *doc, pdf_widget *widget, const char *sigfi
 	fz_try(ctx)
 	{
 		char *dn_str;
+		pdf_obj *wobj = ((pdf_annot *)widget)->obj;
+		fz_rect rect = fz_empty_rect;
 
-		pdf_signature_set_value(doc, ((pdf_annot *)widget)->obj, signer);
-		dn = pdf_signer_designated_name(signer);
-		fzbuf = fz_new_buffer(ctx, 256);
-		if (!dn->cn)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
+		pdf_signature_set_value(doc, wobj, signer);
 
-		fz_buffer_printf(ctx, fzbuf, "cn=%s", dn->cn);
+		pdf_to_rect(ctx, pdf_dict_gets(wobj, "Rect"), &rect);
+		/* Create an appearance stream only if the signature is intended to be visible */
+		if (!fz_is_empty_rect(&rect))
+		{
+			dn = pdf_signer_designated_name(signer);
+			fzbuf = fz_new_buffer(ctx, 256);
+			if (!dn->cn)
+				fz_throw(ctx, FZ_ERROR_GENERIC, "Certificate has no common name");
 
-		if (dn->o)
-			fz_buffer_printf(ctx, fzbuf, ", o=%s", dn->o);
+			fz_buffer_printf(ctx, fzbuf, "cn=%s", dn->cn);
 
-		if (dn->ou)
-			fz_buffer_printf(ctx, fzbuf, ", ou=%s", dn->ou);
+			if (dn->o)
+				fz_buffer_printf(ctx, fzbuf, ", o=%s", dn->o);
 
-		if (dn->email)
-			fz_buffer_printf(ctx, fzbuf, ", email=%s", dn->email);
+			if (dn->ou)
+				fz_buffer_printf(ctx, fzbuf, ", ou=%s", dn->ou);
 
-		if (dn->c)
-			fz_buffer_printf(ctx, fzbuf, ", c=%s", dn->c);
+			if (dn->email)
+				fz_buffer_printf(ctx, fzbuf, ", email=%s", dn->email);
 
-		(void)fz_buffer_storage(ctx, fzbuf, (unsigned char **) &dn_str);
-		pdf_set_signature_appearance(doc, (pdf_annot *)widget, dn->cn, dn_str, NULL);
+			if (dn->c)
+				fz_buffer_printf(ctx, fzbuf, ", c=%s", dn->c);
+
+			(void)fz_buffer_storage(ctx, fzbuf, (unsigned char **) &dn_str);
+			pdf_set_signature_appearance(doc, (pdf_annot *)widget, dn->cn, dn_str, NULL);
+		}
 	}
 	fz_always(ctx)
 	{

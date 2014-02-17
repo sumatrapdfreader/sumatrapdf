@@ -711,7 +711,7 @@ static void declare_dom(pdf_js *js)
 	pdf_jsimp *imp = js->imp;
 
 	/* Create the document type */
-	js->doctype = pdf_jsimp_new_type(imp, NULL);
+	js->doctype = pdf_jsimp_new_type(imp, NULL, "Document");
 	pdf_jsimp_addmethod(imp, js->doctype, "getField", doc_getField);
 	pdf_jsimp_addmethod(imp, js->doctype, "resetForm", doc_resetForm);
 	pdf_jsimp_addmethod(imp, js->doctype, "print", doc_print);
@@ -720,14 +720,14 @@ static void declare_dom(pdf_js *js)
 	pdf_jsimp_addproperty(imp, js->doctype, "app", doc_getApp, doc_setApp);
 
 	/* Create the event type */
-	js->eventtype = pdf_jsimp_new_type(imp, NULL);
+	js->eventtype = pdf_jsimp_new_type(imp, NULL, "Event");
 	pdf_jsimp_addproperty(imp, js->eventtype, "target", event_getTarget, event_setTarget);
 	pdf_jsimp_addproperty(imp, js->eventtype, "value", event_getValue, event_setValue);
 	pdf_jsimp_addproperty(imp, js->eventtype, "willCommit", event_getWillCommit, event_setWillCommit);
 	pdf_jsimp_addproperty(imp, js->eventtype, "rc", event_getRC, event_setRC);
 
 	/* Create the field type */
-	js->fieldtype = pdf_jsimp_new_type(imp, NULL);
+	js->fieldtype = pdf_jsimp_new_type(imp, NULL, "Field");
 	pdf_jsimp_addproperty(imp, js->fieldtype, "value", field_getValue, field_setValue);
 	pdf_jsimp_addproperty(imp, js->fieldtype, "borderStyle", field_getBorderStyle, field_setBorderStyle);
 	pdf_jsimp_addproperty(imp, js->fieldtype, "textColor", field_getTextColor, field_setTextColor);
@@ -737,7 +737,7 @@ static void declare_dom(pdf_js *js)
 	pdf_jsimp_addmethod(imp, js->fieldtype, "buttonSetCaption", field_buttonSetCaption);
 
 	/* Create the app type */
-	js->apptype = pdf_jsimp_new_type(imp, NULL);
+	js->apptype = pdf_jsimp_new_type(imp, NULL, "Application");
 	pdf_jsimp_addmethod(imp, js->apptype, "alert", app_alert);
 	pdf_jsimp_addmethod(imp, js->apptype, "execDialog", app_execDialog);
 	pdf_jsimp_addmethod(imp, js->apptype, "execMenuItem", app_execMenuItem);
@@ -749,12 +749,19 @@ static void declare_dom(pdf_js *js)
 
 static void preload_helpers(pdf_js *js)
 {
-	/* When testing on the cluster, redefine the Date object
-	 * to use a fixed date */
+	/* When testing on the cluster:
+	 * Use a fixed date for "new Date" and Date.now().
+	 * Sadly, this breaks uses of the Date function without the new keyword.
+	 * Return a fixed number from Math.random().
+	 */
 #ifdef CLUSTER
 	pdf_jsimp_execute(js->imp,
 "var MuPDFOldDate = Date\n"
-"Date = function() { return new MuPDFOldDate(1979,5,15); }\n"
+"Date = function() { return new MuPDFOldDate(298252800000); }\n"
+"Date.now = function() { return 298252800000; }\n"
+"Date.UTC = function() { return 298252800000; }\n"
+"Date.parse = MuPDFOldDate.parse;\n"
+"Math.random = function() { return 0.4; }\n"
 	);
 #endif
 

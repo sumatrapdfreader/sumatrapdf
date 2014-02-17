@@ -879,7 +879,7 @@ load_postscript_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int n
 }
 
 static void
-eval_postscript_func(fz_context *ctx, pdf_function *func, float *in, float *out)
+eval_postscript_func(fz_context *ctx, pdf_function *func, const float *in, float *out)
 {
 	ps_stack st;
 	float x;
@@ -1060,7 +1060,7 @@ interpolate_sample(pdf_function *func, int *scale, int *e0, int *e1, float *efra
 }
 
 static void
-eval_sample_func(fz_context *ctx, pdf_function *func, float *in, float *out)
+eval_sample_func(fz_context *ctx, pdf_function *func, const float *in, float *out)
 {
 	int e0[FZ_FN_MAXM], e1[FZ_FN_MAXM], scale[FZ_FN_MAXM];
 	float efrac[FZ_FN_MAXM];
@@ -1383,7 +1383,7 @@ pdf_free_function_imp(fz_context *ctx, fz_storable *func_)
 }
 
 static void
-pdf_eval_function(fz_context *ctx, fz_function *func_, float *in, float *out)
+pdf_eval_function(fz_context *ctx, fz_function *func_, const float *in, float *out)
 {
 	pdf_function *func = (pdf_function *)func_;
 

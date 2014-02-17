@@ -92,7 +92,7 @@ struct fz_vertex_s
 
 typedef struct fz_mesh_processor_s fz_mesh_processor;
 
-typedef void (fz_mesh_prepare_fn)(void *arg, fz_vertex *v);
+typedef void (fz_mesh_prepare_fn)(void *arg, fz_vertex *v, const float *c);
 typedef void (fz_mesh_process_fn)(void *arg, fz_vertex *av, fz_vertex *bv, fz_vertex *cv);
 
 struct fz_mesh_processor_s {

@@ -53,3 +53,52 @@ int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 	else
 		return PDF_WIDGET_TYPE_NOT_WIDGET;
 }
+
+void pdf_set_field_type(pdf_document *doc, pdf_obj *obj, int type)
+{
+	int setbits = 0;
+	int clearbits = 0;
+	char *typename = NULL;
+
+	switch(type)
+	{
+	case PDF_WIDGET_TYPE_PUSHBUTTON:
+		typename = "Btn";
+		setbits = Ff_Pushbutton;
+		break;
+	case PDF_WIDGET_TYPE_CHECKBOX:
+		typename = "Btn";
+		clearbits = Ff_Pushbutton;
+		setbits = Ff_Radio;
+		break;
+	case PDF_WIDGET_TYPE_RADIOBUTTON:
+		typename = "Btn";
+		clearbits = (Ff_Pushbutton|Ff_Radio);
+		break;
+	case PDF_WIDGET_TYPE_TEXT:
+		typename = "Tx";
+		break;
+	case PDF_WIDGET_TYPE_LISTBOX:
+		typename = "Ch";
+		clearbits = Ff_Combo;
+		break;
+	case PDF_WIDGET_TYPE_COMBOBOX:
+		typename = "Ch";
+		setbits = Ff_Combo;
+		break;
+	case PDF_WIDGET_TYPE_SIGNATURE:
+		typename = "Sig";
+		break;
+	}
+
+	if (typename)
+		pdf_dict_puts_drop(obj, "FT", pdf_new_name(doc, typename));
+
+	if (setbits != 0 || clearbits != 0)
+	{
+		int bits = pdf_to_int(pdf_dict_gets(obj, "Ff"));
+		bits &= ~clearbits;
+		bits |= setbits;
+		pdf_dict_puts_drop(obj, "Ff", pdf_new_int(doc, bits));
+	}
+}

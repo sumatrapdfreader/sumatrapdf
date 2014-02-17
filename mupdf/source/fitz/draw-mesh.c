@@ -165,21 +165,21 @@ struct paint_tri_data
 };
 
 static void
-prepare_vertex(void *arg, fz_vertex *v)
+prepare_vertex(void *arg, fz_vertex *v, const float *input)
 {
 	struct paint_tri_data *ptd = (struct paint_tri_data *)arg;
-	float local[MAXN];
 	fz_shade *shade = ptd->shade;
 	fz_pixmap *dest = ptd->dest;
+	float *output = v->c;
 	int i;
 
 	if (shade->use_function)
-		v->c[0] *= 255;
+		output[0] = input[0] * 255;
 	else
 	{
-		ptd->cc.convert(&ptd->cc, &local[0], v->c);
+		ptd->cc.convert(&ptd->cc, output, input);
 		for (i = 0; i < dest->colorspace->n; i++)
-			v->c[i] = local[i] * 255;
+			output[i] *= 255;
 	}
 }
 

@@ -1,34 +1,24 @@
-var MuPDF = {};
+var MuPDF = {
+	monthName: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+	shortMonthName: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+	monthPattern: /Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/,
+	dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 
-MuPDF.monthName = [
-	'January', 'February', 'March', 'April', 'May', 'June',
-	'July', 'August', 'September', 'October', 'November', 'December' ];
+	padZeros: function(num, places) {
+		var s = num.toString();
+		if (s.length < places)
+			s = new Array(places-s.length+1).join('0') + s;
+		return s;
+	},
 
-MuPDF.dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-MuPDF.shortMonthName = [];
-for (var i = 0; i < MuPDF.monthName.length; i++)
-	MuPDF.shortMonthName.push(MuPDF.monthName[i].substring(0,3));
-
-MuPDF.monthPattern = new RegExp('('+MuPDF.shortMonthName.join('|')+')');
-
-MuPDF.padZeros = function(num, places)
-{
-	var s = num.toString();
-	if (s.length < places)
-		s = new Array(places-s.length+1).join('0') + s;
-	return s;
-}
-
-MuPDF.convertCase = function(str, cmd)
-{
-	switch (cmd)
-	{
-		case '>': return str.toUpperCase();
-		case '<': return str.toLowerCase();
-		default: return str;
-	}
-}
+	convertCase: function(str, cmd) {
+		switch (cmd) {
+			case '>': return str.toUpperCase();
+			case '<': return str.toLowerCase();
+			default: return str;
+		}
+	},
+};
 
 /* display must be kept in sync with an enum in pdf_form.c */
 var display = {
@@ -67,6 +57,7 @@ util.printd = function(fmt, d)
 {
 	var regexp = /(m+|d+|y+|H+|h+|M+|s+|t+|[^mdyHhMst]+)/g;
 	var res = '';
+	var i;
 
 	if (!d)
 		return null;
@@ -74,7 +65,7 @@ util.printd = function(fmt, d)
 	var tokens = fmt.match(regexp);
 	var length = tokens ? tokens.length : 0;
 
-	for (var i = 0; i < length; i++)
+	for (i = 0; i < length; i++)
 	{
 		switch(tokens[i])
 		{
@@ -131,10 +122,10 @@ util.printx = function(fmt, val)
 				break;
 
 			case 'A':
-				m = val.match(/[A-z]/);
+				m = val.match(/[A-Za-z]/);
 				if (!m) return res;
 				res += MuPDF.convertCase(m[0],cs);
-				val = val.replace(/^[^A-z]*[A-z]/,'');
+				val = val.replace(/^[^A-Za-z]*[A-Za-z]/,'');
 				break;
 
 			case '9':
@@ -174,6 +165,8 @@ util.printx = function(fmt, val)
 
 util.printf = function()
 {
+	var i;
+
 	if (arguments.length < 1)
 		return "";
 
@@ -183,7 +176,7 @@ util.printf = function()
 	var tokens = arguments[0].match(regexp);
 	var length = tokens ? tokens.length : 0;
 
-	for (var i = 0; i < length; i++)
+	for (i = 0; i < length; i++)
 	{
 		var tok = tokens[i];
 		if (tok.match(/^%/))
@@ -291,7 +284,7 @@ util.printf = function()
 					if (fval >= 0)
 						fval = poschar + fval;
 
-					if (point != '.')
+					if (point !== '.')
 						fval.replace(/\./, point);
 
 					if (thou)
@@ -355,16 +348,17 @@ function AFExtractTime(dt)
 
 function AFParseDateOrder(fmt)
 {
+	var i;
 	var order = '';
 
 	// Ensure all present with those not added in default order
 	fmt += "mdy";
 
-	for (var i = 0; i < fmt.length; i++)
+	for (i = 0; i < fmt.length; i++)
 	{
 		var c = fmt.charAt(i);
 
-		if ('ymd'.indexOf(c) != -1 && order.indexOf(c) == -1)
+		if ('ymd'.indexOf(c) !== -1 && order.indexOf(c) === -1)
 			order += c;
 	}
 
@@ -398,25 +392,26 @@ function AFParseTime(str, d)
 	switch (nums.length)
 	{
 		case 3:
-			sec = nums[2];
+			sec = parseInt(nums[2]);
 		case 2:
-			hour = nums[0];
-			min = nums[1];
+			hour = parseInt(nums[0]);
+			min = parseInt(nums[1]);
 			break;
 
 		default:
 			return null;
 	}
 
-	if (ampm == 'am' && hour < 12)
-		hour = 12 + hour;
+	ampm = ampm && ampm[0]
 
-	if (ampm == 'pm' && hour >= 12)
+	if (ampm === 'am' && hour < 12)
+		hour = 12 + hour;
+	if (ampm === 'pm' && hour >= 12)
 		hour = 0 + hour - 12;
 
 	d.setHours(hour, min, sec);
 
-	if (d.getHours() != hour || d.getMinutes() != min || d.getSeconds() != sec)
+	if (d.getHours() !== hour || d.getMinutes() !== min || d.getSeconds() !== sec)
 		return null;
 
 	return d;
@@ -424,6 +419,7 @@ function AFParseTime(str, d)
 
 function AFParseDateEx(d, fmt)
 {
+	var i;
 	var dt = AFExtractTime(d);
 	var nums = dt[0].match(/\d+/g);
 	var order = AFParseDateOrder(fmt);
@@ -448,22 +444,22 @@ function AFParseDateEx(d, fmt)
 	order = order.substring(0, nums.length);
 
 	// If year and month specified but not date then use the 1st
-	if (order == "ym" || (order == "y" && text_month))
+	if (order === "ym" || (order === "y" && text_month))
 		date = 1;
 
-	for (var i = 0; i < nums.length; i++)
+	for (i = 0; i < nums.length; i++)
 	{
 		switch (order.charAt(i))
 		{
-			case 'y': year = nums[i]; break;
-			case 'm': month = nums[i] - 1; break;
-			case 'd': date = nums[i]; break;
+			case 'y': year = parseInt(nums[i]); break;
+			case 'm': month = parseInt(nums[i]) - 1; break;
+			case 'd': date = parseInt(nums[i]); break;
 		}
 	}
 
 	if (year < 100)
 	{
-		if (fmt.search("yyyy") != -1)
+		if (fmt.search("yyyy") !== -1)
 			return null;
 
 		if (year >= 50)
@@ -474,7 +470,7 @@ function AFParseDateEx(d, fmt)
 
 	dout.setFullYear(year, month, date);
 
-	if (dout.getFullYear() != year || dout.getMonth() != month || dout.getDate() != date)
+	if (dout.getFullYear() !== year || dout.getMonth() !== month || dout.getDate() !== date)
 		return null;
 
 	return AFParseTime(dt[1], dout);
@@ -484,7 +480,7 @@ function AFDate_KeystrokeEx(fmt)
 {
 	if (event.willCommit && !AFParseDateEx(event.value, fmt))
 	{
-		app.alert("Invalid date/time. please ensure that the date/time exists. Field [ "+event.target.name+" ] should match format "+fmt);
+		app.alert("The date/time entered ("+event.value+") does not match the format ("+fmt+") of the field [ "+event.target.name+" ]");
 		event.rc = false;
 	}
 }
@@ -514,7 +510,7 @@ function AFTime_Keystroke(index)
 {
 	if (event.willCommit && !AFParseTime(event.value, null))
 	{
-		app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
+		app.alert("The value entered ("+event.value+") does not match the format of the field [ "+event.target.name+" ]");
 		event.rc = false;
 	}
 }
@@ -551,7 +547,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				if (i >= length)
 					break;
 				res += fmt.charAt(i);
-				if (val && val.charAt(0) == fmt.charAt(i))
+				if (val && val.charAt(0) === fmt.charAt(i))
 					val = val.substring(1);
 				break;
 
@@ -567,7 +563,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				break;
 
 			case 'A':
-				m = val.match(/^[A-z]/);
+				m = val.match(/^[A-Za-z]/);
 				if (!m)
 				{
 					event.rc = false;
@@ -611,7 +607,7 @@ function AFSpecial_KeystrokeEx(fmt)
 
 			default:
 				res += fmt.charAt(i);
-				if (val && val.charAt(0) == fmt.charAt(i))
+				if (val && val.charAt(0) === fmt.charAt(i))
 					val = val.substring(1);
 				break;
 		}
@@ -622,7 +618,7 @@ function AFSpecial_KeystrokeEx(fmt)
 	if (event.rc)
 		event.value = res;
 	else if (event.willCommit)
-		app.alert("The value entered does not match the format of the field [ "+event.target.name+" ] should be "+fmt);
+		app.alert("The value entered ("+event.value+") does not match the format of the field [ "+event.target.name+" ] should be "+fmt);
 }
 
 function AFSpecial_Keystroke(index)
@@ -650,7 +646,7 @@ function AFSpecial_Keystroke(index)
 		}
 
 		if (!event.rc)
-			app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
+			app.alert("The value entered ("+event.value+") does not match the format of the field [ "+event.target.name+" ]");
 	}
 }
 
@@ -697,7 +693,7 @@ function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bC
 			event.rc = false;
 
 		if (!event.rc)
-			app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
+			app.alert("The value entered ("+event.value+") does not match the format of the field [ "+event.target.name+" ]");
 	}
 }
 
@@ -736,7 +732,7 @@ function AFNumber_Format(nDec,sepStyle,negStyle,currStyle,strCurrency,bCurrencyP
 	if (!intpart)
 		intpart = '0';
 
-	if ((sepStyle & 1) == 0)
+	if ((sepStyle & 1) === 0)
 	{
 		// Add the thousands sepearators: pad to length multiple of 3 with zeros,
 		// split into 3s, join with separator, and remove the leading zeros
@@ -803,7 +799,7 @@ function AFPercent_Format(nDec, sepStyle)
 
 function AFSimple_Calculate(op, list)
 {
-	var res;
+	var i, res;
 
 	switch (op)
 	{
@@ -818,10 +814,10 @@ function AFSimple_Calculate(op, list)
 			break;
 	}
 
-	if (typeof list == 'string')
+	if (typeof list === 'string')
 		list = list.split(/ *, */);
 
-	for (var i = 0; i < list.length; i++)
+	for (i = 0; i < list.length; i++)
 	{
 		var field = getField(list[i]);
 		var value = Number(field.value);
@@ -838,17 +834,17 @@ function AFSimple_Calculate(op, list)
 				res += value;
 				break;
 			case 'MIN':
-				if (i == 0 || value < res)
+				if (i === 0 || value < res)
 					res = value;
 				break;
 			case 'MAX':
-				if (i == 0 || value > res)
+				if (i === 0 || value > res)
 					res = value;
 				break;
 		}
 	}
 
-	if (op == 'AVG')
+	if (op === 'AVG')
 		res /= list.length;
 
 	event.value = res;
@@ -869,10 +865,10 @@ function AFRange_Validate(lowerCheck, lowerLimit, upperCheck, upperLimit)
 	if (!event.rc)
 	{
 		if (lowerCheck && upperCheck)
-			app.alert(util.printf("Invalid value: must be greater than or equal to %s and less than or equal to %s", lowerLimit, upperLimit));
+			app.alert(util.printf("The entered value ("+event.value+") must be greater than or equal to %s and less than or equal to %s", lowerLimit, upperLimit));
 		else if (lowerCheck)
-			app.alert(util.printf("Invalid value: must be greater than or equal to %s", lowerLimit));
+			app.alert(util.printf("The entered value ("+event.value+") must be greater than or equal to %s", lowerLimit));
 		else
-			app.alert(util.printf("Invalid value: must be less than or equal to %s", upperLimit));
+			app.alert(util.printf("The entered value ("+event.value+") must be less than or equal to %s", upperLimit));
 	}
 }

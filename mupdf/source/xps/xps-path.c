@@ -58,9 +58,7 @@ xps_draw_arc_segment(fz_context *doc, fz_path *path, const fz_matrix *mtx, float
 	{
 		for (t = th0 + d; t < th1 - d/2; t += d)
 		{
-			p.x = cosf(t);
-			p.y = sinf(t);
-			fz_transform_point(&p, mtx);
+			fz_transform_point_xy(&p, mtx, cosf(t), sinf(t));
 			fz_lineto(doc, path, p.x, p.y);
 		}
 	}
@@ -69,9 +67,7 @@ xps_draw_arc_segment(fz_context *doc, fz_path *path, const fz_matrix *mtx, float
 		th0 += (float)M_PI * 2;
 		for (t = th0 - d; t > th1 + d/2; t -= d)
 		{
-			p.x = cosf(t);
-			p.y = sinf(t);
-			fz_transform_point(&p, mtx);
+			fz_transform_point_xy(&p, mtx, cosf(t), sinf(t));
 			fz_lineto(doc, path, p.x, p.y);
 		}
 	}

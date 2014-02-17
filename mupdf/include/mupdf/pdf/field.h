@@ -21,6 +21,7 @@ enum
 pdf_obj *pdf_get_inheritable(pdf_document *doc, pdf_obj *obj, char *key);
 int pdf_get_field_flags(pdf_document *doc, pdf_obj *obj);
 int pdf_field_type(pdf_document *doc, pdf_obj *field);
+void pdf_set_field_type(pdf_document *doc, pdf_obj *obj, int type);
 char *pdf_field_value(pdf_document *doc, pdf_obj *field);
 int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text);
 char *pdf_field_border_style(pdf_document *doc, pdf_obj *field);

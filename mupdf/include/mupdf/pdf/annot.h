@@ -1,6 +1,20 @@
 #ifndef MUPDF_PDF_ANNOT_H
 #define MUPDF_PDF_ANNOT_H
 
+enum
+{
+	F_Invisible = 1 << (1-1),
+	F_Hidden = 1 << (2-1),
+	F_Print = 1 << (3-1),
+	F_NoZoom = 1 << (4-1),
+	F_NoRotate = 1 << (5-1),
+	F_NoView = 1 << (6-1),
+	F_ReadOnly = 1 << (7-1),
+	F_Locked = 1 << (8-1),
+	F_ToggleNoView = 1 << (9-1),
+	F_LockedContents = 1 << (10-1)
+};
+
 /*
 	pdf_first_annot: Return the first annotation on a page.
 

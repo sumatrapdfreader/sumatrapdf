@@ -181,9 +181,7 @@ xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *a
 			bigview.x1 = bigview.x0 + xstep;
 			bigview.y1 = bigview.y0 + ystep;
 			fz_irect_from_rect(&bbox, fz_transform_rect(&bigview, &transform));
-			tl.x = bbox.x0;
-			tl.y = bbox.y0;
-			fz_transform_point(&tl, &invctm);
+			fz_transform_point_xy(&tl, &invctm, bbox.x0, bbox.y0);
 			local_area.x0 -= fz_max(tl.x, 0) - 0.001f;
 			local_area.y0 -= fz_max(tl.y, 0) - 0.001f;
 			local_area.x1 += xstep - fz_max(tl.x, 0) - 0.001f;

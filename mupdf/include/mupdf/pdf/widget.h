@@ -50,6 +50,11 @@ pdf_widget *pdf_first_widget(pdf_document *doc, pdf_page *page);
 pdf_widget *pdf_next_widget(pdf_widget *previous);
 
 /*
+	pdf_create_widget: create a new widget of a specific type
+*/
+pdf_widget *pdf_create_widget(pdf_document *doc, pdf_page *page, int type, char *fieldname);
+
+/*
 	pdf_widget_get_type: find out the type of a widget.
 
 	The type determines what widget subclass the widget

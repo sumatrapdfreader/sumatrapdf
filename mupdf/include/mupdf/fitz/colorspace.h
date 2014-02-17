@@ -75,8 +75,8 @@ struct fz_colorspace_s
 	unsigned int size;
 	char name[16];
 	int n;
-	void (*to_rgb)(fz_context *ctx, fz_colorspace *, float *src, float *rgb);
-	void (*from_rgb)(fz_context *ctx, fz_colorspace *, float *rgb, float *dst);
+	void (*to_rgb)(fz_context *ctx, fz_colorspace *, const float *src, float *rgb);
+	void (*from_rgb)(fz_context *ctx, fz_colorspace *, const float *rgb, float *dst);
 	void (*free_data)(fz_context *Ctx, fz_colorspace *);
 	void *data;
 };
@@ -87,7 +87,7 @@ fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
 
-void fz_convert_color(fz_context *ctx, fz_colorspace *dsts, float *dstv, fz_colorspace *srcs, float *srcv);
+void fz_convert_color(fz_context *ctx, fz_colorspace *dsts, float *dstv, fz_colorspace *srcs, const float *srcv);
 
 void fz_new_colorspace_context(fz_context *ctx);
 fz_colorspace_context *fz_keep_colorspace_context(fz_context *ctx);
@@ -101,7 +101,7 @@ typedef struct fz_color_converter_s fz_color_converter;
  */
 struct fz_color_converter_s
 {
-	void (*convert)(fz_color_converter *, float *, float *);
+	void (*convert)(fz_color_converter *, float *, const float *);
 	fz_context *ctx;
 	fz_colorspace *ds;
 	fz_colorspace *ss;

@@ -1,19 +1,5 @@
 #include "mupdf/pdf.h"
 
-enum
-{
-	F_Invisible = 1 << (1-1),
-	F_Hidden = 1 << (2-1),
-	F_Print = 1 << (3-1),
-	F_NoZoom = 1 << (4-1),
-	F_NoRotate = 1 << (5-1),
-	F_NoView = 1 << (6-1),
-	F_ReadOnly = 1 << (7-1),
-	F_Locked = 1 << (8-1),
-	F_ToggleNoView = 1 << (9-1),
-	F_LockedContents = 1 << (10-1)
-};
-
 /* Must be kept in sync with definitions in pdf_util.js */
 enum
 {
@@ -21,6 +7,12 @@ enum
 	Display_Hidden,
 	Display_NoPrint,
 	Display_NoView
+};
+
+enum
+{
+	SigFlag_SignaturesExist = 1,
+	SigFlag_AppendOnly = 2
 };
 
 static char *get_string_or_stream(pdf_document *doc, pdf_obj *obj)
@@ -920,6 +912,53 @@ pdf_widget *pdf_next_widget(pdf_widget *previous)
 
 	while (annot && annot->widget_type == PDF_WIDGET_TYPE_NOT_WIDGET)
 		annot = annot->next;
+
+	return (pdf_widget *)annot;
+}
+
+pdf_widget *pdf_create_widget(pdf_document *doc, pdf_page *page, int type, char *fieldname)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *form = NULL;
+	int old_sigflags = pdf_to_int(pdf_dict_getp(pdf_trailer(doc), "Root/AcroForm/SigFlags"));
+	pdf_annot *annot = pdf_create_annot(doc, page, FZ_ANNOT_WIDGET);
+
+	fz_try(ctx)
+	{
+		pdf_set_field_type(doc, annot->obj, type);
+		pdf_dict_puts_drop(annot->obj, "T", pdf_new_string(doc, fieldname, strlen(fieldname)));
+		annot->widget_type = type;
+
+		if (type == PDF_WIDGET_TYPE_SIGNATURE)
+		{
+			int sigflags = (old_sigflags | (SigFlag_SignaturesExist|SigFlag_AppendOnly));
+			pdf_dict_putp_drop(pdf_trailer(doc), "Root/AcroForm/SigFlags", pdf_new_int(doc, sigflags));
+		}
+
+		/*
+		pdf_create_annot will have linked the new widget into the page's
+		annot array. We also need it linked into the document's form
+		*/
+		form = pdf_dict_getp(pdf_trailer(doc), "Root/AcroForm/Fields");
+		if (!form)
+		{
+			form = pdf_new_array(doc, 1);
+			pdf_dict_putp_drop(pdf_trailer(doc), "Root/AcroForm/Fields", form);
+		}
+
+		pdf_array_push(form, annot->obj); /* Cleanup relies on this statement being last */
+	}
+	fz_catch(ctx)
+	{
+		pdf_delete_annot(doc, page, annot);
+
+		/* An empty Fields array may have been created, but that is harmless */
+
+		if (type == PDF_WIDGET_TYPE_SIGNATURE)
+			pdf_dict_putp_drop(pdf_trailer(doc), "Root/AcroForm/SigFlags", pdf_new_int(doc, old_sigflags));
+
+		fz_rethrow(ctx);
+	}
 
 	return (pdf_widget *)annot;
 }

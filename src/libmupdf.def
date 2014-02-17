@@ -281,6 +281,7 @@ EXPORTS
 	fz_include_point_in_rect
 	fz_translate_irect
 	fz_transform_point
+	fz_transform_point_xy
 	fz_transform_vector
 	fz_transform_rect
 	fz_normalize_vector
@@ -543,6 +544,7 @@ EXPORTS
 	pdf_get_inheritable
 	pdf_get_field_flags
 	pdf_field_type
+	pdf_set_field_type
 	pdf_load_encoding
 	pdf_lookup_agl
 	pdf_set_font_wmode

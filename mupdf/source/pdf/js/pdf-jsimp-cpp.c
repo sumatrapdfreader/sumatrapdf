@@ -26,7 +26,7 @@ void pdf_drop_jsimp(pdf_jsimp *imp)
 	}
 }
 
-pdf_jsimp_type *pdf_jsimp_new_type(pdf_jsimp *imp, pdf_jsimp_dtr *dtr)
+pdf_jsimp_type *pdf_jsimp_new_type(pdf_jsimp *imp, pdf_jsimp_dtr *dtr, char *name)
 {
 	pdf_jsimp_type *type = NULL;
 	const char *err = pdf_jsimp_new_type_cpp(imp, dtr, &type);

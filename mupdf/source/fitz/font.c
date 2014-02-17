@@ -921,9 +921,7 @@ static int move_to(const FT_Vector *p, void *cc_)
 	fz_path *path = cc->path;
 	fz_point pt;
 
-	pt.x = p->x;
-	pt.y = p->y;
-	fz_transform_point(&pt, &cc->trm);
+	fz_transform_point_xy(&pt, &cc->trm, p->x, p->y);
 	fz_moveto(ctx, path, pt.x, pt.y);
 	return 0;
 }
@@ -935,9 +933,7 @@ static int line_to(const FT_Vector *p, void *cc_)
 	fz_path *path = cc->path;
 	fz_point pt;
 
-	pt.x = p->x;
-	pt.y = p->y;
-	fz_transform_point(&pt, &cc->trm);
+	fz_transform_point_xy(&pt, &cc->trm, p->x, p->y);
 	fz_lineto(ctx, path, pt.x, pt.y);
 	return 0;
 }
@@ -950,12 +946,8 @@ static int conic_to(const FT_Vector *c, const FT_Vector *p, void *cc_)
 	fz_point ct, pt;
 	fz_point s, c1, c2;
 
-	ct.x = c->x;
-	ct.y = c->y;
-	fz_transform_point(&ct, &cc->trm);
-	pt.x = p->x;
-	pt.y = p->y;
-	fz_transform_point(&pt, &cc->trm);
+	fz_transform_point_xy(&ct, &cc->trm, c->x, c->y);
+	fz_transform_point_xy(&pt, &cc->trm, p->x, p->y);
 
 	s = fz_currentpoint(ctx, path);
 	c1.x = (s.x + ct.x * 2) / 3;
@@ -974,15 +966,9 @@ static int cubic_to(const FT_Vector *c1, const FT_Vector *c2, const FT_Vector *p
 	fz_path *path = cc->path;
 	fz_point c1t, c2t, pt;
 
-	c1t.x = c1->x;
-	c1t.y = c1->y;
-	fz_transform_point(&c1t, &cc->trm);
-	c2t.x = c2->x;
-	c2t.y = c2->y;
-	fz_transform_point(&c2t, &cc->trm);
-	pt.x = p->x;
-	pt.y = p->y;
-	fz_transform_point(&pt, &cc->trm);
+	fz_transform_point_xy(&c1t, &cc->trm, c1->x, c1->y);
+	fz_transform_point_xy(&c2t, &cc->trm, c2->x, c2->y);
+	fz_transform_point_xy(&pt, &cc->trm, p->x, p->y);
 
 	fz_curveto(ctx, path, c1t.x, c1t.y, c2t.x, c2t.y, pt.x, pt.y);
 	return 0;

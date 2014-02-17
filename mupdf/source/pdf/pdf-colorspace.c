@@ -54,7 +54,7 @@ static inline float fung(float x)
 }
 
 static void
-lab_to_rgb(fz_context *ctx, fz_colorspace *cs, float *lab, float *rgb)
+lab_to_rgb(fz_context *ctx, fz_colorspace *cs, const float *lab, float *rgb)
 {
 	/* input is in range (0..100, -128..127, -128..127) not (0..1, 0..1, 0..1) */
 	float lstar, astar, bstar, l, m, n, x, y, z, r, g, b;
@@ -76,7 +76,7 @@ lab_to_rgb(fz_context *ctx, fz_colorspace *cs, float *lab, float *rgb)
 }
 
 static void
-rgb_to_lab(fz_context *ctx, fz_colorspace *cs, float *rgb, float *lab)
+rgb_to_lab(fz_context *ctx, fz_colorspace *cs, const float *rgb, float *lab)
 {
 	fz_warn(ctx, "cannot convert into L*a*b colorspace");
 	lab[0] = rgb[0];
@@ -96,7 +96,7 @@ struct separation
 };
 
 static void
-separation_to_rgb(fz_context *ctx, fz_colorspace *cs, float *color, float *rgb)
+separation_to_rgb(fz_context *ctx, fz_colorspace *cs, const float *color, float *rgb)
 {
 	struct separation *sep = cs->data;
 	float alt[FZ_MAX_COLORS];

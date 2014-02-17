@@ -1825,6 +1825,9 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 		pdf_dict_puts_drop(annot_obj, "Subtype", pdf_new_name(doc, type_str));
 		pdf_dict_puts_drop(annot_obj, "Rect", pdf_new_rect(doc, &rect));
 
+		/* Make printable as default */
+		pdf_dict_puts_drop(annot_obj, "F", pdf_new_int(doc, F_Print));
+
 		annot = fz_malloc_struct(ctx, pdf_annot);
 		annot->page = page;
 		annot->rect = rect;

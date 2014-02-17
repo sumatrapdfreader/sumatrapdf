@@ -12,7 +12,7 @@
 
 typedef struct fz_function_s fz_function;
 
-void fz_eval_function(fz_context *ctx, fz_function *func, float *in, int inlen, float *out, int outlen);
+void fz_eval_function(fz_context *ctx, fz_function *func, const float *in, int inlen, float *out, int outlen);
 fz_function *fz_keep_function(fz_context *ctx, fz_function *func);
 void fz_drop_function(fz_context *ctx, fz_function *func);
 unsigned int fz_function_size(fz_function *func);
@@ -32,7 +32,7 @@ struct fz_function_s
 	unsigned int size;
 	int m;					/* number of input values */
 	int n;					/* number of output values */
-	void (*evaluate)(fz_context *ctx, fz_function *func, float *in, float *out);
+	void (*evaluate)(fz_context *ctx, fz_function *func, const float *in, float *out);
 #ifndef NDEBUG
 	void (*debug)(fz_function *func);
 #endif

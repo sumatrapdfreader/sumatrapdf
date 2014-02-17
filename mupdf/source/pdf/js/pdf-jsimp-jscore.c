@@ -293,12 +293,11 @@ void pdf_drop_jsimp(pdf_jsimp *imp)
 	}
 }
 
-pdf_jsimp_type *pdf_jsimp_new_type(pdf_jsimp *imp, pdf_jsimp_dtr *dtr)
+pdf_jsimp_type *pdf_jsimp_new_type(pdf_jsimp *imp, pdf_jsimp_dtr *dtr, char *name)
 {
 	pdf_jsimp_type *type = fz_malloc_struct(imp->ctx, pdf_jsimp_type);
 	type->imp = imp;
 	type->dtr = dtr;
-
 	return type;
 }
 
