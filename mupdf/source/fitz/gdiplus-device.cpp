@@ -51,7 +51,7 @@ class PixmapBitmap : public Bitmap
 
 public:
 	PixmapBitmap(fz_context *ctx, fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
-		pixmap->has_alpha ? PixelFormat32bppPARGB:
+		pixmap->has_alpha ? PixelFormat32bppPARGB :
 		pixmap->colorspace != fz_device_gray(ctx) ? PixelFormat24bppRGB :
 		pixmap->single_bit ? PixelFormat1bppIndexed : PixelFormat8bppIndexed),
 		palette(NULL), ctx(ctx)
@@ -104,6 +104,27 @@ public:
 		}
 		// color pixmaps (24-bit or 32-bit)
 		fz_pixmap *pix = NULL;
+		fz_var(pix);
+		if (pixmap->colorspace && pixmap->colorspace != fz_device_bgr(ctx) && pixmap->has_alpha)
+		{
+			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+			if (status == Ok)
+			{
+				fz_try(ctx)
+				{
+					fz_irect bbox;
+					pix = fz_new_pixmap_with_bbox_and_data(ctx, fz_device_bgr(ctx), fz_pixmap_bbox(ctx, pixmap, &bbox), (unsigned char *)data.Scan0);
+					fz_convert_pixmap(ctx, pix, pixmap);
+				}
+				fz_always(ctx)
+				{
+					fz_drop_pixmap(ctx, pix);
+				}
+				fz_catch(ctx) { }
+				UnlockBits(&data);
+			}
+			return;
+		}
 		if (pixmap->colorspace != fz_device_bgr(ctx))
 		{
 			fz_try(ctx)
