@@ -48,6 +48,7 @@ class PixmapBitmap : public Bitmap
 {
 	ColorPalette *palette;
 	fz_context *ctx;
+	Status _status;
 
 public:
 	PixmapBitmap(fz_context *ctx, fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
@@ -63,8 +64,8 @@ public:
 			assert(pixmap->colorspace == fz_device_gray(ctx) && !pixmap->has_alpha);
 			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 1)));
 			
-			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat1bppIndexed, &data);
-			if (status == Ok)
+			_status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat1bppIndexed, &data);
+			if (_status == Ok)
 			{
 				for (int y = 0; y < pixmap->h; y++)
 				{
@@ -88,8 +89,8 @@ public:
 		{
 			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 8)));
 			
-			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
-			if (status == Ok)
+			_status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat8bppIndexed, &data);
+			if (_status == Ok)
 			{
 				for (int y = 0; y < pixmap->h; y++)
 				{
@@ -102,93 +103,98 @@ public:
 			}
 			return;
 		}
-		// color pixmaps (24-bit or 32-bit)
-		fz_pixmap *pix = NULL;
-		fz_var(pix);
-		if (pixmap->colorspace && pixmap->colorspace != fz_device_bgr(ctx) && pixmap->has_alpha)
+		// alpha mask
+		if (!pixmap->colorspace)
 		{
-			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
-			if (status == Ok)
+			assert(pixmap->has_alpha);
+			
+			_status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+			if (_status == Ok)
 			{
-				fz_try(ctx)
+				assert(data.Stride > 0 && (data.Stride % 4) == 0);
+				unsigned char *samples = (unsigned char *)data.Scan0;
+				for (int i = 0; i < pixmap->w * pixmap->h; i++)
 				{
-					fz_irect bbox;
-					pix = fz_new_pixmap_with_bbox_and_data(ctx, fz_device_bgr(ctx), fz_pixmap_bbox(ctx, pixmap, &bbox), (unsigned char *)data.Scan0);
-					fz_convert_pixmap(ctx, pix, pixmap);
+					((unsigned char *)data.Scan0)[i * 4 + 3] = pixmap->samples[i];
 				}
-				fz_always(ctx)
-				{
-					fz_drop_pixmap(ctx, pix);
-				}
-				fz_catch(ctx) { }
 				UnlockBits(&data);
 			}
 			return;
 		}
+		// 32-bit pixmap (color and alpha)
+		fz_pixmap *pix = NULL;
+		fz_var(pix);
+		if (pixmap->has_alpha)
+		{
+			_status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
+			if (_status == Ok)
+			{
+				assert(data.Stride > 0 && (data.Stride % 4) == 0);
+				if (pixmap->colorspace != fz_device_bgr(ctx))
+				{
+					fz_try(ctx)
+					{
+						fz_irect bbox;
+						pix = fz_new_pixmap_with_bbox_and_data(ctx, fz_device_bgr(ctx), fz_pixmap_bbox(ctx, pixmap, &bbox), (unsigned char *)data.Scan0);
+						fz_convert_pixmap(ctx, pix, pixmap);
+					}
+					fz_always(ctx)
+					{
+						fz_drop_pixmap(ctx, pix);
+					}
+					fz_catch(ctx) { }
+				}
+				else
+				{
+					memcpy(data.Scan0, pixmap->samples, pixmap->w * pixmap->h * pixmap->n);
+				}
+				UnlockBits(&data);
+			}
+			return;
+		}
+		// 24-bit pixmap (color without alpha)
 		if (pixmap->colorspace != fz_device_bgr(ctx))
 		{
 			fz_try(ctx)
 			{
 				fz_irect bbox;
 				pix = fz_new_pixmap_with_bbox(ctx, fz_device_bgr(ctx), fz_pixmap_bbox(ctx, pixmap, &bbox));
+				fz_convert_pixmap(ctx, pix, pixmap);
 			}
 			fz_catch(ctx)
 			{
 				fz_warn(ctx, "OOM in PixmapBitmap constructor: painting blank image");
 				return;
 			}
-			
-			if (!pixmap->colorspace)
-			{
-				for (int i = 0; i < pix->w * pix->h; i++)
-				{
-					pix->samples[i * 4 + 3] = pixmap->samples[i];
-				}
-			}
-			else
-			{
-				fz_convert_pixmap(ctx, pix, pixmap);
-			}
 		}
 		else
 		{
 			pix = fz_keep_pixmap(ctx, pixmap);
 		}
-		// 32-bit pixmap (color and alpha)
-		if (pixmap->has_alpha)
+		_status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat24bppRGB, &data);
+		if (_status == Ok)
 		{
-			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat32bppARGB, &data);
-			if (status == Ok)
+			for (int y = 0; y < pix->h; y++)
 			{
-				memcpy(data.Scan0, pix->samples, pix->w * pix->h * pix->n);
-				UnlockBits(&data);
-			}
-		}
-		// 24-bit pixmap (color without alpha)
-		else
-		{
-			Status status = LockBits(&Rect(0, 0, pix->w, pix->h), ImageLockModeWrite, PixelFormat24bppRGB, &data);
-			if (status == Ok)
-			{
-				for (int y = 0; y < pix->h; y++)
+				for (int x = 0; x < pix->w; x++)
 				{
-					for (int x = 0; x < pix->w; x++)
+					for (int n = 0; n < 3; n++)
 					{
-						for (int n = 0; n < 3; n++)
-						{
-							((unsigned char *)data.Scan0)[y * data.Stride + x * 3 + n] = pix->samples[(y * pix->w + x) * 4 + n];
-						}
+						((unsigned char *)data.Scan0)[y * data.Stride + x * 3 + n] = pix->samples[(y * pix->w + x) * 4 + n];
 					}
 				}
-				UnlockBits(&data);
 			}
+			UnlockBits(&data);
 		}
-		
 		fz_drop_pixmap(ctx, pix);
 	}
 	virtual ~PixmapBitmap()
 	{
 		fz_free(ctx, palette);
+	}
+	bool HasPixelData()
+	{
+		return _status == Ok;
 	}
 };
 
@@ -708,8 +714,6 @@ public:
 		
 		if (!image->interpolate && !alwaysInterpolate && scale > 1.0 && fz_maxi(image->w, image->h) < 200 && fz_is_rectilinear(ctm))
 		{
-			fz_pixmap *scaledPixmap = NULL;
-			fz_var(scaledPixmap);
 			fz_try(ctx)
 			{
 #ifdef DUMP_BITMAP_STEPS
@@ -717,14 +721,11 @@ public:
 #endif
 				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
 				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
-				scaledPixmap = fz_scale_pixmap_near(ctx, image, w, h);
+				fz_pixmap *scaledPixmap = fz_scale_pixmap_near(ctx, image, w, h);
 				graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
 #ifdef DUMP_BITMAP_STEPS
 				fz_dump_bitmap(ctx, &PixmapBitmap(ctx, scaledPixmap), "scaled image to draw");
 #endif
-			}
-			fz_always(ctx)
-			{
 				fz_drop_pixmap(ctx, scaledPixmap);
 			}
 			fz_catch(ctx) { }
@@ -742,29 +743,42 @@ public:
 		}
 		else if (scale < 1.0 && fz_mini(image->w, image->h) > 100 && !image->has_alpha && fz_is_rectilinear(ctm))
 		{
-			fz_pixmap *scaledPixmap = NULL;
-			fz_var(scaledPixmap);
-			fz_try(ctx)
+#ifdef DUMP_BITMAP_STEPS
+			fz_dump_bitmap(ctx, &PixmapBitmap(ctx, image), "image to scale");
+#endif
+			PixmapBitmap *bitmap = NULL;
+			fz_var(bitmap);
+			int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
+			int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
+			// shrink images further which lead to OOM while scaling
+			short shrink = 1;
+			while (!bitmap && shrink < 16)
 			{
-#ifdef DUMP_BITMAP_STEPS
-				fz_dump_bitmap(ctx, &PixmapBitmap(ctx, image), "image to scale");
-#endif
-				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
-				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
-				scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
-				if (scaledPixmap)
+				fz_try(ctx)
 				{
-					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
-#ifdef DUMP_BITMAP_STEPS
-					fz_dump_bitmap(ctx, &PixmapBitmap(ctx, scaledPixmap), "scaled image to draw");
-#endif
+					fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
+					bitmap = new PixmapBitmap(ctx, scaledPixmap);
+					fz_drop_pixmap(ctx, scaledPixmap);
+					if (!bitmap->HasPixelData())
+					{
+						delete bitmap;
+						bitmap = NULL;
+						fz_throw(ctx, FZ_ERROR_GENERIC, "Couldn't set pixel data for GDI+ bitmap (OOM?)");
+					}
+				}
+				fz_catch(ctx)
+				{
+					w /= 2; h /= 2; shrink *= 2;
 				}
 			}
-			fz_always(ctx)
+			if (bitmap)
 			{
-				fz_drop_pixmap(ctx, scaledPixmap);
+				graphics->DrawImage(bitmap, corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+#ifdef DUMP_BITMAP_STEPS
+				fz_dump_bitmap(ctx, bitmap, "scaled image to draw");
+#endif
+				delete bitmap;
 			}
-			fz_catch(ctx) { }
 		}
 		else
 		{
