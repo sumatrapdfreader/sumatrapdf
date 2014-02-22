@@ -2824,6 +2824,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
     /Type /Annot /Subtype /%s\
     /Rect [%f %f %f %f]\
     /C [%f %f %f]\
+    /F %d\
     /P %d %d R\
     /QuadPoints %s\
     /AP << >>\
@@ -2870,7 +2871,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
-        pdf_to_num(page_obj), pdf_to_gen(page_obj), //P
+        F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj), //F and P
         quad_tpl));
     ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
