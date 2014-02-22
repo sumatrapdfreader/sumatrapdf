@@ -2818,7 +2818,7 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     return SaveUserAnnots(copyFileName);
 }
 
-static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, PageAnnotation& annot, pdf_obj *annots)
+static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pdf_obj *page_obj, PageAnnotation& annot, pdf_obj *annots)
 {
     static const char *obj_dict = "<<\
     /Type /Annot /Subtype /%s\
@@ -2870,7 +2870,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, Pa
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
-        pdf_to_num(page->me), pdf_to_gen(page->me), //P
+        pdf_to_num(page_obj), pdf_to_gen(page_obj), //P
         quad_tpl));
     ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
@@ -2878,9 +2878,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, Pa
     fz_try(ctx) {
         annot_obj = pdf_new_obj_from_str(doc, annot_tpl);
         // append the annotation to the file
-        int num = pdf_create_object(doc);
-        pdf_update_object(doc, num, annot_obj);
-        pdf_array_push_drop(annots, pdf_new_indirect(doc, num, 0));
+        pdf_array_push_drop(annots, pdf_new_ref(doc, annot_obj));
     }
     fz_catch(ctx) {
         pdf_drop_obj(annot_obj);
@@ -2969,13 +2967,11 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
             }
             if (!pdf_is_indirect(annots)) {
                 // make /Annots indirect for the current /Page
-                int num = pdf_create_object(_doc);
-                pdf_update_object(_doc, num, annots);
-                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_indirect(_doc, num, 0));
+                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_ref(_doc, annots));
             }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.Count(); i++) {
-                ok &= pdf_file_update_add_annotation(_doc, page, pageAnnots.At(i), annots);
+                ok &= pdf_file_update_add_annotation(_doc, page, _pageObjs[pageNo - 1], pageAnnots.At(i), annots);
             }
         }
         if (ok) {

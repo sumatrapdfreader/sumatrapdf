@@ -1409,8 +1409,7 @@ pdf_obj *pdf_new_obj_from_str(pdf_document *doc, const char *src)
 	}
 	fz_catch(ctx)
 	{
-		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-		return NULL;
+		fz_rethrow(ctx);
 	}
 
 	return result;
