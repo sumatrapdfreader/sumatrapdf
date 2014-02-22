@@ -631,6 +631,9 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 				}
 			}
 		}
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2526 */
+		else if (!fontdesc->is_embedded && !symbolic)
+			pdf_load_encoding(estrings, "StandardEncoding");
 
 		/* start with the builtin encoding */
 		for (i = 0; i < 256; i++)
