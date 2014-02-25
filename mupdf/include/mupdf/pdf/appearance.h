@@ -18,6 +18,7 @@ void pdf_update_combobox_appearance(pdf_document *doc, pdf_obj *obj);
 void pdf_update_pushbutton_appearance(pdf_document *doc, pdf_obj *obj);
 void pdf_update_text_markup_appearance(pdf_document *doc, pdf_annot *annot, fz_annot_type type);
 void pdf_update_ink_appearance(pdf_document *doc, pdf_annot *annot);
+void pdf_update_text_annot_appearance(pdf_document *doc, pdf_annot *annot);
 /*
 	pdf_update_free_text_annot_appearance: update the appearance stream for a free text
 	annotation, basing it on the annoations rectangle and contents.

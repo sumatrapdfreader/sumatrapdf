@@ -256,7 +256,6 @@ fz_draw_fill_path(fz_device *devp, fz_path *path, int even_odd, const fz_matrix 
 	if (model == NULL)
 		model = fz_device_gray(dev->ctx);
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
 	if (flatness < 0.001f)
 		flatness = 0.001f;
 
@@ -313,7 +312,7 @@ fz_draw_stroke_path(fz_device *devp, fz_path *path, fz_stroke_state *stroke, con
 	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2260 */
 	if (linewidth * expansion < FLT_EPSILON)
 		linewidth = 1 / expansion;
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
+
 	if (flatness < 0.001f)
 		flatness = 0.001f;
 
@@ -366,6 +365,9 @@ fz_draw_clip_path(fz_device *devp, fz_path *path, const fz_rect *rect, int even_
 	fz_colorspace *model;
 	fz_context *ctx = dev->ctx;
 
+	if (flatness < 0.001f)
+		flatness = 0.001f;
+
 	fz_reset_gel(dev->gel, &state->scissor);
 	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
 	fz_sort_gel(dev->gel);
@@ -373,7 +375,6 @@ fz_draw_clip_path(fz_device *devp, fz_path *path, const fz_rect *rect, int even_
 	state = push_stack(dev);
 	model = state->dest->colorspace;
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
 	if (flatness < 0.001f)
 		flatness = 0.001f;
 
@@ -435,7 +436,7 @@ fz_draw_clip_stroke_path(fz_device *devp, fz_path *path, const fz_rect *rect, fz
 	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2260 */
 	if (linewidth * expansion < FLT_EPSILON)
 		linewidth = 1 / expansion;
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
+
 	if (flatness < 0.001f)
 		flatness = 0.001f;
 

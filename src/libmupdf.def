@@ -483,6 +483,9 @@ EXPORTS
 	pdf_delete_annot
 	pdf_set_markup_annot_quadpoints
 	pdf_set_ink_annot_list
+	pdf_set_text_annot_position
+	pdf_set_annot_contents
+	pdf_annot_contents
 	pdf_set_free_text_details
 	pdf_annot_obj_type
 

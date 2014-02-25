@@ -109,6 +109,21 @@ void pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_poi
 void pdf_set_ink_annot_list(pdf_document *doc, pdf_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness);
 
 /*
+	pdf_set_text_annot_position: set the position on page for a text (sticky note) annotation.
+*/
+void pdf_set_text_annot_position(pdf_document *doc, pdf_annot *annot, fz_point pt);
+
+/*
+	pdf_set_annot_contents: set the contents of an annotation.
+*/
+void pdf_set_annot_contents(pdf_document *doc, pdf_annot *annot, char *text);
+
+/*
+	pdf_annot_contents: return the contents of an annotation.
+*/
+char *pdf_annot_contents(pdf_document *doc, pdf_annot *annot);
+
+/*
 	pdf_set_free_text_details: set the position, text, font and color for a free text annotation.
 	Only base 14 fonts are supported and are specified by name.
 */

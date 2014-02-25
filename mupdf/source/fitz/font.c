@@ -246,7 +246,7 @@ void fz_install_load_system_font_funcs(fz_context *ctx, fz_load_system_font_func
 	ctx->font->load_cjk_font = f_cjk;
 }
 
-fz_font *fz_load_system_font(fz_context *ctx, const char *name, int is_substitute)
+fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics)
 {
 	fz_font *font = NULL;
 
@@ -254,7 +254,7 @@ fz_font *fz_load_system_font(fz_context *ctx, const char *name, int is_substitut
 	{
 		fz_try(ctx)
 		{
-			font = ctx->font->load_font(ctx, name, is_substitute);
+			font = ctx->font->load_font(ctx, name, bold, italic, needs_exact_metrics);
 		}
 		fz_catch(ctx)
 		{

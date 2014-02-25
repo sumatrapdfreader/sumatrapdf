@@ -34,7 +34,7 @@ typedef struct stream_block_s
 	int pos;
 } stream_block;
 
-OPJ_SIZE_T stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_data)
+static OPJ_SIZE_T fz_opj_stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_data)
 {
 	stream_block *sb = (stream_block *)p_user_data;
 	int len;
@@ -51,7 +51,7 @@ OPJ_SIZE_T stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_dat
 	return len;
 }
 
-OPJ_OFF_T stream_skip(OPJ_OFF_T skip, void * p_user_data)
+static OPJ_OFF_T fz_opj_stream_skip(OPJ_OFF_T skip, void * p_user_data)
 {
 	stream_block *sb = (stream_block *)p_user_data;
 
@@ -61,7 +61,7 @@ OPJ_OFF_T stream_skip(OPJ_OFF_T skip, void * p_user_data)
 	return sb->pos;
 }
 
-OPJ_BOOL stream_seek(OPJ_OFF_T seek_pos, void * p_user_data)
+static OPJ_BOOL fz_opj_stream_seek(OPJ_OFF_T seek_pos, void * p_user_data)
 {
 	stream_block *sb = (stream_block *)p_user_data;
 
@@ -123,9 +123,9 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 	sb.pos = 0;
 	sb.size = size;
 
-	opj_stream_set_read_function(stream, stream_read);
-	opj_stream_set_skip_function(stream, stream_skip);
-	opj_stream_set_seek_function(stream, stream_seek);
+	opj_stream_set_read_function(stream, fz_opj_stream_read);
+	opj_stream_set_skip_function(stream, fz_opj_stream_skip);
+	opj_stream_set_seek_function(stream, fz_opj_stream_seek);
 	opj_stream_set_user_data(stream, &sb);
 	/* Set the length to avoid an assert */
 	opj_stream_set_user_data_length(stream, size);

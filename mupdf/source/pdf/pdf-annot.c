@@ -1,5 +1,7 @@
 #include "mupdf/pdf.h"
 
+#define TEXT_ANNOT_SIZE (25.0)
+
 static pdf_obj *
 resolve_dest_rec(pdf_document *doc, pdf_obj *dest, fz_link_kind kind, int depth)
 {
@@ -2058,6 +2060,38 @@ static void find_free_font_name(pdf_obj *fdict, char *buf, int buf_size)
 		if (!pdf_dict_gets(fdict, buf))
 			break;
 	}
+}
+
+void pdf_set_text_annot_position(pdf_document *doc, pdf_annot *annot, fz_point pt)
+{
+	fz_matrix ctm;
+	fz_rect rect;
+	int flags;
+
+	fz_invert_matrix(&ctm, &annot->page->ctm);
+	rect.x0 = pt.x;
+	rect.x1 = pt.x + TEXT_ANNOT_SIZE;
+	rect.y0 = pt.y;
+	rect.y1 = pt.y + TEXT_ANNOT_SIZE;
+	fz_transform_rect(&rect, &ctm);
+
+	pdf_dict_puts_drop(annot->obj, "Rect", pdf_new_rect(doc, &rect));
+
+	flags = pdf_to_int(pdf_dict_gets(annot->obj, "F"));
+	flags |= (F_NoZoom|F_NoRotate);
+	pdf_dict_puts_drop(annot->obj, "F", pdf_new_int(doc, flags));
+
+	update_rect(doc->ctx, annot);
+}
+
+void pdf_set_annot_contents(pdf_document *doc, pdf_annot *annot, char *text)
+{
+	pdf_dict_puts_drop(annot->obj, "Contents", pdf_new_string(doc, text, strlen(text)));
+}
+
+char *pdf_annot_contents(pdf_document *doc, pdf_annot *annot)
+{
+	return pdf_to_str_buf(pdf_dict_getp(annot->obj, "Contents"));
 }
 
 void pdf_set_free_text_details(pdf_document *doc, pdf_annot *annot, fz_point *pos, char *text, char *font_name, float font_size, float color[3])

@@ -382,7 +382,6 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 		t = fz_tell(doc->file);
 		if (t < 0)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot tell in file");
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
 		if (len > (INT_MAX - t) / 20)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "xref has too many entries");
 

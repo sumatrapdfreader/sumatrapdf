@@ -464,6 +464,9 @@ void pdf_update_appearance(pdf_document *doc, pdf_annot *annot)
 				break;
 			}
 			break;
+		case FZ_ANNOT_TEXT:
+			pdf_update_text_annot_appearance(doc, annot);
+			break;
 		case FZ_ANNOT_FREETEXT:
 			pdf_update_free_text_annot_appearance(doc, annot);
 			break;

@@ -68,11 +68,11 @@ void fz_new_font_context(fz_context *ctx);
 fz_font_context *fz_keep_font_context(fz_context *ctx);
 void fz_drop_font_context(fz_context *ctx);
 
-typedef fz_font *(*fz_load_system_font_func)(fz_context *ctx, const char *name, int is_substitute);
+typedef fz_font *(*fz_load_system_font_func)(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics);
 typedef fz_font *(*fz_load_system_cjk_font_func)(fz_context *ctx, const char *name, int ros, int serif);
 void fz_install_load_system_font_funcs(fz_context *ctx, fz_load_system_font_func f, fz_load_system_cjk_font_func f_cjk);
 /* fz_load_*_font returns NULL if no font could be loaded (also on error) */
-fz_font *fz_load_system_font(fz_context *ctx, const char *name, int is_substitute);
+fz_font *fz_load_system_font(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics);
 fz_font *fz_load_system_cjk_font(fz_context *ctx, const char *name, int ros, int serif);
 
 fz_font *fz_new_type3_font(fz_context *ctx, const char *name, const fz_matrix *matrix);

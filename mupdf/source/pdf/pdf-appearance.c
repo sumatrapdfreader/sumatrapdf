@@ -1797,6 +1797,127 @@ static fz_text *fit_text(fz_context *ctx, font_info *font_rec, char *str, fz_rec
 	return text;
 }
 
+static void rect_center(const fz_rect *rect, fz_point *c)
+{
+	c->x = (rect->x0 + rect->x1) / 2.0f;
+	c->y = (rect->y0 + rect->y1) / 2.0f;
+}
+
+static void center_rect_within_rect(const fz_rect *tofit, const fz_rect *within, fz_matrix *mat)
+{
+	float xscale = (within->x1 - within->x0) / (tofit->x1 - tofit->x0);
+	float yscale = (within->y1 - within->y0) / (tofit->y1 - tofit->y0);
+	float scale = fz_min(xscale, yscale);
+	fz_point tofit_center;
+	fz_point within_center;
+
+	rect_center(within, &within_center);
+	rect_center(tofit, &tofit_center);
+
+	/* Translate "tofit" to be centered on the origin
+	 * Scale "tofit" to a size that fits within "within"
+	 * Translate "tofit" to "within's" center
+	 * Do all the above in reverse order so that we can use the fz_pre_xx functions */
+	fz_translate(mat, within_center.x, within_center.y);
+	fz_pre_scale(mat, scale, scale);
+	fz_pre_translate(mat, -tofit_center.x, -tofit_center.y);
+}
+
+static const float outline_thickness = 15.0f;
+
+static void draw_rounded_rect(fz_context *ctx, fz_path *path)
+{
+	fz_moveto(ctx, path, 20.0, 60.0);
+	fz_curveto(ctx, path, 20.0, 30.0, 30.0, 20.0, 60.0, 20.0);
+	fz_lineto(ctx, path, 340.0, 20.0);
+	fz_curveto(ctx, path, 370.0, 20.0, 380.0, 30.0, 380.0, 60.0);
+	fz_lineto(ctx, path, 380.0, 340.0);
+	fz_curveto(ctx, path, 380.0, 370.0, 370.0, 380.0, 340.0, 380.0);
+	fz_lineto(ctx, path, 60.0, 380.0);
+	fz_curveto(ctx, path, 30.0, 380.0, 20.0, 370.0, 20.0, 340.0);
+	fz_closepath(ctx, path);
+}
+
+static void draw_speech_bubble(fz_context *ctx, fz_path *path)
+{
+	fz_moveto(ctx, path, 199.0f, 315.6f);
+	fz_curveto(ctx, path, 35.6f, 315.6f, 27.0f, 160.8f, 130.2f, 131.77f);
+	fz_curveto(ctx, path, 130.2f, 93.07f, 113.0f, 83.4f, 113.0f, 83.4f);
+	fz_curveto(ctx, path, 138.8f, 73.72f, 173.2f, 83.4f, 190.4f, 122.1f);
+	fz_curveto(ctx, path, 391.64f, 122.1f, 362.4f, 315.6f, 199.0f, 315.6f);
+	fz_closepath(ctx, path);
+}
+
+void pdf_update_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
+{
+	static float white[3] = {1.0, 1.0, 1.0};
+	static float yellow[3] = {1.0, 1.0, 0.0};
+	static float black[3] = {0.0, 0.0, 0.0};
+	fz_context *ctx = doc->ctx;
+	const fz_matrix *page_ctm = &annot->page->ctm;
+	fz_display_list *dlist = NULL;
+	fz_device *dev = NULL;
+	fz_colorspace *cs = NULL;
+	fz_path *path = NULL;
+	fz_stroke_state *stroke = NULL;
+
+	fz_var(path);
+	fz_var(stroke);
+	fz_var(dlist);
+	fz_var(dev);
+	fz_var(cs);
+	fz_try(ctx)
+	{
+		fz_rect rect;
+		fz_rect bounds;
+		fz_matrix tm;
+
+		pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"), &rect);
+		dlist = fz_new_display_list(ctx);
+		dev = fz_new_list_device(ctx, dlist);
+		stroke = fz_new_stroke_state(ctx);
+		stroke->linewidth = outline_thickness;
+		stroke->linejoin = FZ_LINEJOIN_ROUND;
+
+		path = fz_new_path(ctx);
+		draw_rounded_rect(ctx, path);
+		fz_bound_path(ctx, path, NULL, &fz_identity, &bounds);
+		fz_expand_rect(&bounds, outline_thickness);
+		center_rect_within_rect(&bounds, &rect, &tm);
+		fz_concat(&tm, &tm, page_ctm);
+		cs = fz_device_rgb(ctx);
+		fz_fill_path(dev, path, 0, &tm, cs, yellow, 1.0f);
+		fz_stroke_path(dev, path, stroke, &tm, cs, black, 1.0f);
+		fz_free_path(ctx, path);
+		path = NULL;
+
+		path = fz_new_path(ctx);
+		draw_speech_bubble(ctx, path);
+		fz_fill_path(dev, path, 0, &tm, cs, white, 1.0f);
+		fz_stroke_path(dev, path, stroke, &tm, cs, black, 1.0f);
+
+		fz_transform_rect(&rect, page_ctm);
+		pdf_set_annot_appearance(doc, annot, &rect, dlist);
+
+		/* Drop the cached xobject from the annotation structure to
+		 * force a redraw on next pdf_update_page call */
+		pdf_drop_xobject(ctx, annot->ap);
+		annot->ap = NULL;
+	}
+	fz_always(ctx)
+	{
+		fz_free_device(dev);
+		fz_drop_display_list(ctx, dlist);
+		fz_drop_stroke_state(ctx, stroke);
+		fz_free_path(ctx, path);
+		fz_drop_colorspace(ctx, cs);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
 void pdf_update_free_text_annot_appearance(pdf_document *doc, pdf_annot *annot)
 {
 	fz_context *ctx = doc->ctx;
@@ -1921,32 +2042,6 @@ static void draw_logo(fz_context *ctx, fz_path *path)
 	fz_curveto(ctx, path, 105.75f, 108.749f, 114.0f, 105.749f, 125.25f, 105.749f);
 	fz_closepath(ctx, path);
 };
-
-static void rect_center(const fz_rect *rect, fz_point *c)
-{
-	c->x = (rect->x0 + rect->x1) / 2.0f;
-	c->y = (rect->y0 + rect->y1) / 2.0f;
-}
-
-static void center_rect_within_rect(const fz_rect *tofit, const fz_rect *within, fz_matrix *mat)
-{
-	float xscale = (within->x1 - within->x0) / (tofit->x1 - tofit->x0);
-	float yscale = (within->y1 - within->y0) / (tofit->y1 - tofit->y0);
-	float scale = fz_min(xscale, yscale);
-	fz_point tofit_center;
-	fz_point within_center;
-
-	rect_center(within, &within_center);
-	rect_center(tofit, &tofit_center);
-
-	/* Translate "tofit" to be centered on the origin
-	 * Scale "tofit" to a size that fits within "within"
-	 * Translate "tofit" to "within's" center
-	 * Do all the above in reverse order so that we can use the fz_pre_xx functions */
-	fz_translate(mat, within_center.x, within_center.y);
-	fz_pre_scale(mat, scale, scale);
-	fz_pre_translate(mat, -tofit_center.x, -tofit_center.y);
-}
 
 static void insert_signature_appearance_layers(pdf_document *doc, pdf_annot *annot)
 {
