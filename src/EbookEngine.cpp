@@ -744,8 +744,6 @@ protected:
     bool Load(const WCHAR *fileName);
     bool Load(IStream *stream);
     bool FinishLoading();
-
-    DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
 
 bool EpubEngineImpl::Load(const WCHAR *fileName)
@@ -1364,8 +1362,6 @@ protected:
     ChmDataCache *dataCache;
 
     bool Load(const WCHAR *fileName);
-
-    DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
     bool SaveEmbedded(LinkSaverUI& saveUI, const char *path);

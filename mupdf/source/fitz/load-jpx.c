@@ -264,9 +264,9 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 		{
 			int lbox = read_value(base + ix, 4);
 			unsigned int tbox = read_value(base + ix + 4, 4);
-			if (lbox < 0 || lbox > rest - ix)
+			if (lbox < 8 || lbox > rest - ix)
 			{
-				fz_warn(ctx, "impossibly large JP2 box (%x, %d)", tbox, lbox);
+				fz_warn(ctx, "impossibly small or large JP2 box (%x, %d)", tbox, lbox);
 				break;
 			}
 			if (level == 0 && tbox == 0x6A703268 /* jp2h */ || level == 1 && tbox == 0x72657320 /* res  */)
