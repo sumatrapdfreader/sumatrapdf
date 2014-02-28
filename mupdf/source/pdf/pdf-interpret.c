@@ -765,7 +765,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
  * Assemble and emit text
  */
 
-static void
+static pdf_gstate *
 pdf_flush_text(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
@@ -778,7 +778,7 @@ pdf_flush_text(pdf_csi *csi)
 	softmask_save softmask = { NULL };
 
 	if (!csi->text)
-		return;
+		return gstate;
 	text = csi->text;
 	csi->text = NULL;
 
@@ -890,6 +890,8 @@ pdf_flush_text(pdf_csi *csi)
 	{
 		fz_rethrow(ctx);
 	}
+
+	return csi->gstate + csi->gtop;
 }
 
 static void
@@ -967,7 +969,7 @@ pdf_show_char(pdf_csi *csi, int cid)
 		gstate->render != csi->text_mode ||
 		render_direct)
 	{
-		pdf_flush_text(csi);
+		gstate = pdf_flush_text(csi);
 
 		csi->text = fz_new_text(ctx, fontdesc->font, &trm, fontdesc->wmode);
 		csi->text->trm.e = 0;
@@ -1388,10 +1390,10 @@ static void
 pdf_set_colorspace(pdf_csi *csi, int what, fz_colorspace *colorspace)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gs = csi->gstate + csi->gtop;
+	pdf_gstate *gs;
 	pdf_material *mat;
 
-	pdf_flush_text(csi);
+	gs = pdf_flush_text(csi);
 
 	mat = what == PDF_FILL ? &gs->fill : &gs->stroke;
 
@@ -1417,11 +1419,11 @@ static void
 pdf_set_color(pdf_csi *csi, int what, float *v)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gs = csi->gstate + csi->gtop;
+	pdf_gstate *gs;
 	pdf_material *mat;
 	int i;
 
-	pdf_flush_text(csi);
+	gs = pdf_flush_text(csi);
 
 	mat = what == PDF_FILL ? &gs->fill : &gs->stroke;
 
@@ -1446,10 +1448,10 @@ static void
 pdf_set_shade(pdf_csi *csi, int what, fz_shade *shade)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gs = csi->gstate + csi->gtop;
+	pdf_gstate *gs;
 	pdf_material *mat;
 
-	pdf_flush_text(csi);
+	gs = pdf_flush_text(csi);
 
 	mat = what == PDF_FILL ? &gs->fill : &gs->stroke;
 
@@ -1464,10 +1466,10 @@ static void
 pdf_set_pattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gs = csi->gstate + csi->gtop;
+	pdf_gstate *gs;
 	pdf_material *mat;
 
-	pdf_flush_text(csi);
+	gs = pdf_flush_text(csi);
 
 	mat = what == PDF_FILL ? &gs->fill : &gs->stroke;
 
@@ -1783,11 +1785,11 @@ static void
 pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	pdf_gstate *gstate;
 	fz_colorspace *colorspace;
 	int i, k, n;
 
-	pdf_flush_text(csi);
+	gstate = pdf_flush_text(csi);
 
 	n = pdf_dict_len(extgstate);
 	for (i = 0; i < n; i++)
@@ -2366,9 +2368,9 @@ static void pdf_run_Tw(pdf_csi *csi)
 
 static void pdf_run_Tz(pdf_csi *csi)
 {
-	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	pdf_gstate *gstate;
 	float a = csi->stack[0] / 100;
-	pdf_flush_text(csi);
+	gstate = pdf_flush_text(csi);
 	gstate->scale = a;
 }
 
@@ -2715,8 +2717,8 @@ static void pdf_run_v(pdf_csi *csi)
 
 static void pdf_run_w(pdf_csi *csi)
 {
-	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	pdf_flush_text(csi); /* linewidth affects stroked text rendering mode */
+	pdf_gstate *gstate;
+	gstate = pdf_flush_text(csi); /* linewidth affects stroked text rendering mode */
 	csi->dev->flags &= ~FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
 	gstate->stroke_state = fz_unshare_stroke_state(csi->dev->ctx, gstate->stroke_state);
 	gstate->stroke_state->linewidth = csi->stack[0];

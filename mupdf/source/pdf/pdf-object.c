@@ -661,6 +661,8 @@ pdf_array_insert_drop(pdf_obj *obj, pdf_obj *item, int i)
 void
 pdf_array_delete(pdf_obj *obj, int i)
 {
+	RESOLVE(obj);
+
 	if (!obj)
 		return; /* Can't warn :( */
 	if (obj->kind != PDF_ARRAY)
