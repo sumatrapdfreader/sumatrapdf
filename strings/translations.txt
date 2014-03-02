@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-76035ada2c32ae5f4a50f1c9d4ec9583e2c93ae0
+1096d4df0ca75133195a9526343b3ef1a957bd90
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -1052,7 +1052,7 @@ fr:&Atteindre
 fy-nl:&Gean nei
 ga:&Téigh Chuig
 gl:Ir &a
-he:לך ל
+he:מעבר
 hi:जाए(&G)
 hr:Idi na
 hu:U&grás
@@ -3366,7 +3366,7 @@ fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
 gl:Engadir a páxina %s aos favoritos
-he:למועדפים %s הוסף עמוד
+he:הוסף את עמוד מס' %s למועדפים
 hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
@@ -4088,7 +4088,7 @@ fr:Vérifier &automatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
 gl:Comprobar se hai &actualizacións automáticamente
-he:בדוק אוטומטית לעדכונים
+he:בדוק עדכונים אוטומטית
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
 hu:&Frissítések automatikus keresése
@@ -10612,7 +10612,7 @@ fr:Respecter la casse
 fy-nl:Haadlettergefoelich
 ga:Comhoiriúnaigh an cás
 gl:Coincidir maiúsculas e minúsculas
-he:התאם לאותיות קטנות/גדולות
+he:הבחן בין אותיות גדולות לקטנות
 hi:अक्षर आकार मिलाएं
 hr:Razlikuj velika i mala slova
 hu:Kis- és nagybetűk megkülönböztetése
@@ -16372,7 +16372,7 @@ fr:Vous avez la dernière version.
 fy-nl:Jo brûke de meast resinte ferzje.
 ga:Tá an leagan is úire agat.
 gl:Tes a última versión
-he:ברשותך המדורה האחרונה
+he:ברשותך הגרסה האחרונה
 hi:आपके पास पहले से ही नवीनतम संसकरण है
 hr:Imate najnoviju inačicu.
 hu:Önnél a legfrissebb verzió van telepítve.
@@ -16564,7 +16564,7 @@ fr:Zoom avant
 fy-nl:Ynzoome
 ga:Gluais isteach
 gl:Achegar zoom
-he:זום פנימה
+he:הגדל תצוגה
 hi:ब​ङा करें
 hr:Uvećaj
 hu:Nagyítás
@@ -16632,7 +16632,7 @@ fr:Zoom arrière
 fy-nl:Utzoome
 ga:Gluais amach
 gl:Afastar zoom
-he:זום החוצה
+he:הקטן תצוגה
 hi:छोटा करें
 hr:Umanji
 hu:Kicsinyítés
