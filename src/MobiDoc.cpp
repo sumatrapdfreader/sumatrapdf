@@ -511,6 +511,11 @@ bool MobiDoc::ParseHeader()
         }
     }
     docRecCount = palmDocHdr.recordsCount;
+    if (docRecCount == pdbReader->GetRecordCount()) {
+        // catch the case where a broken document has an off-by-one error
+        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
+        docRecCount--;
+    }
     docUncompressedSize = palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
@@ -803,15 +808,14 @@ bool MobiDoc::LoadDocument()
     assert(!doc);
     doc = new str::Str<char>(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
-        bool ok = LoadDocRecordIntoBuffer(i, *doc);
-        if (!ok) {
-            // special case for broken documents
-            // https://code.google.com/p/sumatrapdf/issues/detail?id=2529
-            if (i == docRecCount) {
-                return true;
-            }
+        if (!LoadDocRecordIntoBuffer(i, *doc))
             return false;
-        }
+    }
+    // replace unexpected \0 with spaces
+    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
+    char *s = doc->Get(), *end = s + doc->Size();
+    while ((s = (char *)memchr(s, '\0', end - s)) != NULL) {
+        *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
         char *docUtf8 = str::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
