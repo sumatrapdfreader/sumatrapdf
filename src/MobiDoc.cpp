@@ -803,8 +803,15 @@ bool MobiDoc::LoadDocument()
     assert(!doc);
     doc = new str::Str<char>(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
-        if (!LoadDocRecordIntoBuffer(i, *doc))
+        bool ok = LoadDocRecordIntoBuffer(i, *doc);
+        if (!ok) {
+            // special case for broken documents
+            // https://code.google.com/p/sumatrapdf/issues/detail?id=2529
+            if (i == docRecCount) {
+                return true;
+            }
             return false;
+        }
     }
     if (textEncoding != CP_UTF8) {
         char *docUtf8 = str::ToMultiByte(doc->Get(), textEncoding, CP_UTF8);
