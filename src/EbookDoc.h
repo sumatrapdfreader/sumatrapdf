@@ -15,20 +15,30 @@ struct ImageData2 {
 
 char *NormalizeURL(const char *url, const char *base);
 
-/* ********** EPUB ********** */
-
-class EpubDoc {
-    struct Metadata {
+class PropertyMap {
+    struct Data {
         DocumentProperty prop;
         char *value;
     };
+    Vec<Data> props;
 
+public:
+    PropertyMap() { }
+    ~PropertyMap();
+
+    void Set(DocumentProperty prop, char *valueUtf8, bool replace=false);
+    WCHAR *Get(DocumentProperty prop) const;
+};
+
+/* ********** EPUB ********** */
+
+class EpubDoc {
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    Vec<Metadata> props;
     ScopedMem<WCHAR> tocPath;
     ScopedMem<WCHAR> fileName;
+    PropertyMap props;
     bool isNcxToc;
     bool isRtlDoc;
 
@@ -70,9 +80,8 @@ class Fb2Doc {
 
     str::Str<char> xmlData;
     Vec<ImageData2> images;
-    ScopedMem<WCHAR> docTitle;
-    ScopedMem<WCHAR> docAuthor;
     ScopedMem<char> coverImage;
+    PropertyMap props;
 
     bool isZipped;
     bool hasToc;
@@ -155,11 +164,7 @@ class HtmlDoc {
     ScopedMem<char> htmlData;
     ScopedMem<char> pagePath;
     Vec<ImageData2> images;
-
-    ScopedMem<WCHAR> title;
-    ScopedMem<WCHAR> author;
-    ScopedMem<WCHAR> date;
-    ScopedMem<WCHAR> copyright;
+    PropertyMap props;
 
     bool Load();
     char *LoadURL(const char *url, size_t *lenOut);

@@ -564,6 +564,32 @@ WCHAR *Replace(const WCHAR *s, const WCHAR *toReplace, const WCHAR *replaceWith)
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
+size_t NormalizeWS(char *str)
+{
+    char *src = str, *dst = str;
+    bool addedSpace = true;
+
+    for (; *src; src++) {
+        if (!IsWs(*src)) {
+            *dst++ = *src;
+            addedSpace = false;
+        }
+        else if (!addedSpace) {
+            *dst++ = ' ';
+            addedSpace = true;
+        }
+    }
+
+    if (dst > str && IsWs(*(dst - 1)))
+        dst--;
+    *dst = '\0';
+
+    return src - dst;
+}
+
+// replaces all whitespace characters with spaces, collapses several
+// consecutive spaces into one and strips heading/trailing ones
+// returns the number of removed characters
 size_t NormalizeWS(WCHAR *str)
 {
     WCHAR *src = str, *dst = str;

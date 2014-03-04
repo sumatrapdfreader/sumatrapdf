@@ -79,18 +79,20 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
     WCHAR buf[512];
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
-    if (0 == ret) // GetDateFormat() failed
-        ret = 1;
+    if (ret < 2) // GetDateFormat() failed or returned an empty result
+        return NULL;
 
-    WCHAR *tmp = buf + ret - 1;
-    if (ret > 1)
-        *tmp++ = ' ';
-    cchBufLen -= ret;
-    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
-    if (0 == ret) // GetTimeFormat() failed
-        *tmp = '\0';
+    // don't add 00:00:00 for dates without time
+    if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond)
+        return str::Dup(buf);
 
-    return tmp > buf ? str::Dup(buf) : NULL;
+    WCHAR *tmp = buf + ret;
+    tmp[-1] = ' ';
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen - ret);
+    if (ret < 2) // GetTimeFormat() failed or returned an empty result
+        tmp[-1] = '\0';
+
+    return str::Dup(buf);
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
@@ -374,22 +376,14 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     str = doc.GetProperty(Prop_CreationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType || Doc_Epub == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Mobi == engineType || Doc_Mobi == engineType)
+    else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = doc.GetProperty(Prop_ModificationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
-    else if (Engine_XPS == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Epub == engineType || Doc_Epub == engineType)
-        ConvDateToDisplay(&str, IsoDateParse);
-    else if (Engine_Mobi == engineType || Doc_Mobi == engineType)
+    else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
@@ -397,7 +391,6 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     layoutData->AddProperty(_TR("Application:"), str);
 
     str = doc.GetProperty(Prop_PdfProducer);
-    // TODO: remove PDF from string
     layoutData->AddProperty(_TR("PDF Producer:"), str);
 
     str = doc.GetProperty(Prop_PdfVersion);
