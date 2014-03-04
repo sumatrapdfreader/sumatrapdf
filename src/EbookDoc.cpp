@@ -666,18 +666,33 @@ Fb2Doc::~Fb2Doc()
 
 bool Fb2Doc::Load()
 {
+    CrashIf(!stream && !fileName);
     ScopedMem<char> data;
-    if (stream && !fileName) {
-        data.Set((char *)GetDataFromStream(stream, NULL));
-    }
-    else {
-        CrashIf(!fileName);
+    if (fileName) {
         ZipFile archive(fileName);
-        isZipped = archive.GetFileCount() == 1;
-        if (isZipped)
+        isZipped = archive.GetFileCount() > 0;
+        if (archive.GetFileCount() > 1) {
+            // if the ZIP file contains more than one file, we try to be rather
+            // restrictive in what we accept in order not to accidentally accept
+            // too many archives which only contain FB2 files among others:
+            // the file must contain a single .fb2 file and may only contain
+            // .url files in addition (TODO: anything else?)
+            for (size_t i = 0; i < archive.GetFileCount(); i++) {
+                const WCHAR *ext = path::GetExt(archive.GetFileName(i));
+                if (str::EqI(ext, L".fb2") && !data)
+                    data.Set(archive.GetFileDataByIdx(i));
+                else if (!str::EqI(ext, L".url"))
+                    return false;
+            }
+        }
+        else if (isZipped)
             data.Set(archive.GetFileDataByIdx(0));
         else
             data.Set(file::ReadAll(fileName, NULL));
+    }
+    else if (stream) {
+        // reading zipped FB2 documents from stream is not supported/needed yet
+        data.Set((char *)GetDataFromStream(stream, NULL));
     }
     if (!data)
         return false;
