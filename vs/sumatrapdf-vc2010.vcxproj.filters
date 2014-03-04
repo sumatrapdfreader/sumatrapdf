@@ -729,6 +729,15 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-object.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-buffer.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-filter.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-run.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-outline.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
@@ -745,6 +754,9 @@
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-repair.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-run.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-shade.c">
@@ -1269,6 +1281,9 @@
       <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
     <ClInclude Include="..\mupdf\source\pdf\pdf-glyphlist.h">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\pdf\pdf-interpret-imp.h">
       <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
   </ItemGroup>

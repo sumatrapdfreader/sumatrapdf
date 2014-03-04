@@ -106,6 +106,8 @@ void pdf_sort_dict(pdf_obj *dict);
 */
 void pdf_set_obj_parent(pdf_obj *obj, int num);
 
+int pdf_obj_refs(pdf_obj *ref);
+
 int pdf_obj_parent_num(pdf_obj *obj);
 
 int pdf_sprint_obj(char *s, int n, pdf_obj *obj, int tight);

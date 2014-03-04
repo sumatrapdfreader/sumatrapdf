@@ -850,8 +850,6 @@ pdf_copy_dict(pdf_obj *obj)
 	int i, n;
 	pdf_document *doc;
 
-	if (!obj)
-		return NULL; /* Can't warn :( */
 	RESOLVE(obj);
 	if (!obj)
 		return NULL; /* Can't warn :( */
@@ -1780,3 +1778,8 @@ pdf_print_ref(pdf_obj *ref)
 	pdf_print_obj(pdf_resolve_indirect(ref));
 }
 #endif
+
+int pdf_obj_refs(pdf_obj *ref)
+{
+	return (ref ? ref->refs : 0);
+}

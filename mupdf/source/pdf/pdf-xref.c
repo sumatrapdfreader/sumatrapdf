@@ -2458,3 +2458,71 @@ fz_document_handler pdf_no_run_document_handler =
 	(fz_document_open_fn *)&pdf_open_document_no_run,
 	(fz_document_open_with_stream_fn *)&pdf_open_document_no_run_with_stream
 };
+
+void pdf_mark_xref(pdf_document *doc)
+{
+	int x, e;
+
+	for (x = 0; x < doc->num_xref_sections; x++)
+	{
+		pdf_xref *xref = &doc->xref_sections[x];
+
+		for (e = 0; e < xref->len; e++)
+		{
+			pdf_xref_entry *entry = &xref->table[e];
+
+			if (entry->obj)
+			{
+				entry->flags |= PDF_OBJ_FLAG_MARK;
+			}
+		}
+	}
+}
+
+void pdf_clear_xref(pdf_document *doc)
+{
+	int x, e;
+
+	for (x = 0; x < doc->num_xref_sections; x++)
+	{
+		pdf_xref *xref = &doc->xref_sections[x];
+
+		for (e = 0; e < xref->len; e++)
+		{
+			pdf_xref_entry *entry = &xref->table[e];
+
+			if (entry->obj)
+			{
+				if (pdf_obj_refs(entry->obj) == 1)
+				{
+					pdf_drop_obj(entry->obj);
+					entry->obj = NULL;
+				}
+			}
+		}
+	}
+}
+
+void pdf_clear_xref_to_mark(pdf_document *doc)
+{
+	int x, e;
+
+	for (x = 0; x < doc->num_xref_sections; x++)
+	{
+		pdf_xref *xref = &doc->xref_sections[x];
+
+		for (e = 0; e < xref->len; e++)
+		{
+			pdf_xref_entry *entry = &xref->table[e];
+
+			if (entry->obj)
+			{
+				if ((entry->flags & PDF_OBJ_FLAG_MARK) == 0 && pdf_obj_refs(entry->obj) == 1)
+				{
+					pdf_drop_obj(entry->obj);
+					entry->obj = NULL;
+				}
+			}
+		}
+	}
+}

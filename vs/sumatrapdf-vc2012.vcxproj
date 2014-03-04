@@ -327,12 +327,16 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-metrics.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-nametree.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-object.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-buffer.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-filter.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-run.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-outline.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-page.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-parse.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-pattern.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-pkcs7.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-repair.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-run.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-shade.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-store.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-stream.c" />
@@ -509,6 +513,7 @@
     <ClInclude Include="..\mupdf\source\fitz\unicodedata_db.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-encodings.h" />
     <ClInclude Include="..\mupdf\source\pdf\pdf-glyphlist.h" />
+    <ClInclude Include="..\mupdf\source\pdf\pdf-interpret-imp.h" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\src\installer\Installer.exe.manifest" />

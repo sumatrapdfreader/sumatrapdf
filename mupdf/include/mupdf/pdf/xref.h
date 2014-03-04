@@ -35,11 +35,17 @@ typedef struct pdf_xref_entry_s pdf_xref_entry;
 struct pdf_xref_entry_s
 {
 	char type;	/* 0=unset (f)ree i(n)use (o)bjstm */
+	unsigned char flags; /* bit 0 = marked */
+	unsigned short gen;	/* generation / objstm index */
 	int ofs;	/* file offset / objstm object number */
-	int gen;	/* generation / objstm index */
 	int stm_ofs;	/* on-disk stream */
 	fz_buffer *stm_buf; /* in-memory stream (for updated objects) */
 	pdf_obj *obj;	/* stored/cached object */
+};
+
+enum
+{
+	PDF_OBJ_FLAG_MARK = 1,
 };
 
 struct pdf_xref_s
@@ -82,6 +88,10 @@ int pdf_xref_is_incremental(pdf_document *doc, int num);
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
 pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
+
+void pdf_mark_xref(pdf_document *doc);
+void pdf_clear_xref(pdf_document *doc);
+void pdf_clear_xref_to_mark(pdf_document *doc);
 
 int pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id, pdf_obj **page, int *tmpofs);
 

@@ -2478,6 +2478,9 @@ WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **co
     }
     LeaveCriticalSection(&ctxAccess);
 
+    if (!cacheRun)
+        fz_enable_device_hints(dev, FZ_NO_CACHE);
+
     // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
     // the extracted text is consistent between cached runs using a list device and
     // fresh runs (otherwise the list device omits text outside the mediabox bounds)
@@ -4189,6 +4192,9 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **co
         return NULL;
     }
     LeaveCriticalSection(&ctxAccess);
+
+    if (!cacheRun)
+        fz_enable_device_hints(dev, FZ_NO_CACHE);
 
     // use an infinite rectangle as bounds (instead of a mediabox) to ensure that
     // the extracted text is consistent between cached runs using a list device and

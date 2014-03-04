@@ -656,6 +656,7 @@ EXPORTS
 	pdf_dict_dels
 	pdf_sort_dict
 	pdf_set_obj_parent
+	pdf_obj_refs
 	pdf_obj_parent_num
 	pdf_sprint_obj
 	pdf_fprint_obj
@@ -746,6 +747,9 @@ EXPORTS
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_new_ref
+	pdf_mark_xref
+	pdf_clear_xref
+	pdf_clear_xref_to_mark
 	pdf_repair_obj
 	pdf_progressive_advance
 	pdf_print_xref

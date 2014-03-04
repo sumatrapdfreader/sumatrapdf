@@ -1839,6 +1839,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\pdf\pdf-interpret-imp.h"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\pdf\pdf-interpret.c"
 					>
 				</File>
@@ -1863,6 +1867,18 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\pdf\pdf-op-buffer.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\source\pdf\pdf-op-filter.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\source\pdf\pdf-op-run.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\pdf\pdf-outline.c"
 					>
 				</File>
@@ -1884,6 +1900,10 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\source\pdf\pdf-repair.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\source\pdf\pdf-run.c"
 					>
 				</File>
 				<File

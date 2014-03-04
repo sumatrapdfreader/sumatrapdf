@@ -778,6 +778,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\pdf\pdf-interpret-imp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\pdf\pdf-interpret.c"
 				>
 			</File>
@@ -795,6 +799,18 @@
 			</File>
 			<File
 				RelativePath="..\..\source\pdf\pdf-object.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\pdf\pdf-op-buffer.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\pdf\pdf-op-filter.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\pdf\pdf-op-run.c"
 				>
 			</File>
 			<File
@@ -819,6 +835,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\pdf\pdf-repair.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\pdf\pdf-run.c"
 				>
 			</File>
 			<File
