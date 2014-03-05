@@ -3108,6 +3108,11 @@ static OPJ_BOOL opj_j2k_read_poc (  opj_j2k_t *p_j2k,
                 opj_event_msg(p_manager, EVT_ERROR, "Error reading POC marker\n");
                 return OPJ_FALSE;
         }
+        /* cf. https://code.google.com/p/openjpeg/issues/detail?id=165 */
+        if (l_current_poc_nb >= sizeof(l_tcp->pocs) / sizeof(l_tcp->pocs[0])) {
+                opj_event_msg(p_manager, EVT_ERROR, "Too many POC entries (%d > 32)\n", l_current_poc_nb);
+                return OPJ_FALSE;
+        }
 
         l_cp = &(p_j2k->m_cp);
         l_tcp = (p_j2k->m_specific_param.m_decoder.m_state == J2K_STATE_TPH) ?
