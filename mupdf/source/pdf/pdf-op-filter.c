@@ -59,7 +59,7 @@ static void insert_resource(pdf_csi *csi, pdf_filter_state *state, const char *k
 	xobj = pdf_dict_gets(state->resources, key);
 	if (xobj == NULL) {
 		xobj = pdf_new_dict(csi->doc, 1);
-		pdf_dict_puts(state->resources, key, xobj);
+		pdf_dict_puts_drop(state->resources, key, xobj);
 	}
 	pdf_dict_putp(xobj, csi->name, obj);
 }
@@ -1069,6 +1069,7 @@ free_processor_filter(pdf_csi *csi, void *state_)
 	}
 
 	call_op(csi, state, PDF_OP_END);
+	fz_free(state->ctx, state->gstate);
 	fz_free(state->ctx, state);
 }
 
