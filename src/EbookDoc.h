@@ -16,16 +16,11 @@ struct ImageData2 {
 char *NormalizeURL(const char *url, const char *base);
 
 class PropertyMap {
-    struct Data {
-        DocumentProperty prop;
-        char *value;
-    };
-    Vec<Data> props;
+    ScopedMem<char> values[Prop_PdfVersion];
+
+    int Find(DocumentProperty prop) const;
 
 public:
-    PropertyMap() { }
-    ~PropertyMap();
-
     void Set(DocumentProperty prop, char *valueUtf8, bool replace=false);
     WCHAR *Get(DocumentProperty prop) const;
 };

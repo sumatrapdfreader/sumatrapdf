@@ -191,37 +191,28 @@ static char *DecodeDataURI(const char *url, size_t *lenOut)
     return str::Dup(data);
 }
 
-PropertyMap::~PropertyMap()
+int PropertyMap::Find(DocumentProperty prop) const
 {
-    for (size_t i = 0; i < props.Count(); i++) {
-        free(props.At(i).value);
-    }
+    if (0 <= prop && prop < dimof(values))
+        return prop;
+    return -1;
 }
 
 void PropertyMap::Set(DocumentProperty prop, char *valueUtf8, bool replace)
 {
-    for (size_t i = 0; i < props.Count(); i++) {
-        if (props.At(i).prop == prop) {
-            if (replace) {
-                free(props.At(i).value);
-                props.At(i).value = valueUtf8;
-            }
-            else {
-                free(valueUtf8);
-            }
-            return;
-        }
-    }
-    Data data = { prop, valueUtf8 };
-    props.Append(data);
+    int idx = Find(prop);
+    CrashIf(-1 == idx);
+    if (-1 == idx || !replace && values[idx])
+        free(valueUtf8);
+    else
+        values[idx].Set(valueUtf8);
 }
 
 WCHAR *PropertyMap::Get(DocumentProperty prop) const
 {
-    for (size_t i = 0; i < props.Count(); i++) {
-        if (props.At(i).prop == prop && props.At(i).value)
-            return str::conv::FromUtf8(props.At(i).value);
-    }
+    int idx = Find(prop);
+    if (idx >= 0 && values[idx])
+        return str::conv::FromUtf8(values[idx]);
     return NULL;
 }
 
