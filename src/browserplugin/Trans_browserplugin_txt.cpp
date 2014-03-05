@@ -111,14 +111,14 @@ const WCHAR * const gTranslations[] = {
   L"正在用SumatraPDF打开文件...",
 
   /* Translations for language tw */
-  NULL,
+  L"%s / %s",
   L"錯誤：無法運行 SumatraPDF!",
   L"錯誤：找不到 SumatraPDF",
   L"錯誤：無法下載文件！",
   NULL,
   NULL,
   NULL,
-  L"以 SumatraPDF 開啟文件...",
+  L"開啟於 SumatraPDF(&S)",
 
   /* Translations for language hr */
   L"%s od %s",
