@@ -24,6 +24,10 @@ exception of code in src/utils and src/mui which has a BSD license
 (see COPYING.BSD). Due to mupdf/COPYING, section 13 of the AGPL v3
 applies to SumatraPDF as well.
 
+Note that by including the UnRAR source code, an additional restriction
+applies which doesn't allow the UnRAR code to be used for recreating the
+RAR compression algorithm (see ext/unrar/license.txt).
+
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
 
@@ -46,7 +50,7 @@ libjpeg-turbo  ext/.../README-turbo.txt  BSD  http://libjpeg-turbo.virtualgl.org
 DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  http://djvu.sourceforge.net/
 OpenJPEG       ext/openjpeg/LICENSE      BSD  http://www.openjpeg.org/
 SyncTeX        ext/.../synctex_parser.c       http://itexmac.sourceforge.net/SyncTeX.html
-UnRAR          ext/unrar/license.txt          http://www.rarlab.com/
+UnRAR          ext/unrar/license.txt     !!!  http://www.rarlab.com/
 zlib           ext/zlib/zlib.h                http://www.zlib.net/
 lzma           ext/lzma/lzma.txt              http://www.7-zip.org/sdk.html
 libwebp        ext/libwebp/COPYING       BSD  https://developers.google.com/speed/webp/

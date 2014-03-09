@@ -1,5 +1,6 @@
 SumatraPDF is a multi-format (PDF, EPUB, MOBI, FB2, CHM, XPS, DjVu) reader
-for Windows under GPLv3 license, with some code under BSD license.
+for Windows under GPLv3 license, with some code under BSD license and the
+UnRAR restriction applying.
 
 The main source repository is at http://code.google.com/p/sumatrapdf/
 
