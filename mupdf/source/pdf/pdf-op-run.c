@@ -421,7 +421,7 @@ begin_softmask(pdf_csi *csi, pdf_run_state *pr, softmask_save *save)
 			softmask->colorspace, gstate->softmask_bc);
 	fz_try(ctx)
 	{
-		run_xobject(csi, pr, NULL, softmask, &fz_identity);
+		run_xobject(csi, pr, csi->rdb, softmask, &fz_identity);
 	}
 	fz_catch(ctx)
 	{
