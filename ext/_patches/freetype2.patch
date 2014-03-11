@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\ftstdlib.h
 --- freetype2.orig\include\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
-+++ freetype2\include\config\ftstdlib.h	Sat Dec 14 17:05:21 2013
++++ freetype2\include\config\ftstdlib.h	Tue Mar 11 18:46:46 2014
 @@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -20,7 +20,7 @@ diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\fts
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
 --- freetype2.orig\include\ftsystem.h	Sat Jun 26 08:18:37 2010
-+++ freetype2\include\ftsystem.h	Sat Dec 14 17:05:21 2013
++++ freetype2\include\ftsystem.h	Tue Mar 11 18:47:05 2014
 @@ -337,10 +337,16 @@
  
  
@@ -40,7 +40,7 @@ diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 --- freetype2.orig\src\base\ftsystem.c	Tue May 28 22:00:03 2013
-+++ freetype2\src\base\ftsystem.c	Sat Dec 14 16:42:05 2013
++++ freetype2\src\base\ftsystem.c	Tue Mar 11 18:47:26 2014
 @@ -315,6 +315,29 @@
  #endif
      ft_sfree( memory );
@@ -71,44 +71,3 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
 +
  /* END */
-diff -rPu5 freetype2.orig\src\type1\t1load.c freetype2\src\type1\t1load.c
---- freetype2.orig\src\type1\t1load.c	Thu Aug 01 10:59:00 2013
-+++ freetype2\src\type1\t1load.c	Thu Feb 13 21:55:33 2014
-@@ -1272,10 +1272,16 @@
-             charcode = n;
-           else
-           {
-             charcode = (FT_Int)T1_ToInt( parser );
-             T1_Skip_Spaces( parser );
-+            /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695040 */
-+            if (cur == parser->root.cursor)
-+            {
-+              parser->root.error = FT_THROW( Unknown_File_Format );
-+              return;
-+            }
-           }
- 
-           cur = parser->root.cursor;
- 
-           if ( cur + 2 < limit && *cur == '/' && n < count )
-diff -rPu5 freetype2.orig\src\type1\t1parse.c freetype2\src\type1\t1parse.c
---- freetype2.orig\src\type1\t1parse.c	Thu Jun 06 06:26:16 2013
-+++ freetype2\src\type1\t1parse.c	Sat Dec 14 16:42:05 2013
-@@ -402,14 +402,16 @@
- 
-       /* according to the Type1 spec, the first cipher byte must not be  */
-       /* an ASCII whitespace character code (blank, tab, carriage return */
-       /* or line feed).  We have seen Type 1 fonts with two line feed    */
-       /* characters...  So skip now all whitespace character codes.      */
-+      /* SumatraPDF: stop at \r if it's not used for EOL - cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2408 */
-+      c = !memchr(cur, '\n', limit - cur) || memchr(cur, '\n', limit - cur) > memchr(cur, '\r', limit - cur);
-       while ( cur < limit       &&
-               ( *cur == ' '  ||
-                 *cur == '\t' ||
--                *cur == '\r' ||
-+                ( c && *cur == '\r' ) ||
-                 *cur == '\n' ) )
-         ++cur;
-       if ( cur >= limit )
-       {
-         FT_ERROR(( "T1_Get_Private_Dict:"
