@@ -450,11 +450,12 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             OnMenuViewFacing(win);
             break;
 
-            // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
+        // unfortunate naming clash: in non-ebook window we have Ctrl-L named as
         // presentation mode and Shift-Ctrl-L named as fullscreen mode
         // in ebook mode there's only fullscreeen mode and I want the simpler
         // Ctrl-L shortcut, which sends IDM_VIEW_PRESENTATION_MODE cmd
         case IDM_VIEW_PRESENTATION_MODE:
+        case IDM_VIEW_FULLSCREEN:
             OnMenuViewFullscreen(win);
             break;
 
