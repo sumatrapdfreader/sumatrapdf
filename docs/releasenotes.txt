@@ -6,10 +6,10 @@ Next version:
 2.5 (2014-??-??):
 
 * new keybindings:
-  * Ctrl+PgDn, Ctrl+Right - go to next page
-  * Ctrl+PgUp, Ctrl+Left = go to previous page
+  * Ctrl+PgDn, Ctrl+Right : go to next page
+  * Ctrl+PgUp, Ctrl+Left  : go to previous page
 * support JP2 images
-* new advanced settings: CustomScreenDPI
+* new advanced settings: ShowMenuBar, ReloadModifiedDocuments, CustomScreenDPI
 * left/right clicking no longer changes pages in fullscreen mode
   (use Presentation mode if you rely on this feature)
 * fixed multiple crashes
