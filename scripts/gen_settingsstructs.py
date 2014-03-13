@@ -375,6 +375,10 @@ GlobalPrefs = [
 		"if true, a document will be reloaded automatically whenever it's changed " +
 		"(currently doesn't work for documents shown in the ebook UI)",
 		expert=True, version="2.5"),
+	Field("CustomScreenDPI", Int, 0,
+		"actual resolution of the main screen in DPI (if this value " +
+		" isn't positive, the system's UI setting is used)",
+		expert=True, version="2.5"),
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +
 		"(preliminary and still subject to change)",

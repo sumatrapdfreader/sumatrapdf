@@ -254,6 +254,9 @@ struct GlobalPrefs {
     // if true, a document will be reloaded automatically whenever it's
     // changed (currently doesn't work for documents shown in the ebook UI)
     bool reloadModifiedDocuments;
+    // actual resolution of the main screen in DPI (if this value isn't
+    // positive, the system's UI setting is used)
+    int customScreenDPI;
     // default values for user added annotations in FixedPageUI documents
     // (preliminary and still subject to change)
     AnnotationDefaults annotationDefaults;
@@ -491,6 +494,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, forwardSearch),            Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
     { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, reloadModifiedDocuments),  Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, customScreenDPI),          Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
@@ -518,7 +522,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 43, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 44, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0CustomScreenDPI\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 

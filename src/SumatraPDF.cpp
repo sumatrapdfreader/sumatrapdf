@@ -968,7 +968,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
     */
     if (win->dm) {
-        win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
+        win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(),
+                                        gGlobalPrefs->customScreenDPI > 0 ? gGlobalPrefs->customScreenDPI : win->dpi);
         // TODO: also expose Manga Mode for image folders?
         if (engineType == Engine_ComicBook || engineType == Engine_ImageDir)
             win->dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
