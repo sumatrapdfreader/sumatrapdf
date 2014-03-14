@@ -290,6 +290,9 @@ static int
 pdf_xobject_uses_blending(pdf_document *doc, pdf_obj *dict)
 {
 	pdf_obj *obj = pdf_dict_gets(dict, "Resources");
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2540 */
+	if (!strcmp(pdf_to_name(pdf_dict_getp(dict, "Group/S")), "Transparency"))
+		return 1;
 	return pdf_resources_use_blending(doc, obj);
 }
 
