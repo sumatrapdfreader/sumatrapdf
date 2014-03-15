@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-868cc8ae81824cc201f33a1d3c5ca07e901f92b2
+36942d9b0e8f468e122d9e5baa3ec3e2de6e0dd6
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -22,6 +22,7 @@ eu:%s -> %s-tik
 fi:%s / %s
 fr:%s de %s
 gl:%s de %s
+he:%s מתוך %s
 hr:%s od %s
 hu:%s/%s
 id:%s dari %s
@@ -77,7 +78,7 @@ fr:&À propos
 fy-nl:&Oer
 ga:Maidir le
 gl:A&cerca de
-he:אודות
+he:&אודות
 hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
@@ -145,7 +146,7 @@ fr:&Taille réelle\tCtrl+1
 fy-nl:Wiere grutte\tCtrl+1
 ga:&Fíormhéid\tCtrl+1
 gl:&Tamaño actual\tCtrl+1
-he:גודל מקור\tCtrl+1
+he:גודל &מקורי\tCtrl+1
 hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
 hu:&Tényleges méret\tCtrl+1
@@ -207,6 +208,7 @@ fa:تنظیمات پیشرفته
 fi:&Lisäasetukset...
 fr:Options &avancées…
 gl:&Opcións avanzadas...
+he:הגדרות &מתקדמות...
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
@@ -256,7 +258,7 @@ fi:K&aikki valitut sivut
 fr:&Toutes les pages sélectionnées
 ga:&Gach leathanach roghnaithe
 gl:&Todas as páxinas seleccionadas
-he:כל העמודים הנבחרים
+he:&כל העמודים הנבחרים
 hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
 hu:Az összes kiválasztott oldal
@@ -315,7 +317,7 @@ fr:&Retour\tAlt+<-
 fy-nl:Tebek\tAlt+<-
 ga:&Siar\tAlt+Saighead Ar Clé
 gl:&Atrás\tAlt+Frecha esquerda
-he:חזור\tAlt+<-
+he:&חזור\tAlt+חץ שמאלי
 hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
 hu:Ugrás vissza\tAlt+<-
@@ -374,7 +376,7 @@ fi:&Kirjanäkymä\tCtrl+8
 fr:Comme un livre\tCtrl+8
 ga:&Leabhar-amharc\tCtrl+8
 gl:Vista de &libro\tCtrl+8
-he:תצוגת ספר\tCtrl+8
+he:תצוגת &ספר\tCtrl+8
 hi:&पुस्तक के रुप में देखें\tCtrl+8
 hr:&Knjiški pregled\tCtrl+8
 hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
@@ -499,7 +501,7 @@ fi:Kopioi &valinta
 fr:&Copier la sélection
 ga:&Macasamhlaigh an Roghnúchán
 gl:&Copiar a selección
-he:העתק בחירה
+he:העתק &בחירה
 hi:च&यनित का नक़ल करें
 hr:&Kopiraj obilježeno
 hu:Kijelölés &másolása
@@ -558,7 +560,7 @@ fr:&Copier la sélection
 fy-nl:Kopiearje seleksje\tCtrl+C
 ga:&Macasamhlaigh an Roghnúchán\tCtrl+C
 gl:&Copiar selección\tCtrl+C
-he:העתק בחירה\tCtrl+C
+he:העתק &בחירה\tCtrl+C
 hi:च&यनित का नक़ल करें\tCtrl+C
 hr:Kopiraj odabir\tCtrl+C
 hu:Kijelölés másolása\tCtrl+C
@@ -621,7 +623,7 @@ fr:&Ne plus me demander
 fy-nl:Net mear freegje
 ga:&Ná fiafraigh dom arís
 gl:Non preguntar de novo
-he:אל תשאל שנית
+he:&אל תציג הודעה זו שוב
 hi:फिर मत पूछिए
 hr:Ubuduće nemoj pitati
 hu:Ne kérdezze meg többé
@@ -684,7 +686,7 @@ fi:Vain pa&rilliset sivut
 fr:Seulement les pages &paires
 ga:&Leathanaigh cothromacha amháin
 gl:&Páxinas pares só
-he:עמודים זוגיים בלבד
+he:עמודים &זוגיים בלבד
 hi:&सम पृष्ठ केवल​
 hr:Samo &parne stranice
 hu:Csak a páros oldalak
@@ -741,7 +743,7 @@ fi:&Rinnakkain\tCtrl+7
 fr:Double page\tCtrl+7
 ga:&Dhá Leathanach\tCtrl+7
 gl:&Dúas páxinas\tCtrl+7
-he:עמוד ממול\tCtrl+7
+he:עמוד ל&צד עמוד\tCtrl+7
 hi:&समतल करना\tCtrl+7
 hr:&Dvije stranice\tCtrl+7
 hu:&Oldalpár\tCtrl+7
@@ -866,7 +868,7 @@ fr:&Rechercher quoi :
 fy-nl:&Sykje nei:
 ga:&Aimsigh céard:
 gl:&Atopar que:
-he:מה למצוא:
+he:&חפש:
 hi:क्या ढूँढ़ें:(&F)
 hr:&Što tražiti:
 hu:Mit keres:
@@ -928,7 +930,7 @@ fr:P&remière page\tHome
 fy-nl:Earste side\tHome
 ga:An Chéad Leathanach\tHome
 gl:Primeira páxina\tHome
-he:דף ראשון\tHome
+he:עמוד &ראשון\tHome
 hi:पहले पृष्ठ पर\tHome
 hr:Prva stranica\tHome
 hu:Első oldal\tHome
@@ -992,7 +994,7 @@ fi:&Sovita sivut tulostettavalle alueelle
 fr:&Ajuster les pages à la zone d'impression
 ga:&Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
 gl:&Axustar páxinas á área imprimible
-he:הגדל עמודים עד גודל אזור ההדפסה
+he:התאם עמודים לגודל איזור ה&דפסה
 hi:पृष्ठों को &छापने योग्य क्षेत्र के लिए उपयुक्त करें
 hr:Namjesti stranice do područja za ispis
 hu:Oldalméret illesztése a nyomtatható területhez
@@ -1053,7 +1055,7 @@ fr:&Atteindre
 fy-nl:&Gean nei
 ga:&Téigh Chuig
 gl:Ir &a
-he:מעבר
+he:&מעבר
 hi:जाए(&G)
 hr:Idi na
 hu:U&grás
@@ -1119,7 +1121,7 @@ fr:&Aller à la page :
 fy-nl:&Gean nei side:
 ga:&Téigh chuig lch:
 gl:&Ir á páxina:
-he:עבור לעמוד
+he:עבור לעמוד:
 hi:पृष्ठ पर जायें (&G)
 hr:&Idi na stranicu:
 hu:&Ugrás oldal:
@@ -1181,7 +1183,7 @@ fr:&Aide
 fy-nl:&Help
 ga:&Cabhair
 gl:A&xuda
-he:עזרה
+he:&עזרה
 hi:सहायता(&H)
 hr:&Pomoć
 hu:&Súgó
@@ -1249,7 +1251,7 @@ fr:&Dernière page\tEnd
 fy-nl:Lêste side\tEnd
 ga:&An Leathanach Deiridh\tEnd
 gl:Última páxina\tEnd
-he:דף אחרון\tEnd
+he:עמוד &אחרון\tEnd
 hi:अन्तिम पृष्ठ पर\tHome
 hr:Posljednja stranica\tEnd
 hu:Utolsó oldal\tEnd
@@ -1314,7 +1316,7 @@ fr:&Grossissement :
 fy-nl:&Fergrutting:
 ga:For&mhéadú:
 gl:&Aumento:
-he:הגדלה
+he:ה&גדלה:
 hi:&बङा करना:
 hr:&Uvećanje:
 hu:Nagyítás:
@@ -1375,7 +1377,7 @@ fr:&Manuel
 fy-nl:Utlis
 ga:Lá&mhleabhar
 gl:Manual de Instruccións
-he:מדריך
+he:&מדריך
 hi:नियम-पुस्तक(&M)
 hr:Korisnički priručnik
 hu:Útmutató (web)
@@ -1438,7 +1440,7 @@ fr:&Respecter la casse
 fy-nl:Haad-/lytse letters tapasse
 ga:&Comhoiriúnaigh an cás
 gl:&Coincidencia maiúsculas/minúsculas
-he:התאם אות גדולה/קטנה
+he:הבחן בין &אותיות גדולות לקטנות
 hi:केस मिलाएँ(&M)
 hr:Razlikuj velika i mala slova
 hu:Kis- és nagybetűk megkülönböztetése
@@ -1500,7 +1502,7 @@ fr:Page &suivante\t->
 fy-nl:Folgjende side\t->
 ga:&Leathanach Ar Aghaidh\tSaighead ar deis
 gl:Páxina seguinte\t->
-he:דף הבא\t->
+he:עמוד הבא\tחץ ימני
 hi:अगले पृष्ठ पर\t->
 hr:Sljedeća stranica\t->
 hu:Következő oldal\t->
@@ -1566,7 +1568,7 @@ fr:&Non
 fy-nl:&Nee
 ga:&Ná déan
 gl:&Non
-he:לא
+he:&לא
 hi:नहीं(&N)
 hr:&Ne
 hu:&Nem
@@ -1627,7 +1629,7 @@ fr:&Non, merci
 fy-nl:&Nee, tankewol
 ga:&Níl, go raibh maith agat
 gl:&Non, grazas
-he:לא, תודה
+he:&לא, תודה
 hi:नहीं, धन्यवाद(&N)
 hr:&Ne, hvala
 hu:Köszönöm,&nem
@@ -1685,7 +1687,7 @@ fi:Vain &parittomat sivut
 fr:Seulement les pages &impaires
 ga:&Corr-leathanaigh amháin
 gl:&Só páxinas impares
-he:עמודים אי-זוגיים בלבד
+he:עמודים &אי-זוגיים בלבד
 hi:केवल &विषम पृष्ठों
 hr:Samo &neparne stranice
 hu:Csak a páratlan oldalak
@@ -1742,7 +1744,7 @@ fi:&Avaa asiakirja
 fr:&Ouvrir le document
 ga:&Oscail Cáipéis
 gl:Abrir Documento
-he:פתח מסמך
+he:&פתח קובץ
 hi:दस्तावेज़ &खोलें
 hr:&Otvori dokument
 hu:&Fájl megnyitása
@@ -1863,6 +1865,7 @@ fa:&تنظیمات
 fi:&Asetukset
 fr:&Options
 gl:&Opcións
+he:&אפשרויות
 hr:P&ostavke
 hu:&Beállítások
 id:Pilihan
@@ -1913,7 +1916,7 @@ fr:&Options...
 fy-nl:&Opsjes...
 ga:&Roghanna...
 gl:&Opcións...
-he:אפשרויות...
+he:ה&גדרות...
 hi:&विकल्पों...
 hr:Mogućnosti...
 hu:&Beállítások...
@@ -1973,7 +1976,7 @@ fr:&Mot de passe :
 fy-nl:&Wachtwurd:
 ga:&Focal faire:
 gl:&Contrasinal:
-he:סיסמה:
+he:&ססמה:
 hi:&पासवर्ड:
 hr:&Lozinka:
 hu:&Jelszó:
@@ -2031,7 +2034,7 @@ fi:&Kiinnitä asiakirja
 fr:Ajouter le document à la liste
 ga:&Greamaigh an cháipéis le biorrán
 gl:&Marcar Documento
-he:רתק מסמך
+he:ה&צמד קובץ
 hi:दस्तावेज़ &जड़ें
 hr:&Pričvrsti dokument
 hu:Lista elejére
@@ -2090,7 +2093,7 @@ fr:Page &précédente\t<-
 fy-nl:Foarige side\t<-
 ga:Leathanach Roimhe\tSaighead ar clé
 gl:Páxina anterior\t<-
-he:דף קודם\t<-
+he:עמוד &קודם\tחץ שמאלי
 hi:पिछले पृष्ठ पर\t<-
 hr:Prethodna stranica\t<-
 hu:Előző oldal\t<-
@@ -2154,7 +2157,7 @@ fi:&Tulosta...
 fr:Im&primer...
 ga:&Clóbhuail...
 gl:&Imprimir...
-he:הדפס
+he:&הדפס...
 hi:&छापें...
 hr:Is&pis...
 hu:&Nyomtatás
@@ -2211,7 +2214,7 @@ fi:&Tulosta... (kielletty)
 fr:&Imprimer... (Interdit)
 ga:&Clóbhualadh... (diúltaithe)
 gl:&Imprimir... (denegado)
-he:הדפס... (התקבל סירוב)
+he:&הדפס... (לא התאפשר)
 hi:&छपाई...(अस्वीकृत)
 hr:&Ispis... (nije dopušteno)
 hu:Nyomtatás... (tiltott)
@@ -2272,7 +2275,7 @@ fr:&Imprimer...\tCtrl+P
 fy-nl:&Ofdrukke...\tCtrl+P
 ga:&Clóbhuail\tCtrl+P
 gl:&Imprimir...\tCtrl+P
-he:הדפס...\tCtrl+P
+he:&הדפס...\tCtrl+P
 hi:परिंट करें(&P)\tCtrl+P
 hr:&Ispiši...\tCtrl+P
 hu:Nyomt&atás...\tCtrl+P
@@ -2336,7 +2339,7 @@ fi:&Muista tämän asiakirjan salasana
 fr:&Se rappeler le mot de passe pour ce document
 ga:&Cuimhnigh ar an bhfocal faire don cháipéis seo
 gl:&Lembrar o contrasinal para este documento
-he:אנא זכור את הסיסמא למסמך זה
+he:&שמור ססמה לקובץ זה
 hi:इस दस्तावेज़ के लिए पासवर्ड &याद रखें
 hr:&Zapamti lozinku za ovaj dokument
 hu:Jelszó megjegyzése a dokumentumhoz
@@ -2395,7 +2398,7 @@ fr:&Se rappeler ces paramètres pour chaque document
 fy-nl:&Bewarje dizze ynstellingen foar elk dokumint
 ga:Cuimhnigh ar na socruithe seo do gach cáipéis
 gl:&Lembrar estes axustes para cada documento
-he:זכור הגדרות אלו לכל מסמך
+he:קבע הגדרות אלו ל&כל הקבצים
 hi:प्रत्येक दस्तावेज़ के लिए इन सेटिंग्स को &याद रखें
 hr:&Upamti ove postavke za svaki pojedini dokument
 hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
@@ -2453,7 +2456,7 @@ fi:&Poista asiakirja
 fr:&Retirer le document de la liste
 ga:&Bain cáipéis
 gl:&Borrar Documento
-he:שכח מסמך
+he:ה&סר קובץ
 hi:दस्तावेज़ को &निकालें
 hr:&Ukloni dokument
 hu:&Eltávolítás a listából
@@ -2508,7 +2511,7 @@ fi:Tallenna &nimellä...
 fr:&Enregistrer sous...
 ga:&Cuir i dtaisce mar...
 gl:&Gardar como...
-he:בשמור בשם
+he:&שמור בשם...
 hi:सहेजें &जैसे...
 hr:&Spremi kao...
 hu:&Mentés másként...
@@ -2568,7 +2571,7 @@ fr:&Enregistrer sous...\tCtrl+S
 fy-nl:&Bewarje as...\tCtrl+S
 ga:Cuir i dtaisce mar...\tCtrl+S
 gl:&Gardar como...\tCtrl+S
-he:שמירה בשם...\tCtrl+S
+he:&שמור בשם...\tCtrl+S
 hi:इस तरह संभालें(&S)\tCtrl+S
 hr:&Spremi kao...\tCtrl+S
 hu:Ment&és másként...\tCtrl+S
@@ -2634,7 +2637,7 @@ fr:&Préférences
 fy-nl:&Ynstellingen
 ga:&Socruithe
 gl:&Axustes
-he:הגדרות
+he:&הגדרות
 hi:&सेटिंग्स
 hr:&Postavke
 hu:&Beállítások
@@ -2692,7 +2695,7 @@ fi:P&ienennä sivut tulostettavalle alueelle (jos tarpeellista)
 fr:&Réduire les pages à la zone d'impression (si nécessaire)
 ga:&Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
 gl:&Reducir páxinas á área imprimible (se for necesario)
-he:כווץ עמודים עד גודל אזור ההדפסה
+he:&כווץ עמודים לגודל איזור ההדפסה (אם נדרש)
 hi:पृष्ठों को छपाई योग्य क्षेत्र &में सिकोड़ें (यदि आवश्यक हो)
 hr:Smanji stranice do područja za ispis (ako je potrebno)
 hu:Oldalak széleinek levágása a nyomtatható méretre
@@ -2749,7 +2752,7 @@ fi:&Yksittäinen sivu\tCtrl+6
 fr:Une &seule page\tCtrl+6
 ga:&Leathanach amháin\tCtrl+6
 gl:&Páxina única\tCtrl+6
-he:עמוד יחיד\tCtrl+6
+he:עמוד &יחיד\tCtrl+6
 hi:&एकल पृष्ठ\tCtrl+6
 hr:&Jedna stranica\tCtrl+6
 hu:&Egyoldalas\tCtrl+6
@@ -2808,7 +2811,7 @@ fr:&Ignorer cette version
 fy-nl:Dizze ferzje oerslaan
 ga:&Ná bac leis an leagan seo
 gl:Ignorar esta versión
-he:דלג מהדורה זו
+he:&דלג על גרסה זו
 hi:इस संसकरण को छोडो
 hr:&Propusti ovu inačicu.
 hu:Verzió kihagyása
@@ -2871,7 +2874,7 @@ fi:&Käytä alkuperäisiä sivukokoja
 fr:&Utiliser les dimensions d'origine
 ga:&Bain feidhm as méideanna bunaidh an leathanaigh
 gl:&Usar tamaños de páxina orixinais
-he:השתמש במידות דף מקוריות
+he:השתמש במידות עמוד &מקוריות
 hi:वास्तविक पृष्ठ आकार का उपयोग(&U) करें
 hr:Koristi &originalne veličine stranica
 hu:Eredeti oldalméret használata
@@ -2998,7 +3001,7 @@ fr:&Oui
 fy-nl:&Ja
 ga:&Déan sin
 gl:&Si
-he:כן
+he:&כן
 hi:हां(&Y)
 hr:&Da
 hu:&Igen
@@ -3126,7 +3129,7 @@ fr:(de %d)
 fy-nl:(fan %d)
 ga:(as %d)
 gl:(de %d)
-he:(%d מ)
+he:(מתוך %d)
 hi:(का %d)
 hr:(od %d)
 hu:(a %d-ból)
@@ -3243,7 +3246,7 @@ fr:À propos de SumatraPDF
 fy-nl:Oer SumatraPDF
 ga:Maidir le SumatraPDF
 gl:Aceca de SumatraPDF
-he:PDF אודות סומטרה
+he:אודות SumatraPDF
 hi:Sumatra PDF के बारे में
 hr:O SumatriPDF
 hu:A SumatraPDF névjegye
@@ -3424,7 +3427,7 @@ fi:Lisää sivu %s suosikkeihin (valinnaisella) nimellä:
 fr:Ajouter la page %s aux favoris avec un nom (optionnel):
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
 gl:Engadir páxina %s aos favoritos  cun nome (opcional):
-he:למועדפים בשם %s הוסף עמוד:
+he:הוסף את עמוד מס' %s למועדפים בשם:
 hi:पृष्ठ %s को पसंदीदा सूचि में नाम (वैकल्पिक) के साथ: जोड़ें:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
 hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
@@ -3666,7 +3669,7 @@ fi:Kaikki tuetut asiakirjat
 fr:Tous les documents pris en charge
 ga:Gach cáipéis inléite
 gl:Todos os documentos soportados
-he:כל המסמכים הנתמכים
+he:כל הקבצים הנתמכים
 hi:सभी समर्थित दस्तावेज़
 hr:Svi podržani dokumenti
 hu:Minden támogatott fájltípus
@@ -3784,6 +3787,7 @@ fa:شما مطمئن هستید که می خواهید سوماترا پی دی 
 fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 gl:Seguro que queres desinstalar SumatraPDF?
+he:האם אתה בטוח שברצונך להסיר את SumatraPDF?
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
@@ -3839,7 +3843,7 @@ fr:Associer aux fichiers PDF ?
 fy-nl:Assosjearje mei PDF-bestannen?
 ga:Comhthiomsaigh le comhaid PDF?
 gl:Asociar con ficheiros PDF?
-he:?PDF לשייך לקבצי
+he:לשייך לקובצי PDF?
 hi:PDF फाईलों से संबंध बनाइए?
 hr:Asocirati sa PDF datotekama?
 hu:Társítsuk a PDF fájlokkal?
@@ -3966,7 +3970,7 @@ fr:Auteur :
 fy-nl:Auteur:
 ga:Údar:
 gl:Autor:
-he:עורך:
+he:מחבר:
 hi:लेखक:
 hr:Autor:
 hu:Készítő:
@@ -4089,7 +4093,7 @@ fr:Vérifier &automatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
 gl:Comprobar se hai &actualizacións automáticamente
-he:בדוק עדכונים אוטומטית
+he:בדוק &עדכונים אוטומטית
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
 hu:&Frissítések automatikus keresése
@@ -4214,7 +4218,7 @@ fr:Signets\tF12
 fy-nl:Blêdwizers\tF12
 ga:Ceanáin\tF12
 gl:Preferidos\tF12
-he:סימניה\tF12
+he:סי&מניות\tF12
 hi:संभाले हुए चिह्न\tF12
 hr:Straničnik\tF12
 hu:Könyvjelzők\tF12
@@ -4278,7 +4282,7 @@ fi:Pikakuvakkeet
 fr:Raccourcis des signets
 ga:Déan ceanáin d'aicearraí
 gl:Atallos de marcadores
-he:קיצורי דרך סימניה
+he:קיצורי דרך לסימנייה
 hi:चिन्हित अल्प तरीका
 hr:Prečaci oznaka
 hu:Könyvjelző parancsikonok
@@ -4333,7 +4337,7 @@ fi:Tee pikakuvake sivulle %s/%s
 fr:Raccourci du signet de la page %s de %s
 ga:Cruthaigh aicearra chuig lch %s as %s
 gl:Atallo de marcador á páxina %s de %s
-he:קיצור דרך לסימנה %s מתוך %s
+he:קיצור דרך לסימניית עמוד %s מתוך %s
 hi:पृष्ठ %s पर बुकमार्क शॉर्टकट %s का करें
 hr:Prečac oznake do stranice %s of %s
 hu:Könyvjelző parancsikon a(z) %s/%s oldalhoz
@@ -4389,7 +4393,7 @@ fi:Kirjanmerkit
 fr:Signets
 ga:Ceanáin
 gl:Marcadores
-he:מועדפים
+he:סימניות
 hi:चिन्हित
 hr:Oznake
 hu:Könyvjelzők
@@ -4449,7 +4453,7 @@ fr:Octets
 fy-nl:Bytes
 ga:Bearta
 gl:Bytes
-he:ביטים
+he:Bytes
 hi:बाइट्स
 hr:Bajtova
 hu:bájt
@@ -4509,7 +4513,7 @@ fr:Fichiers d'aide CHM
 fy-nl:CHM-bestannen
 ga:Cáipéisí CHM
 gl:Documentos CHM
-he:CHM מסמכי
+he:CHM קובצי
 hi:CHM दस्तावेजों
 hr:CHM dokumenti
 hu:CHM fájlok
@@ -4565,7 +4569,7 @@ fi:Internetiin yhdistäminen epäonnistui (virhe %#x).
 fr:Impossible de se connecter à Internet (erreur %#x)
 ga:Ní féidir ceangailt leis an idirlíon (botún %#x).
 gl:Non se pode conectar a Internet (error %#x).
-he:לא יכול להתקשר לאינטרנט (error %#x).
+he:כישלון בחיבור לאינטרנט (שגיאה %#x).
 hi:इंटरनेट से जुड़​ नहीं पा रहा है ( ग़लती %#x )
 hr:Internet nedostupan (greška %#x)
 hu:Nem sikerült kapcsolódni az Internetre (hiba %#x).
@@ -4627,7 +4631,7 @@ fr:Annuler
 fy-nl:Annulearje
 ga:Cealaigh
 gl:Cancelar
-he:בטל
+he:ביטול
 hi:रद्द करें
 hr:Odustani
 hu:Mégse
@@ -4690,7 +4694,7 @@ fr:Impossible d'imprimer ce fichier
 fy-nl:Dit bestân kin net ôfdrukt wurde
 ga:Ní féidir an comhad seo a chlóbhualadh
 gl:Non se pode imprimir este ficheiro
-he:לא ניתן להדפיס הקובץ
+he:הדפסת הקובץ נכשלה.
 hi:इस फ़ाइल का छपाई नहीं किया जा सकता
 hr:Ne mogu ispisati ovu datoteku
 hu:Ez a file nem nyomtatható
@@ -4750,7 +4754,7 @@ fr:Impossible de lancer le programme configuré pour la recherche inverse. Veuil
 fy-nl:Kin de omkearde sykrjochting net starte. Kontrolearje de opdrachtrigel yn de ynstellingen.
 ga:Ní féidir ordú cuardaigh aisiompaithe a thosú. Dearbháil líne na n-orduithe sna socruithe.
 gl:Non se pode iniciar o comando de búsqueda inversa. Revisa a liña de comandos na confiiguración.
-he:לא ניתן להריץ פקודת חיפוש הפוך. אנא בדוק הפקודה בהגדרות
+he:פקודת חיפוש הפוך נכשלה. אנא בדוק את שורת הפקודה בהגדרות.
 hi:उलटा खोज कमांड शुरू हो पा रहा । कृपया सेटिंग्स में कमांड लाइन की जाँच करें ।
 hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
 hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban, a beállításokat.
@@ -4813,7 +4817,7 @@ fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
 gl:Cambiar a lingua
-he:שנה שפה (Change language)
+he:שנה שפת ממשק (Change language)
 hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
@@ -4880,7 +4884,7 @@ fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
 gl:Buscar a&ctualizacións
-he:בדוק לגרסה חדשה
+he:בדוק &עדכונים
 hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
 hu:&Frissítések keresése
@@ -4943,6 +4947,7 @@ fa:بستن
 fi:Sulje
 fr:Fermer
 gl:Pechar
+he:סגור
 hi:Close
 hr:Zatvori
 hu:Bezár
@@ -5240,7 +5245,7 @@ fr:Vue continue, page double
 fy-nl:Dûbele side trochrinnend
 ga:Dhá leathanach ar leanúint
 gl:Páxina dobre continua
-he:המשך תצוגה רציפה
+he:תצוגת 'עמוד לצד עמוד' רציפה
 hi:निरन्तर पुस्तक
 hr:Dvije stranice slijedno
 hu:Folyamatos oldalpár
@@ -5308,7 +5313,7 @@ fr:Contribuer à la traduction
 fy-nl:Help mei oersetten
 ga:Aistrigh é seo
 gl:Axudar coa traducción
-he:עזור לתרגם
+he:סייע בתרגום
 hi:अनुवाद करने में मदद करें
 hr:Pomozi prijevodom
 hu:&Járulj hozzá a fordításhoz
@@ -5372,7 +5377,7 @@ fi:Kopioi &kuva
 fr:Copier l'&image
 ga:Macasamhlaigh &Íomhánna
 gl:Copiar a &imaxe
-he:העתק תמונה
+he:העתק &תמונה
 hi:&छवि नक़ल करें
 hr:Kopiraj Sl&iku
 hu:&Kép másolása
@@ -5428,7 +5433,7 @@ fi:Kopioi &linkin osoite
 fr:Copier l'adresse du &lien
 ga:Macasamhlaigh seoladh an naisc
 gl:Copar o enderezo da &ligazón
-he:העתק כתובת קישור
+he:העתק כתובת &קישור
 hi:&लिंक पता नक़ल करें
 hr:Kopiraj adresu &linka
 hu:&Hivatkozás címének másolása
@@ -5485,7 +5490,7 @@ fi:Kopioi kommentti
 fr:Copier le co&mmentaire
 ga:Macasamhlaigh an nóta tráchta
 gl:Copiar o co&mentario
-he:העתק הערה
+he:העתק ה&ערה
 hi:&टिप्पणी नक़ल करें
 hr:Kopiraj ko&mentar
 hu:Me&gjegyzés másolása
@@ -5543,7 +5548,7 @@ fi:Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
 fr:La copie de texte est refusée (seule une capture d’écran est faite)
 ga:Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
 gl:Impediuse copiar texto (estase a copiar só como imaxe)
-he:העתקת טקסט נדחית (מועתק רק כתמונה)
+he:העתקת הטקסט לא התאפשרה (מעתיק כתמונה בלבד)
 hi:टेक्स्ट कि प्रतियां बनाने से अस्वीकृत ( केवल छवि के रूप में प्रतिलिपिकरण )
 hr:Kopiranje teksta je nemoguće (kopirano kao slika)
 hu:Szöveg másolása tiltott (csak képként másolva)
@@ -5603,7 +5608,7 @@ fi:Copyright:
 fr:Copyright :
 ga:Cóipcheart:
 gl:Copyright:
-he:זכויות יוצרים
+he:זכויות יוצרים:
 hi:पाठाधिकार
 hr:Autorsko pravo
 hu:Szerzői jog:
@@ -5659,7 +5664,7 @@ fi:Tulostimen ominaisuuksia ei voinut lukea
 fr:Impossible d'obtenir les propriétés de l'imprimante
 ga:Níorbh fhéidir airíonna an chlóire a fháil
 gl:Non se puideron obter as propiedades da impresora
-he:לא ניתן להשיג מאפייני מדפסת
+he:הגישה אל מאפייני המדפסת נכשלה.
 hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
@@ -5713,6 +5718,7 @@ eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
 gl:Non se puido crear o cartafol temporal
+he:יצירת תיקייה זמנית נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti privremenu mapu
 hu:Ideiglenes könyvtár létrehozása sikertelen
@@ -5762,6 +5768,7 @@ fa:عدم توانایی در ایجاد پوشه نصب
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
 gl:Non se puido crear o cartafol de instalación
+he:יצירת תיקיית התקנה נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti instalacijsku mapu
 hu:Telepítési könyvtár létrehozása sikertelen
@@ -5814,7 +5821,7 @@ fr:Impossible d'initialiser l'imprimante
 fy-nl:Kin de printer net inisjalisearje
 ga:Níorbh fhéidir an clóire a thúsú
 gl:Non se pode inicializar a impresora
-he:לא ניתן לאתחל מדפסת
+he:אתחול המדפסת נכשל.
 hi:प्रिंटर प्रारंभ नहीं हो पा रहा
 hr:Ne mogu inicijalizirati pisač
 hu:A nyomtató inicializálása nem sikerült
@@ -5871,6 +5878,7 @@ fa:pdf عدم توانایی در نصب پیش نمایش
 fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
 gl:Non se puido instalado o previsualizador de PDF
+he:התקנת תצוגה מקדימה לקובצי PDF נכשלה.
 hr:Nemoguće instalirati PDF preglednik
 hu:PDF előnézet-megjelenítő telepítése sikertelen
 id:Gagal menginstal PDF pemratinjau
@@ -5918,6 +5926,7 @@ fa:عدم توانایی در نصب فیلتر جستجوی pdf
 fi:PDF-hakusuodattimen asentaminen epäonnistui
 fr:Impossible d'installer le filtre de recherche PDF
 gl:Non se puido instalar o filtro de busca de PDF
+he:התקנת מסנן חיפוש ל- PDF נכשלה.
 hr:Nemoguće instalirati PDF filter pretraživanja
 hu:PDF keresési szűrő telepítése sikertelen
 id:Gagal memasang filter pencari PDF
@@ -5964,6 +5973,7 @@ fa:عدم توانایی در نصب پلاگین بروسر
 fi:Selainliitännäisen asentaminen epäonnistui
 fr:Impossible d'installer le plug-in du navigateur
 gl:Non se puido instalar o engadido para o navegador
+he:התקנת תוסף לדפדפן נכשלה.
 hr:Nemoguće instalirati dodatak za internet preglednik
 hu:Böngésző beépülő telepítése sikertelen
 id:Gagal memasang plugin untuk browser
@@ -6010,6 +6020,7 @@ eu:Ezinezkoa aldibaterako zuzenbidea lortzea
 fi:Väliaikaishakemiston käyttäminen epäonnistui
 fr:Impossible d'obtenir un répertoire temporaire
 gl:Non se puido obter o cartafol temporal
+he:הגישה לתיקייה הזמנית נכשלה.
 hr:Nemoguće dobiti privremenu mapu
 hu:Ideiglenes könyvtár nem érhető el
 id:Gagal mendeteksi folder sementara
@@ -6055,6 +6066,7 @@ eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
 gl:Non se puido eliminar o cartafol de instalación
+he:הסרת תיקיית ההתקנה נכשלה.
 hr:Nemoguće ukloniti instalacijsku mapu
 hu:Telepítési könyvtár eltávolítása sikertelen
 id:Gagal menghapus folder instalasi
@@ -6102,6 +6114,7 @@ eu:Ezinezkoa lastertekla kentzea
 fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
 gl:Non se puido eliminar o atallo
+he:הסרת קיצור דרך נכשלה.
 hr:Nemoguće ukloniti prečac
 hu:Parancsikon eltávolítása sikertelen
 id:Gagal menghapus shortcut
@@ -6153,7 +6166,7 @@ fr:Impossible de générer la page
 fy-nl:Dizze side kin net werjûn wurde
 ga:Níorbh fhéidir an leathanach a chóiriú
 gl:Non se pode xerar a vista da páxina
-he:לא ניתן להציג הדף
+he:קריאת העמוד נכשלה.
 hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
 hu:Oldalfeldolgozási hiba
@@ -6208,6 +6221,7 @@ eu:Ezinezkoa PDF aurreikustatzailea kentzea
 fi:PDF-esikatselijan poistaminen epäonnistui
 fr:Impossible de désinstaller l'aperçu PDF
 gl:Non se puido desinstalar o previsualizador de PDFs
+he:הסרת כלי תצוגה מקדימה ל- PDF נכשלה.
 hr:Nemoguće deinstalirati PDF preglednik
 hu:PDF előnézet-megjelenítő eltávolítása sikertelen
 id:Gagal menghapus penampil cepat PDF
@@ -6252,6 +6266,7 @@ eu:Ezinezkoa PDF bilaketa iragazkia kentzea
 fi:PDF-hakusuodattimen poistaminen epäonnistui
 fr:Impossible de désinstaller le filtre de recherche PDF
 gl:Non se puido desinstalar o filtro de buscas de PDF
+he:הסרת מסנן חיפוש ל- PDF נכשלה.
 hr:Nemoguće deinstalirati PDF filter pretraživnja
 hu:PDF keresési szűrő eltávolítása sikertelen
 id:Gagal menghapus filter pencari PDF
@@ -6296,6 +6311,7 @@ eu:Ezinezkoa nabigatzaile plugina kentzea
 fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 gl:Non se puido desinstalar o engadido do navegador
+he:הסרת התוסף לדפדפן נכשלה.
 hr:Nemoguće deinstalirati dodatak za internet preglednik
 hu:Böngésző beépülő eltávolítása sikertelen
 id:Gagal menghapus plugin untuk peramban
@@ -6341,6 +6357,7 @@ eu:Ezinezkoa %s diskara idaztea
 fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 gl:Non se puido escribir %s no disco
+he:כתיבת %s לדיסק נכשלה.
 hr:Nemoguće zapisati %s na disk
 hu:%s lemezre írása sikertelen
 id:Gagal menulis %s ke harddisk
@@ -6509,7 +6526,7 @@ fr:&Zoom personnalisé...\tCtrl+Y
 fy-nl:&Oanpaste Zoom...\tCtrl+Y
 ga:Formhéadú saincheaptha...\tCtrl+Y
 gl:&Aumento a medida...\tCtrl+Y
-he:זום משתמש...\tCtrl+Y
+he:&זום משתמש...\tCtrl+Y
 hi:प्रचलन ज़ूम (&Z)...\tCtrl+Y
 hr:&Prilagođeno uvećanje...\tCtrl+Y
 hu:... Egyéni méret\tCtrl+Y
@@ -6570,7 +6587,7 @@ fr:Mise en &page par défaut :
 fy-nl:Standert &Layout:
 ga:&Leagan amach réamhshocraithe:
 gl:Disposición por defecto:
-he:סידור ברירת מחדל:
+he:&פריסת ברירת מחדל:
 hi:मूलभूत लेआउट :(&L)
 hr:Pretpostavljeni &izgled:
 hu:Oldalmegjelenítési mód:
@@ -6631,7 +6648,7 @@ fr:&Zoom par défaut :
 fy-nl:Standert &Zoom:
 ga:Formhéadú réamhshocraithe:
 gl:&Aumento por defecto:
-he:זום ברירת ברירת מחדל:
+he:&זום ברירת מחדל:
 hi:डिफ़ॉल्ट पृष्ठ &आकार:
 hr:Pretpostavljeno &uvećanje:
 hu:Alap nagyítás:
@@ -6692,7 +6709,7 @@ fr:Le lecteur de PDF ne peut être changé en mode portable
 fy-nl:Standert PDF-lêzer kin net oanpast wurde yn portable moadus
 ga:Ní féidir an léitheoir PDF réamhshocraithe a athrú sa mhodh soghluaiste
 gl:O lector de PDF por defecto non pode trocarse en modo portable
-he:PDF לא ניתן לשנות במצב נייד את קורא ה
+he:הגדרת תוכנת ברירת מחדל ל- PDF אינה אפשרית במצב נייד.
 hi:डिफ़ॉल्ट पीडीएफ रीडर पोर्टेबल मोड में बदला नहीं जा सकता
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
@@ -6811,7 +6828,7 @@ fr:Documents DjVu
 fy-nl:DjVu-bestannen
 ga:Cáipéisí DjVu
 gl:Documentos DjVu
-he:DjVu הערות
+he:קובצי DjVu
 hi:DjVu दस्तावेजों
 hr:DjVu dokumenti
 hu:DjVu fájlok
@@ -6868,7 +6885,7 @@ fr:Propriétés du document
 fy-nl:Dokuminteigenskippen
 ga:Airíonna na cáipéise
 gl:Propiedades do documento
-he:תכונות מסמך
+he:מאפייני קובץ
 hi:दस्तावेज़ गुण
 hr:Svojstva dokumenta
 hu:A dokumentum tulajdonságai
@@ -6928,7 +6945,7 @@ fr:Télécharger
 fy-nl:Ynlade
 ga:Íosluchtaigh
 gl:Descargar
-he:הורדה
+he:הורד
 hi:डाउनलोड
 hr:Preuzmi
 hu:Letöltés
@@ -6990,7 +7007,7 @@ fr:&Quitter\tCtrl+Q
 fy-nl:&Ofslute\tCtrl+Q
 ga:Scoir\tCtrl+Q
 gl:Sai&r\tCtrl+Q
-he:יציאה\tCtrl+Q
+he:י&ציאה\tCtrl+Q
 hi:बाहर निकलें(&x)\tCtrl+Q
 hr:&Izađi\tCtrl+Q
 hu:&Kilépés\tCtrl+Q
@@ -7055,7 +7072,7 @@ fr:Fichiers EPUB
 fy-nl:EPUB-bestannen
 ga:Cáipéisí EPUB
 gl:Documentos EPUB
-he:EPUB מסמכי
+he:קובצי EPUB
 hi:EPUB ई - किताबें
 hr:EPUB dokumenti
 hu:EPUB fájlok
@@ -7114,7 +7131,7 @@ fr:Entrer le mot de passe
 fy-nl:Wachtwurd ynfiere
 ga:Cuir isteach focal faire
 gl:Introduce o contrasinal
-he:הכנס סיסמה
+he:הכנס ססמה
 hi:पहचान शब्द भरें
 hr:Unesi lozinku
 hu:Írja be a jelszót
@@ -7181,7 +7198,7 @@ fr:Entrer le mot de passe pour %s
 fy-nl:Wachtwurd ynfiere foar %s
 ga:Cuir isteach focal faire le haghaidh %s
 gl:Introduza contrasinal para %s
-he:%s הכנס סיסמה עבור
+he:הכנס ססמה ל- %s
 hi:%s के लिए पहचान शब्द भरें
 hr:Unesi lozinku za %s
 hu:Írja be a(z) %s jelszavát
@@ -7244,7 +7261,7 @@ fi:Anna komentorivin komento, joka ajetaan kun PDF-asiakirjaa kaksoisnapsautetaa
 fr:Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
 ga:Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar cháipéis PDF:
 gl:Introduza a liña de comandos a invocar cando faga dobre-click sobre o documento PDF:
-he:הזן פקודה להפעלה בלחיצה כפולה על מסמך
+he:הזן שורת פקודה להפעלה בלחיצה כפולה על קובץ ה- PDF:
 hi:पीडीएफ दस्तावेज़ पर डबल क्लिक से आह्वान करने के लिये कमांड लाइन में प्रवेश करें:
 hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
@@ -7301,7 +7318,7 @@ fi:Virhe ladattaessa: %s
 fr:Erreur de chargement de %s
 ga:Tharla botún ag luchtú %s
 gl:Erro cargando %s
-he:שגיאת טעינה %s
+he:טעינת %s נכשלה.
 hi:त्रुटि लोड हो रही है %s
 hr:Greška kod pokretanja %s
 hu:Hiba %s dokumentum betöltésekor
@@ -7354,6 +7371,7 @@ fa:sumatra pdf خطا: عدم توانایی در اجرای
 fi:Virhe: SumatraPDF:n käynnistäminen epäonnistui!
 fr:Erreur : impossible de lancer SumatraPDF !
 gl:Erro: non se puido executar SumatraPDF!
+he:הפעלת SumatraPDF נכשלה!
 hr:Greška: Nemoguće pokrenuti SumatraPDF
 hu:Hiba: SumatraPDF futtatása sikertelen!
 id:Kesalahan: Tidak bisa menjalankan SumatraPDF.
@@ -7401,6 +7419,7 @@ fa:خطا :sumatra pdf پیدا نشد
 fi:Virhe: SumatraPDF ei löytynyt!
 fr:Erreur : SumatraPDF non trouvé !
 gl:Erro: non se atopou SumatraPDF!
+he:שגיאה: התוכנה SumatraPDF לא נמצאה!
 hr:Greška: SumatraPDF nije pronađena
 hu:Hiba: SumatraPDF nem található!
 id:Kesalahan: SumatraPDF tidak ditemukan.
@@ -7448,6 +7467,7 @@ fa:خطا : عدم توانایی در دانلود متن
 fi:Virhe: asiakirjan lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
 gl:Erro: o documento non se puido descargar!
+he:שגיאה: הורדת המסמך נכשלה!
 hr:Greška: Dokument nije moguće preuzeti!
 hu:Hiba: a dokumentum letöltése sikertelen!
 id:Kesalahan: file tidak dapat diunduh.
@@ -7496,7 +7516,7 @@ fi:S&uosikit
 fr:Fa&voris
 ga:Ce&anáin
 gl:F&avoritos
-he:מועדפים
+he:&מועדפים
 hi:&पसंदीदा
 hr:F&avoriti
 hu:&Kedvencek
@@ -7552,7 +7572,7 @@ fr:&Avancer\tAlt+->
 fy-nl:Fierder\tAlt+->
 ga:Ar aghaidh\tAlt+Saighead Ar Deis
 gl:Adiante\tAlt+Right Arrow
-he:קדימה\tAlt+ ?
+he:הת&קדם\tAlt+חץ ימני
 hi:अग&ला\tAlt+दायाँ तीर
 hr:Naprijed\tAlt+->
 hu:Ugrás előre\tAlt+->
@@ -7610,7 +7630,7 @@ fi:Koko &näyttö\tCtrl+L
 fr:Plein  écran\tCtrl+L
 ga:Lánscáileán\tCtrl+L
 gl:&Pantalla completa\tCtrl+L
-he:מסך מלא\tCtrl+L
+he:&מסך מלא\tCtrl+L
 hi:पूरा परदा\tCtrl+L
 hr:Cijeli zaslon\tCtrl+L
 hu:Teljes képernyő\tCtrl+L
@@ -7667,7 +7687,7 @@ fr:&Plein écran\tCtrl+Shift+L
 fy-nl:Folslein skerm\tCtrl+Shift+L
 ga:Lánscáileán\tCtrl+Shift+L
 gl:A toda pantalla\tCtrl+Shift+L
-he:מסך מלא\tCtrl+Shift+L
+he:&מסך מלא\tCtrl+Shift+L
 hi:पूरा परदा\tCtrl+Shift+L
 hr:Cijeli zaslon\tCtrl+Shift+L
 hu:Teljes képernyő\tCtrl+Shift+L
@@ -7735,7 +7755,7 @@ fr:Page double
 fy-nl:Dûbele side
 ga:Dhá Leathanach
 gl:Páxina dobre
-he:דף כפול
+he:עמוד לצד עמוד
 hi:पुस्तक
 hr:Dvije stranice
 hu:Oldalpár
@@ -7795,6 +7815,7 @@ eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
 fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 gl:Fallou a copia do desinstalador no cartafol temporal
+he:העתקת מסיר התוכנה לתיקייה הזמנית נכשלה.
 hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
 id:Gagal mengkopi uninstaller ke direktori temp
@@ -7841,6 +7862,7 @@ fa:خطا در ایجاد فایل میانبر
 fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
 gl:Fallou a creación do atallo
+he:יצירת קיצור דרך נכשלה.
 hr:Neuspjeh u kreiranju prečaca
 hu:Nem sikerült létrehozni a parancsikont
 id:Gagal membuat shortcut.
@@ -7885,6 +7907,7 @@ eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 gl:Fallou o borrado das claves de rexistro
+he:מחיקת מפתחות רישום של מסיר התוכנה נכשלה.
 hr:Neuspjeh kod brisanja ključeva registra deinstalatera
 hu:Az eltávolító registry kulcsainak törlése sikertelen
 id:Gagal menghapus kunci registry uninstaller
@@ -7990,7 +8013,7 @@ fr:Échec à l'enregistrement du fichier
 fy-nl:Flater by bewarjen bestân
 ga:Theip air comhad a chuir i dtaisce
 gl:Erro ao salvar o arquivo.
-he:כישלון בשמירת הקובץ
+he:שמירת הקובץ נכשלה.
 hi:फाईल संभाली नहीं जा सकी
 hr:Spremanje datoteke nije uspjelo
 hu:A fájl mentése sikertelen
@@ -8050,6 +8073,7 @@ eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
 gl:Non se puido escribir a información de extensión do ficheiro no rexistro
+he:כתיבת נתוני סיומת קבצים ברישום נכשלה.
 hr:Neuspjeh kod zapisivanja produženih informacija nastavka datoteke u registru
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
 id:Gagal menulis info ekstensi file lanjutan ke registry
@@ -8094,6 +8118,7 @@ eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
 gl:Fallouse ao escribir a información de desintalación no rexistro
+he:כתיבת נתוני הסרת התוכנה ברישום נכשלה.
 hr:Neuspjeh kod zapisivanja deinstalacijskih informacija u registar
 hu:Eltávolítással kapcsolatos információk registry-be írása sikertelen
 id:Gagal menulis info penghapusan program ke registry
@@ -8142,7 +8167,7 @@ fi:Nopea web-näkymä
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 gl:Vista web rápida
-he:הצגת רשת מהירה
+he:תצוגת רשת מהירה
 hi:तीव्र वेब दर्शन
 hr:Brzi Web prikaz
 hu:Gyors web-nézet
@@ -8250,7 +8275,7 @@ fa:اسناد کتاب تخیلی
 fi:FictionBook-asiakirjat
 fr:Documents FictionBook
 gl:Documentos FictionBook
-he:מסמכי FictionBook
+he:קובצי FictionBook
 hi:गल्प बुक दस्तावेजों
 hr:FictionBook dokumenti
 hu:FictionBook fájlok
@@ -8302,7 +8327,7 @@ fi:Tiedosto %s ei löydy
 fr:Fichier %s non trouvé
 ga:NÃor aimsÃodh an comhad %s
 gl:Ficheiro %s non atopado
-he:קובץ %s לא נמצא
+he:הקובץ %s לא נמצא.
 hi:फ़ाइल %s नहीं मिली
 hr:Datoteka %s nije pronađena
 hu:Fájl %s nem található
@@ -8477,7 +8502,7 @@ fr:&Rechercher...\tCtrl+F
 fy-nl:Sykje...\tCtrl+F
 ga:Aimsigh...\tCtrl+F
 gl:Procura...\tCtrl+F
-he:חפש...\tCtrl+F
+he:&חפש...\tCtrl+F
 hi:खोज...\tCtrl+F
 hr:Pronađi...\tCtrl+F
 hu:Keresés...\tCtrl+F
@@ -8672,7 +8697,7 @@ fr:Occurrence précédente
 fy-nl:Foarige
 ga:Aimsigh Roimhe
 gl:Atopar Anterior
-he:חפש קודם
+he:חפש הקודם
 hi:पुराना खोजें
 hr:Pronađi prethodno
 hu:Előző keresése
@@ -8802,7 +8827,7 @@ fi:&Sovita sisältö\tCtrl+3
 fr:&Ajuster au contenu\tCtrl+3
 ga:Oiriúnaigh an t-inneachar\tCtrl+3
 gl:Axustar &Contido\tCtrl+3
-he:התאם לתוכן\tCtrl+3
+he:התאם ל&תוכן\tCtrl+3
 hi:सामग्री को फ़िट करें \tCtrl+3
 hr:Namjesti po &sadržaju\tCtrl+3
 hu:&Tartalom\tCtrl+3
@@ -8863,7 +8888,7 @@ fr:&Page entière\tCtrl+0
 fy-nl:Folsleine &side\tCtrl+0
 ga:Oiriúnaigh don Lch\tCtrl+0
 gl:&Páxina enteira\tCtrl+0
-he:התאם דף\tCtrl+0
+he:התאם ל&עמוד\tCtrl+0
 hi:अनुरूप करें(&P)\tCtrl+0
 hr:Prilagodi &stranici\tCtrl+0
 hu:&Teljes oldal\tCtrl+0
@@ -8927,11 +8952,11 @@ et:Lehekülje &laiuse sobitamine\tCtrl+2
 eu:Finkatu &Zabalera\tKtrl+2
 fa:به بزرگی &پهنای پنجره\tCtrl+2
 fi:Sovita sivu &vaakasuunnassa\tCtrl+2
-fr:Pleine &largeur
+fr:Pleine &largeur\tCtrl+2
 fy-nl:Passend yn &breedte\tCtrl+2
 ga:Oiriúnaigh don Leithead\tCtrl+2
 gl:Axustar ao ancho\tCtrl+2
-he:התאם רוחב\tCtrl+2
+he:התאם לרו&חב\tCtrl+2
 hi:चौड़ाई के अनुसार(&h)\tCtrl+2
 hr:&Namjesti po širini\tCtrl+2
 hu:Oldal&szélesség\tCtrl+2
@@ -9056,7 +9081,7 @@ fr:Page entière
 fy-nl:Folsleine side
 ga:Oiriúnaigh don Lch
 gl:Páxina enteira
-he:התאם דף
+he:התאם לעמוד
 hi:अनुरूप करें
 hr:Prilagodi stranici
 hu:Teljes oldal
@@ -9124,7 +9149,7 @@ fr:Pleine largeur
 fy-nl:Passend yn breedte
 ga:Oiriúnaigh don Leithead
 gl:Axustar ao ancho
-he:התאם רוחב
+he:התאם לרוחב
 hi:चौड़ाई के अनुसार
 hr:Namjesti po širini
 hu:Oldalszélesség
@@ -9188,7 +9213,7 @@ fi:Sovita leveys ja näytä sivut peräkkäin
 fr:Pleine largeur, vue continue
 ga:Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
 gl:Axustar ancho e amosar páxinas seguidas
-he:התאם לרוחב והצג העמודים ברציפות
+he:התאם לרוחב והצג עמודים ברציפות
 hi:उपयुक्त चौड़ाई के साथ पृष्ठ लगातार दिखाएँ
 hr:Namjesti po širini i prikaži stranice slijedno
 hu:Oldalszélességhez igazítás + folyamatos nézet
@@ -9302,7 +9327,7 @@ fi:Fontit:
 fr:Polices :
 ga:Clófhoirne:
 gl:Fontes:
-he:גופנים
+he:גופנים:
 hi:अक्षर का आकर
 hr:Fontovi:
 hu:Betűk:
@@ -9411,7 +9436,7 @@ fr:Texte trouvé à la page %s
 fy-nl:Tekst fûn op side %s
 ga:Aimsíodh téacs ag lch a %s
 gl:Atopado texto na páxina %s
-he:%s חפש מלל בעמוד
+he:הטקסט נמצא בעמוד %s
 hi:टेक्स्ट पृष्ठ %s पर पाया गया
 hr:Tekst je pronađen na %s. stranici
 hu:Találat a(z) %s. oldalon
@@ -9469,7 +9494,7 @@ fi:Teksti löytyi sivulta %s (uudelleen)
 fr:Texte trouvé page %s (suivant)
 ga:Aimsíodh téacs ag lch a %s (arís)
 gl:Atopado texto na páxina %s (de novo)
-he:טקסט נמצא בעמוד %s (שוב)
+he:הטקסט נמצא בעמוד %s (שוב)
 hi:पाठ पृष्ठ %s पर पाया गया ( फिर से )
 hr:Tekst pronađen na stranici %s (opet)
 hu:Találat a(z) %s. oldalon (ismét)
@@ -9711,6 +9736,7 @@ fa:مخفی & تنظیمات
 fi:Piilota
 fr:Masque les &options
 gl:Agochar as &opcións
+he:&אפשרויות הסתרה
 hr:Sakrij postavke
 hu:Beállítások elrejtése
 id:Sembunyikan &Opsi
@@ -9760,7 +9786,7 @@ fi:Piilota usein luetut
 fr:Masquer les documents lus fréquemment
 ga:Folaigh cinn léite go minic
 gl:Agachar o lido decote
-he:הסתר נקרא תכופות
+he:הסתר 'נקרא תכופות'
 hi:अक्सर पढ़े जाने वालों को छुपाएँ
 hr:Sakrij najčešće čitano
 hu:Leggyakrabban olvasottak elrejtése
@@ -9816,7 +9842,7 @@ fr:Remarque : utilisez la touche F3 pour trouver de nouveau
 fy-nl:Tip: Brûk de funksjetoets F3 om fierder te sykjen
 ga:Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsiú arís
 gl:Usar "F3" para amosar seguinte resultado
-he:F3 רמז: לחיפוש הבא, השתמש במקש
+he:לחיפוש המופע הבא, לחץ על F3
 hi:सुझाव: फिर से खोजने के लिए F3 कुंजी का प्रयोग करें
 hr:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
 hu:Tipp: Nyomja meg az F3-at a következő találathoz
@@ -9874,7 +9900,7 @@ fi:Kuvatiedostot (*.%s)
 fr:Fichiers-images (*.%s)
 ga:Comhaid íomhánna (*.%s)
 gl:Ficheiros de imaxe (*.%s)
-he:קבצי תמונה (*.%s)
+he:קובצי תמונה (*.%s)
 hi:छवि फ़ाइलें (*.%s)
 hr:Slikovne datoteke (*.%s)
 hu:Képfájlok (*.%s)
@@ -9926,6 +9952,7 @@ fa:برای فایرفاکس و کروم و اپرا pdf نصب پلاگین
 fi:Asenna PDF-liitännäinen selaimille Firefox, Chrome ja Opera
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 gl:Instalar o engadido de &navegador de PDFs para Firefox, Chrome e Opera
+he:התקן תוסף PDF לדפדפנים 'פיירפוקס', 'גוגל כרום' ו'אופרה'.
 hr:Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
 id:Install plugin untuk peram&ban Firefox, Chrome, dan Opera
@@ -9974,6 +10001,7 @@ fa:sumatra pdf نصب
 fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
 gl:Instalar SumatraPDF
+he:התקן את SumatraPDF
 hr:Instaliraj SumatraPDF
 hu:SumatraPDF telepítése
 id:Install SumatraPDF
@@ -10020,6 +10048,7 @@ fa:در &پوشه sumatra pdf نصب
 fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
 gl:Instalar SumatraPDF no &cartafol:
+he:התקן את SumatraPDF ב&תיקייה:
 hr:Instaliraj SumatraPDF u &mapu:
 hu:SumatraPDF telepítése a következő &könyvtárba:
 id:Install SumatraPDF ke &folder:
@@ -10066,6 +10095,7 @@ fa:ایراد در نصب
 fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
 gl:Fallou a instalación!
+he:התקנת SumatraPDF נכשלה!
 hr:Instalacija nije uspjela!
 hu:Telepítés sikertelen!
 id:Instalasi gagal!
@@ -10113,6 +10143,7 @@ fa:نصب در حال بارگذاری
 fi:Asennus käynnissä...
 fr:Installation en cours…
 gl:Instalación en curso...
+he:מתקין את SumatraPDF...
 hr:Instaliranje...
 hu:Telepítés folyamatban...
 id:Instalasi sedang berlangsung...
@@ -10226,6 +10257,7 @@ eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
+he:אפשר &חיפוש קובצי PDF במערכת החיפוש של Windows
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 id:Izinkan Windows Desktop Search mencari dokumen PDF
@@ -10270,6 +10302,7 @@ eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
+he:אפשר תצוגה מקדימה של קובצי PDF
 hr:Neka Windows prikazuje &pregled PDF dokumenata
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 id:Izinkan Windows menampilkan dokumen PDF
@@ -10318,7 +10351,7 @@ fi:Ladataan tiedostoa %s...
 fr:Chargement du fichier %s...
 ga:Ag luchtú an comhad %s...
 gl:Cargando o ficheiro %s...
-he:פותח קובץ %s...
+he:טוען קובץ %s...
 hi:%s फाइल लोड हो रहा
 hr:Pokretanje datoteke %s...
 hu:Fájl beolvasása %s...
@@ -10443,7 +10476,7 @@ fr:Faire de SumatraPDF l’application par défaut pour les fichiers PDF ?
 fy-nl:SumatraPDF as standertlêzer fan PDF-bestannen ynstelle?
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe?
 gl:Facer o SumatraPDF a aplicación por defecto para arquivos PDF?
-he:?SumatraPDF האם לקבוע כברירת מחדל את
+he:האם ברצונך להגדיר את SumatraPDF\n כתוכנת ברירת מחדל לקובצי PDF?
 hi:सभी PDF फाईलें SumatraPDF में खोलें ?
 hr:Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?
 hu:Legyen a SumatraPDF az alapértelmezett PDF-megnyitó program?
@@ -10509,7 +10542,7 @@ fr:Définir SumatraPDF comme lecteur PDF par défaut
 fy-nl:SumatraPDF as standert PDF-lêzer ynstelle
 ga:Bíodh SumatraPDF mar an léitheoir PDF réamhshocruithe
 gl:Facer do SumatraPDF o leitor PDF por defecto
-he:PDF הפוך את סומטרה לברירת מחדל עבור קבצי
+he:הגדר את SumatraPDF כתוכנת ברירת מחדל לקובצי PDF
 hi:सभी PDF फाईलें SumatraPDF में खोलें
 hr:Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 hu:SumatraPDF mint alapértelmezett PDF olvasó
@@ -10568,6 +10601,7 @@ eu:Ma&nga Modua
 fi:Man&ga-moodi
 fr:Mode man&ga
 gl:Modo Man&ga
+he:מצב Man&ga
 hr:Man&ga način
 hu:Manga mód
 id:Mode komik
@@ -10683,7 +10717,7 @@ fr:Fichiers Mobi
 fy-nl:Mobi-bestannen
 ga:Cáipéisí Mobi
 gl:Documentos Mobi
-he:Mobi מסמכי
+he:קובצי Mobi
 hi:Mobi दस्तावेज़
 hr:Mobi dokumenti
 hu:Mobi fájlok
@@ -10801,7 +10835,7 @@ fr:La version %s est disponible. Télécharger la nouvelle version ?
 fy-nl:Nije ferzje %s is beskikber. Wolle jo dizze ynlade?
 ga:Tá an leagan nua %s ar fáil. Íosluchtaigh an leagan nua?
 gl:A nova versión %s está dispoñible. ¿Desexa obtela?
-he:?%s מהדורה חדשה זמינה. להוריד מהדורה
+he:גרסה חדשה (%s) זמינה. ברצונך להורידה?
 hi:संसकरण %s उपलब्ध है । डाउनलोड करूँ ?
 hr:Dostupna je nova inačica (%s). Preuzeti novu inačicu?
 hu:Új verzió érhető el: (%s). Kívánja letölteni?
@@ -10867,7 +10901,7 @@ fr:Page suivante
 fy-nl:Folgjende side
 ga:Leathanach Ar Aghaidh
 gl:Páxina seguinte
-he:דף הבא
+he:עמוד הבא
 hi:अगले पृष्ठ पर
 hr:Sljedeća stranica
 hu:Következő oldal
@@ -10993,7 +11027,7 @@ fi:Tulosta ei löytynyt rivin %u ympäriltä tiedostossa %s
 fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 ga:Níor aimsíodh toradh idir líne %u sa chomhad %s
 gl:Non se atopou resultado arredor da liña %u no ficheiro %s
-he:לא נמצאה תוצאה בסביבות שורה %u בקובץ %s
+he:לא נמצאה תוצאה במתחם שורה %u בקובץ %s
 hi:रेखा %u के आसपास फ़ाइल %s में कोई परिणाम नहीं मिला
 hr:Nema rezultata oko %u. retka u datoteci %s
 hu:Nincs találat a %u. sor körül ebben a fájlban: %s
@@ -11050,7 +11084,7 @@ fr:Aucun fichier de synchronisation trouvé
 fy-nl:Gjin syngronisaasjebestân fûn
 ga:Níor aimsíodh comhad comhaimseartha
 gl:Non se atopou ficheiro de sincronización
-he:לא נמצא קובץ סנכרון
+he:לא נמצא קובץ סנכרון.
 hi:कोई तुल्यकालन फाइल नहीं मिला
 hr:Datoteka usklađivanja nije pronađena
 hu:Nem található szinkronizációs fájl
@@ -11110,7 +11144,7 @@ fr:Aucune information de synchronisation à cette position
 fy-nl:Gjin syngronisaasjeynformaasje beskikber
 ga:Níl faisnéis chomhaimseartha ag an suíomh seo
 gl:Non hai datos de sincronización nesta posición
-he:לא נמצא מידע סנכרון במקום זה
+he:לא נמצא מידע סנכרון במיקום זה.
 hi:इस स्थिति में कोई तुल्यकालन जानकारी नहीं है
 hr:Nema podatka o usklađenosti na ovom mjestu
 hu:Nem található szinkronizálási információ az adott pozícióhoz
@@ -11229,7 +11263,7 @@ fr:OK
 fy-nl:OK
 ga:Tá go maith
 gl:OK
-he:אשר
+he:אישור
 hi:ठीक
 hr:U redu
 hu:OK
@@ -11358,7 +11392,7 @@ fr:Ouvrir dans PDF-XChange
 fy-nl:Iepenje mei PDF-XChange
 ga:Oscail &i PDF-XChange
 gl:Abrir no PDF-XChange
-he:PDF-XChange פתח בקורא
+he:פתח ב- PDF-XChange
 hi:पीडीएफ &Xchange में खोलें
 hr:Otvori u programu PDF-XChange
 hu:Megnyitás PDF-XChangeben
@@ -11416,7 +11450,7 @@ fi:Avaa asiakirja...
 fr:Ouvrir un document...
 ga:Oscail cáipéis...
 gl:Abrir un documento...
-he:פתח מסמך...
+he:פתח קובץ...
 hi:एक दस्तावेज़ खोलें
 hr:Otvori dokument...
 hu:Fájl megnyitása...
@@ -11470,6 +11504,7 @@ fa:%s بازشدن در
 fi:Avaa ohjelmassa %s
 fr:Ouvrir dans %s
 gl:Abrir en %s
+he:פתח ב- %s
 hr:Otvori u %s
 hu:Megnyitás %s
 id:Buka di %s
@@ -11520,7 +11555,7 @@ fr:Ouvrir dans &Adobe Reader
 fy-nl:Iepenje mei &Adobe Reader
 ga:Oscail in &Adobe Reader
 gl:Abrir no &Adobe Reader
-he:Adobe פתח בקורא
+he:פתח ב- Adobe Reader
 hi:&एडोब रीडर में खोलें
 hr:Otvori u programu &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
@@ -11581,7 +11616,7 @@ fr:Ouvrir dans Fo&xit Reader
 fy-nl:Iepenje mei &Foxit Reader
 ga:Oscail i &Foxit Reader
 gl:Abrir no &Foxit Reader
-he:Foxit פתח בקורא
+he:פתח ב- Foxit Reader
 hi:&Foxit रीडर में खोलें
 hr:Otvori u programu &Foxit Reader
 hu:Megnyitás &Foxit Readerben
@@ -11641,7 +11676,7 @@ fr:Ouvrir dans Microsoft HTML Help
 fy-nl:Iepenje mei Microsoft HTML Help
 ga:Oscail i &Microsoft HTML Help
 gl:Abrir no Microsoft HTML Help
-he:Microsoft HTML Help פתח בקורא
+he:פתח ב- Microsoft HTML Help
 hi:Microsoft HTML मदद में खोलें
 hr:Otvori u programu Microsoft HTML Help
 hu:Megnyitás Microsoft HTML Helpben
@@ -11700,7 +11735,7 @@ fr:Ouvrir dans Microsoft XPS-Viewer
 fy-nl:Iepenje mei Microsoft XPS-Viewer
 ga:Oscail i &Microsoft XPS-Viewer
 gl:Abrir no Microsoft XPS-Viewer
-he:Microsoft XPS-Viewer פתח בקורא
+he:פתח ב- Microsoft XPS-Viewer
 hi:Microsoft XPS दर्शक में खोलें
 hr:Otvori u programu Microsoft XPS-Viewer
 hu:Megnyitás Microsoft XPS-Viewerben
@@ -11755,6 +11790,7 @@ fa:sumatra pdf باز کردن متن در
 fi:Avataan asiakirjaa SumatraPDF:ssä...
 fr:Ouverture du document dans SumatraPDF…
 gl:Abrindo o documento en SumatraPDF...
+he:פותח קובץ ב- SumatraPDF...
 hr:Otvaranje dokumenta u SumatraPDF...
 hu:Dokumentum megnyitása SumatraPDF-ben...
 id:Membuka dokumen menggunakan SumatraPDF
@@ -11803,7 +11839,7 @@ fi:Ominaisuudet
 fr:P&ropriétés
 ga:Ai&ríonna
 gl:P&ropiedades
-he:תכונות
+he:&מאפיינים
 hi:&गुण
 hr:&Svojstva
 hu:&Tulajdonságok
@@ -11860,7 +11896,7 @@ fr:&Propriétés\tCtrl+D
 fy-nl:E&igenskippen...\tCtrl+D
 ga:Ai&ríonna\tCtrl+D
 gl:P&ropiedades\tCtrl+D
-he:תכונות...\tCtrl+D
+he:&מאפיינים...\tCtrl+D
 hi:&गुण\tCtrl+D
 hr:S&vojstva...\tCtrl+D
 hu:&Tulajdonságok\tCtrl+D
@@ -11920,7 +11956,7 @@ fr:Document PDF
 fy-nl:PDF-bestân
 ga:Cáipéis PDF
 gl:Documento PDF
-he:PDF מסמך
+he:קובץ PDF
 hi:पीडीएफ दस्तावेज़
 hr:PDF dokument
 hu:PDF dokumentum
@@ -12033,7 +12069,7 @@ fr:PDF produit par :
 fy-nl:PDF-makker:
 ga:Déantasóir PDF:
 gl:Productor do PDF:
-he:PDF מפיק:
+he:מפיק PDF:
 hi:पीडीएफ निर्माता:
 hr:Proizvođač PDF-a:
 hu:PDF-et létrehozta:
@@ -12091,7 +12127,7 @@ fr:Version du PDF :
 fy-nl:PDF-ferzje:
 ga:Leagan PDF:
 gl:Versión PDF:
-he:PDF מהדורת:
+he:גרסת PDF:
 hi:पीडीएफ संस्करण:
 hr:Inačica PDF-a:
 hu:PDF verzió:
@@ -12150,7 +12186,7 @@ fr:Documents PDF
 fy-nl:PDF-bestannen
 ga:Cáipéisí PDF
 gl:Documentos PDF
-he:PDF מסמך
+he:קובצי PDF
 hi:पीडीएफ दस्तावेजों
 hr:PDF dokumenti
 hu:PDF fájlok
@@ -12213,7 +12249,7 @@ fr:Pa&ge...\tCtrl+G
 fy-nl:Side...\tCtrl+G
 ga:Leathanach...\tCtrl+G
 gl:Páxina...\tCtrl+G
-he:דף...\tCtrl+G
+he:&עמוד...\tCtrl+G
 hi:पृष्ठ संख्या पर\tCtrl+G
 hr:Stranica...\tCtrl+G
 hu:Megadott oldal...\tCtrl+G
@@ -12394,7 +12430,7 @@ fr:La page %u n'existe pas
 fy-nl:Sidenûmer %u bestiet net
 ga:Níl an uimhir leathanaigh %u ann
 gl:Non existe a páxina %u
-he:לא קיים %u עמוד מספר
+he:עמוד מס' %u לא קיים
 hi:%u पृष्ठ संख्या विद्यमान नहीं है
 hr:Stranica %u ne postoji
 hu:A(z) %u oldalszám nem létezik
@@ -12571,6 +12607,7 @@ eu:Mesedez itxi %s jarraitzeko!
 fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
 gl:Peche %s para continuar
+he:להמשך, אנא סגור את %s!
 hr:Molim zatvorite %s za nastavak!
 hu:A(z) %s bezárása szükséges a folytatáshoz!
 id:Silakan tutup %s untuk melanjutkan.
@@ -12679,7 +12716,7 @@ fi:Postscript-asiakirjat
 fr:Documents Postscript
 ga:Cáipéisí Postscript
 gl:Documentos Postscript
-he:מסמכי פוסטקריפט
+he:קובצי Postscript
 hi:अनुलेख दस्तावेजों
 hr:Postscript dokumenti
 hu:Postscript fájlok
@@ -12734,7 +12771,7 @@ fi:&Esitys\tCtrl+L
 fr:P&résentation\tCtrl+L
 ga:Cur i láthair\tCtrl+L
 gl:Pr&esentación\tCtrl+L
-he:הצגה\tCtrl+L
+he:&מצגת\tCtrl+L
 hi:&प्रस्तुति\tCtrl+L
 hr:Pr&ezentacija\tCtrl+L
 hu:Bemutató\tCtrl+L
@@ -12794,7 +12831,7 @@ fr:Page précédente
 fy-nl:Foarige side
 ga:Leathanach Roimhe
 gl:Páxina anterior
-he:דף קודם
+he:עמוד קודם
 hi:पिछले पृष्ठ पर
 hr:Prethodna stranica
 hu:Előző oldal
@@ -12914,7 +12951,7 @@ fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 gl:Imprimir como &imaxe (precisará de máis memoria)
-he:הדפס כתמונה (צורך יותר זכרון)
+he:הדפס כ&תמונה (צורך יותר זכרון)
 hi:छवि के रूप में छापें (अधिक स्मृति की आवश्यकता होगी)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 hu:Nyomtatás képként (több memóriát igényel)
@@ -12967,7 +13004,7 @@ fi:Tulostusalue
 fr:Plage d'impression
 ga:Raon clóbhuailte
 gl:Imprimir un rango
-he:הדפס טווח
+he:טווח הדפסה
 hi:छपाई सीमा
 hr:Ispiši raspon
 hu:Nyomtatási tartomány
@@ -13023,7 +13060,7 @@ fi:Annetun nimistä tulostinta ei ole
 fr:Il n'y a pas d'imprimante de ce nom
 ga:Níl clóire leis an ainm sin ann
 gl:A impresora co nome indicado non existe
-he:אין מדפסת בשם שניתן
+he:לא זוהתה מדפסת בשם שצוין.
 hi:दिए गए नाम का प्रिंटर मौजूद नहीं है
 hr:Ne postoji printer sa zadanim imenom
 hu:Nem található nyomtató a megadott néven
@@ -13077,7 +13114,7 @@ fa:در حال چاپ شدن.
 fi:Tulostaminen käynnissä.
 fr:Impression en cours
 gl:Impresión en curso.
-he:נשלח להדפסה
+he:נשלח להדפסה.
 hi:छपाई में प्रगति.
 hr:Ispis u tijeku.
 hu:Nyomtatás folyamatban.
@@ -13127,7 +13164,7 @@ fa:در حال چاپ شدن. انصراف و خروج؟
 fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
 fr:Impression toujours en cours. Annuler et quitter ?
 gl:Ainda se está imprimindo. Quere detela e saír?
-he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
+he:תהליך ההדפסה עדיין לא הסתיים. לבטל ולצאת?
 hi:छपाई अभी भी प्रगति पर है | रद्द किजिये और दें छोड़ दें ?
 hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
@@ -13178,7 +13215,7 @@ fi:Tulostaminen on vielä käynnissä. Keskeytetäänkö ja aloitetaan uudelleen
 fr:Impression toujours en cours. Annuler et recommencer ?
 ga:Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
 gl:A impresión está aínda en curso. Detela e recomezar?
-he:הדפסה בתהליך. לבטל ולהתחיל מחדש?
+he:תהליך ההדפסה עדיין לא הסתיים. לבטל ולהתחיל מחדש?
 hi:छपाई अभी भी प्रगति में है | बन्द करें और फिर से शुरू करें?
 hr:Ispis je još u tijeku. Prekini i započni ponovno?
 hu:A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
@@ -13292,7 +13329,7 @@ fr:Problème d'impression.
 fy-nl:Probleem by it ôfdrukken.
 ga:Fadhb chlóbhuailte.
 gl:Problema de impresión.
-he:בעיית הדפסה
+he:שגיאת הדפסה.
 hi:परिंट करने में गलती
 hr:Problem prilikom ispisivanja.
 hu:Nyomtatási probléma.
@@ -13356,7 +13393,7 @@ fi:&Uudelleennimeä...\tF2
 fr:Re&nommer...\tF2
 ga:Athainmnigh...\tF2
 gl:Re&nomear...\tF2
-he:שנה שם...\tF2
+he:&שנה שם...\tF2
 hi:&नाम बदलें...\tF2
 hr:Preime&novati...\tF2
 hu:Átnevezés...\tF2
@@ -13411,7 +13448,7 @@ fr:Se rappeler les fichiers &ouverts
 fy-nl:Unthâld &iepene bestannen
 ga:Cuimhnigh ar chomhaid &oscailte
 gl:Lembrar ficheiros abertos
-he:זכור קבצים פתוחים
+he:שמור רשימת והגדרת קבצים &פתוחים
 hi:खोले गये फाइल &याद रखें
 hr:Upamti &otvorene datoteke
 hu:Korábban megnyitott fájlok listájának tárolása
@@ -13525,7 +13562,7 @@ fi:Poista sivu %s suosikeista
 fr:Enlever page %s des favoris
 ga:Bain leathanach a %s ó na ceanáin
 gl:Eliminar páxina %s de favoritos
-he:הסר עמוד %s ממועדפים
+he:הסר את עמוד מס' %s ממועדפים
 hi:पसंदीदा से %s पृष्ठ को निकालें
 hr:Ukloni stranicu %s iz favorita
 hu:%s. oldal eltávolítása a kedvencek közül
@@ -13581,7 +13618,7 @@ fi:Uudelleennimeä
 fr:Renommer En
 ga:Athainmnigh chuig
 gl:Renomear como
-he:שנה שם ל
+he:שנה שם ל:
 hi:नाम बदल कर​
 hr:Preimenuj u
 hu:Átnevezés
@@ -13635,7 +13672,7 @@ fi:Korvaa asiakirjan &värit Windowsin väriteemalla
 fr:Remplacer les &couleurs du document par le schéma de couleurs Windows
 ga:Ionadaigh dathanna na cáipéise le córas dathanna Windows
 gl:Cambiar as &cores do documento pola paleta de cores de Windows
-he:החלף את צבעי המסמך עם ערכת צבעי חלונות
+he:החלף את צבעי המסמך לצבעי ערכת Windows
 hi:Windows रंग योजना के साथ दस्तावेज़ रंग बदलें
 hr:Zamijeni boje dokumenta s postavkama &Windows boja
 hu:Helyettesíti a dokumentum &színeket Windows színsémával
@@ -13692,7 +13729,7 @@ fr:Rotation &antihoraire\tCtrl+Shift+-
 fy-nl:Linksom draaie\tCtrl+Shift+-
 ga:Rothlaigh tuathalach\tCtrl+Shift+-
 gl:Xirar á esquerda\tCtrl+Shift+-
-he:סובב שמאלה\tCtrl+Shift+-
+he:סובב &שמאלה\tCtrl+Shift+-
 hi:बांयी ओर घूमाओ\tCtrl+Shift+-
 hr:Zaokreni nalijevo\tCtrl+Shift+-
 hu:Forgatás balra\tCtrl+Shift+-
@@ -13760,7 +13797,7 @@ fr:Rotation &horaire\tCtrl+Shift++
 fy-nl:Rjochtsom draaie\tCtrl+Shift++
 ga:Rothlaigh deiseal\tCtrl+Shift++
 gl:Xirar á dereita\tCtrl+Shift++
-he:סובב ימינה\tCtrl+Shift++
+he:סובב &ימינה\tCtrl+Shift++
 hi:दांयी ओर घूमाओ\tCtrl+Shift++
 hr:Zaokreni nadesno\tCtrl+Shift++
 hu:Forgatás jobbra\tCtrl+Shift++
@@ -13828,7 +13865,7 @@ fr:Enregistrer sous
 fy-nl:Bewarje as
 ga:Cuir i dtaisce mar
 gl:Salvar como
-he:בשמור בשם
+he:שמירה בשם
 hi:इस तरह संभालें
 hr:Spremi kao
 hu:Mentés másként
@@ -13892,7 +13929,7 @@ fi:Tallenna p&ikakuvake...\tCtrl+Shift+S
 fr:Enregistrer un raccourci... \tCtrl+Maj-S
 ga:Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S
 gl:Gardar Atallo...\tCtrl+Shift+S
-he:קיצור שמירה...\tCtrl+Shift+S
+he:שמור &קיצור דרך...\tCtrl+Shift+S
 hi:शॉ&र्टकट सहेजें... \tCtrl+Shift+S
 hr:Spremi p&rečac...\tCtrl+Shift+S
 hu:Parancsikon készítése...\tCtrl+Shift+S
@@ -13948,7 +13985,7 @@ fr:Recherche de %d à %d...
 fy-nl:Sykje %d fan %d...
 ga:Ag cuardach %d as %d...
 gl:Procurando %d de %d...
-he:%d מ %d מחפש...
+he:מחפש %d מתוך %d...
 hi:खोज रहा %d %d का...
 hr:Pretražujem %d. stranicu (od %d)...
 hu:Keresés a(z) %d./%d oldalon
@@ -14006,7 +14043,7 @@ fi:V&alitse kaikki
 fr:&Tout sélectionner
 ga:Roghnaigh Uile
 gl:Seleccionar Todo
-he:בחר הכל
+he:בחר &הכל
 hi:सब &चुनें
 hr:Obilježi &sve
 hu:&Összes kijelölése
@@ -14062,7 +14099,7 @@ fi:V&alitse kaikki\tCtrl+A
 fr:&Tout sélectionner\tCtrl+A
 ga:Roghnaigh Uile\tCtrl+A
 gl:Seleccionar Todo\tCtrl+A
-he:בחר הכל\tCtrl+A
+he:בחר &הכל\tCtrl+A
 hi:सब &चुनें\tCtrl+A
 hr:Obilježi &sve\tCtrl+A
 hu:Összes &kijelölése\tCtrl+A
@@ -14119,7 +14156,7 @@ fr:Sélectionner avec Ctrl+bouton gauche de la souris
 fy-nl:Selektearje ynhâld mei Ctrl+linker mûsknop
 ga:Roghnaigh inneachar le Ctrl+an cnaipe luchóige ar chlé
 gl:Seleccionar contido con Ctrl+botón esquerdo do rato
-he:וכפתור עכבר שמאל Ctrl בחר תוכן עם
+he:בחר תוכן באמצעות Ctrl + לחצן עכבר שמאלי
 hi:सामग्री का चयन करने के लिये  Ctrl +  माउस का बायाँ बटन दबाएँ
 hr:Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 hu:Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
@@ -14173,6 +14210,7 @@ eu:Hautatu SumatraPDF ezarri behar den agiritegia:
 fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
 gl:Escolla o cartafol onde quere instalar SumatraPDF
+he:בחר את תיקיית ההתקנה של  SumatraPDF:
 hr:Odaberite mapu gdje bi trebalo instalirati SumatraPDF:
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 id:Pilih folder instalasi SumatraPDF:
@@ -14222,7 +14260,7 @@ fr:Envoyer par &courriel...
 fy-nl:Ferstjoer per &e-mail...
 ga:Seol i ríomhphost...
 gl:Enviar por email...
-he:שלח אימייל
+he:שלח ב&דוא"ל...
 hi:&ई - मेल द्वारा भेजें...
 hr:Pošalji &e-poštom...
 hu:Fájl küldése &e-mail-ben
@@ -14284,7 +14322,7 @@ fr:Configurer la recherche inverse
 fy-nl:Omkearde sykrjochting ynstelle
 ga:Socruigh líne na n-orduithe cuardaigh aisiompaithe
 gl:Establecer procura inversa
-he:קבע פקודת חיפוש הפוך
+he:הגדר פקודת שורה לחיפוש הפוך
 hi:उलटी command-line खोज सैट करें
 hr:Omogući unazadnu pretragu
 hu:Fordított keresés parancsának beállítása
@@ -14345,7 +14383,7 @@ fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
 gl:Mostrar os &marcadores
-he:הראה סימניות
+he:הצג &סימניות
 hi:बुकमार्क दिखाएँ (&B)
 hr:Prikaži &oznake
 hu:Könyvjelzők mutatása
@@ -14402,7 +14440,7 @@ fr:Afficher la &barre d'outils
 fy-nl:Arkbalke toane
 ga:Taispeáin an Barra Uirlisí
 gl:Amosar barra de ferramentas
-he:הצג שורת תפריט
+he:הצג סרגל &כלים
 hi:औजार वाली पट्टी दिखाओ
 hr:Prikaži alatnu traku
 hu:Eszköztár
@@ -14467,7 +14505,7 @@ fr:&Vue continue
 fy-nl:Toan sides kontinue
 ga:Teaspáin na leathanaigh go leanúnach
 gl:Amosar páxinas seguidas
-he:הצג דפים ברציפות
+he:הצג &עמודים ברציפות
 hi:पृष्ठों को लगातार दिखाएँ
 hr:Prikaži stranice slijedno
 hu:Folyamatos nézet
@@ -14580,7 +14618,7 @@ fi:Näytä usein luetut
 fr:Montrer les documents fréquemment lus
 ga:Taispeáin cinn léite go minic
 gl:Amosar lidos decote
-he:הצג נקרא תכופות
+he:הצג 'נקרא תכופות'
 hi:अक्सर पढ़े जाने वाले दिखाएँ
 hr:Prikaži najčešće čitano
 hu:Leggyakrabban olvasott fájlok mutatása
@@ -14637,7 +14675,7 @@ fr:Voir la barre latérale des &signets lorsqu'elle est disponible
 fy-nl:Toan de &blêdwizerarkbalke as beskikber
 ga:Taispeáin taobh-bharra na gceanán nuair atá sé ar fáil
 gl:Amosar a barra de marcadores cando estea dispoñible
-he:הצג סרגל-צד סימניות כשזמין
+he:הצג סרגל-צד &סימניות (כאשר זמין)
 hi:जब बुकमार्क साइडबार उपलब्ध हो उसे दिखाएँ
 hr:Prikaži traku &oznaka kad je dostupna
 hu:Dokumentumba ágyazott könyvjelzők mutatása
@@ -14699,7 +14737,7 @@ fr:Une seule page
 fy-nl:Inkele side
 ga:Leathanach Amháin
 gl:Unha soa páxina
-he:דף יחיד
+he:עמוד יחיד
 hi:एक पृष्ठ
 hr:Jedna stranica
 hu:Egy oldalas
@@ -14760,6 +14798,7 @@ fa:بخشی از فایهای نصب شده خراب شده و یا گم شده
 fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 gl:Algúns ficheiros que se precisan instalar están danados ou faltan
+he:קובצי התקנה מסוימים פגומים או חסרים
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
 id:Beberapa file yang di-install rusak atau terhapus.
@@ -14808,7 +14847,7 @@ fi:Pahoittelut, jotain odottamatonta tapahtui!\n\nPaina 'Peruuta' jos haluat aut
 fr:Désolé, cela n'aurait pas dû se produire !\n\n Cliquez sur "Annuler" si vous voulez nous aider à remédier à ce crash
 ga:Faraor, níor chóir go dtarlódh sin!\n\nBrúigh 'Cealaigh' le do thoil, más mian leat cuidiú linn údar an chliste seo a dheisiú.
 gl:Desculpe, isto non debería ocurrir\n\nPor favor, prema 'Cancelar', se quere axudarnos a reparar a causa deste erro.
-he:מצטער זה לא היה צריך לקרות!\n\nאנא הקלד בטל אם ברצונך לעזור לנו לתקן תקלה זו.
+he:מצטערים על התקלה!\n\nאנא לחץ על 'ביטול' אם ברצונך לסייע לנו בפתרון הבעיה.
 hi:क्षमा करें, ऐसा नहीं होना चाहिए; अगर आप इस दुर्घटना को ठीक करने में मदद करना चाहते है : \n\n कृपया  'रद्द करें' दबाएँ |
 hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a 'Mégse' gombot, ha segíteni szeretne nekünk a hiba kijavításában.
@@ -14866,7 +14905,7 @@ fr:Le fichier source %s n'a pas de point de synchronisation
 fy-nl:Bestân %s hat gjin syngronisaasjepunt
 ga:Níl láthair comhaimsearatha ag an gcomhad foinse %s
 gl:O ficheiro de orixe %s non ten punto de sincronización
-he:%s אין נקודת סנכרון לקובץ מקור
+he:נקודת סנכרון לקובץ המקור %s לא נמצאה.
 hi:स्रोत फ़ाइल %s का तुल्यकालन बिंदु नहीं है
 hr:Izvorna datoteka %s nema točke usklađivanja
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
@@ -14922,6 +14961,7 @@ fa:اجرای sumatra pdf
 fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
 gl:Iniciar SumatraPDF
+he:הפעל את SumatraPDF
 hi:SumatraPDF शुरू
 hr:Pokreni SumatraPDF
 hu:SumatraPDF indítása
@@ -15029,6 +15069,7 @@ fa:نصب کننده sumatra pdf %s
 fi:SumatraPDF %s asennusohjelma
 fr:Installeur de SumatraPDF %s
 gl:Instalador %s SumatraPDF
+he:התקנת SumatraPDF %s
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
 id:Pasang SumatraPDF %s
@@ -15074,6 +15115,7 @@ fa:حذف کننده sumatra pdf %s
 fi:SumatraPDF %s poisto-ohjelma
 fr:Désinstalleur de SumatraPDF %s
 gl:Desinstalador %s SumatraPDF
+he:הסרת SumatraPDF %s
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
 id:Hapus SumatraPDF %s
@@ -15124,7 +15166,7 @@ fr:SumatraPDF Options
 fy-nl:SumatraPDF Opsjes
 ga:Roghanna SumatraPDF
 gl:Opcións de SumatraPDF
-he:SumatraPDF אפשרויות
+he:אפשרויות SumatraPDF
 hi:Sumatra पीडीएफ विकल्प
 hr:Mogućnosti programa
 hu:A SumatraPDF beállításai
@@ -15182,7 +15224,7 @@ fi:SumatraPDF:n päivitys
 fr:Mise à jour de SumatraPDF
 ga:Nuashonrú do ShumatraPDF
 gl:Actualización de SumatraPDF
-he:SumatraPDF עדכון
+he:עדכון SumatraPDF
 hi:Sumatra पीडीएफ अपडेट
 hr:SumatraPDF ažuriranje
 hu:SumatraPDF frissítés
@@ -15238,7 +15280,7 @@ fi:SumatraPDF kaatui
 fr:SumatraPDF a planté
 ga:Chlis SumatraPDF
 gl:SumatraPDF fallou
-he:SumatraPDF נפלה
+he:התוכנה SumatraPDF קרסה
 hi:Sumatra पीडीएफ दुर्घटनाग्रस्त हो गया
 hr:SumatraPDF se srušio
 hu:SumatraPDF működése leállt
@@ -15292,6 +15334,7 @@ fa:پاک شد sumatra pdf
 fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
 gl:Desintalouse SumatraPDF
+he:התקנת SumatraPDF הושלמה.
 hr:SumatraPDF je deinstaliran.
 hu:SumatraPDF eltávolítása befejeződött.
 id:SumatraPDF telah di-uninstall.
@@ -15339,6 +15382,7 @@ fa:نصب شده sumatra pdf پیدا نشد.
 fi:SumatraPDF-asennusta ei löytynyt.
 fr:Installation de SumatraPDF non trouvée
 gl:Non se atopou ningunha instalación de SumatraPDF.
+he:התקנת SumatraPDF לא נמצאה.
 hr:SumatraPDF instalacija nije pronađena.
 hu:SumatraPDF telepítő nem található.
 id:Instalasi SumatraPDF tidak ditemukan.
@@ -15389,7 +15433,7 @@ fr:SumatraPDF est votre lecteur de PDF
 fy-nl:SumatraPDF is de standart PDF-lêzer
 ga:Is é SumatraPDF do léitheoir PDF réamhshocraithe
 gl:SumatraPDF é o seu lector de PDF por defecto
-he:SumatraPDF ראשי הינו PDF קורא
+he:SumatraPDF מוגדרת כתוכנת ברירת מחדל ל- PDF
 hi:Sumatra पीडीएफ आपका डिफ़ॉल्ट पीडीएफ रीडर है
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 hu:A SumatraPDF az alapértelmezett PDF-olvasója
@@ -15449,7 +15493,7 @@ fr:SumatraPDF doit maintenant être votre lecteur de PDF par défaut
 fy-nl:SumatraPDF soe no de standert PDF-lêzer wêze moatte
 ga:Ba chóir go mbeadh SumatraPDF mar an léitheoir PDF réamhshocraithe agat
 gl:SumatraPDF será agora o seu lector de PDF por defecto
-he:SumatraPDF ראשי אמור להיות עכשיו PDF קורא
+he:SumatraPDF אמורה להיות עכשיו תוכנת ברירת מחדל ל- PDF.
 hi:SumatraPDF अब आपका डिफ़ॉल्ट पीडीएफ रीडर होना चाहिए
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 hu:Mostantól a SumatraPDF az alapértelmezett PDF-olvasója
@@ -15509,7 +15553,7 @@ fr:Le fichier de synchronisation ne peut pas être ouvert
 fy-nl:It syngronisaasjebestân kin net iepene wurde
 ga:Ní féidir an comhad comhaimseartha a oscailt
 gl:O ficheiro de sincronización non pode abrirse
-he:לא ניתן לפתוח קובץ סנכרון
+he:פתיחת קובץ סנכרון נכשלה.
 hi:तुल्यकालन फ़ाइल खोला नहीं जा सकता
 hr:Datoteka usklađenja se ne može otvoriti
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
@@ -15567,7 +15611,7 @@ fi:Merkitty PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 gl:PDF etiquetado
-he:PDF מתוייג
+he:מתוייג כ- PDF
 hi:टैग की गईं पीडीएफ
 hr:Strukturirani PDF
 hu:Címkézett PDF
@@ -15621,7 +15665,7 @@ fr:Documents texte
 fy-nl:Tekstdokuminten
 ga:Cáipéisí téacs
 gl:Documentos de texto
-he:(מסמך מלל (טקסט
+he:קובצי טקסט
 hi:टेक्स्ट दस्तावेज़
 hr:Tekstualni dokumenti
 hu:Szöveges fájlok
@@ -15677,6 +15721,7 @@ fa:sumatra pdf با تشکر از شما جهت انتخاب
 fi:Kiitos, että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
 gl:Graciñas por escoller SumatraPDF!
+he:תודה על בחירתך ב- SumatraPDF.
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
 id:Terima kasih telah memakai SumatraPDF!
@@ -15724,6 +15769,7 @@ fa:با تشکر ! sumapra pdf نصب شد
 fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
 gl:Parabéns! Xa tes SumatraPDF instalado.
+he:תודה! התקנת SumatraPDF הושלמה.
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 id:Terima kasih. SumatraPDF telah berhasil ter-install.
@@ -15769,6 +15815,7 @@ eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
 gl:O instalador está corrompido. Descárgao de novo.
+he:קובץ ההתקנה פגום. אנא הורד שוב.
 hr:Instaler je oštećen. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
 id:Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!
@@ -15876,6 +15923,7 @@ fa:پاک کردن sumatra pdf
 fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
 gl:Desinstalar SumatraPDF
+he:הסר את SumatraPDF
 hr:Deinstaliraj SumatraPDF
 hu:SumatraPDF eltávolítása
 id:Uninstall SumatraPDF
@@ -15923,6 +15971,7 @@ fa:خطا در پاک کردن
 fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
 gl:Fallou a desinstalación
+he:הסרת SumatraPDF נכשלה.
 hr:Deinstalacija nije uspjela
 hu:Eltávolítás sikertelen
 id:Proses uninstall gagal.
@@ -15971,6 +16020,7 @@ fa:حذف شدن در حال بارگذاری
 fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
 gl:Desinstalación en procreso...
+he:מסיר את SumatraPDF...
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
 id:Proses uninstall sedang berjalan...
@@ -16022,7 +16072,7 @@ fr:Fichier source inconnue (%s)
 fy-nl:Unbekend boarnebestân (%s)
 ga:Comhad foinse anaithnid (%s)
 gl:Ficheiros de orixe descoñecidos (%s)
-he:קובץ מקור לא ידוע (%s)
+he:קובץ מקור לא ידוע (%s).
 hi:अज्ञात स्रोत फ़ाइल (%s)
 hr:Nepoznata izvorna datoteka (%s)
 hu:Ismeretlen forrásfájl (%s)
@@ -16078,6 +16128,7 @@ fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاد�
 fi:Käytä SumatraPDF:ää PDF-asiakirjojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 gl:Emprega SumatraPDF como o lector de PDF por &defecto
+he:הגדר את SumatraPDF כתוכנת &ברירת מחדל לקובצי PDF
 hr:Koristi SumatraPDF kao zadani PDF preglednik
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
 id:Gunakan SumatraPDF sebagai pembaca PDF standar.
@@ -16199,7 +16250,7 @@ fr:Visiter le site &web
 fy-nl:Besykje it &webstee
 ga:Tabhair cuairt ar an suíomh idirlíon
 gl:Visitar o &Website
-he:בקר באתר
+he:בקר ב&אתר
 hi:वेबसाइट देखें(&W)
 hr:&Posjeti internetsku stranicu
 hu:&Weboldal
@@ -16325,7 +16376,7 @@ fr:Documents XPS
 fy-nl:XPS-bestannen
 ga:Cáipéisí XPS
 gl:Documentos XPS
-he:XPS מסמכי
+he:קובצי XPS
 hi:XPS दस्तावेज़
 hr:XPS dokumenti
 hu:XPS fájlok
@@ -16384,7 +16435,7 @@ fr:Vous avez la dernière version.
 fy-nl:Jo brûke de meast resinte ferzje.
 ga:Tá an leagan is úire agat.
 gl:Tes a última versión
-he:ברשותך הגרסה האחרונה
+he:ברשותך הגרסה האחרונה.
 hi:आपके पास पहले से ही नवीनतम संसकरण है
 hr:Imate najnoviju inačicu.
 hu:Önnél a legfrissebb verzió van telepítve.
@@ -16451,7 +16502,7 @@ fr:Votre version est la %s
 fy-nl:Jo hawwe ferzje %s
 ga:Tá leagan %s agat
 gl:A versión actual é %s
-he:%s המהדורה שברשותך היא
+he:הגרסה שברשותך: %s.
 hi:आपके पास  %s संसकरण है
 hr:Imate inačicu %s
 hu:Jelenlegi verzió: %s
@@ -16770,7 +16821,7 @@ fr:[Modifications détectées ; actualisation] %s
 fy-nl:[Bestân wizige; ferfarskje] %s
 ga:[Athruithe braite; ag athnuachan] %s
 gl:[Cambios detectados; actualizando] %s
-he:[מרענן ; נתגלו שינויים] %s
+he:[זוהו שינויים; מרענן] %s
 hi:[परिवर्तन का पता चला; तरोताज़ा हो रहा है ]%s
 hr:[Dogodila se promjena - osvježavam] %s
 hu:[a file megváltozott; frissítés] %s
@@ -16888,7 +16939,7 @@ fi:tulostetaan asiakirjaa
 fr:impression du document
 ga:ag clóbhualadh an cháipéis
 gl:imprimindo documento
-he:מדפיס מסמך
+he:מדפיס קובץ
 hi:छपाई दस्तावेज़
 hr:ispisujem dokument
 hu:Nyomtatás

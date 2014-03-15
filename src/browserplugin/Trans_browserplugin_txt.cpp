@@ -220,6 +220,16 @@ const WCHAR * const gTranslations[] = {
   NULL,
   L"Άνοιγμα εγγράφου στο SumatraPDF",
 
+  /* Translations for language he */
+  L"%s מתוך %s",
+  L"הפעלת SumatraPDF נכשלה!",
+  L"שגיאה: התוכנה SumatraPDF לא נמצאה!",
+  L"שגיאה: הורדת המסמך נכשלה!",
+  NULL,
+  NULL,
+  NULL,
+  L"פותח קובץ ב- SumatraPDF...",
+
   /* Translations for language hu */
   L"%s/%s",
   L"Hiba: SumatraPDF futtatása sikertelen!",
@@ -474,9 +484,9 @@ const WCHAR * const gTranslations[] = {
 const char * const gLanguages[] = {
     "en", "sq", "ar", "am", "az", "eu", "bs", "ca", "ca-xv", "cn",
     "tw", "hr", "cz", "dk", "nl", "et", "fi", "fr", "gl", "de",
-    "el", "hu", "id", "it", "ja", "kr", "ku", "mk", "my", "fa",
-    "pl", "br", "pt", "ro", "ru", "sr-rs", "sp-rs", "sk", "sl", "es",
-    "sv", "ta", "tr", "uk", "uz", "cy", NULL
+    "el", "he", "hu", "id", "it", "ja", "kr", "ku", "mk", "my",
+    "fa", "pl", "br", "pt", "ro", "ru", "sr-rs", "sp-rs", "sk", "sl",
+    "es", "sv", "ta", "tr", "uk", "uz", "cy", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -515,31 +525,32 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_GALICIAN): return 144;
     case _LANGID(LANG_GERMAN): return 152;
     case _LANGID(LANG_GREEK): return 160;
-    case _LANGID(LANG_HUNGARIAN): return 168;
-    case _LANGID(LANG_INDONESIAN): return 176;
-    case _LANGID(LANG_ITALIAN): return 184;
-    case _LANGID(LANG_JAPANESE): return 192;
-    case _LANGID(LANG_KOREAN): return 200;
-    case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 208;
-    case _LANGID(LANG_MACEDONIAN): return 216;
-    case _LANGID(LANG_MALAY): return 224;
-    case _LANGID(LANG_FARSI): return 232;
-    case _LANGID(LANG_POLISH): return 240;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 248;
-    case _LANGID(LANG_PORTUGUESE): return 256;
-    case _LANGID(LANG_ROMANIAN): return 264;
-    case _LANGID(LANG_RUSSIAN): return 272;
-    case MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC): return 280;
-    case MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN): return 288;
-    case _LANGID(LANG_SLOVAK): return 296;
-    case _LANGID(LANG_SLOVENIAN): return 304;
-    case _LANGID(LANG_SPANISH): return 312;
-    case _LANGID(LANG_SWEDISH): return 320;
-    case _LANGID(LANG_TAMIL): return 328;
-    case _LANGID(LANG_TURKISH): return 336;
-    case _LANGID(LANG_UKRAINIAN): return 344;
-    case _LANGID(LANG_UZBEK): return 352;
-    case _LANGID(LANG_WELSH): return 360;
+    case _LANGID(LANG_HEBREW): return 168;
+    case _LANGID(LANG_HUNGARIAN): return 176;
+    case _LANGID(LANG_INDONESIAN): return 184;
+    case _LANGID(LANG_ITALIAN): return 192;
+    case _LANGID(LANG_JAPANESE): return 200;
+    case _LANGID(LANG_KOREAN): return 208;
+    case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 216;
+    case _LANGID(LANG_MACEDONIAN): return 224;
+    case _LANGID(LANG_MALAY): return 232;
+    case _LANGID(LANG_FARSI): return 240;
+    case _LANGID(LANG_POLISH): return 248;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 256;
+    case _LANGID(LANG_PORTUGUESE): return 264;
+    case _LANGID(LANG_ROMANIAN): return 272;
+    case _LANGID(LANG_RUSSIAN): return 280;
+    case MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC): return 288;
+    case MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN): return 296;
+    case _LANGID(LANG_SLOVAK): return 304;
+    case _LANGID(LANG_SLOVENIAN): return 312;
+    case _LANGID(LANG_SPANISH): return 320;
+    case _LANGID(LANG_SWEDISH): return 328;
+    case _LANGID(LANG_TAMIL): return 336;
+    case _LANGID(LANG_TURKISH): return 344;
+    case _LANGID(LANG_UKRAINIAN): return 352;
+    case _LANGID(LANG_UZBEK): return 360;
+    case _LANGID(LANG_WELSH): return 368;
     default: return -1;
 #undef _LANGID
     }
@@ -547,5 +558,5 @@ int GetLanguageIndex(LANGID id)
 
 bool IsLanguageRtL(int index)
 {
-    return 16 == index || 208 == index || 232 == index;
+    return 16 == index || 168 == index || 216 == index || 240 == index;
 }
