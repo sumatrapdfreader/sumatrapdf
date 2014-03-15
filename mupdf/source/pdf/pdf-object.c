@@ -1742,12 +1742,11 @@ pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight)
 	return n;
 }
 
-int pdf_output_obj(fz_output *out, pdf_obj *obj)
+int pdf_output_obj(fz_output *out, pdf_obj *obj, int tight)
 {
 	char buf[1024];
 	char *ptr;
 	int n;
-	int tight = 1;
 
 	n = pdf_sprint_obj(NULL, 0, obj, tight);
 	if ((n + 1) < sizeof buf)

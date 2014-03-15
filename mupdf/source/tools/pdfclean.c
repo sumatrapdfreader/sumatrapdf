@@ -11,8 +11,11 @@
 
 #include "mupdf/pdf.h"
 
-static pdf_document *doc = NULL;
-static fz_context *ctx = NULL;
+typedef struct globals_s
+{
+	pdf_document *doc;
+	fz_context *ctx;
+} globals;
 
 static void usage(void)
 {
@@ -35,9 +38,11 @@ static void usage(void)
  * Recreate page tree to only retain specified pages.
  */
 
-static void retainpages(int argc, char **argv)
+static void retainpages(globals *glo, int argc, char **argv)
 {
 	pdf_obj *oldroot, *root, *pages, *kids, *countobj, *parent, *olddests;
+	pdf_document *doc = glo->doc;
+	int argidx = 0;
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
@@ -58,11 +63,11 @@ static void retainpages(int argc, char **argv)
 	kids = pdf_new_array(doc, 1);
 
 	/* Retain pages specified */
-	while (argc - fz_optind)
+	while (argc - argidx)
 	{
 		int page, spage, epage, pagecount;
 		char *spec, *dash;
-		char *pagelist = argv[fz_optind];
+		char *pagelist = argv[argidx];
 
 		pagecount = pdf_count_pages(doc);
 		spec = fz_strsep(&pagelist, ",");
@@ -103,7 +108,7 @@ static void retainpages(int argc, char **argv)
 			spec = fz_strsep(&pagelist, ",");
 		}
 
-		fz_optind++;
+		argidx++;
 	}
 
 	pdf_drop_obj(parent);
@@ -152,16 +157,45 @@ static void retainpages(int argc, char **argv)
 	}
 }
 
+void pdfclean_clean(fz_context *ctx, char *infile, char *outfile, char *password, fz_write_options *opts, char *argv[], int argc)
+{
+	globals glo = { 0 };
+
+	glo.ctx = ctx;
+
+	fz_try(ctx)
+	{
+		glo.doc = pdf_open_document_no_run(ctx, infile);
+		if (pdf_needs_password(glo.doc))
+			if (!pdf_authenticate_password(glo.doc, password))
+				fz_throw(glo.ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
+
+		/* Only retain the specified subset of the pages */
+		if (argc)
+			retainpages(&glo, argc, argv);
+
+		pdf_write_document(glo.doc, outfile, opts);
+	}
+	fz_always(ctx)
+	{
+		pdf_close_document(glo.doc);
+	}
+	fz_catch(ctx)
+	{
+		if (opts && opts->errors)
+			*opts->errors = *opts->errors+1;
+	}
+}
+
 int pdfclean_main(int argc, char **argv)
 {
 	char *infile;
 	char *outfile = "out.pdf";
 	char *password = "";
 	int c;
-	int subset;
 	fz_write_options opts;
-	int write_failed = 0;
 	int errors = 0;
+	fz_context *ctx;
 
 	opts.do_incremental = 0;
 	opts.do_garbage = 0;
@@ -197,10 +231,6 @@ int pdfclean_main(int argc, char **argv)
 		outfile = argv[fz_optind++];
 	}
 
-	subset = 0;
-	if (argc - fz_optind > 0)
-		subset = 1;
-
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)
 	{
@@ -210,29 +240,13 @@ int pdfclean_main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
-		doc = pdf_open_document_no_run(ctx, infile);
-		if (pdf_needs_password(doc))
-			if (!pdf_authenticate_password(doc, password))
-				fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
-
-		/* Only retain the specified subset of the pages */
-		if (subset)
-			retainpages(argc, argv);
-
-		pdf_write_document(doc, outfile, &opts);
-	}
-	fz_always(ctx)
-	{
-		pdf_close_document(doc);
+		pdfclean_clean(ctx, infile, outfile, password, &opts, &argv[fz_optind], argc - fz_optind);
 	}
 	fz_catch(ctx)
 	{
-		write_failed = 1;
+		errors++;
 	}
-
 	fz_free_context(ctx);
 
-	if (errors)
-		write_failed = 1;
-	return write_failed ? 1 : 0;
+	return errors == 0;
 }

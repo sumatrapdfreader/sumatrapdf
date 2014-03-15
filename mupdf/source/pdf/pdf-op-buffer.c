@@ -61,7 +61,7 @@ put_string_or_obj(pdf_csi *csi, fz_output *out)
 	if (csi->string_len)
 		put_string(csi, out);
 	else
-		pdf_output_obj(out, csi->obj);
+		pdf_output_obj(out, csi->obj, 1);
 }
 
 static void
@@ -105,7 +105,7 @@ pdf_buffer_BDC(pdf_csi *csi, void *state_)
 	pdf_buffer_state *state = (pdf_buffer_state *)state_;
 
 	fz_printf(state->out, "/%s ", csi->name);
-	pdf_output_obj(state->out, csi->obj);
+	pdf_output_obj(state->out, csi->obj, 1);
 	fz_printf(state->out, " BDC\n");
 }
 
@@ -126,7 +126,7 @@ pdf_buffer_BI(pdf_csi *csi, void *state_)
 			fz_read_byte(file);
 
 	fz_printf(state->out, "BI ");
-	pdf_output_obj(state->out, obj);
+	pdf_output_obj(state->out, obj, 1);
 	fz_printf(state->out, " ID\n");
 
 	/* FIXME */
@@ -172,7 +172,7 @@ pdf_buffer_DP(pdf_csi *csi, void *state_)
 	pdf_buffer_state *state = (pdf_buffer_state *)state_;
 
 	fz_printf(state->out, "/%s ", csi->name);
-	pdf_output_obj(state->out, csi->obj);
+	pdf_output_obj(state->out, csi->obj, 1);
 	fz_printf(state->out, " DP\n");
 }
 
@@ -318,7 +318,7 @@ pdf_buffer_TJ(pdf_csi *csi, void *state_)
 {
 	pdf_buffer_state *state = (pdf_buffer_state *)state_;
 
-	pdf_output_obj(state->out, csi->obj);
+	pdf_output_obj(state->out, csi->obj, 1);
 	fz_printf(state->out, " TJ\n");
 }
 
@@ -462,7 +462,7 @@ pdf_buffer_d(pdf_csi *csi, void *state_)
 {
 	pdf_buffer_state *state = (pdf_buffer_state *)state_;
 
-	pdf_output_obj(state->out, csi->obj);
+	pdf_output_obj(state->out, csi->obj, 1);
 	fz_printf(state->out, " %f d\n", csi->stack[0]);
 }
 
