@@ -1081,9 +1081,8 @@ Error:
         ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
         // if the window isn't shown and win.canvasRc is still empty, zoom
         // has not been determined yet
-        if (win->canvasRc.IsEmpty() && args.showWin)
-            win->UpdateCanvasSize();
-        AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
+        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
+        // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
         if (args.showWin || ss.page != 1)
             win->dm->SetScrollState(ss);
         UpdateToolbarState(win);
