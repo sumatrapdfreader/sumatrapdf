@@ -1048,8 +1048,9 @@ pdf_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 	{
 		if (obj->u.d.items[i].v != val)
 		{
-			pdf_drop_obj(obj->u.d.items[i].v);
+			pdf_obj *d = obj->u.d.items[i].v;
 			obj->u.d.items[i].v = pdf_keep_obj(val);
+			pdf_drop_obj(d);
 		}
 	}
 	else

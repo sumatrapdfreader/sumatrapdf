@@ -19,6 +19,8 @@ struct fz_predict_s
 	unsigned char *out;
 	unsigned char *ref;
 	unsigned char *rp, *wp;
+
+	unsigned char buffer[4096];
 };
 
 static inline int getcomponent(unsigned char *line, int x, int bpc)
@@ -152,13 +154,18 @@ fz_predict_png(fz_predict *state, unsigned char *out, unsigned char *in, int len
 }
 
 static int
-read_predict(fz_stream *stm, unsigned char *buf, int len)
+next_predict(fz_stream *stm, int len)
 {
 	fz_predict *state = stm->state;
+	unsigned char *buf = state->buffer;
 	unsigned char *p = buf;
-	unsigned char *ep = buf + len;
+	unsigned char *ep;
 	int ispng = state->predictor >= 10;
 	int n;
+
+	if (len >= sizeof(state->buffer))
+		len = sizeof(state->buffer);
+	ep = buf + len;
 
 	while (state->rp < state->wp && p < ep)
 		*p++ = *state->rp++;
@@ -167,7 +174,7 @@ read_predict(fz_stream *stm, unsigned char *buf, int len)
 	{
 		n = fz_read(state->chain, state->in, state->stride + ispng);
 		if (n == 0)
-			return p - buf;
+			break;
 
 		if (state->predictor == 1)
 			memcpy(state->out, state->in, n);
@@ -189,7 +196,13 @@ read_predict(fz_stream *stm, unsigned char *buf, int len)
 		state->rp += n;
 	}
 
-	return p - buf;
+	stm->rp = buf;
+	stm->wp = p;
+	if (stm->rp == stm->wp)
+		return EOF;
+	stm->pos += p - buf;
+
+	return *stm->rp++;
 }
 
 static void
@@ -279,5 +292,5 @@ fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bp
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_predict, close_predict, rebind_predict);
+	return fz_new_stream(ctx, state, next_predict, close_predict, rebind_predict);
 }

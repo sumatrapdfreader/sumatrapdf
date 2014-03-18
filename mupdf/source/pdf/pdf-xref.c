@@ -2491,7 +2491,9 @@ void pdf_clear_xref(pdf_document *doc)
 		{
 			pdf_xref_entry *entry = &xref->table[e];
 
-			if (entry->obj)
+			/* We cannot drop objects if the stream buffer has
+			 * been updated */
+			if (entry->obj != NULL && entry->stm_buf == NULL)
 			{
 				if (pdf_obj_refs(entry->obj) == 1)
 				{
@@ -2515,7 +2517,9 @@ void pdf_clear_xref_to_mark(pdf_document *doc)
 		{
 			pdf_xref_entry *entry = &xref->table[e];
 
-			if (entry->obj)
+			/* We cannot drop objects if the stream buffer has
+			 * been updated */
+			if (entry->obj != NULL && entry->stm_buf == NULL)
 			{
 				if ((entry->flags & PDF_OBJ_FLAG_MARK) == 0 && pdf_obj_refs(entry->obj) == 1)
 				{

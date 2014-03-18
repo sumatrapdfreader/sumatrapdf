@@ -1,6 +1,9 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// interaction between '_setjmp' and C++ object destruction is non-portable
+#pragma warning(disable: 4611)
+
 extern "C" {
 #include <mupdf/fitz.h>
 }
@@ -13,9 +16,6 @@ extern "C" {
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-
-// interaction between '_setjmp' and C++ object destruction is non-portable
-#pragma warning(disable: 4611)
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -325,40 +325,54 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
     return content;
 }
 
-extern "C" static int read_istream(fz_stream *stm, unsigned char *buf, int len)
+struct istream_filter {
+    IStream *stream;
+    unsigned char buf[4096];
+};
+
+extern "C" static int next_istream(fz_stream *stm, int max)
 {
-    ULONG cbRead = len;
-    HRESULT res = ((IStream *)stm->state)->Read(buf, len, &cbRead);
+    istream_filter *state = (istream_filter *)stm->state;
+    ULONG cbRead = sizeof(state->buf);
+    HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
     if (FAILED(res))
         fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
-    return (int)cbRead;
+    stm->rp = state->buf;
+    stm->wp = stm->rp + cbRead;
+    stm->pos += cbRead;
+
+    return cbRead > 0 ? *stm->rp++ : EOF;
 }
 
 extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
 {
+    istream_filter *state = (istream_filter *)stm->state;
     LARGE_INTEGER off;
     ULARGE_INTEGER n;
     off.QuadPart = offset;
-    HRESULT res = ((IStream *)stm->state)->Seek(off, whence, &n);
+    HRESULT res = state->stream->Seek(off, whence, &n);
     if (FAILED(res))
         fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
     if (n.HighPart != 0 || n.LowPart > INT_MAX)
         fz_throw(stm->ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
     stm->pos = n.LowPart;
-    stm->rp = stm->wp = stm->bp;
+    stm->rp = stm->wp = state->buf;
 }
 
-extern "C" static void close_istream(fz_context *ctx, void *state)
+extern "C" static void close_istream(fz_context *ctx, void *state_)
 {
-    ((IStream *)state)->Release();
+    istream_filter *state = (istream_filter *)state_;
+    state->stream->Release();
+    fz_free(ctx, state);
 }
 
 fz_stream *fz_open_istream(fz_context *ctx, IStream *stream);
 
 extern "C" static fz_stream *reopen_istream(fz_context *ctx, fz_stream *stm)
 {
+    istream_filter *state = (istream_filter *)stm->state;
     ScopedComPtr<IStream> stream2;
-    HRESULT res = ((IStream *)stm->state)->Clone(&stream2);
+    HRESULT res = state->stream->Clone(&stream2);
     if (E_NOTIMPL == res)
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream doesn't support cloning");
     if (FAILED(res))
@@ -375,9 +389,12 @@ fz_stream *fz_open_istream(fz_context *ctx, IStream *stream)
     HRESULT res = stream->Seek(zero, STREAM_SEEK_SET, NULL);
     if (FAILED(res))
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
+
+    istream_filter *state = fz_malloc_struct(ctx, istream_filter);
+    state->stream = stream;
     stream->AddRef();
 
-    fz_stream *stm = fz_new_stream(ctx, stream, read_istream, close_istream, NULL);
+    fz_stream *stm = fz_new_stream(ctx, state, next_istream, close_istream, NULL);
     stm->seek = seek_istream;
     stm->reopen = reopen_istream;
     return stm;

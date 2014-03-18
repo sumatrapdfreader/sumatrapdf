@@ -12,7 +12,7 @@ void fz_rebind_stream(fz_stream *stm, fz_context *ctx)
 
 fz_stream *
 fz_new_stream(fz_context *ctx, void *state,
-	fz_stream_read_fn *read,
+	fz_stream_next_fn *next,
 	fz_stream_close_fn *close,
 	fz_stream_rebind_fn *rebind)
 {
@@ -36,13 +36,11 @@ fz_new_stream(fz_context *ctx, void *state,
 	stm->bits = 0;
 	stm->avail = 0;
 
-	stm->bp = stm->buf;
-	stm->rp = stm->bp;
-	stm->wp = stm->bp;
-	stm->ep = stm->buf + sizeof stm->buf;
+	stm->rp = NULL;
+	stm->wp = NULL;
 
 	stm->state = state;
-	stm->read = read;
+	stm->next = next;
 	stm->close = close;
 	stm->seek = NULL;
 	stm->rebind = rebind;
@@ -88,27 +86,44 @@ fz_clone_stream(fz_context *ctx, fz_stream *stm)
 
 /* File stream */
 
-static int read_file(fz_stream *stm, unsigned char *buf, int len)
+typedef struct fz_file_stream_s
 {
-	int n = read(*(int*)stm->state, buf, len);
+	int file;
+	unsigned char buffer[4096];
+} fz_file_stream;
+
+static int next_file(fz_stream *stm, int n)
+{
+	fz_file_stream *state = stm->state;
+
+	/* n is only a hint, that we can safely ignore */
+	n = read(state->file, state->buffer, sizeof(state->buffer));
 	if (n < 0)
 		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "read error: %s", strerror(errno));
-	return n;
+	stm->rp = state->buffer;
+	stm->wp = state->buffer + n;
+	stm->pos += n;
+
+	if (n == 0)
+		return EOF;
+	return *stm->rp++;
 }
 
 static void seek_file(fz_stream *stm, int offset, int whence)
 {
-	int n = lseek(*(int*)stm->state, offset, whence);
+	fz_file_stream *state = stm->state;
+	int n = lseek(state->file, offset, whence);
 	if (n < 0)
 		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "cannot lseek: %s", strerror(errno));
 	stm->pos = n;
-	stm->rp = stm->bp;
-	stm->wp = stm->bp;
+	stm->rp = state->buffer;
+	stm->wp = state->buffer;
 }
 
-static void close_file(fz_context *ctx, void *state)
+static void close_file(fz_context *ctx, void *state_)
 {
-	int n = close(*(int*)state);
+	fz_file_stream *state = state_;
+	int n = close(state->file);
 	if (n < 0)
 		fz_warn(ctx, "close error: %s", strerror(errno));
 	fz_free(ctx, state);
@@ -118,14 +133,12 @@ fz_stream *
 fz_open_fd(fz_context *ctx, int fd)
 {
 	fz_stream *stm;
-	int *state;
-
-	state = fz_malloc_struct(ctx, int);
-	*state = fd;
+	fz_file_stream *state = fz_malloc_struct(ctx, fz_file_stream);
+	state->file = fd;
 
 	fz_try(ctx)
 	{
-		stm = fz_new_stream(ctx, state, read_file, close_file, NULL);
+		stm = fz_new_stream(ctx, state, next_file, close_file, NULL);
 	}
 	fz_catch(ctx)
 	{
@@ -181,21 +194,29 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 
 /* Memory stream */
 
-static int read_buffer(fz_stream *stm, unsigned char *buf, int len)
+static int next_buffer(fz_stream *stm, int max)
 {
-	return 0;
+	return EOF;
 }
 
 static void seek_buffer(fz_stream *stm, int offset, int whence)
 {
-	if (whence == 0)
-		stm->rp = stm->bp + offset;
+	int pos = stm->pos - (stm->wp - stm->rp);
+	/* Convert to absolute pos */
 	if (whence == 1)
-		stm->rp += offset;
-	if (whence == 2)
-		stm->rp = stm->ep - offset;
-	stm->rp = fz_clampp(stm->rp, stm->bp, stm->ep);
-	stm->wp = stm->ep;
+	{
+		offset += pos; /* Was relative to current pos */
+	}
+	else if (whence == 2)
+	{
+		offset += stm->pos; /* Was relative to end */
+	}
+
+	if (offset < 0)
+		offset = 0;
+	if (offset > stm->pos)
+		offset = stm->pos;
+	stm->rp += offset - pos;
 }
 
 static void close_buffer(fz_context *ctx, void *state_)
@@ -210,8 +231,8 @@ static fz_stream *reopen_buffer(fz_context *ctx, fz_stream *stm)
 {
 	fz_stream *clone;
 
-	fz_buffer *buf = fz_new_buffer(ctx, stm->ep - stm->bp);
-	memcpy(buf->data, stm->bp, (buf->len = buf->cap));
+	fz_buffer *orig = stm->state;
+	fz_buffer *buf = fz_new_buffer_from_data(ctx, orig->data, orig->len);
 	clone = fz_open_buffer(ctx, buf);
 	fz_drop_buffer(ctx, buf);
 
@@ -224,14 +245,12 @@ fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 	fz_stream *stm;
 
 	fz_keep_buffer(ctx, buf);
-	stm = fz_new_stream(ctx, buf, read_buffer, close_buffer, NULL);
+	stm = fz_new_stream(ctx, buf, next_buffer, close_buffer, NULL);
 	stm->seek = seek_buffer;
 	stm->reopen = reopen_buffer;
 
-	stm->bp = buf->data;
 	stm->rp = buf->data;
 	stm->wp = buf->data + buf->len;
-	stm->ep = buf->data + buf->len;
 
 	stm->pos = buf->len;
 
@@ -243,14 +262,12 @@ fz_open_memory(fz_context *ctx, unsigned char *data, int len)
 {
 	fz_stream *stm;
 
-	stm = fz_new_stream(ctx, NULL, read_buffer, close_buffer, NULL);
+	stm = fz_new_stream(ctx, NULL, next_buffer, close_buffer, NULL);
 	stm->seek = seek_buffer;
 	stm->reopen = reopen_buffer;
 
-	stm->bp = data;
 	stm->rp = data;
 	stm->wp = data + len;
-	stm->ep = data + len;
 
 	stm->pos = len;
 

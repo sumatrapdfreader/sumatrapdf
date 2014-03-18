@@ -7,87 +7,24 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 {
 	int count, n;
 
-	count = fz_mini(len, stm->wp - stm->rp);
-	if (count)
+	count = 0;
+	do
 	{
-		memcpy(buf, stm->rp, count);
-		stm->rp += count;
-	}
-
-	if (count == len || stm->error || stm->eof)
-		return count;
-
-	assert(stm->rp == stm->wp);
-
-	if (len - count < stm->ep - stm->bp)
-	{
-		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
+		n = fz_available(stm, len);
+		if (n > len)
+			n = len;
 		if (n == 0)
-		{
-			stm->eof = 1;
-		}
-		else if (n > 0)
-		{
-			stm->rp = stm->bp;
-			stm->wp = stm->bp + n;
-			stm->pos += n;
-		}
+			break;
 
-		n = fz_mini(len - count, stm->wp - stm->rp);
-		if (n)
-		{
-			memcpy(buf + count, stm->rp, n);
-			stm->rp += n;
-			count += n;
-		}
+		memcpy(buf, stm->rp, n);
+		stm->rp += n;
+		buf += n;
+		count += n;
+		len -= n;
 	}
-	else
-	{
-		n = stm->read(stm, buf + count, len - count);
-		if (n == 0)
-		{
-			stm->eof = 1;
-		}
-		else if (n > 0)
-		{
-			stm->pos += n;
-			count += n;
-		}
-	}
+	while (len > 0);
 
 	return count;
-}
-
-void
-fz_fill_buffer(fz_stream *stm)
-{
-	int n;
-
-	assert(stm->rp == stm->wp);
-
-	if (stm->error || stm->eof)
-		return;
-
-	fz_try(stm->ctx)
-	{
-		n = stm->read(stm, stm->bp, stm->ep - stm->bp);
-		if (n == 0)
-		{
-			stm->eof = 1;
-		}
-		else if (n > 0)
-		{
-			stm->rp = stm->bp;
-			stm->wp = stm->bp + n;
-			stm->pos += n;
-		}
-	}
-	fz_catch(stm->ctx)
-	{
-		fz_rethrow_if(stm->ctx, FZ_ERROR_TRYLATER);
-		fz_warn(stm->ctx, "read error; treating as end of file");
-		stm->error = 1;
-	}
 }
 
 fz_buffer *
@@ -195,16 +132,6 @@ fz_seek(fz_stream *stm, int offset, int whence)
 		{
 			offset = fz_tell(stm) + offset;
 			whence = 0;
-		}
-		if (whence == 0)
-		{
-			int dist = stm->pos - offset;
-			if (dist >= 0 && dist <= stm->wp - stm->bp)
-			{
-				stm->rp = stm->wp - dist;
-				stm->eof = 0;
-				return;
-			}
 		}
 		stm->seek(stm, offset, whence);
 		stm->eof = 0;

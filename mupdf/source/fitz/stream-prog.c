@@ -24,12 +24,17 @@ typedef struct prog_state
 	int available;
 	int bps;
 	clock_t start_time;
+	unsigned char buffer[4096];
 } prog_state;
 
-static int read_prog(fz_stream *stm, unsigned char *buf, int len)
+static int next_prog(fz_stream *stm, int len)
 {
 	prog_state *ps = (prog_state *)stm->state;
 	int n;
+	unsigned char *buf = ps->buffer;
+
+	if (len > sizeof(ps->buffer))
+		len = sizeof(ps->buffer);
 
 	/* Simulate more data having arrived */
 	if (ps->available < ps->length)
@@ -53,7 +58,12 @@ static int read_prog(fz_stream *stm, unsigned char *buf, int len)
 	n = (len > 0 ? read(ps->fd, buf, len) : 0);
 	if (n < 0)
 		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "read error: %s", strerror(errno));
-	return n;
+	stm->rp = ps->buffer + stm->pos;
+	stm->wp = ps->buffer + stm->pos + n;
+	stm->pos += n;
+	if (n == 0)
+		return EOF;
+	return *stm->rp++;
 }
 
 static void seek_prog(fz_stream *stm, int offset, int whence)
@@ -100,8 +110,7 @@ static void seek_prog(fz_stream *stm, int offset, int whence)
 	if (n < 0)
 		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "cannot lseek: %s", strerror(errno));
 	stm->pos = n;
-	stm->rp = stm->bp;
-	stm->wp = stm->bp;
+	stm->wp = stm->rp;
 }
 
 static void close_prog(fz_context *ctx, void *state)
@@ -144,7 +153,7 @@ fz_open_fd_progressive(fz_context *ctx, int fd, int bps)
 
 	fz_try(ctx)
 	{
-		stm = fz_new_stream(ctx, state, read_prog, close_prog, NULL);
+		stm = fz_new_stream(ctx, state, next_prog, close_prog, NULL);
 	}
 	fz_catch(ctx)
 	{

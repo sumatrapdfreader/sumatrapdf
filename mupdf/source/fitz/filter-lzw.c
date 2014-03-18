@@ -41,15 +41,18 @@ struct fz_lzwd_s
 
 	unsigned char bp[MAX_LENGTH];
 	unsigned char *rp, *wp;
+
+	unsigned char buffer[4096];
 };
 
 static int
-read_lzwd(fz_stream *stm, unsigned char *buf, int len)
+next_lzwd(fz_stream *stm, int len)
 {
 	fz_lzwd *lzw = stm->state;
 	lzw_code *table = lzw->table;
+	unsigned char *buf = lzw->buffer;
 	unsigned char *p = buf;
-	unsigned char *ep = buf + len;
+	unsigned char *ep;
 	unsigned char *s;
 	int codelen;
 
@@ -58,13 +61,17 @@ read_lzwd(fz_stream *stm, unsigned char *buf, int len)
 	int old_code = lzw->old_code;
 	int next_code = lzw->next_code;
 
+	if (len > sizeof(lzw->buffer))
+		len = sizeof(lzw->buffer);
+	ep = buf + len;
+
 	while (lzw->rp < lzw->wp && p < ep)
 		*p++ = *lzw->rp++;
 
 	while (p < ep)
 	{
 		if (lzw->eod)
-			return 0;
+			return EOF;
 
 		code = fz_read_bits(lzw->chain, code_bits);
 
@@ -162,7 +169,13 @@ read_lzwd(fz_stream *stm, unsigned char *buf, int len)
 	lzw->old_code = old_code;
 	lzw->next_code = next_code;
 
-	return p - buf;
+	stm->rp = buf;
+	stm->wp = p;
+	if (buf == p)
+		return EOF;
+	stm->pos += p - buf;
+
+	return *stm->rp++;
 }
 
 static void
@@ -228,5 +241,5 @@ fz_open_lzwd(fz_stream *chain, int early_change)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, lzw, read_lzwd, close_lzwd, rebind_lzwd);
+	return fz_new_stream(ctx, lzw, next_lzwd, close_lzwd, rebind_lzwd);
 }

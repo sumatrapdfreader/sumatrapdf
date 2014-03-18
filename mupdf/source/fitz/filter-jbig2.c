@@ -17,6 +17,7 @@ struct fz_jbig2d_s
 	fz_jbig2_globals *gctx;
 	Jbig2Image *page;
 	int idx;
+	unsigned char buffer[4096];
 };
 
 static void
@@ -39,14 +40,19 @@ close_jbig2d(fz_context *ctx, void *state_)
 }
 
 static int
-read_jbig2d(fz_stream *stm, unsigned char *buf, int len)
+next_jbig2d(fz_stream *stm, int len)
 {
 	fz_jbig2d *state = stm->state;
 	unsigned char tmp[4096];
+	unsigned char *buf = state->buffer;
 	unsigned char *p = buf;
-	unsigned char *ep = buf + len;
+	unsigned char *ep;
 	unsigned char *s;
 	int x, w, n;
+
+	if (len > sizeof(state->buffer))
+		len = sizeof(state->buffer);
+	ep = buf + len;
 
 	if (!state->page)
 	{
@@ -72,7 +78,12 @@ read_jbig2d(fz_stream *stm, unsigned char *buf, int len)
 		*p++ = s[x++] ^ 0xff;
 	state->idx = x;
 
-	return p - buf;
+	stm->rp = buf;
+	stm->wp = p;
+	if (p == buf)
+		return EOF;
+	stm->pos += p - buf;
+	return *stm->rp++;
 }
 
 static fz_stream *
@@ -146,5 +157,5 @@ fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals)
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_jbig2d, close_jbig2d, rebind_jbig2d);
+	return fz_new_stream(ctx, state, next_jbig2d, close_jbig2d, rebind_jbig2d);
 }

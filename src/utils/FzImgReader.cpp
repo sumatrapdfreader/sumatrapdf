@@ -3,14 +3,14 @@
 
 #ifndef NO_LIBMUPDF
 
+// interaction between '_setjmp' and C++ object destruction is non-portable
+#pragma warning(disable: 4611)
+
 extern "C" {
 #include <mupdf/fitz.h>
 }
 
 #include "FzImgReader.h"
-
-// interaction between '_setjmp' and C++ object destruction is non-portable
-#pragma warning(disable: 4611)
 
 using namespace Gdiplus;
 

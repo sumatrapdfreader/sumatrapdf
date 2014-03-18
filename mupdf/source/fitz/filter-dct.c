@@ -22,6 +22,8 @@ struct fz_dctd_s
 	struct jpeg_error_mgr errmgr;
 	jmp_buf jb;
 	char msg[JMSG_LENGTH_MAX];
+
+	unsigned char buffer[4096];
 };
 
 static void error_exit(j_common_ptr cinfo)
@@ -48,10 +50,11 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 	fz_stream *curr_stm = state->curr_stm;
 	fz_context *ctx = curr_stm->ctx;
 
+
 	curr_stm->rp = curr_stm->wp;
 	fz_try(ctx)
 	{
-		fz_fill_buffer(curr_stm);
+		src->bytes_in_buffer = fz_available(curr_stm, 1);
 	}
 	fz_catch(ctx)
 	{
@@ -59,7 +62,6 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 		return 0;
 	}
 	src->next_input_byte = curr_stm->rp;
-	src->bytes_in_buffer = curr_stm->wp - curr_stm->rp;
 
 	if (src->bytes_in_buffer == 0)
 	{
@@ -88,12 +90,16 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 }
 
 static int
-read_dctd(fz_stream *stm, unsigned char *buf, int len)
+next_dctd(fz_stream *stm, int max)
 {
 	fz_dctd *state = stm->state;
 	j_decompress_ptr cinfo = &state->cinfo;
-	unsigned char *p = buf;
-	unsigned char *ep = buf + len;
+	unsigned char *p = state->buffer;
+	unsigned char *ep;
+
+	if (max > sizeof(state->buffer))
+		max = sizeof(state->buffer);
+	ep = state->buffer + max;
 
 	if (setjmp(state->jb))
 	{
@@ -202,8 +208,13 @@ read_dctd(fz_stream *stm, unsigned char *buf, int len)
 		while (state->rp < state->wp && p < ep)
 			*p++ = *state->rp++;
 	}
+	stm->rp = state->buffer;
+	stm->wp = p;
+	stm->pos += (p - state->buffer);
+	if (p == stm->rp)
+		return EOF;
 
-	return p - buf;
+	return *stm->rp++;
 }
 
 static void
@@ -267,5 +278,5 @@ fz_open_dctd(fz_stream *chain, int color_transform, int l2factor, fz_stream *jpe
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, state, read_dctd, close_dctd, rebind_dctd);
+	return fz_new_stream(ctx, state, next_dctd, close_dctd, rebind_dctd);
 }

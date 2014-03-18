@@ -344,6 +344,8 @@ struct fz_faxd_s
 	unsigned char *ref;
 	unsigned char *dst;
 	unsigned char *rp, *wp;
+
+	unsigned char buffer[4096];
 };
 
 static inline void eat_bits(fz_faxd *fax, int nbits)
@@ -355,7 +357,10 @@ static inline void eat_bits(fz_faxd *fax, int nbits)
 static int
 fill_bits(fz_faxd *fax)
 {
-	while (fax->bidx >= 8)
+	/* The longest length of bits we'll ever need is 13. Never read more
+	 * than we need to avoid unnecessary overreading of the end of the
+	 * stream. */
+	while (fax->bidx > (32-13))
 	{
 		int c = fz_read_byte(fax->chain);
 		if (c == EOF)
@@ -551,14 +556,17 @@ dec2d(fz_context *ctx, fz_faxd *fax)
 }
 
 static int
-read_faxd(fz_stream *stm, unsigned char *buf, int len)
+next_faxd(fz_stream *stm, int max)
 {
 	fz_context *ctx = stm->ctx;
 	fz_faxd *fax = stm->state;
-	unsigned char *p = buf;
-	unsigned char *ep = buf + len;
+	unsigned char *p = fax->buffer;
+	unsigned char *ep;
 	unsigned char *tmp;
 
+	if (max > sizeof(fax->buffer))
+		max = sizeof(fax->buffer);
+	ep = p + max;
 	if (fax->stage == STATE_INIT && fax->end_of_line)
 	{
 		fill_bits(fax);
@@ -576,7 +584,7 @@ read_faxd(fz_stream *stm, unsigned char *buf, int len)
 		fax->stage = STATE_NORMAL;
 
 	if (fax->stage == STATE_DONE)
-		return 0;
+		return EOF;
 
 	if (fax->stage == STATE_EOL)
 		goto eol;
@@ -679,7 +687,14 @@ eol:
 	}
 
 	if (fax->rp < fax->wp)
-		return p - buf;
+	{
+		stm->rp = fax->buffer;
+		stm->wp = p;
+		stm->pos += (p - fax->buffer);
+		if (p == fax->buffer)
+			return EOF;
+		return *stm->rp++;
+	}
 
 	tmp = fax->ref;
 	fax->ref = fax->dst;
@@ -694,11 +709,8 @@ eol:
 	fax->a = -1;
 	fax->ridx ++;
 
-	if (!fax->end_of_block && fax->rows)
-	{
-		if (fax->ridx >= fax->rows)
-			goto rtc;
-	}
+	if (!fax->end_of_block && fax->rows && fax->ridx >= fax->rows)
+		goto rtc;
 
 	/* we have not read dim from eol, make a guess */
 	if (fax->k > 0 && !fax->eolc && fax->a == -1)
@@ -719,8 +731,15 @@ eol:
 	}
 
 	/* no more space in output, don't decode the next row yet */
-	if (p == buf + len)
-		return p - buf;
+	if (p == fax->buffer + max)
+	{
+		stm->rp = fax->buffer;
+		stm->wp = p;
+		stm->pos += (p - fax->buffer);
+		if (p == fax->buffer)
+			return EOF;
+		return *stm->rp++;
+	}
 
 	goto loop;
 
@@ -740,7 +759,12 @@ error:
 
 rtc:
 	fax->stage = STATE_DONE;
-	return p - buf;
+	stm->rp = fax->buffer;
+	stm->wp = p;
+	stm->pos += (p - fax->buffer);
+	if (p == fax->buffer)
+		return EOF;
+	return *stm->rp++;
 }
 
 static void
@@ -828,5 +852,5 @@ fz_open_faxd(fz_stream *chain,
 		fz_rethrow(ctx);
 	}
 
-	return fz_new_stream(ctx, fax, read_faxd, close_faxd, rebind_faxd);
+	return fz_new_stream(ctx, fax, next_faxd, close_faxd, rebind_faxd);
 }

@@ -324,7 +324,14 @@ pdf_process_stream(pdf_csi *csi, pdf_lexbuf *buf)
 					break;
 
 				case PDF_TOK_NAME:
-					fz_strlcpy(csi->name, buf->scratch, sizeof(csi->name));
+					if (csi->name[0])
+					{
+						pdf_drop_obj(csi->obj);
+						csi->obj = NULL;
+						csi->obj = pdf_new_name(csi->doc, buf->scratch);
+					}
+					else
+						fz_strlcpy(csi->name, buf->scratch, sizeof(csi->name));
 					break;
 
 				case PDF_TOK_INT:

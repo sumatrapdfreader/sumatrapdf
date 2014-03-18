@@ -8,6 +8,7 @@ struct fz_flate_s
 {
 	fz_stream *chain;
 	z_stream z;
+	unsigned char buffer[4096];
 };
 
 static void *zalloc(void *opaque, unsigned int items, unsigned int size)
@@ -21,23 +22,27 @@ static void zfree(void *opaque, void *ptr)
 }
 
 static int
-read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
+next_flated(fz_stream *stm, int outlen)
 {
 	fz_flate *state = stm->state;
 	fz_stream *chain = state->chain;
 	z_streamp zp = &state->z;
 	int code;
+	unsigned char *outbuf = state->buffer;
+
+	if (outlen > sizeof(state->buffer))
+		outlen = sizeof(state->buffer);
+
+	if (stm->eof)
+		return EOF;
 
 	zp->next_out = outbuf;
 	zp->avail_out = outlen;
 
 	while (zp->avail_out > 0)
 	{
-		if (chain->rp == chain->wp)
-			fz_fill_buffer(chain);
-
+		zp->avail_in = fz_available(chain, 1);
 		zp->next_in = chain->rp;
-		zp->avail_in = chain->wp - chain->rp;
 
 		code = inflate(zp, Z_SYNC_FLUSH);
 
@@ -45,23 +50,23 @@ read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
 
 		if (code == Z_STREAM_END)
 		{
-			return outlen - zp->avail_out;
+			break;
 		}
 		else if (code == Z_BUF_ERROR)
 		{
 			fz_warn(stm->ctx, "premature end of data in flate filter");
-			return outlen - zp->avail_out;
+			break;
 		}
 		else if (code == Z_DATA_ERROR && zp->avail_in == 0)
 		{
 			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
-			return outlen - zp->avail_out;
+			break;
 		}
 		else if (code == Z_DATA_ERROR && !strcmp(zp->msg, "incorrect data check"))
 		{
 			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
 			chain->rp = chain->wp;
-			return outlen - zp->avail_out;
+			break;
 		}
 		else if (code != Z_OK)
 		{
@@ -69,7 +74,15 @@ read_flated(fz_stream *stm, unsigned char *outbuf, int outlen)
 		}
 	}
 
-	return outlen - zp->avail_out;
+	stm->rp = state->buffer;
+	stm->wp = state->buffer + outlen - zp->avail_out;
+	stm->pos += outlen - zp->avail_out;
+	if (stm->rp == stm->wp)
+	{
+		stm->eof = 1;
+		return EOF;
+	}
+	return *stm->rp++;
 }
 
 static void
@@ -126,5 +139,5 @@ fz_open_flated(fz_stream *chain)
 		fz_close(chain);
 		fz_rethrow(ctx);
 	}
-	return fz_new_stream(ctx, state, read_flated, close_flated, rebind_flated);
+	return fz_new_stream(ctx, state, next_flated, close_flated, rebind_flated);
 }

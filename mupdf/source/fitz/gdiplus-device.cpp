@@ -5,6 +5,10 @@
 
 #include <windows.h>
 #include <gdiplus.h>
+
+// interaction between '_setjmp' and C++ object destruction is non-portable
+#pragma warning(disable: 4611)
+
 extern "C" {
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
@@ -17,8 +21,6 @@ extern "C" {
 
 // nonstandard extension used : class rvalue used as lvalue
 #pragma warning(disable: 4238)
-// interaction between '_setjmp' and C++ object destruction is non-portable
-#pragma warning(disable: 4611)
 
 // define the following to output intermediary rendering stages to files
 #undef DUMP_BITMAP_STEPS

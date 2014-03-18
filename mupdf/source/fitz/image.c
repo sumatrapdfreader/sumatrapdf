@@ -345,11 +345,14 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 	if (h < 0 || h > image->h)
 		h = image->h;
 
-	/* What is our ideal factor? */
+	/* What is our ideal factor? We search for the largest factor where
+	 * we can subdivide and stay larger than the required size. We add
+	 * a fudge factor of +2 here to allow for the possibility of
+	 * expansion due to grid fitting. */
 	if (w == 0 || h == 0)
 		l2factor = 0;
 	else
-		for (l2factor=0; image->w>>(l2factor+1) >= w && image->h>>(l2factor+1) >= h && l2factor < 8; l2factor++);
+		for (l2factor=0; image->w>>(l2factor+1) >= w+2 && image->h>>(l2factor+1) >= h+2 && l2factor < 8; l2factor++);
 
 	/* Can we find any suitable tiles in the cache? */
 	key.refs = 1;

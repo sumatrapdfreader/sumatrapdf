@@ -407,7 +407,6 @@ EXPORTS
 	fz_rebind_stream
 	fz_new_stream
 	fz_keep_stream
-	fz_fill_buffer
 	fz_read_best
 	fz_read_line
 	fz_strsep

@@ -45,23 +45,28 @@ typedef struct pdf_filter_state_s
 	pdf_obj *resources;
 } pdf_filter_state;
 
-static void insert_resource(pdf_csi *csi, pdf_filter_state *state, const char *key)
+static void insert_resource_name(pdf_csi *csi, pdf_filter_state *state, const char *key, const char *name)
 {
 	pdf_obj *xobj;
 	pdf_obj *obj;
 
-	if (!state->resources)
+	if (!state->resources || !name || name[0] == 0)
 		return;
 
 	xobj = pdf_dict_gets(csi->rdb, key);
-	obj = pdf_dict_gets(xobj, csi->name);
+	obj = pdf_dict_gets(xobj, name);
 
 	xobj = pdf_dict_gets(state->resources, key);
 	if (xobj == NULL) {
 		xobj = pdf_new_dict(csi->doc, 1);
 		pdf_dict_puts_drop(state->resources, key, xobj);
 	}
-	pdf_dict_putp(xobj, csi->name, obj);
+	pdf_dict_putp(xobj, name, obj);
+}
+
+static void insert_resource(pdf_csi *csi, pdf_filter_state *state, const char *key)
+{
+	insert_resource_name(csi, state, key, csi->name);
 }
 
 static inline void call_op(pdf_csi *csi, pdf_filter_state *state, int op)
@@ -403,6 +408,8 @@ pdf_filter_BDC(pdf_csi *csi, void *state_)
 {
 	pdf_filter_state *state = (pdf_filter_state *)state_;
 
+	insert_resource_name(csi, state, "Properties", pdf_to_name(csi->obj));
+
 	filter_flush(csi, state, 0);
 	call_op(csi, state, PDF_OP_BDC);
 }
@@ -459,6 +466,8 @@ static void
 pdf_filter_DP(pdf_csi *csi, void *state_)
 {
 	pdf_filter_state *state = (pdf_filter_state *)state_;
+
+	insert_resource_name(csi, state, "Properties", pdf_to_name(csi->obj));
 
 	filter_flush(csi, state, 0);
 	call_op(csi, state, PDF_OP_DP);
