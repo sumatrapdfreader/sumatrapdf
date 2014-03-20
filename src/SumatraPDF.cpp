@@ -5115,7 +5115,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_ABOUT:
-#ifdef DEBUG
+#if 0
             OnMenuAbout2();
 #else
             OnMenuAbout();

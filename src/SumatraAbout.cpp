@@ -62,6 +62,8 @@ using namespace Gdiplus;
 #define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
 #endif
 
+#define LAYOUT_LTR              0
+
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
@@ -374,6 +376,7 @@ static void OnPaintAbout(HWND hwnd)
     PAINTSTRUCT ps;
     RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
+    SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(hwnd, hdc, &rc);
     DrawAbout(hwnd, hdc, rc, gLinkInfo);
     EndPaint(hwnd, &ps);
@@ -540,10 +543,14 @@ void OnMenuAbout()
     if (!gHwndAbout)
         return;
 
+
+    ToggleWindowStyle(gHwndAbout, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+
     // get the dimensions required for the about box's content
     RectI rc;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(gHwndAbout, &ps);
+    SetLayout(hdc, LAYOUT_LTR);
     UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
     EndPaint(gHwndAbout, &ps);
     rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
