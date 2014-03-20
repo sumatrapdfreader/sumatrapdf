@@ -692,7 +692,8 @@ void CreateMainWindow()
 {
     ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
-    gHwndFrame = CreateWindow(
+    gHwndFrame = CreateWindowEx(
+        trans::IsCurrLangRtl() ? WS_EX_LAYOUTRTL : 0,
         INSTALLER_FRAME_CLASS_NAME, title.Get(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,

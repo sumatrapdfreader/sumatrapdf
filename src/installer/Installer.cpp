@@ -638,6 +638,8 @@ static REAL DrawMessage(Graphics &g, const WCHAR *msg, REAL y, REAL dx, Color co
     bbox.X += (dx - bbox.Width) / 2.f;
     StringFormat sft;
     sft.SetAlignment(StringAlignmentCenter);
+    if (trans::IsCurrLangRtl())
+        sft.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
 #if DRAW_MSG_TEXT_SHADOW
     {
         bbox.X--; bbox.Y++;
