@@ -28,7 +28,7 @@ static void pdf_run_page_contents_with_usage(pdf_document *doc, pdf_page *page, 
 
 	pdf_process_run(&process, dev, &local_ctm, event, NULL, 0);
 
-	pdf_process_page_contents(doc, page, &process, cookie);
+	pdf_process_stream_object(doc, page->contents, &process, page->resources, cookie);
 
 	if (page->transparency)
 		fz_end_group(dev);

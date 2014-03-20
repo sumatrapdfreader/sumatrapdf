@@ -55,6 +55,19 @@ void pdf_free_page(pdf_document *doc, pdf_page *page);
 */
 void pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
 
+/*
+	pdf_run_page: Interpret a loaded page and render it on a device.
+
+	page: A page loaded by pdf_load_page.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	ctm: A transformation matrix applied to the objects on the page,
+	e.g. to scale or rotate the page contents as desired.
+
+	cookie: A pointer to an optional fz_cookie structure that can be used
+	to track progress, collect errors etc.
+*/
 void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie);
 
 /*
@@ -69,6 +82,22 @@ void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, 
 	e.g. to scale or rotate the page contents as desired.
 */
 void pdf_run_page_contents(pdf_document *doc, pdf_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
+
+/*
+	pdf_clean_page_contents: Clean a loaded pages rendering operations.
+	This involves filtering the PDF operators used to avoid (some cases
+	of) repetition, and leaves the page in a balanced state with an
+	unchanged top level matrix etc. Just the main page contents without
+	the annotations
+
+	page: A page loaded by pdf_load_page.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	cookie: A pointer to an optional fz_cookie structure that can be used
+	to track progress, collect errors etc.
+*/
+void pdf_clean_page_contents(pdf_document *doc, pdf_page *page, fz_cookie *cookie);
 
 /*
 	Presentation interface.

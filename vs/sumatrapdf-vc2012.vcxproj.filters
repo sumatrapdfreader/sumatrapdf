@@ -672,6 +672,9 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-clean.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>

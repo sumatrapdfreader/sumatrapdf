@@ -308,6 +308,7 @@
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-clean.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-parse.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-table.c" />

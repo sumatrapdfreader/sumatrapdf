@@ -51,6 +51,7 @@ struct pdf_write_options_s
 	int do_expand;
 	int do_garbage;
 	int do_linear;
+	int do_clean;
 	int *use_list;
 	int *ofs_list;
 	int *gen_list;
@@ -2542,6 +2543,21 @@ static void complete_signatures(pdf_document *doc, pdf_write_options *opts, char
 	}
 }
 
+static void sanitise(pdf_document *doc)
+{
+	int n = pdf_count_pages(doc);
+	int i;
+
+	for (i = 0; i < n; i++)
+	{
+		pdf_page *page = pdf_load_page(doc, i);
+
+		pdf_clean_page_contents(doc, page, NULL);
+
+		pdf_free_page(doc, page);
+	}
+}
+
 void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_opts)
 {
 	int lastfree;
@@ -2559,6 +2575,10 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 
 	doc->freeze_updates = 1;
 	ctx = doc->ctx;
+
+	/* Sanitise the operator streams */
+	if (fz_opts->do_clean)
+		sanitise(doc);
 
 	pdf_finish_edit(doc);
 	presize_unsaved_signature_byteranges(doc);
@@ -2586,6 +2606,7 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 		opts.do_garbage = fz_opts->do_garbage;
 		opts.do_ascii = fz_opts->do_ascii;
 		opts.do_linear = fz_opts->do_linear;
+		opts.do_clean = fz_opts->do_clean;
 		opts.start = 0;
 		opts.main_xref_offset = INT_MIN;
 		/* We deliberately make these arrays long enough to cope with

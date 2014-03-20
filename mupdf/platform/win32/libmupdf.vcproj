@@ -718,6 +718,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\pdf\pdf-clean.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\pdf\pdf-cmap-load.c"
 				>
 			</File>

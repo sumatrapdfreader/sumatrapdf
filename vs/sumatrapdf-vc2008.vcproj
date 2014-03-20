@@ -1775,6 +1775,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\pdf\pdf-clean.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\pdf\pdf-cmap-load.c"
 					>
 				</File>

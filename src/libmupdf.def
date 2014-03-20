@@ -689,6 +689,7 @@ EXPORTS
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_run_page_contents
+	pdf_clean_page_contents
 	pdf_page_presentation
 	pdf_lexbuf_init
 	pdf_lexbuf_fin

@@ -66,6 +66,8 @@ pdf_parse_link_dest(pdf_document *doc, fz_link_kind kind, pdf_obj *dest)
 	ld.ld.gotor.dest = NULL;
 
 	dest = resolve_dest(doc, dest, kind);
+	if (dest == NULL)
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "Undefined link_dest");
 
 	if (pdf_is_name(dest))
 	{

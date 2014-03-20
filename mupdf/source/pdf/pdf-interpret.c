@@ -609,7 +609,7 @@ pdf_process_contents_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents)
 }
 
 void
-pdf_process_page_contents(pdf_document *doc, pdf_page *page, const pdf_process *process, fz_cookie *cookie)
+pdf_process_stream_object(pdf_document *doc, pdf_obj *obj, const pdf_process *process, pdf_obj *res, fz_cookie *cookie)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_csi *csi;
@@ -617,7 +617,7 @@ pdf_process_page_contents(pdf_document *doc, pdf_page *page, const pdf_process *
 	csi = pdf_new_csi(doc, cookie, process);
 	fz_try(ctx)
 	{
-		csi->process.processor->process_contents(csi, csi->process.state, page->resources, page->contents);
+		csi->process.processor->process_contents(csi, csi->process.state, res, obj);
 	}
 	fz_always(ctx)
 	{
@@ -625,7 +625,7 @@ pdf_process_page_contents(pdf_document *doc, pdf_page *page, const pdf_process *
 	}
 	fz_catch(ctx)
 	{
-		fz_rethrow_message(ctx, "cannot parse page content stream");
+		fz_rethrow_message(ctx, "cannot parse content stream");
 	}
 }
 
