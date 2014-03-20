@@ -93,6 +93,9 @@ build_filter(fz_stream *chain, pdf_document *doc, pdf_obj *f, pdf_obj *p, int nu
 	int colors = pdf_to_int(pdf_dict_gets(p, "Colors"));
 	int bpc = pdf_to_int(pdf_dict_gets(p, "BitsPerComponent"));
 
+	if (params)
+		params->type = FZ_IMAGE_RAW;
+
 	if (!strcmp(s, "ASCIIHexDecode") || !strcmp(s, "AHx"))
 		return fz_open_ahxd(chain);
 
@@ -358,7 +361,41 @@ pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream
 	if (pdf_array_len(filters) > 0)
 		return build_filter_chain(chain, doc, filters, params, 0, 0, imparams);
 
+	if (imparams)
+		imparams->type = FZ_IMAGE_RAW;
 	return fz_open_null(chain, length, fz_tell(chain));
+}
+
+void
+pdf_load_compressed_inline_image(pdf_document *doc, pdf_obj *dict, int length, fz_stream *stm, int indexed, fz_image *image)
+{
+	fz_context *ctx = doc->ctx;
+	fz_compressed_buffer *bc = fz_malloc_struct(ctx, fz_compressed_buffer);
+	fz_stream *istm = NULL;
+
+	fz_var(istm);
+
+	fz_try(ctx)
+	{
+		int dummy_l2factor = 0;
+		bc->buffer = fz_new_buffer(ctx, 1024);
+
+		stm = pdf_open_inline_stream(doc, dict, length, stm, &bc->params);
+		stm = fz_open_leecher(stm, bc->buffer);
+		istm = fz_open_image_decomp_stream(ctx, stm, &bc->params, &dummy_l2factor);
+
+		image->tile = fz_decomp_image_from_stream(ctx, istm, image, indexed, 0, 0);
+	}
+	fz_always(ctx)
+	{
+		fz_close(istm);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, bc);
+		fz_rethrow(ctx);
+	}
+	image->buffer = bc;
 }
 
 /*

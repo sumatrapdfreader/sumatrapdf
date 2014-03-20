@@ -123,6 +123,7 @@ struct pdf_csi_s
 	int string_len;
 	float stack[32];
 	int top;
+	fz_image *img;
 
 	int xbalance;
 	int in_text;

@@ -58,6 +58,7 @@ EXPORTS
 	fz_drop_transfer_function
 	fz_compressed_buffer_size
 	fz_open_compressed_buffer
+	fz_open_image_decomp_stream_from_buffer
 	fz_open_image_decomp_stream
 	fz_free_compressed_buffer
 	fz_var_imp
@@ -318,6 +319,8 @@ EXPORTS
 	fz_putc
 	fz_close_output
 	fz_rebind_output
+	fz_vsnprintf
+	fz_vfprintf
 	fz_new_path
 	fz_currentpoint
 	fz_moveto
@@ -398,6 +401,7 @@ EXPORTS
 	fz_open_memory
 	fz_open_buffer
 	fz_clone_stream
+	fz_open_leecher
 	fz_close
 	fz_tell
 	fz_seek
@@ -730,6 +734,7 @@ EXPORTS
 	pdf_open_stream
 	pdf_open_inline_stream
 	pdf_load_compressed_stream
+	pdf_load_compressed_inline_image
 	pdf_open_stream_with_offset
 	pdf_open_contents_stream
 	pdf_load_raw_renumbered_stream

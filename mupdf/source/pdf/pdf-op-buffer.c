@@ -113,23 +113,118 @@ static void
 pdf_buffer_BI(pdf_csi *csi, void *state_)
 {
 	pdf_buffer_state *state = (pdf_buffer_state *)state_;
-	fz_stream *file = csi->file;
-	pdf_obj *obj;
-	int ch;
+	int len, i;
+	unsigned char *data;
+	fz_compressed_buffer *cbuf;
+	fz_buffer *buffer;
+	const char *match;
+	const char *match2;
+	pdf_obj *filter;
+	fz_context *ctx = csi->doc->ctx;
 
-	obj = pdf_parse_dict(csi->doc, csi->file, &csi->doc->lexbuf.base);
+	if (csi->img == NULL)
+		return;
+	cbuf = csi->img->buffer;
+	if (cbuf == NULL)
+		return;
+	buffer = cbuf->buffer;
+	if (buffer == NULL)
+		return;
 
-	/* read whitespace after ID keyword */
-	ch = fz_read_byte(file);
-	if (ch == '\r')
-		if (fz_peek_byte(file) == '\n')
-			fz_read_byte(file);
+	/* Tweak the /Filter entry in csi->obj to match the buffer params */
+	switch (cbuf->params.type)
+	{
+	case FZ_IMAGE_JPEG:
+		match = "DCTDecode";
+		match2 = "DCT";
+		break;
+	case FZ_IMAGE_FAX:
+		match = "CCITTFaxDecode";
+		match2 = "CCF";
+		break;
+	case FZ_IMAGE_RAW:
+		match = NULL;
+		match2 = NULL;
+		break;
+	case FZ_IMAGE_RLD:
+		match = "RunLengthDecode";
+		match2 = "RL";
+		break;
+	case FZ_IMAGE_FLATE:
+		match = "FlateDecode";
+		match2 = "Fl";
+		break;
+	case FZ_IMAGE_LZW:
+		match = "LZWDecode";
+		match2 = "LZW";
+		break;
+	default:
+		fz_warn(ctx, "Unsupported type (%d) of inline image", cbuf->params.type);
+		return;
+	}
 
-	fz_printf(state->out, "BI ");
-	pdf_output_obj(state->out, obj, 1);
-	fz_printf(state->out, " ID\n");
+	filter = pdf_dict_gets(csi->obj, "Filter");
+	if (filter == NULL)
+		filter = pdf_dict_gets(csi->obj, "F");
+	if (match == NULL)
+	{
+		/* Remove any filter entry (e.g. Ascii85Decode) */
+		if (filter)
+		{
+			pdf_dict_dels(csi->obj, "Filter");
+			pdf_dict_dels(csi->obj, "F");
+		}
+		pdf_dict_dels(csi->obj, "DecodeParms");
+		pdf_dict_dels(csi->obj, "DP");
+	}
+	else if (pdf_is_array(filter))
+	{
+		int l = pdf_array_len(filter);
+		pdf_obj *o = (l == 0 ? NULL : pdf_array_get(filter, l-1));
+		const char *fil = pdf_to_name(o);
 
-	/* FIXME */
+		if (l == 0 || (strcmp(fil, match) && strcmp(fil, match2)))
+		{
+			fz_warn(ctx, "Unexpected Filter configuration in inline image");
+			return;
+		}
+		pdf_dict_puts(csi->obj, "F", o);
+
+		o = pdf_dict_gets(csi->obj, "DecodeParms");
+		if (o == NULL)
+			o = pdf_dict_gets(csi->obj, "DP");
+		if (o)
+		{
+			o = pdf_array_get(o, l-1);
+			if (o)
+				pdf_dict_puts(csi->obj, "DP", o);
+			else
+				pdf_dict_dels(csi->obj, "DP");
+			pdf_dict_dels(csi->obj, "DecodeParms");
+		}
+	}
+	else
+	{
+		/* It's a singleton. It must be correct */
+	}
+
+	fz_printf(state->out, "BI\n");
+
+	len = pdf_dict_len(csi->obj);
+	for (i = 0; i < len; i++)
+	{
+		pdf_output_obj(state->out, pdf_dict_get_key(csi->obj, i), 1);
+		pdf_output_obj(state->out, pdf_dict_get_val(csi->obj, i), 1);
+	}
+	fz_printf(state->out, "ID\n");
+
+	buffer = csi->img->buffer->buffer;
+	len = buffer->len;
+	data = buffer->data;
+	for (i = 0; i < len; i++)
+	{
+		fz_printf(state->out, "%c", data[i]);
+	}
 
 	fz_printf(state->out, "\nEI\n");
 }

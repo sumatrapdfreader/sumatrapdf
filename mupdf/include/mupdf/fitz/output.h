@@ -90,4 +90,21 @@ fz_write_byte(fz_output *out, int x)
 	fz_write(out, &data, 1);
 }
 
+/*
+	fz_vsnprintf: Our customised vsnprintf routine. Takes %c, %d, %o, %s, %x, as usual.
+	Modifiers are not supported except for zero-padding ints (e.g. %02d, %03o, %04x, etc).
+	%f and %g both output in "as short as possible hopefully lossless non-exponent" form,
+	see fz_ftoa for specifics.
+	%C outputs a utf8 encoded int.
+	%M outputs a fz_matrix*. %R outputs a fz_rect*. %P outputs a fz_point*.
+	%q and %( output escaped strings in C/PDF syntax.
+*/
+int fz_vsnprintf(char *buffer, int space, const char *fmt, va_list args);
+
+/*
+	fz_vfprintf: Our customised vfprintf routine. Same supported
+	format specifiers as for fz_vsnprintf.
+*/
+int fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list ap);
+
 #endif

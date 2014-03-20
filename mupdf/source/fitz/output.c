@@ -11,7 +11,7 @@ file_printf(fz_output *out, const char *fmt, va_list ap)
 {
 	FILE *file = (FILE *)out->opaque;
 
-	return vfprintf(file, fmt, ap);
+	return fz_vfprintf(out->ctx, file, fmt, ap);
 }
 
 static int

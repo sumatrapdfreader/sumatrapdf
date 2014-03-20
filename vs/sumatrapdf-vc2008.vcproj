@@ -1315,6 +1315,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\filter-leech.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\filter-lzw.c"
 					>
 				</File>
@@ -1412,6 +1416,10 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\source\fitz\pixmap.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\source\fitz\printf.c"
 					>
 				</File>
 				<File

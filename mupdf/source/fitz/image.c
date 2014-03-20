@@ -382,7 +382,7 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 		break;
 	default:
 		native_l2factor = l2factor;
-		stm = fz_open_image_decomp_stream(ctx, image->buffer, &native_l2factor);
+		stm = fz_open_image_decomp_stream_from_buffer(ctx, image->buffer, &native_l2factor);
 
 		indexed = fz_colorspace_is_indexed(image->colorspace);
 		tile = fz_decomp_image_from_stream(ctx, stm, image, indexed, l2factor, native_l2factor);

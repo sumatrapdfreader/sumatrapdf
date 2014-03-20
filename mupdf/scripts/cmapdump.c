@@ -15,6 +15,7 @@
 #include "../source/fitz/buffer.c"
 #include "../source/fitz/stream-open.c"
 #include "../source/fitz/stream-read.c"
+#include "../source/fitz/printf.c"
 
 #include "../source/pdf/pdf-lex.c"
 #include "../source/pdf/pdf-cmap.c"

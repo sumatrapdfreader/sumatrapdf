@@ -80,6 +80,20 @@ fz_stream *fz_open_buffer(fz_context *ctx, fz_buffer *buf);
 fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
 
 /*
+	fz_open_leecher: Attach a filter to a stream that will store any
+	characters read from the stream into the supplied buffer.
+
+	chain: The underlying stream to leech from.
+
+	buf: The buffer into which the read data should be appended.
+	The buffer will be resized as required.
+
+	Returns pointer to newly created stream. May throw exceptions on
+	failure to allocate.
+*/
+fz_stream *fz_open_leecher(fz_stream *chain, fz_buffer *buf);
+
+/*
 	fz_close: Close an open stream.
 
 	Drops a reference for the stream. Once no references remain

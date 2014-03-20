@@ -261,6 +261,7 @@
     <ClCompile Include="..\mupdf\source\fitz\filter-fax.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-flate.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-jbig2.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-leech.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-lzw.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-predict.c" />
     <ClCompile Include="..\mupdf\source\fitz\font.c" />
@@ -286,6 +287,7 @@
     <ClCompile Include="..\mupdf\source\fitz\output.c" />
     <ClCompile Include="..\mupdf\source\fitz\path.c" />
     <ClCompile Include="..\mupdf\source\fitz\pixmap.c" />
+    <ClCompile Include="..\mupdf\source\fitz\printf.c" />
     <ClCompile Include="..\mupdf\source\fitz\shade.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-output.c" />

@@ -531,6 +531,9 @@
     <ClCompile Include="..\mupdf\source\fitz\filter-jbig2.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\filter-leech.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\filter-lzw.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
@@ -604,6 +607,9 @@
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\pixmap.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\printf.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\shade.c">

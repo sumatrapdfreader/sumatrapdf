@@ -69,6 +69,7 @@ fz_stream *pdf_open_stream(pdf_document *doc, int num, int gen);
 
 fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, fz_compression_params *params);
 fz_compressed_buffer *pdf_load_compressed_stream(pdf_document *doc, int num, int gen);
+void pdf_load_compressed_inline_image(pdf_document *doc, pdf_obj *dict, int length, fz_stream *cstm, int indexed, fz_image *image);
 fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
 fz_stream *pdf_open_compressed_stream(fz_context *ctx, fz_compressed_buffer *);
 fz_stream *pdf_open_contents_stream(pdf_document *doc, pdf_obj *obj);

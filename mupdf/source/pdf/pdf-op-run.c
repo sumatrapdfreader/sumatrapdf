@@ -1865,62 +1865,8 @@ static void pdf_run_BDC(pdf_csi *csi, void *state)
 static void pdf_run_BI(pdf_csi *csi, void *state)
 {
 	pdf_run_state *pr = (pdf_run_state *)state;
-	fz_context *ctx = csi->doc->ctx;
-	pdf_obj *rdb = csi->rdb;
-	fz_stream *file = csi->file;
-	int ch;
-	fz_image *img;
-	pdf_obj *obj;
-	int found;
 
-	obj = pdf_parse_dict(csi->doc, file, &csi->doc->lexbuf.base);
-
-	/* read whitespace after ID keyword */
-	ch = fz_read_byte(file);
-	if (ch == '\r')
-		if (fz_peek_byte(file) == '\n')
-			fz_read_byte(file);
-
-	fz_try(ctx)
-	{
-		img = pdf_load_inline_image(csi->doc, rdb, obj, file);
-	}
-	fz_always(ctx)
-	{
-		pdf_drop_obj(obj);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
-
-	pdf_show_image(csi, pr, img);
-
-	fz_drop_image(ctx, img);
-
-	/* find EI */
-	found = 0;
-	ch = fz_read_byte(file);
-	do
-	{
-		while (ch != 'E' && ch != EOF)
-			ch = fz_read_byte(file);
-		if (ch == 'E')
-		{
-			ch = fz_read_byte(file);
-			if (ch == 'I')
-			{
-				ch = fz_peek_byte(file);
-				if (ch == ' ' || ch <= 32 || ch == EOF || ch == '<' || ch == '/')
-				{
-					found = 1;
-					break;
-				}
-			}
-		}
-	} while (ch != EOF);
-	if (!found)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error after inline image");
+	pdf_show_image(csi, pr, csi->img);
 }
 
 static void pdf_run_B(pdf_csi *csi, void *state)

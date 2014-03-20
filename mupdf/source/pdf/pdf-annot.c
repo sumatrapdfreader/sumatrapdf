@@ -711,10 +711,10 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 		content = fz_new_buffer(ctx, 128);
 
 		// TODO: draw rounded rectangles if the first two /Border values are non-zero
-		fz_buffer_printf(ctx, content, "q %.4f w [", border_width);
+		fz_buffer_printf(ctx, content, "q %f w [", border_width);
 		for (i = 0, n = pdf_array_len(dashes); i < n; i++)
-			fz_buffer_printf(ctx, content, "%.4f ", pdf_to_real(pdf_array_get(dashes, i)));
-		fz_buffer_printf(ctx, content, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
+			fz_buffer_printf(ctx, content, "%f ", pdf_to_real(pdf_array_get(dashes, i)));
+		fz_buffer_printf(ctx, content, "] 0 d %f %f %f RG 0 0 %f %f re S Q",
 			rgb[0], rgb[1], rgb[2], rect.x1 - rect.x0, rect.y1 - rect.y0);
 
 		obj = pdf_clone_for_view_only(doc, obj);
@@ -730,7 +730,7 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
 #define ANNOT_TEXT_AP_NOTE \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M\n"                                    \
 	"2 w 9 18 m 4 18 l 4 7 4 4 6 3 c 20 3 l 18 4 18 7 18 18 c 17 18 l S\n"      \
 	"1.5 w 10 16 m 14 21 l S\n"                                                 \
 	"1.85625 w\n"                                                               \
@@ -741,13 +741,13 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	"6.801 7.5 m 15.5 7.5 l S\n"
 
 #define ANNOT_TEXT_AP_COMMENT \
-	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M 2 w\n"                                \
+	"%f %f %f RG 0 J 1 j [] 0 d 4 M 2 w\n"                                \
 	"8 20 m 16 20 l 18.363 20 20 18.215 20 16 c 20 13 l 20 10.785 18.363 9\n"   \
 	"16 9 c 13 9 l 8 3 l 8 9 l 8 9 l 5.637 9 4 10.785 4 13 c 4 16 l\n"          \
 	"4 18.215 5.637 20 8 20 c h S\n"
 
 #define ANNOT_TEXT_AP_KEY \
-	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M\n"                                    \
+	"%f %f %f RG 0 J 1 j [] 0 d 4 M\n"                                    \
 	"2 w 11.895 18.754 m 13.926 20.625 17.09 20.496 18.961 18.465 c 20.832\n"   \
 	"16.434 20.699 13.27 18.668 11.398 c 17.164 10.016 15.043 9.746 13.281\n"   \
 	"10.516 c 12.473 9.324 l 11.281 10.078 l 9.547 8.664 l 9.008 6.496 l\n"     \
@@ -758,7 +758,7 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	"16.129 17.352 c 15.621 16.883 15.59 16.094 16.059 15.586 c h S\n"
 
 #define ANNOT_TEXT_AP_HELP \
-	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M 2.5 w\n"                              \
+	"%f %f %f RG 0 J 1 j [] 0 d 4 M 2.5 w\n"                              \
 	"8.289 16.488 m 8.824 17.828 10.043 18.773 11.473 18.965 c 12.902 19.156\n" \
 	"14.328 18.559 15.195 17.406 c 16.062 16.254 16.242 14.723 15.664 13.398\n" \
 	"c S 12 8 m 12 12 16 11 16 15 c S\n"                                        \
@@ -768,14 +768,14 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	"19.789 c 12.719 19.969 12.891 20.426 12.719 20.817 c S Q\n"
 
 #define ANNOT_TEXT_AP_PARAGRAPH \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M 2 w\n"                                \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M 2 w\n"                                \
 	"15 3 m 15 18 l 11 18 l 11 3 l S\n"                                         \
 	"q 1 0 0 -1 0 24 cm 4 w\n"                                                  \
 	"9.777 10.988 m 8.746 10.871 7.973 9.988 8 8.949 c 8.027 7.91 8.844\n"      \
 	"7.066 9.879 7.004 c S Q\n"
 
 #define ANNOT_TEXT_AP_NEW_PARAGRAPH \
-	"%.4f %.4f %.4f RG 0 J 1 j [] 0 d 4 M 4 w\n"                                \
+	"%f %f %f RG 0 J 1 j [] 0 d 4 M 4 w\n"                                \
 	"q 1 0 0 -1 0 24 cm\n"                                                      \
 	"9.211 11.988 m 8.449 12.07 7.711 11.707 7.305 11.059 c 6.898 10.41\n"      \
 	"6.898 9.59 7.305 8.941 c 7.711 8.293 8.449 7.93 9.211 8.012 c S Q\n"       \
@@ -786,16 +786,16 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	"2 w 11 17 m 10 17 l 10 3 l S 14 3 m 14 13 l S\n"
 
 #define ANNOT_TEXT_AP_INSERT \
-	"%.4f %.4f %.4f RG 1 J 0 j [] 0 d 4 M 2 w\n"                                \
+	"%f %f %f RG 1 J 0 j [] 0 d 4 M 2 w\n"                                \
 	"12 18.012 m 20 18 l S 9 10 m 17 10 l S 12 14.012 m 20 14 l S\n"            \
 	"12 6.012 m 20 6.012 l S 4 12 m 6 10 l 4 8 l S 4 12 m 4 8 l S\n"
 
 #define ANNOT_TEXT_AP_CROSS \
-	"%.4f %.4f %.4f RG 1 J 0 j [] 0 d 4 M 2.5 w\n"                              \
+	"%f %f %f RG 1 J 0 j [] 0 d 4 M 2.5 w\n"                              \
 	"18 5 m 6 17 l S 6 5 m 18 17 l S\n"
 
 #define ANNOT_TEXT_AP_CIRCLE \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M 2.5 w\n"                              \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M 2.5 w\n"                              \
 	"19.5 11.5 m 19.5 7.359 16.141 4 12 4 c 7.859 4 4.5 7.359 4.5 11.5 c 4.5\n" \
 	"15.641 7.859 19 12 19 c 16.141 19 19.5 15.641 19.5 11.5 c h S\n"
 
@@ -860,14 +860,14 @@ pdf_create_text_annot(pdf_document *doc, pdf_obj *obj)
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
 #define ANNOT_FILE_ATTACHMENT_AP_PUSHPIN \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M\n"                                    \
 	"2 w 5 4 m 6 5 l S\n"                                                       \
 	"11 14 m 9 12 l 6 12 l 13 5 l 13 8 l 15 10 l 18 11 l 20 11 l 12 19 l 12\n"  \
 	"17 l 11 14 l h\n"                                                          \
 	"3 w 6 5 m 9 8 l S\n"
 
 #define ANNOT_FILE_ATTACHMENT_AP_PAPERCLIP \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M 2 w\n"                                \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M 2 w\n"                                \
 	"16.645 12.035 m 12.418 7.707 l 10.902 6.559 6.402 11.203 8.09 12.562 c\n"  \
 	"14.133 18.578 l 14.949 19.387 16.867 19.184 17.539 18.465 c 20.551\n"      \
 	"15.23 l 21.191 14.66 21.336 12.887 20.426 12.102 c 13.18 4.824 l 12.18\n"  \
@@ -875,13 +875,13 @@ pdf_create_text_annot(pdf_document *doc, pdf_obj *obj)
 	"17.887 l S\n"
 
 #define ANNOT_FILE_ATTACHMENT_AP_GRAPH \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M\n"                                    \
 	"1 w 18.5 15.5 m 18.5 13.086 l 16.086 15.5 l 18.5 15.5 l h\n"               \
 	"7 7 m 10 11 l 13 9 l 18 15 l S\n"                                          \
 	"2 w 3 19 m 3 3 l 21 3 l S\n"
 
 #define ANNOT_FILE_ATTACHMENT_AP_TAG \
-	"%.4f %.4f %.4f RG 1 J 1 j [] 0 d 4 M\n"                                    \
+	"%f %f %f RG 1 J 1 j [] 0 d 4 M\n"                                    \
 	"1 w q 1 0 0 -1 0 24 cm\n"                                                  \
 	"8.492 8.707 m 8.492 9.535 7.82 10.207 6.992 10.207 c 6.164 10.207 5.492\n" \
 	"9.535 5.492 8.707 c 5.492 7.879 6.164 7.207 6.992 7.207 c 7.82 7.207\n"    \
@@ -924,7 +924,7 @@ pdf_create_file_annot(pdf_document *doc, pdf_obj *obj)
 	{
 		content = fz_new_buffer(ctx, 512);
 
-		fz_buffer_printf(ctx, content, "q %.4f 0 0 %.4f 0 0 cm ",
+		fz_buffer_printf(ctx, content, "q %f 0 0 %f 0 0 cm ",
 			(rect.x1 - rect.x0) / 24, (rect.y1 - rect.y0) / 24);
 		fz_buffer_printf(ctx, content, content_ap, 0.5, 0.5, 0.5);
 		fz_buffer_printf(ctx, content, " 1 0 0 1 0 1 cm ");
@@ -1003,14 +1003,14 @@ pdf_create_highlight_annot(pdf_document *doc, pdf_obj *obj)
 	{
 		content = fz_new_buffer(ctx, 512);
 
-		fz_buffer_printf(ctx, content, "q /GS gs %.4f %.4f %.4f rg 1 0 0 1 -%.4f -%.4f cm ",
+		fz_buffer_printf(ctx, content, "q /GS gs %f %f %f rg 1 0 0 1 -%f -%f cm ",
 			rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
 		for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 		{
 			pdf_get_quadrilaterals(quad_points, i, &a, &b);
 			skew.x = 0.15 * fabs(a.y0 - b.y0);
 			skew.y = 0.15 * fabs(a.x0 - b.x0);
-			fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l %.4f %.4f l %.4f %.4f l h ",
+			fz_buffer_printf(ctx, content, "%f %f m %f %f l %f %f l %f %f l h ",
 				a.x0, a.y0, b.x1 + skew.x, b.y1 + skew.y, a.x1, a.y1, b.x0 - skew.x, b.y0 - skew.y);
 		}
 		fz_buffer_printf(ctx, content, "f Q");
@@ -1060,7 +1060,7 @@ pdf_create_markup_annot(pdf_document *doc, pdf_obj *obj, char *type)
 	{
 		content = fz_new_buffer(ctx, 512);
 
-		fz_buffer_printf(ctx, content, "q %.4f %.4f %.4f RG 1 0 0 1 -%.4f -%.4f cm 0.5 w ",
+		fz_buffer_printf(ctx, content, "q %f %f %f RG 1 0 0 1 -%f -%f cm 0.5 w ",
 			rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
 		if (annot_type == FZ_ANNOT_SQUIGGLY)
 			fz_buffer_printf(ctx, content, "[1] 1.5 d ");
@@ -1068,16 +1068,16 @@ pdf_create_markup_annot(pdf_document *doc, pdf_obj *obj, char *type)
 		{
 			pdf_get_quadrilaterals(quad_points, i, &a, &b);
 			if (annot_type == FZ_ANNOT_STRIKEOUT)
-				fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l ",
+				fz_buffer_printf(ctx, content, "%f %f m %f %f l ",
 					(a.x0 + b.x0) / 2, (a.y0 + b.y0) / 2, (a.x1 + b.x1) / 2, (a.y1 + b.y1) / 2);
 			else
-				fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l ", b.x0, b.y0, a.x1, a.y1);
+				fz_buffer_printf(ctx, content, "%f %f m %f %f l ", b.x0, b.y0, a.x1, a.y1);
 			if (annot_type == FZ_ANNOT_SQUIGGLY)
 			{
 				offs.x = a.x0 - b.x0; offs.y = a.y0 - b.y0;
 				dot = offs.x == 0 ? fabs(offs.y) : offs.y == 0 ? fabs(offs.x) : hypotf(offs.x, offs.y);
 				offs.x = offs.x / dot / 2; offs.y = offs.y / dot / 2;
-				fz_buffer_printf(ctx, content, "S [1] 0.5 d %.4f %.4f m %.4f %.4f l ", b.x0 + offs.x, b.y0 + offs.y, a.x1 + offs.x, a.y1 + offs.y);
+				fz_buffer_printf(ctx, content, "S [1] 0.5 d %f %f m %f %f l ", b.x0 + offs.x, b.y0 + offs.y, a.x1 + offs.x, a.y1 + offs.y);
 			}
 		}
 		fz_buffer_printf(ctx, content, "S Q");
@@ -1220,6 +1220,7 @@ pdf_prepend_ap_background(fz_buffer *content, pdf_document *doc, pdf_obj *obj)
 static void
 pdf_string_to_Tj(fz_context *ctx, fz_buffer *content, unsigned short *ucs2, unsigned short *end)
 {
+	// TODO: might be able to use fz_buffer_printf(ctx, content, "%( Tj ", ...);
 	fz_buffer_printf(ctx, content, "(");
 	for (; ucs2 < end; ucs2++)
 	{
@@ -1301,7 +1302,7 @@ pdf_append_line(pdf_document *doc, pdf_obj *res, fz_buffer *content, fz_buffer *
 			fz_warn(ctx, "ignoring unknown quadding value %d", align);
 	}
 
-	fz_buffer_printf(ctx, content, "%.4f %.4f Td ", x1 - *x, -font_size);
+	fz_buffer_printf(ctx, content, "%f %f Td ", x1 - *x, -font_size);
 	pdf_string_to_Tj(ctx, content, ucs2, end);
 	*x = x1;
 
@@ -1317,7 +1318,7 @@ pdf_append_combed_line(pdf_document *doc, pdf_obj *res, fz_buffer *content, fz_b
 	float x = -2.0f;
 	int i;
 
-	fz_buffer_printf(doc->ctx, content, "0 %.4f Td ", -font_size);
+	fz_buffer_printf(doc->ctx, content, "0 %f Td ", -font_size);
 	for (i = 0; i < max_len && ucs2[i]; i++)
 	{
 		*c = ucs2[i];
@@ -1379,7 +1380,7 @@ pdf_update_tx_widget_annot(pdf_document *doc, pdf_obj *obj)
 		base_ap = fz_new_buffer(ctx, 256);
 
 		pdf_prepend_ap_background(content, doc, obj);
-		fz_buffer_printf(ctx, content, "/Tx BMC q 1 1 %.4f %.4f re W n BT %s ",
+		fz_buffer_printf(ctx, content, "/Tx BMC q 1 1 %f %f re W n BT %s ",
 			rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, pdf_to_str_buf(ap));
 		fz_buffer_printf(ctx, base_ap, "/Tx BMC q BT %s ", pdf_to_str_buf(ap));
 		if (font_name)
@@ -1408,15 +1409,15 @@ pdf_update_tx_widget_annot(pdf_document *doc, pdf_obj *obj)
 			}
 			pdf_drop_font(ctx, fontdesc);
 			fontdesc = NULL;
-			fz_buffer_printf(ctx, content, "/%s %.4f Tf ", font_name, font_size);
-			fz_buffer_printf(ctx, base_ap, "/%s %.4f Tf ", font_name, font_size);
+			fz_buffer_printf(ctx, content, "/%s %f Tf ", font_name, font_size);
+			fz_buffer_printf(ctx, base_ap, "/%s %f Tf ", font_name, font_size);
 			fz_free(ctx, font_name);
 			font_name = NULL;
 		}
 		y = 0.5f * (rect.y1 - rect.y0) + 0.6f * font_size;
 		if (is_multiline)
 			y = rect.y1 - rect.y0 - 2;
-		fz_buffer_printf(ctx, content, "1 0 0 1 2 %.4f Tm ", y);
+		fz_buffer_printf(ctx, content, "1 0 0 1 2 %f Tm ", y);
 
 		ucs2 = pdf_to_ucs2(doc, value);
 		for (rest = ucs2; *rest; rest++)
@@ -1498,12 +1499,12 @@ pdf_create_freetext_annot(pdf_document *doc, pdf_obj *obj)
 			fz_free(ctx, font_name);
 		}
 
-		fz_buffer_printf(ctx, content, "q 1 1 %.4f %.4f re W n BT %s ",
+		fz_buffer_printf(ctx, content, "q 1 1 %f %f re W n BT %s ",
 			rect.x1 - rect.x0 - 2.0f, rect.y1 - rect.y0 - 2.0f, pdf_to_str_buf(ap));
 		fz_buffer_printf(ctx, base_ap, "q BT %s ", pdf_to_str_buf(ap));
-		fz_buffer_printf(ctx, content, "/Default %.4f Tf ", font_size);
-		fz_buffer_printf(ctx, base_ap, "/Default %.4f Tf ", font_size);
-		fz_buffer_printf(ctx, content, "1 0 0 1 2 %.4f Tm ", rect.y1 - rect.y0 - 2);
+		fz_buffer_printf(ctx, content, "/Default %f Tf ", font_size);
+		fz_buffer_printf(ctx, base_ap, "/Default %f Tf ", font_size);
+		fz_buffer_printf(ctx, content, "1 0 0 1 2 %f Tm ", rect.y1 - rect.y0 - 2);
 
 		/* Adobe Reader seems to consider "[1 0 0] r" and "1 0 0 rg" to mean the same(?) */
 		if ((r = strchr((char *)base_ap->data, '[')) != NULL && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)

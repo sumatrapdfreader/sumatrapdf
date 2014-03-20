@@ -14,11 +14,16 @@ fz_free_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf)
 }
 
 fz_stream *
-fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *l2factor)
+fz_open_image_decomp_stream_from_buffer(fz_context *ctx, fz_compressed_buffer *buffer, int *l2factor)
 {
 	fz_stream *chain = fz_open_buffer(ctx, buffer->buffer);
-	fz_compression_params *params = &buffer->params;
 
+	return fz_open_image_decomp_stream(ctx, chain, &buffer->params, l2factor);
+}
+
+fz_stream *
+fz_open_image_decomp_stream(fz_context *ctx, fz_stream *chain, fz_compression_params *params, int *l2factor)
+{
 	switch (params->type)
 	{
 	case FZ_IMAGE_FAX:
@@ -63,7 +68,7 @@ fz_open_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buffer)
 {
 	int l2factor = 0;
 
-	return fz_open_image_decomp_stream(ctx, buffer, &l2factor);
+	return fz_open_image_decomp_stream_from_buffer(ctx, buffer, &l2factor);
 }
 
 unsigned int

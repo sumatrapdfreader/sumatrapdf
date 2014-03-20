@@ -91,7 +91,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 #define snprintf _snprintf
 #if _MSC_VER < 1800
-#define isnan _isnan
+#define isnan(x) _isnan(x)
+#define isinf(x) (!_finite(x))
 #endif
 #define hypotf _hypotf
 

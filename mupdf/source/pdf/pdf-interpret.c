@@ -40,6 +40,9 @@ pdf_clear_stack(pdf_csi *csi)
 {
 	int i;
 
+	fz_drop_image(csi->doc->ctx, csi->img);
+	csi->img = NULL;
+
 	pdf_drop_obj(csi->obj);
 	csi->obj = NULL;
 
@@ -63,6 +66,61 @@ pdf_free_csi(pdf_csi *csi)
 #define A(a) (a)
 #define B(a,b) (a | b << 8)
 #define C(a,b,c) (a | b << 8 | c << 16)
+
+static void
+parse_inline_image(pdf_csi *csi)
+{
+	fz_context *ctx = csi->doc->ctx;
+	pdf_obj *rdb = csi->rdb;
+	fz_stream *file = csi->file;
+	int ch, found;
+
+	fz_drop_image(ctx, csi->img);
+	csi->img = NULL;
+	pdf_drop_obj(csi->obj);
+	csi->obj = NULL;
+
+	csi->obj = pdf_parse_dict(csi->doc, file, &csi->doc->lexbuf.base);
+
+	/* read whitespace after ID keyword */
+	ch = fz_read_byte(file);
+	if (ch == '\r')
+		if (fz_peek_byte(file) == '\n')
+			fz_read_byte(file);
+
+	fz_try(ctx)
+	{
+		csi->img = pdf_load_inline_image(csi->doc, rdb, csi->obj, file);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	/* find EI */
+	found = 0;
+	ch = fz_read_byte(file);
+	do
+	{
+		while (ch != 'E' && ch != EOF)
+			ch = fz_read_byte(file);
+		if (ch == 'E')
+		{
+			ch = fz_read_byte(file);
+			if (ch == 'I')
+			{
+				ch = fz_peek_byte(file);
+				if (ch == ' ' || ch <= 32 || ch == EOF || ch == '<' || ch == '/')
+				{
+					found = 1;
+					break;
+				}
+			}
+		}
+	} while (ch != EOF);
+	if (!found)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "syntax error after inline image");
+}
 
 static int
 pdf_run_keyword(pdf_csi *csi, char *buf)
@@ -175,6 +233,11 @@ pdf_run_keyword(pdf_csi *csi, char *buf)
 			return 1;
 		}
 		return 0;
+	}
+
+	if (op == PDF_OP_BI)
+	{
+		parse_inline_image(csi);
 	}
 
 	if (op < PDF_OP_Do)
@@ -383,6 +446,10 @@ pdf_process_stream(pdf_csi *csi, pdf_lexbuf *buf)
 				}
 			}
 			while (tok != PDF_TOK_EOF);
+		}
+		fz_always(ctx)
+		{
+			pdf_clear_stack(csi);
 		}
 		fz_catch(ctx)
 		{
