@@ -489,7 +489,7 @@ def email_build_failed(ver):
     subject = "SumatraPDF build %s failed" % str(ver)
     checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" % str(ver)
     body = "Checkin: %s\n\n" % checkin_url
-    build_log_url = s3_url_start + str(ver) + "/rel_build_log.txt"
+    build_log_url = s3_url_start + str(ver) + "/release_build_log.txt"
     body += "Build log: %s\n\n" % build_log_url
     buildbot_index_url = s3_url_start + "index.html"
     body += "Buildbot: %s\n\n" % buildbot_index_url
