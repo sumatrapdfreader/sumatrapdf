@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9dc0cbc5758198742c0bafc9eed0f7b1e5e93d9d
+1d6295cfe2adfeeb856204193b9157132b32491a
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -7516,7 +7516,7 @@ fi:S&uosikit
 fr:Fa&voris
 ga:Ce&anáin
 gl:F&avoritos
-he:מועדפים
+he:מוע&דפים
 hi:&पसंदीदा
 hr:F&avoriti
 hu:&Kedvencek
