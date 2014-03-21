@@ -8,10 +8,10 @@ typedef struct pdf_js_event_s
 	int rc;
 } pdf_js_event;
 
-int pdf_js_supported(void);
-pdf_js *pdf_new_js(pdf_document *doc);
-void pdf_drop_js(pdf_js *js);
-void pdf_js_load_document_level(pdf_js *js);
+void pdf_enable_js(pdf_document *doc);
+void pdf_disable_js(pdf_document *doc);
+int pdf_js_supported(pdf_document *doc);
+
 void pdf_js_setup_event(pdf_js *js, pdf_js_event *e);
 pdf_js_event *pdf_js_get_event(pdf_js *js);
 void pdf_js_execute(pdf_js *js, char *code);

@@ -5,9 +5,9 @@ var MuPDF = {
 	dayName: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
 
 	padZeros: function(num, places) {
-		var s = num.toString();
-		if (s.length < places)
-			s = new Array(places-s.length+1).join('0') + s;
+		var s = String(num)
+		while (s.length < places)
+			s = '0' + s
 		return s;
 	},
 

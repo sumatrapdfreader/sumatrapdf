@@ -1393,8 +1393,6 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
 
     if (ctx)
         pdf_install_load_system_font_funcs(ctx);
-
-    AssertCrash(!pdf_js_supported());
 }
 
 PdfEngineImpl::~PdfEngineImpl()
@@ -1755,6 +1753,8 @@ bool PdfEngineImpl::FinishLoading()
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load page labels");
     }
+
+    AssertCrash(!pdf_js_supported(_doc));
 
     return true;
 }

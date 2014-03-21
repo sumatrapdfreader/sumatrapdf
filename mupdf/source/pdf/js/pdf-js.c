@@ -761,7 +761,7 @@ static void preload_helpers(pdf_js *js)
 "Date.now = function() { return 298252800000; }\n"
 "Date.UTC = function() { return 298252800000; }\n"
 "Date.parse = MuPDFOldDate.parse;\n"
-"Math.random = function() { return 0.4; }\n"
+"Math.random = function() { return 1/4; }\n"
 	);
 #endif
 
@@ -770,7 +770,22 @@ static void preload_helpers(pdf_js *js)
 	);
 }
 
-pdf_js *pdf_new_js(pdf_document *doc)
+static void pdf_drop_js(pdf_js *js)
+{
+	if (js)
+	{
+		fz_context *ctx = js->doc->ctx;
+		fz_free(ctx, js->event.value);
+		pdf_jsimp_drop_type(js->imp, js->apptype);
+		pdf_jsimp_drop_type(js->imp, js->eventtype);
+		pdf_jsimp_drop_type(js->imp, js->fieldtype);
+		pdf_jsimp_drop_type(js->imp, js->doctype);
+		pdf_drop_jsimp(js->imp);
+		fz_free(ctx, js);
+	}
+}
+
+static pdf_js *pdf_new_js(pdf_document *doc)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_js *js = NULL;
@@ -805,7 +820,7 @@ pdf_js *pdf_new_js(pdf_document *doc)
 	return js;
 }
 
-void pdf_js_load_document_level(pdf_js *js)
+static void pdf_js_load_document_level(pdf_js *js)
 {
 	pdf_document *doc = js->doc;
 	fz_context *ctx = doc->ctx;
@@ -851,21 +866,6 @@ void pdf_js_load_document_level(pdf_js *js)
 	fz_catch(ctx)
 	{
 		fz_rethrow(ctx);
-	}
-}
-
-void pdf_drop_js(pdf_js *js)
-{
-	if (js)
-	{
-		fz_context *ctx = js->doc->ctx;
-		fz_free(ctx, js->event.value);
-		pdf_jsimp_drop_type(js->imp, js->apptype);
-		pdf_jsimp_drop_type(js->imp, js->eventtype);
-		pdf_jsimp_drop_type(js->imp, js->fieldtype);
-		pdf_jsimp_drop_type(js->imp, js->doctype);
-		pdf_drop_jsimp(js->imp);
-		fz_free(ctx, js);
 	}
 }
 
@@ -920,7 +920,23 @@ void pdf_js_execute_count(pdf_js *js, char *code, int count)
 	}
 }
 
-int pdf_js_supported(void)
+void pdf_enable_js(pdf_document *doc)
 {
-	return 1;
+	if (!doc->js) {
+		doc->js = pdf_new_js(doc);
+		doc->drop_js = pdf_drop_js;
+		pdf_js_load_document_level(doc->js);
+	}
+}
+
+void pdf_disable_js(pdf_document *doc)
+{
+	if (doc->js)
+		doc->drop_js(doc->js);
+	doc->js = NULL;
+}
+
+int pdf_js_supported(pdf_document *doc)
+{
+	return doc->js != NULL;
 }

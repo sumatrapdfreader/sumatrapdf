@@ -666,6 +666,9 @@
     <ClCompile Include="..\mupdf\source\fitz\xml.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-annot-edit.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c">
       <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
@@ -826,6 +829,9 @@
       <Filter>ext\mupdf\xps</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\xps\xps-zip.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\tools\mjsgen.c">
       <Filter>ext\mupdf\xps</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\tools\mudraw.c">

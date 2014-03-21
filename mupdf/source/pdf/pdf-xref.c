@@ -1168,8 +1168,6 @@ pdf_init_document(pdf_document *doc)
 				dict = NULL;
 			}
 		}
-		doc->js = pdf_new_js(doc);
-		pdf_js_load_document_level(doc->js);
 	}
 	fz_catch(ctx)
 	{
@@ -1218,7 +1216,8 @@ pdf_close_document(pdf_document *doc)
 	 * glyph cache at this point. */
 	fz_purge_glyph_cache(ctx);
 
-	pdf_drop_js(doc->js);
+	if (doc->js)
+		doc->drop_js(doc->js);
 
 	pdf_free_xref_sections(doc);
 

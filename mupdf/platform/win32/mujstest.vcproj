@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="mujstest-v8"
+	Name="mujstest"
 	ProjectGUID="{21E28758-E4D2-4B84-8EC5-B631CEE66B30}"
 	RootNamespace="mupdf"
 	>
@@ -59,8 +59,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FORCE"
-				AdditionalDependencies="v8_base.lib v8_snapshot.lib ws2_32.lib winmm.lib"
-				AdditionalLibraryDirectories="&quot;..\..\thirdparty\v8-3.9\build\Debug\lib\&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -133,8 +131,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="v8_base.lib v8_snapshot.lib ws2_32.lib winmm.lib"
-				AdditionalLibraryDirectories="&quot;..\..\thirdparty\v8-3.9\build\Release\lib&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -209,8 +205,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="v8_base.lib v8_snapshot.lib ws2_32.lib winmm.lib"
-				AdditionalLibraryDirectories="&quot;..\..\thirdparty\v8-3.9\Build\Debug\lib&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -284,8 +278,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/FORCE"
-				AdditionalDependencies="v8_base.lib v8_snapshot.lib ws2_32.lib winmm.lib libeay32.lib"
-				AdditionalLibraryDirectories="&quot;..\..\thirdparty\v8-3.9\build\Debug\lib\&quot;;..\..\thirdparty\openssl\lib"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -359,8 +351,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="v8_base.lib v8_snapshot.lib libeay32.lib ws2_32.lib winmm.lib"
-				AdditionalLibraryDirectories="&quot;..\..\thirdparty\v8-3.9\build\release\lib\&quot;;..\..\thirdparty\openssl\lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

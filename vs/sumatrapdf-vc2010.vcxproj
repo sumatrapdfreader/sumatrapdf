@@ -287,6 +287,7 @@
     <ClCompile Include="..\mupdf\source\fitz\tree.c" />
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-annot-edit.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-clean.c" />
@@ -341,6 +342,7 @@
     <ClCompile Include="..\mupdf\source\xps\xps-tile.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-util.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-zip.c" />
+    <ClCompile Include="..\mupdf\source\tools\mjsgen.c" />
     <ClCompile Include="..\mupdf\source\tools\mudraw.c" />
     <ClCompile Include="..\mupdf\source\tools\mutool.c" />
     <ClCompile Include="..\mupdf\source\tools\pdfclean.c" />

@@ -81,6 +81,7 @@ char *pdf_file_spec_to_str(pdf_document *doc, pdf_obj *file_spec);
 
 fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, const fz_matrix *page_ctm);
 
+void pdf_transform_annot(pdf_annot *annot);
 void pdf_load_annots(pdf_document *, pdf_page *page, pdf_obj *annots);
 void pdf_update_annot(pdf_document *, pdf_annot *annot);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);

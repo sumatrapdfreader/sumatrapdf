@@ -1767,6 +1767,10 @@
 				Name="pdf"
 				>
 				<File
+					RelativePath="..\mupdf\source\pdf\pdf-annot-edit.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\pdf\pdf-annot.c"
 					>
 				</File>
@@ -2006,6 +2010,10 @@
 			<Filter
 				Name="tools"
 				>
+				<File
+					RelativePath="..\mupdf\source\tools\mjsgen.c"
+					>
+				</File>
 				<File
 					RelativePath="..\mupdf\source\tools\mudraw.c"
 					>

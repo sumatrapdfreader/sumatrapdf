@@ -41,7 +41,7 @@ CFLAGS += $(ZLIB_CFLAGS)
 
 # --- Commands ---
 
-ifeq "$(verbose)" ""
+ifneq "$(verbose)" "yes"
 QUIET_AR = @ echo ' ' ' ' AR $@ ;
 QUIET_CC = @ echo ' ' ' ' CC $@ ;
 QUIET_CXX = @ echo ' ' ' ' CXX $@ ;
@@ -97,9 +97,27 @@ CBZ_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(CBZ_SRC))))
 IMG_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(IMG_SRC))))
 TIFF_OBJ := $(subst source/, $(OUT)/, $(addsuffix .o, $(basename $(TIFF_SRC))))
 
-PDF_JS_JSCORE_OBJ := $(OUT)/pdf/js/pdf-js.o $(OUT)/pdf/js/pdf-jsimp-jscore.o
-PDF_JS_V8_OBJ := $(OUT)/pdf/js/pdf-js.o $(OUT)/pdf/js/pdf-jsimp-cpp.o $(OUT)/pdf/js/pdf-jsimp-v8.o
-PDF_JS_NONE_OBJ := $(OUT)/pdf/js/pdf-js-none.o
+# --- Choice of Javascript library ---
+
+ifeq "$(HAVE_MUJS)" "yes"
+PDF_OBJ += $(OUT)/pdf/js/pdf-js.o
+PDF_OBJ += $(OUT)/pdf/js/pdf-jsimp-mu.o
+THIRD_LIBS += $(MUJS_LIB)
+LIBS += $(MUJS_LIBS)
+CFLAGS += $(MUJS_CFLAGS)
+else ifeq "$(HAVE_JSCORE)" "yes"
+PDF_OBJ += $(OUT)/pdf/js/pdf-js.o
+PDF_OBJ += $(OUT)/pdf/js/pdf-jsimp-jscore.o
+LIBS += $(JSCORE_LIBS)
+CFLAGS += $(JSCORE_CFLAGS)
+else ifeq "$(HAVE_V8)" "yes"
+PDF_OBJ += $(OUT)/pdf/js/pdf-js.o
+PDF_OBJ += $(OUT)/pdf/js/pdf-jsimp-cpp.o $(OUT)/pdf/js/pdf-jsimp-v8.o
+LIBS += $(V8_LIBS)
+CFLAGS += $(V8_CFLAGS)
+else
+PDF_OBJ += $(OUT)/pdf/js/pdf-js-none.o
+endif
 
 $(FITZ_OBJ) : $(FITZ_HDR) $(FITZ_SRC_HDR)
 $(PDF_OBJ) : $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
@@ -108,29 +126,13 @@ $(CBZ_OBJ) : $(FITZ_HDR) $(CBZ_HDR) $(CBZ_SRC_HDR)
 $(IMG_OBJ) : $(FITZ_HDR) $(IMG_HDR) $(IMG_SRC_HDR)
 $(TIFF_OBJ) : $(FITZ_HDR) $(IMG_HDR) $(TIFF_SRC_HDR)
 
-$(PDF_JS_JSCORE_OBJ) : $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
-$(PDF_JS_V8_OBJ) : $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
-$(PDF_JS_NONE_OBJ) :=  $(FITZ_HDR) $(PDF_HDR) $(PDF_SRC_HDR)
-
 # --- Library ---
 
 MUPDF_LIB := $(OUT)/libmupdf.a
-MUPDF_JS_NONE_LIB := $(OUT)/libmupdf-js-none.a
 
 $(MUPDF_LIB) : $(FITZ_OBJ) $(PDF_OBJ) $(XPS_OBJ) $(CBZ_OBJ) $(IMG_OBJ) $(TIFF_OBJ)
-$(MUPDF_JS_NONE_LIB) : $(PDF_JS_NONE_OBJ)
 
-ifeq "$(V8_PRESENT)" "yes"
-MUPDF_JS_V8_LIB := $(OUT)/libmupdf-js-v8.a
-$(MUPDF_JS_V8_LIB) : $(PDF_JS_V8_OBJ)
-endif
-
-ifeq "$(JSCORE_PRESENT)" "yes"
-MUPDF_JS_JSCORE_LIB := $(OUT)/libmupdf-js-jscore.a
-$(MUPDF_JS_JSCORE_LIB) : $(PDF_JS_JSCORE_OBJ)
-endif
-
-INSTALL_LIBS := $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(MUPDF_JS_V8_LIB) $(MUPDF_JS_JSCORE_LIB)
+INSTALL_LIBS := $(MUPDF_LIB)
 
 # --- Rules ---
 
@@ -211,7 +213,7 @@ ADOBECA_GEN := $(GEN)/gen_adobe_ca.h
 $(ADOBECA_GEN) : $(ADOBECA_SRC)
 	$(QUIET_GEN) $(BIN2HEX) $@ $(ADOBECA_SRC)
 
-ifeq "$(CROSSCOMPILE)" ""
+ifeq "$(CROSSCOMPILE)" "yes"
 $(CMAP_GEN) : $(CMAPDUMP) | $(GEN)
 $(FONT_GEN) : $(FONTDUMP) | $(GEN)
 $(JAVASCRIPT_GEN) : $(CQUOTE) | $(GEN)
@@ -231,52 +233,45 @@ $(OUT)/cmapdump.o : source/pdf/pdf-cmap.c source/pdf/pdf-cmap-parse.c
 MUDRAW := $(addprefix $(OUT)/, mudraw)
 MUDRAW_OBJ := $(addprefix $(OUT)/tools/, mudraw.o)
 $(MUDRAW_OBJ) : $(FITZ_HDR)
-$(MUDRAW) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
+$(MUDRAW) : $(MUPDF_LIB) $(THIRD_LIBS)
 $(MUDRAW) : $(MUDRAW_OBJ)
 	$(LINK_CMD)
 
 MUTOOL := $(addprefix $(OUT)/, mutool)
 MUTOOL_OBJ := $(addprefix $(OUT)/tools/, mutool.o pdfclean.o pdfextract.o pdfinfo.o pdfposter.o pdfshow.o)
 $(MUTOOL_OBJ): $(FITZ_HDR) $(PDF_HDR)
-$(MUTOOL) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
+$(MUTOOL) : $(MUPDF_LIB) $(THIRD_LIBS)
 $(MUTOOL) : $(MUTOOL_OBJ)
 	$(LINK_CMD)
 
-ifeq "$(V8_PRESENT)" "yes"
-MUJSTEST_V8 := $(OUT)/mujstest-v8
-$(MUJSTEST_V8) : $(MUPDF_LIB) $(MUPDF_JS_V8_LIB) $(THIRD_LIBS)
-$(MUJSTEST_V8) : $(addprefix $(OUT)/platform/x11/, jstest_main.o pdfapp.o)
-	$(LINK_CMD) $(V8_LIBS)
-endif
+MJSGEN := $(OUT)/mjsgen
+$(MJSGEN) : $(MUPDF_LIB) $(THIRD_LIBS)
+$(MJSGEN) : $(addprefix $(OUT)/tools/, mjsgen.o)
+	$(LINK_CMD)
 
-ifeq "$(NOX11)" ""
+MUJSTEST := $(OUT)/mujstest
+$(MUJSTEST) : $(MUPDF_LIB) $(THIRD_LIBS)
+$(MUJSTEST) : $(addprefix $(OUT)/platform/x11/, jstest_main.o pdfapp.o)
+	$(LINK_CMD)
+
+ifeq "$(HAVE_X11)" "yes"
 MUVIEW_X11 := $(OUT)/mupdf-x11
-$(MUVIEW_X11) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS)
+$(MUVIEW_X11) : $(MUPDF_LIB) $(THIRD_LIBS)
 $(MUVIEW_X11) : $(addprefix $(OUT)/platform/x11/, x11_main.o x11_image.o pdfapp.o)
 	$(LINK_CMD) $(X11_LIBS)
 
-ifeq "$(NOCURL)" ""
+ifeq "$(HAVE_CURL)" "yes"
 MUVIEW_X11_CURL := $(OUT)/mupdf-x11-curl
-$(MUVIEW_X11_CURL) : $(MUPDF_LIB) $(MUPDF_JS_NONE_LIB) $(THIRD_LIBS) $(CURL_LIB)
+$(MUVIEW_X11_CURL) : $(MUPDF_LIB) $(THIRD_LIBS) $(CURL_LIB)
 $(MUVIEW_X11_CURL) : $(addprefix $(OUT)/platform/x11/curl/, x11_main.o x11_image.o pdfapp.o curl_stream.o)
 	$(LINK_CMD) $(X11_LIBS) $(CURL_LIBS)
 endif
 endif
 
-ifeq "$(V8_PRESENT)" "yes"
-ifeq "$(NOX11)" ""
-MUVIEW_X11_V8 := $(OUT)/mupdf-x11-v8
-$(MUVIEW_X11_V8) : $(MUPDF_LIB) $(MUPDF_JS_V8_LIB) $(THIRD_LIBS)
-$(MUVIEW_X11_V8) : $(addprefix $(OUT)/platform/x11/, x11_main.o x11_image.o pdfapp.o)
-	$(LINK_CMD) $(X11_LIBS) $(V8_LIBS)
-endif
-endif
-
 MUVIEW := $(MUVIEW_X11)
-MUVIEW_V8 := $(MUVIEW_X11_V8)
 MUVIEW_CURL := $(MUVIEW_X11_CURL)
 
-INSTALL_APPS := $(MUDRAW) $(MUTOOL) $(MUVIEW) $(MUJSTEST_V8) $(MUVIEW_V8) $(MUVIEW_CURL)
+INSTALL_APPS := $(MUDRAW) $(MUTOOL) $(MUVIEW) $(MUJSTEST) $(MUVIEW_CURL)
 
 # --- Update version string header ---
 
@@ -337,9 +332,6 @@ tags: $(shell find include source platform -name '*.[ch]')
 	ctags $^
 
 all: libs apps
-
-all-nojs:
-	$(MAKE) V8_PRESENT=no
 
 clean:
 	rm -rf $(OUT)

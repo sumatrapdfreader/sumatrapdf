@@ -18,6 +18,7 @@ enum
 	Ff_RadioInUnison = 1 << (26-1)
 };
 
+char *pdf_get_string_or_stream(pdf_document *doc, pdf_obj *obj);
 pdf_obj *pdf_get_inheritable(pdf_document *doc, pdf_obj *obj, char *key);
 int pdf_get_field_flags(pdf_document *doc, pdf_obj *obj);
 int pdf_field_type(pdf_document *doc, pdf_obj *field);

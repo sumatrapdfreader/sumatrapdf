@@ -27,10 +27,12 @@ endif
 
 # Windows (MINGW) build doesn't use system libraries.
 ifeq "$(OS)" "MINGW"
-NOX11 ?= yes
 
 # Mac OS X doesn't have pkg-config so we hard code paths.
 else ifeq "$(OS)" "MACOS"
+
+HAVE_X11 ?= yes
+
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
 SYS_OPENSSL_LIBS = -lcrypto
 
@@ -53,6 +55,8 @@ RANLIB_CMD = xcrun ranlib $@
 
 # Linux uses pkg-config for system libraries.
 else ifeq "$(OS)" "Linux"
+
+HAVE_X11 ?= yes
 
 ifeq "$(shell pkg-config --exists libcrypto && echo yes)" "yes"
 SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL $(shell pkg-config --cflags libcrypto)
@@ -138,6 +142,7 @@ RANLIB_CMD = xcrun ranlib $@
 CROSSCOMPILE=yes
 endif
 
+# TODO: If crosscompiling, why not just call "make libs" instead of this exception?
 ifeq "$(CROSSCOMPILE)" "yes"
-NOX11 ?= yes
+HAVE_X11 ?= no
 endif

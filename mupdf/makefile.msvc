@@ -271,7 +271,7 @@ MUPDF_OBJS = \
 	$(OP)\pdf-unicode.obj $(OP)\pdf-write.obj $(OP)\pdf-xobject.obj $(OP)\pdf-xref-aux.obj \
 	$(OP)\pdf-xref.obj $(OP)\pdf-js-none.obj $(OP)\pdf-appearance.obj \
 	$(OP)\pdf-run.obj $(OP)\pdf-op-run.obj $(OP)\pdf-op-buffer.obj $(OP)\pdf-op-filter.obj \
-	$(OP)\pdf-clean.obj
+	$(OP)\pdf-clean.obj $(OP)\pdf-annot-edit.obj
 
 MUXPS_OBJS = \
 	$(OX)\xps-common.obj $(OX)\xps-doc.obj $(OX)\xps-glyphs.obj $(OX)\xps-gradient.obj \

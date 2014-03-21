@@ -479,6 +479,7 @@ EXPORTS
 	pdf_load_name_tree
 	pdf_file_spec_to_str
 	pdf_load_link_annots
+	pdf_transform_annot
 	pdf_load_annots
 	pdf_update_annot
 	pdf_free_annot
@@ -547,10 +548,12 @@ EXPORTS
 	pdf_finish_edit
 	pdf_recognize
 
+	pdf_get_string_or_stream
 	pdf_get_inheritable
 	pdf_get_field_flags
 	pdf_field_type
 	pdf_set_field_type
+	pdf_field_value
 	pdf_load_encoding
 	pdf_lookup_agl
 	pdf_set_font_wmode
@@ -581,10 +584,9 @@ EXPORTS
 	pdf_measure_text
 	pdf_text_stride
 	pdf_run_glyph
+	pdf_enable_js
+	pdf_disable_js
 	pdf_js_supported
-	pdf_new_js
-	pdf_drop_js
-	pdf_js_load_document_level
 	pdf_js_setup_event
 	pdf_js_get_event
 	pdf_js_execute

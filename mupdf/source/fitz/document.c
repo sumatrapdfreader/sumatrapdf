@@ -319,11 +319,6 @@ fz_page_presentation(fz_document *doc, fz_page *page, float *duration)
 	return NULL;
 }
 
-int fz_javascript_supported(void)
-{
-	return pdf_js_supported();
-}
-
 void
 fz_write_document(fz_document *doc, char *filename, fz_write_options *opts)
 {

@@ -405,12 +405,6 @@ char *fz_strdup_no_throw(fz_context *ctx, const char *s);
 */
 int fz_gen_id(fz_context *ctx);
 
-/*
-	fz_javascript_supported: test whether a version of mupdf with
-	a javascript engine is in use.
-*/
-int fz_javascript_supported(void);
-
 struct fz_warn_context_s
 {
 	char message[256];

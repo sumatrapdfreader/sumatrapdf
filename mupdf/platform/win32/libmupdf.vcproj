@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include"
+				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\mujs"
 				PreprocessorDefinitions="DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include"
+				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\mujs"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -165,7 +165,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include"
+				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\mujs"
 				PreprocessorDefinitions="MEMENTO=1;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -227,7 +227,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\openssl\include"
+				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\openssl\include;..\..\thirdparty\mujs"
 				PreprocessorDefinitions="DEBUG=1;HAVE_OPENSSL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -292,7 +292,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include"
+				AdditionalIncludeDirectories="..\..\scripts\freetype;..\..\scripts\jpeg;..\..\scripts\openjpeg;..\..\include;..\..\ucdn;..\..\generated;..\..\thirdparty\jbig2dec;..\..\thirdparty\jpeg;..\..\thirdparty\openjpeg\libopenjpeg;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\mujs"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -710,6 +710,10 @@
 			Name="pdf"
 			>
 			<File
+				RelativePath="..\..\source\pdf\pdf-annot-edit.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\pdf\pdf-annot.c"
 				>
 			</File>
@@ -889,6 +893,22 @@
 				RelativePath="..\..\source\pdf\pdf-xref.c"
 				>
 			</File>
+			<Filter
+				Name="js"
+				>
+				<File
+					RelativePath="..\..\source\pdf\js\pdf-js.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\pdf\js\pdf-jsimp-mu.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\source\pdf\js\pdf-util.js"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="!include"

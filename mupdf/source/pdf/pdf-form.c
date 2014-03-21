@@ -15,49 +15,6 @@ enum
 	SigFlag_AppendOnly = 2
 };
 
-static char *get_string_or_stream(pdf_document *doc, pdf_obj *obj)
-{
-	fz_context *ctx = doc->ctx;
-	int len = 0;
-	char *buf = NULL;
-	fz_buffer *strmbuf = NULL;
-	char *text = NULL;
-
-	fz_var(strmbuf);
-	fz_var(text);
-	fz_try(ctx)
-	{
-		if (pdf_is_string(obj))
-		{
-			len = pdf_to_str_len(obj);
-			buf = pdf_to_str_buf(obj);
-		}
-		else if (pdf_is_stream(doc, pdf_to_num(obj), pdf_to_gen(obj)))
-		{
-			strmbuf = pdf_load_stream(doc, pdf_to_num(obj), pdf_to_gen(obj));
-			len = fz_buffer_storage(ctx, strmbuf, (unsigned char **)&buf);
-		}
-
-		if (buf)
-		{
-			text = fz_malloc(ctx, len+1);
-			memcpy(text, buf, len);
-			text[len] = 0;
-		}
-	}
-	fz_always(ctx)
-	{
-		fz_drop_buffer(ctx, strmbuf);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(ctx, text);
-		fz_rethrow(ctx);
-	}
-
-	return text;
-}
-
 /* Find the point in a field hierarchy where all descendents
  * share the same name */
 static pdf_obj *find_head_of_field_group(pdf_obj *obj)
@@ -405,84 +362,6 @@ static void execute_action(pdf_document *doc, pdf_obj *obj, pdf_obj *a)
 			if (!strcmp(name, "Print"))
 				pdf_event_issue_print(doc);
 		}
-	}
-}
-
-void pdf_update_appearance(pdf_document *doc, pdf_annot *annot)
-{
-	pdf_obj *obj = annot->obj;
-	if (!pdf_dict_gets(obj, "AP") || pdf_obj_is_dirty(obj))
-	{
-		fz_annot_type type = pdf_annot_obj_type(obj);
-		switch (type)
-		{
-		case FZ_ANNOT_WIDGET:
-			switch (pdf_field_type(doc, obj))
-			{
-			case PDF_WIDGET_TYPE_TEXT:
-				{
-					pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
-					if (formatting && doc->js)
-					{
-						/* Apply formatting */
-						pdf_js_event e;
-						fz_context *ctx = doc->ctx;
-
-						e.target = obj;
-						e.value = pdf_field_value(doc, obj);
-						fz_try(ctx)
-						{
-							pdf_js_setup_event(doc->js, &e);
-						}
-						fz_always(ctx)
-						{
-							fz_free(ctx, e.value);
-						}
-						fz_catch(ctx)
-						{
-							fz_rethrow(ctx);
-						}
-						execute_action(doc, obj, formatting);
-						/* Update appearance from JS event.value */
-						pdf_update_text_appearance(doc, obj, pdf_js_get_event(doc->js)->value);
-					}
-					else
-					{
-						/* Update appearance from field value */
-						pdf_update_text_appearance(doc, obj, NULL);
-					}
-				}
-				break;
-			case PDF_WIDGET_TYPE_PUSHBUTTON:
-				pdf_update_pushbutton_appearance(doc, obj);
-				break;
-			case PDF_WIDGET_TYPE_LISTBOX:
-			case PDF_WIDGET_TYPE_COMBOBOX:
-				/* Treating listbox and combobox identically for now,
-				 * and the behaviour is most appropriate for a combobox */
-				pdf_update_combobox_appearance(doc, obj);
-				break;
-			}
-			break;
-		case FZ_ANNOT_TEXT:
-			pdf_update_text_annot_appearance(doc, annot);
-			break;
-		case FZ_ANNOT_FREETEXT:
-			pdf_update_free_text_annot_appearance(doc, annot);
-			break;
-		case FZ_ANNOT_STRIKEOUT:
-		case FZ_ANNOT_UNDERLINE:
-		case FZ_ANNOT_HIGHLIGHT:
-			pdf_update_text_markup_appearance(doc, annot, type);
-			break;
-		case FZ_ANNOT_INK:
-			pdf_update_ink_appearance(doc, annot);
-			break;
-		default:
-			break;
-		}
-
-		pdf_clean_obj(obj);
 	}
 }
 
@@ -972,11 +851,6 @@ int pdf_widget_get_type(pdf_widget *widget)
 	return annot->widget_type;
 }
 
-char *pdf_field_value(pdf_document *doc, pdf_obj *field)
-{
-	return get_string_or_stream(doc, pdf_get_inheritable(doc, field, "V"));
-}
-
 static int set_text_field_value(pdf_document *doc, pdf_obj *field, char *text)
 {
 	pdf_obj *v = pdf_dict_getp(field, "AA/V");
@@ -1375,7 +1249,7 @@ int pdf_text_widget_content_type(pdf_document *doc, pdf_widget *tw)
 	fz_var(code);
 	fz_try(ctx)
 	{
-		code = get_string_or_stream(doc, pdf_dict_getp(annot->obj, "AA/F/JS"));
+		code = pdf_get_string_or_stream(doc, pdf_dict_getp(annot->obj, "AA/F/JS"));
 		if (code)
 		{
 			if (strstr(code, "AFNumber_Format"))

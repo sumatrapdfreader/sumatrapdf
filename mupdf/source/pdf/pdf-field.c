@@ -15,6 +15,54 @@ pdf_obj *pdf_get_inheritable(pdf_document *doc, pdf_obj *obj, char *key)
 	return fobj ? fobj : pdf_dict_gets(pdf_dict_gets(pdf_dict_gets(pdf_trailer(doc), "Root"), "AcroForm"), key);
 }
 
+char *pdf_get_string_or_stream(pdf_document *doc, pdf_obj *obj)
+{
+	fz_context *ctx = doc->ctx;
+	int len = 0;
+	char *buf = NULL;
+	fz_buffer *strmbuf = NULL;
+	char *text = NULL;
+
+	fz_var(strmbuf);
+	fz_var(text);
+	fz_try(ctx)
+	{
+		if (pdf_is_string(obj))
+		{
+			len = pdf_to_str_len(obj);
+			buf = pdf_to_str_buf(obj);
+		}
+		else if (pdf_is_stream(doc, pdf_to_num(obj), pdf_to_gen(obj)))
+		{
+			strmbuf = pdf_load_stream(doc, pdf_to_num(obj), pdf_to_gen(obj));
+			len = fz_buffer_storage(ctx, strmbuf, (unsigned char **)&buf);
+		}
+
+		if (buf)
+		{
+			text = fz_malloc(ctx, len+1);
+			memcpy(text, buf, len);
+			text[len] = 0;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, strmbuf);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, text);
+		fz_rethrow(ctx);
+	}
+
+	return text;
+}
+
+char *pdf_field_value(pdf_document *doc, pdf_obj *field)
+{
+	return pdf_get_string_or_stream(doc, pdf_get_inheritable(doc, field, "V"));
+}
+
 int pdf_get_field_flags(pdf_document *doc, pdf_obj *obj)
 {
 	return pdf_to_int(pdf_get_inheritable(doc, obj, "Ff"));
