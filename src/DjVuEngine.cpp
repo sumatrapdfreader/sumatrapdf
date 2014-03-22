@@ -252,6 +252,10 @@ public:
     virtual bool HasTocTree() const { return outline != miniexp_nil; }
     virtual DocTocItem *GetTocTree();
 
+    virtual bool HasPageLabels() const;
+    virtual WCHAR *GetPageLabel(int pageNo) const;
+    virtual int GetPageByLabel(const WCHAR *label) const;
+
 protected:
     WCHAR *fileName;
 
@@ -287,9 +291,10 @@ DjVuEngineImpl::~DjVuEngineImpl()
     free(fileName);
 
     if (annos) {
-        for (int i = 0; i < pageCount; i++)
+        for (int i = 0; i < pageCount; i++) {
             if (annos[i])
                 ddjvu_miniexp_release(doc, annos[i]);
+        }
         free(annos);
     }
     if (outline != miniexp_nil)
@@ -922,9 +927,10 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
 {
     if (!str::StartsWith(name, "#"))
         return NULL;
-    for (size_t i = 0; i < fileInfo.Count(); i++)
+    for (size_t i = 0; i < fileInfo.Count(); i++) {
         if (fileInfo.At(i).pageno >= 0 && str::EqI(name + 1, fileInfo.At(i).id))
             return str::Format("#%d", fileInfo.At(i).pageno + 1);
+    }
     return NULL;
 }
 
@@ -988,6 +994,37 @@ DocTocItem *DjVuEngineImpl::GetTocTree()
     if (root)
         root->OpenSingleNode();
     return root;
+}
+
+bool DjVuEngineImpl::HasPageLabels() const
+{
+    for (size_t i = 0; i < fileInfo.Count(); i++) {
+        ddjvu_fileinfo_t& info = fileInfo.At(i);
+        if (info.pageno >= 0 && !str::Eq(info.title, info.id))
+            return true;
+    }
+    return false;
+}
+
+WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
+{
+    for (size_t i = 0; i < fileInfo.Count(); i++) {
+        ddjvu_fileinfo_t& info = fileInfo.At(i);
+        if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id))
+            return str::conv::FromUtf8(info.title);
+    }
+    return BaseEngine::GetPageLabel(pageNo);
+}
+
+int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
+{
+    ScopedMem<char> labelUtf8(str::conv::ToUtf8(label));
+    for (size_t i = 0; i < fileInfo.Count(); i++) {
+        ddjvu_fileinfo_t& info = fileInfo.At(i);
+        if (info.pageno >= 0 && str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))
+            return info.pageno + 1;
+    }
+    return BaseEngine::GetPageByLabel(label);
 }
 
 bool DjVuEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
