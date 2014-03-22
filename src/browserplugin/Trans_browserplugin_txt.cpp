@@ -222,9 +222,9 @@ const WCHAR * const gTranslations[] = {
 
   /* Translations for language he */
   L"%s מתוך %s",
-  L"נכשלה SumatraPDF הפעלת",
-  L"לא נמצאה SumatraPDF התוכנה",
-  L"הורדת המסמך נכשלה",
+  L"הפעלת SumatraPDF נכשלה.",
+  L"התוכנה SumatraPDF לא נמצאה.",
+  L"הורדת המסמך נכשלה.",
   NULL,
   NULL,
   NULL,
