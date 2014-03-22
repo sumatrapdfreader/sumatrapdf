@@ -252,7 +252,7 @@ public:
     virtual bool HasTocTree() const { return outline != miniexp_nil; }
     virtual DocTocItem *GetTocTree();
 
-    virtual bool HasPageLabels() const;
+    virtual bool HasPageLabels() const { return hasPageLabels; }
     virtual WCHAR *GetPageLabel(int pageNo) const;
     virtual int GetPageByLabel(const WCHAR *label) const;
 
@@ -266,6 +266,7 @@ protected:
     miniexp_t outline;
     miniexp_t *annos;
     Vec<PageAnnotation> userAnnots;
+    bool hasPageLabels;
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 
@@ -279,7 +280,7 @@ protected:
 };
 
 DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), pageCount(0), mediaboxes(NULL),
-    doc(NULL), outline(miniexp_nil), annos(NULL)
+    doc(NULL), outline(miniexp_nil), annos(NULL), hasPageLabels(false)
 {
 }
 
@@ -429,8 +430,10 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
         ddjvu_fileinfo_s info;
         while ((status = ddjvu_document_get_fileinfo(doc, i, &info)) < DDJVU_JOB_OK)
             gDjVuContext.SpinMessageLoop();
-        if (DDJVU_JOB_OK == status && info.type == 'P')
+        if (DDJVU_JOB_OK == status && info.type == 'P' && info.pageno >= 0) {
             fileInfo.Append(info);
+            hasPageLabels = hasPageLabels || !str::Eq(info.title, info.id);
+        }
     }
 
     return true;
@@ -928,7 +931,7 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
     if (!str::StartsWith(name, "#"))
         return NULL;
     for (size_t i = 0; i < fileInfo.Count(); i++) {
-        if (fileInfo.At(i).pageno >= 0 && str::EqI(name + 1, fileInfo.At(i).id))
+        if (str::EqI(name + 1, fileInfo.At(i).id))
             return str::Format("#%d", fileInfo.At(i).pageno + 1);
     }
     return NULL;
@@ -996,16 +999,6 @@ DocTocItem *DjVuEngineImpl::GetTocTree()
     return root;
 }
 
-bool DjVuEngineImpl::HasPageLabels() const
-{
-    for (size_t i = 0; i < fileInfo.Count(); i++) {
-        ddjvu_fileinfo_t& info = fileInfo.At(i);
-        if (info.pageno >= 0 && !str::Eq(info.title, info.id))
-            return true;
-    }
-    return false;
-}
-
 WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
 {
     for (size_t i = 0; i < fileInfo.Count(); i++) {
@@ -1021,7 +1014,7 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
     ScopedMem<char> labelUtf8(str::conv::ToUtf8(label));
     for (size_t i = 0; i < fileInfo.Count(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.At(i);
-        if (info.pageno >= 0 && str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))
+        if (str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))
             return info.pageno + 1;
     }
     return BaseEngine::GetPageByLabel(label);
