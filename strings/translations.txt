@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-82465db96917679f3c96b2b00ac2ce1bec481e3b
+e2d116c53fefa48687b94be4f0d3c412e7540517
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -8567,7 +8567,7 @@ fr:Rechercher
 fy-nl:Sykje
 ga:Aimsigh
 gl:Procurar
-he:חיפוש
+he:חפש
 hi:खोजें
 hr:Pronađi
 hu:Keresés
