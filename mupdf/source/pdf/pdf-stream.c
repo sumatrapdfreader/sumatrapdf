@@ -386,10 +386,6 @@ pdf_load_compressed_inline_image(pdf_document *doc, pdf_obj *dict, int length, f
 
 		image->tile = fz_decomp_image_from_stream(ctx, istm, image, indexed, 0, 0);
 	}
-	fz_always(ctx)
-	{
-		fz_close(istm);
-	}
 	fz_catch(ctx)
 	{
 		fz_free(ctx, bc);

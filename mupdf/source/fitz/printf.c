@@ -1,6 +1,6 @@
 #include "mupdf/fitz.h"
 
-/* SumatraPDF: VS2013 has both va_copy and strtof */
+/* Microsoft Visual C up to VS2012 */
 #if _MSC_VER < 1800
 #define va_copy(a, oa) do { a=oa; } while (0)
 #undef va_end

@@ -213,7 +213,7 @@ ADOBECA_GEN := $(GEN)/gen_adobe_ca.h
 $(ADOBECA_GEN) : $(ADOBECA_SRC)
 	$(QUIET_GEN) $(BIN2HEX) $@ $(ADOBECA_SRC)
 
-ifeq "$(CROSSCOMPILE)" "yes"
+ifneq "$(CROSSCOMPILE)" "yes"
 $(CMAP_GEN) : $(CMAPDUMP) | $(GEN)
 $(FONT_GEN) : $(FONTDUMP) | $(GEN)
 $(JAVASCRIPT_GEN) : $(CQUOTE) | $(GEN)
