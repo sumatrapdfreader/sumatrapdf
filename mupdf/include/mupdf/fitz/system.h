@@ -69,6 +69,15 @@
 
 #ifdef _MSC_VER /* Microsoft Visual C */
 
+/* MSVC up to VS2012 */
+#if _MSC_VER < 1800
+#define va_copy(a, oa) do { a=oa; } while (0)
+#define va_copy_end(a) do {} while(0)
+#define strtof(a,b) ((float)strtod((a),(b)))
+#else
+#define va_copy_end(a) va_end(a)
+#endif
+
 typedef signed char int8_t;
 typedef short int int16_t;
 typedef int int32_t;
@@ -116,8 +125,9 @@ void fz_free_argv(int argc, char **argv);
 
 #ifndef O_BINARY
 #define O_BINARY 0
-
 #endif
+
+#define va_copy_end(a) va_end(a)
 
 #endif
 

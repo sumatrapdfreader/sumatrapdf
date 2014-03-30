@@ -1,13 +1,5 @@
 #include "mupdf/fitz.h"
 
-/* Microsoft Visual C up to VS2012 */
-#if _MSC_VER < 1800
-#define va_copy(a, oa) do { a=oa; } while (0)
-#undef va_end
-#define va_end(a)
-#define strtof(a, b) ((float)strtod((a), (b)))
-#endif
-
 struct fmtbuf
 {
 	char *p;
@@ -280,7 +272,7 @@ fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list old_args)
 	/* First try using our fixed size buffer */
 	va_copy(args, old_args);
 	l = fz_vsnprintf(buffer, sizeof buffer, fmt, args);
-	va_end(args);
+	va_copy_end(args);
 
 	/* If that failed, allocate the right size buffer dynamically */
 	if (l >= sizeof buffer)
@@ -288,7 +280,7 @@ fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list old_args)
 		b = fz_malloc(ctx, l + 1);
 		va_copy(args, old_args);
 		fz_vsnprintf(buffer, l + 1, fmt, args);
-		va_end(args);
+		va_copy_end(args);
 	}
 
 	l = fwrite(b, 1, l, file);

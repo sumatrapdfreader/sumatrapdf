@@ -240,15 +240,9 @@ fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list o
 	va_list args;
 
 	slack = buffer->cap - buffer->len;
-#ifdef _MSC_VER /* Microsoft Visual C */
-	args = old_args;
-#else
 	va_copy(args, old_args);
-#endif
 	len = fz_vsnprintf((char *)buffer->data + buffer->len, slack, fmt, args);
-#ifndef _MSC_VER
-	va_end(args);
-#endif
+	va_copy_end(args);
 
 	/* len = number of chars written, not including the terminating
 	 * NULL, so len+1 > slack means "truncated". */
@@ -258,15 +252,9 @@ fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list o
 		fz_ensure_buffer(ctx, buffer, buffer->len + len);
 		slack = buffer->cap - buffer->len;
 
-#ifdef _MSC_VER /* Microsoft Visual C */
-		args = old_args;
-#else
 		va_copy(args, old_args);
-#endif
 		len = fz_vsnprintf((char *)buffer->data + buffer->len, slack, fmt, args);
-#ifndef _MSC_VER
-		va_end(args);
-#endif
+		va_copy_end(args);
 	}
 
 	buffer->len += len;

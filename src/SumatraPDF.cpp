@@ -2326,8 +2326,9 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         win.mouseAction = MA_IDLE;
         return;
     }
-    //CrashIf(win.mouseAction == MA_IDLE);  // happened e.g. in crash 50539
-    CrashIf(win.dm);
+
+    // CrashIf(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
+    CrashIf(!win.dm);
 
     SetFocus(win.hwndFrame);
 
