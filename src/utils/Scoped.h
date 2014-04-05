@@ -40,7 +40,7 @@ public:
 class ScopedHandle {
     HANDLE handle;
 public:
-    ScopedHandle(HANDLE handle) : handle(handle) { }
+    explicit ScopedHandle(HANDLE handle) : handle(handle) { }
     ~ScopedHandle() { CloseHandle(handle); }
     operator HANDLE() const { return handle; }
 };
@@ -117,7 +117,7 @@ template <typename T>
 class ScopedGdiObj {
     T obj;
 public:
-    ScopedGdiObj(T obj) : obj(obj) { }
+    explicit ScopedGdiObj(T obj) : obj(obj) { }
     ~ScopedGdiObj() { DeleteObject(obj); }
     operator T() const { return obj; }
 };
@@ -146,7 +146,7 @@ public:
     // suppress the GDI+ background thread when initiating in WinMain,
     // as that thread causes DDE messages to be sent too early and
     // thus causes unexpected timeouts
-    ScopedGdiPlus(bool inWinMain=false) : noBgThread(inWinMain) {
+    explicit ScopedGdiPlus(bool inWinMain=false) : noBgThread(inWinMain) {
         si.SuppressBackgroundThread = noBgThread;
         Gdiplus::GdiplusStartup(&token, &si, &so);
         if (noBgThread)

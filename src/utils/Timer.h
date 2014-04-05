@@ -19,7 +19,7 @@ class Timer {
     }
 
 public:
-    Timer(bool start=false) {
+    explicit Timer(bool start=false) {
         end.QuadPart = 0;
         if (start)
             Start();

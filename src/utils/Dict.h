@@ -24,7 +24,7 @@ public:
     PoolAllocator *allocator;
     HashTable *h;
 
-    MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
+    explicit MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
 
     size_t Count() const;
@@ -40,7 +40,7 @@ public:
     PoolAllocator *allocator;
     HashTable *h;
 
-    MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
+    explicit MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapWStrToInt();
 
     size_t Count() const;

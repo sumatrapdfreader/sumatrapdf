@@ -31,7 +31,7 @@ class SquareTree {
     ScopedMem<char> dataUtf8;
 
 public:
-    SquareTree(const char *data);
+    explicit SquareTree(const char *data);
     ~SquareTree() { delete root; }
 
     SquareTreeNode *root;

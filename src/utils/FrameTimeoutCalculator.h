@@ -13,7 +13,7 @@ class FrameTimeoutCalculator {
     LARGE_INTEGER   timeFreq;
 
 public:
-    FrameTimeoutCalculator(int framesPerSecond) {
+    explicit FrameTimeoutCalculator(int framesPerSecond) {
         QueryPerformanceFrequency(&timeFreq); // number of ticks per second
         ticsPerMs = timeFreq.QuadPart / 1000;
         ticksPerFrame = timeFreq.QuadPart / framesPerSecond;

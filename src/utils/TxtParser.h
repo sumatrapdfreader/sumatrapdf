@@ -33,7 +33,7 @@ struct TxtNode {
     char *          keyStart;
     char *          keyEnd;
 
-    TxtNode(TxtNodeType tp) {
+    explicit TxtNode(TxtNodeType tp) {
         type = tp;
     }
     ~TxtNode() { }

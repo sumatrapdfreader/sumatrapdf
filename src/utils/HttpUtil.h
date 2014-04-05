@@ -22,7 +22,7 @@ public:
     str::Str<char> *data;
     DWORD           error;
 
-    HttpReq(const WCHAR *url, HttpReqCallback *callback=NULL);
+    explicit HttpReq(const WCHAR *url, HttpReqCallback *callback=NULL);
     ~HttpReq();
 };
 

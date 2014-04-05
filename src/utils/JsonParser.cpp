@@ -26,7 +26,7 @@ public:
     bool canceled;
     ValueVisitor *visitor;
 
-    ParseArgs(ValueVisitor *visitor) : canceled(false), visitor(visitor) { }
+    explicit ParseArgs(ValueVisitor *visitor) : canceled(false), visitor(visitor) { }
 };
 
 static const char *ParseValue(ParseArgs& args, const char *data);

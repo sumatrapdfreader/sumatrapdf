@@ -51,7 +51,7 @@ struct DrawInstr {
 
     DrawInstr() { }
 
-    DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) { }
+    explicit DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) { }
 
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox, bool rtl=false);

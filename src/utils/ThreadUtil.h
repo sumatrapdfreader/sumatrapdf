@@ -25,7 +25,7 @@ protected:
 
 public:
     // name is for debugging purposes, can be NULL.
-    ThreadBase(const char *name=NULL);
+    explicit ThreadBase(const char *name=NULL);
 
     // call this to start executing Run() function.
     void Start();

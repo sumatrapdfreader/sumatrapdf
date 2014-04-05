@@ -24,7 +24,7 @@ class BencObj {
     BencType type;
 
 public:
-    BencObj(BencType type) : type(type) { }
+    explicit BencObj(BencType type) : type(type) { }
     virtual ~BencObj() { }
     BencType Type() const { return type; }
 
@@ -36,7 +36,7 @@ class BencString : public BencObj {
     char *value;
 
 public:
-    BencString(const WCHAR *value);
+    explicit BencString(const WCHAR *value);
     BencString(const char *rawValue, size_t len);
     virtual ~BencString() { free(value); }
 
@@ -51,7 +51,7 @@ class BencInt : public BencObj {
     int64_t value;
 
 public:
-    BencInt(int64_t value) : BencObj(BT_INT), value(value) { }
+    explicit BencInt(int64_t value) : BencObj(BT_INT), value(value) { }
     int64_t Value() const { return value; }
 
     virtual char *Encode() const;

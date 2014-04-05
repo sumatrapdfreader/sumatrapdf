@@ -72,7 +72,7 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    Vec(size_t capHint=0, Allocator *allocator=NULL) :
+    explicit Vec(size_t capHint=0, Allocator *allocator=NULL) :
         capacityHint(capHint), allocator(allocator), iterCurr(NULL)
     {
         els = buf;
@@ -295,7 +295,7 @@ namespace str {
 template <typename T>
 class Str : public Vec<T> {
 public:
-    Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
+    explicit Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
 
     void Append(T c)
     {
@@ -457,7 +457,7 @@ class WStrList {
         WCHAR *string;
         uint32_t hash;
 
-        Item(WCHAR *string=NULL, uint32_t hash=0) : string(string), hash(hash) { }
+        explicit Item(WCHAR *string=NULL, uint32_t hash=0) : string(string), hash(hash) { }
     };
 
     Vec<Item> items;
@@ -479,7 +479,7 @@ class WStrList {
     }
 
 public:
-    WStrList(size_t capHint=0, Allocator *allocator=NULL) :
+    explicit WStrList(size_t capHint=0, Allocator *allocator=NULL) :
         items(capHint, allocator), count(0), allocator(allocator) { }
 
     ~WStrList() {

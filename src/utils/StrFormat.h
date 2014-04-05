@@ -39,7 +39,7 @@ public:
     };
 
     Arg();
-    Arg(int);
+    explicit Arg(int);
     // Note: downside of declaring char * and WCHAR * constructor as explicit
     // means that we need to explicitly construct Arg() with literal strings
     // because const char[N] is not the same type as const char *

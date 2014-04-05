@@ -17,8 +17,8 @@
 // allocations would be done from a single VecSegmented and freed item
 // would be put on a free list, so that we can reuse them
 
-#ifndef SIGSLOT_H__
-#define SIGSLOT_H__
+#ifndef SigSlot_h
+#define SigSlot_h
 
 // including <list> at this point breaks debug compilation
 // under VS2008 due to the redefined operator new

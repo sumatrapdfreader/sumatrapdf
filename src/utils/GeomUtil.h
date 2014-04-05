@@ -210,7 +210,7 @@ typedef geomutil::RectT<double> RectD;
 
 class ClientRect : public RectI {
 public:
-    ClientRect(HWND hwnd) {
+    explicit ClientRect(HWND hwnd) {
         RECT rc;
         if (GetClientRect(hwnd, &rc)) {
             x = rc.left; dx = rc.right - rc.left;
@@ -221,7 +221,7 @@ public:
 
 class WindowRect : public RectI {
 public:
-    WindowRect(HWND hwnd) {
+    explicit WindowRect(HWND hwnd) {
         RECT rc;
         if (GetWindowRect(hwnd, &rc)) {
             x = rc.left; dx = rc.right - rc.left;

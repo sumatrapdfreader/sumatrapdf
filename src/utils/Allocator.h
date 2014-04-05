@@ -136,7 +136,7 @@ public:
         return elPtr;
     }
 
-    PoolAllocator(size_t rounding=8) : minBlockSize(4096),
+    explicit PoolAllocator(size_t rounding=8) : minBlockSize(4096),
         allocRounding(rounding), currIter(NULL), iterPos((size_t)-1) {
         Init();
     }
@@ -244,7 +244,7 @@ class FixedArray {
     T stackBuf[StackBufInBytes / sizeof(T)];
     T *memBuf;
 public:
-    FixedArray(size_t elCount) {
+    explicit FixedArray(size_t elCount) {
         memBuf = NULL;
         size_t stackEls = StackBufInBytes / sizeof(T);
         if (elCount > stackEls)

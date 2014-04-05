@@ -19,8 +19,8 @@ class ZipFile {
     void ExtractFilenames(ZipMethod method=Zip_Any);
 
 public:
-    ZipFile(const WCHAR *path, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
-    ZipFile(IStream *stream, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
+    explicit ZipFile(const WCHAR *path, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
+    explicit ZipFile(IStream *stream, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
     ~ZipFile();
 
     size_t GetFileCount() const;
