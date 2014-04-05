@@ -1,10 +1,11 @@
 AppTranslator: SumatraPDF
-e2d116c53fefa48687b94be4f0d3c412e7540517
+6fc1dbb701e055d13b3db3770de1243973ff5996
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
 ar:%s من %s
 az:%s/%s
+bg:%s от %s
 br:%s de %s
 bs:%s od %s
 by:%s з %s
@@ -191,6 +192,7 @@ vn:Kích thướ&c thật\tCtrl+1
 am:&Ընդլայնված կարգավորումներ..
 ar:خيارات متقدمة
 az:&Əlavə seçimlər...
+bg:Разширени опции
 br:Opções &Avançadas...
 bs:N&apredne opcije...
 ca-xv:Opcions &avançades...
@@ -3769,6 +3771,7 @@ af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
 ar:هل أنت متأكد من أنك تريد إزالة SumatraPDF؟
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
+bg:Наистина ли искате да деинсталирате SumatraPDF ?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
 br:Tem certeza de que quer desinstalar o SumatraPDF?
 bs:Da li ste sigurni da želite deinstalirati SumatraPDF?
@@ -4928,6 +4931,7 @@ vn:Kiểm tra cập nhật
 am:Փակել
 ar:إغلاق
 az:Bağla
+bg:Затвори
 bn:বন্ধ করুন
 br:Fechar
 bs:Zatvori
@@ -5701,6 +5705,7 @@ vn:Không thể có được thuộc tính Máy in
 am:Հնարավոր չեղավ ստեղծել ժամանակավոր թղթապանակ
 ar:لم أتمكن من إنشاء مجلد مؤقت
 az:Müvəqqəti qovluğu yaratmaq mümkün olmadı
+bg:Не може да се създаде временна директория
 bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar pasta temporária
 bs:Neuspješno kreiranje privremenog direktorija
@@ -5750,6 +5755,7 @@ vn:Không tạo được thư mục tạm
 am:Հնարավոր չեղավ ստեղծել տեղադրման թղթապանակը
 ar:لم أتمكن من إنشاء مجلد البرنامج
 az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
+bg:Не може да се създаде директория за инсталация
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar a pasta de instalação.
 bs:Neuspješno kreiranje instalacijskog direktorija
@@ -5909,6 +5915,7 @@ vn:Không thể cài đặt phần hiển thị trước PDF
 am:Հնարավոր չեղավ տեղակայել PDF-ի որոնման պայման
 ar:لم أتمكن من تنصيب فلتر البحث لـPDF
 az:PDF axtarış filtrini quraşdırmaq mümkün olmadı
+bg:Не можа да се инсталира PDF филтър за търсене
 bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o filtro de pesquisa para PDF
 bs:Neuspješno instaliranje filtera za pretragu PDF-ova
@@ -5956,6 +5963,7 @@ uz:PDF qidirish filtrini o'rnatib bo'lmadi
 am:Հնարավոր չեղավ տեղադրել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من تنصيب ملحق المستعرض
 az:Brauzer plaginini quraşdırmaq mümkün olmadı
+bg:Не можа да се инсталира плъгина за браузъра
 bn:ব্রাউজার প্লাগ-ইন ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o plugin do navegador
 bs:Neuspješno instaliranje plugina za browser
@@ -6004,6 +6012,7 @@ vn:Không cài được trình cắm vào trình duyệt
 am:Հնարավոր չեղավ ստանալ ժամանակավոր թղթապանակ
 ar:لم أتمكن من الحصول على المجلد المؤقت
 az:Müvəqqəti qovluğu təyin etmək mümkün olmadı
+bg:Не можа да се получи временна директория
 br:Não foi possível obter a pasta temporária
 bs:Neuspješno dobavljanje privremenog direktorija
 ca-xv:No es pot obtindre el directori temporal
@@ -6050,6 +6059,7 @@ uz:Vaqtinchalik direktoriyani olib bo'lmadi
 am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակը
 ar:لم أتمكن من إزالة مجلد البرنامج
 az:Quraşdırma qovluğunu silmək mümkün olmadı
+bg:Не можа да се изтрие инсталационната директория
 br:Não foi possível remover a pasta de instalação
 bs:Neuspješno uklanjanje instalacijskog direktorija
 ca-xv:No es pot suprimir el directori d'instal·lació
@@ -6097,6 +6107,7 @@ vn:Không thể gỡ bỏ thư mục cài đặt
 am:Հնարավոր չեղավ ջնջել պիտակը
 ar:لم أتمكن من حذف رابط البرنامج
 az:Yarlığı silmək mümkün olmadı
+bg:Не можа да се изтрие командата за бърз достъп
 bn:শর্টকাট বাতিল করা সম্ভব হয়নি
 br:Não foi possível remover o atalho
 bs:Neuspješno uklanjanje kratice
@@ -6251,6 +6262,7 @@ uz:PDF ko'rish vositasini o'chirib bo'lmadi
 am:Հնարավոր չեղավ հեռացնել PDF որոնելու պայմանը
 ar:لم أتمكن من إزالة فلتر البحث لـPDF
 az:PDF axtarış filtrini silmək mümkün olmadı
+bg:Не може да деинсталирате PDF филтър за търсене
 br:Não foi possível desinstalar o filtro de pesquisa para PDF
 bs:Neuspješna deinstalacija filtera za pretragu PDF-ova
 ca-xv:No es pot desinstal·lar el filtre de cerca PDF
@@ -6296,6 +6308,7 @@ uz:PDF qidirish filtrini o'chirib bo'lmadi
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من إزالة ملحق المستعرض
 az:Brauzer plaginini silmək mümkün olmadı
+bg:Не може да деинсталирате плъгина за браузъра
 br:Não foi possível desinstalar o plugin do navegador
 bs:Neuspješna instalacija plugina za browser
 ca-xv:No es pot desinstal·lar el connector de navegador
@@ -6341,6 +6354,7 @@ uz:Brauzer plaginini o'chirib bo'lmadi
 am:Հնարավոր չէ գրել %s պնակում
 ar:لم أتمكن من كتابة %s للقرص الصلب
 az:%s diskə yazıla bilmədi
+bg:Не можа да се запише %s на диска
 br:Não foi possível gravar %s no disco
 bs:Neuspješno zapisivanje %s na disk
 ca-xv:No es pot escriure %s al disc
@@ -7354,6 +7368,7 @@ vn:Không mở %s được
 am:Սխալ. Հնարավոր չէ բացել SumatraPDF-ը:
 ar:خطأ: لم أتمكن من تشغيل البرنامج
 az:Xəta: SumatraPDF işə salına bilmədi!
+bg:Грешка: Не може да се стартира SumatraPDF!
 br:Não foi possível rodar o SumatraPDF!
 bs:Greška: Neuspješno pokretanje SumatraPDF-a!
 ca-xv:Error: no es pot executar el SumatraPDF!
@@ -7402,6 +7417,7 @@ vn:Lỗi: Không thể chạy SumatraPDF!
 am:Սխալ. SumatraPDF-ը չի գտնվել:
 ar:خطأ: البرنامج غير موجود
 az:Xəta: SumatraPDF tapılmadı!
+bg:Грешка: SumatraPDF не може да бъде открит!
 br:O SumatraPDF não foi encontrado!
 bs:Greška: SumatraPDF nije pronađen!
 ca-xv:S'ha produït un error: no es troba el SumatraPDF!
@@ -7450,6 +7466,7 @@ vn:Lỗi: Không tìm thấy SumatraPDF!
 am:Սխալ. Փաստաթուղթը չի կարող բեռնվել:
 ar:خطأ: لم أتمكن من تحميل الملف
 az:Xəta: Sənədi endirmək mümkün olmadı!
+bg:Грешка: Документът не може да бъде изтеглен!
 br:Erro: o documento não pôde ser baixado!
 bs:Greška: Dokument ne može biti preuzet!
 ca-xv:Error: no es pot baixar el document!
@@ -7800,6 +7817,7 @@ vn:Trang kép
 am:Հնարավոր չեղավ պատճենել ջնջիչը ժամանակավոր թղթապանակ
 ar:فشل في نسخ مزيل البرنامج إلى المجلد المؤت
 az:Deinstalyatoru müvəqqəti qovluğa kopyalamaq mümkün olmadı
+bg:Не може да се копира деинсталатора във временната директория
 br:Falha na cópia do desinstalador para a pasta temporária
 bs:Neuspješno kopiranje deinstalera u privremeni direktorij
 ca-xv:No es pot copiar el desinstal·lador al directori temporal
@@ -7845,6 +7863,7 @@ uz:O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tu
 am:Հնարավոր չեղավ ստեղծել պիտակը
 ar:فشل في إنشاء رابط اختصار للبرنامج
 az:Yarlık yaratmaq mümkün olmadı
+bg:Не може да се създаде командата за бърз достъп
 br:Falha na criação do atalho
 bs:Neuspješno kreiranje kratice
 ca-xv:No es pot crear una drecera
@@ -7892,6 +7911,7 @@ uz:Xatcho'pni yaratib bo'lmadi
 am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալիները
 ar:فشل في حذف مزيل البرنامج من registry
 az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
+bg:Неуспешно изтриване на ключовете на деинсталатора в регистъра
 br:Falha na remoção das entradas de registro do desinstalador
 bs:Neuspješno brisanje registarskih ključeva deinstalera
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
