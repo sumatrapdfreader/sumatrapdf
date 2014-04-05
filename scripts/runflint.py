@@ -4,7 +4,7 @@
 # (https://code.facebook.com/posts/729709347050548/under-the-hood-building-and-open-sourcing-flint/), facebook's C++ linter.
 # So far I only got it to compile on Mac.
 # Things to know about flint:
-# - it dumps output to stdout
+# - it dumps output to stderr
 # - it contains rules we don't care about, so we need to filter thouse out
 
 import os

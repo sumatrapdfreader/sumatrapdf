@@ -23,7 +23,7 @@ struct ChmTocTraceItem {
     int level;
     int pageNo;
 
-    ChmTocTraceItem(const WCHAR *title=NULL, const WCHAR *url=NULL, int level=0, int pageNo=0) :
+    explicit ChmTocTraceItem(const WCHAR *title=NULL, const WCHAR *url=NULL, int level=0, int pageNo=0) :
         title(title), url(url), level(level), pageNo(pageNo) { }
 };
 
@@ -71,7 +71,7 @@ public:
     unsigned char *data;
     size_t size;
 
-    ChmCacheEntry(const WCHAR *url) : url(url), data(NULL), size(0) { }
+    explicit ChmCacheEntry(const WCHAR *url) : url(url), data(NULL), size(0) { }
     ~ChmCacheEntry() { free(data); }
 };
 

@@ -617,7 +617,7 @@ struct FitzImagePos {
     fz_image *image;
     fz_rect rect;
 
-    FitzImagePos(fz_image *image=NULL, fz_rect rect=fz_unit_rect) :
+    explicit FitzImagePos(fz_image *image=NULL, fz_rect rect=fz_unit_rect) :
         image(image), rect(rect) { }
 };
 
@@ -628,7 +628,7 @@ struct ListInspectionData {
     size_t path_len;
     size_t clip_path_len;
 
-    ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
+    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
         req_t3_fonts(false), mem_estimate(0), path_len(0), clip_path_len(0) { }
 };
 
@@ -1084,7 +1084,7 @@ struct PageTreeStackItem {
     int i, len;
 
     PageTreeStackItem() : kids(NULL), i(-1), len(0) { }
-    PageTreeStackItem(pdf_obj *kids) : kids(kids), i(-1), len(pdf_array_len(kids)) { }
+    explicit PageTreeStackItem(pdf_obj *kids) : kids(kids), i(-1), len(pdf_array_len(kids)) { }
 };
 
 static void
@@ -1455,7 +1455,7 @@ class PasswordCloner : public PasswordUI {
     unsigned char *cryptKey;
 
 public:
-    PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
+    explicit PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
 
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {

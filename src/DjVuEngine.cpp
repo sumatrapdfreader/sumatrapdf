@@ -66,7 +66,7 @@ class DjVuDestination : public PageDestination {
     }
 
 public:
-    DjVuDestination(const char *link) : link(str::Dup(link)) { }
+    explicit DjVuDestination(const char *link) : link(str::Dup(link)) { }
 
     virtual PageDestType GetDestType() const {
         if (IsPageLink(link))

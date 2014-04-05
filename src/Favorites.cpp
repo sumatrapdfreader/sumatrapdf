@@ -333,7 +333,7 @@ class GoToFavoriteTask : public UITask
     int pageNo;
     WindowInfo *win;
 public:
-    GoToFavoriteTask(WindowInfo *win, int pageNo = -1) :
+    explicit GoToFavoriteTask(WindowInfo *win, int pageNo = -1) :
         win(win), pageNo(pageNo) {}
 
     virtual void Execute() {

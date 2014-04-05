@@ -60,7 +60,7 @@ struct PageAnchor {
     DrawInstr *instr;
     int pageNo;
 
-    PageAnchor(DrawInstr *instr=NULL, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
+    explicit PageAnchor(DrawInstr *instr=NULL, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
 };
 
 class EbookAbortCookie : public AbortCookie {
@@ -684,7 +684,7 @@ class EbookTocBuilder : public EbookTocVisitor {
     bool isIndex;
 
 public:
-    EbookTocBuilder(BaseEngine *engine) :
+    explicit EbookTocBuilder(BaseEngine *engine) :
         engine(engine), root(NULL), idCounter(0), isIndex(false) { }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
@@ -1413,7 +1413,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     str::Str<char> html;
 
 public:
-    ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
+    explicit ChmHtmlCollector(ChmDoc *doc) : doc(doc) { }
 
     char *GetHtml() {
         // first add the homepage
@@ -1677,7 +1677,7 @@ class RemoteHtmlDest : public SimpleDest2 {
     ScopedMem<WCHAR> name;
 
 public:
-    RemoteHtmlDest(const WCHAR *relativeURL) : SimpleDest2(0, RectD()) {
+    explicit RemoteHtmlDest(const WCHAR *relativeURL) : SimpleDest2(0, RectD()) {
         const WCHAR *id = str::FindChar(relativeURL, '#');
         if (id) {
             value.Set(str::DupN(relativeURL, id - relativeURL));

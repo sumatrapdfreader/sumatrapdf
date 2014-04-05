@@ -344,7 +344,7 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
 class PasswordHolder : public PasswordUI {
     const WCHAR *password;
 public:
-    PasswordHolder(const WCHAR *password) : password(password) { }
+    explicit PasswordHolder(const WCHAR *password) : password(password) { }
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
         return str::Dup(password);
