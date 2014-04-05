@@ -22,6 +22,7 @@ class NotificationWndCallback {
 public:
     // called after a message has timed out or been canceled
     virtual void RemoveNotification(NotificationWnd *wnd) = 0;
+    virtual ~NotificationWndCallback() { }
 };
 
 class NotificationWnd : public ProgressUpdateUI {

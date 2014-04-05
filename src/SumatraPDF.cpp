@@ -4853,6 +4853,7 @@ struct Base {
     Base() {
         foo(this);
     }
+    virtual ~Base() = 0;
     virtual void pure() = 0;
 };
 struct Derived : public Base {

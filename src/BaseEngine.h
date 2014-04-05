@@ -72,6 +72,7 @@ public:
 class LinkSaverUI {
 public:
     virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount) = 0;
+    virtual ~LinkSaverUI() { }
 };
 
 // a link destination

@@ -36,6 +36,7 @@ class HasherComparator {
 public:
     virtual size_t Hash(uintptr_t key) = 0;
     virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
+    virtual ~HasherComparator() { }
 };
 
 class StrKeyHasherComparator : public HasherComparator {

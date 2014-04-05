@@ -29,6 +29,7 @@ public:
 class HttpReqCallback {
 public:
     virtual void Callback(HttpReq *ctx=NULL) = 0;
+    virtual ~HttpReqCallback() { }
 };
 
 #endif

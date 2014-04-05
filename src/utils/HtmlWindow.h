@@ -30,6 +30,8 @@ public:
 
     // called when a file can't be displayed and has to be downloaded instead
     virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) = 0;
+
+    virtual ~HtmlWindowCallback() { }
 };
 
 // HtmlWindow embeds a web browser (Internet Explorer) control

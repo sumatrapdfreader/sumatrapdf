@@ -10,6 +10,7 @@ class PasswordUI {
 public:
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) = 0;
+    virtual ~PasswordUI() { }
 };
 
 class PdfEngine : public BaseEngine {

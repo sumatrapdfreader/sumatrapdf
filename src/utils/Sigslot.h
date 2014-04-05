@@ -79,6 +79,7 @@ public:
     virtual void emit() = 0;
     virtual _connection_base0* clone() = 0;
     virtual _connection_base0* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base0() { }
 };
 
 template<class arg1_t>
@@ -89,6 +90,7 @@ public:
     virtual void emit(arg1_t) = 0;
     virtual _connection_base1<arg1_t>* clone() = 0;
     virtual _connection_base1<arg1_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base1() { }
 };
 
 template<class arg1_t, class arg2_t>
@@ -99,6 +101,7 @@ public:
     virtual void emit(arg1_t, arg2_t) = 0;
     virtual _connection_base2<arg1_t, arg2_t>* clone() = 0;
     virtual _connection_base2<arg1_t, arg2_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base2() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t>
@@ -109,6 +112,7 @@ public:
     virtual void emit(arg1_t, arg2_t, arg3_t) = 0;
     virtual _connection_base3<arg1_t, arg2_t, arg3_t>* clone() = 0;
     virtual _connection_base3<arg1_t, arg2_t, arg3_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base3() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t>
@@ -119,6 +123,7 @@ public:
     virtual void emit(arg1_t, arg2_t, arg3_t, arg4_t) = 0;
     virtual _connection_base4<arg1_t, arg2_t, arg3_t, arg4_t>* clone() = 0;
     virtual _connection_base4<arg1_t, arg2_t, arg3_t, arg4_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base4() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
@@ -133,6 +138,7 @@ public:
         arg5_t>* clone() = 0;
     virtual _connection_base5<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base5() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
@@ -147,6 +153,7 @@ public:
         arg5_t, arg6_t>* clone() = 0;
     virtual _connection_base6<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base6() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
@@ -161,6 +168,7 @@ public:
         arg5_t, arg6_t, arg7_t>* clone() = 0;
     virtual _connection_base7<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base7() { }
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
@@ -175,6 +183,7 @@ public:
         arg5_t, arg6_t, arg7_t, arg8_t>* clone() = 0;
     virtual _connection_base8<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t, arg8_t>* duplicate(has_slots* pnewdest) = 0;
+    virtual ~_connection_base8() { }
 };
 
 class _signal_base
@@ -182,6 +191,7 @@ class _signal_base
 public:
     virtual void slot_disconnect(has_slots* pslot) = 0;
     virtual void slot_duplicate(const has_slots* poldslot, has_slots* pnewslot) = 0;
+    virtual ~_signal_base() { }
 };
 
 class has_slots

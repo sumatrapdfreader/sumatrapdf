@@ -20,6 +20,8 @@ public:
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
+
+    virtual ~ChmNavigationCallback() { }
 };
 
 class ChmEngine : public BaseEngine {

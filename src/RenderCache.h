@@ -13,6 +13,7 @@
 class RenderingCallback {
 public:
     virtual void Callback(RenderedBitmap *bmp=NULL) = 0;
+    virtual ~RenderingCallback() { }
 };
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
