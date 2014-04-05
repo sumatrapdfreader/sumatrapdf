@@ -136,7 +136,7 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file);
 // one place
 struct LoadArgs
 {
-    LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL) :
+    explicit LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL) :
         fileName(fileName), win(win), showWin(true), forceReuse(false),
         isNewWindow(false), allowFailure(true), placeWindow(true) { }
 

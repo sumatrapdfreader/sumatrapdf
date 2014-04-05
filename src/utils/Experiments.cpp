@@ -36,7 +36,7 @@ class ZipExtractor {
 
 private:
     ZipExtractorData *d;
-    ZipExtractor(Allocator *allocator);
+    explicit ZipExtractor(Allocator *allocator);
 
 public:
     static ZipExtractor *CreateFromFile(const WCHAR *path, Allocator *allocator=NULL);

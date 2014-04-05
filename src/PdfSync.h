@@ -25,7 +25,7 @@ class PdfEngine;
 class Synchronizer
 {
 public:
-    Synchronizer(const WCHAR* syncfilepath);
+    explicit Synchronizer(const WCHAR* syncfilepath);
     virtual ~Synchronizer() { }
 
     // Inverse-search:

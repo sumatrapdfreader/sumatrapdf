@@ -371,7 +371,7 @@ class HwndPasswordUI : public PasswordUI
     WStrVec defaults;
 
 public:
-    HwndPasswordUI(HWND hwnd) : hwnd(hwnd) {
+    explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd) {
         ParseCmdLine(gGlobalPrefs->defaultPasswords, defaults);
     }
 
@@ -772,7 +772,7 @@ class ThumbnailRenderingTask : public UITask, public RenderingCallback
     RenderedBitmap *bmp;
 
 public:
-    ThumbnailRenderingTask(const WCHAR *filePath) :
+    explicit ThumbnailRenderingTask(const WCHAR *filePath) :
         filePath(str::Dup(filePath)), bmp(NULL) {
     }
 
@@ -1311,7 +1311,7 @@ class FileChangeCallback : public UITask, public FileChangeObserver
 {
     WindowInfo *win;
 public:
-    FileChangeCallback(WindowInfo *win) : win(win) { }
+    explicit FileChangeCallback(WindowInfo *win) : win(win) { }
 
     virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions

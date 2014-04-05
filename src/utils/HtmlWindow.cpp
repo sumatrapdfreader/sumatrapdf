@@ -121,7 +121,7 @@ class FrameSite : public IUnknown
     friend class HW_IServiceProvider;
 
 public:
-    FrameSite(HtmlWindow * win);
+    explicit FrameSite(HtmlWindow * win);
     ~FrameSite();
 
     // IUnknown
@@ -533,7 +533,7 @@ static void UnregisterInternetProtocolFactory()
 class HW_IOleInPlaceFrame : public IOleInPlaceFrame
 {
 public:
-    HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs)
+    explicit HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs)
     {
     }
     ~HW_IOleInPlaceFrame() {}
@@ -567,7 +567,7 @@ protected:
 class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless
 {
 public:
-    HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) { }
+    explicit HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) { }
     ~HW_IOleInPlaceSiteWindowless() {}
 
     // IUnknown
@@ -619,7 +619,7 @@ protected:
 class HW_IOleClientSite : public IOleClientSite
 {
 public:
-    HW_IOleClientSite(FrameSite* fs) : fs(fs) { }
+    explicit HW_IOleClientSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleClientSite() {}
 
     // IUnknown
@@ -641,7 +641,7 @@ protected:
 class HW_IOleControlSite : public IOleControlSite
 {
 public:
-    HW_IOleControlSite(FrameSite* fs) : fs(fs) { }
+    explicit HW_IOleControlSite(FrameSite* fs) : fs(fs) { }
     ~HW_IOleControlSite() {}
 
     // IUnknown
@@ -664,7 +664,7 @@ protected:
 class HW_IOleCommandTarget : public IOleCommandTarget
 {
 public:
-    HW_IOleCommandTarget(FrameSite* fs) : fs(fs) { }
+    explicit HW_IOleCommandTarget(FrameSite* fs) : fs(fs) { }
     ~HW_IOleCommandTarget() {}
 
     // IUnknown
@@ -682,7 +682,7 @@ protected:
 class HW_IOleItemContainer : public IOleItemContainer
 {
 public:
-    HW_IOleItemContainer(FrameSite* fs) : fs(fs) { }
+    explicit HW_IOleItemContainer(FrameSite* fs) : fs(fs) { }
     ~HW_IOleItemContainer() {}
 
     // IUnknown
@@ -712,7 +712,7 @@ class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
     HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT *res);
 
 public:
-    HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
+    explicit HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
     ~HW_DWebBrowserEvents2() {}
 
     // IUnknown
@@ -732,7 +732,7 @@ class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx
     FrameSite * fs;
 
 public:
-    HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
+    explicit HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
     ~HW_IAdviseSink2() {}
 
     // IUnknown
@@ -761,7 +761,7 @@ class HW_IDocHostUIHandler : public IDocHostUIHandler
 {
     FrameSite * fs;
 public:
-    HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) { }
+    explicit HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) { }
     ~HW_IDocHostUIHandler() {}
 
     // IUnknown
@@ -791,7 +791,7 @@ class HW_IDropTarget : public IDropTarget
 {
     FrameSite * fs;
 public:
-    HW_IDropTarget(FrameSite* fs) : fs(fs) { }
+    explicit HW_IDropTarget(FrameSite* fs) : fs(fs) { }
     ~HW_IDropTarget() {}
 
     // IUnknown
@@ -900,7 +900,7 @@ class HW_IServiceProvider : public IServiceProvider
 {
     FrameSite * fs;
 public:
-    HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
+    explicit HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
     ~HW_IServiceProvider() {}
 
     // IUnknown
@@ -1399,8 +1399,6 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
 // within window (we don't check that's the case)
 HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 {
-    using namespace Gdiplus;
-
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)

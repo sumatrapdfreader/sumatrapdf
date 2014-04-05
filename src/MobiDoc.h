@@ -39,7 +39,7 @@ class MobiDoc
     };
     Vec<Metadata>       props;
 
-    MobiDoc(const WCHAR *filePath);
+    explicit MobiDoc(const WCHAR *filePath);
 
     bool    ParseHeader();
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);

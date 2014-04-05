@@ -43,8 +43,8 @@ class EpubDoc {
     bool ParseNcxToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
 
 public:
-    EpubDoc(const WCHAR *fileName);
-    EpubDoc(IStream *stream);
+    explicit EpubDoc(const WCHAR *fileName);
+    explicit EpubDoc(IStream *stream);
     ~EpubDoc();
 
     const char *GetTextData(size_t *lenOut);
@@ -85,8 +85,8 @@ class Fb2Doc {
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
 
 public:
-    Fb2Doc(const WCHAR *fileName);
-    Fb2Doc(IStream *stream);
+    explicit Fb2Doc(const WCHAR *fileName);
+    explicit Fb2Doc(IStream *stream);
     ~Fb2Doc();
 
     const char *GetTextData(size_t *lenOut);
@@ -116,7 +116,7 @@ class PalmDoc {
     bool Load();
 
 public:
-    PalmDoc(const WCHAR *fileName);
+    explicit PalmDoc(const WCHAR *fileName);
     ~PalmDoc();
 
     const char *GetTextData(size_t *lenOut);
@@ -140,7 +140,7 @@ class TcrDoc {
     bool Load();
 
 public:
-    TcrDoc(const WCHAR *fileName);
+    explicit TcrDoc(const WCHAR *fileName);
     ~TcrDoc();
 
     const char *GetTextData(size_t *lenOut);
@@ -165,7 +165,7 @@ class HtmlDoc {
     char *LoadURL(const char *url, size_t *lenOut);
 
 public:
-    HtmlDoc(const WCHAR *fileName);
+    explicit HtmlDoc(const WCHAR *fileName);
     ~HtmlDoc();
 
     const char *GetTextData(size_t *lenOut);
@@ -189,7 +189,7 @@ class TxtDoc {
     bool Load();
 
 public:
-    TxtDoc(const WCHAR *fileName);
+    explicit TxtDoc(const WCHAR *fileName);
 
     const char *GetTextData(size_t *lenOut);
 

@@ -42,7 +42,7 @@ struct PageInfo {
 /* The current scroll state (needed for saving/restoring the scroll position) */
 /* coordinates are in user space units (per page) */
 struct ScrollState {
-    ScrollState(int page=0, double x=0, double y=0) : page(page), x(x), y(y) { }
+    explicit ScrollState(int page=0, double x=0, double y=0) : page(page), x(x), y(y) { }
     bool operator==(const ScrollState& other) const {
         return page == other.page && x == other.x && y == other.y;
     }

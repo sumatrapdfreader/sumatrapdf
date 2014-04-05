@@ -24,7 +24,7 @@ struct Print_Advanced_Data {
     PrintScaleAdv scale;
     bool asImage;
 
-    Print_Advanced_Data(PrintRangeAdv range=PrintRangeAll,
+    explicit Print_Advanced_Data(PrintRangeAdv range=PrintRangeAll,
                         PrintScaleAdv scale=PrintScaleShrink,
                         bool asImage=false) :
         range(range), scale(scale), asImage(asImage) { }

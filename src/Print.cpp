@@ -85,7 +85,7 @@ public:
 class ScopeHDC {
     HDC hdc;
 public:
-    ScopeHDC(HDC hdc) : hdc(hdc) { }
+    explicit ScopeHDC(HDC hdc) : hdc(hdc) { }
     ~ScopeHDC() { DeleteDC(hdc); }
     operator HDC() const { return hdc; }
 };

@@ -306,7 +306,7 @@ class FilesProvider : public TestFileProvider {
     WStrVec files;
     size_t provided;
 public:
-    FilesProvider(const WCHAR *path) {
+    explicit FilesProvider(const WCHAR *path) {
         files.Append(str::Dup(path));
         provided = 0;
     }

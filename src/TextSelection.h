@@ -24,7 +24,7 @@ class PageTextCache {
     CRITICAL_SECTION access;
 
 public:
-    PageTextCache(BaseEngine *engine);
+    explicit PageTextCache(BaseEngine *engine);
     ~PageTextCache();
 
     bool HasData(int pageNo);

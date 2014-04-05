@@ -15,7 +15,7 @@ struct TextSel;
 /* Represents selected area on given page */
 class SelectionOnPage {
 public:
-    SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
+    explicit SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
         pageNo(pageNo), rect(rect ? *rect : RectD()) { }
 
     int     pageNo; // page this selection is on

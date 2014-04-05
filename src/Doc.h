@@ -83,10 +83,10 @@ public:
     void Clear();
     Doc() { Clear(); }
     Doc(BaseEngine *doc, DocType engineType);
-    Doc(EpubDoc *doc);
-    Doc(Fb2Doc *doc);
-    Doc(MobiDoc *doc);
-    Doc(MobiTestDoc *doc);
+    explicit Doc(EpubDoc *doc);
+    explicit Doc(Fb2Doc *doc);
+    explicit Doc(MobiDoc *doc);
+    explicit Doc(MobiTestDoc *doc);
 
     void Delete();
 

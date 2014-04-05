@@ -99,7 +99,7 @@ class EbookController : public sigslot::has_slots
     void        SizeChangedPage(Control *c, int dx, int dy);
 
 public:
-    EbookController(EbookControls *ctrls);
+    explicit EbookController(EbookControls *ctrls);
     virtual ~EbookController();
 
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);

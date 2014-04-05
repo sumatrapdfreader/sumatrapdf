@@ -20,7 +20,7 @@ public:
 struct TilePosition {
     USHORT res, row, col;
 
-    TilePosition(USHORT res=INVALID_TILE_RES, USHORT row=-1, USHORT col=-1) :
+    explicit TilePosition(USHORT res=INVALID_TILE_RES, USHORT row=-1, USHORT col=-1) :
         res(res), row(row), col(col) { }
     bool operator==(const TilePosition& other) const {
         return res == other.res && row == other.row && col == other.col;

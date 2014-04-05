@@ -90,7 +90,7 @@ struct DrawStyle {
 
 class HtmlPage {
 public:
-    HtmlPage(int reparseIdx=0) : reparseIdx(reparseIdx) { }
+    explicit HtmlPage(int reparseIdx=0) : reparseIdx(reparseIdx) { }
 
     Vec<DrawInstr>  instructions;
     // if we start parsing html again from reparseIdx, we should
@@ -268,7 +268,7 @@ protected:
     WCHAR               buf[512];
 
 public:
-    HtmlFormatter(HtmlFormatterArgs *args);
+    explicit HtmlFormatter(HtmlFormatterArgs *args);
     virtual ~HtmlFormatter();
 
     HtmlPage *Next(bool skipEmptyPages=true);

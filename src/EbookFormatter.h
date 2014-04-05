@@ -106,7 +106,7 @@ protected:
     virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
 
 public:
-    TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
+    explicit TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 };
 
 #endif
