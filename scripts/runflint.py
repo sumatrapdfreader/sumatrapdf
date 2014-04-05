@@ -62,7 +62,10 @@ def should_filter(s):
         "Warning: Avoid using static at global or namespace scope in C++ header files.",
         "Using directive not allowed at top level or inside namespace",
         "The associated header file of .cpp files should be included before any other includes",
-        "This helps catch missing header file dependencies in the .h"
+        "This helps catch missing header file dependencies in the .h",
+        # VS 2010 doesn't seem to support 'explicit' on conversion operators
+        "Implicit conversion to '",
+        "Symbol __IDownloadManager_INTERFACE_DEFINED__"
     ]
     for f in to_filter:
         if f in s:
