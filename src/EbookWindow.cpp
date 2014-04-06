@@ -331,7 +331,9 @@ static void OnMenuViewFullscreen(EbookWindow* win)
 
 static void OnMenuViewSinglePage(EbookWindow *win)
 {
-    CrashIf(win->ebookController->IsSinglePage());
+    // TODO: happened in e.g. crash 51500. Figure out why
+    // but don't enable in pre-release builds
+    CrashIfDebugOnly(win->ebookController->IsSinglePage());
     win->ebookController->SetSinglePage();
 }
 

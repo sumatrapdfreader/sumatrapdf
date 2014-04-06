@@ -125,6 +125,13 @@ inline void CrashMe()
 #define CrashIf(cond) __analysis_assume(!(cond))
 #endif
 
+// Sometimes we want to assert only in debug build (not in pre-release)
+#if defined(DEBUG)
+#define CrashIfDebugOnly(cond) CrashAlwaysIf(cond)
+#else
+#define CrashIf(cond) __analysis_assume(!(cond))
+#endif
+
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
