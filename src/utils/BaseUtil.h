@@ -129,7 +129,7 @@ inline void CrashMe()
 #if defined(DEBUG)
 #define CrashIfDebugOnly(cond) CrashAlwaysIf(cond)
 #else
-#define CrashIf(cond) __analysis_assume(!(cond))
+#define CrashIfDebugOnly(cond) __analysis_assume(!(cond))
 #endif
 
 // AssertCrash is like assert() but crashes like CrashIf()
