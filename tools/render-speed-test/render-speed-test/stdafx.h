@@ -7,9 +7,10 @@
 
 #include "targetver.h"
 
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+//#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <gdiplus.h>
 
 // C RunTime Header Files
 #include <stdlib.h>
@@ -19,3 +20,5 @@
 #include <stdio.h>
 
 // TODO: reference additional headers your program requires here
+
+#define dimof(X)    (sizeof(X)/sizeof((X)[0]))

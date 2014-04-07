@@ -2,6 +2,9 @@
 
 #include "render-speed-test.h"
 
+using namespace Gdiplus;
+
+
 // a program to test various ways of measuring and drawing text
 // TODO:
 // - load a file with text to test
@@ -76,6 +79,111 @@ struct Buf {
     }
 };
 #endif
+
+
+// set consistent mode for our graphics objects so that we get
+// the same results when measuring text
+void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
+class ITextMeasure {
+public:
+    virtual RectF Measure(const char *s, size_t sLen) = 0;
+};
+
+// note: gdi+ seems to under-report the width, the longer the text, the
+// bigger the difference. I'm trying to correct for that with those magic values
+#define PER_CHAR_DX_ADJUST .2f
+#define PER_STR_DX_ADJUST  1.f
+
+// http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
+RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
+{
+    if (0 == len)
+        return RectF(0, 0, 0, 0); // TODO: should set height to font's height
+    // note: frankly, I don't see a difference between those StringFormat variations
+    StringFormat sf(StringFormat::GenericTypographic());
+    sf.SetFormatFlags(sf.GetFormatFlags() | StringFormatFlagsMeasureTrailingSpaces);
+    //StringFormat sf(StringFormat::GenericDefault());
+    //StringFormat sf;
+    RectF layoutRect;
+    CharacterRange cr(0, (INT)len);
+    sf.SetMeasurableCharacterRanges(1, &cr);
+    Region r;
+    Status status = g->MeasureCharacterRanges(s, (INT)len, f, layoutRect, &sf, 1, &r);
+    if (status != Status::Ok)
+        return RectF(0, 0, 0, 0); // TODO: should set height to font's height
+    RectF bbox;
+    r.GetBounds(&bbox, g);
+    if (bbox.Width != 0)
+        bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float) len);
+    return bbox;
+}
+
+class TextMeasureGdiplus : public ITextMeasure {
+private:
+    enum {
+        bmpDx = 32,
+        bmpDy = 4,
+        stride = bmpDx * 4,
+    };
+
+    Graphics *  gfx;
+    Bitmap *    bmp;
+    Font *      fnt;
+    BYTE        data[bmpDx * bmpDy * 4];
+    WCHAR       txtConvBuf[512];
+    TextMeasureGdiplus() : gfx(nullptr), bmp(nullptr), fnt(nullptr) {}
+
+public:
+    static TextMeasureGdiplus* Create();
+
+    virtual RectF Measure(const char *s, size_t sLen);
+    virtual ~TextMeasureGdiplus();
+};
+
+
+namespace str {
+size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize)
+{
+    //CrashIf(0 == cchBufOutSize);
+    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int) sLen, NULL, 0);
+    if ((size_t) cchConverted >= cchBufOutSize)
+        cchConverted = (int) cchBufOutSize - 1;
+    MultiByteToWideChar(CP_UTF8, 0, s, (int) sLen, bufOut, cchConverted);
+    bufOut[cchConverted] = '\0';
+    return cchConverted;
+}
+}
+
+TextMeasureGdiplus::~TextMeasureGdiplus() {
+    ::delete bmp;
+    ::delete gfx;
+    ::delete fnt;
+};
+
+RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+
+    return MeasureTextAccurate(gfx, fnt, txtConvBuf, strLen);
+}
+
+TextMeasureGdiplus *TextMeasureGdiplus::Create() {
+    auto res = new TextMeasureGdiplus();
+    res->bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, res->data);
+    if (!res->bmp)
+        return nullptr;
+    res->gfx = ::new Graphics((Image*) res->bmp);
+    InitGraphicsMode(res->gfx);
+    // TODO: allocate font
+    return res;
+}
 
 inline bool is_ws(char c) {
     // TODO: probably more white-space characters
@@ -157,12 +265,14 @@ char *strndup(char *s, size_t sLen) {
 
 void DoLayout(char *s) {
     auto sLen = strlen(s);
+    auto m = TextMeasureGdiplus::Create();
     IterWords(s, sLen, [](char *s, size_t sLen) {
         auto tmp = strndup(s, sLen+1);
         tmp[sLen] = '\n';
         OutputDebugStringA(tmp);
         free(tmp);
     });
+    delete m;
 }
 
 // http://kennykerr.ca/2014/03/29/classy-windows-2/
