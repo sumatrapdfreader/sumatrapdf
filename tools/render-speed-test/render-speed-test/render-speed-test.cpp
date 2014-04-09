@@ -123,28 +123,29 @@ struct MeasuredString {
 
 #define MAX_STRINGS 4096
 
-struct MeasuredString *g_strings[MAX_STRINGS] = {};
+struct MeasuredString *g_strings = nullptr;
 int g_nStrings = 0;
 
 void FreeMeasuredStrings() {
-    for (int i = 0; i < g_nStrings; i++) {
-        free((void*) g_strings[i]);
-    }
+    free((void*) g_strings);
+    g_strings = nullptr;
     g_nStrings = 0;
 }
 
 MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float dy) {
-    if (g_nStrings >= dimof(g_strings)) {
+    if (nullptr == g_strings) {
+        g_strings = AllocStruct<MeasuredString>(MAX_STRINGS);
+    }
+    if (g_nStrings >= MAX_STRINGS) {
         return nullptr;
     }
-    auto ms = AllocStruct<MeasuredString>();
+    auto ms = &g_strings[g_nStrings++];
     ms->s = s;
     ms->sLen = sLen;
     ms->bb.X = 0;
     ms->bb.Y = 0;
     ms->bb.Width = dx;
     ms->bb.Height = dy;
-    g_strings[g_nStrings++] = ms;
     return ms;
 }
 

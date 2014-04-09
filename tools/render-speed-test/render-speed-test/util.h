@@ -117,8 +117,8 @@ static inline bool is_word_end(char c) {
 }
 
 template <typename T>
-T *AllocStruct() {
-    return (T*) calloc(1, sizeof(T));
+T *AllocStruct(size_t n=0) {
+    return (T*) calloc(n, sizeof(T));
 }
 
 #endif
