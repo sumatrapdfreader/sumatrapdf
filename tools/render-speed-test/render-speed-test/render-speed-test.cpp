@@ -7,7 +7,6 @@ using namespace Gdiplus;
 
 // a program to test various ways of measuring and drawing text
 // TODO:
-// - paint bounding box
 // - calc & save timings
 // - add GDI version
 // - add DirectDraw version
@@ -120,12 +119,13 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create() {
 class TextDrawGdiplus : public ITextDraw {
 private:
     TextDrawGdiplus() : gfx(nullptr) { }
-    Graphics *  gfx;
     Font *      fnt;
     Brush *     col;
     WCHAR       txtConvBuf[512];
 
 public:
+    Graphics *  gfx;
+
     static TextDrawGdiplus *Create(HDC dc);
     virtual void Draw(const char *s, size_t sLen, RectF& bb);
     virtual ~TextDrawGdiplus();
@@ -327,6 +327,7 @@ struct SampleWindow : Window<SampleWindow>
         }
         ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
         FillRect(hdc, &rTmp, brushAboutBg);
+        Pen                  debugPen(Color(255, 0, 0), 1);
 
         auto td = TextDrawGdiplus::Create(hdc);
         for (size_t i = 0; i < g_nStrings; i++) {
@@ -334,8 +335,10 @@ struct SampleWindow : Window<SampleWindow>
             if (ms->IsNewline()) {
                 continue;
             }
-            // TODO: show bounding box
-            td->Draw(ms->s, ms->sLen, ms->bb);
+            auto& bb = ms->bb;
+            td->Draw(ms->s, ms->sLen, bb);
+            td->gfx->DrawRectangle(&debugPen, bb);
+
         }
         delete td;
         EndPaint(m_window, &ps);
@@ -354,18 +357,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     InitAllCommonControls();
     ScopedGdiPlus initGdiplus;
 
-    //MSG msg;
-    //HACCEL hAccelTable;
+    MSG msg;
+    HACCEL hAccelTable;
 
     SampleWindow window;
-    MSG message;
 
-    while (GetMessage(&message, nullptr, 0, 0))
-    {
-        DispatchMessage(&message);
-    }
-
-    /*
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RENDERSPEEDTEST));
 
     while (GetMessage(&msg, NULL, 0, 0))
@@ -377,8 +373,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    return (int) msg.wParam;
-    */
     FreeMeasuredStrings();
-    return 0;
+    return (int) msg.wParam;
 }
