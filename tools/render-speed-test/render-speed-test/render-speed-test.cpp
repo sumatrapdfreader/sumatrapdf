@@ -7,8 +7,8 @@ using namespace Gdiplus;
 
 // a program to test various ways of measuring and drawing text
 // TODO:
+// - set the right font in GDI version
 // - calc & save timings
-// - add GDI version
 // - add DirectDraw version
 // - re-layout when the window size changes
 
@@ -68,6 +68,35 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     return bbox;
 }
 
+class TextMeasureGdi : public ITextMeasure {
+private:
+    HDC         hdc;
+    WCHAR       txtConvBuf[512];
+
+    TextMeasureGdi() { }
+
+public:
+
+    static TextMeasureGdi* Create(HDC hdc);
+
+    virtual RectF Measure(const char *s, size_t sLen);
+    virtual ~TextMeasureGdi() {}
+};
+
+RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    SIZE txtSize;
+    GetTextExtentPoint32W(hdc, txtConvBuf, (int)strLen, &txtSize);
+    RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
+    return res;
+}
+
+TextMeasureGdi *TextMeasureGdi::Create(HDC hdc) {
+    auto res = new TextMeasureGdi();
+    res->hdc = hdc;
+    return res;
+}
+
 class TextMeasureGdiplus : public ITextMeasure {
 private:
     enum {
@@ -116,12 +145,48 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create() {
     return res;
 }
 
+class TextDrawGdi : public ITextDraw {
+private:
+    HDC hdc;
+    WCHAR       txtConvBuf[512];
+
+    TextDrawGdi() { }
+
+public:
+    static TextDrawGdi *Create(HDC hdc);
+
+    virtual void Draw(const char *s, size_t sLen, RectF& bb);
+    virtual ~TextDrawGdi() {}
+};
+
+TextDrawGdi* TextDrawGdi::Create(HDC hdc) {
+    auto res = new TextDrawGdi();
+    res->hdc = hdc;
+    /*
+    res->gfx = ::new Graphics(dc);
+    InitGraphicsMode(res->gfx);
+    res->fnt = ::new Font(L"Tahoma", 10.0);
+    res->col = ::new SolidBrush(Color(0, 0, 0));
+    */
+    return res;
+}
+
+void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    PointF loc;
+    bb.GetLocation(&loc);
+    int x = (int) bb.X;
+    int y = (int) bb.Y;
+    ExtTextOutW(hdc, x, y, 0, NULL, txtConvBuf, strLen, NULL);
+}
+
 class TextDrawGdiplus : public ITextDraw {
 private:
-    TextDrawGdiplus() : gfx(nullptr) { }
     Font *      fnt;
     Brush *     col;
     WCHAR       txtConvBuf[512];
+
+    TextDrawGdiplus() : gfx(nullptr) { }
 
 public:
     Graphics *  gfx;
@@ -258,13 +323,20 @@ void LayoutStrings(float areaDx, float spaceDx, float lineDy) {
     }
 }
 
-void DoLayout(char *s, float areaDx) {
+void DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
     auto sLen = strlen(s);
-    auto m = TextMeasureGdiplus::Create();
     MeasureStrings(m, s, sLen);
     float fontDy = m->GetFontHeight();
     float spaceDx = m->Measure(" ", 1).Width;
-    delete m;
+    LayoutStrings(areaDx, spaceDx, fontDy);
+}
+
+void DoLayoutGdi(TextMeasureGdi *m, char *s, float areaDx) {
+    auto sLen = strlen(s);
+    MeasureStrings(m, s, sLen);
+    //float fontDy = m->GetFontHeight();
+    float fontDy = 12.0f; // TODO: use real font height
+    float spaceDx = m->Measure(" ", 1).Width;
     LayoutStrings(areaDx, spaceDx, fontDy);
 }
 
@@ -312,7 +384,7 @@ struct SampleWindow : Window<SampleWindow>
         return Window::MessageHandler(message, wparam, lparam);
     }
 
-    void PaintHandler()
+    void PaintHandlerGdiplus()
     {
         static auto didLayout = false;
         PAINTSTRUCT ps;
@@ -322,7 +394,9 @@ struct SampleWindow : Window<SampleWindow>
         RECT rTmp = rcClient.ToRECT();
 
         if (!didLayout) {
-            DoLayout(SAMPLE_TEXT, (float)rcClient.Size().dx);
+            auto m = TextMeasureGdiplus::Create();
+            DoLayoutGdiplus(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
+            delete m;
             didLayout = true;
         }
         ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
@@ -342,6 +416,51 @@ struct SampleWindow : Window<SampleWindow>
         }
         delete td;
         EndPaint(m_window, &ps);
+    }
+
+    void PaintHandlerGdi()
+    {
+        static auto didLayout = false;
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(m_window, &ps);
+        SetTextColor(hdc, RGB(0, 0, 0));
+        SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
+
+        ClientRect rcClient(m_window);
+        RECT rTmp = rcClient.ToRECT();
+        RECT r;
+        if (!didLayout) {
+            auto m = TextMeasureGdi::Create(hdc);
+            DoLayoutGdi(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
+            delete m;
+            didLayout = true;
+        }
+        ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
+        FillRect(hdc, &rTmp, brushAboutBg);
+        ScopedGdiObj<HBRUSH> brushDebugPen(CreateSolidBrush(RGB(255, 0, 0)));
+
+        auto td = TextDrawGdi::Create(hdc);
+        for (size_t i = 0; i < g_nStrings; i++) {
+            auto ms = GetMeasuredString(i);
+            if (ms->IsNewline()) {
+                continue;
+            }
+            auto& bb = ms->bb;
+            td->Draw(ms->s, ms->sLen, bb);
+            r.left = (int) bb.X;
+            r.right = r.left + (int) bb.Width;
+            r.top = (int) bb.Y;
+            r.bottom = r.top + (int) bb.Height;
+            FrameRect(hdc, &r, brushDebugPen);
+        }
+        delete td;
+        EndPaint(m_window, &ps);
+    }
+
+    void PaintHandler()
+    {
+        //PaintHandlerGdiplus();
+        PaintHandlerGdi();
     }
 };
 
