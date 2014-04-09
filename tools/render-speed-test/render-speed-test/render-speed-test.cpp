@@ -4,7 +4,6 @@
 
 using namespace Gdiplus;
 
-
 // a program to test various ways of measuring and drawing text
 // TODO:
 // - load a file with text to test
@@ -15,70 +14,9 @@ using namespace Gdiplus;
 
 HINSTANCE hInst;
 
-typedef INT64 i64;
-typedef UINT64 u64;
-
 // TODO: static_assert(sizeof(i64)==8)
 #define APP_TITLE       L"RenderSpeedTest"
 #define APP_WIN_CLASS   L"RENDERSPEEDTEST_WIN_CLS"
-
-#if 0
-struct MeasuredString {
-    const char *s;
-    size_t sLen;
-    SIZE measuredSize;
-};
-#endif
-
-#if 0
-struct Buf {
-    char *s;
-    u64 sLen;
-    bool owned;
-
-    Buf() {
-        Reset();
-    }
-
-    void Reset() {
-        s = nullptr;
-        sLen = 0;
-        owned = false;
-    }
-
-    explicit Buf(char *sIn, u64 sLenIn = (u64)-1, bool ownedIn = false) {
-        Set(sIn, sLenIn, ownedIn);
-    }
-    void Free() {
-        if (owned)
-            free(s);
-        Reset();
-    }
-
-    void Set(char *sIn, u64 sLenIn = (u64) -1, bool ownedIn = false) {
-        Free();
-        s = sIn;
-        if (sLenIn == (u64) -1) {
-            sLen = (u64) strlen(s);
-        }
-        else {
-            sLen = sLenIn;
-        }
-        owned = ownedIn;
-    }
-
-    void TakeOwnership(char *sIn, u64 sLenIn = (u64) -1) {
-        char *tmp = _strdup(sIn);
-        Set(tmp, sLenIn, true);
-    }
-
-    ~Buf() {
-        if (owned) {
-            free(s);
-        }
-    }
-};
-#endif
 
 
 // set consistent mode for our graphics objects so that we get

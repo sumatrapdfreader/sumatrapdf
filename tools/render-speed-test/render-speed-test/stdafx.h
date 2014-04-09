@@ -22,3 +22,6 @@
 // TODO: reference additional headers your program requires here
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
+
+typedef INT64 i64;
+typedef UINT64 u64;
