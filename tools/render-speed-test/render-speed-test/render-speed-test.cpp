@@ -94,7 +94,6 @@ TextMeasureGdiplus::~TextMeasureGdiplus() {
 
 RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-
     return MeasureTextAccurate(gfx, fnt, txtConvBuf, strLen);
 }
 
@@ -116,20 +115,82 @@ char *normalize_nl(char *, char *end) {
     return end;
 }
 
-void DoLayout(char *s, float dx) {
-    auto sLen = strlen(s);
+struct MeasuredString {
+    const char *s;
+    size_t sLen;
+    RectF bb;
+};
+
+#define MAX_STRINGS 4096
+
+struct MeasuredString *g_strings[MAX_STRINGS] = {};
+int g_nStrings = 0;
+
+void FreeMeasuredStrings() {
+    for (int i = 0; i < g_nStrings; i++) {
+        free((void*) g_strings[i]);
+    }
+    g_nStrings = 0;
+}
+
+MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float dy) {
+    if (g_nStrings >= dimof(g_strings)) {
+        return nullptr;
+    }
+    auto ms = AllocStruct<MeasuredString>();
+    ms->s = s;
+    ms->sLen = sLen;
+    ms->bb.X = 0;
+    ms->bb.Y = 0;
+    ms->bb.Width = dx;
+    ms->bb.Height = dy;
+    g_strings[g_nStrings++] = ms;
+    return ms;
+}
+
+void MeasureStrings(char *s, size_t sLen) {
     auto m = TextMeasureGdiplus::Create();
+    IterWords(s, sLen, [&](char *s, size_t sLen) {
+        RectF bb = m->Measure(s, sLen);
+        AllocMeasuredString(s, sLen, bb.Width, bb.Height);
+    });
+    delete m;
+}
+
+
+#if 0
+void LayoutStrings(float areaDx) {
     float x = 0;
     float y = 0;
+    float maxTextDy = 0; // for current line
+    for (i = 0; i < g_nStrings; i++) {
+        float textDx = size.Width;
+        float textDy = size.Height;
+        if (textDy > maxTextDy) {
+            maxTextDy = textDy;
+        }
+        if (x + textDx > areaDx) {
+            bool firstWordInLine = (x == 0);
+            if (firstWordInLine) {
 
-    IterWords(s, sLen, [](char *s, size_t sLen) {
-        auto tmp = str::DupN(s, sLen+1);
-        tmp[sLen] = '\n';
-        OutputDebugStringA(tmp);
-        free(tmp);
-    });
+            }
+            if (!firstWordInLine) {
+                y += maxTextDy + 2;
+                maxTextDy = textDy;
+                x = 0;
+            }
 
-    delete m;
+            y += maxTextDy + 2;
+            maxTextDy = 0;
+        }
+    }
+}
+#endif
+
+void DoLayout(char *s, float /*areaDx*/) {
+    auto sLen = strlen(s);
+    MeasureStrings(s, sLen);
+    //LayoutStrings(areaDx);
 }
 
 struct SampleWindow : Window<SampleWindow>
@@ -220,5 +281,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     return (int) msg.wParam;
     */
+    FreeMeasuredStrings();
     return 0;
 }

@@ -13,7 +13,7 @@ char *DupN(char *s, size_t sLen);
 // it collapses multile white-space characters as one.
 // it emits newline as '\n' and normalizes '\r' and '\r\n' into '\n' (but doesn't collapse
 // multiple new-lines into one)
-template<typename Func>
+template <typename Func>
 void IterWords(char *s, size_t sLen, Func f) {
     char *end = s + sLen;
     // TODO: could possibly be faster by normalizing nl while we go,
@@ -44,7 +44,7 @@ void IterWords(char *s, size_t sLen, Func f) {
     }
 }
 
-// http://kennykerr.ca/2014/03/29/classy-windows-2/
+// http://kennykerr.ca/2014/03/29/classy-windows-2/s
 template <typename T>
 struct Window
 {
@@ -114,6 +114,11 @@ static inline void skip_ws(char*& s, char *end) {
 
 static inline bool is_word_end(char c) {
     return is_ws(c) || c == '\n' || c == 0;
+}
+
+template <typename T>
+T *AllocStruct() {
+    return (T*) calloc(1, sizeof(T));
 }
 
 #endif

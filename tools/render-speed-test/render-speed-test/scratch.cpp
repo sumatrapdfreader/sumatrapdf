@@ -2,12 +2,6 @@
 
 #include "render-speed-test.h"
 
-struct MeasuredString {
-    const char *s;
-    size_t sLen;
-    SIZE measuredSize;
-};
-
 struct Buf {
     char *s;
     u64 sLen;
