@@ -25,3 +25,10 @@ char *DupN(char *s, size_t sLen) {
 
 }
 
+void InitAllCommonControls()
+{
+    INITCOMMONCONTROLSEX cex = { 0 };
+    cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
+    InitCommonControlsEx(&cex);
+}

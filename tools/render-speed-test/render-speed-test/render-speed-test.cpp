@@ -7,11 +7,11 @@ using namespace Gdiplus;
 
 // a program to test various ways of measuring and drawing text
 // TODO:
-// - load a file with text to test
-// - do layout and display
-// - test GDI+
-// - test GDI
-// - test DirectDraw
+// - paint bounding box
+// - calc & save timings
+// - add GDI version
+// - add DirectDraw version
+// - re-layout when the window size changes
 
 HINSTANCE hInst;
 
@@ -33,6 +33,11 @@ void InitGraphicsMode(Graphics *g)
 class ITextMeasure {
 public:
     virtual RectF Measure(const char *s, size_t sLen) = 0;
+};
+
+class ITextDraw {
+public:
+    virtual void Draw(const char *s, size_t sLen, RectF& bb) = 0;
 };
 
 // note: gdi+ seems to under-report the width, the longer the text, the
@@ -73,13 +78,17 @@ private:
     };
 
     Graphics *  gfx;
-    Bitmap *    bmp;
     Font *      fnt;
+    Bitmap *    bmp;
     BYTE        data[bmpDx * bmpDy * 4];
     WCHAR       txtConvBuf[512];
     TextMeasureGdiplus() : gfx(nullptr), bmp(nullptr), fnt(nullptr) {}
 
 public:
+    float GetFontHeight() const {
+        return fnt->GetHeight(gfx);
+    }
+
     static TextMeasureGdiplus* Create();
 
     virtual RectF Measure(const char *s, size_t sLen);
@@ -104,8 +113,43 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create() {
         return nullptr;
     res->gfx = ::new Graphics((Image*) res->bmp);
     InitGraphicsMode(res->gfx);
-    // TODO: allocate font
+    res->fnt = ::new Font(L"Tahoma", 10.0);
     return res;
+}
+
+class TextDrawGdiplus : public ITextDraw {
+private:
+    TextDrawGdiplus() : gfx(nullptr) { }
+    Graphics *  gfx;
+    Font *      fnt;
+    Brush *     col;
+    WCHAR       txtConvBuf[512];
+
+public:
+    static TextDrawGdiplus *Create(HDC dc);
+    virtual void Draw(const char *s, size_t sLen, RectF& bb);
+    virtual ~TextDrawGdiplus();
+};
+
+TextDrawGdiplus* TextDrawGdiplus::Create(HDC dc) {
+    auto res = new TextDrawGdiplus();
+    res->gfx = ::new Graphics(dc);
+    InitGraphicsMode(res->gfx);
+    res->fnt = ::new Font(L"Tahoma", 10.0);
+    res->col = ::new SolidBrush(Color(0, 0, 0));
+    return res;
+}
+
+TextDrawGdiplus::~TextDrawGdiplus() {
+    ::delete gfx;
+    ::delete fnt;
+}
+
+void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    PointF loc;
+    bb.GetLocation(&loc);
+    gfx->DrawString(txtConvBuf, (INT) strLen, fnt, loc, col);
 }
 
 // normalizes newline characters in-place (i.e. replaces '\r' and "\r\n" with '\n')
@@ -119,12 +163,20 @@ struct MeasuredString {
     const char *s;
     size_t sLen;
     RectF bb;
+
+    bool IsNewline() const {
+        return (sLen == 1) && (*s == '\n');
+    }
+
+    bool IsSpace() const {
+        return (sLen == 1) && (*s == ' ');
+    }
 };
 
 #define MAX_STRINGS 4096
 
 struct MeasuredString *g_strings = nullptr;
-int g_nStrings = 0;
+size_t g_nStrings = 0;
 
 void FreeMeasuredStrings() {
     free((void*) g_strings);
@@ -132,14 +184,19 @@ void FreeMeasuredStrings() {
     g_nStrings = 0;
 }
 
+MeasuredString *GetMeasuredString(size_t n) {
+    if (g_nStrings >= MAX_STRINGS) {
+        return nullptr;
+    }
+    return &g_strings[n];
+}
+
 MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float dy) {
     if (nullptr == g_strings) {
         g_strings = AllocStruct<MeasuredString>(MAX_STRINGS);
     }
-    if (g_nStrings >= MAX_STRINGS) {
-        return nullptr;
-    }
-    auto ms = &g_strings[g_nStrings++];
+    g_nStrings++;
+    auto ms = GetMeasuredString(g_nStrings-1);
     ms->s = s;
     ms->sLen = sLen;
     ms->bb.X = 0;
@@ -149,49 +206,66 @@ MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float 
     return ms;
 }
 
-void MeasureStrings(char *s, size_t sLen) {
-    auto m = TextMeasureGdiplus::Create();
-    IterWords(s, sLen, [&](char *s, size_t sLen) {
+void MeasureStrings(ITextMeasure *m, char *s, size_t sLen) {
+    
+    IterWords(s, sLen, [&m](char *s, size_t sLen) {
         RectF bb = m->Measure(s, sLen);
         AllocMeasuredString(s, sLen, bb.Width, bb.Height);
     });
-    delete m;
 }
 
-
-#if 0
-void LayoutStrings(float areaDx) {
+void LayoutStrings(float areaDx, float spaceDx, float lineDy) {
     float x = 0;
     float y = 0;
-    float maxTextDy = 0; // for current line
-    for (i = 0; i < g_nStrings; i++) {
-        float textDx = size.Width;
-        float textDy = size.Height;
+    float maxTextDy = lineDy; // for current line
+    for (size_t i = 0; i < g_nStrings; i++) {
+        auto ms = GetMeasuredString(i);
+        if (ms->IsNewline()) {
+            x = 0;
+            y += maxTextDy + 2;
+            continue;
+        }
+
+        auto& bb = ms->bb;
+        float textDx = bb.Width;
+        float textDy = bb.Height;
         if (textDy > maxTextDy) {
             maxTextDy = textDy;
         }
-        if (x + textDx > areaDx) {
-            bool firstWordInLine = (x == 0);
-            if (firstWordInLine) {
 
-            }
-            if (!firstWordInLine) {
-                y += maxTextDy + 2;
-                maxTextDy = textDy;
-                x = 0;
-            }
-
-            y += maxTextDy + 2;
-            maxTextDy = 0;
+        if (x + textDx < areaDx) {
+            bb.X = x;
+            bb.Y = y;
+            x += textDx + spaceDx;
+            continue;
         }
+
+        // would exceed dx - advance to new line
+        if (x == 0) {
+            // first word in the line, so put it on this line
+            bb.X = x;
+            bb.Y = y;
+            // advance to next line
+            y += maxTextDy + 2;
+            continue;
+        }
+
+        bb.X = 0;
+        y += maxTextDy + 2;
+        maxTextDy = textDy;
+        bb.Y = y;
+        x = textDx + spaceDx;
     }
 }
-#endif
 
-void DoLayout(char *s, float /*areaDx*/) {
+void DoLayout(char *s, float areaDx) {
     auto sLen = strlen(s);
-    MeasureStrings(s, sLen);
-    //LayoutStrings(areaDx);
+    auto m = TextMeasureGdiplus::Create();
+    MeasureStrings(m, s, sLen);
+    float fontDy = m->GetFontHeight();
+    float spaceDx = m->Measure(" ", 1).Width;
+    delete m;
+    LayoutStrings(areaDx, spaceDx, fontDy);
 }
 
 struct SampleWindow : Window<SampleWindow>
@@ -213,7 +287,7 @@ struct SampleWindow : Window<SampleWindow>
         CreateWindowW(wc.lpszClassName,
             L"Render Speed Test",
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT, 720, 480,
             nullptr,
             nullptr,
             wc.hInstance,
@@ -230,25 +304,44 @@ struct SampleWindow : Window<SampleWindow>
             return 0;
         }
 
+        if (WM_ERASEBKGND == message) {
+            // do nothing, helps to avoid flicker
+            return TRUE;
+        }
+
         return Window::MessageHandler(message, wparam, lparam);
     }
 
     void PaintHandler()
     {
         static auto didLayout = false;
-        if (!didLayout) {
-            // TODO: get the real dx of the window
-            DoLayout(SAMPLE_TEXT, 640.f);
-            didLayout = true;
-        }
-#if 0
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_window, &ps);
-        // TODO: draw
+
+        ClientRect rcClient(m_window);
+        RECT rTmp = rcClient.ToRECT();
+
+        if (!didLayout) {
+            DoLayout(SAMPLE_TEXT, (float)rcClient.Size().dx);
+            didLayout = true;
+        }
+        ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
+        FillRect(hdc, &rTmp, brushAboutBg);
+
+        auto td = TextDrawGdiplus::Create(hdc);
+        for (size_t i = 0; i < g_nStrings; i++) {
+            auto ms = GetMeasuredString(i);
+            if (ms->IsNewline()) {
+                continue;
+            }
+            // TODO: show bounding box
+            td->Draw(ms->s, ms->sLen, ms->bb);
+        }
+        delete td;
         EndPaint(m_window, &ps);
-#endif
     }
 };
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE,
@@ -256,6 +349,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_ int )
 {
     hInst = hInstance;
+
+    ScopedCom initCom;
+    InitAllCommonControls();
+    ScopedGdiPlus initGdiplus;
 
     //MSG msg;
     //HACCEL hAccelTable;

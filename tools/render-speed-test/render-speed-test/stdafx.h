@@ -10,6 +10,9 @@
 //#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
+#include <unknwn.h>
+#include <shlwapi.h>
+#include <shlobj.h>
 #include <gdiplus.h>
 
 // C RunTime Header Files
@@ -19,7 +22,8 @@
 #include <tchar.h>
 #include <stdio.h>
 
-// TODO: reference additional headers your program requires here
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 
