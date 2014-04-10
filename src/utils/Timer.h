@@ -26,7 +26,10 @@ public:
     }
 
     void Start() { QueryPerformanceCounter(&start); }
-    void Stop() { QueryPerformanceCounter(&end); }
+    double Stop() { 
+        QueryPerformanceCounter(&end);
+        return GetTimeInMs();
+    }
 
     // If stopped, get the time at point it was stopped,
     // otherwise get current time
