@@ -251,7 +251,7 @@ void KillSumatra()
 static HFONT CreateDefaultGuiFont()
 {
     HDC hdc = GetDC(NULL);
-    HFONT font = GetSimpleFont(hdc, L"MS Shell Dlg", 14);
+    HFONT font = CreateSimpleFont(hdc, L"MS Shell Dlg", 14);
     ReleaseDC(NULL, hdc);
     return font;
 }

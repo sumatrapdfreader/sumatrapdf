@@ -713,7 +713,7 @@ WCHAR *ToSafeString(const WCHAR *str)
     }
 }
 
-HFONT GetSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize)
+HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize)
 {
     LOGFONT lf = { 0 };
 

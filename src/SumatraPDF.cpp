@@ -2138,7 +2138,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
+            ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             SetTextColor(hdc, gRenderCache.textColor);
             if (renderDelay != RENDER_DELAY_FAILED) {
@@ -2591,7 +2591,7 @@ static void OnPaint(WindowInfo& win)
         // and/or open it in an external viewer (e.g. Adobe Reader might
         // be able to handle PDFs that are too broken for MuPDF),
         // a notification would break this
-        ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
+        ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
         FillRect(hdc, &ps.rcPaint, brush);

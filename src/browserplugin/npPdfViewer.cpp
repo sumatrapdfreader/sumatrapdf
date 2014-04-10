@@ -331,7 +331,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-        HFONT hFont = GetSimpleFont(hDC, L"MS Shell Dlg", 14);
+        HFONT hFont = CreateSimpleFont(hDC, L"MS Shell Dlg", 14);
         bool isRtL = IsLanguageRtL(gTranslationIdx);
         
         // set up double buffering
