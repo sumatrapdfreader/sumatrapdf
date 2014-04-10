@@ -288,13 +288,21 @@ MeasuredString *MeasuredStrings::AllocMeasuredString(const char *s, size_t sLen,
     return ms;
 }
 
-MeasuredStrings *MeasureStrings(ITextMeasure *m, char *s, size_t sLen) {
+MeasuredStrings *BreakTextIntoStrings(char *s, size_t sLen) {
     auto res = new MeasuredStrings();
-    IterWords(s, sLen, [&m,&res](char *s, size_t sLen) {
-        RectF bb = m->Measure(s, sLen);
-        res->AllocMeasuredString(s, sLen, bb.Width, bb.Height);
+    IterWords(s, sLen, [&res](char *s, size_t sLen) {
+        res->AllocMeasuredString(s, sLen, 0.f, 0.f);
     });
     return res;
+}
+
+void MeasureStrings(MeasuredStrings *strings, ITextMeasure *m) {
+    for (size_t i = 0; i < strings->nStrings; i++) {
+        auto ms = strings->GetMeasuredString(i);
+        RectF bb = m->Measure(ms->s, ms->sLen);
+        ms->bb.Width = bb.Width;
+        ms->bb.Height = bb.Height;
+    }
 }
 
 void LayoutStrings(MeasuredStrings *strings, float areaDx, float spaceDx, float lineDy) {
@@ -343,7 +351,8 @@ void LayoutStrings(MeasuredStrings *strings, float areaDx, float spaceDx, float 
 
 MeasuredStrings *DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
     auto sLen = strlen(s);
-    auto strings = MeasureStrings(m, s, sLen);
+    auto strings = BreakTextIntoStrings(s, sLen);
+    MeasureStrings(strings, m);
     float fontDy = m->GetFontHeight();
     float spaceDx = m->Measure(" ", 1).Width;
     LayoutStrings(strings, areaDx, spaceDx, fontDy);
@@ -352,7 +361,8 @@ MeasuredStrings *DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
 
 MeasuredStrings * DoLayoutGdi(TextMeasureGdi *m, char *s, float areaDx) {
     auto sLen = strlen(s);
-    auto strings = MeasureStrings(m, s, sLen);
+    auto strings = BreakTextIntoStrings(s, sLen);
+    MeasureStrings(strings, m);
     //float fontDy = m->GetFontHeight();
     float fontDy = 12.0f; // TODO: use real font height
     float spaceDx = m->Measure(" ", 1).Width;
