@@ -24,37 +24,43 @@ WCHAR *Dup(const WCHAR *s)
     return s ? _wcsdup(s) : NULL;
 }
 
-#define EntryCheck(arg1, arg2) \
-    if (arg1 == arg2) \
-        return true; \
-    if (!arg1 || !arg2) \
-        return false
-
 // return true if s1 == s2, case sensitive
 bool Eq(const char *s1, const char *s2)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == strcmp(s1, s2);
 }
 
 // return true if s1 == s2, case sensitive
 bool Eq(const WCHAR *s1, const WCHAR *s2)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == wcscmp(s1, s2);
 }
 
 // return true if s1 == s2, case insensitive
 bool EqI(const char *s1, const char *s2)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == _stricmp(s1, s2);
 }
 
 // return true if s1 == s2, case insensitive
 bool EqI(const WCHAR *s1, const WCHAR *s2)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == _wcsicmp(s1, s2);
 }
 
@@ -92,43 +98,59 @@ bool EqIS(const WCHAR *s1, const WCHAR *s2)
 
 bool EqN(const char *s1, const char *s2, size_t len)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == strncmp(s1, s2, len);
 }
 
 bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == wcsncmp(s1, s2, len);
 }
 
 bool EqNI(const char *s1, const char *s2, size_t len)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == _strnicmp(s1, s2, len);
 }
 
 bool EqNI(const WCHAR *s1, const WCHAR *s2, size_t len)
 {
-    EntryCheck(s1, s2);
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
     return 0 == _wcsnicmp(s1, s2, len);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char *str, const char *txt)
 {
-    EntryCheck(str, txt);
+    if (str == txt)
+        return true;
+    if (!str || !txt)
+        return false;
     return 0 == _strnicmp(str, txt, str::Len(txt));
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const WCHAR *str, const WCHAR *txt)
 {
-    EntryCheck(str, txt);
+    if (str == txt)
+        return true;
+    if (!str || !txt)
+        return false;
     return 0 == _wcsnicmp(str, txt, str::Len(txt));
 }
-
-#undef EntryCheck
 
 // TODO: implement with templates? (must happen in the header, though)
 // template <typename T> bool EndsWith(const T*, const T*) ?
