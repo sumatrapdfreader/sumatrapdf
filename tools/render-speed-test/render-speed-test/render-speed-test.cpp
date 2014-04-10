@@ -473,7 +473,7 @@ struct SampleWindow : Window<SampleWindow>
         HDC hdc = BeginPaint(m_window, &ps);
 
         if (font == nullptr) {
-            font = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled(PixelToPoint(FONT_SIZE)));
+            font = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float)PixelToPoint(FONT_SIZE)));
             CrashIf(!font);
         }
 
