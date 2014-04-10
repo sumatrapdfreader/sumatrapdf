@@ -8,18 +8,18 @@ using namespace Gdiplus;
 /*
 Results: GDI seems to be easily 10x faster. Sample timings:
 
-gdi  measure,0.3413
+gdi  measure,0.3284
+gdi  measure,0.0611
 gdi  measure,0.0602
-gdi  measure,0.0598
-gdi+ measure,17.6913
-gdi+ measure,60.0512
-gdi+ measure,17.7702
-gdi  draw,3.3577
-gdi  draw,0.7581
-gdi  draw,0.8661
-gdi+ draw,12.9664
-gdi+ draw,17.1750
-gdi+ draw,15.7561
+gdi+ measure,15.1113
+gdi+ measure,28.5502
+gdi+ measure,12.9735
+gdi  draw,1.0829
+gdi  draw,0.8567
+gdi  draw,0.9709
+gdi+ draw,14.1167
+gdi+ draw,13.6285
+gdi+ draw,14.3014
 
 */
 
@@ -31,10 +31,6 @@ gdi+ draw,15.7561
 //   http://www.gamedev.net/topic/333453-32-bit-alpha-bitmaps-and-gdi-fun-alert/
 //   http://stackoverflow.com/questions/5647322/gdi-font-rendering-especially-in-layered-windows
 //   http://www.codeproject.com/Questions/182071/GDI-font-rendering-and-layered-windows
-//
-// NOTES:
-// - on Win 8 (MacBook Pro, VMWare Fusion), GDI+ renders Tahoma much thicker (bolder) than GDI.
-//   Doesn't happen on Win 7 (Mac Pro, Parallels). Not sure what's that about.
 
 HINSTANCE hInst;
 
@@ -556,6 +552,9 @@ struct SampleWindow : Window<SampleWindow>
 
         if (firstTime) {
             for (int i = 0; i < REPEAT_COUNT; i++) {
+                // GDI+ does anti-aliasing so it would accumulate text over-time
+                // if we didn't erase the background again
+                FillRect(hdc, &rTmp, brushAboutBg);
                 Timer timer(true);
                 DrawStrings(td);
                 gGdiplusDrawTimes[i] = timer.Stop();
@@ -612,6 +611,8 @@ struct SampleWindow : Window<SampleWindow>
         auto td = TextDrawGdi::Create(hdc);
         if (firstTime) {
             for (int i = 0; i < REPEAT_COUNT; i++) {
+                // just to be sure, reset the background before each draw
+                FillRect(hdc, &rTmp, brushAboutBg);
                 Timer timer(true);
                 DrawStrings(td);
                 gGdiDrawTimes[i] = timer.Stop();
