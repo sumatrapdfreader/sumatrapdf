@@ -1,13 +1,84 @@
 #ifndef util_h
 #define util_h
 
+#pragma warning(push)
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
+// Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
+// CrashMe() would show up as the cause of several different crash sites)
+//
+// Note: I tried doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+// but it seemed to confuse callstack walking
+inline void CrashMe()
+{
+    char *p = NULL;
+    *p = 0;
+}
+#pragma warning(pop)
+
+// CrashIf() is like assert() except it crashes in debug and pre-release builds.
+// The idea is that assert() indicates "can't possibly happen" situation and if
+// it does happen, we would like to fix the underlying cause.
+// In practice in our testing we rarely get notified when an assert() is triggered
+// and they are disabled in builds running on user's computers.
+// Now that we have crash reporting, we can get notified about such cases if we
+// use CrashIf() instead of assert(), which we should be doing from now on.
+//
+// Enabling it in pre-release builds but not in release builds is trade-off between
+// shipping small executables (each CrashIf() adds few bytes of code) and having
+// more testing on user's machines and not only in our personal testing.
+// To crash uncoditionally use CrashAlwaysIf(). It should only be used in
+// rare cases where we really want to know a given condition happens. Before
+// each release we should audit the uses of CrashAlawysIf()
+//
+// Just as with assert(), the condition is not guaranteed to be executed
+// in some builds, so it shouldn't contain the actual logic of the code
+
+#define CrashAlwaysIf(cond) \
+    do { if (cond) \
+    CrashMe(); \
+    __analysis_assume(!(cond)); } while (0)
+
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#define CrashIf(cond) CrashAlwaysIf(cond)
+#else
+#define CrashIf(cond) __analysis_assume(!(cond))
+#endif
+
+// Sometimes we want to assert only in debug build (not in pre-release)
+#if defined(DEBUG)
+#define CrashIfDebugOnly(cond) CrashAlwaysIf(cond)
+#else
+#define CrashIfDebugOnly(cond) __analysis_assume(!(cond))
+#endif
+
+// AssertCrash is like assert() but crashes like CrashIf()
+// It's meant to make converting assert() easier (converting to
+// CrashIf() requires inverting the condition, which can introduce bugs)
+#define AssertCrash(exp) CrashIf(!(exp))
+
 // stuff that, once implemented, doesn't change often
 namespace str {
 
+static inline size_t Len(const char *s)
+{
+    return s ? strlen(s) : 0;
+}
+
+static inline size_t Len(const WCHAR *s)
+{
+    return s ? wcslen(s) : 0;
+}
+
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize);
 char *DupN(char *s, size_t sLen);
-
+size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 }
+
+namespace win {
+int GetHwndDpi(HWND hwnd, float *uiDPIFactor);
+}
+
+HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize);
 
 // iterates over words of the string and for each word calls a function f(char *s, size_t sLen)
 // it collapses multile white-space characters as one.

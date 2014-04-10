@@ -7,7 +7,6 @@ using namespace Gdiplus;
 
 // a program to test various ways of measuring and drawing text
 // TODO:
-// - set the right font in GDI version
 // - calc & save timings
 // - add DirectDraw version
 // - re-layout when the window size changes
@@ -17,6 +16,9 @@ HINSTANCE hInst;
 // TODO: static_assert(sizeof(i64)==8)
 #define APP_TITLE       L"RenderSpeedTest"
 #define APP_WIN_CLASS   L"RENDERSPEEDTEST_WIN_CLS"
+
+#define FONT_NAME       L"Tahoma"
+#define FONT_SIZE       10
 
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
@@ -141,7 +143,7 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create() {
         return nullptr;
     res->gfx = ::new Graphics((Image*) res->bmp);
     InitGraphicsMode(res->gfx);
-    res->fnt = ::new Font(L"Tahoma", 10.0);
+    res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     return res;
 }
 
@@ -200,7 +202,7 @@ TextDrawGdiplus* TextDrawGdiplus::Create(HDC dc) {
     auto res = new TextDrawGdiplus();
     res->gfx = ::new Graphics(dc);
     InitGraphicsMode(res->gfx);
-    res->fnt = ::new Font(L"Tahoma", 10.0);
+    res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     res->col = ::new SolidBrush(Color(0, 0, 0));
     return res;
 }
@@ -240,28 +242,43 @@ struct MeasuredString {
 
 #define MAX_STRINGS 4096
 
-struct MeasuredString *g_strings = nullptr;
-size_t g_nStrings = 0;
+struct MeasuredStrings {
+    MeasuredString *strings = nullptr;
+    size_t nStrings = 0;
 
-void FreeMeasuredStrings() {
-    free((void*) g_strings);
-    g_strings = nullptr;
-    g_nStrings = 0;
+    MeasuredStrings() : strings(nullptr), nStrings(0) {
+    }
+
+    ~MeasuredStrings() {
+        Free();
+    }
+
+    void Free();
+
+    MeasuredString *GetMeasuredString(size_t n);
+    MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float dy);
+
+};
+
+void MeasuredStrings::Free() {
+    free((void*) strings);
+    strings = nullptr;
+    nStrings = 0;
 }
 
-MeasuredString *GetMeasuredString(size_t n) {
-    if (g_nStrings >= MAX_STRINGS) {
+MeasuredString *MeasuredStrings::GetMeasuredString(size_t n) {
+    if (nStrings >= MAX_STRINGS) {
         return nullptr;
     }
-    return &g_strings[n];
+    return &strings[n];
 }
 
-MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float dy) {
-    if (nullptr == g_strings) {
-        g_strings = AllocStruct<MeasuredString>(MAX_STRINGS);
+MeasuredString *MeasuredStrings::AllocMeasuredString(const char *s, size_t sLen, float dx, float dy) {
+    if (nullptr == strings) {
+        strings = AllocStruct<MeasuredString>(MAX_STRINGS);
     }
-    g_nStrings++;
-    auto ms = GetMeasuredString(g_nStrings-1);
+    nStrings++;
+    auto ms = GetMeasuredString(nStrings-1);
     ms->s = s;
     ms->sLen = sLen;
     ms->bb.X = 0;
@@ -271,20 +288,21 @@ MeasuredString *AllocMeasuredString(const char *s, size_t sLen, float dx, float 
     return ms;
 }
 
-void MeasureStrings(ITextMeasure *m, char *s, size_t sLen) {
-    
-    IterWords(s, sLen, [&m](char *s, size_t sLen) {
+MeasuredStrings *MeasureStrings(ITextMeasure *m, char *s, size_t sLen) {
+    auto res = new MeasuredStrings();
+    IterWords(s, sLen, [&m,&res](char *s, size_t sLen) {
         RectF bb = m->Measure(s, sLen);
-        AllocMeasuredString(s, sLen, bb.Width, bb.Height);
+        res->AllocMeasuredString(s, sLen, bb.Width, bb.Height);
     });
+    return res;
 }
 
-void LayoutStrings(float areaDx, float spaceDx, float lineDy) {
+void LayoutStrings(MeasuredStrings *strings, float areaDx, float spaceDx, float lineDy) {
     float x = 0;
     float y = 0;
     float maxTextDy = lineDy; // for current line
-    for (size_t i = 0; i < g_nStrings; i++) {
-        auto ms = GetMeasuredString(i);
+    for (size_t i = 0; i < strings->nStrings; i++) {
+        auto ms = strings->GetMeasuredString(i);
         if (ms->IsNewline()) {
             x = 0;
             y += maxTextDy + 2;
@@ -323,27 +341,55 @@ void LayoutStrings(float areaDx, float spaceDx, float lineDy) {
     }
 }
 
-void DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
+MeasuredStrings *DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
     auto sLen = strlen(s);
-    MeasureStrings(m, s, sLen);
+    auto strings = MeasureStrings(m, s, sLen);
     float fontDy = m->GetFontHeight();
     float spaceDx = m->Measure(" ", 1).Width;
-    LayoutStrings(areaDx, spaceDx, fontDy);
+    LayoutStrings(strings, areaDx, spaceDx, fontDy);
+    return strings;
 }
 
-void DoLayoutGdi(TextMeasureGdi *m, char *s, float areaDx) {
+MeasuredStrings * DoLayoutGdi(TextMeasureGdi *m, char *s, float areaDx) {
     auto sLen = strlen(s);
-    MeasureStrings(m, s, sLen);
+    auto strings = MeasureStrings(m, s, sLen);
     //float fontDy = m->GetFontHeight();
     float fontDy = 12.0f; // TODO: use real font height
     float spaceDx = m->Measure(" ", 1).Width;
-    LayoutStrings(areaDx, spaceDx, fontDy);
+    LayoutStrings(strings, areaDx, spaceDx, fontDy);
+    return strings;
 }
+
+float DpiScaled(float n) {
+    static float scale = 0.0f;
+    if (scale == 0.0f) {
+        win::GetHwndDpi(HWND_DESKTOP, &scale);
+    }
+    return n * scale;
+}
+
+int PixelToPoint(int n) {
+    return n * 96 / 72;
+}
+
+enum RenderType {
+    RENDER_GDI,
+    RENDER_GDI_PLUS,
+    RENDER_DIRECT_DRAW
+};
 
 struct SampleWindow : Window<SampleWindow>
 {
-    SampleWindow()
+    HFONT font;
+    RenderType renderType;
+    MeasuredStrings *strings;
+
+    SampleWindow(RenderType rt, const WCHAR *title)
     {
+        font = nullptr;
+        renderType = rt;
+        strings = nullptr;
+
         WNDCLASS wc = {};
 
         wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -354,10 +400,10 @@ struct SampleWindow : Window<SampleWindow>
 
         RegisterClass(&wc);
 
-        //ASSERT(!m_window);
+        CrashIf(m_window);
 
         CreateWindowW(wc.lpszClassName,
-            L"Render Speed Test",
+            title,
             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
             CW_USEDEFAULT, CW_USEDEFAULT, 720, 480,
             nullptr,
@@ -365,7 +411,12 @@ struct SampleWindow : Window<SampleWindow>
             wc.hInstance,
             this);
 
-        //ASSERT(m_window);
+        CrashIf(!m_window);
+    }
+
+    ~SampleWindow() {
+        DeleteObject(font);
+        delete strings;
     }
 
     LRESULT MessageHandler(UINT message, WPARAM wparam, LPARAM lparam)
@@ -386,26 +437,24 @@ struct SampleWindow : Window<SampleWindow>
 
     void PaintHandlerGdiplus()
     {
-        static auto didLayout = false;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_window, &ps);
 
         ClientRect rcClient(m_window);
         RECT rTmp = rcClient.ToRECT();
 
-        if (!didLayout) {
+        if (!strings) {
             auto m = TextMeasureGdiplus::Create();
-            DoLayoutGdiplus(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
+            strings = DoLayoutGdiplus(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
             delete m;
-            didLayout = true;
         }
         ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
         FillRect(hdc, &rTmp, brushAboutBg);
         Pen                  debugPen(Color(255, 0, 0), 1);
 
         auto td = TextDrawGdiplus::Create(hdc);
-        for (size_t i = 0; i < g_nStrings; i++) {
-            auto ms = GetMeasuredString(i);
+        for (size_t i = 0; i < strings->nStrings; i++) {
+            auto ms = strings->GetMeasuredString(i);
             if (ms->IsNewline()) {
                 continue;
             }
@@ -420,28 +469,34 @@ struct SampleWindow : Window<SampleWindow>
 
     void PaintHandlerGdi()
     {
-        static auto didLayout = false;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_window, &ps);
+
+        if (font == nullptr) {
+            font = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled(PixelToPoint(FONT_SIZE)));
+            CrashIf(!font);
+        }
+
         SetTextColor(hdc, RGB(0, 0, 0));
         SetBkColor(hdc, RGB(0xff, 0xff, 0xff));
+
+        HFONT oldfnt = SelectFont(hdc, font);
 
         ClientRect rcClient(m_window);
         RECT rTmp = rcClient.ToRECT();
         RECT r;
-        if (!didLayout) {
+        if (!strings) {
             auto m = TextMeasureGdi::Create(hdc);
-            DoLayoutGdi(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
+            strings = DoLayoutGdi(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
             delete m;
-            didLayout = true;
         }
         ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(RGB(0xff, 0xff, 0xff)));
         FillRect(hdc, &rTmp, brushAboutBg);
         ScopedGdiObj<HBRUSH> brushDebugPen(CreateSolidBrush(RGB(255, 0, 0)));
 
         auto td = TextDrawGdi::Create(hdc);
-        for (size_t i = 0; i < g_nStrings; i++) {
-            auto ms = GetMeasuredString(i);
+        for (size_t i = 0; i < strings->nStrings; i++) {
+            auto ms = strings->GetMeasuredString(i);
             if (ms->IsNewline()) {
                 continue;
             }
@@ -454,16 +509,23 @@ struct SampleWindow : Window<SampleWindow>
             FrameRect(hdc, &r, brushDebugPen);
         }
         delete td;
+        SelectFont(hdc, oldfnt);
         EndPaint(m_window, &ps);
     }
 
     void PaintHandler()
     {
-        //PaintHandlerGdiplus();
-        PaintHandlerGdi();
+        if (renderType == RENDER_GDI) {
+            PaintHandlerGdi();
+        }
+        else if (renderType == RENDER_GDI_PLUS) {
+            PaintHandlerGdiplus();
+        }
+        else {
+            CrashIf(true);
+        }
     }
 };
-
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE,
@@ -479,7 +541,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
     HACCEL hAccelTable;
 
-    SampleWindow window;
+    SampleWindow window(RENDER_GDI, L"Gdi rendering");
+    SampleWindow window2(RENDER_GDI_PLUS, L"Gdi+ rendering");
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_RENDERSPEEDTEST));
 
@@ -492,6 +555,5 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    FreeMeasuredStrings();
     return (int) msg.wParam;
 }

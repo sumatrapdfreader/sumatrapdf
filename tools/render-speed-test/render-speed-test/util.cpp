@@ -14,6 +14,19 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOu
     return cchConverted;
 }
 
+size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
+{
+    CrashAlwaysIf(0 == dstCchSize);
+
+    size_t srcCchSize = str::Len(src);
+    size_t toCopy = min(dstCchSize - 1, srcCchSize);
+
+    errno_t err = wcsncpy_s(dst, dstCchSize, src, toCopy);
+    CrashIf(err || dst[toCopy] != '\0');
+
+    return toCopy;
+}
+
 char *DupN(char *s, size_t sLen) {
     auto res = (char*) malloc(sLen + 1);
     if (!res)
@@ -23,6 +36,41 @@ char *DupN(char *s, size_t sLen) {
     return res;
 }
 
+}
+
+namespace win {
+int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
+{
+    HDC dc = GetDC(hwnd);
+    int dpi = GetDeviceCaps(dc, LOGPIXELSY);
+    // round untypical resolutions up to the nearest quarter
+    if (uiDPIFactor)
+        *uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
+    ReleaseDC(hwnd, dc);
+    return dpi;
+}
+}
+
+HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize)
+{
+    LOGFONT lf = { 0 };
+
+    lf.lfWidth = 0;
+    lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
+    lf.lfItalic = FALSE;
+    lf.lfUnderline = FALSE;
+    lf.lfStrikeOut = FALSE;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_TT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
+    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+
+    return CreateFontIndirect(&lf);
 }
 
 void InitAllCommonControls()
