@@ -5,11 +5,36 @@
 
 using namespace Gdiplus;
 
+/*
+Results: GDI seems to be easily 10x faster. Sample timings:
+
+gdi  measure,0.3413
+gdi  measure,0.0602
+gdi  measure,0.0598
+gdi+ measure,17.6913
+gdi+ measure,60.0512
+gdi+ measure,17.7702
+gdi  draw,3.3577
+gdi  draw,0.7581
+gdi  draw,0.8661
+gdi+ draw,12.9664
+gdi+ draw,17.1750
+gdi+ draw,15.7561
+
+*/
+
 // a program to test various ways of measuring and drawing text
 // TODO:
-// - calc & save timings
 // - add DirectDraw version
 // - re-layout when the window size changes
+// - solve alpha-transparency issue with GDI
+//   http://www.gamedev.net/topic/333453-32-bit-alpha-bitmaps-and-gdi-fun-alert/
+//   http://stackoverflow.com/questions/5647322/gdi-font-rendering-especially-in-layered-windows
+//   http://www.codeproject.com/Questions/182071/GDI-font-rendering-and-layered-windows
+//
+// NOTES:
+// - on Win 8 (MacBook Pro, VMWare Fusion), GDI+ renders Tahoma much thicker (bolder) than GDI.
+//   Doesn't happen on Win 7 (Mac Pro, Parallels). Not sure what's that about.
 
 HINSTANCE hInst;
 
@@ -20,13 +45,43 @@ HINSTANCE hInst;
 #define FONT_NAME       L"Tahoma"
 #define FONT_SIZE       10
 
+// we want to run it couple of times and then we pick the best number
+#define REPEAT_COUNT 3
+
+// all times are in milli-seconds
+double gGdiMeasureTimes[REPEAT_COUNT];
+double gGdiDrawTimes[REPEAT_COUNT];
+double gGdiplusMeasureTimes[REPEAT_COUNT];
+double gGdiplusDrawTimes[REPEAT_COUNT];
+
+void DumpTiming(const char *name, double timeMs) {
+    char *s = str::Format("%s,%.4f\n", name, (float) timeMs);
+    OutputDebugStringA(s);
+    free(s);
+}
+
+void DumpTimings() {
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        DumpTiming("gdi  measure", gGdiMeasureTimes[i]);
+    }
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        DumpTiming("gdi+ measure", gGdiplusMeasureTimes[i]);
+    }
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        DumpTiming("gdi  draw", gGdiDrawTimes[i]);
+    }
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        DumpTiming("gdi+ draw", gGdiplusDrawTimes[i]);
+    }
+}
+
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
 void InitGraphicsMode(Graphics *g)
 {
     g->SetCompositingQuality(CompositingQualityHighQuality);
     g->SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    //g->SetSmoothingMode(SmoothingModeHighQuality);
     g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g->SetPageUnit(UnitPixel);
 }
@@ -68,6 +123,33 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     if (bbox.Width != 0)
         bbox.Width += PER_STR_DX_ADJUST + (PER_CHAR_DX_ADJUST * (float) len);
     return bbox;
+}
+
+float DpiScaled(float n) {
+    static float scale = 0.0f;
+    if (scale == 0.0f) {
+        win::GetHwndDpi(HWND_DESKTOP, &scale);
+    }
+    return n * scale;
+}
+
+int PixelToPoint(int n) {
+    return n * 96 / 72;
+}
+
+HFONT gFont = nullptr;
+
+HFONT GetGdiFont() {
+    if (gFont == nullptr) {
+        HDC hdc = GetDC(NULL);
+        gFont = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float) PixelToPoint(FONT_SIZE)));
+        ReleaseDC(NULL, hdc);
+    }
+    return gFont;
+}
+
+void DeleteGdiFont() {
+    DeleteObject(gFont);
 }
 
 class TextMeasureGdi : public ITextMeasure {
@@ -119,7 +201,7 @@ public:
         return fnt->GetHeight(gfx);
     }
 
-    static TextMeasureGdiplus* Create();
+    static TextMeasureGdiplus* Create(HDC hdc);
 
     virtual RectF Measure(const char *s, size_t sLen);
     virtual ~TextMeasureGdiplus();
@@ -136,14 +218,15 @@ RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
     return MeasureTextAccurate(gfx, fnt, txtConvBuf, strLen);
 }
 
-TextMeasureGdiplus *TextMeasureGdiplus::Create() {
+TextMeasureGdiplus *TextMeasureGdiplus::Create(HDC hdc) {
     auto res = new TextMeasureGdiplus();
     res->bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, res->data);
     if (!res->bmp)
         return nullptr;
     res->gfx = ::new Graphics((Image*) res->bmp);
     InitGraphicsMode(res->gfx);
-    res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
+    res->fnt = ::new Font(hdc, GetGdiFont());
+    //res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     return res;
 }
 
@@ -164,12 +247,6 @@ public:
 TextDrawGdi* TextDrawGdi::Create(HDC hdc) {
     auto res = new TextDrawGdi();
     res->hdc = hdc;
-    /*
-    res->gfx = ::new Graphics(dc);
-    InitGraphicsMode(res->gfx);
-    res->fnt = ::new Font(L"Tahoma", 10.0);
-    res->col = ::new SolidBrush(Color(0, 0, 0));
-    */
     return res;
 }
 
@@ -202,7 +279,8 @@ TextDrawGdiplus* TextDrawGdiplus::Create(HDC dc) {
     auto res = new TextDrawGdiplus();
     res->gfx = ::new Graphics(dc);
     InitGraphicsMode(res->gfx);
-    res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
+    res->fnt = ::new Font(dc, GetGdiFont());
+    //res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     res->col = ::new SolidBrush(Color(0, 0, 0));
     return res;
 }
@@ -352,7 +430,11 @@ void LayoutStrings(MeasuredStrings *strings, float areaDx, float spaceDx, float 
 MeasuredStrings *DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
     auto sLen = strlen(s);
     auto strings = BreakTextIntoStrings(s, sLen);
-    MeasureStrings(strings, m);
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        Timer timer(true);
+        MeasureStrings(strings, m);
+        gGdiplusMeasureTimes[i] = timer.Stop();
+    }
     float fontDy = m->GetFontHeight();
     float spaceDx = m->Measure(" ", 1).Width;
     LayoutStrings(strings, areaDx, spaceDx, fontDy);
@@ -362,24 +444,16 @@ MeasuredStrings *DoLayoutGdiplus(TextMeasureGdiplus *m, char *s, float areaDx) {
 MeasuredStrings * DoLayoutGdi(TextMeasureGdi *m, char *s, float areaDx) {
     auto sLen = strlen(s);
     auto strings = BreakTextIntoStrings(s, sLen);
-    MeasureStrings(strings, m);
+    for (int i = 0; i < REPEAT_COUNT; i++) {
+        Timer timer(true);
+        MeasureStrings(strings, m);
+        gGdiMeasureTimes[i] = timer.Stop();
+    }
     //float fontDy = m->GetFontHeight();
     float fontDy = 12.0f; // TODO: use real font height
     float spaceDx = m->Measure(" ", 1).Width;
     LayoutStrings(strings, areaDx, spaceDx, fontDy);
     return strings;
-}
-
-float DpiScaled(float n) {
-    static float scale = 0.0f;
-    if (scale == 0.0f) {
-        win::GetHwndDpi(HWND_DESKTOP, &scale);
-    }
-    return n * scale;
-}
-
-int PixelToPoint(int n) {
-    return n * 96 / 72;
 }
 
 enum RenderType {
@@ -445,8 +519,24 @@ struct SampleWindow : Window<SampleWindow>
         return Window::MessageHandler(message, wparam, lparam);
     }
 
+    // Note: not sure if that measures the right thing - clipping optimization
+    // might distort timings
+    void DrawStrings(ITextDraw *td)
+    {
+        for (size_t i = 0; i < strings->nStrings; i++) {
+            auto ms = strings->GetMeasuredString(i);
+            if (ms->IsNewline()) {
+                continue;
+            }
+            auto& bb = ms->bb;
+            td->Draw(ms->s, ms->sLen, bb);
+        }
+    }
+
     void PaintHandlerGdiplus()
     {
+        static bool firstTime = true;
+
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_window, &ps);
 
@@ -454,7 +544,7 @@ struct SampleWindow : Window<SampleWindow>
         RECT rTmp = rcClient.ToRECT();
 
         if (!strings) {
-            auto m = TextMeasureGdiplus::Create();
+            auto m = TextMeasureGdiplus::Create(hdc);
             strings = DoLayoutGdiplus(m, SAMPLE_TEXT, (float) rcClient.Size().dx);
             delete m;
         }
@@ -463,15 +553,27 @@ struct SampleWindow : Window<SampleWindow>
         Pen                  debugPen(Color(255, 0, 0), 1);
 
         auto td = TextDrawGdiplus::Create(hdc);
+
+        if (firstTime) {
+            for (int i = 0; i < REPEAT_COUNT; i++) {
+                Timer timer(true);
+                DrawStrings(td);
+                gGdiplusDrawTimes[i] = timer.Stop();
+            }
+            firstTime = false;
+        }
+        else {
+            DrawStrings(td);
+        }
+
+        // draw bounding-boxes to visualize correctness of text measurements
         for (size_t i = 0; i < strings->nStrings; i++) {
             auto ms = strings->GetMeasuredString(i);
             if (ms->IsNewline()) {
                 continue;
             }
             auto& bb = ms->bb;
-            td->Draw(ms->s, ms->sLen, bb);
             td->gfx->DrawRectangle(&debugPen, bb);
-
         }
         delete td;
         EndPaint(m_window, &ps);
@@ -479,11 +581,14 @@ struct SampleWindow : Window<SampleWindow>
 
     void PaintHandlerGdi()
     {
+        static bool firstTime = true;
+
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(m_window, &ps);
 
         if (font == nullptr) {
-            font = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float)PixelToPoint(FONT_SIZE)));
+            font = GetGdiFont();
+            //font = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float)PixelToPoint(FONT_SIZE)));
             CrashIf(!font);
         }
 
@@ -505,20 +610,33 @@ struct SampleWindow : Window<SampleWindow>
         ScopedGdiObj<HBRUSH> brushDebugPen(CreateSolidBrush(RGB(255, 0, 0)));
 
         auto td = TextDrawGdi::Create(hdc);
+        if (firstTime) {
+            for (int i = 0; i < REPEAT_COUNT; i++) {
+                Timer timer(true);
+                DrawStrings(td);
+                gGdiDrawTimes[i] = timer.Stop();
+            }
+            firstTime = false;
+        }
+        else {
+            DrawStrings(td);
+        }
+        delete td;
+
+        // draw bounding-boxes to visualize correctness of text measurements
         for (size_t i = 0; i < strings->nStrings; i++) {
             auto ms = strings->GetMeasuredString(i);
             if (ms->IsNewline()) {
                 continue;
             }
             auto& bb = ms->bb;
-            td->Draw(ms->s, ms->sLen, bb);
             r.left = (int) bb.X;
             r.right = r.left + (int) bb.Width;
             r.top = (int) bb.Y;
             r.bottom = r.top + (int) bb.Height;
             FrameRect(hdc, &r, brushDebugPen);
         }
-        delete td;
+
         SelectFont(hdc, oldfnt);
         EndPaint(m_window, &ps);
     }
@@ -564,6 +682,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-
+    DumpTimings();
     return (int) msg.wParam;
 }

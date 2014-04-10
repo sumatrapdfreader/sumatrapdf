@@ -70,6 +70,7 @@ static inline size_t Len(const WCHAR *s)
 }
 
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize);
+char *Format(const char *fmt, ...);
 char *DupN(char *s, size_t sLen);
 size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src);
 }
@@ -441,5 +442,43 @@ public:
     }
 };
 
+// Relatively high-precision timer. Can be used e.g. for measuring execution
+// time of a piece of code.
+class Timer {
+    LARGE_INTEGER   start;
+    LARGE_INTEGER   end;
 
+    double TimeSince(LARGE_INTEGER t) const
+    {
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        double timeInSecs = (double) (t.QuadPart - start.QuadPart) / (double) freq.QuadPart;
+        return timeInSecs * 1000.0;
+    }
+
+public:
+    explicit Timer(bool start = false) {
+        end.QuadPart = 0;
+        if (start)
+            Start();
+    }
+
+    void Start() { QueryPerformanceCounter(&start); }
+    double Stop() {
+        QueryPerformanceCounter(&end);
+        return GetTimeInMs();
+    }
+
+    // If stopped, get the time at point it was stopped,
+    // otherwise get current time
+    double GetTimeInMs()
+    {
+        if (0 == end.QuadPart) {
+            LARGE_INTEGER curr;
+            QueryPerformanceCounter(&curr);
+            return TimeSince(curr);
+        }
+        return TimeSince(end);
+    }
+};
 #endif

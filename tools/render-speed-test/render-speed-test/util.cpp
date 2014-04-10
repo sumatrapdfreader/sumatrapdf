@@ -16,14 +16,9 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOu
 
 size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 {
-    CrashAlwaysIf(0 == dstCchSize);
-
     size_t srcCchSize = str::Len(src);
     size_t toCopy = min(dstCchSize - 1, srcCchSize);
-
-    errno_t err = wcsncpy_s(dst, dstCchSize, src, toCopy);
-    CrashIf(err || dst[toCopy] != '\0');
-
+    wcsncpy_s(dst, dstCchSize, src, toCopy);
     return toCopy;
 }
 
@@ -36,6 +31,48 @@ char *DupN(char *s, size_t sLen) {
     return res;
 }
 
+char *Dup(const char *s)
+{
+    return s ? _strdup(s) : NULL;
+}
+
+char *FmtV(const char *fmt, va_list args)
+{
+    char    message[256];
+    size_t  bufCchSize = dimof(message);
+    char  * buf = message;
+    for (;;)
+    {
+        int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
+        if ((count >= 0) && ((size_t) count < bufCchSize))
+            break;
+        /* we have to make the buffer bigger. The algorithm used to calculate
+        the new size is arbitrary (aka. educated guess) */
+        if (buf != message)
+            free(buf);
+        if (bufCchSize < 4 * 1024)
+            bufCchSize += bufCchSize;
+        else
+            bufCchSize += 1024;
+        buf = (char*)calloc(1, bufCchSize);
+        if (!buf)
+            break;
+    }
+
+    if (buf == message)
+        buf = str::Dup(message);
+
+    return buf;
+}
+
+char *Format(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    char *res = FmtV(fmt, args);
+    va_end(args);
+    return res;
+}
 }
 
 namespace win {
