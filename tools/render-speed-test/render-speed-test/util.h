@@ -481,4 +481,8 @@ public:
         return TimeSince(end);
     }
 };
+
+void InitGraphicsMode(Gdiplus::Graphics *g);
+Gdiplus::RectF MeasureTextAccurate(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, size_t len);
+
 #endif
