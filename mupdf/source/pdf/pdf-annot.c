@@ -1332,8 +1332,8 @@ pdf_update_tx_widget_annot(pdf_document *doc, pdf_obj *obj)
 	fz_transform_rect(&rect, fz_rotate(&ctm, rotate));
 
 	flags = pdf_to_int(pdf_dict_gets(obj, "Ff"));
-	is_multiline = (flags & (1 << 12)) != 0;
-	if ((flags & (1 << 25) /* richtext */))
+	is_multiline = (flags & Ff_Multiline) != 0;
+	if ((flags & Ff_RichText))
 		fz_warn(ctx, "missing support for richtext fields");
 	align = pdf_to_int(pdf_dict_gets(obj, "Q"));
 
@@ -1390,13 +1390,13 @@ pdf_update_tx_widget_annot(pdf_document *doc, pdf_obj *obj)
 		for (rest = ucs2; *rest; rest++)
 			if (*rest > 0xFF)
 				*rest = '?';
-		if ((flags & (1 << 13) /* password */))
+		if ((flags & Ff_Password))
 			for (rest = ucs2; *rest; rest++)
 				*rest = '*';
 
 		x = 0;
 		rest = ucs2;
-		if ((flags & (1 << 24) /* comb */))
+		if ((flags & Ff_Comb))
 		{
 			pdf_append_combed_line(doc, res, content, base_ap, ucs2, font_size, rect.x1 - rect.x0, pdf_to_int(pdf_dict_get_inheritable(doc, obj, "MaxLen")));
 			rest = L"";

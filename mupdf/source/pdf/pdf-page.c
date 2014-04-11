@@ -607,6 +607,8 @@ pdf_delete_page(pdf_document *doc, int at)
 		pdf_dict_puts_drop(parent, "Count", pdf_new_int(doc, count - 1));
 		parent = pdf_dict_gets(parent, "Parent");
 	}
+
+	doc->page_count = 0; /* invalidate cached value */
 }
 
 void
@@ -675,6 +677,8 @@ pdf_insert_page(pdf_document *doc, pdf_page *page, int at)
 	{
 		fz_rethrow(ctx);
 	}
+
+	doc->page_count = 0; /* invalidate cached value */
 }
 
 void

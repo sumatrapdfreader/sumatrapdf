@@ -3,7 +3,7 @@
 // Compile a debug build of mupdf, then compile and run this example:
 //
 // gcc -g -o build/debug/example -Iinclude docs/example.c \
-//	build/debug/libmupdf.a build/debug/libmupdf-js-none.a \
+//	build/debug/libmupdf.a \
 //	build/debug/libfreetype.a build/debug/libjbig2dec.a \
 //	build/debug/libjpeg.a build/debug/libopenjpeg.a \
 //	build/debug/libz.a -lm
@@ -19,6 +19,10 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// Create a context to hold the exception stack and various caches.
 
 	fz_context *ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
+
+	// Register the default file types.
+
+	fz_register_document_handlers(ctx);
 
 	// Open the PDF, XPS or CBZ document.
 

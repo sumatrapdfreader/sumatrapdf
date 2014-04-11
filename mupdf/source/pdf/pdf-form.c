@@ -15,6 +15,14 @@ enum
 	SigFlag_AppendOnly = 2
 };
 
+static int pdf_field_dirties_document(pdf_document *doc, pdf_obj *field)
+{
+	int ff = pdf_get_field_flags(doc, field);
+	if (ff & Ff_NoExport) return 0;
+	if (ff & Ff_ReadOnly) return 0;
+	return 1;
+}
+
 /* Find the point in a field hierarchy where all descendents
  * share the same name */
 static pdf_obj *find_head_of_field_group(pdf_obj *obj)
@@ -178,7 +186,8 @@ static void reset_field(pdf_document *doc, pdf_obj *field)
 		}
 	}
 
-	doc->dirty = 1;
+	if (pdf_field_dirties_document(doc, field))
+		doc->dirty = 1;
 }
 
 void pdf_field_reset(pdf_document *doc, pdf_obj *field)
@@ -870,7 +879,8 @@ static int set_text_field_value(pdf_document *doc, pdf_obj *field, char *text)
 		text = pdf_js_get_event(doc->js)->value;
 	}
 
-	doc->dirty = 1;
+	if (pdf_field_dirties_document(doc, field))
+		doc->dirty = 1;
 	update_field_value(doc, field, text);
 
 	return 1;
@@ -1434,7 +1444,8 @@ void pdf_choice_widget_set_value(pdf_document *doc, pdf_widget *tw, int n, char 
 		pdf_dict_dels(annot->obj, "I");
 
 		pdf_field_mark_dirty(doc, annot->obj);
-		doc->dirty = 1;
+		if (pdf_field_dirties_document(doc, annot->obj))
+			doc->dirty = 1;
 	}
 	fz_catch(ctx)
 	{

@@ -371,9 +371,6 @@ pdf_load_compressed_inline_image(pdf_document *doc, pdf_obj *dict, int length, f
 {
 	fz_context *ctx = doc->ctx;
 	fz_compressed_buffer *bc = fz_malloc_struct(ctx, fz_compressed_buffer);
-	fz_stream *istm = NULL;
-
-	fz_var(istm);
 
 	fz_try(ctx)
 	{
@@ -382,9 +379,9 @@ pdf_load_compressed_inline_image(pdf_document *doc, pdf_obj *dict, int length, f
 
 		stm = pdf_open_inline_stream(doc, dict, length, stm, &bc->params);
 		stm = fz_open_leecher(stm, bc->buffer);
-		istm = fz_open_image_decomp_stream(ctx, stm, &bc->params, &dummy_l2factor);
+		stm = fz_open_image_decomp_stream(ctx, stm, &bc->params, &dummy_l2factor);
 
-		image->tile = fz_decomp_image_from_stream(ctx, istm, image, indexed, 0, 0);
+		image->tile = fz_decomp_image_from_stream(ctx, stm, image, indexed, 0, 0);
 	}
 	fz_catch(ctx)
 	{

@@ -1,3 +1,64 @@
+List of changes on master since MuPDF 1.3
+
+* Headline changes:
+	* CMYK rendering (mudraw PWG and PAM formats)
+	* TIFF viewer (with multi-page support).
+	* Added MuJS Javascript interpreter.
+		* MuJS is the default, V8 and JavaScriptCore are compile time options.
+		* Javascript support has to be explicitly enabled with pdf_enable_js.
+		* All viewers now have JavaScript enabled in the default builds.
+* Viewers:
+	* X11: Horizontal scroll wheel support.
+	* X11: Status bar display with warnings.
+	* Android: Digital signatures.
+	* iOS: Links, form filling, annotation editing, and javascript.
+	* iOS: Reflow mode.
+	* WinRT: Printing.
+	* WinRT: Improved zooming behaviour.
+* Tools:
+	* mudraw: Banded rendering with -B /band-height/.
+	* mudraw: Select output format with -F /format/.
+	* mudraw: Write to stdout if you use '-' as the output file name.
+	* mudraw: Add TGA output format.
+	* mudraw: Improved SVG output.
+	* mutool show: Write output to file instead of stdout with -o /filename/.
+	* mutool clean: Clean content streams with -s option.
+* Annotations:
+	* Improved font handling.
+	* Form fields.
+	* Free text.
+	* Sticky notes.
+* Optimizations:
+	* glyph cache: Partial eviction.
+	* glyph cache: Run-length compressed glyphs.
+	* Smarter handling of subpixel metrics in text rendering.
+	* Optimized blitting functions.
+	* Optimized gradient mesh drawing.
+* API changes and additions:
+	* fz_stream API reworked: replace "read" function with "next".
+	* "Rebind" functions to associate context bound objects with another context:
+		fz_output, fz_stream, fz_device and fz_document.
+	* Introduce "document handlers" to detect and open different file types.
+		* Must now call fz_register_document_handlers() to register the defaults.
+		* May register your own handlers as well to work with fz_open_document.
+	* Hook to load system fonts: fz_install_load_system_font_funcs.
+	* PDF xref cache flushing functions (mark/clear/clear-to-mark).
+	* Add our own "printf" set of functions to format strings and write to fz_output:
+		* Format %f as short as possible while preserving precision.
+		* Has %C for formatting a unicode character as UTF-8.
+		* Has %M to format fz_matrix.
+		* Has %R to format fz_rect.
+		* Has %q and %( to format strings with escaped characters.
+	* PDF process interface: allow PDF interpreter to do more than just draw!
+		* Content stream state cleaning filter.
+		* Content stream rewriting filter.
+	* PDF digital signatures.
+	* Stroke states may now be stored on the stack.
+	* Improved fz_path internals.
+	* Gradient mesh drawing interface has been improved.
+	* Save files with incremental updates.
+
+
 List of changes on master since MuPDF 1.2
 
  * Windows RT viewer app for MuPDF.

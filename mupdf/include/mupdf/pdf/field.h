@@ -4,18 +4,33 @@
 /* Field flags */
 enum
 {
+	/* Common to all field types */
+	Ff_ReadOnly = 1 << (1-1),
+	Ff_Required = 1 << (2-1),
+	Ff_NoExport = 1 << (3-1),
+
+	/* Text fields */
 	Ff_Multiline = 1 << (13-1),
 	Ff_Password = 1 << (14-1),
-	Ff_NoToggleToOff = 1 << (15-1),
-	Ff_Radio = 1 << (16-1),
-	Ff_Pushbutton = 1 << (17-1),
-	Ff_Combo = 1 << (18-1),
+
 	Ff_FileSelect = 1 << (21-1),
-	Ff_MultiSelect = 1 << (22-1),
 	Ff_DoNotSpellCheck = 1 << (23-1),
 	Ff_DoNotScroll = 1 << (24-1),
 	Ff_Comb = 1 << (25-1),
-	Ff_RadioInUnison = 1 << (26-1)
+	Ff_RichText = 1 << (26-1),
+
+	/* Button fields */
+	Ff_NoToggleToOff = 1 << (15-1),
+	Ff_Radio = 1 << (16-1),
+	Ff_Pushbutton = 1 << (17-1),
+	Ff_RadioInUnison = 1 << (26-1),
+
+	/* Choice fields */
+	Ff_Combo = 1 << (18-1),
+	Ff_Edit = 1 << (19-1),
+	Ff_Sort = 1 << (20-1),
+	Ff_MultiSelect = 1 << (22-1),
+	Ff_CommitOnSelCHange = 1 << (27-1),
 };
 
 char *pdf_get_string_or_stream(pdf_document *doc, pdf_obj *obj);
