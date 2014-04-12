@@ -683,10 +683,11 @@ static int GetPolicies(bool isRestricted)
     return Perm_All;
 }
 
+// takes ownership of bmp
 void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
-    CrashIf(!ds);
+    // CrashIf(!ds); // happened in e.g. crash 52161
     CrashIf(bmp && bmp->Size().IsEmpty());
     if (!ds || !bmp || bmp->Size().IsEmpty()) {
         delete bmp;
