@@ -8,6 +8,12 @@
 #include "SvgPath.h"
 #include "TxtParser.h"
 
+/*
+Code to create mui controls from text description (so that it can be loaded
+at runtime).
+
+*/
+
 namespace mui {
 
 struct ControlCreatorNode {

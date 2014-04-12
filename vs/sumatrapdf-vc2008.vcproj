@@ -570,6 +570,14 @@
 					RelativePath="..\src\mui\SvgPath_ut.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\src\mui\TextRender.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\TextRender.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="base"

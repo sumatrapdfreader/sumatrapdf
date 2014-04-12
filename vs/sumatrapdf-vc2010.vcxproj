@@ -155,6 +155,7 @@
     <ClCompile Include="..\src\mui\MuiPainter.cpp" />
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
+    <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BencUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />
@@ -425,6 +426,7 @@
     <ClInclude Include="..\src\mui\MuiPainter.h" />
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
+    <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\utils\Allocator.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BencUtil.h" />
