@@ -29,7 +29,7 @@ int PixelToPoint(int n) {
 HFONT gFont = NULL;
 
 HFONT GetGdiFont() {
-    if (gFont == nullptr) {
+    if (!gFont) {
         HDC hdc = GetDC(NULL);
         gFont = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float) PixelToPoint(FONT_SIZE)));
         ReleaseDC(NULL, hdc);
@@ -50,7 +50,7 @@ RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
 }
 
 TextMeasureGdi *TextMeasureGdi::Create(HDC hdc) {
-    auto res = new TextMeasureGdi();
+    TextMeasureGdi *res = new TextMeasureGdi();
     res->hdc = hdc;
     return res;
 }
@@ -64,14 +64,14 @@ TextMeasureGdiplus::~TextMeasureGdiplus() {
 
 RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return MeasureTextAccurate(gfx, fnt, txtConvBuf, strLen);
+    return MeasureTextAccurate(gfx, fnt, txtConvBuf, (int)strLen);
 }
 
 TextMeasureGdiplus *TextMeasureGdiplus::Create(HDC hdc) {
-    auto res = new TextMeasureGdiplus();
+    TextMeasureGdiplus *res = new TextMeasureGdiplus();
     res->bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, res->data);
     if (!res->bmp)
-        return nullptr;
+        return NULL;
     res->gfx = ::new Graphics((Image*) res->bmp);
     mui::InitGraphicsMode(res->gfx);
     res->fnt = ::new Font(hdc, GetGdiFont());
@@ -79,8 +79,8 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create(HDC hdc) {
     return res;
 }
 
-TextDrawGdi* TextDrawGdi::Create(HDC hdc) {
-    auto res = new TextDrawGdi();
+TextDrawGdi *TextDrawGdi::Create(HDC hdc) {
+    TextDrawGdi *res = new TextDrawGdi();
     res->hdc = hdc;
     return res;
 }
@@ -91,11 +91,11 @@ void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb) {
     bb.GetLocation(&loc);
     int x = (int) bb.X;
     int y = (int) bb.Y;
-    ExtTextOutW(hdc, x, y, 0, NULL, txtConvBuf, strLen, NULL);
+    ExtTextOutW(hdc, x, y, 0, NULL, txtConvBuf, (int)strLen, NULL);
 }
 
-TextDrawGdiplus* TextDrawGdiplus::Create(HDC dc) {
-    auto res = new TextDrawGdiplus();
+TextDrawGdiplus *TextDrawGdiplus::Create(HDC dc) {
+    TextDrawGdiplus *res = new TextDrawGdiplus();
     res->gfx = ::new Graphics(dc);
     mui::InitGraphicsMode(res->gfx);
     res->fnt = ::new Font(dc, GetGdiFont());
@@ -115,4 +115,3 @@ void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb) {
     bb.GetLocation(&loc);
     gfx->DrawString(txtConvBuf, (INT) strLen, fnt, loc, col);
 }
-

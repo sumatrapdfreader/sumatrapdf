@@ -8,6 +8,17 @@
 
 namespace mui {
 
+// set consistent mode for our graphics objects so that we get
+// the same results when measuring text
+void InitGraphicsMode(Graphics *g)
+{
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
 class FontCache {
     struct Entry {
         WCHAR *     name;
@@ -66,11 +77,7 @@ public:
     Graphics gfx;
 
     GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) {
-        // cf. EbookEngine::RenderPage
-        gfx.SetCompositingQuality(CompositingQualityHighQuality);
-        gfx.SetSmoothingMode(SmoothingModeAntiAlias);
-        gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-        gfx.SetPageUnit(UnitPixel);
+        InitGraphicsMode(&gfx);
     }
 };
 

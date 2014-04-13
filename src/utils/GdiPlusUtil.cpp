@@ -52,7 +52,7 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, int len)
 #define PER_STR_DX_ADJUST  1.f
 
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
-RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
+RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len)
 {
     if (0 == len)
         return RectF(0, 0, 0, 0); // TODO: should set height to font's height
@@ -62,10 +62,10 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, size_t len)
     //StringFormat sf(StringFormat::GenericDefault());
     //StringFormat sf;
     RectF layoutRect;
-    CharacterRange cr(0, (INT)len);
+    CharacterRange cr(0, len);
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
-    Status status = g->MeasureCharacterRanges(s, (INT)len, f, layoutRect, &sf, 1, &r);
+    Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
     CrashIf(status != Ok);
     RectF bbox;
     r.GetBounds(&bbox, g);
@@ -128,9 +128,9 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len, TextMeasureA
     CrashIf(len > INT_MAX);
     if (algo)
         return algo(g, f, s, (int)len);
-    //RectF bbox = MeasureTextStandard(g, f, s, len);
-    RectF bbox = MeasureTextAccurate(g, f, s, len);
-    //RectF bbox = MeasureTextAccurate2(g, f, s, len);
+    //RectF bbox = MeasureTextStandard(g, f, s, (int)len);
+    RectF bbox = MeasureTextAccurate(g, f, s, (int)len);
+    //RectF bbox = MeasureTextAccurate2(g, f, s, (int)len);
     return bbox;
 }
 

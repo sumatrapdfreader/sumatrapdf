@@ -10,6 +10,7 @@ using namespace Gdiplus;
 
 namespace mui {
 
+void InitGraphicsMode(Graphics *g);
 Font *GetCachedFont(const WCHAR *name, float size, FontStyle style);
 Graphics *AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Graphics *g);
