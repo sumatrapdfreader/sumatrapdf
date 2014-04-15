@@ -113,6 +113,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 
     DrawHtmlPage(gfx, textDraw, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
+    delete textDraw;
 }
 
 Control *CreatePageControl(TxtNode *structDef)
