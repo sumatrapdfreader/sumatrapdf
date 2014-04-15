@@ -20,8 +20,28 @@ void LeaveMuiCriticalSection()
     LeaveCriticalSection(&gMuiCs);
 }
 
+class FontListItem {
+public:
+    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hdcFont) : next(NULL) {
+        cf.name = str::Dup(name);
+        cf.sizePt = sizePt;
+        cf.style = style;
+        cf.font = font;
+        cf.hdcFont = hdcFont;
+    }
+    ~FontListItem() {
+        free((void *)cf.name);
+        ::delete cf.font;
+        DeleteObject(cf.hdcFont);
+        delete next;
+    }
+
+    CachedFont cf;
+    FontListItem *next;
+};
+
 // Global, thread-safe font cache. Font objects live forever.
-static Vec<CachedFont> *gFontsCache = NULL;
+static FontListItem *gFontsCache = NULL;
 
 // Graphics objects cannot be used across threads. We have a per-thread
 // cache so that it's easy to grab Graphics object to be used for
@@ -85,7 +105,6 @@ void GraphicsCacheEntry::Free()
 void InitializeBase()
 {
     InitializeCriticalSection(&gMuiCs);
-    gFontsCache = new Vec<CachedFont>();
     gGraphicsCache = new Vec<GraphicsCacheEntry>();
     // allocate the first entry in gGraphicsCache for UI thread, ref count
     // ensures it stays alive forever
@@ -101,11 +120,6 @@ void DestroyBase()
     }
     delete gGraphicsCache;
 
-    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        free((void*)e->name);
-        ::delete e->font;
-        DeleteObject(e->hdcFont);
-    }
     delete gFontsCache;
 
     DeleteCriticalSection(&gMuiCs);
@@ -127,64 +141,51 @@ CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle styl
 {
     ScopedMuiCritSec muiCs;
 
-    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        if (e->SameAs(name, sizePt, style) && (e->font != NULL)) {
-            return e;
+    for (FontListItem *item = gFontsCache; item; item = item->next) {
+        if (item->cf.SameAs(name, sizePt, style) && item->cf.font != NULL) {
+            return &item->cf;
         }
     }
 
-    // TODO: growing the Vec invalidates all CachedFont pointers!
-    CrashAlwaysIf(gFontsCache->Count() >= 15);
-
-    CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
-    // TODO: handle a failure to create a font. Use fontCache[0] if exists
-    // or try to fallback to a known font like Times New Roman
-    f.font = ::new Font(name, sizePt, style);
-    f.hdcFont = NULL;
-    gFontsCache->Append(f);
-    return gFontsCache->AtPtr(gFontsCache->Size()-1);
-}
-
-static float DpiScaled(float n) {
-    static float scale = 0.0f;
-    if (scale == 0.0f) {
-        win::GetHwndDpi(HWND_DESKTOP, &scale);
+    Font *font = ::new Font(name, sizePt, style);
+    if (!font) {
+        font = ::new Font(L"Times New Roman", sizePt, style);
+        if (!font) {
+            // if no font is available, return the last successfully created one
+            return gFontsCache ? &gFontsCache->cf : NULL;
+        }
     }
-    return n * scale;
+
+    FontListItem *item = new FontListItem(name, sizePt, style, font, NULL);
+    ListInsert(&gFontsCache, item);
+    return &item->cf;
 }
 
-#if 0
-static int PointToPixel(int n) {
-    return n * 96 / 72;
-}
-#endif
-
-static float PointToPixel(float n) {
-    return n * 96 / 72;
+static int PointToPixel(float n) {
+    // note: CreateSimpleFont DPI-converts the font height
+    return (int)(n * USER_DEFAULT_SCREEN_DPI / 72);
 }
 
 CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
-    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        if (e->SameAs(name, sizePt, style) && (e->hdcFont != NULL)) {
-            return e;
+    for (FontListItem *item = gFontsCache; item; item = item->next) {
+        if (item->cf.SameAs(name, sizePt, style) && item->cf.hdcFont != NULL) {
+            return &item->cf;
         }
     }
 
-    // TODO: growing the Vec invalidates all CachedFont pointers!
-    CrashAlwaysIf(gFontsCache->Count() >= 15);
-
-    CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
     // TODO: do I need to be given HDC?
-    float sizePx = DpiScaled(PointToPixel(sizePt));
+    int sizePx = PointToPixel(sizePt);
     // TODO: take FontStyle into account as well
     HDC hdc = GetDC(NULL);
-    f.hdcFont = CreateSimpleFont(hdc, name, (int)sizePx);
+    HFONT hdcFont = CreateSimpleFont(hdc, name, sizePx);
     ReleaseDC(NULL, hdc);
-    gFontsCache->Append(f);
-    return gFontsCache->AtPtr(gFontsCache->Size()-1);
+
+    FontListItem *item = new FontListItem(name, sizePt, style, NULL, hdcFont);
+    ListInsert(&gFontsCache, item);
+    return &item->cf;
 }
 
 Graphics *AllocGraphicsForMeasureText()
