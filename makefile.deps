@@ -38,7 +38,7 @@ $(OM)\MemTraceDll.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils
 $(OM)\MemTraceDll.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OMUI)\MiniMui.obj: $B\src\mui\MiniMui.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OMUI)\MiniMui.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OMUI)\MiniMui.obj: $B\src\utils\Vec.h
+$(OMUI)\MiniMui.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OMUI)\Mui.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\Mui.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\Mui.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
@@ -52,7 +52,7 @@ $(OMUI)\MuiBase.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\Mu
 $(OMUI)\MuiBase.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiBase.obj: $B\src\mui\TextRender.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OMUI)\MuiBase.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiBase.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OMUI)\MuiBase.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OMUI)\MuiButton.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiButton.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiButton.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
@@ -216,17 +216,18 @@ $(OS)\EbookController.obj: $B\src\utils\Timer.h $B\src\utils\UITask.h $B\src\uti
 $(OS)\EbookController.obj: $B\src\WindowInfo.h
 $(OS)\EbookControls.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\DisplayState.h
 $(OS)\EbookControls.obj: $B\src\Doc.h $B\src\EbookBase.h $B\src\EbookControls.h
-$(OS)\EbookControls.obj: $B\src\HtmlFormatter.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
-$(OS)\EbookControls.obj: $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h
-$(OS)\EbookControls.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h
-$(OS)\EbookControls.obj: $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h
-$(OS)\EbookControls.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h $B\src\MuiEbookPageDef.h
-$(OS)\EbookControls.obj: $B\src\PagesLayoutDef.h $B\src\resource.h $B\src\SettingsStructs.h
-$(OS)\EbookControls.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
-$(OS)\EbookControls.obj: $B\src\utils\DebugLog.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OS)\EbookControls.obj: $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h $B\src\utils\SettingsUtil.h
-$(OS)\EbookControls.obj: $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
-$(OS)\EbookControls.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\EbookControls.obj: $B\src\EbookFormatter.h $B\src\HtmlFormatter.h $B\src\mui\Mui.h
+$(OS)\EbookControls.obj: $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h
+$(OS)\EbookControls.obj: $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h
+$(OS)\EbookControls.obj: $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h
+$(OS)\EbookControls.obj: $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h
+$(OS)\EbookControls.obj: $B\src\MuiEbookPageDef.h $B\src\PagesLayoutDef.h $B\src\resource.h
+$(OS)\EbookControls.obj: $B\src\SettingsStructs.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\EbookControls.obj: $B\src\utils\BitManip.h $B\src\utils\DebugLog.h $B\src\utils\GeomUtil.h
+$(OS)\EbookControls.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h
+$(OS)\EbookControls.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
+$(OS)\EbookControls.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OS)\EbookControls.obj: $B\src\utils\WinUtil.h
 $(OS)\EbookDoc.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\EbookDoc.h
 $(OS)\EbookDoc.obj: $B\src\MobiDoc.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\EbookDoc.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
