@@ -78,25 +78,37 @@ TextDrawGdi *TextDrawGdi::Create(Graphics *gfx) {
     return res;
 }
 
+TextDrawGdi::~TextDrawGdi() {
+    CrashIf(hdc); // hasn't been Unlock()ed
+}
+
 void TextDrawGdi::SetFont(mui::CachedFont *font) {
     CrashIf(!font->hdcFont);
+    // not sure how expensive SelectFont() is so avoid it just in case
+    if (currFont == font->hdcFont)
+        return;
     currFont = font->hdcFont;
+    if (hdc)
+        SelectFont(hdc, currFont);
+}
+
+void TextDrawGdi::Lock() {
+    CrashIf(hdc);
+    hdc = gfx->GetHDC();
+    SelectFont(hdc, currFont);
+}
+
+void TextDrawGdi::Unlock() {
+    CrashIf(!hdc);
+    gfx->ReleaseHDC(hdc);
+    hdc = NULL;
 }
 
 void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb) {
+    CrashIf(!hdc); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
-
-    // TODO: this gfx->GetHDC() business is killing performance
-    HDC hdc = gfx->GetHDC();
-    if (origFont == NULL) {
-        origFont = SelectFont(hdc, currFont);
-    } else {
-        SelectFont(hdc, currFont);
-    }
     ExtTextOutW(hdc, x, y, 0, NULL, s, (int)sLen, NULL);
-
-    gfx->ReleaseHDC(hdc);
 }
 
 void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb) {

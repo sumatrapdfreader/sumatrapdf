@@ -1387,6 +1387,39 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
     WCHAR buf[512];
     PointF pos;
     DrawInstr *i;
+
+    // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
+    // draw, so first draw text and then paint everything else
+    textDraw->Lock();
+    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
+        RectF bbox = i->bbox;
+        bbox.X += offX;
+        bbox.Y += offY;
+        if (InstrString == i->type) {
+            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            //bbox.GetLocation(&pos);
+            if (showBbox)
+                g->DrawRectangle(&debugPen, bbox);
+            textDraw->Draw((const WCHAR*)buf, strLen, bbox); // TODO: include brText (&brText);
+        } else if (InstrSetFont == i->type) {
+            font = i->font; // TODO: temporary, for InstrRtlString
+            textDraw->SetFont(i->font);
+        } else if (InstrRtlString == i->type) {
+            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            bbox.GetLocation(&pos);
+            if (showBbox)
+                g->DrawRectangle(&debugPen, bbox);
+            // TODO: handle gdi
+            StringFormat rtl;
+            rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
+            pos.X += bbox.Width;
+            g->DrawString(buf, strLen, font->font, pos, &rtl, &brText);
+        }
+        if (abortCookie && *abortCookie)
+            break;
+    }
+    textDraw->Unlock();
+
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
         bbox.X += offX;
@@ -1399,17 +1432,11 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
             g->DrawLine(&linePen, p1, p2);
-        } else if (InstrString == i->type) {
-            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            //bbox.GetLocation(&pos);
-            if (showBbox)
-                g->DrawRectangle(&debugPen, bbox);
-            textDraw->Draw((const WCHAR*)buf, strLen, bbox); // TODO: include brText (&brText);
-        } else if (InstrSetFont == i->type) {
-            font = i->font; // TODO: temporary, for InstrRtlString
-            textDraw->SetFont(i->font);
         } else if ((InstrElasticSpace == i->type) ||
             (InstrFixedSpace == i->type) ||
+            (InstrString == i->type) ||
+            (InstrRtlString == i->type) ||
+            (InstrSetFont == i->type) ||
             (InstrAnchor == i->type)) {
             // ignore
         } else if (InstrImage == i->type) {
@@ -1427,16 +1454,6 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             g->DrawLine(&linkPen, p1, p2);
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
-        } else if (InstrRtlString == i->type) {
-            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            bbox.GetLocation(&pos);
-            if (showBbox)
-                g->DrawRectangle(&debugPen, bbox);
-            // TODO: handle gdi
-            StringFormat rtl;
-            rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
-            pos.X += bbox.Width;
-            g->DrawString(buf, strLen, font->font, pos, &rtl, &brText);
         } else {
             CrashIf(true);
         }

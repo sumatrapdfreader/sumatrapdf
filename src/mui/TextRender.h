@@ -9,6 +9,9 @@
 #endif
 #define TextRender_h
 
+// TODO: should combine ITextMeasure and ITextDraw into single ITextRender object.
+// They have too much in common
+
 enum TextRenderMethod {
     TextRenderGdiplus, // uses MeasureTextAccurate, which is slower than MeasureTextQuick
     TextRenderGdiplusQuick, // uses MeasureTextQuick
@@ -32,6 +35,8 @@ public:
     virtual void SetFont(CachedFont *font) = 0;
     virtual void Draw(const char *s, size_t sLen, RectF& bb) = 0;
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb) = 0;
+    virtual void Lock() {}
+    virtual void Unlock() {}
 };
 
 class TextMeasureGdi : public ITextMeasure {
@@ -59,20 +64,22 @@ public:
 class TextDrawGdi : public ITextDraw {
 private:
     Gdiplus::Graphics * gfx;
-    HFONT               origFont;
+    HDC                 hdc;
     HFONT               currFont;
     WCHAR               txtConvBuf[512];
 
-    TextDrawGdi() : gfx(NULL), origFont(NULL), currFont(NULL) { }
+    TextDrawGdi() : gfx(NULL), hdc(NULL), currFont(NULL) { }
 
 public:
     //static TextDrawGdi *Create(HDC hdc);
     static TextDrawGdi *Create(Gdiplus::Graphics *gfx);
 
+    virtual ~TextDrawGdi();
     virtual void SetFont(CachedFont *font);
     virtual void Draw(const char *s, size_t sLen, RectF& bb);
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb);
-    virtual ~TextDrawGdi() {}
+    virtual void Lock();
+    virtual void Unlock();
 };
 
 class TextMeasureGdiplus : public ITextMeasure {
