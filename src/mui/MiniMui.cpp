@@ -9,6 +9,10 @@
 
 namespace mui {
 
+// needed when Mui is occasionally used instead of MiniMui
+void Initialize() { }
+void Destroy() { }
+
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
 void InitGraphicsMode(Graphics *g)

@@ -566,10 +566,12 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
 {
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    TextRenderMethod renderMethod = args->textRenderMethod;
     HtmlFormatter *formatter = CreateFormatter(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
     delete args;
+    args = NULL;
     if (!pd)
         return NULL;
 
@@ -582,10 +584,9 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
 
     // TODO: simplify by forcing GDI+ rendering?
     ITextDraw *textDraw = NULL;
-    if (args->textRenderMethod == TextRenderGdiplus ||
-        args->textRenderMethod == TextRenderGdiplusQuick) {
+    if (TextRenderGdiplus == renderMethod || TextRenderGdiplusQuick == renderMethod) {
         textDraw = TextDrawGdiplus::Create(&g);
-    } else if (args->textRenderMethod == TextRenderGdi) {
+    } else if (TextRenderGdi == renderMethod) {
         textDraw = TextDrawGdi::Create(&g);
     } else {
         CrashIf(true);

@@ -215,8 +215,9 @@ HtmlFormatter::~HtmlFormatter()
     // delete all pages that were not consumed by the caller
     DeleteVecMembers(pagesToSend);
     delete currPage;
-    delete htmlParser;
+    delete textMeasure;
     mui::FreeGraphicsForMeasureText(gfx);
+    delete htmlParser;
 }
 
 void HtmlFormatter::AppendInstr(DrawInstr di)

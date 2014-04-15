@@ -25,6 +25,8 @@ public:
 
     virtual Gdiplus::RectF  Measure(const char *s, size_t sLen) = 0;
     virtual Gdiplus::RectF  Measure(const WCHAR *s, size_t sLen) = 0;
+
+    virtual ~ITextMeasure() { }
 };
 
 class ITextDraw {
@@ -40,6 +42,8 @@ public:
     // can batch Draw() calls to minimize GetHDC()/ReleaseHDC() calls
     virtual void Lock() {}
     virtual void Unlock() {}
+
+    virtual ~ITextDraw() { }
 };
 
 class TextMeasureGdi : public ITextMeasure {

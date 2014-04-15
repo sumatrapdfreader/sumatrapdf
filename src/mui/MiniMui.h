@@ -11,6 +11,8 @@ using namespace Gdiplus;
 
 namespace mui {
 
+void Initialize();
+void Destroy();
 void InitGraphicsMode(Graphics *g);
 
 struct CachedFont {

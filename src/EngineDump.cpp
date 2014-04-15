@@ -10,6 +10,7 @@
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "MiniMui.h"
 #include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
@@ -351,6 +352,12 @@ public:
     }
 };
 
+class ScopedMui {
+public:
+    ScopedMui() { mui::Initialize(); }
+    ~ScopedMui() { mui::Destroy(); }
+};
+
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
@@ -437,6 +444,8 @@ Usage:
     bool useChm2Engine = !useAlternateHandlers;
 
     ScopedGdiPlus gdiPlus;
+    ScopedMui mui;
+
     DocType engineType;
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, useChm2Engine);
