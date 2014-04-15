@@ -189,6 +189,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     }
     defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
+
     DrawStyle style;
     // TODO: this should go through textMeasure so that we create
     // a font compatible with rendering. Alternatively, during
@@ -200,12 +201,13 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     styleStack.Append(style);
     nextPageStyle = styleStack.Last();
 
+    // CurrFont() is available after we construct first DrawStyle
+    textMeasure->SetFont(CurrFont());
+
     // TODO: handle hdc
     lineSpacing = CurrFont()->font->GetHeight(gfx);
-    // TODO: handle hdc
-    spaceDx = CurrFont()->font->GetSize() / 2.5f; // note: a heuristic
-    // TODO: handle hdc
-    float spaceDx2 = GetSpaceDx(gfx, CurrFont()->font, NULL);
+    spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
+    float spaceDx2 = GetSpaceDx(textMeasure);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
 
@@ -246,15 +248,23 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     styleStack.Append(style);
 }
 
-void HtmlFormatter::SetFont(CachedFont *font, FontStyle fs, float fontSize)
+void HtmlFormatter::SetFontBasedOn(CachedFont *font, FontStyle fs, float fontSize)
 {
-    LOGFONTW lfw;
+     // TODO: not sure if the new code is exactly like the old code
+#if 0
     // TODO: handle gdi
+    LOGFONTW lfw;
     Status ok = CurrFont()->font->GetLogFontW(gfx, &lfw);
     const WCHAR *fontName = defaultFontName;
     if (ok == Ok)
         fontName = lfw.lfFaceName;
     SetFont(fontName, fs, fontSize);
+#else
+    const WCHAR *fontName = font->GetName();
+    if (NULL == fontName)
+        fontName = defaultFontName;
+    SetFont(fontName, fs, fontSize);
+#endif
 }
 
 bool ValidStyleForChangeFontStyle(FontStyle fs)
@@ -276,7 +286,7 @@ void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 {
     CrashIf(!ValidStyleForChangeFontStyle(fs));
     if (addStyle)
-        SetFont(CurrFont(), (FontStyle)(fs | CurrFont()->GetStyle()));
+        SetFontBasedOn(CurrFont(), (FontStyle)(fs | CurrFont()->GetStyle()));
     else
         RevertStyleChange();
 }
@@ -859,8 +869,8 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
     }
 
     AttrInfo *attr = t->GetAttrByName("face");
+#if 0 // TODO: remove if the code below is deemed correct
     LOGFONTW lfw;
-    // TODO: handle gdi
     CurrFont()->font->GetLogFontW(gfx, &lfw);
     const WCHAR *faceName = lfw.lfFaceName;
     if (attr) {
@@ -871,6 +881,17 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
             faceName = buf;
         }
     }
+#else
+    const WCHAR *faceName = CurrFont()->GetName();
+    if (attr) {
+        size_t strLen = str::Utf8ToWcharBuf(t->s, t->sLen, buf, dimof(buf));
+        // multiple font names can be comma separated
+        if (strLen > 0 && *buf != ',') {
+            str::TransChars(buf, L",", L"\0");
+            faceName = buf;
+        }
+    }
+#endif
 
     float fontSize = CurrFont()->GetSize();
     attr = t->GetAttrByName("size");
@@ -933,7 +954,7 @@ void HtmlFormatter::HandleTagHx(HtmlToken *t)
         float fontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
         if (currY > 0)
             currY += fontSize / 2;
-        SetFont(CurrFont(), FontStyleBold, fontSize);
+        SetFontBasedOn(CurrFont(), FontStyleBold, fontSize);
 
         StyleRule rule = ComputeStyleRule(t);
         if (Align_NotFound == rule.textAlign)

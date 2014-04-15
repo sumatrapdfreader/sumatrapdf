@@ -107,4 +107,5 @@ public:
 };
 
 size_t StringLenForWidth(ITextMeasure *textMeasure, const WCHAR *s, size_t len, float dx);
+REAL GetSpaceDx(ITextMeasure *textMeasure);
 

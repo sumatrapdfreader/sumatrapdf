@@ -196,7 +196,7 @@ protected:
     DrawStyle *CurrStyle() { return &styleStack.Last(); }
     CachedFont *CurrFont() { return CurrStyle()->font; }
     void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
-    void  SetFont(CachedFont *origFont, FontStyle fs, float fontSize=-1);
+    void  SetFontBasedOn(CachedFont *origFont, FontStyle fs, float fontSize=-1);
     void  ChangeFontStyle(FontStyle fs, bool isStart);
     void  SetAlignment(AlignAttr align);
     void  RevertStyleChange();
