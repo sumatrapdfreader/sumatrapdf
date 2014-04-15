@@ -480,6 +480,16 @@ const WCHAR * const gTranslations[] = {
   NULL,
   L"Hujjat SumatraPDFda ochilmoqda...",
 
+  /* Translations for language vn */
+  L"%s trên %s",
+  L"Lỗi: Không thể chạy SumatraPDF!",
+  L"Lỗi: Không tìm thấy SumatraPDF!",
+  L"Lỗi: Không thể tải tài liệu xuống!",
+  NULL,
+  NULL,
+  NULL,
+  L"Đang mở tài liệu bằng SumatraPDF...",
+
   /* Translations for language cy */
   L"%s o %s",
   L"Gwall. Methu rhedeg SumatraPDF",
@@ -496,7 +506,7 @@ const char * const gLanguages[] = {
     "cn", "tw", "hr", "cz", "dk", "nl", "et", "fi", "fr", "gl",
     "de", "el", "he", "hu", "id", "it", "ja", "kr", "ku", "mk",
     "my", "fa", "pl", "br", "pt", "ro", "ru", "sr-rs", "sp-rs", "sk",
-    "sl", "es", "sv", "ta", "tr", "uk", "uz", "cy", NULL
+    "sl", "es", "sv", "ta", "tr", "uk", "uz", "vn", "cy", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -561,7 +571,8 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_TURKISH): return 352;
     case _LANGID(LANG_UKRAINIAN): return 360;
     case _LANGID(LANG_UZBEK): return 368;
-    case _LANGID(LANG_WELSH): return 376;
+    case _LANGID(LANG_VIETNAMESE): return 376;
+    case _LANGID(LANG_WELSH): return 384;
     default: return -1;
 #undef _LANGID
     }

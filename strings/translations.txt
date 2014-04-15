@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6fc1dbb701e055d13b3db3770de1243973ff5996
+eeabdb9573547082fa2cd36b0533a01a19419b02
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -236,6 +236,7 @@ tr:Gelişmiş Ayarlar
 tw:進階選項(&A)...
 uk:Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
+vn:Tùy chọn &nâng cao...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
 ar:&كل الصفحات المحددة
@@ -1893,6 +1894,7 @@ tr:&Ayarlar
 tw:選項(&O)
 uk:Налаштування
 uz:&Parametrlar
+vn:&Tùy chọn
 :&Options...
 am:&Ընտրանքներ...
 ar:&خيارات...
@@ -5959,6 +5961,7 @@ tr:PDF arama filtresi yüklenemedi
 tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося встановити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'rnatib bo'lmadi
+vn:Không thể cài đặt bộ lọc tìm kiếm PDF
 :Couldn't install browser plugin
 am:Հնարավոր չեղավ տեղադրել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من تنصيب ملحق المستعرض
@@ -6055,6 +6058,7 @@ tr:Geçici dizin bulunamadı
 tw:無法獲得暫存資料夾
 uk:Не вдалося отримати розташування тимчасової папки
 uz:Vaqtinchalik direktoriyani olib bo'lmadi
+vn:Không thể tìm được thư mục tạm
 :Couldn't remove installation directory
 am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակը
 ar:لم أتمكن من إزالة مجلد البرنامج
@@ -6258,6 +6262,7 @@ tr:PDF önizleyicisi kaldırılamadı
 tw:無法解除安裝 PDF 預覽器
 uk:Не вдалося видалити програму для попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
+vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall PDF search filter
 am:Հնարավոր չեղավ հեռացնել PDF որոնելու պայմանը
 ar:لم أتمكن من إزالة فلتر البحث لـPDF
@@ -6304,6 +6309,7 @@ tr:PDF arama filtresi kaldırılamadı
 tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося видалити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'chirib bo'lmadi
+vn:Không thể gỡ cài đặt bộ lọc tìm kiếm PDF
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من إزالة ملحق المستعرض
@@ -6350,6 +6356,7 @@ tr:Tarayıcı eklentisi silinemedi
 tw:無法解除安裝瀏覽器附加元件
 uk:Не вдалося видалити розширення для браузера
 uz:Brauzer plaginini o'chirib bo'lmadi
+vn:Không thể gỡ cài đặt Plugin trình duyệt
 :Couldn't write %s to disk
 am:Հնարավոր չէ գրել %s պնակում
 ar:لم أتمكن من كتابة %s للقرص الصلب
@@ -6397,6 +6404,7 @@ tr:Diske %s yazılamadı
 tw:無法寫入 %s 到磁碟中
 uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
+vn:Không thể ghi %s vào đĩa
 :Created:
 am:Ստեղծված է.
 ar:الإنشاء
@@ -7510,6 +7518,7 @@ tr:Hata: Belge indirilemedi!
 tw:錯誤：無法下載文件！
 uk:Помилка: Неможливо завантажити документ!
 uz:Xato: hujjatni yuklab bo'lmadi!
+vn:Lỗi: Không thể tải tài liệu xuống!
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -7859,6 +7868,7 @@ tr:Kaldırıcıyı geçici dizine kopyalama başarısız oldu
 tw:無法將解除安裝程式複製到暫存目錄
 uk:Не вдалося скопіювати деінсталятор у тимчасову папку
 uz:O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tugadi
+vn:Không thể chép bộ gỡ cài đặt vào thư mục tạm
 :Failed to create a shortcut
 am:Հնարավոր չեղավ ստեղծել պիտակը
 ar:فشل في إنشاء رابط اختصار للبرنامج
@@ -7907,6 +7917,7 @@ tr:Kısayol oluşturulamadı
 tw:無法建立捷徑
 uk:Не вдалося створити ярлик
 uz:Xatcho'pni yaratib bo'lmadi
+vn:Không thể tạo Shortcut
 :Failed to delete uninstaller registry keys
 am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալիները
 ar:فشل في حذف مزيل البرنامج من registry
@@ -7953,6 +7964,7 @@ tr:Kaldırıcı kayıt defteri anahtarlarını silemedi
 tw:刪除解除安裝器註冊項失敗。
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
 uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
+vn:Không thể xóa các khóa Registry của bộ gỡ cài đặt
 :Failed to rename the file!
 am:Հնարավոր չեղավ անվանափոխել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
@@ -8119,6 +8131,7 @@ tr:Kayıt defterine genişletimiş dosya uzantısı yazma başarısız oldu
 tw:寫入延遲檔案副檔名資訊到註冊項失敗。
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
 uz:Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
+vn:Không thể ghi thông tin về phần mở rộng của tập tin vào khóa Registry
 :Failed to write the uninstallation information to the registry
 am:Ծրագիրը հեռացնելու մասին գրառումը չստացվեց Գրանցատեղիում
 ar:فشل في كتابة بيانات إزالة البرنامج في registry
@@ -8164,6 +8177,7 @@ tr:Kayıt defterine kaldırma bilgisi yazma işi başarısız oldu
 tw:寫入解除安裝資訊到註冊項目失敗。
 uk:Не вдалося записати інформацію для видалення у реєстр
 uz:Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
+vn:Không thể ghi thông tin về việc gỡ cài đặt vào khóa Registry
 :Fast Web View
 am:Արագ վեբ դիտում
 ar:تهيئة الويب السريعة
@@ -10047,6 +10061,7 @@ tr:SumatraPDF yükle
 tw:安裝 SumatraPDF
 uk:Встановити SumatraPDF
 uz:SumatraPDF o'rnatish
+vn:Cài đặt SumatraPDF
 :Install SumatraPDF in &folder:
 am:Տեղադրել SumatraPDF-ը &հետևյալ թղթապանակում՝
 ar:تنصيب SumatraPDF في المجلد:
@@ -10094,6 +10109,7 @@ tr:&folder klasörüne SumatraPDF'yi yükle
 tw:安裝 SumatraPDF 於資料夾(&F):
 uk:Встановити SumatraPDF у папку
 uz:SumatraPDF &jildga o'rnatish
+vn:Cài đặt SumatraPDF trong &thư mục:
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
 ar:فشل في تنصيب البرنامج
@@ -10303,6 +10319,7 @@ tr:PDF belgelrini aramak için Windows Masaüstü Aramaya izin ver
 tw:讓 Windows 桌面搜尋搜尋 PDF 文件
 uk:Дозволити Windows Desktop Search пошук у PDF документах
 uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
+vn:Cho phép Windows &tìm kiếm các tài liệu PDF
 :Let Windows show &previews of PDF documents
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
 ar:السماح لويندوز عرض صور معاينة PDF
@@ -10348,6 +10365,7 @@ tr:PDF belgelerini görüntülemek ve önizleme için Windows'a izin ver
 tw:讓 Windows 顯示 PDF 文件的預覽(&P)
 uk:Дозволити Windows здійснювати попередній перегляд для PDF
 uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
+vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
 :Loading file %s...
 am:%s ֆայլը բացվում է...
 ar:تحميل الملف %s...
@@ -10647,6 +10665,7 @@ tr:Man&ga modu
 tw:漫畫模式(&G)
 uk:Режим манги
 uz:Man&ga usuli
+vn:Kiểu &Manga
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
@@ -11550,6 +11569,7 @@ tr:%s içinde aç
 tw:以 %s 開啟
 uk:відкрити в %s
 uz:%s'da ochish
+vn:Mở bằng %s
 :Open in &Adobe Reader
 am:Բացել &Adobe Reader-ում
 ar:فتح الملف بـ Adobe Reader
@@ -11836,6 +11856,7 @@ tr:Belge SumatraPDF ile açılıyor...
 tw:開啟於 SumatraPDF(&S)
 uk:Триває відкриття документа у SumatraPDF...
 uz:Hujjat SumatraPDFda ochilmoqda...
+vn:Đang mở tài liệu bằng SumatraPDF...
 :P&roperties
 am:Հ&ատկությունները
 ar:الخصائص
@@ -12653,6 +12674,7 @@ tr:Devam etmek için %s kapatın!
 tw:請關閉 %s 以繼續。
 uk:Будь ласка закрийте %s, щоб продовжити!
 uz:Davom etish uchun %s yoping!
+vn:Hãy đóng %s lại để tiến hành!
 :Please wait - rendering...
 am:Խնդրում ենք սպասել...
 ar:الرجاء الانتظار ، جاري التجزئة
@@ -14256,6 +14278,7 @@ tr:SumatraPDF'in yükleneceği alanı seçin:
 tw:選擇 SumatraPDF 應被安裝的資料夾：
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
 uz:SumatraPDF o'rnatish uchun jildni tanlang:
+vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
@@ -14844,6 +14867,7 @@ tr:Yüklü olması gereken bazı dosyalar eksik ve ya hasar görmüş
 tw:一些要安裝的檔案已損壞或丟失
 uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
 uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
+vn:Một số tập tin dùng để cài đặt đã bị lỗi hoặc bị thiếu
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
@@ -15115,6 +15139,7 @@ tr:SumatraPDF %s yükleyici
 tw:SumatraPDF %s 安裝器
 uk:Інсталятор SumatraPDF %s
 uz:SumatraPDF %s o'rnatuvchisi
+vn:Bộ cài đặt %s SumatraPDF
 :SumatraPDF %s Uninstaller
 am:SumatraPDF %s-ի Ջնջիչ
 ar:SumatraPDF %s مزيل التنصيب
@@ -15161,6 +15186,7 @@ tr:SumatraPDF %s Kaldırıcı
 tw:SumatraPDF %s 解除安裝器
 uk:Деінсталятор SumatraPDF %s
 uz:SumatraPDF %s o'chirish dasturi
+vn:Bộ gỡ cài đặt %s SumatraPDF
 :SumatraPDF Options
 am:Ընտրանքներ
 ar:خيارات SumatraPDF
@@ -15428,6 +15454,7 @@ tr:SumatraPDF kurulum dosyası bulunamadı.
 tw:未找到 SumatraPDF 安裝。
 uk:Встановлений SumatraPDF не було знайдено.
 uz:SumatraPDF o'rnatilganligi topilmadi.
+vn:Không tìm thấy gói cài đặt SumatraPDF.
 :SumatraPDF is your default PDF reader
 am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 ar:قارئ SumatraPDF هو الافتراضي
