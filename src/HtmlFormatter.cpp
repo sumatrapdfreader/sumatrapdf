@@ -184,28 +184,24 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
         textMeasure = TextMeasureGdiplus::Create(gfx);
     } else if (TextRenderGdiplusQuick == args->textRenderMethod) {
         textMeasure = TextMeasureGdiplus::Create(gfx, MeasureTextQuick);
+    } else if (TextRenderGdi == args->textRenderMethod) {
+        textMeasure = TextMeasureGdi::Create(NULL);
     } else {
-        CrashAlwaysIf(true); // TODO: implement GDI
+        CrashAlwaysIf(true);
     }
     defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
 
     DrawStyle style;
-    // TODO: this should go through textMeasure so that we create
-    // a font compatible with rendering. Alternatively, during
-    // rendering we might create the right font because CachedFont
-    // has necessary information
-    style.font = mui::GetCachedFontGdiplus(defaultFontName, defaultFontSize, FontStyleRegular);
+    style.font = textMeasure->CreateCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
     style.dirRtl = false;
     styleStack.Append(style);
     nextPageStyle = styleStack.Last();
 
-    // CurrFont() is available after we construct first DrawStyle
     textMeasure->SetFont(CurrFont());
 
-    // TODO: handle hdc
-    lineSpacing = CurrFont()->font->GetHeight(gfx);
+    lineSpacing = textMeasure->GetCurrFontLineSpacing();
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
     float spaceDx2 = GetSpaceDx(textMeasure);
     if (spaceDx2 < spaceDx)
@@ -237,8 +233,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
-    // TODO: handle gdi
-    CachedFont *newFont = mui::GetCachedFontGdiplus(fontName, fontSize, fs);
+    CachedFont *newFont = textMeasure->CreateCachedFont(fontName, fontSize, fs);
     if (CurrFont() != newFont) {
         AppendInstr(DrawInstr::SetFont(newFont));
     }
@@ -1381,13 +1376,13 @@ Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
+void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
 {
     SolidBrush brText(textColor);
     Pen debugPen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
-    Font *font = NULL;
+    CachedFont *font = NULL;
 
     WCHAR buf[512];
     PointF pos;
@@ -1406,13 +1401,13 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
             g->DrawLine(&linePen, p1, p2);
         } else if (InstrString == i->type) {
             int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            bbox.GetLocation(&pos);
+            //bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
-            g->DrawString(buf, strLen, font, pos, NULL, &brText);
+            textDraw->Draw((const WCHAR*)buf, strLen, bbox); // TODO: include brText (&brText);
         } else if (InstrSetFont == i->type) {
-            // TODO: handle gdi
-            font = i->font->font;
+            font = i->font; // TODO: temporary, for InstrRtlString
+            textDraw->SetFont(i->font);
         } else if ((InstrElasticSpace == i->type) ||
             (InstrFixedSpace == i->type) ||
             (InstrAnchor == i->type)) {
@@ -1437,10 +1432,11 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
             bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
+            // TODO: handle gdi
             StringFormat rtl;
             rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
             pos.X += bbox.Width;
-            g->DrawString(buf, strLen, font, pos, &rtl, &brText);
+            g->DrawString(buf, strLen, font->font, pos, &rtl, &brText);
         } else {
             CrashIf(true);
         }

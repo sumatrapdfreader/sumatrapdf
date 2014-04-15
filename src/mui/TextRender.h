@@ -19,93 +19,102 @@ enum TextRenderMethod {
 
 class ITextMeasure {
 public:
-    virtual void SetFont(CachedFont *font) = 0;
-    virtual Gdiplus::RectF Measure(const char *s, size_t sLen) = 0;
-    virtual Gdiplus::RectF Measure(const WCHAR *s, size_t sLen) = 0;
+    virtual void            SetFont(CachedFont *font) = 0;
+    virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style) = 0;
+    virtual float           GetCurrFontLineSpacing() = 0;
+
+    virtual Gdiplus::RectF  Measure(const char *s, size_t sLen) = 0;
+    virtual Gdiplus::RectF  Measure(const WCHAR *s, size_t sLen) = 0;
 };
 
 class ITextDraw {
 public:
+    virtual void SetFont(CachedFont *font) = 0;
     virtual void Draw(const char *s, size_t sLen, RectF& bb) = 0;
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb) = 0;
 };
 
 class TextMeasureGdi : public ITextMeasure {
 private:
     HDC         hdc;
-    WCHAR       txtConvBuf[512];
+    bool        ownsHdc;
     HFONT       origFont;
+    HFONT       currFont;
+    WCHAR       txtConvBuf[512];
 
-    TextMeasureGdi() { }
+    TextMeasureGdi() : hdc(NULL), ownsHdc(false), origFont(NULL), currFont(NULL) { }
 
 public:
 
-    static TextMeasureGdi* Create(HDC hdc);
+    static TextMeasureGdi*  Create(HDC hdc);
 
-    virtual void SetFont(CachedFont *font);
-    virtual Gdiplus::RectF Measure(const char *s, size_t sLen);
-    virtual Gdiplus::RectF Measure(const WCHAR *s, size_t sLen);
+    virtual void            SetFont(CachedFont *font);
+    virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style);
+    virtual float           GetCurrFontLineSpacing();
+    virtual Gdiplus::RectF  Measure(const char *s, size_t sLen);
+    virtual Gdiplus::RectF  Measure(const WCHAR *s, size_t sLen);
     virtual ~TextMeasureGdi();
 };
 
 class TextDrawGdi : public ITextDraw {
 private:
-    HDC hdc;
-    WCHAR       txtConvBuf[512];
+    Gdiplus::Graphics * gfx;
+    HFONT               origFont;
+    HFONT               currFont;
+    WCHAR               txtConvBuf[512];
 
-    TextDrawGdi() { }
+    TextDrawGdi() : gfx(NULL), origFont(NULL), currFont(NULL) { }
 
 public:
-    static TextDrawGdi *Create(HDC hdc);
+    //static TextDrawGdi *Create(HDC hdc);
+    static TextDrawGdi *Create(Gdiplus::Graphics *gfx);
 
+    virtual void SetFont(CachedFont *font);
     virtual void Draw(const char *s, size_t sLen, RectF& bb);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb);
     virtual ~TextDrawGdi() {}
 };
 
 class TextMeasureGdiplus : public ITextMeasure {
 private:
-    enum {
-        bmpDx = 32,
-        bmpDy = 4,
-        stride = bmpDx * 4,
-    };
-
     Gdiplus::RectF        (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len);
+
+    // We don't own gfx and fnt
     Gdiplus::Graphics *  gfx;
     Gdiplus::Font *      fnt;
-    Gdiplus::Bitmap *    bmp;
-    BYTE        data[bmpDx * bmpDy * 4];
     WCHAR       txtConvBuf[512];
-    TextMeasureGdiplus() : gfx(NULL), bmp(NULL), fnt(NULL) {}
+    TextMeasureGdiplus() : gfx(NULL), fnt(NULL) {}
 
 public:
-    float GetFontHeight() const {
-        return fnt->GetHeight(gfx);
-    }
+    static TextMeasureGdiplus*  Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=NULL);
 
-    static TextMeasureGdiplus* Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=NULL);
-
-    virtual void SetFont(CachedFont *font);
-    virtual Gdiplus::RectF Measure(const char *s, size_t sLen);
-    virtual Gdiplus::RectF Measure(const WCHAR *s, size_t sLen);
+    virtual void                SetFont(CachedFont *font);
+    virtual CachedFont *        CreateCachedFont(const WCHAR *name, float size, FontStyle style);
+    virtual float               GetCurrFontLineSpacing();
+    virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);
+    virtual Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen);
     virtual ~TextMeasureGdiplus();
 };
 
 class TextDrawGdiplus : public ITextDraw {
 private:
+    // we don't own gfx or fnt
+    Gdiplus::Graphics *  gfx;
     Gdiplus::Font *      fnt;
     Gdiplus::Brush *     col;
-    WCHAR       txtConvBuf[512];
+    WCHAR                txtConvBuf[512];
 
     TextDrawGdiplus() : gfx(NULL) { }
 
 public:
-    Gdiplus::Graphics *  gfx;
 
     static TextDrawGdiplus *Create(Gdiplus::Graphics *gfx);
+
+    virtual void SetFont(CachedFont *font);
     virtual void Draw(const char *s, size_t sLen, RectF& bb);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb);
     virtual ~TextDrawGdiplus();
 };
 
 size_t StringLenForWidth(ITextMeasure *textMeasure, const WCHAR *s, size_t len, float dx);
 REAL GetSpaceDx(ITextMeasure *textMeasure);
-

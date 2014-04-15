@@ -1,12 +1,13 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "Mui.h"
 #include "EbookControls.h"
 
 #include "AppPrefs.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "EbookFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "resource.h"
@@ -99,7 +100,18 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
         textColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
     else
         textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
-    DrawHtmlPage(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
+
+    ITextDraw *textDraw = NULL;
+    if (GetTextRenderMethod() == TextRenderGdiplus ||
+        GetTextRenderMethod() == TextRenderGdiplusQuick) {
+        textDraw = TextDrawGdiplus::Create(gfx);
+    } else if (GetTextRenderMethod() == TextRenderGdi) {
+        textDraw = TextDrawGdi::Create(gfx);
+    } else {
+        CrashIf(true);
+    }
+
+    DrawHtmlPage(gfx, textDraw, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 

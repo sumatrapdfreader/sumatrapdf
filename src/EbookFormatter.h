@@ -7,6 +7,8 @@
 #include "HtmlFormatter.h"
 #include "Doc.h"
 
+TextRenderMethod GetTextRenderMethod();
+
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 

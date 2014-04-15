@@ -406,7 +406,9 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
         *cookie_out = cookie = new EbookAbortCookie();
 
     ScopedCritSec scope(&pagesAccess);
-    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
+    ITextDraw *textDraw = TextDrawGdiplus::Create(&g);
+    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
+    delete textDraw;
     DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);
 }

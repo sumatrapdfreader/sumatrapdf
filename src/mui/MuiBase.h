@@ -29,22 +29,22 @@ public:
 
 struct CachedFont {
     const WCHAR *       name;
-    float               size;
+    float               sizePt;
     Gdiplus::FontStyle  style;
 
     // only one of font or hdcFont can be set
     Gdiplus::Font *     font;
-    HDC                 hdcFont;
+    HFONT               hdcFont;
 
     Gdiplus::FontStyle  GetStyle() const { return style; }
-    float               GetSize() const { return size; }
+    float               GetSize() const { return sizePt; }
     const WCHAR *       GetName() const { return name; }
-    bool                SameAs(const WCHAR *name, float size, FontStyle style) const;
+    bool                SameAs(const WCHAR *name, float sizePt, FontStyle style) const;
 };
 
 void        InitGraphicsMode(Graphics *g);
-CachedFont *GetCachedFontGdi(const WCHAR *name, float size, FontStyle style);
-CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style);
+CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style);
+CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle style);
 
 Graphics *  AllocGraphicsForMeasureText();
 void        FreeGraphicsForMeasureText(Graphics *gfx);

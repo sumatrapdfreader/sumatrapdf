@@ -275,6 +275,6 @@ public:
     Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
-void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
+void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
 
 #endif

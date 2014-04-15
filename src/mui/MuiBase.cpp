@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
+#include "WinUtil.h"
 
 namespace mui {
 
@@ -110,9 +111,9 @@ void DestroyBase()
     DeleteCriticalSection(&gMuiCs);
 }
 
-bool CachedFont::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle) const
+bool CachedFont::SameAs(const WCHAR *otherName, float otherSizePt, FontStyle otherStyle) const
 {
-    if (size != otherSize)
+    if (sizePt != otherSizePt)
         return false;
     if (style != otherStyle)
         return false;
@@ -122,41 +123,61 @@ bool CachedFont::SameAs(const WCHAR *otherName, float otherSize, FontStyle other
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style)
+CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
     for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        if (e->SameAs(name, size, style) && (e->font != NULL)) {
+        if (e->SameAs(name, sizePt, style) && (e->font != NULL)) {
             return e;
         }
     }
 
-    CachedFont f = { str::Dup(name), size, style, NULL, NULL };
+    CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
-    f.font = ::new Font(name, size, style);
+    f.font = ::new Font(name, sizePt, style);
     f.hdcFont = NULL;
     gFontsCache->Append(f);
     return gFontsCache->AtPtr(gFontsCache->Size()-1);
 }
 
-CachedFont *GetCachedFontGdi(const WCHAR *name, float size, FontStyle style)
+static float DpiScaled(float n) {
+    static float scale = 0.0f;
+    if (scale == 0.0f) {
+        win::GetHwndDpi(HWND_DESKTOP, &scale);
+    }
+    return n * scale;
+}
+
+#if 0
+static int PointToPixel(int n) {
+    return n * 96 / 72;
+}
+#endif
+
+static float PointToPixel(float n) {
+    return n * 96 / 72;
+}
+
+CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style)
 {
-    // TODO: not yet implemented
-    CrashAlwaysIf(true);
     ScopedMuiCritSec muiCs;
 
     for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        if (e->SameAs(name, size, style) && (e->hdcFont != NULL)) {
+        if (e->SameAs(name, sizePt, style) && (e->hdcFont != NULL)) {
             return e;
         }
     }
 
-    CachedFont f = { str::Dup(name), size, style, NULL, NULL };
-    f.font = NULL;
-    // TODO: create HDC font
-    f.hdcFont = NULL;
+    CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
+    // TODO: do I need to be given HDC?
+    float sizePx = DpiScaled(PointToPixel(sizePt));
+    // TODO: take FontStyle into account as well
+    HDC hdc = GetDC(NULL);
+    f.hdcFont = CreateSimpleFont(hdc, name, (int)sizePx);
+    ReleaseDC(NULL, hdc);
+    gFontsCache->Append(f);
     return gFontsCache->AtPtr(gFontsCache->Size()-1);
 }
 

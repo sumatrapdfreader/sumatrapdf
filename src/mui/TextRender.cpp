@@ -7,47 +7,22 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
-/* Note: this code should be in utils but it depends on mui code, so it's
-in mui, to avoid circular dependency */
-
-#define FONT_NAME       L"Tahoma"
-#define FONT_SIZE       10
-
-/*
-float DpiScaled(float n) {
-    static float scale = 0.0f;
-    if (scale == 0.0f) {
-        win::GetHwndDpi(HWND_DESKTOP, &scale);
-    }
-    return n * scale;
-}
-
-int PixelToPoint(int n) {
-    return n * 96 / 72;
-}
-
-HFONT gFont = NULL;
-
-HFONT GetGdiFont() {
-    if (!gFont) {
-        HDC hdc = GetDC(NULL);
-        gFont = CreateSimpleFont(hdc, FONT_NAME, (int) DpiScaled((float) PixelToPoint(FONT_SIZE)));
-        ReleaseDC(NULL, hdc);
-    }
-    return gFont;
-}
-
-void DeleteGdiFont() {
-    DeleteObject(gFont);
-}
-*/
+/* Note: I would prefer this code be in utils but it depends on mui, so it must
+be in mui to avoid circular dependency */
 
 namespace mui {
 
 TextMeasureGdi *TextMeasureGdi::Create(HDC hdc) {
     TextMeasureGdi *res = new TextMeasureGdi();
-    res->hdc = hdc;
+    if (hdc == NULL) {
+        res->hdc = GetDC(NULL);
+        res->ownsHdc = true;
+    } else {
+        res->hdc = hdc;
+        res->ownsHdc = false;
+    }
     res->origFont = NULL;
+    res->currFont = NULL;
     return res;
 }
 
@@ -57,13 +32,29 @@ TextMeasureGdi::~TextMeasureGdi() {
     }
 }
 
+CachedFont *TextMeasureGdi::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
+    return GetCachedFontGdi(name, size, style);
+}
+
 void TextMeasureGdi::SetFont(mui::CachedFont *font) {
     CrashIf(!font->hdcFont);
+    // I'm not sure how expensive SelectFont() is so avoid it just in case
+    if (currFont == font->hdcFont) {
+        return;
+    }
     if (origFont == NULL) {
         origFont = SelectFont(hdc, font->hdcFont);
     } else {
         SelectFont(hdc, font->hdcFont);
     }
+    currFont = font->hdcFont;
+}
+
+float TextMeasureGdi::GetCurrFontLineSpacing() {
+    CrashIf(!currFont);
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
+    return (float)tm.tmHeight;
 }
 
 RectF TextMeasureGdi::Measure(const WCHAR *s, size_t sLen) {
@@ -81,31 +72,41 @@ RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
     return res;
 }
 
-TextDrawGdi *TextDrawGdi::Create(HDC hdc) {
+TextDrawGdi *TextDrawGdi::Create(Graphics *gfx) {
     TextDrawGdi *res = new TextDrawGdi();
-    res->hdc = hdc;
+    res->gfx = gfx;
     return res;
+}
+
+void TextDrawGdi::SetFont(mui::CachedFont *font) {
+    CrashIf(!font->hdcFont);
+    currFont = font->hdcFont;
+}
+
+void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb) {
+    int x = (int) bb.X;
+    int y = (int) bb.Y;
+
+    // TODO: this gfx->GetHDC() business is killing performance
+    HDC hdc = gfx->GetHDC();
+    if (origFont == NULL) {
+        origFont = SelectFont(hdc, currFont);
+    } else {
+        SelectFont(hdc, currFont);
+    }
+    ExtTextOutW(hdc, x, y, 0, NULL, s, (int)sLen, NULL);
+
+    gfx->ReleaseHDC(hdc);
 }
 
 void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    PointF loc;
-    bb.GetLocation(&loc);
-    int x = (int) bb.X;
-    int y = (int) bb.Y;
-    ExtTextOutW(hdc, x, y, 0, NULL, txtConvBuf, (int)strLen, NULL);
+    return Draw(txtConvBuf, strLen, bb);
 }
 
 TextMeasureGdiplus *TextMeasureGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
     TextMeasureGdiplus *res = new TextMeasureGdiplus();
-    //res->bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, res->data);
-    //if (!res->bmp)
-    //    return NULL;
-    //res->gfx = ::new Graphics((Image*) res->bmp);
     res->gfx = gfx;
-    mui::InitGraphicsMode(res->gfx);
-    //res->fnt = ::new Font(hdc, GetGdiFont());
-    //res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     res->fnt = NULL;
     if (NULL == measureAlgo)
         res->measureAlgo = MeasureTextAccurate;
@@ -115,14 +116,19 @@ TextMeasureGdiplus *TextMeasureGdiplus::Create(Graphics *gfx, RectF (*measureAlg
 }
 
 TextMeasureGdiplus::~TextMeasureGdiplus() {
-    ::delete bmp;
-    //::delete gfx;
-    //::delete fnt;
 };
+
+CachedFont *TextMeasureGdiplus::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
+    return GetCachedFontGdiplus(name, size, style);
+}
 
 void TextMeasureGdiplus::SetFont(mui::CachedFont *font) {
     CrashIf(!font->font);
     this->fnt = font->font;
+}
+
+float TextMeasureGdiplus::GetCurrFontLineSpacing() {
+    return fnt->GetHeight(gfx);
 }
 
 RectF TextMeasureGdiplus::Measure(const WCHAR *s, size_t sLen) {
@@ -134,25 +140,28 @@ RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
     CrashIf(!fnt);
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return MeasureText(gfx, fnt, txtConvBuf, strLen, measureAlgo);
-    //return MeasureTextAccurate(gfx, fnt, txtConvBuf, (int)strLen);
 }
 
 TextDrawGdiplus *TextDrawGdiplus::Create(Graphics *gfx) {
     TextDrawGdiplus *res = new TextDrawGdiplus();
-    //res->gfx = ::new Graphics(dc);
     res->gfx = gfx;
-    mui::InitGraphicsMode(res->gfx);
-    //res->fnt = ::new Font(dc, GetGdiFont());
 
-    // TODO: need to be able to set font
-    res->fnt = ::new Font(FONT_NAME, FONT_SIZE);
     res->col = ::new SolidBrush(Color(0, 0, 0));
     return res;
 }
 
 TextDrawGdiplus::~TextDrawGdiplus() {
-    //::delete gfx;
-    ::delete fnt;
+}
+
+void TextDrawGdiplus::SetFont(mui::CachedFont *font) {
+    CrashIf(!font->font);
+    this->fnt = font->font;
+}
+
+void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb) {
+    PointF loc;
+    bb.GetLocation(&loc);
+    gfx->DrawString(s, (INT) sLen, fnt, loc, col);
 }
 
 void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb) {

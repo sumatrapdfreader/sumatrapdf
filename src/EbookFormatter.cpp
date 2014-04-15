@@ -11,7 +11,12 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 
+//TextRenderMethod gTextRenderMethod = TextRenderGdi;
 TextRenderMethod gTextRenderMethod = TextRenderGdiplus;
+
+TextRenderMethod GetTextRenderMethod() {
+    return gTextRenderMethod;
+}
 
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
