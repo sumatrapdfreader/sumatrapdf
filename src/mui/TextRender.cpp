@@ -104,16 +104,19 @@ void TextDrawGdi::Unlock() {
     hdc = NULL;
 }
 
-void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb) {
+void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
     CrashIf(!hdc); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
-    ExtTextOutW(hdc, x, y, 0, NULL, s, (int)sLen, NULL);
+    UINT opts = 0;
+    if (!isLtr)
+        opts = ETO_RTLREADING;
+    ExtTextOutW(hdc, x, y, opts, NULL, s, (int)sLen, NULL);
 }
 
-void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb) {
+void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return Draw(txtConvBuf, strLen, bb);
+    return Draw(txtConvBuf, strLen, bb, isLtr);
 }
 
 TextMeasureGdiplus *TextMeasureGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
@@ -170,13 +173,20 @@ void TextDrawGdiplus::SetFont(mui::CachedFont *font) {
     this->fnt = font->font;
 }
 
-void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb) {
-    PointF loc;
-    bb.GetLocation(&loc);
-    gfx->DrawString(s, (INT) sLen, fnt, loc, col);
+void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
+    PointF pos;
+    bb.GetLocation(&pos);
+    if (isLtr) {
+        gfx->DrawString(s, (INT) sLen, fnt, pos, NULL, col);
+    } else {
+        StringFormat rtl;
+        rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
+        pos.X += bb.Width;
+        gfx->DrawString(s, (INT)sLen, fnt, pos, &rtl, col); //&brText);
+    }
 }
 
-void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb) {
+void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     PointF loc;
     bb.GetLocation(&loc);

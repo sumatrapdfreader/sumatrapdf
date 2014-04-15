@@ -1397,10 +1397,9 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
         bbox.Y += offY;
         if (InstrString == i->type) {
             int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            //bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
-            textDraw->Draw((const WCHAR*)buf, strLen, bbox); // TODO: include brText (&brText);
+            textDraw->Draw((const WCHAR*)buf, strLen, bbox, true); // TODO: include brText (&brText);
         } else if (InstrSetFont == i->type) {
             font = i->font; // TODO: temporary, for InstrRtlString
             textDraw->SetFont(i->font);
@@ -1409,11 +1408,7 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             bbox.GetLocation(&pos);
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
-            // TODO: handle gdi
-            StringFormat rtl;
-            rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
-            pos.X += bbox.Width;
-            g->DrawString(buf, strLen, font->font, pos, &rtl, &brText);
+            textDraw->Draw((const WCHAR*)buf, strLen, bbox, false);
         }
         if (abortCookie && *abortCookie)
             break;
@@ -1432,13 +1427,6 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
             g->DrawLine(&linePen, p1, p2);
-        } else if ((InstrElasticSpace == i->type) ||
-            (InstrFixedSpace == i->type) ||
-            (InstrString == i->type) ||
-            (InstrRtlString == i->type) ||
-            (InstrSetFont == i->type) ||
-            (InstrAnchor == i->type)) {
-            // ignore
         } else if (InstrImage == i->type) {
             // TODO: cache the bitmap somewhere (?)
             Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
@@ -1454,6 +1442,13 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             g->DrawLine(&linkPen, p1, p2);
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
+        } else if ((InstrElasticSpace == i->type) ||
+            (InstrFixedSpace == i->type) ||
+            (InstrString == i->type) ||
+            (InstrRtlString == i->type) ||
+            (InstrSetFont == i->type) ||
+            (InstrAnchor == i->type)) {
+            // ignore
         } else {
             CrashIf(true);
         }

@@ -33,8 +33,13 @@ public:
 class ITextDraw {
 public:
     virtual void SetFont(CachedFont *font) = 0;
-    virtual void Draw(const char *s, size_t sLen, RectF& bb) = 0;
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb) = 0;
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) = 0;
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) = 0;
+
+    // GDI+ calls cannot be done if we called Graphics::GetHDC(). However, getting/releasing
+    // hdc is very expensive and kills performance if we do it for every Draw(). So we add
+    // explicit Lock()/Unlock() calls (only important for TextDrawGdi) so that a caller
+    // can batch Draw() calls to minimize GetHDC()/ReleaseHDC() calls
     virtual void Lock() {}
     virtual void Unlock() {}
 };
@@ -76,8 +81,8 @@ public:
 
     virtual ~TextDrawGdi();
     virtual void SetFont(CachedFont *font);
-    virtual void Draw(const char *s, size_t sLen, RectF& bb);
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb);
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
     virtual void Lock();
     virtual void Unlock();
 };
@@ -118,8 +123,8 @@ public:
     static TextDrawGdiplus *Create(Gdiplus::Graphics *gfx);
 
     virtual void SetFont(CachedFont *font);
-    virtual void Draw(const char *s, size_t sLen, RectF& bb);
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb);
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
     virtual ~TextDrawGdiplus();
 };
 
