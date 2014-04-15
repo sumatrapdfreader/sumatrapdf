@@ -7,6 +7,16 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
+/*
+TODO:
+ - add transparent rendering to GDI, see:
+   http://stackoverflow.com/questions/1340166/transparency-to-text-in-gdi
+   http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/
+ - get perf data about time to format using GDI and GDI+ measurement
+ - combine ITextMeasure and ITextDraw into single ITextRender object.
+   They have too much in common
+*/
+
 /* Note: I would prefer this code be in utils but it depends on mui, so it must
 be in mui to avoid circular dependency */
 
@@ -75,6 +85,8 @@ RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
 TextDrawGdi *TextDrawGdi::Create(Graphics *gfx) {
     TextDrawGdi *res = new TextDrawGdi();
     res->gfx = gfx;
+    // default to red to make mistakes stand out
+    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
 }
 
@@ -85,17 +97,31 @@ TextDrawGdi::~TextDrawGdi() {
 void TextDrawGdi::SetFont(mui::CachedFont *font) {
     CrashIf(!font->hdcFont);
     // not sure how expensive SelectFont() is so avoid it just in case
-    if (currFont == font->hdcFont)
+    if (currFont == font->hdcFont) {
         return;
+    }
     currFont = font->hdcFont;
-    if (hdc)
+    if (hdc) {
         SelectFont(hdc, currFont);
+    }
+}
+
+void TextDrawGdi::SetTextColor(Gdiplus::Color col) {
+    if (textColor.GetValue() == col.GetValue()) {
+        return;
+    }
+    textColor = col;
+    if (hdc) {
+        ::SetTextColor(hdc, col.ToCOLORREF());
+    }
 }
 
 void TextDrawGdi::Lock() {
     CrashIf(hdc);
     hdc = gfx->GetHDC();
     SelectFont(hdc, currFont);
+    ::SetTextColor(hdc, textColor.ToCOLORREF());
+    //SetBkMode(hdc, TRANSPARENT);
 }
 
 void TextDrawGdi::Unlock() {
@@ -108,9 +134,9 @@ void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
     CrashIf(!hdc); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
-    UINT opts = 0;
+    UINT opts = ETO_OPAQUE;
     if (!isLtr)
-        opts = ETO_RTLREADING;
+        opts = opts | ETO_RTLREADING;
     ExtTextOutW(hdc, x, y, opts, NULL, s, (int)sLen, NULL);
 }
 
@@ -160,12 +186,13 @@ RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
 TextDrawGdiplus *TextDrawGdiplus::Create(Graphics *gfx) {
     TextDrawGdiplus *res = new TextDrawGdiplus();
     res->gfx = gfx;
-
-    res->col = ::new SolidBrush(Color(0, 0, 0));
+    // default to red to make mistakes stand out
+    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
 }
 
 TextDrawGdiplus::~TextDrawGdiplus() {
+    ::delete textColorBrush;
 }
 
 void TextDrawGdiplus::SetFont(mui::CachedFont *font) {
@@ -173,16 +200,25 @@ void TextDrawGdiplus::SetFont(mui::CachedFont *font) {
     this->fnt = font->font;
 }
 
+void TextDrawGdiplus::SetTextColor(Gdiplus::Color col) {
+    if (textColor.GetValue() == col.GetValue()) {
+        return;
+    }
+    textColor = col;
+    ::delete textColorBrush;
+    textColorBrush = ::new SolidBrush(col);
+}
+
 void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
     PointF pos;
     bb.GetLocation(&pos);
     if (isLtr) {
-        gfx->DrawString(s, (INT) sLen, fnt, pos, NULL, col);
+        gfx->DrawString(s, (INT) sLen, fnt, pos, NULL, textColorBrush);
     } else {
         StringFormat rtl;
         rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
         pos.X += bb.Width;
-        gfx->DrawString(s, (INT)sLen, fnt, pos, &rtl, col); //&brText);
+        gfx->DrawString(s, (INT)sLen, fnt, pos, &rtl, textColorBrush);
     }
 }
 
@@ -190,7 +226,7 @@ void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     PointF loc;
     bb.GetLocation(&loc);
-    gfx->DrawString(txtConvBuf, (INT) strLen, fnt, loc, col);
+    gfx->DrawString(txtConvBuf, (INT) strLen, fnt, loc, textColorBrush);
 }
 
 // returns number of characters of string s that fits in a given width dx

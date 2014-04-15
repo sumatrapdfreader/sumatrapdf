@@ -9,9 +9,6 @@
 #endif
 #define TextRender_h
 
-// TODO: should combine ITextMeasure and ITextDraw into single ITextRender object.
-// They have too much in common
-
 enum TextRenderMethod {
     TextRenderGdiplus, // uses MeasureTextAccurate, which is slower than MeasureTextQuick
     TextRenderGdiplusQuick, // uses MeasureTextQuick
@@ -33,6 +30,7 @@ public:
 class ITextDraw {
 public:
     virtual void SetFont(CachedFont *font) = 0;
+    virtual void SetTextColor(Gdiplus::Color col) = 0;
     virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) = 0;
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) = 0;
 
@@ -68,10 +66,11 @@ public:
 
 class TextDrawGdi : public ITextDraw {
 private:
-    Gdiplus::Graphics * gfx;
-    HDC                 hdc;
-    HFONT               currFont;
-    WCHAR               txtConvBuf[512];
+    Gdiplus::Graphics *     gfx;
+    Gdiplus::Color          textColor;
+    HDC                     hdc;
+    HFONT                   currFont;
+    WCHAR                   txtConvBuf[512];
 
     TextDrawGdi() : gfx(NULL), hdc(NULL), currFont(NULL) { }
 
@@ -81,6 +80,7 @@ public:
 
     virtual ~TextDrawGdi();
     virtual void SetFont(CachedFont *font);
+    virtual void SetTextColor(Gdiplus::Color col);
     virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
     virtual void Lock();
@@ -113,16 +113,18 @@ private:
     // we don't own gfx or fnt
     Gdiplus::Graphics *  gfx;
     Gdiplus::Font *      fnt;
-    Gdiplus::Brush *     col;
+    Gdiplus::Color       textColor;
+    Gdiplus::Brush *     textColorBrush;
     WCHAR                txtConvBuf[512];
 
-    TextDrawGdiplus() : gfx(NULL) { }
+    TextDrawGdiplus() : gfx(NULL), fnt(NULL), textColorBrush(NULL), textColor(0,0,0,0) { }
 
 public:
 
     static TextDrawGdiplus *Create(Gdiplus::Graphics *gfx);
 
     virtual void SetFont(CachedFont *font);
+    virtual void SetTextColor(Gdiplus::Color col);
     virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
     virtual ~TextDrawGdiplus();

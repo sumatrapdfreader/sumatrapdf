@@ -1378,11 +1378,9 @@ Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
 // should be underlined at a baseline
 void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
 {
-    SolidBrush brText(textColor);
     Pen debugPen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
-    CachedFont *font = NULL;
 
     WCHAR buf[512];
     PointF pos;
@@ -1390,6 +1388,7 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
 
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
+    textDraw->SetTextColor(textColor);
     textDraw->Lock();
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
@@ -1399,9 +1398,8 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
             int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
-            textDraw->Draw((const WCHAR*)buf, strLen, bbox, true); // TODO: include brText (&brText);
+            textDraw->Draw((const WCHAR*)buf, strLen, bbox, true);
         } else if (InstrSetFont == i->type) {
-            font = i->font; // TODO: temporary, for InstrRtlString
             textDraw->SetFont(i->font);
         } else if (InstrRtlString == i->type) {
             int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
