@@ -357,7 +357,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 {
     CrashIf(!doc.IsEngine() && !doc.IsEbook());
     DocType docType = doc.GetDocType();
-    EngineType engineType = (docType & Doc_BaseEngine) ? (EngineType)(docType - Doc_BaseEngine) : Engine_None;
+    EngineType engineType = (docType >= Doc_BaseEngine) ? (EngineType)(docType - Doc_BaseEngine) : Engine_None;
 
     WCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);

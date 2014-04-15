@@ -238,7 +238,7 @@ BROWSER_PLUGIN_OBJS = \
 	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) $(UTILS_LIB)
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINES_LIB) $(MUPDF_LIB) $(UTILS_LIB) $(MUI_LIB) # $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
+	$(OS)\EngineDump.obj $(ENGINES_LIB) $(MUPDF_LIB) $(UTILS_LIB) $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
