@@ -1,12 +1,11 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "Mui.h"
 #include "SumatraAbout2.h"
 
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "Mui.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
@@ -155,7 +154,9 @@ Size SumatraLogo::Measure(const Size availableSize)
 {
     Graphics *gfx = AllocGraphicsForMeasureText();
     CachedStyle *s = cachedStyle;
-    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    Font *font = cachedFont->font;
+    CrashIf(!font);
     const WCHAR *txt = LOGO_TEXT;
     RectF bbox;
     int textDx = 0;
@@ -175,7 +176,9 @@ void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
     CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
-    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    Font *font = cachedFont->font;
+    CrashIf(!font);
 
     int x = offX; int y = offY;
     int n = 0;

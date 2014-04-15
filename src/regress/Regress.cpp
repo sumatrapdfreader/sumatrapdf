@@ -15,7 +15,9 @@ To write new regression test:
 - call Regress${NN} function from RunTests()
 */
 
-#include "BaseUtil.h"
+#include "Mui.h"
+using namespace mui;
+
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
@@ -23,7 +25,6 @@ To write new regression test:
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "Mui.h"
 #include "WinUtil.h"
 
 static WCHAR *gTestFilesDir;

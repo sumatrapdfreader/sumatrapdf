@@ -18,7 +18,7 @@ RectF    MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, int len);
 RectF    MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, int len);
 RectF    MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len=-1, TextMeasureAlgorithm algo=NULL);
 REAL     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=NULL);
-size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo=NULL);
+//size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo=NULL);
 void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 
 void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);

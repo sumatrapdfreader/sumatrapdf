@@ -54,7 +54,8 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
     Graphics *gfx = AllocGraphicsForMeasureText();
     CachedStyle *s = cachedStyle;
-    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    Font *font = cachedFont->font;
 
     textDx = 0;
     float fontDy = font->GetHeight(gfx);
@@ -166,7 +167,9 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     int x = offX + alignedOffX + pad.left + (int)s->borderWidth.left;
     int y = offY + pad.top + (int)s->borderWidth.top;
     Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
-    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    
+    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    Font *font = cachedFont->font;
     gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 

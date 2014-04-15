@@ -1,9 +1,10 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "EbookFormatter.h"
+#include "Mui.h"
+using namespace mui;
 
+#include "EbookFormatter.h"
 #include "EbookDoc.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

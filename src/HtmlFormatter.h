@@ -4,9 +4,11 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
+#include "Mui.h"
+using namespace mui;
+
 #include "EbookBase.h"
 #include "HtmlParserLookup.h"
-
 using namespace Gdiplus;
 
 // Layout information for a given page is a list of
@@ -43,9 +45,9 @@ struct DrawInstr {
         struct {
             const char *s;
             size_t      len;
-        }                   str;          // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
-        Font *              font;         // InstrSetFont
-        ImageData           img;          // InstrImage
+        } str;          // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
+        CachedFont *    font;         // InstrSetFont
+        ImageData       img;          // InstrImage
     };
     RectF bbox; // common to most instructions
 
@@ -56,7 +58,7 @@ struct DrawInstr {
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox, bool rtl=false);
     static DrawInstr Image(char *data, size_t len, RectF bbox);
-    static DrawInstr SetFont(Font *font);
+    static DrawInstr SetFont(CachedFont *font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(const char *s, size_t len);
     static DrawInstr Anchor(const char *s, size_t len, RectF bbox);
@@ -83,7 +85,7 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    Font *font;
+    CachedFont *font;
     AlignAttr align;
     bool dirRtl;
 };
@@ -107,7 +109,7 @@ public:
     HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
-      reparseIdx(0), measureAlgo(NULL)
+      reparseIdx(0), textRenderMethod(TextRenderGdiplus)
     { }
 
     ~HtmlFormatterArgs() {
@@ -131,9 +133,7 @@ public:
        used to allocate this text. */
     Allocator *     textAllocator;
 
-    // if layouting everything at once, MeasureTextAccurate is too slow,
-    // so measureAlgo allows to choose a quicker text measurer instead
-    RectF        (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len);
+    TextRenderMethod textRenderMethod;
 
     const char *    htmlStr;
     size_t          htmlStrLen;
@@ -194,9 +194,9 @@ protected:
     bool  EnsureDx(float dx);
 
     DrawStyle *CurrStyle() { return &styleStack.Last(); }
-    Font *CurrFont() { return CurrStyle()->font; }
+    CachedFont *CurrFont() { return CurrStyle()->font; }
     void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
-    void  SetFont(Font *origFont, FontStyle fs, float fontSize=-1);
+    void  SetFont(CachedFont *origFont, FontStyle fs, float fontSize=-1);
     void  ChangeFontStyle(FontStyle fs, bool isStart);
     void  SetAlignment(AlignAttr align);
     void  RevertStyleChange();
@@ -220,7 +220,7 @@ protected:
     ScopedMem<WCHAR>    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
-    RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len);
+    ITextMeasure *      textMeasure;
 
     // style stack of the current line
     Vec<DrawStyle>      styleStack;

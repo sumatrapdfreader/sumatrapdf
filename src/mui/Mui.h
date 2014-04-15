@@ -16,6 +16,7 @@ namespace mui {
 using namespace Gdiplus;
 
 #include "MuiBase.h"
+#include "TextRender.h"
 #include "MuiCss.h"
 
 using namespace css;

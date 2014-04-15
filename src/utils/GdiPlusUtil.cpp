@@ -128,9 +128,7 @@ RectF MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len, TextMeasureA
     CrashIf(len > INT_MAX);
     if (algo)
         return algo(g, f, s, (int)len);
-    //RectF bbox = MeasureTextStandard(g, f, s, (int)len);
     RectF bbox = MeasureTextAccurate(g, f, s, (int)len);
-    //RectF bbox = MeasureTextAccurate2(g, f, s, (int)len);
     return bbox;
 }
 

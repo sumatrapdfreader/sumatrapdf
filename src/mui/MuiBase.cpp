@@ -20,17 +20,7 @@ void LeaveMuiCriticalSection()
 }
 
 // Global, thread-safe font cache. Font objects live forever.
-struct FontCacheEntry {
-    WCHAR *     name;
-    float       size;
-    FontStyle   style;
-
-    Font *      font;
-
-    bool SameAs(const WCHAR *name, float size, FontStyle style);
-};
-
-static Vec<FontCacheEntry> *gFontsCache = NULL;
+static Vec<CachedFont> *gFontsCache = NULL;
 
 // Graphics objects cannot be used across threads. We have a per-thread
 // cache so that it's easy to grab Graphics object to be used for
@@ -94,7 +84,7 @@ void GraphicsCacheEntry::Free()
 void InitializeBase()
 {
     InitializeCriticalSection(&gMuiCs);
-    gFontsCache = new Vec<FontCacheEntry>();
+    gFontsCache = new Vec<CachedFont>();
     gGraphicsCache = new Vec<GraphicsCacheEntry>();
     // allocate the first entry in gGraphicsCache for UI thread, ref count
     // ensures it stays alive forever
@@ -110,16 +100,17 @@ void DestroyBase()
     }
     delete gGraphicsCache;
 
-    for (FontCacheEntry *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        free(e->name);
+    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
+        free((void*)e->name);
         ::delete e->font;
+        DeleteObject(e->hdcFont);
     }
     delete gFontsCache;
 
     DeleteCriticalSection(&gMuiCs);
 }
 
-bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle)
+bool CachedFont::SameAs(const WCHAR *otherName, float otherSize, FontStyle otherStyle) const
 {
     if (size != otherSize)
         return false;
@@ -131,22 +122,42 @@ bool FontCacheEntry::SameAs(const WCHAR *otherName, float otherSize, FontStyle o
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-Font *GetCachedFont(const WCHAR *name, float size, FontStyle style)
+CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
-    for (FontCacheEntry *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
-        if (e->SameAs(name, size, style)) {
-            return e->font;
+    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
+        if (e->SameAs(name, size, style) && (e->font != NULL)) {
+            return e;
         }
     }
 
-    FontCacheEntry f = { str::Dup(name), size, style, NULL };
+    CachedFont f = { str::Dup(name), size, style, NULL, NULL };
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
     f.font = ::new Font(name, size, style);
+    f.hdcFont = NULL;
     gFontsCache->Append(f);
-    return f.font;
+    return gFontsCache->AtPtr(gFontsCache->Size()-1);
+}
+
+CachedFont *GetCachedFontGdi(const WCHAR *name, float size, FontStyle style)
+{
+    // TODO: not yet implemented
+    CrashAlwaysIf(true);
+    ScopedMuiCritSec muiCs;
+
+    for (CachedFont *e = gFontsCache->IterStart(); e; e = gFontsCache->IterNext()) {
+        if (e->SameAs(name, size, style) && (e->hdcFont != NULL)) {
+            return e;
+        }
+    }
+
+    CachedFont f = { str::Dup(name), size, style, NULL, NULL };
+    f.font = NULL;
+    // TODO: create HDC font
+    f.hdcFont = NULL;
+    return gFontsCache->AtPtr(gFontsCache->Size()-1);
 }
 
 Graphics *AllocGraphicsForMeasureText()

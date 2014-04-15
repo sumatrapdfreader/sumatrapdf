@@ -75,7 +75,7 @@ DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox, bool rtl)
     return di;
 }
 
-DrawInstr DrawInstr::SetFont(Font *font)
+DrawInstr DrawInstr::SetFont(CachedFont *font)
 {
     DrawInstr di(InstrSetFont);
     di.font = font;
@@ -171,7 +171,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
     listDepth(0), preFormatted(false), dirRtl(false), currPage(NULL),
-    finishedParsing(false), pageCount(0), measureAlgo(args->measureAlgo),
+    finishedParsing(false), pageCount(0),
     keepTagNesting(false)
 {
     currReparseIdx = args->reparseIdx;
@@ -180,18 +180,32 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
+    if (TextRenderGdiplus == args->textRenderMethod) {
+        textMeasure = TextMeasureGdiplus::Create(gfx);
+    } else if (TextRenderGdiplusQuick == args->textRenderMethod) {
+        textMeasure = TextMeasureGdiplus::Create(gfx, MeasureTextQuick);
+    } else {
+        CrashAlwaysIf(true); // TODO: implement GDI
+    }
     defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
     DrawStyle style;
-    style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
+    // TODO: this should go through textMeasure so that we create
+    // a font compatible with rendering. Alternatively, during
+    // rendering we might create the right font because CachedFont
+    // has necessary information
+    style.font = mui::GetCachedFontGdiplus(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
     style.dirRtl = false;
     styleStack.Append(style);
     nextPageStyle = styleStack.Last();
 
-    lineSpacing = CurrFont()->GetHeight(gfx);
-    spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
-    float spaceDx2 = GetSpaceDx(gfx, CurrFont(), measureAlgo);
+    // TODO: handle hdc
+    lineSpacing = CurrFont()->font->GetHeight(gfx);
+    // TODO: handle hdc
+    spaceDx = CurrFont()->font->GetSize() / 2.5f; // note: a heuristic
+    // TODO: handle hdc
+    float spaceDx2 = GetSpaceDx(gfx, CurrFont()->font, NULL);
     if (spaceDx2 < spaceDx)
         spaceDx = spaceDx2;
 
@@ -218,22 +232,28 @@ void HtmlFormatter::AppendInstr(DrawInstr di)
 
 void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
 {
-    if (fontSize < 0)
+    if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
-    Font *newFont = mui::GetCachedFont(fontName, fontSize, fs);
-    if (CurrFont() != newFont)
+    }
+    // TODO: handle gdi
+    CachedFont *newFont = mui::GetCachedFontGdiplus(fontName, fontSize, fs);
+    if (CurrFont() != newFont) {
         AppendInstr(DrawInstr::SetFont(newFont));
+    }
 
     DrawStyle style = styleStack.Last();
     style.font = newFont;
     styleStack.Append(style);
 }
 
-void HtmlFormatter::SetFont(Font *font, FontStyle fs, float fontSize)
+void HtmlFormatter::SetFont(CachedFont *font, FontStyle fs, float fontSize)
 {
     LOGFONTW lfw;
-    Status ok = CurrFont()->GetLogFontW(gfx, &lfw);
-    const WCHAR *fontName = ok == Ok ? lfw.lfFaceName : defaultFontName;
+    // TODO: handle gdi
+    Status ok = CurrFont()->font->GetLogFontW(gfx, &lfw);
+    const WCHAR *fontName = defaultFontName;
+    if (ok == Ok)
+        fontName = lfw.lfFaceName;
     SetFont(fontName, fs, fontSize);
 }
 
@@ -722,7 +742,8 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
             currReparseIdx = s - htmlParser->Start();
 
         size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
-        RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen, measureAlgo);
+        textMeasure->SetFont(CurrFont());
+        RectF bbox = textMeasure->Measure(buf, strLen);
         EnsureDx(bbox.Width);
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
@@ -730,7 +751,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
             break;
         }
 
-        size_t lenThatFits = StringLenForWidth(gfx, CurrFont(), buf, strLen, pageDx - NewLineX(), measureAlgo);
+        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - NewLineX());
         // try to prevent a break in the middle of a word
         if (iswalnum(buf[lenThatFits])) {
             for (size_t len = lenThatFits; len > 0; len--) {
@@ -740,7 +761,8 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
                 }
             }
         }
-        bbox = MeasureText(gfx, CurrFont(), buf, lenThatFits, measureAlgo);
+        textMeasure->SetFont(CurrFont());
+        bbox = textMeasure->Measure(buf, lenThatFits);
         CrashIf(bbox.Width > pageDx);
         // s is UTF-8 and buf is UTF-16, so one
         // WCHAR doesn't always equal one char
@@ -838,7 +860,8 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
 
     AttrInfo *attr = t->GetAttrByName("face");
     LOGFONTW lfw;
-    CurrFont()->GetLogFontW(gfx, &lfw);
+    // TODO: handle gdi
+    CurrFont()->font->GetLogFontW(gfx, &lfw);
     const WCHAR *faceName = lfw.lfFaceName;
     if (attr) {
         size_t strLen = str::Utf8ToWcharBuf(t->s, t->sLen, buf, dimof(buf));
@@ -1367,7 +1390,8 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
                 g->DrawRectangle(&debugPen, bbox);
             g->DrawString(buf, strLen, font, pos, NULL, &brText);
         } else if (InstrSetFont == i->type) {
-            font = i->font;
+            // TODO: handle gdi
+            font = i->font->font;
         } else if ((InstrElasticSpace == i->type) ||
             (InstrFixedSpace == i->type) ||
             (InstrAnchor == i->type)) {

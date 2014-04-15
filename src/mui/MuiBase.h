@@ -27,8 +27,25 @@ public:
     }
 };
 
+struct CachedFont {
+    const WCHAR *       name;
+    float               size;
+    Gdiplus::FontStyle  style;
+
+    // only one of font or hdcFont can be set
+    Gdiplus::Font *     font;
+    HDC                 hdcFont;
+
+    Gdiplus::FontStyle  GetStyle() const { return style; }
+    float               GetSize() const { return size; }
+    const WCHAR *       GetName() const { return name; }
+    bool                SameAs(const WCHAR *name, float size, FontStyle style) const;
+};
+
 void        InitGraphicsMode(Graphics *g);
-Font *      GetCachedFont(const WCHAR *name, float size, FontStyle style);
+CachedFont *GetCachedFontGdi(const WCHAR *name, float size, FontStyle style);
+CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style);
+
 Graphics *  AllocGraphicsForMeasureText();
 void        FreeGraphicsForMeasureText(Graphics *gfx);
 

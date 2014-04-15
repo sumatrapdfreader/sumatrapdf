@@ -621,7 +621,7 @@ WCHAR *EbookEngine::ExtractFontList()
 {
     ScopedCritSec scope(&pagesAccess);
 
-    Vec<Font *> seenFonts;
+    Vec<CachedFont *> seenFonts;
     WStrVec fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
@@ -636,7 +636,8 @@ WCHAR *EbookEngine::ExtractFontList()
             seenFonts.Append(i->font);
 
             FontFamily family;
-            Status ok = i->font->GetFamily(&family);
+            // TODO: handle gdi
+            Status ok = i->font->font->GetFamily(&family);
             if (ok != Ok)
                 continue;
             WCHAR fontName[LF_FACESIZE];
@@ -774,7 +775,7 @@ bool EpubEngineImpl::FinishLoading()
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
+    args.textRenderMethod = TextRenderGdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -872,7 +873,7 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
+    args.textRenderMethod = TextRenderGdiplusQuick;
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1000,7 +1001,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
+    args.textRenderMethod = TextRenderGdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1178,7 +1179,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
+    args.textRenderMethod = TextRenderGdiplusQuick;
 
     pages = PdbFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1471,7 +1472,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.measureAlgo = MeasureTextQuick;
+    args.textRenderMethod = TextRenderGdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     if (!ExtractPageAnchors())
