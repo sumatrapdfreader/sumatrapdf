@@ -133,6 +133,9 @@ CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle styl
         }
     }
 
+    // TODO: growing the Vec invalidates all CachedFont pointers!
+    CrashAlwaysIf(gFontsCache->Count() >= 15);
+
     CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
     // TODO: handle a failure to create a font. Use fontCache[0] if exists
     // or try to fallback to a known font like Times New Roman
@@ -169,6 +172,9 @@ CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style)
             return e;
         }
     }
+
+    // TODO: growing the Vec invalidates all CachedFont pointers!
+    CrashAlwaysIf(gFontsCache->Count() >= 15);
 
     CachedFont f = { str::Dup(name), sizePt, style, NULL, NULL };
     // TODO: do I need to be given HDC?

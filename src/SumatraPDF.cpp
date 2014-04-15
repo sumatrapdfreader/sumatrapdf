@@ -687,7 +687,7 @@ static int GetPolicies(bool isRestricted)
 void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
-    // CrashIf(!ds); // happened in e.g. crash 52161
+    CrashIfDebugOnly(!ds); // happened in e.g. crash 52161
     CrashIf(bmp && bmp->Size().IsEmpty());
     if (!ds || !bmp || bmp->Size().IsEmpty()) {
         delete bmp;
@@ -2328,7 +2328,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         return;
     }
 
-    // CrashIf(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
+    CrashIfDebugOnly(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
     CrashIf(!win.dm);
 
     SetFocus(win.hwndFrame);
