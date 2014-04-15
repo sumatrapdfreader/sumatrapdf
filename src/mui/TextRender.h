@@ -33,8 +33,8 @@ class ITextDraw {
 public:
     virtual void SetFont(CachedFont *font) = 0;
     virtual void SetTextColor(Gdiplus::Color col) = 0;
-    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) = 0;
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) = 0;
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false) = 0;
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false) = 0;
 
     // GDI+ calls cannot be done if we called Graphics::GetHDC(). However, getting/releasing
     // hdc is very expensive and kills performance if we do it for every Draw(). So we add
@@ -85,8 +85,8 @@ public:
     virtual ~TextDrawGdi();
     virtual void SetFont(CachedFont *font);
     virtual void SetTextColor(Gdiplus::Color col);
-    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
     virtual void Lock();
     virtual void Unlock();
 };
@@ -129,8 +129,8 @@ public:
 
     virtual void SetFont(CachedFont *font);
     virtual void SetTextColor(Gdiplus::Color col);
-    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isLtr);
-    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr);
+    virtual void Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
+    virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
     virtual ~TextDrawGdiplus();
 };
 

@@ -76,10 +76,7 @@ RectF TextMeasureGdi::Measure(const WCHAR *s, size_t sLen) {
 
 RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    SIZE txtSize;
-    GetTextExtentPoint32W(hdc, txtConvBuf, (int) strLen, &txtSize);
-    RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
-    return res;
+    return Measure(txtConvBuf, strLen);
 }
 
 TextDrawGdi *TextDrawGdi::Create(Graphics *gfx) {
@@ -130,19 +127,19 @@ void TextDrawGdi::Unlock() {
     hdc = NULL;
 }
 
-void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
+void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     CrashIf(!hdc); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
     UINT opts = ETO_OPAQUE;
-    if (!isLtr)
+    if (isRtl)
         opts = opts | ETO_RTLREADING;
     ExtTextOutW(hdc, x, y, opts, NULL, s, (int)sLen, NULL);
 }
 
-void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) {
+void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return Draw(txtConvBuf, strLen, bb, isLtr);
+    return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
 TextMeasureGdiplus *TextMeasureGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
@@ -209,11 +206,11 @@ void TextDrawGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = ::new SolidBrush(col);
 }
 
-void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
+void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     PointF pos;
     bb.GetLocation(&pos);
-    if (isLtr) {
-        gfx->DrawString(s, (INT) sLen, fnt, pos, NULL, textColorBrush);
+    if (!isRtl) {
+        gfx->DrawString(s, (INT)sLen, fnt, pos, NULL, textColorBrush);
     } else {
         StringFormat rtl;
         rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
@@ -222,11 +219,9 @@ void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isLtr) {
     }
 }
 
-void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isLtr) {
+void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    PointF loc;
-    bb.GetLocation(&loc);
-    gfx->DrawString(txtConvBuf, (INT) strLen, fnt, loc, textColorBrush);
+    Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
 // returns number of characters of string s that fits in a given width dx

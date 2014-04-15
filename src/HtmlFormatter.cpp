@@ -1384,7 +1384,6 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
 
     WCHAR buf[512];
-    PointF pos;
     DrawInstr *i;
 
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
@@ -1395,19 +1394,13 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
         RectF bbox = i->bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrString == i->type) {
-            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+        if (InstrString == i->type || InstrRtlString == i->type) {
+            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
             if (showBbox)
                 g->DrawRectangle(&debugPen, bbox);
-            textDraw->Draw((const WCHAR*)buf, strLen, bbox, true);
+            textDraw->Draw(buf, strLen, bbox, InstrRtlString == i->type);
         } else if (InstrSetFont == i->type) {
             textDraw->SetFont(i->font);
-        } else if (InstrRtlString == i->type) {
-            int strLen = (int)str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            bbox.GetLocation(&pos);
-            if (showBbox)
-                g->DrawRectangle(&debugPen, bbox);
-            textDraw->Draw((const WCHAR*)buf, strLen, bbox, false);
         }
         if (abortCookie && *abortCookie)
             break;
@@ -1442,11 +1435,11 @@ void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstruct
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
         } else if ((InstrElasticSpace == i->type) ||
-            (InstrFixedSpace == i->type) ||
-            (InstrString == i->type) ||
-            (InstrRtlString == i->type) ||
-            (InstrSetFont == i->type) ||
-            (InstrAnchor == i->type)) {
+                   (InstrFixedSpace == i->type) ||
+                   (InstrString == i->type) ||
+                   (InstrRtlString == i->type) ||
+                   (InstrSetFont == i->type) ||
+                   (InstrAnchor == i->type)) {
             // ignore
         } else {
             CrashIf(true);
