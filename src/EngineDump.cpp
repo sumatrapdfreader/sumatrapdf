@@ -352,12 +352,6 @@ public:
     }
 };
 
-class ScopedMui {
-public:
-    ScopedMui() { mui::Initialize(); }
-    ~ScopedMui() { mui::Destroy(); }
-};
-
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
@@ -444,7 +438,7 @@ Usage:
     bool useChm2Engine = !useAlternateHandlers;
 
     ScopedGdiPlus gdiPlus;
-    ScopedMui mui;
+    ScopedMiniMui miniMui;
 
     DocType engineType;
     PasswordHolder pwdUI(password);

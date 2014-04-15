@@ -11,7 +11,6 @@ namespace mui {
 
 void Initialize();
 void Destroy();
-void InitGraphicsMode(Gdiplus::Graphics *g);
 
 struct CachedFont {
     WCHAR *             name;
@@ -34,9 +33,16 @@ struct CachedFont {
 CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
 CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
 
+void InitGraphicsMode(Gdiplus::Graphics *g);
 Gdiplus::Graphics *AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Gdiplus::Graphics *g);
 
+};
+
+class ScopedMiniMui {
+public:
+    ScopedMiniMui() { mui::Initialize(); }
+    ~ScopedMiniMui() { mui::Destroy(); }
 };
 
 #endif
