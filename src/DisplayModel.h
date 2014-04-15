@@ -6,7 +6,7 @@
 
 #include "ChmEngine.h"
 #include "DisplayState.h"
-#include "Doc.h"
+#include "EngineManager.h"
 
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
@@ -76,7 +76,7 @@ public:
 class DisplayModel
 {
 public:
-    DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelCallback *dmCb);
+    DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
     const WCHAR *FilePath() const { return engine->FileName(); }
@@ -104,7 +104,7 @@ public:
     int CurrentPageNo() const;
 
     BaseEngine *    engine;
-    DocType         engineType;
+    EngineType      engineType;
 
     PageTextCache * textCache;
     TextSelection * textSelection;

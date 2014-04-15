@@ -8,6 +8,9 @@
 #ifdef BUILD_XPS_PREVIEW
 #define SZ_XPS_PREVIEW_CLSID    L"{D427A82C-6545-4fbe-8E87-030EDB3BE46D}"
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+#define SZ_EPUB_PREVIEW_CLSID    L"{80C4E4B1-2B0F-40D5-95AF-BE7B57FEA4F9}"
+#endif
 #ifdef BUILD_CBZ_PREVIEW
 #define SZ_CBZ_PREVIEW_CLSID    L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #endif
@@ -247,6 +250,17 @@ protected:
 class CXpsPreview : public PreviewBase {
 public:
     CXpsPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) { }
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream);
+};
+#endif
+
+#ifdef BUILD_EPUB_PREVIEW
+class CEpubPreview : public PreviewBase {
+public:
+    CEpubPreview(long *plRefCount);
+    ~CEpubPreview();
 
 protected:
     virtual BaseEngine *LoadEngine(IStream *stream);

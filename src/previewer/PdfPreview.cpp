@@ -317,6 +317,27 @@ BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 }
 #endif
 
+#ifdef BUILD_EPUB_PREVIEW
+#include "EbookEngine.h"
+#include "MiniMui.h"
+
+CEpubPreview::CEpubPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID)
+{
+    m_gdiScope = new ScopedGdiPlus();
+    mui::Initialize();
+}
+
+CEpubPreview::~CEpubPreview()
+{
+    mui::Destroy();
+}
+
+BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
+{
+    return EpubEngine::CreateFromStream(stream);
+}
+#endif
+
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_TGA_PREVIEW)
 #include "ImagesEngine.h"
 

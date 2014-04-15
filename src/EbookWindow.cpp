@@ -806,7 +806,7 @@ Doc GetDocForWindow(const SumatraWindow& win)
         WindowInfo *iwin = win.AsWindowInfo();
         if (!iwin->IsDocLoaded())
             return Doc();
-        return Doc(iwin->dm->engine, iwin->dm->engineType);
+        return Doc(iwin->dm->engine, (DocType)(Doc_BaseEngine + iwin->dm->engineType));
     }
     if (win.AsEbookWindow()) {
         EbookWindow *ewin = win.AsEbookWindow();

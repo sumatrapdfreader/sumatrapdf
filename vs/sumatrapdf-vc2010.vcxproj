@@ -125,6 +125,7 @@
     <ClCompile Include="..\src\ChmEngine.cpp" />
     <ClCompile Include="..\src\DjVuEngine.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
+    <ClCompile Include="..\src\EngineManager.cpp" />
     <ClCompile Include="..\src\ImagesEngine.cpp" />
     <ClCompile Include="..\src\PdfEngine.cpp" />
     <ClCompile Include="..\src\PsEngine.cpp" />
@@ -394,6 +395,7 @@
     <ClInclude Include="..\src\ChmDoc.h" />
     <ClInclude Include="..\src\ChmEngine.h" />
     <ClInclude Include="..\src\DjVuEngine.h" />
+    <ClInclude Include="..\src\EngineManager.h" />
     <ClInclude Include="..\src\ImagesEngine.h" />
     <ClInclude Include="..\src\PdfEngine.h" />
     <ClInclude Include="..\src\PsEngine.h" />

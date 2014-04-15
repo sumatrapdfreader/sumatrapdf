@@ -7,7 +7,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DirIter.h"
-#include "Doc.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
 #include "Notifications.h"

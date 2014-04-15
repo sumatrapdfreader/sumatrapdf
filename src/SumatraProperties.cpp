@@ -356,7 +356,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
 static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bool extended)
 {
     CrashIf(!doc.IsEngine() && !doc.IsEbook());
-    DocType engineType = doc.GetDocType();
+    DocType docType = doc.GetDocType();
+    EngineType engineType = (docType & Doc_BaseEngine) ? (EngineType)(docType - Doc_BaseEngine) : Engine_None;
 
     WCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);

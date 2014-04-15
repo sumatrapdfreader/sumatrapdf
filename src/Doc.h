@@ -28,20 +28,13 @@ struct ImageData;
 enum DocumentProperty;
 
 enum DocType {
-    Doc_None = 0, Engine_None = 0,
+    Doc_None = 0,
 
     Doc_Epub, Doc_Fb2,
     Doc_Mobi, Doc_MobiTest,
 
-    // the EngineManager tries to create a new engine
-    // in the following order (types on the same line
-    // share common code and reside in the same file)
-    Engine_PDF, Engine_XPS,
-    Engine_DjVu,
-    Engine_Image, Engine_ImageDir, Engine_ComicBook,
-    Engine_PS,
-    Engine_Chm,
-    Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Tcr, Engine_Html, Engine_Txt,
+    // the specific engine type is added to this value
+    Doc_BaseEngine = 16,
 };
 
 enum DocError {
@@ -120,16 +113,5 @@ public:
 
     static Doc CreateFromFile(const WCHAR *filePath);
 };
-
-namespace EngineManager {
-
-bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEngines=true);
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL, bool useAlternateChmEngine=false, bool enableEbookEngines=true);
-
-inline BaseEngine *CreateEngine(const WCHAR *filePath, bool useAlternateChmEngine) {
-    return CreateEngine(filePath, NULL, NULL, useAlternateChmEngine, true);
-}
-
-}
 
 #endif

@@ -5,7 +5,7 @@
 #include "BaseEngine.h"
 #include "ChmEngine.h"
 #include "CmdLineParser.h"
-#include "Doc.h"
+#include "EngineManager.h"
 #include "FileModifications.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
@@ -440,7 +440,7 @@ Usage:
     ScopedGdiPlus gdiPlus;
     ScopedMiniMui miniMui;
 
-    DocType engineType;
+    EngineType engineType;
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, useChm2Engine);
     if (!engine) {

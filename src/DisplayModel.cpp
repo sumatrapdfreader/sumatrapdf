@@ -183,7 +183,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 }
 
 // must call SetInitialViewSettings() after creation
-DisplayModel::DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelCallback *cb) :
+DisplayModel::DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *cb) :
     engine(engine), engineType(engineType), dmCb(cb),
     pagesInfo(NULL), displayMode(DM_AUTOMATIC), startPage(1),
     zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),

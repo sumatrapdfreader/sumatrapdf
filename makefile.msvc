@@ -192,7 +192,7 @@ ENGINE_OBJS = \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS) \
-	$(OS)\FileModifications.obj
+	$(OS)\EngineManager.obj $(OS)\FileModifications.obj
 
 UIA_OBJS = \
 	$(OUIA)\Provider.obj $(OUIA)\StartPageProvider.obj $(OUIA)\DocumentProvider.obj \
@@ -249,6 +249,7 @@ BUILD_TEX_IFILTER = 1
 BUILD_EPUB_IFILTER = 1
 # build all optional previews for debug builds
 BUILD_XPS_PREVIEW = 1
+BUILD_EPUB_PREVIEW = 1
 BUILD_CBZ_PREVIEW = 1
 BUILD_TGA_PREVIEW = 1
 !endif
@@ -268,9 +269,19 @@ PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_EPUB_IFILTER"
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
 !endif
 
+!if "$(BUILD_EPUB_PREVIEW)$(BUILD_CBZ_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(UTILS_LIB)
+!endif
+
+!if "$(BUILD_EPUB_PREVIEW)"!=""
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EbookEngine.obj \
+	$(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
+	$(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
+PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
+!endif
+
 !if "$(BUILD_CBZ_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\GdiPlusUtil.obj \
-	$(OU)\JsonParser.obj $(OU)\HtmlPullParser.obj $(OU)\HtmlParserLookup.obj $(OU)\TgaReader.obj
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\JsonParser.obj
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 !endif

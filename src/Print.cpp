@@ -6,7 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppUtil.h"
-#include "Doc.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "Selection.h"

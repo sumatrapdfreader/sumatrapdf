@@ -59,6 +59,10 @@ public:
         else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CXpsPreview(&g_lRefCount);
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CEpubPreview(&g_lRefCount);
+#endif
 #ifdef BUILD_CBZ_PREVIEW
         else if (SUCCEEDED(CLSIDFromString(SZ_CBZ_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CCbzPreview(&g_lRefCount);
@@ -179,6 +183,27 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
                 L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
+                NULL,                   L"SumatraPDF EPUB Preview Handler" },
+        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID L"\\InProcServer32",
+                NULL,                   path },
+        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID L"\\InProcServer32",
+                L"ThreadingModel",   L"Apartment" },
+        // IThumbnailProvider
+        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
+                NULL,                   SZ_EPUB_PREVIEW_CLSID },
+        // IExtractImage (for Windows XP)
+        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_EXTRACT_IMAGE,
+                NULL,                   SZ_EPUB_PREVIEW_CLSID },
+        // IPreviewHandler
+        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_PREVIEW_HANDLER,
+                NULL,                   SZ_EPUB_PREVIEW_CLSID },
+        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
+                SZ_EPUB_PREVIEW_CLSID,   L"SumatraPDF EPUB Preview Handler" },
+        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
+                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+#endif
 #ifdef BUILD_CBZ_PREVIEW
         { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
                 NULL,                   L"SumatraPDF CBZ Preview Handler" },
@@ -253,6 +278,12 @@ STDAPI DllUnregisterServer()
         L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
         L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
 #endif
+#ifdef BUILD_EPUB_PREVIEW
+        L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
+        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
+        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_EXTRACT_IMAGE,
+        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_PREVIEW_HANDLER,
+#endif
 #ifdef BUILD_CBZ_PREVIEW
         L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
         L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
@@ -280,6 +311,10 @@ STDAPI DllUnregisterServer()
 #ifdef BUILD_XPS_PREVIEW
     SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_XPS_PREVIEW_CLSID);
     SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_XPS_PREVIEW_CLSID);
+#endif
+#ifdef BUILD_EPUB_PREVIEW
+    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_EPUB_PREVIEW_CLSID);
+    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_EPUB_PREVIEW_CLSID);
 #endif
 #ifdef BUILD_CBZ_PREVIEW
     SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_CBZ_PREVIEW_CLSID);

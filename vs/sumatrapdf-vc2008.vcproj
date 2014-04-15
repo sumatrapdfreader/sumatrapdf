@@ -753,6 +753,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\EngineManager.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\EngineManager.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\HtmlFormatter.cpp"
 					>
 				</File>

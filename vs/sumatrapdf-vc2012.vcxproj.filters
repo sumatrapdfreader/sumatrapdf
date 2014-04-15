@@ -180,6 +180,9 @@
     <ClCompile Include="..\src\EngineDump.cpp">
       <Filter>sumatra\engine</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\EngineManager.cpp">
+      <Filter>sumatra\engine</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ImagesEngine.cpp">
       <Filter>sumatra\engine</Filter>
     </ClCompile>
@@ -981,6 +984,9 @@
       <Filter>sumatra\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DjVuEngine.h">
+      <Filter>sumatra\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\EngineManager.h">
       <Filter>sumatra\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ImagesEngine.h">

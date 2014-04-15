@@ -13,9 +13,9 @@
 #include "CrashHandler.h"
 #include "DebugLog.h"
 #include "DirIter.h"
-#include "Doc.h"
 #include "EbookController.h"
 #include "EbookWindow.h"
+#include "EngineManager.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 #include "FileModifications.h"
@@ -925,7 +925,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     win->pdfsync = NULL;
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
-    DocType engineType;
+    EngineType engineType;
     BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType,
                                                      gGlobalPrefs->chmUI.useFixedPageUI,
                                                      gGlobalPrefs->ebookUI.useFixedPageUI);
