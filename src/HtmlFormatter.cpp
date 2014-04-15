@@ -246,21 +246,10 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
 
 void HtmlFormatter::SetFontBasedOn(CachedFont *font, FontStyle fs, float fontSize)
 {
-     // TODO: not sure if the new code is exactly like the old code
-#if 0
-    // TODO: handle gdi
-    LOGFONTW lfw;
-    Status ok = CurrFont()->font->GetLogFontW(gfx, &lfw);
-    const WCHAR *fontName = defaultFontName;
-    if (ok == Ok)
-        fontName = lfw.lfFaceName;
-    SetFont(fontName, fs, fontSize);
-#else
     const WCHAR *fontName = font->GetName();
     if (NULL == fontName)
         fontName = defaultFontName;
     SetFont(fontName, fs, fontSize);
-#endif
 }
 
 bool ValidStyleForChangeFontStyle(FontStyle fs)
@@ -865,29 +854,15 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
     }
 
     AttrInfo *attr = t->GetAttrByName("face");
-#if 0 // TODO: remove if the code below is deemed correct
-    LOGFONTW lfw;
-    CurrFont()->font->GetLogFontW(gfx, &lfw);
-    const WCHAR *faceName = lfw.lfFaceName;
-    if (attr) {
-        size_t strLen = str::Utf8ToWcharBuf(t->s, t->sLen, buf, dimof(buf));
-        // multiple font names can be comma separated
-        if (strLen > 0 && *buf != ',') {
-            str::TransChars(buf, L",", L"\0");
-            faceName = buf;
-        }
-    }
-#else
     const WCHAR *faceName = CurrFont()->GetName();
     if (attr) {
-        size_t strLen = str::Utf8ToWcharBuf(t->s, t->sLen, buf, dimof(buf));
+        size_t strLen = str::Utf8ToWcharBuf(attr->val, attr->valLen, buf, dimof(buf));
         // multiple font names can be comma separated
         if (strLen > 0 && *buf != ',') {
             str::TransChars(buf, L",", L"\0");
             faceName = buf;
         }
     }
-#endif
 
     float fontSize = CurrFont()->GetSize();
     attr = t->GetAttrByName("size");
