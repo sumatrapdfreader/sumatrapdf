@@ -134,6 +134,38 @@ bool CachedFont::SameAs(const WCHAR *otherName, float otherSizePt, FontStyle oth
     return str::Eq(name, otherName);
 }
 
+static HFONT CreateSimpleFont2(HDC hdc, const WCHAR *fontName, float fontSize, FontStyle style)
+{
+    LOGFONTW lf = { 0 };
+
+    float sizeDpiScaled = (fontSize * (float)GetDeviceCaps(hdc, LOGPIXELSY)) / (float)USER_DEFAULT_SCREEN_DPI;
+    lf.lfWidth = 0;
+    lf.lfHeight = -(int)sizeDpiScaled;
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfItalic = FALSE;
+    lf.lfUnderline = FALSE;
+    lf.lfStrikeOut = FALSE;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_TT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
+    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+
+    if (FontStyleBold == (style & FontStyleBold)) {
+        lf.lfWeight = FW_BOLD;
+    } else if (FontStyleItalic == (style & FontStyleItalic)) {
+        lf.lfItalic = TRUE;
+    } else if (FontStyleUnderline == (style & FontStyleUnderline)) {
+        lf.lfUnderline = TRUE;
+    } else if (FontStyleStrikeout == (style & FontStyleStrikeout)) {
+        lf.lfStrikeOut = TRUE;
+    }
+    return CreateFontIndirectW(&lf);
+}
+
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
@@ -161,12 +193,11 @@ CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle styl
     return &item->cf;
 }
 
-static int PointToPixel(float n) {
-    // note: CreateSimpleFont DPI-converts the font height
-    return (int)(n * USER_DEFAULT_SCREEN_DPI / 72);
+static float PointToPixel(float n) {
+    return (n * (float)USER_DEFAULT_SCREEN_DPI) / 72.f;
 }
 
-CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style)
+CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float sizePt, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
@@ -176,14 +207,10 @@ CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style)
         }
     }
 
-    // TODO: do I need to be given HDC?
-    int sizePx = PointToPixel(sizePt);
-    // TODO: take FontStyle into account as well
-    HDC hdc = GetDC(NULL);
-    HFONT hdcFont = CreateSimpleFont(hdc, name, sizePx);
-    ReleaseDC(NULL, hdc);
+    float sizePx = PointToPixel(sizePt);
+    HFONT hFont = CreateSimpleFont2(hdc, name, sizePx, style);
 
-    FontListItem *item = new FontListItem(name, sizePt, style, NULL, hdcFont);
+    FontListItem *item = new FontListItem(name, sizePt, style, NULL, hFont);
     ListInsert(&gFontsCache, item);
     return &item->cf;
 }

@@ -13,8 +13,6 @@ TODO:
    http://stackoverflow.com/questions/1340166/transparency-to-text-in-gdi
    http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/
  - get perf data about time to format using GDI and GDI+ measurement
- - combine ITextMeasure and ITextDraw into single ITextRender object.
-   They have too much in common
 */
 
 /* Note: I would prefer this code be in utils but it depends on mui, so it must
@@ -22,44 +20,35 @@ be in mui to avoid circular dependency */
 
 namespace mui {
 
-TextRenderGdi *TextRenderGdi::CreateFromHdc(HDC hdc) {
-    TextRenderGdi *res = new TextRenderGdi();
-    if (hdc == NULL) {
-        res->hdc = GetDC(NULL);
-        res->ownsHdc = true;
-    } else {
-        res->hdc = hdc;
-        res->ownsHdc = false;
-    }
-    res->origFont = NULL;
-    res->currFont = NULL;
-    // default to red to make mistakes stand out
-    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
-    return res;
-}
-
 TextRenderGdi *TextRenderGdi::Create(Graphics *gfx) {
     TextRenderGdi *res = new TextRenderGdi();
     res->gfx = gfx;
     // default to red to make mistakes stand out
     res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
+    res->CreateHdcForTextMeasure(); // could do lazily, but that's more things to track, so not worth it
     return res;
 }
 
+void TextRenderGdi::CreateHdcForTextMeasure() {
+    HDC hdc = hdcGfxLocked;
+    bool unlock = false;
+    if (!hdc) {
+        hdc = gfx->GetHDC();
+        unlock = true;
+    }
+    hdcForTextMeasure = CreateCompatibleDC(hdc);
+    if (unlock) {
+        gfx->ReleaseHDC(hdc);
+    }
+}
 
 TextRenderGdi::~TextRenderGdi() {
-    if (origFont != NULL) {
-        SelectObject(hdc, origFont);
-    }
-    if (ownsHdc) {
-        ReleaseDC(NULL, hdc);
-        hdc = NULL;
-    }
-    CrashIf(gfx && hdc); // hasn't been Unlock()ed
+    ReleaseDC(NULL, hdcForTextMeasure);
+    CrashIf(hdcGfxLocked); // hasn't been Unlock()ed
 }
 
 CachedFont *TextRenderGdi::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
-    return GetCachedFontGdi(name, size, style);
+    return GetCachedFontGdi(hdcForTextMeasure, name, size, style);
 }
 
 void TextRenderGdi::SetFont(mui::CachedFont *font) {
@@ -69,26 +58,28 @@ void TextRenderGdi::SetFont(mui::CachedFont *font) {
         return;
     }
     currFont = font->hdcFont;
-    if (!hdc)
-        return;
-
-    if (origFont == NULL) {
-        origFont = SelectFont(hdc, font->hdcFont);
-    } else {
-        SelectFont(hdc, font->hdcFont);
+    if (hdcGfxLocked) {
+        SelectFont(hdcGfxLocked, font->hdcFont);
+    }
+    if (hdcForTextMeasure) {
+        SelectFont(hdcForTextMeasure, font->hdcFont);
     }
 }
 
+// TODO: those are not the same as for TextRenderGdiplus (e.g. a given font is 18 here and 18.9
+// in TextRenderGdiplus. One way to fix it would be to also construct Gdiplus::Font alongside
+// HDC font and use that for line spacing or in TextRenderGdiplus pull out LOGFONTW and do GetTextMetric()
+// on info from that
 float TextRenderGdi::GetCurrFontLineSpacing() {
     CrashIf(!currFont);
     TEXTMETRIC tm;
-    GetTextMetrics(hdc, &tm);
+    GetTextMetrics(hdcForTextMeasure, &tm);
     return (float)tm.tmHeight;
 }
 
 RectF TextRenderGdi::Measure(const WCHAR *s, size_t sLen) {
     SIZE txtSize;
-    GetTextExtentPoint32W(hdc, s, (int) sLen, &txtSize);
+    GetTextExtentPoint32W(hdcForTextMeasure, s, (int) sLen, &txtSize);
     RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
     return res;
 }
@@ -103,33 +94,33 @@ void TextRenderGdi::SetTextColor(Gdiplus::Color col) {
         return;
     }
     textColor = col;
-    if (hdc) {
-        ::SetTextColor(hdc, col.ToCOLORREF());
+    if (hdcGfxLocked) {
+        ::SetTextColor(hdcGfxLocked, col.ToCOLORREF());
     }
 }
 
 void TextRenderGdi::Lock() {
-    CrashIf(hdc);
-    hdc = gfx->GetHDC();
-    SelectFont(hdc, currFont);
-    ::SetTextColor(hdc, textColor.ToCOLORREF());
+    CrashIf(hdcGfxLocked);
+    hdcGfxLocked = gfx->GetHDC();
+    SelectFont(hdcGfxLocked, currFont);
+    ::SetTextColor(hdcGfxLocked, textColor.ToCOLORREF());
     //SetBkMode(hdc, TRANSPARENT);
 }
 
 void TextRenderGdi::Unlock() {
-    CrashIf(!hdc);
-    gfx->ReleaseHDC(hdc);
-    hdc = NULL;
+    CrashIf(!hdcGfxLocked);
+    gfx->ReleaseHDC(hdcGfxLocked);
+    hdcGfxLocked = NULL;
 }
 
 void TextRenderGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
-    CrashIf(!hdc); // hasn't been Lock()ed
+    CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
     UINT opts = ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOutW(hdc, x, y, opts, NULL, s, (int)sLen, NULL);
+    ExtTextOutW(hdcGfxLocked, x, y, opts, NULL, s, (int)sLen, NULL);
 }
 
 void TextRenderGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {

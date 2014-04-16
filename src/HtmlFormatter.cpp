@@ -185,7 +185,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     } else if (TextRenderMethodGdiplusQuick == args->textRenderMethod) {
         textMeasure = TextRenderGdiplus::Create(gfx, MeasureTextQuick);
     } else if (TextRenderMethodGdi == args->textRenderMethod) {
-        textMeasure = TextRenderGdi::CreateFromHdc(NULL);
+        textMeasure = TextRenderGdi::Create(gfx);
     } else {
         CrashAlwaysIf(true);
     }

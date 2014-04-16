@@ -43,7 +43,7 @@ struct CachedFont {
 };
 
 void        InitGraphicsMode(Graphics *g);
-CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, FontStyle style);
+CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float sizePt, FontStyle style);
 CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle style);
 
 Graphics *  AllocGraphicsForMeasureText();

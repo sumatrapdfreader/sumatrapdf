@@ -43,19 +43,18 @@ public:
 
 class TextRenderGdi : public ITextRender {
 private:
-    HDC         hdc;
-    bool        ownsHdc;
-    HFONT       origFont;
-    HFONT       currFont;
-    WCHAR       txtConvBuf[512];
+    HDC                     hdcGfxLocked;
+    HDC                     hdcForTextMeasure;
+    HFONT                   origFont;
+    HFONT                   currFont;
     Gdiplus::Graphics *     gfx;
     Gdiplus::Color          textColor;
+    WCHAR                   txtConvBuf[512];
 
-    TextRenderGdi() : hdc(NULL), ownsHdc(false), origFont(NULL), currFont(NULL), gfx(NULL) { }
+    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), origFont(NULL), currFont(NULL), gfx(NULL) { }
 
 public:
-
-    static TextRenderGdi*   CreateFromHdc(HDC hdc);
+    void CreateHdcForTextMeasure();
     static TextRenderGdi *  Create(Gdiplus::Graphics *gfx);
 
     virtual void            SetFont(CachedFont *font);
@@ -104,7 +103,6 @@ public:
     virtual void Lock() {}
     virtual void Unlock() {}
 
-    // inherits no-op Lock() and Unlock() from ITextRender
     virtual void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
     virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
 
