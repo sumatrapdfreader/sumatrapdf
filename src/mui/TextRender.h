@@ -62,6 +62,7 @@ private:
 
 public:
     void CreateHdcForTextMeasure();
+    // note: Draw() ignores any transformation set on gfx
     static TextRenderGdi *  Create(Gdiplus::Graphics *gfx);
 
     virtual void            SetFont(CachedFont *font);

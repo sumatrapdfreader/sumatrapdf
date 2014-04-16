@@ -1601,6 +1601,7 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
+    args.textRenderMethod = TextRenderMethodGdiplus;
 
     pages = HtmlFormatter(&args).FormatAllPages(false);
 
@@ -1669,6 +1670,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
+    args.textRenderMethod = TextRenderMethodGdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1775,6 +1777,7 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
+    args.textRenderMethod = TextRenderMethodGdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
     if (!ExtractPageAnchors())

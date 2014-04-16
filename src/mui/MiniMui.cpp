@@ -118,10 +118,19 @@ Graphics *AllocGraphicsForMeasureText()
 
 void FreeGraphicsForMeasureText(Graphics *g) { /* deallocation happens in mui::Destroy */ }
 
-void Initialize() { /* all initialization happens on demand */ }
+// allow for calls to mui::Initialize and mui::Destroy to be nested
+static LONG gMiniMuiRefCount = 0;
+
+void Initialize()
+{
+    InterlockedIncrement(&gMiniMuiRefCount);
+}
 
 void Destroy()
 {
+    if (InterlockedDecrement(&gMiniMuiRefCount) != 0)
+        return;
+
     delete gFontCache;
     gFontCache = NULL;
     delete gGraphicsHack;
