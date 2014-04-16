@@ -582,19 +582,11 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
 
-    // TODO: simplify by forcing GDI+ rendering?
-    ITextRender *textDraw = NULL;
-    if (TextRenderMethodGdiplus == renderMethod || TextRenderMethodGdiplusQuick == renderMethod) {
-        textDraw = TextRenderGdiplus::Create(&g);
-    } else if (TextRenderMethodGdi == renderMethod) {
-        textDraw = TextRenderGdi::Create(&g);
-    } else {
-        CrashIf(true);
-    }
-
-    DrawHtmlPage(&g, textDraw, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
+    ITextRender *textRender = CreateTextRender(renderMethod, &g);
+    textRender->SetTextBgColor(Color(255,255,255));
+    DrawHtmlPage(&g, textRender, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
     delete pd;
-    delete textDraw;
+    delete textRender;
 
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
     Graphics g2(&res);

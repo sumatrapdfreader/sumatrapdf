@@ -101,19 +101,24 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     else
         textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
 
-    ITextRender *textDraw = NULL;
-    if (GetTextRenderMethod() == TextRenderMethodGdiplus ||
-        GetTextRenderMethod() == TextRenderMethodGdiplusQuick) {
-        textDraw = TextRenderGdiplus::Create(gfx);
-    } else if (GetTextRenderMethod() == TextRenderMethodGdi) {
-        textDraw = TextRenderGdi::Create(gfx);
-    } else {
-        CrashIf(true);
-    }
+    ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx);
 
-    DrawHtmlPage(gfx, textDraw, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
+    // TODO: this should work, but doesn't (the color is black). Do I loose .color property
+    // somewhere when copying the values?
+#if 0
+    if (s->bgColor->type == ColorSolid) {
+        ARGB rgbCol = s->bgColor->solid.color;
+        textRender->SetTextBgColor(Color(rgbCol));
+    }
+#else
+#define MKRGB(r, g, b) (((ARGB) (b)) | ((ARGB) (g) << 8) | ((ARGB) (r) << 16) | ((ARGB)(0xff) << 24))
+    textRender->SetTextBgColor(Color(MKRGB(0xfb, 0xf0, 0xd9))); // sepia
+#undef MKRGB
+#endif
+
+    DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
-    delete textDraw;
+    delete textRender;
 }
 
 Control *CreatePageControl(TxtNode *structDef)

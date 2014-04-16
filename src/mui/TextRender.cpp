@@ -99,12 +99,22 @@ void TextRenderGdi::SetTextColor(Gdiplus::Color col) {
     }
 }
 
+void TextRenderGdi::SetTextBgColor(Gdiplus::Color col) {
+    if (textBgColor.GetValue() == col.GetValue()) {
+        return;
+    }
+    textBgColor = col;
+    if (hdcGfxLocked) {
+        ::SetBkColor(hdcGfxLocked, textBgColor.ToCOLORREF());
+    }
+}
+
 void TextRenderGdi::Lock() {
     CrashIf(hdcGfxLocked);
     hdcGfxLocked = gfx->GetHDC();
     SelectFont(hdcGfxLocked, currFont);
     ::SetTextColor(hdcGfxLocked, textColor.ToCOLORREF());
-    //SetBkMode(hdc, TRANSPARENT);
+    ::SetBkColor(hdcGfxLocked, textBgColor.ToCOLORREF());
 }
 
 void TextRenderGdi::Unlock() {
@@ -194,6 +204,22 @@ void TextRenderGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl)
 void TextRenderGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     Draw(txtConvBuf, strLen, bb, isRtl);
+}
+
+ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
+
+    ITextRender *textDraw = NULL;
+    if (TextRenderMethodGdiplus == method) {
+        return TextRenderGdiplus::Create(gfx);
+    }
+    if (TextRenderMethodGdiplusQuick == method) {
+        return TextRenderGdiplus::Create(gfx, MeasureTextQuick);
+    }
+    if (TextRenderMethodGdi == method) {
+        return TextRenderGdi::Create(gfx);
+    }
+    CrashIf(true);
+    return NULL;
 }
 
 // returns number of characters of string s that fits in a given width dx

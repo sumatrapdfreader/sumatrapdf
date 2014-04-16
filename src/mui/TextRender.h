@@ -22,6 +22,12 @@ public:
     virtual void            SetFont(CachedFont *font) = 0;
     virtual void            SetTextColor(Gdiplus::Color col) = 0;
 
+    // this is only for the benefit of TextRenderGdi. In GDI+, Draw() uses
+    // transparent background color (i.e. whatever is under).
+    // GDI doesn't support such transparency so the best we can do is simulate
+    // that if the background is solid color. It won't work in other cases
+    virtual void            SetTextBgColor(Gdiplus::Color col) = 0;
+
     virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style) = 0;
     virtual float           GetCurrFontLineSpacing() = 0;
 
@@ -49,6 +55,7 @@ private:
     HFONT                   currFont;
     Gdiplus::Graphics *     gfx;
     Gdiplus::Color          textColor;
+    Gdiplus::Color          textBgColor;
     WCHAR                   txtConvBuf[512];
 
     TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), origFont(NULL), currFont(NULL), gfx(NULL) { }
@@ -59,6 +66,7 @@ public:
 
     virtual void            SetFont(CachedFont *font);
     virtual void            SetTextColor(Gdiplus::Color col);
+    virtual void            SetTextBgColor(Gdiplus::Color col);
 
     virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style);
     virtual float           GetCurrFontLineSpacing();
@@ -93,6 +101,7 @@ public:
 
     virtual void                SetFont(CachedFont *font);
     virtual void                SetTextColor(Gdiplus::Color col);
+    virtual void                SetTextBgColor(Gdiplus::Color col) {}
 
     virtual CachedFont *        CreateCachedFont(const WCHAR *name, float size, FontStyle style);
     virtual float               GetCurrFontLineSpacing();
@@ -109,5 +118,7 @@ public:
     virtual ~TextRenderGdiplus();
 };
 
-size_t StringLenForWidth(ITextRender *textRender, const WCHAR *s, size_t len, float dx);
-REAL GetSpaceDx(ITextRender *textRender);
+ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx);
+
+size_t  StringLenForWidth(ITextRender *textRender, const WCHAR *s, size_t len, float dx);
+REAL    GetSpaceDx(ITextRender *textRender);

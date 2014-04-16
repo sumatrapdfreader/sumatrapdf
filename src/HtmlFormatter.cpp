@@ -180,15 +180,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
-    if (TextRenderMethodGdiplus == args->textRenderMethod) {
-        textMeasure = TextRenderGdiplus::Create(gfx);
-    } else if (TextRenderMethodGdiplusQuick == args->textRenderMethod) {
-        textMeasure = TextRenderGdiplus::Create(gfx, MeasureTextQuick);
-    } else if (TextRenderMethodGdi == args->textRenderMethod) {
-        textMeasure = TextRenderGdi::Create(gfx);
-    } else {
-        CrashAlwaysIf(true);
-    }
+    textMeasure = CreateTextRender(args->textRenderMethod, gfx);
     defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
 
