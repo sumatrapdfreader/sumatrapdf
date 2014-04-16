@@ -427,7 +427,11 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     p.color.type = ColorSolid;
     p.color.solid.color = color;
     p.color.solid.cachedBrush = ::new SolidBrush(color);
-    return UniqifyProp(p);
+    Prop *res = UniqifyProp(p);
+    CrashIf(res->color.type != ColorSolid);
+    CrashIf(res->color.solid.color != color);
+    CrashIf(!res->color.solid.cachedBrush);
+    return res;
 }
 
 Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b)
