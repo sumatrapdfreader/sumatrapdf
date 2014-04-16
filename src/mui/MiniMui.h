@@ -30,7 +30,7 @@ struct CachedFont {
     }
 };
 
-CachedFont *GetCachedFontGdi(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
+CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
 CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
 
 void InitGraphicsMode(Gdiplus::Graphics *g);

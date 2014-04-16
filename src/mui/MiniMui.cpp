@@ -34,7 +34,7 @@ public:
 
 static CachedFontItem *gFontCache = NULL;
 
-static CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style, CachedFontItem::FontRenderType type)
+static CachedFont *GetCachedFont(HDC hdc, const WCHAR *name, float size, FontStyle style, CachedFontItem::FontRenderType type)
 {
     CachedFontItem **item = &gFontCache;
     for (; *item; item = &(*item)->_next) {
@@ -57,9 +57,14 @@ static CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style,
     }
     else if (CachedFontItem::Gdi == type) {
         // TODO: take FontStyle into account as well
-        HDC hdc = GetDC(NULL);
+        bool release = false;
+        if (!hdc) {
+            hdc = GetDC(NULL);
+            release = true;
+        }
         HFONT font = CreateSimpleFont(hdc, name, (int)(size * 96 / 72));
-        ReleaseDC(NULL, hdc);
+        if (release)
+            ReleaseDC(NULL, hdc);
         return (*item = new CachedFontItem(name, size, style, NULL, font));
     }
     else {
@@ -68,14 +73,14 @@ static CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style,
     }
 }
 
-CachedFont *GetCachedFontGdi(const WCHAR *name, float size, FontStyle style)
+CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float size, FontStyle style)
 {
-    return GetCachedFont(name, size, style, CachedFontItem::Gdi);
+    return GetCachedFont(hdc, name, size, style, CachedFontItem::Gdi);
 }
 
 CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style)
 {
-    return GetCachedFont(name, size, style, CachedFontItem::Gdiplus);
+    return GetCachedFont(NULL, name, size, style, CachedFontItem::Gdiplus);
 }
 
 // set consistent mode for our graphics objects so that we get
