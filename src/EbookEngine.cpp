@@ -407,7 +407,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
 
-    ITextDraw *textDraw = TextDrawGdiplus::Create(&g);
+    ITextRender *textDraw = TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
@@ -779,7 +779,7 @@ bool EpubEngineImpl::FinishLoading()
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderGdiplusQuick;
+    args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -877,7 +877,7 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderGdiplusQuick;
+    args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1005,7 +1005,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderGdiplusQuick;
+    args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1183,7 +1183,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderGdiplusQuick;
+    args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
     pages = PdbFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1476,7 +1476,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderGdiplusQuick;
+    args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     if (!ExtractPageAnchors())

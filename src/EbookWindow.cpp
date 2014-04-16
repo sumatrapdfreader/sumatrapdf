@@ -583,11 +583,11 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     g.FillRectangle(&br, r);
 
     // TODO: simplify by forcing GDI+ rendering?
-    ITextDraw *textDraw = NULL;
-    if (TextRenderGdiplus == renderMethod || TextRenderGdiplusQuick == renderMethod) {
-        textDraw = TextDrawGdiplus::Create(&g);
-    } else if (TextRenderGdi == renderMethod) {
-        textDraw = TextDrawGdi::Create(&g);
+    ITextRender *textDraw = NULL;
+    if (TextRenderMethodGdiplus == renderMethod || TextRenderMethodGdiplusQuick == renderMethod) {
+        textDraw = TextRenderGdiplus::Create(&g);
+    } else if (TextRenderMethodGdi == renderMethod) {
+        textDraw = TextRenderGdi::Create(&g);
     } else {
         CrashIf(true);
     }

@@ -101,12 +101,12 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     else
         textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
 
-    ITextDraw *textDraw = NULL;
-    if (GetTextRenderMethod() == TextRenderGdiplus ||
-        GetTextRenderMethod() == TextRenderGdiplusQuick) {
-        textDraw = TextDrawGdiplus::Create(gfx);
-    } else if (GetTextRenderMethod() == TextRenderGdi) {
-        textDraw = TextDrawGdi::Create(gfx);
+    ITextRender *textDraw = NULL;
+    if (GetTextRenderMethod() == TextRenderMethodGdiplus ||
+        GetTextRenderMethod() == TextRenderMethodGdiplusQuick) {
+        textDraw = TextRenderGdiplus::Create(gfx);
+    } else if (GetTextRenderMethod() == TextRenderMethodGdi) {
+        textDraw = TextRenderGdi::Create(gfx);
     } else {
         CrashIf(true);
     }

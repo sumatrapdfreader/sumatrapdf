@@ -22,8 +22,8 @@ be in mui to avoid circular dependency */
 
 namespace mui {
 
-TextMeasureGdi *TextMeasureGdi::Create(HDC hdc) {
-    TextMeasureGdi *res = new TextMeasureGdi();
+TextRenderGdi *TextRenderGdi::CreateFromHdc(HDC hdc) {
+    TextRenderGdi *res = new TextRenderGdi();
     if (hdc == NULL) {
         res->hdc = GetDC(NULL);
         res->ownsHdc = true;
@@ -33,77 +33,72 @@ TextMeasureGdi *TextMeasureGdi::Create(HDC hdc) {
     }
     res->origFont = NULL;
     res->currFont = NULL;
+    // default to red to make mistakes stand out
+    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
 }
 
-TextMeasureGdi::~TextMeasureGdi() {
-    if (origFont != NULL) {
-        SelectObject(hdc, origFont);
-    }
-}
-
-CachedFont *TextMeasureGdi::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
-    return GetCachedFontGdi(name, size, style);
-}
-
-void TextMeasureGdi::SetFont(mui::CachedFont *font) {
-    CrashIf(!font->hdcFont);
-    // I'm not sure how expensive SelectFont() is so avoid it just in case
-    if (currFont == font->hdcFont) {
-        return;
-    }
-    if (origFont == NULL) {
-        origFont = SelectFont(hdc, font->hdcFont);
-    } else {
-        SelectFont(hdc, font->hdcFont);
-    }
-    currFont = font->hdcFont;
-}
-
-float TextMeasureGdi::GetCurrFontLineSpacing() {
-    CrashIf(!currFont);
-    TEXTMETRIC tm;
-    GetTextMetrics(hdc, &tm);
-    return (float)tm.tmHeight;
-}
-
-RectF TextMeasureGdi::Measure(const WCHAR *s, size_t sLen) {
-    SIZE txtSize;
-    GetTextExtentPoint32W(hdc, s, (int) sLen, &txtSize);
-    RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
-    return res;
-}
-
-RectF TextMeasureGdi::Measure(const char *s, size_t sLen) {
-    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return Measure(txtConvBuf, strLen);
-}
-
-TextDrawGdi *TextDrawGdi::Create(Graphics *gfx) {
-    TextDrawGdi *res = new TextDrawGdi();
+TextRenderGdi *TextRenderGdi::Create(Graphics *gfx) {
+    TextRenderGdi *res = new TextRenderGdi();
     res->gfx = gfx;
     // default to red to make mistakes stand out
     res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
 }
 
-TextDrawGdi::~TextDrawGdi() {
-    CrashIf(hdc); // hasn't been Unlock()ed
+
+TextRenderGdi::~TextRenderGdi() {
+    if (origFont != NULL) {
+        SelectObject(hdc, origFont);
+    }
+    if (ownsHdc) {
+        ReleaseDC(NULL, hdc);
+        hdc = NULL;
+    }
+    CrashIf(gfx && hdc); // hasn't been Unlock()ed
 }
 
-void TextDrawGdi::SetFont(mui::CachedFont *font) {
+CachedFont *TextRenderGdi::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
+    return GetCachedFontGdi(name, size, style);
+}
+
+void TextRenderGdi::SetFont(mui::CachedFont *font) {
     CrashIf(!font->hdcFont);
-    // not sure how expensive SelectFont() is so avoid it just in case
+    // I'm not sure how expensive SelectFont() is so avoid it just in case
     if (currFont == font->hdcFont) {
         return;
     }
     currFont = font->hdcFont;
-    if (hdc) {
-        SelectFont(hdc, currFont);
+    if (!hdc)
+        return;
+
+    if (origFont == NULL) {
+        origFont = SelectFont(hdc, font->hdcFont);
+    } else {
+        SelectFont(hdc, font->hdcFont);
     }
 }
 
-void TextDrawGdi::SetTextColor(Gdiplus::Color col) {
+float TextRenderGdi::GetCurrFontLineSpacing() {
+    CrashIf(!currFont);
+    TEXTMETRIC tm;
+    GetTextMetrics(hdc, &tm);
+    return (float)tm.tmHeight;
+}
+
+RectF TextRenderGdi::Measure(const WCHAR *s, size_t sLen) {
+    SIZE txtSize;
+    GetTextExtentPoint32W(hdc, s, (int) sLen, &txtSize);
+    RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
+    return res;
+}
+
+RectF TextRenderGdi::Measure(const char *s, size_t sLen) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    return Measure(txtConvBuf, strLen);
+}
+
+void TextRenderGdi::SetTextColor(Gdiplus::Color col) {
     if (textColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -113,7 +108,7 @@ void TextDrawGdi::SetTextColor(Gdiplus::Color col) {
     }
 }
 
-void TextDrawGdi::Lock() {
+void TextRenderGdi::Lock() {
     CrashIf(hdc);
     hdc = gfx->GetHDC();
     SelectFont(hdc, currFont);
@@ -121,13 +116,13 @@ void TextDrawGdi::Lock() {
     //SetBkMode(hdc, TRANSPARENT);
 }
 
-void TextDrawGdi::Unlock() {
+void TextRenderGdi::Unlock() {
     CrashIf(!hdc);
     gfx->ReleaseHDC(hdc);
     hdc = NULL;
 }
 
-void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     CrashIf(!hdc); // hasn't been Lock()ed
     int x = (int) bb.X;
     int y = (int) bb.Y;
@@ -137,67 +132,53 @@ void TextDrawGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     ExtTextOutW(hdc, x, y, opts, NULL, s, (int)sLen, NULL);
 }
 
-void TextDrawGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-TextMeasureGdiplus *TextMeasureGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
-    TextMeasureGdiplus *res = new TextMeasureGdiplus();
+TextRenderGdiplus *TextRenderGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
+    TextRenderGdiplus *res = new TextRenderGdiplus();
     res->gfx = gfx;
     res->fnt = NULL;
     if (NULL == measureAlgo)
         res->measureAlgo = MeasureTextAccurate;
     else
         res->measureAlgo = measureAlgo;
-    return res;
-}
-
-TextMeasureGdiplus::~TextMeasureGdiplus() {
-};
-
-CachedFont *TextMeasureGdiplus::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
-    return GetCachedFontGdiplus(name, size, style);
-}
-
-void TextMeasureGdiplus::SetFont(mui::CachedFont *font) {
-    CrashIf(!font->font);
-    this->fnt = font->font;
-}
-
-float TextMeasureGdiplus::GetCurrFontLineSpacing() {
-    return fnt->GetHeight(gfx);
-}
-
-RectF TextMeasureGdiplus::Measure(const WCHAR *s, size_t sLen) {
-    CrashIf(!fnt);
-    return MeasureText(gfx, fnt, s, sLen, measureAlgo);
-}
-
-RectF TextMeasureGdiplus::Measure(const char *s, size_t sLen) {
-    CrashIf(!fnt);
-    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
-    return MeasureText(gfx, fnt, txtConvBuf, strLen, measureAlgo);
-}
-
-TextDrawGdiplus *TextDrawGdiplus::Create(Graphics *gfx) {
-    TextDrawGdiplus *res = new TextDrawGdiplus();
-    res->gfx = gfx;
     // default to red to make mistakes stand out
     res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
     return res;
 }
 
-TextDrawGdiplus::~TextDrawGdiplus() {
-    ::delete textColorBrush;
+CachedFont *TextRenderGdiplus::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
+    return GetCachedFontGdiplus(name, size, style);
 }
 
-void TextDrawGdiplus::SetFont(mui::CachedFont *font) {
+void TextRenderGdiplus::SetFont(mui::CachedFont *font) {
     CrashIf(!font->font);
     this->fnt = font->font;
 }
 
-void TextDrawGdiplus::SetTextColor(Gdiplus::Color col) {
+float TextRenderGdiplus::GetCurrFontLineSpacing() {
+    return fnt->GetHeight(gfx);
+}
+
+RectF TextRenderGdiplus::Measure(const WCHAR *s, size_t sLen) {
+    CrashIf(!fnt);
+    return MeasureText(gfx, fnt, s, sLen, measureAlgo);
+}
+
+RectF TextRenderGdiplus::Measure(const char *s, size_t sLen) {
+    CrashIf(!fnt);
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    return MeasureText(gfx, fnt, txtConvBuf, strLen, measureAlgo);
+}
+
+TextRenderGdiplus::~TextRenderGdiplus() {
+    ::delete textColorBrush;
+}
+
+void TextRenderGdiplus::SetTextColor(Gdiplus::Color col) {
     if (textColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -206,7 +187,7 @@ void TextDrawGdiplus::SetTextColor(Gdiplus::Color col) {
     textColorBrush = ::new SolidBrush(col);
 }
 
-void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     PointF pos;
     bb.GetLocation(&pos);
     if (!isRtl) {
@@ -219,7 +200,7 @@ void TextDrawGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     }
 }
 
-void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
+void TextRenderGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
@@ -230,7 +211,7 @@ void TextDrawGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
 // this shouldn't happen often, so that's fine. It's also possible that
 // a smarter approach is possible, but this usually only does 3 MeasureText
 // calls, so it's not that bad
-size_t StringLenForWidth(ITextMeasure *textMeasure, const WCHAR *s, size_t len, float dx)
+size_t StringLenForWidth(ITextRender *textMeasure, const WCHAR *s, size_t len, float dx)
 {
     RectF r = textMeasure->Measure(s, len);
     if (r.Width <= dx)
@@ -262,7 +243,7 @@ size_t StringLenForWidth(ITextMeasure *textMeasure, const WCHAR *s, size_t len, 
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because
 // is smaller and looks as better spacing to me
-REAL GetSpaceDx(ITextMeasure *textMeasure)
+REAL GetSpaceDx(ITextRender *textMeasure)
 {
     RectF bbox;
 #if 0

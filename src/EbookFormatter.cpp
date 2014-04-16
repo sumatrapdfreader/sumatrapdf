@@ -11,8 +11,8 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 
-//TextRenderMethod gTextRenderMethod = TextRenderGdi;
-TextRenderMethod gTextRenderMethod = TextRenderGdiplus;
+//TextRenderMethod gTextRenderMethod = TextRenderMethodGdi;
+TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
 
 TextRenderMethod GetTextRenderMethod() {
     return gTextRenderMethod;

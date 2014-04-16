@@ -180,12 +180,12 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
-    if (TextRenderGdiplus == args->textRenderMethod) {
-        textMeasure = TextMeasureGdiplus::Create(gfx);
-    } else if (TextRenderGdiplusQuick == args->textRenderMethod) {
-        textMeasure = TextMeasureGdiplus::Create(gfx, MeasureTextQuick);
-    } else if (TextRenderGdi == args->textRenderMethod) {
-        textMeasure = TextMeasureGdi::Create(NULL);
+    if (TextRenderMethodGdiplus == args->textRenderMethod) {
+        textMeasure = TextRenderGdiplus::Create(gfx);
+    } else if (TextRenderMethodGdiplusQuick == args->textRenderMethod) {
+        textMeasure = TextRenderGdiplus::Create(gfx, MeasureTextQuick);
+    } else if (TextRenderMethodGdi == args->textRenderMethod) {
+        textMeasure = TextRenderGdi::CreateFromHdc(NULL);
     } else {
         CrashAlwaysIf(true);
     }
@@ -1352,7 +1352,7 @@ Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
+void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
 {
     Pen debugPen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);

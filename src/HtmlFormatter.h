@@ -109,7 +109,7 @@ public:
     HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
-      reparseIdx(0), textRenderMethod(TextRenderGdiplus)
+      reparseIdx(0), textRenderMethod(TextRenderMethodGdiplus)
     { }
 
     ~HtmlFormatterArgs() {
@@ -220,7 +220,7 @@ protected:
     ScopedMem<WCHAR>    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
-    ITextMeasure *      textMeasure;
+    ITextRender *       textMeasure;
 
     // style stack of the current line
     Vec<DrawStyle>      styleStack;
@@ -275,6 +275,6 @@ public:
     Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
-void DrawHtmlPage(Graphics *g, ITextDraw *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
+void DrawHtmlPage(Graphics *g, ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
 
 #endif
