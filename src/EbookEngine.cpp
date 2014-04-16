@@ -13,7 +13,6 @@
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
-#include "MiniMui.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
@@ -640,7 +639,11 @@ WCHAR *EbookEngine::ExtractFontList()
             seenFonts.Append(i->font);
 
             FontFamily family;
-            // TODO: handle gdi
+            if (!i->font->font) {
+                // TODO: handle gdi
+                CrashIf(!i->font->hdcFont);
+                continue;
+            }
             Status ok = i->font->font->GetFamily(&family);
             if (ok != Ok)
                 continue;

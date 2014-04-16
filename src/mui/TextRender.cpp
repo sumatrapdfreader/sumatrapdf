@@ -208,7 +208,6 @@ void TextRenderGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) 
 
 ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
 
-    ITextRender *textDraw = NULL;
     if (TextRenderMethodGdiplus == method) {
         return TextRenderGdiplus::Create(gfx);
     }

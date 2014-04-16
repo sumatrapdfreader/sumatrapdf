@@ -55,22 +55,24 @@ static CachedFont *GetCachedFont(HDC hdc, const WCHAR *name, float size, FontSty
         }
         return (*item = new CachedFontItem(name, size, style, font, NULL));
     }
-    else if (CachedFontItem::Gdi == type) {
-        // TODO: take FontStyle into account as well
-        bool release = false;
-        if (!hdc) {
-            hdc = GetDC(NULL);
-            release = true;
-        }
-        HFONT font = CreateSimpleFont(hdc, name, (int)(size * 96 / 72));
-        if (release)
-            ReleaseDC(NULL, hdc);
+
+    if (CachedFontItem::Gdi == type) {
+        CrashIf(!hdc);
+        LOGFONTW lf = { 0 };
+        lf.lfHeight = -(int)(size * (hdc ? GetDeviceCaps(hdc, LOGPIXELSY) : win::GetHwndDpi(HWND_DESKTOP)) / 72);
+        lf.lfWeight = (style & FontStyleBold) ? FW_BOLD : FW_DONTCARE;
+        lf.lfItalic = (style & FontStyleItalic) ? TRUE : FALSE;
+        lf.lfUnderline = (style & FontStyleUnderline) ? TRUE : FALSE;
+        lf.lfStrikeOut = (style & FontStyleStrikeout) ? TRUE : FALSE;
+        lf.lfCharSet = DEFAULT_CHARSET;
+        lf.lfOutPrecision = OUT_TT_PRECIS;
+        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), name);
+        HFONT font = CreateFontIndirectW(&lf);
         return (*item = new CachedFontItem(name, size, style, NULL, font));
     }
-    else {
-        CrashIf(true);
-        return NULL;
-    }
+
+    CrashIf(true);
+    return NULL;
 }
 
 CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float size, FontStyle style)
