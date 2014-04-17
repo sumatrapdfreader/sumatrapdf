@@ -81,6 +81,9 @@ public:
     virtual void            Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
     virtual void            Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
 
+    void                    DrawTransparent(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
+    void                    DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
+
     virtual ~TextRenderGdi();
 };
 
