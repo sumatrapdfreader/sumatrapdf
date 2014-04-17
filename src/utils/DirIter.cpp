@@ -30,12 +30,14 @@ bool DirIter::TryNextDir()
     return false;
 }
 
-// Start iteration in a given dir. Returns false if error.
-bool DirIter::Start(const WCHAR *dir, bool recursive)
+// Start iteration in a given dir and return fullPath of first
+// file found or NULL if no files
+const WCHAR *DirIter::First()
 {
-    this->recursive = recursive;
-    foundNext = StartDirIter(dir);
-    return foundNext;
+    foundNext = StartDirIter(startDir);
+    if (!foundNext)
+        return NULL;
+    return Next();
 }
 
 // try to filter out things that are not files

@@ -207,16 +207,8 @@ static bool IsMobiFile(const WCHAR *f)
 static void MobiTestDir(WCHAR *dir)
 {
     wprintf(L"Testing mobi files in '%s'\n", dir);
-    DirIter di;
-    if (!di.Start(dir, true)) {
-        wprintf(L"Error: invalid directory '%s'\n", dir);
-        return;
-    }
-
-    for (;;) {
-        const WCHAR *p = di.Next();
-        if (NULL == p)
-            break;
+    DirIter di(dir, true);
+    for (const WCHAR *p = di.First(); p; p = di.Next()) {
         if (IsMobiFile(p))
             MobiTestFile(p);
     }

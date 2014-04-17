@@ -331,17 +331,15 @@ IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
     if (!zf)
         return NULL;
 
-    DirIter iter;
-    if (!iter.Start(dirPath, recursive))
-        return NULL;
+    DirIter di(dirPath, recursive);
 
     size_t dirLen = str::Len(dirPath);
     if (!path::IsSep(dirPath[dirLen - 1]))
         dirLen++;
 
+
     bool ok = true;
-    const WCHAR *filePath;
-    while (ok && (filePath = iter.Next()) != NULL) {
+    for (const WCHAR *filePath = di.First(); filePath && ok; filePath = di.Next()) {
         CrashIf(!str::StartsWith(filePath, dirPath));
         const WCHAR *nameInZip = filePath + dirLen;
         size_t fileSize;

@@ -259,19 +259,11 @@ static bool IsFileToBench(const WCHAR *fileName) {
 }
 
 static void CollectFilesToBench(WCHAR *dir, WStrVec& files) {
-    DirIter dirIter;
-    bool ok = dirIter.Start(dir, true /* recursive */);
-    if (!ok) {
-        return;
-    }
-    for (;;) {
-        const WCHAR *filePath = dirIter.Next();
-        if (NULL == filePath)
-            return;
-        if (!IsFileToBench(filePath)) {
-            continue;
+    DirIter di(dir, true /* recursive */);
+    for (const WCHAR *filePath = di.First(); filePath; filePath = di.Next()) {
+        if (IsFileToBench(filePath)) {
+            files.Append(str::Dup(filePath));
         }
-        files.Append(str::Dup(filePath));
     }
 }
 
