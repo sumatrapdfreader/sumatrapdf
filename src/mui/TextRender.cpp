@@ -53,21 +53,21 @@ TextRenderGdi::~TextRenderGdi() {
 }
 
 CachedFont *TextRenderGdi::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
-    return GetCachedFontGdi(hdcForTextMeasure, name, size, style);
+    return GetCachedFont(name, size, style);
 }
 
 void TextRenderGdi::SetFont(mui::CachedFont *font) {
-    CrashIf(!font->hdcFont);
     // I'm not sure how expensive SelectFont() is so avoid it just in case
-    if (currFont == font->hdcFont) {
+    if (currFont == font) {
         return;
     }
-    currFont = font->hdcFont;
+    currFont = font;
+    HFONT hfont = font->GetHFont();
     if (hdcGfxLocked) {
-        SelectFont(hdcGfxLocked, font->hdcFont);
+        SelectFont(hdcGfxLocked, hfont);
     }
     if (hdcForTextMeasure) {
-        SelectFont(hdcForTextMeasure, font->hdcFont);
+        SelectFont(hdcForTextMeasure, hfont);
     }
 }
 
@@ -229,7 +229,7 @@ TextRenderGdiplus *TextRenderGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)
 }
 
 CachedFont *TextRenderGdiplus::CreateCachedFont(const WCHAR *name, float size, FontStyle style) {
-    return GetCachedFontGdiplus(name, size, style);
+    return GetCachedFont(name, size, style);
 }
 
 void TextRenderGdiplus::SetFont(mui::CachedFont *font) {

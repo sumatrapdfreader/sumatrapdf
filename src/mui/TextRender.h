@@ -51,14 +51,13 @@ class TextRenderGdi : public ITextRender {
 private:
     HDC                     hdcGfxLocked;
     HDC                     hdcForTextMeasure;
-    HFONT                   origFont;
-    HFONT                   currFont;
+    CachedFont *            currFont;
     Gdiplus::Graphics *     gfx;
     Gdiplus::Color          textColor;
     Gdiplus::Color          textBgColor;
     WCHAR                   txtConvBuf[512];
 
-    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), origFont(NULL), currFont(NULL), gfx(NULL) { }
+    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), currFont(NULL), gfx(NULL) { }
 
 public:
     void CreateHdcForTextMeasure();

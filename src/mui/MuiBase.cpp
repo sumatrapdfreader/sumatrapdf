@@ -22,17 +22,17 @@ void LeaveMuiCriticalSection()
 
 class FontListItem {
 public:
-    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hdcFont) : next(NULL) {
+    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hFont) : next(NULL) {
         cf.name = str::Dup(name);
         cf.sizePt = sizePt;
         cf.style = style;
         cf.font = font;
-        cf.hdcFont = hdcFont;
+        cf.hFont = hFont;
     }
     ~FontListItem() {
         free((void *)cf.name);
         ::delete cf.font;
-        DeleteObject(cf.hdcFont);
+        DeleteObject(cf.hFont);
         delete next;
     }
 
@@ -114,14 +114,11 @@ void InitializeBase()
 void DestroyBase()
 {
     FreeGraphicsForMeasureText(gGraphicsCache->At(0).gfx);
-
     for (GraphicsCacheEntry *e = gGraphicsCache->IterStart(); e; e = gGraphicsCache->IterNext()) {
         e->Free();
     }
     delete gGraphicsCache;
-
     delete gFontsCache;
-
     DeleteCriticalSection(&gMuiCs);
 }
 
@@ -134,42 +131,29 @@ bool CachedFont::SameAs(const WCHAR *otherName, float otherSizePt, FontStyle oth
     return str::Eq(name, otherName);
 }
 
-static HFONT CreateSimpleFont2(HDC hdc, const WCHAR *fontName, float fontSize, FontStyle style)
+HFONT CachedFont::GetHFont()
 {
-    LOGFONTW lf = { 0 };
-
-    float sizeDpiScaled = (fontSize * (float)GetDeviceCaps(hdc, LOGPIXELSY)) / (float)USER_DEFAULT_SCREEN_DPI;
-    lf.lfWidth = 0;
-    lf.lfHeight = -(int)sizeDpiScaled;
-    lf.lfWeight = FW_DONTCARE;
-    lf.lfItalic = FALSE;
-    lf.lfUnderline = FALSE;
-    lf.lfStrikeOut = FALSE;
-    lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfOutPrecision = OUT_TT_PRECIS;
-    lf.lfQuality = DEFAULT_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH;
-    str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), fontName);
-    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    lf.lfEscapement = 0;
-    lf.lfOrientation = 0;
-
-    if (FontStyleBold == (style & FontStyleBold)) {
-        lf.lfWeight = FW_BOLD;
-    } else if (FontStyleItalic == (style & FontStyleItalic)) {
-        lf.lfItalic = TRUE;
-    } else if (FontStyleUnderline == (style & FontStyleUnderline)) {
-        lf.lfUnderline = TRUE;
-    } else if (FontStyleStrikeout == (style & FontStyleStrikeout)) {
-        lf.lfStrikeOut = TRUE;
+    LOGFONTW lf;
+    EnterMuiCriticalSection();
+    if (!hFont) {
+        // TODO: Graphics is probably only used for metrics,
+        // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
+        // but previous code wasn't much better
+        Graphics *gfx = AllocGraphicsForMeasureText();
+        Status status = font->GetLogFontW(gfx, &lf);
+        FreeGraphicsForMeasureText(gfx);
+        CrashIf(status != Ok);
+        hFont = CreateFontIndirectW(&lf);
+        CrashIf(!hFont);
     }
-    return CreateFontIndirectW(&lf);
+    LeaveMuiCriticalSection();
+    return hFont;
 }
 
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle style)
+CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style)
 {
     ScopedMuiCritSec muiCs;
 
@@ -189,28 +173,6 @@ CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, FontStyle styl
     }
 
     FontListItem *item = new FontListItem(name, sizePt, style, font, NULL);
-    ListInsert(&gFontsCache, item);
-    return &item->cf;
-}
-
-static float PointToPixel(float n) {
-    return (n * (float)USER_DEFAULT_SCREEN_DPI) / 72.f;
-}
-
-CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float sizePt, FontStyle style)
-{
-    ScopedMuiCritSec muiCs;
-
-    for (FontListItem *item = gFontsCache; item; item = item->next) {
-        if (item->cf.SameAs(name, sizePt, style) && item->cf.hdcFont != NULL) {
-            return &item->cf;
-        }
-    }
-
-    float sizePx = PointToPixel(sizePt);
-    HFONT hFont = CreateSimpleFont2(hdc, name, sizePx, style);
-
-    FontListItem *item = new FontListItem(name, sizePt, style, NULL, hFont);
     ListInsert(&gFontsCache, item);
     return &item->cf;
 }

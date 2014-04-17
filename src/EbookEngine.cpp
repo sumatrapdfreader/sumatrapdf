@@ -641,7 +641,7 @@ WCHAR *EbookEngine::ExtractFontList()
             FontFamily family;
             if (!i->font->font) {
                 // TODO: handle gdi
-                CrashIf(!i->font->hdcFont);
+                CrashIf(!i->font->GetHFont());
                 continue;
             }
             Status ok = i->font->font->GetFamily(&family);

@@ -154,7 +154,7 @@ Size SumatraLogo::Measure(const Size availableSize)
 {
     Graphics *gfx = AllocGraphicsForMeasureText();
     CachedStyle *s = cachedStyle;
-    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     Font *font = cachedFont->font;
     CrashIf(!font);
     const WCHAR *txt = LOGO_TEXT;
@@ -176,7 +176,7 @@ void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
     CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
-    CachedFont *cachedFont = GetCachedFontGdiplus(s->fontName, s->fontSize, s->fontWeight);
+    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     Font *font = cachedFont->font;
     CrashIf(!font);
 
