@@ -177,14 +177,14 @@ void BenchEbookLayout(WCHAR *filePath) {
     double timeMs = t.Stop();
     logbench(L"load: %.2f ms", timeMs);
 
-    int nPages = TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi");
-    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
+    int nPages = TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi       ");
+    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+      ");
     TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
 
     // do it twice because the first run is very unfair to the first version that runs
     // (probably because of font caching)
-    TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi");
-    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
+    TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi       ");
+    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+      ");
     TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
 
     logbench(L"pages: %d", nPages);
