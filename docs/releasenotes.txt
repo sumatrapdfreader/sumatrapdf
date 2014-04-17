@@ -8,6 +8,7 @@ Next version:
 * new keybindings:
   * Ctrl+PgDn, Ctrl+Right : go to next page
   * Ctrl+PgUp, Ctrl+Left  : go to previous page
+* 10x faster ebook layout
 * support JP2 images
 * new advanced settings: ShowMenuBar, ReloadModifiedDocuments, CustomScreenDPI
 * left/right clicking no longer changes pages in fullscreen mode

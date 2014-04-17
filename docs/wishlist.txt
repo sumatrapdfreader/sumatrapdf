@@ -1,13 +1,111 @@
-This is a list of ideas that would require significant work. In no particular
-order:
+A list of random ideas, big and small. In no particular order. Those that are
+marked "risky" are likely to cause disturbance to existing code, so should be
+done at the beginning of the dev cycle. I also estimate the complexity (time to
+implement) as low/med/high
 
-1. Improve find UI. The one I like the best is in Chrome browser (with 
+-- text viewer (high)
+
+Important thing: make it work even with gigantic files by limiting how much of
+the file we load in memory (1-10 MB?). We would only build and index for each
+line, consisting of:
+* position in the file
+* length in bytes
+* encoding (to support various encodings; but we would start by only supporting
+ascii/utf8)
+* measured size of this line
+
+We would build that index for the whole file in the background thread, then
+only load the needed part as the user scrolls through the document.
+
+-- support links for ebook UI (low)
+
+-- hex viewer (high)
+
+-- search for ebook UI (med)
+
+-- toc support in ebook UI (med)
+
+-- thumbnails (med)
+
+Many viewers have an option to navigate document via thumbnails.
+
+For perf, we could cache thumbnails as a single, webp-encoded image + info
+about where a thumbnail for a given page is within the image (similar to
+sprite technique in web dev)
+
+-- wclang build (med)
+
+To get static analysis from clang, use wclang (https://github.com/tpoechtrager/wclang).
+Would require writing a makefile and probably code changes to acommodate
+mingw winapi headers.
+
+Then would need another buildbot script (wclang only works on Linux).
+
+-- toolbar improvements (med, risky)
+
+Ditch using toolbar control for the toolbar and use more mui-like approach.
+That would allow us to have overlaid toolbar (shown semi-transparent over the
+content). Also we could add an option to make it vertical. Also an option to
+have it user-configurable (via advanced settings, allow specifying the order
+of controls in the toolbar).
+
+This would also help in unifying full-screen modes (overlaid, auto-hidden
+toolbar is a better match for full-screen mode than the current one).
+
+-- simplify re-layout (risky, low)
+
+Now that layout is 10x faster, we could eliminate the problems of sometimes
+breaking the styling by simplifying the code by removing the optimization
+that tries to re-parse from a given point in the html. Always re-parse from
+the beginning.
+
+-- better looking notifications (med)
+
+Visual style of notifications is dated. Use more modern look e.g. inspired by
+Chrome or Android.
+
+-- loading errors are not always reported (low)
+
+In some cases we don't show document loading errors (e.g. drag&drop a file that
+fails to load). We need to show them as notifications
+
+-- more detail when page doesn't render
+
+I think we sometimes get bug reports when PDF page doesn't render because of
+running out of memory. It would be good to show the exact cause of page
+rendering failure instead of generic "failed to render" message.
+
+-- tabs (risky, high)
+
+But not using the Window's standard tab control, because it looks ugly. Chrome's
+are nice but complicated to draw. There are styles that look nice and are still
+easy to implement (Dash on mac, Metro style tabs etc. basically anything that is
+mostly a rectangle).
+
+-- faster re-layout (med, risky)
+
+Layout time is dominated by measuring strings.
+
+Split layout into 2 phases:
+* generating instructions and calculating sizes (including measuring strings)
+* calculating positions of the elements given page dx/dy
+
+When users resizes the window, we would only need to redo phase 2. A small
+complication: when a string doesn't fit in a single line, we need to split
+it into to string instructions. We would need to be able to do it (by adding
+additional instructions during second phase).
+
+-- Improve find UI (med, risky)
+
+The one I like the best is in Chrome browser (with
 modification needed for specyfing search parameters like case sensitivity
 and additions like 'match whole words' modifier). Another nice implementation
 is in Kindle PC reader.
 We could then free up significant amount of space in the toolbar.
 
-2. Screen space is always at premium and most PDFs have very wasteful
+-- Manual cropping of margins for PDFs (med, risky)
+
+Screen space is always at premium and most PDFs have very wasteful
 margins. Good Reader has a really nice feature for manual cropping of margins
 (http://www.goodiware.com/gr-man-view-pdf.html#crop). They have a mode for
 manually selecting visible part of the PDF, similar to how many graphics
@@ -18,37 +116,50 @@ screens (netbooks/small laptops).
 
 Note: Automatic cropping is currently implemented as "Fit Content" View mode.
 
-3. Editing/saving of PDF forms. Many people want that.
+-- Editing/saving of PDF forms (high)
 
-4. Add integration with web-based backup/viewer system. The idea is that users
-could easily backup their PDFs on the server. They would have a convenient
-access to those PDFs from Sumatra as well as being able to view them on the
-web. Basically it would be private Scribd for PDFs only. The web service
-would have to be paid (since on-line storage is rather expensive) but there
-would be free accounts (with quota, similar to how Dropbox works).
+-- PDF JavaScript support using mujs (low)
 
-5. As an alternative (or addition) to 5., integration with Scribd i.e. being
-able to search for PDF documents on Scribd and download/view them in Sumatra.
-They have APIs (http://www.scribd.com/developers).
+-- Integration with web-based backup/viewer system (high)
 
-6. Direct integration with Dropbox (they have APIs) i.e. being able to list,
-download and read PDF files in Dropbox account. Not sure if that makes sense,
-though, since having Dropbox pretty much means the files are locally anyway.
+The idea is that users could easily backup their PDFs on the server. They would
+have a convenient access to those PDFs from Sumatra as well as being able to
+view them on the web. Basically it would be private Scribd for PDFs only. The
+web service would have to be paid (since on-line storage is rather expensive)
+but there would be free accounts (with quota, similar to how Dropbox works).
 
-7. Document library management similar to how e.g. Picasa manages photos or iTunes
-manages mp3 files.
+-- Direct integration with Dropbox (high)
+
+They have APIs. Being able to list, download and read PDF files in Dropbox
+account. Not sure if that makes sense, though, since having Dropbox pretty much
+means the files are locally anyway.
+
+-- Integration with Scribd (high)
+
+As an alternative (or addition) to Dropbox integration. Being able to search for
+PDF documents on Scribd and download/view them in Sumatra. They have APIs
+(http://www.scribd.com/developers).
+
+-- Document library management (high)
+
+Similar to how e.g. Picasa manages photos or iTunes anages mp3 files.
 
 User would tell us which directories contain PDF and oher supported files
-(or, on Win 7, we could use windows search or scan the whole hard-drive to 
+(or, on Win 7, we could use windows search or scan the whole hard-drive to
 automatically find all files). We would index the files (their filenames, metadata,
-maybe extract text for full-text search), build thumbnails and allow efficient 
+maybe extract text for full-text search), build thumbnails and allow efficient
 browsing/searching those files.
 
 This would be a good feature for those who have large collections of PDFs
 (compared to using file explorer or open file dialog for locating the file).
 
-8. Native client version (https://developers.google.com/native-client/).
+-- Native client version (super high)
 
+https://developers.google.com/native-client/.
 There are some challenges (need completely custom UI, fonts aren't as easy
 to get at, CHM support would be much harder). The upside is we would have
 no-install, browser hosted (well, at least in Chrome) app.
+
+-- mac version (super high)
+
+-- gyp-based build system (med)
