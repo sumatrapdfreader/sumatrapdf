@@ -1356,6 +1356,7 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
+    Status status = Ok;
     textDraw->Lock();
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
@@ -1363,8 +1364,6 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
         bbox.Y += offY;
         if (InstrString == i->type || InstrRtlString == i->type) {
             size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            if (showBbox)
-                g->DrawRectangle(&debugPen, bbox);
             textDraw->Draw(buf, strLen, bbox, InstrRtlString == i->type);
         } else if (InstrSetFont == i->type) {
             textDraw->SetFont(i->font);
@@ -1383,14 +1382,19 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
             REAL y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
-            if (showBbox)
-                g->DrawRectangle(&debugPen, bbox);
-            g->DrawLine(&linePen, p1, p2);
+            if (showBbox) {
+                status = g->DrawRectangle(&debugPen, bbox);
+                CrashIf(status != Ok);
+            }
+            status = g->DrawLine(&linePen, p1, p2);
+            CrashIf(status != Ok);
         } else if (InstrImage == i->type) {
             // TODO: cache the bitmap somewhere (?)
             Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
-            if (bmp)
-                g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+            if (bmp) {
+                status = g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
+                CrashIf(status != Ok);
+            }
             delete bmp;
         } else if (InstrLinkStart == i->type) {
             // TODO: set text color to blue
@@ -1398,7 +1402,13 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
             PointF p1(bbox.X, y);
             PointF p2(bbox.X + bbox.Width, y);
             Pen linkPen(textColor);
-            g->DrawLine(&linkPen, p1, p2);
+            status = g->DrawLine(&linkPen, p1, p2);
+            CrashIf(status != Ok);
+        } else if (InstrString == i->type || InstrRtlString == i->type) {
+            if (showBbox) {
+                status = g->DrawRectangle(&debugPen, bbox);
+                CrashIf(status != Ok);
+            }
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
         } else if ((InstrElasticSpace == i->type) ||
@@ -1411,7 +1421,6 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
         } else {
             CrashIf(true);
         }
-
         if (abortCookie && *abortCookie)
             break;
     }
