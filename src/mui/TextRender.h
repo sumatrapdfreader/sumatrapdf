@@ -28,7 +28,6 @@ public:
     // that if the background is solid color. It won't work in other cases
     virtual void            SetTextBgColor(Gdiplus::Color col) = 0;
 
-    virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style) = 0;
     virtual float           GetCurrFontLineSpacing() = 0;
 
     virtual Gdiplus::RectF  Measure(const char *s, size_t sLen) = 0;
@@ -68,7 +67,6 @@ public:
     virtual void            SetTextColor(Gdiplus::Color col);
     virtual void            SetTextBgColor(Gdiplus::Color col);
 
-    virtual CachedFont *    CreateCachedFont(const WCHAR *name, float size, FontStyle style);
     virtual float           GetCurrFontLineSpacing();
 
     virtual Gdiplus::RectF  Measure(const char *s, size_t sLen);
@@ -90,14 +88,14 @@ class TextRenderGdiplus : public ITextRender {
 private:
     Gdiplus::RectF        (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len);
 
-    // We don't own gfx and fnt
+    // We don't own gfx and currFont
     Gdiplus::Graphics *  gfx;
-    Gdiplus::Font *      fnt;
+    CachedFont *         currFont;
     Gdiplus::Color       textColor;
     Gdiplus::Brush *     textColorBrush;
     WCHAR                txtConvBuf[512];
 
-    TextRenderGdiplus() : gfx(NULL), fnt(NULL), textColorBrush(NULL), textColor(0,0,0,0) {}
+    TextRenderGdiplus() : gfx(NULL), currFont(NULL), textColorBrush(NULL), textColor(0,0,0,0) {}
 
 public:
     static TextRenderGdiplus*  Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=NULL);
@@ -106,7 +104,6 @@ public:
     virtual void                SetTextColor(Gdiplus::Color col);
     virtual void                SetTextBgColor(Gdiplus::Color col) {}
 
-    virtual CachedFont *        CreateCachedFont(const WCHAR *name, float size, FontStyle style);
     virtual float               GetCurrFontLineSpacing();
 
     virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);

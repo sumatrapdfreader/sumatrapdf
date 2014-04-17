@@ -185,7 +185,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     defaultFontSize = args->fontSize;
 
     DrawStyle style;
-    style.font = textMeasure->CreateCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
+    style.font = GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
     style.dirRtl = false;
     styleStack.Append(style);
@@ -226,7 +226,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
-    CachedFont *newFont = textMeasure->CreateCachedFont(fontName, fontSize, fs);
+    CachedFont *newFont = GetCachedFont(fontName, fontSize, fs);
     if (CurrFont() != newFont) {
         AppendInstr(DrawInstr::SetFont(newFont));
     }
