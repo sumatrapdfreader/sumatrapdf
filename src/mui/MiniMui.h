@@ -17,10 +17,11 @@ struct CachedFont {
     float               sizePt;
     Gdiplus::FontStyle  style;
 
-    // only one of font or hdcFont can be set
     Gdiplus::Font *     font;
-    HFONT               hdcFont;
+    // hFont is created out of font
+    HFONT               hFont;
 
+    HFONT               GetHFont();
     Gdiplus::FontStyle  GetStyle() const { return style; }
     float               GetSize() const { return sizePt; }
     const WCHAR *       GetName() const { return name; }
@@ -30,8 +31,7 @@ struct CachedFont {
     }
 };
 
-CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
-CachedFont *GetCachedFontGdiplus(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
+CachedFont *GetCachedFont(const WCHAR *name, float sizePt, Gdiplus::FontStyle style);
 
 void InitGraphicsMode(Gdiplus::Graphics *g);
 Gdiplus::Graphics *AllocGraphicsForMeasureText();

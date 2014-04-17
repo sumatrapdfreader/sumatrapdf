@@ -11,78 +11,60 @@ using namespace Gdiplus;
 
 namespace mui {
 
+HFONT CachedFont::GetHFont()
+{
+    if (!hFont) {
+        LOGFONTW lf;
+        // TODO: Graphics is probably only used for metrics,
+        // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
+        // but previous code wasn't much better
+        Graphics *gfx = AllocGraphicsForMeasureText();
+        Status status = font->GetLogFontW(gfx, &lf);
+        FreeGraphicsForMeasureText(gfx);
+        CrashIf(status != Ok);
+        hFont = CreateFontIndirectW(&lf);
+        CrashIf(!hFont);
+    }
+    return hFont;
+}
+
 class CachedFontItem : public CachedFont {
 public:
-    enum FontRenderType { Gdiplus, Gdi };
-
     CachedFontItem *_next;
 
-    CachedFontItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hdcFont) : _next(NULL) {
-        this->name = str::Dup(name); this->sizePt = sizePt; this->style = style; this->font = font; this->hdcFont = hdcFont;
+    CachedFontItem(const WCHAR *name, float sizePt, FontStyle style, Font *font) : _next(NULL) {
+        this->name = str::Dup(name); this->sizePt = sizePt; this->style = style; this->font = font;
     }
     ~CachedFontItem() {
         free(name);
         ::delete font;
-        DeleteObject(hdcFont);
+        DeleteObject(hFont);
         delete _next;
-    }
-
-    bool HasType(FontRenderType type) const {
-        return Gdiplus == type ? !!font : Gdi == type ? !!hdcFont : false;
     }
 };
 
 static CachedFontItem *gFontCache = NULL;
 
-static CachedFont *GetCachedFont(HDC hdc, const WCHAR *name, float size, FontStyle style, CachedFontItem::FontRenderType type)
+CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style)
 {
     CachedFontItem **item = &gFontCache;
     for (; *item; item = &(*item)->_next) {
-        if ((*item)->SameAs(name, size, style) && (*item)->HasType(type)) {
+        if ((*item)->SameAs(name, size, style)) {
             return *item;
         }
     }
 
-    if (CachedFontItem::Gdiplus == type) {
-        Font *font = ::new Font(name, size, style);
-        CrashIf(!font);
+    Font *font = ::new Font(name, size, style);
+    CrashIf(!font);
+    if (!font) {
+        // fall back to the default font, if a desired font can't be created
+        font = ::new Font(L"Times New Roman", size, style);
         if (!font) {
-            // fall back to the default font, if a desired font can't be created
-            font = ::new Font(L"Times New Roman", size, style);
-            if (!font) {
-                return gFontCache;
-            }
+            return gFontCache;
         }
-        return (*item = new CachedFontItem(name, size, style, font, NULL));
     }
 
-    if (CachedFontItem::Gdi == type) {
-        CrashIf(!hdc);
-        LOGFONTW lf = { 0 };
-        lf.lfHeight = -(int)(size * (hdc ? GetDeviceCaps(hdc, LOGPIXELSY) : win::GetHwndDpi(HWND_DESKTOP)) / 72);
-        lf.lfWeight = (style & FontStyleBold) ? FW_BOLD : FW_DONTCARE;
-        lf.lfItalic = (style & FontStyleItalic) ? TRUE : FALSE;
-        lf.lfUnderline = (style & FontStyleUnderline) ? TRUE : FALSE;
-        lf.lfStrikeOut = (style & FontStyleStrikeout) ? TRUE : FALSE;
-        lf.lfCharSet = DEFAULT_CHARSET;
-        lf.lfOutPrecision = OUT_TT_PRECIS;
-        str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), name);
-        HFONT font = CreateFontIndirectW(&lf);
-        return (*item = new CachedFontItem(name, size, style, NULL, font));
-    }
-
-    CrashIf(true);
-    return NULL;
-}
-
-CachedFont *GetCachedFontGdi(HDC hdc, const WCHAR *name, float size, FontStyle style)
-{
-    return GetCachedFont(hdc, name, size, style, CachedFontItem::Gdi);
-}
-
-CachedFont *GetCachedFontGdiplus(const WCHAR *name, float size, FontStyle style)
-{
-    return GetCachedFont(NULL, name, size, style, CachedFontItem::Gdiplus);
+    return (*item = new CachedFontItem(name, size, style, font));
 }
 
 // set consistent mode for our graphics objects so that we get
