@@ -10,7 +10,6 @@
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookFormatter.h"
-#include "EbookWindow.h" // for IsEbookFile()
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
@@ -164,7 +163,7 @@ void BenchEbookLayout(WCHAR *filePath) {
         logbench(L"Error: file doesn't exist");
         return;
     }
-    if (!IsEbookFile(filePath)) {
+    if (!Doc::IsSupportedFile(filePath)) {
         logbench(L"Error: not an ebook file");
         return;
     }
@@ -172,6 +171,7 @@ void BenchEbookLayout(WCHAR *filePath) {
     Doc doc = Doc::CreateFromFile(filePath);
     if (!doc.IsEbook()) {
         logbench(L"Error: failed to load the file as doc");
+        doc.Delete();
         return;
     }
     double timeMs = t.Stop();
@@ -186,6 +186,8 @@ void BenchEbookLayout(WCHAR *filePath) {
     TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi       ");
     TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+      ");
     TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
+
+    doc.Delete();
 
     logbench(L"pages: %d", nPages);
     if (deleteLog) {
@@ -204,7 +206,7 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     // docs that take a long time to load
 
 #if 1
-    if (IsEbookFile(filePath)) {
+    if (Doc::IsSupportedFile(filePath)) {
         BenchEbookLayout(filePath);
         return;
     }
@@ -248,17 +250,17 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
-static bool IsFileToBench(const WCHAR *fileName) {
-    if (str::EndsWithI(fileName, L".pdf"))
+static bool IsFileToBench(const WCHAR *fileName)
+{
+    if (EngineManager::IsSupportedFile(fileName))
         return true;
-    if (str::EndsWithI(fileName, L".mobi"))
-        return true;
-    if (str::EndsWithI(fileName, L".epub"))
+    if (Doc::IsSupportedFile(fileName))
         return true;
     return false;
 }
 
-static void CollectFilesToBench(WCHAR *dir, WStrVec& files) {
+static void CollectFilesToBench(WCHAR *dir, WStrVec& files)
+{
     DirIter di(dir, true /* recursive */);
     for (const WCHAR *filePath = di.First(); filePath; filePath = di.Next()) {
         if (IsFileToBench(filePath)) {
@@ -299,39 +301,30 @@ inline bool IsSpecialDir(const WCHAR *s)
     return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
-static bool IsStressTestSupportedFile(const WCHAR *fileName, const WCHAR *filter, const WCHAR *dirPath)
+static bool IsStressTestSupportedFile(const WCHAR *filePath, const WCHAR *filter)
 {
-    if (filter && !path::Match(fileName, filter))
+    if (filter && !path::Match(path::GetBaseName(filePath), filter))
         return false;
-    if (EngineManager::IsSupportedFile(fileName))
+    if (EngineManager::IsSupportedFile(filePath))
         return true;
     if (!filter)
         return false;
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    ScopedMem<WCHAR> fullPath(path::Join(dirPath, fileName));
-    return EngineManager::IsSupportedFile(fullPath, true);
+    return EngineManager::IsSupportedFile(filePath, true);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)
 {
-    ScopedMem<WCHAR> pattern(path::Join(dirPath, L"*"));
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
-        return false;
-
-    do {
-        if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            if (IsStressTestSupportedFile(fdata.cFileName, filter, dirPath)) {
-                paths.Append(path::Join(dirPath, fdata.cFileName));
-            }
+    bool hasFiles = false;
+    DirIter di(dirPath);
+    for (const WCHAR *filePath = di.First(); filePath; filePath = di.Next()) {
+        if (IsStressTestSupportedFile(filePath, filter)) {
+            paths.Append(str::Dup(filePath));
+            hasFiles = true;
         }
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
-
-    return paths.Count() > 0;
+    }
+    return hasFiles;
 }
 
 // return t1 - t2 in seconds

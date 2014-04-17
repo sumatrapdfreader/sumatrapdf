@@ -321,6 +321,9 @@ bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
 // TODO: using this for XPS files results in documents that Microsoft XPS Viewer can't read
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
 {
+    if (!dir::Exists(dirPath))
+        return NULL;
+
     ScopedComPtr<IStream> stream;
     if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
         return NULL;
@@ -331,14 +334,12 @@ IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
     if (!zf)
         return NULL;
 
-    DirIter di(dirPath, recursive);
-
     size_t dirLen = str::Len(dirPath);
     if (!path::IsSep(dirPath[dirLen - 1]))
         dirLen++;
 
-
     bool ok = true;
+    DirIter di(dirPath, recursive);
     for (const WCHAR *filePath = di.First(); filePath && ok; filePath = di.Next()) {
         CrashIf(!str::StartsWith(filePath, dirPath));
         const WCHAR *nameInZip = filePath + dirLen;

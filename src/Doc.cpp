@@ -148,7 +148,7 @@ bool Doc::IsEbook() const
     case Doc_MobiTest:
         return true;
     default:
-        CrashIf(!IsEngine() && !IsNone());
+        CrashIf(!IsNone() && !IsEngine());
         return false;
     }
 }
@@ -158,7 +158,7 @@ bool Doc::IsEngine() const
     if ((type & Doc_BaseEngine)) {
         return true;
     }
-    CrashIf(!IsEbook() && !IsNone());
+    CrashIf(!IsNone() && !IsEbook());
     return false;
 }
 
@@ -276,6 +276,16 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
         doc.error = Error_Unknown;
         doc.filePath.Set(str::Dup(filePath));
     }
+    else {
+        CrashIf(!Doc::IsSupportedFile(filePath));
+    }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;
+}
+
+bool Doc::IsSupportedFile(const WCHAR *filePath, bool sniff)
+{
+    return EpubDoc::IsSupportedFile(filePath, sniff) ||
+           Fb2Doc::IsSupportedFile(filePath, sniff) ||
+           MobiDoc::IsSupportedFile(filePath, sniff);
 }

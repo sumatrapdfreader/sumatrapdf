@@ -787,9 +787,7 @@ void RegisterMobiWinClass(HINSTANCE hinst)
 
 bool IsEbookFile(const WCHAR *fileName)
 {
-    return EpubDoc::IsSupportedFile(fileName) ||
-           Fb2Doc::IsSupportedFile(fileName) ||
-           MobiDoc::IsSupportedFile(fileName);
+    return Doc::IsSupportedFile(fileName);
 }
 
 Doc GetDocForWindow(const SumatraWindow& win)
