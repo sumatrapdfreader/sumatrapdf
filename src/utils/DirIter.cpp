@@ -67,7 +67,7 @@ static bool IsSpecialDir(const WCHAR *s)
     return false;
 }
 
-// Returns a path of the next file (relative to the path passed to Start()).
+// Returns a full path of the next file
 // Returns NULL if finished iteration.
 // Returned value is valid only until we call Next() again.
 const WCHAR *DirIter::Next()

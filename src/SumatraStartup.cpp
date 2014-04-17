@@ -351,6 +351,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
+    // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
+    // in layout
+#if 0
+    RedirectIOToConsole();
+    BenchEbookLayout(L"C:\\kjk\\downloads\\pg12.mobi");
+    system("pause");
+    goto Exit;
+#endif
+
     if (i.showConsole)
         RedirectIOToConsole();
     if (i.makeDefault)

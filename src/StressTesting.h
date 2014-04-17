@@ -8,6 +8,7 @@ bool IsValidPageRange(const WCHAR *ranges);
 bool IsBenchPagesInfo(const WCHAR *s);
 void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
+void BenchEbookLayout(WCHAR *filePath);
 
 class WindowInfo;
 class RenderCache;

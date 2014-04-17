@@ -18,6 +18,10 @@ TextRenderMethod GetTextRenderMethod() {
     return gTextRenderMethod;
 }
 
+void SetTextRenderMethod(TextRenderMethod method) {
+    gTextRenderMethod = method;
+}
+
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();

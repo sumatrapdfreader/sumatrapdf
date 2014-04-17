@@ -12,7 +12,6 @@ TODO:
  - add transparent rendering to GDI, see:
    http://stackoverflow.com/questions/1340166/transparency-to-text-in-gdi
    http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/
- - get perf data about time to format using GDI and GDI+ measurement
 */
 
 /* Note: I would prefer this code be in utils but it depends on mui, so it must

@@ -7,6 +7,10 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DirIter.h"
+#include "Doc.h"
+#include "EbookController.h"
+#include "EbookFormatter.h"
+#include "EbookWindow.h" // for IsEbookFile()
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
@@ -95,8 +99,8 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
         logbench("Error: failed to load page %d", pagenum);
         return;
     }
-    double timems = t.GetTimeInMs();
-    logbench("pageload   %3d: %.2f ms", pagenum, timems);
+    double timeMs = t.GetTimeInMs();
+    logbench("pageload   %3d: %.2f ms", pagenum, timeMs);
 
     t.Start();
     RenderedBitmap *rendered = engine->RenderBitmap(pagenum, 1.0, 0);
@@ -107,8 +111,8 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
         return;
     }
     delete rendered;
-    timems = t.GetTimeInMs();
-    logbench("pagerender %3d: %.2f ms", pagenum, timems);
+    timeMs = t.GetTimeInMs();
+    logbench("pagerender %3d: %.2f ms", pagenum, timeMs);
 }
 
 // <s> can be:
@@ -119,26 +123,105 @@ bool IsBenchPagesInfo(const WCHAR *s)
     return str::EqI(s, L"loadonly") || IsValidPageRange(s);
 }
 
+static int FormatWholeDoc(Doc& doc) {
+    int PAGE_DX = 640;
+    int PAGE_DY = 520;
+
+    PoolAllocator textAllocator;
+    HtmlFormatterArgs *formatterArgs = CreateFormatterArgsDoc2(doc, PAGE_DX, PAGE_DY, &textAllocator);
+
+    HtmlFormatter *formatter = CreateFormatter(doc, formatterArgs);
+    int nPages = 0;
+    for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
+        delete pd;
+        ++nPages;
+    }
+    delete formatterArgs;
+    delete formatter;
+    return nPages;
+}
+
+static int TimeOneMethod(Doc&doc, TextRenderMethod method, const WCHAR *methodName) {
+    SetTextRenderMethod(method);
+    Timer t(true);
+    int nPages = FormatWholeDoc(doc);
+    double timesms = t.Stop();
+    logbench("%s: %.2f ms", methodName, timesms);
+    return nPages;
+}
+
+// this is to compare the time it takes to layout a whole ebook file
+// using different text measurement method (since the time is mostly
+// dominated by text measure)
+void BenchEbookLayout(WCHAR *filePath) {
+    bool deleteLog = false;
+    if (!gLog) {
+        gLog = new slog::StderrLogger();
+        deleteLog = true;
+    }
+    logbench("Starting: %s", filePath);
+    if (!file::Exists(filePath)) {
+        logbench("Error: file doesn't exist");
+        return;
+    }
+    if (!IsEbookFile(filePath)) {
+        logbench("Error: not an ebook file");
+        return;
+    }
+    Timer t(true);
+    Doc doc = Doc::CreateFromFile(filePath);
+    if (!doc.IsEbook()) {
+        logbench("Error: failed to load the file as doc");
+        return;
+    }
+    double timeMs = t.Stop();
+    logbench("load: %.2f ms", timeMs);
+
+    int nPages = TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi");
+    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
+    TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
+
+    // do it twice because the first run is very unfair to the first version that runs
+    // (probably because of font caching)
+    TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi");
+    TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
+    TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
+
+    logbench("pages: %d", nPages);
+    if (deleteLog) {
+        delete gLog;
+    }
+}
+
 static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
 {
     if (!file::Exists(filePath)) {
         return;
     }
 
+    // ad-hoc: if enabled times layout instead of rendering and does layout
+    // using all text rendering methods, so that we can compare and find
+    // docs that take a long time to load
+
+#if 1
+    if (IsEbookFile(filePath)) {
+        BenchEbookLayout(filePath);
+        return;
+    }
+#endif
+
     Timer total(true);
     logbench("Starting: %s", filePath);
 
     Timer t(true);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, gGlobalPrefs->chmUI.useFixedPageUI);
-    t.Stop();
-
     if (!engine) {
         logbench("Error: failed to load %s", filePath);
         return;
     }
 
-    double timems = t.GetTimeInMs();
-    logbench("load: %.2f ms", timems);
+    double timeMs = t.Stop();
+    logbench("load: %.2f ms", timeMs);
     int pages = engine->PageCount();
     logbench("page count: %d", pages);
 
@@ -165,11 +248,37 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     logbench("Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
+static bool IsFileToBench(const WCHAR *fileName) {
+    if (str::EndsWithI(fileName, L".pdf"))
+        return true;
+    if (str::EndsWithI(fileName, L".mobi"))
+        return true;
+    if (str::EndsWithI(fileName, L".epub"))
+        return true;
+    return false;
+}
+
+static void CollectFilesToBench(WCHAR *dir, WStrVec& files) {
+    DirIter dirIter;
+    bool ok = dirIter.Start(dir, true /* recursive */);
+    if (!ok) {
+        return;
+    }
+    for (;;) {
+        const WCHAR *filePath = dirIter.Next();
+        if (NULL == filePath)
+            return;
+        if (!IsFileToBench(filePath)) {
+            continue;
+        }
+        files.Append(str::Dup(filePath));
+    }
+}
+
 static void BenchDir(WCHAR *dir)
 {
     WStrVec files;
-    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*.pdf", dir));
-    CollectPathsFromDirectory(pattern, files);
+    CollectFilesToBench(dir, files);
     for (size_t i = 0; i < files.Count(); i++) {
         BenchFile(files.At(i), NULL);
     }
