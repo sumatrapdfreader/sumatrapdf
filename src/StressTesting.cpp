@@ -27,7 +27,7 @@
 #define FIRST_STRESS_TIMER_ID 101
 
 static slog::Logger *gLog;
-#define logbench(msg, ...) gLog->LogFmt(TEXT(msg), __VA_ARGS__)
+#define logbench(msg, ...) gLog->LogFmt(msg, __VA_ARGS__)
 
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
@@ -96,23 +96,23 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
     t.Stop();
 
     if (!ok) {
-        logbench("Error: failed to load page %d", pagenum);
+        logbench(L"Error: failed to load page %d", pagenum);
         return;
     }
     double timeMs = t.GetTimeInMs();
-    logbench("pageload   %3d: %.2f ms", pagenum, timeMs);
+    logbench(L"pageload   %3d: %.2f ms", pagenum, timeMs);
 
     t.Start();
     RenderedBitmap *rendered = engine->RenderBitmap(pagenum, 1.0, 0);
     t.Stop();
 
     if (!rendered) {
-        logbench("Error: failed to render page %d", pagenum);
+        logbench(L"Error: failed to render page %d", pagenum);
         return;
     }
     delete rendered;
     timeMs = t.GetTimeInMs();
-    logbench("pagerender %3d: %.2f ms", pagenum, timeMs);
+    logbench(L"pagerender %3d: %.2f ms", pagenum, timeMs);
 }
 
 // <s> can be:
@@ -146,7 +146,7 @@ static int TimeOneMethod(Doc&doc, TextRenderMethod method, const WCHAR *methodNa
     Timer t(true);
     int nPages = FormatWholeDoc(doc);
     double timesms = t.Stop();
-    logbench("%s: %.2f ms", methodName, timesms);
+    logbench(L"%s: %.2f ms", methodName, timesms);
     return nPages;
 }
 
@@ -159,23 +159,23 @@ void BenchEbookLayout(WCHAR *filePath) {
         gLog = new slog::StderrLogger();
         deleteLog = true;
     }
-    logbench("Starting: %s", filePath);
+    logbench(L"Starting: %s", filePath);
     if (!file::Exists(filePath)) {
-        logbench("Error: file doesn't exist");
+        logbench(L"Error: file doesn't exist");
         return;
     }
     if (!IsEbookFile(filePath)) {
-        logbench("Error: not an ebook file");
+        logbench(L"Error: not an ebook file");
         return;
     }
     Timer t(true);
     Doc doc = Doc::CreateFromFile(filePath);
     if (!doc.IsEbook()) {
-        logbench("Error: failed to load the file as doc");
+        logbench(L"Error: failed to load the file as doc");
         return;
     }
     double timeMs = t.Stop();
-    logbench("load: %.2f ms", timeMs);
+    logbench(L"load: %.2f ms", timeMs);
 
     int nPages = TimeOneMethod(doc, TextRenderMethodGdi,          L"gdi");
     TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
@@ -187,7 +187,7 @@ void BenchEbookLayout(WCHAR *filePath) {
     TimeOneMethod(doc, TextRenderMethodGdiplus,      L"gdi+");
     TimeOneMethod(doc, TextRenderMethodGdiplusQuick, L"gdi+ quick");
 
-    logbench("pages: %d", nPages);
+    logbench(L"pages: %d", nPages);
     if (deleteLog) {
         delete gLog;
     }
@@ -211,19 +211,19 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
 #endif
 
     Timer total(true);
-    logbench("Starting: %s", filePath);
+    logbench(L"Starting: %s", filePath);
 
     Timer t(true);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, gGlobalPrefs->chmUI.useFixedPageUI);
     if (!engine) {
-        logbench("Error: failed to load %s", filePath);
+        logbench(L"Error: failed to load %s", filePath);
         return;
     }
 
     double timeMs = t.Stop();
-    logbench("load: %.2f ms", timeMs);
+    logbench(L"load: %.2f ms", timeMs);
     int pages = engine->PageCount();
-    logbench("page count: %d", pages);
+    logbench(L"page count: %d", pages);
 
     if (NULL == pagesSpec) {
         for (int i = 1; i <= pages; i++) {
@@ -245,7 +245,7 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     delete engine;
     total.Stop();
 
-    logbench("Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+    logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
 static bool IsFileToBench(const WCHAR *fileName) {
@@ -296,7 +296,7 @@ void BenchFileOrDir(WStrVec& pathsToBench)
         else if (dir::Exists(path))
             BenchDir(path);
         else
-            logbench("Error: file or dir %s doesn't exist", path);
+            logbench(L"Error: file or dir %s doesn't exist", path);
     }
 
     delete gLog;
