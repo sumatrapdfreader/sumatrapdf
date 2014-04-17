@@ -152,7 +152,7 @@ void TextRenderGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
 }
 
 // based on http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/,
-// but I must be missing something
+// TODO: look into using http://theartofdev.wordpress.com/2014/01/12/gdi-text-rendering-to-image/
 // TODO: doesn't actually look good (i.e. similar to DrawText when using transparent SetBkMode())
 // which kind of makes sense, because I'm using transparent mode to draw to in-memory bitmap as well
 // TODO: doesn't actually do alpha bf.SourceConstantAlpha > 4 looks the same, values 1-4 produce
