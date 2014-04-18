@@ -168,3 +168,9 @@ no-install, browser hosted (well, at least in Chrome) app.
 -- mac version (super high)
 
 -- gyp-based build system (med)
+
+-- use SafeInt (low)
+
+We have quite a few places where we do integer overflow checks. Explore
+doing that in a systematic way, using SafeInt (http://safeint.codeplex.com/) or
+similar library (or extract useful stuff for us from SafeInt)
