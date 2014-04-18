@@ -77,7 +77,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="render-speed-test.h" />
+    <ClInclude Include="test-app.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -85,7 +85,7 @@
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="render-speed-test.cpp" />
+    <ClCompile Include="test-app.cpp" />
     <ClCompile Include="scratch.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -95,10 +95,10 @@
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="render-speed-test.rc" />
+    <ResourceCompile Include="test-app.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="render-speed-test.ico" />
+    <Image Include="test-app.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
