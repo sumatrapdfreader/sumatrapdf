@@ -18,6 +18,11 @@ TODO:
         SetBkMode(_hdc, 1);
         SelectClipRgn(_hdc, clip);
         DeleteObject(clip);
+ - figure out a way to get rid of Lock()/Unlock(). One way is to turn ITextRender into a full-blown
+   IGraphics abstraction (add drawing calls to it) and then GDI+-based implementation could
+   track locking state internally, so that the caller doesn't have to.
+   Another options would be to figure out a way to draw to a bitmap and blit that bitmap
+   to Graphics object.
 */
 
 /* Note: I would prefer this code be in utils but it depends on mui, so it must

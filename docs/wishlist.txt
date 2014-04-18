@@ -59,6 +59,11 @@ breaking the styling by simplifying the code by removing the optimization
 that tries to re-parse from a given point in the html. Always re-parse from
 the beginning.
 
+-- change fit width mode
+
+Make all pages have uniform size. Currently they all have uniform zoom ratio
+and one big page can make other pages really small.
+
 -- better looking notifications (med)
 
 Visual style of notifications is dated. Use more modern look e.g. inspired by

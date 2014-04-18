@@ -23,14 +23,14 @@ struct Window
 
     static LRESULT __stdcall WndProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
     {
-        //ASSERT(window);
+        CrashIf(!window);
 
         if (WM_NCCREATE == message)
         {
             CREATESTRUCT * cs = reinterpret_cast<CREATESTRUCT *>(lparam);
             T * that = static_cast<T *>(cs->lpCreateParams);
-            //ASSERT(that);
-            //ASSERT(!that->m_window);
+            CrashIf(!that);
+            CrashIf(that->m_window);
             that->m_window = window;
             SetWindowLongPtr(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(that));
         }
@@ -62,7 +62,7 @@ struct SampleWindow : Window<SampleWindow>
 
         wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
         wc.hInstance = hInst;
-        wc.lpszClassName = APP_WIN_CLASS;
+        wc.lpszClassName = L"SAMPLE_WINDOW_WIN_CLASS";
         wc.style = CS_HREDRAW | CS_VREDRAW;
         wc.lpfnWndProc = WndProc;
 

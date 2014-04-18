@@ -41,22 +41,26 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\src\utils;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\src\utils;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;EXCLUDE_WEBP;EXCLUDE_FITZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <DisableSpecificWarnings>4127;4100;4800;4627;4189</DisableSpecificWarnings>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>Comctl32.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Comctl32.lib;gdiplus.lib;Shlwapi.lib;Urlmon.lib;Wininet.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -66,23 +70,115 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;EXCLUDE_WEBP;EXCLUDE_FITZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <DisableSpecificWarnings>4127;4100;4800;4627;4189</DisableSpecificWarnings>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Comctl32.lib;gdiplus.lib;Shlwapi.lib;Urlmon.lib;Wininet.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\utils\Allocator.h" />
+    <ClInclude Include="..\..\src\utils\BaseUtil.h" />
+    <ClInclude Include="..\..\src\utils\BencUtil.h" />
+    <ClInclude Include="..\..\src\utils\BitManip.h" />
+    <ClInclude Include="..\..\src\utils\BitReader.h" />
+    <ClInclude Include="..\..\src\utils\ByteOrderDecoder.h" />
+    <ClInclude Include="..\..\src\utils\ByteReader.h" />
+    <ClInclude Include="..\..\src\utils\CmdLineParser.h" />
+    <ClInclude Include="..\..\src\utils\CssParser.h" />
+    <ClInclude Include="..\..\src\utils\DbgHelpDyn.h" />
+    <ClInclude Include="..\..\src\utils\DebugLog.h" />
+    <ClInclude Include="..\..\src\utils\DialogSizer.h" />
+    <ClInclude Include="..\..\src\utils\Dict.h" />
+    <ClInclude Include="..\..\src\utils\DirIter.h" />
+    <ClInclude Include="..\..\src\utils\FileTransactions.h" />
+    <ClInclude Include="..\..\src\utils\FileUtil.h" />
+    <ClInclude Include="..\..\src\utils\FileWatcher.h" />
+    <ClInclude Include="..\..\src\utils\FrameTimeoutCalculator.h" />
+    <ClInclude Include="..\..\src\utils\GdiPlusUtil.h" />
+    <ClInclude Include="..\..\src\utils\GeomUtil.h" />
+    <ClInclude Include="..\..\src\utils\HtmlParserLookup.h" />
+    <ClInclude Include="..\..\src\utils\HtmlPrettyPrint.h" />
+    <ClInclude Include="..\..\src\utils\HtmlPullParser.h" />
+    <ClInclude Include="..\..\src\utils\HtmlWindow.h" />
+    <ClInclude Include="..\..\src\utils\HttpUtil.h" />
+    <ClInclude Include="..\..\src\utils\JsonParser.h" />
+    <ClInclude Include="..\..\src\utils\NoFreeAllocator.h" />
+    <ClInclude Include="..\..\src\utils\PalmDbReader.h" />
+    <ClInclude Include="..\..\src\utils\RefCounted.h" />
+    <ClInclude Include="..\..\src\utils\Scoped.h" />
+    <ClInclude Include="..\..\src\utils\SerializeTxt.h" />
+    <ClInclude Include="..\..\src\utils\SettingsUtil.h" />
+    <ClInclude Include="..\..\src\utils\Sigslot.h" />
+    <ClInclude Include="..\..\src\utils\SimpleLog.h" />
+    <ClInclude Include="..\..\src\utils\SquareTreeParser.h" />
+    <ClInclude Include="..\..\src\utils\StrFormat.h" />
+    <ClInclude Include="..\..\src\utils\StrHash.h" />
+    <ClInclude Include="..\..\src\utils\StrSlice.h" />
+    <ClInclude Include="..\..\src\utils\StrUtil.h" />
+    <ClInclude Include="..\..\src\utils\TgaReader.h" />
+    <ClInclude Include="..\..\src\utils\ThreadUtil.h" />
+    <ClInclude Include="..\..\src\utils\Timer.h" />
+    <ClInclude Include="..\..\src\utils\Touch.h" />
+    <ClInclude Include="..\..\src\utils\TrivialHtmlParser.h" />
+    <ClInclude Include="..\..\src\utils\TxtParser.h" />
+    <ClInclude Include="..\..\src\utils\UITask.h" />
+    <ClInclude Include="..\..\src\utils\UtAssert.h" />
+    <ClInclude Include="..\..\src\utils\VarintGob.h" />
+    <ClInclude Include="..\..\src\utils\Vec.h" />
+    <ClInclude Include="..\..\src\utils\VecSegmented.h" />
+    <ClInclude Include="..\..\src\utils\WinUtil.h" />
     <ClInclude Include="test-app.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\utils\BaseUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\BencUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\BitReader.cpp" />
+    <ClCompile Include="..\..\src\utils\ByteOrderDecoder.cpp" />
+    <ClCompile Include="..\..\src\utils\CmdLineParser.cpp" />
+    <ClCompile Include="..\..\src\utils\CssParser.cpp" />
+    <ClCompile Include="..\..\src\utils\DbgHelpDyn.cpp" />
+    <ClCompile Include="..\..\src\utils\DebugLog.cpp" />
+    <ClCompile Include="..\..\src\utils\DialogSizer.cpp" />
+    <ClCompile Include="..\..\src\utils\Dict.cpp" />
+    <ClCompile Include="..\..\src\utils\DirIter.cpp" />
+    <ClCompile Include="..\..\src\utils\FileTransactions.cpp" />
+    <ClCompile Include="..\..\src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\FileWatcher.cpp" />
+    <ClCompile Include="..\..\src\utils\GdiPlusUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\HtmlParserLookup.cpp" />
+    <ClCompile Include="..\..\src\utils\HtmlPrettyPrint.cpp" />
+    <ClCompile Include="..\..\src\utils\HtmlPullParser.cpp" />
+    <ClCompile Include="..\..\src\utils\HtmlWindow.cpp" />
+    <ClCompile Include="..\..\src\utils\HttpUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\JsonParser.cpp" />
+    <ClCompile Include="..\..\src\utils\NoFreeAllocator.cpp" />
+    <ClCompile Include="..\..\src\utils\PalmDbReader.cpp" />
+    <ClCompile Include="..\..\src\utils\SerializeTxt.cpp" />
+    <ClCompile Include="..\..\src\utils\SettingsUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\SquareTreeParser.cpp" />
+    <ClCompile Include="..\..\src\utils\StrFormat.cpp" />
+    <ClCompile Include="..\..\src\utils\StrSlice.cpp" />
+    <ClCompile Include="..\..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\TgaReader.cpp" />
+    <ClCompile Include="..\..\src\utils\ThreadUtil.cpp" />
+    <ClCompile Include="..\..\src\utils\Touch.cpp" />
+    <ClCompile Include="..\..\src\utils\TrivialHtmlParser.cpp" />
+    <ClCompile Include="..\..\src\utils\TxtParser.cpp" />
+    <ClCompile Include="..\..\src\utils\UITask.cpp" />
+    <ClCompile Include="..\..\src\utils\UtAssert.cpp" />
+    <ClCompile Include="..\..\src\utils\VarintGob.cpp" />
+    <ClCompile Include="..\..\src\utils\WinUtil.cpp" />
     <ClCompile Include="test-app.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -95,6 +191,9 @@
   <ItemGroup>
     <Image Include="test-app.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\utils\HtmlParseTest00.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
