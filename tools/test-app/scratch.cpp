@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "render-speed-test.h"
+#include "test-app.h"
 
 struct Buf {
     char *s;

@@ -11,15 +11,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TextRender.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="render-speed-test.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -29,26 +20,20 @@
     <ClInclude Include="Resource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="test-app.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="render-speed-test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="scratch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextRender.cpp">
+    <ClCompile Include="test-app.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="render-speed-test.rc">
+    <ResourceCompile Include="test-app.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -56,7 +41,7 @@
     <Image Include="small.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="render-speed-test.ico">
+    <Image Include="test-app.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
