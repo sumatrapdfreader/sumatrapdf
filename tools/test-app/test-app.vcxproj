@@ -52,7 +52,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;EXCLUDE_WEBP;EXCLUDE_FITZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;NO_LIBMUPDF;NO_LIBWEBP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4127;4100;4800;4627;4189</DisableSpecificWarnings>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
@@ -70,7 +70,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;EXCLUDE_WEBP;EXCLUDE_FITZ;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;NO_LIBMUPDF;NO_LIBWEBP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4127;4100;4800;4627;4189</DisableSpecificWarnings>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
@@ -102,6 +102,7 @@
     <ClInclude Include="..\..\src\utils\FileUtil.h" />
     <ClInclude Include="..\..\src\utils\FileWatcher.h" />
     <ClInclude Include="..\..\src\utils\FrameTimeoutCalculator.h" />
+    <ClInclude Include="..\..\src\utils\FzImgReader.h" />
     <ClInclude Include="..\..\src\utils\GdiPlusUtil.h" />
     <ClInclude Include="..\..\src\utils\GeomUtil.h" />
     <ClInclude Include="..\..\src\utils\HtmlParserLookup.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="..\..\src\utils\VarintGob.h" />
     <ClInclude Include="..\..\src\utils\Vec.h" />
     <ClInclude Include="..\..\src\utils\VecSegmented.h" />
+    <ClInclude Include="..\..\src\utils\WebpReader.h" />
     <ClInclude Include="..\..\src\utils\WinUtil.h" />
     <ClInclude Include="test-app.h" />
     <ClInclude Include="Resource.h" />
@@ -155,6 +157,7 @@
     <ClCompile Include="..\..\src\utils\FileTransactions.cpp" />
     <ClCompile Include="..\..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\..\src\utils\FileWatcher.cpp" />
+    <ClCompile Include="..\..\src\utils\FzImgReader.cpp" />
     <ClCompile Include="..\..\src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="..\..\src\utils\HtmlParserLookup.cpp" />
     <ClCompile Include="..\..\src\utils\HtmlPrettyPrint.cpp" />
@@ -178,6 +181,7 @@
     <ClCompile Include="..\..\src\utils\UITask.cpp" />
     <ClCompile Include="..\..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\..\src\utils\VarintGob.cpp" />
+    <ClCompile Include="..\..\src\utils\WebpReader.cpp" />
     <ClCompile Include="..\..\src\utils\WinUtil.cpp" />
     <ClCompile Include="test-app.cpp" />
     <ClCompile Include="stdafx.cpp">

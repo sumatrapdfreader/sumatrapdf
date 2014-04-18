@@ -309,10 +309,8 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_TGA;
     if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
         return Img_JXR;
-#if !defined(EXCLUDE_WEBP)
     if (webp::HasSignature(data, len))
         return Img_WebP;
-#endif
     if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
         return Img_JP2;
     return Img_Unknown;
@@ -348,14 +346,10 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     ImgFormat format = GfxFormatFromData(data, len);
     if (Img_TGA == format)
         return tga::ImageFromData(data, len);
-#if !defined(EXCLUDE_WEBP)
     if (Img_WebP == format)
         return webp::ImageFromData(data, len);
-#endif
-#if !defined(EXCLUDE_FITZ)
     if (Img_JP2 == format)
         return fitz::ImageFromData(data, len);
-#endif
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
@@ -379,9 +373,7 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         }
         if (ok != Ok) {
             delete bmp;
-#if !defined(EXCLUDE_FITZ)
             bmp = fitz::ImageFromData(data, len);
-#endif
         }
     }
     return bmp;
@@ -484,7 +476,6 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Height = r.WordLE(14);
         }
         break;
-#if !defined(EXCLUDE_WEBP)
     case Img_WebP:
         if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
             result.Width = r.WordLE(26) & 0x3fff;
@@ -493,7 +484,6 @@ Size BitmapSizeFromData(const char *data, size_t len)
         else {
             result = webp::SizeFromData(data, len);
         }
-#endif
         break;
     case Img_JP2:
         if (len >= 32) {

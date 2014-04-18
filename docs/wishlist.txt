@@ -123,7 +123,7 @@ Note: Automatic cropping is currently implemented as "Fit Content" View mode.
 
 -- Editing/saving of PDF forms (high)
 
--- PDF JavaScript support using mujs (low)
+-- PDF JavaScript support using mujs (low, risky)
 
 -- Integration with web-based backup/viewer system (high)
 

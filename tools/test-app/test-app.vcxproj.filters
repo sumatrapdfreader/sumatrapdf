@@ -83,6 +83,9 @@
     <ClInclude Include="..\..\src\utils\FrameTimeoutCalculator.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\utils\FzImgReader.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\utils\GdiPlusUtil.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
@@ -179,6 +182,9 @@
     <ClInclude Include="..\..\src\utils\VecSegmented.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\utils\WebpReader.h">
+      <Filter>Source Files\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\utils\WinUtil.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
@@ -230,6 +236,9 @@
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\FileWatcher.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\FzImgReader.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\GdiPlusUtil.cpp">
@@ -299,6 +308,9 @@
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\VarintGob.cpp">
+      <Filter>Source Files\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\WebpReader.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\WinUtil.cpp">
