@@ -223,10 +223,11 @@ EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode) 
     em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
     em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+    // displayMode could be any value if alternate UI was used, we have to limit it to
+    // either DM_SINGLE_PAGE or DM_FACING
     if ((DM_SINGLE_PAGE == displayMode) || (DM_AUTOMATIC == displayMode)) {
         SetSinglePage();
     } else {
-        CrashIf(displayMode != DM_FACING);
         SetDoublePage();
     }
     UpdateStatus();
