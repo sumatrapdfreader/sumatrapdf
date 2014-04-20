@@ -85,10 +85,6 @@ void HwndWrapper::TopLevelLayout()
     ClientRect rc(hwndParent);
     Size availableSize(rc.dx, rc.dy);
     //lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
-    if (lastLayoutSize == rc) {
-        layoutRequested = false;
-        return;
-    }
     Size s = Measure(availableSize);
 
     if (firstLayout && sizeToFit) {
@@ -115,7 +111,6 @@ void HwndWrapper::TopLevelLayout()
         }
     }
     Arrange(r);
-    lastLayoutSize = rc;
     layoutRequested = false;
 }
 

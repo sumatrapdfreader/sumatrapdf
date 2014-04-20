@@ -21,7 +21,6 @@ class HwndWrapper : public Control
     bool    layoutRequested;
     bool    markedForRepaint;
     bool    firstLayout;
-    RectI   lastLayoutSize;
 
 public:
     Painter *           painter;

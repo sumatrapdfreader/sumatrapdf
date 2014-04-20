@@ -33,6 +33,10 @@ EventMgr::~EventMgr()
 // Default is (0,0), which is unlimited
 void EventMgr::SetMinSize(Size s)
 {
+    // TODO: need to figure out a way to force resizing
+    // respecting those constraints. Could just size manually.
+    // Without doing sth., the constraints will only apply
+    // after next resize operation
     minSize = s;
 }
 
@@ -40,6 +44,10 @@ void EventMgr::SetMinSize(Size s)
 // Default is (0,0), which is unlimited
 void EventMgr::SetMaxSize(Size s)
 {
+    // TODO: need to figure out a way to force resizing
+    // respecting those constraints. Could just size manually.
+    // Without doing sth., the constraints will only apply
+    // after next resize operation
     maxSize = s;
 }
 

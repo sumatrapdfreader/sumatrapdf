@@ -226,8 +226,8 @@ void Control::Hide()
 {
     if (!IsVisible())
         return;
+    RequestRepaint(this); // request repaint before hiding, to trigger repaint
     bit::Set(stateBits, IsHiddenBit);
-    //RequestRepaint(this); // request repaint before hiding, to trigger repaint
     RequestLayout(this);
 }
 
