@@ -21,6 +21,7 @@ class HwndWrapper : public Control
     bool    layoutRequested;
     bool    markedForRepaint;
     bool    firstLayout;
+    RectI   lastLayoutSize;
 
 public:
     Painter *           painter;
@@ -47,4 +48,6 @@ public:
     virtual void Arrange(const Rect finalRect);
 
     void           TopLevelLayout();
+
+    bool           IsInSizeMove() const;
 };

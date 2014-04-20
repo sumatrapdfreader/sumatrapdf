@@ -65,7 +65,11 @@ void RestartLayoutTimer(EbookController *controller)
 {
     EbookWindow *win = FindEbookWindowByController(controller);
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
-    SetTimer(win->hwndFrame,  LAYOUT_TIMER_ID, 600, NULL);
+    // if the window size changes are due to user resizing, we want to delay a bit
+    // before we start reformatting. If it's because e.g. switching to fullscreen,
+    // start reformatting faster
+    UINT delay = win->hwndWrapper->IsInSizeMove() ? 100 : 600;
+    SetTimer(win->hwndFrame,  LAYOUT_TIMER_ID, delay, NULL);
 }
 
 static void OnTimer(EbookWindow *win, WPARAM timerId)

@@ -4,6 +4,7 @@
 #include "Mui.h"
 #include "WinUtil.h"
 
+//#define NOLOG 0
 #include "DebugLog.h"
 
 namespace mui {
@@ -84,30 +85,37 @@ void HwndWrapper::TopLevelLayout()
     ClientRect rc(hwndParent);
     Size availableSize(rc.dx, rc.dy);
     //lf("(%3d,%3d) HwndWrapper::TopLevelLayout()", rc.dx, rc.dy);
+    if (lastLayoutSize == rc) {
+        layoutRequested = false;
+        return;
+    }
     Size s = Measure(availableSize);
 
     if (firstLayout && sizeToFit) {
         firstLayout = false;
         desiredSize = s;
         ResizeHwndToClientArea(hwndParent, s.Width, s.Height, false);
-    } else {
-        desiredSize = availableSize;
-        Rect r(0, 0, availableSize.Width, availableSize.Height);
-        SetPosition(r);
-        if (centerContent) {
-            int n = availableSize.Width - s.Width;
-            if (n > 0) {
-                r.X = n / 2;
-                r.Width = s.Width;
-            }
-            n = availableSize.Height - s.Height;
-            if (n > 0) {
-                r.Y = n / 2;
-                r.Height = s.Height;
-            }
-        }
-        Arrange(r);
+        layoutRequested = false;
+        return;
     }
+
+    desiredSize = availableSize;
+    Rect r(0, 0, availableSize.Width, availableSize.Height);
+    SetPosition(r);
+    if (centerContent) {
+        int n = availableSize.Width - s.Width;
+        if (n > 0) {
+            r.X = n / 2;
+            r.Width = s.Width;
+        }
+        n = availableSize.Height - s.Height;
+        if (n > 0) {
+            r.Y = n / 2;
+            r.Height = s.Height;
+        }
+    }
+    Arrange(r);
+    lastLayoutSize = rc;
     layoutRequested = false;
 }
 
@@ -132,6 +140,11 @@ void HwndWrapper::OnPaint(HWND hwnd)
     CrashIf(hwnd != hwndParent);
     painter->Paint(hwnd, markedForRepaint);
     markedForRepaint = false;
+}
+
+bool HwndWrapper::IsInSizeMove() const 
+{
+    return evtMgr->IsInSizeMove();
 }
 
 }
