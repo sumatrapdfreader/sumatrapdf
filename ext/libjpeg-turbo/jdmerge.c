@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1994-1996, Thomas G. Lane.
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Modifications:
+ * libjpeg-turbo Modifications:
  * Copyright (C) 2009, 2011, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *

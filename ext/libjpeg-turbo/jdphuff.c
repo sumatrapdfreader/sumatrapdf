@@ -198,6 +198,7 @@ start_pass_phuff_decoder (j_decompress_ptr cinfo)
  * On some machines, a shift and add will be faster than a table lookup.
  */
 
+#define AVOID_TABLES
 #ifdef AVOID_TABLES
 
 #define HUFF_EXTEND(x,s)  ((x) < (1<<((s)-1)) ? (x) + (((-1)<<(s)) + 1) : (x))

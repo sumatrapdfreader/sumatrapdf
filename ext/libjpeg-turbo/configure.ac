@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.56])
-AC_INIT([libjpeg-turbo], [1.3.0])
+AC_INIT([libjpeg-turbo], [1.3.1])
 BUILD=`date +%Y%m%d`
 
 AM_INIT_AUTOMAKE([-Wall foreign dist-bzip2])
@@ -11,12 +11,16 @@ AC_PREFIX_DEFAULT(/opt/libjpeg-turbo)
 # Always build with prototypes
 AC_DEFINE([HAVE_PROTOTYPES], 1, [Define if your compiler supports prototypes])
 
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 # Checks for programs.
 SAVED_CFLAGS=${CFLAGS}
 SAVED_CPPFLAGS=${CPPFLAGS}
 AC_PROG_CPP
 AC_PROG_CC
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AM_PROG_AS
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_LN_S
@@ -52,14 +56,12 @@ if test "x${libdir}" = 'x${exec_prefix}/lib' -o "x${libdir}" = 'x${prefix}/lib';
       darwin*)
         ;;
       *)
-        case "$host_cpu" in
-          x86_64 | amd64)
-            libdir='${exec_prefix}/lib64'
-            ;;
-          i*86 | x86 | ia32)
-            libdir='${exec_prefix}/lib32'
-            ;;
-        esac
+        AC_CHECK_SIZEOF(long)
+        if test "${ac_cv_sizeof_long}" = "8"; then
+          libdir='${exec_prefix}/lib64'
+        elif test "${ac_cv_sizeof_long}" = "4"; then
+          libdir='${exec_prefix}/lib32'
+        fi
         ;;
     esac
   fi
@@ -237,13 +239,13 @@ VERS_1 {
   global: *;
 };
 EOF
-AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
   [VERSION_SCRIPT_FLAG=-Wl,--version-script,;
    AC_MSG_RESULT([yes (GNU style)])],
   [])
 if test "x$VERSION_SCRIPT_FLAG" = "x"; then
   LDFLAGS="$SAVED_LDFLAGS -Wl,-M,conftest.map"
-  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],
     [VERSION_SCRIPT_FLAG=-Wl,-M,;
      AC_MSG_RESULT([yes (Sun style)])],
     [])
@@ -264,7 +266,7 @@ AC_SUBST(VERSION_SCRIPT_FLAG)
 AC_MSG_CHECKING(for inline)
 ljt_cv_inline=""
 AC_TRY_COMPILE(, [} __attribute__((always_inline)) int foo() { return 0; }
-int bar() { return foo();], ljt_cv_inline="__attribute__((always_inline))",
+int bar() { return foo();], ljt_cv_inline="inline __attribute__((always_inline))",
 AC_TRY_COMPILE(, [} __inline__ int foo() { return 0; }
 int bar() { return foo();], ljt_cv_inline="__inline__",
 AC_TRY_COMPILE(, [} __inline int foo() { return 0; }
@@ -402,6 +404,10 @@ fi
 AC_ARG_WITH([simd],
   AC_HELP_STRING([--without-simd], [Do not include SIMD extensions]))
 if test "x${with_simd}" != "xno"; then
+  require_simd=no
+  if test "x${with_simd}" = "xyes"; then
+    require_simd=yes
+  fi
   # Check if we're on a supported CPU
   AC_MSG_CHECKING([if we have SIMD optimisations for cpu type])
   case "$host_cpu" in
@@ -422,13 +428,23 @@ if test "x${with_simd}" != "xno"; then
         [AC_MSG_RESULT([yes])
          simd_arch=arm],
         [AC_MSG_RESULT([no])
-         with_simd=no
-         AC_MSG_WARN([SIMD support can't be enabled.  Performance will suffer.])])
+         with_simd=no])
+      if test "x${with_simd}" = "xno"; then
+        if test "x${require_simd}" = "xyes"; then
+          AC_MSG_ERROR([SIMD support can't be enabled.])
+        else
+          AC_MSG_WARN([SIMD support can't be enabled.  Performance will suffer.])
+        fi
+      fi
       ;;
     *)
       AC_MSG_RESULT([no ("$host_cpu")])
-      AC_MSG_WARN([SIMD support not available for this CPU.  Performance will suffer.])
       with_simd=no;
+      if test "x${require_simd}" = "xyes"; then
+        AC_MSG_ERROR([SIMD support not available for this CPU.])
+      else
+        AC_MSG_WARN([SIMD support not available for this CPU.  Performance will suffer.])
+      fi
       ;;
   esac
 

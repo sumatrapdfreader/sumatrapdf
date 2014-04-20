@@ -40,7 +40,7 @@ case "$host_os" in
         ;;
     esac
   ;;
-  freebsd* | netbsd* | openbsd*)
+  kfreebsd* | freebsd* | netbsd* | openbsd*)
     if echo __ELF__ | $CC -E - | grep __ELF__ > /dev/null; then
       objfmt='BSD-a.out'
     else
@@ -144,26 +144,26 @@ AC_DEFUN([AC_CHECK_COMPATIBLE_ARM_ASSEMBLER_IFELSE],[
   ac_save_CFLAGS="$CFLAGS"
   CFLAGS="$CCASFLAGS -x assembler-with-cpp"
   CC="$CCAS"
-  AC_COMPILE_IFELSE([[
+  AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
     .text
     .fpu neon
     .arch armv7a
     .object_arch armv4
     .arm
     pld [r0]
-    vmovn.u16 d0, q0]], ac_good_gnu_arm_assembler=yes)
+    vmovn.u16 d0, q0]])], ac_good_gnu_arm_assembler=yes)
 
   ac_use_gas_preprocessor=no
   if test "x$ac_good_gnu_arm_assembler" = "xno" ; then
     CC="gas-preprocessor.pl $CCAS"
-    AC_COMPILE_IFELSE([[
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
       .text
       .fpu neon
       .arch armv7a
       .object_arch armv4
       .arm
       pld [r0]
-      vmovn.u16 d0, q0]], ac_use_gas_preprocessor=yes)
+      vmovn.u16 d0, q0]])], ac_use_gas_preprocessor=yes)
   fi
   CFLAGS="$ac_save_CFLAGS"
   CC="$ac_save_CC"

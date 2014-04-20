@@ -53,9 +53,9 @@ Build Requirements
    required.  Some systems, such as OS X 10.4, Solaris 10 and later, and Red
    Hat Enterprise Linux 5 and later, have this pre-installed.  On OS X 10.5 and
    later, it will be necessary to install the Java Developer Package, which can
-   be downloaded from http://connect.apple.com.  For systems that do not have a
-   JDK installed, you can obtain the Oracle Java Development Kit from
-   http://www.java.com.
+   be downloaded from http://developer.apple.com/downloads (Apple ID required.)
+   For systems that do not have a JDK installed, you can obtain the Oracle Java
+   Development Kit from http://www.java.com.
 
 
 ==================
@@ -333,31 +333,48 @@ examples accordingly.
 
 Additional build requirements:
 
-  gas-preprocessor.pl (https://github.com/yuvi/gas-preprocessor) should be
-  installed in your PATH.
+  gas-preprocessor.pl
+  (https://sourceforge.net/p/libjpeg-turbo/code/HEAD/tree/gas-preprocessor)
+  should be installed in your PATH.
 
 Set the following shell variables for simplicity:
 
   Xcode 3.2.x / iOS 4.3 SDK:
-  IOS_PLATFORMDIR="/Developer/Platforms/iPhoneOS.platform"
-  IOS_SYSROOT="$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS4.3.sdk"
-  IOS_GCC="$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2"
+  IOS_PLATFORMDIR=/Developer/Platforms/iPhoneOS.platform
+  IOS_SYSROOT=$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS4.3.sdk
+  IOS_GCC=$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
 
   Xcode 4.5.x / iOS 6.0 SDK:
-  IOS_PLATFORMDIR="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform"
-  IOS_SYSROOT="$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS6.0.sdk"
-  IOS_GCC="$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2"
+  IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+  IOS_SYSROOT=$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS6.0.sdk
+  IOS_GCC=$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
+
+  Xcode 4.6.x / iOS 6.1 SDK:
+  IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+  IOS_SYSROOT=$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS6.1.sdk
+  IOS_GCC=$IOS_PLATFORMDIR/Developer/usr/bin/arm-apple-darwin10-llvm-gcc-4.2
+
+  Xcode 5.0.x / iOS 7.0 SDK:
+  IOS_PLATFORMDIR=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+  IOS_SYSROOT=$IOS_PLATFORMDIR/Developer/SDKs/iPhoneOS7.0.sdk
+  IOS_GCC=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
 
   ARM v6 only (up to and including iPhone 3G):
   [NOTE: Requires Xcode 4.4.x or earlier]
   IOS_CFLAGS="-march=armv6 -mcpu=arm1176jzf-s -mfpu=vfp"
 
   ARM v7 only (iPhone 3GS-4S, iPad 1st-3rd Generation):
+  GCC:
   IOS_CFLAGS="-march=armv7 -mcpu=cortex-a8 -mtune=cortex-a8 -mfpu=neon"
+  Clang:
+  IOS_CFLAGS="-arch armv7 -no-integrated-as"
 
   ARM v7s only (iPhone 5, iPad 4th Generation):
   [NOTE: Requires Xcode 4.5 or later]
+  GCC
   IOS_CFLAGS="-march=armv7s -mcpu=swift -mtune=swift -mfpu=neon"
+  Clang:
+  IOS_CFLAGS="-arch armv7s -no-integrated-as"
 
 Follow the procedure under "Building libjpeg-turbo" above, adding
 

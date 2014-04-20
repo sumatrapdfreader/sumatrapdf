@@ -84,6 +84,9 @@
 /* Define if you have sys/types.h */
 #undef NEED_SYS_TYPES_H
 
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
+
 /* Name of package */
 #undef PACKAGE
 
@@ -104,6 +107,9 @@
 
 /* Define if shift is unsigned */
 #undef RIGHT_SHIFT_IS_UNSIGNED
+
+/* The size of a `long', as computed by sizeof. */
+#undef SIZEOF_LONG
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

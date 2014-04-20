@@ -169,7 +169,7 @@ int loadbmp(char *filename, unsigned char **buf, int *w, int *h,
 				nlines);
 		}
 		cinfo.next_scanline+=nlines;
-  }
+	}
 
 	(*src->finish_input)(&cinfo, src);
 
@@ -236,7 +236,7 @@ int savebmp(char *filename, unsigned char *buf, int w, int h, int srcpf,
 			_throw("savebmp(): Could not initialize PPM writer");
 	}
 
-  dst->output_file=file;
+	dst->output_file=file;
 	(*dst->start_output)(&dinfo, dst);
 	(*dinfo.mem->realize_virt_arrays)((j_common_ptr)&dinfo);
 
@@ -258,7 +258,7 @@ int savebmp(char *filename, unsigned char *buf, int w, int h, int srcpf,
 		}
 		(*dst->put_pixel_rows)(&dinfo, dst, nlines);
 		dinfo.output_scanline+=nlines;
-  }
+	}
 
 	(*dst->finish_output)(&dinfo, dst);
 

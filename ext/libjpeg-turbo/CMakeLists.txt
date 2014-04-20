@@ -2,10 +2,11 @@
 # Setup
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.8)
+cmake_policy(SET CMP0022 OLD)
 
 project(libjpeg-turbo C)
-set(VERSION 1.3.0)
+set(VERSION 1.3.1)
 
 if(MINGW OR CYGWIN)
   execute_process(COMMAND "date" "+%Y%m%d" OUTPUT_VARIABLE BUILD)
@@ -309,6 +310,7 @@ set(MD5_BMP_256 4980185e3776e89bd931736e1cddeee6)
 set(MD5_JPEG_ARI e986fb0a637a8d833d96e8a6d6d84ea1)
 set(MD5_PPM_ARI 72b59a99bcf1de24c5b27d151bde2437)
 set(MD5_JPEG_PROG 1c4afddc05c0a43489ee54438a482d92)
+set(MD5_JPEG_PROG_ARI 0a8f1c8f66e113c3cf635df0a475a617)
 set(MD5_JPEG_CROP b4197f377e621c4e9b1d20471432610d)
 
 if(WITH_JAVA)
@@ -362,6 +364,8 @@ add_test(cjpeg-ari sharedlib/cjpeg -dct int -arithmetic -outfile testoutari.jpg 
 add_test(cjpeg-ari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_ARI} -DFILE=testoutari.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake )
 add_test(jpegtran-toari sharedlib/jpegtran -arithmetic -outfile testouta.jpg ${CMAKE_SOURCE_DIR}/testimages/testimgint.jpg)
 add_test(jpegtran-toari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_ARI} -DFILE=testouta.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake)
+add_test(cjpeg-prog-ari sharedlib/cjpeg -dct int -progressive -arithmetic -sample 1x1 -outfile testoutpa.jpg ${CMAKE_SOURCE_DIR}/testimages/testorig.ppm)
+add_test(cjpeg-prog-ari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_PROG_ARI} -DFILE=testoutpa.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake )
 endif()
 if(WITH_ARITH_DEC)
 add_test(djpeg-ari sharedlib/djpeg -dct int -fast -ppm -outfile testoutari.ppm ${CMAKE_SOURCE_DIR}/testimages/testimgari.jpg)
@@ -417,6 +421,8 @@ add_test(cjpeg-static-ari cjpeg-static -dct int -arithmetic -outfile testoutari.
 add_test(cjpeg-static-ari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_ARI} -DFILE=testoutari.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake )
 add_test(jpegtran-static-toari jpegtran-static -arithmetic -outfile testouta.jpg ${CMAKE_SOURCE_DIR}/testimages/testimgint.jpg)
 add_test(jpegtran-static-toari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_ARI} -DFILE=testouta.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake)
+add_test(cjpeg-static-prog-ari cjpeg-static -dct int -progressive -arithmetic -sample 1x1 -outfile testoutpa.jpg ${CMAKE_SOURCE_DIR}/testimages/testorig.ppm)
+add_test(cjpeg-static-prog-ari-cmp ${CMAKE_COMMAND} -DMD5=${MD5_JPEG_PROG_ARI} -DFILE=testoutpa.jpg -P ${CMAKE_SOURCE_DIR}/cmakescripts/md5cmp.cmake )
 endif()
 if(WITH_ARITH_DEC)
 add_test(djpeg-static-ari djpeg-static -dct int -fast -ppm -outfile testoutari.ppm ${CMAKE_SOURCE_DIR}/testimages/testimgari.jpg)

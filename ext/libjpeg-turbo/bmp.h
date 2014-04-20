@@ -39,8 +39,4 @@ int savebmp(char *filename, unsigned char *buf, int w, int h, int pf,
 
 const char *bmpgeterr(void);
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif

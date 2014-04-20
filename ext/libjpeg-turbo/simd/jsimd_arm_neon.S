@@ -1,5 +1,5 @@
 /*
- * ARM NEON optimizations for libjpeg-turbo
+ * ARMv7 NEON optimizations for libjpeg-turbo
  *
  * Copyright (C) 2009-2011 Nokia Corporation and/or its subsidiary(-ies).
  * All rights reserved.
@@ -35,6 +35,7 @@
 
 #define RESPECT_STRICT_ALIGNMENT 1
 
+
 /*****************************************************************************/
 
 /* Supplementary macro for setting function attributes */
@@ -61,6 +62,7 @@ _\fname:
     vtrn.32 \x0, \x2
     vtrn.32 \x1, \x3
 .endm
+
 
 #define CENTERJSAMPLE 128
 
@@ -670,6 +672,7 @@ asm_function jsimd_idct_islow_neon
     .unreq          ROW7R
 .endfunc
 
+
 /*****************************************************************************/
 
 /*
@@ -894,6 +897,7 @@ asm_function jsimd_idct_ifast_neon
     .unreq          TMP4
 .endfunc
 
+
 /*****************************************************************************/
 
 /*
@@ -1108,6 +1112,7 @@ asm_function jsimd_idct_4x4_neon
 
 .purgem idct_helper
 
+
 /*****************************************************************************/
 
 /*
@@ -1261,6 +1266,7 @@ asm_function jsimd_idct_2x2_neon
 .endfunc
 
 .purgem idct_helper
+
 
 /*****************************************************************************/
 
@@ -1560,6 +1566,7 @@ generate_jsimd_ycc_rgb_convert_neon extxrgb, 32, 1, 2, 3
 
 .purgem do_load
 .purgem do_store
+
 
 /*****************************************************************************/
 
@@ -1871,6 +1878,7 @@ generate_jsimd_rgb_ycc_convert_neon extxrgb, 32, 1, 2, 3
 .purgem do_load
 .purgem do_store
 
+
 /*****************************************************************************/
 
 /*
@@ -1933,6 +1941,7 @@ asm_function jsimd_convsamp_neon
     .unreq          TMP3
     .unreq          TMP4
 .endfunc
+
 
 /*****************************************************************************/
 
@@ -2057,6 +2066,7 @@ asm_function jsimd_fdct_ifast_neon
     .unreq          TMP
 .endfunc
 
+
 /*****************************************************************************/
 
 /*
@@ -2157,6 +2167,7 @@ asm_function jsimd_quantize_neon
     .unreq          SHIFT
     .unreq          LOOP_COUNT
 .endfunc
+
 
 /*****************************************************************************/
 

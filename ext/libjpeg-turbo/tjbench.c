@@ -1,5 +1,5 @@
 /*
- * Copyright (C)2009-2012 D. R. Commander.  All Rights Reserved.
+ * Copyright (C)2009-2014 D. R. Commander.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include <errno.h>
 #include <cdjpeg.h>
@@ -138,7 +139,7 @@ int decomptest(unsigned char *srcbuf, unsigned char **jpegbuf,
 		if(yuv==YUVDECODE)
 		{
 			if(tjDecompressToYUV(handle, jpegbuf[0], jpegsize[0], dstbuf, flags)==-1)
-			_throwtj("executing tjDecompressToYUV()");
+				_throwtj("executing tjDecompressToYUV()");
 		}
 		else for(row=0, dstptr=dstbuf; row<ntilesh; row++, dstptr+=pitch*tileh)
 		{
@@ -475,7 +476,7 @@ void dodecomptest(char *filename)
 
 	if((file=fopen(filename, "rb"))==NULL)
 		_throwunix("opening file");
-	if(fseek(file, 0, SEEK_END)<0 || (srcsize=ftell(file))<0)
+	if(fseek(file, 0, SEEK_END)<0 || (srcsize=ftell(file))==(unsigned long)-1)
 		_throwunix("determining file size");
 	if((srcbuf=(unsigned char *)malloc(srcsize))==NULL)
 		_throwunix("allocating memory");
@@ -520,7 +521,7 @@ void dodecomptest(char *filename)
 			_throwunix("allocating JPEG size array");
 		memset(jpegsize, 0, sizeof(unsigned long)*ntilesw*ntilesh);
 
-		if((flags&TJFLAG_NOREALLOC)!=0)
+		if((flags&TJFLAG_NOREALLOC)!=0 || !dotile)
 			for(i=0; i<ntilesw*ntilesh; i++)
 			{
 				if((jpegbuf[i]=(unsigned char *)malloc(tjBufSize(tilew, tileh,
@@ -686,6 +687,9 @@ void usage(char *progname)
 	printf("     codec\n");
 	printf("-accuratedct = Use the most accurate DCT/IDCT algorithms available in the\n");
 	printf("     underlying codec\n");
+	printf("-subsamp <s> = When testing JPEG compression, this option specifies the level\n");
+	printf("     of chrominance subsampling to use (<s> = 444, 422, 440, 420, or GRAY).\n");
+	printf("     The default is to test Grayscale, 4:2:0, 4:2:2, and 4:4:4 in sequence.\n");
 	printf("-quiet = Output results in tabular rather than verbose format\n");
 	printf("-yuvencode = Encode RGB input as planar YUV rather than compressing as JPEG\n");
 	printf("-yuvdecode = Decode JPEG image to planar YUV rather than RGB\n");
@@ -719,7 +723,7 @@ int main(int argc, char *argv[])
 {
 	unsigned char *srcbuf=NULL;  int w, h, i, j;
 	int minqual=-1, maxqual=-1;  char *temp;
-	int minarg=2;  int retval=0;
+	int minarg=2, retval=0, subsamp=-1;
 
 	if((scalingfactors=tjGetScalingFactors(&nsf))==NULL || nsf==0)
 		_throwtj("executing tjGetScalingFactors()");
@@ -856,6 +860,22 @@ int main(int argc, char *argv[])
 			if(!strcmp(argv[i], "-?")) usage(argv[0]);
 			if(!strcasecmp(argv[i], "-alloc")) flags&=(~TJFLAG_NOREALLOC);
 			if(!strcasecmp(argv[i], "-bmp")) ext="bmp";
+			if(!strcasecmp(argv[i], "-subsamp") && i<argc-1)
+			{
+				i++;
+				if(toupper(argv[i][0])=='G') subsamp=TJSAMP_GRAY;
+				else
+				{
+					int temp=atoi(argv[i]);
+					switch(temp)
+					{
+						case 444:  subsamp=TJSAMP_444;  break;
+						case 422:  subsamp=TJSAMP_422;  break;
+						case 440:  subsamp=TJSAMP_440;  break;
+						case 420:  subsamp=TJSAMP_420;  break;
+					}
+				}
+			}
 		}
 	}
 
@@ -895,18 +915,27 @@ int main(int argc, char *argv[])
 		printf("\n");
 		goto bailout;
 	}
-	for(i=maxqual; i>=minqual; i--)
-		dotest(srcbuf, w, h, TJ_GRAYSCALE, i, argv[1]);
-	printf("\n");
-	for(i=maxqual; i>=minqual; i--)
-		dotest(srcbuf, w, h, TJ_420, i, argv[1]);
-	printf("\n");
-	for(i=maxqual; i>=minqual; i--)
-		dotest(srcbuf, w, h, TJ_422, i, argv[1]);
-	printf("\n");
-	for(i=maxqual; i>=minqual; i--)
-		dotest(srcbuf, w, h, TJ_444, i, argv[1]);
-	printf("\n");
+	if(subsamp>=0 && subsamp<TJ_NUMSAMP)
+	{
+		for(i=maxqual; i>=minqual; i--)
+			dotest(srcbuf, w, h, subsamp, i, argv[1]);
+		printf("\n");
+	}
+	else
+	{
+		for(i=maxqual; i>=minqual; i--)
+			dotest(srcbuf, w, h, TJSAMP_GRAY, i, argv[1]);
+		printf("\n");
+		for(i=maxqual; i>=minqual; i--)
+			dotest(srcbuf, w, h, TJSAMP_420, i, argv[1]);
+		printf("\n");
+		for(i=maxqual; i>=minqual; i--)
+			dotest(srcbuf, w, h, TJSAMP_422, i, argv[1]);
+		printf("\n");
+		for(i=maxqual; i>=minqual; i--)
+			dotest(srcbuf, w, h, TJSAMP_444, i, argv[1]);
+		printf("\n");
+	}
 
 	bailout:
 	if(srcbuf) free(srcbuf);

@@ -53,12 +53,16 @@
 
 /**
  * Chrominance subsampling options.
- * When an image is converted from the RGB to the YUV colorspace as part of
- * the JPEG compression process, some of the U and V (chrominance) components
+ * When an image is converted from the RGB to the YCbCr colorspace as part of
+ * the JPEG compression process, some of the Cb and Cr (chrominance) components
  * can be discarded or averaged together to produce a smaller image with little
  * perceptible loss of image clarity (the human eye is more sensitive to small
  * changes in brightness than small changes in color.)  This is called
  * "chrominance subsampling".
+ * <p>
+ * NOTE: Technically, the JPEG format uses the YCbCr colorspace, but per the
+ * convention of the digital video community, the TurboJPEG API uses "YUV" to
+ * refer to an image format consisting of Y, Cb, and Cr image planes.
  */
 enum TJSAMP
 {
@@ -85,6 +89,7 @@ enum TJSAMP
   /**
    * 4:4:0 chrominance subsampling.  The JPEG or YUV image will contain one
    * chrominance component for every 1x2 block of pixels in the source image.
+   * Note that 4:4:0 subsampling is not fully accelerated in libjpeg-turbo.
    */
   TJSAMP_440
 };
@@ -263,20 +268,20 @@ static const int tjPixelSize[TJ_NUMPF] = {3, 3, 4, 4, 4, 4, 1, 4, 4, 4, 4};
 #define TJFLAG_NOREALLOC     1024
 /**
  * Use the fastest DCT/IDCT algorithm available in the underlying codec.  The
- * default if this flag is not specified is implementation-specific.  The
- * libjpeg implementation, for example, uses the fast algorithm by default when
- * compressing, because this has been shown to have only a very slight effect
- * on accuracy, but it uses the accurate algorithm when decompressing, because
- * this has been shown to have a larger effect.
+ * default if this flag is not specified is implementation-specific.  For
+ * example, the implementation of TurboJPEG for libjpeg[-turbo] uses the fast
+ * algorithm by default when compressing, because this has been shown to have
+ * only a very slight effect on accuracy, but it uses the accurate algorithm
+ * when decompressing, because this has been shown to have a larger effect.
  */
 #define TJFLAG_FASTDCT       2048
 /**
  * Use the most accurate DCT/IDCT algorithm available in the underlying codec.
- * The default if this flag is not specified is implementation-specific.  The
- * libjpeg implementation, for example, uses the fast algorithm by default when
- * compressing, because this has been shown to have only a very slight effect
- * on accuracy, but it uses the accurate algorithm when decompressing, because
- * this has been shown to have a larger effect.
+ * The default if this flag is not specified is implementation-specific.  For
+ * example, the implementation of TurboJPEG for libjpeg[-turbo] uses the fast
+ * algorithm by default when compressing, because this has been shown to have
+ * only a very slight effect on accuracy, but it uses the accurate algorithm
+ * when decompressing, because this has been shown to have a larger effect.
  */
 #define TJFLAG_ACCURATEDCT   4096
 
@@ -440,8 +445,8 @@ typedef struct tjtransform
   /**
    * A callback function that can be used to modify the DCT coefficients
    * after they are losslessly transformed but before they are transcoded to a
-   * new JPEG file.  This allows for custom filters or other transformations to
-   * be applied in the frequency domain.
+   * new JPEG image.  This allows for custom filters or other transformations
+   * to be applied in the frequency domain.
    *
    * @param coeffs pointer to an array of transformed DCT coefficients.  (NOTE:
    *        this pointer is not guaranteed to be valid once the callback
@@ -456,7 +461,7 @@ typedef struct tjtransform
    * @param planeRegion #tjregion structure containing the width and height of
    *        the component plane to which <tt>coeffs</tt> belongs
    * @param componentID ID number of the component plane to which
-   *        <tt>coeffs</tt> belongs (Y, U, and V have, respectively, ID's of
+   *        <tt>coeffs</tt> belongs (Y, Cb, and Cr have, respectively, ID's of
    *        0, 1, and 2 in typical JPEG images.)
    * @param transformID ID number of the transformed image to which
    *        <tt>coeffs</tt> belongs.  This is the same as the index of the
@@ -610,6 +615,10 @@ DLLEXPORT unsigned long DLLCALL tjBufSizeYUV(int width, int height,
  * padded to 4 bytes.  Although this will work with any subsampling option, it
  * is really only useful in combination with TJ_420, which produces an image
  * compatible with the I420 (AKA "YUV420P") format.
+ * <p>
+ * NOTE: Technically, the JPEG format uses the YCbCr colorspace, but per the
+ * convention of the digital video community, the TurboJPEG API uses "YUV" to
+ * refer to an image format consisting of Y, Cb, and Cr image planes.
  *
  * @param handle a handle to a TurboJPEG compressor or transformer instance
  * @param srcBuf pointer to an image buffer containing RGB or grayscale pixels
@@ -741,6 +750,10 @@ DLLEXPORT int DLLCALL tjDecompress2(tjhandle handle,
  * that, if the width or height of the image is not an even multiple of the MCU
  * block size (see #tjMCUWidth and #tjMCUHeight), then an intermediate buffer
  * copy will be performed within TurboJPEG.
+ * <p>
+ * NOTE: Technically, the JPEG format uses the YCbCr colorspace, but per the
+ * convention of the digital video community, the TurboJPEG API uses "YUV" to
+ * refer to an image format consisting of Y, Cb, and Cr image planes.
  *
  * @param handle a handle to a TurboJPEG decompressor or transformer instance
  * @param jpegBuf pointer to a buffer containing the JPEG image to decompress

@@ -1,3 +1,42 @@
+1.3.1
+=====
+
+[1] On Un*x systems, 'make install' now installs the libjpeg-turbo libraries
+into /opt/libjpeg-turbo/lib32 by default on any 32-bit system, not just x86,
+and into /opt/libjpeg-turbo/lib64 by default on any 64-bit system, not just
+x86-64.  You can override this by overriding either the 'prefix' or 'libdir'
+configure variables.
+
+[2] The Windows installer now places a copy of the TurboJPEG DLLs in the same
+directory as the rest of the libjpeg-turbo binaries.  This was mainly done
+to support TurboVNC 1.3, which bundles the DLLs in its Windows installation.
+When using a 32-bit version of CMake on 64-bit Windows, it is impossible to
+access the c:\WINDOWS\system32 directory, which made it impossible for the
+TurboVNC build scripts to bundle the 64-bit TurboJPEG DLL.
+
+[3] Fixed a bug whereby attempting to encode a progressive JPEG with arithmetic
+entropy coding (by passing arguments of -progressive -arithmetic to cjpeg or
+jpegtran, for instance) would result in an error, "Requested feature was
+omitted at compile time".
+
+[4] Fixed a couple of issues whereby malformed JPEG images would cause
+libjpeg-turbo to use uninitialized memory during decompression.
+
+[5] Fixed an error ("Buffer passed to JPEG library is too small") that occurred
+when calling the TurboJPEG YUV encoding function with a very small (< 5x5)
+source image, and added a unit test to check for this error.
+
+[6] The Java classes should now build properly under Visual Studio 2010 and
+later.
+
+[7] Fixed an issue that prevented SRPMs generated using the in-tree packaging
+tools from being rebuilt on certain newer Linux distributions.
+
+[8] Numerous minor fixes to eliminate compilation and build/packaging system
+warnings, fix cosmetic issues, improve documentation clarity, and other general
+source cleanup.
+
+
 1.3.0
 =====
 

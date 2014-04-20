@@ -192,6 +192,7 @@ MD5_BMP_256 = 4980185e3776e89bd931736e1cddeee6
 MD5_JPEG_ARI = e986fb0a637a8d833d96e8a6d6d84ea1
 MD5_PPM_ARI = 72b59a99bcf1de24c5b27d151bde2437
 MD5_JPEG_PROG = 1c4afddc05c0a43489ee54438a482d92
+MD5_JPEG_PROG_ARI = 0a8f1c8f66e113c3cf635df0a475a617
 MD5_JPEG_CROP = b4197f377e621c4e9b1d20471432610d
 
 test: testclean all
@@ -269,6 +270,8 @@ if WITH_ARITH_ENC
 	md5/md5cmp $(MD5_JPEG_ARI) testoutari.jpg
 	./jpegtran -arithmetic -outfile testouta.jpg $(srcdir)/testimages/testimgint.jpg
 	md5/md5cmp $(MD5_JPEG_ARI) testouta.jpg
+	./cjpeg -dct int -progressive -arithmetic -sample 1x1 -outfile testoutpa.jpg $(srcdir)/testimages/testorig.ppm
+	md5/md5cmp $(MD5_JPEG_PROG_ARI) testoutpa.jpg
 endif
 if WITH_ARITH_DEC
 	./djpeg -dct int -fast -ppm -outfile testoutari.ppm $(srcdir)/testimages/testimgari.jpg

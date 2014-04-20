@@ -3,7 +3,7 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1997-2011, Thomas G. Lane, Guido Vollbeding.
- * Modifications:
+ * libjpeg-turbo Modifications:
  * Copyright (C) 2010, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -1176,6 +1176,7 @@ transpose_critical_parameters (j_compress_ptr dstinfo)
  * We try to adjust the Tags ExifImageWidth and ExifImageHeight if possible.
  */
 
+#if JPEG_LIB_VERSION >= 70
 LOCAL(void)
 adjust_exif_parameters (JOCTET FAR * data, unsigned int length,
 			JDIMENSION new_width, JDIMENSION new_height)
@@ -1325,6 +1326,7 @@ adjust_exif_parameters (JOCTET FAR * data, unsigned int length,
     offset += 12;
   } while (--number_of_tags);
 }
+#endif
 
 
 /* Adjust output image parameters as needed.

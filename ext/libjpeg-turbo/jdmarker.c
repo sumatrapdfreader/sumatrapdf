@@ -3,7 +3,7 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modifications:
+ * libjpeg-turbo Modifications:
  * Copyright (C) 2012, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -304,7 +304,7 @@ get_sos (j_decompress_ptr cinfo)
 /* Process a SOS marker */
 {
   INT32 length;
-  int i, ci, n, c, cc;
+  int i, ci, n, c, cc, pi;
   jpeg_component_info * compptr;
   INPUT_VARS(cinfo);
 
@@ -348,6 +348,13 @@ get_sos (j_decompress_ptr cinfo)
     
     TRACEMS3(cinfo, 1, JTRC_SOS_COMPONENT, cc,
 	     compptr->dc_tbl_no, compptr->ac_tbl_no);
+
+    /* This CSi (cc) should differ from the previous CSi */
+    for (pi = 0; pi < i; pi++) {
+      if (cinfo->cur_comp_info[pi] == compptr) {
+        ERREXIT1(cinfo, JERR_BAD_COMPONENT_ID, cc);
+      }
+    }
   }
 
   /* Collect the additional scan parameters Ss, Se, Ah/Al. */
@@ -465,17 +472,20 @@ get_dht (j_decompress_ptr cinfo)
     for (i = 0; i < count; i++)
       INPUT_BYTE(cinfo, huffval[i], return FALSE);
 
+    MEMZERO(&huffval[count], (256 - count) * SIZEOF(UINT8));
+
     length -= count;
 
     if (index & 0x10) {		/* AC table definition */
       index -= 0x10;
+      if (index < 0 || index >= NUM_HUFF_TBLS)
+        ERREXIT1(cinfo, JERR_DHT_INDEX, index);
       htblptr = &cinfo->ac_huff_tbl_ptrs[index];
     } else {			/* DC table definition */
+      if (index < 0 || index >= NUM_HUFF_TBLS)
+        ERREXIT1(cinfo, JERR_DHT_INDEX, index);
       htblptr = &cinfo->dc_huff_tbl_ptrs[index];
     }
-
-    if (index < 0 || index >= NUM_HUFF_TBLS)
-      ERREXIT1(cinfo, JERR_DHT_INDEX, index);
 
     if (*htblptr == NULL)
       *htblptr = jpeg_alloc_huff_table((j_common_ptr) cinfo);
