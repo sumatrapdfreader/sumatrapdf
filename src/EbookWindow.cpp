@@ -340,11 +340,16 @@ static void OnMenuViewFullscreen(EbookWindow* win)
 
 static void OnMenuViewSinglePage(EbookWindow *win)
 {
+    // TODO: adjust size for DPI
+    win->hwndWrapper->SetMinSize(Size(320, 320));
     win->ebookController->SetSinglePage();
 }
 
 static void OnMenuViewFacing(EbookWindow *win)
 {
+    // TODO: adjust size for DPI
+    int spaceDx = win->ebookControls->pagesLayout->GetSpaceDx();
+    win->hwndWrapper->SetMinSize(Size(320*2 + spaceDx, 320));
     win->ebookController->SetDoublePage();
 }
 
