@@ -7,7 +7,7 @@
 /* A very simple thread class that allows stopping a thread */
 class ThreadBase {
 private:
-    LONG                threadNo;
+    int                 threadNo;
     HANDLE              hThread;
     bool                cancelRequested;
 

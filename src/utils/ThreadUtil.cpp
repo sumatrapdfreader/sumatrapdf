@@ -40,11 +40,17 @@ void SetThreadName(DWORD threadId, const char *threadName)
 }
 #pragma warning(push)
 
-static LONG gThreadNoSeq = 0;
+// We need a way to uniquely identified threads (so that we can test for equality).
+// Thread id assigned by the OS might be recycled. The memory address given to ThreadBase
+// object can be recycled as well, so we keep our own counter.
+static int GenUniqueThreadId() {
+    static LONG gThreadNoSeq = 0;
+    return (int) InterlockedIncrement(&gThreadNoSeq);
+}
 
 ThreadBase::ThreadBase(const char *name) :
     hThread(NULL), cancelRequested(false),
-    threadNo(InterlockedIncrement(&gThreadNoSeq)),
+    threadNo(GenUniqueThreadId()),
     threadName(str::Dup(name))
 {
     //lf("ThreadBase() %d", threadNo);

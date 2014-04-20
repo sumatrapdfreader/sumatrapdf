@@ -187,8 +187,12 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
     case VK_RIGHT: case VK_DOWN: case VK_NEXT: case 'N':
         win->ebookController->AdvancePage(1);
         break;
+    case VK_RETURN:
     case VK_SPACE:
         win->ebookController->AdvancePage(IsShiftPressed() ? -1 : 1);
+        break;
+    case VK_BACK:
+        win->ebookController->AdvancePage(-1);
         break;
 #ifdef DEBUG
     case VK_F1:
@@ -327,6 +331,7 @@ static void OnMenuGoToPage(EbookWindow *win)
 
 static void OnMenuViewFullscreen(EbookWindow* win)
 {
+    // TODO: changing full-screen status is not smooth
     if (win->isFullScreen)
         ExitFullScreen(win);
     else
@@ -335,15 +340,11 @@ static void OnMenuViewFullscreen(EbookWindow* win)
 
 static void OnMenuViewSinglePage(EbookWindow *win)
 {
-    // TODO: happened in e.g. crash 51500. Figure out why
-    // but don't enable in pre-release builds
-    CrashIfDebugOnly(win->ebookController->IsSinglePage());
     win->ebookController->SetSinglePage();
 }
 
 static void OnMenuViewFacing(EbookWindow *win)
 {
-    CrashIf(!win->ebookController->IsSinglePage());
     win->ebookController->SetDoublePage();
 }
 
@@ -651,7 +652,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
     SaveThumbnailForFile(doc.GetFilePath(), bmp);
 }
 
-void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
+void OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace)
 {
     const WCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
@@ -761,7 +762,8 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     EbookWindow *win = new EbookWindow();
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
-    win->ebookController = new EbookController(win->ebookControls);
+    DisplayMode dm = prefs::conv::ToDisplayMode(ds->displayMode, DM_SINGLE_PAGE);
+    win->ebookController = new EbookController(win->ebookControls, dm);
     win->hwndFrame = hwnd;
 
     gEbookWindows.Append(win);

@@ -223,7 +223,7 @@ void PagesLayout::Arrange(const Rect finalRect)
 
     // when both visible, give them equally sized areas
     // with spaceDx between them
-    int dx = desiredSize.Width;
+    int dx = finalRect.Width;
     if (page2->IsVisible()) {
         dx = (dx / 2) - spaceDx;
         // protect against excessive spaceDx values

@@ -37,7 +37,7 @@ public:
 };
 
 EbookWindow* FindEbookWindowByController(EbookController *controller);
-void   OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace);
+void   OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace);
 void   RegisterMobiWinClass(HINSTANCE hinst);
 void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);

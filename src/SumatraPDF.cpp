@@ -504,12 +504,10 @@ static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
     // switch between the interfaces); we get reasonable
     // defaults from DisplayState's constructor anyway
     ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
-#if 0
-    if (win->ebookControler->IsSinglePage)
-        ds->displayMode = DM_SINGLE_PAGE;
+    if (win->ebookController->IsSinglePage())
+        str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(DM_SINGLE_PAGE));
     else
-        ds->displayMode = DM_FACING;
-#endif
+        str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(DM_FACING));
 }
 
 static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)

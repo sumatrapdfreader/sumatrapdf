@@ -52,13 +52,6 @@ of controls in the toolbar).
 This would also help in unifying full-screen modes (overlaid, auto-hidden
 toolbar is a better match for full-screen mode than the current one).
 
--- simplify re-layout (risky, low)
-
-Now that layout is 10x faster, we could eliminate the problems of sometimes
-breaking the styling by simplifying the code by removing the optimization
-that tries to re-parse from a given point in the html. Always re-parse from
-the beginning.
-
 -- change fit width mode
 
 Make all pages have uniform size. Currently they all have uniform zoom ratio
@@ -91,16 +84,40 @@ mostly a rectangle).
 
 Layout time is dominated by measuring strings.
 
-Split layout into 2 phases:
-* generating instructions and calculating sizes (including measuring strings)
-* calculating positions of the elements given page dx/dy
+Split layout into 2 or 3 phases:
+* generate instructions (text fragments, images, font/style changes etc.)
+* measure strings, images etc.
+* calculating positions of the elements given page dx/dy and break them into pages
 
-When users resizes the window, we would only need to redo phase 2. A small
+When users resizes the window, we would only need to redo phase 3. A small
 complication: when a string doesn't fit in a single line, we need to split
-it into to string instructions. We would need to be able to do it (by adding
-additional instructions during second phase).
+it into to string instructions. We would need to be able to do it e.g. by
+adding a "compound" instruction, that just contains one or more other instructions.
+That way the istruction stream would be almost-immutable, and we could turn
+a e.g. a long string into 2 smaller strings by replacing string instruction with
+"compound" instructions that points to the original string instructions (so that we
+can undo that in the next layout) and 2 or more substrings.
 
--- Improve find UI (med, risky)
+Changing default font would require redoing phase 2 and 3.
+
+-- ebook: re-introduce preserving top of page after re-layout (risky, med)
+
+The code to preserve current top of page after re-layout was so complicated
+that I had to remove it in order to implement dual pages in ebook mode.
+It would be nice to bring it back in a saner way and without the problem
+of breaking the styling.
+It would be easier if we implement faster re-layout as described above and
+have every element remember its reparse point (instead of having it on a
+per-page basis).
+
+That way we would generate instructions just once. A page would just be:
+(index of first instruction, number of instructions).
+
+We could avoid breaking styling because now we have access to the whole instruction
+stream and we could quickly scan back instructions from any point to find
+formatting instructions and recover current styling.
+
+-- improve find UI (med, risky)
 
 The one I like the best is in Chrome browser (with
 modification needed for specyfing search parameters like case sensitivity
@@ -108,7 +125,7 @@ and additions like 'match whole words' modifier). Another nice implementation
 is in Kindle PC reader.
 We could then free up significant amount of space in the toolbar.
 
--- Manual cropping of margins for PDFs (med, risky)
+-- manual cropping of margins for PDFs (med, risky)
 
 Screen space is always at premium and most PDFs have very wasteful
 margins. Good Reader has a really nice feature for manual cropping of margins
