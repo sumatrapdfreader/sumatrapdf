@@ -5,6 +5,7 @@ Next version:
 
 2.5 (2014-??-??):
 
+* 2 page view for ebooks
 * new keybindings:
   * Ctrl+PgDn, Ctrl+Right : go to next page
   * Ctrl+PgUp, Ctrl+Left  : go to previous page

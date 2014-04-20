@@ -137,6 +137,13 @@ only shows the non-cropped part. This would be especially valuable for small
 screens (netbooks/small laptops).
 
 Note: Automatic cropping is currently implemented as "Fit Content" View mode.
+Note to note: it's similar but not really the same. One big difference is that
+with this style of cropping, for the purpose of layout and display the cropped
+part doesn't exist. Fit Content positions the page so that it's out of the view,
+but change zoom and it's really there.
+Plus, automatic cropping has limitations. There are many cases where a PDF has
+lots of white-space but cannot be cropped because has some small thing there,
+like a page number.
 
 -- Editing/saving of PDF forms (high)
 
