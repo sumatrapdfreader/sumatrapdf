@@ -12,12 +12,6 @@ TODO:
  - add transparent rendering to GDI, see:
    http://stackoverflow.com/questions/1340166/transparency-to-text-in-gdi
    http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/
- - propagate clipping region from Graphics to HDC in TextRenderGdi, like this:
-        var clip = gfx.Clip.GetHrgn(gfx);
-         _hdc = gfx.GetHdc();
-        SetBkMode(_hdc, 1);
-        SelectClipRgn(_hdc, clip);
-        DeleteObject(clip);
  - figure out a way to get rid of Lock()/Unlock(). One way is to turn ITextRender into a full-blown
    IGraphics abstraction (add drawing calls to it) and then GDI+-based implementation could
    track locking state internally, so that the caller doesn't have to.
@@ -117,7 +111,15 @@ void TextRenderGdi::SetTextBgColor(Gdiplus::Color col) {
 
 void TextRenderGdi::Lock() {
     CrashIf(hdcGfxLocked);
+    Region r;
+    Status st = gfx->GetClip(&r); // must call before GetHDC(), which locks gfx
+    CrashIf(st != Ok);
+    HRGN hrgn = r.GetHRGN(gfx);
+
     hdcGfxLocked = gfx->GetHDC();
+    SelectClipRgn(hdcGfxLocked, hrgn);
+    DeleteObject(hrgn);
+
     SelectFont(hdcGfxLocked, currFont);
     ::SetTextColor(hdcGfxLocked, textColor.ToCOLORREF());
     ::SetBkColor(hdcGfxLocked, textBgColor.ToCOLORREF());
