@@ -426,6 +426,7 @@ size_t EpubDoc::GetTextDataSize()
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 {
     if (!pagePath) {
+        CrashIf(true);
         // if we're reparsing, we might not have pagePath, which is needed to
         // build the exact url so try to find a partial match
         // TODO: the correct approach would be to extend reparseIdx into a
@@ -478,8 +479,10 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 
 char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *lenOut)
 {
-    if (!pagePath)
+    if (!pagePath) {
+        CrashIf(true);
         return NULL;
+    }
 
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
     ScopedMem<WCHAR> zipPath(str::conv::FromUtf8(url));

@@ -697,13 +697,14 @@ public:
             dest = NULL;
         else if (IsAbsoluteUrl(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
-        else if (str::FindChar(url, '%')) {
-            ScopedMem<WCHAR> decodedUrl(str::Dup(url));
-            str::UrlDecodeInPlace(decodedUrl);
-            dest = engine->GetNamedDest(decodedUrl);
-        }
-        else
+        else {
             dest = engine->GetNamedDest(url);
+            if (!dest && str::FindChar(url, '%')) {
+                ScopedMem<WCHAR> decodedUrl(str::Dup(url));
+                str::UrlDecodeInPlace(decodedUrl);
+                dest = engine->GetNamedDest(decodedUrl);
+            }
+        }
 
         EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
         item->id = ++idCounter;
