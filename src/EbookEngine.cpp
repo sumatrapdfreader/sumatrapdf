@@ -1243,7 +1243,6 @@ public:
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
         ScopedMem<char> url(NormalizeURL(id, pagePath));
-        str::UrlDecodeInPlace(url);
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;
@@ -1260,7 +1259,6 @@ public:
 
     char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut) {
         ScopedMem<char> url(NormalizeURL(relPath, pagePath));
-        str::UrlDecodeInPlace(url);
         return (char *)doc->GetData(url, lenOut);
     }
 };
@@ -1288,6 +1286,7 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        str::UrlDecodeInPlace(src);
         ImageData *img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
@@ -1326,6 +1325,7 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
 
     size_t len;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    str::UrlDecodeInPlace(src);
     ScopedMem<char> data(chmDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
@@ -1452,6 +1452,7 @@ public:
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
         if (added.FindI(plainUrl) != -1)
             return;
+        // TODO: str::UrlDecodeInPlace(plainUrl) ?
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));

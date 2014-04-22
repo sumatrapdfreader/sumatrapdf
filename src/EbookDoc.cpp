@@ -255,6 +255,7 @@ bool EpubDoc::Load()
     ScopedMem<WCHAR> contentPath(node->GetAttribute("full-path"));
     if (!contentPath)
         return false;
+    str::UrlDecodeInPlace(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
@@ -264,15 +265,15 @@ bool EpubDoc::Load()
         HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR *uri = cr->GetAttribute("URI");
-            if (uri)
+            if (uri) {
+                str::UrlDecodeInPlace(uri);
                 encList.Append(uri);
+            }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
         }
     }
 
-    ScopedMem<WCHAR> contentPathDec(str::Dup(contentPath));
-    str::UrlDecodeInPlace(contentPathDec);
-    ScopedMem<char> content(zip.GetFileDataByName(contentPathDec));
+    ScopedMem<char> content(zip.GetFileDataByName(contentPath));
     if (!content)
         return false;
     ParseMetadata(content);
@@ -299,13 +300,13 @@ bool EpubDoc::Load()
             ScopedMem<WCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
+            str::UrlDecodeInPlace(imgPath);
             imgPath.Set(str::Join(contentPath, imgPath));
             if (encList.Contains(imgPath))
                 continue;
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
-            str::UrlDecodeInPlace(imgPath);
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
@@ -315,14 +316,15 @@ bool EpubDoc::Load()
                  str::Eq(mediatype, L"text/html") ||
                  str::Eq(mediatype, L"text/xml")) {
             ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
+            if (!htmlPath)
+                continue;
+            str::UrlDecodeInPlace(htmlPath);
             ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
             // EPUB 3 ToC
             ScopedMem<WCHAR> properties(node->GetAttribute("properties"));
-            if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml")) {
+            if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml"))
                 tocPath.Set(str::Join(contentPath, htmlPath));
-                str::UrlDecodeInPlace(tocPath);
-            }
-            if (htmlPath && encList.Count() > 0 && encList.Contains(ScopedMem<WCHAR>(str::Join(contentPath, htmlPath))))
+            if (encList.Count() > 0 && encList.Contains(ScopedMem<WCHAR>(str::Join(contentPath, htmlPath))))
                 continue;
             if (htmlPath && htmlId) {
                 idList.Append(htmlId.StealData());
@@ -338,7 +340,6 @@ bool EpubDoc::Load()
     ScopedMem<WCHAR> tocId(node->GetAttribute("toc"));
     if (tocId && !tocPath && idList.Contains(tocId)) {
         tocPath.Set(str::Join(contentPath, pathList.At(idList.Find(tocId))));
-        str::UrlDecodeInPlace(tocPath);
         isNcxToc = true;
     }
     ScopedMem<WCHAR> readingDir(node->GetAttribute("page-progression-direction"));
@@ -353,8 +354,6 @@ bool EpubDoc::Load()
             continue;
 
         ScopedMem<WCHAR> fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
-        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
-        str::UrlDecodeInPlace(fullPath);
         ScopedMem<char> html(zip.GetFileDataByName(fullPath));
         if (!html)
             continue;
@@ -363,6 +362,9 @@ bool EpubDoc::Load()
             continue;
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
+        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
+        CrashIfDebugOnly(str::FindChar(utf8_path, '"'));
+        str::TransChars(utf8_path, "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path);
         htmlData.Append(html);
     }
@@ -463,7 +465,6 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     // try to also load images which aren't registered in the manifest
     ImageData2 data = { 0 };
     ScopedMem<WCHAR> imgPath(str::conv::FromUtf8(url));
-    str::UrlDecodeInPlace(imgPath);
     data.idx = zip.GetFileIndex(imgPath);
     if (data.idx != (size_t)-1) {
         data.base.data = zip.GetFileDataByIdx(data.idx, &data.base.len);
@@ -817,8 +818,10 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
 {
     ScopedMem<char> id;
     AttrInfo *attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS);
-    if (attrInfo)
+    if (attrInfo) {
         id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
+        str::UrlDecodeInPlace(id);
+    }
 
     tok = parser->Next();
     if (!tok || !tok->IsText())
@@ -1224,7 +1227,6 @@ const char *HtmlDoc::GetTextData(size_t *lenOut)
 ImageData *HtmlDoc::GetImageData(const char *id)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));
-    str::UrlDecodeInPlace(url);
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))
             return &images.At(i).base;
@@ -1242,7 +1244,6 @@ ImageData *HtmlDoc::GetImageData(const char *id)
 char *HtmlDoc::GetFileData(const char *relPath, size_t *lenOut)
 {
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
-    str::UrlDecodeInPlace(url);
     return LoadURL(url, lenOut);
 }
 
