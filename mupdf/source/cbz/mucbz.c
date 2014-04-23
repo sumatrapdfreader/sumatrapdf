@@ -8,6 +8,8 @@
 #define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
 #define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
 
+#define ZIP_ENCRYPTED_FLAG 0x1
+
 #define DPI 72.0f
 
 static void cbz_init_document(cbz_document *doc);
@@ -76,7 +78,7 @@ cbz_read_zip_entry(cbz_document *doc, int offset, int *sizep)
 {
 	fz_context *ctx = doc->ctx;
 	fz_stream *file = doc->file;
-	int sig, method, namelength, extralength;
+	int sig, general, method, namelength, extralength;
 	unsigned long csize, usize;
 	unsigned char *cdata;
 	int code;
@@ -88,7 +90,10 @@ cbz_read_zip_entry(cbz_document *doc, int offset, int *sizep)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "wrong zip local file signature (0x%x)", sig);
 
 	(void) getshort(doc->file); /* version */
-	(void) getshort(doc->file); /* general */
+	general = getshort(doc->file); /* general */
+	if (general & ZIP_ENCRYPTED_FLAG)
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "zipfile content is encrypted");
+
 	method = getshort(doc->file);
 	(void) getshort(doc->file); /* file time */
 	(void) getshort(doc->file); /* file date */

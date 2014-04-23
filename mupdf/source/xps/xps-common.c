@@ -13,7 +13,7 @@ xps_lookup_alternate_content(fz_xml *node)
 {
 	for (node = fz_xml_down(node); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(fz_xml_tag(node), "mc:Choice") && fz_xml_att(node, "Requires"))
+		if (!strcmp(fz_xml_tag(node), "Choice") && fz_xml_att(node, "Requires"))
 		{
 			char list[64];
 			char *next = list, *item;
@@ -22,7 +22,7 @@ xps_lookup_alternate_content(fz_xml *node)
 			if (!item)
 				return fz_xml_down(node);
 		}
-		else if (!strcmp(fz_xml_tag(node), "mc:Fallback"))
+		else if (!strcmp(fz_xml_tag(node), "Fallback"))
 			return fz_xml_down(node);
 	}
 	return NULL;
@@ -57,7 +57,7 @@ xps_parse_element(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, 
 		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
 	if (!strcmp(fz_xml_tag(node), "Canvas"))
 		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
-	if (!strcmp(fz_xml_tag(node), "mc:AlternateContent"))
+	if (!strcmp(fz_xml_tag(node), "AlternateContent"))
 	{
 		node = xps_lookup_alternate_content(node);
 		if (node)

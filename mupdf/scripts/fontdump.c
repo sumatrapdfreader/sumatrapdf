@@ -49,7 +49,7 @@ main(int argc, char **argv)
 	}
 
 	fprintf(fo, "#ifndef __STRICT_ANSI__\n");
-	fprintf(fo, "#if defined(__linux__) || defined(__FreeBSD__)\n");
+	fprintf(fo, "#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__)\n");
 	fprintf(fo, "#ifndef __clang__\n");
 	fprintf(fo, "#define HAVE_INCBIN\n");
 	fprintf(fo, "#endif\n");

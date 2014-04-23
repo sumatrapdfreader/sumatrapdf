@@ -11,6 +11,8 @@
 #define ZIP64_END_OF_CENTRAL_DIRECTORY_SIG 0x06064b50
 #define ZIP64_EXTRA_FIELD_SIG 0x0001
 
+#define ZIP_ENCRYPTED_FLAG 0x1
+
 static void xps_init_document(xps_document *doc);
 
 xps_part *
@@ -103,6 +105,7 @@ xps_read_zip_entry(xps_document *doc, xps_entry *ent, unsigned char *outbuf)
 	z_stream stream;
 	unsigned char *inbuf;
 	int sig;
+	int general;
 	int method;
 	int namelength, extralength;
 	int code;
@@ -117,7 +120,12 @@ xps_read_zip_entry(xps_document *doc, xps_entry *ent, unsigned char *outbuf)
 	}
 
 	(void) getshort(doc->file); /* version */
-	(void) getshort(doc->file); /* general */
+	general = getshort(doc->file); /* general */
+	if (general & ZIP_ENCRYPTED_FLAG)
+	{
+		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "zipfile content is encrypted");
+	}
+
 	method = getshort(doc->file);
 	(void) getshort(doc->file); /* file time */
 	(void) getshort(doc->file); /* file date */

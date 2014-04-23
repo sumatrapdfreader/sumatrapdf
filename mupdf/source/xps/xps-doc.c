@@ -463,7 +463,7 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	if (!root)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "FixedPage missing root element");
 
-	if (!strcmp(fz_xml_tag(root), "mc:AlternateContent"))
+	if (!strcmp(fz_xml_tag(root), "AlternateContent"))
 	{
 		fz_xml *node = xps_lookup_alternate_content(root);
 		if (!node)

@@ -169,6 +169,12 @@ static inline int iswhite(int c)
 static void xml_emit_open_tag(struct parser *parser, char *a, char *b)
 {
 	fz_xml *head, *tail;
+	char *ns;
+
+	/* skip namespace prefix */
+	for (ns = a; ns < b; ++ns)
+		if (*ns == ':')
+			a = ns + 1;
 
 	head = fz_malloc_struct(parser->ctx, fz_xml);
 	if (b - a > sizeof(head->name) - 1)

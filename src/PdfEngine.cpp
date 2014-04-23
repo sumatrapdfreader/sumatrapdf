@@ -3411,15 +3411,15 @@ xps_extract_doc_props(xps_document *doc)
     xps_doc_props *props = new xps_doc_props();
 
     for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
-        if (str::Eq(fz_xml_tag(item), "dc:title") && !props->title)
+        if (str::Eq(fz_xml_tag(item), /*"dc:"*/"title") && !props->title)
             props->title.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), "dc:creator") && !props->author)
+        else if (str::Eq(fz_xml_tag(item), /*"dc:"*/"creator") && !props->author)
             props->author.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), "dc:subject") && !props->subject)
+        else if (str::Eq(fz_xml_tag(item), /*"dc:"*/"subject") && !props->subject)
             props->subject.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), "dcterms:created") && !props->creation_date)
+        else if (str::Eq(fz_xml_tag(item), /*"dcterms:"*/"created") && !props->creation_date)
             props->creation_date.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), "dcterms:modified") && !props->modification_date)
+        else if (str::Eq(fz_xml_tag(item), /*"dcterms:"*/"modified") && !props->modification_date)
             props->modification_date.Set(xps_get_core_prop(doc->ctx, item));
     }
     fz_free_xml(doc->ctx, root);
