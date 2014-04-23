@@ -767,7 +767,9 @@ void OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace)
     EbookWindow *win = new EbookWindow();
     win->ebookControls = CreateEbookControls(hwnd);
     win->hwndWrapper = win->ebookControls->mainWnd;
-    DisplayMode dm = prefs::conv::ToDisplayMode(ds->displayMode, DM_SINGLE_PAGE);
+    DisplayMode dm = DM_SINGLE_PAGE;
+    if (ds)
+        dm = prefs::conv::ToDisplayMode(ds->displayMode, DM_SINGLE_PAGE);
     win->ebookController = new EbookController(win->ebookControls, dm);
     win->hwndFrame = hwnd;
 
