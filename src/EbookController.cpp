@@ -273,6 +273,7 @@ void EbookController::CloseCurrentDocument()
 // returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
 // returns 0 if not found
+// TODO: return -1 on not found
 static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
     if (!pages)
@@ -284,7 +285,8 @@ static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
         // this is the first page whose content is after reparseIdx, so
         // the page contining reparseIdx must be the one before
         if (pd->reparseIdx > reparseIdx) {
-            CrashIf(0 == i);
+            // TODO: happened in e.g. crash 54140
+            //CrashIf(0 == i);
             return (int)i;
         }
     }
