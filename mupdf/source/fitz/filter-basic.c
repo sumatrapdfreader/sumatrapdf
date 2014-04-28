@@ -134,7 +134,7 @@ next_concat(fz_stream *stm, int max)
 					stm->pos += 5;
 					return *stm->rp++;
 				}
-				stm->rp = &state->ws_buf;
+				stm->rp = (&state->ws_buf)+1;
 				stm->wp = stm->rp + 1;
 				stm->pos++;
 				return 32;
