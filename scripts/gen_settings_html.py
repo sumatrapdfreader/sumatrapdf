@@ -288,10 +288,11 @@ class Lang(object):
 
 def blog_dir():
     script_dir = os.path.realpath(os.path.dirname(__file__))
-    blog_dir = os.path.realpath(
-        os.path.join(script_dir, "..", "..", "web", "blog", "www", "software", "sumatrapdf"))
-    if os.path.exists(blog_dir):
-        return blog_dir
+    d = os.path.realpath(
+        os.path.join(script_dir, "..", "..", "go", "src", "github.com", "kjk", "blog", "www", "software", "sumatrapdf"))
+    if os.path.exists(d):
+        return d
+    print("blog dir '%s' doesn't exist" % d)
     return None
 
 
@@ -308,10 +309,9 @@ def gen_langs_html():
     file_name = "langs.html"
     p = os.path.join("scripts", file_name)
     open(p, "w").write(s)
-    if blog_dir():
+    if blog_dir() is not None:
         p = os.path.join(blog_dir(), file_name)
         open(p, "w").write(s)
-
 
 def gen_html():
     prefs = gen_settingsstructs.GlobalPrefs
@@ -320,7 +320,7 @@ def gen_html():
     file_name = "settings" + g_version + ".html"
     p = os.path.join("scripts", file_name)
     open(p, "w").write(s)
-    if blog_dir():
+    if blog_dir() is not None:
         p = os.path.join(blog_dir(), file_name)
         open(p, "w").write(s)
         # also save the latest version as settings.html so that there is a
