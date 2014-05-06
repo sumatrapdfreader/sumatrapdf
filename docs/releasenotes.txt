@@ -3,7 +3,9 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.5 (2014-??-??):
+2.6 (???-??-??)
+
+2.5 (2014-05-05):
 
 * 2 page view for ebooks
 * new keybindings:
