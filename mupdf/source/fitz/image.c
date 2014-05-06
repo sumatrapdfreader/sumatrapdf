@@ -381,6 +381,19 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 		tile = fz_load_jxr(ctx, image->buffer->buffer->data, image->buffer->buffer->len);
 		break;
 	default:
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695112 */
+		if (image->buffer->params.type == FZ_IMAGE_JPEG)
+		{
+			unsigned char *d = image->buffer->buffer->data;
+			unsigned char *e = d + image->buffer->buffer->len;
+			for (d += 2; d + 9 < e && d[0] == 0xFF; d += (d[2] << 8 | d[3]) + 2)
+			{
+				/* SumatraPDF: cap height at 0xFFDB since libjpeg rejects larger values */
+				if (((0xC0 <= d[1] && d[1] <= 0xC3) || (0xC9 <= d[1] && d[1] <= 0xCB)) && d[5] == 0xFF && d[6] >= 0xDC)
+					d[6] = 0xDB;
+			}
+		}
+
 		native_l2factor = l2factor;
 		stm = fz_open_image_decomp_stream_from_buffer(ctx, image->buffer, &native_l2factor);
 
