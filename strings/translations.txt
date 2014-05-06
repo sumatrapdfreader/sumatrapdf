@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-eeabdb9573547082fa2cd36b0533a01a19419b02
+2db62f71a94e63569dd8adf0bfd18fa431355cdc
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -1496,7 +1496,7 @@ cz:Další strá&nka\tŠipka vpravo
 de:&Nächste Seite\t->
 dk:&Næste side\t->
 el:&Επόμενη Σελίδα\t->
-es:Página siguiente\t->
+es:&Página siguiente\t->
 et:&Järgmine lehekülg\tParemnool
 eu:&Hurrengo Orrialdea\tEskuin Gezia
 fa:صفحه‌ی &بعدی\t→
@@ -1984,7 +1984,7 @@ he:ססמה:
 hi:&पासवर्ड:
 hr:&Lozinka:
 hu:&Jelszó:
-id:&Kata kunci:
+id:&Kata sandi:
 it:&Password:
 ja:パスワード(&P):
 ka:&პაროლი:
@@ -2691,7 +2691,7 @@ cz:&Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
 de:Seiten auf Druckbereich &verkleinern (falls nötig)
 dk:krymp sider til printbart område
 el:Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
-es:&Reducir el tamaño del área de impresión de páginas (si es necesario)
+es:&Reducir páginas hasta llegar al área imprimible (si es necesario)
 et:Mahuta leheküljed pr&inditavale alale (kui vaja)
 eu:&Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)
 fa:اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &کاهش بده (اگر لازم است)
@@ -3677,7 +3677,7 @@ he:כל הקבצים הנתמכים
 hi:सभी समर्थित दस्तावेज़
 hr:Svi podržani dokumenti
 hu:Minden támogatott fájltípus
-id:Semua Dokumen Yang Didukung
+id:Semua dokumen yang didukung
 it:Tutti i documenti supportati
 ja:すべての対応ドキュメント
 ka:ყველა მხარდაჭერილი დოკუმენტი
@@ -3785,7 +3785,7 @@ cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 dk:Er du sikker på at du vil afinstallere SumatraPDF ?
 el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
-es:¿Está seguro de que quiere desinstalar SumatraPDF?
+es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
@@ -3796,7 +3796,7 @@ he:האם אתה בטוח שברצונך להסיר את SumatraPDF?
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Jeste li sigurni da želite deinstalirati SumatraPDF?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
-id:Anda yakin untuk menghapus instalasi SumatraPDF?
+id:Anda yakin ingin menghapus instalasi SumatraPDF?
 it:Siete sicuri di voler disinstallare SumatraPDF?
 ja:SumatraPDFを本当にアンインストールしますか？
 kr:SumatraPDF를 제거할까요?
@@ -5662,7 +5662,7 @@ cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
 dk:Kan ikke hente printer egenskaber
 el:Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
-es:Imposible obtener propiedades de la impresora
+es:No se pudieron obtener las propiedades de la impresora
 et:Printeri sätteid ei õnnestunud lugeda
 eu:Ezinezkoa Irarkailu ezaugarriak lortzea
 fa:نمی‌توان خصوصیات چاپگر را به دست آورد
@@ -5674,7 +5674,7 @@ he:הגישה אל מאפייני המדפסת נכשלה.
 hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
-id:Gagal mendapatkan piranti Printer
+id:Gagal mendapatkan properti Pencetak
 it:Impossibile ottenere info proprietà stampante
 ja:プリンターのプロパティを開けませんでした
 ka:პრინტერის თვისებების მიღება ვერ მოხერხდა
@@ -5719,7 +5719,7 @@ cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
 dk:Kunne ikke oprette midlertidigt folder
 el:Αδυναμία δημιουργίας προσωρινού φακέλου
-es:No es posiblre crear la carpeta temporal
+es:No se pudo crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fi:Väliaikaiskansion luominen epäonnistui
@@ -5729,7 +5729,7 @@ he:יצירת תיקייה זמנית נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti privremenu mapu
 hu:Ideiglenes könyvtár létrehozása sikertelen
-id:Gagal membuat folder sementara
+id:Gagal membuat direktori sementara
 it:Impossibile creare la cartella temporanea
 ja:一時ディレクトリを作成できませんでした
 kr:임시 디렉토리를 만들 수 없습니다.
@@ -5769,7 +5769,7 @@ cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Kunne ikke oprette installations folder
 el:Αδυναμία δημιουργίας φακέλου εγκατάστασης
-es:No se puede crear el directorio de instalación
+es:No se pudo crear la carpeta de instalación
 et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
 fa:عدم توانایی در ایجاد پوشه نصب
@@ -5780,7 +5780,7 @@ he:יצירת תיקיית התקנה נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
 hr:Nemoguće napraviti instalacijsku mapu
 hu:Telepítési könyvtár létrehozása sikertelen
-id:Gagal membuat folder instalasi
+id:Gagal membuat direktori instalasi
 it:Impossibile creare la cartella di installazione
 ja:インストール先ディレクトリを作成できませんでした
 kr:설치 디렉토리를 만들 수 없습니다.
@@ -5833,7 +5833,7 @@ he:אתחול המדפסת נכשל.
 hi:प्रिंटर प्रारंभ नहीं हो पा रहा
 hr:Ne mogu inicijalizirati pisač
 hu:A nyomtató inicializálása nem sikerült
-id:Gagal memulai printer
+id:Gagal memulai pencetak
 it:Impossibile inizializzare la stampante
 ja:プリンターを初期化できませんでした
 ka:პრინტერის ინიციალიზაცია ვერ მოხერხდა
@@ -5879,7 +5879,7 @@ cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
 dk:Kunne ikke installere PDF viser
-es:No se puede instalar previsualizador PDF
+es:No se pudo instalar el previsualizador de PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
 fa:pdf عدم توانایی در نصب پیش نمایش
@@ -5889,7 +5889,7 @@ gl:Non se puido instalado o previsualizador de PDF
 he:התקנת תצוגה מקדימה לקובצי PDF נכשלה.
 hr:Nemoguće instalirati PDF preglednik
 hu:PDF előnézet-megjelenítő telepítése sikertelen
-id:Gagal menginstal PDF pemratinjau
+id:Gagal menginstal pratilik PDF
 it:Impossibile installare modulo anteprima PDF
 ja:PDF プレビューアをインストールできませんでした
 kr:PDF 미리보기를 설치할 수 없습니다.
@@ -5928,7 +5928,7 @@ cy:Methu gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht installieren
 dk:Kunne ikke installere PDF søge filter
-es:No se puede instalar el filtro buscador PDF
+es:No se pudo instalar el filtro de búsqueda PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
 fa:عدم توانایی در نصب فیلتر جستجوی pdf
@@ -5977,7 +5977,7 @@ cy:Methu gosod ategyn porwr
 cz:Nepodařilo se nainstalovat rozšíření do prohlížeče
 de:Konnte das Browser-Plugin nicht installieren
 dk:Kunne ikke installere browser plugin
-es:No se puede instalar el complemento del navegador
+es:No se pudo instalar el complemento del navegador
 et:Ei suudetud paigaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina ezartzea
 fa:عدم توانایی در نصب پلاگین بروسر
@@ -5987,7 +5987,7 @@ gl:Non se puido instalar o engadido para o navegador
 he:התקנת תוסף לדפדפן נכשלה.
 hr:Nemoguće instalirati dodatak za internet preglednik
 hu:Böngésző beépülő telepítése sikertelen
-id:Gagal memasang plugin untuk browser
+id:Gagal memasang plugin untuk peramban
 it:Impossibile installare plugin browser
 ja:ブラウザプラグインをインストールできませんでした
 kr:브라우저 플러그인을 설치할 수 없습니다.
@@ -6026,7 +6026,7 @@ cz:Dočasný adresář není dostupný
 de:Konnte das temporäre Verzeichnis nicht finden
 dk:Kunne ikke tilgå midlertidig folder
 el:Αδυναμία ανάκτησης προσωρινού φακέλου
-es:No se puede acceder al directorio temporal
+es:No se pudo obtener la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
 fi:Väliaikaishakemiston käyttäminen epäonnistui
@@ -6035,7 +6035,7 @@ gl:Non se puido obter o cartafol temporal
 he:הגישה לתיקייה הזמנית נכשלה.
 hr:Nemoguće dobiti privremenu mapu
 hu:Ideiglenes könyvtár nem érhető el
-id:Gagal mendeteksi folder sementara
+id:Gagal mendeteksi direktori sementara
 it:Impossibile ottenere la cartella temporanea
 ja:一時ディレクトリを確保できませんでした
 kr:임시 디렉토리를 가져올 수 없습니다.
@@ -6074,7 +6074,7 @@ cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 dk:Kunne ikke fjerne installations folder
 el:Αδυναμία μετακίνησης φακέλου εγκατάστασης
-es:No se puede eliminar el directorio de instalación
+es:No se pudo eliminar la carpeta de instalación
 et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fi:Asennuskansion poistaminen epäonnistui
@@ -6083,7 +6083,7 @@ gl:Non se puido eliminar o cartafol de instalación
 he:הסרת תיקיית ההתקנה נכשלה.
 hr:Nemoguće ukloniti instalacijsku mapu
 hu:Telepítési könyvtár eltávolítása sikertelen
-id:Gagal menghapus folder instalasi
+id:Gagal menghapus direktori instalasi
 it:Impossibile rimuovere la cartella di installazione
 ja:インストール先ディレクトリを削除できませんでした
 kr:설치 디렉토리를 제거할 수 없습니다.
@@ -6123,7 +6123,7 @@ cz:Nepodařilo se odstranit zástupce
 de:Konnte die Verknüpfung nicht löschen
 dk:Kunne ikke fjerne genvej
 el:Αδυναμία απομάκρυνσης συντόμευσης
-es:No se puede eliminar el acceso directo
+es:No se pudo eliminar el acceso directo
 et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
 fi:Pikakuvakkeen poistaminen epäonnistui
@@ -6172,7 +6172,7 @@ cz:Stránku nelze vykreslit
 de:Diese Seite kann leider nicht angezeigt werden
 dk:Kunne ikke vise siden
 el:Δε μπορεί να φορτωθεί η σελίδα
-es:No se pudo procesar la página
+es:No se pudo cargar la visualización de la página
 et:Lehekülje visualiseerimine ei õnnestunud
 eu:Ezinezkoa orrialdea aurkeztea
 fa:متأسفانه صفحه قابل نمایش نیست
@@ -6230,7 +6230,7 @@ cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF viser
-es:No se puede desinstalar el previsualizador PDF
+es:No se pudo desinstalar el previsualizador de PDF
 et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
 fi:PDF-esikatselijan poistaminen epäonnistui
@@ -6277,7 +6277,7 @@ cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
 dk:Kunne ikke afinstallere PDF søge filter
-es:No se puede desinstalar el filtro buscador PDF
+es:No se pudo desinstalar el filtro de búsqueda PDF
 et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
 fi:PDF-hakusuodattimen poistaminen epäonnistui
@@ -6324,7 +6324,7 @@ cy:Methu dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
 dk:Kunne ikke fjerne browser plugin
-es:No se puede desinstalar el plugin del navegador
+es:No se pudo desinstalar el complemento del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
 fi:Selainliitännäisen poistaminen epäonnistui
@@ -6600,7 +6600,7 @@ cz:Výchozí &uspořádání:
 de:&Standardlayout:
 dk:Standard &Layout:
 el:Προκαθορισμένη &Διαμόρφωση:
-es:Apariencia predeterminada:
+es:Apariencia pre&determinada:
 et:Vaike&küljend:
 eu:Berezko &Egitura:
 fa:&نمایش پیش‌فرض:
@@ -6722,7 +6722,7 @@ cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
 dk:Standard PDF-læser kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
-es:No se puede cambiar el lector PDF predeterminado en modo portátil
+es:No se puede cambiar el lector PDF predeterminado en el modo «portable», sin instalación
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
 fa:خواننده‌ی پیش‌فرض پرونده‌های PDF را نمی‌توان در نسخه‌ی همراه تغییر داد.
@@ -7387,7 +7387,7 @@ cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 dk:Fejl: Kan ikke køre SumatraPDF !
 el:Σφάλμα: Αδυναμία εκτέλεσης SumatraPDF !
-es:Error: no se pudo ejecutar SumatraPDF.
+es:Error: No se pudo ejecutar SumatraPDF.
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fa:sumatra pdf خطا: عدم توانایی در اجرای
@@ -7436,7 +7436,7 @@ cz:Chyba: Program SumatraPDF nebyl nalezen!
 de:Fehler: SumatraPDF ist unaufindbar!
 dk:Fejl: SumatraPDF ikke fundet !
 el:Σφάλμα: Το SumatraPDF δεν βρέθηκε!
-es:Error: ¡SumatraPDF no ha sido encontrado!
+es:Error: SumatraPDF no ha sido encontrado.
 et:Viga: Ei leitud rakendust SumatraPDF
 eu:Akatsa: SumatraPDF ez da aurkitu!
 fa:خطا :sumatra pdf پیدا نشد
@@ -7980,7 +7980,7 @@ cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
-es:¡No se pudo renombrar el archivo!
+es:No se pudo renombrar el archivo.
 et:Faili ümbernimetamine ebaõnnestus.
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده با شکست مواجه شد!
@@ -11422,7 +11422,7 @@ cz:Otevřít v programu PDF-XChange
 de:Mit PDF-&XChange öffnen
 dk:Åben med PDF-XChange
 el:Άνοιγμα με PDF-XChange
-es:Abrir en PDF-XChange
+es:Abr&ir con PDF-XChange
 et:Ava PDF-XChangega
 eu:Ireki PDF-XChangen
 fa:باز کردن در PDF-&XChange
@@ -11536,7 +11536,7 @@ cz:Otevřít v %s
 de:Mit %s öffnen
 dk:Åben o %s
 el:Άνοιγμα σε %s
-es:Abrir en %s
+es:Abrir con %s
 et:Ava rakenduses %s
 eu:Irekitzea %s
 fa:%s بازشدن در
@@ -11586,7 +11586,7 @@ cz:Otevřít v programu &Adobe Reader
 de:Mit &Adobe Reader öffnen
 dk:Åbn med &Adobe Reader
 el:Άνοιγμα με &Adobe Reader
-es:Abrir en &Adobe Reader
+es:Abrir con &Adobe Reader
 et:Ava &Adobe Readeris
 eu:Ireki &Adobe Readerren
 fa:باز کردن در &Adobe Reader
@@ -11647,7 +11647,7 @@ cz:Otevřít v programu &Foxit Reader
 de:Mit F&oxit Reader öffnen
 dk:Åben med &Foxit Reader
 el:Άνοιγμα με &Foxit Reader
-es:Abrir en &Foxit Reader
+es:Abrir con &Foxit Reader
 et:Ava &Foxit Readeris
 eu:Ireki &Foxit Readerren
 fa:باز کردن در &Foxit Reader
@@ -11707,7 +11707,7 @@ cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML Hilfe öffnen
 dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
-es:Abrir en &Microsoft HTML Help
+es:Abrir con &Microsoft HTML Help
 et:Ava Microsoft HTML Helpga
 eu:Ireki Microsoft HTML Laguntzan
 fa:باز کردن در &Microsoft HTML Help
@@ -11766,7 +11766,7 @@ cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
 dk:Åben med Microsoft XPS-Viewer
 el:Άνοιγμα με Microsoft XPS-Viewer
-es:Abrir en &Microsoft XPS-Viewer
+es:Abrir con el Visor XPS de &Microsoft
 et:Ava Microsoft XPS-Viewerga
 eu:Ireki Microsoft XPS-Ikusgailuan
 fa:باز کردن در Microsoft X&PS-Viewer
@@ -12281,7 +12281,7 @@ cz:Strán&ka...\tCtrl+G
 de:&Seite…\tStrg+G
 dk:Side...\tCtrl+G
 el:&Σελίδα...\tCtrl+G
-es:Página...\tCtrl+G
+es:Pá&gina...\tCtrl+G
 et:&Lehekülg...\tCtrl+G
 eu:&Orrialdea...\tKtrl+G
 fa:&صفحه‌ی...\tCtrl+G
@@ -12997,7 +12997,7 @@ he:הדפס כתמונה (צורך יותר זכרון)
 hi:छवि के रूप में छापें (अधिक स्मृति की आवश्यकता होगी)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 hu:Nyomtatás képként (több memóriát igényel)
-id:Cetak Sebagai Gambar (butuh banyak memori)
+id:Cetak sebagai gambar (butuh lebih banyak memori)
 it:Stampa come &immagine (richiede più memoria))
 ja:画像として印刷 (より多くのメモリを必要とします) (&I)
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
@@ -13261,7 +13261,7 @@ he:תהליך ההדפסה עדיין לא הסתיים. לבטל ולהתחיל
 hi:छपाई अभी भी प्रगति में है | बन्द करें और फिर से शुरू करें?
 hr:Ispis je još u tijeku. Prekini i započni ponovno?
 hu:A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
-id:Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?
+id:Sedang dalam proses mencetak. Batalkan dan ulangi lagi?
 it:La stampa è in corso. Interrompere e ricominciare?
 ja:印刷は既に実行されています。中止または再実行しますか？
 ka:მიმდინარეობს ამობეჭდვა. გსურთ გაუქმება და ხელახლა დაწყება?
@@ -14474,7 +14474,7 @@ cz:Zobrazit panel nás&trojů
 de:&Werkzeugleiste anzeigen
 dk:Vis &værktøjslinie
 el:&Εμφάνιση Γραμμής Εργαλείων
-es:Mostrar barra de herramientas
+es:Mostrar barra de &herramientas
 et:&Näita tööriistariba
 eu:Erakutsi &Tresnabarra
 fa:نمایش نوار &ابزار
@@ -14539,7 +14539,7 @@ cz:Zobrazit stránky &průběžně
 de:Seiten &fortlaufend anzeigen
 dk:Vis &sider fortløbende
 el:&Συνεχής εμφάνιση σελίδων
-es:Mostrar páginas de forma continua
+es:Mostrar &páginas de forma continua
 et:Näita &lehekülgi pidevana
 eu:&Erakutsi Orrialdeak Jarraian
 fa:نمایش &پیوسته‌ی صفحات
@@ -14653,7 +14653,7 @@ cz:Zobrazit často čtené dokumenty
 de:Oft gelesene Dokumente einblenden
 dk:Vis hyppigt læste
 el:Εμφάνιση συχνά αναγνωσμένων αρχείων
-es:Mostrar "lo más leído"
+es:Mostrar «lo más leído»
 et:Näita sageli loetud dokumente
 eu:Erakutsi Sarri irakurriak
 fa:نشان دادن آخرین خوانده‌ها
@@ -14709,7 +14709,7 @@ cz:Zo&brazit záložky v postranním panelu, jsou-li dostupné
 de:&Lesezeichen standardmässig anzeigen
 dk:Vis &bogmærke sidepanelet når tilgængeligt
 el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
-es:Mostrar la barra de marcadores cuando esté disponible
+es:Mostrar la barra de &marcadores cuando esté disponible
 et:Näita &järjehoidjate külgriba kui võimalik
 eu:E&rakutsi lastermarka albobarra eskuragarri dagoenean
 fa:هنگامیکه نوار ن&شانه‌ها در دسترس است آن را نشان بده
@@ -14844,7 +14844,7 @@ gl:Algúns ficheiros que se precisan instalar están danados ou faltan
 he:קובצי התקנה מסוימים פגומים או חסרים.
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
-id:Beberapa file yang di-install rusak atau terhapus.
+id:Beberapa berkas yang akan diinstal rusak atau terhapus.
 it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
@@ -14883,7 +14883,7 @@ cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit př
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
 dk:Desværrre, det var ikke meningen\n\nKlik på 'Afbryd', hvis du kan og vil hjælpe med at finde årsagen til nedbruddet.
 el:Μας συγχωρείτε για το αναπάντεχο σφάλμα που συνέβη!\n\nΑν θέλετε να μας βοηθήσετε να αντιμετωπίσουμε το προβλήμα, παρακαλούμε πατήστε 'Άκυρο'.
-es:Lo sentimos, esto no debería haber sucedido...\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.
+es:Lo sentimos, esto no debería haber sucedido...\n\nPresione «cancelar» si quiere ayudarnos a arreglar la causa del fallo.
 et:Vabandust, seda ei oleks tohtinud juhtuda!\n\nPalun vajuta 'Loobu' kui soovid aidata meil parandada selle kokkujooksmise põhjust.
 eu:Barkatu, hau ez litzake gertatu behar!\n\nMesedez sakatu 'ezeztatu', matxura hau eragin duena zuzentzen laguntzea nahi badiguzu.
 fa:متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید که برای برطرف شدن مشکل ما را یاری نمایید، کلید لغو را بزنید.
@@ -15163,7 +15163,7 @@ gl:Desinstalador %s SumatraPDF
 he:הסרת SumatraPDF %s
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
-id:Hapus SumatraPDF %s
+id:Penghapus SumatraPDF %s
 it:Disinstallazione SumatraPDF %s
 ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
@@ -15383,7 +15383,7 @@ gl:Desintalouse SumatraPDF
 he:התקנת SumatraPDF הושלמה.
 hr:SumatraPDF je deinstaliran.
 hu:SumatraPDF eltávolítása befejeződött.
-id:SumatraPDF telah di-uninstall.
+id:SumatraPDF telah dihapus
 it:SumatraPDF è stata completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
@@ -15819,7 +15819,7 @@ gl:Parabéns! Xa tes SumatraPDF instalado.
 he:התקנת SumatraPDF הושלמה.
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
-id:Terima kasih. SumatraPDF telah berhasil ter-install.
+id:Terima kasih. SumatraPDF telah berhasil terinstal.
 it:Grazie! SumatraPDF installato correttamente.
 ja:ありがとう！SumatraPDF はインストールされました。
 kr:야호! SumatraPDF가 설치됐습니다.
@@ -15856,7 +15856,7 @@ cy:Mae'r gosodwr yn llwgr. Llwythwch y ffeil i lawr eto. \n Ymddiheuriadau am yr
 cz:Instalační program byl nejspíše poškozen. Stáhněte si jej prosím znovu. \nOmlouváme se za způsobené nepříjemnosti!
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
 dk:Installationsprogrammet er fejlbehæftet. Prøv venligst at hente det igen.\nVi beklager ulejligheden!
-es:El instalador está dañado, descárguelo de nuevo.\n¡Disculpa las molestias!
+es:El instalador está dañado, pruebe descargándolo de nuevo.\n¡Perdón por las molestias!
 et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
@@ -16168,7 +16168,7 @@ cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 dk:Anvend SumatraPDF som &standard PDF læser
 el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
-es:Usar SumatraPDF como el lector PDF pre&determinado
+es:Usar SumatraPDF como lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از
@@ -16859,7 +16859,7 @@ cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
 dk:[Ændringer konstateret; opdaterer] %s
 el:[Ανιχνεύτηκαν αλλαγές, ανανέωση] %s
-es:[Modificaciones detectadas; actualizando] %s
+es:[Cambios detectados; actualizando] %s
 et:[Leiti muutuseid; värskendamine] %s
 eu:[Aldaketak atzeman dira, berritzen] %s
 fa:%s [تغییرات شناسایی شد؛ تازه‌سازی]

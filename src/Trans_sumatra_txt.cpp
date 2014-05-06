@@ -6441,7 +6441,7 @@ const char * gTranslations_id =
   "Buka D&okumen\0"\
   "&Buka...\tCtrl+O\0"\
   "&Pilihan...\0"\
-  "&Kata kunci:\0"\
+  "&Kata sandi:\0"\
   "&Pin Dokumen\0"\
   "Halaman Sebelumnya\t<-\0"\
   "&Cetak...\0"\
@@ -6469,7 +6469,7 @@ const char * gTranslations_id =
   "Tambah Ke Favorit\0"\
   "Lanjutan\0"\
   "Semua Berkas\0"\
-  "Semua Dokumen Yang Didukung\0"\
+  "Semua dokumen yang didukung\0"\
   "Aplikasi\0"\
   "Asosiasikan dengan berkas PDF?\0"\
   "Lampiran: %s\0"\
@@ -6500,8 +6500,8 @@ const char * gTranslations_id =
   "Salin &Komentar\0"\
   "Menyalin teks ditolak (menyalin sebagai gambar saja)\0"\
   "Hak Cipta\0"\
-  "Gagal mendapatkan piranti Printer\0"\
-  "Gagal memulai printer\0"\
+  "Gagal mendapatkan properti Pencetak\0"\
+  "Gagal memulai pencetak\0"\
   "Gagal menampilkan halaman\0"\
   "Dibuat:\0"\
   "Berkas ini\0"\
@@ -6598,12 +6598,12 @@ const char * gTranslations_id =
   "Presentasi\tCtrl+L\0"\
   "Halaman Sebelumnya\0"\
   "Cetak\0"\
-  "Cetak Sebagai Gambar (butuh banyak memori)\0"\
+  "Cetak sebagai gambar (butuh lebih banyak memori)\0"\
   "Kisaran cetakan\0"\
   "Printer dengan nama tersebut tidak ada\0"\
   "Dalam proses mencetak\0"\
   "Sedang dalam proses mencetak. Batalkan dan keluar?\0"\
-  "Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?\0"\
+  "Sedang dalam proses mencetak. Batalkan dan ulangi lagi?\0"\
   "Mencetak halaman %d dari %d...\0"\
   "Masalah pencetakan.\0"\
   "&Ganti Nama...\tF2\0"\
@@ -11600,7 +11600,7 @@ const char * gTranslations_es =
   "&Aumento:\0"\
   "&Manual de instrucciones\0"\
   "&Coincidir may\303\272sculas y min\303\272sculas\0"\
-  "P\303\241gina siguiente\t->\0"\
+  "&P\303\241gina siguiente\t->\0"\
   "\0"\
   "&No, gracias\0"\
   "&S\303\263lo p\303\241ginas impares\0"\
@@ -11619,7 +11619,7 @@ const char * gTranslations_es =
   "&Guardar como...\0"\
   "&Guardar como...\tCtrl+S\0"\
   "&Configuraci\303\263n\0"\
-  "&Reducir el tama\303\261o del \303\241rea de impresi\303\263n de p\303\241ginas (si es necesario)\0"\
+  "&Reducir p\303\241ginas hasta llegar al \303\241rea imprimible (si es necesario)\0"\
   "P\303\241gina \303\272nica\tCtrl+6\0"\
   "&Ignorar esta versi\303\263n\0"\
   "&Usar el tama\303\261o original de la p\303\241gina\0"\
@@ -11666,15 +11666,15 @@ const char * gTranslations_es =
   "Copiar co&mentario\0"\
   "No se permite copiar como texto (copiando como imagen)\0"\
   "Derechos de autor:\0"\
-  "Imposible obtener propiedades de la impresora\0"\
+  "No se pudieron obtener las propiedades de la impresora\0"\
   "No se pudo inicializar la impresora\0"\
-  "No se pudo procesar la p\303\241gina\0"\
+  "No se pudo cargar la visualizaci\303\263n de la p\303\241gina\0"\
   "Creado:\0"\
   "Archivo actual\0"\
   "&Zoom personalizado...\tCtrl+Y\0"\
-  "Apariencia predeterminada:\0"\
+  "Apariencia pre&determinada:\0"\
   "Am&pliaci\303\263n predeterminada:\0"\
-  "No se puede cambiar el lector PDF predeterminado en modo port\303\241til\0"\
+  "No se puede cambiar el lector PDF predeterminado en el modo \302\253portable\302\273, sin instalaci\303\263n\0"\
   "Permisos denegados:\0"\
   "Documentos DjVu\0"\
   "Propiedades del documento\0"\
@@ -11690,7 +11690,7 @@ const char * gTranslations_es =
   "Pantalla completa\tCtrl+L\0"\
   "Pantalla completa\tCtrl+May\303\272s+L\0"\
   "P\303\241gina doble\0"\
-  "\302\241No se pudo renombrar el archivo!\0"\
+  "No se pudo renombrar el archivo.\0"\
   "Error al guardar un archivo\0"\
   "Visualizaci\303\263n r\303\241pida en Web\0"\
   "Favoritos\0"\
@@ -11739,13 +11739,13 @@ const char * gTranslations_es =
   "N\303\272mero de p\303\241ginas:\0"\
   "Aceptar\0"\
   "Abrir\0"\
-  "Abrir en PDF-XChange\0"\
+  "Abr&ir con PDF-XChange\0"\
   "Abrir un documento...\0"\
-  "Abrir en %s\0"\
-  "Abrir en &Adobe Reader\0"\
-  "Abrir en &Foxit Reader\0"\
-  "Abrir en &Microsoft HTML Help\0"\
-  "Abrir en &Microsoft XPS-Viewer\0"\
+  "Abrir con %s\0"\
+  "Abrir con &Adobe Reader\0"\
+  "Abrir con &Foxit Reader\0"\
+  "Abrir con &Microsoft HTML Help\0"\
+  "Abrir con el Visor XPS de &Microsoft\0"\
   "P&ropiedades\0"\
   "P&ropiedades...\tCtrl+D\0"\
   "Documento PDF\0"\
@@ -11753,7 +11753,7 @@ const char * gTranslations_es =
   "Generador de PDF:\0"\
   "Versi\303\263n de PDF:\0"\
   "Documentos PDF\0"\
-  "P\303\241gina...\tCtrl+G\0"\
+  "P\303\241&gina...\tCtrl+G\0"\
   "P\303\241gina %s\0"\
   "Tama\303\261o de p\303\241gina:\0"\
   "La p\303\241gina %u no existe\0"\
@@ -11789,13 +11789,13 @@ const char * gTranslations_es =
   "Enviar por correo &electr\303\263nico\0"\
   "Establecer l\303\255nea de comandos para b\303\272squeda inversa\0"\
   "Mostrar &marcadores\0"\
-  "Mostrar barra de herramientas\0"\
-  "Mostrar p\303\241ginas de forma continua\0"\
+  "Mostrar barra de &herramientas\0"\
+  "Mostrar &p\303\241ginas de forma continua\0"\
   "Mostrar favoritos\0"\
-  "Mostrar \"lo m\303\241s le\303\255do\"\0"\
-  "Mostrar la barra de marcadores cuando est\303\251 disponible\0"\
+  "Mostrar \302\253lo m\303\241s le\303\255do\302\273\0"\
+  "Mostrar la barra de &marcadores cuando est\303\251 disponible\0"\
   "P\303\241gina \303\272nica\0"\
-  "Lo sentimos, esto no deber\303\255a haber sucedido...\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.\0"\
+  "Lo sentimos, esto no deber\303\255a haber sucedido...\n\nPresione \302\253cancelar\302\273 si quiere ayudarnos a arreglar la causa del fallo.\0"\
   "El archivo de origen %s no posee un punto de sincronizaci\303\263n\0"\
   "Asunto:\0"\
   "Opciones de SumatraPDF\0"\
@@ -11818,7 +11818,7 @@ const char * gTranslations_es =
   "Acercar zoom\0"\
   "Alejar zoom\0"\
   "Proporci\303\263n de zoom\0"\
-  "[Modificaciones detectadas; actualizando] %s\0"\
+  "[Cambios detectados; actualizando] %s\0"\
   "copiado de texto\0"\
   "imprimiendo documento\0";
 

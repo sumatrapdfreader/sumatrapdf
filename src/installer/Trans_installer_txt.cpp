@@ -1006,15 +1006,15 @@ const char * gTranslations_hu =
 
 const char * gTranslations_id = 
   "Pilihan\0"\
-  "Anda yakin untuk menghapus instalasi SumatraPDF?\0"\
+  "Anda yakin ingin menghapus instalasi SumatraPDF?\0"\
   "Tutup\0"\
-  "Gagal membuat folder sementara\0"\
-  "Gagal membuat folder instalasi\0"\
-  "Gagal menginstal PDF pemratinjau\0"\
+  "Gagal membuat direktori sementara\0"\
+  "Gagal membuat direktori instalasi\0"\
+  "Gagal menginstal pratilik PDF\0"\
   "Gagal memasang filter pencari PDF\0"\
-  "Gagal memasang plugin untuk browser\0"\
-  "Gagal mendeteksi folder sementara\0"\
-  "Gagal menghapus folder instalasi\0"\
+  "Gagal memasang plugin untuk peramban\0"\
+  "Gagal mendeteksi direktori sementara\0"\
+  "Gagal menghapus direktori instalasi\0"\
   "Gagal menghapus shortcut\0"\
   "Gagal menghapus penampil cepat PDF\0"\
   "Gagal menghapus filter pencari PDF\0"\
@@ -1035,14 +1035,14 @@ const char * gTranslations_id =
   "Izinkan Windows menampilkan dokumen PDF\0"\
   "Silakan tutup %s untuk melanjutkan.\0"\
   "Pilih folder instalasi SumatraPDF:\0"\
-  "Beberapa file yang di-install rusak atau terhapus.\0"\
+  "Beberapa berkas yang akan diinstal rusak atau terhapus.\0"\
   "Jalankan SumatraPDF\0"\
   "Pasang SumatraPDF %s\0"\
-  "Hapus SumatraPDF %s\0"\
-  "SumatraPDF telah di-uninstall.\0"\
+  "Penghapus SumatraPDF %s\0"\
+  "SumatraPDF telah dihapus\0"\
   "Instalasi SumatraPDF tidak ditemukan.\0"\
   "Terima kasih telah memakai SumatraPDF!\0"\
-  "Terima kasih. SumatraPDF telah berhasil ter-install.\0"\
+  "Terima kasih. SumatraPDF telah berhasil terinstal.\0"\
   "Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!\0"\
   "\0"\
   "Proses uninstall gagal.\0"\
@@ -1726,19 +1726,19 @@ const char * gTranslations_sl =
 
 const char * gTranslations_es = 
   "&Opciones\0"\
-  "\302\277Est\303\241 seguro de que quiere desinstalar SumatraPDF?\0"\
+  "\302\277Est\303\241 seguro de querer desinstalar SumatraPDF?\0"\
   "Cerrar\0"\
-  "No es posiblre crear la carpeta temporal\0"\
-  "No se puede crear el directorio de instalaci\303\263n\0"\
-  "No se puede instalar previsualizador PDF\0"\
-  "No se puede instalar el filtro buscador PDF\0"\
-  "No se puede instalar el complemento del navegador\0"\
-  "No se puede acceder al directorio temporal\0"\
-  "No se puede eliminar el directorio de instalaci\303\263n\0"\
-  "No se puede eliminar el acceso directo\0"\
-  "No se puede desinstalar el previsualizador PDF\0"\
-  "No se puede desinstalar el filtro buscador PDF\0"\
-  "No se puede desinstalar el plugin del navegador\0"\
+  "No se pudo crear la carpeta temporal\0"\
+  "No se pudo crear la carpeta de instalaci\303\263n\0"\
+  "No se pudo instalar el previsualizador de PDF\0"\
+  "No se pudo instalar el filtro de b\303\272squeda PDF\0"\
+  "No se pudo instalar el complemento del navegador\0"\
+  "No se pudo obtener la carpeta temporal\0"\
+  "No se pudo eliminar la carpeta de instalaci\303\263n\0"\
+  "No se pudo eliminar el acceso directo\0"\
+  "No se pudo desinstalar el previsualizador de PDF\0"\
+  "No se pudo desinstalar el filtro de b\303\272squeda PDF\0"\
+  "No se pudo desinstalar el complemento del navegador\0"\
   "No se puede escribir %s en el disco\0"\
   "Error al copiar el desinstalador al directorio temporal\0"\
   "No se pudo crear un acceso directo\0"\
@@ -1763,11 +1763,11 @@ const char * gTranslations_es =
   "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
   "\302\241Gracias por elegir a SumatraPDF!\0"\
   "\302\241Gracias! SumatraPDF ha sido instalado.\0"\
-  "El instalador est\303\241 da\303\261ado, desc\303\241rguelo de nuevo.\n\302\241Disculpa las molestias!\0"\
+  "El instalador est\303\241 da\303\261ado, pruebe descarg\303\241ndolo de nuevo.\n\302\241Perd\303\263n por las molestias!\0"\
   "Desinstalar SumatraPDF\0"\
   "Fall\303\263 la desinstalaci\303\263n\0"\
   "Desinstalaci\303\263n en progreso...\0"\
-  "Usar SumatraPDF como el lector PDF pre&determinado\0";
+  "Usar SumatraPDF como lector PDF pre&determinado\0";
 
 const char * gTranslations_sv = 
   "Alternativ\0"\
