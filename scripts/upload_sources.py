@@ -7,6 +7,11 @@ It's meant to be run after tagging a realease (it checks out
 the sources from svn's /tags/${ver}rel branch).
 
 Run as: ./scripts/upload_sources.bat 2.4
+
+The sources are uploaded as:
+https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-${ver}-src.7z
+(e.g. https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.5-src.7z)
+
 """
 
 import os
