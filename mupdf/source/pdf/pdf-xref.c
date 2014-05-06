@@ -323,9 +323,11 @@ pdf_read_start_xref(pdf_document *doc)
 		if (memcmp(buf + i, "startxref", 9) == 0)
 		{
 			i += 9;
-			while (iswhite(buf[i]) && i < n)
+			while (i < n && iswhite(buf[i]))
 				i ++;
-			doc->startxref = atoi((char*)(buf + i));
+			doc->startxref = 0;
+			while (i < n && buf[i] >= '0' && buf[i] <= '9')
+				doc->startxref = doc->startxref * 10 + (buf[i++] - '0');
 			if (doc->startxref != 0)
 				return;
 			break;

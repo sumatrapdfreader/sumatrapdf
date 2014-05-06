@@ -660,7 +660,7 @@ printinfo(globals *glo, char *filename, int show, int page)
 	int j;
 	fz_output *out = glo->out;
 
-#define PAGE_FMT "\t% 5d (% 7d %1d R): "
+#define PAGE_FMT "\t%d\t(%d %d R):\t"
 
 	if (show & DIMENSIONS && glo->dims > 0)
 	{

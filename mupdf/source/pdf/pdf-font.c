@@ -943,10 +943,10 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 	pdf_obj *descriptor;
 	pdf_font_desc *fontdesc = NULL;
 	FT_Face face;
-	int kind;
 	char collection[256];
 	char *basefont;
 	int i, k, fterr;
+	pdf_obj *cidtogidmap;
 	pdf_obj *obj;
 	int dw;
 	fz_context *ctx = doc->ctx;
@@ -993,7 +993,6 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 		pdf_load_font_descriptor(fontdesc, doc, descriptor, collection, basefont, 1, 1);
 
 		face = fontdesc->font->ft_face;
-		kind = ft_kind(face);
 
 		/* Encoding */
 
@@ -1018,55 +1017,46 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 
 		pdf_set_font_wmode(ctx, fontdesc, pdf_cmap_wmode(ctx, fontdesc->encoding));
 
-		if (kind == TRUETYPE ||
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1565 */
-			!strcmp(pdf_to_name(pdf_dict_gets(dict, "Subtype")), "CIDFontType2") ||
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1997 */
-			pdf_is_indirect(pdf_dict_gets(dict, "CIDToGIDMap")))
+		cidtogidmap = pdf_dict_gets(dict, "CIDToGIDMap");
+		if (pdf_is_indirect(cidtogidmap))
 		{
-			pdf_obj *cidtogidmap;
+			fz_buffer *buf;
 
-			cidtogidmap = pdf_dict_gets(dict, "CIDToGIDMap");
-			if (pdf_is_indirect(cidtogidmap))
+			buf = pdf_load_stream(doc, pdf_to_num(cidtogidmap), pdf_to_gen(cidtogidmap));
+
+			fontdesc->cid_to_gid_len = (buf->len) / 2;
+			fontdesc->cid_to_gid = fz_malloc_array(ctx, fontdesc->cid_to_gid_len, sizeof(unsigned short));
+			fontdesc->size += fontdesc->cid_to_gid_len * sizeof(unsigned short);
+			for (i = 0; i < fontdesc->cid_to_gid_len; i++)
+				fontdesc->cid_to_gid[i] = (buf->data[i * 2] << 8) + buf->data[i * 2 + 1];
+
+			fz_drop_buffer(ctx, buf);
+		}
+
+		/* if font is external, cidtogidmap should not be identity */
+		/* so we map from cid to unicode and then map that through the (3 1) */
+		/* unicode cmap to get a glyph id */
+		else if (fontdesc->font->ft_substitute)
+		{
+			fterr = FT_Select_Charmap(face, ft_encoding_unicode);
+			if (fterr)
 			{
-				fz_buffer *buf;
-
-				buf = pdf_load_stream(doc, pdf_to_num(cidtogidmap), pdf_to_gen(cidtogidmap));
-
-				fontdesc->cid_to_gid_len = (buf->len) / 2;
-				fontdesc->cid_to_gid = fz_malloc_array(ctx, fontdesc->cid_to_gid_len, sizeof(unsigned short));
-				fontdesc->size += fontdesc->cid_to_gid_len * sizeof(unsigned short);
-				for (i = 0; i < fontdesc->cid_to_gid_len; i++)
-					fontdesc->cid_to_gid[i] = (buf->data[i * 2] << 8) + buf->data[i * 2 + 1];
-
-				fz_drop_buffer(ctx, buf);
+				fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: no unicode cmap when emulating CID font: %s", ft_error_string(fterr));
 			}
 
-			/* if truetype font is external, cidtogidmap should not be identity */
-			/* so we map from cid to unicode and then map that through the (3 1) */
-			/* unicode cmap to get a glyph id */
-			else if (fontdesc->font->ft_substitute)
-			{
-				fterr = FT_Select_Charmap(face, ft_encoding_unicode);
-				if (fterr)
-				{
-					fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: no unicode cmap when emulating CID font: %s", ft_error_string(fterr));
-				}
-
-				if (!strcmp(collection, "Adobe-CNS1"))
-					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-CNS1-UCS2");
-				else if (!strcmp(collection, "Adobe-GB1"))
-					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
-				else if (!strcmp(collection, "Adobe-Japan1"))
-					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan1-UCS2");
-				else if (!strcmp(collection, "Adobe-Japan2"))
-					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan2-UCS2");
-				else if (!strcmp(collection, "Adobe-Korea1"))
-					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2318 */
-				else if (!strcmp(collection, "Adobe-Identity") && fontdesc->font->ft_filepath)
-					fontdesc->font->ft_substitute = 0;
-			}
+			if (!strcmp(collection, "Adobe-CNS1"))
+				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-CNS1-UCS2");
+			else if (!strcmp(collection, "Adobe-GB1"))
+				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
+			else if (!strcmp(collection, "Adobe-Japan1"))
+				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan1-UCS2");
+			else if (!strcmp(collection, "Adobe-Japan2"))
+				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan2-UCS2");
+			else if (!strcmp(collection, "Adobe-Korea1"))
+				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2318 */
+			else if (!strcmp(collection, "Adobe-Identity") && fontdesc->font->ft_filepath)
+				fontdesc->font->ft_substitute = 0;
 		}
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1961 */

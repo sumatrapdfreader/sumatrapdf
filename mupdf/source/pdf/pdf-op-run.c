@@ -1330,7 +1330,7 @@ pdf_show_string(pdf_csi *csi, pdf_run_state *pr, unsigned char *buf, int len)
 		if (cid >= 0)
 			pdf_show_char(csi, pr, cid);
 		else
-			fz_warn(ctx, "cannot encode character with code point %#x", cpt);
+			fz_warn(ctx, "cannot encode character");
 		if (cpt == 32 && w == 1)
 			pdf_show_space(pr, gstate->word_space);
 	}

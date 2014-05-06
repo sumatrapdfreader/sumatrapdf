@@ -164,32 +164,33 @@ fz_process_mesh_type2(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	}
 }
 
-/* FIXME: Nasty */
-#define RADSEGS 32 /* how many segments to generate for radial meshes */
-
 static void
 fz_paint_annulus(const fz_matrix *ctm,
 		fz_point p0, float r0, float c0,
 		fz_point p1, float r1, float c1,
+		int count,
 		fz_mesh_processor *painter)
 {
 	fz_vertex t0, t1, t2, t3, b0, b1, b2, b3;
-	float theta, step;
+	float theta, step, a, b;
 	int i;
 
 	theta = atan2f(p1.y - p0.y, p1.x - p0.x);
-	step = (float)M_PI * 2 / RADSEGS;
+	step = (float)M_PI / count;
 
-	for (i = 0; i < RADSEGS / 2; i++)
+	a = 0;
+	for (i = 1; i <= count; i++)
 	{
-		t0.p = fz_point_on_circle(p0, r0, theta + i * step);
-		t1.p = fz_point_on_circle(p0, r0, theta + i * step + step);
-		t2.p = fz_point_on_circle(p1, r1, theta + i * step);
-		t3.p = fz_point_on_circle(p1, r1, theta + i * step + step);
-		b0.p = fz_point_on_circle(p0, r0, theta - i * step);
-		b1.p = fz_point_on_circle(p0, r0, theta - i * step - step);
-		b2.p = fz_point_on_circle(p1, r1, theta - i * step);
-		b3.p = fz_point_on_circle(p1, r1, theta - i * step - step);
+		b = i * step;
+
+		t0.p = fz_point_on_circle(p0, r0, theta + a);
+		t1.p = fz_point_on_circle(p0, r0, theta + b);
+		t2.p = fz_point_on_circle(p1, r1, theta + a);
+		t3.p = fz_point_on_circle(p1, r1, theta + b);
+		b0.p = fz_point_on_circle(p0, r0, theta - a);
+		b1.p = fz_point_on_circle(p0, r0, theta - b);
+		b2.p = fz_point_on_circle(p1, r1, theta - a);
+		b3.p = fz_point_on_circle(p1, r1, theta - b);
 
 		fz_transform_point(&t0.p, ctm);
 		fz_transform_point(&t1.p, ctm);
@@ -211,6 +212,8 @@ fz_paint_annulus(const fz_matrix *ctm,
 
 		paint_quad(painter, &t0, &t2, &t3, &t1);
 		paint_quad(painter, &b0, &b2, &b3, &b1);
+
+		a = b;
 	}
 }
 
@@ -221,6 +224,7 @@ fz_process_mesh_type3(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	float r0, r1;
 	fz_point e;
 	float er, rs;
+	int count;
 
 	p0.x = shade->u.l_or_r.coords[0][0];
 	p0.y = shade->u.l_or_r.coords[0][1];
@@ -229,6 +233,13 @@ fz_process_mesh_type3(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	p1.x = shade->u.l_or_r.coords[1][0];
 	p1.y = shade->u.l_or_r.coords[1][1];
 	r1 = shade->u.l_or_r.coords[1][2];
+
+	/* number of segments for a half-circle */
+	count = 4 * sqrtf(fz_matrix_expansion(ctm) * fz_max(r0, r1));
+	if (count < 3)
+		count = 3;
+	if (count > 1024)
+		count = 1024;
 
 	if (shade->u.l_or_r.extend[0])
 	{
@@ -241,10 +252,10 @@ fz_process_mesh_type3(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 		e.y = p0.y + (p1.y - p0.y) * rs;
 		er = r0 + (r1 - r0) * rs;
 
-		fz_paint_annulus(ctm, e, er, 0, p0, r0, 0, painter);
+		fz_paint_annulus(ctm, e, er, 0, p0, r0, 0, count, painter);
 	}
 
-	fz_paint_annulus(ctm, p0, r0, 0, p1, r1, 1, painter);
+	fz_paint_annulus(ctm, p0, r0, 0, p1, r1, 1, count, painter);
 
 	if (shade->u.l_or_r.extend[1])
 	{
@@ -257,7 +268,7 @@ fz_process_mesh_type3(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 		e.y = p1.y + (p0.y - p1.y) * rs;
 		er = r1 + (r0 - r1) * rs;
 
-		fz_paint_annulus(ctm, p1, r1, 1, e, er, 1, painter);
+		fz_paint_annulus(ctm, p1, r1, 1, e, er, 1, count, painter);
 	}
 }
 

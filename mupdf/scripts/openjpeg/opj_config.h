@@ -16,3 +16,6 @@
  * ==== YOU CAN NOT COMPILE WITHOUT IT. ====
  * === DO NOT FORGET TO CHANGE 'config.nix' APPROPRIATELY. ====
 */
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define OPJ_BIG_ENDIAN 1
+#endif
