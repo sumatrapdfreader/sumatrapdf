@@ -5,6 +5,10 @@ Next version:
 
 2.6 (???-??-??)
 
+2.5.1 (2014-05-07):
+
+* hopefully fix frequent ebook crashes
+
 2.5 (2014-05-05):
 
 * 2 page view for ebooks
