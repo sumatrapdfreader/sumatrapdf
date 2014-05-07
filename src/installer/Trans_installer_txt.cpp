@@ -8,7 +8,7 @@
 namespace trans {
 
 #define LANGS_COUNT   46
-#define STRINGS_COUNT 43
+#define STRINGS_COUNT 42
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
   "&Options",
@@ -18,7 +18,6 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
   "Couldn't create the installation directory",
   "Couldn't install PDF previewer",
   "Couldn't install PDF search filter",
-  "Couldn't install browser plugin",
   "Couldn't obtain temporary directory",
   "Couldn't remove installation directory",
   "Couldn't remove the shortcut",
@@ -32,11 +31,11 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
   "Failed to write the extended file extension information to the registry",
   "Failed to write the uninstallation information to the registry",
   "Hide &Options",
-  "Install PDF &browser plugin for Firefox, Chrome and Opera",
   "Install SumatraPDF",
   "Install SumatraPDF in &folder:",
   "Installation failed!",
   "Installation in progress...",
+  "Keep the PDF &browser plugin installed (no longer supported)",
   "Let Windows Desktop Search &search PDF documents",
   "Let Windows show &previews of PDF documents",
   "Please close %s to proceed!",
@@ -67,7 +66,6 @@ const char * gTranslations_sq =
   "Nuk mund t\303\253 krijoj\303\253 direktorin\303\253 p\303\253r instalimin\0"\
   "Nuk mund t\303\253 instaloj\303\253 parashikuesin e PDF-ve\0"\
   "Nuk mund t\303\253 instaloj\303\253 k\303\253rkuesin e PDF-ve\0"\
-  "Nuk mund t\303\253 instaloj\303\253 spin\303\253n p\303\253r shfletuesin\0"\
   "Nuk mund t\303\253 siguroj\303\253 direktorin\303\253 e p\303\253rkohshme\0"\
   "Nuk mund t\303\253 heq\303\253 direktorin\303\253 e p\303\253rkohshme\0"\
   "Nuk mund t\303\253 heq\303\253 shkurtoren\0"\
@@ -81,11 +79,11 @@ const char * gTranslations_sq =
   "D\303\253shtoi shkrimi n\303\253 regjist\303\253r i informacionit t\303\253 zgjeruar p\303\253r sked\303\253n.\0"\
   "D\303\253shtoi shkrimi n\303\253 regjist\303\253r i informacionit p\303\253r \303\247instalimin\0"\
   "Fsheh &opsionet\0"\
-  "Instaloj spin\303\253n PDF p\303\253r &shfletuesin Firefox, Chrome dhe Opera\0"\
   "Instaloj SumatraPDF\0"\
   "Instaloj SumatraPDF n\303\253 &dosje:\0"\
   "D\303\253shtoi instalimi!\0"\
   "Instalimi vijon...\0"\
+  "\0"\
   "Lejoj Windows Desktop Search t\303\253 &k\303\253rkoj\303\253 dokumentet PDF\0"\
   "Lejoj Windows Desktop Search t\303\253 &parashikoj\303\253 dokumentet PDF\0"\
   "Ju lutemi, mbyllni %s p\303\253r t\303\253 vazhduar!\0"\
@@ -112,7 +110,6 @@ const char * gTranslations_ar =
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\245\331\206\330\264\330\247\330\241 \331\205\330\254\331\204\330\257 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\252\331\206\330\265\331\212\330\250 \331\205\330\271\330\247\331\212\331\206 PDF\0"\
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\252\331\206\330\265\331\212\330\250 \331\201\331\204\330\252\330\261 \330\247\331\204\330\250\330\255\330\253 \331\204\331\200PDF\0"\
-  "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\252\331\206\330\265\331\212\330\250 \331\205\331\204\330\255\331\202 \330\247\331\204\331\205\330\263\330\252\330\271\330\261\330\266\0"\
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\247\331\204\330\255\330\265\331\210\331\204 \330\271\331\204\331\211 \330\247\331\204\331\205\330\254\331\204\330\257 \330\247\331\204\331\205\330\244\331\202\330\252\0"\
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\245\330\262\330\247\331\204\330\251 \331\205\330\254\331\204\330\257 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
   "\331\204\331\205 \330\243\330\252\331\205\331\203\331\206 \331\205\331\206 \330\255\330\260\331\201 \330\261\330\247\330\250\330\267 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
@@ -126,11 +123,11 @@ const char * gTranslations_ar =
   "\331\201\330\264\331\204 \331\201\331\212 \331\203\330\252\330\247\330\250\330\251 \330\250\331\212\330\247\331\206\330\247\330\252 \330\247\331\204\331\205\331\204\331\201 \331\201\331\212 registry\0"\
   "\331\201\330\264\331\204 \331\201\331\212 \331\203\330\252\330\247\330\250\330\251 \330\250\331\212\330\247\331\206\330\247\330\252 \330\245\330\262\330\247\331\204\330\251 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 \331\201\331\212 registry\0"\
   "\330\245\330\256\331\201\330\247\330\241 &\330\247\331\204\330\256\331\212\330\247\330\261\330\247\330\252\0"\
-  "\330\252\331\206\330\265\331\212\330\250 \331\205\330\271\330\247\331\212\331\206 PDF \331\204\331\204\331\201\330\247\331\212\330\261\331\201\331\210\331\203\330\263 \331\210\331\203\330\261\331\210\331\205 \331\210\330\247\331\210\330\250\330\261\330\247\0"\
   "\330\252\331\206\330\265\331\212\330\250 SumatraPDF\0"\
   "\330\252\331\206\330\265\331\212\330\250 SumatraPDF \331\201\331\212 \330\247\331\204\331\205\330\254\331\204\330\257:\0"\
   "\331\201\330\264\331\204 \331\201\331\212 \330\252\331\206\330\265\331\212\330\250 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
   "\331\202\331\212\330\257 \330\252\331\206\330\265\331\212\330\250 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 ...\0"\
+  "\0"\
   "\330\247\331\204\330\263\331\205\330\247\330\255 \331\204\331\210\331\212\331\206\330\257\331\210\330\262 \330\250\330\247\331\204\330\250\330\255\330\253 \331\201\331\212 \331\205\331\204\331\201\330\247\330\252 PDF\0"\
   "\330\247\331\204\330\263\331\205\330\247\330\255 \331\204\331\210\331\212\331\206\330\257\331\210\330\262 \330\271\330\261\330\266 \330\265\331\210\330\261 \331\205\330\271\330\247\331\212\331\206\330\251 PDF\0"\
   "\330\243\330\272\331\204\331\202 %s \331\204\331\204\330\245\331\203\331\205\330\247\331\204!\0"\
@@ -157,7 +154,6 @@ const char * gTranslations_am =
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\275\325\277\325\245\325\262\325\256\325\245\325\254 \325\277\325\245\325\262\325\241\325\244\326\200\325\264\325\241\325\266 \325\251\325\262\325\251\325\241\325\272\325\241\325\266\325\241\325\257\325\250\0"\
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\277\325\245\325\262\325\241\325\257\325\241\325\265\325\245\325\254 PDF-\325\253 \325\266\325\241\325\255\325\241\325\244\325\253\325\277\325\270\326\202\325\264\325\250\0"\
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\277\325\245\325\262\325\241\325\257\325\241\325\265\325\245\325\254 PDF-\325\253 \325\270\326\200\325\270\325\266\325\264\325\241\325\266 \325\272\325\241\325\265\325\264\325\241\325\266\0"\
-  "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\277\325\245\325\262\325\241\325\244\326\200\325\245\325\254 \325\244\325\253\325\277\325\241\326\200\325\257\325\253\325\271\325\253 \325\242\325\241\325\262\325\241\325\244\326\200\325\253\325\271\325\250\0"\
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\275\325\277\325\241\325\266\325\241\325\254 \325\252\325\241\325\264\325\241\325\266\325\241\325\257\325\241\325\276\325\270\326\200 \325\251\325\262\325\251\325\241\325\272\325\241\325\266\325\241\325\257\0"\
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\273\325\266\325\273\325\245\325\254 \325\277\325\245\325\262\325\241\325\244\326\200\325\264\325\241\325\266 \325\251\325\262\325\251\325\241\325\272\325\241\325\266\325\241\325\257\325\250\0"\
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \325\273\325\266\325\273\325\245\325\254 \325\272\325\253\325\277\325\241\325\257\325\250\0"\
@@ -171,11 +167,11 @@ const char * gTranslations_am =
   "\325\200\325\266\325\241\326\200\325\241\325\276\325\270\326\200 \325\271\325\245\325\262\325\241\325\276 \326\206\325\241\325\265\325\254\325\253 \325\250\325\266\325\244\325\254\325\241\325\265\325\266\325\264\325\241\325\266 \325\264\325\241\325\275\325\253\325\266 \325\243\326\200\325\241\325\274\325\245\325\254 \324\263\326\200\325\241\325\266\326\201\325\241\325\277\325\245\325\262\325\253\325\270\326\202\325\264\0"\
   "\324\276\326\200\325\241\325\243\325\253\326\200\325\250 \325\260\325\245\325\274\325\241\326\201\325\266\325\245\325\254\325\270\326\202 \325\264\325\241\325\275\325\253\325\266 \325\243\326\200\325\241\325\274\325\270\326\202\325\264\325\250 \325\271\325\275\325\277\325\241\326\201\325\276\325\245\326\201 \324\263\326\200\325\241\325\266\326\201\325\241\325\277\325\245\325\262\325\253\325\270\326\202\325\264\0"\
   "\324\271\325\241\326\204\326\201\325\266\325\245\325\254 &\325\250\325\266\325\277\326\200\325\241\325\266\326\204\325\266\325\245\326\200\325\250\0"\
-  "\325\217\325\245\325\262\325\241\325\244\326\200\325\245\325\254 PDF-\325\253 &\325\242\325\241\325\262\325\241\325\244\326\200\325\253\325\271\325\250 Firefox-\325\270\326\202\325\264, Chrome-\325\270\326\202\325\264 \326\207 Opera-\325\270\326\202\325\264\0"\
   "\325\217\325\245\325\262\325\241\325\257\325\241\325\265\325\245\325\254 SumatraPDF-\325\250\0"\
   "\325\217\325\245\325\262\325\241\325\244\326\200\325\245\325\254 SumatraPDF-\325\250 &\325\260\325\245\325\277\326\207\325\265\325\241\325\254 \325\251\325\262\325\251\325\241\325\272\325\241\325\266\325\241\325\257\325\270\326\202\325\264\325\235\0"\
   "\325\217\325\245\325\262\325\241\325\257\325\241\325\265\325\270\326\202\325\264\325\250 \325\261\325\241\325\255\325\270\325\262\325\276\325\245\326\201:\0"\
   "\324\270\325\266\325\251\325\241\326\201\326\204\325\270\326\202\325\264 \325\247...\0"\
+  "\0"\
   "\324\271\325\270\326\202\325\265\325\254\325\241\325\277\326\200\325\245\325\254 Windows Desktop Search-\325\253\325\266 &\326\203\325\266\325\277\326\200\325\245\325\254 PDF \326\206\325\241\325\265\325\254\325\245\326\200\0"\
   "\324\271\325\270\326\202\325\265\325\254\325\241\325\277\326\200\325\245\325\254 Windows-\325\253\325\266 &\326\201\325\270\326\202\326\201\325\241\325\244\326\200\325\245\325\254 PDF \326\206\325\241\325\265\325\254\325\245\326\200\325\253 \325\266\325\241\325\255\325\241\325\244\325\253\325\277\325\270\326\202\325\264\325\250\0"\
   "\325\207\325\241\326\200\325\270\326\202\325\266\325\241\325\257\325\245\325\254\325\270\326\202\326\201 \325\241\325\274\325\241\325\273 \326\203\325\241\325\257\325\245\326\204 %s-\325\250:\0"\
@@ -202,7 +198,6 @@ const char * gTranslations_az =
   "Qura\305\237d\304\261rma qovlu\304\237unu yaratmaq m\303\274mk\303\274n olmad\304\261\0"\
   "PDF \303\266nbax\304\261\305\237 al\311\231tini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
   "PDF axtar\304\261\305\237 filtrini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
-  "Brauzer plaginini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
   "M\303\274v\311\231qq\311\231ti qovlu\304\237u t\311\231yin etm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
   "Qura\305\237d\304\261rma qovlu\304\237unu silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
   "Yarl\304\261\304\237\304\261 silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
@@ -216,11 +211,11 @@ const char * gTranslations_az =
   "Fayl\304\261n geni\305\237liyi haqq\304\261nda \311\231trafl\304\261 m\311\231lumat\304\261 reyestr\311\231 yazmaq m\303\274mk\303\274n olmad\304\261\0"\
   "Deinstalyasiya m\311\231lumat\304\261n\304\261 reyestr\311\231 yazmaq m\303\274mk\303\274n olmad\304\261\0"\
   "&Se\303\247iml\311\231ri gizl\311\231t\0"\
-  "PDF &brauzer plaginini Firefox, Chrome v\311\231 Opera \303\274\303\247\303\274n qura\305\237d\304\261r\0"\
   "SumatraPDF-i qura\305\237d\304\261r\0"\
   "SumatraPDF-i bu &qovluqda qura\305\237d\304\261r:\0"\
   "Qura\305\237d\304\261rma ba\305\237 tutmad\304\261!\0"\
   "Qura\305\237d\304\261rma davam edir...\0"\
+  "\0"\
   "PDF s\311\231n\311\231dl\311\231rini Windows Desktop Search vasit\311\231sil\311\231 a&xtar\0"\
   "PDF s\311\231n\311\231dl\311\231rini Windows al\311\231tl\311\231ri vasit\311\231sil\311\231 &g\303\266r\303\274nt\303\274l\311\231\0"\
   "Davam etm\311\231k \303\274\303\247\303\274n %s ba\304\237lay\304\261n!\0"\
@@ -247,7 +242,6 @@ const char * gTranslations_eu =
   "Ezinezkoa ezarpen zuzenbidea sortzea\0"\
   "Ezinezkoa PDF aurreikustatzailea ezartzea\0"\
   "Ezinezkoa PDF bilaketa iragazkia ezartzea\0"\
-  "Ezinezkoa nabigatzaile plugina ezartzea\0"\
   "Ezinezkoa aldibaterako zuzenbidea lortzea\0"\
   "Ezinezkoa ezarpen zuzenbidea kentzea\0"\
   "Ezinezkoa lastertekla kentzea\0"\
@@ -261,11 +255,11 @@ const char * gTranslations_eu =
   "Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan\0"\
   "Hutsegitea kentze argibideak erregistroan idazterakoan\0"\
   "Ezkutatu A&ukerak\0"\
-  "Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat\0"\
   "Ezarri SumatraPDF\0"\
   "Ezarri Su&matraPDF agiritegi honetan:\0"\
   "Ezarpen hutsegitea!\0"\
   "Ezarpena garatzen...\0"\
+  "\0"\
   "&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen\0"\
   "Utzi &Windowsi PDF agirien aurreikuspenak erakusten\0"\
   "Mesedez itxi %s jarraitzeko!\0"\
@@ -292,7 +286,6 @@ const char * gTranslations_bs =
   "Neuspje\305\241no kreiranje instalacijskog direktorija\0"\
   "Neuspje\305\241no instaliranje PDF preglednika\0"\
   "Neuspje\305\241no instaliranje filtera za pretragu PDF-ova\0"\
-  "Neuspje\305\241no instaliranje plugina za browser\0"\
   "Neuspje\305\241no dobavljanje privremenog direktorija\0"\
   "Neuspje\305\241no uklanjanje instalacijskog direktorija\0"\
   "Neuspje\305\241no uklanjanje kratice\0"\
@@ -306,11 +299,11 @@ const char * gTranslations_bs =
   "Neuspje\305\241no zapisivanje informacije o ekstenziji pro\305\241irenog fajla u registar\0"\
   "Neuspje\305\241no zapisivanje deinstalacijske informacije u registar\0"\
   "Sakrij &opcije\0"\
-  "Instaliraj PDF &browser plugin za Firefox, Chrome i Operu\0"\
   "Instaliraj SumatraPDF\0"\
   "Instaliraj SumatraPDF u &direktorij:\0"\
   "Neuspje\305\241na instalacija!\0"\
   "Instalacija u toku...\0"\
+  "\0"\
   "Omogu\304\207i Windows Desktop Search-u da &pretra\305\276uje PDF dokumente\0"\
   "Omogu\304\207i Windows-ima da prika\305\276u &pregled PDF dokumenata\0"\
   "Molimo da zatvorite %s za nastavak!\0"\
@@ -337,7 +330,6 @@ const char * gTranslations_ca =
   "No es pot crear el directori d'instal\302\267laci\303\263\0"\
   "No es pot instal\302\267lar el visor r\303\240pid de PDF\0"\
   "No es pot instal\302\267lar el filtre de cerca PDF\0"\
-  "No es pot instal\302\267lar el connector del navegador\0"\
   "No es pot obtenir el directori temporal\0"\
   "No es pot suprimir el directori d'instal\302\267laci\303\263\0"\
   "No es pot suprimir la drecera\0"\
@@ -351,11 +343,11 @@ const char * gTranslations_ca =
   "No es pot escriure la informaci\303\263 d'extensi\303\263 de fitxer extesa al registre\0"\
   "No es pot escriure la informaci\303\263 de desinstal\302\267laci\303\263 al registre\0"\
   "Amaga les &opcions\0"\
-  "Instal\302\267la el &connector PDF pels navegadors Firefox, Chrome i Opera\0"\
   "Instal\302\267la el SumatraPDF\0"\
   "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
   "La instal\302\267laci\303\263 ha fallat.\0"\
   "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
+  "\0"\
   "Permet al Windows Desktop Search &cercar als documents PDF\0"\
   "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents PDF\0"\
   "Tanqueu %s per continuar!\0"\
@@ -382,7 +374,6 @@ const char * gTranslations_ca_xv =
   "No es pot crear el directori d'instal\302\267laci\303\263\0"\
   "No es pot instal\302\267lar el visor r\303\240pid de PDF\0"\
   "No es pot instal\302\267lar el filtre de cerca PDF\0"\
-  "No es pot instal\302\267lar el connector del navegador\0"\
   "No es pot obtindre el directori temporal\0"\
   "No es pot suprimir el directori d'instal\302\267laci\303\263\0"\
   "No es pot suprimir la drecera\0"\
@@ -396,11 +387,11 @@ const char * gTranslations_ca_xv =
   "No es pot escriure la informaci\303\263 d'extensi\303\263 de fitxer extesa al registre\0"\
   "No es pot escriure la informaci\303\263 de desinstal\302\267laci\303\263 al registre\0"\
   "Amaga les &opcions\0"\
-  "Instal\302\267la el &connector PDF per als navegadors Firefox, Chrome i Opera\0"\
   "Instal\302\267la el SumatraPDF\0"\
   "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
   "La instal\302\267laci\303\263 ha fallat!\0"\
   "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
+  "\0"\
   "Permet al Windows Desktop Search &cercar als documents PDF\0"\
   "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents\0"\
   "Tanqueu %s per continuar!\0"\
@@ -427,7 +418,6 @@ const char * gTranslations_cn =
   "\346\227\240\346\263\225\345\210\233\345\273\272\346\214\207\345\256\232\347\232\204\345\256\211\350\243\205\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\345\256\211\350\243\205 PDF \346\226\207\344\273\266\351\242\204\344\270\264\350\247\210\0"\
   "\346\227\240\346\263\225\345\256\211\350\243\205PDF\346\220\234\347\264\242\350\277\207\346\273\244\345\231\250\0"\
-  "\346\227\240\346\263\225\345\256\211\350\243\205\346\265\217\350\247\210\345\231\250\346\217\222\344\273\266\0"\
   "\346\227\240\346\263\225\345\276\227\345\210\260\346\232\202\345\255\230\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\347\247\273\351\231\244\345\256\211\350\243\205\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\347\247\273\351\231\244\345\277\253\346\215\267\346\226\271\345\274\217\0"\
@@ -441,11 +431,11 @@ const char * gTranslations_cn =
   "\346\227\240\346\263\225\345\260\206\346\226\207\344\273\266\346\211\251\345\261\225\345\220\215\347\232\204\346\211\251\345\261\225\344\277\241\346\201\257\345\206\231\350\277\233\346\263\250\345\206\214\350\241\250\0"\
   "\345\260\206\345\215\270\350\275\275\346\211\200\351\234\200\344\277\241\346\201\257\345\206\231\350\277\233\346\263\250\345\206\214\350\241\250\346\227\266\345\244\261\350\264\245\344\272\206\0"\
   "\351\232\220\350\227\217\351\200\211\351\241\271\350\217\234\345\215\225\0"\
-  "\345\256\211\350\243\205PDF\346\265\217\350\247\210\345\231\250\346\217\222\344\273\266\345\210\260\347\201\253\347\213\220, Chrome\345\222\214Opera\0"\
   "\345\256\211\350\243\205SumatraPDF\0"\
   "\345\256\211\350\243\205SumatraPDF\345\210\260\347\233\256\345\275\225: &folder\0"\
   "\345\256\211\350\243\205\345\244\261\350\264\245!\0"\
   "\345\256\211\350\243\205\346\255\243\345\234\250\350\277\233\350\241\214\344\270\255...\0"\
+  "\0"\
   "\344\275\277\347\224\250Windows\346\241\214\351\235\242\346\220\234\347\264\242\346\235\245\346\220\234\347\264\242PDF\346\226\207\346\241\243\0"\
   "\344\275\277\347\224\250Windows\347\232\204PDF\351\242\204\350\247\210\345\212\237\350\203\275\0"\
   "\350\257\267\345\205\263\351\227\255%s\345\220\216\347\273\247\347\273\255!\0"\
@@ -472,7 +462,6 @@ const char * gTranslations_tw =
   "\347\204\241\346\263\225\345\273\272\347\253\213\345\256\211\350\243\235\350\263\207\346\226\231\345\244\276\0"\
   "\347\204\241\346\263\225\345\256\211\350\243\235 PDF \351\240\220\350\246\275\345\231\250\0"\
   "\347\204\241\346\263\225\345\256\211\350\243\235 PDF \346\220\234\347\264\242\351\201\216\346\277\276\345\231\250\0"\
-  "\347\204\241\346\263\225\345\256\211\350\243\235\347\200\217\350\246\275\345\231\250\346\217\222\344\273\266\0"\
   "\347\204\241\346\263\225\347\215\262\345\276\227\346\232\253\345\255\230\350\263\207\346\226\231\345\244\276\0"\
   "\347\204\241\346\263\225\347\247\273\351\231\244\345\256\211\350\243\235\347\233\256\351\214\204\0"\
   "\347\204\241\346\263\225\347\247\273\351\231\244\346\215\267\345\276\221\0"\
@@ -486,11 +475,11 @@ const char * gTranslations_tw =
   "\345\257\253\345\205\245\345\273\266\351\201\262\346\252\224\346\241\210\345\211\257\346\252\224\345\220\215\350\263\207\350\250\212\345\210\260\350\250\273\345\206\212\351\240\205\345\244\261\346\225\227\343\200\202\0"\
   "\345\257\253\345\205\245\350\247\243\351\231\244\345\256\211\350\243\235\350\263\207\350\250\212\345\210\260\350\250\273\345\206\212\351\240\205\347\233\256\345\244\261\346\225\227\343\200\202\0"\
   "\351\232\261\350\227\217\351\201\270\351\240\205(&O)\0"\
-  "\345\256\211\350\243\235 PDF \347\200\217\350\246\275\345\231\250\346\217\222\344\273\266\347\224\250\346\226\274 Firefox, Chrome, Opera\0"\
   "\345\256\211\350\243\235 SumatraPDF\0"\
   "\345\256\211\350\243\235 SumatraPDF \346\226\274\350\263\207\346\226\231\345\244\276(&F):\0"\
   "\345\256\211\350\243\235\345\244\261\346\225\227\357\274\201\0"\
   "\345\256\211\350\243\235\346\255\243\345\234\250\351\200\262\350\241\214...\0"\
+  "\0"\
   "\350\256\223 Windows \346\241\214\351\235\242\346\220\234\345\260\213\346\220\234\345\260\213 PDF \346\226\207\344\273\266\0"\
   "\350\256\223 Windows \351\241\257\347\244\272 PDF \346\226\207\344\273\266\347\232\204\351\240\220\350\246\275(&P)\0"\
   "\350\253\213\351\227\234\351\226\211 %s \344\273\245\347\271\274\347\272\214\343\200\202\0"\
@@ -517,7 +506,6 @@ const char * gTranslations_hr =
   "Nemogu\304\207e napraviti instalacijsku mapu\0"\
   "Nemogu\304\207e instalirati PDF preglednik\0"\
   "Nemogu\304\207e instalirati PDF filter pretra\305\276ivanja\0"\
-  "Nemogu\304\207e instalirati dodatak za internet preglednik\0"\
   "Nemogu\304\207e dobiti privremenu mapu\0"\
   "Nemogu\304\207e ukloniti instalacijsku mapu\0"\
   "Nemogu\304\207e ukloniti pre\304\215ac\0"\
@@ -531,11 +519,11 @@ const char * gTranslations_hr =
   "Neuspjeh kod zapisivanja produ\305\276enih informacija nastavka datoteke u registru\0"\
   "Neuspjeh kod zapisivanja deinstalacijskih informacija u registar\0"\
   "Sakrij postavke\0"\
-  "Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera\0"\
   "Instaliraj SumatraPDF\0"\
   "Instaliraj SumatraPDF u &mapu:\0"\
   "Instalacija nije uspjela!\0"\
   "Instaliranje...\0"\
+  "\0"\
   "Neka Windows pretraga radne povr\305\241ine &pretra\305\276uje PDF dokumente\0"\
   "Neka Windows prikazuje &pregled PDF dokumenata\0"\
   "Molim zatvorite %s za nastavak!\0"\
@@ -562,7 +550,6 @@ const char * gTranslations_cz =
   "Nepoda\305\231ilo se vytvo\305\231it adres\303\241\305\231 pro instalaci\0"\
   "Nelze nainstalovat PDF prohl\303\255\305\276e\304\215\0"\
   "Nelze nainstalovat vyhled\303\241vac\303\255 PDF filtr\0"\
-  "Nepoda\305\231ilo se nainstalovat roz\305\241\303\255\305\231en\303\255 do prohl\303\255\305\276e\304\215e\0"\
   "Do\304\215asn\303\275 adres\303\241\305\231 nen\303\255 dostupn\303\275\0"\
   "Nepoda\305\231ilo se odstranit adres\303\241\305\231 pro instalaci\0"\
   "Nepoda\305\231ilo se odstranit z\303\241stupce\0"\
@@ -576,11 +563,11 @@ const char * gTranslations_cz =
   "Nepoda\305\231ilo se zapsat informace o p\305\231\303\255pon\304\233 souboru do registru\0"\
   "Nepoda\305\231ilo se zapsat odinsla\304\215n\303\255 z\303\241znamy do registru\0"\
   "Skr\303\275t &mo\305\276nosti\0"\
-  "Instalovat PDF dopln\304\233k pro prohl\303\255\305\276e\304\215e Firefox, Chrome a Opera\0"\
   "Nainstalovat SumatraPDF\0"\
   "Nainstalovat SumatraPDF do &slo\305\276ky:\0"\
   "Instalace se nezda\305\231ila!\0"\
   "Prob\303\255h\303\241 instalace...\0"\
+  "\0"\
   "Nechte Windows Desktop Search &prohled\303\241vat PDF dokumenty\0"\
   "Nechte Windows zobrazit &n\303\241hledy PDF dokument\305\257\0"\
   "Pros\303\255m ukon\304\215ete %s pro pokra\304\215ov\303\241n\303\255!\0"\
@@ -607,7 +594,6 @@ const char * gTranslations_dk =
   "Kunne ikke oprette installations folder\0"\
   "Kunne ikke installere PDF viser\0"\
   "Kunne ikke installere PDF s\303\270ge filter\0"\
-  "Kunne ikke installere browser plugin\0"\
   "Kunne ikke tilg\303\245 midlertidig folder\0"\
   "Kunne ikke fjerne installations folder\0"\
   "Kunne ikke fjerne genvej\0"\
@@ -621,11 +607,11 @@ const char * gTranslations_dk =
   "Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen\0"\
   "Kunne ikke skrive afinstallerings information i registreringsdatabasen\0"\
   "Gem &Valgmuligheder\0"\
-  "Installer PDF &browser plugin til Firefox, Chrome og Opera\0"\
   "Installer SumatraPDF\0"\
   "Installer SumatraPDF i &folder:\0"\
   "Installation fejlede !\0"\
   "Installation i gang ...\0"\
+  "\0"\
   "Lad Windows skrivebord S\303\270ge &s\303\270g PDF dokumenter\0"\
   "Lad Windows vise &femvisning af PDF dokumenter\0"\
   "Luk venligst %s for at forts\303\246tte !\0"\
@@ -652,7 +638,6 @@ const char * gTranslations_nl =
   "Kon de installatie folder niet aanmaken\0"\
   "Kon PDF voorbeeld niet installeren\0"\
   "Kon PDF zoek filter niet installeren\0"\
-  "Kon browser invoegmodule niet installeren\0"\
   "Kon tijdelijke folder niet verkrijgen\0"\
   "Kon installatie folder niet verwijderen\0"\
   "Kon snelkoppeling niet verwijderen\0"\
@@ -666,11 +651,11 @@ const char * gTranslations_nl =
   "Kon uitgebreide bestandsextensie informatie niet wegschrijven in register\0"\
   "Kan de\303\257nstallatie-informatie niet wegschrijven in het register\0"\
   "Verberg &Opties\0"\
-  "Installeer de PDF-&browserplugins voor Firefox, Chrome en Opera\0"\
   "Installeer SumatraPDF\0"\
   "Installeer SumatraPDF in &folder\0"\
   "Installatie mislukt!\0"\
   "Installatie is bezig...\0"\
+  "\0"\
   "Laat Windows Bureaublad Zoeker PDF documenten &zoeken\0"\
   "Laat Windows &voorbeelden tonen van PDF documenten\0"\
   "Sluit %s om verder te gaan!\0"\
@@ -697,7 +682,6 @@ const char * gTranslations_et =
   "Ei suudetud luua paigalduskataloogi\0"\
   "Ei suudetud paigaldada PDF-eelvaaturit\0"\
   "Ei suudetud paigaldada PDF otsingufiltrit\0"\
-  "Ei suudetud paigaldada brauseri pluginat\0"\
   "Ei suudetud luua ajutist kataloogi\0"\
   "Ei suudetud kustutada paigalduskataloogi\0"\
   "Ei suudetud kustutada otseteed\0"\
@@ -711,11 +695,11 @@ const char * gTranslations_et =
   "Ei \303\265nnestunud registrisse kirjutada infot pikendatud faililaiendi kohta\0"\
   "Ei \303\265nnestunud registrisse kirjutada eemaldamise informatsiooni\0"\
   "Peida &s\303\244tted\0"\
-  "Paigalda lisaks PDF &plugin Firefox, Chrome ja Opera brauseritele.\0"\
   "Paigalda SumatraPDF\0"\
   "Paigalda SumatraPDF &kataloogi:\0"\
   "Paigaldamine eba\303\265nnestus!\0"\
   "Toimub paigaldamine...\0"\
+  "\0"\
   "Windows Desktop Search &otsib PDF-dokumente\0"\
   "Windows kuvab PDF-dokumentide &eelvaateid\0"\
   "J\303\244tkamiseks palun sulge rakendus %s!\0"\
@@ -742,7 +726,6 @@ const char * gTranslations_fi =
   "Asennuskansion luominen ep\303\244onnistui\0"\
   "PDF-esikatselijan asentaminen ep\303\244onnistui\0"\
   "PDF-hakusuodattimen asentaminen ep\303\244onnistui\0"\
-  "Selainliit\303\244nn\303\244isen asentaminen ep\303\244onnistui\0"\
   "V\303\244liaikaishakemiston k\303\244ytt\303\244minen ep\303\244onnistui\0"\
   "Asennuskansion poistaminen ep\303\244onnistui\0"\
   "Pikakuvakkeen poistaminen ep\303\244onnistui\0"\
@@ -756,11 +739,11 @@ const char * gTranslations_fi =
   "Tiedostop\303\244\303\244tetietojen kirjoittaminen rekisteriin ep\303\244onnistui\0"\
   "Poistamistietojen kirjoittaminen rekisteriin ep\303\244onnistui\0"\
   "Piilota\0"\
-  "Asenna PDF-liit\303\244nn\303\244inen selaimille Firefox, Chrome ja Opera\0"\
   "Asenna SumatraPDF\0"\
   "Asenna SumatraPDF kansioon:\0"\
   "Asentaminen ep\303\244onnistui!\0"\
   "Asennus k\303\244ynniss\303\244...\0"\
+  "\0"\
   "&Anna Windowsin hakutoiminnon etsi\303\244 PDF-asiakirjoista\0"\
   "Anna Windowsin n\303\244ytt\303\244\303\244 &esikatselukuvat PDF-asiakirjoille\0"\
   "Sulje %s jatkaaksesi!\0"\
@@ -787,7 +770,6 @@ const char * gTranslations_fr =
   "Impossible de cr\303\251er le r\303\251pertoire d'installation\0"\
   "Impossible d'installer l'aper\303\247u PDF\0"\
   "Impossible d'installer le filtre de recherche PDF\0"\
-  "Impossible d'installer le plug-in du navigateur\0"\
   "Impossible d'obtenir un r\303\251pertoire temporaire\0"\
   "Impossible de supprimer le r\303\251pertoire d'installation\0"\
   "Impossible de supprimer le raccourci\0"\
@@ -801,11 +783,11 @@ const char * gTranslations_fr =
   "L'\303\251criture dans la base de registre des informations \303\251tendues de l'extension de fichier a \303\251chou\303\251\0"\
   "L'\303\251criture des informations de d\303\251sinstallation dans la base de registre a \303\251chou\303\251\0"\
   "Masque les &options\0"\
-  "Installer le plug-in PDF pour Firefox, Chrome and Opera\0"\
   "Installer SumatraPDF\0"\
   "Installer SumatraPDF dans le r\303\251pertoire :\0"\
   "\303\211chec de l'installation !\0"\
   "Installation en cours\342\200\246\0"\
+  "\0"\
   "Permettre \303\240 Windows Desktop Search la recherche de documents PDF\0"\
   "Permettre \303\240 Windows de montrer des a&per\303\247us des documents PDF\0"\
   "Fermez %s pour continuer, s.v.p. !\0"\
@@ -832,7 +814,6 @@ const char * gTranslations_gl =
   "Non se puido crear o cartafol de instalaci\303\263n\0"\
   "Non se puido instalado o previsualizador de PDF\0"\
   "Non se puido instalar o filtro de busca de PDF\0"\
-  "Non se puido instalar o engadido para o navegador\0"\
   "Non se puido obter o cartafol temporal\0"\
   "Non se puido eliminar o cartafol de instalaci\303\263n\0"\
   "Non se puido eliminar o atallo\0"\
@@ -846,11 +827,11 @@ const char * gTranslations_gl =
   "Non se puido escribir a informaci\303\263n de extensi\303\263n do ficheiro no rexistro\0"\
   "Fallouse ao escribir a informaci\303\263n de desintalaci\303\263n no rexistro\0"\
   "Agochar as &opci\303\263ns\0"\
-  "Instalar o engadido de &navegador de PDFs para Firefox, Chrome e Opera\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF no &cartafol:\0"\
   "Fallou a instalaci\303\263n!\0"\
   "Instalaci\303\263n en curso...\0"\
+  "\0"\
   "Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF\0"\
   "Deixar que Windows mostre &previsualizaci\303\263ns de documentos PDF\0"\
   "Peche %s para continuar\0"\
@@ -877,7 +858,6 @@ const char * gTranslations_de =
   "Konnte das Installationsverzeichnis nicht erstellen\0"\
   "Konnte die PDF Vorschau nicht installieren\0"\
   "Konnte den PDF Suchfilter nicht installieren\0"\
-  "Konnte das Browser-Plugin nicht installieren\0"\
   "Konnte das tempor\303\244re Verzeichnis nicht finden\0"\
   "Konnte das Installationsverzeichnis nicht l\303\266schen\0"\
   "Konnte die Verkn\303\274pfung nicht l\303\266schen\0"\
@@ -891,11 +871,11 @@ const char * gTranslations_de =
   "Konnte die Dateiformats-Verkn\303\274pfungen nicht vollst\303\244ndig in die Registry schreiben\0"\
   "Konnte keine Deinstallations-Informationen in die Registry schreiben\0"\
   "&Optionen\0"\
-  "PDF Browser-Plugin f\303\274r Firefox, Chrome und Opera installieren\0"\
   "Installieren\0"\
   "&Installationsverzeichnis:\0"\
   "Die Installation ist fehlgeschlagen!\0"\
   "Die Installation wird ausgef\303\274hrt\342\200\246\0"\
+  "\0"\
   "PDF Dokumente in Windows-&Suchen einbeziehen\0"\
   "&Vorschau f\303\274r PDF Dokumente in Explorer aktivieren\0"\
   "Bitte schliessen Sie %s vor der Installation!\0"\
@@ -922,7 +902,6 @@ const char * gTranslations_he =
   "\327\231\327\246\327\231\327\250\327\252 \327\252\327\231\327\247\327\231\327\231\327\252 \327\224\327\252\327\247\327\240\327\224 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\252\327\247\327\240\327\252 \327\252\327\246\327\225\327\222\327\224 \327\236\327\247\327\223\327\231\327\236\327\224 \327\234\327\247\327\225\327\221\327\246\327\231 PDF \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\252\327\247\327\240\327\252 \327\236\327\241\327\240\327\237 \327\227\327\231\327\244\327\225\327\251 \327\234- PDF \327\240\327\233\327\251\327\234\327\224.\0"\
-  "\327\224\327\252\327\247\327\240\327\252 \327\252\327\225\327\241\327\243 \327\234\327\223\327\244\327\223\327\244\327\237 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\222\327\231\327\251\327\224 \327\234\327\252\327\231\327\247\327\231\327\231\327\224 \327\224\327\226\327\236\327\240\327\231\327\252 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\241\327\250\327\252 \327\252\327\231\327\247\327\231\327\231\327\252 \327\224\327\224\327\252\327\247\327\240\327\224 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\241\327\250\327\252 \327\247\327\231\327\246\327\225\327\250 \327\223\327\250\327\232 \327\240\327\233\327\251\327\234\327\224.\0"\
@@ -936,11 +915,11 @@ const char * gTranslations_he =
   "\327\233\327\252\327\231\327\221\327\252 \327\240\327\252\327\225\327\240\327\231 \327\241\327\231\327\225\327\236\327\252 \327\247\327\221\327\246\327\231\327\235 \327\221\327\250\327\231\327\251\327\225\327\235 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\233\327\252\327\231\327\221\327\252 \327\240\327\252\327\225\327\240\327\231 \327\224\327\241\327\250\327\252 \327\224\327\252\327\225\327\233\327\240\327\224 \327\221\327\250\327\231\327\251\327\225\327\235 \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\224\327\241\327\252\327\250 \327\220\327\244\327\251\327\250\327\225\327\231\327\225\327\252\0"\
-  "\327\224\327\252\327\247\327\237 \327\252\327\225\327\241\327\243 PDF \327\234\327\223\327\244\327\223\327\244\327\240\327\231\327\235 '\327\244\327\231\327\231\327\250\327\244\327\225\327\247\327\241', '\327\222\327\225\327\222\327\234 \327\233\327\250\327\225\327\235' \327\225'\327\220\327\225\327\244\327\250\327\224'\0"\
   "\327\224\327\252\327\247\327\237 \327\220\327\252 SumatraPDF\0"\
   "\327\224\327\252\327\247\327\237 \327\220\327\252 SumatraPDF \327\221\327\252\327\231\327\247\327\231\327\231\327\224:\0"\
   "\327\224\327\252\327\247\327\240\327\252 SumatraPDF \327\240\327\233\327\251\327\234\327\224.\0"\
   "\327\236\327\252\327\247\327\231\327\237 \327\220\327\252 SumatraPDF...\0"\
+  "\0"\
   "\327\220\327\244\327\251\327\250 \327\227\327\231\327\244\327\225\327\251 \327\247\327\225\327\221\327\246\327\231 PDF \327\221\327\236\327\242\327\250\327\233\327\252 \327\224\327\227\327\231\327\244\327\225\327\251 \327\251\327\234 Windows\0"\
   "\327\220\327\244\327\251\327\250 \327\252\327\246\327\225\327\222\327\224 \327\236\327\247\327\223\327\231\327\236\327\224 \327\251\327\234 \327\247\327\225\327\221\327\246\327\231 PDF\0"\
   "\327\234\327\224\327\236\327\251\327\232, \327\220\327\240\327\220 \327\241\327\222\327\225\327\250 \327\220\327\252 %s!\0"\
@@ -967,7 +946,6 @@ const char * gTranslations_hu =
   "Telep\303\255t\303\251si k\303\266nyvt\303\241r l\303\251trehoz\303\241sa sikertelen\0"\
   "PDF el\305\221n\303\251zet-megjelen\303\255t\305\221 telep\303\255t\303\251se sikertelen\0"\
   "PDF keres\303\251si sz\305\261r\305\221 telep\303\255t\303\251se sikertelen\0"\
-  "B\303\266ng\303\251sz\305\221 be\303\251p\303\274l\305\221 telep\303\255t\303\251se sikertelen\0"\
   "Ideiglenes k\303\266nyvt\303\241r nem \303\251rhet\305\221 el\0"\
   "Telep\303\255t\303\251si k\303\266nyvt\303\241r elt\303\241vol\303\255t\303\241sa sikertelen\0"\
   "Parancsikon elt\303\241vol\303\255t\303\241sa sikertelen\0"\
@@ -981,11 +959,11 @@ const char * gTranslations_hu =
   "Nem siker\303\274lt \303\255rni a kiterjesztett f\303\241jlkiterjeszt\303\251st inform\303\241ci\303\263kat a rendszerle\303\255r\303\263 adatb\303\241zisban\0"\
   "Elt\303\241vol\303\255t\303\241ssal kapcsolatos inform\303\241ci\303\263k registry-be \303\255r\303\241sa sikertelen\0"\
   "Be\303\241ll\303\255t\303\241sok elrejt\303\251se\0"\
-  "PDF be\303\251p\303\274l\305\221 telep\303\255t\303\251se Firefox, Chrome \303\251s Opera b\303\266ng\303\251sz\305\221kre\0"\
   "SumatraPDF telep\303\255t\303\251se\0"\
   "SumatraPDF telep\303\255t\303\251se a k\303\266vetkez\305\221 &k\303\266nyvt\303\241rba:\0"\
   "Telep\303\255t\303\251s sikertelen!\0"\
   "Telep\303\255t\303\251s folyamatban...\0"\
+  "\0"\
   "Hagyja a Windows Desktop Search-re a PDF dokumentumok keres\303\251s\303\251t\0"\
   "Hagyja a Windows-ra a PDF dokumentumok el\305\221n\303\251zet\303\251nek megjelen\303\255t\303\251s\303\251t\0"\
   "A(z) %s bez\303\241r\303\241sa sz\303\274ks\303\251ges a folytat\303\241shoz!\0"\
@@ -1012,7 +990,6 @@ const char * gTranslations_id =
   "Gagal membuat direktori instalasi\0"\
   "Gagal menginstal pratilik PDF\0"\
   "Gagal memasang filter pencari PDF\0"\
-  "Gagal memasang plugin untuk peramban\0"\
   "Gagal mendeteksi direktori sementara\0"\
   "Gagal menghapus direktori instalasi\0"\
   "Gagal menghapus shortcut\0"\
@@ -1026,11 +1003,11 @@ const char * gTranslations_id =
   "Gagal menulis info ekstensi file lanjutan ke registry\0"\
   "Gagal menulis info penghapusan program ke registry\0"\
   "Sembunyikan &Opsi\0"\
-  "Install plugin untuk peram&ban Firefox, Chrome, dan Opera\0"\
   "\0"\
   "Install SumatraPDF ke &folder:\0"\
   "Instalasi gagal!\0"\
   "Instalasi sedang berlangsung...\0"\
+  "\0"\
   "Izinkan Windows Desktop Search mencari dokumen PDF\0"\
   "Izinkan Windows menampilkan dokumen PDF\0"\
   "Silakan tutup %s untuk melanjutkan.\0"\
@@ -1057,7 +1034,6 @@ const char * gTranslations_it =
   "Impossibile creare la cartella di installazione\0"\
   "Impossibile installare modulo anteprima PDF\0"\
   "Impossibile installare filtro ricerca PDF\0"\
-  "Impossibile installare plugin browser\0"\
   "Impossibile ottenere la cartella temporanea\0"\
   "Impossibile rimuovere la cartella di installazione\0"\
   "Impossibile rimuovere il collegamento\0"\
@@ -1071,11 +1047,11 @@ const char * gTranslations_it =
   "Scrittura fallita informazione estensione estesa file nel registro\0"\
   "Scrittura fallita informazione disinstallazione nel registro\0"\
   "Nascondi & opzioni\0"\
-  "Installa plugin PDF per i &browser FireFox, Chrome e Opera\0"\
   "Installa SumatraPDF\0"\
   "Installa SumatraPD&F nella cartella:\0"\
   "Installazione fallita!\0"\
   "Installazione in corso...\0"\
+  "\0"\
   "Assegna a Windows la ricerca sul desktop & dei documenti PDF\0"\
   "Assegna a Windows la visualizzazione & anteprima dei documenti PDF\0"\
   "Chiudi %s per continuare!\0"\
@@ -1102,7 +1078,6 @@ const char * gTranslations_ja =
   "\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\345\205\210\343\203\207\343\202\243\343\203\254\343\202\257\343\203\210\343\203\252\343\202\222\344\275\234\346\210\220\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
   "PDF \343\203\227\343\203\254\343\203\223\343\203\245\343\203\274\343\202\242\343\202\222\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
   "PDF \346\244\234\347\264\242\343\203\225\343\202\243\343\203\253\343\202\277\343\202\222\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
-  "\343\203\226\343\203\251\343\202\246\343\202\266\343\203\227\343\203\251\343\202\260\343\202\244\343\203\263\343\202\222\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
   "\344\270\200\346\231\202\343\203\207\343\202\243\343\203\254\343\202\257\343\203\210\343\203\252\343\202\222\347\242\272\344\277\235\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
   "\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\345\205\210\343\203\207\343\202\243\343\203\254\343\202\257\343\203\210\343\203\252\343\202\222\345\211\212\351\231\244\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
   "\343\202\267\343\203\247\343\203\274\343\203\210\343\202\253\343\203\203\343\203\210\343\202\222\345\211\212\351\231\244\343\201\247\343\201\215\343\201\276\343\201\233\343\202\223\343\201\247\343\201\227\343\201\237\0"\
@@ -1116,11 +1091,11 @@ const char * gTranslations_ja =
   "\346\213\241\345\274\265\345\255\220\346\203\205\345\240\261\343\202\222\343\203\254\343\202\270\343\202\271\343\203\210\343\203\252\343\201\253\346\233\270\343\201\215\350\276\274\343\202\200\343\201\256\343\201\253\345\244\261\346\225\227\343\201\227\343\201\276\343\201\227\343\201\237\0"\
   "\343\202\242\343\203\263\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\346\203\205\345\240\261\343\202\222\343\203\254\343\202\270\343\202\271\343\203\210\343\203\252\343\201\253\346\233\270\343\201\215\350\276\274\343\202\200\343\201\256\343\201\253\345\244\261\346\225\227\343\201\227\343\201\276\343\201\227\343\201\237\0"\
   "\343\202\252\343\203\227\343\202\267\343\203\247\343\203\263\343\202\222\351\232\240\343\201\231(&O)\0"\
-  "Firefox, Chrome, Opera \343\201\270 PDF \351\226\262\350\246\247\343\203\227\343\203\251\343\202\260\343\202\244\343\203\263\343\202\222\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253(&b)\0"\
   "SumatraPDF\343\202\222\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\0"\
   "SumatraPDF \343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\345\205\210\343\203\225\343\202\251\343\203\253\343\203\200(&F)\0"\
   "\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\343\201\253\345\244\261\346\225\227\357\274\201\0"\
   "\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\344\270\255\342\200\246\0"\
+  "\0"\
   "Windows \343\203\207\343\202\271\343\202\257\343\203\210\343\203\203\343\203\227 \343\202\265\343\203\274\343\203\201\343\201\256 PDF \343\203\211\343\202\255\343\203\245\343\203\241\343\203\263\343\203\210\346\244\234\347\264\242\343\202\222\350\250\261\345\217\257\343\201\231\343\202\213(&s)\0"\
   "Windows \343\201\256 PDF \343\203\211\343\202\255\343\203\245\343\203\241\343\203\263\343\203\210\343\203\227\343\203\254\343\203\223\343\203\245\343\203\274\343\202\222\350\250\261\345\217\257\343\201\231\343\202\213(&p)\0"\
   "%s \343\202\222\351\226\211\343\201\230\343\201\246\343\201\217\343\201\240\343\201\225\343\201\204\0"\
@@ -1147,7 +1122,6 @@ const char * gTranslations_kr =
   "\354\204\244\354\271\230 \353\224\224\353\240\211\355\206\240\353\246\254\353\245\274 \353\247\214\353\223\244 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "PDF \353\257\270\353\246\254\353\263\264\352\270\260\353\245\274 \354\204\244\354\271\230\355\225\240 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "PDF \352\262\200\354\203\211 \355\225\204\355\204\260\353\245\274 \354\204\244\354\271\230\355\225\240 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
-  "\353\270\214\353\235\274\354\232\260\354\240\200 \355\224\214\353\237\254\352\267\270\354\235\270\354\235\204 \354\204\244\354\271\230\355\225\240 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "\354\236\204\354\213\234 \353\224\224\353\240\211\355\206\240\353\246\254\353\245\274 \352\260\200\354\240\270\354\230\254 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "\354\204\244\354\271\230 \353\224\224\353\240\211\355\206\240\353\246\254\353\245\274 \354\240\234\352\261\260\355\225\240 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "\353\260\224\353\241\234\352\260\200\352\270\260\353\245\274 \354\240\234\352\261\260\355\225\240 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
@@ -1161,11 +1135,11 @@ const char * gTranslations_kr =
   "\355\231\225\354\236\245\353\220\234 \355\214\214\354\235\274\354\235\230 \355\231\225\354\236\245\354\236\220 \354\240\225\353\263\264\353\245\274 \353\240\210\354\247\200\354\212\244\355\212\270\353\246\254\354\227\220 \354\223\260\354\247\200 \353\252\273\355\226\210\354\212\265\353\213\210\353\213\244.\0"\
   "\354\240\234\352\261\260 \354\240\225\353\263\264\353\245\274 \353\240\210\354\247\200\354\212\244\355\212\270\353\246\254\354\227\220 \354\223\260\354\247\200 \353\252\273\355\226\210\354\212\265\353\213\210\353\213\244.\0"\
   "\354\230\265\354\205\230 \352\260\220\354\266\224\352\270\260(&O)\0"\
-  "Firefox, Chrome \353\260\217 Opera\354\232\251 PDF \353\270\214\353\235\274\354\232\260\354\240\200 \355\224\214\353\237\254\352\267\270\354\235\270 \354\204\244\354\271\230(&B)\0"\
   "SumatraPDF \354\204\244\354\271\230\0"\
   "SumatraPDF \354\204\244\354\271\230 \355\217\264\353\215\224(&F):\0"\
   "\354\204\244\354\271\230 \354\213\244\355\214\250!\0"\
   "\354\204\244\354\271\230\355\225\230\353\212\224 \354\244\221...\0"\
+  "\0"\
   "Windows \353\215\260\354\212\244\355\201\254\355\206\261 \352\262\200\354\203\211\354\227\220\354\204\234 PDF \353\254\270\354\204\234\353\245\274 \352\262\200\354\203\211\355\225\240 \354\210\230 \354\236\210\354\212\265\353\213\210\353\213\244.\0"\
   "Windows \353\202\264\354\227\220\354\204\234 PDF \353\254\270\354\204\234 \353\257\270\353\246\254\353\263\264\352\270\260 \352\270\260\353\212\245 \354\266\224\352\260\200(&P)\0"\
   "\354\247\204\355\226\211\355\225\230\353\240\244\353\251\264 %s(\354\235\204)\353\245\274 \353\213\253\354\234\274\354\204\270\354\232\224!\0"\
@@ -1192,7 +1166,6 @@ const char * gTranslations_ku =
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\201\333\206\332\265\330\257\333\225\330\261\333\214 \330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206 \330\257\330\261\331\210\330\263\330\252 \330\250\332\251\330\261\333\216\330\252\0"\
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\276\333\214\330\264\330\247\331\206\330\257\333\225\330\261\333\214 PDF \330\257\330\247\330\250\333\225\330\262\333\216\331\206\330\257\330\261\333\216\330\252\0"\
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\201\330\261\331\205\330\247\331\206\333\214 \332\257\333\225\332\225\330\247\331\206\333\214 PDF \330\257\330\247\330\250\333\225\330\262\333\216\331\206\330\257\330\261\333\216\330\252\0"\
-  "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\276\333\216\331\210\333\225\332\251\330\261\330\247\331\210\333\214 \331\210\333\216\330\250\332\257\333\225\332\225 \330\257\330\247\330\250\333\225\330\262\333\216\331\206\330\257\330\261\333\216\330\252\0"\
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\201\333\206\332\265\330\257\333\225\330\261\333\214 \332\251\330\247\330\252\333\214 \330\250\330\257\333\206\330\262\330\261\333\216\330\252\333\225\331\210\333\225\0"\
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \331\201\333\206\332\265\330\257\333\225\330\261\333\214 \330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206 \331\204\330\247\330\250\330\257\330\261\333\216\330\252\0"\
   "\331\206\330\247\330\252\331\210\330\247\331\206\330\261\333\216\330\252 \332\251\331\210\330\261\330\252\333\225 \330\246\330\247\333\214\332\251\333\206\331\206 \331\204\330\247\330\250\330\257\330\261\333\216\330\252\0"\
@@ -1206,11 +1179,11 @@ const char * gTranslations_ku =
   "\330\257\330\247\331\206\330\247\331\206\333\214 \330\262\330\247\331\206\333\214\330\247\330\261\333\214 \331\276\330\247\330\264\332\251\333\206\333\214 \331\201\330\247\333\214\331\204 \330\263\333\225\330\261\332\251\333\225\331\210\330\252\331\210 \331\206\333\225\330\250\331\210\331\210 \331\204\333\225 \332\225\333\214\332\257\330\263\330\252\330\261\333\214\330\257\330\247\0"\
   "\330\257\330\247\331\206\330\247\331\206\333\214 \330\262\330\247\331\206\333\214\330\247\330\261\333\214 \330\263\332\225\333\214\331\206\333\225\331\210\333\225 \330\263\333\225\330\261\332\251\333\225\331\210\330\252\331\210 \331\206\333\225\330\250\331\210\331\210 \331\204\333\225 \332\225\333\214\332\257\330\263\330\252\330\261\333\214\330\257\330\247\0"\
   "\331\207\333\225\332\265\330\250\332\230\330\247\330\261\330\257\331\206\333\225\332\251\330\247\331\206\333\214 &\330\264\330\247\330\261\330\257\331\206\333\225\331\210\333\225\0"\
-  "\330\250\333\206 \331\201\330\247\333\214\333\225\330\261\331\201\333\206\332\251\330\263\330\214 \332\251\330\261\333\206\331\205 \331\210 \330\246\333\206\331\276\333\216\330\261\330\247& PDF \330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206\333\214 \331\276\333\216\331\210\333\225\332\251\330\261\330\247\331\210\333\214\0"\
   "\330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206\333\214 SumatraPDF\0"\
   "\331\204\333\225 \331\201\333\206\332\265\330\257\333\225\330\261\333\214 SumatraPDF \330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206\333\214:\0"\
   "\330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206 \330\263\333\225\330\261\332\251\333\225\331\210\330\252\331\210 \331\206\333\225\330\250\331\210\331\210!\0"\
   "\330\257\330\247\330\250\333\225\330\262\330\247\331\206\330\257\331\206 \331\204\333\225 \330\246\333\225\331\206\330\254\330\247\331\205\330\257\330\247\331\206\330\257\330\247\333\214\333\225...\0"\
+  "\0"\
   "PDF \332\225\333\216\332\257\333\225\330\257\330\247\331\206 \330\250\333\225 \332\257\333\225\332\225\330\247\331\206\333\214 \330\263\333\225\330\261\330\264\330\247\330\264\333\225\333\214 \331\210\333\214\331\206\330\257\333\206\330\262 &\330\250\332\257\333\225\332\225\333\216\330\252 \330\250\333\206 \330\250\333\225\332\265\332\257\333\225\331\206\330\247\331\205\333\225\332\251\330\247\331\206\333\214\0"\
   "\331\276\333\214\330\264\330\247\331\206 \330\250\330\257\330\247\330\252 PDF \332\225\333\216\332\257\333\225\330\257\330\247\331\206 \330\250\333\225 \331\276\333\214\330\264\330\247\331\206\330\257\333\225\330\261\333\214 \331\210\333\214\331\206\330\257\333\206\330\262 &\330\250\333\225\332\265\332\257\333\225\331\206\330\247\331\205\333\225\332\251\330\247\331\206\333\214\0"\
   "\330\252\332\251\330\247\333\214\333\225 %s \330\257\330\247\330\250\330\256\333\225 \330\250\333\206 \330\250\333\225\330\261\330\257\333\225\331\210\330\247\331\205\330\250\331\210\331\206!\0"\
@@ -1237,7 +1210,6 @@ const char * gTranslations_mk =
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \321\230\320\260 \321\201\320\276\320\267\320\264\320\260\320\264\320\260\320\274 \320\277\320\260\320\277\320\272\320\260\321\202\320\260 \320\267\320\260 \320\270\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260\0"\
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\320\274 \320\277\321\200\320\270\320\272\320\260\320\266\321\203\320\262\320\260\321\207\320\276\321\202 \320\275\320\260 PDF\0"\
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\320\274 \321\204\320\270\320\273\321\202\320\265\321\200 \320\267\320\260 \320\277\321\200\320\265\320\261\320\260\321\200\321\203\320\262\320\260\321\232\320\265 \320\275\320\260 PDF\0"\
-  "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \320\263\320\276 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\320\274 \320\264\320\276\320\264\320\260\321\202\320\276\320\272\320\276\321\202 \320\267\320\260 \320\277\321\200\320\265\320\273\320\270\321\201\321\202\321\203\320\262\320\260\321\207\320\270\0"\
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \320\277\321\200\320\270\321\201\321\202\320\260\320\277\320\260\320\274 \320\264\320\276 \320\277\321\200\320\270\320\262\321\200\320\265\320\274\320\265\320\275\320\260\321\202\320\260 \320\277\320\260\320\277\320\272\320\260\0"\
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \321\230\320\260 \320\270\320\267\320\261\321\200\320\270\321\210\320\260\320\274 \320\270\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\320\276\320\275\320\260\321\202\320\260 \320\277\320\260\320\277\320\272\320\260\0"\
   "\320\235\320\265 \320\274\320\276\320\266\320\260\320\274 \320\264\320\260 \321\230\320\260 \320\270\320\267\320\261\321\200\320\270\321\210\320\260\320\274 \320\272\321\200\320\260\321\202\320\265\320\275\320\272\320\260\321\202\320\260\0"\
@@ -1251,11 +1223,11 @@ const char * gTranslations_mk =
   "\320\235\320\265 \321\203\321\201\320\277\320\265\320\260\320\262 \320\264\320\260 \320\263\320\270 \320\267\320\260\320\277\320\270\321\210\320\260\320\274 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\320\270\321\202\320\265 \320\267\320\260 \321\202\320\270\320\277\320\276\320\262\320\270 \320\275\320\260 \320\264\320\260\321\202\320\276\321\202\320\265\320\272\320\270 \320\262\320\276 \321\200\320\265\320\263\320\270\321\201\321\202\320\260\321\200\320\276\321\202\0"\
   "\320\235\320\265 \321\203\321\201\320\277\320\265\320\260\320\262 \320\264\320\260 \320\263\320\270 \320\267\320\260\320\277\320\270\321\210\320\260\320\274 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\320\270\321\202\320\265 \320\267\320\260 \320\264\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\260\321\202\320\276\321\200\320\276\321\202 \320\262\320\276 \321\200\320\265\320\263\320\270\321\201\321\202\320\260\321\200\320\276\321\202\0"\
   "\320\241\320\272\321\200\320\270\321\230 &\320\276\320\277\321\206\320\270\320\270\0"\
-  "\320\230\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\230 \320\264\320\276\320\264\320\260\321\202\320\276\320\272 \320\267\320\260 PDF \320\262\320\276 Firefox, Chrome \320\270 Opera\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\230 SumatraPDF\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\230 SumatraPDF \320\262\320\276 &\320\277\320\260\320\277\320\272\320\260:\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\232\320\265\321\202\320\276 \320\275\320\265 \321\203\321\201\320\277\320\265\320\260!\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\232\320\265\321\202\320\276 \320\265 \320\262\320\276 \321\202\320\265\320\272...\0"\
+  "\0"\
   "\320\224\320\276\320\267\320\262\320\276\320\273\320\270 Windows Desktop Search \320\264\320\260 \320\277\321\200\320\265\320\261\320\260\321\200\321\203\320\262\320\260 \320\275\320\270\320\267 PDF-\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270\0"\
   "\320\224\320\276\320\267\320\262\320\276\320\273\320\270 Windows \320\264\320\260 \320\277\321\200\320\270\320\272\320\260\320\266\321\203\320\262\320\260 \321\201\320\273\320\270\320\272\320\270 \320\267\320\260 PDF-\320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270\0"\
   "\320\222\320\265 \320\274\320\276\320\273\320\260\320\274 \320\267\320\260\321\202\320\262\320\276\321\200\320\265\321\202\320\265 \320\263\320\276 %s, \320\267\320\260 \320\264\320\260 \320\277\321\200\320\276\320\264\320\276\320\273\320\266\320\270\321\202\320\265!\0"\
@@ -1282,7 +1254,6 @@ const char * gTranslations_my =
   "Tidak dapat mencipta direktori pemasangan\0"\
   "Tidak dapat memasang previewer PDF\0"\
   "Tidak dapat memasang penapis carian PDF\0"\
-  "Tidak dapat memasang pelayar plugin\0"\
   "Tidak boleh mendapatkan direktori sementara\0"\
   "Tidak dapat memadamkan direktori pemasangan\0"\
   "Tidak dapat membuang shortcut\0"\
@@ -1296,11 +1267,11 @@ const char * gTranslations_my =
   "Gagal menulis fail lanjutan maklumat tambahan ke dalam registry\0"\
   "Gagal untuk menulis maklumat pemasangan untuk registry\0"\
   "Sembunyi &Tetapan\0"\
-  "Pasang PDF &pelayar plugin untuk Firefox, Chrome dan Opera\0"\
   "Pasang SumatraPDF\0"\
   "Pasang SumatraPDF dalam &folder\0"\
   "Pemasangan gagal!\0"\
   "Pemasangan sedang dijalankan...\0"\
+  "\0"\
   "Biarkan Windows Desktop Search &mencari dokumen PDF\0"\
   "Biarkan Windows menunjukkan &preview dokumen PDF\0"\
   "Sila tutup\302\240%s untuk meneruskan!\0"\
@@ -1327,7 +1298,6 @@ const char * gTranslations_pl =
   "Nie mo\305\274na utworzy\304\207 katalogu instalacyjnego\0"\
   "Nie mo\305\274na zainstalowa\304\207 podgl\304\205du PDF\0"\
   "Nie mo\305\274na zainstalowa\304\207 filtru przeszukiwania PDF\0"\
-  "Nie mo\305\274na zainstalowa\304\207 wtyczki do przegl\304\205darek\0"\
   "Nie mo\305\274na uzyska\304\207 katalogu tymczasowego\0"\
   "Nie mo\305\274na usun\304\205\304\207 katalogu instalacyjnego\0"\
   "Nie mo\305\274na usun\304\205\304\207 skr\303\263tu\0"\
@@ -1341,11 +1311,11 @@ const char * gTranslations_pl =
   "Nie mo\305\274na wprowadzi\304\207 poszerzonych informacji o rozszerzeniu pliku do rejestru\0"\
   "Nie mo\305\274na zapisa\304\207 informacji o usuni\304\231ciu programu do rejestru\0"\
   "Ukryj &Opcje\0"\
-  "Zainstaluj &wtyczk\304\231 PDF do przegl\304\205darek Firefox, Chrome i Opera\0"\
   "Zainstaluj SumatraPDF\0"\
   "Zainstaluj SumatraPDF w &folderze:\0"\
   "B\305\202\304\205d instalacji!\0"\
   "Trwa instalacja...\0"\
+  "\0"\
   "Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwa\304\207 pliki PDF\0"\
   "Windows ma pokazywa\304\207 &podgl\304\205d plik\303\263w PDF\0"\
   "Zamknij  %s, aby kontynuowa\304\207!\0"\
@@ -1372,7 +1342,6 @@ const char * gTranslations_br =
   "N\303\243o foi poss\303\255vel criar a pasta de instala\303\247\303\243o.\0"\
   "N\303\243o foi poss\303\255vel instalar o pr\303\251-visualizador para PDF\0"\
   "N\303\243o foi poss\303\255vel instalar o filtro de pesquisa para PDF\0"\
-  "N\303\243o foi poss\303\255vel instalar o plugin do navegador\0"\
   "N\303\243o foi poss\303\255vel obter a pasta tempor\303\241ria\0"\
   "N\303\243o foi poss\303\255vel remover a pasta de instala\303\247\303\243o\0"\
   "N\303\243o foi poss\303\255vel remover o atalho\0"\
@@ -1386,11 +1355,11 @@ const char * gTranslations_br =
   "Falha na grava\303\247\303\243o da extens\303\243o de arquivo no registro\0"\
   "Falha na grava\303\247\303\243o dos dados de desinstala\303\247\303\243o no registro\0"\
   "Ocultar &Op\303\247\303\265es\0"\
-  "Instalar plugin PDF para Firefox, Chrome e Opera\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF na &pasta:\0"\
   "Falha na instala\303\247\303\243o!\0"\
   "Instala\303\247\303\243o em progresso...\0"\
+  "\0"\
   "Permitir que o Windows fa\303\247a a bu&sca em documentos PDF\0"\
   "Permitir que o Windows &pr\303\251-visualize documentos PDF\0"\
   "Por favor feche %s para continuar!\0"\
@@ -1417,7 +1386,6 @@ const char * gTranslations_pt =
   "N\303\243o foi poss\303\255vel criar a pasta de instala\303\247\303\243o\0"\
   "N\303\243o foi poss\303\255vel instalar o antevis\303\243o de PDF\0"\
   "N\303\243o foi poss\303\255vel instalar o filtro de procuras\0"\
-  "N\303\243o foi poss\303\255vel instalar o plugin do navegador\0"\
   "N\303\243o foi poss\303\255vel obter a pasta tempor\303\241ria\0"\
   "N\303\243o foi poss\303\255vel remover a pasta de instala\303\247\303\243o\0"\
   "N\303\243o foi poss\303\255vel remover o atalho\0"\
@@ -1431,11 +1399,11 @@ const char * gTranslations_pt =
   "Falha ao escrever as informa\303\247\303\265es do tipo de ficheiro nas chaves de registo\0"\
   "Falha ao escrever as informa\303\247\303\265es de desinstala\303\247\303\243o no registo\0"\
   "&Ocultar op\303\247\303\265es\0"\
-  "Instalar o pl&ugin de navegador para o Chrome, Firefox e Opera\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPD&F na pasta:\0"\
   "A instala\303\247\303\243o falhou!\0"\
   "A instalar...\0"\
+  "\0"\
   "Permitir que o Windows Desktop &Search localize os PDF\0"\
   "&Permitir que o WIndows mostre uma antevis\303\243o dos PDF\0"\
   "Para continuar, feche o %s!\0"\
@@ -1462,7 +1430,6 @@ const char * gTranslations_ro =
   "Nu s-a putut crea directorul de instalare\0"\
   "Nu s-a putut instala previzualizatorul PDF\0"\
   "Nu s-a putut instala filtrul de cautare PDF\0"\
-  "Nu s-a putut instala plugin-ul pentru browser\0"\
   "Nu s-a putut obtine directorul temporar\0"\
   "Nu s-a putut sterge directorul de instalare\0"\
   "Nu s-au putut sterge scurtatura\0"\
@@ -1476,11 +1443,11 @@ const char * gTranslations_ro =
   "Eroare la scrierea informatiei extinse despre extensia fisierului in registri\0"\
   "Eroare la scrierea informatiilor de dezinstalare in registri\0"\
   "Ascundere &Optiuni\0"\
-  "Instaleaza plugin-ul PDF pentru browser-ul Firefox, Chrome si Opera\0"\
   "Instalare SumatraPDF\0"\
   "Instalare SumatraPDF in &folderul:\0"\
   "Instalare esuata!\0"\
   "Se instaleaza...\0"\
+  "\0"\
   "Permite Windows Desktop &Search sa caute in documente PDF\0"\
   "Permite Windows-ului sa arate &previzualizari ale documentelor PDF\0"\
   "Rugam inchideti %s pentru a putea continua!\0"\
@@ -1507,7 +1474,6 @@ const char * gTranslations_ru =
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\201\320\276\320\267\320\264\320\260\321\202\321\214 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\216 \320\264\320\273\321\217 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\272\320\270\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\321\214 \320\277\321\200\320\276\321\201\320\274\320\276\321\202\321\200\321\211\320\270\320\272 PDF\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\321\214 \321\204\320\270\320\273\321\214\321\202\321\200 \320\277\320\276\320\270\321\201\320\272\320\260 PDF\0"\
-  "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\321\214 \320\277\320\273\320\260\320\263\320\270\320\275 \320\261\321\200\320\260\321\203\320\267\320\265\321\200\320\260\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \320\276\320\277\321\200\320\265\320\264\320\265\320\273\320\270\321\202\321\214 \320\262\321\200\320\265\320\274\320\265\320\275\320\275\321\203\321\216 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\216\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\203\320\264\320\260\320\273\320\270\321\202\321\214 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\216 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\272\320\270\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \321\203\320\264\320\260\320\273\320\270\321\202\321\214 \321\217\321\200\320\273\321\213\320\272\0"\
@@ -1521,11 +1487,11 @@ const char * gTranslations_ru =
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\321\214 \320\277\320\276\320\273\320\275\321\203\321\216 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\321\216 \320\276 \321\200\320\260\321\201\321\210\320\270\321\200\320\265\320\275\320\270\320\270 \321\204\320\260\320\271\320\273\320\260 \320\262 \321\200\320\265\320\263\320\270\321\201\321\202\321\200\0"\
   "\320\235\320\265 \321\203\320\264\320\260\320\273\320\276\321\201\321\214 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\321\214 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\321\216 \320\264\320\273\321\217 \320\264\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\273\321\217\321\202\320\276\321\200\320\260 \320\262 \321\200\320\265\320\263\320\270\321\201\321\202\321\200\0"\
   "\320\241\320\272\321\200\321\213\321\202\321\214 \320\277\320\260\321\200\320\260\320\274\320\265\321\202\321\200\321\213\0"\
-  "\320\243\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\321\214 &\320\277\320\273\320\260\320\263\320\270\320\275 PDF \320\264\320\273\321\217 Firefox, Chrome \320\270 Opera\0"\
   "\320\235\320\260\321\207\320\260\321\202\321\214 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\272\321\203\0"\
   "\320\243\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\321\214 SumatraPDF \320\262 &\320\277\320\260\320\277\320\272\321\203:\0"\
   "\320\243\321\201\321\202\320\260\320\275\320\276\320\262\320\272\320\260 \320\275\320\265 \321\203\320\264\320\260\320\273\320\260\321\201\321\214!\0"\
   "\320\237\321\200\320\276\320\270\321\201\321\205\320\276\320\264\320\270\321\202 \321\203\321\201\321\202\320\260\320\275\320\276\320\262\320\272\320\260...\0"\
+  "\0"\
   "&\320\237\320\276\320\270\321\201\320\272 \321\204\320\260\320\271\320\273\320\276\320\262 PDF \321\201 \320\277\320\276\320\274\320\276\321\211\321\214\321\216 Windows Desktop Search\0"\
   "&\320\237\321\200\320\276\321\201\320\274\320\276\321\202\321\200 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\276\320\262 PDF \321\201\321\200\320\265\320\264\321\201\321\202\320\262\320\260\320\274\320\270 Windows\0"\
   "\320\224\320\273\321\217 \320\277\321\200\320\276\320\264\320\276\320\273\320\266\320\265\320\275\320\270\321\217, \320\267\320\260\320\272\321\200\320\276\320\271\321\202\320\265 %s !\0"\
@@ -1552,7 +1518,6 @@ const char * gTranslations_sr_rs =
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\320\276\320\275\320\270 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\230\321\203\320\274 \321\201\320\265 \320\275\320\265 \320\274\320\276\320\266\320\265 \320\272\321\200\320\265\320\270\321\200\320\260\321\202\320\270\0"\
   "\320\237\321\200\320\265\320\263\320\273\320\265\320\264\320\260\321\207 \320\237\320\224\320\244 \320\275\320\265\320\274\320\276\320\263\321\203\321\233\320\265 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\202\320\270\0"\
   "\320\235\320\265\320\274\320\276\320\263\321\203\321\233\320\265 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\202\320\270 \321\204\320\270\320\273\321\202\320\265\321\200 \320\267\320\260 \320\277\321\200\320\265\321\202\321\200\320\260\320\263\321\203\0"\
-  "\320\235\320\265\320\274\320\276\320\263\321\203\321\233\320\265 \320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\202\321\200\320\265\321\202\320\270 \320\264\320\276\320\264\320\260\321\202\320\260\320\272 \320\267\320\260 \320\277\321\200\320\265\321\202\321\200\320\260\320\266\320\270\320\262\320\260\321\207\0"\
   "\320\235\320\265\320\274\320\276\320\263\321\203\321\233 \320\277\321\200\320\270\321\201\321\202\321\203\320\277 \320\277\321\200\320\270\320\262\321\200\320\265\320\274\320\265\320\275\320\276\320\274 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\230\321\203\320\274\321\203\0"\
   "\320\235\320\265\320\274\320\276\320\263\321\203\321\233\320\265 \321\203\320\272\320\273\320\276\320\275\320\270\321\202\320\270 \320\277\321\200\320\270\320\262\321\200\320\265\320\274\320\265\320\275\320\270 \320\264\320\270\321\200\320\265\320\272\321\202\320\276\321\200\320\270\321\230\321\203\320\274\0"\
   "\320\235\320\265\320\274\320\276\320\263\321\203\321\233\320\265 \321\203\320\272\320\273\320\276\320\275\320\270\320\270\321\202\320\270 \321\201\320\272\321\200\320\260\321\233\320\265\320\275\320\270\321\206\321\203\0"\
@@ -1566,11 +1531,11 @@ const char * gTranslations_sr_rs =
   "\320\235\320\265\321\203\321\201\320\277\320\265\320\276 \321\203\320\277\320\270\321\201 \320\277\321\200\320\276\321\210\320\270\321\200\320\265\320\275\320\265 \320\265\320\272\321\201\321\202\320\265\320\275\320\267\320\270\321\230\320\265 \321\204\320\260\321\230\320\273\320\260 \321\203 \321\200\320\265\320\263\320\270\321\201\321\202\321\200\320\270 \320\261\320\260\320\267\321\203\0"\
   "\320\235\320\265\321\203\321\201\320\277\320\265\320\276 \321\203\320\277\320\270\321\201 \320\270\320\275\321\204\320\276\321\200\320\274\320\260\321\206\320\270\321\230\320\260 \320\276 \320\264\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\270 \321\203 \321\200\320\265\320\263\320\270\321\201\321\202\321\200\320\270 \320\261\320\260\320\267\321\203\0"\
   "\320\241\320\260\320\272\321\200\320\270\321\230 \320\276\320\277\321\206\320\270\321\230\320\265\0"\
-  "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260 \320\237\320\224\320\244 &\320\277\321\200\320\265\321\202\321\200\320\260\320\266\320\270\320\262\320\260\321\207 \320\277\320\273\321\203\320\263\320\270\320\275\320\260 \320\267\320\260 \320\244\320\260\321\230\320\265\321\200\321\204\320\276\320\272\321\201\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260 \320\241\321\203\320\274\320\260\321\202\321\200\320\260\320\237\320\224\320\244\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260 \320\241\321\203\320\274\320\260\321\202\321\200\320\260\320\237\320\224\320\244\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260 \320\275\320\265\321\203\321\201\320\277\320\265\320\273\320\260!\0"\
   "\320\230\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\320\260 \321\203 \321\202\320\276\320\272\321\203...\0"\
+  "\0"\
   "\320\237\321\200\320\265\321\202\321\200\320\260\320\263\320\260 Windows Desktop &\320\277\321\200\320\265\321\202\321\200\320\260\320\263\320\260 \320\237\320\224\320\244 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\0"\
   "Windows &\320\277\321\200\320\270\320\272\320\260\320\267 \320\237\320\224\320\244 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\0"\
   "\320\227\320\260\321\202\320\262\320\276\321\200\320\270\321\202\320\265 %s \320\267\320\260 \320\275\320\260\321\201\321\202\320\260\320\262\320\260\320\272!\0"\
@@ -1597,7 +1562,6 @@ const char * gTranslations_sp_rs =
   "Nemogu\304\207e kreirati instalacioni direktorijum\0"\
   "Nemogu\304\207e instalirati PDF pregleda\304\215\0"\
   "Nemogu\304\207e instalirati PDF filter pretrage\0"\
-  "Nemogu\304\207e kreirati plugin Internet pregleda\304\215a\0"\
   "Nemogu\304\207 pristup privremenom direktorijumu\0"\
   "Nemogu\304\207e ukloniti instalacioni direktorijum\0"\
   "Nemogu\304\207e ukloniti skra\304\207enicu\0"\
@@ -1611,11 +1575,11 @@ const char * gTranslations_sp_rs =
   "Neuspeli upis pro\305\241irene ekstenzije fajla u registri\0"\
   "Neuspeli upis instalacionih informacija u registri\0"\
   "Sakrij opcije\0"\
-  "Instalacija PDF plugin \304\215ita\304\215 za Firefox, Chrome i Opera\0"\
   "Instaliraj SumatraPDF\0"\
   "Instalacija SumatraPDF u folder\0"\
   "Instalacija neuspe\305\241na!\0"\
   "Instalacija u toku...\0"\
+  "\0"\
   "Pretraga Windows Desktop pretraga PDF dokumenta\0"\
   "Windows &prikaz PDF dokumenta\0"\
   "Zatvorite %s za nastavak!\0"\
@@ -1642,7 +1606,6 @@ const char * gTranslations_sk =
   "Nie je mo\305\276n\303\251 vytvori\305\245 in\305\241tala\304\215n\303\275 adres\303\241r\0"\
   "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 PDF prehliada\304\215 r\303\275chlych n\303\241h\304\276adov\0"\
   "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 PDF vyh\304\276ad\303\241vac\303\255 filter\0"\
-  "Nie je mo\305\276n\303\251 nain\305\241talova\305\245 plugin do prehliada\304\215a\0"\
   "Po\305\276iadavka na do\304\215asn\303\275 adres\303\241r bola ne\303\272spe\305\241n\303\241\0"\
   "Nie je mo\305\276n\303\251 odstr\303\241ni\305\245 in\305\241tala\304\215n\303\275 adres\303\241r\0"\
   "Nie je mo\305\276n\303\251 odstr\303\241ni\305\245 odkaz\0"\
@@ -1656,11 +1619,11 @@ const char * gTranslations_sk =
   "Z\303\241pis roz\305\241\303\255ren\303\275ch inform\303\241ci\303\255 o pr\303\255pone s\303\272boru do registrov bolo ne\303\272spe\305\241n\303\251\0"\
   "Ulo\305\276enie inform\303\241ci\303\255 pre odin\305\241talovanie do registrov bolo ne\303\272spe\305\241n\303\251\0"\
   "Skry\305\245 &Mo\305\276nosti\0"\
-  "In\305\241taluj PDF pluginy pre &prehliada\304\215e Firefox, Chrome a Opera\0"\
   "In\305\241taluj SumatraPDF\0"\
   "In\305\241taluj SumatraPDF do &adres\303\241ra:\0"\
   "In\305\241tal\303\241cia sa nepodarila!\0"\
   "Prebieha in\305\241tal\303\241cia...\0"\
+  "\0"\
   "Povoli\305\245, aby Windows Desktop Search &vyh\304\276ad\303\241val PDF dokumenty\0"\
   "Povoli\305\245, aby Windows zobrazoval &n\303\241h\304\276ad PDF dokumentov\0"\
   "Pros\303\255m zatvorte %s pre pokra\304\215ovanie!\0"\
@@ -1687,7 +1650,6 @@ const char * gTranslations_sl =
   "Ni bilo mogo\304\215e ustvariti mape za namestitev\0"\
   "Ni bilo mogo\304\215e namestiti predogleda za PDF\0"\
   "Ni bilo mogo\304\215e namestiti filtra za PDF iskanje\0"\
-  "Ni bilo mogo\304\215e namestiti vti\304\215nika za brskalnik\0"\
   "Ni bilo mogo\304\215e pridobiti za\304\215asne mape\0"\
   "Ni bilo mogo\304\215e odstraniti namestitvene mape\0"\
   "Ni bilo mogo\304\215e odstraniti bli\305\276njice\0"\
@@ -1701,11 +1663,11 @@ const char * gTranslations_sl =
   "Pisanje v register informacij o raz\305\241irjenem podalj\305\241ku datoteke ni uspelo\0"\
   "Pisanje v register informacij o odstranitvi ni uspelo\0"\
   "Skrij M&o\305\276nosti\0"\
-  "Namesti PDF vti\304\215nik za brskalnik Firefox, Chrome in Opera\0"\
   "Namesti SumatraPDF\0"\
   "Namesti SumatraPDF v mapo:\0"\
   "Namestitev ni uspela!\0"\
   "Namestitev poteka \342\200\246\0"\
+  "\0"\
   "Naj Windows Desktop Search i\305\241\304\215e PDF dokumente\0"\
   "Naj Windows prikazuje predogled PDF dokumentov\0"\
   "Prosimo, izberite %s za nadaljevati!\0"\
@@ -1732,7 +1694,6 @@ const char * gTranslations_es =
   "No se pudo crear la carpeta de instalaci\303\263n\0"\
   "No se pudo instalar el previsualizador de PDF\0"\
   "No se pudo instalar el filtro de b\303\272squeda PDF\0"\
-  "No se pudo instalar el complemento del navegador\0"\
   "No se pudo obtener la carpeta temporal\0"\
   "No se pudo eliminar la carpeta de instalaci\303\263n\0"\
   "No se pudo eliminar el acceso directo\0"\
@@ -1746,11 +1707,11 @@ const char * gTranslations_es =
   "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo en el registro\0"\
   "Error al escribir informaci\303\263n de desinstalaci\303\263n en el registro\0"\
   "Menos &opciones\0"\
-  "Instalar el &plugin PDF para Firefox, Chrome y Opera\0"\
   "Instalar SumatraPDF\0"\
   "&Instalar SumatraPDF en la siguiente carpeta:\0"\
   "\302\241La instalaci\303\263n ha fallado!\0"\
   "Instalaci\303\263n en progreso...\0"\
+  "\0"\
   "Permitir que la b\303\272squeda de Windows encuentre documentos PDF\0"\
   "Mostrar miniaturas en los iconos de documentos &PDF\0"\
   "Necesita cerrar %s para continuar.\0"\
@@ -1777,7 +1738,6 @@ const char * gTranslations_sv =
   "Kunde inte skapa installationsmappen\0"\
   "Kunde inte installera f\303\266rhandstitt av PDF:er\0"\
   "Kunde inte installera s\303\266kfilter f\303\266r PDF\0"\
-  "Kunde inte installera insticksprogrammet i webbl\303\244saren\0"\
   "Kunde inte h\303\244mta temp-katalog\0"\
   "Kunde inte ta bort installationsmappen\0"\
   "Kunde inte ta bort genv\303\244gen\0"\
@@ -1791,11 +1751,11 @@ const char * gTranslations_sv =
   "Misslyckades med att spara registernycklar f\303\266r den ut\303\266kade filhanteringen\0"\
   "Missluckades spara data f\303\266r avinstallation i registret\0"\
   "G\303\266m Alternativ\0"\
-  "Installera insticksprogram f\303\266r PDF i webbl\303\244sarna Firefox, Chrome och Opera\0"\
   "Installera SumatraPDF\0"\
   "Installera SumatraPDF i katalog:\0"\
   "Installationen misslyckades!\0"\
   "Installerar...\0"\
+  "\0"\
   "L\303\245t Windows inbyggda s\303\266kfunktion indexera PDF-dokument\0"\
   "Visa f\303\266rhandstitt av PDF-dokument i Windows\0"\
   "V\303\244nligen st\303\244ng %s innan du forts\303\244tter!\0"\
@@ -1822,7 +1782,6 @@ const char * gTranslations_ta =
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\215 \340\256\225\340\257\207\340\256\276\340\256\252\340\257\215\340\256\252\340\257\201\340\256\261\340\257\210\340\256\257\340\256\277\340\256\251\340\257\210 \340\256\211\340\256\260\340\257\201\340\256\265\340\256\276\340\256\225\340\257\215\340\256\225 \340\256\207\340\256\257\340\256\262\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "PDF \340\256\256\340\257\201\340\256\251\340\257\215\340\256\251\340\257\213\340\256\237\340\257\215\340\256\237\340\256\256\340\257\215 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265 \340\256\207\340\256\257\340\256\262\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "PDF \340\256\244\340\257\207\340\256\237\340\256\262\340\257\210 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265 \340\256\207\340\256\257\340\256\262\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
-  "\340\256\211\340\256\262\340\256\276\340\256\265\340\256\277 \340\256\211\340\256\263\340\257\215\340\256\207\340\256\237\340\257\201\340\256\225\340\257\215\340\256\225\340\257\210\340\256\225\340\256\263\340\257\210 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265 \340\256\207\340\256\257\340\256\262\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "\340\256\244\340\256\261\340\257\215\340\256\225\340\256\276\340\256\262\340\256\277\340\256\225 \340\256\225\340\257\207\340\256\276\340\256\252\340\257\215\340\256\252\340\257\201\340\256\261\340\257\210\340\256\257\340\257\210 \340\256\205\340\256\237\340\257\210\340\256\257 \340\256\256\340\257\201\340\256\237\340\256\277\340\256\257\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\277\340\256\257 \340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201\340\256\261\340\257\210\340\256\257\340\257\210 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225 \340\256\256\340\257\201\340\256\237\340\256\277\340\256\257\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "\340\256\232\340\257\201\340\256\260\340\257\201\340\256\225\340\257\215\340\256\225\340\257\201 \340\256\265\340\256\264\340\256\277\340\256\257\340\257\210 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225 \340\256\256\340\257\201\340\256\237\340\256\277\340\256\257\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
@@ -1836,11 +1795,11 @@ const char * gTranslations_ta =
   "\340\256\252\340\256\244\340\256\277\340\256\265\340\257\201 \340\256\232\340\257\206\340\256\257\340\257\215\340\256\257 \340\256\265\340\256\277\340\256\260\340\256\277\340\256\265\340\256\276\340\256\225\340\257\215\340\256\225\340\256\252\340\257\215\340\256\252\340\256\237\340\257\215\340\256\237 \340\256\225\340\257\207\340\256\276\340\256\252\340\257\215\340\256\252\340\257\201 \340\256\250\340\257\200\340\256\237\340\257\215\340\256\237\340\256\277\340\256\252\340\257\215\340\256\252\340\257\201 \340\256\244\340\256\225\340\256\265\340\256\262\340\257\210 \340\256\216\340\256\264\340\257\201\340\256\244 \340\256\256\340\257\201\340\256\237\340\256\277\340\256\257\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\277 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\257\201\340\256\256\340\257\215 \340\256\244\340\256\225\340\256\265\340\256\262\340\257\210 \340\256\252\340\256\244\340\256\277\340\256\265\340\256\277\340\256\262\340\257\215 \340\256\216\340\256\264\340\257\201\340\256\244 \340\256\256\340\257\201\340\256\237\340\256\277\340\256\257\340\256\265\340\256\277\340\256\262\340\257\215\340\256\262\340\257\210\0"\
   "\340\256\256\340\256\261\340\257\210 & \340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\256\340\257\215\0"\
-  "\340\256\252\340\256\257\340\256\260\340\257\215\340\256\252\340\256\276\340\256\225\340\257\215\340\256\270\340\257\215, \340\256\225\340\257\201\340\256\260\340\257\213\340\256\256\340\257\215, \340\256\222\340\256\252\340\257\207\340\256\260\340\256\276 \340\256\211\340\256\262\340\256\276\340\256\265\340\256\277\340\256\225\340\256\263\340\256\277\340\256\262\340\257\215 PDF \340\256\211\340\256\263\340\257\215\340\256\207\340\256\237\340\257\201\340\256\225\340\257\215\340\256\225\340\257\210\340\256\225\340\256\263\340\257\215 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\225\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276PDF\340\256\220 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\257\201\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276PDF\340\256\220 &\340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201\340\256\261\340\257\210\340\256\257\340\256\277\340\256\262\340\257\215 \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\265\340\257\201\340\256\256\340\257\215:\0"\
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\215 \340\256\244\340\257\213\340\256\262\340\257\215\340\256\265\340\256\277!\0"\
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\215 \340\256\232\340\257\206\340\256\257\340\256\262\340\256\277\340\256\262\340\257\215 \340\256\211\340\256\263\340\257\215\340\256\263\340\256\244\340\257\201...\0"\
+  "\0"\
   "\340\256\265\340\256\277\340\256\243\340\257\215\340\256\237\340\257\213\340\256\270\340\257\215 \340\256\237\340\257\206\340\256\270\340\257\215\340\256\225\340\257\215\340\256\237\340\256\276\340\256\252\340\257\215 \340\256\244\340\257\207\340\256\237\340\256\262\340\257\215 &PDF \340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201\340\256\225\340\256\263\340\257\210 \340\256\244\340\257\207\340\256\237\340\256\237\340\257\215\340\256\237\340\257\201\340\256\256\340\257\215\0"\
   "\340\256\265\340\256\277\340\256\243\340\257\215\340\256\237\340\256\276\340\256\270\340\257\215 PDF \340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201\340\256\225\340\256\263\340\257\210 \340\256\225\340\256\276\340\256\243\340\257\215\340\256\252\340\256\277\340\256\225\340\257\215\340\256\225 &\340\256\256\340\257\201\340\256\251\340\257\215\340\256\251\340\257\207\340\256\276\340\256\237\340\257\215\340\256\237\340\256\256\340\257\215 \340\256\232\340\257\206\340\256\257\340\257\215\340\256\257\340\256\237\340\257\215\340\256\237\340\257\201\340\256\256\340\257\215\0"\
   "\340\256\244\340\256\257\340\256\265\340\257\201 \340\256\232\340\257\206\340\256\257\340\257\215\340\256\244\340\257\201 %s \340\256\256\340\257\202\340\256\237\340\256\277\340\256\265\340\256\277\340\256\237\340\257\215\340\256\237\340\257\201 \340\256\244\340\257\212\340\256\237\340\256\260\340\256\265\340\257\201\340\256\256\340\257\215!\0"\
@@ -1867,7 +1826,6 @@ const char * gTranslations_tr =
   "Kurulum dizini olu\305\237turulamad\304\261\0"\
   "PDF \303\266n zileyici y\303\274klenemedi\0"\
   "PDF arama filtresi y\303\274klenemedi\0"\
-  "Taray\304\261c\304\261 eklentisi y\303\274klenemedi\0"\
   "Ge\303\247ici dizin bulunamad\304\261\0"\
   "Kurulum dizini kald\304\261r\304\261lamad\304\261\0"\
   "K\304\261sayol silinemedi\0"\
@@ -1881,11 +1839,11 @@ const char * gTranslations_tr =
   "Kay\304\261t defterine geni\305\237letimi\305\237 dosya uzant\304\261s\304\261 yazma ba\305\237ar\304\261s\304\261z oldu\0"\
   "Kay\304\261t defterine kald\304\261rma bilgisi yazma i\305\237i ba\305\237ar\304\261s\304\261z oldu\0"\
   "Sakla & Se\303\247enekler\0"\
-  "Firefox, Chrome ve Opera i\303\247in &taray\304\261c\304\261 eklentisi y\303\274kle\0"\
   "SumatraPDF y\303\274kle\0"\
   "&folder klas\303\266r\303\274ne SumatraPDF'yi y\303\274kle\0"\
   "Y\303\274kleme ba\305\237ar\304\261s\304\261z !\0"\
   "Kurulum devam ediyor...\0"\
+  "\0"\
   "PDF belgelrini aramak i\303\247in Windows Masa\303\274st\303\274 Aramaya izin ver\0"\
   "PDF belgelerini g\303\266r\303\274nt\303\274lemek ve \303\266nizleme i\303\247in Windows'a izin ver\0"\
   "Devam etmek i\303\247in %s kapat\304\261n!\0"\
@@ -1912,7 +1870,6 @@ const char * gTranslations_uk =
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \321\201\321\202\320\262\320\276\321\200\320\270\321\202\320\270 \320\277\320\260\320\277\320\272\321\203 \320\264\320\273\321\217 \320\262\321\201\321\202\320\260\320\275\320\276\320\262\320\273\320\265\320\275\320\275\321\217\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\262\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203 \320\264\320\273\321\217 \320\277\320\276\320\277\320\265\321\200\320\265\320\264\320\275\321\214\320\276\320\263\320\276 \320\277\320\265\321\200\320\265\320\263\320\273\321\217\320\264\321\203 PDF\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\262\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 \321\204\321\226\320\273\321\214\321\202\321\200 \320\277\320\276\321\210\321\203\320\272\321\203 \320\264\320\273\321\217 PDF\0"\
-  "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\262\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 \321\200\320\276\320\267\321\210\320\270\321\200\320\265\320\275\320\275\321\217 \320\264\320\273\321\217 \320\261\321\200\320\260\321\203\320\267\320\265\321\200\320\260\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\276\321\202\321\200\320\270\320\274\320\260\321\202\320\270 \321\200\320\276\320\267\321\202\320\260\321\210\321\203\320\262\320\260\320\275\320\275\321\217 \321\202\320\270\320\274\321\207\320\260\321\201\320\276\320\262\320\276\321\227 \320\277\320\260\320\277\320\272\320\270\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\262\320\270\320\264\320\260\320\273\320\270\321\202\320\270 \320\277\320\260\320\277\320\272\321\203, \320\264\320\265 \320\261\321\203\320\273\320\276 \320\262\321\201\321\202\320\260\320\275\320\276\320\262\320\273\320\265\320\275\320\276 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\262\320\270\320\264\320\260\320\273\320\270\321\202\320\270 \321\217\321\200\320\273\320\270\320\272\0"\
@@ -1926,11 +1883,11 @@ const char * gTranslations_uk =
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\320\270 \321\226\320\275\321\204\320\276\321\200\320\274\320\260\321\206\321\226\321\216 \320\277\321\200\320\276 \321\200\320\276\320\267\321\210\320\270\321\200\320\265\320\275\320\275\321\217 \321\204\320\260\320\271\320\273\321\203 \320\264\320\276 \321\200\320\265\321\224\321\201\321\202\321\200\321\203\0"\
   "\320\235\320\265 \320\262\320\264\320\260\320\273\320\276\321\201\321\217 \320\267\320\260\320\277\320\270\321\201\320\260\321\202\320\270 \321\226\320\275\321\204\320\276\321\200\320\274\320\260\321\206\321\226\321\216 \320\264\320\273\321\217 \320\262\320\270\320\264\320\260\320\273\320\265\320\275\320\275\321\217 \321\203 \321\200\320\265\321\224\321\201\321\202\321\200\0"\
   "\320\237\321\200\320\270\321\205\320\276\320\262\320\260\321\202\320\270 \320\275\320\260\320\273\320\260\321\210\321\202\321\203\320\262\320\260\320\275\320\275\321\217\0"\
-  "\320\222\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 \321\200\320\276\320\267\321\210\320\270\321\200\320\265\320\275\320\275\321\217 \320\264\320\273\321\217 \320\277\320\265\321\200\320\265\320\263\320\273\321\217\320\264\321\203 PDF \321\203 Firefox, Chrome \321\202\320\260 Opera\0"\
   "\320\222\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 SumatraPDF\0"\
   "\320\222\321\201\321\202\320\260\320\275\320\276\320\262\320\270\321\202\320\270 SumatraPDF \321\203 \320\277\320\260\320\277\320\272\321\203\0"\
   "\320\222\321\201\321\202\320\260\320\275\320\276\320\262\320\273\320\265\320\275\320\275\321\217 \320\275\320\265 \320\261\321\203\320\273\320\276 \321\203\321\201\320\277\321\226\321\210\320\275\320\270\320\274!\0"\
   "\320\222\321\201\321\202\320\260\320\275\320\276\320\262\320\273\320\265\320\275\320\275\321\217 \321\202\321\200\320\270\320\262\320\260\321\224...\0"\
+  "\0"\
   "\320\224\320\276\320\267\320\262\320\276\320\273\320\270\321\202\320\270 Windows Desktop Search \320\277\320\276\321\210\321\203\320\272 \321\203 PDF \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\321\205\0"\
   "\320\224\320\276\320\267\320\262\320\276\320\273\320\270\321\202\320\270 Windows \320\267\320\264\321\226\320\271\321\201\320\275\321\216\320\262\320\260\321\202\320\270 \320\277\320\276\320\277\320\265\321\200\320\265\320\264\320\275\321\226\320\271 \320\277\320\265\321\200\320\265\320\263\320\273\321\217\320\264 \320\264\320\273\321\217 PDF\0"\
   "\320\221\321\203\320\264\321\214 \320\273\320\260\321\201\320\272\320\260 \320\267\320\260\320\272\321\200\320\270\320\271\321\202\320\265 %s, \321\211\320\276\320\261 \320\277\321\200\320\276\320\264\320\276\320\262\320\266\320\270\321\202\320\270!\0"\
@@ -1957,7 +1914,6 @@ const char * gTranslations_uz =
   "O'rnatish directoriyasini yaratib bo'lmadi\0"\
   "PDF ko'rish vositasini o'rnatib bo'lmadi\0"\
   "PDF qidirish filtrini o'rnatib bo'lmadi\0"\
-  "Brauzer plaginini o'rnatib bo'lmadi\0"\
   "Vaqtinchalik direktoriyani olib bo'lmadi\0"\
   "O'rnatish direktoriyasini o'chirib bo'lmadi\0"\
   "Xatcho'pni o'chirib bo'lmadi\0"\
@@ -1971,11 +1927,11 @@ const char * gTranslations_uz =
   "Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi\0"\
   "Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi\0"\
   "&Parametrlarni yashirish\0"\
-  "PDF &brauzer plaginini Firefox, Chrome va Opera uchun o'rnatish\0"\
   "SumatraPDF o'rnatish\0"\
   "SumatraPDF &jildga o'rnatish\0"\
   "O'rnatish muvaffaqiyatsiz tugadi!\0"\
   "O'rnatilmoqda...\0"\
+  "\0"\
   "Windows Desktop Search yordamida PDF hujjatlarini &qidirish\0"\
   "Windows yordamida PDF hujjatlarini oldindan &ko'rish\0"\
   "Davom etish uchun %s yoping!\0"\
@@ -2002,7 +1958,6 @@ const char * gTranslations_vn =
   "Kh\303\264ng t\341\272\241o \304\221\306\260\341\273\243c th\306\260 m\341\273\245c c\303\240i \304\221\341\272\267t\0"\
   "Kh\303\264ng th\341\273\203 c\303\240i \304\221\341\272\267t ph\341\272\247n hi\341\273\203n th\341\273\213 tr\306\260\341\273\233c PDF\0"\
   "Kh\303\264ng th\341\273\203 c\303\240i \304\221\341\272\267t b\341\273\231 l\341\273\215c t\303\254m ki\341\272\277m PDF\0"\
-  "Kh\303\264ng c\303\240i \304\221\306\260\341\273\243c tr\303\254nh c\341\272\257m v\303\240o tr\303\254nh duy\341\273\207t\0"\
   "Kh\303\264ng th\341\273\203 t\303\254m \304\221\306\260\341\273\243c th\306\260 m\341\273\245c t\341\272\241m\0"\
   "Kh\303\264ng th\341\273\203 g\341\273\241 b\341\273\217 th\306\260 m\341\273\245c c\303\240i \304\221\341\272\267t\0"\
   "Kh\303\264ng b\341\273\217 l\341\273\221i t\341\272\257t \304\221\306\260\341\273\243c\0"\
@@ -2016,11 +1971,11 @@ const char * gTranslations_vn =
   "Kh\303\264ng th\341\273\203 ghi th\303\264ng tin v\341\273\201 ph\341\272\247n m\341\273\237 r\341\273\231ng c\341\273\247a t\341\272\255p tin v\303\240o kh\303\263a Registry\0"\
   "Kh\303\264ng th\341\273\203 ghi th\303\264ng tin v\341\273\201 vi\341\273\207c g\341\273\241 c\303\240i \304\221\341\272\267t v\303\240o kh\303\263a Registry\0"\
   "Thi\341\272\277t l\341\272\255p \341\272\251n v\303\240 t\303\271y ch\341\273\215n\0"\
-  "C\303\240i \304\221\341\272\267t tr\303\254nh c\341\272\257m PDF tr\303\254nh duy\341\273\207t v\303\240o Firefox, Chrome v\303\240 Opera\0"\
   "C\303\240i \304\221\341\272\267t SumatraPDF\0"\
   "C\303\240i \304\221\341\272\267t SumatraPDF trong &th\306\260 m\341\273\245c:\0"\
   "C\303\240i \304\221\341\272\267t th\341\272\245t b\341\272\241i!\0"\
   "\304\220ang c\303\240i \304\221\341\272\267t...\0"\
+  "\0"\
   "Cho ph\303\251p Windows &t\303\254m ki\341\272\277m c\303\241c t\303\240i li\341\273\207u PDF\0"\
   "Cho ph\303\251p Windows hi\341\273\203n th\341\273\213 h\303\254nh \341\272\243nh &xem tr\306\260\341\273\233c c\341\273\247a c\303\241c t\303\240i li\341\273\207u PDF\0"\
   "H\303\243y \304\221\303\263ng %s l\341\272\241i \304\221\341\273\203 ti\341\272\277n h\303\240nh!\0"\
@@ -2047,7 +2002,6 @@ const char * gTranslations_cy =
   "Merhu creu'r cyfeiriadur gosod\0"\
   "Mehu gosod rhagolygwr PDF\0"\
   "Methu gosod hidl chwilio PDF\0"\
-  "Methu gosod ategyn porwr\0"\
   "Methu canfod cyfeiriadur dros dro\0"\
   "Methu tynnu'r cyfeiriadur gosod\0"\
   "Methu tynnu'r llwybr byr\0"\
@@ -2061,11 +2015,11 @@ const char * gTranslations_cy =
   "Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa\0"\
   "Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa\0"\
   "Dewisiadau C&uddio\0"\
-  "Gosod ategyn &porwr PDF ar gyfer Firefox, Chrome ac Opera\0"\
   "Gosod SumatraPDF\0"\
   "Gosod SumatraPDF yn &ffolder:\0"\
   "Methodd y gosod!\0"\
   "Wrthi'n gosod\0"\
+  "\0"\
   "Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF\0"\
   "Gadael i Windows ddangos &rhagolwg o ddogfennau PDF\0"\
   "Cau %s i barhau!\0"\

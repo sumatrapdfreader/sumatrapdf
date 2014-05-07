@@ -219,8 +219,6 @@
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
-    <ClCompile Include="..\src\browserplugin\npPdfViewer.cpp" />
-    <ClCompile Include="..\src\browserplugin\Trans_browserplugin_txt.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CPdfFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CTeXFilter.cpp" />
@@ -503,10 +501,6 @@
     <ClInclude Include="..\src\utils\WebpReader.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
-    <ClInclude Include="..\src\browserplugin\npapi\npapi.h" />
-    <ClInclude Include="..\src\browserplugin\npapi\npfunctions.h" />
-    <ClInclude Include="..\src\browserplugin\npapi\npruntime.h" />
-    <ClInclude Include="..\src\browserplugin\npapi\nptypes.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h" />
     <ClInclude Include="..\src\ifilter\CPdfFilter.h" />
     <ClInclude Include="..\src\ifilter\CTeXFilter.h" />
@@ -547,7 +541,6 @@
     <None Include="..\src\toolbar_11.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\browserplugin\npPdfViewer.rc" />
     <ResourceCompile Include="..\src\libmupdf.rc" />
     <ResourceCompile Include="..\src\SumatraPDF.rc" />
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />

@@ -22,9 +22,6 @@
     <Filter Include="docs">
       <UniqueIdentifier>{367a3cbe-0f88-4739-8890-c93e3b756c3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="browser_plugin">
-      <UniqueIdentifier>{b04f4d08-164c-4b30-ba0c-26ec812e2c88}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
     </Filter>
@@ -404,12 +401,6 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\ZipUtil.cpp">
       <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\browserplugin\npPdfViewer.cpp">
-      <Filter>browser_plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\browserplugin\Trans_browserplugin_txt.cpp">
-      <Filter>browser_plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <Filter>ifilter</Filter>
@@ -1253,18 +1244,6 @@
     <ClInclude Include="..\src\utils\ZipUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\browserplugin\npapi\npapi.h">
-      <Filter>browser_plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\browserplugin\npapi\npfunctions.h">
-      <Filter>browser_plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\browserplugin\npapi\npruntime.h">
-      <Filter>browser_plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\browserplugin\npapi\nptypes.h">
-      <Filter>browser_plugin</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ifilter\CEpubFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
@@ -1373,9 +1352,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\browserplugin\npPdfViewer.rc">
-      <Filter>browser_plugin</Filter>
-    </ResourceCompile>
     <ResourceCompile Include="..\src\libmupdf.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>

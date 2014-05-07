@@ -2127,22 +2127,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="Browser Plugin"
-				>
-				<File
-					RelativePath="..\src\browserplugin\npPdfViewer.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\browserplugin\npPdfViewer.rc"
-					>
-				</File>
-				<File
-					RelativePath="..\src\browserplugin\Trans_browserplugin_txt.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Installer"

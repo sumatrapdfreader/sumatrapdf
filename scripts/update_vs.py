@@ -231,8 +231,6 @@ g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_or_docs_file)
 g_utils_files = list_top_dir_files(pj("src", "utils"), is_c_src_file)
 g_docs_files = list_top_dir_files("docs", is_docs_file)
 g_chm_files = list_top_dir_files(pj("ext", "CHMLib", "src"), is_c_src_file)
-g_browser_plugin_files = list_top_dir_files(
-    pj("src", "browserplugin"), is_any_file, recur=True)
 g_resource_files = list_top_dir_files("src", is_resources_group_file)
 g_ifilter_files = list_top_dir_files(pj("src", "ifilter"), is_any_file)
 g_previewer_files = list_top_dir_files(pj("src", "previewer"), is_any_file)
@@ -258,8 +256,6 @@ g_filters = [
     Filter("mui", "{0cbc9131-0370-46a1-a361-d8c441d9f9c5}", g_mui_files),
     Filter("utils", "{88c95b88-1f3f-4262-835b-91b32349401b}", g_utils_files),
     Filter("docs", "{367a3cbe-0f88-4739-8890-c93e3b756c3f}", g_docs_files),
-    Filter("browser_plugin",
-           "{b04f4d08-164c-4b30-ba0c-26ec812e2c88}", g_browser_plugin_files),
     Filter("Resource Files",
            "{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}", g_resource_files),
     Filter("ifilter", "{f3b78d8d-cb6d-4728-9f92-10059ca368a7}",

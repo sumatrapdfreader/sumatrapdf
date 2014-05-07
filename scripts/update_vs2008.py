@@ -11,7 +11,6 @@ DIR_STRUCT = [
 	(pjoin("src", "utils"), ("baseutils",)),
 	(pjoin("src", "installer"), ("Installer",)),
 	(pjoin("src", "ifilter"), ("Integration DLLs", "IFilter")),
-	(pjoin("src", "browserplugin"), ("Integration DLLs", "Browser Plugin")),
 	(pjoin("src", "previewer"), ("Integration DLLs", "Previewer")),
 	(pjoin("src", "mui"), ("baseutils", "mui")),
 	(pjoin("src", "uia"), ("Source Files", "Automation")),

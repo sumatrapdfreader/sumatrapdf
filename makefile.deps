@@ -15,12 +15,6 @@ $(ODLL)\CTeXFilter.obj: $B\src\ifilter\CTeXFilter.h $B\src\ifilter\FilterBase.h 
 $(ODLL)\CTeXFilter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(ODLL)\CTeXFilter.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(ODLL)\CTeXFilter.obj: $B\src\utils\WinUtil.h
-$(ODLL)\npPdfViewer.obj: $B\src\Version.h $B\src\browserplugin\npapi\npapi.h $B\src\browserplugin\npapi\npfunctions.h
-$(ODLL)\npPdfViewer.obj: $B\src\browserplugin\npapi\npruntime.h $B\src\browserplugin\npapi\nptypes.h $B\src\browserplugin\Trans_browserplugin_txt.cpp
-$(ODLL)\npPdfViewer.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
-$(ODLL)\npPdfViewer.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(ODLL)\npPdfViewer.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
-$(ODLL)\npPdfViewer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(ODLL)\PdfFilterDll.obj: $B\src\ifilter\CEpubFilter.h $B\src\ifilter\CPdfFilter.h $B\src\ifilter\CTeXFilter.h
 $(ODLL)\PdfFilterDll.obj: $B\src\ifilter\FilterBase.h $B\src\ifilter\PdfFilter.h $B\src\utils\Allocator.h
 $(ODLL)\PdfFilterDll.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
