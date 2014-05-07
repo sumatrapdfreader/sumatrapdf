@@ -320,7 +320,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingTask *ft)
             DeletePages(&toDelete);
             GoToPage(pageNo);
         }
-                } else {
+    } else {
         CrashIf(!pages);
         for (size_t i = 0; i < ft->pageCount; i++) {
             pages->Append(ft->pages[i]);
@@ -447,6 +447,12 @@ void EbookController::GoToPage(int newPageNo)
     // we're still formatting, disable page movement
     if (incomingPages) {
         //lf("EbookController::GoToPage(%d): skipping because incomingPages != NULL", newPageNo);
+        return;
+    }
+
+    CrashIf(!pages);
+    // Hopefully prevent crashes like 55175
+    if (!pages) {
         return;
     }
 
