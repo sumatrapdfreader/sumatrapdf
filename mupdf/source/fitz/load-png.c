@@ -360,7 +360,6 @@ png_read_phys(struct info *info, unsigned char *p, unsigned int size)
 		fz_throw(info->ctx, FZ_ERROR_GENERIC, "pHYs chunk is the wrong size");
 	if (p[8] == 1)
 	{
-		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2569 */
 		info->xres = (getuint(p) * 254 + 5000) / 10000;
 		info->yres = (getuint(p + 4) * 254 + 5000) / 10000;
 	}

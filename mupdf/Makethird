@@ -454,6 +454,10 @@ CURL_CFLAGS := -I$(CURL_DIR)/include
 CURL_LIBS := $(SYS_CURL_DEPS)
 
 HAVE_CURL := yes
+
+else ifeq "$(HAVE_CURL)" "yes"
+CURL_CFLAGS := $(SYS_CURL_CFLAGS)
+CURL_LIBS := $(SYS_CURL_LIBS)
 endif
 
 # --- X11 ---
@@ -461,7 +465,4 @@ endif
 ifeq "$(HAVE_X11)" "yes"
 X11_CFLAGS := $(SYS_X11_CFLAGS)
 X11_LIBS := $(SYS_X11_LIBS)
-else
-X11_CFLAGS :=
-X11_LIBS :=
 endif
