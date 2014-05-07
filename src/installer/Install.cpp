@@ -28,9 +28,9 @@ static HWND             gHwndStaticInstDir = NULL;
 static HWND             gHwndTextboxInstDir = NULL;
 static HWND             gHwndButtonBrowseDir = NULL;
 static HWND             gHwndCheckboxRegisterDefault = NULL;
-static HWND             gHwndCheckboxRegisterBrowserPlugin = NULL;
 static HWND             gHwndCheckboxRegisterPdfFilter = NULL;
 static HWND             gHwndCheckboxRegisterPdfPreviewer = NULL;
+static HWND             gHwndCheckboxKeepBrowserPlugin = NULL;
 static HWND             gHwndProgressBar = NULL;
 
 static int GetInstallationStepCount()
@@ -137,12 +137,10 @@ static WCHAR *GetDefaultPdfViewer()
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", NULL);
 }
 
-bool IsBrowserPluginInstalled()
+static bool IsBrowserPluginInstalled()
 {
-    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
-    if (!buf)
-        buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
-    return file::Exists(buf);
+    ScopedMem<WCHAR> dllPath(GetInstalledBrowserPluginPath());
+    return file::Exists(dllPath);
 }
 
 bool IsPdfFilterInstalled()
@@ -315,11 +313,6 @@ DWORD WINAPI InstallerThread(LPVOID data)
         CreateProcessHelper(installedExePath, L"-register-for-pdf");
     }
 
-    if (gGlobalData.installBrowserPlugin)
-        InstallBrowserPlugin();
-    else if (IsBrowserPluginInstalled())
-        UninstallBrowserPlugin();
-
     if (gGlobalData.installPdfFilter)
         InstallPdfFilter();
     else if (IsPdfFilterInstalled())
@@ -329,6 +322,9 @@ DWORD WINAPI InstallerThread(LPVOID data)
         InstallPdfPreviewer();
     else if (IsPdfPreviewerInstalled())
         UninstallPdfPreviewer();
+
+    if (!gGlobalData.keepBrowserPlugin)
+        UninstallBrowserPlugin();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
         NotifyFailed(_TR("Failed to create a shortcut"));
@@ -387,13 +383,15 @@ static void OnButtonInstall()
     gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == NULL ||
                                     IsCheckboxChecked(gHwndCheckboxRegisterDefault);
 
-    gGlobalData.installBrowserPlugin = IsCheckboxChecked(gHwndCheckboxRegisterBrowserPlugin);
     // note: this checkbox isn't created when running inside Wow64
     gGlobalData.installPdfFilter = gHwndCheckboxRegisterPdfFilter != NULL &&
                                    IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
     // note: this checkbox isn't created on Windows 2000 and XP
     gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterPdfPreviewer != NULL &&
                                       IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
+    // note: this checkbox isn't created if the browser plugin hasn't been installed before
+    gGlobalData.keepBrowserPlugin = gHwndCheckboxKeepBrowserPlugin != NULL &&
+                                    IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), PUSH_BUTTON_DY);
@@ -409,9 +407,9 @@ static void OnButtonInstall()
     SafeDestroyWindow(&gHwndTextboxInstDir);
     SafeDestroyWindow(&gHwndButtonBrowseDir);
     SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
-    SafeDestroyWindow(&gHwndCheckboxRegisterBrowserPlugin);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
+    SafeDestroyWindow(&gHwndCheckboxKeepBrowserPlugin);
     SafeDestroyWindow(&gHwndButtonOptions);
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
@@ -451,6 +449,8 @@ static void OnButtonStartSumatra()
 
 inline void EnableAndShow(HWND hwnd, bool enable)
 {
+    if (!hwnd)
+        return;
     ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
     EnableWindow(hwnd, enable);
 }
@@ -463,9 +463,9 @@ static void OnButtonOptions()
     EnableAndShow(gHwndTextboxInstDir, gShowOptions);
     EnableAndShow(gHwndButtonBrowseDir, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
-    EnableAndShow(gHwndCheckboxRegisterBrowserPlugin, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
+    EnableAndShow(gHwndCheckboxKeepBrowserPlugin, gShowOptions);
 
     win::SetText(gHwndButtonOptions, gShowOptions ? _TR("Hide &Options") : _TR("&Options"));
 
@@ -647,15 +647,6 @@ void OnCreateWindow(HWND hwnd)
         rc.y += staticDy;
     }
 
-    gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-        WC_BUTTON, _TR("Install PDF &browser plugin for Firefox, Chrome and Opera"),
-        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-        rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-        hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
-    SetWindowFont(gHwndCheckboxRegisterBrowserPlugin, gFontDefault, TRUE);
-    Button_SetCheck(gHwndCheckboxRegisterBrowserPlugin, gGlobalData.installBrowserPlugin || IsBrowserPluginInstalled());
-    rc.y += staticDy;
-
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
 #ifndef _WIN64
@@ -681,6 +672,18 @@ void OnCreateWindow(HWND hwnd)
     SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
     Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
     rc.y += staticDy;
+
+    // only show this checkbox if the browser plugin has been installed before
+    if (IsBrowserPluginInstalled()) {
+        gHwndCheckboxKeepBrowserPlugin = CreateWindow(
+            WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+            hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
+        SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
+        rc.y += staticDy;
+    }
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();

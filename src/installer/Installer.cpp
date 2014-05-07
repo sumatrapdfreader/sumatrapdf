@@ -85,7 +85,7 @@ PayloadInfo gPayloadData[] = {
     { "SumatraPDF.exe",         true    },
     { "sumatrapdfprefs.dat",    false   },
     { "DroidSansFallback.ttf",  true    },
-    { "npPdfViewer.dll",        true    },
+    { "npPdfViewer.dll",        false   },
     { "PdfFilter.dll",          true    },
     { "PdfPreview.dll",         true    },
     { "uninstall.exe",          true    },
@@ -98,9 +98,9 @@ GlobalData gGlobalData = {
     NULL,  /* WCHAR *installDir */
 #ifndef BUILD_UNINSTALLER
     false, /* bool registerAsDefault */
-    false, /* bool installBrowserPlugin */
     false, /* bool installPdfFilter */
     false, /* bool installPdfPreviewer */
+    true,  /* bool keepBrowserPlugin */
     false, /* bool extractFiles */
 #endif
 
@@ -220,6 +220,14 @@ WCHAR *GetInstalledExePath()
 static WCHAR *GetBrowserPluginPath()
 {
     return path::Join(gGlobalData.installDir, L"npPdfViewer.dll");
+}
+
+WCHAR *GetInstalledBrowserPluginPath()
+{
+    WCHAR *path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH);
+    if (!path)
+        path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH);
+    return path;
 }
 
 static WCHAR *GetPdfFilterPath()
@@ -414,16 +422,15 @@ bool CheckInstallUninstallPossible(bool silent)
     return possible;
 }
 
-void InstallBrowserPlugin()
-{
-    ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
-    if (!RegisterServerDLL(dllPath))
-        NotifyFailed(_TR("Couldn't install browser plugin"));
-}
-
 void UninstallBrowserPlugin()
 {
     ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
+    if (!file::Exists(dllPath)) {
+        // uninstall the detected plugin, even if it isn't in the target installation path
+        dllPath.Set(GetInstalledBrowserPluginPath());
+        if (!file::Exists(dllPath))
+            return;
+    }
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
@@ -904,12 +911,14 @@ static void ParseCommandLine(WCHAR *cmdLine)
             str::TransChars(opts, L" ;", L",,");
             WStrVec optlist;
             optlist.Split(opts, L",", true);
-            if (optlist.Contains(L"plugin"))
-                gGlobalData.installBrowserPlugin = true;
             if (optlist.Contains(L"pdffilter"))
                 gGlobalData.installPdfFilter = true;
             if (optlist.Contains(L"pdfpreviewer"))
                 gGlobalData.installPdfPreviewer = true;
+            // uninstall the deprecated browser plugin if it's not
+            // explicitly listed (only applies if the /opt flag is used)
+            if (!optlist.Contains(L"plugin"))
+                gGlobalData.keepBrowserPlugin = false;
         }
         else if (is_arg("x")) {
             gGlobalData.justExtractFiles = true;
@@ -1003,8 +1012,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         UninstallerThread(NULL);
 #else
         // make sure not to uninstall the plugins during silent installation
-        if (!gGlobalData.installBrowserPlugin)
-            gGlobalData.installBrowserPlugin = IsBrowserPluginInstalled();
         if (!gGlobalData.installPdfFilter)
             gGlobalData.installPdfFilter = IsPdfFilterInstalled();
         if (!gGlobalData.installPdfPreviewer)

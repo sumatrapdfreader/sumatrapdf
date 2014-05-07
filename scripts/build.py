@@ -169,7 +169,7 @@ def build_installer_data(dir):
 
     files = [
         ["SumatraPDF-no-MuPDF.exe", "SumatraPDF.exe"], "DroidSansFallback.ttf",
-        "libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll",
+        "libmupdf.dll", "PdfFilter.dll", "PdfPreview.dll",
         "uninstall.exe"]
     create_lzsa_archive(dir, "InstallerData.dat", files)
     installer_res = os.path.join(dir, "sumatrapdf", "Installer.res")
