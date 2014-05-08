@@ -96,6 +96,7 @@ static MenuDef menuDefView[] = {
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
+    // TODO: change shortcut to F5 (Presentation) and F11 (Fullscreen)
     { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN },
     { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },

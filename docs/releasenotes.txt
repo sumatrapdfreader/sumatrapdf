@@ -3,7 +3,12 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.6 (???-??-??)
+2.6 (????-??-??)
+
+* swapped keybindings:
+  * F11 : Fullscreen mode (still also Ctrl+Shift+L)
+  * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
+* deprecated the browser plugin (remains installed if used)
 
 2.5.1 (2014-05-07):
 
