@@ -119,8 +119,8 @@ fz_bbox_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 static void
 fz_bbox_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, const fz_matrix *ctm)
 {
-	fz_rect r = *rect;
-	fz_bbox_add_rect(dev, fz_transform_rect(&r, ctm), 1);
+	/* SumatraPDF: rect has already been transformed by ctm */
+	fz_bbox_add_rect(dev, rect, 1);
 }
 
 static void
