@@ -1,5 +1,4 @@
 AppTranslator strings
-%s of %s
 &About
 &Actual Size\tCtrl+1
 &Advanced Options...
@@ -98,7 +97,6 @@ Couldn't create the installation directory
 Couldn't initialize printer
 Couldn't install PDF previewer
 Couldn't install PDF search filter
-Couldn't install browser plugin
 Couldn't obtain temporary directory
 Couldn't remove installation directory
 Couldn't remove the shortcut
@@ -123,9 +121,6 @@ Enter password
 Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
-Error: Couldn't run SumatraPDF!
-Error: SumatraPDF hasn't been found!
-Error: The document couldn't be downloaded!
 F&avorites
 F&orward\tAlt+Right Arrow
 F&ullscreen\tCtrl+L
@@ -168,12 +163,12 @@ Hide &Options
 Hide frequently read
 Hint: Use the F3 key for finding again
 Image files (*.%s)
-Install PDF &browser plugin for Firefox, Chrome and Opera
 Install SumatraPDF
 Install SumatraPDF in &folder:
 Installation failed!
 Installation in progress...
 KB
+Keep the PDF &browser plugin installed (no longer supported)
 Let Windows Desktop Search &search PDF documents
 Let Windows show &previews of PDF documents
 Loading file %s...
@@ -200,7 +195,6 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Open in &Microsoft HTML Help
 Open in &Microsoft XPS-Viewer
-Opening document in SumatraPDF...
 P&roperties
 P&roperties\tCtrl+D
 PDF Document
