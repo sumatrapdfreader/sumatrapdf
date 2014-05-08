@@ -536,7 +536,7 @@ void AddFavorite(WindowInfo *win)
     ScopedMem<WCHAR> name;
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
-        DocTocItem *root = win->dm->engine->GetTocTree();
+        DocTocItem *root = win->dm->GetTocTree();
         DocTocItem *item = TocItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));

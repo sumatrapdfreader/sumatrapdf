@@ -164,7 +164,8 @@ public:
     // if GetLink() returns a destination to a page, the two should match
     int pageNo;
     // arbitrary number allowing to distinguish this DocTocItem
-    // from any other of the same ToC tree
+    // from any other of the same ToC tree (must be constant
+    // between runs so that it can be persisted in FileState::tocState)
     int id;
 
     // first child item
@@ -201,7 +202,7 @@ public:
         }
     }
 
-    // returns the destination this ToC item points to
+    // returns the destination this ToC item points to or NULL
     // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination *GetLink() = 0;
 };

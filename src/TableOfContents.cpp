@@ -334,13 +334,13 @@ static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
 
 void LoadTocTree(WindowInfo *win)
 {
+    CrashIf(!win->IsDocLoaded());
+
     if (win->tocLoaded)
         return;
     win->tocLoaded = true;
 
-    win->tocRoot = NULL;
-    if (win->dm->engine)
-        win->tocRoot = win->dm->engine->GetTocTree();
+    win->tocRoot = win->dm->GetTocTree();
     if (!win->tocRoot)
         return;
 

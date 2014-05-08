@@ -100,7 +100,8 @@ public:
     float ZoomReal(int pageNo);
     float ZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
 
-    bool HasTocTree() const { return engine && engine->HasTocTree();}
+    bool HasTocTree() const { return engine->HasTocTree(); }
+    DocTocItem *GetTocTree() { return engine->GetTocTree(); }
     int CurrentPageNo() const;
 
     BaseEngine *    engine;
