@@ -363,15 +363,16 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         bmp = NULL;
     }
     if (bmp && Img_JPEG == format) {
-        Status ok = GenericError;
+        bool ok = false;
         // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
         if (bmp->GetWidth() > 0 && bmp->GetHeight() > 0) {
             // GDI+ apparently succeeds when loading an arithmetically encoded JPEG
             // but fails to render it after all - use libjpeg-turbo for that case as well
-            Color c;
-            ok = bmp->GetPixel(0, 0, &c);
+            Bitmap *clone = bmp->Clone(0, 0, 1, 1, PixelFormat32bppARGB);
+            ok = clone != NULL;
+            delete clone;
         }
-        if (ok != Ok) {
+        if (!ok) {
             delete bmp;
             bmp = fitz::ImageFromData(data, len);
         }
