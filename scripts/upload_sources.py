@@ -68,7 +68,7 @@ def main():
     #print("top_dir: '%s'" % get_top_dir())
     ensure_7z_exists()
     conf = util.load_config()
-    cert_pwd = conf.GetCertPwdMustExist()
+    assert conf.aws_access is not None, "conf.py is missing"
     s3.set_secrets(conf.aws_access, conf.aws_secret)
     s3.set_bucket("kjkpub")
 
