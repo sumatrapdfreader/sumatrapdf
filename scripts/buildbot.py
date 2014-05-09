@@ -219,8 +219,11 @@ def verify_efi_present():
         sys.exit(1)
 
 
-def file_size_in_obj(file_name):
-    return file_size(os.path.join("obj-rel", file_name))
+def file_size_in_obj(file_name, defSize=None):
+    p = os.path.join("obj-rel", file_name)
+    if not os.path.exists(p) and defSize is not None:
+        return defSize
+    return file_size(p)
 
 
 def clean_release():
@@ -255,7 +258,7 @@ def build_release(stats, ver):
     stats.rel_sumatrapdf_no_mupdf_exe_size = file_size_in_obj(
         "SumatraPDF-no-MuPDF.exe")
     stats.rel_libmupdf_dll_size = file_size_in_obj("libmupdf.dll")
-    stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll")
+    stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll", 0)
     stats.rel_pdffilter_dll_size = file_size_in_obj("PdfFilter.dll")
     stats.rel_pdfpreview_dll_size = file_size_in_obj("PdfPreview.dll")
 
