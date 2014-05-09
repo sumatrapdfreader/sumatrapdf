@@ -5469,7 +5469,7 @@ void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(" pre-release"));
+    s.AppendFmt(" pre-release");
 #endif
 #ifdef DEBUG
     if (!str::EndsWith(s.Get(), " (dbg)"))
