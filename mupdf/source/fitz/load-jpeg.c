@@ -111,6 +111,9 @@ static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int 
 		*xres = (int)(x_res * 254 / 100);
 		*yres = (int)(y_res * 254 / 100);
 	}
+	/* SumatraPDF: don't let *xres and *yres be undefined */
+	else
+		*xres = *yres = 0;
 	return 1;
 }
 
