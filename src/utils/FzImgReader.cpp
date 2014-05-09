@@ -35,8 +35,8 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
         cs = NULL;
     }
 
-    PixelFormat fmt = fz_device_rgb(ctx) == cs ? PixelFormat32bppARGB :
-                      fz_device_gray(ctx) == cs ? PixelFormat32bppARGB :
+    PixelFormat fmt = fz_device_rgb(ctx) == cs ? PixelFormat24bppRGB :
+                      fz_device_gray(ctx) == cs ? PixelFormat24bppRGB :
                       fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK :
                       PixelFormatUndefined;
     if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
@@ -63,21 +63,22 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
     fz_try(ctx) {
         for (int y = 0; y < h; y++) {
             unsigned char *line = (unsigned char *)bmpData.Scan0 + y * bmpData.Stride;
-            for (int x = 0; x < w * 4; x += 4) {
-                int read = fz_read(stm, line + x, cs->n);
+            for (int x = 0; x < w; x++) {
+                int read = fz_read(stm, line, cs->n);
                 if (read != cs->n)
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
-                if (3 == cs->n) { // RGB -> BGRA
-                    Swap(line[x], line[x + 2]);
-                    line[x + 3] = 0xFF;
+                if (3 == cs->n) { // RGB -> BGR
+                    Swap(line[0], line[2]);
+                    line += 3;
                 }
-                else if (1 == cs->n) { // gray -> BGRA
-                    line[x + 1] = line[x + 2] = line[x];
-                    line[x + 3] = 0xFF;
+                else if (1 == cs->n) { // gray -> BGR
+                    line[1] = line[2] = line[0];
+                    line += 3;
                 }
                 else if (4 == cs->n) { // CMYK color inversion
                     for (int k = 0; k < 4; k++)
-                        line[x + k] = 255 - line[x + k];
+                        line[k] = 255 - line[k];
+                    line += 4;
                 }
             }
         }
