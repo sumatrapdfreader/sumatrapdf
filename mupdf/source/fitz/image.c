@@ -383,9 +383,10 @@ fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h)
 	case FZ_IMAGE_JPEG:
 		/* Scan JPEG stream and patch missing height values in header */
 		{
-			unsigned char *d = image->buffer->buffer->data;
-			unsigned char *e = d + image->buffer->buffer->len;
-			for (d += 2; d + 9 < e && d[0] == 0xFF; d += (d[2] << 8 | d[3]) + 2)
+			unsigned char *s = image->buffer->buffer->data;
+			unsigned char *e = s + image->buffer->buffer->len;
+			unsigned char *d;
+			for (d = s + 2; s < d && d < e - 9 && d[0] == 0xFF; d += (d[2] << 8 | d[3]) + 2)
 			{
 				if (d[1] < 0xC0 || (0xC3 < d[1] && d[1] < 0xC9) || 0xCB < d[1])
 					continue;
