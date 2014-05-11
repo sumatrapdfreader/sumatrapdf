@@ -59,9 +59,16 @@ extern "C" {
 #include "bzlib.h"
 #endif
 
+/* SumatraPDF: support LZMA */
+#ifdef HAVE_LZMA
+#include "LzmaDec.h"
+#endif
+
 /* SumatraPDF: support Deflate64 */
 #define Z_DEFLATE64ED 9
 #define Z_BZIP2ED 12
+/* SumatraPDF: support LZMA */
+#define Z_LZMAED 14
 
 #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
 /* like the STRICT of WIN32, we define a pointer that cannot be converted

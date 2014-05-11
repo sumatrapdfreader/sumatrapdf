@@ -1,14 +1,14 @@
 diff -rPu5 zlib.orig\infback9\inftree2.h zlib\infback9\inftree2.h
 --- zlib.orig\infback9\inftree2.h	Thu Jan 01 01:00:00 1970
-+++ zlib\infback9\inftree2.h	Tue May 14 20:21:21 2013
++++ zlib\infback9\inftree2.h	Tue May 14 21:21:21 2013
 @@ -0,0 +1,4 @@
 +/* SumatraPDF: support Deflate64 */
 +extern int inflate_table9 OF((codetype type, unsigned short FAR *lens,
 +                             unsigned codes, code FAR * FAR *table,
 +                             unsigned FAR *bits, unsigned short FAR *work));
 diff -rPu5 zlib.orig\infback9\inftree9.c zlib\infback9\inftree9.c
---- zlib.orig\infback9\inftree9.c	Sun Apr 28 23:57:10 2013
-+++ zlib\infback9\inftree9.c	Wed Dec 18 13:33:15 2013
+--- zlib.orig\infback9\inftree9.c	Mon Apr 29 00:57:10 2013
++++ zlib\infback9\inftree9.c	Wed Dec 18 14:33:15 2013
 @@ -254,11 +254,11 @@
              /* if first time, transition to sub-tables */
              if (drop == 0)
@@ -23,8 +23,8 @@ diff -rPu5 zlib.orig\infback9\inftree9.c zlib\infback9\inftree9.c
              left = (int)(1 << curr);
              while (curr + drop < max) {
 diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
---- zlib.orig\inflate.c	Mon Aug 13 08:02:40 2012
-+++ zlib\inflate.c	Tue May 14 20:21:21 2013
+--- zlib.orig\inflate.c	Mon Aug 13 09:02:40 2012
++++ zlib\inflate.c	Tue May 14 21:21:21 2013
 @@ -82,10 +82,15 @@
  
  #include "zutil.h"
@@ -176,8 +176,8 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  NEEDBITS(state->extra);
                  state->length += BITS(state->extra);
 diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
---- zlib.orig\inflate.h	Sat Dec 26 01:32:08 2009
-+++ zlib\inflate.h	Tue May 14 20:21:21 2013
+--- zlib.orig\inflate.h	Sat Dec 26 02:32:08 2009
++++ zlib\inflate.h	Tue May 14 21:21:21 2013
 @@ -75,10 +75,14 @@
                  LIT -> LEN
      Process trailer:
@@ -202,8 +202,8 @@ diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
 +    inflate_table_func *inflate_table; /* SumatraPDF: support Deflate64 */
  };
 diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
---- zlib.orig\minizip\iowin32.c	Sun Apr 28 23:57:11 2013
-+++ zlib\minizip\iowin32.c	Tue May 14 20:21:21 2013
+--- zlib.orig\minizip\iowin32.c	Mon Apr 29 00:57:11 2013
++++ zlib\minizip\iowin32.c	Tue May 14 21:21:21 2013
 @@ -25,11 +25,11 @@
  #define INVALID_SET_FILE_POINTER ((DWORD)-1)
  #endif
@@ -245,7 +245,7 @@ diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
          }
 diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 --- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.c	Sat Jan 21 15:18:29 2012
++++ zlib\minizip\iowin32s.c	Sat Jan 21 16:18:29 2012
 @@ -0,0 +1,103 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -352,7 +352,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 +}
 diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 --- zlib.orig\minizip\iowin32s.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\iowin32s.h	Sat Jan 21 15:18:39 2012
++++ zlib\minizip\iowin32s.h	Sat Jan 21 16:18:39 2012
 @@ -0,0 +1,14 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -370,7 +370,7 @@ diff -rPu5 zlib.orig\minizip\iowin32s.h zlib\minizip\iowin32s.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 --- zlib.orig\minizip\unzalloc.c	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.c	Sat Feb 04 06:36:16 2012
++++ zlib\minizip\unzalloc.c	Sat Feb 04 07:36:16 2012
 @@ -0,0 +1,27 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -401,7 +401,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.c zlib\minizip\unzalloc.c
 +}
 diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 --- zlib.orig\minizip\unzalloc.h	Thu Jan 01 01:00:00 1970
-+++ zlib\minizip\unzalloc.h	Sat Feb 04 06:42:30 2012
++++ zlib\minizip\unzalloc.h	Sat Feb 04 07:42:30 2012
 @@ -0,0 +1,28 @@
 +/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
@@ -432,8 +432,8 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +}
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
---- zlib.orig\minizip\unzip.c	Sun Feb 24 08:32:30 2013
-+++ zlib\minizip\unzip.c	Tue May 14 20:21:21 2013
+--- zlib.orig\minizip\unzip.c	Sun Feb 24 09:32:30 2013
++++ zlib\minizip\unzip.c	Sun May 11 23:58:02 2014
 @@ -106,10 +106,15 @@
  
  #ifndef UNZ_MAXFILENAMEINZIP
@@ -450,7 +450,21 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  #endif
  #ifndef TRYFREE
  # define TRYFREE(p) {if (p) free(p);}
-@@ -712,10 +717,14 @@
+@@ -137,10 +142,13 @@
+     z_stream stream;            /* zLib stream structure for inflate */
+ 
+ #ifdef HAVE_BZIP2
+     bz_stream bstream;          /* bzLib stream structure for bziped */
+ #endif
++#ifdef HAVE_LZMA
++    CLzmaDec *lzmadec;          /* LZMA decoder data */
++#endif
+ 
+     ZPOS64_T pos_in_zipfile;       /* position in byte on the zipfile, for fseek*/
+     uLong stream_initialised;   /* flag set if stream structure is initialised*/
+ 
+     ZPOS64_T offset_local_extrafield;/* offset of the local extra field */
+@@ -712,10 +720,14 @@
          /* total number of entries in the central dir */
          if (unz64local_getShort(&us.z_filefunc, us.filestream,&uL)!=UNZ_OK)
              err=UNZ_ERRNO;
@@ -465,7 +479,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
              (number_disk!=0))
              err=UNZ_BADZIPFILE;
  
-@@ -1373,10 +1382,15 @@
+@@ -1373,10 +1385,19 @@
  /*
  // Unzip Helper Functions - should be here?
  ///////////////////////////////////////////
@@ -474,38 +488,44 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 +/* SumatraPDF: allow to include a custom allocator */
 +static void *zlib_cust_alloc(voidpf opaque, uInt count, uInt size) { return ALLOC(count * size); }
 +static void *bz_cust_alloc(voidpf opaque, int count, int size) { return ALLOC(count * size); }
-+static void zlib_bz_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
++static void zlib_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
++#ifdef HAVE_LZMA
++static void *lzma_cust_alloc(void *self, size_t size) { return ALLOC(size); }
++static void lzma_cust_free(void *self, void *p) { TRYFREE(p); }
++#endif
 +
  /*
    Read the local header of the current zipfile
    Check the coherency of the local header and info in the end of central
          directory about this file
    store in *piSizeVar the size of extra info in local header
-@@ -1424,10 +1438,11 @@
+@@ -1424,10 +1445,12 @@
  
      if ((err==UNZ_OK) && (s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
                           (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
  /* #endif */
++                         (s->cur_file_info.compression_method!=Z_LZMAED) &&
 +                         (s->cur_file_info.compression_method!=Z_DEFLATE64ED) &&
                           (s->cur_file_info.compression_method!=Z_DEFLATED))
          err=UNZ_BADZIPFILE;
  
      if (unz64local_getLong(&s->z_filefunc, s->filestream,&uData) != UNZ_OK) /* date/time */
          err=UNZ_ERRNO;
-@@ -1531,10 +1546,11 @@
+@@ -1531,10 +1554,12 @@
  
      if ((s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
          (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
  /* #endif */
++        (s->cur_file_info.compression_method!=Z_LZMAED) &&
 +        (s->cur_file_info.compression_method!=Z_DEFLATE64ED) &&
          (s->cur_file_info.compression_method!=Z_DEFLATED))
  
          err=UNZ_BADZIPFILE;
  
      pfile_in_zip_read_info->crc32_wait=s->cur_file_info.crc;
-@@ -1548,17 +1564,19 @@
+@@ -1548,17 +1573,19 @@
      pfile_in_zip_read_info->stream.total_out = 0;
  
      if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
@@ -515,7 +535,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 -      pfile_in_zip_read_info->bstream.bzfree = (free_func)0;
 +      /* SumatraPDF: allow to include a custom allocator */
 +      pfile_in_zip_read_info->bstream.bzalloc = bz_cust_alloc;
-+      pfile_in_zip_read_info->bstream.bzfree = zlib_bz_cust_free;
++      pfile_in_zip_read_info->bstream.bzfree = zlib_cust_free;
        pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
        pfile_in_zip_read_info->bstream.state = (voidpf)0;
  
@@ -523,19 +543,42 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 -      pfile_in_zip_read_info->stream.zfree = (free_func)0;
 +      /* SumatraPDF: allow to include a custom allocator */
 +      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
-+      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
++      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
        pfile_in_zip_read_info->stream.opaque = (voidpf)0;
        pfile_in_zip_read_info->stream.next_in = (voidpf)0;
        pfile_in_zip_read_info->stream.avail_in = 0;
  
        err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-@@ -1571,19 +1589,25 @@
+@@ -1571,19 +1598,48 @@
        }
  #else
        pfile_in_zip_read_info->raw=1;
  #endif
      }
 -    else if ((s->cur_file_info.compression_method==Z_DEFLATED) && (!raw))
++    else if ((s->cur_file_info.compression_method==Z_LZMAED) && (!raw))
++    {
++#ifdef HAVE_LZMA
++      /* SumatraPDF: allow to include a custom allocator */
++      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
++      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
++      pfile_in_zip_read_info->stream.opaque = (voidpf)0;
++      pfile_in_zip_read_info->stream.next_in = (voidpf)0;
++      pfile_in_zip_read_info->stream.avail_in = 0;
++
++      pfile_in_zip_read_info->lzmadec = ALLOC(sizeof(*pfile_in_zip_read_info->lzmadec));
++      if (!pfile_in_zip_read_info->lzmadec)
++      {
++          TRYFREE(pfile_in_zip_read_info);
++          return UNZ_INTERNALERROR;
++      }
++      memset(pfile_in_zip_read_info->lzmadec, 0, sizeof(*pfile_in_zip_read_info->lzmadec));
++      LzmaDec_Construct(pfile_in_zip_read_info->lzmadec);
++      pfile_in_zip_read_info->stream_initialised = Z_LZMAED;
++#else
++      pfile_in_zip_read_info->raw=1;
++#endif
++    }
 +    else if (((s->cur_file_info.compression_method==Z_DEFLATED) ||
 +              (s->cur_file_info.compression_method==Z_DEFLATE64ED)) && (!raw))
      {
@@ -543,7 +586,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 -      pfile_in_zip_read_info->stream.zfree = (free_func)0;
 +      /* SumatraPDF: allow to include a custom allocator */
 +      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
-+      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
++      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
        pfile_in_zip_read_info->stream.opaque = (voidpf)0;
        pfile_in_zip_read_info->stream.next_in = 0;
        pfile_in_zip_read_info->stream.avail_in = 0;
@@ -559,19 +602,107 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        else
        {
          TRYFREE(pfile_in_zip_read_info);
+@@ -1833,10 +1889,60 @@
+               return (iRead==0) ? UNZ_EOF : iRead;
+             if (err!=BZ_OK)
+               break;
+ #endif
+         } // end Z_BZIP2ED
++        else if (pfile_in_zip_read_info->compression_method==Z_LZMAED)
++        {
++#ifdef HAVE_LZMA
++            ELzmaFinishMode lzmafinish = (s->cur_file_info.flag & 0x02) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
++            SizeT srcLen = 0, destLen = 0;
++            ELzmaStatus status;
++            SRes res = SZ_OK;
++
++            if (!pfile_in_zip_read_info->lzmadec->dic)
++            {
++                ISzAlloc alloc = { lzma_cust_alloc, lzma_cust_free };
++                unsigned propSize;
++                if (pfile_in_zip_read_info->stream.avail_in < 9)
++                    return UNZ_EOF;
++                propSize = pfile_in_zip_read_info->stream.next_in[2];
++                if (pfile_in_zip_read_info->stream.next_in[3] != 0 || pfile_in_zip_read_info->stream.avail_in < 4 + propSize)
++                    return UNZ_ERRNO;
++                res = LzmaDec_Allocate(pfile_in_zip_read_info->lzmadec, pfile_in_zip_read_info->stream.next_in + 4, propSize, &alloc);
++                pfile_in_zip_read_info->stream.next_in += 4 + propSize;
++                pfile_in_zip_read_info->stream.avail_in -= 4 + propSize;
++                pfile_in_zip_read_info->stream.total_in += 4 + propSize;
++                if (res != SZ_OK)
++                    return UNZ_ERRNO;
++                LzmaDec_Init(pfile_in_zip_read_info->lzmadec);
++            }
++
++            srcLen = pfile_in_zip_read_info->stream.avail_in;
++            destLen = pfile_in_zip_read_info->stream.avail_out;
++            res = LzmaDec_DecodeToBuf(pfile_in_zip_read_info->lzmadec, pfile_in_zip_read_info->stream.next_out, &destLen, pfile_in_zip_read_info->stream.next_in, &srcLen, lzmafinish, &status);
++            if (res != SZ_OK || (srcLen == 0 && destLen == 0))
++                return UNZ_ERRNO;
++
++            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, destLen);
++            pfile_in_zip_read_info->rest_read_uncompressed -= destLen;
++            pfile_in_zip_read_info->total_out_64 += destLen;
++            iRead += destLen;
++
++            pfile_in_zip_read_info->stream.next_in += srcLen;
++            pfile_in_zip_read_info->stream.avail_in -= srcLen;
++            pfile_in_zip_read_info->stream.total_in += srcLen;
++            pfile_in_zip_read_info->stream.next_out += destLen;
++            pfile_in_zip_read_info->stream.avail_out -= destLen;
++            pfile_in_zip_read_info->stream.total_out += destLen;
++
++            if (status == LZMA_STATUS_FINISHED_WITH_MARK || (status == LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK && pfile_in_zip_read_info->rest_read_uncompressed == 0))
++            {
++                return iRead > 0 ? iRead : UNZ_EOF;
++            }
++#endif
++        } // end Z_LZMAED
+         else
+         {
+             ZPOS64_T uTotalOutBefore,uTotalOutAfter;
+             const Bytef *bufBefore;
+             ZPOS64_T uOutThis;
+@@ -2029,10 +2135,18 @@
+     if (pfile_in_zip_read_info->stream_initialised == Z_DEFLATED)
+         inflateEnd(&pfile_in_zip_read_info->stream);
+ #ifdef HAVE_BZIP2
+     else if (pfile_in_zip_read_info->stream_initialised == Z_BZIP2ED)
+         BZ2_bzDecompressEnd(&pfile_in_zip_read_info->bstream);
++#endif
++#ifdef HAVE_LZMA
++    else if (pfile_in_zip_read_info->stream_initialised == Z_LZMAED)
++    {
++        ISzAlloc alloc = { lzma_cust_alloc, lzma_cust_free };
++        LzmaDec_Free(pfile_in_zip_read_info->lzmadec, &alloc);
++        TRYFREE(pfile_in_zip_read_info->lzmadec);
++    }
+ #endif
+ 
+ 
+     pfile_in_zip_read_info->stream_initialised = 0;
+     TRYFREE(pfile_in_zip_read_info);
 diff -rPu5 zlib.orig\minizip\unzip.h zlib\minizip\unzip.h
---- zlib.orig\minizip\unzip.h	Mon Jul 09 00:34:08 2012
-+++ zlib\minizip\unzip.h	Tue May 14 20:21:21 2013
-@@ -57,10 +57,12 @@
+--- zlib.orig\minizip\unzip.h	Mon Jul 09 01:34:08 2012
++++ zlib\minizip\unzip.h	Sun May 11 10:53:11 2014
+@@ -57,11 +57,20 @@
  
  #ifdef HAVE_BZIP2
  #include "bzlib.h"
  #endif
  
++/* SumatraPDF: support LZMA */
++#ifdef HAVE_LZMA
++#include "LzmaDec.h"
++#endif
++
 +/* SumatraPDF: support Deflate64 */
 +#define Z_DEFLATE64ED 9
  #define Z_BZIP2ED 12
++/* SumatraPDF: support LZMA */
++#define Z_LZMAED 14
  
  #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
  /* like the STRICT of WIN32, we define a pointer that cannot be converted
      from (void*) without cast */
+ typedef struct TagunzFile__ { int unused; } unzFile__;

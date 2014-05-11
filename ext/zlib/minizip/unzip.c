@@ -144,6 +144,9 @@ typedef struct
 #ifdef HAVE_BZIP2
     bz_stream bstream;          /* bzLib stream structure for bziped */
 #endif
+#ifdef HAVE_LZMA
+    CLzmaDec *lzmadec;          /* LZMA decoder data */
+#endif
 
     ZPOS64_T pos_in_zipfile;       /* position in byte on the zipfile, for fseek*/
     uLong stream_initialised;   /* flag set if stream structure is initialised*/
@@ -1387,7 +1390,11 @@ extern int ZEXPORT unzGoToFilePos(
 /* SumatraPDF: allow to include a custom allocator */
 static void *zlib_cust_alloc(voidpf opaque, uInt count, uInt size) { return ALLOC(count * size); }
 static void *bz_cust_alloc(voidpf opaque, int count, int size) { return ALLOC(count * size); }
-static void zlib_bz_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
+static void zlib_cust_free(voidpf opaque, voidpf p) { TRYFREE(p); }
+#ifdef HAVE_LZMA
+static void *lzma_cust_alloc(void *self, size_t size) { return ALLOC(size); }
+static void lzma_cust_free(void *self, void *p) { TRYFREE(p); }
+#endif
 
 /*
   Read the local header of the current zipfile
@@ -1440,6 +1447,7 @@ local int unz64local_CheckCurrentFileCoherencyHeader (unz64_s* s, uInt* piSizeVa
 /* #ifdef HAVE_BZIP2 */
                          (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
 /* #endif */
+                         (s->cur_file_info.compression_method!=Z_LZMAED) &&
                          (s->cur_file_info.compression_method!=Z_DEFLATE64ED) &&
                          (s->cur_file_info.compression_method!=Z_DEFLATED))
         err=UNZ_BADZIPFILE;
@@ -1548,6 +1556,7 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
 /* #ifdef HAVE_BZIP2 */
         (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
 /* #endif */
+        (s->cur_file_info.compression_method!=Z_LZMAED) &&
         (s->cur_file_info.compression_method!=Z_DEFLATE64ED) &&
         (s->cur_file_info.compression_method!=Z_DEFLATED))
 
@@ -1568,13 +1577,13 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
 #ifdef HAVE_BZIP2
       /* SumatraPDF: allow to include a custom allocator */
       pfile_in_zip_read_info->bstream.bzalloc = bz_cust_alloc;
-      pfile_in_zip_read_info->bstream.bzfree = zlib_bz_cust_free;
+      pfile_in_zip_read_info->bstream.bzfree = zlib_cust_free;
       pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
       pfile_in_zip_read_info->bstream.state = (voidpf)0;
 
       /* SumatraPDF: allow to include a custom allocator */
       pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
-      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
+      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
       pfile_in_zip_read_info->stream.next_in = (voidpf)0;
       pfile_in_zip_read_info->stream.avail_in = 0;
@@ -1591,12 +1600,35 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
       pfile_in_zip_read_info->raw=1;
 #endif
     }
+    else if ((s->cur_file_info.compression_method==Z_LZMAED) && (!raw))
+    {
+#ifdef HAVE_LZMA
+      /* SumatraPDF: allow to include a custom allocator */
+      pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
+      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
+      pfile_in_zip_read_info->stream.opaque = (voidpf)0;
+      pfile_in_zip_read_info->stream.next_in = (voidpf)0;
+      pfile_in_zip_read_info->stream.avail_in = 0;
+
+      pfile_in_zip_read_info->lzmadec = ALLOC(sizeof(*pfile_in_zip_read_info->lzmadec));
+      if (!pfile_in_zip_read_info->lzmadec)
+      {
+          TRYFREE(pfile_in_zip_read_info);
+          return UNZ_INTERNALERROR;
+      }
+      memset(pfile_in_zip_read_info->lzmadec, 0, sizeof(*pfile_in_zip_read_info->lzmadec));
+      LzmaDec_Construct(pfile_in_zip_read_info->lzmadec);
+      pfile_in_zip_read_info->stream_initialised = Z_LZMAED;
+#else
+      pfile_in_zip_read_info->raw=1;
+#endif
+    }
     else if (((s->cur_file_info.compression_method==Z_DEFLATED) ||
               (s->cur_file_info.compression_method==Z_DEFLATE64ED)) && (!raw))
     {
       /* SumatraPDF: allow to include a custom allocator */
       pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
-      pfile_in_zip_read_info->stream.zfree = zlib_bz_cust_free;
+      pfile_in_zip_read_info->stream.zfree = zlib_cust_free;
       pfile_in_zip_read_info->stream.opaque = (voidpf)0;
       pfile_in_zip_read_info->stream.next_in = 0;
       pfile_in_zip_read_info->stream.avail_in = 0;
@@ -1859,6 +1891,56 @@ extern int ZEXPORT unzReadCurrentFile  (unzFile file, voidp buf, unsigned len)
               break;
 #endif
         } // end Z_BZIP2ED
+        else if (pfile_in_zip_read_info->compression_method==Z_LZMAED)
+        {
+#ifdef HAVE_LZMA
+            ELzmaFinishMode lzmafinish = (s->cur_file_info.flag & 0x02) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
+            SizeT srcLen = 0, destLen = 0;
+            ELzmaStatus status;
+            SRes res = SZ_OK;
+
+            if (!pfile_in_zip_read_info->lzmadec->dic)
+            {
+                ISzAlloc alloc = { lzma_cust_alloc, lzma_cust_free };
+                unsigned propSize;
+                if (pfile_in_zip_read_info->stream.avail_in < 9)
+                    return UNZ_EOF;
+                propSize = pfile_in_zip_read_info->stream.next_in[2];
+                if (pfile_in_zip_read_info->stream.next_in[3] != 0 || pfile_in_zip_read_info->stream.avail_in < 4 + propSize)
+                    return UNZ_ERRNO;
+                res = LzmaDec_Allocate(pfile_in_zip_read_info->lzmadec, pfile_in_zip_read_info->stream.next_in + 4, propSize, &alloc);
+                pfile_in_zip_read_info->stream.next_in += 4 + propSize;
+                pfile_in_zip_read_info->stream.avail_in -= 4 + propSize;
+                pfile_in_zip_read_info->stream.total_in += 4 + propSize;
+                if (res != SZ_OK)
+                    return UNZ_ERRNO;
+                LzmaDec_Init(pfile_in_zip_read_info->lzmadec);
+            }
+
+            srcLen = pfile_in_zip_read_info->stream.avail_in;
+            destLen = pfile_in_zip_read_info->stream.avail_out;
+            res = LzmaDec_DecodeToBuf(pfile_in_zip_read_info->lzmadec, pfile_in_zip_read_info->stream.next_out, &destLen, pfile_in_zip_read_info->stream.next_in, &srcLen, lzmafinish, &status);
+            if (res != SZ_OK || (srcLen == 0 && destLen == 0))
+                return UNZ_ERRNO;
+
+            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, destLen);
+            pfile_in_zip_read_info->rest_read_uncompressed -= destLen;
+            pfile_in_zip_read_info->total_out_64 += destLen;
+            iRead += destLen;
+
+            pfile_in_zip_read_info->stream.next_in += srcLen;
+            pfile_in_zip_read_info->stream.avail_in -= srcLen;
+            pfile_in_zip_read_info->stream.total_in += srcLen;
+            pfile_in_zip_read_info->stream.next_out += destLen;
+            pfile_in_zip_read_info->stream.avail_out -= destLen;
+            pfile_in_zip_read_info->stream.total_out += destLen;
+
+            if (status == LZMA_STATUS_FINISHED_WITH_MARK || (status == LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK && pfile_in_zip_read_info->rest_read_uncompressed == 0))
+            {
+                return iRead > 0 ? iRead : UNZ_EOF;
+            }
+#endif
+        } // end Z_LZMAED
         else
         {
             ZPOS64_T uTotalOutBefore,uTotalOutAfter;
@@ -2055,6 +2137,14 @@ extern int ZEXPORT unzCloseCurrentFile (unzFile file)
 #ifdef HAVE_BZIP2
     else if (pfile_in_zip_read_info->stream_initialised == Z_BZIP2ED)
         BZ2_bzDecompressEnd(&pfile_in_zip_read_info->bstream);
+#endif
+#ifdef HAVE_LZMA
+    else if (pfile_in_zip_read_info->stream_initialised == Z_LZMAED)
+    {
+        ISzAlloc alloc = { lzma_cust_alloc, lzma_cust_free };
+        LzmaDec_Free(pfile_in_zip_read_info->lzmadec, &alloc);
+        TRYFREE(pfile_in_zip_read_info->lzmadec);
+    }
 #endif
 
 

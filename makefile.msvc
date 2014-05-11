@@ -168,8 +168,8 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
 !endif
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
-ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS)
-LZSA_OBJS = $(OU)\LzmaSimpleArchive.obj $(LZMA_OBJS)
+ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
+	$(OU)\LzmaSimpleArchive.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
@@ -211,11 +211,11 @@ MAIN_UI_OBJS = \
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
-	$(UTILS_LIB) $(MUI_LIB) $(ENGINES_LIB) $(SYNCTEX_OBJS) $(LZSA_OBJS)
+	$(UTILS_LIB) $(MUI_LIB) $(ENGINES_LIB) $(SYNCTEX_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) $(LZSA_OBJS) $(ZLIB_OBJS) \
+	$(UTILS_LIB) $(ZLIB_OBJS) $(ZIP_OBJS) \
 	$(OS)\Translations.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \

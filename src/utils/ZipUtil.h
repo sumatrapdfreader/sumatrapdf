@@ -6,7 +6,7 @@
 
 #include <unzip.h>
 
-enum ZipMethod { Zip_Any=-1, Zip_None=0, Zip_Deflate=8, Zip_Deflate64=9, Zip_Bzip=12 };
+enum ZipMethod { Zip_Any=-1, Zip_None=0, Zip_Deflate=8, Zip_Deflate64=9, Zip_Bzip=12, Zip_Lzma=14 };
 
 class ZipFile {
     unzFile uf;
