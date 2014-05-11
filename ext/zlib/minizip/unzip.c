@@ -1923,17 +1923,17 @@ extern int ZEXPORT unzReadCurrentFile  (unzFile file, voidp buf, unsigned len)
             if (res != SZ_OK || (srcLen == 0 && destLen == 0))
                 return UNZ_ERRNO;
 
-            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, destLen);
+            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, (uInt)destLen);
             pfile_in_zip_read_info->rest_read_uncompressed -= destLen;
             pfile_in_zip_read_info->total_out_64 += destLen;
-            iRead += destLen;
+            iRead += (uInt)destLen;
 
             pfile_in_zip_read_info->stream.next_in += srcLen;
-            pfile_in_zip_read_info->stream.avail_in -= srcLen;
-            pfile_in_zip_read_info->stream.total_in += srcLen;
+            pfile_in_zip_read_info->stream.avail_in -= (uInt)srcLen;
+            pfile_in_zip_read_info->stream.total_in += (uInt)srcLen;
             pfile_in_zip_read_info->stream.next_out += destLen;
-            pfile_in_zip_read_info->stream.avail_out -= destLen;
-            pfile_in_zip_read_info->stream.total_out += destLen;
+            pfile_in_zip_read_info->stream.avail_out -= (uInt)destLen;
+            pfile_in_zip_read_info->stream.total_out += (uInt)destLen;
 
             if (status == LZMA_STATUS_FINISHED_WITH_MARK || (status == LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK && pfile_in_zip_read_info->rest_read_uncompressed == 0))
             {

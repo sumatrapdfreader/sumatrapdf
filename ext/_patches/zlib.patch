@@ -433,7 +433,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 --- zlib.orig\minizip\unzip.c	Sun Feb 24 09:32:30 2013
-+++ zlib\minizip\unzip.c	Sun May 11 23:58:02 2014
++++ zlib\minizip\unzip.c	Mon May 12 00:13:15 2014
 @@ -106,10 +106,15 @@
  
  #ifndef UNZ_MAXFILENAMEINZIP
@@ -640,17 +640,17 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 +            if (res != SZ_OK || (srcLen == 0 && destLen == 0))
 +                return UNZ_ERRNO;
 +
-+            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, destLen);
++            pfile_in_zip_read_info->crc32 = crc32(pfile_in_zip_read_info->crc32, pfile_in_zip_read_info->stream.next_out, (uInt)destLen);
 +            pfile_in_zip_read_info->rest_read_uncompressed -= destLen;
 +            pfile_in_zip_read_info->total_out_64 += destLen;
-+            iRead += destLen;
++            iRead += (uInt)destLen;
 +
 +            pfile_in_zip_read_info->stream.next_in += srcLen;
-+            pfile_in_zip_read_info->stream.avail_in -= srcLen;
-+            pfile_in_zip_read_info->stream.total_in += srcLen;
++            pfile_in_zip_read_info->stream.avail_in -= (uInt)srcLen;
++            pfile_in_zip_read_info->stream.total_in += (uInt)srcLen;
 +            pfile_in_zip_read_info->stream.next_out += destLen;
-+            pfile_in_zip_read_info->stream.avail_out -= destLen;
-+            pfile_in_zip_read_info->stream.total_out += destLen;
++            pfile_in_zip_read_info->stream.avail_out -= (uInt)destLen;
++            pfile_in_zip_read_info->stream.total_out += (uInt)destLen;
 +
 +            if (status == LZMA_STATUS_FINISHED_WITH_MARK || (status == LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK && pfile_in_zip_read_info->rest_read_uncompressed == 0))
 +            {
