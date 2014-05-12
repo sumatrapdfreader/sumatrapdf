@@ -75,13 +75,6 @@ pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
 void
 pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n)
 {
-	/* SumatraPDF: Sanity check ranges */
-	if (low < 0 || low > 65535 || high < 0 || high > 65535 || low > high)
-	{
-		fz_warn(ctx, "codespace section limits out of range in cmap %s", cmap->cmap_name);
-		return;
-	}
-
 	if (cmap->codespace_len + 1 == nelem(cmap->codespace))
 	{
 		fz_warn(ctx, "assert: too many code space ranges");
