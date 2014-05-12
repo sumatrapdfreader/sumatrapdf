@@ -1129,6 +1129,9 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
                         fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
                 }
             }
+            else if (pdf_is_null(kid)) {
+                fz_warn(ctx, "ignoring null object in page tree");
+            }
             else {
                 fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree (%s)", type);
             }
