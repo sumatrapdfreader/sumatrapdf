@@ -279,7 +279,7 @@ fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list old_args)
 	{
 		b = fz_malloc(ctx, l + 1);
 		va_copy(args, old_args);
-		fz_vsnprintf(buffer, l + 1, fmt, args);
+		fz_vsnprintf(b, l + 1, fmt, args);
 		va_copy_end(args);
 	}
 

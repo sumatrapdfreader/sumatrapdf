@@ -56,7 +56,6 @@ xps_measure_font_glyph(xps_document *doc, fz_font *font, int gid, xps_glyph_metr
 {
 	int mask = FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
 	FT_Face face = font->ft_face;
-	/* SumatraPDF: don't use hadv and vadv with undefined values */
 	FT_Fixed hadv = 0, vadv = 0;
 	fz_context *ctx = doc->ctx;
 

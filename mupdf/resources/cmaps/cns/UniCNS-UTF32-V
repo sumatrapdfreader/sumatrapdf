@@ -1,9 +1,11 @@
 %!PS-Adobe-3.0 Resource-CMap
 %%DocumentNeededResources: ProcSet (CIDInit)
+%%DocumentNeededResources: CMap (UniCNS-UTF32-H)
 %%IncludeResource: ProcSet (CIDInit)
-%%BeginResource: CMap (Identity)
-%%Title: (Identity Adobe Japan2 0)
-%%Version: 9.003
+%%IncludeResource: CMap (UniCNS-UTF32-H)
+%%BeginResource: CMap (UniCNS-UTF32-V)
+%%Title: (UniCNS-UTF32-V Adobe CNS1 6)
+%%Version: 1.005
 %%Copyright: -----------------------------------------------------------
 %%Copyright: Copyright 1990-2009 Adobe Systems Incorporated.
 %%Copyright: All rights reserved.
@@ -19,12 +21,12 @@
 %%Copyright: Redistributions in binary form must reproduce the above
 %%Copyright: copyright notice, this list of conditions and the following
 %%Copyright: disclaimer in the documentation and/or other materials
-%%Copyright: provided with the distribution. 
+%%Copyright: provided with the distribution.
 %%Copyright:
 %%Copyright: Neither the name of Adobe Systems Incorporated nor the names
 %%Copyright: of its contributors may be used to endorse or promote
 %%Copyright: products derived from this software without specific prior
-%%Copyright: written permission. 
+%%Copyright: written permission.
 %%Copyright:
 %%Copyright: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
 %%Copyright: CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -48,53 +50,41 @@
 
 begincmap
 
+/UniCNS-UTF32-H usecmap
+
 /CIDSystemInfo 3 dict dup begin
   /Registry (Adobe) def
-  /Ordering (Japan2) def
-  /Supplement 0 def
+  /Ordering (CNS1) def
+  /Supplement 6 def
 end def
 
-/CMapName /Adobe-Japan2-0 def
-/CMapVersion 9.003 def
+/CMapName /UniCNS-UTF32-V def
+/CMapVersion 1.005 def
 /CMapType 1 def
 
-/UIDOffset 220 def
-/XUID [1 10 25426] def
+/XUID [1 10 25594] def
 
-/WMode 0 def
+/WMode 1 def
 
-/CIDCount 6068 def
+6 begincidchar
+<00002013> 120
+<00002014> 122
+<00002025> 109
+<0000fe4f> 13745
+<0000ff5b> 134
+<0000ff5d> 135
+endcidchar
 
-1 begincodespacerange
-  <0000> <17FF>
-endcodespacerange
-
-24 begincidrange
-<0000> <00ff>    0
-<0100> <01ff>  256
-<0200> <02ff>  512
-<0300> <03ff>  768
-<0400> <04ff> 1024
-<0500> <05ff> 1280
-<0600> <06ff> 1536
-<0700> <07ff> 1792
-<0800> <08ff> 2048
-<0900> <09ff> 2304
-<0a00> <0aff> 2560
-<0b00> <0bff> 2816
-<0c00> <0cff> 3072
-<0d00> <0dff> 3328
-<0e00> <0eff> 3584
-<0f00> <0fff> 3840
-<1000> <10ff> 4096
-<1100> <11ff> 4352
-<1200> <12ff> 4608
-<1300> <13ff> 4864
-<1400> <14ff> 5120
-<1500> <15ff> 5376
-<1600> <16ff> 5632
-<1700> <17b3> 5888
+7 begincidrange
+<00003008> <00003009> 150
+<0000300a> <0000300b> 146
+<0000300c> <0000300d> 154
+<0000300e> <0000300f> 158
+<00003010> <00003011> 142
+<00003014> <00003015> 138
+<0000ff08> <0000ff09> 130
 endcidrange
+
 endcmap
 CMapName currentdict /CMap defineresource pop
 end

@@ -1,11 +1,11 @@
 %!PS-Adobe-3.0 Resource-CMap
 %%DocumentNeededResources: ProcSet (CIDInit)
-%%DocumentNeededResources: CMap (Hojo-H)
+%%DocumentNeededResources: CMap (UniKS-UTF8-H)
 %%IncludeResource: ProcSet (CIDInit)
-%%IncludeResource: CMap (Hojo-H)
-%%BeginResource: CMap (Hojo-V)
-%%Title: (Hojo-V Adobe Japan2 0)
-%%Version: 9.003
+%%IncludeResource: CMap (UniKS-UTF8-H)
+%%BeginResource: CMap (UniKS-UTF8-V)
+%%Title: (UniKS-UTF8-V Adobe Korea1 1)
+%%Version: 11.002
 %%Copyright: -----------------------------------------------------------
 %%Copyright: Copyright 1990-2009 Adobe Systems Incorporated.
 %%Copyright: All rights reserved.
@@ -21,12 +21,12 @@
 %%Copyright: Redistributions in binary form must reproduce the above
 %%Copyright: copyright notice, this list of conditions and the following
 %%Copyright: disclaimer in the documentation and/or other materials
-%%Copyright: provided with the distribution. 
+%%Copyright: provided with the distribution.
 %%Copyright:
 %%Copyright: Neither the name of Adobe Systems Incorporated nor the names
 %%Copyright: of its contributors may be used to endorse or promote
 %%Copyright: products derived from this software without specific prior
-%%Copyright: written permission. 
+%%Copyright: written permission.
 %%Copyright:
 %%Copyright: THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
 %%Copyright: CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
@@ -50,22 +50,45 @@
 
 begincmap
 
-/Hojo-H usecmap
+/UniKS-UTF8-H usecmap
 
 /CIDSystemInfo 3 dict dup begin
   /Registry (Adobe) def
-  /Ordering (Japan2) def
-  /Supplement 0 def
+  /Ordering (Korea1) def
+  /Supplement 1 def
 end def
 
-/CMapName /Hojo-V def
-/CMapVersion 9.003 def
+/CMapName /UniKS-UTF8-V def
+/CMapVersion 11.002 def
 /CMapType 1 def
 
-/UIDOffset 210 def
-/XUID [1 10 25423] def
+/XUID [1 10 25415] def
 
 /WMode 1 def
+
+11 begincidchar
+<e28096> 8061
+<e280a5> 8058
+<e38093> 8075
+<efbc81> 8076
+<efbc8c> 8079
+<efbc8e> 8080
+<efbcbb> 8087
+<efbcbd> 8088
+<efbcbf> 8089
+<efbd9e> 8062
+<efbfa3> 8093
+endcidchar
+
+7 begincidrange
+<e28093> <e28094> 8059
+<e38081> <e38082> 8056
+<e38088> <e38091> 8065
+<e38094> <e38095> 8063
+<efbc88> <efbc89> 8077
+<efbc9a> <efbc9f> 8081
+<efbd9b> <efbd9d> 8090
+endcidrange
 
 endcmap
 CMapName currentdict /CMap defineresource pop

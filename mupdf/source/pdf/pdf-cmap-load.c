@@ -8,7 +8,10 @@ pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap)
 	if (cmap->storable.refs < 0)
 		return 0;
 
-	return cmap->rcap * sizeof(pdf_range) + cmap->tcap * sizeof(short) + pdf_cmap_size(ctx, cmap->usecmap);
+	return pdf_cmap_size(ctx, cmap->usecmap) +
+		cmap->rcap * sizeof *cmap->ranges +
+		cmap->xcap * sizeof *cmap->xranges +
+		cmap->mcap * sizeof *cmap->mranges;
 }
 
 /*

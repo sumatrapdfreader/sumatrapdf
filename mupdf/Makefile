@@ -226,7 +226,7 @@ $(OUT)/pdf/pdf-cmap-table.o : $(CMAP_GEN)
 $(OUT)/pdf/pdf-fontfile.o : $(FONT_GEN)
 $(OUT)/pdf/pdf-pkcs7.o : $(ADOBECA_GEN)
 $(OUT)/pdf/js/pdf-js.o : $(JAVASCRIPT_GEN)
-$(OUT)/cmapdump.o : source/pdf/pdf-cmap.c source/pdf/pdf-cmap-parse.c
+$(OUT)/cmapdump.o : include/mupdf/pdf/cmap.h source/pdf/pdf-cmap.c source/pdf/pdf-cmap-parse.c
 
 # --- Tools and Apps ---
 
@@ -264,7 +264,7 @@ ifeq "$(HAVE_CURL)" "yes"
 MUVIEW_X11_CURL := $(OUT)/mupdf-x11-curl
 $(MUVIEW_X11_CURL) : $(MUPDF_LIB) $(THIRD_LIBS) $(CURL_LIB)
 $(MUVIEW_X11_CURL) : $(addprefix $(OUT)/platform/x11/curl/, x11_main.o x11_image.o pdfapp.o curl_stream.o)
-	$(LINK_CMD) $(X11_LIBS) $(CURL_LIBS)
+	$(LINK_CMD) $(X11_LIBS) $(CURL_LIBS) $(SYS_CURL_DEPS)
 endif
 endif
 

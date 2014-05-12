@@ -67,9 +67,8 @@ ifeq "$(shell pkg-config --exists libcurl && echo yes)" "yes"
 HAVE_CURL = yes
 SYS_CURL_CFLAGS = $(shell pkg-config --cflags libcurl)
 SYS_CURL_LIBS = $(shell pkg-config --libs libcurl)
-else
-SYS_CURL_DEPS = -lpthread -lrt
 endif
+SYS_CURL_DEPS = -lpthread -lrt
 
 SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
 SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
