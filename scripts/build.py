@@ -46,12 +46,13 @@ import struct
 import types
 import s3
 import util
-from util import test_for_flag, run_cmd_throw
+from util import test_for_flag, run_cmd_throw, run_cmd
 from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
 from util import load_config, verify_path_exists, get_svn_branch
 import trans_upload
 import trans_download
+import upload_sources
 from binascii import crc32
 
 
@@ -292,6 +293,20 @@ def verify_correct_branch(ver):
     assert branch == expected, "svn branch is '%s' and should be '%s' for version %s (%s)" % (branch, expected, ver, short_ver)
 
 
+# if we haven't tagged this release in svn yet, svn info for the /tags/${ver}rel
+# must fail
+def verify_not_tagged_yet(ver):
+    out, err, errcode = run_cmd("svn", "info", "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver)
+    #print("out: '%s'\nerr:'%s'\nerrcode:%d" % (out, err, errcode))
+    assert errcode == 1, "out: '%s'\nerr:'%s'\nerrcode:%d" % (out, err, errcode)
+
+
+def svn_tag_release(ver):
+    working = "https://sumatrapdf.googlecode.com/svn/branches/%sworking" % get_short_ver(ver)
+    rel = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
+    run_cmd_throw("svn", "copy", working, rel)
+
+
 def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
 
     verify_started_in_right_directory()
@@ -308,6 +323,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         ver = extract_sumatra_version(os.path.join("src", "Version.h"))
         if upload:
             verify_correct_branch(ver)
+            verfiy_not_tagged_yet(ver)
 
     log("Version: '%s'" % ver)
 
@@ -446,6 +462,10 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         s3.upload_file_public(exe_zip_path, s3_exe_zip)
         s3_latest_ver_manual = "sumatrapdf/sumpdf-latest-manual.txt"
         s3.upload_data_public(s3_latest_ver_manual, "%s\n" % ver)
+
+    if not build_prerelease and upload:
+        svn_tag_release(ver)
+        upload_sources(ver)
 
     # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
     # manually to: "%s\n" % ver

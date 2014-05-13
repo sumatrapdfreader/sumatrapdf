@@ -58,6 +58,22 @@ def usage_and_exit():
     sys.exit(1)
 
 
+def upload(ver):
+    svn_url = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
+    src_dir_name = "SumatraPDF-%s-src" % ver
+    archive_name = src_dir_name + ".7z"
+    s3_path = "sumatrapdf/rel/" + archive_name
+    print("svn_url: '%s'\ndir_name: '%s'\narchive_name: %s\ns3_path: %s" % (svn_url, src_dir_name, archive_name, s3_path))
+    s3.verify_doesnt_exist(s3_path)
+
+    os.chdir(get_top_dir())
+    util.run_cmd_throw("svn", "export", svn_url, src_dir_name)
+    util.run_cmd_throw("7z", "a", "-r", archive_name, src_dir_name)
+    s3.upload_file_public(archive_name, s3_path)
+    shutil.rmtree(src_dir_name)
+    os.remove(archive_name)
+
+
 # - check out the sources from /svn/tags/${ver}rel to SumatraPDF-$ver-src directory
 # - 7-zip them
 # - upload to s3
@@ -74,19 +90,8 @@ def main():
 
     ver = sys.argv[1]
     #print("ver: '%s'" % ver)
-    svn_url = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
-    src_dir_name = "SumatraPDF-%s-src" % ver
-    archive_name = src_dir_name + ".7z"
-    s3_path = "sumatrapdf/rel/" + archive_name
-    print("svn_url: '%s'\ndir_name: '%s'\narchive_name: %s\ns3_path: %s" % (svn_url, src_dir_name, archive_name, s3_path))
-    s3.verify_doesnt_exist(s3_path)
+    upload(ver)
 
-    os.chdir(get_top_dir())
-    util.run_cmd_throw("svn", "export", svn_url, src_dir_name)
-    util.run_cmd_throw("7z", "a", "-r", archive_name, src_dir_name)
-    s3.upload_file_public(archive_name, s3_path)
-    shutil.rmtree(src_dir_name)
-    os.remove(archive_name)
 
 if __name__ == "__main__":
     main()
