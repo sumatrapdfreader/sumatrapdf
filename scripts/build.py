@@ -46,6 +46,7 @@ import struct
 import types
 import s3
 import util
+import util2
 from util import test_for_flag, run_cmd_throw, run_cmd
 from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
@@ -60,6 +61,12 @@ def usage():
     print(
         "build.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
     sys.exit(1)
+
+
+@util2.memoize
+def get_top_dir():
+    scripts_dir = os.path.realpath(os.path.dirname(__file__))
+    return os.path.realpath(os.path.join(scripts_dir, ".."))
 
 
 def lzma_compress(src, dst):
@@ -307,9 +314,25 @@ def svn_tag_release(ver):
     run_cmd_throw("svn", "copy", working, rel)
 
 
+def try_find_scripts_file(file_name):
+    top_dir = get_top_dir()
+    dst = os.path.join(top_dir, "scripts", file_name)
+    src = os.path.join(top_dir, "..", "sumatrapdf", "scripts", file_name)
+    if not os.path.exists(dst) and os.path.exists(src):
+        shutil.copyfile(src, dst)
+
+
+# if scripts/cert.pfx and scripts/config.py don't exist, try to copy them from
+# ../../sumatrapdf/scripts directory
+def try_find_config_files():
+    try_find_scripts_file("config.py")
+    try_find_scripts_file("cert.pfx")
+
+
 def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
 
     verify_started_in_right_directory()
+    try_find_config_files()
     if build_prerelease:
         if svn_revision is None:
             run_cmd_throw("svn", "update")
