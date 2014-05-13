@@ -174,6 +174,16 @@ def get_svn_versions():
     ver_latest = str(parse_svninfo_out(out))
     return ver_local, ver_latest
 
+# Given a line in svn info output:
+# URL: https://sumatrapdf.googlecode.com/svn/trunk
+# return '/trunk' part
+def get_svn_branch():
+    (out, err) = run_cmd_throw("svn", "info")
+    url = re.findall(r'URL: (.+)', out)[0]
+    s = "https://sumatrapdf.googlecode.com/svn"
+    assert url.startswith(s), "'%s' should start with '%s'" % (url, s)
+    return url[len(s):]
+
 
 # Parse output of "svn log -r${rev} -v", which looks sth. like this:
 #------------------------------------------------------------------------

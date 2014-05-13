@@ -49,7 +49,7 @@ import util
 from util import test_for_flag, run_cmd_throw
 from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
-from util import load_config, verify_path_exists
+from util import load_config, verify_path_exists, get_svn_branch
 import trans_upload
 import trans_download
 from binascii import crc32
@@ -275,6 +275,23 @@ def zip_one_file(dir, to_pack, zip_name):
     os.chdir(curr_dir)
 
 
+# returns a ver up to first decimal point i.e. "2.3.1" => "2.3"
+def get_short_ver(ver):
+    parts = ver.split(".")
+    if len(parts) <= 2:
+        return ver
+    return parts[0] + "." + parts[1]
+
+
+# when doing a release build, we must be on /svn/branches/${ver_short}working
+# branch
+def verify_correct_branch(ver):
+    short_ver = get_short_ver(ver)
+    branch = get_svn_branch()
+    expected = "/branches/%sworking" % short_ver
+    assert branch == expected, "svn branch is '%s' and should be '%s' for version %s (%s)" % (branch, expected, ver, short_ver)
+
+
 def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
 
     verify_started_in_right_directory()
@@ -289,6 +306,9 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
             ver = svn_revision
     else:
         ver = extract_sumatra_version(os.path.join("src", "Version.h"))
+        if upload:
+            verify_correct_branch(ver)
+
     log("Version: '%s'" % ver)
 
     # don't update translations for release versions to prevent Trunk changes
