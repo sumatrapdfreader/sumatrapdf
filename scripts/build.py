@@ -444,6 +444,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         delete_old_pre_release_builds()
     else:
         s3.upload_file_public(exe_zip_path, s3_exe_zip)
+        s3_latest_ver_manual = "sumatrapdf/sumpdf-latest-manual.txt"
+        s3.upload_data_public(s3_latest_ver_manual, "%s\n" % ver)
 
     # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
     # manually to: "%s\n" % ver
