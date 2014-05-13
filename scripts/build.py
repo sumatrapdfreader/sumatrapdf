@@ -463,7 +463,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         s3_latest_ver_manual = "sumatrapdf/sumpdf-latest-manual.txt"
         s3.upload_data_public(s3_latest_ver_manual, "%s\n" % ver)
 
-    if not build_prerelease and upload:
+    if not build_prerelease:
         svn_tag_release(ver)
         upload_sources(ver)
 
