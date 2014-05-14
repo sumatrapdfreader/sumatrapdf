@@ -311,7 +311,8 @@ def verify_not_tagged_yet(ver):
 def svn_tag_release(ver):
     working = "https://sumatrapdf.googlecode.com/svn/branches/%sworking" % get_short_ver(ver)
     rel = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
-    run_cmd_throw("svn", "copy", working, rel)
+    msg = "tag %s release" % ver
+    run_cmd_throw("svn", "copy", working, rel, "-m", msg)
 
 
 def try_find_scripts_file(file_name):
@@ -346,7 +347,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         ver = extract_sumatra_version(os.path.join("src", "Version.h"))
         if upload:
             verify_correct_branch(ver)
-            verfiy_not_tagged_yet(ver)
+            verify_not_tagged_yet(ver)
 
     log("Version: '%s'" % ver)
 
@@ -483,8 +484,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         delete_old_pre_release_builds()
     else:
         s3.upload_file_public(exe_zip_path, s3_exe_zip)
-        s3_latest_ver_manual = "sumatrapdf/sumpdf-latest-manual.txt"
-        s3.upload_data_public(s3_latest_ver_manual, "%s\n" % ver)
+        s3.upload_data_public("%s\n" % ver, "sumatrapdf/sumpdf-latest-manual.txt")
 
     if not build_prerelease:
         svn_tag_release(ver)
