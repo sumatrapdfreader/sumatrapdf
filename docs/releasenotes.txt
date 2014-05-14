@@ -11,6 +11,11 @@ Next version:
 * deprecated the browser plugin (remains installed if used)
 * support LZMA in Comic Book (CBZ) files
 
+2.5.2 (2014-05-13)
+
+* use less memory for comic book files
+* PDF rendering improvements
+
 2.5.1 (2014-05-07):
 
 * hopefully fix frequent ebook crashes
