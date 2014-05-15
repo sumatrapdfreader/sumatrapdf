@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7ad13d8960765bc7386605757cfdcee8a948813c
+feafd70d9bb18d3e27e0f2dc73626e1c273e1ab1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9988,7 +9988,10 @@ fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
+sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
+sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
+uk:Залишити розширення для браузера (більше не підтримується)
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
 ar:السماح لويندوز بالبحث في ملفات PDF
