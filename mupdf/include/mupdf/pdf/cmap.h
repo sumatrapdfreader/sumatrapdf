@@ -40,7 +40,7 @@ struct pdf_cmap_s
 	int codespace_len;
 	struct
 	{
-		unsigned int n;
+		int n;
 		unsigned int low;
 		unsigned int high;
 	} codespace[40];
@@ -65,15 +65,15 @@ int pdf_cmap_wmode(fz_context *ctx, pdf_cmap *cmap);
 void pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode);
 void pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap);
 
-void pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n);
-void pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, int low, int *map, int len);
-void pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, int srclo, int srchi, int dstlo);
-void pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, int one, int *many, int len);
+void pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int n);
+void pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *map, int len);
+void pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int srclo, unsigned int srchi, int dstlo);
+void pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int one, int *many, int len);
 void pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap);
 
 int pdf_lookup_cmap(pdf_cmap *cmap, unsigned int cpt);
 int pdf_lookup_cmap_full(pdf_cmap *cmap, unsigned int cpt, int *out);
-int pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, unsigned char *e, int *cpt);
+int pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, unsigned char *e, unsigned int *cpt);
 
 pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
 pdf_cmap *pdf_load_cmap(fz_context *ctx, fz_stream *file);

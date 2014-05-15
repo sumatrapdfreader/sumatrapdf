@@ -180,7 +180,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	/* Determine encryption key length */
 
 	crypt->length = 40;
-	if (crypt->v == 2 || crypt->v == 4)
+	if (crypt->v == 2)
 	{
 		obj = pdf_dict_gets(dict, "Length");
 		if (pdf_is_int(obj))
@@ -195,7 +195,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 			pdf_free_crypt(ctx, crypt);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid encryption key length");
 		}
-		if (crypt->length < 0 || crypt->length > 256)
+		if (crypt->length < 40 || crypt->length > 128)
 		{
 			pdf_free_crypt(ctx, crypt);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid encryption key length");
@@ -694,8 +694,8 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 		memcpy(userpass, crypt->o, 32);
 		for (x = 0; x < 20; x++)
 		{
-			for (i = 0; i < 32; i++)
-				xor[i] = pwbuf[i] ^ (19 - x);
+			for (i = 0; i < n; i++)
+				xor[i] = key[i] ^ (19 - x);
 			fz_arc4_init(&arc4, xor, n);
 			fz_arc4_encrypt(&arc4, userpass, userpass, 32);
 		}

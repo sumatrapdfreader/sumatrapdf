@@ -73,7 +73,7 @@ pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
  * multi-byte encoded strings.
  */
 void
-pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n)
+pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int n)
 {
 	if (cmap->codespace_len + 1 == nelem(cmap->codespace))
 	{
@@ -153,7 +153,7 @@ add_mrange(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *out, int len)
  * Add a range-to-table mapping.
  */
 void
-pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, int low, int *table, int len)
+pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *table, int len)
 {
 	int i;
 	for (i = 0; i < len; i++)
@@ -164,7 +164,7 @@ pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, int low, int *table, int
  * Add a range of contiguous one-to-one mappings (ie 1..5 maps to 21..25)
  */
 void
-pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, int low, int high, int out)
+pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int out)
 {
 	add_range(ctx, cmap, low, high, out);
 }
@@ -173,7 +173,7 @@ pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, int low, int high, int o
  * Add a single one-to-many mapping.
  */
 void
-pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, int low, int *values, int len)
+pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *values, int len)
 {
 	if (len == 1)
 	{
@@ -315,7 +315,8 @@ pdf_lookup_cmap_full(pdf_cmap *cmap, unsigned int cpt, int *out)
 	pdf_range *ranges = cmap->ranges;
 	pdf_xrange *xranges = cmap->xranges;
 	pdf_mrange *mranges = cmap->mranges;
-	int l, r, m, i;
+	unsigned int i;
+	int l, r, m;
 
 	l = 0;
 	r = cmap->rlen - 1;
@@ -360,7 +361,7 @@ pdf_lookup_cmap_full(pdf_cmap *cmap, unsigned int cpt, int *out)
 			l = m + 1;
 		else
 		{
-			for (i = 0; i < (int)mranges[m].len; ++i)
+			for (i = 0; i < mranges[m].len; ++i)
 				out[i] = mranges[m].out[i];
 			return mranges[m].len;
 		}
@@ -377,9 +378,10 @@ pdf_lookup_cmap_full(pdf_cmap *cmap, unsigned int cpt, int *out)
  * multi-byte encoded string.
  */
 int
-pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, int *cpt)
+pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, unsigned int *cpt)
 {
-	int k, n, c;
+	unsigned int c;
+	int k, n;
 	int len = end - buf;
 
 	if (len > 4)
@@ -391,9 +393,9 @@ pdf_decode_cmap(pdf_cmap *cmap, unsigned char *buf, unsigned char *end, int *cpt
 		c = (c << 8) | buf[n];
 		for (k = 0; k < cmap->codespace_len; k++)
 		{
-			if ((int)cmap->codespace[k].n == n + 1)
+			if (cmap->codespace[k].n == n + 1)
 			{
-				if (c >= (int)cmap->codespace[k].low && c <= (int)cmap->codespace[k].high)
+				if (c >= cmap->codespace[k].low && c <= cmap->codespace[k].high)
 				{
 					*cpt = c;
 					return n + 1;

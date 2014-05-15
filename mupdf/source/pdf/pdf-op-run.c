@@ -1309,7 +1309,8 @@ pdf_show_string(pdf_csi *csi, pdf_run_state *pr, unsigned char *buf, int len)
 	pdf_gstate *gstate = pr->gstate + pr->gtop;
 	pdf_font_desc *fontdesc = gstate->font;
 	unsigned char *end = buf + len;
-	int cpt, cid;
+	unsigned int cpt;
+	int cid;
 
 	if (!fontdesc)
 	{
