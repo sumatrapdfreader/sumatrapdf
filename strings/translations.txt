@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4c6bae200ad61d2586d5a45bf36f3ea7af111c28
+7ad13d8960765bc7386605757cfdcee8a948813c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -945,7 +945,7 @@ fi:&Sovita sivut tulostettavalle alueelle
 fr:&Ajuster les pages à la zone d'impression
 ga:&Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
 gl:&Axustar páxinas á área imprimible
-he:התאם עמודים לגודל איזור הדפסה
+he:התאם עמודים לגודל אזור הדפסה
 hi:पृष्ठों को &छापने योग्य क्षेत्र के लिए उपयुक्त करें
 hr:Namjesti stranice do područja za ispis
 hu:Oldalméret illesztése a nyomtatható területhez
@@ -2647,7 +2647,7 @@ fi:P&ienennä sivut tulostettavalle alueelle (jos tarpeellista)
 fr:&Réduire les pages à la zone d'impression (si nécessaire)
 ga:&Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
 gl:&Reducir páxinas á área imprimible (se for necesario)
-he:כווץ עמודים לגודל איזור ההדפסה (אם נדרש)
+he:כווץ עמודים לגודל אזור ההדפסה (אם נדרש)
 hi:पृष्ठों को छपाई योग्य क्षेत्र &में सिकोड़ें (यदि आवश्यक हो)
 hr:Smanji stranice do područja za ispis (ako je potrebno)
 hu:Oldalak széleinek levágása a nyomtatható méretre
@@ -9985,6 +9985,7 @@ br:Mantenha o plugin PDF para instalado (não é mais suportado)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
 fr:Conserver le plugin pour navigateur (plus de support)
+he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
@@ -11244,7 +11245,7 @@ br:Abrir em %s
 bs:Otvori u %s
 ca-xv:Obri amb %s
 ca:Obre amb %s
-cn:开放的 %s
+cn:用 %s 打开
 cy:Agor yn %s
 cz:Otevřít v %s
 de:Mit %s öffnen
