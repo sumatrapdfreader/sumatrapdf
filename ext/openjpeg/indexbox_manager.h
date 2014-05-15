@@ -1,8 +1,8 @@
 /*
  * $Id: indexbox_manager.h 897 2011-08-28 21:43:57Z Kaori.Hagihara@gmail.com $
  *
- * Copyright (c) 2002-2011, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2011, Professor Benoit Macq
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2003-2004, Yannick Verschueren
  * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.

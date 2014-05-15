@@ -1,8 +1,8 @@
 /*
  * $Id: tpix_manager.c 897 2011-08-28 21:43:57Z Kaori.Hagihara@gmail.com $
  *
- * Copyright (c) 2002-2011, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2011, Professor Benoit Macq
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2003-2004, Yannick Verschueren
  * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.
@@ -80,7 +80,7 @@ int opj_write_tpix( int coff,
   opj_stream_write_data(cio,l_data_header,4,p_manager);
   opj_stream_seek(cio, lenp+len,p_manager);
 
-  return len;
+  return (int)len;
 }
 
 int opj_write_tpixfaix( int coff,
@@ -92,15 +92,15 @@ int opj_write_tpixfaix( int coff,
 {
   OPJ_UINT32 len;
   OPJ_OFF_T lenp;
-  int i, j;
-  int Aux;
-  int num_max_tile_parts;
-  int size_of_coding; /* 4 or 8 */
+  OPJ_UINT32 i, j;
+  OPJ_UINT32 Aux;
+  OPJ_UINT32 num_max_tile_parts;
+  OPJ_UINT32 size_of_coding; /* 4 or 8 */
   opj_tp_info_t tp;
   OPJ_BYTE l_data_header [8];
-  int version;
+  OPJ_UINT32 version;
 
-  num_max_tile_parts = get_num_max_tile_parts( cstr_info);
+  num_max_tile_parts = (OPJ_UINT32)get_num_max_tile_parts( cstr_info);
 
   if( j2klen > pow( 2, 32)){
     size_of_coding =  8;
@@ -120,24 +120,24 @@ int opj_write_tpixfaix( int coff,
 
   opj_write_bytes(l_data_header,num_max_tile_parts,size_of_coding);         /* NMAX           */
   opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-  opj_write_bytes(l_data_header,cstr_info.tw*cstr_info.th,size_of_coding);  /* M              */
+  opj_write_bytes(l_data_header,(OPJ_UINT32)(cstr_info.tw*cstr_info.th),size_of_coding);  /* M              */
   opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
 
-  for (i = 0; i < cstr_info.tw*cstr_info.th; i++)
+  for (i = 0; i < (OPJ_UINT32)(cstr_info.tw*cstr_info.th); i++)
     {
-    for (j = 0; j < cstr_info.tile[i].num_tps; j++)
+    for (j = 0; j < (OPJ_UINT32)cstr_info.tile[i].num_tps; j++)
       {
       tp = cstr_info.tile[i].tp[j];
 
-      opj_write_bytes(l_data_header,tp.tp_start_pos-coff,size_of_coding);            /* start position */
+      opj_write_bytes(l_data_header,(OPJ_UINT32)(tp.tp_start_pos-coff),size_of_coding);            /* start position */
       opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-      opj_write_bytes(l_data_header,tp.tp_end_pos-tp.tp_start_pos+1,size_of_coding); /* length         */
+      opj_write_bytes(l_data_header,(OPJ_UINT32)(tp.tp_end_pos-tp.tp_start_pos+1),size_of_coding); /* length         */
       opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
 
       if (version & 0x02)
         {
         if( cstr_info.tile[i].num_tps == 1 && cstr_info.numdecompos[compno] > 1)
-          Aux = cstr_info.numdecompos[compno] + 1;
+          Aux = (OPJ_UINT32)(cstr_info.numdecompos[compno] + 1);
         else
           Aux = j + 1;
 
@@ -171,7 +171,7 @@ int opj_write_tpixfaix( int coff,
   opj_stream_write_data(cio,l_data_header,4,p_manager);
   opj_stream_seek(cio, lenp+len,p_manager);
 
-  return len;
+  return (int)len;
 }
 
 int get_num_max_tile_parts( opj_codestream_info_t cstr_info)

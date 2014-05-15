@@ -1,4 +1,9 @@
 /*
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
  * Copyright (c) 2008, Jerome Fimes, Communications & Systemes <jerome.fimes@c-s.fr>
  * All rights reserved.
  *
@@ -67,8 +72,8 @@ OPJ_BOOL opj_matrix_inversion_f(OPJ_FLOAT32 * pSrcMatrix,
                                 OPJ_UINT32 nb_compo)
 {
 	OPJ_BYTE * l_data = 00;
-	OPJ_UINT32 l_permutation_size = nb_compo * sizeof(OPJ_UINT32);
-	OPJ_UINT32 l_swap_size = nb_compo * sizeof(OPJ_FLOAT32);
+	OPJ_UINT32 l_permutation_size = nb_compo * (OPJ_UINT32)sizeof(OPJ_UINT32);
+	OPJ_UINT32 l_swap_size = nb_compo * (OPJ_UINT32)sizeof(OPJ_FLOAT32);
 	OPJ_UINT32 l_total_size = l_permutation_size + 3 * l_swap_size;
 	OPJ_UINT32 * lPermutations = 00;
 	OPJ_FLOAT32 * l_double_data = 00;
@@ -109,7 +114,7 @@ OPJ_BOOL opj_lupDecompose(OPJ_FLOAT32 * matrix,OPJ_UINT32 * permutations,
 	OPJ_UINT32 i,j,k;
 	OPJ_FLOAT32 p;
 	OPJ_UINT32 lLastColum = nb_compo - 1;
-	OPJ_UINT32 lSwapSize = nb_compo * sizeof(OPJ_FLOAT32);
+	OPJ_UINT32 lSwapSize = nb_compo * (OPJ_UINT32)sizeof(OPJ_FLOAT32);
 	OPJ_FLOAT32 * lTmpMatrix = matrix;
 	OPJ_FLOAT32 * lColumnMatrix,* lDestMatrix;
 	OPJ_UINT32 offset = 1;
@@ -250,7 +255,7 @@ void opj_lupSolve (OPJ_FLOAT32 * pResult,
 		lTmpMatrix = lLineMatrix;
         u = *(lTmpMatrix++);
 		lCurrentPtr = lDestPtr--;
-        for (j = k + 1; j < nb_compo; ++j) {
+        for (j = (OPJ_UINT32)(k + 1); j < nb_compo; ++j) {
 			/* sum += matrix[k][j] * x[j] */
         	sum += (*(lTmpMatrix++)) * (*(lCurrentPtr++));
 		}
@@ -272,7 +277,7 @@ void opj_lupInvert (OPJ_FLOAT32 * pSrcMatrix,
 	OPJ_UINT32 j,i;
 	OPJ_FLOAT32 * lCurrentPtr;
 	OPJ_FLOAT32 * lLineMatrix = pDestMatrix;
-	OPJ_UINT32 lSwapSize = nb_compo * sizeof(OPJ_FLOAT32);
+	OPJ_UINT32 lSwapSize = nb_compo * (OPJ_UINT32)sizeof(OPJ_FLOAT32);
 
 	for (j = 0; j < nb_compo; ++j) {
 		lCurrentPtr = lLineMatrix++;

@@ -1,9 +1,15 @@
 /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2007, Jonathan Ballard <dzonatas@dzonux.net>
  * Copyright (c) 2007, Callum Lerwick <seg@haxxed.com>
@@ -389,23 +395,20 @@ INLINE OPJ_BOOL opj_dwt_encode_procedure(opj_tcd_tilecomp_t * tilec,void (*p_fun
 
 	OPJ_INT32 rw;			/* width of the resolution level computed   */
 	OPJ_INT32 rh;			/* height of the resolution level computed  */
-	OPJ_INT32 l_data_size;
+	OPJ_UINT32 l_data_size;
 
 	opj_tcd_resolution_t * l_cur_res = 0;
 	opj_tcd_resolution_t * l_last_res = 0;
 
 	w = tilec->x1-tilec->x0;
-	l = tilec->numresolutions-1;
+	l = (OPJ_INT32)tilec->numresolutions-1;
 	a = tilec->data;
 
 	l_cur_res = tilec->resolutions + l;
 	l_last_res = l_cur_res - 1;
 
-	rw = l_cur_res->x1 - l_cur_res->x0;
-	rh = l_cur_res->y1 - l_cur_res->y0;
-
-	l_data_size = opj_dwt_max_resolution( tilec->resolutions,tilec->numresolutions) * sizeof(OPJ_INT32);
-	bj = (OPJ_INT32*)opj_malloc(l_data_size);
+	l_data_size = opj_dwt_max_resolution( tilec->resolutions,tilec->numresolutions) * (OPJ_UINT32)sizeof(OPJ_INT32);
+	bj = (OPJ_INT32*)opj_malloc((size_t)l_data_size);
 	if (! bj) {
 		return OPJ_FALSE;
 	}
@@ -531,7 +534,7 @@ void opj_dwt_calc_explicit_stepsizes(opj_tccp_t * tccp, OPJ_UINT32 prec) {
 			OPJ_FLOAT64 norm = opj_dwt_norms_real[orient][level];
 			stepsize = (1 << (gain)) / norm;
 		}
-		opj_dwt_encode_stepsize((OPJ_INT32) floor(stepsize * 8192.0), prec + gain, &tccp->stepsizes[bandno]);
+		opj_dwt_encode_stepsize((OPJ_INT32) floor(stepsize * 8192.0), (OPJ_INT32)(prec + gain), &tccp->stepsizes[bandno]);
 	}
 }
 
@@ -543,9 +546,9 @@ OPJ_UINT32 opj_dwt_max_resolution(opj_tcd_resolution_t* restrict r, OPJ_UINT32 i
 	OPJ_UINT32 w;
 	while( --i ) {
 		++r;
-		if( mr < ( w = r->x1 - r->x0 ) )
+		if( mr < ( w = (OPJ_UINT32)(r->x1 - r->x0) ) )
 			mr = w ;
-		if( mr < ( w = r->y1 - r->y0 ) )
+		if( mr < ( w = (OPJ_UINT32)(r->y1 - r->y0) ) )
 			mr = w ;
 	}
 	return mr ;
@@ -560,10 +563,10 @@ OPJ_BOOL opj_dwt_decode_tile(opj_tcd_tilecomp_t* tilec, OPJ_UINT32 numres, DWT1D
 
 	opj_tcd_resolution_t* tr = tilec->resolutions;
 
-	OPJ_UINT32 rw = tr->x1 - tr->x0;	/* width of the resolution level computed */
-	OPJ_UINT32 rh = tr->y1 - tr->y0;	/* height of the resolution level computed */
+	OPJ_UINT32 rw = (OPJ_UINT32)(tr->x1 - tr->x0);	/* width of the resolution level computed */
+	OPJ_UINT32 rh = (OPJ_UINT32)(tr->y1 - tr->y0);	/* height of the resolution level computed */
 
-	OPJ_UINT32 w = tilec->x1 - tilec->x0;
+	OPJ_UINT32 w = (OPJ_UINT32)(tilec->x1 - tilec->x0);
 
 	h.mem = (OPJ_INT32*)
 	opj_aligned_malloc(opj_dwt_max_resolution(tr, numres) * sizeof(OPJ_INT32));
@@ -578,13 +581,13 @@ OPJ_BOOL opj_dwt_decode_tile(opj_tcd_tilecomp_t* tilec, OPJ_UINT32 numres, DWT1D
 		OPJ_UINT32 j;
 
 		++tr;
-		h.sn = rw;
-		v.sn = rh;
+		h.sn = (OPJ_INT32)rw;
+		v.sn = (OPJ_INT32)rh;
 
-		rw = tr->x1 - tr->x0;
-		rh = tr->y1 - tr->y0;
+		rw = (OPJ_UINT32)(tr->x1 - tr->x0);
+		rh = (OPJ_UINT32)(tr->y1 - tr->y0);
 
-		h.dn = rw - h.sn;
+		h.dn = (OPJ_INT32)(rw - (OPJ_UINT32)h.sn);
 		h.cas = tr->x0 % 2;
 
 		for(j = 0; j < rh; ++j) {
@@ -593,12 +596,12 @@ OPJ_BOOL opj_dwt_decode_tile(opj_tcd_tilecomp_t* tilec, OPJ_UINT32 numres, DWT1D
 			memcpy(&tiledp[j*w], h.mem, rw * sizeof(OPJ_INT32));
 		}
 
-		v.dn = rh - v.sn;
+		v.dn = (OPJ_INT32)(rh - (OPJ_UINT32)v.sn);
 		v.cas = tr->y0 % 2;
 
 		for(j = 0; j < rw; ++j){
 			OPJ_UINT32 k;
-			opj_dwt_interleave_v(&v, &tiledp[j], w);
+			opj_dwt_interleave_v(&v, &tiledp[j], (OPJ_INT32)w);
 			(dwt_1D)(&v);
 			for(k = 0; k < rh; ++k) {
 				tiledp[k * w + j] = v.mem[k];
@@ -657,14 +660,14 @@ void opj_v4dwt_interleave_v(opj_v4dwt_t* restrict v , OPJ_FLOAT32* restrict a , 
 	OPJ_INT32 i;
 
 	for(i = 0; i < v->sn; ++i){
-		memcpy(&bi[i*2], &a[i*x], nb_elts_read * sizeof(OPJ_FLOAT32));
+		memcpy(&bi[i*2], &a[i*x], (size_t)nb_elts_read * sizeof(OPJ_FLOAT32));
 	}
 
 	a += v->sn * x;
 	bi = v->wavelet + 1 - v->cas;
 
 	for(i = 0; i < v->dn; ++i){
-		memcpy(&bi[i*2], &a[i*x], nb_elts_read * sizeof(OPJ_FLOAT32));
+		memcpy(&bi[i*2], &a[i*x], (size_t)nb_elts_read * sizeof(OPJ_FLOAT32));
 	}
 }
 
@@ -833,40 +836,40 @@ OPJ_BOOL opj_dwt_decode_real(opj_tcd_tilecomp_t* restrict tilec, OPJ_UINT32 numr
 
 	opj_tcd_resolution_t* res = tilec->resolutions;
 
-	OPJ_UINT32 rw = res->x1 - res->x0;	/* width of the resolution level computed */
-	OPJ_UINT32 rh = res->y1 - res->y0;	/* height of the resolution level computed */
+	OPJ_UINT32 rw = (OPJ_UINT32)(res->x1 - res->x0);	/* width of the resolution level computed */
+	OPJ_UINT32 rh = (OPJ_UINT32)(res->y1 - res->y0);	/* height of the resolution level computed */
 
-	OPJ_UINT32 w = tilec->x1 - tilec->x0;
+	OPJ_UINT32 w = (OPJ_UINT32)(tilec->x1 - tilec->x0);
 
 	h.wavelet = (opj_v4_t*) opj_aligned_malloc((opj_dwt_max_resolution(res, numres)+5) * sizeof(opj_v4_t));
 	v.wavelet = h.wavelet;
 
 	while( --numres) {
 		OPJ_FLOAT32 * restrict aj = (OPJ_FLOAT32*) tilec->data;
-		OPJ_UINT32 bufsize = (tilec->x1 - tilec->x0) * (tilec->y1 - tilec->y0);
+		OPJ_UINT32 bufsize = (OPJ_UINT32)((tilec->x1 - tilec->x0) * (tilec->y1 - tilec->y0));
 		OPJ_INT32 j;
 
-		h.sn = rw;
-		v.sn = rh;
+		h.sn = (OPJ_INT32)rw;
+		v.sn = (OPJ_INT32)rh;
 
 		++res;
 
-		rw = res->x1 - res->x0;	/* width of the resolution level computed */
-		rh = res->y1 - res->y0;	/* height of the resolution level computed */
+		rw = (OPJ_UINT32)(res->x1 - res->x0);	/* width of the resolution level computed */
+		rh = (OPJ_UINT32)(res->y1 - res->y0);	/* height of the resolution level computed */
 
-		h.dn = rw - h.sn;
+		h.dn = (OPJ_INT32)(rw - (OPJ_UINT32)h.sn);
 		h.cas = res->x0 % 2;
 
-		for(j = rh; j > 3; j -= 4) {
+		for(j = (OPJ_INT32)rh; j > 3; j -= 4) {
 			OPJ_INT32 k;
-			opj_v4dwt_interleave_h(&h, aj, w, bufsize);
+			opj_v4dwt_interleave_h(&h, aj, (OPJ_INT32)w, (OPJ_INT32)bufsize);
 			opj_v4dwt_decode(&h);
 
-			for(k = rw; --k >= 0;){
-				aj[k    ] = h.wavelet[k].f[0];
-				aj[k+w  ] = h.wavelet[k].f[1];
-				aj[k+w*2] = h.wavelet[k].f[2];
-				aj[k+w*3] = h.wavelet[k].f[3];
+			for(k = (OPJ_INT32)rw; --k >= 0;){
+				aj[k               ] = h.wavelet[k].f[0];
+				aj[k+(OPJ_INT32)w  ] = h.wavelet[k].f[1];
+				aj[k+(OPJ_INT32)w*2] = h.wavelet[k].f[2];
+				aj[k+(OPJ_INT32)w*3] = h.wavelet[k].f[3];
 			}
 
 			aj += w*4;
@@ -876,25 +879,25 @@ OPJ_BOOL opj_dwt_decode_real(opj_tcd_tilecomp_t* restrict tilec, OPJ_UINT32 numr
 		if (rh & 0x03) {
 			OPJ_INT32 k;
 			j = rh & 0x03;
-			opj_v4dwt_interleave_h(&h, aj, w, bufsize);
+			opj_v4dwt_interleave_h(&h, aj, (OPJ_INT32)w, (OPJ_INT32)bufsize);
 			opj_v4dwt_decode(&h);
-			for(k = rw; --k >= 0;){
+			for(k = (OPJ_INT32)rw; --k >= 0;){
 				switch(j) {
-					case 3: aj[k+w*2] = h.wavelet[k].f[2];
-					case 2: aj[k+w  ] = h.wavelet[k].f[1];
-					case 1: aj[k    ] = h.wavelet[k].f[0];
+					case 3: aj[k+(OPJ_INT32)w*2] = h.wavelet[k].f[2];
+					case 2: aj[k+(OPJ_INT32)w  ] = h.wavelet[k].f[1];
+					case 1: aj[k               ] = h.wavelet[k].f[0];
 				}
 			}
 		}
 
-		v.dn = rh - v.sn;
+		v.dn = (OPJ_INT32)(rh - (OPJ_UINT32)v.sn);
 		v.cas = res->y0 % 2;
 
 		aj = (OPJ_FLOAT32*) tilec->data;
-		for(j = rw; j > 3; j -= 4){
+		for(j = (OPJ_INT32)rw; j > 3; j -= 4){
 			OPJ_UINT32 k;
 
-			opj_v4dwt_interleave_v(&v, aj, w, 4);
+			opj_v4dwt_interleave_v(&v, aj, (OPJ_INT32)w, 4);
 			opj_v4dwt_decode(&v);
 
 			for(k = 0; k < rh; ++k){
@@ -908,11 +911,11 @@ OPJ_BOOL opj_dwt_decode_real(opj_tcd_tilecomp_t* restrict tilec, OPJ_UINT32 numr
 
 			j = rw & 0x03;
 
-			opj_v4dwt_interleave_v(&v, aj, w, j);
+			opj_v4dwt_interleave_v(&v, aj, (OPJ_INT32)w, j);
 			opj_v4dwt_decode(&v);
 
 			for(k = 0; k < rh; ++k){
-				memcpy(&aj[k*w], &v.wavelet[k], j * sizeof(OPJ_FLOAT32));
+				memcpy(&aj[k*w], &v.wavelet[k], (size_t)j * sizeof(OPJ_FLOAT32));
 			}
 		}
 	}

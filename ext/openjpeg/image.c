@@ -1,4 +1,9 @@
 /*
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * All rights reserved.
  *
@@ -40,7 +45,7 @@ opj_image_t* OPJ_CALLCONV opj_image_create(OPJ_UINT32 numcmpts, opj_image_cmptpa
 		image->color_space = clrspc;
 		image->numcomps = numcmpts;
 		/* allocate memory for the per-component information */
-		image->comps = (opj_image_comp_t*)opj_malloc(image->numcomps * sizeof(opj_image_comp_t));
+		image->comps = (opj_image_comp_t*)opj_calloc(1,image->numcomps * sizeof(opj_image_comp_t));
 		if(!image->comps) {
 			fprintf(stderr,"Unable to allocate memory for image.\n");
 			opj_image_destroy(image);
@@ -106,23 +111,23 @@ void opj_image_comp_header_update(opj_image_t * p_image_header, const struct opj
 	OPJ_INT32 l_comp_x0, l_comp_y0, l_comp_x1, l_comp_y1;
 	opj_image_comp_t* l_img_comp = NULL;
 
-	l_x0 = opj_int_max(p_cp->tx0 , p_image_header->x0);
-	l_y0 = opj_int_max(p_cp->ty0 , p_image_header->y0);
-	l_x1 = opj_int_min(p_cp->tx0 + p_cp->tw * p_cp->tdx, p_image_header->x1);
-	l_y1 = opj_int_min(p_cp->ty0 + p_cp->th * p_cp->tdy, p_image_header->y1);
+	l_x0 = opj_int_max((OPJ_INT32)p_cp->tx0 , (OPJ_INT32)p_image_header->x0);
+	l_y0 = opj_int_max((OPJ_INT32)p_cp->ty0 , (OPJ_INT32)p_image_header->y0);
+	l_x1 = opj_int_min((OPJ_INT32)(p_cp->tx0 + p_cp->tw * p_cp->tdx), (OPJ_INT32)p_image_header->x1);
+	l_y1 = opj_int_min((OPJ_INT32)(p_cp->ty0 + p_cp->th * p_cp->tdy), (OPJ_INT32)p_image_header->y1);
 
 	l_img_comp = p_image_header->comps;
 	for	(i = 0; i < p_image_header->numcomps; ++i) {
-		l_comp_x0 = opj_int_ceildiv(l_x0, l_img_comp->dx);
-		l_comp_y0 = opj_int_ceildiv(l_y0, l_img_comp->dy);
-		l_comp_x1 = opj_int_ceildiv(l_x1, l_img_comp->dx);
-		l_comp_y1 = opj_int_ceildiv(l_y1, l_img_comp->dy);
-		l_width = opj_int_ceildivpow2(l_comp_x1 - l_comp_x0, l_img_comp->factor);
-		l_height = opj_int_ceildivpow2(l_comp_y1 - l_comp_y0, l_img_comp->factor);
+		l_comp_x0 = opj_int_ceildiv(l_x0, (OPJ_INT32)l_img_comp->dx);
+		l_comp_y0 = opj_int_ceildiv(l_y0, (OPJ_INT32)l_img_comp->dy);
+		l_comp_x1 = opj_int_ceildiv(l_x1, (OPJ_INT32)l_img_comp->dx);
+		l_comp_y1 = opj_int_ceildiv(l_y1, (OPJ_INT32)l_img_comp->dy);
+		l_width = (OPJ_UINT32)opj_int_ceildivpow2(l_comp_x1 - l_comp_x0, (OPJ_INT32)l_img_comp->factor);
+		l_height = (OPJ_UINT32)opj_int_ceildivpow2(l_comp_y1 - l_comp_y0, (OPJ_INT32)l_img_comp->factor);
 		l_img_comp->w = l_width;
 		l_img_comp->h = l_height;
-		l_img_comp->x0 = l_comp_x0/*l_x0*/;
-		l_img_comp->y0 = l_comp_y0/*l_y0*/;
+		l_img_comp->x0 = (OPJ_UINT32)l_comp_x0/*l_x0*/;
+		l_img_comp->y0 = (OPJ_UINT32)l_comp_y0/*l_y0*/;
 		++l_img_comp;
 	}
 }

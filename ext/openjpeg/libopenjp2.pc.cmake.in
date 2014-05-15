@@ -10,4 +10,5 @@ Description: JPEG2000 library (Part 1 and 2)
 URL: http://www.openjpeg.org/
 Version: @OPENJPEG_VERSION@
 Libs: -L${libdir} -lopenjp2
+Libs.private: -lm
 Cflags: -I${includedir}

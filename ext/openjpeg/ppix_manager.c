@@ -1,8 +1,8 @@
 /*
  * $Id: ppix_manager.c 897 2011-08-28 21:43:57Z Kaori.Hagihara@gmail.com $
  *
- * Copyright (c) 2002-2011, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2011, Professor Benoit Macq
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2003-2004, Yannick Verschueren
  * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.
@@ -60,7 +60,7 @@ int opj_write_ppix( int coff, opj_codestream_info_t cstr_info, OPJ_BOOL EPHused,
   /*  printf("cstr_info.packno %d\n", cstr_info.packno); //NMAX? */
 
   lenp = -1;
-  box = (opj_jp2_box_t *)opj_calloc( cstr_info.numcomps, sizeof(opj_jp2_box_t));
+  box = (opj_jp2_box_t *)opj_calloc( (size_t)cstr_info.numcomps, sizeof(opj_jp2_box_t));
   
   for (i=0;i<2;i++){
     if (i)
@@ -75,7 +75,7 @@ int opj_write_ppix( int coff, opj_codestream_info_t cstr_info, OPJ_BOOL EPHused,
     opj_write_manf( i, cstr_info.numcomps, box, cio, p_manager);
     
     for (compno=0; compno<cstr_info.numcomps; compno++){
-      box[compno].length = opj_write_ppixfaix( coff, compno, cstr_info, EPHused, j2klen, cio,p_manager);
+      box[compno].length = (OPJ_UINT32)opj_write_ppixfaix( coff, compno, cstr_info, EPHused, j2klen, cio,p_manager);
       box[compno].type = JPIP_FAIX;
     }
    
@@ -89,7 +89,7 @@ int opj_write_ppix( int coff, opj_codestream_info_t cstr_info, OPJ_BOOL EPHused,
   
   opj_free(box);
 
-  return len;
+  return (int)len;
 }
 
 
@@ -98,12 +98,13 @@ int opj_write_ppixfaix( int coff, int compno, opj_codestream_info_t cstr_info, O
               opj_event_mgr_t * p_manager )
 {
   OPJ_BYTE l_data_header [8];
-  int tileno, version, i, nmax, size_of_coding; /* 4 or 8*/
+  OPJ_UINT32 tileno, version, i, nmax, size_of_coding; /* 4 or 8*/
   OPJ_UINT32 len;
   OPJ_OFF_T lenp;
   opj_tile_info_t *tile_Idx;
   opj_packet_info_t packet;
-  int resno, precno, layno, num_packet;
+  int resno, precno, layno;
+  OPJ_UINT32 num_packet;
   int numOfres, numOfprec, numOflayers;
   packet.end_pos = packet.end_ph_pos = packet.start_pos = -1;
   (void)EPHused; /* unused ? */
@@ -124,15 +125,15 @@ int opj_write_ppixfaix( int coff, int compno, opj_codestream_info_t cstr_info, O
   opj_stream_write_data(cio,l_data_header,1,p_manager);/* Version 0 = 4 bytes */
 
   nmax = 0;
-  for( i=0; i<=cstr_info.numdecompos[compno]; i++)
-    nmax += cstr_info.tile[0].ph[i] * cstr_info.tile[0].pw[i] * cstr_info.numlayers;
+  for( i=0; i<=(OPJ_UINT32)cstr_info.numdecompos[compno]; i++)
+    nmax += (OPJ_UINT32)(cstr_info.tile[0].ph[i] * cstr_info.tile[0].pw[i] * cstr_info.numlayers);
   
   opj_write_bytes(l_data_header,nmax,size_of_coding);         /* NMAX           */
   opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-  opj_write_bytes(l_data_header,cstr_info.tw*cstr_info.th,size_of_coding);  /* M              */
+  opj_write_bytes(l_data_header,(OPJ_UINT32)(cstr_info.tw*cstr_info.th),size_of_coding);  /* M              */
   opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
 
-  for( tileno=0; tileno<cstr_info.tw*cstr_info.th; tileno++){
+  for( tileno=0; tileno<(OPJ_UINT32)(cstr_info.tw*cstr_info.th); tileno++){
     tile_Idx = &cstr_info.tile[ tileno];
  
     num_packet=0;
@@ -189,5 +190,5 @@ int opj_write_ppixfaix( int coff, int compno, opj_codestream_info_t cstr_info, O
   opj_stream_write_data(cio,l_data_header,4,p_manager);
   opj_stream_seek(cio, lenp+len,p_manager);
 
-  return len;
+  return (int)len;
 }

@@ -1,11 +1,17 @@
 /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
- * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France 
+ * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR 
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -193,21 +199,6 @@ void OPJ_CALLCONV opj_stream_destroy(opj_stream_t* p_stream)
 		l_stream->m_stored_data = 00;
 		opj_free(l_stream);
 	}
-}
-
-void OPJ_CALLCONV opj_stream_destroy_v3(opj_stream_t* p_stream)
-{
-    opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
-    
-    if (l_stream) {
-        FILE *fp = (FILE*)l_stream->m_user_data;
-        if(fp) 
-            fclose(fp);
-        
-        opj_free(l_stream->m_stored_data);
-        l_stream->m_stored_data = 00;
-        opj_free(l_stream);
-    }
 }
 
 void OPJ_CALLCONV opj_stream_set_read_function(opj_stream_t* p_stream, opj_stream_read_fn p_function)
@@ -522,7 +513,6 @@ OPJ_OFF_T opj_stream_write_skip (opj_stream_private_t * p_stream, OPJ_OFF_T p_si
 	if (! l_is_written) {
 		p_stream->m_status |= opj_stream_e_error;
 		p_stream->m_bytes_in_buffer = 0;
-		p_stream->m_current_data = p_stream->m_current_data;
 		return (OPJ_OFF_T) -1;
 	}
 	/* then skip */

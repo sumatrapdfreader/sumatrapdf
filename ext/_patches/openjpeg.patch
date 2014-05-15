@@ -1,75 +1,7 @@
-diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
---- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
-+++ openjpeg\cio.c	Tue Jan 14 01:20:58 2014
-@@ -254,16 +254,20 @@
- }
- 
- void OPJ_CALLCONV opj_stream_set_user_data(opj_stream_t* p_stream, void * p_data)
- {
- 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
-+	if (!l_stream)
-+		return;
- 	l_stream->m_user_data = p_data;
- }
- 
- void OPJ_CALLCONV opj_stream_set_user_data_length(opj_stream_t* p_stream, OPJ_UINT64 data_length)
- {
- 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
-+	if (!l_stream)
-+		return;
- 	l_stream->m_user_data_length = data_length;
- }
- 
- OPJ_SIZE_T opj_stream_read_data (opj_stream_private_t * p_stream,OPJ_BYTE * p_buffer, OPJ_SIZE_T p_size, opj_event_mgr_t * p_event_mgr)
- {
-diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
---- openjpeg.orig\event.c	Sat May 18 20:52:42 2013
-+++ openjpeg\event.c	Thu Jan 09 02:20:16 2014
-@@ -116,11 +116,11 @@
- 		va_start(arg, fmt);
- 		/* check the length of the format string */
- 		str_length = (strlen(fmt) > OPJ_MSG_SIZE) ? OPJ_MSG_SIZE : strlen(fmt);
-         (void)str_length;
- 		/* parse the format string and put the result in 'message' */
--		vsprintf(message, fmt, arg); /* UniPG */
-+		vsnprintf(message, OPJ_MSG_SIZE, fmt, arg); /* UniPG */
- 		/* deinitialize the optional parameter list */
- 		va_end(arg);
- 
- 		/* output the message to the user program */
- 		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Thu May 15 14:59:38 2014
-@@ -1930,10 +1930,27 @@
-         if (l_image->numcomps != l_nb_comp) {
-                 opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
-                 return OPJ_FALSE;
-         }
- 
-+        /* testcase 4035.pdf.SIGSEGV.d8b.3375 */
-+        if (l_image->x0 > l_image->x1 || l_image->y0 > l_image->y1) {
-+                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: negative image size (%d x %d)\n", l_image->x1 - l_image->x0, l_image->y1 - l_image->y0);
-+                return OPJ_FALSE;
-+        }
-+        /* testcase 2539.pdf.SIGFPE.706.1712 (also 3622.pdf.SIGFPE.706.2916 and 4008.pdf.SIGFPE.706.3345 and maybe more) */
-+        if (!(l_cp->tdx * l_cp->tdy)) {
-+                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: invalid tile size (tdx: %d, tdy: %d)\n", l_cp->tdx, l_cp->tdy);
-+                return OPJ_FALSE;
-+        }
-+
-+        /* testcase 1610.pdf.SIGSEGV.59c.681 */
-+        if (((OPJ_UINT64)l_image->x1) * ((OPJ_UINT64)l_image->y1) != (l_image->x1 * l_image->y1)) {
-+                opj_event_msg(p_manager, EVT_ERROR, "Prevent buffer overflow (x1: %d, y1: %d)", l_image->x1, l_image->y1);
-+                return OPJ_FALSE;
-+        }
-+
- #ifdef USE_JPWL
-         if (l_cp->correct) {
-                 /* if JPWL is on, we check whether TX errors have damaged
-                   too much the SIZ parameters */
-                 if (!(l_image->x1 * l_image->y1)) {
-@@ -3089,10 +3106,15 @@
+--- openjpeg.orig\j2k.c	Tue Apr 22 09:54:20 2014
++++ openjpeg\j2k.c	Thu May 15 17:21:06 2014
+@@ -3174,10 +3174,15 @@
  
          if ((l_current_poc_nb <= 0) || (l_current_poc_remaining != 0)) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error reading POC marker\n");
@@ -85,69 +17,34 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
          l_tcp = (p_j2k->m_specific_param.m_decoder.m_state == J2K_STATE_TPH) ?
                                  &l_cp->tcps[p_j2k->m_current_tile_number] :
                                  p_j2k->m_specific_param.m_decoder.m_default_tcp;
-@@ -3873,10 +3895,16 @@
- 
-         l_cp = &(p_j2k->m_cp);
-         opj_read_bytes(p_header_data,&(p_j2k->m_current_tile_number),2);                /* Isot */
-         p_header_data+=2;
- 
-+        /* testcase 2.pdf.SIGFPE.706.1112 */
-+        if (p_j2k->m_current_tile_number >= l_cp->tw * l_cp->th) {
-+                opj_event_msg(p_manager, EVT_ERROR, "Invalid tile number %d\n", p_j2k->m_current_tile_number);
-+                return OPJ_FALSE;
-+        }
-+
-         l_tcp = &l_cp->tcps[p_j2k->m_current_tile_number];
-         l_tile_x = p_j2k->m_current_tile_number % l_cp->tw;
-         l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
- 
- #ifdef USE_JPWL
-@@ -3962,24 +3990,23 @@
+@@ -4078,10 +4083,12 @@
+                 opj_read_bytes(p_header_data,&l_current_part ,1);       /* TPsot */
                  ++p_header_data;
+ 
+                 opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
+                 ++p_header_data;
++                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=254 */
++                l_num_parts++;
  
                  if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
                          /* Useful to manage the case of textGBR.jp2 file because two values of TNSot are allowed: the correct numbers of
                           * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
--                        if (l_tcp->m_nb_tile_parts) {
--                                if (l_current_part >= l_tcp->m_nb_tile_parts){
--                                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
--                                                        "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
--                                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
--                                        return OPJ_FALSE;
--                                }
+                         if (l_tcp->m_nb_tile_parts) {
+@@ -4090,10 +4097,13 @@
+                                                         "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
+                                         p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
+                                         return OPJ_FALSE;
+                                 }
+                         }
 +                        if (l_num_parts < l_tcp->m_nb_tile_parts) {
 +                                l_num_parts = l_tcp->m_nb_tile_parts;
 +                        }
-+                        if (l_current_part >= l_num_parts) {
-+                                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
-+                                l_num_parts = l_current_part + 1;
-                         }
-                         l_tcp->m_nb_tile_parts = l_num_parts;
-                 }
- 
-                 /* If know the number of tile part header we will check if we didn't read the last*/
-                 if (l_tcp->m_nb_tile_parts) {
--                        if (l_tcp->m_nb_tile_parts == (l_current_part + 1)) {
-+                        if (l_tcp->m_nb_tile_parts == l_current_part) {
-                                 p_j2k->m_specific_param.m_decoder.m_can_decode = 1; /* Process the last tile-part header*/
-                         }
-                 }
- 
-                 if (!p_j2k->m_specific_param.m_decoder.m_last_tile_part){
-@@ -4044,11 +4071,11 @@
-                                                                         sizeof(opj_tp_index_t));
-                                         }
- 
-                                         if ( l_current_part >= p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps ){
-                                                 opj_tp_index_t *new_tp_index;
--                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps += 10;
-+                                                p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps = l_current_part + 1;
-                                                 new_tp_index = (opj_tp_index_t *) opj_realloc(
-                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index,
-                                                                 p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps * sizeof(opj_tp_index_t));
-                                                 if (! new_tp_index) {
-                                                         opj_free(p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index);
-@@ -4207,10 +4234,16 @@
+                         if( l_current_part >= l_num_parts ) {
+                           /* testcase 451.pdf.SIGSEGV.ce9.3723 */
+                           opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
+                             "number of tile-part (header) (%d), giving up\n", l_current_part, l_num_parts );
+                           p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
+@@ -4334,10 +4344,16 @@
          l_current_data = &(l_tcp->m_data);
          l_tile_len = &l_tcp->m_data_size;
  
@@ -164,370 +61,57 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                   * TODO: If this was consistant, we could simplify the code to only use realloc(), as realloc(0,...) default to malloc(0,...).
                   */
                  *l_current_data = (OPJ_BYTE*) opj_malloc(p_j2k->m_specific_param.m_decoder.m_sot_length);
-@@ -4434,10 +4467,18 @@
-                         }
-                 }
-         };
- #endif /* USE_JPWL */
- 
-+        /* testcase 3635.pdf.asan.77.2930 */
-+        if (l_comp_room >= l_nb_comp) {
-+                opj_event_msg(p_manager, EVT_ERROR,
-+                        "JPWL: bad component number in RGN (%d when there are only %d)\n",
-+                        l_comp_room, l_nb_comp);
-+                return OPJ_FALSE;
-+        }
-+
-         opj_read_bytes(p_header_data,(OPJ_UINT32 *) (&(l_tcp->tccps[l_comp_no].roishift)),1);   /* SPrgn */
-         ++p_header_data;
- 
-         return OPJ_TRUE;
- 
-@@ -7047,10 +7088,16 @@
-                         }
- 
-                         /* Read 2 bytes from the buffer as the marker size */
-                         opj_read_bytes(p_j2k->m_specific_param.m_decoder.m_header_data,&l_marker_size,2);
- 
-+                        /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2325 */
-+                        if (l_current_marker == 0x8080 && opj_stream_get_number_byte_left(p_stream) == 0) {
-+                                p_j2k->m_specific_param.m_decoder.m_state = J2K_STATE_NEOC;
-+                                break;
-+                        }
-+
-                         /* Why this condition? FIXME */
-                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
-                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
-                         }
-                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */
-@@ -7438,10 +7485,14 @@
-                                 l_offset_y1_src = l_res->y1 - l_y1_dest;
-                         }
-                 }
- 
-                 if( (l_offset_x0_src < 0 ) || (l_offset_y0_src < 0 ) || (l_offset_x1_src < 0 ) || (l_offset_y1_src < 0 ) ){
-+                        return OPJ_FALSE;
-+                }
-+                /* testcase 2977.pdf.asan.67.2198 */
-+                if ((OPJ_INT32)l_width_dest < 0 || (OPJ_INT32)l_height_dest < 0) {
-                         return OPJ_FALSE;
-                 }
-                 /*-----*/
- 
-                 /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\jp2.c	Tue Jan 14 01:21:18 2014
-@@ -750,10 +750,81 @@
- 	if(color->jp2_pclr->cmap) opj_free(color->jp2_pclr->cmap);
+--- openjpeg.orig\jp2.c	Tue Apr 22 09:54:20 2014
++++ openjpeg\jp2.c	Thu May 15 16:55:49 2014
+@@ -1095,10 +1095,12 @@
+     {
+     /* WATCH: acn = asoc - 1 ! */
+     asoc = info[i].asoc;
+     if(asoc == 0 || asoc == 65535)
+       {
++        if (asoc == 0 && i < image->numcomps)
++            image->comps[i].alpha = info[i].typ;
+       continue;
+       }
  
-     opj_free(color->jp2_pclr); color->jp2_pclr = NULL;
- }
+     cn = info[i].cn; 
+     acn = (OPJ_UINT16)(asoc - 1);
+@@ -1118,10 +1120,11 @@
  
-+static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, opj_event_mgr_t *p_manager)
-+{
-+	OPJ_UINT16 i;
-+
-+	/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
-+	if (color->jp2_cdef) {
-+		opj_jp2_cdef_info_t *info = color->jp2_cdef->info;
-+		OPJ_UINT16 n = color->jp2_cdef->n;
-+
-+		for (i = 0; i < n; i++) {
-+			if (info[i].cn >= image->numcomps) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].cn, image->numcomps);
-+				return OPJ_FALSE;
-+			}
-+			if (info[i].asoc > 0 && (OPJ_UINT32)(info[i].asoc - 1) >= image->numcomps) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", info[i].asoc - 1, image->numcomps);
-+				return OPJ_FALSE;
-+			}
-+		}
-+	}
-+
-+	/* testcases 451.pdf.SIGSEGV.f4c.3723, 451.pdf.SIGSEGV.5b5.3723 and
-+	   66ea31acbb0f23a2bbc91f64d69a03f5_signal_sigsegv_13937c0_7030_5725.pdf */
-+	if (color->jp2_pclr && color->jp2_pclr->cmap) {
-+		OPJ_UINT16 nr_channels = color->jp2_pclr->nr_channels;
-+		opj_jp2_cmap_comp_t *cmap = color->jp2_pclr->cmap;
-+		OPJ_BOOL *pcol_usage, is_sane = OPJ_TRUE;
-+
-+		/* verify that all original components match an existing one */
-+		for (i = 0; i < nr_channels; i++) {
-+			if (cmap[i].cmp >= image->numcomps) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component index %d (>= %d).\n", cmap[i].cmp, image->numcomps);
-+				is_sane = OPJ_FALSE;
-+			}
-+		}
-+
-+		pcol_usage = opj_calloc(nr_channels, sizeof(OPJ_BOOL));
-+		if (!pcol_usage) {
-+			opj_event_msg(p_manager, EVT_ERROR, "Unexpected OOM.\n");
-+			return OPJ_FALSE;
-+		}
-+		/* verify that no component is targeted more than once */
-+		for (i = 0; i < nr_channels; i++) {
-+			OPJ_UINT16 pcol = cmap[i].pcol;
-+			if (pcol >= nr_channels) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Invalid component/palette index for direct mapping %d.\n", pcol);
-+				is_sane = OPJ_FALSE;
-+			}
-+			else if (pcol_usage[pcol]) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Component %d is mapped twice.\n", pcol);
-+				is_sane = OPJ_FALSE;
-+			}
-+			else
-+				pcol_usage[pcol] = OPJ_TRUE;
-+		}
-+		/* verify that all components are targeted at least once */
-+		for (i = 0; i < nr_channels; i++) {
-+			if (!pcol_usage[i]) {
-+				opj_event_msg(p_manager, EVT_ERROR, "Component %d doesn't have a mapping.\n", i);
-+				is_sane = OPJ_FALSE;
-+			}
-+		}
-+		opj_free(pcol_usage);
-+		if (!is_sane) {
-+			return OPJ_FALSE;
-+		}
-+	}
-+
-+	return OPJ_TRUE;
-+}
-+
- void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
- {
- 	opj_image_comp_t *old_comps, *new_comps;
- 	OPJ_BYTE *channel_size, *channel_sign;
- 	OPJ_UINT32 *entries;
-@@ -835,28 +906,35 @@
- 	OPJ_BYTE *channel_size, *channel_sign;
- 	OPJ_UINT32 *entries;
- 	OPJ_UINT16 nr_entries,nr_channels;
- 	OPJ_UINT16 i, j;
- 	OPJ_UINT32 l_value;
-+	OPJ_BYTE *orig_header_data = p_pclr_header_data;
- 
- 	/* preconditions */
- 	assert(p_pclr_header_data != 00);
- 	assert(jp2 != 00);
- 	assert(p_manager != 00);
-     (void)p_pclr_header_size;
- 
- 	if(jp2->color.jp2_pclr)
- 		return OPJ_FALSE;
- 
-+	if (p_pclr_header_size < 3)
-+		return OPJ_FALSE;
-+
- 	opj_read_bytes(p_pclr_header_data, &l_value , 2);	/* NE */
- 	p_pclr_header_data += 2;
- 	nr_entries = (OPJ_UINT16) l_value;
- 
- 	opj_read_bytes(p_pclr_header_data, &l_value , 1);	/* NPC */
- 	++p_pclr_header_data;
- 	nr_channels = (OPJ_UINT16) l_value;
- 
-+	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= (OPJ_UINT32)-1 / nr_channels)
-+		return OPJ_FALSE;
-+
- 	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
-     if (!entries)
-         return OPJ_FALSE;
- 	channel_size = (OPJ_BYTE*) opj_malloc(nr_channels);
-     if (!channel_size)
-@@ -900,10 +978,15 @@
- 
- 	for(j = 0; j < nr_entries; ++j) {
- 		for(i = 0; i < nr_channels; ++i) {
- 			OPJ_INT32 bytes_to_read = (channel_size[i]+7)>>3;
- 
-+			if (bytes_to_read > sizeof(OPJ_UINT32))
-+				bytes_to_read = sizeof(OPJ_UINT32);
-+			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + bytes_to_read)
-+				return OPJ_FALSE;
-+
- 			opj_read_bytes(p_pclr_header_data, &l_value , bytes_to_read);	/* Cji */
- 			p_pclr_header_data += bytes_to_read;
- 			*entries = (OPJ_UINT32) l_value;
- 			entries++;
+ 			info[i].asoc = (OPJ_UINT16)(cn + 1);
+ 			info[acn].asoc = (OPJ_UINT16)(info[acn].cn + 1);
  		}
-@@ -941,10 +1024,15 @@
- 		opj_event_msg(p_manager, EVT_ERROR, "Only one CMAP box is allowed.\n");
- 		return OPJ_FALSE;
- 	}
  
- 	nr_channels = jp2->color.jp2_pclr->nr_channels;
-+	if (p_cmap_header_size < (OPJ_UINT32)nr_channels * 4) {
-+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CMAP box.\n");
-+		return OPJ_FALSE;
-+	}
-+
- 	cmap = (opj_jp2_cmap_comp_t*) opj_malloc(nr_channels * sizeof(opj_jp2_cmap_comp_t));
-     if (!cmap)
-         return OPJ_FALSE;
- 
- 
-@@ -976,11 +1064,16 @@
- 	n = color->jp2_cdef->n;
- 
- 	for(i = 0; i < n; ++i)
- 	{
- 		/* WATCH: acn = asoc - 1 ! */
--		if((asoc = info[i].asoc) == 0) continue;
-+		if((asoc = info[i].asoc) == 0)
-+                {
-+                    if (i < image->numcomps)
-+                        image->comps[i].alpha = info[i].typ;
-+                    continue;
-+                }
- 
- 		cn = info[i].cn; 
-         acn = asoc - 1;
- 
- 		if(cn != acn)
-@@ -992,10 +1085,12 @@
- 			memcpy(&image->comps[acn], &saved, sizeof(opj_image_comp_t));
- 
- 			info[i].asoc = cn + 1;
- 			info[acn].asoc = info[acn].cn + 1;
- 		}
-+
 +		image->comps[cn].alpha = info[i].typ;
  	}
  
  	if(color->jp2_cdef->info) opj_free(color->jp2_cdef->info);
  
  	opj_free(color->jp2_cdef); color->jp2_cdef = NULL;
-@@ -1020,18 +1115,28 @@
- 
- 	/* Part 1, I.5.3.6: 'The shall be at most one Channel Definition box
- 	 * inside a JP2 Header box.'*/
- 	if(jp2->color.jp2_cdef) return OPJ_FALSE;
- 
-+	if (p_cdef_header_size < 2) {
-+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
-+		return OPJ_FALSE;
-+	}
-+
- 	opj_read_bytes(p_cdef_header_data,&l_value ,2);			/* N */
- 	p_cdef_header_data+= 2;
- 
- 	if ( (OPJ_UINT16)l_value == 0){ /* szukw000: FIXME */
- 		opj_event_msg(p_manager, EVT_ERROR, "Number of channel description is equal to zero in CDEF box.\n");
- 		return OPJ_FALSE;
- 	}
- 
-+	if (p_cdef_header_size < 2 + (OPJ_UINT32)(OPJ_UINT16)l_value * 6) {
-+		opj_event_msg(p_manager, EVT_ERROR, "Insufficient data for CDEF box.\n");
-+		return OPJ_FALSE;
-+	}
-+
- 	cdef_info = (opj_jp2_cdef_info_t*) opj_malloc(l_value * sizeof(opj_jp2_cdef_info_t));
-     if (!cdef_info)
-         return OPJ_FALSE;
- 
- 	jp2->color.jp2_cdef = (opj_jp2_cdef_t*)opj_malloc(sizeof(opj_jp2_cdef_t));
-@@ -1095,14 +1200,18 @@
- 
- 	opj_read_bytes(p_colr_header_data,&jp2->approx ,1);			/* APPROX */
- 	++p_colr_header_data;
- 
- 	if (jp2->meth == 1) {
--		if (p_colr_header_size != 7) {
--			opj_event_msg(p_manager, EVT_ERROR, "Bad BPCC header box (bad size)\n");
-+		if (p_colr_header_size < 7) {
-+			opj_event_msg(p_manager, EVT_ERROR, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
- 			return OPJ_FALSE;
- 		}
-+		if (p_colr_header_size > 7) {
-+			/* testcase Altona_Technical_v20_x4.pdf */
-+			opj_event_msg(p_manager, EVT_WARNING, "Bad COLR header box (bad size: %d)\n", p_colr_header_size);
-+		}
- 
- 		opj_read_bytes(p_colr_header_data,&jp2->enumcs ,4);			/* EnumCS */
-         
-         jp2->color.jp2_has_colr = 1;
- 	}
-@@ -1152,18 +1261,23 @@
- 		opj_event_msg(p_manager, EVT_ERROR, "Failed to decode the codestream in the JP2 file\n");
- 		return OPJ_FALSE;
- 	}
- 
-     if (!jp2->ignore_pclr_cmap_cdef){
-+	    if (!opj_jp2_check_color(p_image, &(jp2->color), p_manager)) {
-+		    return OPJ_FALSE;
-+	    }
- 
- 	    /* Set Image Color Space */
- 	    if (jp2->enumcs == 16)
+@@ -1303,10 +1306,12 @@
  		    p_image->color_space = OPJ_CLRSPC_SRGB;
  	    else if (jp2->enumcs == 17)
  		    p_image->color_space = OPJ_CLRSPC_GRAY;
  	    else if (jp2->enumcs == 18)
  		    p_image->color_space = OPJ_CLRSPC_SYCC;
-+            else if (jp2->enumcs == 24)
-+                    p_image->color_space = OPJ_CLRSPC_EYCC;
++        else if (jp2->enumcs == 24)
++                p_image->color_space = OPJ_CLRSPC_EYCC;
  	    else
  		    p_image->color_space = OPJ_CLRSPC_UNKNOWN;
  
  	    /* Apply the color space if needed */
  	    if(jp2->color.jp2_cdef) {
-@@ -1683,18 +1797,24 @@
- 		else if	(box.length == 0) {
- 			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
- 			opj_free(l_current_data);
- 			return OPJ_FALSE;
- 		}
-+		/* testcase 1851.pdf.SIGSEGV.ce9.948 */
-+		else if	(box.length < l_nb_bytes_read) {
-+			opj_event_msg(p_manager, EVT_ERROR, "invalid box size %d (%x)\n", box.length, box.type);
-+			opj_free(l_current_data);
-+			return OPJ_FALSE;
-+		}
- 
- 		l_current_handler = opj_jp2_find_handler(box.type);
- 		l_current_data_size = box.length - l_nb_bytes_read;
- 
- 		if (l_current_handler != 00) {
- 			if (l_current_data_size > l_last_data_size) {
- 				OPJ_BYTE* new_current_data = (OPJ_BYTE*)opj_realloc(l_current_data,l_current_data_size);
--				if (!l_current_data){
-+				if (!new_current_data) {
- 					opj_free(l_current_data);
-                     opj_event_msg(p_manager, EVT_ERROR, "Not enough memory to handle jpeg2000 box\n");
- 					return OPJ_FALSE;
- 				}
-                 l_current_data = new_current_data;
-@@ -2329,10 +2449,14 @@
- 
- 	opj_event_msg(p_manager, EVT_WARNING, "JP2 box which are after the codestream will not be read by this function.\n");
- 
- 	if (! opj_j2k_get_tile(p_jp2->j2k, p_stream, p_image, p_manager, tile_index) ){
- 		opj_event_msg(p_manager, EVT_ERROR, "Failed to decode the codestream in the JP2 file\n");
-+		return OPJ_FALSE;
-+	}
-+
-+	if (!opj_jp2_check_color(p_image, &(p_jp2->color), p_manager)) {
- 		return OPJ_FALSE;
- 	}
- 
- 	/* Set Image Color Space */
- 	if (p_jp2->enumcs == 16)
 diff -rPu5 openjpeg.orig\openjpeg.h openjpeg\openjpeg.h
---- openjpeg.orig\openjpeg.h	Sat May 18 20:52:42 2013
-+++ openjpeg\openjpeg.h	Tue Jan 14 01:22:51 2014
-@@ -191,14 +191,15 @@
- /**
-  * Supported image color spaces
- */
+--- openjpeg.orig\openjpeg.h	Tue Apr 22 09:54:20 2014
++++ openjpeg\openjpeg.h	Thu May 15 15:45:04 2014
+@@ -217,11 +217,12 @@
  typedef enum COLOR_SPACE {
  	OPJ_CLRSPC_UNKNOWN = -1,	/**< not supported by the library */
--	OPJ_CLRSPC_UNSPECIFIED = 0, /**< not specified in the codestream */ 
-+	OPJ_CLRSPC_UNSPECIFIED = 0,	/**< not specified in the codestream */ 
+ 	OPJ_CLRSPC_UNSPECIFIED = 0,	/**< not specified in the codestream */ 
  	OPJ_CLRSPC_SRGB = 1,		/**< sRGB */
  	OPJ_CLRSPC_GRAY = 2,		/**< grayscale */
--	OPJ_CLRSPC_SYCC = 3			/**< YUV */
+-	OPJ_CLRSPC_SYCC = 3		/**< YUV */
 +	OPJ_CLRSPC_SYCC = 3,		/**< YUV */
 +        OPJ_CLRSPC_EYCC = 4		/**< e-YCC */
  } OPJ_COLOR_SPACE;
@@ -535,7 +119,7 @@ diff -rPu5 openjpeg.orig\openjpeg.h openjpeg\openjpeg.h
  /**
   * Supported codec
  */
-@@ -536,10 +537,12 @@
+@@ -559,10 +560,12 @@
  	OPJ_UINT32 resno_decoded;
  	/** number of division by 2 of the out image compared to the original size of image */
  	OPJ_UINT32 factor;
@@ -555,9 +139,9 @@ diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 +// #define OPJ_HAVE_STDINT_H
 diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 --- openjpeg.orig\opj_config_private.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config_private.h	Sun May 19 03:54:40 2013
++++ openjpeg\opj_config_private.h	Thu May 15 15:45:40 2014
 @@ -0,0 +1,9 @@
-+#define OPJ_PACKAGE_VERSION "2.0.0"
++#define OPJ_PACKAGE_VERSION "2.0.1"
 +
 +// #define OPJ_HAVE_INTTYPES_H
 +// #define OPJ_HAVE_FSEEKO
@@ -566,159 +150,84 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define OPJ_EXPORTS
 +
 +#define USE_JPIP
-diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
---- openjpeg.orig\opj_includes.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_includes.h	Tue Jan 14 01:22:28 2014
-@@ -127,14 +127,14 @@
- 	#else
- 		#define restrict /* restrict */
- 	#endif
- #endif
- 
--/* MSVC and Borland C do not have lrintf */
--#if defined(_MSC_VER) || defined(__BORLANDC__)
-+/* MSVC before 2013 and Borland C do not have lrintf */
-+#if defined(_MSC_VER) && (_MSC_VER < 1800) || defined(__BORLANDC__)
- static INLINE long lrintf(float f){
--#ifdef _M_X64
-+#if defined(_M_X64) || defined(_M_ARM_FP)
-     return (long)((f>0.0f) ? (f + 0.5f):(f -0.5f));
- #else
-     int i;
-  
-     _asm{
-diff -rPu5 openjpeg.orig\opj_intmath.h openjpeg\opj_intmath.h
---- openjpeg.orig\opj_intmath.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_intmath.h	Wed Feb 26 23:35:05 2014
-@@ -116,11 +116,11 @@
- /**
- Divide an integer by a power of 2 and round upwards
- @return Returns a divided by 2^b
- */
- static INLINE OPJ_INT32 opj_int_ceildivpow2(OPJ_INT32 a, OPJ_INT32 b) {
--	return (a + (1 << b) - 1) >> b;
-+	return (a + (int64_t)(1 << b) - 1) >> b;
- }
- /**
- Divide an integer by a power of 2 and round downwards
- @return Returns a divided by 2^b
- */
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
---- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Wed Jan 15 01:39:32 2014
-@@ -46,11 +46,12 @@
- @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
- */
+--- openjpeg.orig\opj_malloc.h	Tue Apr 22 09:54:20 2014
++++ openjpeg\opj_malloc.h	Thu May 15 15:47:34 2014
+@@ -53,11 +53,11 @@
  #ifdef ALLOC_PERF_OPT
  void * OPJ_CALLCONV opj_malloc(size_t size);
  #else
--#define opj_malloc(size) malloc(size)
-+/* prevent assertion on overflow for MSVC */
-+#define opj_malloc(size) ((size_t)(size) >= (size_t)0x7ffdefff ? NULL : malloc(size))
+ /* prevent assertion on overflow for MSVC */
+ #ifdef _MSC_VER
+-#define opj_malloc(size) ((size_t)(size) >= (size_t)-0x100 ? NULL : malloc(size))
++#define opj_malloc(size) ((size_t)(size) >= 0x7ffdefff ? NULL : malloc(size))
+ #else
+ #define opj_malloc(size) malloc(size)
+ #endif
  #endif
  
- /**
- Allocate a memory block with elements initialized to 0
- @param num Blocks to allocate
-@@ -58,11 +59,12 @@
- @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
- */
+@@ -70,11 +70,11 @@
  #ifdef ALLOC_PERF_OPT
  void * OPJ_CALLCONV opj_calloc(size_t _NumOfElements, size_t _SizeOfElements);
  #else
--#define opj_calloc(num, size) calloc(num, size)
-+/* prevent assertion on overflow for MSVC */
-+#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)0x7ffdefff / (size_t)(size) ? NULL : calloc(num, size))
+ /* prevent assertion on overflow for MSVC */
+ #ifdef _MSC_VER
+-#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
++#define opj_calloc(num, size) ((size_t)(num) != 0 && (size_t)(num) >= 0x7ffdefff / (size_t)(size) ? NULL : calloc(num, size))
+ #else
+ #define opj_calloc(num, size) calloc(num, size)
+ #endif
  #endif
  
- /**
- Allocate memory aligned to a 16 byte boundry
- @param size Bytes to allocate
-@@ -137,11 +139,12 @@
- @return Returns a void pointer to the reallocated (and possibly moved) memory block
- */
+@@ -154,11 +154,11 @@
  #ifdef ALLOC_PERF_OPT
  void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
  #else
--#define opj_realloc(m, s) realloc(m, s)
-+/* prevent assertion on overflow for MSVC */
-+#define opj_realloc(m, s) ((size_t)(s) >= (size_t)0x7ffdefff ? NULL : realloc(m, s))
+ /* prevent assertion on overflow for MSVC */
+ #ifdef _MSC_VER
+-#define opj_realloc(m, s) ((size_t)(s) >= (size_t)-0x100 ? NULL : realloc(m, s))
++#define opj_realloc(m, s) ((size_t)(s) >= 0x7ffdefff ? NULL : realloc(m, s))
+ #else
+ #define opj_realloc(m, s) realloc(m, s)
+ #endif
  #endif
  
- /**
- Deallocates or frees a memory block.
- @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
---- openjpeg.orig\t2.c	Sat May 18 20:52:42 2013
-+++ openjpeg\t2.c	Sun Jan 26 01:10:16 2014
-@@ -833,12 +833,16 @@
-         }
- 
+--- openjpeg.orig\t2.c	Tue Apr 22 09:54:20 2014
++++ openjpeg\t2.c	Thu May 15 16:38:14 2014
+@@ -861,14 +861,13 @@
          /* SOP markers */
  
          if (p_tcp->csty & J2K_CP_CSTY_SOP) {
--                if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
--                        /* TODO opj_event_msg(t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
-+                if (p_max_length < 6) {
-+                        /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Not enough space for expected SOP marker\n"); */
+                 if (p_max_length < 6) {
+                         /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Not enough space for expected SOP marker\n"); */
+-                        printf("Not enough space for expected SOP marker\n");
 +                        fprintf(stderr, "Not enough space for expected SOP marker\n");
-+                } else if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
-+                        /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
-+                        fprintf(stderr, "Expected SOP marker\n");
+                 } else if ((*l_current_data) != 0xff || (*(l_current_data + 1) != 0x91)) {
+                         /* TODO opj_event_msg(p_t2->cinfo->event_mgr, EVT_WARNING, "Expected SOP marker\n"); */
+-                        printf("Expected SOP marker\n");
+                         fprintf(stderr, "Error : expected SOP marker\n");
                  } else {
                          l_current_data += 6;
                  }
  
-                 /** TODO : check the Nsop value */
-@@ -883,12 +887,14 @@
-                 l_header_data += opj_bio_numbytes(l_bio);
-                 opj_bio_destroy(l_bio);
- 
-                 /* EPH markers */
-                 if (p_tcp->csty & J2K_CP_CSTY_EPH) {
--                        if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
--                                printf("Error : expected EPH marker\n");
-+                        if (p_max_length < 2) {
-+                                fprintf(stderr, "Not enough space for expected EPH marker\n");
-+                        } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-+                                fprintf(stderr, "Error : expected EPH marker\n");
-                         } else {
-                                 l_header_data += 2;
-                         }
-                 }
- 
-@@ -979,10 +985,15 @@
-                         n = l_cblk->numnewpasses;
+@@ -1015,10 +1014,15 @@
  
                          do {
-                                 l_cblk->segs[l_segno].numnewpasses = opj_int_min(l_cblk->segs[l_segno].maxpasses - l_cblk->segs[l_segno].numpasses, n);
+                                 l_cblk->segs[l_segno].numnewpasses = (OPJ_UINT32)opj_int_min((OPJ_INT32)(l_cblk->segs[l_segno].maxpasses - l_cblk->segs[l_segno].numpasses), n);
                                  l_cblk->segs[l_segno].newlen = opj_bio_read(l_bio, l_cblk->numlenbits + opj_uint_floorlog2(l_cblk->segs[l_segno].numnewpasses));
+                                         JAS_FPRINTF(stderr, "included=%d numnewpasses=%d increment=%d len=%d \n", l_included, l_cblk->segs[l_segno].numnewpasses, l_increment, l_cblk->segs[l_segno].newlen );
 +                                /* testcase 1802.pdf.SIGSEGV.36e.894 */
 +                                if (l_cblk->segs[l_segno].newlen > *l_modified_length_ptr) {
 +                                        opj_bio_destroy(l_bio);
 +                                        return OPJ_FALSE;
 +                                }
  
-                                 n -= l_cblk->segs[l_segno].numnewpasses;
+                                 n -= (OPJ_INT32)l_cblk->segs[l_segno].numnewpasses;
                                  if (n > 0) {
                                          ++l_segno;
  
-@@ -1007,11 +1018,13 @@
-         l_header_data += opj_bio_numbytes(l_bio);
-         opj_bio_destroy(l_bio);
- 
-         /* EPH markers */
-         if (p_tcp->csty & J2K_CP_CSTY_EPH) {
--                if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-+                if (p_max_length < 2) {
-+                        fprintf(stderr, "Not enough space for expected EPH marker\n");
-+                } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-                         /* TODO opj_event_msg(t2->cinfo->event_mgr, EVT_ERROR, "Expected EPH marker\n"); */
-                 } else {
-                         l_header_data += 2;
-                 }
-         }
-@@ -1114,10 +1127,11 @@
+@@ -1157,10 +1161,11 @@
                                  /* Check if the cblk->data have allocated enough memory */
                                  if ((l_cblk->data_current_size + l_seg->newlen) > l_cblk->data_max_size) {
                                      OPJ_BYTE* new_cblk_data = (OPJ_BYTE*) opj_realloc(l_cblk->data, l_cblk->data_current_size + l_seg->newlen);
@@ -730,54 +239,3 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                          return OPJ_FALSE;
                                      }
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
-diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
---- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Wed Jan 15 03:03:58 2014
-@@ -661,10 +661,15 @@
-         /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
-         l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
-         l_tile->y0 = opj_int_max(l_cp->ty0 + q * l_cp->tdy, l_image->y0);                                                                                                                                             \
-         l_tile->x1 = opj_int_min(l_cp->tx0 + (p + 1) * l_cp->tdx, l_image->x1);                                                                                                                                       \
-         l_tile->y1 = opj_int_min(l_cp->ty0 + (q + 1) * l_cp->tdy, l_image->y1);                                                                                                                                       \
-+        /* testcase 1888.pdf.asan.35.988 */ \
-+        if (l_tccp->numresolutions == 0) { \
-+            fprintf(stderr, "tiles require at least one resolution\n"); \
-+            return OPJ_FALSE; \
-+        } \
-         /*fprintf(stderr, "Tile border = %d,%d,%d,%d\n", l_tile->x0, l_tile->y0,l_tile->x1,l_tile->y1);*/                                                                                                         \
-                                                                     \
-         /*tile->numcomps = image->numcomps; */                      \
-         for(compno = 0; compno < l_tile->numcomps; ++compno) {      \
-                 /*fprintf(stderr, "compno = %d/%d\n", compno, l_tile->numcomps);*/                                                                                                                                \
-@@ -1571,11 +1576,17 @@
-         }
- 
-         l_samples = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
- 
-         if (l_tile->numcomps >= 3 ){
--                if (l_tcp->mct == 2) {
-+                /* testcase 1336.pdf.asan.47.376 */
-+                if ((l_tile->comps[0].x1 - l_tile->comps[0].x0) * (l_tile->comps[0].y1 - l_tile->comps[0].y0) < (OPJ_INT32)l_samples ||
-+                    (l_tile->comps[1].x1 - l_tile->comps[1].x0) * (l_tile->comps[1].y1 - l_tile->comps[1].y0) < (OPJ_INT32)l_samples ||
-+                    (l_tile->comps[2].x1 - l_tile->comps[2].x0) * (l_tile->comps[2].y1 - l_tile->comps[2].y0) < (OPJ_INT32)l_samples) {
-+                        fprintf(stderr, "Tiles don't all have the same dimension. Skip the MCT step.\n");
-+                }
-+                else if (l_tcp->mct == 2) {
-                         OPJ_BYTE ** l_data;
- 
-                         if (! l_tcp->m_mct_decoding_matrix) {
-                                 return OPJ_TRUE;
-                         }
-@@ -1651,10 +1662,12 @@
-         for (compno = 0; compno < l_tile->numcomps; compno++) {
-                 l_res = l_tile_comp->resolutions + l_img_comp->resno_decoded;
-                 l_width = (l_res->x1 - l_res->x0);
-                 l_height = (l_res->y1 - l_res->y0);
-                 l_stride = (l_tile_comp->x1 - l_tile_comp->x0) - l_width;
-+
-+                assert(l_height == 0 || l_width + l_stride <= l_tile_comp->data_size / l_height); /*MUPDF*/
- 
-                 if (l_img_comp->sgnd) {
-                         l_min = -(1 << (l_img_comp->prec - 1));
-                         l_max = (1 << (l_img_comp->prec - 1)) - 1;
-                 }

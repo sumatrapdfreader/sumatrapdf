@@ -1,12 +1,18 @@
 /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2010-2011, Kaori Hagihara
- * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France 
+ * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR 
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -442,7 +448,7 @@ static void opj_jp2_setup_header_reading (opj_jp2_t *jp2);
 	assert(p_number_bytes_read != 00);
 	assert(p_manager != 00);
 
-	*p_number_bytes_read = opj_stream_read_data(cio,l_data_header,8,p_manager);
+	*p_number_bytes_read = (OPJ_UINT32)opj_stream_read_data(cio,l_data_header,8,p_manager);
 	if (*p_number_bytes_read != 8) {
 		return OPJ_FALSE;
 	}
@@ -451,10 +457,12 @@ static void opj_jp2_setup_header_reading (opj_jp2_t *jp2);
 	opj_read_bytes(l_data_header,&(box->length), 4);
 	opj_read_bytes(l_data_header+4,&(box->type), 4);
     
-    if(box->length == 0)/* last box */
+  if(box->length == 0)/* last box */
     {
-        box->length = opj_stream_get_number_byte_left(cio);
-        return OPJ_TRUE;
+    const OPJ_OFF_T bleft = opj_stream_get_number_byte_left(cio);
+    box->length = (OPJ_UINT32)bleft;
+    assert( (OPJ_OFF_T)box->length == bleft );
+    return OPJ_TRUE;
     }
 
 	/* do we have a "special very large box ?" */
@@ -462,7 +470,7 @@ static void opj_jp2_setup_header_reading (opj_jp2_t *jp2);
 	if (box->length == 1) {
 		OPJ_UINT32 l_xl_part_size;
 
-		OPJ_UINT32 l_nb_bytes_read = opj_stream_read_data(cio,l_data_header,8,p_manager);
+		OPJ_UINT32 l_nb_bytes_read = (OPJ_UINT32)opj_stream_read_data(cio,l_data_header,8,p_manager);
 		if (l_nb_bytes_read != 8) {
 			if (l_nb_bytes_read > 0) {
 				*p_number_bytes_read += l_nb_bytes_read;
@@ -612,7 +620,7 @@ OPJ_BYTE * opj_jp2_write_bpcc(	opj_jp2_t *jp2,
 {
 	OPJ_UINT32 i;
 	/* room for 8 bytes for box and 1 byte for each component */
-	OPJ_INT32 l_bpcc_size = 8 + jp2->numcomps;
+	OPJ_UINT32 l_bpcc_size = 8 + jp2->numcomps;
 	OPJ_BYTE * l_bpcc_data,* l_current_bpcc_ptr;
 	
 	/* preconditions */
@@ -795,21 +803,28 @@ static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, 
 		}
 		/* verify that no component is targeted more than once */
 		for (i = 0; i < nr_channels; i++) {
-			OPJ_UINT16 pcol = cmap[i].pcol;
+      OPJ_UINT16 pcol = cmap[i].pcol;
+      assert(cmap[i].mtyp == 0 || cmap[i].mtyp == 1);
 			if (pcol >= nr_channels) {
 				opj_event_msg(p_manager, EVT_ERROR, "Invalid component/palette index for direct mapping %d.\n", pcol);
 				is_sane = OPJ_FALSE;
 			}
-			else if (pcol_usage[pcol]) {
+			else if (pcol_usage[pcol] && cmap[i].mtyp == 1) {
 				opj_event_msg(p_manager, EVT_ERROR, "Component %d is mapped twice.\n", pcol);
 				is_sane = OPJ_FALSE;
 			}
+      else if (cmap[i].mtyp == 0 && cmap[i].pcol != 0) {
+        /* I.5.3.5 PCOL: If the value of the MTYP field for this channel is 0, then
+         * the value of this field shall be 0. */
+				opj_event_msg(p_manager, EVT_ERROR, "Direct use at #%d however pcol=%d.\n", i, pcol);
+				is_sane = OPJ_FALSE;
+      }
 			else
 				pcol_usage[pcol] = OPJ_TRUE;
 		}
 		/* verify that all components are targeted at least once */
 		for (i = 0; i < nr_channels; i++) {
-			if (!pcol_usage[i]) {
+			if (!pcol_usage[i] && cmap[i].mtyp != 0) {
 				opj_event_msg(p_manager, EVT_ERROR, "Component %d doesn't have a mapping.\n", i);
 				is_sane = OPJ_FALSE;
 			}
@@ -823,6 +838,7 @@ static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, 
 	return OPJ_TRUE;
 }
 
+/* file9.jp2 */
 void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 {
 	opj_image_comp_t *old_comps, *new_comps;
@@ -847,40 +863,52 @@ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 	for(i = 0; i < nr_channels; ++i) {
 		pcol = cmap[i].pcol; cmp = cmap[i].cmp;
 
-		new_comps[pcol] = old_comps[cmp];
-
 		/* Direct use */
-		if(cmap[i].mtyp == 0){
-			old_comps[cmp].data = NULL; continue;
-		}
+    if(cmap[i].mtyp == 0){
+      assert( pcol == 0 );
+      new_comps[i] = old_comps[cmp];
+    } else {
+      assert( i == pcol );
+      new_comps[pcol] = old_comps[cmp];
+    }
 
 		/* Palette mapping: */
-		new_comps[pcol].data = (OPJ_INT32*)
+		new_comps[i].data = (OPJ_INT32*)
 				opj_malloc(old_comps[cmp].w * old_comps[cmp].h * sizeof(OPJ_INT32));
-		new_comps[pcol].prec = channel_size[i];
-		new_comps[pcol].sgnd = channel_sign[i];
+		new_comps[i].prec = channel_size[i];
+		new_comps[i].sgnd = channel_sign[i];
 	}
 
 	top_k = color->jp2_pclr->nr_entries - 1;
 
 	for(i = 0; i < nr_channels; ++i) {
-		/* Direct use: */
-		if(cmap[i].mtyp == 0) continue;
-
 		/* Palette mapping: */
 		cmp = cmap[i].cmp; pcol = cmap[i].pcol;
 		src = old_comps[cmp].data;
-		dst = new_comps[pcol].data;
+    assert( src );
 		max = new_comps[pcol].w * new_comps[pcol].h;
 
-		for(j = 0; j < max; ++j)
-		{
-			/* The index */
-			if((k = src[j]) < 0) k = 0; else if(k > top_k) k = top_k;
+		/* Direct use: */
+    if(cmap[i].mtyp == 0) {
+      assert( cmp == 0 );
+      dst = new_comps[i].data;
+      assert( dst );
+      for(j = 0; j < max; ++j) {
+        dst[j] = src[j];
+      }
+    }
+    else {
+      assert( i == pcol );
+      dst = new_comps[pcol].data;
+      assert( dst );
+      for(j = 0; j < max; ++j) {
+        /* The index */
+        if((k = src[j]) < 0) k = 0; else if(k > top_k) k = top_k;
 
-			/* The colour */
-			dst[j] = entries[k * nr_channels + pcol];
-		}
+        /* The colour */
+        dst[j] = (OPJ_INT32)entries[k * nr_channels + pcol];
+        }
+    }
 	}
 
 	max = image->numcomps;
@@ -933,7 +961,7 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 	if (p_pclr_header_size < 3 + (OPJ_UINT32)nr_channels || nr_channels == 0 || nr_entries >= (OPJ_UINT32)-1 / nr_channels)
 		return OPJ_FALSE;
 
-	entries = (OPJ_UINT32*) opj_malloc(nr_channels * nr_entries * sizeof(OPJ_UINT32));
+	entries = (OPJ_UINT32*) opj_malloc((size_t)nr_channels * nr_entries * sizeof(OPJ_UINT32));
     if (!entries)
         return OPJ_FALSE;
 	channel_size = (OPJ_BYTE*) opj_malloc(nr_channels);
@@ -972,17 +1000,17 @@ OPJ_BOOL opj_jp2_read_pclr(	opj_jp2_t *jp2,
 		opj_read_bytes(p_pclr_header_data, &l_value , 1);	/* Bi */
 		++p_pclr_header_data;
 
-		channel_size[i] = (l_value & 0x7f) + 1;
-		channel_sign[i] = (l_value & 0x80)? 1 : 0;
+		channel_size[i] = (OPJ_BYTE)((l_value & 0x7f) + 1);
+		channel_sign[i] = (l_value & 0x80) ? 1 : 0;
 	}
 
 	for(j = 0; j < nr_entries; ++j) {
 		for(i = 0; i < nr_channels; ++i) {
-			OPJ_INT32 bytes_to_read = (channel_size[i]+7)>>3;
+			OPJ_UINT32 bytes_to_read = (OPJ_UINT32)((channel_size[i]+7)>>3);
 
 			if (bytes_to_read > sizeof(OPJ_UINT32))
 				bytes_to_read = sizeof(OPJ_UINT32);
-			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + bytes_to_read)
+			if ((ptrdiff_t)p_pclr_header_size < p_pclr_header_data - orig_header_data + (ptrdiff_t)bytes_to_read)
 				return OPJ_FALSE;
 
 			opj_read_bytes(p_pclr_header_data, &l_value , bytes_to_read);	/* Cji */
@@ -1063,18 +1091,24 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 	info = color->jp2_cdef->info;
 	n = color->jp2_cdef->n;
 
-	for(i = 0; i < n; ++i)
-	{
-		/* WATCH: acn = asoc - 1 ! */
-		if((asoc = info[i].asoc) == 0)
-                {
-                    if (i < image->numcomps)
-                        image->comps[i].alpha = info[i].typ;
-                    continue;
-                }
+  for(i = 0; i < n; ++i)
+    {
+    /* WATCH: acn = asoc - 1 ! */
+    asoc = info[i].asoc;
+    if(asoc == 0 || asoc == 65535)
+      {
+        if (asoc == 0 && i < image->numcomps)
+            image->comps[i].alpha = info[i].typ;
+      continue;
+      }
 
-		cn = info[i].cn; 
-        acn = asoc - 1;
+    cn = info[i].cn; 
+    acn = (OPJ_UINT16)(asoc - 1);
+    if( cn >= image->numcomps || acn >= image->numcomps )
+      {
+      fprintf(stderr, "cn=%d, acn=%d, numcomps=%d\n", cn, acn, image->numcomps);
+      continue;
+      }
 
 		if(cn != acn)
 		{
@@ -1084,8 +1118,8 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 			memcpy(&image->comps[cn], &image->comps[acn], sizeof(opj_image_comp_t));
 			memcpy(&image->comps[acn], &saved, sizeof(opj_image_comp_t));
 
-			info[i].asoc = cn + 1;
-			info[acn].asoc = info[acn].cn + 1;
+			info[i].asoc = (OPJ_UINT16)(cn + 1);
+			info[acn].asoc = (OPJ_UINT16)(info[acn].cn + 1);
 		}
 
 		image->comps[cn].alpha = info[i].typ;
@@ -1218,16 +1252,16 @@ OPJ_BOOL opj_jp2_read_colr( opj_jp2_t *jp2,
 	else if (jp2->meth == 2) {
 		/* ICC profile */
 		OPJ_INT32 it_icc_value = 0;
-		OPJ_INT32 icc_len = p_colr_header_size - 3;
+		OPJ_INT32 icc_len = (OPJ_INT32)p_colr_header_size - 3;
 
-		jp2->color.icc_profile_len = icc_len;
-		jp2->color.icc_profile_buf = (OPJ_BYTE*) opj_malloc(icc_len);
+		jp2->color.icc_profile_len = (OPJ_UINT32)icc_len;
+		jp2->color.icc_profile_buf = (OPJ_BYTE*) opj_malloc((size_t)icc_len);
         if (!jp2->color.icc_profile_buf)
         {
             jp2->color.icc_profile_len = 0;
             return OPJ_FALSE;
         }
-		memset(jp2->color.icc_profile_buf, 0, icc_len * sizeof(OPJ_BYTE));
+		memset(jp2->color.icc_profile_buf, 0, (size_t)icc_len * sizeof(OPJ_BYTE));
 
 		for (it_icc_value = 0; it_icc_value < icc_len; ++it_icc_value)
 		{
@@ -1274,8 +1308,8 @@ OPJ_BOOL opj_jp2_decode(opj_jp2_t *jp2,
 		    p_image->color_space = OPJ_CLRSPC_GRAY;
 	    else if (jp2->enumcs == 18)
 		    p_image->color_space = OPJ_CLRSPC_SYCC;
-            else if (jp2->enumcs == 24)
-                    p_image->color_space = OPJ_CLRSPC_EYCC;
+        else if (jp2->enumcs == 24)
+                p_image->color_space = OPJ_CLRSPC_EYCC;
 	    else
 		    p_image->color_space = OPJ_CLRSPC_UNKNOWN;
 
@@ -1312,7 +1346,7 @@ OPJ_BOOL opj_jp2_write_jp2h(opj_jp2_t *jp2,
 
 	OPJ_INT32 i, l_nb_pass;
 	/* size of data for super box*/
-	OPJ_INT32 l_jp2h_size = 8;
+	OPJ_UINT32 l_jp2h_size = 8;
 	OPJ_BOOL l_result = OPJ_TRUE;
 
 	/* to store the data of the super box */
@@ -1539,7 +1573,8 @@ void opj_jp2_setup_encoder(	opj_jp2_t *jp2,
                             opj_event_mgr_t * p_manager)
 {
     OPJ_UINT32 i;
-	OPJ_INT32 depth_0, sign;
+	OPJ_UINT32 depth_0;
+  OPJ_UINT32 sign;
 
 	if(!jp2 || !parameters || !image)
 		return;
@@ -1588,7 +1623,7 @@ void opj_jp2_setup_encoder(	opj_jp2_t *jp2,
 	sign = image->comps[0].sgnd;
 	jp2->bpc = depth_0 + (sign << 7);
 	for (i = 1; i < image->numcomps; i++) {
-		OPJ_INT32 depth = image->comps[i].prec - 1;
+		OPJ_UINT32 depth = image->comps[i].prec - 1;
 		sign = image->comps[i].sgnd;
 		if (depth_0 != depth)
 			jp2->bpc = 255;
@@ -1821,7 +1856,7 @@ OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 				l_last_data_size = l_current_data_size;
 			}
 
-			l_nb_bytes_read = opj_stream_read_data(stream,l_current_data,l_current_data_size,p_manager);
+			l_nb_bytes_read = (OPJ_UINT32)opj_stream_read_data(stream,l_current_data,l_current_data_size,p_manager);
 			if (l_nb_bytes_read != l_current_data_size) {
 				opj_event_msg(p_manager, EVT_ERROR, "Problem with reading JPEG2000 box, stream error\n");
                 opj_free(l_current_data);                
@@ -2194,11 +2229,11 @@ OPJ_BOOL opj_jp2_read_boxhdr_char(   opj_jp2_box_t *box,
 	/* process read data */
 	opj_read_bytes(p_data, &l_value, 4);
 	p_data += 4;
-	box->length = (OPJ_INT32)(l_value);
+	box->length = (OPJ_UINT32)(l_value);
 
 	opj_read_bytes(p_data, &l_value, 4);
 	p_data += 4;
-	box->type = (OPJ_INT32)(l_value);
+	box->type = (OPJ_UINT32)(l_value);
 
 	*p_number_bytes_read = 8;
 
@@ -2223,7 +2258,7 @@ OPJ_BOOL opj_jp2_read_boxhdr_char(   opj_jp2_box_t *box,
 
 		opj_read_bytes(p_data, &l_value, 4);
 		*p_number_bytes_read += 4;
-		box->length = (OPJ_INT32)(l_value);
+		box->length = (OPJ_UINT32)(l_value);
 
 		if (box->length == 0) {
 			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
@@ -2685,6 +2720,7 @@ static OPJ_BOOL opj_jpip_write_cidx(opj_jp2_t *jp2,
   return OPJ_TRUE;
 }
 
+#if 0
 static void write_prxy( int offset_jp2c, int length_jp2c, int offset_idx, int length_idx, opj_stream_private_t *cio,
   opj_event_mgr_t * p_manager )
 {
@@ -2717,8 +2753,10 @@ static void write_prxy( int offset_jp2c, int length_jp2c, int offset_idx, int le
   opj_stream_write_data(cio,l_data_header,4,p_manager);
   opj_stream_seek(cio, lenp+len,p_manager);
 }
+#endif
 
 
+#if 0
 static int write_fidx( int offset_jp2c, int length_jp2c, int offset_idx, int length_idx, opj_stream_private_t *cio,
   opj_event_mgr_t * p_manager )
 {
@@ -2740,4 +2778,5 @@ static int write_fidx( int offset_jp2c, int length_jp2c, int offset_idx, int len
 
   return len;
 }
+#endif
 #endif /* USE_JPIP */

@@ -1,9 +1,15 @@
  /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2006-2007, Parvatha Elangovan
  * Copyright (c) 2008, Jerome Fimes, Communications & Systemes <jerome.fimes@c-s.fr>
@@ -42,6 +48,23 @@
    Compiler directives
 ==========================================================
 */
+
+/*
+The inline keyword is supported by C99 but not by C90. 
+Most compilers implement their own version of this keyword ... 
+*/
+#ifndef INLINE
+	#if defined(_MSC_VER)
+		#define INLINE __forceinline
+	#elif defined(__GNUC__)
+		#define INLINE __inline__
+	#elif defined(__MWERKS__)
+		#define INLINE inline
+	#else 
+		/* add other compilers here ... */
+		#define INLINE 
+	#endif /* defined(<Compiler>) */
+#endif /* INLINE */
 
 /* deprecated attribute */
 #ifdef __GNUC__
@@ -143,7 +166,7 @@ typedef size_t   OPJ_SIZE_T;
 #define OPJ_IMG_INFO		1	/**< Basic image information provided to the user */
 #define OPJ_J2K_MH_INFO		2	/**< Codestream information based only on the main header */
 #define OPJ_J2K_TH_INFO		4	/**< Tile information based on the current tile header */
-/*FIXME #define OPJ_J2K_CSTR_INFO	6*/	/**<  */
+#define OPJ_J2K_TCH_INFO	8	/**< Tile/Component information of all tiles */
 #define OPJ_J2K_MH_IND		16	/**< Codestream index based only on the main header */
 #define OPJ_J2K_TH_IND		32	/**< Tile index based on the current tile */
 /*FIXME #define OPJ_J2K_CSTR_IND	48*/	/**<  */
@@ -1007,16 +1030,8 @@ OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create(OPJ_SIZE_T p_buffer_size, O
  *
  * @param	p_stream	the stream to destroy.
  */
-OPJ_DEPRECATED(OPJ_API void OPJ_CALLCONV opj_stream_destroy(opj_stream_t* p_stream));
+OPJ_API void OPJ_CALLCONV opj_stream_destroy(opj_stream_t* p_stream);
 
-/**
- * Destroys a stream created by opj_create_stream. This function does NOT close the abstract stream. 
- * If needed the user must close its own implementation of the stream.
- *
- * @param	p_stream	the stream to destroy.
- */
-OPJ_API void OPJ_CALLCONV opj_stream_destroy_v3(opj_stream_t* p_stream);
- 
 /**
  * Sets the given function to be used as a read function.
  * @param		p_stream	the stream to modify
@@ -1066,34 +1081,16 @@ OPJ_API void OPJ_CALLCONV opj_stream_set_user_data_length(opj_stream_t* p_stream
  * @param p_file            the file stream to operate on
  * @param p_is_read_stream  whether the stream is a read stream (true) or not (false)
 */
-OPJ_DEPRECATED(OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_default_file_stream (FILE * p_file, OPJ_BOOL p_is_read_stream));
+OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_default_file_stream (FILE * p_file, OPJ_BOOL p_is_read_stream);
 
-/**
- * Create a stream from a file identified with its filename with default parameters (helper function)
- * @param fname             the filename of the file to stream
- * @param p_is_read_stream  whether the stream is a read stream (true) or not (false)
-*/
-OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_default_file_stream_v3 (const char *fname, OPJ_BOOL p_is_read_stream);
- 
 /**
  * FIXME DOC
  * @param p_file            the file stream to operate on
  * @param p_buffer_size     size of the chunk used to stream
  * @param p_is_read_stream  whether the stream is a read stream (true) or not (false)
 */
-OPJ_DEPRECATED(OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stream (FILE * p_file, 
-                                                                  OPJ_SIZE_T p_buffer_size,
-                                                                  OPJ_BOOL p_is_read_stream));
+OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stream (FILE * p_file, OPJ_SIZE_T p_buffer_size, OPJ_BOOL p_is_read_stream);
 
-/** Create a stream from a file identified with its filename with a specific buffer size
- * @param fname             the filename of the file to stream
- * @param p_buffer_size     size of the chunk used to stream
- * @param p_is_read_stream  whether the stream is a read stream (true) or not (false)
-*/
-OPJ_API opj_stream_t* OPJ_CALLCONV opj_stream_create_file_stream_v3 (const char *fname, 
-                                                                     OPJ_SIZE_T p_buffer_size,
-                                                                     OPJ_BOOL p_is_read_stream);
- 
 /* 
 ==========================================================
    event manager functions definitions

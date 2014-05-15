@@ -1,8 +1,8 @@
 /*
  * $Id: thix_manager.c 897 2011-08-28 21:43:57Z Kaori.Hagihara@gmail.com $
  *
- * Copyright (c) 2002-2011, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2011, Professor Benoit Macq
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2003-2004, Yannick Verschueren
  * Copyright (c) 2010-2011, Kaori Hagihara
  * All rights reserved.
@@ -48,7 +48,7 @@ int opj_write_thix( int coff, opj_codestream_info_t cstr_info, opj_stream_privat
   OPJ_OFF_T lenp;
 
   lenp = 0;
-  box = (opj_jp2_box_t *)opj_calloc( cstr_info.tw*cstr_info.th, sizeof(opj_jp2_box_t));
+  box = (opj_jp2_box_t *)opj_calloc( (size_t)(cstr_info.tw*cstr_info.th), sizeof(opj_jp2_box_t));
 
   for ( i = 0; i < 2 ; i++ ){
     if (i)
@@ -62,7 +62,7 @@ int opj_write_thix( int coff, opj_codestream_info_t cstr_info, opj_stream_privat
     opj_write_manf( i, cstr_info.tw*cstr_info.th, box, cio, p_manager);
     
     for (tileno = 0; tileno < cstr_info.tw*cstr_info.th; tileno++){
-      box[tileno].length = opj_write_tilemhix( coff, cstr_info, tileno, cio,p_manager);
+      box[tileno].length = (OPJ_UINT32)opj_write_tilemhix( coff, cstr_info, tileno, cio,p_manager);
       box[tileno].type = JPIP_MHIX;
     }
  
@@ -76,7 +76,7 @@ int opj_write_thix( int coff, opj_codestream_info_t cstr_info, opj_stream_privat
 
   opj_free(box);
 
-  return len;
+  return (int)len;
 }
 
 /* 
@@ -107,7 +107,7 @@ int opj_write_tilemhix( int coff, opj_codestream_info_t cstr_info, int tileno, o
   tile = cstr_info.tile[tileno];
   tp = tile.tp[0];
 
-  opj_write_bytes(l_data_header,tp.tp_end_header-tp.tp_start_pos+1, 8);        /* TLEN                              */
+  opj_write_bytes(l_data_header,(OPJ_UINT32)(tp.tp_end_header-tp.tp_start_pos+1), 8);        /* TLEN                              */
   opj_stream_write_data(cio,l_data_header,8,p_manager);
 
   marker = cstr_info.tile[tileno].marker;
@@ -118,7 +118,7 @@ int opj_write_tilemhix( int coff, opj_codestream_info_t cstr_info, int tileno, o
     opj_stream_write_data(cio,l_data_header,4,p_manager);
     opj_write_bytes( l_data_header, (OPJ_UINT32)(marker[i].pos-coff), 8);
     opj_stream_write_data(cio,l_data_header,8,p_manager);
-    opj_write_bytes( l_data_header, marker[i].len, 2);
+    opj_write_bytes( l_data_header, (OPJ_UINT32)marker[i].len, 2);
     opj_stream_write_data(cio,l_data_header,2,p_manager);
   }
      
@@ -130,5 +130,5 @@ int opj_write_tilemhix( int coff, opj_codestream_info_t cstr_info, int tileno, o
   opj_stream_write_data(cio,l_data_header,4,p_manager);
   opj_stream_seek(cio, lenp+len,p_manager);
 
-  return len;
+  return (int)len;
 }

@@ -1,12 +1,18 @@
 /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
+ * Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
+ * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux and Antonin Descampe
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * Copyright (c) 2006-2007, Parvatha Elangovan
- * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France 
+ * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR 
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -301,7 +307,7 @@ void opj_tcd_makelayer_fixed(opj_tcd_t *tcd, OPJ_UINT32 layno, OPJ_UINT32 final)
                         for (j = 0; j < tilec->numresolutions; j++) {
                                 for (k = 0; k < 3; k++) {
                                         matrice[i][j][k] =
-                                                (OPJ_INT32) (cp->m_specific_param.m_enc.m_matrice[i * tilec->numresolutions * 3 + j * 3 + k]
+                                                (OPJ_INT32) ((OPJ_FLOAT32)cp->m_specific_param.m_enc.m_matrice[i * tilec->numresolutions * 3 + j * 3 + k]
                                                 * (OPJ_FLOAT32) (tcd->image->comps[compno].prec / 16.0));
                                 }
                         }
@@ -320,7 +326,7 @@ void opj_tcd_makelayer_fixed(opj_tcd_t *tcd, OPJ_UINT32 layno, OPJ_UINT32 final)
                                                 opj_tcd_cblk_enc_t *cblk = &prc->cblks.enc[cblkno];
                                                 opj_tcd_layer_t *layer = &cblk->layers[layno];
                                                 OPJ_UINT32 n;
-                                                OPJ_INT32 imsb = tcd->image->comps[compno].prec - cblk->numbps; /* number of bit-plan equal to zero */
+                                                OPJ_INT32 imsb = (OPJ_INT32)(tcd->image->comps[compno].prec - cblk->numbps); /* number of bit-plan equal to zero */
 
                                                 /* Correction of the matrix of coefficient to include the IMSB information */
                                                 if (layno == 0) {
@@ -347,12 +353,12 @@ void opj_tcd_makelayer_fixed(opj_tcd_t *tcd, OPJ_UINT32 layno, OPJ_UINT32 final)
                                                 n = cblk->numpassesinlayers;
                                                 if (cblk->numpassesinlayers == 0) {
                                                         if (value != 0) {
-                                                                n = 3 * value - 2 + cblk->numpassesinlayers;
+                                                                n = 3 * (OPJ_UINT32)value - 2 + cblk->numpassesinlayers;
                                                         } else {
                                                                 n = cblk->numpassesinlayers;
                                                         }
                                                 } else {
-                                                        n = 3 * value + cblk->numpassesinlayers;
+                                                        n = 3 * (OPJ_UINT32)value + cblk->numpassesinlayers;
                                                 }
 
                                                 layer->numpasses = n - cblk->numpassesinlayers;
@@ -421,10 +427,10 @@ OPJ_BOOL opj_tcd_rateallocate(  opj_tcd_t *tcd,
                                                         OPJ_FLOAT64 dd, rdslope;
 
                                                         if (passno == 0) {
-                                                                dr = pass->rate;
+                                                                dr = (OPJ_INT32)pass->rate;
                                                                 dd = pass->distortiondec;
                                                         } else {
-                                                                dr = pass->rate - cblk->passes[passno - 1].rate;
+                                                                dr = (OPJ_INT32)(pass->rate - cblk->passes[passno - 1].rate);
                                                                 dd = pass->distortiondec - cblk->passes[passno - 1].distortiondec;
                                                         }
 
@@ -580,7 +586,7 @@ OPJ_BOOL opj_tcd_init( opj_tcd_t *p_tcd,
         }
         memset(p_tcd->tcd_image->tiles,0, sizeof(opj_tcd_tile_t));
 
-        l_tile_comp_size = p_image->numcomps * sizeof(opj_tcd_tilecomp_t);
+        l_tile_comp_size = p_image->numcomps * (OPJ_UINT32)sizeof(opj_tcd_tilecomp_t);
         p_tcd->tcd_image->tiles->comps = (opj_tcd_tilecomp_t *) opj_malloc(l_tile_comp_size);
         if (! p_tcd->tcd_image->tiles->comps ) {
                 return OPJ_FALSE;
@@ -659,10 +665,10 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
         /*fprintf(stderr, "Tile coordinate = %d,%d\n", p, q);*/     \
                                                                     \
         /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
-        l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
-        l_tile->y0 = opj_int_max(l_cp->ty0 + q * l_cp->tdy, l_image->y0);                                                                                                                                             \
-        l_tile->x1 = opj_int_min(l_cp->tx0 + (p + 1) * l_cp->tdx, l_image->x1);                                                                                                                                       \
-        l_tile->y1 = opj_int_min(l_cp->ty0 + (q + 1) * l_cp->tdy, l_image->y1);                                                                                                                                       \
+        l_tile->x0 = opj_int_max((OPJ_INT32)(l_cp->tx0 + p * l_cp->tdx), (OPJ_INT32)l_image->x0);                                                                                                                                             \
+        l_tile->y0 = opj_int_max((OPJ_INT32)(l_cp->ty0 + q * l_cp->tdy), (OPJ_INT32)l_image->y0);                                                                                                                                             \
+        l_tile->x1 = opj_int_min((OPJ_INT32)(l_cp->tx0 + (p + 1) * l_cp->tdx), (OPJ_INT32)l_image->x1);                                                                                                                                       \
+        l_tile->y1 = opj_int_min((OPJ_INT32)(l_cp->ty0 + (q + 1) * l_cp->tdy), (OPJ_INT32)l_image->y1);                                                                                                                                       \
         /* testcase 1888.pdf.asan.35.988 */ \
         if (l_tccp->numresolutions == 0) { \
             fprintf(stderr, "tiles require at least one resolution\n"); \
@@ -675,14 +681,14 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                 /*fprintf(stderr, "compno = %d/%d\n", compno, l_tile->numcomps);*/                                                                                                                                \
                                                                     \
                 /* border of each l_tile component (global) */      \
-                l_tilec->x0 = opj_int_ceildiv(l_tile->x0, l_image_comp->dx);                                                                                                                                          \
-                l_tilec->y0 = opj_int_ceildiv(l_tile->y0, l_image_comp->dy);                                                                                                                                          \
-                l_tilec->x1 = opj_int_ceildiv(l_tile->x1, l_image_comp->dx);                                                                                                                                          \
-                l_tilec->y1 = opj_int_ceildiv(l_tile->y1, l_image_comp->dy);                                                                                                                                          \
+                l_tilec->x0 = opj_int_ceildiv(l_tile->x0, (OPJ_INT32)l_image_comp->dx);                                                                                                                                          \
+                l_tilec->y0 = opj_int_ceildiv(l_tile->y0, (OPJ_INT32)l_image_comp->dy);                                                                                                                                          \
+                l_tilec->x1 = opj_int_ceildiv(l_tile->x1, (OPJ_INT32)l_image_comp->dx);                                                                                                                                          \
+                l_tilec->y1 = opj_int_ceildiv(l_tile->y1, (OPJ_INT32)l_image_comp->dy);                                                                                                                                          \
                 /*fprintf(stderr, "\tTile compo border = %d,%d,%d,%d\n", l_tilec->x0, l_tilec->y0,l_tilec->x1,l_tilec->y1);*/                                                                                     \
                                                                     \
-                l_data_size = (l_tilec->x1 - l_tilec->x0)           \
-                * (l_tilec->y1 - l_tilec->y0) * sizeof(OPJ_UINT32 );\
+                l_data_size = (OPJ_UINT32)(l_tilec->x1 - l_tilec->x0)           \
+                * (OPJ_UINT32)(l_tilec->y1 - l_tilec->y0) * (OPJ_UINT32)sizeof(OPJ_UINT32 );\
                 l_tilec->numresolutions = l_tccp->numresolutions;   \
                 if (l_tccp->numresolutions < l_cp->m_specific_param.m_dec.m_reduce) {                                                                                                                             \
                         l_tilec->minimum_num_resolutions = 1;       \
@@ -716,7 +722,7 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                         l_tilec->data_size = l_data_size;           \
                 }                                                   \
                                                                     \
-                l_data_size = l_tilec->numresolutions * sizeof(opj_tcd_resolution_t);                                                                                                                          \
+                l_data_size = l_tilec->numresolutions * (OPJ_UINT32)sizeof(opj_tcd_resolution_t);                                                                                                                          \
                                                                     \
                 if (l_tilec->resolutions == 00) {                   \
                         l_tilec->resolutions = (opj_tcd_resolution_t *) opj_malloc(l_data_size);                                                                                                               \
@@ -761,28 +767,28 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                         OPJ_UINT32 cblkwidthexpn, cblkheightexpn;                                                                                                                                                 \
                                                                                                                                                                                                                   \
                         /* border for each resolution level (global) */                                                                                                                                           \
-                        l_res->x0 = opj_int_ceildivpow2(l_tilec->x0, l_level_no);                                                                                                                                     \
-                        l_res->y0 = opj_int_ceildivpow2(l_tilec->y0, l_level_no);                                                                                                                                     \
-                        l_res->x1 = opj_int_ceildivpow2(l_tilec->x1, l_level_no);                                                                                                                                     \
-                        l_res->y1 = opj_int_ceildivpow2(l_tilec->y1, l_level_no);                                                                                                                                     \
+                        l_res->x0 = opj_int_ceildivpow2(l_tilec->x0, (OPJ_INT32)l_level_no);                                                                                                                                     \
+                        l_res->y0 = opj_int_ceildivpow2(l_tilec->y0, (OPJ_INT32)l_level_no);                                                                                                                                     \
+                        l_res->x1 = opj_int_ceildivpow2(l_tilec->x1, (OPJ_INT32)l_level_no);                                                                                                                                     \
+                        l_res->y1 = opj_int_ceildivpow2(l_tilec->y1, (OPJ_INT32)l_level_no);                                                                                                                                     \
                         /*fprintf(stderr, "\t\t\tres_x0= %d, res_y0 =%d, res_x1=%d, res_y1=%d\n", l_res->x0, l_res->y0, l_res->x1, l_res->y1);*/                                                                  \
                         /* p. 35, table A-23, ISO/IEC FDIS154444-1 : 2000 (18 august 2000) */                                                                                                                     \
                         l_pdx = l_tccp->prcw[resno];                                                                                                                                                              \
                         l_pdy = l_tccp->prch[resno];                                                                                                                                                              \
                         /*fprintf(stderr, "\t\t\tpdx=%d, pdy=%d\n", l_pdx, l_pdy);*/                                                                                                                              \
                         /* p. 64, B.6, ISO/IEC FDIS15444-1 : 2000 (18 august 2000)  */                                                                                                                            \
-                        l_tl_prc_x_start = opj_int_floordivpow2(l_res->x0, l_pdx) << l_pdx;                                                                                                                           \
-                        l_tl_prc_y_start = opj_int_floordivpow2(l_res->y0, l_pdy) << l_pdy;                                                                                                                           \
-                        l_br_prc_x_end = opj_int_ceildivpow2(l_res->x1, l_pdx) << l_pdx;                                                                                                                              \
-                        l_br_prc_y_end = opj_int_ceildivpow2(l_res->y1, l_pdy) << l_pdy;                                                                                                                              \
+                        l_tl_prc_x_start = opj_int_floordivpow2(l_res->x0, (OPJ_INT32)l_pdx) << l_pdx;                                                                                                                           \
+                        l_tl_prc_y_start = opj_int_floordivpow2(l_res->y0, (OPJ_INT32)l_pdy) << l_pdy;                                                                                                                           \
+                        l_br_prc_x_end = opj_int_ceildivpow2(l_res->x1, (OPJ_INT32)l_pdx) << l_pdx;                                                                                                                              \
+                        l_br_prc_y_end = opj_int_ceildivpow2(l_res->y1, (OPJ_INT32)l_pdy) << l_pdy;                                                                                                                              \
                         /*fprintf(stderr, "\t\t\tprc_x_start=%d, prc_y_start=%d, br_prc_x_end=%d, br_prc_y_end=%d \n", l_tl_prc_x_start, l_tl_prc_y_start, l_br_prc_x_end ,l_br_prc_y_end );*/                    \
                                                                                                                                                                                                                   \
-                        l_res->pw = (l_res->x0 == l_res->x1) ? 0 : ((l_br_prc_x_end - l_tl_prc_x_start) >> l_pdx);                                                                                                \
-                        l_res->ph = (l_res->y0 == l_res->y1) ? 0 : ((l_br_prc_y_end - l_tl_prc_y_start) >> l_pdy);                                                                                                \
+                        l_res->pw = (l_res->x0 == l_res->x1) ? 0 : (OPJ_UINT32)((l_br_prc_x_end - l_tl_prc_x_start) >> l_pdx);                                                                                                \
+                        l_res->ph = (l_res->y0 == l_res->y1) ? 0 : (OPJ_UINT32)((l_br_prc_y_end - l_tl_prc_y_start) >> l_pdy);                                                                                                \
                         /*fprintf(stderr, "\t\t\tres_pw=%d, res_ph=%d\n", l_res->pw, l_res->ph );*/                                                                                                               \
                                                                                                                                                                                                                   \
                         l_nb_precincts = l_res->pw * l_res->ph;                                                                                                                                                   \
-                        l_nb_precinct_size = l_nb_precincts * sizeof(opj_tcd_precinct_t);                                                                                                                      \
+                        l_nb_precinct_size = l_nb_precincts * (OPJ_UINT32)sizeof(opj_tcd_precinct_t);                                                                                                                      \
                         if (resno == 0) {                                                                                                                                                                         \
                                 tlcbgxstart = l_tl_prc_x_start;                                                                                                                                                   \
                                 tlcbgystart = l_tl_prc_y_start;                                                                                                                                                   \
@@ -812,29 +818,29 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                                                                                                                                                                                                                   \
                                 if (resno == 0) {                                                                                                                                                                 \
                                         l_band->bandno = 0 ;                                                                                                                                                      \
-                                        l_band->x0 = opj_int_ceildivpow2(l_tilec->x0, l_level_no);                                                                                                                    \
-                                        l_band->y0 = opj_int_ceildivpow2(l_tilec->y0, l_level_no);                                                                                                                    \
-                                        l_band->x1 = opj_int_ceildivpow2(l_tilec->x1, l_level_no);                                                                                                                    \
-                                        l_band->y1 = opj_int_ceildivpow2(l_tilec->y1, l_level_no);                                                                                                                    \
+                                        l_band->x0 = opj_int_ceildivpow2(l_tilec->x0, (OPJ_INT32)l_level_no);                                                                                                                    \
+                                        l_band->y0 = opj_int_ceildivpow2(l_tilec->y0, (OPJ_INT32)l_level_no);                                                                                                                    \
+                                        l_band->x1 = opj_int_ceildivpow2(l_tilec->x1, (OPJ_INT32)l_level_no);                                                                                                                    \
+                                        l_band->y1 = opj_int_ceildivpow2(l_tilec->y1, (OPJ_INT32)l_level_no);                                                                                                                    \
                                 }                                                                                                                                                                                 \
                                 else {                                                                                                                                                                            \
                                         l_band->bandno = bandno + 1;                                                                                                                                              \
                                         /* x0b = 1 if bandno = 1 or 3 */                                                                                                                                          \
                                         l_x0b = l_band->bandno&1;                                                                                                                                                 \
                                         /* y0b = 1 if bandno = 2 or 3 */                                                                                                                                          \
-                                        l_y0b = (l_band->bandno)>>1;                                                                                                                                              \
+                                        l_y0b = (OPJ_INT32)((l_band->bandno)>>1);                                                                                                                                              \
                                         /* l_band border (global) */                                                                                                                                              \
-                                        l_band->x0 = opj_int_ceildivpow2(l_tilec->x0 - (1 << l_level_no) * l_x0b, l_level_no + 1);                                                                                    \
-                                        l_band->y0 = opj_int_ceildivpow2(l_tilec->y0 - (1 << l_level_no) * l_y0b, l_level_no + 1);                                                                                    \
-                                        l_band->x1 = opj_int_ceildivpow2(l_tilec->x1 - (1 << l_level_no) * l_x0b, l_level_no + 1);                                                                                    \
-                                        l_band->y1 = opj_int_ceildivpow2(l_tilec->y1 - (1 << l_level_no) * l_y0b, l_level_no + 1);                                                                                    \
+                                        l_band->x0 = opj_int_ceildivpow2(l_tilec->x0 - (1 << l_level_no) * l_x0b, (OPJ_INT32)(l_level_no + 1));                                                                                    \
+                                        l_band->y0 = opj_int_ceildivpow2(l_tilec->y0 - (1 << l_level_no) * l_y0b, (OPJ_INT32)(l_level_no + 1));                                                                                    \
+                                        l_band->x1 = opj_int_ceildivpow2(l_tilec->x1 - (1 << l_level_no) * l_x0b, (OPJ_INT32)(l_level_no + 1));                                                                                    \
+                                        l_band->y1 = opj_int_ceildivpow2(l_tilec->y1 - (1 << l_level_no) * l_y0b, (OPJ_INT32)(l_level_no + 1));                                                                                    \
                                 }                                                                                                                                                                                 \
                                                                                                                                                                                                                   \
                                 /** avoid an if with storing function pointer */                                                                                                                                  \
                                 l_gain = (*l_gain_ptr) (l_band->bandno);                                                                                                                                          \
-                                numbps = l_image_comp->prec + l_gain;                                                                                                                                             \
+                                numbps = (OPJ_INT32)(l_image_comp->prec + l_gain);                                                                                                                                             \
                                 l_band->stepsize = (OPJ_FLOAT32)(((1.0 + l_step_size->mant / 2048.0) * pow(2.0, (OPJ_INT32) (numbps - l_step_size->expn)))) * FRACTION;                                           \
-                                l_band->numbps = l_step_size->expn + l_tccp->numgbits - 1;      /* WHY -1 ? */                                                                                                    \
+                                l_band->numbps = l_step_size->expn + (OPJ_INT32)l_tccp->numgbits - 1;      /* WHY -1 ? */                                                                                                    \
                                                                                                                                                                                                                   \
                                 if (! l_band->precincts) {                                                                                                                                                        \
                                         l_band->precincts = (opj_tcd_precinct_t *) opj_malloc( /*3 * */ l_nb_precinct_size);                                                                                   \
@@ -865,8 +871,8 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                                 l_current_precinct = l_band->precincts;                                                                                                                                           \
                                 for     (precno = 0; precno < l_nb_precincts; ++precno) {                                                                                                                         \
                                         OPJ_INT32 tlcblkxstart, tlcblkystart, brcblkxend, brcblkyend;                                                                                                             \
-                                        OPJ_INT32 cbgxstart = tlcbgxstart + (precno % l_res->pw) * (1 << cbgwidthexpn);                                                                                           \
-                                        OPJ_INT32 cbgystart = tlcbgystart + (precno / l_res->pw) * (1 << cbgheightexpn);                                                                                          \
+                                        OPJ_INT32 cbgxstart = tlcbgxstart + (OPJ_INT32)(precno % l_res->pw) * (1 << cbgwidthexpn);                                                                                           \
+                                        OPJ_INT32 cbgystart = tlcbgystart + (OPJ_INT32)(precno / l_res->pw) * (1 << cbgheightexpn);                                                                                          \
                                         OPJ_INT32 cbgxend = cbgxstart + (1 << cbgwidthexpn);                                                                                                                      \
                                         OPJ_INT32 cbgyend = cbgystart + (1 << cbgheightexpn);                                                                                                                     \
                                         /*fprintf(stderr, "\t precno=%d; bandno=%d, resno=%d; compno=%d\n", precno, bandno , resno, compno);*/                                                                    \
@@ -881,20 +887,20 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                                         l_current_precinct->y1 = opj_int_min(cbgyend, l_band->y1);                                                                                                                    \
                                         /*fprintf(stderr, "\t prc_x0=%d; prc_y0=%d, prc_x1=%d; prc_y1=%d\n",l_current_precinct->x0, l_current_precinct->y0 ,l_current_precinct->x1, l_current_precinct->y1);*/    \
                                                                                                                                                                                                                   \
-                                        tlcblkxstart = opj_int_floordivpow2(l_current_precinct->x0, cblkwidthexpn) << cblkwidthexpn;                                                                                  \
+                                        tlcblkxstart = opj_int_floordivpow2(l_current_precinct->x0, (OPJ_INT32)cblkwidthexpn) << cblkwidthexpn;                                                                                  \
                                         /*fprintf(stderr, "\t tlcblkxstart =%d\n",tlcblkxstart );*/                                                                                                               \
-                                        tlcblkystart = opj_int_floordivpow2(l_current_precinct->y0, cblkheightexpn) << cblkheightexpn;                                                                                \
+                                        tlcblkystart = opj_int_floordivpow2(l_current_precinct->y0, (OPJ_INT32)cblkheightexpn) << cblkheightexpn;                                                                                \
                                         /*fprintf(stderr, "\t tlcblkystart =%d\n",tlcblkystart );*/                                                                                                               \
-                                        brcblkxend = opj_int_ceildivpow2(l_current_precinct->x1, cblkwidthexpn) << cblkwidthexpn;                                                                                     \
+                                        brcblkxend = opj_int_ceildivpow2(l_current_precinct->x1, (OPJ_INT32)cblkwidthexpn) << cblkwidthexpn;                                                                                     \
                                         /*fprintf(stderr, "\t brcblkxend =%d\n",brcblkxend );*/                                                                                                                   \
-                                        brcblkyend = opj_int_ceildivpow2(l_current_precinct->y1, cblkheightexpn) << cblkheightexpn;                                                                                   \
+                                        brcblkyend = opj_int_ceildivpow2(l_current_precinct->y1, (OPJ_INT32)cblkheightexpn) << cblkheightexpn;                                                                                   \
                                         /*fprintf(stderr, "\t brcblkyend =%d\n",brcblkyend );*/                                                                                                                   \
-                                        l_current_precinct->cw = (brcblkxend - tlcblkxstart) >> cblkwidthexpn;                                                                                                    \
-                                        l_current_precinct->ch = (brcblkyend - tlcblkystart) >> cblkheightexpn;                                                                                                   \
+                                        l_current_precinct->cw = (OPJ_UINT32)((brcblkxend - tlcblkxstart) >> cblkwidthexpn);                                                                                                    \
+                                        l_current_precinct->ch = (OPJ_UINT32)((brcblkyend - tlcblkystart) >> cblkheightexpn);                                                                                                   \
                                                                                                                                                                                                                   \
                                         l_nb_code_blocks = l_current_precinct->cw * l_current_precinct->ch;                                                                                                       \
                                         /*fprintf(stderr, "\t\t\t\t precinct_cw = %d x recinct_ch = %d\n",l_current_precinct->cw, l_current_precinct->ch);      */                                                \
-                                        l_nb_code_blocks_size = l_nb_code_blocks * sizeof(TYPE);                                                                                                                  \
+                                        l_nb_code_blocks_size = l_nb_code_blocks * (OPJ_UINT32)sizeof(TYPE);                                                                                                                  \
                                                                                                                                                                                                                   \
                                         if (! l_current_precinct->cblks.ELEMENT) {                                                                                                                                \
                                                 l_current_precinct->cblks.ELEMENT = (TYPE*) opj_malloc(l_nb_code_blocks_size);                                                                                    \
@@ -962,8 +968,8 @@ OPJ_BOOL FUNCTION (     opj_tcd_t *p_tcd,                        \
                                         l_code_block = l_current_precinct->cblks.ELEMENT;                                                                                                                         \
                                                                                                                                                                                                                   \
                                         for (cblkno = 0; cblkno < l_nb_code_blocks; ++cblkno) {                                                                                                                   \
-                                                OPJ_INT32 cblkxstart = tlcblkxstart + (cblkno % l_current_precinct->cw) * (1 << cblkwidthexpn);                                                                   \
-                                                OPJ_INT32 cblkystart = tlcblkystart + (cblkno / l_current_precinct->cw) * (1 << cblkheightexpn);                                                                  \
+                                                OPJ_INT32 cblkxstart = tlcblkxstart + (OPJ_INT32)(cblkno % l_current_precinct->cw) * (1 << cblkwidthexpn);                                                                   \
+                                                OPJ_INT32 cblkystart = tlcblkystart + (OPJ_INT32)(cblkno / l_current_precinct->cw) * (1 << cblkheightexpn);                                                                  \
                                                 OPJ_INT32 cblkxend = cblkxstart + (1 << cblkwidthexpn);                                                                                                           \
                                                 OPJ_INT32 cblkyend = cblkystart + (1 << cblkheightexpn);                                                                                                          \
                                                                                                                                                                                                                   \
@@ -1006,7 +1012,7 @@ OPJ_BOOL opj_tcd_code_block_enc_allocate (opj_tcd_cblk_enc_t * p_code_block)
 {
         if (! p_code_block->data) {
 
-                p_code_block->data = (OPJ_BYTE*) opj_malloc(OPJ_J2K_DEFAULT_CBLK_DATA_SIZE); //why +1 ?
+                p_code_block->data = (OPJ_BYTE*) opj_malloc(OPJ_J2K_DEFAULT_CBLK_DATA_SIZE*2); /*why +1 ?*/
                 if(! p_code_block->data) {
                         return OPJ_FALSE;
                 }
@@ -1090,7 +1096,7 @@ OPJ_UINT32 opj_tcd_get_decoded_tile_size ( opj_tcd_t *p_tcd )
                 }
 
                 l_res = l_tile_comp->resolutions + l_tile_comp->minimum_num_resolutions - 1;
-                l_data_size += l_size_comp * (l_res->x1 - l_res->x0) * (l_res->y1 - l_res->y0);
+                l_data_size += l_size_comp * (OPJ_UINT32)((l_res->x1 - l_res->x0) * (l_res->y1 - l_res->y0));
                 ++l_img_comp;
                 ++l_tile_comp;
         }
@@ -1121,14 +1127,14 @@ OPJ_BOOL opj_tcd_encode_tile(   opj_tcd_t *p_tcd,
                         for (i = 0; i < l_tilec_idx->numresolutions; i++) {
                                 opj_tcd_resolution_t *l_res_idx = &l_tilec_idx->resolutions[i];
 
-                                p_cstr_info->tile[p_tile_no].pw[i] = l_res_idx->pw;
-                                p_cstr_info->tile[p_tile_no].ph[i] = l_res_idx->ph;
+                                p_cstr_info->tile[p_tile_no].pw[i] = (int)l_res_idx->pw;
+                                p_cstr_info->tile[p_tile_no].ph[i] = (int)l_res_idx->ph;
 
                                 l_num_packs += l_res_idx->pw * l_res_idx->ph;
-                                p_cstr_info->tile[p_tile_no].pdx[i] = l_tccp->prcw[i];
-                                p_cstr_info->tile[p_tile_no].pdy[i] = l_tccp->prch[i];
+                                p_cstr_info->tile[p_tile_no].pdx[i] = (int)l_tccp->prcw[i];
+                                p_cstr_info->tile[p_tile_no].pdy[i] = (int)l_tccp->prch[i];
                         }
-                        p_cstr_info->tile[p_tile_no].packet = (opj_packet_info_t*) opj_calloc(p_cstr_info->numcomps * p_cstr_info->numlayers * l_num_packs, sizeof(opj_packet_info_t));
+                        p_cstr_info->tile[p_tile_no].packet = (opj_packet_info_t*) opj_calloc((size_t)p_cstr_info->numcomps * (size_t)p_cstr_info->numlayers * l_num_packs, sizeof(opj_packet_info_t));
                 }
                 /* << INDEX */
 
@@ -1291,9 +1297,9 @@ OPJ_BOOL opj_tcd_update_tile_data ( opj_tcd_t *p_tcd,
                 l_size_comp = l_img_comp->prec >> 3; /*(/ 8)*/
                 l_remaining = l_img_comp->prec & 7;  /* (%8) */
                 l_res = l_tilec->resolutions + l_img_comp->resno_decoded;
-                l_width = (l_res->x1 - l_res->x0);
-                l_height = (l_res->y1 - l_res->y0);
-                l_stride = (l_tilec->x1 - l_tilec->x0) - l_width;
+                l_width = (OPJ_UINT32)(l_res->x1 - l_res->x0);
+                l_height = (OPJ_UINT32)(l_res->y1 - l_res->y0);
+                l_stride = (OPJ_UINT32)(l_tilec->x1 - l_tilec->x0) - l_width;
 
                 if (l_remaining) {
                         ++l_size_comp;
@@ -1321,7 +1327,7 @@ OPJ_BOOL opj_tcd_update_tile_data ( opj_tcd_t *p_tcd,
                                         else {
                                                 for (j=0;j<l_height;++j) {
                                                         for     (k=0;k<l_width;++k) {
-                                                                *(l_dest_ptr++) = (OPJ_BYTE) ((*(l_src_ptr++))&0xff);
+                                                                *(l_dest_ptr++) = (OPJ_CHAR) ((*(l_src_ptr++))&0xff);
                                                         }
                                                         l_src_ptr += l_stride;
                                                 }
@@ -1346,7 +1352,7 @@ OPJ_BOOL opj_tcd_update_tile_data ( opj_tcd_t *p_tcd,
                                         else {
                                                 for (j=0;j<l_height;++j) {
                                                         for (k=0;k<l_width;++k) {
-                                                                *(l_dest_ptr++) = (OPJ_UINT16) ((*(l_src_ptr++))&0xffff);
+                                                                *(l_dest_ptr++) = (OPJ_INT16) ((*(l_src_ptr++))&0xffff);
                                                         }
                                                         l_src_ptr += l_stride;
                                                 }
@@ -1575,7 +1581,7 @@ OPJ_BOOL opj_tcd_mct_decode ( opj_tcd_t *p_tcd )
                 return OPJ_TRUE;
         }
 
-        l_samples = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
+        l_samples = (OPJ_UINT32)((l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0));
 
         if (l_tile->numcomps >= 3 ){
                 /* testcase 1336.pdf.asan.47.376 */
@@ -1583,6 +1589,7 @@ OPJ_BOOL opj_tcd_mct_decode ( opj_tcd_t *p_tcd )
                     (l_tile->comps[1].x1 - l_tile->comps[1].x0) * (l_tile->comps[1].y1 - l_tile->comps[1].y0) < (OPJ_INT32)l_samples ||
                     (l_tile->comps[2].x1 - l_tile->comps[2].x0) * (l_tile->comps[2].y1 - l_tile->comps[2].y0) < (OPJ_INT32)l_samples) {
                         fprintf(stderr, "Tiles don't all have the same dimension. Skip the MCT step.\n");
+                        return OPJ_FALSE;
                 }
                 else if (l_tcp->mct == 2) {
                         OPJ_BYTE ** l_data;
@@ -1661,9 +1668,9 @@ OPJ_BOOL opj_tcd_dc_level_shift_decode ( opj_tcd_t *p_tcd )
 
         for (compno = 0; compno < l_tile->numcomps; compno++) {
                 l_res = l_tile_comp->resolutions + l_img_comp->resno_decoded;
-                l_width = (l_res->x1 - l_res->x0);
-                l_height = (l_res->y1 - l_res->y0);
-                l_stride = (l_tile_comp->x1 - l_tile_comp->x0) - l_width;
+                l_width = (OPJ_UINT32)(l_res->x1 - l_res->x0);
+                l_height = (OPJ_UINT32)(l_res->y1 - l_res->y0);
+                l_stride = (OPJ_UINT32)(l_tile_comp->x1 - l_tile_comp->x0) - l_width;
 
                 assert(l_height == 0 || l_width + l_stride <= l_tile_comp->data_size / l_height); /*MUPDF*/
 
@@ -1691,7 +1698,7 @@ OPJ_BOOL opj_tcd_dc_level_shift_decode ( opj_tcd_t *p_tcd )
                         for (j=0;j<l_height;++j) {
                                 for (i = 0; i < l_width; ++i) {
                                         OPJ_FLOAT32 l_value = *((OPJ_FLOAT32 *) l_current_ptr);
-                                        *l_current_ptr = opj_int_clamp(lrintf(l_value) + l_tccp->m_dc_level_shift, l_min, l_max); ;
+                                        *l_current_ptr = opj_int_clamp((OPJ_INT32)lrintf(l_value) + l_tccp->m_dc_level_shift, l_min, l_max); ;
                                         ++l_current_ptr;
                                 }
                                 l_current_ptr += l_stride;
@@ -1802,7 +1809,7 @@ OPJ_UINT32 opj_tcd_get_encoded_tile_size ( opj_tcd_t *p_tcd )
                         l_size_comp = 4;
                 }
 
-                l_data_size += l_size_comp * (l_tilec->x1 - l_tilec->x0) * (l_tilec->y1 - l_tilec->y0);
+                l_data_size += l_size_comp * (OPJ_UINT32)((l_tilec->x1 - l_tilec->x0) * (l_tilec->y1 - l_tilec->y0));
                 ++l_img_comp;
                 ++l_tilec;
         }
@@ -1827,7 +1834,7 @@ OPJ_BOOL opj_tcd_dc_level_shift_encode ( opj_tcd_t *p_tcd )
 
         for (compno = 0; compno < l_tile->numcomps; compno++) {
                 l_current_ptr = l_tile_comp->data;
-                l_nb_elem = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
+                l_nb_elem = (OPJ_UINT32)((l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0));
 
                 if (l_tccp->qmfbid == 1) {
                         for     (i = 0; i < l_nb_elem; ++i) {
@@ -1854,7 +1861,7 @@ OPJ_BOOL opj_tcd_mct_encode ( opj_tcd_t *p_tcd )
 {
         opj_tcd_tile_t * l_tile = p_tcd->tcd_image->tiles;
         opj_tcd_tilecomp_t * l_tile_comp = p_tcd->tcd_image->tiles->comps;
-        OPJ_UINT32 samples = (l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0);
+        OPJ_UINT32 samples = (OPJ_UINT32)((l_tile_comp->x1 - l_tile_comp->x0) * (l_tile_comp->y1 - l_tile_comp->y0));
         OPJ_UINT32 i;
         OPJ_BYTE ** l_data = 00;
         opj_tcp_t * l_tcp = p_tcd->tcp;
@@ -2051,7 +2058,7 @@ OPJ_BOOL opj_tcd_copy_tile_data (       opj_tcd_t *p_tcd,
         for (i=0;i<p_tcd->image->numcomps;++i) {
                 l_size_comp = l_img_comp->prec >> 3; /*(/ 8)*/
                 l_remaining = l_img_comp->prec & 7;  /* (%8) */
-                l_nb_elem = (l_tilec->x1 - l_tilec->x0) * (l_tilec->y1 - l_tilec->y0);
+                l_nb_elem = (OPJ_UINT32)((l_tilec->x1 - l_tilec->x0) * (l_tilec->y1 - l_tilec->y0));
 
                 if (l_remaining) {
                         ++l_size_comp;

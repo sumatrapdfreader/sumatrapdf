@@ -1,6 +1,11 @@
 /*
+ * The copyright in this software is being made available under the 2-clauses 
+ * BSD License, included below. This software may be subject to other third 
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
- * Copyright (c) 2008;2011-2012, Centre National d'Etudes Spatiales (CNES), France 
+ * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR 
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -56,7 +61,7 @@
   ftello() only on systems with special LFS support since some systems
   (e.g. FreeBSD) support a 64-bit off_t by default.
 */
-#if defined(OPJ_HAVE_FSEEKO)
+#if defined(OPJ_HAVE_FSEEKO) && !defined(fseek)
 #  define fseek  fseeko
 #  define ftell  ftello
 #endif
@@ -102,22 +107,6 @@
 	#define __attribute__(x) /* __attribute__(x) */
 #endif
 
-/*
-The inline keyword is supported by C99 but not by C90. 
-Most compilers implement their own version of this keyword ... 
-*/
-#ifndef INLINE
-	#if defined(_MSC_VER)
-		#define INLINE __forceinline
-	#elif defined(__GNUC__)
-		#define INLINE __inline__
-	#elif defined(__MWERKS__)
-		#define INLINE inline
-	#else 
-		/* add other compilers here ... */
-		#define INLINE 
-	#endif /* defined(<Compiler>) */
-#endif /* INLINE */
 
 /* Are restricted pointers available? (C99) */
 #if (__STDC_VERSION__ != 199901L)
@@ -132,7 +121,7 @@ Most compilers implement their own version of this keyword ...
 /* MSVC before 2013 and Borland C do not have lrintf */
 #if defined(_MSC_VER) && (_MSC_VER < 1800) || defined(__BORLANDC__)
 static INLINE long lrintf(float f){
-#if defined(_M_X64) || defined(_M_ARM_FP)
+#ifdef _M_X64
     return (long)((f>0.0f) ? (f + 0.5f):(f -0.5f));
 #else
     int i;
@@ -185,6 +174,7 @@ static INLINE long lrintf(float f){
 /* <<JPWL */
 
 /* V2 */
+#include "opj_codec.h"
 
 
 #endif /* OPJ_INCLUDES_H */
