@@ -4236,6 +4236,12 @@ OPJ_BOOL opj_j2k_read_sod (opj_j2k_t *p_j2k,
 
         /* Patch to support new PHR data */
         if (p_j2k->m_specific_param.m_decoder.m_sot_length) {
+            /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2591 */
+            if (p_j2k->m_specific_param.m_decoder.m_sot_length > opj_stream_get_number_byte_left(p_stream)) {
+                opj_event_msg(p_manager, EVT_ERROR, "Not enough data to decode tile\n");
+                return OPJ_FALSE;
+            }
+
             if (! *l_current_data) {
                 /* LH: oddly enough, in this path, l_tile_len!=0.
                  * TODO: If this was consistant, we could simplify the code to only use realloc(), as realloc(0,...) default to malloc(0,...).

@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
---- openjpeg.orig\cio.c	Sat May 18 19:52:42 2013
-+++ openjpeg\cio.c	Tue Jan 14 00:20:58 2014
+--- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
++++ openjpeg\cio.c	Tue Jan 14 01:20:58 2014
 @@ -254,16 +254,20 @@
  }
  
@@ -23,8 +23,8 @@ diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
  OPJ_SIZE_T opj_stream_read_data (opj_stream_private_t * p_stream,OPJ_BYTE * p_buffer, OPJ_SIZE_T p_size, opj_event_mgr_t * p_event_mgr)
  {
 diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
---- openjpeg.orig\event.c	Sat May 18 19:52:42 2013
-+++ openjpeg\event.c	Thu Jan 09 01:20:16 2014
+--- openjpeg.orig\event.c	Sat May 18 20:52:42 2013
++++ openjpeg\event.c	Thu Jan 09 02:20:16 2014
 @@ -116,11 +116,11 @@
  		va_start(arg, fmt);
  		/* check the length of the format string */
@@ -39,8 +39,8 @@ diff -rPu5 openjpeg.orig\event.c openjpeg\event.c
  		/* output the message to the user program */
  		msg_handler(message, l_data);
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Sat May 18 19:52:42 2013
-+++ openjpeg\j2k.c	Wed Mar 05 23:02:13 2014
+--- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
++++ openjpeg\j2k.c	Thu May 15 14:59:38 2014
 @@ -1930,10 +1930,27 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -147,7 +147,24 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                                                                  p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].current_nb_tps * sizeof(opj_tp_index_t));
                                                  if (! new_tp_index) {
                                                          opj_free(p_j2k->cstr_index->tile_index[p_j2k->m_current_tile_number].tp_index);
-@@ -4434,10 +4461,18 @@
+@@ -4207,10 +4234,16 @@
+         l_current_data = &(l_tcp->m_data);
+         l_tile_len = &l_tcp->m_data_size;
+ 
+         /* Patch to support new PHR data */
+         if (p_j2k->m_specific_param.m_decoder.m_sot_length) {
++            /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2591 */
++            if (p_j2k->m_specific_param.m_decoder.m_sot_length > opj_stream_get_number_byte_left(p_stream)) {
++                opj_event_msg(p_manager, EVT_ERROR, "Not enough data to decode tile\n");
++                return OPJ_FALSE;
++            }
++
+             if (! *l_current_data) {
+                 /* LH: oddly enough, in this path, l_tile_len!=0.
+                  * TODO: If this was consistant, we could simplify the code to only use realloc(), as realloc(0,...) default to malloc(0,...).
+                  */
+                 *l_current_data = (OPJ_BYTE*) opj_malloc(p_j2k->m_specific_param.m_decoder.m_sot_length);
+@@ -4434,10 +4467,18 @@
                          }
                  }
          };
@@ -166,7 +183,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
          return OPJ_TRUE;
  
-@@ -7047,10 +7082,16 @@
+@@ -7047,10 +7088,16 @@
                          }
  
                          /* Read 2 bytes from the buffer as the marker size */
@@ -183,7 +200,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                                  p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                          }
                          l_marker_size -= 2; /* Subtract the size of the marker ID already read */
-@@ -7438,10 +7479,14 @@
+@@ -7438,10 +7485,14 @@
                                  l_offset_y1_src = l_res->y1 - l_y1_dest;
                          }
                  }
@@ -199,8 +216,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
                  /* Compute the input buffer offset */
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\jp2.c	Tue Jan 14 00:21:18 2014
+--- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
++++ openjpeg\jp2.c	Tue Jan 14 01:21:18 2014
 @@ -750,10 +750,81 @@
  	if(color->jp2_pclr->cmap) opj_free(color->jp2_pclr->cmap);
  
@@ -498,8 +515,8 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	/* Set Image Color Space */
  	if (p_jp2->enumcs == 16)
 diff -rPu5 openjpeg.orig\openjpeg.h openjpeg\openjpeg.h
---- openjpeg.orig\openjpeg.h	Sat May 18 19:52:42 2013
-+++ openjpeg\openjpeg.h	Tue Jan 14 00:22:51 2014
+--- openjpeg.orig\openjpeg.h	Sat May 18 20:52:42 2013
++++ openjpeg\openjpeg.h	Tue Jan 14 01:22:51 2014
 @@ -191,14 +191,15 @@
  /**
   * Supported image color spaces
@@ -533,12 +550,12 @@ diff -rPu5 openjpeg.orig\openjpeg.h openjpeg\openjpeg.h
   * */
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Sun May 19 02:54:43 2013
++++ openjpeg\opj_config.h	Sun May 19 03:54:43 2013
 @@ -0,0 +1 @@
 +// #define OPJ_HAVE_STDINT_H
 diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 --- openjpeg.orig\opj_config_private.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config_private.h	Sun May 19 02:54:40 2013
++++ openjpeg\opj_config_private.h	Sun May 19 03:54:40 2013
 @@ -0,0 +1,9 @@
 +#define OPJ_PACKAGE_VERSION "2.0.0"
 +
@@ -550,8 +567,8 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +
 +#define USE_JPIP
 diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
---- openjpeg.orig\opj_includes.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_includes.h	Tue Jan 14 00:22:28 2014
+--- openjpeg.orig\opj_includes.h	Sat May 18 20:52:42 2013
++++ openjpeg\opj_includes.h	Tue Jan 14 01:22:28 2014
 @@ -127,14 +127,14 @@
  	#else
  		#define restrict /* restrict */
@@ -571,8 +588,8 @@ diff -rPu5 openjpeg.orig\opj_includes.h openjpeg\opj_includes.h
   
      _asm{
 diff -rPu5 openjpeg.orig\opj_intmath.h openjpeg\opj_intmath.h
---- openjpeg.orig\opj_intmath.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_intmath.h	Wed Feb 26 22:35:05 2014
+--- openjpeg.orig\opj_intmath.h	Sat May 18 20:52:42 2013
++++ openjpeg\opj_intmath.h	Wed Feb 26 23:35:05 2014
 @@ -116,11 +116,11 @@
  /**
  Divide an integer by a power of 2 and round upwards
@@ -587,8 +604,8 @@ diff -rPu5 openjpeg.orig\opj_intmath.h openjpeg\opj_intmath.h
  @return Returns a divided by 2^b
  */
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
---- openjpeg.orig\opj_malloc.h	Sat May 18 19:52:42 2013
-+++ openjpeg\opj_malloc.h	Wed Jan 15 00:39:32 2014
+--- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
++++ openjpeg\opj_malloc.h	Wed Jan 15 01:39:32 2014
 @@ -46,11 +46,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -632,8 +649,8 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  Deallocates or frees a memory block.
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
---- openjpeg.orig\t2.c	Sat May 18 19:52:42 2013
-+++ openjpeg\t2.c	Sun Jan 26 00:10:16 2014
+--- openjpeg.orig\t2.c	Sat May 18 20:52:42 2013
++++ openjpeg\t2.c	Sun Jan 26 01:10:16 2014
 @@ -833,12 +833,16 @@
          }
  
@@ -714,8 +731,8 @@ diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
                                      }
                                      l_cblk->data_max_size = l_cblk->data_current_size + l_seg->newlen;
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
---- openjpeg.orig\tcd.c	Sat May 18 19:52:42 2013
-+++ openjpeg\tcd.c	Wed Jan 15 02:03:58 2014
+--- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
++++ openjpeg\tcd.c	Wed Jan 15 03:03:58 2014
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \
