@@ -218,7 +218,7 @@ OPJ_BOOL opj_t2_encode_packets( opj_t2_t* p_t2,
         opj_image_t *l_image = p_t2->image;
         opj_cp_t *l_cp = p_t2->cp;
         opj_tcp_t *l_tcp = &l_cp->tcps[p_tile_no];
-        OPJ_UINT32 pocno = l_cp->m_specific_param.m_enc.m_cinema == OPJ_CINEMA4K_24? 2: 1;
+        OPJ_UINT32 pocno = (l_cp->rsiz == OPJ_PROFILE_CINEMA_4K)? 2: 1;
         OPJ_UINT32 l_max_comp = l_cp->m_specific_param.m_enc.m_max_comp_size > 0 ? l_image->numcomps : 1;
         OPJ_UINT32 l_nb_pocs = l_tcp->numpocs + 1;
 

@@ -68,10 +68,12 @@ install(FILES openjpeg.h opj_stdint.h
   DESTINATION ${OPENJPEG_INSTALL_INCLUDE_DIR} COMPONENT Headers
 )
 
+if(BUILD_DOC)
 # install man page of the library
 install(
   FILES       ${OPENJPEG_SOURCE_DIR}/doc/man/man3/libopenjp2.3
   DESTINATION ${OPENJPEG_INSTALL_MAN_DIR}/man3)
+endif()
 
 # internal utilities to generate t1_luts.h (part of the jp2 lib)
 # no need to install:

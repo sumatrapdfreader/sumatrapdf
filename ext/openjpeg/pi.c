@@ -1525,7 +1525,7 @@ opj_pi_iterator_t *opj_pi_initialise_encode(const opj_image_t *p_image,
 	opj_free(l_tmp_ptr);
 	l_tmp_ptr = 00;
 
-	if (l_tcp->POC && ( p_cp->m_specific_param.m_enc.m_cinema || p_t2_mode == FINAL_PASS)) {
+    if (l_tcp->POC && (OPJ_IS_CINEMA(p_cp->rsiz) || p_t2_mode == FINAL_PASS)) {
 		opj_pi_update_encode_poc_and_final(p_cp,p_tile_no,l_tx0,l_tx1,l_ty0,l_ty1,l_max_prec,l_max_res,l_dx_min,l_dy_min);
 	}
 	else {
@@ -1554,7 +1554,7 @@ void opj_pi_create_encode( 	opj_pi_iterator_t *pi,
 	pi[pino].first = 1;
 	pi[pino].poc.prg = tcp->prg;
 
-	if(!(cp->m_specific_param.m_enc.m_tp_on && ((!cp->m_specific_param.m_enc.m_cinema && (t2_mode == FINAL_PASS)) || cp->m_specific_param.m_enc.m_cinema))){
+    if(!(cp->m_specific_param.m_enc.m_tp_on && ((!OPJ_IS_CINEMA(cp->rsiz) && (t2_mode == FINAL_PASS)) || OPJ_IS_CINEMA(cp->rsiz)))){
 		pi[pino].poc.resno0 = tcp->resS;
 		pi[pino].poc.resno1 = tcp->resE;
 		pi[pino].poc.compno0 = tcp->compS;

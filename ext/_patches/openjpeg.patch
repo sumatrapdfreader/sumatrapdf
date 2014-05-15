@@ -1,42 +1,27 @@
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Tue Apr 22 09:54:20 2014
-+++ openjpeg\j2k.c	Thu May 15 17:21:06 2014
-@@ -3174,10 +3174,15 @@
- 
-         if ((l_current_poc_nb <= 0) || (l_current_poc_remaining != 0)) {
-                 opj_event_msg(p_manager, EVT_ERROR, "Error reading POC marker\n");
-                 return OPJ_FALSE;
-         }
-+        /* cf. https://code.google.com/p/openjpeg/issues/detail?id=165 */
-+        if (l_current_poc_nb >= sizeof(l_tcp->pocs) / sizeof(l_tcp->pocs[0])) {
-+                opj_event_msg(p_manager, EVT_ERROR, "Too many POC entries (%d > 32)\n", l_current_poc_nb);
-+                return OPJ_FALSE;
-+        }
- 
-         l_cp = &(p_j2k->m_cp);
-         l_tcp = (p_j2k->m_specific_param.m_decoder.m_state == J2K_STATE_TPH) ?
+--- openjpeg.orig\j2k.c	Tue Apr 29 09:15:02 2014
++++ openjpeg\j2k.c	Thu May 15 22:28:26 2014
+@@ -3162,11 +3162,11 @@
                                  &l_cp->tcps[p_j2k->m_current_tile_number] :
                                  p_j2k->m_specific_param.m_decoder.m_default_tcp;
-@@ -4078,10 +4083,12 @@
-                 opj_read_bytes(p_header_data,&l_current_part ,1);       /* TPsot */
-                 ++p_header_data;
+         l_old_poc_nb = l_tcp->POC ? l_tcp->numpocs + 1 : 0;
+         l_current_poc_nb += l_old_poc_nb;
  
-                 opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
-                 ++p_header_data;
-+                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=254 */
-+                l_num_parts++;
- 
-                 if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
-                         /* Useful to manage the case of textGBR.jp2 file because two values of TNSot are allowed: the correct numbers of
-                          * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
-                         if (l_tcp->m_nb_tile_parts) {
-@@ -4090,10 +4097,13 @@
+-        if(l_current_poc_nb >= 32)
++        if(l_current_poc_nb >= sizeof(l_tcp->pocs) / sizeof(l_tcp->pocs[0]))
+           {
+           opj_event_msg(p_manager, EVT_ERROR, "Too many POCs %d\n", l_current_poc_nb);
+           return OPJ_FALSE;
+           }
+         assert(l_current_poc_nb < 32);
+@@ -4070,10 +4070,14 @@
                                                          "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
                                          p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
                                          return OPJ_FALSE;
                                  }
                          }
-+                        if (l_num_parts < l_tcp->m_nb_tile_parts) {
++                        /* cf. https://code.google.com/p/openjpeg/issues/detail?id=254 */
++                        if (++l_num_parts < l_tcp->m_nb_tile_parts) {
 +                                l_num_parts = l_tcp->m_nb_tile_parts;
 +                        }
                          if( l_current_part >= l_num_parts ) {
@@ -44,13 +29,13 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                            opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
                              "number of tile-part (header) (%d), giving up\n", l_current_part, l_num_parts );
                            p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
-@@ -4334,10 +4344,16 @@
+@@ -4314,10 +4318,16 @@
          l_current_data = &(l_tcp->m_data);
          l_tile_len = &l_tcp->m_data_size;
  
          /* Patch to support new PHR data */
          if (p_j2k->m_specific_param.m_decoder.m_sot_length) {
-+            /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2591 */
++            /* cf. https://code.google.com/p/openjpeg/issues/detail?id=348 */
 +            if (p_j2k->m_specific_param.m_decoder.m_sot_length > opj_stream_get_number_byte_left(p_stream)) {
 +                opj_event_msg(p_manager, EVT_ERROR, "Not enough data to decode tile\n");
 +                return OPJ_FALSE;
@@ -61,87 +46,22 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                   * TODO: If this was consistant, we could simplify the code to only use realloc(), as realloc(0,...) default to malloc(0,...).
                   */
                  *l_current_data = (OPJ_BYTE*) opj_malloc(p_j2k->m_specific_param.m_decoder.m_sot_length);
-diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Tue Apr 22 09:54:20 2014
-+++ openjpeg\jp2.c	Thu May 15 16:55:49 2014
-@@ -1095,10 +1095,12 @@
-     {
-     /* WATCH: acn = asoc - 1 ! */
-     asoc = info[i].asoc;
-     if(asoc == 0 || asoc == 65535)
-       {
-+        if (asoc == 0 && i < image->numcomps)
-+            image->comps[i].alpha = info[i].typ;
-       continue;
-       }
- 
-     cn = info[i].cn; 
-     acn = (OPJ_UINT16)(asoc - 1);
-@@ -1118,10 +1120,11 @@
- 
- 			info[i].asoc = (OPJ_UINT16)(cn + 1);
- 			info[acn].asoc = (OPJ_UINT16)(info[acn].cn + 1);
- 		}
- 
-+		image->comps[cn].alpha = info[i].typ;
- 	}
- 
- 	if(color->jp2_cdef->info) opj_free(color->jp2_cdef->info);
- 
- 	opj_free(color->jp2_cdef); color->jp2_cdef = NULL;
-@@ -1303,10 +1306,12 @@
- 		    p_image->color_space = OPJ_CLRSPC_SRGB;
- 	    else if (jp2->enumcs == 17)
- 		    p_image->color_space = OPJ_CLRSPC_GRAY;
- 	    else if (jp2->enumcs == 18)
- 		    p_image->color_space = OPJ_CLRSPC_SYCC;
-+        else if (jp2->enumcs == 24)
-+                p_image->color_space = OPJ_CLRSPC_EYCC;
- 	    else
- 		    p_image->color_space = OPJ_CLRSPC_UNKNOWN;
- 
- 	    /* Apply the color space if needed */
- 	    if(jp2->color.jp2_cdef) {
-diff -rPu5 openjpeg.orig\openjpeg.h openjpeg\openjpeg.h
---- openjpeg.orig\openjpeg.h	Tue Apr 22 09:54:20 2014
-+++ openjpeg\openjpeg.h	Thu May 15 15:45:04 2014
-@@ -217,11 +217,12 @@
- typedef enum COLOR_SPACE {
- 	OPJ_CLRSPC_UNKNOWN = -1,	/**< not supported by the library */
- 	OPJ_CLRSPC_UNSPECIFIED = 0,	/**< not specified in the codestream */ 
- 	OPJ_CLRSPC_SRGB = 1,		/**< sRGB */
- 	OPJ_CLRSPC_GRAY = 2,		/**< grayscale */
--	OPJ_CLRSPC_SYCC = 3		/**< YUV */
-+	OPJ_CLRSPC_SYCC = 3,		/**< YUV */
-+        OPJ_CLRSPC_EYCC = 4		/**< e-YCC */
- } OPJ_COLOR_SPACE;
- 
- /**
-  * Supported codec
- */
-@@ -559,10 +560,12 @@
- 	OPJ_UINT32 resno_decoded;
- 	/** number of division by 2 of the out image compared to the original size of image */
- 	OPJ_UINT32 factor;
- 	/** image component data */
- 	OPJ_INT32 *data;
-+        /** alpha channel */
-+        OPJ_UINT16 alpha;
- } opj_image_comp_t;
- 
- /** 
-  * Defines image data and characteristics
-  * */
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Sun May 19 03:54:43 2013
-@@ -0,0 +1 @@
++++ openjpeg\opj_config.h	Thu May 15 21:53:22 2014
+@@ -0,0 +1,5 @@
 +// #define OPJ_HAVE_STDINT_H
++
++#define OPJ_VERSION_MAJOR 2
++#define OPJ_VERSION_MINOR 1
++#define OPJ_VERSION_BUILD 0
 diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 --- openjpeg.orig\opj_config_private.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config_private.h	Thu May 15 15:45:40 2014
-@@ -0,0 +1,9 @@
-+#define OPJ_PACKAGE_VERSION "2.0.1"
++++ openjpeg\opj_config_private.h	Thu May 15 21:56:02 2014
+@@ -0,0 +1,11 @@
++// #define OPJ_HAVE_STDINT_H
++
++#define OPJ_PACKAGE_VERSION "2.1.0"
 +
 +// #define OPJ_HAVE_INTTYPES_H
 +// #define OPJ_HAVE_FSEEKO
@@ -151,8 +71,8 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +
 +#define USE_JPIP
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
---- openjpeg.orig\opj_malloc.h	Tue Apr 22 09:54:20 2014
-+++ openjpeg\opj_malloc.h	Thu May 15 15:47:34 2014
+--- openjpeg.orig\opj_malloc.h	Tue Apr 29 09:15:02 2014
++++ openjpeg\opj_malloc.h	Thu May 15 22:00:14 2014
 @@ -53,11 +53,11 @@
  #ifdef ALLOC_PERF_OPT
  void * OPJ_CALLCONV opj_malloc(size_t size);
@@ -193,8 +113,8 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  #endif
  
 diff -rPu5 openjpeg.orig\t2.c openjpeg\t2.c
---- openjpeg.orig\t2.c	Tue Apr 22 09:54:20 2014
-+++ openjpeg\t2.c	Thu May 15 16:38:14 2014
+--- openjpeg.orig\t2.c	Tue Apr 29 09:15:02 2014
++++ openjpeg\t2.c	Thu May 15 22:12:09 2014
 @@ -861,14 +861,13 @@
          /* SOP markers */
  
