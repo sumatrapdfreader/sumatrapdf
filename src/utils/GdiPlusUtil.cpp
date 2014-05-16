@@ -189,10 +189,6 @@ REAL GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo)
 #endif
 }
 
-#define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
-#define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
-#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
-
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
 void DrawCloseButton(DRAWITEMSTRUCT *dis)

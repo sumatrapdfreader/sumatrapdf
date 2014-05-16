@@ -139,6 +139,7 @@ public:
     virtual DocTocItem *GetTocTree();
 
     virtual bool SetParentHwnd(HWND hwnd);
+    virtual void RemoveParentHwnd();
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
 
@@ -242,6 +243,12 @@ bool ChmEngineImpl::SetParentHwnd(HWND hwnd)
     CrashIf(htmlWindow);
     htmlWindow = HtmlWindow::Create(hwnd, this);
     return htmlWindow != NULL;
+}
+
+void ChmEngineImpl::RemoveParentHwnd()
+{
+    delete htmlWindow;
+    htmlWindow = NULL;
 }
 
 void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)

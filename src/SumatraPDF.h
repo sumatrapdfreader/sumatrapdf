@@ -122,6 +122,8 @@ void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
 void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
+void  EnterFullScreen(WindowInfo& win, bool presentation=false);
+void  ExitFullScreen(WindowInfo& win);
 
 COLORREF GetLogoBgColor();
 COLORREF GetAboutBgColor();

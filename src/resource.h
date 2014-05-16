@@ -162,6 +162,7 @@
 #define IDC_FAV_TITLE                   1106
 #define IDC_FAV_CLOSE                   1107
 #define IDC_FAV_TREE                    1108
+#define IDC_TABBAR                      1110
 #define IDB_TOOLBAR                     2000
 #define IDB_RELOADING_CUE               2010
 #define IDT_FILE_NEW                    3000

@@ -852,6 +852,9 @@
     <ClCompile Include="..\mupdf\source\tools\pdfshow.c">
       <Filter>ext\mupdf\xps</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Tabs.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\AppPrefs.h">
@@ -1291,6 +1294,9 @@
     </ClInclude>
     <ClInclude Include="..\mupdf\source\pdf\pdf-interpret-imp.h">
       <Filter>ext\mupdf\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Tabs.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

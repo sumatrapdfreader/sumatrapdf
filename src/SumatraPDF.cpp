@@ -46,6 +46,7 @@ using namespace Gdiplus;
 #include "SumatraWindow.h"
 #include "StressTesting.h"
 #include "TableOfContents.h"
+#include "Tabs.h"
 #include "Timer.h"
 #include "ThreadUtil.h"
 #include "Toolbar.h"
@@ -165,8 +166,6 @@ static FileExistenceChecker *       gFileExistenceChecker = NULL;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
-static void EnterFullScreen(WindowInfo& win, bool presentation=false);
-static void ExitFullScreen(WindowInfo& win);
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 bool HasPermission(int permission)
@@ -1249,6 +1248,8 @@ static WindowInfo* CreateWindowInfo()
         win->hwndCanvas, NULL, ghinst, NULL);
 
     CreateToolbar(win);
+    if (gGlobalPrefs->showTabBar)
+        CreateTabbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
@@ -1466,6 +1467,24 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return win;
     }
 
+    if (gGlobalPrefs->showTabBar) {
+        // modify the args so that we always reuse the same window
+        if (!args.win) {
+            if (gWindows.Count()) {
+                args.win = gWindows.At(0);
+                args.isNewWindow = false;
+                args.forceReuse = true;
+            }
+        }
+        else
+            args.forceReuse = true;
+        args.allowFailure = true;
+
+        SaveCurrentTabData(args.win);
+
+        win = args.win;
+    }
+
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
         win = gWindows.At(0);
         args.win = win;
@@ -1503,6 +1522,10 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         *(WCHAR *)path::GetExt(fullPath) = '\0';
         loaded = LoadDocIntoWindow(args, &pwdUI);
     }
+
+    // insert new tab item for the loaded document
+    if (gGlobalPrefs->showTabBar && win && !win->IsAboutWindow())
+        TabsOnLoadedDoc(win);
 
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
@@ -1545,6 +1568,92 @@ WindowInfo* LoadDocument(LoadArgs& args)
 #else
     return LoadDocumentOld(args);
 #endif
+}
+
+// Loads document data into the WindowInfo.
+void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
+{
+    if (!win || !tdata) return;
+
+    FileWatcherUnsubscribe(win->watcher);
+    win->watcher = NULL;
+
+    ClearTocBox(win);
+    AbortFinding(win);
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = NULL;
+    if (win->uia_provider)
+        win->uia_provider->OnDocumentUnload();
+
+    delete win->pdfsync;
+    win->pdfsync = NULL;
+
+    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
+    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    win->mouseAction = MA_IDLE;
+
+    DeletePropertiesWindow(win->hwndFrame);
+
+
+    str::ReplacePtr(&win->loadedFilePath, tdata->dm->FilePath());
+
+    delete win->dm;
+    win->dm = tdata->dm;
+    if (win->IsChm())
+        static_cast<ChmEngine *>(win->dm->engine)->SetParentHwnd(win->hwndCanvas);
+
+    // tell UI Automation about content change
+    if (win->uia_provider)
+        win->uia_provider->OnDocumentLoad(win->dm);
+
+    delete win->userAnnots;
+    win->userAnnots = tdata->userAnnots;
+    win->userAnnotsModified = tdata->userAnnotsModified;
+
+    if (win->dm->viewPort != win->canvasRc)
+        win->dm->ChangeViewPortSize(win->GetViewPortSize());
+
+    win->RedrawAll();
+    OnMenuFindMatchCase(win);
+    UpdateFindbox(win);
+
+    // menu for chm docs is different, so we have to re-create it
+    RebuildMenuBarForWindow(win);
+
+    int pageCount = win->dm->PageCount();
+    if (pageCount > 0) {
+        UpdateToolbarPageText(win, pageCount);
+        UpdateToolbarFindText(win);
+    }
+
+    win::SetText(win->hwndFrame, tdata->title);
+
+    if (HasPermission(Perm_DiskAccess) && Engine_PDF == win->dm->engineType) {
+        int res = Synchronizer::Create(win->dm->FilePath(),
+            static_cast<PdfEngine *>(win->dm->engine), &win->pdfsync);
+        // expose SyncTeX in the UI
+        if (PDFSYNCERR_SUCCESS == res)
+            gGlobalPrefs->enableTeXEnhancements = true;
+    }
+
+    bool enable = !win->dm->engine || !win->dm->engine->HasPageLabels();
+    ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
+
+    win->dm->SetScrollState(tdata->dm->GetScrollState());
+
+    UpdateTextSelection(win, false);
+
+    UpdateToolbarState(win);
+
+    win->tocState = tdata->tocState;
+    SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
+
+    win->RedrawAll(true);
+
+    UpdateToolbarAndScrollbarState(*win);
+
+    if (gGlobalPrefs->reloadModifiedDocuments)
+        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win));
 }
 
 // The current page edit box is updated with the current page number
@@ -2628,6 +2737,9 @@ void OnMenuExit()
         }
         AbortFinding(win);
         AbortPrinting(win);
+
+        if (gGlobalPrefs->showTabBar)
+            TabsOnCloseWindow(win, true);
     }
 
     prefs::Save();
@@ -2730,6 +2842,12 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         // TODO: warn about unsaved changes
     }
 
+    if (gGlobalPrefs->showTabBar) {
+        TabsOnCloseWindow(win, quitIfLast);
+        if (!quitIfLast && TabCtrl_GetItemCount(win->hwndTabBar))
+            return;
+    }
+
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)
@@ -2762,6 +2880,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     } else if (lastWindow && !quitIfLast) {
         CrashIf(!gWindows.Contains(win));
         UpdateToolbarAndScrollbarState(*win);
+
+        if (gGlobalPrefs->showTabBar)
+            ShowOrHideTabbar(win, SW_HIDE);
     }
 }
 
@@ -3377,11 +3498,18 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
+    int tabBarDy = 0;
+    if (gGlobalPrefs->showTabBar && !(win->presentation || win->isFullScreen)) {
+        SetWindowPos(win->hwndTabBar, NULL, 0, rebBarDy, dx, TABBAR_HEIGHT, SWP_NOZORDER);
+        UpdateTabWidth(win);
+        tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+    }
+
     bool tocVisible = win->tocLoaded && win->tocVisible;
     if (tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
     else
-        SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy + tabBarDy, dx, dy - (rebBarDy + tabBarDy), SWP_NOZORDER);
 
     if (win->presentation || win->isFullScreen) {
         RectI fullscreen = GetFullscreenRect(win->hwndFrame);
@@ -3553,7 +3681,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         win.dm->GoToPage(newPageNo, 0, true);
 }
 
-static void EnterFullScreen(WindowInfo& win, bool presentation)
+void EnterFullScreen(WindowInfo& win, bool presentation)
 {
     if (!HasPermission(Perm_FullscreenAccess))
         return;
@@ -3600,6 +3728,7 @@ static void EnterFullScreen(WindowInfo& win, bool presentation)
 
     SetMenu(win.hwndFrame, NULL);
     ShowWindow(win.hwndReBar, SW_HIDE);
+    ShowWindow(win.hwndTabBar, SW_HIDE);
 
     SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
     SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOZORDER);
@@ -3613,7 +3742,7 @@ static void EnterFullScreen(WindowInfo& win, bool presentation)
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
-static void ExitFullScreen(WindowInfo& win)
+void ExitFullScreen(WindowInfo& win)
 {
     if (!win.isFullScreen && !win.presentation)
         return;
@@ -3637,6 +3766,8 @@ static void ExitFullScreen(WindowInfo& win)
 
     if (gGlobalPrefs->showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
+    if (gGlobalPrefs->showTabBar)
+        ShowWindow(win.hwndTabBar, SW_SHOW);
     if (!win.isMenuHidden)
         SetMenu(win.hwndFrame, win.menu);
 
@@ -3732,6 +3863,11 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 {
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
+
+    if (gGlobalPrefs->showTabBar && isCtrl && VK_TAB == key) {
+        TabsOnCtrlTab(win);
+        return true;
+    }
 
     if ((VK_LEFT == key || VK_RIGHT == key) &&
         isShift && isCtrl &&
@@ -4051,6 +4187,8 @@ static void ResizeSidebar(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
+    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+        y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     totalDy -= y;
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
@@ -4093,6 +4231,8 @@ static void ResizeFav(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
+    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+        y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     totalDy -= y;
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
@@ -4255,13 +4395,18 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
     int toolbarDy = 0;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
-    int dy = rFrame.dy - toolbarDy;
+
+    int tabBarDy = 0;
+    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+        tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+
+    int dy = rFrame.dy - (toolbarDy + tabBarDy);
 
     if (!sidebarVisible) {
         if (GetFocus() == win->hwndTocTree || GetFocus() == win->hwndFavTree)
             SetFocus(win->hwndFrame);
 
-        SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy, rFrame.dx, dy, SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy + tabBarDy, rFrame.dx, dy, SWP_NOZORDER);
         ShowWindow(win->hwndSidebarSplitter, SW_HIDE);
         ShowWindow(win->hwndTocBox, SW_HIDE);
         ShowWindow(win->hwndFavSplitter, SW_HIDE);
@@ -4276,7 +4421,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         return;
     }
 
-    int y = toolbarDy;
+    int y = toolbarDy + tabBarDy;
     ClientRect sidebarRc(win->hwndTocBox);
     int tocDx = sidebarRc.dx;
     if (tocDx == 0) {
@@ -5439,6 +5584,13 @@ InitMouseWheelInfo:
             if (win && win->presentation && hwnd != GetForegroundWindow())
                 return MA_ACTIVATEANDEAT;
             return MA_ACTIVATE;
+
+        case WM_NOTIFY:
+            if (wParam == IDC_TABBAR) {
+                if (win)
+                    return TabsOnNotify(win, lParam);
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);

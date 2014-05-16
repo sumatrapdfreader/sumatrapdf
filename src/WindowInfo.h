@@ -14,6 +14,7 @@ class Notifications;
 class StressTest;
 struct WatchedFile;
 class SumatraUIAutomationProvider;
+struct TabData;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -105,6 +106,11 @@ public:
 
     // horizontal splitter for resizing favorites and bookmars parts
     HWND            hwndFavSplitter;
+
+    HWND            hwndTabBar;
+    // keeps the sequence of tab selection. This is needed for restoration 
+    // of the previous tab when the current one is closed.
+    Vec<TabData *> *tabSelectionHistory;
 
     HWND            hwndInfotip;
 

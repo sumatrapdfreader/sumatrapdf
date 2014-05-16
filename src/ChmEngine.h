@@ -27,6 +27,7 @@ public:
 class ChmEngine : public BaseEngine {
 public:
     virtual bool SetParentHwnd(HWND hwnd) = 0;
+    virtual void RemoveParentHwnd() = 0;
     virtual void DisplayPage(int pageNo) = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
 

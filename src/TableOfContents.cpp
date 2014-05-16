@@ -10,6 +10,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"
+#include "Tabs.h"
 #include "Translations.h"
 #include "UITask.h"
 #include "WindowInfo.h"
@@ -376,7 +377,10 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
         case TVN_KEYDOWN: {
             TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
-                AdvanceFocus(win);
+                if (gGlobalPrefs->showTabBar && IsCtrlPressed())
+                    TabsOnCtrlTab(win);
+                else
+                    AdvanceFocus(win);
                 return 1;
             }
             break;

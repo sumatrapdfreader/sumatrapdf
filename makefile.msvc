@@ -207,6 +207,7 @@ MAIN_UI_OBJS = \
 	$(OS)\MuiEbookPageDef.obj $(OS)\PagesLayoutDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
+	$(OS)\Tabs.obj \
 	$(UIA_OBJS)
 
 SUMATRA_OBJS = \

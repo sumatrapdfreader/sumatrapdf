@@ -7,6 +7,10 @@
 // used for communicating with DrawCloseButton()
 #define BUTTON_HOVER_TEXT L"1"
 
+#define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
+#define COL_CLOSE_X_HOVER RGB(0xf9, 0xeb, 0xeb)  // white-ish
+#define COL_CLOSE_HOVER_BG RGB(0xC1, 0x35, 0x35) // red-ish
+
 // note: must write "using namespace Gdiplus;" before #include "GdiPlusUtil.h"
 // this is to make sure we don't accidentally do that just by including this file
 
