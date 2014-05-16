@@ -324,7 +324,9 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
             // ToC tree, sidebar title and close button
             parent == win->hwndTocBox   ||
             // Favorites tree, title, and close button
-            parent == win->hwndFavBox)
+            parent == win->hwndFavBox   ||
+            // tab bar
+            parent == win->hwndTabBar)
         {
             return win;
         }

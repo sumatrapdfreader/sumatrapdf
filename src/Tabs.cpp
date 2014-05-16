@@ -9,6 +9,7 @@ using namespace Gdiplus;
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "TableOfContents.h"
+#include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -273,31 +274,27 @@ private:
     }
 };
 
-
-struct NotifyThreadData {
-    HWND  wnd;
+// TODO: why can't we just call TabsOnNotify directly?
+class TabNotification : public UITask {
+    WindowInfo *win;
     UINT  code;
-    int   index1;
-    int   index2;
+    int   index1, index2;
 
-    NotifyThreadData(HWND wnd, UINT code, int index1=-1, int index2=-1) : 
-                        wnd(wnd), code(code), index1(index1), index2(index2) {}
-    NotifyThreadData() {}
-};
+public:
+    TabNotification(WindowInfo *win, UINT code, int index1=-1, int index2=-1) :
+        win(win), code(code), index1(index1), index2(index2) { }
 
-// Notifies the parent window about specific events in the tab bar.
-DWORD WINAPI NotifyThread(LPVOID data)
-{
-    NotifyThreadData *ntd = (NotifyThreadData *)data;
-    LRESULT result = SendMessage(GetParent(ntd->wnd), WM_NOTIFY, IDC_TABBAR, (LPARAM)ntd);
-    if (result == FALSE && (ntd->code == TCN_SELCHANGING || ntd->code == T_CLOSING)) {
-        // Return the response as a WM_USER message to the tabbar's WndProc.
-        PostMessage(ntd->wnd, WM_USER, ntd->code, 0);
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            NMHDR nmhdr = { NULL, 0, code };
+            LRESULT res = TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2);
+            if (!res && (TCN_SELCHANGING == code || T_CLOSING == code)) {
+                // TODO: do these need to be delayed (again)?
+                PostMessage(win->hwndTabBar, WM_USER, code, 0);
+            }
+        }
     }
-    delete ntd;
-    return 0;
-}
-
+};
 
 WNDPROC DefWndProcTabBar;
 LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -413,9 +410,8 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             if (tab->highlighted != hl) {
                 if (tab->isDragging) {
                     // send notification if the highlighted tab is dragged over another
-                    NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_DRAG, tab->highlighted, hl);
-                    HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
-                    SafeCloseHandle(&h);
+                    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+                    uitask::Post(new TabNotification(win, T_DRAG, tab->highlighted, hl));
                 }
 
                 tab->Invalidate(hl);
@@ -438,16 +434,14 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &inX);
         if (inX) {
             // send request to close the tab
-            NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_CLOSING, tab->nextTab);
-            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
-            SafeCloseHandle(&h);
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            uitask::Post(new TabNotification(win, T_CLOSING, tab->nextTab));
         }
         else if (tab->nextTab != -1) {
             if (tab->nextTab != tab->current) {
                 // send request to select tab
-                NotifyThreadData *ntd = new NotifyThreadData(hwnd, TCN_SELCHANGING);
-                HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
-                SafeCloseHandle(&h);
+                WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+                uitask::Post(new TabNotification(win, TCN_SELCHANGING));
             }
             tab->isDragging = true;
             SetCapture(hwnd);
@@ -466,18 +460,16 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             tab->Invalidate(tab->nextTab);
             tab->current = tab->nextTab;
             // send notification that the tab is selected
-            NotifyThreadData *ntd = new NotifyThreadData(hwnd, TCN_SELCHANGE);
-            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
-            SafeCloseHandle(&h);
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            uitask::Post(new TabNotification(win, TCN_SELCHANGE));
         }
         return 0;
 
     case WM_LBUTTONUP:
         if (tab->xClicked != -1) {
             // send notification that the tab is closed
-            NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_CLOSE, tab->xClicked);
-            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
-            SafeCloseHandle(&h);
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            uitask::Post(new TabNotification(win, T_CLOSE, tab->xClicked));
             tab->Invalidate(tab->xClicked);
             tab->xClicked = -1;
         }
@@ -687,13 +679,9 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
 
 // On tab selection, we save the data for the tab which is loosing selection and
 // load the data of the selected tab into the WindowInfo.
-LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam)
+LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
 {
-#ifdef OWN_TAB_DRAWING
-    NotifyThreadData *data = (NotifyThreadData *)lparam;
-#else
     LPNMHDR data = (LPNMHDR)lparam;
-#endif //OWN_TAB_DRAWING
 
     switch(data->code) {
     case TCN_SELCHANGING:
@@ -719,21 +707,21 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam)
     case T_CLOSE:
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
-            if (data->index1 == current) {
+            if (tab1 == current) {
                 CloseWindow(win, false);
             }
             else {
-                TabData *tdata = GetTabData(win->hwndTabBar, data->index1);
+                TabData *tdata = GetTabData(win->hwndTabBar, tab1);
                 win->tabSelectionHistory->Remove(tdata);
                 DeleteTabData(tdata, true);
-                TabCtrl_DeleteItem(win->hwndTabBar, data->index1);
+                TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
             }
         }
         break;
 
     case T_DRAG:
-        SwapTabs(win, data->index1, data->index2);
+        SwapTabs(win, tab1, tab2);
         break;
 #endif //OWN_TAB_DRAWING
     }
@@ -766,14 +754,10 @@ void TabsOnCtrlTab(WindowInfo *win)
     int count = TabCtrl_GetItemCount(win->hwndTabBar);
     if (count < 2) return;
 
-#ifdef OWN_TAB_DRAWING
-    NotifyThreadData ntd;
-#else
-    NMHDR ntd;
-#endif //OWN_TAB_DRAWING
+    NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
 
-    ntd.code = TCN_SELCHANGING;
-    if (FALSE != TabsOnNotify(win, (LPARAM)&ntd)) return;
+    if (TabsOnNotify(win, (LPARAM)&ntd))
+        return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     //if (-1 == current) return;
@@ -783,9 +767,10 @@ void TabsOnCtrlTab(WindowInfo *win)
     TabsOnNotify(win, (LPARAM)&ntd);
 }
 
-
+// TODO: why can't we switch tabs in fullscreen/presentation mode?
 void ManageFullScreen(WindowInfo *win, bool exitFullScreen)
 {
+    // TODO: shouldn't these rather be per window?
     static bool prevFullScreen, prevPresentation;
 
     if (exitFullScreen) {
@@ -816,14 +801,14 @@ void SwapTabs(WindowInfo *win, int tab1, int tab2)
     if (!TabCtrl_GetItem(win->hwndTabBar, tab1, &tcs))
         return;
     if (tcs.pszText != buf1)
-        wcsncpy_s(buf1, tcs.pszText, _TRUNCATE);
+        str::BufSet(buf1, dimof(buf1), tcs.pszText);
     lp = tcs.lParam;
 
     tcs.pszText = buf2;
     if (!TabCtrl_GetItem(win->hwndTabBar, tab2, &tcs))
         return;
     if (tcs.pszText != buf2)
-        wcsncpy_s(buf2, tcs.pszText, _TRUNCATE);
+        str::BufSet(buf2, dimof(buf2), tcs.pszText);
 
     tcs.pszText = buf2;
     TabCtrl_SetItem(win->hwndTabBar, tab1, &tcs);

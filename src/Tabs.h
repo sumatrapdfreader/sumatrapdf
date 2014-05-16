@@ -47,7 +47,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
 void CreateTabbar(WindowInfo *win);
 void TabsOnLoadedDoc(WindowInfo *win);
 void TabsOnCloseWindow(WindowInfo *win, bool cleanUp);
-LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam);
+LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1=-1, int tab2=-1);
 void TabsOnCtrlTab(WindowInfo *win);
 
 void ShowOrHideTabbar(WindowInfo *win, int command);
