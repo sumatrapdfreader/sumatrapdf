@@ -627,10 +627,14 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc)
         fromDy = (int)((float)coverBmp->GetHeight() * scale);
     Graphics g(&res);
     g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
-        0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    Status ok = g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
+                            0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    if (ok != Ok) {
+        delete coverBmp;
+        return NULL;
+    }
     HBITMAP hbmp;
-    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
     delete coverBmp;
     if (ok == Ok)
         return new RenderedBitmap(hbmp, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));

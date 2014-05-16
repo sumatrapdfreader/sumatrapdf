@@ -1393,7 +1393,8 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
             Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
             if (bmp) {
                 status = g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
-                CrashIf(status != Ok);
+                // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it
+                CrashIf(status != Ok && status != Win32Error);
             }
             delete bmp;
         } else if (InstrLinkStart == i->type) {
