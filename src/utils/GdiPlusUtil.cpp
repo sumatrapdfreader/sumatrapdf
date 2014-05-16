@@ -328,12 +328,26 @@ const WCHAR *GfxFileExtFromData(const char *data, size_t len)
     }
 }
 
+static bool JpegUsesArithmeticCoding(const char *data, size_t len)
+{
+    CrashIf(GfxFormatFromData(data, len) != Img_JPEG);
+
+    ByteReader r(data, len);
+    for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ix += r.WordBE(ix + 2) + 2) {
+        if (0xC9 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xCB) {
+            // found the start of a frame using arithmetic coding
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IsGdiPlusNativeFormat(const char *data, size_t len)
 {
     ImgFormat fmt = GfxFormatFromData(data, len);
     return Img_BMP == fmt || Img_GIF == fmt ||
-           Img_JPEG == fmt || Img_PNG == fmt ||
-           Img_TIFF == fmt;
+           (Img_JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
+           Img_PNG == fmt || Img_TIFF == fmt;
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
@@ -345,6 +359,8 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     if (Img_WebP == format)
         return webp::ImageFromData(data, len);
     if (Img_JP2 == format)
+        return fitz::ImageFromData(data, len);
+    if (Img_JPEG == format && JpegUsesArithmeticCoding(data, len))
         return fitz::ImageFromData(data, len);
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
@@ -358,20 +374,10 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         delete bmp;
         bmp = NULL;
     }
-    if (bmp && Img_JPEG == format) {
-        bool ok = false;
-        // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
-        if (bmp->GetWidth() > 0 && bmp->GetHeight() > 0) {
-            // GDI+ apparently succeeds when loading an arithmetically encoded JPEG
-            // but fails to render it after all - use libjpeg-turbo for that case as well
-            Bitmap *clone = bmp->Clone(0, 0, 1, 1, PixelFormat32bppARGB);
-            ok = clone != NULL;
-            delete clone;
-        }
-        if (!ok) {
-            delete bmp;
-            bmp = fitz::ImageFromData(data, len);
-        }
+    // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
+    if (bmp && Img_JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
+        delete bmp;
+        bmp = fitz::ImageFromData(data, len);
     }
     return bmp;
 }
