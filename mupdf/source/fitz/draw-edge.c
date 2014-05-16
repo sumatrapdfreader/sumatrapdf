@@ -326,7 +326,8 @@ fz_insert_gel_raw(fz_gel *gel, int x0, int y0, int x1, int y1)
 	if (y1 > gel->bbox.y1) gel->bbox.y1 = y1;
 
 	if (gel->len + 1 == gel->cap) {
-		int new_cap = gel->cap + 512;
+		/* SumatraPDF: don't reallocate too often for huge paths */
+		int new_cap = gel->cap * 2;
 		gel->edges = fz_resize_array(gel->ctx, gel->edges, new_cap, sizeof(fz_edge));
 		gel->cap = new_cap;
 	}
