@@ -1,3 +1,5 @@
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
 
 #include "BaseUtil.h"
 #include "Tabs.h"
@@ -11,11 +13,10 @@ using namespace Gdiplus;
 #include "WinUtil.h"
 
 
-
 #ifdef OWN_TAB_DRAWING
 class TabPainter
 {
-    Vec<WCHAR *> text;
+    WStrVec text;
     PathData *data;
     int width, height, tabbarHeight;
     HWND hwnd;
@@ -86,7 +87,7 @@ public:
         iterator.NextMarker(&shape);
 
         graphics.TranslateTransform(1.0f, REAL(tabbarHeight - height - 1));
-        for (size_t i = 0; i < Count(); i++) {
+        for (int i = 0; i < Count(); i++) {
             Point pt(point);
             graphics.TransformPoints( CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
             if (shape.IsVisible(pt, &graphics)) {
@@ -149,7 +150,7 @@ public:
         sf.SetTrimming(StringTrimmingEllipsisCharacter);
 
         graphics.TranslateTransform(1.0f, REAL(tabbarHeight - height - 1));
-        for (size_t i = 0; i < Count(); i++) {
+        for (int i = 0; i < Count(); i++) {
             if (graphics.IsVisible(0, 0, width + 1, height + 1)) {
                 // paint tab's body
                 iterator.NextMarker(&shape);
@@ -213,24 +214,23 @@ public:
         color.x_click     = AdjustLightness2(color.x_highlight, -10.0f);
     }
 
-    size_t Count() {
-        return text.Count();
+    int Count() {
+        return (int)text.Count();
     }
 
-    void Insert(size_t index, const WCHAR *t) {
+    void Insert(int index, const WCHAR *t) {
         text.InsertAt(index, str::Dup(t));
     }
 
-    bool Set(size_t index, const WCHAR *t) {
+    bool Set(int index, const WCHAR *t) {
         if (index < Count()) {
-            free(text.At(index));
-            text.At(index) = str::Dup(t);
+            str::ReplacePtr(&text.At(index), t);
             return true;
         }
         return false;
     }
 
-    bool Delete(size_t index) {
+    bool Delete(int index) {
         if (index < Count()) {
             free(text.At(index));
             text.RemoveAt(index);
@@ -240,9 +240,6 @@ public:
     }
 
     void DeleteAll() {
-        for (size_t i = 0; i < Count(); i++) {
-            free(text.At(i));
-        }
         text.Reset();
     }
 
@@ -307,7 +304,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 {
     PAINTSTRUCT ps;
     HDC hdc;
-    size_t index;
+    int index;
     LPTCITEM tcs;
 
     TabPainter *tab = (TabPainter *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -319,7 +316,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         break;
 
     case TCM_INSERTITEM:
-        index = wParam;
+        index = (int)wParam;
         tcs = (LPTCITEM)lParam;
         tab->Insert(index, tcs->pszText);
         if ((int)index <= tab->current)
@@ -331,7 +328,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         break;
 
     case TCM_SETITEM:
-        index = wParam;
+        index = (int)wParam;
         tcs = (LPTCITEM)lParam;
         if (TCIF_TEXT & tcs->mask) {
             if (tab->Set(index, tcs->pszText))
@@ -340,7 +337,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         break;
 
     case TCM_DELETEITEM:
-        index = wParam;
+        index = (int)wParam;
         if (tab->Delete(index)) {
             if ((int)index < tab->current)
                 tab->current--;
@@ -374,7 +371,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     case TCM_SETCURSEL:
         {
-            index = wParam;
+            index = (int)wParam;
             if (index >= tab->Count()) return -1;
             int previous = tab->current;
             if ((int)index != tab->current) {
@@ -417,7 +414,8 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 if (tab->isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_DRAG, tab->highlighted, hl);
-                    CloseHandle(CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL));
+                    HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
+                    SafeCloseHandle(&h);
                 }
 
                 tab->Invalidate(hl);
@@ -441,13 +439,15 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (inX) {
             // send request to close the tab
             NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_CLOSING, tab->nextTab);
-            CloseHandle(CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL));
+            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
+            SafeCloseHandle(&h);
         }
         else if (tab->nextTab != -1) {
             if (tab->nextTab != tab->current) {
                 // send request to select tab
                 NotifyThreadData *ntd = new NotifyThreadData(hwnd, TCN_SELCHANGING);
-                CloseHandle(CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL));
+                HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
+                SafeCloseHandle(&h);
             }
             tab->isDragging = true;
             SetCapture(hwnd);
@@ -467,7 +467,8 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             tab->current = tab->nextTab;
             // send notification that the tab is selected
             NotifyThreadData *ntd = new NotifyThreadData(hwnd, TCN_SELCHANGE);
-            CloseHandle(CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL));
+            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
+            SafeCloseHandle(&h);
         }
         return 0;
 
@@ -475,7 +476,8 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (tab->xClicked != -1) {
             // send notification that the tab is closed
             NotifyThreadData *ntd = new NotifyThreadData(hwnd, T_CLOSE, tab->xClicked);
-            CloseHandle(CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL));
+            HANDLE h = CreateThread(NULL, 0, NotifyThread, ntd, 0, NULL);
+            SafeCloseHandle(&h);
             tab->Invalidate(tab->xClicked);
             tab->xClicked = -1;
         }

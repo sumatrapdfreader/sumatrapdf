@@ -379,6 +379,9 @@ GlobalPrefs = [
 		"actual resolution of the main screen in DPI (if this value " +
 		" isn't positive, the system's UI setting is used)",
 		expert=True, version="2.5"),
+	Field("ShowTabBar", Bool, False,
+		"if true, we show a tab bar and perform tabbed navigation",
+		expert=True, version="2.6"),
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +
 		"(preliminary and still subject to change)",

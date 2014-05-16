@@ -1,4 +1,8 @@
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
 
+#ifndef Tabs_h
+#define Tabs_h
 
 #define TABBAR_HEIGHT    24
 #define TAB_WIDTH        200
@@ -51,3 +55,4 @@ void UpdateTabWidth(WindowInfo *win);
 void ManageFullScreen(WindowInfo *win, bool exitFullScreen);
 void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
+#endif

@@ -957,6 +957,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\Tabs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\Tabs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\Toolbar.cpp"
 					>
 				</File>

@@ -257,6 +257,8 @@ struct GlobalPrefs {
     // actual resolution of the main screen in DPI (if this value isn't
     // positive, the system's UI setting is used)
     int customScreenDPI;
+    // if true, we show a tab bar and perform tabbed navigation
+    bool showTabBar;
     // default values for user added annotations in FixedPageUI documents
     // (preliminary and still subject to change)
     AnnotationDefaults annotationDefaults;
@@ -326,8 +328,6 @@ struct GlobalPrefs {
     DisplayMode defaultDisplayModeEnum;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
-    // if true, we show a tab bar and perform tabbed navigation
-    bool showTabBar;
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
@@ -479,7 +479,7 @@ static const FieldInfo gFILETIMEFields[] = {
 static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
-    { (size_t)-1,                                      Type_Comment,    (intptr_t)"For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings2.5.html"                    },
+    { (size_t)-1,                                      Type_Comment,    (intptr_t)"For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings2.6.html"                    },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,       false                                                                                                                 },
@@ -497,6 +497,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, reloadModifiedDocuments),  Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, customScreenDPI),          Type_Int,        0                                                                                                                     },
+    { offsetof(GlobalPrefs, showTabBar),               Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
@@ -523,9 +524,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, showTabBar),               Type_Bool,       false                                                                                                                 },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 45, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0CustomScreenDPI\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek\0ShowTabBar" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 45, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0CustomScreenDPI\0ShowTabBar\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 
