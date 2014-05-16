@@ -363,39 +363,28 @@ int main(int argc, char **argv)
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:
-        ErrOut("%s <filename> [-pwd <password>][-full][-render <path-%%d.tga>]\n",
+        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>\n",
             path::GetBaseName(argList.At(0)));
         return 2;
     }
 
     ScopedMem<WCHAR> filePath;
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(argList.At(1), &fdata);
-    if (INVALID_HANDLE_VALUE != hfind) {
-        ScopedMem<WCHAR> dir(path::GetDir(argList.At(1)));
-        filePath.Set(path::Join(dir, fdata.cFileName));
-        FindClose(hfind);
-    }
-    else {
-        // embedded documents are referred to by an invalid path
-        // containing more information after a colon (e.g. "C:\file.pdf:3:0")
-        filePath.Set(str::Dup(argList.At(1)));
-    }
-
-    bool fullDump = false;
     WCHAR *password = NULL;
+    bool fullDump = true;
     WCHAR *renderPath = NULL;
     float renderZoom = 1.f;
     bool useAlternateHandlers = false;
     bool loadOnly = false, silent = false;
+#ifdef DEBUG
     int breakAlloc = 0;
+#endif
 
-    for (size_t i = 2; i < argList.Count(); i++) {
-        if (str::Eq(argList.At(i), L"-full"))
-            fullDump = true;
-        else if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count())
+    for (size_t i = 1; i < argList.Count(); i++) {
+        if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count() && !password)
             password = argList.At(++i);
-        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count()) {
+        else if (str::Eq(argList.At(i), L"-quick"))
+            fullDump = false;
+        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count() && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
             if (i + 2 < argList.Count() && str::Parse(argList.At(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
@@ -412,13 +401,20 @@ Usage:
             loadOnly = true;
         else if (str::Eq(argList.At(i), L"-silent"))
             silent = true;
+        // -full is for backward compatibility
+        else if (str::Eq(argList.At(i), L"-full"))
+            fullDump = true;
 #ifdef DEBUG
         else if (str::Eq(argList.At(i), L"-breakalloc") && i + 1 < argList.Count())
             breakAlloc = _wtoi(argList.At(++i));
 #endif
+        else if (!filePath)
+            filePath.Set(str::Dup(argList.At(i)));
         else
             goto Usage;
     }
+    if (!filePath)
+        goto Usage;
 
 #ifdef DEBUG
     if (breakAlloc) {
@@ -439,6 +435,16 @@ Usage:
 
     ScopedGdiPlus gdiPlus;
     ScopedMiniMui miniMui;
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFile(filePath, &fdata);
+    // embedded documents are referred to by an invalid path
+    // containing more information after a colon (e.g. "C:\file.pdf:3:0")
+    if (INVALID_HANDLE_VALUE != hfind) {
+        ScopedMem<WCHAR> dir(path::GetDir(filePath));
+        filePath.Set(path::Join(dir, fdata.cFileName));
+        FindClose(hfind);
+    }
 
     EngineType engineType;
     PasswordHolder pwdUI(password);
