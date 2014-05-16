@@ -1019,11 +1019,19 @@ char *CbzEngineImpl::GetImageData(int pageNo, size_t& len)
     return cbzFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
 }
 
+// UnRAR doesn't allow to selectively decompress files, so we store all of them
+// in umcompressed form; since image decoding might be expensive, the data is only
+// decoded on demand same as for CBZ and ImageDir
+struct RarDecompressData {
+    size_t len, cap;
+    char data[1]; // data buffer has size cap (+ 2 for zero-termination)
+};
+
 class CbrEngineImpl : public ComicEngine {
     friend CbxEngine;
 
 public:
-    virtual ~CbrEngineImpl() { DeleteVecMembers(pages); }
+    virtual ~CbrEngineImpl() { FreeVecMembers(pageData); }
 
     virtual CbxEngine *Clone() {
         if (fileName)
@@ -1034,7 +1042,7 @@ public:
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbr"; }
 
 protected:
-    Vec<Bitmap *> pages;
+    Vec<RarDecompressData *> pageData;
 
     bool LoadFromFile(const WCHAR *fileName);
 
@@ -1042,85 +1050,60 @@ protected:
     virtual RectD LoadMediabox(int pageNo);
 };
 
-class ImagesPage {
-public:
-    ScopedMem<WCHAR>fileName; // for sorting image files
-    Bitmap *        bmp;
-
-    ImagesPage(const WCHAR *fileName, Bitmap *bmp) : bmp(bmp),
-        fileName(str::Dup(fileName)) { }
-    ~ImagesPage() { delete bmp; }
-
-    static int cmpPageByName(const void *o1, const void *o2) {
-        ImagesPage *p1 = *(ImagesPage **)o1;
-        ImagesPage *p2 = *(ImagesPage **)o2;
-        return wcscmp(p1->fileName, p2->fileName);
-    }
-};
-
-struct RarDecompressData {
-    unsigned    totalSize;
-    char *      buf;
-    unsigned    currSize;
-};
-
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed)
 {
     if (UCM_PROCESSDATA != msg)
         return -1;
-
     if (!userData)
         return -1;
-    RarDecompressData *rrd = (RarDecompressData*)userData;
 
-    if (rrd->currSize + bytesProcessed > rrd->totalSize)
+    RarDecompressData *rdd = (RarDecompressData *)userData;
+    if (bytesProcessed > (LPARAM)rdd->cap || rdd->len > rdd->cap - bytesProcessed)
         return -1;
 
-    char *buf = rrd->buf + rrd->currSize;
-    memcpy(buf, (char *)rarBuffer, bytesProcessed);
-    rrd->currSize += (unsigned int)bytesProcessed;
+    memcpy(rdd->data + rdd->len, (unsigned char *)rarBuffer, bytesProcessed);
+    rdd->len += bytesProcessed;
     return 1;
 }
 
-static char *LoadCurrentCbrFile(HANDLE hArc, RARHeaderDataEx& rarHeader, size_t *lenOut)
+static RarDecompressData *LoadCurrentCbrFile(HANDLE hArc, RARHeaderDataEx& rarHeader)
 {
-    ScopedMem<char> data((char *)malloc(rarHeader.UnpSize + sizeof(WCHAR)));
-
-    if (rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize == 0 ||
-        rarHeader.UnpSize + sizeof(WCHAR) < sizeof(WCHAR) || !data) {
+    if (rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize == 0 || (int)rarHeader.UnpSize < 0) {
         RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
         return NULL;
     }
 
-    RarDecompressData rdd;
-    rdd.totalSize = rarHeader.UnpSize;
-    rdd.buf = data;
-    rdd.currSize = 0;
-    RARSetCallback(hArc, unrarCallback, (LPARAM)&rdd);
+    RarDecompressData *rdd = (RarDecompressData *)malloc(sizeof(RarDecompressData) + rarHeader.UnpSize + 1);
+    if (!rdd) {
+        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+        return NULL;
+    }
+    rdd->cap = rarHeader.UnpSize;
+    rdd->len = 0;
+
+    RARSetCallback(hArc, unrarCallback, (LPARAM)rdd);
     int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
-    if (0 != res || rdd.totalSize != rdd.currSize)
+    if (0 != res || rdd->cap != rdd->len) {
+        free(rdd);
         return NULL;
+    }
+
     // zero-terminate for convenience
-    data[rdd.totalSize] = data[rdd.totalSize + 1] = '\0';
+    rdd->data[rdd->len] = rdd->data[rdd->len + 1] = '\0';
 
-    if (lenOut)
-        *lenOut = rdd.totalSize;
-    return data.StealData();
+    return rdd;
 }
 
-static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
-{
-    size_t bmpDataSize;
-    ScopedMem<char> bmpData(LoadCurrentCbrFile(hArc, rarHeader, &bmpDataSize));
-    if (!bmpData)
-        return NULL;
+struct NameToData {
+    const WCHAR *fileName;
+    RarDecompressData *rdd;
 
-    Bitmap *bmp = BitmapFromData(bmpData, bmpDataSize);
-    if (!bmp)
-        return NULL;
+    explicit NameToData(const WCHAR *fileName=NULL, RarDecompressData *rdd=NULL) : fileName(fileName), rdd(rdd) { }
 
-    return new ImagesPage(rarHeader.FileNameW, bmp);
-}
+    static int cmpByName(const void *a, const void *b) {
+        return wcscmp(((NameToData *)a)->fileName, ((NameToData *)b)->fileName);
+    }
+};
 
 bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 {
@@ -1129,7 +1112,7 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
     fileName = str::Dup(file);
 
     RAROpenArchiveDataEx  arcData = { 0 };
-    arcData.ArcNameW = (WCHAR *)file;
+    arcData.ArcNameW = fileName;
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
@@ -1139,7 +1122,9 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
     // UnRAR does not seem to support extracting a single file by name,
     // so lazy image loading doesn't seem possible
 
-    Vec<ImagesPage *> found;
+    WStrVec foundNames;
+    Vec<NameToData> foundData;
+
     for (;;) {
         RARHeaderDataEx rarHeader;
         int res = RARReadHeaderEx(hArc, &rarHeader);
@@ -1148,14 +1133,21 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 
         const WCHAR *fileName = rarHeader.FileNameW;
         if (ImageEngine::IsSupportedFile(fileName)) {
-            ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
-            if (page)
-                found.Append(page);
+            RarDecompressData *rdd = LoadCurrentCbrFile(hArc, rarHeader);
+            if (rdd && !GfxFileExtFromData(rdd->data, rdd->cap)) {
+                delete rdd;
+            }
+            else if (rdd) {
+                foundNames.Append(str::Dup(fileName));
+                foundData.Append(NameToData(foundNames.Last(), rdd));
+            }
         }
         else if (str::EqI(fileName, L"ComicInfo.xml")) {
-            ScopedMem<char> xmlData(LoadCurrentCbrFile(hArc, rarHeader, NULL));
-            if (xmlData)
-                ParseComicInfoXml(xmlData);
+            RarDecompressData *rdd = LoadCurrentCbrFile(hArc, rarHeader);
+            if (rdd) {
+                ParseComicInfoXml(rdd->data);
+                delete rdd;
+            }
         }
         else
             RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
@@ -1163,38 +1155,40 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
     }
     RARCloseArchive(hArc);
 
-    if (found.Count() == 0)
+    if (foundData.Count() == 0)
         return false;
-    found.Sort(ImagesPage::cmpPageByName);
 
-    for (size_t i = 0; i < found.Count(); i++) {
-        pages.Append(found.At(i)->bmp);
-        found.At(i)->bmp = NULL;
+    foundData.Sort(NameToData::cmpByName);
+    for (NameToData *item = foundData.IterStart(); item; item = foundData.IterNext()) {
+        pageData.Append(item->rdd);
     }
-    mediaboxes.AppendBlanks(pages.Count());
+    mediaboxes.AppendBlanks(pageData.Count());
 
-    DeleteVecMembers(found);
     return true;
 }
 
 Bitmap *CbrEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    if (pages.At(pageNo - 1)) {
-        deleteAfterUse = false;
-        return pages.At(pageNo - 1);
-    }
-    return NULL;
+    RarDecompressData *rdd = pageData.At(pageNo - 1);
+    deleteAfterUse = true;
+    return BitmapFromData(rdd->data, rdd->len);
 }
 
 RectD CbrEngineImpl::LoadMediabox(int pageNo)
 {
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    if (pages.At(pageNo - 1)) {
-        Bitmap *bmp = pages.At(pageNo - 1);
-        return RectD(0, 0, bmp->GetWidth(), bmp->GetHeight());
+    // fill the cache to prevent the first few images from being unpacked twice
+    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
+    if (page) {
+        RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
+        DropPage(page);
+        return mbox;
     }
-    return RectD();
+
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
+    RarDecompressData *rdd = pageData.At(pageNo - 1);
+    Size size = BitmapSizeFromData(rdd->data, rdd->len);
+    return RectD(0, 0, size.Width, size.Height);
 }
 
 bool CbxEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
