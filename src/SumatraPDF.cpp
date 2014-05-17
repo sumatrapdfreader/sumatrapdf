@@ -1924,8 +1924,8 @@ Stable 2.5.3
 # further information can be added, e.g. the following experimental subkey for
 # auto-updating (requires SUPPORTS_AUTO_UPDATE)
 Portable [
-    URL <download URL for the uncompressed portable .exe>
-    Hash <SHA-256 hash of that file
+    URL: <download URL for the uncompressed portable .exe>
+    Hash <SHA-256 hash of that file>
 ]
 */
 

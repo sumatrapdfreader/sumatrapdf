@@ -571,7 +571,7 @@ void SaveCurrentTabData(WindowInfo *win)
                 SaveTabData(win, (TabData **)&tcs.lParam);
                 TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
 
-                // update the selectoin history
+                // update the selection history
                 win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
                 win->tabSelectionHistory->Push((TabData *)tcs.lParam);
             }
