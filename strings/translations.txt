@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-feafd70d9bb18d3e27e0f2dc73626e1c273e1ab1
+8e300a798af6c020a54afab497b888701152b430
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5670,6 +5670,7 @@ el:Αδυναμία δημιουργίας προσωρινού φακέλου
 es:No se pudo crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
+fa:فهرست موقت را نمی توان ایجاد کرد
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
 gl:Non se puido crear o cartafol temporal
@@ -5928,6 +5929,7 @@ el:Αδυναμία ανάκτησης προσωρινού φακέλου
 es:No se pudo obtener la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
+fa:فهرست موقت را نمی توان به دست آورد
 fi:Väliaikaishakemiston käyttäminen epäonnistui
 fr:Impossible d'obtenir un répertoire temporaire
 gl:Non se puido obter o cartafol temporal
@@ -5976,6 +5978,7 @@ el:Αδυναμία μετακίνησης φακέλου εγκατάσταση
 es:No se pudo eliminar la carpeta de instalación
 et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
+fa:پوشه نصب شده را نمی توان حذف کرد
 fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
 gl:Non se puido eliminar o cartafol de instalación
@@ -6025,6 +6028,7 @@ el:Αδυναμία απομάκρυνσης συντόμευσης
 es:No se pudo eliminar el acceso directo
 et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
+fa:میانبرنمی تواند حذف شود
 fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
 gl:Non se puido eliminar o atallo
@@ -6132,6 +6136,7 @@ dk:Kunne ikke fjerne PDF viser
 es:No se pudo desinstalar el previsualizador de PDF
 et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
+fa:ازقبلا دیده شده را نمی توان پاک کردpdf
 fi:PDF-esikatselijan poistaminen epäonnistui
 fr:Impossible de désinstaller l'aperçu PDF
 gl:Non se puido desinstalar o previsualizador de PDFs
@@ -6179,6 +6184,7 @@ dk:Kunne ikke afinstallere PDF søge filter
 es:No se pudo desinstalar el filtro de búsqueda PDF
 et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
+fa:جستجو شده را نمی توان پاک کردpdf فیلتر
 fi:PDF-hakusuodattimen poistaminen epäonnistui
 fr:Impossible de désinstaller le filtre de recherche PDF
 gl:Non se puido desinstalar o filtro de buscas de PDF
@@ -6226,6 +6232,7 @@ dk:Kunne ikke fjerne browser plugin
 es:No se pudo desinstalar el complemento del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
+fa:مرورگر پلاگین را نمی توان پاک کرد
 fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 gl:Non se puido desinstalar o engadido do navegador
@@ -7591,6 +7598,7 @@ dk:Kunne ikke kopiere fra midlertidig folder
 es:Error al copiar el desinstalador al directorio temporal
 et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
+fa:کپی برنامه برای حذف در پوشه موقت ناموفق
 fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 gl:Fallou a copia do desinstalador no cartafol temporal
@@ -7687,6 +7695,7 @@ dk:Kunne ikke slette afinstallering nøger i registreringsdatabasen
 es:Error al eliminar las claves del registro del desinstalador
 et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
+fa:برای حذف کلید های ثبت برنامه ، حذف به انجام نرسید
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 gl:Fallou o borrado das claves de rexistro
@@ -7854,6 +7863,7 @@ dk:Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen
 es:Fallo al escribir información de la extensión de archivo en el registro
 et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
+fa:ثبت اطلاعات ارسال شده با پسوند طولانی ناموفق
 fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
 gl:Non se puido escribir a información de extensión do ficheiro no rexistro
@@ -7900,6 +7910,7 @@ dk:Kunne ikke skrive afinstallerings information i registreringsdatabasen
 es:Error al escribir información de desinstalación en el registro
 et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
+fa:اطلاعات ارسالی ثبت شده برای حذف ناموق
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
 gl:Fallouse ao escribir a información de desintalación no rexistro
@@ -9984,6 +9995,8 @@ am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջ
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
+et:Jäta alles PDF &brauseri plugin (enam ei toetata)
+eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 pt:&Manter plugin de navegador instalado (já não é suportado)
