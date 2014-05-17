@@ -99,6 +99,7 @@ struct GlobalData {
     bool    installPdfPreviewer;
     bool    keepBrowserPlugin;
     bool    justExtractFiles;
+    bool    autoUpdate;
 #endif
 
     WCHAR * firstError;

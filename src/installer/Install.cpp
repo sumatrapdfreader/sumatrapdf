@@ -422,10 +422,8 @@ static void OnButtonInstall()
 
 void OnInstallationFinished()
 {
-    DestroyWindow(gHwndButtonInstUninst);
-    gHwndButtonInstUninst = NULL;
-    DestroyWindow(gHwndProgressBar);
-    gHwndProgressBar = NULL;
+    SafeDestroyWindow(&gHwndButtonInstUninst);
+    SafeDestroyWindow(&gHwndProgressBar);
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
@@ -438,6 +436,11 @@ void OnInstallationFinished()
     InvalidateFrame();
 
     CloseHandle(gGlobalData.hThread);
+
+    if (gGlobalData.autoUpdate && gGlobalData.success) {
+        // click the Start button
+        PostMessage(gHwndFrame, WM_COMMAND, IDOK, 0);
+    }
 }
 
 static void OnButtonStartSumatra()
@@ -689,6 +692,11 @@ void OnCreateWindow(HWND hwnd)
     OnButtonOptions();
 
     SetFocus(gHwndButtonInstUninst);
+
+    if (gGlobalData.autoUpdate) {
+        // click the Install button
+        PostMessage(hwnd, WM_COMMAND, IDOK, 0);
+    }
 }
 
 void CreateMainWindow()
@@ -708,11 +716,12 @@ void CreateMainWindow()
 void ShowUsage()
 {
     // Note: translation services aren't initialized at this point, so English only
-    MessageBox(NULL, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt plugin,...][/x]\n\
+    MessageBox(NULL, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt pdffilter,...][/x][/autoupdate]\n\
     \n\
     /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
     /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
     /register\tregisters " APP_NAME_STR L" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).\n\
-    /x\tjust extracts the files contained within the installer", APP_NAME_STR L" Installer Usage", MB_OK | MB_ICONINFORMATION);
+    /opt\tenables optional components (currently: pdffilter, pdfpreviewer, plugin).\n\
+    /x\tjust extracts the files contained within the installer.\n\
+    /autoupdate\tperforms an update with visible UI and minimal user interaction.", APP_NAME_STR L" Installer Usage", MB_OK);
 }

@@ -102,6 +102,7 @@ GlobalData gGlobalData = {
     false, /* bool installPdfPreviewer */
     true,  /* bool keepBrowserPlugin */
     false, /* bool extractFiles */
+    false, /* bool autoUpdate */
 #endif
 
     NULL,  /* WCHAR *firstError */
@@ -926,6 +927,9 @@ static void ParseCommandLine(WCHAR *cmdLine)
             gGlobalData.silent = true;
             if (!gGlobalData.installDir)
                 str::ReplacePtr(&gGlobalData.installDir, L".");
+        }
+        else if (is_arg("autoupdate")) {
+            gGlobalData.autoUpdate = true;
         }
 #endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
