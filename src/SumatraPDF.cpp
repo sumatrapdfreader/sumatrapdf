@@ -920,6 +920,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         showToc = state->showToc;
     }
 
+    // make sure to clear linkOnLastButtonDown before deleting win->dm
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = NULL;
+
     DisplayModel *prevModel = win->dm;
     AbortFinding(args.win);
     delete win->pdfsync;
@@ -1597,7 +1601,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
-
 
     str::ReplacePtr(&win->loadedFilePath, tdata->dm->FilePath());
 
