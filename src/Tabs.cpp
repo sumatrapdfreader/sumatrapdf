@@ -22,7 +22,7 @@ class TabPainter
     int width, height, tabbarHeight;
     HWND hwnd;
     struct {
-        COLORREF background, highlight, select, outline, text, x_highlight, x_click, x_line;
+        COLORREF background, highlight, select, outline, bar, text, x_highlight, x_click, x_line;
     } color;
 
 public:
@@ -31,12 +31,13 @@ public:
     LPARAM mouseCoordinates;
     int nextTab;
 
-    TabPainter(HWND wnd, int tabWidth, int tabHeight, int tabBarHeight) : hwnd(wnd), data(NULL) {
-        current = highlighted = xClicked = xHighlighted = nextTab = -1;
-        isMouseInClientArea = isDragging = false;
-        width = height = tabbarHeight = 0;
+    TabPainter(HWND wnd, int tabWidth, int tabHeight, int tabBarHeight) :
+        hwnd(wnd), data(NULL), width(0), height(0), tabbarHeight(0),
+        current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
+        isMouseInClientArea(false), isDragging(false) {
         Reshape(tabWidth, tabHeight, tabBarHeight);
         EvaluateColors();
+        memset(&color, 0, sizeof(color));
     }
 
     ~TabPainter() {
@@ -159,6 +160,8 @@ public:
                     graphics.FillPath(LoadBrush(br, c, color.select), &shape);
                 else if (highlighted == (int)i)
                     graphics.FillPath(LoadBrush(br, c, color.highlight), &shape);
+                else
+                    graphics.FillPath(LoadBrush(br, c, color.background), &shape);
                 graphics.DrawPath(LoadPen(pen, c, color.outline, 1.0f), &shape);
 
                 // draw tab's text
@@ -196,20 +199,21 @@ public:
     void EvaluateColors() {
         COLORREF bg  = GetSysColor(TAB_COLOR_BG);
         COLORREF txt = GetSysColor(TAB_COLOR_TEXT);
-        if (bg == color.background && txt == color.text)
+        if (bg == color.bar && txt == color.text)
             return;
 
-        color.background  = bg;
-        color.text        = txt;
+        color.bar  = bg;
+        color.text = txt;
 
-        int sign = 230.0f < GetLightness(color.background) ? -1 : 1;
+        int sign = 240.0f < GetLightness(color.bar) ? -1 : 1;
 
-        color.select      = AdjustLightness2(color.background, sign * 25.0f);
-        color.highlight   = AdjustLightness2(color.background, sign * 15.0f);
+        color.select      = AdjustLightness2(color.bar, sign * 25.0f);
+        color.highlight   = AdjustLightness2(color.bar, sign * 15.0f);
+        color.background  = AdjustLightness2(color.bar, -sign * 15.0f);
 
-        sign = GetLightness(color.text) < GetLightness(color.background) ? -1 : 1;
+        sign = GetLightness(color.text) < GetLightness(color.bar) ? -1 : 1;
 
-        color.outline     = AdjustLightness2(color.background, sign * 60.0f);
+        color.outline     = AdjustLightness2(color.bar, sign * 60.0f);
         color.x_line      = COL_CLOSE_X_HOVER;
         color.x_highlight = COL_CLOSE_HOVER_BG;
         color.x_click     = AdjustLightness2(color.x_highlight, -10.0f);

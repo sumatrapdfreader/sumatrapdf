@@ -6,7 +6,7 @@
 
 #define TABBAR_HEIGHT    24
 #define TAB_WIDTH        200
-#define TAB_HEIGHT       TABBAR_HEIGHT - 3
+#define TAB_HEIGHT       TABBAR_HEIGHT - 1
 
 // Comment this for default drawing.
 #define OWN_TAB_DRAWING
