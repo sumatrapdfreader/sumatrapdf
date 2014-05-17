@@ -185,9 +185,9 @@ static void SetCurrentLang(const char *langCode)
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
+#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-update.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
+#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
 #endif
 #endif
 
@@ -1839,34 +1839,42 @@ void OnDropFiles(HDROP hDrop, bool dragFinish)
         DragFinish(hDrop);
 }
 
-/* The proposed format handled looks like
-
-SumatraPDF [
-    Latest 2.6
-    Stable 2.5.3
-
-    Installer [
-        URL http://...
-        Hash <SHA-2 hash of the installer>
-    ]
-    Portable [
-        URL http://...
-        Hash <SHA-2 hash of the uncompressed portable version>
-    ]
-]
-
-The minimal format is
+/* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
 
 [SumatraPDF]
-Latest = 2.6
+# the first line must start with SumatraPDF (optionally as INI header)
+Latest 2.6
+# Latest must be the version number of the version currently offered for download
+Stable 2.5.3
+# Stable is optional and indicates the oldest version for which automated update
+# checks don't yet report the available update
+
+# further information can be added, e.g. the following experimental subkey for
+# auto-updating (requires SUPPORTS_AUTO_UPDATE)
+Portable [
+    URL <download URL for the uncompressed portable .exe>
+    Hash <SHA-256 hash of that file
+]
 */
 
-static DWORD HandleUpdateIni(HWND hParent, HttpReq *ctx, bool silent)
+static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 {
+    if (ctx->error)
+        return ctx->error;
+    if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
+        return ERROR_INTERNET_INVALID_URL;
+
+    // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
+    // If a user configures os-wide proxy that is not regular ie proxy
+    // (which we pick up) we might get complete garbage in response to
+    // our query. Make sure to check whether the returned data is sane.
+    if (!str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
+        return ERROR_INTERNET_INVALID_URL;
+
     SquareTree tree(ctx->data->Get());
     SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
     const char *latest = node ? node->GetValue("Latest") : NULL;
-    if (!latest)
+    if (!latest || !IsValidProgramVersion(latest))
         return ERROR_INTERNET_INVALID_URL;
 
     ScopedMem<WCHAR> verTxt(str::conv::FromUtf8(latest));
@@ -1879,7 +1887,8 @@ static DWORD HandleUpdateIni(HWND hParent, HttpReq *ctx, bool silent)
 
     if (silent) {
         const char *stable = node->GetValue("Stable");
-        if (stable && CompareVersion(ScopedMem<WCHAR>(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
+        if (stable && IsValidProgramVersion(stable) &&
+            CompareVersion(ScopedMem<WCHAR>(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }
@@ -1927,71 +1936,6 @@ static DWORD HandleUpdateIni(HWND hParent, HttpReq *ctx, bool silent)
             return 0;
         }
 BrowserFallback:
-#endif
-        LaunchBrowser(SVN_UPDATE_LINK);
-    }
-    prefs::Save();
-
-    return 0;
-}
-
-static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
-{
-    if (ctx->error)
-        return ctx->error;
-    if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
-        return ERROR_INTERNET_INVALID_URL;
-
-    if (str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
-        return HandleUpdateIni(hParent, ctx, silent);
-
-    // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
-    // If a user configures os-wide proxy that is not regular ie proxy
-    // (which we pick up) we might get complete garbage in response to
-    // our query and it might accidentally contain a number bigger than
-    // our version number which will make us ask to upgrade every time.
-    // To fix that, we reject text that doesn't look like a valid version number.
-    ScopedMem<char> txt(ctx->data->StealData());
-    if (!IsValidProgramVersion(txt))
-        return ERROR_INTERNET_INVALID_URL;
-
-    ScopedMem<WCHAR> verTxt(str::conv::FromAnsi(txt));
-    /* reduce the string to a single line (resp. drop the newline) */
-    str::TransChars(verTxt, L"\r\n", L"\0\0");
-    if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
-        /* if automated => don't notify that there is no new version */
-        if (!silent)
-            MessageBoxWarning(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"));
-        return 0;
-    }
-
-    // if automated, respect gGlobalPrefs->versionToSkip
-    if (silent && str::EqI(gGlobalPrefs->versionToSkip, verTxt))
-        return 0;
-
-    // ask whether to download the new version and allow the user to
-    // either open the browser, do nothing or don't be reminded of
-    // this update ever again
-    bool skipThisVersion = false;
-    INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
-    if (skipThisVersion) {
-        free(gGlobalPrefs->versionToSkip);
-        gGlobalPrefs->versionToSkip = verTxt.StealData();
-    }
-    if (IDYES == res) {
-#ifdef SUPPORTS_AUTO_UPDATE
-        if (str::EndsWith(SVN_UPDATE_LINK, L".exe")) {
-            ScopedMem<WCHAR> updater(GetExePath());
-            updater.Set(str::Join(updater, L"-updater.exe"));
-            bool ok = HttpGetToFile(SVN_UPDATE_LINK, updater);
-            if (ok) {
-                ok = LaunchFile(updater, L"-autoupdate replace");
-                if (ok) {
-                    OnMenuExit();
-                    return 0;
-                }
-            }
-        }
 #endif
         LaunchBrowser(SVN_UPDATE_LINK);
     }

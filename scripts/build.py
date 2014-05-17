@@ -20,7 +20,11 @@ Building release version:
          pdb symbols for libmupdf.dll, and Sumatra's static and library builds
       sumatrapdf/rel/SumatraPDF-<ver>-install.exe
          installer for library build
-  * file sumatrapdf/sumpdf-latest.txt must be manually updated
+      sumatrapdf/sumpdf-update.txt
+         updates Latest version, keeps Stable version
+  * files sumatrapdf/sumpdf-update.txt and sumatrapdf/sumpdf-latest.txt
+    must be manually updated using update_auto_update_ver.py in order to
+    make automated update checks find the latest version
 
 Building pre-release version:
   * get svn version
@@ -34,6 +38,7 @@ Building pre-release version:
       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-install.exe
          installer for library build
       sumatrapdf/sumatralatest.js
+      sumatrapdf/sumpdf-prerelease-update.txt
       sumatrapdf/sumpdf-prerelease-latest.txt
 """
 
@@ -323,6 +328,20 @@ def try_find_scripts_file(file_name):
         shutil.copyfile(src, dst)
 
 
+# returns the version marked as Stable at the given url;
+# returns the Latest version or the provided fallback if it's missing
+def get_stable_version(url, fallback):
+    import urllib2
+    import SquareTree
+    try:
+        data = urllib2.urlopen(url).read()
+        root = SquareTree.Parse(data)
+        node = root.GetChild("SumatraPDF")
+        return node.GetValue("Stable") or node.GetValue("Latest") or fallback
+    except:
+        return fallback
+
+
 # if scripts/cert.pfx and scripts/config.py don't exist, try to copy them from
 # ../../sumatrapdf/scripts directory
 def try_find_config_files():
@@ -479,19 +498,26 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
 
     if build_prerelease:
         s3.upload_data_public(jstxt, "sumatrapdf/sumatralatest.js")
+        # don't set a Stable version for prerelease builds
+        txt = "[SumatraPDF]\nLatest %s\n" % ver
+        s3.upload_data_public(txt, "sumatrapdf/sumpdf-prerelease-update.txt")
+        # keep updating the legacy file for now
         txt = "%s\n" % ver
         s3.upload_data_public(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
         delete_old_pre_release_builds()
     else:
+        # update the Latest version for manual update checks but
+        # leave the Stable version for automated update checks
+        update_url = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+        ver_stable = get_stable_version(update_url, "2.5.2")
         s3.upload_file_public(exe_zip_path, s3_exe_zip)
-        s3.upload_data_public("%s\n" % ver, "sumatrapdf/sumpdf-latest-manual.txt")
+        s3.upload_data_public("[SumatraPDF]\nLatest %s\nStable %s\n" % (ver, ver_stable), "sumatrapdf/sumpdf-update.txt")
 
     if not build_prerelease:
         svn_tag_release(ver)
         upload_sources(ver)
 
-    # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
-    # manually to: "%s\n" % ver
+    # Note: for release builds, must run scripts/update_auto_update_ver.py
 
 
 def build_pre_release():

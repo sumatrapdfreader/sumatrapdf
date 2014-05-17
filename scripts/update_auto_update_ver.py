@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import SquareTree
 import sys
 import urllib2
 from util import load_config
@@ -34,23 +35,16 @@ def discover_getch():
 getch = discover_getch()
 
 
-def usage_and_exit():
-    print("usage: update_auto_update_ver.py $ver")
-    sys.exit(1)
-
-
 def report_invalid_ver(ver):
     print("'%s' is not a valid program version" % ver)
     sys.exit(1)
 
+
 def is_num(s):
     try:
-        n = int(s)
-        if str(n) != s:
-            return False
+    	return str(int(s)) == s
     except:
         return False
-    return True
 
 
 def validate_ver(ver):
@@ -60,7 +54,17 @@ def validate_ver(ver):
             report_invalid_ver(ver)
 
 
-def get_url(url):
+def get_update_versions(url):
+    try:
+        data = urllib2.urlopen(url).read()
+        root = SquareTree.Parse(data)
+        node = root.GetChild("SumatraPDF")
+        return (node.GetValue("Stable"), node.GetValue("Latest"))
+    except:
+        return (None, None)
+
+
+def get_latest_version(url):
     try:
         s = urllib2.urlopen(url).read()
         return s.strip()
@@ -124,21 +128,18 @@ def verify_version_not_lower(myver, curr1, curr2):
         sys.exit(1)
 
 def main():
-    args = sys.argv[1:]
-    if len(args) == 0:
-        usage_and_exit()
-    ver = args[0]
-    validate_ver(ver)
-    url1 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
-    url2 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest-manual.txt"
+    url_update = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+    url_latest = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
 
     conf = load_config()
     assert conf.aws_access != "" and conf.aws_secret != ""
     s3.set_secrets(conf.aws_access, conf.aws_secret)
     s3.set_bucket("kjkpub")
 
-    v1 = get_url(url1)
-    v2 = get_url(url2)
+    v1 = get_latest_version(url_latest)
+    (v2, ver) = get_update_versions(url_update)
+    validate_ver(ver)
+    assert not v2 or v1 == v2, "sumpdf-update.txt and sumpdf-latest.txt don't agree on Stable version, run build.py -release first"
     verify_version_not_lower(ver, v1, v2)
     sys.stdout.write("Going to update auto-update version to %s. Are you sure? [y/N] " % ver)
     sys.stdout.flush()
@@ -148,13 +149,16 @@ def main():
         print("Didn't update because you didn't press 'y'")
         sys.exit(1)
 
+    # remove the Stable version from sumpdf-update.txt
+    s = "[SumatraPDF]\nLatest %s\n" % ver
+    s3.upload_data_public(s, "sumatrapdf/sumpdf-update.txt")
+    # keep updating the legacy file for now
     s = "%s\n" % ver
-    s3.upload_data_public(s, "sumatrapdf/sumpdf-latest-manual.txt")
     s3.upload_data_public(s, "sumatrapdf/sumpdf-latest.txt")
-    v1 = get_url(url1)
-    v2 = get_url(url2)
-    if v1 != ver or v2 != ver:
-        print("Upload failed because v1 or v2 != ver ('%s' or '%s' != '%s'" % (v1, v2, ver))
+    v1 = get_latest_version(url_latest)
+    (v2, v3) = get_update_versions(url_update)
+    if v1 != ver or v2 != None or v3 != ver:
+        print("Upload failed because v1 or v3 != ver ('%s' or '%s' != '%s'" % (v1, v3, ver))
         sys.exit(1)
     print("Successfully update auto-update version to '%s'" % ver)
 
