@@ -468,15 +468,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs->associatedExtensions && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
-    if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
-        AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
-
     if (i.stressTestPath) {
         // don't save file history and preference changes
         gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~Perm_SavePreferences;
         RebuildMenuBarForWindow(win);
         StartStressTest(&i, win, &gRenderCache);
     }
+
+    if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
+        AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {

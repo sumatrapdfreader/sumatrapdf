@@ -11,6 +11,7 @@
 #include "AppUtil.h"
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
+#include "CryptoUtil.h"
 #include "DebugLog.h"
 #include "DirIter.h"
 #include "EbookController.h"
@@ -1838,12 +1839,111 @@ void OnDropFiles(HDROP hDrop, bool dragFinish)
         DragFinish(hDrop);
 }
 
+/* The proposed format handled looks like
+
+SumatraPDF [
+    Latest 2.6
+    Stable 2.5.3
+
+    Installer [
+        URL http://...
+        Hash <SHA-2 hash of the installer>
+    ]
+    Portable [
+        URL http://...
+        Hash <SHA-2 hash of the uncompressed portable version>
+    ]
+]
+
+The minimal format is
+
+[SumatraPDF]
+Latest = 2.6
+*/
+
+static DWORD HandleUpdateIni(HWND hParent, HttpReq *ctx, bool silent)
+{
+    SquareTree tree(ctx->data->Get());
+    SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
+    const char *latest = node ? node->GetValue("Latest") : NULL;
+    if (!latest)
+        return ERROR_INTERNET_INVALID_URL;
+
+    ScopedMem<WCHAR> verTxt(str::conv::FromUtf8(latest));
+    if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
+        /* if automated => don't notify that there is no new version */
+        if (!silent)
+            MessageBoxWarning(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"));
+        return 0;
+    }
+
+    if (silent) {
+        const char *stable = node->GetValue("Stable");
+        if (stable && CompareVersion(ScopedMem<WCHAR>(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
+            // don't update just yet if the older version is still marked as stable
+            return 0;
+        }
+    }
+
+    // if automated, respect gGlobalPrefs->versionToSkip
+    if (silent && str::EqI(gGlobalPrefs->versionToSkip, verTxt))
+        return 0;
+
+    // ask whether to download the new version and allow the user to
+    // either open the browser, do nothing or don't be reminded of
+    // this update ever again
+    bool skipThisVersion = false;
+    INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
+    if (skipThisVersion) {
+        free(gGlobalPrefs->versionToSkip);
+        gGlobalPrefs->versionToSkip = verTxt.StealData();
+    }
+    if (IDYES == res) {
+#ifdef SUPPORTS_AUTO_UPDATE
+        // TODO: support auto-updating using the installer
+        SquareTreeNode *data = node->GetChild("Portable");
+        const char *url = data ? data->GetValue("URL") : NULL;
+        const char *hash = data ? data->GetValue("Hash") : NULL;
+        if (url && hash && str::EndsWithI(url, ".exe")) {
+            ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
+            ScopedMem<WCHAR> updater(GetExePath());
+            ScopedMem<char> fingerPrint;
+            HttpReq req(exeUrl);
+            if (req.error)
+                goto BrowserFallback;
+            unsigned char digest[32];
+            CalcSHA2Digest((const unsigned char *)req.data->Get(), req.data->Size(), digest);
+            fingerPrint.Set(_MemToHex(&digest));
+            if (!str::EqI(fingerPrint, hash))
+                goto BrowserFallback;
+            updater.Set(str::Join(updater, L"-updater.exe"));
+            bool ok = file::WriteAll(updater, req.data->Get(), req.data->Size());
+            if (!ok)
+                goto BrowserFallback;
+            ok = LaunchFile(updater, L"-autoupdate replace");
+            if (!ok)
+                goto BrowserFallback;
+            OnMenuExit();
+            return 0;
+        }
+BrowserFallback:
+#endif
+        LaunchBrowser(SVN_UPDATE_LINK);
+    }
+    prefs::Save();
+
+    return 0;
+}
+
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 {
     if (ctx->error)
         return ctx->error;
     if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
+
+    if (str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
+        return HandleUpdateIni(hParent, ctx, silent);
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
@@ -1985,11 +2085,16 @@ public:
 // of the user and therefore will show less UI
 void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 {
-    if (!HasPermission(Perm_InternetAccess) || gPluginMode)
+    if (!HasPermission(Perm_InternetAccess))
         return;
 
     // For auto-check, only check if at least a day passed since last check
     if (autoCheck) {
+        // don't check if the timestamp or version to skip can't be updated
+        // (mainly in plugin mode, stress testing and restricted settings)
+        if (!HasPermission(Perm_SavePreferences))
+            return;
+
         // don't check for updates at the first start, so that privacy
         // sensitive users can disable the update check in time
         FILETIME never = { 0 };

@@ -761,7 +761,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
     if (path::HasVariableDriveLetter(filePath))
         pathU[0] = '?'; // ignore the drive letter, if it might change
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
-    ScopedMem<char> fingerPrint(str::MemToHex(digest, 16));
+    ScopedMem<char> fingerPrint(_MemToHex(&digest));
 
     ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
