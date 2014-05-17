@@ -182,6 +182,7 @@
     <ClCompile Include="..\src\utils\BitReader.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\utils\CmdLineParser.cpp" />
+    <ClCompile Include="..\src\utils\CryptoUtil.cpp" />
     <ClCompile Include="..\src\utils\CssParser.cpp" />
     <ClCompile Include="..\src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="..\src\utils\DebugLog.cpp" />
@@ -456,6 +457,7 @@
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />
     <ClInclude Include="..\src\utils\ByteReader.h" />
     <ClInclude Include="..\src\utils\CmdLineParser.h" />
+    <ClInclude Include="..\src\utils\CryptoUtil.h" />
     <ClInclude Include="..\src\utils\CssParser.h" />
     <ClInclude Include="..\src\utils\DbgHelpDyn.h" />
     <ClInclude Include="..\src\utils\DebugLog.h" />

@@ -10,6 +10,7 @@
 using namespace mui;
 
 #include "CmdLineParser.h"
+#include "CryptoUtil.h"
 #include "DirIter.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
@@ -17,7 +18,6 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
-#include "PdfEngine.h"
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"

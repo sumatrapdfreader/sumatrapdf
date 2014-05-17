@@ -39,18 +39,6 @@ void DebugGdiPlusDevice(bool enable)
     gDebugGdiPlusDevice = enable;
 }
 
-void CalcMD5Digest(const unsigned char *data, size_t byteCount, unsigned char digest[16])
-{
-    fz_md5 md5;
-    fz_md5_init(&md5);
-#ifdef _WIN64
-    for (; byteCount > UINT_MAX; data += UINT_MAX, byteCount -= UINT_MAX)
-        fz_md5_update(&md5, data, UINT_MAX);
-#endif
-    fz_md5_update(&md5, data, (unsigned int)byteCount);
-    fz_md5_final(&md5, digest);
-}
-
 ///// extensions to Fitz that are usable for both PDF and XPS /////
 
 inline RectD fz_rect_to_RectD(fz_rect rect)
@@ -241,7 +229,10 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     CrashIf(NULL == buffer);
     CrashIf(fileLen != buffer->len);
 
-    CalcMD5Digest(buffer->data, buffer->len, digest);
+    fz_md5 md5;
+    fz_md5_init(&md5);
+    fz_md5_update(&md5, buffer->data, buffer->len);
+    fz_md5_final(&md5, digest);
 
     fz_drop_buffer(file->ctx, buffer);
 }

@@ -6,11 +6,11 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "CryptoUtil.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "PdfEngine.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"

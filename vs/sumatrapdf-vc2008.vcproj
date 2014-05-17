@@ -383,6 +383,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\CryptoUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\CryptoUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\DebugLog.cpp"
 					>
 				</File>

@@ -158,7 +158,7 @@ UTILS_OBJS = \
 	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
-	$(OU)\CssParser.obj $(OU)\FileWatcher.obj \
+	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\CryptoUtil.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj \
 	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj

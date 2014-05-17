@@ -93,8 +93,6 @@ bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t off
 UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
 WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 
-void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[16]);
-void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[32]);
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 
 namespace win {
