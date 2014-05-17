@@ -450,6 +450,11 @@ GlobalPrefs = [
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files (in most recently used order)"),
+	Field("ReopenOnce", String, None,
+		"a list of paths for files which will be reopened at the " +
+		"next start in command line format (needed for auto-updating)",
+		doc="data required for reloading documents after an auto-update",
+		version="2.6"),
 	Struct("TimeOfLastUpdateCheck", FileTime,
 		"timestamp of the last update check",
 		structName="FILETIME", compact=True,

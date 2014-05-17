@@ -1584,6 +1584,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 {
     if (!win || !tdata) return;
 
+    // TODO: this misses changes to documents opened in a background tab!
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
 
@@ -1839,6 +1840,77 @@ void OnDropFiles(HDROP hDrop, bool dragFinish)
         DragFinish(hDrop);
 }
 
+#ifdef SUPPORTS_AUTO_UPDATE
+static void RememberCurrentlyOpenedFiles()
+{
+    CrashIf(gGlobalPrefs->reopenOnce);
+    str::Str<WCHAR> cmdLine;
+
+    DisplayState *ds;
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if ((ds = gFileHistory.Find(win->loadedFilePath)) != NULL) {
+            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
+        }
+        if (win->tabSelectionHistory) {
+            // TODO: try to preserve tab order instead of restoring MRU first?
+            for (size_t j = 0; j < win->tabSelectionHistory->Count(); j++) {
+                TabData *td = win->tabSelectionHistory->At(j);
+                // TODO: after reloading, the visible tab is only added to
+                // win->tabSelectionHistory once another tab has been selected
+                if (0 == j && str::Eq(ds->filePath, td->dm->FilePath()))
+                    continue;
+                if (td->dm && (ds = gFileHistory.Find(td->dm->FilePath())) != NULL) {
+                    cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
+                }
+            }
+        }
+    }
+    for (size_t i = 0; i < gEbookWindows.Count(); i++) {
+        EbookWindow *win = gEbookWindows.At(i);
+        if ((ds = gFileHistory.Find(win->LoadedFilePath())) != NULL) {
+            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
+        }
+    }
+
+    if (cmdLine.Size() > 0) {
+        cmdLine.Pop();
+        gGlobalPrefs->reopenOnce = cmdLine.StealData();
+    }
+}
+
+bool AutoUpdateInitiate(const char *mode, const char *url, const char *hash)
+{
+    if (!url || !hash || !str::EndsWithI(url, ".exe"))
+        return false;
+
+    ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
+    HttpReq req(exeUrl);
+    if (req.error)
+        return false;
+
+    unsigned char digest[32];
+    CalcSHA2Digest((const unsigned char *)req.data->Get(), req.data->Size(), digest);
+    ScopedMem<char> fingerPrint(_MemToHex(&digest));
+    if (!str::EqI(fingerPrint, hash))
+        return false;
+
+    // TODO: use %TEMP% instead of portable path(?)
+    ScopedMem<WCHAR> updater(GetExePath());
+    updater.Set(str::Join(updater, L"-updater.exe"));
+    bool ok = file::WriteAll(updater, req.data->Get(), req.data->Size());
+    if (!ok)
+        return false;
+
+    ok = LaunchFile(updater, L"-autoupdate replace");
+    if (ok) {
+        RememberCurrentlyOpenedFiles();
+        OnMenuExit();
+    }
+    return ok;
+}
+#endif
+
 /* The format used for SUMATRA_UPDATE_INFO_URL looks as follows:
 
 [SumatraPDF]
@@ -1910,32 +1982,12 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     if (IDYES == res) {
 #ifdef SUPPORTS_AUTO_UPDATE
         // TODO: support auto-updating using the installer
-        SquareTreeNode *data = node->GetChild("Portable");
+        const char *mode = "Portable";
+        SquareTreeNode *data = node->GetChild(mode);
         const char *url = data ? data->GetValue("URL") : NULL;
         const char *hash = data ? data->GetValue("Hash") : NULL;
-        if (url && hash && str::EndsWithI(url, ".exe")) {
-            ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
-            ScopedMem<WCHAR> updater(GetExePath());
-            ScopedMem<char> fingerPrint;
-            HttpReq req(exeUrl);
-            if (req.error)
-                goto BrowserFallback;
-            unsigned char digest[32];
-            CalcSHA2Digest((const unsigned char *)req.data->Get(), req.data->Size(), digest);
-            fingerPrint.Set(_MemToHex(&digest));
-            if (!str::EqI(fingerPrint, hash))
-                goto BrowserFallback;
-            updater.Set(str::Join(updater, L"-updater.exe"));
-            bool ok = file::WriteAll(updater, req.data->Get(), req.data->Size());
-            if (!ok)
-                goto BrowserFallback;
-            ok = LaunchFile(updater, L"-autoupdate replace");
-            if (!ok)
-                goto BrowserFallback;
-            OnMenuExit();
+        if (AutoUpdateInitiate(mode, url, hash))
             return 0;
-        }
-BrowserFallback:
 #endif
         LaunchBrowser(SVN_UPDATE_LINK);
     }

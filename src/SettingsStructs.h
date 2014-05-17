@@ -317,6 +317,9 @@ struct GlobalPrefs {
     bool showStartPage;
     // information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
+    // a list of paths for files which will be reopened at the next start
+    // in command line format (needed for auto-updating)
+    WCHAR * reopenOnce;
     // timestamp of the last update check
     FILETIME timeOfLastUpdateCheck;
     // week count since 2011-01-01 needed to "age" openCount values in file
@@ -522,10 +525,11 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
+    { offsetof(GlobalPrefs, reopenOnce),               Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 45, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0CustomScreenDPI\0ShowTabBar\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 46, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0ReloadModifiedDocuments\0CustomScreenDPI\0ShowTabBar\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 

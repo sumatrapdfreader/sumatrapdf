@@ -427,6 +427,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!i.reuseInstance && (gGlobalPrefs->reuseInstance || gGlobalPrefs->showTabBar) && FindWindow(FRAME_CLASS_NAME, 0))
         i.reuseInstance = true;
 
+    if (gGlobalPrefs->reopenOnce) {
+        WStrVec moreFileNames;
+        ParseCmdLine(gGlobalPrefs->reopenOnce, moreFileNames);
+        moreFileNames.Reverse();
+        for (WCHAR **fileName = moreFileNames.IterStart(); fileName; fileName = moreFileNames.IterNext()) {
+            i.fileNames.Append(*fileName);
+        }
+        moreFileNames.RemoveAt(0, moreFileNames.Count());
+        str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
+    }
+
     WindowInfo *win = NULL;
     bool isFirstWin = true;
 
