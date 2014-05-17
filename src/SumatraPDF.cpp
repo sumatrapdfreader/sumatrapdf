@@ -314,8 +314,11 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
     HWND parent = GetParent(hwnd);
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (hwnd == win->hwndFrame      ||
-            // canvas, toolbar, rebar, tocbox, splitters
+        if (hwnd == win->hwndFrame)
+            return win;
+        if (!parent)
+            continue;
+        if (// canvas, toolbar, rebar, tocbox, splitters
             parent == win->hwndFrame    ||
             // infotips, message windows
             parent == win->hwndCanvas   ||
@@ -326,8 +329,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
             // Favorites tree, title, and close button
             parent == win->hwndFavBox   ||
             // tab bar
-            parent == win->hwndTabBar)
-        {
+            parent == win->hwndTabBar) {
             return win;
         }
     }
