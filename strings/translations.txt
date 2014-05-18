@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8e300a798af6c020a54afab497b888701152b430
+0a666ae5ad50610a2c4c22c05f562a83c0447c57
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6281,6 +6281,7 @@ el:Αδυναμία εγγραφής %s στον δίσκο
 es:No se puede escribir %s en el disco
 et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
+fa:نمی توانید بنویسید  %s بر روی دیسک
 fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 gl:Non se puido escribir %s no disco
@@ -9997,10 +9998,12 @@ cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
 et:Jäta alles PDF &brauseri plugin (enam ei toetata)
 eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
+fa:و نصب مرور پلاگین (پشتبانی دائمی وجود ندارد PDF نگهداری
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
+sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
 sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
 sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
@@ -10021,6 +10024,7 @@ dk:Lad Windows skrivebord Søge &søg PDF dokumenter
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
+fa:اچازه جستجو دهید  PDFدر صفحه نمایش گر ویندوز و فایل
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
@@ -10067,6 +10071,7 @@ dk:Lad Windows vise &femvisning af PDF dokumenter
 es:Mostrar miniaturas en los iconos de documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
+fa:اجازه داده شودPDFنمایش ویندوز و از فایل
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
@@ -10367,6 +10372,7 @@ dk:Man&ga tilstand
 es:Modo man&ga
 et:Man&garežiim
 eu:Ma&nga Modua
+fa:حالت مانگا
 fi:Man&ga-moodi
 fr:Mode man&ga
 gl:Modo Man&ga
@@ -12328,6 +12334,7 @@ el:Παρακαλώ κλείστε %s για να συνεχίσετε!
 es:Necesita cerrar %s para continuar.
 et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
+fa:لطفا آن را ببندید %s برای دسترسی کامل
 fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
 gl:Peche %s para continuar
@@ -12818,7 +12825,7 @@ uk:Друкарки з даним іменем не існує
 uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
-am:Տպվում է:
+am:Տպում է:
 ar:جاري الطباعة.
 az:Çap davam edir.
 bg:Печатане...
@@ -12868,7 +12875,7 @@ uk:Триває друк.
 uz:Chop etilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
-am:Տպվում է: Ընդհատե՞լ և փակել:
+am:Տպում է: Ընդհատե՞լ և փակել:
 ar:الطباعة قيد التنفيذ. هل تريد التوقف والخروج؟
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
@@ -12918,7 +12925,7 @@ uk:Друк ще не завершено. Перервати та вийти?
 uz:Chop etilmoqda. To'xtatilib dasturdan chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
 :Printing is still in progress. Abort and start over?
-am:Տպվում է։ Կանգնեցնե՞լ։
+am:Տպում է։ Կանգնեցնե՞լ։
 ar:الطباعة جارية. أوقفها وأعدها مرة أخرى؟
 az:Çap davam edir. Dayandırmaq və yenidən başlamaq?
 bg:Отпечатването се извършва. Прекъсни и започни отначало?
@@ -12973,7 +12980,7 @@ uk:Друк ще не завершено. Перервати та розпоча
 uz:Chop etilmoqda. To'xtatilib qaytadan boshlansinmi?
 vn:Vẫn còn đang in. Thoát và bắt đầu lại?
 :Printing page %d of %d...
-am:Տպվում է %d էջը %d-ից...
+am:Տպում է %d էջը %d-ից...
 ar:طباعة الصفحة %d من %d...
 az:%d/%d səhifə çap olunur...
 bg:Отпечатване на страница %d от %d...
@@ -13932,6 +13939,7 @@ dk:Vælg folderen hvor SumatraPDF skal installeres:
 es:Seleccione la carpeta de instalación de SumatraPDF:
 et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
+fa:که سوماترا باید در آن نصب شود را انتخاب کنید PDFپوشه ای
 fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
 gl:Escolla o cartafol onde quere instalar SumatraPDF
@@ -15542,6 +15550,7 @@ dk:Installationsprogrammet er fejlbehæftet. Prøv venligst at hente det igen.\n
 es:El instalador está dañado, pruebe descargándolo de nuevo.\n¡Perdón por las molestias!
 et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
+fa:با عرض معذرت از این مزاحمت نا خواسته  /n .نصب خراب شده است.لطفا دوباره دانلود کنید
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
 gl:O instalador está corrompido. Descárgao de novo.
