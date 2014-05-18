@@ -94,6 +94,7 @@ solution "all_tests"
       "src/utils/BitManip*",
       "src/utils/ByteOrderDecoder*",
       "src/utils/CmdLineParser*",
+      "src/utils/CryptoUtil*",
       "src/utils/CssParser*",
       "src/utils/Dict*",
       "src/utils/DebugLog*",
@@ -120,6 +121,7 @@ solution "all_tests"
       "src/mui/SvgPath*",
       "tools/tests/UnitMain.cpp"
     }
+    defines { "NO_LIBMUPDF" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
