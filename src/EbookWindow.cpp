@@ -13,12 +13,12 @@
 #include "EbookFormatter.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
+#include "FileThumbnails.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "resource.h"
-#include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"

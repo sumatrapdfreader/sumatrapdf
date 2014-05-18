@@ -1045,6 +1045,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\FileThumbnails.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\FileThumbnails.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\ParseCommandLine.cpp"
 					>
 				</File>

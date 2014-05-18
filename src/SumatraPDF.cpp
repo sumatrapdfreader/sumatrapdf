@@ -21,6 +21,7 @@
 #include "FileHistory.h"
 #include "FileModifications.h"
 #include "Favorites.h"
+#include "FileThumbnails.h"
 #include "FileUtil.h"
 #include "FileWatcher.h"
 using namespace Gdiplus;

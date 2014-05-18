@@ -84,6 +84,9 @@
     <ClCompile Include="..\src\FileModifications.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FileThumbnails.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -891,6 +894,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FileModifications.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\FileThumbnails.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\HtmlFormatter.h">

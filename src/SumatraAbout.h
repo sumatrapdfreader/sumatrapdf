@@ -4,7 +4,6 @@
 #ifndef SumatraAbout_h
 #define SumatraAbout_h
 
-#include "DisplayState.h"
 #include "FileHistory.h"
 #include "WindowInfo.h" // for StaticLinkInfo
 
@@ -18,15 +17,6 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 #define SLINK_LIST_SHOW L"<View,ShowList>"
 #define SLINK_LIST_HIDE L"<View,HideList>"
 
-#define THUMBNAILS_DIR_NAME L"sumatrapdfcache"
-// thumbnails are 150px high and have a ratio of sqrt(2) : 1
-#define THUMBNAIL_DX        212
-#define THUMBNAIL_DY        150
-
 void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
-void    CleanUpThumbnailCache(FileHistory& fileHistory);
-bool    HasThumbnail(DisplayState& ds);
-void    SaveThumbnail(DisplayState& ds);
-void    RemoveThumbnail(DisplayState& ds);
 
 #endif
