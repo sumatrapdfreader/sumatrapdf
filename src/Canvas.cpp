@@ -1,0 +1,1242 @@
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+// TODO: for the moment it needs to be included from SumatraPDF.cpp
+// and not compiled as stand-alone
+
+void WindowInfo::UpdateScrollbars(SizeI canvas)
+{
+    SCROLLINFO si = { 0 };
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+
+    SizeI viewPort = dm->viewPort.Size();
+
+    if (viewPort.dx >= canvas.dx) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->viewPort.x;
+        si.nMin = 0;
+        si.nMax = canvas.dx - 1;
+        si.nPage = viewPort.dx;
+    }
+    ShowScrollBar(hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
+    SetScrollInfo(hwndCanvas, SB_HORZ, &si, TRUE);
+
+    if (viewPort.dy >= canvas.dy) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->viewPort.y;
+        si.nMin = 0;
+        si.nMax = canvas.dy - 1;
+        si.nPage = viewPort.dy;
+
+        if (ZOOM_FIT_PAGE != dm->ZoomVirtual()) {
+            // keep the top/bottom 5% of the previous page visible after paging down/up
+            si.nPage = (UINT)(si.nPage * 0.95);
+            si.nMax -= viewPort.dy - si.nPage;
+        }
+    }
+    ShowScrollBar(hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
+    SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
+}
+
+class RepaintCanvasTask : public UITask
+{
+    UINT delay;
+    WindowInfo *win;
+
+public:
+    RepaintCanvasTask(WindowInfo *win, UINT delay)
+        : win(win), delay(delay) {
+        name = "RepaintCanvasTask";
+    }
+
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+        if (!delay)
+            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        else if (!win->delayedRepaintTimer)
+            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
+    }
+};
+
+void WindowInfo::RepaintAsync(UINT delay)
+{
+    // even though RepaintAsync is mostly called from the UI thread,
+    // we depend on the repaint message to happen asynchronously
+    uitask::Post(new RepaintCanvasTask(this, delay));
+}
+
+static void OnVScroll(WindowInfo& win, WPARAM wParam)
+{
+    if (!win.IsDocLoaded())
+        return;
+    AssertCrash(win.dm);
+
+    SCROLLINFO si = { 0 };
+    si.cbSize = sizeof (si);
+    si.fMask  = SIF_ALL;
+    GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
+
+    int iVertPos = si.nPos;
+    int lineHeight = 16;
+    if (!IsContinuous(win.dm->GetDisplayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
+        lineHeight = 1;
+
+    switch (LOWORD(wParam)) {
+    case SB_TOP:        si.nPos = si.nMin; break;
+    case SB_BOTTOM:     si.nPos = si.nMax; break;
+    case SB_LINEUP:     si.nPos -= lineHeight; break;
+    case SB_LINEDOWN:   si.nPos += lineHeight; break;
+    case SB_HPAGEUP:    si.nPos -= si.nPage / 2; break;
+    case SB_HPAGEDOWN:  si.nPos += si.nPage / 2; break;
+    case SB_PAGEUP:     si.nPos -= si.nPage; break;
+    case SB_PAGEDOWN:   si.nPos += si.nPage; break;
+    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
+    }
+
+    // Set the position and then retrieve it.  Due to adjustments
+    // by Windows it may not be the same as the value set.
+    si.fMask = SIF_POS;
+    SetScrollInfo(win.hwndCanvas, SB_VERT, &si, TRUE);
+    GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
+
+    // If the position has changed, scroll the window and update it
+    if (si.nPos != iVertPos)
+        win.dm->ScrollYTo(si.nPos);
+}
+
+static void OnHScroll(WindowInfo& win, WPARAM wParam)
+{
+    if (!win.IsDocLoaded())
+        return;
+    AssertCrash(win.dm);
+
+    SCROLLINFO si = { 0 };
+    si.cbSize = sizeof (si);
+    si.fMask  = SIF_ALL;
+    GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
+
+    int iVertPos = si.nPos;
+    switch (LOWORD(wParam)) {
+    case SB_LEFT:       si.nPos = si.nMin; break;
+    case SB_RIGHT:      si.nPos = si.nMax; break;
+    case SB_LINELEFT:   si.nPos -= 16; break;
+    case SB_LINERIGHT:  si.nPos += 16; break;
+    case SB_PAGELEFT:   si.nPos -= si.nPage; break;
+    case SB_PAGERIGHT:  si.nPos += si.nPage; break;
+    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
+    }
+
+    // Set the position and then retrieve it.  Due to adjustments
+    // by Windows it may not be the same as the value set.
+    si.fMask = SIF_POS;
+    SetScrollInfo(win.hwndCanvas, SB_HORZ, &si, TRUE);
+    GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
+
+    // If the position has changed, scroll the window and update it
+    if (si.nPos != iVertPos)
+        win.dm->ScrollXTo(si.nPos);
+}
+
+static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
+{
+    SetCapture(win.hwndCanvas);
+    win.mouseAction = right ? MA_DRAGGING_RIGHT : MA_DRAGGING;
+    win.dragPrevPos = PointI(x, y);
+    if (GetCursor())
+        SetCursor(gCursorDrag);
+}
+
+static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
+{
+    if (GetCapture() != win.hwndCanvas)
+        return;
+
+    if (GetCursor())
+        SetCursor(gCursorArrow);
+    ReleaseCapture();
+
+    if (aborted)
+        return;
+
+    SizeI drag(x - win.dragPrevPos.x, y - win.dragPrevPos.y);
+    win.MoveDocBy(drag.dx, -2 * drag.dy);
+}
+
+static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
+{
+    if (!win.IsDocLoaded())
+        return;
+    AssertCrash(win.dm);
+
+    if (win.presentation) {
+        // shortly display the cursor if the mouse has moved and the cursor is hidden
+        if (PointI(x, y) != win.dragPrevPos && !GetCursor()) {
+            if (win.mouseAction == MA_IDLE)
+                SetCursor(gCursorArrow);
+            else
+                SendMessage(win.hwndCanvas, WM_SETCURSOR, 0, 0);
+            SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
+        }
+    }
+
+    if (win.dragStartPending) {
+        // have we already started a proper drag?
+        if (abs(x - win.dragStart.x) <= GetSystemMetrics(SM_CXDRAG) &&
+            abs(y - win.dragStart.y) <= GetSystemMetrics(SM_CYDRAG)) {
+            return;
+        }
+        win.dragStartPending = false;
+        delete win.linkOnLastButtonDown;
+        win.linkOnLastButtonDown = NULL;
+    }
+
+    SizeI drag;
+    switch (win.mouseAction) {
+    case MA_SCROLLING:
+        win.yScrollSpeed = (y - win.dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        win.xScrollSpeed = (x - win.dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+        break;
+    case MA_SELECTING_TEXT:
+        if (GetCursor())
+            SetCursor(gCursorIBeam);
+        /* fall through */
+    case MA_SELECTING:
+        win.selectionRect.dx = x - win.selectionRect.x;
+        win.selectionRect.dy = y - win.selectionRect.y;
+        OnSelectionEdgeAutoscroll(&win, x, y);
+        win.RepaintAsync();
+        break;
+    case MA_DRAGGING:
+    case MA_DRAGGING_RIGHT:
+        drag = SizeI(win.dragPrevPos.x - x, win.dragPrevPos.y - y);
+        win.MoveDocBy(drag.dx, drag.dy);
+        break;
+    }
+
+    win.dragPrevPos = PointI(x, y);
+}
+
+static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
+{
+    //lf("Left button clicked on %d %d", x, y);
+    if (win.IsAboutWindow()) {
+        // remember a link under so that on mouse up we only activate
+        // link if mouse up is on the same link as mouse down
+        win.url = GetStaticLink(win.staticLinks, x, y);
+    }
+    if (!win.IsDocLoaded())
+        return;
+
+    if (MA_DRAGGING_RIGHT == win.mouseAction)
+        return;
+
+    if (MA_SCROLLING == win.mouseAction) {
+        win.mouseAction = MA_IDLE;
+        return;
+    }
+
+    CrashIfDebugOnly(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
+    CrashIf(!win.dm);
+
+    SetFocus(win.hwndFrame);
+
+    AssertCrash(!win.linkOnLastButtonDown);
+    PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
+    if (pageEl && pageEl->GetType() == Element_Link)
+        win.linkOnLastButtonDown = pageEl;
+    else
+        delete pageEl;
+    win.dragStartPending = true;
+    win.dragStart = PointI(x, y);
+
+    // - without modifiers, clicking on text starts a text selection
+    //   and clicking somewhere else starts a drag
+    // - pressing Shift forces dragging
+    // - pressing Ctrl forces a rectangular selection
+    // - pressing Ctrl+Shift forces text selection
+    // - not having CopySelection permission forces dragging
+    if (!HasPermission(Perm_CopySelection) || ((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
+        OnDraggingStart(win, x, y);
+    else
+        OnSelectionStart(&win, x, y, key);
+}
+
+static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
+{
+    if (win.IsAboutWindow()) {
+        SetFocus(win.hwndFrame);
+        const WCHAR *url = GetStaticLink(win.staticLinks, x, y);
+        if (url && url == win.url) {
+            if (str::Eq(url, SLINK_OPEN_FILE))
+                SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
+            else if (str::Eq(url, SLINK_LIST_HIDE)) {
+                gGlobalPrefs->showStartPage = false;
+                win.RedrawAll(true);
+            } else if (str::Eq(url, SLINK_LIST_SHOW)) {
+                gGlobalPrefs->showStartPage = true;
+                win.RedrawAll(true);
+            } else if (!str::StartsWithI(url, L"http:") &&
+                       !str::StartsWithI(url, L"https:") &&
+                       !str::StartsWithI(url, L"mailto:"))
+            {
+                LoadArgs args(url, &win);
+                LoadDocument(args);
+            } else
+                LaunchBrowser(url);
+        }
+        win.url = NULL;
+    }
+    if (!win.IsDocLoaded())
+        return;
+
+    AssertCrash(win.dm);
+    if (MA_IDLE == win.mouseAction || MA_DRAGGING_RIGHT == win.mouseAction)
+        return;
+    AssertCrash(MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction || MA_DRAGGING == win.mouseAction);
+
+    bool didDragMouse = !win.dragStartPending ||
+        abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+    if (MA_DRAGGING == win.mouseAction)
+        OnDraggingStop(win, x, y, !didDragMouse);
+    else
+        OnSelectionStop(&win, x, y, !didDragMouse);
+
+    PointD ptPage = win.dm->CvtFromScreen(PointI(x, y));
+    // TODO: win.linkHandler->GotoLink might spin the event loop
+    PageElement *link = win.linkOnLastButtonDown;
+    win.linkOnLastButtonDown = NULL;
+    win.mouseAction = MA_IDLE;
+
+    if (didDragMouse)
+        /* pass */;
+    /* return from white/black screens in presentation mode */
+    else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
+        win.ChangePresentationMode(PM_ENABLED);
+    /* follow an active link */
+    else if (link && link->GetRect().Contains(ptPage)) {
+        PageDestination *dest = link->AsLink();
+        win.linkHandler->GotoLink(dest);
+        SetCursor(gCursorArrow);
+        // highlight the clicked link (as a reminder of the last action once the user returns)
+        if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
+            DeleteOldSelectionInfo(&win, true);
+            win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, win.dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
+            win.showSelection = win.selectionOnPage != NULL;
+            win.RepaintAsync();
+        }
+    }
+    /* if we had a selection and this was just a click, hide the selection */
+    else if (win.showSelection)
+        ClearSearchResult(&win);
+    /* if there's a permanent forward search mark, hide it */
+    else if (win.fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+        win.fwdSearchMark.show = false;
+        win.RepaintAsync();
+    }
+    /* in presentation mode, change pages on left/right-clicks */
+    else if (PM_ENABLED == win.presentation) {
+        if ((key & MK_SHIFT))
+            win.dm->GoToPrevPage(0);
+        else
+            win.dm->GoToNextPage(0);
+    }
+
+    delete link;
+}
+
+static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
+{
+    //lf("Left button clicked on %d %d", x, y);
+    if (win.presentation && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
+        // in presentation mode, left clicks turn the page,
+        // make two quick left clicks (AKA one double-click) turn two pages
+        OnMouseLeftButtonDown(win, x, y, key);
+        return;
+    }
+
+    bool dontSelect = false;
+    if (gGlobalPrefs->enableTeXEnhancements && !(key & ~MK_LBUTTON))
+        dontSelect = OnInverseSearch(&win, x, y);
+    if (dontSelect || !win.IsDocLoaded())
+        return;
+
+    if (win.dm->IsOverText(PointI(x, y))) {
+        int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
+        if (win.dm->ValidPageNo(pageNo)) {
+            PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
+            win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+            UpdateTextSelection(&win, false);
+            win.RepaintAsync();
+        }
+        return;
+    }
+
+    PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
+    if (pageEl && pageEl->GetType() == Element_Link) {
+        // speed up navigation in a file where navigation links are in a fixed position
+        OnMouseLeftButtonDown(win, x, y, key);
+    }
+    else if (pageEl && pageEl->GetType() == Element_Image) {
+        // select an image that could be copied to the clipboard
+        RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+
+        DeleteOldSelectionInfo(&win, true);
+        win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, rc);
+        win.showSelection = win.selectionOnPage != NULL;
+        win.RepaintAsync();
+    }
+    delete pageEl;
+}
+
+static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
+{
+    // Handle message by recording placement then moving document as mouse moves.
+
+    switch (win.mouseAction) {
+    case MA_IDLE:
+        win.mouseAction = MA_SCROLLING;
+
+        // record current mouse position, the farther the mouse is moved
+        // from this position, the faster we scroll the document
+        win.dragStart = PointI(x, y);
+        SetCursor(gCursorScroll);
+        break;
+
+    case MA_SCROLLING:
+        win.mouseAction = MA_IDLE;
+        break;
+    }
+}
+
+static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
+{
+    //lf("Right button clicked on %d %d", x, y);
+    if (!win.IsDocLoaded()) {
+        SetFocus(win.hwndFrame);
+        win.dragStart = PointI(x, y);
+        return;
+    }
+
+    if (MA_SCROLLING == win.mouseAction)
+        win.mouseAction = MA_IDLE;
+    else if (win.mouseAction != MA_IDLE)
+        return;
+    AssertCrash(win.dm);
+
+    SetFocus(win.hwndFrame);
+
+    win.dragStartPending = true;
+    win.dragStart = PointI(x, y);
+
+    OnDraggingStart(win, x, y, true);
+}
+
+static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
+{
+    if (!win.IsDocLoaded()) {
+        bool didDragMouse =
+            abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+            abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+        if (!didDragMouse)
+            OnAboutContextMenu(&win, x, y);
+        return;
+    }
+
+    AssertCrash(win.dm);
+    if (MA_DRAGGING_RIGHT != win.mouseAction)
+        return;
+
+    bool didDragMouse = !win.dragStartPending ||
+        abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+    OnDraggingStop(win, x, y, !didDragMouse);
+
+    win.mouseAction = MA_IDLE;
+
+    if (didDragMouse)
+        /* pass */;
+    else if (PM_ENABLED == win.presentation) {
+        if ((key & MK_CONTROL))
+            OnContextMenu(&win, x, y);
+        else if ((key & MK_SHIFT))
+            win.dm->GoToNextPage(0);
+        else
+            win.dm->GoToPrevPage(0);
+    }
+    /* return from white/black screens in presentation mode */
+    else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
+        win.ChangePresentationMode(PM_ENABLED);
+    else
+        OnContextMenu(&win, x, y);
+}
+
+static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
+{
+    if (win.presentation && !(key & ~MK_RBUTTON)) {
+        // in presentation mode, right clicks turn the page,
+        // make two quick right clicks (AKA one double-click) turn two pages
+        OnMouseRightButtonDown(win, x, y, key);
+        return;
+    }
+}
+
+#ifdef DRAW_PAGE_SHADOWS
+#define BORDER_SIZE   1
+#define SHADOW_OFFSET 4
+static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
+{
+    // Frame info
+    RectI frame = bounds;
+    frame.Inflate(BORDER_SIZE, BORDER_SIZE);
+
+    // Shadow info
+    RectI shadow = frame;
+    shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
+    if (frame.x < 0) {
+        // the left of the page isn't visible, so start the shadow at the left
+        int diff = min(-pageRect.x, SHADOW_OFFSET);
+        shadow.x -= diff; shadow.dx += diff;
+    }
+    if (frame.y < 0) {
+        // the top of the page isn't visible, so start the shadow at the top
+        int diff = min(-pageRect.y, SHADOW_OFFSET);
+        shadow.y -= diff; shadow.dy += diff;
+    }
+
+    // Draw shadow
+    if (!presentation) {
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(COL_PAGE_SHADOW));
+        FillRect(hdc, &shadow.ToRECT(), brush);
+    }
+
+    // Draw frame
+    ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
+    SelectObject(hdc, pe);
+    SelectObject(hdc, brush);
+    Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
+}
+#else
+static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
+{
+    ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
+    SelectObject(hdc, pe);
+    SelectObject(hdc, brush);
+    Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
+}
+#endif
+
+/* debug code to visualize links (can block while rendering) */
+static void DebugShowLinks(DisplayModel& dm, HDC hdc)
+{
+    if (!gDebugShowLinks)
+        return;
+
+    RectI viewPortRect(PointI(), dm.viewPort.Size());
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+
+    for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
+        PageInfo *pageInfo = dm.GetPageInfo(pageNo);
+        if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+            continue;
+
+        Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
+        if (els) {
+            for (size_t i = 0; i < els->Count(); i++) {
+                if (els->At(i)->GetType() == Element_Image)
+                    continue;
+                RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
+                RectI isect = viewPortRect.Intersect(rect);
+                if (!isect.IsEmpty())
+                    PaintRect(hdc, isect);
+            }
+            DeleteVecMembers(*els);
+            delete els;
+        }
+    }
+
+    DeletePen(SelectObject(hdc, oldPen));
+
+    if (dm.ZoomVirtual() == ZOOM_FIT_CONTENT) {
+        // also display the content box when fitting content
+        pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
+        oldPen = SelectObject(hdc, pen);
+
+        for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
+            PageInfo *pageInfo = dm.GetPageInfo(pageNo);
+            if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+                continue;
+
+            RectI rect = dm.CvtToScreen(pageNo, dm.engine->PageContentBox(pageNo));
+            PaintRect(hdc, rect);
+        }
+
+        DeletePen(SelectObject(hdc, oldPen));
+    }
+}
+
+// cf. http://forums.fofou.org/sumatrapdf/topic?id=3183580
+static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
+{
+    tv->Red = (COLOR16)((GetRValueSafe(a) + perc * (GetRValueSafe(b) - GetRValueSafe(a))) * 256);
+    tv->Green = (COLOR16)((GetGValueSafe(a) + perc * (GetGValueSafe(b) - GetGValueSafe(a))) * 256);
+    tv->Blue = (COLOR16)((GetBValueSafe(a) + perc * (GetBValueSafe(b) - GetBValueSafe(a))) * 256);
+}
+
+static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
+{
+    DisplayModel* dm = win.dm;
+    AssertCrash(dm);
+    if (!dm) return;
+
+    bool paintOnBlackWithoutShadow = win.presentation ||
+    // draw comic books and single images on a black background (without frame and shadow)
+                                     dm->engine && dm->engine->IsImageCollection();
+    if (paintOnBlackWithoutShadow) {
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(WIN_COL_BLACK));
+        FillRect(hdc, rcArea, brush);
+    }
+    else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        FillRect(hdc, rcArea, brush);
+    }
+    else {
+        COLORREF colors[3];
+        colors[0] = gGlobalPrefs->fixedPageUI.gradientColors->At(0);
+        if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 1) {
+            colors[1] = colors[2] = colors[0];
+        }
+        else if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 2) {
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
+            colors[1] = RGB((GetRValueSafe(colors[0]) + GetRValueSafe(colors[2])) / 2,
+                            (GetGValueSafe(colors[0]) + GetGValueSafe(colors[2])) / 2,
+                            (GetBValueSafe(colors[0]) + GetBValueSafe(colors[2])) / 2);
+        }
+        else {
+            colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(2);
+        }
+        SizeI size = win.dm->GetCanvasSize();
+        float percTop = 1.0f * win.dm->viewPort.y / size.dy;
+        float percBot = 1.0f * win.dm->viewPort.BR().y / size.dy;
+        if (!IsContinuous(win.dm->GetDisplayMode())) {
+            percTop += win.dm->CurrentPageNo() - 1; percTop /= win.dm->PageCount();
+            percBot += win.dm->CurrentPageNo() - 1; percBot /= win.dm->PageCount();
+        }
+        SizeI vp = win.dm->viewPort.Size();
+        TRIVERTEX tv[4] = { { 0, 0 }, { vp.dx, vp.dy / 2 }, { 0, vp.dy / 2 }, { vp.dx, vp.dy } };
+        GRADIENT_RECT gr[2] = { { 0, 1 }, { 2, 3 } };
+        if (percTop < 0.5f)
+            GetGradientColor(colors[0], colors[1], 2 * percTop, &tv[0]);
+        else
+            GetGradientColor(colors[1], colors[2], 2 * (percTop - 0.5f), &tv[0]);
+        if (percBot < 0.5f)
+            GetGradientColor(colors[0], colors[1], 2 * percBot, &tv[3]);
+        else
+            GetGradientColor(colors[1], colors[2], 2 * (percBot - 0.5f), &tv[3]);
+        bool needCenter = percTop < 0.5f && percBot > 0.5f;
+        if (needCenter) {
+            GetGradientColor(colors[1], colors[1], 0, &tv[1]);
+            GetGradientColor(colors[1], colors[1], 0, &tv[2]);
+            tv[1].y = tv[2].y = (LONG)((0.5f - percTop) / (percBot - percTop) * vp.dy);
+        }
+        else
+            gr[0].LowerRight = 3;
+        // TODO: disable for less than about two screen heights?
+        GradientFill(hdc, tv, dimof(tv), gr, needCenter ? 2 : 1, GRADIENT_FILL_RECT_V);
+    }
+
+    bool rendering = false;
+    RectI screen(PointI(), dm->viewPort.Size());
+
+    for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
+        PageInfo *pageInfo = dm->GetPageInfo(pageNo);
+        if (!pageInfo || 0.0f == pageInfo->visibleRatio)
+            continue;
+        AssertCrash(pageInfo->shown);
+        if (!pageInfo->shown)
+            continue;
+
+        RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
+        // don't paint the frame background for images
+        if (!(dm->engine && dm->engine->IsImageCollection()))
+            PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
+
+        bool renderOutOfDateCue = false;
+        UINT renderDelay = 0;
+        if (!DoCachePageRendering(&win, pageNo)) {
+            if (dm->engine)
+                dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+        }
+        else
+            renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+
+        if (renderDelay) {
+            ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+            HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+            SetTextColor(hdc, gRenderCache.textColor);
+            if (renderDelay != RENDER_DELAY_FAILED) {
+                if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
+                    win.RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                else
+                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
+                rendering = true;
+            } else {
+                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
+            }
+            SelectObject(hdc, hPrevFont);
+            continue;
+        }
+
+        if (!renderOutOfDateCue)
+            continue;
+
+        HDC bmpDC = CreateCompatibleDC(hdc);
+        if (bmpDC) {
+            SelectObject(bmpDC, gBitmapReloadingCue);
+            int size = (int)(16 * win.uiDPIFactor);
+            int cx = min(bounds.dx, 2 * size), cy = min(bounds.dy, 2 * size);
+            StretchBlt(hdc, bounds.x + bounds.dx - min((cx + size) / 2, cx),
+                bounds.y + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
+                bmpDC, 0, 0, 16, 16, SRCCOPY);
+
+            DeleteDC(bmpDC);
+        }
+    }
+
+    if (win.showSelection)
+        PaintSelection(&win, hdc);
+
+    if (win.fwdSearchMark.show)
+        PaintForwardSearchMark(&win, hdc);
+
+    if (!rendering)
+        DebugShowLinks(*dm, hdc);
+}
+
+static void OnPaint(WindowInfo& win)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(win.hwndCanvas, &ps);
+
+    if (win.IsAboutWindow()) {
+        if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
+            DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.textColor, gRenderCache.backgroundColor);
+        } else {
+            DrawAboutPage(win, win.buffer->GetDC());
+        }
+        win.buffer->Flush(hdc);
+    } else if (!win.IsDocLoaded()) {
+        // TODO: replace with notifications as far as reasonably possible
+        // note: currently it's possible to easily reload the document
+        // and/or open it in an external viewer (e.g. Adobe Reader might
+        // be able to handle PDFs that are too broken for MuPDF),
+        // a notification would break this
+        ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+        HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        FillRect(hdc, &ps.rcPaint, brush);
+        ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
+        SelectObject(hdc, hPrevFont);
+    } else {
+        switch (win.presentation) {
+        case PM_BLACK_SCREEN:
+            FillRect(hdc, &ps.rcPaint, GetStockBrush(BLACK_BRUSH));
+            break;
+        case PM_WHITE_SCREEN:
+            FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
+            break;
+        default:
+            DrawDocument(win, win.buffer->GetDC(), &ps.rcPaint);
+            win.buffer->Flush(hdc);
+        }
+    }
+
+    EndPaint(win.hwndCanvas, &ps);
+}
+
+static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
+{
+    POINT pt;
+
+    if (win.IsAboutWindow()) {
+        if (GetCursorPosInHwnd(hwnd, pt)) {
+            StaticLinkInfo linkInfo;
+            if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
+                win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
+                SetCursor(gCursorHand);
+            }
+            else {
+                win.DeleteInfotip();
+                SetCursor(gCursorArrow);
+            }
+            return TRUE;
+        }
+    }
+
+    if (!win.IsDocLoaded()) {
+        win.DeleteInfotip();
+        return FALSE;
+    }
+
+    if (win.mouseAction != MA_IDLE)
+        win.DeleteInfotip();
+
+    switch (win.mouseAction) {
+        case MA_DRAGGING:
+        case MA_DRAGGING_RIGHT:
+            SetCursor(gCursorDrag);
+            return TRUE;
+        case MA_SCROLLING:
+            SetCursor(gCursorScroll);
+            return TRUE;
+        case MA_SELECTING_TEXT:
+            SetCursor(gCursorIBeam);
+            return TRUE;
+        case MA_SELECTING:
+            break;
+        case MA_IDLE:
+            if (GetCursor() && GetCursorPosInHwnd(hwnd, pt)) {
+                PointI pti(pt.x, pt.y);
+                PageElement *pageEl = win.dm->GetElementAtPos(pti);
+                if (pageEl) {
+                    ScopedMem<WCHAR> text(pageEl->GetValue());
+                    RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+                    win.CreateInfotip(text, rc, true);
+
+                    bool isLink = pageEl->GetType() == Element_Link;
+                    delete pageEl;
+
+                    if (isLink) {
+                        SetCursor(gCursorHand);
+                        return TRUE;
+                    }
+                }
+                else
+                    win.DeleteInfotip();
+                if (win.dm->IsOverText(pti))
+                    SetCursor(gCursorIBeam);
+                else
+                    SetCursor(gCursorArrow);
+                return TRUE;
+            }
+            win.DeleteInfotip();
+            break;
+    }
+    if (win.presentation)
+        return TRUE;
+    return FALSE;
+}
+
+static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
+{
+    POINT pt;
+
+    switch (timerId) {
+    case REPAINT_TIMER_ID:
+        win.delayedRepaintTimer = 0;
+        KillTimer(hwnd, REPAINT_TIMER_ID);
+        win.RedrawAll();
+        break;
+
+    case SMOOTHSCROLL_TIMER_ID:
+        if (MA_SCROLLING == win.mouseAction)
+            win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
+        else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
+            GetCursorPosInHwnd(win.hwndCanvas, pt);
+            if (NeedsSelectionEdgeAutoscroll(&win, pt.x, pt.y))
+                OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+        }
+        else {
+            KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+            win.yScrollSpeed = 0;
+            win.xScrollSpeed = 0;
+        }
+        break;
+
+    case HIDE_CURSOR_TIMER_ID:
+        KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
+        if (win.presentation)
+            SetCursor(NULL);
+        break;
+
+    case HIDE_FWDSRCHMARK_TIMER_ID:
+        win.fwdSearchMark.hideStep++;
+        if (1 == win.fwdSearchMark.hideStep) {
+            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+        }
+        else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
+            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
+            win.fwdSearchMark.show = false;
+            win.RepaintAsync();
+        }
+        else
+            win.RepaintAsync();
+        break;
+
+    case AUTO_RELOAD_TIMER_ID:
+        KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+        ReloadDocument(&win, true);
+        break;
+    }
+}
+
+static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (!win.IsDocLoaded())
+        return 0;
+
+    // Scroll the ToC sidebar, if it's visible and the cursor is in it
+    if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
+        // Note: hwndTocTree's window procedure doesn't always handle
+        //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
+        //       here recursively - prevent that
+        gWheelMsgRedirect = true;
+        LRESULT res = SendMessage(win.hwndTocTree, message, wParam, lParam);
+        gWheelMsgRedirect = false;
+        return res;
+    }
+
+    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+    // Note: not all mouse drivers correctly report the Ctrl key's state
+    if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
+        POINT pt;
+        GetCursorPosInHwnd(win.hwndCanvas, pt);
+
+        float zoom = win.dm->NextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
+        PointI tmpPoint(pt.x, pt.y);
+        win.dm->ZoomTo(zoom, &tmpPoint);
+        UpdateToolbarState(&win);
+
+        // don't show the context menu when zooming with the right mouse-button down
+        if ((LOWORD(wParam) & MK_RBUTTON))
+            win.dragStartPending = false;
+
+        return 0;
+    }
+
+    // make sure to scroll whole pages in non-continuous Fit Content mode
+    if (!IsContinuous(win.dm->GetDisplayMode()) &&
+        ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
+        if (delta > 0)
+            win.dm->GoToPrevPage(0);
+        else
+            win.dm->GoToNextPage(0);
+        return 0;
+    }
+
+    if (gDeltaPerLine == 0)
+        return 0;
+
+    bool horizontal = (LOWORD(wParam) & MK_ALT) || IsAltPressed();
+    if (horizontal)
+        gSuppressAltKey = true;
+
+    if (gDeltaPerLine < 0) {
+        // scroll by (fraction of a) page
+        SCROLLINFO si = { 0 };
+        si.cbSize = sizeof(si);
+        si.fMask  = SIF_PAGE;
+        GetScrollInfo(win.hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
+        if (horizontal)
+            win.dm->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
+        else
+            win.dm->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+        return 0;
+    }
+
+    win.wheelAccumDelta += delta;
+    int currentScrollPos = GetScrollPos(win.hwndCanvas, SB_VERT);
+
+    while (win.wheelAccumDelta >= gDeltaPerLine) {
+        if (horizontal)
+            SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+        else
+            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        win.wheelAccumDelta -= gDeltaPerLine;
+    }
+    while (win.wheelAccumDelta <= -gDeltaPerLine) {
+        if (horizontal)
+            SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        else
+            SendMessage(win.hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        win.wheelAccumDelta += gDeltaPerLine;
+    }
+
+    if (!horizontal && !IsContinuous(win.dm->GetDisplayMode()) &&
+        GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
+        if (delta > 0)
+            win.dm->GoToPrevPage(-1);
+        else
+            win.dm->GoToNextPage(0);
+    }
+
+    return 0;
+}
+
+static LRESULT CanvasOnMouseHWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (!win.IsDocLoaded())
+        return 0;
+
+    // Scroll the ToC sidebar, if it's visible and the cursor is in it
+    if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
+        // Note: hwndTocTree's window procedure doesn't always handle
+        //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
+        //       here recursively - prevent that
+        gWheelMsgRedirect = true;
+        LRESULT res = SendMessage(win.hwndTocTree, message, wParam, lParam);
+        gWheelMsgRedirect = false;
+        return res;
+    }
+
+    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    win.wheelAccumDelta += delta;
+
+    while (win.wheelAccumDelta >= gDeltaPerLine) {
+        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        win.wheelAccumDelta -= gDeltaPerLine;
+    }
+    while (win.wheelAccumDelta <= -gDeltaPerLine) {
+        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+        win.wheelAccumDelta += gDeltaPerLine;
+    }
+
+    return TRUE;
+}
+
+static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    if (!Touch::SupportsGestures())
+        return DefWindowProc(win.hwndFrame, message, wParam, lParam);
+
+    HGESTUREINFO hgi = (HGESTUREINFO)lParam;
+    GESTUREINFO gi = { 0 };
+    gi.cbSize = sizeof(GESTUREINFO);
+
+    BOOL ok = Touch::GetGestureInfo(hgi, &gi);
+    if (!ok || !win.IsDocLoaded()) {
+        Touch::CloseGestureInfoHandle(hgi);
+        return 0;
+    }
+
+    switch (gi.dwID) {
+        case GID_ZOOM:
+            if (gi.dwFlags != GF_BEGIN) {
+                float zoom = (float)LODWORD(gi.ullArguments) / (float)win.touchState.startArg;
+                ZoomToSelection(&win, zoom, false, true);
+            }
+            win.touchState.startArg = LODWORD(gi.ullArguments);
+            break;
+
+        case GID_PAN:
+            // Flicking left or right changes the page,
+            // panning moves the document in the scroll window
+            if (gi.dwFlags == GF_BEGIN) {
+                win.touchState.panStarted = true;
+                win.touchState.panPos = gi.ptsLocation;
+                win.touchState.panScrollOrigX = GetScrollPos(win.hwndCanvas, SB_HORZ);
+            }
+            else if (win.touchState.panStarted) {
+                int deltaX = win.touchState.panPos.x - gi.ptsLocation.x;
+                int deltaY = win.touchState.panPos.y - gi.ptsLocation.y;
+                win.touchState.panPos = gi.ptsLocation;
+
+                if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
+                    // Switch pages once we hit inertia in a horizontal direction
+                    if (deltaX < 0)
+                        win.dm->GoToPrevPage(0);
+                    else if (deltaX > 0)
+                        win.dm->GoToNextPage(0);
+                    // When we switch pages, go back to the initial scroll position
+                    // and prevent further pan movement caused by the inertia
+                    win.dm->ScrollXTo(win.touchState.panScrollOrigX);
+                    win.touchState.panStarted = false;
+                }
+                else {
+                    // Pan/Scroll
+                    win.MoveDocBy(deltaX, deltaY);
+                }
+            }
+            break;
+
+        case GID_ROTATE:
+            // Rotate the PDF 90 degrees in one direction
+            if (gi.dwFlags == GF_END) {
+                // This is in radians
+                double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
+                // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
+                double degrees = -rads * 180 / M_PI;
+
+                // Playing with the app, I found that I often didn't go quit a full 90 or 180
+                // degrees. Allowing rotate without a full finger rotate seemed more natural.
+                if (degrees < -120 || degrees > 120)
+                    win.dm->RotateBy(180);
+                else if (degrees < -45)
+                    win.dm->RotateBy(-90);
+                else if (degrees > 45)
+                    win.dm->RotateBy(90);
+            }
+            break;
+
+        case GID_TWOFINGERTAP:
+            // Two-finger tap toggles fullscreen mode
+            OnMenuViewFullscreen(win);
+            break;
+
+        case GID_PRESSANDTAP:
+            // Toggle between Fit Page, Fit Width and Fit Content (same as 'z')
+            if (gi.dwFlags == GF_BEGIN)
+                win.ToggleZoom();
+            break;
+
+        default:
+            // A gesture was not recognized
+            break;
+    }
+
+    Touch::CloseGestureInfoHandle(hgi);
+    return 0;
+}
+
+static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    // messages that don't require win
+    switch (msg) {
+        case WM_DROPFILES:
+            CrashIf(lParam != 0 && lParam != 1);
+            OnDropFiles((HDROP)wParam, !lParam);
+            break;
+
+        case WM_ERASEBKGND:
+            // do nothing, helps to avoid flicker
+            return TRUE;
+    }
+
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    if (!win)
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    // messages that require win
+    switch (msg) {
+        case WM_VSCROLL:
+            OnVScroll(*win, wParam);
+            break;
+
+        case WM_HSCROLL:
+            OnHScroll(*win, wParam);
+            break;
+
+        case WM_MOUSEMOVE:
+            OnMouseMove(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_LBUTTONDBLCLK:
+            OnMouseLeftButtonDblClk(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_LBUTTONDOWN:
+            OnMouseLeftButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_LBUTTONUP:
+            OnMouseLeftButtonUp(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_MBUTTONDOWN:
+            if (win->IsDocLoaded()) {
+                SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+                // TODO: Create window that shows location of initial click for reference
+                OnMouseMiddleButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            }
+            break;
+
+        case WM_RBUTTONDBLCLK:
+            OnMouseRightButtonDblClick(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_RBUTTONDOWN:
+            OnMouseRightButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_RBUTTONUP:
+            OnMouseRightButtonUp(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+            break;
+
+        case WM_CONTEXTMENU:
+            if (win->IsDocLoaded())
+                OnContextMenu(win, 0, 0);
+            else
+                OnAboutContextMenu(win, 0, 0);
+            break;
+
+        case WM_SETCURSOR:
+            if (OnSetCursor(*win, hwnd))
+                return TRUE;
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_TIMER:
+            OnTimer(*win, hwnd, wParam);
+            break;
+
+        case WM_PAINT:
+            OnPaint(*win);
+            break;
+
+        case WM_SIZE:
+            if (!IsIconic(win->hwndFrame))
+                win->UpdateCanvasSize();
+            break;
+
+        case WM_MOUSEWHEEL:
+            return CanvasOnMouseWheel(*win, msg, wParam, lParam);
+
+        case WM_MOUSEHWHEEL:
+            return CanvasOnMouseHWheel(*win, msg, wParam, lParam);
+
+        case WM_GESTURE:
+            return OnGesture(*win, msg, wParam, lParam);
+
+        case WM_GETOBJECT:
+            // TODO: should we check for UiaRootObjectId, as in http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
+            // On the other hand http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+            // says that UiaReturnRawElementProvider() should be called regardless of lParam
+            // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+            if (!gPluginMode) {
+                // disable UIAutomation in release builds until concurrency issues and
+                // memory leaks have been figured out and fixed
+#ifdef DEBUG
+                if (win->CreateUIAProvider()) {
+                    // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
+                    // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
+                    // Maybe instead of having a single provider per win, we should always create a new one
+                    // like in this sample: http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+                    // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
+                    // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
+                    // and since WM_GETOBJECT is called many times, it accumulates
+                    return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
+                }
+#endif
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
