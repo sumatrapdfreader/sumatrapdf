@@ -350,6 +350,9 @@ GlobalPrefs = [
 		"if false, the menu bar will be hidden for all newly opened windows " +
 		"(use F9 to show it until the window closes or Alt to show it just briefly)",
 		expert=True, version="2.5"),
+	Field("FullPathInTitle", Bool, False,
+		"if true, we show the full path to a file in the title bar",
+		expert=True, version="2.6"),
 	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
@@ -381,9 +384,6 @@ GlobalPrefs = [
 		expert=True, version="2.5"),
 	Field("ShowTabBar", Bool, False,
 		"if true, we show a tab bar and perform tabbed navigation",
-		expert=True, version="2.6"),
-	Field("FullPathInTitle", Bool, False,
-		"if true, we show the full path to a file in the title bar",
 		expert=True, version="2.6"),
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +

@@ -917,10 +917,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         showToc = state->showToc;
     }
 
-    // make sure to clear linkOnLastButtonDown before deleting win->dm
-    delete win->linkOnLastButtonDown;
-    win->linkOnLastButtonDown = NULL;
-
     DisplayModel *prevModel = win->dm;
     AbortFinding(args.win);
     delete win->pdfsync;
@@ -956,8 +952,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
 
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
-    if (win->dm || args.allowFailure)
+    // (same for linkOnLastButtonDown)
+    if (win->dm || args.allowFailure) {
         ClearTocBox(win);
+        delete win->linkOnLastButtonDown;
+        win->linkOnLastButtonDown = NULL;
+    }
 
     AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->dm != NULL));
     /* see http://code.google.com/p/sumatrapdf/issues/detail?id=1570
