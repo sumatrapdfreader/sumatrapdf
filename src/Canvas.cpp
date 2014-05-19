@@ -4,6 +4,8 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
+///// methods needed for FixedPageUI canvases with document loaded /////
+
 void WindowInfo::UpdateScrollbars(SizeI canvas)
 {
     SCROLLINFO si = { 0 };
@@ -47,38 +49,8 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
     SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
 }
 
-class RepaintCanvasTask : public UITask
-{
-    UINT delay;
-    WindowInfo *win;
-
-public:
-    RepaintCanvasTask(WindowInfo *win, UINT delay)
-        : win(win), delay(delay) {
-        name = "RepaintCanvasTask";
-    }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        if (!delay)
-            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
-        else if (!win->delayedRepaintTimer)
-            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
-    }
-};
-
-void WindowInfo::RepaintAsync(UINT delay)
-{
-    // even though RepaintAsync is mostly called from the UI thread,
-    // we depend on the repaint message to happen asynchronously
-    uitask::Post(new RepaintCanvasTask(this, delay));
-}
-
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
-    if (!win.IsDocLoaded())
-        return;
     AssertCrash(win.dm);
 
     SCROLLINFO si = { 0 };
@@ -116,8 +88,6 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
 {
-    if (!win.IsDocLoaded())
-        return;
     AssertCrash(win.dm);
 
     SCROLLINFO si = { 0 };
@@ -174,8 +144,6 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
 
 static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
-    if (!win.IsDocLoaded())
-        return;
     AssertCrash(win.dm);
 
     if (win.presentation) {
@@ -229,14 +197,6 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if (win.IsAboutWindow()) {
-        // remember a link under so that on mouse up we only activate
-        // link if mouse up is on the same link as mouse down
-        win.url = GetStaticLink(win.staticLinks, x, y);
-    }
-    if (!win.IsDocLoaded())
-        return;
-
     if (MA_DRAGGING_RIGHT == win.mouseAction)
         return;
 
@@ -273,32 +233,6 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    if (win.IsAboutWindow()) {
-        SetFocus(win.hwndFrame);
-        const WCHAR *url = GetStaticLink(win.staticLinks, x, y);
-        if (url && url == win.url) {
-            if (str::Eq(url, SLINK_OPEN_FILE))
-                SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
-            else if (str::Eq(url, SLINK_LIST_HIDE)) {
-                gGlobalPrefs->showStartPage = false;
-                win.RedrawAll(true);
-            } else if (str::Eq(url, SLINK_LIST_SHOW)) {
-                gGlobalPrefs->showStartPage = true;
-                win.RedrawAll(true);
-            } else if (!str::StartsWithI(url, L"http:") &&
-                       !str::StartsWithI(url, L"https:") &&
-                       !str::StartsWithI(url, L"mailto:"))
-            {
-                LoadArgs args(url, &win);
-                LoadDocument(args);
-            } else
-                LaunchBrowser(url);
-        }
-        win.url = NULL;
-    }
-    if (!win.IsDocLoaded())
-        return;
-
     AssertCrash(win.dm);
     if (MA_IDLE == win.mouseAction || MA_DRAGGING_RIGHT == win.mouseAction)
         return;
@@ -358,7 +292,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if (win.presentation && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
+    if (win.presentation && !(key & ~MK_LBUTTON)) {
         // in presentation mode, left clicks turn the page,
         // make two quick left clicks (AKA one double-click) turn two pages
         OnMouseLeftButtonDown(win, x, y, key);
@@ -368,7 +302,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     bool dontSelect = false;
     if (gGlobalPrefs->enableTeXEnhancements && !(key & ~MK_LBUTTON))
         dontSelect = OnInverseSearch(&win, x, y);
-    if (dontSelect || !win.IsDocLoaded())
+    if (dontSelect)
         return;
 
     if (win.dm->IsOverText(PointI(x, y))) {
@@ -422,12 +356,6 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Right button clicked on %d %d", x, y);
-    if (!win.IsDocLoaded()) {
-        SetFocus(win.hwndFrame);
-        win.dragStart = PointI(x, y);
-        return;
-    }
-
     if (MA_SCROLLING == win.mouseAction)
         win.mouseAction = MA_IDLE;
     else if (win.mouseAction != MA_IDLE)
@@ -444,15 +372,6 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    if (!win.IsDocLoaded()) {
-        bool didDragMouse =
-            abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-            abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-        if (!didDragMouse)
-            OnAboutContextMenu(&win, x, y);
-        return;
-    }
-
     AssertCrash(win.dm);
     if (MA_DRAGGING_RIGHT != win.mouseAction)
         return;
@@ -727,43 +646,21 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         DebugShowLinks(*dm, hdc);
 }
 
-static void OnPaint(WindowInfo& win)
+static void OnPaintDocument(WindowInfo& win)
 {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
-    if (win.IsAboutWindow()) {
-        if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
-            DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.textColor, gRenderCache.backgroundColor);
-        } else {
-            DrawAboutPage(win, win.buffer->GetDC());
-        }
+    switch (win.presentation) {
+    case PM_BLACK_SCREEN:
+        FillRect(hdc, &ps.rcPaint, GetStockBrush(BLACK_BRUSH));
+        break;
+    case PM_WHITE_SCREEN:
+        FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
+        break;
+    default:
+        DrawDocument(win, win.buffer->GetDC(), &ps.rcPaint);
         win.buffer->Flush(hdc);
-    } else if (!win.IsDocLoaded()) {
-        // TODO: replace with notifications as far as reasonably possible
-        // note: currently it's possible to easily reload the document
-        // and/or open it in an external viewer (e.g. Adobe Reader might
-        // be able to handle PDFs that are too broken for MuPDF),
-        // a notification would break this
-        ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-        HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
-        FillRect(hdc, &ps.rcPaint, brush);
-        ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
-        DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
-        SelectObject(hdc, hPrevFont);
-    } else {
-        switch (win.presentation) {
-        case PM_BLACK_SCREEN:
-            FillRect(hdc, &ps.rcPaint, GetStockBrush(BLACK_BRUSH));
-            break;
-        case PM_WHITE_SCREEN:
-            FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
-            break;
-        default:
-            DrawDocument(win, win.buffer->GetDC(), &ps.rcPaint);
-            win.buffer->Flush(hdc);
-        }
     }
 
     EndPaint(win.hwndCanvas, &ps);
@@ -773,133 +670,55 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
 {
     POINT pt;
 
-    if (win.IsAboutWindow()) {
-        if (GetCursorPosInHwnd(hwnd, pt)) {
-            StaticLinkInfo linkInfo;
-            if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
-                win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
-                SetCursor(gCursorHand);
-            }
-            else {
-                win.DeleteInfotip();
-                SetCursor(gCursorArrow);
-            }
-            return TRUE;
-        }
-    }
-
-    if (!win.IsDocLoaded()) {
-        win.DeleteInfotip();
-        return FALSE;
-    }
-
     if (win.mouseAction != MA_IDLE)
         win.DeleteInfotip();
 
     switch (win.mouseAction) {
-        case MA_DRAGGING:
-        case MA_DRAGGING_RIGHT:
-            SetCursor(gCursorDrag);
-            return TRUE;
-        case MA_SCROLLING:
-            SetCursor(gCursorScroll);
-            return TRUE;
-        case MA_SELECTING_TEXT:
-            SetCursor(gCursorIBeam);
-            return TRUE;
-        case MA_SELECTING:
-            break;
-        case MA_IDLE:
-            if (GetCursor() && GetCursorPosInHwnd(hwnd, pt)) {
-                PointI pti(pt.x, pt.y);
-                PageElement *pageEl = win.dm->GetElementAtPos(pti);
-                if (pageEl) {
-                    ScopedMem<WCHAR> text(pageEl->GetValue());
-                    RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
-                    win.CreateInfotip(text, rc, true);
-
-                    bool isLink = pageEl->GetType() == Element_Link;
-                    delete pageEl;
-
-                    if (isLink) {
-                        SetCursor(gCursorHand);
-                        return TRUE;
-                    }
-                }
-                else
-                    win.DeleteInfotip();
-                if (win.dm->IsOverText(pti))
-                    SetCursor(gCursorIBeam);
-                else
-                    SetCursor(gCursorArrow);
-                return TRUE;
-            }
-            win.DeleteInfotip();
-            break;
-    }
-    if (win.presentation)
+    case MA_DRAGGING:
+    case MA_DRAGGING_RIGHT:
+        SetCursor(gCursorDrag);
         return TRUE;
-    return FALSE;
-}
-
-static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
-{
-    POINT pt;
-
-    switch (timerId) {
-    case REPAINT_TIMER_ID:
-        win.delayedRepaintTimer = 0;
-        KillTimer(hwnd, REPAINT_TIMER_ID);
-        win.RedrawAll();
+    case MA_SCROLLING:
+        SetCursor(gCursorScroll);
+        return TRUE;
+    case MA_SELECTING_TEXT:
+        SetCursor(gCursorIBeam);
+        return TRUE;
+    case MA_SELECTING:
         break;
+    case MA_IDLE:
+        if (GetCursor() && GetCursorPosInHwnd(hwnd, pt)) {
+            PointI pti(pt.x, pt.y);
+            PageElement *pageEl = win.dm->GetElementAtPos(pti);
+            if (pageEl) {
+                ScopedMem<WCHAR> text(pageEl->GetValue());
+                RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+                win.CreateInfotip(text, rc, true);
 
-    case SMOOTHSCROLL_TIMER_ID:
-        if (MA_SCROLLING == win.mouseAction)
-            win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
-        else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
-            GetCursorPosInHwnd(win.hwndCanvas, pt);
-            if (NeedsSelectionEdgeAutoscroll(&win, pt.x, pt.y))
-                OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
-        }
-        else {
-            KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
-            win.yScrollSpeed = 0;
-            win.xScrollSpeed = 0;
-        }
-        break;
+                bool isLink = pageEl->GetType() == Element_Link;
+                delete pageEl;
 
-    case HIDE_CURSOR_TIMER_ID:
-        KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
-        if (win.presentation)
-            SetCursor(NULL);
-        break;
-
-    case HIDE_FWDSRCHMARK_TIMER_ID:
-        win.fwdSearchMark.hideStep++;
-        if (1 == win.fwdSearchMark.hideStep) {
-            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+                if (isLink) {
+                    SetCursor(gCursorHand);
+                    return TRUE;
+                }
+            }
+            else
+                win.DeleteInfotip();
+            if (win.dm->IsOverText(pti))
+                SetCursor(gCursorIBeam);
+            else
+                SetCursor(gCursorArrow);
+            return TRUE;
         }
-        else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
-            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
-            win.fwdSearchMark.show = false;
-            win.RepaintAsync();
-        }
-        else
-            win.RepaintAsync();
-        break;
-
-    case AUTO_RELOAD_TIMER_ID:
-        KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-        ReloadDocument(&win, true);
+        win.DeleteInfotip();
         break;
     }
+    return win.presentation ? TRUE : FALSE;
 }
 
 static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (!win.IsDocLoaded())
-        return 0;
-
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
@@ -991,9 +810,6 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
 
 static LRESULT CanvasOnMouseHWheel(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (!win.IsDocLoaded())
-        return 0;
-
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
@@ -1030,7 +846,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
     gi.cbSize = sizeof(GESTUREINFO);
 
     BOOL ok = Touch::GetGestureInfo(hgi, &gi);
-    if (!ok || !win.IsDocLoaded()) {
+    if (!ok) {
         Touch::CloseGestureInfoHandle(hgi);
         return 0;
     }
@@ -1114,18 +930,342 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
     return 0;
 }
 
+static LRESULT WndProcCanvasFixedPageUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_PAINT:
+        OnPaintDocument(win);
+        return 0;
+
+    case WM_MOUSEMOVE:
+        OnMouseMove(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONDOWN:
+        OnMouseLeftButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONUP:
+        OnMouseLeftButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONDBLCLK:
+        OnMouseLeftButtonDblClk(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_MBUTTONDOWN:
+        SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+        // TODO: Create window that shows location of initial click for reference
+        OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_RBUTTONDOWN:
+        OnMouseRightButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_RBUTTONUP:
+        OnMouseRightButtonUp(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_RBUTTONDBLCLK:
+        OnMouseRightButtonDblClick(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_VSCROLL:
+        OnVScroll(win, wParam);
+        return 0;
+
+    case WM_HSCROLL:
+        OnHScroll(win, wParam);
+        return 0;
+
+    case WM_MOUSEWHEEL:
+        return CanvasOnMouseWheel(win, msg, wParam, lParam);
+
+    case WM_MOUSEHWHEEL:
+        return CanvasOnMouseHWheel(win, msg, wParam, lParam);
+
+    case WM_SETCURSOR:
+        if (OnSetCursor(win, hwnd))
+            return TRUE;
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    case WM_CONTEXTMENU:
+        OnContextMenu(&win, 0, 0);
+        return 0;
+
+    case WM_GESTURE:
+        return OnGesture(win, msg, wParam, lParam);
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+}
+
+///// methods needed for the About/Start screen /////
+
+static void OnPaintAbout(WindowInfo& win)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(win.hwndCanvas, &ps);
+
+    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
+        DrawStartPage(win, win.buffer->GetDC(), gFileHistory, gRenderCache.textColor, gRenderCache.backgroundColor);
+    } else {
+        DrawAboutPage(win, win.buffer->GetDC());
+    }
+    win.buffer->Flush(hdc);
+
+    EndPaint(win.hwndCanvas, &ps);
+}
+
+static void OnMouseLeftButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
+{
+    //lf("Left button clicked on %d %d", x, y);
+
+    // remember a link under so that on mouse up we only activate
+    // link if mouse up is on the same link as mouse down
+    win.url = GetStaticLink(win.staticLinks, x, y);
+}
+
+static void OnMouseLeftButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
+{
+    SetFocus(win.hwndFrame);
+
+    const WCHAR *url = GetStaticLink(win.staticLinks, x, y);
+    if (url && url == win.url) {
+        if (str::Eq(url, SLINK_OPEN_FILE))
+            SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
+        else if (str::Eq(url, SLINK_LIST_HIDE)) {
+            gGlobalPrefs->showStartPage = false;
+            win.RedrawAll(true);
+        } else if (str::Eq(url, SLINK_LIST_SHOW)) {
+            gGlobalPrefs->showStartPage = true;
+            win.RedrawAll(true);
+        } else if (!str::StartsWithI(url, L"http:") &&
+                   !str::StartsWithI(url, L"https:") &&
+                   !str::StartsWithI(url, L"mailto:"))
+        {
+            LoadArgs args(url, &win);
+            LoadDocument(args);
+        } else
+            LaunchBrowser(url);
+    }
+    win.url = NULL;
+}
+
+static void OnMouseRightButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
+{
+    //lf("Right button clicked on %d %d", x, y);
+    SetFocus(win.hwndFrame);
+    win.dragStart = PointI(x, y);
+}
+
+static void OnMouseRightButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
+{
+    bool didDragMouse =
+        abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
+        abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+    if (!didDragMouse)
+        OnAboutContextMenu(&win, x, y);
+}
+
+static LRESULT OnSetCursorAbout(WindowInfo& win, HWND hwnd)
+{
+    POINT pt;
+    if (GetCursorPosInHwnd(hwnd, pt)) {
+        StaticLinkInfo linkInfo;
+        if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
+            win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
+            SetCursor(gCursorHand);
+        }
+        else {
+            win.DeleteInfotip();
+            SetCursor(gCursorArrow);
+        }
+        return TRUE;
+    }
+
+    win.DeleteInfotip();
+    return FALSE;
+}
+
+static LRESULT WndProcCanvasAbout(WindowInfo& win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_LBUTTONDOWN:
+        OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONUP:
+        OnMouseLeftButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_LBUTTONDBLCLK:
+        OnMouseLeftButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_RBUTTONDOWN:
+        OnMouseRightButtonDownAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_RBUTTONUP:
+        OnMouseRightButtonUpAbout(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
+        return 0;
+
+    case WM_SETCURSOR:
+        if (OnSetCursorAbout(win, hwnd))
+            return TRUE;
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    case WM_CONTEXTMENU:
+        OnAboutContextMenu(&win, 0, 0);
+        return 0;
+
+    case WM_PAINT:
+        OnPaintAbout(win);
+        return 0;
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+}
+
+///// methods needed for FixedPageUI canvases with loading error /////
+
+static void OnPaintError(WindowInfo& win)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(win.hwndCanvas, &ps);
+
+    // TODO: replace with notifications as far as reasonably possible
+    // note: currently it's possible to easily reload the document
+    // and/or open it in an external viewer (e.g. Adobe Reader might
+    // be able to handle PDFs that are too broken for MuPDF),
+    // a notification would break this
+    ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+    FillRect(hdc, &ps.rcPaint, brush);
+    ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+    DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
+    SelectObject(hdc, hPrevFont);
+
+    EndPaint(win.hwndCanvas, &ps);
+}
+
+static LRESULT WndProcCanvasLoadError(WindowInfo& win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_PAINT:
+        OnPaintError(win);
+        return 0;
+
+    case WM_SETCURSOR:
+        // TODO: make (re)loading a document always clear the infotip
+        win.DeleteInfotip();
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+}
+
+///// methods needed for all types of canvas /////
+
+class RepaintCanvasTask : public UITask
+{
+    UINT delay;
+    WindowInfo *win;
+
+public:
+    RepaintCanvasTask(WindowInfo *win, UINT delay)
+        : win(win), delay(delay) {
+        name = "RepaintCanvasTask";
+    }
+
+    virtual void Execute() {
+        if (!WindowInfoStillValid(win))
+            return;
+        if (!delay)
+            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        else if (!win->delayedRepaintTimer)
+            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
+    }
+};
+
+void WindowInfo::RepaintAsync(UINT delay)
+{
+    // even though RepaintAsync is mostly called from the UI thread,
+    // we depend on the repaint message to happen asynchronously
+    uitask::Post(new RepaintCanvasTask(this, delay));
+}
+
+static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
+{
+    POINT pt;
+
+    switch (timerId) {
+    case REPAINT_TIMER_ID:
+        win.delayedRepaintTimer = 0;
+        KillTimer(hwnd, REPAINT_TIMER_ID);
+        win.RedrawAll();
+        break;
+
+    case SMOOTHSCROLL_TIMER_ID:
+        if (MA_SCROLLING == win.mouseAction)
+            win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
+        else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
+            GetCursorPosInHwnd(win.hwndCanvas, pt);
+            if (NeedsSelectionEdgeAutoscroll(&win, pt.x, pt.y))
+                OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+        }
+        else {
+            KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+            win.yScrollSpeed = 0;
+            win.xScrollSpeed = 0;
+        }
+        break;
+
+    case HIDE_CURSOR_TIMER_ID:
+        KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
+        if (win.presentation)
+            SetCursor(NULL);
+        break;
+
+    case HIDE_FWDSRCHMARK_TIMER_ID:
+        win.fwdSearchMark.hideStep++;
+        if (1 == win.fwdSearchMark.hideStep) {
+            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+        }
+        else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
+            KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
+            win.fwdSearchMark.show = false;
+            win.RepaintAsync();
+        }
+        else
+            win.RepaintAsync();
+        break;
+
+    case AUTO_RELOAD_TIMER_ID:
+        KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+        ReloadDocument(&win, true);
+        break;
+    }
+}
+
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     // messages that don't require win
     switch (msg) {
-        case WM_DROPFILES:
-            CrashIf(lParam != 0 && lParam != 1);
-            OnDropFiles((HDROP)wParam, !lParam);
-            break;
+    case WM_DROPFILES:
+        CrashIf(lParam != 0 && lParam != 1);
+        OnDropFiles((HDROP)wParam, !lParam);
+        return 0;
 
-        case WM_ERASEBKGND:
-            // do nothing, helps to avoid flicker
-            return TRUE;
+    case WM_ERASEBKGND:
+        // do nothing, helps to avoid flicker
+        return TRUE;
     }
 
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -1134,109 +1274,46 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
     // messages that require win
     switch (msg) {
-        case WM_VSCROLL:
-            OnVScroll(*win, wParam);
-            break;
+    case WM_TIMER:
+        OnTimer(*win, hwnd, wParam);
+        return 0;
 
-        case WM_HSCROLL:
-            OnHScroll(*win, wParam);
-            break;
+    case WM_SIZE:
+        if (!IsIconic(win->hwndFrame))
+            win->UpdateCanvasSize();
+        return 0;
 
-        case WM_MOUSEMOVE:
-            OnMouseMove(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_LBUTTONDBLCLK:
-            OnMouseLeftButtonDblClk(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_LBUTTONDOWN:
-            OnMouseLeftButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_LBUTTONUP:
-            OnMouseLeftButtonUp(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_MBUTTONDOWN:
-            if (win->IsDocLoaded()) {
-                SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
-                // TODO: Create window that shows location of initial click for reference
-                OnMouseMiddleButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            }
-            break;
-
-        case WM_RBUTTONDBLCLK:
-            OnMouseRightButtonDblClick(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_RBUTTONDOWN:
-            OnMouseRightButtonDown(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_RBUTTONUP:
-            OnMouseRightButtonUp(*win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
-            break;
-
-        case WM_CONTEXTMENU:
-            if (win->IsDocLoaded())
-                OnContextMenu(win, 0, 0);
-            else
-                OnAboutContextMenu(win, 0, 0);
-            break;
-
-        case WM_SETCURSOR:
-            if (OnSetCursor(*win, hwnd))
-                return TRUE;
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-
-        case WM_TIMER:
-            OnTimer(*win, hwnd, wParam);
-            break;
-
-        case WM_PAINT:
-            OnPaint(*win);
-            break;
-
-        case WM_SIZE:
-            if (!IsIconic(win->hwndFrame))
-                win->UpdateCanvasSize();
-            break;
-
-        case WM_MOUSEWHEEL:
-            return CanvasOnMouseWheel(*win, msg, wParam, lParam);
-
-        case WM_MOUSEHWHEEL:
-            return CanvasOnMouseHWheel(*win, msg, wParam, lParam);
-
-        case WM_GESTURE:
-            return OnGesture(*win, msg, wParam, lParam);
-
-        case WM_GETOBJECT:
-            // TODO: should we check for UiaRootObjectId, as in http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
-            // On the other hand http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-            // says that UiaReturnRawElementProvider() should be called regardless of lParam
-            // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
-            if (!gPluginMode) {
-                // disable UIAutomation in release builds until concurrency issues and
-                // memory leaks have been figured out and fixed
+    case WM_GETOBJECT:
+        // TODO: should we check for UiaRootObjectId, as in http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
+        // On the other hand http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+        // says that UiaReturnRawElementProvider() should be called regardless of lParam
+        // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+        if (!gPluginMode) {
+            // disable UIAutomation in release builds until concurrency issues and
+            // memory leaks have been figured out and fixed
 #ifdef DEBUG
-                if (win->CreateUIAProvider()) {
-                    // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
-                    // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
-                    // Maybe instead of having a single provider per win, we should always create a new one
-                    // like in this sample: http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-                    // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
-                    // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
-                    // and since WM_GETOBJECT is called many times, it accumulates
-                    return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
-                }
-#endif
+            if (win->CreateUIAProvider()) {
+                // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
+                // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
+                // Maybe instead of having a single provider per win, we should always create a new one
+                // like in this sample: http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+                // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
+                // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
+                // and since WM_GETOBJECT is called many times, it accumulates
+                return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+#endif
+        }
+        return DefWindowProc(hwnd, msg, wParam, lParam);
 
-        default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+    default:
+        // TODO: achieve this split through subclassing or different window classes
+        if (win->IsDocLoaded())
+            return WndProcCanvasFixedPageUI(*win, hwnd, msg, wParam, lParam);
+
+        if (win->IsAboutWindow())
+            return WndProcCanvasAbout(*win, hwnd, msg, wParam, lParam);
+
+        return WndProcCanvasLoadError(*win, hwnd, msg, wParam, lParam);
     }
-    return 0;
 }

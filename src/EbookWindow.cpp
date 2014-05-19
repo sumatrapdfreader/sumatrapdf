@@ -540,7 +540,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
         case WM_COMMAND:
             return OnCommand(win, msg, wParam, lParam);
-            break;
 
         case WM_INITMENUPOPUP:
             UpdateMenu(win, (HMENU)wParam);
