@@ -1111,6 +1111,7 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 	fz_display_list *list;
 	fz_matrix ctm;
 	fz_device *dev;
+	fz_rect big;
 
 	list = font->t3lists[gid];
 	if (!list)
@@ -1133,6 +1134,13 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm,
 	{
 		fz_rethrow(ctx);
 	}
+
+	/* clip the bbox size to a reasonable maximum for degenerate glyphs */
+	big = font->bbox;
+	/* SumatraPDF: this collides with the bbox resizing fix in fz_set_font_bbox above
+	fz_expand_rect(&big, fz_max(fz_matrix_expansion(&ctm) * 2, fz_max(big.x1 - big.x0, big.y1 - big.y0)));
+	fz_intersect_rect(bounds, &big);
+	*/
 
 	return bounds;
 }

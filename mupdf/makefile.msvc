@@ -149,7 +149,7 @@ JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f 
 # 4703 - potentially uninitialized local variable (frequent with vs 2012)
 MUPDF_CFLAGS = $(CFLAGS) /TC /I$(MUPDF_DIR)/include /I$(MUPDF_DIR)/generated \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
-	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /I$(OPENJPEG_DIR)
+	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR)
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4703
 
 !if "$(CFG)"=="dbg"

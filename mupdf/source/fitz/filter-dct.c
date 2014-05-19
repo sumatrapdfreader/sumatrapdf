@@ -1,6 +1,10 @@
 #include "mupdf/fitz.h"
 
 #include <jpeglib.h>
+#ifndef SHARE_JPEG
+typedef void * backing_store_ptr;
+#include "jmemcust.h"
+#endif
 #include <setjmp.h>
 
 typedef struct fz_dctd_s fz_dctd;
@@ -26,9 +30,66 @@ struct fz_dctd_s
 	unsigned char buffer[4096];
 };
 
+#ifdef SHARE_JPEG
+
+#define JZ_DCT_STATE_FROM_CINFO(c) (fz_dctd *)(c->client_data)
+
+#define fz_dct_mem_init(st)
+#define fz_dct_mem_term(st)
+
+#else /* SHARE_JPEG */
+
+#define JZ_DCT_STATE_FROM_CINFO(c) (fz_dctd *)(GET_CUST_MEM_DATA(c)->priv)
+
+static void *
+fz_dct_mem_alloc(j_common_ptr cinfo, size_t size)
+{
+	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
+	return fz_malloc(state->ctx, size);
+}
+
+static void
+fz_dct_mem_free(j_common_ptr cinfo, void *object, size_t size)
+{
+	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
+	UNUSED(size);
+	fz_free(state->ctx, object);
+}
+
+static void
+fz_dct_mem_init(fz_dctd *state)
+{
+	j_common_ptr cinfo = (j_common_ptr)&state->cinfo;
+	jpeg_cust_mem_data *custmptr;
+
+	custmptr = fz_malloc_struct(state->ctx, jpeg_cust_mem_data);
+
+	if (!jpeg_cust_mem_init(custmptr, (void *) state, NULL, NULL, NULL,
+				fz_dct_mem_alloc, fz_dct_mem_free,
+				fz_dct_mem_alloc, fz_dct_mem_free, NULL))
+	{
+		fz_free(state->ctx, custmptr);
+		fz_throw(state->ctx, FZ_ERROR_GENERIC, "cannot initialize custom JPEG memory handler");
+	}
+
+	cinfo->client_data = custmptr;
+}
+
+static void
+fz_dct_mem_term(fz_dctd *state)
+{
+	if(state->cinfo.client_data)
+	{
+		fz_free(state->ctx, state->cinfo.client_data);
+		state->cinfo.client_data = NULL;
+	}
+}
+
+#endif /* SHARE_JPEG */
+
 static void error_exit(j_common_ptr cinfo)
 {
-	fz_dctd *state = cinfo->client_data;
+	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
 	cinfo->err->format_message(cinfo, state->msg);
 	longjmp(state->jb, 1);
 }
@@ -46,10 +107,9 @@ static void term_source(j_decompress_ptr cinfo)
 static boolean fill_input_buffer(j_decompress_ptr cinfo)
 {
 	struct jpeg_source_mgr *src = cinfo->src;
-	fz_dctd *state = cinfo->client_data;
+	fz_dctd *state = JZ_DCT_STATE_FROM_CINFO(cinfo);
 	fz_stream *curr_stm = state->curr_stm;
 	fz_context *ctx = curr_stm->ctx;
-
 
 	curr_stm->rp = curr_stm->wp;
 	fz_try(ctx)
@@ -115,6 +175,9 @@ next_dctd(fz_stream *stm, int max)
 		cinfo->err = &state->errmgr;
 		jpeg_std_error(cinfo->err);
 		cinfo->err->error_exit = error_exit;
+
+		fz_dct_mem_init(state);
+
 		jpeg_create_decompress(cinfo);
 		state->init = 1;
 
@@ -237,6 +300,8 @@ skip:
 	if (state->init)
 		jpeg_destroy_decompress(&state->cinfo);
 
+	fz_dct_mem_term(state);
+
 	fz_free(ctx, state->scanline);
 	fz_close(state->chain);
 	fz_close(state->jpegtables);
@@ -269,6 +334,7 @@ fz_open_dctd(fz_stream *chain, int color_transform, int l2factor, fz_stream *jpe
 		state->color_transform = color_transform;
 		state->init = 0;
 		state->l2factor = l2factor;
+		state->cinfo.client_data = NULL;
 	}
 	fz_catch(ctx)
 	{

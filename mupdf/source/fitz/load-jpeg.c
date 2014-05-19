@@ -1,6 +1,67 @@
 #include "mupdf/fitz.h"
 
 #include <jpeglib.h>
+#ifndef SHARE_JPEG
+typedef void * backing_store_ptr;
+#include "jmemcust.h"
+#endif
+
+#ifdef SHARE_JPEG
+
+#define JZ_CTX_FROM_CINFO(c) (fz_context *)(c->client_data)
+
+#define fz_jpg_mem_init(ctx, cinfo)
+#define fz_jpg_mem_term(cinfo)
+
+#else /* SHARE_JPEG */
+
+#define JZ_CTX_FROM_CINFO(c) (fz_context *)(GET_CUST_MEM_DATA(c)->priv)
+
+static void *
+fz_jpg_mem_alloc(j_common_ptr cinfo, size_t size)
+{
+	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
+	return fz_malloc(ctx, size);
+}
+
+static void
+fz_jpg_mem_free(j_common_ptr cinfo, void *object, size_t size)
+{
+	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
+	UNUSED(size);
+	fz_free(ctx, object);
+}
+
+static void
+fz_jpg_mem_init(fz_context *ctx, struct jpeg_decompress_struct *cinfo)
+{
+	jpeg_cust_mem_data *custmptr;
+
+	custmptr = fz_malloc_struct(ctx, jpeg_cust_mem_data);
+
+	if (!jpeg_cust_mem_init(custmptr, (void *) ctx, NULL, NULL, NULL,
+				fz_jpg_mem_alloc, fz_jpg_mem_free,
+				fz_jpg_mem_alloc, fz_jpg_mem_free, NULL))
+	{
+		fz_free(ctx, custmptr);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot initialize custom JPEG memory handler");
+	}
+
+	cinfo->client_data = custmptr;
+}
+
+static void
+fz_jpg_mem_term(struct jpeg_decompress_struct *cinfo)
+{
+	if(cinfo->client_data)
+	{
+		fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
+		fz_free(ctx, cinfo->client_data);
+		cinfo->client_data = NULL;
+	}
+}
+
+#endif /* SHARE_JPEG */
 
 static void error_exit(j_common_ptr cinfo)
 {
@@ -168,6 +229,8 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		cinfo.err = jpeg_std_error(&err);
 		err.error_exit = error_exit;
 
+		fz_jpg_mem_init(ctx, &cinfo);
+
 		jpeg_create_decompress(&cinfo);
 
 		cinfo.src = &src;
@@ -222,6 +285,7 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 	fz_always(ctx)
 	{
 		jpeg_destroy_decompress(&cinfo);
+		fz_jpg_mem_term(&cinfo);
 	}
 	fz_catch(ctx)
 	{
