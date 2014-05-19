@@ -347,7 +347,7 @@ const char * gTranslations_ca =
   "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
   "La instal\302\267laci\303\263 ha fallat.\0"\
   "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
-  "\0"\
+  "Mant\303\251n instal\302\267lat el connector PDF del &navegador (ja no es mant\303\251)\0"\
   "Permet al Windows Desktop Search &cercar als documents PDF\0"\
   "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents PDF\0"\
   "Tanqueu %s per continuar!\0"\
@@ -391,7 +391,7 @@ const char * gTranslations_ca_xv =
   "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
   "La instal\302\267laci\303\263 ha fallat!\0"\
   "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
-  "\0"\
+  "Mant\303\255n instal\302\267lat el connector PDF del &navegador (ja no es mant\303\251)\0"\
   "Permet al Windows Desktop Search &cercar als documents PDF\0"\
   "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents\0"\
   "Tanqueu %s per continuar!\0"\
