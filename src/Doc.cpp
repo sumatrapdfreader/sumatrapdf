@@ -155,7 +155,8 @@ bool Doc::IsEbook() const
 
 bool Doc::IsEngine() const
 {
-    if ((type & Doc_BaseEngine)) {
+    if (type >= Doc_BaseEngine) {
+        CrashIf(Doc_BaseEngine == type);
         return true;
     }
     CrashIf(!IsNone() && !IsEbook());
