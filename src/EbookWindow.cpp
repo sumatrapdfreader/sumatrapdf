@@ -717,7 +717,8 @@ void OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
-    ScopedMem<WCHAR> winTitle(str::Format(L"%s - %s", path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
+    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? fullPath : path::GetBaseName(fullPath);
+    ScopedMem<WCHAR> winTitle(str::Format(L"%s - %s", titlePath, SUMATRA_WINDOW_TITLE));
 
     if (winToReplace.AsEbookWindow()) {
         EbookWindow *mw = winToReplace.AsEbookWindow();

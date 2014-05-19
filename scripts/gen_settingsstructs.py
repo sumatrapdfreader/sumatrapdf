@@ -382,6 +382,9 @@ GlobalPrefs = [
 	Field("ShowTabBar", Bool, False,
 		"if true, we show a tab bar and perform tabbed navigation",
 		expert=True, version="2.6"),
+	Field("FullPathInTitle", Bool, False,
+		"if true, we show the full path to a file in the title bar",
+		expert=True, version="2.6"),
 	Struct("AnnotationDefaults", AnnotationDefaults,
 		"default values for user added annotations in FixedPageUI documents " +
 		"(preliminary and still subject to change)",

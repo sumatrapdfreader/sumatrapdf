@@ -988,7 +988,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             win->uia_provider->OnDocumentLoad(win->dm);
     } else if (args.allowFailure) {
         delete prevModel;
-        ScopedMem<WCHAR> title2(str::Format(L"%s - %s", path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
+        const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
+        ScopedMem<WCHAR> title2(str::Format(L"%s - %s", titlePath, SUMATRA_WINDOW_TITLE));
         win::SetText(win->hwndFrame, title2);
         goto Error;
     } else {
@@ -1037,7 +1038,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         UpdateToolbarFindText(win);
     }
 
-    const WCHAR *baseName = path::GetBaseName(win->dm->FilePath());
+    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? win->dm->FilePath() : path::GetBaseName(win->dm->FilePath());
     WCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty(Prop_Title) : NULL;
     if (docTitle) {
         str::NormalizeWS(docTitle);
@@ -1047,10 +1048,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             docTitle = docTitleBit.StealData();
         }
     }
-    title.Set(str::Format(L"%s %s- %s", baseName, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
+    title.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
     if (IsUIRightToLeft()) {
         // explicitly revert the title, so that filenames aren't garbled
-        title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", baseName));
+        title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
     }
     free(docTitle);
     if (needRefresh)
