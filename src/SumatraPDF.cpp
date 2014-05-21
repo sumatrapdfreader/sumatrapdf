@@ -1730,21 +1730,16 @@ static void RememberCurrentlyOpenedFiles()
     DisplayState *ds;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if ((ds = gFileHistory.Find(win->loadedFilePath)) != NULL) {
-            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
-        }
-        if (win->tabSelectionHistory) {
-            // TODO: try to preserve tab order instead of restoring MRU first?
-            for (size_t j = 0; j < win->tabSelectionHistory->Count(); j++) {
-                TabData *td = win->tabSelectionHistory->At(j);
-                // TODO: after reloading, the visible tab is only added to
-                // win->tabSelectionHistory once another tab has been selected
-                if (0 == j && str::Eq(ds->filePath, td->ctrl->FilePath()))
-                    continue;
+        if (win->hwndTabBar) {
+            TabData *td;
+            for (int j = 0; (td = GetTabData(win->hwndTabBar, j)) != NULL; j++) {
                 if (td->ctrl && (ds = gFileHistory.Find(td->ctrl->FilePath())) != NULL) {
                     cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
                 }
             }
+        }
+        else if ((ds = gFileHistory.Find(win->loadedFilePath)) != NULL) {
+            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
         }
     }
     for (size_t i = 0; i < gEbookWindows.Count(); i++) {
