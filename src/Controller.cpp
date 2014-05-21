@@ -7,8 +7,13 @@
 #include "AppPrefs.h"
 #include "ChmEngine.h"
 #include "DisplayModel.h"
+#include "Doc.h"
 #include "EbookController.h"
+#include "EbookControls.h"
+#include "EbookFormatter.h"
 #include "FileThumbnails.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "SumatraPDF.h"
 #include "UITask.h"
 #include "WindowInfo.h"
@@ -31,7 +36,7 @@ public:
     virtual int CurrentPageNo() { return dm->CurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { dm->GoToPage(pageNo, 0, addNavPoint); }
     virtual bool CanNavigate(int dir) { return dm->CanNavigate(dir); }
-    virtual void Navigate(int dir) { return dm->Navigate(dir); }
+    virtual void Navigate(int dir) { dm->Navigate(dir); }
 
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
     virtual DisplayMode GetDisplayMode() const { return dm->GetDisplayMode(); }
@@ -145,7 +150,7 @@ public:
     virtual int CurrentPageNo() { return _engine->CurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { _engine->DisplayPage(pageNo); }
     virtual bool CanNavigate(int dir) { return _engine->CanNavigate(dir); }
-    virtual void Navigate(int dir) { return _engine->Navigate(dir); }
+    virtual void Navigate(int dir) { _engine->Navigate(dir); }
 
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true) { /* not supported */ }
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
@@ -336,4 +341,180 @@ void ChmController::SaveDownload(const WCHAR *url, const unsigned char *data, si
 ChmUIController *ChmUIController::Create(ChmEngine *engine, WindowInfo *win)
 {
     return new ChmController(engine, win);
+}
+
+///// EbookUI /////
+
+class EbController : public EbookUIController {
+    EbookController *_ctrl;
+    EbookControls *_ctrls;
+
+public:
+    EbController(EbookControls *ctrls);
+    virtual ~EbController();
+
+    virtual const WCHAR *FilePath() const { return _ctrl->GetDoc().GetFilePath(); }
+    virtual const WCHAR *DefaultFileExt() const { return path::GetExt(FilePath()); }
+    virtual int PageCount() const { return (int)_ctrl->GetMaxPageCount(); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc()->GetProperty(prop); }
+
+    virtual int CurrentPageNo() { return _ctrl->GetCurrentPageNo(); }
+    virtual void GoToPage(int pageNo, bool addNavPoint) { _ctrl->GoToPage(pageNo); }
+    virtual bool CanNavigate(int dir) { return false; }
+    virtual void Navigate(int dir) { /* not supported */ }
+
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
+    virtual DisplayMode GetDisplayMode() const { return _ctrl->IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
+    virtual void SetPresentationMode(bool enable) { /* not supported */ }
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { /* not supported */ }
+    virtual float GetZoomVirtual() const { return 100; }
+    virtual float GetNextZoomStep(float towards) const { return 100; }
+    virtual void SetViewPortSize(SizeI size) { _ctrl->OnLayoutTimer(); }
+
+    virtual bool HasTocTree() const { return false; }
+    virtual DocTocItem *GetTocTree() { return NULL; }
+    virtual void GotoLink(PageDestination *dest) { CrashIf(true); }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
+
+    virtual void UpdateDisplayState(DisplayState *ds);
+    virtual void CreateThumbnail(DisplayState *ds);
+
+    virtual EbookUIController *AsEbook() { return this; }
+
+    // EbookUIController
+    virtual EbookController *ctrl() { return _ctrl; }
+    virtual EbookControls *ctrls() { return _ctrls; }
+    virtual Doc *doc() { return (Doc *)&_ctrl->GetDoc(); }
+
+    virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) {
+        return _ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+    }
+    virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
+};
+
+EbController::EbController(EbookControls *ctrls) :
+    _ctrl(NULL), _ctrls(ctrls)
+{
+    CrashIf(_ctrl || !_ctrls);
+}
+
+EbController::~EbController()
+{
+    delete _ctrl;
+    DestroyEbookControls(_ctrls);
+}
+
+void EbController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
+{
+    if (!IsSingle(mode))
+        _ctrl->SetDoublePage();
+    else
+        _ctrl->SetSinglePage();
+}
+
+void EbController::UpdateDisplayState(DisplayState *ds)
+{
+    if (!ds->filePath || !str::EqI(ds->filePath, FilePath()))
+        str::ReplacePtr(&ds->filePath, FilePath());
+
+    // don't modify any of the other DisplayState values
+    // as long as they're not used, so that the same
+    // DisplayState settings can also be used for EbookEngine;
+    // we get reasonable defaults from DisplayState's constructor anyway
+    ds->reparseIdx = _ctrl->CurrPageReparseIdx();
+    str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
+}
+
+// TODO: move somewhere more appropriate
+static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
+{
+    PoolAllocator textAllocator;
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    TextRenderMethod renderMethod = args->textRenderMethod;
+    HtmlFormatter *formatter = CreateFormatter(doc, args);
+    HtmlPage *pd = formatter->Next();
+    delete formatter;
+    delete args;
+    args = NULL;
+    if (!pd)
+        return NULL;
+
+    Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
+    Graphics g(&pageBmp);
+    Rect r(0, 0, pageSize.dx, pageSize.dy);
+    r.Inflate(1, 1);
+    SolidBrush br(Color(255, 255, 255));
+    g.FillRectangle(&br, r);
+
+    ITextRender *textRender = CreateTextRender(renderMethod, &g);
+    textRender->SetTextBgColor(Color(255,255,255));
+    DrawHtmlPage(&g, textRender, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
+    delete pd;
+    delete textRender;
+
+    Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
+    Graphics g2(&res);
+    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
+                 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
+
+    HBITMAP hbmp;
+    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    if (ok != Ok)
+        return NULL;
+    return new RenderedBitmap(hbmp, bmpSize);
+}
+
+static RenderedBitmap *ThumbFromCoverPage(Doc doc)
+{
+    ImageData *coverImage = doc.GetCoverImage();
+    if (!coverImage)
+        return NULL;
+    Bitmap *coverBmp = BitmapFromData(coverImage->data, coverImage->len);
+    if (!coverBmp)
+        return NULL;
+
+    Bitmap res(THUMBNAIL_DX, THUMBNAIL_DY, PixelFormat24bppRGB);
+    float scale = (float)THUMBNAIL_DX / (float)coverBmp->GetWidth();
+    int fromDy = THUMBNAIL_DY;
+    if (scale < 1.f)
+        fromDy = (int)((float)coverBmp->GetHeight() * scale);
+    Graphics g(&res);
+    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    Status ok = g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
+                            0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    if (ok != Ok) {
+        delete coverBmp;
+        return NULL;
+    }
+    HBITMAP hbmp;
+    ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    delete coverBmp;
+    if (ok == Ok)
+        return new RenderedBitmap(hbmp, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
+    return NULL;
+}
+
+void EbController::CreateThumbnail(DisplayState *ds)
+{
+    CrashIf(!doc()->AsEpub() && !doc()->AsFb2() && !doc()->AsMobi());
+
+    // if there is cover image, we use it to generate thumbnail by scaling
+    // image width to thumbnail dx, scaling height proportionally and using
+    // as much of it as fits in thumbnail dy
+    RenderedBitmap *bmp = ThumbFromCoverPage(*doc());
+    if (!bmp) {
+        // no cover image so generate thumbnail from first page
+        SizeI pageSize(THUMBNAIL_DX * 3, THUMBNAIL_DY * 3);
+        SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
+        bmp = RenderFirstDocPageToBitmap(*doc(), pageSize, dstSize, 10);
+    }
+    SetThumbnail(ds, bmp);
+}
+
+EbookUIController *EbookUIController::Create(HWND hwnd)
+{
+    EbookControls *ctrls = CreateEbookControls(hwnd);
+    if (!ctrls) return NULL;
+    return new EbController(ctrls);
 }

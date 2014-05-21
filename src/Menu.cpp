@@ -84,7 +84,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
-// the whole menu is MF_NOT_FOR_EBOOK_UI
+// the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefView[] = {
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
@@ -129,7 +129,7 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
 };
 
-// the whole menu is MF_NOT_FOR_EBOOK_UI
+// the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
     { _TRN("&Actual Size\tCtrl+1"),         IDM_ZOOM_ACTUAL_SIZE,       MF_NOT_FOR_CHM },
@@ -162,7 +162,7 @@ static MenuDef menuDefSettings[] = {
     { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
 };
 
-// the whole menu is MF_NOT_FOR_EBOOK_UI
+// the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
@@ -661,20 +661,27 @@ HMENU BuildMenu(WindowInfo *win)
     int filter = 0;
     if (win->IsChm())
         filter |= MF_NOT_FOR_CHM;
+    else if (win->IsEbookLoaded())
+        filter |= MF_NOT_FOR_EBOOK_UI;
     if (!win->IsCbx())
         filter |= MF_CBX_ONLY;
 
     HMENU m = CreateMenu();
     RebuildFileMenu(win, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
+    if (!win->IsEbookLoaded())
+        m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
+    else
+        m = BuildMenuFromMenuDef(menuDefViewEbook, dimof(menuDefViewEbook), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
     m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+    if (!win->IsEbookLoaded()) {
+        m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), filter);
+        AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+    }
 
-    if (HasPermission(Perm_SavePreferences)) {
+    if (HasPermission(Perm_SavePreferences) && !win->IsEbookLoaded()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
         m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());

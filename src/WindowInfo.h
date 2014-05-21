@@ -68,12 +68,15 @@ public:
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->ctrl != NULL; }
-    bool IsFixedDocLoaded() const { return this->ctrl && this->ctrl->AsFixed(); }
+    // TODO: consistent naming
+    bool IsFixedDocLoaded() const { return ctrl && ctrl->AsFixed(); }
+    bool IsChm() const { return ctrl && ctrl->AsChm(); }
+    bool IsEbookLoaded() const { return ctrl && ctrl->AsEbook(); }
 
     FixedPageUIController *AsFixed() { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmUIController *AsChm() { return ctrl ? ctrl->AsChm() : NULL; }
+    EbookUIController *AsEbook() { return ctrl ? ctrl->AsEbook() : NULL; }
 
-    bool IsChm() const { return ctrl && ctrl->AsChm(); }
     bool IsCbx() const { return ctrl && ctrl->AsFixed() && Engine_ComicBook == ctrl->AsFixed()->engineType; }
     bool IsNotPdf() const { return ctrl && (!ctrl->AsFixed() || Engine_PDF != ctrl->AsFixed()->engineType); }
 

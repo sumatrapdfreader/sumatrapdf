@@ -541,6 +541,7 @@
     <None Include="..\docs\settings.html" />
     <None Include="..\docs\sumatrapdfrestrict.ini" />
     <None Include="..\docs\wishlist-lua.txt" />
+    <None Include="..\docs\wishlist-tabs.txt" />
     <None Include="..\docs\wishlist.txt" />
     <None Include="..\src\dragcursor.cur" />
     <None Include="..\src\PdfDoc.ico" />

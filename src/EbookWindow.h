@@ -37,6 +37,7 @@ public:
 };
 
 EbookWindow* FindEbookWindowByController(EbookController *controller);
+WindowInfo *FindWindowInfoByController(EbookController *controller);
 void   OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace);
 void   RegisterMobiWinClass(HINSTANCE hinst);
 void   RebuildMenuBarForEbookWindows();

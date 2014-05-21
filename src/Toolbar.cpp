@@ -172,22 +172,27 @@ void ToolbarUpdateStateForWindow(WindowInfo *win, bool showHide)
         UpdateToolbarFindText(win);
 }
 
+void ShowOrHideToolbarForWindow(WindowInfo *win)
+{
+    if (win->presentation || win->isFullScreen)
+        return;
+    if (gGlobalPrefs->showToolbar && !win->IsEbookLoaded()) {
+        ShowWindow(win->hwndReBar, SW_SHOW);
+    } else {
+        // Move the focus out of the toolbar
+        if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+            SetFocus(win->hwndFrame);
+        ShowWindow(win->hwndReBar, SW_HIDE);
+    }
+    ClientRect rect(win->hwndFrame);
+    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+}
+
 void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->presentation || win->isFullScreen)
-            continue;
-        if (gGlobalPrefs->showToolbar) {
-            ShowWindow(win->hwndReBar, SW_SHOW);
-        } else {
-            // Move the focus out of the toolbar
-            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
-                SetFocus(win->hwndFrame);
-            ShowWindow(win->hwndReBar, SW_HIDE);
-        }
-        ClientRect rect(win->hwndFrame);
-        SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+        ShowOrHideToolbarForWindow(win);
     }
 }
 

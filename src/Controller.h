@@ -109,17 +109,22 @@ public:
     static ChmUIController *Create(ChmEngine *engine, WindowInfo *win);
 };
 
-/*
 class EbookController;
+struct EbookControls;
 class Doc;
 
 class EbookUIController : public Controller {
 public:
-    EbookController *ctrl();
-    Doc *doc();
+    virtual EbookController *ctrl() = 0;
+    virtual EbookControls *ctrls() = 0;
+    virtual Doc *doc() = 0;
 
-    static EbookUIController *Create(EbookController *controller);
+    virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) = 0;
+    // EbookController's constructor calls UpdateWindow which
+    // must not happen before EbookUIController::Create returns
+    virtual void SetController(EbookController *ctrl) = 0;
+
+    static EbookUIController *Create(HWND hwnd);
 };
-*/
 
 #endif

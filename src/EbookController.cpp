@@ -95,6 +95,8 @@ public:
         EbookWindow *win = FindEbookWindowByController(controller);
         if (win)
             controller->HandlePagesFromEbookLayout(this);
+        else if (FindWindowInfoByController(controller))
+            controller->HandlePagesFromEbookLayout(this);
     }
 };
 

@@ -70,6 +70,11 @@ bool             gDebugShowLinks = true;
 bool             gDebugShowLinks = false;
 #endif
 
+#ifdef DEBUG
+// if true, ebook documents are loaded into a WindowInfo instead an EbookWindow
+#define DISABLE_EBOOK_WINDOW
+#endif
+
 /* if true, we're rendering everything with the GDI+ back-end,
    otherwise Fitz/MuPDF is used at least for screen rendering.
    In Debug builds, you can switch between the two through the Debug menu */
@@ -834,7 +839,16 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
 
     DisplayModel *dm = NULL;
-    if (!engine) {
+    if (!engine && Doc::IsSupportedFile(args.fileName)) {
+        Doc doc = Doc::CreateFromFile(args.fileName);
+        win->ctrl = !doc.IsNone() ? EbookUIController::Create(win->hwndCanvas) : NULL;
+        if (win->ctrl) {
+            EbookController *ectrl = new EbookController(win->AsEbook()->ctrls(), displayMode);
+            win->AsEbook()->SetController(ectrl);
+            ectrl->SetDoc(doc, state ? state->reparseIdx : 0);
+        }
+    }
+    else if (!engine) {
         win->ctrl = NULL;
     }
     else if (Engine_Chm == engineType) {
@@ -886,10 +900,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             if (win->uia_provider)
                 win->uia_provider->OnDocumentLoad(dm);
         }
-        else {
+        else if (win->IsChm()) {
             win->ctrl->SetDisplayMode(displayMode);
             win->ctrl->GoToPage(startPage, false);
         }
+        else
+            CrashIf(!win->IsEbookLoaded());
         delete prevCtrl;
     } else if (args.allowFailure) {
         delete prevCtrl;
@@ -937,8 +953,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
     UpdateFindbox(win);
 
-    // menu for chm docs is different, so we have to re-create it
+    // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
+    // the toolbar isn't supported for ebook docs (yet)
+    ShowOrHideToolbarForWindow(win);
 
     int pageCount = win->ctrl->PageCount();
     if (pageCount > 0) {
@@ -998,7 +1016,7 @@ Error:
         // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
         if ((args.showWin || ss.page != 1) && dm)
             dm->SetScrollState(ss);
-        else
+        else if (win->IsChm())
             win->ctrl->GoToPage(ss.page, false);
         UpdateToolbarState(win);
     }
@@ -1356,6 +1374,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return NULL;
     }
 
+#ifndef DISABLE_EBOOK_WINDOW
     if (!gGlobalPrefs->ebookUI.useFixedPageUI && IsEbookFile(fullPath)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
@@ -1377,6 +1396,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         // TODO: we should show a notification in the window user is looking at
         return win;
     }
+#endif
 
     if (gGlobalPrefs->showTabBar) {
         // modify the args so that we always reuse the same window
@@ -1530,6 +1550,8 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
+    // the toolbar isn't supported for ebook docs (yet)
+    ShowOrHideToolbarForWindow(win);
 
     int pageCount = win->ctrl->PageCount();
     if (pageCount > 0) {
@@ -1633,6 +1655,7 @@ void WindowInfo::RequestRendering(int pageNo)
 
 void WindowInfo::CleanUp(DisplayModel *dm)
 {
+    // TODO: this might refer to a background tab!
     AssertCrash(IsFixedDocLoaded());
     if (!IsFixedDocLoaded()) return;
 
@@ -2050,8 +2073,8 @@ size_t TotalWindowsCount()
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
-    bool wasChm = win->IsChm();
-    if (wasChm)
+    bool wasntFixed = !win->IsFixedDocLoaded();
+    if (win->IsChm())
         win->AsChm()->engine()->RemoveParentHwnd();
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
@@ -2076,9 +2099,10 @@ void CloseDocumentInWindow(WindowInfo *win)
     DeletePropertiesWindow(win->hwndFrame);
     UpdateToolbarPageText(win, 0);
     UpdateToolbarFindText(win);
-    if (wasChm) {
-        // restore the non-Chm menu
+    if (wasntFixed) {
+        // restore the full menu and toolbar
         RebuildMenuBarForWindow(win);
+        ShowOrHideToolbarForWindow(win);
     }
 
     DeleteOldSelectionInfo(win, true);
@@ -2723,7 +2747,7 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen)) {
+    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->IsEbookLoaded())) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
@@ -2897,7 +2921,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation) {
+    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation && !win.IsEbookLoaded()) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -2996,7 +3020,7 @@ void ExitFullScreen(WindowInfo& win)
     if (tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(&win, tocVisible, gGlobalPrefs->showFavorites);
 
-    if (gGlobalPrefs->showToolbar)
+    if (gGlobalPrefs->showToolbar && !win.IsEbookLoaded())
         ShowWindow(win.hwndReBar, SW_SHOW);
     if (gGlobalPrefs->showTabBar)
         ShowWindow(win.hwndTabBar, SW_SHOW);
@@ -3032,7 +3056,7 @@ void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->isFullScreen && !win->presentation &&
+    bool hasToolbar = !win->isFullScreen && !win->presentation && !win->IsEbookLoaded() &&
                       gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
@@ -3418,7 +3442,7 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
         y = WindowRect(win->hwndReBar).dy;
     if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
@@ -3462,7 +3486,7 @@ static void ResizeFav(WindowInfo *win)
 
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
         y = WindowRect(win->hwndReBar).dy;
     if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
@@ -3626,7 +3650,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
         toolbarDy = WindowRect(win->hwndReBar).dy;
 
     int tabBarDy = 0;

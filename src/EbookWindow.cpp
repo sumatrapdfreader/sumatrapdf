@@ -60,11 +60,27 @@ EbookWindow* FindEbookWindowByController(EbookController *controller)
     return NULL;
 }
 
+WindowInfo *FindWindowInfoByController(EbookController *controller)
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (win->IsEbookLoaded() && win->AsEbook()->ctrl() == controller)
+            return win;
+    }
+    return NULL;
+}
+
 #define LAYOUT_TIMER_ID 1
 
 void RestartLayoutTimer(EbookController *controller)
 {
     EbookWindow *win = FindEbookWindowByController(controller);
+    // TODO: make RestartLayoutTimer an optional callback to EbookController
+    if (!win) {
+        if (FindWindowInfoByController(controller))
+            controller->OnLayoutTimer();
+        return;
+    }
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
     // if the window size changes are due to user resizing, we want to delay a bit
     // before we start reformatting. If it's because e.g. switching to fullscreen,
@@ -572,7 +588,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
     return 0;
 }
 
-RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
+static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
 {
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
@@ -816,6 +832,8 @@ Doc GetDocForWindow(const SumatraWindow& win)
             return Doc(iwin->AsChm()->engine(), (DocType)(Doc_BaseEngine + Engine_Chm));
         if (iwin->IsFixedDocLoaded())
             return Doc(iwin->AsFixed()->engine(), (DocType)(Doc_BaseEngine + iwin->AsFixed()->engineType));
+        if (iwin->IsEbookLoaded())
+            return *iwin->AsEbook()->doc();
         return Doc();
     }
     if (win.AsEbookWindow()) {

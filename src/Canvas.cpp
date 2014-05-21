@@ -860,7 +860,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
     switch (gi.dwID) {
         case GID_ZOOM:
-            if (gi.dwFlags != GF_BEGIN) {
+            if (gi.dwFlags != GF_BEGIN && win.IsFixedDocLoaded()) {
                 float zoom = (float)LODWORD(gi.ullArguments) / (float)win.touchState.startArg;
                 ZoomToSelection(&win, zoom, false, true);
             }
@@ -892,7 +892,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                         win.AsFixed()->model()->ScrollXTo(win.touchState.panScrollOrigX);
                     win.touchState.panStarted = false;
                 }
-                else {
+                else if (win.IsFixedDocLoaded()) {
                     // Pan/Scroll
                     win.MoveDocBy(deltaX, deltaY);
                 }
@@ -1019,6 +1019,53 @@ static LRESULT WndProcCanvasChmUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM w
         // TODO: make (re)loading a document always clear the infotip
         win.DeleteInfotip();
         return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+}
+
+///// methods needed for EbookUI canvases /////
+
+static LRESULT CanvasOnMouseWheelEbook(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    // Scroll the ToC sidebar, if it's visible and the cursor is in it
+    if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
+        // Note: hwndTocTree's window procedure doesn't always handle
+        //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
+        //       here recursively - prevent that
+        gWheelMsgRedirect = true;
+        LRESULT res = SendMessage(win.hwndTocTree, message, wParam, lParam);
+        gWheelMsgRedirect = false;
+        return res;
+    }
+
+    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    if (delta > 0)
+        win.ctrl->GoToPrevPage();
+    else
+        win.ctrl->GoToNextPage();
+    return 0;
+}
+
+static LRESULT WndProcCanvasEbookUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    bool wasHandled;
+    LRESULT res = win.AsEbook()->HandleMessage(msg, wParam, lParam, wasHandled);
+    if (wasHandled)
+        return res;
+
+    switch (msg) {
+    case WM_SETCURSOR:
+        // TODO: make (re)loading a document always clear the infotip
+        win.DeleteInfotip();
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    case WM_MOUSEWHEEL:
+        return CanvasOnMouseWheelEbook(win, msg, wParam, lParam);
+
+    case WM_GESTURE:
+        return OnGesture(win, msg, wParam, lParam);
 
     default:
         return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -1336,6 +1383,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         if (win->IsChm())
             return WndProcCanvasChmUI(*win, hwnd, msg, wParam, lParam);
+
+        if (win->IsEbookLoaded())
+            return WndProcCanvasEbookUI(*win, hwnd, msg, wParam, lParam);
 
         if (win->IsAboutWindow())
             return WndProcCanvasAbout(*win, hwnd, msg, wParam, lParam);

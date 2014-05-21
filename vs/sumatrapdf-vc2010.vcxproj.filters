@@ -1356,6 +1356,9 @@
     <None Include="..\docs\wishlist-lua.txt">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\docs\wishlist-tabs.txt">
+      <Filter>docs</Filter>
+    </None>
     <None Include="..\docs\wishlist.txt">
       <Filter>docs</Filter>
     </None>
