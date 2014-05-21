@@ -25,7 +25,7 @@ class FpController : public FixedPageUIController /*, public DisplayModelCallbac
     LinkHandler *linkHandler;
 
 public:
-    FpController(DisplayModel *dm, EngineType type, LinkHandler *linkHandler);
+    FpController(DisplayModel *dm, LinkHandler *linkHandler);
     virtual ~FpController();
 
     virtual const WCHAR *FilePath() const { return dm->engine->FileName(); }
@@ -79,11 +79,10 @@ public:
     */
 };
 
-FpController::FpController(DisplayModel *dm, EngineType type, LinkHandler *linkHandler) :
+FpController::FpController(DisplayModel *dm, LinkHandler *linkHandler) :
     dm(dm), linkHandler(linkHandler)
 {
     CrashIf(!dm || !linkHandler);
-    engineType = type;
 }
 
 FpController::~FpController()
@@ -126,9 +125,9 @@ void FpController::CreateThumbnail(DisplayState *ds)
     RenderThumbnail(dm, zoom, pageRect);
 }
 
-FixedPageUIController *FixedPageUIController::Create(DisplayModel *dm, EngineType type, LinkHandler *linkHandler)
+FixedPageUIController *FixedPageUIController::Create(DisplayModel *dm, LinkHandler *linkHandler)
 {
-    return new FpController(dm, type, linkHandler);
+    return new FpController(dm, linkHandler);
 }
 
 ///// ChmUI /////

@@ -386,7 +386,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return false;
-    if (!win->IsFixedDocLoaded() || win->AsFixed()->engineType != Engine_PDF) return false;
+    if (win->GetEngineType() != Engine_PDF) return false;
     DisplayModel *dm = win->AsFixed()->model();
 
     // Clear the last forward-search result

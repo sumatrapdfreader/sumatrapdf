@@ -54,7 +54,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
     if (win->IsCbx()) {
-        bool mangaMode = win->AsFixed() ? win->AsFixed()->model()->GetDisplayR2L() : gGlobalPrefs->comicBookUI.cbxMangaMode;
+        bool mangaMode = win->AsFixed()->model()->GetDisplayR2L();
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
 }
@@ -468,7 +468,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
     }
 
-    if (win->IsFixedDocLoaded() && Engine_ImageDir == win->AsFixed()->engineType) {
+    if (win->GetEngineType() == Engine_ImageDir) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);

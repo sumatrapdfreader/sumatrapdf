@@ -212,7 +212,7 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     if (!win || win->IsAboutWindow() || !CanViewExternally(win))
         return false;
     // allow viewing with XPS-Viewer, if either an XPS document is loaded...
-    if (win->IsFixedDocLoaded() ? win->AsFixed()->engineType != Engine_XPS : win->IsDocLoaded())
+    if (win->IsDocLoaded() && win->GetEngineType() != Engine_XPS)
         return false;
     // or a file ending in .xps or .oxps has failed to be loaded
     if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps") && !str::EndsWithI(win->loadedFilePath, L".oxps"))
@@ -247,7 +247,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     if (!win || win->IsAboutWindow() || !CanViewExternally(win))
         return false;
     // allow viewing with HTML Help, if either an CHM document is loaded...
-    if (win->IsFixedDocLoaded() ? win->AsFixed()->engineType != Engine_Chm2 : win->IsDocLoaded() && !win->IsChm())
+    if (win->IsDocLoaded() && win->GetEngineType() != Engine_Chm2 && !win->IsChm())
         return false;
     // or a file ending in .chm has failed to be loaded
     if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))

@@ -831,7 +831,7 @@ Doc GetDocForWindow(const SumatraWindow& win)
         if (iwin->IsChm())
             return Doc(iwin->AsChm()->engine(), (DocType)(Doc_BaseEngine + Engine_Chm));
         if (iwin->IsFixedDocLoaded())
-            return Doc(iwin->AsFixed()->engine(), (DocType)(Doc_BaseEngine + iwin->AsFixed()->engineType));
+            return Doc(iwin->AsFixed()->engine(), (DocType)(Doc_BaseEngine + iwin->GetEngineType()));
         if (iwin->IsEbookLoaded())
             return *iwin->AsEbook()->doc();
         return Doc();

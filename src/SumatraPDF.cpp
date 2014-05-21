@@ -846,6 +846,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             EbookController *ectrl = new EbookController(win->AsEbook()->ctrls(), displayMode);
             win->AsEbook()->SetController(ectrl);
             ectrl->SetDoc(doc, state ? state->reparseIdx : 0);
+            CrashIf(!win->ctrl || !win->AsEbook() || win->AsFixed() || win->AsChm());
         }
     }
     else if (!engine) {
@@ -853,12 +854,13 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
     else if (Engine_Chm == engineType) {
         win->ctrl = ChmUIController::Create(static_cast<ChmEngine *>(engine), win);
-        CrashIf(!win->ctrl || !win->AsChm() || win->AsFixed());
+        CrashIf(!win->ctrl || !win->AsChm() || win->AsFixed() || win->AsEbook());
     }
     else {
         dm = new DisplayModel(engine, win);
-        win->ctrl = FixedPageUIController::Create(dm, engineType, win->linkHandler);
-        CrashIf(!win->ctrl || !win->AsFixed() || win->AsChm());
+        win->ctrl = FixedPageUIController::Create(dm, win->linkHandler);
+        CrashIf(!win->ctrl || !win->AsFixed() || win->AsChm() || win->AsEbook());
+        win->ctrl->AsFixed()->engineType = engineType;
     }
 
     bool needRefresh = !win->ctrl;
@@ -1556,7 +1558,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     win::SetText(win->hwndFrame, tdata->title);
 
-    if (HasPermission(Perm_DiskAccess) && win->IsFixedDocLoaded() && Engine_PDF == win->AsFixed()->engineType) {
+    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
         int res = Synchronizer::Create(win->ctrl->FilePath(),
             static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->pdfsync);
         // expose SyncTeX in the UI
@@ -2240,8 +2242,8 @@ static void OnMenuSaveAs(WindowInfo& win)
         hasCopyPerm = false;
 #endif
     CrashIf(hasCopyPerm && !engine);
-    bool canConvertToPDF = engine && Engine_PS == win.AsFixed()->engineType;
-    CrashIf(canConvertToPDF && (!engine || win.AsFixed()->engineType != Engine_PS));
+    bool canConvertToPDF = engine && Engine_PS == win.GetEngineType();
+    CrashIf(canConvertToPDF && (!engine || win.GetEngineType() != Engine_PS));
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -2312,7 +2314,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     ScopedMem<WCHAR> errorMsg;
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt") &&
-        (2 == ofn.nFilterIndex || Engine_Txt != win.AsFixed()->engineType)) {
+        (2 == ofn.nFilterIndex || Engine_Txt != win.GetEngineType())) {
         str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= win.ctrl->PageCount(); pageNo++) {
             WCHAR *tmp = engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export);

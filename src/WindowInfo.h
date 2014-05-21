@@ -77,8 +77,9 @@ public:
     ChmUIController *AsChm() { return ctrl ? ctrl->AsChm() : NULL; }
     EbookUIController *AsEbook() { return ctrl ? ctrl->AsEbook() : NULL; }
 
-    bool IsCbx() const { return ctrl && ctrl->AsFixed() && Engine_ComicBook == ctrl->AsFixed()->engineType; }
-    bool IsNotPdf() const { return ctrl && (!ctrl->AsFixed() || Engine_PDF != ctrl->AsFixed()->engineType); }
+    EngineType GetEngineType() const { return ctrl && ctrl->AsFixed() ? ctrl->AsFixed()->engineType : Engine_None; }
+    bool IsCbx() const { return GetEngineType() == Engine_ComicBook; } // needed for Manga mode
+    bool IsNotPdf() const { return IsDocLoaded() && GetEngineType() != Engine_PDF; } // note: an error might be a PDF
 
     WCHAR *         loadedFilePath;
     Controller *    ctrl;

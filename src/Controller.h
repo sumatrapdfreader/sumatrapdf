@@ -103,7 +103,7 @@ public:
     Vec<PageAnnotation> *userAnnots;
     bool userAnnotsModified;
 
-    static FixedPageUIController *Create(DisplayModel *dm, EngineType type, LinkHandler *linkHandler);
+    static FixedPageUIController *Create(DisplayModel *dm, LinkHandler *linkHandler);
 };
 
 class ChmEngine;
