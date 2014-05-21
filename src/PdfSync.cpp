@@ -493,8 +493,8 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
 // SYNCTEX synchronizer
 
 int SyncTex::RebuildIndex() {
-    synctex_scanner_free(this->scanner);
-    this->scanner = NULL;
+    synctex_scanner_free(scanner);
+    scanner = NULL;
 
     ScopedMem<char> syncfname(str::conv::ToAnsi(syncfilepath));
     if (!syncfname)
@@ -509,12 +509,15 @@ int SyncTex::RebuildIndex() {
 
 int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col)
 {
-    if (IsIndexDiscarded())
+    if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-    assert(this->scanner);
+    }
+    CrashIf(!this->scanner);
 
-    if (synctex_edit_query(this->scanner, pageNo, (float)pt.x, (float)pt.y) < 0)
+    // Coverity: at this point, this->scanner->flags.has_parsed == 1 and thus
+    // synctex_scanner_parse never gets the chance to freeing the scanner
+    if (synctex_edit_query(this->scanner, pageNo, (float)pt.x, (float)pt.y) <= 0)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
     synctex_node_t node = synctex_next_result(this->scanner);
