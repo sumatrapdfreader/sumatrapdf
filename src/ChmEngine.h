@@ -40,6 +40,7 @@ public:
     virtual bool CanNavigate(int dir) = 0;
     virtual void Navigate(int dir) = 0;
     virtual void ZoomTo(float zoomLevel) = 0;
+    virtual float GetZoom() = 0;
     virtual void SelectAll() = 0;
     virtual void CopySelection() = 0;
     virtual int CurrentPageNo() const = 0;

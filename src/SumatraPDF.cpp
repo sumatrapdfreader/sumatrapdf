@@ -967,6 +967,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     win::SetText(win->hwndFrame, title);
 
     if (HasPermission(Perm_DiskAccess) && Engine_PDF == engineType) {
+        CrashIf(!dm);
         int res = Synchronizer::Create(args.fileName,
             static_cast<PdfEngine *>(dm->engine), &win->pdfsync);
         // expose SyncTeX in the UI
@@ -1000,13 +1001,6 @@ Error:
         else
             win->ctrl->GoToPage(ss.page, false);
         UpdateToolbarState(win);
-        // Note: this is a hack. Somewhere between r4593 and r4629
-        // restoring zoom for chm files from history regressed and
-        // I'm too lazy to figure out where and why. This forces
-        // setting zoom level after a page has been displayed
-        // (indirectly triggered via UpdateToolbarState()).
-        if (win->IsChm())
-            win->ctrl->SetZoomVirtual(zoomVirtual);
     }
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);

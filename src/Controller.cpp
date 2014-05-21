@@ -36,7 +36,7 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
     virtual DisplayMode GetDisplayMode() const { return dm->GetDisplayMode(); }
     virtual void SetPresentationMode(bool enable) { dm->SetPresentationMode(enable); }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt) { dm->ZoomTo(zoom, fixPt); }
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { dm->ZoomTo(zoom, fixPt); }
     virtual float GetZoomVirtual() const { return dm->ZoomVirtual(); }
     virtual float GetNextZoomStep(float towards) const { return dm->NextZoomStep(towards); }
     virtual void SetViewPortSize(SizeI size) { dm->ChangeViewPortSize(size); }
@@ -131,7 +131,7 @@ FixedPageUIController *FixedPageUIController::Create(DisplayModel *dm, EngineTyp
 class ChmController : public ChmUIController, public ChmNavigationCallback {
     ChmEngine *_engine;
     WindowInfo *win;
-    float zoomVirtual;
+    float initZoom;
 
 public:
     ChmController(ChmEngine *engine, WindowInfo *win);
@@ -150,8 +150,8 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true) { /* not supported */ }
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt);
-    virtual float GetZoomVirtual() const { return zoomVirtual; }
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
+    virtual float GetZoomVirtual() const { return _engine->GetZoom(); }
     virtual float GetNextZoomStep(float towards) const;
     virtual void SetViewPortSize(SizeI size) { /* not needed(?) */ }
 
@@ -169,13 +169,13 @@ public:
     virtual ChmEngine *engine() { return _engine; }
 
     // ChmNavigationCallback
-    virtual void PageNoChanged(int pageNo) { win->PageNoChanged(pageNo); }
+    virtual void PageNoChanged(int pageNo);
     virtual void LaunchBrowser(const WCHAR *url) { ::LaunchBrowser(url); }
     virtual void FocusFrame(bool always) { win->FocusFrame(always); }
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
 };
 
-ChmController::ChmController(ChmEngine *engine, WindowInfo *win) : _engine(engine), win(win), zoomVirtual(INVALID_ZOOM)
+ChmController::ChmController(ChmEngine *engine, WindowInfo *win) : _engine(engine), win(win), initZoom(INVALID_ZOOM)
 {
     CrashIf(!_engine || _engine->PageCount() <= 0 || !win);
     _engine->SetNavigationCalback(this);
@@ -190,20 +190,21 @@ void ChmController::SetZoomVirtual(float zoom, PointI *fixPt)
 {
     if (zoom <= 0 || !IsValidZoom(zoom))
         zoom = 100.0f;
-    zoomVirtual = zoom;
-    // zoomReal = zoomVirtual * 0.01f * dpiFactor;
-    _engine->ZoomTo(zoomVirtual);
+    _engine->ZoomTo(zoom);
+    initZoom = zoom;
 }
 
 // adapted from DisplayModel::NextZoomStep
 float ChmController::GetNextZoomStep(float towardsLevel) const
 {
+    float currZoom = GetZoomVirtual();
+
     if (gGlobalPrefs->zoomIncrement > 0) {
-        if (zoomVirtual < towardsLevel)
-            return min(zoomVirtual * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
-        if (zoomVirtual > towardsLevel)
-            return max(zoomVirtual / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
-        return zoomVirtual;
+        if (currZoom < towardsLevel)
+            return min(currZoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+        if (currZoom > towardsLevel)
+            return max(currZoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+        return currZoom;
     }
 
     Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
@@ -212,17 +213,17 @@ float ChmController::GetNextZoomStep(float towardsLevel) const
 
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
-    if (zoomVirtual < towardsLevel) {
+    if (currZoom < towardsLevel) {
         for (size_t i = 0; i < zoomLevels->Count(); i++) {
-            if (zoomLevels->At(i) - FUZZ > zoomVirtual) {
+            if (zoomLevels->At(i) - FUZZ > currZoom) {
                 newZoom = zoomLevels->At(i);
                 break;
             }
         }
     }
-    else if (zoomVirtual > towardsLevel) {
+    else if (currZoom > towardsLevel) {
         for (size_t i = zoomLevels->Count(); i > 0; i--) {
-            if (zoomLevels->At(i - 1) + FUZZ < zoomVirtual) {
+            if (zoomLevels->At(i - 1) + FUZZ < currZoom) {
                 newZoom = zoomLevels->At(i - 1);
                 break;
             }
@@ -240,7 +241,7 @@ void ChmController::UpdateDisplayState(DisplayState *ds)
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
-    prefs::conv::FromZoom(&ds->zoom, zoomVirtual, ds);
+    prefs::conv::FromZoom(&ds->zoom, GetZoomVirtual(), ds);
 
     ds->pageNo = CurrentPageNo();
     ds->scrollPos = PointI();
@@ -313,6 +314,17 @@ void ChmController::CreateThumbnail(DisplayState *ds)
     ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd);
     engine->SetNavigationCalback(callback);
     engine->DisplayPage(1);
+}
+
+void ChmController::PageNoChanged(int pageNo)
+{
+    // TODO: setting zoom before the first page is loaded seems not to work
+    // (might be a regression from between r4593 and r4629)
+    if (IsValidZoom(initZoom)) {
+        SetZoomVirtual(initZoom);
+        initZoom = INVALID_ZOOM;
+    }
+    win->PageNoChanged(pageNo);
 }
 
 void ChmController::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)

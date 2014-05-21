@@ -1010,6 +1010,21 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo& win, HWND hwnd, UINT msg, WP
     }
 }
 
+///// methods needed for ChmUI canvases (should be subclassed by HtmlHwnd) /////
+
+static LRESULT WndProcCanvasChmUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+    case WM_SETCURSOR:
+        // TODO: make (re)loading a document always clear the infotip
+        win.DeleteInfotip();
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    default:
+        return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+}
+
 ///// methods needed for the About/Start screen /////
 
 static void OnPaintAbout(WindowInfo& win)
@@ -1316,8 +1331,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
     default:
         // TODO: achieve this split through subclassing or different window classes
-        if (win->IsDocLoaded())
+        if (win->IsFixedDocLoaded())
             return WndProcCanvasFixedPageUI(*win, hwnd, msg, wParam, lParam);
+
+        if (win->IsChm())
+            return WndProcCanvasChmUI(*win, hwnd, msg, wParam, lParam);
 
         if (win->IsAboutWindow())
             return WndProcCanvasAbout(*win, hwnd, msg, wParam, lParam);

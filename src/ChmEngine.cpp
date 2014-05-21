@@ -151,6 +151,7 @@ public:
     virtual bool CanNavigate(int dir);
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
+    virtual float GetZoom();
     virtual void SelectAll() { if (htmlWindow) htmlWindow->SelectAll(); }
     virtual void CopySelection() { if (htmlWindow) htmlWindow->CopySelection(); }
     virtual int CurrentPageNo() const { return currentPageNo; }
@@ -323,6 +324,11 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
 {
     if (htmlWindow)
         htmlWindow->SetZoomPercent((int)zoomLevel);
+}
+
+float ChmEngineImpl::GetZoom()
+{
+    return htmlWindow ? (float)htmlWindow->GetZoomPercent() : 100;
 }
 
 class ChmTocBuilder : public EbookTocVisitor {
