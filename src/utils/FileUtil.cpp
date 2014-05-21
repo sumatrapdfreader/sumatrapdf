@@ -315,7 +315,7 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
     if (!data)
         return NULL;
 
-    if (!ReadAll(filePath, data, size)) {
+    if (!ReadN(filePath, data, size)) {
         Allocator::Free(allocator, data);
         return NULL;
     }
@@ -335,15 +335,16 @@ char *ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator
     return ReadAll(buf, fileSizeOut, allocator);
 }
 
-bool ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen)
+// buf must be at least toRead in size
+bool ReadN(const WCHAR *filePath, char *buf, size_t toRead)
 {
     ScopedHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE)
         return false;
 
-    DWORD sizeRead;
-    BOOL ok = ReadFile(h, buffer, (DWORD)bufferLen, &sizeRead, NULL);
-    return ok && sizeRead == bufferLen;
+    DWORD nRead;
+    BOOL ok = ReadFile(h, buf, (DWORD)toRead, &nRead, NULL);
+    return ok && nRead == toRead;
 }
 
 bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
@@ -399,7 +400,7 @@ bool StartsWith(const WCHAR *filePath, const char *magicNumber, size_t len)
     if (!header)
         return false;
 
-    ReadAll(filePath, header, len);
+    ReadN(filePath, header, len);
     return memeq(header, magicNumber, len);
 }
 

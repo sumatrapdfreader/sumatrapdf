@@ -165,12 +165,13 @@ fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
     int64 fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
-    if (0 <= fileSize && fileSize < MAX_MEMORY_FILE_SIZE) {
+    if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
         fz_var(data);
         fz_try(ctx) {
             data = fz_new_buffer(ctx, (int)fileSize);
-            if (file::ReadAll(filePath, (char *)data->data, (data->len = (int)fileSize)))
+            data->len = (int)fileSize;
+            if (file::ReadN(filePath, (char *)data->data, data->len))
                 file = fz_open_buffer(ctx, data);
         }
         fz_catch(ctx) {
@@ -3232,13 +3233,13 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
 bool PdfEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        char header[1024];
-        ZeroMemory(header, sizeof(header));
-        file::ReadAll(fileName, header, sizeof(header));
+        char header[1024] = { 0 };
+        file::ReadN(fileName, header, sizeof(header));
 
-        for (int i = 0; i < sizeof(header) - 4; i++)
+        for (int i = 0; i < sizeof(header) - 4; i++) {
             if (str::EqN(header + i, "%PDF", 4))
                 return true;
+        }
         return false;
     }
 

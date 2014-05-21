@@ -33,7 +33,7 @@ namespace file {
 bool         Exists(const WCHAR *filePath);
 char *       ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator=NULL);
 char *       ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator=NULL);
-bool         ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen);
+bool         ReadN(const WCHAR *filePath, char *buf, size_t toRead);
 bool         WriteAll(const WCHAR *filePath, const void *data, size_t dataLen);
 bool         WriteAllUtf(const char *filePath, const void *data, size_t dataLen);
 int64        GetSize(const WCHAR *filePath);

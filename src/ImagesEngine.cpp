@@ -534,7 +534,7 @@ bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         char header[32] = { 0 };
-        file::ReadAll(fileName, header, sizeof(header));
+        file::ReadN(fileName, header, sizeof(header));
         fileName = GfxFileExtFromData(header, sizeof(header));
     }
 

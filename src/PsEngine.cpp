@@ -96,10 +96,8 @@ public:
 
 static RectI ExtractDSCPageSize(const WCHAR *fileName)
 {
-    char header[1024];
-    if (!file::ReadAll(fileName, header, sizeof(header)))
-        return RectI();
-    header[sizeof(header) - 1] = '\0';
+    char header[1024] = { 0 };
+    file::ReadN(fileName, header, sizeof(header));
     if (!str::StartsWith(header, "%!PS-Adobe-"))
         return RectI();
 
@@ -355,9 +353,8 @@ bool PsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
         return false;
 
     if (sniff) {
-        char header[2048];
-        ZeroMemory(header, sizeof(header));
-        file::ReadAll(fileName, header, sizeof(header) - 1);
+        char header[2048] = { 0 };
+        file::ReadN(fileName, header, sizeof(header) - 1);
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
             // Windows-format EPS file - cf. http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
             DWORD psStart = ByteReader(header, sizeof(header)).DWordLE(4);
