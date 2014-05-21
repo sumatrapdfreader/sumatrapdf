@@ -40,7 +40,8 @@ int64        GetSize(const WCHAR *filePath);
 bool         Delete(const WCHAR *filePath);
 FILETIME     GetModificationTime(const WCHAR *filePath);
 bool         SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
-bool         StartsWith(const WCHAR *filePath, const char *magicNumber, size_t len=-1);
+bool         StartsWithN(const WCHAR *filePath, const char *magicNumber, size_t len);
+bool         StartsWith(const WCHAR *filePath, const char *magicNumber);
 int          GetZoneIdentifier(const WCHAR *filePath);
 bool         SetZoneIdentifier(const WCHAR *filePath, int zoneId=URLZONE_INTERNET);
 

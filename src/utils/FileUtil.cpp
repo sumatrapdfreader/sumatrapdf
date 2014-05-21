@@ -392,16 +392,22 @@ bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod)
     return SetFileTime(h, NULL, NULL, &lastMod);
 }
 
-bool StartsWith(const WCHAR *filePath, const char *magicNumber, size_t len)
+// return true if a file starts with string s of size len
+bool StartsWithN(const WCHAR *filePath, const char *s, size_t len)
 {
-    if (len == (size_t)-1)
-        len = str::Len(magicNumber);
-    ScopedMem<char> header(AllocArray<char>(len));
-    if (!header)
+    ScopedMem<char> buf(AllocArray<char>(len));
+    if (!buf)
         return false;
 
-    ReadN(filePath, header, len);
-    return memeq(header, magicNumber, len);
+    if (!ReadN(filePath, buf, len))
+        return false;
+    return memeq(buf, s, len);
+}
+
+// return true if a file starts with null-terminated string s
+bool StartsWith(const WCHAR *filePath, const char *s)
+{
+    return file::StartsWithN(filePath, s, str::Len(s));
 }
 
 int GetZoneIdentifier(const WCHAR *filePath)

@@ -1196,7 +1196,7 @@ bool CbxEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
-        return file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7);
+        return file::StartsWithN(fileName, "Rar!\x1A\x07\x00", 7);
     }
 
     return str::EndsWithI(fileName, L".cbz") ||
@@ -1218,7 +1218,7 @@ CbxEngine *CbxEngine::CreateFromFile(const WCHAR *fileName)
     // also try again if a .cbz or .zip file failed to load, it might
     // just have been misnamed (which apparently happens occasionally)
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
-        file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
+        file::StartsWithN(fileName, "Rar!\x1A\x07\x00", 7)) {
         CbrEngineImpl *cbrEngine = new CbrEngineImpl();
         if (cbrEngine->LoadFromFile(fileName))
             return cbrEngine;
