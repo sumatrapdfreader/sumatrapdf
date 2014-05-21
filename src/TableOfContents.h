@@ -6,9 +6,6 @@
 
 #include <CommCtrl.h>
 
-/* Define if you want page numbers to be displayed in the ToC sidebar */
-// #define DISPLAY_TOC_PAGE_NUMBERS
-
 class WindowInfo;
 
 void CreateToc(WindowInfo *win);

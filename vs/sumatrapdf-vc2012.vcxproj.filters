@@ -69,6 +69,9 @@
     <ClCompile Include="..\src\Canvas.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Controller.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -873,6 +876,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\AppUtil.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Controller.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">

@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "BaseEngine.h"
+#include "ChmEngine.h"
 #include "EbookController.h"
 #include "EbookControls.h"
 #include "EbookDoc.h"
@@ -657,7 +658,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
         SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
         bmp = RenderFirstDocPageToBitmap(doc, pageSize, dstSize, 10);
     }
-    SaveThumbnailForFile(doc.GetFilePath(), bmp);
+    SetThumbnail(&ds, bmp);
 }
 
 void OpenEbookInWindow(Doc doc, SumatraWindow& winToReplace)
@@ -811,9 +812,11 @@ Doc GetDocForWindow(const SumatraWindow& win)
 {
     if (win.AsWindowInfo()) {
         WindowInfo *iwin = win.AsWindowInfo();
-        if (!iwin->IsDocLoaded())
-            return Doc();
-        return Doc(iwin->dm->engine, (DocType)(Doc_BaseEngine + iwin->dm->engineType));
+        if (iwin->IsChm())
+            return Doc(iwin->AsChm()->engine(), (DocType)(Doc_BaseEngine + Engine_Chm));
+        if (iwin->IsFixedDocLoaded())
+            return Doc(iwin->AsFixed()->engine(), (DocType)(Doc_BaseEngine + iwin->AsFixed()->engineType));
+        return Doc();
     }
     if (win.AsEbookWindow()) {
         EbookWindow *ewin = win.AsEbookWindow();

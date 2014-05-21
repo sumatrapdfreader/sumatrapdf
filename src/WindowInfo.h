@@ -4,6 +4,8 @@
 #ifndef WindowInfo_h
 #define WindowInfo_h
 
+#include "Controller.h"
+// for DisplayModelCallback
 #include "DisplayModel.h"
 
 class Synchronizer;
@@ -15,6 +17,7 @@ class StressTest;
 struct WatchedFile;
 class SumatraUIAutomationProvider;
 struct TabData;
+class Controller;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -64,14 +67,18 @@ public:
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const { return !loadedFilePath; }
-    bool IsDocLoaded() const { return this->dm != NULL; }
+    bool IsDocLoaded() const { return this->ctrl != NULL; }
+    bool IsFixedDocLoaded() const { return this->ctrl && this->ctrl->AsFixed(); }
 
-    bool IsChm() const { return dm && dm->engineType == Engine_Chm; }
-    bool IsCbx() const { return dm && dm->engineType == Engine_ComicBook; }
-    bool IsNotPdf() const { return dm && dm->engineType != Engine_PDF; }
+    FixedPageUIController *AsFixed() { return ctrl ? ctrl->AsFixed() : NULL; }
+    ChmUIController *AsChm() { return ctrl ? ctrl->AsChm() : NULL; }
+
+    bool IsChm() const { return ctrl && ctrl->AsChm(); }
+    bool IsCbx() const { return ctrl && ctrl->AsFixed() && Engine_ComicBook == ctrl->AsFixed()->engineType; }
+    bool IsNotPdf() const { return ctrl && (!ctrl->AsFixed() || Engine_PDF != ctrl->AsFixed()->engineType); }
 
     WCHAR *         loadedFilePath;
-    DisplayModel *  dm;
+    Controller *    ctrl;
 
     HWND            hwndFrame;
     HWND            hwndCanvas;
@@ -229,12 +236,12 @@ public:
 
     bool CreateUIAProvider();
 
-    // DisplayModelCallback implementation (incl. ChmNavigationCallback)
-    virtual void PageNoChanged(int pageNo);
-    virtual void LaunchBrowser(const WCHAR *url);
-    virtual void FocusFrame(bool always);
-    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+    void FocusFrame(bool always);
+    void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+
+    // DisplayModelCallback implementation
     virtual void Repaint() { RepaintAsync(); };
+    virtual void PageNoChanged(int pageNo);
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RequestRendering(int pageNo);
     virtual void CleanUp(DisplayModel *dm);

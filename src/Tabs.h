@@ -20,22 +20,23 @@
 #define T_DRAG      (TCN_LAST + 3)
 #endif //OWN_TAB_DRAWING
 
-class DisplayModel;
 struct PageAnnotation;
 class WindowInfo;
+class Controller;
 
 // This is the data, for every opened document, which is preserved between
 // tab selections. It's loaded back in the WindowInfo for the currently active document.
 struct TabData
 {
-    DisplayModel *        dm;
+    Controller *          ctrl;
     bool                  showToc;
     Vec<int>              tocState;
     WCHAR *               title;
     Vec<PageAnnotation> * userAnnots;
     bool                  userAnnotsModified;
 
-    TabData(): dm(NULL), showToc(false), tocState(0,NULL), title(NULL), userAnnots(NULL), userAnnotsModified(false) {}
+    TabData(): ctrl(NULL), showToc(false), title(NULL),
+        userAnnots(NULL), userAnnotsModified(false) { }
 };
 
 void SaveTabData(WindowInfo *win, TabData **tdata);

@@ -429,9 +429,8 @@ Usage:
         freopen_s(&nul, "NUL", "w", stderr);
     }
 
-    // optionally use GDI+ rendering for PDF/XPS and the original ChmEngine for CHM
+    // optionally use GDI+ rendering for PDF/XPS
     DebugGdiPlusDevice(useAlternateHandlers);
-    bool useChm2Engine = !useAlternateHandlers;
 
     ScopedGdiPlus gdiPlus;
     ScopedMiniMui miniMui;
@@ -448,7 +447,7 @@ Usage:
 
     EngineType engineType;
     PasswordHolder pwdUI(password);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, useChm2Engine);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, true);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;

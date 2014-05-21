@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "WindowInfo.h"
 
+#include "Controller.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "PdfSync.h"
@@ -17,7 +18,7 @@
 #include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    dm(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
+    ctrl(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocVisible(false), tocRoot(NULL), tocKeepSelection(false),
     isFullScreen(false), presentation(PM_DISABLED), tocBeforeFullScreen(false),
@@ -56,7 +57,7 @@ WindowInfo::~WindowInfo()
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
     if (uia_provider) {
-        if (dm)
+        if (IsFixedDocLoaded())
             uia_provider->OnDocumentUnload();
         uia_provider->Release();
     }
@@ -73,7 +74,7 @@ WindowInfo::~WindowInfo()
     // delete DisplayModel/BaseEngine last, as e.g.
     // DocTocItem or PageElement might still need the
     // BaseEngine in their destructors
-    delete dm;
+    delete ctrl;
 
     free(loadedFilePath);
 }
@@ -94,7 +95,7 @@ void WindowInfo::UpdateCanvasSize()
 
     if (IsDocLoaded()) {
         // the display model needs to know the full size (including scroll bars)
-        dm->ChangeViewPortSize(GetViewPortSize());
+        ctrl->SetViewPortSize(GetViewPortSize());
     }
 
     // keep the notifications visible (only needed for right-to-left layouts)
@@ -124,27 +125,28 @@ void WindowInfo::RedrawAll(bool update)
 
 void WindowInfo::ToggleZoom()
 {
-    assert(this->dm);
+    CrashIf(!this->ctrl);
     if (!this->IsDocLoaded()) return;
 
-    if (ZOOM_FIT_PAGE == this->dm->ZoomVirtual())
-        this->dm->ZoomTo(ZOOM_FIT_WIDTH);
-    else if (ZOOM_FIT_WIDTH == this->dm->ZoomVirtual())
-        this->dm->ZoomTo(ZOOM_FIT_CONTENT);
+    if (ZOOM_FIT_PAGE == this->ctrl->GetZoomVirtual())
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH);
+    else if (ZOOM_FIT_WIDTH == this->ctrl->GetZoomVirtual())
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT);
     else
-        this->dm->ZoomTo(ZOOM_FIT_PAGE);
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE);
 }
 
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
-    CrashIf(!this->dm);
-    if (!this->IsDocLoaded()) return;
+    CrashIf(!this->IsFixedDocLoaded());
+    if (!this->IsFixedDocLoaded()) return;
     CrashIf(this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
+    DisplayModel *dm = this->ctrl->AsFixed()->model();
     if (0 != dx)
-        this->dm->ScrollXBy(dx);
+        dm->ScrollXBy(dx);
     if (0 != dy)
-        this->dm->ScrollYBy(dy, false);
+        dm->ScrollYBy(dy, false);
 }
 
 #define MULTILINE_INFOTIP_WIDTH_PX 500
@@ -192,16 +194,11 @@ bool WindowInfo::CreateUIAProvider()
         if (!uia_provider)
             return false;
         // load data to provider
-        if (dm)
-            uia_provider->OnDocumentLoad(dm);
+        if (IsFixedDocLoaded())
+            uia_provider->OnDocumentLoad(AsFixed()->model());
     }
 
     return true;
-}
-
-void WindowInfo::LaunchBrowser(const WCHAR *url)
-{
-    ::LaunchBrowser(url);
 }
 
 void WindowInfo::FocusFrame(bool always)
@@ -218,9 +215,9 @@ void WindowInfo::SaveDownload(const WCHAR *url, const unsigned char *data, size_
 
 BaseEngine *LinkHandler::engine() const
 {
-    if (!owner || !owner->dm)
+    if (!owner || !owner->ctrl || !owner->ctrl->AsFixed())
         return NULL;
-    return owner->dm->engine;
+    return owner->ctrl->AsFixed()->engine();
 }
 
 void LinkHandler::GotoLink(PageDestination *link)
@@ -228,10 +225,16 @@ void LinkHandler::GotoLink(PageDestination *link)
     assert(owner && owner->linkHandler == this);
     if (!link)
         return;
+
+    if (owner->IsChm()) {
+        owner->ctrl->GotoLink(link);
+        return;
+    }
+
     if (!engine())
         return;
 
-    DisplayModel *dm = owner->dm;
+    DisplayModel *dm = owner->ctrl->AsFixed()->model();
     ScopedMem<WCHAR> path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
@@ -259,7 +262,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if (Dest_LaunchEmbedded == type) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path.Get(), dm->FilePath())) {
+        if (path && str::StartsWith(path.Get(), owner->ctrl->FilePath())) {
             WindowInfo *newWin = FindWindowInfoByFile(path);
             if (!newWin) {
                 LoadArgs args(path, owner);
@@ -318,12 +321,12 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (pageNo <= 0)
         return;
 
-    if (owner->dm->AsChmEngine()) {
-        owner->dm->AsChmEngine()->GoToDestination(dest);
+    if (!owner->IsFixedDocLoaded()) {
+        owner->ctrl->GotoLink(dest);
         return;
     }
 
-    DisplayModel *dm = owner->dm;
+    DisplayModel *dm = owner->ctrl->AsFixed()->model();
     PointI scroll(-1, 0);
     RectD rect = dest->GetDestRect();
 
@@ -381,7 +384,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
         return;
     }
 
-    ScopedMem<WCHAR> fullPath(path::GetDir(owner->dm->FilePath()));
+    ScopedMem<WCHAR> fullPath(path::GetDir(owner->ctrl->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -415,7 +418,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     if (!name)
         newWin->linkHandler->ScrollTo(link);
     else {
-        PageDestination *dest = newWin->dm->engine->GetNamedDest(name);
+        PageDestination *dest = newWin->ctrl->GetNamedDest(name);
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
             delete dest;
@@ -465,20 +468,20 @@ PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, b
 void LinkHandler::GotoNamedDest(const WCHAR *name)
 {
     assert(owner && owner->linkHandler == this);
-    if (!engine())
+    if (!owner->ctrl)
         return;
 
     // Match order:
     // 1. Exact match on internal destination name
     // 2. Fuzzy match on full ToC item title
     // 3. Fuzzy match on a part of a ToC item title
-    PageDestination *dest = engine()->GetNamedDest(name);
+    PageDestination *dest = owner->ctrl->GetNamedDest(name);
     if (dest) {
         ScrollTo(dest);
         delete dest;
     }
-    else if (owner->dm->HasTocTree()) {
-        DocTocItem *root = owner->dm->GetTocTree();
+    else if (owner->ctrl->HasTocTree()) {
+        DocTocItem *root = owner->ctrl->GetTocTree();
         ScopedMem<WCHAR> fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)

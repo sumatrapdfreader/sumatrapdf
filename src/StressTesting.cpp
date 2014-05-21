@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "Controller.h"
 #include "DirIter.h"
 #include "Doc.h"
 #include "EbookController.h"
@@ -642,9 +643,9 @@ bool StressTest::OpenFile(const WCHAR *fileName)
         return false;
 
     if (w == win) { // WindowInfo reused
-        if (!win->dm)
+        if (!win->IsDocLoaded())
             return false;
-    } else if (!w->dm) { // new WindowInfo
+    } else if (!w->IsDocLoaded()) { // new WindowInfo
         CloseWindow(w, false);
         return false;
     }
@@ -668,21 +669,21 @@ bool StressTest::OpenFile(const WCHAR *fileName)
         win = w;
         CloseWindow(toClose, false);
     }
-    if (!win->dm)
+    if (!win->IsDocLoaded())
         return false;
 
-    win->dm->ChangeDisplayMode(DM_CONTINUOUS);
-    win->dm->ZoomTo(ZOOM_FIT_PAGE);
-    win->dm->GoToFirstPage();
+    win->ctrl->SetDisplayMode(DM_CONTINUOUS);
+    win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE);
+    win->ctrl->GoToFirstPage();
     if (win->tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);
 
     currPage = pageRanges.At(0).start;
-    win->dm->GoToPage(currPage, 0);
+    win->ctrl->GoToPage(currPage, false);
     currPageRenderTime.Start();
     ++filesCount;
 
-    pageForSearchStart = (rand() % win->dm->PageCount()) + 1;
+    pageForSearchStart = (rand() % win->ctrl->PageCount()) + 1;
     // search immediately in single page documents
     if (1 == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
@@ -705,18 +706,18 @@ bool StressTest::GoToNextPage()
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
-    while (!IsInRange(pageRanges, currPage) && currPage <= win->dm->PageCount()) {
+    while (!IsInRange(pageRanges, currPage) && currPage <= win->ctrl->PageCount()) {
         currPage++;
     }
 
-    if (currPage > win->dm->PageCount()) {
+    if (currPage > win->ctrl->PageCount()) {
         if (GoToNextFile())
             return true;
         Finished(true);
         return false;
     }
 
-    win->dm->GoToPage(currPage, 0);
+    win->ctrl->GoToPage(currPage, false);
     currPageRenderTime.Start();
 
     // start text search when we're in the middle of the document, so that
@@ -754,7 +755,7 @@ void StressTest::OnTimer(int timerIdGot)
 {
     CrashIf(timerId != timerIdGot);
     KillTimer(win->hwndFrame, timerId);
-    if (!win->dm || !win->dm->engine) {
+    if (!win->IsDocLoaded()) {
         if (!GoToNextFile()) {
             Finished(true);
             return;
@@ -765,29 +766,31 @@ void StressTest::OnTimer(int timerIdGot)
 
     // chm documents aren't rendered and we block until we show them
     // so we can assume previous page has been shown and go to next page
-    if (win->dm->AsChmEngine()) {
+    if (!win->IsFixedDocLoaded()) {
         if (!GoToNextPage())
             return;
         goto Next;
     }
 
+    DisplayModel *dm = win->AsFixed()->model();
     // For non-image files, we detect if a page was rendered by checking the cache
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    bool didRender = renderCache->Exists(win->dm, currPage, win->dm->Rotation());
+    bool didRender = renderCache->Exists(dm, currPage, dm->Rotation());
     if (!didRender && DoCachePageRendering(win, currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage())
                 return;
         }
-    } else {
-        if (!GoToNextPage())
-            return;
     }
+    else if (!GoToNextPage()) {
+        return;
+    }
+    MakeRandomSelection(dm, currPage);
+
 Next:
-    MakeRandomSelection(win->dm, currPage);
     TickTimer();
 }
 
@@ -810,7 +813,7 @@ void GetStressTestInfo(str::Str<char>* s)
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *w = gWindows.At(i);
-        if (!w || !w->dm || !w->loadedFilePath)
+        if (!w || !w->IsDocLoaded() || !w->loadedFilePath)
             continue;
 
         s->Append("File: ");

@@ -6,6 +6,8 @@
 
 #include "AppPrefs.h"
 #include "AppUtil.h"
+#include "ChmEngine.h"
+#include "Controller.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "Notifications.h"
@@ -489,12 +491,19 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     if (!HasPermission(Perm_PrinterAccess))
         return;
 
-    DisplayModel *dm = win->dm;
-    assert(dm);
-    if (!dm) return;
-
-    if (!dm->engine)
+    if (win->IsChm()) {
+        // the Print dialog allows access to the file system, so fall back
+        // to printing the entire document without dialog if that isn't desired
+        bool showUI = HasPermission(Perm_DiskAccess);
+        win->AsChm()->engine()->PrintCurrentPage(showUI);
         return;
+    }
+
+    CrashIf(!win->AsFixed());
+    if (!win->AsFixed()) return;
+    FixedPageUIController *ctrl = win->AsFixed();
+    DisplayModel *dm = ctrl->model();
+
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!dm->engine->AllowsPrinting())
         return;
@@ -513,15 +522,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // the Print dialog allows access to the file system, so fall back
     // to printing the entire document without dialog if that isn't desired
     if (!HasPermission(Perm_DiskAccess)) {
-        if (win->IsChm())
-            dm->AsChmEngine()->PrintCurrentPage(false);
-        else
-            PrintFile(dm->engine);
-        return;
-    }
-
-    if (win->IsChm()) {
-        dm->AsChmEngine()->PrintCurrentPage(true);
+        PrintFile(dm->engine);
         return;
     }
 
@@ -539,9 +540,9 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     PRINTPAGERANGE *ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
-    ppr->nToPage = dm->PageCount();
+    ppr->nToPage = ctrl->PageCount();
     pd.nMinPage = 1;
-    pd.nMaxPage = dm->PageCount();
+    pd.nMaxPage = ctrl->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv, defaultAsImage);
@@ -584,12 +585,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         goto Exit;
 
     if (pd.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr = { dm->CurrentPageNo(), dm->CurrentPageNo() };
+        PRINTPAGERANGE pr = { ctrl->CurrentPageNo(), ctrl->CurrentPageNo() };
         ranges.Append(pr);
     } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pd.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = { 1, dm->PageCount() };
+        PRINTPAGERANGE pr = { 1, ctrl->PageCount() };
         ranges.Append(pr);
     } else {
         assert(pd.nPageRanges > 0);
@@ -604,7 +605,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
-    PrintData *data = new PrintData(dm->engine, &printerInfo, devMode, ranges, advanced,
+    PrintData *data = new PrintData(ctrl->engine(), &printerInfo, devMode, ranges, advanced,
                                     dm->Rotation(), printSelection ? win->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
@@ -617,9 +618,9 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // unexpectedly deleted
     // TODO: instead prevent closing the document so that printing
     // can still happen on a separate thread and be interruptible
-    bool failedEngineClone = dm->engine && !data->engine;
+    bool failedEngineClone = ctrl->engine() && !data->engine;
     if (failedEngineClone)
-        data->engine = dm->engine;
+        data->engine = ctrl->engine();
 
     if (!waitForCompletion && !failedEngineClone)
         PrintToDeviceOnThread(win, data);

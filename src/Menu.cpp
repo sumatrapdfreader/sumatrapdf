@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
+#include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
 #include "EbookWindow.h"
@@ -33,7 +34,7 @@ void MenuUpdateDisplayMode(EbookWindow *win)
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = enabled ? win->dm->GetDisplayMode() : gGlobalPrefs->defaultDisplayModeEnum;
+    DisplayMode displayMode = enabled ? win->ctrl->GetDisplayMode() : gGlobalPrefs->defaultDisplayModeEnum;
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
         win::menu::SetEnabled(win->menu, id, enabled);
@@ -47,13 +48,13 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     else if (DisplayModeShowCover(displayMode))
         id = IDM_VIEW_BOOK;
     else
-        assert(!win->dm && DM_AUTOMATIC == displayMode);
+        AssertCrash(!win->ctrl && DM_AUTOMATIC == displayMode);
 
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
     if (win->IsCbx()) {
-        bool mangaMode = win->dm ? win->dm->GetDisplayR2L() : gGlobalPrefs->comicBookUI.cbxMangaMode;
+        bool mangaMode = win->AsFixed() ? win->AsFixed()->model()->GetDisplayR2L() : gGlobalPrefs->comicBookUI.cbxMangaMode;
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
 }
@@ -381,7 +382,7 @@ void MenuUpdateZoom(WindowInfo* win)
 {
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     if (win->IsDocLoaded())
-        zoomVirtual = win->dm->ZoomVirtual();
+        zoomVirtual = win->ctrl->GetZoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
@@ -389,7 +390,7 @@ void MenuUpdateZoom(WindowInfo* win)
 void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    bool filePrintAllowed = !filePrintEnabled || win->dm->engine->AllowsPrinting();
+    bool filePrintAllowed = !filePrintEnabled || !win->IsFixedDocLoaded() || win->AsFixed()->engine()->AllowsPrinting();
 #else
     bool filePrintAllowed = true;
 #endif
@@ -445,7 +446,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && win->dm->HasTocTree();
+    bool enabled = win->IsDocLoaded() && win->ctrl->HasTocTree();
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -458,8 +459,8 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded()) {
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->dm->CanNavigate(-1));
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->dm->CanNavigate(1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->ctrl->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->ctrl->CanNavigate(1));
     }
 
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
@@ -467,7 +468,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
     }
 
-    if (win->dm && Engine_ImageDir == win->dm->engineType) {
+    if (win->IsFixedDocLoaded() && Engine_ImageDir == win->AsFixed()->engineType) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);
@@ -481,11 +482,11 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         }
     }
 
-    if (win->dm && win->dm->engine)
-        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->dm->engine->IsImageCollection());
+    if (win->IsFixedDocLoaded())
+        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->AsFixed()->engine()->IsImageCollection());
 
     // TODO: is this check too expensive?
-    if (win->IsDocLoaded() && !file::Exists(win->dm->FilePath()))
+    if (win->IsDocLoaded() && !file::Exists(win->ctrl->FilePath()))
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
@@ -548,11 +549,11 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
 
 void OnContextMenu(WindowInfo* win, int x, int y)
 {
-    assert(win->IsDocLoaded());
-    if (!win->IsDocLoaded())
+    CrashIf(!win->IsFixedDocLoaded());
+    if (!win->IsFixedDocLoaded())
         return;
 
-    PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
+    PageElement *pageEl = win->AsFixed()->model()->GetElementAtPos(PointI(x, y));
     ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
     CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
@@ -568,7 +569,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!win->selectionOnPage)
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
-    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->dm->HasTocTree());
+    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
 
     POINT pt = { x, y };
@@ -621,7 +622,7 @@ void OnMenuCustomZoom(WindowInfo* win)
     if (!win->IsDocLoaded())
         return;
 
-    float zoom = win->dm->ZoomVirtual();
+    float zoom = win->ctrl->GetZoomVirtual();
     if (!Dialog_CustomZoom(win->hwndFrame, win->IsChm(), &zoom))
         return;
     ZoomToSelection(win, zoom);

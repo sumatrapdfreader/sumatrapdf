@@ -4,7 +4,6 @@
 #ifndef DisplayModel_h
 #define DisplayModel_h
 
-#include "ChmEngine.h"
 #include "DisplayState.h"
 #include "EngineManager.h"
 
@@ -57,9 +56,10 @@ class TextSelection;
 class TextSearch;
 struct TextSel;
 
-class DisplayModelCallback : public ChmNavigationCallback {
+class DisplayModelCallback {
 public:
     virtual void Repaint() = 0;
+    virtual void PageNoChanged(int pageNo) = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
@@ -76,10 +76,9 @@ public:
 class DisplayModel
 {
 public:
-    DisplayModel(BaseEngine *engine, EngineType engineType, DisplayModelCallback *dmCb);
+    DisplayModel(BaseEngine *engine, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
-    const WCHAR *FilePath() const { return engine->FileName(); }
     /* number of pages in the document */
     int  PageCount() const { return engine->PageCount(); }
     bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
@@ -100,12 +99,9 @@ public:
     float ZoomReal(int pageNo);
     float ZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
 
-    bool HasTocTree() const { return engine->HasTocTree(); }
-    DocTocItem *GetTocTree() { return engine->GetTocTree(); }
     int CurrentPageNo() const;
 
     BaseEngine *    engine;
-    EngineType      engineType;
 
     PageTextCache * textCache;
     TextSelection * textSelection;
@@ -184,8 +180,6 @@ public:
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { dmCb->Repaint(); }
 
-    ChmEngine *     AsChmEngine() const;
-
 protected:
 
     void            BuildPagesInfo();
@@ -199,8 +193,6 @@ protected:
 
     void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
-
-    void            ZoomToChm(float zoomLevel);
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      pagesInfo;

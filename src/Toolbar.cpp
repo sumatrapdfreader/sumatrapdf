@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "Controller.h"
 #include "Menu.h"
 #include "resource.h"
 #include "Search.h"
@@ -87,7 +88,7 @@ static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     case IDM_PRINT:
-        return win->dm->engine->AllowsPrinting();
+        return !win->AsFixed() || win->AsFixed()->engine()->AllowsPrinting();
 #endif
 
     case IDM_FIND_NEXT:
@@ -96,9 +97,9 @@ static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
         return win::GetTextLen(win->hwndFindBox) > 0;
 
     case IDM_GOTO_NEXT_PAGE:
-        return win->dm->CurrentPageNo() < win->dm->PageCount();
+        return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
     case IDM_GOTO_PREV_PAGE:
-        return win->dm->CurrentPageNo() > 1;
+        return win->ctrl->CurrentPageNo() > 1;
 
     default:
         return true;
@@ -343,7 +344,7 @@ void UpdateToolbarState(WindowInfo *win)
         return;
 
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_WIDTH, 0);
-    if (win->dm->GetDisplayMode() == DM_CONTINUOUS && win->dm->ZoomVirtual() == ZOOM_FIT_WIDTH)
+    if (win->ctrl->GetDisplayMode() == DM_CONTINUOUS && win->ctrl->GetZoomVirtual() == ZOOM_FIT_WIDTH)
         state |= TBSTATE_CHECKED;
     else
         state &= ~TBSTATE_CHECKED;
@@ -352,7 +353,7 @@ void UpdateToolbarState(WindowInfo *win)
     bool isChecked = (state & TBSTATE_CHECKED);
 
     state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDT_VIEW_FIT_PAGE, 0);
-    if (win->dm->GetDisplayMode() == DM_SINGLE_PAGE && win->dm->ZoomVirtual() == ZOOM_FIT_PAGE)
+    if (win->ctrl->GetDisplayMode() == DM_SINGLE_PAGE && win->ctrl->GetZoomVirtual() == ZOOM_FIT_PAGE)
         state |= TBSTATE_CHECKED;
     else
         state &= ~TBSTATE_CHECKED;
@@ -410,9 +411,9 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
         switch (wParam) {
         case VK_RETURN: {
             ScopedMem<WCHAR> buf(win::GetText(win->hwndPageBox));
-            int newPageNo = win->dm->engine->GetPageByLabel(buf);
-            if (win->dm->ValidPageNo(newPageNo)) {
-                win->dm->GoToPage(newPageNo, 0, true);
+            int newPageNo = win->ctrl->GetPageByLabel(buf);
+            if (win->ctrl->ValidPageNo(newPageNo)) {
+                win->ctrl->GoToPage(newPageNo);
                 SetFocus(win->hwndFrame);
             }
             return 1;
@@ -469,10 +470,10 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
         size2.dx -= TB_TEXT_PADDING_RIGHT;
     } else if (!pageCount)
         buf = str::Dup(L"");
-    else if (!win->dm || !win->dm->engine || !win->dm->engine->HasPageLabels())
+    else if (!win->ctrl || !win->ctrl->HasPageLabels())
         buf = str::Format(L" / %d", pageCount);
     else {
-        buf = str::Format(L" (%d / %d)", win->dm->CurrentPageNo(), pageCount);
+        buf = str::Format(L" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
         ScopedMem<WCHAR> buf2(str::Format(L" (%d / %d)", pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }

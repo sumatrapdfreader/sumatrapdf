@@ -5,6 +5,8 @@
 #include "Selection.h"
 
 #include "AppPrefs.h"
+#include "ChmEngine.h"
+#include "Controller.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "Toolbar.h"
@@ -27,7 +29,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
 {
     Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
 
-    for (int pageNo = dm->PageCount(); pageNo >= 1; --pageNo) {
+    for (int pageNo = dm->engine->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         assert(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo || !pageInfo->shown)
@@ -73,8 +75,8 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
     win->selectionOnPage = NULL;
     win->showSelection = false;
 
-    if (alsoTextSel && win->IsDocLoaded())
-        win->dm->textSelection->Reset();
+    if (alsoTextSel && win->IsFixedDocLoaded())
+        win->AsFixed()->model()->textSelection->Reset();
 }
 
 void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, BYTE alpha, int margin)
@@ -104,6 +106,8 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
 
 void PaintSelection(WindowInfo *win, HDC hdc)
 {
+    CrashIf(!win->AsFixed());
+
     Vec<RectI> rects;
 
     if (win->mouseAction == MA_SELECTING) {
@@ -137,7 +141,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
             return;
 
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
-            rects.Append(win->selectionOnPage->At(i).GetRect(win->dm));
+            rects.Append(win->selectionOnPage->At(i).GetRect(win->AsFixed()->model()));
     }
 
     PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->fixedPageUI.selectionColor);
@@ -145,19 +149,20 @@ void PaintSelection(WindowInfo *win, HDC hdc)
 
 void UpdateTextSelection(WindowInfo *win, bool select)
 {
-    assert(win->IsDocLoaded());
-    if (!win->IsDocLoaded()) return;
+    if (!win->IsFixedDocLoaded())
+        return;
 
+    DisplayModel *dm = win->AsFixed()->model();
     if (select) {
-        int pageNo = win->dm->GetPageNoByPoint(win->selectionRect.BR());
-        if (win->dm->ValidPageNo(pageNo)) {
-            PointD pt = win->dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
-            win->dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
+        int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
+        if (win->ctrl->ValidPageNo(pageNo)) {
+            PointD pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
+            dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
         }
     }
 
     DeleteOldSelectionInfo(win);
-    win->selectionOnPage = SelectionOnPage::FromTextSelect(&win->dm->textSelection->result);
+    win->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
     win->showSelection = win->selectionOnPage != NULL;
 
     if (win->uia_provider)
@@ -166,17 +171,24 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relative)
 {
-    if (!win->IsDocLoaded())
+    if (win->IsChm()) {
+        win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual() : 1));
+        UpdateToolbarState(win);
+        return;
+    }
+
+    if (!win->IsFixedDocLoaded())
         return;
 
     PointI pt;
     bool zoomToPt = win->showSelection && win->selectionOnPage;
+    DisplayModel *dm = win->AsFixed()->model();
 
     // either scroll towards the center of the current selection
     if (zoomToPt) {
         RectI selRect;
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
-            selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(win->dm));
+            selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(dm));
         }
 
         ClientRect rc(win->hwndCanvas);
@@ -186,20 +198,20 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
         pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
         pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
-        int pageNo = win->dm->GetPageNoByPoint(pt);
-        if (!win->dm->ValidPageNo(pageNo) || !win->dm->PageVisible(pageNo))
+        int pageNo = dm->GetPageNoByPoint(pt);
+        if (!win->ctrl->ValidPageNo(pageNo) || !dm->PageVisible(pageNo))
             zoomToPt = false;
     }
     // or towards the top-left-most part of the first visible page
     else {
-        int page = win->dm->FirstVisiblePageNo();
-        PageInfo *pageInfo = win->dm->GetPageInfo(page);
+        int page = dm->FirstVisiblePageNo();
+        PageInfo *pageInfo = dm->GetPageInfo(page);
         if (pageInfo) {
             RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
             pt = visible.TL();
 
-            int pageNo = win->dm->GetPageNoByPoint(pt);
-            if (!visible.IsEmpty() && win->dm->ValidPageNo(pageNo) && win->dm->PageVisible(pageNo))
+            int pageNo = dm->GetPageNoByPoint(pt);
+            if (!visible.IsEmpty() && win->ctrl->ValidPageNo(pageNo) && dm->PageVisible(pageNo))
                 zoomToPt = true;
         }
     }
@@ -208,9 +220,9 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
         zoomToPt = false;
 
     if (relative)
-        win->dm->ZoomBy(factor, zoomToPt ? &pt : NULL);
+        dm->ZoomBy(factor, zoomToPt ? &pt : NULL);
     else
-        win->dm->ZoomTo(factor, zoomToPt ? &pt : NULL);
+        dm->ZoomTo(factor, zoomToPt ? &pt : NULL);
 
     UpdateToolbarState(win);
 }
@@ -220,28 +232,29 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!win->selectionOnPage) return;
     CrashIf(win->selectionOnPage->Count() == 0);
     if (win->selectionOnPage->Count() == 0) return;
-    CrashIf(!win->dm || !win->dm->engine);
-    if (!win->dm || !win->dm->engine) return;
+    CrashIf(!win->IsFixedDocLoaded());
+    if (!win->IsFixedDocLoaded()) return;
 
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
+    DisplayModel *dm = win->AsFixed()->model();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!win->dm->engine->AllowsCopyingText())
+    if (!dm->engine->AllowsCopyingText())
         ShowNotification(win, _TR("Copying text was denied (copying as image only)"));
     else
 #endif
-    if (!win->dm->engine->IsImageCollection()) {
+    if (!dm->engine->IsImageCollection()) {
         ScopedMem<WCHAR> selText;
-        bool isTextSelection = win->dm->textSelection->result.len > 0;
+        bool isTextSelection = dm->textSelection->result.len > 0;
         if (isTextSelection) {
-            selText.Set(win->dm->textSelection->ExtractText(L"\r\n"));
+            selText.Set(dm->textSelection->ExtractText(L"\r\n"));
         }
         else {
             WStrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                WCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
+                WCHAR *text = dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (text)
                     selections.Push(text);
             }
@@ -261,8 +274,8 @@ void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
-    RenderedBitmap * bmp = win->dm->engine->RenderBitmap(selOnPage->pageNo,
-        win->dm->ZoomReal(), win->dm->Rotation(), &selOnPage->rect, Target_Export);
+    RenderedBitmap * bmp = dm->engine->RenderBitmap(selOnPage->pageNo,
+        dm->ZoomReal(), dm->Rotation(), &selOnPage->rect, Target_Export);
     if (bmp)
         CopyImageToClipboard(bmp->GetBitmap(), true);
     delete bmp;
@@ -274,31 +287,33 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
 {
     if (!HasPermission(Perm_CopySelection))
         return;
-    if (!win->IsDocLoaded())
-        return;
 
     if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus()) {
         Edit_SelectAll(GetFocus());
         return;
     }
+
     if (win->IsChm()) {
-        win->dm->AsChmEngine()->SelectAll();
+        win->AsChm()->engine()->SelectAll();
         return;
     }
+    if (!win->IsDocLoaded())
+        return;
 
+    DisplayModel *dm = win->AsFixed()->model();
     if (textOnly) {
         int pageNo;
-        for (pageNo = 1; !win->dm->GetPageInfo(pageNo)->shown; pageNo++);
-        win->dm->textSelection->StartAt(pageNo, 0);
-        for (pageNo = win->dm->PageCount(); !win->dm->GetPageInfo(pageNo)->shown; pageNo--);
-        win->dm->textSelection->SelectUpTo(pageNo, -1);
+        for (pageNo = 1; !dm->GetPageInfo(pageNo)->shown; pageNo++);
+        dm->textSelection->StartAt(pageNo, 0);
+        for (pageNo = win->ctrl->PageCount(); !dm->GetPageInfo(pageNo)->shown; pageNo--);
+        dm->textSelection->SelectUpTo(pageNo, -1);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
         UpdateTextSelection(win);
     }
     else {
         DeleteOldSelectionInfo(win, true);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
-        win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
+        win->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 
     win->showSelection = win->selectionOnPage != NULL;
@@ -331,11 +346,13 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
     CrashIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
     if (dx != 0 || dy != 0) {
-        PointI oldOffset = win->dm->viewPort.TL();
+        CrashIf(!win->IsFixedDocLoaded());
+        DisplayModel *dm = win->AsFixed()->model();
+        PointI oldOffset = dm->viewPort.TL();
         win->MoveDocBy(dx, dy);
 
-        dx = win->dm->viewPort.x - oldOffset.x;
-        dy = win->dm->viewPort.y - oldOffset.y;
+        dx = dm->viewPort.x - oldOffset.x;
+        dy = dm->viewPort.y - oldOffset.y;
         win->selectionRect.x -= dx;
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
@@ -345,6 +362,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
 void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
+    CrashIf(!win->IsFixedDocLoaded());
     DeleteOldSelectionInfo(win, true);
 
     win->selectionRect = RectI(x, y, 0, 0);
@@ -353,10 +371,11 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 
     // Ctrl+drag forces a rectangular selection
     if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
-        int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
-        if (win->dm->ValidPageNo(pageNo)) {
-            PointD pt = win->dm->CvtFromScreen(PointI(x, y), pageNo);
-            win->dm->textSelection->StartAt(pageNo, pt.x, pt.y);
+        DisplayModel *dm = win->AsFixed()->model();
+        int pageNo = dm->GetPageNoByPoint(PointI(x, y));
+        if (dm->ValidPageNo(pageNo)) {
+            PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
+            dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
         }
     }
@@ -381,7 +400,7 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
         DeleteOldSelectionInfo(win, true);
     else if (win->mouseAction == MA_SELECTING) {
-        win->selectionOnPage = SelectionOnPage::FromRectangle(win->dm, win->selectionRect);
+        win->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed()->model(), win->selectionRect);
         win->showSelection = win->selectionOnPage != NULL;
     }
     win->RepaintAsync();

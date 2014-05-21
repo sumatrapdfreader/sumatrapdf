@@ -227,8 +227,8 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
     if (win->IsDocLoaded() && i.destName && isFirstWin) {
         win->linkHandler->GotoNamedDest(i.destName);
     } else if (win->IsDocLoaded() && i.pageNumber > 0 && isFirstWin) {
-        if (win->dm->ValidPageNo(i.pageNumber))
-            win->dm->GoToPage(i.pageNumber, 0);
+        if (win->ctrl->ValidPageNo(i.pageNumber))
+            win->ctrl->GoToPage(i.pageNumber, false);
     }
     if (i.hwndPluginParent)
         MakePluginWindow(*win, i.hwndPluginParent);
@@ -241,11 +241,12 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
         SwitchToDisplayMode(win, i.startView);
     if (i.startZoom != INVALID_ZOOM)
         ZoomToSelection(win, i.startZoom);
-    if (i.startScroll.x != -1 || i.startScroll.y != -1) {
-        ScrollState ss = win->dm->GetScrollState();
+    if ((i.startScroll.x != -1 || i.startScroll.y != -1) && win->AsFixed()) {
+        DisplayModel *dm = win->AsFixed()->model();
+        ScrollState ss = dm->GetScrollState();
         ss.x = i.startScroll.x;
         ss.y = i.startScroll.y;
-        win->dm->SetScrollState(ss);
+        dm->SetScrollState(ss);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
         UINT page;

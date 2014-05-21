@@ -24,6 +24,7 @@ public:
     virtual ~ChmNavigationCallback() { }
 };
 
+// TODO: stop inheriting from BaseEngine
 class ChmEngine : public BaseEngine {
 public:
     virtual bool SetParentHwnd(HWND hwnd) = 0;

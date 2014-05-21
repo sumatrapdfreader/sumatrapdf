@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
+#include "Controller.h"
 #include "FileUtil.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
@@ -132,7 +133,7 @@ bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
     // TODO: Foxit allows passing password and zoom
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(L"\"%s\" %s -n %d", win->dm->FilePath(), args, win->dm->CurrentPageNo()));
+        params.Set(str::Format(L"\"%s\" %s -n %d", win->ctrl->FilePath(), args, win->ctrl->CurrentPageNo()));
     else
         params.Set(str::Format(L"\"%s\" %s", win->loadedFilePath, args));
     return LaunchFile(exePath, params);
@@ -163,7 +164,7 @@ bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
     // /A params: page=<page number>
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, win->dm->CurrentPageNo(), win->dm->FilePath()));
+        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, win->ctrl->CurrentPageNo(), win->ctrl->FilePath()));
     else
         params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
@@ -198,7 +199,7 @@ bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->IsDocLoaded() && HIWORD(GetFileVersion(exePath)) >= 6)
-        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", win->dm->CurrentPageNo(), args, win->dm->FilePath()));
+        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", win->ctrl->CurrentPageNo(), args, win->ctrl->FilePath()));
     else
         params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
 
@@ -211,7 +212,7 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     if (!win || win->IsAboutWindow() || !CanViewExternally(win))
         return false;
     // allow viewing with XPS-Viewer, if either an XPS document is loaded...
-    if (win->IsDocLoaded() && win->dm->engineType != Engine_XPS)
+    if (win->IsFixedDocLoaded() ? win->AsFixed()->engineType != Engine_XPS : win->IsDocLoaded())
         return false;
     // or a file ending in .xps or .oxps has failed to be loaded
     if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps") && !str::EndsWithI(win->loadedFilePath, L".oxps"))
@@ -234,7 +235,7 @@ bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->ctrl->FilePath()));
     else
         params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
@@ -246,7 +247,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     if (!win || win->IsAboutWindow() || !CanViewExternally(win))
         return false;
     // allow viewing with HTML Help, if either an CHM document is loaded...
-    if (win->IsDocLoaded() && win->dm->engineType != Engine_Chm && win->dm->engineType != Engine_Chm2)
+    if (win->IsFixedDocLoaded() ? win->AsFixed()->engineType != Engine_Chm2 : win->IsDocLoaded() && !win->IsChm())
         return false;
     // or a file ending in .chm has failed to be loaded
     if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))
@@ -269,7 +270,7 @@ bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->ctrl->FilePath()));
     else
         params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);

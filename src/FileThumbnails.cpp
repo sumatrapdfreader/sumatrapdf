@@ -139,6 +139,18 @@ bool HasThumbnail(DisplayState& ds)
     return ds.thumbnail != NULL;
 }
 
+void SetThumbnail(DisplayState *ds, RenderedBitmap *bmp)
+{
+    CrashIf(bmp && bmp->Size().IsEmpty());
+    if (!ds || !bmp || bmp->Size().IsEmpty()) {
+        delete bmp;
+        return;
+    }
+    delete ds->thumbnail;
+    ds->thumbnail = bmp;
+    SaveThumbnail(*ds);
+}
+
 void SaveThumbnail(DisplayState& ds)
 {
     if (!ds.thumbnail)

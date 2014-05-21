@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SumatraProperties.h"
 
+#include "Controller.h"
 #include "EbookWindow.h"
 #include "FileUtil.h"
 #include "resource.h"
@@ -353,7 +354,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     return true;
 }
 
-static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bool extended)
+static void GetProps(Doc doc, PropertiesLayout *layoutData, FixedPageUIController *ctrl, bool extended)
 {
     CrashIf(!doc.IsEngine() && !doc.IsEbook());
     DocType docType = doc.GetDocType();
@@ -416,8 +417,8 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         layoutData->AddProperty(_TR("Number of Pages:"), str);
     }
 
-    if (dm && dm->engineType != Engine_Chm) {
-        str = FormatPageSize(dm->engine, dm->CurrentPageNo(), dm->Rotation());
+    if (ctrl) {
+        str = FormatPageSize(ctrl->engine(), ctrl->CurrentPageNo(), ctrl->model()->Rotation());
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
@@ -442,7 +443,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 #endif
 }
 
-static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended=false)
+static void ShowProperties(HWND parent, Doc doc, Controller *ctrl, bool extended=false)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByParent(parent);
     if (layoutData) {
@@ -454,7 +455,7 @@ static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended
         return;
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetProps(doc, layoutData, dm, extended);
+    GetProps(doc, layoutData, ctrl ? ctrl->AsFixed() : NULL, extended);
 
     if (!CreatePropertiesWindow(parent, layoutData))
         delete layoutData;
@@ -463,7 +464,7 @@ static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended
 void OnMenuProperties(const SumatraWindow& win)
 {
     if (win.AsWindowInfo())
-        ShowProperties(win.AsWindowInfo()->hwndFrame, GetDocForWindow(win), win.AsWindowInfo()->dm);
+        ShowProperties(win.AsWindowInfo()->hwndFrame, GetDocForWindow(win), win.AsWindowInfo()->ctrl->AsFixed());
     else if (win.AsEbookWindow())
         ShowProperties(win.AsEbookWindow()->hwndFrame, GetDocForWindow(win), NULL);
 }
@@ -550,7 +551,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
             WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
             if (win && !pl->HasProperty(_TR("Fonts:"))) {
                 DestroyWindow(hwnd);
-                ShowProperties(win->hwndFrame, GetDocForWindow(SumatraWindow::Make(win)), win->dm, true);
+                ShowProperties(win->hwndFrame, GetDocForWindow(SumatraWindow::Make(win)), win->ctrl, true);
             }
         }
 #endif

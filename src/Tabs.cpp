@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include "Tabs.h"
 
+#include "ChmEngine.h"
+#include "Controller.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
@@ -543,14 +545,14 @@ void SaveTabData(WindowInfo *win, TabData **tdata)
     (*tdata)->showToc = win->tocVisible;
 
     if (win->IsChm())
-        static_cast<ChmEngine *>(win->dm->engine)->RemoveParentHwnd();
+        win->AsChm()->engine()->RemoveParentHwnd();
 
-    (*tdata)->dm = win->dm;
-    win->dm = NULL;         // prevent this data deletion
+    (*tdata)->ctrl = win->ctrl;
+    win->ctrl = NULL;       // prevent this data deletion
     if (!(*tdata)->title)
         (*tdata)->title = win::GetText(win->hwndFrame);
     (*tdata)->userAnnots = win->userAnnots;
-    win->userAnnots = NULL;    // prevent this data deletion
+    win->userAnnots = NULL; // prevent this data deletion
     (*tdata)->userAnnotsModified = win->userAnnotsModified;
 }
 
@@ -613,7 +615,7 @@ void DeleteTabData(TabData *tdata, bool deleteModel)
 {
     if (tdata) {
         if (deleteModel) {
-            delete tdata->dm;
+            delete tdata->ctrl;
             delete tdata->userAnnots;
         }
         free(tdata->title);
@@ -628,12 +630,9 @@ void TabsOnLoadedDoc(WindowInfo *win)
 {
     if (!win) return;
 
-    //ScopedMem<WCHAR> filename(str::Dup(path::GetBaseName(win->dm->FilePath())));
-    ScopedMem<WCHAR> filename(str::Dup(path::GetBaseName(win->loadedFilePath)));
-
     TCITEM tcs;
     tcs.mask = TCIF_TEXT | TCIF_PARAM;
-    tcs.pszText = filename;
+    tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
     tcs.lParam = NULL;
     int count = TabCtrl_GetItemCount(win->hwndTabBar);
 
@@ -657,7 +656,7 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
             for (int i = 0; i < count; i++) {
                 tdata = GetTabData(win->hwndTabBar, i);
                 if (tdata)
-                    DeleteTabData(tdata, win->dm != tdata->dm);
+                    DeleteTabData(tdata, win->ctrl != tdata->ctrl);
             }
             TabCtrl_DeleteAllItems(win->hwndTabBar);
             return;

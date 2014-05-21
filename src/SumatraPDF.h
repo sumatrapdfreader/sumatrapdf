@@ -69,6 +69,7 @@ enum MenuToolbarFlags {
 class WindowInfo;
 class EbookWindow;
 class Favorites;
+class DisplayModel;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
@@ -122,6 +123,7 @@ void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
 void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
+void  RenderThumbnail(DisplayModel *dm, float zoom, RectD pageRect);
 void  EnterFullScreen(WindowInfo& win, bool presentation=false);
 void  ExitFullScreen(WindowInfo& win);
 

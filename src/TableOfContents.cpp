@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "Controller.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
@@ -15,6 +16,9 @@ using namespace Gdiplus;
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+
+/* Define if you want page numbers to be displayed in the ToC sidebar */
+// #define DISPLAY_TOC_PAGE_NUMBERS
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC     (WM_APP + 1)
@@ -99,8 +103,8 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     WindowInfo *win = FindWindowInfoByHwnd(hTV);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
     ScopedMem<WCHAR> label;
-    if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
-        label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
+    if (tocItem->pageNo && win && win->IsDocLoaded()) {
+        label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
         label.Set(str::Join(L"  ", label));
     }
     if (label && str::EndsWith(item.pszText, label)) {
@@ -139,24 +143,24 @@ class GoToTocLinkTask : public UITask
 {
     DocTocItem *tocItem;
     WindowInfo *win;
-    DisplayModel *dm;
+    Controller *ctrl;
 
 public:
-    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, DisplayModel *dm) :
-        win(win), tocItem(tocItem), dm(dm) { }
+    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, Controller *ctrl) :
+        win(win), tocItem(tocItem), ctrl(ctrl) { }
 
     virtual void Execute() {
         // tocItem is invalid if the DisplayModel has been replaced
-        if (!WindowInfoStillValid(win) || !win->tocLoaded || win->dm != dm)
+        if (!WindowInfoStillValid(win) || !win->tocLoaded || win->ctrl != ctrl)
             return;
 
         // make sure that the tree item that the user selected
         // isn't unselected in UpdateTocSelection right again
         win->tocKeepSelection = true;
         if (tocItem->GetLink())
-            win->linkHandler->GotoLink(tocItem->GetLink());
+            win->ctrl->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
-            win->dm->GoToPage(tocItem->pageNo, 0, true);
+            win->ctrl->GoToPage(tocItem->pageNo);
         win->tocKeepSelection = false;
     }
 };
@@ -175,7 +179,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
         return;
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        uitask::Post(new GoToTocLinkTask(win, tocItem, win->dm));
+        uitask::Post(new GoToTocLinkTask(win, tocItem, win->ctrl));
     }
 }
 
@@ -223,8 +227,8 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (entry->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
-        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
+    if (entry->pageNo && win && win->IsDocLoaded()) {
+        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(entry->pageNo));
         ScopedMem<WCHAR> text(str::Format(L"%s  %s", entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
@@ -341,7 +345,7 @@ void LoadTocTree(WindowInfo *win)
         return;
     win->tocLoaded = true;
 
-    win->tocRoot = win->dm->GetTocTree();
+    win->tocRoot = win->ctrl->GetTocTree();
     if (!win->tocRoot)
         return;
 

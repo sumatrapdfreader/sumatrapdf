@@ -15,6 +15,8 @@ void    CleanUpThumbnailCache(FileHistory& fileHistory);
 
 bool    LoadThumbnail(DisplayState& ds);
 bool    HasThumbnail(DisplayState& ds);
+// takes ownership of bmp
+void    SetThumbnail(DisplayState *ds, RenderedBitmap *bmp);
 void    SaveThumbnail(DisplayState& ds);
 void    RemoveThumbnail(DisplayState& ds);
 

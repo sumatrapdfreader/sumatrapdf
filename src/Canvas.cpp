@@ -8,6 +8,9 @@
 
 void WindowInfo::UpdateScrollbars(SizeI canvas)
 {
+    CrashIf(!IsFixedDocLoaded());
+    DisplayModel *dm = AsFixed()->model();
+
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -51,7 +54,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -60,7 +63,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     int iVertPos = si.nPos;
     int lineHeight = 16;
-    if (!IsContinuous(win.dm->GetDisplayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
+    if (!IsContinuous(win.ctrl->GetDisplayMode()) && ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam)) {
@@ -83,12 +86,12 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (si.nPos != iVertPos)
-        win.dm->ScrollYTo(si.nPos);
+        win.AsFixed()->model()->ScrollYTo(si.nPos);
 }
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
 {
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -114,7 +117,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (si.nPos != iVertPos)
-        win.dm->ScrollXTo(si.nPos);
+        win.AsFixed()->model()->ScrollXTo(si.nPos);
 }
 
 static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
@@ -144,7 +147,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
 
 static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
 
     if (win.presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
@@ -206,12 +209,13 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     }
 
     CrashIfDebugOnly(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
-    CrashIf(!win.dm);
+    CrashIf(!win.IsFixedDocLoaded());
 
     SetFocus(win.hwndFrame);
 
     AssertCrash(!win.linkOnLastButtonDown);
-    PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
+    DisplayModel *dm = win.AsFixed()->model();
+    PageElement *pageEl = dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->GetType() == Element_Link)
         win.linkOnLastButtonDown = pageEl;
     else
@@ -225,7 +229,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     // - pressing Ctrl forces a rectangular selection
     // - pressing Ctrl+Shift forces text selection
     // - not having CopySelection permission forces dragging
-    if (!HasPermission(Perm_CopySelection) || ((key & MK_SHIFT) || !win.dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
+    if (!HasPermission(Perm_CopySelection) || ((key & MK_SHIFT) || !dm->IsOverText(PointI(x, y))) && !(key & MK_CONTROL))
         OnDraggingStart(win, x, y);
     else
         OnSelectionStart(&win, x, y, key);
@@ -233,7 +237,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
     if (MA_IDLE == win.mouseAction || MA_DRAGGING_RIGHT == win.mouseAction)
         return;
     AssertCrash(MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction || MA_DRAGGING == win.mouseAction);
@@ -246,7 +250,8 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     else
         OnSelectionStop(&win, x, y, !didDragMouse);
 
-    PointD ptPage = win.dm->CvtFromScreen(PointI(x, y));
+    DisplayModel *dm = win.AsFixed()->model();
+    PointD ptPage = dm->CvtFromScreen(PointI(x, y));
     // TODO: win.linkHandler->GotoLink might spin the event loop
     PageElement *link = win.linkOnLastButtonDown;
     win.linkOnLastButtonDown = NULL;
@@ -260,12 +265,12 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* follow an active link */
     else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination *dest = link->AsLink();
-        win.linkHandler->GotoLink(dest);
+        win.ctrl->GotoLink(dest);
         SetCursor(gCursorArrow);
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(&win, true);
-            win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, win.dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
+            win.selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
             win.showSelection = win.selectionOnPage != NULL;
             win.RepaintAsync();
         }
@@ -281,9 +286,9 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* in presentation mode, change pages on left/right-clicks */
     else if (PM_ENABLED == win.presentation) {
         if ((key & MK_SHIFT))
-            win.dm->GoToPrevPage(0);
+            win.ctrl->GoToPrevPage();
         else
-            win.dm->GoToNextPage(0);
+            win.ctrl->GoToNextPage();
     }
 
     delete link;
@@ -305,28 +310,29 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     if (dontSelect)
         return;
 
-    if (win.dm->IsOverText(PointI(x, y))) {
-        int pageNo = win.dm->GetPageNoByPoint(PointI(x, y));
-        if (win.dm->ValidPageNo(pageNo)) {
-            PointD pt = win.dm->CvtFromScreen(PointI(x, y), pageNo);
-            win.dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
+    DisplayModel *dm = win.AsFixed()->model();
+    if (dm->IsOverText(PointI(x, y))) {
+        int pageNo = dm->GetPageNoByPoint(PointI(x, y));
+        if (win.ctrl->ValidPageNo(pageNo)) {
+            PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
+            dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(&win, false);
             win.RepaintAsync();
         }
         return;
     }
 
-    PageElement *pageEl = win.dm->GetElementAtPos(PointI(x, y));
+    PageElement *pageEl = dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->GetType() == Element_Link) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
     }
     else if (pageEl && pageEl->GetType() == Element_Image) {
         // select an image that could be copied to the clipboard
-        RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+        RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
 
         DeleteOldSelectionInfo(&win, true);
-        win.selectionOnPage = SelectionOnPage::FromRectangle(win.dm, rc);
+        win.selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
         win.showSelection = win.selectionOnPage != NULL;
         win.RepaintAsync();
     }
@@ -360,7 +366,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         win.mouseAction = MA_IDLE;
     else if (win.mouseAction != MA_IDLE)
         return;
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
 
     SetFocus(win.hwndFrame);
 
@@ -372,7 +378,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    AssertCrash(win.dm);
+    AssertCrash(win.IsFixedDocLoaded());
     if (MA_DRAGGING_RIGHT != win.mouseAction)
         return;
 
@@ -389,9 +395,9 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         if ((key & MK_CONTROL))
             OnContextMenu(&win, x, y);
         else if ((key & MK_SHIFT))
-            win.dm->GoToNextPage(0);
+            win.ctrl->GoToNextPage();
         else
-            win.dm->GoToPrevPage(0);
+            win.ctrl->GoToPrevPage();
     }
     /* return from white/black screens in presentation mode */
     else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
@@ -517,9 +523,9 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
 
 static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 {
-    DisplayModel* dm = win.dm;
-    AssertCrash(dm);
-    if (!dm) return;
+    AssertCrash(win.IsFixedDocLoaded());
+    if (!win.IsFixedDocLoaded()) return;
+    DisplayModel* dm = win.AsFixed()->model();
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
@@ -548,14 +554,14 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
             colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(2);
         }
-        SizeI size = win.dm->GetCanvasSize();
-        float percTop = 1.0f * win.dm->viewPort.y / size.dy;
-        float percBot = 1.0f * win.dm->viewPort.BR().y / size.dy;
-        if (!IsContinuous(win.dm->GetDisplayMode())) {
-            percTop += win.dm->CurrentPageNo() - 1; percTop /= win.dm->PageCount();
-            percBot += win.dm->CurrentPageNo() - 1; percBot /= win.dm->PageCount();
+        SizeI size = dm->GetCanvasSize();
+        float percTop = 1.0f * dm->viewPort.y / size.dy;
+        float percBot = 1.0f * dm->viewPort.BR().y / size.dy;
+        if (!IsContinuous(dm->GetDisplayMode())) {
+            percTop += dm->CurrentPageNo() - 1; percTop /= dm->PageCount();
+            percBot += dm->CurrentPageNo() - 1; percBot /= dm->PageCount();
         }
-        SizeI vp = win.dm->viewPort.Size();
+        SizeI vp = dm->viewPort.Size();
         TRIVERTEX tv[4] = { { 0, 0 }, { vp.dx, vp.dy / 2 }, { 0, vp.dy / 2 }, { vp.dx, vp.dy } };
         GRADIENT_RECT gr[2] = { { 0, 1 }, { 2, 3 } };
         if (percTop < 0.5f)
@@ -687,12 +693,13 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
     case MA_SELECTING:
         break;
     case MA_IDLE:
-        if (GetCursor() && GetCursorPosInHwnd(hwnd, pt)) {
+        if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.IsFixedDocLoaded()) {
+            DisplayModel *dm = win.AsFixed()->model();
             PointI pti(pt.x, pt.y);
-            PageElement *pageEl = win.dm->GetElementAtPos(pti);
+            PageElement *pageEl = dm->GetElementAtPos(pti);
             if (pageEl) {
                 ScopedMem<WCHAR> text(pageEl->GetValue());
-                RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+                RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                 win.CreateInfotip(text, rc, true);
 
                 bool isLink = pageEl->GetType() == Element_Link;
@@ -705,7 +712,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
             }
             else
                 win.DeleteInfotip();
-            if (win.dm->IsOverText(pti))
+            if (dm->IsOverText(pti))
                 SetCursor(gCursorIBeam);
             else
                 SetCursor(gCursorArrow);
@@ -737,9 +744,9 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         POINT pt;
         GetCursorPosInHwnd(win.hwndCanvas, pt);
 
-        float zoom = win.dm->NextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
+        float zoom = win.ctrl->GetNextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
         PointI tmpPoint(pt.x, pt.y);
-        win.dm->ZoomTo(zoom, &tmpPoint);
+        win.ctrl->SetZoomVirtual(zoom, &tmpPoint);
         UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down
@@ -750,12 +757,12 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     }
 
     // make sure to scroll whole pages in non-continuous Fit Content mode
-    if (!IsContinuous(win.dm->GetDisplayMode()) &&
-        ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
+    if (!IsContinuous(win.ctrl->GetDisplayMode()) &&
+        ZOOM_FIT_CONTENT == win.ctrl->GetZoomVirtual()) {
         if (delta > 0)
-            win.dm->GoToPrevPage(0);
+            win.ctrl->GoToPrevPage();
         else
-            win.dm->GoToNextPage(0);
+            win.ctrl->GoToNextPage();
         return 0;
     }
 
@@ -766,16 +773,16 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     if (horizontal)
         gSuppressAltKey = true;
 
-    if (gDeltaPerLine < 0) {
+    if (gDeltaPerLine < 0 && win.IsFixedDocLoaded()) {
         // scroll by (fraction of a) page
         SCROLLINFO si = { 0 };
         si.cbSize = sizeof(si);
         si.fMask  = SIF_PAGE;
         GetScrollInfo(win.hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
         if (horizontal)
-            win.dm->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
+            win.AsFixed()->model()->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
         else
-            win.dm->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+            win.AsFixed()->model()->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
         return 0;
     }
 
@@ -797,12 +804,12 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         win.wheelAccumDelta += gDeltaPerLine;
     }
 
-    if (!horizontal && !IsContinuous(win.dm->GetDisplayMode()) &&
+    if (!horizontal && !IsContinuous(win.ctrl->GetDisplayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
         if (delta > 0)
-            win.dm->GoToPrevPage(-1);
+            win.ctrl->GoToPrevPage(true);
         else
-            win.dm->GoToNextPage(0);
+            win.ctrl->GoToNextPage();
     }
 
     return 0;
@@ -876,12 +883,13 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
                     // Switch pages once we hit inertia in a horizontal direction
                     if (deltaX < 0)
-                        win.dm->GoToPrevPage(0);
+                        win.ctrl->GoToPrevPage();
                     else if (deltaX > 0)
-                        win.dm->GoToNextPage(0);
+                        win.ctrl->GoToNextPage();
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    win.dm->ScrollXTo(win.touchState.panScrollOrigX);
+                    if (win.IsFixedDocLoaded())
+                        win.AsFixed()->model()->ScrollXTo(win.touchState.panScrollOrigX);
                     win.touchState.panStarted = false;
                 }
                 else {
@@ -893,7 +901,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
-            if (gi.dwFlags == GF_END) {
+            if (gi.dwFlags == GF_END && win.IsFixedDocLoaded()) {
                 // This is in radians
                 double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
                 // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
@@ -902,11 +910,11 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 // Playing with the app, I found that I often didn't go quit a full 90 or 180
                 // degrees. Allowing rotate without a full finger rotate seemed more natural.
                 if (degrees < -120 || degrees > 120)
-                    win.dm->RotateBy(180);
+                    win.AsFixed()->model()->RotateBy(180);
                 else if (degrees < -45)
-                    win.dm->RotateBy(-90);
+                    win.AsFixed()->model()->RotateBy(-90);
                 else if (degrees > 45)
-                    win.dm->RotateBy(90);
+                    win.AsFixed()->model()->RotateBy(90);
             }
             break;
 

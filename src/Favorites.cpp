@@ -5,6 +5,7 @@
 #include "Favorites.h"
 
 #include "AppPrefs.h"
+#include "Controller.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "FileHistory.h"
@@ -303,8 +304,8 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
-        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
-        bool isBookmarked = gFavorites.IsPageInFavorites(win->dm->FilePath(), win->currPageNo);
+        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(win->currPageNo));
+        bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
             ScopedMem<WCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
@@ -314,7 +315,7 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
             ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
-        AppendFavMenus(menu, win->dm->FilePath());
+        AppendFavMenus(menu, win->ctrl->FilePath());
     }
     win::menu::SetEnabled(menu, IDM_FAV_TOGGLE, HasFavorites());
 }
@@ -343,7 +344,7 @@ public:
         SetForegroundWindow(win->hwndFrame);
         if (win->IsDocLoaded()) {
             if (-1 != pageNo)
-                win->dm->GoToPage(pageNo, 0, true);
+                win->ctrl->GoToPage(pageNo);
             // we might have been invoked by clicking on a tree view
             // switch focus so that keyboard navigation works, which enables
             // a fluid experience
@@ -535,15 +536,15 @@ void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
     ScopedMem<WCHAR> name;
-    if (win->dm->HasTocTree()) {
+    if (win->ctrl->HasTocTree()) {
         // use the current ToC heading as default name
-        DocTocItem *root = win->dm->GetTocTree();
+        DocTocItem *root = win->ctrl->GetTocTree();
         DocTocItem *item = TocItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));
         delete root;
     }
-    ScopedMem<WCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
+    ScopedMem<WCHAR> pageLabel(win->ctrl->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd)
