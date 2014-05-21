@@ -210,9 +210,6 @@ public:
 
     TouchState      touchState;
 
-    Vec<PageAnnotation> *userAnnots;
-    bool            userAnnotsModified;
-
     SumatraUIAutomationProvider * uia_provider;
 
     void  UpdateCanvasSize();

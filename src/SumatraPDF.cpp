@@ -920,10 +920,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
 
     if (win->ctrl != prevCtrl && win->IsFixedDocLoaded()) {
-        delete win->userAnnots;
-        win->userAnnots = LoadFileModifications(args.fileName);
-        win->userAnnotsModified = false;
-        win->AsFixed()->engine()->UpdateUserAnnotations(win->userAnnots);
+        win->AsFixed()->userAnnots = LoadFileModifications(args.fileName);
+        win->AsFixed()->userAnnotsModified = false;
+        win->AsFixed()->engine()->UpdateUserAnnotations(win->AsFixed()->userAnnots);
     }
 
     if (state) {
@@ -1537,10 +1536,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->uia_provider && win->IsFixedDocLoaded())
         win->uia_provider->OnDocumentLoad(win->AsFixed()->model());
 
-    delete win->userAnnots;
-    win->userAnnots = tdata->userAnnots;
-    win->userAnnotsModified = tdata->userAnnotsModified;
-
     if (win->IsFixedDocLoaded() && win->AsFixed()->model()->viewPort != win->canvasRc)
         win->ctrl->SetViewPortSize(win->GetViewPortSize());
 
@@ -2081,8 +2076,6 @@ void CloseDocumentInWindow(WindowInfo *win)
     str::ReplacePtr(&win->loadedFilePath, NULL);
     delete win->pdfsync;
     win->pdfsync = NULL;
-    delete win->userAnnots;
-    win->userAnnots = NULL;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
     win->mouseAction = MA_IDLE;
@@ -2148,7 +2141,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             return;
     }
 
-    if (win->userAnnotsModified) {
+    if (win->IsFixedDocLoaded() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
         // TODO: warn about unsaved changes
     }
 
@@ -2358,13 +2351,13 @@ static void OnMenuSaveAs(WindowInfo& win)
             LocalFree(msgBuf);
         }
     }
-    if (ok && win.userAnnots && win.userAnnotsModified) {
+    if (ok && win.IsFixedDocLoaded() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified) {
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument ||
             !engine || !engine->SupportsAnnotation(true)) {
-            ok = SaveFileModifictions(realDstFileName, win.userAnnots);
+            ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName))
-            win.userAnnotsModified = false;
+            win.AsFixed()->userAnnotsModified = false;
     }
     if (!ok)
         MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
@@ -3357,15 +3350,15 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     case 'h': // convert selection to highlight annotation
         if (win.IsFixedDocLoaded() && win.AsFixed()->engine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
-            if (!win.userAnnots)
-                win.userAnnots = new Vec<PageAnnotation>();
+            if (!win.AsFixed()->userAnnots)
+                win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                 SelectionOnPage& sel = win.selectionOnPage->At(i);
-                win.userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
+                win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
                 gRenderCache.Invalidate(win.AsFixed()->model(), sel.pageNo, sel.rect);
             }
-            win.userAnnotsModified = true;
-            win.AsFixed()->engine()->UpdateUserAnnotations(win.userAnnots);
+            win.AsFixed()->userAnnotsModified = true;
+            win.AsFixed()->engine()->UpdateUserAnnotations(win.AsFixed()->userAnnots);
             ClearSearchResult(&win); // causes invalidated tiles to be rerendered
         }
 #endif

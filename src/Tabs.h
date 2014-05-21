@@ -32,11 +32,8 @@ struct TabData
     bool                  showToc;
     Vec<int>              tocState;
     WCHAR *               title;
-    Vec<PageAnnotation> * userAnnots;
-    bool                  userAnnotsModified;
 
-    TabData(): ctrl(NULL), showToc(false), title(NULL),
-        userAnnots(NULL), userAnnotsModified(false) { }
+    TabData(): ctrl(NULL), showToc(false), title(NULL) { }
 };
 
 void SaveTabData(WindowInfo *win, TabData **tdata);

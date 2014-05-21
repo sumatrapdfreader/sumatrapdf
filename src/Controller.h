@@ -92,9 +92,16 @@ class LinkHandler;
 
 class FixedPageUIController : public Controller {
 public:
+    FixedPageUIController() : userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None) { }
+    virtual ~FixedPageUIController() { delete userAnnots; }
+
     virtual DisplayModel *model() = 0;
     virtual BaseEngine *engine() = 0;
+
+    // controller-specific data (easier to save here than on WindowInfo)
     EngineType engineType;
+    Vec<PageAnnotation> *userAnnots;
+    bool userAnnotsModified;
 
     static FixedPageUIController *Create(DisplayModel *dm, EngineType type, LinkHandler *linkHandler);
 };

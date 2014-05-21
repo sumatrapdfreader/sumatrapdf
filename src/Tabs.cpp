@@ -551,9 +551,6 @@ void SaveTabData(WindowInfo *win, TabData **tdata)
     win->ctrl = NULL;       // prevent this data deletion
     if (!(*tdata)->title)
         (*tdata)->title = win::GetText(win->hwndFrame);
-    (*tdata)->userAnnots = win->userAnnots;
-    win->userAnnots = NULL; // prevent this data deletion
-    (*tdata)->userAnnotsModified = win->userAnnotsModified;
 }
 
 
@@ -616,7 +613,6 @@ void DeleteTabData(TabData *tdata, bool deleteModel)
     if (tdata) {
         if (deleteModel) {
             delete tdata->ctrl;
-            delete tdata->userAnnots;
         }
         free(tdata->title);
         delete tdata;
