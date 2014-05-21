@@ -778,7 +778,7 @@ void StressTest::OnTimer(int timerIdGot)
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
     bool didRender = renderCache->Exists(dm, currPage, dm->Rotation());
-    if (!didRender && DoCachePageRendering(win, currPage)) {
+    if (!didRender && DoCachePageRendering(dm, currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage())

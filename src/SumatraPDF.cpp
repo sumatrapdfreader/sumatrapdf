@@ -1626,41 +1626,37 @@ void WindowInfo::PageNoChanged(int pageNo)
     wnd->UpdateMessage(pageInfo);
 }
 
-bool DoCachePageRendering(WindowInfo *win, int pageNo)
+bool DoCachePageRendering(DisplayModel *dm, int pageNo)
 {
-    AssertCrash(win->IsFixedDocLoaded());
-    if (!win->IsFixedDocLoaded() || !win->AsFixed()->engine()->IsImageCollection())
+    CrashIf(!dm);
+    if (!dm || !dm->engine->IsImageCollection())
         return true;
 
     // cache large images (mainly photos), as shrinking them
     // for every UI update (WM_PAINT) can cause notable lags
     // TODO: stretching small images also causes minor lags
-    RectD page = win->AsFixed()->engine()->PageMediabox(pageNo);
+    RectD page = dm->engine->PageMediabox(pageNo);
     return page.dx * page.dy > 1024 * 1024;
 }
 
 /* Send the request to render a given page to a rendering thread */
 void WindowInfo::RequestRendering(int pageNo)
 {
-    AssertCrash(IsFixedDocLoaded());
+    CrashIf(!IsFixedDocLoaded());
     if (!IsFixedDocLoaded()) return;
+
+    DisplayModel *dm = AsFixed()->model();
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
-    if (!DoCachePageRendering(this, pageNo))
-        return;
-
-    gRenderCache.RequestRendering(AsFixed()->model(), pageNo);
+    if (DoCachePageRendering(dm, pageNo))
+        gRenderCache.RequestRendering(dm, pageNo);
 }
 
 void WindowInfo::CleanUp(DisplayModel *dm)
 {
-    // TODO: this might refer to a background tab!
-    AssertCrash(IsFixedDocLoaded());
-    if (!IsFixedDocLoaded()) return;
-
-    gRenderCache.CancelRendering(AsFixed()->model());
-    gRenderCache.FreeForDisplayModel(AsFixed()->model());
+    gRenderCache.CancelRendering(dm);
+    gRenderCache.FreeForDisplayModel(dm);
 }
 
 void AssociateExeWithPdfExtension()

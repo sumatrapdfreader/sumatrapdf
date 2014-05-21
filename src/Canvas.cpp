@@ -602,7 +602,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (!DoCachePageRendering(&win, pageNo)) {
+        if (!DoCachePageRendering(dm, pageNo)) {
             if (dm->engine)
                 dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         }

@@ -109,7 +109,7 @@ bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfiel
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
-bool  DoCachePageRendering(WindowInfo *win, int pageNo);
+bool  DoCachePageRendering(DisplayModel *dm, int pageNo);
 void  OnMenuOptions(HWND hwnd);
 void  OnMenuAdvancedOptions();
 void  OnMenuExit();
