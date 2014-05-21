@@ -60,7 +60,7 @@ SumatraUIAutomationTextRange::~SumatraUIAutomationTextRange()
 
 bool SumatraUIAutomationTextRange::operator==(const SumatraUIAutomationTextRange&b) const
 {
-    return  document == b.document && 
+    return  document == b.document &&
             startPage == b.startPage && endPage == b.endPage &&
             startGlyph == b.startGlyph && endGlyph == b.endGlyph;
 }
@@ -131,7 +131,7 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     // based on TextSelection::SelectWordAt
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
-    
+
     if (dontReturnInitial) {
         for (; idx > 0; idx--)
         {
@@ -173,7 +173,7 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 {
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
-    
+
     if (dontReturnInitial)
     {
         for (; idx > 0; idx--)
@@ -183,7 +183,7 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
         }
     }
 
-    for (; idx > 0; idx--) 
+    for (; idx > 0; idx--)
     {
         if (pageText[idx - 1] == L'\n')
             break;
@@ -195,7 +195,7 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
 {
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
-    
+
     if (dontReturnInitial) {
         for (; idx < textLen; idx++)
         {
@@ -342,7 +342,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
 
         // start from the beginning of start page
         startGlyph = 0;
-        
+
         // to the end of the end page
         endGlyph = GetPageGlyphCount(endPage);
 
@@ -405,7 +405,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SA
 
     if (IsNullRange()) {
         SAFEARRAY* sarray = SafeArrayCreateVector(VT_R8,0,0);
-        if (sarray)
+        if (!sarray)
             return E_OUTOFMEMORY;
 
         *boundingRects = sarray;
@@ -443,7 +443,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     TextSelection selection(document->GetDM()->engine, document->GetDM()->textCache);
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
-    
+
     ScopedMem<WCHAR> selected_text(selection.ExtractText(L"\r\n"));
     size_t selected_text_length = str::Len(selected_text);
 
@@ -451,7 +451,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     if (maxLength > -2) {
         if (maxLength != -1 && selected_text_length > (size_t)maxLength)
             selected_text[maxLength] = '\0'; // truncate
-        
+
         *text = SysAllocString(selected_text);
         if (*text)
             return S_OK;
@@ -550,7 +550,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
         // return false when not appliable
         bool NextPage() const {
             int max_glyph = target->GetPageGlyphCount(*target_page);
-            
+
             if (*target_glyph == max_glyph) {
                 if (*target_page == target->GetPageCount()) {
                     // last page
@@ -772,7 +772,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alig
 {
     if (!document->IsDocumentLoaded())
         return E_FAIL;
-    
+
     // extract target location
     int target_page, target_idx;
     if (IsNullRange()) {
