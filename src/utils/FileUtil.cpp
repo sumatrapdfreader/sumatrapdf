@@ -335,7 +335,7 @@ char *ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator
     return ReadAll(buf, fileSizeOut, allocator);
 }
 
-// buf must be at least toRead in size
+// buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR *filePath, char *buf, size_t toRead)
 {
     ScopedHandle h(OpenReadOnly(filePath));

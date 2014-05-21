@@ -97,7 +97,7 @@ public:
 static RectI ExtractDSCPageSize(const WCHAR *fileName)
 {
     char header[1024] = { 0 };
-    file::ReadN(fileName, header, sizeof(header));
+    file::ReadN(fileName, header, sizeof(header) - 1);
     if (!str::StartsWith(header, "%!PS-Adobe-"))
         return RectI();
 
