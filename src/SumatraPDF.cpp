@@ -2045,8 +2045,10 @@ void OnMenuExit()
         AbortFinding(win);
         AbortPrinting(win);
 
-        if (gGlobalPrefs->showTabBar)
+        if (win->hwndTabBar) {
             TabsOnCloseWindow(win, true);
+            SendMessage(win->hwndTabBar, WM_DESTROY, 0, 0);
+        }
     }
 
     prefs::Save();
