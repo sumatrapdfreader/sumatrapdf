@@ -6,7 +6,6 @@
 
 #include "FileHistory.h"
 #include "Favorites.h"
-#include "SumatraWindow.h"
 #include "Translations.h"
 
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
@@ -104,7 +103,7 @@ void  SetCurrentLanguageAndRefreshUi(const char *langCode);
 void  ShowOrHideToolbarGlobally();
 void  ShowOrHideToolbarForWindow(WindowInfo *win);
 void  UpdateDocumentColors();
-void  UpdateCurrentFileDisplayStateForWin(const SumatraWindow& win);
+void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
@@ -116,7 +115,6 @@ void  OnMenuExit();
 void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
 void  OnDropFiles(HDROP hDrop, bool dragFinish=true);
-void  OnMenuOpen(const SumatraWindow& win);
 size_t TotalWindowsCount();
 void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
@@ -156,7 +154,6 @@ struct LoadArgs
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);
-void        LoadDocument2(const WCHAR *fileName, const SumatraWindow& win);
 WindowInfo *CreateAndShowWindowInfo();
 
 UINT MbRtlReadingMaybe();

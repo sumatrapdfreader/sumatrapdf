@@ -196,9 +196,9 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     return str::Format(L"%s x %s %s%s", strWidth, strHeight, unit, formatName);
 }
 
-static WCHAR *FormatPdfFileStructure(Doc doc)
+static WCHAR *FormatPdfFileStructure(Controller *ctrl)
 {
-    ScopedMem<WCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
+    ScopedMem<WCHAR> fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
     WStrVec parts;
@@ -222,16 +222,17 @@ static WCHAR *FormatPdfFileStructure(Doc doc)
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static WCHAR *FormatPermissions(Doc doc)
+static WCHAR *FormatPermissions(Controller *ctrl)
 {
-    if (!doc.IsEngine())
+    if (!ctrl->AsFixed())
         return NULL;
 
     WStrVec denials;
 
-    if (!doc.AsEngine()->AllowsPrinting())
+    BaseEngine *engine = ctrl->AsFixed()->engine();
+    if (!engine->AllowsPrinting())
         denials.Push(str::Dup(_TR("printing document")));
-    if (!doc.AsEngine()->AllowsCopyingText())
+    if (!engine->AllowsCopyingText())
         denials.Push(str::Dup(_TR("copying text")));
 
     return denials.Join(L", ");
@@ -354,57 +355,56 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     return true;
 }
 
-static void GetProps(Doc doc, PropertiesLayout *layoutData, FixedPageUIController *ctrl, bool extended)
+static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extended)
 {
-    CrashIf(!doc.IsEngine() && !doc.IsEbook());
-    DocType docType = doc.GetDocType();
-    EngineType engineType = (docType >= Doc_BaseEngine) ? (EngineType)(docType - Doc_BaseEngine) : Engine_None;
+    CrashIf(!ctrl);
+    EngineType engineType = ctrl->AsFixed() ? ctrl->AsFixed()->engineType : ctrl->AsChm() ? Engine_Chm : Engine_None;
 
-    WCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
+    WCHAR *str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
     layoutData->AddProperty(_TR("File:"), str);
 
-    str = doc.GetProperty(Prop_Title);
+    str = ctrl->GetProperty(Prop_Title);
     layoutData->AddProperty(_TR("Title:"), str);
 
-    str = doc.GetProperty(Prop_Subject);
+    str = ctrl->GetProperty(Prop_Subject);
     layoutData->AddProperty(_TR("Subject:"), str);
 
-    str = doc.GetProperty(Prop_Author);
+    str = ctrl->GetProperty(Prop_Author);
     layoutData->AddProperty(_TR("Author:"), str);
 
-    str = doc.GetProperty(Prop_Copyright);
+    str = ctrl->GetProperty(Prop_Copyright);
     layoutData->AddProperty(_TR("Copyright:"), str);
 
-    str = doc.GetProperty(Prop_CreationDate);
+    str = ctrl->GetProperty(Prop_CreationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
-    str = doc.GetProperty(Prop_ModificationDate);
+    str = ctrl->GetProperty(Prop_ModificationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
-    str = doc.GetProperty(Prop_CreatorApp);
+    str = ctrl->GetProperty(Prop_CreatorApp);
     layoutData->AddProperty(_TR("Application:"), str);
 
-    str = doc.GetProperty(Prop_PdfProducer);
+    str = ctrl->GetProperty(Prop_PdfProducer);
     layoutData->AddProperty(_TR("PDF Producer:"), str);
 
-    str = doc.GetProperty(Prop_PdfVersion);
+    str = ctrl->GetProperty(Prop_PdfVersion);
     layoutData->AddProperty(_TR("PDF Version:"), str);
 
-    str = FormatPdfFileStructure(doc);
+    str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    int64 fileSize = file::GetSize(doc.GetFilePath());
-    if (-1 == fileSize && doc.IsEngine()) {
+    int64 fileSize = file::GetSize(ctrl->FilePath());
+    if (-1 == fileSize && ctrl->AsFixed()) {
         size_t fileSizeT;
-        if (ScopedMem<unsigned char>(doc.AsEngine()->GetFileData(&fileSizeT)))
+        if (ScopedMem<unsigned char>(ctrl->AsFixed()->engine()->GetFileData(&fileSizeT)))
             fileSize = fileSizeT;
     }
     if (-1 != fileSize) {
@@ -412,13 +412,14 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, FixedPageUIControlle
         layoutData->AddProperty(_TR("File Size:"), str);
     }
 
-    if (doc.IsEngine()) {
-        str = str::Format(L"%d", doc.AsEngine()->PageCount());
+    // TODO: display page count per current layout for ebooks?
+    if (!ctrl->AsEbook()) {
+        str = str::Format(L"%d", ctrl->PageCount());
         layoutData->AddProperty(_TR("Number of Pages:"), str);
     }
 
-    if (ctrl) {
-        str = FormatPageSize(ctrl->engine(), ctrl->CurrentPageNo(), ctrl->model()->Rotation());
+    if (ctrl->AsFixed()) {
+        str = FormatPageSize(ctrl->AsFixed()->engine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->model()->Rotation());
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
@@ -427,13 +428,13 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, FixedPageUIControlle
         layoutData->AddProperty(_TR("Page Size:"), str);
     }
 
-    str = FormatPermissions(doc);
+    str = FormatPermissions(ctrl);
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
         // TODO: FontList extraction can take a while
-        str = doc.GetProperty(Prop_FontList);
+        str = ctrl->GetProperty(Prop_FontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(L" ", str::Dup(L" "));
@@ -443,7 +444,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, FixedPageUIControlle
 #endif
 }
 
-static void ShowProperties(HWND parent, Doc doc, Controller *ctrl, bool extended=false)
+static void ShowProperties(HWND parent, Controller *ctrl, bool extended=false)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByParent(parent);
     if (layoutData) {
@@ -451,22 +452,19 @@ static void ShowProperties(HWND parent, Doc doc, Controller *ctrl, bool extended
         return;
     }
 
-    if (!doc.IsEngine() && !doc.IsEbook())
+    if (!ctrl)
         return;
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetProps(doc, layoutData, ctrl ? ctrl->AsFixed() : NULL, extended);
+    GetProps(ctrl, layoutData, extended);
 
     if (!CreatePropertiesWindow(parent, layoutData))
         delete layoutData;
 }
 
-void OnMenuProperties(const SumatraWindow& win)
+void OnMenuProperties(WindowInfo *win)
 {
-    if (win.AsWindowInfo())
-        ShowProperties(win.AsWindowInfo()->hwndFrame, GetDocForWindow(win), win.AsWindowInfo()->ctrl->AsFixed());
-    else if (win.AsEbookWindow())
-        ShowProperties(win.AsEbookWindow()->hwndFrame, GetDocForWindow(win), NULL);
+    ShowProperties(win->hwndFrame, win->ctrl);
 }
 
 static void DrawProperties(HWND hwnd, HDC hdc)
@@ -551,7 +549,7 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
             WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
             if (win && !pl->HasProperty(_TR("Fonts:"))) {
                 DestroyWindow(hwnd);
-                ShowProperties(win->hwndFrame, GetDocForWindow(SumatraWindow::Make(win)), win->ctrl, true);
+                ShowProperties(win->hwndFrame, win->ctrl, true);
             }
         }
 #endif

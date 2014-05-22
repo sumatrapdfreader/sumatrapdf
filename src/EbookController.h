@@ -80,7 +80,6 @@ public:
     bool IsDoublePage() const { return !IsSinglePage(); }
 };
 
-void LoadEbookAsync(const WCHAR *fileName, const SumatraWindow &win);
 HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 
 #endif

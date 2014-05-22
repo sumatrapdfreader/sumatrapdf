@@ -286,10 +286,7 @@ bool Save()
 
     /* mark currently shown files as visible */
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gWindows.At(i)));
-    }
-    for (size_t i = 0; i < gEbookWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gEbookWindows.At(i)));
+        UpdateCurrentFileDisplayStateForWin(gWindows.At(i));
     }
 
     // remove entries which should (no longer) be remembered

@@ -151,7 +151,7 @@ void DeleteEbookWindow(EbookWindow *win, bool forceDelete)
     if (gPluginMode && !forceDelete)
         return;
 
-    UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
+    // UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
 
     DeletePropertiesWindow(win->hwndFrame);
     delete win->ebookController;
@@ -387,8 +387,12 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
     if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))
     {
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
-        if (state && HasPermission(Perm_DiskAccess))
-            LoadDocument2(state->filePath, SumatraWindow::Make(win));
+        if (state && HasPermission(Perm_DiskAccess)) {
+            // TODO: LoadDocument() needs to handle EbookWindow, for now
+            // we force opening in a new window
+            LoadArgs args(state->filePath);
+            LoadDocument(args);
+        }
         return 0;
     }
 
@@ -402,7 +406,7 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(SumatraWindow::Make(win));
+            // OnMenuOpen(SumatraWindow::Make(win));
             break;
 
         case IDT_FILE_EXIT:
@@ -512,7 +516,7 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             break;
 
         case IDM_PROPERTIES:
-            OnMenuProperties(SumatraWindow::Make(win));
+            // OnMenuProperties(SumatraWindow::Make(win));
             break;
 
         default:
@@ -824,31 +828,6 @@ void RegisterMobiWinClass(HINSTANCE hinst)
     wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
     RegisterClassEx(&wcex);
-}
-
-bool IsEbookFile(const WCHAR *fileName)
-{
-    return Doc::IsSupportedFile(fileName);
-}
-
-Doc GetDocForWindow(const SumatraWindow& win)
-{
-    if (win.AsWindowInfo()) {
-        WindowInfo *iwin = win.AsWindowInfo();
-        if (iwin->IsChm())
-            return Doc(iwin->AsChm()->engine(), (DocType)(Doc_BaseEngine + Engine_Chm));
-        if (iwin->IsFixedDocLoaded())
-            return Doc(iwin->AsFixed()->engine(), (DocType)(Doc_BaseEngine + iwin->GetEngineType()));
-        if (iwin->IsEbookLoaded())
-            return *iwin->AsEbook()->doc();
-        return Doc();
-    }
-    if (win.AsEbookWindow()) {
-        EbookWindow *ewin = win.AsEbookWindow();
-        return ewin->ebookController->GetDoc();
-    }
-    CrashIf(true);
-    return Doc();
 }
 
 // TODO: also needs to update for font name/size changes, but it's more complicated

@@ -31,6 +31,7 @@ using namespace Gdiplus;
 #include "HttpUtil.h"
 #include "HtmlWindow.h"
 #include "Menu.h"
+#include "MobiDoc.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
@@ -47,7 +48,6 @@ using namespace Gdiplus;
 #include "SumatraAbout2.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
-#include "SumatraWindow.h"
 #include "StressTesting.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
@@ -69,9 +69,6 @@ bool             gDebugShowLinks = true;
 #else
 bool             gDebugShowLinks = false;
 #endif
-
-// if defined, ebook documents are loaded into a WindowInfo instead an EbookWindow
-#define DISABLE_EBOOK_WINDOW
 
 /* if true, we're rendering everything with the GDI+ back-end,
    otherwise Fitz/MuPDF is used at least for screen rendering.
@@ -443,25 +440,6 @@ static void RememberDefaultWindowPosition(WindowInfo& win)
     }
 }
 
-// update global windowState for next default launch when either
-// no pdf is opened or a document without window dimension information
-static void RememberDefaultWindowPosition(EbookWindow *win)
-{
-    if (IsZoomed(win->hwndFrame))
-        gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
-    else if (!IsIconic(win->hwndFrame))
-        gGlobalPrefs->windowState = WIN_STATE_NORMAL;
-
-    // don't touch gGlobalPrefs->sidebarDx as it's only relevant to non-mobi windows
-
-    /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
-    if (WIN_STATE_NORMAL == gGlobalPrefs->windowState && !IsIconic(win->hwndFrame)) {
-        // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
-        //       the non-maximized dimensions for proper restoration)
-        gGlobalPrefs->windowPos = WindowRect(win->hwndFrame);
-    }
-}
-
 static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool updateGlobal=true)
 {
     if (updateGlobal)
@@ -486,44 +464,7 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
     *ds->tocState = win->tocState;
 }
 
-static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
-{
-    ds->showToc = false;
-    ds->tocState->Reset();
-}
-
-static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
-{
-    if (!ds->filePath || !str::EqI(ds->filePath, win->LoadedFilePath()))
-        str::ReplacePtr(&ds->filePath, win->LoadedFilePath());
-
-    // don't modify any of the other DisplayState values
-    // as long as they're not used, so that the same
-    // DisplayState settings can also be used for MobiEngine
-    // (in debug builds and in case we ever want to allow to
-    // switch between the interfaces); we get reasonable
-    // defaults from DisplayState's constructor anyway
-    ds->reparseIdx = win->ebookController->CurrPageReparseIdx();
-    if (win->ebookController->IsSinglePage())
-        str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(DM_SINGLE_PAGE));
-    else
-        str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(DM_FACING));
-}
-
-static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)
-{
-    RememberDefaultWindowPosition(win);
-    DisplayState *ds = gFileHistory.Find(win->LoadedFilePath());
-    if (!ds)
-        return;
-    DisplayStateFromEbookWindow(win, ds);
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
-    ds->windowState = gGlobalPrefs->windowState;
-    ds->windowPos   = gGlobalPrefs->windowPos;
-    UpdateSidebarDisplayState(win, ds);
-}
-
-static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
+void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
 {
     RememberDefaultWindowPosition(*win);
     if (!win->IsDocLoaded())
@@ -534,14 +475,6 @@ static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
     win->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds, false);
     UpdateSidebarDisplayState(win, ds);
-}
-
-void UpdateCurrentFileDisplayStateForWin(const SumatraWindow& win)
-{
-    if (win.AsWindowInfo())
-        UpdateCurrentFileDisplayStateForWinInfo(win.AsWindowInfo());
-    else if (win.AsEbookWindow())
-        UpdateCurrentFileDisplayStateForWinMobi(win.AsEbookWindow());
 }
 
 bool IsUIRightToLeft()
@@ -842,6 +775,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     DisplayModel *dm = NULL;
     if (!engine && Doc::IsSupportedFile(args.fileName)) {
         Doc doc = Doc::CreateFromFile(args.fileName);
+        // don't load PalmDoc, etc. files as long as they're not correctly formatted
+        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
+            doc.Delete();
         win->ctrl = !doc.IsNone() ? EbookUIController::Create(win->hwndCanvas) : NULL;
         if (win->ctrl) {
             EbookController *ectrl = new EbookController(win->AsEbook()->ctrls(), displayMode);
@@ -1302,22 +1238,6 @@ static bool DocumentPathExists(const WCHAR *path)
     return false;
 }
 
-void LoadDocument2(const WCHAR *fileName, const SumatraWindow& win)
-{
-    // TODO: opening non-mobi files from mobi window doesn't work exactly
-    // the same as opening them from non-mobi window
-    if (win.AsWindowInfo()) {
-        LoadArgs args(fileName, win.AsWindowInfo());
-        LoadDocument(args);
-        return;
-    }
-    CrashIf(!win.AsEbookWindow());
-    // TODO: LoadDocument() needs to handle EbookWindow, for now
-    // we force opening in a new window
-    LoadArgs args(fileName);
-    LoadDocument(args);
-}
-
 #if 0
 // Load a file into a new or existing window, show error message
 // if loading failed, set the right window position (based on history
@@ -1375,30 +1295,6 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         }
         return NULL;
     }
-
-#ifndef DISABLE_EBOOK_WINDOW
-    if (!gGlobalPrefs->ebookUI.useFixedPageUI && IsEbookFile(fullPath)) {
-        if (!win) {
-            if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
-                win = gWindows.At(0);
-        } else if (!win->IsAboutWindow() && !args.forceReuse)
-            win = NULL;
-        if (!win) {
-            // create a dummy window so that we can return
-            // a non-NULL value to indicate loading success
-            win = CreateWindowInfo();
-        }
-        if (win->IsAboutWindow()) {
-            // don't crash if multiple ebook files are opened at once
-            // (e.g. via dragging on the window)
-            // TODO: figure out a better way to handle this
-            win->loadedFilePath = str::Dup(fullPath);
-        }
-        LoadEbookAsync(fullPath, SumatraWindow::Make(win));
-        // TODO: we should show a notification in the window user is looking at
-        return win;
-    }
-#endif
 
     if (gGlobalPrefs->showTabBar) {
         // modify the args so that we always reuse the same window
@@ -2168,7 +2064,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow)
         prefs::Save();
     else
-        UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
+        UpdateCurrentFileDisplayStateForWin(win);
 
     if (forceClose) {
         // WM_DESTROY has already been sent, so don't destroy win->hwndFrame again
@@ -2454,7 +2350,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!ok)
         return;
 
-    UpdateCurrentFileDisplayStateForWinInfo(&win);
+    UpdateCurrentFileDisplayStateForWin(&win);
     // note: srcFileName is deleted together with the DisplayModel
     ScopedMem<WCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInWindow(&win);
@@ -2566,15 +2462,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 }
 #endif
 
-HWND GetSumatraWindowHwnd(const SumatraWindow& win)
-{
-    if (win.AsWindowInfo())
-        return win.AsWindowInfo()->hwndFrame;
-    CrashIf(!win.AsEbookWindow());
-    return win.AsEbookWindow()->hwndFrame;
-}
-
-void OnMenuOpen(const SumatraWindow& win)
+void OnMenuOpen(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
     // don't allow opening different files in plugin mode
@@ -2627,7 +2515,7 @@ void OnMenuOpen(const SumatraWindow& win)
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = GetSumatraWindowHwnd(win);
+    ofn.hwndOwner = win.hwndFrame;
 
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
@@ -2657,14 +2545,17 @@ void OnMenuOpen(const SumatraWindow& win)
     WCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
-        LoadDocument2(ofn.lpstrFile, win);
+        LoadArgs args(ofn.lpstrFile, &win);
+        LoadDocument(args);
         return;
     }
 
     while (*fileName) {
         ScopedMem<WCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
-        if (filePath)
-            LoadDocument2(filePath, win);
+        if (filePath) {
+            LoadArgs args(filePath, &win);
+            LoadDocument(args);
+        }
         fileName += str::Len(fileName) + 1;
     }
 }
@@ -2703,7 +2594,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         index = (int)(index + files.Count() - 1) % files.Count();
 
     // TODO: check for unsaved modifications
-    UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
+    UpdateCurrentFileDisplayStateForWin(&win);
     LoadArgs args(files.At(index), &win);
     args.forceReuse = true;
     LoadDocument(args);
@@ -3814,8 +3705,9 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
     {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(SumatraWindow::Make(win));
+            OnMenuOpen(*win);
             break;
+
         case IDM_SAVEAS:
             OnMenuSaveAs(*win);
             break;
@@ -4050,7 +3942,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_PROPERTIES:
-            OnMenuProperties(SumatraWindow::Make(win));
+            OnMenuProperties(win);
             break;
 
         case IDM_MOVE_FRAME_FOCUS:

@@ -538,7 +538,7 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
     if (*tdata == NULL)
         *tdata = new TabData();
 
-    UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
+    UpdateCurrentFileDisplayStateForWin(win);
     // This update is already done in UpdateCurrentFileDisplayStateForWin, 
     // if there is record found in the gFileHistory.
     if (win->tocLoaded && !gFileHistory.Find(win->loadedFilePath)) {
@@ -677,7 +677,7 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
         if (count > 1) {
             tdata = win->tabSelectionHistory->Pop();
             ManageFullScreen(win, true);
-            UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
+            UpdateCurrentFileDisplayStateForWin(win);
             LoadModelIntoTab(win, tdata);
             ManageFullScreen(win, false);
             TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win->hwndTabBar, tdata));

@@ -25,7 +25,7 @@ struct SumatraWindow {
         return w;
     }
 
-    HWND HwndFrame() const;
+    HWND HwndFrame() const { return NULL; }
 
 private:
     enum Type { Info, Ebook };

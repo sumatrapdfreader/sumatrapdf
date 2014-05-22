@@ -491,17 +491,3 @@ void LinkHandler::GotoNamedDest(const WCHAR *name)
         delete root;
     }
 }
-
-// TODO: this is a bad place for it, but for now there are circular dependencies
-// between SumatraWindow, WindowInfo, EbookWindow
-#include "EbookWindow.h"
-
-HWND SumatraWindow::HwndFrame() const
-{
-    if (AsWindowInfo())
-        return AsWindowInfo()->hwndFrame;
-    if (AsEbookWindow())
-        return AsEbookWindow()->hwndFrame;
-    return NULL;
-}
-
