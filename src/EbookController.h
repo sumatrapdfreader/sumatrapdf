@@ -22,9 +22,6 @@ class EbookController : public sigslot::has_slots
 
     Doc             doc;
 
-    // only set while we load the file on a background thread, used in UpdateStatus()
-    WCHAR *         fileBeingLoaded;
-
     // TODO: this should be recycled along with pages so that its
     // memory use doesn't grow without bounds
     PoolAllocator   textAllocator;
@@ -35,9 +32,9 @@ class EbookController : public sigslot::has_slots
     Vec<HtmlPage*> *    incomingPages;
 
     // currPageNo is in range 1..$numberOfPages. 
-    int            currPageNo;
+    int             currPageNo;
     // reparseIdx of the current page (the first one if we're showing 2)
-    int                 currPageReparseIdx;
+    int             currPageReparseIdx;
 
     // size of the page for which pages were generated
     SizeI           pageSize;

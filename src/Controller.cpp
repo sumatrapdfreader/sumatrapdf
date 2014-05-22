@@ -381,6 +381,7 @@ public:
 
     virtual bool GoToNextPage() { _ctrl->AdvancePage(1); return true; }
     virtual bool GoToPrevPage(bool toBottom) { _ctrl->AdvancePage(-1); return true; }
+    virtual bool GoToLastPage() { _ctrl->GoToLastPage(); return true; }
 
     virtual EbookUIController *AsEbook() { return this; }
 

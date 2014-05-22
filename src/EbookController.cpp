@@ -186,7 +186,7 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
 }
 
 EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode) : ctrls(ctrls),
-    fileBeingLoaded(NULL), pages(NULL), incomingPages(NULL),
+    pages(NULL), incomingPages(NULL),
     currPageNo(0), pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
     currPageReparseIdx(0)
 {
@@ -397,13 +397,6 @@ size_t EbookController::GetMaxPageCount()
 // show the status text based on current state
 void EbookController::UpdateStatus()
 {
-    if (fileBeingLoaded) {
-        ScopedMem<WCHAR> s(str::Format(_TR("Loading file %s..."), fileBeingLoaded));
-        ctrls->status->SetText(s.Get());
-        ctrls->progress->SetFilled(0.f);
-        return;
-    }
-
     size_t pageCount = GetMaxPageCount();
     if (FormattingInProgress()) {
         ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
