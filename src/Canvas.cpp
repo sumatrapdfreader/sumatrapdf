@@ -1319,12 +1319,15 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case AUTO_RELOAD_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
+        // TODO: handle background tabs
         ReloadDocument(&win, true);
         break;
 
     case EBOOK_LAYOUT_TIMER_ID:
         KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
-        win.AsEbook()->ctrl()->OnLayoutTimer();
+        // TODO: handle background tabs
+        if (win.IsEbookLoaded())
+            win.AsEbook()->ctrl()->OnLayoutTimer();
         break;
     }
 }
