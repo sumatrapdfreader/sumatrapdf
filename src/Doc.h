@@ -4,25 +4,16 @@
 #ifndef Doc_h
 #define Doc_h
 
-// In the past operations on supported document files were done as BaseEngine
-// subclass. When we added MobiDoc and EbookWindow, not every document is an engine.
-// Class Doc (a short for Document, since it's going to be used frequently)
-// is a wrapper/abstractions for them.
-// It simply wraps all document objects, allows querying the type, casting
+// Doc is to EbookController what BaseEngine is to DisplayModel:
+// It simply abstracts all document objects, allows querying the type, casting
 // to the wrapped object and present as much of the unified interface as
 // possible.
 // It's small enough to be passed as value.
-// 
-// During transitional period, there wil be a lot of converting to/from
-// but the intent is to use Doc and only extract the wrapped object at
-// leaf nodes of the code
 
-class BaseEngine;
 class EpubDoc;
 class Fb2Doc;
 class MobiDoc;
 class MobiTestDoc;
-class PasswordUI;
 
 struct ImageData;
 enum DocumentProperty;
@@ -32,9 +23,6 @@ enum DocType {
 
     Doc_Epub, Doc_Fb2,
     Doc_Mobi, Doc_MobiTest,
-
-    // the specific engine type is added to this value
-    Doc_BaseEngine = 16,
 };
 
 enum DocError {
@@ -54,12 +42,11 @@ protected:
     DocError error;
 
     // A copy of the file path which is needed in case of an error (else
-    // the file path is supposed to be stored inside the wrapped *Doc or engine)
+    // the file path is supposed to be stored inside the wrapped *Doc)
     ScopedMem<WCHAR> filePath;
 
     union {
         void *generic;
-        BaseEngine *engine; // we can always cast to the right type based on type
         EpubDoc *   epubDoc;
         Fb2Doc *    fb2Doc;
         MobiDoc *   mobiDoc;
@@ -75,7 +62,6 @@ public:
 
     void Clear();
     Doc() { Clear(); }
-    Doc(BaseEngine *doc, DocType engineType);
     explicit Doc(EpubDoc *doc);
     explicit Doc(Fb2Doc *doc);
     explicit Doc(MobiDoc *doc);
@@ -85,22 +71,17 @@ public:
 
     // note: find a better name, if possible
     bool IsNone() const { return Doc_None == type; }
-    // to allow distinguishing loading errors from blank docs
-    bool IsEbook() const;
-    bool IsEngine() const;
+    bool IsDocLoaded() const { return !IsNone(); }
 
     bool LoadingFailed() const {
         CrashIf(error && !IsNone());
         return error != Error_None;
     }
 
-    BaseEngine *AsEngine() const;
     EpubDoc *AsEpub() const;
     Fb2Doc *AsFb2() const;
     MobiDoc *AsMobi() const;
     MobiTestDoc *AsMobiTest() const;
-
-    DocType GetDocType() const { return type; }
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement so

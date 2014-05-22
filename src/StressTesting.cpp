@@ -170,7 +170,7 @@ void BenchEbookLayout(WCHAR *filePath) {
     }
     Timer t(true);
     Doc doc = Doc::CreateFromFile(filePath);
-    if (!doc.IsEbook()) {
+    if (doc.LoadingFailed()) {
         logbench(L"Error: failed to load the file as doc");
         doc.Delete();
         return;

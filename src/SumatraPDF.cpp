@@ -774,7 +774,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         // don't load PalmDoc, etc. files as long as they're not correctly formatted
         if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
             doc.Delete();
-        win->ctrl = !doc.IsNone() ? EbookUIController::Create(win->hwndCanvas) : NULL;
+        win->ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas) : NULL;
         if (win->ctrl) {
             EbookController *ectrl = new EbookController(win->AsEbook()->ctrls(), displayMode);
             win->AsEbook()->SetController(ectrl);

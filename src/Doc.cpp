@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "Doc.h"
 
-#include "BaseEngine.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
 
@@ -51,20 +50,11 @@ void Doc::Delete()
     case Doc_None:
         break;
     default:
-        CrashIf(!IsEngine());
-        delete engine;
+        CrashIf(true);
         break;
     }
 
     Clear();
-}
-
-Doc::Doc(BaseEngine *doc, DocType engineType)
-{
-    Clear();
-    type = doc ? engineType : Doc_None;
-    engine = doc;
-    CrashIf(doc && !IsEngine());
 }
 
 Doc::Doc(EpubDoc *doc)
@@ -103,13 +93,6 @@ void Doc::Clear()
     filePath.Set(NULL);
 }
 
-BaseEngine *Doc::AsEngine() const
-{
-    if (IsEngine())
-        return engine;
-    return NULL;
-}
-
 MobiDoc *Doc::AsMobi() const
 {
     if (Doc_Mobi == type)
@@ -138,31 +121,6 @@ Fb2Doc *Doc::AsFb2() const
     return NULL;
 }
 
-// return true if this is document supported by ebook UI
-bool Doc::IsEbook() const
-{
-    switch (type) {
-    case Doc_Epub:
-    case Doc_Fb2:
-    case Doc_Mobi:
-    case Doc_MobiTest:
-        return true;
-    default:
-        CrashIf(!IsNone() && !IsEngine());
-        return false;
-    }
-}
-
-bool Doc::IsEngine() const
-{
-    if (type >= Doc_BaseEngine) {
-        CrashIf(Doc_BaseEngine == type);
-        return true;
-    }
-    CrashIf(!IsNone() && !IsEbook());
-    return false;
-}
-
 // the caller should make sure there is a document object
 const WCHAR *Doc::GetFilePathFromDoc() const
 {
@@ -178,8 +136,8 @@ const WCHAR *Doc::GetFilePathFromDoc() const
     case Doc_None:
         return NULL;
     default:
-        CrashIf(!IsEngine());
-        return engine->FileName();
+        CrashIf(true);
+        return NULL;
     }
 }
 
@@ -209,8 +167,8 @@ WCHAR *Doc::GetProperty(DocumentProperty prop)
     case Doc_None:
         return NULL;
     default:
-        CrashIf(!IsEngine());
-        return engine->GetProperty(prop);
+        CrashIf(true);
+        return NULL;
     }
 }
 

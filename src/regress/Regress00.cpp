@@ -10,7 +10,7 @@ static void RegressTestEpubLoading(const WCHAR *fileName)
     VerifyFileExists(filePath);
     Doc doc(Doc::CreateFromFile(filePath));
     CrashAlwaysIf(doc.LoadingFailed());
-    CrashAlwaysIf(Doc_Epub != doc.GetDocType());
+    CrashAlwaysIf(!doc.AsEpub());
 }
 
 // http://code.google.com/p/sumatrapdf/issues/detail?id=2102
@@ -32,7 +32,7 @@ static void Regress00()
     VerifyFileExists(filePath);
     Doc doc(Doc::CreateFromFile(filePath));
     CrashAlwaysIf(doc.LoadingFailed());
-    CrashAlwaysIf(Doc_Epub != doc.GetDocType());
+    CrashAlwaysIf(!doc.AsEpub());
 
     PoolAllocator   textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, 820, 920, &textAllocator);
@@ -58,4 +58,3 @@ static void Regress00()
     delete formatter;
     delete args;
 }
-

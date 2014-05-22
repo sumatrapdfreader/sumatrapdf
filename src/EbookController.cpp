@@ -120,7 +120,7 @@ EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, E
     doc(doc), formatterArgs(args), controller(ctrl), pageCount(0), reparseIdx(reparseIdx), pagesAfterReparseIdx(0)
 {
     CrashIf(reparseIdx < 0);
-    AssertCrash(doc.IsEbook() || (doc.IsNone() && (NULL != args->htmlStr)));
+    AssertCrash(doc.IsDocLoaded() || (doc.IsNone() && (NULL != args->htmlStr)));
 }
 
 EbookFormattingThread::~EbookFormattingThread()
@@ -334,7 +334,7 @@ void EbookController::TriggerBookFormatting()
         return;
     }
     CrashIf(size.dx < 100 || size.dy < 40);
-    if (!doc.IsEbook())
+    if (!doc.IsDocLoaded())
         return;
 
     if (pageSize == size) {
@@ -482,7 +482,7 @@ void EbookController::AdvancePage(int dist)
 
 void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
 {
-    CrashIf(!newDoc.IsEbook());
+    CrashIf(!newDoc.IsDocLoaded());
     currPageReparseIdx = startReparseIdxArg;
     if ((size_t)currPageReparseIdx >= newDoc.GetHtmlDataSize())
         currPageReparseIdx = 0;
