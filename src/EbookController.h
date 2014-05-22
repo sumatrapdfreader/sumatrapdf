@@ -7,7 +7,6 @@
 #include "Doc.h"
 #include "DisplayState.h"
 #include "Sigslot.h"
-#include "SumatraWindow.h"
 
 struct  EbookControls;
 class   HtmlPage;

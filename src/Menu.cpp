@@ -9,7 +9,6 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
-#include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -23,14 +22,6 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
-
-void MenuUpdateDisplayMode(EbookWindow *win)
-{
-    UINT id = IDM_VIEW_FACING;
-    if (win->ebookController->IsSinglePage())
-        id = IDM_VIEW_SINGLE_PAGE;
-    CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
-}
 
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
@@ -109,13 +100,6 @@ static MenuDef menuDefView[] = {
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
 };
 
-static MenuDef menuDefViewEbook[] = {
-    { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       0 },
-    { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            0 },
-    { SEP_ITEM,                             0,                          0 },
-    { _TRN("F&ullscreen\tCtrl+L"),          IDM_VIEW_FULLSCREEN,        0 },
-};
-
 static MenuDef menuDefGoTo[] = {
     { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
@@ -182,19 +166,12 @@ static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
-    // same as "Show bbox" below
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     // TODO: is this still needed?
     // { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,       MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
-};
-
-static MenuDef menuDefDebugEbooks[] = {
-    { "Show bbox",                          IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,       MF_NO_TRANSLATE },
-    { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
 };
 #endif
 
@@ -284,7 +261,7 @@ static void AppendRecentFilesToMenu(HMENU m)
         InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
-static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, bool forEbookUI)
+static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath)
 {
     if (0 == gGlobalPrefs->externalViewers->Count())
         return;
@@ -313,15 +290,11 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, b
 
         ScopedMem<WCHAR> menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
-        InsertMenu(menuFile, forEbookUI ? IDM_PROPERTIES : IDM_SEND_BY_EMAIL,
-                   MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath)
             win::menu::SetEnabled(menuFile, menuId, false);
         count++;
     }
-
-    if (forEbookUI && count > 0)
-        InsertMenu(menuFile, IDM_PROPERTIES, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
 static struct {
@@ -414,8 +387,6 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
 
 static bool IsFileCloseMenuEnabled()
 {
-    if (gEbookWindows.Count() > 0)
-        return true;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows.At(i)->IsAboutWindow())
             return true;
@@ -637,7 +608,7 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->IsChm() ? MF_NOT_FOR_CHM : 0);
     AppendRecentFilesToMenu(menu);
-    AppendExternalViewersToMenu(menu, win->loadedFilePath, false);
+    AppendExternalViewersToMenu(menu, win->loadedFilePath);
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
@@ -682,6 +653,7 @@ HMENU BuildMenu(WindowInfo *win)
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
     }
 
+    // TODO: implement Favorites for ebooks
     if (HasPermission(Perm_SavePreferences) && !win->IsEbookLoaded()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
@@ -701,42 +673,6 @@ HMENU BuildMenu(WindowInfo *win)
     return mainMenu;
 }
 
-static void RebuildFileMenuForEbookUI(HMENU menu, EbookWindow *win)
-{
-    win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, MF_NOT_FOR_EBOOK_UI);
-    AppendRecentFilesToMenu(menu);
-    AppendExternalViewersToMenu(menu, win->LoadedFilePath(), true);
-}
-
-HMENU BuildMenu(EbookWindow *win)
-{
-    HMENU mainMenu = CreateMenu();
-    int filter = MF_NOT_FOR_EBOOK_UI;
-
-    HMENU m = CreateMenu();
-    RebuildFileMenuForEbookUI(m, win);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-
-    m = BuildMenuFromMenuDef(menuDefViewEbook, dimof(menuDefViewEbook), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
-
-    m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-
-    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
-
-    m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
-
-#ifdef SHOW_DEBUG_MENU_ITEMS
-    m = BuildMenuFromMenuDef(menuDefDebugEbooks, dimof(menuDefDebugEbooks), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
-#endif
-    return mainMenu;
-}
-
 void UpdateMenu(WindowInfo *win, HMENU m)
 {
     CrashIf(!win);
@@ -751,41 +687,12 @@ void UpdateMenu(WindowInfo *win, HMENU m)
     MenuUpdateStateForWindow(win);
 }
 
-void UpdateMenu(EbookWindow *win, HMENU m)
-{
-    UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].id)
-        RebuildFileMenuForEbookUI(m, win);
-    else if (id == menuDefViewEbook[0].id)
-        MenuUpdateDisplayMode(win);
-}
-
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
 void ShowHideMenuBar(WindowInfo *win, bool showTemporarily)
 {
     CrashIf(!win->menu);
     if (win->presentation || win->isFullScreen)
-        return;
-
-    HWND hwnd = win->hwndFrame;
-
-    if (showTemporarily) {
-        SetMenu(hwnd, win->menu);
-        return;
-    }
-
-    bool hideMenu = !showTemporarily && GetMenu(hwnd) != NULL;
-    SetMenu(hwnd, hideMenu ? NULL : win->menu);
-    win->isMenuHidden = hideMenu;
-}
-
-// show/hide top-level menu bar. This doesn't persist across launches
-// so that accidental removal of the menu isn't catastrophic
-void ShowHideMenuBar(EbookWindow *win, bool showTemporarily)
-{
-    CrashIf(!win->menu);
-    if (win->isFullScreen)
         return;
 
     HWND hwnd = win->hwndFrame;

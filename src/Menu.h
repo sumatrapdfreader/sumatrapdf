@@ -26,23 +26,19 @@ struct MenuDef {
 };
 
 class WindowInfo;
-class EbookWindow;
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter=0);
 HMENU BuildMenu(WindowInfo *win);
-HMENU BuildMenu(EbookWindow *win);
 void  OnContextMenu(WindowInfo* win, int x, int y);
 void  OnAboutContextMenu(WindowInfo* win, int x, int y);
 void  OnMenuZoom(WindowInfo* win, UINT menuId);
 void  OnMenuCustomZoom(WindowInfo* win);
 UINT  MenuIdFromVirtualZoom(float virtualZoom);
 void  UpdateMenu(WindowInfo *win, HMENU m);
-void  UpdateMenu(EbookWindow *win, HMENU m);
 void  ShowHideMenuBar(WindowInfo *win, bool showTemporarily=false);
-void  ShowHideMenuBar(EbookWindow *win, bool showTemporarily=false);
 
 /* Define if you want to display an additional debug menu */
-#if defined(DEBUG)
+#if defined(DEBUG) && !defined(SHOW_DEBUG_MENU_ITEMS)
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 

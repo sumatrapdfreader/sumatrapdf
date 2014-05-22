@@ -360,6 +360,7 @@ public:
     virtual int CurrentPageNo() { return _ctrl->GetCurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { _ctrl->GoToPage(pageNo); }
     virtual bool CanNavigate(int dir) { return false; }
+    // TODO: this used to be equivalent to GoToNextPage/GoToPrevPage
     virtual void Navigate(int dir) { /* not supported */ }
 
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);

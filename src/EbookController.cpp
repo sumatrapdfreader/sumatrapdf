@@ -10,12 +10,12 @@
 #include "EbookControls.h"
 #include "MobiDoc.h"
 #include "EbookFormatter.h"
-#include "EbookWindow.h"
-#include "SumatraWindow.h"
+#include "SumatraPDF.h"
 #include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UITask.h"
+#include "WindowInfo.h"
 
 static const WCHAR *GetFontName()
 {
@@ -41,38 +41,30 @@ HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocato
     return args;
 }
 
-class ThreadLoadEbook : public ThreadBase, public UITask {
-    ScopedMem<WCHAR>    fileName;
-    SumatraWindow       win;
-    Doc                 doc;
+// TODO: move these to a more appropriate place
 
-public:
-    ThreadLoadEbook(const WCHAR *fileName, const SumatraWindow& sumWin) :
-        fileName(str::Dup(fileName)), win(sumWin) { }
-
-    virtual void Run() {
-        doc = Doc::CreateFromFile(fileName);
-        // don't load PalmDoc, etc. files as long as they're not correctly formatted
-        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
-            doc.Delete();
-        // let uitask clean up this thread
-        uitask::Post(this);
-    }
-
-    virtual void Execute() {
-        // let OpenEbookInWindow handle the failure case as well
-        OpenEbookInWindow(doc, win);
-        // the thread should already have terminated by now
-        Join();
-    }
-};
-
-void LoadEbookAsync(const WCHAR *fileName, const SumatraWindow &win)
+static WindowInfo *FindWindowInfoByController(EbookController *controller)
 {
-    ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, win);
-    // the thread will delete itself at the end of processing
-    loadThread->Start();
-    // loadThread will replace win with an EbookWindow on successful loading
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (win->IsEbookLoaded() && win->AsEbook()->ctrl() == controller)
+            return win;
+    }
+    return NULL;
+}
+
+// TODO: same as EBOOK_LAYOUT_TIMER_ID in SumatraPDF.cpp
+#define LAYOUT_TIMER_ID 7
+
+static void RestartLayoutTimer(EbookController *controller)
+{
+    WindowInfo *win = FindWindowInfoByController(controller);
+    if (!win) return;
+
+    KillTimer(win->hwndCanvas, LAYOUT_TIMER_ID);
+    // TODO: previously, the delay was 100 while inSizeMove and 600 else
+    // (to delay a bit if the user resizes but not when e.g. switching to fullscreen)
+    SetTimer(win->hwndCanvas, LAYOUT_TIMER_ID, 200, NULL);
 }
 
 class EbookFormattingTask : public UITask {
@@ -92,10 +84,7 @@ public:
     }
 
     virtual void Execute() {
-        EbookWindow *win = FindEbookWindowByController(controller);
-        if (win)
-            controller->HandlePagesFromEbookLayout(this);
-        else if (FindWindowInfoByController(controller))
+        if (FindWindowInfoByController(controller))
             controller->HandlePagesFromEbookLayout(this);
     }
 };
@@ -524,3 +513,33 @@ bool EbookController::IsSinglePage() const
 {
     return !ctrls->pagesLayout->GetPage2()->IsVisible();
 }
+
+// TODO: is this still needed?
+#if 0
+static void OnLoadMobiSample(EbookWindow *win)
+{
+    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(IDD_SAMPLE_MOBI), RT_RCDATA);
+    CrashIf(!resSrc);
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    MobiTestDoc *doc = new MobiTestDoc((const char *)LockResource(res), SizeofResource(NULL, resSrc));
+    CrashIf(!doc || 0 == doc->GetBookHtmlSize());
+    UnlockResource(res);
+    win->ebookController->SetDoc(Doc(doc));
+}
+#endif
+
+// TODO: reimplement
+#if 0
+// TODO: also needs to update for font name/size changes, but it's more complicated
+// because requires re-layout
+void EbookWindowRefreshUI(EbookWindow *win)
+{
+    SetMainWndBgCol(win->ebookControls);
+    // changing background will repaint mainWnd control but changing
+    // of text color will not, so we request uncoditional repaint
+    // TODO: in PageControl::Paint() use a property for text color, instead of
+    // taking it directly from prefs
+    RequestRepaint(win->ebookControls->mainWnd);
+}
+#endif

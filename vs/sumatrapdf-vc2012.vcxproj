@@ -157,7 +157,6 @@
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookEngine.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
-    <ClCompile Include="..\src\EbookWindow.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
     <ClCompile Include="..\src\uia\DocumentProvider.cpp" />
@@ -407,7 +406,6 @@
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
-    <ClInclude Include="..\src\SumatraWindow.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
     <ClInclude Include="..\src\Tabs.h" />
     <ClInclude Include="..\src\TextSearch.h" />
@@ -430,7 +428,6 @@
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookEngine.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
-    <ClInclude Include="..\src\EbookWindow.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\MuiEbookPageDef.h" />
     <ClInclude Include="..\src\uia\Constants.h" />

@@ -216,9 +216,6 @@
     <ClCompile Include="..\src\EbookFormatter.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EbookWindow.cpp">
-      <Filter>sumatra\ebook</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\MobiDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
@@ -962,9 +959,6 @@
     <ClInclude Include="..\src\SumatraProperties.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SumatraWindow.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\TableOfContents.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1029,9 +1023,6 @@
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="..\src\EbookFormatter.h">
-      <Filter>sumatra\ebook</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\EbookWindow.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="..\src\MobiDoc.h">

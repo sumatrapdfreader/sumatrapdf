@@ -66,7 +66,6 @@ enum MenuToolbarFlags {
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
 class WindowInfo;
-class EbookWindow;
 class Favorites;
 class DisplayModel;
 
@@ -80,7 +79,6 @@ extern HCURSOR                  gCursorIBeam;
 extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
-extern Vec<EbookWindow*>        gEbookWindows;
 extern Favorites                gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
@@ -109,16 +107,8 @@ void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCon
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 bool  DoCachePageRendering(DisplayModel *dm, int pageNo);
-void  OnMenuOptions(HWND hwnd);
-void  OnMenuAdvancedOptions();
-void  OnMenuExit();
-void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
-void  OnMenuChangeLanguage(HWND hwnd);
-void  OnDropFiles(HDROP hDrop, bool dragFinish=true);
-size_t TotalWindowsCount();
 void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
-void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
 void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);

@@ -203,7 +203,7 @@ MAIN_UI_OBJS = \
 	$(OS)\AppTools.obj $(OS)\AppUtil.obj $(OS)\TableOfContents.obj \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj $(OS)\Selection.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
-	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
+	$(OS)\EbookControls.obj $(OS)\EbookController.obj \
 	$(OS)\MuiEbookPageDef.obj $(OS)\PagesLayoutDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \

@@ -1097,14 +1097,6 @@
 				Name="Windows"
 				>
 				<File
-					RelativePath="..\src\EbookWindow.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\EbookWindow.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\SumatraAbout.cpp"
 					>
 				</File>
@@ -1126,10 +1118,6 @@
 				</File>
 				<File
 					RelativePath="..\src\SumatraProperties.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\SumatraWindow.h"
 					>
 				</File>
 				<File

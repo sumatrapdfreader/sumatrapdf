@@ -17,7 +17,6 @@
 #include "DebugLog.h"
 #include "DirIter.h"
 #include "EbookController.h"
-#include "EbookWindow.h"
 #include "EngineManager.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
@@ -137,9 +136,7 @@ HCURSOR                      gCursorHand;
 HCURSOR                      gCursorIBeam;
 HFONT                        gDefaultGuiFont;
 
-// TODO: combine into Vec<SumatraWindow> (after 2.0) ?
 Vec<WindowInfo*>             gWindows;
-Vec<EbookWindow*>            gEbookWindows;
 FileHistory                  gFileHistory;
 Favorites                    gFavorites;
 
@@ -693,7 +690,6 @@ static void RebuildMenuBarForAllWindows()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         RebuildMenuBarForWindow(gWindows.At(i));
     }
-    RebuildMenuBarForEbookWindows();
 }
 
 // meaning of the internal values of LoadArgs:
@@ -1591,7 +1587,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-void OnDropFiles(HDROP hDrop, bool dragFinish)
+static void OnDropFiles(HDROP hDrop, bool dragFinish)
 {
     WCHAR       filePath[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
@@ -1632,18 +1628,13 @@ static void RememberCurrentlyOpenedFiles()
             cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
         }
     }
-    for (size_t i = 0; i < gEbookWindows.Count(); i++) {
-        EbookWindow *win = gEbookWindows.At(i);
-        if ((ds = gFileHistory.Find(win->LoadedFilePath())) != NULL) {
-            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
-        }
-    }
-
     if (cmdLine.Size() > 0) {
         cmdLine.Pop();
         gGlobalPrefs->reopenOnce = cmdLine.StealData();
     }
 }
+
+static void OnMenuExit();
 
 bool AutoUpdateInitiate(const char *mode, const char *url, const char *hash)
 {
@@ -1845,7 +1836,7 @@ public:
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
+static void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 {
     if (!HasPermission(Perm_InternetAccess))
         return;
@@ -1912,6 +1903,14 @@ void UpdateDocumentColors()
             return; // colors didn't change
     }
 
+    // TODO: update ebook documents
+#if 0
+    size_t n = gEbookWindows.Count();
+    for (size_t i = 0; i < n; i++) {
+        EbookWindowRefreshUI(gEbookWindows.At(i));
+    }
+#endif
+
     gRenderCache.textColor = text;
     gRenderCache.backgroundColor = bg;
     RerenderEverything();
@@ -1926,7 +1925,7 @@ static void ToggleGdiDebugging()
 }
 #endif
 
-void OnMenuExit()
+static void OnMenuExit()
 {
     if (gPluginMode)
         return;
@@ -1949,11 +1948,6 @@ void OnMenuExit()
 
     prefs::Save();
     PostQuitMessage(0);
-}
-
-size_t TotalWindowsCount()
-{
-    return gWindows.Count() + gEbookWindows.Count();
 }
 
 // closes a document inside a WindowInfo and turns it into
@@ -2005,7 +1999,7 @@ void CloseDocumentInWindow(WindowInfo *win)
 
 void QuitIfNoMoreWindows()
 {
-    if (0 == TotalWindowsCount()) {
+    if (0 == gWindows.Count()) {
         PostQuitMessage(0);
     }
 }
@@ -2057,7 +2051,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (win->presentation)
         ExitFullScreen(*win);
 
-    bool lastWindow = (1 == TotalWindowsCount());
+    bool lastWindow = (1 == gWindows.Count());
     // hide the window before saving prefs (closing seems slightly faster that way)
     if (lastWindow && quitIfLast && !forceClose)
         ShowWindow(win->hwndFrame, SW_HIDE);
@@ -2667,7 +2661,7 @@ void SetCurrentLanguageAndRefreshUi(const char *langCode)
     prefs::Save();
 }
 
-void OnMenuChangeLanguage(HWND hwnd)
+static void OnMenuChangeLanguage(HWND hwnd)
 {
     const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
     SetCurrentLanguageAndRefreshUi(newLangCode);
@@ -2682,7 +2676,7 @@ static void OnMenuViewShowHideToolbar(WindowInfo *win)
     ShowOrHideToolbarGlobally();
 }
 
-void OnMenuAdvancedOptions()
+static void OnMenuAdvancedOptions()
 {
     if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
         return;
@@ -2693,7 +2687,7 @@ void OnMenuAdvancedOptions()
     LaunchFile(path, NULL, L"open");
 }
 
-void OnMenuOptions(HWND hwnd)
+static void OnMenuOptions(HWND hwnd)
 {
     if (!HasPermission(Perm_SavePreferences)) return;
 
@@ -3099,6 +3093,11 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     } else if (VK_DIVIDE == key && dm) {
         dm->RotateBy(-90);
         gIsDivideKeyDown = true;
+#ifdef DEBUG
+    } else if (VK_F1 == key && win->IsEbookLoaded()) {
+        // TODO: this was in EbookWindow - is it still needed?
+        SendMessage(win->hwndFrame, WM_COMMAND, IDM_DEBUG_MUI, 0);
+#endif
     } else {
         return false;
     }

@@ -10,7 +10,6 @@
 #include "BencUtil.h"
 #include "DebugLog.h"
 #include "EbookEngine.h"
-#include "EbookWindow.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "FileTransactions.h"
@@ -391,11 +390,6 @@ bool Reload()
 
     UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
-
-    size_t n = gEbookWindows.Count();
-    for (size_t i = 0; i < n; i++) {
-        EbookWindowRefreshUI(gEbookWindows.At(i));
-    }
 
     return true;
 }

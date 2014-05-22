@@ -125,7 +125,6 @@ static bool RegisterWinClass(HINSTANCE hinst)
     CrashIf(!atom);
 
     RegisterNotificationsWndClass(hinst);
-    RegisterMobiWinClass(hinst);
 
     return true;
 }
@@ -562,9 +561,6 @@ Exit:
 
     while (gWindows.Count() > 0) {
         DeleteWindowInfo(gWindows.At(0));
-    }
-    while (gEbookWindows.Count() > 0) {
-        DeleteEbookWindow(gEbookWindows.At(0), true);
     }
 
 #ifndef DEBUG
