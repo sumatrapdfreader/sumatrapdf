@@ -293,10 +293,22 @@ public:
     virtual void Execute() {
         if (WindowInfoStillValid(win)) {
             NMHDR nmhdr = { NULL, 0, code };
-            LRESULT res = TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2);
-            if (!res && (TCN_SELCHANGING == code || T_CLOSING == code)) {
-                // TODO: do these need to be delayed (again)?
-                PostMessage(win->hwndTabBar, WM_USER, code, 0);
+            if (!TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2)) {
+                TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+                if (T_CLOSING == code) {
+                    // if we have permission to close the tab
+                    tab->Invalidate(tab->nextTab);
+                    tab->xClicked = tab->nextTab;
+                }
+                else if (TCN_SELCHANGING == code) {
+                    // if we have permission to select the tab
+                    tab->Invalidate(tab->current);
+                    tab->Invalidate(tab->nextTab);
+                    tab->current = tab->nextTab;
+                    // send notification that the tab is selected
+                    nmhdr.code = TCN_SELCHANGE;
+                    TabsOnNotify(win, (LPARAM)&nmhdr);
+                }
             }
         }
     }
@@ -451,23 +463,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             }
             tab->isDragging = true;
             SetCapture(hwnd);
-        }
-        return 0;
-
-    case WM_USER:
-        if (T_CLOSING == wParam) {
-            // if we have permission to close the tab
-            tab->Invalidate(tab->nextTab);
-            tab->xClicked = tab->nextTab;
-        }
-        else if (TCN_SELCHANGING == wParam) {
-            // if we have permission to select the tab
-            tab->Invalidate(tab->current);
-            tab->Invalidate(tab->nextTab);
-            tab->current = tab->nextTab;
-            // send notification that the tab is selected
-            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            uitask::Post(new TabNotification(win, TCN_SELCHANGE));
         }
         return 0;
 
