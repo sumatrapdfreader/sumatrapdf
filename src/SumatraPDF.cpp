@@ -3319,6 +3319,13 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             else if (!forward && currPage <= win.ctrl->CurrentPageNo())
                 win.ctrl->GoToPrevPage();
         }
+        else if (win.IsEbookLoaded() && !IsSingle(win.ctrl->GetDisplayMode())) {
+            // "e-book view": flip a single page
+            bool forward = !IsShiftPressed();
+            int nextPage = win.ctrl->CurrentPageNo() + (forward ? 1 : -1);
+            if (win.ctrl->ValidPageNo(nextPage))
+                win.ctrl->GoToPage(nextPage, false);
+        }
         else if (win.presentation)
             win.ChangePresentationMode(PM_BLACK_SCREEN);
         break;
