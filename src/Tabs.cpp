@@ -528,9 +528,20 @@ void CreateTabbar(WindowInfo *win)
 
 
 // Saves some of the document's data from the WindowInfo to the TabData.
-void SaveTabData(WindowInfo *win, TabData **tdata)
+void SaveTabData(WindowInfo *win, TabData *tdata)
 {
-    if (*tdata == NULL) *tdata = new TabData();
+    tdata->tocState = win->tocState;
+    tdata->showToc = win->tocVisible;
+    tdata->ctrl = win->ctrl;
+    if (!tdata->title)
+        tdata->title = win::GetText(win->hwndFrame);
+}
+
+
+void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
+{
+    if (*tdata == NULL)
+        *tdata = new TabData();
 
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
     // This update is already done in UpdateCurrentFileDisplayStateForWin, 
@@ -541,20 +552,17 @@ void SaveTabData(WindowInfo *win, TabData **tdata)
         if (hRoot)
             UpdateTocExpansionState(win, hRoot);
     }
-    (*tdata)->tocState = win->tocState;
-    (*tdata)->showToc = win->tocVisible;
 
     if (win->IsChm())
         win->AsChm()->engine()->RemoveParentHwnd();
 
-    (*tdata)->ctrl = win->ctrl;
+    SaveTabData(win, *tdata);
+
     win->ctrl = NULL;       // prevent this data deletion
-    if (!(*tdata)->title)
-        (*tdata)->title = win::GetText(win->hwndFrame);
 }
 
 
-// Must be called when the active tab is loosing selection.
+// Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
 void SaveCurrentTabData(WindowInfo *win)
 {
@@ -567,7 +575,7 @@ void SaveCurrentTabData(WindowInfo *win)
         if (TabCtrl_GetItem(win->hwndTabBar, current, &tcs)) {
             if (win->IsDocLoaded()) {
                 // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
-                SaveTabData(win, (TabData **)&tcs.lParam);
+                PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
                 TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
 
                 // update the selection history
@@ -624,20 +632,27 @@ void DeleteTabData(TabData *tdata, bool deleteModel)
 // Its text is the name of the opened file.
 void TabsOnLoadedDoc(WindowInfo *win)
 {
-    if (!win) return;
+    if (!win)
+        return;
+
+    TabData *td = new TabData();
+    SaveTabData(win, td);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT | TCIF_PARAM;
     tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
-    tcs.lParam = NULL;
+    tcs.lParam = (LPARAM)td;
     int count = TabCtrl_GetItemCount(win->hwndTabBar);
 
     if (-1 != TabCtrl_InsertItem(win->hwndTabBar, count, &tcs)) {
         TabCtrl_SetCurSel(win->hwndTabBar, count);
         UpdateTabWidth(win);
 
-        if (!count) ShowOrHideTabbar(win, SW_SHOW);
+        if (!count)
+            ShowOrHideTabbar(win, SW_SHOW);
     }
+    else
+        DeleteTabData(td, false);
 }
 
 
@@ -676,7 +691,7 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
 }
 
 
-// On tab selection, we save the data for the tab which is loosing selection and
+// On tab selection, we save the data for the tab which is losing selection and
 // load the data of the selected tab into the WindowInfo.
 LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
 {

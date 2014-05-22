@@ -36,7 +36,8 @@ struct TabData
     TabData(): ctrl(NULL), showToc(false), title(NULL) { }
 };
 
-void SaveTabData(WindowInfo *win, TabData **tdata);
+void SaveTabData(WindowInfo *win, TabData *tdata);
+void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata);
 void SaveCurrentTabData(WindowInfo *win);
 TabData *GetTabData(HWND tabbarHwnd, int tabIndex);
 void DeleteTabData(TabData *tdata, bool deleteModel);
