@@ -394,6 +394,7 @@ public:
     }
     virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
     virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
+    virtual void UpdateDocumentColors();
 };
 
 EbController::EbController(EbookControls *ctrls) :
@@ -514,6 +515,18 @@ void EbController::CreateThumbnail(DisplayState *ds)
         bmp = RenderFirstDocPageToBitmap(*doc(), pageSize, dstSize, 10);
     }
     SetThumbnail(ds, bmp);
+}
+
+// TODO: also needs to update for font name/size changes, but it's more complicated
+// because requires re-layout
+void EbController::UpdateDocumentColors()
+{
+    SetMainWndBgCol(_ctrls);
+    // changing background will repaint mainWnd control but changing
+    // of text color will not, so we request uncoditional repaint
+    // TODO: in PageControl::Paint() use a property for text color, instead of
+    // taking it directly from prefs
+    ::RequestRepaint(_ctrls->mainWnd);
 }
 
 EbookUIController *EbookUIController::Create(HWND hwnd)

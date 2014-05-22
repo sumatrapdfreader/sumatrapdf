@@ -287,9 +287,6 @@ BEGIN
 END
 
 IDD_EBOOK_WIN_DESC  RCDATA                      "EbookWinDesc.txt"
-#ifdef DEBUG
-IDD_SAMPLE_MOBI     RCDATA                      "sample_mobi.html"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -126,9 +126,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
-// TODO: same as LAYOUT_TIMER_ID in EbookWindow.cpp
-#define EBOOK_LAYOUT_TIMER_ID       7
-
 HINSTANCE                    ghinst = NULL;
 
 HCURSOR                      gCursorArrow;
@@ -1896,20 +1893,19 @@ COLORREF GetFixedPageUiBgColor()
 
 void UpdateDocumentColors()
 {
+    // TODO: only do this if colors have actually changed?
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (win->IsEbookLoaded())
+            win->AsEbook()->UpdateDocumentColors();
+    }
+
     COLORREF text = GetFixedPageUiTextColor();
     COLORREF bg = GetFixedPageUiBgColor();
     if ((text == gRenderCache.textColor) &&
         (bg == gRenderCache.backgroundColor)) {
             return; // colors didn't change
     }
-
-    // TODO: update ebook documents
-#if 0
-    size_t n = gEbookWindows.Count();
-    for (size_t i = 0; i < n; i++) {
-        EbookWindowRefreshUI(gEbookWindows.At(i));
-    }
-#endif
 
     gRenderCache.textColor = text;
     gRenderCache.backgroundColor = bg;

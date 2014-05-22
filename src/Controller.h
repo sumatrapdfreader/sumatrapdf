@@ -130,6 +130,7 @@ public:
     // EbookController's constructor calls UpdateWindow which
     // must not happen before EbookUIController::Create returns
     virtual void SetController(EbookController *ctrl) = 0;
+    virtual void UpdateDocumentColors() = 0;
     virtual void RequestRepaint() = 0;
 
     static EbookUIController *Create(HWND hwnd);

@@ -41,8 +41,6 @@ HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocato
     return args;
 }
 
-// TODO: move these to a more appropriate place
-
 static WindowInfo *FindWindowInfoByController(EbookController *controller)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -51,20 +49,6 @@ static WindowInfo *FindWindowInfoByController(EbookController *controller)
             return win;
     }
     return NULL;
-}
-
-// TODO: same as EBOOK_LAYOUT_TIMER_ID in SumatraPDF.cpp
-#define LAYOUT_TIMER_ID 7
-
-static void RestartLayoutTimer(EbookController *controller)
-{
-    WindowInfo *win = FindWindowInfoByController(controller);
-    if (!win) return;
-
-    KillTimer(win->hwndCanvas, LAYOUT_TIMER_ID);
-    // TODO: previously, the delay was 100 while inSizeMove and 600 else
-    // (to delay a bit if the user resizes but not when e.g. switching to fullscreen)
-    SetTimer(win->hwndCanvas, LAYOUT_TIMER_ID, 200, NULL);
 }
 
 class EbookFormattingTask : public UITask {
@@ -366,7 +350,14 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
     CrashIf(!(c == ctrls->pagesLayout->GetPage1() || c==ctrls->pagesLayout->GetPage2()));
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
-    RestartLayoutTimer(this);
+
+    WindowInfo *win = FindWindowInfoByController(this);
+    // TODO: should always succeed once FindWindowInfoByController searches background tabs
+    if (!win) return;
+
+    // TODO: previously, the delay was 100 while inSizeMove and 600 else
+    // (to delay a bit if the user resizes but not when e.g. switching to fullscreen)
+    SetTimer(win->hwndCanvas, EBOOK_LAYOUT_TIMER_ID, EBOOK_LAYOUT_DELAY_IN_MS, NULL);
 }
 
 void EbookController::ClickedNext(Control *c, int x, int y)
@@ -513,33 +504,3 @@ bool EbookController::IsSinglePage() const
 {
     return !ctrls->pagesLayout->GetPage2()->IsVisible();
 }
-
-// TODO: is this still needed?
-#if 0
-static void OnLoadMobiSample(EbookWindow *win)
-{
-    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(IDD_SAMPLE_MOBI), RT_RCDATA);
-    CrashIf(!resSrc);
-    HGLOBAL res = LoadResource(NULL, resSrc);
-    CrashIf(!res);
-    MobiTestDoc *doc = new MobiTestDoc((const char *)LockResource(res), SizeofResource(NULL, resSrc));
-    CrashIf(!doc || 0 == doc->GetBookHtmlSize());
-    UnlockResource(res);
-    win->ebookController->SetDoc(Doc(doc));
-}
-#endif
-
-// TODO: reimplement
-#if 0
-// TODO: also needs to update for font name/size changes, but it's more complicated
-// because requires re-layout
-void EbookWindowRefreshUI(EbookWindow *win)
-{
-    SetMainWndBgCol(win->ebookControls);
-    // changing background will repaint mainWnd control but changing
-    // of text color will not, so we request uncoditional repaint
-    // TODO: in PageControl::Paint() use a property for text color, instead of
-    // taking it directly from prefs
-    RequestRepaint(win->ebookControls->mainWnd);
-}
-#endif

@@ -193,7 +193,6 @@
 #define IDT_FILE_ADDTOFAV               3025
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
-#define IDD_SAMPLE_MOBI                 3050
 #define IDD_EBOOK_WIN_DESC              3051
 #define IDC_SUMATRAPDF                  4000
 #define IDC_STATIC                      -1
