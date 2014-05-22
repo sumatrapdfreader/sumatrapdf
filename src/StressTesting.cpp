@@ -306,13 +306,13 @@ static bool IsStressTestSupportedFile(const WCHAR *filePath, const WCHAR *filter
 {
     if (filter && !path::Match(path::GetBaseName(filePath), filter))
         return false;
-    if (EngineManager::IsSupportedFile(filePath))
+    if (EngineManager::IsSupportedFile(filePath) || Doc::IsSupportedFile(filePath))
         return true;
     if (!filter)
         return false;
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    return EngineManager::IsSupportedFile(filePath, true);
+    return EngineManager::IsSupportedFile(filePath, true) || Doc::IsSupportedFile(filePath);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)
@@ -370,8 +370,9 @@ static void FormatTime(int totalSecs, str::Str<char> *s)
     s->AppendFmt("%d secs", secs);
 }
 
-static void MakeRandomSelection(DisplayModel *dm, int pageNo)
+static void MakeRandomSelection(WindowInfo *win, int pageNo)
 {
+    DisplayModel *dm = win->AsFixed()->model();
     if (!dm->ValidPageNo(pageNo))
         pageNo = 1;
     if (!dm->ValidPageNo(pageNo))
@@ -772,11 +773,11 @@ void StressTest::OnTimer(int timerIdGot)
         goto Next;
     }
 
-    DisplayModel *dm = win->AsFixed()->model();
     // For non-image files, we detect if a page was rendered by checking the cache
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
+    DisplayModel *dm = win->AsFixed()->model();
     bool didRender = renderCache->Exists(dm, currPage, dm->Rotation());
     if (!didRender && DoCachePageRendering(dm, currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
@@ -788,7 +789,7 @@ void StressTest::OnTimer(int timerIdGot)
     else if (!GoToNextPage()) {
         return;
     }
-    MakeRandomSelection(dm, currPage);
+    MakeRandomSelection(win, currPage);
 
 Next:
     TickTimer();
@@ -889,7 +890,10 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     // gPredictiveRender = false;
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
-    gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
+    gGlobalPrefs->ebookUI.useFixedPageUI = true;
+    gGlobalPrefs->chmUI.useFixedPageUI = true;
+    // TODO: make stress test work with tabs?
+    gGlobalPrefs->showTabBar = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));
