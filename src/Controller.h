@@ -23,7 +23,7 @@ public:
 
     // page navigation (stateful)
     virtual int CurrentPageNo() = 0;
-    virtual void GoToPage(int pageNo, bool addNavPoint=true) = 0;
+    virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
     virtual bool CanNavigate(int dir) = 0;
     virtual void Navigate(int dir) = 0;
 
@@ -71,13 +71,13 @@ public:
     virtual bool GoToFirstPage() {
         if (CurrentPageNo() == 1)
             return false;
-        GoToPage(1);
+        GoToPage(1, true);
         return true;
     }
     virtual bool GoToLastPage() {
         if (CurrentPageNo() == PageCount())
             return false;
-        GoToPage(PageCount());
+        GoToPage(PageCount(), true);
         return true;
     }
 

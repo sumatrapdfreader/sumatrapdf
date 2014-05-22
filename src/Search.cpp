@@ -484,7 +484,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
             overallrc = overallrc.Union(rects.At(i));
         TextSel res = { 1, &pageNo, &overallrc };
         if (!dm->PageVisible(page))
-            win->ctrl->GoToPage(page);
+            win->ctrl->GoToPage(page, true);
         if (!dm->ShowResultRectToScreen(&res))
             win->RepaintAsync();
         if (IsIconic(win->hwndFrame))
@@ -679,7 +679,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
     if (!win->ctrl->ValidPageNo(page))
         return next;
 
-    win->ctrl->GoToPage(page);
+    win->ctrl->GoToPage(page, true);
     ack.fAck = 1;
     win->Focus();
     return next;

@@ -160,7 +160,7 @@ public:
         if (tocItem->GetLink())
             win->ctrl->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
-            win->ctrl->GoToPage(tocItem->pageNo);
+            win->ctrl->GoToPage(tocItem->pageNo, true);
         win->tocKeepSelection = false;
     }
 };

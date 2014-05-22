@@ -1575,7 +1575,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
         dm->SetScrollState(dm->GetScrollState());
     }
     else
-        win->ctrl->GoToPage(win->ctrl->CurrentPageNo());
+        win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
 
     UpdateTextSelection(win, false);
 
@@ -2921,7 +2921,7 @@ static void OnMenuGoToPage(WindowInfo& win)
 
     int newPageNo = win.ctrl->GetPageByLabel(newPageLabel);
     if (win.ctrl->ValidPageNo(newPageNo))
-        win.ctrl->GoToPage(newPageNo);
+        win.ctrl->GoToPage(newPageNo, true);
 }
 
 void EnterFullScreen(WindowInfo& win, bool presentation)
