@@ -15,6 +15,7 @@
 #include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "FileUtil.h"
+#include "Mui.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
@@ -84,29 +85,28 @@ static MenuDef menuDefFile[] = {
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
 
-// the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefView[] = {
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
-    { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM },
+    { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: this should be Show &Pages Continuously. Need to add rename/duplicate functionality
     // to apptranslator to make such renames easy
-    { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM },
+    { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
     { _TRN("Man&ga Mode"),                  IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM },
-    { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
+    { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     // TODO: change shortcut to F5 (Presentation) and F11 (Fullscreen)
-    { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN },
+    { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_EBOOK_UI },
     { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
-    { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
-    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
-    { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0 },
-    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
-    { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
 };
 
 static MenuDef menuDefViewEbook[] = {
@@ -182,8 +182,11 @@ static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
+    // same as "Show bbox" below
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
+    // TODO: is this still needed?
+    // { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,       MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
@@ -493,6 +496,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
+    win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, IsDebugPaint());
 #endif
 }
 
@@ -669,10 +673,7 @@ HMENU BuildMenu(WindowInfo *win)
     HMENU m = CreateMenu();
     RebuildFileMenu(win, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
-    if (!win->IsEbookLoaded())
-        m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
-    else
-        m = BuildMenuFromMenuDef(menuDefViewEbook, dimof(menuDefViewEbook), CreateMenu(), filter);
+    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
     m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));

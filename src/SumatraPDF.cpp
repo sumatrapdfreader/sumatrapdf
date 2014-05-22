@@ -70,10 +70,8 @@ bool             gDebugShowLinks = true;
 bool             gDebugShowLinks = false;
 #endif
 
-#ifdef DEBUG
-// if true, ebook documents are loaded into a WindowInfo instead an EbookWindow
+// if defined, ebook documents are loaded into a WindowInfo instead an EbookWindow
 #define DISABLE_EBOOK_WINDOW
-#endif
 
 /* if true, we're rendering everything with the GDI+ back-end,
    otherwise Fitz/MuPDF is used at least for screen rendering.
@@ -131,6 +129,9 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
+
+// TODO: same as LAYOUT_TIMER_ID in EbookWindow.cpp
+#define EBOOK_LAYOUT_TIMER_ID       7
 
 HINSTANCE                    ghinst = NULL;
 
@@ -4098,6 +4099,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_MUI:
             SetDebugPaint(!IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
+            for (size_t i = 0; i < gWindows.Count(); i++)
+                gWindows.At(i)->RedrawAll(true);
             break;
 
         case IDM_DEBUG_ANNOTATION:

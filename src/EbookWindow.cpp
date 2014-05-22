@@ -70,23 +70,30 @@ WindowInfo *FindWindowInfoByController(EbookController *controller)
     return NULL;
 }
 
-#define LAYOUT_TIMER_ID 1
+// TODO: same as EBOOK_LAYOUT_TIMER_ID in SumatraPDF.cpp
+#define LAYOUT_TIMER_ID 7
 
 void RestartLayoutTimer(EbookController *controller)
 {
-    EbookWindow *win = FindEbookWindowByController(controller);
+    EbookWindow *ewin = FindEbookWindowByController(controller);
+    HWND targetHwnd;
+    UINT delay = 200;
     // TODO: make RestartLayoutTimer an optional callback to EbookController
-    if (!win) {
-        if (FindWindowInfoByController(controller))
-            controller->OnLayoutTimer();
-        return;
+    if (ewin) {
+        targetHwnd = ewin->hwndFrame;
+        // if the window size changes are due to user resizing, we want to delay a bit
+        // before we start reformatting. If it's because e.g. switching to fullscreen,
+        // start reformatting faster
+        delay = ewin->hwndWrapper->IsInSizeMove() ? 100 : 600;
     }
-    KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
-    // if the window size changes are due to user resizing, we want to delay a bit
-    // before we start reformatting. If it's because e.g. switching to fullscreen,
-    // start reformatting faster
-    UINT delay = win->hwndWrapper->IsInSizeMove() ? 100 : 600;
-    SetTimer(win->hwndFrame,  LAYOUT_TIMER_ID, delay, NULL);
+    else {
+        WindowInfo *win = FindWindowInfoByController(controller);
+        if (!win)
+            return;
+        targetHwnd = win->hwndCanvas;
+    }
+    KillTimer(targetHwnd, LAYOUT_TIMER_ID);
+    SetTimer(targetHwnd, LAYOUT_TIMER_ID, delay, NULL);
 }
 
 static void OnTimer(EbookWindow *win, WPARAM timerId)

@@ -1321,6 +1321,11 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
         ReloadDocument(&win, true);
         break;
+
+    case EBOOK_LAYOUT_TIMER_ID:
+        KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
+        win.AsEbook()->ctrl()->OnLayoutTimer();
+        break;
     }
 }
 

@@ -368,7 +368,7 @@ public:
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { /* not supported */ }
     virtual float GetZoomVirtual() const { return 100; }
     virtual float GetNextZoomStep(float towards) const { return 100; }
-    virtual void SetViewPortSize(SizeI size) { _ctrl->OnLayoutTimer(); }
+    virtual void SetViewPortSize(SizeI size) { _ctrls->mainWnd->RequestLayout(); }
 
     virtual bool HasTocTree() const { return false; }
     virtual DocTocItem *GetTocTree() { return NULL; }
@@ -377,6 +377,9 @@ public:
 
     virtual void UpdateDisplayState(DisplayState *ds);
     virtual void CreateThumbnail(DisplayState *ds);
+
+    virtual bool GoToNextPage() { _ctrl->AdvancePage(1); return true; }
+    virtual bool GoToPrevPage(bool toBottom) { _ctrl->AdvancePage(-1); return true; }
 
     virtual EbookUIController *AsEbook() { return this; }
 
@@ -389,6 +392,7 @@ public:
         return _ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
     }
     virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
+    virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
 };
 
 EbController::EbController(EbookControls *ctrls) :

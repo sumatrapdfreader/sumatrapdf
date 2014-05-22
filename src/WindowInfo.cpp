@@ -117,6 +117,8 @@ SizeI WindowInfo::GetViewPortSize()
 void WindowInfo::RedrawAll(bool update)
 {
     InvalidateRect(this->hwndCanvas, NULL, false);
+    if (this->IsEbookLoaded())
+        this->AsEbook()->RequestRepaint();
     if (update)
         UpdateWindow(this->hwndCanvas);
 }
