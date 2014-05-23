@@ -357,7 +357,6 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
 static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extended)
 {
     CrashIf(!ctrl);
-    EngineType engineType = ctrl->AsFixed() ? ctrl->AsFixed()->engineType : ctrl->AsChm() ? Engine_Chm : Engine_None;
 
     WCHAR *str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
     layoutData->AddProperty(_TR("File:"), str);
@@ -375,14 +374,14 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     layoutData->AddProperty(_TR("Copyright:"), str);
 
     str = ctrl->GetProperty(Prop_CreationDate);
-    if (Engine_PDF == engineType)
+    if (str && ctrl->AsFixed() && Engine_PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = ctrl->GetProperty(Prop_ModificationDate);
-    if (Engine_PDF == engineType)
+    if (str && ctrl->AsFixed() && Engine_PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);

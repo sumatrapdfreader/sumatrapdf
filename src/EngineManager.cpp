@@ -5,7 +5,6 @@
 #include "EngineManager.h"
 
 #include "BaseEngine.h"
-#include "ChmEngine.h"
 #include "DjVuEngine.h"
 #include "EbookEngine.h"
 #include "ImagesEngine.h"
@@ -16,7 +15,6 @@ namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
 {
-    CrashIf(ChmEngine::IsSupportedFile(filePath, sniff) != Chm2Engine::IsSupportedFile(filePath, sniff));
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
            DjVuEngine::IsSupportedFile(filePath, sniff) ||
@@ -24,7 +22,7 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
            ImageDirEngine::IsSupportedFile(filePath, sniff) ||
            CbxEngine::IsSupportedFile(filePath, sniff)  ||
            PsEngine::IsSupportedFile(filePath, sniff)   ||
-           ChmEngine::IsSupportedFile(filePath, sniff)  ||
+           Chm2Engine::IsSupportedFile(filePath, sniff) ||
            enableEbookEngines && (
                EpubEngine::IsSupportedFile(filePath, sniff) ||
                Fb2Engine::IsSupportedFile(filePath, sniff)  ||
@@ -65,9 +63,6 @@ RetrySniffing:
     } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
         engine = PsEngine::CreateFromFile(filePath);
         engineType = Engine_PS;
-    } else if (!useAlternateChmEngine && ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
-        engine = ChmEngine::CreateFromFile(filePath);
-        engineType = Engine_Chm;
     } else if (useAlternateChmEngine && Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
         engine = Chm2Engine::CreateFromFile(filePath);
         engineType = Engine_Chm2;

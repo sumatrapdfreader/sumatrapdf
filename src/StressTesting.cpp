@@ -312,7 +312,7 @@ static bool IsStressTestSupportedFile(const WCHAR *filePath, const WCHAR *filter
         return false;
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
-    return EngineManager::IsSupportedFile(filePath, true) || Doc::IsSupportedFile(filePath);
+    return EngineManager::IsSupportedFile(filePath, true) || Doc::IsSupportedFile(filePath, true);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)

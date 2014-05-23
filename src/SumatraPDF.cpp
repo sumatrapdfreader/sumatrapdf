@@ -691,6 +691,62 @@ static void RebuildMenuBarForAllWindows()
     }
 }
 
+static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
+{
+    Controller *ctrl = NULL;
+
+    EngineType engineType;
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType,
+                                                     gGlobalPrefs->chmUI.useFixedPageUI,
+                                                     gGlobalPrefs->ebookUI.useFixedPageUI);
+
+    if (!engine && ChmEngine::IsSupportedFile(filePath)) {
+        ChmEngine *chmEngine = ChmEngine::CreateFromFile(filePath);
+        if (chmEngine) {
+            // make sure that MSHTML can't be used as a potential exploit
+            // vector through another browser and our plugin (which doesn't
+            // advertise itself for Chm documents but could be tricked into
+            // loading one nonetheless); note: this crash should never happen,
+            // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
+            CrashAlwaysIf(gPluginMode);
+            // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
+            if (!chmEngine->SetParentHwnd(win->hwndCanvas)) {
+                delete chmEngine;
+                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType, true);
+                CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
+                goto LoadChmInFixedPageUI;
+            }
+            ctrl = ChmUIController::Create(chmEngine, win);
+            CrashIf(!ctrl || !ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook());
+        }
+    }
+    else if (!engine && Doc::IsSupportedFile(filePath)) {
+        Doc doc = Doc::CreateFromFile(filePath);
+        // don't load PalmDoc, etc. files as long as they're not correctly formatted
+        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
+            doc.Delete();
+        ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas) : NULL;
+        if (ctrl) {
+            EbookController *ectrl = new EbookController(ctrl->AsEbook()->ctrls(), displayMode);
+            ctrl->AsEbook()->SetController(ectrl);
+            ectrl->SetDoc(doc, reparseIdx);
+            CrashIf(!ctrl || !ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());
+        }
+    }
+    else if (!engine) {
+        ctrl = NULL;
+    }
+    else {
+LoadChmInFixedPageUI:
+        DisplayModel *dm = new DisplayModel(engine, win);
+        ctrl = FixedPageUIController::Create(dm, win->linkHandler);
+        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
+        ctrl->AsFixed()->engineType = engineType;
+    }
+
+    return ctrl;
+}
+
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
@@ -741,57 +797,11 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         showToc = state->showToc;
     }
 
-    Controller *prevCtrl = win->ctrl;
     AbortFinding(args.win);
 
+    Controller *prevCtrl = win->ctrl;
+    win->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
-    EngineType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType,
-                                                     gGlobalPrefs->chmUI.useFixedPageUI,
-                                                     gGlobalPrefs->ebookUI.useFixedPageUI);
-
-    if (engine && Engine_Chm == engineType) {
-        // make sure that MSHTML can't be used as a potential exploit
-        // vector through another browser and our plugin (which doesn't
-        // advertise itself for Chm documents but could be tricked into
-        // loading one nonetheless); note: this crash should never happen,
-        // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
-        CrashAlwaysIf(gPluginMode);
-        // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
-        if (!static_cast<ChmEngine *>(engine)->SetParentHwnd(win->hwndCanvas)) {
-            delete engine;
-            engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, true);
-            CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
-        }
-    }
-
-    DisplayModel *dm = NULL;
-    if (!engine && Doc::IsSupportedFile(args.fileName)) {
-        Doc doc = Doc::CreateFromFile(args.fileName);
-        // don't load PalmDoc, etc. files as long as they're not correctly formatted
-        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
-            doc.Delete();
-        win->ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas) : NULL;
-        if (win->ctrl) {
-            EbookController *ectrl = new EbookController(win->AsEbook()->ctrls(), displayMode);
-            win->AsEbook()->SetController(ectrl);
-            ectrl->SetDoc(doc, state ? state->reparseIdx : 0);
-            CrashIf(!win->ctrl || !win->AsEbook() || win->AsFixed() || win->AsChm());
-        }
-    }
-    else if (!engine) {
-        win->ctrl = NULL;
-    }
-    else if (Engine_Chm == engineType) {
-        win->ctrl = ChmUIController::Create(static_cast<ChmEngine *>(engine), win);
-        CrashIf(!win->ctrl || !win->AsChm() || win->AsFixed() || win->AsEbook());
-    }
-    else {
-        dm = new DisplayModel(engine, win);
-        win->ctrl = FixedPageUIController::Create(dm, win->linkHandler);
-        CrashIf(!win->ctrl || !win->AsFixed() || win->AsChm() || win->AsEbook());
-        win->ctrl->AsFixed()->engineType = engineType;
-    }
 
     bool needRefresh = !win->ctrl;
 
@@ -816,12 +826,14 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         str::ReplacePtr(&win->loadedFilePath, NULL);
     }
     */
+    DisplayModel *dm = NULL;
     if (win->ctrl) {
-        if (dm) {
+        if (win->AsFixed()) {
+            dm = win->AsFixed()->model();
             dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(),
                                        gGlobalPrefs->customScreenDPI > 0 ? gGlobalPrefs->customScreenDPI : win->dpi);
             // TODO: also expose Manga Mode for image folders?
-            if (engineType == Engine_ComicBook || engineType == Engine_ImageDir)
+            if (win->GetEngineType() == Engine_ComicBook || win->GetEngineType() == Engine_ImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed()->model(), dm);
@@ -865,7 +877,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
-            // else let win.dm->Relayout() scroll to fit the page (again)
+            // else let dm->Relayout() scroll to fit the page (again)
         } else if (startPage > win->ctrl->PageCount()) {
             ss.page = win->ctrl->PageCount();
         }
@@ -915,7 +927,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
     win::SetText(win->hwndFrame, title);
 
-    if (HasPermission(Perm_DiskAccess) && Engine_PDF == engineType) {
+    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
         CrashIf(!dm);
         int res = Synchronizer::Create(args.fileName,
             static_cast<PdfEngine *>(dm->engine), &win->AsFixed()->pdfSync);
@@ -2078,7 +2090,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
     if (ctrl->AsFixed())
         type = ctrl->AsFixed()->engineType;
     else if (ctrl->AsChm())
-        type = Engine_Chm;
+        type = Engine_Chm2;
     else if (ctrl->AsEbook()) {
         Doc *doc = ctrl->AsEbook()->doc();
         type = doc->AsEpub() ? Engine_Epub : doc->AsFb2() ? Engine_Fb2 : doc->AsMobi() ? Engine_Mobi : Engine_None;
@@ -2090,12 +2102,11 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1); break;
         case Engine_ImageDir: return false; // only show "All files"
         case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
-        case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
+        case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Fb2:    fileFilter.Append(_TR("FictionBook documents")); break;
         case Engine_Pdb:    fileFilter.Append(L"PalmDOC"); break;
-        case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Tcr:    fileFilter.Append(L"TCR ebooks"); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
