@@ -135,7 +135,7 @@ pdf_load_system_cmap(fz_context *ctx, char *cmap_name)
 
 	if (cmap->usecmap_name[0] && !cmap->usecmap)
 	{
-		usecmap = pdf_load_builtin_cmap(ctx, cmap->usecmap_name);
+		usecmap = pdf_load_system_cmap(ctx, cmap->usecmap_name);
 		if (!usecmap)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "no builtin cmap file: %s", cmap->usecmap_name);
 		pdf_set_usecmap(ctx, cmap, usecmap);

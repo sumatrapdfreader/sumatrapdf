@@ -326,7 +326,6 @@ fz_insert_gel_raw(fz_gel *gel, int x0, int y0, int x1, int y1)
 	if (y1 > gel->bbox.y1) gel->bbox.y1 = y1;
 
 	if (gel->len + 1 == gel->cap) {
-		/* SumatraPDF: don't reallocate too often for huge paths */
 		int new_cap = gel->cap * 2;
 		gel->edges = fz_resize_array(gel->ctx, gel->edges, new_cap, sizeof(fz_edge));
 		gel->cap = new_cap;
@@ -428,15 +427,30 @@ fz_insert_gel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 	fz_insert_gel_raw(gel, x0, y0, x1, y1);
 }
 
+static int cmpedge(const void *va, const void *vb)
+{
+	const fz_edge *a = va;
+	const fz_edge *b = vb;
+	return a->y - b->y;
+}
+
 void
 fz_sort_gel(fz_gel *gel)
 {
 	fz_edge *a = gel->edges;
 	int n = gel->len;
-
 	int h, i, k;
 	fz_edge t;
 
+
+	/* quick sort for long lists */
+	if (n > 10000)
+	{
+		qsort(a, n, sizeof *a, cmpedge);
+		return;
+	}
+
+	/* shell sort for short lists */
 	h = 1;
 	if (n < 14) {
 		h = 1;
@@ -460,7 +474,6 @@ fz_sort_gel(fz_gel *gel)
 			}
 			a[k + h] = t;
 		}
-
 		h /= 3;
 	}
 }

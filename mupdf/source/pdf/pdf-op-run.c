@@ -2403,9 +2403,10 @@ static void pdf_run_c(pdf_csi *csi, void *state)
 static void pdf_run_cm(pdf_csi *csi, void *state)
 {
 	pdf_run_state *pr = (pdf_run_state *)state;
-	pdf_gstate *gstate = pr->gstate + pr->gtop;
+	pdf_gstate *gstate;
 	fz_matrix m;
 
+	gstate = pdf_flush_text(csi, pr);
 	m.a = csi->stack[0];
 	m.b = csi->stack[1];
 	m.c = csi->stack[2];

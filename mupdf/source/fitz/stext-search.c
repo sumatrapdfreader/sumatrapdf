@@ -3,6 +3,7 @@
 static inline int fz_tolower(int c)
 {
 	/* TODO: proper unicode case folding */
+	/* TODO: character equivalence (a matches ä, etc) */
 	if (c >= 'A' && c <= 'Z')
 		return c - 'A' + 'a';
 	return c;
@@ -10,7 +11,7 @@ static inline int fz_tolower(int c)
 
 static inline int iswhite(int c)
 {
-	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
+	return c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == 0xA0 || c == 0x2028 || c == 0x2029;
 }
 
 fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx)

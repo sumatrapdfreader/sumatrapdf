@@ -22,16 +22,14 @@ static void zfree(void *opaque, void *ptr)
 }
 
 static int
-next_flated(fz_stream *stm, int outlen)
+next_flated(fz_stream *stm, int required)
 {
 	fz_flate *state = stm->state;
 	fz_stream *chain = state->chain;
 	z_streamp zp = &state->z;
 	int code;
 	unsigned char *outbuf = state->buffer;
-
-	if (outlen > sizeof(state->buffer))
-		outlen = sizeof(state->buffer);
+	int outlen = sizeof(state->buffer);
 
 	if (stm->eof)
 		return EOF;
