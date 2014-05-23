@@ -531,6 +531,8 @@ void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->ctrl = win->ctrl;
     if (!tdata->title)
         tdata->title = win::GetText(win->hwndFrame);
+    if (!tdata->filePath)
+        tdata->filePath = str::Dup(win->loadedFilePath);
 }
 
 
@@ -569,20 +571,13 @@ void SaveCurrentTabData(WindowInfo *win)
         TCITEM tcs;
         tcs.mask = TCIF_PARAM;
         if (TabCtrl_GetItem(win->hwndTabBar, current, &tcs)) {
-            if (win->IsDocLoaded()) {
-                // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
-                PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
-                TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
+            // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
+            PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
+            TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
 
-                // update the selection history
-                win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
-                win->tabSelectionHistory->Push((TabData *)tcs.lParam);
-            }
-            else {
-                DeleteTabData((TabData *)tcs.lParam, false);
-                TabCtrl_DeleteItem(win->hwndTabBar, current);
-                UpdateTabWidth(win);
-            }
+            // update the selection history
+            win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
+            win->tabSelectionHistory->Push((TabData *)tcs.lParam);
         }
     }
 }
@@ -619,6 +614,7 @@ void DeleteTabData(TabData *tdata, bool deleteModel)
             delete tdata->ctrl;
         }
         free(tdata->title);
+        free(tdata->filePath);
         delete tdata;
     }
 }

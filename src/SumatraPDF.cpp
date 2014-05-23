@@ -1421,7 +1421,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     DeletePropertiesWindow(win->hwndFrame);
 
-    str::ReplacePtr(&win->loadedFilePath, tdata->ctrl->FilePath());
+    str::ReplacePtr(&win->loadedFilePath, tdata->ctrl ? tdata->ctrl->FilePath() : tdata->filePath);
     win::SetText(win->hwndFrame, tdata->title);
 
     delete win->ctrl;
@@ -1440,6 +1440,12 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     RebuildMenuBarForWindow(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
+
+    int pageCount = win->IsDocLoaded() ? win->ctrl->PageCount() : 0;
+    UpdateToolbarPageText(win, pageCount);
+    if (pageCount > 0)
+        UpdateToolbarFindText(win);
+
     // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
     UpdateToolbarAndScrollbarState(*win);
     UpdateToolbarState(win);
@@ -1450,12 +1456,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->AsFixed() && win->AsFixed()->model()->viewPort != win->canvasRc)
         win->ctrl->SetViewPortSize(win->GetViewPortSize());
 
-    int pageCount = win->ctrl->PageCount();
-    if (pageCount > 0) {
-        UpdateToolbarPageText(win, pageCount);
-        UpdateToolbarFindText(win);
-    }
-
     bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
@@ -1463,7 +1463,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
         DisplayModel *dm = win->AsFixed()->model();
         dm->SetScrollState(dm->GetScrollState());
     }
-    else
+    else if (win->IsDocLoaded())
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
 
     // TODO: why?

@@ -32,8 +32,9 @@ struct TabData
     bool                  showToc;
     Vec<int>              tocState;
     WCHAR *               title;
+    WCHAR *               filePath;
 
-    TabData(): ctrl(NULL), showToc(false), title(NULL) { }
+    TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL) { }
 };
 
 void SaveTabData(WindowInfo *win, TabData *tdata);
