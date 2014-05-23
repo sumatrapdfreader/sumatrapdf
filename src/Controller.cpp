@@ -14,11 +14,23 @@
 #include "FileThumbnails.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "PdfSync.h"
 #include "SumatraPDF.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 
 ///// FixedPageUI /////
+
+FixedPageUIController::FixedPageUIController() :
+    userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None), pdfSync(NULL)
+{
+}
+
+FixedPageUIController::~FixedPageUIController()
+{
+    delete userAnnots;
+    delete pdfSync;
+}
 
 class FpController : public FixedPageUIController /*, public DisplayModelCallback */ {
     DisplayModel *dm;

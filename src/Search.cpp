@@ -395,9 +395,9 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
-    if (!win->pdfsync) {
+    if (!win->AsFixed()->pdfSync) {
         int err = Synchronizer::Create(win->loadedFilePath,
-            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->pdfsync);
+            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->AsFixed()->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
@@ -420,7 +420,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).Convert<int>();
     ScopedMem<WCHAR> srcfilepath;
     UINT line, col;
-    int err = win->pdfsync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
+    int err = win->AsFixed()->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         ShowNotification(win, _TR("No synchronization info at this position"));
         return true;
@@ -442,7 +442,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     ScopedMem<WCHAR> cmdline;
     if (inverseSearch)
-        cmdline.Set(win->pdfsync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
+        cmdline.Set(win->AsFixed()->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         ScopedMem<WCHAR> appDir(GetExePath());
@@ -578,16 +578,16 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
         }
     }
 
-    if (!win || !win->IsDocLoaded())
+    if (!win || win->GetEngineType() != Engine_PDF)
         return next;
-    if (!win->pdfsync)
+    if (!win->AsFixed()->pdfSync)
         return next;
 
     ack.fAck = 1;
-    assert(win->IsDocLoaded());
+    CrashIf(!win->AsFixed());
     UINT page;
     Vec<RectI> rects;
-    int ret = win->pdfsync->SourceToDoc(srcFile, line, col, &page, rects);
+    int ret = win->AsFixed()->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
     if (setFocus)
         win->Focus();

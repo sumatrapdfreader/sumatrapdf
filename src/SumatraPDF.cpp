@@ -350,8 +350,10 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file)
         WindowInfo *win = gWindows.At(i);
         Vec<RectI> rects;
         UINT page;
-        if (win->pdfsync && win->pdfsync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE)
+        if (win->AsFixed() && win->AsFixed()->pdfSync &&
+            win->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
+        }
     }
     return NULL;
 }
@@ -741,8 +743,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
 
     Controller *prevCtrl = win->ctrl;
     AbortFinding(args.win);
-    delete win->pdfsync;
-    win->pdfsync = NULL;
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     EngineType engineType;
@@ -918,7 +918,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     if (HasPermission(Perm_DiskAccess) && Engine_PDF == engineType) {
         CrashIf(!dm);
         int res = Synchronizer::Create(args.fileName,
-            static_cast<PdfEngine *>(dm->engine), &win->pdfsync);
+            static_cast<PdfEngine *>(dm->engine), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -1412,9 +1412,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
 
-    delete win->pdfsync;
-    win->pdfsync = NULL;
-
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
     win->mouseAction = MA_IDLE;
@@ -1470,12 +1467,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     OnMenuFindMatchCase(win);
     UpdateFindbox(win);
     UpdateTextSelection(win, false);
-
-    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
-        // TODO: move pdfsync to FixedPageUIController
-        Synchronizer::Create(win->ctrl->FilePath(),
-            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->pdfsync);
-    }
 
     if (gGlobalPrefs->reloadModifiedDocuments)
         win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win));
@@ -1967,8 +1958,6 @@ void CloseDocumentInWindow(WindowInfo *win)
     delete win->ctrl;
     win->ctrl = NULL;
     str::ReplacePtr(&win->loadedFilePath, NULL);
-    delete win->pdfsync;
-    win->pdfsync = NULL;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
     win->mouseAction = MA_IDLE;

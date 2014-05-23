@@ -8,7 +8,6 @@
 // for DisplayModelCallback
 #include "DisplayModel.h"
 
-class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
 class LinkHandler;
@@ -17,7 +16,6 @@ class StressTest;
 struct WatchedFile;
 class SumatraUIAutomationProvider;
 struct TabData;
-class Controller;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -71,9 +69,9 @@ public:
 
     EngineType GetEngineType() const { return ctrl && ctrl->AsFixed() ? ctrl->AsFixed()->engineType : Engine_None; }
 
-    FixedPageUIController *AsFixed() { return ctrl ? ctrl->AsFixed() : NULL; }
-    ChmUIController *AsChm() { return ctrl ? ctrl->AsChm() : NULL; }
-    EbookUIController *AsEbook() { return ctrl ? ctrl->AsEbook() : NULL; }
+    FixedPageUIController *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
+    ChmUIController *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
+    EbookUIController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
 
     WCHAR *         loadedFilePath;
     Controller *    ctrl;
@@ -188,9 +186,6 @@ public:
     LinkHandler *   linkHandler;
     PageElement *   linkOnLastButtonDown;
     const WCHAR *   url;
-
-    // synchronizer based on .pdfsync file
-    Synchronizer *  pdfsync;
 
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers

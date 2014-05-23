@@ -89,11 +89,12 @@ public:
 
 class DisplayModel;
 class LinkHandler;
+class Synchronizer;
 
 class FixedPageUIController : public Controller {
 public:
-    FixedPageUIController() : userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None) { }
-    virtual ~FixedPageUIController() { delete userAnnots; }
+    FixedPageUIController();
+    virtual ~FixedPageUIController();
 
     virtual DisplayModel *model() = 0;
     virtual BaseEngine *engine() = 0;
@@ -102,6 +103,7 @@ public:
     EngineType engineType;
     Vec<PageAnnotation> *userAnnots;
     bool userAnnotsModified;
+    Synchronizer *pdfSync;
 
     static FixedPageUIController *Create(DisplayModel *dm, LinkHandler *linkHandler);
 };

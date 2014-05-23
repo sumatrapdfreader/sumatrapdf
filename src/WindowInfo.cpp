@@ -7,7 +7,6 @@
 #include "Controller.h"
 #include "FileUtil.h"
 #include "Notifications.h"
-#include "PdfSync.h"
 #include "Print.h"
 #include "resource.h"
 #include "Selection.h"
@@ -34,8 +33,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), watcher(NULL),
-    pdfsync(NULL), stressTest(NULL),
+    delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL),
     uia_provider(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabSelectionHistory(NULL)
@@ -61,7 +59,6 @@ WindowInfo::~WindowInfo()
         uia_provider->Release();
     }
 
-    delete pdfsync;
     delete linkHandler;
     delete buffer;
     delete selectionOnPage;

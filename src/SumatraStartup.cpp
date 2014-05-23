@@ -247,11 +247,11 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
         ss.y = i.startScroll.y;
         dm->SetScrollState(ss);
     }
-    if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
+    if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         UINT page;
         Vec<RectI> rects;
             ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
-        int ret = win->pdfsync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
+        int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
     return win;
