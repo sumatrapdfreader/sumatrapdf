@@ -1108,7 +1108,7 @@ static WindowInfo* CreateWindowInfo()
         win->hwndCanvas, NULL, ghinst, NULL);
 
     CreateToolbar(win);
-    if (gGlobalPrefs->showTabBar)
+    if (gGlobalPrefs->useTabs)
         CreateTabbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
@@ -1289,7 +1289,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return NULL;
     }
 
-    if (gGlobalPrefs->showTabBar) {
+    if (gGlobalPrefs->useTabs) {
         // modify the args so that we always reuse the same window
         if (!args.win) {
             if (gWindows.Count()) {
@@ -1346,7 +1346,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     // insert new tab item for the loaded document
-    if (gGlobalPrefs->showTabBar && win && !win->IsAboutWindow())
+    if (gGlobalPrefs->useTabs && win && !win->IsAboutWindow())
         TabsOnLoadedDoc(win);
 
     if (gPluginMode) {
@@ -2036,7 +2036,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         // TODO: warn about unsaved changes
     }
 
-    if (gGlobalPrefs->showTabBar) {
+    if (gGlobalPrefs->useTabs) {
         TabsOnCloseWindow(win, quitIfLast);
         if (!quitIfLast && TabCtrl_GetItemCount(win->hwndTabBar))
             return;
@@ -2075,7 +2075,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         CrashIf(!gWindows.Contains(win));
         UpdateToolbarAndScrollbarState(*win);
 
-        if (gGlobalPrefs->showTabBar)
+        if (gGlobalPrefs->useTabs)
             ShowOrHideTabbar(win, SW_HIDE);
     }
 }
@@ -2623,7 +2623,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     }
 
     int tabBarDy = 0;
-    if (gGlobalPrefs->showTabBar && !(win->presentation || win->isFullScreen)) {
+    if (gGlobalPrefs->useTabs && !(win->presentation || win->isFullScreen)) {
         SetWindowPos(win->hwndTabBar, NULL, 0, rebBarDy, dx, TABBAR_HEIGHT, SWP_NOZORDER);
         UpdateTabWidth(win);
         tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
@@ -2892,7 +2892,7 @@ void ExitFullScreen(WindowInfo& win)
 
     if (gGlobalPrefs->showToolbar && !win.IsEbookLoaded())
         ShowWindow(win.hwndReBar, SW_SHOW);
-    if (gGlobalPrefs->showTabBar)
+    if (gGlobalPrefs->useTabs)
         ShowWindow(win.hwndTabBar, SW_SHOW);
     if (!win.isMenuHidden)
         SetMenu(win.hwndFrame, win.menu);
@@ -2990,7 +2990,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
 
-    if (gGlobalPrefs->showTabBar && isCtrl && VK_TAB == key) {
+    if (gGlobalPrefs->useTabs && isCtrl && VK_TAB == key) {
         TabsOnCtrlTab(win);
         return true;
     }
@@ -3326,7 +3326,7 @@ static void ResizeSidebar(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
         y = WindowRect(win->hwndReBar).dy;
-    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     totalDy -= y;
 
@@ -3370,7 +3370,7 @@ static void ResizeFav(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
         y = WindowRect(win->hwndReBar).dy;
-    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     totalDy -= y;
 
@@ -3536,7 +3536,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         toolbarDy = WindowRect(win->hwndReBar).dy;
 
     int tabBarDy = 0;
-    if (gGlobalPrefs->showTabBar && !win->isFullScreen && !win->presentation)
+    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
         tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
 
     int dy = rFrame.dy - (toolbarDy + tabBarDy);

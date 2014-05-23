@@ -893,7 +893,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     gGlobalPrefs->ebookUI.useFixedPageUI = true;
     gGlobalPrefs->chmUI.useFixedPageUI = true;
     // TODO: make stress test work with tabs?
-    gGlobalPrefs->showTabBar = false;
+    gGlobalPrefs->useTabs = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));

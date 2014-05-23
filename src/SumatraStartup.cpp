@@ -280,7 +280,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     i.reuseInstance = i.exitWhenDone = false;
     gGlobalPrefs->reuseInstance = false;
     // don't allow tabbed navigation
-    gGlobalPrefs->showTabBar = false;
+    gGlobalPrefs->useTabs = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
     gGlobalPrefs->showToolbar = true;
     // never allow esc as a shortcut to quit
@@ -479,7 +479,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && (gGlobalPrefs->reuseInstance || gGlobalPrefs->showTabBar) && FindWindow(FRAME_CLASS_NAME, 0))
+    if (!i.reuseInstance && (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) && FindWindow(FRAME_CLASS_NAME, 0))
         i.reuseInstance = true;
 
     if (gGlobalPrefs->reopenOnce) {

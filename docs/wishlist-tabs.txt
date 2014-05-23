@@ -4,8 +4,6 @@ TBD means "to be designed" i.e. a decision about the behavior must be made
 
 Must have:
 
-. tab support in ebook window
-
 . tabs must be above all content (i.e. toolbar will be inside the tab) to match
   chrome/firefox and also because when we have tabs in ebook window, tab bar
   would jump around the window since there is no toolbar in ebook window
@@ -19,6 +17,12 @@ Must have:
 . we already are not very good at showing error messages. Need to make sure
   that in the tab world, a failure to load document is shown to the user in some
   way
+
+. TBD: go single-process? Currently we might end up with multiple Sumatra processes.
+  Currently it doesn't matter much but if we implement moving tabs between
+  windows, it'll be much easier to do it if all windows belong to the same
+  process. Otherwise we would have to marshall quite a bit of state across
+  processes.
 
 . will probably release tabs as 3.0, as it's a big feature
 
@@ -34,4 +38,6 @@ Nice to have:
   a tab as there's argument that if we only have one document in the window,
   we don't have to show tab strip, which saves screen space)
 
+Done:
 
+. tab support in ebook window

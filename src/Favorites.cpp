@@ -613,7 +613,7 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
         case TVN_KEYDOWN: {
             TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
-                if (gGlobalPrefs->showTabBar && IsCtrlPressed())
+                if (gGlobalPrefs->useTabs && IsCtrlPressed())
                     TabsOnCtrlTab(win);
                 else
                     AdvanceFocus(win);
