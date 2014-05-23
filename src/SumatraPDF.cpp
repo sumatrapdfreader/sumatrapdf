@@ -1438,12 +1438,13 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     if (win->AsChm())
         win->AsChm()->engine()->SetParentHwnd(win->hwndCanvas);
+    // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
+    else if (win->AsEbook())
+        win->AsEbook()->EnableMessageHandling(false);
 
     // tell UI Automation about content change
     if (win->uia_provider && win->AsFixed())
         win->uia_provider->OnDocumentLoad(win->AsFixed()->model());
-
-    // TODO: prevent the ebook UI from redrawing before win->RedrawAll at the bottom
 
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
@@ -1462,20 +1463,24 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     win->tocState = tdata->tocState;
     SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
-    if (win->AsFixed() && win->AsFixed()->model()->viewPort != win->canvasRc)
-        win->ctrl->SetViewPortSize(win->GetViewPortSize());
-
     bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
     if (win->AsFixed()) {
+        if (win->AsFixed()->model()->viewPort != win->canvasRc)
+            win->ctrl->SetViewPortSize(win->GetViewPortSize());
         DisplayModel *dm = win->AsFixed()->model();
         dm->SetScrollState(dm->GetScrollState());
     }
-    else if (win->IsDocLoaded())
+    else if (win->AsChm()) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
+    }
+    else if (win->AsEbook()) {
+        win->AsEbook()->EnableMessageHandling(true);
+        win->ctrl->SetViewPortSize(win->GetViewPortSize());
+        win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
+    }
 
-    // TODO: why?
     OnMenuFindMatchCase(win);
     UpdateFindbox(win);
     UpdateTextSelection(win, false);

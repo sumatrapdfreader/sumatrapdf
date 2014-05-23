@@ -359,6 +359,7 @@ ChmUIController *ChmUIController::Create(ChmEngine *engine, WindowInfo *win)
 class EbController : public EbookUIController {
     EbookController *_ctrl;
     EbookControls *_ctrls;
+    bool handleMsgs;
 
 public:
     EbController(EbookControls *ctrls);
@@ -403,15 +404,16 @@ public:
     virtual Doc *doc() { return (Doc *)&_ctrl->GetDoc(); }
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) {
-        return _ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+        return handleMsgs ? _ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled) : 0;
     }
+    virtual void EnableMessageHandling(bool enable) { handleMsgs = enable; }
     virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
     virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
     virtual void UpdateDocumentColors();
 };
 
 EbController::EbController(EbookControls *ctrls) :
-    _ctrl(NULL), _ctrls(ctrls)
+    _ctrl(NULL), _ctrls(ctrls), handleMsgs(true)
 {
     CrashIf(_ctrl || !_ctrls);
 }

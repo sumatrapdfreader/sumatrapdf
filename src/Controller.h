@@ -129,6 +129,7 @@ public:
     virtual Doc *doc() = 0;
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) = 0;
+    virtual void EnableMessageHandling(bool enable) = 0;
     // EbookController's constructor calls UpdateWindow which
     // must not happen before EbookUIController::Create returns
     virtual void SetController(EbookController *ctrl) = 0;
