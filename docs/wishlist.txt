@@ -73,14 +73,7 @@ I think we sometimes get bug reports when PDF page doesn't render because of
 running out of memory. It would be good to show the exact cause of page
 rendering failure instead of generic "failed to render" message.
 
--- tabs (risky, high)
-
-But not using the Window's standard tab control, because it looks ugly. Chrome's
-are nice but complicated to draw. There are styles that look nice and are still
-easy to implement (Dash on mac, Metro style tabs etc. basically anything that is
-mostly a rectangle).
-
--- faster re-layout (med, risky)
+-- faster re-layout for ebooks (med, risky)
 
 Layout time is dominated by measuring strings.
 
@@ -198,3 +191,19 @@ no-install, browser hosted (well, at least in Chrome) app.
 We have quite a few places where we do integer overflow checks. Explore
 doing that in a systematic way, using SafeInt (http://safeint.codeplex.com/) or
 similar library (or extract useful stuff for us from SafeInt)
+
+-- use pdfium (high)
+
+Google released https://pdfium.googlesource.com/pdfium/ which is Foxit codebase
+under BSD license.
+
+It would probably be a bunch of work to integrate this (although at first it
+could be done alongside mupdf, since we have necessary abstractions to plug
+another engine). So that's the downside.
+
+I've briefly looked at the code and it might have some benefits over mupdf:
+* they have hooks for form editing (which should make implementing this much
+  easier)
+* their priting code looks more efficient
+* they probably support some of the more advanced PDF features
+* they are probably faster and (thanks to Google) more secure
