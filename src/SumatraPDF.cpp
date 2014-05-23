@@ -712,7 +712,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
             if (!chmEngine->SetParentHwnd(win->hwndCanvas)) {
                 delete chmEngine;
-                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType, true);
+                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType);
                 CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
                 goto LoadChmInFixedPageUI;
             }

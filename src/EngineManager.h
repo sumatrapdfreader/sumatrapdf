@@ -23,11 +23,7 @@ class PasswordUI;
 namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEngines=true);
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL, bool useAlternateChmEngine=false, bool enableEbookEngines=true);
-
-inline BaseEngine *CreateEngine(const WCHAR *filePath, bool useAlternateChmEngine) {
-    return CreateEngine(filePath, NULL, NULL, useAlternateChmEngine, true);
-}
+BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL, bool useAlternateChmEngine=true, bool enableEbookEngines=true);
 
 }
 

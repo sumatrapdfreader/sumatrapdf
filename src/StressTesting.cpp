@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "ChmEngine.h"
 #include "Controller.h"
 #include "DirIter.h"
 #include "Doc.h"
@@ -153,7 +154,7 @@ static int TimeOneMethod(Doc&doc, TextRenderMethod method, const WCHAR *methodNa
 // this is to compare the time it takes to layout a whole ebook file
 // using different text measurement method (since the time is mostly
 // dominated by text measure)
-void BenchEbookLayout(WCHAR *filePath) {
+void BenchEbookLayout(const WCHAR *filePath) {
     bool deleteLog = false;
     if (!gLog) {
         gLog = new slog::StderrLogger();
@@ -196,7 +197,28 @@ void BenchEbookLayout(WCHAR *filePath) {
     }
 }
 
-static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
+static void BenchChmLoadOnly(const WCHAR *filePath)
+{
+    Timer total(true);
+    logbench(L"Starting: %s", filePath);
+
+    Timer t(true);
+    ChmEngine *chmEngine = ChmEngine::CreateFromFile(filePath);
+    if (!chmEngine) {
+        logbench(L"Error: failed to load %s", filePath);
+        return;
+    }
+
+    double timeMs = t.Stop();
+    logbench(L"load: %.2f ms", timeMs);
+
+    delete chmEngine;
+    total.Stop();
+
+    logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+}
+
+static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
 {
     if (!file::Exists(filePath)) {
         return;
@@ -206,18 +228,21 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     // using all text rendering methods, so that we can compare and find
     // docs that take a long time to load
 
-#if 1
-    if (Doc::IsSupportedFile(filePath)) {
+    if (Doc::IsSupportedFile(filePath) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
         BenchEbookLayout(filePath);
         return;
     }
-#endif
+
+    if (ChmEngine::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
+        BenchChmLoadOnly(filePath);
+        return;
+    }
 
     Timer total(true);
     logbench(L"Starting: %s", filePath);
 
     Timer t(true);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, gGlobalPrefs->chmUI.useFixedPageUI);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         logbench(L"Error: failed to load %s", filePath);
         return;

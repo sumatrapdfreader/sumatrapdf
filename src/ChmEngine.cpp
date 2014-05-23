@@ -87,52 +87,9 @@ public:
 
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return (int)pages.Count(); }
-    virtual RectD PageMediabox(int pageNo) { return RectD(); }
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
-         // TODO: assert(0);
-         return NULL;
-    }
-
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
-        // TODO: assert(0);
-        return false;
-    }
-
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {
-        return pt;
-    }
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) {
-        return rect;
-    }
-    virtual unsigned char *GetFileData(size_t *cbCount) {
-        return (unsigned char *)file::ReadAll(fileName, cbCount);
-    }
-    virtual bool SaveFileAs(const WCHAR *copyFileName) {
-        return CopyFile(fileName, copyFileName, FALSE);
-    }
-
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View) {
-        return NULL;
-    }
-
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
-
     virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
-
-    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) { return NULL; }
-
-    virtual bool BenchLoadPage(int pageNo) { return true; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocTrace.Count() > 0; }

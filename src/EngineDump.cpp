@@ -447,7 +447,7 @@ Usage:
 
     EngineType engineType;
     PasswordHolder pwdUI(password);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, true);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;

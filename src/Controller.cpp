@@ -300,7 +300,7 @@ void ChmController::CreateThumbnail(DisplayState *ds)
 {
     // Create a thumbnail of chm document by loading it again and rendering
     // its first page to a hwnd specially created for it.
-    ChmEngine *engine = static_cast<ChmEngine *>(_engine->Clone());
+    ChmEngine *engine = _engine->Clone();
     if (!engine)
         return;
 

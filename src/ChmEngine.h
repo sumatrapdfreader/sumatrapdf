@@ -8,6 +8,7 @@
 
 class ChmNavigationCallback {
 public:
+    virtual ~ChmNavigationCallback() { }
     // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for chm ui where navigation
     // can be initiated from inside html control
@@ -20,13 +21,23 @@ public:
     virtual void FocusFrame(bool always) = 0;
     // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
-
-    virtual ~ChmNavigationCallback() { }
 };
 
-// TODO: stop inheriting from BaseEngine
-class ChmEngine : public BaseEngine {
+class ChmEngine {
 public:
+    virtual ~ChmEngine() { }
+    virtual ChmEngine *Clone() = 0;
+
+    virtual const WCHAR *FileName() const = 0;
+    virtual int PageCount() const = 0;
+
+    virtual WCHAR *GetProperty(DocumentProperty prop) = 0;
+    virtual const WCHAR *GetDefaultFileExt() const = 0;
+
+    virtual PageDestination *GetNamedDest(const WCHAR *name) = 0;
+    virtual bool HasTocTree() const = 0;
+    virtual DocTocItem *GetTocTree() = 0;
+
     virtual bool SetParentHwnd(HWND hwnd) = 0;
     virtual void RemoveParentHwnd() = 0;
     virtual void DisplayPage(int pageNo) = 0;
