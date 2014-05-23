@@ -1292,14 +1292,19 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     if (gGlobalPrefs->useTabs) {
         // modify the args so that we always reuse the same window
         if (!args.win) {
-            if (gWindows.Count()) {
+            // TODO: enable the tab bar if tabs haven't been initialized
+            if (gWindows.Count() && gWindows.At(0)->tabsVisible) {
                 args.win = gWindows.At(0);
                 args.isNewWindow = false;
                 args.forceReuse = true;
             }
         }
-        else
+        else if (!args.win->tabsVisible) {
+            args.win = NULL;
+        }
+        else {
             args.forceReuse = true;
+        }
         args.allowFailure = true;
 
         SaveCurrentTabData(args.win);
@@ -1346,7 +1351,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     // insert new tab item for the loaded document
-    if (gGlobalPrefs->useTabs && win && !win->IsAboutWindow())
+    if (win && win->tabsVisible && !win->IsAboutWindow())
         TabsOnLoadedDoc(win);
 
     if (gPluginMode) {
@@ -2036,7 +2041,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         // TODO: warn about unsaved changes
     }
 
-    if (gGlobalPrefs->useTabs) {
+    if (win->tabsVisible) {
         TabsOnCloseWindow(win, quitIfLast);
         if (!quitIfLast && TabCtrl_GetItemCount(win->hwndTabBar))
             return;
@@ -2075,7 +2080,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         CrashIf(!gWindows.Contains(win));
         UpdateToolbarAndScrollbarState(*win);
 
-        if (gGlobalPrefs->useTabs)
+        if (win->tabsVisible)
             ShowOrHideTabbar(win, SW_HIDE);
     }
 }
@@ -2616,24 +2621,22 @@ static void AdjustWindowEdge(WindowInfo& win)
 
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
-    int rebBarDy = 0;
-    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->IsEbookLoaded())) {
-        SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
-        rebBarDy = WindowRect(win->hwndReBar).dy;
-    }
-
-    int tabBarDy = 0;
-    if (gGlobalPrefs->useTabs && !(win->presentation || win->isFullScreen)) {
-        SetWindowPos(win->hwndTabBar, NULL, 0, rebBarDy, dx, TABBAR_HEIGHT, SWP_NOZORDER);
+    int topDy = 0;
+    if (win->tabsVisible && !(win->presentation || win->isFullScreen)) {
+        SetWindowPos(win->hwndTabBar, NULL, 0, topDy, dx, TABBAR_HEIGHT, SWP_NOZORDER);
         UpdateTabWidth(win);
-        tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+        topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+    }
+    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->IsEbookLoaded())) {
+        SetWindowPos(win->hwndReBar, NULL, 0, topDy, dx, 0, SWP_NOZORDER);
+        topDy += WindowRect(win->hwndReBar).dy;
     }
 
     bool tocVisible = win->tocLoaded && win->tocVisible;
     if (tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
     else
-        SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy + tabBarDy, dx, dy - (rebBarDy + tabBarDy), SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, topDy, dx, dy - topDy, SWP_NOZORDER);
 
     if (win->presentation || win->isFullScreen) {
         RectI fullscreen = GetFullscreenRect(win->hwndFrame);
@@ -2890,10 +2893,10 @@ void ExitFullScreen(WindowInfo& win)
     if (tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(&win, tocVisible, gGlobalPrefs->showFavorites);
 
+    if (win.tabsVisible)
+        ShowWindow(win.hwndTabBar, SW_SHOW);
     if (gGlobalPrefs->showToolbar && !win.IsEbookLoaded())
         ShowWindow(win.hwndReBar, SW_SHOW);
-    if (gGlobalPrefs->useTabs)
-        ShowWindow(win.hwndTabBar, SW_SHOW);
     if (!win.isMenuHidden)
         SetMenu(win.hwndFrame, win.menu);
 
@@ -2990,7 +2993,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
 
-    if (gGlobalPrefs->useTabs && isCtrl && VK_TAB == key) {
+    if (win->tabsVisible && isCtrl && VK_TAB == key) {
         TabsOnCtrlTab(win);
         return true;
     }
@@ -3324,10 +3327,10 @@ static void ResizeSidebar(WindowInfo *win)
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
-        y = WindowRect(win->hwndReBar).dy;
-    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
+    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
+        y += WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
@@ -3368,10 +3371,10 @@ static void ResizeFav(WindowInfo *win)
 
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
-        y = WindowRect(win->hwndReBar).dy;
-    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
+    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
+        y += WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
     // rToc.y is always 0, as rToc is a ClientRect, so we first have
@@ -3531,21 +3534,19 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
     gGlobalPrefs->showFavorites = showFavorites;
 
     ClientRect rFrame(win->hwndFrame);
-    int toolbarDy = 0;
+    int topDy = 0;
+    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
+        topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
-        toolbarDy = WindowRect(win->hwndReBar).dy;
+        topDy += WindowRect(win->hwndReBar).dy;
 
-    int tabBarDy = 0;
-    if (gGlobalPrefs->useTabs && !win->isFullScreen && !win->presentation)
-        tabBarDy = IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-
-    int dy = rFrame.dy - (toolbarDy + tabBarDy);
+    int dy = rFrame.dy - topDy;
 
     if (!sidebarVisible) {
         if (GetFocus() == win->hwndTocTree || GetFocus() == win->hwndFavTree)
             SetFocus(win->hwndFrame);
 
-        SetWindowPos(win->hwndCanvas, NULL, 0, toolbarDy + tabBarDy, rFrame.dx, dy, SWP_NOZORDER);
+        SetWindowPos(win->hwndCanvas, NULL, 0, topDy, rFrame.dx, dy, SWP_NOZORDER);
         ShowWindow(win->hwndSidebarSplitter, SW_HIDE);
         ShowWindow(win->hwndTocBox, SW_HIDE);
         ShowWindow(win->hwndFavSplitter, SW_HIDE);
@@ -3560,7 +3561,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         return;
     }
 
-    int y = toolbarDy + tabBarDy;
+    int y = topDy;
     ClientRect sidebarRc(win->hwndTocBox);
     int tocDx = sidebarRc.dx;
     if (tocDx == 0) {

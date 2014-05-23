@@ -38,7 +38,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     pdfsync(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL),
     uia_provider(NULL),
-    hwndTabBar(NULL), tabSelectionHistory(NULL)
+    hwndTabBar(NULL), tabsVisible(false), tabSelectionHistory(NULL)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;

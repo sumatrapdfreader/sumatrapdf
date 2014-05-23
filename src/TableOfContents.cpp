@@ -381,7 +381,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
         case TVN_KEYDOWN: {
             TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
-                if (gGlobalPrefs->useTabs && IsCtrlPressed())
+                if (win->tabsVisible && IsCtrlPressed())
                     TabsOnCtrlTab(win);
                 else
                     AdvanceFocus(win);

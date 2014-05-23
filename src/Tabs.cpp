@@ -518,6 +518,7 @@ void CreateTabbar(WindowInfo *win)
     SetWindowFont(win->hwndTabBar, gDefaultGuiFont, FALSE);
     TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
 
+    win->tabsVisible = true;
     win->tabSelectionHistory = new Vec<TabData *>();
 }
 
