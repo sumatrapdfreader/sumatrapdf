@@ -44,8 +44,6 @@ HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
         return new Fb2Formatter(args, doc.AsFb2());
     if (doc.AsMobi())
         return new MobiFormatter(args, doc.AsMobi());
-    if (doc.AsMobiTest())
-        return new MobiFormatter(args, NULL);
     CrashIf(true);
     return NULL;
 }

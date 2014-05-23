@@ -13,21 +13,12 @@
 class EpubDoc;
 class Fb2Doc;
 class MobiDoc;
-class MobiTestDoc;
 
 struct ImageData;
 enum DocumentProperty;
 
-enum DocType {
-    Doc_None = 0,
-
-    Doc_Epub, Doc_Fb2,
-    Doc_Mobi, Doc_MobiTest,
-};
-
-enum DocError {
-    Error_None, Error_Unknown,
-};
+enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi };
+enum DocError { Error_None, Error_Unknown };
 
 class Doc
 {
@@ -50,7 +41,6 @@ protected:
         EpubDoc *   epubDoc;
         Fb2Doc *    fb2Doc;
         MobiDoc *   mobiDoc;
-        MobiTestDoc *mobiTestDoc;
     };
 
     const WCHAR *GetFilePathFromDoc() const;
@@ -65,7 +55,6 @@ public:
     explicit Doc(EpubDoc *doc);
     explicit Doc(Fb2Doc *doc);
     explicit Doc(MobiDoc *doc);
-    explicit Doc(MobiTestDoc *doc);
 
     void Delete();
 
@@ -81,7 +70,6 @@ public:
     EpubDoc *AsEpub() const;
     Fb2Doc *AsFb2() const;
     MobiDoc *AsMobi() const;
-    MobiTestDoc *AsMobiTest() const;
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement so

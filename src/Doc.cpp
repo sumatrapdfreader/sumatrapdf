@@ -44,9 +44,6 @@ void Doc::Delete()
     case Doc_Mobi:
         delete mobiDoc;
         break;
-    case Doc_MobiTest:
-        delete mobiTestDoc;
-        break;
     case Doc_None:
         break;
     default:
@@ -78,13 +75,6 @@ Doc::Doc(MobiDoc *doc)
     mobiDoc = doc;
 }
 
-Doc::Doc(MobiTestDoc *doc)
-{ 
-    Clear();
-    type = doc ? Doc_MobiTest : Doc_None;
-    mobiTestDoc = doc;
-}
-
 void Doc::Clear()
 {
     type = Doc_None;
@@ -97,13 +87,6 @@ MobiDoc *Doc::AsMobi() const
 {
     if (Doc_Mobi == type)
         return mobiDoc;
-    return NULL;
-}
-
-MobiTestDoc *Doc::AsMobiTest() const
-{
-    if (Doc_MobiTest == type)
-        return mobiTestDoc;
     return NULL;
 }
 
@@ -131,8 +114,6 @@ const WCHAR *Doc::GetFilePathFromDoc() const
         return fb2Doc->GetFileName();
     case Doc_Mobi:
         return mobiDoc->GetFileName();
-    case Doc_MobiTest:
-        return NULL;
     case Doc_None:
         return NULL;
     default:
@@ -162,8 +143,6 @@ WCHAR *Doc::GetProperty(DocumentProperty prop)
         return fb2Doc->GetProperty(prop);
     case Doc_Mobi:
         return mobiDoc->GetProperty(prop);
-    case Doc_MobiTest:
-        return NULL;
     case Doc_None:
         return NULL;
     default:
@@ -181,8 +160,6 @@ const char *Doc::GetHtmlData(size_t &len)
         return fb2Doc->GetTextData(&len);
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlData(len);
-    case Doc_MobiTest:
-        return mobiTestDoc->GetBookHtmlData(len);
     default:
         CrashIf(true);
         return NULL;
@@ -198,8 +175,6 @@ size_t Doc::GetHtmlDataSize()
         return fb2Doc->GetTextDataSize();
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlSize();
-    case Doc_MobiTest:
-        return mobiTestDoc->GetBookHtmlSize();
     default:
         CrashIf(true);
         return NULL;

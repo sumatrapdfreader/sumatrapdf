@@ -2074,9 +2074,15 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 // returns false if no filter has been appended
 static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter)
 {
-    EngineType type = ctrl->AsFixed() ? ctrl->AsFixed()->engineType :
-                      ctrl->AsChm() ? Engine_Chm :
-                      Engine_None;
+    EngineType type = Engine_None;
+    if (ctrl->AsFixed())
+        type = ctrl->AsFixed()->engineType;
+    else if (ctrl->AsChm())
+        type = Engine_Chm;
+    else if (ctrl->AsEbook()) {
+        Doc *doc = ctrl->AsEbook()->doc();
+        type = doc->AsEpub() ? Engine_Epub : doc->AsFb2() ? Engine_Fb2 : doc->AsMobi() ? Engine_Mobi : Engine_None;
+    }
     switch (type) {
         case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
         case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;

@@ -67,20 +67,4 @@ public:
     static MobiDoc *    CreateFromFile(const WCHAR *fileName);
 };
 
-// for testing MobiFormatter
-class MobiTestDoc {
-    str::Str<char> htmlData;
-
-public:
-    MobiTestDoc(const char *html, size_t len) {
-        htmlData.Append(html, len);
-    }
-
-    const char *GetBookHtmlData(size_t& lenOut) const {
-        lenOut = htmlData.Size();
-        return htmlData.Get();
-    }
-    size_t      GetBookHtmlSize() const { return htmlData.Size(); }
-};
-
 #endif
