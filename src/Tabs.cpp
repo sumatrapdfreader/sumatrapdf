@@ -549,7 +549,7 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
             UpdateTocExpansionState(win, hRoot);
     }
 
-    if (win->IsChm())
+    if (win->AsChm())
         win->AsChm()->engine()->RemoveParentHwnd();
 
     SaveTabData(win, *tdata);

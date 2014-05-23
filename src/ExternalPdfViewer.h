@@ -7,6 +7,7 @@
 class WindowInfo;
 
 bool CanViewExternally(WindowInfo *win=NULL);
+bool CouldBePDFDoc(WindowInfo *win);
 
 bool CanViewWithFoxit(WindowInfo *win=NULL);
 bool ViewWithFoxit(WindowInfo *win, WCHAR *args=NULL);

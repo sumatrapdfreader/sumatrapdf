@@ -45,7 +45,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
-    if (win->IsCbx()) {
+    if (Engine_ComicBook == win->GetEngineType()) {
         bool mangaMode = win->AsFixed()->model()->GetDisplayR2L();
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
@@ -366,7 +366,7 @@ void MenuUpdateZoom(WindowInfo* win)
 void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    bool filePrintAllowed = !filePrintEnabled || !win->IsFixedDocLoaded() || win->AsFixed()->engine()->AllowsPrinting();
+    bool filePrintAllowed = !filePrintEnabled || !win->AsFixed() || win->AsFixed()->engine()->AllowsPrinting();
 #else
     bool filePrintAllowed = true;
 #endif
@@ -456,7 +456,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         }
     }
 
-    if (win->IsFixedDocLoaded())
+    if (win->AsFixed())
         win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->AsFixed()->engine()->IsImageCollection());
 
     // TODO: is this check too expensive?
@@ -524,8 +524,8 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
 
 void OnContextMenu(WindowInfo* win, int x, int y)
 {
-    CrashIf(!win->IsFixedDocLoaded());
-    if (!win->IsFixedDocLoaded())
+    CrashIf(!win->AsFixed());
+    if (!win->AsFixed())
         return;
 
     PageElement *pageEl = win->AsFixed()->model()->GetElementAtPos(PointI(x, y));
@@ -598,7 +598,7 @@ void OnMenuCustomZoom(WindowInfo* win)
         return;
 
     float zoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, win->IsChm(), &zoom))
+    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom))
         return;
     ZoomToSelection(win, zoom);
 }
@@ -606,7 +606,7 @@ void OnMenuCustomZoom(WindowInfo* win)
 static void RebuildFileMenu(WindowInfo *win, HMENU menu)
 {
     win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->IsChm() ? MF_NOT_FOR_CHM : 0);
+    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->AsChm() ? MF_NOT_FOR_CHM : 0);
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, win->loadedFilePath);
 
@@ -618,11 +618,11 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 
     // Also suppress PDF specific items for non-PDF documents
-    if (win->IsNotPdf() || !CanViewWithAcrobat())
+    if (!CouldBePDFDoc(win) || !CanViewWithAcrobat())
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (win->IsNotPdf() || !CanViewWithFoxit())
+    if (!CouldBePDFDoc(win) || !CanViewWithFoxit())
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (win->IsNotPdf() || !CanViewWithPDFXChange())
+    if (!CouldBePDFDoc(win) || !CanViewWithPDFXChange())
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
     if (!CanViewWithXPSViewer(win))
         win::menu::Remove(menu, IDM_VIEW_WITH_XPS_VIEWER);
@@ -634,11 +634,11 @@ HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
     int filter = 0;
-    if (win->IsChm())
+    if (win->AsChm())
         filter |= MF_NOT_FOR_CHM;
-    else if (win->IsEbookLoaded())
+    else if (win->AsEbook())
         filter |= MF_NOT_FOR_EBOOK_UI;
-    if (!win->IsCbx())
+    if (win->GetEngineType() != Engine_ComicBook)
         filter |= MF_CBX_ONLY;
 
     HMENU m = CreateMenu();
@@ -648,13 +648,13 @@ HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
     m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
-    if (!win->IsEbookLoaded()) {
+    if (!win->AsEbook()) {
         m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu(), filter);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
     }
 
     // TODO: implement Favorites for ebooks
-    if (HasPermission(Perm_SavePreferences) && !win->IsEbookLoaded()) {
+    if (HasPermission(Perm_SavePreferences) && !win->AsEbook()) {
         // I think it makes sense to disable favorites in restricted mode
         // because they wouldn't be persisted, anyway
         m = BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), CreateMenu());

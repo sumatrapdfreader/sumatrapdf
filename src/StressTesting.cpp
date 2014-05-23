@@ -767,7 +767,7 @@ void StressTest::OnTimer(int timerIdGot)
 
     // chm documents aren't rendered and we block until we show them
     // so we can assume previous page has been shown and go to next page
-    if (!win->IsFixedDocLoaded()) {
+    if (!win->AsFixed()) {
         if (!GoToNextPage())
             return;
         goto Next;

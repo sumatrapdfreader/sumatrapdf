@@ -8,7 +8,7 @@
 
 void WindowInfo::UpdateScrollbars(SizeI canvas)
 {
-    CrashIf(!IsFixedDocLoaded());
+    CrashIf(!AsFixed());
     DisplayModel *dm = AsFixed()->model();
 
     SCROLLINFO si = { 0 };
@@ -54,7 +54,7 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -91,7 +91,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
 {
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -147,7 +147,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
 
 static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
 
     if (win.presentation) {
         // shortly display the cursor if the mouse has moved and the cursor is hidden
@@ -209,7 +209,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     }
 
     CrashIfDebugOnly(win.mouseAction != MA_IDLE); // happened e.g. in crash 50539
-    CrashIf(!win.IsFixedDocLoaded());
+    CrashIf(!win.AsFixed());
 
     SetFocus(win.hwndFrame);
 
@@ -237,7 +237,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
     if (MA_IDLE == win.mouseAction || MA_DRAGGING_RIGHT == win.mouseAction)
         return;
     AssertCrash(MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction || MA_DRAGGING == win.mouseAction);
@@ -366,7 +366,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         win.mouseAction = MA_IDLE;
     else if (win.mouseAction != MA_IDLE)
         return;
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
 
     SetFocus(win.hwndFrame);
 
@@ -378,7 +378,7 @@ static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
-    AssertCrash(win.IsFixedDocLoaded());
+    AssertCrash(win.AsFixed());
     if (MA_DRAGGING_RIGHT != win.mouseAction)
         return;
 
@@ -523,8 +523,8 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
 
 static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 {
-    AssertCrash(win.IsFixedDocLoaded());
-    if (!win.IsFixedDocLoaded()) return;
+    AssertCrash(win.AsFixed());
+    if (!win.AsFixed()) return;
     DisplayModel* dm = win.AsFixed()->model();
 
     bool paintOnBlackWithoutShadow = win.presentation ||
@@ -693,7 +693,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
     case MA_SELECTING:
         break;
     case MA_IDLE:
-        if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.IsFixedDocLoaded()) {
+        if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.AsFixed()) {
             DisplayModel *dm = win.AsFixed()->model();
             PointI pti(pt.x, pt.y);
             PageElement *pageEl = dm->GetElementAtPos(pti);
@@ -773,7 +773,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     if (horizontal)
         gSuppressAltKey = true;
 
-    if (gDeltaPerLine < 0 && win.IsFixedDocLoaded()) {
+    if (gDeltaPerLine < 0 && win.AsFixed()) {
         // scroll by (fraction of a) page
         SCROLLINFO si = { 0 };
         si.cbSize = sizeof(si);
@@ -860,7 +860,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
     switch (gi.dwID) {
         case GID_ZOOM:
-            if (gi.dwFlags != GF_BEGIN && win.IsFixedDocLoaded()) {
+            if (gi.dwFlags != GF_BEGIN && win.AsFixed()) {
                 float zoom = (float)LODWORD(gi.ullArguments) / (float)win.touchState.startArg;
                 ZoomToSelection(&win, zoom, false, true);
             }
@@ -888,11 +888,11 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                         win.ctrl->GoToNextPage();
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
-                    if (win.IsFixedDocLoaded())
+                    if (win.AsFixed())
                         win.AsFixed()->model()->ScrollXTo(win.touchState.panScrollOrigX);
                     win.touchState.panStarted = false;
                 }
-                else if (win.IsFixedDocLoaded()) {
+                else if (win.AsFixed()) {
                     // Pan/Scroll
                     win.MoveDocBy(deltaX, deltaY);
                 }
@@ -901,7 +901,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
         case GID_ROTATE:
             // Rotate the PDF 90 degrees in one direction
-            if (gi.dwFlags == GF_END && win.IsFixedDocLoaded()) {
+            if (gi.dwFlags == GF_END && win.AsFixed()) {
                 // This is in radians
                 double rads = GID_ROTATE_ANGLE_FROM_ARGUMENT(LODWORD(gi.ullArguments));
                 // The angle from the rotate is the opposite of the Sumatra rotate, thus the negative
@@ -1326,7 +1326,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
     case EBOOK_LAYOUT_TIMER_ID:
         KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
         // TODO: handle background tabs
-        if (win.IsEbookLoaded())
+        if (win.AsEbook())
             win.AsEbook()->ctrl()->OnLayoutTimer();
         break;
     }
@@ -1386,13 +1386,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
     default:
         // TODO: achieve this split through subclassing or different window classes
-        if (win->IsFixedDocLoaded())
+        if (win->AsFixed())
             return WndProcCanvasFixedPageUI(*win, hwnd, msg, wParam, lParam);
 
-        if (win->IsChm())
+        if (win->AsChm())
             return WndProcCanvasChmUI(*win, hwnd, msg, wParam, lParam);
 
-        if (win->IsEbookLoaded())
+        if (win->AsEbook())
             return WndProcCanvasEbookUI(*win, hwnd, msg, wParam, lParam);
 
         if (win->IsAboutWindow())

@@ -75,7 +75,7 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
     win->selectionOnPage = NULL;
     win->showSelection = false;
 
-    if (alsoTextSel && win->IsFixedDocLoaded())
+    if (alsoTextSel && win->AsFixed())
         win->AsFixed()->model()->textSelection->Reset();
 }
 
@@ -149,7 +149,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
 
 void UpdateTextSelection(WindowInfo *win, bool select)
 {
-    if (!win->IsFixedDocLoaded())
+    if (!win->AsFixed())
         return;
 
     DisplayModel *dm = win->AsFixed()->model();
@@ -171,13 +171,13 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relative)
 {
-    if (win->IsChm()) {
+    if (win->AsChm()) {
         win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual() : 1));
         UpdateToolbarState(win);
         return;
     }
 
-    if (!win->IsFixedDocLoaded())
+    if (!win->AsFixed())
         return;
 
     PointI pt;
@@ -232,8 +232,8 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!win->selectionOnPage) return;
     CrashIf(win->selectionOnPage->Count() == 0);
     if (win->selectionOnPage->Count() == 0) return;
-    CrashIf(!win->IsFixedDocLoaded());
-    if (!win->IsFixedDocLoaded()) return;
+    CrashIf(!win->AsFixed());
+    if (!win->AsFixed()) return;
 
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
@@ -293,7 +293,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         return;
     }
 
-    if (win->IsChm()) {
+    if (win->AsChm()) {
         win->AsChm()->engine()->SelectAll();
         return;
     }
@@ -344,7 +344,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
     CrashIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
     if (dx != 0 || dy != 0) {
-        CrashIf(!win->IsFixedDocLoaded());
+        CrashIf(!win->AsFixed());
         DisplayModel *dm = win->AsFixed()->model();
         PointI oldOffset = dm->viewPort.TL();
         win->MoveDocBy(dx, dy);
@@ -360,7 +360,7 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 
 void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 {
-    CrashIf(!win->IsFixedDocLoaded());
+    CrashIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 
     win->selectionRect = RectI(x, y, 0, 0);

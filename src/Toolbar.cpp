@@ -55,7 +55,7 @@ static bool IsVisibleToolbarButton(WindowInfo *win, int buttonNo)
 
     case IDT_VIEW_FIT_WIDTH:
     case IDT_VIEW_FIT_PAGE:
-        return !win->IsChm();
+        return !win->AsChm();
 
     case IDM_FIND_FIRST:
     case IDM_FIND_NEXT:
@@ -176,7 +176,7 @@ void ShowOrHideToolbarForWindow(WindowInfo *win)
 {
     if (win->presentation || win->isFullScreen)
         return;
-    if (gGlobalPrefs->showToolbar && !win->IsEbookLoaded()) {
+    if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     } else {
         // Move the focus out of the toolbar

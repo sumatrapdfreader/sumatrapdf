@@ -33,7 +33,7 @@ bool NeedsFindUI(WindowInfo *win)
 {
     if (!win->IsDocLoaded())
         return true;
-    if (!win->IsFixedDocLoaded())
+    if (!win->AsFixed())
         return false;
     if (win->AsFixed()->engine()->IsImageCollection())
         return false;
@@ -42,12 +42,12 @@ bool NeedsFindUI(WindowInfo *win)
 
 void OnMenuFind(WindowInfo *win)
 {
-    if (win->IsChm()) {
+    if (win->AsChm()) {
         win->AsChm()->engine()->FindInCurrentPage();
         return;
     }
 
-    if (!win->IsFixedDocLoaded() || !NeedsFindUI(win))
+    if (!win->AsFixed() || !NeedsFindUI(win))
         return;
 
     // copy any selected text to the find bar, if it's still empty
@@ -358,7 +358,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
 
 void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 {
-    CrashIf(!win->IsFixedDocLoaded());
+    CrashIf(!win->AsFixed());
     DisplayModel *dm = win->AsFixed()->model();
     PageInfo *pageInfo = dm->GetPageInfo(win->fwdSearchMark.page);
     if (!pageInfo || 0.0 == pageInfo->visibleRatio)
@@ -464,7 +464,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
 void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
-    CrashIf(!win->IsFixedDocLoaded());
+    CrashIf(!win->AsFixed());
     DisplayModel *dm = win->AsFixed()->model();
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = dm->GetPageInfo(page);
@@ -716,7 +716,7 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
     if (zoom != INVALID_ZOOM)
         ZoomToSelection(win, zoom);
 
-    if ((scroll.x != -1 || scroll.y != -1) && win->IsFixedDocLoaded()) {
+    if ((scroll.x != -1 || scroll.y != -1) && win->AsFixed()) {
         DisplayModel *dm = win->AsFixed()->model();
         ScrollState ss = dm->GetScrollState();
         ss.x = scroll.x;

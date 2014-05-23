@@ -108,10 +108,17 @@ bool CanViewExternally(WindowInfo *win)
     return file::Exists(win->loadedFilePath);
 }
 
+bool CouldBePDFDoc(WindowInfo *win)
+{
+    CrashIf(!win);
+    // consider any error state a potential PDF document
+    return !win->IsDocLoaded() || win->GetEngineType() == Engine_PDF;
+}
+
 bool CanViewWithFoxit(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (win && win->IsNotPdf() || !CanViewExternally(win))
+    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
         return false;
     ScopedMem<WCHAR> path(GetFoxitPath());
     return path != NULL;
@@ -142,7 +149,7 @@ bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
 bool CanViewWithPDFXChange(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to PDF X-Change
-    if (win && win->IsNotPdf() || !CanViewExternally(win))
+    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
         return false;
     ScopedMem<WCHAR> path(GetPDFXChangePath());
     return path != NULL;
@@ -173,7 +180,7 @@ bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
 bool CanViewWithAcrobat(WindowInfo *win)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (win && win->IsNotPdf() || !CanViewExternally(win))
+    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
         return false;
     ScopedMem<WCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
@@ -247,7 +254,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     if (!win || win->IsAboutWindow() || !CanViewExternally(win))
         return false;
     // allow viewing with HTML Help, if either an CHM document is loaded...
-    if (win->IsDocLoaded() && win->GetEngineType() != Engine_Chm2 && !win->IsChm())
+    if (win->IsDocLoaded() && win->GetEngineType() != Engine_Chm2 && !win->AsChm())
         return false;
     // or a file ending in .chm has failed to be loaded
     if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))

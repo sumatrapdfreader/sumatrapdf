@@ -832,12 +832,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             if (win->uia_provider)
                 win->uia_provider->OnDocumentLoad(dm);
         }
-        else if (win->IsChm()) {
+        else if (win->AsChm()) {
             win->ctrl->SetDisplayMode(displayMode);
             win->ctrl->GoToPage(startPage, false);
         }
         else
-            CrashIf(!win->IsEbookLoaded());
+            CrashIf(!win->AsEbook());
         delete prevCtrl;
     } else if (args.allowFailure) {
         delete prevCtrl;
@@ -851,7 +851,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->ctrl = prevCtrl;
     }
 
-    if (win->ctrl != prevCtrl && win->IsFixedDocLoaded()) {
+    if (win->ctrl != prevCtrl && win->AsFixed()) {
         win->AsFixed()->userAnnots = LoadFileModifications(args.fileName);
         win->AsFixed()->userAnnotsModified = false;
         win->AsFixed()->engine()->UpdateUserAnnotations(win->AsFixed()->userAnnots);
@@ -944,10 +944,10 @@ Error:
         // if the window isn't shown and win.canvasRc is still empty, zoom
         // has not been determined yet
         // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
-        // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->IsChm());
+        // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->AsChm());
         if ((args.showWin || ss.page != 1) && dm)
             dm->SetScrollState(ss);
-        else if (win->IsChm())
+        else if (win->AsChm())
             win->ctrl->GoToPage(ss.page, false);
         UpdateToolbarState(win);
     }
@@ -1011,7 +1011,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
             CreateThumbnailForFile(*win, *state);
     }
 
-    if (win->IsFixedDocLoaded()) {
+    if (win->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
         ScopedMem<char> decryptionKey(win->AsFixed()->engine()->GetDecryptionKey());
@@ -1030,7 +1030,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
     ToolbarUpdateStateForWindow(&win, true);
-    if (!win.IsFixedDocLoaded())
+    if (!win.AsFixed())
         ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
     if (win.IsAboutWindow())
         win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
@@ -1427,11 +1427,11 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     delete win->ctrl;
     win->ctrl = tdata->ctrl;
 
-    if (win->IsChm())
+    if (win->AsChm())
         win->AsChm()->engine()->SetParentHwnd(win->hwndCanvas);
 
     // tell UI Automation about content change
-    if (win->uia_provider && win->IsFixedDocLoaded())
+    if (win->uia_provider && win->AsFixed())
         win->uia_provider->OnDocumentLoad(win->AsFixed()->model());
 
     // TODO: prevent the ebook UI from redrawing before win->RedrawAll at the bottom
@@ -1447,7 +1447,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     win->tocState = tdata->tocState;
     SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
-    if (win->IsFixedDocLoaded() && win->AsFixed()->model()->viewPort != win->canvasRc)
+    if (win->AsFixed() && win->AsFixed()->model()->viewPort != win->canvasRc)
         win->ctrl->SetViewPortSize(win->GetViewPortSize());
 
     int pageCount = win->ctrl->PageCount();
@@ -1459,7 +1459,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
-    if (win->IsFixedDocLoaded()) {
+    if (win->AsFixed()) {
         DisplayModel *dm = win->AsFixed()->model();
         dm->SetScrollState(dm->GetScrollState());
     }
@@ -1531,8 +1531,8 @@ bool DoCachePageRendering(DisplayModel *dm, int pageNo)
 /* Send the request to render a given page to a rendering thread */
 void WindowInfo::RequestRendering(int pageNo)
 {
-    CrashIf(!IsFixedDocLoaded());
-    if (!IsFixedDocLoaded()) return;
+    CrashIf(!AsFixed());
+    if (!AsFixed()) return;
 
     DisplayModel *dm = AsFixed()->model();
     // don't render any plain images on the rendering thread,
@@ -1870,7 +1870,7 @@ static void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 static void RerenderEverything()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        if (!gWindows.At(i)->IsFixedDocLoaded())
+        if (!gWindows.At(i)->AsFixed())
             continue;
         DisplayModel *dm = gWindows.At(i)->AsFixed()->model();
         gRenderCache.CancelRendering(dm);
@@ -1898,7 +1898,7 @@ void UpdateDocumentColors()
     // TODO: only do this if colors have actually changed?
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->IsEbookLoaded())
+        if (win->AsEbook())
             win->AsEbook()->UpdateDocumentColors();
     }
 
@@ -1952,8 +1952,8 @@ static void OnMenuExit()
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
-    bool wasntFixed = !win->IsFixedDocLoaded();
-    if (win->IsChm())
+    bool wasntFixed = !win->AsFixed();
+    if (win->AsChm())
         win->AsChm()->engine()->RemoveParentHwnd();
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
@@ -2034,7 +2034,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             return;
     }
 
-    if (win->IsFixedDocLoaded() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
+    if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
         // TODO: warn about unsaved changes
     }
 
@@ -2044,7 +2044,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             return;
     }
 
-    if (win->IsFixedDocLoaded())
+    if (win->AsFixed())
         win->AsFixed()->model()->dontRenderFlag = true;
     if (win->presentation)
         ExitFullScreen(*win);
@@ -2125,7 +2125,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     AssertCrash(srcFileName);
     if (!srcFileName) return;
 
-    BaseEngine *engine = win.IsFixedDocLoaded() ? win.AsFixed()->engine() : NULL;
+    BaseEngine *engine = win.AsFixed() ? win.AsFixed()->engine() : NULL;
     // Can't save a document's content as plain text if text copying isn't allowed
     bool hasCopyPerm = engine && engine->IsImageCollection();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -2244,7 +2244,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             LocalFree(msgBuf);
         }
     }
-    if (ok && win.IsFixedDocLoaded() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified) {
+    if (ok && win.AsFixed() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified) {
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument ||
             !engine || !engine->SupportsAnnotation(true)) {
             ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
@@ -2403,7 +2403,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         fileName.Set(str::Join(dstFileName, L".lnk"));
 
     ScrollState ss(win.ctrl->CurrentPageNo());
-    if (win.IsFixedDocLoaded())
+    if (win.AsFixed())
         ss = win.AsFixed()->model()->GetScrollState();
     const WCHAR *viewMode = prefs::conv::FromDisplayMode(win.ctrl->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.ctrl->GetZoomVirtual()));
@@ -2624,7 +2624,7 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
         UpdateTabWidth(win);
         topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
     }
-    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->IsEbookLoaded())) {
+    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->AsEbook())) {
         SetWindowPos(win->hwndReBar, NULL, 0, topDy, dx, 0, SWP_NOZORDER);
         topDy += WindowRect(win->hwndReBar).dy;
     }
@@ -2733,8 +2733,8 @@ static void OnMenuViewContinuous(WindowInfo& win)
 
 static void OnMenuViewMangaMode(WindowInfo *win)
 {
-    CrashIf(!win->IsCbx());
-    if (!win->IsCbx()) return;
+    CrashIf(win->GetEngineType() != Engine_ComicBook);
+    if (win->GetEngineType() != Engine_ComicBook) return;
     DisplayModel *dm = win->AsFixed()->model();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());
     ScrollState state = dm->GetScrollState();
@@ -2791,7 +2791,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation && !win.IsEbookLoaded()) {
+    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation && !win.AsEbook()) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -2893,7 +2893,7 @@ void ExitFullScreen(WindowInfo& win)
 
     if (win.tabsVisible)
         ShowWindow(win.hwndTabBar, SW_SHOW);
-    if (gGlobalPrefs->showToolbar && !win.IsEbookLoaded())
+    if (gGlobalPrefs->showToolbar && !win.AsEbook())
         ShowWindow(win.hwndReBar, SW_SHOW);
     if (!win.isMenuHidden)
         SetMenu(win.hwndFrame, win.menu);
@@ -2927,7 +2927,7 @@ void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
-    bool hasToolbar = !win->isFullScreen && !win->presentation && !win->IsEbookLoaded() &&
+    bool hasToolbar = !win->isFullScreen && !win->presentation && !win->AsEbook() &&
                       gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
@@ -3008,10 +3008,10 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     if (!win->IsDocLoaded())
         return false;
 
-    DisplayModel *dm = win->IsFixedDocLoaded() ? win->AsFixed()->model() : NULL;
+    DisplayModel *dm = win->AsFixed() ? win->AsFixed()->model() : NULL;
     // some of the chm key bindings are different than the rest and we
     // need to make sure we don't break them
-    bool isChm = win->IsChm();
+    bool isChm = win->AsChm();
 
     bool isPageUp = (isCtrl && (VK_UP == key));
     if (!isChm)
@@ -3091,7 +3091,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         dm->RotateBy(-90);
         gIsDivideKeyDown = true;
 #ifdef DEBUG
-    } else if (VK_F1 == key && win->IsEbookLoaded()) {
+    } else if (VK_F1 == key && win->AsEbook()) {
         // TODO: this was in EbookWindow - is it still needed?
         SendMessage(win->hwndFrame, WM_COMMAND, IDM_DEBUG_MUI, 0);
 #endif
@@ -3191,7 +3191,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         OnMenuViewContinuous(win);
         break;
     case 'b':
-        if (win.IsFixedDocLoaded() && !IsSingle(win.ctrl->GetDisplayMode())) {
+        if (win.AsFixed() && !IsSingle(win.ctrl->GetDisplayMode())) {
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.ctrl->CurrentPageNo();
@@ -3208,7 +3208,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             else if (!forward && currPage <= win.ctrl->CurrentPageNo())
                 win.ctrl->GoToPrevPage();
         }
-        else if (win.IsEbookLoaded() && !IsSingle(win.ctrl->GetDisplayMode())) {
+        else if (win.AsEbook() && !IsSingle(win.ctrl->GetDisplayMode())) {
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int nextPage = win.ctrl->CurrentPageNo() + (forward ? 1 : -1);
@@ -3248,7 +3248,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
 #endif
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     case 'h': // convert selection to highlight annotation
-        if (win.IsFixedDocLoaded() && win.AsFixed()->engine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
+        if (win.AsFixed() && win.AsFixed()->engine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
             if (!win.AsFixed()->userAnnots)
                 win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
@@ -3327,7 +3327,7 @@ static void ResizeSidebar(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (win->tabsVisible && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
         y += WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -3371,7 +3371,7 @@ static void ResizeFav(WindowInfo *win)
     int totalDy = rFrame.dy;
     if (win->tabsVisible && !win->isFullScreen && !win->presentation)
         y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
         y += WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -3535,7 +3535,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
     int topDy = 0;
     if (win->tabsVisible && !win->isFullScreen && !win->presentation)
         topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->IsEbookLoaded())
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
         topDy += WindowRect(win->hwndReBar).dy;
 
     int dy = rFrame.dy - topDy;
@@ -3846,12 +3846,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_ROTATE_LEFT:
-            if (win->IsFixedDocLoaded())
+            if (win->AsFixed())
                 win->AsFixed()->model()->RotateBy(-90);
             break;
 
         case IDM_VIEW_ROTATE_RIGHT:
-            if (win->IsFixedDocLoaded())
+            if (win->AsFixed())
                 win->AsFixed()->model()->RotateBy(90);
             break;
 
@@ -3962,7 +3962,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
             else if (!HasPermission(Perm_CopySelection))
                 break;
-            else if (win->IsChm())
+            else if (win->AsChm())
                 win->AsChm()->engine()->CopySelection();
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(win);
@@ -4177,7 +4177,7 @@ InitMouseWheelInfo:
             if (!win)
                 break;
 
-            if (win->IsChm()) {
+            if (win->AsChm()) {
                 return win->AsChm()->engine()->PassUIMsg(msg, wParam, lParam);
             }
 

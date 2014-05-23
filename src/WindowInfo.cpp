@@ -56,7 +56,7 @@ WindowInfo::~WindowInfo()
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
     if (uia_provider) {
-        if (IsFixedDocLoaded())
+        if (AsFixed())
             uia_provider->OnDocumentUnload();
         uia_provider->Release();
     }
@@ -117,7 +117,7 @@ SizeI WindowInfo::GetViewPortSize()
 void WindowInfo::RedrawAll(bool update)
 {
     InvalidateRect(this->hwndCanvas, NULL, false);
-    if (this->IsEbookLoaded())
+    if (this->AsEbook())
         this->AsEbook()->RequestRepaint();
     if (update)
         UpdateWindow(this->hwndCanvas);
@@ -138,8 +138,8 @@ void WindowInfo::ToggleZoom()
 
 void WindowInfo::MoveDocBy(int dx, int dy)
 {
-    CrashIf(!this->IsFixedDocLoaded());
-    if (!this->IsFixedDocLoaded()) return;
+    CrashIf(!this->AsFixed());
+    if (!this->AsFixed()) return;
     CrashIf(this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
     DisplayModel *dm = this->ctrl->AsFixed()->model();
@@ -194,7 +194,7 @@ bool WindowInfo::CreateUIAProvider()
         if (!uia_provider)
             return false;
         // load data to provider
-        if (IsFixedDocLoaded())
+        if (AsFixed())
             uia_provider->OnDocumentLoad(AsFixed()->model());
     }
 
@@ -226,7 +226,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     if (!link)
         return;
 
-    if (owner->IsChm()) {
+    if (owner->AsChm()) {
         owner->ctrl->GotoLink(link);
         return;
     }
@@ -321,7 +321,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (pageNo <= 0)
         return;
 
-    if (!owner->IsFixedDocLoaded()) {
+    if (!owner->AsFixed()) {
         owner->ctrl->GotoLink(dest);
         return;
     }

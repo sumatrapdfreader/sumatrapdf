@@ -68,18 +68,12 @@ public:
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->ctrl != NULL; }
-    // TODO: consistent naming
-    bool IsFixedDocLoaded() const { return ctrl && ctrl->AsFixed(); }
-    bool IsChm() const { return ctrl && ctrl->AsChm(); }
-    bool IsEbookLoaded() const { return ctrl && ctrl->AsEbook(); }
+
+    EngineType GetEngineType() const { return ctrl && ctrl->AsFixed() ? ctrl->AsFixed()->engineType : Engine_None; }
 
     FixedPageUIController *AsFixed() { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmUIController *AsChm() { return ctrl ? ctrl->AsChm() : NULL; }
     EbookUIController *AsEbook() { return ctrl ? ctrl->AsEbook() : NULL; }
-
-    EngineType GetEngineType() const { return ctrl && ctrl->AsFixed() ? ctrl->AsFixed()->engineType : Engine_None; }
-    bool IsCbx() const { return GetEngineType() == Engine_ComicBook; } // needed for Manga mode
-    bool IsNotPdf() const { return IsDocLoaded() && GetEngineType() != Engine_PDF; } // note: an error might be a PDF
 
     WCHAR *         loadedFilePath;
     Controller *    ctrl;

@@ -491,7 +491,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     if (!HasPermission(Perm_PrinterAccess))
         return;
 
-    if (win->IsChm()) {
+    if (win->AsChm()) {
         // the Print dialog allows access to the file system, so fall back
         // to printing the entire document without dialog if that isn't desired
         bool showUI = HasPermission(Perm_DiskAccess);

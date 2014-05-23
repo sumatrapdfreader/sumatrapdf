@@ -45,7 +45,7 @@ static WindowInfo *FindWindowInfoByController(EbookController *controller)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->IsEbookLoaded() && win->AsEbook()->ctrl() == controller)
+        if (win->AsEbook() && win->AsEbook()->ctrl() == controller)
             return win;
     }
     return NULL;
