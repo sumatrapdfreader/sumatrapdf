@@ -1030,9 +1030,8 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
     ToolbarUpdateStateForWindow(&win, true);
-    if (win.IsDocLoaded() && !win.IsChm())
-        return;
-    ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
+    if (!win.IsFixedDocLoaded())
+        ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
     if (win.IsAboutWindow())
         win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
 }
@@ -1423,9 +1422,11 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     DeletePropertiesWindow(win->hwndFrame);
 
     str::ReplacePtr(&win->loadedFilePath, tdata->ctrl->FilePath());
+    win::SetText(win->hwndFrame, tdata->title);
 
     delete win->ctrl;
     win->ctrl = tdata->ctrl;
+
     if (win->IsChm())
         win->AsChm()->engine()->SetParentHwnd(win->hwndCanvas);
 
@@ -1433,32 +1434,26 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->uia_provider && win->IsFixedDocLoaded())
         win->uia_provider->OnDocumentLoad(win->AsFixed()->model());
 
-    if (win->IsFixedDocLoaded() && win->AsFixed()->model()->viewPort != win->canvasRc)
-        win->ctrl->SetViewPortSize(win->GetViewPortSize());
-
-    win->RedrawAll();
-    OnMenuFindMatchCase(win);
-    UpdateFindbox(win);
+    // TODO: prevent the ebook UI from redrawing before win->RedrawAll at the bottom
 
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
+    // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
+    UpdateToolbarAndScrollbarState(*win);
+    UpdateToolbarState(win);
+    // TODO: handle presentation mode (in which the sidebar usually is hidden)
+    win->tocState = tdata->tocState;
+    SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
+
+    if (win->IsFixedDocLoaded() && win->AsFixed()->model()->viewPort != win->canvasRc)
+        win->ctrl->SetViewPortSize(win->GetViewPortSize());
 
     int pageCount = win->ctrl->PageCount();
     if (pageCount > 0) {
         UpdateToolbarPageText(win, pageCount);
         UpdateToolbarFindText(win);
-    }
-
-    win::SetText(win->hwndFrame, tdata->title);
-
-    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
-        int res = Synchronizer::Create(win->ctrl->FilePath(),
-            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->pdfsync);
-        // expose SyncTeX in the UI
-        if (PDFSYNCERR_SUCCESS == res)
-            gGlobalPrefs->enableTeXEnhancements = true;
     }
 
     bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
@@ -1471,19 +1466,21 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     else
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
 
+    // TODO: why?
+    OnMenuFindMatchCase(win);
+    UpdateFindbox(win);
     UpdateTextSelection(win, false);
 
-    UpdateToolbarState(win);
-
-    win->tocState = tdata->tocState;
-    SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
-
-    win->RedrawAll(true);
-
-    UpdateToolbarAndScrollbarState(*win);
+    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
+        // TODO: move pdfsync to FixedPageUIController
+        Synchronizer::Create(win->ctrl->FilePath(),
+            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->pdfsync);
+    }
 
     if (gGlobalPrefs->reloadModifiedDocuments)
         win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win));
+
+    win->RedrawAll(true);
 }
 
 // The current page edit box is updated with the current page number
@@ -2840,6 +2837,7 @@ void EnterFullScreen(WindowInfo& win, bool presentation)
     }
 
     // Remove TOC and favorites from full screen, add back later on exit fullscreen
+    // TODO: make showFavorites a per-window pref
     bool showFavoritesTmp = gGlobalPrefs->showFavorites;
     if (win.tocVisible || gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(&win, false, false);
