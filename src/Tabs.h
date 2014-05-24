@@ -29,11 +29,12 @@ class Controller;
 // tab selections. It's loaded back in the WindowInfo for the currently active document.
 struct TabData
 {
-    Controller *          ctrl;
-    bool                  showToc;
-    Vec<int>              tocState;
-    WCHAR *               title;
-    WCHAR *               filePath;
+    Controller *ctrl;
+    bool        showToc;
+    Vec<int>    tocState;
+    WCHAR *     title;
+    WCHAR *     filePath;
+    RectI       canvasRc;
 
     TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL) { }
 };

@@ -1515,7 +1515,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
     if (win->AsFixed()) {
-        if (win->AsFixed()->model()->viewPort != win->canvasRc)
+        if (tdata->canvasRc != win->canvasRc)
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
         DisplayModel *dm = win->AsFixed()->model();
         dm->SetScrollState(dm->GetScrollState());
@@ -1525,8 +1525,8 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     }
     else if (win->AsEbook()) {
         win->AsEbook()->EnableMessageHandling(true);
-        win->ctrl->SetViewPortSize(win->GetViewPortSize());
-        win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);
+        if (tdata->canvasRc != win->canvasRc)
+            win->ctrl->SetViewPortSize(win->GetViewPortSize());
     }
 
     OnMenuFindMatchCase(win);

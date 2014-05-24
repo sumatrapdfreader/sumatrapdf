@@ -111,6 +111,7 @@ SizeI WindowInfo::GetViewPortSize()
         size.dx += GetSystemMetrics(SM_CXVSCROLL);
     if ((style & WS_HSCROLL))
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
+    CrashIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
 
     return size;
 }

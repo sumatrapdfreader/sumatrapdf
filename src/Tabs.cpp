@@ -533,6 +533,7 @@ void SaveTabData(WindowInfo *win, TabData *tdata)
         tdata->title = win::GetText(win->hwndFrame);
     if (!tdata->filePath)
         tdata->filePath = str::Dup(win->loadedFilePath);
+    tdata->canvasRc = win->canvasRc;
 }
 
 
