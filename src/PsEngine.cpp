@@ -207,65 +207,63 @@ class PsEngineImpl : public PsEngine {
 public:
     PsEngineImpl() : fileName(NULL), pdfEngine(NULL) { }
     virtual ~PsEngineImpl() {
-        free(fileName);
         delete pdfEngine;
     }
-    virtual PsEngineImpl *Clone() {
-        if (!pdfEngine)
-            return NULL;
+    virtual BaseEngine *Clone() {
         BaseEngine *newEngine = pdfEngine->Clone();
         if (!newEngine)
             return NULL;
         PsEngineImpl *clone = new PsEngineImpl();
-        if (fileName) clone->fileName = str::Dup(fileName);
+        if (fileName)
+            clone->fileName.Set(str::Dup(fileName));
         clone->pdfEngine = newEngine;
         return clone;
     }
 
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const {
-        return pdfEngine ? pdfEngine->PageCount() : 0;
+        return pdfEngine->PageCount();
     }
 
     virtual RectD PageMediabox(int pageNo) {
-        return pdfEngine ? pdfEngine->PageMediabox(pageNo) : RectD();
+        return pdfEngine->PageMediabox(pageNo);
     }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        return pdfEngine ? pdfEngine->PageContentBox(pageNo, target) : RectD();
+        return pdfEngine->PageContentBox(pageNo, target);
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
-        return pdfEngine ? pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out) : NULL;
+        return pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
-        return pdfEngine ? pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, cookie_out) : false;
+        return pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {
-        return pdfEngine ? pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse) : pt;
+        return pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse);
     }
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) {
-        return pdfEngine ? pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse) : rect;
+        return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
     virtual unsigned char *GetFileData(size_t *cbCount) {
-        return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
+        return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
     virtual bool SaveFileAs(const WCHAR *copyFileName) {
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
-        return pdfEngine ? pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target) : NULL;
+        return pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target);
     }
     virtual bool HasClipOptimizations(int pageNo) {
-        return pdfEngine ? pdfEngine->HasClipOptimizations(pageNo) : true;
+        return pdfEngine->HasClipOptimizations(pageNo);
     }
     virtual PageLayoutType PreferredLayout() {
-        return pdfEngine ? pdfEngine->PreferredLayout() : Layout_Single;
+        return pdfEngine->PreferredLayout();
     }
     virtual WCHAR *GetProperty(DocumentProperty prop) {
         // omit properties created by Ghostscript
@@ -277,49 +275,49 @@ public:
     }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const {
-        return !forSaving && pdfEngine && pdfEngine->SupportsAnnotation();
+        return !forSaving && pdfEngine->SupportsAnnotation();
     }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) {
-        if (pdfEngine) pdfEngine->UpdateUserAnnotations(list);
+        pdfEngine->UpdateUserAnnotations(list);
     }
 
     virtual bool AllowsPrinting() const {
-        return pdfEngine ? pdfEngine->AllowsPrinting() : true;
+        return pdfEngine->AllowsPrinting();
     }
     virtual bool AllowsCopyingText() const {
-        return pdfEngine ? pdfEngine->AllowsCopyingText() : true;
+        return pdfEngine->AllowsCopyingText();
     }
 
     virtual float GetFileDPI() const {
-        return pdfEngine ? pdfEngine->GetFileDPI() : 72.0f;
+        return pdfEngine->GetFileDPI();
     }
     virtual const WCHAR *GetDefaultFileExt() const {
-        return !fileName || !str::EndsWithI(fileName, L".eps") ? L".ps" : L".eps";
+        return !str::EndsWithI(fileName, L".eps") ? L".ps" : L".eps";
     }
 
     virtual bool BenchLoadPage(int pageNo) {
-        return pdfEngine ? pdfEngine->BenchLoadPage(pageNo) : false;
+        return pdfEngine->BenchLoadPage(pageNo);
     }
 
     virtual Vec<PageElement *> *GetElements(int pageNo) {
-        return pdfEngine ? pdfEngine->GetElements(pageNo) : NULL;
+        return pdfEngine->GetElements(pageNo);
     }
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt) {
-        return pdfEngine ? pdfEngine->GetElementAtPos(pageNo, pt) : NULL;
+        return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name) {
-        return pdfEngine ? pdfEngine->GetNamedDest(name) : NULL;
+        return pdfEngine->GetNamedDest(name);
     }
     virtual bool HasTocTree() const {
-        return pdfEngine ? pdfEngine->HasTocTree() : false;
+        return pdfEngine->HasTocTree();
     }
     virtual DocTocItem *GetTocTree() {
-        return pdfEngine ? pdfEngine->GetTocTree() : NULL;
+        return pdfEngine->GetTocTree();
     }
 
     virtual char *GetDecryptionKey() const {
-        return pdfEngine ? pdfEngine->GetDecryptionKey() : NULL;
+        return pdfEngine->GetDecryptionKey();
     }
 
     virtual bool SaveFileAsPDF(const WCHAR *copyFileName) {
@@ -327,14 +325,14 @@ public:
     }
 
 protected:
-    WCHAR *fileName;
+    ScopedMem<WCHAR> fileName;
     BaseEngine *pdfEngine;
 
     bool Load(const WCHAR *fileName) {
-        assert(!this->fileName && !pdfEngine);
+        AssertCrash(!this->fileName && !pdfEngine);
         if (!fileName)
             return false;
-        this->fileName = str::Dup(fileName);
+        this->fileName.Set(str::Dup(fileName));
         if (file::StartsWith(fileName, "\x1F\x8B"))
             pdfEngine = psgz2pdf(fileName);
         else
