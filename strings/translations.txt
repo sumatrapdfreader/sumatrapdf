@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e99b60f2b8dd9a4c08ddbe5e4287fa479194d0c3
+42d866c4a82acb75a9008f96498f831a62fa8596
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1014,7 +1014,7 @@ id:&Pergi ke
 it:&Vai a
 ja:移動(&G)
 ka:გადა&სვლა
-kr:이동(&G)
+kr:가기(&G)
 ku:چوون بۆ&
 kw:&Mos dhe
 lt:&Eiti į
@@ -9482,7 +9482,7 @@ id:Pergi ke halaman
 it:Vai a pagina
 ja:ページへ移動
 ka:გვერდის მითითება
-kr:이동할 페이지
+kr:페이지로 가기
 ku:چوون بۆ پەڕە
 kw:Mos dhe folen
 lt:Eiti į puslapį
@@ -9540,7 +9540,7 @@ hu:Beállítások elrejtése
 id:Sembunyikan &Opsi
 it:Nascondi & opzioni
 ja:オプションを隠す(&O)
-kr:옵션 감추기(&O)
+kr:옵션 숨김(&O)
 ku:هەڵبژاردنەکانی &شاردنەوە
 mk:Скриј &опции
 my:Sembunyi &Tetapan
@@ -9648,7 +9648,7 @@ id:Tips : Gunakan tombol F3 untuk mengulangi pencarian
 it:Consiglio: usare <F3> per trovare il successivo
 ja:ヒント: 再び検索するには F3 キーを使用します
 ka:ქარაგმა: ძებნის განმეორებისთვის გამოიყენეთ ღიალკი "F3"
-kr:힌트: 다시 찾으려면 F3 키를 누르세요.
+kr:힌트: 다시 찾으려면, F3 키를 누르세요.
 ku:بەکاربهێنە بۆ دووبارە دۆزینەوە F3 فێرکاری: دوگمەی
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
@@ -10003,6 +10003,8 @@ eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
 fa:و نصب مرور پلاگین (پشتبانی دائمی وجود ندارد PDF نگهداری
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
+hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
+kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
 sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
@@ -12346,7 +12348,7 @@ hu:A(z) %s bezárása szükséges a folytatáshoz!
 id:Silakan tutup %s untuk melanjutkan.
 it:Chiudi %s per continuare!
 ja:%s を閉じてください
-kr:진행하려면 %s(을)를 닫으세요!
+kr:진행하려면, %s(을)를 닫으세요!
 ku:تکایە %s دابخە بۆ بەردەوامبون!
 mk:Ве молам затворете го %s, за да продолжите!
 my:Sila tutup %s untuk meneruskan!
