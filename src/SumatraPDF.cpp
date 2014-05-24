@@ -691,6 +691,40 @@ static void RebuildMenuBarForAllWindows()
     }
 }
 
+class DisplayModelHandler: public DisplayModelCallback {
+    WindowInfo *win;
+
+public:
+    DisplayModelHandler(WindowInfo *win) : win(win) { }
+    virtual ~DisplayModelHandler() { }
+
+    virtual void Repaint() { win->RepaintAsync(); }
+    virtual void PageNoChanged(int pageNo) { win->PageNoChanged(pageNo); }
+    virtual void UpdateScrollbars(SizeI canvas);
+    virtual void RequestRendering(int pageNo);
+    virtual void CleanUp(DisplayModel *dm);
+};
+
+/* Send the request to render a given page to a rendering thread */
+void DisplayModelHandler::RequestRendering(int pageNo)
+{
+    CrashIf(!win->AsFixed());
+    if (!win->AsFixed()) return;
+
+    DisplayModel *dm = win->AsFixed()->model();
+    // don't render any plain images on the rendering thread,
+    // they'll be rendered directly in DrawDocument during
+    // WM_PAINT on the UI thread
+    if (dm->ShouldCacheRendering(pageNo))
+        gRenderCache.RequestRendering(dm, pageNo);
+}
+
+void DisplayModelHandler::CleanUp(DisplayModel *dm)
+{
+    gRenderCache.CancelRendering(dm);
+    gRenderCache.FreeForDisplayModel(dm);
+}
+
 static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
 {
     Controller *ctrl = NULL;
@@ -738,7 +772,9 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
     }
     else {
 LoadChmInFixedPageUI:
-        DisplayModel *dm = new DisplayModel(engine, win);
+        if (!win->dmHandler)
+            win->dmHandler = new DisplayModelHandler(win);
+        DisplayModel *dm = new DisplayModel(engine, win->dmHandler);
         ctrl = FixedPageUIController::Create(dm, win->linkHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
         ctrl->AsFixed()->engineType = engineType;
@@ -1521,39 +1557,6 @@ void WindowInfo::PageNoChanged(int pageNo)
         pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, ctrl->PageCount()));
     }
     wnd->UpdateMessage(pageInfo);
-}
-
-bool DoCachePageRendering(DisplayModel *dm, int pageNo)
-{
-    CrashIf(!dm);
-    if (!dm || !dm->engine->IsImageCollection())
-        return true;
-
-    // cache large images (mainly photos), as shrinking them
-    // for every UI update (WM_PAINT) can cause notable lags
-    // TODO: stretching small images also causes minor lags
-    RectD page = dm->engine->PageMediabox(pageNo);
-    return page.dx * page.dy > 1024 * 1024;
-}
-
-/* Send the request to render a given page to a rendering thread */
-void WindowInfo::RequestRendering(int pageNo)
-{
-    CrashIf(!AsFixed());
-    if (!AsFixed()) return;
-
-    DisplayModel *dm = AsFixed()->model();
-    // don't render any plain images on the rendering thread,
-    // they'll be rendered directly in DrawDocument during
-    // WM_PAINT on the UI thread
-    if (DoCachePageRendering(dm, pageNo))
-        gRenderCache.RequestRendering(dm, pageNo);
-}
-
-void WindowInfo::CleanUp(DisplayModel *dm)
-{
-    gRenderCache.CancelRendering(dm);
-    gRenderCache.FreeForDisplayModel(dm);
 }
 
 void AssociateExeWithPdfExtension()
@@ -3210,7 +3213,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
-            if (DisplayModeShowCover(win.ctrl->GetDisplayMode()))
+            if (IsBookView(win.ctrl->GetDisplayMode()))
                 newMode = DM_FACING;
             SwitchToDisplayMode(&win, newMode, true);
 

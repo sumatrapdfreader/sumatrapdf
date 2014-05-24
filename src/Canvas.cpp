@@ -6,10 +6,10 @@
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-void WindowInfo::UpdateScrollbars(SizeI canvas)
+void DisplayModelHandler::UpdateScrollbars(SizeI canvas)
 {
-    CrashIf(!AsFixed());
-    DisplayModel *dm = AsFixed()->model();
+    CrashIf(!win->AsFixed());
+    DisplayModel *dm = win->AsFixed()->model();
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
@@ -28,8 +28,8 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
-    ShowScrollBar(hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
-    SetScrollInfo(hwndCanvas, SB_HORZ, &si, TRUE);
+    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
+    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
     if (viewPort.dy >= canvas.dy) {
         si.nPos = 0;
@@ -48,8 +48,8 @@ void WindowInfo::UpdateScrollbars(SizeI canvas)
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
-    ShowScrollBar(hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
-    SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
+    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
+    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
@@ -529,7 +529,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
-                                     dm->engine && dm->engine->IsImageCollection();
+                                     dm->engine->IsImageCollection();
     if (paintOnBlackWithoutShadow) {
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(WIN_COL_BLACK));
         FillRect(hdc, rcArea, brush);
@@ -597,14 +597,13 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
-        if (!(dm->engine && dm->engine->IsImageCollection()))
+        if (!dm->engine->IsImageCollection())
             PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
-        if (!DoCachePageRendering(dm, pageNo)) {
-            if (dm->engine)
-                dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+        if (!dm->ShouldCacheRendering(pageNo)) {
+            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         }
         else
             renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);

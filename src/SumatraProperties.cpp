@@ -5,6 +5,7 @@
 #include "SumatraProperties.h"
 
 #include "Controller.h"
+#include "DisplayModel.h"
 #include "FileUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

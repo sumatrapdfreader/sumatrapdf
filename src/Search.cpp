@@ -13,6 +13,7 @@
 #include "AppTools.h"
 #include "ChmEngine.h"
 #include "Controller.h"
+#include "DisplayModel.h"
 #include "Notifications.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"

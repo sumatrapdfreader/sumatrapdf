@@ -5,6 +5,7 @@
 #include "WindowInfo.h"
 
 #include "Controller.h"
+#include "DisplayModel.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "Print.h"
@@ -35,7 +36,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL),
-    uia_provider(NULL),
+    uia_provider(NULL), dmHandler(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabSelectionHistory(NULL)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
@@ -70,6 +71,9 @@ WindowInfo::~WindowInfo()
     // DocTocItem or PageElement might still need the
     // BaseEngine in their destructors
     delete ctrl;
+    // dmHandler is passed into Controller/DisplayModel and
+    // must be deleted afterwards
+    delete dmHandler;
 
     free(loadedFilePath);
 }

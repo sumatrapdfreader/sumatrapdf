@@ -1441,7 +1441,6 @@ void SetTextRenderMethod(TextRenderMethod method) {
 HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
-    CrashIf(!args->htmlStr);
     args->SetFontName(L"Georgia");
     args->fontSize = 12.5f;
     args->pageDx = (REAL)dx;

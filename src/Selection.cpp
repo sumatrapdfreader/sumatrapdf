@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "ChmEngine.h"
 #include "Controller.h"
+#include "DisplayModel.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "Toolbar.h"

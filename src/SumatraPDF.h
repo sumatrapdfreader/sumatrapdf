@@ -106,7 +106,6 @@ bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfiel
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
-bool  DoCachePageRendering(DisplayModel *dm, int pageNo);
 void  CloseDocumentInWindow(WindowInfo *win);
 void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 void  QuitIfNoMoreWindows();

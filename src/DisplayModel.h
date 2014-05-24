@@ -58,6 +58,7 @@ struct TextSel;
 
 class DisplayModelCallback {
 public:
+    virtual ~DisplayModelCallback() { }
     virtual void Repaint() = 0;
     virtual void PageNoChanged(int pageNo) = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
@@ -177,6 +178,7 @@ public:
     void            SetDisplayR2L(bool r2l) { displayR2L = r2l; }
     bool            GetDisplayR2L() const { return displayR2L; }
 
+    bool            ShouldCacheRendering(int pageNo);
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { dmCb->Repaint(); }
 
@@ -240,11 +242,6 @@ public:
     bool            dontRenderFlag;
 };
 
-bool    IsContinuous(DisplayMode displayMode);
-bool    IsSingle(DisplayMode displayMode);
-bool    IsFacing(DisplayMode displayMode);
-bool    DisplayModeShowCover(DisplayMode displayMode);
 int     NormalizeRotation(int rotation);
-bool    IsValidZoom(float zoomLevel);
 
 #endif

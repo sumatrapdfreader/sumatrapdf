@@ -5,8 +5,6 @@
 #define WindowInfo_h
 
 #include "Controller.h"
-// for DisplayModelCallback
-#include "DisplayModel.h"
 
 class DoubleBuffer;
 class SelectionOnPage;
@@ -16,6 +14,7 @@ class StressTest;
 struct WatchedFile;
 class SumatraUIAutomationProvider;
 struct TabData;
+class DisplayModelCallback;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -55,7 +54,7 @@ struct StaticLinkInfo {
 
 /* Describes information related to one window with (optional) a document
    on the screen */
-class WindowInfo : public DisplayModelCallback
+class WindowInfo
 {
 public:
     explicit WindowInfo(HWND hwnd);
@@ -187,6 +186,8 @@ public:
     PageElement *   linkOnLastButtonDown;
     const WCHAR *   url;
 
+    DisplayModelCallback *  dmHandler;
+
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
@@ -230,12 +231,7 @@ public:
     void FocusFrame(bool always);
     void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
 
-    // DisplayModelCallback implementation
-    virtual void Repaint() { RepaintAsync(); };
-    virtual void PageNoChanged(int pageNo);
-    virtual void UpdateScrollbars(SizeI canvas);
-    virtual void RequestRendering(int pageNo);
-    virtual void CleanUp(DisplayModel *dm);
+    void PageNoChanged(int pageNo);
 };
 
 class LinkHandler {

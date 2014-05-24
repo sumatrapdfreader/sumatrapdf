@@ -9,6 +9,7 @@
 #include "ChmEngine.h"
 #include "Controller.h"
 #include "DirIter.h"
+#include "DisplayModel.h"
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookFormatter.h"
@@ -685,7 +686,8 @@ bool StressTest::OpenFile(const WCHAR *fileName)
             ClientRect rect(win->hwndFrame);
             rect.Inflate(rand() % 10, rand() % 10);
             SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-            win->RequestRendering(1);
+            if (win->dmHandler)
+                win->dmHandler->RequestRendering(1);
             win->RepaintAsync();
         }
 
@@ -804,7 +806,7 @@ void StressTest::OnTimer(int timerIdGot)
     // has already been rendered.
     DisplayModel *dm = win->AsFixed()->model();
     bool didRender = renderCache->Exists(dm, currPage, dm->Rotation());
-    if (!didRender && DoCachePageRendering(dm, currPage)) {
+    if (!didRender && dm->ShouldCacheRendering(currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {
             if (!GoToNextPage())

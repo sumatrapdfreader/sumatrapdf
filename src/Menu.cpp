@@ -37,7 +37,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
         id = IDM_VIEW_SINGLE_PAGE;
     else if (IsFacing(displayMode))
         id = IDM_VIEW_FACING;
-    else if (DisplayModeShowCover(displayMode))
+    else if (IsBookView(displayMode))
         id = IDM_VIEW_BOOK;
     else
         AssertCrash(!win->ctrl && DM_AUTOMATIC == displayMode);

@@ -56,31 +56,6 @@
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;
 
-bool IsContinuous(DisplayMode displayMode)
-{
-    return DM_CONTINUOUS == displayMode ||
-           DM_CONTINUOUS_FACING == displayMode ||
-           DM_CONTINUOUS_BOOK_VIEW == displayMode;
-}
-
-bool IsSingle(DisplayMode displayMode)
-{
-    return DM_SINGLE_PAGE == displayMode ||
-           DM_CONTINUOUS == displayMode;
-}
-
-bool IsFacing(DisplayMode displayMode)
-{
-    return DM_FACING == displayMode ||
-           DM_CONTINUOUS_FACING == displayMode;
-}
-
-bool DisplayModeShowCover(DisplayMode displayMode)
-{
-    return DM_BOOK_VIEW == displayMode ||
-           DM_CONTINUOUS_BOOK_VIEW == displayMode;
-}
-
 static int ColumnsFromDisplayMode(DisplayMode displayMode)
 {
     if (!IsSingle(displayMode))
@@ -99,24 +74,6 @@ int NormalizeRotation(int rotation)
         return 0;
     }
     return rotation;
-}
-
-static bool IsZoomVirtual(float zoomLevel)
-{
-    if ((ZOOM_FIT_PAGE == zoomLevel) || (ZOOM_FIT_WIDTH == zoomLevel) ||
-        (ZOOM_FIT_CONTENT == zoomLevel))
-        return true;
-    return false;
-}
-
-bool IsValidZoom(float zoomLevel)
-{
-    if (IsZoomVirtual(zoomLevel))
-        return true;
-    if ((zoomLevel < ZOOM_MIN - 0.01f) || (zoomLevel > ZOOM_MAX + 0.01f)) {
-        return false;
-    }
-    return true;
 }
 
 void DisplayModel::DisplayStateFromModel(DisplayState *ds)
@@ -275,7 +232,7 @@ void DisplayModel::BuildPagesInfo()
 
     int columns = ColumnsFromDisplayMode(displayMode);
     int newStartPage = startPage;
-    if (DisplayModeShowCover(displayMode) && newStartPage == 1 && columns > 1)
+    if (IsBookView(displayMode) && newStartPage == 1 && columns > 1)
         newStartPage--;
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -316,7 +273,7 @@ bool DisplayModel::PageVisibleNearby(int pageNo)
     DisplayMode mode = GetDisplayMode();
     int columns = ColumnsFromDisplayMode(mode);
 
-    pageNo = FirstPageInARowNo(pageNo, columns, DisplayModeShowCover(mode));
+    pageNo = FirstPageInARowNo(pageNo, columns, IsBookView(mode));
     for (int i = pageNo - columns; i < pageNo + 2 * columns; i++) {
         if (ValidPageNo(i) && PageVisible(i))
             return true;
@@ -328,7 +285,7 @@ bool DisplayModel::PageVisibleNearby(int pageNo)
    show cover mode (i.e. it's not possible to flip to a previous page) */
 bool DisplayModel::FirstBookPageVisible()
 {
-    if (!DisplayModeShowCover(GetDisplayMode()))
+    if (!IsBookView(GetDisplayMode()))
         return false;
     if (CurrentPageNo() != 1)
         return false;
@@ -348,7 +305,7 @@ bool DisplayModel::LastBookPageVisible()
     if (GetPageInfo(count)->visibleRatio < 1.0)
         return false;
     if (FirstPageInARowNo(count, ColumnsFromDisplayMode(mode),
-                          DisplayModeShowCover(mode)) < count)
+                          IsBookView(mode)) < count)
         return false;
     return true;
 }
@@ -367,8 +324,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (fitToContent && columns > 1) {
         // Fit the content of all the pages in the same row into the visible area
         // (i.e. don't crop inner margins but just the left-most, right-most, etc.)
-        int first = FirstPageInARowNo(pageNo, columns, DisplayModeShowCover(GetDisplayMode()));
-        int last = LastPageInARowNo(pageNo, columns, DisplayModeShowCover(GetDisplayMode()), PageCount());
+        int first = FirstPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()));
+        int last = LastPageInARowNo(pageNo, columns, IsBookView(GetDisplayMode()), PageCount());
         RectD box;
         for (int i = first; i <= last; i++) {
             PageInfo *pageInfo = GetPageInfo(i);
@@ -494,8 +451,8 @@ float DisplayModel::ZoomReal(int pageNo)
         return zoomReal;
     if (IsSingle(mode))
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
-    pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(mode), DisplayModeShowCover(mode));
-    if (pageNo == PageCount() || pageNo == 1 && DisplayModeShowCover(mode))
+    pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(mode), IsBookView(mode));
+    if (pageNo == PageCount() || pageNo == 1 && IsBookView(mode))
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
     return min(ZoomRealFromVirtualForPage(zoomVirtual, pageNo), ZoomRealFromVirtualForPage(zoomVirtual, pageNo + 1));
 }
@@ -557,7 +514,7 @@ RestartLayout:
             goto RestartLayout;
         }
 
-        if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1)
+        if (IsBookView(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1)
             pageInARow++;
         CrashIf(pageInARow >= dimof(columnMaxWidth));
         if (columnMaxWidth[pageInARow] < pos.dx)
@@ -596,7 +553,7 @@ RestartLayout:
 
     if (columns == 2 && PageCount() == 1) {
         /* don't center a single page over two columns */
-        if (DisplayModeShowCover(GetDisplayMode()))
+        if (IsBookView(GetDisplayMode()))
             columnMaxWidth[0] = columnMaxWidth[1];
         else
             columnMaxWidth[1] = columnMaxWidth[0];
@@ -629,7 +586,7 @@ RestartLayout:
             continue;
         }
         // leave first spot empty in cover page mode
-        if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1) {
+        if (IsBookView(GetDisplayMode()) && pageNo == 1) {
             CrashIf(pageInARow >= dimof(columnMaxWidth));
             pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
             ++pageInARow;
@@ -643,7 +600,7 @@ RestartLayout:
         else
             pageInfo->pos.x = pageOffX;
         // center the cover page over the first two spots in non-continuous mode
-        if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
+        if (IsBookView(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
             pageInfo->pos.x = offX + windowMargin.left + (columnMaxWidth[0] + pageSpacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
         }
         // mirror the page layout when displaying a Right-to-Left document
@@ -690,7 +647,7 @@ void DisplayModel::ChangeStartPage(int newStartPage)
 
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     startPage = newStartPage;
-    if (DisplayModeShowCover(GetDisplayMode()) && newStartPage == 1 && columns > 1)
+    if (IsBookView(GetDisplayMode()) && newStartPage == 1 && columns > 1)
         newStartPage--;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -971,7 +928,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
     if (!IsSingle(GetDisplayMode()))
-        pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), DisplayModeShowCover(GetDisplayMode()));
+        pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), IsBookView(GetDisplayMode()));
 
     if (!IsContinuous(GetDisplayMode())) {
         /* in single page mode going to another page involves recalculating
@@ -994,7 +951,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         scrollX = start.x;
         scrollY = start.y;
         if (ColumnsFromDisplayMode(GetDisplayMode()) > 1) {
-            int lastPageNo = LastPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), DisplayModeShowCover(GetDisplayMode()), PageCount());
+            int lastPageNo = LastPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), IsBookView(GetDisplayMode()), PageCount());
             PointI second = GetContentStart(lastPageNo);
             scrollY = min(scrollY, second.y);
         }
@@ -1003,7 +960,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     else if (-1 != scrollX)
         viewPort.x = scrollX;
     // make sure to not display the blank space beside the first page in cover mode
-    else if (-1 == scrollX && 1 == pageNo && DisplayModeShowCover(GetDisplayMode()))
+    else if (-1 == scrollX && 1 == pageNo && IsBookView(GetDisplayMode()))
         viewPort.x = pageInfo->pos.x - windowMargin.left;
     // make sure that at least part of the page is visible
     else if (viewPort.x >= pageInfo->pos.x + pageInfo->pos.dx)
@@ -1034,7 +991,7 @@ void DisplayModel::ChangeDisplayMode(DisplayMode newDisplayMode)
         return;
 
     int currPageNo = CurrentPageNo();
-    if (IsFacing(newDisplayMode) && DisplayModeShowCover(displayMode) && currPageNo < PageCount())
+    if (IsFacing(newDisplayMode) && IsBookView(displayMode) && currPageNo < PageCount())
         currPageNo++;
     displayMode = newDisplayMode;
     if (IsContinuous(newDisplayMode)) {
@@ -1091,7 +1048,7 @@ bool DisplayModel::GoToNextPage(int scrollY)
         GoToPage(currPageNo, scrollY);
         return true;
     }
-    int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, DisplayModeShowCover(GetDisplayMode()));
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo + columns, columns, IsBookView(GetDisplayMode()));
     if (firstPageInNewRow > PageCount()) {
         /* we're on a last row or after it, can't go any further */
         return false;
@@ -1119,7 +1076,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
         GoToPage(currPageNo, scrollY);
         return true;
     }
-    int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, DisplayModeShowCover(GetDisplayMode()));
+    int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, IsBookView(GetDisplayMode()));
     if (firstPageInNewRow < 1 || 1 == currPageNo) {
         /* we're on a first page, can't go back */
         return false;
@@ -1138,7 +1095,7 @@ bool DisplayModel::GoToLastPage()
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     int currPageNo = CurrentPageNo();
     int newPageNo = PageCount();
-    int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, DisplayModeShowCover(GetDisplayMode()));
+    int firstPageInLastRow = FirstPageInARowNo(newPageNo, columns, IsBookView(GetDisplayMode()));
 
     if (currPageNo == firstPageInLastRow) /* are we on the last page already ? */
         return false;
@@ -1558,4 +1515,17 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
                 navHistoryIx--;
         }
     }
+}
+
+bool DisplayModel::ShouldCacheRendering(int pageNo)
+{
+    // recommend caching for all documents which are non-trivial to render
+    if (!engine->IsImageCollection())
+        return true;
+
+    // recommend caching large images (mainly photos) as well, as shrinking
+    // them for every UI update (WM_PAINT) can cause notable lags
+    // TODO: stretching small images even also causes minor lags
+    RectD page = engine->PageMediabox(pageNo);
+    return page.dx * page.dy > 1024 * 1024;
 }
