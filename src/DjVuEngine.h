@@ -4,7 +4,13 @@
 #ifndef DjVuEngine_h
 #define DjVuEngine_h
 
-bool IsSupportedDjVuEngineFile(const WCHAR *fileName, bool sniff=false);
-BaseEngine *CreateDjVuEngineFromFile(const WCHAR *fileName);
+class BaseEngine;
+
+namespace DjVuEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
 
 #endif

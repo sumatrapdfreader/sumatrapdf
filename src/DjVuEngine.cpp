@@ -200,14 +200,11 @@ public:
 static DjVuContext gDjVuContext;
 
 class DjVuEngineImpl : public BaseEngine {
-
 public:
-    static DjVuEngineImpl* CreateDjVuEngineImplFromFile(const WCHAR *);
-
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
-    virtual DjVuEngineImpl *Clone() {
-        return fileName ? CreateDjVuEngineImplFromFile(fileName) : NULL;
+    virtual BaseEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
     }
 
     virtual const WCHAR *FileName() const { return fileName; };
@@ -258,6 +255,8 @@ public:
     virtual WCHAR *GetPageLabel(int pageNo) const;
     virtual int GetPageByLabel(const WCHAR *label) const;
 
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
+
 protected:
     WCHAR *fileName;
 
@@ -279,7 +278,6 @@ protected:
     DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter);
     bool Load(const WCHAR *fileName);
     bool LoadMediaboxes();
-
 };
 
 DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), pageCount(0), mediaboxes(NULL),
@@ -1023,15 +1021,7 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
     return BaseEngine::GetPageByLabel(label);
 }
 
-bool IsSupportedDjVuEngineFile(const WCHAR *fileName, bool sniff)
-{
-    if (sniff)
-        return file::StartsWith(fileName, "AT&T");
-
-    return str::EndsWithI(fileName, L".djvu");
-}
-
-DjVuEngineImpl *DjVuEngineImpl::CreateDjVuEngineImplFromFile(const WCHAR *fileName)
+BaseEngine *DjVuEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1041,7 +1031,19 @@ DjVuEngineImpl *DjVuEngineImpl::CreateDjVuEngineImplFromFile(const WCHAR *fileNa
     return engine;
 }
 
-BaseEngine *CreateDjVuEngineFromFile(const WCHAR *fileName)
+namespace DjVuEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    return DjVuEngineImpl::CreateDjVuEngineImplFromFile(fileName);
+    if (sniff)
+        return file::StartsWith(fileName, "AT&T");
+
+    return str::EndsWithI(fileName, L".djvu");
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return DjVuEngineImpl::CreateFromFile(fileName);
+}
+
 }
