@@ -161,6 +161,7 @@ static WStrVec                      gAllowedFileTypes;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
+static void CloseDocumentInWindow(WindowInfo *win);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -610,7 +611,7 @@ static int GetPolicies(bool isRestricted)
     return Perm_All;
 }
 
-bool ShouldSaveThumbnail(DisplayState& ds)
+static bool ShouldSaveThumbnail(DisplayState& ds)
 {
     // don't create thumbnails if we won't be needing them at all
     if (!HasPermission(Perm_SavePreferences))
@@ -1972,7 +1973,7 @@ static void OnMenuExit()
 
 // closes a document inside a WindowInfo and turns it into
 // about window
-void CloseDocumentInWindow(WindowInfo *win)
+static void CloseDocumentInWindow(WindowInfo *win)
 {
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm())
@@ -2013,23 +2014,6 @@ void CloseDocumentInWindow(WindowInfo *win)
     // in FileWatcher::SynchronousAbort() isn't correct
     HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
 #endif
-}
-
-void QuitIfNoMoreWindows()
-{
-    if (0 == gWindows.Count()) {
-        PostQuitMessage(0);
-    }
-}
-
-void CloseDocumentAndDeleteWindowInfo(WindowInfo *win)
-{
-    if (!win)
-        return;
-    HWND hwndToDestroy = win->hwndFrame;
-    CloseDocumentInWindow(win);
-    DeleteWindowInfo(win);
-    DestroyWindow(hwndToDestroy);
 }
 
 /* Close the document associated with window 'hwnd'.
