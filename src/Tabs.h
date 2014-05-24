@@ -4,6 +4,7 @@
 #ifndef Tabs_h
 #define Tabs_h
 
+// TODO: take WindowInfo::uiDPIFactor into account?
 #define TABBAR_HEIGHT    24
 #define TAB_WIDTH        200
 #define TAB_HEIGHT       TABBAR_HEIGHT - 1

@@ -2630,24 +2630,89 @@ static void AdjustWindowEdge(WindowInfo& win)
     }
 }
 
-static void FrameOnSize(WindowInfo* win, int dx, int dy)
+static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1)
 {
-    int topDy = 0;
-    if (win->tabsVisible && !(win->presentation || win->isFullScreen)) {
-        SetWindowPos(win->hwndTabBar, NULL, 0, topDy, dx, TABBAR_HEIGHT, SWP_NOZORDER);
-        UpdateTabWidth(win);
-        topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    }
-    if (gGlobalPrefs->showToolbar && !(win->presentation || win->isFullScreen || win->AsEbook())) {
-        SetWindowPos(win->hwndReBar, NULL, 0, topDy, dx, 0, SWP_NOZORDER);
-        topDy += WindowRect(win->hwndReBar).dy;
+    ClientRect rc(win->hwndFrame);
+    // don't relayout while the window is minimized
+    if (rc.IsEmpty())
+        return;
+
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        MoveWindow(win->hwndCanvas, rc);
+        return;
     }
 
+    // Tabbar and toolbar at the top
+    if (win->tabsVisible && !win->presentation && !win->isFullScreen) {
+        if (updateToolbars) {
+            SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
+            UpdateTabWidth(win);
+        }
+        // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
+        if (!win->IsAboutWindow()) {
+            rc.y += TABBAR_HEIGHT;
+            rc.dy -= TABBAR_HEIGHT;
+        }
+    }
+    if (gGlobalPrefs->showToolbar && !win->presentation && !win->isFullScreen && !win->AsEbook()) {
+        if (updateToolbars)
+            SetWindowPos(win->hwndReBar, NULL, rc.x, rc.y, rc.dx, 0 /* auto */, SWP_NOZORDER);
+        WindowRect rcRebar(win->hwndReBar);
+        rc.y += rcRebar.dy;
+        rc.dy -= rcRebar.dy;
+    }
+
+    // ToC and Favorites sidebars at the left
+    bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm_DiskAccess);
     bool tocVisible = win->tocLoaded && win->tocVisible;
-    if (tocVisible || gGlobalPrefs->showFavorites)
-        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
-    else
-        SetWindowPos(win->hwndCanvas, NULL, 0, topDy, dx, dy - topDy, SWP_NOZORDER);
+    if (tocVisible || showFavorites) {
+        SizeI toc = sidebarDx < 0 ? ClientRect(win->hwndTocBox).Size() : SizeI(sidebarDx, rc.y);
+        if (0 == toc.dx) {
+            // TODO: use saved sidebarDx from saved preferences?
+            toc.dx = rc.dx / 4;
+        }
+        // make sure that the sidebar is never too wide or too narrow
+        // note: requires that the main frame is at least 2 * SIDEBAR_MIN_WIDTH
+        //       wide (cf. OnFrameGetMinMaxInfo)
+        toc.dx = limitValue(toc.dx, SIDEBAR_MIN_WIDTH, rc.dx / 2);
+
+        toc.dy = !tocVisible ? 0 :
+                 !showFavorites ? rc.dy :
+                 gGlobalPrefs->tocDy ? limitValue(gGlobalPrefs->tocDy, 0, rc.dy) :
+                 rc.dy / 2; // default value
+        if (tocVisible && showFavorites)
+            toc.dy = limitValue(toc.dy, TOC_MIN_DY, rc.dy - TOC_MIN_DY);
+
+        if (tocVisible) {
+            RectI rToc(rc.TL(), toc);
+            MoveWindow(win->hwndTocBox, rToc);
+            if (showFavorites) {
+                RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
+                MoveWindow(win->hwndFavSplitter, rSplitV);
+                toc.dy += SPLITTER_DY;
+            }
+        }
+        if (showFavorites) {
+            RectI rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
+            MoveWindow(win->hwndFavBox, rFav);
+        }
+        RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
+        MoveWindow(win->hwndSidebarSplitter, rSplitH);
+
+        rc.x += toc.dx + SPLITTER_DX;
+        rc.dx -= toc.dx + SPLITTER_DX;
+    }
+
+    MoveWindow(win->hwndCanvas, rc);
+
+    // TODO: is this needed here?
+    if (rc.x > 0 && win->tocLoaded && win->tocVisible)
+        UpdateTocSelection(win, win->ctrl->CurrentPageNo());
+}
+
+static void FrameOnSize(WindowInfo* win, int dx, int dy)
+{
+    RelayoutFrame(win);
 
     if (win->presentation || win->isFullScreen) {
         RectI fullscreen = GetFullscreenRect(win->hwndFrame);
@@ -3307,100 +3372,46 @@ static void UpdateUITextForLanguage()
     }
 }
 
-// TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
-// would be nice to consolidate.
 static void ResizeSidebar(WindowInfo *win)
 {
     POINT pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
 
-    ClientRect rToc(win->hwndTocBox);
-    ClientRect rFav(win->hwndFavBox);
-    AssertCrash(rToc.dx == rFav.dx);
-    ClientRect rFrame(win->hwndFrame);
-
-    // make sure to keep this in sync with the calculations in SetSidebarVisibility
+    // make sure to keep this in sync with the calculations in RelayoutFrame
     // note: without the min/max(..., rToc.dx), the sidebar will be
     //       stuck at its width if it accidentally got too wide or too narrow
+    ClientRect rFrame(win->hwndFrame);
+    ClientRect rToc(win->hwndTocBox);
     if (sidebarDx < min(SIDEBAR_MIN_WIDTH, rToc.dx) ||
         sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
         SetCursor(gCursorNo);
-        return;
     }
-
-    SetCursor(gCursorSizeWE);
-
-    int favSplitterDy = 0;
-    bool favSplitterVisible = win->tocVisible && gGlobalPrefs->showFavorites;
-    if (favSplitterVisible)
-        favSplitterDy = SPLITTER_DY;
-
-    int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
-    int y = 0;
-    int totalDy = rFrame.dy;
-    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
-        y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
-        y += WindowRect(win->hwndReBar).dy;
-    totalDy -= y;
-
-    // rToc.y is always 0, as rToc is a ClientRect, so we first have
-    // to convert it into coordinates relative to hwndFrame:
-    AssertCrash(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
-    //AssertCrash(totalDy == (rToc.dy + rFav.dy));
-
-    MoveWindow(win->hwndTocBox,      0, y,                           sidebarDx, rToc.dy, TRUE);
-    MoveWindow(win->hwndFavSplitter, 0, y + rToc.dy,                 sidebarDx, favSplitterDy, TRUE);
-    MoveWindow(win->hwndFavBox,      0, y + rToc.dy + favSplitterDy, sidebarDx, rFav.dy, TRUE);
-
-    MoveWindow(win->hwndSidebarSplitter, sidebarDx, y, SPLITTER_DX, totalDy, TRUE);
-    MoveWindow(win->hwndCanvas, sidebarDx + SPLITTER_DX, y, canvasDx, totalDy, TRUE);
+    else {
+        SetCursor(gCursorSizeWE);
+        RelayoutFrame(win, false, sidebarDx);
+    }
 }
 
-// TODO: the layout logic here is similar to what we do in SetSidebarVisibility()
-// would be nice to consolidate.
 static void ResizeFav(WindowInfo *win)
 {
     POINT pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
 
-    ClientRect rToc(win->hwndTocBox);
-    ClientRect rFav(win->hwndFavBox);
-    AssertCrash(rToc.dx == rFav.dx);
+    // make sure to keep this in sync with the calculations in RelayoutFrame
     ClientRect rFrame(win->hwndFrame);
-    int tocDx = rToc.dx;
-
-    // make sure to keep this in sync with the calculations in SetSidebarVisibility
+    ClientRect rToc(win->hwndTocBox);
+    AssertCrash(rToc.dx == ClientRect(win->hwndFavBox).dx);
     if (tocDy < min(TOC_MIN_DY, rToc.dy) ||
         tocDy > max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
         SetCursor(gCursorNo);
-        return;
     }
-
-    SetCursor(gCursorSizeNS);
-
-    int y = 0;
-    int totalDy = rFrame.dy;
-    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
-        y += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
-        y += WindowRect(win->hwndReBar).dy;
-    totalDy -= y;
-
-    // rToc.y is always 0, as rToc is a ClientRect, so we first have
-    // to convert it into coordinates relative to hwndFrame:
-    AssertCrash(MapRectToWindow(rToc, win->hwndTocBox, win->hwndFrame).y == y);
-    //AssertCrash(totalDy == (rToc.dy + rFav.dy));
-    int favDy = totalDy - tocDy - SPLITTER_DY;
-    AssertCrash(favDy >= 0);
-
-    MoveWindow(win->hwndTocBox,      0, y,                       tocDx, tocDy,       TRUE);
-    MoveWindow(win->hwndFavSplitter, 0, y + tocDy,               tocDx, SPLITTER_DY, TRUE);
-    MoveWindow(win->hwndFavBox,      0, y + tocDy + SPLITTER_DY, tocDx, favDy,       TRUE);
-
-    gGlobalPrefs->tocDy = tocDy;
+    else {
+        SetCursor(gCursorSizeNS);
+        gGlobalPrefs->tocDy = tocDy;
+        RelayoutFrame(win, false, rToc.dx);
+    }
 }
 
 static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -3516,12 +3527,6 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return CallWindowProc(DefWndProcCloseButton, hwnd, msg, wParam, lParam);
 }
 
-static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
-{
-    UINT flags = SWP_NOZORDER | (isVisible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW);
-    SetWindowPos(hwnd, NULL, r.x, r.y, r.dx, r.dy, flags);
-}
-
 void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 {
     if (gPluginMode || !HasPermission(Perm_DiskAccess))
@@ -3535,92 +3540,26 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         showFavorites = false;
     }
 
-    bool sidebarVisible = tocVisible || showFavorites;
-
     if (tocVisible)
         LoadTocTree(win);
     if (showFavorites)
         PopulateFavTreeIfNeeded(win);
 
     win->tocVisible = tocVisible;
+    // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    ClientRect rFrame(win->hwndFrame);
-    int topDy = 0;
-    if (win->tabsVisible && !win->isFullScreen && !win->presentation)
-        topDy += IsWindowVisible(win->hwndTabBar) ? TABBAR_HEIGHT : 0;
-    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook())
-        topDy += WindowRect(win->hwndReBar).dy;
-
-    int dy = rFrame.dy - topDy;
-
-    if (!sidebarVisible) {
-        if (GetFocus() == win->hwndTocTree || GetFocus() == win->hwndFavTree)
-            SetFocus(win->hwndFrame);
-
-        SetWindowPos(win->hwndCanvas, NULL, 0, topDy, rFrame.dx, dy, SWP_NOZORDER);
-        ShowWindow(win->hwndSidebarSplitter, SW_HIDE);
-        ShowWindow(win->hwndTocBox, SW_HIDE);
-        ShowWindow(win->hwndFavSplitter, SW_HIDE);
-        ShowWindow(win->hwndFavBox, SW_HIDE);
-        return;
+    if ((!tocVisible && GetFocus() == win->hwndTocTree) ||
+        (!showFavorites && GetFocus() == win->hwndFavTree)) {
+        SetFocus(win->hwndFrame);
     }
 
-    if (rFrame.IsEmpty()) {
-        // don't adjust the ToC sidebar size while the window is minimized
-        if (win->tocVisible)
-            UpdateTocSelection(win, win->ctrl->CurrentPageNo());
-        return;
-    }
+    ShowWindow(win->hwndSidebarSplitter, tocVisible || showFavorites ? SW_SHOW : SW_HIDE);
+    ShowWindow(win->hwndTocBox, tocVisible ? SW_SHOW : SW_HIDE);
+    ShowWindow(win->hwndFavSplitter, tocVisible && showFavorites ? SW_SHOW : SW_HIDE);
+    ShowWindow(win->hwndFavBox, showFavorites ? SW_SHOW : SW_HIDE);
 
-    int y = topDy;
-    ClientRect sidebarRc(win->hwndTocBox);
-    int tocDx = sidebarRc.dx;
-    if (tocDx == 0) {
-        // TODO: use saved panelDx from saved preferences
-        tocDx = rFrame.dx / 4;
-    }
-
-    // make sure that the sidebar is never too wide or too narrow
-    // (when changing these values, also adjust ResizeSidebar() and ResizeFav())
-    // TODO: we should also limit minimum size of the frame or else
-    // limitValue() blows up with an assert() if frame.dx / 2 < SIDEBAR_MIN_WIDTH
-    tocDx = limitValue(tocDx, SIDEBAR_MIN_WIDTH, rFrame.dx / 2);
-
-    bool favSplitterVisible = tocVisible && showFavorites;
-
-    int tocDy = 0; // if !tocVisible
-    if (tocVisible) {
-        if (!showFavorites)
-            tocDy = dy;
-        else if (gGlobalPrefs->tocDy)
-            tocDy = gGlobalPrefs->tocDy;
-        else
-            tocDy = dy / 2; // default value
-    }
-    if (favSplitterVisible) {
-        // TODO: we should also limit minimum size of the frame or else
-        // limitValue() blows up with an assert() if TOC_MIN_DY < dy - TOC_MIN_DY
-        tocDy = limitValue(tocDy, TOC_MIN_DY, dy-TOC_MIN_DY);
-    }
-
-    int canvasX = tocDx + SPLITTER_DX;
-    RectI rToc(0, y, tocDx, tocDy);
-    RectI rFavSplitter(0, y + tocDy, tocDx, SPLITTER_DY);
-    int favSplitterDy = favSplitterVisible ? SPLITTER_DY : 0;
-    RectI rFav(0, y + tocDy + favSplitterDy, tocDx, dy - tocDy - favSplitterDy);
-
-    RectI rSplitter(tocDx, y, SPLITTER_DX, dy);
-    RectI rCanvas(canvasX, y, rFrame.dx - canvasX, dy);
-
-    SetWinPos(win->hwndTocBox,          rToc,           tocVisible);
-    SetWinPos(win->hwndFavSplitter,     rFavSplitter,   favSplitterVisible);
-    SetWinPos(win->hwndFavBox,          rFav,           showFavorites);
-    SetWinPos(win->hwndSidebarSplitter, rSplitter,      true);
-    SetWinPos(win->hwndCanvas,          rCanvas,        true);
-
-    if (tocVisible)
-        UpdateTocSelection(win, win->ctrl->CurrentPageNo());
+    RelayoutFrame(win, false);
 }
 
 // Tests that various ways to crash will generate crash report.
