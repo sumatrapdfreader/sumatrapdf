@@ -1125,8 +1125,10 @@ static WindowInfo* CreateWindowInfo()
     AssertCrash(NULL == FindWindowInfoByHwnd(hwndFrame));
     WindowInfo *win = new WindowInfo(hwndFrame);
 
-    win->hwndCanvas = CreateWindowEx(
-            WS_EX_STATICEDGE,
+    // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
+    // screen's edge when maximized (cf. Fitts' law) and there are
+    // no additional adjustments needed when (un)maximizing
+    win->hwndCanvas = CreateWindow(
             CANVAS_CLASS_NAME, NULL,
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             0, 0, 0, 0, /* position and size determined in OnSize */
@@ -2610,26 +2612,6 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 #define SB_HPAGEUP   (WM_USER + 1)
 #define SB_HPAGEDOWN (WM_USER + 2)
 
-static void AdjustWindowEdge(WindowInfo& win)
-{
-    DWORD exStyle = GetWindowLong(win.hwndCanvas, GWL_EXSTYLE);
-    DWORD newStyle = exStyle;
-
-    // Remove the canvas' edge in the cases where the vertical scrollbar
-    // would otherwise touch the screen's edge, making the scrollbar much
-    // easier to hit with the mouse (cf. Fitts' law)
-    // TODO: should we just always remove the canvas' edge?
-    if (IsZoomed(win.hwndFrame) || win.isFullScreen || win.presentation || gPluginMode)
-        newStyle &= ~WS_EX_STATICEDGE;
-    else
-        newStyle |= WS_EX_STATICEDGE;
-
-    if (newStyle != exStyle) {
-        SetWindowLong(win.hwndCanvas, GWL_EXSTYLE, newStyle);
-        SetWindowPos(win.hwndCanvas, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-    }
-}
-
 static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1)
 {
     ClientRect rc(win->hwndFrame);
@@ -4009,8 +3991,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wParam) {
                 RememberDefaultWindowPosition(*win);
-                AdjustWindowEdge(*win);
-
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
                 FrameOnSize(win, dx, dy);
@@ -4021,10 +4001,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lParam);
 
         case WM_MOVE:
-            if (win) {
+            if (win)
                 RememberDefaultWindowPosition(*win);
-                AdjustWindowEdge(*win);
-            }
             break;
 
         case WM_INITMENUPOPUP:
