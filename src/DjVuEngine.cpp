@@ -6,6 +6,7 @@
 #define MINILISPAPI /**/
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "DjVuEngine.h"
 #include <ddjvuapi.h>
 #include <miniexp.h>
@@ -198,14 +199,15 @@ public:
 
 static DjVuContext gDjVuContext;
 
-class DjVuEngineImpl : public DjVuEngine {
-    friend DjVuEngine;
+class DjVuEngineImpl : public BaseEngine {
 
 public:
+    static DjVuEngineImpl* CreateDjVuEngineImplFromFile(const WCHAR *);
+
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
-    virtual DjVuEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+    virtual DjVuEngineImpl *Clone() {
+        return fileName ? CreateDjVuEngineImplFromFile(fileName) : NULL;
     }
 
     virtual const WCHAR *FileName() const { return fileName; };
@@ -277,6 +279,7 @@ protected:
     DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter);
     bool Load(const WCHAR *fileName);
     bool LoadMediaboxes();
+
 };
 
 DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), pageCount(0), mediaboxes(NULL),
@@ -1020,7 +1023,7 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
     return BaseEngine::GetPageByLabel(label);
 }
 
-bool DjVuEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool IsSupportedDjVuEngineFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff)
         return file::StartsWith(fileName, "AT&T");
@@ -1028,7 +1031,7 @@ bool DjVuEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, L".djvu");
 }
 
-DjVuEngine *DjVuEngine::CreateFromFile(const WCHAR *fileName)
+DjVuEngineImpl *DjVuEngineImpl::CreateDjVuEngineImplFromFile(const WCHAR *fileName)
 {
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1036,4 +1039,9 @@ DjVuEngine *DjVuEngine::CreateFromFile(const WCHAR *fileName)
         return NULL;
     }
     return engine;
+}
+
+BaseEngine *CreateDjVuEngineFromFile(const WCHAR *fileName)
+{
+    return DjVuEngineImpl::CreateDjVuEngineImplFromFile(fileName);
 }

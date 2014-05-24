@@ -4,12 +4,7 @@
 #ifndef DjVuEngine_h
 #define DjVuEngine_h
 
-#include "BaseEngine.h"
-
-class DjVuEngine : public BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static DjVuEngine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsSupportedDjVuEngineFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateDjVuEngineFromFile(const WCHAR *fileName);
 
 #endif

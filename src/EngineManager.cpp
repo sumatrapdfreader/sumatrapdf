@@ -17,7 +17,7 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
 {
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
-           DjVuEngine::IsSupportedFile(filePath, sniff) ||
+           IsSupportedDjVuEngineFile(filePath, sniff) ||
            ImageEngine::IsSupportedFile(filePath, sniff)||
            ImageDirEngine::IsSupportedFile(filePath, sniff) ||
            CbxEngine::IsSupportedFile(filePath, sniff)  ||
@@ -48,8 +48,8 @@ RetrySniffing:
     } else if (XpsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_XPS) {
         engine = XpsEngine::CreateFromFile(filePath);
         engineType = Engine_XPS;
-    } else if (DjVuEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_DjVu) {
-        engine = DjVuEngine::CreateFromFile(filePath);
+    } else if (IsSupportedDjVuEngineFile(filePath, sniff) && engineType != Engine_DjVu) {
+        engine = CreateDjVuEngineFromFile(filePath);
         engineType = Engine_DjVu;
     } else if (ImageEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Image) {
         engine = ImageEngine::CreateFromFile(filePath);
