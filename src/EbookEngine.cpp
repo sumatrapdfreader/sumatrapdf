@@ -7,6 +7,7 @@
 #include "BaseUtil.h"
 #include "EbookEngine.h"
 
+#include "BaseEngine.h"
 #include "EbookDoc.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
@@ -17,10 +18,6 @@ using namespace Gdiplus;
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-
-// disable warning C4250 which is wrongly issued due to a compiler bug; cf.
-// http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
-#pragma warning(disable: 4250) /* 'class1' : inherits 'class2::member' via dominance */
 
 static ScopedMem<WCHAR> gDefaultFontName;
 static float gDefaultFontSize = 10.f;
@@ -69,7 +66,7 @@ public:
     virtual void Abort() { abort = true; }
 };
 
-class EbookEngine : public virtual BaseEngine {
+class EbookEngine : public BaseEngine {
 public:
     EbookEngine();
     virtual ~EbookEngine();
@@ -723,13 +720,11 @@ public:
 
 /* BaseEngine for handling EPUB documents */
 
-class EpubEngineImpl : public EbookEngine, public EpubEngine {
-    friend EpubEngine;
-
+class EpubEngineImpl : public EbookEngine {
 public:
     EpubEngineImpl() : EbookEngine(), doc(NULL) { }
     virtual ~EpubEngineImpl() { delete doc; }
-    virtual EpubEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -742,6 +737,9 @@ public:
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     EpubDoc *doc;
@@ -809,16 +807,7 @@ DocTocItem *EpubEngineImpl::GetTocTree()
     return root;
 }
 
-bool EpubEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    if (sniff && dir::Exists(fileName)) {
-        ScopedMem<WCHAR> mimetypePath(path::Join(fileName, L"mimetype"));
-        return file::StartsWith(mimetypePath, "application/epub+zip");
-    }
-    return EpubDoc::IsSupportedFile(fileName, sniff);
-}
-
-EpubEngine *EpubEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *EpubEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
@@ -828,7 +817,7 @@ EpubEngine *EpubEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
-EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
+BaseEngine *EpubEngineImpl::CreateFromStream(IStream *stream)
 {
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(stream)) {
@@ -838,15 +827,36 @@ EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
     return engine;
 }
 
+namespace EpubEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    if (sniff && dir::Exists(fileName)) {
+        ScopedMem<WCHAR> mimetypePath(path::Join(fileName, L"mimetype"));
+        return file::StartsWith(mimetypePath, "application/epub+zip");
+    }
+    return EpubDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return EpubEngineImpl::CreateFromFile(fileName);
+}
+
+BaseEngine *CreateFromStream(IStream *stream)
+{
+    return EpubEngineImpl::CreateFromStream(stream);
+}
+
+}
+
 /* BaseEngine for handling FictionBook2 documents */
 
-class Fb2EngineImpl : public EbookEngine, public Fb2Engine {
-    friend Fb2Engine;
-
+class Fb2EngineImpl : public EbookEngine {
 public:
     Fb2EngineImpl() : EbookEngine(), doc(NULL) { }
     virtual ~Fb2EngineImpl() { delete doc; }
-    virtual Fb2Engine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -859,6 +869,8 @@ public:
 
     virtual bool HasTocTree() const;
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     Fb2Doc *doc;
@@ -948,12 +960,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
     return root;
 }
 
-bool Fb2Engine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return Fb2Doc::IsSupportedFile(fileName, sniff);
-}
-
-Fb2Engine *Fb2Engine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *Fb2EngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     Fb2EngineImpl *engine = new Fb2EngineImpl();
     if (!engine->Load(fileName)) {
@@ -963,17 +970,29 @@ Fb2Engine *Fb2Engine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace Fb2Engine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return Fb2Doc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return Fb2EngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 /* BaseEngine for handling Mobi documents */
 
 #include "MobiDoc.h"
 
-class MobiEngineImpl : public EbookEngine, public MobiEngine {
-    friend MobiEngine;
-
+class MobiEngineImpl : public EbookEngine {
 public:
     MobiEngineImpl() : EbookEngine(), doc(NULL), tocReparsePoint(NULL) { }
     virtual ~MobiEngineImpl() { delete doc; }
-    virtual MobiEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -985,6 +1004,8 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     MobiDoc *doc;
@@ -1131,12 +1152,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
     return root;
 }
 
-bool MobiEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return MobiDoc::IsSupportedFile(fileName, sniff);
-}
-
-MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *MobiEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     MobiEngineImpl *engine = new MobiEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1146,15 +1162,27 @@ MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace MobiEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return MobiDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return MobiEngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 /* BaseEngine for handling PalmDOC documents (and extensions such as TealDoc) */
 
-class PdbEngineImpl : public EbookEngine, public PdbEngine {
-    friend PdbEngine;
-
+class PdbEngineImpl : public EbookEngine {
 public:
     PdbEngineImpl() : EbookEngine(), doc(NULL) { }
     virtual ~PdbEngineImpl() { delete doc; }
-    virtual PdbEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -1165,6 +1193,8 @@ public:
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     PalmDoc *doc;
@@ -1203,12 +1233,7 @@ DocTocItem *PdbEngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool PdbEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return PalmDoc::IsSupportedFile(fileName, sniff);
-}
-
-PdbEngine *PdbEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *PdbEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     PdbEngineImpl *engine = new PdbEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1216,6 +1241,20 @@ PdbEngine *PdbEngine::CreateFromFile(const WCHAR *fileName)
         return NULL;
     }
     return engine;
+}
+
+namespace PdbEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return PalmDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return PdbEngineImpl::CreateFromFile(fileName);
+}
+
 }
 
 /* formatting extensions for CHM */
@@ -1335,8 +1374,7 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
 
 class ChmEmbeddedDest;
 
-class Chm2EngineImpl : public EbookEngine, public Chm2Engine {
-    friend Chm2Engine;
+class Chm2EngineImpl : public EbookEngine {
     friend ChmEmbeddedDest;
 
 public:
@@ -1348,7 +1386,7 @@ public:
         delete dataCache;
         delete doc;
     }
-    virtual Chm2Engine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -1361,6 +1399,8 @@ public:
 
     virtual bool HasTocTree() const { return doc->HasToc() || doc->HasIndex(); }
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     ChmDoc *doc;
@@ -1546,12 +1586,7 @@ bool Chm2EngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char *path)
     return saveUI.SaveEmbedded(data, len);
 }
 
-bool Chm2Engine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return ChmDoc::IsSupportedFile(fileName, sniff);
-}
-
-Chm2Engine *Chm2Engine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *Chm2EngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     Chm2EngineImpl *engine = new Chm2EngineImpl();
     if (!engine->Load(fileName)) {
@@ -1561,18 +1596,30 @@ Chm2Engine *Chm2Engine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace Chm2Engine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return ChmDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return Chm2EngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 /* BaseEngine for handling TCR documents */
 
-class TcrEngineImpl : public EbookEngine, public TcrEngine {
-    friend TcrEngine;
-
+class TcrEngineImpl : public EbookEngine {
 public:
     TcrEngineImpl() : EbookEngine(), doc(NULL) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
     virtual ~TcrEngineImpl() { delete doc; }
-    virtual TcrEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -1581,6 +1628,8 @@ public:
     }
     virtual const WCHAR *GetDefaultFileExt() const { return L".tcr"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     TcrDoc *doc;
@@ -1610,12 +1659,7 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     return pages->Count() > 0;
 }
 
-bool TcrEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return TcrDoc::IsSupportedFile(fileName, sniff);
-}
-
-TcrEngine *TcrEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *TcrEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     TcrEngineImpl *engine = new TcrEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1625,12 +1669,24 @@ TcrEngine *TcrEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace TcrEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return TcrDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return TcrEngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 /* BaseEngine for handling HTML documents */
 /* (mainly to allow creating minimal regression test testcases more easily) */
 
-class HtmlEngineImpl : public EbookEngine, public HtmlEngine {
-    friend HtmlEngine;
-
+class HtmlEngineImpl : public EbookEngine {
 public:
     HtmlEngineImpl() : EbookEngine(), doc(NULL) {
         // ISO 216 A4 (210mm x 297mm)
@@ -1639,7 +1695,7 @@ public:
     virtual ~HtmlEngineImpl() {
         delete doc;
     }
-    virtual HtmlEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -1648,6 +1704,8 @@ public:
     }
     virtual const WCHAR *GetDefaultFileExt() const { return L".html"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     HtmlDoc *doc;
@@ -1712,12 +1770,7 @@ PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     return new EbookLink(link, rect, dest, pageNo, true);
 }
 
-bool HtmlEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return HtmlDoc::IsSupportedFile(fileName, sniff);
-}
-
-HtmlEngine *HtmlEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *HtmlEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     HtmlEngineImpl *engine = new HtmlEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1727,18 +1780,30 @@ HtmlEngine *HtmlEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace HtmlEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return HtmlDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return HtmlEngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 /* BaseEngine for handling TXT documents */
 
-class TxtEngineImpl : public EbookEngine, public TxtEngine {
-    friend TxtEngine;
-
+class TxtEngineImpl : public EbookEngine {
 public:
     TxtEngineImpl() : EbookEngine(), doc(NULL) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
     virtual ~TxtEngineImpl() { delete doc; }
-    virtual TxtEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -1752,6 +1817,8 @@ public:
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     TxtDoc *doc;
@@ -1795,12 +1862,7 @@ DocTocItem *TxtEngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool TxtEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return TxtDoc::IsSupportedFile(fileName, sniff);
-}
-
-TxtEngine *TxtEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *TxtEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     TxtEngineImpl *engine = new TxtEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1808,4 +1870,18 @@ TxtEngine *TxtEngine::CreateFromFile(const WCHAR *fileName)
         return NULL;
     }
     return engine;
+}
+
+namespace TxtEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    return TxtDoc::IsSupportedFile(fileName, sniff);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return TxtEngineImpl::CreateFromFile(fileName);
+}
+
 }

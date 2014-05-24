@@ -4,56 +4,64 @@
 #ifndef EpubEngine_h
 #define EpubEngine_h
 
-#include "BaseEngine.h"
+class BaseEngine;
 
-class EpubEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static EpubEngine *CreateFromFile(const WCHAR *fileName);
-    static EpubEngine *CreateFromStream(IStream *stream);
-};
+namespace EpubEngine {
 
-class Fb2Engine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static Fb2Engine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
 
-class MobiEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static MobiEngine *CreateFromFile(const WCHAR *fileName);
-};
+}
 
-class PdbEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static PdbEngine *CreateFromFile(const WCHAR *fileName);
-};
+namespace Fb2Engine {
 
-class Chm2Engine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static Chm2Engine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
 
-class TcrEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static TcrEngine *CreateFromFile(const WCHAR *fileName);
-};
+}
 
-class HtmlEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static HtmlEngine *CreateFromFile(const WCHAR *fileName);
-};
+namespace MobiEngine {
 
-class TxtEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static TxtEngine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace PdbEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace Chm2Engine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace TcrEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace HtmlEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace TxtEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
 
 void SetDefaultEbookFont(const WCHAR *name, float size);
 
