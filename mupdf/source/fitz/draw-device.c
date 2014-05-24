@@ -1470,6 +1470,11 @@ fz_draw_end_mask(fz_device *devp)
 #endif
 	/* convert to alpha mask */
 	temp = fz_alpha_from_gray(dev->ctx, state[1].dest, luminosity);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695260 */
+	fz_pixmap_bbox(ctx, temp, &bbox);
+	dest = fz_new_pixmap_with_bbox(dev->ctx, state->dest->colorspace, &bbox);
+	fz_clear_pixmap(dev->ctx, dest);
+
 	if (state[1].dest != state[0].dest)
 		fz_drop_pixmap(dev->ctx, state[1].dest);
 	state[1].dest = NULL;
@@ -1480,10 +1485,11 @@ fz_draw_end_mask(fz_device *devp)
 		fz_drop_pixmap(dev->ctx, state[1].mask);
 	state[1].mask = NULL;
 
-	/* create new dest scratch buffer */
+	/* create new dest scratch buffer * /
 	fz_pixmap_bbox(ctx, temp, &bbox);
 	dest = fz_new_pixmap_with_bbox(dev->ctx, state->dest->colorspace, &bbox);
 	fz_clear_pixmap(dev->ctx, dest);
+	*/
 
 	/* push soft mask as clip mask */
 	state[1].mask = temp;
