@@ -15,7 +15,7 @@ namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
 {
-    return PdfEngine::IsSupportedFile(filePath, sniff)  ||
+    return IsSupportedPdfEngineFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
            IsSupportedDjVuEngineFile(filePath, sniff) ||
            ImageEngine::IsSupportedFile(filePath, sniff)||
@@ -42,8 +42,8 @@ BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, EngineType *t
     EngineType engineType = Engine_None;
     bool sniff = false;
 RetrySniffing:
-    if (PdfEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PDF) {
-        engine = PdfEngine::CreateFromFile(filePath, pwdUI);
+    if (IsSupportedPdfEngineFile(filePath, sniff) && engineType != Engine_PDF) {
+        engine = CreatePdfEngineFromFile(filePath, pwdUI);
         engineType = Engine_PDF;
     } else if (XpsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_XPS) {
         engine = XpsEngine::CreateFromFile(filePath);

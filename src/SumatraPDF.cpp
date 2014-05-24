@@ -971,8 +971,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
 
     if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
         CrashIf(!dm);
-        int res = Synchronizer::Create(args.fileName,
-            static_cast<PdfEngine *>(dm->engine), &win->AsFixed()->pdfSync);
+        int res = Synchronizer::Create(args.fileName, dm->engine, &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;

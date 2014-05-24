@@ -117,7 +117,7 @@ static RectI ExtractDSCPageSize(const WCHAR *fileName)
     return RectI();
 }
 
-static PdfEngine *ps2pdf(const WCHAR *fileName)
+static BaseEngine *ps2pdf(const WCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     ScopedMem<WCHAR> shortPath(path::ShortPath(fileName));
@@ -166,10 +166,10 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     if (!stream)
         return NULL;
 
-    return PdfEngine::CreateFromStream(stream);
+    return CreatePdfEngineFromStream(stream);
 }
 
-static PdfEngine *psgz2pdf(const WCHAR *fileName)
+static BaseEngine *psgz2pdf(const WCHAR *fileName)
 {
     ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
@@ -211,7 +211,9 @@ public:
         delete pdfEngine;
     }
     virtual PsEngineImpl *Clone() {
-        PdfEngine *newEngine = pdfEngine ? static_cast<PdfEngine *>(pdfEngine->Clone()) : NULL;
+        if (!pdfEngine)
+            return NULL;
+        BaseEngine *newEngine = pdfEngine->Clone();
         if (!newEngine)
             return NULL;
         PsEngineImpl *clone = new PsEngineImpl();
@@ -326,7 +328,7 @@ public:
 
 protected:
     WCHAR *fileName;
-    PdfEngine *pdfEngine;
+    BaseEngine *pdfEngine;
 
     bool Load(const WCHAR *fileName) {
         assert(!this->fileName && !pdfEngine);

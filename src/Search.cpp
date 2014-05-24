@@ -397,8 +397,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
     if (!win->AsFixed()->pdfSync) {
-        int err = Synchronizer::Create(win->loadedFilePath,
-            static_cast<PdfEngine *>(win->AsFixed()->engine()), &win->AsFixed()->pdfSync);
+        int err = Synchronizer::Create(win->loadedFilePath, win->AsFixed()->engine(), &win->AsFixed()->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer

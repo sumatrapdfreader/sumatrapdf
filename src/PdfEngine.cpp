@@ -9,6 +9,7 @@ extern "C" {
 }
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "PdfEngine.h"
 
 #include "FileUtil.h"
@@ -1158,12 +1159,14 @@ class PdfTocItem;
 class PdfLink;
 class PdfImage;
 
-class PdfEngineImpl : public PdfEngine {
-    friend PdfEngine;
+class PdfEngineImpl : public BaseEngine {
     friend PdfLink;
     friend PdfImage;
 
 public:
+    static PdfEngineImpl *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
+    static PdfEngineImpl *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
+
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
     virtual PdfEngineImpl *Clone();
@@ -3230,7 +3233,7 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
     return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
 }
 
-bool PdfEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool IsSupportedPdfEngineFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         char header[1024] = { 0 };
@@ -3246,7 +3249,7 @@ bool PdfEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
-PdfEngine *PdfEngine::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
+PdfEngineImpl *PdfEngineImpl::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
 {
     PdfEngineImpl *engine = new PdfEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
@@ -3256,7 +3259,7 @@ PdfEngine *PdfEngine::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
     return engine;
 }
 
-PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
+PdfEngineImpl *PdfEngineImpl::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
     PdfEngineImpl *engine = new PdfEngineImpl();
     if (!engine->Load(stream, pwdUI)) {
@@ -3264,6 +3267,16 @@ PdfEngine *PdfEngine::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
         return NULL;
     }
     return engine;
+}
+
+BaseEngine *CreatePdfEngineFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
+{
+    return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
+}
+
+BaseEngine *CreatePdfEngineFromStream(IStream *stream, PasswordUI *pwdUI)
+{
+    return PdfEngineImpl::CreateFromStream(stream, pwdUI);
 }
 
 ///// XPS-specific extensions to Fitz/MuXPS /////

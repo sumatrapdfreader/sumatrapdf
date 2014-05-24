@@ -13,12 +13,9 @@ public:
     virtual ~PasswordUI() { }
 };
 
-class PdfEngine : public BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static PdfEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
-    static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
-};
+bool IsSupportedPdfEngineFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreatePdfEngineFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
+BaseEngine *CreatePdfEngineFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 
 class XpsEngine : public BaseEngine {
 public:

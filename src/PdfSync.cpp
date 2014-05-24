@@ -42,7 +42,7 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(const WCHAR* syncfilename, PdfEngine *engine) :
+    Pdfsync(const WCHAR* syncfilename, BaseEngine *engine) :
         Synchronizer(syncfilename), engine(engine)
     {
         assert(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
@@ -55,7 +55,7 @@ private:
     int RebuildIndex();
     UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
-    PdfEngine *engine;          // needed for converting between coordinate systems
+    BaseEngine *engine;          // needed for converting between coordinate systems
     WStrVec srcfiles;           // source file names
     Vec<PdfsyncLine> lines;     // record-to-line mapping
     Vec<PdfsyncPoint> points;   // record-to-point mapping
@@ -67,7 +67,7 @@ private:
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(const WCHAR* syncfilename, PdfEngine *engine) :
+    SyncTex(const WCHAR* syncfilename, BaseEngine *engine) :
         Synchronizer(syncfilename), engine(engine), scanner(NULL)
     {
         assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
@@ -83,7 +83,7 @@ public:
 private:
     int RebuildIndex();
 
-    PdfEngine *engine; // needed for converting between coordinate systems
+    BaseEngine *engine; // needed for converting between coordinate systems
     synctex_scanner_t scanner;
 };
 
@@ -128,7 +128,7 @@ WCHAR * Synchronizer::PrependDir(const WCHAR* filename) const
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const WCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync)
+int Synchronizer::Create(const WCHAR *pdffilename, BaseEngine *engine, Synchronizer **sync)
 {
     if (!sync || !engine)
         return PDFSYNCERR_INVALID_ARGUMENT;
