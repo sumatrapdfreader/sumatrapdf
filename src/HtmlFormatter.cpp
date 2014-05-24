@@ -1426,3 +1426,27 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
             break;
     }
 }
+
+static TextRenderMethod gTextRenderMethod = TextRenderMethodGdi;
+// static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
+
+TextRenderMethod GetTextRenderMethod() {
+    return gTextRenderMethod;
+}
+
+void SetTextRenderMethod(TextRenderMethod method) {
+    gTextRenderMethod = method;
+}
+
+HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator)
+{
+    HtmlFormatterArgs *args = new HtmlFormatterArgs();
+    CrashIf(!args->htmlStr);
+    args->SetFontName(L"Georgia");
+    args->fontSize = 12.5f;
+    args->pageDx = (REAL)dx;
+    args->pageDy = (REAL)dy;
+    args->textAllocator = textAllocator;
+    args->textRenderMethod = GetTextRenderMethod();
+    return args;
+}

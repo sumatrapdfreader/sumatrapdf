@@ -449,7 +449,7 @@ void EbController::UpdateDisplayState(DisplayState *ds)
 static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
 {
     PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
     TextRenderMethod renderMethod = args->textRenderMethod;
     HtmlFormatter *formatter = CreateFormatter(doc, args);
     HtmlPage *pd = formatter->Next();

@@ -5,13 +5,6 @@
 #define EbookFormatter_h
 
 #include "HtmlFormatter.h"
-#include "Doc.h"
-
-TextRenderMethod GetTextRenderMethod();
-void SetTextRenderMethod(TextRenderMethod method);
-
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
-HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 
 /* formatting extensions for Mobi */
 

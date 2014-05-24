@@ -1092,6 +1092,14 @@
 					RelativePath="..\src\UnitTests.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\src\regress\Regress.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\regress\Regress00.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Windows"

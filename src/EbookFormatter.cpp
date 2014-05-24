@@ -11,43 +11,6 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 
-TextRenderMethod gTextRenderMethod = TextRenderMethodGdi;
-//TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
-
-TextRenderMethod GetTextRenderMethod() {
-    return gTextRenderMethod;
-}
-
-void SetTextRenderMethod(TextRenderMethod method) {
-    gTextRenderMethod = method;
-}
-
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
-{
-    HtmlFormatterArgs *args = new HtmlFormatterArgs();
-    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
-    CrashIf(!args->htmlStr);
-    args->SetFontName(L"Georgia");
-    args->fontSize = 12.5f;
-    args->pageDx = (REAL)dx;
-    args->pageDy = (REAL)dy;
-    args->textAllocator = textAllocator;
-    args->textRenderMethod = gTextRenderMethod;
-    return args;
-}
-
-HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
-{
-    if (doc.AsEpub())
-        return new EpubFormatter(args, doc.AsEpub());
-    if (doc.AsFb2())
-        return new Fb2Formatter(args, doc.AsFb2());
-    if (doc.AsMobi())
-        return new MobiFormatter(args, doc.AsMobi());
-    CrashIf(true);
-    return NULL;
-}
-
 /* Mobi-specific formatting methods */
 
 MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :

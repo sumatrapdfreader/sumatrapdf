@@ -129,7 +129,7 @@ static int FormatWholeDoc(Doc& doc) {
     int PAGE_DY = 520;
 
     PoolAllocator textAllocator;
-    HtmlFormatterArgs *formatterArgs = CreateFormatterArgsDoc2(doc, PAGE_DX, PAGE_DY, &textAllocator);
+    HtmlFormatterArgs *formatterArgs = CreateFormatterArgsDoc(doc, PAGE_DX, PAGE_DY, &textAllocator);
 
     HtmlFormatter *formatter = CreateFormatter(doc, formatterArgs);
     int nPages = 0;

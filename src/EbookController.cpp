@@ -31,14 +31,25 @@ static float GetFontSize()
     return fontSize;
 }
 
-// we don't use CreateFormatterArgsDoc() to not introduce dependency
-// on gGlobalPrefs in EngineDump
-HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator)
 {
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, dx, dy, textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
+    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
     args->SetFontName(GetFontName());
     args->fontSize = GetFontSize();
     return args;
+}
+
+HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
+{
+    if (doc.AsEpub())
+        return new EpubFormatter(args, doc.AsEpub());
+    if (doc.AsFb2())
+        return new Fb2Formatter(args, doc.AsFb2());
+    if (doc.AsMobi())
+        return new MobiFormatter(args, doc.AsMobi());
+    CrashIf(true);
+    return NULL;
 }
 
 static WindowInfo *FindWindowInfoByController(EbookController *controller)
@@ -333,7 +344,7 @@ void EbookController::TriggerBookFormatting()
     CrashIf(incomingPages);
     incomingPages = new Vec<HtmlPage*>(1024);
 
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, size.dx, size.dy, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
     formattingThread = new EbookFormattingThread(doc, args, this, currPageReparseIdx);
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();

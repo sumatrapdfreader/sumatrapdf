@@ -277,4 +277,8 @@ public:
 
 void DrawHtmlPage(Graphics *g, ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
 
+TextRenderMethod GetTextRenderMethod();
+void SetTextRenderMethod(TextRenderMethod method);
+HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator=NULL);
+
 #endif

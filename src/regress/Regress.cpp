@@ -22,6 +22,7 @@ using namespace mui;
 #include "DirIter.h"
 #include "Doc.h"
 #include "EbookFormatter.h"
+#include "EbookDoc.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

@@ -8,9 +8,10 @@ static void RegressTestEpubLoading(const WCHAR *fileName)
 {
     WCHAR *filePath = path::Join(TestFilesDir(), fileName);
     VerifyFileExists(filePath);
-    Doc doc(Doc::CreateFromFile(filePath));
-    CrashAlwaysIf(doc.LoadingFailed());
-    CrashAlwaysIf(!doc.AsEpub());
+    CrashAlwaysIf(!EpubDoc::IsSupportedFile(filePath));
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    CrashAlwaysIf(!doc);
+    delete doc;
 }
 
 // http://code.google.com/p/sumatrapdf/issues/detail?id=2102
@@ -30,14 +31,15 @@ static void Regress00()
 {
     WCHAR *filePath = path::Join(TestFilesDir(), L"epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
-    Doc doc(Doc::CreateFromFile(filePath));
-    CrashAlwaysIf(doc.LoadingFailed());
-    CrashAlwaysIf(!doc.AsEpub());
+    CrashAlwaysIf(!EpubDoc::IsSupportedFile(filePath));
+    EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
+    CrashAlwaysIf(!doc);
 
-    PoolAllocator   textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, 820, 920, &textAllocator);
+    PoolAllocator textAllocator;
+    HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
+    args->htmlStr = doc->GetTextData(&args->htmlStrLen);
     HtmlPage *pages[3];
-    HtmlFormatter *formatter = CreateFormatter(doc, args);
+    HtmlFormatter *formatter = new EpubFormatter(args, doc);
     int page = 0;
     for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         pages[page++] = pd;
@@ -48,13 +50,15 @@ static void Regress00()
     delete args;
     CrashAlwaysIf(page != 3);
 
-    args = CreateFormatterArgsDoc(doc, 820, 920, &textAllocator);
+    args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
+    args->htmlStr = doc->GetTextData(&args->htmlStrLen);
     args->reparseIdx = pages[2]->reparseIdx;
-    formatter = CreateFormatter(doc, args);
+    formatter = new EpubFormatter(args, doc);
     // if bug is present, this will crash in formatter->Next()
     for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         delete pd;
     }
     delete formatter;
     delete args;
+    delete doc;
 }

@@ -76,7 +76,10 @@ public:
     bool IsDoublePage() const { return !IsSinglePage(); }
 };
 
-HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
+class HtmlFormatter;
+
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=NULL);
+HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 
 #define EBOOK_LAYOUT_TIMER_ID       6
 #define EBOOK_LAYOUT_DELAY_IN_MS    200

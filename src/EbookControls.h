@@ -4,7 +4,6 @@
 #ifndef EbookControls_h
 #define EbookControls_h
 
-#include "Doc.h"
 #include "Mui.h"
 
 class HtmlFormatter;
