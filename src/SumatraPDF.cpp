@@ -761,6 +761,11 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             doc.Delete();
         ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas) : NULL;
         if (ctrl) {
+            // TODO: the EbookController constructor calls UpdateWindow, so WndProcCanvas must
+            // already think that an EbookUIController has been successfully loaded
+            win->ctrl = ctrl;
+            ctrl->AsEbook()->EnableMessageHandling(false);
+
             EbookController *ectrl = new EbookController(ctrl->AsEbook()->ctrls(), displayMode);
             ctrl->AsEbook()->SetController(ectrl);
             ectrl->SetDoc(doc, reparseIdx);
@@ -836,8 +841,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     AbortFinding(args.win);
 
     Controller *prevCtrl = win->ctrl;
-    win->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
+    win->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
 
     bool needRefresh = !win->ctrl;
 
@@ -971,6 +976,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
     }
+
+    // reallow resizing/relayout/repaining
+    if (win->ctrl->AsEbook())
+        win->ctrl->AsEbook()->EnableMessageHandling(true);
 
 Error:
     if (args.isNewWindow || args.placeWindow && state) {
