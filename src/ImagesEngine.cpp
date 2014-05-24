@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ImagesEngine.h"
 
+#include "BaseEngine.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -13,10 +14,6 @@ using namespace Gdiplus;
 #include "ZipUtil.h"
 
 #include "../ext/unrar/dll.hpp"
-
-// disable warning C4250 which is wrongly issued due to a compiler bug; cf.
-// http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
-#pragma warning(disable: 4250) /* 'class1' : inherits 'class2::member' via dominance */
 
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE    10
@@ -35,7 +32,7 @@ struct ImagePage {
 
 class ImageElement;
 
-class ImagesEngine : public virtual BaseEngine {
+class ImagesEngine : public BaseEngine {
     friend ImageElement;
 
 public:
@@ -331,19 +328,20 @@ void ImagesEngine::DropPage(ImagePage *page, bool forceRemove)
 
 ///// ImageEngine handles a single image file /////
 
-class ImageEngineImpl : public ImagesEngine, public ImageEngine {
-    friend ImageEngine;
-
+class ImageEngineImpl : public ImagesEngine {
 public:
     ImageEngineImpl() : fileExt(NULL), image(NULL) { }
     virtual ~ImageEngineImpl() { delete image; }
 
-    virtual ImageEngine *Clone();
+    virtual BaseEngine *Clone();
 
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
     virtual float GetFileDPI() const { return image->GetHorizontalResolution(); }
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     const WCHAR *fileExt;
@@ -357,7 +355,7 @@ protected:
     virtual RectD LoadMediabox(int pageNo);
 };
 
-ImageEngine *ImageEngineImpl::Clone()
+BaseEngine *ImageEngineImpl::Clone()
 {
     Bitmap *bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!bmp)
@@ -530,7 +528,29 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo)
     return mbox;
 }
 
-bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+BaseEngine *ImageEngineImpl::CreateFromFile(const WCHAR *fileName)
+{
+    ImageEngineImpl *engine = new ImageEngineImpl();
+    if (!engine->LoadSingleFile(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+BaseEngine *ImageEngineImpl::CreateFromStream(IStream *stream)
+{
+    ImageEngineImpl *engine = new ImageEngineImpl();
+    if (!engine->LoadFromStream(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+namespace ImageEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         char header[32] = { 0 };
@@ -550,36 +570,26 @@ bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, L".jp2");
 }
 
-ImageEngine *ImageEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
-    AssertCrash(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
-    ImageEngineImpl *engine = new ImageEngineImpl();
-    if (!engine->LoadSingleFile(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    AssertCrash(ImageEngine::IsSupportedFile(fileName) || ImageEngine::IsSupportedFile(fileName, true));
+    return ImageEngineImpl::CreateFromFile(fileName);
 }
 
-ImageEngine *ImageEngine::CreateFromStream(IStream *stream)
+BaseEngine *CreateFromStream(IStream *stream)
 {
-    ImageEngineImpl *engine = new ImageEngineImpl();
-    if (!engine->LoadFromStream(stream)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    return ImageEngineImpl::CreateFromStream(stream);
+}
+
 }
 
 ///// ImageDirEngine handles a directory full of image files /////
 
-class ImageDirEngineImpl : public ImagesEngine, public ImageDirEngine {
-    friend ImageDirEngine;
-
+class ImageDirEngineImpl : public ImagesEngine {
 public:
     ImageDirEngineImpl() : fileDPI(96.0f) { }
 
-    virtual ImageDirEngine *Clone() {
+    virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -599,6 +609,8 @@ public:
     // TODO: better handle the case where images have different resolutions
     virtual float GetFileDPI() const { return fileDPI; }
     virtual const WCHAR *GetDefaultFileExt() const { return L""; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     bool LoadImageDir(const WCHAR *dirName);
@@ -721,13 +733,7 @@ RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
     return RectD();
 }
 
-bool ImageDirEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    // whether it actually contains images will be checked in LoadImageDir
-    return dir::Exists(fileName);
-}
-
-ImageDirEngine *ImageDirEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *ImageDirEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     AssertCrash(dir::Exists(fileName));
     ImageDirEngineImpl *engine = new ImageDirEngineImpl();
@@ -738,10 +744,25 @@ ImageDirEngine *ImageDirEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+namespace ImageDirEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
+{
+    // whether it actually contains images will be checked in LoadImageDir
+    return dir::Exists(fileName);
+}
+
+BaseEngine *CreateFromFile(const WCHAR *fileName)
+{
+    return ImageDirEngineImpl::CreateFromFile(fileName);
+}
+
+}
+
 ///// CbxEngine handles comic book files (either .cbz or .cbr) /////
 
 // ComicEngine handles the common parts of CbzEngine and CbrEngine
-class ComicEngine : public ImagesEngine, public CbxEngine, public json::ValueVisitor {
+class ComicEngine : public ImagesEngine, public json::ValueVisitor {
 public:
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
@@ -878,13 +899,11 @@ WCHAR *ComicEngine::GetProperty(DocumentProperty prop)
 }
 
 class CbzEngineImpl : public ComicEngine {
-    friend CbxEngine;
-
 public:
     CbzEngineImpl() : cbzFile(NULL) { }
     virtual ~CbzEngineImpl() { delete cbzFile; }
 
-    virtual CbxEngine *Clone() {
+    virtual BaseEngine *Clone() {
         if (fileStream) {
             ScopedComPtr<IStream> stm;
             HRESULT res = fileStream->Clone(&stm);
@@ -897,6 +916,9 @@ public:
     }
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbz"; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     ZipFile *cbzFile;
@@ -1019,6 +1041,26 @@ char *CbzEngineImpl::GetImageData(int pageNo, size_t& len)
     return cbzFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
 }
 
+BaseEngine *CbzEngineImpl::CreateFromFile(const WCHAR *fileName)
+{
+    CbzEngineImpl *engine = new CbzEngineImpl();
+    if (!engine->LoadFromFile(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+BaseEngine *CbzEngineImpl::CreateFromStream(IStream *stream)
+{
+    CbzEngineImpl *engine = new CbzEngineImpl();
+    if (!engine->LoadFromStream(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 // UnRAR doesn't allow to selectively decompress files, so we store all of them
 // in umcompressed form; since image decoding might be expensive, the data is only
 // decoded on demand same as for CBZ and ImageDir
@@ -1028,18 +1070,18 @@ struct RarDecompressData {
 };
 
 class CbrEngineImpl : public ComicEngine {
-    friend CbxEngine;
-
 public:
     virtual ~CbrEngineImpl() { FreeVecMembers(pageData); }
 
-    virtual CbxEngine *Clone() {
+    virtual BaseEngine *Clone() {
         if (fileName)
             return CreateFromFile(fileName);
         return NULL;
     }
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbr"; }
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     Vec<RarDecompressData *> pageData;
@@ -1191,7 +1233,19 @@ RectD CbrEngineImpl::LoadMediabox(int pageNo)
     return RectD(0, 0, size.Width, size.Height);
 }
 
-bool CbxEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+BaseEngine *CbrEngineImpl::CreateFromFile(const WCHAR *fileName)
+{
+    CbrEngineImpl *engine = new CbrEngineImpl();
+    if (!engine->LoadFromFile(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+namespace CbxEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
@@ -1205,35 +1259,30 @@ bool CbxEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, L".rar");
 }
 
-CbxEngine *CbxEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
-    AssertCrash(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
+    AssertCrash(CbxEngine::IsSupportedFile(fileName) || CbxEngine::IsSupportedFile(fileName, true));
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWith(fileName, "PK\x03\x04")) {
-        CbzEngineImpl *cbzEngine = new CbzEngineImpl();
-        if (cbzEngine->LoadFromFile(fileName))
-            return cbzEngine;
-        delete cbzEngine;
+        BaseEngine *engine = CbzEngineImpl::CreateFromFile(fileName);
+        if (engine)
+            return engine;
     }
     // also try again if a .cbz or .zip file failed to load, it might
     // just have been misnamed (which apparently happens occasionally)
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
         file::StartsWithN(fileName, "Rar!\x1A\x07\x00", 7)) {
-        CbrEngineImpl *cbrEngine = new CbrEngineImpl();
-        if (cbrEngine->LoadFromFile(fileName))
-            return cbrEngine;
-        delete cbrEngine;
+        BaseEngine *engine = CbrEngineImpl::CreateFromFile(fileName);
+        if (engine)
+            return engine;
     }
     return NULL;
 }
 
-CbxEngine *CbxEngine::CreateFromStream(IStream *stream)
+BaseEngine *CreateFromStream(IStream *stream)
 {
     // TODO: UnRAR doesn't support reading from arbitrary data streams
-    CbzEngineImpl *engine = new CbzEngineImpl();
-    if (!engine->LoadFromStream(stream)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    return CbzEngineImpl::CreateFromStream(stream);
+}
+
 }

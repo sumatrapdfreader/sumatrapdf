@@ -4,26 +4,29 @@
 #ifndef ImagesEngine_H
 #define ImagesEngine_H
 
-#include "BaseEngine.h"
+class BaseEngine;
 
-class ImageEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static ImageEngine *CreateFromFile(const WCHAR *fileName);
-    static ImageEngine *CreateFromStream(IStream *stream);
-};
+namespace ImageEngine {
 
-class ImageDirEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static ImageDirEngine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
 
-class CbxEngine : public virtual BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static CbxEngine *CreateFromFile(const WCHAR *fileName);
-    static CbxEngine *CreateFromStream(IStream *stream);
-};
+}
+
+namespace ImageDirEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
+
+namespace CbxEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
+
+}
 
 #endif

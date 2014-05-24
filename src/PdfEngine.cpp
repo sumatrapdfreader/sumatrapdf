@@ -3457,7 +3457,7 @@ class XpsEngineImpl : public BaseEngine {
 public:
     XpsEngineImpl();
     virtual ~XpsEngineImpl();
-    virtual XpsEngineImpl *Clone();
+    virtual BaseEngine *Clone();
 
     virtual const WCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
@@ -3685,7 +3685,7 @@ XpsEngineImpl::~XpsEngineImpl()
     DeleteCriticalSection(&_pagesAccess);
 }
 
-XpsEngineImpl *XpsEngineImpl::Clone()
+BaseEngine *XpsEngineImpl::Clone()
 {
     ScopedCritSec scope(&ctxAccess);
 
