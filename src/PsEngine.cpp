@@ -166,7 +166,7 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
     if (!stream)
         return NULL;
 
-    return CreatePdfEngineFromStream(stream);
+    return PdfEngine::CreateFromStream(stream);
 }
 
 static BaseEngine *psgz2pdf(const WCHAR *fileName)

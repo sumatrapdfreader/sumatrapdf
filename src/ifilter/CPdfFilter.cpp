@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "CPdfFilter.h"
+
+#include "BaseEngine.h"
 #include "PdfEngine.h"
 #include "WinUtil.h"
 

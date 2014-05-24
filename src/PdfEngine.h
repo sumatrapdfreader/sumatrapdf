@@ -4,7 +4,7 @@
 #ifndef PdfEngine_h
 #define PdfEngine_h
 
-#include "BaseEngine.h"
+class BaseEngine;
 
 class PasswordUI {
 public:
@@ -13,16 +13,21 @@ public:
     virtual ~PasswordUI() { }
 };
 
-bool IsSupportedPdfEngineFile(const WCHAR *fileName, bool sniff=false);
-BaseEngine *CreatePdfEngineFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
-BaseEngine *CreatePdfEngineFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
+namespace PdfEngine {
 
-class XpsEngine : public BaseEngine {
-public:
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static XpsEngine *CreateFromFile(const WCHAR *fileName);
-    static XpsEngine *CreateFromStream(IStream *stream);
-};
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
+BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
+
+}
+
+namespace XpsEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
+
+}
 
 void DebugGdiPlusDevice(bool enable);
 

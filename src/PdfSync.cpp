@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "PdfSync.h"
 
+#include "BaseEngine.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
 

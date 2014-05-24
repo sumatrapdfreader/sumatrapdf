@@ -1164,12 +1164,9 @@ class PdfEngineImpl : public BaseEngine {
     friend PdfImage;
 
 public:
-    static PdfEngineImpl *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
-    static PdfEngineImpl *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
-
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
-    virtual PdfEngineImpl *Clone();
+    virtual BaseEngine *Clone();
 
     virtual const WCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
@@ -1230,6 +1227,9 @@ public:
 
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
+    static BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
 
 protected:
     WCHAR *_fileName;
@@ -1463,7 +1463,7 @@ public:
     }
 };
 
-PdfEngineImpl *PdfEngineImpl::Clone()
+BaseEngine *PdfEngineImpl::Clone()
 {
     ScopedCritSec scope(&ctxAccess);
 
@@ -3233,7 +3233,29 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
     return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
 }
 
-bool IsSupportedPdfEngineFile(const WCHAR *fileName, bool sniff)
+BaseEngine *PdfEngineImpl::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
+{
+    PdfEngineImpl *engine = new PdfEngineImpl();
+    if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+BaseEngine *PdfEngineImpl::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
+{
+    PdfEngineImpl *engine = new PdfEngineImpl();
+    if (!engine->Load(stream, pwdUI)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+namespace PdfEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         char header[1024] = { 0 };
@@ -3249,34 +3271,16 @@ bool IsSupportedPdfEngineFile(const WCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
-PdfEngineImpl *PdfEngineImpl::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
-{
-    PdfEngineImpl *engine = new PdfEngineImpl();
-    if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
-}
-
-PdfEngineImpl *PdfEngineImpl::CreateFromStream(IStream *stream, PasswordUI *pwdUI)
-{
-    PdfEngineImpl *engine = new PdfEngineImpl();
-    if (!engine->Load(stream, pwdUI)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
-}
-
-BaseEngine *CreatePdfEngineFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
+BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
 {
     return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
 }
 
-BaseEngine *CreatePdfEngineFromStream(IStream *stream, PasswordUI *pwdUI)
+BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI)
 {
     return PdfEngineImpl::CreateFromStream(stream, pwdUI);
+}
+
 }
 
 ///// XPS-specific extensions to Fitz/MuXPS /////
@@ -3447,8 +3451,7 @@ struct XpsPageRun {
 class XpsTocItem;
 class XpsImage;
 
-class XpsEngineImpl : public XpsEngine {
-    friend XpsEngine;
+class XpsEngineImpl : public BaseEngine {
     friend XpsImage;
 
 public:
@@ -3500,6 +3503,9 @@ public:
     virtual DocTocItem *GetTocTree();
 
     fz_rect FindDestRect(const char *target);
+
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     WCHAR *_fileName;
@@ -4517,7 +4523,29 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo)
     return true;
 }
 
-bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+BaseEngine *XpsEngineImpl::CreateFromFile(const WCHAR *fileName)
+{
+    XpsEngineImpl *engine = new XpsEngineImpl();
+    if (!engine || !fileName || !engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+BaseEngine *XpsEngineImpl::CreateFromStream(IStream *stream)
+{
+    XpsEngineImpl *engine = new XpsEngineImpl();
+    if (!engine->Load(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+namespace XpsEngine {
+
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         if (dir::Exists(fileName)) {
@@ -4534,22 +4562,14 @@ bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
 }
 
-XpsEngine *XpsEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
-    XpsEngineImpl *engine = new XpsEngineImpl();
-    if (!engine || !fileName || !engine->Load(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    return XpsEngineImpl::CreateFromFile(fileName);
 }
 
-XpsEngine *XpsEngine::CreateFromStream(IStream *stream)
+BaseEngine *CreateFromStream(IStream *stream)
 {
-    XpsEngineImpl *engine = new XpsEngineImpl();
-    if (!engine->Load(stream)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    return XpsEngineImpl::CreateFromStream(stream);
+}
+
 }
