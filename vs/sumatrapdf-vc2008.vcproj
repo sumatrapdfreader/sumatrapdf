@@ -893,10 +893,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\EbookWinDesc.txt"
-					>
-				</File>
-				<File
 					RelativePath="..\src\Favorites.cpp"
 					>
 				</File>
@@ -913,27 +909,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\MuiEbookPageDef.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\MuiEbookPageDef.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\Notifications.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\Notifications.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\PagesLayoutDef.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\PagesLayoutDef.h"
 					>
 				</File>
 				<File
@@ -961,14 +941,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\SumatraAbout2.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\SumatraAbout2.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\TableOfContents.cpp"
 					>
 				</File>
@@ -990,18 +962,6 @@
 				</File>
 				<File
 					RelativePath="..\src\Toolbar.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Trans_sumatra_txt.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Translations.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Translations.h"
 					>
 				</File>
 			</Filter>
@@ -1085,19 +1045,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\Tester.cpp"
+					RelativePath="..\src\Translations.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\Translations.h"
 					>
 				</File>
 				<File
 					RelativePath="..\src\UnitTests.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\regress\Regress.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\regress\Regress00.cpp"
 					>
 				</File>
 			</Filter>
@@ -1185,6 +1141,46 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Varia"
+				>
+				<File
+					RelativePath="..\src\MuiEbookPageDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\MuiEbookPageDef.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\PagesLayoutDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\PagesLayoutDef.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\regress\Regress.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\regress\Regress00.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\SumatraAbout2.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\SumatraAbout2.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\Tester.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -1193,6 +1189,10 @@
 			>
 			<File
 				RelativePath="..\src\dragcursor.cur"
+				>
+			</File>
+			<File
+				RelativePath="..\src\EbookWinDesc.txt"
 				>
 			</File>
 			<File
@@ -1225,6 +1225,10 @@
 			</File>
 			<File
 				RelativePath="..\src\toolbar_11.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Trans_sumatra_txt.cpp"
 				>
 			</File>
 		</Filter>

@@ -14,7 +14,7 @@ DIR_STRUCT = [
 	(pjoin("src", "previewer"), ("Integration DLLs", "Previewer")),
 	(pjoin("src", "mui"), ("baseutils", "mui")),
 	(pjoin("src", "uia"), ("Source Files", "Automation")),
-	(pjoin("src", "regress"), ("Source Files", "Helpers")),
+	(pjoin("src", "regress"), ("Source Files", "Varia")),
 	(pjoin("mupdf", "include", "mupdf"), ("mupdf", "include")),
 	(pjoin("mupdf", "include", "mupdf", "fitz"), ("mupdf", "include", "fitz")),
 	(pjoin("mupdf", "include", "mupdf", "pdf"), ("mupdf", "include", "pdf")),
