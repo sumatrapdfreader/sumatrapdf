@@ -83,4 +83,5 @@ HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 
 #define EBOOK_LAYOUT_TIMER_ID       6
 #define EBOOK_LAYOUT_DELAY_IN_MS    200
+
 #endif

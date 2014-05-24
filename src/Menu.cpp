@@ -8,7 +8,6 @@
 #include "CmdLineParser.h"
 #include "Controller.h"
 #include "DisplayModel.h"
-#include "EbookController.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -467,7 +466,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, IsDebugPaint());
+    win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
 #endif
 }
 

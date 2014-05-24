@@ -14,7 +14,6 @@
 #include "Controller.h"
 #include "CrashHandler.h"
 #include "CryptoUtil.h"
-#include "DebugLog.h"
 #include "DirIter.h"
 #include "EbookController.h"
 #include "EngineManager.h"
@@ -28,7 +27,6 @@
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
-#include "HtmlWindow.h"
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "Mui.h"
@@ -50,7 +48,6 @@ using namespace Gdiplus;
 #include "StressTesting.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
-#include "Timer.h"
 #include "ThreadUtil.h"
 #include "Toolbar.h"
 #include "Touch.h"

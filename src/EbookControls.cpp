@@ -6,15 +6,12 @@
 
 #include "AppPrefs.h"
 #include "BitManip.h"
-#include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "resource.h"
 #include "TxtParser.h"
 #include "WinUtil.h"
-
-#include "DebugLog.h"
 
 static HCURSOR      gCursorHand = NULL;
 

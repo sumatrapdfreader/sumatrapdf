@@ -8,12 +8,10 @@
 #include "DisplayModel.h"
 #include "FileUtil.h"
 #include "Notifications.h"
-#include "Print.h"
 #include "resource.h"
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
 #include "uia/Provider.h"
 #include "WinUtil.h"
 
