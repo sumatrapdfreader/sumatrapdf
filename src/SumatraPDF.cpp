@@ -2131,14 +2131,17 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!srcFileName) return;
 
     BaseEngine *engine = win.AsFixed() ? win.AsFixed()->engine() : NULL;
-    // Can't save a document's content as plain text if text copying isn't allowed
-    bool hasCopyPerm = engine && engine->IsImageCollection();
-#ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (engine && !engine->AllowsCopyingText())
-        hasCopyPerm = false;
-#endif
-    CrashIf(hasCopyPerm && !engine);
+    bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
     bool canConvertToPDF = Engine_PS == win.GetEngineType();
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    // Can't save a document's content as plain text if text copying isn't allowed
+    if (engine && !engine->AllowsCopyingText())
+        canConvertToTXT = false;
+    // don't allow converting to PDF when printing isn't allowed
+    if (engine && !engine->AllowsPrinting())
+        canConvertToPDF = false;
+#endif
+    CrashIf(canConvertToTXT && (!engine || engine->IsImageCollection() || Engine_Txt == win.GetEngineType()));
     CrashIf(canConvertToPDF && (!engine || win.GetEngineType() != Engine_PS));
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
@@ -2148,7 +2151,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     str::Str<WCHAR> fileFilter(256);
     if (AppendFileFilterForDoc(win.ctrl, fileFilter))
         fileFilter.AppendFmt(L"\1*%s\1", defExt);
-    if (hasCopyPerm) {
+    if (canConvertToTXT) {
         fileFilter.Append(_TR("Text documents"));
         fileFilter.Append(L"\1*.txt\1");
     }
@@ -2196,21 +2199,25 @@ static void OnMenuSaveAs(WindowInfo& win)
         return;
 
     WCHAR * realDstFileName = dstFileName;
+    bool convertToTXT = canConvertToTXT && str::EndsWithI(dstFileName, L".txt");
+    bool convertToPDF = canConvertToPDF && str::EndsWithI(dstFileName, L".pdf");
+
     // Make sure that the file has a valid ending
-    if (!str::EndsWithI(dstFileName, defExt) &&
-        !(hasCopyPerm && str::EndsWithI(dstFileName, L".txt")) &&
-        !(canConvertToPDF && str::EndsWithI(dstFileName, L".pdf"))) {
-        if (hasCopyPerm && 2 == ofn.nFilterIndex)
+    if (!str::EndsWithI(dstFileName, defExt) && !convertToTXT && !convertToPDF) {
+        if (canConvertToTXT && 2 == ofn.nFilterIndex) {
             defExt = L".txt";
-        else if (canConvertToPDF && (hasCopyPerm ? 3 : 2) == (int)ofn.nFilterIndex)
+            convertToTXT = true;
+        }
+        else if (canConvertToPDF && (canConvertToTXT ? 3 : 2) == (int)ofn.nFilterIndex) {
             defExt = L".pdf";
+            convertToPDF = true;
+        }
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
     ScopedMem<WCHAR> errorMsg;
     // Extract all text when saving as a plain text file
-    if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt") &&
-        (2 == ofn.nFilterIndex || Engine_Txt != win.GetEngineType())) {
+    if (convertToTXT) {
         str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= win.ctrl->PageCount(); pageNo++) {
             WCHAR *tmp = engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export);
@@ -2222,8 +2229,10 @@ static void OnMenuSaveAs(WindowInfo& win)
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     }
     // Convert the Postscript file into a PDF one
-    else if (canConvertToPDF && str::EndsWithI(realDstFileName, L".pdf")) {
+    else if (convertToPDF) {
         ok = engine->SaveFileAsPDF(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
+        if (!gGlobalPrefs->annotationDefaults.saveIntoDocument)
+            ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName) && engine) {
@@ -2249,8 +2258,8 @@ static void OnMenuSaveAs(WindowInfo& win)
             LocalFree(msgBuf);
         }
     }
-    if (ok && win.AsFixed() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified) {
-        // TODO: don't save annotations externally when converting to PDF and .saveIntoDocument == true
+    if (ok && win.AsFixed() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified &&
+        !convertToTXT && !convertToPDF) {
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument ||
             !engine || !engine->SupportsAnnotation(true)) {
             ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
@@ -2261,7 +2270,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!ok)
         MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
 
-    if (ok && IsUntrustedFile(win.ctrl->FilePath(), gPluginURL))
+    if (ok && IsUntrustedFile(win.ctrl->FilePath(), gPluginURL) && !convertToTXT)
         file::SetZoneIdentifier(realDstFileName);
 
     if (realDstFileName != dstFileName)
