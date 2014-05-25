@@ -31,8 +31,9 @@ extern "C" {
 // maximum amount of memory that MuPDF should use per fz_context store
 #define MAX_CONTEXT_MEMORY  (256 * 1024 * 1024)
 
-// when set, always uses GDI+ for rendering (else GDI+ is only used for
-// zoom levels above 4000% and for rendering directly into an HDC)
+// normally, GDI+ is mainly used for zoom levels above 4000% and for
+// rendering directly into an HDC; if gDebugGdiPlusDevice is true,
+// the use of Fitz' draw device and the GDI+ device are swapped
 static bool gDebugGdiPlusDevice = false;
 
 void DebugGdiPlusDevice(bool enable)
@@ -4572,4 +4573,119 @@ BaseEngine *CreateFromStream(IStream *stream)
     return XpsEngineImpl::CreateFromStream(stream);
 }
 
+}
+
+///// a very simple PDF exporter /////
+
+static fz_image *render_to_pixmap(fz_context *ctx, RenderedBitmap *bmp)
+{
+    LONG w = bmp->Size().dx, h = bmp->Size().dy;
+
+    unsigned char *data = (unsigned char *)fz_malloc(ctx, w * h * 4);
+
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hDC = GetDC(NULL);
+    int res = GetDIBits(hDC, bmp->GetBitmap(), 0, h, data, &bmi, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hDC);
+    if (!res) {
+        fz_free(ctx, data);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "GetDIBits failed");
+    }
+
+    // reset alpha channel (just to be sure)
+    for (int i = 0; i < w * h; i++) {
+        data[i * 4 + 3] = 255;
+    }
+    // TODO: compress data
+    fz_pixmap *pix = NULL, *rgbPix = NULL;
+    fz_var(pix);
+
+    fz_try(ctx) {
+        pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, data);
+        // pdf_device doesn't handle non-RGB colorspaces
+        rgbPix = fz_new_pixmap(ctx, fz_device_rgb(ctx), w, h);
+        fz_convert_pixmap(ctx, rgbPix, pix);
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, pix);
+        fz_free(ctx, data);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+
+    return fz_new_image_from_pixmap(ctx, rgbPix, NULL);
+}
+
+bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
+{
+    fz_context *ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
+    if (!ctx)
+        return false;
+
+    ScopedMem<char> pathUtf8(str::conv::ToUtf8(pdfFileName));
+
+    pdf_document *doc = NULL;
+    pdf_page *page = NULL;
+    fz_image *image = NULL;
+    fz_device *dev = NULL;
+    fz_var(dev);
+    fz_var(page);
+    fz_var(image);
+    fz_var(doc);
+
+    fz_try(ctx) {
+        doc = pdf_create_document(ctx);
+        float zoom = dpi / engine->GetFileDPI();
+        for (int i = 1; i <= engine->PageCount(); i++) {
+            RenderedBitmap *bmp = engine->RenderBitmap(i, zoom, 0, NULL, Target_Export);
+            if (!bmp)
+                fz_throw(ctx, FZ_ERROR_GENERIC, "Failed to render page %d of %s", i, pathUtf8);
+            fz_matrix ctm = { bmp->Size().dx / zoom, 0, 0, bmp->Size().dy / zoom, 0, 0 };
+            fz_try(ctx) {
+                image = render_to_pixmap(ctx, bmp);
+            }
+            fz_always(ctx) {
+                delete bmp;
+            }
+            fz_catch(ctx) {
+                fz_rethrow(ctx);
+            }
+
+            fz_rect bounds = fz_unit_rect;
+            fz_transform_rect(&bounds, &ctm);
+            page = pdf_create_page(doc, bounds, dpi, 0);
+            dev = pdf_page_write(doc, page);
+            fz_fill_image(dev, image, &ctm, 1.0);
+            fz_free_device(dev);
+            dev = NULL;
+            fz_drop_image(ctx, image);
+            image = NULL;
+
+            pdf_insert_page(doc, page, i - 1);
+            pdf_free_page(doc, page);
+            page = NULL;
+        }
+
+        fz_write_options opts = { 0 };
+        pdf_write_document(doc, pathUtf8, &opts);
+    }
+    fz_always(ctx) {
+        fz_free_device(dev);
+        fz_drop_image(ctx, image);
+        pdf_free_page(doc, page);
+        pdf_close_document(doc);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
+
+    return true;
 }

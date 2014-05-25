@@ -6,7 +6,6 @@
 
 #include "BaseEngine.h"
 #include "FileUtil.h"
-#include "PdfEngine.h"
 
 #include "synctex_parser.h"
 

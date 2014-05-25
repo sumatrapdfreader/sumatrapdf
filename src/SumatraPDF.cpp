@@ -2132,7 +2132,12 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     BaseEngine *engine = win.AsFixed() ? win.AsFixed()->engine() : NULL;
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
-    bool canConvertToPDF = Engine_PS == win.GetEngineType();
+    bool canConvertToPDF = engine && win.GetEngineType() != Engine_PDF;
+#ifndef DEBUG
+    // not ready for non-PS document types yet
+    if (canConvertToPDF && win.GetEngineType() != Engine_PS)
+        canConvertToPDF = false;
+#endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     // Can't save a document's content as plain text if text copying isn't allowed
     if (engine && !engine->AllowsCopyingText())
@@ -2142,7 +2147,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         canConvertToPDF = false;
 #endif
     CrashIf(canConvertToTXT && (!engine || engine->IsImageCollection() || Engine_Txt == win.GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || win.GetEngineType() != Engine_PS));
+    CrashIf(canConvertToPDF && (!engine || Engine_PDF == win.GetEngineType()));
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -2231,8 +2236,14 @@ static void OnMenuSaveAs(WindowInfo& win)
     // Convert the Postscript file into a PDF one
     else if (convertToPDF) {
         ok = engine->SaveFileAsPDF(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
-        if (!gGlobalPrefs->annotationDefaults.saveIntoDocument)
-            ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
+        if (!ok) {
+#ifdef DEBUG
+            // rendering includes all page annotations
+            ok = RenderToPDF(realDstFileName, engine);
+#endif
+        }
+        else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument)
+            SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName) && engine) {
