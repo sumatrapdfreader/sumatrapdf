@@ -4577,18 +4577,21 @@ BaseEngine *CreateFromStream(IStream *stream)
 
 ///// a very simple PDF exporter /////
 
+#include <zlib.h>
+
 static fz_image *render_to_pixmap(fz_context *ctx, RenderedBitmap *bmp)
 {
-    LONG w = bmp->Size().dx, h = bmp->Size().dy;
+    int w = bmp->Size().dx, h = bmp->Size().dy;
+    int stride = ((w * 3 + 3) / 4) * 4;
 
-    unsigned char *data = (unsigned char *)fz_malloc(ctx, w * h * 4);
+    unsigned char *data = (unsigned char *)fz_malloc(ctx, stride * h);
 
     BITMAPINFO bmi = { 0 };
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = w;
     bmi.bmiHeader.biHeight = -h;
     bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
 
     HDC hDC = GetDC(NULL);
@@ -4599,29 +4602,52 @@ static fz_image *render_to_pixmap(fz_context *ctx, RenderedBitmap *bmp)
         fz_throw(ctx, FZ_ERROR_GENERIC, "GetDIBits failed");
     }
 
-    // reset alpha channel (just to be sure)
-    for (int i = 0; i < w * h; i++) {
-        data[i * 4 + 3] = 255;
+    // convert BGR with padding to RGB without padding
+    unsigned char *out = data;
+    for (int y = 0; y < h; y++) {
+        unsigned char *in = data + y * stride;
+        unsigned char rgb[3];
+        for (int x = 0; x < w; x++) {
+            rgb[2] = *in++;
+            rgb[1] = *in++;
+            *out++ = *in++;
+            *out++ = rgb[1];
+            *out++ = rgb[2];
+        }
     }
-    // TODO: compress data
-    fz_pixmap *pix = NULL, *rgbPix = NULL;
-    fz_var(pix);
+
+    fz_compressed_buffer *buf = NULL;
+    fz_var(buf);
 
     fz_try(ctx) {
-        pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, data);
-        // pdf_device doesn't handle non-RGB colorspaces
-        rgbPix = fz_new_pixmap(ctx, fz_device_rgb(ctx), w, h);
-        fz_convert_pixmap(ctx, rgbPix, pix);
-    }
-    fz_always(ctx) {
-        fz_drop_pixmap(ctx, pix);
-        fz_free(ctx, data);
+        buf = fz_malloc_struct(ctx, fz_compressed_buffer);
+        buf->buffer = fz_new_buffer(ctx, w * h * 4 + 10);
+        buf->params.type = FZ_IMAGE_FLATE;
+        buf->params.u.flate.predictor = 1;
+
+        z_stream zstm = { 0 };
+        zstm.next_in = data;
+        zstm.avail_in = out - data;
+        zstm.next_out = buf->buffer->data;
+        zstm.avail_out = buf->buffer->cap;
+
+        res = deflateInit(&zstm, 9);
+        if (res != Z_OK)
+            fz_throw(ctx, FZ_ERROR_GENERIC, "deflate failure %d", res);
+        res = deflate(&zstm, Z_FINISH);
+        if (res != Z_STREAM_END)
+            fz_throw(ctx, FZ_ERROR_GENERIC, "deflate failure %d", res);
+        buf->buffer->len = zstm.total_out;
+        res = deflateEnd(&zstm);
+        if (res != Z_OK)
+            fz_throw(ctx, FZ_ERROR_GENERIC, "deflate failure %d", res);
     }
     fz_catch(ctx) {
+        fz_free_compressed_buffer(ctx, buf);
         fz_rethrow(ctx);
     }
 
-    return fz_new_image_from_pixmap(ctx, rgbPix, NULL);
+    return fz_new_image(ctx, w, h, 8, fz_device_rgb(ctx), 96, 96, 0, 0, NULL, NULL, buf, NULL);
 }
 
 bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
@@ -4673,6 +4699,8 @@ bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
             pdf_free_page(doc, page);
             page = NULL;
         }
+
+        // TODO: create Root/Info dictionary from engine properties
 
         fz_write_options opts = { 0 };
         pdf_write_document(doc, pathUtf8, &opts);

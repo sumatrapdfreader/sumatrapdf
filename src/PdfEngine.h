@@ -30,7 +30,7 @@ BaseEngine *CreateFromStream(IStream *stream);
 }
 
 // creates a simple PDF with all pages rendered as a single image
-bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=96);
+bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
 // swaps Fitz' draw device with the GDI+ device
 void DebugGdiPlusDevice(bool enable);
 
