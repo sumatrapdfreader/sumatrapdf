@@ -1190,7 +1190,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName);
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
@@ -2815,14 +2815,14 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
         bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
         if (ok)
-            return SaveUserAnnots(copyFileName);
+            return !includeUserAnnots || SaveUserAnnots(copyFileName);
     }
     if (!_fileName)
         return false;
@@ -2830,7 +2830,7 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     if (!ok)
         return false;
     // TODO: try to recover when SaveUserAnnots fails?
-    return SaveUserAnnots(copyFileName);
+    return !includeUserAnnots || SaveUserAnnots(copyFileName);
 }
 
 static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pdf_obj *page_obj, PageAnnotation& annot, pdf_obj *annots)
@@ -3479,7 +3479,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName);
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
@@ -4251,7 +4251,7 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));

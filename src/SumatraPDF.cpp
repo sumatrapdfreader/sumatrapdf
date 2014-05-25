@@ -2138,7 +2138,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         hasCopyPerm = false;
 #endif
     CrashIf(hasCopyPerm && !engine);
-    bool canConvertToPDF = engine && Engine_PS == win.GetEngineType();
+    bool canConvertToPDF = Engine_PS == win.GetEngineType();
     CrashIf(canConvertToPDF && (!engine || win.GetEngineType() != Engine_PS));
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
@@ -2223,16 +2223,16 @@ static void OnMenuSaveAs(WindowInfo& win)
     }
     // Convert the Postscript file into a PDF one
     else if (canConvertToPDF && str::EndsWithI(realDstFileName, L".pdf")) {
-        ok = static_cast<PsEngine *>(engine)->SaveFileAsPDF(realDstFileName);
+        ok = engine->SaveFileAsPDF(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName) && engine) {
-        ok = engine->SaveFileAs(realDstFileName);
+        ok = engine->SaveFileAs(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
     }
     // ... as well as files containing annotations ...
     else if (gGlobalPrefs->annotationDefaults.saveIntoDocument &&
              engine && engine->SupportsAnnotation(true)) {
-        ok = engine->SaveFileAs(realDstFileName);
+        ok = engine->SaveFileAs(realDstFileName, true);
     }
     // ... else just copy the file
     else if (!path::IsSame(srcFileName, realDstFileName)) {
@@ -2250,6 +2250,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
     }
     if (ok && win.AsFixed() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified) {
+        // TODO: don't save annotations externally when converting to PDF and .saveIntoDocument == true
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument ||
             !engine || !engine->SupportsAnnotation(true)) {
             ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);

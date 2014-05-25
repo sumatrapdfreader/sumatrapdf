@@ -255,7 +255,11 @@ public:
     // caller needs to free() the result
     virtual unsigned char *GetFileData(size_t *cbCount) = 0;
     // saves a copy of the current file under a different name (overwriting an existing file)
-    virtual bool SaveFileAs(const WCHAR *copyFileName) = 0;
+    // (includeUserAnnots only has an effect if SupportsAnnotation(true) returns true)
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) = 0;
+    // converts the current file to a PDF file and saves it (overwriting an existing file),
+    // (includeUserAnnots should always have an effect)
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) { return false; }
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coords_out (if coords_out is non-NULL)

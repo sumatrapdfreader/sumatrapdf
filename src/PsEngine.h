@@ -4,16 +4,14 @@
 #ifndef PsEngine_h
 #define PsEngine_h
 
-#include "BaseEngine.h"
+class BaseEngine;
 
-class PsEngine : public BaseEngine {
-public:
-    virtual bool SaveFileAsPDF(const WCHAR *copyFileName) = 0;
+namespace PsEngine {
 
-public:
-    static bool IsAvailable();
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static PsEngine *CreateFromFile(const WCHAR *fileName);
-};
+bool IsAvailable();
+bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+BaseEngine *CreateFromFile(const WCHAR *fileName);
+
+}
 
 #endif

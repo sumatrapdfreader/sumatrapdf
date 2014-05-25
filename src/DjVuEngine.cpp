@@ -226,7 +226,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName);
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -709,7 +709,7 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
-bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     return CopyFile(fileName, copyFileName, FALSE);
 }

@@ -93,7 +93,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
     }
-    virtual bool SaveFileAs(const WCHAR *copyFileName) {
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,

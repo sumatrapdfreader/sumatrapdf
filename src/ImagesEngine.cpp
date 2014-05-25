@@ -54,7 +54,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName);
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -258,7 +258,7 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
     return NULL;
 }
 
-bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName)
+bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     if (fileName) {
         BOOL ok = CopyFile(fileName, copyFileName, FALSE);
@@ -594,7 +594,7 @@ public:
     }
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
-    virtual bool SaveFileAs(const WCHAR *copyFileName);
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
@@ -697,7 +697,7 @@ DocTocItem *ImageDirEngineImpl::GetTocTree()
     return root;
 }
 
-bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     // only copy the files if the target directory doesn't exist yet
     if (!CreateDirectory(copyFileName, NULL))

@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "PsEngine.h"
 
+#include "BaseEngine.h"
 #include "ByteReader.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
@@ -201,9 +202,7 @@ static BaseEngine *psgz2pdf(const WCHAR *fileName)
 
 // PsEngineImpl is mostly a proxy for a PdfEngine that's fed whatever
 // the ps2pdf conversion from Ghostscript returns
-class PsEngineImpl : public PsEngine {
-    friend PsEngine;
-
+class PsEngineImpl : public BaseEngine {
 public:
     PsEngineImpl() : fileName(NULL), pdfEngine(NULL) { }
     virtual ~PsEngineImpl() {
@@ -252,8 +251,11 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
-    virtual bool SaveFileAs(const WCHAR *copyFileName) {
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
+    }
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
+        return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
@@ -320,9 +322,7 @@ public:
         return pdfEngine->GetDecryptionKey();
     }
 
-    virtual bool SaveFileAsPDF(const WCHAR *copyFileName) {
-        return pdfEngine->SaveFileAs(copyFileName);
-    }
+    static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     ScopedMem<WCHAR> fileName;
@@ -341,13 +341,25 @@ protected:
     }
 };
 
-bool PsEngine::IsAvailable()
+BaseEngine *PsEngineImpl::CreateFromFile(const WCHAR *fileName)
+{
+    PsEngineImpl *engine = new PsEngineImpl();
+    if (!engine->Load(fileName)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
+namespace PsEngine {
+
+bool IsAvailable()
 {
     ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != NULL;
 }
 
-bool PsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (!IsAvailable())
         return false;
@@ -370,12 +382,9 @@ bool PsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, L".eps");
 }
 
-PsEngine *PsEngine::CreateFromFile(const WCHAR *fileName)
+BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
-    PsEngineImpl *engine = new PsEngineImpl();
-    if (!engine->Load(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
+    return PsEngineImpl::CreateFromFile(fileName);
+}
+
 }
