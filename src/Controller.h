@@ -45,7 +45,7 @@ public:
     // state export
     virtual void UpdateDisplayState(DisplayState *ds) = 0;
     // asynchronously calls SaveThumbnailForFile (fails silently)
-    virtual void CreateThumbnail(DisplayState *ds) = 0;
+    virtual void CreateThumbnail(DisplayState *ds, SizeI size) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }

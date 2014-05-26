@@ -13,6 +13,7 @@ class   HtmlPage;
 class   EbookFormattingThread;
 class   EbookFormattingTask;
 class   HtmlFormatterArgs;
+class   RenderedBitmap;
 namespace mui { class Control; }
 using namespace mui;
 
@@ -74,6 +75,8 @@ public:
     void SetDoublePage();
     bool IsSinglePage() const;
     bool IsDoublePage() const { return !IsSinglePage(); }
+
+    RenderedBitmap *CreateThumbnail(SizeI size);
 };
 
 class HtmlFormatter;

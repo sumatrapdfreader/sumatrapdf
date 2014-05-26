@@ -1192,6 +1192,9 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
+        return SaveFileAs(pdfFileName, includeUserAnnots);
+    }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);

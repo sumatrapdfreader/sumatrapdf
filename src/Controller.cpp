@@ -10,10 +10,7 @@
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookControls.h"
-#include "EbookFormatter.h"
 #include "FileThumbnails.h"
-using namespace Gdiplus;
-#include "GdiPlusUtil.h"
 #include "PdfSync.h"
 #include "SumatraPDF.h"
 #include "UITask.h"
@@ -32,7 +29,7 @@ FixedPageUIController::~FixedPageUIController()
     delete pdfSync;
 }
 
-class FpController : public FixedPageUIController /*, public DisplayModelCallback */ {
+class FpController : public FixedPageUIController {
     DisplayModel *dm;
     LinkHandler *linkHandler;
 
@@ -64,7 +61,7 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return dm->engine->GetNamedDest(name); }
 
     virtual void UpdateDisplayState(DisplayState *ds) { dm->DisplayStateFromModel(ds); }
-    virtual void CreateThumbnail(DisplayState *ds);
+    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
 
     virtual bool HasPageLabels() const { return dm->engine->HasPageLabels(); }
     virtual WCHAR *GetPageLabel(int pageNo) const { return dm->engine->GetPageLabel(pageNo); }
@@ -81,14 +78,6 @@ public:
     // FixedPageUIController
     virtual DisplayModel *model() { return dm; }
     virtual BaseEngine *engine() { return dm->engine; }
-
-    /*
-    // DisplayModelCallback
-    virtual void Repaint();
-    virtual void UpdateScrollbars(SizeI canvas);
-    virtual void RequestRendering(int pageNo);
-    virtual void CleanUp(DisplayModel *dm);
-    */
 };
 
 FpController::FpController(DisplayModel *dm, LinkHandler *linkHandler) :
@@ -114,7 +103,7 @@ void FpController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
     dm->ChangeDisplayMode(mode);
 }
 
-void FpController::CreateThumbnail(DisplayState *ds)
+void FpController::CreateThumbnail(DisplayState *ds, SizeI size)
 {
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
@@ -124,17 +113,7 @@ void FpController::CreateThumbnail(DisplayState *ds)
         return;
     }
 
-    RectD pageRect = dm->engine->PageMediabox(1);
-    if (pageRect.IsEmpty())
-        return;
-
-    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = THUMBNAIL_DX / (float)pageRect.dx;
-    if (pageRect.dy > (float)THUMBNAIL_DY / zoom)
-        pageRect.dy = (float)THUMBNAIL_DY / zoom;
-    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
-
-    RenderThumbnail(dm, zoom, pageRect);
+    RenderThumbnail(dm, size);
 }
 
 FixedPageUIController *FixedPageUIController::Create(DisplayModel *dm, LinkHandler *linkHandler)
@@ -177,7 +156,7 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
 
     virtual void UpdateDisplayState(DisplayState *ds);
-    virtual void CreateThumbnail(DisplayState *ds);
+    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
 
     virtual ChmUIController *AsChm() { return this; }
 
@@ -267,11 +246,12 @@ class ChmThumbnailTask : public UITask, public ChmNavigationCallback
 {
     ChmEngine *engine;
     HWND hwnd;
+    SizeI size;
     RenderedBitmap *bmp;
 
 public:
-    ChmThumbnailTask(ChmEngine *engine, HWND hwnd) :
-        engine(engine), hwnd(hwnd), bmp(NULL) { }
+    ChmThumbnailTask(ChmEngine *engine, HWND hwnd, SizeI size) :
+        engine(engine), hwnd(hwnd), size(size), bmp(NULL) { }
 
     ~ChmThumbnailTask() {
         delete engine;
@@ -286,8 +266,8 @@ public:
 
     virtual void PageNoChanged(int pageNo) {
         CrashIf(pageNo != 1);
-        RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
-        bmp = engine->TakeScreenshot(area, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
+        RectI area(0, 0, size.dx * 2, size.dy * 2);
+        bmp = engine->TakeScreenshot(area, size);
         uitask::Post(this);
     }
 
@@ -296,7 +276,7 @@ public:
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) { }
 };
 
-void ChmController::CreateThumbnail(DisplayState *ds)
+void ChmController::CreateThumbnail(DisplayState *ds, SizeI size)
 {
     // Create a thumbnail of chm document by loading it again and rendering
     // its first page to a hwnd specially created for it.
@@ -305,8 +285,8 @@ void ChmController::CreateThumbnail(DisplayState *ds)
         return;
 
     // We render twice the size of thumbnail and scale it down
-    int winDx = THUMBNAIL_DX * 2 + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = THUMBNAIL_DY * 2 + GetSystemMetrics(SM_CYHSCROLL);
+    int winDx = size.dx * 2 + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = size.dy * 2 + GetSystemMetrics(SM_CYHSCROLL);
     // reusing WC_STATIC. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be NULL.
     HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
@@ -327,7 +307,7 @@ void ChmController::CreateThumbnail(DisplayState *ds)
 #endif
 
     // engine and window will be destroyed by the callback once it's invoked
-    ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd);
+    ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd, size);
     engine->SetNavigationCalback(callback);
     engine->DisplayPage(1);
 }
@@ -390,7 +370,7 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
 
     virtual void UpdateDisplayState(DisplayState *ds);
-    virtual void CreateThumbnail(DisplayState *ds);
+    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
 
     virtual bool GoToNextPage() { _ctrl->AdvancePage(1); return true; }
     virtual bool GoToPrevPage(bool toBottom) { _ctrl->AdvancePage(-1); return true; }
@@ -445,90 +425,9 @@ void EbController::UpdateDisplayState(DisplayState *ds)
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
 }
 
-// TODO: move somewhere more appropriate
-static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
+void EbController::CreateThumbnail(DisplayState *ds, SizeI size)
 {
-    PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
-    TextRenderMethod renderMethod = args->textRenderMethod;
-    HtmlFormatter *formatter = CreateFormatter(doc, args);
-    HtmlPage *pd = formatter->Next();
-    delete formatter;
-    delete args;
-    args = NULL;
-    if (!pd)
-        return NULL;
-
-    Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
-    Graphics g(&pageBmp);
-    Rect r(0, 0, pageSize.dx, pageSize.dy);
-    r.Inflate(1, 1);
-    SolidBrush br(Color(255, 255, 255));
-    g.FillRectangle(&br, r);
-
-    ITextRender *textRender = CreateTextRender(renderMethod, &g);
-    textRender->SetTextBgColor(Color(255,255,255));
-    DrawHtmlPage(&g, textRender, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
-    delete pd;
-    delete textRender;
-
-    Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
-    Graphics g2(&res);
-    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
-                 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
-
-    HBITMAP hbmp;
-    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
-    if (ok != Ok)
-        return NULL;
-    return new RenderedBitmap(hbmp, bmpSize);
-}
-
-static RenderedBitmap *ThumbFromCoverPage(Doc doc)
-{
-    ImageData *coverImage = doc.GetCoverImage();
-    if (!coverImage)
-        return NULL;
-    Bitmap *coverBmp = BitmapFromData(coverImage->data, coverImage->len);
-    if (!coverBmp)
-        return NULL;
-
-    Bitmap res(THUMBNAIL_DX, THUMBNAIL_DY, PixelFormat24bppRGB);
-    float scale = (float)THUMBNAIL_DX / (float)coverBmp->GetWidth();
-    int fromDy = THUMBNAIL_DY;
-    if (scale < 1.f)
-        fromDy = (int)((float)coverBmp->GetHeight() * scale);
-    Graphics g(&res);
-    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    Status ok = g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
-                            0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
-    if (ok != Ok) {
-        delete coverBmp;
-        return NULL;
-    }
-    HBITMAP hbmp;
-    ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
-    delete coverBmp;
-    if (ok == Ok)
-        return new RenderedBitmap(hbmp, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
-    return NULL;
-}
-
-void EbController::CreateThumbnail(DisplayState *ds)
-{
-    CrashIf(!doc()->AsEpub() && !doc()->AsFb2() && !doc()->AsMobi());
-
-    // if there is cover image, we use it to generate thumbnail by scaling
-    // image width to thumbnail dx, scaling height proportionally and using
-    // as much of it as fits in thumbnail dy
-    RenderedBitmap *bmp = ThumbFromCoverPage(*doc());
-    if (!bmp) {
-        // no cover image so generate thumbnail from first page
-        SizeI pageSize(THUMBNAIL_DX * 3, THUMBNAIL_DY * 3);
-        SizeI dstSize(THUMBNAIL_DX, THUMBNAIL_DY);
-        bmp = RenderFirstDocPageToBitmap(*doc(), pageSize, dstSize, 10);
-    }
+    RenderedBitmap *bmp = _ctrl->CreateThumbnail(size);
     SetThumbnail(ds, bmp);
 }
 

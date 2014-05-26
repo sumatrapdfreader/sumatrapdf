@@ -5,9 +5,12 @@
 #include "EbookController.h"
 
 #include "AppPrefs.h"
+#include "BaseEngine.h"
 //#define NOLOG 0
 #include "DebugLog.h"
 #include "EbookControls.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "MobiDoc.h"
 #include "EbookFormatter.h"
 #include "SumatraPDF.h"
@@ -507,4 +510,88 @@ void EbookController::SetDoublePage()
 bool EbookController::IsSinglePage() const
 {
     return !ctrls->pagesLayout->GetPage2()->IsVisible();
+}
+
+static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
+{
+    PoolAllocator textAllocator;
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    TextRenderMethod renderMethod = args->textRenderMethod;
+    HtmlFormatter *formatter = CreateFormatter(doc, args);
+    HtmlPage *pd = formatter->Next();
+    delete formatter;
+    delete args;
+    args = NULL;
+    if (!pd)
+        return NULL;
+
+    Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
+    Graphics g(&pageBmp);
+    Rect r(0, 0, pageSize.dx, pageSize.dy);
+    r.Inflate(1, 1);
+    SolidBrush br(Color(255, 255, 255));
+    g.FillRectangle(&br, r);
+
+    ITextRender *textRender = CreateTextRender(renderMethod, &g);
+    textRender->SetTextBgColor(Color(255,255,255));
+    DrawHtmlPage(&g, textRender, &pd->instructions, (REAL)border, (REAL)border, false, Color((ARGB)Color::Black));
+    delete pd;
+    delete textRender;
+
+    Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);
+    Graphics g2(&res);
+    g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy),
+                 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
+
+    HBITMAP hbmp;
+    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    if (ok != Ok)
+        return NULL;
+    return new RenderedBitmap(hbmp, bmpSize);
+}
+
+static RenderedBitmap *ThumbFromCoverPage(Doc doc, SizeI size)
+{
+    ImageData *coverImage = doc.GetCoverImage();
+    if (!coverImage)
+        return NULL;
+    Bitmap *coverBmp = BitmapFromData(coverImage->data, coverImage->len);
+    if (!coverBmp)
+        return NULL;
+
+    Bitmap res(size.dx, size.dy, PixelFormat24bppRGB);
+    float scale = (float)size.dx / (float)coverBmp->GetWidth();
+    int fromDy = size.dy;
+    if (scale < 1.f)
+        fromDy = (int)((float)coverBmp->GetHeight() * scale);
+    Graphics g(&res);
+    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    Status ok = g.DrawImage(coverBmp, Rect(0, 0, size.dx, size.dy),
+                            0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    if (ok != Ok) {
+        delete coverBmp;
+        return NULL;
+    }
+    HBITMAP hbmp;
+    ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    delete coverBmp;
+    if (ok == Ok)
+        return new RenderedBitmap(hbmp, SizeI(size.dx, size.dy));
+    return NULL;
+}
+
+RenderedBitmap *EbookController::CreateThumbnail(SizeI size)
+{
+    CrashIf(!doc.IsDocLoaded());
+    // if there is cover image, we use it to generate thumbnail by scaling
+    // image width to thumbnail dx, scaling height proportionally and using
+    // as much of it as fits in thumbnail dy
+    RenderedBitmap *bmp = ThumbFromCoverPage(doc, size);
+    if (!bmp) {
+        // no cover image so generate thumbnail from first page
+        SizeI pageSize(size.dx * 3, size.dy * 3);
+        bmp = RenderFirstDocPageToBitmap(doc, pageSize, size, 10);
+    }
+    return bmp;
 }

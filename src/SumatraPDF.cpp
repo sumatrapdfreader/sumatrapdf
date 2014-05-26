@@ -656,8 +656,18 @@ public:
     }
 };
 
-void RenderThumbnail(DisplayModel *dm, float zoom, RectD pageRect)
+void RenderThumbnail(DisplayModel *dm, SizeI size)
 {
+    RectD pageRect = dm->engine->PageMediabox(1);
+    if (pageRect.IsEmpty())
+        return;
+
+    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0);
+    float zoom = size.dx / (float)pageRect.dx;
+    if (pageRect.dy > (float)size.dy / zoom)
+        pageRect.dy = (float)size.dy / zoom;
+    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
+
     RenderingCallback *callback = new ThumbnailRenderingTask(dm->engine->FileName());
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
@@ -670,7 +680,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     AssertCrash(win.IsDocLoaded());
     if (!win.IsDocLoaded()) return;
 
-    win.ctrl->CreateThumbnail(&ds);
+    win.ctrl->CreateThumbnail(&ds, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
 }
 
 static void RebuildMenuBarForWindow(WindowInfo *win)

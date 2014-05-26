@@ -825,6 +825,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\EbookController.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\EbookController.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\FileHistory.h"
 					>
 				</File>
@@ -874,14 +882,6 @@
 				</File>
 				<File
 					RelativePath="..\src\Controller.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\EbookController.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\EbookController.h"
 					>
 				</File>
 				<File

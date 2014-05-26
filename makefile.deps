@@ -171,20 +171,18 @@ $(OS)\ChmEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlWindow.h $B\src\ut
 $(OS)\ChmEngine.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
 $(OS)\Controller.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\ChmEngine.h
 $(OS)\Controller.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OS)\Controller.obj: $B\src\Doc.h $B\src\EbookBase.h $B\src\EbookController.h
-$(OS)\Controller.obj: $B\src\EbookControls.h $B\src\EbookFormatter.h $B\src\EngineManager.h
-$(OS)\Controller.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\FileThumbnails.h
-$(OS)\Controller.obj: $B\src\HtmlFormatter.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
+$(OS)\Controller.obj: $B\src\Doc.h $B\src\EbookController.h $B\src\EbookControls.h
+$(OS)\Controller.obj: $B\src\EngineManager.h $B\src\Favorites.h $B\src\FileHistory.h
+$(OS)\Controller.obj: $B\src\FileThumbnails.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
 $(OS)\Controller.obj: $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h
 $(OS)\Controller.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h
 $(OS)\Controller.obj: $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h
 $(OS)\Controller.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h $B\src\PdfSync.h
 $(OS)\Controller.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\Translations.h
 $(OS)\Controller.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
-$(OS)\Controller.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OS)\Controller.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\Controller.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\Controller.obj: $B\src\WindowInfo.h
+$(OS)\Controller.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\Controller.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\UITask.h
+$(OS)\Controller.obj: $B\src\utils\Vec.h $B\src\WindowInfo.h
 $(OS)\CrashHandler.obj: $B\src\AppTools.h $B\src\BaseEngine.h $B\src\CrashHandler.h
 $(OS)\CrashHandler.obj: $B\src\DisplayState.h $B\src\Favorites.h $B\src\FileHistory.h
 $(OS)\CrashHandler.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\Translations.h
@@ -217,10 +215,11 @@ $(OS)\EbookController.obj: $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h $B\s
 $(OS)\EbookController.obj: $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h
 $(OS)\EbookController.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\Translations.h
 $(OS)\EbookController.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
-$(OS)\EbookController.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OS)\EbookController.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\EbookController.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h $B\src\utils\Timer.h
-$(OS)\EbookController.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\WindowInfo.h
+$(OS)\EbookController.obj: $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
+$(OS)\EbookController.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\EbookController.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h
+$(OS)\EbookController.obj: $B\src\utils\Timer.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\EbookController.obj: $B\src\WindowInfo.h
 $(OS)\EbookControls.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\DisplayState.h
 $(OS)\EbookControls.obj: $B\src\EbookBase.h $B\src\EbookControls.h $B\src\EbookFormatter.h
 $(OS)\EbookControls.obj: $B\src\HtmlFormatter.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
