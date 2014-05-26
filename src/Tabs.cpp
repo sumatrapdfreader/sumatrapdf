@@ -649,6 +649,23 @@ void TabsOnLoadedDoc(WindowInfo *win)
 }
 
 
+// Refresh the tab's title
+void TabsOnChangedDoc(WindowInfo *win)
+{
+    if (!win || TabCtrl_GetItemCount(win->hwndTabBar) == 0)
+        return;
+
+    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    TabData *tdata = GetTabData(win->hwndTabBar, current);
+    SaveTabData(win, tdata);
+
+    TCITEM tcs;
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
+    TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
+}
+
+
 // Called when we're closing a document or when we're quitting.
 void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
 {

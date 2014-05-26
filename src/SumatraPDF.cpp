@@ -1354,34 +1354,32 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return NULL;
     }
 
-    if (gGlobalPrefs->useTabs) {
+    bool openNewTab = gGlobalPrefs->useTabs && !args.forceReuse;
+    if (openNewTab) {
         // modify the args so that we always reuse the same window
         if (!args.win) {
             // TODO: enable the tab bar if tabs haven't been initialized
             if (gWindows.Count() && gWindows.At(0)->tabsVisible) {
                 args.win = gWindows.At(0);
                 args.isNewWindow = false;
-                args.forceReuse = true;
             }
         }
         else if (!args.win->tabsVisible) {
             args.win = NULL;
         }
-        else {
-            args.forceReuse = true;
-        }
         args.allowFailure = true;
-
-        SaveCurrentTabData(args.win);
-
         win = args.win;
+
+        openNewTab = win && win->tabsVisible;
+        if (openNewTab)
+            SaveCurrentTabData(args.win);
     }
 
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
         win = gWindows.At(0);
         args.win = win;
         args.isNewWindow = false;
-    } else if (!win || win->IsDocLoaded() && !args.forceReuse) {
+    } else if (!win || !openNewTab && !args.forceReuse && win->IsDocLoaded()) {
         WindowInfo *currWin = win;
         win = CreateWindowInfo();
         if (!win)
@@ -1392,13 +1390,15 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
         }
-    } else if (!win->IsAboutWindow() && !win->IsDocLoaded()) {
+    } else if (!win->IsAboutWindow() && !win->IsDocLoaded() && !openNewTab) {
         // reuse the window if it only contains an error message
         args.forceReuse = true;
     }
 
+    CrashIf(openNewTab && args.forceReuse);
     if (!win->IsAboutWindow()) {
-        CrashIf(!args.forceReuse);
+        CrashIf(!args.forceReuse && !openNewTab);
+        // TODO: simplify for when opening a new tab
         CloseDocumentInWindow(win);
     }
     // invalidate the links on the Frequently Read page
@@ -1415,15 +1415,17 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         loaded = LoadDocIntoWindow(args, &pwdUI);
     }
 
-    // insert new tab item for the loaded document
-    if (win && win->tabsVisible && !win->IsAboutWindow())
-        TabsOnLoadedDoc(win);
-
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
         SetMenu(win->hwndFrame, NULL);
         return win;
     }
+
+    // insert new tab item for the loaded document
+    if (openNewTab)
+        TabsOnLoadedDoc(win);
+    else if (args.forceReuse && win->tabsVisible)
+        TabsOnChangedDoc(win);
 
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
@@ -2604,7 +2606,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.Count(); i > 0; i--) {
         if (!EngineManager::IsSupportedFile(files.At(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
-            !gFileHistory.Find(files.At(i - 1))) {
+            !Doc::IsSupportedFile(files.At(i - 1)) && !gFileHistory.Find(files.At(i - 1))) {
             WCHAR *path = files.At(i - 1);
             files.RemoveAt(i - 1);
             free(path);

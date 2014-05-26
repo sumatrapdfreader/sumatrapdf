@@ -47,8 +47,10 @@ void DeleteTabData(TabData *tdata, bool deleteModel);
 void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
 
 void CreateTabbar(WindowInfo *win);
+// TODO: rename to TabCreateForDoc, TabDestroy and TabRefresh?
 void TabsOnLoadedDoc(WindowInfo *win);
 void TabsOnCloseWindow(WindowInfo *win, bool cleanUp);
+void TabsOnChangedDoc(WindowInfo *win);
 LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1=-1, int tab2=-1);
 void TabsOnCtrlTab(WindowInfo *win);
 
