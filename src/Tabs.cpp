@@ -82,7 +82,7 @@ public:
     }
 
     // Finds the index of the tab, which contains the given point.
-    int IndexFromPoint(int x, int y, bool *inXbutton) {
+    int IndexFromPoint(int x, int y, bool *inXbutton=NULL) {
         Point point(x, y);
         Graphics graphics(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
@@ -96,12 +96,14 @@ public:
             graphics.TransformPoints( CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
             if (shape.IsVisible(pt, &graphics)) {
                 iterator.NextMarker(&shape);
-                *inXbutton = shape.IsVisible(pt, &graphics) ? true : false;
+                if (inXbutton)
+                    *inXbutton = shape.IsVisible(pt, &graphics) ? true : false;
                 return i;
             }
             graphics.TranslateTransform(REAL(width + 1), 0.0f);
         }
-        *inXbutton = false;
+        if (inXbutton)
+            *inXbutton = false;
         return -1;
     }
 
@@ -477,6 +479,26 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (tab->isDragging) {
             tab->isDragging = false;
             ReleaseCapture();
+        }
+        return 0;
+
+    case WM_MBUTTONDOWN:
+        // middle-clicking unconditionally closes the tab
+        {
+            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            // send request to close the tab
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            uitask::Post(new TabNotification(win, T_CLOSING, tab->nextTab));
+        }
+        return 0;
+
+    case WM_MBUTTONUP:
+        if (tab->xClicked != -1) {
+            // send notification that the tab is closed
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            uitask::Post(new TabNotification(win, T_CLOSE, tab->xClicked));
+            tab->Invalidate(tab->xClicked);
+            tab->xClicked = -1;
         }
         return 0;
 
