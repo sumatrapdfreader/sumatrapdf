@@ -14,6 +14,7 @@
 #include "ChmEngine.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EngineManager.h"
 #include "Notifications.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"

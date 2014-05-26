@@ -779,7 +779,7 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win)) {
-            CrashIf(!win->AsEbook() || win->AsEbook()->ctrl() != ctrl);
+            CrashIf(!win->AsEbook());
             ctrl->HandlePagesFromEbookLayout(data);
         }
     }
@@ -838,10 +838,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             // already think that an EbookUIController has been successfully loaded
             win->ctrl = ctrl;
             ctrl->AsEbook()->EnableMessageHandling(false);
-
-            EbookController *ectrl = new EbookController(ctrl->AsEbook()->ctrls(), displayMode, win->AsEbook()->GetEbookCallback());
-            ctrl->AsEbook()->SetController(ectrl);
-            ectrl->SetDoc(doc, reparseIdx);
+            ctrl->AsEbook()->CreateController(displayMode)->SetDoc(doc, reparseIdx);
             CrashIf(!ctrl || !ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());
         }
     }

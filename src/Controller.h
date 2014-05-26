@@ -153,27 +153,22 @@ public:
     static ChmUIController *Create(ChmEngine *engine, ControllerCallback *cb);
 };
 
-struct EbookControls;
-class EbookControllerCallback;
 class Doc;
 
 class EbookUIController : public Controller {
 public:
     explicit EbookUIController(ControllerCallback *cb) : Controller(cb) { }
 
-    virtual EbookController *ctrl() = 0;
-    virtual EbookControls *ctrls() = 0;
     virtual Doc *doc() = 0;
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) = 0;
     virtual void EnableMessageHandling(bool enable) = 0;
-    // EbookController's constructor calls UpdateWindow which
-    // must not happen before EbookUIController::Create returns
-    virtual void SetController(EbookController *ctrl) = 0;
     virtual void UpdateDocumentColors() = 0;
     virtual void RequestRepaint() = 0;
-    // TODO: Create should be able to set this once EbookController stops spinning the message loop too soon
-    virtual EbookControllerCallback *GetEbookCallback() = 0;
+    virtual void OnLayoutTimer() = 0;
+    // EbookController's constructor calls UpdateWindow which
+    // must not happen before EbookUIController::Create returns
+    virtual EbookController *CreateController(DisplayMode displayMode) = 0;
 
     static EbookUIController *Create(HWND hwnd, ControllerCallback *cb);
 };

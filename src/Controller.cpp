@@ -10,6 +10,7 @@
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookControls.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "PdfSync.h"
 #include "UITask.h"
@@ -325,32 +326,32 @@ ChmUIController *ChmUIController::Create(ChmEngine *engine, ControllerCallback *
 
 // TODO: merge with EbookController
 class EbController : public EbookUIController, public EbookControllerCallback {
-    EbookController *_ctrl;
-    EbookControls *_ctrls;
+    EbookController *ctrl;
+    EbookControls *ctrls;
     bool handleMsgs;
 
 public:
     EbController(EbookControls *ctrls, ControllerCallback *cb);
     virtual ~EbController();
 
-    virtual const WCHAR *FilePath() const { return _ctrl->GetDoc().GetFilePath(); }
+    virtual const WCHAR *FilePath() const { return ctrl->GetDoc().GetFilePath(); }
     virtual const WCHAR *DefaultFileExt() const { return path::GetExt(FilePath()); }
-    virtual int PageCount() const { return (int)_ctrl->GetMaxPageCount(); }
+    virtual int PageCount() const { return (int)ctrl->GetMaxPageCount(); }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc()->GetProperty(prop); }
 
-    virtual int CurrentPageNo() { return _ctrl->GetCurrentPageNo(); }
-    virtual void GoToPage(int pageNo, bool addNavPoint) { _ctrl->GoToPage(pageNo); }
+    virtual int CurrentPageNo() { return ctrl->GetCurrentPageNo(); }
+    virtual void GoToPage(int pageNo, bool addNavPoint) { ctrl->GoToPage(pageNo); }
     virtual bool CanNavigate(int dir) { return false; }
     // TODO: this used to be equivalent to GoToNextPage/GoToPrevPage
     virtual void Navigate(int dir) { /* not supported */ }
 
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
-    virtual DisplayMode GetDisplayMode() const { return _ctrl->IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
+    virtual DisplayMode GetDisplayMode() const { return ctrl->IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { /* not supported */ }
     virtual float GetZoomVirtual() const { return 100; }
     virtual float GetNextZoomStep(float towards) const { return 100; }
-    virtual void SetViewPortSize(SizeI size) { _ctrls->mainWnd->RequestLayout(); }
+    virtual void SetViewPortSize(SizeI size) { ctrls->mainWnd->RequestLayout(); }
 
     virtual bool HasTocTree() const { return false; }
     virtual DocTocItem *GetTocTree() { return NULL; }
@@ -360,51 +361,50 @@ public:
     virtual void UpdateDisplayState(DisplayState *ds);
     virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb);
 
-    virtual bool GoToNextPage() { _ctrl->AdvancePage(1); return true; }
-    virtual bool GoToPrevPage(bool toBottom) { _ctrl->AdvancePage(-1); return true; }
-    virtual bool GoToLastPage() { _ctrl->GoToLastPage(); return true; }
+    virtual bool GoToNextPage() { ctrl->AdvancePage(1); return true; }
+    virtual bool GoToPrevPage(bool toBottom) { ctrl->AdvancePage(-1); return true; }
+    virtual bool GoToLastPage() { ctrl->GoToLastPage(); return true; }
 
     virtual EbookUIController *AsEbook() { return this; }
 
     // EbookUIController
-    virtual EbookController *ctrl() { return _ctrl; }
-    virtual EbookControls *ctrls() { return _ctrls; }
-    virtual Doc *doc() { return (Doc *)&_ctrl->GetDoc(); }
+    virtual Doc *doc() { return (Doc *)&ctrl->GetDoc(); }
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) {
-        return handleMsgs ? _ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled) : 0;
+        return handleMsgs ? ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled) : 0;
     }
     virtual void EnableMessageHandling(bool enable) { handleMsgs = enable; }
-    virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
     virtual void UpdateDocumentColors();
-    virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
-    virtual EbookControllerCallback *GetEbookCallback() { return this; }
+    virtual void RequestRepaint() { ctrls->mainWnd->MarkForRepaint(); }
+    virtual void OnLayoutTimer() { ctrl->OnLayoutTimer(); }
+    virtual EbookController *CreateController(DisplayMode displayMode);
 
     // EbookControllerCallback
     virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) {
+        CrashIf(ctrl != this->ctrl);
         cb->HandleLayoutedPages(ctrl, data);
     }
     virtual void RequestDelayedLayout(int delay) { cb->RequestDelayedLayout(delay); }
 };
 
 EbController::EbController(EbookControls *ctrls, ControllerCallback *cb) :
-    EbookUIController(cb), _ctrl(NULL), _ctrls(ctrls), handleMsgs(true)
+    EbookUIController(cb), ctrl(NULL), ctrls(ctrls), handleMsgs(true)
 {
-    CrashIf(_ctrl || !_ctrls);
+    CrashIf(ctrl || !ctrls);
 }
 
 EbController::~EbController()
 {
-    delete _ctrl;
-    DestroyEbookControls(_ctrls);
+    delete ctrl;
+    DestroyEbookControls(ctrls);
 }
 
 void EbController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
 {
     if (!IsSingle(mode))
-        _ctrl->SetDoublePage();
+        ctrl->SetDoublePage();
     else
-        _ctrl->SetSinglePage();
+        ctrl->SetSinglePage();
 }
 
 void EbController::UpdateDisplayState(DisplayState *ds)
@@ -416,14 +416,14 @@ void EbController::UpdateDisplayState(DisplayState *ds)
     // as long as they're not used, so that the same
     // DisplayState settings can also be used for EbookEngine;
     // we get reasonable defaults from DisplayState's constructor anyway
-    ds->reparseIdx = _ctrl->CurrPageReparseIdx();
+    ds->reparseIdx = ctrl->CurrPageReparseIdx();
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
 }
 
 void EbController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 {
     // TODO: create thumbnail asynchronously
-    RenderedBitmap *bmp = _ctrl->CreateThumbnail(size);
+    RenderedBitmap *bmp = ctrl->CreateThumbnail(size);
     tnCb->SaveThumbnail(bmp);
 }
 
@@ -431,12 +431,18 @@ void EbController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 // because requires re-layout
 void EbController::UpdateDocumentColors()
 {
-    SetMainWndBgCol(_ctrls);
+    SetMainWndBgCol(ctrls);
     // changing background will repaint mainWnd control but changing
     // of text color will not, so we request uncoditional repaint
     // TODO: in PageControl::Paint() use a property for text color, instead of
     // taking it directly from prefs
-    ::RequestRepaint(_ctrls->mainWnd);
+    ::RequestRepaint(ctrls->mainWnd);
+}
+
+EbookController *EbController::CreateController(DisplayMode displayMode)
+{
+    CrashIf(ctrl);
+    return (ctrl = new EbookController(ctrls, displayMode, this));
 }
 
 EbookUIController *EbookUIController::Create(HWND hwnd, ControllerCallback *cb)

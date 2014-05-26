@@ -6,6 +6,7 @@
 
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

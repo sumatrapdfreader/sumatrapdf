@@ -8,6 +8,7 @@
 #include "CmdLineParser.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EngineManager.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
 #include "FileHistory.h"

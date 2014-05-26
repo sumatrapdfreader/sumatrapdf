@@ -5,7 +5,6 @@
 #define DisplayModel_h
 
 #include "DisplayState.h"
-#include "EngineManager.h"
 
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
