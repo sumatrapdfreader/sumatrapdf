@@ -66,11 +66,11 @@ public:
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->ctrl != NULL; }
 
-    EngineType GetEngineType() const { return ctrl && ctrl->AsFixed() ? ctrl->AsFixed()->engineType : Engine_None; }
-
     FixedPageUIController *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmUIController *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
     EbookUIController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
+
+    EngineType GetEngineType() const;
 
     WCHAR *         loadedFilePath;
     Controller *    ctrl;
@@ -186,7 +186,7 @@ public:
     PageElement *   linkOnLastButtonDown;
     const WCHAR *   url;
 
-    DisplayModelCallback *  dmHandler;
+    ControllerCallback *cbHandler;
 
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
@@ -227,11 +227,6 @@ public:
     void DeleteInfotip();
 
     bool CreateUIAProvider();
-
-    void FocusFrame(bool always);
-    void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
-
-    void PageNoChanged(int pageNo);
 };
 
 class LinkHandler {

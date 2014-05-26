@@ -5,14 +5,44 @@
 #define Controller_h
 
 #include "DisplayState.h"
-#include "EngineManager.h"
+
+// call SaveThumbnail on success or delete ThumbnailCallback on failure
+class ThumbnailCallback {
+public:
+    virtual ~ThumbnailCallback() { }
+    virtual void SaveThumbnail(RenderedBitmap *bmp) = 0;
+};
+
+class DisplayModel;
+
+class ControllerCallback {
+public:
+    virtual ~ControllerCallback() { }
+    // DisplayModel
+    virtual void Repaint() = 0;
+    virtual void PageNoChanged(int pageNo) = 0;
+    virtual void UpdateScrollbars(SizeI canvas) = 0;
+    virtual void RequestRendering(int pageNo) = 0;
+    virtual void CleanUp(DisplayModel *dm) = 0;
+    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb) = 0;
+    virtual void GotoLink(PageDestination *dest) = 0;
+    // ChmEngine
+    virtual void LaunchBrowser(const WCHAR *url) = 0;
+    virtual void FocusFrame(bool always) = 0;
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
+    // EbookController
+};
 
 class FixedPageUIController;
 class ChmUIController;
 class EbookUIController;
 
 class Controller {
+protected:
+    ControllerCallback *cb;
+
 public:
+    explicit Controller(ControllerCallback *cb) : cb(cb) { CrashIf(!cb); }
     virtual ~Controller() { }
 
     // meta data
@@ -44,8 +74,8 @@ public:
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds) = 0;
-    // asynchronously calls SaveThumbnailForFile (fails silently)
-    virtual void CreateThumbnail(DisplayState *ds, SizeI size) = 0;
+    // asynchronously calls ThumbnailCallback::SaveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }
@@ -87,13 +117,12 @@ public:
     virtual EbookUIController *AsEbook() { return NULL; }
 };
 
-class DisplayModel;
-class LinkHandler;
 class Synchronizer;
+enum EngineType;
 
 class FixedPageUIController : public Controller {
 public:
-    FixedPageUIController();
+    explicit FixedPageUIController(ControllerCallback *cb);
     virtual ~FixedPageUIController();
 
     virtual DisplayModel *model() = 0;
@@ -105,7 +134,7 @@ public:
     bool userAnnotsModified;
     Synchronizer *pdfSync;
 
-    static FixedPageUIController *Create(DisplayModel *dm, LinkHandler *linkHandler);
+    static FixedPageUIController *Create(BaseEngine *engine, ControllerCallback *cb);
 };
 
 class ChmEngine;
@@ -113,9 +142,11 @@ class WindowInfo;
 
 class ChmUIController : public Controller {
 public:
+    explicit ChmUIController(ControllerCallback *cb) : Controller(cb) { }
+
     virtual ChmEngine *engine() = 0;
 
-    static ChmUIController *Create(ChmEngine *engine, WindowInfo *win);
+    static ChmUIController *Create(ChmEngine *engine, ControllerCallback *cb);
 };
 
 class EbookController;
@@ -124,6 +155,8 @@ class Doc;
 
 class EbookUIController : public Controller {
 public:
+    explicit EbookUIController(ControllerCallback *cb) : Controller(cb) { }
+
     virtual EbookController *ctrl() = 0;
     virtual EbookControls *ctrls() = 0;
     virtual Doc *doc() = 0;
@@ -136,7 +169,7 @@ public:
     virtual void UpdateDocumentColors() = 0;
     virtual void RequestRepaint() = 0;
 
-    static EbookUIController *Create(HWND hwnd);
+    static EbookUIController *Create(HWND hwnd, ControllerCallback *cb);
 };
 
 #endif

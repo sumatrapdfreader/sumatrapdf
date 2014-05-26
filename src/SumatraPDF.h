@@ -106,8 +106,6 @@ bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfiel
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
-void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
-void  RenderThumbnail(DisplayModel *dm, SizeI size);
 void  EnterFullScreen(WindowInfo& win, bool presentation=false);
 void  ExitFullScreen(WindowInfo& win);
 

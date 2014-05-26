@@ -4,22 +4,20 @@
 #include "BaseUtil.h"
 #include "Controller.h"
 
-#include "AppPrefs.h"
+#include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmEngine.h"
 #include "DisplayModel.h"
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookControls.h"
-#include "FileThumbnails.h"
+#include "FileUtil.h"
 #include "PdfSync.h"
-#include "SumatraPDF.h"
 #include "UITask.h"
-#include "WindowInfo.h"
 
 ///// FixedPageUI /////
 
-FixedPageUIController::FixedPageUIController() :
-    userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None), pdfSync(NULL)
+FixedPageUIController::FixedPageUIController(ControllerCallback *cb) :
+    Controller(cb), userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None), pdfSync(NULL)
 {
 }
 
@@ -29,13 +27,13 @@ FixedPageUIController::~FixedPageUIController()
     delete pdfSync;
 }
 
-class FpController : public FixedPageUIController {
+// TODO: merge with DisplayModel
+class FpController : public FixedPageUIController, public DisplayModelCallback {
     DisplayModel *dm;
-    LinkHandler *linkHandler;
 
 public:
-    FpController(DisplayModel *dm, LinkHandler *linkHandler);
-    virtual ~FpController();
+    FpController(BaseEngine *engine, ControllerCallback *cb);
+    virtual ~FpController() { delete dm; }
 
     virtual const WCHAR *FilePath() const { return dm->engine->FileName(); }
     virtual const WCHAR *DefaultFileExt() const { return dm->engine->GetDefaultFileExt(); }
@@ -57,11 +55,11 @@ public:
 
     virtual bool HasTocTree() const { return dm->engine->HasTocTree(); }
     virtual DocTocItem *GetTocTree() { return dm->engine->GetTocTree(); }
-    virtual void GotoLink(PageDestination *dest) { linkHandler->GotoLink(dest); }
+    virtual void GotoLink(PageDestination *dest) { cb->GotoLink(dest); }
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return dm->engine->GetNamedDest(name); }
 
     virtual void UpdateDisplayState(DisplayState *ds) { dm->DisplayStateFromModel(ds); }
-    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
+    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(dm, size, tnCb); }
 
     virtual bool HasPageLabels() const { return dm->engine->HasPageLabels(); }
     virtual WCHAR *GetPageLabel(int pageNo) const { return dm->engine->GetPageLabel(pageNo); }
@@ -78,17 +76,19 @@ public:
     // FixedPageUIController
     virtual DisplayModel *model() { return dm; }
     virtual BaseEngine *engine() { return dm->engine; }
+
+    // DisplayModelCallback
+    virtual void Repaint() { cb->Repaint(); }
+    virtual void PageNoChanged(int pageNo) { cb->PageNoChanged(pageNo); }
+    virtual void UpdateScrollbars(SizeI canvas) { cb->UpdateScrollbars(canvas); }
+    virtual void RequestRendering(int pageNo) { cb->RequestRendering(pageNo); }
+    virtual void CleanUp(DisplayModel *dm) { CrashIf(dm != this->dm); cb->CleanUp(dm); }
 };
 
-FpController::FpController(DisplayModel *dm, LinkHandler *linkHandler) :
-    dm(dm), linkHandler(linkHandler)
+FpController::FpController(BaseEngine *engine, ControllerCallback *cb) : FixedPageUIController(cb)
 {
-    CrashIf(!dm || !linkHandler);
-}
-
-FpController::~FpController()
-{
-    delete dm;
+    CrashIf(!engine);
+    dm = new DisplayModel(engine, this);
 }
 
 void FpController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
@@ -103,34 +103,26 @@ void FpController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
     dm->ChangeDisplayMode(mode);
 }
 
-void FpController::CreateThumbnail(DisplayState *ds, SizeI size)
+FixedPageUIController *FixedPageUIController::Create(BaseEngine *engine, ControllerCallback *cb)
 {
-    // don't create thumbnails for password protected documents
-    // (unless we're also remembering the decryption key anyway)
-    if (dm->engine->IsPasswordProtected() &&
-        !ScopedMem<char>(dm->engine->GetDecryptionKey())) {
-        RemoveThumbnail(*ds);
-        return;
+    FpController *ctrl = new FpController(engine, cb);
+    if (!ctrl->model()) {
+        delete ctrl;
+        return NULL;
     }
-
-    RenderThumbnail(dm, size);
-}
-
-FixedPageUIController *FixedPageUIController::Create(DisplayModel *dm, LinkHandler *linkHandler)
-{
-    return new FpController(dm, linkHandler);
+    return ctrl;
 }
 
 ///// ChmUI /////
 
+// TODO: merge with ChmEngine (and rename to ChmModel)
 class ChmController : public ChmUIController, public ChmNavigationCallback {
     ChmEngine *_engine;
-    WindowInfo *win;
     float initZoom;
 
 public:
-    ChmController(ChmEngine *engine, WindowInfo *win);
-    virtual ~ChmController();
+    ChmController(ChmEngine *engine, ControllerCallback *cb);
+    virtual ~ChmController() { delete _engine; }
 
     virtual const WCHAR *FilePath() const { return _engine->FileName(); }
     virtual const WCHAR *DefaultFileExt() const { return _engine->GetDefaultFileExt(); }
@@ -156,7 +148,7 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
 
     virtual void UpdateDisplayState(DisplayState *ds);
-    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
+    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb);
 
     virtual ChmUIController *AsChm() { return this; }
 
@@ -165,20 +157,18 @@ public:
 
     // ChmNavigationCallback
     virtual void PageNoChanged(int pageNo);
-    virtual void LaunchBrowser(const WCHAR *url) { ::LaunchBrowser(url); }
-    virtual void FocusFrame(bool always) { win->FocusFrame(always); }
-    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+    virtual void LaunchBrowser(const WCHAR *url) { cb->LaunchBrowser(url); }
+    virtual void FocusFrame(bool always) { cb->FocusFrame(always); }
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) {
+        cb->SaveDownload(url, data, len);
+    }
 };
 
-ChmController::ChmController(ChmEngine *engine, WindowInfo *win) : _engine(engine), win(win), initZoom(INVALID_ZOOM)
+ChmController::ChmController(ChmEngine *engine, ControllerCallback *cb) :
+    ChmUIController(cb), _engine(engine), initZoom(INVALID_ZOOM)
 {
-    CrashIf(!_engine || _engine->PageCount() <= 0 || !win);
+    CrashIf(!_engine || _engine->PageCount() <= 0);
     _engine->SetNavigationCalback(this);
-}
-
-ChmController::~ChmController()
-{
-    delete _engine;
 }
 
 void ChmController::SetZoomVirtual(float zoom, PointI *fixPt)
@@ -242,32 +232,31 @@ void ChmController::UpdateDisplayState(DisplayState *ds)
     ds->scrollPos = PointI();
 }
 
-class ChmThumbnailTask : public UITask, public ChmNavigationCallback
+class ChmThumbnailTask : public ChmNavigationCallback, public UITask
 {
     ChmEngine *engine;
     HWND hwnd;
     SizeI size;
-    RenderedBitmap *bmp;
+    ThumbnailCallback *tnCb;
 
 public:
-    ChmThumbnailTask(ChmEngine *engine, HWND hwnd, SizeI size) :
-        engine(engine), hwnd(hwnd), size(size), bmp(NULL) { }
+    ChmThumbnailTask(ChmEngine *engine, HWND hwnd, SizeI size, ThumbnailCallback *tnCb) :
+        engine(engine), hwnd(hwnd), size(size), tnCb(tnCb) { }
 
     ~ChmThumbnailTask() {
         delete engine;
         DestroyWindow(hwnd);
-        delete bmp;
+        delete tnCb;
     }
 
-    virtual void Execute() {
-        SaveThumbnailForFile(engine->FileName(), bmp);
-        bmp = NULL;
-    }
+    virtual void Execute() { }
 
     virtual void PageNoChanged(int pageNo) {
         CrashIf(pageNo != 1);
         RectI area(0, 0, size.dx * 2, size.dy * 2);
-        bmp = engine->TakeScreenshot(area, size);
+        RenderedBitmap *bmp = engine->TakeScreenshot(area, size);
+        tnCb->SaveThumbnail(bmp);
+        tnCb = NULL;
         uitask::Post(this);
     }
 
@@ -276,13 +265,15 @@ public:
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) { }
 };
 
-void ChmController::CreateThumbnail(DisplayState *ds, SizeI size)
+void ChmController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 {
     // Create a thumbnail of chm document by loading it again and rendering
     // its first page to a hwnd specially created for it.
     ChmEngine *engine = _engine->Clone();
-    if (!engine)
+    if (!engine) {
+        delete tnCb;
         return;
+    }
 
     // We render twice the size of thumbnail and scale it down
     int winDx = size.dx * 2 + GetSystemMetrics(SM_CXVSCROLL);
@@ -293,12 +284,14 @@ void ChmController::CreateThumbnail(DisplayState *ds, SizeI size)
                              0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
     if (!hwnd) {
         delete engine;
+        delete tnCb;
         return;
     }
     bool ok = engine->SetParentHwnd(hwnd);
     if (!ok) {
         DestroyWindow(hwnd);
         delete engine;
+        delete tnCb;
         return;
     }
 
@@ -307,7 +300,7 @@ void ChmController::CreateThumbnail(DisplayState *ds, SizeI size)
 #endif
 
     // engine and window will be destroyed by the callback once it's invoked
-    ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd, size);
+    ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd, size, tnCb);
     engine->SetNavigationCalback(callback);
     engine->DisplayPage(1);
 }
@@ -320,29 +313,24 @@ void ChmController::PageNoChanged(int pageNo)
         SetZoomVirtual(initZoom);
         initZoom = INVALID_ZOOM;
     }
-    win->PageNoChanged(pageNo);
+    cb->PageNoChanged(pageNo);
 }
 
-void ChmController::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
+ChmUIController *ChmUIController::Create(ChmEngine *engine, ControllerCallback *cb)
 {
-    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-    LinkSaver(*win, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
-}
-
-ChmUIController *ChmUIController::Create(ChmEngine *engine, WindowInfo *win)
-{
-    return new ChmController(engine, win);
+    return new ChmController(engine, cb);
 }
 
 ///// EbookUI /////
 
+// TODO: merge with EbookController
 class EbController : public EbookUIController {
     EbookController *_ctrl;
     EbookControls *_ctrls;
     bool handleMsgs;
 
 public:
-    EbController(EbookControls *ctrls);
+    EbController(EbookControls *ctrls, ControllerCallback *cb);
     virtual ~EbController();
 
     virtual const WCHAR *FilePath() const { return _ctrl->GetDoc().GetFilePath(); }
@@ -370,7 +358,7 @@ public:
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
 
     virtual void UpdateDisplayState(DisplayState *ds);
-    virtual void CreateThumbnail(DisplayState *ds, SizeI size);
+    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb);
 
     virtual bool GoToNextPage() { _ctrl->AdvancePage(1); return true; }
     virtual bool GoToPrevPage(bool toBottom) { _ctrl->AdvancePage(-1); return true; }
@@ -392,8 +380,8 @@ public:
     virtual void UpdateDocumentColors();
 };
 
-EbController::EbController(EbookControls *ctrls) :
-    _ctrl(NULL), _ctrls(ctrls), handleMsgs(true)
+EbController::EbController(EbookControls *ctrls, ControllerCallback *cb) :
+    EbookUIController(cb), _ctrl(NULL), _ctrls(ctrls), handleMsgs(true)
 {
     CrashIf(_ctrl || !_ctrls);
 }
@@ -425,10 +413,11 @@ void EbController::UpdateDisplayState(DisplayState *ds)
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
 }
 
-void EbController::CreateThumbnail(DisplayState *ds, SizeI size)
+void EbController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 {
+    // TODO: create thumbnail asynchronously
     RenderedBitmap *bmp = _ctrl->CreateThumbnail(size);
-    SetThumbnail(ds, bmp);
+    tnCb->SaveThumbnail(bmp);
 }
 
 // TODO: also needs to update for font name/size changes, but it's more complicated
@@ -443,9 +432,9 @@ void EbController::UpdateDocumentColors()
     ::RequestRepaint(_ctrls->mainWnd);
 }
 
-EbookUIController *EbookUIController::Create(HWND hwnd)
+EbookUIController *EbookUIController::Create(HWND hwnd, ControllerCallback *cb)
 {
     EbookControls *ctrls = CreateEbookControls(hwnd);
     if (!ctrls) return NULL;
-    return new EbController(ctrls);
+    return new EbController(ctrls, cb);
 }

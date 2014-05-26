@@ -608,6 +608,41 @@ static int GetPolicies(bool isRestricted)
     return Perm_All;
 }
 
+static void RebuildMenuBarForWindow(WindowInfo *win)
+{
+    HMENU oldMenu = win->menu;
+    win->menu = BuildMenu(win);
+    if (!win->presentation && !win->isFullScreen && !win->isMenuHidden)
+        SetMenu(win->hwndFrame, win->menu);
+    DestroyMenu(oldMenu);
+}
+
+static void RebuildMenuBarForAllWindows()
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        RebuildMenuBarForWindow(gWindows.At(i));
+    }
+}
+
+class ControllerCallbackHandler : public ControllerCallback {
+    WindowInfo *win;
+
+public:
+    ControllerCallbackHandler(WindowInfo *win) : win(win) { }
+    virtual ~ControllerCallbackHandler() { }
+
+    virtual void Repaint() { win->RepaintAsync(); }
+    virtual void PageNoChanged(int pageNo);
+    virtual void UpdateScrollbars(SizeI canvas);
+    virtual void RequestRendering(int pageNo);
+    virtual void CleanUp(DisplayModel *dm);
+    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb);
+    virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
+    virtual void LaunchBrowser(const WCHAR *url) { ::LaunchBrowser(url); }
+    virtual void FocusFrame(bool always);
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+};
+
 static bool ShouldSaveThumbnail(DisplayState& ds)
 {
     // don't create thumbnails if we won't be needing them at all
@@ -626,37 +661,22 @@ static bool ShouldSaveThumbnail(DisplayState& ds)
     return true;
 }
 
-void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
+class ThumbnailRenderingTask : public RenderingCallback
 {
-    SetThumbnail(gFileHistory.Find(filePath), bmp);
-}
-
-class ThumbnailRenderingTask : public UITask, public RenderingCallback
-{
-    ScopedMem<WCHAR> filePath;
-    RenderedBitmap *bmp;
+    ThumbnailCallback *tnCb;
 
 public:
-    explicit ThumbnailRenderingTask(const WCHAR *filePath) :
-        filePath(str::Dup(filePath)), bmp(NULL) {
-    }
-
-    ~ThumbnailRenderingTask() {
-        delete bmp;
-    }
+    explicit ThumbnailRenderingTask(ThumbnailCallback *tnCb) : tnCb(tnCb) { }
+    ~ThumbnailRenderingTask() { delete tnCb; }
 
     virtual void Callback(RenderedBitmap *bmp) {
-        this->bmp = bmp;
-        uitask::Post(this);
-    }
-
-    virtual void Execute() {
-        SaveThumbnailForFile(filePath, bmp);
-        bmp = NULL;
+        tnCb->SaveThumbnail(bmp);
+        tnCb = NULL;
+        delete this;
     }
 };
 
-void RenderThumbnail(DisplayModel *dm, SizeI size)
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb)
 {
     RectD pageRect = dm->engine->PageMediabox(1);
     if (pageRect.IsEmpty())
@@ -668,9 +688,29 @@ void RenderThumbnail(DisplayModel *dm, SizeI size)
         pageRect.dy = (float)size.dy / zoom;
     pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    RenderingCallback *callback = new ThumbnailRenderingTask(dm->engine->FileName());
+    RenderingCallback *callback = new ThumbnailRenderingTask(tnCb);
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
+
+class ThumbnailCreated : public ThumbnailCallback, public UITask {
+    ScopedMem<WCHAR> filePath;
+    RenderedBitmap *bmp;
+
+public:
+    ThumbnailCreated(const WCHAR *filePath) : filePath(str::Dup(filePath)), bmp(NULL) { }
+    virtual ~ThumbnailCreated() { delete bmp; }
+
+    virtual void SaveThumbnail(RenderedBitmap *bmp) {
+        this->bmp = bmp;
+        uitask::Post(this);
+    }
+
+    virtual void Execute() {
+        if (bmp)
+            SetThumbnail(gFileHistory.Find(filePath), bmp);
+        bmp = NULL;
+    }
+};
 
 static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
@@ -680,41 +720,20 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     AssertCrash(win.IsDocLoaded());
     if (!win.IsDocLoaded()) return;
 
-    win.ctrl->CreateThumbnail(&ds, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
-}
-
-static void RebuildMenuBarForWindow(WindowInfo *win)
-{
-    HMENU oldMenu = win->menu;
-    win->menu = BuildMenu(win);
-    if (!win->presentation && !win->isFullScreen && !win->isMenuHidden)
-        SetMenu(win->hwndFrame, win->menu);
-    DestroyMenu(oldMenu);
-}
-
-static void RebuildMenuBarForAllWindows()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        RebuildMenuBarForWindow(gWindows.At(i));
+    // don't create thumbnails for password protected documents
+    // (unless we're also remembering the decryption key anyway)
+    if (win.AsFixed() && win.AsFixed()->engine()->IsPasswordProtected() &&
+        !ScopedMem<char>(win.AsFixed()->engine()->GetDecryptionKey())) {
+        RemoveThumbnail(ds);
+        return;
     }
+
+    ThumbnailCreated *tnCb = new ThumbnailCreated(win.ctrl->FilePath());
+    win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), tnCb);
 }
-
-class DisplayModelHandler: public DisplayModelCallback {
-    WindowInfo *win;
-
-public:
-    DisplayModelHandler(WindowInfo *win) : win(win) { }
-    virtual ~DisplayModelHandler() { }
-
-    virtual void Repaint() { win->RepaintAsync(); }
-    virtual void PageNoChanged(int pageNo) { win->PageNoChanged(pageNo); }
-    virtual void UpdateScrollbars(SizeI canvas);
-    virtual void RequestRendering(int pageNo);
-    virtual void CleanUp(DisplayModel *dm);
-};
 
 /* Send the request to render a given page to a rendering thread */
-void DisplayModelHandler::RequestRendering(int pageNo)
+void ControllerCallbackHandler::RequestRendering(int pageNo)
 {
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
@@ -727,14 +746,29 @@ void DisplayModelHandler::RequestRendering(int pageNo)
         gRenderCache.RequestRendering(dm, pageNo);
 }
 
-void DisplayModelHandler::CleanUp(DisplayModel *dm)
+void ControllerCallbackHandler::CleanUp(DisplayModel *dm)
 {
     gRenderCache.CancelRendering(dm);
     gRenderCache.FreeForDisplayModel(dm);
 }
 
+void ControllerCallbackHandler::FocusFrame(bool always)
+{
+    if (always || !FindWindowInfoByHwnd(GetFocus()))
+        SetFocus(win->hwndFrame);
+}
+
+void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
+{
+    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+    LinkSaver(*win, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
+}
+
 static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
 {
+    if (!win->cbHandler)
+        win->cbHandler = new ControllerCallbackHandler(win);
+
     Controller *ctrl = NULL;
 
     EngineType engineType;
@@ -758,7 +792,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
                 CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
                 goto LoadChmInFixedPageUI;
             }
-            ctrl = ChmUIController::Create(chmEngine, win);
+            ctrl = ChmUIController::Create(chmEngine, win->cbHandler);
             CrashIf(!ctrl || !ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook());
         }
     }
@@ -767,7 +801,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
         // don't load PalmDoc, etc. files as long as they're not correctly formatted
         if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
             doc.Delete();
-        ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas) : NULL;
+        ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas, win->cbHandler) : NULL;
         if (ctrl) {
             // TODO: the EbookController constructor calls UpdateWindow, so WndProcCanvas must
             // already think that an EbookUIController has been successfully loaded
@@ -785,10 +819,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
     }
     else {
 LoadChmInFixedPageUI:
-        if (!win->dmHandler)
-            win->dmHandler = new DisplayModelHandler(win);
-        DisplayModel *dm = new DisplayModel(engine, win->dmHandler);
-        ctrl = FixedPageUIController::Create(dm, win->linkHandler);
+        ctrl = FixedPageUIController::Create(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
         ctrl->AsFixed()->engineType = engineType;
     }
@@ -1548,33 +1579,33 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 }
 
 // The current page edit box is updated with the current page number
-void WindowInfo::PageNoChanged(int pageNo)
+void ControllerCallbackHandler::PageNoChanged(int pageNo)
 {
-    AssertCrash(ctrl && ctrl->PageCount() > 0);
-    if (!ctrl || ctrl->PageCount() == 0)
+    AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
+    if (!win->ctrl || win->ctrl->PageCount() == 0)
         return;
 
     if (INVALID_PAGE_NO != pageNo) {
-        ScopedMem<WCHAR> buf(ctrl->GetPageLabel(pageNo));
-        win::SetText(hwndPageBox, buf);
-        ToolbarUpdateStateForWindow(this, false);
-        if (ctrl->HasPageLabels())
-            UpdateToolbarPageText(this, ctrl->PageCount(), true);
+        ScopedMem<WCHAR> buf(win->ctrl->GetPageLabel(pageNo));
+        win::SetText(win->hwndPageBox, buf);
+        ToolbarUpdateStateForWindow(win, false);
+        if (win->ctrl->HasPageLabels())
+            UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
     }
-    if (pageNo == currPageNo)
+    if (pageNo == win->currPageNo)
         return;
 
-    UpdateTocSelection(this, pageNo);
-    currPageNo = pageNo;
+    UpdateTocSelection(win, pageNo);
+    win->currPageNo = pageNo;
 
-    NotificationWnd *wnd = notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
+    NotificationWnd *wnd = win->notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
     if (!wnd)
         return;
 
-    ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, ctrl->PageCount()));
-    if (ctrl->HasPageLabels()) {
-        ScopedMem<WCHAR> label(ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, ctrl->PageCount()));
+    ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
+    if (win->ctrl->HasPageLabels()) {
+        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(pageNo));
+        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, win->ctrl->PageCount()));
     }
     wnd->UpdateMessage(pageInfo);
 }

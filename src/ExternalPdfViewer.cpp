@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "Controller.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

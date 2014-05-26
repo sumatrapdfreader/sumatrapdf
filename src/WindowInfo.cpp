@@ -6,6 +6,7 @@
 
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EngineManager.h"
 #include "FileUtil.h"
 #include "Notifications.h"
 #include "resource.h"
@@ -34,7 +35,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL),
-    uia_provider(NULL), dmHandler(NULL),
+    uia_provider(NULL), cbHandler(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabSelectionHistory(NULL)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
@@ -69,11 +70,18 @@ WindowInfo::~WindowInfo()
     // DocTocItem or PageElement might still need the
     // BaseEngine in their destructors
     delete ctrl;
-    // dmHandler is passed into Controller/DisplayModel and
+    // cbHandler is passed into Controller and
     // must be deleted afterwards
-    delete dmHandler;
+    delete cbHandler;
 
     free(loadedFilePath);
+}
+
+EngineType WindowInfo::GetEngineType() const
+{
+    if (ctrl && ctrl->AsFixed())
+        return ctrl->AsFixed()->engineType;
+    return Engine_None;
 }
 
 // Notify both display model and double-buffer (if they exist)
@@ -199,18 +207,6 @@ bool WindowInfo::CreateUIAProvider()
     }
 
     return true;
-}
-
-void WindowInfo::FocusFrame(bool always)
-{
-    if (always || !FindWindowInfoByHwnd(GetFocus()))
-        SetFocus(hwndFrame);
-}
-
-void WindowInfo::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
-{
-    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-    LinkSaver(*this, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
 }
 
 BaseEngine *LinkHandler::engine() const

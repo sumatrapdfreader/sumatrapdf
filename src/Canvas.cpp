@@ -6,7 +6,7 @@
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
-void DisplayModelHandler::UpdateScrollbars(SizeI canvas)
+void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
 {
     CrashIf(!win->AsFixed());
     DisplayModel *dm = win->AsFixed()->model();

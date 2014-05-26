@@ -813,6 +813,14 @@
 				Name="Model"
 				>
 				<File
+					RelativePath="..\src\Controller.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\Controller.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\DisplayModel.cpp"
 					>
 				</File>
@@ -874,14 +882,6 @@
 				>
 				<File
 					RelativePath="..\src\Canvas.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Controller.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Controller.h"
 					>
 				</File>
 				<File

@@ -686,8 +686,8 @@ bool StressTest::OpenFile(const WCHAR *fileName)
             ClientRect rect(win->hwndFrame);
             rect.Inflate(rand() % 10, rand() % 10);
             SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-            if (win->dmHandler)
-                win->dmHandler->RequestRendering(1);
+            if (win->AsFixed())
+                win->cbHandler->RequestRendering(1);
             win->RepaintAsync();
         }
 
