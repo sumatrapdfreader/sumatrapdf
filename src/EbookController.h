@@ -8,20 +8,34 @@
 #include "DisplayState.h"
 #include "Sigslot.h"
 
+class   EbookController;
 struct  EbookControls;
 class   HtmlPage;
 class   EbookFormattingThread;
-class   EbookFormattingTask;
+struct  EbookFormattingData;
 class   HtmlFormatterArgs;
-class   RenderedBitmap;
+class   HtmlFormatter;
 namespace mui { class Control; }
 using namespace mui;
+
+class EbookControllerCallback {
+public:
+    virtual ~EbookControllerCallback() { }
+    // handle data from the formatting thread (pass it to HandlePagesFromEbookLayout)
+    // TODO: do this internally without need for FindWindowInfoByController
+    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) = 0;
+    // call OnLayoutTimer in at least delay ms (replaces all previous requests)
+    virtual void RequestDelayedLayout(int delay) = 0;
+};
 
 class EbookController : public sigslot::has_slots
 {
     EbookControls * ctrls;
 
     Doc             doc;
+
+    // callback for interacting with UI code
+    EbookControllerCallback *cb;
 
     // TODO: this should be recycled along with pages so that its
     // memory use doesn't grow without bounds
@@ -57,11 +71,11 @@ class EbookController : public sigslot::has_slots
     void        SizeChangedPage(Control *c, int dx, int dy);
 
 public:
-    EbookController(EbookControls *ctrls, DisplayMode displayMode);
+    EbookController(EbookControls *ctrls, DisplayMode displayMode, EbookControllerCallback *cb);
     virtual ~EbookController();
 
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
-    void HandlePagesFromEbookLayout(EbookFormattingTask *ebookLayout);
+    void HandlePagesFromEbookLayout(EbookFormattingData *ebookLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     int  GetCurrentPageNo() const { return currPageNo; }
@@ -79,12 +93,7 @@ public:
     RenderedBitmap *CreateThumbnail(SizeI size);
 };
 
-class HtmlFormatter;
-
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=NULL);
 HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
-
-#define EBOOK_LAYOUT_TIMER_ID       6
-#define EBOOK_LAYOUT_DELAY_IN_MS    200
 
 #endif

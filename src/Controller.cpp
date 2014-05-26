@@ -324,7 +324,7 @@ ChmUIController *ChmUIController::Create(ChmEngine *engine, ControllerCallback *
 ///// EbookUI /////
 
 // TODO: merge with EbookController
-class EbController : public EbookUIController {
+class EbController : public EbookUIController, public EbookControllerCallback {
     EbookController *_ctrl;
     EbookControls *_ctrls;
     bool handleMsgs;
@@ -376,8 +376,15 @@ public:
     }
     virtual void EnableMessageHandling(bool enable) { handleMsgs = enable; }
     virtual void SetController(EbookController *ctrl) { _ctrl = ctrl; }
-    virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
     virtual void UpdateDocumentColors();
+    virtual void RequestRepaint() { _ctrls->mainWnd->MarkForRepaint(); }
+    virtual EbookControllerCallback *GetEbookCallback() { return this; }
+
+    // EbookControllerCallback
+    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) {
+        cb->HandleLayoutedPages(ctrl, data);
+    }
+    virtual void RequestDelayedLayout(int delay) { cb->RequestDelayedLayout(delay); }
 };
 
 EbController::EbController(EbookControls *ctrls, ControllerCallback *cb) :

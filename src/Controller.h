@@ -14,6 +14,8 @@ public:
 };
 
 class DisplayModel;
+class EbookController;
+struct EbookFormattingData;
 
 class ControllerCallback {
 public:
@@ -31,6 +33,8 @@ public:
     virtual void FocusFrame(bool always) = 0;
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
     // EbookController
+    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) = 0;
+    virtual void RequestDelayedLayout(int delay) = 0;
 };
 
 class FixedPageUIController;
@@ -149,8 +153,8 @@ public:
     static ChmUIController *Create(ChmEngine *engine, ControllerCallback *cb);
 };
 
-class EbookController;
 struct EbookControls;
+class EbookControllerCallback;
 class Doc;
 
 class EbookUIController : public Controller {
@@ -168,6 +172,8 @@ public:
     virtual void SetController(EbookController *ctrl) = 0;
     virtual void UpdateDocumentColors() = 0;
     virtual void RequestRepaint() = 0;
+    // TODO: Create should be able to set this once EbookController stops spinning the message loop too soon
+    virtual EbookControllerCallback *GetEbookCallback() = 0;
 
     static EbookUIController *Create(HWND hwnd, ControllerCallback *cb);
 };

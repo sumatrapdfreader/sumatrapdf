@@ -123,6 +123,8 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
+#define EBOOK_LAYOUT_TIMER_ID       6
+
 HINSTANCE                    ghinst = NULL;
 
 HCURSOR                      gCursorArrow;
@@ -641,6 +643,8 @@ public:
     virtual void LaunchBrowser(const WCHAR *url) { ::LaunchBrowser(url); }
     virtual void FocusFrame(bool always);
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data);
+    virtual void RequestDelayedLayout(int delay);
 };
 
 static bool ShouldSaveThumbnail(DisplayState& ds)
@@ -764,6 +768,33 @@ void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned ch
     LinkSaver(*win, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
 }
 
+class EbookFormattingTask : public UITask {
+    WindowInfo *win;
+    EbookController *ctrl;
+    EbookFormattingData *data;
+
+public:
+    EbookFormattingTask(WindowInfo *win, EbookController *ctrl, EbookFormattingData *data) :
+        win(win), ctrl(ctrl), data(data) { }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            CrashIf(!win->AsEbook() || win->AsEbook()->ctrl() != ctrl);
+            ctrl->HandlePagesFromEbookLayout(data);
+        }
+    }
+};
+
+void ControllerCallbackHandler::HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data)
+{
+    uitask::Post(new EbookFormattingTask(win, ctrl, data));
+}
+
+void ControllerCallbackHandler::RequestDelayedLayout(int delay)
+{
+    SetTimer(win->hwndCanvas, EBOOK_LAYOUT_TIMER_ID, delay, NULL);
+}
+
 static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
 {
     if (!win->cbHandler)
@@ -808,7 +839,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             win->ctrl = ctrl;
             ctrl->AsEbook()->EnableMessageHandling(false);
 
-            EbookController *ectrl = new EbookController(ctrl->AsEbook()->ctrls(), displayMode);
+            EbookController *ectrl = new EbookController(ctrl->AsEbook()->ctrls(), displayMode, win->AsEbook()->GetEbookCallback());
             ctrl->AsEbook()->SetController(ectrl);
             ectrl->SetDoc(doc, reparseIdx);
             CrashIf(!ctrl || !ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());

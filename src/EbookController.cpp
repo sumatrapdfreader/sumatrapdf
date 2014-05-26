@@ -5,7 +5,6 @@
 #include "EbookController.h"
 
 #include "AppPrefs.h"
-#include "BaseEngine.h"
 //#define NOLOG 0
 #include "DebugLog.h"
 #include "EbookControls.h"
@@ -13,12 +12,9 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "MobiDoc.h"
 #include "EbookFormatter.h"
-#include "SumatraPDF.h"
 #include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
-#include "UITask.h"
-#include "WindowInfo.h"
 
 static const WCHAR *GetFontName()
 {
@@ -55,46 +51,29 @@ HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
     return NULL;
 }
 
-static WindowInfo *FindWindowInfoByController(EbookController *controller)
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (win->AsEbook() && win->AsEbook()->ctrl() == controller)
-            return win;
-    }
-    return NULL;
-}
-
-class EbookFormattingTask : public UITask {
-public:
+struct EbookFormattingData {
     enum { MAX_PAGES = 256 };
     HtmlPage *         pages[MAX_PAGES];
     size_t             pageCount;
     bool               finished;
-    EbookController *  controller;
     LONG               threadNo;
 
-    EbookFormattingTask(HtmlPage **pages, size_t pageCount, bool finished, EbookController *controller, LONG threadNo) :
-        pageCount(pageCount), finished(finished),
-        controller(controller), threadNo(threadNo) {
+    EbookFormattingData(HtmlPage **pages, size_t pageCount, bool finished, LONG threadNo) :
+        pageCount(pageCount), finished(finished), threadNo(threadNo) {
         CrashIf(pageCount > MAX_PAGES);
         memcpy(this->pages, pages, pageCount * sizeof(*pages));
-    }
-
-    virtual void Execute() {
-        if (FindWindowInfoByController(controller))
-            controller->HandlePagesFromEbookLayout(this);
     }
 };
 
 class EbookFormattingThread : public ThreadBase {
-    Doc                 doc; // we own it
     HtmlFormatterArgs * formatterArgs; // we own it
 
+    Doc                 doc;
     EbookController *   controller;
+    EbookControllerCallback *cb;
 
     // state used during layout process
-    HtmlPage *  pages[EbookFormattingTask::MAX_PAGES];
+    HtmlPage *  pages[EbookFormattingData::MAX_PAGES];
     int         pageCount;
 
     // we want to send 2 pages after reparseIdx as soon as we have them,
@@ -107,15 +86,16 @@ public:
     void        SendPagesIfNecessary(bool force, bool finished);
     bool        Format();
 
-    EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx);
+    EbookFormattingThread(Doc doc, HtmlFormatterArgs *args,
+                          EbookController *ctrl, int reparseIdx, EbookControllerCallback *cb);
     virtual ~EbookFormattingThread();
 
     // ThreadBase
     virtual void Run();
 };
 
-EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx) :
-    doc(doc), formatterArgs(args), controller(ctrl), pageCount(0), reparseIdx(reparseIdx), pagesAfterReparseIdx(0)
+EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx, EbookControllerCallback *cb) :
+    doc(doc), formatterArgs(args), cb(cb), controller(ctrl), pageCount(0), reparseIdx(reparseIdx), pagesAfterReparseIdx(0)
 {
     CrashIf(reparseIdx < 0);
     AssertCrash(doc.IsDocLoaded() || (doc.IsNone() && (NULL != args->htmlStr)));
@@ -134,11 +114,11 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished)
         force = true;
     if (!force && (pageCount < dimof(pages)))
         return;
-    EbookFormattingTask *msg = new EbookFormattingTask(pages, pageCount, finished, controller, GetNo());
+    EbookFormattingData *msg = new EbookFormattingData(pages, pageCount, finished, GetNo());
     //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     pageCount = 0;
     memset(pages, 0, sizeof(pages));
-    uitask::Post(msg);
+    cb->HandleLayoutedPages(controller, msg);
 }
 
 // layout pages from a given reparse point (beginning if NULL)
@@ -199,8 +179,8 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
     *toDeletePtr = NULL;
 }
 
-EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode) : ctrls(ctrls),
-    pages(NULL), incomingPages(NULL),
+EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode, EbookControllerCallback *cb) :
+    ctrls(ctrls), cb(cb), pages(NULL), incomingPages(NULL),
     currPageNo(0), pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
     currPageReparseIdx(0)
 {
@@ -212,6 +192,8 @@ EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode) 
     em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
     em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+
+    // TODO: don't call these immediately (let callers set up things first)
     // displayMode could be any value if alternate UI was used, we have to limit it to
     // either DM_SINGLE_PAGE or DM_FACING
     if ((DM_SINGLE_PAGE == displayMode) || (DM_AUTOMATIC == displayMode)) {
@@ -289,11 +271,12 @@ Vec<HtmlPage*> *EbookController::GetPages()
     return pages;
 }
 
-void EbookController::HandlePagesFromEbookLayout(EbookFormattingTask *ft)
+void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
 {
     if (formattingThreadNo != ft->threadNo) {
         // this is a message from cancelled thread, we can disregard
         lf("EbookController::HandlePagesFromEbookLayout() thread msg discarded, curr thread: %d, sending thread: %d", formattingThreadNo, ft->threadNo);
+        delete ft;
         return;
     }
     //lf("EbookController::HandlePagesFromEbookLayout() %d pages, ft=0x%x", ft->pageCount, (int)ft);
@@ -321,6 +304,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingTask *ft)
         StopFormattingThread();
     }
     UpdateStatus();
+    delete ft;
 }
 
 void EbookController::TriggerBookFormatting()
@@ -348,7 +332,7 @@ void EbookController::TriggerBookFormatting()
     incomingPages = new Vec<HtmlPage*>(1024);
 
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
-    formattingThread = new EbookFormattingThread(doc, args, this, currPageReparseIdx);
+    formattingThread = new EbookFormattingThread(doc, args, this, currPageReparseIdx, cb);
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();
     UpdateStatus();
@@ -364,14 +348,9 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
     CrashIf(!(c == ctrls->pagesLayout->GetPage1() || c==ctrls->pagesLayout->GetPage2()));
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
-
-    WindowInfo *win = FindWindowInfoByController(this);
-    // TODO: should always succeed once FindWindowInfoByController searches background tabs
-    if (!win) return;
-
     // TODO: previously, the delay was 100 while inSizeMove and 600 else
     // (to delay a bit if the user resizes but not when e.g. switching to fullscreen)
-    SetTimer(win->hwndCanvas, EBOOK_LAYOUT_TIMER_ID, EBOOK_LAYOUT_DELAY_IN_MS, NULL);
+    cb->RequestDelayedLayout(200);
 }
 
 void EbookController::ClickedNext(Control *c, int x, int y)
