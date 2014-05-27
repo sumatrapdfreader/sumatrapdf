@@ -75,6 +75,7 @@ FREETYPE_SRC := \
 	ftbase.c \
 	ftbbox.c \
 	ftbitmap.c \
+	ftdebug.c \
 	ftgasp.c \
 	ftglyph.c \
 	ftinit.c \

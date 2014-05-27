@@ -585,10 +585,10 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 		}
 		else
 		{
-			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &trm);
+			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &tm);
 			if (path)
 			{
-				fz_draw_fill_path(devp, path, 0, &fz_identity, colorspace, color, alpha);
+				fz_draw_fill_path(devp, path, 0, ctm, colorspace, color, alpha);
 				fz_free_path(dev->ctx, path);
 			}
 			else
@@ -648,10 +648,10 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke,
 		}
 		else
 		{
-			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &trm);
+			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &tm);
 			if (path)
 			{
-				fz_draw_stroke_path(devp, path, stroke, &fz_identity, colorspace, color, alpha);
+				fz_draw_stroke_path(devp, path, stroke, ctm, colorspace, color, alpha);
 				fz_free_path(dev->ctx, path);
 			}
 			else
@@ -756,7 +756,7 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 				}
 				else
 				{
-					fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &trm);
+					fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &tm);
 					if (path)
 					{
 						fz_pixmap *old_dest;
@@ -767,7 +767,7 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 						state[1].mask = NULL;
 						fz_try(ctx)
 						{
-							fz_draw_fill_path(devp, path, 0, &fz_identity, fz_device_gray(ctx), &white, 1);
+							fz_draw_fill_path(devp, path, 0, ctm, fz_device_gray(ctx), &white, 1);
 						}
 						fz_always(ctx)
 						{
@@ -860,7 +860,7 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 				}
 				else
 				{
-					fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &trm);
+					fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, &tm);
 					if (path)
 					{
 						fz_pixmap *old_dest;
@@ -872,7 +872,7 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 						state[0].mask = NULL;
 						fz_try(ctx)
 						{
-							fz_draw_stroke_path(devp, path, stroke, &fz_identity, fz_device_gray(ctx), &white, 1);
+							fz_draw_stroke_path(devp, path, stroke, ctm, fz_device_gray(ctx), &white, 1);
 						}
 						fz_always(ctx)
 						{

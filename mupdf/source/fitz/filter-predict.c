@@ -67,16 +67,19 @@ fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int le
 
 	for (k = 0; k < state->colors; k++)
 		left[k] = 0;
-	memset(out, 0, state->stride);
 
-	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2518 */
+	/* special fast case */
 	if (state->bpc == 8)
 	{
 		for (i = 0; i < state->columns; i++)
 			for (k = 0; k < state->colors; k++)
-				left[k] = *out++ = ((char)*in++ + left[k]) & 0xFF;
+				*out++ = left[k] = (*in++ + left[k]) & 0xFF;
 		return;
 	}
+
+	/* putcomponent assumes zeroed memory for bpc < 8 */
+	if (state->bpc < 8)
+		memset(out, 0, state->stride);
 
 	for (i = 0; i < state->columns; i++)
 	{

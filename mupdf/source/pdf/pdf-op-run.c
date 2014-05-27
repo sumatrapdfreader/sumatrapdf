@@ -1733,11 +1733,13 @@ run_xobject(pdf_csi *csi, void *state, pdf_obj *resources, pdf_xobject *xobj, co
 	int gparent_save;
 	fz_matrix gparent_save_ctm;
 	pdf_run_state *pr = (pdf_run_state *)state;
+	int cleanup_state = 0;
 
 	/* Avoid infinite recursion */
 	if (xobj == NULL || pdf_mark_obj(xobj->me))
 		return;
 
+	fz_var(cleanup_state);
 	fz_var(gstate);
 	fz_var(oldtop);
 
@@ -1764,8 +1766,15 @@ run_xobject(pdf_csi *csi, void *state, pdf_obj *resources, pdf_xobject *xobj, co
 		{
 			fz_rect bbox = xobj->bbox;
 			fz_transform_rect(&bbox, &gstate->ctm);
+
+			/* Remember that we tried to call begin_softmask. Even
+			 * if it throws an error, we must call end_softmask. */
+			cleanup_state = 1;
 			gstate = begin_softmask(csi, pr, &softmask);
 
+			/* Remember that we tried to call fz_begin_group. Even
+			 * if it throws an error, we must call fz_end_group. */
+			cleanup_state = 2;
 			fz_begin_group(pr->dev, &bbox,
 				xobj->isolated, xobj->knockout, gstate->blendmode, gstate->fill.alpha);
 
@@ -1774,6 +1783,9 @@ run_xobject(pdf_csi *csi, void *state, pdf_obj *resources, pdf_xobject *xobj, co
 			gstate->fill.alpha = 1;
 		}
 
+		/* Remember that we tried to save for the clippath. Even if it
+		 * throws an error, we must pop it. */
+		cleanup_state = 3;
 		pdf_gsave(pr); /* Save here so the clippath doesn't persist */
 
 		/* clip to the bounds */
@@ -1794,13 +1806,16 @@ run_xobject(pdf_csi *csi, void *state, pdf_obj *resources, pdf_xobject *xobj, co
 	}
 	fz_always(ctx)
 	{
-		pdf_grestore(pr); /* Remove the clippath */
+		if (cleanup_state >= 3)
+			pdf_grestore(pr); /* Remove the clippath */
 
 		/* wrap up transparency stacks */
 		if (xobj->transparency)
 		{
-			fz_end_group(pr->dev);
-			end_softmask(csi, pr, &softmask);
+			if (cleanup_state >= 2)
+				fz_end_group(pr->dev);
+			if (cleanup_state >= 1)
+				end_softmask(csi, pr, &softmask);
 		}
 
 		pr->gstate[pr->gparent].ctm = gparent_save_ctm;
