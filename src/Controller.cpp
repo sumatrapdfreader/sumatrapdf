@@ -6,113 +6,11 @@
 
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmEngine.h"
-#include "DisplayModel.h"
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookControls.h"
-#include "EngineManager.h"
 #include "FileUtil.h"
-#include "PdfSync.h"
 #include "UITask.h"
-
-///// FixedPageUI /////
-
-FixedPageUIController::FixedPageUIController(ControllerCallback *cb) :
-    Controller(cb), userAnnots(NULL), userAnnotsModified(false), engineType(Engine_None), pdfSync(NULL)
-{
-}
-
-FixedPageUIController::~FixedPageUIController()
-{
-    delete userAnnots;
-    delete pdfSync;
-}
-
-// TODO: merge with DisplayModel
-class FpController : public FixedPageUIController, public DisplayModelCallback {
-    DisplayModel *dm;
-
-public:
-    FpController(BaseEngine *engine, ControllerCallback *cb);
-    virtual ~FpController() { delete dm; }
-
-    virtual const WCHAR *FilePath() const { return engine()->FileName(); }
-    virtual const WCHAR *DefaultFileExt() const { return engine()->GetDefaultFileExt(); }
-    virtual int PageCount() const { return engine()->PageCount(); }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return engine()->GetProperty(prop); }
-
-    virtual int CurrentPageNo() { return dm->CurrentPageNo(); }
-    virtual void GoToPage(int pageNo, bool addNavPoint) { dm->GoToPage(pageNo, 0, addNavPoint); }
-    virtual bool CanNavigate(int dir) { return dm->CanNavigate(dir); }
-    virtual void Navigate(int dir) { dm->Navigate(dir); }
-
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
-    virtual DisplayMode GetDisplayMode() const { return dm->GetDisplayMode(); }
-    virtual void SetPresentationMode(bool enable) { dm->SetPresentationMode(enable); }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { dm->ZoomTo(zoom, fixPt); }
-    virtual float GetZoomVirtual() const { return dm->ZoomVirtual(); }
-    virtual float GetNextZoomStep(float towards) const { return dm->NextZoomStep(towards); }
-    virtual void SetViewPortSize(SizeI size) { dm->ChangeViewPortSize(size); }
-
-    virtual bool HasTocTree() const { return engine()->HasTocTree(); }
-    virtual DocTocItem *GetTocTree() { return engine()->GetTocTree(); }
-    virtual void GotoLink(PageDestination *dest) { cb->GotoLink(dest); }
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return engine()->GetNamedDest(name); }
-
-    virtual void UpdateDisplayState(DisplayState *ds) { dm->DisplayStateFromModel(ds); }
-    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(dm, size, tnCb); }
-
-    virtual bool HasPageLabels() const { return engine()->HasPageLabels(); }
-    virtual WCHAR *GetPageLabel(int pageNo) const { return engine()->GetPageLabel(pageNo); }
-    virtual int GetPageByLabel(const WCHAR *label) const { return engine()->GetPageByLabel(label); }
-
-    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= PageCount(); }
-    virtual bool GoToNextPage() { return dm->GoToNextPage(0); }
-    virtual bool GoToPrevPage(bool toBottom) { return dm->GoToPrevPage(toBottom ? -1 : 0); }
-    virtual bool GoToFirstPage() { return dm->GoToFirstPage(); }
-    virtual bool GoToLastPage() { return dm->GoToLastPage(); }
-
-    virtual FixedPageUIController *AsFixed() { return this; }
-
-    // FixedPageUIController
-    virtual DisplayModel *model() { return dm; }
-    virtual BaseEngine *engine() const { return dm->engine(); }
-
-    // DisplayModelCallback
-    virtual void Repaint() { cb->Repaint(); }
-    virtual void PageNoChanged(int pageNo) { cb->PageNoChanged(pageNo); }
-    virtual void UpdateScrollbars(SizeI canvas) { cb->UpdateScrollbars(canvas); }
-    virtual void RequestRendering(int pageNo) { cb->RequestRendering(pageNo); }
-    virtual void CleanUp(DisplayModel *dm) { CrashIf(dm != this->dm); cb->CleanUp(dm); }
-};
-
-FpController::FpController(BaseEngine *engine, ControllerCallback *cb) : FixedPageUIController(cb)
-{
-    CrashIf(!engine);
-    dm = new DisplayModel(engine, this);
-}
-
-void FpController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
-{
-    if (keepContinuous && IsContinuous(dm->GetDisplayMode())) {
-        switch (mode) {
-        case DM_SINGLE_PAGE: mode = DM_CONTINUOUS; break;
-        case DM_FACING: mode = DM_CONTINUOUS_FACING; break;
-        case DM_BOOK_VIEW: mode = DM_CONTINUOUS_BOOK_VIEW; break;
-        }
-    }
-    dm->ChangeDisplayMode(mode);
-}
-
-FixedPageUIController *FixedPageUIController::Create(BaseEngine *engine, ControllerCallback *cb)
-{
-    FpController *ctrl = new FpController(engine, cb);
-    if (!ctrl->model()) {
-        delete ctrl;
-        return NULL;
-    }
-    return ctrl;
-}
 
 ///// ChmUI /////
 
@@ -130,12 +28,12 @@ public:
     virtual int PageCount() const { return _engine->PageCount(); }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return _engine->GetProperty(prop); }
 
-    virtual int CurrentPageNo() { return _engine->CurrentPageNo(); }
+    virtual int CurrentPageNo() const { return _engine->CurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { _engine->DisplayPage(pageNo); }
-    virtual bool CanNavigate(int dir) { return _engine->CanNavigate(dir); }
+    virtual bool CanNavigate(int dir) const { return _engine->CanNavigate(dir); }
     virtual void Navigate(int dir) { _engine->Navigate(dir); }
 
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true) { /* not supported */ }
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) { /* not supported */ }
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
@@ -153,7 +51,7 @@ public:
 
     virtual ChmUIController *AsChm() { return this; }
 
-    // FixedPageUIController
+    // ChmUIController
     virtual ChmEngine *engine() { return _engine; }
 
     // ChmNavigationCallback
@@ -339,13 +237,13 @@ public:
     virtual int PageCount() const { return (int)ctrl->GetMaxPageCount(); }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc()->GetProperty(prop); }
 
-    virtual int CurrentPageNo() { return ctrl->GetCurrentPageNo(); }
+    virtual int CurrentPageNo() const { return ctrl->GetCurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { ctrl->GoToPage(pageNo); }
-    virtual bool CanNavigate(int dir) { return false; }
+    virtual bool CanNavigate(int dir) const { return false; }
     // TODO: this used to be equivalent to GoToNextPage/GoToPrevPage
     virtual void Navigate(int dir) { /* not supported */ }
 
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
     virtual DisplayMode GetDisplayMode() const { return ctrl->IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { /* not supported */ }

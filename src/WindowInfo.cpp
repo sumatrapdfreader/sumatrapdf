@@ -150,7 +150,7 @@ void WindowInfo::MoveDocBy(int dx, int dy)
     if (!this->AsFixed()) return;
     CrashIf(this->linkOnLastButtonDown);
     if (this->linkOnLastButtonDown) return;
-    DisplayModel *dm = this->ctrl->AsFixed()->model();
+    DisplayModel *dm = this->ctrl->AsFixed();
     if (0 != dx)
         dm->ScrollXBy(dx);
     if (0 != dy)
@@ -203,7 +203,7 @@ bool WindowInfo::CreateUIAProvider()
             return false;
         // load data to provider
         if (AsFixed())
-            uia_provider->OnDocumentLoad(AsFixed()->model());
+            uia_provider->OnDocumentLoad(AsFixed());
     }
 
     return true;
@@ -230,7 +230,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     if (!engine())
         return;
 
-    DisplayModel *dm = owner->ctrl->AsFixed()->model();
+    DisplayModel *dm = owner->ctrl->AsFixed();
     ScopedMem<WCHAR> path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
@@ -282,9 +282,9 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     // predefined named actions
     else if (Dest_NextPage == type)
-        dm->GoToNextPage(0);
+        dm->GoToNextPage();
     else if (Dest_PrevPage == type)
-        dm->GoToPrevPage(0);
+        dm->GoToPrevPage();
     else if (Dest_FirstPage == type)
         dm->GoToFirstPage();
     else if (Dest_LastPage == type)
@@ -322,14 +322,14 @@ void LinkHandler::ScrollTo(PageDestination *dest)
         return;
     }
 
-    DisplayModel *dm = owner->ctrl->AsFixed()->model();
+    DisplayModel *dm = owner->ctrl->AsFixed();
     PointI scroll(-1, 0);
     RectD rect = dest->GetDestRect();
 
     if (rect.IsEmpty()) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
-        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
+        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->GetZoomReal(), dm->GetRotation());
         scroll = scrollD.Convert<int>();
 
         // default values for the coordinates mean: keep the current position
@@ -342,15 +342,15 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     }
     else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
-        RectD rectD = dm->engine()->Transform(rect, pageNo, dm->ZoomReal(), dm->Rotation());
+        RectD rectD = dm->engine()->Transform(rect, pageNo, dm->GetZoomReal(), dm->GetRotation());
         scroll = rectD.TL().Convert<int>();
 
-        // Rect<float> rectF = dm->engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
+        // Rect<float> rectF = dm->engine()->Transform(rect, pageNo, 1.0, dm->GetRotation()).Convert<float>();
         // zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
     }
     else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
-        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
+        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->GetZoomReal(), dm->GetRotation());
         scroll.y = scrollD.Convert<int>().y;
 
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH

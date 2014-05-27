@@ -170,13 +170,12 @@ $(OS)\ChmEngine.obj: $B\src\utils\DebugLog.h $B\src\utils\Dict.h $B\src\utils\Fi
 $(OS)\ChmEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlWindow.h $B\src\utils\Scoped.h
 $(OS)\ChmEngine.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
 $(OS)\Controller.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\ChmEngine.h
-$(OS)\Controller.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OS)\Controller.obj: $B\src\Doc.h $B\src\EbookController.h $B\src\EbookControls.h
-$(OS)\Controller.obj: $B\src\EngineManager.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
-$(OS)\Controller.obj: $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h
-$(OS)\Controller.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h
-$(OS)\Controller.obj: $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h
-$(OS)\Controller.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h $B\src\PdfSync.h
+$(OS)\Controller.obj: $B\src\Controller.h $B\src\DisplayState.h $B\src\Doc.h
+$(OS)\Controller.obj: $B\src\EbookController.h $B\src\EbookControls.h $B\src\mui\Mui.h
+$(OS)\Controller.obj: $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h
+$(OS)\Controller.obj: $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h
+$(OS)\Controller.obj: $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h
+$(OS)\Controller.obj: $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h
 $(OS)\Controller.obj: $B\src\SettingsStructs.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\Controller.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OS)\Controller.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
@@ -189,8 +188,9 @@ $(OS)\CrashHandler.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\u
 $(OS)\CrashHandler.obj: $B\src\utils\HttpUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h
 $(OS)\CrashHandler.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\CrashHandler.obj: $B\src\utils\WinUtil.h $B\src\Version.h
-$(OS)\DisplayModel.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\DisplayModel.h
-$(OS)\DisplayModel.obj: $B\src\DisplayState.h $B\src\SettingsStructs.h $B\src\TextSearch.h
+$(OS)\DisplayModel.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
+$(OS)\DisplayModel.obj: $B\src\DisplayModel.h $B\src\DisplayState.h $B\src\EngineManager.h
+$(OS)\DisplayModel.obj: $B\src\PdfSync.h $B\src\SettingsStructs.h $B\src\TextSearch.h
 $(OS)\DisplayModel.obj: $B\src\TextSelection.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\DisplayModel.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
 $(OS)\DisplayModel.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -421,11 +421,11 @@ $(OS)\Regress.obj: $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h $B\src\uti
 $(OS)\Regress.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
 $(OS)\Regress.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\Regress.obj: $B\src\utils\ZipUtil.h
-$(OS)\RenderCache.obj: $B\src\BaseEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OS)\RenderCache.obj: $B\src\RenderCache.h $B\src\SettingsStructs.h $B\src\TextSelection.h
-$(OS)\RenderCache.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OS)\RenderCache.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\RenderCache.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\RenderCache.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
+$(OS)\RenderCache.obj: $B\src\DisplayState.h $B\src\RenderCache.h $B\src\SettingsStructs.h
+$(OS)\RenderCache.obj: $B\src\TextSelection.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\RenderCache.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\RenderCache.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\Search.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\Search.obj: $B\src\ChmEngine.h $B\src\Controller.h $B\src\DisplayModel.h
 $(OS)\Search.obj: $B\src\DisplayState.h $B\src\EngineManager.h $B\src\Favorites.h
@@ -564,14 +564,14 @@ $(OS)\TextSelection.obj: $B\src\BaseEngine.h $B\src\TextSelection.h $B\src\utils
 $(OS)\TextSelection.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OS)\TextSelection.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Toolbar.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
-$(OS)\Toolbar.obj: $B\src\Controller.h $B\src\DisplayState.h $B\src\Favorites.h
-$(OS)\Toolbar.obj: $B\src\FileHistory.h $B\src\Menu.h $B\src\resource.h
-$(OS)\Toolbar.obj: $B\src\Search.h $B\src\SettingsStructs.h $B\src\SumatraPDF.h
-$(OS)\Toolbar.obj: $B\src\TextSearch.h $B\src\TextSelection.h $B\src\Toolbar.h
-$(OS)\Toolbar.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\Toolbar.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
-$(OS)\Toolbar.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\Toolbar.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Toolbar.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\DisplayState.h
+$(OS)\Toolbar.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\Menu.h
+$(OS)\Toolbar.obj: $B\src\resource.h $B\src\Search.h $B\src\SettingsStructs.h
+$(OS)\Toolbar.obj: $B\src\SumatraPDF.h $B\src\TextSearch.h $B\src\TextSelection.h
+$(OS)\Toolbar.obj: $B\src\Toolbar.h $B\src\Translations.h $B\src\utils\Allocator.h
+$(OS)\Toolbar.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OS)\Toolbar.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
+$(OS)\Toolbar.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Trans_installer_txt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OS)\Trans_installer_txt.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Trans_sumatra_txt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
@@ -742,18 +742,18 @@ $(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUti
 $(OU)\ZipUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h
 $(OU)\ZipUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\ZipUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\ZipUtil.h
-$(OUIA)\DocumentProvider.obj: $B\src\BaseEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OUIA)\DocumentProvider.obj: $B\src\SettingsStructs.h $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h
-$(OUIA)\DocumentProvider.obj: $B\src\uia\PageProvider.h $B\src\uia\Provider.h $B\src\uia\TextRange.h
-$(OUIA)\DocumentProvider.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
-$(OUIA)\DocumentProvider.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OUIA)\DocumentProvider.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OUIA)\PageProvider.obj: $B\src\BaseEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OUIA)\PageProvider.obj: $B\src\SettingsStructs.h $B\src\TextSelection.h $B\src\uia\Constants.h
-$(OUIA)\PageProvider.obj: $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h $B\src\uia\Provider.h
-$(OUIA)\PageProvider.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OUIA)\PageProvider.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OUIA)\PageProvider.obj: $B\src\utils\Vec.h
+$(OUIA)\DocumentProvider.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
+$(OUIA)\DocumentProvider.obj: $B\src\DisplayState.h $B\src\SettingsStructs.h $B\src\uia\Constants.h
+$(OUIA)\DocumentProvider.obj: $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h $B\src\uia\Provider.h
+$(OUIA)\DocumentProvider.obj: $B\src\uia\TextRange.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OUIA)\DocumentProvider.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OUIA)\DocumentProvider.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OUIA)\PageProvider.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
+$(OUIA)\PageProvider.obj: $B\src\DisplayState.h $B\src\SettingsStructs.h $B\src\TextSelection.h
+$(OUIA)\PageProvider.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h
+$(OUIA)\PageProvider.obj: $B\src\uia\Provider.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OUIA)\PageProvider.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OUIA)\PageProvider.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OUIA)\Provider.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\src\uia\Provider.h
 $(OUIA)\Provider.obj: $B\src\uia\StartPageProvider.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OUIA)\Provider.obj: $B\src\utils\DbgHelpDyn.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
@@ -761,9 +761,9 @@ $(OUIA)\Provider.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\Win
 $(OUIA)\StartPageProvider.obj: $B\src\uia\Constants.h $B\src\uia\Provider.h $B\src\uia\StartPageProvider.h
 $(OUIA)\StartPageProvider.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OUIA)\StartPageProvider.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OUIA)\TextRange.obj: $B\src\BaseEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OUIA)\TextRange.obj: $B\src\SettingsStructs.h $B\src\TextSelection.h $B\src\uia\Constants.h
-$(OUIA)\TextRange.obj: $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h $B\src\uia\Provider.h
-$(OUIA)\TextRange.obj: $B\src\uia\TextRange.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OUIA)\TextRange.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OUIA)\TextRange.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OUIA)\TextRange.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
+$(OUIA)\TextRange.obj: $B\src\DisplayState.h $B\src\SettingsStructs.h $B\src\TextSelection.h
+$(OUIA)\TextRange.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h
+$(OUIA)\TextRange.obj: $B\src\uia\Provider.h $B\src\uia\TextRange.h $B\src\utils\Allocator.h
+$(OUIA)\TextRange.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OUIA)\TextRange.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h

@@ -4,7 +4,7 @@
 #ifndef DisplayModel_h
 #define DisplayModel_h
 
-#include "DisplayState.h"
+#include "Controller.h"
 
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
@@ -49,21 +49,12 @@ struct ScrollState {
     double x, y;
 };
 
-class DisplayModel;
 class PageTextCache;
 class TextSelection;
 class TextSearch;
 struct TextSel;
-
-class DisplayModelCallback {
-public:
-    virtual ~DisplayModelCallback() { }
-    virtual void Repaint() = 0;
-    virtual void PageNoChanged(int pageNo) = 0;
-    virtual void UpdateScrollbars(SizeI canvas) = 0;
-    virtual void RequestRendering(int pageNo) = 0;
-    virtual void CleanUp(DisplayModel *dm) = 0;
-};
+class Synchronizer;
+enum EngineType;
 
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
 // virtual zoom level OR physical zoom level. Would be good to find
@@ -73,35 +64,69 @@ public:
    You can think of it as a model in the MVC pardigm.
    All the display changes should be done through changing this model via
    API and re-displaying things based on new display information */
-class DisplayModel
+class DisplayModel : public Controller
 {
 public:
-    DisplayModel(BaseEngine *engine, DisplayModelCallback *dmCb);
+    DisplayModel(BaseEngine *engine, EngineType type, ControllerCallback *cb);
     ~DisplayModel();
 
-    BaseEngine *engine() const { return _engine; }
+    // meta data
+    virtual const WCHAR *FilePath() const { return _engine->FileName(); }
+    virtual const WCHAR *DefaultFileExt() const { return _engine->GetDefaultFileExt(); }
+    virtual int PageCount() const { return _engine->PageCount(); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return _engine->GetProperty(prop); }
 
-    /* number of pages in the document */
-    int  PageCount() const { return _engine->PageCount(); }
-    bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= _engine->PageCount(); }
+    // page navigation (stateful)
+    virtual int CurrentPageNo() const;
+    virtual void GoToPage(int pageNo, bool addNavPoint) { GoToPage(pageNo, 0, addNavPoint); }
+    virtual bool CanNavigate(int dir) const;
+    virtual void Navigate(int dir);
 
-    /* current rotation selected by user */
-    int Rotation() const { return rotation; }
-    void SetRotation(int newRotation) { rotation = newRotation; }
+    // view settings
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
+    virtual DisplayMode GetDisplayMode() const { return displayMode; }
+    virtual void SetPresentationMode(bool enable);
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { ZoomTo(zoom, fixPt); }
+    virtual float GetZoomVirtual() const { return zoomVirtual; }
+    virtual float GetNextZoomStep(float towards) const;
+    virtual void SetViewPortSize(SizeI size);
 
-    DisplayMode GetDisplayMode() const { return displayMode; }
-    void ChangeDisplayMode(DisplayMode newDisplayMode);
-    void SetPresentationMode(bool enable);
+    // table of contents
+    virtual bool HasTocTree() const { return _engine->HasTocTree(); }
+    virtual DocTocItem *GetTocTree() { return _engine->GetTocTree(); }
+    virtual void GotoLink(PageDestination *dest) { cb->GotoLink(dest); }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
 
-    /* a "virtual" zoom level. Can be either a real zoom level in percent
-       (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
-       ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    float ZoomVirtual() const { return zoomVirtual; }
-    float ZoomReal() const { return zoomReal; }
-    float ZoomReal(int pageNo);
-    float ZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
+    // state export
+    virtual void UpdateDisplayState(DisplayState *ds);
+    // asynchronously calls ThumbnailCallback::SaveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(this, size, tnCb); }
 
-    int CurrentPageNo() const;
+    // page labels (optional)
+    virtual bool HasPageLabels() const { return _engine->HasPageLabels(); }
+    virtual WCHAR *GetPageLabel(int pageNo) const { return _engine->GetPageLabel(pageNo); }
+    virtual int GetPageByLabel(const WCHAR *label) const { return _engine->GetPageByLabel(label); }
+
+    // common shortcuts
+    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= _engine->PageCount(); }
+    virtual bool GoToNextPage();
+    virtual bool GoToPrevPage(bool toBottom=false) { return GoToPrevPage(toBottom ? -1 : 0); }
+    virtual bool GoToFirstPage();
+    virtual bool GoToLastPage();
+
+    // for quick type determination and type-safe casting
+    virtual DisplayModel *AsFixed() { return this; }
+
+public:
+    // the following is specific to DisplayModel
+
+    virtual BaseEngine *engine() const { return _engine; }
+
+    // controller-specific data (easier to save here than on WindowInfo)
+    EngineType      engineType;
+    Vec<PageAnnotation> *userAnnots;
+    bool            userAnnotsModified;
+    Synchronizer *  pdfSync;
 
     PageTextCache * textCache;
     TextSelection * textSelection;
@@ -110,44 +135,36 @@ public:
 
     PageInfo *      GetPageInfo(int pageNo) const;
 
-    /* size and position of the viewport on the canvas (resp size of the visible
-       part of the canvase available for content (totalViewPortSize minus scroll bars)
-       (canvasSize is always at least as big as viewPort.Size()) */
-    RectI           viewPort;
-protected:
-    /* total size of view port (draw area), including scroll bars */
-    SizeI           totalViewPortSize;
+    /* current rotation selected by user */
+    int             GetRotation() const { return rotation; }
+    // Note: zoomReal contains dpiFactor premultiplied
+    float           GetZoomReal() const { return zoomReal; }
+    float           GetZoomReal(int pageNo) const;
+    void            Relayout(float zoomVirtual, int rotation);
 
-public:
+    RectI           GetViewPort() const { return viewPort; }
     bool            NeedHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
     bool            NeedVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
     SizeI           GetCanvasSize() const { return canvasSize; }
 
-    void            ChangeViewPortSize(SizeI newViewPortSize);
-
-    bool            PageShown(int pageNo);
-    bool            PageVisible(int pageNo);
-    bool            PageVisibleNearby(int pageNo);
+    bool            PageShown(int pageNo) const;
+    bool            PageVisible(int pageNo) const;
+    bool            PageVisibleNearby(int pageNo) const;
     int             FirstVisiblePageNo() const;
-    bool            FirstBookPageVisible();
-    bool            LastBookPageVisible();
-    void            Relayout(float zoomVirtual, int rotation);
+    bool            FirstBookPageVisible() const;
+    bool            LastBookPageVisible() const;
 
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
-    bool            GoToPrevPage(int scrollY);
-    bool            GoToNextPage(int scrollY);
-    bool            GoToFirstPage();
-    bool            GoToLastPage();
 
     void            ScrollXTo(int xOff);
     void            ScrollXBy(int dx);
-
     void            ScrollYTo(int yOff);
     void            ScrollYBy(int dy, bool changePage);
-
+    /* a "virtual" zoom level. Can be either a real zoom level in percent
+       (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
+       ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
     void            ZoomTo(float zoomVirtual, PointI *fixPt=NULL);
     void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
-    float           NextZoomStep(float towardsLevel);
     void            RotateBy(int rotation);
 
     WCHAR *         GetTextInRegion(int pageNo, RectD region);
@@ -157,7 +174,6 @@ public:
     const WindowMargin *GetWindowMargin() const { return &windowMargin; }
 
     int             GetPageNoByPoint(PointI pt);
-    int             GetPageNextToPoint(PointI pt);
     PointI          CvtToScreen(int pageNo, PointD pt);
     RectI           CvtToScreen(int pageNo, RectD r);
     PointD          CvtFromScreen(PointI pt, int pageNo=INVALID_PAGE_NO);
@@ -168,32 +184,35 @@ public:
     ScrollState     GetScrollState();
     void            SetScrollState(ScrollState state);
 
-    bool            CanNavigate(int dir) const;
-    void            Navigate(int dir);
     void            CopyNavHistory(DisplayModel& orig);
 
-    void            DisplayStateFromModel(DisplayState *ds);
     void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI);
     void            SetDisplayR2L(bool r2l) { displayR2L = r2l; }
     bool            GetDisplayR2L() const { return displayR2L; }
 
     bool            ShouldCacheRendering(int pageNo);
     // called when we decide that the display needs to be redrawn
-    void            RepaintDisplay() { dmCb->Repaint(); }
+    void            RepaintDisplay() { cb->Repaint(); }
+
+    /* allow resizing a window without triggering a new rendering (needed for window destruction) */
+    bool            dontRenderFlag;
 
 protected:
 
     void            BuildPagesInfo();
-    float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo);
-    SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false);
+    float           ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const;
+    SizeD           PageSizeAfterRotation(int pageNo, bool fitToContent=false) const;
     void            ChangeStartPage(int startPage);
     PointI          GetContentStart(int pageNo);
-    void            SetZoomVirtual(float zoomVirtual);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
 
     void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
+    void            CalcZoomVirtual(float zoomVirtual);
+    float           GetZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
+    bool            GoToPrevPage(int scrollY);
+    int             GetPageNextToPoint(PointI pt);
 
     BaseEngine *    _engine;
 
@@ -206,11 +225,14 @@ protected:
        No meaning in continous mode. */
     int             startPage;
 
-    /* A callback to notify UI about required changes */
-    DisplayModelCallback *dmCb;
-
     /* size of virtual canvas containing all rendered pages. */
     SizeI           canvasSize;
+    /* size and position of the viewport on the canvas (resp size of the visible
+       part of the canvase available for content (totalViewPortSize minus scroll bars)
+       (canvasSize is always at least as big as viewPort.Size()) */
+    RectI           viewPort;
+    /* total size of view port (draw area), including scroll bars */
+    SizeI           totalViewPortSize;
 
     WindowMargin    windowMargin;
     SizeI           pageSpacing;
@@ -237,10 +259,6 @@ protected:
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
     size_t          navHistoryIx;
-
-public:
-    /* allow resizing a window without triggering a new rendering (needed for window destruction) */
-    bool            dontRenderFlag;
 };
 
 int     NormalizeRotation(int rotation);

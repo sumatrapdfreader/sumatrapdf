@@ -398,7 +398,7 @@ static void FormatTime(int totalSecs, str::Str<char> *s)
 
 static void MakeRandomSelection(WindowInfo *win, int pageNo)
 {
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     if (!dm->ValidPageNo(pageNo))
         pageNo = 1;
     if (!dm->ValidPageNo(pageNo))
@@ -804,8 +804,8 @@ void StressTest::OnTimer(int timerIdGot)
     // (but we don't wait more than 3 seconds).
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
-    DisplayModel *dm = win->AsFixed()->model();
-    bool didRender = renderCache->Exists(dm, currPage, dm->Rotation());
+    DisplayModel *dm = win->AsFixed();
+    bool didRender = renderCache->Exists(dm, currPage, dm->GetRotation());
     if (!didRender && dm->ShouldCacheRendering(currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {

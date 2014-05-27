@@ -419,7 +419,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     }
 
     if (ctrl->AsFixed()) {
-        str = FormatPageSize(ctrl->AsFixed()->engine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->model()->Rotation());
+        str = FormatPageSize(ctrl->AsFixed()->engine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->GetRotation());
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)

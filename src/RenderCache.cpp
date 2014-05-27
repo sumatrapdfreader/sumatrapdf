@@ -158,13 +158,13 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, TilePosition tile, float
     if (!dm) return false;
     PageInfo *pageInfo = dm->GetPageInfo(pageNo);
     if (!dm->engine() || !pageInfo) return false;
-    RectI tileOnScreen = GetTileOnScreen(dm->engine(), pageNo, dm->Rotation(), dm->ZoomReal(), tile, pageInfo->pageOnScreen);
+    RectI tileOnScreen = GetTileOnScreen(dm->engine(), pageNo, dm->GetRotation(), dm->GetZoomReal(), tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
     tileOnScreen.y -= (int)(tileOnScreen.dy * fuzz * 0.5);
     tileOnScreen.dy = (int)(tileOnScreen.dy * (fuzz + 1));
-    RectI screen(PointI(), dm->viewPort.Size());
+    RectI screen(PointI(), dm->GetViewPort().Size());
     return !tileOnScreen.Intersect(screen).IsEmpty();
 }
 
@@ -253,7 +253,7 @@ void RenderCache::Invalidate(DisplayModel *dm, int pageNo, RectD rect)
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
     RectD mediabox = dm->engine()->PageMediabox(pageNo);
-    RectD pixelbox = dm->engine()->Transform(mediabox, pageNo, dm->ZoomReal(), dm->Rotation());
+    RectD pixelbox = dm->engine()->Transform(mediabox, pageNo, dm->GetZoomReal(), dm->GetRotation());
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -265,8 +265,8 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
     // without clipping optimizations
-    if (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_WIDTH ||
-        pixelbox.dx <= dm->viewPort.dx || pixelbox.dy < dm->viewPort.dy ||
+    if (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_WIDTH ||
+        pixelbox.dx <= dm->GetViewPort().dx || pixelbox.dy < dm->GetViewPort().dy ||
         !dm->engine()->HasClipOptimizations(pageNo)) {
         factorAvg /= 2.0;
     }
@@ -341,8 +341,8 @@ void RenderCache::RequestRendering(DisplayModel *dm, int pageNo, TilePosition ti
     if (!dm || dm->dontRenderFlag)
         return;
 
-    int rotation = NormalizeRotation(dm->Rotation());
-    float zoom = dm->ZoomReal(pageNo);
+    int rotation = NormalizeRotation(dm->GetRotation());
+    float zoom = dm->GetZoomReal(pageNo);
 
     if (curReq && (curReq->pageNo == pageNo) && (curReq->dm == dm) && (curReq->tile == tile)) {
         if ((curReq->zoom == zoom) && (curReq->rotation == rotation)) {
@@ -604,14 +604,14 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                             TilePosition tile, RectI tileOnScreen, bool renderMissing,
                             bool *renderOutOfDateCue, bool *renderedReplacement)
 {
-    BitmapCacheEntry *entry = Find(dm, pageNo, dm->Rotation(), dm->ZoomReal(), &tile);
+    BitmapCacheEntry *entry = Find(dm, pageNo, dm->GetRotation(), dm->GetZoomReal(), &tile);
     UINT renderDelay = 0;
 
     if (!entry) {
         if (!isRemoteSession) {
             if (renderedReplacement)
                 *renderedReplacement = true;
-            entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
+            entry = Find(dm, pageNo, dm->GetRotation(), INVALID_ZOOM, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
@@ -679,8 +679,8 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 {
     assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 
-    int rotation = dm->Rotation();
-    float zoom = dm->ZoomReal();
+    int rotation = dm->GetRotation();
+    float zoom = dm->GetZoomReal();
     USHORT targetRes = GetTileRes(dm, pageNo);
     USHORT maxRes = GetMaxTileRes(dm, pageNo, rotation);
     if (maxRes < targetRes)

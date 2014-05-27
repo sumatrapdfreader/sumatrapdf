@@ -14,7 +14,7 @@ class StressTest;
 struct WatchedFile;
 class SumatraUIAutomationProvider;
 struct TabData;
-class DisplayModelCallback;
+enum EngineType;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -66,7 +66,7 @@ public:
     bool IsAboutWindow() const { return !loadedFilePath; }
     bool IsDocLoaded() const { return this->ctrl != NULL; }
 
-    FixedPageUIController *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
+    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmUIController *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
     EbookUIController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
 

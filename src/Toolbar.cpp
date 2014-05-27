@@ -6,7 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
-#include "Controller.h"
+#include "DisplayModel.h"
 #include "Menu.h"
 #include "resource.h"
 #include "Search.h"

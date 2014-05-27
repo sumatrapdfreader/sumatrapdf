@@ -241,7 +241,7 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
     if (i.startZoom != INVALID_ZOOM)
         ZoomToSelection(win, i.startZoom);
     if ((i.startScroll.x != -1 || i.startScroll.y != -1) && win->AsFixed()) {
-        DisplayModel *dm = win->AsFixed()->model();
+        DisplayModel *dm = win->AsFixed();
         ScrollState ss = dm->GetScrollState();
         ss.x = i.startScroll.x;
         ss.y = i.startScroll.y;

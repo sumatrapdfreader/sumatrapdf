@@ -53,7 +53,7 @@ void OnMenuFind(WindowInfo *win)
         return;
 
     // copy any selected text to the find bar, if it's still empty
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     if (dm->textSelection->result.len > 0 &&
         Edit_GetTextLength(win->hwndFindBox) == 0) {
         ScopedMem<WCHAR> selection(dm->textSelection->ExtractText(L" "));
@@ -118,7 +118,7 @@ void OnMenuFindMatchCase(WindowInfo *win)
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
-    win->AsFixed()->model()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
+    win->AsFixed()->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
 }
 
@@ -126,7 +126,7 @@ void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
 {
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     if (!win->selectionOnPage || 0 == dm->textSelection->result.len)
         return;
 
@@ -149,9 +149,9 @@ static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
     if (0 == result->len || !result->pages || !result->rects)
         return;
 
-    DisplayModel *dm = win.AsFixed()->model();
+    DisplayModel *dm = win.AsFixed();
     if (addNavPt || !dm->PageShown(result->pages[0]) ||
-        (dm->ZoomVirtual() == ZOOM_FIT_PAGE || dm->ZoomVirtual() == ZOOM_FIT_CONTENT))
+        (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_CONTENT))
     {
         win.ctrl->GoToPage(result->pages[0], addNavPt);
     }
@@ -231,7 +231,7 @@ struct FindThreadData : public ProgressUpdateUI {
         else if (!success && loopedAround)
             wnd->UpdateMessage(_TR("No matches were found"), 3000);
         else {
-            ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(win->AsFixed()->model()->textSearch->GetCurrentPageNo()));
+            ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetCurrentPageNo()));
             ScopedMem<WCHAR> buf(str::Format(_TR("Found text at page %s"), label));
             if (loopedAround) {
                 buf.Set(str::Format(_TR("Found text at page %s (again)"), label));
@@ -295,7 +295,7 @@ static DWORD WINAPI FindThread(LPVOID data)
     FindThreadData *ftd = (FindThreadData *)data;
     AssertCrash(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed());
     WindowInfo *win = ftd->win;
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
 
     TextSel *rect;
     dm->textSearch->SetDirection(ftd->direction);
@@ -361,7 +361,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
 void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 {
     CrashIf(!win->AsFixed());
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     PageInfo *pageInfo = dm->GetPageInfo(win->fwdSearchMark.page);
     if (!pageInfo || 0.0 == pageInfo->visibleRatio)
         return;
@@ -372,8 +372,8 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
         RectI rect = win->fwdSearchMark.rects.At(i);
         rect = dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
         if (gGlobalPrefs->forwardSearch.highlightOffset > 0) {
-            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs->forwardSearch.highlightOffset * dm->ZoomReal());
-            rect.dx = (int)((gGlobalPrefs->forwardSearch.highlightWidth > 0 ? gGlobalPrefs->forwardSearch.highlightWidth : 15.0) * dm->ZoomReal());
+            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs->forwardSearch.highlightOffset * dm->GetZoomReal());
+            rect.dx = (int)((gGlobalPrefs->forwardSearch.highlightWidth > 0 ? gGlobalPrefs->forwardSearch.highlightWidth : 15.0) * dm->GetZoomReal());
             rect.y -= 4;
             rect.dy += 8;
         }
@@ -389,7 +389,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return false;
     if (win->GetEngineType() != Engine_PDF) return false;
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
 
     // Clear the last forward-search result
     win->fwdSearchMark.rects.Reset();
@@ -466,7 +466,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     CrashIf(!win->AsFixed());
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = dm->GetPageInfo(page);
     if ((ret == PDFSYNCERR_SUCCESS) && (rects.Count() > 0) && (NULL != pi)) {
@@ -718,7 +718,7 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
         ZoomToSelection(win, zoom);
 
     if ((scroll.x != -1 || scroll.y != -1) && win->AsFixed()) {
-        DisplayModel *dm = win->AsFixed()->model();
+        DisplayModel *dm = win->AsFixed();
         ScrollState ss = dm->GetScrollState();
         ss.x = scroll.x;
         ss.y = scroll.y;

@@ -105,7 +105,7 @@ public:
 
     virtual void PrintCurrentPage(bool showUI) { if (htmlWindow) htmlWindow->PrintCurrentPage(showUI); }
     virtual void FindInCurrentPage() { if (htmlWindow) htmlWindow->FindInCurrentPage(); }
-    virtual bool CanNavigate(int dir);
+    virtual bool CanNavigate(int dir) const;
     virtual void Navigate(int dir);
     virtual void ZoomTo(float zoomLevel);
     virtual float GetZoom();
@@ -255,7 +255,7 @@ RenderedBitmap *ChmEngineImpl::TakeScreenshot(RectI area, SizeI targetSize)
     return new RenderedBitmap(hbmp, targetSize);
 }
 
-bool ChmEngineImpl::CanNavigate(int dir)
+bool ChmEngineImpl::CanNavigate(int dir) const
 {
     if (!htmlWindow)
         return false;

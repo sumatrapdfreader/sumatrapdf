@@ -742,7 +742,7 @@ void ControllerCallbackHandler::RequestRendering(int pageNo)
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
 
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
@@ -847,9 +847,8 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
     }
     else {
 LoadChmInFixedPageUI:
-        ctrl = FixedPageUIController::Create(engine, win->cbHandler);
+        ctrl = new DisplayModel(engine, engineType, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
-        ctrl->AsFixed()->engineType = engineType;
     }
 
     return ctrl;
@@ -937,15 +936,15 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     DisplayModel *dm = NULL;
     if (win->ctrl) {
         if (win->AsFixed()) {
-            dm = win->AsFixed()->model();
+            dm = win->AsFixed();
             dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(),
                                        gGlobalPrefs->customScreenDPI > 0 ? gGlobalPrefs->customScreenDPI : win->dpi);
             // TODO: also expose Manga Mode for image folders?
             if (win->GetEngineType() == Engine_ComicBook || win->GetEngineType() == Engine_ImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
-                gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed()->model(), dm);
-                dm->CopyNavHistory(*prevCtrl->AsFixed()->model());
+                gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
+                dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
 
             // tell UI Automation about content change
@@ -1559,7 +1558,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     // tell UI Automation about content change
     if (win->uia_provider && win->AsFixed())
-        win->uia_provider->OnDocumentLoad(win->AsFixed()->model());
+        win->uia_provider->OnDocumentLoad(win->AsFixed());
 
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
@@ -1584,7 +1583,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->AsFixed()) {
         if (tdata->canvasRc != win->canvasRc)
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
-        DisplayModel *dm = win->AsFixed()->model();
+        DisplayModel *dm = win->AsFixed();
         dm->SetScrollState(dm->GetScrollState());
     }
     else if (win->AsChm()) {
@@ -1962,7 +1961,7 @@ static void RerenderEverything()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows.At(i)->AsFixed())
             continue;
-        DisplayModel *dm = gWindows.At(i)->AsFixed()->model();
+        DisplayModel *dm = gWindows.At(i)->AsFixed();
         gRenderCache.CancelRendering(dm);
         gRenderCache.KeepForDisplayModel(dm, dm);
         gWindows.At(i)->RedrawAll(true);
@@ -2116,7 +2115,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 
     if (win->AsFixed())
-        win->AsFixed()->model()->dontRenderFlag = true;
+        win->AsFixed()->dontRenderFlag = true;
     if (win->presentation)
         ExitFullScreen(*win);
 
@@ -2501,7 +2500,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 
     ScrollState ss(win.ctrl->CurrentPageNo());
     if (win.AsFixed())
-        ss = win.AsFixed()->model()->GetScrollState();
+        ss = win.AsFixed()->GetScrollState();
     const WCHAR *viewMode = prefs::conv::FromDisplayMode(win.ctrl->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.ctrl->GetZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual())
@@ -2877,10 +2876,10 @@ static void OnMenuViewMangaMode(WindowInfo *win)
 {
     CrashIf(win->GetEngineType() != Engine_ComicBook);
     if (win->GetEngineType() != Engine_ComicBook) return;
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());
     ScrollState state = dm->GetScrollState();
-    dm->Relayout(dm->ZoomVirtual(), dm->Rotation());
+    dm->Relayout(dm->GetZoomVirtual(), dm->GetRotation());
     dm->SetScrollState(state);
 }
 
@@ -3150,7 +3149,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     if (!win->IsDocLoaded())
         return false;
 
-    DisplayModel *dm = win->AsFixed() ? win->AsFixed()->model() : NULL;
+    DisplayModel *dm = win->AsFixed();
     // some of the chm key bindings are different than the rest and we
     // need to make sure we don't break them
     bool isChm = win->AsChm();
@@ -3337,7 +3336,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.ctrl->CurrentPageNo();
-            if (forward ? win.AsFixed()->model()->LastBookPageVisible() : win.AsFixed()->model()->FirstBookPageVisible())
+            if (forward ? win.AsFixed()->LastBookPageVisible() : win.AsFixed()->FirstBookPageVisible())
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
@@ -3396,7 +3395,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                 SelectionOnPage& sel = win.selectionOnPage->At(i);
                 win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
-                gRenderCache.Invalidate(win.AsFixed()->model(), sel.pageNo, sel.rect);
+                gRenderCache.Invalidate(win.AsFixed(), sel.pageNo, sel.rect);
             }
             win.AsFixed()->userAnnotsModified = true;
             win.AsFixed()->engine()->UpdateUserAnnotations(win.AsFixed()->userAnnots);
@@ -3863,12 +3862,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_ROTATE_LEFT:
             if (win->AsFixed())
-                win->AsFixed()->model()->RotateBy(-90);
+                win->AsFixed()->RotateBy(-90);
             break;
 
         case IDM_VIEW_ROTATE_RIGHT:
             if (win->AsFixed())
-                win->AsFixed()->model()->RotateBy(90);
+                win->AsFixed()->RotateBy(90);
             break;
 
         case IDM_FIND_FIRST:

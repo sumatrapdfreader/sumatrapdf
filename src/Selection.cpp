@@ -77,7 +77,7 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
     win->showSelection = false;
 
     if (alsoTextSel && win->AsFixed())
-        win->AsFixed()->model()->textSelection->Reset();
+        win->AsFixed()->textSelection->Reset();
 }
 
 void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLORREF selectionColor, BYTE alpha, int margin)
@@ -142,7 +142,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
             return;
 
         for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
-            rects.Append(win->selectionOnPage->At(i).GetRect(win->AsFixed()->model()));
+            rects.Append(win->selectionOnPage->At(i).GetRect(win->AsFixed()));
     }
 
     PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->fixedPageUI.selectionColor);
@@ -153,7 +153,7 @@ void UpdateTextSelection(WindowInfo *win, bool select)
     if (!win->AsFixed())
         return;
 
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
         if (win->ctrl->ValidPageNo(pageNo)) {
@@ -183,7 +183,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
 
     PointI pt;
     bool zoomToPt = win->showSelection && win->selectionOnPage;
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
 
     // either scroll towards the center of the current selection
     if (zoomToPt) {
@@ -239,7 +239,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!dm->engine()->AllowsCopyingText())
         ShowNotification(win, _TR("Copying text was denied (copying as image only)"));
@@ -276,7 +276,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
     RenderedBitmap * bmp = dm->engine()->RenderBitmap(selOnPage->pageNo,
-        dm->ZoomReal(), dm->Rotation(), &selOnPage->rect, Target_Export);
+        dm->GetZoomReal(), dm->GetRotation(), &selOnPage->rect, Target_Export);
     if (bmp)
         CopyImageToClipboard(bmp->GetBitmap(), true);
     delete bmp;
@@ -301,7 +301,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
     if (!win->IsDocLoaded())
         return;
 
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
     if (textOnly) {
         int pageNo;
         for (pageNo = 1; !dm->GetPageInfo(pageNo)->shown; pageNo++);
@@ -346,12 +346,12 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
     CrashIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
     if (dx != 0 || dy != 0) {
         CrashIf(!win->AsFixed());
-        DisplayModel *dm = win->AsFixed()->model();
-        PointI oldOffset = dm->viewPort.TL();
+        DisplayModel *dm = win->AsFixed();
+        PointI oldOffset = dm->GetViewPort().TL();
         win->MoveDocBy(dx, dy);
 
-        dx = dm->viewPort.x - oldOffset.x;
-        dy = dm->viewPort.y - oldOffset.y;
+        dx = dm->GetViewPort().x - oldOffset.x;
+        dy = dm->GetViewPort().y - oldOffset.y;
         win->selectionRect.x -= dx;
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
@@ -370,7 +370,7 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 
     // Ctrl+drag forces a rectangular selection
     if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
-        DisplayModel *dm = win->AsFixed()->model();
+        DisplayModel *dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(PointI(x, y));
         if (dm->ValidPageNo(pageNo)) {
             PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
@@ -399,7 +399,7 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
     if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
         DeleteOldSelectionInfo(win, true);
     else if (win->mouseAction == MA_SELECTING) {
-        win->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed()->model(), win->selectionRect);
+        win->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
         win->showSelection = win->selectionOnPage != NULL;
     }
     win->RepaintAsync();

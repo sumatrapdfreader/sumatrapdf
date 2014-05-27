@@ -48,7 +48,7 @@ public:
 
     virtual void PrintCurrentPage(bool showUI) = 0;
     virtual void FindInCurrentPage() = 0;
-    virtual bool CanNavigate(int dir) = 0;
+    virtual bool CanNavigate(int dir) const = 0;
     virtual void Navigate(int dir) = 0;
     virtual void ZoomTo(float zoomLevel) = 0;
     virtual float GetZoom() = 0;

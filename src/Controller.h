@@ -37,7 +37,6 @@ public:
     virtual void RequestDelayedLayout(int delay) = 0;
 };
 
-class FixedPageUIController;
 class ChmUIController;
 class EbookUIController;
 
@@ -56,13 +55,13 @@ public:
     virtual WCHAR *GetProperty(DocumentProperty prop) = 0;
 
     // page navigation (stateful)
-    virtual int CurrentPageNo() = 0;
+    virtual int CurrentPageNo() const = 0;
     virtual void GoToPage(int pageNo, bool addNavPoint) = 0;
-    virtual bool CanNavigate(int dir) = 0;
+    virtual bool CanNavigate(int dir) const = 0;
     virtual void Navigate(int dir) = 0;
 
     // view settings
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true) = 0;
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) = 0;
     virtual DisplayMode GetDisplayMode() const = 0;
     virtual void SetPresentationMode(bool enable) = 0;
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) = 0;
@@ -116,29 +115,9 @@ public:
     }
 
     // for quick type determination and type-safe casting
-    virtual FixedPageUIController *AsFixed() { return NULL; }
+    virtual DisplayModel *AsFixed() { return NULL; }
     virtual ChmUIController *AsChm() { return NULL; }
     virtual EbookUIController *AsEbook() { return NULL; }
-};
-
-class Synchronizer;
-enum EngineType;
-
-class FixedPageUIController : public Controller {
-public:
-    explicit FixedPageUIController(ControllerCallback *cb);
-    virtual ~FixedPageUIController();
-
-    virtual DisplayModel *model() = 0;
-    virtual BaseEngine *engine() const = 0;
-
-    // controller-specific data (easier to save here than on WindowInfo)
-    EngineType engineType;
-    Vec<PageAnnotation> *userAnnots;
-    bool userAnnotsModified;
-    Synchronizer *pdfSync;
-
-    static FixedPageUIController *Create(BaseEngine *engine, ControllerCallback *cb);
 };
 
 class ChmEngine;

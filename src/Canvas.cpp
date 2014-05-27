@@ -9,13 +9,13 @@
 void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
 {
     CrashIf(!win->AsFixed());
-    DisplayModel *dm = win->AsFixed()->model();
+    DisplayModel *dm = win->AsFixed();
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
 
-    SizeI viewPort = dm->viewPort.Size();
+    SizeI viewPort = dm->GetViewPort().Size();
 
     if (viewPort.dx >= canvas.dx) {
         si.nPos = 0;
@@ -23,7 +23,7 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->viewPort.x;
+        si.nPos = dm->GetViewPort().x;
         si.nMin = 0;
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
@@ -37,12 +37,12 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
         si.nMax = 99;
         si.nPage = 100;
     } else {
-        si.nPos = dm->viewPort.y;
+        si.nPos = dm->GetViewPort().y;
         si.nMin = 0;
         si.nMax = canvas.dy - 1;
         si.nPage = viewPort.dy;
 
-        if (ZOOM_FIT_PAGE != dm->ZoomVirtual()) {
+        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
             // keep the top/bottom 5% of the previous page visible after paging down/up
             si.nPage = (UINT)(si.nPage * 0.95);
             si.nMax -= viewPort.dy - si.nPage;
@@ -86,7 +86,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (si.nPos != iVertPos)
-        win.AsFixed()->model()->ScrollYTo(si.nPos);
+        win.AsFixed()->ScrollYTo(si.nPos);
 }
 
 static void OnHScroll(WindowInfo& win, WPARAM wParam)
@@ -117,7 +117,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
 
     // If the position has changed, scroll the window and update it
     if (si.nPos != iVertPos)
-        win.AsFixed()->model()->ScrollXTo(si.nPos);
+        win.AsFixed()->ScrollXTo(si.nPos);
 }
 
 static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
@@ -214,7 +214,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     SetFocus(win.hwndFrame);
 
     AssertCrash(!win.linkOnLastButtonDown);
-    DisplayModel *dm = win.AsFixed()->model();
+    DisplayModel *dm = win.AsFixed();
     PageElement *pageEl = dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->GetType() == Element_Link)
         win.linkOnLastButtonDown = pageEl;
@@ -250,7 +250,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     else
         OnSelectionStop(&win, x, y, !didDragMouse);
 
-    DisplayModel *dm = win.AsFixed()->model();
+    DisplayModel *dm = win.AsFixed();
     PointD ptPage = dm->CvtFromScreen(PointI(x, y));
     // TODO: win.linkHandler->GotoLink might spin the event loop
     PageElement *link = win.linkOnLastButtonDown;
@@ -310,7 +310,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     if (dontSelect)
         return;
 
-    DisplayModel *dm = win.AsFixed()->model();
+    DisplayModel *dm = win.AsFixed();
     if (dm->IsOverText(PointI(x, y))) {
         int pageNo = dm->GetPageNoByPoint(PointI(x, y));
         if (win.ctrl->ValidPageNo(pageNo)) {
@@ -469,7 +469,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
     if (!gDebugShowLinks)
         return;
 
-    RectI viewPortRect(PointI(), dm.viewPort.Size());
+    RectI viewPortRect(PointI(), dm.GetViewPort().Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
     HGDIOBJ oldPen = SelectObject(hdc, pen);
 
@@ -495,7 +495,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
 
     DeletePen(SelectObject(hdc, oldPen));
 
-    if (dm.ZoomVirtual() == ZOOM_FIT_CONTENT) {
+    if (dm.GetZoomVirtual() == ZOOM_FIT_CONTENT) {
         // also display the content box when fitting content
         pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0x00, 0xff));
         oldPen = SelectObject(hdc, pen);
@@ -525,7 +525,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 {
     AssertCrash(win.AsFixed());
     if (!win.AsFixed()) return;
-    DisplayModel* dm = win.AsFixed()->model();
+    DisplayModel* dm = win.AsFixed();
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
@@ -555,13 +555,13 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(2);
         }
         SizeI size = dm->GetCanvasSize();
-        float percTop = 1.0f * dm->viewPort.y / size.dy;
-        float percBot = 1.0f * dm->viewPort.BR().y / size.dy;
+        float percTop = 1.0f * dm->GetViewPort().y / size.dy;
+        float percBot = 1.0f * dm->GetViewPort().BR().y / size.dy;
         if (!IsContinuous(dm->GetDisplayMode())) {
             percTop += dm->CurrentPageNo() - 1; percTop /= dm->PageCount();
             percBot += dm->CurrentPageNo() - 1; percBot /= dm->PageCount();
         }
-        SizeI vp = dm->viewPort.Size();
+        SizeI vp = dm->GetViewPort().Size();
         TRIVERTEX tv[4] = { { 0, 0 }, { vp.dx, vp.dy / 2 }, { 0, vp.dy / 2 }, { vp.dx, vp.dy } };
         GRADIENT_RECT gr[2] = { { 0, 1 }, { 2, 3 } };
         if (percTop < 0.5f)
@@ -585,7 +585,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     }
 
     bool rendering = false;
-    RectI screen(PointI(), dm->viewPort.Size());
+    RectI screen(PointI(), dm->GetViewPort().Size());
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
@@ -603,7 +603,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
         if (!dm->ShouldCacheRendering(pageNo)) {
-            dm->engine()->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+            dm->engine()->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->GetZoomReal(pageNo), dm->GetRotation());
         }
         else
             renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
@@ -693,7 +693,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
         break;
     case MA_IDLE:
         if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.AsFixed()) {
-            DisplayModel *dm = win.AsFixed()->model();
+            DisplayModel *dm = win.AsFixed();
             PointI pti(pt.x, pt.y);
             PageElement *pageEl = dm->GetElementAtPos(pti);
             if (pageEl) {
@@ -779,9 +779,9 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         si.fMask  = SIF_PAGE;
         GetScrollInfo(win.hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
         if (horizontal)
-            win.AsFixed()->model()->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
+            win.AsFixed()->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
         else
-            win.AsFixed()->model()->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+            win.AsFixed()->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
         return 0;
     }
 
@@ -888,7 +888,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                     // When we switch pages, go back to the initial scroll position
                     // and prevent further pan movement caused by the inertia
                     if (win.AsFixed())
-                        win.AsFixed()->model()->ScrollXTo(win.touchState.panScrollOrigX);
+                        win.AsFixed()->ScrollXTo(win.touchState.panScrollOrigX);
                     win.touchState.panStarted = false;
                 }
                 else if (win.AsFixed()) {
@@ -909,11 +909,11 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 // Playing with the app, I found that I often didn't go quit a full 90 or 180
                 // degrees. Allowing rotate without a full finger rotate seemed more natural.
                 if (degrees < -120 || degrees > 120)
-                    win.AsFixed()->model()->RotateBy(180);
+                    win.AsFixed()->RotateBy(180);
                 else if (degrees < -45)
-                    win.AsFixed()->model()->RotateBy(-90);
+                    win.AsFixed()->RotateBy(-90);
                 else if (degrees > 45)
-                    win.AsFixed()->model()->RotateBy(90);
+                    win.AsFixed()->RotateBy(90);
             }
             break;
 

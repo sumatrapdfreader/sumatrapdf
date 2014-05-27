@@ -502,8 +502,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
-    FixedPageUIController *ctrl = win->AsFixed();
-    DisplayModel *dm = ctrl->model();
+    DisplayModel *dm = win->AsFixed();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!dm->engine()->AllowsPrinting())
@@ -541,9 +540,9 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     PRINTPAGERANGE *ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
-    ppr->nToPage = ctrl->PageCount();
+    ppr->nToPage = dm->PageCount();
     pd.nMinPage = 1;
-    pd.nMaxPage = ctrl->PageCount();
+    pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
     Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv, defaultAsImage);
@@ -586,12 +585,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         goto Exit;
 
     if (pd.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr = { ctrl->CurrentPageNo(), ctrl->CurrentPageNo() };
+        PRINTPAGERANGE pr = { dm->CurrentPageNo(), dm->CurrentPageNo() };
         ranges.Append(pr);
     } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pd.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = { 1, ctrl->PageCount() };
+        PRINTPAGERANGE pr = { 1, dm->PageCount() };
         ranges.Append(pr);
     } else {
         assert(pd.nPageRanges > 0);
@@ -606,8 +605,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
-    PrintData *data = new PrintData(ctrl->engine(), &printerInfo, devMode, ranges, advanced,
-                                    dm->Rotation(), printSelection ? win->selectionOnPage : NULL);
+    PrintData *data = new PrintData(dm->engine(), &printerInfo, devMode, ranges, advanced,
+                                    dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
     if (devMode)
@@ -619,9 +618,9 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // unexpectedly deleted
     // TODO: instead prevent closing the document so that printing
     // can still happen on a separate thread and be interruptible
-    bool failedEngineClone = ctrl->engine() && !data->engine;
+    bool failedEngineClone = dm->engine() && !data->engine;
     if (failedEngineClone)
-        data->engine = ctrl->engine();
+        data->engine = dm->engine();
 
     if (!waitForCompletion && !failedEngineClone)
         PrintToDeviceOnThread(win, data);

@@ -46,7 +46,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
     if (Engine_ComicBook == win->GetEngineType()) {
-        bool mangaMode = win->AsFixed()->model()->GetDisplayR2L();
+        bool mangaMode = win->AsFixed()->GetDisplayR2L();
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
 }
@@ -528,7 +528,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!win->AsFixed())
         return;
 
-    PageElement *pageEl = win->AsFixed()->model()->GetElementAtPos(PointI(x, y));
+    PageElement *pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
     ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
     CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
