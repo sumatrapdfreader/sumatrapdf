@@ -350,13 +350,17 @@ GlobalPrefs = [
 		"if false, the menu bar will be hidden for all newly opened windows " +
 		"(use F9 to show it until the window closes or Alt to show it just briefly)",
 		expert=True, version="2.5"),
+	Field("ReloadModifiedDocuments", Bool, True,
+		"if true, a document will be reloaded automatically whenever it's changed " +
+		"(currently doesn't work for documents shown in the ebook UI)",
+		expert=True, version="2.5"),
 	Field("FullPathInTitle", Bool, False,
 		"if true, we show the full path to a file in the title bar",
 		expert=True, version="2.6"),
 	Field("UseTabs", Bool, True,
 		"if true, we use tabs",
 		expert=True, version="2.6"),
-	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
+	# the below prefs don't apply to EbookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
 		"the minimum and maximum allowed values (8.33 and 6400)",
@@ -366,6 +370,7 @@ GlobalPrefs = [
 		"zoom step size in percents relative to the current zoom level. " +
 		"if zero or negative, the values from ZoomLevels are used instead",
 		expert=True),
+	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these override the default settings in the Print dialog",
 		expert=True),
@@ -377,10 +382,6 @@ GlobalPrefs = [
 		"a whitespace separated list of passwords to try for opening a password protected document " +
 		"(passwords containing spaces must be quoted same as command line arguments)",
 		expert=True, version="2.4"),
-	Field("ReloadModifiedDocuments", Bool, True,
-		"if true, a document will be reloaded automatically whenever it's changed " +
-		"(currently doesn't work for documents shown in the ebook UI)",
-		expert=True, version="2.5"),
 	Field("CustomScreenDPI", Int, 0,
 		"actual resolution of the main screen in DPI (if this value " +
 		" isn't positive, the system's UI setting is used)",

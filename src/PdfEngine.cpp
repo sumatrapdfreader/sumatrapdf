@@ -4705,8 +4705,7 @@ bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
 
         // TODO: create Root/Info dictionary from engine properties
 
-        fz_write_options opts = { 0 };
-        pdf_write_document(doc, pathUtf8, &opts);
+        pdf_write_document(doc, pathUtf8, NULL);
     }
     fz_always(ctx) {
         fz_free_device(dev);
@@ -4715,8 +4714,10 @@ bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
         pdf_close_document(doc);
     }
     fz_catch(ctx) {
+        fz_free_context(ctx);
         return false;
     }
 
+    fz_free_context(ctx);
     return true;
 }
