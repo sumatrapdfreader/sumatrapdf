@@ -478,7 +478,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
         if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio)
             continue;
 
-        Vec<PageElement *> *els = dm.engine->GetElements(pageNo);
+        Vec<PageElement *> *els = dm.engine()->GetElements(pageNo);
         if (els) {
             for (size_t i = 0; i < els->Count(); i++) {
                 if (els->At(i)->GetType() == Element_Image)
@@ -505,7 +505,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
             if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
                 continue;
 
-            RectI rect = dm.CvtToScreen(pageNo, dm.engine->PageContentBox(pageNo));
+            RectI rect = dm.CvtToScreen(pageNo, dm.engine()->PageContentBox(pageNo));
             PaintRect(hdc, rect);
         }
 
@@ -529,7 +529,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
     bool paintOnBlackWithoutShadow = win.presentation ||
     // draw comic books and single images on a black background (without frame and shadow)
-                                     dm->engine->IsImageCollection();
+                                     dm->engine()->IsImageCollection();
     if (paintOnBlackWithoutShadow) {
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(WIN_COL_BLACK));
         FillRect(hdc, rcArea, brush);
@@ -597,13 +597,13 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
-        if (!dm->engine->IsImageCollection())
+        if (!dm->engine()->IsImageCollection())
             PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = 0;
         if (!dm->ShouldCacheRendering(pageNo)) {
-            dm->engine->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
+            dm->engine()->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->ZoomReal(pageNo), dm->Rotation());
         }
         else
             renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);

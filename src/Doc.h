@@ -75,10 +75,10 @@ public:
     // of a virtual EbookDoc interface that *Doc implement so
     // that the compiler can choose the correct method automatically
     const WCHAR *GetFilePath() const;
-    WCHAR *GetProperty(DocumentProperty prop);
-    const char *GetHtmlData(size_t &len);
-    size_t GetHtmlDataSize();
-    ImageData *GetCoverImage();
+    WCHAR *GetProperty(DocumentProperty prop) const;
+    const char *GetHtmlData(size_t &len) const;
+    size_t GetHtmlDataSize() const;
+    ImageData *GetCoverImage() const;
 
     static Doc CreateFromFile(const WCHAR *filePath);
     static bool IsSupportedFile(const WCHAR *filePath, bool sniff=false);

@@ -36,10 +36,10 @@ public:
     FpController(BaseEngine *engine, ControllerCallback *cb);
     virtual ~FpController() { delete dm; }
 
-    virtual const WCHAR *FilePath() const { return dm->engine->FileName(); }
-    virtual const WCHAR *DefaultFileExt() const { return dm->engine->GetDefaultFileExt(); }
-    virtual int PageCount() const { return dm->engine->PageCount(); }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return dm->engine->GetProperty(prop); }
+    virtual const WCHAR *FilePath() const { return engine()->FileName(); }
+    virtual const WCHAR *DefaultFileExt() const { return engine()->GetDefaultFileExt(); }
+    virtual int PageCount() const { return engine()->PageCount(); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return engine()->GetProperty(prop); }
 
     virtual int CurrentPageNo() { return dm->CurrentPageNo(); }
     virtual void GoToPage(int pageNo, bool addNavPoint) { dm->GoToPage(pageNo, 0, addNavPoint); }
@@ -54,17 +54,17 @@ public:
     virtual float GetNextZoomStep(float towards) const { return dm->NextZoomStep(towards); }
     virtual void SetViewPortSize(SizeI size) { dm->ChangeViewPortSize(size); }
 
-    virtual bool HasTocTree() const { return dm->engine->HasTocTree(); }
-    virtual DocTocItem *GetTocTree() { return dm->engine->GetTocTree(); }
+    virtual bool HasTocTree() const { return engine()->HasTocTree(); }
+    virtual DocTocItem *GetTocTree() { return engine()->GetTocTree(); }
     virtual void GotoLink(PageDestination *dest) { cb->GotoLink(dest); }
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return dm->engine->GetNamedDest(name); }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return engine()->GetNamedDest(name); }
 
     virtual void UpdateDisplayState(DisplayState *ds) { dm->DisplayStateFromModel(ds); }
     virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(dm, size, tnCb); }
 
-    virtual bool HasPageLabels() const { return dm->engine->HasPageLabels(); }
-    virtual WCHAR *GetPageLabel(int pageNo) const { return dm->engine->GetPageLabel(pageNo); }
-    virtual int GetPageByLabel(const WCHAR *label) const { return dm->engine->GetPageByLabel(label); }
+    virtual bool HasPageLabels() const { return engine()->HasPageLabels(); }
+    virtual WCHAR *GetPageLabel(int pageNo) const { return engine()->GetPageLabel(pageNo); }
+    virtual int GetPageByLabel(const WCHAR *label) const { return engine()->GetPageByLabel(label); }
 
     virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= PageCount(); }
     virtual bool GoToNextPage() { return dm->GoToNextPage(0); }
@@ -76,7 +76,7 @@ public:
 
     // FixedPageUIController
     virtual DisplayModel *model() { return dm; }
-    virtual BaseEngine *engine() { return dm->engine; }
+    virtual BaseEngine *engine() const { return dm->engine(); }
 
     // DisplayModelCallback
     virtual void Repaint() { cb->Repaint(); }
@@ -334,7 +334,7 @@ public:
     EbController(EbookControls *ctrls, ControllerCallback *cb);
     virtual ~EbController();
 
-    virtual const WCHAR *FilePath() const { return ctrl->GetDoc().GetFilePath(); }
+    virtual const WCHAR *FilePath() const { return doc()->GetFilePath(); }
     virtual const WCHAR *DefaultFileExt() const { return path::GetExt(FilePath()); }
     virtual int PageCount() const { return (int)ctrl->GetMaxPageCount(); }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc()->GetProperty(prop); }
@@ -368,7 +368,7 @@ public:
     virtual EbookUIController *AsEbook() { return this; }
 
     // EbookUIController
-    virtual Doc *doc() { return (Doc *)&ctrl->GetDoc(); }
+    virtual const Doc *doc() const { return ctrl->doc(); }
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) {
         return handleMsgs ? ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled) : 0;

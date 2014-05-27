@@ -237,7 +237,7 @@ void EbookController::CloseCurrentDocument()
     ctrls->pagesLayout->GetPage2()->SetPage(NULL);
     StopFormattingThread();
     DeletePages(&pages);
-    doc.Delete();
+    _doc.Delete();
     pageSize = SizeI(0, 0);
 }
 
@@ -316,7 +316,7 @@ void EbookController::TriggerBookFormatting()
         return;
     }
     CrashIf(size.dx < 100 || size.dy < 40);
-    if (!doc.IsDocLoaded())
+    if (!_doc.IsDocLoaded())
         return;
 
     if (pageSize == size) {
@@ -331,8 +331,8 @@ void EbookController::TriggerBookFormatting()
     CrashIf(incomingPages);
     incomingPages = new Vec<HtmlPage*>(1024);
 
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
-    formattingThread = new EbookFormattingThread(doc, args, this, currPageReparseIdx, cb);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(_doc, size.dx, size.dy, &textAllocator);
+    formattingThread = new EbookFormattingThread(_doc, args, this, currPageReparseIdx, cb);
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();
     UpdateStatus();
@@ -464,7 +464,7 @@ void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
     if ((size_t)currPageReparseIdx >= newDoc.GetHtmlDataSize())
         currPageReparseIdx = 0;
     CloseCurrentDocument();
-    doc = newDoc;
+    _doc = newDoc;
     TriggerBookFormatting();
 }
 
@@ -562,15 +562,15 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc, SizeI size)
 
 RenderedBitmap *EbookController::CreateThumbnail(SizeI size)
 {
-    CrashIf(!doc.IsDocLoaded());
+    CrashIf(!_doc.IsDocLoaded());
     // if there is cover image, we use it to generate thumbnail by scaling
     // image width to thumbnail dx, scaling height proportionally and using
     // as much of it as fits in thumbnail dy
-    RenderedBitmap *bmp = ThumbFromCoverPage(doc, size);
+    RenderedBitmap *bmp = ThumbFromCoverPage(_doc, size);
     if (!bmp) {
         // no cover image so generate thumbnail from first page
         SizeI pageSize(size.dx * 3, size.dy * 3);
-        bmp = RenderFirstDocPageToBitmap(doc, pageSize, size, 10);
+        bmp = RenderFirstDocPageToBitmap(_doc, pageSize, size, 10);
     }
     return bmp;
 }

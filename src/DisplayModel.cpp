@@ -78,8 +78,8 @@ int NormalizeRotation(int rotation)
 
 void DisplayModel::DisplayStateFromModel(DisplayState *ds)
 {
-    if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName()))
-        str::ReplacePtr(&ds->filePath, engine->FileName());
+    if (!ds->filePath || !str::EqI(ds->filePath, _engine->FileName()))
+        str::ReplacePtr(&ds->filePath, _engine->FileName());
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
@@ -96,20 +96,20 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     ds->displayR2L = displayR2L;
 
     free(ds->decryptionKey);
-    ds->decryptionKey = engine->GetDecryptionKey();
+    ds->decryptionKey = _engine->GetDecryptionKey();
 }
 
 SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)
 {
     PageInfo *pageInfo = GetPageInfo(pageNo);
     if (fitToContent && pageInfo->contentBox.IsEmpty()) {
-        pageInfo->contentBox = engine->PageContentBox(pageNo);
+        pageInfo->contentBox = _engine->PageContentBox(pageNo);
         if (pageInfo->contentBox.IsEmpty())
             return PageSizeAfterRotation(pageNo);
     }
 
     RectD box = fitToContent ? pageInfo->contentBox : pageInfo->page;
-    return engine->Transform(box, pageNo, 1.0, rotation).Size();
+    return _engine->Transform(box, pageNo, 1.0, rotation).Size();
 }
 
 /* given 'columns' and an absolute 'pageNo', return the number of the first
@@ -141,7 +141,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(BaseEngine *engine, DisplayModelCallback *cb) :
-    engine(engine), dmCb(cb),
+    _engine(engine), dmCb(cb),
     pagesInfo(NULL), displayMode(DM_AUTOMATIC), startPage(1),
     zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),
     rotation(0), dpiFactor(1.0f), displayR2L(false),
@@ -149,9 +149,9 @@ DisplayModel::DisplayModel(BaseEngine *engine, DisplayModelCallback *cb) :
     presDisplayMode(DM_AUTOMATIC), navHistoryIx(0),
     dontRenderFlag(false)
 {
-    CrashIf(!engine || engine->PageCount() <= 0);
+    CrashIf(!_engine || _engine->PageCount() <= 0);
 
-    if (!engine->IsImageCollection()) {
+    if (!_engine->IsImageCollection()) {
         windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
         pageSpacing = gGlobalPrefs->fixedPageUI.pageSpacing;
     }
@@ -165,9 +165,9 @@ DisplayModel::DisplayModel(BaseEngine *engine, DisplayModelCallback *cb) :
     pageSpacing.dx += 4; pageSpacing.dy += 4;
 #endif
 
-    textCache = new PageTextCache(engine);
-    textSelection = new TextSelection(engine, textCache);
-    textSearch = new TextSearch(engine, textCache);
+    textCache = new PageTextCache(_engine);
+    textSelection = new TextSelection(_engine, textCache);
+    textSearch = new TextSearch(_engine, textCache);
 }
 
 DisplayModel::~DisplayModel()
@@ -178,7 +178,7 @@ DisplayModel::~DisplayModel()
     delete textSearch;
     delete textSelection;
     delete textCache;
-    delete engine;
+    delete _engine;
     free(pagesInfo);
 }
 
@@ -195,13 +195,13 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, SizeI viewPort, int screenDPI)
 {
     totalViewPortSize = viewPort;
-    dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
+    dpiFactor = 1.0f * screenDPI / _engine->GetFileDPI();
     if (ValidPageNo(newStartPage))
         startPage = newStartPage;
 
     displayMode = newDisplayMode;
     presDisplayMode = newDisplayMode;
-    PageLayoutType layout = engine->PreferredLayout();
+    PageLayoutType layout = _engine->PreferredLayout();
     if (DM_AUTOMATIC == displayMode) {
         switch (layout & ~Layout_R2L) {
         case Layout_Single: displayMode = DM_CONTINUOUS; break;
@@ -226,9 +226,9 @@ void DisplayModel::BuildPagesInfo()
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     RectD defaultRect;
     if (unitSystem[0] == '0') // metric A4 size
-        defaultRect = RectD(0, 0, 21.0 / 2.54 * engine->GetFileDPI(), 29.7 / 2.54 * engine->GetFileDPI());
+        defaultRect = RectD(0, 0, 21.0 / 2.54 * _engine->GetFileDPI(), 29.7 / 2.54 * _engine->GetFileDPI());
     else // imperial letter size
-        defaultRect = RectD(0, 0, 8.5 * engine->GetFileDPI(), 11 * engine->GetFileDPI());
+        defaultRect = RectD(0, 0, 8.5 * _engine->GetFileDPI(), 11 * _engine->GetFileDPI());
 
     int columns = ColumnsFromDisplayMode(displayMode);
     int newStartPage = startPage;
@@ -236,7 +236,7 @@ void DisplayModel::BuildPagesInfo()
         newStartPage--;
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
-        pageInfo->page = engine->PageMediabox(pageNo);
+        pageInfo->page = _engine->PageMediabox(pageNo);
         // layout pages with an empty mediabox as A4 size (resp. letter size)
         if (pageInfo->page.IsEmpty())
             pageInfo->page = defaultRect;
@@ -330,10 +330,10 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
         for (int i = first; i <= last; i++) {
             PageInfo *pageInfo = GetPageInfo(i);
             if (pageInfo->contentBox.IsEmpty())
-                pageInfo->contentBox = engine->PageContentBox(i);
+                pageInfo->contentBox = _engine->PageContentBox(i);
 
-            RectD pageBox = engine->Transform(pageInfo->page, i, 1.0, rotation);
-            RectD contentBox = engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
+            RectD pageBox = _engine->Transform(pageInfo->page, i, 1.0, rotation);
+            RectD contentBox = _engine->Transform(pageInfo->contentBox, i, 1.0, rotation);
             if (contentBox.IsEmpty())
                 contentBox = pageBox;
 
@@ -748,7 +748,7 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
     if (!pageInfo)
         return PointI();
 
-    PointD p = engine->Transform(pt, pageNo, zoomReal, rotation);
+    PointD p = _engine->Transform(pt, pageNo, zoomReal, rotation);
     // don't add the full 0.5 for rounding to account for precision errors
     p.x += 0.499 + pageInfo->pageOnScreen.x;
     p.y += 0.499 + pageInfo->pageOnScreen.y;
@@ -776,7 +776,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
     // don't add the full 0.5 for rounding to account for precision errors
     PointD p = PointD(pt.x - 0.499 - pageInfo->pageOnScreen.x,
                       pt.y - 0.499 - pageInfo->pageOnScreen.y);
-    return engine->Transform(p, pageNo, zoomReal, rotation, true);
+    return _engine->Transform(p, pageNo, zoomReal, rotation, true);
 }
 
 RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
@@ -798,7 +798,7 @@ PageElement *DisplayModel::GetElementAtPos(PointI pt)
         return NULL;
 
     PointD pos = CvtFromScreen(pt, pageNo);
-    return engine->GetElementAtPos(pageNo, pos);
+    return _engine->GetElementAtPos(pageNo, pos);
 }
 
 // note: returns false for pages that haven't been rendered yet
@@ -896,13 +896,13 @@ RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target)
     if (Target_View == target) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (pageInfo->contentBox.IsEmpty())
-            pageInfo->contentBox = engine->PageContentBox(pageNo);
+            pageInfo->contentBox = _engine->PageContentBox(pageNo);
         cbox = pageInfo->contentBox;
     }
     else
-        cbox = engine->PageContentBox(pageNo, target);
+        cbox = _engine->PageContentBox(pageNo, target);
 
-    return engine->Transform(cbox, pageNo, zoomReal, rotation);
+    return _engine->Transform(cbox, pageNo, zoomReal, rotation);
 }
 
 /* get the (screen) coordinates of the point where a page's actual
@@ -1020,7 +1020,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         ZoomTo(ZOOM_FIT_PAGE);
     }
     else {
-        if (engine && engine->IsImageCollection())
+        if (_engine && _engine->IsImageCollection())
             windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
         else
             windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
@@ -1520,12 +1520,12 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
 bool DisplayModel::ShouldCacheRendering(int pageNo)
 {
     // recommend caching for all documents which are non-trivial to render
-    if (!engine->IsImageCollection())
+    if (!_engine->IsImageCollection())
         return true;
 
     // recommend caching large images (mainly photos) as well, as shrinking
     // them for every UI update (WM_PAINT) can cause notable lags
     // TODO: stretching small images even also causes minor lags
-    RectD page = engine->PageMediabox(pageNo);
+    RectD page = _engine->PageMediabox(pageNo);
     return page.dx * page.dy > 1024 * 1024;
 }

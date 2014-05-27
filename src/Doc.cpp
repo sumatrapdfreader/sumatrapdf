@@ -134,7 +134,7 @@ const WCHAR *Doc::GetFilePath() const
     return GetFilePathFromDoc();
 }
 
-WCHAR *Doc::GetProperty(DocumentProperty prop)
+WCHAR *Doc::GetProperty(DocumentProperty prop) const
 {
     switch (type) {
     case Doc_Epub:
@@ -151,7 +151,7 @@ WCHAR *Doc::GetProperty(DocumentProperty prop)
     }
 }
 
-const char *Doc::GetHtmlData(size_t &len)
+const char *Doc::GetHtmlData(size_t &len) const
 {
     switch (type) {
     case Doc_Epub:
@@ -166,7 +166,7 @@ const char *Doc::GetHtmlData(size_t &len)
     }
 }
 
-size_t Doc::GetHtmlDataSize()
+size_t Doc::GetHtmlDataSize() const
 {
     switch (type) {
     case Doc_Epub:
@@ -181,7 +181,7 @@ size_t Doc::GetHtmlDataSize()
     }
 }
 
-ImageData *Doc::GetCoverImage()
+ImageData *Doc::GetCoverImage() const
 {
     switch (type) {
     case Doc_Fb2:

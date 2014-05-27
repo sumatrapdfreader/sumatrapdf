@@ -130,7 +130,7 @@ public:
     virtual ~FixedPageUIController();
 
     virtual DisplayModel *model() = 0;
-    virtual BaseEngine *engine() = 0;
+    virtual BaseEngine *engine() const = 0;
 
     // controller-specific data (easier to save here than on WindowInfo)
     EngineType engineType;
@@ -159,7 +159,7 @@ class EbookUIController : public Controller {
 public:
     explicit EbookUIController(ControllerCallback *cb) : Controller(cb) { }
 
-    virtual Doc *doc() = 0;
+    virtual const Doc *doc() const = 0;
 
     virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) = 0;
     virtual void EnableMessageHandling(bool enable) = 0;

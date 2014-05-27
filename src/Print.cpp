@@ -506,7 +506,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     DisplayModel *dm = ctrl->model();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->engine->AllowsPrinting())
+    if (!dm->engine()->AllowsPrinting())
         return;
 #endif
 
@@ -523,7 +523,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // the Print dialog allows access to the file system, so fall back
     // to printing the entire document without dialog if that isn't desired
     if (!HasPermission(Perm_DiskAccess)) {
-        PrintFile(dm->engine);
+        PrintFile(dm->engine());
         return;
     }
 

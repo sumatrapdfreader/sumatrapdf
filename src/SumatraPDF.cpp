@@ -682,15 +682,15 @@ public:
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb)
 {
-    RectD pageRect = dm->engine->PageMediabox(1);
+    RectD pageRect = dm->engine()->PageMediabox(1);
     if (pageRect.IsEmpty())
         return;
 
-    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0);
+    pageRect = dm->engine()->Transform(pageRect, 1, 1.0f, 0);
     float zoom = size.dx / (float)pageRect.dx;
     if (pageRect.dy > (float)size.dy / zoom)
         pageRect.dy = (float)size.dy / zoom;
-    pageRect = dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
+    pageRect = dm->engine()->Transform(pageRect, 1, 1.0f, 0, true);
 
     RenderingCallback *callback = new ThumbnailRenderingTask(tnCb);
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
@@ -1037,7 +1037,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
 
     if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
         CrashIf(!dm);
-        int res = Synchronizer::Create(args.fileName, dm->engine, &win->AsFixed()->pdfSync);
+        int res = Synchronizer::Create(args.fileName, dm->engine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -2162,7 +2162,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
     else if (ctrl->AsChm())
         type = Engine_Chm2;
     else if (ctrl->AsEbook()) {
-        Doc *doc = ctrl->AsEbook()->doc();
+        const Doc *doc = ctrl->AsEbook()->doc();
         type = doc->AsEpub() ? Engine_Epub : doc->AsFb2() ? Engine_Fb2 : doc->AsMobi() ? Engine_Mobi : Engine_None;
     }
     switch (type) {

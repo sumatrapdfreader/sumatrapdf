@@ -79,9 +79,11 @@ public:
     DisplayModel(BaseEngine *engine, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
+    BaseEngine *engine() const { return _engine; }
+
     /* number of pages in the document */
-    int  PageCount() const { return engine->PageCount(); }
-    bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
+    int  PageCount() const { return _engine->PageCount(); }
+    bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= _engine->PageCount(); }
 
     /* current rotation selected by user */
     int Rotation() const { return rotation; }
@@ -100,8 +102,6 @@ public:
     float ZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
 
     int CurrentPageNo() const;
-
-    BaseEngine *    engine;
 
     PageTextCache * textCache;
     TextSelection * textSelection;
@@ -194,6 +194,8 @@ protected:
 
     void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
+
+    BaseEngine *    _engine;
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      pagesInfo;

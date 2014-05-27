@@ -32,7 +32,7 @@ class EbookController : public sigslot::has_slots
 {
     EbookControls * ctrls;
 
-    Doc             doc;
+    Doc             _doc;
 
     // callback for interacting with UI code
     EbookControllerCallback *cb;
@@ -82,7 +82,7 @@ public:
     size_t GetMaxPageCount();
     void GoToPage(int newPageNo);
     void GoToLastPage();
-    const Doc&  GetDoc() const { return doc; }
+    const Doc *doc() const { return &_doc; }
     int  CurrPageReparseIdx() const { return currPageReparseIdx; }
 
     void SetSinglePage();

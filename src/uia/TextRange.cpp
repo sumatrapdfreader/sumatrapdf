@@ -440,7 +440,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
         return S_OK;
     }
 
-    TextSelection selection(document->GetDM()->engine, document->GetDM()->textCache);
+    TextSelection selection(document->GetDM()->engine(), document->GetDM()->textCache);
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 

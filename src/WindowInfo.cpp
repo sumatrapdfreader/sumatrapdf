@@ -329,7 +329,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     if (rect.IsEmpty()) {
         // PDF: /XYZ top left
         // scroll to rect.TL()
-        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
+        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
         scroll = scrollD.Convert<int>();
 
         // default values for the coordinates mean: keep the current position
@@ -342,15 +342,15 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     }
     else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
-        RectD rectD = dm->engine->Transform(rect, pageNo, dm->ZoomReal(), dm->Rotation());
+        RectD rectD = dm->engine()->Transform(rect, pageNo, dm->ZoomReal(), dm->Rotation());
         scroll = rectD.TL().Convert<int>();
 
-        // Rect<float> rectF = dm->engine->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
+        // Rect<float> rectF = dm->engine()->Transform(rect, pageNo, 1.0, dm->rotation()).Convert<float>();
         // zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
     }
     else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
-        PointD scrollD = dm->engine->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
+        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->ZoomReal(), dm->Rotation());
         scroll.y = scrollD.Convert<int>().y;
 
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
