@@ -1428,7 +1428,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         args.allowFailure = true;
         win = args.win;
 
-        openNewTab = win && win->tabsVisible;
+        openNewTab = !win || win->tabsVisible;
         if (openNewTab)
             SaveCurrentTabData(args.win);
     }
