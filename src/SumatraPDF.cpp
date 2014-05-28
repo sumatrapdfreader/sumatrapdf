@@ -3152,7 +3152,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     bool isShift = IsShiftPressed();
 
     if (win->tabsVisible && isCtrl && VK_TAB == key) {
-        TabsOnCtrlTab(win);
+        TabsOnCtrlTab(win, isShift);
         return true;
     }
 
@@ -3423,6 +3423,18 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
 #endif
     }
 }
+
+static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
+{
+    // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
+    if (win.tabsVisible && ('1' <= key && key <= '9')) {
+        TabsSelect(&win, key < '9' ? key - '1' : TabsGetCount(&win) - 1);
+        return true;
+    }
+
+    return false;
+}
+
 
 static void UpdateSidebarTitles(WindowInfo& win)
 {
@@ -4152,6 +4164,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
                 gSuppressAltKey = false;
                 return 0;
             }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_SYSCHAR:
+            if (win && FrameOnSysChar(*win, wParam))
+                return 0;
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_SYSCOMMAND:

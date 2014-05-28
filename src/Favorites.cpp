@@ -614,7 +614,7 @@ static LRESULT OnFavTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
             TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
                 if (win->tabsVisible && IsCtrlPressed())
-                    TabsOnCtrlTab(win);
+                    TabsOnCtrlTab(win, IsShiftPressed());
                 else
                     AdvanceFocus(win);
                 return 1;

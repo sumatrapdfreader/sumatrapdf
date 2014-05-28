@@ -17,7 +17,17 @@ using namespace Gdiplus;
 #include "WinUtil.h"
 
 
+// Comment this for default drawing.
+#define OWN_TAB_DRAWING
+
 #ifdef OWN_TAB_DRAWING
+#define TAB_COLOR_BG     COLOR_BTNFACE
+#define TAB_COLOR_TEXT   COLOR_BTNTEXT
+
+#define T_CLOSING   (TCN_LAST + 1)
+#define T_CLOSE     (TCN_LAST + 2)
+#define T_DRAG      (TCN_LAST + 3)
+
 class TabPainter
 {
     WStrVec text;
@@ -805,23 +815,32 @@ void UpdateTabWidth(WindowInfo *win)
 }
 
 
-// Selects the next tab.
-void TabsOnCtrlTab(WindowInfo *win)
+// Selects the given tab (0-based index).
+void TabsSelect(WindowInfo *win, int tabIndex)
 {
     int count = TabsGetCount(win);
-    if (count < 2) return;
-
+    if (count < 2 || tabIndex < 0 || tabIndex >= count)
+        return;
     NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
-
     if (TabsOnNotify(win, (LPARAM)&ntd))
         return;
+    int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
+    if (prevIndex != -1) {
+        ntd.code = TCN_SELCHANGE;
+        TabsOnNotify(win, (LPARAM)&ntd);
+    }
+}
 
-    int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    //if (-1 == current) return;
 
-    TabCtrl_SetCurSel(win->hwndTabBar, ++current == count ? 0 : current);
-    ntd.code = TCN_SELCHANGE;
-    TabsOnNotify(win, (LPARAM)&ntd);
+// Selects the next (or previous) tab.
+void TabsOnCtrlTab(WindowInfo *win, bool reverse)
+{
+    int count = TabsGetCount(win);
+    if (count < 2)
+        return;
+
+    int next = (TabCtrl_GetCurSel(win->hwndTabBar) + (reverse ? -1 : 1) + count) % count;
+    TabsSelect(win, next);
 }
 
 

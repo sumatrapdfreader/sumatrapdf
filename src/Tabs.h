@@ -9,18 +9,6 @@
 #define TAB_WIDTH        200
 #define TAB_HEIGHT       TABBAR_HEIGHT - 1
 
-// Comment this for default drawing.
-#define OWN_TAB_DRAWING
-
-#ifdef OWN_TAB_DRAWING
-#define TAB_COLOR_BG     COLOR_BTNFACE
-#define TAB_COLOR_TEXT   COLOR_BTNTEXT
-
-#define T_CLOSING   (TCN_LAST + 1)
-#define T_CLOSE     (TCN_LAST + 2)
-#define T_DRAG      (TCN_LAST + 3)
-#endif //OWN_TAB_DRAWING
-
 struct PageAnnotation;
 class WindowInfo;
 class Controller;
@@ -53,7 +41,8 @@ void TabsOnCloseDoc(WindowInfo *win);
 void TabsOnCloseWindow(WindowInfo *win);
 void TabsOnChangedDoc(WindowInfo *win);
 LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1=-1, int tab2=-1);
-void TabsOnCtrlTab(WindowInfo *win);
+void TabsSelect(WindowInfo *win, int tabIndex);
+void TabsOnCtrlTab(WindowInfo *win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(WindowInfo *win);
 void SwapTabs(WindowInfo *win, int tab1, int tab2);
