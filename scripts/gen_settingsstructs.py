@@ -330,6 +330,8 @@ GlobalPrefs = [
 	Field("ReuseInstance", Bool, False,
 		"if true, we'll always open files using existing SumatraPDF process",
 		expert=True),
+	EmptyLine(),
+
 	Struct("FixedPageUI", FixedPageUI,
 		"customization options for PDF, XPS, DjVu and PostScript UI",
 		expert=True),
@@ -373,6 +375,8 @@ GlobalPrefs = [
 		"zoom step size in percents relative to the current zoom level. " +
 		"if zero or negative, the values from ZoomLevels are used instead",
 		expert=True),
+	EmptyLine(),
+
 	# the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these override the default settings in the Print dialog",
@@ -381,6 +385,10 @@ GlobalPrefs = [
 		"customization options for how we show forward search results (used from " +
 		"LaTeX editors)",
 		expert=True),
+	Struct("AnnotationDefaults", AnnotationDefaults,
+		"default values for user added annotations in FixedPageUI documents " +
+		"(preliminary and still subject to change)",
+		expert=True, prerelease=True),
 	Field("DefaultPasswords", String, None,
 		"a whitespace separated list of passwords to try for opening a password protected document " +
 		"(passwords containing spaces must be quoted same as command line arguments)",
@@ -389,10 +397,6 @@ GlobalPrefs = [
 		"actual resolution of the main screen in DPI (if this value " +
 		" isn't positive, the system's UI setting is used)",
 		expert=True, version="2.5"),
-	Struct("AnnotationDefaults", AnnotationDefaults,
-		"default values for user added annotations in FixedPageUI documents " +
-		"(preliminary and still subject to change)",
-		expert=True, prerelease=True),
 	EmptyLine(),
 
 	Field("RememberStatePerDocument", Bool, True,

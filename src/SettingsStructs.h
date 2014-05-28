@@ -256,6 +256,9 @@ struct GlobalPrefs {
     // customization options for how we show forward search results (used
     // from LaTeX editors)
     ForwardSearch forwardSearch;
+    // default values for user added annotations in FixedPageUI documents
+    // (preliminary and still subject to change)
+    AnnotationDefaults annotationDefaults;
     // a whitespace separated list of passwords to try for opening a
     // password protected document (passwords containing spaces must be
     // quoted same as command line arguments)
@@ -263,9 +266,6 @@ struct GlobalPrefs {
     // actual resolution of the main screen in DPI (if this value isn't
     // positive, the system's UI setting is used)
     int customScreenDPI;
-    // default values for user added annotations in FixedPageUI documents
-    // (preliminary and still subject to change)
-    AnnotationDefaults annotationDefaults;
     // if true, we store display settings for each document separately
     // (i.e. everything after UseDefaultState in FileStates)
     bool rememberStatePerDocument;
@@ -491,6 +491,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,       false                                                                                                                 },
+    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,     (intptr_t)&gFixedPageUIInfo                                                                                           },
     { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,     (intptr_t)&gEbookUIInfo                                                                                               },
     { offsetof(GlobalPrefs, comicBookUI),              Type_Struct,     (intptr_t)&gComicBookUIInfo                                                                                           },
@@ -503,11 +504,12 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, showSingleTab),            Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, zoomLevels),               Type_FloatArray, (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
     { offsetof(GlobalPrefs, zoomIncrement),            Type_Float,      (intptr_t)"0"                                                                                                         },
+    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, printerDefaults),          Type_Struct,     (intptr_t)&gPrinterDefaultsInfo                                                                                       },
     { offsetof(GlobalPrefs, forwardSearch),            Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
+    { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
     { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, customScreenDPI),          Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, uiLanguage),               Type_Utf8String, NULL                                                                                                                  },
@@ -535,7 +537,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 48, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0UseTabs\0ShowSingleTab\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0DefaultPasswords\0CustomScreenDPI\0AnnotationDefaults\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 50, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0UseTabs\0ShowSingleTab\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 
