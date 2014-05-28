@@ -68,6 +68,7 @@ enum MenuToolbarFlags {
 class WindowInfo;
 class Favorites;
 class DisplayModel;
+struct TabData;
 
 // all defined in SumatraPDF.cpp
 extern HINSTANCE                ghinst;
@@ -102,6 +103,7 @@ void  ShowOrHideToolbarGlobally();
 void  ShowOrHideToolbarForWindow(WindowInfo *win);
 void  UpdateDocumentColors();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
+void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabData *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);

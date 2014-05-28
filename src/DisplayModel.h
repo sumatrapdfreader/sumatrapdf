@@ -193,6 +193,8 @@ public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool            dontRenderFlag;
 
+    bool            GetPresentationMode() const { return presentationMode; }
+
 protected:
 
     void            BuildPagesInfo();

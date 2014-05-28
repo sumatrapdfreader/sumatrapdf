@@ -473,6 +473,27 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     UpdateSidebarDisplayState(win, ds);
 }
 
+void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabData *td)
+{
+    RememberDefaultWindowPosition(*win);
+    if (!td->ctrl)
+        return;
+    DisplayState *ds = gFileHistory.Find(td->filePath);
+    if (!ds)
+        return;
+    td->ctrl->UpdateDisplayState(ds);
+    UpdateDisplayStateWindowRect(*win, *ds, false);
+    if (win->ctrl == td->ctrl) {
+        UpdateSidebarDisplayState(win, ds);
+        if (win->presentation != PM_DISABLED)
+            ds->showToc = win->tocBeforeFullScreen;
+    }
+    else {
+        *ds->tocState = td->tocState;
+        ds->showToc = win->isFullScreen ? false : td->showToc;
+    }
+}
+
 bool IsUIRightToLeft()
 {
     return trans::IsCurrLangRtl();
@@ -1575,9 +1596,12 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
     UpdateToolbarAndScrollbarState(*win);
     UpdateToolbarState(win);
-    // TODO: handle presentation mode (in which the sidebar usually is hidden)
+
     win->tocState = tdata->tocState;
-    SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
+    if (win->isFullScreen || win->presentation != PM_DISABLED)
+        win->tocBeforeFullScreen = tdata->showToc;
+    else
+        SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
     bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
@@ -1587,6 +1611,8 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
         DisplayModel *dm = win->AsFixed();
         dm->SetScrollState(dm->GetScrollState());
+        if (dm->GetPresentationMode() != (win->presentation != PM_DISABLED))
+            dm->SetPresentationMode(!dm->GetPresentationMode());
     }
     else if (win->AsChm()) {
         win->ctrl->GoToPage(win->ctrl->CurrentPageNo(), false);

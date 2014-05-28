@@ -56,7 +56,6 @@ void TabsOnCtrlTab(WindowInfo *win);
 
 void ShowOrHideTabbar(WindowInfo *win, int command);
 void UpdateTabWidth(WindowInfo *win);
-void ManageFullScreen(WindowInfo *win, bool exitFullScreen);
 void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
 #endif

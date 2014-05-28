@@ -549,7 +549,7 @@ void CreateTabbar(WindowInfo *win)
 void SaveTabData(WindowInfo *win, TabData *tdata)
 {
     tdata->tocState = win->tocState;
-    tdata->showToc = win->tocVisible;
+    tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
     tdata->ctrl = win->ctrl;
     if (!tdata->title)
         tdata->title = win::GetText(win->hwndFrame);
@@ -564,10 +564,7 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
     if (*tdata == NULL)
         *tdata = new TabData();
 
-    UpdateCurrentFileDisplayStateForWin(win);
-    // This update is already done in UpdateCurrentFileDisplayStateForWin, 
-    // if there is record found in the gFileHistory.
-    if (win->tocLoaded && !gFileHistory.Find(win->loadedFilePath)) {
+    if (win->tocLoaded) {
         win->tocState.Reset();
         HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
         if (hRoot)
@@ -587,7 +584,8 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
 // This happens when a new document is loaded or when another tab is selected.
 void SaveCurrentTabData(WindowInfo *win)
 {
-    if (!win) return;
+    if (!win)
+        return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     if (current != -1) {
@@ -619,7 +617,8 @@ TabData *GetTabData(HWND tabbarHwnd, int tabIndex)
 
 int FindTabIndex(HWND tabbarHwnd, TabData *tdata)
 {
-    if (!tabbarHwnd || !tdata) return -1;
+    if (!tabbarHwnd || !tdata)
+        return -1;
     int count = TabCtrl_GetItemCount(tabbarHwnd);
 
     for (int i = 0; i < count; i++) {
@@ -698,9 +697,12 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
         if (cleanUp) {
             for (int i = 0; i < count; i++) {
                 tdata = GetTabData(win->hwndTabBar, i);
-                if (tdata)
+                if (tdata) {
+                    UpdateTabFileDisplayStateForWin(win, tdata);
                     DeleteTabData(tdata, win->ctrl != tdata->ctrl);
+                }
             }
+            win->tabSelectionHistory->Reset();
             TabCtrl_DeleteAllItems(win->hwndTabBar);
             return;
         }
@@ -708,15 +710,13 @@ void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
         int current = TabCtrl_GetCurSel(win->hwndTabBar);
         tdata = GetTabData(win->hwndTabBar, current);
         win->tabSelectionHistory->Remove(tdata);
+        UpdateTabFileDisplayStateForWin(win, tdata);
         DeleteTabData(tdata, false);
         TabCtrl_DeleteItem(win->hwndTabBar, current);
         UpdateTabWidth(win);
         if (count > 1) {
             tdata = win->tabSelectionHistory->Pop();
-            ManageFullScreen(win, true);
-            UpdateCurrentFileDisplayStateForWin(win);
             LoadModelIntoTab(win, tdata);
-            ManageFullScreen(win, false);
             TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win->hwndTabBar, tdata));
         }
     }
@@ -733,7 +733,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     case TCN_SELCHANGING:
         // TODO: Should we allow the switch of the tab if we are in process of printing?
 
-        ManageFullScreen(win, true);
         SaveCurrentTabData(win);
         return FALSE;
 
@@ -741,7 +740,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
             LoadModelIntoTab(win, GetTabData(win->hwndTabBar, current));
-            ManageFullScreen(win, false);
         }
         break;
 
@@ -759,6 +757,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
             else {
                 TabData *tdata = GetTabData(win->hwndTabBar, tab1);
                 win->tabSelectionHistory->Remove(tdata);
+                UpdateTabFileDisplayStateForWin(win, tdata);
                 DeleteTabData(tdata, true);
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
@@ -811,24 +810,6 @@ void TabsOnCtrlTab(WindowInfo *win)
     TabCtrl_SetCurSel(win->hwndTabBar, ++current == count ? 0 : current);
     ntd.code = TCN_SELCHANGE;
     TabsOnNotify(win, (LPARAM)&ntd);
-}
-
-// TODO: why can't we switch tabs in fullscreen/presentation mode?
-void ManageFullScreen(WindowInfo *win, bool exitFullScreen)
-{
-    // TODO: shouldn't these rather be per window?
-    static bool prevFullScreen, prevPresentation;
-
-    if (exitFullScreen) {
-        prevFullScreen = win->isFullScreen;
-        prevPresentation = win->presentation != PM_DISABLED;
-        if (prevFullScreen || prevPresentation)
-            ExitFullScreen(*win);
-    }
-    else {     // enter fullscreen
-        if (prevFullScreen || prevPresentation)
-            EnterFullScreen(*win, prevPresentation);
-    }
 }
 
 
