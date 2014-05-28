@@ -1076,6 +1076,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->AsEbook()->EnableMessageHandling(true);
 
 Error:
+    // remove the scrollbars before EbookController starts layouting
+    UpdateToolbarAndScrollbarState(*win);
+
     if (args.isNewWindow || args.placeWindow && state) {
         if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {
             // Make sure it doesn't have a position like outside of the screen etc.
@@ -1106,7 +1109,6 @@ Error:
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     win->RedrawAll(true);
 
-    UpdateToolbarAndScrollbarState(*win);
     if (!win->IsDocLoaded()) {
         win->RedrawAll();
         return false;
@@ -1484,6 +1486,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     HwndPasswordUI pwdUI(win->hwndFrame);
     args.fileName = fullPath;
     args.allowFailure = true;
+    // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = true;
     bool loaded = LoadDocIntoWindow(args, &pwdUI);
     // don't fail if a user tries to load an SMX file instead
@@ -1499,9 +1502,8 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     // insert new tab item for the loaded document
-    if (!args.forceReuse) {
+    if (!args.forceReuse)
         TabsOnLoadedDoc(win);
-    }
     else
         TabsOnChangedDoc(win);
 
