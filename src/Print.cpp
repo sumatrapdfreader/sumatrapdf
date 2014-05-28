@@ -499,6 +499,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
+    if (win->AsEbook()) {
+        // TODO: use EbookEngine for printing?
+        return;
+    }
 
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;

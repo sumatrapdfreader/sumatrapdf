@@ -54,11 +54,11 @@ void MenuUpdateDisplayMode(WindowInfo* win)
 static MenuDef menuDefFile[] = {
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
-    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
 #ifdef ENABLE_SAVE_SHORTCUT
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
 #else
-    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS },
 #endif
     { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
@@ -69,8 +69,8 @@ static MenuDef menuDefFile[] = {
     { _TRN("Open in &Microsoft XPS-Viewer"),IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Open in &Microsoft HTML Help"), IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     // further entries are added if specified in gGlobalPrefs.vecCommandLine
-    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS },
+    { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
@@ -175,7 +175,7 @@ static MenuDef menuDefDebug[] = {
 };
 #endif
 
-// the whole menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
+// the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
@@ -403,7 +403,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         IDM_GOTO_PAGE, IDM_FIND_FIRST, IDM_SAVEAS, IDM_SAVEAS_BOOKMARK, IDM_SEND_BY_EMAIL,
         IDM_SELECT_ALL, IDM_COPY_SELECTION, IDM_PROPERTIES, IDM_VIEW_PRESENTATION_MODE,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
-        IDM_RENAME_FILE,
+        IDM_RENAME_FILE, IDM_DEBUG_ANNOTATION,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
@@ -468,6 +468,8 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
+    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->engine()->SupportsAnnotation() &&
+                                                           win->showSelection && win->selectionOnPage);
 #endif
 }
 
@@ -594,7 +596,7 @@ void OnMenuZoom(WindowInfo* win, UINT menuId)
 
 void OnMenuCustomZoom(WindowInfo* win)
 {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded() || win->AsEbook())
         return;
 
     float zoom = win->ctrl->GetZoomVirtual();
@@ -606,7 +608,8 @@ void OnMenuCustomZoom(WindowInfo* win)
 static void RebuildFileMenu(WindowInfo *win, HMENU menu)
 {
     win::menu::Empty(menu);
-    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->AsChm() ? MF_NOT_FOR_CHM : 0);
+    int filter = win->AsChm() ? MF_NOT_FOR_CHM : win->AsEbook() ? MF_NOT_FOR_EBOOK_UI : 0;
+    BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, filter);
     AppendRecentFilesToMenu(menu);
     AppendExternalViewersToMenu(menu, win->loadedFilePath);
 

@@ -298,7 +298,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         win->AsChm()->SelectAll();
         return;
     }
-    if (!win->IsDocLoaded())
+    if (!win->AsFixed())
         return;
 
     DisplayModel *dm = win->AsFixed();

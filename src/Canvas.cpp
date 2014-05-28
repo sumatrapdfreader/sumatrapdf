@@ -1327,7 +1327,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         if (win.tabsVisible) {
             TabData *td;
             for (int i = 0; (td = GetTabData(&win, i)) != NULL; i++) {
-                if (td->ctrl->AsEbook())
+                if (td->ctrl && td->ctrl->AsEbook())
                     td->ctrl->AsEbook()->TriggerLayout();
             }
         }

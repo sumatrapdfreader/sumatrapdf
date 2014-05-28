@@ -2477,6 +2477,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     RenameFileInHistory(srcFilePath, newPath);
 
     LoadArgs args(dstFileName, &win);
+    args.forceReuse = true;
     LoadDocument(args);
 }
 
@@ -4021,7 +4022,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
                 win->AsChm()->CopySelection();
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(win);
-            else
+            else if (win->AsFixed())
                 ShowNotification(win, _TR("Select content with Ctrl+left mouse button"));
             break;
 
