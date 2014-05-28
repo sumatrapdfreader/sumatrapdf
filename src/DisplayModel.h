@@ -11,8 +11,6 @@
 
 #define INVALID_PAGE_NO     -1
 
-extern bool gPredictiveRender;
-
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */

@@ -914,7 +914,6 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
 
 void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCache)
 {
-    // gPredictiveRender = false;
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
     gGlobalPrefs->ebookUI.useFixedPageUI = true;

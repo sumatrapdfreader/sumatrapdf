@@ -55,7 +55,7 @@
 // doesn't map to chm features well.
 
 // if true, we pre-render the pages right before and after the visible pages
-bool gPredictiveRender = true;
+static bool gPredictiveRender = true;
 
 static int ColumnsFromDisplayMode(DisplayMode displayMode)
 {

@@ -162,6 +162,8 @@ static WStrVec                      gAllowedFileTypes;
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void CloseDocumentInWindow(WindowInfo *win);
+static void EnterFullScreen(WindowInfo& win, bool presentation=false);
+static void ExitFullScreen(WindowInfo& win);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -1736,13 +1738,11 @@ static void RememberCurrentlyOpenedFiles()
         if (win->hwndTabBar) {
             TabData *td;
             for (int j = 0; (td = GetTabData(win->hwndTabBar, j)) != NULL; j++) {
-                if (td->ctrl && (ds = gFileHistory.Find(td->ctrl->FilePath())) != NULL) {
-                    cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
-                }
+                cmdLine.Append('"'); cmdLine.Append(td->filePath); cmdLine.Append(L"\" ");
             }
         }
-        else if ((ds = gFileHistory.Find(win->loadedFilePath)) != NULL) {
-            cmdLine.Append('"'); cmdLine.Append(ds->filePath); cmdLine.Append(L"\" ");
+        else {
+            cmdLine.Append('"'); cmdLine.Append(win->loadedFilePath); cmdLine.Append(L"\" ");
         }
     }
     if (cmdLine.Size() > 0) {
@@ -2977,7 +2977,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         win.ctrl->GoToPage(newPageNo, true);
 }
 
-void EnterFullScreen(WindowInfo& win, bool presentation)
+static void EnterFullScreen(WindowInfo& win, bool presentation)
 {
     if (!HasPermission(Perm_FullscreenAccess))
         return;
@@ -3039,7 +3039,7 @@ void EnterFullScreen(WindowInfo& win, bool presentation)
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
-void ExitFullScreen(WindowInfo& win)
+static void ExitFullScreen(WindowInfo& win)
 {
     if (!win.isFullScreen && !win.presentation)
         return;
