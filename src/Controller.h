@@ -34,7 +34,7 @@ public:
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
     virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb) = 0;
-    // ChmEngine //
+    // ChmModel //
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
     // an HtmlWindow and thus outside the reach of the main UI)

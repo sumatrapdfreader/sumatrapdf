@@ -932,10 +932,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         str::ReplacePtr(&win->loadedFilePath, NULL);
     }
     */
-    DisplayModel *dm = NULL;
     if (win->ctrl) {
         if (win->AsFixed()) {
-            dm = win->AsFixed();
+            DisplayModel *dm = win->AsFixed();
             dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(),
                                        gGlobalPrefs->customScreenDPI > 0 ? gGlobalPrefs->customScreenDPI : win->dpi);
             // TODO: also expose Manga Mode for image folders?
@@ -945,7 +944,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
-
+            // reload user annotations
+            dm->userAnnots = LoadFileModifications(args.fileName);
+            dm->userAnnotsModified = false;
+            dm->engine()->UpdateUserAnnotations(dm->userAnnots);
             // tell UI Automation about content change
             if (win->uia_provider)
                 win->uia_provider->OnDocumentLoad(dm);
@@ -957,7 +959,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         else
             CrashIf(!win->AsEbook());
         delete prevCtrl;
-    } else if (args.allowFailure) {
+    } else if (args.allowFailure || !prevCtrl) {
+        CrashIf(!args.allowFailure);
         delete prevCtrl;
         const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
         ScopedMem<WCHAR> title2(str::Format(L"%s - %s", titlePath, SUMATRA_WINDOW_TITLE));
@@ -969,12 +972,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->ctrl = prevCtrl;
     }
 
-    if (win->ctrl != prevCtrl && win->AsFixed()) {
-        win->AsFixed()->userAnnots = LoadFileModifications(args.fileName);
-        win->AsFixed()->userAnnotsModified = false;
-        win->AsFixed()->engine()->UpdateUserAnnotations(win->AsFixed()->userAnnots);
-    }
-
     if (state) {
         zoomVirtual = prefs::conv::ToZoom(state->zoom);
         if (win->ctrl->ValidPageNo(startPage)) {
@@ -983,7 +980,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
-            // else let dm->Relayout() scroll to fit the page (again)
+            // else let win->AsFixed()->Relayout() scroll to fit the page (again)
         } else if (startPage > win->ctrl->PageCount()) {
             ss.page = win->ctrl->PageCount();
         }
@@ -991,8 +988,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->tocState = *state->tocState;
     }
 
-    if (dm)
-        dm->Relayout(zoomVirtual, rotation);
+    if (win->AsFixed())
+        win->AsFixed()->Relayout(zoomVirtual, rotation);
     else
         win->ctrl->SetZoomVirtual(zoomVirtual);
 
@@ -1034,8 +1031,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     win::SetText(win->hwndFrame, title);
 
     if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
-        CrashIf(!dm);
-        int res = Synchronizer::Create(args.fileName, dm->engine(), &win->AsFixed()->pdfSync);
+        CrashIf(!win->AsFixed());
+        CrashIf(win->AsFixed()->pdfSync && win->ctrl != prevCtrl);
+        delete win->AsFixed()->pdfSync;
+        int res = Synchronizer::Create(args.fileName, win->AsFixed()->engine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -1066,8 +1065,8 @@ Error:
         // has not been determined yet
         // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
         // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->AsChm());
-        if ((args.showWin || ss.page != 1) && dm)
-            dm->SetScrollState(ss);
+        if ((args.showWin || ss.page != 1) && win->AsFixed())
+            win->AsFixed()->SetScrollState(ss);
         else if (win->AsChm())
             win->ctrl->GoToPage(ss.page, false);
         UpdateToolbarState(win);
@@ -1124,6 +1123,9 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         DeleteDisplayState(ds);
         return;
     }
+
+    if (win->tabsVisible)
+        TabsOnChangedDoc(win);
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
@@ -1424,7 +1426,6 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         else if (!args.win->tabsVisible) {
             args.win = NULL;
         }
-        args.allowFailure = true;
         win = args.win;
 
         openNewTab = !win || win->tabsVisible;
@@ -4184,13 +4185,12 @@ InitMouseWheelInfo:
 
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
-            if (!win)
+            if (!win || !win->IsDocLoaded())
                 break;
-
             if (win->AsChm()) {
                 return win->AsChm()->PassUIMsg(msg, wParam, lParam);
             }
-
+            CrashIf(!win->AsFixed() && !win->AsEbook());
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)

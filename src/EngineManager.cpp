@@ -34,7 +34,7 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
            );
 }
 
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, EngineType *typeOut, bool useAlternateChmEngine, bool enableEbookEngines)
+BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, EngineType *typeOut, bool enableChm2Engine, bool enableEbookEngines)
 {
     CrashIf(!filePath);
 
@@ -63,7 +63,7 @@ RetrySniffing:
     } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_PS) {
         engine = PsEngine::CreateFromFile(filePath);
         engineType = Engine_PS;
-    } else if (useAlternateChmEngine && Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
+    } else if (enableChm2Engine && Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
         engine = Chm2Engine::CreateFromFile(filePath);
         engineType = Engine_Chm2;
     } else if (!enableEbookEngines) {
