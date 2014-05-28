@@ -94,7 +94,7 @@ public:
     // table of contents
     virtual bool HasTocTree() const { return _engine->HasTocTree(); }
     virtual DocTocItem *GetTocTree() { return _engine->GetTocTree(); }
-    virtual void ScrollToLink(PageDestination *dest) { CrashIf(true); }
+    virtual void ScrollToLink(PageDestination *dest);
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
 
     // state export
@@ -154,8 +154,6 @@ public:
     bool            FirstBookPageVisible() const;
     bool            LastBookPageVisible() const;
 
-    void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
-
     void            ScrollXTo(int xOff);
     void            ScrollXBy(int dx);
     void            ScrollYTo(int yOff);
@@ -170,8 +168,6 @@ public:
     WCHAR *         GetTextInRegion(int pageNo, RectD region);
     bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
-
-    const WindowMargin *GetWindowMargin() const { return &windowMargin; }
 
     int             GetPageNoByPoint(PointI pt);
     PointI          CvtToScreen(int pageNo, PointD pt);
@@ -206,11 +202,11 @@ protected:
     PointI          GetContentStart(int pageNo);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
-
     void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
     void            CalcZoomVirtual(float zoomVirtual);
     float           GetZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
+    void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            GoToPrevPage(int scrollY);
     int             GetPageNextToPoint(PointI pt);
 

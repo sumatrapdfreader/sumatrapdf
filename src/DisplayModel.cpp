@@ -1262,7 +1262,7 @@ void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
     // zoomTo expects a zoomVirtual, so undo the dpiFactor here
     float newZoom = GetZoomAbsolute() * zoomFactor;
     newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
-    //lf("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f", dm->zoomReal, zoomFactor, newZoom);
+    //lf("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f", zoomReal, zoomFactor, newZoom);
     ZoomTo(newZoom, fixPt);
 }
 
@@ -1539,4 +1539,56 @@ bool DisplayModel::ShouldCacheRendering(int pageNo)
     // TODO: stretching small images even also causes minor lags
     RectD page = _engine->PageMediabox(pageNo);
     return page.dx * page.dy > 1024 * 1024;
+}
+
+void DisplayModel::ScrollToLink(PageDestination *dest)
+{
+    CrashIf(!dest || dest->GetDestPageNo() <= 0);
+
+    PointI scroll(-1, 0);
+    RectD rect = dest->GetDestRect();
+    int pageNo = dest->GetDestPageNo();
+
+    if (rect.IsEmpty()) {
+        // PDF: /XYZ top left
+        // scroll to rect.TL()
+        PointD scrollD = _engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        scroll = scrollD.Convert<int>();
+
+        // default values for the coordinates mean: keep the current position
+        if (DEST_USE_DEFAULT == rect.x)
+            scroll.x = -1;
+        if (DEST_USE_DEFAULT == rect.y) {
+            PageInfo *pageInfo = GetPageInfo(CurrentPageNo());
+            scroll.y = -(pageInfo->pageOnScreen.y - windowMargin.top);
+        }
+    }
+    else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
+        // PDF: /FitR left bottom right top
+        RectD rectD = _engine->Transform(rect, pageNo, zoomReal, rotation);
+        scroll = rectD.TL().Convert<int>();
+
+        // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
+        // zoom = 100.0f * min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
+    }
+    else if (rect.y != DEST_USE_DEFAULT) {
+        // PDF: /FitH top  or  /FitBH top
+        PointD scrollD = _engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
+        scroll.y = scrollD.Convert<int>().y;
+
+        // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
+    }
+    // else if (Fit || FitV) zoom = ZOOM_FIT_PAGE
+    // else if (FitB || FitBV) zoom = ZOOM_FIT_CONTENT
+    /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
+    if (zoom != INVALID_ZOOM) {
+        // TODO: adjust the zoom level before calculating the scrolling coordinates
+        zoomTo(zoom);
+        UpdateToolbarState(owner);
+    }
+    // */
+    // TODO: prevent scroll.y from getting too large?
+    if (scroll.y < 0)
+        scroll.y = 0; // Adobe Reader never shows the previous page
+    GoToPage(pageNo, scroll.y, true, scroll.x);
 }

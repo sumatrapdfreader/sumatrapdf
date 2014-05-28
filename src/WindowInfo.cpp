@@ -209,16 +209,9 @@ bool WindowInfo::CreateUIAProvider()
     return true;
 }
 
-BaseEngine *LinkHandler::engine() const
-{
-    if (!owner || !owner->ctrl || !owner->ctrl->AsFixed())
-        return NULL;
-    return owner->ctrl->AsFixed()->engine();
-}
-
 void LinkHandler::GotoLink(PageDestination *link)
 {
-    assert(owner && owner->linkHandler == this);
+    CrashIf(!owner || owner->linkHandler != this);
     if (!link || !owner->IsDocLoaded())
         return;
 
@@ -303,62 +296,14 @@ void LinkHandler::GotoLink(PageDestination *link)
 
 void LinkHandler::ScrollTo(PageDestination *dest)
 {
-    assert(owner && owner->linkHandler == this);
+    CrashIf(!owner || owner->linkHandler != this);
+    if (!dest || !owner->IsDocLoaded())
+        return;
+
     int pageNo = dest->GetDestPageNo();
-    if (pageNo <= 0)
-        return;
-
-    if (!owner->AsFixed()) {
+    if (pageNo > 0)
         owner->ctrl->ScrollToLink(dest);
-        return;
-    }
 
-    DisplayModel *dm = owner->AsFixed();
-    PointI scroll(-1, 0);
-    RectD rect = dest->GetDestRect();
-
-    if (rect.IsEmpty()) {
-        // PDF: /XYZ top left
-        // scroll to rect.TL()
-        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->GetZoomReal(), dm->GetRotation());
-        scroll = scrollD.Convert<int>();
-
-        // default values for the coordinates mean: keep the current position
-        if (DEST_USE_DEFAULT == rect.x)
-            scroll.x = -1;
-        if (DEST_USE_DEFAULT == rect.y) {
-            PageInfo *pageInfo = dm->GetPageInfo(dm->CurrentPageNo());
-            scroll.y = -(pageInfo->pageOnScreen.y - dm->GetWindowMargin()->top);
-        }
-    }
-    else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
-        // PDF: /FitR left bottom right top
-        RectD rectD = dm->engine()->Transform(rect, pageNo, dm->GetZoomReal(), dm->GetRotation());
-        scroll = rectD.TL().Convert<int>();
-
-        // Rect<float> rectF = dm->engine()->Transform(rect, pageNo, 1.0, dm->GetRotation()).Convert<float>();
-        // zoom = 100.0f * min(owner->canvasRc.dx / rectF.dx, owner->canvasRc.dy / rectF.dy);
-    }
-    else if (rect.y != DEST_USE_DEFAULT) {
-        // PDF: /FitH top  or  /FitBH top
-        PointD scrollD = dm->engine()->Transform(rect.TL(), pageNo, dm->GetZoomReal(), dm->GetRotation());
-        scroll.y = scrollD.Convert<int>().y;
-
-        // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
-    }
-    // else if (Fit || FitV) zoom = ZOOM_FIT_PAGE
-    // else if (FitB || FitBV) zoom = ZOOM_FIT_CONTENT
-    /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
-    if (zoom != INVALID_ZOOM) {
-        // TODO: adjust the zoom level before calculating the scrolling coordinates
-        dm->zoomTo(zoom);
-        UpdateToolbarState(owner);
-    }
-    // */
-    // TODO: prevent scroll.y from getting too large?
-    if (scroll.y < 0)
-        scroll.y = 0; // Adobe Reader never shows the previous page
-    dm->GoToPage(pageNo, scroll.y, true, scroll.x);
 }
 
 void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
@@ -454,7 +399,7 @@ PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, b
 
 void LinkHandler::GotoNamedDest(const WCHAR *name)
 {
-    assert(owner && owner->linkHandler == this);
+    CrashIf(!owner || owner->linkHandler != this);
     if (!owner->ctrl)
         return;
 

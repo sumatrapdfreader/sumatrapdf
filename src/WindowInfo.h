@@ -231,7 +231,6 @@ public:
 
 class LinkHandler {
     WindowInfo *owner;
-    BaseEngine *engine() const;
 
     void ScrollTo(PageDestination *dest);
     void LaunchFile(const WCHAR *path, PageDestination *link);
