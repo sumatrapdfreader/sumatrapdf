@@ -1324,9 +1324,15 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case EBOOK_LAYOUT_TIMER_ID:
         KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
-        // TODO: handle background tabs
-        if (win.AsEbook())
-            win.AsEbook()->OnLayoutTimer();
+        if (win.tabsVisible) {
+            TabData *td;
+            for (int i = 0; (td = GetTabData(&win, i)) != NULL; i++) {
+                if (td->ctrl->AsEbook())
+                    td->ctrl->AsEbook()->TriggerLayout();
+            }
+        }
+        else if (win.AsEbook())
+            win.AsEbook()->TriggerLayout();
         break;
     }
 }

@@ -802,7 +802,14 @@ public:
 
     virtual void Execute() {
         if (WindowInfoStillValid(win)) {
-            CrashIf(!win->AsEbook());
+#ifdef DEBUG
+            TabData *td = NULL;
+            for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+                if (td->ctrl == ctrl)
+                    break;
+            }
+            CrashIf(!td);
+#endif
             ctrl->HandlePagesFromEbookLayout(data);
         }
     }
@@ -1065,8 +1072,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
 
     // reallow resizing/relayout/repaining
-    if (win->ctrl->AsEbook())
-        win->ctrl->AsEbook()->EnableMessageHandling(true);
+    if (win->AsEbook())
+        win->AsEbook()->EnableMessageHandling(true);
 
 Error:
     if (args.isNewWindow || args.placeWindow && state) {

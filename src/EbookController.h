@@ -65,7 +65,7 @@ public:
     void UpdateDocumentColors();
     void RequestRepaint();
     void HandlePagesFromEbookLayout(EbookFormattingData *ebookLayout);
-    void OnLayoutTimer();
+    void TriggerLayout();
     void SetDoc(Doc newDoc, int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
 
     // call SetDoc before using this EbookController
@@ -102,7 +102,6 @@ protected:
 
     Vec<HtmlPage*> *GetPages();
     void        UpdateStatus();
-    void        TriggerBookFormatting();
     bool        FormattingInProgress() const { return formattingThread != NULL; }
     void        StopFormattingThread();
     void        CloseCurrentDocument();

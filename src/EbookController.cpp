@@ -311,7 +311,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
     delete ft;
 }
 
-void EbookController::TriggerBookFormatting()
+void EbookController::TriggerLayout()
 {
     Size s = ctrls->pagesLayout->GetPage1()->GetDrawableSize();
     SizeI size(s.Width, s.Height);
@@ -324,11 +324,11 @@ void EbookController::TriggerBookFormatting()
         return;
 
     if (pageSize == size) {
-        //lf("EbookController::TriggerBookFormatting() - skipping layout because same as last size");
+        //lf("EbookController::TriggerLayout() - skipping layout because same as last size");
         return;
     }
 
-    //lf("(%3d,%3d) EbookController::TriggerBookFormatting",size.dx, size.dy);
+    //lf("(%3d,%3d) EbookController::TriggerLayout",size.dx, size.dy);
     pageSize = size; // set it early to prevent re-doing layout at the same size
 
     StopFormattingThread();
@@ -340,11 +340,6 @@ void EbookController::TriggerBookFormatting()
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();
     UpdateStatus();
-}
-
-void EbookController::OnLayoutTimer()
-{
-    TriggerBookFormatting();
 }
 
 void EbookController::SizeChangedPage(Control *c, int dx, int dy)
@@ -481,7 +476,7 @@ void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg, DisplayMode dis
     if (DM_AUTOMATIC == displayMode)
         displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     SetDisplayMode(displayMode);
-    TriggerBookFormatting();
+    TriggerLayout();
     UpdateStatus();
 }
 
