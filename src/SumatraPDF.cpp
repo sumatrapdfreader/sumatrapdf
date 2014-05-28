@@ -1145,13 +1145,10 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     args.placeWindow = false;
     if (!LoadDocIntoWindow(args, &pwdUI, ds)) {
         DeleteDisplayState(ds);
-        if (win->tabsVisible)
-            TabsOnChangedDoc(win);
+        TabsOnChangedDoc(win);
         return;
     }
-
-    if (win->tabsVisible)
-        TabsOnChangedDoc(win);
+    TabsOnChangedDoc(win);
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
@@ -1257,9 +1254,8 @@ static WindowInfo* CreateWindowInfo()
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         win->hwndCanvas, NULL, ghinst, NULL);
 
+    CreateTabbar(win);
     CreateToolbar(win);
-    if (gGlobalPrefs->useTabs)
-        CreateTabbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
@@ -1444,19 +1440,12 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         // modify the args so that we always reuse the same window
         if (!args.win) {
             // TODO: enable the tab bar if tabs haven't been initialized
-            if (gWindows.Count() && gWindows.At(0)->tabsVisible) {
-                args.win = gWindows.At(0);
+            if (gWindows.Count() > 0) {
+                win = args.win = gWindows.Last();
                 args.isNewWindow = false;
             }
         }
-        else if (!args.win->tabsVisible) {
-            args.win = NULL;
-        }
-        win = args.win;
-
-        openNewTab = !win || win->tabsVisible;
-        if (openNewTab)
-            SaveCurrentTabData(args.win);
+        SaveCurrentTabData(args.win);
     }
 
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
@@ -1474,9 +1463,6 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             RememberFavTreeExpansionState(currWin);
             win->expandedFavorites = currWin->expandedFavorites;
         }
-    } else if (!win->IsAboutWindow() && !win->IsDocLoaded() && !openNewTab) {
-        // reuse the window if it only contains an error message
-        args.forceReuse = true;
     }
 
     CrashIf(openNewTab && args.forceReuse);
@@ -1506,9 +1492,10 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     // insert new tab item for the loaded document
-    if (openNewTab)
+    if (!args.forceReuse) {
         TabsOnLoadedDoc(win);
-    else if (args.forceReuse && win->tabsVisible)
+    }
+    else
         TabsOnChangedDoc(win);
 
     if (!loaded) {
@@ -1737,7 +1724,7 @@ static void RememberCurrentlyOpenedFiles()
         WindowInfo *win = gWindows.At(i);
         if (win->hwndTabBar) {
             TabData *td;
-            for (int j = 0; (td = GetTabData(win->hwndTabBar, j)) != NULL; j++) {
+            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
                 cmdLine.Append('"'); cmdLine.Append(td->filePath); cmdLine.Append(L"\" ");
             }
         }
@@ -2056,10 +2043,8 @@ static void OnMenuExit()
         AbortFinding(win);
         AbortPrinting(win);
 
-        if (win->hwndTabBar) {
-            TabsOnCloseWindow(win, true);
-            SendMessage(win->hwndTabBar, WM_DESTROY, 0, 0);
-        }
+        TabsOnCloseWindow(win);
+        SendMessage(win->hwndTabBar, WM_DESTROY, 0, 0);
     }
 
     prefs::Save();
@@ -2137,11 +2122,10 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         // TODO: warn about unsaved changes
     }
 
-    if (win->tabsVisible) {
-        TabsOnCloseWindow(win, quitIfLast);
-        if (!quitIfLast && TabCtrl_GetItemCount(win->hwndTabBar))
-            return;
-    }
+    TabsOnCloseDoc(win);
+    // don't proceed if there are still other tabs in this window
+    if (TabsGetCount(win) > 0)
+        return;
 
     if (win->AsFixed())
         win->AsFixed()->dontRenderFlag = true;
@@ -2175,9 +2159,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     } else if (lastWindow && !quitIfLast) {
         CrashIf(!gWindows.Contains(win));
         UpdateToolbarAndScrollbarState(*win);
-
-        if (win->tabsVisible)
-            ShowOrHideTabbar(win, SW_HIDE);
+        UpdateTabWidth(win);
     }
 }
 
@@ -2715,6 +2697,14 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     LoadArgs args(files.At(index), &win);
     args.forceReuse = true;
     LoadDocument(args);
+}
+
+void ShowOrHideSingleTabGlobally()
+{
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        UpdateTabWidth(win);
+    }
 }
 
 // scrolls half a page down/up (needed for Shift+Up/Down)

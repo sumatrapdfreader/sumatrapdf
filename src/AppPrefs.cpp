@@ -367,7 +367,7 @@ bool Reload()
 
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
-    bool useTabs = gGlobalPrefs->useTabs;
+    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab;
 
     gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
@@ -386,9 +386,8 @@ bool Reload()
     if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage))
         SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
 
-    if (gGlobalPrefs->useTabs != useTabs) {
-        // TODO: enable/disable tabs (for single tab windows)
-    }
+    if (showSingleTab != (gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab))
+        ShowOrHideSingleTabGlobally();
     if (gGlobalPrefs->showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
 

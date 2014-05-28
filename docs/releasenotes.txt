@@ -10,7 +10,7 @@ Next version:
   * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
 * deprecated the browser plugin (remains installed if used)
 * support LZMA in Comic Book (CBZ) files
-* new advanced settings: UseTabs (to be exposed eventually), FullPathInTitle
+* new advanced settings: UseTabs (to be exposed eventually), ShowSingleTab, FullPathInTitle
 
 2.5.2 (2014-05-13)
 

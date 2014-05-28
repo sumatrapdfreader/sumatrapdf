@@ -42,19 +42,19 @@ struct TabData
 void SaveTabData(WindowInfo *win, TabData *tdata);
 void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata);
 void SaveCurrentTabData(WindowInfo *win);
-TabData *GetTabData(HWND tabbarHwnd, int tabIndex);
+int TabsGetCount(WindowInfo *win);
+TabData *GetTabData(WindowInfo *win, int tabIndex);
 void DeleteTabData(TabData *tdata, bool deleteModel);
 void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
 
 void CreateTabbar(WindowInfo *win);
-// TODO: rename to TabCreateForDoc, TabDestroy and TabRefresh?
 void TabsOnLoadedDoc(WindowInfo *win);
-void TabsOnCloseWindow(WindowInfo *win, bool cleanUp);
+void TabsOnCloseDoc(WindowInfo *win);
+void TabsOnCloseWindow(WindowInfo *win);
 void TabsOnChangedDoc(WindowInfo *win);
 LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1=-1, int tab2=-1);
 void TabsOnCtrlTab(WindowInfo *win);
-
-void ShowOrHideTabbar(WindowInfo *win, int command);
+// also shows/hides the tabbar when necessary
 void UpdateTabWidth(WindowInfo *win);
 void SwapTabs(WindowInfo *win, int tab1, int tab2);
 

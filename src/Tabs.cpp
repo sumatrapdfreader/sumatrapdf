@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Tabs.h"
 
+#include "AppPrefs.h"
 #include "ChmModel.h"
 #include "Controller.h"
 using namespace Gdiplus;
@@ -540,7 +541,6 @@ void CreateTabbar(WindowInfo *win)
     SetWindowFont(win->hwndTabBar, gDefaultGuiFont, FALSE);
     TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
 
-    win->tabsVisible = true;
     win->tabSelectionHistory = new Vec<TabData *>();
 }
 
@@ -604,25 +604,30 @@ void SaveCurrentTabData(WindowInfo *win)
 }
 
 
+int TabsGetCount(WindowInfo *win)
+{
+    if (!win)
+        return -1;
+    return TabCtrl_GetItemCount(win->hwndTabBar);
+}
+
+
 // Gets the TabData pointer from the lParam member of the TCITEM structure of the tab.
-TabData *GetTabData(HWND tabbarHwnd, int tabIndex)
+TabData *GetTabData(WindowInfo *win, int tabIndex)
 {
     TCITEM tcs;
     tcs.mask = TCIF_PARAM;
-    if (TabCtrl_GetItem(tabbarHwnd, tabIndex, &tcs))
+    if (TabCtrl_GetItem(win->hwndTabBar, tabIndex, &tcs))
         return (TabData *)tcs.lParam;
     return NULL;
 }
 
 
-int FindTabIndex(HWND tabbarHwnd, TabData *tdata)
+static int FindTabIndex(WindowInfo *win, TabData *tdata)
 {
-    if (!tabbarHwnd || !tdata)
-        return -1;
-    int count = TabCtrl_GetItemCount(tabbarHwnd);
-
+    int count = TabsGetCount(win);
     for (int i = 0; i < count; i++) {
-        if (tdata == GetTabData(tabbarHwnd, i))
+        if (tdata == GetTabData(win, i))
             return i;
     }
     return -1;
@@ -656,14 +661,11 @@ void TabsOnLoadedDoc(WindowInfo *win)
     tcs.mask = TCIF_TEXT | TCIF_PARAM;
     tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
     tcs.lParam = (LPARAM)td;
-    int count = TabCtrl_GetItemCount(win->hwndTabBar);
 
+    int count = TabsGetCount(win);
     if (-1 != TabCtrl_InsertItem(win->hwndTabBar, count, &tcs)) {
         TabCtrl_SetCurSel(win->hwndTabBar, count);
         UpdateTabWidth(win);
-
-        if (!count)
-            ShowOrHideTabbar(win, SW_SHOW);
     }
     else
         DeleteTabData(td, false);
@@ -673,11 +675,11 @@ void TabsOnLoadedDoc(WindowInfo *win)
 // Refresh the tab's title
 void TabsOnChangedDoc(WindowInfo *win)
 {
-    if (!win || TabCtrl_GetItemCount(win->hwndTabBar) == 0)
+    if (TabsGetCount(win) <= 0)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    TabData *tdata = GetTabData(win->hwndTabBar, current);
+    TabData *tdata = GetTabData(win, current);
     SaveTabData(win, tdata);
 
     TCITEM tcs;
@@ -687,39 +689,41 @@ void TabsOnChangedDoc(WindowInfo *win)
 }
 
 
-// Called when we're closing a document or when we're quitting.
-void TabsOnCloseWindow(WindowInfo *win, bool cleanUp)
+// Called when we're closing a document
+void TabsOnCloseDoc(WindowInfo *win)
 {
-    int count = TabCtrl_GetItemCount(win->hwndTabBar);
-    if (count) {
-        TabData *tdata;
+    int count = TabsGetCount(win);
+    if (count <= 0)
+        return;
 
-        if (cleanUp) {
-            for (int i = 0; i < count; i++) {
-                tdata = GetTabData(win->hwndTabBar, i);
-                if (tdata) {
-                    UpdateTabFileDisplayStateForWin(win, tdata);
-                    DeleteTabData(tdata, win->ctrl != tdata->ctrl);
-                }
-            }
-            win->tabSelectionHistory->Reset();
-            TabCtrl_DeleteAllItems(win->hwndTabBar);
-            return;
-        }
+    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    TabData *tdata = GetTabData(win, current);
+    win->tabSelectionHistory->Remove(tdata);
+    UpdateTabFileDisplayStateForWin(win, tdata);
+    DeleteTabData(tdata, false);
+    TabCtrl_DeleteItem(win->hwndTabBar, current);
+    UpdateTabWidth(win);
+    if (count > 1) {
+        tdata = win->tabSelectionHistory->Pop();
+        LoadModelIntoTab(win, tdata);
+        TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win, tdata));
+    }
+}
 
-        int current = TabCtrl_GetCurSel(win->hwndTabBar);
-        tdata = GetTabData(win->hwndTabBar, current);
-        win->tabSelectionHistory->Remove(tdata);
-        UpdateTabFileDisplayStateForWin(win, tdata);
-        DeleteTabData(tdata, false);
-        TabCtrl_DeleteItem(win->hwndTabBar, current);
-        UpdateTabWidth(win);
-        if (count > 1) {
-            tdata = win->tabSelectionHistory->Pop();
-            LoadModelIntoTab(win, tdata);
-            TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win->hwndTabBar, tdata));
+
+// Called when we're closing an entire window (quitting)
+void TabsOnCloseWindow(WindowInfo *win)
+{
+    int count = TabsGetCount(win);
+    for (int i = 0; i < count; i++) {
+        TabData *tdata = GetTabData(win, i);
+        if (tdata) {
+            UpdateTabFileDisplayStateForWin(win, tdata);
+            DeleteTabData(tdata, win->ctrl != tdata->ctrl);
         }
     }
+    win->tabSelectionHistory->Reset();
+    TabCtrl_DeleteAllItems(win->hwndTabBar);
 }
 
 
@@ -739,7 +743,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     case TCN_SELCHANGE:
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
-            LoadModelIntoTab(win, GetTabData(win->hwndTabBar, current));
+            LoadModelIntoTab(win, GetTabData(win, current));
         }
         break;
 
@@ -755,7 +759,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 CloseWindow(win, false);
             }
             else {
-                TabData *tdata = GetTabData(win->hwndTabBar, tab1);
+                TabData *tdata = GetTabData(win, tab1);
                 win->tabSelectionHistory->Remove(tdata);
                 UpdateTabFileDisplayStateForWin(win, tdata);
                 DeleteTabData(tdata, true);
@@ -774,9 +778,12 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
 }
 
 
-void ShowOrHideTabbar(WindowInfo *win, int command)
+static void ShowTabBar(WindowInfo *win, bool show)
 {
-    ShowWindow(win->hwndTabBar, command);
+    if (show == win->tabsVisible)
+        return;
+    win->tabsVisible = show;
+    ShowWindow(win->hwndTabBar, show ? SW_SHOW : SW_HIDE);
     ClientRect rect(win->hwndFrame);
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
 }
@@ -784,11 +791,16 @@ void ShowOrHideTabbar(WindowInfo *win, int command)
 
 void UpdateTabWidth(WindowInfo *win)
 {
-    ClientRect rect(win->hwndFrame);
-    int count = TabCtrl_GetItemCount(win->hwndTabBar);
-    if (count) {
+    int count = TabsGetCount(win);
+    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab;
+    if (count > (showSingleTab ? 0 : 1)) {
+        ShowTabBar(win, true);
+        ClientRect rect(win->hwndFrame);
         int tabWidth = (rect.dx - 3) / count;
         TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH < tabWidth ? TAB_WIDTH : tabWidth, TAB_HEIGHT);
+    }
+    else {
+        ShowTabBar(win, false);
     }
 }
 
@@ -796,7 +808,7 @@ void UpdateTabWidth(WindowInfo *win)
 // Selects the next tab.
 void TabsOnCtrlTab(WindowInfo *win)
 {
-    int count = TabCtrl_GetItemCount(win->hwndTabBar);
+    int count = TabsGetCount(win);
     if (count < 2) return;
 
     NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
