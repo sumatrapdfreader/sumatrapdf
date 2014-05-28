@@ -127,7 +127,16 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 			else if (forcemask)
 				fz_warn(ctx, "Ignoring recursive image soft mask");
 			else
+			{
 				mask = pdf_load_image_imp(doc, rdb, obj, NULL, 1);
+				obj = pdf_dict_gets(obj, "Matte");
+				if (pdf_is_array(obj))
+				{
+					usecolorkey = 1;
+					for (i = 0; i < n; i++)
+						colorkey[i] = pdf_to_real(pdf_array_get(obj, i)) * 255;
+				}
+			}
 		}
 		else if (pdf_is_array(obj))
 		{
@@ -169,25 +178,6 @@ pdf_load_image_imp(pdf_document *doc, pdf_obj *rdb, pdf_obj *dict, fz_stream *cs
 		fz_drop_image(ctx, image);
 		fz_rethrow(ctx);
 	}
-
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
-	fz_try(ctx)
-	{
-		obj = pdf_dict_getp(dict, "SMask/Matte");
-		if (pdf_is_array(obj) && image->mask)
-		{
-			assert(!image->usecolorkey);
-			image->usecolorkey = 2;
-			for (i = 0; i < image->n; i++)
-				image->colorkey[i] = pdf_to_int(pdf_array_get(obj, i));
-		}
-	}
-	fz_catch(ctx)
-	{
-		fz_drop_image(ctx, image);
-		fz_rethrow(ctx);
-	}
-
 	return image;
 }
 

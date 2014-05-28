@@ -125,11 +125,10 @@ fz_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 	pix->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
 
-/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
 static void
 fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image)
 {
-	/* fz_image_get_pixmap tends to return too large tiles */
+	/* SumatraPDF: fz_image_get_pixmap tends to return overly large tiles */
 	int min_w = 1 << (int)floorf(logf(tile->w) / logf(2));
 	int min_h = 1 << (int)floorf(logf(tile->h) / logf(2));
 	fz_pixmap *mask = image->mask->get_pixmap(ctx, image->mask, min_w, min_h);
@@ -146,10 +145,12 @@ fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image)
 
 	for (; s < end; s++, d += tile->n)
 	{
-		if (!*s)
-			continue;
-		for (k = 0; k < image->n; k++)
-			d[k] = fz_clampi(image->colorkey[k] + (d[k] - image->colorkey[k]) * 255 / *s, 0, 255);
+		if (*s == 0)
+			for (k = 0; k < image->n; k++)
+				d[k] = image->colorkey[k];
+		else
+			for (k = 0; k < image->n; k++)
+				d[k] = fz_clampi(image->colorkey[k] + (d[k] - image->colorkey[k]) * 255 / *s, 0, 255);
 	}
 
 	fz_drop_pixmap(ctx, mask);
@@ -187,7 +188,7 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, fz_image *image, int indexe
 			fz_drop_pixmap(ctx, part);
 			part = NULL;
 		}
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+		/* pre-blended matte color */
 		if (image->usecolorkey && image->mask)
 			fz_unblend_masked_tile(ctx, tile, image);
 	}
@@ -261,6 +262,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 		fz_free(ctx, samples);
 		samples = NULL;
 
+		/* color keyed transparency */
 		if (image->usecolorkey && !image->mask)
 			fz_mask_color_key(tile, image->n, image->colorkey);
 
@@ -277,7 +279,7 @@ fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, in
 			fz_decode_tile(tile, image->decode);
 		}
 
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+		/* pre-blended matte color */
 		if (image->usecolorkey && image->mask && !is_banded)
 			fz_unblend_masked_tile(ctx, tile, image);
 	}
