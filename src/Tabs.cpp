@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "Tabs.h"
 
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "Controller.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -575,7 +575,7 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
     }
 
     if (win->AsChm())
-        win->AsChm()->engine()->RemoveParentHwnd();
+        win->AsChm()->RemoveParentHwnd();
 
     SaveTabData(win, *tdata);
 

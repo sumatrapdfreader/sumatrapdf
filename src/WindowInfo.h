@@ -67,7 +67,7 @@ public:
     bool IsDocLoaded() const { return this->ctrl != NULL; }
 
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
-    ChmUIController *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
+    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
     EbookUIController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
 
     EngineType GetEngineType() const;

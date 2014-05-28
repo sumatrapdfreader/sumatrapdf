@@ -219,18 +219,9 @@ BaseEngine *LinkHandler::engine() const
 void LinkHandler::GotoLink(PageDestination *link)
 {
     assert(owner && owner->linkHandler == this);
-    if (!link)
+    if (!link || !owner->IsDocLoaded())
         return;
 
-    if (owner->AsChm()) {
-        owner->ctrl->GotoLink(link);
-        return;
-    }
-
-    if (!engine())
-        return;
-
-    DisplayModel *dm = owner->ctrl->AsFixed();
     ScopedMem<WCHAR> path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
@@ -282,22 +273,22 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     // predefined named actions
     else if (Dest_NextPage == type)
-        dm->GoToNextPage();
+        owner->ctrl->GoToNextPage();
     else if (Dest_PrevPage == type)
-        dm->GoToPrevPage();
+        owner->ctrl->GoToPrevPage();
     else if (Dest_FirstPage == type)
-        dm->GoToFirstPage();
+        owner->ctrl->GoToFirstPage();
     else if (Dest_LastPage == type)
-        dm->GoToLastPage();
+        owner->ctrl->GoToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
     else if (Dest_FindDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
     else if (Dest_FullScreen == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
     else if (Dest_GoBack == type)
-        dm->Navigate(-1);
+        owner->ctrl->Navigate(-1);
     else if (Dest_GoForward == type)
-        dm->Navigate(1);
+        owner->ctrl->Navigate(1);
     else if (Dest_GoToPageDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
     else if (Dest_PrintDialog == type)
@@ -318,11 +309,11 @@ void LinkHandler::ScrollTo(PageDestination *dest)
         return;
 
     if (!owner->AsFixed()) {
-        owner->ctrl->GotoLink(dest);
+        owner->ctrl->ScrollToLink(dest);
         return;
     }
 
-    DisplayModel *dm = owner->ctrl->AsFixed();
+    DisplayModel *dm = owner->AsFixed();
     PointI scroll(-1, 0);
     RectD rect = dest->GetDestRect();
 

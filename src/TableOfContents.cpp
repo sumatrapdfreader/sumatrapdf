@@ -158,7 +158,7 @@ public:
         // isn't unselected in UpdateTocSelection right again
         win->tocKeepSelection = true;
         if (tocItem->GetLink())
-            win->ctrl->GotoLink(tocItem->GetLink());
+            win->linkHandler->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
             win->ctrl->GoToPage(tocItem->pageNo, true);
         win->tocKeepSelection = false;

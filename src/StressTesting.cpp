@@ -6,7 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "Controller.h"
 #include "DirIter.h"
 #include "DisplayModel.h"
@@ -204,8 +204,8 @@ static void BenchChmLoadOnly(const WCHAR *filePath)
     logbench(L"Starting: %s", filePath);
 
     Timer t(true);
-    ChmEngine *chmEngine = ChmEngine::CreateFromFile(filePath);
-    if (!chmEngine) {
+    ChmModel *chmModel = ChmModel::Create(filePath, NULL);
+    if (!chmModel) {
         logbench(L"Error: failed to load %s", filePath);
         return;
     }
@@ -213,7 +213,7 @@ static void BenchChmLoadOnly(const WCHAR *filePath)
     double timeMs = t.Stop();
     logbench(L"load: %.2f ms", timeMs);
 
-    delete chmEngine;
+    delete chmModel;
     total.Stop();
 
     logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
@@ -234,7 +234,7 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
         return;
     }
 
-    if (ChmEngine::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
+    if (ChmModel::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
         BenchChmLoadOnly(filePath);
         return;
     }

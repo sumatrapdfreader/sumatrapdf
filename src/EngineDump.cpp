@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "ChmEngine.h"
 #include "CmdLineParser.h"
 #include "EngineManager.h"
 #include "FileModifications.h"

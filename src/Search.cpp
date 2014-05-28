@@ -11,7 +11,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EngineManager.h"
@@ -45,7 +45,7 @@ bool NeedsFindUI(WindowInfo *win)
 void OnMenuFind(WindowInfo *win)
 {
     if (win->AsChm()) {
-        win->AsChm()->engine()->FindInCurrentPage();
+        win->AsChm()->FindInCurrentPage();
         return;
     }
 

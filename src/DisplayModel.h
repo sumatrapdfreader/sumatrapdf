@@ -94,7 +94,7 @@ public:
     // table of contents
     virtual bool HasTocTree() const { return _engine->HasTocTree(); }
     virtual DocTocItem *GetTocTree() { return _engine->GetTocTree(); }
-    virtual void GotoLink(PageDestination *dest) { cb->GotoLink(dest); }
+    virtual void ScrollToLink(PageDestination *dest) { CrashIf(true); }
     virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
 
     // state export

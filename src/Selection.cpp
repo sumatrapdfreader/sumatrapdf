@@ -5,7 +5,7 @@
 #include "Selection.h"
 
 #include "AppPrefs.h"
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "Notifications.h"
@@ -295,7 +295,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
     }
 
     if (win->AsChm()) {
-        win->AsChm()->engine()->SelectAll();
+        win->AsChm()->SelectAll();
         return;
     }
     if (!win->IsDocLoaded())

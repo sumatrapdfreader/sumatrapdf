@@ -265,7 +265,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* follow an active link */
     else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination *dest = link->AsLink();
-        win.ctrl->GotoLink(dest);
+        win.linkHandler->GotoLink(dest);
         SetCursor(gCursorArrow);
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {

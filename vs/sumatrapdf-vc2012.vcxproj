@@ -108,6 +108,7 @@
     <ClCompile Include="..\src\AppTools.cpp" />
     <ClCompile Include="..\src\AppUtil.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
+    <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\Controller.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
@@ -145,7 +146,6 @@
     <ClCompile Include="..\src\UnitTests.cpp" />
     <ClCompile Include="..\src\WindowInfo.cpp" />
     <ClCompile Include="..\src\ChmDoc.cpp" />
-    <ClCompile Include="..\src\ChmEngine.cpp" />
     <ClCompile Include="..\src\DjVuEngine.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineManager.cpp" />
@@ -378,6 +378,7 @@
     <ClInclude Include="..\src\AppPrefs.h" />
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\AppUtil.h" />
+    <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\Controller.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
@@ -416,7 +417,6 @@
     <ClInclude Include="..\src\WindowInfo.h" />
     <ClInclude Include="..\src\BaseEngine.h" />
     <ClInclude Include="..\src\ChmDoc.h" />
-    <ClInclude Include="..\src\ChmEngine.h" />
     <ClInclude Include="..\src\DjVuEngine.h" />
     <ClInclude Include="..\src\EngineManager.h" />
     <ClInclude Include="..\src\ImagesEngine.h" />

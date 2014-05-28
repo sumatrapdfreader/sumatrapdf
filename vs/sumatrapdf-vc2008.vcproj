@@ -705,14 +705,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\ChmEngine.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\ChmEngine.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\DjVuEngine.cpp"
 					>
 				</File>
@@ -812,6 +804,14 @@
 			<Filter
 				Name="Model"
 				>
+				<File
+					RelativePath="..\src\ChmModel.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\ChmModel.h"
+					>
+				</File>
 				<File
 					RelativePath="..\src\Controller.cpp"
 					>

@@ -69,6 +69,9 @@
     <ClCompile Include="..\src\Canvas.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ChmModel.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Controller.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -178,9 +181,6 @@
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChmDoc.cpp">
-      <Filter>sumatra\engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ChmEngine.cpp">
       <Filter>sumatra\engine</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DjVuEngine.cpp">
@@ -875,6 +875,9 @@
     <ClInclude Include="..\src\AppUtil.h">
       <Filter>sumatra</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ChmModel.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Controller.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -987,9 +990,6 @@
       <Filter>sumatra\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ChmDoc.h">
-      <Filter>sumatra\engine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ChmEngine.h">
       <Filter>sumatra\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\src\DjVuEngine.h">

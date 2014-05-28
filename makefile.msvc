@@ -186,8 +186,7 @@ ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
-	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-	$(OS)\EbookEngine.obj $(EBOOK_OBJS) \
+	$(OS)\EbookEngine.obj $(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EngineManager.obj $(OS)\FileModifications.obj
 
 UIA_OBJS = \
@@ -208,6 +207,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj $(OS)\Controller.obj \
+	$(OS)\ChmModel.obj \
 	$(UIA_OBJS)
 
 SUMATRA_OBJS = \

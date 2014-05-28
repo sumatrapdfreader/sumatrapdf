@@ -6,6 +6,12 @@
 
 #include "DisplayState.h"
 
+class ChmModel;
+class DisplayModel;
+class EbookController;
+struct EbookFormattingData;
+class EbookUIController;
+
 // call SaveThumbnail on success or delete ThumbnailCallback on failure
 class ThumbnailCallback {
 public:
@@ -13,32 +19,32 @@ public:
     virtual void SaveThumbnail(RenderedBitmap *bmp) = 0;
 };
 
-class DisplayModel;
-class EbookController;
-struct EbookFormattingData;
-
 class ControllerCallback {
 public:
     virtual ~ControllerCallback() { }
-    // DisplayModel
-    virtual void Repaint() = 0;
+    // tell the UI to show the pageNo as current page (which also syncs
+    // the toc with the curent page). Needed for when a page change happens
+    // indirectly or is initiated from within the (CHM) model
     virtual void PageNoChanged(int pageNo) = 0;
+    // tell the UI to open the linked document or URL
+    virtual void GotoLink(PageDestination *dest) = 0;
+    // DisplayModel //
+    virtual void Repaint() = 0;
     virtual void UpdateScrollbars(SizeI canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
     virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb) = 0;
-    virtual void GotoLink(PageDestination *dest) = 0;
-    // ChmEngine
-    virtual void LaunchBrowser(const WCHAR *url) = 0;
+    // ChmEngine //
+    // tell the UI to move focus back to the main window
+    // (if always == false, then focus is only moved if it's inside
+    // an HtmlWindow and thus outside the reach of the main UI)
     virtual void FocusFrame(bool always) = 0;
+    // tell the UI to let the user save the provided data to a file
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) = 0;
-    // EbookController
+    // EbookController //
     virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) = 0;
     virtual void RequestDelayedLayout(int delay) = 0;
 };
-
-class ChmUIController;
-class EbookUIController;
 
 class Controller {
 protected:
@@ -72,7 +78,7 @@ public:
     // table of contents
     virtual bool HasTocTree() const = 0;
     virtual DocTocItem *GetTocTree() = 0;
-    virtual void GotoLink(PageDestination *dest) = 0;
+    virtual void ScrollToLink(PageDestination *dest) = 0;
     virtual PageDestination *GetNamedDest(const WCHAR *name) = 0;
 
     // state export
@@ -116,20 +122,8 @@ public:
 
     // for quick type determination and type-safe casting
     virtual DisplayModel *AsFixed() { return NULL; }
-    virtual ChmUIController *AsChm() { return NULL; }
+    virtual ChmModel *AsChm() { return NULL; }
     virtual EbookUIController *AsEbook() { return NULL; }
-};
-
-class ChmEngine;
-class WindowInfo;
-
-class ChmUIController : public Controller {
-public:
-    explicit ChmUIController(ControllerCallback *cb) : Controller(cb) { }
-
-    virtual ChmEngine *engine() = 0;
-
-    static ChmUIController *Create(ChmEngine *engine, ControllerCallback *cb);
 };
 
 class Doc;

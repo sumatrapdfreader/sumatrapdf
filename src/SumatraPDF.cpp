@@ -9,7 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "AppUtil.h"
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "CmdLineParser.h"
 #include "Controller.h"
 #include "CrashHandler.h"
@@ -640,7 +640,6 @@ public:
     virtual void CleanUp(DisplayModel *dm);
     virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb);
     virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
-    virtual void LaunchBrowser(const WCHAR *url) { ::LaunchBrowser(url); }
     virtual void FocusFrame(bool always);
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
     virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data);
@@ -807,9 +806,9 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
                                                      gGlobalPrefs->chmUI.useFixedPageUI,
                                                      gGlobalPrefs->ebookUI.useFixedPageUI);
 
-    if (!engine && ChmEngine::IsSupportedFile(filePath)) {
-        ChmEngine *chmEngine = ChmEngine::CreateFromFile(filePath);
-        if (chmEngine) {
+    if (!engine && ChmModel::IsSupportedFile(filePath)) {
+        ChmModel *chmModel = ChmModel::Create(filePath, win->cbHandler);
+        if (chmModel) {
             // make sure that MSHTML can't be used as a potential exploit
             // vector through another browser and our plugin (which doesn't
             // advertise itself for Chm documents but could be tricked into
@@ -817,13 +816,13 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
             CrashAlwaysIf(gPluginMode);
             // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
-            if (!chmEngine->SetParentHwnd(win->hwndCanvas)) {
-                delete chmEngine;
+            if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
+                delete chmModel;
                 engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType);
                 CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
                 goto LoadChmInFixedPageUI;
             }
-            ctrl = ChmUIController::Create(chmEngine, win->cbHandler);
+            ctrl = chmModel;
             CrashIf(!ctrl || !ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook());
         }
     }
@@ -1551,7 +1550,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     win->ctrl = tdata->ctrl;
 
     if (win->AsChm())
-        win->AsChm()->engine()->SetParentHwnd(win->hwndCanvas);
+        win->AsChm()->SetParentHwnd(win->hwndCanvas);
     // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
     else if (win->AsEbook())
         win->AsEbook()->EnableMessageHandling(false);
@@ -2043,7 +2042,7 @@ static void CloseDocumentInWindow(WindowInfo *win)
 {
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm())
-        win->AsChm()->engine()->RemoveParentHwnd();
+        win->AsChm()->RemoveParentHwnd();
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
@@ -3180,7 +3179,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if (isChm) {
         if (ChmForwardKey(key)) {
-            win->AsChm()->engine()->PassUIMsg(WM_KEYDOWN, key, lparam);
+            win->AsChm()->PassUIMsg(WM_KEYDOWN, key, lparam);
             return true;
         }
     }
@@ -3978,7 +3977,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             else if (!HasPermission(Perm_CopySelection))
                 break;
             else if (win->AsChm())
-                win->AsChm()->engine()->CopySelection();
+                win->AsChm()->CopySelection();
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(win);
             else
@@ -4189,7 +4188,7 @@ InitMouseWheelInfo:
                 break;
 
             if (win->AsChm()) {
-                return win->AsChm()->engine()->PassUIMsg(msg, wParam, lParam);
+                return win->AsChm()->PassUIMsg(msg, wParam, lParam);
             }
 
             // Pass the message to the canvas' window procedure

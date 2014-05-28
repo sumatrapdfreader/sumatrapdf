@@ -6,7 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppUtil.h"
-#include "ChmEngine.h"
+#include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EngineManager.h"
@@ -496,7 +496,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         // the Print dialog allows access to the file system, so fall back
         // to printing the entire document without dialog if that isn't desired
         bool showUI = HasPermission(Perm_DiskAccess);
-        win->AsChm()->engine()->PrintCurrentPage(showUI);
+        win->AsChm()->PrintCurrentPage(showUI);
         return;
     }
 
