@@ -353,6 +353,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (tab->isMouseInClientArea)
             PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
         InvalidateRgn(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
         break;
 
     case TCM_SETITEM:
@@ -374,8 +375,10 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             tab->xClicked = -1;
             if (tab->isMouseInClientArea)
                 PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
-            if (tab->Count())
+            if (tab->Count()) {
                 InvalidateRgn(hwnd, NULL, FALSE);
+                UpdateWindow(hwnd);
+            }
         }
         break;
 
@@ -389,8 +392,10 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             tab->xClicked = -1;
             if (tab->isMouseInClientArea)
                 PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
-            if (tab->Count())
+            if (tab->Count()) {
                 InvalidateRgn(hwnd, NULL, FALSE);
+                UpdateWindow(hwnd);
+            }
         }
         break;
 
@@ -406,6 +411,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 tab->Invalidate(tab->current);
                 tab->Invalidate(index);
                 tab->current = index;
+                UpdateWindow(hwnd);
             }
             return previous;
         }
