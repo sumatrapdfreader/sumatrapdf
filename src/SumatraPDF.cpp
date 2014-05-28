@@ -1121,6 +1121,8 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     args.placeWindow = false;
     if (!LoadDocIntoWindow(args, &pwdUI, ds)) {
         DeleteDisplayState(ds);
+        if (win->tabsVisible)
+            TabsOnChangedDoc(win);
         return;
     }
 
