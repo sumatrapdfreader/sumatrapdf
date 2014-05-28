@@ -6,6 +6,7 @@
 
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EbookController.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "Notifications.h"

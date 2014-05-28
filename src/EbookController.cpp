@@ -4,10 +4,11 @@
 #include "BaseUtil.h"
 #include "EbookController.h"
 
-#include "AppPrefs.h"
+#include "AppPrefs.h" // for gGlobalPrefs
 //#define NOLOG 0
 #include "DebugLog.h"
 #include "EbookControls.h"
+#include "EbookDoc.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "MobiDoc.h"
@@ -70,7 +71,7 @@ class EbookFormattingThread : public ThreadBase {
 
     Doc                 doc;
     EbookController *   controller;
-    EbookControllerCallback *cb;
+    ControllerCallback *cb;
 
     // state used during layout process
     HtmlPage *  pages[EbookFormattingData::MAX_PAGES];
@@ -87,14 +88,14 @@ public:
     bool        Format();
 
     EbookFormattingThread(Doc doc, HtmlFormatterArgs *args,
-                          EbookController *ctrl, int reparseIdx, EbookControllerCallback *cb);
+                          EbookController *ctrl, int reparseIdx, ControllerCallback *cb);
     virtual ~EbookFormattingThread();
 
     // ThreadBase
     virtual void Run();
 };
 
-EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx, EbookControllerCallback *cb) :
+EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx, ControllerCallback *cb) :
     doc(doc), formatterArgs(args), cb(cb), controller(ctrl), pageCount(0), reparseIdx(reparseIdx), pagesAfterReparseIdx(0)
 {
     CrashIf(reparseIdx < 0);
@@ -179,10 +180,10 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
     *toDeletePtr = NULL;
 }
 
-EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode, EbookControllerCallback *cb) :
-    ctrls(ctrls), cb(cb), pages(NULL), incomingPages(NULL),
+EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
+    Controller(cb), ctrls(ctrls), pages(NULL), incomingPages(NULL),
     currPageNo(0), pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
-    currPageReparseIdx(0)
+    currPageReparseIdx(0), handleMsgs(true)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
     em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
@@ -192,16 +193,6 @@ EbookController::EbookController(EbookControls *ctrls, DisplayMode displayMode, 
     em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
     em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
-
-    // TODO: don't call these immediately (let callers set up things first)
-    // displayMode could be any value if alternate UI was used, we have to limit it to
-    // either DM_SINGLE_PAGE or DM_FACING
-    if ((DM_SINGLE_PAGE == displayMode) || (DM_AUTOMATIC == displayMode)) {
-        SetSinglePage();
-    } else {
-        SetDoublePage();
-    }
-    UpdateStatus();
 }
 
 EbookController::~EbookController()
@@ -214,6 +205,19 @@ EbookController::~EbookController()
     // TODO: this seems fragile
     evtMgr->DisconnectEvents(this);
     CloseCurrentDocument();
+    DestroyEbookControls(ctrls);
+}
+
+const WCHAR *EbookController::DefaultFileExt() const
+{
+    if (_doc.AsEpub())
+        return L".epub";
+    if (_doc.AsFb2())
+        return _doc.AsFb2()->IsZipped() ? L".fb2z" : L".fb2";
+    if (_doc.AsMobi())
+        return L".mobi";
+    CrashIf(true);
+    return NULL;
 }
 
 // stop layout thread (if we're closing a document we'll delete
@@ -290,7 +294,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
             pages = incomingPages;
             incomingPages = NULL;
             DeletePages(&toDelete);
-            GoToPage(pageNo);
+            GoToPage(pageNo, false);
         }
     } else {
         CrashIf(!pages);
@@ -356,13 +360,13 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 void EbookController::ClickedNext(Control *c, int x, int y)
 {
     //CrashIf(c != ctrls->next);
-    AdvancePage(1);
+    GoToNextPage();
 }
 
 void EbookController::ClickedPrev(Control *c, int x, int y)
 {
     //CrashIf(c != ctrls->prev);
-    AdvancePage(-1);
+    GoToPrevPage();
 }
 
 // (x, y) is in the coordinates of w
@@ -372,10 +376,10 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
     float perc = ctrls->progress->GetPercAt(x);
     int pageCount = (int)GetPages()->Count();
     int newPageNo = IntFromPerc(pageCount, perc) + 1;
-    GoToPage(newPageNo);
+    GoToPage(newPageNo, true);
 }
 
-size_t EbookController::GetMaxPageCount()
+int EbookController::GetMaxPageCount() const
 {
     Vec<HtmlPage *> *pagesTmp = pages;
     if (incomingPages) {
@@ -384,13 +388,13 @@ size_t EbookController::GetMaxPageCount()
     }
     if (!pagesTmp)
         return 0;
-    return pagesTmp->Count();
+    return (int)pagesTmp->Count();
 }
 
 // show the status text based on current state
 void EbookController::UpdateStatus()
 {
-    size_t pageCount = GetMaxPageCount();
+    int pageCount = GetMaxPageCount();
     if (FormattingInProgress()) {
         ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
         ctrls->status->SetText(s);
@@ -401,20 +405,20 @@ void EbookController::UpdateStatus()
     ScopedMem<WCHAR> s(str::Format(L"%s %d / %d", _TR("Page:"), currPageNo, pageCount));
     ctrls->status->SetText(s);
 #if 1
-    ctrls->progress->SetFilled(PercFromInt((int)pageCount, currPageNo));
+    ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
 #else
     if (GetPages())
-        ctrls->progress->SetFilled(PercFromInt((int)pageCount, currPageNo));
+        ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
     else
         ctrls->progress->SetFilled(0.f);
 #endif
 }
 
-void EbookController::GoToPage(int newPageNo)
+void EbookController::GoToPage(int pageNo, bool addNavPoint)
 {
     // we're still formatting, disable page movement
     if (incomingPages) {
-        //lf("EbookController::GoToPage(%d): skipping because incomingPages != NULL", newPageNo);
+        //lf("EbookController::GoToPage(%d): skipping because incomingPages != NULL", pageNo);
         return;
     }
 
@@ -424,20 +428,20 @@ void EbookController::GoToPage(int newPageNo)
         return;
     }
 
-    int pageCount = (int)pages->Count();
-    int n = IsSinglePage() ? 0 : 1;
-    if (newPageNo + n > pageCount)
-        newPageNo = pageCount - n;
+    int pageCount = PageCount();
+    int n = IsDoublePage() ? 1 : 0;
+    if (pageNo + n > pageCount)
+        pageNo = pageCount - n;
     // if have only 1 page and showing double, we could go below 1
-    if (newPageNo < 1)
-        newPageNo = 1;
+    if (pageNo < 1)
+        pageNo = 1;
 
-    HtmlPage *p = pages->At(newPageNo - 1);
-    currPageNo = newPageNo;
+    HtmlPage *p = pages->At(pageNo - 1);
+    currPageNo = pageNo;
     currPageReparseIdx = p->reparseIdx;
     ctrls->pagesLayout->GetPage1()->SetPage(p);
     if (IsDoublePage() && pages->Count() > 1) {
-        p = pages->At(newPageNo);
+        p = pages->At(pageNo);
         ctrls->pagesLayout->GetPage2()->SetPage(p);
     } else {
         ctrls->pagesLayout->GetPage2()->SetPage(NULL);
@@ -445,50 +449,45 @@ void EbookController::GoToPage(int newPageNo)
     UpdateStatus();
 }
 
-void EbookController::GoToLastPage()
+bool EbookController::GoToNextPage()
 {
-    GoToPage((int)pages->Count());
+    int dist = IsDoublePage() ? 2 : 1;
+    if (currPageNo + dist > PageCount())
+        return false;
+    GoToPage(currPageNo + dist, false);
+    return true;
 }
 
-void EbookController::AdvancePage(int dist)
+bool EbookController::GoToPrevPage(bool toBottom)
 {
-    if (IsDoublePage())
-        dist = dist * 2;
-    GoToPage(currPageNo + dist);
+    int dist = IsDoublePage() ? 2 : 1;
+    if (currPageNo - dist < 1)
+        return false;
+    GoToPage(currPageNo - dist, false);
+    return true;
 }
 
-void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
+void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg, DisplayMode displayMode)
 {
     CrashIf(!newDoc.IsDocLoaded());
     currPageReparseIdx = startReparseIdxArg;
     if ((size_t)currPageReparseIdx >= newDoc.GetHtmlDataSize())
         currPageReparseIdx = 0;
     CloseCurrentDocument();
+
     _doc = newDoc;
+    // displayMode could be any value if alternate UI was used, we have to limit it to
+    // either DM_SINGLE_PAGE or DM_FACING
+    if (DM_AUTOMATIC == displayMode)
+        displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+    SetDisplayMode(displayMode);
     TriggerBookFormatting();
+    UpdateStatus();
 }
 
-void EbookController::SetSinglePage()
+bool EbookController::IsDoublePage() const
 {
-    if (IsSinglePage())
-        return;
-    // hiding a control will trigger re-layout which will
-    // trigger book re-formatting
-    ctrls->pagesLayout->GetPage2()->Hide();
-}
-
-void EbookController::SetDoublePage()
-{
-    if (IsDoublePage())
-        return;
-    // hiding a control will trigger re-layout which will
-    // trigger book re-formatting
-    ctrls->pagesLayout->GetPage2()->Show();
-}
-
-bool EbookController::IsSinglePage() const
-{
-    return !ctrls->pagesLayout->GetPage2()->IsVisible();
+    return ctrls->pagesLayout->GetPage2()->IsVisible();
 }
 
 static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
@@ -560,8 +559,9 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc, SizeI size)
     return NULL;
 }
 
-RenderedBitmap *EbookController::CreateThumbnail(SizeI size)
+void EbookController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 {
+    // TODO: create thumbnail asynchronously
     CrashIf(!_doc.IsDocLoaded());
     // if there is cover image, we use it to generate thumbnail by scaling
     // image width to thumbnail dx, scaling height proportionally and using
@@ -572,5 +572,69 @@ RenderedBitmap *EbookController::CreateThumbnail(SizeI size)
         SizeI pageSize(size.dx * 3, size.dy * 3);
         bmp = RenderFirstDocPageToBitmap(_doc, pageSize, size, 10);
     }
-    return bmp;
+    tnCb->SaveThumbnail(bmp);
+}
+
+void EbookController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
+{
+    bool newDouble = !IsSingle(mode);
+    if (IsDoublePage() == newDouble)
+        return;
+    // showing/hiding a control will trigger re-layout which will
+    // trigger book re-formatting
+    if (newDouble)
+        ctrls->pagesLayout->GetPage2()->Show();
+    else
+        ctrls->pagesLayout->GetPage2()->Hide();
+}
+
+void EbookController::UpdateDisplayState(DisplayState *ds)
+{
+    if (!ds->filePath || !str::EqI(ds->filePath, _doc.GetFilePath()))
+        str::ReplacePtr(&ds->filePath, _doc.GetFilePath());
+
+    // don't modify any of the other DisplayState values
+    // as long as they're not used, so that the same
+    // DisplayState settings can also be used for EbookEngine;
+    // we get reasonable defaults from DisplayState's constructor anyway
+    ds->reparseIdx = currPageReparseIdx;
+    str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(GetDisplayMode()));
+}
+
+void EbookController::SetViewPortSize(SizeI size)
+{
+    // relayouting gets the size from the canvas hwnd
+    ctrls->mainWnd->RequestLayout();
+}
+
+LRESULT EbookController::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
+{
+    if (!handleMsgs)
+        return 0;
+    return ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
+}
+
+// TODO: also needs to update for font name/size changes, but it's more complicated
+// because requires re-layout
+void EbookController::UpdateDocumentColors()
+{
+    SetMainWndBgCol(ctrls);
+    // changing background will repaint mainWnd control but changing
+    // of text color will not, so we request uncoditional repaint
+    // TODO: in PageControl::Paint() use a property for text color, instead of
+    // taking it directly from prefs
+    ::RequestRepaint(ctrls->mainWnd);
+}
+
+void EbookController::RequestRepaint()
+{
+    ctrls->mainWnd->MarkForRepaint();
+}
+
+EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb)
+{
+    EbookControls *ctrls = CreateEbookControls(hwnd);
+    if (!ctrls)
+        return NULL;
+    return new EbookController(ctrls, cb);
 }

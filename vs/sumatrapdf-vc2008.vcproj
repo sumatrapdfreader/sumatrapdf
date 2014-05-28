@@ -813,10 +813,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\Controller.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\Controller.h"
 					>
 				</File>

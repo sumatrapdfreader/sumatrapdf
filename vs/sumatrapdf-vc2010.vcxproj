@@ -90,7 +90,6 @@
     <ClCompile Include="..\src\AppUtil.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
-    <ClCompile Include="..\src\Controller.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />

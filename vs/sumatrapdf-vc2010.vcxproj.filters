@@ -72,9 +72,6 @@
     <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Controller.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>

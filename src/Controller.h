@@ -10,7 +10,6 @@ class ChmModel;
 class DisplayModel;
 class EbookController;
 struct EbookFormattingData;
-class EbookUIController;
 
 // call SaveThumbnail on success or delete ThumbnailCallback on failure
 class ThumbnailCallback {
@@ -123,27 +122,7 @@ public:
     // for quick type determination and type-safe casting
     virtual DisplayModel *AsFixed() { return NULL; }
     virtual ChmModel *AsChm() { return NULL; }
-    virtual EbookUIController *AsEbook() { return NULL; }
-};
-
-class Doc;
-
-class EbookUIController : public Controller {
-public:
-    explicit EbookUIController(ControllerCallback *cb) : Controller(cb) { }
-
-    virtual const Doc *doc() const = 0;
-
-    virtual LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled) = 0;
-    virtual void EnableMessageHandling(bool enable) = 0;
-    virtual void UpdateDocumentColors() = 0;
-    virtual void RequestRepaint() = 0;
-    virtual void OnLayoutTimer() = 0;
-    // EbookController's constructor calls UpdateWindow which
-    // must not happen before EbookUIController::Create returns
-    virtual EbookController *CreateController(DisplayMode displayMode) = 0;
-
-    static EbookUIController *Create(HWND hwnd, ControllerCallback *cb);
+    virtual EbookController *AsEbook() { return NULL; }
 };
 
 #endif

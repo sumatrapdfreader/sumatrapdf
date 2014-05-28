@@ -15,6 +15,7 @@
 #include "CrashHandler.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
+#include "DisplayModel.h"
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "ExternalPdfViewer.h"
@@ -852,15 +853,15 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
         // don't load PalmDoc, etc. files as long as they're not correctly formatted
         if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
             doc.Delete();
-        ctrl = doc.IsDocLoaded() ? EbookUIController::Create(win->hwndCanvas, win->cbHandler) : NULL;
-        if (ctrl) {
-            // TODO: the EbookController constructor calls UpdateWindow, so WndProcCanvas must
-            // already think that an EbookUIController has been successfully loaded
+        else if (doc.IsDocLoaded()) {
+            ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler);
+            // TODO: SetDoc triggers a relayout which spins the message loop early
+            // through UpdateWindow - make sure that Canvas uses the correct WndProc
             win->ctrl = ctrl;
             ctrl->AsEbook()->EnableMessageHandling(false);
-            ctrl->AsEbook()->CreateController(displayMode)->SetDoc(doc, reparseIdx);
-            CrashIf(!ctrl || !ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm());
+            ctrl->AsEbook()->SetDoc(doc, reparseIdx, displayMode);
         }
+        CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
     }
     else if (!engine) {
         ctrl = NULL;

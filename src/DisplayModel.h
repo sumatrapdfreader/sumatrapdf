@@ -120,7 +120,7 @@ public:
 public:
     // the following is specific to DisplayModel
 
-    virtual BaseEngine *engine() const { return _engine; }
+    BaseEngine *engine() const { return _engine; }
 
     // controller-specific data (easier to save here than on WindowInfo)
     EngineType      engineType;
