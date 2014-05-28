@@ -551,10 +551,10 @@ void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->tocState = win->tocState;
     tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
     tdata->ctrl = win->ctrl;
-    if (!tdata->title)
-        tdata->title = win::GetText(win->hwndFrame);
-    if (!tdata->filePath)
-        tdata->filePath = str::Dup(win->loadedFilePath);
+    free(tdata->title);
+    tdata->title = win::GetText(win->hwndFrame);
+    free(tdata->filePath);
+    tdata->filePath = str::Dup(win->loadedFilePath);
     tdata->canvasRc = win->canvasRc;
 }
 
