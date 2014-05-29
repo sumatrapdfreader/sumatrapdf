@@ -334,7 +334,7 @@ bool WindowInfoStillValid(WindowInfo *win)
 }
 
 // Find the first window showing a given PDF file
-WindowInfo* FindWindowInfoByFile(const WCHAR *file)
+WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
 {
     ScopedMem<WCHAR> normFile(path::Normalize(file));
 
@@ -342,13 +342,23 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file)
         WindowInfo *win = gWindows.At(i);
         if (!win->IsAboutWindow() && path::IsSame(win->loadedFilePath, normFile))
             return win;
+        if (win->tabsVisible && focusTab) {
+            // bring a background tab to the foreground
+            TabData *td;
+            for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+                if (path::IsSame(td->filePath, normFile)) {
+                    TabsSelect(win, i);
+                    return win;
+                }
+            }
+        }
     }
 
     return NULL;
 }
 
 // Find the first window that has been produced from <file>
-WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file)
+WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -357,6 +367,17 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file)
         if (win->AsFixed() && win->AsFixed()->pdfSync &&
             win->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
+        }
+        if (win->tabsVisible && focusTab) {
+            // bring a background tab to the foreground
+            TabData *td;
+            for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+                if (td->ctrl && td->ctrl->AsFixed() && td->ctrl->AsFixed()->pdfSync &&
+                    td->ctrl->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+                    TabsSelect(win, i);
+                    return win;
+                }
+            }
         }
     }
     return NULL;

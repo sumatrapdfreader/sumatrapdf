@@ -561,7 +561,7 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
     WindowInfo *win = NULL;
     if (pdfFile) {
         // check if the PDF is already opened
-        win = FindWindowInfoByFile(pdfFile);
+        win = FindWindowInfoByFile(pdfFile, !newWindow);
         // if not then open it
         if (newWindow || !win) {
             LoadArgs args(pdfFile, !newWindow ? win : NULL);
@@ -572,8 +572,8 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
     }
     else {
         // check if any opened PDF has sync information for the source file
-        win = FindWindowInfoBySyncFile(srcFile);
-        if (newWindow) {
+        win = FindWindowInfoBySyncFile(srcFile, true);
+        if (win && newWindow) {
             LoadArgs args(win->loadedFilePath);
             win = LoadDocument(args);
         }
@@ -609,7 +609,7 @@ static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
     if (!next)
         return NULL;
 
-    WindowInfo *win = FindWindowInfoByFile(pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile, !newWindow);
     if (newWindow || !win) {
         LoadArgs args(pdfFile, !newWindow ? win : NULL);
         win = LoadDocument(args);
@@ -641,7 +641,7 @@ static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
     if (!next)
         return NULL;
 
-    WindowInfo *win = FindWindowInfoByFile(pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {
@@ -668,7 +668,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
         return false;
 
     // check if the PDF is already opened
-    WindowInfo *win = FindWindowInfoByFile(pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {
@@ -701,7 +701,7 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
     if (!next)
         return NULL;
 
-    WindowInfo *win = FindWindowInfoByFile(pdfFile);
+    WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
     if (!win)
         return next;
     if (!win->IsDocLoaded()) {

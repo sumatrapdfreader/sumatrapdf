@@ -114,9 +114,10 @@ COLORREF GetLogoBgColor();
 COLORREF GetAboutBgColor();
 COLORREF GetNoDocBgColor();
 
-WindowInfo* FindWindowInfoByFile(const WCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
-WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file);
+// note: background tabs are only searched if focusTab is true
+WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab);
+WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab);
 
 // TODO: this is hopefully temporary
 // LoadDocument carries a lot of state, this holds them in

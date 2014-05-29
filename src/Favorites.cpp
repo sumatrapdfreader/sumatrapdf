@@ -361,7 +361,7 @@ static void GoToFavorite(WindowInfo *win, DisplayState *f, Favorite *fn)
     assert(f && fn);
     if (!f || !fn) return;
 
-    WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
+    WindowInfo *existingWin = FindWindowInfoByFile(f->filePath, true);
     if (existingWin) {
         uitask::Post(new GoToFavoriteTask(existingWin, fn->pageNo));
         return;
