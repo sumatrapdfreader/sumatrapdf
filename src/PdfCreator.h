@@ -7,8 +7,8 @@
 typedef struct fz_context_s fz_context;
 typedef struct fz_image_s fz_image;
 typedef struct pdf_document_s pdf_document;
-class BaseEngine;
 enum DocumentProperty;
+class BaseEngine;
 
 class PdfCreator {
     fz_context *ctx;
@@ -25,13 +25,15 @@ public:
     bool AddImagePage(const char *data, size_t len, float imgDpi=0);
 
     bool SetProperty(DocumentProperty prop, const WCHAR *value);
+    bool CopyProperties(BaseEngine *engine);
+
     bool SaveToFile(const WCHAR *filePath);
 
     // this name is included in all saved PDF files
     static void SetProducerName(const WCHAR *name);
-};
 
-// creates a simple PDF with all pages rendered as a single image
-bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
+    // creates a simple PDF with all pages rendered as a single image
+    static bool RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
+};
 
 #endif

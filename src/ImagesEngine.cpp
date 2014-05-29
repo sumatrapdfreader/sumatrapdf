@@ -341,6 +341,8 @@ public:
     virtual float GetFileDPI() const { return image->GetHorizontalResolution(); }
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
 
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
 
@@ -529,6 +531,33 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo)
     return mbox;
 }
 
+bool ImageEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+{
+    bool ok = true;
+    PdfCreator *c = new PdfCreator();
+    if (fileName) {
+        size_t len;
+        ScopedMem<char> data(file::ReadAll(fileName, &len));
+        ok = data && c->AddImagePage(data, len, GetFileDPI());
+    }
+    else {
+        size_t len;
+        ScopedMem<char> data((char *)GetDataFromStream(fileStream, &len));
+        ok = data && c->AddImagePage(data, len, GetFileDPI());
+    }
+    for (int i = 2; i <= PageCount() && ok; i++) {
+        ImagePage *page = GetPage(i);
+        ok = page && c->AddImagePage(page->bmp, GetFileDPI());
+        DropPage(page);
+    }
+    if (ok) {
+        c->CopyProperties(this);
+        ok = c->SaveToFile(pdfFileName);
+    }
+    delete c;
+    return ok;
+}
+
 BaseEngine *ImageEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     ImageEngineImpl *engine = new ImageEngineImpl();
@@ -610,6 +639,8 @@ public:
     // TODO: better handle the case where images have different resolutions
     virtual float GetFileDPI() const { return fileDPI; }
     virtual const WCHAR *GetDefaultFileExt() const { return L""; }
+
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -732,6 +763,20 @@ RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
+}
+
+bool ImageDirEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+{
+    bool ok = true;
+    PdfCreator *c = new PdfCreator();
+    for (int i = 1; i <= PageCount() && ok; i++) {
+        size_t len;
+        ScopedMem<char> data(file::ReadAll(pageFileNames.At(i - 1), &len));
+        ok = data && c->AddImagePage(data, len, GetFileDPI());
+    }
+    ok = ok && c->SaveToFile(pdfFileName);
+    delete c;
+    return ok;
 }
 
 BaseEngine *ImageDirEngineImpl::CreateFromFile(const WCHAR *fileName)
@@ -1051,14 +1096,10 @@ bool CbzEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnno
     for (int i = 1; i <= PageCount() && ok; i++) {
         size_t len;
         ScopedMem<char> data(GetImageData(i, len));
-        ok = c->AddImagePage(data, len, GetFileDPI());
+        ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     if (ok) {
-        if (propTitle) c->SetProperty(Prop_Title, propTitle);
-        if (propAuthors.Count()) c->SetProperty(Prop_Author, ScopedMem<WCHAR>(propAuthors.Join(L", ")));
-        if (propModDate) c->SetProperty(Prop_ModificationDate, propModDate);
-        if (propCreator) c->SetProperty(Prop_CreatorApp, propCreator);
-        if (propSummary) c->SetProperty(Prop_Subject, propSummary);
+        c->CopyProperties(this);
         ok = c->SaveToFile(pdfFileName);
     }
     delete c;
@@ -1268,11 +1309,7 @@ bool CbrEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnno
         ok = c->AddImagePage(rdd->data, rdd->len, GetFileDPI());
     }
     if (ok) {
-        if (propTitle) c->SetProperty(Prop_Title, propTitle);
-        if (propAuthors.Count()) c->SetProperty(Prop_Author, ScopedMem<WCHAR>(propAuthors.Join(L", ")));
-        if (propModDate) c->SetProperty(Prop_ModificationDate, propModDate);
-        if (propCreator) c->SetProperty(Prop_CreatorApp, propCreator);
-        if (propSummary) c->SetProperty(Prop_Subject, propSummary);
+        c->CopyProperties(this);
         ok = c->SaveToFile(pdfFileName);
     }
     delete c;

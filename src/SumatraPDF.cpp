@@ -2224,8 +2224,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
     bool canConvertToPDF = engine && win.GetEngineType() != Engine_PDF;
 #ifndef DEBUG
-    // not ready for document types other than PS and Comic book
-    if (canConvertToPDF && win.GetEngineType() != Engine_PS && win.GetEngineType() != Engine_ComicBook)
+    // not ready for document types other than PS and image collections
+    if (canConvertToPDF && win.GetEngineType() != Engine_PS && !engine->IsImageCollection())
         canConvertToPDF = false;
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -2330,7 +2330,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         if (!ok) {
 #ifdef DEBUG
             // rendering includes all page annotations
-            ok = RenderToPDF(realDstFileName, engine);
+            ok = PdfCreator::RenderToFile(realDstFileName, engine);
 #endif
         }
         else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument)

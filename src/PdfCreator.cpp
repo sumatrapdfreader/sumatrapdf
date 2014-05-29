@@ -303,6 +303,22 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
     return true;
 }
 
+bool PdfCreator::CopyProperties(BaseEngine *engine)
+{
+    static DocumentProperty props[] = {
+        Prop_Title, Prop_Author, Prop_Subject, Prop_Copyright,
+        Prop_ModificationDate, Prop_CreatorApp
+    };
+    bool ok = true;
+    for (int i = 0; i < dimof(props); i++) {
+        ScopedMem<WCHAR> value(engine->GetProperty(props[i]));
+        if (value) {
+            ok = ok && SetProperty(props[i], value);
+        }
+    }
+    return ok;
+}
+
 bool PdfCreator::SaveToFile(const WCHAR *filePath)
 {
     if (!ctx || !doc) return false;
@@ -320,7 +336,7 @@ bool PdfCreator::SaveToFile(const WCHAR *filePath)
     return true;
 }
 
-bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
+bool PdfCreator::RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
 {
     PdfCreator *c = new PdfCreator();
     bool ok = true;
@@ -338,13 +354,7 @@ bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
         delete c;
         return false;
     }
-    // copy document properties
-    static DocumentProperty props[] = { Prop_Title, Prop_Author, Prop_Subject, Prop_Copyright, Prop_ModificationDate, Prop_CreatorApp };
-    for (int i = 0; i < dimof(props); i++) {
-        ScopedMem<WCHAR> value(engine->GetProperty(props[i]));
-        if (value)
-            c->SetProperty(props[i], value);
-    }
+    c->CopyProperties(engine);
     ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;
