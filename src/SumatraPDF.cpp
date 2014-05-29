@@ -1123,6 +1123,42 @@ Error:
     return true;
 }
 
+class FileChangeCallback : public UITask, public FileChangeObserver
+{
+    WindowInfo *win;
+    Controller *ctrl;
+
+public:
+    explicit FileChangeCallback(WindowInfo *win, Controller *ctrl) : win(win), ctrl(ctrl) { }
+
+    virtual void OnFileChanged() {
+        // We cannot call win->Reload directly as it could cause race conditions
+        // between the watching thread and the main thread (and only pass a copy of this
+        // callback to uitask::Post, as the object will be deleted after use)
+        uitask::Post(new FileChangeCallback(win, ctrl));
+    }
+
+    virtual void Execute() {
+        if (WindowInfoStillValid(win)) {
+            if (win->ctrl == ctrl) {
+                // delay the reload slightly, in case we get another request immediately after this one
+                SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+            }
+            else {
+                CrashIf(!win->tabsVisible);
+                TabData *td = NULL;
+                for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+                    if (td->ctrl == ctrl) {
+                        td->reloadOnFocus = true;
+                        break;
+                    }
+                }
+                CrashIf(!td);
+            }
+        }
+    }
+};
+
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
     if (!win->IsDocLoaded()) {
@@ -1142,6 +1178,8 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
+    FileWatcherUnsubscribe(win->watcher);
+    win->watcher = NULL;
 
     ScopedMem<WCHAR> path(str::Dup(win->loadedFilePath));
     HwndPasswordUI pwdUI(win->hwndFrame);
@@ -1159,6 +1197,8 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
     TabsOnChangedDoc(win);
+    if (gGlobalPrefs->reloadModifiedDocuments)
+        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win, win->ctrl));
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
@@ -1322,27 +1362,6 @@ static void DeleteWindowInfo(WindowInfo *win)
 
     delete win;
 }
-
-class FileChangeCallback : public UITask, public FileChangeObserver
-{
-    WindowInfo *win;
-public:
-    explicit FileChangeCallback(WindowInfo *win) : win(win) { }
-
-    virtual void OnFileChanged() {
-        // We cannot call win->Reload directly as it could cause race conditions
-        // between the watching thread and the main thread (and only pass a copy of this
-        // callback to uitask::Post, as the object will be deleted after use)
-        uitask::Post(new FileChangeCallback(win));
-    }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            // delay the reload slightly, in case we get another request immediately after this one
-            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
-        }
-    }
-};
 
 static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
 {
@@ -1514,11 +1533,9 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return win;
     }
 
-    FileWatcherUnsubscribe(win->watcher);
-    win->watcher = NULL;
-
+    CrashIf(win->watcher);
     if (gGlobalPrefs->reloadModifiedDocuments)
-        win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
+        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win, win->ctrl));
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
@@ -1550,7 +1567,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 {
     if (!win || !tdata) return;
 
-    // TODO: this misses changes to documents opened in a background tab!
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
 
@@ -1572,6 +1588,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     delete win->ctrl;
     win->ctrl = tdata->ctrl;
+    win->watcher = tdata->watcher;
 
     if (win->AsChm())
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
@@ -1627,10 +1644,12 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     UpdateFindbox(win);
     UpdateTextSelection(win, false);
 
-    if (gGlobalPrefs->reloadModifiedDocuments)
-        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win));
-
     win->RedrawAll(true);
+
+    if (tdata->reloadOnFocus) {
+        tdata->reloadOnFocus = false;
+        ReloadDocument(win, true);
+    }
 }
 
 // The current page edit box is updated with the current page number

@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "ChmModel.h"
 #include "Controller.h"
+#include "FileWatcher.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
@@ -569,13 +570,13 @@ void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->ctrl = win->ctrl;
     free(tdata->title);
     tdata->title = win::GetText(win->hwndFrame);
-    free(tdata->filePath);
-    tdata->filePath = str::Dup(win->loadedFilePath);
+    str::ReplacePtr(&tdata->filePath, win->loadedFilePath);
     tdata->canvasRc = win->canvasRc;
+    tdata->watcher = win->watcher;
 }
 
 
-void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
+static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
 {
     if (*tdata == NULL)
         *tdata = new TabData();
@@ -591,8 +592,9 @@ void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
         win->AsChm()->RemoveParentHwnd();
 
     SaveTabData(win, *tdata);
-
-    win->ctrl = NULL;       // prevent this data deletion
+    // prevent data from being deleted
+    win->ctrl = NULL;
+    win->watcher = NULL;
 }
 
 
@@ -655,6 +657,7 @@ void DeleteTabData(TabData *tdata, bool deleteModel)
     if (tdata) {
         if (deleteModel) {
             delete tdata->ctrl;
+            FileWatcherUnsubscribe(tdata->watcher);
         }
         free(tdata->title);
         free(tdata->filePath);

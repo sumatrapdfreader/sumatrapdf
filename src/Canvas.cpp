@@ -1318,7 +1318,6 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case AUTO_RELOAD_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-        // TODO: handle background tabs
         ReloadDocument(&win, true);
         break;
 

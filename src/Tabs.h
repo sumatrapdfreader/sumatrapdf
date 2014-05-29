@@ -9,9 +9,9 @@
 #define TAB_WIDTH        200
 #define TAB_HEIGHT       TABBAR_HEIGHT - 1
 
-struct PageAnnotation;
 class WindowInfo;
 class Controller;
+struct WatchedFile;
 
 // This is the data, for every opened document, which is preserved between
 // tab selections. It's loaded back in the WindowInfo for the currently active document.
@@ -22,13 +22,17 @@ struct TabData
     Vec<int>    tocState;
     WCHAR *     title;
     WCHAR *     filePath;
+    // canvas dimensions when the document was last visible
     RectI       canvasRc;
+    WatchedFile*watcher;
+    // if true, the document should be auto-reloaded when it's visible again
+    bool        reloadOnFocus;
 
-    TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL) { }
+    TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL),
+        watcher(NULL), reloadOnFocus(false) { }
 };
 
 void SaveTabData(WindowInfo *win, TabData *tdata);
-void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata);
 void SaveCurrentTabData(WindowInfo *win);
 int TabsGetCount(WindowInfo *win);
 TabData *GetTabData(WindowInfo *win, int tabIndex);
