@@ -1270,12 +1270,18 @@ BaseEngine *CbrEngineImpl::CreateFromFile(const WCHAR *fileName)
 
 namespace CbxEngine {
 
+#define RAR_SIGNATURE       "Rar!\x1A\x07\x00"
+#define RAR_SIGNATURE_LEN   7
+#define RAR5_SIGNATURE      "Rar!\x1A\x07\x01\x00"
+#define RAR5_SIGNATURE_LEN  8
+
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
-        return file::StartsWithN(fileName, "Rar!\x1A\x07\x00", 7);
+        return file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
+               file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN);
     }
 
     return str::EndsWithI(fileName, L".cbz") ||
@@ -1288,7 +1294,7 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
     AssertCrash(CbxEngine::IsSupportedFile(fileName) || CbxEngine::IsSupportedFile(fileName, true));
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
-        file::StartsWith(fileName, "PK\x03\x04")) {
+        file::StartsWithN(fileName, "PK\x03\x04", 4)) {
         BaseEngine *engine = CbzEngineImpl::CreateFromFile(fileName);
         if (engine)
             return engine;
@@ -1296,7 +1302,8 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
     // also try again if a .cbz or .zip file failed to load, it might
     // just have been misnamed (which apparently happens occasionally)
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
-        file::StartsWithN(fileName, "Rar!\x1A\x07\x00", 7)) {
+        file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
+        file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
         BaseEngine *engine = CbrEngineImpl::CreateFromFile(fileName);
         if (engine)
             return engine;
