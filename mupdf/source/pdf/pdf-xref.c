@@ -374,7 +374,7 @@ pdf_xref_size_from_old_trailer(pdf_document *doc, pdf_lexbuf *buf)
 		if (!s)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "invalid range marker in xref");
 		len = fz_atoi(fz_strsep(&s, " "));
-		if (len <= 0)
+		if (len < 0)
 			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "xref range marker must be positive");
 
 		/* broken pdfs where the section is not on a separate line */
