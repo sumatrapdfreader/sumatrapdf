@@ -183,7 +183,7 @@ EBOOK_OBJS = \
 	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj
 
 ENGINE_OBJS = \
-	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
+	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj $(OS)\PdfCreator.obj \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
@@ -275,7 +275,8 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
 !endif
 
 !if "$(BUILD_CBZ_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
-PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OU)\JsonParser.obj
+PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj \
+	$(OU)\JsonParser.obj $(OS)\PdfCreator.obj
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 !endif

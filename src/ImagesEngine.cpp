@@ -10,6 +10,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
+#include "PdfCreator.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
@@ -917,6 +918,8 @@ public:
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbz"; }
 
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
 
@@ -1039,6 +1042,28 @@ char *CbzEngineImpl::GetImageData(int pageNo, size_t& len)
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
     ScopedCritSec scope(&cacheAccess);
     return cbzFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
+}
+
+bool CbzEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+{
+    bool ok = true;
+    PdfCreator *c = PdfCreator::Create((int)GetFileDPI());
+    for (int i = 1; i <= PageCount() && ok; i++) {
+        size_t len;
+        ScopedMem<char> data(GetImageData(i, len));
+        ok = c->AddImagePage(data, len, GetFileDPI());
+    }
+    if (ok) {
+        if (propTitle) c->SetProperty(Prop_Title, propTitle);
+        if (propAuthors.Count()) c->SetProperty(Prop_Author, ScopedMem<WCHAR>(propAuthors.Join(L", ")));
+        if (propModDate) c->SetProperty(Prop_ModificationDate, propModDate);
+        if (propCreator) c->SetProperty(Prop_CreatorApp, propCreator);
+        if (propSummary) c->SetProperty(Prop_Subject, propSummary);
+        c->SetProperty(Prop_PdfProducer, L"SumatraPDF's CbzEngine");
+        ok = c->SaveToFile(pdfFileName);
+    }
+    delete c;
+    return ok;
 }
 
 BaseEngine *CbzEngineImpl::CreateFromFile(const WCHAR *fileName)

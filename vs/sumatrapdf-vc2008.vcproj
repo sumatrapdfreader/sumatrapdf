@@ -785,6 +785,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\PdfCreator.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\PdfCreator.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\PdfEngine.cpp"
 					>
 				</File>

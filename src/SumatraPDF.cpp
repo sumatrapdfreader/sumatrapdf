@@ -33,6 +33,7 @@ using namespace Gdiplus;
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
+#include "PdfCreator.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"
 #include "Print.h"
@@ -1728,7 +1729,6 @@ static void RememberCurrentlyOpenedFiles()
     CrashIf(gGlobalPrefs->reopenOnce);
     str::Str<WCHAR> cmdLine;
 
-    DisplayState *ds;
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
         if (win->hwndTabBar) {

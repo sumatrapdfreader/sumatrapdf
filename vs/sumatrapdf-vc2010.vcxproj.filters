@@ -111,6 +111,9 @@
     <ClCompile Include="..\src\ParseCommandLine.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PdfCreator.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -918,6 +921,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ParseCommandLine.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\PdfCreator.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PdfSync.h">
