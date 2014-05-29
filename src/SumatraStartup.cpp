@@ -479,8 +479,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) && FindWindow(FRAME_CLASS_NAME, 0))
+    if (!i.reuseInstance && !i.newInstance &&
+        (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) &&
+        FindWindow(FRAME_CLASS_NAME, 0)) {
         i.reuseInstance = true;
+    }
 
     if (gGlobalPrefs->reopenOnce) {
         WStrVec moreFileNames;

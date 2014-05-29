@@ -160,6 +160,12 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // in another process
             reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
         }
+#ifdef DEBUG
+        // TODO: remove once issue 2601 has been fixed (-reuse-instance affects other versions)
+        else if (is_arg("-new-instance")) {
+            newInstance = true;
+        }
+#endif
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
