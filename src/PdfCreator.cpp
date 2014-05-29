@@ -17,6 +17,14 @@ using namespace Gdiplus;
 
 #include <zlib.h>
 
+static ScopedMem<WCHAR> gPdfProducer;
+
+void PdfCreator::SetProducerName(const WCHAR *name)
+{
+    if (!str::Eq(gPdfProducer, name))
+        gPdfProducer.Set(str::Dup(name));
+}
+
 static fz_image *render_to_pixmap(fz_context *ctx, HBITMAP hbmp, SizeI size)
 {
     int w = size.dx, h = size.dy;
@@ -130,7 +138,7 @@ static fz_image *pack_jp2(fz_context *ctx, const char *data, size_t len, SizeI s
     return fz_new_image(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, NULL, NULL, buf, NULL);
 }
 
-PdfCreator::PdfCreator(int dpi) : dpi(dpi)
+PdfCreator::PdfCreator()
 {
     ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
     if (!ctx)
@@ -151,17 +159,20 @@ PdfCreator::~PdfCreator()
 
 bool PdfCreator::AddImagePage(fz_image *image, float imgDpi)
 {
+    CrashIf(!ctx || !doc);
+    if (!ctx || !doc) return false;
+
     pdf_page *page = NULL;
     fz_device *dev = NULL;
     fz_var(page);
     fz_var(dev);
 
     fz_try(ctx) {
-        float zoom = imgDpi ? dpi / imgDpi : 1.0f;
-        fz_matrix ctm = { image->w / zoom, 0, 0, image->h / zoom, 0, 0 };
+        float zoom = imgDpi ? 72 / imgDpi : 1.0f;
+        fz_matrix ctm = { image->w * zoom, 0, 0, image->h * zoom, 0, 0 };
         fz_rect bounds = fz_unit_rect;
         fz_transform_rect(&bounds, &ctm);
-        page = pdf_create_page(doc, bounds, dpi, 0);
+        page = pdf_create_page(doc, bounds, 72, 0);
         dev = pdf_page_write(doc, page);
         fz_fill_image(dev, image, &ctm, 1.0);
         fz_free_device(dev);
@@ -180,6 +191,8 @@ bool PdfCreator::AddImagePage(fz_image *image, float imgDpi)
 
 bool PdfCreator::AddImagePage(HBITMAP hbmp, SizeI size, float imgDpi)
 {
+    if (!ctx || !doc) return false;
+
     fz_image *image = NULL;
     fz_try(ctx) {
         image = render_to_pixmap(ctx, hbmp, size);
@@ -206,6 +219,9 @@ bool PdfCreator::AddImagePage(Bitmap *bmp, float imgDpi)
 
 bool PdfCreator::AddImagePage(const char *data, size_t len, float imgDpi)
 {
+    CrashIf(!ctx || !doc);
+    if (!ctx || !doc) return false;
+
     const WCHAR *ext = GfxFileExtFromData(data, len);
     if (str::Eq(ext, L".jpg") || str::Eq(ext, L".jp2")) {
         Size size = BitmapSizeFromData(data, len);
@@ -228,19 +244,19 @@ bool PdfCreator::AddImagePage(const char *data, size_t len, float imgDpi)
     return ok;
 }
 
-bool PdfCreator::AddRenderedPage(BaseEngine *engine, int pageNo)
+static bool Is7BitAscii(const WCHAR *str)
 {
-    float zoom = dpi / engine->GetFileDPI();
-    RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, 0, NULL, Target_Export);
-    if (!bmp)
-        return false;
-    bool ok = AddImagePage(bmp->GetBitmap(), bmp->Size(), engine->GetFileDPI());
-    delete bmp;
-    return ok;
+    for (const WCHAR *c = str; *c; c++) {
+        if (*c < 32 || *c > 127)
+            return false;
+    }
+    return true;
 }
 
 bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
 {
+    if (!ctx || !doc) return false;
+
     // adapted from PdfEngineImpl::GetProperty
     static struct {
         DocumentProperty prop;
@@ -259,8 +275,16 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
     if (!name)
         return false;
 
-    // TODO: proper encoding?
-    ScopedMem<char> valueUtf8(str::conv::ToUtf8(value));
+    ScopedMem<char> encValue;
+    int encValueLen;
+    if (Is7BitAscii(value)) {
+        encValue.Set(str::conv::ToUtf8(value));
+        encValueLen = (int)str::Len(encValue);
+    }
+    else {
+        encValue.Set((char *)str::Join(L"\uFEFF", value));
+        encValueLen = (int)((str::Len(value) + 1) * sizeof(WCHAR));
+    }
     pdf_obj *obj = NULL;
     fz_var(obj);
     fz_try(ctx) {
@@ -270,7 +294,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
             pdf_dict_puts_drop(pdf_trailer(doc), "Info", pdf_new_ref(doc, obj));
             pdf_drop_obj(obj);
         }
-        pdf_dict_puts_drop(info, name, pdf_new_string(doc, valueUtf8, (int)str::Len(valueUtf8)));
+        pdf_dict_puts_drop(info, name, pdf_new_string(doc, encValue, encValueLen));
     }
     fz_catch(ctx) {
         pdf_drop_obj(obj);
@@ -281,6 +305,11 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
 
 bool PdfCreator::SaveToFile(const WCHAR *filePath)
 {
+    if (!ctx || !doc) return false;
+
+    if (gPdfProducer)
+        SetProperty(Prop_PdfProducer, gPdfProducer);
+
     ScopedMem<char> pathUtf8(str::conv::ToUtf8(filePath));
     fz_try(ctx) {
         pdf_write_document(doc, pathUtf8, NULL);
@@ -291,37 +320,32 @@ bool PdfCreator::SaveToFile(const WCHAR *filePath)
     return true;
 }
 
-PdfCreator *PdfCreator::Create(int dpi)
-{
-    PdfCreator *c = new PdfCreator(dpi);
-    if (!c->ctx || !c->doc) {
-        delete c;
-        return NULL;
-    }
-    return c;
-}
-
 bool RenderToPDF(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
 {
-    PdfCreator *c = PdfCreator::Create(dpi);
-    if (!c)
-        return false;
+    PdfCreator *c = new PdfCreator();
     bool ok = true;
     // render all pages to images
+    float zoom = dpi / engine->GetFileDPI();
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
-        ok = c->AddRenderedPage(engine, i);
+        RenderedBitmap *bmp = engine->RenderBitmap(i, zoom, 0, NULL, Target_Export);
+        if (bmp)
+            ok = c->AddImagePage(bmp->GetBitmap(), bmp->Size(), dpi);
+        else
+            ok = false;
+        delete bmp;
     }
-    if (ok) {
-        // copy document properties
-        static DocumentProperty props[] = { Prop_Title, Prop_Author, Prop_Subject, Prop_Copyright, Prop_ModificationDate, Prop_CreatorApp };
-        for (int i = 0; i < dimof(props); i++) {
-            ScopedMem<WCHAR> value(engine->GetProperty(props[i]));
-            if (value)
-                c->SetProperty(props[i], value);
-        }
-        c->SetProperty(Prop_PdfProducer, L"SumatraPDF's RenderToPDF");
-        ok = c->SaveToFile(pdfFileName);
+    if (!ok) {
+        delete c;
+        return false;
     }
+    // copy document properties
+    static DocumentProperty props[] = { Prop_Title, Prop_Author, Prop_Subject, Prop_Copyright, Prop_ModificationDate, Prop_CreatorApp };
+    for (int i = 0; i < dimof(props); i++) {
+        ScopedMem<WCHAR> value(engine->GetProperty(props[i]));
+        if (value)
+            c->SetProperty(props[i], value);
+    }
+    ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;
 }

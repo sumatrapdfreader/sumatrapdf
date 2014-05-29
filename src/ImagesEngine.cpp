@@ -1047,7 +1047,7 @@ char *CbzEngineImpl::GetImageData(int pageNo, size_t& len)
 bool CbzEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
 {
     bool ok = true;
-    PdfCreator *c = PdfCreator::Create((int)GetFileDPI());
+    PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
         size_t len;
         ScopedMem<char> data(GetImageData(i, len));
@@ -1059,7 +1059,6 @@ bool CbzEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnno
         if (propModDate) c->SetProperty(Prop_ModificationDate, propModDate);
         if (propCreator) c->SetProperty(Prop_CreatorApp, propCreator);
         if (propSummary) c->SetProperty(Prop_Subject, propSummary);
-        c->SetProperty(Prop_PdfProducer, L"SumatraPDF's CbzEngine");
         ok = c->SaveToFile(pdfFileName);
     }
     delete c;
@@ -1105,6 +1104,8 @@ public:
     }
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbr"; }
+
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1256,6 +1257,26 @@ RectD CbrEngineImpl::LoadMediabox(int pageNo)
     RarDecompressData *rdd = pageData.At(pageNo - 1);
     Size size = BitmapSizeFromData(rdd->data, rdd->len);
     return RectD(0, 0, size.Width, size.Height);
+}
+
+bool CbrEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+{
+    bool ok = true;
+    PdfCreator *c = new PdfCreator();
+    for (int i = 1; i <= PageCount() && ok; i++) {
+        RarDecompressData *rdd = pageData.At(i - 1);
+        ok = c->AddImagePage(rdd->data, rdd->len, GetFileDPI());
+    }
+    if (ok) {
+        if (propTitle) c->SetProperty(Prop_Title, propTitle);
+        if (propAuthors.Count()) c->SetProperty(Prop_Author, ScopedMem<WCHAR>(propAuthors.Join(L", ")));
+        if (propModDate) c->SetProperty(Prop_ModificationDate, propModDate);
+        if (propCreator) c->SetProperty(Prop_CreatorApp, propCreator);
+        if (propSummary) c->SetProperty(Prop_Subject, propSummary);
+        ok = c->SaveToFile(pdfFileName);
+    }
+    delete c;
+    return ok;
 }
 
 BaseEngine *CbrEngineImpl::CreateFromFile(const WCHAR *fileName)

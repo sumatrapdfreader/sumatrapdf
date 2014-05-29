@@ -11,6 +11,7 @@ Next version:
 * deprecated the browser plugin (remains installed if used)
 * support LZMA in Comic Book (CBZ) files
 * new advanced settings: UseTabs (to be exposed eventually), ShowSingleTab, FullPathInTitle
+* allow saving Comic Book files as PDF
 
 2.5.2 (2014-05-13)
 

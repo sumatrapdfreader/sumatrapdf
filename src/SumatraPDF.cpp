@@ -2224,8 +2224,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
     bool canConvertToPDF = engine && win.GetEngineType() != Engine_PDF;
 #ifndef DEBUG
-    // not ready for non-PS document types yet
-    if (canConvertToPDF && win.GetEngineType() != Engine_PS)
+    // not ready for document types other than PS and Comic book
+    if (canConvertToPDF && win.GetEngineType() != Engine_PS && win.GetEngineType() != Engine_ComicBook)
         canConvertToPDF = false;
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -2323,8 +2323,9 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     }
-    // Convert the Postscript file into a PDF one
+    // Convert the file into a PDF one
     else if (convertToPDF) {
+        PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
         ok = engine->SaveFileAsPDF(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
         if (!ok) {
 #ifdef DEBUG

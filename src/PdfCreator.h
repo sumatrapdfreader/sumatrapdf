@@ -13,10 +13,9 @@ enum DocumentProperty;
 class PdfCreator {
     fz_context *ctx;
     pdf_document *doc;
-    int dpi;
 
 public:
-    PdfCreator(int dpi);
+    PdfCreator();
     ~PdfCreator();
 
     bool AddImagePage(fz_image *image, float imgDpi=0);
@@ -25,11 +24,11 @@ public:
     // recommended for JPEG and JP2 images (don't need to be recompressed)
     bool AddImagePage(const char *data, size_t len, float imgDpi=0);
 
-    bool AddRenderedPage(BaseEngine *engine, int pageNo);
     bool SetProperty(DocumentProperty prop, const WCHAR *value);
     bool SaveToFile(const WCHAR *filePath);
 
-    static PdfCreator *Create(int dpi);
+    // this name is included in all saved PDF files
+    static void SetProducerName(const WCHAR *name);
 };
 
 // creates a simple PDF with all pages rendered as a single image

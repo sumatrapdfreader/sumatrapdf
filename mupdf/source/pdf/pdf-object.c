@@ -1676,7 +1676,8 @@ static void fmt_obj(struct fmt *fmt, pdf_obj *obj)
 		int i, c;
 		for (i = 0; i < len; i++) {
 			c = (unsigned char)str[i];
-			if (strchr("()\\\n\r\t\b\f", c))
+			/* SumatraPDF: \0 is encoded as \000 */
+			if (strchr("()\\\n\r\t\b\f", c) && c)
 				added ++;
 			else if (c < 32 || c >= 127)
 				added += 3;
