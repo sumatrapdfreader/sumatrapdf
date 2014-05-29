@@ -270,7 +270,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
             pdf_dict_puts_drop(pdf_trailer(doc), "Info", pdf_new_ref(doc, obj));
             pdf_drop_obj(obj);
         }
-        pdf_dict_puts_drop(info, name, pdf_new_string(doc, valueUtf8, str::Len(valueUtf8)));
+        pdf_dict_puts_drop(info, name, pdf_new_string(doc, valueUtf8, (int)str::Len(valueUtf8)));
     }
     fz_catch(ctx) {
         pdf_drop_obj(obj);
