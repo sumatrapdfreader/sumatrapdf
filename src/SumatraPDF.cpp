@@ -345,9 +345,9 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
             TabData *td;
-            for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
                 if (path::IsSame(td->filePath, normFile)) {
-                    TabsSelect(win, i);
+                    TabsSelect(win, j);
                     return win;
                 }
             }
@@ -371,10 +371,10 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
             TabData *td;
-            for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
                 if (td->ctrl && td->ctrl->AsFixed() && td->ctrl->AsFixed()->pdfSync &&
                     td->ctrl->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, i);
+                    TabsSelect(win, j);
                     return win;
                 }
             }
