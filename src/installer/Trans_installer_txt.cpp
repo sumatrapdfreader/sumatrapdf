@@ -1051,7 +1051,7 @@ const char * gTranslations_it =
   "Installa SumatraPD&F nella cartella:\0"\
   "Installazione fallita!\0"\
   "Installazione in corso...\0"\
-  "\0"\
+  "Mantieni installato il plugin PDF del &browser (non pi\303\271 supportato)\0"\
   "Assegna a Windows la ricerca sul desktop & dei documenti PDF\0"\
   "Assegna a Windows la visualizzazione & anteprima dei documenti PDF\0"\
   "Chiudi %s per continuare!\0"\
