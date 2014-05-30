@@ -77,9 +77,7 @@ class Fb2Doc {
     Vec<ImageData2> images;
     ScopedMem<char> coverImage;
     PropertyMap props;
-
     bool isZipped;
-    bool hasToc;
 
     bool Load();
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
