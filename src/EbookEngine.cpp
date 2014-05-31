@@ -940,7 +940,7 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 class MobiEngineImpl : public EbookEngine {
 public:
-    MobiEngineImpl() : EbookEngine(), doc(NULL), tocReparsePoint(NULL) { }
+    MobiEngineImpl() : EbookEngine(), doc(NULL) { }
     virtual ~MobiEngineImpl() { delete doc; }
     virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
@@ -952,15 +952,13 @@ public:
     virtual const WCHAR *GetDefaultFileExt() const { return L".mobi"; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
+    virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
     MobiDoc *doc;
-    const char *tocReparsePoint;
-    ScopedMem<char> pdbHtml;
 
     bool Load(const WCHAR *fileName);
 };
@@ -985,22 +983,6 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
-
-    HtmlParser parser;
-    if (parser.Parse(args.htmlStr)) {
-        HtmlElement *ref = NULL;
-        while ((ref = parser.FindElementByName("reference", ref)) != NULL) {
-            ScopedMem<WCHAR> type(ref->GetAttribute("type"));
-            ScopedMem<WCHAR> filepos(ref->GetAttribute("filepos"));
-            if (str::EqI(type, L"toc") && filepos) {
-                unsigned int pos;
-                if (str::Parse(filepos, L"%u%$", &pos) && pos < args.htmlStrLen) {
-                    tocReparsePoint = args.htmlStr + pos;
-                    break;
-                }
-            }
-        }
-    }
 
     return pages->Count() > 0;
 }
@@ -1042,61 +1024,9 @@ PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
 
 DocTocItem *MobiEngineImpl::GetTocTree()
 {
-    if (!tocReparsePoint)
-        return NULL;
-
-    EbookTocItem *root = NULL;
-    ScopedMem<WCHAR> itemText;
-    ScopedMem<WCHAR> itemLink;
-    int itemLevel = 0;
-    int idCounter = 0;
-
-    // there doesn't seem to be a standard for Mobi ToCs, so we try to
-    // determine the author's intentions by looking at commonly used tags
-    HtmlPullParser parser(tocReparsePoint, str::Len(tocReparsePoint));
-    HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
-        if (itemLink && tok->IsText()) {
-            ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
-            if (itemText)
-                itemText.Set(str::Join(itemText, L" ", linkText));
-            else
-                itemText.Set(linkText.StealData());
-        }
-        else if (!tok->IsTag())
-            continue;
-        else if (Tag_Mbp_Pagebreak == tok->tag)
-            break;
-        else if (!itemLink && tok->IsStartTag() && Tag_A == tok->tag) {
-            AttrInfo *attr = tok->GetAttrByName("filepos");
-            if (!attr)
-                attr = tok->GetAttrByName("href");
-            if (attr)
-                itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
-        }
-        else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
-            PageDestination *dest = NULL;
-            if (!itemText) {
-                itemLink.Set(NULL);
-                continue;
-            }
-            if (IsAbsoluteUrl(itemLink))
-                dest = new SimpleDest2(0, RectD(), itemLink.StealData());
-            else
-                dest = GetNamedDest(itemLink);
-            EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
-            item->id = ++idCounter;
-            AppendTocItem(root, item, itemLevel);
-            itemLink.Set(NULL);
-        }
-        else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
-            if (tok->IsStartTag())
-                itemLevel++;
-            else if (tok->IsEndTag() && itemLevel > 0)
-                itemLevel--;
-        }
-    }
-
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    EbookTocItem *root = builder.GetRoot();
     if (root)
         root->OpenSingleNode();
     return root;

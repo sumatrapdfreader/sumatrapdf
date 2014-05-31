@@ -9,7 +9,10 @@
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "HtmlPullParser.h"
 #include "PalmDbReader.h"
+#include "TrivialHtmlParser.h"
+
 #include "DebugLog.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
@@ -460,7 +463,7 @@ MobiDoc::MobiDoc(const WCHAR *filePath) :
     fileName(str::Dup(filePath)), pdbReader(NULL),
     docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
     doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0), coverImageRec(0),
-    imagesCount(0), images(NULL), huffDic(NULL), textEncoding(CP_UTF8)
+    imagesCount(0), images(NULL), huffDic(NULL), textEncoding(CP_UTF8), docTocIndex((size_t)-1)
 {
 }
 
@@ -840,6 +843,87 @@ WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
             return str::conv::FromCodePage(props.At(i).value, textEncoding);
     }
     return NULL;
+}
+
+bool MobiDoc::HasToc()
+{
+    if (docTocIndex != (size_t)-1)
+        return docTocIndex < doc->Size();
+    docTocIndex = doc->Size(); // no ToC
+
+    // search for <reference type=toc filepos=\d+/>
+    HtmlPullParser parser(doc->Get(), doc->Size());
+    HtmlToken *tok;
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+        if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference"))
+            continue;
+        AttrInfo *attr = tok->GetAttrByName("type");
+        if (!attr)
+            continue;
+        ScopedMem<WCHAR> val(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        attr = tok->GetAttrByName("filepos");
+        if (!str::EqI(val, L"toc") || !attr)
+            continue;
+        val.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        unsigned int pos;
+        if (str::Parse(val, L"%u%$", &pos)) {
+            docTocIndex = pos;
+            return docTocIndex < doc->Size();
+        }
+    }
+    return false;
+}
+
+bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
+{
+    if (!HasToc())
+        return false;
+
+    ScopedMem<WCHAR> itemText;
+    ScopedMem<WCHAR> itemLink;
+    int itemLevel = 0;
+
+    // there doesn't seem to be a standard for Mobi ToCs, so we try to
+    // determine the author's intentions by looking at commonly used tags
+    HtmlPullParser parser(doc->Get() + docTocIndex, doc->Size() - docTocIndex);
+    HtmlToken *tok;
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+        if (itemLink && tok->IsText()) {
+            ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            if (itemText)
+                itemText.Set(str::Join(itemText, L" ", linkText));
+            else
+                itemText.Set(linkText.StealData());
+        }
+        else if (!tok->IsTag())
+            continue;
+        else if (Tag_Mbp_Pagebreak == tok->tag)
+            break;
+        else if (!itemLink && tok->IsStartTag() && Tag_A == tok->tag) {
+            AttrInfo *attr = tok->GetAttrByName("filepos");
+            if (!attr)
+                attr = tok->GetAttrByName("href");
+            if (attr)
+                itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        }
+        else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
+            PageDestination *dest = NULL;
+            if (!itemText) {
+                itemLink.Set(NULL);
+                continue;
+            }
+            visitor->Visit(itemText, itemLink, itemLevel);
+            itemText.Set(NULL);
+            itemLink.Set(NULL);
+        }
+        else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
+            if (tok->IsStartTag())
+                itemLevel++;
+            else if (tok->IsEndTag() && itemLevel > 0)
+                itemLevel--;
+        }
+    }
+    return true;
 }
 
 bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)

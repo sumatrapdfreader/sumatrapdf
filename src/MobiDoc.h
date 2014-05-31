@@ -23,6 +23,7 @@ class MobiDoc
     int                 compressionType;
     size_t              docUncompressedSize;
     int                 textEncoding;
+    size_t              docTocIndex;
 
     bool                multibyte;
     size_t              trailersCount;
@@ -62,6 +63,9 @@ public:
     const WCHAR *       GetFileName() const { return fileName; }
     WCHAR *             GetProperty(DocumentProperty prop);
     PdbDocType          GetDocType() const { return docType; }
+
+    bool                HasToc();
+    bool                ParseToc(EbookTocVisitor *visitor);
 
     static bool         IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static MobiDoc *    CreateFromFile(const WCHAR *fileName);
