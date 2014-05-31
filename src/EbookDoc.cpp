@@ -674,10 +674,10 @@ const char *FB2_MAIN_NS = "http://www.gribuser.ru/xml/fictionbook/2.0";
 const char *FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
 
 Fb2Doc::Fb2Doc(const WCHAR *fileName) : fileName(str::Dup(fileName)),
-    stream(NULL), isZipped(false) { }
+    stream(NULL), isZipped(false), hasToc(false) { }
 
 Fb2Doc::Fb2Doc(IStream *stream) : fileName(NULL),
-    stream(stream), isZipped(false) {
+    stream(stream), isZipped(false), hasToc(false) {
     stream->AddRef();
 }
 
@@ -745,6 +745,8 @@ bool Fb2Doc::Load()
                 xmlData.Append('>');
             }
         }
+        else if (inBody && tok->IsStartTag() && Tag_Title == tok->tag)
+            hasToc = true;
         else if (inBody)
             continue;
         else if (inTitleInfo && tok->IsEndTag() && tok->NameIsNS("title-info", FB2_MAIN_NS))
@@ -876,6 +878,53 @@ const WCHAR *Fb2Doc::GetFileName() const
 bool Fb2Doc::IsZipped() const
 {
     return isZipped;
+}
+
+bool Fb2Doc::HasToc() const
+{
+    return hasToc;
+}
+
+bool Fb2Doc::ParseToc(EbookTocVisitor *visitor)
+{
+    ScopedMem<WCHAR> itemText;
+    bool inTitle = false;
+    int titleCount = 0;
+    int level = 0;
+
+    size_t xmlLen;
+    const char *xmlData = GetTextData(&xmlLen);
+    HtmlPullParser parser(xmlData, xmlLen);
+    HtmlToken *tok;
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+        if (tok->IsStartTag() && Tag_Section == tok->tag)
+            level++;
+        else if (tok->IsEndTag() && Tag_Section == tok->tag && level > 0)
+            level--;
+        else if (tok->IsStartTag() && Tag_Title == tok->tag) {
+            inTitle = true;
+            titleCount++;
+        }
+        else if (tok->IsEndTag() && Tag_Title == tok->tag) {
+            if (itemText)
+                str::NormalizeWS(itemText);
+            if (!str::IsEmpty(itemText.Get())) {
+                ScopedMem<WCHAR> url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
+                visitor->Visit(itemText, url, level);
+                itemText.Set(NULL);
+            }
+            inTitle = false;
+        }
+        else if (inTitle && tok->IsText()) {
+            ScopedMem<WCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            if (str::IsEmpty(itemText.Get()))
+                itemText.Set(text.StealData());
+            else
+                itemText.Set(str::Join(itemText, L" ", text));
+        }
+    }
+
+    return true;
 }
 
 bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -1479,6 +1528,13 @@ bool TxtDoc::HasToc() const
     return isRFC;
 }
 
+static inline const WCHAR *SkipDigits(const WCHAR *s)
+{
+    while (str::IsDigit(*s))
+        s++;
+    return s;
+}
+
 bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
 {
     if (!isRFC)
@@ -1492,9 +1548,10 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
         ScopedMem<WCHAR> id(el->GetAttribute("id"));
         int level = 1;
         if (str::IsDigit(*title)) {
-            const WCHAR *dot = str::FindChar(title, '.');
-            while ((dot = str::FindChar(dot + 1, '.')) != NULL) {
+            const WCHAR *dot = SkipDigits(title);
+            while ('.' == *dot && str::IsDigit(*(dot + 1))) {
                 level++;
+                dot = SkipDigits(dot + 1);
             }
         }
         visitor->Visit(title, id, level);

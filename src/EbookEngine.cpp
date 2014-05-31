@@ -705,10 +705,8 @@ public:
 
         EbookTocItem *item = new EbookTocItem(str::Dup(name), dest);
         item->id = ++idCounter;
-        item->open = level <= 2;
         if (isIndex) {
             item->pageNo = 0;
-            item->open = level != 1;
             level++;
         }
         AppendTocItem(root, item, level);
@@ -864,10 +862,10 @@ public:
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     virtual const WCHAR *GetDefaultFileExt() const {
-        return doc && doc->IsZipped() ? L".fb2z" : L".fb2";
+        return doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
-    virtual bool HasTocTree() const;
+    virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
@@ -902,59 +900,11 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     return pages->Count() > 0;
 }
 
-bool Fb2EngineImpl::HasTocTree() const
-{
-    CrashIf(str::Len(FB2_TOC_ENTRY_MARK) != 10);
-    for (size_t i = 0; i < anchors.Count(); i++) {
-        DrawInstr *instr = anchors.At(i).instr;
-        if (instr->str.len == 11 && str::EqN(instr->str.s, FB2_TOC_ENTRY_MARK "1", 11))
-            return true;
-    }
-    return false;
-}
-
 DocTocItem *Fb2EngineImpl::GetTocTree()
 {
-    EbookTocItem *root = NULL;
-    ScopedMem<WCHAR> itemText;
-    int titleCount = 0;
-    bool inTitle = false;
-    int level = 0;
-
-    size_t xmlLen;
-    const char *xmlData = doc->GetTextData(&xmlLen);
-    HtmlPullParser parser(xmlData, xmlLen);
-    HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
-        if (tok->IsStartTag() && Tag_Section == tok->tag)
-            level++;
-        else if (tok->IsEndTag() && Tag_Section == tok->tag && level > 0)
-            level--;
-        else if (tok->IsStartTag() && Tag_Title == tok->tag) {
-            inTitle = true;
-            titleCount++;
-        }
-        else if (tok->IsEndTag() && Tag_Title == tok->tag) {
-            if (itemText)
-                str::NormalizeWS(itemText);
-            if (!str::IsEmpty(itemText.Get())) {
-                ScopedMem<WCHAR> name(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
-                PageDestination *dest = GetNamedDest(name);
-                EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
-                item->id = titleCount;
-                AppendTocItem(root, item, level);
-            }
-            inTitle = false;
-        }
-        else if (inTitle && tok->IsText()) {
-            ScopedMem<WCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
-            if (str::IsEmpty(itemText.Get()))
-                itemText.Set(text.StealData());
-            else
-                itemText.Set(str::Join(itemText, L" ", text));
-        }
-    }
-
+    EbookTocBuilder builder(this);
+    doc->ParseToc(&builder);
+    EbookTocItem *root = builder.GetRoot();
     if (root)
         root->OpenSingleNode();
     return root;
@@ -1542,7 +1492,10 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
-    return builder.GetRoot();
+    EbookTocItem *root = builder.GetRoot();
+    if (root)
+        root->OpenSingleNode();
+    return root;
 }
 
 class ChmEmbeddedDest : public PageDestination {

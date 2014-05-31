@@ -47,8 +47,6 @@ public:
 
 /* formatting extensions for FictionBook */
 
-#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
-
 class Fb2Doc;
 
 class Fb2Formatter : public HtmlFormatter {

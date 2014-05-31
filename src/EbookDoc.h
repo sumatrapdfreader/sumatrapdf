@@ -66,6 +66,8 @@ public:
 
 /* ********** FictionBook (FB2) ********** */
 
+#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
+
 class HtmlPullParser;
 struct HtmlToken;
 
@@ -78,6 +80,7 @@ class Fb2Doc {
     ScopedMem<char> coverImage;
     PropertyMap props;
     bool isZipped;
+    bool hasToc;
 
     bool Load();
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
@@ -95,6 +98,9 @@ public:
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
     bool IsZipped() const;
+
+    bool HasToc() const;
+    bool ParseToc(EbookTocVisitor *visitor);
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static Fb2Doc *CreateFromFile(const WCHAR *fileName);
