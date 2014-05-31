@@ -1470,11 +1470,6 @@ fz_draw_end_mask(fz_device *devp)
 #endif
 	/* convert to alpha mask */
 	temp = fz_alpha_from_gray(dev->ctx, state[1].dest, luminosity);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695260 */
-	fz_pixmap_bbox(ctx, temp, &bbox);
-	dest = fz_new_pixmap_with_bbox(dev->ctx, state->dest->colorspace, &bbox);
-	fz_clear_pixmap(dev->ctx, dest);
-
 	if (state[1].dest != state[0].dest)
 		fz_drop_pixmap(dev->ctx, state[1].dest);
 	state[1].dest = NULL;
@@ -1485,24 +1480,30 @@ fz_draw_end_mask(fz_device *devp)
 		fz_drop_pixmap(dev->ctx, state[1].mask);
 	state[1].mask = NULL;
 
-	/* create new dest scratch buffer * /
-	fz_pixmap_bbox(ctx, temp, &bbox);
-	dest = fz_new_pixmap_with_bbox(dev->ctx, state->dest->colorspace, &bbox);
-	fz_clear_pixmap(dev->ctx, dest);
-	*/
-
-	/* push soft mask as clip mask */
-	state[1].mask = temp;
-	state[1].dest = dest;
-	state[1].blendmode |= FZ_BLEND_ISOLATED;
-	/* If we have a shape, then it'll need to be masked with the
-	 * clip mask when we pop. So create a new shape now. */
-	if (state[0].shape)
+	fz_try(ctx)
 	{
-		state[1].shape = fz_new_pixmap_with_bbox(dev->ctx, NULL, &bbox);
-		fz_clear_pixmap(dev->ctx, state[1].shape);
+		/* create new dest scratch buffer */
+		fz_pixmap_bbox(ctx, temp, &bbox);
+		dest = fz_new_pixmap_with_bbox(dev->ctx, state->dest->colorspace, &bbox);
+		fz_clear_pixmap(dev->ctx, dest);
+
+		/* push soft mask as clip mask */
+		state[1].mask = temp;
+		state[1].dest = dest;
+		state[1].blendmode |= FZ_BLEND_ISOLATED;
+		/* If we have a shape, then it'll need to be masked with the
+		 * clip mask when we pop. So create a new shape now. */
+		if (state[0].shape)
+		{
+			state[1].shape = fz_new_pixmap_with_bbox(dev->ctx, NULL, &bbox);
+			fz_clear_pixmap(dev->ctx, state[1].shape);
+		}
+		state[1].scissor = bbox;
 	}
-	state[1].scissor = bbox;
+	fz_catch(ctx)
+	{
+		emergency_pop_stack(dev, state);
+	}
 }
 
 static void

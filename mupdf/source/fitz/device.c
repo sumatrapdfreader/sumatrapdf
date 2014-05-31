@@ -402,6 +402,8 @@ fz_begin_mask(fz_device *dev, const fz_rect *area, int luminosity, fz_colorspace
 void
 fz_end_mask(fz_device *dev)
 {
+	fz_context *ctx = dev->ctx;
+
 	if (dev->error_depth)
 	{
 		/* Converts from mask to clip, so no change in stack depth */
@@ -412,8 +414,17 @@ fz_end_mask(fz_device *dev)
 		dev->container[dev->container_len-1].flags &= ~fz_device_container_stack_in_mask;
 		dev->container[dev->container_len-1].flags |= fz_device_container_stack_is_mask;
 	}
-	if (dev->end_mask)
-		dev->end_mask(dev);
+	fz_try(ctx)
+	{
+		if (dev->end_mask)
+			dev->end_mask(dev);
+	}
+	fz_catch(ctx)
+	{
+		dev->error_depth = 1;
+		strcpy(dev->errmess, fz_caught_message(ctx));
+		/* Error swallowed */
+	}
 }
 
 void

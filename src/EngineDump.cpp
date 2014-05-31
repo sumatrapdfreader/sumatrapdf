@@ -311,10 +311,14 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
+#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
+
 void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f, bool silent=false)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, 0);
+        if (!bmp && !silent)
+            ErrOut("Error: Failed to render page %d for %s!\n", pageNo, engine->FileName());
         if (!bmp || silent) {
             delete bmp;
             continue;
@@ -350,8 +354,6 @@ public:
         return str::Dup(password);
     }
 };
-
-#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
 {

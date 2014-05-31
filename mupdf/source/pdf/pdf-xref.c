@@ -2427,7 +2427,6 @@ pdf_document *pdf_create_document(fz_context *ctx)
 		pdf_dict_puts_drop(pages, "Count", pdf_new_int(doc, 0));
 		pdf_dict_puts_drop(pages, "Kids", pdf_new_array(doc, 1));
 		pdf_set_populating_xref_trailer(doc, trailer);
-		/* SumatraPDF: fix memory leak */
 		pdf_drop_obj(trailer);
 	}
 	fz_catch(ctx)
