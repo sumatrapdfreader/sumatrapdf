@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b78203c874bac955f0fec79e0514f6b67c647224
+06fb0c6c8a1f99582ada67e4bd2890b0dd79d150
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9993,6 +9993,7 @@ uz:KB
 vn:KB
 :Keep the PDF &browser plugin installed (no longer supported)
 am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
+az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
 ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)

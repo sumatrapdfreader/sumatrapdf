@@ -215,7 +215,7 @@ const char * gTranslations_az =
   "SumatraPDF-i bu &qovluqda qura\305\237d\304\261r:\0"\
   "Qura\305\237d\304\261rma ba\305\237 tutmad\304\261!\0"\
   "Qura\305\237d\304\261rma davam edir...\0"\
-  "\0"\
+  "PDF &brauzer plaginini silm\311\231 (art\304\261q d\311\231st\311\231kl\311\231nmir)\0"\
   "PDF s\311\231n\311\231dl\311\231rini Windows Desktop Search vasit\311\231sil\311\231 a&xtar\0"\
   "PDF s\311\231n\311\231dl\311\231rini Windows al\311\231tl\311\231ri vasit\311\231sil\311\231 &g\303\266r\303\274nt\303\274l\311\231\0"\
   "Davam etm\311\231k \303\274\303\247\303\274n %s ba\304\237lay\304\261n!\0"\
