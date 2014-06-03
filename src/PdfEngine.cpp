@@ -1076,9 +1076,11 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
 struct PageTreeStackItem {
     pdf_obj *kids;
     int i, len;
+    int next_page_no;
 
-    PageTreeStackItem() : kids(NULL), i(-1), len(0) { }
-    explicit PageTreeStackItem(pdf_obj *kids) : kids(kids), i(-1), len(pdf_array_len(kids)) { }
+    PageTreeStackItem() : kids(NULL), i(-1), len(0), next_page_no(0) { }
+    explicit PageTreeStackItem(pdf_obj *kids, int next_page_no=0) :
+        kids(kids), i(-1), len(pdf_array_len(kids)), next_page_no(next_page_no) { }
 };
 
 static void
@@ -1098,6 +1100,8 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
             top.i++;
             if (top.i == top.len) {
                 pdf_unmark_obj(top.kids);
+                if (page_no < top.next_page_no)
+                    page_no = top.next_page_no;
                 if (stack.Size() == 0)
                     break;
                 top = stack.Pop();
@@ -1107,6 +1111,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
             pdf_obj *kid = pdf_array_get(top.kids, top.i);
             char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
             if (str::Eq(type, "Page") || str::IsEmpty(type) && pdf_dict_gets(kid, "MediaBox")) {
+tolerate_broken_page_tree:
                 if (page_no >= pdf_count_pages(doc))
                     fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
 
@@ -1117,17 +1122,15 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
                 int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
                 if (count > 0) {
                     stack.Push(top);
-                    top = PageTreeStackItem(pdf_dict_gets(kid, "Kids"));
+                    top = PageTreeStackItem(pdf_dict_gets(kid, "Kids"), page_no + count);
 
                     if (pdf_mark_obj(top.kids))
                         fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
                 }
             }
-            else if (pdf_is_null(kid)) {
-                fz_warn(ctx, "ignoring null object in page tree");
-            }
             else {
-                fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree (%s)", type);
+                fz_warn(ctx, "non-page object in page tree (%s)", type);
+                goto tolerate_broken_page_tree;
             }
         }
     }

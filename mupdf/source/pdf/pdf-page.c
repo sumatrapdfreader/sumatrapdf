@@ -66,6 +66,7 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 				char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
 				if (!strcmp(type, "Page") || (!*type && pdf_dict_gets(kid, "MediaBox")))
 				{
+tolerate_broken_page_tree:
 					if (*skip == 0)
 					{
 						if (parentp) *parentp = node;
@@ -91,14 +92,12 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 						*skip -= count;
 					}
 				}
-				/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2582 */
-				else if (pdf_is_null(kid))
-				{
-					fz_warn(ctx, "ignoring null object in page tree");
-				}
 				else
 				{
-					fz_throw(ctx, FZ_ERROR_GENERIC, "non-page object in page tree (%s)", type);
+					/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2582 */
+					/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2608 */
+					fz_warn(ctx, "non-page object in page tree (%s)", type);
+					goto tolerate_broken_page_tree;
 				}
 			}
 		}
