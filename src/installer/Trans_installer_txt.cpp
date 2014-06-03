@@ -1007,7 +1007,7 @@ const char * gTranslations_id =
   "Install SumatraPDF ke &folder:\0"\
   "Instalasi gagal!\0"\
   "Instalasi sedang berlangsung...\0"\
-  "\0"\
+  "Biarkan plugin peramban PDF terinstal (tidak lagi didukung)\0"\
   "Izinkan Windows Desktop Search mencari dokumen PDF\0"\
   "Izinkan Windows menampilkan dokumen PDF\0"\
   "Silakan tutup %s untuk melanjutkan.\0"\

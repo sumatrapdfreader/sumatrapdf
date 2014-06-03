@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-06fb0c6c8a1f99582ada67e4bd2890b0dd79d150
+5bb81e25b9c5e24313aa1d9824a48dd89d4f3adf
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -10005,6 +10005,7 @@ fa:و نصب مرور پلاگین (پشتبانی دائمی وجود ندار�
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
+id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
 it:Mantieni installato il plugin PDF del &browser (non più supportato)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 pt:&Manter plugin de navegador instalado (já não é suportado)
