@@ -25,7 +25,7 @@ public:
     virtual ~EbookController();
 
     virtual const WCHAR *FilePath() const { return _doc.GetFilePath(); }
-    virtual const WCHAR *DefaultFileExt() const;
+    virtual const WCHAR *DefaultFileExt() const { return _doc.GetDefaultFileExt(); }
     virtual int PageCount() const { return GetMaxPageCount(); }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return _doc.GetProperty(prop); }
 
@@ -42,10 +42,10 @@ public:
     virtual float GetNextZoomStep(float towards) const { return 100; }
     virtual void SetViewPortSize(SizeI size);
 
-    virtual bool HasTocTree() const { return false; }
-    virtual DocTocItem *GetTocTree() { return NULL; }
-    virtual void ScrollToLink(PageDestination *dest) { CrashIf(true); }
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
+    virtual bool HasTocTree() const { return _doc.HasToc(); }
+    virtual DocTocItem *GetTocTree();
+    virtual void ScrollToLink(PageDestination *dest);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
 
     virtual void UpdateDisplayState(DisplayState *ds);
     virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb);
@@ -67,6 +67,7 @@ public:
     void HandlePagesFromEbookLayout(EbookFormattingData *ebookLayout);
     void TriggerLayout();
     void SetDoc(Doc newDoc, int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
+    int  ResolvePageAnchor(const WCHAR *id);
 
     // call SetDoc before using this EbookController
     static EbookController *Create(HWND hwnd, ControllerCallback *cb);
@@ -100,6 +101,10 @@ protected:
     // whether HandleMessage passes messages on to ctrls->mainWnd
     bool            handleMsgs;
 
+    // parallel lists mapping anchor IDs to reparseIdxs
+    WStrVec *   pageAnchorIds;
+    Vec<int> *  pageAnchorIdxs;
+
     Vec<HtmlPage*> *GetPages();
     void        UpdateStatus();
     bool        FormattingInProgress() const { return formattingThread != NULL; }
@@ -107,6 +112,7 @@ protected:
     void        CloseCurrentDocument();
     int         GetMaxPageCount() const;
     bool        IsDoublePage() const;
+    void        ExtractPageAnchors();
 
     // event handlers
     void        ClickedNext(Control *c, int x, int y);

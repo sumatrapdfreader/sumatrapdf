@@ -8,7 +8,7 @@
 // It simply abstracts all document objects, allows querying the type, casting
 // to the wrapped object and present as much of the unified interface as
 // possible.
-// It's small enough to be passed as value.
+// It's small enough to be passed by value.
 
 class EpubDoc;
 class Fb2Doc;
@@ -16,6 +16,7 @@ class MobiDoc;
 
 struct ImageData;
 enum DocumentProperty;
+class EbookTocVisitor;
 
 enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi };
 enum DocError { Error_None, Error_Unknown };
@@ -72,13 +73,15 @@ public:
     MobiDoc *AsMobi() const;
 
     // instead of adding these to Doc, they could also be part
-    // of a virtual EbookDoc interface that *Doc implement so
-    // that the compiler can choose the correct method automatically
+    // of a virtual EbookDoc interface that *Doc implement
     const WCHAR *GetFilePath() const;
+    const WCHAR *GetDefaultFileExt() const;
     WCHAR *GetProperty(DocumentProperty prop) const;
     const char *GetHtmlData(size_t &len) const;
     size_t GetHtmlDataSize() const;
     ImageData *GetCoverImage() const;
+    bool HasToc() const;
+    bool ParseToc(EbookTocVisitor *visitor) const;
 
     static Doc CreateFromFile(const WCHAR *filePath);
     static bool IsSupportedFile(const WCHAR *filePath, bool sniff=false);

@@ -1060,6 +1060,11 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM
         win.DeleteInfotip();
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
+    case WM_LBUTTONDOWN:
+        // move focus from sidebar
+        SetFocus(win.hwndFrame);
+        return 0;
+
     case WM_MOUSEWHEEL:
         return CanvasOnMouseWheelEbook(win, msg, wParam, lParam);
 

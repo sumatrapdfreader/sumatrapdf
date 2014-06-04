@@ -9,10 +9,11 @@
 #include "DebugLog.h"
 #include "EbookControls.h"
 #include "EbookDoc.h"
+#include "EbookFormatter.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
+#include "HtmlPullParser.h"
 #include "MobiDoc.h"
-#include "EbookFormatter.h"
 #include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
@@ -183,7 +184,7 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
 EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     Controller(cb), ctrls(ctrls), pages(NULL), incomingPages(NULL),
     currPageNo(0), pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
-    currPageReparseIdx(0), handleMsgs(true)
+    currPageReparseIdx(0), handleMsgs(true), pageAnchorIds(NULL), pageAnchorIdxs(NULL)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
     em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
@@ -206,18 +207,8 @@ EbookController::~EbookController()
     evtMgr->DisconnectEvents(this);
     CloseCurrentDocument();
     DestroyEbookControls(ctrls);
-}
-
-const WCHAR *EbookController::DefaultFileExt() const
-{
-    if (_doc.AsEpub())
-        return L".epub";
-    if (_doc.AsFb2())
-        return _doc.AsFb2()->IsZipped() ? L".fb2z" : L".fb2";
-    if (_doc.AsMobi())
-        return L".mobi";
-    CrashIf(true);
-    return NULL;
+    delete pageAnchorIds;
+    delete pageAnchorIdxs;
 }
 
 // stop layout thread (if we're closing a document we'll delete
@@ -247,12 +238,12 @@ void EbookController::CloseCurrentDocument()
 
 // returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
-// returns 0 if not found
-// TODO: return -1 on not found
+// returns 0 if not found (or maybe on the last page)
+// returns -1 if no pages are available
 static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
     if (!pages)
-        return 0;
+        return -1;
     for (size_t i = 0; i < pages->Count(); i++) {
         HtmlPage *pd = pages->At(i);
         if (pd->reparseIdx == reparseIdx)
@@ -289,7 +280,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
             incomingPages->Append(ft->pages[i]);
         }
         int pageNo = PageForReparsePoint(incomingPages, currPageReparseIdx);
-        if (0 != pageNo) {
+        if (pageNo > 0) {
             Vec<HtmlPage*> *toDelete = pages;
             pages = incomingPages;
             incomingPages = NULL;
@@ -442,6 +433,8 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint)
         ctrls->pagesLayout->GetPage2()->SetPage(NULL);
     }
     UpdateStatus();
+    // update the ToC selection
+    cb->PageNoChanged(p->reparseIdx + 1);
 }
 
 bool EbookController::GoToNextPage()
@@ -581,6 +574,185 @@ void EbookController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
         ctrls->pagesLayout->GetPage2()->Show();
     else
         ctrls->pagesLayout->GetPage2()->Hide();
+}
+
+void EbookController::ExtractPageAnchors()
+{
+    if (pageAnchorIds || pageAnchorIdxs) {
+        CrashIf(!pageAnchorIds || !pageAnchorIdxs);
+        return;
+    }
+
+    pageAnchorIds = new WStrVec();
+    pageAnchorIdxs = new Vec<int>();
+
+    ScopedMem<WCHAR> epubPagePath;
+    int fb2TitleCount = 0;
+    size_t len;
+    const char *data = _doc.GetHtmlData(len);
+    HtmlPullParser parser(data, len);
+    HtmlToken *tok;
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+        if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag())
+            continue;
+        AttrInfo *attr = tok->GetAttrByName("id");
+        if (!attr && Tag_A == tok->tag && !_doc.AsFb2())
+            attr = tok->GetAttrByName("name");
+        if (attr) {
+            ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
+            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id));
+            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+        }
+        // update EPUB page paths and create an anchor per chapter
+        if (Tag_Pagebreak == tok->tag &&
+            (attr = tok->GetAttrByName("page_path")) != NULL &&
+            str::StartsWith(attr->val + attr->valLen, "\" page_marker />")) {
+            CrashIf(!_doc.AsEpub());
+            epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
+            pageAnchorIds->Append(str::Dup(epubPagePath));
+            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+        }
+        // create FB2 title anchors (cf. Fb2Doc::ParseToc)
+        if (Tag_Title == tok->tag && tok->IsStartTag() && _doc.AsFb2()) {
+            ScopedMem<WCHAR> id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
+            pageAnchorIds->Append(id.StealData());
+            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+        }
+    }
+}
+
+int EbookController::ResolvePageAnchor(const WCHAR *id)
+{
+    ExtractPageAnchors();
+
+    int reparseIdx = -1;
+    if (_doc.AsMobi() && str::Parse(id, L"%d%$", &reparseIdx) &&
+        0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
+        // Mobi uses filepos (reparseIdx) for in-document links
+        return reparseIdx;
+    }
+
+    int idx = pageAnchorIds->Find(id);
+    if (idx != -1)
+        return pageAnchorIdxs->At(idx);
+    if (!_doc.AsEpub() || !str::FindChar(id, '#'))
+        return -1;
+
+    ScopedMem<WCHAR> chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
+    idx = pageAnchorIds->Find(chapterPath);
+    if (idx != -1)
+        return pageAnchorIdxs->At(idx);
+    return -1;
+}
+
+class EbookTocDest : public DocTocItem, public PageDestination {
+    ScopedMem<WCHAR> url;
+
+public:
+    EbookTocDest(const WCHAR *title, int reparseIdx) :
+        DocTocItem(str::Dup(title), reparseIdx), url(NULL) { }
+    EbookTocDest(const WCHAR *title, const WCHAR *url) :
+        DocTocItem(str::Dup(title)), url(str::Dup(url)) { }
+
+    virtual PageDestination *GetLink() { return this; }
+
+    virtual PageDestType GetDestType() const { return url ? Dest_LaunchURL : Dest_ScrollTo; }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual WCHAR *GetDestValue() const { return str::Dup(url); }
+};
+
+// TODO: move to UrlUtil.h, StrUtil.h or FileUtil.h (as url::IsAbsolute)
+inline bool IsAbsoluteUrl(const WCHAR *url)
+{
+    const WCHAR *colon = str::FindChar(url, ':');
+    const WCHAR *hash = str::FindChar(url, '#');
+    return colon && (!hash || hash > colon);
+}
+
+class EbookTocCollector : public EbookTocVisitor {
+    EbookController *ctrl;
+    EbookTocDest *root;
+    int idCounter;
+
+public:
+    explicit EbookTocCollector(EbookController *ctrl) :
+        ctrl(ctrl), root(NULL), idCounter(0) { }
+
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
+        EbookTocDest *item = NULL;
+        if (url && IsAbsoluteUrl(url))
+            item = new EbookTocDest(name, url);
+        else {
+            int idx = ctrl->ResolvePageAnchor(url);
+            if (idx < 0 && str::FindChar(url, '%')) {
+                ScopedMem<WCHAR> decodedUrl(str::Dup(url));
+                str::UrlDecodeInPlace(decodedUrl);
+                idx = ctrl->ResolvePageAnchor(url);
+            }
+            item = new EbookTocDest(name, idx + 1);
+        }
+        item->id = ++idCounter;
+        // find the last child at each level, until finding the parent of the new item
+        if (!root) {
+            root = item;
+        }
+        else {
+            DocTocItem *r2 = root;
+            for (level--; level > 0; level--) {
+                for (; r2->next; r2 = r2->next);
+                if (!r2->child)
+                    break;
+                r2 = r2->child;
+            }
+            if (level <= 0)
+                r2->AddSibling(item);
+            else
+                r2->child = item;
+        }
+    }
+
+    EbookTocDest *GetRoot() { return root; }
+};
+
+DocTocItem *EbookController::GetTocTree()
+{
+    EbookTocCollector visitor(this);
+    _doc.ParseToc(&visitor);
+    EbookTocDest *root = visitor.GetRoot();
+    if (root)
+        root->OpenSingleNode();
+    return root;
+}
+
+void EbookController::ScrollToLink(PageDestination *dest)
+{
+    int reparseIdx = dest->GetDestPageNo() - 1;
+    int pageNo = PageForReparsePoint(pages, reparseIdx);
+    if (pageNo > 0)
+        GoToPage(pageNo, true);
+    else if (0 == pageNo)
+        GoToLastPage();
+}
+
+PageDestination *EbookController::GetNamedDest(const WCHAR *name)
+{
+    int reparseIdx = -1;
+    if (_doc.AsMobi() && str::Parse(name, L"%d%$", &reparseIdx) &&
+        0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
+        // Mobi uses filepos (reparseIdx) for in-document links
+    }
+    else if (!str::FindChar(name, '#')) {
+        ScopedMem<WCHAR> id(str::Format(L"#%s", name));
+        reparseIdx = ResolvePageAnchor(id);
+    }
+    else {
+        reparseIdx = ResolvePageAnchor(name);
+    }
+    if (reparseIdx < 0)
+        return NULL;
+    CrashIf((size_t)reparseIdx > _doc.GetHtmlDataSize());
+    return new EbookTocDest(NULL, reparseIdx + 1);
 }
 
 void EbookController::UpdateDisplayState(DisplayState *ds)

@@ -134,6 +134,23 @@ const WCHAR *Doc::GetFilePath() const
     return GetFilePathFromDoc();
 }
 
+const WCHAR *Doc::GetDefaultFileExt() const
+{
+    switch (type) {
+    case Doc_Epub:
+        return L".epub";
+    case Doc_Fb2:
+        return fb2Doc->IsZipped() ? L".fb2z" : L".fb2";
+    case Doc_Mobi:
+        return L".mobi";
+    case Doc_None:
+        return NULL;
+    default:
+        CrashIf(true);
+        return NULL;
+    }
+}
+
 WCHAR *Doc::GetProperty(DocumentProperty prop) const
 {
     switch (type) {
@@ -184,12 +201,42 @@ size_t Doc::GetHtmlDataSize() const
 ImageData *Doc::GetCoverImage() const
 {
     switch (type) {
+    case Doc_Epub:
+        return NULL;
     case Doc_Fb2:
         return fb2Doc->GetCoverImage();
     case Doc_Mobi:
         return mobiDoc->GetCoverImage();
     default:
         return NULL;
+    }
+}
+
+bool Doc::HasToc() const
+{
+    switch (type) {
+    case Doc_Epub:
+        return epubDoc->HasToc();
+    case Doc_Fb2:
+        return fb2Doc->HasToc();
+    case Doc_Mobi:
+        return mobiDoc->HasToc();
+    default:
+        return false;
+    }
+}
+
+bool Doc::ParseToc(EbookTocVisitor *visitor) const
+{
+    switch (type) {
+    case Doc_Epub:
+        return epubDoc->ParseToc(visitor);
+    case Doc_Fb2:
+        return fb2Doc->ParseToc(visitor);
+    case Doc_Mobi:
+        return mobiDoc->ParseToc(visitor);
+    default:
+        return false;
     }
 }
 

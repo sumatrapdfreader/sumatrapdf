@@ -1680,6 +1680,14 @@ void ControllerCallbackHandler::PageNoChanged(int pageNo)
     if (!win->ctrl || win->ctrl->PageCount() == 0)
         return;
 
+    if (win->AsEbook()) {
+        // pageNo == reparseIdx + 1
+        if (pageNo != win->currPageNo)
+            UpdateTocSelection(win, pageNo);
+        win->currPageNo = pageNo;
+        return;
+    }
+
     if (INVALID_PAGE_NO != pageNo) {
         ScopedMem<WCHAR> buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);

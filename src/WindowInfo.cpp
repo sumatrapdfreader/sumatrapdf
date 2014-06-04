@@ -304,7 +304,6 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     int pageNo = dest->GetDestPageNo();
     if (pageNo > 0)
         owner->ctrl->ScrollToLink(dest);
-
 }
 
 void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)

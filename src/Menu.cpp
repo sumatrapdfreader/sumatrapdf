@@ -92,8 +92,8 @@ static MenuDef menuDefView[] = {
     // TODO: change shortcut to F5 (Presentation) and F11 (Fullscreen)
     { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_EBOOK_UI },
     { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
-    { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN | MF_NOT_FOR_EBOOK_UI },
-    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
+    { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
