@@ -125,3 +125,23 @@ solution "all_tests"
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
+
+solution "plugin-test"
+  solution_common()
+
+  project "plugin-test"
+    kind "WindowedApp"
+    language "C++"
+    files {
+      "src/utils/BaseUtil.*",
+      "src/utils/CmdLineParser.*",
+      "src/utils/FileUtil.*",
+      "src/utils/GeomUtil.*",
+      "src/utils/Scoped.*",
+      "src/utils/StrUtil.*",
+      "src/utils/Vec.*",
+      "tools/plugin-test/plugin-test.cpp"
+    }
+    includedirs { "src/utils", "src/utils/msvc" }
+    flags { "NoManifest", "WinMain" }
+    links { "shlwapi" }
