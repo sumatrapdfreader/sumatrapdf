@@ -1170,6 +1170,10 @@ pdf_init_document(pdf_document *doc)
 				dict = NULL;
 			}
 		}
+
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2610 */
+		if (repaired && doc->crypt)
+			pdf_clear_xref(doc);
 	}
 	fz_catch(ctx)
 	{
