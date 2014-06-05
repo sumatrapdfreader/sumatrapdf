@@ -442,6 +442,7 @@ EXPORTS
 	fz_free_argv
 	fz_synchronize_begin
 	fz_synchronize_end
+	fz_redirect_io_to_console
 	fz_new_text
 	fz_add_text
 	fz_free_text

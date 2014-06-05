@@ -1859,3 +1859,25 @@ fz_synchronize_end()
 {
 	globalLock.Release();
 }
+
+/* TODO: move libmupdf.dll related code to another file(?) */
+
+extern "C" void
+fz_redirect_io_to_console()
+{
+	// redirect unbuffered STDOUT to the console
+	int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+	*stdout = *_fdopen(hConHandle, "w");
+	setvbuf(stdout, NULL, _IONBF, 0);
+	// redirect unbuffered STDERR to the console
+	hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+	*stderr = *_fdopen(hConHandle, "w");
+	setvbuf(stderr, NULL, _IONBF, 0);
+	// redirect unbuffered STDIN to the console
+	hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
+	*stdin = *_fdopen(hConHandle, "r");
+	setvbuf(stdin, NULL, _IONBF, 0);
+}
+
+/* replace this function with one calling fz_redirect_io_to_console when building libmupdf.dll */
+void RedirectDllIOToConsole() { }

@@ -378,6 +378,8 @@ int fz_strcasecmp(const char *a, const char *b);
 #ifdef _WIN32
 void fz_synchronize_begin();
 void fz_synchronize_end();
+/* SumatraPDF: better support for libmupdf.dll */
+void fz_redirect_io_to_console();
 #endif
 
 #endif

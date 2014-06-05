@@ -1,5 +1,5 @@
-#ifndef _MUPDF_EXPORTS_H_
-#define _MUPDF_EXPORTS_H_
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
 
 // Re-declare variables for when building libmupdf.dll,
 // as exporting/importing them prevents sharing of .obj
@@ -23,4 +23,6 @@ const fz_irect fz_infinite_irect = { 1, 1, -1, -1 };
 const fz_irect fz_empty_irect = { 0, 0, 0, 0 };
 const fz_irect fz_unit_bbox = { 0, 0, 1, 1 };
 
-#endif
+// adapted for mupdf/source/fitz/gdiplus-device.cpp
+
+void RedirectDllIOToConsole() { fz_redirect_io_to_console(); }

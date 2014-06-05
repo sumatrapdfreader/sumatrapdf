@@ -343,6 +343,8 @@ static void SetupCrashHandler()
     InstallCrashHandler(crashDumpPath, symDir);
 }
 
+extern void RedirectDllIOToConsole();
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -417,8 +419,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     goto Exit;
 #endif
 
-    if (i.showConsole)
+    if (i.showConsole) {
         RedirectIOToConsole();
+        RedirectDllIOToConsole();
+    }
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
     if (i.pathsToBenchmark.Count() > 0) {
