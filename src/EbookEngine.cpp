@@ -45,13 +45,6 @@ void SetDefaultEbookFont(const WCHAR *name, float size)
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
 
-inline bool IsAbsoluteUrl(const WCHAR *url)
-{
-    const WCHAR *colon = str::FindChar(url, ':');
-    const WCHAR *hash = str::FindChar(url, '#');
-    return colon && (!hash || hash > colon);
-}
-
 struct PageAnchor {
     DrawInstr *instr;
     int pageNo;
@@ -508,7 +501,7 @@ void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)
 PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
-    if (IsAbsoluteUrl(url))
+    if (url::IsAbsolute(url))
         return new EbookLink(link, rect, NULL, pageNo);
 
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
@@ -692,13 +685,13 @@ public:
         PageDestination *dest;
         if (!url)
             dest = NULL;
-        else if (IsAbsoluteUrl(url))
+        else if (url::IsAbsolute(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else {
             dest = engine->GetNamedDest(url);
             if (!dest && str::FindChar(url, '%')) {
                 ScopedMem<WCHAR> decodedUrl(str::Dup(url));
-                str::UrlDecodeInPlace(decodedUrl);
+                url::DecodeInPlace(decodedUrl);
                 dest = engine->GetNamedDest(decodedUrl);
             }
         }
@@ -1205,7 +1198,7 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        str::UrlDecodeInPlace(src);
+        url::DecodeInPlace(src);
         ImageData *img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
@@ -1244,7 +1237,7 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
 
     size_t len;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    str::UrlDecodeInPlace(src);
+    url::DecodeInPlace(src);
     ScopedMem<char> data(chmDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
@@ -1367,12 +1360,11 @@ public:
     }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
-        if (!url || IsAbsoluteUrl(url))
+        if (!url || url::IsAbsolute(url))
             return;
-        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1)
             return;
-        // TODO: str::UrlDecodeInPlace(plainUrl) ?
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
@@ -1646,7 +1638,7 @@ PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
         return NULL;
 
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
-    if (IsAbsoluteUrl(url) || '#' == *url)
+    if (url::IsAbsolute(url) || '#' == *url)
         return EbookEngine::CreatePageLink(link, rect, pageNo);
 
     PageDestination *dest = new RemoteHtmlDest(url);

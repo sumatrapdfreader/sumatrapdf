@@ -424,7 +424,7 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
     // of using the more confusing temporary filename
     ScopedMem<WCHAR> urlName;
     if (gPluginMode) {
-        urlName.Set(ExtractFilenameFromURL(gPluginURL));
+        urlName.Set(url::GetFileName(gPluginURL));
         if (urlName)
             fileName = urlName;
     }
@@ -809,8 +809,8 @@ void ControllerCallbackHandler::FocusFrame(bool always)
 
 void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
 {
-    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-    LinkSaver(*win, path::GetBaseName(plainUrl)).SaveEmbedded(data, len);
+    ScopedMem<WCHAR> fileName(url::GetFileName(url));
+    LinkSaver(*win, fileName).SaveEmbedded(data, len);
 }
 
 class EbookFormattingTask : public UITask {
@@ -2261,7 +2261,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     const WCHAR *srcFileName = win.ctrl->FilePath();
     ScopedMem<WCHAR> urlName;
     if (gPluginMode) {
-        urlName.Set(ExtractFilenameFromURL(gPluginURL));
+        urlName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
         srcFileName = urlName ? urlName : L"filename";
     }

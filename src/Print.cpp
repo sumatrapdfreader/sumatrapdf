@@ -118,7 +118,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
     DOCINFO di = { 0 };
     di.cbSize = sizeof (DOCINFO);
     if (gPluginMode) {
-        fileName.Set(ExtractFilenameFromURL(gPluginURL));
+        fileName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
         di.lpszDocName = fileName ? fileName : L"filename";
     }

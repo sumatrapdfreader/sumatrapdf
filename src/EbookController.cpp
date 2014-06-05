@@ -662,14 +662,6 @@ public:
     virtual WCHAR *GetDestValue() const { return str::Dup(url); }
 };
 
-// TODO: move to UrlUtil.h, StrUtil.h or FileUtil.h (as url::IsAbsolute)
-inline bool IsAbsoluteUrl(const WCHAR *url)
-{
-    const WCHAR *colon = str::FindChar(url, ':');
-    const WCHAR *hash = str::FindChar(url, '#');
-    return colon && (!hash || hash > colon);
-}
-
 class EbookTocCollector : public EbookTocVisitor {
     EbookController *ctrl;
     EbookTocDest *root;
@@ -681,13 +673,13 @@ public:
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         EbookTocDest *item = NULL;
-        if (url && IsAbsoluteUrl(url))
+        if (url && url::IsAbsolute(url))
             item = new EbookTocDest(name, url);
         else {
             int idx = ctrl->ResolvePageAnchor(url);
-            if (idx < 0 && str::FindChar(url, '%')) {
+            if (idx < 0 && url && str::FindChar(url, '%')) {
                 ScopedMem<WCHAR> decodedUrl(str::Dup(url));
-                str::UrlDecodeInPlace(decodedUrl);
+                url::DecodeInPlace(decodedUrl);
                 idx = ctrl->ResolvePageAnchor(url);
             }
             item = new EbookTocDest(name, idx + 1);

@@ -87,20 +87,6 @@ bool AdjustVariableDriveLetter(WCHAR *path)
     return false;
 }
 
-// caller needs to free() the result
-WCHAR *ExtractFilenameFromURL(const WCHAR *url)
-{
-    // try to extract the file name from the URL (last path component before query or hash)
-    // (can't use ToPlainUrl because that decodes %2F to '/' before path::GetBaseName)
-    ScopedMem<WCHAR> plainUrl(str::Dup(url));
-    str::TransChars(plainUrl, L"#?", L"\0\0");
-    const WCHAR *baseName = path::GetBaseName(plainUrl);
-    if (str::IsEmpty(baseName))
-        return NULL;
-    str::UrlDecodeInPlace((WCHAR *)baseName);
-    return str::Dup(baseName);
-}
-
 // files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)

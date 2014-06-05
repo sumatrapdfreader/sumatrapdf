@@ -1177,38 +1177,6 @@ size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
     return cbConverted;
 }
 
-void UrlDecodeInPlace(char *url)
-{
-    for (char *src = url; *src; src++, url++) {
-        int val;
-        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
-            *url = (char)val;
-            src += 2;
-        } else {
-            *url = *src;
-        }
-    }
-    *url = '\0';
-}
-
-void UrlDecodeInPlace(WCHAR *url)
-{
-    if (!str::FindChar(url, '%'))
-        return;
-    // URLs are usually UTF-8 encoded
-    ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
-    UrlDecodeInPlace(urlUtf8);
-    str::conv::FromCodePageBuf(url, str::Len(url) + 1, urlUtf8, CP_UTF8);
-}
-
-WCHAR *ToPlainUrl(const WCHAR *url)
-{
-    WCHAR *plainUrl = str::Dup(url);
-    str::TransChars(plainUrl, L"#?", L"\0\0");
-    UrlDecodeInPlace(plainUrl);
-    return plainUrl;
-}
-
 // --- copyright for utf8 code below
 
 /*
@@ -1367,6 +1335,64 @@ size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp)
 } // namespace str::conv
 
 } // namespace str
+
+namespace url {
+
+bool IsAbsolute(const WCHAR *url)
+{
+    const WCHAR *colon = str::FindChar(url, ':');
+    const WCHAR *hash = str::FindChar(url, '#');
+    return colon && (!hash || hash > colon);
+}
+
+void DecodeInPlace(char *url)
+{
+    for (char *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
+            *url = (char)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
+
+void DecodeInPlace(WCHAR *url)
+{
+    if (!str::FindChar(url, '%'))
+        return;
+    // URLs are usually UTF-8 encoded
+    ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
+    DecodeInPlace(urlUtf8);
+    str::conv::FromCodePageBuf(url, str::Len(url) + 1, urlUtf8, CP_UTF8);
+}
+
+WCHAR *GetFullPath(const WCHAR *url)
+{
+    WCHAR *path = str::Dup(url);
+    str::TransChars(path, L"#?", L"\0\0");
+    DecodeInPlace(path);
+    return path;
+}
+
+WCHAR *GetFileName(const WCHAR *url)
+{
+    ScopedMem<WCHAR> path(str::Dup(url));
+    str::TransChars(path, L"#?", L"\0\0");
+    WCHAR *base = path + str::Len(path);
+    for (; base > path; base--) {
+        if ('/' == base[-1] || '\\' == base[-1])
+            break;
+    }
+    if (str::IsEmpty(base))
+        return NULL;
+    DecodeInPlace(base);
+    return str::Dup(base);
+}
+
+} // namespace url
 
 // seqstrings is for size-efficient implementation of:
 // string -> int and int->string.

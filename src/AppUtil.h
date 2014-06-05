@@ -9,7 +9,6 @@ int CompareVersion(const WCHAR *txt1, const WCHAR *txt2);
 
 bool AdjustVariableDriveLetter(WCHAR *path);
 
-WCHAR *ExtractFilenameFromURL(const WCHAR *url);
 bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileUrl=NULL);
 
 #endif

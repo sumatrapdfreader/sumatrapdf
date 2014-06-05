@@ -255,7 +255,7 @@ bool EpubDoc::Load()
     ScopedMem<WCHAR> contentPath(node->GetAttribute("full-path"));
     if (!contentPath)
         return false;
-    str::UrlDecodeInPlace(contentPath);
+    url::DecodeInPlace(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
@@ -266,7 +266,7 @@ bool EpubDoc::Load()
         while (cr) {
             WCHAR *uri = cr->GetAttribute("URI");
             if (uri) {
-                str::UrlDecodeInPlace(uri);
+                url::DecodeInPlace(uri);
                 encList.Append(uri);
             }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
@@ -300,7 +300,7 @@ bool EpubDoc::Load()
             ScopedMem<WCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
-            str::UrlDecodeInPlace(imgPath);
+            url::DecodeInPlace(imgPath);
             imgPath.Set(str::Join(contentPath, imgPath));
             if (encList.Contains(imgPath))
                 continue;
@@ -318,7 +318,7 @@ bool EpubDoc::Load()
             ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
             if (!htmlPath)
                 continue;
-            str::UrlDecodeInPlace(htmlPath);
+            url::DecodeInPlace(htmlPath);
             ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
             // EPUB 3 ToC
             ScopedMem<WCHAR> properties(node->GetAttribute("properties"));
@@ -822,7 +822,7 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
     AttrInfo *attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS);
     if (attrInfo) {
         id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
-        str::UrlDecodeInPlace(id);
+        url::DecodeInPlace(id);
     }
 
     tok = parser->Next();

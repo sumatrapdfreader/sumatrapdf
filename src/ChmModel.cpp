@@ -171,7 +171,7 @@ void ChmModel::DisplayPage(const WCHAR *pageUrl)
         return;
     }
 
-    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(pageUrl))) + 1;
+    int pageNo = pages.Find(ScopedMem<WCHAR>(url::GetFullPath(pageUrl))) + 1;
     if (pageNo)
         currentPageNo = pageNo;
 
@@ -259,7 +259,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         if (!url || IsExternalUrl(url))
             return 0;
 
-        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
         int pageNo = (int)pages->Count() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
@@ -337,7 +337,7 @@ void ChmModel::OnDocumentComplete(const WCHAR *url)
         return;
     if (*url == '/')
         ++url;
-    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
+    int pageNo = pages.Find(ScopedMem<WCHAR>(url::GetFullPath(url))) + 1;
     if (pageNo) {
         currentPageNo = pageNo;
         // TODO: setting zoom before the first page is loaded seems not to work
@@ -375,7 +375,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 // Load and cache data for a given url inside CHM file.
 const unsigned char *ChmModel::GetDataForUrl(const WCHAR *url, size_t *len)
 {
-    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+    ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
@@ -406,7 +406,7 @@ void ChmModel::OnLButtonDown()
 
 PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
 {
-    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
+    ScopedMem<WCHAR> plainUrl(url::GetFullPath(name));
     int pageNo = pages.Find(plainUrl) + 1;
     if (pageNo > 0)
         return new ChmNamedDest(name, pageNo);
@@ -547,7 +547,7 @@ public:
     }
     virtual void OnLButtonDown() { }
     virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) {
-        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8, len));
         return data.Last();

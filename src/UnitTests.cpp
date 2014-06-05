@@ -153,18 +153,19 @@ static void versioncheck_test()
 
 static void UrlExtractTest()
 {
-    utassert(!ExtractFilenameFromURL(L""));
-    utassert(!ExtractFilenameFromURL(L"#hash_only"));
-    utassert(!ExtractFilenameFromURL(L"?query=only"));
-    ScopedMem<WCHAR> fileName(ExtractFilenameFromURL(L"http://example.net/filename.ext"));
+    // TODO: move to StrUtil_ut.cpp
+    utassert(!url::GetFileName(L""));
+    utassert(!url::GetFileName(L"#hash_only"));
+    utassert(!url::GetFileName(L"?query=only"));
+    ScopedMem<WCHAR> fileName(url::GetFileName(L"http://example.net/filename.ext"));
     utassert(str::Eq(fileName, L"filename.ext"));
-    fileName.Set(ExtractFilenameFromURL(L"http://example.net/filename.ext#with_hash"));
+    fileName.Set(url::GetFileName(L"http://example.net/filename.ext#with_hash"));
     utassert(str::Eq(fileName, L"filename.ext"));
-    fileName.Set(ExtractFilenameFromURL(L"http://example.net/path/to/filename.ext?more=data"));
+    fileName.Set(url::GetFileName(L"http://example.net/path/to/filename.ext?more=data"));
     utassert(str::Eq(fileName, L"filename.ext"));
-    fileName.Set(ExtractFilenameFromURL(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
+    fileName.Set(url::GetFileName(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
     utassert(str::Eq(fileName, L"na/me.ext"));
-    fileName.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
+    fileName.Set(url::GetFileName(L"http://example.net/%E2%82%AC"));
     utassert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
 }
 

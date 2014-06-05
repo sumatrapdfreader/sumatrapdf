@@ -151,11 +151,6 @@ const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize);
 size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize);
 
-void UrlDecodeInPlace(char *url);
-void UrlDecodeInPlace(WCHAR *url);
-// TODO: a better name
-WCHAR *ToPlainUrl(const WCHAR *url);
-
 namespace conv {
 
 inline WCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
@@ -175,6 +170,16 @@ size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
 } // namespace str::conv
 
 }  // namespace str
+
+namespace url {
+
+bool IsAbsolute(const WCHAR *url);
+void DecodeInPlace(char *urlUtf8);
+void DecodeInPlace(WCHAR *url);
+WCHAR *GetFullPath(const WCHAR *url);
+WCHAR *GetFileName(const WCHAR *url);
+
+} // namespace url
 
 namespace seqstrings {
 void         SkipStr(char *& s);

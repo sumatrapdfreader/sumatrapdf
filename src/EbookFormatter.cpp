@@ -135,7 +135,7 @@ void EpubFormatter::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        str::UrlDecodeInPlace(src);
+        url::DecodeInPlace(src);
         ImageData *img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
@@ -174,7 +174,7 @@ void EpubFormatter::HandleTagLink(HtmlToken *t)
 
     size_t len;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    str::UrlDecodeInPlace(src);
+    url::DecodeInPlace(src);
     ScopedMem<char> data(epubDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
@@ -191,7 +191,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    str::UrlDecodeInPlace(src);
+    url::DecodeInPlace(src);
     ImageData *img = epubDoc->GetImageData(src, pagePath);
     if (img)
         EmitImage(img);
@@ -251,7 +251,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        str::UrlDecodeInPlace(src);
+        url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
     if (img)
@@ -328,7 +328,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-        str::UrlDecodeInPlace(src);
+        url::DecodeInPlace(src);
         ImageData *img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
@@ -353,7 +353,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken *t)
 
     size_t len;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    str::UrlDecodeInPlace(src);
+    url::DecodeInPlace(src);
     ScopedMem<char> data(htmlDoc->GetFileData(src, &len));
     if (data)
         ParseStyleSheet(data, len);
