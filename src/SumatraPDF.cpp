@@ -1087,6 +1087,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         CrashIf(!win->AsFixed());
         CrashIf(win->AsFixed()->pdfSync && win->ctrl != prevCtrl);
         delete win->AsFixed()->pdfSync;
+        win->AsFixed()->pdfSync = NULL;
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->engine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
