@@ -601,7 +601,7 @@ void EbookController::ExtractPageAnchors()
         if (attr) {
             ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id));
-            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+            pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // update EPUB page paths and create an anchor per chapter
         if (Tag_Pagebreak == tok->tag &&
@@ -610,13 +610,13 @@ void EbookController::ExtractPageAnchors()
             CrashIf(!_doc.AsEpub());
             epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Dup(epubPagePath));
-            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+            pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // create FB2 title anchors (cf. Fb2Doc::ParseToc)
         if (Tag_Title == tok->tag && tok->IsStartTag() && _doc.AsFb2()) {
             ScopedMem<WCHAR> id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
             pageAnchorIds->Append(id.StealData());
-            pageAnchorIdxs->Append(tok->GetReparsePoint() - parser.Start());
+            pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
     }
 }
