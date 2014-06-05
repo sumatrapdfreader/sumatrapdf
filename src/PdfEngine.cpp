@@ -2124,7 +2124,7 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
 
 bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, const fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
-    if (!page)
+    if (!page || !pdf_is_dict(page->me))
         return false;
 
     fz_matrix ctm2;
@@ -2206,7 +2206,7 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
 RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     pdf_page* page = GetPdfPage(pageNo);
-    if (!page)
+    if (!page || !pdf_is_dict(page->me))
         return NULL;
 
     fz_rect pRect;
