@@ -9,18 +9,30 @@
 
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
-LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+struct PluginStartData {
+    // path to SumatraPDF.exe
+    const WCHAR *sumatraPath;
+    // path to the (downloaded) document to display
+    const WCHAR *filePath;
+    // path/URL to display in the UI (to hide temporary paths)
+    const WCHAR *fileOriginUrl;
+};
+
+// in order to host SumatraPDF as a plugin, create a (child) window and
+// handle the following messages for it:
+LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (WM_CREATE == msg) {
-        WStrVec *argList = (WStrVec *)((CREATESTRUCT *)lParam)->lpCreateParams;
-        ScopedMem<WCHAR> cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, argList->At(2)));
-        if (argList->Count() > 3) {
-            // argList->At(2) is the optional URL argument
-            cmdLine.Set(str::Format(L"-plugin \"%s\" %d \"%s\"", argList->At(2), hwnd, argList->At(3)));
+        // run SumatraPDF.exe with the -plugin command line argument
+        PluginStartData *data = (PluginStartData *)((CREATESTRUCT *)lParam)->lpCreateParams;
+        ScopedMem<WCHAR> cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, data->filePath));
+        if (data->fileOriginUrl) {
+            cmdLine.Set(str::Format(L"-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
         }
-        ShellExecute(hwnd, L"open", argList->At(1), cmdLine, NULL, SW_SHOW);
+        ShellExecute(hwnd, L"open", data->sumatraPath, cmdLine, NULL, SW_SHOW);
     }
     else if (WM_SIZE == msg) {
+        // resize the SumatraPDF window
         HWND hChild = FindWindowEx(hwnd, NULL, NULL, NULL);
         if (hChild) {
             ClientRect rcClient(hwnd);
@@ -32,6 +44,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
     else if (msg == WM_COPYDATA) {
+        // handle a URL to open externally (or prevent it)
         HWND hChild = FindWindowEx(hwnd, NULL, NULL, NULL);
         COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wParam == hChild) {
@@ -41,6 +54,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
     else if (WM_PAINT == msg) {
+        // paint an error message (only needed if SumatraPDF couldn't be run)
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hwnd, &ps);
         RECT rcClient = ClientRect(hwnd).ToRECT();
@@ -57,10 +71,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         DeleteObject(SelectObject(hDC, hFont));
         DeleteObject(brushBg);
         EndPaint(hwnd, &ps);
-    }
-    else if (msg == WM_DESTROY || msg == WM_ENDSESSION) {
-        PostQuitMessage(0);
-        return 0;
     }
 
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -92,18 +102,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (argList.Count() == 2 || !str::EndsWithI(argList.At(1), L".exe")) {
         argList.InsertAt(1, GetSumatraExePath());
     }
+    if (argList.Count() == 3) {
+        argList.InsertAt(2, NULL);
+    }
 
     WNDCLASS wc = { 0 };
-    wc.lpfnWndProc = MainWndProc;
+    wc.lpfnWndProc = PluginParentWndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = PLUGIN_TEST_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
+    PluginStartData data = { argList.At(1), argList.At(3), argList.At(2) };
     HWND hwnd = CreateWindow(PLUGIN_TEST_NAME, PLUGIN_TEST_NAME,
                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
                              NULL, NULL, hInstance,
-                             &argList);
+                             &data);
     ShowWindow(hwnd, nCmdShow);
 
     MSG msg;
