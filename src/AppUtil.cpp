@@ -90,29 +90,15 @@ bool AdjustVariableDriveLetter(WCHAR *path)
 // caller needs to free() the result
 WCHAR *ExtractFilenameFromURL(const WCHAR *url)
 {
-    ScopedMem<WCHAR> urlName(str::Dup(url));
     // try to extract the file name from the URL (last path component before query or hash)
-    str::TransChars(urlName, L"/?#", L"\\\0\0");
-    urlName.Set(str::Dup(path::GetBaseName(urlName)));
-    // unescape hex-escapes (these are usually UTF-8)
-    if (str::FindChar(urlName, '%')) {
-        ScopedMem<char> utf8Name(str::conv::ToUtf8(urlName));
-        char *src = utf8Name, *dst = utf8Name;
-        while (*src) {
-            int esc;
-            if ('%' == *src && str::Parse(src, "%%%2x", &esc)) {
-                *dst++ = (char)esc;
-                src += 3;
-            }
-            else
-                *dst++ = *src++;
-        }
-        *dst = '\0';
-        urlName.Set(str::conv::FromUtf8(utf8Name));
-    }
-    if (str::IsEmpty(urlName.Get()))
+    // (can't use ToPlainUrl because that decodes %2F to '/' before path::GetBaseName)
+    ScopedMem<WCHAR> plainUrl(str::Dup(url));
+    str::TransChars(plainUrl, L"#?", L"\0\0");
+    const WCHAR *baseName = path::GetBaseName(plainUrl);
+    if (str::IsEmpty(baseName))
         return NULL;
-    return urlName.StealData();
+    str::UrlDecodeInPlace((WCHAR *)baseName);
+    return str::Dup(baseName);
 }
 
 // files are considered untrusted, if they're either loaded from a
@@ -131,7 +117,7 @@ bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileURL)
     // check all parents of embedded files and ADSs as well
     ScopedMem<WCHAR> path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
-        *wcsrchr(path, ':') = '\0';
+        *str::FindCharLast(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
             return true;
     }

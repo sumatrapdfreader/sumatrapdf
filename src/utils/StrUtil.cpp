@@ -1193,16 +1193,12 @@ void UrlDecodeInPlace(char *url)
 
 void UrlDecodeInPlace(WCHAR *url)
 {
-    for (WCHAR *src = url; *src; src++, url++) {
-        int val;
-        if (*src == '%' && str::Parse(src, L"%%%2x", &val)) {
-            *url = (WCHAR)val;
-            src += 2;
-        } else {
-            *url = *src;
-        }
-    }
-    *url = '\0';
+    if (!str::FindChar(url, '%'))
+        return;
+    // URLs are usually UTF-8 encoded
+    ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
+    UrlDecodeInPlace(urlUtf8);
+    str::conv::FromCodePageBuf(url, str::Len(url) + 1, urlUtf8, CP_UTF8);
 }
 
 WCHAR *ToPlainUrl(const WCHAR *url)
