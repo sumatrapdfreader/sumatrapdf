@@ -1009,8 +1009,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             win->ctrl->SetDisplayMode(displayMode);
             win->ctrl->GoToPage(startPage, false);
         }
+        else if (win->AsEbook()) {
+            if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath()))
+                win->ctrl->AsEbook()->CopyNavHistory(*prevCtrl->AsEbook());
+        }
         else
-            CrashIf(!win->AsEbook());
+            CrashIf(true);
         delete prevCtrl;
     } else if (args.allowFailure || !prevCtrl) {
         CrashIf(!args.allowFailure);

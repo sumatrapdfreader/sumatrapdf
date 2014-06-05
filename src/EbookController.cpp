@@ -184,7 +184,8 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
 EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     Controller(cb), ctrls(ctrls), pages(NULL), incomingPages(NULL),
     currPageNo(0), pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
-    currPageReparseIdx(0), handleMsgs(true), pageAnchorIds(NULL), pageAnchorIdxs(NULL)
+    currPageReparseIdx(0), handleMsgs(true), pageAnchorIds(NULL), pageAnchorIdxs(NULL),
+    navHistoryIx(0)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
     em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
@@ -413,6 +414,9 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint)
     if (!pages) {
         return;
     }
+
+    if (addNavPoint)
+        AddNavPoint();
 
     int pageCount = PageCount();
     int n = IsDoublePage() ? 1 : 0;
@@ -788,6 +792,62 @@ void EbookController::UpdateDocumentColors()
 void EbookController::RequestRepaint()
 {
     ctrls->mainWnd->MarkForRepaint();
+}
+
+// cf. DisplayModel.cpp
+#define MAX_NAV_HISTORY_LEN 50
+
+void EbookController::AddNavPoint()
+{
+    int idx = currPageReparseIdx;
+    // remove the current and all Forward history entries
+    if (navHistoryIx < navHistory.Count())
+        navHistory.RemoveAt(navHistoryIx, navHistory.Count() - navHistoryIx);
+    // don't add another entry for the exact same position
+    if (navHistoryIx > 0 && idx == navHistory.At(navHistoryIx - 1))
+        return;
+    // make sure that the history doesn't grow overly large
+    if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
+        CrashIf(navHistoryIx > MAX_NAV_HISTORY_LEN);
+        navHistory.RemoveAt(0, navHistoryIx - MAX_NAV_HISTORY_LEN + 1);
+        navHistoryIx = MAX_NAV_HISTORY_LEN - 1;
+    }
+    // add a new Back history entry
+    navHistory.Append(idx);
+    navHistoryIx++;
+}
+
+bool EbookController::CanNavigate(int dir) const
+{
+    CrashIf(navHistoryIx > navHistory.Count());
+    if (dir < 0)
+        return navHistoryIx >= (size_t)-dir;
+    return navHistoryIx + dir < navHistory.Count();
+}
+
+void EbookController::Navigate(int dir)
+{
+    if (!CanNavigate(dir))
+        return;
+    // update the current history entry
+    int idx = currPageReparseIdx;
+    if (navHistoryIx < navHistory.Count())
+        navHistory.At(navHistoryIx) = idx;
+    else
+        navHistory.Append(idx);
+    navHistoryIx += dir;
+    idx = navHistory.At(navHistoryIx);
+    int pageNo = PageForReparsePoint(pages, idx);
+    if (0 == pageNo)
+        pageNo = GetMaxPageCount();
+    if (pageNo > 0)
+        GoToPage(pageNo, false);
+}
+
+void EbookController::CopyNavHistory(EbookController& orig)
+{
+    navHistory = orig.navHistory;
+    navHistoryIx = orig.navHistoryIx;
 }
 
 EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb)

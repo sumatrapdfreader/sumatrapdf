@@ -31,8 +31,8 @@ public:
 
     virtual int CurrentPageNo() const { return currPageNo; }
     virtual void GoToPage(int pageNo, bool addNavPoint);
-    virtual bool CanNavigate(int dir) const { return false; }
-    virtual void Navigate(int dir) { /* not supported */ }
+    virtual bool CanNavigate(int dir) const;
+    virtual void Navigate(int dir);
 
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
     virtual DisplayMode GetDisplayMode() const { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
@@ -68,6 +68,7 @@ public:
     void TriggerLayout();
     void SetDoc(Doc newDoc, int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
     int  ResolvePageAnchor(const WCHAR *id);
+    void CopyNavHistory(EbookController& orig);
 
     // call SetDoc before using this EbookController
     static EbookController *Create(HWND hwnd, ControllerCallback *cb);
@@ -105,6 +106,9 @@ protected:
     WStrVec *   pageAnchorIds;
     Vec<int> *  pageAnchorIdxs;
 
+    Vec<int>    navHistory;
+    size_t      navHistoryIx;
+
     Vec<HtmlPage*> *GetPages();
     void        UpdateStatus();
     bool        FormattingInProgress() const { return formattingThread != NULL; }
@@ -113,6 +117,7 @@ protected:
     int         GetMaxPageCount() const;
     bool        IsDoublePage() const;
     void        ExtractPageAnchors();
+    void        AddNavPoint();
 
     // event handlers
     void        ClickedNext(Control *c, int x, int y);

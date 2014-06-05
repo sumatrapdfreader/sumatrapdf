@@ -1482,7 +1482,7 @@ void DisplayModel::AddNavPoint()
         return;
     // make sure that the history doesn't grow overly large
     if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
-        assert(navHistoryIx == MAX_NAV_HISTORY_LEN);
+        CrashIf(navHistoryIx > MAX_NAV_HISTORY_LEN);
         navHistory.RemoveAt(0, navHistoryIx - MAX_NAV_HISTORY_LEN + 1);
         navHistoryIx = MAX_NAV_HISTORY_LEN - 1;
     }
@@ -1493,7 +1493,7 @@ void DisplayModel::AddNavPoint()
 
 bool DisplayModel::CanNavigate(int dir) const
 {
-    assert(navHistoryIx <= navHistory.Count());
+    CrashIf(navHistoryIx > navHistory.Count());
     if (dir < 0)
         return navHistoryIx >= (size_t)-dir;
     return navHistoryIx + dir < navHistory.Count();
