@@ -1366,7 +1366,9 @@ void DecodeInPlace(WCHAR *url)
     // URLs are usually UTF-8 encoded
     ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
     DecodeInPlace(urlUtf8);
-    str::conv::FromCodePageBuf(url, str::Len(url) + 1, urlUtf8, CP_UTF8);
+    // convert back in place
+    CrashIf(str::Len(url) >= INT_MAX);
+    MultiByteToWideChar(CP_UTF8, 0, urlUtf8, -1, url, (int)str::Len(url) + 1);
 }
 
 WCHAR *GetFullPath(const WCHAR *url)
