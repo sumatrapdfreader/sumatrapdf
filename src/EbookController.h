@@ -69,6 +69,7 @@ public:
     void SetDoc(Doc newDoc, int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
     int  ResolvePageAnchor(const WCHAR *id);
     void CopyNavHistory(EbookController& orig);
+    int  CurrentTocPageNo() const;
 
     // call SetDoc before using this EbookController
     static EbookController *Create(HWND hwnd, ControllerCallback *cb);

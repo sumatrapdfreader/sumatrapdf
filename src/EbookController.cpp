@@ -438,7 +438,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint)
     }
     UpdateStatus();
     // update the ToC selection
-    cb->PageNoChanged(p->reparseIdx + 1);
+    cb->PageNoChanged(CurrentTocPageNo());
 }
 
 bool EbookController::GoToNextPage()
@@ -749,6 +749,11 @@ PageDestination *EbookController::GetNamedDest(const WCHAR *name)
         return NULL;
     CrashIf((size_t)reparseIdx > _doc.GetHtmlDataSize());
     return new EbookTocDest(NULL, reparseIdx + 1);
+}
+
+int EbookController::CurrentTocPageNo() const
+{
+     return currPageReparseIdx + 1;
 }
 
 void EbookController::UpdateDisplayState(DisplayState *ds)

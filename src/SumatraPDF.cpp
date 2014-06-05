@@ -2850,9 +2850,14 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
     MoveWindow(win->hwndCanvas, rc);
 
-    // TODO: is this needed here?
-    if (rc.x > 0 && win->tocLoaded && win->tocVisible)
-        UpdateTocSelection(win, win->ctrl->CurrentPageNo());
+    if (tocVisible) {
+        // the ToC selection may change due to resizing
+        // (and SetSidebarVisibility relies on this for initialization)
+        if (win->ctrl->AsEbook())
+            UpdateTocSelection(win, win->ctrl->AsEbook()->CurrentTocPageNo());
+        else
+            UpdateTocSelection(win, win->ctrl->CurrentPageNo());
+    }
 }
 
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
