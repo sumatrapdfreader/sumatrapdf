@@ -333,56 +333,6 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
     return firstEditor;
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1,
-    HSZ hsz2, HDDEDATA hdata, ULONG_PTR dwData1, ULONG_PTR dwData2)
-{
-    return 0;
-}
-
-bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command)
-{
-    DWORD inst = 0;
-    HSZ hszServer = NULL, hszTopic = NULL;
-    HCONV hconv = NULL;
-    bool ok = false;
-
-    CrashIf(str::Len(command) >= INT_MAX - 1);
-    if (str::Len(command) >= INT_MAX - 1)
-        return false;
-
-    UINT result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
-    if (result != DMLERR_NO_ERROR)
-        return false;
-
-    hszServer = DdeCreateStringHandle(inst, server, CP_WINNEUTRAL);
-    if (!hszServer)
-        goto Exit;
-    hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
-    if (!hszTopic)
-        goto Exit;
-    hconv = DdeConnect(inst, hszServer, hszTopic, NULL);
-    if (!hconv)
-        goto Exit;
-
-    DWORD cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    HDDEDATA answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, NULL);
-    if (answer) {
-        DdeFreeDataHandle(answer);
-        ok = true;
-    }
-
-Exit:
-    if (hconv)
-        DdeDisconnect(hconv);
-    if (hszTopic)
-        DdeFreeStringHandle(inst, hszTopic);
-    if (hszServer)
-        DdeFreeStringHandle(inst, hszServer);
-    DdeUninitialize(inst);
-
-    return ok;
-}
-
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
 #define UWM_DELAYED_CTRL_BACK (WM_APP + 2)
 

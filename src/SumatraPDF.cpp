@@ -1780,7 +1780,7 @@ static void RememberCurrentlyOpenedFiles()
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->hwndTabBar) {
+        if (win->tabsVisible) {
             TabData *td;
             for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
                 cmdLine.Append('"'); cmdLine.Append(td->filePath); cmdLine.Append(L"\" ");
