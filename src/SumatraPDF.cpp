@@ -1529,7 +1529,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     args.fileName = fullPath;
     args.allowFailure = true;
     // TODO: stop remembering/restoring window positions when using tabs?
-    args.placeWindow = true;
+    args.placeWindow = !gGlobalPrefs->useTabs;
     bool loaded = LoadDocIntoWindow(args, &pwdUI);
     // don't fail if a user tries to load an SMX file instead
     if (!loaded && IsModificationsFile(fullPath)) {
