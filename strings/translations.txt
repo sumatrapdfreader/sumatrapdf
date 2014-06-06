@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5bb81e25b9c5e24313aa1d9824a48dd89d4f3adf
+d20c175887327aff9637625e01c6a22b3b9648d7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3351,7 +3351,7 @@ sr-rs:Додај страницу %s међу одабране
 sv:Lägg till sida %s i favoriter
 ta:விருப்பகளில்  பக்கம் %s ஐ சேர்
 th:เพิ่มหน้า %s ไปยังรายการโปรด
-tr:Sayfa %s sık kullanılanlara ekle
+tr:%s no.lu sayfayı sık kullanılanlara ekle
 tw:加入第 %s 頁到最愛
 uk:Додати %s сторінку до закладок
 uz:%s betni Tanlanganlarga qo'shish
@@ -3408,7 +3408,7 @@ sr-rs:Додај страницу %s међу одабране под (опци�
 sv:Lägg till sida %s i favoriter med (valfritt) namn:
 ta:விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர்
 th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อม (สามารถเลือกได้) ชื่อ:
-tr:Sayfa %s sık kullanılanlara (tercihe bağlı) isimle ekle:
+tr:%s no.lu sayfayı sık kullanılanlara (tercihe bağlı isimle) ekle:
 tw:以 (可選) 名稱加入第 %s 頁到最愛:
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
 uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
@@ -10013,6 +10013,7 @@ ru:Сохранить установленный PDF плагин для бра�
 sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
 sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
 sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
+tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
 uk:Залишити розширення для браузера (більше не підтримується)
 :Let Windows Desktop Search &search PDF documents

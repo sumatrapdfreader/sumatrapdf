@@ -1887,7 +1887,7 @@ const char * gTranslations_tr =
   "&folder klas\303\266r\303\274ne SumatraPDF'yi y\303\274kle\0"\
   "Y\303\274kleme ba\305\237ar\304\261s\304\261z !\0"\
   "Kurulum devam ediyor...\0"\
-  "\0"\
+  "PDF ve taray\304\261c\304\261 eklentisini kurulu oalrak b\304\261rak\304\261n\304\261z (art\304\261k desteklenmiyor)\0"\
   "PDF belgelrini aramak i\303\247in Windows Masa\303\274st\303\274 Aramaya izin ver\0"\
   "PDF belgelerini g\303\266r\303\274nt\303\274lemek ve \303\266nizleme i\303\247in Windows'a izin ver\0"\
   "Devam etmek i\303\247in %s kapat\304\261n!\0"\
