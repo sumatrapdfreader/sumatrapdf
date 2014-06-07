@@ -50,15 +50,25 @@ static fz_image *render_to_pixmap(fz_context *ctx, HBITMAP hbmp, SizeI size)
 
     // convert BGR with padding to RGB without padding
     unsigned char *out = data;
+    bool is_grayscale = true;
     for (int y = 0; y < h; y++) {
-        unsigned char *in = data + y * stride;
-        unsigned char rgb[3];
+        const unsigned char *in = data + y * stride;
+        unsigned char green, blue;
         for (int x = 0; x < w; x++) {
-            rgb[2] = *in++;
-            rgb[1] = *in++;
+            is_grayscale = is_grayscale && in[0] == in[1] && in[0] == in[2];
+            blue = *in++;
+            green = *in++;
             *out++ = *in++;
-            *out++ = rgb[1];
-            *out++ = rgb[2];
+            *out++ = green;
+            *out++ = blue;
+        }
+    }
+    // convert grayscale RGB to proper grayscale
+    if (is_grayscale) {
+        const unsigned char *in = out = data;
+        for (int i = 0; i < w * h; i++) {
+            *out++ = *in++;
+            in += 2;
         }
     }
 
@@ -96,7 +106,8 @@ static fz_image *render_to_pixmap(fz_context *ctx, HBITMAP hbmp, SizeI size)
         fz_rethrow(ctx);
     }
 
-    return fz_new_image(ctx, w, h, 8, fz_device_rgb(ctx), 96, 96, 0, 0, NULL, NULL, buf, NULL);
+    fz_colorspace *cs = is_grayscale ? fz_device_gray(ctx) : fz_device_rgb(ctx);
+    return fz_new_image(ctx, w, h, 8, cs, 96, 96, 0, 0, NULL, NULL, buf, NULL);
 }
 
 static fz_image *pack_jpeg(fz_context *ctx, const char *data, size_t len, SizeI size)
