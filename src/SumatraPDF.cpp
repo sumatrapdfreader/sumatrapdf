@@ -923,16 +923,17 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     int rotation = 0;
 
     // Never load settings from a preexisting state if the user doesn't wish to
-    // (unless we're just refreshing the document, i.e. only if args.placeWindow == true)
-    if (args.placeWindow && (!gGlobalPrefs->rememberStatePerDocument || state && state->useDefaultState)) {
-        state = NULL;
-    } else if (NULL == state) {
+    // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
+    if (!state && gGlobalPrefs->rememberStatePerDocument) {
         state = gFileHistory.Find(args.fileName);
         if (state) {
             if (state->windowPos.IsEmpty())
                 state->windowPos = gGlobalPrefs->windowPos;
             EnsureAreaVisibility(state->windowPos);
         }
+    }
+    if (state && state->useDefaultState) {
+        state = NULL;
     }
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
     int startPage = 1;
@@ -1204,6 +1205,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
+    ds->useDefaultState = false;
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
 
