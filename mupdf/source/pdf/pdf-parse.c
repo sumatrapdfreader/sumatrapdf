@@ -391,6 +391,17 @@ end:
 	return op;
 }
 
+/* SumatraPDF: skip invalid simple tokens in dicts */
+static int
+pdf_is_simple_tok(pdf_token tok)
+{
+	return
+		tok != PDF_TOK_ERROR && tok != PDF_TOK_EOF &&
+		tok != PDF_TOK_OPEN_ARRAY && tok != PDF_TOK_CLOSE_ARRAY &&
+		tok != PDF_TOK_OPEN_DICT && tok != PDF_TOK_CLOSE_DICT &&
+		tok != PDF_TOK_OPEN_BRACE && tok != PDF_TOK_CLOSE_BRACE;
+}
+
 pdf_obj *
 pdf_parse_dict(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 {
@@ -419,6 +430,12 @@ pdf_parse_dict(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 			if (tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "ID"))
 				break;
 
+			/* SumatraPDF skip invalid simple tokens in dicts */
+			if (tok != PDF_TOK_NAME && pdf_is_simple_tok(tok))
+			{
+				fz_warn(ctx, "skipping invalid key in dict");
+				continue;
+			}
 			if (tok != PDF_TOK_NAME)
 				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid key in dict");
 
@@ -441,8 +458,7 @@ pdf_parse_dict(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 					val = key = NULL;
 					do
 						tok = pdf_lex(file, buf);
-					while (tok != PDF_TOK_CLOSE_DICT && tok != PDF_TOK_CLOSE_ARRAY &&
-						tok != PDF_TOK_EOF && tok != PDF_TOK_OPEN_ARRAY && tok != PDF_TOK_OPEN_DICT);
+					while (pdf_is_simple_tok(tok));
 					if (tok == PDF_TOK_CLOSE_DICT)
 						goto skip;
 					if (tok == PDF_TOK_CLOSE_ARRAY)
@@ -487,10 +503,22 @@ pdf_parse_dict(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 						break;
 					}
 				}
-				fz_throw(ctx, FZ_ERROR_GENERIC, "invalid indirect reference in dict");
+				/* fz_throw(ctx, FZ_ERROR_GENERIC, "invalid indirect reference in dict");
+				/* fall through */
 
 			default:
-				fz_throw(ctx, FZ_ERROR_GENERIC, "unknown token in dict");
+				/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2608 */
+				if (!pdf_is_simple_tok(tok))
+					fz_throw(ctx, FZ_ERROR_GENERIC, "unknown token in dict");
+				fz_warn(ctx, "skipping unknown token in dict");
+				pdf_drop_obj(key);
+				key = NULL;
+				while (pdf_is_simple_tok(tok) && tok != PDF_TOK_NAME &&
+					(tok != PDF_TOK_KEYWORD || strcmp(buf->scratch, "ID") != 0))
+				{
+					tok = pdf_lex(file, buf);
+				}
+				goto skip;
 			}
 
 			pdf_dict_put(dict, key, val);
