@@ -213,7 +213,9 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
     // try WM_COPYDATA first, as that allows targetting a specific window
     COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
     LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
-    if (!res)
+    if (res)
+        SetForegroundWindow(targetWnd);
+    else
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
