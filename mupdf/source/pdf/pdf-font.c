@@ -244,8 +244,9 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 		if (!data)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin CJK font");
 
-		/* a glyph bbox cache is too big for droid sans fallback (51k glyphs!) */
-		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 0);
+		/* The DroidSansFallback fonts have both H and V variants in the TTC */
+		/* A glyph bbox cache is too big for DroidSansFallback (51k glyphs!) */
+		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, fontdesc->wmode, 0);
 	}
 
 	fontdesc->font->ft_substitute = 1;
@@ -942,6 +943,7 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 	pdf_obj *widths;
 	pdf_obj *descriptor;
 	pdf_font_desc *fontdesc = NULL;
+	pdf_cmap *cmap;
 	FT_Face face;
 	char collection[256];
 	char *basefont;
@@ -983,9 +985,34 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 			fz_strlcat(collection, tmpstr, sizeof collection);
 		}
 
+		/* Encoding */
+
+		if (pdf_is_name(encoding))
+		{
+			if (!strcmp(pdf_to_name(encoding), "Identity-H"))
+				cmap = pdf_new_identity_cmap(ctx, 0, 2);
+			else if (!strcmp(pdf_to_name(encoding), "Identity-V"))
+				cmap = pdf_new_identity_cmap(ctx, 1, 2);
+			else
+				cmap = pdf_load_system_cmap(ctx, pdf_to_name(encoding));
+		}
+		else if (pdf_is_indirect(encoding))
+		{
+			cmap = pdf_load_embedded_cmap(doc, encoding);
+		}
+		else
+		{
+			fz_throw(ctx, FZ_ERROR_GENERIC, "syntaxerror: font missing encoding");
+		}
+
 		/* Load font file */
 
 		fontdesc = pdf_new_font_desc(ctx);
+
+		fontdesc->encoding = cmap;
+		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
+
+		pdf_set_font_wmode(ctx, fontdesc, pdf_cmap_wmode(ctx, fontdesc->encoding));
 
 		descriptor = pdf_dict_gets(dict, "FontDescriptor");
 		if (!descriptor)
@@ -994,28 +1021,7 @@ load_cid_font(pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_u
 
 		face = fontdesc->font->ft_face;
 
-		/* Encoding */
-
-		if (pdf_is_name(encoding))
-		{
-			if (!strcmp(pdf_to_name(encoding), "Identity-H"))
-				fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 2);
-			else if (!strcmp(pdf_to_name(encoding), "Identity-V"))
-				fontdesc->encoding = pdf_new_identity_cmap(ctx, 1, 2);
-			else
-				fontdesc->encoding = pdf_load_system_cmap(ctx, pdf_to_name(encoding));
-		}
-		else if (pdf_is_indirect(encoding))
-		{
-			fontdesc->encoding = pdf_load_embedded_cmap(doc, encoding);
-		}
-		else
-		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "syntaxerror: font missing encoding");
-		}
-		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
-
-		pdf_set_font_wmode(ctx, fontdesc, pdf_cmap_wmode(ctx, fontdesc->encoding));
+		/* Apply encoding */
 
 		cidtogidmap = pdf_dict_gets(dict, "CIDToGIDMap");
 		if (pdf_is_indirect(cidtogidmap))
