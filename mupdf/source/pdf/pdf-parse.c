@@ -493,7 +493,8 @@ pdf_parse_dict(pdf_document *doc, fz_stream *file, pdf_lexbuf *buf)
 					key = NULL;
 					goto skip;
 				}
-				if (tok == PDF_TOK_INT)
+				/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695300 */
+				if (tok == PDF_TOK_INT && a > 0 && buf->i >= 0)
 				{
 					b = buf->i;
 					tok = pdf_lex(file, buf);

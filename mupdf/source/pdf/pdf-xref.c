@@ -1351,12 +1351,22 @@ pdf_load_obj_stm(pdf_document *doc, int num, int gen, pdf_lexbuf *buf)
 			pdf_xref_entry *entry;
 			fz_seek(stm, first + ofsbuf[i], SEEK_SET);
 
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695300 */
+			fz_try(ctx)
+			{
+
 			obj = pdf_parse_stm_obj(doc, stm, buf);
 
 			if (numbuf[i] < 1 || numbuf[i] >= xref_len)
 			{
 				pdf_drop_obj(obj);
 				fz_throw(ctx, FZ_ERROR_GENERIC, "object id (%d 0 R) out of range (0..%d)", numbuf[i], xref_len - 1);
+			}
+
+			}
+			fz_catch(ctx)
+			{
+				continue;
 			}
 
 			entry = pdf_get_xref_entry(doc, numbuf[i]);
