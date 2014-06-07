@@ -106,9 +106,9 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
     { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
     { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0 },
-    { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          MF_NOT_FOR_EBOOK_UI },
-    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       MF_NOT_FOR_EBOOK_UI },
+    { SEP_ITEM,                             0,                          0 },
+    { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          0 },
+    { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
 };
@@ -168,8 +168,6 @@ static MenuDef menuDefDebug[] = {
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
-    // TODO: is this still needed?
-    // { "Load mobi sample",                   IDM_LOAD_MOBI_SAMPLE,       MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
@@ -415,7 +413,12 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
     };
 
-    assert(IsFileCloseMenuEnabled() == !win->IsAboutWindow());
+    for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
+        UINT id = menusToDisableIfNoDocument[i];
+        win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
+    }
+
+    CrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
     win::menu::SetEnabled(win->menu, IDM_CLOSE, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
@@ -435,11 +438,6 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     if (win->IsDocLoaded()) {
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->ctrl->CanNavigate(-1));
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->ctrl->CanNavigate(1));
-    }
-
-    for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
-        UINT id = menusToDisableIfNoDocument[i];
-        win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
     }
 
     if (win->GetEngineType() == Engine_ImageDir) {

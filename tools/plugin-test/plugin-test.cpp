@@ -43,7 +43,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             UpdateWindow(hwnd);
         }
     }
-    else if (msg == WM_COPYDATA) {
+    else if (WM_COPYDATA == msg) {
         // handle a URL to open externally (or prevent it)
         HWND hChild = FindWindowEx(hwnd, NULL, NULL, NULL);
         COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
