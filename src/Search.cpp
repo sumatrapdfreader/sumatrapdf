@@ -729,39 +729,38 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
     return next;
 }
 
+static void HandleDdeCmds(const WCHAR *cmd, DDEACK& ack)
+{
+    while (!str::IsEmpty(cmd)) {
+        const WCHAR *nextCmd = NULL;
+        if (!nextCmd) nextCmd = HandleSyncCmd(cmd, ack);
+        if (!nextCmd) nextCmd = HandleOpenCmd(cmd, ack);
+        if (!nextCmd) nextCmd = HandleGotoCmd(cmd, ack);
+        if (!nextCmd) nextCmd = HandlePageCmd(cmd, ack);
+        if (!nextCmd) nextCmd = HandleSetViewCmd(cmd, ack);
+        if (!nextCmd) {
+            ScopedMem<WCHAR> tmp;
+            nextCmd = str::Parse(cmd, L"%S]", &tmp);
+        }
+        cmd = nextCmd;
+    }
+}
+
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     UINT_PTR lo, hi;
     UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi);
 
-    ScopedMem<WCHAR> cmd;
     DDEACK ack = { 0 };
-
     LPVOID command = GlobalLock((HGLOBAL)hi);
-    if (!command)
-        goto Exit;
-
-    if (IsWindowUnicode((HWND)wparam))
-        cmd.Set(str::Dup((const WCHAR*)command));
-    else
-        cmd.Set(str::conv::FromAnsi((const char*)command));
-
-    const WCHAR *currCmd = cmd;
-    while (!str::IsEmpty(currCmd)) {
-        const WCHAR *nextCmd = NULL;
-        if (!nextCmd) nextCmd = HandleSyncCmd(currCmd, ack);
-        if (!nextCmd) nextCmd = HandleOpenCmd(currCmd, ack);
-        if (!nextCmd) nextCmd = HandleGotoCmd(currCmd, ack);
-        if (!nextCmd) nextCmd = HandlePageCmd(currCmd, ack);
-        if (!nextCmd) nextCmd = HandleSetViewCmd(currCmd, ack);
-        if (!nextCmd) {
-            ScopedMem<WCHAR> tmp;
-            nextCmd = str::Parse(currCmd, L"%S]", &tmp);
-        }
-        currCmd = nextCmd;
+    if (command) {
+        ScopedMem<WCHAR> cmd;
+        if (IsWindowUnicode((HWND)wparam))
+            cmd.Set(str::Dup((const WCHAR *)command));
+        else
+            cmd.Set(str::conv::FromAnsi((const char *)command));
+        HandleDdeCmds(cmd, ack);
     }
-
-Exit:
     GlobalUnlock((HGLOBAL)hi);
 
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD *)&ack, hi);
@@ -774,4 +773,19 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
     // Respond with another WM_DDE_TERMINATE message
     PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);
     return 0;
+}
+
+LRESULT OnCopyData(HWND hwnd, WPARAM wparam, LPARAM lparam)
+{
+    COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lparam;
+    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wparam)
+        return FALSE;
+
+    const WCHAR *cmd = (const WCHAR *)cds->lpData;
+    if (cmd[cds->cbData / sizeof(WCHAR) - 1])
+        return FALSE;
+
+    DDEACK ack = { 0 };
+    HandleDdeCmds(cmd, ack);
+    return ack.fAck ? TRUE : FALSE;
 }

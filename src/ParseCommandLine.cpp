@@ -152,20 +152,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
             forwardSearchLine = _wtoi(argList.At(++n));
         }
-        else if (is_arg("-reuse-instance")) {
-            // find the window handle of a running instance of SumatraPDF
-            // TODO: there should be a mutex here to reduce possibility of
-            // race condition and having more than one copy launch because
-            // FindWindow() in one process is called before a window is created
-            // in another process
-            reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
-        }
-#ifdef DEBUG
-        // TODO: remove once issue 2601 has been fixed (-reuse-instance affects other versions)
-        else if (is_arg("-new-instance")) {
-            newInstance = true;
-        }
-#endif
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
@@ -253,6 +239,12 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             crashOnOpen = true;
+        }
+        else if (is_arg("-reuse-instance")) {
+            // until version 2.5, this didn't permanently change the advanced setting
+            // now it has to be permanent so that the shared mutex is created for the
+            // very first instance (instead of the first using -reuse-instance)
+            reuseInstance = true;
         }
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg("-esc-to-exit")) {

@@ -184,35 +184,37 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
-static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
+static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     // delegate file opening to a previously running instance by sending a DDE message
     WCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
-    ScopedMem<WCHAR> cmd(str::Format(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath));
-    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+    str::Str<WCHAR> cmd;
+    cmd.AppendFmt(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath);
     if (i.destName && isFirstWin) {
-        cmd.Set(str::Format(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName));
-        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+        cmd.AppendFmt(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName);
     }
     else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.Set(str::Format(L"[" DDECOMMAND_PAGE L"(\"%s\", %d)]", fullpath, i.pageNumber));
-        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+        cmd.AppendFmt(L"[" DDECOMMAND_PAGE L"(\"%s\", %d)]", fullpath, i.pageNumber);
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
             i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
         const WCHAR *viewMode = prefs::conv::FromDisplayMode(i.startView);
-        cmd.Set(str::Format(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]",
-                                    fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
-        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+        cmd.AppendFmt(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]",
+                      fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.Set(str::Format(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
-                                    fullpath, sourcePath, i.forwardSearchLine));
-        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
+        cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
+                      fullpath, sourcePath, i.forwardSearchLine);
     }
+
+    // try WM_COPYDATA first, as that allows targetting a specific window
+    COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
+    LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
+    if (!res)
+        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
 static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
@@ -323,6 +325,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gGlobalPrefs->mainWindowBackground;
+    i.reuseInstance = gGlobalPrefs->reuseInstance;
     i.forwardSearch = gGlobalPrefs->forwardSearch;
     i.escToExit = gGlobalPrefs->escToExit;
     i.cbxMangaMode = gGlobalPrefs->comicBookUI.cbxMangaMode;
@@ -341,6 +344,54 @@ static void SetupCrashHandler()
         symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
     ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, symDir);
+}
+
+static HWND FindPrevInstWindow(HANDLE *hMutex)
+{
+    // create a unique identifier for this executable
+    // (allows independent side-by-side installations)
+    ScopedMem<WCHAR> exePath(GetExePath());
+    str::ToLower(exePath);
+    uint32_t hash = MurmurHash2(exePath.Get(), str::Len(exePath) * sizeof(WCHAR));
+    ScopedMem<WCHAR> mapId(str::Format(L"SumatraPDF-%08x", hash));
+
+    int retriesLeft = 3;
+Retry:
+    // use a memory mapping containing a process id as mutex
+    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    if (!hMap)
+        goto Error;
+    bool hasPrevInst = GetLastError() == ERROR_ALREADY_EXISTS;
+    DWORD *procId = (DWORD *)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(DWORD));
+    if (!procId) {
+        CloseHandle(hMap);
+        goto Error;
+    }
+    if (!hasPrevInst) {
+        *procId = GetCurrentProcessId();
+        UnmapViewOfFile(procId);
+        *hMutex = hMap;
+        return NULL;
+    }
+
+    // if the mapping already exists, find one window belonging to the original process
+    DWORD prevProcId = *procId;
+    UnmapViewOfFile(procId);
+    CloseHandle(hMap);
+    HWND hwnd = NULL;
+    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)) != NULL) {
+        DWORD wndProcId;
+        GetWindowThreadProcessId(hwnd, &wndProcId);
+        if (wndProcId == prevProcId)
+            return hwnd;
+    }
+
+    // fall through
+Error:
+    if (--retriesLeft < 0)
+        return NULL;
+    Sleep(100);
+    goto Retry;
 }
 
 extern void RedirectDllIOToConsole();
@@ -435,6 +486,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCrashOnOpen = i.crashOnOpen;
 
     gGlobalPrefs->mainWindowBackground = i.bgColor;
+    gGlobalPrefs->reuseInstance = i.reuseInstance;
     if (gGlobalPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
         gGlobalPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
         gGlobalPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
@@ -483,12 +535,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && !i.newInstance &&
-        (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) &&
-        FindWindow(FRAME_CLASS_NAME, 0)) {
-        i.reuseInstance = true;
-    }
-
     if (gGlobalPrefs->reopenOnce) {
         WStrVec moreFileNames;
         ParseCmdLine(gGlobalPrefs->reopenOnce, moreFileNames);
@@ -500,12 +546,24 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
     }
 
+    HWND hPrevWnd = NULL;
+    HANDLE hMutex = NULL;
+    if (i.printDialog || i.stressTestPath || gPluginMode) {
+        // TODO: pass print request through to previous instance?
+        i.reuseInstance = false;
+    }
+    else if (i.reuseInstance || gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
+        // TODO: create mutex also without -reuse-instance?
+        hPrevWnd = FindPrevInstWindow(&hMutex);
+        i.reuseInstance = hPrevWnd != NULL;
+    }
+
     WindowInfo *win = NULL;
     bool isFirstWin = true;
 
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
-        if (i.reuseInstance && !i.printDialog) {
-            OpenUsingDde(i.fileNames.At(n), i, isFirstWin);
+        if (i.reuseInstance) {
+            OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, isFirstWin);
         } else {
             win = LoadOnStartup(i.fileNames.At(n), i, isFirstWin);
             if (!win) {
@@ -523,7 +581,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (i.reuseInstance && !i.printDialog || i.printDialog && i.exitWhenDone)
+    if (i.reuseInstance || i.printDialog && i.exitWhenDone)
         goto Exit;
 
     if (isFirstWin) {
@@ -561,6 +619,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     retCode = RunMessageLoop();
 
+    SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);
 
 Exit:

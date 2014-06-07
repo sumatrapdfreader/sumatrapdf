@@ -2586,7 +2586,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         ZoomVirtual.Set(str::Dup(L"fitcontent"));
 
     ScopedMem<WCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance",
+    ScopedMem<WCHAR> args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d",
                           win.ctrl->FilePath(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<WCHAR> label(win.ctrl->GetPageLabel(ss.page));
     ScopedMem<WCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
@@ -4327,6 +4327,9 @@ InitMouseWheelInfo:
             return OnDDExecute(hwnd, wParam, lParam);
         case WM_DDE_TERMINATE:
             return OnDDETerminate(hwnd, wParam, lParam);
+
+        case WM_COPYDATA:
+            return OnCopyData(hwnd, wParam, lParam);
 
         case WM_TIMER:
             if (win && win->stressTest) {
