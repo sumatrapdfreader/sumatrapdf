@@ -24,7 +24,7 @@ static Rect RectForCircle(int x, int y, int r)
 
 PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
 {
-    bit::Set(wantedInputBits, WantsMouseMoveBit);
+    bit::Set(wantedInputBits, WantsMouseMoveBit, WantsMouseClickBit);
 }
 
 void PageControl::SetPage(HtmlPage *newPage)
@@ -236,4 +236,3 @@ void PagesLayout::Arrange(const Rect finalRect)
     r.X = r.X + dx + spaceDx;
     page2->Arrange(r);
 }
-

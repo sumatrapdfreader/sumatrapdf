@@ -14,9 +14,10 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
-#include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
+#include "Translations.h"
+#include "TrivialHtmlParser.h"
 
 static const WCHAR *GetFontName()
 {
@@ -52,6 +53,23 @@ HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
     CrashIf(true);
     return NULL;
 }
+
+class EbookTocDest : public DocTocItem, public PageDestination {
+    ScopedMem<WCHAR> url;
+
+public:
+    EbookTocDest(const WCHAR *title, int reparseIdx) :
+        DocTocItem(str::Dup(title), reparseIdx), url(NULL) { }
+    EbookTocDest(const WCHAR *title, const WCHAR *url) :
+        DocTocItem(str::Dup(title)), url(str::Dup(url)) { }
+
+    virtual PageDestination *GetLink() { return this; }
+
+    virtual PageDestType GetDestType() const { return url ? Dest_LaunchURL : Dest_ScrollTo; }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return RectD(); }
+    virtual WCHAR *GetDestValue() const { return str::Dup(url); }
+};
 
 struct EbookFormattingData {
     enum { MAX_PAGES = 256 };
@@ -192,9 +210,13 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     em->EventsForName("prev")->Clicked.connect(this, &EbookController::ClickedPrev);
     em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
     PageControl *page1 = ctrls->pagesLayout->GetPage1();
-    em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
+    em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
+    // TODO: how to show the hand cursor when over a link?
+    // TODO: how to show a tooltip for external URLs when over a link?
+    em->EventsForControl(page1)->Clicked.connect(this, &EbookController::ClickedPage1);
+    em->EventsForControl(page2)->Clicked.connect(this, &EbookController::ClickedPage2);
 }
 
 EbookController::~EbookController()
@@ -366,6 +388,70 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
     GoToPage(newPageNo, true);
 }
 
+void EbookController::OnClickedPage(int pageNo, int x, int y)
+{
+    HtmlPage *p = pages->At(pageNo - 1);
+    PointF pt((REAL)x, (REAL)y);
+    DrawInstr *link = NULL;
+    for (DrawInstr *i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+        if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea() && i->bbox.Contains(pt)) {
+            link = i;
+            break;
+        }
+    }
+    if (!link)
+        return;
+
+    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    if (url::IsAbsolute(url)) {
+        EbookTocDest dest(NULL, url);
+        cb->GotoLink(&dest);
+        return;
+    }
+
+    if (_doc.AsEpub()) {
+        // normalize the URL by combining it with the chapter's base path
+        for (int j = pageNo - 1; j > 0; j--) {
+            HtmlPage *pg = pages->At(j);
+            // <pagebreak src="..." page_marker /> is usually the second instruction on a page
+            for (size_t k = 0; k < min(2, pg->instructions.Count()); k++) {
+                DrawInstr& di = pg->instructions.At(k);
+                if (InstrAnchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
+                    ScopedMem<char> basePath(str::DupN(di.str.s, di.str.len));
+                    ScopedMem<char> relPath(ResolveHtmlEntities(link->str.s, link->str.len));
+                    ScopedMem<char> absPath(NormalizeURL(relPath, basePath));
+                    url.Set(str::conv::FromUtf8(absPath));
+                    j = 0; // done
+                    break;
+                }
+            }
+        }
+    }
+
+    int idx = ResolvePageAnchor(url);
+    if (idx != -1) {
+        EbookTocDest dest(NULL, idx);
+        cb->GotoLink(&dest);
+    }
+}
+
+void EbookController::ClickedPage1(Control *c, int x, int y)
+{
+    cb->FocusFrame(true);
+
+    if (pages && (size_t)currPageNo <= pages->Count())
+        OnClickedPage(currPageNo, x - c->cachedStyle->padding.left, y - c->cachedStyle->padding.top);
+}
+
+void EbookController::ClickedPage2(Control *c, int x, int y)
+{
+    cb->FocusFrame(true);
+
+    CrashIf(!IsDoublePage());
+    if (pages && (size_t)currPageNo < pages->Count())
+        OnClickedPage(currPageNo + 1, x - c->cachedStyle->padding.left, y - c->cachedStyle->padding.top);
+}
+
 int EbookController::GetMaxPageCount() const
 {
     Vec<HtmlPage *> *pagesTmp = pages;
@@ -438,7 +524,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint)
     }
     UpdateStatus();
     // update the ToC selection
-    cb->PageNoChanged(CurrentTocPageNo());
+    cb->PageNoChanged(pageNo);
 }
 
 bool EbookController::GoToNextPage()
@@ -648,23 +734,6 @@ int EbookController::ResolvePageAnchor(const WCHAR *id)
         return pageAnchorIdxs->At(idx);
     return -1;
 }
-
-class EbookTocDest : public DocTocItem, public PageDestination {
-    ScopedMem<WCHAR> url;
-
-public:
-    EbookTocDest(const WCHAR *title, int reparseIdx) :
-        DocTocItem(str::Dup(title), reparseIdx), url(NULL) { }
-    EbookTocDest(const WCHAR *title, const WCHAR *url) :
-        DocTocItem(str::Dup(title)), url(str::Dup(url)) { }
-
-    virtual PageDestination *GetLink() { return this; }
-
-    virtual PageDestType GetDestType() const { return url ? Dest_LaunchURL : Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const { return str::Dup(url); }
-};
 
 class EbookTocCollector : public EbookTocVisitor {
     EbookController *ctrl;

@@ -119,12 +119,15 @@ protected:
     bool        IsDoublePage() const;
     void        ExtractPageAnchors();
     void        AddNavPoint();
+    void        OnClickedPage(int pageNo, int x, int y);
 
     // event handlers
     void        ClickedNext(Control *c, int x, int y);
     void        ClickedPrev(Control *c, int x, int y);
     void        ClickedProgress(Control *c, int x, int y);
     void        SizeChangedPage(Control *c, int dx, int dy);
+    void        ClickedPage1(Control *c, int x, int y);
+    void        ClickedPage2(Control *c, int x, int y);
 };
 
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=NULL);

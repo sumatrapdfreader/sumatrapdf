@@ -1688,7 +1688,7 @@ void ControllerCallbackHandler::PageNoChanged(int pageNo)
         return;
 
     if (win->AsEbook()) {
-        // pageNo == reparseIdx + 1
+        pageNo = win->AsEbook()->CurrentTocPageNo();
         if (pageNo != win->currPageNo)
             UpdateTocSelection(win, pageNo);
         win->currPageNo = pageNo;

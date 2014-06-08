@@ -507,7 +507,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
         ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-        ScopedMem<char> relPath(str::DupN(link->str.s, link->str.len));
+        ScopedMem<char> relPath(ResolveHtmlEntities(link->str.s, link->str.len));
         ScopedMem<char> absPath(NormalizeURL(relPath, basePath));
         url.Set(str::conv::FromUtf8(absPath));
     }

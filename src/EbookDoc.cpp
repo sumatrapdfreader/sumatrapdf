@@ -99,7 +99,10 @@ char *NormalizeURL(const char *url, const char *base)
 
     const char *baseEnd = str::FindCharLast(base, '/');
     const char *hash = str::FindChar(base, '#');
-    if (baseEnd && hash && hash < baseEnd) {
+    if (*url == '#') {
+        baseEnd = hash ? hash - 1 : base + str::Len(base) - 1;
+    }
+    else if (baseEnd && hash && hash < baseEnd) {
         for (baseEnd = hash - 1; baseEnd > base && *baseEnd != '/'; baseEnd--);
     }
     if (baseEnd)
