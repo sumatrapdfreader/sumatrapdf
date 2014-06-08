@@ -73,3 +73,65 @@ file (GLOB PLUGIN_TEST_SRC
 include_directories ("src/utils" "src/utils/msvc")
 add_executable(plugin_test WIN32 ${PLUGIN_TEST_SRC})
 target_link_libraries(plugin_test "shlwapi")
+
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+add_library(bzip2 "ext/bzip2/bzip_all.c")
+
+add_definitions(-DUNRAR -DRARDLL -DSILENT)
+
+file (GLOB UNRAR_SRC
+	"ext/unrar/archive.*"
+	"ext/unrar/arcread.*"
+	"ext/unrar/blake2s.*"
+	"ext/unrar/cmddata.*"
+	"ext/unrar/consio.*"
+	"ext/unrar/crc.*"
+	"ext/unrar/crypt.*"
+	"ext/unrar/encname.*"
+	"ext/unrar/errhnd.*"
+	"ext/unrar/extinfo.*"
+	"ext/unrar/extract.*"
+	"ext/unrar/filcreat.*"
+	"ext/unrar/file.*"
+	"ext/unrar/filefn.*"
+	"ext/unrar/filestr.*"
+	"ext/unrar/find.*"
+	"ext/unrar/getbits.*"
+	"ext/unrar/global.*"
+	"ext/unrar/hash.*"
+	"ext/unrar/headers.*"
+	"ext/unrar/isnt.*"
+	"ext/unrar/list.*"
+	"ext/unrar/match.*"
+	"ext/unrar/options.*"
+	"ext/unrar/pathfn.*"
+	"ext/unrar/qopen.*"
+	"ext/unrar/rarvm.*"
+	"ext/unrar/rawread.*"
+	"ext/unrar/rdwrfn.*"
+	"ext/unrar/recvol.*"
+	"ext/unrar/rijndael.*"
+	"ext/unrar/rs.*"
+	"ext/unrar/rs16.*"
+	"ext/unrar/secpassword.*"
+	"ext/unrar/scantree.*"
+	"ext/unrar/sha1.*"
+	"ext/unrar/sha256.*"
+	"ext/unrar/smallfn.*"
+	"ext/unrar/strfn.*"
+	"ext/unrar/strlist.*"
+	"ext/unrar/system.*"
+	"ext/unrar/threadpool.*"
+	"ext/unrar/timefn.*"
+	"ext/unrar/unicode.*"
+	"ext/unrar/unpack.*"
+	"ext/unrar/volume.*"
+	"ext/unrar/dll.*"
+)
+
+
+
+add_library(unrar ${UNRAR_SRC})
