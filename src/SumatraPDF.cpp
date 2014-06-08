@@ -2922,7 +2922,6 @@ static void OnMenuOptions(HWND hwnd)
         return;
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
-        // TODO: also remove all favorites?
         gFileHistory.Clear(true);
         CleanUpThumbnailCache(gFileHistory);
     }

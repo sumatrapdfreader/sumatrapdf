@@ -301,7 +301,7 @@ bool Save()
     size_t prevPrefsDataSize;
     ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
 
-    if (!gGlobalPrefs->rememberStatePerDocument) {
+    if (!gGlobalPrefs->rememberStatePerDocument || !gGlobalPrefs->rememberOpenedFiles) {
         for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
             (*ds)->useDefaultState = true;
         }
@@ -319,7 +319,7 @@ bool Save()
     size_t prefsDataSize;
     ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, prevPrefsData, &prefsDataSize));
 
-    if (!gGlobalPrefs->rememberStatePerDocument)
+    if (!gGlobalPrefs->rememberStatePerDocument || !gGlobalPrefs->rememberOpenedFiles)
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
 
     CrashIf(!prefsData || 0 == prefsDataSize);
