@@ -3151,7 +3151,8 @@ static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
 
 static void OnMenuViewPresentation(WindowInfo& win)
 {
-    OnMenuViewFullscreen(win, true);
+    // only DisplayModel currently supports an actual presentation mode
+    OnMenuViewFullscreen(win, win.AsFixed() != NULL);
 }
 
 void AdvanceFocus(WindowInfo* win)
