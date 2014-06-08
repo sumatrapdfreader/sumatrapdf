@@ -241,10 +241,9 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             crashOnOpen = true;
         }
         else if (is_arg("-reuse-instance")) {
-            // until version 2.5, this didn't permanently change the advanced setting
-            // now it has to be permanent so that the shared mutex is created for the
-            // very first instance (instead of the first using -reuse-instance)
-            reuseInstance = true;
+            // for backwards compatibility, -reuse-instance reuses whatever
+            // instance has registered as DDE server
+            reuseDdeInstance = true;
         }
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg("-esc-to-exit")) {

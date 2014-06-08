@@ -210,13 +210,16 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
                       fullpath, sourcePath, i.forwardSearchLine);
     }
 
-    // try WM_COPYDATA first, as that allows targetting a specific window
-    COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
-    LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
-    if (res)
-        SetForegroundWindow(targetWnd);
-    else
-        DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
+    if (!i.reuseDdeInstance) {
+        // try WM_COPYDATA first, as that allows targetting a specific window
+        COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
+        LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
+        if (res) {
+            SetForegroundWindow(targetWnd);
+            return;
+        }
+    }
+    DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
 static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
@@ -281,7 +284,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     // (they can still be disabled through sumatrapdfrestrict.ini or -restrict)
     gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~(Perm_SavePreferences | Perm_FullscreenAccess);
 
-    i.reuseInstance = i.exitWhenDone = false;
+    i.reuseDdeInstance = i.exitWhenDone = false;
     gGlobalPrefs->reuseInstance = false;
     // don't allow tabbed navigation
     gGlobalPrefs->useTabs = false;
@@ -327,7 +330,6 @@ static bool SetupPluginMode(CommandLineInfo& i)
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gGlobalPrefs->mainWindowBackground;
-    i.reuseInstance = gGlobalPrefs->reuseInstance;
     i.forwardSearch = gGlobalPrefs->forwardSearch;
     i.escToExit = gGlobalPrefs->escToExit;
     i.cbxMangaMode = gGlobalPrefs->comicBookUI.cbxMangaMode;
@@ -488,7 +490,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCrashOnOpen = i.crashOnOpen;
 
     gGlobalPrefs->mainWindowBackground = i.bgColor;
-    gGlobalPrefs->reuseInstance = i.reuseInstance;
     if (gGlobalPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
         gGlobalPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
         gGlobalPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
@@ -548,57 +549,57 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
     }
 
-    HWND hPrevWnd = NULL;
     HANDLE hMutex = NULL;
+    HWND hPrevWnd = NULL;
     if (i.printDialog || i.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
-        i.reuseInstance = false;
     }
-    else if (i.reuseInstance || gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
-        // TODO: create mutex also without -reuse-instance?
+    else if (i.reuseDdeInstance) {
+        hPrevWnd = FindWindow(FRAME_CLASS_NAME, NULL);
+    }
+    else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
         hPrevWnd = FindPrevInstWindow(&hMutex);
-        i.reuseInstance = hPrevWnd != NULL;
+    }
+    if (hPrevWnd) {
+        for (size_t n = 0; n < i.fileNames.Count(); n++) {
+            OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, 0 == n);
+        }
+        goto Exit;
     }
 
     WindowInfo *win = NULL;
-    bool isFirstWin = true;
-
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
-        if (i.reuseInstance) {
-            OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, isFirstWin);
-        } else {
-            win = LoadOnStartup(i.fileNames.At(n), i, isFirstWin);
-            if (!win) {
-                retCode++;
-                continue;
-            }
-            if (i.printDialog)
-                OnMenuPrint(win, i.exitWhenDone);
+        win = LoadOnStartup(i.fileNames.At(n), i, !win);
+        if (!win) {
+            retCode++;
+            continue;
         }
-        isFirstWin = false;
+        if (i.printDialog)
+            OnMenuPrint(win, i.exitWhenDone);
     }
-    if (i.fileNames.Count() > 0 && isFirstWin) {
+    if (i.fileNames.Count() > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;
     }
-
-    if (i.reuseInstance || i.printDialog && i.exitWhenDone)
+    if (i.printDialog && i.exitWhenDone)
         goto Exit;
 
-    if (isFirstWin) {
+    if (!win) {
         win = CreateAndShowWindowInfo();
         if (!win)
             goto Exit;
     }
 
     UpdateUITextForLanguage(); // needed for RTL languages
-    if (isFirstWin)
+    if (win->IsAboutWindow()) {
+        // TODO: shouldn't CreateAndShowWindowInfo take care of this?
         UpdateToolbarAndScrollbarState(*win);
+    }
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
-    if (gGlobalPrefs->associatedExtensions && win)
+    if (gGlobalPrefs->associatedExtensions)
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (i.stressTestPath) {
@@ -608,8 +609,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         StartStressTest(&i, win, &gRenderCache);
     }
 
-    if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
-        AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
+    if (gGlobalPrefs->checkForUpdates)
+        AutoUpdateCheckAsync(win->hwndFrame, true);
 
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {

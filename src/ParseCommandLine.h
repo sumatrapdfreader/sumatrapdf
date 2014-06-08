@@ -26,7 +26,7 @@ public:
     int         forwardSearchLine;
     ForwardSearch forwardSearch;
     bool        escToExit;
-    bool        reuseInstance;
+    bool        reuseDdeInstance;
     char *      lang;
     WCHAR *     destName;
     int         pageNumber;
@@ -57,7 +57,7 @@ public:
 
     CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
         printerName(NULL), printSettings(NULL), bgColor((COLORREF)-1),
-        escToExit(false), reuseInstance(false), lang(NULL),
+        escToExit(false), reuseDdeInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1), inverseSearchCmdLine(NULL),
         restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullScreen(false), hwndPluginParent(NULL),
