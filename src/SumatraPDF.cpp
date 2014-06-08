@@ -1792,7 +1792,7 @@ static void RememberCurrentlyOpenedFiles()
                 cmdLine.Append('"'); cmdLine.Append(td->filePath); cmdLine.Append(L"\" ");
             }
         }
-        else {
+        else if (!win->IsAboutWindow()) {
             cmdLine.Append('"'); cmdLine.Append(win->loadedFilePath); cmdLine.Append(L"\" ");
         }
     }
