@@ -213,8 +213,6 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
     em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
-    // TODO: how to show the hand cursor when over a link?
-    // TODO: how to show a tooltip for external URLs when over a link?
     em->EventsForControl(page1)->Clicked.connect(this, &EbookController::ClickedPage1);
     em->EventsForControl(page2)->Clicked.connect(this, &EbookController::ClickedPage2);
 }
@@ -228,6 +226,7 @@ EbookController::~EbookController()
     // will disconnect slots without deleting them, causing leaks
     // TODO: this seems fragile
     evtMgr->DisconnectEvents(this);
+    EnableMessageHandling(false);
     CloseCurrentDocument();
     DestroyEbookControls(ctrls);
     delete pageAnchorIds;
@@ -388,20 +387,8 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
     GoToPage(newPageNo, true);
 }
 
-void EbookController::OnClickedPage(int pageNo, int x, int y)
+void EbookController::OnClickedLink(int pageNo, DrawInstr *link)
 {
-    HtmlPage *p = pages->At(pageNo - 1);
-    PointF pt((REAL)x, (REAL)y);
-    DrawInstr *link = NULL;
-    for (DrawInstr *i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
-        if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea() && i->bbox.Contains(pt)) {
-            link = i;
-            break;
-        }
-    }
-    if (!link)
-        return;
-
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         EbookTocDest dest(NULL, url);
@@ -409,13 +396,13 @@ void EbookController::OnClickedPage(int pageNo, int x, int y)
         return;
     }
 
-    if (_doc.AsEpub()) {
+    if (_doc.AsEpub() && pages && (size_t)pageNo <= pages->Count()) {
         // normalize the URL by combining it with the chapter's base path
-        for (int j = pageNo - 1; j > 0; j--) {
-            HtmlPage *pg = pages->At(j);
+        for (int j = pageNo; j > 0; j--) {
+            HtmlPage *p = pages->At(j - 1);
             // <pagebreak src="..." page_marker /> is usually the second instruction on a page
-            for (size_t k = 0; k < min(2, pg->instructions.Count()); k++) {
-                DrawInstr& di = pg->instructions.At(k);
+            for (size_t k = 0; k < min(2, p->instructions.Count()); k++) {
+                DrawInstr& di = p->instructions.At(k);
                 if (InstrAnchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
                     ScopedMem<char> basePath(str::DupN(di.str.s, di.str.len));
                     ScopedMem<char> relPath(ResolveHtmlEntities(link->str.s, link->str.len));
@@ -439,8 +426,10 @@ void EbookController::ClickedPage1(Control *c, int x, int y)
 {
     cb->FocusFrame(true);
 
-    if (pages && (size_t)currPageNo <= pages->Count())
-        OnClickedPage(currPageNo, x - c->cachedStyle->padding.left, y - c->cachedStyle->padding.top);
+    CrashIf(c != ctrls->pagesLayout->GetPage1());
+    DrawInstr *link = ctrls->pagesLayout->GetPage1()->GetLinkAt(x, y);
+    if (link)
+        OnClickedLink(currPageNo, link);
 }
 
 void EbookController::ClickedPage2(Control *c, int x, int y)
@@ -448,8 +437,10 @@ void EbookController::ClickedPage2(Control *c, int x, int y)
     cb->FocusFrame(true);
 
     CrashIf(!IsDoublePage());
-    if (pages && (size_t)currPageNo < pages->Count())
-        OnClickedPage(currPageNo + 1, x - c->cachedStyle->padding.left, y - c->cachedStyle->padding.top);
+    CrashIf(c != ctrls->pagesLayout->GetPage2());
+    DrawInstr *link = ctrls->pagesLayout->GetPage2()->GetLinkAt(x, y);
+    if (link)
+        OnClickedLink(currPageNo + 1, link);
 }
 
 int EbookController::GetMaxPageCount() const

@@ -11,6 +11,7 @@
 class   EbookController;
 struct  EbookControls;
 class   HtmlPage;
+struct  DrawInstr;
 class   EbookFormattingThread;
 struct  EbookFormattingData;
 class   HtmlFormatterArgs;
@@ -119,7 +120,7 @@ protected:
     bool        IsDoublePage() const;
     void        ExtractPageAnchors();
     void        AddNavPoint();
-    void        OnClickedPage(int pageNo, int x, int y);
+    void        OnClickedLink(int pageNo, DrawInstr *link);
 
     // event handlers
     void        ClickedNext(Control *c, int x, int y);

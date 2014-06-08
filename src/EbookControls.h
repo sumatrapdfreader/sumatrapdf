@@ -28,6 +28,7 @@ void            DestroyEbookControls(EbookControls* controls);
 void            SetMainWndBgCol(EbookControls *ctrls);
 
 class HtmlPage;
+struct DrawInstr;
 
 // control that shows a single ebook page
 // TODO: move to a separate file
@@ -38,11 +39,13 @@ class PageControl : public Control
 
 public:
     PageControl();
+    virtual ~PageControl();
 
     void      SetPage(HtmlPage *newPage);
     HtmlPage* GetPage() const { return page; }
 
-    Size GetDrawableSize();
+    Size GetDrawableSize() const;
+    DrawInstr *GetLinkAt(int x, int y) const;
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 

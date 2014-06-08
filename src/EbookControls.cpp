@@ -6,25 +6,28 @@
 
 #include "AppPrefs.h"
 #include "BitManip.h"
-#include "EbookFormatter.h"
+#include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "resource.h"
+#include "TrivialHtmlParser.h"
 #include "TxtParser.h"
 #include "WinUtil.h"
 
-static HCURSOR      gCursorHand = NULL;
-
-#if 0
-static Rect RectForCircle(int x, int y, int r)
-{
-    return Rect(x - r, y - r, r * 2, r * 2);
-}
-#endif
+static HCURSOR gCursorArrow = NULL;
+static HCURSOR gCursorHand = NULL;
 
 PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
 {
     bit::Set(wantedInputBits, WantsMouseMoveBit, WantsMouseClickBit);
+}
+
+PageControl::~PageControl()
+{
+    if (toolTip) {
+        // TODO: make Control's destructor clear the tooltip?
+        Control::NotifyMouseLeave();
+    }
 }
 
 void PageControl::SetPage(HtmlPage *newPage)
@@ -33,20 +36,46 @@ void PageControl::SetPage(HtmlPage *newPage)
     RequestRepaint(this);
 }
 
-// This is just to test mouse move handling
+DrawInstr *PageControl::GetLinkAt(int x, int y) const
+{
+    if (!page)
+        return NULL;
+
+    PointF pt((REAL)(x - cachedStyle->padding.left), (REAL)(y - cachedStyle->padding.top));
+    for (DrawInstr *i = page->instructions.IterStart(); i; i = page->instructions.IterNext()) {
+        if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea() && i->bbox.Contains(pt)) {
+            return i;
+        }
+    }
+    return NULL;
+}
+
 void PageControl::NotifyMouseMove(int x, int y)
 {
-#if 0
-    Rect r1 = RectForCircle(cursorX, cursorY, 10);
-    Rect r2 = RectForCircle(x, y, 10);
-    cursorX = x; cursorY = y;
-    r1.Inflate(1,1); r2.Inflate(1,1);
-    RequestRepaint(this, &r1, &r2);
-#endif
+    DrawInstr *link = GetLinkAt(x, y);
+    if (!link) {
+        SetCursor(gCursorArrow);
+        if (toolTip) {
+            Control::NotifyMouseLeave();
+            str::ReplacePtr(&toolTip, NULL);
+        }
+        return;
+    }
+
+    SetCursor(gCursorHand);
+    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
+        Control::NotifyMouseLeave();
+        str::ReplacePtr(&toolTip, NULL);
+    }
+    if (!toolTip && url::IsAbsolute(url)) {
+        toolTip = url.StealData();
+        Control::NotifyMouseEnter();
+    }
 }
 
 // size of the drawable area i.e. size minus padding
-Size PageControl::GetDrawableSize()
+Size PageControl::GetDrawableSize() const
 {
     Size s;
     pos.GetSize(&s);
@@ -61,17 +90,6 @@ Size PageControl::GetDrawableSize()
 void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
     CrashIf(!IsVisible());
-
-#if 0
-    // for testing mouse move, paint a blue circle at current cursor position
-    if ((-1 != cursorX) && (-1 != cursorY)) {
-        SolidBrush br(Color(180, 0, 0, 255));
-        int x = offX + cursorX;
-        int y = offY + cursorY;
-        Rect r(RectForCircle(x, y, 10));
-        gfx->FillEllipse(&br, r);
-    }
-#endif
 
     CachedStyle *s = cachedStyle;
     Rect r(offX, offY, pos.Width, pos.Height);
@@ -155,6 +173,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     if (!gCursorHand) {
         RegisterControlCreatorFor("EbookPage", &CreatePageControl);
         RegisterLayoutCreatorFor("PagesLayout", &CreatePagesLayout);
+        gCursorArrow = LoadCursor(NULL, IDC_ARROW);
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
     }
 
