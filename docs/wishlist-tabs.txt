@@ -4,25 +4,9 @@ TBD means "to be designed" i.e. a decision about the behavior must be made
 
 Must have:
 
-. tabs must be above all content (i.e. toolbar will be inside the tab) to match
-  chrome/firefox and also because when we have tabs in ebook window, tab bar
-  would jump around the window since there is no toolbar in ebook window
-
-. TBD: when a document is loaded as tab, the size of the window over-rides
-  the size previously remembered. But should we remember that size or try
-  to preserve the size from the time it was the only document in the window?
-  Probably remember as otherwise it'll be complicated and the rule would be
-  rather magical (which is not a good thing).
-
 . we already are not very good at showing error messages. Need to make sure
   that in the tab world, a failure to load document is shown to the user in some
   way
-
-. TBD: go single-process? Currently we might end up with multiple Sumatra processes.
-  Currently it doesn't matter much but if we implement moving tabs between
-  windows, it'll be much easier to do it if all windows belong to the same
-  process. Otherwise we would have to marshall quite a bit of state across
-  processes.
 
 . will probably release tabs as 3.0, as it's a big feature
 
@@ -39,5 +23,21 @@ Nice to have:
   we don't have to show tab strip, which saves screen space)
 
 Done:
+
+. TBD: go single-process? Currently we might end up with multiple Sumatra processes.
+  Currently it doesn't matter much but if we implement moving tabs between
+  windows, it'll be much easier to do it if all windows belong to the same
+  process. Otherwise we would have to marshall quite a bit of state across
+  processes.
+
+. tabs must be above all content (i.e. toolbar will be inside the tab) to match
+  chrome/firefox and also because when we have tabs in ebook window, tab bar
+  would jump around the window since there is no toolbar in ebook window
+
+. TBD: when a document is loaded as tab, the size of the window over-rides
+  the size previously remembered. But should we remember that size or try
+  to preserve the size from the time it was the only document in the window?
+  Probably remember as otherwise it'll be complicated and the rule would be
+  rather magical (which is not a good thing).
 
 . tab support in ebook window

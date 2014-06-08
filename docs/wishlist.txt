@@ -17,13 +17,9 @@ ascii/utf8)
 We would build that index for the whole file in the background thread, then
 only load the needed part as the user scrolls through the document.
 
--- support links for ebook UI (low)
-
 -- hex viewer (high)
 
 -- search for ebook UI (med)
-
--- toc support in ebook UI (med)
 
 -- thumbnails (med)
 
@@ -183,8 +179,6 @@ to get at, CHM support would be much harder). The upside is we would have
 no-install, browser hosted (well, at least in Chrome) app.
 
 -- mac version (super high)
-
--- gyp-based build system (med)
 
 -- use SafeInt (low)
 
