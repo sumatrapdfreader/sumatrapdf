@@ -461,7 +461,7 @@ const WCHAR *FromDisplayMode(DisplayMode mode)
         return enumName; \
     else NoOp()
 
-DisplayMode ToDisplayMode(const WCHAR *s, DisplayMode default)
+DisplayMode ToDisplayMode(const WCHAR *s, DisplayMode defVal)
 {
     IS_STR_ENUM(DM_AUTOMATIC);
     IS_STR_ENUM(DM_SINGLE_PAGE);
@@ -473,7 +473,7 @@ DisplayMode ToDisplayMode(const WCHAR *s, DisplayMode default)
     // for consistency ("continuous" is used instead in the settings instead for brevity)
     if (str::EqIS(s, L"continuous single page"))
         return DM_CONTINUOUS;
-    return default;
+    return defVal;
 }
 
 #undef IS_STR_ENUM
@@ -506,7 +506,7 @@ void FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140)
         *dst = str::Format("%g", zoom);
 }
 
-float ToZoom(const char *s, float default)
+float ToZoom(const char *s, float defVal)
 {
     if (str::EqIS(s, "fit page"))
         return ZOOM_FIT_PAGE;
@@ -517,7 +517,7 @@ float ToZoom(const char *s, float default)
     float zoom;
     if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom))
         return zoom;
-    return default;
+    return defVal;
 }
 
 }; // namespace conv

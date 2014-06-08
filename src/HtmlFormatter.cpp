@@ -800,14 +800,14 @@ void HtmlFormatter::HandleTagBr()
         FlushCurrLine(true);
 }
 
-static AlignAttr GetAlignAttr(HtmlToken *t, AlignAttr default)
+static AlignAttr GetAlignAttr(HtmlToken *t, AlignAttr defVal)
 {
     AttrInfo *attr = t->GetAttrByName("align");
     if (!attr)
-        return default;
+        return defVal;
     AlignAttr align = FindAlignAttr(attr->val, attr->valLen);
     if (Align_NotFound == align)
-        return default;
+        return defVal;
     return align;
 }
 

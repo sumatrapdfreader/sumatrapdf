@@ -825,12 +825,12 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
     return SUCCEEDED(res) && read == len;
 }
 
-UINT GuessTextCodepage(const char *data, size_t len, UINT default)
+UINT GuessTextCodepage(const char *data, size_t len, UINT defVal)
 {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
     if (!pMLang.Create(CLSID_CMultiLanguage))
-        return default;
+        return defVal;
 
     int ilen = (int)min(len, INT_MAX);
     int count = 1;
@@ -838,7 +838,7 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT default)
     HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
                                              &ilen, &info, &count);
     if (FAILED(hr) || count != 1)
-        return default;
+        return defVal;
     return info.nCodePage;
 }
 
