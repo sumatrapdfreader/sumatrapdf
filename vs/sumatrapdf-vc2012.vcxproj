@@ -534,6 +534,7 @@
     <None Include="..\src\mui\mui-todo.txt" />
     <None Include="..\docs\codingstyle.txt" />
     <None Include="..\docs\mui-html-fusion.txt" />
+    <None Include="..\docs\plan-for-64bits.txt" />
     <None Include="..\docs\releasenotes.txt" />
     <None Include="..\docs\releaseplan.txt" />
     <None Include="..\docs\settings.html" />

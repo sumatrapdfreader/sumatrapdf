@@ -161,3 +161,62 @@ void CalcSha2DigestWin(const void *data, size_t byteCount, unsigned char digest[
     CryptDestroyHash(hHash);
     CryptReleaseContext(hProv,0);
 }
+
+static bool ExtractSignature(const char *hexSignature, const void *data, size_t& dataLen, ScopedMem<BYTE>& signature, size_t& signatureLen)
+{
+    // verify hexSignature format - must be either
+    // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
+    // * NULL, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
+    if (str::StartsWith(hexSignature, "sha1:"))
+        hexSignature += 5;
+    else if (!hexSignature) {
+        if (dataLen < 20 || memchr(data, 0, dataLen))
+            return false;
+        const char *lastLine = (const char *)data + dataLen - 1;
+        while (lastLine > data && *(lastLine - 1) != '\n')
+            lastLine--;
+        if (lastLine == data || !str::Find(lastLine, " Signature sha1:"))
+            return false;
+        dataLen = lastLine - (const char *)data;
+        hexSignature = str::Find(lastLine, " Signature sha1:") + 16;
+    }
+    else
+        return false;
+
+    str::Str<BYTE> signatureBytes;
+    for (const char *c = hexSignature; *c && !str::IsWs(*c); c += 2) {
+        int val;
+        if (1 != sscanf_s(c, "%02x", &val))
+            return false;
+        signatureBytes.Append((BYTE)val);
+    }
+    signatureLen = signatureBytes.Size();
+    signature.Set(signatureBytes.StealData());
+    return true;
+}
+
+bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignature, const void *pubkey, size_t pubkeyLen)
+{
+    HCRYPTPROV hProv = NULL;
+    HCRYPTKEY hPubKey = NULL;
+    HCRYPTHASH hHash = NULL;
+    BOOL ok = false;
+    ScopedMem<BYTE> signature;
+    size_t signatureLen;
+
+#define Check(val) if ((ok = (val)) == FALSE) goto CleanUp
+    Check(ExtractSignature(hexSignature, data, dataLen, signature, signatureLen));
+    Check(CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT));
+    Check(CryptImportKey(hProv, (const BYTE *)pubkey, (DWORD)pubkeyLen, 0, 0, &hPubKey));
+    Check(CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash));
+    Check(CryptHashData(hHash, (const BYTE *)data, (DWORD)dataLen, 0));
+    Check(CryptVerifySignature(hHash, signature, signatureLen, hPubKey, NULL, 0));
+#undef Check
+
+CleanUp:
+    if (hHash)
+        CryptDestroyHash(hHash);
+    if (hProv)
+        CryptReleaseContext(hProv, 0);
+    return ok;
+}

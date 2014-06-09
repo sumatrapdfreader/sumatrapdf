@@ -12,4 +12,6 @@ void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[1
 void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[20]);
 void CalcSha2DigestWin(const void *data, size_t byteCount, unsigned char digest[32]);
 
+bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignature, const void *pubkey, size_t pubkeyLen);
+
 #endif

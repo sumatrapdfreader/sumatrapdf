@@ -99,10 +99,12 @@ solution "all_tests"
       "src/utils/Dict*",
       "src/utils/DebugLog*",
       "src/utils/FileUtil*",
+      "src/utils/GeomUtil.*",
       "src/utils/HtmlParserLookup*",
       "src/utils/HtmlPrettyPrint*",
       "src/utils/HtmlPullParser*",
       "src/utils/JsonParser*",
+      "src/utils/Scoped.*",
       "src/utils/SettingsUtil*",
       "src/utils/SimpleLog*",
       "src/utils/StrFormat*",
@@ -111,6 +113,7 @@ solution "all_tests"
       "src/utils/TrivialHtmlParser*",
       "src/utils/UtAssert*",
       "src/utils/VarintGob*",
+      "src/utils/Vec.*",
       "src/utils/WinUtil*",
       "src/utils/tests/*",
       --"src/AppTools.*",
@@ -124,7 +127,6 @@ solution "all_tests"
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
 
 solution "plugin-test"
   solution_common()
@@ -145,3 +147,23 @@ solution "plugin-test"
     includedirs { "src/utils", "src/utils/msvc" }
     flags { "NoManifest", "WinMain" }
     links { "shlwapi" }
+
+solution "signfile"
+  solution_common()
+
+  project "signfile"
+    kind "ConsoleApp"
+    language "C++"
+    files {
+      "src/utils/BaseUtil.*",
+      "src/utils/CmdLineParser.*",
+      "src/utils/CryptoUtil.*",
+      "src/utils/FileUtil.*",
+      "src/utils/Scoped.*",
+      "src/utils/StrUtil.*",
+      "src/utils/Vec.*",
+      "tools/signfile/signfile.cpp"
+    }
+    defines { "NO_LIBMUPDF" }
+    includedirs { "src/utils", "src/utils/msvc" }
+    links { "shlwapi", "crypt32" }

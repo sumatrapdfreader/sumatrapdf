@@ -1335,6 +1335,9 @@
     <None Include="..\docs\mui-html-fusion.txt">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\docs\plan-for-64bits.txt">
+      <Filter>docs</Filter>
+    </None>
     <None Include="..\docs\releasenotes.txt">
       <Filter>docs</Filter>
     </None>
