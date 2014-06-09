@@ -821,6 +821,8 @@ void EbookController::UpdateDisplayState(DisplayState *ds)
     if (!ds->filePath || !str::EqI(ds->filePath, _doc.GetFilePath()))
         str::ReplacePtr(&ds->filePath, _doc.GetFilePath());
 
+    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+
     // don't modify any of the other DisplayState values
     // as long as they're not used, so that the same
     // DisplayState settings can also be used for EbookEngine;
