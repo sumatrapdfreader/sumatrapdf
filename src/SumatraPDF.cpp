@@ -1804,8 +1804,16 @@ static void RememberCurrentlyOpenedFiles()
 
 static void OnMenuExit();
 
-bool AutoUpdateInitiate(const char *mode, const char *url, const char *hash)
+bool AutoUpdateInitiate(const char *updateData)
 {
+    SquareTree tree(updateData);
+    SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
+    CrashIf(!node);
+
+    // TODO: support auto-updating using the installer
+    SquareTreeNode *data = node->GetChild("Portable");
+    const char *url = data ? data->GetValue("URL") : NULL;
+    const char *hash = data ? data->GetValue("Hash") : NULL;
     if (!url || !hash || !str::EndsWithI(url, ".exe"))
         return false;
 
@@ -1852,6 +1860,9 @@ Portable [
     URL: <download URL for the uncompressed portable .exe>
     Hash <SHA-256 hash of that file>
 ]
+
+# to allow safe transmission over http, the file may also be signed:
+# Signature sha1:<SHA-1 signature to be verified using IDD_PUBLIC_APP_KEY>
 */
 
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
@@ -1860,6 +1871,8 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
         return ctx->error;
     if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
+    if (0 == ctx->data->Size())
+        return ERROR_INTERNET_INVALID_URL;
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
@@ -1867,6 +1880,15 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     // our query. Make sure to check whether the returned data is sane.
     if (!str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
         return ERROR_INTERNET_INVALID_URL;
+
+#ifdef PUBLIC_APP_KEY_PATH
+    size_t pubkeyLen;
+    const char *pubkey = LoadTextResource(IDD_PUBLIC_APP_KEY, &pubkeyLen);
+    CrashIf(!pubkey);
+    bool ok = VerifySHA1Signature(ctx->data->Get(), ctx->data->Size(), NULL, pubkey, pubkeyLen);
+    if (!ok)
+        return ERROR_INTERNET_INVALID_URL;
+#endif
 
     SquareTree tree(ctx->data->Get());
     SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
@@ -1906,12 +1928,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     }
     if (IDYES == res) {
 #ifdef SUPPORTS_AUTO_UPDATE
-        // TODO: support auto-updating using the installer
-        const char *mode = "Portable";
-        SquareTreeNode *data = node->GetChild(mode);
-        const char *url = data ? data->GetValue("URL") : NULL;
-        const char *hash = data ? data->GetValue("Hash") : NULL;
-        if (AutoUpdateInitiate(mode, url, hash))
+        if (AutoUpdateInitiate(ctx->data->Get()))
             return 0;
 #endif
         LaunchBrowser(SVN_UPDATE_LINK);

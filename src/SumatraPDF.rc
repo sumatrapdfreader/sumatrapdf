@@ -287,6 +287,9 @@ BEGIN
 END
 
 IDD_EBOOK_WIN_DESC  RCDATA                      "EbookWinDesc.txt"
+#ifdef PUBLIC_APP_KEY_PATH
+IDD_PUBLIC_APP_KEY  RCDATA                      PUBLIC_APP_KEY_PATH
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //

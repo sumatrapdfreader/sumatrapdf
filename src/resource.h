@@ -194,6 +194,7 @@
 #define IDT_VIEW_FIT_WIDTH              3026
 #define IDT_VIEW_FIT_PAGE               3027
 #define IDD_EBOOK_WIN_DESC              3051
+#define IDD_PUBLIC_APP_KEY              3060
 #define IDC_SUMATRAPDF                  4000
 #define IDC_STATIC                      -1
 
