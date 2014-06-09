@@ -1872,14 +1872,14 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
     if (0 == ctx->data->Size())
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_INTERNET_CONNECTION_ABORTED;
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
     // our query. Make sure to check whether the returned data is sane.
     if (!str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_INTERNET_LOGIN_FAILURE;
 
 #ifdef PUBLIC_APP_KEY_PATH
     size_t pubkeyLen;
@@ -1887,14 +1887,14 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     CrashIf(!pubkey);
     bool ok = VerifySHA1Signature(ctx->data->Get(), ctx->data->Size(), NULL, pubkey, pubkeyLen);
     if (!ok)
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_INTERNET_SEC_CERT_ERRORS;
 #endif
 
     SquareTree tree(ctx->data->Get());
     SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
     const char *latest = node ? node->GetValue("Latest") : NULL;
     if (!latest || !IsValidProgramVersion(latest))
-        return ERROR_INTERNET_INVALID_URL;
+        return ERROR_INTERNET_INCORRECT_FORMAT;
 
     ScopedMem<WCHAR> verTxt(str::conv::FromUtf8(latest));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
