@@ -2245,6 +2245,7 @@ static void CloseDocumentInWindow(WindowInfo *win)
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
    menu item. */
+// TODO: separate CloseTab and CloseWindow (make Alt+F4 actually close the window)
 void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 {
     CrashIf(!win);
@@ -2257,7 +2258,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (gPluginMode && gWindows.Find(win) == 0 && !forceClose)
         return;
 
-    if (win->printThread && !win->printCanceled) {
+    if (win->printThread && !win->printCanceled && !forceClose) {
         int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
         if (IDNO == res)
             return;
