@@ -4,6 +4,10 @@
 #include "BaseUtil.h"
 #include "CryptoUtil.h"
 
+#ifndef DWORD_MAX
+#define DWORD_MAX 0xffffffffUL
+#endif
+
 #ifndef NO_LIBMUPDF
 
 extern "C" {
@@ -86,7 +90,13 @@ void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[1
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
-    CrashAlwaysIf(byteCount > UINT_MAX);
+#ifdef _WIN64
+    for (; byteCount > DWORD_MAX; data = (const BYTE *)data + DWORD_MAX, byteCount -= DWORD_MAX) {
+        ok = CryptHashData(hHash, (const BYTE *)data, DWORD_MAX, 0);
+        CrashAlwaysIf(!ok);
+    }
+#endif
+    CrashAlwaysIf(byteCount > DWORD_MAX);
     ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
     CrashAlwaysIf(!ok);
 
@@ -115,7 +125,13 @@ void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
-    CrashAlwaysIf(byteCount > UINT_MAX);
+#ifdef _WIN64
+    for (; byteCount > DWORD_MAX; data = (const BYTE *)data + DWORD_MAX, byteCount -= DWORD_MAX) {
+        ok = CryptHashData(hHash, (const BYTE *)data, DWORD_MAX, 0);
+        CrashAlwaysIf(!ok);
+    }
+#endif
+    CrashAlwaysIf(byteCount > DWORD_MAX);
     ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
     CrashAlwaysIf(!ok);
 
@@ -145,7 +161,13 @@ void CalcSha2DigestWin(const void *data, size_t byteCount, unsigned char digest[
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
-    CrashAlwaysIf(byteCount > UINT_MAX);
+#ifdef _WIN64
+    for (; byteCount > DWORD_MAX; data = (const BYTE *)data + DWORD_MAX, byteCount -= DWORD_MAX) {
+        ok = CryptHashData(hHash, (const BYTE *)data, DWORD_MAX, 0);
+        CrashAlwaysIf(!ok);
+    }
+#endif
+    CrashAlwaysIf(byteCount > DWORD_MAX);
     ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
     CrashAlwaysIf(!ok);
 
@@ -209,8 +231,14 @@ bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignat
     Check(CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT));
     Check(CryptImportKey(hProv, (const BYTE *)pubkey, (DWORD)pubkeyLen, 0, 0, &hPubKey));
     Check(CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash));
+#ifdef _WIN64
+    for (; dataLen > DWORD_MAX; data = (const BYTE *)data + DWORD_MAX, dataLen -= DWORD_MAX) {
+        Check(CryptHashData(hHash, (const BYTE *)data, DWORD_MAX, 0));
+    }
+#endif
+    Check(dataLen <= DWORD_MAX && pubkeyLen <= DWORD_MAX && signatureLen <= DWORD_MAX);
     Check(CryptHashData(hHash, (const BYTE *)data, (DWORD)dataLen, 0));
-    Check(CryptVerifySignature(hHash, signature, signatureLen, hPubKey, NULL, 0));
+    Check(CryptVerifySignature(hHash, signature, (DWORD)signatureLen, hPubKey, NULL, 0));
 #undef Check
 
 CleanUp:

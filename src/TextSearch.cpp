@@ -68,12 +68,10 @@ void TextSearch::SetText(const WCHAR *text)
     else
         anchor = str::DupN(text, 1);
 
+    if (str::Len(this->findText) >= INT_MAX)
+        this->findText[(unsigned)INT_MAX - 1] = '\0';
     if (str::EndsWith(this->findText, L" "))
         this->findText[str::Len(this->findText) - 1] = '\0';
-#ifdef _WIN64
-    if (str::Len(this->findText) >= INT_MAX)
-        this->findText[INT_MAX] = 0;
-#endif
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
 }
