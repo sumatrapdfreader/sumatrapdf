@@ -4560,7 +4560,7 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
             ScopedMem<WCHAR> relsPath(path::Join(fileName, L"_rels\\.rels"));
             return file::Exists(relsPath) || dir::Exists(relsPath);
         }
-        ZipFile zip(fileName, Zip_Deflate);
+        ZipFile zip(fileName, true);
         return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
                zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
                zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;

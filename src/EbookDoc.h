@@ -183,7 +183,7 @@ public:
     static HtmlDoc *CreateFromFile(const WCHAR *fileName);
 };
 
-/* ********** Plain Text ********** */
+/* ********** Plain Text (and RFCs) ********** */
 
 class TxtDoc {
     ScopedMem<WCHAR> fileName;

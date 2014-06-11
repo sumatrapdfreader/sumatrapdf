@@ -13,7 +13,7 @@
 #include <iowin32s.h>
 #include <zip.h>
 
-ZipFile::ZipFile(const WCHAR *path, ZipMethod method, Allocator *allocator) :
+ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
@@ -21,10 +21,10 @@ ZipFile::ZipFile(const WCHAR *path, ZipMethod method, Allocator *allocator) :
     fill_win32_filefunc64(&ffunc);
     uf = unzOpen2_64(path, &ffunc);
     if (uf)
-        ExtractFilenames(method);
+        ExtractFilenames(deflatedOnly);
 }
 
-ZipFile::ZipFile(IStream *stream, ZipMethod method, Allocator *allocator) :
+ZipFile::ZipFile(IStream *stream, bool deflatedOnly, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
@@ -32,7 +32,7 @@ ZipFile::ZipFile(IStream *stream, ZipMethod method, Allocator *allocator) :
     fill_win32s_filefunc64(&ffunc);
     uf = unzOpen2_64(stream, &ffunc);
     if (uf)
-        ExtractFilenames(method);
+        ExtractFilenames(deflatedOnly);
 }
 
 ZipFile::~ZipFile()
@@ -47,7 +47,7 @@ ZipFile::~ZipFile()
 
 #define INVALID_ZIP_FILE_POS ((ZPOS64_T)-1)
 
-void ZipFile::ExtractFilenames(ZipMethod method)
+void ZipFile::ExtractFilenames(bool deflatedOnly)
 {
     if (!uf)
         return;
@@ -63,9 +63,8 @@ void ZipFile::ExtractFilenames(ZipMethod method)
         char fileName[MAX_PATH];
         err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         // some file format specifications only allow Deflate as compression method (e.g. XPS and EPUB)
-        bool isSupported = (Zip_Any == method) || (Zip_None == finfo.compression_method) ||
-                                                  (method == (ZipMethod)finfo.compression_method);
-        if (err == UNZ_OK && isSupported) {
+        bool isDeflated = (0 == finfo.compression_method) || (Z_DEFLATED == finfo.compression_method);
+        if (err == UNZ_OK && (isDeflated || !deflatedOnly)) {
             WCHAR fileNameW[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
             str::conv::FromCodePageBuf(fileNameW, dimof(fileNameW), fileName, cp);

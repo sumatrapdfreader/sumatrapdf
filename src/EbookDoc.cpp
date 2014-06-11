@@ -227,11 +227,11 @@ const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
 const char *EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 
 EpubDoc::EpubDoc(const WCHAR *fileName) :
-    zip(fileName, Zip_Deflate), fileName(str::Dup(fileName)),
+    zip(fileName, true), fileName(str::Dup(fileName)),
     isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::EpubDoc(IStream *stream) :
-    zip(stream, Zip_Deflate), fileName(NULL),
+    zip(stream, true), fileName(NULL),
     isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::~EpubDoc()
@@ -628,7 +628,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
 bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        ZipFile zip(fileName, Zip_Deflate);
+        ZipFile zip(fileName, true);
         ScopedMem<char> mimetype(zip.GetFileDataByName(L"mimetype"));
         if (!mimetype)
             return false;
@@ -671,7 +671,7 @@ EpubDoc *EpubDoc::CreateFromStream(IStream *stream)
     return doc;
 }
 
-/* ********** FictionBook ********** */
+/* ********** FictionBook (FB2) ********** */
 
 const char *FB2_MAIN_NS = "http://www.gribuser.ru/xml/fictionbook/2.0";
 const char *FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
@@ -1337,7 +1337,7 @@ HtmlDoc *HtmlDoc::CreateFromFile(const WCHAR *fileName)
     return doc;
 }
 
-/* ********** Plain Text ********** */
+/* ********** Plain Text (and RFCs) ********** */
 
 TxtDoc::TxtDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
 
