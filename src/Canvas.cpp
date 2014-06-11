@@ -194,7 +194,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     // needed also for detecting cursor movement in presentation mode
     win.dragPrevPos = PointI(x, y);
 
-    NotificationWnd *wnd = win.notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER);
+    NotificationWnd *wnd = win.notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     if (wnd)
         UpdateCursorPositionHelper(&win, PointI(x, y), wnd);
 }

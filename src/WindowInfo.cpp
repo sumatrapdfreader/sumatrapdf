@@ -196,6 +196,12 @@ void WindowInfo::DeleteInfotip()
     infotipVisible = false;
 }
 
+void WindowInfo::ShowNotification(const WCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
+{
+    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, notifications);
+    notifications->Add(wnd, groupId);
+}
+
 bool WindowInfo::CreateUIAProvider()
 {
     if (!uia_provider) {
@@ -337,7 +343,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
             ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
-            ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
+            owner->ShowNotification(msg, true /* autoDismiss */, true /* highlight */);
         }
         return;
     }

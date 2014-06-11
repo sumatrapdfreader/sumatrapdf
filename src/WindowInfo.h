@@ -26,6 +26,15 @@ enum MouseAction {
     MA_SELECTING_TEXT
 };
 
+enum NotificationGroup {
+    NG_RESPONSE_TO_ACTION = 1,
+    NG_FIND_PROGRESS,
+    NG_PAGE_INFO_HELPER,
+    NG_CURSOR_POS_HELPER,
+    NG_STRESS_TEST_BENCHMARK,
+    NG_STRESS_TEST_SUMMARY,
+};
+
 enum PresentationMode {
     PM_DISABLED = 0,
     PM_ENABLED,
@@ -225,6 +234,7 @@ public:
 
     void CreateInfotip(const WCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
+    void ShowNotification(const WCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
 };

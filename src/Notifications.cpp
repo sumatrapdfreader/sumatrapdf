@@ -5,7 +5,6 @@
 #include "Notifications.h"
 
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
 
 #define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
@@ -226,10 +225,8 @@ void Notifications::Remove(NotificationWnd *wnd)
 
 void Notifications::Add(NotificationWnd *wnd, int groupId)
 {
-    // use groupId to classify notifications and make a notification
-    // replace any other notification of the same class
     if (groupId != 0)
-        RemoveAllInGroup(groupId);
+        RemoveForGroup(groupId);
     wnd->groupId = groupId;
 
     if (wnds.Count() > 0)
@@ -237,8 +234,9 @@ void Notifications::Add(NotificationWnd *wnd, int groupId)
     wnds.Append(wnd);
 }
 
-NotificationWnd *Notifications::GetFirstInGroup(int groupId)
+NotificationWnd *Notifications::GetForGroup(int groupId)
 {
+    CrashIf(!groupId);
     for (size_t i = 0; i < wnds.Count(); i++) {
         if (wnds.At(i)->groupId == groupId)
             return wnds.At(i);
@@ -246,19 +244,20 @@ NotificationWnd *Notifications::GetFirstInGroup(int groupId)
     return NULL;
 }
 
+void Notifications::RemoveForGroup(int groupId)
+{
+    CrashIf(!groupId);
+    for (size_t i = wnds.Count(); i > 0; i--) {
+        if (wnds.At(i - 1)->groupId == groupId)
+            RemoveNotification(wnds.At(i - 1));
+    }
+}
+
 void Notifications::RemoveNotification(NotificationWnd *wnd)
 {
     if (Contains(wnd)) {
         Remove(wnd);
         delete wnd;
-    }
-}
-
-void Notifications::RemoveAllInGroup(int groupId)
-{
-    for (size_t i = wnds.Count(); i > 0; i--) {
-        if (wnds.At(i - 1)->groupId == groupId)
-            RemoveNotification(wnds.At(i - 1));
     }
 }
 
@@ -280,15 +279,9 @@ void Notifications::Relayout()
     }
 }
 
-void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
-{
-    NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, win->notifications);
-    win->notifications->Add(wnd, groupId);
-}
-
 void RegisterNotificationsWndClass(HINSTANCE inst)
 {
-    WNDCLASSEX  wcex;
+    WNDCLASSEX wcex;
     FillWndClassEx(wcex, inst, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
     wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
     RegisterClassEx(&wcex);

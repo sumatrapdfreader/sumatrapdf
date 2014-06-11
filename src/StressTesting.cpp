@@ -16,7 +16,6 @@
 #include "EngineManager.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
-#include "Notifications.h"
 #include "ParseCommandLine.h"
 #include "RenderCache.h"
 #include "SimpleLog.h"
@@ -621,7 +620,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     else {
         // Note: string dev only, don't translate
         ScopedMem<WCHAR> s(str::Format(L"Path '%s' doesn't exist", path));
-        ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
+        win->ShowNotification(s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
     }
 }
@@ -634,7 +633,7 @@ void StressTest::Finished(bool success)
         int secs = SecsSinceSystemTime(stressStartTime);
         ScopedMem<WCHAR> tm(FormatTime(secs));
         ScopedMem<WCHAR> s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm));
-        ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
+        win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
     CloseWindow(win, exitWhenDone);
@@ -722,7 +721,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<WCHAR> tm(FormatTime(secs));
     ScopedMem<WCHAR> s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm));
-    ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
+    win->ShowNotification(s, false, false, NG_STRESS_TEST_SUMMARY);
 
     return true;
 }
@@ -731,7 +730,7 @@ bool StressTest::GoToNextPage()
 {
     double pageRenderTime = currPageRenderTime.GetTimeInMs();
     ScopedMem<WCHAR> s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
-    ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
+    win->ShowNotification(s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
     while (!IsInRange(pageRanges, currPage) && currPage <= win->ctrl->PageCount()) {

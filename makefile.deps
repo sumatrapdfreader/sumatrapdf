@@ -342,13 +342,13 @@ $(OS)\MuiEbookPageDef.obj: $B\src\MuiEbookPageDef.h $B\src\utils\Allocator.h $B\
 $(OS)\MuiEbookPageDef.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h
 $(OS)\MuiEbookPageDef.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: $B\mupdf\include\mupdf\fitz\math.h $B\mupdf\include\mupdf\fitz\system.h
-$(OS)\Notifications.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayState.h
-$(OS)\Notifications.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\Notifications.h
-$(OS)\Notifications.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\TextSearch.h
-$(OS)\Notifications.obj: $B\src\TextSelection.h $B\src\Translations.h $B\src\utils\Allocator.h
-$(OS)\Notifications.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(OS)\Notifications.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\Notifications.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Notifications.obj: $B\src\BaseEngine.h $B\src\DisplayState.h $B\src\Favorites.h
+$(OS)\Notifications.obj: $B\src\FileHistory.h $B\src\Notifications.h $B\src\SettingsStructs.h
+$(OS)\Notifications.obj: $B\src\SumatraPDF.h $B\src\TextSearch.h $B\src\TextSelection.h
+$(OS)\Notifications.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\Notifications.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OS)\Notifications.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\Notifications.obj: $B\src\utils\WinUtil.h
 $(OS)\PagesLayoutDef.obj: $B\src\PagesLayoutDef.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\PagesLayoutDef.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h
 $(OS)\PagesLayoutDef.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -456,13 +456,13 @@ $(OS)\Search.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\util
 $(OS)\Search.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Selection.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\ChmModel.h
 $(OS)\Selection.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OS)\Selection.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\Notifications.h
-$(OS)\Selection.obj: $B\src\Selection.h $B\src\SettingsStructs.h $B\src\SumatraPDF.h
-$(OS)\Selection.obj: $B\src\TextSearch.h $B\src\TextSelection.h $B\src\Toolbar.h
-$(OS)\Selection.obj: $B\src\Translations.h $B\src\uia\Provider.h $B\src\utils\Allocator.h
-$(OS)\Selection.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(OS)\Selection.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\Selection.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Selection.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\Selection.h
+$(OS)\Selection.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\TextSelection.h
+$(OS)\Selection.obj: $B\src\Toolbar.h $B\src\Translations.h $B\src\uia\Provider.h
+$(OS)\Selection.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
+$(OS)\Selection.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\Selection.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Selection.obj: $B\src\WindowInfo.h
 $(OS)\StressTesting.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\StressTesting.obj: $B\src\ChmModel.h $B\src\Controller.h $B\src\DisplayModel.h
 $(OS)\StressTesting.obj: $B\src\DisplayState.h $B\src\Doc.h $B\src\EbookBase.h
@@ -472,15 +472,15 @@ $(OS)\StressTesting.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiBut
 $(OS)\StressTesting.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OS)\StressTesting.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OS)\StressTesting.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
-$(OS)\StressTesting.obj: $B\src\mui\TextRender.h $B\src\Notifications.h $B\src\ParseCommandLine.h
-$(OS)\StressTesting.obj: $B\src\RenderCache.h $B\src\Search.h $B\src\SettingsStructs.h
-$(OS)\StressTesting.obj: $B\src\StressTesting.h $B\src\SumatraPDF.h $B\src\TextSearch.h
-$(OS)\StressTesting.obj: $B\src\TextSelection.h $B\src\Translations.h $B\src\utils\Allocator.h
-$(OS)\StressTesting.obj: $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
-$(OS)\StressTesting.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlWindow.h
-$(OS)\StressTesting.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\StressTesting.obj: $B\src\utils\SimpleLog.h $B\src\utils\StrUtil.h $B\src\utils\Timer.h
-$(OS)\StressTesting.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\StressTesting.obj: $B\src\mui\TextRender.h $B\src\ParseCommandLine.h $B\src\RenderCache.h
+$(OS)\StressTesting.obj: $B\src\Search.h $B\src\SettingsStructs.h $B\src\StressTesting.h
+$(OS)\StressTesting.obj: $B\src\SumatraPDF.h $B\src\TextSearch.h $B\src\TextSelection.h
+$(OS)\StressTesting.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\StressTesting.obj: $B\src\utils\DirIter.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OS)\StressTesting.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlWindow.h $B\src\utils\Scoped.h
+$(OS)\StressTesting.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\SimpleLog.h
+$(OS)\StressTesting.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
+$(OS)\StressTesting.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\SumatraAbout.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
 $(OS)\SumatraAbout.obj: $B\src\DisplayState.h $B\src\Favorites.h $B\src\FileHistory.h
 $(OS)\SumatraAbout.obj: $B\src\FileThumbnails.h $B\src\resource.h $B\src\SettingsStructs.h

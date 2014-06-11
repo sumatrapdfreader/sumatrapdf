@@ -6,22 +6,11 @@
 
 #include "TextSearch.h" // for ProgressUpdateUI
 
-class WindowInfo;
 class NotificationWnd;
-
-enum NotificationGroup {
-    NG_RESPONSE_TO_ACTION = 1,
-    NG_FIND_PROGRESS,
-    NG_PRINT_PROGRESS,
-    NG_PAGE_INFO_HELPER,
-    NG_CURSOR_POS_HELPER,
-    NG_STRESS_TEST_BENCHMARK,
-    NG_STRESS_TEST_SUMMARY,
-};
 
 class NotificationWndCallback {
 public:
-    // called after a message has timed out or been canceled
+    // called after a message has timed out or has been canceled
     virtual void RemoveNotification(NotificationWnd *wnd) = 0;
     virtual ~NotificationWndCallback() { }
 };
@@ -53,7 +42,7 @@ public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
-    // Note: in most cases use ShowNotification() and not assemble them manually
+    // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL) {
         CreatePopup(parent, message);
@@ -97,16 +86,17 @@ public:
 
     bool Contains(NotificationWnd *wnd) { return wnds.Contains(wnd); }
 
+    // groupId is used to classify notifications and causes a notification
+    // to replace any other notification of the same group
     void         Add(NotificationWnd *wnd, int groupId=0);
-    NotificationWnd * GetFirstInGroup(int groupId);
-    void         RemoveAllInGroup(int groupId);
+    NotificationWnd * GetForGroup(int groupId);
+    void         RemoveForGroup(int groupId);
     void         Relayout();
 
     // NotificationWndCallback methods
     virtual void RemoveNotification(NotificationWnd *wnd);
 };
 
-void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
 void RegisterNotificationsWndClass(HINSTANCE inst);
 
 #endif

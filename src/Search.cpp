@@ -338,7 +338,7 @@ void AbortFinding(WindowInfo *win, bool hideMessage)
     win->findCanceled = false;
 
     if (hideMessage)
-        win->notifications->RemoveAllInGroup(NG_FIND_PROGRESS);
+        win->notifications->RemoveForGroup(NG_FIND_PROGRESS);
 }
 
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
@@ -408,7 +408,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
             return false;
         }
         if (err != PDFSYNCERR_SUCCESS) {
-            ShowNotification(win, _TR("Synchronization file cannot be opened"));
+            win->ShowNotification(_TR("Synchronization file cannot be opened"));
             return true;
         }
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -423,7 +423,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     UINT line, col;
     int err = win->AsFixed()->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
-        ShowNotification(win, _TR("No synchronization info at this position"));
+        win->ShowNotification(_TR("No synchronization info at this position"));
         return true;
     }
 
@@ -451,10 +451,10 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
             appDir.Set(path::GetDir(appDir));
         ScopedHandle process(LaunchProcess(cmdline, appDir));
         if (!process)
-            ShowNotification(win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
+            win->ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
     else if (gGlobalPrefs->enableTeXEnhancements)
-        ShowNotification(win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
+        win->ShowNotification(_TR("Cannot start inverse search command. Please check the command line in the settings."));
 
     if (inverseSearch != gGlobalPrefs->inverseSearchCmdLine)
         free(inverseSearch);
@@ -495,13 +495,13 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
 
     ScopedMem<WCHAR> buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND)
-        ShowNotification(win, _TR("No synchronization file found"));
+        win->ShowNotification(_TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
-        ShowNotification(win, _TR("Synchronization file cannot be opened"));
+        win->ShowNotification(_TR("Synchronization file cannot be opened"));
     else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER)
         buf.Set(str::Format(_TR("Page number %u inexistant"), page));
     else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION)
-        ShowNotification(win, _TR("No synchronization info at this position"));
+        win->ShowNotification(_TR("No synchronization info at this position"));
     else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE)
         buf.Set(str::Format(_TR("Unknown source file (%s)"), fileName));
     else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE)
@@ -511,7 +511,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
     else if (ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD)
         buf.Set(str::Format(_TR("No result found around line %u in file %s"), line, fileName));
     if (buf)
-        ShowNotification(win, buf);
+        win->ShowNotification(buf);
 }
 
 // DDE commands handling

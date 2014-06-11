@@ -8,8 +8,8 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
-#include "Notifications.h"
 #include "SumatraPDF.h"
+#include "TextSelection.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
@@ -242,7 +242,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     DisplayModel *dm = win->AsFixed();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (!dm->engine()->AllowsCopyingText())
-        ShowNotification(win, _TR("Copying text was denied (copying as image only)"));
+        win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
     else
 #endif
     if (!dm->engine()->IsImageCollection()) {

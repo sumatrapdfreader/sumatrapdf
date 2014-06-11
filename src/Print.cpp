@@ -368,6 +368,8 @@ public:
     PrintThreadData(WindowInfo *win, PrintData *data) :
         win(win), data(data), isCanceled(false), thread(NULL) {
         wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), this);
+        // don't use a groupId for this notification so that
+        // multiple printing notifications could coexist between tabs
         win->notifications->Add(wnd);
     }
 

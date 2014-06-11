@@ -4,7 +4,6 @@
 #ifndef TextSearch_h
 #define TextSearch_h
 
-#include <windows.h>
 #include "TextSelection.h"
 
 enum TextSearchDirection {

@@ -979,7 +979,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     if (!win->ctrl) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
         ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win->loadedFilePath));
-        ShowNotification(win, msg, true, false, NG_RESPONSE_TO_ACTION);
+        win->ShowNotification(msg, true, false);
         // TODO: CloseWindow() does slightly more than this
         //       (also, some code presumes that there is at least one window with
         //        IsAboutWindow() == true and that that window is gWindows.At(0))
@@ -1479,7 +1479,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     // there is a window the user has just been interacting with
     if (failEarly) {
         ScopedMem<WCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
-        ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
+        win->ShowNotification(msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
@@ -1605,9 +1605,10 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
 
-    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
-    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
-    win->notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
+    win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
+    win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
+    win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
+    // TODO: this can cause a mouse capture to stick around (cf. OnSelectionStop)
     win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
@@ -1692,7 +1693,7 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
     }
     if (!wnd) {
         bool autoDismiss = !IsShiftPressed();
-        ShowNotification(win, pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
+        win->ShowNotification(pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
     }
     else {
         wnd->UpdateMessage(pageInfo);
@@ -1730,7 +1731,7 @@ static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, Notification
 {
     static MeasureUnit unit = Unit_pt;
     // toggle measure unit by repeatedly invoking the helper
-    if (!wnd && win->notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER))
+    if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
         unit = Unit_pt == unit ? Unit_cm : Unit_cm == unit ? Unit_in : Unit_pt;
 
     CrashIf(!win->AsFixed());
@@ -1748,7 +1749,7 @@ static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, Notification
     if (selStr)
         posInfo.Set(str::Format(L"%s - %s %s", posInfo, L"Selection:", selStr));
     if (!wnd)
-        ShowNotification(win, posInfo, false, false, NG_CURSOR_POS_HELPER);
+        win->ShowNotification(posInfo, false, false, NG_CURSOR_POS_HELPER);
     else
         wnd->UpdateMessage(posInfo);
 }
@@ -1775,7 +1776,7 @@ void ControllerCallbackHandler::PageNoChanged(int pageNo)
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;
 
-    NotificationWnd *wnd = win->notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
+    NotificationWnd *wnd = win->notifications->GetForGroup(NG_PAGE_INFO_HELPER);
     if (wnd) {
         CrashIf(!win->AsFixed());
         UpdatePageInfoHelper(win, wnd, pageNo);
@@ -2213,9 +2214,9 @@ static void CloseDocumentInWindow(WindowInfo *win)
     delete win->ctrl;
     win->ctrl = NULL;
     str::ReplacePtr(&win->loadedFilePath, NULL);
-    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
-    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
-    win->notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
+    win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
+    win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
+    win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
     win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
@@ -2605,7 +2606,7 @@ static void OnMenuRenameFile(WindowInfo &win)
         LogLastError();
         LoadArgs args(srcFilePath, &win);
         LoadDocument(args);
-        ShowNotification(&win, _TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
+        win.ShowNotification(_TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
         return;
     }
 
@@ -3427,8 +3428,8 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case VK_ESCAPE:
         if (win.findThread)
             AbortFinding(&win);
-        else if (win.notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER))
-            win.notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+        else if (win.notifications->GetForGroup(NG_PAGE_INFO_HELPER))
+            win.notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
         else if (gGlobalPrefs->escToExit)
@@ -3437,8 +3438,8 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             OnMenuViewFullscreen(win);
         else if (win.showSelection)
             ClearSearchResult(&win);
-        else if (win.notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER))
-            win.notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
+        else if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER))
+            win.notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
         return;
     case 'q':
         // close the current document/window. Quit if this is the last window
@@ -4167,7 +4168,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             else if (win->selectionOnPage)
                 CopySelectionToClipboard(win);
             else if (win->AsFixed())
-                ShowNotification(win, _TR("Select content with Ctrl+left mouse button"));
+                win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
             break;
 
         case IDM_SELECT_ALL:
