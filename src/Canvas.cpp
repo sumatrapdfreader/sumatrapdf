@@ -171,7 +171,6 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
         win.linkOnLastButtonDown = NULL;
     }
 
-    SizeI drag;
     switch (win.mouseAction) {
     case MA_SCROLLING:
         win.yScrollSpeed = (y - win.dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
@@ -189,12 +188,15 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
         break;
     case MA_DRAGGING:
     case MA_DRAGGING_RIGHT:
-        drag = SizeI(win.dragPrevPos.x - x, win.dragPrevPos.y - y);
-        win.MoveDocBy(drag.dx, drag.dy);
+        win.MoveDocBy(win.dragPrevPos.x - x, win.dragPrevPos.y - y);
         break;
     }
-
+    // needed also for detecting cursor movement in presentation mode
     win.dragPrevPos = PointI(x, y);
+
+    NotificationWnd *wnd = win.notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER);
+    if (wnd)
+        UpdateCursorPositionHelper(&win, PointI(x, y), wnd);
 }
 
 static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
@@ -673,7 +675,7 @@ static void OnPaintDocument(WindowInfo& win)
 
 static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
 {
-    POINT pt;
+    PointI pt;
 
     if (win.mouseAction != MA_IDLE)
         win.DeleteInfotip();
@@ -694,8 +696,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
     case MA_IDLE:
         if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.AsFixed()) {
             DisplayModel *dm = win.AsFixed();
-            PointI pti(pt.x, pt.y);
-            PageElement *pageEl = dm->GetElementAtPos(pti);
+            PageElement *pageEl = dm->GetElementAtPos(pt);
             if (pageEl) {
                 ScopedMem<WCHAR> text(pageEl->GetValue());
                 RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
@@ -711,7 +712,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
             }
             else
                 win.DeleteInfotip();
-            if (dm->IsOverText(pti))
+            if (dm->IsOverText(pt))
                 SetCursor(gCursorIBeam);
             else
                 SetCursor(gCursorArrow);
@@ -740,12 +741,11 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
     if ((LOWORD(wParam) & MK_CONTROL) || IsCtrlPressed() || (LOWORD(wParam) & MK_RBUTTON)) {
-        POINT pt;
+        PointI pt;
         GetCursorPosInHwnd(win.hwndCanvas, pt);
 
         float zoom = win.ctrl->GetNextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
-        PointI tmpPoint(pt.x, pt.y);
-        win.ctrl->SetZoomVirtual(zoom, &tmpPoint);
+        win.ctrl->SetZoomVirtual(zoom, &pt);
         UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down
@@ -1141,7 +1141,7 @@ static void OnMouseRightButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
 
 static LRESULT OnSetCursorAbout(WindowInfo& win, HWND hwnd)
 {
-    POINT pt;
+    PointI pt;
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo linkInfo;
         if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
@@ -1272,7 +1272,7 @@ void WindowInfo::RepaintAsync(UINT delay)
 
 static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 {
-    POINT pt;
+    PointI pt;
 
     switch (timerId) {
     case REPAINT_TIMER_ID:

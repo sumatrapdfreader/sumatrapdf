@@ -172,9 +172,9 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         return 0;
     }
     if (WM_SETCURSOR == message && wnd->hasCancel) {
-        POINT pt;
+        PointI pt;
         if (GetCursorPosInHwnd(hwnd, pt) &&
-            GetCancelRect(hwnd).Contains(PointI(pt.x, pt.y))) {
+            GetCancelRect(hwnd).Contains(pt)) {
             SetCursor(LoadCursor(NULL, IDC_HAND));
             return TRUE;
         }

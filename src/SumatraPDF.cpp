@@ -1607,6 +1607,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    win->notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
     win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
@@ -1680,6 +1681,78 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     }
 }
 
+static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int pageNo=-1)
+{
+    if (!win->ctrl->ValidPageNo(pageNo))
+        pageNo = win->ctrl->CurrentPageNo();
+    ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
+    if (win->ctrl->HasPageLabels()) {
+        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(pageNo));
+        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, win->ctrl->PageCount()));
+    }
+    if (!wnd) {
+        bool autoDismiss = !IsShiftPressed();
+        ShowNotification(win, pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
+    }
+    else {
+        wnd->UpdateMessage(pageInfo);
+    }
+}
+
+enum MeasureUnit { Unit_pt, Unit_cm, Unit_in };
+
+static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasureUnit unit)
+{
+    if (pt.x < 0)
+        pt.x = 0;
+    if (pt.y < 0)
+        pt.y = 0;
+    pt.x /= engine->GetFileDPI();
+    pt.y /= engine->GetFileDPI();
+
+    if (Unit_pt == unit) {
+        ScopedMem<WCHAR> xPos(str::FormatNumWithThousandSep((size_t)(pt.x * 72)));
+        ScopedMem<WCHAR> yPos(str::FormatNumWithThousandSep((size_t)(pt.y * 72)));
+        return str::Format(L"%s x %s pt", xPos, yPos);
+    }
+    if (Unit_cm == unit) {
+        ScopedMem<WCHAR> xPos(str::FormatFloatWithThousandSep(pt.x * 2.54));
+        ScopedMem<WCHAR> yPos(str::FormatFloatWithThousandSep(pt.y * 2.54));
+        return str::Format(L"%s x %s cm", xPos, yPos);
+    }
+    CrashIf(unit != Unit_in);
+    ScopedMem<WCHAR> xPos(str::FormatFloatWithThousandSep(pt.x));
+    ScopedMem<WCHAR> yPos(str::FormatFloatWithThousandSep(pt.y));
+    return str::Format(L"%s x %s in", xPos, yPos);
+}
+
+static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd=NULL)
+{
+    static MeasureUnit unit = Unit_pt;
+    // toggle measure unit by repeatedly invoking the helper
+    if (!wnd && win->notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER))
+        unit = Unit_pt == unit ? Unit_cm : Unit_cm == unit ? Unit_in : Unit_pt;
+
+    CrashIf(!win->AsFixed());
+    BaseEngine *engine = win->AsFixed()->engine();
+    PointD pt = win->AsFixed()->CvtFromScreen(pos);
+    ScopedMem<WCHAR> posStr(FormatCursorPosition(engine, pt, unit)), selStr;
+    if (MA_SELECTING == win->mouseAction) {
+        RectD rc = win->AsFixed()->CvtFromScreen(win->selectionRect);
+        pt = PointD(rc.dx, rc.dy);
+        selStr.Set(FormatCursorPosition(engine, pt, unit));
+    }
+
+    // TODO: translate once this is good enough
+    ScopedMem<WCHAR> posInfo(str::Format(L"%s %s", L"Cursor position:", posStr));
+    if (selStr)
+        posInfo.Set(str::Format(L"%s - %s %s", posInfo, L"Selection:", selStr));
+    if (!wnd)
+        ShowNotification(win, posInfo, false, false, NG_CURSOR_POS_HELPER);
+    else
+        wnd->UpdateMessage(posInfo);
+}
+
 // The current page edit box is updated with the current page number
 void ControllerCallbackHandler::PageNoChanged(int pageNo)
 {
@@ -1687,15 +1760,9 @@ void ControllerCallbackHandler::PageNoChanged(int pageNo)
     if (!win->ctrl || win->ctrl->PageCount() == 0)
         return;
 
-    if (win->AsEbook()) {
+    if (win->AsEbook())
         pageNo = win->AsEbook()->CurrentTocPageNo();
-        if (pageNo != win->currPageNo)
-            UpdateTocSelection(win, pageNo);
-        win->currPageNo = pageNo;
-        return;
-    }
-
-    if (INVALID_PAGE_NO != pageNo) {
+    else if (INVALID_PAGE_NO != pageNo) {
         ScopedMem<WCHAR> buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);
         ToolbarUpdateStateForWindow(win, false);
@@ -1709,15 +1776,10 @@ void ControllerCallbackHandler::PageNoChanged(int pageNo)
     win->currPageNo = pageNo;
 
     NotificationWnd *wnd = win->notifications->GetFirstInGroup(NG_PAGE_INFO_HELPER);
-    if (!wnd)
-        return;
-
-    ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
-    if (win->ctrl->HasPageLabels()) {
-        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, win->ctrl->PageCount()));
+    if (wnd) {
+        CrashIf(!win->AsFixed());
+        UpdatePageInfoHelper(win, wnd, pageNo);
     }
-    wnd->UpdateMessage(pageInfo);
 }
 
 void AssociateExeWithPdfExtension()
@@ -2153,6 +2215,7 @@ static void CloseDocumentInWindow(WindowInfo *win)
     str::ReplacePtr(&win->loadedFilePath, NULL);
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    win->notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
     win->mouseAction = MA_IDLE;
 
     DeletePropertiesWindow(win->hwndFrame);
@@ -3374,6 +3437,8 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             OnMenuViewFullscreen(win);
         else if (win.showSelection)
             ClearSearchResult(&win);
+        else if (win.notifications->GetFirstInGroup(NG_CURSOR_POS_HELPER))
+            win.notifications->RemoveAllInGroup(NG_CURSOR_POS_HELPER);
         return;
     case 'q':
         // close the current document/window. Quit if this is the last window
@@ -3478,15 +3543,16 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs->showToolbar || win.isFullScreen || PM_ENABLED == win.presentation) {
-            int current = win.ctrl->CurrentPageNo(), total = win.ctrl->PageCount();
-            ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), current, total));
-            if (win.ctrl->HasPageLabels()) {
-                ScopedMem<WCHAR> label(win.ctrl->GetPageLabel(current));
-                pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, current, total));
-            }
-            bool autoDismiss = !IsShiftPressed();
-            ShowNotification(&win, pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
+        if (win.AsFixed() && (!gGlobalPrefs->showToolbar || win.isFullScreen || PM_ENABLED == win.presentation))
+            UpdatePageInfoHelper(&win);
+        break;
+    case 'm':
+        // experimental "cursor position" tip: make figuring out the current
+        // cursor position in cm/in/pt possible (for exact layouting)
+        if (win.AsFixed()) {
+            PointI pt;
+            if (GetCursorPosInHwnd(win.hwndCanvas, pt))
+                UpdateCursorPositionHelper(&win, pt);
         }
         break;
 #ifdef DEBUG
@@ -3555,7 +3621,7 @@ static void UpdateUITextForLanguage()
 
 static void ResizeSidebar(WindowInfo *win)
 {
-    POINT pcur;
+    PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
 
@@ -3576,7 +3642,7 @@ static void ResizeSidebar(WindowInfo *win)
 
 static void ResizeFav(WindowInfo *win)
 {
-    POINT pcur;
+    PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
 

@@ -454,7 +454,7 @@ static void ClearInfotip()
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     const WCHAR * url;
-    POINT pt;
+    PointI pt;
 
     switch (message)
     {

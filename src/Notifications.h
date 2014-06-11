@@ -4,7 +4,7 @@
 #ifndef Notifications_h
 #define Notifications_h
 
-#include "TextSearch.h"
+#include "TextSearch.h" // for ProgressUpdateUI
 
 class WindowInfo;
 class NotificationWnd;
@@ -14,6 +14,7 @@ enum NotificationGroup {
     NG_FIND_PROGRESS,
     NG_PRINT_PROGRESS,
     NG_PAGE_INFO_HELPER,
+    NG_CURSOR_POS_HELPER,
     NG_STRESS_TEST_BENCHMARK,
     NG_STRESS_TEST_SUMMARY,
 };
