@@ -3022,6 +3022,7 @@ archive_string_normalize_C(struct archive_string *as, const void *_p,
 			int cl, cx, i, nx, ucx_size;
 			int LIndex,SIndex;
 			uint32_t nfc;
+			nx = 0;
 
 			if (n2 == spair || always_replace)
 				/* uc2 is converted from a surrogate pair.

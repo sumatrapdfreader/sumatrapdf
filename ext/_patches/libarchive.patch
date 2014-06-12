@@ -69,6 +69,21 @@ diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_
    free(rar->dbo);
    if ((rar->dbo = calloc(1, sizeof(*rar->dbo))) == NULL)
    {
+diff -rPu5 libarchive.orig\archive_string.c libarchive\archive_string.c
+--- libarchive.orig\archive_string.c	Thu Jun 12 15:33:21 2014
++++ libarchive\archive_string.c	Thu Jun 12 16:00:40 2014
+@@ -3020,10 +3020,11 @@
+ 			uint32_t ucx[FDC_MAX];
+ 			int ccx[FDC_MAX];
+ 			int cl, cx, i, nx, ucx_size;
+ 			int LIndex,SIndex;
+ 			uint32_t nfc;
++			nx = 0;
+ 
+ 			if (n2 == spair || always_replace)
+ 				/* uc2 is converted from a surrogate pair.
+ 			 	 * this should be treated as a changed code. */
+ 				uc2ptr = NULL;
 diff -rPu5 libarchive.orig\config_win32.h libarchive\config_win32.h
 --- libarchive.orig\config_win32.h	Thu Jan 01 01:00:00 1970
 +++ libarchive\config_win32.h	Thu Jun 12 15:52:03 2014
