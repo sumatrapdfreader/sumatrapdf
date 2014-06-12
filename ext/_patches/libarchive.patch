@@ -1,0 +1,163 @@
+diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
+--- libarchive.orig\archive_read.c	Thu Jun 12 15:33:22 2014
++++ libarchive\archive_read.c	Thu Jun 12 14:00:51 2014
+@@ -452,11 +452,11 @@
+ int
+ archive_read_open1(struct archive *_a)
+ {
+ 	struct archive_read *a = (struct archive_read *)_a;
+ 	struct archive_read_filter *filter, *tmp;
+-	int slot, e;
++	int slot, e = 0;
+ 	unsigned int i;
+ 
+ 	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_NEW,
+ 	    "archive_read_open");
+ 	archive_clear_error(&a->archive);
+diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_read_support_format_rar.c
+--- libarchive.orig\archive_read_support_format_rar.c	Thu Jun 12 15:33:23 2014
++++ libarchive\archive_read_support_format_rar.c	Thu Jun 12 15:36:40 2014
+@@ -223,10 +223,11 @@
+   time_t mtime;
+   long mnsec;
+   mode_t mode;
+   char *filename;
+   char *filename_save;
++  size_t filename_save_size;
+   size_t filename_allocated;
+ 
+   /* File header optional entries */
+   char salt[8];
+   time_t atime;
+@@ -1290,11 +1291,14 @@
+ 
+   if (rar->file_flags & FHD_PASSWORD)
+   {
+     archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
+                       "RAR encryption support unavailable.");
+-    return (ARCHIVE_FATAL);
++    /* Since it is only the data part itself that is encrypted we can at least
++       extract information about the currently processed entry and don't need
++       to return ARCHIVE_FATAL here. */
++    /*return (ARCHIVE_FATAL);*/
+   }
+ 
+   if (rar->file_flags & FHD_LARGE)
+   {
+     memcpy(packed_size, file_header.pack_size, 4);
+@@ -1467,10 +1471,11 @@
+     p += filename_size;
+   }
+ 
+   /* Split file in multivolume RAR. No more need to process header. */
+   if (rar->filename_save &&
++    filename_size == rar->filename_save_size &&
+     !memcmp(rar->filename, rar->filename_save, filename_size + 1))
+   {
+     __archive_read_consume(a, header_size - 7);
+     rar->cursor++;
+     if (rar->cursor >= rar->nodes)
+@@ -1496,10 +1501,11 @@
+   }
+ 
+   rar->filename_save = (char*)realloc(rar->filename_save,
+                                       filename_size + 1);
+   memcpy(rar->filename_save, rar->filename, filename_size + 1);
++  rar->filename_save_size = filename_size;
+ 
+   /* Set info for seeking */
+   free(rar->dbo);
+   if ((rar->dbo = calloc(1, sizeof(*rar->dbo))) == NULL)
+   {
+diff -rPu5 libarchive.orig\config_win32.h libarchive\config_win32.h
+--- libarchive.orig\config_win32.h	Thu Jan 01 01:00:00 1970
++++ libarchive\config_win32.h	Thu Jun 12 14:16:11 2014
+@@ -0,0 +1,88 @@
++#ifndef Config_Win32_h
++#define Config_Win32_h
++
++#define ssize_t long
++#define pid_t int
++#define uid_t unsigned int
++#define gid_t unsigned int
++// cf. archive_entry.h
++#define mode_t unsigned short
++
++#define ARCHIVE_CRYPTO_MD5_WIN
++#define ARCHIVE_CRYPTO_SHA1_WIN
++/* TODO: only on Vista and above
++#define ARCHIVE_CRYPTO_SHA256_WIN
++#define ARCHIVE_CRYPTO_SHA384_WIN
++#define ARCHIVE_CRYPTO_SHA512_WIN
++*/
++
++#define HAVE_BZLIB_H 1
++#define HAVE_CTYPE_H 1
++#define HAVE_DECL_INT64_MAX 1
++#define HAVE_DECL_INT64_MIN 1
++#define HAVE_DECL_SIZE_MAX 1
++#define HAVE_DECL_UINT32_MAX 1
++#define HAVE_DECL_UINT64_MAX 1
++
++#define HAVE_ERRNO_H 1
++#define HAVE_FCNTL 1
++#define HAVE_FCNTL_H 1
++
++#define HAVE_INTTYPES_H 1
++#define HAVE_IO_H 1
++
++#define HAVE_LIBBZ2 1
++#define HAVE_LIBLZMADEC 1
++
++#define HAVE_LIMITS_H 1
++#define HAVE_LOCALE_H 1
++
++#define HAVE_LZMADEC_H 1
++
++#define HAVE_MEMMOVE 1
++#define HAVE_MEMSET 1
++#define HAVE_MKDIR 1
++
++#undef HAVE_SETENV
++#undef HAVE_SETLOCALE
++
++#define HAVE_STDARG_H 1
++#define HAVE_STDINT_H 1
++#define HAVE_STDLIB_H 1
++#define HAVE_STRCHR 1
++#define HAVE_STRDUP 1
++#define HAVE_STRFTIME 1
++#define HAVE_STRINGS_H 1
++#define HAVE_STRING_H 1
++#define HAVE_STRNCPY_S 1
++#define HAVE_STRRCHR 1
++#define HAVE_TIME_H 1
++
++#define HAVE_VPRINTF 1
++#define HAVE_WCHAR_H 1
++#define HAVE_WCHAR_T 1
++#define HAVE_WCRTOMB 1
++#define HAVE_WCSCMP 1
++#define HAVE_WCSCPY 1
++#define HAVE_WCSLEN 1
++#define HAVE_WCTOMB 1
++#define HAVE_WCTYPE_H 1
++
++#define HAVE_WINCRYPT_H 1
++#define HAVE_WINDOWS_H 1
++#define HAVE_WINIOCTL_H 1
++#define HAVE_WMEMCMP 1
++#define HAVE_WMEMCPY 1
++
++#define HAVE_ZLIB_H 1
++
++#define HAVE__CTIME64_S 1
++#define HAVE__FSEEKI64 1
++#define HAVE__GET_TIMEZONE 1
++#define HAVE__LOCALTIME64_S 1
++
++#define STDC_HEADERS 1
++
++#define _WIN32_WINNT 0x0500
++
++#endif

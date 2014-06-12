@@ -362,4 +362,19 @@ int    PASCAL   RARReadHeaderEx(HANDLE, struct RARHeaderDataEx *) { return -1; }
 void   PASCAL   RARSetCallback(HANDLE, UNRARCALLBACK, LPARAM) { }
 int    PASCAL   RARProcessFile(HANDLE, int, char *, char *) { return -1; }
 int    PASCAL   RARCloseArchive(HANDLE) { return -1; }
+
+// allow to build PdfPreview.dll without libarchive
+extern "C" {
+#define LIBARCHIVE_STATIC
+#include "../ext/libarchive/archive.h"
+#include "../ext/libarchive/archive_entry.h"
+}
+struct archive *archive_read_new(void) { return NULL; }
+int archive_read_support_format_rar(struct archive *) { return ARCHIVE_FATAL; }
+int archive_read_open_filename_w(struct archive *, const wchar_t *, size_t) { return ARCHIVE_FATAL; }
+int archive_read_next_header(struct archive *, struct archive_entry **) { return ARCHIVE_FATAL; }
+const wchar_t *archive_entry_pathname_w(struct archive_entry *) { return NULL; }
+int archive_read_data_block(struct archive *, const void **, size_t *, __LA_INT64_T *) { return ARCHIVE_FATAL; }
+int	archive_read_close(struct archive *) { return ARCHIVE_FATAL; }
+int archive_read_free(struct archive *) { return ARCHIVE_FATAL; }
 #endif

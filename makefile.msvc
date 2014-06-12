@@ -184,7 +184,7 @@ EBOOK_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj $(OS)\PdfCreator.obj \
-	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
+	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) $(LARC_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EngineManager.obj $(OS)\FileModifications.obj

@@ -14,7 +14,18 @@ using namespace Gdiplus;
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
+// undefine for using UnRAR instead (for now)
+#define USE_LIBARCHIVE
+
+#ifndef USE_LIBARCHIVE
 #include "../ext/unrar/dll.hpp"
+#else
+extern "C" {
+#define LIBARCHIVE_STATIC
+#include "../ext/libarchive/archive.h"
+#include "../ext/libarchive/archive_entry.h"
+}
+#endif
 
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE    10
@@ -1159,6 +1170,108 @@ protected:
     virtual RectD LoadMediabox(int pageNo);
 };
 
+struct NameToData {
+    const WCHAR *fileName;
+    RarDecompressData *rdd;
+
+    explicit NameToData(const WCHAR *fileName=NULL, RarDecompressData *rdd=NULL) : fileName(fileName), rdd(rdd) { }
+
+    static int cmpByName(const void *a, const void *b) {
+        return wcscmp(((NameToData *)a)->fileName, ((NameToData *)b)->fileName);
+    }
+};
+
+#ifdef USE_LIBARCHIVE
+
+static RarDecompressData *LoadCurrentCbrFile(struct archive *a)
+{
+    str::Str<char> data;
+    data.AppendBlanks(offsetof(RarDecompressData, data));
+    for (;;) {
+        const void *buffer;
+        size_t size;
+        int64_t offset;
+        int r = archive_read_data_block(a, &buffer, &size, &offset);
+        if (ARCHIVE_EOF == r)
+            break;
+        if (r != ARCHIVE_OK)
+            return NULL;
+        data.Append((char *)buffer, size);
+    }
+    size_t size = data.Size();
+    // zero-terminate for convenience
+    data.Append("\0\0", 2);
+
+    RarDecompressData *rdd = (RarDecompressData *)data.StealData();
+    rdd->cap = rdd->len = size;
+
+    return rdd;
+}
+
+bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
+{
+    if (!file)
+        return false;
+    fileName = str::Dup(file);
+
+    struct archive *a = archive_read_new();
+    if (!a)
+        return false;
+    archive_read_support_format_rar(a);
+    int r = archive_read_open_filename_w(a, fileName, 10240);
+    if (r != ARCHIVE_OK) {
+        archive_read_free(a);
+        return false;
+    }
+
+    // libarchive does not seem to support extracting a single file by name,
+    // so lazy image loading doesn't seem possible (yet)
+
+    WStrVec foundNames;
+    Vec<NameToData> foundData;
+
+    for (;;) {
+        struct archive_entry *entry;
+        r = archive_read_next_header(a, &entry);
+        if (ARCHIVE_EOF == r || r != ARCHIVE_OK)
+            break;
+        const WCHAR *name = archive_entry_pathname_w(entry);
+        if (ImageEngine::IsSupportedFile(name)) {
+            RarDecompressData *rdd = LoadCurrentCbrFile(a);
+            if (rdd && !GfxFileExtFromData(rdd->data, rdd->cap)) {
+                delete rdd;
+            }
+            else if (rdd) {
+                foundNames.Append(str::Dup(name));
+                foundData.Append(NameToData(foundNames.Last(), rdd));
+            }
+        }
+        else if (str::EqI(name, L"ComicInfo.xml")) {
+            RarDecompressData *rdd = LoadCurrentCbrFile(a);
+            if (rdd) {
+                ParseComicInfoXml(rdd->data);
+                delete rdd;
+            }
+        }
+    }
+
+    archive_read_close(a);
+    archive_read_free(a);
+
+    if (foundData.Count() == 0)
+        return false;
+
+    foundData.Sort(NameToData::cmpByName);
+    for (NameToData *item = foundData.IterStart(); item; item = foundData.IterNext()) {
+        pageData.Append(item->rdd);
+    }
+    mediaboxes.AppendBlanks(pageData.Count());
+
+    return true;
+}
+
+#else
+
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed)
 {
     if (UCM_PROCESSDATA != msg)
@@ -1202,17 +1315,6 @@ static RarDecompressData *LoadCurrentCbrFile(HANDLE hArc, RARHeaderDataEx& rarHe
 
     return rdd;
 }
-
-struct NameToData {
-    const WCHAR *fileName;
-    RarDecompressData *rdd;
-
-    explicit NameToData(const WCHAR *fileName=NULL, RarDecompressData *rdd=NULL) : fileName(fileName), rdd(rdd) { }
-
-    static int cmpByName(const void *a, const void *b) {
-        return wcscmp(((NameToData *)a)->fileName, ((NameToData *)b)->fileName);
-    }
-};
 
 bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 {
@@ -1275,6 +1377,8 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 
     return true;
 }
+
+#endif
 
 Bitmap *CbrEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 {

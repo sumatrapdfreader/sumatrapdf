@@ -11,6 +11,7 @@ ODV= $(O)\djvu
 OC = $(O)\chmlib
 OLZ= $(O)\lzma
 OWP= $(O)\webp
+OLA= $(O)\archive
 
 SYNCTEX_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /wd4244 /wd4702 /wd4706 /wd4996
 !if "$(PLATFORM)"=="X64"
@@ -51,6 +52,10 @@ CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4267
 LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
 
 WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
+
+LARC_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/libarchive /I$(ZLIB_DIR) /DLIBARCHIVE_STATIC
+LARC_CFLAGS = $(LARC_CFLAGS) /wd4201 /wd4204 /wd4244 /wd4245 /wd4996
+LARC_CFLAGS = $(LARC_CFLAGS) /D "PLATFORM_CONFIG_H=\"config_win32.h\""
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -128,6 +133,15 @@ WEBP_OBJS = \
 	$(OWP)\thread.obj $(OWP)\utils.obj $(OWP)\alpha_processing.obj \
 	$(OWP)\random.obj
 
+LARC_OBJS = \
+	$(OLA)\archive_acl.obj $(OLA)\archive_check_magic.obj \
+	$(OLA)\archive_entry.obj $(OLA)\archive_entry_sparse.obj $(OLA)\archive_entry_xattr.obj \
+	$(OLA)\archive_read.obj $(OLA)\archive_read_open_filename.obj \
+	$(OLA)\archive_read_support_format_rar.obj $(OLA)\archive_ppmd7.obj \
+	$(OLA)\archive_string.obj $(OLA)\archive_string_sprintf.obj \
+	$(OLA)\archive_util.obj $(OLA)\archive_virtual.obj \
+	$(OLA)\archive_windows.obj
+
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
@@ -136,6 +150,7 @@ $(OE): force
 	@if not exist $(OC) mkdir $(OC)
 	@if not exist $(OLZ) mkdir $(OLZ)
 	@if not exist $(OWP) mkdir $(OWP)
+	@if not exist $(OLA) mkdir $(OLA)
 
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
@@ -166,3 +181,6 @@ $(OE): force
 
 {$(EXTDIR)\libwebp\utils}.c{$(OWP)}.obj::
 	$(CC) $(WEBP_CFLAGS) /Fo$(OWP)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\libarchive}.c{$(OLA)}.obj::
+	$(CC) $(LARC_CFLAGS) /Fo$(OLA)\ /Fd$(O)\vc80.pdb $<
