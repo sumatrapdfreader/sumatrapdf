@@ -71,12 +71,16 @@ diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_
    {
 diff -rPu5 libarchive.orig\config_win32.h libarchive\config_win32.h
 --- libarchive.orig\config_win32.h	Thu Jan 01 01:00:00 1970
-+++ libarchive\config_win32.h	Thu Jun 12 14:16:11 2014
-@@ -0,0 +1,88 @@
++++ libarchive\config_win32.h	Thu Jun 12 15:52:03 2014
+@@ -0,0 +1,92 @@
 +#ifndef Config_Win32_h
 +#define Config_Win32_h
 +
++#ifdef _WIN64
++#define ssize_t __int64
++#else
 +#define ssize_t long
++#endif
 +#define pid_t int
 +#define uid_t unsigned int
 +#define gid_t unsigned int

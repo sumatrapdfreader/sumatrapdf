@@ -1,7 +1,11 @@
 #ifndef Config_Win32_h
 #define Config_Win32_h
 
+#ifdef _WIN64
+#define ssize_t __int64
+#else
 #define ssize_t long
+#endif
 #define pid_t int
 #define uid_t unsigned int
 #define gid_t unsigned int
