@@ -20,6 +20,7 @@ class PdbReader {
 
 public:
     explicit PdbReader(const WCHAR *filePath);
+    explicit PdbReader(IStream *stream);
 
     const char *GetDbType();
     size_t GetRecordCount();

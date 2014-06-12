@@ -6,6 +6,7 @@
 
 #include "ByteReader.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
 
 #include <pshpack1.h>
 
@@ -40,6 +41,13 @@ STATIC_ASSERT(sizeof(PdbRecordHeader) == 8, pdbRecHeaderSize);
 
 PdbReader::PdbReader(const WCHAR *filePath) :
     data(file::ReadAll(filePath, &dataSize))
+{
+    if (!ParseHeader())
+        recOffsets.Reset();
+}
+
+PdbReader::PdbReader(IStream *stream) :
+    data((char *)GetDataFromStream(stream, &dataSize))
 {
     if (!ParseHeader())
         recOffsets.Reset();

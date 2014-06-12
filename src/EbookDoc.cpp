@@ -721,8 +721,14 @@ bool Fb2Doc::Load()
             data.Set(file::ReadAll(fileName, NULL));
     }
     else if (stream) {
-        // reading zipped FB2 documents from stream is not supported/needed yet
         data.Set((char *)GetDataFromStream(stream, NULL));
+        if (str::StartsWith(data.Get(), "PK\x03\x04")) {
+            ZipFile archive(stream);
+            if (archive.GetFileCount() == 1) {
+                isZipped = true;
+                data.Set(archive.GetFileDataByIdx(0));
+            }
+        }
     }
     if (!data)
         return false;

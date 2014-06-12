@@ -862,18 +862,31 @@ public:
     virtual DocTocItem *GetTocTree();
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     Fb2Doc *doc;
 
     bool Load(const WCHAR *fileName);
+    bool Load(IStream *stream);
+    bool FinishLoading();
 };
 
 bool Fb2EngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
-
     doc = Fb2Doc::CreateFromFile(fileName);
+    return FinishLoading();
+}
+
+bool Fb2EngineImpl::Load(IStream *stream)
+{
+    doc = Fb2Doc::CreateFromStream(stream);
+    return FinishLoading();
+}
+
+bool Fb2EngineImpl::FinishLoading()
+{
     if (!doc)
         return false;
 
@@ -913,6 +926,16 @@ BaseEngine *Fb2EngineImpl::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+BaseEngine *Fb2EngineImpl::CreateFromStream(IStream *stream)
+{
+    Fb2EngineImpl *engine = new Fb2EngineImpl();
+    if (!engine->Load(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 namespace Fb2Engine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -923,6 +946,11 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
     return Fb2EngineImpl::CreateFromFile(fileName);
+}
+
+BaseEngine *CreateFromStream(IStream *stream)
+{
+    return Fb2EngineImpl::CreateFromStream(stream);
 }
 
 }
@@ -949,18 +977,31 @@ public:
     virtual DocTocItem *GetTocTree();
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     MobiDoc *doc;
 
     bool Load(const WCHAR *fileName);
+    bool Load(IStream *stream);
+    bool FinishLoading();
 };
 
 bool MobiEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
-
     doc = MobiDoc::CreateFromFile(fileName);
+    return FinishLoading();
+}
+
+bool MobiEngineImpl::Load(IStream *stream)
+{
+    doc = MobiDoc::CreateFromStream(stream);
+    return FinishLoading();
+}
+
+bool MobiEngineImpl::FinishLoading()
+{
     if (!doc || Pdb_Mobipocket != doc->GetDocType())
         return false;
 
@@ -1035,6 +1076,16 @@ BaseEngine *MobiEngineImpl::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+BaseEngine *MobiEngineImpl::CreateFromStream(IStream *stream)
+{
+    MobiEngineImpl *engine = new MobiEngineImpl();
+    if (!engine->Load(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 namespace MobiEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -1045,6 +1096,11 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
     return MobiEngineImpl::CreateFromFile(fileName);
+}
+
+BaseEngine *CreateFromStream(IStream *stream)
+{
+    return MobiEngineImpl::CreateFromStream(stream);
 }
 
 }

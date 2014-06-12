@@ -18,6 +18,7 @@ namespace Fb2Engine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
 BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
 
 }
 
@@ -25,6 +26,7 @@ namespace MobiEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
 BaseEngine *CreateFromFile(const WCHAR *fileName);
+BaseEngine *CreateFromStream(IStream *stream);
 
 }
 

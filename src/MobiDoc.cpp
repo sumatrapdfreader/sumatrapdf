@@ -481,7 +481,9 @@ MobiDoc::~MobiDoc()
 
 bool MobiDoc::ParseHeader()
 {
-    pdbReader = new PdbReader(fileName);
+    CrashIf(!pdbReader);
+    if (!pdbReader)
+        return false;
     if (pdbReader->GetRecordCount() == 0)
         return false;
 
@@ -803,8 +805,9 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     return false;
 }
 
-bool MobiDoc::LoadDocument()
+bool MobiDoc::LoadDocument(PdbReader *pdbReader)
 {
+    this->pdbReader = pdbReader;
     if (!ParseHeader())
         return false;
 
@@ -943,7 +946,19 @@ bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 MobiDoc *MobiDoc::CreateFromFile(const WCHAR *fileName)
 {
     MobiDoc *mb = new MobiDoc(fileName);
-    if (!mb->LoadDocument()) {
+    PdbReader *pdbReader = new PdbReader(fileName);
+    if (!mb->LoadDocument(pdbReader)) {
+        delete mb;
+        return NULL;
+    }
+    return mb;
+}
+
+MobiDoc *MobiDoc::CreateFromStream(IStream *stream)
+{
+    MobiDoc *mb = new MobiDoc(NULL);
+    PdbReader *pdbReader = new PdbReader(stream);
+    if (!mb->LoadDocument(pdbReader)) {
         delete mb;
         return NULL;
     }

@@ -46,7 +46,7 @@ class MobiDoc
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
     void    LoadImages();
     bool    LoadImage(size_t imageNo);
-    bool    LoadDocument();
+    bool    LoadDocument(PdbReader *pdbReader);
     bool    DecodeExthHeader(const char *data, size_t dataLen);
 
 public:
@@ -69,6 +69,7 @@ public:
 
     static bool         IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static MobiDoc *    CreateFromFile(const WCHAR *fileName);
+    static MobiDoc *    CreateFromStream(IStream *stream);
 };
 
 #endif
