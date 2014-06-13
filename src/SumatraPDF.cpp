@@ -1700,7 +1700,7 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
     }
 }
 
-enum MeasureUnit { Unit_pt, Unit_cm, Unit_in };
+enum MeasureUnit { Unit_pt, Unit_mm, Unit_in };
 
 static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasureUnit unit)
 {
@@ -1711,20 +1711,18 @@ static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasureUnit un
     pt.x /= engine->GetFileDPI();
     pt.y /= engine->GetFileDPI();
 
-    if (Unit_pt == unit) {
-        ScopedMem<WCHAR> xPos(str::FormatNumWithThousandSep((size_t)(pt.x * 72)));
-        ScopedMem<WCHAR> yPos(str::FormatNumWithThousandSep((size_t)(pt.y * 72)));
-        return str::Format(L"%s x %s pt", xPos, yPos);
+    float factor = Unit_pt == unit ? 72 : Unit_mm == unit ? 25.4f : 1;
+    const WCHAR *unitName = Unit_pt == unit ? L"pt" : Unit_mm == unit ? L"mm" : L"in";
+    ScopedMem<WCHAR> xPos(str::FormatFloatWithThousandSep(pt.x * factor));
+    ScopedMem<WCHAR> yPos(str::FormatFloatWithThousandSep(pt.y * factor));
+    if (unit != Unit_in) {
+        // use similar precision for all units
+        if (str::IsDigit(xPos[str::Len(xPos) - 2]))
+            xPos[str::Len(xPos) - 1] = '\0';
+        if (str::IsDigit(yPos[str::Len(yPos) - 2]))
+            yPos[str::Len(yPos) - 1] = '\0';
     }
-    if (Unit_cm == unit) {
-        ScopedMem<WCHAR> xPos(str::FormatFloatWithThousandSep(pt.x * 2.54));
-        ScopedMem<WCHAR> yPos(str::FormatFloatWithThousandSep(pt.y * 2.54));
-        return str::Format(L"%s x %s cm", xPos, yPos);
-    }
-    CrashIf(unit != Unit_in);
-    ScopedMem<WCHAR> xPos(str::FormatFloatWithThousandSep(pt.x));
-    ScopedMem<WCHAR> yPos(str::FormatFloatWithThousandSep(pt.y));
-    return str::Format(L"%s x %s in", xPos, yPos);
+    return str::Format(L"%s x %s %s", xPos, yPos, unitName);
 }
 
 static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd=NULL)
@@ -1732,7 +1730,7 @@ static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, Notification
     static MeasureUnit unit = Unit_pt;
     // toggle measure unit by repeatedly invoking the helper
     if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
-        unit = Unit_pt == unit ? Unit_cm : Unit_cm == unit ? Unit_in : Unit_pt;
+        unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
 
     CrashIf(!win->AsFixed());
     BaseEngine *engine = win->AsFixed()->engine();

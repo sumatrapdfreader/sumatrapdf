@@ -375,6 +375,6 @@ int archive_read_open_filename_w(struct archive *, const wchar_t *, size_t) { re
 int archive_read_next_header(struct archive *, struct archive_entry **) { return ARCHIVE_FATAL; }
 const wchar_t *archive_entry_pathname_w(struct archive_entry *) { return NULL; }
 int archive_read_data_block(struct archive *, const void **, size_t *, __LA_INT64_T *) { return ARCHIVE_FATAL; }
-int	archive_read_close(struct archive *) { return ARCHIVE_FATAL; }
+int archive_read_close(struct archive *) { return ARCHIVE_FATAL; }
 int archive_read_free(struct archive *) { return ARCHIVE_FATAL; }
 #endif

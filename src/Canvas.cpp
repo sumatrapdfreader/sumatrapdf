@@ -695,6 +695,10 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
         break;
     case MA_IDLE:
         if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.AsFixed()) {
+            if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+                SetCursor(LoadCursor(NULL, IDC_CROSS));
+                return TRUE;
+            }
             DisplayModel *dm = win.AsFixed();
             PageElement *pageEl = dm->GetElementAtPos(pt);
             if (pageEl) {
