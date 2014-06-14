@@ -175,6 +175,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\RarUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\RarUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\TgaReader.cpp"
 					>
 				</File>

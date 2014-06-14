@@ -11,21 +11,9 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
 #include "PdfCreator.h"
+#include "RarUtil.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-
-// undefine for using UnRAR instead (for now)
-#define USE_LIBARCHIVE
-
-#ifndef USE_LIBARCHIVE
-#include "../ext/unrar/dll.hpp"
-#else
-extern "C" {
-#define LIBARCHIVE_STATIC
-#include "../ext/libarchive/archive.h"
-#include "../ext/libarchive/archive_entry.h"
-}
-#endif
 
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE    10
@@ -821,6 +809,8 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 // ComicEngine handles the common parts of CbzEngine and CbrEngine
 class ComicEngine : public ImagesEngine, public json::ValueVisitor {
 public:
+    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
     // not using the resolution of the contained images seems to be
@@ -832,6 +822,10 @@ public:
     virtual bool Visit(const char *path, const char *value, json::DataType type);
 
 protected:
+    virtual Bitmap *LoadBitmap(int pageNo, bool& deleteAfterUse);
+    virtual RectD LoadMediabox(int pageNo);
+    virtual char *GetImageData(int pageNo, size_t& len) = 0;
+
     void ParseComicInfoXml(const char *xmlData);
 
     // extracted metadata
@@ -934,6 +928,23 @@ bool ComicEngine::Visit(const char *path, const char *value, json::DataType type
            !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
+bool ComicEngine::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+{
+    bool ok = true;
+    PdfCreator *c = new PdfCreator();
+    for (int i = 1; i <= PageCount() && ok; i++) {
+        size_t len;
+        ScopedMem<char> data(GetImageData(i, len));
+        ok = data && c->AddImagePage(data, len, GetFileDPI());
+    }
+    if (ok) {
+        c->CopyProperties(this);
+        ok = c->SaveToFile(pdfFileName);
+    }
+    delete c;
+    return ok;
+}
+
 WCHAR *ComicEngine::GetProperty(DocumentProperty prop)
 {
     switch (prop) {
@@ -955,6 +966,36 @@ WCHAR *ComicEngine::GetProperty(DocumentProperty prop)
     }
 }
 
+Bitmap *ComicEngine::LoadBitmap(int pageNo, bool& deleteAfterUse)
+{
+    size_t len;
+    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    if (bmpData) {
+        deleteAfterUse = true;
+        return BitmapFromData(bmpData, len);
+    }
+    return NULL;
+}
+
+RectD ComicEngine::LoadMediabox(int pageNo)
+{
+    // fill the cache to prevent the first few images from being unpacked twice
+    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
+    if (page) {
+        RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
+        DropPage(page);
+        return mbox;
+    }
+
+    size_t len;
+    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    if (bmpData) {
+        Size size = BitmapSizeFromData(bmpData, len);
+        return RectD(0, 0, size.Width, size.Height);
+    }
+    return RectD();
+}
+
 class CbzEngineImpl : public ComicEngine {
 public:
     CbzEngineImpl() : cbzFile(NULL) { }
@@ -974,8 +1015,6 @@ public:
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbz"; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
-
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
 
@@ -987,10 +1026,7 @@ protected:
     bool LoadFromStream(IStream *stream);
     bool FinishLoading();
 
-    char *GetImageData(int pageNo, size_t& len);
-
-    virtual Bitmap *LoadBitmap(int pageNo, bool& deleteAfterUse);
-    virtual RectD LoadMediabox(int pageNo);
+    virtual char *GetImageData(int pageNo, size_t& len);
 };
 
 bool CbzEngineImpl::LoadFromFile(const WCHAR *file)
@@ -1063,58 +1099,11 @@ bool CbzEngineImpl::FinishLoading()
     return true;
 }
 
-Bitmap *CbzEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
-{
-    size_t len;
-    ScopedMem<char> bmpData(GetImageData(pageNo, len));
-    if (bmpData) {
-        deleteAfterUse = true;
-        return BitmapFromData(bmpData, len);
-    }
-    return NULL;
-}
-
-RectD CbzEngineImpl::LoadMediabox(int pageNo)
-{
-    // fill the cache to prevent the first few images from being unpacked twice
-    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
-    if (page) {
-        RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page);
-        return mbox;
-    }
-
-    size_t len;
-    ScopedMem<char> bmpData(GetImageData(pageNo, len));
-    if (bmpData) {
-        Size size = BitmapSizeFromData(bmpData, len);
-        return RectD(0, 0, size.Width, size.Height);
-    }
-    return RectD();
-}
-
 char *CbzEngineImpl::GetImageData(int pageNo, size_t& len)
 {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
     ScopedCritSec scope(&cacheAccess);
     return cbzFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
-}
-
-bool CbzEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
-{
-    bool ok = true;
-    PdfCreator *c = new PdfCreator();
-    for (int i = 1; i <= PageCount() && ok; i++) {
-        size_t len;
-        ScopedMem<char> data(GetImageData(i, len));
-        ok = data && c->AddImagePage(data, len, GetFileDPI());
-    }
-    if (ok) {
-        c->CopyProperties(this);
-        ok = c->SaveToFile(pdfFileName);
-    }
-    delete c;
-    return ok;
 }
 
 BaseEngine *CbzEngineImpl::CreateFromFile(const WCHAR *fileName)
@@ -1137,17 +1126,10 @@ BaseEngine *CbzEngineImpl::CreateFromStream(IStream *stream)
     return engine;
 }
 
-// UnRAR doesn't allow to selectively decompress files, so we store all of them
-// in umcompressed form; since image decoding might be expensive, the data is only
-// decoded on demand same as for CBZ and ImageDir
-struct RarDecompressData {
-    size_t len, cap;
-    char data[1]; // data buffer has size cap (+ 2 for zero-termination)
-};
-
 class CbrEngineImpl : public ComicEngine {
 public:
-    virtual ~CbrEngineImpl() { FreeVecMembers(pageData); }
+    CbrEngineImpl() : cbrFile(NULL) { }
+    virtual ~CbrEngineImpl() { delete cbrFile; }
 
     virtual BaseEngine *Clone() {
         if (fileName)
@@ -1157,56 +1139,16 @@ public:
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbr"; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
-
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
-    Vec<RarDecompressData *> pageData;
+    RarFile *cbrFile;
+    Vec<size_t> fileIdxs;
 
     bool LoadFromFile(const WCHAR *fileName);
 
-    virtual Bitmap *LoadBitmap(int pageNo, bool& deleteAfterUse);
-    virtual RectD LoadMediabox(int pageNo);
+    virtual char *GetImageData(int pageNo, size_t& len);
 };
-
-struct NameToData {
-    const WCHAR *fileName;
-    RarDecompressData *rdd;
-
-    explicit NameToData(const WCHAR *fileName=NULL, RarDecompressData *rdd=NULL) : fileName(fileName), rdd(rdd) { }
-
-    static int cmpByName(const void *a, const void *b) {
-        return wcscmp(((NameToData *)a)->fileName, ((NameToData *)b)->fileName);
-    }
-};
-
-#ifdef USE_LIBARCHIVE
-
-static RarDecompressData *LoadCurrentCbrFile(struct archive *a)
-{
-    str::Str<char> data;
-    data.AppendBlanks(offsetof(RarDecompressData, data));
-    for (;;) {
-        const void *buffer;
-        size_t size;
-        int64_t offset;
-        int r = archive_read_data_block(a, &buffer, &size, &offset);
-        if (ARCHIVE_EOF == r)
-            break;
-        if (r != ARCHIVE_OK)
-            return NULL;
-        data.Append((char *)buffer, size);
-    }
-    size_t size = data.Size();
-    // zero-terminate for convenience
-    data.Append("\0\0", 2);
-
-    RarDecompressData *rdd = (RarDecompressData *)data.StealData();
-    rdd->cap = rdd->len = size;
-
-    return rdd;
-}
 
 bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 {
@@ -1214,210 +1156,47 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
         return false;
     fileName = str::Dup(file);
 
-    struct archive *a = archive_read_new();
-    if (!a)
-        return false;
-    archive_read_support_format_rar(a);
-    int r = archive_read_open_filename_w(a, fileName, 10240);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        return false;
-    }
+    cbrFile = new RarFile(fileName);
 
-    // libarchive does not seem to support extracting a single file by name,
-    // so lazy image loading doesn't seem possible (yet)
+    Vec<const WCHAR *> allFileNames;
+    Vec<const WCHAR *> pageFileNames;
 
-    WStrVec foundNames;
-    Vec<NameToData> foundData;
-
-    for (;;) {
-        struct archive_entry *entry;
-        r = archive_read_next_header(a, &entry);
-        if (ARCHIVE_EOF == r || r != ARCHIVE_OK)
-            break;
-        const WCHAR *name = archive_entry_pathname_w(entry);
-        if (ImageEngine::IsSupportedFile(name)) {
-            RarDecompressData *rdd = LoadCurrentCbrFile(a);
-            if (rdd && !GfxFileExtFromData(rdd->data, rdd->cap)) {
-                delete rdd;
-            }
-            else if (rdd) {
-                foundNames.Append(str::Dup(name));
-                foundData.Append(NameToData(foundNames.Last(), rdd));
-            }
+    for (size_t idx = 0; idx < cbrFile->GetFileCount(); idx++) {
+        const WCHAR *fileName = cbrFile->GetFileName(idx);
+        if (fileName && ImageEngine::IsSupportedFile(fileName) &&
+            // OS X occasionally leaves metadata with image extensions
+            !str::StartsWith(path::GetBaseName(fileName), L".")) {
+            allFileNames.Append(fileName);
+            pageFileNames.Append(fileName);
         }
-        else if (str::EqI(name, L"ComicInfo.xml")) {
-            RarDecompressData *rdd = LoadCurrentCbrFile(a);
-            if (rdd) {
-                ParseComicInfoXml(rdd->data);
-                delete rdd;
-            }
+        else {
+            allFileNames.Append(NULL);
         }
     }
+    AssertCrash(allFileNames.Count() == cbrFile->GetFileCount());
 
-    archive_read_close(a);
-    archive_read_free(a);
+    ScopedMem<char> metadata(cbrFile->GetFileDataByName(L"ComicInfo.xml"));
+    if (metadata)
+        ParseComicInfoXml(metadata);
 
-    if (foundData.Count() == 0)
+    pageFileNames.Sort(cmpAscii);
+    for (const WCHAR **fn = pageFileNames.IterStart(); fn; fn = pageFileNames.IterNext()) {
+        fileIdxs.Append(allFileNames.Find(*fn));
+    }
+    AssertCrash(pageFileNames.Count() == fileIdxs.Count());
+    if (fileIdxs.Count() == 0)
         return false;
 
-    foundData.Sort(NameToData::cmpByName);
-    for (NameToData *item = foundData.IterStart(); item; item = foundData.IterNext()) {
-        pageData.Append(item->rdd);
-    }
-    mediaboxes.AppendBlanks(pageData.Count());
+    mediaboxes.AppendBlanks(fileIdxs.Count());
 
     return true;
 }
 
-#else
-
-static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed)
-{
-    if (UCM_PROCESSDATA != msg)
-        return -1;
-    if (!userData)
-        return -1;
-
-    RarDecompressData *rdd = (RarDecompressData *)userData;
-    if (bytesProcessed > (LPARAM)rdd->cap || rdd->len > rdd->cap - bytesProcessed)
-        return -1;
-
-    memcpy(rdd->data + rdd->len, (unsigned char *)rarBuffer, bytesProcessed);
-    rdd->len += bytesProcessed;
-    return 1;
-}
-
-static RarDecompressData *LoadCurrentCbrFile(HANDLE hArc, RARHeaderDataEx& rarHeader)
-{
-    if (rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize == 0 || (int)rarHeader.UnpSize < 0) {
-        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
-        return NULL;
-    }
-
-    RarDecompressData *rdd = (RarDecompressData *)malloc(sizeof(RarDecompressData) + rarHeader.UnpSize + 1);
-    if (!rdd) {
-        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
-        return NULL;
-    }
-    rdd->cap = rarHeader.UnpSize;
-    rdd->len = 0;
-
-    RARSetCallback(hArc, unrarCallback, (LPARAM)rdd);
-    int res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
-    if (0 != res || rdd->cap != rdd->len) {
-        free(rdd);
-        return NULL;
-    }
-
-    // zero-terminate for convenience
-    rdd->data[rdd->len] = rdd->data[rdd->len + 1] = '\0';
-
-    return rdd;
-}
-
-bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
-{
-    if (!file)
-        return false;
-    fileName = str::Dup(file);
-
-    RAROpenArchiveDataEx  arcData = { 0 };
-    arcData.ArcNameW = fileName;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0)
-        return false;
-
-    // UnRAR does not seem to support extracting a single file by name,
-    // so lazy image loading doesn't seem possible
-
-    WStrVec foundNames;
-    Vec<NameToData> foundData;
-
-    for (;;) {
-        RARHeaderDataEx rarHeader;
-        int res = RARReadHeaderEx(hArc, &rarHeader);
-        if (0 != res)
-            break;
-
-        const WCHAR *fileName = rarHeader.FileNameW;
-        if (ImageEngine::IsSupportedFile(fileName)) {
-            RarDecompressData *rdd = LoadCurrentCbrFile(hArc, rarHeader);
-            if (rdd && !GfxFileExtFromData(rdd->data, rdd->cap)) {
-                delete rdd;
-            }
-            else if (rdd) {
-                foundNames.Append(str::Dup(fileName));
-                foundData.Append(NameToData(foundNames.Last(), rdd));
-            }
-        }
-        else if (str::EqI(fileName, L"ComicInfo.xml")) {
-            RarDecompressData *rdd = LoadCurrentCbrFile(hArc, rarHeader);
-            if (rdd) {
-                ParseComicInfoXml(rdd->data);
-                delete rdd;
-            }
-        }
-        else
-            RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
-
-    }
-    RARCloseArchive(hArc);
-
-    if (foundData.Count() == 0)
-        return false;
-
-    foundData.Sort(NameToData::cmpByName);
-    for (NameToData *item = foundData.IterStart(); item; item = foundData.IterNext()) {
-        pageData.Append(item->rdd);
-    }
-    mediaboxes.AppendBlanks(pageData.Count());
-
-    return true;
-}
-
-#endif
-
-Bitmap *CbrEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
+char *CbrEngineImpl::GetImageData(int pageNo, size_t& len)
 {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    RarDecompressData *rdd = pageData.At(pageNo - 1);
-    deleteAfterUse = true;
-    return BitmapFromData(rdd->data, rdd->len);
-}
-
-RectD CbrEngineImpl::LoadMediabox(int pageNo)
-{
-    // fill the cache to prevent the first few images from being unpacked twice
-    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
-    if (page) {
-        RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page);
-        return mbox;
-    }
-
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    RarDecompressData *rdd = pageData.At(pageNo - 1);
-    Size size = BitmapSizeFromData(rdd->data, rdd->len);
-    return RectD(0, 0, size.Width, size.Height);
-}
-
-bool CbrEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
-{
-    bool ok = true;
-    PdfCreator *c = new PdfCreator();
-    for (int i = 1; i <= PageCount() && ok; i++) {
-        RarDecompressData *rdd = pageData.At(i - 1);
-        ok = c->AddImagePage(rdd->data, rdd->len, GetFileDPI());
-    }
-    if (ok) {
-        c->CopyProperties(this);
-        ok = c->SaveToFile(pdfFileName);
-    }
-    delete c;
-    return ok;
+    ScopedCritSec scope(&cacheAccess);
+    return cbrFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
 }
 
 BaseEngine *CbrEngineImpl::CreateFromFile(const WCHAR *fileName)
