@@ -136,7 +136,7 @@ WEBP_OBJS = \
 LARC_OBJS = \
 	$(OLA)\archive_acl.obj $(OLA)\archive_check_magic.obj \
 	$(OLA)\archive_entry.obj $(OLA)\archive_entry_sparse.obj $(OLA)\archive_entry_xattr.obj \
-	$(OLA)\archive_read.obj $(OLA)\archive_read_open_filename.obj \
+	$(OLA)\archive_read.obj $(OLA)\archive_read_open_filename.obj $(OLA)\archive_read_open_istream.obj \
 	$(OLA)\archive_read_support_format_rar.obj $(OLA)\archive_ppmd7.obj \
 	$(OLA)\archive_string.obj $(OLA)\archive_string_sprintf.obj \
 	$(OLA)\archive_util.obj $(OLA)\archive_virtual.obj \

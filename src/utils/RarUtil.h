@@ -4,15 +4,23 @@
 #ifndef RarUtil_h
 #define RarUtil_h
 
+extern "C" {
+struct archive;
+}
+
 class RarFile {
     ScopedMem<WCHAR> path;
     WStrList filenames;
+
+    struct archive *arc;
+    Vec<int64_t> filepos;
 
     void ExtractFilenames();
 
 public:
     explicit RarFile(const WCHAR *path);
-    ~RarFile() { }
+    explicit RarFile(IStream *stream);
+    ~RarFile();
 
     size_t GetFileCount() const;
     // the result is owned by RarFile

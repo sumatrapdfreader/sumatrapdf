@@ -451,6 +451,10 @@ __LA_DECL int archive_read_open_fd(struct archive *, int _fd,
 /* Read an archive that's already open, using a FILE *. */
 /* Note: DO NOT use this with tape drives. */
 __LA_DECL int archive_read_open_FILE(struct archive *, FILE *_file);
+/* SumatraPDF: Read an archive from a Win32 IStream. */
+#ifdef _WIN32
+__LA_DECL int archive_read_open_istream(struct archive *, IStream *, ULONG);
+#endif
 
 /* Parses and returns next entry header. */
 __LA_DECL int archive_read_next_header(struct archive *,
@@ -472,6 +476,9 @@ __LA_DECL __LA_SSIZE_T		 archive_read_data(struct archive *,
 
 /* Seek within the body of an entry.  Similar to lseek(2). */
 __LA_DECL __LA_INT64_T archive_seek_data(struct archive *, __LA_INT64_T, int);
+
+/* SumatraPDF: seek freely within the file (to header offsets) */
+__LA_DECL __LA_INT64_T archive_read_seek(struct archive *, __LA_INT64_T, int);
 
 /*
  * A zero-copy version of archive_read_data that also exposes the file offset

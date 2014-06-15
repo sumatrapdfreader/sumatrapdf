@@ -1132,6 +1132,12 @@ public:
     virtual ~CbrEngineImpl() { delete cbrFile; }
 
     virtual BaseEngine *Clone() {
+        if (fileStream) {
+            ScopedComPtr<IStream> stm;
+            HRESULT res = fileStream->Clone(&stm);
+            if (SUCCEEDED(res))
+                return CreateFromStream(stm);
+        }
         if (fileName)
             return CreateFromFile(fileName);
         return NULL;
@@ -1140,12 +1146,15 @@ public:
     virtual const WCHAR *GetDefaultFileExt() const { return L".cbr"; }
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     RarFile *cbrFile;
     Vec<size_t> fileIdxs;
 
     bool LoadFromFile(const WCHAR *fileName);
+    bool LoadFromStream(IStream *stream);
+    bool FinishLoading();
 
     virtual char *GetImageData(int pageNo, size_t& len);
 };
@@ -1158,6 +1167,23 @@ bool CbrEngineImpl::LoadFromFile(const WCHAR *file)
 
     cbrFile = new RarFile(fileName);
 
+    return FinishLoading();
+}
+
+bool CbrEngineImpl::LoadFromStream(IStream *stream)
+{
+    if (!stream)
+        return false;
+    fileStream = stream;
+    fileStream->AddRef();
+
+    cbrFile = new RarFile(stream);
+
+    return FinishLoading();
+}
+
+bool CbrEngineImpl::FinishLoading()
+{
     Vec<const WCHAR *> allFileNames;
     Vec<const WCHAR *> pageFileNames;
 
@@ -1209,6 +1235,16 @@ BaseEngine *CbrEngineImpl::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+BaseEngine *CbrEngineImpl::CreateFromStream(IStream *stream)
+{
+    CbrEngineImpl *engine = new CbrEngineImpl();
+    if (!engine->LoadFromStream(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 namespace CbxEngine {
 
 #define RAR_SIGNATURE       "Rar!\x1A\x07\x00"
@@ -1254,8 +1290,10 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 BaseEngine *CreateFromStream(IStream *stream)
 {
-    // TODO: UnRAR doesn't support reading from arbitrary data streams
-    return CbzEngineImpl::CreateFromStream(stream);
+    BaseEngine *engine = CbzEngineImpl::CreateFromStream(stream);
+    if (!engine)
+        engine = CbrEngineImpl::CreateFromStream(stream);
+    return engine;
 }
 
 }

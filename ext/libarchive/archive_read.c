@@ -881,6 +881,17 @@ archive_seek_data(struct archive *_a, int64_t offset, int whence)
 	return (a->format->seek_data)(a, offset, whence);
 }
 
+/* SumatraPDF: seek freely within the file (to header offsets) */
+int64_t
+archive_read_seek(struct archive *_a, int64_t offset, int whence)
+{
+	struct archive_read *a = (struct archive_read *)_a;
+	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_ANY,
+	    "archive_read_seek");
+	_a->state = ARCHIVE_STATE_HEADER;
+	return __archive_read_seek(a, offset, whence);
+}
+
 /*
  * Read the next block of entry data from the archive.
  * This is a zero-copy interface; the client receives a pointer,

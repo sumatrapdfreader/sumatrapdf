@@ -89,7 +89,8 @@ size_t ZipFile::GetFileIndex(const WCHAR *fileName)
 
 size_t ZipFile::GetFileCount() const
 {
-    assert(filenames.Count() == fileinfo.Count());
+    CrashIf(filenames.Count() != fileinfo.Count());
+    CrashIf(filenames.Count() != filepos.Count());
     return filenames.Count();
 }
 

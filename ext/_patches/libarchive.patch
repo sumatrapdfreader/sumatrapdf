@@ -1,6 +1,38 @@
+diff -rPu5 libarchive.orig\archive.h libarchive\archive.h
+--- libarchive.orig\archive.h	Thu Jun 12 15:33:23 2014
++++ libarchive\archive.h	Sun Jun 15 03:23:48 2014
+@@ -449,10 +449,14 @@
+ __LA_DECL int archive_read_open_fd(struct archive *, int _fd,
+ 		     size_t _block_size);
+ /* Read an archive that's already open, using a FILE *. */
+ /* Note: DO NOT use this with tape drives. */
+ __LA_DECL int archive_read_open_FILE(struct archive *, FILE *_file);
++/* SumatraPDF: Read an archive from a Win32 IStream. */
++#ifdef _WIN32
++__LA_DECL int archive_read_open_istream(struct archive *, IStream *, ULONG);
++#endif
+ 
+ /* Parses and returns next entry header. */
+ __LA_DECL int archive_read_next_header(struct archive *,
+ 		     struct archive_entry **);
+ 
+@@ -470,10 +474,13 @@
+ __LA_DECL __LA_SSIZE_T		 archive_read_data(struct archive *,
+ 				    void *, size_t);
+ 
+ /* Seek within the body of an entry.  Similar to lseek(2). */
+ __LA_DECL __LA_INT64_T archive_seek_data(struct archive *, __LA_INT64_T, int);
++
++/* SumatraPDF: seek freely within the file (to header offsets) */
++__LA_DECL __LA_INT64_T archive_read_seek(struct archive *, __LA_INT64_T, int);
+ 
+ /*
+  * A zero-copy version of archive_read_data that also exposes the file offset
+  * of each returned block.  Note that the client has no way to specify
+  * the desired size of the block.  The API does guarantee that offsets will
 diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
 --- libarchive.orig\archive_read.c	Thu Jun 12 15:33:22 2014
-+++ libarchive\archive_read.c	Thu Jun 12 14:00:51 2014
++++ libarchive\archive_read.c	Sun Jun 15 02:31:28 2014
 @@ -452,11 +452,11 @@
  int
  archive_read_open1(struct archive *_a)
@@ -14,6 +46,137 @@ diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
  	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_NEW,
  	    "archive_read_open");
  	archive_clear_error(&a->archive);
+@@ -877,10 +877,21 @@
+ 		    "No format_seek_data_block function registered");
+ 		return (ARCHIVE_FATAL);
+ 	}
+ 
+ 	return (a->format->seek_data)(a, offset, whence);
++}
++
++/* SumatraPDF: seek freely within the file (to header offsets) */
++int64_t
++archive_read_seek(struct archive *_a, int64_t offset, int whence)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_ANY,
++	    "archive_read_seek");
++	_a->state = ARCHIVE_STATE_HEADER;
++	return __archive_read_seek(a, offset, whence);
+ }
+ 
+ /*
+  * Read the next block of entry data from the archive.
+  * This is a zero-copy interface; the client receives a pointer,
+diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_open_istream.c
+--- libarchive.orig\archive_read_open_istream.c	Thu Jan 01 01:00:00 1970
++++ libarchive\archive_read_open_istream.c	Sun Jun 15 03:43:52 2014
+@@ -0,0 +1,105 @@
++/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
++   License: Simplified BSD (see COPYING.BSD) */
++
++#ifndef _WIN32
++#error archive_read_open_istream is only supported for Win32
++#endif
++#define COBJMACROS
++
++#include "archive_platform.h"
++
++#include "archive.h"
++#include "archive_private.h"
++
++struct read_istream_data {
++	IStream	*stream;
++	ULONG	 block_size;
++	char	 buffer[1];
++};
++
++static ssize_t
++istream_read(struct archive *a, void *client_data, const void **buff)
++{
++	struct read_istream_data *mine = client_data;
++	ULONG cbRead = mine->block_size;
++	HRESULT res;
++
++	res = IStream_Read(mine->stream, mine->buffer, mine->block_size, &cbRead);
++	if (FAILED(res)) {
++		archive_set_error(a, EIO, "IStream read error: %x", res);
++		return ARCHIVE_FATAL;
++	}
++
++	*buff = mine->buffer;
++	return cbRead;
++}
++
++static int64_t
++istream_seek(struct archive *a, void *client_data, int64_t request, int whence)
++{
++	struct read_istream_data *mine = client_data;
++	LARGE_INTEGER off;
++	ULARGE_INTEGER n;
++	HRESULT res;
++
++	off.QuadPart = request;
++	res = IStream_Seek(mine->stream, off, whence, &n);
++	if (FAILED(res)) {
++		archive_set_error(a, EIO, "IStream seek error: %x", res);
++		return ARCHIVE_FATAL;
++	}
++
++	return n.QuadPart;
++}
++
++static int64_t
++istream_skip(struct archive *a, void *client_data, int64_t request)
++{
++	return istream_seek(a, client_data, request, SEEK_CUR);
++}
++
++static int
++istream_close(struct archive *a, void *client_data)
++{
++	struct read_istream_data *mine = client_data;
++
++	IUnknown_Release(mine->stream);
++	free(mine);
++
++	return ARCHIVE_OK;
++}
++
++int
++archive_read_open_istream(struct archive *a, IStream *stream, ULONG block_size)
++{
++	struct read_istream_data *mine;
++	LARGE_INTEGER zero = { 0 };
++	HRESULT res;
++
++	res = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
++	if (FAILED(res)) {
++		archive_set_error(a, EINVAL, "IStream isn't seekable");
++		return ARCHIVE_FATAL;
++	}
++
++	mine = calloc(1, sizeof(*mine) + block_size);
++	if (!mine) {
++		archive_set_error(a, ENOMEM, "No memory");
++		return ARCHIVE_FATAL;
++	}
++
++	mine->block_size = block_size;
++	mine->stream = stream;
++	IUnknown_AddRef(stream);
++
++	if (archive_read_append_callback_data(a, mine) != ARCHIVE_OK) {
++		istream_close(a, mine);
++		return ARCHIVE_FATAL;
++	}
++	archive_read_set_read_callback(a, istream_read);
++	archive_read_set_seek_callback(a, istream_seek);
++	archive_read_set_skip_callback(a, istream_skip);
++	archive_read_set_close_callback(a, istream_close);
++
++	return archive_read_open1(a);
++}
 diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_read_support_format_rar.c
 --- libarchive.orig\archive_read_support_format_rar.c	Thu Jun 12 15:33:23 2014
 +++ libarchive\archive_read_support_format_rar.c	Thu Jun 12 15:36:40 2014

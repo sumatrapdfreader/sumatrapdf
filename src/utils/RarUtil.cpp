@@ -19,7 +19,44 @@ extern "C" {
 
 RarFile::RarFile(const WCHAR *path) : path(str::Dup(path))
 {
+#ifdef USE_LIBARCHIVE
+    arc = archive_read_new();
+    if (arc) {
+        archive_read_support_format_rar(arc);
+        int r = archive_read_open_filename_w(arc, path, 10240);
+        if (r != ARCHIVE_OK) {
+            archive_read_free(arc);
+            arc = NULL;
+        }
+    }
+#endif
     ExtractFilenames();
+}
+
+RarFile::RarFile(IStream *stream) : path(NULL)
+{
+#ifdef USE_LIBARCHIVE
+    arc = archive_read_new();
+    if (arc) {
+        archive_read_support_format_rar(arc);
+        int r = archive_read_open_istream(arc, stream, 65536);
+        if (r != ARCHIVE_OK) {
+            archive_read_free(arc);
+            arc = NULL;
+        }
+    }
+#endif
+    ExtractFilenames();
+}
+
+RarFile::~RarFile()
+{
+#ifdef USE_LIBARCHIVE
+    if (arc) {
+        archive_read_close(arc);
+        archive_read_free(arc);
+    }
+#endif
 }
 
 size_t RarFile::GetFileCount() const
@@ -44,83 +81,54 @@ char *RarFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
     return GetFileDataByIdx(GetFileIndex(fileName), len);
 }
 
-// TODO: implement the following without the need for reparsing
-// most of the file for every call to RarFile::GetFileDataByIdx
-
 #ifdef USE_LIBARCHIVE
 
 void RarFile::ExtractFilenames()
 {
-    if (!path)
+    if (!arc)
         return;
 
-    struct archive *a = archive_read_new();
-    if (!a)
-        return;
-    archive_read_support_format_rar(a);
-    int r = archive_read_open_filename_w(a, path, 10240);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        return;
-    }
-
-    for (;;) {
+    int r = ARCHIVE_OK;
+    while (ARCHIVE_OK == r) {
         struct archive_entry *entry;
-        r = archive_read_next_header(a, &entry);
-        if (ARCHIVE_EOF == r || r != ARCHIVE_OK)
-            break;
-        const WCHAR *name = archive_entry_pathname_w(entry);
-        filenames.Append(str::Dup(name));
+        r = archive_read_next_header(arc, &entry);
+        if (ARCHIVE_OK == r) {
+            const WCHAR *name = archive_entry_pathname_w(entry);
+            filenames.Append(str::Dup(name));
+            filepos.Append(archive_read_header_position(arc));
+        }
     }
-
-    archive_read_close(a);
-    archive_read_free(a);
 }
 
 char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
-    if (!path || fileindex > filenames.Count())
+    if (!arc || fileindex > filepos.Count())
         return NULL;
 
-    struct archive *a = archive_read_new();
-    if (!a)
+    int64_t r = archive_read_seek(arc, filepos.At(fileindex), SEEK_SET);
+    if (r < 0)
         return NULL;
-    archive_read_support_format_rar(a);
-    int r = archive_read_open_filename_w(a, path, 10240);
-    if (r != ARCHIVE_OK) {
-        archive_read_free(a);
-        return NULL;
-    }
-
-    for (size_t i = 0; i < fileindex; i++) {
-        struct archive_entry *entry;
-        archive_read_next_header(a, &entry);
-    }
 
     str::Str<char> data;
     struct archive_entry *entry;
-    r = archive_read_next_header(a, &entry);
-    if (ARCHIVE_OK == r) {
-        for (;;) {
-            const void *buffer;
-            size_t size;
-            int64_t offset;
-            int r = archive_read_data_block(a, &buffer, &size, &offset);
-            if (ARCHIVE_EOF == r || r != ARCHIVE_OK)
-                break;
-            data.Append((char *)buffer, size);
-        }
-        if (ARCHIVE_EOF == r)
-            r = ARCHIVE_OK;
-        // zero-terminate for convenience
-        data.Append("\0\0", 2);
-    }
-
-    archive_read_close(a);
-    archive_read_free(a);
-
+    r = archive_read_next_header(arc, &entry);
     if (r != ARCHIVE_OK)
         return NULL;
+
+    for (;;) {
+        const void *buffer;
+        size_t size;
+        int64_t offset;
+        r = archive_read_data_block(arc, &buffer, &size, &offset);
+        if (ARCHIVE_EOF == r)
+            break;
+        if (r != ARCHIVE_OK)
+            return NULL;
+        data.Append((char *)buffer, size);
+    }
+    // zero-terminate for convenience
+    data.Append("\0\0", 2);
+
     if (len)
         *len = data.Size() - 2;
     return data.StealData();
