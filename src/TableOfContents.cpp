@@ -355,6 +355,24 @@ void LoadTocTree(WindowInfo *win)
     GetLeftRightCounts(win->tocRoot, l2r, r2l);
     bool isRTL = r2l > l2r;
 
+    if (win->AsEbook()) {
+        COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
+        if (gGlobalPrefs->useSysColors)
+            bgColor = GetSysColor(COLOR_WINDOW);
+        TreeView_SetBkColor(win->hwndTocTree, bgColor);
+        // TODO: more work needed to to ensure consistent look of the ebook window:
+        // - change the tree item text color
+        // - change the tree item background color when selected (for both focused and non-focused cases)
+        // - "Bookmarks" header and close buttom should also match ebook window background
+        // - splitter color should be derived from backround color (e.g. change the hue so that
+        //   it has a matching color but subtly different. alternatively we could use exactly the same
+        //   color but add some indicator about splitter (some programs use 3 dots in the middle)
+        // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
+        //   and match their colors as well
+    }
+    else {
+        TreeView_SetBkColor(win->hwndTocTree, RGB(255, 255, 255));
+    }
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     PopulateTocTreeView(win->hwndTocTree, win->tocRoot, win->tocState);

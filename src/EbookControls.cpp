@@ -166,6 +166,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
         bgColor = GetSysColor(COLOR_WINDOW);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->mainWnd->SetStyle(styleMainWnd);
+    // TODO: update the background of tree control and other colors that are supposed to match background color
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
