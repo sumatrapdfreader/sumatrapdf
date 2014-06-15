@@ -27,7 +27,7 @@ istream_read(struct archive *a, void *client_data, const void **buff)
 	res = IStream_Read(mine->stream, mine->buffer, mine->block_size, &cbRead);
 	if (FAILED(res)) {
 		archive_set_error(a, EIO, "IStream read error: %x", res);
-		return ARCHIVE_FATAL;
+		return -1;
 	}
 
 	*buff = mine->buffer;
@@ -46,7 +46,7 @@ istream_seek(struct archive *a, void *client_data, int64_t request, int whence)
 	res = IStream_Seek(mine->stream, off, whence, &n);
 	if (FAILED(res)) {
 		archive_set_error(a, EIO, "IStream seek error: %x", res);
-		return ARCHIVE_FATAL;
+		return ARCHIVE_FAILED;
 	}
 
 	return n.QuadPart;
@@ -55,7 +55,8 @@ istream_seek(struct archive *a, void *client_data, int64_t request, int whence)
 static int64_t
 istream_skip(struct archive *a, void *client_data, int64_t request)
 {
-	return istream_seek(a, client_data, request, SEEK_CUR);
+	int64_t r = istream_seek(a, client_data, request, SEEK_CUR);
+	return r >= 0 ? request : r;
 }
 
 static int

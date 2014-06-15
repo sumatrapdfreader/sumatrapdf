@@ -32,8 +32,22 @@ diff -rPu5 libarchive.orig\archive.h libarchive\archive.h
   * the desired size of the block.  The API does guarantee that offsets will
 diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
 --- libarchive.orig\archive_read.c	Thu Jun 12 15:33:22 2014
-+++ libarchive\archive_read.c	Sun Jun 15 02:31:28 2014
-@@ -452,11 +452,11 @@
++++ libarchive\archive_read.c	Sun Jun 15 04:22:37 2014
+@@ -192,11 +192,12 @@
+ 			int64_t get, ask = request;
+ 			if (ask > skip_limit)
+ 				ask = skip_limit;
+ 			get = (self->archive->client.skipper)
+ 				(&self->archive->archive, self->data, ask);
+-			if (get == 0)
++			/* SumatraPDF: handle errors (prevent infinite loop) */
++			if (get <= 0)
+ 				return (total);
+ 			request -= get;
+ 			total += get;
+ 		}
+ 	} else if (self->archive->client.seeker != NULL
+@@ -452,11 +453,11 @@
  int
  archive_read_open1(struct archive *_a)
  {
@@ -46,7 +60,7 @@ diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
  	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_NEW,
  	    "archive_read_open");
  	archive_clear_error(&a->archive);
-@@ -877,10 +877,21 @@
+@@ -877,10 +878,21 @@
  		    "No format_seek_data_block function registered");
  		return (ARCHIVE_FATAL);
  	}
@@ -70,8 +84,8 @@ diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
   * This is a zero-copy interface; the client receives a pointer,
 diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_open_istream.c
 --- libarchive.orig\archive_read_open_istream.c	Thu Jan 01 01:00:00 1970
-+++ libarchive\archive_read_open_istream.c	Sun Jun 15 03:43:52 2014
-@@ -0,0 +1,105 @@
++++ libarchive\archive_read_open_istream.c	Sun Jun 15 04:43:18 2014
+@@ -0,0 +1,106 @@
 +/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
 +
@@ -101,7 +115,7 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +	res = IStream_Read(mine->stream, mine->buffer, mine->block_size, &cbRead);
 +	if (FAILED(res)) {
 +		archive_set_error(a, EIO, "IStream read error: %x", res);
-+		return ARCHIVE_FATAL;
++		return -1;
 +	}
 +
 +	*buff = mine->buffer;
@@ -120,7 +134,7 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +	res = IStream_Seek(mine->stream, off, whence, &n);
 +	if (FAILED(res)) {
 +		archive_set_error(a, EIO, "IStream seek error: %x", res);
-+		return ARCHIVE_FATAL;
++		return ARCHIVE_FAILED;
 +	}
 +
 +	return n.QuadPart;
@@ -129,7 +143,8 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +static int64_t
 +istream_skip(struct archive *a, void *client_data, int64_t request)
 +{
-+	return istream_seek(a, client_data, request, SEEK_CUR);
++	int64_t r = istream_seek(a, client_data, request, SEEK_CUR);
++	return r >= 0 ? request : r;
 +}
 +
 +static int

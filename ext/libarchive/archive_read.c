@@ -194,7 +194,8 @@ client_skip_proxy(struct archive_read_filter *self, int64_t request)
 				ask = skip_limit;
 			get = (self->archive->client.skipper)
 				(&self->archive->archive, self->data, ask);
-			if (get == 0)
+			/* SumatraPDF: handle errors (prevent infinite loop) */
+			if (get <= 0)
 				return (total);
 			request -= get;
 			total += get;
