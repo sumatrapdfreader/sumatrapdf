@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d20c175887327aff9637625e01c6a22b3b9648d7
+c5e1e03036e5cde150768622dcb90d59478eec7d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6431,6 +6431,12 @@ tw:當前的檔案
 uk:Поточний файл
 uz:Joriy fayl
 vn:Tập tin hiện hành
+:Cursor position:
+de:Zeigerposition:
+fr:Position du curseur :
+hr:Pozicija pokazivača:
+it:Posizione cursore
+ja:カーソル位置：
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
@@ -7393,60 +7399,7 @@ tw:下一停頓頁面(&O)\tAlt+->
 uk:Вперед\tAlt+Права стрілка
 uz:&Oldinga\tAlt+->
 vn:Tiếp tục\tAlt+Mũi tên phải
-:F&ullscreen\tCtrl+L
-am:Ամ&բողջ էկրանով\tCtrl+L
-ar:بحجم الشاشة\tCtrl+L
-az:Tam ek&ran\tCtrl+L
-bg:&Цял Екран\tCtrl+L
-br:Tela cheia\tCtrl+L
-bs:Cijeli ekran\tCtrl+L
-ca-xv:Pantalla &completa\tCtrl+L
-ca:Pantalla &completa\tCtrl+L
-cn:全屏显示(&U)\tCtrl+L
-cy:Sgrin Lawn\tCtrl+L
-cz:&Celá obrazovka\tCtrl+L
-de:&Vollbild\tStrg+L
-dk:F&uldskærmsvisning\tCtrl+L
-el:&Πλήρης Οθόνη\tCtrl+L
-es:Pantalla completa\tCtrl+L
-et:&Täisekraanvaade\tCtrl+L
-eu:&Ikusleiho-osoan\tKtrl+L
-fa:&تمام‌صفحه\tCtrl+L
-fi:Koko &näyttö\tCtrl+L
-fr:Plein  écran\tCtrl+L
-ga:Lánscáileán\tCtrl+L
-gl:&Pantalla completa\tCtrl+L
-he:מסך מלא\tCtrl+L
-hi:पूरा परदा\tCtrl+L
-hr:Cijeli zaslon\tCtrl+L
-hu:Teljes képernyő\tCtrl+L
-id:Selayar Penuh\tCtrl+L
-it:S&chermo intero\t<Ctrl>+L
-ja:全画面表示(&U)\tCtrl+L
-kr:전체 화면(&U)\tCtrl+L
-ku:پڕ&بەشاشە\tCtrl+L
-mk:На цел екран\tCtrl+L
-my:F&ullscreen\tCtrl+L
-ne:पू&र्णस्क्रिन\tCtrl+L
-nl:Volledig scherm\tCtrl+L
-no:Fullskjerm\tCtrl+L
-pl:Pełny ekran\tCtrl+L
-pt:Ecrã co&mpleto\tCtrl+L
-ro:Tot ecranul\tCtrl+L
-ru:Полный &экран\tCtrl+L
-sk:&Na celú obrazovku\tCtrl+L
-sl:Celozaslonsko\tCtrl+L
-sp-rs:Ceo ekran\tCtrl+L
-sq:Ekran i p&lotë\tCtrl+L
-sr-rs:Цео екран\tCtrl+L
-sv:Fullskärm\tCtrl+L
-ta:முழுத்திரை
-tr:&Tam Ekran\tCtrl+L
-tw:全螢幕顯示(&U)\tCtrl+L
-uk:На цілий екран\tCtrl+L
-uz:To'liq &ekran\tCtrl+L
-vn:Toàn màn hình\tCtrl+L
-:F&ullscreen\tCtrl+Shift+L
+:F&ullscreen\tF11
 af:Volskerm\tCtrl+Shift+L
 am:Ամ&բողջ էկրանով\tCtrl+Shift+L
 ar:بحجم الشاشة\tCtrl+Shift+L
@@ -7461,7 +7414,7 @@ ca:Pantalla &completa\tCtrl+Shift+L
 cn:全屏显示(&U)\tCtrl+Shift+L
 cy:Sgrin Lawn\tCtrl+Shift+L
 cz:&Celá obrazovka\tCtrl+Shift+L
-de:&Vollbild\tStrg+Umschalt+L
+de:&Vollbild\tF11
 dk:F&uldskærmsvisning\tCtrl+Shift+L
 el:&Πλήρης Οθόνη\tCtrl+Shift+L
 es:Pantalla completa\tCtrl+Mayús+L
@@ -10007,6 +9960,7 @@ he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך ע�
 hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
 id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
 it:Mantieni installato il plugin PDF del &browser (non più supportato)
+ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
@@ -10016,6 +9970,7 @@ sr-rs:Задржи ПДФ плугин инсталисан (није подрж
 tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
 uk:Залишити розширення для браузера (більше не підтримується)
+vn:Giữ lại Plugin PDF đã cài đặt cho các trình duyệt (không còn được hỗ trợ)
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
 ar:السماح لويندوز بالبحث في ملفات PDF
@@ -10110,59 +10065,6 @@ tw:讓 Windows 顯示 PDF 文件的預覽(&P)
 uk:Дозволити Windows здійснювати попередній перегляд для PDF
 uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
-:Loading file %s...
-am:%s ֆայլը բացվում է...
-ar:تحميل الملف %s...
-az:%s faylı yüklənilir...
-bg:Зареждане на файл %s...
-br:Carregando arquivo %s...
-bs:Učitavanje fajl %s...
-ca-xv:S'està carregant el fitxer %s...
-ca:S'està carregant el fitxer %s...
-cn:正在加载文件 %s...
-cy:Llwytho ffeil %s...
-cz:Načítání souboru %s...
-de:%s wird geladen…
-dk:Indlæser fil %s...
-el:Φόρτωση του αρχείου %s
-es:Cargando archivo %s...
-et:Faili %s laadimine...
-eu:%s agiria gertatzen...
-fa:در حال بازکردن پرونده‌ی %s...
-fi:Ladataan tiedostoa %s...
-fr:Chargement du fichier %s...
-ga:Ag luchtú an comhad %s...
-gl:Cargando o ficheiro %s...
-he:טוען קובץ %s...
-hi:%s फाइल लोड हो रहा
-hr:Pokretanje datoteke %s...
-hu:Fájl beolvasása %s...
-id:Memuat berkas %s...
-it:Caricamento file %s...
-ja:%s を読込中…
-kr:%s 파일 불러오는 중...
-ku:%s کردنەوەی فایلی ...
-mk:Ја вчитувам датотеката %s...
-my:Memuatkan fail %s...
-ne:%s फाइल लोड हुँदैछ ...
-nl:Bestand %s laden...
-no:Laster fil %s...
-pl:Wczytywanie pliku %s...
-pt:A carregar o ficheiro %s...
-ro:Incarcare fisier %s...
-ru:Загрузка файла %s...
-sk:Načítavanie súboru %s...
-sl:Nalaganje datoteke %s …
-sp-rs:Učitavanje datoteke %s...
-sq:Hap skedën %s...
-sr-rs:Учитавање датотеке %s...
-sv:Laddar fil %s...
-ta:%s கோப்பு ஏற்றப்படுகிறது
-tr:%s dosyası yükleniyor...
-tw:正在載入檔案 %s...
-uk:Завантажується файл %s...
-uz:%s fayli yuklanmoqda...
-vn:Đang mở tập tin %s...
 :MB
 af:MB
 am:ՄԲ
@@ -12488,7 +12390,7 @@ tw:Postscript 文件
 uk:Документи postscript
 uz:Postscript hujjatlari
 vn:Tập tin Postscript
-:Pr&esentation\tCtrl+L
+:Pr&esentation\tF5
 am:Ներ&կայացումը\tCtrl+L
 ar:عرض ملء الشاشة \tCtrl+L
 az:Tə&qdimat\tCtrl+L
@@ -12500,7 +12402,7 @@ ca:Pr&esentació\tCtrl+L
 cn:幻灯片(&E)\tCtrl+L
 cy:Cyflwyniad\tCtrl+L
 cz:Pr&ezentace\tCtrl+L
-de:&Präsentation\tStrg+L
+de:&Präsentation\tF5
 dk:H&ele skærmen\tCtrl+L
 el:&Παρουσίαση\tCtrl+L
 es:Pr&esentación\tCtrl+L
@@ -13978,6 +13880,11 @@ tw:選擇 SumatraPDF 應被安裝的資料夾：
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
 uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
+:Selection:
+de:Auswahl:
+fr:Sélection :
+hr:Odabir:
+it:Selezione
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
