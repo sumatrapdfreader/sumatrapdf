@@ -510,7 +510,7 @@ static pdf_obj *sweepref(pdf_document *doc, pdf_write_options *opts, pdf_obj *ob
 	int gen = pdf_to_gen(obj);
 	fz_context *ctx = doc->ctx;
 
-	if (num < 0 || num >= pdf_xref_len(doc))
+	if (num <= 0 || num >= pdf_xref_len(doc))
 		return NULL;
 	if (opts->use_list[num])
 		return NULL;

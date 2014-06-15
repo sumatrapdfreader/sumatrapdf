@@ -8,7 +8,7 @@ pdf_is_stream(pdf_document *doc, int num, int gen)
 {
 	pdf_xref_entry *entry;
 
-	if (num < 0 || num >= pdf_xref_len(doc))
+	if (num <= 0 || num >= pdf_xref_len(doc))
 		return 0;
 
 	pdf_cache_object(doc, num, gen);
@@ -405,7 +405,7 @@ pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num
 {
 	pdf_xref_entry *x;
 
-	if (num < 0 || num >= pdf_xref_len(doc))
+	if (num <= 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
 	pdf_cache_object(doc, num, gen);
@@ -422,7 +422,7 @@ pdf_open_image_stream(pdf_document *doc, int num, int gen, int orig_num, int ori
 {
 	pdf_xref_entry *x;
 
-	if (num < 0 || num >= pdf_xref_len(doc))
+	if (num <= 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
 	pdf_cache_object(doc, num, gen);
