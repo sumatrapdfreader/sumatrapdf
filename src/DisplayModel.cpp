@@ -785,6 +785,9 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
 
 RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
 {
+    if (!ValidPageNo(pageNo))
+        pageNo = GetPageNextToPoint(r.TL());
+
     PointD TL = CvtFromScreen(r.TL(), pageNo);
     PointD BR = CvtFromScreen(r.BR(), pageNo);
     return RectD::FromXY(TL, BR);

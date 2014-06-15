@@ -1700,9 +1700,9 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
     }
 }
 
-enum MeasureUnit { Unit_pt, Unit_mm, Unit_in };
+enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in };
 
-static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasureUnit unit)
+static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasurementUnit unit)
 {
     if (pt.x < 0)
         pt.x = 0;
@@ -1727,8 +1727,8 @@ static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasureUnit un
 
 static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd=NULL)
 {
-    static MeasureUnit unit = Unit_pt;
-    // toggle measure unit by repeatedly invoking the helper
+    static MeasurementUnit unit = Unit_pt;
+    // toggle measurement unit by repeatedly invoking the helper
     if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
         unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
 
@@ -1736,16 +1736,14 @@ static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, Notification
     BaseEngine *engine = win->AsFixed()->engine();
     PointD pt = win->AsFixed()->CvtFromScreen(pos);
     ScopedMem<WCHAR> posStr(FormatCursorPosition(engine, pt, unit)), selStr;
-    if (MA_SELECTING == win->mouseAction) {
-        RectD rc = win->AsFixed()->CvtFromScreen(win->selectionRect);
-        pt = PointD(rc.dx, rc.dy);
+    if (!win->selectionMeasure.IsEmpty()) {
+        pt = PointD(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
-    // TODO: translate once this is good enough
-    ScopedMem<WCHAR> posInfo(str::Format(L"%s %s", L"Cursor position:", posStr));
+    ScopedMem<WCHAR> posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr));
     if (selStr)
-        posInfo.Set(str::Format(L"%s - %s %s", posInfo, L"Selection:", selStr));
+        posInfo.Set(str::Format(L"%s - %s %s", posInfo, _TR("Selection:"), selStr));
     if (!wnd)
         win->ShowNotification(posInfo, false, false, NG_CURSOR_POS_HELPER);
     else

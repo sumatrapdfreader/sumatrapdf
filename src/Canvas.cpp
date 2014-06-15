@@ -195,8 +195,11 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     win.dragPrevPos = PointI(x, y);
 
     NotificationWnd *wnd = win.notifications->GetForGroup(NG_CURSOR_POS_HELPER);
-    if (wnd)
+    if (wnd) {
+        if (MA_SELECTING == win.mouseAction)
+            win.selectionMeasure = win.AsFixed()->CvtFromScreen(win.selectionRect).Size();
         UpdateCursorPositionHelper(&win, PointI(x, y), wnd);
+    }
 }
 
 static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
@@ -249,8 +252,11 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
     if (MA_DRAGGING == win.mouseAction)
         OnDraggingStop(win, x, y, !didDragMouse);
-    else
+    else {
         OnSelectionStop(&win, x, y, !didDragMouse);
+        if (MA_SELECTING == win.mouseAction && win.showSelection)
+            win.selectionMeasure = win.AsFixed()->CvtFromScreen(win.selectionRect).Size();
+    }
 
     DisplayModel *dm = win.AsFixed();
     PointD ptPage = dm->CvtFromScreen(PointI(x, y));

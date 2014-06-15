@@ -160,6 +160,9 @@ public:
      * to user coordinates for each page which has not empty intersection with it */
     Vec<SelectionOnPage> *selectionOnPage;
 
+    // size of the current rectangular selection in document units
+    SizeD           selectionMeasure;
+
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLinkInfo> staticLinks;
 

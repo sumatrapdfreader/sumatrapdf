@@ -75,6 +75,7 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
     delete win->selectionOnPage;
     win->selectionOnPage = NULL;
     win->showSelection = false;
+    win->selectionMeasure = SizeD();
 
     if (alsoTextSel && win->AsFixed())
         win->AsFixed()->textSelection->Reset();
