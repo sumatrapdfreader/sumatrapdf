@@ -12,6 +12,7 @@ extern "C" {
 #define LIBARCHIVE_STATIC
 #include "../../ext/libarchive/archive.h"
 #include "../../ext/libarchive/archive_entry.h"
+int archive_format_rar_read_reset_header(struct archive *a);
 }
 #else
 #include "../../ext/unrar/dll.hpp"
@@ -108,6 +109,8 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     int64_t r = archive_read_seek(arc, filepos.At(fileindex), SEEK_SET);
     if (r < 0)
         return NULL;
+    r = archive_format_rar_read_reset_header(arc);
+    CrashIf(r != ARCHIVE_OK);
 
     str::Str<char> data;
     struct archive_entry *entry;

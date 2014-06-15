@@ -194,7 +194,7 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +}
 diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_read_support_format_rar.c
 --- libarchive.orig\archive_read_support_format_rar.c	Thu Jun 12 15:33:23 2014
-+++ libarchive\archive_read_support_format_rar.c	Thu Jun 12 15:36:40 2014
++++ libarchive\archive_read_support_format_rar.c	Sun Jun 15 05:36:14 2014
 @@ -223,10 +223,11 @@
    time_t mtime;
    long mnsec;
@@ -247,6 +247,24 @@ diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_
    free(rar->dbo);
    if ((rar->dbo = calloc(1, sizeof(*rar->dbo))) == NULL)
    {
+@@ -2853,6 +2859,17 @@
+         return NULL;
+       return rar_read_ahead(a, min, avail);
+     }
+   }
+   return h;
++}
++
++/* SumatraPDF: allow rereading headers */
++void
++archive_format_rar_read_reset_header(struct archive *_a)
++{
++  struct archive_read *a = (struct archive_read *)_a;
++  struct rar *rar = (struct rar *)a->format->data;
++  free(rar->filename_save);
++  rar->filename_save = NULL;
++  _a->file_count--;
+ }
 diff -rPu5 libarchive.orig\archive_string.c libarchive\archive_string.c
 --- libarchive.orig\archive_string.c	Thu Jun 12 15:33:21 2014
 +++ libarchive\archive_string.c	Thu Jun 12 16:00:40 2014

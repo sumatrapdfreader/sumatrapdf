@@ -2862,3 +2862,20 @@ rar_read_ahead(struct archive_read *a, size_t min, ssize_t *avail)
   }
   return h;
 }
+
+/* SumatraPDF: allow rereading headers */
+int
+archive_format_rar_read_reset_header(struct archive *_a)
+{
+  struct archive_read *a = (struct archive_read *)_a;
+  struct rar *rar;
+  archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_HEADER,
+                      "archive_format_rar_read_reset_header");
+  if (!_a->archive_format_name || strcmp(_a->archive_format_name, "RAR") != 0)
+    return ARCHIVE_FAILED;
+  rar = (struct rar *)a->format->data;
+  free(rar->filename_save);
+  rar->filename_save = NULL;
+  _a->file_count--;
+  return ARCHIVE_OK;
+}
