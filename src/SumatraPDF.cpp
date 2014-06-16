@@ -1632,6 +1632,9 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
+    // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
+    UpdateToolbarAndScrollbarState(*win);
+    UpdateToolbarState(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
 
@@ -1639,10 +1642,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     UpdateToolbarPageText(win, pageCount);
     if (pageCount > 0)
         UpdateToolbarFindText(win);
-
-    // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
-    UpdateToolbarAndScrollbarState(*win);
-    UpdateToolbarState(win);
 
     win->tocState = tdata->tocState;
     if (win->isFullScreen || win->presentation != PM_DISABLED)
@@ -2200,7 +2199,6 @@ static void CloseDocumentInWindow(WindowInfo *win)
         win->AsChm()->RemoveParentHwnd();
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
-    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ClearTocBox(win);
     AbortFinding(win, true);
     delete win->linkOnLastButtonDown;
@@ -2215,6 +2213,7 @@ static void CloseDocumentInWindow(WindowInfo *win)
     win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
     win->mouseAction = MA_IDLE;
 
+    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     DeletePropertiesWindow(win->hwndFrame);
     UpdateToolbarPageText(win, 0);
     UpdateToolbarFindText(win);
