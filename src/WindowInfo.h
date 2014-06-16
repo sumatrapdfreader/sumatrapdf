@@ -120,6 +120,7 @@ public:
 
     HWND            hwndTabBar;
     bool            tabsVisible;
+    bool            tabsInTitlebar;
     // keeps the sequence of tab selection. This is needed for restoration 
     // of the previous tab when the current one is closed.
     Vec<TabData *> *tabSelectionHistory;

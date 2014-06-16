@@ -1347,6 +1347,8 @@ static WindowInfo* CreateWindowInfo()
         Touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
+    SetTabsInTitlebar(win, gGlobalPrefs->tabBarAsTitleBar);
+
     return win;
 }
 
@@ -2870,14 +2872,16 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
     // Tabbar and toolbar at the top
     if (win->tabsVisible && !win->presentation && !win->isFullScreen) {
+        int tabbarHeight = win->tabsInTitlebar && !IsZoomed(win->hwndFrame) ? int(1.3f * TABBAR_HEIGHT)
+                                                                            : TABBAR_HEIGHT;
         if (updateToolbars) {
-            SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
+            SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabbarHeight, SWP_NOZORDER);
             UpdateTabWidth(win);
         }
         // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
-        if (!win->IsAboutWindow()) {
-            rc.y += TABBAR_HEIGHT;
-            rc.dy -= TABBAR_HEIGHT;
+        if (!win->IsAboutWindow() || win->tabsInTitlebar) {
+            rc.y += tabbarHeight;
+            rc.dy -= tabbarHeight;
         }
     }
     if (gGlobalPrefs->showToolbar && !win->presentation && !win->isFullScreen && !win->AsEbook()) {
@@ -4233,6 +4237,31 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
     return 0;
 }
 
+#define INVALID_STATE 2
+void NCDrawFrame(HWND hwnd, WPARAM active = INVALID_STATE)
+{
+    HDC hdc = GetWindowDC(hwnd);
+
+    RECT rWindow, rClient;
+    GetWindowRect(hwnd, &rWindow);
+    GetClientRect(hwnd, &rClient);
+    // convert the client rectangle to window coordinates and exclude it from the clipping region
+    POINT pt = {rWindow.left, rWindow.top};
+    ScreenToClient(hwnd, &pt);
+    OffsetRect(&rClient, -pt.x, -pt.y);
+    ExcludeClipRect(hdc, rClient.left, rClient.top, rClient.right, rClient.bottom);
+    // convert the window rectangle, from screen to window coordinates, and draw the frame
+    OffsetRect(&rWindow, -rWindow.left, -rWindow.top);
+    int sysColorIndex = active == TRUE ? COLOR_GRADIENTACTIVECAPTION
+                      : active == FALSE ? COLOR_GRADIENTINACTIVECAPTION
+                      : hwnd == GetForegroundWindow() ? COLOR_GRADIENTACTIVECAPTION
+                                                      : COLOR_GRADIENTINACTIVECAPTION;
+    FillRect(hdc, &rWindow, GetSysColorBrush(sysColorIndex));
+    DrawEdge(hdc, &rWindow, EDGE_RAISED, BF_RECT | BF_FLAT);
+
+    ReleaseDC(hwnd, hdc);
+}
+
 // TODO: shared with Canvas.cpp - figure out better way of interaction
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int  gDeltaPerLine = 0;         // for mouse wheel logic
@@ -4430,6 +4459,50 @@ InitMouseWheelInfo:
             if (wParam == IDC_TABBAR) {
                 if (win)
                     return TabsOnNotify(win, lParam);
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_NCCALCSIZE:
+            if (win && win->tabsInTitlebar) {
+                RECT *r = wParam == TRUE ? &((LPNCCALCSIZE_PARAMS)lParam)->rgrc[0] : (RECT *)lParam;
+                RECT rWindow = *r;
+                // Let DefWindowProc calculate the client rectangle.
+                DefWindowProc(hwnd, msg, wParam, lParam);
+                RECT rClient = *r;
+                LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
+                int frameThickness = WS_THICKFRAME & style ? GetSystemMetrics(SM_CXSIZEFRAME)
+                    : WS_BORDER & style ? GetSystemMetrics(SM_CXFIXEDFRAME)
+                    : 0;
+                if (rClient.top > rWindow.top + frameThickness) {
+                    // Modify the client rectangle to include the caption's area.
+                    // Adding 1 prevents the hiding of the topmost windows, when this window is maximized.
+                    rClient.top = rWindow.top + frameThickness + 1;
+                    *r = rClient;
+                }
+                return 0;
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_NCPAINT:
+            if (win && win->tabsInTitlebar) {
+                NCDrawFrame(hwnd);
+                return 0;
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case WM_NCACTIVATE:
+            if (win && win->tabsInTitlebar && !IsIconic(hwnd)) {
+                NCDrawFrame(hwnd, wParam);
+                RedrawWindow(win->hwndTabBar, NULL, NULL, RDW_INVALIDATE);
+                return TRUE;
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        case 0xAE:  // WM_NCUAHDRAWCAPTION
+        case 0xAF:  // WM_NCUAHDRAWFRAME
+            if (win && win->tabsInTitlebar) {
+                NCDrawFrame(hwnd);
+                return TRUE;
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 

@@ -365,6 +365,9 @@ GlobalPrefs = [
 	Field("ShowSingleTab", Bool, True,
 		"if false, the tab bar is hidden if there's only a single tab",
 		expert=True, version="2.6"),
+	Field("TabBarAsTitleBar", Bool, False,
+		"if true, the tab bar replaces the title bar",
+		expert=True, version="2.6"),
 	# the below prefs don't apply to EbookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
