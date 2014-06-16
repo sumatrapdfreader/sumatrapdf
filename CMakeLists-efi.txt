@@ -1,8 +1,0 @@
-file (GLOB SRC
-	"tools/efi/*.cpp"
-	"tools/efi/*.h"
-	"src/utils/BaseUtil*"
-	"src/utils/BitManip.h"
-	"src/utils/Dict*"
-	"src/utils/StrUtil*"
-	)
