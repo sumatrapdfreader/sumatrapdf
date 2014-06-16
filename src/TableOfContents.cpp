@@ -371,7 +371,7 @@ void LoadTocTree(WindowInfo *win)
         //   and match their colors as well
     }
     else {
-        TreeView_SetBkColor(win->hwndTocTree, RGB(255, 255, 255));
+        TreeView_SetBkColor(win->hwndTocTree, -1);
     }
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);

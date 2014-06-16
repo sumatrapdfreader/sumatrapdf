@@ -729,12 +729,6 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 
-        if (GetSysColor(COLOR_WINDOWTEXT) == RGB(0, 0, 0) &&
-            GetSysColor(COLOR_WINDOW) == RGB(0xFF, 0xFF, 0xFF)) {
-            // remove the "use system colors" item if it wouldn't change anything
-            RemoveDialogItem(hDlg, IDC_USE_SYS_COLORS);
-        }
-
         if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fill the combo with the list of possible inverse search commands
             // Try to select a correct default when first showing this dialog
