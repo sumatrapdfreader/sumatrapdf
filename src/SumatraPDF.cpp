@@ -2271,6 +2271,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 
     if (win->AsFixed())
         win->AsFixed()->dontRenderFlag = true;
+    else if (win->AsEbook())
+        win->AsEbook()->EnableMessageHandling(false);
     if (win->presentation)
         ExitFullScreen(*win);
 

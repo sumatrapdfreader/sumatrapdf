@@ -219,6 +219,8 @@ LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
 {
+    wasHandled = false;
+
     if (WM_ENTERSIZEMOVE == msg) {
         inSizeMove = true;
     }
@@ -236,10 +238,6 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
 
     wndRoot->LayoutIfRequested();
 
-    wasHandled = false;
-    int x = GET_X_LPARAM(lParam);
-    int y = GET_Y_LPARAM(lParam);
-
     if (WM_SETCURSOR == msg) {
         POINT pt;
         if (GetCursorPos(&pt) && ScreenToClient(wndRoot->hwndParent, &pt))
@@ -247,14 +245,21 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
         return 0;
     }
 
-    if (WM_MOUSEMOVE == msg)
+    if (WM_MOUSEMOVE == msg) {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
         return OnMouseMove(wParam, x, y, wasHandled);
+    }
 
-    if (WM_LBUTTONUP == msg)
+    if (WM_LBUTTONUP == msg) {
+        int x = GET_X_LPARAM(lParam);
+        int y = GET_Y_LPARAM(lParam);
         return OnLButtonUp(wParam, x, y, wasHandled);
+    }
 
-    if (WM_GETMINMAXINFO == msg)
+    if (WM_GETMINMAXINFO == msg) {
         return OnGetMinMaxInfo((MINMAXINFO*)lParam, wasHandled);
+    }
 
     if (WM_PAINT == msg) {
         wndRoot->OnPaint(wndRoot->hwndParent);

@@ -332,7 +332,7 @@ void EbookController::TriggerLayout()
         // we haven't been sized yet
         return;
     }
-    CrashIf(size.dx < 100 || size.dy < 40);
+    // CrashIf(size.dx < 100 || size.dy < 40);
     if (!_doc.IsDocLoaded())
         return;
 
@@ -839,8 +839,10 @@ void EbookController::SetViewPortSize(SizeI size)
 
 LRESULT EbookController::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
 {
-    if (!handleMsgs)
+    if (!handleMsgs) {
+        wasHandled = false;
         return 0;
+    }
     return ctrls->mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
 }
 
