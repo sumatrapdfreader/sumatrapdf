@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2c58243d9a041aebcc515d1c9c8ec48f8922099e
+964805f4af1aa861ac9f2939b5f0650153b9b216
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6433,11 +6433,13 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
+cz:Pozice kurzoru:
 de:Zeigerposition:
 fr:Position du curseur :
 hr:Pozicija pokazivača:
 it:Posizione cursore
 ja:カーソル位置：
+ru:Позиция курсора:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
@@ -7414,7 +7416,7 @@ ca-xv:Pantalla &completa\tCtrl+Shift+L
 ca:Pantalla &completa\tCtrl+Shift+L
 cn:全屏显示(&U)\tCtrl+Shift+L
 cy:Sgrin Lawn\tCtrl+Shift+L
-cz:&Celá obrazovka\tCtrl+Shift+L
+cz:&Celá obrazovka\tF11
 de:&Vollbild\tF11
 dk:F&uldskærmsvisning\tCtrl+Shift+L
 el:&Πλήρης Οθόνη\tCtrl+Shift+L
@@ -12402,7 +12404,7 @@ ca-xv:Pr&esentació\tCtrl+L
 ca:Pr&esentació\tCtrl+L
 cn:幻灯片(&E)\tCtrl+L
 cy:Cyflwyniad\tCtrl+L
-cz:Pr&ezentace\tCtrl+L
+cz:Pr&ezentace\tF5
 de:&Präsentation\tF5
 dk:H&ele skærmen\tCtrl+L
 el:&Παρουσίαση\tCtrl+L
@@ -13883,10 +13885,13 @@ uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Selection:
 am:Նշվածը.
+cz:Výběr:
 de:Auswahl:
 fr:Sélection :
 hr:Odabir:
 it:Selezione
+ja:Selection:
+ru:Выделение:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
