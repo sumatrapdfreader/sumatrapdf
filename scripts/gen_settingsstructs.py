@@ -212,11 +212,12 @@ ChmUI = [
 ExternalViewer = [
 	Field("CommandLine", String, None,
 		"command line with which to call the external viewer, may contain " +
-		"%p for page numer and %1 for the file name"),
+		"%p for page numer and \"%1\" for the file name (add quotation " +
+		"marks around paths containing spaces)"),
 	Field("Name", String, None,
 		"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
 	Field("Filter", String, None,
-		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
+		"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 ]
 
 AnnotationDefaults = [

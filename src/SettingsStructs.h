@@ -84,13 +84,15 @@ struct ChmUI {
 // multiple entries for the same format)
 struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
-    // for page numer and %1 for the file name
+    // for page numer and "%1" for the file name (add quotation marks
+    // around paths containing spaces)
     WCHAR * commandLine;
     // name of the external viewer to be shown in the menu (implied by
     // CommandLine if missing)
     WCHAR * name;
-    // filter for which file types the menu item is to be shown (e.g.
-    // "*.pdf;*.xps"; "*" if missing)
+    // optional filter for which file types the menu item is to be shown;
+    // separate multiple entries using ';' and don't include any spaces
+    // (e.g. *.pdf;*.xps for all PDF and XPS documents)
     WCHAR * filter;
 };
 
