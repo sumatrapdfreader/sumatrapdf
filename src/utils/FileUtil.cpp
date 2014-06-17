@@ -248,6 +248,22 @@ WCHAR *GetTempPath(const WCHAR *filePrefix)
     return str::Dup(path);
 }
 
+// returns a path to the application executable's directory
+// with either the given fileName or the executable's name
+WCHAR *GetAppPath(const WCHAR *fileName)
+{
+    WCHAR exePath[MAX_PATH];
+    exePath[0] = 0;
+    GetModuleFileName(NULL, exePath, dimof(exePath));
+    // TODO: is normalization needed here at all?
+    ScopedMem<WCHAR> fullPath(path::Normalize(exePath));
+    if (fileName) {
+        fullPath.Set(path::GetDir(fullPath));
+        fullPath.Set(path::Join(fullPath, fileName));
+    }
+    return fullPath.StealData();
+}
+
 }
 
 namespace file {

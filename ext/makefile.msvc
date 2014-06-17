@@ -6,7 +6,6 @@
 
 OE = $(O)\ext
 OBZ= $(O)\bzip2
-OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
 OLZ= $(O)\lzma
@@ -24,11 +23,6 @@ MINIZIP_CFLAGS = $(CFLAGS) /TC /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)/bzip2
 MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "HAVE_LZMA" /I$(EXTDIR)/lzma/C
 MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "INC_CUSTOM_ALLOC=\"unzalloc.h\"" /D "NOCRYPT"
 MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /wd4131 /wd4245
-
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
-UNRAR_CFLAGS = $(UNRAR_CFLAGS) /wd4201 /wd4211 /wd4244 /wd4389 /wd4701 /wd4702 /wd4706 /wd4709 /wd4996
-# a hack to enable C++ exception handling for UnRAR (without triggering a warning)
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 
 DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
 DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4189 /wd4244 /wd4512 /wd4611 /wd4701 /wd4702 /wd4703 /wd4706 /wd4996
@@ -69,19 +63,6 @@ BZIP2_OBJS = \
 MINIZIP_OBJS = \
 	$(OZ)\unzip.obj $(OZ)\unzalloc.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj \
 	$(OZ)\iowin32s.obj $(OZ)\zip.obj
-
-UNRAR_OBJS = \
-	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\blake2s.obj $(OR)\cmddata.obj \
-	$(OR)\consio.obj $(OR)\crc.obj $(OR)\crypt.obj $(OR)\encname.obj \
-	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
-	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
-	$(OR)\global.obj $(OR)\hash.obj $(OR)\headers.obj $(OR)\isnt.obj  $(OR)\list.obj \
-	$(OR)\match.obj $(OR)\options.obj $(OR)\pathfn.obj $(OR)\qopen.obj $(OR)\rarvm.obj \
-	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
-	$(OR)\rijndael.obj $(OR)\rs.obj $(OR)\rs16.obj $(OR)\secpassword.obj \
-	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\sha256.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
-	$(OR)\strlist.obj $(OR)\system.obj $(OR)\threadpool.obj $(OR)\timefn.obj \
-	$(OR)\unicode.obj $(OR)\unpack.obj $(OR)\volume.obj $(OR)\dll.obj
 
 # Note: in theory using compiling all djvu files as one should generate smaller
 # code, but it does just the opposite. Why?
@@ -145,7 +126,6 @@ LARC_OBJS = \
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
-	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
 	@if not exist $(OLZ) mkdir $(OLZ)
@@ -154,9 +134,6 @@ $(OE): force
 
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(EXTDIR)\unrar}.cpp{$(OR)}.obj::
-	$(CC) $(UNRAR_CFLAGS) /Fo$(OR)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)\minizip}.c{$(OZ)}.obj::
 	$(CC) $(MINIZIP_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<

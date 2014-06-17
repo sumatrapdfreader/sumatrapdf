@@ -14,6 +14,9 @@ Next version:
 * support LZMA in Comic Book (CBZ) files
 * allow saving Comic Book files as PDF
 * new advanced settings: UseTabs (to be exposed eventually), ShowSingleTab, FullPathInTitle
+* replaced non-free UnRAR with a free RAR extraction library
+  (if some CBR files fail to open for you, please download unrar.dll from
+  http://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe)
 
 2.5.2 (2014-05-13)
 

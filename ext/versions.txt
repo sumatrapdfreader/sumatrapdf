@@ -11,6 +11,5 @@ libwebp         0.4.0   2013-12-19   https://developers.google.com/speed/webp/do
 lzma            9.22b   2011-04-19   http://www.7-zip.org/sdk.html
 openjpeg        2.1.0   2014-04-29   https://code.google.com/p/openjpeg/wiki/Downloads?tm=2
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
-unrar           5.1     2013-12-01   http://www.rarlab.com/rar_add.htm
 zlib            1.2.8   2013-04-28   http://www.zlib.net/
 ../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git

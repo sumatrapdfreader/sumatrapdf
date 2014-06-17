@@ -25,6 +25,7 @@ bool         Match(const WCHAR *path, const WCHAR *filter);
 bool         IsAbsolute(const WCHAR *path);
 
 WCHAR *      GetTempPath(const WCHAR *filePrefix=NULL);
+WCHAR *      GetAppPath(const WCHAR *fileName=NULL);
 
 }
 

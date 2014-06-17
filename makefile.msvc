@@ -171,7 +171,7 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
 ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
 	$(OU)\LzmaSimpleArchive.obj
 
-RAR_OBJS = $(OU)\RarUtil.obj $(UNRAR_OBJS) $(LARC_OBJS)
+RAR_OBJS = $(OU)\RarUtil.obj $(LARC_OBJS)
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \

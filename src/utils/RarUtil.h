@@ -7,6 +7,7 @@
 extern "C" {
 struct archive;
 }
+class UnRarDll;
 
 class RarFile {
     ScopedMem<WCHAR> path;
@@ -14,6 +15,7 @@ class RarFile {
 
     struct archive *arc;
     Vec<int64_t> filepos;
+    UnRarDll *fallback;
 
     void ExtractFilenames();
 

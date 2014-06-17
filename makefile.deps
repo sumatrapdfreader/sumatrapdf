@@ -712,8 +712,8 @@ $(OU)\PalmDbReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\
 $(OU)\PalmDbReader.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\PalmDbReader.h
 $(OU)\PalmDbReader.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\PalmDbReader.obj: $B\src\utils\WinUtil.h
-$(OU)\RarUtil.obj: $B\src\..\ext\libarchive\archive.h $B\src\..\ext\libarchive\archive_entry.h $B\src\..\ext\unrar\dll.hpp
-$(OU)\RarUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\RarUtil.obj: $B\src\..\ext\libarchive\archive.h $B\src\..\ext\libarchive\archive_entry.h $B\src\utils\Allocator.h
+$(OU)\RarUtil.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OU)\RarUtil.obj: $B\src\utils\RarUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\RarUtil.obj: $B\src\utils\Vec.h
 $(OU)\SerializeTxt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
