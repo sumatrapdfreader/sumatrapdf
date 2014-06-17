@@ -1,6 +1,10 @@
 # project is .sln
 # each add_executable is .vcproj within .sln
 #
+# Note: cmake really likes to operate in terms of folders but I want a single
+# CMakeLists.txt file (as opposed to putting it in every directory), so this
+# might be different than how most people use it.
+#
 # TODO: I would like to move CMakeLists.txt to cmake directory, but then
 # I would have to add "../" to every file path
 #
@@ -23,6 +27,8 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800")
 
 # this doesn't remove _MBCS
 #remove_definitions(-D _MBCS)
+# another possibility
+#string (REPLACE "/D_MBCS" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 MESSAGE("cmake is starting")
 IF(MSVC)
