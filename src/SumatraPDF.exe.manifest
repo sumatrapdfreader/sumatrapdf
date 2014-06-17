@@ -21,7 +21,7 @@
 	</trustInfo>
 	<application xmlns="urn:schemas-microsoft-com:asm.v3">
 		<windowsSettings>
-			<dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True</dpiAware>
+			<dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True/PM</dpiAware>
 		</windowsSettings>
 	</application>
 	<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
