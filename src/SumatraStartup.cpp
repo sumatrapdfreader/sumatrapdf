@@ -9,9 +9,7 @@
 #ifdef DEBUG
 static bool TryLoadMemTrace()
 {
-    ScopedMem<WCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> exeDir(path::GetDir(exePath));
-    ScopedMem<WCHAR> dllPath(path::Join(exeDir, L"memtrace.dll"));
+    ScopedMem<WCHAR> dllPath(path::GetAppPath(L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;

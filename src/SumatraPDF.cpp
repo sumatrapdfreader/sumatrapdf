@@ -612,9 +612,7 @@ static int GetPolicies(bool isRestricted)
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
-    ScopedMem<WCHAR> restrictPath(GetExePath());
-    restrictPath.Set(path::GetDir(restrictPath));
-    restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
+    ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
     if (file::Exists(restrictPath)) {
         ScopedMem<char> restrictData(file::ReadAll(restrictPath, NULL));
         SquareTree sqt(restrictData);

@@ -65,25 +65,21 @@ bool IsRunningInPortableMode()
 /* Caller needs to free() the result. */
 WCHAR *AppGenDataFilename(const WCHAR *fileName)
 {
-    ScopedMem<WCHAR> path;
-    if (IsRunningInPortableMode()) {
-        /* Use the same path as the binary */
-        ScopedMem<WCHAR> exePath(GetExePath());
-        if (exePath)
-            path.Set(path::GetDir(exePath));
-    } else {
-        /* Use %APPDATA% */
-        path.Set(GetSpecialFolder(CSIDL_APPDATA, true));
-        if (path) {
-            path.Set(path::Join(path, APP_NAME_STR));
-            if (path && !dir::Create(path))
-                path.Set(NULL);
-        }
-    }
-
-    if (!path || !fileName)
+    if (!fileName)
         return NULL;
 
+    if (IsRunningInPortableMode()) {
+        /* Use the same path as the binary */
+        return path::GetAppPath(fileName);
+    }
+
+    /* Use %APPDATA% */
+    ScopedMem<WCHAR> path(GetSpecialFolder(CSIDL_APPDATA, true));
+    if (!path)
+        return NULL;
+    path.Set(path::Join(path, APP_NAME_STR));
+    if (!path || !dir::Create(path))
+        return NULL;
     return path::Join(path, fileName);
 }
 
