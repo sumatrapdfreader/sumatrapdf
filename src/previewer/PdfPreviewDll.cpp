@@ -138,9 +138,10 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 #define REG_KEY_PREVIEW_HANDLERS    L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"
 
-static const struct {
+static struct {
     const WCHAR *clsid;
     const WCHAR *ext;
+    bool skip;
 } gPreviewers[] = {
     { SZ_PDF_PREVIEW_CLSID, L".pdf" },
 #ifdef BUILD_XPS_PREVIEW
@@ -178,6 +179,8 @@ STDAPI DllRegisterServer()
     if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) return E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
+        if (gPreviewers[i].skip)
+            continue;
         // register class
         ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
         WriteOrFail_(key, NULL, L"SumatraPDF Preview Handler");
@@ -214,6 +217,8 @@ STDAPI DllUnregisterServer()
     if (!DeleteRegKey(HKEY_CURRENT_USER, key)) hr = E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
+        if (gPreviewers[i].skip)
+            continue;
         // unregister preview handler
         SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
         SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
@@ -235,14 +240,35 @@ STDAPI DllUnregisterServer()
     return hr;
 }
 
+STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
+{
+    // allows installing only a subset of available preview handlers
+    if (str::StartsWithI(pszCmdLine, L"exts:")) {
+        ScopedMem<WCHAR> extsList(str::Dup(pszCmdLine + 5));
+        str::ToLower(extsList);
+        str::TransChars(extsList, L";. :", L",,,\0");
+        WStrVec exts;
+        exts.Split(extsList, L",", true);
+        for (int i = 0; i < dimof(gPreviewers); i++) {
+            gPreviewers[i].skip = !exts.Contains(gPreviewers[i].ext + 1);
+        }
+    }
+
+    if (!bInstall)
+        return DllUnregisterServer();
+    return DllRegisterServer();
+}
+
 #ifdef _WIN64
 #pragma comment(linker, "/EXPORT:DllCanUnloadNow=DllCanUnloadNow,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllGetClassObject=DllGetClassObject,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=DllRegisterServer,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=DllUnregisterServer,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllInstall=DllInstall,PRIVATE")
 #else
 #pragma comment(linker, "/EXPORT:DllCanUnloadNow=_DllCanUnloadNow@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllGetClassObject=_DllGetClassObject@12,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllRegisterServer=_DllRegisterServer@0,PRIVATE")
 #pragma comment(linker, "/EXPORT:DllUnregisterServer=_DllUnregisterServer@0,PRIVATE")
+#pragma comment(linker, "/EXPORT:DllInstall=_DllInstall@8,PRIVATE")
 #endif
