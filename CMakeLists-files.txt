@@ -102,3 +102,23 @@ file (GLOB FREETYPE2_SRC
 
 # TODO: if dbg, add ftdebug
 #	"ext/freetype2/src/base/ftdebug.c"
+
+file (GLOB ZLIB_SRC
+	"ext/zlib/*.h"
+	"ext/zlib/adler32.c"
+	"ext/zlib/compress.c"
+	"ext/zlib/crc32.c"
+	"ext/zlib/deflate.c"
+	"ext/zlib/inffast.c"
+	"ext/zlib/inflate.c"
+	"ext/zlib/inftrees.c"
+	"ext/zlib/trees.c"
+	"ext/zlib/zutil.c"
+	"ext/zlib/gzlib.c"
+	"ext/zlib/gzread.c"
+	"ext/zlib/gzwrite.c"
+	"ext/zlib/gzclose.c"
+
+	"ext/zlib/infback9/*.h"
+	"ext/zlib/infback9/inftree9.c"
+	)

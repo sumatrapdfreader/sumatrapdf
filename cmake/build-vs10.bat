@@ -18,6 +18,12 @@ set TEMP=
 
 echo running cmake
 cmake -G "Visual Studio 10" ..\..
+IF NOT ERRORLEVEL 1 GOTO CMAKEOK
+ECHO cmake failed
+EXIT /B 1
+
+:CMAKEOK
+
 echo runing msbuild
 #msbuild all.sln /t:Rebuild /p:Configuration=Release
 msbuild all.sln /t:Build /p:Configuration=Release

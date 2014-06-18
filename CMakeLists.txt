@@ -17,9 +17,13 @@ project(all)
 
 include(CmakeLists-files.txt)
 
+# TODO: disable warnings in narrower scopes
 # flags for C++ code that applies to all targets
 # /wd4800 -  warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800")
+# /wd4996 - The POSIX name for this item is deprecated
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800 /wd4996")
+
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
 
 # this also removes the default -D _MBCS
 # TODO: this messes up unrar build
@@ -29,6 +33,9 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800")
 #remove_definitions(-D _MBCS)
 # another possibility
 string (REPLACE "/D_MBCS" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string (REPLACE "/D_MBCS" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 MESSAGE("cmake is starting")
 IF(MSVC)
@@ -95,11 +102,15 @@ set_target_properties(
 	COMPILE_DEFINITIONS "FT2_BUILD_LIBRARY;FT_OPTION_AUTOFIT2"
 )
 
-# TODO: those should be per-target
-#add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+## --------------------------------------------------------------------
+
+# TODO: per target
+include_directories("ext/zlib" "ext/zlib/infback9")
+add_library(zlib ${ZLIB_SRC})
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 add_executable(all_tests ${ALL_TESTS_SRC})
 IF(WIN32)
 	target_link_libraries(all_tests "gdiplus" "comctl32" "shlwapi" "Version")
@@ -113,4 +124,4 @@ set_target_properties(
 # d4244 - possibly only needed for 64-bit build
 
 #set_target_properties(all_tests PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-
+ENDIF(NOT_DEFINED)
