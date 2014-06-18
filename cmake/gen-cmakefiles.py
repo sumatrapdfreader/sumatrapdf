@@ -11,7 +11,7 @@ import os
 
 # if true, paths generated to be relative to cmake directory, so that we
 # can place CMakeLists*.txt inside cmake directory
-dirs_relative_to_cmake = True
+dirs_relative_to_cmake = False
 
 
 class DirInfo(object):

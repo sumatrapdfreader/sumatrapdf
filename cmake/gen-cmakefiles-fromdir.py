@@ -2,6 +2,9 @@
 
 import os
 
+# if true, paths generated to be relative to cmake directory, so that we
+# can place CMakeLists*.txt inside cmake directory
+dirs_relative_to_cmake = False
 dirs = ["src", "ext", "mupdf/source"]
 
 
@@ -14,7 +17,7 @@ class DirInfo(object):
 
 def is_compilable(file_name):
     ext = os.path.splitext(file_name)[-1]
-    return ext in [".c", ".cpp", ".cxx", ".asm", ".rc", ".manifest"]
+    return ext in [".c", ".cpp", ".cxx", ".asm", ".rc"]  #, ".manifest"]
 
 
 def is_include(file_name):
@@ -45,15 +48,27 @@ def quote(s):
     return '"' + s + '"'
 
 
+def fixup_dirname(s):
+    if s.startswith("./"):
+        s = s[2:]
+        if dirs_relative_to_cmake:
+            s = "../" + s
+    return s
+
+
 def gen_cmake_one(di, lines):
     name = dir_to_srcname(di.path)
     s = "file (GLOB %s" % name
     lines.append(s)
     sources = di.sources
     sources.sort()
+    dir = fixup_dirname(di.path)
+    if len(di.includes) > 0:
+        s = "%s/*.h" % dir
+        lines.append("\t" + quote(s))
     for src in sources:
-        s = quote(src)
-        lines.append("\t%s" % s)
+        s = "%s/%s" % (dir, src)
+        lines.append("\t" + quote(s))
     lines.append("\t)")
     lines.append("")
 

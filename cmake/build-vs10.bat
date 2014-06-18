@@ -19,4 +19,5 @@ set TEMP=
 echo running cmake
 cmake -G "Visual Studio 10" ..\..
 echo runing msbuild
-msbuild all.sln /t:Rebuild /p:Configuration=Release
+#msbuild all.sln /t:Rebuild /p:Configuration=Release
+msbuild all.sln /t:Build /p:Configuration=Release

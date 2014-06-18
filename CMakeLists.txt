@@ -28,7 +28,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800")
 # this doesn't remove _MBCS
 #remove_definitions(-D _MBCS)
 # another possibility
-#string (REPLACE "/D_MBCS" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+string (REPLACE "/D_MBCS" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 MESSAGE("cmake is starting")
 IF(MSVC)
@@ -63,22 +63,6 @@ set_target_properties(
 
 ## --------------------------------------------------------------------
 
-add_executable(all_tests ${ALL_TESTS_SRC})
-IF(WIN32)
-	target_link_libraries(all_tests "gdiplus" "comctl32" "shlwapi" "Version")
-ENDIF()
-set_target_properties(
-	all_tests
-	PROPERTIES
-	COMPILE_FLAGS "/wd4996 /wd4244"
-	COMPILE_DEFINITIONS "NO_LIBMUPDF"
-)
-# d4244 - possibly only needed for 64-bit build
-
-#set_target_properties(all_tests PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
-
-## --------------------------------------------------------------------
-
 include_directories ("src/utils" "src/utils/msvc")
 add_executable(plugin_test WIN32 ${PLUGIN_TEST_SRC})
 target_link_libraries(plugin_test "shlwapi")
@@ -100,14 +84,33 @@ set_target_properties(
 
 ## --------------------------------------------------------------------
 
+# TODO: per target
+include_directories("ext/freetype2/include" "ext/freetype2/config")
+
+add_library(ft ${FREETYPE2_SRC})
+set_target_properties(
+	ft
+	PROPERTIES
+	COMPILE_FLAGS "/wd4244 /wd4703 /wd4996"
+	COMPILE_DEFINITIONS "FT2_BUILD_LIBRARY;FT_OPTION_AUTOFIT2"
+)
+
 # TODO: those should be per-target
 #add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-add_library(unrar ${UNRAR_SRC})
+## --------------------------------------------------------------------
+
+add_executable(all_tests ${ALL_TESTS_SRC})
+IF(WIN32)
+	target_link_libraries(all_tests "gdiplus" "comctl32" "shlwapi" "Version")
+ENDIF()
 set_target_properties(
-	unrar
+	all_tests
 	PROPERTIES
-	COMPILE_FLAGS "/wd4996"
-	COMPILE_DEFINITIONS "UNRAR;RARDLL;SILENT;_CRT_SECURE_NO_WARNINGS"
+	COMPILE_FLAGS "/wd4996 /wd4244"
+	COMPILE_DEFINITIONS "NO_LIBMUPDF"
 )
+# d4244 - possibly only needed for 64-bit build
+
+#set_target_properties(all_tests PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 
