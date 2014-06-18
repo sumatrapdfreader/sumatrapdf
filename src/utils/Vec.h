@@ -516,6 +516,10 @@ public:
         return items.At(idx).string;
     }
 
+    const WCHAR *Last() const {
+        return items.Last().string;
+    }
+
     size_t Count() const {
         return count;
     }

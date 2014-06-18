@@ -9,10 +9,16 @@
 #define SZ_XPS_PREVIEW_CLSID    L"{D427A82C-6545-4fbe-8E87-030EDB3BE46D}"
 #endif
 #ifdef BUILD_EPUB_PREVIEW
-#define SZ_EPUB_PREVIEW_CLSID    L"{80C4E4B1-2B0F-40D5-95AF-BE7B57FEA4F9}"
+#define SZ_EPUB_PREVIEW_CLSID   L"{80C4E4B1-2B0F-40D5-95AF-BE7B57FEA4F9}"
 #endif
-#ifdef BUILD_CBZ_PREVIEW
-#define SZ_CBZ_PREVIEW_CLSID    L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
+#ifdef BUILD_FB2_PREVIEW
+#define SZ_FB2_PREVIEW_CLSID    L"{D5878036-E863-403E-A62C-7B9C7453336A}"
+#endif
+#ifdef BUILD_MOBI_PREVIEW
+#define SZ_MOBI_PREVIEW_CLSID   L"{42CA907E-BDF5-4A75-994A-E1AEC8A10954}"
+#endif
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW)
+#define SZ_CBX_PREVIEW_CLSID    L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #endif
 #ifdef BUILD_TGA_PREVIEW
 #define SZ_TGA_PREVIEW_CLSID    L"{CB1D63A6-FE5E-4ded-BEA5-3F6AF1A70D08}"
@@ -269,10 +275,32 @@ protected:
 };
 #endif
 
-#ifdef BUILD_CBZ_PREVIEW
-class CCbzPreview : public PreviewBase {
+#ifdef BUILD_FB2_PREVIEW
+class CFb2Preview : public PreviewBase {
 public:
-    CCbzPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_CBZ_PREVIEW_CLSID) {
+    CFb2Preview(long *plRefCount);
+    ~CFb2Preview();
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream);
+};
+#endif
+
+#ifdef BUILD_MOBI_PREVIEW
+class CMobiPreview : public PreviewBase {
+public:
+    CMobiPreview(long *plRefCount);
+    ~CMobiPreview();
+
+protected:
+    virtual BaseEngine *LoadEngine(IStream *stream);
+};
+#endif
+
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW)
+class CCbxPreview : public PreviewBase {
+public:
+    CCbxPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {
         m_gdiScope = new ScopedGdiPlus();
     }
 

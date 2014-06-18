@@ -311,6 +311,8 @@ BaseEngine *CPdfPreview::LoadEngine(IStream *stream)
 }
 
 #ifdef BUILD_XPS_PREVIEW
+#include "PdfEngine.h"
+
 BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 {
     return XpsEngine::CreateFromStream(stream);
@@ -338,20 +340,62 @@ BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
 }
 #endif
 
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_TGA_PREVIEW)
+#ifdef BUILD_FB2_PREVIEW
+#include "EbookEngine.h"
+#include "MiniMui.h"
+
+CFb2Preview::CFb2Preview(long *plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID)
+{
+    m_gdiScope = new ScopedGdiPlus();
+    mui::Initialize();
+}
+
+CFb2Preview::~CFb2Preview()
+{
+    mui::Destroy();
+}
+
+BaseEngine *CFb2Preview::LoadEngine(IStream *stream)
+{
+    return Fb2Engine::CreateFromStream(stream);
+}
+#endif
+
+#ifdef BUILD_MOBI_PREVIEW
+#include "EbookEngine.h"
+#include "MiniMui.h"
+
+CMobiPreview::CMobiPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID)
+{
+    m_gdiScope = new ScopedGdiPlus();
+    mui::Initialize();
+}
+
+CMobiPreview::~CMobiPreview()
+{
+    mui::Destroy();
+}
+
+BaseEngine *CMobiPreview::LoadEngine(IStream *stream)
+{
+    return MobiEngine::CreateFromStream(stream);
+}
+#endif
+
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW)
 #include "ImagesEngine.h"
 
-#ifdef BUILD_CBZ_PREVIEW
-BaseEngine *CCbzPreview::LoadEngine(IStream *stream)
+BaseEngine *CCbxPreview::LoadEngine(IStream *stream)
 {
     return CbxEngine::CreateFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_TGA_PREVIEW
+#include "ImagesEngine.h"
+
 BaseEngine *CTgaPreview::LoadEngine(IStream *stream)
 {
     return ImageEngine::CreateFromStream(stream);
 }
-#endif
 #endif

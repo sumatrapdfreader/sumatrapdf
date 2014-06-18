@@ -63,9 +63,17 @@ public:
         else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CEpubPreview(&g_lRefCount);
 #endif
-#ifdef BUILD_CBZ_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(SZ_CBZ_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
-            pObject = new CCbzPreview(&g_lRefCount);
+#ifdef BUILD_FB2_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(SZ_FB2_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CFb2Preview(&g_lRefCount);
+#endif
+#ifdef BUILD_MOBI_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CMobiPreview(&g_lRefCount);
+#endif
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW)
+        else if (SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CCbxPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_TGA_PREVIEW
         else if (SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
@@ -128,202 +136,101 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 #define APPID_PREVHOST_EXE          L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}"
 #define APPID_PREVHOST_EXE_WOW64    L"{534a1e02-d58f-44f0-b58b-36cbed287c7c}"
 
-STDAPI DllRegisterServer()
-{
-    WCHAR path[MAX_PATH];
-    if (!GetModuleFileName(g_hInstance, path, dimof(path)))
-        return HRESULT_FROM_WIN32(GetLastError());
+#define REG_KEY_PREVIEW_HANDLERS    L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"
 
-    struct {
-        WCHAR *key, *value, *data;
-    } regVals[] = {
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,
-                NULL,                   L"SumatraPDF Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID L"\\InProcServer32",
-                NULL,                   path },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",   L"Apartment" },
-        // IThumbnailProvider
-        { L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_PDF_PREVIEW_CLSID },
-        // IExtractImage (for Windows XP)
-        { L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_PDF_PREVIEW_CLSID },
-        // IPreviewHandler
-        { L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_PDF_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
-                SZ_PDF_PREVIEW_CLSID,   L"SumatraPDF Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,
-                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+static const struct {
+    const WCHAR *clsid;
+    const WCHAR *ext;
+} gPreviewers[] = {
+    { SZ_PDF_PREVIEW_CLSID, L".pdf" },
 #ifdef BUILD_XPS_PREVIEW
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
-                NULL,                   L"SumatraPDF XPS Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID L"\\InProcServer32",
-                NULL,                   path },
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",      L"Apartment" },
-        // IThumbnailProvider
-        { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        // IExtractImage (for Windows XP)
-        { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        // IPreviewHandler
-        { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_XPS_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
-                SZ_XPS_PREVIEW_CLSID,   L"SumatraPDF XPS Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
-                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+    { SZ_XPS_PREVIEW_CLSID, L".xps" },
+    { SZ_XPS_PREVIEW_CLSID, L".oxps" },
 #endif
 #ifdef BUILD_EPUB_PREVIEW
-        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
-                NULL,                   L"SumatraPDF EPUB Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID L"\\InProcServer32",
-                NULL,                   path },
-        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",   L"Apartment" },
-        // IThumbnailProvider
-        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_EPUB_PREVIEW_CLSID },
-        // IExtractImage (for Windows XP)
-        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_EPUB_PREVIEW_CLSID },
-        // IPreviewHandler
-        { L"Software\\Classes\\.epub\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_EPUB_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
-                SZ_EPUB_PREVIEW_CLSID,   L"SumatraPDF EPUB Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
-                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+    { SZ_EPUB_PREVIEW_CLSID,L".epub" },
+#endif
+#ifdef BUILD_FB2_PREVIEW
+    { SZ_FB2_PREVIEW_CLSID, L".fb2" },
+    { SZ_FB2_PREVIEW_CLSID, L".fb2z" },
+#endif
+#ifdef BUILD_MOBI_PREVIEW
+    { SZ_MOBI_PREVIEW_CLSID,L".mobi" },
 #endif
 #ifdef BUILD_CBZ_PREVIEW
-        { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
-                NULL,                   L"SumatraPDF CBZ Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID L"\\InProcServer32",
-                NULL,                   path },
-        { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",   L"Apartment" },
-        // IThumbnailProvider
-        { L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_CBZ_PREVIEW_CLSID },
-        // IExtractImage (for Windows XP)
-        { L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_CBZ_PREVIEW_CLSID },
-        // IPreviewHandler
-        { L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_CBZ_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
-                SZ_CBZ_PREVIEW_CLSID,   L"SumatraPDF CBZ Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
-                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+    { SZ_CBX_PREVIEW_CLSID, L".cbz" },
+#endif
+#ifdef BUILD_CBZ_PREVIEW
+    { SZ_CBX_PREVIEW_CLSID, L".cbr" },
 #endif
 #ifdef BUILD_TGA_PREVIEW
-        { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID,
-                NULL,                   L"SumatraPDF TGA Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID L"\\InProcServer32",
-                NULL,                   path },
-        { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",      L"Apartment" },
-        // IThumbnailProvider
-        { L"Software\\Classes\\.tga\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-                NULL,                   SZ_TGA_PREVIEW_CLSID },
-        // IExtractImage (for Windows XP)
-        { L"Software\\Classes\\.tga\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-                NULL,                   SZ_TGA_PREVIEW_CLSID },
-        // IPreviewHandler
-        { L"Software\\Classes\\.tga\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-                NULL,                   SZ_TGA_PREVIEW_CLSID },
-        { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
-                SZ_TGA_PREVIEW_CLSID,   L"SumatraPDF TGA Preview Handler" },
-        { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID,
-                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+    { SZ_TGA_PREVIEW_CLSID, L".tga" },
 #endif
-    };
+};
 
-    for (int i = 0; i < dimof(regVals); i++) {
-        // don't register for IExtractImage on systems which accept IThumbnailProvider
-        // (because it doesn't offer anything beyond what IThumbnailProvider does)
-        if (IsVistaOrGreater() && str::EndsWith(regVals[i].key, CLSID_I_EXTRACT_IMAGE))
-            continue;
-        WriteRegStr(HKEY_LOCAL_MACHINE, regVals[i].key, regVals[i].value, regVals[i].data);
-        bool ok = WriteRegStr(HKEY_CURRENT_USER, regVals[i].key, regVals[i].value, regVals[i].data);
-        if (!ok)
-            return E_FAIL;
+STDAPI DllRegisterServer()
+{
+    WCHAR dllPath[MAX_PATH];
+    if (!GetModuleFileName(g_hInstance, dllPath, dimof(dllPath)))
+        return HRESULT_FROM_WIN32(GetLastError());
+
+#define WriteOrFail_(key, value, data) WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data); \
+    if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) return E_FAIL
+
+    for (int i = 0; i < dimof(gPreviewers); i++) {
+        // register class
+        ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        WriteOrFail_(key, NULL, L"SumatraPDF Preview Handler");
+        WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
+        key.Set(str::Format(L"Software\\Classes\\CLSID\\%s\\InProcServer32", gPreviewers[i].clsid));
+        WriteOrFail_(key, NULL, dllPath);
+        WriteOrFail_(key, L"ThreadingModel", L"Apartment");
+        // IThumbnailProvider
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
+        WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+        // IExtractImage (for Windows XP)
+        if (!IsVistaOrGreater()) {
+            // don't register for IExtractImage on systems which accept IThumbnailProvider
+            // (because it doesn't offer anything beyond what IThumbnailProvider does)
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext));
+            WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+        }
+        // IPreviewHandler
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext));
+        WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+        WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid, L"SumatraPDF Preview Handler");
+
     }
+#undef WriteOrFail_
 
     return S_OK;
 }
 
 STDAPI DllUnregisterServer()
 {
-    const WCHAR *regKeys[] = {
-        L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,
-        L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.pdf\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-#ifdef BUILD_XPS_PREVIEW
-        L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
-        L"Software\\Classes\\.xps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.xps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.xps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-#endif
-#ifdef BUILD_EPUB_PREVIEW
-        L"Software\\Classes\\CLSID\\" SZ_EPUB_PREVIEW_CLSID,
-        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.epub\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-#endif
-#ifdef BUILD_CBZ_PREVIEW
-        L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
-        L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.cbz\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-#endif
-#ifdef BUILD_TGA_PREVIEW
-        L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID,
-        L"Software\\Classes\\.tga\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
-        L"Software\\Classes\\.tga\\shellex\\" CLSID_I_EXTRACT_IMAGE,
-        L"Software\\Classes\\.tga\\shellex\\" CLSID_I_PREVIEW_HANDLER,
-#endif
-    };
-
     HRESULT hr = S_OK;
 
-    for (int i = 0; i < dimof(regKeys); i++) {
-        DeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
-        bool ok = DeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
-        if (!ok)
-            hr = E_FAIL;
+#define DeleteOrFail_(key) DeleteRegKey(HKEY_LOCAL_MACHINE, key); \
+    if (!DeleteRegKey(HKEY_CURRENT_USER, key)) hr = E_FAIL
+
+    for (int i = 0; i < dimof(gPreviewers); i++) {
+        // unregister preview handler
+        SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
+        SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
+        // remove class data
+        ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        DeleteOrFail_(key);
+        // IThumbnailProvider
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
+        DeleteOrFail_(key);
+        // IExtractImage (for Windows XP)
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext));
+        DeleteOrFail_(key);
+        // IPreviewHandler
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext));
+        DeleteOrFail_(key);
     }
-    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_PDF_PREVIEW_CLSID);
-    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_PDF_PREVIEW_CLSID);
-#ifdef BUILD_XPS_PREVIEW
-    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_XPS_PREVIEW_CLSID);
-    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_XPS_PREVIEW_CLSID);
-#endif
-#ifdef BUILD_EPUB_PREVIEW
-    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_EPUB_PREVIEW_CLSID);
-    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_EPUB_PREVIEW_CLSID);
-#endif
-#ifdef BUILD_CBZ_PREVIEW
-    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_CBZ_PREVIEW_CLSID);
-    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_CBZ_PREVIEW_CLSID);
-#endif
-#ifdef BUILD_TGA_PREVIEW
-    SHDeleteValue(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_TGA_PREVIEW_CLSID);
-    SHDeleteValue(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers", SZ_TGA_PREVIEW_CLSID);
-#endif
+#undef DeleteOrFail_
 
     return hr;
 }
