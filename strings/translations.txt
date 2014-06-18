@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-964805f4af1aa861ac9f2939b5f0650153b9b216
+721298c9b54aaef83b190bdb3a55d790585f3e69
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6436,6 +6436,7 @@ am:Նշորդի դիրքը.
 cz:Pozice kurzoru:
 de:Zeigerposition:
 fr:Position du curseur :
+he:מיקום סמן:
 hr:Pozicija pokazivača:
 it:Posizione cursore
 ja:カーソル位置：
@@ -9954,6 +9955,7 @@ br:Mantenha o plugin PDF para instalado (não é mais suportado)
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
 ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
+cz:Ponechat nainstalovaný plugin &prohlížeč PDF (již není podporován)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
 et:Jäta alles PDF &brauseri plugin (enam ei toetata)
 eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
@@ -13888,6 +13890,7 @@ am:Նշվածը.
 cz:Výběr:
 de:Auswahl:
 fr:Sélection :
+he:בחירה:
 hr:Odabir:
 it:Selezione
 ja:Selection:

@@ -567,7 +567,7 @@ const char * gTranslations_cz =
   "Nainstalovat SumatraPDF do &slo\305\276ky:\0"\
   "Instalace se nezda\305\231ila!\0"\
   "Prob\303\255h\303\241 instalace...\0"\
-  "\0"\
+  "Ponechat nainstalovan\303\275 plugin &prohl\303\255\305\276e\304\215 PDF (ji\305\276 nen\303\255 podporov\303\241n)\0"\
   "Nechte Windows Desktop Search &prohled\303\241vat PDF dokumenty\0"\
   "Nechte Windows zobrazit &n\303\241hledy PDF dokument\305\257\0"\
   "Pros\303\255m ukon\304\215ete %s pro pokra\304\215ov\303\241n\303\255!\0"\
