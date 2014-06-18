@@ -1,5 +1,8 @@
 @echo off
 
+REM add nasm.exe to the path
+SET PATH=%CD%\bin;%PATH%
+
 @rem setup for Visual Studio 2010 or bust
 CALL "%VS100COMNTOOLS%\vsvars32.bat" 2>NUL
 IF NOT ERRORLEVEL 1 GOTO VSFOUND
@@ -25,5 +28,5 @@ EXIT /B 1
 :CMAKEOK
 
 echo runing msbuild
-rem msbuild all.sln /t:Rebuild /p:Configuration=Release
-msbuild all.sln /t:Build /p:Configuration=Release
+msbuild all.sln /t:Rebuild /p:Configuration=Release
+rem msbuild all.sln /t:Build /p:Configuration=Release

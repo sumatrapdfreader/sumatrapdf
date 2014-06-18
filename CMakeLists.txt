@@ -142,13 +142,24 @@ ENDIF(NOT_DEFINED)
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
+enable_language(ASM_NASM)
+message("nasm ext: ${CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS}")
+message("nasm compiler: ${CMAKE_ASM_NASM_COMPILER}")
+message("nasm obj format: ${CMAKE_ASM_NASM_OBJECT_FORMAT}")
+message("nasm compile obj: ${CMAKE_ASM_NASM_COMPILE_OBJECT}")
 # TODO: nasm support, see https://github.com/aumuell/libjpeg-turbo/blob/master/simd/CMakeLists.txt
 # and https://github.com/aumuell/libjpeg-turbo/blob/master/CMakeLists.txt
-# TODO: per target
+# TODO: include_directories per target
 include_directories("ext/libjpeg-turbo" "ext/libjpeg-turbo/simd")
 add_library(jpegturbo ${LIBJPEG_TURBO_SRC} ${LIBJPEG_TURBO_SIMD_SRC})
+# TODO: why doesn't it compile .asm files with nasm?
+#add_library(jpegturbo "ext/libjpeg-turbo/simd/jsimdcpu.asm")
+#add_library(jpegturbo ${LIBJPEG_TURBO_SIMD_SRC})
 ENDIF(NOT_DEFINED)
 
+## --------------------------------------------------------------------
+
+IF(NOT_DEFINED)
 # TODO: per target
 include_directories("ext/jbig2dec")
 add_library(jbig2 ${JBIG2_SRC})
@@ -157,3 +168,4 @@ set_target_properties(
 	PROPERTIES
 	COMPILE_DEFINITIONS "HAVE_STRING_H=1;JBIG_NO_MEMENTO"
 )
+ENDIF(NOT_DEFINED)
