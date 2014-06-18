@@ -149,7 +149,7 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
         char buf[1024];
         if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))
             goto Exit;
-        bool ok = resp.AppendChecked(buf, dwRead);
+        ok = resp.AppendChecked(buf, dwRead);
         if (!ok)
             goto Exit;
     } while (dwRead > 0);
