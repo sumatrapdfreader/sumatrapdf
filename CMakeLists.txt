@@ -58,6 +58,7 @@ ENDIF(MSVC)
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 include_directories("tools/efi"
 	"src/utils")
 
@@ -67,9 +68,11 @@ set_target_properties(
 	PROPERTIES
 	COMPILE_FLAGS "/wd4267"
 )
+ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 include_directories ("src/utils" "src/utils/msvc")
 add_executable(plugin_test WIN32 ${PLUGIN_TEST_SRC})
 target_link_libraries(plugin_test "shlwapi")
@@ -78,9 +81,11 @@ set_target_properties(
 	PROPERTIES
 	COMPILE_FLAGS "/wd4244"
 )
+ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 add_library(bzip2 "ext/bzip2/bzip_all.c")
 set_target_properties(
 	bzip2
@@ -88,9 +93,11 @@ set_target_properties(
 	COMPILE_FLAGS "/wd4996  /wd4244 /wd4267"
 )
 # 4267 - possibly only needed for 64-bit build
+ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 # TODO: per target
 include_directories("ext/freetype2/include" "ext/freetype2/config")
 
@@ -101,12 +108,16 @@ set_target_properties(
 	COMPILE_FLAGS "/wd4244 /wd4703 /wd4996"
 	COMPILE_DEFINITIONS "FT2_BUILD_LIBRARY;FT_OPTION_AUTOFIT2"
 )
+ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
+IF(NOT_DEFINED)
 # TODO: per target
 include_directories("ext/zlib" "ext/zlib/infback9")
 add_library(zlib ${ZLIB_SRC})
+ENDIF(NOT_DEFINED)
+
 
 ## --------------------------------------------------------------------
 
@@ -125,3 +136,14 @@ set_target_properties(
 
 #set_target_properties(all_tests PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
 ENDIF(NOT_DEFINED)
+
+## --------------------------------------------------------------------
+
+IF(NOT_DEFINED)
+# TODO: nasm support, see https://github.com/aumuell/libjpeg-turbo/blob/master/simd/CMakeLists.txt
+# and https://github.com/aumuell/libjpeg-turbo/blob/master/CMakeLists.txt
+# TODO: per target
+include_directories("ext/libjpeg-turbo" "ext/libjpeg-turbo/simd")
+add_library(jpegturbo ${LIBJPEG_TURBO_SRC} ${LIBJPEG_TURBO_SIMD_SRC})
+ENDIF(NOT_DEFINED)
+
