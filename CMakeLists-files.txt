@@ -217,3 +217,22 @@ file (GLOB LIBJPEG_TURBO_SIMD_SRC
 	"ext/libjpeg-turbo/simd/jsimd_i386.c"
 )
 ENDIF()
+
+file (GLOB JBIG2_SRC
+	"ext/jbig2dec/*.h"
+	"ext/jbig2dec/jbig2.c"
+	"ext/jbig2dec/jbig2_arith.c"
+	"ext/jbig2dec/jbig2_arith_int.c"
+	"ext/jbig2dec/jbig2_arith_iaid.c"
+	"ext/jbig2dec/jbig2_huffman.c"
+	"ext/jbig2dec/jbig2_segment.c"
+	"ext/jbig2dec/jbig2_page.c"
+	"ext/jbig2dec/jbig2_symbol_dict.c"
+	"ext/jbig2dec/jbig2_text.c"
+	"ext/jbig2dec/jbig2_generic.c"
+	"ext/jbig2dec/jbig2_refinement.c"
+	"ext/jbig2dec/jbig2_mmr.c"
+	"ext/jbig2dec/jbig2_image.c"
+	"ext/jbig2dec/jbig2_metadata.c"
+	"ext/jbig2dec/jbig2_halftone.c"
+)

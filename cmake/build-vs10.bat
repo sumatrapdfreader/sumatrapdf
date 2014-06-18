@@ -25,5 +25,5 @@ EXIT /B 1
 :CMAKEOK
 
 echo runing msbuild
-#msbuild all.sln /t:Rebuild /p:Configuration=Release
+rem msbuild all.sln /t:Rebuild /p:Configuration=Release
 msbuild all.sln /t:Build /p:Configuration=Release

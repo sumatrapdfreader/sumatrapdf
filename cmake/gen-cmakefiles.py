@@ -8,14 +8,14 @@
 # It's not perfect and re
 import os
 
-s_objs = """
+objs = """
 	$(OT)\jfsseflt-64.obj $(OT)\jccolss2-64.obj $(OT)\jdcolss2-64.obj $(OT)\jcgrass2-64.obj \
 	$(OT)\jcsamss2-64.obj $(OT)\jdsamss2-64.obj $(OT)\jdmerss2-64.obj $(OT)\jcqnts2i-64.obj  \
 	$(OT)\jfss2fst-64.obj $(OT)\jfss2int-64.obj $(OT)\jiss2red-64.obj $(OT)\jiss2int-64.obj \
 	$(OT)\jiss2fst-64.obj $(OT)\jcqnts2f-64.obj $(OT)\jiss2flt-64.obj $(OT)\jsimd_x86_64.obj
 """
 
-s_objs2 = """
+objs2 = """
 	$(OT)\jsimdcpu.obj $(OT)\jccolmmx.obj $(OT)\jcgrammx.obj $(OT)\jdcolmmx.obj \
 	$(OT)\jcsammmx.obj $(OT)\jdsammmx.obj $(OT)\jdmermmx.obj $(OT)\jcqntmmx.obj \
 	$(OT)\jfmmxfst.obj $(OT)\jfmmxint.obj $(OT)\jimmxred.obj $(OT)\jimmxint.obj \
@@ -25,6 +25,14 @@ s_objs2 = """
 	$(OT)\jdmerss2.obj $(OT)\jcqnts2i.obj $(OT)\jfss2fst.obj $(OT)\jfss2int.obj \
 	$(OT)\jiss2red.obj $(OT)\jiss2int.obj $(OT)\jiss2fst.obj $(OT)\jcqnts2f.obj \
 	$(OT)\jiss2flt.obj $(OT)\jsimd_i386.obj
+"""
+
+objs3 = """
+	$(OJB)\jbig2.obj $(OJB)\jbig2_arith.obj $(OJB)\jbig2_arith_int.obj \
+	$(OJB)\jbig2_arith_iaid.obj $(OJB)\jbig2_huffman.obj $(OJB)\jbig2_segment.obj \
+	$(OJB)\jbig2_page.obj $(OJB)\jbig2_symbol_dict.obj $(OJB)\jbig2_text.obj \
+	$(OJB)\jbig2_generic.obj $(OJB)\jbig2_refinement.obj $(OJB)\jbig2_mmr.obj \
+	$(OJB)\jbig2_image.obj $(OJB)\jbig2_metadata.obj $(OJB)\jbig2_halftone.obj
 """
 
 # if true, paths generated to be relative to cmake directory, so that we
@@ -134,7 +142,7 @@ def gen_cmake(obj_names, files_map):
 
 def main():
 	files_map = build_files_map()
-	obj_names = parse_objs(s_objs2)
+	obj_names = parse_objs(objs3)
 	dump_defs(obj_names)
 	s = gen_cmake(obj_names, files_map)
 	print(s)

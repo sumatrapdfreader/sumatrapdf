@@ -17,13 +17,15 @@ project(all)
 
 include(CmakeLists-files.txt)
 
-# TODO: disable warnings in narrower scopes
-# flags for C++ code that applies to all targets
-# /wd4800 -  warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-# /wd4996 - The POSIX name for this item is deprecated
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4800 /wd4996")
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4996")
+# flags for C++ code that applies to all targets
+# /MP  : use muliple processors to speed up compilation
+# /wd4800 - warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+# /wd4996 - The POSIX name for this item is deprecated
+# /wd4018 - warning C4018: '<' : signed/unsigned mismatch
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4800 /wd4996")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP /wd4996 /wd4018")
+# TODO: disable warnings in narrower scopes
 
 # this also removes the default -D _MBCS
 # TODO: this messes up unrar build
@@ -147,3 +149,11 @@ include_directories("ext/libjpeg-turbo" "ext/libjpeg-turbo/simd")
 add_library(jpegturbo ${LIBJPEG_TURBO_SRC} ${LIBJPEG_TURBO_SIMD_SRC})
 ENDIF(NOT_DEFINED)
 
+# TODO: per target
+include_directories("ext/jbig2dec")
+add_library(jbig2 ${JBIG2_SRC})
+set_target_properties(
+	jbig2
+	PROPERTIES
+	COMPILE_DEFINITIONS "HAVE_STRING_H=1;JBIG_NO_MEMENTO"
+)
