@@ -278,7 +278,7 @@ MUXPS_OBJS = \
 	$(OX)\xps-image.obj $(OX)\xps-outline.obj $(OX)\xps-path.obj $(OX)\xps-resource.obj \
 	$(OX)\xps-tile.obj $(OX)\xps-util.obj $(OX)\xps-zip.obj
 
-LIBS_OBJS = \
+MUPDF_ALL_OBJS = \
 	$(ZLIB_OBJS) $(FT_OBJS) $(JPEG_TURBO_OBJS) $(JBIG2_OBJS) $(OPENJPEG_OBJS) \
 	$(FITZ_OBJS) $(DRAW_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS)
 
@@ -291,11 +291,11 @@ MUTOOLS_OBJS = \
 	$(OA)\mudraw.obj $(OA)\mutool.obj $(OA)\pdfclean.obj $(OA)\pdfextract.obj \
 	$(OA)\pdfinfo.obj $(OA)\pdfposter.obj $(OA)\pdfshow.obj
 
-MUTOOL_OBJS = $(LIBS_OBJS) $(MUDOC_OBJS) $(OA)\mutool.obj $(OA)\pdfshow.obj \
+MUTOOL_OBJS = $(MUPDF_ALL_OBJS) $(MUDOC_OBJS) $(OA)\mutool.obj $(OA)\pdfshow.obj \
 	$(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj $(OA)\pdfposter.obj
 MUTOOL_APP = $(O)\mutool.exe
 
-MUDRAW_OBJS = $(LIBS_OBJS) $(MUDOC_OBJS) $(OA)\mudraw.obj
+MUDRAW_OBJS = $(MUPDF_ALL_OBJSMUPDF_ALL_OBJS) $(MUDOC_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
 all: $(O) $(MUDRAW_APP) $(MUTOOL_APP)

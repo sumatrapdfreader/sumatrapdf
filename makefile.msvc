@@ -398,7 +398,7 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 {$(SRCDIR)\memtrace}.cpp{$(OM)}.obj::
 	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
 
-$(MUPDF_LIB): $(LIBS_OBJS)
+$(MUPDF_LIB): $(MUPDF_ALL_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
 
 $(UTILS_LIB): $(UTILS_OBJS)
