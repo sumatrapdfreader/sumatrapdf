@@ -27,9 +27,9 @@ protected:
     // state of the IterStart()/IterNext() iterator
     T *         iterCurr;
 
-    void EnsureCap(size_t needed) {
+    bool EnsureCapTry(size_t needed) {
         if (cap >= needed)
-            return;
+            return true;
 
         size_t newCap = cap * 2;
         if (needed > newCap)
@@ -38,23 +38,37 @@ protected:
             newCap = capacityHint;
 
         size_t newElCount = newCap + PADDING;
-        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
-        CrashAlwaysIf(newElCount > INT_MAX); // limitation of Vec::Find
+        if (newElCount >= SIZE_MAX / sizeof(T))
+            return false;
+        if (newElCount > INT_MAX) // limitation of Vec::Find
+            return false;
 
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
+        T *newEls;
         if (buf == els)
-            els = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
+            newEls = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
         else
-            els = (T *)Allocator::Realloc(allocator, els, allocSize);
-        CrashAlwaysIf(!els);
+            newEls = (T *)Allocator::Realloc(allocator, els, allocSize);
+        if (!newEls)
+            return false;
+        els = newEls;
         memset(els + len, 0, newPadding);
         cap = newCap;
+        return true;
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count) {
+    void EnsureCapCrash(size_t needed) {
+        bool ok = EnsureCapTry(needed);
+        CrashAlwaysIf(!ok);
+    }
+
+    T* MakeSpaceAt(size_t idx, size_t count, bool allowFailure=false) {
         size_t newLen = max(len, idx) + count;
-        EnsureCap(newLen);
+        if (!allowFailure)
+            EnsureCapCrash(newLen);
+        else if (!EnsureCapTry(newLen))
+            return NULL;
         T* res = &(els[idx]);
         if (len > idx) {
             T* src = els + idx;
@@ -88,14 +102,14 @@ public:
     Vec(const Vec& orig) : capacityHint(0), allocator(NULL), iterCurr(NULL) {
         els = buf;
         Reset();
-        EnsureCap(orig.cap);
+        EnsureCapCrash(orig.cap);
         // use memcpy, as Vec only supports POD types
         memcpy(els, orig.els, sizeof(T) * (len = orig.len));
     }
 
     Vec& operator=(const Vec& that) {
         if (this != &that) {
-            EnsureCap(that.cap);
+            EnsureCapCrash(that.cap);
             // use memcpy, as Vec only supports POD types
             memcpy(els, that.els, sizeof(T) * (len = that.len));
             memset(els + len, 0, sizeof(T) * (cap - len));
@@ -149,6 +163,16 @@ public:
             return;
         T* dst = MakeSpaceAt(len, count);
         memcpy(dst, src, count * sizeof(T));
+    }
+
+    // returns false on allocation failure instead of crashing
+    bool AppendChecked(const T* src, size_t count) {
+        if (0 == count)
+            return true;
+        T* dst = MakeSpaceAt(len, count, true);
+        if (dst)
+            memcpy(dst, src, count * sizeof(T));
+        return dst != NULL;
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end

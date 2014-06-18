@@ -162,7 +162,9 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 #endif
             return NULL;
         }
-        data.Append((char *)buffer, size);
+        bool ok = data.AppendChecked((char *)buffer, size);
+        if (!ok)
+            return NULL; // OOM
     }
     // zero-terminate for convenience
     data.Append("\0\0", 2);
@@ -295,8 +297,8 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     if (UCM_PROCESSDATA != msg || !userData)
         return -1;
     str::Str<char> *data = (str::Str<char> *)userData;
-    data->Append((char *)rarBuffer, bytesProcessed);
-    return 1;
+    bool ok = data->AppendChecked((char *)rarBuffer, bytesProcessed);
+    return ok ? 1 : -1;
 }
 
 char *UnRarDll::GetFileByName(const WCHAR *filename, size_t *len)
