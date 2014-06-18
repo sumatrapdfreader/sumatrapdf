@@ -319,7 +319,7 @@ char *UnRarDll::GetFileByName(const WCHAR *filename, size_t *len)
     int res = 0;
     RARHeaderDataEx rarHeader;
     for (;;) {
-        int res = RARReadHeaderEx(hArc, &rarHeader);
+        res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res)
             break;
         if (str::EqI(rarHeader.FileNameW, filename))
@@ -328,7 +328,7 @@ char *UnRarDll::GetFileByName(const WCHAR *filename, size_t *len)
     }
 
     if (0 == res) {
-        if (rarHeader.UnpSizeHigh != 0 || rarHeader.UnpSize == 0 || (int)rarHeader.UnpSize < 0) {
+        if (rarHeader.UnpSizeHigh != 0) {
             res = 1;
         }
         else {
