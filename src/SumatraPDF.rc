@@ -296,7 +296,11 @@ IDD_PUBLIC_APP_KEY  RCDATA                      PUBLIC_APP_KEY_PATH
 // RT_MANIFEST
 //
 
+#ifdef DISABLE_PER_MONITOR_DPI_AWARENESS
+1                       RT_MANIFEST             "SumatraPDF-no-per-monitor-dpi.exe.manifest"
+#else
 1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
+#endif
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
