@@ -61,63 +61,42 @@ ENDIF(MSVC)
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
-include_directories("tools/efi"
-	"src/utils")
-
 add_executable(efi ${EFI_SRC})
-set_target_properties(
-	efi
-	PROPERTIES
-	COMPILE_FLAGS "/wd4267"
-)
+target_include_directories(efi PRIVATE "tools/efi" "src/utils")
+target_compile_options(efi PRIVATE "/wd4267")
 ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
-include_directories ("src/utils" "src/utils/msvc")
 add_executable(plugin_test WIN32 ${PLUGIN_TEST_SRC})
 target_link_libraries(plugin_test "shlwapi")
-set_target_properties(
-	plugin_test
-	PROPERTIES
-	COMPILE_FLAGS "/wd4244"
-)
+target_include_directories(plugin_test PRIVATE "src/utils" "src/utils/msvc")
+target_compile_options(plugin_test PRIVATE "/wd4244")
 ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
 add_library(bzip2 "ext/bzip2/bzip_all.c")
-set_target_properties(
-	bzip2
-	PROPERTIES
-	COMPILE_FLAGS "/wd4996  /wd4244 /wd4267"
-)
+target_compile_options(bzip2 PRIVATE "/wd4996 /wd4244 /wd4267")
 # 4267 - possibly only needed for 64-bit build
 ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
-# TODO: per target
-include_directories("ext/freetype2/include" "ext/freetype2/config")
-
 add_library(ft ${FREETYPE2_SRC})
-set_target_properties(
-	ft
-	PROPERTIES
-	COMPILE_FLAGS "/wd4244 /wd4703 /wd4996"
-	COMPILE_DEFINITIONS "FT2_BUILD_LIBRARY;FT_OPTION_AUTOFIT2"
-)
+target_include_directories(ft PRIVATE "ext/freetype2/include" "ext/freetype2/config")
+target_compile_options(ft PRIVATE "/wd4244 /wd4703 /wd4996")
+target_compile_definitions(ft PRIVATE "FT2_BUILD_LIBRARY;FT_OPTION_AUTOFIT2")
 ENDIF(NOT_DEFINED)
 
 ## --------------------------------------------------------------------
 
 IF(NOT_DEFINED)
-# TODO: per target
-include_directories("ext/zlib" "ext/zlib/infback9")
 add_library(zlib ${ZLIB_SRC})
+target_include_directories(zlib PRIVATE "ext/zlib" "ext/zlib/infback9")
 ENDIF(NOT_DEFINED)
 
 
@@ -128,12 +107,8 @@ add_executable(all_tests ${ALL_TESTS_SRC})
 IF(WIN32)
 	target_link_libraries(all_tests "gdiplus" "comctl32" "shlwapi" "Version")
 ENDIF()
-set_target_properties(
-	all_tests
-	PROPERTIES
-	COMPILE_FLAGS "/wd4996 /wd4244"
-	COMPILE_DEFINITIONS "NO_LIBMUPDF"
-)
+target_compile_options(all_tests PRIVATE "/wd4996 /wd4244")
+target_compile_definitions(all_tests PRIVATE "NO_LIBMUPDF")
 # d4244 - possibly only needed for 64-bit build
 
 #set_target_properties(all_tests PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS")
@@ -163,9 +138,5 @@ IF(NOT_DEFINED)
 # TODO: per target
 include_directories("ext/jbig2dec")
 add_library(jbig2 ${JBIG2_SRC})
-set_target_properties(
-	jbig2
-	PROPERTIES
-	COMPILE_DEFINITIONS "HAVE_STRING_H=1;JBIG_NO_MEMENTO"
-)
+target_compile_definitions(jbig2 PRIVATE "HAVE_STRING_H=1;JBIG_NO_MEMENTO")
 ENDIF(NOT_DEFINED)
