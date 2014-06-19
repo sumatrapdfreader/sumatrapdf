@@ -319,11 +319,8 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 
 void UpdateTocColors(WindowInfo *win)
 {
-    if (win->AsEbook()) {
-        COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
-        if (gGlobalPrefs->useSysColors)
-            bgColor = GetSysColor(COLOR_WINDOW);
-        TreeView_SetBkColor(win->hwndTocTree, bgColor);
+    if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
+        TreeView_SetBkColor(win->hwndTocTree, gGlobalPrefs->ebookUI.backgroundColor);
         // TODO: more work needed to to ensure consistent look of the ebook window:
         // - change the tree item text color
         // - change the tree item background color when selected (for both focused and non-focused cases)
