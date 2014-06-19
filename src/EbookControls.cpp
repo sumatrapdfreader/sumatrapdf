@@ -119,7 +119,10 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx);
 
     Color bgCol;
-    bgCol.SetFromCOLORREF(gGlobalPrefs->ebookUI.backgroundColor);
+    if (gGlobalPrefs->useSysColors)
+        bgCol.SetFromCOLORREF(GetSysColor(COLOR_WINDOW));
+    else
+        bgCol.SetFromCOLORREF(gGlobalPrefs->ebookUI.backgroundColor);
     textRender->SetTextBgColor(bgCol);
 
     DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
@@ -166,7 +169,8 @@ void SetMainWndBgCol(EbookControls *ctrls)
         bgColor = GetSysColor(COLOR_WINDOW);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->mainWnd->SetStyle(styleMainWnd);
-    // TODO: update the background of tree control and other colors that are supposed to match background color
+    // note: callers are expected to update the background of tree control and 
+    // other colors that are supposed to match background color
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)

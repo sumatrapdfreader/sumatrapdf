@@ -2142,8 +2142,10 @@ void UpdateDocumentColors()
     // TODO: only do this if colors have actually changed?
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->AsEbook())
+        if (win->AsEbook()) {
             win->AsEbook()->UpdateDocumentColors();
+            UpdateTocColors(win);
+        }
     }
 
     COLORREF text = GetFixedPageUiTextColor();
