@@ -144,6 +144,9 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         break;
     case CS3('s','u','p'): return Tag_Sup;
     case CS3('s','v','g'): return Tag_Svg;
+    case CS4('s','v','g',':'):
+        if (9 == len && str::EqNI(name + 4, "image", 5)) return Tag_Svg_Image;
+        break;
     case CS4('t','a','b','l'):
         if (5 == len && CS1('e') == STR1i(name + 4)) return Tag_Table;
         break;

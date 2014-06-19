@@ -185,7 +185,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
     CrashIf(!epubDoc);
     if (t->IsEndTag())
         return;
-    if (!tagNesting.Contains(Tag_Svg))
+    if (!tagNesting.Contains(Tag_Svg) && Tag_Svg_Image != t->tag)
         return;
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (!attr)
@@ -210,7 +210,7 @@ void EpubFormatter::HandleHtmlTag(HtmlToken *t)
         hiddenDepth = tagNesting.Count() + 1;
     if (hiddenDepth > 0)
         UpdateTagNesting(t);
-    else if (Tag_Image == t->tag)
+    else if (Tag_Image == t->tag || Tag_Svg_Image == t->tag)
         HandleTagSvgImage(t);
     else
         HtmlFormatter::HandleHtmlTag(t);
