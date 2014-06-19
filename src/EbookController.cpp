@@ -264,20 +264,24 @@ void EbookController::CloseCurrentDocument()
 // returns -1 if no pages are available
 static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
-    if (!pages)
+    if (!pages || pages->Count() == 0) {
         return -1;
+    }
+
+    // sometimes reparseIdx of first page is > 0 and the code below
+    // doesn't handle that, so do that case first
+    if (0 == reparseIdx) {
+        return 1;
+    }
+
     for (size_t i = 0; i < pages->Count(); i++) {
         HtmlPage *pd = pages->At(i);
-        if (pd->reparseIdx == reparseIdx)
+        if (pd->reparseIdx == reparseIdx) {
             return (int)i + 1;
+        }
         // this is the first page whose content is after reparseIdx, so
         // the page contining reparseIdx must be the one before
         if (pd->reparseIdx > reparseIdx) {
-            if (i == 0 && reparseIdx == 0) {
-                // unless pd->reparseIdx of the first page is > reparseIdx
-                // and reparseIdx is 0, which means it's really the first page
-                return 1;
-            }
             CrashIf(0 == i);
             return (int)i;
         }
