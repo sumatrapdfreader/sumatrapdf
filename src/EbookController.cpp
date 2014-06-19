@@ -273,8 +273,12 @@ static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
         // this is the first page whose content is after reparseIdx, so
         // the page contining reparseIdx must be the one before
         if (pd->reparseIdx > reparseIdx) {
-            // TODO: happened in e.g. crash 54140
-            //CrashIf(0 == i);
+            if (i == 0 && reparseIdx == 0) {
+                // unless pd->reparseIdx of the first page is > reparseIdx
+                // and reparseIdx is 0, which means it's really the first page
+                return 1;
+            }
+            CrashIf(0 == i);
             return (int)i;
         }
     }
