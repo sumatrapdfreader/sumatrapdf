@@ -270,7 +270,7 @@ static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 
     // sometimes reparseIdx of first page is > 0 and the code below
     // doesn't handle that, so do that case first
-    if (0 == reparseIdx) {
+    if (reparseIdx < pages->At(0)->reparseIdx) {
         return 1;
     }
 
