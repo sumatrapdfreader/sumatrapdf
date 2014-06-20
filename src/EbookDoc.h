@@ -135,27 +135,6 @@ public:
     static PalmDoc *CreateFromFile(const WCHAR *fileName);
 };
 
-/* ********** TCR (Text Compression for (Psion) Reader) ********** */
-
-class TcrDoc {
-    ScopedMem<WCHAR> fileName;
-    str::Str<char> htmlData;
-
-    bool Load();
-
-public:
-    explicit TcrDoc(const WCHAR *fileName);
-    ~TcrDoc();
-
-    const char *GetTextData(size_t *lenOut);
-
-    WCHAR *GetProperty(DocumentProperty prop) const;
-    const WCHAR *GetFileName() const;
-
-    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static TcrDoc *CreateFromFile(const WCHAR *fileName);
-};
-
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
@@ -183,7 +162,7 @@ public:
     static HtmlDoc *CreateFromFile(const WCHAR *fileName);
 };
 
-/* ********** Plain Text (and RFCs) ********** */
+/* ********** Plain Text (and RFCs and TCR) ********** */
 
 class TxtDoc {
     ScopedMem<WCHAR> fileName;

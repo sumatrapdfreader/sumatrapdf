@@ -1145,87 +1145,6 @@ PalmDoc *PalmDoc::CreateFromFile(const WCHAR *fileName)
     return doc;
 }
 
-/* ********** TCR (Text Compression for (Psion) Reader) ********** */
-
-// cf. http://www.cix.co.uk/~gidds/Software/TCR.html
-#define TCR_HEADER      "!!8-Bit!!"
-#define TCR_HEADER_LEN  strlen(TCR_HEADER)
-
-TcrDoc::TcrDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
-TcrDoc::~TcrDoc() { }
-
-bool TcrDoc::Load()
-{
-    size_t dataLen;
-    ScopedMem<char> data(file::ReadAll(fileName, &dataLen));
-    if (!data)
-        return false;
-    if (dataLen < TCR_HEADER_LEN || !str::StartsWith(data.Get(), TCR_HEADER))
-        return false;
-
-    const char *curr = data + TCR_HEADER_LEN;
-    const char *end = data + dataLen;
-
-    const char *dict[256];
-    for (int n = 0; n < dimof(dict); n++) {
-        if (curr >= end)
-            return false;
-        dict[n] = curr;
-        curr += 1 + (uint8_t)*curr;
-    }
-
-    str::Str<char> text(dataLen * 2);
-    for (; curr < end; curr++) {
-        const char *entry = dict[(uint8_t)*curr];
-        text.Append(entry + 1, (uint8_t)*entry);
-    }
-
-    ScopedMem<char> textUtf8(DecodeTextToUtf8(text.Get()));
-    if (!textUtf8)
-        return false;
-    htmlData.Append("<pre>");
-    for (curr = textUtf8; *curr; curr++) {
-        AppendChar(htmlData, *curr);
-    }
-    htmlData.Append("</pre>");
-
-    return true;
-}
-
-const char *TcrDoc::GetTextData(size_t *lenOut)
-{
-    *lenOut = htmlData.Size();
-    return htmlData.Get();
-}
-
-WCHAR *TcrDoc::GetProperty(DocumentProperty prop) const
-{
-    return NULL;
-}
-
-const WCHAR *TcrDoc::GetFileName() const
-{
-    return fileName;
-}
-
-bool TcrDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    if (sniff)
-        return file::StartsWith(fileName, TCR_HEADER);
-
-    return str::EndsWithI(fileName, L".tcr");
-}
-
-TcrDoc *TcrDoc::CreateFromFile(const WCHAR *fileName)
-{
-    TcrDoc *doc = new TcrDoc(fileName);
-    if (!doc || !doc->Load()) {
-        delete doc;
-        return NULL;
-    }
-    return doc;
-}
-
 /* ********** Plain HTML ********** */
 
 HtmlDoc::HtmlDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
@@ -1343,9 +1262,37 @@ HtmlDoc *HtmlDoc::CreateFromFile(const WCHAR *fileName)
     return doc;
 }
 
-/* ********** Plain Text (and RFCs) ********** */
+/* ********** Plain Text (and RFCs and TCR) ********** */
 
 TxtDoc::TxtDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
+
+// cf. http://www.cix.co.uk/~gidds/Software/TCR.html
+#define TCR_HEADER "!!8-Bit!!"
+
+static char *DecompressTcrText(const char *data, size_t dataLen)
+{
+    CrashIf(!str::StartsWith(data, TCR_HEADER));
+    const char *curr = data + str::Len(TCR_HEADER);
+    const char *end = data + dataLen;
+
+    const char *dict[256];
+    for (int n = 0; n < dimof(dict); n++) {
+        if (curr >= end)
+            return str::Dup(data);
+        dict[n] = curr;
+        curr += 1 + (uint8_t)*curr;
+    }
+
+    str::Str<char> text(dataLen * 2);
+    for (; curr < end; curr++) {
+        const char *entry = dict[(uint8_t)*curr];
+        bool ok = text.AppendChecked(entry + 1, (uint8_t)*entry);
+        if (!ok)
+            return NULL;
+    }
+
+    return text.StealData();
+}
 
 static const char *TextFindLinkEnd(str::Str<char>& htmlData, const char *curr, char prevChar, bool fromWww=false)
 {
@@ -1391,19 +1338,19 @@ inline bool IsEmailDomainChar(char c)
     return isalnum((unsigned char)c) || '-' == c;
 }
 
-static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr, bool fromAt=false)
+static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
 {
     ScopedMem<char> beforeAt;
     const char *end = curr;
-    if (fromAt) {
+    if ('@' == *curr) {
         if (htmlData.Count() == 0 || !IsEmailUsernameChar(htmlData.Last()))
             return NULL;
         size_t idx = htmlData.Count();
         for (; idx > 1 && IsEmailUsernameChar(htmlData.At(idx - 1)); idx--);
         beforeAt.Set(str::Dup(&htmlData.At(idx)));
-        htmlData.RemoveAt(idx, htmlData.Count() - idx);
     } else {
-        end = curr + 7; // skip mailto:
+        CrashIf(!str::StartsWith(curr, "mailto:"));
+        end = curr = curr + 7; // skip mailto:
         if (!IsEmailUsernameChar(*end))
             return NULL;
         for (; IsEmailUsernameChar(*end); end++);
@@ -1418,15 +1365,17 @@ static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr, 
         for (end++; IsEmailDomainChar(*end); end++);
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
 
-    htmlData.Append("<a href=\"");
-    if (fromAt)
-        htmlData.AppendFmt("mailto:%s", beforeAt);
+    if (beforeAt) {
+        size_t idx = htmlData.Count() - str::Len(beforeAt);
+        htmlData.RemoveAt(idx, htmlData.Count() - idx);
+    }
+    htmlData.Append("<a href=\"mailto:");
+    htmlData.Append(beforeAt);
     for (; curr < end; curr++) {
         AppendChar(htmlData, *curr);
     }
     htmlData.Append("\">");
-    if (fromAt)
-        htmlData.Append(beforeAt);
+    htmlData.Append(beforeAt);
 
     return end;
 }
@@ -1444,7 +1393,12 @@ static const char *TextFindRfcEnd(str::Str<char>& htmlData, const char *curr)
 
 bool TxtDoc::Load()
 {
-    ScopedMem<char> text(file::ReadAll(fileName, NULL));
+    size_t dataLen;
+    ScopedMem<char> text(file::ReadAll(fileName, &dataLen));
+    if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.Get(), TCR_HEADER))
+        text.Set(DecompressTcrText(text, dataLen));
+    if (!text)
+        return false;
     text.Set(DecodeTextToUtf8(text));
     if (!text)
         return false;
@@ -1466,7 +1420,7 @@ bool TxtDoc::Load()
         else if (linkEnd)
             /* don't check for hyperlinks inside a link */;
         else if ('@' == *curr)
-            linkEnd = TextFindEmailEnd(htmlData, curr, true);
+            linkEnd = TextFindEmailEnd(htmlData, curr);
         else if (curr > text && ('/' == curr[-1] || isalnum((unsigned char)curr[-1])))
             /* don't check for a link at this position */;
         else if ('h' == *curr && str::Parse(curr, "http%?s://"))
@@ -1578,7 +1532,9 @@ bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
            // http://en.wikipedia.org/wiki/FILE_ID.DIZ
            str::EndsWithI(fileName, L"\\file_id.diz") ||
            // http://en.wikipedia.org/wiki/Read.me
-           str::EndsWithI(fileName, L"\\Read.me");
+           str::EndsWithI(fileName, L"\\Read.me") ||
+           // http://www.cix.co.uk/~gidds/Software/TCR.html
+           str::EndsWithI(fileName, L".tcr");
 }
 
 TxtDoc *TxtDoc::CreateFromFile(const WCHAR *fileName)

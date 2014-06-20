@@ -43,7 +43,7 @@ void SetDefaultEbookFont(const WCHAR *name, float size)
     gDefaultFontSize = size * 0.8f;
 }
 
-/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
+/* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, HTML and TXT engines */
 
 struct PageAnchor {
     DrawInstr *instr;
@@ -1148,7 +1148,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.textAllocator = &allocator;
     args.textRenderMethod = TextRenderMethodGdiplusQuick;
 
-    pages = PdbFormatter(&args, doc).FormatAllPages();
+    pages = HtmlFormatter(&args).FormatAllPages();
     if (!ExtractPageAnchors())
         return false;
 
@@ -1537,79 +1537,6 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
     return Chm2EngineImpl::CreateFromFile(fileName);
-}
-
-}
-
-/* BaseEngine for handling TCR documents */
-
-class TcrEngineImpl : public EbookEngine {
-public:
-    TcrEngineImpl() : EbookEngine(), doc(NULL) {
-        // ISO 216 A4 (210mm x 297mm)
-        pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
-    }
-    virtual ~TcrEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
-    }
-
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".tcr"; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-
-    static BaseEngine *CreateFromFile(const WCHAR *fileName);
-
-protected:
-    TcrDoc *doc;
-
-    bool Load(const WCHAR *fileName);
-};
-
-bool TcrEngineImpl::Load(const WCHAR *fileName)
-{
-    this->fileName = str::Dup(fileName);
-
-    doc = TcrDoc::CreateFromFile(fileName);
-    if (!doc)
-        return false;
-
-    HtmlFormatterArgs args;
-    args.htmlStr = doc->GetTextData(&args.htmlStrLen);
-    args.pageDx = (float)pageRect.dx - 2 * pageBorder;
-    args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(GetDefaultFontName());
-    args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplus;
-
-    pages = HtmlFormatter(&args).FormatAllPages(false);
-
-    return pages->Count() > 0;
-}
-
-BaseEngine *TcrEngineImpl::CreateFromFile(const WCHAR *fileName)
-{
-    TcrEngineImpl *engine = new TcrEngineImpl();
-    if (!engine->Load(fileName)) {
-        delete engine;
-        return NULL;
-    }
-    return engine;
-}
-
-namespace TcrEngine {
-
-bool IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
-    return TcrDoc::IsSupportedFile(fileName, sniff);
-}
-
-BaseEngine *CreateFromFile(const WCHAR *fileName)
-{
-    return TcrEngineImpl::CreateFromFile(fileName);
 }
 
 }

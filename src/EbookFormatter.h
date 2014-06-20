@@ -65,18 +65,6 @@ public:
     Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc);
 };
 
-/* formatting extensions for PalmDOC */
-
-class PalmDoc;
-
-class PdbFormatter : public HtmlFormatter {
-    PalmDoc *palmDoc;
-
-public:
-    PdbFormatter(HtmlFormatterArgs *args, PalmDoc *doc) :
-        HtmlFormatter(args), palmDoc(doc) { }
-};
-
 /* formatting extensions for standalone HTML */
 
 class HtmlDoc;

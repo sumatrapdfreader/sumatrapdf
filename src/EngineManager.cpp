@@ -28,7 +28,6 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
                Fb2Engine::IsSupportedFile(filePath, sniff)  ||
                MobiEngine::IsSupportedFile(filePath, sniff) ||
                PdbEngine::IsSupportedFile(filePath, sniff)  ||
-               TcrEngine::IsSupportedFile(filePath, sniff)  ||
                HtmlEngine::IsSupportedFile(filePath, sniff) ||
                TxtEngine::IsSupportedFile(filePath, sniff)
            );
@@ -80,9 +79,6 @@ RetrySniffing:
     } else if (PdbEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Pdb) {
         engine = PdbEngine::CreateFromFile(filePath);
         engineType = Engine_Pdb;
-    } else if (TcrEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Tcr) {
-        engine = TcrEngine::CreateFromFile(filePath);
-        engineType = Engine_Tcr;
     } else if (HtmlEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Html) {
         engine = HtmlEngine::CreateFromFile(filePath);
         engineType = Engine_Html;

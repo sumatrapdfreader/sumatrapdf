@@ -2332,7 +2332,6 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Fb2:    fileFilter.Append(_TR("FictionBook documents")); break;
         case Engine_Pdb:    fileFilter.Append(L"PalmDOC"); break;
-        case Engine_Tcr:    fileFilter.Append(L"TCR ebooks"); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
@@ -2730,8 +2729,8 @@ void OnMenuOpen(WindowInfo& win)
         { _TR("EPUB ebooks"),           L"*.epub",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true },
         { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
-        { NULL, /* further ebooks */    L"*.pdb;*.tcr", gGlobalPrefs->ebookUI.useFixedPageUI },
-        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", gGlobalPrefs->ebookUI.useFixedPageUI },
+        { NULL, /* further ebooks */    L"*.pdb", gGlobalPrefs->ebookUI.useFixedPageUI },
+        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;rfc*.txt;file_id.diz;read.me;*.tcr", gGlobalPrefs->ebookUI.useFixedPageUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling

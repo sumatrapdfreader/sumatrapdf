@@ -44,13 +44,6 @@ BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 }
 
-namespace TcrEngine {
-
-bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-BaseEngine *CreateFromFile(const WCHAR *fileName);
-
-}
-
 namespace HtmlEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
