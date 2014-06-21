@@ -303,7 +303,7 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_TGA_PREVIEW"
 
 ##### SumatraPDF-specific build rules #####
 
-rebuild: clean SumatraPDF
+rebuild: clean OnlySumatraPDF
 
 cleanmupdf: force
 	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS) $(MUCBZ_OBJS)
@@ -311,6 +311,7 @@ cleanmupdf: force
 cleanall: force
 	-rmdir /S /Q obj-dbg obj-rel
 
+OnlySumatraPDF: $(OS) $(SUMATRA_APP)
 SumatraPDF:    $(OS) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
 Installer:     $(OS) $(INSTALLER_APP)
 Uninstaller:   $(OS) $(UNINSTALLER_APP)

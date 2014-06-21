@@ -60,7 +60,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe OnlySumatraPDF</NMakeBuildCommandLine>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe WITH_ANALYZE=yes</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes rebuild</NMakeReBuildCommandLine>
