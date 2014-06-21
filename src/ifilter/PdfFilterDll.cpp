@@ -124,9 +124,10 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer()
 {
-    WCHAR path[MAX_PATH];
-    if (!GetModuleFileName(g_hInstance, path, dimof(path)))
+    WCHAR dllPath[MAX_PATH];
+    if (!GetModuleFileName(g_hInstance, dllPath, dimof(dllPath)))
         return HRESULT_FROM_WIN32(GetLastError());
+    dllPath[dimof(dllPath) - 1] = '\0';
 
     struct {
         WCHAR *key, *value, *data;
@@ -134,7 +135,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
                 NULL,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   path },
+                NULL,                   dllPath },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",   L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
@@ -149,7 +150,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
                 NULL,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   path },
+                NULL,                   dllPath },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",      L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
@@ -165,7 +166,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID,
                 NULL,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   path },
+                NULL,                   dllPath },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",      L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER,

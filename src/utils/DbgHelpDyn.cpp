@@ -341,18 +341,19 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi)))
         return false;
 
-    DWORD hMod = (DWORD)mbi.AllocationBase;
+    HMODULE hMod = (HMODULE)mbi.AllocationBase;
     if (0 == hMod)
         return false;
 
-    if (!GetModuleFileNameA((HMODULE)hMod, module, moduleLen))
+    if (!GetModuleFileNameA(hMod, module, moduleLen))
         return false;
+    module[moduleLen - 1] = '\0';
 
-    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMod;
-    PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)(hMod + dosHeader->e_lfanew);
+    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)mbi.AllocationBase;
+    PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)((BYTE *)dosHeader + dosHeader->e_lfanew);
     PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(pNtHeader);
 
-    DWORD lAddr = (DWORD)addr - hMod;
+    DWORD lAddr = (DWORD)addr - (DWORD)hMod;
     for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++) {
         DWORD startAddr = section->VirtualAddress;
         DWORD endAddr = startAddr;

@@ -671,6 +671,10 @@ destroy_system_font_list(void)
 	memset(&fontlistMS, 0, sizeof(fontlistMS));
 }
 
+// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
+
 static void
 create_system_font_list(fz_context *ctx)
 {
@@ -692,7 +696,9 @@ create_system_font_list(fz_context *ctx)
 		// If no CJK fallback font is builtin but one has been shipped separately (in the same
 		// directory as the main executable), add it to the list of loadable system fonts
 		WCHAR szFile[MAX_PATH], *lpFileName;
-		GetModuleFileName(0, szFontDir, MAX_PATH);
+		szFile[0] = '\0';
+		GetModuleFileName(CURRENT_HMODULE, szFontDir, MAX_PATH);
+		szFontDir[nelem(szFontDir) - 1] = '\0';
 		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
 		lstrcpyn(lpFileName, L"DroidSansFallback.ttf", szFile + MAX_PATH - lpFileName);
 		extend_system_font_list(ctx, szFile);

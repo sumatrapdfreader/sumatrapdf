@@ -4,6 +4,10 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
 
+// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
+
 namespace path {
 
 bool IsSep(WCHAR c)
@@ -248,20 +252,19 @@ WCHAR *GetTempPath(const WCHAR *filePrefix)
     return str::Dup(path);
 }
 
-// returns a path to the application executable's directory
-// with either the given fileName or the executable's name
+// returns a path to the application module's directory
+// with either the given fileName or the module's name
+// (module is the EXE or DLL in which path::GetAppPath resides)
 WCHAR *GetAppPath(const WCHAR *fileName)
 {
-    WCHAR exePath[MAX_PATH];
-    exePath[0] = 0;
-    GetModuleFileName(NULL, exePath, dimof(exePath));
-    // TODO: is normalization needed here at all?
-    ScopedMem<WCHAR> fullPath(path::Normalize(exePath));
-    if (fileName) {
-        fullPath.Set(path::GetDir(fullPath));
-        fullPath.Set(path::Join(fullPath, fileName));
-    }
-    return fullPath.StealData();
+    WCHAR modulePath[MAX_PATH];
+    modulePath[0] = '\0';
+    GetModuleFileName(CURRENT_HMODULE, modulePath, dimof(modulePath));
+    modulePath[dimof(modulePath) - 1] = '\0';
+    if (!fileName)
+        return str::Dup(modulePath);
+    ScopedMem<WCHAR> moduleDir(path::GetDir(modulePath));
+    return path::Join(moduleDir, fileName);
 }
 
 }

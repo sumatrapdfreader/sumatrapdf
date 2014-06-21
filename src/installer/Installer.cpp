@@ -179,7 +179,9 @@ int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated)
 WCHAR *GetOwnPath()
 {
     static WCHAR exePath[MAX_PATH];
+    exePath[0] = '\0';
     GetModuleFileName(NULL, exePath, dimof(exePath));
+    exePath[dimof(exePath) - 1] = '\0';
     return exePath;
 }
 

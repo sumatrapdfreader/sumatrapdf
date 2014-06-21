@@ -6,6 +6,10 @@
 
 #include "WinUtil.h"
 
+// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
+
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
 
@@ -103,8 +107,10 @@ private:
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-    if (dwReason == DLL_PROCESS_ATTACH)
+    if (dwReason == DLL_PROCESS_ATTACH) {
         g_hInstance = hInstance;
+        CrashIf(g_hInstance != CURRENT_HMODULE);
+    }
 
     return TRUE;
 }
@@ -174,6 +180,7 @@ STDAPI DllRegisterServer()
     WCHAR dllPath[MAX_PATH];
     if (!GetModuleFileName(g_hInstance, dllPath, dimof(dllPath)))
         return HRESULT_FROM_WIN32(GetLastError());
+    dllPath[dimof(dllPath) - 1] = '\0';
 
 #define WriteOrFail_(key, value, data) WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data); \
     if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) return E_FAIL

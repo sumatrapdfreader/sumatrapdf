@@ -281,6 +281,7 @@ WCHAR *GetExePath()
     WCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
+    buf[dimof(buf) - 1] = '\0';
     // TODO: is normalization needed here at all?
     return path::Normalize(buf);
 }
