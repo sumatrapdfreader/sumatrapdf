@@ -905,6 +905,7 @@ void TabsOnChangedDoc(WindowInfo *win)
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     TabData *tdata = GetTabData(win, current);
+    CrashIf(!tdata);
     SaveTabData(win, tdata);
 
     TCITEM tcs;
@@ -930,8 +931,8 @@ void TabsOnCloseDoc(WindowInfo *win)
     UpdateTabWidth(win);
     if (count > 1) {
         tdata = win->tabSelectionHistory->Pop();
-        LoadModelIntoTab(win, tdata);
         TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win, tdata));
+        LoadModelIntoTab(win, tdata);
     }
 }
 
