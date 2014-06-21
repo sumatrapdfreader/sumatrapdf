@@ -88,6 +88,22 @@ static void StrIsDigitTest()
     }
 }
 
+static void StrConvTest()
+{
+    WCHAR wbuf[4];
+    char cbuf[4];
+    size_t conv = str::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
+    utassert(conv == 3 && str::Eq(wbuf, L"tes"));
+    conv = str::WcharToUtf8Buf(L"abc", cbuf, dimof(cbuf));
+    utassert(conv == 3 && str::Eq(cbuf, "abc"));
+    conv = str::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
+    utassert(conv == 3 && str::StartsWith(wbuf, L"ab") && wbuf[2] == 0xD800);
+    conv = str::WcharToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
+    utassert(conv == 0 && str::Eq(cbuf, ""));
+    conv = str::WcharToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
+    utassert(conv == 0 && str::Eq(cbuf, ""));
+}
+
 void StrTest()
 {
     WCHAR buf[32];
@@ -470,4 +486,5 @@ void StrTest()
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();
+    StrConvTest();
 }

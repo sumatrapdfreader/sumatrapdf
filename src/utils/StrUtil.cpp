@@ -1157,9 +1157,8 @@ Failure:
 
 size_t Utf8ToWcharBuf(const char *s, size_t cbLen, WCHAR *bufOut, size_t cchBufOutSize)
 {
-    CrashIf(0 == cchBufOutSize);
-    int iCbLen = (int)cbLen;
-    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, iCbLen, bufOut, cchBufOutSize);
+    CrashIf(!bufOut || (0 == cchBufOutSize));
+    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cbLen, bufOut, (int)cchBufOutSize);
     if ((size_t)cchConverted >= cchBufOutSize) {
         cchConverted = (int)cchBufOutSize - 1;
     }
@@ -1173,9 +1172,10 @@ size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
     int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, NULL, 0, NULL, NULL);
     if ((size_t)cbConverted >= cbBufOutSize)
         cbConverted = (int)cbBufOutSize - 1;
-    WideCharToMultiByte(CP_UTF8, 0, s, -1, bufOut, cbConverted, NULL, NULL);
-    bufOut[cbConverted] = '\0';
-    return cbConverted;
+    int res = WideCharToMultiByte(CP_UTF8, 0, s, (int)str::Len(s), bufOut, cbConverted, NULL, NULL);
+    CrashIf(res > cbConverted);
+    bufOut[res] = '\0';
+    return res;
 }
 
 // --- copyright for utf8 code below
