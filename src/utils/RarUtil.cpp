@@ -284,6 +284,7 @@ bool UnRarDll::ExtractFilenames(WStrList &filenames)
         int res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res)
             break;
+        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
         filenames.Append(str::Dup(rarHeader.FileNameW));
         RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
     }
@@ -324,6 +325,7 @@ char *UnRarDll::GetFileByName(const WCHAR *filename, size_t *len)
         res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res)
             break;
+        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
         if (str::EqI(rarHeader.FileNameW, filename))
             break;
         RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
