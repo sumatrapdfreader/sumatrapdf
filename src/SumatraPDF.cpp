@@ -2869,12 +2869,14 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
         return;
     }
 
+    DeferWinPosHelper dh;
+
     // Tabbar and toolbar at the top
     if (win->tabsVisible && !win->presentation && !win->isFullScreen) {
         int tabbarHeight = win->tabsInTitlebar && !IsZoomed(win->hwndFrame) ? int(1.3f * TABBAR_HEIGHT)
                                                                             : TABBAR_HEIGHT;
         if (updateToolbars) {
-            SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabbarHeight, SWP_NOZORDER);
+            dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabbarHeight, SWP_NOZORDER);
             UpdateTabWidth(win);
         }
         // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
@@ -2885,7 +2887,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
     }
     if (gGlobalPrefs->showToolbar && !win->presentation && !win->isFullScreen && !win->AsEbook()) {
         if (updateToolbars)
-            SetWindowPos(win->hwndReBar, NULL, rc.x, rc.y, rc.dx, 0 /* auto */, SWP_NOZORDER);
+            dh.SetWindowPos(win->hwndReBar, NULL, rc.x, rc.y, rc.dx, 0 /* auto */, SWP_NOZORDER);
         WindowRect rcRebar(win->hwndReBar);
         rc.y += rcRebar.dy;
         rc.dy -= rcRebar.dy;
@@ -2914,25 +2916,27 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
         if (tocVisible) {
             RectI rToc(rc.TL(), toc);
-            MoveWindow(win->hwndTocBox, rToc);
+            dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
                 RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
-                MoveWindow(win->hwndFavSplitter, rSplitV);
+                dh.MoveWindow(win->hwndFavSplitter, rSplitV);
                 toc.dy += SPLITTER_DY;
             }
         }
         if (showFavorites) {
             RectI rFav(rc.x, rc.y + toc.dy, toc.dx, rc.dy - toc.dy);
-            MoveWindow(win->hwndFavBox, rFav);
+            dh.MoveWindow(win->hwndFavBox, rFav);
         }
         RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
-        MoveWindow(win->hwndSidebarSplitter, rSplitH);
+        dh.MoveWindow(win->hwndSidebarSplitter, rSplitH);
 
         rc.x += toc.dx + SPLITTER_DX;
         rc.dx -= toc.dx + SPLITTER_DX;
     }
 
-    MoveWindow(win->hwndCanvas, rc);
+    dh.MoveWindow(win->hwndCanvas, rc);
+
+    dh.End();
 
     if (tocVisible) {
         // the ToC selection may change due to resizing

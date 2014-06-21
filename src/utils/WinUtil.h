@@ -160,6 +160,41 @@ public:
     void Flush(HDC hdc);
 };
 
+class DeferWinPosHelper {
+    HDWP hdwp;
+
+public:
+    DeferWinPosHelper() {
+        hdwp = ::BeginDeferWindowPos(32);
+    }
+
+    ~DeferWinPosHelper() {
+        End();
+    }
+
+    void End() {
+        if (hdwp) {
+            ::EndDeferWindowPos(hdwp);
+            hdwp = NULL;
+        }
+    }
+
+    void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags) {
+        hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+    }
+
+    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint=TRUE) {
+        UINT uFlags = SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER;
+        if (!bRepaint)
+            uFlags |= SWP_NOREDRAW;
+        this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
+    }
+
+    void MoveWindow(HWND hWnd, RectI r) {
+        this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
+    }
+};
+
 void    InitAllCommonControls();
 SizeI   GetBitmapSize(HBITMAP hbmp);
 void    UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
