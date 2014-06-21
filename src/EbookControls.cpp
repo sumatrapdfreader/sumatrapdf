@@ -10,9 +10,13 @@
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "resource.h"
+#include "Timer.h"
 #include "TrivialHtmlParser.h"
 #include "TxtParser.h"
 #include "WinUtil.h"
+
+#define NOLOG 1
+#include "DebugLog.h"
 
 static HCURSOR gCursorArrow = NULL;
 static HCURSOR gCursorHand = NULL;
@@ -91,10 +95,14 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
     CrashIf(!IsVisible());
 
+    Timer timerAll(true);
+
     CachedStyle *s = cachedStyle;
     Rect r(offX, offY, pos.Width, pos.Height);
     Brush *br = BrushFromColorData(s->bgColor, r);
+    Timer timerFill(true);
     gfx->FillRectangle(br, r);
+    double durFill = timerFill.Stop();
 
     if (!page)
         return;
@@ -125,9 +133,14 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
         bgCol.SetFromCOLORREF(gGlobalPrefs->ebookUI.backgroundColor);
     textRender->SetTextBgColor(bgCol);
 
+    Timer timerDrawHtml(true);
     DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
+    double durDraw = timerDrawHtml.Stop();
     gfx->SetClip(&origClipRegion, CombineModeReplace);
     delete textRender;
+
+    double durAll = timerAll.Stop();
+    plogf("all: %.2f, fill: %.2f, draw html: %.2f", durAll, durFill, durDraw);
 }
 
 Control *CreatePageControl(TxtNode *structDef)

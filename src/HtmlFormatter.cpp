@@ -9,7 +9,9 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"
+#include "Timer.h"
 
+#define NOLOG 1
 #include "DebugLog.h"
 
 /*
@@ -1357,6 +1359,7 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
     // draw, so first draw text and then paint everything else
     textDraw->SetTextColor(textColor);
     Status status = Ok;
+    Timer t(true);
     textDraw->Lock();
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
@@ -1372,6 +1375,8 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
             break;
     }
     textDraw->Unlock();
+    double dur = t.Stop();
+    lf("DrawHtmlPage: textDraw %.2f ms", dur);
 
     for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
         RectF bbox = i->bbox;
