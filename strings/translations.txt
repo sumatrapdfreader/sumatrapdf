@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-721298c9b54aaef83b190bdb3a55d790585f3e69
+08654fc86154db3c48629323b4368784599cdc78
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6133,6 +6133,7 @@ cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF viser
+el:Δεν ήταν δυνατή η απεγκατάσταση του PDF previewer
 es:No se pudo desinstalar el previsualizador de PDF
 et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
@@ -6433,6 +6434,7 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
+bs:Pozicija kursora:
 cz:Pozice kurzoru:
 de:Zeigerposition:
 fr:Position du curseur :
@@ -9952,6 +9954,7 @@ vn:KB
 am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
 az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
+bs:Ostavi plugin instaliran u &browseru (više nije podržano)
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
 ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
@@ -13887,6 +13890,7 @@ uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Selection:
 am:Նշվածը.
+bs:Selekcija:
 cz:Výběr:
 de:Auswahl:
 fr:Sélection :
@@ -15472,6 +15476,7 @@ cy:Mae'r gosodwr yn llwgr. Llwythwch y ffeil i lawr eto. \n Ymddiheuriadau am yr
 cz:Instalační program byl nejspíše poškozen. Stáhněte si jej prosím znovu. \nOmlouváme se za způsobené nepříjemnosti!
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
 dk:Installationsprogrammet er fejlbehæftet. Prøv venligst at hente det igen.\nVi beklager ulejligheden!
+el:Το πρόγραμμα εγκατάστασης έχει καταστραφεί. Παρακαλώ κατεβάστε το ξανά.\nΣυγγνώμη για την ταλαιπωρία!
 es:El instalador está dañado, pruebe descargándolo de nuevo.\n¡Perdón por las molestias!
 et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!

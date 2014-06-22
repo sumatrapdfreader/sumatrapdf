@@ -1585,7 +1585,7 @@ const char * gTranslations_bs =
   "Nije mogu\304\207e iscrtati stranicu\0"\
   "Kreirano:\0"\
   "Trenutni fajl\0"\
-  "\0"\
+  "Pozicija kursora:\0"\
   "&Prilago\304\221eno uve\304\207anje...\tCtrl+Y\0"\
   "Izvorni &izgled:\0"\
   "Izvorno &uve\304\207anje:\0"\
@@ -1699,7 +1699,7 @@ const char * gTranslations_bs =
   "Ozna\304\215i &sve\0"\
   "Ozna\304\215i &sve\tCtrl+A\0"\
   "Izaberi sadr\305\276aj pomo\304\207u Ctrl+lijeva tipka mi\305\241a\0"\
-  "\0"\
+  "Selekcija:\0"\
   "Po\305\241alji &e-mailom...\0"\
   "Postavi komandnu liniju za pretragu unazad\0"\
   "Poka\305\276i &oznake\0"\

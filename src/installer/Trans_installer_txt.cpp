@@ -303,7 +303,7 @@ const char * gTranslations_bs =
   "Instaliraj SumatraPDF u &direktorij:\0"\
   "Neuspje\305\241na instalacija!\0"\
   "Instalacija u toku...\0"\
-  "\0"\
+  "Ostavi plugin instaliran u &browseru (vi\305\241e nije podr\305\276ano)\0"\
   "Omogu\304\207i Windows Desktop Search-u da &pretra\305\276uje PDF dokumente\0"\
   "Omogu\304\207i Windows-ima da prika\305\276u &pregled PDF dokumenata\0"\
   "Molimo da zatvorite %s za nastavak!\0"\
