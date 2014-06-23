@@ -73,17 +73,11 @@ istream_close(struct archive *a, void *client_data)
 int
 archive_read_open_istream(struct archive *a, IStream *stream, ULONG block_size)
 {
-	struct read_istream_data *mine;
 	LARGE_INTEGER zero = { 0 };
-	HRESULT res;
+	HRESULT res = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
+	BOOL canSeek = SUCCEEDED(res);
 
-	res = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
-	if (FAILED(res)) {
-		archive_set_error(a, EINVAL, "IStream isn't seekable");
-		return ARCHIVE_FATAL;
-	}
-
-	mine = calloc(1, sizeof(*mine) + block_size);
+	struct read_istream_data *mine = calloc(1, sizeof(*mine) + block_size);
 	if (!mine) {
 		archive_set_error(a, ENOMEM, "No memory");
 		return ARCHIVE_FATAL;
@@ -97,10 +91,18 @@ archive_read_open_istream(struct archive *a, IStream *stream, ULONG block_size)
 		istream_close(a, mine);
 		return ARCHIVE_FATAL;
 	}
+
 	archive_read_set_read_callback(a, istream_read);
+	archive_read_set_close_callback(a, istream_close);
+	if (!canSeek) {
+		int r = archive_read_open1(a);
+		if (r != ARCHIVE_OK)
+			return r;
+		/* warn for unseekable streams */
+		archive_set_error(a, EIO, "IStream isn't seekable");
+		return ARCHIVE_WARN;
+	}
 	archive_read_set_seek_callback(a, istream_seek);
 	archive_read_set_skip_callback(a, istream_skip);
-	archive_read_set_close_callback(a, istream_close);
-
 	return archive_read_open1(a);
 }

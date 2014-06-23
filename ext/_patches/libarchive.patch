@@ -84,8 +84,8 @@ diff -rPu5 libarchive.orig\archive_read.c libarchive\archive_read.c
   * This is a zero-copy interface; the client receives a pointer,
 diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_open_istream.c
 --- libarchive.orig\archive_read_open_istream.c	Thu Jan 01 01:00:00 1970
-+++ libarchive\archive_read_open_istream.c	Sun Jun 15 04:43:18 2014
-@@ -0,0 +1,106 @@
++++ libarchive\archive_read_open_istream.c	Mon Jun 23 14:05:16 2014
+@@ -0,0 +1,108 @@
 +/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
 +   License: Simplified BSD (see COPYING.BSD) */
 +
@@ -161,17 +161,11 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +int
 +archive_read_open_istream(struct archive *a, IStream *stream, ULONG block_size)
 +{
-+	struct read_istream_data *mine;
 +	LARGE_INTEGER zero = { 0 };
-+	HRESULT res;
++	HRESULT res = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
++	BOOL canSeek = SUCCEEDED(res);
 +
-+	res = IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL);
-+	if (FAILED(res)) {
-+		archive_set_error(a, EINVAL, "IStream isn't seekable");
-+		return ARCHIVE_FATAL;
-+	}
-+
-+	mine = calloc(1, sizeof(*mine) + block_size);
++	struct read_istream_data *mine = calloc(1, sizeof(*mine) + block_size);
 +	if (!mine) {
 +		archive_set_error(a, ENOMEM, "No memory");
 +		return ARCHIVE_FATAL;
@@ -185,16 +179,24 @@ diff -rPu5 libarchive.orig\archive_read_open_istream.c libarchive\archive_read_o
 +		istream_close(a, mine);
 +		return ARCHIVE_FATAL;
 +	}
++
 +	archive_read_set_read_callback(a, istream_read);
++	archive_read_set_close_callback(a, istream_close);
++	if (!canSeek) {
++		int r = archive_read_open1(a);
++		if (r != ARCHIVE_OK)
++			return r;
++		/* warn for unseekable streams */
++		archive_set_error(a, EIO, "IStream isn't seekable");
++		return ARCHIVE_WARN;
++	}
 +	archive_read_set_seek_callback(a, istream_seek);
 +	archive_read_set_skip_callback(a, istream_skip);
-+	archive_read_set_close_callback(a, istream_close);
-+
 +	return archive_read_open1(a);
 +}
 diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_read_support_format_rar.c
 --- libarchive.orig\archive_read_support_format_rar.c	Thu Jun 12 15:33:23 2014
-+++ libarchive\archive_read_support_format_rar.c	Sun Jun 15 05:36:14 2014
++++ libarchive\archive_read_support_format_rar.c	Sun Jun 15 05:39:55 2014
 @@ -223,10 +223,11 @@
    time_t mtime;
    long mnsec;
@@ -247,7 +249,7 @@ diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_
    free(rar->dbo);
    if ((rar->dbo = calloc(1, sizeof(*rar->dbo))) == NULL)
    {
-@@ -2853,6 +2859,17 @@
+@@ -2853,6 +2859,23 @@
          return NULL;
        return rar_read_ahead(a, min, avail);
      }
@@ -256,14 +258,20 @@ diff -rPu5 libarchive.orig\archive_read_support_format_rar.c libarchive\archive_
 +}
 +
 +/* SumatraPDF: allow rereading headers */
-+void
++int
 +archive_format_rar_read_reset_header(struct archive *_a)
 +{
 +  struct archive_read *a = (struct archive_read *)_a;
-+  struct rar *rar = (struct rar *)a->format->data;
++  struct rar *rar;
++  archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_HEADER,
++                      "archive_format_rar_read_reset_header");
++  if (!_a->archive_format_name || strcmp(_a->archive_format_name, "RAR") != 0)
++    return ARCHIVE_FAILED;
++  rar = (struct rar *)a->format->data;
 +  free(rar->filename_save);
 +  rar->filename_save = NULL;
 +  _a->file_count--;
++  return ARCHIVE_OK;
  }
 diff -rPu5 libarchive.orig\archive_string.c libarchive\archive_string.c
 --- libarchive.orig\archive_string.c	Thu Jun 12 15:33:21 2014
