@@ -18,21 +18,15 @@ public:
     bool        makeDefault;
     bool        exitWhenDone;
     bool        printDialog;
-    WCHAR *     printerName;
-    WCHAR *     printSettings;
-    COLORREF    bgColor;
-    WCHAR *     inverseSearchCmdLine;
-    WCHAR *     forwardSearchOrigin;
+    ScopedMem<WCHAR> printerName;
+    ScopedMem<WCHAR> printSettings;
+    ScopedMem<WCHAR> inverseSearchCmdLine;
+    ScopedMem<WCHAR> forwardSearchOrigin;
     int         forwardSearchLine;
-    ForwardSearch forwardSearch;
-    bool        escToExit;
     bool        reuseDdeInstance;
-    char *      lang;
-    WCHAR *     destName;
+    ScopedMem<WCHAR> destName;
     int         pageNumber;
     bool        restrictedUse;
-    COLORREF    textColor;
-    COLORREF    backgroundColor;
     bool        invertColors;
     bool        enterPresentation;
     bool        enterFullScreen;
@@ -41,20 +35,28 @@ public:
     PointI      startScroll;
     bool        showConsole;
     HWND        hwndPluginParent;
-    WCHAR *     pluginURL;
+    ScopedMem<WCHAR> pluginURL;
     bool        exitImmediately;
     bool        silent;
-    bool        cbxMangaMode;
 
     // stress-testing related
-    WCHAR *     stressTestPath;
-    WCHAR *     stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
-    WCHAR *     stressTestRanges;
+    ScopedMem<WCHAR> stressTestPath;
+    ScopedMem<WCHAR> stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
+    ScopedMem<WCHAR> stressTestRanges;
     int         stressTestCycles;
     int         stressParallelCount;
     bool        stressRandomizeFiles;
 
     bool        crashOnOpen;
+
+    // deprecated flags
+    bool        escToExit;
+    COLORREF    bgColor;
+    ScopedMem<char> lang;
+    COLORREF    textColor;
+    COLORREF    backgroundColor;
+    ForwardSearch forwardSearch;
+    bool        cbxMangaMode;
 
     CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
         printerName(NULL), printSettings(NULL), bgColor((COLORREF)-1),
@@ -78,18 +80,7 @@ public:
         forwardSearch.highlightPermanent = false;
     }
 
-    ~CommandLineInfo() {
-        free(printerName);
-        free(printSettings);
-        free(inverseSearchCmdLine);
-        free(forwardSearchOrigin);
-        free(lang);
-        free(destName);
-        free(stressTestPath);
-        free(stressTestRanges);
-        free(stressTestFilter);
-        free(pluginURL);
-    }
+    ~CommandLineInfo() { }
 
     void ParseCommandLine(WCHAR *cmdLine);
 };

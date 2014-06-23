@@ -99,6 +99,8 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
+#define handle_string_param(name) name.Set(str::Dup(argList.At(++n)))
+#define handle_int_param(name) name = _wtoi(argList.At(++n))
 
     for (size_t n = 1; n < argCount; n++) {
         WCHAR *argument = argList.At(n);
@@ -116,15 +118,13 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             silent = true;
         }
         else if (is_arg("-print-to-default")) {
-            WCHAR *name = GetDefaultPrinterName();
-            if (name) {
-                str::ReplacePtr(&printerName, name);
-                free(name);
-            }
+            printerName.Set(GetDefaultPrinterName());
+            if (!printerName)
+                printDialog = true;
             exitWhenDone = true;
         }
         else if (is_arg_with_param("-print-to")) {
-            str::ReplacePtr(&printerName, argList.At(++n));
+            handle_string_param(printerName);
             exitWhenDone = true;
         }
         else if (is_arg("-print-dialog")) {
@@ -134,7 +134,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd] and [noscale|shrink|fit]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
-            str::ReplacePtr(&printSettings, argList.At(++n));
+            handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
         }
         else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
@@ -143,22 +143,22 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             exitWhenDone = true;
         }
         else if (is_arg_with_param("-inverse-search")) {
-            str::ReplacePtr(&inverseSearchCmdLine, argList.At(++n));
+            handle_string_param(inverseSearchCmdLine);
         }
         else if ((is_arg_with_param("-forward-search") ||
                   is_arg_with_param("-fwdsearch")) && argCount > n + 2) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
-            str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
-            forwardSearchLine = _wtoi(argList.At(++n));
+            handle_string_param(forwardSearchOrigin);
+            handle_int_param(forwardSearchLine);
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
-            str::ReplacePtr(&destName, argList.At(++n));
+            handle_string_param(destName);
         }
         else if (is_arg_with_param("-page")) {
-            pageNumber = _wtoi(argList.At(++n));
+            handle_int_param(pageNumber);
         }
         else if (is_arg("-restrict")) {
             restrictedUse = true;
@@ -191,7 +191,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
             if (!str::IsDigit(*param) && has_additional_param())
-                str::ReplacePtr(&pluginURL, argList.At(++n));
+                handle_string_param(pluginURL);
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
@@ -203,23 +203,19 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
-            str::ReplacePtr(&stressTestPath, argList.At(++n));
+            handle_string_param(stressTestPath);
             int num;
-            if (has_additional_param() && str::FindChar(additional_param(), '*')) {
-                str::ReplacePtr(&stressTestFilter, additional_param());
-                n++;
-            }
-            if (has_additional_param() && IsValidPageRange(additional_param())) {
-                str::ReplacePtr(&stressTestRanges, additional_param());
-                n++;
-            }
+            if (has_additional_param() && str::FindChar(additional_param(), '*'))
+                handle_string_param(stressTestFilter);
+            if (has_additional_param() && IsValidPageRange(additional_param()))
+                handle_string_param(stressTestRanges);
             if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
                 stressTestCycles = num;
                 n++;
             }
         }
         else if (is_arg_with_param("-n")) {
-            stressParallelCount = _wtoi(argList.At(++n));
+            handle_int_param(stressParallelCount);
         }
         else if (is_arg("-rand")) {
             stressRandomizeFiles = true;
@@ -229,8 +225,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             pathsToBenchmark.Push(s);
             s = NULL;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
-                s = str::Dup(additional_param());
-                n++;
+                s = str::Dup(argList.At(++n));
             }
             pathsToBenchmark.Push(s);
             exitImmediately = true;
@@ -254,24 +249,23 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             ParseColor(&bgColor, argList.At(++n));
         }
         else if (is_arg_with_param("-lang")) {
-            free(lang);
-            lang = str::conv::ToAnsi(argList.At(++n));
+            lang.Set(str::conv::ToAnsi(argList.At(++n)));
         }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
             ParseColor(&textColor, argList.At(++n));
             ParseColor(&backgroundColor, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            forwardSearch.highlightOffset = _wtoi(argList.At(++n));
+            handle_int_param(forwardSearch.highlightOffset);
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            forwardSearch.highlightWidth = _wtoi(argList.At(++n));
+            handle_int_param(forwardSearch.highlightWidth);
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
             ParseColor(&forwardSearch.highlightColor, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            forwardSearch.highlightPermanent = _wtoi(argList.At(++n));
+            handle_int_param(forwardSearch.highlightPermanent);
         }
         else if (is_arg_with_param("-manga-mode")) {
             WCHAR *s = argList.At(++n);
@@ -304,4 +298,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
 #undef is_arg_with_param
 #undef additional_param
 #undef has_additional_param
+#undef handle_string_param
+#undef handle_int_param
 }
