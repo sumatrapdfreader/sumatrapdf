@@ -1028,6 +1028,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->ctrl = prevCtrl;
     }
 
+    // make sure that scrollbars are always hidden for non-FixedPageUI document types
+    if (win->ctrl != prevCtrl && !win->AsFixed())
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+
     if (state) {
         zoomVirtual = prefs::conv::ToZoom(state->zoom);
         if (win->ctrl->ValidPageNo(startPage)) {
