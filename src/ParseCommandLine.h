@@ -20,14 +20,12 @@ public:
     bool        printDialog;
     ScopedMem<WCHAR> printerName;
     ScopedMem<WCHAR> printSettings;
-    ScopedMem<WCHAR> inverseSearchCmdLine;
     ScopedMem<WCHAR> forwardSearchOrigin;
     int         forwardSearchLine;
     bool        reuseDdeInstance;
     ScopedMem<WCHAR> destName;
     int         pageNumber;
     bool        restrictedUse;
-    bool        invertColors;
     bool        enterPresentation;
     bool        enterFullScreen;
     DisplayMode startView;
@@ -50,39 +48,28 @@ public:
     bool        crashOnOpen;
 
     // deprecated flags
-    bool        escToExit;
-    COLORREF    bgColor;
     ScopedMem<char> lang;
-    COLORREF    textColor;
-    COLORREF    backgroundColor;
-    ForwardSearch forwardSearch;
-    bool        cbxMangaMode;
 
-    CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
-        printerName(NULL), printSettings(NULL), bgColor((COLORREF)-1),
-        escToExit(false), reuseDdeInstance(false), lang(NULL),
-        destName(NULL), pageNumber(-1), inverseSearchCmdLine(NULL),
-        restrictedUse(false), pluginURL(NULL), invertColors(false),
+    CommandLineInfo(const WCHAR *cmdLine) : makeDefault(false), exitWhenDone(false), printDialog(false),
+        printerName(NULL), printSettings(NULL),
+        reuseDdeInstance(false), lang(NULL),
+        destName(NULL), pageNumber(-1),
+        restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullScreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
-        showConsole(false), exitImmediately(false), silent(false), cbxMangaMode(false),
+        showConsole(false), exitImmediately(false), silent(false),
         forwardSearchOrigin(NULL), forwardSearchLine(0),
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1), stressParallelCount(1),
         stressRandomizeFiles(false),
         crashOnOpen(false)
     {
-        textColor = RGB(0, 0, 0); // black
-        backgroundColor = RGB(0xFF, 0xFF, 0xFF); // white
-        forwardSearch.highlightOffset = 0;
-        forwardSearch.highlightWidth = 0;
-        forwardSearch.highlightColor = (COLORREF)-1;
-        forwardSearch.highlightPermanent = false;
+        ParseCommandLine(cmdLine);
     }
 
     ~CommandLineInfo() { }
 
-    void ParseCommandLine(WCHAR *cmdLine);
+    void ParseCommandLine(const WCHAR *cmdLine);
 };
 
 #endif

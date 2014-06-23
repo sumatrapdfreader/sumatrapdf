@@ -325,17 +325,6 @@ static bool SetupPluginMode(CommandLineInfo& i)
     return true;
 }
 
-static void GetCommandLineInfo(CommandLineInfo& i)
-{
-    i.bgColor = gGlobalPrefs->mainWindowBackground;
-    i.forwardSearch = gGlobalPrefs->forwardSearch;
-    i.escToExit = gGlobalPrefs->escToExit;
-    i.cbxMangaMode = gGlobalPrefs->comicBookUI.cbxMangaMode;
-    i.textColor = gGlobalPrefs->fixedPageUI.textColor;
-    i.backgroundColor = gGlobalPrefs->fixedPageUI.backgroundColor;
-    i.ParseCommandLine(GetCommandLine());
-}
-
 static void SetupCrashHandler()
 {
     ScopedMem<WCHAR> symDir;
@@ -458,8 +447,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     prefs::Load();
 
-    CommandLineInfo i;
-    GetCommandLineInfo(i);
+    CommandLineInfo i(GetCommandLine());
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
@@ -487,25 +475,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     gCrashOnOpen = i.crashOnOpen;
 
-    gGlobalPrefs->mainWindowBackground = i.bgColor;
-    if (gGlobalPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
-        gGlobalPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
-        gGlobalPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
-        gGlobalPrefs->forwardSearch.highlightWidth != i.forwardSearch.highlightWidth) {
-        gGlobalPrefs->enableTeXEnhancements = true;
-    }
-    gGlobalPrefs->forwardSearch = i.forwardSearch;
-    gGlobalPrefs->escToExit = i.escToExit;
-    gGlobalPrefs->fixedPageUI.textColor = i.textColor;
-    gGlobalPrefs->fixedPageUI.backgroundColor = i.backgroundColor;
-    gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
-    gGlobalPrefs->comicBookUI.cbxMangaMode = i.cbxMangaMode;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
-    if (i.inverseSearchCmdLine) {
-        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
-        gGlobalPrefs->enableTeXEnhancements = true;
-    }
-
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
     DebugGdiPlusDevice(gUseGdiRenderer);
 

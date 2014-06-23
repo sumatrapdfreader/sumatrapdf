@@ -936,11 +936,11 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         }
         WStrVec filesToTest;
 
-        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
+        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath.Get());
         fflush(stdout);
         size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
         if (0 == filesCount) {
-            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter);
+            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter.Get());
             return;
         }
         wprintf(L"Found %d files", (int)filesCount);

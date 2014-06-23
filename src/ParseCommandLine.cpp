@@ -89,14 +89,14 @@ static void ParseScrollValue(PointI *scroll, const WCHAR *txt)
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
+void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
 {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
 #define is_arg(txt) str::EqI(TEXT(txt), argument)
-#define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
+#define is_arg_with_param(txt) (is_arg(txt) && (argCount > n + 1))
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 #define handle_string_param(name) name.Set(str::Dup(argList.At(++n)))
@@ -104,10 +104,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
 
     for (size_t n = 1; n < argCount; n++) {
         WCHAR *argument = argList.At(n);
-        WCHAR *param = NULL;
-        if (argCount > n + 1)
-            param = argList.At(n + 1);
-
         if (is_arg("-register-for-pdf")) {
             makeDefault = true;
             exitImmediately = true;
@@ -143,7 +139,8 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             exitWhenDone = true;
         }
         else if (is_arg_with_param("-inverse-search")) {
-            handle_string_param(inverseSearchCmdLine);
+            str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, argList.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
         }
         else if ((is_arg_with_param("-forward-search") ||
                   is_arg_with_param("-fwdsearch")) && argCount > n + 2) {
@@ -168,7 +165,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
-            invertColors = true;
+            gGlobalPrefs->fixedPageUI.invertColors = true;
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;
@@ -190,7 +187,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
         }
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
-            if (!str::IsDigit(*param) && has_additional_param())
+            if (argCount > n + 2 && !str::IsDigit(*argList.At(n + 1)) && *argList.At(n + 2) != '-')
                 handle_string_param(pluginURL);
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
@@ -241,35 +238,39 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
         }
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg("-esc-to-exit")) {
-            escToExit = true;
+            gGlobalPrefs->escToExit = true;
         }
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            ParseColor(&bgColor, argList.At(++n));
+            ParseColor(&gGlobalPrefs->mainWindowBackground, argList.At(++n));
         }
         else if (is_arg_with_param("-lang")) {
             lang.Set(str::conv::ToAnsi(argList.At(++n)));
         }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
-            ParseColor(&textColor, argList.At(++n));
-            ParseColor(&backgroundColor, argList.At(++n));
+            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, argList.At(++n));
+            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            handle_int_param(forwardSearch.highlightOffset);
+            handle_int_param(gGlobalPrefs->forwardSearch.highlightOffset);
+            gGlobalPrefs->enableTeXEnhancements = true;
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            handle_int_param(forwardSearch.highlightWidth);
+            handle_int_param(gGlobalPrefs->forwardSearch.highlightWidth);
+            gGlobalPrefs->enableTeXEnhancements = true;
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&forwardSearch.highlightColor, argList.At(++n));
+            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, argList.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            handle_int_param(forwardSearch.highlightPermanent);
+            handle_int_param(gGlobalPrefs->forwardSearch.highlightPermanent);
+            gGlobalPrefs->enableTeXEnhancements = true;
         }
         else if (is_arg_with_param("-manga-mode")) {
-            WCHAR *s = argList.At(++n);
-            cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
+            const WCHAR *s = argList.At(++n);
+            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
 #if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
         else if (is_arg_with_param("-autoupdate")) {
