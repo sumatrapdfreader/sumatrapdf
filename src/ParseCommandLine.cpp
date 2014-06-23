@@ -166,10 +166,9 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
-            // -invert-colors is a shortcut for -set-color-range 0xFFFFFF 0x000000
-            // (i.e. it sets white as foreground color and black as background color)
-            textColor = WIN_COL_WHITE;
-            backgroundColor = WIN_COL_BLACK;
+            // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
+            // now it non-permanently swaps textColor and backgroundColor
+            invertColors = true;
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;

@@ -180,6 +180,9 @@ FixedPageUI = [
 		"colors are supported; the idea behind this experimental feature is that the " +
 		"background might allow to subconsciously determine reading progress; " +
 		"suggested values: #2828aa #28aa28 #aa2828"),
+	Field("InvertColors", Bool, False,
+		"if true, TextColor and BackgroundColor will be temporarily swapped",
+		internal=True),
 ]
 
 EbookUI = [

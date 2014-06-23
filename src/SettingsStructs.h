@@ -41,6 +41,8 @@ struct FixedPageUI {
     // subconsciously determine reading progress; suggested values: #2828aa
     // #28aa28 #aa2828
     Vec<COLORREF> * gradientColors;
+    // if true, TextColor and BackgroundColor will be temporarily swapped
+    bool invertColors;
 };
 
 // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If

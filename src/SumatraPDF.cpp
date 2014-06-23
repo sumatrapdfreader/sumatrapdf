@@ -2127,18 +2127,19 @@ static void RerenderEverything()
     }
 }
 
-COLORREF GetFixedPageUiTextColor()
+static void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
 {
-    if (gGlobalPrefs->useSysColors)
-        return GetSysColor(COLOR_WINDOWTEXT);
-    return gGlobalPrefs->fixedPageUI.textColor;
-}
-
-COLORREF GetFixedPageUiBgColor()
-{
-    if (gGlobalPrefs->useSysColors)
-        return GetSysColor(COLOR_WINDOW);
-    return gGlobalPrefs->fixedPageUI.backgroundColor;
+    if (gGlobalPrefs->useSysColors) {
+        text = GetSysColor(COLOR_WINDOWTEXT);
+        bg = GetSysColor(COLOR_WINDOW);
+    }
+    else {
+        text = gGlobalPrefs->fixedPageUI.textColor;
+        bg = gGlobalPrefs->fixedPageUI.backgroundColor;
+    }
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        Swap(text, bg);
+    }
 }
 
 void UpdateDocumentColors()
@@ -2152,8 +2153,9 @@ void UpdateDocumentColors()
         }
     }
 
-    COLORREF text = GetFixedPageUiTextColor();
-    COLORREF bg = GetFixedPageUiBgColor();
+    COLORREF text, bg;
+    GetFixedPageUiColors(text, bg);
+
     if ((text == gRenderCache.textColor) &&
         (bg == gRenderCache.backgroundColor)) {
             return; // colors didn't change

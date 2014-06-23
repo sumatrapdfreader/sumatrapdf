@@ -331,8 +331,8 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.forwardSearch = gGlobalPrefs->forwardSearch;
     i.escToExit = gGlobalPrefs->escToExit;
     i.cbxMangaMode = gGlobalPrefs->comicBookUI.cbxMangaMode;
-    i.textColor = GetFixedPageUiTextColor();
-    i.backgroundColor = GetFixedPageUiBgColor();
+    i.textColor = gGlobalPrefs->fixedPageUI.textColor;
+    i.backgroundColor = gGlobalPrefs->fixedPageUI.backgroundColor;
     i.ParseCommandLine(GetCommandLine());
 }
 
@@ -496,16 +496,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
     gGlobalPrefs->forwardSearch = i.forwardSearch;
     gGlobalPrefs->escToExit = i.escToExit;
+    gGlobalPrefs->fixedPageUI.textColor = i.textColor;
+    gGlobalPrefs->fixedPageUI.backgroundColor = i.backgroundColor;
+    gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
     gGlobalPrefs->comicBookUI.cbxMangaMode = i.cbxMangaMode;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
-    gRenderCache.textColor = i.textColor;
-    gRenderCache.backgroundColor = i.backgroundColor;
-    DebugGdiPlusDevice(gUseGdiRenderer);
-
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
     }
+
+    GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
+    DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (!RegisterWinClass(hInstance))
         goto Exit;

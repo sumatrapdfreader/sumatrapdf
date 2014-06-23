@@ -33,6 +33,7 @@ public:
     bool        restrictedUse;
     COLORREF    textColor;
     COLORREF    backgroundColor;
+    bool        invertColors;
     bool        enterPresentation;
     bool        enterFullScreen;
     DisplayMode startView;
@@ -59,7 +60,7 @@ public:
         printerName(NULL), printSettings(NULL), bgColor((COLORREF)-1),
         escToExit(false), reuseDdeInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1), inverseSearchCmdLine(NULL),
-        restrictedUse(false), pluginURL(NULL),
+        restrictedUse(false), pluginURL(NULL), invertColors(false),
         enterPresentation(false), enterFullScreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false), cbxMangaMode(false),

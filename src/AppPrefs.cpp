@@ -368,6 +368,7 @@ bool Reload()
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
     bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab;
+    bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
     gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
@@ -375,6 +376,8 @@ bool Reload()
 
     bool ok = Load();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
+
+    gGlobalPrefs->fixedPageUI.invertColors = invertColors;
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
