@@ -39,10 +39,11 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 
 static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
-    DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
-    ScopedMem<WCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
+    PageDestination *link = ((DocTocItem *)nmit->lParam)->GetLink();
+    ScopedMem<WCHAR> path(link ? link->GetDestValue() : NULL);
     if (!path)
         return;
+    CrashIf(link->GetDestType() != Dest_LaunchURL && link->GetDestType() != Dest_LaunchFile && link->GetDestType() != Dest_LaunchEmbedded);
 
     str::Str<WCHAR> infotip;
 
@@ -63,7 +64,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
         infotip.Append(L"\r\n");
     }
 
-    if (tocItem->GetLink() && Dest_LaunchEmbedded == tocItem->GetLink()->GetDestType())
+    if (Dest_LaunchEmbedded == link->GetDestType())
         path.Set(str::Format(_TR("Attachment: %s"), path));
 
     infotip.Append(path);

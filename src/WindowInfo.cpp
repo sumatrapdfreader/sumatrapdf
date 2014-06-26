@@ -216,6 +216,27 @@ bool WindowInfo::CreateUIAProvider()
     return true;
 }
 
+class RemoteDestination : public PageDestination {
+    PageDestType type;
+    int pageNo;
+    RectD rect;
+    ScopedMem<WCHAR> value;
+    ScopedMem<WCHAR> name;
+
+public:
+    RemoteDestination(PageDestination *dest) :
+        type(dest->GetDestType()), pageNo(dest->GetDestPageNo()),
+        rect(dest->GetDestRect()), value(dest->GetDestValue()),
+        name(dest->GetDestName()) { }
+    virtual ~RemoteDestination() { }
+
+    virtual PageDestType GetDestType() const { return type; }
+    virtual int GetDestPageNo() const { return pageNo; }
+    virtual RectD GetDestRect() const { return rect; }
+    virtual WCHAR *GetDestValue() const { return str::Dup(value); }
+    virtual WCHAR *GetDestName() const { return str::Dup(name); }
+};
+
 void LinkHandler::GotoLink(PageDestination *link)
 {
     CrashIf(!owner || owner->linkHandler != this);
@@ -322,6 +343,13 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
         return;
     }
 
+    // TODO: link is deleted when opening the document in a new tab
+    RemoteDestination *remoteLink = NULL;
+    if (link) {
+        remoteLink = new RemoteDestination(link);
+        link = NULL;
+    }
+
     ScopedMem<WCHAR> fullPath(path::GetDir(owner->ctrl->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
@@ -331,8 +359,10 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     if (!newWin) {
         LoadArgs args(fullPath, owner);
         newWin = LoadDocument(args);
-        if (!newWin)
+        if (!newWin) {
+            delete remoteLink;
             return;
+        }
     }
 
     if (!newWin->IsDocLoaded()) {
@@ -345,23 +375,26 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
             ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
             owner->ShowNotification(msg, true /* autoDismiss */, true /* highlight */);
         }
+        delete remoteLink;
         return;
     }
 
     newWin->Focus();
-    if (!link)
+    if (!remoteLink)
         return;
 
-    ScopedMem<WCHAR> name(link->GetDestName());
-    if (!name)
-        newWin->linkHandler->ScrollTo(link);
-    else {
-        PageDestination *dest = newWin->ctrl->GetNamedDest(name);
+    ScopedMem<WCHAR> destName(remoteLink->GetDestName());
+    if (destName) {
+        PageDestination *dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
             delete dest;
         }
     }
+    else {
+        newWin->linkHandler->ScrollTo(remoteLink);
+    }
+    delete remoteLink;
 }
 
 // normalizes case and whitespace in the string

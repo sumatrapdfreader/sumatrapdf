@@ -30,18 +30,17 @@ public:
 
     virtual PageDestination *GetLink() { return url ? this : NULL; }
     virtual PageDestType GetDestType() const {
-        if (url && IsExternalUrl(url))
-            return Dest_LaunchURL;
-        return Dest_ScrollTo;
+        return !url ? Dest_None : IsExternalUrl(url) ? Dest_LaunchURL : Dest_ScrollTo;
     }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     virtual WCHAR *GetDestValue() const {
-        if (url && IsExternalUrl(url))
-            return str::Dup(url);
-        return NULL;
+        return url && IsExternalUrl(url) ? str::Dup(url) : NULL;
+    }
+    virtual WCHAR *GetDestName() const {
+        return url && !IsExternalUrl(url) ? str::Dup(url) : NULL;
     }
 };
 
@@ -51,7 +50,7 @@ class ChmNamedDest : public ChmTocItem {
 public:
     ChmNamedDest(const WCHAR *url, int pageNo) :
         ChmTocItem(NULL, pageNo, NULL), myUrl(str::Dup(url)) {
-        this->title = myUrl;
+        this->url = this->title = myUrl;
     }
     virtual ~ChmNamedDest() { }
 };
@@ -194,10 +193,10 @@ void ChmModel::DisplayPage(const WCHAR *pageUrl)
 
 void ChmModel::ScrollToLink(PageDestination *link)
 {
-    ChmTocItem *item = static_cast<ChmTocItem *>(link);
     CrashIf(link->GetDestType() != Dest_ScrollTo);
-    if (item && item->url)
-        DisplayPage(item->url);
+    ScopedMem<WCHAR> url(link->GetDestName());
+    if (url)
+        DisplayPage(url);
 }
 
 bool ChmModel::CanNavigate(int dir) const
