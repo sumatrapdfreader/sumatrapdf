@@ -1711,7 +1711,7 @@ const char * gTranslations_sl =
   "Namesti SumatraPDF v mapo:\0"\
   "Namestitev ni uspela!\0"\
   "Namestitev poteka \342\200\246\0"\
-  "\0"\
+  "Obdr\305\276ati PDF vti\304\215nik &brskalnika name\305\241\304\215en (ni ve\304\215 podprt)\0"\
   "Naj Windows Desktop Search i\305\241\304\215e PDF dokumente\0"\
   "Naj Windows prikazuje predogled PDF dokumentov\0"\
   "Prosimo, izberite %s za nadaljevati!\0"\

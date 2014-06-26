@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-08654fc86154db3c48629323b4368784599cdc78
+197756badd1bde5a3ba849960526192cff9d148e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6437,12 +6437,14 @@ am:Նշորդի դիրքը.
 bs:Pozicija kursora:
 cz:Pozice kurzoru:
 de:Zeigerposition:
+fa:مکان نما, موقعیت
 fr:Position du curseur :
 he:מיקום סמן:
 hr:Pozicija pokazivača:
 it:Posizione cursore
 ja:カーソル位置：
 ru:Позиция курсора:
+sl:Položaj kurzorja:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
@@ -9973,6 +9975,7 @@ kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
 sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
+sl:Obdržati PDF vtičnik &brskalnika nameščen (ni več podprt)
 sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
 sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
 tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
@@ -13893,12 +13896,14 @@ am:Նշվածը.
 bs:Selekcija:
 cz:Výběr:
 de:Auswahl:
+fa:انتخاب
 fr:Sélection :
 he:בחירה:
 hr:Odabir:
 it:Selezione
 ja:Selection:
 ru:Выделение:
+sl:Izbor:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
