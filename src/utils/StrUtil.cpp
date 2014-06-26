@@ -1159,7 +1159,11 @@ size_t Utf8ToWcharBuf(const char *s, size_t cbLen, WCHAR *bufOut, size_t cchBufO
 {
     CrashIf(!bufOut || (0 == cchBufOutSize));
     int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cbLen, bufOut, (int)cchBufOutSize);
-    if ((size_t)cchConverted >= cchBufOutSize) {
+    if (0 == cchConverted) {
+        // TODO: determine ideal string length so that the conversion succeeds
+        cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cchBufOutSize / 2, bufOut, (int)cchBufOutSize);
+    }
+    else if ((size_t)cchConverted >= cchBufOutSize) {
         cchConverted = (int)cchBufOutSize - 1;
     }
     bufOut[cchConverted] = '\0';
