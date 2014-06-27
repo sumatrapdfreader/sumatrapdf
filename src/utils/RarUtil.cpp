@@ -96,20 +96,7 @@ char *RarFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 
 void RarFile::ExtractFilenames()
 {
-    if (!arc) {
-#ifdef ENABLE_UNRARDLL_FALLBACK
-        if (path) {
-            fallback = new UnRarDll(path);
-            fallback->ExtractFilenames(filenames);
-            for (size_t i = 0; i < filenames.Count(); i++) {
-                filepos.Append(-1);
-            }
-        }
-#endif
-        return;
-    }
-
-    int r = ARCHIVE_OK;
+    int r = arc ? ARCHIVE_OK : ARCHIVE_FATAL;
     while (ARCHIVE_OK == r) {
         struct archive_entry *entry;
         r = archive_read_next_header(arc, &entry);
@@ -118,6 +105,21 @@ void RarFile::ExtractFilenames()
             filenames.Append(str::Dup(name));
             filepos.Append(archive_read_header_position(arc));
         }
+    }
+
+    if (r != ARCHIVE_EOF) {
+        // TODO: if r == ARCHIVE_FATAL, libarchive will refuse to
+        // uncompress even non-damaged parts of the archive
+#ifdef ENABLE_UNRARDLL_FALLBACK
+        if (path) {
+            fallback = new UnRarDll(path);
+            fallback->ExtractFilenames(filenames);
+            filepos.Reset();
+            for (size_t i = 0; i < filenames.Count(); i++) {
+                filepos.Append(-1);
+            }
+        }
+#endif
     }
 }
 
@@ -133,8 +135,17 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
         return NULL;
 
     int64_t r = archive_read_seek(arc, filepos.At(fileindex), SEEK_SET);
-    if (r < 0)
+    if (r < 0) {
+#ifdef ENABLE_UNRARDLL_FALLBACK
+        if (path) {
+            if (!fallback)
+                fallback = new UnRarDll(path);
+            filepos.At(fileindex) = -1;
+            return fallback->GetFileByName(filenames.At(fileindex), len);
+        }
+#endif
         return NULL;
+    }
     r = archive_format_rar_read_reset_header(arc);
     CrashIf(r != ARCHIVE_OK);
 
@@ -279,13 +290,16 @@ bool UnRarDll::ExtractFilenames(WStrList &filenames)
     if (!hArc || arcData.OpenResult != 0)
         return false;
 
-    for (;;) {
+    for (size_t idx = 0; ; idx++) {
         RARHeaderDataEx rarHeader;
         int res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res)
             break;
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        filenames.Append(str::Dup(rarHeader.FileNameW));
+        if (filenames.Count() == idx)
+            filenames.Append(str::Dup(rarHeader.FileNameW));
+        else
+            CrashIf(!str::Eq(filenames.At(idx), rarHeader.FileNameW));
         RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
     }
 
