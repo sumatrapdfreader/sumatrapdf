@@ -9686,7 +9686,7 @@ const char * gTranslations_br =
   "N\303\243o foi poss\303\255vel imprimir este arquivo\0"\
   "N\303\243o \303\251 poss\303\255vel acionar a pesquisa inversa. Verifique a linha de comando nas prefer\303\252ncias.\0"\
   "Mudar o idioma (Change Language)\0"\
-  "Procurar atualiza\303\247\303\265es\0"\
+  "Procurar Atualiza\303\247\303\265es\0"\
   "Quadrinhos\0"\
   "Compatibilidade\0"\
   "Cont\303\255nuo\0"\
@@ -9703,7 +9703,7 @@ const char * gTranslations_br =
   "N\303\243o foi poss\303\255vel renderizar a p\303\241gina\0"\
   "Criado:\0"\
   "Arquivo atual\0"\
-  "\0"\
+  "Posi\303\247\303\243o do cursor:\0"\
   "&Zoom personalizado...\tCtrl+Y\0"\
   "&Visualiza\303\247\303\243o Padr\303\243o\0"\
   "&Zoom Padr\303\243o\0"\
@@ -9817,7 +9817,7 @@ const char * gTranslations_br =
   "Selecion&ar tudo\0"\
   "Selecion&ar Tudo\tCtrl+A\0"\
   "Selecionar com Ctrl+Bot\303\243o esquerdo do mouse\0"\
-  "\0"\
+  "Sele\303\247\303\243o:\0"\
   "Enviar por email...\0"\
   "Configurar pesquisa inversa\0"\
   "Mostrar Fa&voritos\0"\

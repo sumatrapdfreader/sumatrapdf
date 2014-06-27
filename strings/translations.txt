@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-197756badd1bde5a3ba849960526192cff9d148e
+460007686fd2f0cbbdff9f8efa4cc000a8c84ea5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4817,7 +4817,7 @@ ar:تحقق من وجود &تحديثات
 az:&Yenilikləri yoxla
 bg:Проверка за нова &версия
 bn:নতুন সংস্করণের জন্য নিরীক্ষা করুন
-br:Procurar atualizações
+br:Procurar Atualizações
 bs:Provjeri za &nadogradnju
 by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
@@ -6434,6 +6434,7 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
+br:Posição do cursor:
 bs:Pozicija kursora:
 cz:Pozice kurzoru:
 de:Zeigerposition:
@@ -13893,6 +13894,7 @@ uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Selection:
 am:Նշվածը.
+br:Seleção:
 bs:Selekcija:
 cz:Výběr:
 de:Auswahl:
