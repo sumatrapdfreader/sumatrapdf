@@ -1,0 +1,9 @@
+﻿unarr contains code by:
+
+* The Unarchiver project (https://code.google.com/p/theunarchiver/)
+* The libarchive project (http://www.libarchive.org/)
+* Simon Bünzli (zeniko at gmail.com, http://www.zeniko.ch/#SumatraPDF)
+
+Code taken directly from the Unarchiver project is licensed under LGPLv3,
+code taken directly from the libarchive project is licensed under BSD (see COPYING.BSD),
+all other code is licensed under GPLv3 (see COPYING).

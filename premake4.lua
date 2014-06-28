@@ -29,14 +29,10 @@ function solution_common()
     buildoptions { "/wd4189" }
 
   configuration {"vs*"}
-    -- defines { "_WIN32", "WIN32", "WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
     defines { "_WIN32", "WIN32", "WINDOWS" }
     -- 4800 - int -> bool coversion
-    -- 4127 - conditional expression is constant
     -- 4100 - unreferenced formal parameter
-    -- 4244 - possible loss of data due to conversion
     -- 4428 - universal-character-name encountered in source
-    -- /MP  - use multi-cores for compilation
     buildoptions {
         "/wd4800", "/wd4127", "/wd4100", "/wd4244", "/wd4428"
     }
@@ -167,3 +163,16 @@ solution "signfile"
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "shlwapi", "crypt32" }
+
+solution "unarr"
+  solution_common()
+
+  project "unarr"
+    kind "ConsoleApp"
+    language "C"
+    files {
+      "tools/unarr/*.*",
+      "tools/unarr/rar/*"
+    }
+    defines { "_CRT_SECURE_NO_WARNINGS" }
+    includedirs { "src/utils/msvc" }
