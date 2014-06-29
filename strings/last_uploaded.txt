@@ -270,7 +270,7 @@ Uninstall SumatraPDF
 Uninstallation failed
 Uninstallation in progress...
 Unknown source file (%s)
-Use &Tabs
+Use &tabs
 Use SumatraPDF as the &default PDF reader
 View
 Visit &Website
