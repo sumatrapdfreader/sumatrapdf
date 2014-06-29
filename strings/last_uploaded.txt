@@ -226,7 +226,6 @@ Remember &opened files
 Remove from favorites
 Remove page %s from favorites
 Rename To
-Replace document &colors with Windows color scheme
 Rotate &Left\tCtrl+Shift+-
 Rotate &Right\tCtrl+Shift++
 Save As
@@ -271,6 +270,7 @@ Uninstall SumatraPDF
 Uninstallation failed
 Uninstallation in progress...
 Unknown source file (%s)
+Use &Tabs
 Use SumatraPDF as the &default PDF reader
 View
 Visit &Website
