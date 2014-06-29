@@ -17,7 +17,6 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-
 // Comment this for default drawing.
 #define OWN_TAB_DRAWING
 
@@ -425,25 +424,28 @@ public:
         win(win), code(code), index1(index1), index2(index2) { }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            NMHDR nmhdr = { NULL, 0, code };
-            if (!TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2)) {
-                TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
-                if (T_CLOSING == code) {
-                    // if we have permission to close the tab
-                    tab->Invalidate(tab->nextTab);
-                    tab->xClicked = tab->nextTab;
-                }
-                else if (TCN_SELCHANGING == code) {
-                    // if we have permission to select the tab
-                    tab->Invalidate(tab->current);
-                    tab->Invalidate(tab->nextTab);
-                    tab->current = tab->nextTab;
-                    // send notification that the tab is selected
-                    nmhdr.code = TCN_SELCHANGE;
-                    TabsOnNotify(win, (LPARAM)&nmhdr);
-                }
-            }
+        if (!WindowInfoStillValid(win)) {
+            return;
+        }
+        NMHDR nmhdr = { NULL, 0, code };
+        if (TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2)) {
+            return;
+        }
+        TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+        if (T_CLOSING == code) {
+            // if we have permission to close the tab
+            tab->Invalidate(tab->nextTab);
+            tab->xClicked = tab->nextTab;
+            return;
+        }
+        if (TCN_SELCHANGING == code) {
+            // if we have permission to select the tab
+            tab->Invalidate(tab->current);
+            tab->Invalidate(tab->nextTab);
+            tab->current = tab->nextTab;
+            // send notification that the tab is selected
+            nmhdr.code = TCN_SELCHANGE;
+            TabsOnNotify(win, (LPARAM)&nmhdr);
         }
     }
 };
@@ -746,7 +748,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 }
 #endif //OWN_TAB_DRAWING
 
-
 void CreateTabbar(WindowInfo *win)
 {
     win->hwndTabBar = CreateWindow(WC_TABCONTROL, L"", 
@@ -767,7 +768,6 @@ void CreateTabbar(WindowInfo *win)
     win->tabSelectionHistory = new Vec<TabData *>();
 }
 
-
 // Saves some of the document's data from the WindowInfo to the TabData.
 void SaveTabData(WindowInfo *win, TabData *tdata)
 {
@@ -780,7 +780,6 @@ void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->canvasRc = win->canvasRc;
     tdata->watcher = win->watcher;
 }
-
 
 static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
 {
@@ -803,7 +802,6 @@ static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
     win->watcher = NULL;
 }
 
-
 // Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
 void SaveCurrentTabData(WindowInfo *win)
@@ -812,21 +810,22 @@ void SaveCurrentTabData(WindowInfo *win)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    if (current != -1) {
-        TCITEM tcs;
-        tcs.mask = TCIF_PARAM;
-        if (TabCtrl_GetItem(win->hwndTabBar, current, &tcs)) {
-            // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
-            PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
-            TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
-
-            // update the selection history
-            win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
-            win->tabSelectionHistory->Push((TabData *)tcs.lParam);
-        }
+    if (current == -1) {
+        return;
     }
-}
+    TCITEM tcs;
+    tcs.mask = TCIF_PARAM;
+    if (!TabCtrl_GetItem(win->hwndTabBar, current, &tcs)) {
+        return;
+    }
+    // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
+    PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
+    TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
 
+    // update the selection history
+    win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
+    win->tabSelectionHistory->Push((TabData *)tcs.lParam);
+}
 
 int TabsGetCount(WindowInfo *win)
 {
@@ -834,7 +833,6 @@ int TabsGetCount(WindowInfo *win)
         return -1;
     return TabCtrl_GetItemCount(win->hwndTabBar);
 }
-
 
 // Gets the TabData pointer from the lParam member of the TCITEM structure of the tab.
 TabData *GetTabData(WindowInfo *win, int tabIndex)
@@ -846,7 +844,6 @@ TabData *GetTabData(WindowInfo *win, int tabIndex)
     return NULL;
 }
 
-
 static int FindTabIndex(WindowInfo *win, TabData *tdata)
 {
     int count = TabsGetCount(win);
@@ -857,20 +854,19 @@ static int FindTabIndex(WindowInfo *win, TabData *tdata)
     return -1;
 }
 
-
 void DeleteTabData(TabData *tdata, bool deleteModel)
 {
-    if (tdata) {
-        if (deleteModel) {
-            delete tdata->ctrl;
-            FileWatcherUnsubscribe(tdata->watcher);
-        }
-        free(tdata->title);
-        free(tdata->filePath);
-        delete tdata;
+    if (!tdata) {
+        return;
     }
+    if (deleteModel) {
+        delete tdata->ctrl;
+        FileWatcherUnsubscribe(tdata->watcher);
+    }
+    free(tdata->title);
+    free(tdata->filePath);
+    delete tdata;
 }
-
 
 // On load of a new document we insert a new tab item in the tab bar.
 // Its text is the name of the opened file.
@@ -914,7 +910,6 @@ void TabsOnChangedDoc(WindowInfo *win)
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
 }
 
-
 // Called when we're closing a document
 void TabsOnCloseDoc(WindowInfo *win)
 {
@@ -936,7 +931,6 @@ void TabsOnCloseDoc(WindowInfo *win)
     }
 }
 
-
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo *win)
 {
@@ -951,7 +945,6 @@ void TabsOnCloseWindow(WindowInfo *win)
     win->tabSelectionHistory->Reset();
     TabCtrl_DeleteAllItems(win->hwndTabBar);
 }
-
 
 // On tab selection, we save the data for the tab which is losing selection and
 // load the data of the selected tab into the WindowInfo.
@@ -1003,7 +996,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     return TRUE;
 }
 
-
 static void ShowTabBar(WindowInfo *win, bool show)
 {
     if (show == win->tabsVisible)
@@ -1013,7 +1005,6 @@ static void ShowTabBar(WindowInfo *win, bool show)
     ClientRect rect(win->hwndFrame);
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
 }
-
 
 void UpdateTabWidth(WindowInfo *win)
 {
@@ -1031,7 +1022,6 @@ void UpdateTabWidth(WindowInfo *win)
     }
 }
 
-
 void SetTabsInTitlebar(WindowInfo *win, bool set)
 {
 #ifdef OWN_TAB_DRAWING
@@ -1044,7 +1034,6 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
     SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
 #endif //OWN_TAB_DRAWING
 }
-
 
 // Selects the given tab (0-based index).
 void TabsSelect(WindowInfo *win, int tabIndex)
@@ -1062,7 +1051,6 @@ void TabsSelect(WindowInfo *win, int tabIndex)
     }
 }
 
-
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(WindowInfo *win, bool reverse)
 {
@@ -1073,7 +1061,6 @@ void TabsOnCtrlTab(WindowInfo *win, bool reverse)
     int next = (TabCtrl_GetCurSel(win->hwndTabBar) + (reverse ? -1 : 1) + count) % count;
     TabsSelect(win, next);
 }
-
 
 void SwapTabs(WindowInfo *win, int tab1, int tab2)
 {
@@ -1111,7 +1098,6 @@ void SwapTabs(WindowInfo *win, int tab1, int tab2)
     else if (tab2 == current)
         TabCtrl_SetCurSel(win->hwndTabBar, tab1);
 }
-
 
 void MenuBarAsPopupMenu(HWND hwnd, int x, int y)
 {
