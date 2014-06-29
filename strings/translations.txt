@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0d114124cb8cdcca91d0d41fe93e66c1ced5081b
+9e30c9c3362ac0e7fd8be648c0733cd69f088aaf
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15732,6 +15732,9 @@ tw:未知來源檔案 (%s)
 uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
+:Use &tabs
+fr:Utiliser les ongle&ts
+ru:Использовать &вкладки
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
