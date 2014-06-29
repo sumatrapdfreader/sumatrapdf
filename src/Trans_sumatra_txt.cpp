@@ -1093,7 +1093,7 @@ const char * gTranslations_az =
   "S\311\231hif\311\231ni \311\231ks etdirm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
   "Haz\304\261rlanma tarixi:\0"\
   "Haz\304\261rk\304\261 fayl\0"\
-  "\0"\
+  "Kursorun m\303\266vqeyi:\0"\
   "Miq&yas\304\261 qeyd et...\tCtrl+Y\0"\
   "Standart &d\303\274z\303\274m:\0"\
   "Standart miq&yas:\0"\
@@ -1207,7 +1207,7 @@ const char * gTranslations_az =
   "&Ham\304\261s\304\261n\304\261 se\303\247\0"\
   "&Ham\304\261s\304\261n\304\261 se\303\247\tCtrl+A\0"\
   "M\311\231zmunu Ctrl+sol si\303\247an d\303\274ym\311\231si il\311\231 se\303\247\0"\
-  "\0"\
+  "Se\303\247m\311\231:\0"\
   "&E-po\303\247tla g\303\266nd\311\231r...\0"\
   "T\311\231rs axtar\304\261\305\237 komandas\304\261n\304\261 t\311\231yin etm\311\231k\0"\
   "\306\217&lf\311\231cinl\311\231ri g\303\266st\311\231r\0"\

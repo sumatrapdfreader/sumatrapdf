@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-460007686fd2f0cbbdff9f8efa4cc000a8c84ea5
+30bedc54c503c88c0a6ff09fe54419bd664c239d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6434,6 +6434,7 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
+az:Kursorun mövqeyi:
 br:Posição do cursor:
 bs:Pozicija kursora:
 cz:Pozice kurzoru:
@@ -13894,6 +13895,7 @@ uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Selection:
 am:Նշվածը.
+az:Seçmə:
 br:Seleção:
 bs:Selekcija:
 cz:Výběr:
