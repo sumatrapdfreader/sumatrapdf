@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-30bedc54c503c88c0a6ff09fe54419bd664c239d
+0d114124cb8cdcca91d0d41fe93e66c1ced5081b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13304,59 +13304,6 @@ tw:重新命名為
 uk:Перейменувати в
 uz:Yangi nom
 vn:Đổi tên thành
-:Replace document &colors with Windows color scheme
-am:Փոխարինել փաստաթղթի &գույները Windows-ի գույնային սխեմայով
-ar:تغيير ألوان الكتب إلى ألوان ويندوز القياسية
-az:Windows rənglər s&xemini sənədə tətbiq et
-bg:Замени &цветовете на документа с цветовата схема на Windows
-br:Substituir &cores do documento pelo esquema de cores do Windows
-bs:Zamijeni &boje u dokumentu sa Windows kolor šemom
-ca-xv:Substitueix els &colors del document amb l'esquema de colors del Windows
-ca:Substitueix els &colors del document amb l'esquema de colors del Windows
-cn:用 Windows 配色方案替换文件的配色 (&C)
-cy:Amnewid &lliwiau dogfen gyda threfn lliwiau Windows
-cz:Barvy dokumentu nahradit barevným s&chématem systému Windows
-de:Dokumenten&farben durch Windows-Farbschema ersetzen
-dk:Erstat dokument &farver med Windows farveskema
-el:Αντικατάσταση των &χρωμάτων του εγγράφου με το θέμα των Windows
-es:Reemplazar &colores del documento con el esquema de color de Windows
-et:Asenda dokumendi &värvid Windowsi värviskeemiga
-eu:Ordeztu agiri &margoak Windowsen margo eskemarekin
-fa:جایگزینی &رنگ‌های سند با طرح رنگ ویندوز
-fi:Korvaa asiakirjan &värit Windowsin väriteemalla
-fr:Remplacer les &couleurs du document par le schéma de couleurs Windows
-ga:Ionadaigh dathanna na cáipéise le córas dathanna Windows
-gl:Cambiar as &cores do documento pola paleta de cores de Windows
-he:החלף את צבעי המסמך לצבעי ערכת Windows
-hi:Windows रंग योजना के साथ दस्तावेज़ रंग बदलें
-hr:Zamijeni boje dokumenta s postavkama &Windows boja
-hu:Helyettesíti a dokumentum &színeket Windows színsémával
-id:Ganti &warna dokumen dengan skema warna Windows
-it:Sostituisci &colori documento con schema colore di Windows
-ja:Windows カラースキーマへ色を置き換える(&C)
-kr:Windows 색 구성표처럼 문서 색 교체(&C)
-ku:گۆڕینی ڕەنگی بەڵگەنامەکان & بۆ ڕەنگی ویندۆز
-mk:Замени ги &боите во документот со палетата на Windows
-my:Menggantikan dokumen &warna dengan skim warna Windows
-ne:कागजात &रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
-nl:Vervang de documentkleuren met Windows kleurenschema
-no:Erstatt dokument &farger med Windows fargeskjema
-pl:Wymień kolory dokumentu na kolory systemowe Windows
-pt:Substituir &cores do documento pelas cores do Windows
-ro:Înlocuiește &colors documentului cu schema de culori Windows.
-ru:Применить к документу цветовую схему Windows
-sk:&Farby dokumentu nahradiť farebnou schémou systému Windows
-sl:Zamenjaj &barve dokumenta z barvno shemo Windows
-sp-rs:Zameni boje dokumenta Windows kolor šemom
-sq:Zëvendësoj &ngjyrat e dokumentit me ato të Windows-it
-sr-rs:Замени боје документа Windows колор шемом
-sv:Byt ut dokument&färg till Windows färgschema
-ta:ஆவணம் மற்றும் வண்ணங்களை  விண்டோஸ் வண்ண திட்டம் மூலம் மாற்றவும்
-tr:Belgenin &renklerini Windows renk planıyla değiştir
-tw:用 Windows 配色方案取代文件的配色 (&C)
-uk:Замінити кольори у документі використовуючи кольорову схему Windows
-uz:Hujjat &ranglarini Windows rangli sxemasiga o'zgartirish
-vn:Thay màu tập tin bằng bảng màu Windows
 :Rotate &Left\tCtrl+Shift+-
 af:Draai Links\tCtrl+Shift+-
 am:Շրջել ձախ\tCtrl+Shift+-
