@@ -720,7 +720,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SetDlgItemText(hDlg, IDC_DEFAULT_ZOOM_LABEL, _TR("Default &Zoom:"));
         SetDlgItemText(hDlg, IDC_DEFAULT_SHOW_TOC, _TR("Show the &bookmarks sidebar when available"));
         SetDlgItemText(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT, _TR("&Remember these settings for each document"));
-        SetDlgItemText(hDlg, IDC_USE_TABS, _TR("Use &Tabs"));
+        SetDlgItemText(hDlg, IDC_USE_TABS, _TR("Use &tabs"));
         SetDlgItemText(hDlg, IDC_SECTION_ADVANCED, _TR("Advanced"));
         SetDlgItemText(hDlg, IDC_CHECK_FOR_UPDATES, _TR("Automatically check for &updates"));
         SetDlgItemText(hDlg, IDC_REMEMBER_OPENED_FILES, _TR("Remember &opened files"));

@@ -241,7 +241,7 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
   "Text documents",
   "Title:",
   "Unknown source file (%s)",
-  "Use &Tabs",
+  "Use &tabs",
   "View",
   "Visit &Website",
   "Warning",
