@@ -221,7 +221,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | 
 CAPTION "Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "View",IDC_SECTION_VIEW,6,6,228,88
+    GROUPBOX        "View",IDC_SECTION_VIEW,6,6,228,75
     LTEXT           "Default &Layout:",IDC_DEFAULT_LAYOUT_LABEL,12,19,108,9
     COMBOBOX        IDC_DEFAULT_LAYOUT,120,17,108,64,CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT           "Default &Zoom:",IDC_DEFAULT_ZOOM_LABEL,12,36,108,9
@@ -230,9 +230,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,53,216,9
     CONTROL         "&Remember these settings for each document",IDC_REMEMBER_STATE_PER_DOCUMENT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
+    GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,87,228,70
     CONTROL         "Use &tabs",IDC_USE_TABS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,79,216,9
-    GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,100,228,57
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
     CONTROL         "Automatically check for &updates",IDC_CHECK_FOR_UPDATES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
     CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9

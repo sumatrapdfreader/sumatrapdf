@@ -223,6 +223,9 @@ struct GlobalPrefs {
     bool escToExit;
     // if true, we'll always open files using existing SumatraPDF process
     bool reuseInstance;
+    // if true, we use Windows system colors for background/text color.
+    // Over-rides other settings
+    bool useSysColors;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
     // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
@@ -295,9 +298,6 @@ struct GlobalPrefs {
     // if true, we remember which files we opened and their display
     // settings
     bool rememberOpenedFiles;
-    // if true, we use Windows system colors for background/text color.
-    // Over-rides other settings
-    bool useSysColors;
     // pattern used to launch the LaTeX editor when doing inverse search
     WCHAR * inverseSearchCmdLine;
     // if true, we expose the SyncTeX inverse search command line in
@@ -497,6 +497,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, useSysColors),             Type_Bool,       false                                                                                                                 },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,     (intptr_t)&gFixedPageUIInfo                                                                                           },
     { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,     (intptr_t)&gEbookUIInfo                                                                                               },
@@ -527,7 +528,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, checkForUpdates),          Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, versionToSkip),            Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberOpenedFiles),      Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, useSysColors),             Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, inverseSearchCmdLine),     Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, enableTeXEnhancements),    Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, defaultDisplayMode),       Type_String,     (intptr_t)L"automatic"                                                                                                },
@@ -544,7 +544,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 51, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0UseTabs\0ShowSingleTab\0TabBarAsTitleBar\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 51, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0UseTabs\0ShowSingleTab\0TabBarAsTitleBar\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 

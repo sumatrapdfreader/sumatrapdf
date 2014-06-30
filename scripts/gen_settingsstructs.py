@@ -334,6 +334,9 @@ GlobalPrefs = [
 	Field("ReuseInstance", Bool, False,
 		"if true, we'll always open files using existing SumatraPDF process",
 		expert=True),
+	Field("UseSysColors", Bool, False,
+		"if true, we use Windows system colors for background/text color. Over-rides other settings",
+		expert=True),
 	EmptyLine(),
 
 	Struct("FixedPageUI", FixedPageUI,
@@ -433,8 +436,6 @@ GlobalPrefs = [
 		"we won't ask again to update to this version"),
 	Field("RememberOpenedFiles", Bool, True,
 		"if true, we remember which files we opened and their display settings"),
-	Field("UseSysColors", Bool, False,
-		"if true, we use Windows system colors for background/text color. Over-rides other settings"),
 	Field("InverseSearchCmdLine", String, None,
 		"pattern used to launch the LaTeX editor when doing inverse search"),
 	Field("EnableTeXEnhancements", Bool, False,
