@@ -102,20 +102,16 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
         todo("Unsupported compression version: %d", entry->version);
         return false;
     }
-    entry->solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
 
     rar->entry.method = entry->method;
     rar->entry.crc = entry->crc;
     rar->entry.header_size = header->size;
+    rar->entry.restart_solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
     free(rar->entry.name);
     rar->entry.name = NULL;
     free(rar->entry.name_w);
     rar->entry.name_w = NULL;
 
-    if (!entry->solid)
-        rar_clear_uncompress(&rar->uncomp);
-    else
-        todo("This only works if all previous entries of this solid block are uncompressed first");
     rar->progr.offset_in = header->size;
     rar->progr.offset_out = 0;
     rar->progr.crc = 0;

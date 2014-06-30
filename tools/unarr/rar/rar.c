@@ -14,6 +14,8 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 {
     struct rar_header header;
     struct rar_entry entry;
+    /* without solid data, most/all previous files have to be decompressed again */
+    bool has_solid_data = rar->super.entry_offset != 0 && rar->uncomp.initialized;
 
     if (rar->super.entry_offset != 0) {
         if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->super.entry_size_block, SEEK_SET)) {
@@ -70,6 +72,10 @@ static bool rar_parse_entry(ar_archive_rar *rar)
                 warn("Integer overflow due to overly large data size");
                 return false;
             }
+            if (!has_solid_data || !rar->entry.restart_solid || rar->entry.method == METHOD_STORE)
+                rar_clear_uncompress(&rar->uncomp);
+            else
+                rar->entry.restart_solid = false;
 #ifdef DEBUG
             // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
             if (!rar_check_header_crc(&rar->super))
@@ -126,6 +132,34 @@ static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
     return true;
 }
 
+static bool rar_restart_solid(ar_archive_rar *rar)
+{
+    ar_archive *ar = &rar->super;
+    size_t current_offset = ar->entry_offset;
+    log("Restarting decompression for solid entry");
+    if (!ar_parse_entry_at(ar, 0)) {
+        ar_parse_entry_at(ar, current_offset);
+        return false;
+    }
+    while (ar->entry_offset != current_offset) {
+        size_t size = ar->entry_size_uncompressed;
+        while (size > 0) {
+            unsigned char buffer[1024];
+            if (!ar_entry_uncompress(ar, buffer, min(size, sizeof(buffer)))) {
+                ar_parse_entry_at(ar, current_offset);
+                return false;
+            }
+            size -= min(size, sizeof(buffer));
+        }
+        if (!ar_parse_entry(ar)) {
+            ar_parse_entry_at(ar, current_offset);
+            return false;
+        }
+    }
+    rar->entry.restart_solid = false;
+    return true;
+}
+
 static bool rar_uncompress(ar_archive_rar *rar, void *buffer, size_t count)
 {
     if (rar->entry.method == METHOD_STORE) {
@@ -135,6 +169,10 @@ static bool rar_uncompress(ar_archive_rar *rar, void *buffer, size_t count)
     else if (rar->entry.method == METHOD_FASTEST || rar->entry.method == METHOD_FAST ||
              rar->entry.method == METHOD_NORMAL || rar->entry.method == METHOD_GOOD ||
              rar->entry.method == METHOD_BEST) {
+        if (rar->entry.restart_solid && !rar_restart_solid(rar)) {
+            warn("Failed to produce the required solid decompression state");
+            return false;
+        }
         if (!rar_uncompress_part(rar, buffer, count))
             return false;
     }
@@ -147,7 +185,7 @@ static bool rar_uncompress(ar_archive_rar *rar, void *buffer, size_t count)
     if (rar->progr.offset_in <= rar->super.entry_size_block && rar->progr.offset_out < rar->super.entry_size_uncompressed)
         return true;
     if (rar->progr.offset_in < rar->super.entry_size_block)
-        warn("Uncompressed block has more data than required");
+        log("Uncompressed block has more data than required");
     if (rar->progr.crc != rar->entry.crc) {
         warn("Checksum of extracted data doesn't match");
         return false;

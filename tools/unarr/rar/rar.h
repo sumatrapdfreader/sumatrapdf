@@ -66,6 +66,7 @@ struct ar_archive_rar_entry {
     uint8_t method;
     uint32_t crc;
     uint16_t header_size;
+    bool restart_solid;
     char *name;
     WCHAR *name_w;
 };
@@ -130,7 +131,7 @@ struct ar_archive_rar_uncomp {
 
     LZSS lzss;
     uint32_t dict_size;
-    size_t bytes_uncopied;
+    size_t bytes_ready;
     struct huffman_code maincode;
     struct huffman_code offsetcode;
     struct huffman_code lowoffsetcode;
@@ -144,7 +145,6 @@ struct ar_archive_rar_uncomp {
 
     bool is_ppmd_block;
     bool ppmd_valid;
-    bool ppmd_eod;
     int ppmd_escape;
     CPpmd7 ppmd7_context;
     struct CPpmdRAR_RangeDec range_dec;

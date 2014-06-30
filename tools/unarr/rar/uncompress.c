@@ -1,7 +1,33 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: GPLv3 */
 
-// adapted from https://code.google.com/p/libarchive/source/browse/libarchive/archive_read_support_format_rar.c
+// adapted from https://github.com/libarchive/libarchive/blob/master/libarchive/archive_read_support_format_rar.c
+
+/*-
+* Copyright (c) 2003-2007 Tim Kientzle
+* Copyright (c) 2011 Andres Mejia
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions
+* are met:
+* 1. Redistributions of source code must retain the above copyright
+*    notice, this list of conditions and the following disclaimer.
+* 2. Redistributions in binary form must reproduce the above copyright
+*    notice, this list of conditions and the following disclaimer in the
+*    documentation and/or other materials provided with the distribution.
+*
+* THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) ``AS IS'' AND ANY EXPRESS OR
+* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+* IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY DIRECT, INDIRECT,
+* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+* NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #include "rar.h"
 
@@ -68,8 +94,9 @@ static Bool PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
     p->Low = 0;
     p->Bottom = 0x8000;
     p->Range = 0xFFFFFFFF;
-    for (i = 0; i < 4; i++)
-    p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
+    for (i = 0; i < 4; i++) {
+        p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
+    }
     return (p->Code < 0xFFFFFFFF) != 0;
 }
 
@@ -141,7 +168,7 @@ static bool rar_new_node(struct huffman_code *code)
         code->maxlength = INT_MIN;
     }
     if (code->numentries + 1 >= code->capacity) {
-        /* in my small file sample, 1024 is value needed most often */
+        /* in my small file sample, 1024 is the value needed most often */
         int new_capacity = code->capacity ? code->capacity * 2 : 1024;
         void *new_tree = realloc(code->tree, new_capacity * sizeof(*code->tree));
         if (!new_tree) {
@@ -382,6 +409,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         uint8_t bitlengths[20];
         uint8_t zerocount;
         int i, j, val, n;
+        bool ok = false;
 
         /* keep existing table flag */
         if (!rar_br_check(rar, 1))
@@ -405,78 +433,59 @@ static bool rar_parse_codes(ar_archive_rar *rar)
                 }
             }
         }
+
         memset(&precode, 0, sizeof(precode));
-        if (!rar_create_code(rar, &precode, bitlengths, sizeof(bitlengths))) {
-            free(precode.tree);
-            free(precode.table);
-            return false;
-        }
+        if (!rar_create_code(rar, &precode, bitlengths, sizeof(bitlengths)))
+            goto PrecodeError;
         for (i = 0; i < HUFFMAN_TABLE_SIZE; ) {
             val = rar_read_next_symbol(rar, &precode);
-            if (val < 0) {
-                free(precode.tree);
-                free(precode.table);
-                return false;
-            }
+            if (val < 0)
+                goto PrecodeError;
             if (val < 16) {
                 uncomp->lengthtable[i] = (uncomp->lengthtable[i] + val) & 0x0F;
                 i++;
             }
             else if (val < 18) {
                 if (i == 0) {
-                    warn("Internal error extracting RAR file.");
-                    free(precode.tree);
-                    free(precode.table);
-                    return false;
+                    warn("Internal error extracting RAR file");
+                    goto PrecodeError;
                 }
                 if (val == 16) {
-                    if (!rar_br_check(rar, 3)) {
-                        free(precode.tree);
-                        free(precode.table);
-                        return false;
-                    }
+                    if (!rar_br_check(rar, 3))
+                        goto PrecodeError;
                     n = (uint8_t)rar_br_bits(rar, 3) + 3;
                 }
                 else {
-                    if (!rar_br_check(rar, 7)) {
-                        free(precode.tree);
-                        free(precode.table);
-                        return false;
-                    }
+                    if (!rar_br_check(rar, 7))
+                        goto PrecodeError;
                     n = (uint8_t)rar_br_bits(rar, 7) + 11;
                 }
-
-                for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; j++) {
+                for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; i++, j++) {
                     uncomp->lengthtable[i] = uncomp->lengthtable[i - 1];
-                    i++;
                 }
             }
             else {
                 if (val == 18) {
-                    if (!rar_br_check(rar, 3)) {
-                        free(precode.tree);
-                        free(precode.table);
-                        return false;
-                    }
+                    if (!rar_br_check(rar, 3))
+                        goto PrecodeError;
                     n = (uint8_t)rar_br_bits(rar, 3) + 3;
                 }
                 else {
-                    if (!rar_br_check(rar, 7)) {
-                        free(precode.tree);
-                        free(precode.table);
-                        return false;
-                    }
+                    if (!rar_br_check(rar, 7))
+                        goto PrecodeError;
                     n = (uint8_t)rar_br_bits(rar, 7) + 11;
                 }
-
-                for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; j++) {
+                for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; i++, j++) {
                     uncomp->lengthtable[i] = 0;
-                    i++;
                 }
             }
         }
+        ok = true;
+PrecodeError:
         free(precode.tree);
         free(precode.table);
+        if (!ok)
+            return false;
 
         if (!rar_create_code(rar, &uncomp->maincode, uncomp->lengthtable, MAINCODE_SIZE))
             return false;
@@ -500,7 +509,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         }
     }
 
-    uncomp->start_new_table = 0;
+    uncomp->start_new_table = false;
     return true;
 }
 
@@ -518,6 +527,75 @@ static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
     free(uncomp->lengthcode.tree);
     free(uncomp->lengthcode.table);
     memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
+}
+
+static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, Byte *symbol)
+{
+    int value = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.super);
+    if (value < 0) {
+        warn("Invalid PPMd symbol");
+        return false;
+    }
+    *symbol = (Byte)value;
+    return true;
+}
+
+static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
+{
+    struct ar_archive_rar_uncomp *data = &rar->uncomp;
+    Byte sym, code, length;
+    int lzss_offset;
+
+    if (!rar_decode_ppmd7_symbol(data, &sym))
+        return false;
+
+    if (sym != data->ppmd_escape) {
+        lzss_emit_literal(&data->lzss, sym);
+        return true;
+    }
+
+    if (!rar_decode_ppmd7_symbol(data, &code))
+        return false;
+
+    switch (code) {
+    case 0:
+        return rar_parse_codes(rar);
+
+    case 2:
+        data->start_new_table = true;
+        return true;
+
+    case 3:
+        todo("Parsing filters are unsupported");
+        return false;
+
+    case 4:
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset = code << 16;
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset |= code << 8;
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset |= code;
+        if (!rar_decode_ppmd7_symbol(data, &length))
+            return false;
+        lzss_emit_match(&data->lzss, lzss_offset + 2, length + 32);
+        break;
+
+    case 5:
+        if (!rar_decode_ppmd7_symbol(data, &length))
+            return false;
+        lzss_emit_match(&data->lzss, 1, length + 4);
+        break;
+
+    default:
+        lzss_emit_literal(&data->lzss, sym);
+        break;
+    }
+
+    return true;
 }
 
 static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
@@ -555,16 +633,19 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
         { 2, 2, 3, 4, 5, 6, 6, 6 };
 
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
-    bool output_last_match = false;
     int symbol, offs, len, i;
 
     for (;;) {
-        if (output_last_match && lzss_position(&uncomp->lzss) + uncomp->lastlength <= end) {
-            lzss_emit_match(&uncomp->lzss, uncomp->lastoffset, uncomp->lastlength);
-            output_last_match = false;
-        }
-        if (uncomp->is_ppmd_block || output_last_match || lzss_position(&uncomp->lzss) >= end)
+        if (lzss_position(&uncomp->lzss) >= end)
             return lzss_position(&uncomp->lzss);
+
+        if (uncomp->is_ppmd_block) {
+            if (!rar_handle_ppmd_sequence(rar))
+                return -1;
+            if (uncomp->start_new_table)
+                return lzss_position(&uncomp->lzss);
+            continue;
+        }
 
         symbol = rar_read_next_symbol(rar, &uncomp->maincode);
         if (symbol < 0)
@@ -690,129 +771,43 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 
         uncomp->lastoffset = offs;
         uncomp->lastlength = len;
-        output_last_match = true;
+
+        lzss_emit_match(&uncomp->lzss, offs, len);
     }
-}
-
-static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, Byte *symbol)
-{
-    int value = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.super);
-    if (value < 0) {
-        warn("Invalid PPMd symbol");
-        return false;
-    }
-    *symbol = (Byte)value;
-    return true;
-}
-
-static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
-{
-    struct ar_archive_rar_uncomp *data = &rar->uncomp;
-    Byte sym, code, length;
-    int lzss_offset;
-
-    if (!rar_decode_ppmd7_symbol(data, &sym))
-        return false;
-
-    if (sym != data->ppmd_escape) {
-        lzss_emit_literal(&data->lzss, sym);
-        data->bytes_uncopied++;
-        return true;
-    }
-
-    if (!rar_decode_ppmd7_symbol(data, &code))
-        return false;
-
-    switch (code) {
-    case 0:
-        data->start_new_table = true;
-        return true;
-
-    case 2:
-        data->ppmd_eod = true;
-        return true;
-
-    case 3:
-        todo("Parsing filters are unsupported");
-        return false;
-
-    case 4:
-        if (!rar_decode_ppmd7_symbol(data, &code))
-            return false;
-        lzss_offset = code << 16;
-        if (!rar_decode_ppmd7_symbol(data, &code))
-            return false;
-        lzss_offset |= code << 8;
-        if (!rar_decode_ppmd7_symbol(data, &code))
-            return false;
-        lzss_offset |= code;
-        if (!rar_decode_ppmd7_symbol(data, &length))
-            return false;
-        lzss_emit_match(&data->lzss, lzss_offset + 2, length + 32);
-        data->bytes_uncopied += length + 32;
-        break;
-
-    case 5:
-        if (!rar_decode_ppmd7_symbol(data, &length))
-            return false;
-        lzss_emit_match(&data->lzss, 1, length + 4);
-        data->bytes_uncopied += length + 4;
-        break;
-
-    default:
-        lzss_emit_literal(&data->lzss, sym);
-        data->bytes_uncopied++;
-        break;
-    }
-
-    return true;
 }
 
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 {
     struct ar_archive_rar_uncomp *data = &rar->uncomp;
-    size_t buffer_offset = 0;
+    int64_t end;
 
     rar_init_uncompress(rar);
 
-    while (buffer_offset < buffer_size) {
-        bool flush_only = !data->is_ppmd_block && data->dict_size && data->bytes_uncopied > 0;
+    for (;;) {
+        if (data->bytes_ready > 0) {
+            size_t count = min(data->bytes_ready, buffer_size);
+            lzss_copy_bytes_from_window(&data->lzss, buffer, rar->progr.offset_out, count);
+            rar->progr.offset_out += count;
+            data->bytes_ready -= count;
+            buffer_size -= count;
+            buffer = (uint8_t *)buffer + count;
+        }
+
+        if (buffer_size == 0)
+            return true;
 
         if (data->at_eof)
             return false;
-        if (data->dict_size && rar->progr.offset_out >= rar->super.entry_size_uncompressed) {
-            warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", buffer_offset, buffer_size);
-            return false;
-        }
 
-        if (!flush_only && data->start_new_table && !rar_parse_codes(rar))
+        if (data->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        if (data->is_ppmd_block) {
-            if (!rar_handle_ppmd_sequence(rar) || data->ppmd_eod)
-                return false;
-        }
-        else if (!flush_only) {
-            int64_t end = rar_expand(rar, buffer_offset + data->dict_size);
-            if (end < buffer_offset)
-                return false;
-            data->bytes_uncopied = (size_t)end - buffer_offset;
-        }
+        end = rar_expand(rar, rar->progr.offset_out + data->dict_size);
+        if (end < rar->progr.offset_out)
+            return false;
+        data->bytes_ready = (size_t)end - rar->progr.offset_out;
 
-        if (data->bytes_uncopied > 0) {
-            int count = (int)min(data->bytes_uncopied, buffer_size - buffer_offset);
-            lzss_copy_bytes_from_window(&data->lzss, (uint8_t *)buffer + buffer_offset, rar->progr.offset_out, count);
-            buffer_offset += count;
-            rar->progr.offset_out += count;
-            data->bytes_uncopied -= count;
-        }
+        if (data->is_ppmd_block && data->start_new_table && !rar_parse_codes(rar))
+            return false;
     }
-
-    if (data->is_ppmd_block && rar->progr.offset_out == rar->super.entry_size_uncompressed) {
-        if (!rar_handle_ppmd_sequence(rar) || !data->ppmd_eod)
-            log("PPMd eod marker is missing");
-        // TODO: even after this, a few uncompressed bytes remain
-    }
-
-    return true;
 }
