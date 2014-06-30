@@ -35,25 +35,22 @@ bool rar_parse_header(ar_archive *ar, struct rar_header *header)
     }
 
     if (header->size < read) {
-        log("Invalid header size %Iu", header->size);
+        warn("Invalid header size %Iu", header->size);
         return false;
     }
 
-    ar->entry_offset = ar_tell(ar->stream) - read;
-    ar->entry_size_block = 0;
-    ar->entry_size_uncompressed = 0;
     return true;
 }
 
-bool rar_check_header_crc(ar_stream *stream, size_t offset)
+bool rar_check_header_crc(ar_archive *ar)
 {
     unsigned char buffer[256];
     uint16_t crc16, size;
     uint32_t crc;
 
-    if (!ar_seek(stream, offset, SEEK_SET))
+    if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
         return false;
-    if (ar_read(stream, buffer, 7) != 7)
+    if (ar_read(ar->stream, buffer, 7) != 7)
         return false;
 
     crc16 = uint16le(buffer + 0);
@@ -64,7 +61,7 @@ bool rar_check_header_crc(ar_stream *stream, size_t offset)
 
     crc = crc32(0, buffer + 2, 5);
     while (size > 0) {
-        if (ar_read(stream, buffer, min(size, sizeof(buffer))) != min(size, sizeof(buffer)))
+        if (ar_read(ar->stream, buffer, min(size, sizeof(buffer))) != min(size, sizeof(buffer)))
             return false;
         crc = crc32(crc, buffer, min(size, sizeof(buffer)));
         size -= min(size, sizeof(buffer));
@@ -72,71 +69,10 @@ bool rar_check_header_crc(ar_stream *stream, size_t offset)
     return (crc & 0xFFFF) == crc16;
 }
 
-static void rar_update_entry_name(ar_archive *ar, struct rar_header *header, struct rar_entry *entry)
+bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, struct rar_entry *entry)
 {
-    struct rar_data *ar_rar = (struct rar_data *)(ar + 1);
-
-    free(ar_rar->entry.name);
-    ar_rar->entry.name = NULL;
-    free(ar_rar->entry.name_w);
-    ar_rar->entry.name_w = NULL;
-
-    if (!entry->name) {
-        log("OOM when allocating memory for the filename");
-    }
-    else if (!(header->flags & LHD_UNICODE)) {
-#ifdef _WIN32
-        int res = MultiByteToWideChar(CP_ACP, 0, entry->name, -1, NULL, 0);
-        ar_rar->entry.name_w = malloc(res * sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, entry->name, -1, ar_rar->entry.name_w, res);
-        res = WideCharToMultiByte(CP_UTF8, 0, ar_rar->entry.name_w, -1, NULL, 0, NULL, NULL);
-        ar_rar->entry.name = malloc(res);
-        WideCharToMultiByte(CP_UTF8, 0, ar_rar->entry.name_w, -1, ar_rar->entry.name, res, NULL, NULL);
-#else
-#error need conversion from CP_ACP to CP_UTF8
-#endif
-    }
-    else if (entry->namelen == strlen(entry->name)) {
-        ar_rar->entry.name = entry->name;
-        entry->name = NULL;
-    }
-    else {
-#ifdef _WIN32
-        int res = WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)entry->name, -1, NULL, 0, NULL, NULL);
-        ar_rar->entry.name = malloc(res);
-        WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)entry->name, -1, ar_rar->entry.name, res, NULL, NULL);
-        ar_rar->entry.name_w = (WCHAR *)entry->name;
-        entry->name = NULL;
-#else
-#error need conversion from CP_UTF16LE to CP_UTF8
-#endif
-    }
-
-    /* normalize path separators */
-    if (ar_rar->entry.name) {
-        char *p = ar_rar->entry.name;
-        while ((p = strchr(p, '\\')) != NULL) {
-            *p = '/';
-        }
-    }
-    if (ar_rar->entry.name_w) {
-        WCHAR *pw;
-        for (pw = ar_rar->entry.name_w; *pw; pw++) {
-            if (*pw == '\\')
-                *pw = '/';
-        }
-    }
-
-    free(entry->name);
-    entry->name = NULL;
-}
-
-bool rar_parse_header_entry(ar_archive *ar, struct rar_header *header, struct rar_entry *entry)
-{
-    struct rar_data *ar_rar = (struct rar_data *)(ar + 1);
-
     unsigned char data[21];
-    if (ar_read(ar->stream, data, sizeof(data)) != sizeof(data))
+    if (ar_read(rar->super.stream, data, sizeof(data)) != sizeof(data))
         return false;
 
     entry->size = uint32le(data + 0);
@@ -149,40 +85,131 @@ bool rar_parse_header_entry(ar_archive *ar, struct rar_header *header, struct ra
     entry->attrs = uint32le(data + 17);
     if ((header->flags & LHD_LARGE)) {
         unsigned char more_data[8];
-        if (ar_read(ar->stream, more_data, sizeof(more_data)) != sizeof(more_data))
+        if (ar_read(rar->super.stream, more_data, sizeof(more_data)) != sizeof(more_data))
             return false;
         header->datasize += (uint64_t)uint32le(more_data + 0);
         entry->size += (uint64_t)uint32le(more_data + 4);
     }
-    entry->name = malloc(entry->namelen + 2);
-    if (entry->name) {
-        if (ar_read(ar->stream, entry->name, entry->namelen) != entry->namelen) {
-            free(entry->name);
-            return false;
-        }
-        entry->name[entry->namelen] = entry->name[entry->namelen + 1] = '\0';
-    }
+    if (!ar_skip(rar->super.stream, entry->namelen))
+        return false;
     if ((header->flags & LHD_SALT)) {
         log("Skipping LHD_SALT");
-        ar_skip(ar->stream, 8);
+        ar_skip(rar->super.stream, 8);
     }
-    if ((header->flags & LHD_SOLID)) {
-        log("TODO: support LHD_SOLID");
-    }
+    if ((header->flags & LHD_SOLID))
+        todo("LHD_SOLID only supported for METHOD_STORE");
     if (entry->method != METHOD_STORE && entry->version != 29) {
-        log("Unsupported compression version: %d", entry->version);
-        free(entry->name);
-        entry->name = NULL;
+        todo("Unsupported compression version: %d", entry->version);
         return false;
     }
+    entry->solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
 
-    ar_rar->entry.method = entry->method;
-    ar_rar->entry.crc = entry->crc;
-    rar_update_entry_name(ar, header, entry);
-    ar_rar->uncomp.offset = header->size;
-    ar_rar->uncomp.crc = 0;
+    rar->entry.method = entry->method;
+    rar->entry.crc = entry->crc;
+    rar->entry.header_size = header->size;
+    free(rar->entry.name);
+    rar->entry.name = NULL;
+    free(rar->entry.name_w);
+    rar->entry.name_w = NULL;
 
-    ar->entry_size_block = header->size + (size_t)header->datasize;
-    ar->entry_size_uncompressed = (size_t)entry->size;
+    if (!entry->solid)
+        rar_clear_uncompress(&rar->uncomp);
+    else
+        todo("This only works if all previous entries of this solid block are uncompressed first");
+    rar->progr.offset_in = header->size;
+    rar->progr.offset_out = 0;
+    rar->progr.crc = 0;
+
     return true;
+}
+
+const char *rar_get_name(ar_archive_rar *rar)
+{
+    if (!rar->entry.name) {
+        unsigned char data[21];
+        uint16_t namelen;
+        char *name;
+
+        struct rar_header header;
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset, SEEK_SET))
+            return NULL;
+        if (!rar_parse_header(&rar->super, &header))
+            return NULL;
+        if (ar_read(rar->super.stream, data, sizeof(data)) != sizeof(data))
+            return NULL;
+        if ((header.flags & LHD_LARGE) && !ar_skip(rar->super.stream, 8))
+            return NULL;
+
+        namelen = uint16le(data + 15);
+        name = malloc(namelen + 2);
+        if (!name) {
+            warn("OOM when allocating memory for the filename");
+            return NULL;
+        }
+        if (ar_read(rar->super.stream, name, namelen) != namelen) {
+            free(name);
+            return NULL;
+        }
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET)) {
+            warn("Couldn't seek back to the end of the entry header");
+            free(name);
+            return NULL;
+        }
+        name[namelen] = name[namelen + 1] = '\0';
+
+        if (!(header.flags & LHD_UNICODE)) {
+#ifdef _WIN32
+            int res = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
+            rar->entry.name_w = malloc(res * sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, name, -1, rar->entry.name_w, res);
+            res = WideCharToMultiByte(CP_UTF8, 0, rar->entry.name_w, -1, NULL, 0, NULL, NULL);
+            rar->entry.name = malloc(res);
+            WideCharToMultiByte(CP_UTF8, 0, rar->entry.name_w, -1, rar->entry.name, res, NULL, NULL);
+#else
+#error need conversion from CP_ACP to CP_UTF8
+#endif
+            free(name);
+        }
+        else if (namelen == strlen(name)) {
+            rar->entry.name = name;
+        }
+        else {
+#ifdef _WIN32
+            int res = WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)name, -1, NULL, 0, NULL, NULL);
+            rar->entry.name = malloc(res);
+            WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)name, -1, rar->entry.name, res, NULL, NULL);
+            rar->entry.name_w = (WCHAR *)name;
+#else
+#error need conversion from CP_UTF16LE to CP_UTF8
+#endif
+        }
+
+        /* normalize path separators */
+        if (rar->entry.name) {
+            char *p = rar->entry.name;
+            while ((p = strchr(p, '\\')) != NULL) {
+                *p = '/';
+            }
+        }
+        if (rar->entry.name_w) {
+            WCHAR *pw;
+            for (pw = rar->entry.name_w; *pw; pw++) {
+                if (*pw == '\\')
+                    *pw = '/';
+            }
+        }
+    }
+    return rar->entry.name;
+}
+
+const WCHAR *rar_get_name_w(ar_archive_rar *rar)
+{
+#ifdef _WIN32
+    if (!rar->entry.name_w && rar_get_name(rar)) {
+        int res = MultiByteToWideChar(CP_UTF8, 0, rar->entry.name, -1, NULL, 0);
+        rar->entry.name_w = malloc(res);
+        MultiByteToWideChar(CP_UTF8, 0, rar->entry.name, -1, rar->entry.name_w, res);
+    }
+#endif
+    return rar->entry.name_w;
 }

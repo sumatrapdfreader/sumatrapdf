@@ -3,6 +3,10 @@
 
 #include "unarr.h"
 
+#if defined(DEBUG) && defined(_MSC_VER)
+#include <crtdbg.h>
+#endif
+
 #define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); goto CleanUp; } step++
 
 int main(int argc, char *argv[])
@@ -11,6 +15,12 @@ int main(int argc, char *argv[])
     ar_archive *ar = NULL;
     int count = 1;
     int step = 1;
+
+#if defined(DEBUG) && defined(_MSC_VER)
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     FailIf(argc < 2, "Syntax: %s <filename.rar>", argv[0]);
 
@@ -30,6 +40,8 @@ int main(int argc, char *argv[])
                 break;
             size -= min(size, sizeof(buffer));
         }
+        if (size > 0)
+            fprintf(stderr, "Warning: Failed to uncompress... skipping\n");
     }
     FailIf(!ar_at_eof(ar), "Error: Failed to parse entry %d!", count);
     step = 0;

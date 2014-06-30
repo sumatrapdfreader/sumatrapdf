@@ -2,8 +2,12 @@
 
 * The Unarchiver project (https://code.google.com/p/theunarchiver/)
 * The libarchive project (http://www.libarchive.org/)
+* The GNUNet project (https://gnunet.org/)
+* The 7-zip project (http://www.7-zip.org/)
 * Simon Bünzli (zeniko at gmail.com, http://www.zeniko.ch/#SumatraPDF)
 
-Code taken directly from the Unarchiver project is licensed under LGPLv3,
-code taken directly from the libarchive project is licensed under BSD (see COPYING.BSD),
+All code taken directly from the Unarchiver project is licensed under LGPLv3,
+all code taken directly from the libarchive project is licensed under new BSD,
+all code taken directly from the GNUNet project is in the public domain,
+all code taken directly from the 7-zip project is in the public domain,
 all other code is licensed under GPLv3 (see COPYING).

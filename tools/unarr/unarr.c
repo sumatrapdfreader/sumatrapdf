@@ -3,13 +3,13 @@
 
 #include "unarr-internals.h"
 
-ar_archive *ar_open_archive(ar_stream *stream, size_t format_data, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
+ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
                             ar_entry_get_name_fn get_name, ar_entry_get_name_w_fn get_name_w, ar_entry_uncompress_fn uncompress)
 {
-    ar_archive *ar = malloc(sizeof(ar_archive) + format_data);
+    ar_archive *ar = malloc(struct_size);
     if (!ar)
         return NULL;
-    memset(ar, 0, sizeof(ar_archive) + format_data);
+    memset(ar, 0, struct_size);
     ar->close = close;
     ar->parse_entry = parse_entry;
     ar->get_name = get_name;

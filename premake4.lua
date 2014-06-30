@@ -172,6 +172,7 @@ solution "unarr"
     language "C"
     files {
       "tools/unarr/*.*",
+      "tools/unarr/ppmd/*",
       "tools/unarr/rar/*"
     }
     defines { "_CRT_SECURE_NO_WARNINGS" }

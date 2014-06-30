@@ -33,11 +33,11 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 /***** unarr *****/
 
-typedef void (* ar_archive_close_fn)(ar_archive *ar);
-typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
-typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
-typedef const WCHAR *(* ar_entry_get_name_w_fn)(ar_archive *ar);
-typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
+typedef void (* ar_archive_close_fn)(void *ar);
+typedef bool (* ar_parse_entry_fn)(void *ar);
+typedef const char *(* ar_entry_get_name_fn)(void *ar);
+typedef const WCHAR *(* ar_entry_get_name_w_fn)(void *ar);
+typedef bool (* ar_entry_uncompress_fn)(void *ar, void *buffer, size_t count);
 
 struct ar_archive_s {
     ar_archive_close_fn close;
@@ -53,7 +53,7 @@ struct ar_archive_s {
     size_t entry_size_uncompressed;
 };
 
-ar_archive *ar_open_archive(ar_stream *stream, size_t format_data, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
+ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
                             ar_entry_get_name_fn get_name, ar_entry_get_name_w_fn get_name_w, ar_entry_uncompress_fn uncompress);
 
 #endif
