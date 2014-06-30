@@ -140,13 +140,14 @@ static void PpmdRAR_RangeDec_CreateVTable(struct CPpmdRAR_RangeDec *p, IByteIn *
     p->Stream = stream;
 }
 
-static void rar_init_uncompress(ar_archive_rar *rar)
+static void rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp)
 {
-    if (rar->uncomp.initialized)
+    if (uncomp->initialized)
         return;
-    memset(&rar->uncomp, 0, sizeof(rar->uncomp));
-    rar->uncomp.start_new_table = true;
-    rar->uncomp.initialized = true;
+    memset(uncomp, 0, sizeof(*uncomp));
+    uncomp->start_new_table = true;
+    uncomp->filterstart = SIZE_MAX;
+    uncomp->initialized = true;
 }
 
 static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp);
@@ -224,7 +225,7 @@ static bool rar_add_value(ar_archive_rar *rar, struct huffman_code *code, int va
     return true;
 }
 
-static bool rar_create_code(ar_archive_rar *rar, struct huffman_code *code, unsigned char *lengths, int numsymbols)
+static bool rar_create_code(ar_archive_rar *rar, struct huffman_code *code, uint8_t *lengths, int numsymbols)
 {
     int symbolsleft = numsymbols;
     int codebits = 0;
@@ -529,6 +530,45 @@ static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
     memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
 }
 
+static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive_rar *rar, uint8_t *byte))
+{
+    uint8_t flags, val, *code;
+    uint16_t length, i;
+
+    if (!decode_byte(rar, &flags))
+        return false;
+    length = (flags & 0x07) + 1;
+    if (length == 7) {
+        if (!decode_byte(rar, &val))
+            return false;
+        length = val + 7;
+    }
+    else if (length == 8) {
+        if (!decode_byte(rar, &val))
+            return false;
+        length = val << 8;
+        if (!decode_byte(rar, &val))
+            return false;
+        length |= val;
+    }
+
+    code = malloc(length);
+    if (!code) {
+        warn("Unable to allocate memory for parsing filter");
+        return false;
+    }
+    for (i = 0; i < length; i++) {
+        if (!decode_byte(rar, &code[i])) {
+            free(code);
+            return false;
+        }
+    }
+
+    free(code);
+    todo("ParseFilter(code, %d, %#02x)", length, flags);
+    return false;
+}
+
 static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, Byte *symbol)
 {
     int value = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.super);
@@ -540,7 +580,20 @@ static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, B
     return true;
 }
 
-static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
+static bool rar_decode_byte(ar_archive_rar *rar, uint8_t *byte)
+{
+    if (!rar_br_check(rar, 8))
+        return false;
+    *byte = (uint8_t)rar_br_bits(rar, 8);
+    return true;
+}
+
+static bool rar_decode_ppmd7_byte(ar_archive_rar *rar, uint8_t *byte)
+{
+    return rar_decode_ppmd7_symbol(&rar->uncomp, byte);
+}
+
+static bool rar_handle_ppmd_sequence(ar_archive_rar *rar, int64_t *end)
 {
     struct ar_archive_rar_uncomp *data = &rar->uncomp;
     Byte sym, code, length;
@@ -566,8 +619,11 @@ static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
         return true;
 
     case 3:
-        todo("Parsing filters are unsupported");
-        return false;
+        if (!rar_read_filter(rar, rar_decode_ppmd7_byte))
+            return false;
+        if (data->filterstart < *end)
+            *end = data->filterstart;
+        return true;
 
     case 4:
         if (!rar_decode_ppmd7_symbol(data, &code))
@@ -600,17 +656,17 @@ static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
 
 static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 {
-    static const unsigned char lengthbases[] =
+    static const uint8_t lengthbases[] =
         {   0,   1,   2,   3,   4,   5,   6,
             7,   8,  10,  12,  14,  16,  20,
            24,  28,  32,  40,  48,  56,  64,
            80,  96, 112, 128, 160, 192, 224 };
-    static const unsigned char lengthbits[] =
+    static const uint8_t lengthbits[] =
         { 0, 0, 0, 0, 0, 0, 0,
           0, 1, 1, 1, 1, 2, 2,
           2, 2, 3, 3, 3, 3, 4,
           4, 4, 4, 5, 5, 5, 5 };
-    static const unsigned int offsetbases[] =
+    static const int32_t offsetbases[] =
         {       0,       1,       2,       3,       4,       6,
                 8,      12,      16,      24,      32,      48,
                64,      96,     128,     192,     256,     384,
@@ -621,15 +677,15 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
            655360,  720896,  786432,  851968,  917504,  983040,
           1048576, 1310720, 1572864, 1835008, 2097152, 2359296,
           2621440, 2883584, 3145728, 3407872, 3670016, 3932160 };
-    static const unsigned char offsetbits[] =
+    static const uint8_t offsetbits[] =
         {  0,  0,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,
            5,  5,  6,  6,  7,  7,  8,  8,  9,  9, 10, 10,
           11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16,
           16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
           18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18 };
-    static const unsigned char shortbases[] =
+    static const uint8_t shortbases[] =
         { 0, 4, 8, 16, 32, 64, 128, 192 };
-    static const unsigned char shortbits[] =
+    static const uint8_t shortbits[] =
         { 2, 2, 3, 4, 5, 6, 6, 6 };
 
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
@@ -637,10 +693,10 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 
     for (;;) {
         if (lzss_position(&uncomp->lzss) >= end)
-            return lzss_position(&uncomp->lzss);
+            return end;
 
         if (uncomp->is_ppmd_block) {
-            if (!rar_handle_ppmd_sequence(rar))
+            if (!rar_handle_ppmd_sequence(rar, &end))
                 return -1;
             if (uncomp->start_new_table)
                 return lzss_position(&uncomp->lzss);
@@ -668,8 +724,11 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             continue;
         }
         if (symbol == 257) {
-            todo("Parsing filters are unsupported");
-            return -1;
+            if (!rar_read_filter(rar, rar_decode_byte))
+                return -1;
+            if (uncomp->filterstart < end)
+                end = uncomp->filterstart;
+            continue;
         }
         if (symbol == 258) {
             if (uncomp->lastlength == 0)
@@ -781,7 +840,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
     struct ar_archive_rar_uncomp *data = &rar->uncomp;
     int64_t end;
 
-    rar_init_uncompress(rar);
+    rar_init_uncompress(data);
 
     for (;;) {
         if (data->bytes_ready > 0) {
@@ -802,7 +861,10 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (data->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        end = rar_expand(rar, rar->progr.offset_out + data->dict_size);
+        end = rar->progr.offset_out + data->dict_size;
+        if (data->filterstart < end)
+            end = data->filterstart;
+        end = rar_expand(rar, end);
         if (end < rar->progr.offset_out)
             return false;
         data->bytes_ready = (size_t)end - rar->progr.offset_out;

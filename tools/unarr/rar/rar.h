@@ -150,6 +150,8 @@ struct ar_archive_rar_uncomp {
     struct CPpmdRAR_RangeDec range_dec;
     struct ByteReader bytein;
 
+    size_t filterstart;
+
     struct {
         uint64_t bits;
         int available;

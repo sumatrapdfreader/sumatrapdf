@@ -23,7 +23,7 @@ char *conv_utf16_to_utf8(const WCHAR *wstr)
     return str;
 }
 
-char *conv_ansi_to_utf8_utf16(const char *astr, const WCHAR **wstr_opt)
+char *conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt)
 {
     char *str = NULL;
     int res = MultiByteToWideChar(CP_ACP, 0, astr, -1, NULL, 0);
