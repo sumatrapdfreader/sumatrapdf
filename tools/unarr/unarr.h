@@ -10,8 +10,8 @@
 typedef unsigned short WCHAR;
 #endif
 #include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 /***** stream *****/
 

@@ -10,18 +10,11 @@
 
 typedef struct ar_archive_rar_s ar_archive_rar;
 
-#ifdef _MSC_VER
 #define warn(msg, ...) fprintf(stderr, "Warning: " msg "\n", __VA_ARGS__)
 #define todo(msg, ...) fprintf(stderr, "TODO: " msg "\n", __VA_ARGS__)
 #ifdef DEBUG
 #define log(msg, ...) fprintf(stderr, "Log: " msg "\n", __VA_ARGS__)
 #else
-#define log(msg, ...) ((void)0)
-#endif
-#else
-// TODO: printf("%Iu", ...) isn't portable
-#define warn(msg, ...) ((void)0)
-#define todo(msg, ...) ((void)0)
 #define log(msg, ...) ((void)0)
 #endif
 
@@ -121,33 +114,40 @@ struct ByteReader {
     ar_archive_rar *rar;
 };
 
+struct CPpmdRAR_RangeDec {
+    IPpmd7_RangeDec super;
+    UInt32 Range;
+    UInt32 Code;
+    UInt32 Low;
+    UInt32 Bottom;
+    IByteIn *Stream;
+};
+
 struct ar_archive_rar_uncomp {
     bool initialized;
-
-    bool at_eof;
     bool start_new_table;
+    bool at_eof;
 
     LZSS lzss;
     uint32_t dict_size;
-    uint32_t bytes_uncopied;
+    size_t bytes_uncopied;
     struct huffman_code maincode;
     struct huffman_code offsetcode;
     struct huffman_code lowoffsetcode;
     struct huffman_code lengthcode;
     uint8_t lengthtable[HUFFMAN_TABLE_SIZE];
-    int64_t filterstart;
     uint32_t lastlength;
     uint32_t lastoffset;
     uint32_t oldoffset[4];
     uint32_t lastlowoffset;
     uint32_t numlowoffsetrepeats;
 
+    bool is_ppmd_block;
     bool ppmd_valid;
     bool ppmd_eod;
-    bool is_ppmd_block;
     int ppmd_escape;
     CPpmd7 ppmd7_context;
-    CPpmd7z_RangeDec range_dec;
+    struct CPpmdRAR_RangeDec range_dec;
     struct ByteReader bytein;
 
     struct {

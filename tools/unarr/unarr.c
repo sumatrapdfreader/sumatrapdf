@@ -21,7 +21,8 @@ ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_cl
 
 void ar_close_archive(ar_archive *ar)
 {
-    ar->close(ar);
+    if (ar)
+        ar->close(ar);
     free(ar);
 }
 

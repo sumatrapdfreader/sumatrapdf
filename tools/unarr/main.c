@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     printf("Parsing \"%s\":\n", argv[1]);
     while (ar_parse_entry(ar)) {
         size_t size = ar_entry_get_size(ar);
-        printf("%02d. %s (@%Iu)\n", count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
+        printf("%02d. %s (@%" PRIuPTR ")\n", count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
         while (size > 0) {
             unsigned char buffer[1024];
             if (!ar_entry_uncompress(ar, buffer, min(size, sizeof(buffer))))
@@ -47,9 +47,7 @@ int main(int argc, char *argv[])
     step = 0;
 
 CleanUp:
-    if (ar)
-        ar_close_archive(ar);
-    if (stream)
-        ar_close(stream);
+    ar_close_archive(ar);
+    ar_close(stream);
     return step;
 }

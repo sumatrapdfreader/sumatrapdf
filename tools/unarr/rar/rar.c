@@ -17,7 +17,7 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 
     if (rar->super.entry_offset != 0) {
         if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->super.entry_size_block, SEEK_SET)) {
-            warn("Couldn't seek to offset %Iu", rar->super.entry_offset + rar->super.entry_size_block);
+            warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + rar->super.entry_size_block);
             return false;
         }
     }
@@ -44,7 +44,7 @@ static bool rar_parse_entry(ar_archive_rar *rar)
             if ((header.flags & MHD_COMMENT))
                 log("MHD_COMMENT is set");
             if (ar_tell(rar->super.stream) - rar->super.entry_offset > header.size) {
-                warn("Invalid RAR header size: %Iu", header.size);
+                warn("Invalid RAR header size: %" PRIuPTR, header.size);
                 return false;
             }
             rar->archive_flags = header.flags;
@@ -73,16 +73,16 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 #ifdef DEBUG
             // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
             if (!rar_check_header_crc(&rar->super))
-                warn("Invalid header checksum @%Iu", rar->super.entry_offset);
+                warn("Invalid header checksum @%" PRIuPTR, rar->super.entry_offset);
 #endif
             if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET)) {
-                warn("Couldn't seek to offset %Iu", rar->super.entry_offset + rar->entry.header_size);
+                warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + rar->entry.header_size);
                 return false;
             }
             return true;
 
         case TYPE_NEWSUB:
-            log("Skipping newsub header @%Iu", rar->super.entry_offset);
+            log("Skipping newsub header @%" PRIuPTR, rar->super.entry_offset);
             break;
 
         case TYPE_END_OF_ARCHIVE:
@@ -97,11 +97,11 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 #ifdef DEBUG
         // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
         if (!rar_check_header_crc(&rar->super))
-            warn("Invalid header checksum @%Iu", rar->super.entry_offset);
+            warn("Invalid header checksum @%" PRIuPTR, rar->super.entry_offset);
 #endif
 
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset + header.size + header.datasize, SEEK_SET)) {
-            warn("Couldn't seek to offset %Iu", rar->super.entry_offset + header.size + header.datasize);
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset + header.size + (ptrdiff_t)header.datasize, SEEK_SET)) {
+            warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + header.size + header.datasize);
             return false;
         }
         if (ar_tell(rar->super.stream) <= rar->super.entry_offset) {
@@ -114,7 +114,7 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
 {
     if (count > rar->super.entry_size_block - rar->progr.offset_in) {
-        warn("Requesting too much data (%Iu < %Iu)", rar->super.entry_size_block - rar->progr.offset_in, count);
+        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", rar->super.entry_size_block - rar->progr.offset_in, count);
         return false;
     }
     if (ar_read(rar->super.stream, buffer, count) != count) {

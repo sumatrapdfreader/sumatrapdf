@@ -35,7 +35,7 @@ bool rar_parse_header(ar_archive *ar, struct rar_header *header)
     }
 
     if (header->size < read) {
-        warn("Invalid header size %Iu", header->size);
+        warn("Invalid header size %" PRIuPTR, header->size);
         return false;
     }
 
@@ -142,48 +142,25 @@ const char *rar_get_name(ar_archive_rar *rar)
 
         namelen = uint16le(data + 15);
         name = malloc(namelen + 2);
-        if (!name) {
-            warn("OOM when allocating memory for the filename");
-            return NULL;
-        }
-        if (ar_read(rar->super.stream, name, namelen) != namelen) {
-            free(name);
-            return NULL;
-        }
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET)) {
-            warn("Couldn't seek back to the end of the entry header");
+        if (!name || ar_read(rar->super.stream, name, namelen) != namelen) {
+            warn("Out of resources in rar_get_name");
             free(name);
             return NULL;
         }
         name[namelen] = name[namelen + 1] = '\0';
 
         if (!(header.flags & LHD_UNICODE)) {
-#ifdef _WIN32
-            int res = MultiByteToWideChar(CP_ACP, 0, name, -1, NULL, 0);
-            rar->entry.name_w = malloc(res * sizeof(WCHAR));
-            MultiByteToWideChar(CP_ACP, 0, name, -1, rar->entry.name_w, res);
-            res = WideCharToMultiByte(CP_UTF8, 0, rar->entry.name_w, -1, NULL, 0, NULL, NULL);
-            rar->entry.name = malloc(res);
-            WideCharToMultiByte(CP_UTF8, 0, rar->entry.name_w, -1, rar->entry.name, res, NULL, NULL);
-#else
-#error need conversion from CP_ACP to CP_UTF8
-#endif
+            rar->entry.name = conv_ansi_to_utf8_utf16(name, &rar->entry.name_w);
             free(name);
         }
         else if (namelen == strlen(name)) {
             rar->entry.name = name;
+            rar->entry.name_w = NULL;
         }
         else {
-#ifdef _WIN32
-            int res = WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)name, -1, NULL, 0, NULL, NULL);
-            rar->entry.name = malloc(res);
-            WideCharToMultiByte(CP_UTF8, 0, (const WCHAR *)name, -1, rar->entry.name, res, NULL, NULL);
+            rar->entry.name = conv_utf16_to_utf8((const WCHAR *)name);
             rar->entry.name_w = (WCHAR *)name;
-#else
-#error need conversion from CP_UTF16LE to CP_UTF8
-#endif
         }
-
         /* normalize path separators */
         if (rar->entry.name) {
             char *p = rar->entry.name;
@@ -198,18 +175,16 @@ const char *rar_get_name(ar_archive_rar *rar)
                     *pw = '/';
             }
         }
+
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET))
+            warn("Couldn't seek back to the end of the entry header");
     }
     return rar->entry.name;
 }
 
 const WCHAR *rar_get_name_w(ar_archive_rar *rar)
 {
-#ifdef _WIN32
-    if (!rar->entry.name_w && rar_get_name(rar)) {
-        int res = MultiByteToWideChar(CP_UTF8, 0, rar->entry.name, -1, NULL, 0);
-        rar->entry.name_w = malloc(res);
-        MultiByteToWideChar(CP_UTF8, 0, rar->entry.name, -1, rar->entry.name_w, res);
-    }
-#endif
+    if (!rar->entry.name_w && rar_get_name(rar))
+        rar->entry.name_w = conv_utf8_to_utf16(rar->entry.name);
     return rar->entry.name_w;
 }

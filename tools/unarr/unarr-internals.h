@@ -31,6 +31,12 @@ struct ar_stream_s {
 
 ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_fn read, ar_stream_seek_fn seek, ar_stream_tell_fn tell);
 
+/***** string ****/
+
+WCHAR *conv_utf8_to_utf16(const char *str);
+char *conv_utf16_to_utf8(const WCHAR *wstr);
+char *conv_ansi_to_utf8_utf16(const char *astr, const WCHAR **wstr_opt);
+
 /***** unarr *****/
 
 typedef void (* ar_archive_close_fn)(void *ar);

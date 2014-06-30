@@ -23,7 +23,8 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 void ar_close(ar_stream *stream)
 {
-    stream->close(stream->data);
+    if (stream)
+        stream->close(stream->data);
     free(stream);
 }
 
@@ -141,7 +142,7 @@ static size_t stream_tell(void *data)
     LARGE_INTEGER zero = { 0 };
     ULARGE_INTEGER n = { 0 };
     IStream_Seek((IStream *)data, zero, SEEK_CUR, &n);
-    return n.QuadPart;
+    return (size_t)n.QuadPart;
 }
 
 ar_stream *ar_open_istream(IStream *stream)

@@ -5,9 +5,6 @@
 
 #include "rar.h"
 
-#define MAX_SYMBOL_LENGTH 0xF
-#define MAX_SYMBOLS 20
-
 static void *gSzAlloc_Alloc(void *self, size_t size) { return malloc(size); }
 static void gSzAlloc_Free(void *self, void *ptr) { free(ptr); }
 static ISzAlloc gSzAlloc = { gSzAlloc_Alloc, gSzAlloc_Free };
@@ -21,22 +18,24 @@ static inline size_t next_power_of_2(size_t value)
 
 static bool rar_br_fill(ar_archive_rar *rar, int bits)
 {
-    uint8_t bytes[8], count, i;
+    uint8_t bytes[8];
+    int count, i;
     /* read as many bits as possible */
     count = (64 - rar->uncomp.br.available) / 8;
-    if (rar->super.entry_size_block - rar->progr.offset_in < count)
+    if (rar->super.entry_size_block - rar->progr.offset_in < (size_t)count)
         count = rar->super.entry_size_block - rar->progr.offset_in;
 
-    if (ar_read(rar->super.stream, bytes, count) != count)
+    if (bits > rar->uncomp.br.available + 8 * count || ar_read(rar->super.stream, bytes, count) != (size_t)count) {
+        warn("Unexpected EOF during decompression (truncated file?)");
+        rar->uncomp.at_eof = true;
         return false;
+    }
     rar->progr.offset_in += count;
     for (i = 0; i < count; i++) {
         rar->uncomp.br.bits = (rar->uncomp.br.bits << 8) | bytes[i];
     }
     rar->uncomp.br.available += 8 * count;
-    rar->uncomp.at_eof = bits > rar->uncomp.br.available;
-
-    return !rar->uncomp.at_eof;
+    return true;
 }
 
 static inline bool rar_br_check(ar_archive_rar *rar, int bits)
@@ -53,11 +52,65 @@ static inline uint64_t rar_br_bits(ar_archive_rar *rar, int bits)
 
 static Byte ByteIn_Read(struct ByteReader *self)
 {
-    if (!rar_br_check(self->rar, 8)) {
-        warn("Unexpected EOF in ByteIn_Read");
-        return 0;
+    return rar_br_check(self->rar, 8) ? (Byte)rar_br_bits(self->rar, 8) : 0;
+}
+
+static void ByteIn_CreateVTable(struct ByteReader *br, ar_archive_rar *rar)
+{
+    br->super.Read = ByteIn_Read;
+    br->rar = rar;
+}
+
+/* Ppmd7 range decoder differs between 7z and RAR */
+static Bool PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
+{
+    unsigned i;
+    p->Low = 0;
+    p->Bottom = 0x8000;
+    p->Range = 0xFFFFFFFF;
+    for (i = 0; i < 4; i++)
+    p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
+    return (p->Code < 0xFFFFFFFF) != 0;
+}
+
+static UInt32 Range_GetThreshold(struct CPpmdRAR_RangeDec *p, UInt32 total)
+{
+    return (p->Code - p->Low) / (p->Range /= total);
+}
+
+static void Range_Decode_RAR(struct CPpmdRAR_RangeDec *p, UInt32 start, UInt32 size)
+{
+    p->Low += start * p->Range;
+    p->Range *= size;
+    for (;;) {
+        if ((p->Low ^ (p->Low + p->Range)) >= (1 << 24)) {
+            if (p->Range >= p->Bottom)
+                break;
+            p->Range = ((uint32_t)(-(int32_t)p->Low)) & (p->Bottom - 1);
+        }
+        p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
+        p->Range <<= 8;
+        p->Low <<= 8;
     }
-    return (Byte)rar_br_bits(self->rar, 8);
+}
+
+static UInt32 Range_DecodeBit_RAR(struct CPpmdRAR_RangeDec *p, UInt32 size0)
+{
+    UInt32 value = Range_GetThreshold(p, PPMD_BIN_SCALE);
+    UInt32 bit = value < size0 ? 0 : 1;
+    if (value < size0)
+        Range_Decode_RAR(p, 0, size0);
+    else
+        Range_Decode_RAR(p, size0, PPMD_BIN_SCALE - size0);
+    return bit;
+}
+
+static void PpmdRAR_RangeDec_CreateVTable(struct CPpmdRAR_RangeDec *p, IByteIn *stream)
+{
+    p->super.GetThreshold = Range_GetThreshold;
+    p->super.Decode = Range_Decode_RAR;
+    p->super.DecodeBit = Range_DecodeBit_RAR;
+    p->Stream = stream;
 }
 
 static void rar_init_uncompress(ar_archive_rar *rar)
@@ -66,8 +119,6 @@ static void rar_init_uncompress(ar_archive_rar *rar)
         return;
     memset(&rar->uncomp, 0, sizeof(rar->uncomp));
     rar->uncomp.start_new_table = true;
-    rar->uncomp.bytein.rar = rar;
-    rar->uncomp.bytein.super.Read = ByteIn_Read;
     rar->uncomp.initialized = true;
 }
 
@@ -85,16 +136,24 @@ void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp)
 
 static bool rar_new_node(struct huffman_code *code)
 {
+    if (!code->tree) {
+        code->minlength = INT_MAX;
+        code->maxlength = INT_MIN;
+    }
     if (code->numentries + 1 >= code->capacity) {
-        int new_capacity = code->capacity ? code->capacity * 2 : 16;
+        /* in my small file sample, 1024 is value needed most often */
+        int new_capacity = code->capacity ? code->capacity * 2 : 1024;
         void *new_tree = realloc(code->tree, new_capacity * sizeof(*code->tree));
-        if (!new_tree)
+        if (!new_tree) {
+            warn("Unable to allocate memory for node data");
             return false;
+        }
         code->tree = new_tree;
         code->capacity = new_capacity;
     }
     code->tree[code->numentries].branches[0] = -1;
     code->tree[code->numentries].branches[1] = -2;
+    code->numentries++;
     return true;
 }
 
@@ -113,83 +172,64 @@ static bool rar_add_value(ar_archive_rar *rar, struct huffman_code *code, int va
     lastnode = 0;
     for (bitpos = length - 1; bitpos >= 0; bitpos--) {
         bit = (codebits >> bitpos) & 1;
-
-        /* Leaf node check */
+        /* check for leaf node */
         if (code->tree[lastnode].branches[0] == code->tree[lastnode].branches[1]) {
             warn("Prefix found");
             return false;
         }
-
-        /* Open branch check */
+        /* check for open branch */
         if (code->tree[lastnode].branches[bit] < 0) {
-            if (!rar_new_node(code)) {
-                warn("Unable to allocate memory for node data.");
+            if (!rar_new_node(code))
                 return false;
-            }
-            code->tree[lastnode].branches[bit] = code->numentries++;
+            code->tree[lastnode].branches[bit] = code->numentries - 1;
         }
-
-        /* set to branch */
+        /* select branch */
         lastnode = code->tree[lastnode].branches[bit];
     }
-
+    /* check for empty leaf */
     if (code->tree[lastnode].branches[0] != -1 || code->tree[lastnode].branches[1] != -2) {
         warn("Prefix found");
         return false;
     }
-
-    /* Set leaf value */
+    /* set leaf value */
     code->tree[lastnode].branches[0] = value;
     code->tree[lastnode].branches[1] = value;
     return true;
 }
 
-static bool rar_create_code(ar_archive_rar *rar, struct huffman_code *code, unsigned char *lengths, int numsymbols, char maxlength)
+static bool rar_create_code(ar_archive_rar *rar, struct huffman_code *code, unsigned char *lengths, int numsymbols)
 {
-    int codebits = 0;
     int symbolsleft = numsymbols;
+    int codebits = 0;
     int i, j;
 
-    if (!rar_new_node(code)) {
-        warn("Unable to allocate memory for node data.");
+    if (!rar_new_node(code))
         return false;
-    }
-    code->numentries = 1;
-    code->minlength = INT_MAX;
-    code->maxlength = INT_MIN;
 
-    for (i = 1; i <= maxlength; i++) {
+    for (i = 1; i <= 0x0F; i++) {
         for (j = 0; j < numsymbols; j++) {
             if (lengths[j] != i)
                 continue;
             if (!rar_add_value(rar, code, j, codebits, i))
                 return false;
+            if (--symbolsleft <= 0)
+                return true;
             codebits++;
-            if (--symbolsleft <= 0) {
-                break;
-                break;
-            }
         }
         codebits <<= 1;
     }
     return true;
 }
 
-static bool rar_make_table_recurse(struct huffman_code *code, int node, struct huffman_table_entry *table, int depth, int maxdepth)
+static bool rar_make_table_rec(struct huffman_code *code, int node, struct huffman_table_entry *table, int depth, int maxdepth)
 {
-    int currtablesize, i;
-    bool ok = true;
+    int currtablesize = 1 << (maxdepth - depth);
+    int i;
 
-    if (!code->tree) {
-        warn("Huffman tree was not created.");
+    if (node < 0 || code->numentries <= node) {
+        warn("Invalid location to Huffman tree specified");
         return false;
     }
-    if (node < 0 || node >= code->numentries) {
-        warn("Invalid location to Huffman tree specified.");
-        return false;
-    }
-
-    currtablesize = 1 << (maxdepth - depth);
 
     if (code->tree[node].branches[0] == code->tree[node].branches[1]) {
         for (i = 0; i < currtablesize; i++) {
@@ -206,21 +246,28 @@ static bool rar_make_table_recurse(struct huffman_code *code, int node, struct h
         table[0].value = node;
     }
     else {
-        ok |= rar_make_table_recurse(code, code->tree[node].branches[0], table, depth + 1, maxdepth);
-        ok |= rar_make_table_recurse(code, code->tree[node].branches[1], table + currtablesize / 2, depth + 1, maxdepth);
+        if (!rar_make_table_rec(code, code->tree[node].branches[0], table, depth + 1, maxdepth))
+            return false;
+        if (!rar_make_table_rec(code, code->tree[node].branches[1], table + currtablesize / 2, depth + 1, maxdepth))
+            return false;
     }
-    return ok;
+    return true;
 }
 
 static bool rar_make_table(struct huffman_code *code)
 {
-    if (code->maxlength < code->minlength || code->maxlength > 10)
-        code->tablesize = 10;
-    else
+    if (code->minlength <= code->maxlength && code->maxlength <= 10)
         code->tablesize = code->maxlength;
+    else
+        code->tablesize = 10;
 
-    code->table = calloc((size_t)1 << code->tablesize, sizeof(*code->table));
-    return rar_make_table_recurse(code, 0, code->table, 0, code->tablesize);
+    code->table = calloc(1 << code->tablesize, sizeof(*code->table));
+    if (!code->table) {
+        warn("Unable to allocate memory for table data");
+        return false;
+    }
+
+    return rar_make_table_rec(code, 0, code->table, 0, code->tablesize);
 }
 
 static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
@@ -232,10 +279,8 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
     if (!code->table && !rar_make_table(code))
         return -1;
 
-    if (!rar_br_check(rar, code->tablesize)) {
-        warn("Truncated RAR file data");
+    if (!rar_br_check(rar, code->tablesize))
         return -1;
-    }
     bits = (uint32_t)rar_br_bits(rar, code->tablesize);
 
     length = code->table[bits].length;
@@ -255,10 +300,8 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
 
     node = value;
     while (code->tree[node].branches[0] != code->tree[node].branches[1]) {
-        if (!rar_br_check(rar, 1)) {
-            warn("Truncated RAR file data");
+        if (!rar_br_check(rar, 1))
             return -1;
-        }
         bit = (uint8_t)rar_br_bits(rar, 1);
 
         if (code->tree[node].branches[bit] < 0) {
@@ -273,8 +316,6 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
 
 static bool rar_parse_codes(ar_archive_rar *rar)
 {
-#define ensure_bits(n) if (!rar_br_check(rar, n)) { warn("Unexpected EOF in rar_parse_codes"); return false; } else ((void)0)
-
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
 
     rar_free_codes(uncomp);
@@ -282,20 +323,24 @@ static bool rar_parse_codes(ar_archive_rar *rar)
     /* skip to next byte */
     uncomp->br.available &= ~0x07;
 
-    ensure_bits(1);
+    if (!rar_br_check(rar, 1))
+        return false;
     uncomp->is_ppmd_block = rar_br_bits(rar, 1) != 0;
     if (uncomp->is_ppmd_block) {
         uint8_t ppmd_flags;
-        ensure_bits(7);
+        if (!rar_br_check(rar, 7))
+            return false;
         ppmd_flags = (uint8_t)rar_br_bits(rar, 7);
         /* memory is allocated in MB */
         if ((ppmd_flags & 0x20)) {
-            ensure_bits(8);
-            uncomp->dict_size = (rar_br_bits(rar, 8) + 1) << 20;
+            if (!rar_br_check(rar, 8))
+                return false;
+            uncomp->dict_size = ((uint8_t)rar_br_bits(rar, 8) + 1) << 20;
         }
         if ((ppmd_flags & 0x40)) {
-            ensure_bits(8);
-            uncomp->ppmd_escape = uncomp->ppmd7_context.InitEsc = rar_br_bits(rar, 8);
+            if (!rar_br_check(rar, 8))
+                return false;
+            uncomp->ppmd_escape = uncomp->ppmd7_context.InitEsc = (uint8_t)rar_br_bits(rar, 8);
         }
         else
             uncomp->ppmd_escape = 2;
@@ -307,15 +352,14 @@ static bool rar_parse_codes(ar_archive_rar *rar)
                 maxorder = 16 + (maxorder - 16) * 3;
 
             Ppmd7_Free(&uncomp->ppmd7_context, &gSzAlloc);
-            Ppmd7z_RangeDec_CreateVTable(&uncomp->range_dec);
-            uncomp->range_dec.Stream = &uncomp->bytein.super;
             Ppmd7_Construct(&uncomp->ppmd7_context);
             if (!Ppmd7_Alloc(&uncomp->ppmd7_context, uncomp->dict_size, &gSzAlloc)) {
                 warn("OOM in Ppmd7_Alloc");
                 return false;
             }
-            // TODO: RAR and 7z are slightly incompatible
-            if (!Ppmd7z_RangeDec_Init(&uncomp->range_dec)) {
+            ByteIn_CreateVTable(&uncomp->bytein, rar);
+            PpmdRAR_RangeDec_CreateVTable(&uncomp->range_dec, &uncomp->bytein.super);
+            if (!PpmdRAR_RangeDec_Init(&uncomp->range_dec)) {
                 warn("Unable to initialize PPMd range decoder");
                 return false;
             }
@@ -327,7 +371,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
                 warn("Invalid PPMd sequence");
                 return false;
             }
-            if (!Ppmd7z_RangeDec_Init(&uncomp->range_dec)) {
+            if (!PpmdRAR_RangeDec_Init(&uncomp->range_dec)) {
                 warn("Unable to initialize PPMd range decoder");
                 return false;
             }
@@ -335,20 +379,23 @@ static bool rar_parse_codes(ar_archive_rar *rar)
     }
     else {
         struct huffman_code precode;
-        uint8_t bitlengths[MAX_SYMBOLS];
+        uint8_t bitlengths[20];
         uint8_t zerocount;
         int i, j, val, n;
 
         /* keep existing table flag */
-        ensure_bits(1);
+        if (!rar_br_check(rar, 1))
+            return false;
         if (!rar_br_bits(rar, 1))
             memset(uncomp->lengthtable, 0, sizeof(uncomp->lengthtable));
         memset(&bitlengths, 0, sizeof(bitlengths));
         for (i = 0; i < sizeof(bitlengths); ) {
-            ensure_bits(4);
+            if (!rar_br_check(rar, 4))
+                return false;
             bitlengths[i++] = (uint8_t)rar_br_bits(rar, 4);
             if (bitlengths[i - 1] == 0x0F) {
-                ensure_bits(4);
+                if (!rar_br_check(rar, 4))
+                    return false;
                 zerocount = (uint8_t)rar_br_bits(rar, 4);
                 if (zerocount) {
                     i--;
@@ -359,7 +406,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             }
         }
         memset(&precode, 0, sizeof(precode));
-        if (!rar_create_code(rar, &precode, bitlengths, sizeof(bitlengths), MAX_SYMBOL_LENGTH)) {
+        if (!rar_create_code(rar, &precode, bitlengths, sizeof(bitlengths))) {
             free(precode.tree);
             free(precode.table);
             return false;
@@ -384,21 +431,19 @@ static bool rar_parse_codes(ar_archive_rar *rar)
                 }
                 if (val == 16) {
                     if (!rar_br_check(rar, 3)) {
-                        warn("Unexpected EOF in rar_parse_codes");
                         free(precode.tree);
                         free(precode.table);
                         return false;
                     }
-                    n = rar_br_bits(rar, 3) + 3;
+                    n = (uint8_t)rar_br_bits(rar, 3) + 3;
                 }
                 else {
                     if (!rar_br_check(rar, 7)) {
-                        warn("Unexpected EOF in rar_parse_codes");
                         free(precode.tree);
                         free(precode.table);
                         return false;
                     }
-                    n = rar_br_bits(rar, 7) + 11;
+                    n = (uint8_t)rar_br_bits(rar, 7) + 11;
                 }
 
                 for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; j++) {
@@ -409,21 +454,19 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             else {
                 if (val == 18) {
                     if (!rar_br_check(rar, 3)) {
-                        warn("Unexpected EOF in rar_parse_codes");
                         free(precode.tree);
                         free(precode.table);
                         return false;
                     }
-                    n = rar_br_bits(rar, 3) + 3;
+                    n = (uint8_t)rar_br_bits(rar, 3) + 3;
                 }
                 else {
                     if (!rar_br_check(rar, 7)) {
-                        warn("Unexpected EOF in rar_parse_codes");
                         free(precode.tree);
                         free(precode.table);
                         return false;
                     }
-                    n = rar_br_bits(rar, 7) + 11;
+                    n = (uint8_t)rar_br_bits(rar, 7) + 11;
                 }
 
                 for (j = 0; j < n && i < HUFFMAN_TABLE_SIZE; j++) {
@@ -435,13 +478,13 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         free(precode.tree);
         free(precode.table);
 
-        if (!rar_create_code(rar, &uncomp->maincode, uncomp->lengthtable, MAINCODE_SIZE, MAX_SYMBOL_LENGTH))
+        if (!rar_create_code(rar, &uncomp->maincode, uncomp->lengthtable, MAINCODE_SIZE))
             return false;
-        if (!rar_create_code(rar, &uncomp->offsetcode, uncomp->lengthtable + MAINCODE_SIZE, OFFSETCODE_SIZE, MAX_SYMBOL_LENGTH))
+        if (!rar_create_code(rar, &uncomp->offsetcode, uncomp->lengthtable + MAINCODE_SIZE, OFFSETCODE_SIZE))
             return false;
-        if (!rar_create_code(rar, &uncomp->lowoffsetcode, uncomp->lengthtable + MAINCODE_SIZE + OFFSETCODE_SIZE, LOWOFFSETCODE_SIZE, MAX_SYMBOL_LENGTH))
+        if (!rar_create_code(rar, &uncomp->lowoffsetcode, uncomp->lengthtable + MAINCODE_SIZE + OFFSETCODE_SIZE, LOWOFFSETCODE_SIZE))
             return false;
-        if (!rar_create_code(rar, &uncomp->lengthcode, uncomp->lengthtable + MAINCODE_SIZE + OFFSETCODE_SIZE + LOWOFFSETCODE_SIZE, LENGTHCODE_SIZE, MAX_SYMBOL_LENGTH))
+        if (!rar_create_code(rar, &uncomp->lengthcode, uncomp->lengthtable + MAINCODE_SIZE + OFFSETCODE_SIZE + LOWOFFSETCODE_SIZE, LENGTHCODE_SIZE))
             return false;
     }
 
@@ -451,13 +494,14 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             uncomp->dict_size = 0x400000;
         else
             uncomp->dict_size = (uint32_t)next_power_of_2(rar->super.entry_size_uncompressed);
-        lzss_initialize(&rar->uncomp.lzss, rar->uncomp.dict_size);
+        if (!lzss_initialize(&rar->uncomp.lzss, rar->uncomp.dict_size)) {
+            warn("OOM in lzss_initialize");
+            return false;
+        }
     }
 
     uncomp->start_new_table = 0;
     return true;
-
-#undef ensure_bits
 }
 
 static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
@@ -510,12 +554,9 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
     static const unsigned char shortbits[] =
         { 2, 2, 3, 4, 5, 6, 6, 6 };
 
-    int symbol, offs, len, offsindex, lensymbol, i, offssymbol, lowoffsetsymbol;
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     bool output_last_match = false;
-
-    if (uncomp->filterstart < end)
-        end = uncomp->filterstart;
+    int symbol, offs, len, i;
 
     for (;;) {
         if (output_last_match && lzss_position(&uncomp->lzss) + uncomp->lastlength <= end) {
@@ -529,19 +570,15 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
         if (symbol < 0)
             return -1;
         if (symbol < 256) {
-            lzss_emit_literal(&uncomp->lzss, symbol);
+            lzss_emit_literal(&uncomp->lzss, (uint8_t)symbol);
             continue;
         }
         if (symbol == 256) {
-            if (!rar_br_check(rar, 1)) {
-                warn("Unexpected EOF in rar_expand");
+            if (!rar_br_check(rar, 1))
                 return -1;
-            }
             if (!rar_br_bits(rar, 1)) {
-                if (!rar_br_check(rar, 1)) {
-                    warn("Unexpected EOF in rar_expand");
+                if (!rar_br_check(rar, 1))
                     return -1;
-                }
                 uncomp->start_new_table = rar_br_bits(rar, 1) != 0;
                 return lzss_position(&uncomp->lzss);
             }
@@ -560,33 +597,30 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             len = uncomp->lastlength;
         }
         else if (symbol <= 262) {
-            offsindex = symbol - 259;
-            offs = uncomp->oldoffset[offsindex];
-            lensymbol = rar_read_next_symbol(rar, &uncomp->lengthcode);
+            int idx = symbol - 259;
+            int lensymbol = rar_read_next_symbol(rar, &uncomp->lengthcode);
+            offs = uncomp->oldoffset[idx];
             if (lensymbol < 0 || lensymbol > (int)(sizeof(lengthbases) / sizeof(lengthbases[0])) || lensymbol > (int)(sizeof(lengthbits) / sizeof(lengthbits[0]))) {
                 warn("Bad RAR file data");
                 return -1;
             }
             len = lengthbases[lensymbol] + 2;
             if (lengthbits[lensymbol] > 0) {
-                if (!rar_br_check(rar, lengthbits[lensymbol])) {
-                    warn("Unexpected EOF in rar_expand");
+                if (!rar_br_check(rar, lengthbits[lensymbol]))
                     return -1;
-                }
-                len += rar_br_bits(rar, lengthbits[lensymbol]);
+                len += (int)rar_br_bits(rar, lengthbits[lensymbol]);
             }
-            for (i = offsindex; i > 0; i--)
+            for (i = idx; i > 0; i--)
                 uncomp->oldoffset[i] = uncomp->oldoffset[i - 1];
             uncomp->oldoffset[0] = offs;
         }
         else if (symbol <= 270) {
-            offs = shortbases[symbol - 263] + 1;
-            if (shortbits[symbol - 263] > 0) {
-                if (!rar_br_check(rar, shortbits[symbol - 263])) {
-                    warn("Unexpected EOF in rar_expand");
+            int idx = symbol - 263;
+            offs = shortbases[idx] + 1;
+            if (shortbits[idx] > 0) {
+                if (!rar_br_check(rar, shortbits[idx]))
                     return -1;
-                }
-                offs += rar_br_bits(rar, shortbits[symbol - 263]);
+                offs += (int)rar_br_bits(rar, shortbits[idx]);
             }
             len = 2;
             for (i = 3; i > 0; i--)
@@ -594,17 +628,17 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             uncomp->oldoffset[0] = offs;
         }
         else {
-            if (symbol - 271 > (int)(sizeof(lengthbases) / sizeof(lengthbases[0])) || symbol - 271 > (int)(sizeof(lengthbits) / sizeof(lengthbits[0]))) {
+            int idx = symbol - 271;
+            int offssymbol;
+            if (idx > (int)(sizeof(lengthbases) / sizeof(lengthbases[0])) || idx > (int)(sizeof(lengthbits) / sizeof(lengthbits[0]))) {
                 warn("Bad RAR file data");
                 return -1;
             }
-            len = lengthbases[symbol - 271] + 3;
-            if (lengthbits[symbol - 271] > 0) {
-                if (!rar_br_check(rar, lengthbits[symbol - 271])) {
-                    warn("Unexpected EOF in rar_expand");
+            len = lengthbases[idx] + 3;
+            if (lengthbits[idx] > 0) {
+                if (!rar_br_check(rar, lengthbits[idx]))
                     return -1;
-                }
-                len += rar_br_bits(rar, lengthbits[symbol - 271]);
+                len += (int)rar_br_bits(rar, lengthbits[idx]);
             }
             offssymbol = rar_read_next_symbol(rar, &uncomp->offsetcode);
             if (offssymbol < 0 || offssymbol > (int)(sizeof(offsetbases) / sizeof(offsetbases[0])) || offssymbol > (int)(sizeof(offsetbits) / sizeof(offsetbits[0]))) {
@@ -615,18 +649,16 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             if (offsetbits[offssymbol] > 0) {
                 if (offssymbol > 9) {
                     if (offsetbits[offssymbol] > 4) {
-                        if (!rar_br_check(rar, offsetbits[offssymbol] - 4)) {
-                            warn("Unexpected EOF in rar_expand");
+                        if (!rar_br_check(rar, offsetbits[offssymbol] - 4))
                             return -1;
-                        }
-                        offs += rar_br_bits(rar, offsetbits[offssymbol] - 4) << 4;
+                        offs += (int)rar_br_bits(rar, offsetbits[offssymbol] - 4) << 4;
                     }
                     if (uncomp->numlowoffsetrepeats > 0) {
                         uncomp->numlowoffsetrepeats--;
                         offs += uncomp->lastlowoffset;
                     }
                     else {
-                        lowoffsetsymbol = rar_read_next_symbol(rar, &uncomp->lowoffsetcode);
+                        int lowoffsetsymbol = rar_read_next_symbol(rar, &uncomp->lowoffsetcode);
                         if (lowoffsetsymbol < 0)
                             return -1;
                         if (lowoffsetsymbol == 16) {
@@ -640,11 +672,9 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
                     }
                 }
                 else {
-                    if (!rar_br_check(rar, offsetbits[offssymbol])) {
-                        warn("Unexpected EOF in rar_expand");
+                    if (!rar_br_check(rar, offsetbits[offssymbol]))
                         return -1;
-                    }
-                    offs += rar_br_bits(rar, offsetbits[offssymbol]);
+                    offs += (int)rar_br_bits(rar, offsetbits[offssymbol]);
                 }
             }
 
@@ -664,6 +694,80 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
     }
 }
 
+static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, Byte *symbol)
+{
+    int value = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.super);
+    if (value < 0) {
+        warn("Invalid PPMd symbol");
+        return false;
+    }
+    *symbol = (Byte)value;
+    return true;
+}
+
+static bool rar_handle_ppmd_sequence(ar_archive_rar *rar)
+{
+    struct ar_archive_rar_uncomp *data = &rar->uncomp;
+    Byte sym, code, length;
+    int lzss_offset;
+
+    if (!rar_decode_ppmd7_symbol(data, &sym))
+        return false;
+
+    if (sym != data->ppmd_escape) {
+        lzss_emit_literal(&data->lzss, sym);
+        data->bytes_uncopied++;
+        return true;
+    }
+
+    if (!rar_decode_ppmd7_symbol(data, &code))
+        return false;
+
+    switch (code) {
+    case 0:
+        data->start_new_table = true;
+        return true;
+
+    case 2:
+        data->ppmd_eod = true;
+        return true;
+
+    case 3:
+        todo("Parsing filters are unsupported");
+        return false;
+
+    case 4:
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset = code << 16;
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset |= code << 8;
+        if (!rar_decode_ppmd7_symbol(data, &code))
+            return false;
+        lzss_offset |= code;
+        if (!rar_decode_ppmd7_symbol(data, &length))
+            return false;
+        lzss_emit_match(&data->lzss, lzss_offset + 2, length + 32);
+        data->bytes_uncopied += length + 32;
+        break;
+
+    case 5:
+        if (!rar_decode_ppmd7_symbol(data, &length))
+            return false;
+        lzss_emit_match(&data->lzss, 1, length + 4);
+        data->bytes_uncopied += length + 4;
+        break;
+
+    default:
+        lzss_emit_literal(&data->lzss, sym);
+        data->bytes_uncopied++;
+        break;
+    }
+
+    return true;
+}
+
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 {
     struct ar_archive_rar_uncomp *data = &rar->uncomp;
@@ -671,116 +775,44 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 
     rar_init_uncompress(rar);
 
-    while (buffer_offset < buffer_size && !data->at_eof) {
-        int count;
-        if (data->ppmd_eod || (data->dict_size && rar->progr.offset_out >= rar->super.entry_size_uncompressed)) {
-            warn("Requesting too much data (%Iu < %Iu)", buffer_offset, buffer_size);
+    while (buffer_offset < buffer_size) {
+        bool flush_only = !data->is_ppmd_block && data->dict_size && data->bytes_uncopied > 0;
+
+        if (data->at_eof)
+            return false;
+        if (data->dict_size && rar->progr.offset_out >= rar->super.entry_size_uncompressed) {
+            warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", buffer_offset, buffer_size);
             return false;
         }
 
-        if (!data->is_ppmd_block && data->dict_size && data->bytes_uncopied > 0) {
-            count = (int)min(data->bytes_uncopied, buffer_size - buffer_offset);
+        if (!flush_only && data->start_new_table && !rar_parse_codes(rar))
+            return false;
+
+        if (data->is_ppmd_block) {
+            if (!rar_handle_ppmd_sequence(rar) || data->ppmd_eod)
+                return false;
+        }
+        else if (!flush_only) {
+            int64_t end = rar_expand(rar, buffer_offset + data->dict_size);
+            if (end < buffer_offset)
+                return false;
+            data->bytes_uncopied = (size_t)end - buffer_offset;
+        }
+
+        if (data->bytes_uncopied > 0) {
+            int count = (int)min(data->bytes_uncopied, buffer_size - buffer_offset);
             lzss_copy_bytes_from_window(&data->lzss, (uint8_t *)buffer + buffer_offset, rar->progr.offset_out, count);
             buffer_offset += count;
             rar->progr.offset_out += count;
             data->bytes_uncopied -= count;
-            continue;
         }
-
-        if (data->start_new_table && !rar_parse_codes(rar))
-            return false;
-
-        if (data->is_ppmd_block) {
-            int lzss_offset, i, length;
-            int sym = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.p);
-            if (sym < 0) {
-                warn("Invalid symbol");
-                return false;
-            }
-            if (sym != data->ppmd_escape) {
-                lzss_emit_literal(&data->lzss, sym);
-                data->bytes_uncopied++;
-            }
-            else {
-                int code = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.p);
-                if (code < 0) {
-                    warn("Invalid symbol");
-                    return false;
-                }
-
-                switch (code) {
-                case 0:
-                    data->start_new_table = true;
-                    continue;
-
-                case 2:
-                    data->ppmd_eod = true;
-                    continue;
-
-                case 3:
-                    todo("Parsing filters are unsupported");
-                    return false;
-
-                case 4:
-                    lzss_offset = 0;
-                    for (i = 2; i >= 0; i--) {
-                        code = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.p);
-                        if (code < 0) {
-                            warn("Invalid symbol");
-                            return false;
-                        }
-                        lzss_offset |= code << (i * 8);
-                    }
-                    length = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.p);
-                    if (length < 0) {
-                        warn("Invalid symbol");
-                        return false;
-                    }
-                    lzss_emit_match(&data->lzss, lzss_offset + 2, length + 32);
-                    data->bytes_uncopied += length + 32;
-                    break;
-
-                case 5:
-                    length = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.p);
-                    if (length < 0) {
-                        warn("Invalid symbol");
-                        return false;
-                    }
-                    lzss_emit_match(&data->lzss, 1, length + 4);
-                    data->bytes_uncopied += length + 4;
-                    break;
-
-                default:
-                    lzss_emit_literal(&data->lzss, sym);
-                    data->bytes_uncopied++;
-                    break;
-                }
-            }
-        }
-        else {
-            int64_t start, end, actualend;
-
-            start = buffer_offset;
-            end = start + data->dict_size;
-            data->filterstart = INT64_MAX;
-
-            actualend = rar_expand(rar, end);
-            if (actualend < 0)
-                return false;
-
-            data->bytes_uncopied = actualend - start;
-            if (data->bytes_uncopied == 0) {
-                warn("Internal error extracting RAR file");
-                return false;
-            }
-        }
-
-        count = (int)min(data->bytes_uncopied, buffer_size - buffer_offset);
-        lzss_copy_bytes_from_window(&data->lzss, (uint8_t *)buffer + buffer_offset, rar->progr.offset_out, count);
-        buffer_offset += count;
-        rar->progr.offset_out += count;
-        data->bytes_uncopied -= count;
     }
 
-    return !data->at_eof;
+    if (data->is_ppmd_block && rar->progr.offset_out == rar->super.entry_size_uncompressed) {
+        if (!rar_handle_ppmd_sequence(rar) || !data->ppmd_eod)
+            log("PPMd eod marker is missing");
+        // TODO: even after this, a few uncompressed bytes remain
+    }
+
+    return true;
 }
