@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9e30c9c3362ac0e7fd8be648c0733cd69f088aaf
+fdf16105f11717e098cafb00a19dfebf3d3591a2
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6443,8 +6443,10 @@ fa:مکان نما, موقعیت
 fr:Position du curseur :
 he:מיקום סמן:
 hr:Pozicija pokazivača:
+id:Posisi kursor:
 it:Posizione cursore
 ja:カーソル位置：
+pl:Pozycja kursora:
 ru:Позиция курсора:
 sl:Položaj kurzorja:
 :Custom &Zoom...\tCtrl+Y
@@ -13851,8 +13853,10 @@ fa:انتخاب
 fr:Sélection :
 he:בחירה:
 hr:Odabir:
+id:Seleksi:
 it:Selezione
 ja:Selection:
+pl:Selekcja:
 ru:Выделение:
 sl:Izbor:
 :Send by &E-mail...
@@ -15733,7 +15737,12 @@ uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
+am:Ավելացնել &ներդիրներ
+de:Dokumente in &Tabs öffnen
 fr:Utiliser les ongle&ts
+he:השתמש בלשוניות
+id:Gunakan &tab
+it:Usa &schede
 ru:Использовать &вкладки
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր

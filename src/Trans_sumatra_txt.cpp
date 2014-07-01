@@ -983,7 +983,7 @@ const char * gTranslations_am =
   "\325\217\325\245\326\204\325\275\325\277\325\241\325\265\325\253\325\266 \326\206\325\241\325\265\325\254\325\245\326\200\0"\
   "\324\261\325\266\325\270\326\202\325\266\325\250.\0"\
   "\324\261\325\266\325\260\325\241\325\265\325\277 \326\206\325\241\325\265\325\254 (%s)\0"\
-  "\0"\
+  "\324\261\325\276\325\245\325\254\325\241\326\201\325\266\325\245\325\254 &\325\266\325\245\326\200\325\244\325\253\326\200\325\266\325\245\326\200\0"\
   "\325\217\325\245\325\275\326\204\325\250\0"\
   "\324\276\326\200\325\241\325\243\326\200\325\253 &\325\257\325\241\325\265\326\204\325\250\0"\
   "\324\266\325\243\325\270\326\202\325\267\325\241\326\201\325\270\326\202\325\264\0"\
@@ -5411,7 +5411,7 @@ const char * gTranslations_de =
   "Text-Dokumente\0"\
   "Titel:\0"\
   "Unbekannte Datei (%s)\0"\
-  "\0"\
+  "Dokumente in &Tabs \303\266ffnen\0"\
   "Ansicht\0"\
   "&SumatraPDF im Internet\0"\
   "Warnung\0"\
@@ -5903,7 +5903,7 @@ const char * gTranslations_he =
   "\327\247\327\225\327\221\327\246\327\231 \327\230\327\247\327\241\327\230\0"\
   "\327\233\327\225\327\252\327\250\327\252:\0"\
   "\327\247\327\225\327\221\327\245 \327\236\327\247\327\225\327\250 \327\234\327\220 \327\231\327\223\327\225\327\242 (%s)\0"\
-  "\0"\
+  "\327\224\327\251\327\252\327\236\327\251 \327\221\327\234\327\251\327\225\327\240\327\231\327\225\327\252\0"\
   "\327\252\327\246\327\225\327\222\327\224\0"\
   "\327\221\327\247\327\250 \327\221\327\220\327\252\327\250...\0"\
   "\327\220\327\226\327\224\327\250\327\224\0"\
@@ -6505,7 +6505,7 @@ const char * gTranslations_id =
   "Gagal menampilkan halaman\0"\
   "Dibuat:\0"\
   "Berkas ini\0"\
-  "\0"\
+  "Posisi kursor:\0"\
   "&Pembesaran Buatan\tCtrl+Y\0"\
   "Tampilan &Standar\0"\
   "Pembesaran &Standar\0"\
@@ -6618,7 +6618,7 @@ const char * gTranslations_id =
   "Pilih Semu&a\0"\
   "Pilih Semu&a\tCtrl+A\0"\
   "Pilih konten dengan tombol Ctrl+tombol kiri mouse\0"\
-  "\0"\
+  "Seleksi:\0"\
   "Kirim Via &Email...\0"\
   "Tetapkan baris perintah pencarian terbalik\0"\
   "Tampilkan &Markah\0"\
@@ -6641,7 +6641,7 @@ const char * gTranslations_id =
   "Dokumen Teks\0"\
   "Judul:\0"\
   "Berkas asal (%s) tidak diketahui\0"\
-  "\0"\
+  "Gunakan &tab\0"\
   "Tampilan\0"\
   "&Kunjungi Halaman Web\0"\
   "Peringatan\0"\
@@ -7133,7 +7133,7 @@ const char * gTranslations_it =
   "Documenti di testo\0"\
   "Titolo:\0"\
   "File sorgente sconosciuto (%s)\0"\
-  "\0"\
+  "Usa &schede\0"\
   "Visualizza\0"\
   "Visita il sito &web\0"\
   "Attenzione\0"\
@@ -9457,7 +9457,7 @@ const char * gTranslations_pl =
   "Nie mo\305\274na wy\305\233wietli\304\207 strony\0"\
   "Utworzono:\0"\
   "Bie\305\274\304\205cy plik\0"\
-  "\0"\
+  "Pozycja kursora:\0"\
   "&W\305\202asne powi\304\231kszenie...\tCtrl+Y\0"\
   "&Uk\305\202ad domy\305\233lny:\0"\
   "Domy\305\233lne &powi\304\231kszenie:\0"\
@@ -9570,7 +9570,7 @@ const char * gTranslations_pl =
   "Zaznacz wszystko\0"\
   "Zaznacz &wszystko\tCtrl+A\0"\
   "Zaznacz zawarto\305\233\304\207 wciskaj\304\205c Ctrl i lewy przycisk myszy\0"\
-  "\0"\
+  "Selekcja:\0"\
   "Do\305\202\304\205cz do wiadomo\305\233ci &e-mail...\0"\
   "Ustaw wiersz polece\305\204 do odwrotnego wyszukiwania\0"\
   "Poka\305\274 &Zak\305\202adki\0"\
