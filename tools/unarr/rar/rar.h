@@ -7,6 +7,7 @@
 #include "../unarr-internals.h"
 #include "../lzss.h"
 #include "../ppmd/Ppmd7.h"
+#include <limits.h>
 
 typedef struct ar_archive_rar_s ar_archive_rar;
 
@@ -74,8 +75,8 @@ struct ar_archive_rar_entry {
 bool rar_parse_header(ar_archive *ar, struct rar_header *header);
 bool rar_check_header_crc(ar_archive *ar);
 bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, struct rar_entry *entry);
-const char *rar_get_name(ar_archive_rar *rar);
-const WCHAR *rar_get_name_w(ar_archive_rar *rar);
+const char *rar_get_name(ar_archive *ar);
+const WCHAR *rar_get_name_w(ar_archive *ar);
 
 /***** uncompress *****/
 
@@ -159,8 +160,8 @@ struct ar_archive_rar_uncomp {
 };
 
 struct ar_archive_rar_progress {
-    size_t offset_in;
-    size_t offset_out;
+    size_t data_left;
+    size_t bytes_done;
     uint32_t crc;
 };
 

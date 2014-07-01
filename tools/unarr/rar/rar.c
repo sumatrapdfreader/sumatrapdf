@@ -3,19 +3,21 @@
 
 #include "rar.h"
 
-static void rar_close(ar_archive_rar *rar)
+static void rar_close(ar_archive *ar)
 {
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
     free(rar->entry.name);
     free(rar->entry.name_w);
     rar_clear_uncompress(&rar->uncomp);
 }
 
-static bool rar_parse_entry(ar_archive_rar *rar)
+static bool rar_parse_entry(ar_archive *ar)
 {
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
     struct rar_header header;
     struct rar_entry entry;
     /* without solid data, most/all previous files have to be decompressed again */
-    bool has_solid_data = rar->super.entry_offset != 0 && rar->uncomp.initialized;
+    bool has_solid_data = rar->super.entry_offset != 0 && rar->uncomp.initialized && rar->progr.data_left == 0;
 
     if (rar->super.entry_offset != 0) {
         if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->super.entry_size_block, SEEK_SET)) {
@@ -58,7 +60,7 @@ static bool rar_parse_entry(ar_archive_rar *rar)
             if ((header.flags & LHD_PASSWORD))
                 todo("Encrypted entries will fail to uncompress");
             if ((header.flags & LHD_DIRECTORY) == LHD_DIRECTORY) {
-                log("Skipping directory entry \"%s\"", rar_get_name(rar));
+                log("Skipping directory entry \"%s\"", rar_get_name(&rar->super));
                 break;
             }
             if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER))) {
@@ -107,7 +109,7 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 #endif
 
         if (!ar_seek(rar->super.stream, rar->super.entry_offset + header.size + (ptrdiff_t)header.datasize, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + header.size + header.datasize);
+            warn("Couldn't seek to offset %" PRIu64, rar->super.entry_offset + header.size + header.datasize);
             return false;
         }
         if (ar_tell(rar->super.stream) <= rar->super.entry_offset) {
@@ -119,16 +121,16 @@ static bool rar_parse_entry(ar_archive_rar *rar)
 
 static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
 {
-    if (count > rar->super.entry_size_block - rar->progr.offset_in) {
-        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", rar->super.entry_size_block - rar->progr.offset_in, count);
+    if (count > rar->progr.data_left) {
+        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", rar->progr.data_left, count);
         return false;
     }
     if (ar_read(rar->super.stream, buffer, count) != count) {
         warn("Unexpected EOF in stored data");
         return false;
     }
-    rar->progr.offset_in += count;
-    rar->progr.offset_out += count;
+    rar->progr.data_left -= count;
+    rar->progr.bytes_done += count;
     return true;
 }
 
@@ -143,6 +145,7 @@ static bool rar_restart_solid(ar_archive_rar *rar)
     }
     while (ar->entry_offset != current_offset) {
         size_t size = ar->entry_size_uncompressed;
+        rar->entry.restart_solid = false;
         while (size > 0) {
             unsigned char buffer[1024];
             if (!ar_entry_uncompress(ar, buffer, min(size, sizeof(buffer)))) {
@@ -160,8 +163,9 @@ static bool rar_restart_solid(ar_archive_rar *rar)
     return true;
 }
 
-static bool rar_uncompress(ar_archive_rar *rar, void *buffer, size_t count)
+static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
     if (rar->entry.method == METHOD_STORE) {
         if (!rar_copy_stored(rar, buffer, count))
             return false;
@@ -182,10 +186,10 @@ static bool rar_uncompress(ar_archive_rar *rar, void *buffer, size_t count)
     }
 
     rar->progr.crc = crc32(rar->progr.crc, buffer, count);
-    if (rar->progr.offset_in <= rar->super.entry_size_block && rar->progr.offset_out < rar->super.entry_size_uncompressed)
+    if (rar->progr.bytes_done < rar->super.entry_size_uncompressed)
         return true;
-    if (rar->progr.offset_in < rar->super.entry_size_block)
-        log("Uncompressed block has more data than required");
+    if (rar->progr.data_left)
+        log("Compressed block has more data than required");
     if (rar->progr.crc != rar->entry.crc) {
         warn("Checksum of extracted data doesn't match");
         return false;

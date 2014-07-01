@@ -9,6 +9,7 @@
 #else
 typedef unsigned short WCHAR;
 #endif
+#include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <inttypes.h>

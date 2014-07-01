@@ -39,11 +39,11 @@ char *conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt);
 
 /***** unarr *****/
 
-typedef void (* ar_archive_close_fn)(void *ar);
-typedef bool (* ar_parse_entry_fn)(void *ar);
-typedef const char *(* ar_entry_get_name_fn)(void *ar);
-typedef const WCHAR *(* ar_entry_get_name_w_fn)(void *ar);
-typedef bool (* ar_entry_uncompress_fn)(void *ar, void *buffer, size_t count);
+typedef void (* ar_archive_close_fn)(ar_archive *ar);
+typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
+typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
+typedef const WCHAR *(* ar_entry_get_name_w_fn)(ar_archive *ar);
+typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
 
 struct ar_archive_s {
     ar_archive_close_fn close;

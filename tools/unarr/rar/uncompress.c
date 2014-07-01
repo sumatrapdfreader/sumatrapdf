@@ -31,8 +31,8 @@
 
 #include "rar.h"
 
-static void *gSzAlloc_Alloc(void *self, size_t size) { return malloc(size); }
-static void gSzAlloc_Free(void *self, void *ptr) { free(ptr); }
+static void *gSzAlloc_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
+static void gSzAlloc_Free(void *self, void *ptr) { (void)self; free(ptr); }
 static ISzAlloc gSzAlloc = { gSzAlloc_Alloc, gSzAlloc_Free };
 
 static inline size_t next_power_of_2(size_t value)
@@ -48,15 +48,15 @@ static bool rar_br_fill(ar_archive_rar *rar, int bits)
     int count, i;
     /* read as many bits as possible */
     count = (64 - rar->uncomp.br.available) / 8;
-    if (rar->super.entry_size_block - rar->progr.offset_in < (size_t)count)
-        count = rar->super.entry_size_block - rar->progr.offset_in;
+    if (rar->progr.data_left < (size_t)count)
+        count = (int)rar->progr.data_left;
 
     if (bits > rar->uncomp.br.available + 8 * count || ar_read(rar->super.stream, bytes, count) != (size_t)count) {
         warn("Unexpected EOF during decompression (truncated file?)");
         rar->uncomp.at_eof = true;
         return false;
     }
-    rar->progr.offset_in += count;
+    rar->progr.data_left -= count;
     for (i = 0; i < count; i++) {
         rar->uncomp.br.bits = (rar->uncomp.br.bits << 8) | bytes[i];
     }
@@ -76,8 +76,9 @@ static inline uint64_t rar_br_bits(ar_archive_rar *rar, int bits)
     return value;
 }
 
-static Byte ByteIn_Read(struct ByteReader *self)
+static Byte ByteIn_Read(void *p)
 {
+    struct ByteReader *self = p;
     return rar_br_check(self->rar, 8) ? (Byte)rar_br_bits(self->rar, 8) : 0;
 }
 
@@ -90,7 +91,7 @@ static void ByteIn_CreateVTable(struct ByteReader *br, ar_archive_rar *rar)
 /* Ppmd7 range decoder differs between 7z and RAR */
 static Bool PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
 {
-    unsigned i;
+    int i;
     p->Low = 0;
     p->Bottom = 0x8000;
     p->Range = 0xFFFFFFFF;
@@ -100,28 +101,30 @@ static Bool PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
     return (p->Code < 0xFFFFFFFF) != 0;
 }
 
-static UInt32 Range_GetThreshold(struct CPpmdRAR_RangeDec *p, UInt32 total)
+static UInt32 Range_GetThreshold(void *p, UInt32 total)
 {
-    return (p->Code - p->Low) / (p->Range /= total);
+    struct CPpmdRAR_RangeDec *self = p;
+    return (self->Code - self->Low) / (self->Range /= total);
 }
 
-static void Range_Decode_RAR(struct CPpmdRAR_RangeDec *p, UInt32 start, UInt32 size)
+static void Range_Decode_RAR(void *p, UInt32 start, UInt32 size)
 {
-    p->Low += start * p->Range;
-    p->Range *= size;
+    struct CPpmdRAR_RangeDec *self = p;
+    self->Low += start * self->Range;
+    self->Range *= size;
     for (;;) {
-        if ((p->Low ^ (p->Low + p->Range)) >= (1 << 24)) {
-            if (p->Range >= p->Bottom)
+        if ((self->Low ^ (self->Low + self->Range)) >= (1 << 24)) {
+            if (self->Range >= self->Bottom)
                 break;
-            p->Range = ((uint32_t)(-(int32_t)p->Low)) & (p->Bottom - 1);
+            self->Range = ((uint32_t)(-(int32_t)self->Low)) & (self->Bottom - 1);
         }
-        p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
-        p->Range <<= 8;
-        p->Low <<= 8;
+        self->Code = (self->Code << 8) | self->Stream->Read(self->Stream);
+        self->Range <<= 8;
+        self->Low <<= 8;
     }
 }
 
-static UInt32 Range_DecodeBit_RAR(struct CPpmdRAR_RangeDec *p, UInt32 size0)
+static UInt32 Range_DecodeBit_RAR(void *p, UInt32 size0)
 {
     UInt32 value = Range_GetThreshold(p, PPMD_BIN_SCALE);
     UInt32 bit = value < size0 ? 0 : 1;
@@ -530,7 +533,7 @@ static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
     memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
 }
 
-static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive_rar *rar, uint8_t *byte))
+static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive_rar *rar, uint8_t *byte), int64_t *end)
 {
     uint8_t flags, val, *code;
     uint16_t length, i;
@@ -566,12 +569,16 @@ static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive
 
     free(code);
     todo("ParseFilter(code, %d, %#02x)", length, flags);
+
+    if (rar->uncomp.filterstart < *end)
+        *end = rar->uncomp.filterstart;
+
     return false;
 }
 
-static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *data, Byte *symbol)
+static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *uncomp, Byte *symbol)
 {
-    int value = Ppmd7_DecodeSymbol(&data->ppmd7_context, &data->range_dec.super);
+    int value = Ppmd7_DecodeSymbol(&uncomp->ppmd7_context, &uncomp->range_dec.super);
     if (value < 0) {
         warn("Invalid PPMd symbol");
         return false;
@@ -595,63 +602,55 @@ static bool rar_decode_ppmd7_byte(ar_archive_rar *rar, uint8_t *byte)
 
 static bool rar_handle_ppmd_sequence(ar_archive_rar *rar, int64_t *end)
 {
-    struct ar_archive_rar_uncomp *data = &rar->uncomp;
+    struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     Byte sym, code, length;
     int lzss_offset;
 
-    if (!rar_decode_ppmd7_symbol(data, &sym))
+    if (!rar_decode_ppmd7_symbol(uncomp, &sym))
         return false;
-
-    if (sym != data->ppmd_escape) {
-        lzss_emit_literal(&data->lzss, sym);
+    if (sym != uncomp->ppmd_escape) {
+        lzss_emit_literal(&uncomp->lzss, sym);
         return true;
     }
 
-    if (!rar_decode_ppmd7_symbol(data, &code))
+    if (!rar_decode_ppmd7_symbol(uncomp, &code))
         return false;
-
     switch (code) {
     case 0:
         return rar_parse_codes(rar);
 
     case 2:
-        data->start_new_table = true;
+        uncomp->start_new_table = true;
         return true;
 
     case 3:
-        if (!rar_read_filter(rar, rar_decode_ppmd7_byte))
-            return false;
-        if (data->filterstart < *end)
-            *end = data->filterstart;
-        return true;
+        return rar_read_filter(rar, rar_decode_ppmd7_byte, end);
 
     case 4:
-        if (!rar_decode_ppmd7_symbol(data, &code))
+        if (!rar_decode_ppmd7_symbol(uncomp, &code))
             return false;
         lzss_offset = code << 16;
-        if (!rar_decode_ppmd7_symbol(data, &code))
+        if (!rar_decode_ppmd7_symbol(uncomp, &code))
             return false;
         lzss_offset |= code << 8;
-        if (!rar_decode_ppmd7_symbol(data, &code))
+        if (!rar_decode_ppmd7_symbol(uncomp, &code))
             return false;
         lzss_offset |= code;
-        if (!rar_decode_ppmd7_symbol(data, &length))
+        if (!rar_decode_ppmd7_symbol(uncomp, &length))
             return false;
-        lzss_emit_match(&data->lzss, lzss_offset + 2, length + 32);
-        break;
+        lzss_emit_match(&uncomp->lzss, lzss_offset + 2, length + 32);
+        return true;
 
     case 5:
-        if (!rar_decode_ppmd7_symbol(data, &length))
+        if (!rar_decode_ppmd7_symbol(uncomp, &length))
             return false;
-        lzss_emit_match(&data->lzss, 1, length + 4);
-        break;
+        lzss_emit_match(&uncomp->lzss, 1, length + 4);
+        return true;
 
     default:
-        lzss_emit_literal(&data->lzss, sym);
-        break;
+        lzss_emit_literal(&uncomp->lzss, sym);
+        return true;
     }
-
-    return true;
 }
 
 static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
@@ -724,10 +723,8 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             continue;
         }
         if (symbol == 257) {
-            if (!rar_read_filter(rar, rar_decode_byte))
+            if (!rar_read_filter(rar, rar_decode_byte, &end))
                 return -1;
-            if (uncomp->filterstart < end)
-                end = uncomp->filterstart;
             continue;
         }
         if (symbol == 258) {
@@ -837,17 +834,17 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 {
-    struct ar_archive_rar_uncomp *data = &rar->uncomp;
+    struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     int64_t end;
 
-    rar_init_uncompress(data);
+    rar_init_uncompress(uncomp);
 
     for (;;) {
-        if (data->bytes_ready > 0) {
-            size_t count = min(data->bytes_ready, buffer_size);
-            lzss_copy_bytes_from_window(&data->lzss, buffer, rar->progr.offset_out, count);
-            rar->progr.offset_out += count;
-            data->bytes_ready -= count;
+        if (uncomp->bytes_ready > 0) {
+            size_t count = min(uncomp->bytes_ready, buffer_size);
+            lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progr.bytes_done, count);
+            rar->progr.bytes_done += count;
+            uncomp->bytes_ready -= count;
             buffer_size -= count;
             buffer = (uint8_t *)buffer + count;
         }
@@ -855,21 +852,21 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (buffer_size == 0)
             return true;
 
-        if (data->at_eof)
+        if (uncomp->at_eof)
             return false;
 
-        if (data->start_new_table && !rar_parse_codes(rar))
+        if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        end = rar->progr.offset_out + data->dict_size;
-        if (data->filterstart < end)
-            end = data->filterstart;
+        end = rar->progr.bytes_done + uncomp->dict_size;
+        if (uncomp->filterstart < end)
+            end = uncomp->filterstart;
         end = rar_expand(rar, end);
-        if (end < rar->progr.offset_out)
+        if (end < rar->progr.bytes_done)
             return false;
-        data->bytes_ready = (size_t)end - rar->progr.offset_out;
+        uncomp->bytes_ready = (size_t)end - rar->progr.bytes_done;
 
-        if (data->is_ppmd_block && data->start_new_table && !rar_parse_codes(rar))
+        if (uncomp->is_ppmd_block && uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
     }
 }

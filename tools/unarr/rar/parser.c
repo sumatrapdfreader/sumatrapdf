@@ -112,15 +112,16 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
     free(rar->entry.name_w);
     rar->entry.name_w = NULL;
 
-    rar->progr.offset_in = header->size;
-    rar->progr.offset_out = 0;
+    rar->progr.data_left = (size_t)header->datasize;
+    rar->progr.bytes_done = 0;
     rar->progr.crc = 0;
 
     return true;
 }
 
-const char *rar_get_name(ar_archive_rar *rar)
+const char *rar_get_name(ar_archive *ar)
 {
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
     if (!rar->entry.name) {
         unsigned char data[21];
         uint16_t namelen;
@@ -178,9 +179,10 @@ const char *rar_get_name(ar_archive_rar *rar)
     return rar->entry.name;
 }
 
-const WCHAR *rar_get_name_w(ar_archive_rar *rar)
+const WCHAR *rar_get_name_w(ar_archive *ar)
 {
-    if (!rar->entry.name_w && rar_get_name(rar))
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
+    if (!rar->entry.name_w && rar_get_name(ar))
         rar->entry.name_w = conv_utf8_to_utf16(rar->entry.name);
     return rar->entry.name_w;
 }
