@@ -88,7 +88,7 @@ const char *   GetTranslationsForLang(int langIdx);
 #endif
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
-that also requires uploading new strings to the server, for which one needs accesss.
+that also requires uploading new strings to the server, for which one needs access.
 
 To support adding new strings without re-generating Translatiosn_txt.cpp, we have a concept
 of missing translations. */
