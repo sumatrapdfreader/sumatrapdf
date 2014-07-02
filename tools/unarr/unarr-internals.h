@@ -6,9 +6,11 @@
 
 #include "unarr.h"
 
-#ifdef _MSC_VER
-#define inline __inline
-#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <inttypes.h>
 
 /***** crc32 *****/
 
@@ -38,6 +40,14 @@ char *conv_utf16_to_utf8(const WCHAR *wstr);
 char *conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt);
 
 /***** unarr *****/
+
+#define warn(...) ar_log("!", __FILE__, __LINE__, __VA_ARGS__)
+#ifdef DEBUG
+#define log(...) ar_log("-", __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define log(...) ((void)0)
+#endif
+void ar_log(const char *prefix, const char *file, int line, const char *msg, ...);
 
 typedef void (* ar_archive_close_fn)(ar_archive *ar);
 typedef bool (* ar_parse_entry_fn)(ar_archive *ar);

@@ -6,11 +6,13 @@
 #ifndef lzss_h
 #define lzss_h
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #if defined(_MSC_VER) && !defined(inline)
-#define inline __inline;
+#define inline __inline
 #endif
 
 typedef struct {

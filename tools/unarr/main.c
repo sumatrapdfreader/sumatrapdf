@@ -3,6 +3,8 @@
 
 #include "unarr.h"
 
+#include <stdio.h>
+#include <inttypes.h>
 #if defined(DEBUG) && defined(_MSC_VER)
 #include <crtdbg.h>
 #endif
@@ -36,9 +38,10 @@ int main(int argc, char *argv[])
         printf("%02d. %s (@%" PRIuPTR ")\n", count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
         while (size > 0) {
             unsigned char buffer[1024];
-            if (!ar_entry_uncompress(ar, buffer, min(size, sizeof(buffer))))
+            size_t count = size < sizeof(buffer) ? size : sizeof(buffer);
+            if (!ar_entry_uncompress(ar, buffer, count))
                 break;
-            size -= min(size, sizeof(buffer));
+            size -= count;
         }
         if (size > 0)
             fprintf(stderr, "Warning: Failed to uncompress... skipping\n");

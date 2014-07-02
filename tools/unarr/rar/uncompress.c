@@ -176,7 +176,7 @@ static bool rar_new_node(struct huffman_code *code)
         int new_capacity = code->capacity ? code->capacity * 2 : 1024;
         void *new_tree = realloc(code->tree, new_capacity * sizeof(*code->tree));
         if (!new_tree) {
-            warn("Unable to allocate memory for node data");
+            warn("OOM during decompression");
             return false;
         }
         code->tree = new_tree;
@@ -205,7 +205,7 @@ static bool rar_add_value(ar_archive_rar *rar, struct huffman_code *code, int va
         bit = (codebits >> bitpos) & 1;
         /* check for leaf node */
         if (code->tree[lastnode].branches[0] == code->tree[lastnode].branches[1]) {
-            warn("Prefix found");
+            warn("Invalid data in bitstream"); // prefix found
             return false;
         }
         /* check for open branch */
@@ -219,7 +219,7 @@ static bool rar_add_value(ar_archive_rar *rar, struct huffman_code *code, int va
     }
     /* check for empty leaf */
     if (code->tree[lastnode].branches[0] != -1 || code->tree[lastnode].branches[1] != -2) {
-        warn("Prefix found");
+        warn("Invalid data in bitstream"); // prefix found
         return false;
     }
     /* set leaf value */
@@ -258,7 +258,7 @@ static bool rar_make_table_rec(struct huffman_code *code, int node, struct huffm
     int i;
 
     if (node < 0 || code->numentries <= node) {
-        warn("Invalid location to Huffman tree specified");
+        warn("Invalid data in bitstream"); // invalid location to Huffman tree specified
         return false;
     }
 
@@ -294,7 +294,7 @@ static bool rar_make_table(struct huffman_code *code)
 
     code->table = calloc(1 << code->tablesize, sizeof(*code->table));
     if (!code->table) {
-        warn("Unable to allocate memory for table data");
+        warn("OOM during decompression");
         return false;
     }
 
@@ -318,7 +318,7 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
     value = code->table[bits].value;
 
     if (length < 0) {
-        warn("Invalid prefix code in bitstream");
+        warn("Invalid data in bitstream"); // invalid prefix code in bitstream
         return -1;
     }
 
@@ -336,7 +336,7 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
         bit = (uint8_t)rar_br_bits(rar, 1);
 
         if (code->tree[node].branches[bit] < 0) {
-            warn("Invalid prefix code in bitstream");
+            warn("Invalid data in bitstream"); // invalid prefix code in bitstream
             return -1;
         }
         node = code->tree[node].branches[bit];
@@ -385,13 +385,13 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             Ppmd7_Free(&uncomp->ppmd7_context, &gSzAlloc);
             Ppmd7_Construct(&uncomp->ppmd7_context);
             if (!Ppmd7_Alloc(&uncomp->ppmd7_context, uncomp->dict_size, &gSzAlloc)) {
-                warn("OOM in Ppmd7_Alloc");
+                warn("OOM during decompression");
                 return false;
             }
             ByteIn_CreateVTable(&uncomp->bytein, rar);
             PpmdRAR_RangeDec_CreateVTable(&uncomp->range_dec, &uncomp->bytein.super);
             if (!PpmdRAR_RangeDec_Init(&uncomp->range_dec)) {
-                warn("Unable to initialize PPMd range decoder");
+                warn("Invalid data in bitstream"); // unable to initialize PPMd range decoder
                 return false;
             }
             Ppmd7_Init(&uncomp->ppmd7_context, maxorder);
@@ -399,11 +399,11 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         }
         else {
             if (!uncomp->ppmd_valid) {
-                warn("Invalid PPMd sequence");
+                warn("Invalid data in bitstream"); // invalid PPMd sequence
                 return false;
             }
             if (!PpmdRAR_RangeDec_Init(&uncomp->range_dec)) {
-                warn("Unable to initialize PPMd range decoder");
+                warn("Invalid data in bitstream"); // unable to initialize PPMd range decoder
                 return false;
             }
         }
@@ -451,7 +451,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             }
             else if (val < 18) {
                 if (i == 0) {
-                    warn("Internal error extracting RAR file");
+                    warn("Invalid data in bitstream");
                     goto PrecodeError;
                 }
                 if (val == 16) {
@@ -508,7 +508,7 @@ PrecodeError:
         else
             uncomp->dict_size = (uint32_t)next_power_of_2(rar->super.entry_size_uncompressed);
         if (!lzss_initialize(&rar->uncomp.lzss, rar->uncomp.dict_size)) {
-            warn("OOM in lzss_initialize");
+            warn("OOM during decompression");
             return false;
         }
     }
@@ -557,7 +557,7 @@ static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive
 
     code = malloc(length);
     if (!code) {
-        warn("Unable to allocate memory for parsing filter");
+        warn("OOM during decompression");
         return false;
     }
     for (i = 0; i < length; i++) {
@@ -568,7 +568,7 @@ static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive
     }
 
     free(code);
-    todo("ParseFilter(code, %d, %#02x)", length, flags);
+    warn("TODO: ParseFilter(code, %d, %#02x)", length, flags);
 
     if (rar->uncomp.filterstart < *end)
         *end = rar->uncomp.filterstart;
@@ -580,7 +580,7 @@ static inline bool rar_decode_ppmd7_symbol(struct ar_archive_rar_uncomp *uncomp,
 {
     int value = Ppmd7_DecodeSymbol(&uncomp->ppmd7_context, &uncomp->range_dec.super);
     if (value < 0) {
-        warn("Invalid PPMd symbol");
+        warn("Invalid data in bitstream"); // invalid PPMd symbol
         return false;
     }
     *symbol = (Byte)value;
@@ -738,7 +738,7 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             int lensymbol = rar_read_next_symbol(rar, &uncomp->lengthcode);
             offs = uncomp->oldoffset[idx];
             if (lensymbol < 0 || lensymbol > (int)(sizeof(lengthbases) / sizeof(lengthbases[0])) || lensymbol > (int)(sizeof(lengthbits) / sizeof(lengthbits[0]))) {
-                warn("Bad RAR file data");
+                warn("Invalid data in bitstream");
                 return -1;
             }
             len = lengthbases[lensymbol] + 2;
@@ -768,7 +768,7 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             int idx = symbol - 271;
             int offssymbol;
             if (idx > (int)(sizeof(lengthbases) / sizeof(lengthbases[0])) || idx > (int)(sizeof(lengthbits) / sizeof(lengthbits[0]))) {
-                warn("Bad RAR file data");
+                warn("Invalid data in bitstream");
                 return -1;
             }
             len = lengthbases[idx] + 3;
@@ -779,7 +779,7 @@ static int64_t rar_expand(ar_archive_rar *rar, int64_t end)
             }
             offssymbol = rar_read_next_symbol(rar, &uncomp->offsetcode);
             if (offssymbol < 0 || offssymbol > (int)(sizeof(offsetbases) / sizeof(offsetbases[0])) || offssymbol > (int)(sizeof(offsetbits) / sizeof(offsetbits[0]))) {
-                warn("Bad RAR file data");
+                warn("Invalid data in bitstream");
                 return -1;
             }
             offs = offsetbases[offssymbol] + 1;

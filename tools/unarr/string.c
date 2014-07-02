@@ -5,6 +5,8 @@
 
 #ifdef _WIN32
 
+#include <windows.h>
+
 WCHAR *conv_utf8_to_utf16(const char *str)
 {
     int res = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);

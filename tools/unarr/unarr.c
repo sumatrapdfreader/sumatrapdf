@@ -69,3 +69,17 @@ size_t ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     return ar->uncompress(ar, buffer, count);
 }
+
+void ar_log(const char *prefix, const char *file, int line, const char *msg, ...)
+{
+    va_list args;
+    va_start(args, msg);
+    if (prefix)
+        fprintf(stderr, "%s ", prefix);
+    if (strstr(file, "unarr"))
+        file = strstr(file, "unarr") + 6;
+    fprintf(stderr, "%s:%d: ", file, line);
+    vfprintf(stderr, msg, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+}

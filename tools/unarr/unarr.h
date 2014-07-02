@@ -4,15 +4,10 @@
 #ifndef unarr_h
 #define unarr_h
 
-#ifdef _WIN32
-#include <windows.h>
-#else
-typedef unsigned short WCHAR;
-#endif
 #include <stddef.h>
-#include <stdio.h>
 #include <stdbool.h>
-#include <inttypes.h>
+/* WCHAR must be 2 bytes (wchar_t may not be) */
+typedef unsigned short WCHAR;
 
 /***** stream *****/
 
@@ -27,6 +22,7 @@ size_t ar_tell(ar_stream *stream);
 ar_stream *ar_open_file(const char *path);
 ar_stream *ar_open_file_w(const WCHAR *path);
 #ifdef _WIN32
+typedef struct IStream IStream;
 ar_stream *ar_open_istream(IStream *stream);
 #endif
 

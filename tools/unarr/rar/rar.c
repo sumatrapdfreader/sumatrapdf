@@ -37,7 +37,7 @@ static bool rar_parse_entry(ar_archive *ar)
         switch (header.type) {
         case TYPE_MAIN_HEADER:
             if ((header.flags & MHD_PASSWORD)) {
-                todo("Encrypted archives aren't supported");
+                warn("Encrypted archives aren't supported");
                 return false;
             }
             ar_skip(rar->super.stream, 6 /* reserved data */);
@@ -58,15 +58,13 @@ static bool rar_parse_entry(ar_archive *ar)
             if (!rar_parse_header_entry(rar, &header, &entry))
                 return false;
             if ((header.flags & LHD_PASSWORD))
-                todo("Encrypted entries will fail to uncompress");
+                warn("Encrypted entries will fail to uncompress");
             if ((header.flags & LHD_DIRECTORY) == LHD_DIRECTORY) {
                 log("Skipping directory entry \"%s\"", rar_get_name(&rar->super));
                 break;
             }
-            if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER))) {
-                todo("Splitting files isn't supported");
-                break;
-            }
+            if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER)))
+                warn("Splitting files isn't really supported");
             // TODO: handle multi-part files (only needed for split files)?
             rar->super.entry_size_block = header.size + (size_t)header.datasize;
             rar->super.entry_size_uncompressed = (size_t)entry.size;
@@ -204,11 +202,11 @@ ar_archive *ar_open_rar_archive(ar_stream *stream)
         return NULL;
     if (memcmp(signature, "Rar!\x1A\x07\x00", 7) != 0) {
         if (memcmp(signature, "Rar!\x1A\x07\x01", 7) == 0)
-            todo("RAR 5 format isn't supported");
+            warn("RAR 5 format isn't supported");
         else if (memcmp(signature, "RE~^", 4) == 0)
-            todo("Ancient RAR format isn't supported");
+            warn("Ancient RAR format isn't supported");
         else if (memcmp(signature, "MZ", 2) == 0 || memcmp(signature, "\x7F\x45LF", 4) == 0)
-            todo("SFX archives aren't supported");
+            warn("SFX archives aren't supported");
         return NULL;
     }
 

@@ -96,10 +96,8 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
         log("Skipping LHD_SALT");
         ar_skip(rar->super.stream, 8);
     }
-    if ((header->flags & LHD_SOLID))
-        todo("LHD_SOLID only supported for METHOD_STORE");
     if (entry->method != METHOD_STORE && entry->version != 29) {
-        todo("Unsupported compression version: %d", entry->version);
+        warn("Unsupported compression version: %d", entry->version);
         return false;
     }
 
@@ -140,7 +138,6 @@ const char *rar_get_name(ar_archive *ar)
         namelen = uint16le(data + 15);
         name = malloc(namelen + 2);
         if (!name || ar_read(rar->super.stream, name, namelen) != namelen) {
-            warn("Out of resources in rar_get_name");
             free(name);
             return NULL;
         }

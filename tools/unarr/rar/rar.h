@@ -1,23 +1,16 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef rar_h
-#define rar_h
+#ifndef rar_rar_h
+#define rar_rar_h
 
 #include "../unarr-internals.h"
+
 #include "../lzss.h"
 #include "../ppmd/Ppmd7.h"
 #include <limits.h>
 
 typedef struct ar_archive_rar_s ar_archive_rar;
-
-#define warn(msg, ...) fprintf(stderr, "Warning: " msg "\n", __VA_ARGS__)
-#define todo(msg, ...) fprintf(stderr, "TODO: " msg "\n", __VA_ARGS__)
-#ifdef DEBUG
-#define log(msg, ...) fprintf(stderr, "Log: " msg "\n", __VA_ARGS__)
-#else
-#define log(msg, ...) ((void)0)
-#endif
 
 /***** parser *****/
 
