@@ -184,6 +184,17 @@ void fz_empty_store(fz_context *ctx);
 int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
 
 /*
+	fz_shrink_store: Evict items from the store until the total size of
+	the objects in the store is reduced to a given percentage of its
+	current size.
+
+	percent: %age of current size to reduce the store to.
+
+	Returns non zero if we managed to free enough memory, zero otherwise.
+*/
+int fz_shrink_store(fz_context *ctx, unsigned int percent);
+
+/*
 	fz_print_store: Dump the contents of the store for debugging.
 */
 #ifndef NDEBUG

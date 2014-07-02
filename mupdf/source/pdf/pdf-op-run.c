@@ -1859,7 +1859,7 @@ run_xobject(pdf_csi *csi, void *state, pdf_obj *resources, pdf_xobject *xobj, co
 
 	/* Rethrow postponed errors */
 	if (errmess[0])
-		fz_throw(ctx, FZ_ERROR_GENERIC, errmess);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "%s", errmess);
 }
 
 static void pdf_run_BDC(pdf_csi *csi, void *state)

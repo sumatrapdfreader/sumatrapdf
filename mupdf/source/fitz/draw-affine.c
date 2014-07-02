@@ -489,7 +489,7 @@ fz_paint_affine_N_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa,
 						dp[n1] = a + fz_mul255(dp[n1], t);
 						if (hp)
 							hp[0] = a + fz_mul255(hp[0], t);
-					} 
+					}
 				}
 			}
 			dp += n;
