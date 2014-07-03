@@ -8,15 +8,31 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include <limits.h>
 
-typedef struct RARVirtualMachine_s RARVirtualMachine;
-typedef struct RAROpcode_s RAROpcode;
+#define RARProgramMemorySize 0x40000
+#define RARProgramMemoryMask (RARProgramMemorySize - 1)
+#define RARProgramWorkSize 0x3c000
+#define RARProgramGlobalSize 0x2000
+#define RARProgramSystemGlobalAddress RARProgramWorkSize
+#define RARProgramSystemGlobalSize 64
+#define RARProgramUserGlobalAddress (RARProgramSystemGlobalAddress + RARProgramSystemGlobalSize)
+#define RARProgramUserGlobalSize (RARProgramGlobalSize - RARProgramSystemGlobalSize)
+#define RARRuntimeMaxInstructions 250000000
 
-// Setup
+#define RARRegisterAddressingMode(n) (0 + (n))
+#define RARRegisterIndirectAddressingMode(n) (8 + (n))
+#define RARIndexedAbsoluteAddressingMode(n) (16 + (n))
+#define RARAbsoluteAddressingMode 24
+#define RARImmediateAddressingMode 25
+#define RARNumberOfAddressingModes 26
 
-void InitializeRARVirtualMachine(RARVirtualMachine *self);
+typedef struct RARVirtualMachine {
+    uint32_t registers[8];
+    uint32_t flags;
+    uint8_t memory[RARProgramMemorySize + sizeof(uint32_t) /* overflow sentinel */];
+} RARVirtualMachine;
+
+typedef struct RARProgram_s RARProgram;
 
 // Program building
 
@@ -64,15 +80,15 @@ enum {
     RARNumberOfInstructions = 40,
 };
 
-void SetRAROpcodeInstruction(RAROpcode *opcode, uint8_t instruction, bool bytemode);
-void SetRAROpcodeOperand1(RAROpcode *opcode, uint8_t addressingmode, uint32_t value);
-void SetRAROpcodeOperand2(RAROpcode *opcode, uint8_t addressingmode, uint32_t value);
-bool IsProgramTerminated(RAROpcode *opcodes, uint32_t numopcodes);
-bool PrepareRAROpcodes(RAROpcode *opcodes, uint32_t numopcodes);
+RARProgram *RARCreateProgram();
+void RARDeleteProgram(RARProgram *prog);
+bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode);
+bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t value1, uint8_t addressingmode2, uint32_t value2);
+bool RARIsProgramTerminated(RARProgram *prog);
 
 // Execution
 
-bool ExecuteRARCode(RARVirtualMachine *self, RAROpcode *opcodes, uint32_t numopcodes);
+bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog);
 
 // Instruction properties
 
@@ -83,7 +99,7 @@ bool RARInstructionIsRelativeJump(uint8_t instruction);
 bool RARInstructionWritesFirstOperand(uint8_t instruction);
 bool RARInstructionWritesSecondOperand(uint8_t instruction);
 
-// Memory and register access
+// Memory and register access (convenience)
 
 void SetRARVirtualMachineRegisters(RARVirtualMachine *self, uint32_t registers[8]);
 uint32_t RARVirtualMachineRead32(RARVirtualMachine *self, uint32_t address);

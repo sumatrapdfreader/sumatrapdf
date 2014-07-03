@@ -5,33 +5,13 @@
 
 #include "vm.h"
 
-#define RARProgramMemorySize 0x40000
-#define RARProgramMemoryMask (RARProgramMemorySize-1)
-#define RARProgramWorkSize 0x3c000
-#define RARProgramGlobalSize 0x2000
-#define RARProgramSystemGlobalAddress RARProgramWorkSize
-#define RARProgramSystemGlobalSize 64
-#define RARProgramUserGlobalAddress (RARProgramSystemGlobalAddress + RARProgramSystemGlobalSize)
-#define RARProgramUserGlobalSize (RARProgramGlobalSize - RARProgramSystemGlobalSize)
-#define RARRuntimeMaxInstructions 250000000
-
-#define RARRegisterAddressingMode(n) (0 + (n))
-#define RARRegisterIndirectAddressingMode(n) (8 + (n))
-#define RARIndexedAbsoluteAddressingMode(n) (16 + (n))
-#define RARAbsoluteAddressingMode 24
-#define RARImmediateAddressingMode 25
-#define RARNumberOfAddressingModes 26
+#include <stdlib.h>
+#include <string.h>
 
 typedef uint32_t (* RARGetterFunction)(RARVirtualMachine *self, uint32_t value);
 typedef void (* RARSetterFunction)(RARVirtualMachine *self, uint32_t value, uint32_t data);
 
-struct RARVirtualMachine_s {
-    uint32_t registers[8];
-    uint32_t flags;
-    uint8_t memory[RARProgramMemorySize + sizeof(uint32_t) /* overflow sentinel */];
-};
-
-struct RAROpcode_s {
+typedef struct RAROpcode {
     RARGetterFunction operand1getter;
     RARSetterFunction operand1setter;
     uint32_t value1;
@@ -44,10 +24,12 @@ struct RAROpcode_s {
     uint8_t bytemode;
     uint8_t addressingmode1;
     uint8_t addressingmode2;
+} RAROpcode;
 
-#if UINTPTR_MAX==UINT64_MAX
-    uint8_t padding[12]; // 64-bit machine, pad to 64 bytes
-#endif
+struct RARProgram_s {
+    RAROpcode *opcodes;
+    uint32_t length;
+    uint32_t capacity;
 };
 
 static RARGetterFunction OperandGetters_32[RARNumberOfAddressingModes];
@@ -55,89 +37,102 @@ static RARGetterFunction OperandGetters_8[RARNumberOfAddressingModes];
 static RARSetterFunction OperandSetters_32[RARNumberOfAddressingModes];
 static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes];
 
-// Setup
-
-void InitializeRARVirtualMachine(RARVirtualMachine *self)
-{
-    // TODO: memset(self, 0, sizeof(*self)); ?
-    memset(self->registers, 0, sizeof(self->registers));
-}
-
 // Program building
 
-void SetRAROpcodeInstruction(RAROpcode *opcode, uint8_t instruction, bool bytemode)
+RARProgram *RARCreateProgram()
 {
-    opcode->instruction = instruction;
-    opcode->bytemode = bytemode ? 1 : 0;
+    return calloc(1, sizeof(RARProgram));
 }
 
-void SetRAROpcodeOperand1(RAROpcode *opcode, uint8_t addressingmode, uint32_t value)
+void RARDeleteProgram(RARProgram *prog)
 {
-    opcode->addressingmode1 = addressingmode;
-    opcode->value1 = value;
+    if (prog)
+        free(prog->opcodes);
+    free(prog);
 }
 
-void SetRAROpcodeOperand2(RAROpcode *opcode, uint8_t addressingmode, uint32_t value)
+bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode)
 {
-    opcode->addressingmode2 = addressingmode;
-    opcode->value2 = value;
-}
-
-bool IsProgramTerminated(RAROpcode *opcodes, uint32_t numopcodes)
-{
-    return RARInstructionIsUnconditionalJump(opcodes[numopcodes - 1].instruction);
-}
-
-bool PrepareRAROpcodes(RAROpcode *opcodes, uint32_t numopcodes)
-{
-    uint32_t i;
-    for (i = 0; i < numopcodes; i++) {
-        RARGetterFunction *getterfunctions = OperandGetters_32;
-        RARSetterFunction *setterfunctions = OperandSetters_32;
-        int numoperands = NumberOfRARInstructionOperands(opcodes[i].instruction);;
-
-        if (opcodes[i].instruction >= RARNumberOfInstructions)
+    if (instruction >= RARNumberOfInstructions)
+        return false;
+    if (prog->length + 1 >= prog->capacity) {
+        uint32_t newCapacity = prog->capacity ? prog->capacity * 2 : 16;
+        RAROpcode *newCodes = realloc(prog->opcodes, newCapacity * sizeof(*prog->opcodes));
+        if (!newCodes)
             return false;
+        prog->opcodes = newCodes;
+        prog->capacity = newCapacity;
+    }
+    memset(&prog->opcodes[prog->length], 0, sizeof(prog->opcodes[prog->length]));
+    prog->opcodes[prog->length].instruction = instruction;
+    prog->opcodes[prog->length].bytemode = bytemode ? 1 : 0;
+    prog->length++;
+    return true;
+}
 
-        if (opcodes[i].instruction == RARMovsxInstruction || opcodes[i].instruction == RARMovzxInstruction) {
-            getterfunctions = OperandGetters_8;
-        }
-        else if (opcodes[i].bytemode) {
-            if (!RARInstructionHasByteMode(opcodes[i].instruction))
+bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t value1, uint8_t addressingmode2, uint32_t value2)
+{
+    RAROpcode *opcode = &prog->opcodes[prog->length - 1];
+    RARGetterFunction *getterfunctions;
+    RARSetterFunction *setterfunctions;
+    int numoperands;
+
+    if (addressingmode1 >= RARNumberOfAddressingModes || addressingmode2 >= RARNumberOfAddressingModes)
+        return false;
+    if (!prog->length || opcode->addressingmode1 || opcode->value1 || opcode->addressingmode2 || opcode->value2)
+        return false;
+
+    numoperands = NumberOfRARInstructionOperands(opcode->instruction);
+    if (numoperands == 0)
+        return true;
+
+    if (opcode->instruction == RARMovsxInstruction || opcode->instruction == RARMovzxInstruction) {
+        getterfunctions = OperandGetters_8;
+        setterfunctions = OperandSetters_32;
+    }
+    else if (opcode->bytemode) {
+        if (!RARInstructionHasByteMode(opcode->instruction))
+            return false;
+        getterfunctions = OperandGetters_8;
+        setterfunctions = OperandSetters_8;
+    }
+    else {
+        getterfunctions = OperandGetters_32;
+        setterfunctions = OperandSetters_32;
+    }
+
+    opcode->operand1getter = getterfunctions[addressingmode1];
+    opcode->operand1setter = setterfunctions[addressingmode1];
+    if (addressingmode1 == RARImmediateAddressingMode) {
+        if (RARInstructionWritesFirstOperand(opcode->instruction))
+            return false;
+    }
+    else if (addressingmode1 == RARAbsoluteAddressingMode) {
+        value1 &= RARProgramMemoryMask;
+    }
+    opcode->addressingmode1 = addressingmode1;
+    opcode->value1 = value1;
+
+    if (numoperands == 2) {
+        opcode->operand2getter = getterfunctions[addressingmode2];
+        opcode->operand2setter = setterfunctions[addressingmode2];
+        if (addressingmode2 == RARImmediateAddressingMode) {
+            if (RARInstructionWritesSecondOperand(opcode->instruction))
                 return false;
-            getterfunctions = OperandGetters_8;
-            setterfunctions = OperandSetters_8;
         }
-
-        if (numoperands >= 1) {
-            if (opcodes[i].addressingmode1 >= RARNumberOfAddressingModes)
-                return false;
-            opcodes[i].operand1getter = getterfunctions[opcodes[i].addressingmode1];
-            opcodes[i].operand1setter = setterfunctions[opcodes[i].addressingmode1];
-
-            if (opcodes[i].addressingmode1 == RARImmediateAddressingMode) {
-                if (RARInstructionWritesFirstOperand(opcodes[i].instruction))
-                    return false;
-            }
-            else if (opcodes[i].addressingmode1 == RARAbsoluteAddressingMode)
-                opcodes[i].value1 &= RARProgramMemoryMask;
+        else if (addressingmode2 == RARAbsoluteAddressingMode) {
+            value2 &= RARProgramMemoryMask;
         }
-        if (numoperands==2) {
-            if (opcodes[i].addressingmode2 >= RARNumberOfAddressingModes)
-                return false;
-            opcodes[i].operand2getter = getterfunctions[opcodes[i].addressingmode2];
-            opcodes[i].operand2setter = setterfunctions[opcodes[i].addressingmode2];
-
-            if (opcodes[i].addressingmode2 == RARImmediateAddressingMode) {
-                if (RARInstructionWritesSecondOperand(opcodes[i].instruction))
-                    return false;
-            }
-            else if (opcodes[i].addressingmode2 == RARAbsoluteAddressingMode)
-                opcodes[i].value2 &= RARProgramMemoryMask;
-        }
+        opcode->addressingmode2 = addressingmode2;
+        opcode->value2 = value2;
     }
 
     return true;
+}
+
+bool RARIsProgramTerminated(RARProgram *prog)
+{
+    return prog->length > 0 && RARInstructionIsUnconditionalJump(prog->opcodes[prog->length - 1].instruction);
 }
 
 // Execution
@@ -169,21 +164,21 @@ bool PrepareRAROpcodes(RAROpcode *opcodes, uint32_t numopcodes)
 #define SetOperand1AndFlags(res) EXTMACRO_BEGIN uint32_t r = (res); SetFlags(r); SetOperand1(r); EXTMACRO_END
 
 #define NextInstruction() { opcode++; continue; }
-#define Jump(offs) { uint32_t o = (offs); if (o >= numopcodes) return false; opcode = &opcodes[o]; continue; }
+#define Jump(offs) { uint32_t o = (offs); if (o >= prog->length) return false; opcode = &prog->opcodes[o]; continue; }
 
-bool ExecuteRARCode(RARVirtualMachine *self, RAROpcode *opcodes, uint32_t numopcodes)
+bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog)
 {
-    RAROpcode *opcode = opcodes;
+    RAROpcode *opcode = prog->opcodes;
     uint32_t flags = self->flags;
     uint32_t op1, op2, carry, i;
     uint32_t counter = 0;
 
-    if (!IsProgramTerminated(opcodes, numopcodes))
+    if (!RARIsProgramTerminated(prog))
         return false;
 
     self->flags = 0; // ?
 
-    while ((uint32_t)(opcode - opcodes) < numopcodes && counter++ < RARRuntimeMaxInstructions) {
+    while ((uint32_t)(opcode - prog->opcodes) < prog->length && counter++ < RARRuntimeMaxInstructions) {
         switch (opcode->instruction) {
         case RARMovInstruction:
             SetOperand1(GetOperand2());
@@ -297,7 +292,7 @@ bool ExecuteRARCode(RARVirtualMachine *self, RAROpcode *opcodes, uint32_t numopc
 
         case RARCallInstruction:
             self->registers[7] -= 4;
-            RARVirtualMachineWrite32(self, self->registers[7], opcode - opcodes + 1);
+            RARVirtualMachineWrite32(self, self->registers[7], opcode - prog->opcodes + 1);
             Jump(GetOperand1());
 
         case RARRetInstruction:
@@ -428,7 +423,10 @@ static void _RARWrite32(uint8_t *b, uint32_t n)
 
 void SetRARVirtualMachineRegisters(RARVirtualMachine *self, uint32_t registers[8])
 {
-    memcpy(self->registers, registers, sizeof(self->registers));
+    if (registers)
+        memcpy(self->registers, registers, sizeof(self->registers));
+    else
+        memset(self->registers, 0, sizeof(self->registers));
 }
 
 uint32_t RARVirtualMachineRead32(RARVirtualMachine *self, uint32_t address)
@@ -502,7 +500,7 @@ static uint32_t IndexedAbsoluteGetter5_8(RARVirtualMachine *self, uint32_t value
 static uint32_t IndexedAbsoluteGetter6_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[6]); }
 static uint32_t IndexedAbsoluteGetter7_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[7]); }
 
-// Note: Absolute addressing is pre-masked in PrepareRAROpcodes.
+// Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
 static uint32_t AbsoluteGetter_32(RARVirtualMachine *self, uint32_t value) { return _RARRead32(&self->memory[value]); }
 static uint32_t AbsoluteGetter_8(RARVirtualMachine *self, uint32_t value) { return self->memory[value]; }
 static uint32_t ImmediateGetter(RARVirtualMachine *self, uint32_t value) { return value; }
@@ -558,125 +556,48 @@ static void IndexedAbsoluteSetter5_8(RARVirtualMachine *self, uint32_t value, ui
 static void IndexedAbsoluteSetter6_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[6], (uint8_t)data); }
 static void IndexedAbsoluteSetter7_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[7], (uint8_t)data); }
 
-// Note: Absolute addressing is pre-masked in PrepareRAROpcodes.
+// Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
 static void AbsoluteSetter_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { _RARWrite32(&self->memory[value], data); }
 static void AbsoluteSetter_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->memory[value] = (uint8_t)data; }
 
 static RARGetterFunction OperandGetters_32[RARNumberOfAddressingModes] = {
-    RegisterGetter0_32,
-    RegisterGetter1_32,
-    RegisterGetter2_32,
-    RegisterGetter3_32,
-    RegisterGetter4_32,
-    RegisterGetter5_32,
-    RegisterGetter6_32,
-    RegisterGetter7_32,
-    RegisterIndirectGetter0_32,
-    RegisterIndirectGetter1_32,
-    RegisterIndirectGetter2_32,
-    RegisterIndirectGetter3_32,
-    RegisterIndirectGetter4_32,
-    RegisterIndirectGetter5_32,
-    RegisterIndirectGetter6_32,
-    RegisterIndirectGetter7_32,
-    IndexedAbsoluteGetter0_32,
-    IndexedAbsoluteGetter1_32,
-    IndexedAbsoluteGetter2_32,
-    IndexedAbsoluteGetter3_32,
-    IndexedAbsoluteGetter4_32,
-    IndexedAbsoluteGetter5_32,
-    IndexedAbsoluteGetter6_32,
-    IndexedAbsoluteGetter7_32,
-    AbsoluteGetter_32,
-    ImmediateGetter,
+    RegisterGetter0_32, RegisterGetter1_32, RegisterGetter2_32, RegisterGetter3_32,
+    RegisterGetter4_32, RegisterGetter5_32, RegisterGetter6_32, RegisterGetter7_32,
+    RegisterIndirectGetter0_32, RegisterIndirectGetter1_32, RegisterIndirectGetter2_32, RegisterIndirectGetter3_32,
+    RegisterIndirectGetter4_32, RegisterIndirectGetter5_32, RegisterIndirectGetter6_32, RegisterIndirectGetter7_32,
+    IndexedAbsoluteGetter0_32, IndexedAbsoluteGetter1_32, IndexedAbsoluteGetter2_32, IndexedAbsoluteGetter3_32,
+    IndexedAbsoluteGetter4_32, IndexedAbsoluteGetter5_32, IndexedAbsoluteGetter6_32, IndexedAbsoluteGetter7_32,
+    AbsoluteGetter_32, ImmediateGetter,
 };
 
 static RARGetterFunction OperandGetters_8[RARNumberOfAddressingModes] = {
-    RegisterGetter0_8,
-    RegisterGetter1_8,
-    RegisterGetter2_8,
-    RegisterGetter3_8,
-    RegisterGetter4_8,
-    RegisterGetter5_8,
-    RegisterGetter6_8,
-    RegisterGetter7_8,
-    RegisterIndirectGetter0_8,
-    RegisterIndirectGetter1_8,
-    RegisterIndirectGetter2_8,
-    RegisterIndirectGetter3_8,
-    RegisterIndirectGetter4_8,
-    RegisterIndirectGetter5_8,
-    RegisterIndirectGetter6_8,
-    RegisterIndirectGetter7_8,
-    IndexedAbsoluteGetter0_8,
-    IndexedAbsoluteGetter1_8,
-    IndexedAbsoluteGetter2_8,
-    IndexedAbsoluteGetter3_8,
-    IndexedAbsoluteGetter4_8,
-    IndexedAbsoluteGetter5_8,
-    IndexedAbsoluteGetter6_8,
-    IndexedAbsoluteGetter7_8,
-    AbsoluteGetter_8,
-    ImmediateGetter,
+    RegisterGetter0_8, RegisterGetter1_8, RegisterGetter2_8, RegisterGetter3_8,
+    RegisterGetter4_8, RegisterGetter5_8, RegisterGetter6_8, RegisterGetter7_8,
+    RegisterIndirectGetter0_8, RegisterIndirectGetter1_8, RegisterIndirectGetter2_8, RegisterIndirectGetter3_8,
+    RegisterIndirectGetter4_8, RegisterIndirectGetter5_8, RegisterIndirectGetter6_8, RegisterIndirectGetter7_8,
+    IndexedAbsoluteGetter0_8, IndexedAbsoluteGetter1_8, IndexedAbsoluteGetter2_8, IndexedAbsoluteGetter3_8,
+    IndexedAbsoluteGetter4_8, IndexedAbsoluteGetter5_8, IndexedAbsoluteGetter6_8, IndexedAbsoluteGetter7_8,
+    AbsoluteGetter_8, ImmediateGetter,
 };
 
-
 static RARSetterFunction OperandSetters_32[RARNumberOfAddressingModes] = {
-    RegisterSetter0_32,
-    RegisterSetter1_32,
-    RegisterSetter2_32,
-    RegisterSetter3_32,
-    RegisterSetter4_32,
-    RegisterSetter5_32,
-    RegisterSetter6_32,
-    RegisterSetter7_32,
-    RegisterIndirectSetter0_32,
-    RegisterIndirectSetter1_32,
-    RegisterIndirectSetter2_32,
-    RegisterIndirectSetter3_32,
-    RegisterIndirectSetter4_32,
-    RegisterIndirectSetter5_32,
-    RegisterIndirectSetter6_32,
-    RegisterIndirectSetter7_32,
-    IndexedAbsoluteSetter0_32,
-    IndexedAbsoluteSetter1_32,
-    IndexedAbsoluteSetter2_32,
-    IndexedAbsoluteSetter3_32,
-    IndexedAbsoluteSetter4_32,
-    IndexedAbsoluteSetter5_32,
-    IndexedAbsoluteSetter6_32,
-    IndexedAbsoluteSetter7_32,
-    AbsoluteSetter_32,
-    NULL,
+    RegisterSetter0_32, RegisterSetter1_32, RegisterSetter2_32, RegisterSetter3_32,
+    RegisterSetter4_32, RegisterSetter5_32, RegisterSetter6_32, RegisterSetter7_32,
+    RegisterIndirectSetter0_32, RegisterIndirectSetter1_32, RegisterIndirectSetter2_32, RegisterIndirectSetter3_32,
+    RegisterIndirectSetter4_32, RegisterIndirectSetter5_32, RegisterIndirectSetter6_32, RegisterIndirectSetter7_32,
+    IndexedAbsoluteSetter0_32, IndexedAbsoluteSetter1_32, IndexedAbsoluteSetter2_32, IndexedAbsoluteSetter3_32,
+    IndexedAbsoluteSetter4_32, IndexedAbsoluteSetter5_32, IndexedAbsoluteSetter6_32, IndexedAbsoluteSetter7_32,
+    AbsoluteSetter_32, NULL,
 };
 
 static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes] = {
-    RegisterSetter0_8,
-    RegisterSetter1_8,
-    RegisterSetter2_8,
-    RegisterSetter3_8,
-    RegisterSetter4_8,
-    RegisterSetter5_8,
-    RegisterSetter6_8,
-    RegisterSetter7_8,
-    RegisterIndirectSetter0_8,
-    RegisterIndirectSetter1_8,
-    RegisterIndirectSetter2_8,
-    RegisterIndirectSetter3_8,
-    RegisterIndirectSetter4_8,
-    RegisterIndirectSetter5_8,
-    RegisterIndirectSetter6_8,
-    RegisterIndirectSetter7_8,
-    IndexedAbsoluteSetter0_8,
-    IndexedAbsoluteSetter1_8,
-    IndexedAbsoluteSetter2_8,
-    IndexedAbsoluteSetter3_8,
-    IndexedAbsoluteSetter4_8,
-    IndexedAbsoluteSetter5_8,
-    IndexedAbsoluteSetter6_8,
-    IndexedAbsoluteSetter7_8,
-    AbsoluteSetter_8,
-    NULL,
+    RegisterSetter0_8, RegisterSetter1_8, RegisterSetter2_8, RegisterSetter3_8,
+    RegisterSetter4_8, RegisterSetter5_8, RegisterSetter6_8, RegisterSetter7_8,
+    RegisterIndirectSetter0_8, RegisterIndirectSetter1_8, RegisterIndirectSetter2_8, RegisterIndirectSetter3_8,
+    RegisterIndirectSetter4_8, RegisterIndirectSetter5_8, RegisterIndirectSetter6_8, RegisterIndirectSetter7_8,
+    IndexedAbsoluteSetter0_8, IndexedAbsoluteSetter1_8, IndexedAbsoluteSetter2_8, IndexedAbsoluteSetter3_8,
+    IndexedAbsoluteSetter4_8, IndexedAbsoluteSetter5_8, IndexedAbsoluteSetter6_8, IndexedAbsoluteSetter7_8,
+    AbsoluteSetter_8, NULL,
 };
 
 // Instruction properties
@@ -747,7 +668,7 @@ bool RARInstructionHasByteMode(uint8_t instruction)
 {
     if (instruction >= RARNumberOfInstructions)
         return false;
-    return (InstructionFlags[instruction]&RARHasByteModeFlag)!=0;
+    return (InstructionFlags[instruction] & RARHasByteModeFlag)!=0;
 }
 
 bool RARInstructionIsUnconditionalJump(uint8_t instruction)

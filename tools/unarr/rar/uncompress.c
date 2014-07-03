@@ -71,9 +71,7 @@ static inline bool rar_br_check(ar_archive_rar *rar, int bits)
 
 static inline uint64_t rar_br_bits(ar_archive_rar *rar, int bits)
 {
-    uint64_t value = (rar->uncomp.br.bits >> (rar->uncomp.br.available - bits)) & (((uint64_t)1 << bits) - 1);
-    rar->uncomp.br.available -= bits;
-    return value;
+    return (rar->uncomp.br.bits >> (rar->uncomp.br.available -= bits)) & (((uint64_t)1 << bits) - 1);
 }
 
 static Byte ByteIn_Read(void *p)
