@@ -8,7 +8,7 @@
 static bool crc_table_ready = false;
 static uint32_t crc_table[256];
 
-uint32_t crc32(uint32_t crc32, const unsigned char *data, size_t data_len)
+uint32_t ar_crc32(uint32_t crc32, const unsigned char *data, size_t data_len)
 {
     if (!crc_table_ready) {
         uint32_t i, j;

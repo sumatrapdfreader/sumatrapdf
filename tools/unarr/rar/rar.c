@@ -183,7 +183,7 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
         return false;
     }
 
-    rar->progr.crc = crc32(rar->progr.crc, buffer, count);
+    rar->progr.crc = ar_crc32(rar->progr.crc, buffer, count);
     if (rar->progr.bytes_done < rar->super.entry_size_uncompressed)
         return true;
     if (rar->progr.data_left)

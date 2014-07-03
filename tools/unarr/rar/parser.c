@@ -59,11 +59,11 @@ bool rar_check_header_crc(ar_archive *ar)
         return false;
     size -= 7;
 
-    crc = crc32(0, buffer + 2, 5);
+    crc = ar_crc32(0, buffer + 2, 5);
     while (size > 0) {
         if (ar_read(ar->stream, buffer, min(size, sizeof(buffer))) != min(size, sizeof(buffer)))
             return false;
-        crc = crc32(crc, buffer, min(size, sizeof(buffer)));
+        crc = ar_crc32(crc, buffer, min(size, sizeof(buffer)));
         size -= min(size, sizeof(buffer));
     }
     return (crc & 0xFFFF) == crc16;
@@ -144,7 +144,7 @@ const char *rar_get_name(ar_archive *ar)
         name[namelen] = name[namelen + 1] = '\0';
 
         if (!(header.flags & LHD_UNICODE)) {
-            rar->entry.name = conv_ansi_to_utf8_utf16(name, &rar->entry.name_w);
+            rar->entry.name = ar_conv_ansi_to_utf8_utf16(name, &rar->entry.name_w);
             free(name);
         }
         else if (namelen == strlen(name)) {
@@ -152,7 +152,7 @@ const char *rar_get_name(ar_archive *ar)
             rar->entry.name_w = NULL;
         }
         else {
-            rar->entry.name = conv_utf16_to_utf8((const WCHAR *)name);
+            rar->entry.name = ar_conv_utf16_to_utf8((const WCHAR *)name);
             rar->entry.name_w = (WCHAR *)name;
         }
         /* normalize path separators */
@@ -180,6 +180,6 @@ const WCHAR *rar_get_name_w(ar_archive *ar)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     if (!rar->entry.name_w && rar_get_name(ar))
-        rar->entry.name_w = conv_utf8_to_utf16(rar->entry.name);
+        rar->entry.name_w = ar_conv_utf8_to_utf16(rar->entry.name);
     return rar->entry.name_w;
 }

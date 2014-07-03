@@ -160,6 +160,7 @@ void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp)
     rar_free_codes(uncomp);
     lzss_cleanup(&uncomp->lzss);
     Ppmd7_Free(&uncomp->ppmd7_context, &gSzAlloc);
+    rar_clear_filters(&uncomp->filters);
     uncomp->initialized = false;
 }
 

@@ -14,7 +14,7 @@
 
 /***** crc32 *****/
 
-uint32_t crc32(uint32_t crc32, const unsigned char *data, size_t data_len);
+uint32_t ar_crc32(uint32_t crc32, const unsigned char *data, size_t data_len);
 
 /***** stream *****/
 
@@ -35,9 +35,9 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 /***** string ****/
 
-WCHAR *conv_utf8_to_utf16(const char *str);
-char *conv_utf16_to_utf8(const WCHAR *wstr);
-char *conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt);
+WCHAR *ar_conv_utf8_to_utf16(const char *str);
+char *ar_conv_utf16_to_utf8(const WCHAR *wstr);
+char *ar_conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt);
 
 /***** unarr *****/
 

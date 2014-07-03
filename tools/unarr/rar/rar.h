@@ -71,6 +71,18 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
 const char *rar_get_name(ar_archive *ar);
 const WCHAR *rar_get_name_w(ar_archive *ar);
 
+/***** filters *****/
+
+struct RARVirtualMachine_s;
+struct RARProgramCode;
+
+struct ar_archive_rar_filters {
+    struct RARVirtualMachine_s *vm;
+    struct RARProgramCode *progs;
+};
+
+void rar_clear_filters(struct ar_archive_rar_filters *filters);
+
 /***** uncompress *****/
 
 enum compression_method {
@@ -145,6 +157,7 @@ struct ar_archive_rar_uncomp {
     struct ByteReader bytein;
 
     size_t filterstart;
+    struct ar_archive_rar_filters filters;
 
     struct {
         uint64_t bits;
@@ -152,14 +165,16 @@ struct ar_archive_rar_uncomp {
     } br;
 };
 
+bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size);
+void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp);
+
+/***** rar *****/
+
 struct ar_archive_rar_progress {
     size_t data_left;
     size_t bytes_done;
     uint32_t crc;
 };
-
-bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size);
-void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp);
 
 struct ar_archive_rar_s {
     ar_archive super;

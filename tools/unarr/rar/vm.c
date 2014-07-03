@@ -8,10 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef uint32_t (* RARGetterFunction)(RARVirtualMachine *self, uint32_t value);
-typedef void (* RARSetterFunction)(RARVirtualMachine *self, uint32_t value, uint32_t data);
+typedef uint32_t (* RARGetterFunction)(RARVirtualMachine *vm, uint32_t value);
+typedef void (* RARSetterFunction)(RARVirtualMachine *vm, uint32_t value, uint32_t data);
 
-typedef struct RAROpcode {
+typedef struct RAROpcode_s RAROpcode;
+
+struct RAROpcode_s {
     RARGetterFunction operand1getter;
     RARSetterFunction operand1setter;
     uint32_t value1;
@@ -24,7 +26,7 @@ typedef struct RAROpcode {
     uint8_t bytemode;
     uint8_t addressingmode1;
     uint8_t addressingmode2;
-} RAROpcode;
+};
 
 struct RARProgram_s {
     RAROpcode *opcodes;
@@ -150,10 +152,10 @@ bool RARIsProgramTerminated(RARProgram *prog)
 
 #define SignExtend(a) ((uint32_t)((int8_t)(a)))
 
-#define GetOperand1() (opcode->operand1getter(self, opcode->value1))
-#define GetOperand2() (opcode->operand2getter(self, opcode->value2))
-#define SetOperand1(data) opcode->operand1setter(self, opcode->value1, data)
-#define SetOperand2(data) opcode->operand2setter(self, opcode->value2, data)
+#define GetOperand1() (opcode->operand1getter(vm, opcode->value1))
+#define GetOperand2() (opcode->operand2getter(vm, opcode->value2))
+#define SetOperand1(data) opcode->operand1setter(vm, opcode->value1, data)
+#define SetOperand2(data) opcode->operand2setter(vm, opcode->value2, data)
 
 #define SetFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint32_t result = (res); flags = (result == 0 ? ZeroFlag : (result & SignFlag)) | ((carry) ? 1 : 0); EXTMACRO_END
 #define SetByteFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint8_t result = (res); flags = (result == 0 ? ZeroFlag : (SignExtend(result) & SignFlag)) | ((carry) ? 1 : 0); EXTMACRO_END
@@ -166,17 +168,17 @@ bool RARIsProgramTerminated(RARProgram *prog)
 #define NextInstruction() { opcode++; continue; }
 #define Jump(offs) { uint32_t o = (offs); if (o >= prog->length) return false; opcode = &prog->opcodes[o]; continue; }
 
-bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog)
+bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
 {
     RAROpcode *opcode = prog->opcodes;
-    uint32_t flags = self->flags;
+    uint32_t flags = vm->flags;
     uint32_t op1, op2, carry, i;
     uint32_t counter = 0;
 
     if (!RARIsProgramTerminated(prog))
         return false;
 
-    self->flags = 0; // ?
+    vm->flags = 0; // ?
 
     while ((uint32_t)(opcode - prog->opcodes) < prog->length && counter++ < RARRuntimeMaxInstructions) {
         switch (opcode->instruction) {
@@ -281,27 +283,27 @@ bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog)
             NextInstruction();
 
         case RARPushInstruction:
-            self->registers[7] -= 4;
-            RARVirtualMachineWrite32(self, self->registers[7], GetOperand1());
+            vm->registers[7] -= 4;
+            RARVirtualMachineWrite32(vm, vm->registers[7], GetOperand1());
             NextInstruction();
 
         case RARPopInstruction:
-            SetOperand1(RARVirtualMachineRead32(self, self->registers[7]));
-            self->registers[7] += 4;
+            SetOperand1(RARVirtualMachineRead32(vm, vm->registers[7]));
+            vm->registers[7] += 4;
             NextInstruction();
 
         case RARCallInstruction:
-            self->registers[7] -= 4;
-            RARVirtualMachineWrite32(self, self->registers[7], opcode - prog->opcodes + 1);
+            vm->registers[7] -= 4;
+            RARVirtualMachineWrite32(vm, vm->registers[7], opcode - prog->opcodes + 1);
             Jump(GetOperand1());
 
         case RARRetInstruction:
-            if (self->registers[7] >= RARProgramMemorySize) {
-                self->flags = flags;
+            if (vm->registers[7] >= RARProgramMemorySize) {
+                vm->flags = flags;
                 return true;
             }
-            i = RARVirtualMachineRead32(self, self->registers[7]);
-            self->registers[7] += 4;
+            i = RARVirtualMachineRead32(vm, vm->registers[7]);
+            vm->registers[7] += 4;
             Jump(i);
 
         case RARNotInstruction:
@@ -332,26 +334,26 @@ bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog)
 
         case RARPushaInstruction:
             for (i = 0; i < 8; i++) {
-                RARVirtualMachineWrite32(self, self->registers[7] - 4 - i * 4, self->registers[i]);
+                RARVirtualMachineWrite32(vm, vm->registers[7] - 4 - i * 4, vm->registers[i]);
             }
-            self->registers[7] -= 32;
+            vm->registers[7] -= 32;
             NextInstruction();
 
         case RARPopaInstruction:
             for (i = 0; i < 8; i++) {
-                self->registers[i] = RARVirtualMachineRead32(self, self->registers[7] + 28 - i * 4);
+                vm->registers[i] = RARVirtualMachineRead32(vm, vm->registers[7] + 28 - i * 4);
             }
-            // TODO: self->registers[7] += 32; ?
+            // TODO: vm->registers[7] += 32; ?
             NextInstruction();
 
         case RARPushfInstruction:
-            self->registers[7] -= 4;
-            RARVirtualMachineWrite32(self, self->registers[7], flags);
+            vm->registers[7] -= 4;
+            RARVirtualMachineWrite32(vm, vm->registers[7], flags);
             NextInstruction();
 
         case RARPopfInstruction:
-            flags = RARVirtualMachineRead32(self, self->registers[7]);
-            self->registers[7] += 4;
+            flags = RARVirtualMachineRead32(vm, vm->registers[7]);
+            vm->registers[7] += 4;
             NextInstruction();
 
         case RARMovzxInstruction:
@@ -421,144 +423,144 @@ static void _RARWrite32(uint8_t *b, uint32_t n)
     b[0] = n & 0xFF;
 }
 
-void SetRARVirtualMachineRegisters(RARVirtualMachine *self, uint32_t registers[8])
+void RARSetVirtualMachineRegisters(RARVirtualMachine *vm, uint32_t registers[8])
 {
     if (registers)
-        memcpy(self->registers, registers, sizeof(self->registers));
+        memcpy(vm->registers, registers, sizeof(vm->registers));
     else
-        memset(self->registers, 0, sizeof(self->registers));
+        memset(vm->registers, 0, sizeof(vm->registers));
 }
 
-uint32_t RARVirtualMachineRead32(RARVirtualMachine *self, uint32_t address)
+uint32_t RARVirtualMachineRead32(RARVirtualMachine *vm, uint32_t address)
 {
-    return _RARRead32(&self->memory[address & RARProgramMemoryMask]);
+    return _RARRead32(&vm->memory[address & RARProgramMemoryMask]);
 }
 
-void RARVirtualMachineWrite32(RARVirtualMachine *self, uint32_t address, uint32_t val)
+void RARVirtualMachineWrite32(RARVirtualMachine *vm, uint32_t address, uint32_t val)
 {
-    _RARWrite32(&self->memory[address & RARProgramMemoryMask], val);
+    _RARWrite32(&vm->memory[address & RARProgramMemoryMask], val);
 }
 
-uint8_t RARVirtualMachineRead8(RARVirtualMachine *self, uint32_t address)
+uint8_t RARVirtualMachineRead8(RARVirtualMachine *vm, uint32_t address)
 {
-    return self->memory[address & RARProgramMemoryMask];
+    return vm->memory[address & RARProgramMemoryMask];
 }
 
-void RARVirtualMachineWrite8(RARVirtualMachine *self, uint32_t address, uint8_t val)
+void RARVirtualMachineWrite8(RARVirtualMachine *vm, uint32_t address, uint8_t val)
 {
-    self->memory[address & RARProgramMemoryMask] = val;
+    vm->memory[address & RARProgramMemoryMask] = val;
 }
 
-static uint32_t RegisterGetter0_32(RARVirtualMachine *self, uint32_t value) { return self->registers[0]; }
-static uint32_t RegisterGetter1_32(RARVirtualMachine *self, uint32_t value) { return self->registers[1]; }
-static uint32_t RegisterGetter2_32(RARVirtualMachine *self, uint32_t value) { return self->registers[2]; }
-static uint32_t RegisterGetter3_32(RARVirtualMachine *self, uint32_t value) { return self->registers[3]; }
-static uint32_t RegisterGetter4_32(RARVirtualMachine *self, uint32_t value) { return self->registers[4]; }
-static uint32_t RegisterGetter5_32(RARVirtualMachine *self, uint32_t value) { return self->registers[5]; }
-static uint32_t RegisterGetter6_32(RARVirtualMachine *self, uint32_t value) { return self->registers[6]; }
-static uint32_t RegisterGetter7_32(RARVirtualMachine *self, uint32_t value) { return self->registers[7]; }
-static uint32_t RegisterGetter0_8(RARVirtualMachine *self, uint32_t value) { return self->registers[0] & 0xFF; }
-static uint32_t RegisterGetter1_8(RARVirtualMachine *self, uint32_t value) { return self->registers[1] & 0xFF; }
-static uint32_t RegisterGetter2_8(RARVirtualMachine *self, uint32_t value) { return self->registers[2] & 0xFF; }
-static uint32_t RegisterGetter3_8(RARVirtualMachine *self, uint32_t value) { return self->registers[3] & 0xFF; }
-static uint32_t RegisterGetter4_8(RARVirtualMachine *self, uint32_t value) { return self->registers[4] & 0xFF; }
-static uint32_t RegisterGetter5_8(RARVirtualMachine *self, uint32_t value) { return self->registers[5] & 0xFF; }
-static uint32_t RegisterGetter6_8(RARVirtualMachine *self, uint32_t value) { return self->registers[6] & 0xFF; }
-static uint32_t RegisterGetter7_8(RARVirtualMachine *self, uint32_t value) { return self->registers[7] & 0xFF; }
+static uint32_t RegisterGetter0_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[0]; }
+static uint32_t RegisterGetter1_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[1]; }
+static uint32_t RegisterGetter2_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[2]; }
+static uint32_t RegisterGetter3_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[3]; }
+static uint32_t RegisterGetter4_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[4]; }
+static uint32_t RegisterGetter5_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[5]; }
+static uint32_t RegisterGetter6_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[6]; }
+static uint32_t RegisterGetter7_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[7]; }
+static uint32_t RegisterGetter0_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[0] & 0xFF; }
+static uint32_t RegisterGetter1_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[1] & 0xFF; }
+static uint32_t RegisterGetter2_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[2] & 0xFF; }
+static uint32_t RegisterGetter3_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[3] & 0xFF; }
+static uint32_t RegisterGetter4_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[4] & 0xFF; }
+static uint32_t RegisterGetter5_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[5] & 0xFF; }
+static uint32_t RegisterGetter6_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[6] & 0xFF; }
+static uint32_t RegisterGetter7_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[7] & 0xFF; }
 
-static uint32_t RegisterIndirectGetter0_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[0]); }
-static uint32_t RegisterIndirectGetter1_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[1]); }
-static uint32_t RegisterIndirectGetter2_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[2]); }
-static uint32_t RegisterIndirectGetter3_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[3]); }
-static uint32_t RegisterIndirectGetter4_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[4]); }
-static uint32_t RegisterIndirectGetter5_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[5]); }
-static uint32_t RegisterIndirectGetter6_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[6]); }
-static uint32_t RegisterIndirectGetter7_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, self->registers[7]); }
-static uint32_t RegisterIndirectGetter0_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[0]); }
-static uint32_t RegisterIndirectGetter1_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[1]); }
-static uint32_t RegisterIndirectGetter2_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[2]); }
-static uint32_t RegisterIndirectGetter3_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[3]); }
-static uint32_t RegisterIndirectGetter4_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[4]); }
-static uint32_t RegisterIndirectGetter5_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[5]); }
-static uint32_t RegisterIndirectGetter6_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[6]); }
-static uint32_t RegisterIndirectGetter7_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, self->registers[7]); }
+static uint32_t RegisterIndirectGetter0_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[0]); }
+static uint32_t RegisterIndirectGetter1_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[1]); }
+static uint32_t RegisterIndirectGetter2_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[2]); }
+static uint32_t RegisterIndirectGetter3_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[3]); }
+static uint32_t RegisterIndirectGetter4_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[4]); }
+static uint32_t RegisterIndirectGetter5_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[5]); }
+static uint32_t RegisterIndirectGetter6_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[6]); }
+static uint32_t RegisterIndirectGetter7_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[7]); }
+static uint32_t RegisterIndirectGetter0_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[0]); }
+static uint32_t RegisterIndirectGetter1_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[1]); }
+static uint32_t RegisterIndirectGetter2_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[2]); }
+static uint32_t RegisterIndirectGetter3_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[3]); }
+static uint32_t RegisterIndirectGetter4_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[4]); }
+static uint32_t RegisterIndirectGetter5_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[5]); }
+static uint32_t RegisterIndirectGetter6_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[6]); }
+static uint32_t RegisterIndirectGetter7_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[7]); }
 
-static uint32_t IndexedAbsoluteGetter0_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[0]); }
-static uint32_t IndexedAbsoluteGetter1_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[1]); }
-static uint32_t IndexedAbsoluteGetter2_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[2]); }
-static uint32_t IndexedAbsoluteGetter3_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[3]); }
-static uint32_t IndexedAbsoluteGetter4_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[4]); }
-static uint32_t IndexedAbsoluteGetter5_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[5]); }
-static uint32_t IndexedAbsoluteGetter6_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[6]); }
-static uint32_t IndexedAbsoluteGetter7_32(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead32(self, value + self->registers[7]); }
-static uint32_t IndexedAbsoluteGetter0_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[0]); }
-static uint32_t IndexedAbsoluteGetter1_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[1]); }
-static uint32_t IndexedAbsoluteGetter2_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[2]); }
-static uint32_t IndexedAbsoluteGetter3_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[3]); }
-static uint32_t IndexedAbsoluteGetter4_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[4]); }
-static uint32_t IndexedAbsoluteGetter5_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[5]); }
-static uint32_t IndexedAbsoluteGetter6_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[6]); }
-static uint32_t IndexedAbsoluteGetter7_8(RARVirtualMachine *self, uint32_t value) { return RARVirtualMachineRead8(self, value + self->registers[7]); }
+static uint32_t IndexedAbsoluteGetter0_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[0]); }
+static uint32_t IndexedAbsoluteGetter1_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[1]); }
+static uint32_t IndexedAbsoluteGetter2_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[2]); }
+static uint32_t IndexedAbsoluteGetter3_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[3]); }
+static uint32_t IndexedAbsoluteGetter4_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[4]); }
+static uint32_t IndexedAbsoluteGetter5_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[5]); }
+static uint32_t IndexedAbsoluteGetter6_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[6]); }
+static uint32_t IndexedAbsoluteGetter7_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[7]); }
+static uint32_t IndexedAbsoluteGetter0_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[0]); }
+static uint32_t IndexedAbsoluteGetter1_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[1]); }
+static uint32_t IndexedAbsoluteGetter2_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[2]); }
+static uint32_t IndexedAbsoluteGetter3_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[3]); }
+static uint32_t IndexedAbsoluteGetter4_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[4]); }
+static uint32_t IndexedAbsoluteGetter5_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[5]); }
+static uint32_t IndexedAbsoluteGetter6_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[6]); }
+static uint32_t IndexedAbsoluteGetter7_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[7]); }
 
 // Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
-static uint32_t AbsoluteGetter_32(RARVirtualMachine *self, uint32_t value) { return _RARRead32(&self->memory[value]); }
-static uint32_t AbsoluteGetter_8(RARVirtualMachine *self, uint32_t value) { return self->memory[value]; }
-static uint32_t ImmediateGetter(RARVirtualMachine *self, uint32_t value) { return value; }
+static uint32_t AbsoluteGetter_32(RARVirtualMachine *vm, uint32_t value) { return _RARRead32(&vm->memory[value]); }
+static uint32_t AbsoluteGetter_8(RARVirtualMachine *vm, uint32_t value) { return vm->memory[value]; }
+static uint32_t ImmediateGetter(RARVirtualMachine *vm, uint32_t value) { return value; }
 
-static void RegisterSetter0_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[0] = data; }
-static void RegisterSetter1_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[1] = data; }
-static void RegisterSetter2_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[2] = data; }
-static void RegisterSetter3_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[3] = data; }
-static void RegisterSetter4_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[4] = data; }
-static void RegisterSetter5_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[5] = data; }
-static void RegisterSetter6_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[6] = data; }
-static void RegisterSetter7_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[7] = data; }
-static void RegisterSetter0_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[0] = data & 0xFF; }
-static void RegisterSetter1_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[1] = data & 0xFF; }
-static void RegisterSetter2_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[2] = data & 0xFF; }
-static void RegisterSetter3_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[3] = data & 0xFF; }
-static void RegisterSetter4_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[4] = data & 0xFF; }
-static void RegisterSetter5_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[5] = data & 0xFF; }
-static void RegisterSetter6_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[6] = data & 0xFF; }
-static void RegisterSetter7_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->registers[7] = data & 0xFF; }
+static void RegisterSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[0] = data; }
+static void RegisterSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[1] = data; }
+static void RegisterSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[2] = data; }
+static void RegisterSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[3] = data; }
+static void RegisterSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[4] = data; }
+static void RegisterSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[5] = data; }
+static void RegisterSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[6] = data; }
+static void RegisterSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[7] = data; }
+static void RegisterSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[0] = data & 0xFF; }
+static void RegisterSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[1] = data & 0xFF; }
+static void RegisterSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[2] = data & 0xFF; }
+static void RegisterSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[3] = data & 0xFF; }
+static void RegisterSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[4] = data & 0xFF; }
+static void RegisterSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[5] = data & 0xFF; }
+static void RegisterSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[6] = data & 0xFF; }
+static void RegisterSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[7] = data & 0xFF; }
 
-static void RegisterIndirectSetter0_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[0], data); }
-static void RegisterIndirectSetter1_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[1], data); }
-static void RegisterIndirectSetter2_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[2], data); }
-static void RegisterIndirectSetter3_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[3], data); }
-static void RegisterIndirectSetter4_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[4], data); }
-static void RegisterIndirectSetter5_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[5], data); }
-static void RegisterIndirectSetter6_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[6], data); }
-static void RegisterIndirectSetter7_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, self->registers[7], data); }
-static void RegisterIndirectSetter0_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[0], (uint8_t)data); }
-static void RegisterIndirectSetter1_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[1], (uint8_t)data); }
-static void RegisterIndirectSetter2_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[2], (uint8_t)data); }
-static void RegisterIndirectSetter3_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[3], (uint8_t)data); }
-static void RegisterIndirectSetter4_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[4], (uint8_t)data); }
-static void RegisterIndirectSetter5_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[5], (uint8_t)data); }
-static void RegisterIndirectSetter6_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[6], (uint8_t)data); }
-static void RegisterIndirectSetter7_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, self->registers[7], (uint8_t)data); }
+static void RegisterIndirectSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[0], data); }
+static void RegisterIndirectSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[1], data); }
+static void RegisterIndirectSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[2], data); }
+static void RegisterIndirectSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[3], data); }
+static void RegisterIndirectSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[4], data); }
+static void RegisterIndirectSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[5], data); }
+static void RegisterIndirectSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[6], data); }
+static void RegisterIndirectSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[7], data); }
+static void RegisterIndirectSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[0], (uint8_t)data); }
+static void RegisterIndirectSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[1], (uint8_t)data); }
+static void RegisterIndirectSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[2], (uint8_t)data); }
+static void RegisterIndirectSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[3], (uint8_t)data); }
+static void RegisterIndirectSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[4], (uint8_t)data); }
+static void RegisterIndirectSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[5], (uint8_t)data); }
+static void RegisterIndirectSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[6], (uint8_t)data); }
+static void RegisterIndirectSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[7], (uint8_t)data); }
 
-static void IndexedAbsoluteSetter0_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[0], data); }
-static void IndexedAbsoluteSetter1_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[1], data); }
-static void IndexedAbsoluteSetter2_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[2], data); }
-static void IndexedAbsoluteSetter3_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[3], data); }
-static void IndexedAbsoluteSetter4_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[4], data); }
-static void IndexedAbsoluteSetter5_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[5], data); }
-static void IndexedAbsoluteSetter6_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[6], data); }
-static void IndexedAbsoluteSetter7_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(self, value + self->registers[7], data); }
-static void IndexedAbsoluteSetter0_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[0], (uint8_t)data); }
-static void IndexedAbsoluteSetter1_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[1], (uint8_t)data); }
-static void IndexedAbsoluteSetter2_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[2], (uint8_t)data); }
-static void IndexedAbsoluteSetter3_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[3], (uint8_t)data); }
-static void IndexedAbsoluteSetter4_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[4], (uint8_t)data); }
-static void IndexedAbsoluteSetter5_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[5], (uint8_t)data); }
-static void IndexedAbsoluteSetter6_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[6], (uint8_t)data); }
-static void IndexedAbsoluteSetter7_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(self, value + self->registers[7], (uint8_t)data); }
+static void IndexedAbsoluteSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[0], data); }
+static void IndexedAbsoluteSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[1], data); }
+static void IndexedAbsoluteSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[2], data); }
+static void IndexedAbsoluteSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[3], data); }
+static void IndexedAbsoluteSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[4], data); }
+static void IndexedAbsoluteSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[5], data); }
+static void IndexedAbsoluteSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[6], data); }
+static void IndexedAbsoluteSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[7], data); }
+static void IndexedAbsoluteSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[0], (uint8_t)data); }
+static void IndexedAbsoluteSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[1], (uint8_t)data); }
+static void IndexedAbsoluteSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[2], (uint8_t)data); }
+static void IndexedAbsoluteSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[3], (uint8_t)data); }
+static void IndexedAbsoluteSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[4], (uint8_t)data); }
+static void IndexedAbsoluteSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[5], (uint8_t)data); }
+static void IndexedAbsoluteSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[6], (uint8_t)data); }
+static void IndexedAbsoluteSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[7], (uint8_t)data); }
 
 // Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
-static void AbsoluteSetter_32(RARVirtualMachine *self, uint32_t value, uint32_t data) { _RARWrite32(&self->memory[value], data); }
-static void AbsoluteSetter_8(RARVirtualMachine *self, uint32_t value, uint32_t data) { self->memory[value] = (uint8_t)data; }
+static void AbsoluteSetter_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { _RARWrite32(&vm->memory[value], data); }
+static void AbsoluteSetter_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->memory[value] = (uint8_t)data; }
 
 static RARGetterFunction OperandGetters_32[RARNumberOfAddressingModes] = {
     RegisterGetter0_32, RegisterGetter1_32, RegisterGetter2_32, RegisterGetter3_32,

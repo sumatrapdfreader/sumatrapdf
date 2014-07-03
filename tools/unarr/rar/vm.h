@@ -26,11 +26,13 @@
 #define RARImmediateAddressingMode 25
 #define RARNumberOfAddressingModes 26
 
-typedef struct RARVirtualMachine {
+typedef struct RARVirtualMachine_s RARVirtualMachine;
+
+struct RARVirtualMachine_s {
     uint32_t registers[8];
     uint32_t flags;
     uint8_t memory[RARProgramMemorySize + sizeof(uint32_t) /* overflow sentinel */];
-} RARVirtualMachine;
+};
 
 typedef struct RARProgram_s RARProgram;
 
@@ -88,7 +90,7 @@ bool RARIsProgramTerminated(RARProgram *prog);
 
 // Execution
 
-bool RARExecuteProgram(RARVirtualMachine *self, RARProgram *prog);
+bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog);
 
 // Instruction properties
 
@@ -101,10 +103,10 @@ bool RARInstructionWritesSecondOperand(uint8_t instruction);
 
 // Memory and register access (convenience)
 
-void SetRARVirtualMachineRegisters(RARVirtualMachine *self, uint32_t registers[8]);
-uint32_t RARVirtualMachineRead32(RARVirtualMachine *self, uint32_t address);
-void RARVirtualMachineWrite32(RARVirtualMachine *self, uint32_t address, uint32_t val);
-uint8_t RARVirtualMachineRead8(RARVirtualMachine *self, uint32_t address);
-void RARVirtualMachineWrite8(RARVirtualMachine *self, uint32_t address, uint8_t val);
+void RARSetVirtualMachineRegisters(RARVirtualMachine *vm, uint32_t registers[8]);
+uint32_t RARVirtualMachineRead32(RARVirtualMachine *vm, uint32_t address);
+void RARVirtualMachineWrite32(RARVirtualMachine *vm, uint32_t address, uint32_t val);
+uint8_t RARVirtualMachineRead8(RARVirtualMachine *vm, uint32_t address);
+void RARVirtualMachineWrite8(RARVirtualMachine *vm, uint32_t address, uint8_t val);
 
 #endif
