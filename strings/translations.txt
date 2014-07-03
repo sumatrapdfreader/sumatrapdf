@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fdf16105f11717e098cafb00a19dfebf3d3591a2
+5fcce29597c2baa45ec5f9bc2b946df6b341f8c4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -34,6 +34,7 @@ hu:Név&jegy
 id:&Tentang
 it:&Informazioni su...
 ja:バージョン情報(&A)
+jv:&Babagan
 ka:&პროგრამის შესახებ...
 kr:정보(&A)
 ku:دەربارەی&
@@ -102,6 +103,7 @@ hu:&Tényleges méret\tCtrl+1
 id:&Ukuran Sebenarnya\tCtrl+1
 it:&Dimensioni reali\t<Ctrl>+1
 ja:実際のサイズ(&A)\tCtrl+1
+jv:&Ukuran Nyata\tCtrl+1
 ka:&თავდაპირველი ზომა\tCtrl+1
 kr:실제 크기(&A)\tCtrl+1
 ku:قەبارەی ڕاستەقینە &\tCtrl+1
@@ -164,6 +166,7 @@ hu:Speciális beállítások...
 id:&Pilihan Lanjutan...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
+jv:&Pilihan Terusan...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
 mk:&Напредни oпции...
@@ -216,6 +219,7 @@ hu:Az összes kiválasztott oldal
 id:&Semua halaman yang dipilih
 it:&Tutte le pagine selezionate
 ja:すべての選択されたページ(&A)
+jv:&Kabeh kaca sing kapilih
 ka:&ყველა მონიშნული გვერდი
 kr:선택한 모든 페이지(&A)
 ku:هەموو پەڕە دیاریکراوەکان&
@@ -3205,6 +3209,7 @@ hu:A SumatraPDF névjegye
 id:Tentang SumatraPDF
 it:Informazioni su SumatraPDF
 ja:SumatraPDF のバージョン情報
+jv:Babagan SumatraPDF
 ka:SumatraPDF-ის შესახებ
 kr:SumatraPDF 정보
 ku:SumatraPDF دەربارەی
@@ -3271,6 +3276,7 @@ hu:Hozzáadás a kedvencekhez
 id:Tambah Favorit
 it:Aggiungi ai Preferiti
 ja:お気に入りに追加
+jv:Nambah Favorit
 ka:რჩეულებში დამატება
 kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
@@ -3329,6 +3335,7 @@ hu:%s. oldal hozzáadása a kedvencekhez
 id:Tambah Halaman %s Ke Favorit
 it:Aggiungi pagina %s ai Preferiti
 ja:ページ %s を追加
+jv:Nambah kaca %s ning favorit
 ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 ku:بۆ پەسەندەکان %s زیادکردنی پەڕەی
@@ -3386,6 +3393,7 @@ hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
 id:Tambah Halaman %s Ke Favorit Dengan Nama:
 it:Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 ja:ページ %s に名前を付けて追加
+jv:Nambah kaca %s ning favorit nganggo jeneng (opsional):
 ka:%s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (선택 사항) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
@@ -3445,6 +3453,7 @@ hu:Hozzáadás a kedvencekhez
 id:Tambah Ke Favorit
 it:Aggiungi ai Preferiti
 ja:お気に入りに追加
+jv:Nambah ning favorit
 ka:რჩეულებში დამატება
 kr:즐겨찾기에 추가
 ku:زیادکردن بۆ پەسەندەکان
@@ -3506,6 +3515,7 @@ hu:Haladó
 id:Lanjutan
 it:Avanzate
 ja:詳細設定
+jv:Terusan
 ka:დამატებითი
 kr:고급
 ku:پەرەسەندوو
@@ -3568,6 +3578,7 @@ hu:Minden fájl
 id:Semua Berkas
 it:Tutti i file
 ja:すべてのファイル
+jv:Kabeh berkas
 ka:ყველა ფაილი
 kr:모든 파일
 ku:هەموو فایلەکان
@@ -3628,6 +3639,7 @@ hu:Minden támogatott fájltípus
 id:Semua dokumen yang didukung
 it:Tutti i documenti supportati
 ja:すべての対応ドキュメント
+jv:Kabeh dokumen sing didhukung
 ka:ყველა მხარდაჭერილი დოკუმენტი
 kr:지원하는 모든 문서
 ku:هەموو بەڵگەنامە گونجاوەکان
@@ -3688,6 +3700,7 @@ hu:Alkalmazás:
 id:Aplikasi
 it:Creato con:
 ja:アプリケーション:
+jv:Aplikasi
 ka:პროგრამა:
 kr:프로그램:
 ku:بەرنامە:
@@ -3747,6 +3760,7 @@ hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 id:Anda yakin ingin menghapus instalasi SumatraPDF?
 it:Siete sicuri di voler disinstallare SumatraPDF?
 ja:SumatraPDFを本当にアンインストールしますか？
+jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
@@ -3803,6 +3817,7 @@ hu:Társítsuk a PDF fájlokkal?
 id:Asosiasikan dengan berkas PDF?
 it:Associare ai file PDF?
 ja:PDF ファイルと関連付けますか？
+jv:Asosiasi karo berkas PDF?
 ka:გსურთ PDF ფაილებთან ასოცირება?
 kr:PDF 파일 확장자를 연결할까요?
 ku:؟PDF پەیوەستکردن بە فایلەکانی
@@ -3868,6 +3883,7 @@ hu:Csatolmány: %s
 id:Lampiran: %s
 it:Allegato: %s
 ja:添付: %s
+jv:Lampiran: %s
 ka:დანართი: %s
 kr:첨부: %s
 ku:%s :پاشکۆ
@@ -3992,6 +4008,7 @@ hu:Automatikus
 id:Otomatis
 it:Automatica
 ja:自動
+jv:Otomatis
 ka:ავტომატური
 kr:자동
 ku:خۆکار
@@ -6449,6 +6466,7 @@ ja:カーソル位置：
 pl:Pozycja kursora:
 ru:Позиция курсора:
 sl:Položaj kurzorja:
+uk:Позиція вказівника:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
@@ -13859,6 +13877,7 @@ ja:Selection:
 pl:Selekcja:
 ru:Выделение:
 sl:Izbor:
+uk:Виділення:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
@@ -15743,7 +15762,9 @@ fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
 id:Gunakan &tab
 it:Usa &schede
+ja:タブを使う(&t)
 ru:Использовать &вкладки
+uk:Використовувати вкладки
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
@@ -16271,6 +16292,7 @@ hu:Nagyítás
 id:Perbesar
 it:Ingrandimento
 ja:拡大
+jv:Nggedhekake
 ka:გადიდება
 kr:확대
 ku:نزیک خستنەوە
@@ -16339,6 +16361,7 @@ hu:Kicsinyítés
 id:Perkecil
 it:Riduzione
 ja:縮小
+jv:Nyilikake
 ka:დაპატარავება
 kr:축소
 ku:دوور خستنەوە
