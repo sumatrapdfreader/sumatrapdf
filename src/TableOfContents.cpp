@@ -43,6 +43,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     ScopedMem<WCHAR> path(link ? link->GetDestValue() : NULL);
     if (!path)
         return;
+    CrashIf(!link); // /analyze claims that this could happen - it really can't
     CrashIf(link->GetDestType() != Dest_LaunchURL && link->GetDestType() != Dest_LaunchFile && link->GetDestType() != Dest_LaunchEmbedded);
 
     str::Str<WCHAR> infotip;
