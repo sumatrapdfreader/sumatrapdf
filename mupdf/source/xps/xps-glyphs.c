@@ -101,6 +101,13 @@ xps_deobfuscate_font_resource(xps_document *doc, xps_part *part)
 	char *p;
 	int i;
 
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2651 */
+	if (part->size < 32)
+	{
+		fz_warn(doc->ctx, "insufficient data for font deobfuscation");
+		return;
+	}
+
 	p = strrchr(part->name, '/');
 	if (!p)
 		p = part->name;
