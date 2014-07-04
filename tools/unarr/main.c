@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #if defined(DEBUG) && defined(_MSC_VER)
+#include <windows.h>
 #include <crtdbg.h>
 #endif
 
@@ -19,8 +20,10 @@ int main(int argc, char *argv[])
     int step = 1;
 
 #if defined(DEBUG) && defined(_MSC_VER)
-    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+    if (!IsDebuggerPresent()) {
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+    }
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 

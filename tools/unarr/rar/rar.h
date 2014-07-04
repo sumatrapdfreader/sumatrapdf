@@ -75,12 +75,23 @@ const WCHAR *rar_get_name_w(ar_archive *ar);
 
 struct RARVirtualMachine_s;
 struct RARProgramCode;
+struct RARFilter;
 
 struct ar_archive_rar_filters {
     struct RARVirtualMachine_s *vm;
     struct RARProgramCode *progs;
+    struct RARFilter *stack;
+    size_t filterstart;
+    uint32_t lastfilternum;
+    uint32_t oldfilterlength[1024];
+    uint32_t usagecount[1024];
+    size_t lastend;
+    uint8_t *bytes;
+    size_t bytes_ready;
 };
 
+bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length, uint8_t flags);
+bool rar_run_filters(ar_archive_rar *rar);
 void rar_clear_filters(struct ar_archive_rar_filters *filters);
 
 /***** uncompress *****/
@@ -133,7 +144,6 @@ struct CPpmdRAR_RangeDec {
 struct ar_archive_rar_uncomp {
     bool initialized;
     bool start_new_table;
-    bool at_eof;
 
     LZSS lzss;
     uint32_t dict_size;
@@ -156,16 +166,17 @@ struct ar_archive_rar_uncomp {
     struct CPpmdRAR_RangeDec range_dec;
     struct ByteReader bytein;
 
-    size_t filterstart;
     struct ar_archive_rar_filters filters;
 
     struct {
         uint64_t bits;
         int available;
+        bool at_eof;
     } br;
 };
 
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size);
+int64_t rar_expand(ar_archive_rar *rar, int64_t end);
 void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp);
 
 /***** rar *****/
