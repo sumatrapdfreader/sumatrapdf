@@ -60,7 +60,7 @@ static size_t file_read(void *data, void *buffer, size_t count)
 static bool file_seek(void *data, ptrdiff_t offset, int origin)
 {
 #ifdef _WIN64
-    return _fseeki64(data, offset, origin);
+    return _fseeki64(data, offset, origin) == 0;
 #else
     return fseek(data, offset, origin) == 0;
 #endif
