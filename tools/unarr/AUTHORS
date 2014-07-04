@@ -1,13 +1,13 @@
 ﻿unarr contains code by:
 
 * The Unarchiver project (https://code.google.com/p/theunarchiver/)
-* The libarchive project (http://www.libarchive.org/)
-* The GNUNet project (https://gnunet.org/)
-* The 7-zip project (http://www.7-zip.org/)
 * Simon Bünzli (zeniko at gmail.com, http://www.zeniko.ch/#SumatraPDF)
 
-All code taken directly from the Unarchiver project is licensed under LGPLv3,
-all code taken directly from the libarchive project is licensed under new BSD,
-all code taken directly from the GNUNet project is in the public domain,
-all code taken directly from the 7-zip project is in the public domain,
-all other code is licensed under GPLv3 (see COPYING).
+Most code is licensed under LGPLv3 (see COPYING). Exceptions are in code
+included from other projects:
+
+Files             License       URL
+---------------------------------------------------------------------------------------------------------------------------------
+crc32.c           Public Domain https://gnunet.org/svn/gnunet/src/util/crypto_crc.c
+ppmd/*.*          Public Domain http://www.7-zip.org/sdk.html              
+rar/uncompress.c  BSD 2-clause  https://github.com/libarchive/libarchive/blob/master/libarchive/archive_read_support_format_rar.c

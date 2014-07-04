@@ -1,5 +1,5 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: LGPLv3 */
 
 #ifndef rar_rar_h
 #define rar_rar_h
@@ -73,18 +73,16 @@ const WCHAR *rar_get_name_w(ar_archive *ar);
 
 /***** filters *****/
 
-struct RARVirtualMachine_s;
+struct RARVirtualMachine;
 struct RARProgramCode;
 struct RARFilter;
 
 struct ar_archive_rar_filters {
-    struct RARVirtualMachine_s *vm;
+    struct RARVirtualMachine *vm;
     struct RARProgramCode *progs;
     struct RARFilter *stack;
     size_t filterstart;
     uint32_t lastfilternum;
-    uint32_t oldfilterlength[1024];
-    uint32_t usagecount[1024];
     size_t lastend;
     uint8_t *bytes;
     size_t bytes_ready;

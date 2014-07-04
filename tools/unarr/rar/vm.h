@@ -1,5 +1,5 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: LGPLv3 */
 
 // adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h
 
@@ -26,9 +26,9 @@
 #define RARImmediateAddressingMode 25
 #define RARNumberOfAddressingModes 26
 
-typedef struct RARVirtualMachine_s RARVirtualMachine;
+typedef struct RARVirtualMachine RARVirtualMachine;
 
-struct RARVirtualMachine_s {
+struct RARVirtualMachine {
     uint32_t registers[8];
     uint32_t flags;
     uint8_t memory[RARProgramMemorySize + sizeof(uint32_t) /* overflow sentinel */];

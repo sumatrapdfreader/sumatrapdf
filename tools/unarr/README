@@ -1,0 +1,5 @@
+unarr is currently a port of the RAR extraction features from
+The Unarchiver project required for extracting images from comic
+book archives (.cbr). It originated as an alternative to
+libarchive which didn't have support for parsing filters or solid
+compression at the time.
