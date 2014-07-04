@@ -3,6 +3,8 @@
 
 #include "unarr-internals.h"
 
+#ifndef HAVE_ZLIB
+
 // code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain)
 
 static bool crc_table_ready = false;
@@ -29,3 +31,21 @@ uint32_t ar_crc32(uint32_t crc32, const unsigned char *data, size_t data_len)
     }
     return crc32 ^ 0xFFFFFFFF;
 }
+
+#else
+
+#include <zlib.h>
+
+uint32_t ar_crc32(uint32_t crc, const unsigned char *data, size_t data_len)
+{
+#if SIZE_MAX > UINT32_MAX
+    while (data_len > UINT32_MAX) {
+        crc = crc32(crc, data, UINT32_MAX);
+        data += UINT32_MAX;
+        data_len -= UINT32_MAX;
+    }
+#endif
+    return crc32(crc, data, (uint32_t)data_len);
+}
+
+#endif

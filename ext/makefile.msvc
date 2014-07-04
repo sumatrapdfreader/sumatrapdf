@@ -48,6 +48,7 @@ LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
 WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
 
 UNARR_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/unarr /wd4996
+UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj

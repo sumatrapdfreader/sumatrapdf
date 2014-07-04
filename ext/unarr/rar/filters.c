@@ -236,7 +236,7 @@ static bool rar_execute_filter_prog(struct RARFilter *filter, RARVirtualMachine 
             staticlength = RARProgramUserGlobalSize - globallength;
         memcpy(&vm->memory[RARProgramUserGlobalAddress], filter->prog->staticdata, staticlength);
     }
-    memcpy(vm->registers, filter->initialregisters, sizeof(vm->registers));
+    RARSetVirtualMachineRegisters(vm, filter->initialregisters);
 
     if (!RARExecuteProgram(vm, filter->prog->prog)) {
         warn("Error while executing program in RAR VM");
