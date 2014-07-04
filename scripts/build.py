@@ -460,7 +460,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if build_test_installer:
         print_run_resp(out, err)
 
-    sign_retry(os.path.join(obj_dir, "SumatraPDF.exe"), cert_pwd)
+    exe = os.path.join(obj_dir, "SumatraPDF.exe")
+    sign_retry(exe, cert_pwd)
     sign_retry(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"), cert_pwd)
     sign_retry(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
