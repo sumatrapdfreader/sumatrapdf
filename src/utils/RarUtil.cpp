@@ -124,7 +124,7 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     }
 
     size_t size = ar_entry_get_size(ar);
-    char *data = (char *)malloc(size + 2);
+    ScopedMem<char> data((char *)malloc(size + 2));
     if (!data)
         return NULL;
     if (!ar_entry_uncompress(ar, data, size)) {
@@ -143,7 +143,7 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 
     if (len)
         *len = size;
-    return data;
+    return data.StealData();
 }
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
