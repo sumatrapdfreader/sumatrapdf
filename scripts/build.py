@@ -235,6 +235,10 @@ def delete_old_pre_release_builds():
 
 
 def sign(file_path, cert_pwd):
+    # not everyone has a certificate, in which case don't sign
+    if cert_pwd is None:
+        print("Skipping signing file_path")
+        return
     # the sign tool is finicky, so copy it and cert to the same dir as
     # exe we're signing
     file_dir = os.path.dirname(file_path)
@@ -249,6 +253,20 @@ def sign(file_path, cert_pwd):
         "signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
         "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
     os.chdir(curr_dir)
+
+
+# sometimes sign() fails, probably because of time-stamping, so we retry 3 times,
+# 1 minute apart
+def sign_retry(file_path, cert_pwd):
+    nRetries = 3
+    while nRetries > 1:  # the last one will rethrow
+        try:
+            sign(file_path, cert_pwd)
+            return
+        except:
+            time.sleep(60)  # 1 min
+        nRetries -= 1
+    sign(file_path, cert_pwd)
 
 
 def print_run_resp(out, err):
@@ -442,10 +460,9 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if build_test_installer:
         print_run_resp(out, err)
 
-    exe = os.path.join(obj_dir, "SumatraPDF.exe")
-    if upload:
-        sign(exe, cert_pwd)
-        sign(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
+    sign_retry(os.path.join(obj_dir, "SumatraPDF.exe"), cert_pwd)
+    sign_retry(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"), cert_pwd)
+    sign_retry(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
     build_installer_data(obj_dir)
     (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc",
@@ -457,8 +474,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         sys.exit(0)
 
     installer = os.path.join(obj_dir, "Installer.exe")
-    if upload:
-        sign(installer, cert_pwd)
+    sign_retry(installer, cert_pwd)
 
     pdb_lzsa_archive = create_pdb_lzsa_archive(obj_dir, "%s.pdb.lzsa" % filename_base)
     pdb_zip_archive = create_pdb_zip_archive(obj_dir, "%s.pdb.zip" % filename_base)
