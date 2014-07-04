@@ -179,7 +179,7 @@ const char *rar_get_name(ar_archive *ar)
 const WCHAR *rar_get_name_w(ar_archive *ar)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
-    if (!rar->entry.name_w && rar_get_name(ar))
+    if (!rar->entry.name_w && rar_get_name(ar) && !rar->entry.name_w)
         rar->entry.name_w = ar_conv_utf8_to_utf16(rar->entry.name);
     return rar->entry.name_w;
 }

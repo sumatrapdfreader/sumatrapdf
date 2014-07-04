@@ -7,13 +7,10 @@
 // if this is defined, SumatraPDF will look for unrar.dll in
 // the same directory as SumatraPDF.exe whenever a RAR archive
 // fails to open or extract and uses that as a fallback
-#define ENABLE_UNRARDLL_FALLBACK
+// #define ENABLE_UNRARDLL_FALLBACK
 
 extern "C" {
-#define LIBARCHIVE_STATIC
-#include "../../ext/libarchive/archive.h"
-#include "../../ext/libarchive/archive_entry.h"
-int archive_format_rar_read_reset_header(struct archive *a);
+#include <unarr.h>
 }
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
@@ -37,38 +34,24 @@ class UnRarDll { };
 
 RarFile::RarFile(const WCHAR *path) : path(str::Dup(path)), fallback(NULL)
 {
-    arc = archive_read_new();
-    if (arc) {
-        archive_read_support_format_rar(arc);
-        int r = archive_read_open_filename_w(arc, path, 10240);
-        if (r != ARCHIVE_OK) {
-            archive_read_free(arc);
-            arc = NULL;
-        }
-    }
+    data = ar_open_file_w(path);
+    if (data)
+        ar = ar_open_rar_archive(data);
     ExtractFilenames();
 }
 
 RarFile::RarFile(IStream *stream) : path(NULL), fallback(NULL)
 {
-    arc = archive_read_new();
-    if (arc) {
-        archive_read_support_format_rar(arc);
-        int r = archive_read_open_istream(arc, stream, 65536);
-        if (r != ARCHIVE_OK) {
-            archive_read_free(arc);
-            arc = NULL;
-        }
-    }
+    data = ar_open_istream(stream);
+    if (data)
+        ar = ar_open_rar_archive(data);
     ExtractFilenames();
 }
 
 RarFile::~RarFile()
 {
-    if (arc) {
-        archive_read_close(arc);
-        archive_read_free(arc);
-    }
+    ar_close_archive(ar);
+    ar_close(data);
     delete fallback;
 }
 
@@ -96,27 +79,21 @@ char *RarFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 
 void RarFile::ExtractFilenames()
 {
-    int r = arc ? ARCHIVE_OK : ARCHIVE_FATAL;
-    while (ARCHIVE_OK == r) {
-        struct archive_entry *entry;
-        r = archive_read_next_header(arc, &entry);
-        if (ARCHIVE_OK == r) {
-            const WCHAR *name = archive_entry_pathname_w(entry);
+    if (ar) {
+        while (ar_parse_entry(ar)) {
+            const WCHAR *name = ar_entry_get_name_w(ar);
             filenames.Append(str::Dup(name));
-            filepos.Append(archive_read_header_position(arc));
+            filepos.Append(ar_entry_get_offset(ar));
         }
     }
-
-    if (r != ARCHIVE_EOF) {
-        // TODO: if r == ARCHIVE_FATAL, libarchive will refuse to
-        // uncompress even non-damaged parts of the archive
+    if (!ar || !ar_at_eof(ar)) {
 #ifdef ENABLE_UNRARDLL_FALLBACK
         if (path) {
             fallback = new UnRarDll(path);
             fallback->ExtractFilenames(filenames);
             filepos.Reset();
             for (size_t i = 0; i < filenames.Count(); i++) {
-                filepos.Append(-1);
+                filepos.Append((size_t)-1);
             }
         }
 #endif
@@ -128,61 +105,45 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (fileindex > filepos.Count())
         return NULL;
 #ifdef ENABLE_UNRARDLL_FALLBACK
-    if (fallback && -1 == filepos.At(fileindex))
+    if (fallback && (size_t)-1 == filepos.At(fileindex))
         return fallback->GetFileByName(filenames.At(fileindex), len);
 #endif
-    if (!arc)
+    if (!ar)
         return NULL;
 
-    int64_t r = archive_read_seek(arc, filepos.At(fileindex), SEEK_SET);
-    if (r < 0) {
+    if (!ar_parse_entry_at(ar, filepos.At(fileindex))) {
 #ifdef ENABLE_UNRARDLL_FALLBACK
         if (path) {
             if (!fallback)
                 fallback = new UnRarDll(path);
-            filepos.At(fileindex) = -1;
+            filepos.At(fileindex) = (size_t)-1;
             return fallback->GetFileByName(filenames.At(fileindex), len);
         }
 #endif
         return NULL;
     }
-    r = archive_format_rar_read_reset_header(arc);
-    CrashIf(r != ARCHIVE_OK);
 
-    str::Str<char> data;
-    struct archive_entry *entry;
-    r = archive_read_next_header(arc, &entry);
-    if (r != ARCHIVE_OK)
+    size_t size = ar_entry_get_size(ar);
+    char *data = (char *)malloc(size + 2);
+    if (!data)
         return NULL;
-
-    for (;;) {
-        const void *buffer;
-        size_t size;
-        int64_t offset;
-        r = archive_read_data_block(arc, &buffer, &size, &offset);
-        if (ARCHIVE_EOF == r)
-            break;
-        if (r != ARCHIVE_OK) {
+    if (!ar_entry_uncompress(ar, data, size)) {
 #ifdef ENABLE_UNRARDLL_FALLBACK
-            if (path) {
-                if (!fallback)
-                    fallback = new UnRarDll(path);
-                filepos.At(fileindex) = -1;
-                return fallback->GetFileByName(filenames.At(fileindex), len);
-            }
-#endif
-            return NULL;
+        if (path) {
+            if (!fallback)
+                fallback = new UnRarDll(path);
+            filepos.At(fileindex) = (size_t)-1;
+            return fallback->GetFileByName(filenames.At(fileindex), len);
         }
-        bool ok = data.AppendChecked((char *)buffer, size);
-        if (!ok)
-            return NULL; // OOM
+#endif
+        return NULL;
     }
     // zero-terminate for convenience
-    data.Append("\0\0", 2);
+    data[size] = data[size + 1] = '\0';
 
     if (len)
-        *len = data.Size() - 2;
-    return data.StealData();
+        *len = size;
+    return data;
 }
 
 #ifdef ENABLE_UNRARDLL_FALLBACK

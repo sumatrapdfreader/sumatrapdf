@@ -80,7 +80,8 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 
 UTILS_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp /I$(MUPDF_DIR)\include
+	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp /I$(EXTDIR)/unarr \
+	/I$(MUPDF_DIR)\include
 
 SUMATRA_CFLAGS = $(UTILS_CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(MUPDF_DIR)\include \
@@ -171,7 +172,7 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
 ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
 	$(OU)\LzmaSimpleArchive.obj
 
-RAR_OBJS = $(OU)\RarUtil.obj $(LARC_OBJS)
+RAR_OBJS = $(OU)\RarUtil.obj $(UNARR_OBJS)
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \

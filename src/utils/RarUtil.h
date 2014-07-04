@@ -5,7 +5,8 @@
 #define RarUtil_h
 
 extern "C" {
-struct archive;
+typedef struct ar_stream_s ar_stream;
+typedef struct ar_archive_s ar_archive;
 }
 class UnRarDll;
 
@@ -13,8 +14,9 @@ class RarFile {
     ScopedMem<WCHAR> path;
     WStrList filenames;
 
-    struct archive *arc;
-    Vec<int64_t> filepos;
+    ar_stream *data;
+    ar_archive *ar;
+    Vec<size_t> filepos;
     UnRarDll *fallback;
 
     void ExtractFilenames();

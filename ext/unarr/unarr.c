@@ -42,6 +42,7 @@ bool ar_parse_entry_at(ar_archive *ar, size_t offset)
         return false;
     ar->entry_offset = 0;
     ar->entry_size_block = offset;
+    ar->at_eof = false;
     return ar->parse_entry(ar);
 }
 

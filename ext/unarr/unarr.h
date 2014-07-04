@@ -7,7 +7,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 /* WCHAR must be 2 bytes (wchar_t may not be) */
+#ifdef _WIN32
+typedef wchar_t WCHAR;
+#else
 typedef unsigned short WCHAR;
+#endif
 
 /***** stream *****/
 

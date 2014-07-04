@@ -171,9 +171,9 @@ solution "unarr"
     kind "ConsoleApp"
     language "C"
     files {
-      "tools/unarr/*.*",
-      "tools/unarr/ppmd/*",
-      "tools/unarr/rar/*"
+      "ext/unarr/*.*",
+      "ext/unarr/ppmd/*",
+      "ext/unarr/rar/*"
     }
     defines { "_CRT_SECURE_NO_WARNINGS" }
     includedirs { "src/utils/msvc" }
