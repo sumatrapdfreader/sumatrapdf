@@ -287,7 +287,7 @@ static bool rar_make_table(struct huffman_code *code)
     else
         code->tablesize = 10;
 
-    code->table = calloc(1 << code->tablesize, sizeof(*code->table));
+    code->table = calloc(1ULL << code->tablesize, sizeof(*code->table));
     if (!code->table) {
         warn("OOM during decompression");
         return false;
@@ -567,7 +567,7 @@ static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive
     }
     free(code);
 
-    if (rar->uncomp.filters.filterstart < *end)
+    if (rar->uncomp.filters.filterstart < (size_t)*end)
         *end = rar->uncomp.filters.filterstart;
 
     return true;
@@ -832,7 +832,7 @@ int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 {
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
-    int64_t end;
+    size_t end;
 
     rar_init_uncompress(uncomp);
 
@@ -847,7 +847,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
             buffer = (uint8_t *)buffer + count;
         }
         else if (uncomp->bytes_ready > 0) {
-            size_t count = min(uncomp->bytes_ready, buffer_size);
+            int count = (int)min(uncomp->bytes_ready, buffer_size);
             lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progr.bytes_done, count);
             uncomp->bytes_ready -= count;
             rar->progr.bytes_done += count;
@@ -872,11 +872,11 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         end = rar->progr.bytes_done + uncomp->dict_size;
         if (uncomp->filters.filterstart < end)
             end = uncomp->filters.filterstart;
-        end = rar_expand(rar, end);
+        end = (size_t)rar_expand(rar, end);
         if (end < rar->progr.bytes_done)
             return false;
-        uncomp->bytes_ready = (size_t)end - rar->progr.bytes_done;
-        uncomp->filters.lastend = (size_t)end;
+        uncomp->bytes_ready = end - rar->progr.bytes_done;
+        uncomp->filters.lastend = end;
 
         if (uncomp->is_ppmd_block && uncomp->start_new_table && !rar_parse_codes(rar))
             return false;

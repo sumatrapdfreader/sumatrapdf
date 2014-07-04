@@ -294,7 +294,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
 
         case RARCallInstruction:
             vm->registers[7] -= 4;
-            RARVirtualMachineWrite32(vm, vm->registers[7], opcode - prog->opcodes + 1);
+            RARVirtualMachineWrite32(vm, vm->registers[7], (uint32_t)(opcode - prog->opcodes + 1));
             Jump(GetOperand1());
 
         case RARRetInstruction:

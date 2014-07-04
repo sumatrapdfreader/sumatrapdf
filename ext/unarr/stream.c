@@ -113,11 +113,11 @@ static size_t stream_read(void *data, void *buffer, size_t count)
     ULONG cbRead;
 #ifdef _WIN64
     while (count > ULONG_MAX) {
-        res = IStream_Read(data, buffer, ULONG_MAX, &cbRead);
+        res = IStream_Read((IStream *)data, buffer, ULONG_MAX, &cbRead);
         if (FAILED(res))
             return read;
         read += cbRead;
-        buffer += (BYTE *)buffer + ULONG_MAX;
+        buffer = (BYTE *)buffer + ULONG_MAX;
         count -= ULONG_MAX;
     }
 #endif

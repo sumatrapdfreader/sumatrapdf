@@ -33,7 +33,7 @@ struct RARFilter {
     uint8_t *globaldata;
     uint32_t globaldatalen;
     size_t blockstartpos;
-    size_t blocklength;
+    uint32_t blocklength;
     uint32_t filteredblockaddress;
     uint32_t filteredblocklength;
     struct RARFilter *next;
@@ -261,7 +261,7 @@ static bool rar_execute_filter_prog(struct RARFilter *filter, RARVirtualMachine 
     return true;
 }
 
-static struct RARFilter *rar_create_filter(struct RARProgramCode *prog, const uint8_t *globaldata, size_t globaldatalen, uint32_t registers[8], size_t startpos, size_t length)
+static struct RARFilter *rar_create_filter(struct RARProgramCode *prog, const uint8_t *globaldata, uint32_t globaldatalen, uint32_t registers[8], size_t startpos, uint32_t length)
 {
     struct RARFilter *filter;
 
@@ -508,14 +508,13 @@ bool rar_run_filters(ar_archive_rar *rar)
     struct ar_archive_rar_filters *filters = &uncomp->filters;
     struct RARFilter *filter = filters->stack;
     size_t start = filters->filterstart;
-    int64_t end = start + filter->blocklength;
-    int64_t actualend;
+    size_t end = start + filter->blocklength;
     uint32_t lastfilteraddress;
     uint32_t lastfilterlength;
 
     filters->filterstart = SIZE_MAX;
-    actualend = rar_expand(rar, end);
-    if (end != actualend) {
+    end = (size_t)rar_expand(rar, end);
+    if (end != start + filter->blocklength) {
         warn("Failed to expand the expected amout of bytes");
         return false;
     }
@@ -554,7 +553,7 @@ bool rar_run_filters(ar_archive_rar *rar)
         filters->filterstart = filters->stack->blockstartpos;
     }
 
-    filters->lastend = (size_t)end;
+    filters->lastend = end;
     filters->bytes = &filters->vm->memory[lastfilteraddress];
     filters->bytes_ready = lastfilterlength;
 
