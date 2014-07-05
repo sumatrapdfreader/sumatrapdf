@@ -335,8 +335,10 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
     filter->initialregisters[6] = (uint32_t)pos;
     bw_write32le(&filter->globaldata[0x24], (uint32_t)pos);
     bw_write32le(&filter->globaldata[0x28], (uint32_t)((uint64_t)pos >> 32));
+
     if (!rar_execute_filter_prog(filter, vm))
         return false;
+
     filter->filteredblockaddress = RARVirtualMachineRead32(vm, RARProgramSystemGlobalAddress + 0x20) & RARProgramMemoryMask;
     filter->filteredblocklength = RARVirtualMachineRead32(vm, RARProgramSystemGlobalAddress + 0x1C) & RARProgramMemoryMask;
     if (filter->filteredblockaddress + filter->filteredblocklength >= RARProgramMemorySize) {

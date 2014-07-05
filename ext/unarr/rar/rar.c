@@ -19,20 +19,25 @@ static bool rar_parse_entry(ar_archive *ar)
     /* without solid data, most/all previous files have to be decompressed again */
     bool has_solid_data = rar->super.entry_offset != 0 && rar->uncomp.initialized && rar->progr.data_left == 0;
 
-    if (rar->super.entry_offset != 0) {
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->super.entry_size_block, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + rar->super.entry_size_block);
+    if (rar->super.entry_offset > 0) {
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset_next, SEEK_SET)) {
+            warn("Couldn't seek to offset %" PRIi64, rar->super.entry_offset_next);
             return false;
         }
     }
 
     for (;;) {
         rar->super.entry_offset = ar_tell(rar->super.stream);
-        rar->super.entry_size_block = 0;
         rar->super.entry_size_uncompressed = 0;
 
         if (!rar_parse_header(&rar->super, &header))
             return false;
+
+        rar->super.entry_offset_next = rar->super.entry_offset + header.size + header.datasize;
+        if (rar->super.entry_offset_next < rar->super.entry_offset + header.size) {
+            warn("Integer overflow due to overly large data size");
+            return false;
+        }
 
         switch (header.type) {
         case TYPE_MAIN_HEADER:
@@ -48,7 +53,7 @@ static bool rar_parse_entry(ar_archive *ar)
             if ((header.flags & MHD_COMMENT))
                 log("MHD_COMMENT is set");
             if (ar_tell(rar->super.stream) - rar->super.entry_offset > header.size) {
-                warn("Invalid RAR header size: %" PRIuPTR, header.size);
+                warn("Invalid RAR header size: %d", header.size);
                 return false;
             }
             rar->archive_flags = header.flags;
@@ -66,29 +71,22 @@ static bool rar_parse_entry(ar_archive *ar)
             if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER)))
                 warn("Splitting files isn't really supported");
             // TODO: handle multi-part files (only needed for split files)?
-            rar->super.entry_size_block = header.size + (size_t)header.datasize;
             rar->super.entry_size_uncompressed = (size_t)entry.size;
-            if (rar->super.entry_size_block < rar->entry.header_size) {
-                warn("Integer overflow due to overly large data size");
-                return false;
-            }
             if (!has_solid_data || !rar->entry.restart_solid || rar->entry.method == METHOD_STORE)
                 rar_clear_uncompress(&rar->uncomp);
             else
                 rar->entry.restart_solid = false;
-#ifdef DEBUG
             // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
             if (!rar_check_header_crc(&rar->super))
-                warn("Invalid header checksum @%" PRIuPTR, rar->super.entry_offset);
-#endif
-            if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET)) {
-                warn("Couldn't seek to offset %" PRIuPTR, rar->super.entry_offset + rar->entry.header_size);
+                warn("Invalid header checksum @%" PRIi64, rar->super.entry_offset);
+            if (ar_tell(rar->super.stream) != rar->super.entry_offset + rar->entry.header_size) {
+                warn("Couldn't seek to offset %" PRIi64, rar->super.entry_offset + rar->entry.header_size);
                 return false;
             }
             return true;
 
         case TYPE_NEWSUB:
-            log("Skipping newsub header @%" PRIuPTR, rar->super.entry_offset);
+            log("Skipping newsub header @%" PRIi64, rar->super.entry_offset);
             break;
 
         case TYPE_END_OF_ARCHIVE:
@@ -100,18 +98,11 @@ static bool rar_parse_entry(ar_archive *ar)
             break;
         }
 
-#ifdef DEBUG
         // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
         if (!rar_check_header_crc(&rar->super))
-            warn("Invalid header checksum @%" PRIuPTR, rar->super.entry_offset);
-#endif
-
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset + header.size + (ptrdiff_t)header.datasize, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIu64, rar->super.entry_offset + header.size + header.datasize);
-            return false;
-        }
-        if (ar_tell(rar->super.stream) <= rar->super.entry_offset) {
-            warn("Integer overflow due to overly large data size");
+            warn("Invalid header checksum @%" PRIi64, rar->super.entry_offset);
+        if (!ar_seek(rar->super.stream, rar->super.entry_offset_next, SEEK_SET)) {
+            warn("Couldn't seek to offset %" PRIu64, rar->super.entry_offset_next);
             return false;
         }
     }
@@ -135,7 +126,7 @@ static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
 static bool rar_restart_solid(ar_archive_rar *rar)
 {
     ar_archive *ar = &rar->super;
-    size_t current_offset = ar->entry_offset;
+    off64_t current_offset = ar->entry_offset;
     log("Restarting decompression for solid entry");
     if (!ar_parse_entry_at(ar, 0)) {
         ar_parse_entry_at(ar, current_offset);

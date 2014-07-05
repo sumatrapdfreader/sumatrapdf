@@ -36,12 +36,12 @@ bool ar_parse_entry(ar_archive *ar)
     return ar->parse_entry(ar);
 }
 
-bool ar_parse_entry_at(ar_archive *ar, size_t offset)
+bool ar_parse_entry_at(ar_archive *ar, off64_t offset)
 {
     if (!ar_seek(ar->stream, offset, SEEK_SET))
         return false;
     ar->entry_offset = 0;
-    ar->entry_size_block = offset;
+    ar->entry_offset_next = offset;
     ar->at_eof = false;
     return ar->parse_entry(ar);
 }
@@ -51,12 +51,12 @@ const char *ar_entry_get_name(ar_archive *ar)
     return ar->get_name(ar);
 }
 
-const WCHAR *ar_entry_get_name_w(ar_archive *ar)
+const wchar16_t *ar_entry_get_name_w(ar_archive *ar)
 {
     return ar->get_name_w(ar);
 }
 
-size_t ar_entry_get_offset(ar_archive *ar)
+off64_t ar_entry_get_offset(ar_archive *ar)
 {
     return ar->entry_offset;
 }
@@ -66,7 +66,7 @@ size_t ar_entry_get_size(ar_archive *ar)
     return ar->entry_size_uncompressed;
 }
 
-size_t ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count)
+bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     return ar->uncompress(ar, buffer, count);
 }

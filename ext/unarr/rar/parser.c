@@ -35,7 +35,7 @@ bool rar_parse_header(ar_archive *ar, struct rar_header *header)
     }
 
     if (header->size < read) {
-        warn("Invalid header size %" PRIuPTR, header->size);
+        warn("Invalid header size %d", header->size);
         return false;
     }
 
@@ -46,7 +46,7 @@ bool rar_check_header_crc(ar_archive *ar)
 {
     unsigned char buffer[256];
     uint16_t crc16, size;
-    uint32_t crc;
+    uint32_t crc32;
 
     if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
         return false;
@@ -59,14 +59,14 @@ bool rar_check_header_crc(ar_archive *ar)
         return false;
     size -= 7;
 
-    crc = ar_crc32(0, buffer + 2, 5);
+    crc32 = ar_crc32(0, buffer + 2, 5);
     while (size > 0) {
         if (ar_read(ar->stream, buffer, min(size, sizeof(buffer))) != min(size, sizeof(buffer)))
             return false;
-        crc = ar_crc32(crc, buffer, min(size, sizeof(buffer)));
+        crc32 = ar_crc32(crc32, buffer, min(size, sizeof(buffer)));
         size -= min(size, sizeof(buffer));
     }
-    return (crc & 0xFFFF) == crc16;
+    return (crc32 & 0xFFFF) == crc16;
 }
 
 bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, struct rar_entry *entry)
@@ -152,8 +152,8 @@ const char *rar_get_name(ar_archive *ar)
             rar->entry.name_w = NULL;
         }
         else {
-            rar->entry.name = ar_conv_utf16_to_utf8((const WCHAR *)name);
-            rar->entry.name_w = (WCHAR *)name;
+            rar->entry.name = ar_conv_utf16_to_utf8((const wchar16_t *)name);
+            rar->entry.name_w = (wchar16_t *)name;
         }
         /* normalize path separators */
         if (rar->entry.name) {
@@ -163,7 +163,7 @@ const char *rar_get_name(ar_archive *ar)
             }
         }
         if (rar->entry.name_w) {
-            WCHAR *pw;
+            wchar16_t *pw;
             for (pw = rar->entry.name_w; *pw; pw++) {
                 if (*pw == '\\')
                     *pw = '/';
@@ -176,7 +176,7 @@ const char *rar_get_name(ar_archive *ar)
     return rar->entry.name;
 }
 
-const WCHAR *rar_get_name_w(ar_archive *ar)
+const wchar16_t *rar_get_name_w(ar_archive *ar)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     if (!rar->entry.name_w && rar_get_name(ar) && !rar->entry.name_w)

@@ -30,17 +30,17 @@ size_t ar_read(ar_stream *stream, void *buffer, size_t count)
     return stream->read(stream->data, buffer, count);
 }
 
-bool ar_seek(ar_stream *stream, ptrdiff_t offset, int origin)
+bool ar_seek(ar_stream *stream, off64_t offset, int origin)
 {
     return stream->seek(stream->data, offset, origin);
 }
 
-bool ar_skip(ar_stream *stream, ptrdiff_t count)
+bool ar_skip(ar_stream *stream, off64_t count)
 {
     return stream->seek(stream->data, count, SEEK_CUR);
 }
 
-size_t ar_tell(ar_stream *stream)
+off64_t ar_tell(ar_stream *stream)
 {
     return stream->tell(stream->data);
 }
@@ -57,18 +57,20 @@ static size_t file_read(void *data, void *buffer, size_t count)
     return fread(buffer, 1, count, data);
 }
 
-static bool file_seek(void *data, ptrdiff_t offset, int origin)
+static bool file_seek(void *data, off64_t offset, int origin)
 {
-#ifdef _WIN64
+#ifdef _MSC_VER
     return _fseeki64(data, offset, origin) == 0;
 #else
-    return fseek(data, offset, origin) == 0;
+    if (offset > INT32_MAX)
+        return false;
+    return fseek(data, (long)offset, origin) == 0;
 #endif
 }
 
-static size_t file_tell(void *data)
+static off64_t file_tell(void *data)
 {
-#ifdef _WIN64
+#ifdef _MSC_VER
     return _ftelli64(data);
 #else
     return ftell(data);
@@ -83,7 +85,7 @@ ar_stream *ar_open_file(const char *path)
     return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
 }
 
-ar_stream *ar_open_file_w(const WCHAR *path)
+ar_stream *ar_open_file_w(const wchar16_t *path)
 {
 #ifdef _WIN32
     FILE *f = _wfopen(path, L"rb");
@@ -93,6 +95,60 @@ ar_stream *ar_open_file_w(const WCHAR *path)
 #else
     return NULL;
 #endif
+}
+
+/***** stream based on preallocated memory *****/
+
+struct MemoryStream {
+    const uint8_t *data;
+    size_t length;
+    size_t offset;
+};
+
+static void memory_close(void *data)
+{
+    struct MemoryStream *stm = data;
+    free(stm);
+}
+
+static size_t memory_read(void *data, void *buffer, size_t count)
+{
+    struct MemoryStream *stm = data;
+    if (count > stm->length - stm->offset)
+        count = stm->length - stm->offset;
+    memcpy(buffer, stm->data + stm->offset, count);
+    stm->offset += count;
+    return count;
+}
+
+static bool memory_seek(void *data, off64_t offset, int origin)
+{
+    struct MemoryStream *stm = data;
+    if (origin == SEEK_CUR)
+        offset += stm->offset;
+    else if (origin == SEEK_END)
+        offset += stm->length;
+    if (offset < 0 || offset > (off64_t)stm->length || (size_t)offset > stm->length)
+        return false;
+    stm->offset = (size_t)offset;
+    return true;
+}
+
+static off64_t memory_tell(void *data)
+{
+    struct MemoryStream *stm = data;
+    return stm->offset;
+}
+
+ar_stream *ar_open_memory(const void *data, size_t datalen)
+{
+    struct MemoryStream *stm = malloc(sizeof(struct MemoryStream));
+    if (!stm)
+        return NULL;
+    stm->data = data;
+    stm->length = datalen;
+    stm->offset = 0;
+    return ar_open_stream(stm, memory_close, memory_read, memory_seek, memory_tell);
 }
 
 #ifdef _WIN32
@@ -127,7 +183,7 @@ static size_t stream_read(void *data, void *buffer, size_t count)
     return read;
 }
 
-static bool stream_seek(void *data, ptrdiff_t offset, int origin)
+static bool stream_seek(void *data, off64_t offset, int origin)
 {
     LARGE_INTEGER off;
     ULARGE_INTEGER n;
@@ -137,12 +193,12 @@ static bool stream_seek(void *data, ptrdiff_t offset, int origin)
     return SUCCEEDED(res);
 }
 
-static size_t stream_tell(void *data)
+static off64_t stream_tell(void *data)
 {
     LARGE_INTEGER zero = { 0 };
     ULARGE_INTEGER n = { 0 };
     IStream_Seek((IStream *)data, zero, SEEK_CUR, &n);
-    return (size_t)n.QuadPart;
+    return (off64_t)n.QuadPart;
 }
 
 ar_stream *ar_open_istream(IStream *stream)

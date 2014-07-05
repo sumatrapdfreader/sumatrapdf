@@ -16,7 +16,7 @@ class RarFile {
 
     ar_stream *data;
     ar_archive *ar;
-    Vec<size_t> filepos;
+    Vec<int64_t> filepos;
     UnRarDll *fallback;
 
     void ExtractFilenames();

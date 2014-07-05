@@ -20,8 +20,8 @@ uint32_t ar_crc32(uint32_t crc32, const unsigned char *data, size_t data_len);
 
 typedef void (* ar_stream_close_fn)(void *data);
 typedef size_t (* ar_stream_read_fn)(void *data, void *buffer, size_t count);
-typedef bool (* ar_stream_seek_fn)(void *data, ptrdiff_t offset, int origin);
-typedef size_t (* ar_stream_tell_fn)(void *data);
+typedef bool (* ar_stream_seek_fn)(void *data, off64_t offset, int origin);
+typedef off64_t (* ar_stream_tell_fn)(void *data);
 
 struct ar_stream_s {
     ar_stream_close_fn close;
@@ -35,9 +35,9 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 /***** string ****/
 
-WCHAR *ar_conv_utf8_to_utf16(const char *str);
-char *ar_conv_utf16_to_utf8(const WCHAR *wstr);
-char *ar_conv_ansi_to_utf8_utf16(const char *astr, WCHAR **wstr_opt);
+wchar16_t *ar_conv_utf8_to_utf16(const char *str);
+char *ar_conv_utf16_to_utf8(const wchar16_t *wstr);
+char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
 
 /***** unarr *****/
 
@@ -52,7 +52,7 @@ void ar_log(const char *prefix, const char *file, int line, const char *msg, ...
 typedef void (* ar_archive_close_fn)(ar_archive *ar);
 typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
 typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
-typedef const WCHAR *(* ar_entry_get_name_w_fn)(ar_archive *ar);
+typedef const wchar16_t *(* ar_entry_get_name_w_fn)(ar_archive *ar);
 typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
 
 struct ar_archive_s {
@@ -64,8 +64,8 @@ struct ar_archive_s {
 
     ar_stream *stream;
     bool at_eof;
-    size_t entry_offset;
-    size_t entry_size_block;
+    off64_t entry_offset;
+    off64_t entry_offset_next;
     size_t entry_size_uncompressed;
 };
 

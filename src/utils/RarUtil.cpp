@@ -93,7 +93,7 @@ void RarFile::ExtractFilenames()
             fallback->ExtractFilenames(filenames);
             filepos.Reset();
             for (size_t i = 0; i < filenames.Count(); i++) {
-                filepos.Append((size_t)-1);
+                filepos.Append(-1);
             }
         }
 #endif
@@ -105,7 +105,7 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (fileindex > filepos.Count())
         return NULL;
 #ifdef ENABLE_UNRARDLL_FALLBACK
-    if (fallback && (size_t)-1 == filepos.At(fileindex))
+    if (fallback && -1 == filepos.At(fileindex))
         return fallback->GetFileByName(filenames.At(fileindex), len);
 #endif
     if (!ar)
@@ -116,7 +116,7 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
         if (path) {
             if (!fallback)
                 fallback = new UnRarDll(path);
-            filepos.At(fileindex) = (size_t)-1;
+            filepos.At(fileindex) = -1;
             return fallback->GetFileByName(filenames.At(fileindex), len);
         }
 #endif
@@ -132,7 +132,7 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
         if (path) {
             if (!fallback)
                 fallback = new UnRarDll(path);
-            filepos.At(fileindex) = (size_t)-1;
+            filepos.At(fileindex) = -1;
             return fallback->GetFileByName(filenames.At(fileindex), len);
         }
 #endif

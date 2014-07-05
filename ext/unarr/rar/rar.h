@@ -62,14 +62,14 @@ struct ar_archive_rar_entry {
     uint16_t header_size;
     bool restart_solid;
     char *name;
-    WCHAR *name_w;
+    wchar16_t *name_w;
 };
 
 bool rar_parse_header(ar_archive *ar, struct rar_header *header);
 bool rar_check_header_crc(ar_archive *ar);
 bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, struct rar_entry *entry);
 const char *rar_get_name(ar_archive *ar);
-const WCHAR *rar_get_name_w(ar_archive *ar);
+const wchar16_t *rar_get_name_w(ar_archive *ar);
 
 /***** filters *****/
 
@@ -166,7 +166,7 @@ struct ar_archive_rar_uncomp {
 
     struct ar_archive_rar_filters filters;
 
-    struct {
+    struct StreamBitReader {
         uint64_t bits;
         int available;
         bool at_eof;
