@@ -78,7 +78,7 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
     entry->size = uint32le(data + 0);
     entry->os = uint8le(data + 4);
     entry->crc = uint32le(data + 5);
-    entry->dostime = uint32le(data + 9);
+    entry->dosdate = uint32le(data + 9);
     entry->version = uint8le(data + 13);
     entry->method = uint8le(data + 14);
     entry->namelen = uint16le(data + 15);

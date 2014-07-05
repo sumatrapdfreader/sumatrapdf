@@ -48,7 +48,7 @@ struct rar_entry {
     uint64_t size;
     uint8_t os;
     uint32_t crc;
-    uint32_t dostime;
+    uint32_t dosdate;
     uint8_t version;
     uint8_t method;
     uint16_t namelen;

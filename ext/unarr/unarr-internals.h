@@ -67,6 +67,7 @@ struct ar_archive_s {
     off64_t entry_offset;
     off64_t entry_offset_next;
     size_t entry_size_uncompressed;
+    uint32_t entry_dosdate;
 };
 
 ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,

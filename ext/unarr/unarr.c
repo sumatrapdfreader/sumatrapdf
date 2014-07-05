@@ -66,6 +66,11 @@ size_t ar_entry_get_size(ar_archive *ar)
     return ar->entry_size_uncompressed;
 }
 
+uint32_t ar_entry_get_dosdate(ar_archive *ar)
+{
+    return ar->entry_dosdate;
+}
+
 bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     return ar->uncompress(ar, buffer, count);
