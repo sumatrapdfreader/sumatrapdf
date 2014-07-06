@@ -297,7 +297,7 @@ static bool rar_execute_filter_delta(struct RARFilter *filter, RARVirtualMachine
 {
     uint32_t length = filter->initialregisters[4];
     uint32_t numchannels = filter->initialregisters[0];
-    uint8_t *src, *dest;
+    uint8_t *src, *dst;
     uint32_t i, idx;
 
     if (length > RARProgramWorkSize / 2)
@@ -307,11 +307,11 @@ static bool rar_execute_filter_delta(struct RARFilter *filter, RARVirtualMachine
     filter->filteredblocklength = length;
 
     src = &vm->memory[0];
-    dest = &vm->memory[filter->filteredblockaddress];
+    dst = &vm->memory[filter->filteredblockaddress];
     for (i = 0; i < numchannels; i++) {
         uint8_t lastbyte = 0;
         for (idx = i; idx < length; idx += numchannels)
-            lastbyte = dest[idx] = lastbyte - *src++;
+            lastbyte = dst[idx] = lastbyte - *src++;
     }
 
     return true;

@@ -5,6 +5,7 @@
 #define zip_zip_h
 
 #include "../common/unarr-imp.h"
+#include <limits.h>
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
@@ -69,6 +70,7 @@ struct zip_eocd64 {
 struct ar_archive_zip_entry {
     off64_t offset;
     uint16_t method;
+    uint16_t flags;
     uint32_t crc;
     char *name;
     wchar16_t *name_w;
@@ -83,20 +85,36 @@ const wchar16_t *zip_get_name_w(ar_archive *ar);
 
 /***** uncompress-zip *****/
 
+struct ar_archive_zip_uncomp;
+
+typedef size_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size);
+typedef void (* zip_uncomp_clear_state_fn)(struct ar_archive_zip_uncomp *uncomp);
+
 struct ar_archive_zip_uncomp {
-    uint16_t method;
+    bool initialized;
+    zip_uncomp_uncompress_data_fn uncompress_data;
+    zip_uncomp_clear_state_fn clear_state;
     union {
 #ifdef HAVE_ZLIB
         z_stream zstream;
 #endif
-        int _dummy;
+#ifdef HAVE_BZIP2
+        bz_stream bstream;
+#endif
+#ifdef HAVE_LZMA
+        CLzmaDec *lzmadec;
+#endif
+        char _dummy;
     } state;
+    struct InputBuffer {
+        uint8_t data[4096];
+        uint16_t offset;
+        uint16_t bytes_left;
+    } input;
+    uint16_t flags;
 };
 
-bool zip_uncompress_deflate(ar_archive_zip *zip, void *buffer, size_t count);
-bool zip_uncompress_deflate64(ar_archive_zip *zip, void *buffer, size_t count);
-bool zip_uncompress_bzip2(ar_archive_zip *zip, void *buffer, size_t count);
-bool zip_uncompress_lzma(ar_archive_zip *zip, void *buffer, size_t count);
+bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size);
 void zip_clear_uncompress(struct ar_archive_zip_uncomp *uncomp);
 
 /***** zip *****/

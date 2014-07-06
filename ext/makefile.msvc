@@ -47,7 +47,7 @@ LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
 
 WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
 
-UNARR_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/unarr /wd4996
+UNARR_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_BZIP2" /I$(EXTDIR)/bzip2
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_LZMA" /I$(EXTDIR)/lzma/C
@@ -158,9 +158,6 @@ $(OE): force
 {$(EXTDIR)\libwebp\utils}.c{$(OWP)}.obj::
 	$(CC) $(WEBP_CFLAGS) /Fo$(OWP)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTDIR)\unarr}.c{$(OUN)}.obj::
-	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
-
 {$(EXTDIR)\unarr\common}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
@@ -172,3 +169,13 @@ $(OE): force
 
 {$(EXTDIR)\unarr\zip}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
+
+# executable(s) for testing the above libraries
+
+unarr_test: $(O) $(OE) $(O)\unarr.exe
+
+{$(EXTDIR)\unarr}.c{$(OUN)}.obj::
+	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
+
+$(O)\unarr.exe: $(UNARR_OBJS) $(OUN)\main.obj $(ZLIB_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE

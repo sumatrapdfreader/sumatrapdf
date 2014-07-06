@@ -39,17 +39,19 @@ static bool zip_parse_entry(ar_archive *ar)
         zip->dir.seen_count++;
     }
 
-    if ((entry.flags & ((1 << 0) | (1 << 6))))
-        warn("Encrypted archives aren't supported");
     zip->entry.offset = entry.header_offset;
+    zip->entry.method = entry.method;
+    zip->entry.flags = entry.flags;
     zip->entry.crc = entry.crc;
     free(zip->entry.name);
     zip->entry.name = NULL;
     free(zip->entry.name_w);
     zip->entry.name_w = NULL;
+
     zip->progr.crc = 0;
     zip->progr.bytes_done = 0;
     zip->progr.data_left = (size_t)entry.datasize;
+    zip_clear_uncompress(&zip->uncomp);
 
     if (ar->entry_size_uncompressed == 0 && (entry.version & 0xFF00) == 0 && (entry.attr_external & 0x10)) {
         log("Skipping directory entry \"%s\"", zip_get_name(ar));
@@ -77,29 +79,28 @@ static bool zip_copy_stored(ar_archive_zip *zip, void *buffer, size_t count)
 static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
-    bool ok = false;
     if (zip->progr.bytes_done == 0) {
+        if ((zip->entry.flags & ((1 << 0) | (1 << 6)))) {
+            warn("Encrypted archives aren't supported");
+            return false;
+        }
         if (!zip_seek_to_compressed_data(zip)) {
             warn("Couldn't find data for file %s", ar_entry_get_name(ar));
             return false;
         }
     }
-    if (zip->entry.method == METHOD_STORE)
-        ok = zip_copy_stored(zip, buffer, count);
-    else if (zip->entry.method == METHOD_DEFLATE)
-        ok = zip_uncompress_deflate(zip, buffer, count);
-    else if (zip->deflateonly)
+    if (zip->entry.method == METHOD_STORE) {
+        if (!zip_copy_stored(zip, buffer, count))
+            return false;
+    }
+    else if (zip->deflateonly && zip->entry.method != METHOD_DEFLATE) {
         warn("Only store and deflate compression methods are allowed");
-    else if (zip->entry.method == METHOD_DEFLATE64)
-        ok = zip_uncompress_deflate64(zip, buffer, count);
-    else if (zip->entry.method == METHOD_BZIP2)
-        ok = zip_uncompress_bzip2(zip, buffer, count);
-    else if (zip->entry.method == METHOD_LZMA)
-        ok = zip_uncompress_lzma(zip, buffer, count);
-    else
-        warn("Unsupported compression method %02x", zip->entry.method);
-    if (!ok)
         return false;
+    }
+    else {
+        if (!zip_uncompress_part(zip, buffer, count))
+            return false;
+    }
 
     zip->progr.crc = ar_crc32(zip->progr.crc, buffer, count);
     if (zip->progr.bytes_done < ar->entry_size_uncompressed)

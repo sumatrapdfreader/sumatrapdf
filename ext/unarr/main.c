@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <string.h>
-#if defined(DEBUG) && defined(_MSC_VER)
+#if !defined(NDEBUG) && defined(_MSC_VER)
 #include <windows.h>
 #include <crtdbg.h>
 #endif
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     int count = 1;
     int step = 1;
 
-#if defined(DEBUG) && defined(_MSC_VER)
+#if !defined(NDEBUG) && defined(_MSC_VER)
     if (!IsDebuggerPresent()) {
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
         _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);

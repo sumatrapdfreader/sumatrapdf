@@ -43,7 +43,7 @@ char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
 /***** unarr *****/
 
 #define warn(...) ar_log("!", __FILE__, __LINE__, __VA_ARGS__)
-#ifdef DEBUG
+#ifndef NDEBUG
 #define log(...) ar_log("-", __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define log(...) ((void)0)
