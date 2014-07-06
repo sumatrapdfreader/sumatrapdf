@@ -49,6 +49,8 @@ WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
 
 UNARR_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
+UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_BZIP2" /I$(EXTDIR)/bzip2
+UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_LZMA" /I$(EXTDIR)/lzma/C
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -116,8 +118,9 @@ WEBP_OBJS = \
 UNARR_OBJS = \
 	$(OUN)\crc32.obj $(OUN)\stream.obj $(OUN)\string.obj $(OUN)\unarr.obj \
 	$(OUN)\CpuArch.obj $(OUN)\Ppmd7.obj $(OUN)\Ppmd7Dec.obj \
-	$(OUN)\rar\filters.obj $(OUN)\rar\parser.obj $(OUN)\rar\rar.obj \
-	$(OUN)\rar\uncompress.obj $(OUN)\rar\vm.obj
+	$(OUN)\filter-rar.obj $(OUN)\parse-rar.obj $(OUN)\rar.obj \
+	$(OUN)\rarvm.obj $(OUN)\uncompress-rar.obj \
+	$(OUN)\parse-zip.obj $(OUN)\uncompress-zip.obj $(OUN)\zip.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
@@ -127,7 +130,6 @@ $(OE): force
 	@if not exist $(OLZ) mkdir $(OLZ)
 	@if not exist $(OWP) mkdir $(OWP)
 	@if not exist $(OUN) mkdir $(OUN)
-	@if not exist $(OUN)\rar mkdir $(OUN)\rar
 
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
@@ -162,5 +164,8 @@ $(OE): force
 {$(EXTDIR)\unarr\ppmd}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTDIR)\unarr\rar}.c{$(OUN)\rar}.obj::
-	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\rar\ /Fd$(O)\vc80.pdb $<
+{$(EXTDIR)\unarr\rar}.c{$(OUN)}.obj::
+	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\unarr\zip}.c{$(OUN)}.obj::
+	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<

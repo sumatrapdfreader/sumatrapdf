@@ -2,7 +2,7 @@
    License: LGPLv3 */
 
 #include "rar.h"
-#include "vm.h"
+#include "rarvm.h"
 
 // adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRARVirtualMachine.m
 

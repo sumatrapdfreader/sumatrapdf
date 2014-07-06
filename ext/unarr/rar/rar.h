@@ -12,7 +12,7 @@
 
 typedef struct ar_archive_rar_s ar_archive_rar;
 
-/***** parser *****/
+/***** parse-rar *****/
 
 enum block_types {
     TYPE_MAGIC = 0x72, TYPE_MAIN_HEADER = 0x73, TYPE_FILE_ENTRY = 0x74,
@@ -77,7 +77,7 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
 const char *rar_get_name(ar_archive *ar);
 const wchar16_t *rar_get_name_w(ar_archive *ar);
 
-/***** filters *****/
+/***** filter-rar *****/
 
 struct RARVirtualMachine;
 struct RARProgramCode;
@@ -98,7 +98,7 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
 bool rar_run_filters(ar_archive_rar *rar);
 void rar_clear_filters(struct ar_archive_rar_filters *filters);
 
-/***** uncompress *****/
+/***** uncompress-rar *****/
 
 #define MAINCODE_SIZE      299
 #define OFFSETCODE_SIZE    60

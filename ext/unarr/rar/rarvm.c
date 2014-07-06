@@ -3,7 +3,7 @@
 
 // adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h
 
-#include "vm.h"
+#include "rarvm.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -5,10 +5,19 @@
 #define zip_zip_h
 
 #include "../unarr-internals.h"
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+#ifdef HAVE_BZIP2
+#include <bzlib.h>
+#endif
+#ifdef HAVE_LZMA
+#include <LzmaDec.h>
+#endif
 
 typedef struct ar_archive_zip_s ar_archive_zip;
 
-/***** parser *****/
+/***** parse-zip *****/
 
 enum zip_signatures {
     SIG_LOCAL_FILE_HEADER = 0x04034B50,
@@ -72,6 +81,24 @@ off64_t zip_find_end_of_central_directory(ar_stream *stream);
 const char *zip_get_name(ar_archive *ar);
 const wchar16_t *zip_get_name_w(ar_archive *ar);
 
+/***** uncompress-zip *****/
+
+struct ar_archive_zip_uncomp {
+    uint16_t method;
+    union {
+#ifdef HAVE_ZLIB
+        z_stream zstream;
+#endif
+        int _dummy;
+    } state;
+};
+
+bool zip_uncompress_deflate(ar_archive_zip *zip, void *buffer, size_t count);
+bool zip_uncompress_deflate64(ar_archive_zip *zip, void *buffer, size_t count);
+bool zip_uncompress_bzip2(ar_archive_zip *zip, void *buffer, size_t count);
+bool zip_uncompress_lzma(ar_archive_zip *zip, void *buffer, size_t count);
+void zip_clear_uncompress(struct ar_archive_zip_uncomp *uncomp);
+
 /***** zip *****/
 
 struct ar_archive_zip_dir {
@@ -91,6 +118,7 @@ struct ar_archive_zip_s {
     ar_archive super;
     struct ar_archive_zip_dir dir;
     struct ar_archive_zip_entry entry;
+    struct ar_archive_zip_uncomp uncomp;
     struct ar_archive_zip_progress progr;
     bool deflateonly;
     off64_t comment_offset;

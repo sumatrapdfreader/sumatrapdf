@@ -82,8 +82,10 @@ void ar_log(const char *prefix, const char *file, int line, const char *msg, ...
     va_start(args, msg);
     if (prefix)
         fprintf(stderr, "%s ", prefix);
-    if (strstr(file, "unarr"))
-        file = strstr(file, "unarr") + 6;
+    if (strrchr(file, '/'))
+        file = strrchr(file, '/') + 1;
+    if (strrchr(file, '\\'))
+        file = strrchr(file, '\\') + 1;
     fprintf(stderr, "%s:%d: ", file, line);
     vfprintf(stderr, msg, args);
     fprintf(stderr, "\n");

@@ -8,6 +8,7 @@ static void zip_close(ar_archive *ar)
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     free(zip->entry.name);
     free(zip->entry.name_w);
+    zip_clear_uncompress(&zip->uncomp);
 }
 
 static bool zip_parse_entry(ar_archive *ar)
@@ -76,20 +77,29 @@ static bool zip_copy_stored(ar_archive_zip *zip, void *buffer, size_t count)
 static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
+    bool ok = false;
     if (zip->progr.bytes_done == 0) {
         if (!zip_seek_to_compressed_data(zip)) {
             warn("Couldn't find data for file %s", ar_entry_get_name(ar));
             return false;
         }
     }
-    if (zip->entry.method == METHOD_STORE) {
-        if (!zip_copy_stored(zip, buffer, count))
-            return false;
-    }
-    else {
+    if (zip->entry.method == METHOD_STORE)
+        ok = zip_copy_stored(zip, buffer, count);
+    else if (zip->entry.method == METHOD_DEFLATE)
+        ok = zip_uncompress_deflate(zip, buffer, count);
+    else if (zip->deflateonly)
+        warn("Only store and deflate compression methods are allowed");
+    else if (zip->entry.method == METHOD_DEFLATE64)
+        ok = zip_uncompress_deflate64(zip, buffer, count);
+    else if (zip->entry.method == METHOD_BZIP2)
+        ok = zip_uncompress_bzip2(zip, buffer, count);
+    else if (zip->entry.method == METHOD_LZMA)
+        ok = zip_uncompress_lzma(zip, buffer, count);
+    else
         warn("Unsupported compression method %02x", zip->entry.method);
+    if (!ok)
         return false;
-    }
 
     zip->progr.crc = ar_crc32(zip->progr.crc, buffer, count);
     if (zip->progr.bytes_done < ar->entry_size_uncompressed)
