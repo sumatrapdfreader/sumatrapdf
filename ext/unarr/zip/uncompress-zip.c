@@ -19,7 +19,7 @@ static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bo
     return err == Z_OK;
 }
 
-static size_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static unsigned int zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
 {
     int err;
 
@@ -67,7 +67,7 @@ static bool zip_init_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
     return err == BZ_OK;
 }
 
-static size_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static unsigned int zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
 {
     int err;
 
@@ -113,7 +113,7 @@ static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
     return true;
 }
 
-static size_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static unsigned int zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
 {
     ELzmaFinishMode lzmafinish = (uncomp->flags & (1 << 1)) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
     SizeT srclen, dstlen;

@@ -87,7 +87,7 @@ const wchar16_t *zip_get_name_w(ar_archive *ar);
 
 struct ar_archive_zip_uncomp;
 
-typedef size_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size);
+typedef unsigned int (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size);
 typedef void (* zip_uncomp_clear_state_fn)(struct ar_archive_zip_uncomp *uncomp);
 
 struct ar_archive_zip_uncomp {
