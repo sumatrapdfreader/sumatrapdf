@@ -1,7 +1,7 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-#include "unarr-internals.h"
+#include "unarr-imp.h"
 
 ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_fn read, ar_stream_seek_fn seek, ar_stream_tell_fn tell)
 {

@@ -1,10 +1,10 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-#ifndef unarr_internals_h
-#define unarr_internals_h
+#ifndef common_unarr_imp_h
+#define common_unarr_imp_h
 
-#include "unarr.h"
+#include "../unarr.h"
 
 #include <stdlib.h>
 #include <stdio.h>

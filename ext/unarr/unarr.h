@@ -14,7 +14,7 @@ typedef wchar_t wchar16_t;
 typedef unsigned short wchar16_t;
 #endif
 
-/***** stream *****/
+/***** common/stream *****/
 
 typedef struct ar_stream_s ar_stream;
 
@@ -32,7 +32,7 @@ typedef struct IStream IStream;
 ar_stream *ar_open_istream(IStream *stream);
 #endif
 
-/***** unarr *****/
+/***** common/unarr *****/
 
 typedef struct ar_archive_s ar_archive;
 

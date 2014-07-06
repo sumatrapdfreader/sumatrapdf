@@ -4,9 +4,9 @@
 #ifndef rar_rar_h
 #define rar_rar_h
 
-#include "../unarr-internals.h"
+#include "../common/unarr-imp.h"
 
-#include "../lzss.h"
+#include "../common/lzss.h"
 #include "../ppmd/Ppmd7.h"
 #include <limits.h>
 

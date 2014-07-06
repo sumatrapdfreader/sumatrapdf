@@ -161,6 +161,9 @@ $(OE): force
 {$(EXTDIR)\unarr}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
+{$(EXTDIR)\unarr\common}.c{$(OUN)}.obj::
+	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
+
 {$(EXTDIR)\unarr\ppmd}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 

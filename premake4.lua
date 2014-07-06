@@ -171,7 +171,9 @@ solution "unarr"
     kind "ConsoleApp"
     language "C"
     files {
-      "ext/unarr/*.*",
+      "ext/unarr/main.c",
+      "ext/unarr/unarr.h",
+      "ext/unarr/common/*",
       "ext/unarr/ppmd/*",
       "ext/unarr/rar/*",
       "ext/unarr/zip/*"

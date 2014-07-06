@@ -1,7 +1,7 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-#include "unarr-internals.h"
+#include "unarr-imp.h"
 
 #ifdef _WIN32
 

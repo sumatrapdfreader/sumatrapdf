@@ -4,7 +4,7 @@
 #ifndef zip_zip_h
 #define zip_zip_h
 
-#include "../unarr-internals.h"
+#include "../common/unarr-imp.h"
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
