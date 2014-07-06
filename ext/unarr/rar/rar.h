@@ -36,6 +36,12 @@ enum entry_flags {
     LHD_LONG_BLOCK = 1 << 15,
 };
 
+enum compression_method {
+    METHOD_STORE = 0x30,
+    METHOD_FASTEST = 0x31, METHOD_FAST = 0x32, METHOD_NORMAL = 0x33,
+    METHOD_GOOD = 0x34, METHOD_BEST = 0x35,
+};
+
 struct rar_header {
     uint16_t crc;
     uint8_t type;
@@ -93,12 +99,6 @@ bool rar_run_filters(ar_archive_rar *rar);
 void rar_clear_filters(struct ar_archive_rar_filters *filters);
 
 /***** uncompress *****/
-
-enum compression_method {
-    METHOD_STORE = 0x30,
-    METHOD_FASTEST = 0x31, METHOD_FAST = 0x32, METHOD_NORMAL = 0x33,
-    METHOD_GOOD = 0x34, METHOD_BEST = 0x35,
-};
 
 #define MAINCODE_SIZE      299
 #define OFFSETCODE_SIZE    60

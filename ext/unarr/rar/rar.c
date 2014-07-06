@@ -17,24 +17,24 @@ static bool rar_parse_entry(ar_archive *ar)
     struct rar_header header;
     struct rar_entry entry;
     /* without solid data, most/all previous files have to be decompressed again */
-    bool has_solid_data = rar->super.entry_offset != 0 && rar->uncomp.initialized && rar->progr.data_left == 0;
+    bool has_solid_data = ar->entry_offset != 0 && rar->uncomp.initialized && rar->progr.data_left == 0;
 
-    if (rar->super.entry_offset > 0) {
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset_next, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIi64, rar->super.entry_offset_next);
+    if (ar->entry_offset > 0) {
+        if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
+            warn("Couldn't seek to offset %" PRIi64, ar->entry_offset_next);
             return false;
         }
     }
 
     for (;;) {
-        rar->super.entry_offset = ar_tell(rar->super.stream);
-        rar->super.entry_size_uncompressed = 0;
+        ar->entry_offset = ar_tell(ar->stream);
+        ar->entry_size_uncompressed = 0;
 
-        if (!rar_parse_header(&rar->super, &header))
+        if (!rar_parse_header(ar, &header))
             return false;
 
-        rar->super.entry_offset_next = rar->super.entry_offset + header.size + header.datasize;
-        if (rar->super.entry_offset_next < rar->super.entry_offset + header.size) {
+        ar->entry_offset_next = ar->entry_offset + header.size + header.datasize;
+        if (ar->entry_offset_next < ar->entry_offset + header.size) {
             warn("Integer overflow due to overly large data size");
             return false;
         }
@@ -45,14 +45,14 @@ static bool rar_parse_entry(ar_archive *ar)
                 warn("Encrypted archives aren't supported");
                 return false;
             }
-            ar_skip(rar->super.stream, 6 /* reserved data */);
+            ar_skip(ar->stream, 6 /* reserved data */);
             if ((header.flags & MHD_ENCRYPTVER)) {
                 log("MHD_ENCRYPTVER is set");
-                ar_skip(rar->super.stream, 1);
+                ar_skip(ar->stream, 1);
             }
             if ((header.flags & MHD_COMMENT))
                 log("MHD_COMMENT is set");
-            if (ar_tell(rar->super.stream) - rar->super.entry_offset > header.size) {
+            if (ar_tell(ar->stream) - ar->entry_offset > header.size) {
                 warn("Invalid RAR header size: %d", header.size);
                 return false;
             }
@@ -65,33 +65,33 @@ static bool rar_parse_entry(ar_archive *ar)
             if ((header.flags & LHD_PASSWORD))
                 warn("Encrypted entries will fail to uncompress");
             if ((header.flags & LHD_DIRECTORY) == LHD_DIRECTORY) {
-                log("Skipping directory entry \"%s\"", rar_get_name(&rar->super));
+                log("Skipping directory entry \"%s\"", rar_get_name(ar));
                 break;
             }
             if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER)))
                 warn("Splitting files isn't really supported");
             // TODO: handle multi-part files (only needed for split files)?
-            rar->super.entry_size_uncompressed = (size_t)entry.size;
-            rar->super.entry_dosdate = entry.dosdate;
+            ar->entry_size_uncompressed = (size_t)entry.size;
+            ar->entry_dosdate = entry.dosdate;
             if (!has_solid_data || !rar->entry.restart_solid || rar->entry.method == METHOD_STORE)
                 rar_clear_uncompress(&rar->uncomp);
             else
                 rar->entry.restart_solid = false;
             // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
-            if (!rar_check_header_crc(&rar->super))
-                warn("Invalid header checksum @%" PRIi64, rar->super.entry_offset);
-            if (ar_tell(rar->super.stream) != rar->super.entry_offset + rar->entry.header_size) {
-                warn("Couldn't seek to offset %" PRIi64, rar->super.entry_offset + rar->entry.header_size);
+            if (!rar_check_header_crc(ar))
+                warn("Invalid header checksum @%" PRIi64, ar->entry_offset);
+            if (ar_tell(ar->stream) != ar->entry_offset + rar->entry.header_size) {
+                warn("Couldn't seek to offset %" PRIi64, ar->entry_offset + rar->entry.header_size);
                 return false;
             }
             return true;
 
         case TYPE_NEWSUB:
-            log("Skipping newsub header @%" PRIi64, rar->super.entry_offset);
+            log("Skipping newsub header @%" PRIi64, ar->entry_offset);
             break;
 
         case TYPE_END_OF_ARCHIVE:
-            rar->super.at_eof = true;
+            ar->at_eof = true;
             return false;
 
         default:
@@ -100,10 +100,10 @@ static bool rar_parse_entry(ar_archive *ar)
         }
 
         // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
-        if (!rar_check_header_crc(&rar->super))
-            warn("Invalid header checksum @%" PRIi64, rar->super.entry_offset);
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset_next, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIu64, rar->super.entry_offset_next);
+        if (!rar_check_header_crc(ar))
+            warn("Invalid header checksum @%" PRIi64, ar->entry_offset);
+        if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
+            warn("Couldn't seek to offset %" PRIu64, ar->entry_offset_next);
             return false;
         }
     }
@@ -124,9 +124,9 @@ static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
     return true;
 }
 
-static bool rar_restart_solid(ar_archive_rar *rar)
+static bool rar_restart_solid(ar_archive *ar)
 {
-    ar_archive *ar = &rar->super;
+    ar_archive_rar *rar = (ar_archive_rar *)ar;
     off64_t current_offset = ar->entry_offset;
     log("Restarting decompression for solid entry");
     if (!ar_parse_entry_at(ar, 0)) {
@@ -163,7 +163,7 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
     else if (rar->entry.method == METHOD_FASTEST || rar->entry.method == METHOD_FAST ||
              rar->entry.method == METHOD_NORMAL || rar->entry.method == METHOD_GOOD ||
              rar->entry.method == METHOD_BEST) {
-        if (rar->entry.restart_solid && !rar_restart_solid(rar)) {
+        if (rar->entry.restart_solid && !rar_restart_solid(ar)) {
             warn("Failed to produce the required solid decompression state");
             return false;
         }
@@ -176,7 +176,7 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
     }
 
     rar->progr.crc = ar_crc32(rar->progr.crc, buffer, count);
-    if (rar->progr.bytes_done < rar->super.entry_size_uncompressed)
+    if (rar->progr.bytes_done < ar->entry_size_uncompressed)
         return true;
     if (rar->progr.data_left)
         log("Compressed block has more data than required");

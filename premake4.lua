@@ -173,7 +173,8 @@ solution "unarr"
     files {
       "ext/unarr/*.*",
       "ext/unarr/ppmd/*",
-      "ext/unarr/rar/*"
+      "ext/unarr/rar/*",
+      "ext/unarr/zip/*"
     }
     defines { "_CRT_SECURE_NO_WARNINGS" }
     includedirs { "src/utils/msvc" }

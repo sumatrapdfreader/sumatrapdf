@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
 #if defined(DEBUG) && defined(_MSC_VER)
 #include <windows.h>
 #include <crtdbg.h>
@@ -27,13 +28,15 @@ int main(int argc, char *argv[])
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    FailIf(argc < 2, "Syntax: %s <filename.rar>", argv[0]);
+    FailIf(argc < 2, "Syntax: %s <filename.ext>", argv[0]);
 
     stream = ar_open_file(argv[1]);
     FailIf(!stream, "Error: File \"%s\" not found!", argv[1]);
 
     ar = ar_open_rar_archive(stream);
-    FailIf(!ar, "Error: File \"%s\" is no valid RAR archive!", argv[1]);
+    if (!ar)
+        ar = ar_open_zip_archive(stream, strstr(argv[1], ".xps") || strstr(argv[1], ".epub"));
+    FailIf(!ar, "Error: File \"%s\" is no valid RAR or ZIP archive!", argv[1]);
 
     printf("Parsing \"%s\":\n", argv[1]);
     while (ar_parse_entry(ar)) {

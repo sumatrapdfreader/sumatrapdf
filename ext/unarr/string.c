@@ -25,13 +25,13 @@ char *ar_conv_utf16_to_utf8(const wchar16_t *wstr)
     return str;
 }
 
-char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
+static char *ar_conv_cp_to_utf8_utf16(UINT cp, const char *astr, wchar16_t **wstr_opt)
 {
     char *str = NULL;
-    int res = MultiByteToWideChar(CP_ACP, 0, astr, -1, NULL, 0);
+    int res = MultiByteToWideChar(cp, 0, astr, -1, NULL, 0);
     wchar16_t *wstr = malloc(res * sizeof(wchar16_t));
     if (wstr) {
-        MultiByteToWideChar(CP_ACP, 0, astr, -1, wstr, res);
+        MultiByteToWideChar(cp, 0, astr, -1, wstr, res);
         str = ar_conv_utf16_to_utf8(wstr);
     }
     if (wstr_opt)
@@ -39,6 +39,16 @@ char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
     else
         free(wstr);
     return str;
+}
+
+char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
+{
+    return ar_conv_cp_to_utf8_utf16(CP_ACP, astr, wstr_opt);
+}
+
+char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
+{
+    return ar_conv_cp_to_utf8_utf16(437, astr, wstr_opt);
 }
 
 #else

@@ -126,18 +126,18 @@ const char *rar_get_name(ar_archive *ar)
         char *name;
 
         struct rar_header header;
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset, SEEK_SET))
+        if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
             return NULL;
-        if (!rar_parse_header(&rar->super, &header))
+        if (!rar_parse_header(ar, &header))
             return NULL;
-        if (ar_read(rar->super.stream, data, sizeof(data)) != sizeof(data))
+        if (ar_read(ar->stream, data, sizeof(data)) != sizeof(data))
             return NULL;
-        if ((header.flags & LHD_LARGE) && !ar_skip(rar->super.stream, 8))
+        if ((header.flags & LHD_LARGE) && !ar_skip(ar->stream, 8))
             return NULL;
 
         namelen = uint16le(data + 15);
         name = malloc(namelen + 2);
-        if (!name || ar_read(rar->super.stream, name, namelen) != namelen) {
+        if (!name || ar_read(ar->stream, name, namelen) != namelen) {
             free(name);
             return NULL;
         }
@@ -170,7 +170,7 @@ const char *rar_get_name(ar_archive *ar)
             }
         }
 
-        if (!ar_seek(rar->super.stream, rar->super.entry_offset + rar->entry.header_size, SEEK_SET))
+        if (!ar_seek(ar->stream, ar->entry_offset + rar->entry.header_size, SEEK_SET))
             warn("Couldn't seek back to the end of the entry header");
     }
     return rar->entry.name;

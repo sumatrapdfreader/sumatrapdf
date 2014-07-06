@@ -52,4 +52,8 @@ bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count);
 
 ar_archive *ar_open_rar_archive(ar_stream *stream);
 
+/***** zip/zip *****/
+
+ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly);
+
 #endif
