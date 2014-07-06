@@ -277,7 +277,7 @@ static bool AppendFileToZip(zipFile& zf, const WCHAR *nameInZip, const char *fil
     ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
     str::TransChars(nameInZipUtf, "\\", "/");
     zip_fileinfo zi = { 0 };
-    int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
+    int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 0);
     if (ZIP_OK == err) {
         err = zipWriteInFileInZip(zf, fileData, (unsigned int)fileSize);
         if (ZIP_OK == err)
@@ -318,7 +318,6 @@ bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
     return result;
 }
 
-// TODO: using this for XPS files results in documents that Microsoft XPS Viewer can't read
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
 {
     if (!dir::Exists(dirPath))
