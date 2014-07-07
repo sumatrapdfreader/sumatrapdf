@@ -72,7 +72,7 @@ static bool rar_parse_entry(ar_archive *ar)
                 warn("Splitting files isn't really supported");
             // TODO: handle multi-part files (only needed for split files)?
             ar->entry_size_uncompressed = (size_t)entry.size;
-            ar->entry_dosdate = entry.dosdate;
+            ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
             if (!has_solid_data || !rar->entry.restart_solid || rar->entry.method == METHOD_STORE)
                 rar_clear_uncompress(&rar->uncomp);
             else

@@ -39,6 +39,7 @@ wchar16_t *ar_conv_utf8_to_utf16(const char *str);
 char *ar_conv_utf16_to_utf8(const wchar16_t *wstr);
 char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
 char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
+time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
 
 /***** unarr *****/
 
@@ -70,7 +71,7 @@ struct ar_archive_s {
     off64_t entry_offset;
     off64_t entry_offset_next;
     size_t entry_size_uncompressed;
-    uint32_t entry_dosdate;
+    time64_t entry_filetime;
 };
 
 ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,

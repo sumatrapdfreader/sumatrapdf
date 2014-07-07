@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 typedef int64_t off64_t;
+typedef int64_t time64_t;
 #ifdef _WIN32
 typedef wchar_t wchar16_t;
 #else
@@ -45,7 +46,7 @@ const char *ar_entry_get_name(ar_archive *ar);
 const wchar16_t *ar_entry_get_name_w(ar_archive *ar);
 off64_t ar_entry_get_offset(ar_archive *ar);
 size_t ar_entry_get_size(ar_archive *ar);
-uint32_t ar_entry_get_dosdate(ar_archive *ar);
+time64_t ar_entry_get_filetime(ar_archive *ar);
 bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count);
 
 size_t ar_get_global_comment(ar_archive *ar, void *buffer, size_t count);

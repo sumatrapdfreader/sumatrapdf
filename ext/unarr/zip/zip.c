@@ -32,7 +32,7 @@ static bool zip_parse_entry(ar_archive *ar)
     ar->entry_offset = ar->entry_offset_next;
     ar->entry_offset_next += ZIP_DIR_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + entry.commentlen;
     ar->entry_size_uncompressed = (size_t)entry.uncompressed;
-    ar->entry_dosdate = entry.dosdate;
+    ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
 
     if (ar->entry_offset > zip->dir.seen_last_offset) {
         zip->dir.seen_last_offset = ar->entry_offset;
@@ -47,6 +47,7 @@ static bool zip_parse_entry(ar_archive *ar)
     zip->entry.name = NULL;
     free(zip->entry.name_w);
     zip->entry.name_w = NULL;
+    zip->entry.dosdate = entry.dosdate;
 
     zip->progr.crc = 0;
     zip->progr.bytes_done = 0;

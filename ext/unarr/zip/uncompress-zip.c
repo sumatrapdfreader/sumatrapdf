@@ -4,8 +4,8 @@
 #include "zip.h"
 
 #ifdef HAVE_ZLIB
-static void *gZlib_Alloc(void *self, uInt count, uInt size) { (void)self; return calloc(count, size); }
-static void gZlib_Free(void *self, void *ptr) { (void)self; free(ptr); }
+static void *gZlib_Alloc(void *opaque, uInt count, uInt size) { (void)opaque; return calloc(count, size); }
+static void gZlib_Free(void *opaque, void *ptr) { (void)opaque; free(ptr); }
 
 static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bool deflate64)
 {
@@ -16,6 +16,8 @@ static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bo
     uncomp->state.zstream.opaque = NULL;
 
     err = inflateInit2(&uncomp->state.zstream, deflate64 ? -16 : -15);
+    if (err == Z_STREAM_ERROR && deflate64)
+        warn("ZLIB doesn't seem to support Deflate64");
     return err == Z_OK;
 }
 
@@ -52,8 +54,8 @@ static void zip_clear_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp)
 #endif
 
 #ifdef HAVE_BZIP2
-static void *gBzip2_Alloc(void *self, int count, int size) { (void)self; return calloc(count, size); }
-static void gBzip2_Free(void *self, void *ptr) { (void)self; free(ptr); }
+static void *gBzip2_Alloc(void *opaque, int count, int size) { (void)opaque; return calloc(count, size); }
+static void gBzip2_Free(void *opaque, void *ptr) { (void)opaque; free(ptr); }
 
 static bool zip_init_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
 {
@@ -100,16 +102,17 @@ static void zip_clear_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
 #endif
 
 #ifdef HAVE_LZMA
-static void *gSzAlloc_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
-static void gSzAlloc_Free(void *self, void *ptr) { (void)self; free(ptr); }
-static ISzAlloc gSzAlloc = { gSzAlloc_Alloc, gSzAlloc_Free };
+static void *gLzma_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
+static void gLzma_Free(void *self, void *ptr) { (void)self; free(ptr); }
 
 static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
 {
-    uncomp->state.lzmadec = calloc(1, sizeof(*uncomp->state.lzmadec));
-    if (!uncomp->state.lzmadec)
+    uncomp->state.lzma.alloc.Alloc = gLzma_Alloc;
+    uncomp->state.lzma.alloc.Free = gLzma_Free;
+    uncomp->state.lzma.dec = calloc(1, sizeof(*uncomp->state.lzma.dec));
+    if (!uncomp->state.lzma.dec)
         return false;
-    LzmaDec_Construct(uncomp->state.lzmadec);
+    LzmaDec_Construct(uncomp->state.lzma.dec);
     return true;
 }
 
@@ -120,7 +123,7 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
     ELzmaStatus status;
     SRes res = SZ_OK;
 
-    if (!uncomp->state.lzmadec->dic) {
+    if (!uncomp->state.lzma.dec->dic) {
         uint8_t propsize;
         if (uncomp->input.bytes_left < 9) {
             warn("Insufficient data in LZMA stream");
@@ -131,16 +134,16 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
             warn("Insufficient data in LZMA stream");
             return 0;
         }
-        res = LzmaDec_Allocate(uncomp->state.lzmadec, &uncomp->input.data[uncomp->input.offset + 4], propsize, &gSzAlloc);
+        res = LzmaDec_Allocate(uncomp->state.lzma.dec, &uncomp->input.data[uncomp->input.offset + 4], propsize, &uncomp->state.lzma.alloc);
         uncomp->input.offset += 4 + propsize;
         if (res != SZ_OK)
             return 0;
-        LzmaDec_Init(uncomp->state.lzmadec);
+        LzmaDec_Init(uncomp->state.lzma.dec);
     }
 
     srclen = uncomp->input.bytes_left;
     dstlen = buffer_size;
-    res = LzmaDec_DecodeToBuf(uncomp->state.lzmadec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, lzmafinish, &status);
+    res = LzmaDec_DecodeToBuf(uncomp->state.lzma.dec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, lzmafinish, &status);
 
     uncomp->input.offset += (uint16_t)srclen;
     uncomp->input.bytes_left -= (uint16_t)srclen;
@@ -157,8 +160,8 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
 
 static void zip_clear_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
 {
-    LzmaDec_Free(uncomp->state.lzmadec, &gSzAlloc);
-    free(uncomp->state.lzmadec);
+    LzmaDec_Free(uncomp->state.lzma.dec, &uncomp->state.lzma.alloc);
+    free(uncomp->state.lzma.dec);
 }
 #endif
 

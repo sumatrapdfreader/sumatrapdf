@@ -229,8 +229,9 @@ FILETIME ZipFile::GetFileTime(size_t fileindex)
 #ifdef USE_UNARR_AS_UNZIP
     if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
         FILETIME ftLocal;
-        DWORD dosDate = ar_entry_get_dosdate(ar);
-        DosDateTimeToFileTime(HIWORD(dosDate), LOWORD(dosDate), &ftLocal);
+        time64_t filetime = ar_entry_get_filetime(ar);
+        ftLocal.dwLowDateTime = (DWORD)filetime;
+        ftLocal.dwHighDateTime = (DWORD)((filetime >> 32) & 0xFFFFFFFF);
         LocalFileTimeToFileTime(&ftLocal, &ft);
     }
 #else

@@ -73,6 +73,7 @@ struct ar_archive_zip_entry {
     uint32_t crc;
     char *name;
     wchar16_t *name_w;
+    uint32_t dosdate;
 };
 
 bool zip_seek_to_compressed_data(ar_archive_zip *zip);
@@ -101,7 +102,10 @@ struct ar_archive_zip_uncomp {
         bz_stream bstream;
 #endif
 #ifdef HAVE_LZMA
-        CLzmaDec *lzmadec;
+        struct {
+            CLzmaDec *dec;
+            ISzAlloc alloc;
+        } lzma;
 #endif
         char _dummy;
     } state;

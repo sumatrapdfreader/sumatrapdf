@@ -26,10 +26,12 @@ bool zip_seek_to_compressed_data(ar_archive_zip *zip)
         if (!zip->entry.method)
             zip->entry.method = uint16le(data + 8);
     }
-    if (uint32le(data + 10) != zip->super.entry_dosdate) {
+    if (uint32le(data + 10) != zip->entry.dosdate) {
         warn("Timestamps don't match");
-        if (!zip->super.entry_dosdate)
-            zip->super.entry_dosdate = uint32le(data + 10);
+        if (!zip->entry.dosdate) {
+            zip->entry.dosdate = uint32le(data + 10);
+            zip->super.entry_filetime = ar_conv_dosdate_to_filetime(zip->entry.dosdate);
+        }
     }
     /* skip filename and extra field */
     if (!ar_skip(zip->super.stream, uint16le(data + 26) + uint16le(data + 28)))

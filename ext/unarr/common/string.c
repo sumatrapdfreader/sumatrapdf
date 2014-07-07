@@ -10,7 +10,7 @@
 wchar16_t *ar_conv_utf8_to_utf16(const char *str)
 {
     int res = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    wchar16_t *wstr = malloc(res * sizeof(wchar16_t));
+    wchar16_t *wstr = calloc(res, sizeof(wchar16_t));
     if (wstr)
         MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, res);
     return wstr;
@@ -29,7 +29,7 @@ static char *ar_conv_cp_to_utf8_utf16(UINT cp, const char *astr, wchar16_t **wst
 {
     char *str = NULL;
     int res = MultiByteToWideChar(cp, 0, astr, -1, NULL, 0);
-    wchar16_t *wstr = malloc(res * sizeof(wchar16_t));
+    wchar16_t *wstr = calloc(res, sizeof(wchar16_t));
     if (wstr) {
         MultiByteToWideChar(cp, 0, astr, -1, wstr, res);
         str = ar_conv_utf16_to_utf8(wstr);
@@ -49,6 +49,13 @@ char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
 char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
 {
     return ar_conv_cp_to_utf8_utf16(437, astr, wstr_opt);
+}
+
+time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate)
+{
+    FILETIME ft;
+    DosDateTimeToFileTime(HIWORD(dosdate), LOWORD(dosdate), &ft);
+    return ft.dwLowDateTime | (time64_t)ft.dwHighDateTime << 32;
 }
 
 #else
