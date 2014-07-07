@@ -10,7 +10,7 @@
 wchar16_t *ar_conv_utf8_to_utf16(const char *str)
 {
     int res = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    wchar16_t *wstr = malloc(res);
+    wchar16_t *wstr = malloc(res * sizeof(wchar16_t));
     if (wstr)
         MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, res);
     return wstr;

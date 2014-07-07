@@ -55,6 +55,7 @@ typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
 typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
 typedef const wchar16_t *(* ar_entry_get_name_w_fn)(ar_archive *ar);
 typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
+typedef size_t (* ar_get_global_comment_fn)(ar_archive *ar, void *buffer, size_t count);
 
 struct ar_archive_s {
     ar_archive_close_fn close;
@@ -62,6 +63,7 @@ struct ar_archive_s {
     ar_entry_get_name_fn get_name;
     ar_entry_get_name_w_fn get_name_w;
     ar_entry_uncompress_fn uncompress;
+    ar_get_global_comment_fn get_comment;
 
     ar_stream *stream;
     bool at_eof;

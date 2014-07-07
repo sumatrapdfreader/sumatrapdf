@@ -5,7 +5,6 @@
 #define zip_zip_h
 
 #include "../common/unarr-imp.h"
-#include <limits.h>
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
@@ -87,7 +86,7 @@ const wchar16_t *zip_get_name_w(ar_archive *ar);
 
 struct ar_archive_zip_uncomp;
 
-typedef unsigned int (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size);
+typedef uint32_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size);
 typedef void (* zip_uncomp_clear_state_fn)(struct ar_archive_zip_uncomp *uncomp);
 
 struct ar_archive_zip_uncomp {

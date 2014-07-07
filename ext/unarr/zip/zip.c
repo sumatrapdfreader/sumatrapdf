@@ -114,6 +114,20 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
     return true;
 }
 
+size_t zip_get_global_comment(ar_archive *ar, void *buffer, size_t count)
+{
+    ar_archive_zip *zip = (ar_archive_zip *)ar;
+    if (!zip->comment_size)
+        return 0;
+    if (!buffer)
+        return zip->comment_size;
+    if (!ar_seek(ar->stream, zip->comment_offset, SEEK_SET))
+        return 0;
+    if (count > zip->comment_size)
+        count = zip->comment_size;
+    return ar_read(ar->stream, buffer, count);
+}
+
 ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
 {
     ar_archive *ar;
@@ -139,6 +153,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
     zip->comment_offset = offset + 22;
     zip->comment_size = eocd.commentlen;
     ar->entry_offset_next = zip->dir.offset;
+    ar->get_comment = zip_get_global_comment;
 
     return ar;
 }

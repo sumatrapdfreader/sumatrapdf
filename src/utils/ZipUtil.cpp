@@ -7,6 +7,12 @@
 #include "DirIter.h"
 #include "FileUtil.h"
 
+#ifdef USE_UNARR_AS_UNZIP
+extern "C" {
+#include <unarr.h>
+}
+#endif
+
 // mini(un)zip
 #include <ioapi.h>
 #include <iowin32.h>
@@ -17,29 +23,46 @@ ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
+#ifdef USE_UNARR_AS_UNZIP
+    data = ar_open_file_w(path);
+    ar = data ? ar_open_zip_archive(data, deflatedOnly) : NULL;
+    if (ar)
+        ExtractFilenames(deflatedOnly);
+#else
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
     uf = unzOpen2_64(path, &ffunc);
     if (uf)
         ExtractFilenames(deflatedOnly);
+#endif
 }
 
 ZipFile::ZipFile(IStream *stream, bool deflatedOnly, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
+#ifdef USE_UNARR_AS_UNZIP
+    data = ar_open_istream(stream);
+    ar = data ? ar_open_zip_archive(data, deflatedOnly) : NULL;
+    if (ar)
+        ExtractFilenames(deflatedOnly);
+#else
     zlib_filefunc64_def ffunc;
     fill_win32s_filefunc64(&ffunc);
     uf = unzOpen2_64(stream, &ffunc);
     if (uf)
         ExtractFilenames(deflatedOnly);
+#endif
 }
 
 ZipFile::~ZipFile()
 {
-    if (!uf)
-        return;
+#ifdef USE_UNARR_AS_UNZIP
+    ar_close_archive(ar);
+    ar_close(data);
+#else
     unzClose(uf);
+#endif
 }
 
 // cf. http://www.pkware.com/documents/casestudies/APPNOTE.TXT Appendix D
@@ -49,9 +72,13 @@ ZipFile::~ZipFile()
 
 void ZipFile::ExtractFilenames(bool deflatedOnly)
 {
-    if (!uf)
-        return;
-
+#ifdef USE_UNARR_AS_UNZIP
+    while (ar_parse_entry(ar)) {
+        const WCHAR *name = ar_entry_get_name_w(ar);
+        filenames.Append(Allocator::StrDup(allocator, name));
+        filepos.Append(ar_entry_get_offset(ar));
+    }
+#else
     unz_global_info64 ginfo;
     int err = unzGetGlobalInfo64(uf, &ginfo);
     if (err != UNZ_OK)
@@ -80,6 +107,7 @@ void ZipFile::ExtractFilenames(bool deflatedOnly)
         err = unzGoToNextFile(uf);
     }
     commentLen = ginfo.size_comment;
+#endif
 }
 
 size_t ZipFile::GetFileIndex(const WCHAR *fileName)
@@ -89,7 +117,9 @@ size_t ZipFile::GetFileIndex(const WCHAR *fileName)
 
 size_t ZipFile::GetFileCount() const
 {
+#ifndef USE_UNARR_AS_UNZIP
     CrashIf(filenames.Count() != fileinfo.Count());
+#endif
     CrashIf(filenames.Count() != filepos.Count());
     return filenames.Count();
 }
@@ -108,6 +138,32 @@ char *ZipFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 
 char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
+#ifdef USE_UNARR_AS_UNZIP
+    if (!ar)
+        return NULL;
+    if (fileindex >= filenames.Count())
+        return NULL;
+
+    if (!ar_parse_entry_at(ar, filepos.At(fileindex)))
+        return NULL;
+
+    size_t size = ar_entry_get_size(ar);
+    if (size > SIZE_MAX - 2)
+        return NULL;
+    char *data = (char *)Allocator::Alloc(allocator, size + 2);
+    if (!data)
+        return NULL;
+    if (!ar_entry_uncompress(ar, data, size)) {
+        Allocator::Free(allocator, data);
+        return NULL;
+    }
+    // zero-terminate for convenience
+    data[size] = data[size + 1] = '\0';
+
+    if (len)
+        *len = size;
+    return data;
+#else
     if (!uf)
         return NULL;
     if (fileindex >= filenames.Count())
@@ -131,7 +187,7 @@ char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     unsigned int len2 = (unsigned int)fileinfo.At(fileindex).uncompressed_size;
     // overflow check
     if (len2 != fileinfo.At(fileindex).uncompressed_size ||
-        len2 + sizeof(WCHAR) < sizeof(WCHAR) ||
+        len2 > UINT_MAX - sizeof(WCHAR) ||
         len2 / 1024 > fileinfo.At(fileindex).compressed_size) {
         unzCloseCurrentFile(uf);
         return NULL;
@@ -159,6 +215,7 @@ char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     }
 
     return result;
+#endif
 }
 
 FILETIME ZipFile::GetFileTime(const WCHAR *fileName)
@@ -169,24 +226,43 @@ FILETIME ZipFile::GetFileTime(const WCHAR *fileName)
 FILETIME ZipFile::GetFileTime(size_t fileindex)
 {
     FILETIME ft = { (DWORD)-1, (DWORD)-1 };
+#ifdef USE_UNARR_AS_UNZIP
+    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
+        FILETIME ftLocal;
+        DWORD dosDate = ar_entry_get_dosdate(ar);
+        DosDateTimeToFileTime(HIWORD(dosDate), LOWORD(dosDate), &ftLocal);
+        LocalFileTimeToFileTime(&ftLocal, &ft);
+    }
+#else
     if (uf && fileindex < fileinfo.Count()) {
         FILETIME ftLocal;
         DWORD dosDate = fileinfo.At(fileindex).dosDate;
         DosDateTimeToFileTime(HIWORD(dosDate), LOWORD(dosDate), &ftLocal);
         LocalFileTimeToFileTime(&ftLocal, &ft);
     }
+#endif
     return ft;
 }
 
 char *ZipFile::GetComment(size_t *len)
 {
+#ifdef USE_UNARR_AS_UNZIP
+    if (!ar)
+        return NULL;
+    commentLen = ar_get_global_comment(ar, NULL, 0);
+    char *comment = (char *)Allocator::Alloc(allocator, commentLen + 1);
+    if (!comment)
+        return NULL;
+    size_t read = ar_get_global_comment(ar, comment, commentLen);
+#else
     if (!uf)
         return NULL;
     char *comment = (char *)Allocator::Alloc(allocator, commentLen + 1);
     if (!comment)
         return NULL;
-    int read = unzGetGlobalComment(uf, comment, commentLen);
-    if (read <= 0) {
+    uLong read = (uLong)unzGetGlobalComment(uf, comment, commentLen);
+#endif
+    if (read != commentLen) {
         Allocator::Free(allocator, comment);
         return NULL;
     }

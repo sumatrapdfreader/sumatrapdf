@@ -19,7 +19,7 @@ static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bo
     return err == Z_OK;
 }
 
-static unsigned int zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
 {
     int err;
 
@@ -67,7 +67,7 @@ static bool zip_init_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
     return err == BZ_OK;
 }
 
-static unsigned int zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static uint32_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
 {
     int err;
 
@@ -113,7 +113,7 @@ static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
     return true;
 }
 
-static unsigned int zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, unsigned int buffer_size)
+static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
 {
     ELzmaFinishMode lzmafinish = (uncomp->flags & (1 << 1)) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
     SizeT srclen, dstlen;
@@ -152,7 +152,7 @@ static unsigned int zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncom
         return 0;
     }
 
-    return (unsigned int)dstlen;
+    return (uint32_t)dstlen;
 }
 
 static void zip_clear_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
@@ -215,7 +215,7 @@ void zip_clear_uncompress(struct ar_archive_zip_uncomp *uncomp)
 bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
 {
     struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
-    unsigned int count;
+    uint32_t count;
 
     if (!zip_init_uncompress(uncomp, zip->entry.method, zip->entry.flags))
         return false;
@@ -231,7 +231,7 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
             }
             count = sizeof(uncomp->input.data) - uncomp->input.bytes_left;
             if (count > zip->progr.data_left)
-                count = (unsigned int)zip->progr.data_left;
+                count = (uint32_t)zip->progr.data_left;
             if (ar_read(zip->super.stream, &uncomp->input.data[uncomp->input.bytes_left], count) != count) {
                 warn("Unexpected EOF during decompression (invalid data size?)");
                 return false;
@@ -240,7 +240,7 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
             uncomp->input.bytes_left += (uint16_t)count;
         }
 
-        count = uncomp->uncompress_data(uncomp, buffer, buffer_size > UINT_MAX ? UINT_MAX : (unsigned int)buffer_size);
+        count = uncomp->uncompress_data(uncomp, buffer, buffer_size > UINT32_MAX ? UINT32_MAX : (uint32_t)buffer_size);
         if (count == 0)
             return false;
         zip->progr.bytes_done += count;

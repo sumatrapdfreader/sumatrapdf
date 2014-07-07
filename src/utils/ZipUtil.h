@@ -4,15 +4,34 @@
 #ifndef ZipUtil_h
 #define ZipUtil_h
 
+// define for using unarr instead of miniunzip
+#define USE_UNARR_AS_UNZIP
+
+#ifdef USE_UNARR_AS_UNZIP
+extern "C" {
+typedef struct ar_stream_s ar_stream;
+typedef struct ar_archive_s ar_archive;
+}
+#else
 #include <unzip.h>
+#endif
 
 class ZipFile {
-    unzFile uf;
     Allocator *allocator;
     WStrList filenames;
+#ifdef USE_UNARR_AS_UNZIP
+    ar_stream *data;
+    ar_archive *ar;
+    Vec<int64_t> filepos;
+    // not needed
+    Vec<char> fileinfo;
+    size_t commentLen;
+#else
+    unzFile uf;
     Vec<unz_file_info64> fileinfo;
     Vec<unz64_file_pos> filepos;
     uLong commentLen;
+#endif
 
     void ExtractFilenames(bool deflatedOnly);
 

@@ -35,16 +35,14 @@ class UnRarDll { };
 RarFile::RarFile(const WCHAR *path) : path(str::Dup(path)), fallback(NULL)
 {
     data = ar_open_file_w(path);
-    if (data)
-        ar = ar_open_rar_archive(data);
+    ar = data ? ar_open_rar_archive(data) : NULL;
     ExtractFilenames();
 }
 
 RarFile::RarFile(IStream *stream) : path(NULL), fallback(NULL)
 {
     data = ar_open_istream(stream);
-    if (data)
-        ar = ar_open_rar_archive(data);
+    ar = data ? ar_open_rar_archive(data) : NULL;
     ExtractFilenames();
 }
 
@@ -102,7 +100,7 @@ void RarFile::ExtractFilenames()
 
 char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
-    if (fileindex > filepos.Count())
+    if (fileindex >= filepos.Count())
         return NULL;
 #ifdef ENABLE_UNRARDLL_FALLBACK
     if (fallback && -1 == filepos.At(fileindex))
@@ -124,6 +122,8 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     }
 
     size_t size = ar_entry_get_size(ar);
+    if (size > SIZE_MAX - 2)
+        return NULL;
     ScopedMem<char> data((char *)malloc(size + 2));
     if (!data)
         return NULL;

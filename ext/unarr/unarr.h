@@ -48,6 +48,8 @@ size_t ar_entry_get_size(ar_archive *ar);
 uint32_t ar_entry_get_dosdate(ar_archive *ar);
 bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count);
 
+size_t ar_get_global_comment(ar_archive *ar, void *buffer, size_t count);
+
 /***** rar/rar *****/
 
 ar_archive *ar_open_rar_archive(ar_stream *stream);

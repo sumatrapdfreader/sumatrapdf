@@ -169,10 +169,8 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
 !endif
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
-ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
-	$(OU)\LzmaSimpleArchive.obj
-
-RAR_OBJS = $(OU)\RarUtil.obj $(UNARR_OBJS)
+ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
+	$(OU)\LzmaSimpleArchive.obj $(OU)\RarUtil.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
@@ -187,7 +185,7 @@ EBOOK_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj $(OS)\PdfCreator.obj \
-	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(RAR_OBJS) \
+	$(OS)\ImagesEngine.obj $(ZIP_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EngineManager.obj $(OS)\FileModifications.obj
@@ -290,7 +288,7 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_MOBI_PREVIEW"
 
 !if "$(BUILD_CBZ_PREVIEW)$(BUILD_CBR_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj \
-	$(OU)\JsonParser.obj $(OS)\PdfCreator.obj $(RAR_OBJS)
+	$(OU)\JsonParser.obj $(OS)\PdfCreator.obj
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 !endif

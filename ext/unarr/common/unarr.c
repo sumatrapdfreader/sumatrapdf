@@ -76,6 +76,13 @@ bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count)
     return ar->uncompress(ar, buffer, count);
 }
 
+size_t ar_get_global_comment(ar_archive *ar, void *buffer, size_t count)
+{
+    if (!ar->get_comment)
+        return 0;
+    return ar->get_comment(ar, buffer, count);
+}
+
 void ar_log(const char *prefix, const char *file, int line, const char *msg, ...)
 {
     va_list args;
