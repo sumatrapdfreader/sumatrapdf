@@ -173,11 +173,13 @@ static bool rar_new_node(struct huffman_code *code)
     if (code->numentries + 1 >= code->capacity) {
         /* in my small file sample, 1024 is the value needed most often */
         int new_capacity = code->capacity ? code->capacity * 2 : 1024;
-        void *new_tree = realloc(code->tree, new_capacity * sizeof(*code->tree));
+        void *new_tree = calloc(new_capacity, sizeof(*code->tree));
         if (!new_tree) {
             warn("OOM during decompression");
             return false;
         }
+        memcpy(new_tree, code->tree, code->capacity * sizeof(*code->tree));
+        free(code->tree);
         code->tree = new_tree;
         code->capacity = new_capacity;
     }

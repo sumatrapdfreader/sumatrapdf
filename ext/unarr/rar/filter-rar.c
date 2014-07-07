@@ -248,12 +248,15 @@ static bool rar_execute_filter_prog(struct RARFilter *filter, RARVirtualMachine 
         newgloballength = RARProgramUserGlobalSize;
     if (newgloballength > 0) {
         uint32_t newglobaldatalength = RARProgramSystemGlobalSize + newgloballength;
-        uint8_t *newglobaldata = realloc(filter->globaldata, newglobaldatalength);
-        if (!newglobaldata)
-            return false;
-        memcpy(newglobaldata, &vm->memory[RARProgramSystemGlobalAddress], newglobaldatalength);
-        filter->globaldata = newglobaldata;
+        if (newglobaldatalength > filter->globaldatalen) {
+            uint8_t *newglobaldata = malloc(newglobaldatalength);
+            if (!newglobaldata)
+                return false;
+            free(filter->globaldata);
+            filter->globaldata = newglobaldata;
+        }
         filter->globaldatalen = newglobaldatalength;
+        memcpy(filter->globaldata, &vm->memory[RARProgramSystemGlobalAddress], filter->globaldatalen);
     }
     else
         filter->globaldatalen = 0;

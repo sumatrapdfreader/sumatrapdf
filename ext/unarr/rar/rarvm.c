@@ -4,6 +4,7 @@
 // adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h
 
 #include "rarvm.h"
+#include "../common/allocator.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -58,10 +59,13 @@ bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode)
     if (instruction >= RARNumberOfInstructions)
         return false;
     if (prog->length + 1 >= prog->capacity) {
-        uint32_t newCapacity = prog->capacity ? prog->capacity * 2 : 16;
-        RAROpcode *newCodes = realloc(prog->opcodes, newCapacity * sizeof(*prog->opcodes));
+        /* in my small file sample, 16 is the value needed most often */
+        uint32_t newCapacity = prog->capacity ? prog->capacity * 4 : 32;
+        RAROpcode *newCodes = calloc(newCapacity, sizeof(*prog->opcodes));
         if (!newCodes)
             return false;
+        memcpy(newCodes, prog->opcodes, prog->capacity * sizeof(*prog->opcodes));
+        free(prog->opcodes);
         prog->opcodes = newCodes;
         prog->capacity = newCapacity;
     }
