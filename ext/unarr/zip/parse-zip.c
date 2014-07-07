@@ -130,7 +130,7 @@ bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eo
         return false;
     if (uint32le(data + 0) != SIG_END_OF_CENTRAL_DIRECTORY_64_LOCATOR)
         return true;
-    if (uint32le(data + 4) != eocd->diskno || uint32le(data + 16) != 1) {
+    if ((eocd->diskno != UINT16_MAX && uint32le(data + 4) != eocd->diskno) || uint32le(data + 16) != 1) {
         warn("Archive spanning isn't supported");
         return false;
     }
@@ -147,9 +147,9 @@ bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eo
         eocd->diskno = uint32le(data + 16);
     if (eocd->diskno_dir == UINT16_MAX)
         eocd->diskno_dir = uint32le(data + 20);
-    if (eocd->numentries_disk == UINT32_MAX)
+    if (eocd->numentries_disk == UINT16_MAX)
         eocd->numentries_disk = uint64le(data + 24);
-    if (eocd->numentries == UINT32_MAX)
+    if (eocd->numentries == UINT16_MAX)
         eocd->numentries = uint64le(data + 32);
     if (eocd->dir_size == UINT32_MAX)
         eocd->dir_size = uint64le(data + 40);

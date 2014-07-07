@@ -216,8 +216,10 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 	offset = getlong(doc->file); /* offset to central directory */
 
 	/* ZIP64 */
-	if (count == 0xFFFF)
+	/* SumatraPDF: adhere to spec */
+	if (count == 0xFFFF || offset == 0xFFFFFFFF)
 	{
+		int origoffset = offset;
 		fz_seek(doc->file, start_offset - 20, 0);
 
 		sig = getlong(doc->file);
@@ -240,9 +242,11 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 		(void) getshort(doc->file); /* version to extract */
 		(void) getlong(doc->file); /* disk number */
 		(void) getlong(doc->file); /* disk number start */
+		if (count < 0xFFFF) (void) getlong64(doc->file); else
 		count = getlong64(doc->file); /* entries in central directory disk */
 		(void) getlong64(doc->file); /* entries in central directory */
 		(void) getlong64(doc->file); /* size of central directory */
+		if (origoffset < 0xFFFFFFFF) offset = origoffset; else
 		offset = getlong64(doc->file); /* offset to central directory */
 
 		if (count < 0 || offset < 0)
@@ -288,10 +292,24 @@ xps_read_zip_dir(xps_document *doc, int start_offset)
 			int size = getshort(doc->file);
 			if (type == ZIP64_EXTRA_FIELD_SIG)
 			{
-				doc->zip_table[i].usize = getlong64(doc->file);
-				doc->zip_table[i].csize = getlong64(doc->file);
-				doc->zip_table[i].offset = getlong64(doc->file);
-				fz_seek(doc->file, -24, 1);
+				/* SumatraPDF: adhere to spec */
+				int sizeleft = size;
+				if (doc->zip_table[i].usize == 0xFFFFFFFF && sizeleft >= 8)
+				{
+					doc->zip_table[i].usize = getlong64(doc->file);
+					sizeleft -= 8;
+				}
+				if (doc->zip_table[i].csize == 0xFFFFFFFF && sizeleft >= 8)
+				{
+					doc->zip_table[i].csize = getlong64(doc->file);
+					sizeleft -= 8;
+				}
+				if (doc->zip_table[i].offset == 0xFFFFFFFF && sizeleft >= 8)
+				{
+					doc->zip_table[i].offset = getlong64(doc->file);
+					sizeleft -= 8;
+				}
+				fz_seek(doc->file, sizeleft - size, 1);
 			}
 			fz_seek(doc->file, size, 1);
 			metasize -= 4 + size;
