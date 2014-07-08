@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5fcce29597c2baa45ec5f9bc2b946df6b341f8c4
+5a16a21c0b2e80effb5610069e8ea207604369ab
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6463,6 +6463,7 @@ hr:Pozicija pokazivača:
 id:Posisi kursor:
 it:Posizione cursore
 ja:カーソル位置：
+nl:Cursor positie
 pl:Pozycja kursora:
 ru:Позиция курсора:
 sl:Položaj kurzorja:
@@ -13874,6 +13875,7 @@ hr:Odabir:
 id:Seleksi:
 it:Selezione
 ja:Selection:
+nl:Selectie
 pl:Selekcja:
 ru:Выделение:
 sl:Izbor:
@@ -15763,6 +15765,7 @@ he:השתמש בלשוניות
 id:Gunakan &tab
 it:Usa &schede
 ja:タブを使う(&t)
+nl:Gebruik &tabs
 ru:Использовать &вкладки
 uk:Використовувати вкладки
 :Use SumatraPDF as the &default PDF reader

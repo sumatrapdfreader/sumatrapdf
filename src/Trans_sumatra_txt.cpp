@@ -3799,7 +3799,7 @@ const char * gTranslations_nl =
   "Kan deze pagina niet weergegeven\0"\
   "Gemaakt:\0"\
   "Huidig bestand\0"\
-  "\0"\
+  "Cursor positie\0"\
   "&Aangepaste Zoom...\tCtrl+Y\0"\
   "Standaard opmaak:\0"\
   "Standaard &zoom:\0"\
@@ -3912,7 +3912,7 @@ const char * gTranslations_nl =
   "&Alles selecteren\0"\
   "Selecteer &alles\tCtrl+A\0"\
   "Selecteer inhoud met Ctrl+linker muisknop\0"\
-  "\0"\
+  "Selectie\0"\
   "Verzend per &e-mail...\0"\
   "Omgekeerde zoekrichting instellen\0"\
   "Bladwijzers tonen\0"\
@@ -3935,7 +3935,7 @@ const char * gTranslations_nl =
   "Tekstdocumenten\0"\
   "Titel:\0"\
   "Onbekend bronbestand (%s)\0"\
-  "\0"\
+  "Gebruik &tabs\0"\
   "Beeld\0"\
   "Bezoek de &website\0"\
   "Waarschuwing\0"\
