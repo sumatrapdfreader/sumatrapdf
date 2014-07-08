@@ -86,7 +86,6 @@ solution "all_tests"
     language "C++"
     files {
       "src/utils/BaseUtil*",
-      "src/utils/BencUtil*",
       "src/utils/BitManip*",
       "src/utils/ByteOrderDecoder*",
       "src/utils/CmdLineParser*",

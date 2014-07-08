@@ -13,7 +13,6 @@ extern void SumatraPDF_UnitTests();
 extern void SvgPath_UnitTests();
 
 extern void BaseUtilTest();
-extern void BencTest();
 extern void ByteOrderTests();
 extern void CmdLineParserTest();
 extern void CryptoUtilTest();
@@ -38,7 +37,6 @@ int main(int argc, char **argv)
 {
     printf("Running unit tests\n");
     BaseUtilTest();
-    BencTest();
     ByteOrderTests();
     CmdLineParserTest();
     CryptoUtilTest();

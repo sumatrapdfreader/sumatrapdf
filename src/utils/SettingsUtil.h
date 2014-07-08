@@ -53,10 +53,4 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *pre
 void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=NULL);
 void FreeStruct(const StructInfo *info, void *strct);
 
-// Benc doesn't need compact serialization, so allow to use Type_Compact for custom deserialization
-class BencDict;
-typedef bool (* CompactCallback)(BencDict *dict, const FieldInfo *field, const char *fieldName, uint8_t *fieldPtr);
-
-void *DeserializeStructBenc(const StructInfo *info, const char *data, void *strct=NULL, CompactCallback cb=NULL);
-
 #endif

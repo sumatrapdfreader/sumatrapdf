@@ -7,7 +7,6 @@
 #include "DisplayState.h"
 
 #include "AppTools.h"
-#include "BencUtil.h"
 #include "DebugLog.h"
 #include "EbookEngine.h"
 #include "Favorites.h"
@@ -21,7 +20,6 @@
 #include "WindowInfo.h"
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
-#define LEGACY_FILE_NAME    L"sumatrapdfprefs.dat"
 
 GlobalPrefs *        gGlobalPrefs = NULL;
 
@@ -64,122 +62,6 @@ void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
     FreeStruct(&gGlobalPrefsInfo, globalPrefs);
 }
 
-// metadata mapping from legacy Benc names to current structures
-static FieldInfo gGlobalPrefsFieldsBenc[] = {
-    { offsetof(GlobalPrefs, comicBookUI.cbxMangaMode), Type_Bool, false },
-    { offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic" },
-    { offsetof(GlobalPrefs, checkForUpdates), Type_Bool, true },
-    { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },
-    { offsetof(GlobalPrefs, showFavorites), Type_Bool, false },
-    { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool, false }, // note: used to be globalPrefsOnly
-    { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
-    { offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, 0 },
-    { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
-    { offsetof(GlobalPrefs, associateSilently), Type_Bool, false },
-    { offsetof(GlobalPrefs, associatedExtensions), Type_Compact, false },
-    { offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true },
-    { offsetof(GlobalPrefs, showStartPage), Type_Bool, true },
-    { offsetof(GlobalPrefs, showToc), Type_Bool, true },
-    { offsetof(GlobalPrefs, showToolbar), Type_Bool, true },
-    { offsetof(GlobalPrefs, sidebarDx), Type_Int, 0 },
-    { offsetof(GlobalPrefs, tocDy), Type_Int, 0 },
-    { offsetof(GlobalPrefs, uiLanguage), Type_Utf8String, NULL },
-    { offsetof(GlobalPrefs, useSysColors), Type_Bool, false },
-    { offsetof(GlobalPrefs, versionToSkip), Type_String, NULL },
-    { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 0 },
-    { offsetof(GlobalPrefs, windowPos.dy), Type_Int, 0 },
-    { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
-    { offsetof(GlobalPrefs, windowPos.x), Type_Int, 0 },
-    { offsetof(GlobalPrefs, windowPos.y), Type_Int, 0 },
-    { offsetof(GlobalPrefs, defaultZoom), Type_Utf8String, (intptr_t)"fit page" },
-    { offsetof(GlobalPrefs, mainWindowBackground), Type_Color, ABOUT_BG_COLOR_DEFAULT },
-    { offsetof(GlobalPrefs, escToExit), Type_Bool, false },
-    { offsetof(GlobalPrefs, forwardSearch.highlightColor), Type_Color, RGB(0x65, 0x81, 0xFF) },
-    { offsetof(GlobalPrefs, forwardSearch.highlightOffset), Type_Int, 0 },
-    { offsetof(GlobalPrefs, forwardSearch.highlightPermanent), Type_Bool, false },
-    { offsetof(GlobalPrefs, forwardSearch.highlightWidth), Type_Int, 15 },
-};
-static StructInfo gGlobalPrefsInfoBenc = { sizeof(GlobalPrefs), 26, gGlobalPrefsFieldsBenc, "CBX_Right2Left\0Display Mode\0EnableAutoUpdate\0ExposeInverseSearch\0FavVisible\0GlobalPrefsOnly\0InverseSearchCommandLine\0LastUpdate\0OpenCountWeek\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0RememberOpenedFiles\0ShowStartPage\0ShowToc\0ShowToolbar\0Toc DX\0Toc Dy\0UILanguage\0UseSysColors\0VersionToSkip\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual\0BgColor\0EscToExit\0ForwardSearch_HighlightColor\0ForwardSearch_HighlightOffset\0ForwardSearch_HighlightPermanent\0ForwardSearch_HighlightWidth" };
-
-static FieldInfo gFileFieldsBenc[] = {
-    { offsetof(FileState, decryptionKey), Type_Utf8String, NULL },
-    { offsetof(FileState, displayMode), Type_String, (intptr_t)L"automatic" },
-    { offsetof(FileState, filePath), Type_String, NULL },
-    { offsetof(FileState, isMissing), Type_Bool, false },
-    { offsetof(FileState, openCount), Type_Int, 0 },
-    { offsetof(FileState, pageNo), Type_Int, 1 },
-    { offsetof(FileState, isPinned), Type_Bool, false },
-    { offsetof(FileState, reparseIdx), Type_Int, 0 },
-    { offsetof(FileState, rotation), Type_Int, 0 },
-    { offsetof(FileState, scrollPos.x), Type_Int, 0 },
-    { offsetof(FileState, scrollPos.y), Type_Int, 0 },
-    { offsetof(FileState, showToc), Type_Bool, true },
-    { offsetof(FileState, sidebarDx), Type_Int, 0 },
-    { offsetof(FileState, tocState), Type_IntArray, NULL },
-    { offsetof(FileState, useDefaultState), Type_Bool, false },
-    { offsetof(FileState, windowPos.dx), Type_Int, 0 },
-    { offsetof(FileState, windowPos.dy), Type_Int, 0 },
-    { offsetof(FileState, windowState), Type_Int, 1 },
-    { offsetof(FileState, windowPos.x), Type_Int, 0 },
-    { offsetof(FileState, windowPos.y), Type_Int, 0 },
-    { offsetof(FileState, zoom), Type_Utf8String, (intptr_t)"fit page" },
-};
-static StructInfo gFileInfoBenc = { sizeof(FileState), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
-
-static FieldInfo gBencGlobalPrefsFields[] = {
-    { offsetof(GlobalPrefs, fileStates), Type_Array, (intptr_t)&gFileInfoBenc },
-    { 0 /* self */, Type_Struct, (intptr_t)&gGlobalPrefsInfoBenc },
-    // Favorites must be read after File History
-    { offsetof(GlobalPrefs, fileStates), Type_Compact, NULL },
-};
-static StructInfo gBencGlobalPrefs = { sizeof(GlobalPrefs), 3, gBencGlobalPrefsFields, "File History\0gp\0Favorites" };
-
-static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, const char *fieldName, uint8_t *fieldPtr)
-{
-    if (str::Eq(fieldName, "LastUpdate")) {
-        BencString *val = dict ? dict->GetString(fieldName) : NULL;
-        if (!val || !_HexToMem(val->RawValue(), (FILETIME *)fieldPtr))
-            ZeroMemory(fieldPtr, sizeof(FILETIME));
-        return true;
-    }
-    if (str::Eq(fieldName, "PdfAssociateShouldAssociate")) {
-        BencInt *val = dict ? dict->GetInt(fieldName) : NULL;
-        free(*(WCHAR **)fieldPtr);
-        *(WCHAR **)fieldPtr = str::Dup(val && val->Value() ? L".pdf" : NULL);
-        return true;
-    }
-    if (str::Eq(fieldName, "Favorites")) {
-        BencArray *favDict = dict ? dict->GetArray(fieldName) : NULL;
-        Vec<FileState *> *files = *(Vec<FileState *> **)fieldPtr;
-        for (size_t j = 0; j < files->Count(); j++) {
-            FileState *file = files->At(j);
-            CrashIf(file->favorites);
-            file->favorites = new Vec<Favorite *>();
-            if (!favDict)
-                continue;
-            BencArray *favList = NULL;
-            for (size_t k = 0; k < favDict->Length() && !favList; k += 2) {
-                BencString *path = favDict->GetString(k);
-                ScopedMem<WCHAR> filePath(path ? path->Value() : NULL);
-                if (str::Eq(filePath, file->filePath))
-                    favList = favDict->GetArray(k + 1);
-            }
-            if (!favList)
-                continue;
-            for (size_t k = 0; k < favList->Length(); k += 2) {
-                BencInt *page = favList->GetInt(k);
-                BencString *name = favList->GetString(k + 1);
-                int pageNo = page ? (int)page->Value() : -1;
-                ScopedMem<WCHAR> favName(name ? name->Value() : NULL);
-                if (favName && pageNo > 0)
-                    file->favorites->Append(NewFavorite(pageNo, favName, NULL));
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
 {
@@ -214,27 +96,10 @@ bool Load()
     gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
-    if (!file::Exists(path)) {
-        ScopedMem<WCHAR> bencPath(AppGenDataFilename(LEGACY_FILE_NAME));
-        ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
-        // the old format used the inverted meaning for this pref
-        gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
-        DeserializeStructBenc(&gBencGlobalPrefs, bencPrefsData, gGlobalPrefs, BencGlobalPrefsCallback);
-        gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
-        // update the zoom values to the more readable format
-        float zoom = conv::ToZoom(gGlobalPrefs->defaultZoom);
-        str::ReplacePtr(&gGlobalPrefs->defaultZoom, NULL);
-        conv::FromZoom(&gGlobalPrefs->defaultZoom, zoom);
-        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
-            zoom = conv::ToZoom((*ds)->zoom);
-            str::ReplacePtr(&(*ds)->zoom, NULL);
-            conv::FromZoom(&(*ds)->zoom, zoom);
-        }
 #ifdef DISABLE_EBOOK_UI
-        gGlobalPrefs->ebookUI.useFixedPageUI = true;
-        gGlobalPrefs->chmUI.useFixedPageUI = true;
+    if (!file::Exists(path))
+        gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
 #endif
-    }
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start

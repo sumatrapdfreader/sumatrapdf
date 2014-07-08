@@ -150,7 +150,7 @@ ENGINES_LIB = $(O)\engines.lib
 MAIN_UI_LIB = $(O)\sumatra.lib
 
 UTILS_OBJS = \
-	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
+	$(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\WinUtil.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj \

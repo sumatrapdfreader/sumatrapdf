@@ -635,14 +635,6 @@
 				Name="settings"
 				>
 				<File
-					RelativePath="..\src\utils\BencUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\BencUtil.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\SerializeTxt.cpp"
 					>
 				</File>

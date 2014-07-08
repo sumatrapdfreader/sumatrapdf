@@ -17,6 +17,9 @@ Next version:
 * replaced non-free UnRAR with a free RAR extraction library
   (if some CBR files fail to open for you, please download unrar.dll from
   http://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe)
+* removed support for reading sumatrapdfprefs.dat (when updating from a version prior to
+  version 2.3, please upgrade to 2.5.2 first and have that convert your settings to the
+  format introduced in version 2.3 before updating to a later version)
 
 2.5.2 (2014-05-13)
 

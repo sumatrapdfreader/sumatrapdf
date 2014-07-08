@@ -161,7 +161,6 @@
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
-    <ClCompile Include="..\src\utils\BencUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="..\src\utils\CmdLineParser.cpp" />
@@ -436,7 +435,6 @@
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\utils\Allocator.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
-    <ClInclude Include="..\src\utils\BencUtil.h" />
     <ClInclude Include="..\src\utils\BitManip.h" />
     <ClInclude Include="..\src\utils\BitReader.h" />
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />

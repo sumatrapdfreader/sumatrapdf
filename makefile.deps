@@ -146,11 +146,10 @@ $(OS)\AppPrefs.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\AppPrefs.obj: $B\src\Controller.h $B\src\DisplayState.h $B\src\EbookEngine.h
 $(OS)\AppPrefs.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\SettingsStructs.h
 $(OS)\AppPrefs.obj: $B\src\SumatraPDF.h $B\src\Translations.h $B\src\utils\Allocator.h
-$(OS)\AppPrefs.obj: $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h $B\src\utils\DebugLog.h
-$(OS)\AppPrefs.obj: $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
-$(OS)\AppPrefs.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\AppPrefs.obj: $B\src\WindowInfo.h
+$(OS)\AppPrefs.obj: $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h $B\src\utils\FileTransactions.h
+$(OS)\AppPrefs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h
+$(OS)\AppPrefs.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
+$(OS)\AppPrefs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\WindowInfo.h
 $(OS)\AppTools.obj: $B\src\AppTools.h $B\src\Translations.h $B\src\utils\Allocator.h
 $(OS)\AppTools.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\DbgHelpDyn.h
 $(OS)\AppTools.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
@@ -617,9 +616,6 @@ $(OS)\WindowInfo.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\
 $(OS)\WindowInfo.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OU)\BaseUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\BaseUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\BencUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h
-$(OU)\BencUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\BencUtil.obj: $B\src\utils\Vec.h
 $(OU)\BitReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitReader.h
 $(OU)\BitReader.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\BitReader.obj: $B\src\utils\Vec.h
@@ -719,9 +715,9 @@ $(OU)\RarUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\SerializeTxt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\SerializeTxt.obj: $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h $B\src\utils\StrSlice.h
 $(OU)\SerializeTxt.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
-$(OU)\SettingsUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h
-$(OU)\SettingsUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OU)\SettingsUtil.obj: $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\SettingsUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\SettingsUtil.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\SquareTreeParser.h
+$(OU)\SettingsUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Vec.h

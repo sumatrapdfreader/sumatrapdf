@@ -285,9 +285,6 @@
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\BencUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\BitReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1104,9 +1101,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\BaseUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\BencUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\BitManip.h">
