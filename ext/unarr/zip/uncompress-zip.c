@@ -3,6 +3,8 @@
 
 #include "zip.h"
 
+#define ERR_UNCOMP UINT32_MAX
+
 static bool zip_fill_input_buffer(ar_archive_zip *zip)
 {
     struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
@@ -61,11 +63,11 @@ static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp
 
     if (err != Z_OK && err != Z_STREAM_END) {
         warn("Unexpected ZLIB error %d", err);
-        return 0;
+        return ERR_UNCOMP;
     }
     if (err == Z_STREAM_END && uncomp->input.bytes_left) {
         warn("Premature EOS in Deflate stream");
-        return 0;
+        return ERR_UNCOMP;
     }
     
     return buffer_size - uncomp->state.zstream.avail_out;
@@ -111,11 +113,11 @@ static uint32_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, 
 
     if (err != BZ_OK && err != BZ_STREAM_END) {
         warn("Unexpected BZIP2 error %d", err);
-        return 0;
+        return ERR_UNCOMP;
     }
     if (err == BZ_STREAM_END && uncomp->input.bytes_left) {
         warn("Premature EOS in BZIP2 stream");
-        return 0;
+        return ERR_UNCOMP;
     }
     
     return buffer_size - uncomp->state.bstream.avail_out;
@@ -151,19 +153,19 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
     if (!uncomp->state.lzma.dec.dic) {
         uint8_t propsize;
         if (uncomp->input.bytes_left < 9) {
-            warn("Insufficient data in LZMA stream");
-            return 0;
+            warn("Insufficient data in compressed stream");
+            return ERR_UNCOMP;
         }
         propsize = uncomp->input.data[uncomp->input.offset + 2];
         if (uncomp->input.data[uncomp->input.offset + 3] != 0 || uncomp->input.bytes_left < 4 + propsize) {
-            warn("Insufficient data in LZMA stream");
-            return 0;
+            warn("Insufficient data in compressed stream");
+            return ERR_UNCOMP;
         }
         res = LzmaDec_Allocate(&uncomp->state.lzma.dec, &uncomp->input.data[uncomp->input.offset + 4], propsize, &uncomp->state.lzma.alloc);
         uncomp->input.offset += 4 + propsize;
         uncomp->input.bytes_left -= 4 + propsize;
         if (res != SZ_OK)
-            return 0;
+            return ERR_UNCOMP;
         LzmaDec_Init(&uncomp->state.lzma.dec);
     }
 
@@ -175,10 +177,10 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
     uncomp->input.bytes_left -= (uint16_t)srclen;
 
     if (res != SZ_OK || (srclen == 0 && dstlen == 0))
-        return 0;
+        return ERR_UNCOMP;
     if (status == LZMA_STATUS_FINISHED_WITH_MARK && uncomp->input.bytes_left) {
         warn("Premature EOS in LZMA stream");
-        return 0;
+        return ERR_UNCOMP;
     }
 
     return (uint32_t)dstlen;
@@ -224,8 +226,8 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
     if (!uncomp->state.ppmd8.ctx.Base) {
         uint8_t order, size, method;
         if (uncomp->input.bytes_left < 2) {
-            warn("Invalid PPMd data stream");
-            return 0;
+            warn("Insufficient data in compressed stream");
+            return ERR_UNCOMP;
         }
         order = (uncomp->input.data[uncomp->input.offset] & 0x0F) + 1;
         size = ((uncomp->input.data[uncomp->input.offset] >> 4) | (uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF) + 1;
@@ -234,18 +236,18 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
         uncomp->input.offset += 2;
         if (order < 2 || method > 2) {
             warn("Invalid PPMd data stream");
-            return 0;
+            return ERR_UNCOMP;
         }
 #ifndef PPMD8_FREEZE_SUPPORT
         if (order == 2) {
             warn("PPMd freeze method isn't supported");
-            return 0;
+            return ERR_UNCOMP;
         }
 #endif
         if (!Ppmd8_Alloc(&uncomp->state.ppmd8.ctx, size << 20, &uncomp->state.ppmd8.alloc))
-            return 0;
+            return ERR_UNCOMP;
         if (!Ppmd8_RangeDec_Init(&uncomp->state.ppmd8.ctx))
-            return 0;
+            return ERR_UNCOMP;
         Ppmd8_Init(&uncomp->state.ppmd8.ctx, order, method);
     }
 
@@ -253,7 +255,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
         int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
         if (symbol < 0) {
             warn("Invalid PPMd data stream");
-            return 0;
+            return ERR_UNCOMP;
         }
         ((uint8_t *)buffer)[bytes_done++] = (uint8_t)symbol;
     }
@@ -340,9 +342,13 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
                 return false;
         }
 
-        count = uncomp->uncompress_data(uncomp, buffer, buffer_size > UINT32_MAX ? UINT32_MAX : (uint32_t)buffer_size);
-        if (count == 0)
+        count = uncomp->uncompress_data(uncomp, buffer, buffer_size >= UINT32_MAX ? UINT32_MAX - 1 : (uint32_t)buffer_size);
+        if (count == ERR_UNCOMP)
             return false;
+        if (count == 0 && !zip->progr.data_left) {
+            warn("Insufficient data in compressed stream");
+            return false;
+        }
         zip->progr.bytes_done += count;
         buffer = (uint8_t *)buffer + count;
         buffer_size -= count;
