@@ -259,6 +259,16 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
         }
         ((uint8_t *)buffer)[bytes_done++] = (uint8_t)symbol;
     }
+
+    // TODO: simplify checking for last uncompressed block
+    if (uncomp->state.ppmd8.bytein.zip->progr.bytes_done + bytes_done == uncomp->state.ppmd8.bytein.zip->super.entry_size_uncompressed) {
+        int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
+        if (symbol != -1 || !Ppmd8_RangeDec_IsFinishedOK(&uncomp->state.ppmd8.ctx)) {
+            warn("Invalid PPMd data stream");
+            return ERR_UNCOMP;
+        }
+    }
+
     return bytes_done;
 }
 
@@ -342,7 +352,8 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
                 return false;
         }
 
-        count = uncomp->uncompress_data(uncomp, buffer, buffer_size >= UINT32_MAX ? UINT32_MAX - 1 : (uint32_t)buffer_size);
+        count = buffer_size >= UINT32_MAX ? UINT32_MAX - 1 : (uint32_t)buffer_size;
+        count = uncomp->uncompress_data(uncomp, buffer, count);
         if (count == ERR_UNCOMP)
             return false;
         if (count == 0 && !zip->progr.data_left) {
