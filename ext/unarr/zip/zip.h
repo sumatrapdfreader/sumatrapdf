@@ -5,6 +5,7 @@
 #define zip_zip_h
 
 #include "../common/unarr-imp.h"
+
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
@@ -14,6 +15,7 @@
 #ifdef HAVE_LZMA
 #include <LzmaDec.h>
 #endif
+#include "../ppmd/Ppmd8.h"
 
 typedef struct ar_archive_zip_s ar_archive_zip;
 
@@ -30,6 +32,7 @@ enum zip_signatures {
 enum compression_method {
     METHOD_STORE = 0, METHOD_DEFLATE = 8,
     METHOD_DEFLATE64 = 9, METHOD_BZIP2 = 12, METHOD_LZMA = 14,
+    METHOD_PPMD = 98,
 };
 
 #define ZIP_DIR_ENTRY_FIXED_SIZE 46
@@ -90,6 +93,18 @@ struct ar_archive_zip_uncomp;
 typedef uint32_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size);
 typedef void (* zip_uncomp_clear_state_fn)(struct ar_archive_zip_uncomp *uncomp);
 
+struct InputBuffer {
+    uint8_t data[4096];
+    uint16_t offset;
+    uint16_t bytes_left;
+};
+
+struct ByteReader {
+    IByteIn super;
+    struct InputBuffer *input;
+    ar_archive_zip *zip;
+};
+
 struct ar_archive_zip_uncomp {
     bool initialized;
     zip_uncomp_uncompress_data_fn uncompress_data;
@@ -103,18 +118,18 @@ struct ar_archive_zip_uncomp {
 #endif
 #ifdef HAVE_LZMA
         struct {
-            CLzmaDec *dec;
+            CLzmaDec dec;
+            ELzmaFinishMode finish;
             ISzAlloc alloc;
         } lzma;
 #endif
-        char _dummy;
+        struct {
+            CPpmd8 ctx;
+            struct ByteReader bytein;
+            ISzAlloc alloc;
+        } ppmd8;
     } state;
-    struct InputBuffer {
-        uint8_t data[4096];
-        uint16_t offset;
-        uint16_t bytes_left;
-    } input;
-    uint16_t flags;
+    struct InputBuffer input;
 };
 
 bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size);

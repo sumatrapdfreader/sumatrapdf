@@ -3,6 +3,30 @@
 
 #include "zip.h"
 
+static bool zip_fill_input_buffer(ar_archive_zip *zip)
+{
+    struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
+    size_t count;
+
+    if (uncomp->input.offset) {
+        memmove(&uncomp->input.data[0], &uncomp->input.data[uncomp->input.offset], uncomp->input.bytes_left);
+        uncomp->input.offset = 0;
+    }
+    count = sizeof(uncomp->input.data) - uncomp->input.bytes_left;
+    if (count > zip->progr.data_left)
+        count = zip->progr.data_left;
+    if (ar_read(zip->super.stream, &uncomp->input.data[uncomp->input.bytes_left], count) != count) {
+        warn("Unexpected EOF during decompression (invalid data size?)");
+        return false;
+    }
+    zip->progr.data_left -= count;
+    uncomp->input.bytes_left += (uint16_t)count;
+
+    return true;
+}
+
+/***** Deflate and Deflate64 compression *****/
+
 #ifdef HAVE_ZLIB
 static void *gZlib_Alloc(void *opaque, uInt count, uInt size) { (void)opaque; return calloc(count, size); }
 static void gZlib_Free(void *opaque, void *ptr) { (void)opaque; free(ptr); }
@@ -53,6 +77,8 @@ static void zip_clear_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp)
 }
 #endif
 
+/***** BZIP2 compression *****/
+
 #ifdef HAVE_BZIP2
 static void *gBzip2_Alloc(void *opaque, int count, int size) { (void)opaque; return calloc(count, size); }
 static void gBzip2_Free(void *opaque, void *ptr) { (void)opaque; free(ptr); }
@@ -101,29 +127,28 @@ static void zip_clear_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
 }
 #endif
 
+/***** LZMA compression *****/
+
 #ifdef HAVE_LZMA
 static void *gLzma_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
 static void gLzma_Free(void *self, void *ptr) { (void)self; free(ptr); }
 
-static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
+static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp, uint16_t flags)
 {
     uncomp->state.lzma.alloc.Alloc = gLzma_Alloc;
     uncomp->state.lzma.alloc.Free = gLzma_Free;
-    uncomp->state.lzma.dec = calloc(1, sizeof(*uncomp->state.lzma.dec));
-    if (!uncomp->state.lzma.dec)
-        return false;
-    LzmaDec_Construct(uncomp->state.lzma.dec);
+    uncomp->state.lzma.finish = (flags & (1 << 1)) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
+    LzmaDec_Construct(&uncomp->state.lzma.dec);
     return true;
 }
 
 static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
 {
-    ELzmaFinishMode lzmafinish = (uncomp->flags & (1 << 1)) ? LZMA_FINISH_END : LZMA_FINISH_ANY;
     SizeT srclen, dstlen;
     ELzmaStatus status;
     SRes res = SZ_OK;
 
-    if (!uncomp->state.lzma.dec->dic) {
+    if (!uncomp->state.lzma.dec.dic) {
         uint8_t propsize;
         if (uncomp->input.bytes_left < 9) {
             warn("Insufficient data in LZMA stream");
@@ -134,16 +159,17 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
             warn("Insufficient data in LZMA stream");
             return 0;
         }
-        res = LzmaDec_Allocate(uncomp->state.lzma.dec, &uncomp->input.data[uncomp->input.offset + 4], propsize, &uncomp->state.lzma.alloc);
+        res = LzmaDec_Allocate(&uncomp->state.lzma.dec, &uncomp->input.data[uncomp->input.offset + 4], propsize, &uncomp->state.lzma.alloc);
         uncomp->input.offset += 4 + propsize;
+        uncomp->input.bytes_left -= 4 + propsize;
         if (res != SZ_OK)
             return 0;
-        LzmaDec_Init(uncomp->state.lzma.dec);
+        LzmaDec_Init(&uncomp->state.lzma.dec);
     }
 
     srclen = uncomp->input.bytes_left;
     dstlen = buffer_size;
-    res = LzmaDec_DecodeToBuf(uncomp->state.lzma.dec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, lzmafinish, &status);
+    res = LzmaDec_DecodeToBuf(&uncomp->state.lzma.dec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, uncomp->state.lzma.finish, &status);
 
     uncomp->input.offset += (uint16_t)srclen;
     uncomp->input.bytes_left -= (uint16_t)srclen;
@@ -160,20 +186,96 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
 
 static void zip_clear_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
 {
-    LzmaDec_Free(uncomp->state.lzma.dec, &uncomp->state.lzma.alloc);
-    free(uncomp->state.lzma.dec);
+    LzmaDec_Free(&uncomp->state.lzma.dec, &uncomp->state.lzma.alloc);
 }
 #endif
 
-static bool zip_init_uncompress(struct ar_archive_zip_uncomp *uncomp, uint16_t method, uint16_t flags)
+/***** PPMd compression *****/
+
+static void *gPpmd_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
+static void gPpmd_Free(void *self, void *ptr) { (void)self; free(ptr); }
+
+static Byte gPpmd_ByteIn_Read(void *p)
 {
+    struct ByteReader *self = p;
+    if (!self->input->bytes_left && (!self->zip->progr.data_left || !zip_fill_input_buffer(self->zip)))
+        return 0;
+    self->input->bytes_left--;
+    return self->input->data[self->input->offset++];
+}
+
+static bool zip_init_uncompress_ppmd(ar_archive_zip *zip)
+{
+    struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
+    uncomp->state.ppmd8.alloc.Alloc = gPpmd_Alloc;
+    uncomp->state.ppmd8.alloc.Free = gPpmd_Free;
+    uncomp->state.ppmd8.bytein.super.Read = gPpmd_ByteIn_Read;
+    uncomp->state.ppmd8.bytein.input = &uncomp->input;
+    uncomp->state.ppmd8.bytein.zip = zip;
+    uncomp->state.ppmd8.ctx.Stream.In = &uncomp->state.ppmd8.bytein.super;
+    Ppmd8_Construct(&uncomp->state.ppmd8.ctx);
+    return true;
+}
+
+static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
+{
+    uint32_t bytes_done = 0;
+
+    if (!uncomp->state.ppmd8.ctx.Base) {
+        uint8_t order, size, method;
+        if (uncomp->input.bytes_left < 2) {
+            warn("Invalid PPMd data stream");
+            return 0;
+        }
+        order = (uncomp->input.data[uncomp->input.offset] & 0x0F) + 1;
+        size = ((uncomp->input.data[uncomp->input.offset] >> 4) | (uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF) + 1;
+        method = uncomp->input.data[uncomp->input.offset + 1] >> 4;
+        uncomp->input.bytes_left -= 2;
+        uncomp->input.offset += 2;
+        if (order < 2 || method > 2) {
+            warn("Invalid PPMd data stream");
+            return 0;
+        }
+#ifndef PPMD8_FREEZE_SUPPORT
+        if (order == 2) {
+            warn("PPMd freeze method isn't supported");
+            return 0;
+        }
+#endif
+        if (!Ppmd8_Alloc(&uncomp->state.ppmd8.ctx, size << 20, &uncomp->state.ppmd8.alloc))
+            return 0;
+        if (!Ppmd8_RangeDec_Init(&uncomp->state.ppmd8.ctx))
+            return 0;
+        Ppmd8_Init(&uncomp->state.ppmd8.ctx, order, method);
+    }
+
+    while (bytes_done < buffer_size) {
+        int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
+        if (symbol < 0) {
+            warn("Invalid PPMd data stream");
+            return 0;
+        }
+        ((uint8_t *)buffer)[bytes_done++] = (uint8_t)symbol;
+    }
+    return bytes_done;
+}
+
+static void zip_clear_uncompress_ppmd(struct ar_archive_zip_uncomp *uncomp)
+{
+    Ppmd8_Free(&uncomp->state.ppmd8.ctx, &uncomp->state.ppmd8.alloc);
+}
+
+/***** common decompression handling *****/
+
+static bool zip_init_uncompress(ar_archive_zip *zip)
+{
+    struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
     if (uncomp->initialized)
         return true;
     memset(uncomp, 0, sizeof(*uncomp));
-    uncomp->flags = flags;
-    if (method == METHOD_DEFLATE || method == METHOD_DEFLATE64) {
+    if (zip->entry.method == METHOD_DEFLATE || zip->entry.method == METHOD_DEFLATE64) {
 #ifdef HAVE_ZLIB
-        if (zip_init_uncompress_deflate(uncomp, method == METHOD_DEFLATE64)) {
+        if (zip_init_uncompress_deflate(uncomp, zip->entry.method == METHOD_DEFLATE64)) {
             uncomp->uncompress_data = zip_uncompress_data_deflate;
             uncomp->clear_state = zip_clear_uncompress_deflate;
         }
@@ -181,7 +283,7 @@ static bool zip_init_uncompress(struct ar_archive_zip_uncomp *uncomp, uint16_t m
         warn("Deflate support requires ZLIB (define HAVE_ZLIB)");
 #endif
     }
-    else if (method == METHOD_BZIP2) {
+    else if (zip->entry.method == METHOD_BZIP2) {
 #ifdef HAVE_BZIP2
         if (zip_init_uncompress_bzip2(uncomp)) {
             uncomp->uncompress_data = zip_uncompress_data_bzip2;
@@ -191,9 +293,9 @@ static bool zip_init_uncompress(struct ar_archive_zip_uncomp *uncomp, uint16_t m
         warn("BZIP2 support requires BZIP2 (define HAVE_BZIP2)");
 #endif
     }
-    else if (method == METHOD_LZMA) {
+    else if (zip->entry.method == METHOD_LZMA) {
 #ifdef HAVE_LZMA
-        if (zip_init_uncompress_lzma(uncomp)) {
+        if (zip_init_uncompress_lzma(uncomp, zip->entry.flags)) {
             uncomp->uncompress_data = zip_uncompress_data_lzma;
             uncomp->clear_state = zip_clear_uncompress_lzma;
         }
@@ -201,8 +303,14 @@ static bool zip_init_uncompress(struct ar_archive_zip_uncomp *uncomp, uint16_t m
         warn("LZMA support requires LZMA SDK (define HAVE_LZMA)");
 #endif
     }
+    else if (zip->entry.method == METHOD_PPMD) {
+        if (zip_init_uncompress_ppmd(zip)) {
+            uncomp->uncompress_data = zip_uncompress_data_ppmd;
+            uncomp->clear_state = zip_clear_uncompress_ppmd;
+        }
+    }
     else
-        warn("Unsupported compression method %d", method);
+        warn("Unsupported compression method %d", zip->entry.method);
     uncomp->initialized = uncomp->uncompress_data != NULL && uncomp->clear_state != NULL;
     return uncomp->initialized;
 }
@@ -220,7 +328,7 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
     struct ar_archive_zip_uncomp *uncomp = &zip->uncomp;
     uint32_t count;
 
-    if (!zip_init_uncompress(uncomp, zip->entry.method, zip->entry.flags))
+    if (!zip_init_uncompress(zip))
         return false;
 
     for (;;) {
@@ -228,19 +336,8 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
             return true;
 
         if (uncomp->input.bytes_left < sizeof(uncomp->input.data) / 2 && zip->progr.data_left) {
-            if (uncomp->input.offset) {
-                memmove(&uncomp->input.data[0], &uncomp->input.data[uncomp->input.offset], uncomp->input.bytes_left);
-                uncomp->input.offset = 0;
-            }
-            count = sizeof(uncomp->input.data) - uncomp->input.bytes_left;
-            if (count > zip->progr.data_left)
-                count = (uint32_t)zip->progr.data_left;
-            if (ar_read(zip->super.stream, &uncomp->input.data[uncomp->input.bytes_left], count) != count) {
-                warn("Unexpected EOF during decompression (invalid data size?)");
+            if (!zip_fill_input_buffer(zip))
                 return false;
-            }
-            zip->progr.data_left -= count;
-            uncomp->input.bytes_left += (uint16_t)count;
         }
 
         count = uncomp->uncompress_data(uncomp, buffer, buffer_size > UINT32_MAX ? UINT32_MAX : (uint32_t)buffer_size);
