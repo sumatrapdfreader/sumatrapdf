@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Apr 29 09:15:02 2014
-+++ openjpeg\j2k.c	Thu May 15 22:28:26 2014
++++ openjpeg\j2k.c	Wed Jul 09 02:05:04 2014
 @@ -3162,11 +3162,11 @@
                                  &l_cp->tcps[p_j2k->m_current_tile_number] :
                                  p_j2k->m_specific_param.m_decoder.m_default_tcp;
@@ -14,7 +14,35 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
            return OPJ_FALSE;
            }
          assert(l_current_poc_nb < 32);
-@@ -4070,10 +4070,14 @@
+@@ -3645,11 +3645,12 @@
+                 p_header_size -= l_N_ppm;
+                 p_header_data += l_N_ppm;
+ 
+                 l_cp->ppm_data_read += l_N_ppm; /* Increase the number of data read*/
+ 
+-                if (p_header_size)
++                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=362 */
++                if (p_header_size >= 4)
+                 {
+                         opj_read_bytes(p_header_data,&l_N_ppm,4);               /* N_ppm^i */
+                         p_header_data+=4;
+                         p_header_size-=4;
+                 }
+@@ -3686,11 +3687,12 @@
+ 
+         /* Need to read an incomplete Ippm series*/
+         if (l_remaining_data) {
+                 OPJ_BYTE *new_ppm_data;
+                 assert(l_cp->ppm_data == l_cp->ppm_buffer && "We need ppm_data and ppm_buffer to be the same when reallocating");
+-                new_ppm_data = (OPJ_BYTE *) opj_realloc(l_cp->ppm_data, l_cp->ppm_len + l_N_ppm);
++                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=362 */
++                new_ppm_data = (OPJ_BYTE *) opj_realloc(l_cp->ppm_data, l_cp->ppm_len + l_remaining_data);
+                 if (! new_ppm_data) {
+                         opj_free(l_cp->ppm_data);
+                         l_cp->ppm_data = NULL;
+                         l_cp->ppm_buffer = NULL;  /* TODO: no need for a new local variable: ppm_buffer and ppm_data are enough */
+                         l_cp->ppm_len = 0;
+@@ -4070,10 +4072,14 @@
                                                          "number of tile-part (%d), giving up\n", l_current_part, l_tcp->m_nb_tile_parts );
                                          p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
                                          return OPJ_FALSE;
@@ -29,7 +57,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                            opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to the current "
                              "number of tile-part (header) (%d), giving up\n", l_current_part, l_num_parts );
                            p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
-@@ -4314,10 +4318,16 @@
+@@ -4314,10 +4320,16 @@
          l_current_data = &(l_tcp->m_data);
          l_tile_len = &l_tcp->m_data_size;
  

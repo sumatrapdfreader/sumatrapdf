@@ -3647,7 +3647,8 @@ OPJ_BOOL j2k_read_ppm_v3 (
 
                 l_cp->ppm_data_read += l_N_ppm; /* Increase the number of data read*/
 
-                if (p_header_size)
+                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=362 */
+                if (p_header_size >= 4)
                 {
                         opj_read_bytes(p_header_data,&l_N_ppm,4);               /* N_ppm^i */
                         p_header_data+=4;
@@ -3688,7 +3689,8 @@ OPJ_BOOL j2k_read_ppm_v3 (
         if (l_remaining_data) {
                 OPJ_BYTE *new_ppm_data;
                 assert(l_cp->ppm_data == l_cp->ppm_buffer && "We need ppm_data and ppm_buffer to be the same when reallocating");
-                new_ppm_data = (OPJ_BYTE *) opj_realloc(l_cp->ppm_data, l_cp->ppm_len + l_N_ppm);
+                /* cf. https://code.google.com/p/openjpeg/issues/detail?id=362 */
+                new_ppm_data = (OPJ_BYTE *) opj_realloc(l_cp->ppm_data, l_cp->ppm_len + l_remaining_data);
                 if (! new_ppm_data) {
                         opj_free(l_cp->ppm_data);
                         l_cp->ppm_data = NULL;
