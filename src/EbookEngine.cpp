@@ -714,10 +714,16 @@ public:
 class EpubEngineImpl : public EbookEngine {
 public:
     EpubEngineImpl() : EbookEngine(), doc(NULL) { }
-    virtual ~EpubEngineImpl() { delete doc; }
+    virtual ~EpubEngineImpl() {
+        delete doc;
+        if (stream)
+            stream->Release();
+    }
     virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
+
+    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
 
     virtual PageLayoutType PreferredLayout();
 
@@ -734,6 +740,7 @@ public:
 
 protected:
     EpubDoc *doc;
+    IStream *stream;
 
     bool Load(const WCHAR *fileName);
     bool Load(IStream *stream);
@@ -756,6 +763,8 @@ bool EpubEngineImpl::Load(const WCHAR *fileName)
 
 bool EpubEngineImpl::Load(IStream *stream)
 {
+    this->stream = stream;
+    stream->AddRef();
     doc = EpubDoc::CreateFromStream(stream);
     return FinishLoading();
 }
@@ -779,6 +788,19 @@ bool EpubEngineImpl::FinishLoading()
         return false;
 
     return pages->Count() > 0;
+}
+
+bool EpubEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+{
+    if (stream) {
+        size_t len;
+        ScopedMem<void> data(GetDataFromStream(stream, &len));
+        if (data && file::WriteAll(copyFileName, data, len))
+            return true;
+    }
+    if (!fileName)
+        return false;
+    return CopyFile(fileName, copyFileName, FALSE);
 }
 
 PageLayoutType EpubEngineImpl::PreferredLayout()
