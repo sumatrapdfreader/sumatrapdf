@@ -59,19 +59,25 @@ public:
     bool UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName=NULL);
 };
 
-IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive=false);
-
-class ZipCreatorData;
-
 class ZipCreator {
-    ZipCreatorData *d;
+    str::Str<char> filedata;
+    str::Str<char> centraldir;
+    size_t fileCount;
+
+    bool AddFileData(const char *nameUtf8, const void *data, size_t size, uint32_t dosdate=0);
+    void CreateEOCD(char eocdData[22]);
+
 public:
-    ZipCreator();
-    ~ZipCreator();
+    ZipCreator() : fileCount(0) { }
 
     bool AddFile(const WCHAR *filePath, const WCHAR *nameInZip=NULL);
     bool AddFileFromDir(const WCHAR *filePath, const WCHAR *dir);
-    bool SaveAs(const WCHAR *zipFilePath);
+    bool AddDir(const WCHAR *dirPath, bool recursive=false);
+
+    bool SaveTo(const WCHAR *zipFilePath);
+    bool SaveTo(IStream *stream);
 };
+
+IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive=false);
 
 #endif

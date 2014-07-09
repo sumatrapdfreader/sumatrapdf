@@ -404,6 +404,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\ByteWriter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\CmdLineParser.cpp"
 					>
 				</File>

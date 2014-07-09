@@ -764,11 +764,8 @@ $(OU)\WebpReader.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\Web
 $(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\WinUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\ZipUtil.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
-$(OU)\ZipUtil.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
-$(OU)\ZipUtil.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OU)\ZipUtil.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\src\utils\Allocator.h
-$(OU)\ZipUtil.obj: $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
+$(OU)\ZipUtil.obj: $B\ext\unarr\unarr.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OU)\ZipUtil.obj: $B\src\utils\ByteWriter.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
 $(OU)\ZipUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\ZipUtil.obj: $B\src\utils\Vec.h $B\src\utils\ZipUtil.h
 $(OUIA)\DocumentProvider.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h

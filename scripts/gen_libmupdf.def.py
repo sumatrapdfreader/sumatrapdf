@@ -70,8 +70,6 @@ EXPORTS
 	deflateInit2_
 	deflate
 	deflateEnd
-	compress
-	compressBound
 	crc32
 """
 

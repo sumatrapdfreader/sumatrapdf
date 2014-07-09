@@ -439,6 +439,7 @@
     <ClInclude Include="..\src\utils\BitReader.h" />
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />
     <ClInclude Include="..\src\utils\ByteReader.h" />
+    <ClInclude Include="..\src\utils\ByteWriter.h" />
     <ClInclude Include="..\src\utils\CmdLineParser.h" />
     <ClInclude Include="..\src\utils\CryptoUtil.h" />
     <ClInclude Include="..\src\utils\CssParser.h" />

@@ -1,9 +1,11 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "ZipUtil.h"
 
+#include "ByteWriter.h"
 #include "DirIter.h"
 #include "FileUtil.h"
 
@@ -11,13 +13,12 @@
 extern "C" {
 #include <unarr.h>
 }
-#endif
-
-// mini(un)zip
+#else
 #include <ioapi.h>
 #include <iowin32.h>
 #include <iowin32s.h>
-#include <zip.h>
+#endif
+#include <zlib.h>
 
 ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
@@ -297,102 +298,200 @@ bool ZipFile::UnzipFile(const WCHAR *fileName, const WCHAR *dir, const WCHAR *un
 }
 
 
-class ZipCreatorData {
-public:
-    WStrVec pathsAndZipNames;
-};
-
-ZipCreator::ZipCreator()
+static uint32_t zip_deflate(void *dst, uint32_t dstlen, const void *src, uint32_t srclen)
 {
-    d = new ZipCreatorData;
+    z_stream stream = { 0 };
+    stream.next_in = (Bytef *)src;
+    stream.avail_in = srclen;
+    stream.next_out = (Bytef *)dst;
+    stream.avail_out = dstlen;
+
+    uint32_t newdstlen = 0;
+    int err = deflateInit2(&stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
+    if (err != Z_OK)
+        return 0;
+    err = deflate(&stream, Z_FINISH);
+    if (Z_STREAM_END == err)
+        newdstlen = stream.total_out;
+    err = deflateEnd(&stream);
+    if (err != Z_OK)
+        return 0;
+    return newdstlen;
 }
 
-ZipCreator::~ZipCreator()
+bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size, uint32_t dosdate)
 {
-    delete d;
-}
-
-// add a given file under (optional) nameInZip
-// it's not a good idea to save absolute windows-style
-// in the zip file, so we try to pick an intelligent
-// name if filePath is absolute and nameInZip is NULL
-bool ZipCreator::AddFile(const WCHAR *filePath, const WCHAR *nameInZip)
-{
-    if (!file::Exists(filePath))
+    CrashIf(size >= UINT32_MAX);
+    CrashIf(fileCount >= UINT16_MAX);
+    CrashIf(str::Len(nameUtf8) >= UINT16_MAX);
+    if (size >= UINT32_MAX)
         return false;
-    d->pathsAndZipNames.Append(str::Dup(filePath));
-    if (NULL == nameInZip) {
-        if (path::IsAbsolute(filePath)) {
-            nameInZip = path::GetBaseName(filePath);
-        } else {
-            nameInZip = filePath;
-        }
+    if (fileCount >= UINT16_MAX - 1)
+        return false;
+
+    size_t fileOffset = filedata.Size();
+    uint16_t flags = (1 << 11); // filename is UTF-8
+    uInt crc = crc32(0, (const Bytef *)data, (uInt)size);
+    size_t namelen = str::Len(nameUtf8);
+    if (namelen >= UINT16_MAX)
+        return false;
+
+    uint16_t method = Z_DEFLATED;
+    uLongf compressedSize = size;
+    ScopedMem<char> compressed((char *)malloc(size));
+    if (!compressed)
+        return false;
+    compressedSize = zip_deflate(compressed, size, data, size);
+    if (!compressedSize) {
+        method = 0; // Store
+        memcpy(compressed.Get(), data, size);
+        compressedSize = size;
     }
-    d->pathsAndZipNames.Append(str::Dup(nameInZip));
+
+    ByteWriterLE local(filedata.AppendBlanks(30), 30);
+    local.Write32(0x04034B50); // signature
+    local.Write16(20); // version needed to extract
+    local.Write16(flags);
+    local.Write16(method);
+    local.Write32(dosdate);
+    local.Write32(crc);
+    local.Write32(compressedSize);
+    local.Write32((uint32_t)size);
+    local.Write16((uint16_t)namelen);
+    local.Write16(0); // extra field length
+    filedata.Append(nameUtf8, namelen);
+
+    bool ok = filedata.AppendChecked(compressed, compressedSize);
+    if (!ok || filedata.Size() >= UINT32_MAX) {
+        filedata.RemoveAt(fileOffset, filedata.Size() - fileOffset);
+        return false;
+    }
+
+    ByteWriterLE central(centraldir.AppendBlanks(46), 46);
+    central.Write32(0x02014B50); // signature
+    central.Write16(20); // version made by
+    central.Write16(20); // version needed to extract
+    central.Write16(flags);
+    central.Write16(method);
+    central.Write32(dosdate);
+    central.Write32(crc);
+    central.Write32(compressedSize);
+    central.Write32((uint32_t)size);
+    central.Write16((uint16_t)namelen);
+    central.Write16(0); // extra field length
+    central.Write16(0); // file comment length
+    central.Write16(0); // disk number
+    central.Write16(0); // internal file attributes
+    central.Write32(0); // external file attributes
+    central.Write32(fileOffset);
+    centraldir.Append(nameUtf8, namelen);
+
+    fileCount++;
+
     return true;
 }
 
-// filePath must be in dir, we use the filePath relative to dir
-// as the zip name
+void ZipCreator::CreateEOCD(char eocdData[22])
+{
+    ByteWriterLE eocd(eocdData, 22);
+    eocd.Write32(0x06054B50); // signature
+    eocd.Write16(0); // disk number
+    eocd.Write16(0); // disk number of central directory
+    eocd.Write16((uint16_t)fileCount);
+    eocd.Write16((uint16_t)fileCount);
+    eocd.Write32(centraldir.Size());
+    eocd.Write32(filedata.Size());
+    eocd.Write16(0); // comment len
+}
+
+// add a given file under (optional) nameInZip
+bool ZipCreator::AddFile(const WCHAR *filePath, const WCHAR *nameInZip)
+{
+    size_t filelen;
+    ScopedMem<char> filedata(file::ReadAll(filePath, &filelen));
+    if (!filedata)
+        return false;
+
+    uint32_t dosdatetime = 0;
+    FILETIME ft = file::GetModificationTime(filePath);
+    if (ft.dwLowDateTime || ft.dwHighDateTime) {
+        FILETIME ftLocal;
+        WORD dosDate, dosTime;
+        if (FileTimeToLocalFileTime(&ft, &ftLocal) &&
+            FileTimeToDosDateTime(&ftLocal, &dosDate, &dosTime)) {
+            dosdatetime = MAKELONG(dosTime, dosDate);
+        }
+    }
+
+    if (!nameInZip)
+        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseName(filePath) : filePath;
+    ScopedMem<char> nameUtf8(str::conv::ToUtf8(nameInZip));
+    str::TransChars(nameUtf8, "\\", "/");
+
+    return AddFileData(nameUtf8, filedata, filelen, dosdatetime);
+}
+
+// we use the filePath relative to dir as the zip name
 bool ZipCreator::AddFileFromDir(const WCHAR *filePath, const WCHAR *dir)
 {
-    if (!str::StartsWith(filePath, dir))
+    if (str::IsEmpty(dir) || !str::StartsWith(filePath, dir))
         return false;
-    const WCHAR *nameInZip = filePath + str::Len(dir);
-    if (path::IsSep(*nameInZip))
-        ++nameInZip;
+    const WCHAR *nameInZip = filePath + str::Len(dir) + 1;
+    if (!path::IsSep(nameInZip[-1]))
+        return false;
     return AddFile(filePath, nameInZip);
 }
 
-static bool AppendFileToZip(zipFile& zf, const WCHAR *nameInZip, const char *fileData, size_t fileSize)
+bool ZipCreator::AddDir(const WCHAR *dirPath, bool recursive)
 {
-#ifdef _WIN64
-    CrashIf(fileSize > UINT_MAX);
-    if (fileSize > UINT_MAX)
-        return false;
-#endif
-    ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
-    str::TransChars(nameInZipUtf, "\\", "/");
-    zip_fileinfo zi = { 0 };
-    int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 0);
-    if (ZIP_OK == err) {
-        err = zipWriteInFileInZip(zf, fileData, (unsigned int)fileSize);
-        if (ZIP_OK == err)
-            err = zipCloseFileInZip(zf);
-        else
-            zipCloseFileInZip(zf);
+    DirIter di(dirPath, recursive);
+    for (const WCHAR *filePath = di.First(); filePath; filePath = di.Next()) {
+        if (!AddFileFromDir(filePath, dirPath))
+            return false;
     }
-    return ZIP_OK == err;
+    return true;
 }
 
-bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
+bool ZipCreator::SaveTo(const WCHAR *zipFilePath)
 {
-    if (d->pathsAndZipNames.Count() == 0)
+    char endOfCentralDir[22];
+    CreateEOCD(endOfCentralDir);
+
+    ScopedHandle h(CreateFile(zipFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
+    if (INVALID_HANDLE_VALUE == h)
         return false;
-    zlib_filefunc64_def ffunc;
-    fill_win32_filefunc64(&ffunc);
-    zipFile zf = zipOpen2_64(zipFilePath, 0, NULL, &ffunc);
-    if (!zf)
+    DWORD written;
+    BOOL ok = WriteFile(h, filedata.Get(), (DWORD)filedata.Size(), &written, NULL);
+    if (!ok || written != filedata.Size())
+        return false;
+    ok = WriteFile(h, centraldir.Get(), (DWORD)centraldir.Size(), &written, NULL);
+    if (!ok || written != centraldir.Size())
+        return false;
+    ok = WriteFile(h, endOfCentralDir, sizeof(endOfCentralDir), &written, NULL);
+    if (!ok || written != sizeof(endOfCentralDir))
         return false;
 
-    bool result = true;
-    for (size_t i = 0; i < d->pathsAndZipNames.Count(); i += 2) {
-        const WCHAR *fileName = d->pathsAndZipNames.At(i);
-        const WCHAR *nameInZip = d->pathsAndZipNames.At(i + 1);
-        size_t fileSize;
-        ScopedMem<char> fileData(file::ReadAll(fileName, &fileSize));
-        if (!fileData) {
-            result = false;
-            break;
-        }
-        result = AppendFileToZip(zf, nameInZip, fileData, fileSize);
-        if (!result)
-            break;
-    }
-    int err = zipClose(zf, NULL);
-    if (err != ZIP_OK)
-        result = false;
-    return result;
+    return true;
+}
+
+bool ZipCreator::SaveTo(IStream *stream)
+{
+    char endOfCentralDir[22];
+    CreateEOCD(endOfCentralDir);
+
+    ULONG written;
+    HRESULT res = stream->Write(filedata.Get(), (ULONG)filedata.Size(), &written);
+    if (FAILED(res) || (size_t)written != filedata.Size())
+        return false;
+    res = stream->Write(centraldir.Get(), (ULONG)centraldir.Size(), &written);
+    if (FAILED(res) || (size_t)written != centraldir.Size())
+        return false;
+    res = stream->Write(endOfCentralDir, sizeof(endOfCentralDir), &written);
+    if (FAILED(res) || written != sizeof(endOfCentralDir))
+        return false;
+
+    return true;
 }
 
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
@@ -404,27 +503,10 @@ IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
     if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
         return NULL;
 
-    zlib_filefunc64_def ffunc;
-    fill_win32s_filefunc64(&ffunc);
-    zipFile zf = zipOpen2_64(stream, 0, NULL, &ffunc);
-    if (!zf)
+    ZipCreator zc;
+    if (!zc.AddDir(dirPath, recursive))
         return NULL;
-
-    size_t dirLen = str::Len(dirPath);
-    if (!path::IsSep(dirPath[dirLen - 1]))
-        dirLen++;
-
-    bool ok = true;
-    DirIter di(dirPath, recursive);
-    for (const WCHAR *filePath = di.First(); filePath && ok; filePath = di.Next()) {
-        CrashIf(!str::StartsWith(filePath, dirPath));
-        const WCHAR *nameInZip = filePath + dirLen;
-        size_t fileSize;
-        ScopedMem<char> fileData(file::ReadAll(filePath, &fileSize));
-        ok = fileData && AppendFileToZip(zf, nameInZip, fileData, fileSize);
-    }
-    int err = zipClose(zf, NULL);
-    if (!ok || err != ZIP_OK)
+    if (!zc.SaveTo(stream))
         return NULL;
 
     stream->AddRef();

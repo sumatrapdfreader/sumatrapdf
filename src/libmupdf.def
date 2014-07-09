@@ -395,6 +395,7 @@ EXPORTS
 	fz_remove_item
 	fz_empty_store
 	fz_store_scavenge
+	fz_shrink_store
 	fz_open_file
 	fz_open_file_w
 	fz_open_fd
@@ -847,6 +848,4 @@ EXPORTS
 	deflateInit2_
 	deflate
 	deflateEnd
-	compress
-	compressBound
 	crc32
