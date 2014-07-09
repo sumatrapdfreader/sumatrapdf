@@ -100,6 +100,27 @@
 				CompileAsManaged=""
 			/>
 		</Configuration>
+		<Configuration
+			Name="unarr-test|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			BuildLogFile="..\obj-dbg\BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe unarr_test"
+				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe rebuild unarr_test"
+				CleanCommandLine="del /s ..\obj-dbg\*.obj"
+				Output="..\obj-dbg\unarr.exe"
+				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA"
+				IncludeSearchPath="..\ext\zlib;..\ext\lzma\C;..\ext\bzip2;..\src\utils\msvc"
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -2199,6 +2220,106 @@
 				RelativePath="..\src\installer\Uninstall.cpp"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="unarr"
+			>
+			<File
+				RelativePath="..\ext\unarr\main.c"
+				>
+			</File>
+			<File
+				RelativePath="..\ext\unarr\unarr.h"
+				>
+			</File>
+			<Filter
+				Name="common"
+				>
+				<File
+					RelativePath="..\ext\unarr\common\allocator.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\crc32.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\custalloc.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\lzss.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\stream.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\string.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\unarr-imp.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\common\unarr.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="rar"
+				>
+				<File
+					RelativePath="..\ext\unarr\rar\filter-rar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\parse-rar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\rar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\rar.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\rarvm.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\rarvm.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\uncompress-rar.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="zip"
+				>
+				<File
+					RelativePath="..\ext\unarr\zip\parse-zip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\uncompress-zip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\zip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\zip.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\docs\releasenotes.txt"

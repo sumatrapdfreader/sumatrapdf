@@ -162,20 +162,3 @@ solution "signfile"
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "shlwapi", "crypt32" }
-
-solution "unarr"
-  solution_common()
-
-  project "unarr"
-    kind "ConsoleApp"
-    language "C"
-    files {
-      "ext/unarr/main.c",
-      "ext/unarr/unarr.h",
-      "ext/unarr/common/*",
-      "ext/unarr/ppmd/*",
-      "ext/unarr/rar/*",
-      "ext/unarr/zip/*"
-    }
-    defines { "_CRT_SECURE_NO_WARNINGS" }
-    includedirs { "src/utils/msvc" }

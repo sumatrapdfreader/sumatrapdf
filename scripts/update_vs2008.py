@@ -22,6 +22,10 @@ DIR_STRUCT = [
 	(pjoin("mupdf", "source", "pdf"), ("mupdf", "pdf")),
 	(pjoin("mupdf", "source", "tools"), ("mupdf", "tools")),
 	(pjoin("mupdf", "source", "xps"), ("mupdf", "xps")),
+	(pjoin("ext", "unarr"), ("unarr")),
+	(pjoin("ext", "unarr", "common"), ("unarr", "common")),
+	(pjoin("ext", "unarr", "rar"), ("unarr", "rar")),
+	(pjoin("ext", "unarr", "zip"), ("unarr", "zip")),
 ]
 SOURCE_EXTS = [".cpp", ".c", ".h", ".rc"]
 EXCLUDE = [
