@@ -366,9 +366,6 @@ GlobalPrefs = [
 	Field("FullPathInTitle", Bool, False,
 		"if true, we show the full path to a file in the title bar",
 		expert=True, version="2.6"),
-	Field("UseTabs", Bool, True,
-		"if true, documents are opened in tabs instead of new windows",
-		expert=True, version="2.6"),
 	Field("ShowSingleTab", Bool, True,
 		"if false, the tab bar is hidden if there's only a single tab",
 		expert=True, version="2.6"),
@@ -464,6 +461,9 @@ GlobalPrefs = [
 		"the height of bookmarks (table of contents) part"),
 	Field("ShowStartPage", Bool, True,
 		"if true, we show a list of frequently read documents when no document is loaded"),
+	Field("UseTabs", Bool, True,
+		"if true, documents are opened in tabs instead of new windows",
+		version="2.6"),
 	EmptyLine(),
 
 	# file history and favorites

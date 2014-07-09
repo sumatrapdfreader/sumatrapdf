@@ -248,8 +248,6 @@ struct GlobalPrefs {
     bool reloadModifiedDocuments;
     // if true, we show the full path to a file in the title bar
     bool fullPathInTitle;
-    // if true, documents are opened in tabs instead of new windows
-    bool useTabs;
     // if false, the tab bar is hidden if there's only a single tab
     bool showSingleTab;
     // if true, the tab bar replaces the title bar
@@ -325,6 +323,8 @@ struct GlobalPrefs {
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
+    // if true, documents are opened in tabs instead of new windows
+    bool useTabs;
     // information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
     // a list of paths for files which will be reopened at the next start
@@ -507,7 +507,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, showMenubar),              Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, reloadModifiedDocuments),  Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, fullPathInTitle),          Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, useTabs),                  Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, showSingleTab),            Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, tabBarAsTitleBar),         Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, zoomLevels),               Type_FloatArray, (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
@@ -538,13 +537,14 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, sidebarDx),                Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, useTabs),                  Type_Bool,       true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
     { offsetof(GlobalPrefs, reopenOnce),               Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 51, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0UseTabs\0ShowSingleTab\0TabBarAsTitleBar\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 51, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ShowSingleTab\0TabBarAsTitleBar\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 
