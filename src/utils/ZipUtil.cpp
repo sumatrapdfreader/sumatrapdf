@@ -201,15 +201,15 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
         return false;
 
     uint16_t method = Z_DEFLATED;
-    uLongf compressedSize = size;
+    uLongf compressedSize = (uint32_t)size;
     ScopedMem<char> compressed((char *)malloc(size));
     if (!compressed)
         return false;
-    compressedSize = zip_deflate(compressed, size, data, size);
+    compressedSize = zip_deflate(compressed, (uint32_t)size, data, (uint32_t)size);
     if (!compressedSize) {
         method = 0; // Store
         memcpy(compressed.Get(), data, size);
-        compressedSize = size;
+        compressedSize = (uint32_t)size;
     }
 
     ByteWriterLE local(filedata.AppendBlanks(30), 30);
@@ -247,7 +247,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
     central.Write16(0); // disk number
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
-    central.Write32(fileOffset);
+    central.Write32((uint32_t)fileOffset);
     centraldir.Append(nameUtf8, namelen);
 
     fileCount++;
@@ -263,8 +263,8 @@ void ZipCreator::CreateEOCD(char eocdData[22])
     eocd.Write16(0); // disk number of central directory
     eocd.Write16((uint16_t)fileCount);
     eocd.Write16((uint16_t)fileCount);
-    eocd.Write32(centraldir.Size());
-    eocd.Write32(filedata.Size());
+    eocd.Write32((uint32_t)centraldir.Size());
+    eocd.Write32((uint32_t)filedata.Size());
     eocd.Write16(0); // comment len
 }
 
