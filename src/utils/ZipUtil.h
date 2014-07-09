@@ -44,22 +44,23 @@ public:
 };
 
 class ZipCreator {
-    str::Str<char> filedata;
+    ISequentialStream *stream;
     str::Str<char> centraldir;
+    size_t bytesWritten;
     size_t fileCount;
 
+    bool WriteData(const void *data, size_t size);
     bool AddFileData(const char *nameUtf8, const void *data, size_t size, uint32_t dosdate=0);
-    void CreateEOCD(char eocdData[22]);
 
 public:
-    ZipCreator() : fileCount(0) { }
+    ZipCreator(const WCHAR *zipFilePath);
+    ZipCreator(ISequentialStream *stream);
+    ~ZipCreator();
 
     bool AddFile(const WCHAR *filePath, const WCHAR *nameInZip=NULL);
     bool AddFileFromDir(const WCHAR *filePath, const WCHAR *dir);
     bool AddDir(const WCHAR *dirPath, bool recursive=false);
-
-    bool SaveTo(const WCHAR *zipFilePath);
-    bool SaveTo(IStream *stream);
+    bool Finish();
 };
 
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive=false);

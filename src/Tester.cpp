@@ -228,7 +228,7 @@ void ZipCreateTest()
 {
     WCHAR *zipFileName = L"tester-tmp.zip";
     file::Delete(zipFileName);
-    ZipCreator zc;
+    ZipCreator zc(zipFileName);
     bool ok = zc.AddFile(L"makefile.deps");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.deps");
@@ -239,9 +239,9 @@ void ZipCreateTest()
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
     }
-    ok = zc.SaveTo(zipFileName);
+    ok = zc.Finish();
     if (!ok) {
-        printf("ZipCreateTest(): SaveTo() failed");
+        printf("ZipCreateTest(): Finish() failed");
     }
 }
 
