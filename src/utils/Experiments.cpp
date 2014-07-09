@@ -9,6 +9,8 @@ but only to make sure it's compileable. */
 #include "BaseUtil.h"
 #include "FileUtil.h"
 
+// TODO: mini(un)zip has been removed
+#if 0
 // mini(un)zip
 #include <ioapi.h>
 #include <iowin32.h>
@@ -71,7 +73,9 @@ ZipExtractor::~ZipExtractor()
 
 ZipExtractor *ZipExtractor::CreateFromFile(const WCHAR *path, Allocator *allocator)
 {
+    // TODO: new might use a different allocator
     ZipExtractor *ze = new ZipExtractor(allocator);
+    // TODO: who owns path?
     ze->d->path = path;
     // TODO: do sth.
     return ze;
@@ -80,6 +84,7 @@ ZipExtractor *ZipExtractor::CreateFromFile(const WCHAR *path, Allocator *allocat
 ZipExtractor *ZipExtractor::CreateFromStream(IStream *stream, Allocator *allocator)
 {
     ZipExtractor *ze = new ZipExtractor(allocator);
+    // TODO: stream->AddRef?
     ze->d->stream = stream;
     // TODO: do sth.
     return ze;
@@ -106,3 +111,4 @@ void *ZipExtractor::GetFileData(size_t fileInfoIdx, size_t *lenOut)
 {
     return NULL;
 }
+#endif
