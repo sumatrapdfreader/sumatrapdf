@@ -79,7 +79,7 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 UTILS_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
+	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) \
 	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp /I$(EXTDIR)/unarr \
 	/I$(MUPDF_DIR)\include
 
@@ -169,7 +169,7 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
 !endif
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
-ZIP_OBJS = $(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
+ZIP_OBJS = $(OU)\ZipUtil.obj $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
 	$(OU)\LzmaSimpleArchive.obj $(OU)\RarUtil.obj
 
 MUI_OBJS = \

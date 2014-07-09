@@ -647,12 +647,9 @@ $(OU)\Dict.obj: $B\src\utils\Vec.h
 $(OU)\DirIter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h
 $(OU)\DirIter.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\DirIter.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\Experiments.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
-$(OU)\Experiments.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
-$(OU)\Experiments.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OU)\Experiments.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\src\utils\Allocator.h
-$(OU)\Experiments.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(OU)\Experiments.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\Experiments.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
+$(OU)\Experiments.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OU)\Experiments.obj: $B\src\utils\Vec.h
 $(OU)\FileTransactions.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileTransactions.h
 $(OU)\FileTransactions.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\FileTransactions.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
