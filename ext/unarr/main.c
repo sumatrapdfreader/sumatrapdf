@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     ar_stream *stream = NULL;
     ar_archive *ar = NULL;
     int count = 1;
+    int skips = 0;
     int step = 1;
 
 #if !defined(NDEBUG) && defined(_MSC_VER)
@@ -49,11 +50,13 @@ int main(int argc, char *argv[])
                 break;
             size -= count;
         }
-        if (size > 0)
+        if (size > 0) {
             fprintf(stderr, "Warning: Failed to uncompress... skipping\n");
+            skips++;
+        }
     }
     FailIf(!ar_at_eof(ar), "Error: Failed to parse entry %d!", count);
-    step = 0;
+    step = skips > 0 ? 1000 + skips : 0;
 
 CleanUp:
     ar_close_archive(ar);
