@@ -723,6 +723,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
 
     virtual PageLayoutType PreferredLayout();
@@ -788,6 +789,18 @@ bool EpubEngineImpl::FinishLoading()
         return false;
 
     return pages->Count() > 0;
+}
+
+unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
+{
+    if (stream) {
+        ScopedMem<void> data(GetDataFromStream(stream, cbCount));
+        if (data)
+            return (unsigned char *)data.StealData();
+    }
+    if (!fileName)
+        return NULL;
+    return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
 bool EpubEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
