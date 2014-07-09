@@ -713,12 +713,8 @@ public:
 
 class EpubEngineImpl : public EbookEngine {
 public:
-    EpubEngineImpl() : EbookEngine(), doc(NULL) { }
-    virtual ~EpubEngineImpl() {
-        delete doc;
-        if (stream)
-            stream->Release();
-    }
+    EpubEngineImpl() : EbookEngine(), doc(NULL), stream(NULL) { }
+    virtual ~EpubEngineImpl();
     virtual BaseEngine *Clone() {
         return fileName ? CreateFromFile(fileName) : NULL;
     }
@@ -748,6 +744,13 @@ protected:
     bool FinishLoading();
 };
 
+EpubEngineImpl::~EpubEngineImpl()
+{
+    delete doc;
+    if (stream)
+        stream->Release();
+}
+
 bool EpubEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
@@ -764,8 +767,8 @@ bool EpubEngineImpl::Load(const WCHAR *fileName)
 
 bool EpubEngineImpl::Load(IStream *stream)
 {
-    this->stream = stream;
     stream->AddRef();
+    this->stream = stream;
     doc = EpubDoc::CreateFromStream(stream);
     return FinishLoading();
 }
