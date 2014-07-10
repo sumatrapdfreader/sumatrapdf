@@ -9593,7 +9593,7 @@ const char * gTranslations_pl =
   "Pliki tekstowe\0"\
   "Tytu\305\202:\0"\
   "Nieznany plik \305\272r\303\263d\305\202owy (%s)\0"\
-  "\0"\
+  "W\305\202\304\205cz wy\305\233wietlanie &kart\0"\
   "Widok\0"\
   "Odwied\305\272 &stron\304\231 internetow\304\205\0"\
   "Uwaga\0"\

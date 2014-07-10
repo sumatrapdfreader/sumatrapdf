@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5a16a21c0b2e80effb5610069e8ea207604369ab
+c750b3e46106e081113233fbfb91eb88e06f8387
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9995,6 +9995,7 @@ id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
 it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
+pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
 sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
@@ -15766,6 +15767,7 @@ id:Gunakan &tab
 it:Usa &schede
 ja:タブを使う(&t)
 nl:Gebruik &tabs
+pl:Włącz wyświetlanie &kart
 ru:Использовать &вкладки
 uk:Використовувати вкладки
 :Use SumatraPDF as the &default PDF reader

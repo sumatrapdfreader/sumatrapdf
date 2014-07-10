@@ -1359,7 +1359,7 @@ const char * gTranslations_pl =
   "Zainstaluj SumatraPDF w &folderze:\0"\
   "B\305\202\304\205d instalacji!\0"\
   "Trwa instalacja...\0"\
-  "\0"\
+  "Pozostaw zainstalowan\304\205 &wtyczk\304\231 PDF do przegl\304\205darek (ju\305\274 nie jest wspierana)\0"\
   "Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwa\304\207 pliki PDF\0"\
   "Windows ma pokazywa\304\207 &podgl\304\205d plik\303\263w PDF\0"\
   "Zamknij  %s, aby kontynuowa\304\207!\0"\
