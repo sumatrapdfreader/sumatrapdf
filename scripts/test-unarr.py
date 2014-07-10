@@ -22,7 +22,7 @@ def detect_unarr_exe():
 
 
 def should_test_file(f):
-    exts = [".cbz", ".cbr", ".epub"]
+    exts = [".rar", ".zip", ".cbz", ".cbr", ".epub", ".xps"]
     f = f.lower()
     for ext in exts:
         if f.endswith(ext):
@@ -94,7 +94,7 @@ def test_unarr(dir):
 
 
 def dump_failures():
-    global files_failed
+    global files_failed, files_tested
     i = 0
     while i < len(files_failed):
         p = files_failed[i]
@@ -102,6 +102,8 @@ def dump_failures():
         err = files_failed[i+2]
         i += 3
         print("%s failed with out: '%s' err: '%s'" % (p, out, err))
+    print("Failed %d out of %d" % (len(files_failed)/3, files_tested))
+
 
 def main():
     detect_unarr_exe()  # detect early if doesn't exist
