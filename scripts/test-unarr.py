@@ -32,7 +32,7 @@ def should_test_file(f):
 
 files_tested = 0
 files_failed = []
-
+fo = None
 
 # Apparently shell argument to Popen it must be False on unix/mac and True
 # on windows
@@ -71,7 +71,7 @@ def run_cmd(*args):
 
 
 def test_unarr(dir):
-    global files_tested, files_failed
+    global files_tested, files_failed, fo
     print("Directory: %s" % dir)
     unarr = detect_unarr_exe()
     files = os.listdir(dir)
@@ -88,29 +88,34 @@ def test_unarr(dir):
             files_failed.append(out)
             files_failed.append(err)
             print("%s failed with out: '%s' err: '%s'" % (p, out, err))
+            fo.write("%s failed with out: '%s' err: '%s'\n" % (p, out, err))
         files_tested += 1
         if files_tested % 100 == 0:
             print("tested %d files" % files_tested)
 
 
 def dump_failures():
-    global files_failed, files_tested
+    global files_failed, files_tested, fo
+    # print just the names of files failed
+    fo.write("\n-------------------------------------------\n")
+    n = len(files_failed) / 3
     i = 0
-    while i < len(files_failed):
-        p = files_failed[i]
-        out = files_failed[i+1]
-        err = files_failed[i+2]
-        i += 3
-        print("%s failed with out: '%s' err: '%s'" % (p, out, err))
-    print("Failed %d out of %d" % (len(files_failed)/3, files_tested))
+    while i < n:
+        fo.write("%s failed\n" % files_failed[i*3])
+        i += 1
+    print("Failed %d out of %d" % (n, files_tested))
+    fo.write("Failed %d out of %d\n" % (n, files_tested))
 
 
 def main():
+    global fo
     detect_unarr_exe()  # detect early if doesn't exist
     if len(sys.argv) != 2:
         usage_and_exit()
+    fo = open("unarr_failed.txt", "w")
     test_unarr(sys.argv[1])
     dump_failures()
+    fo.close()
 
 
 if __name__ == "__main__":
