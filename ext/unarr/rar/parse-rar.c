@@ -107,10 +107,6 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
     free(rar->entry.name_w);
     rar->entry.name_w = NULL;
 
-    rar->progr.data_left = (size_t)header->datasize;
-    rar->progr.bytes_done = 0;
-    rar->progr.crc = 0;
-
     return true;
 }
 

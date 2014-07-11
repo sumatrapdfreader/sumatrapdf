@@ -193,6 +193,7 @@ struct ar_archive_rar_solid {
     bool restart;
     off64_t next_offset;
     size_t next_size;
+    size_t size_total;
 };
 
 struct ar_archive_rar_s {
