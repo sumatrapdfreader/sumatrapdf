@@ -4,7 +4,7 @@
 #include "rar.h"
 #include "rarvm.h"
 
-// adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRARVirtualMachine.m
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRARVirtualMachine.m */
 
 struct MemBitReader {
     const uint8_t *bytes;
@@ -128,9 +128,9 @@ static bool rar_parse_operand(struct MemBitReader *br, uint8_t instruction, bool
         else
             *value = br_bits(br, 8);
         if (instrcount != (uint32_t)-1 && RARInstructionIsRelativeJump(instruction)) {
-            if (*value >= 256) // absolute address
+            if (*value >= 256) /* absolute address */
                 *value -= 256;
-            else { // relative address
+            else { /* relative address */
                 if (*value >= 136)
                     *value -= 264;
                 else if (*value >= 16)
@@ -170,8 +170,8 @@ static struct RARProgramCode *rar_compile_program(const uint8_t *bytes, size_t l
         rar_delete_program(prog);
         return NULL;
     }
-    // XADRARVirtualMachine calculates a fingerprint so that known,
-    // often used programs can be run natively instead of in the VM
+    /* XADRARVirtualMachine calculates a fingerprint so that known,
+       often used programs can be run natively instead of in the VM */
     prog->fingerprint = ar_crc32(0, bytes, length) | ((uint64_t)length << 32);
 
     if (br_bits(&br, 1)) {
@@ -296,7 +296,7 @@ static void rar_delete_filter(struct RARFilter *filter)
     }
 }
 
-static bool rar_execute_filter_delta(struct RARFilter *filter, RARVirtualMachine *vm, size_t pos)
+static bool rar_execute_filter_delta(struct RARFilter *filter, RARVirtualMachine *vm)
 {
     uint32_t length = filter->initialregisters[4];
     uint32_t numchannels = filter->initialregisters[0];
@@ -350,13 +350,13 @@ static bool rar_execute_filter_e8(struct RARFilter *filter, RARVirtualMachine *v
 static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, size_t pos)
 {
     if (filter->prog->fingerprint == 0x1D0E06077D)
-        return rar_execute_filter_delta(filter, vm, pos);
+        return rar_execute_filter_delta(filter, vm);
     if (filter->prog->fingerprint == 0x35AD576887)
         return rar_execute_filter_e8(filter, vm, pos, false);
     if (filter->prog->fingerprint == 0x393CD7E57E)
         return rar_execute_filter_e8(filter, vm, pos, true);
 
-    // TODO: XADRAR30Filter.m @executeOnVirtualMachine claims that this is required
+    /* TODO: XADRAR30Filter.m @executeOnVirtualMachine claims that this is required */
     if (filter->prog->globalbackuplen > RARProgramSystemGlobalSize) {
         uint8_t *newglobaldata = malloc(filter->prog->globalbackuplen);
         if (newglobaldata) {

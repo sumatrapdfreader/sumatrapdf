@@ -230,7 +230,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
             return ERR_UNCOMP;
         }
         order = (uncomp->input.data[uncomp->input.offset] & 0x0F) + 1;
-        size = ((uncomp->input.data[uncomp->input.offset] >> 4) | (uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF) + 1;
+        size = (((uncomp->input.data[uncomp->input.offset] >> 4) | ((uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF))) + 1;
         method = uncomp->input.data[uncomp->input.offset + 1] >> 4;
         uncomp->input.bytes_left -= 2;
         uncomp->input.offset += 2;
@@ -260,7 +260,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
         ((uint8_t *)buffer)[bytes_done++] = (uint8_t)symbol;
     }
 
-    // TODO: simplify checking for last uncompressed block
+    /* TODO: simplify checking for last uncompressed block */
     if (uncomp->state.ppmd8.bytein.zip->progr.bytes_done + bytes_done == uncomp->state.ppmd8.bytein.zip->super.entry_size_uncompressed) {
         int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
         if (symbol != -1 || !Ppmd8_RangeDec_IsFinishedOK(&uncomp->state.ppmd8.ctx)) {

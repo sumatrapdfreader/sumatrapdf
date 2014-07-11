@@ -1,7 +1,7 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-// adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h */
 
 #include "rarvm.h"
 #include "../common/allocator.h"
@@ -40,7 +40,7 @@ static RARGetterFunction OperandGetters_8[RARNumberOfAddressingModes];
 static RARSetterFunction OperandSetters_32[RARNumberOfAddressingModes];
 static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes];
 
-// Program building
+/* Program building */
 
 RARProgram *RARCreateProgram()
 {
@@ -141,7 +141,7 @@ bool RARIsProgramTerminated(RARProgram *prog)
     return prog->length > 0 && RARInstructionIsUnconditionalJump(prog->opcodes[prog->length - 1].instruction);
 }
 
-// Execution
+/* Execution */
 
 #define EXTMACRO_BEGIN do {
 #ifdef _MSC_VER
@@ -205,7 +205,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
 
         case RARSubInstruction:
             op1 = GetOperand1();
-#if 0 // apparently not correctly implemented in the RAR VM
+#if 0 /* apparently not correctly implemented in the RAR VM */
             if (opcode->bytemode)
                 SetOperand1AndByteFlagsWithCarry((op1 - GetOperand2()) & 0xFF, result > op1);
             else
@@ -389,7 +389,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
             op1 = GetOperand1();
             carry = (flags & CarryFlag);
             if (opcode->bytemode)
-                SetOperand1AndFlagsWithCarry((op1 + GetOperand2() + carry) & 0xFF, result < op1 || (result == op1 && carry)); // does not correctly set sign bit
+                SetOperand1AndFlagsWithCarry((op1 + GetOperand2() + carry) & 0xFF, result < op1 || (result == op1 && carry)); /* does not correctly set sign bit */
             else
                 SetOperand1AndFlagsWithCarry(op1 + GetOperand2() + carry, result < op1 || (result == op1 && carry));
             NextInstruction();
@@ -398,13 +398,13 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
             op1 = GetOperand1();
             carry = (flags & CarryFlag);
             if (opcode->bytemode)
-                SetOperand1AndFlagsWithCarry((op1 - GetOperand2() - carry) & 0xFF, result > op1 || (result == op1 && carry)); // does not correctly set sign bit
+                SetOperand1AndFlagsWithCarry((op1 - GetOperand2() - carry) & 0xFF, result > op1 || (result == op1 && carry)); /* does not correctly set sign bit */
             else
                 SetOperand1AndFlagsWithCarry(op1 - GetOperand2() - carry, result > op1 || (result == op1 && carry));
             NextInstruction();
 
         case RARPrintInstruction:
-            // TODO: ???
+            /* TODO: ??? */
             NextInstruction();
         }
     }
@@ -412,7 +412,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
     return false;
 }
 
-// Memory and register access
+/* Memory and register access */
 
 static uint32_t _RARRead32(const uint8_t *b)
 {
@@ -506,7 +506,7 @@ static uint32_t IndexedAbsoluteGetter5_8(RARVirtualMachine *vm, uint32_t value) 
 static uint32_t IndexedAbsoluteGetter6_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[6]); }
 static uint32_t IndexedAbsoluteGetter7_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[7]); }
 
-// Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
+/* Note: Absolute addressing is pre-masked in RARSetLastInstrOperands. */
 static uint32_t AbsoluteGetter_32(RARVirtualMachine *vm, uint32_t value) { return _RARRead32(&vm->memory[value]); }
 static uint32_t AbsoluteGetter_8(RARVirtualMachine *vm, uint32_t value) { return vm->memory[value]; }
 static uint32_t ImmediateGetter(RARVirtualMachine *vm, uint32_t value) { return value; }
@@ -562,7 +562,7 @@ static void IndexedAbsoluteSetter5_8(RARVirtualMachine *vm, uint32_t value, uint
 static void IndexedAbsoluteSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[6], (uint8_t)data); }
 static void IndexedAbsoluteSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[7], (uint8_t)data); }
 
-// Note: Absolute addressing is pre-masked in RARSetLastInstrOperands.
+/* Note: Absolute addressing is pre-masked in RARSetLastInstrOperands. */
 static void AbsoluteSetter_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { _RARWrite32(&vm->memory[value], data); }
 static void AbsoluteSetter_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->memory[value] = (uint8_t)data; }
 
@@ -606,7 +606,7 @@ static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes] = {
     AbsoluteSetter_8, NULL,
 };
 
-// Instruction properties
+/* Instruction properties */
 
 #define RAR0OperandsFlag 0
 #define RAR1OperandFlag 1
@@ -705,7 +705,7 @@ bool RARInstructionWritesSecondOperand(uint8_t instruction)
     return (InstructionFlags[instruction] & RARWritesSecondOperandFlag) != 0;
 }
 
-// Program debugging
+/* Program debugging */
 
 #ifndef NDEBUG
 #include <stdio.h>

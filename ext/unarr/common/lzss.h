@@ -1,7 +1,7 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-// adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/LZSS.h
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/LZSS.h */
 
 #ifndef common_lzss_h
 #define common_lzss_h
@@ -44,7 +44,7 @@ static inline int64_t lzss_next_window_edge(LZSS *self) { return lzss_next_windo
 static inline uint8_t lzss_get_byte_from_window(LZSS *self, int64_t pos) { return *lzss_window_pointer_for_position(self, pos); }
 
 static inline void lzss_emit_literal(LZSS *self, uint8_t literal) {
-    // self->window[(self->position & self->mask)] = literal;
+    /* self->window[(self->position & self->mask)] = literal; */
     *lzss_current_window_pointer(self) = literal;
     self->position++;
 }
@@ -62,11 +62,11 @@ static inline void lzss_copy_bytes_from_window(LZSS *self, uint8_t *buffer, int6
     int windowoffs = lzss_offset_for_position(self, startpos);
     int firstpart = lzss_size(self) - windowoffs;
     if (length <= firstpart) {
-        // Request fits inside window
+        /* Request fits inside window */
         memcpy(buffer, &self->window[windowoffs], length);
     }
     else {
-        // Request wraps around window
+        /* Request wraps around window */
         memcpy(buffer, &self->window[windowoffs], firstpart);
         memcpy(buffer + firstpart, &self->window[0], length - firstpart);
     }
@@ -77,7 +77,7 @@ static inline bool lzss_initialize(LZSS *self, int windowsize) {
     if (!self->window)
         return false;
 
-    self->mask = windowsize - 1; // Assume windows are power-of-two sized!
+    self->mask = windowsize - 1; /* Assume windows are power-of-two sized! */
     memset(self->window, 0, lzss_size(self));
     self->position = 0;
     return true;

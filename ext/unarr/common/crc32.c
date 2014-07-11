@@ -5,7 +5,7 @@
 
 #ifndef HAVE_ZLIB
 
-// code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain)
+/* code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain) */
 
 static bool crc_table_ready = false;
 static uint32_t crc_table[256];

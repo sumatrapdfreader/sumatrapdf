@@ -83,7 +83,7 @@ static bool rar_parse_entry(ar_archive *ar)
             rar->progr.bytes_done = 0;
             rar->progr.crc = 0;
 
-            // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
+            /* TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader) */
             if (!rar_check_header_crc(ar))
                 warn("Invalid header checksum @%" PRIi64, ar->entry_offset);
             if (ar_tell(ar->stream) != ar->entry_offset + rar->entry.header_size) {
@@ -105,7 +105,7 @@ static bool rar_parse_entry(ar_archive *ar)
             break;
         }
 
-        // TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader)
+        /* TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader) */
         if (!rar_check_header_crc(ar))
             warn("Invalid header checksum @%" PRIi64, ar->entry_offset);
         if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
