@@ -87,6 +87,7 @@ static bool rar_parse_entry(ar_archive *ar)
             return true;
 
         case TYPE_NEWSUB:
+            // TODO: rar_clear_uncompress for solid compression?
             log("Skipping newsub header @%" PRIi64, ar->entry_offset);
             break;
 
@@ -129,7 +130,7 @@ static bool rar_restart_solid(ar_archive *ar)
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     off64_t current_offset = ar->entry_offset;
     log("Restarting decompression for solid entry");
-    if (!ar_parse_entry_at(ar, 0)) {
+    if (!ar_parse_entry_at(ar, FILE_SIGNATURE_SIZE)) {
         ar_parse_entry_at(ar, current_offset);
         return false;
     }
@@ -189,11 +190,11 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
 
 ar_archive *ar_open_rar_archive(ar_stream *stream)
 {
-    char signature[7];
+    char signature[FILE_SIGNATURE_SIZE];
     if (ar_read(stream, signature, sizeof(signature)) != sizeof(signature))
         return NULL;
-    if (memcmp(signature, "Rar!\x1A\x07\x00", 7) != 0) {
-        if (memcmp(signature, "Rar!\x1A\x07\x01", 7) == 0)
+    if (memcmp(signature, "Rar!\x1A\x07\x00", sizeof(signature)) != 0) {
+        if (memcmp(signature, "Rar!\x1A\x07\x01", sizeof(signature)) == 0)
             warn("RAR 5 format isn't supported");
         else if (memcmp(signature, "RE~^", 4) == 0)
             warn("Ancient RAR format isn't supported");

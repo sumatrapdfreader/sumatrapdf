@@ -14,8 +14,10 @@ typedef struct ar_archive_rar_s ar_archive_rar;
 
 /***** parse-rar *****/
 
+#define FILE_SIGNATURE_SIZE 7
+
 enum block_types {
-    TYPE_MAGIC = 0x72, TYPE_MAIN_HEADER = 0x73, TYPE_FILE_ENTRY = 0x74,
+    TYPE_FILE_SIGNATURE = 0x72, TYPE_MAIN_HEADER = 0x73, TYPE_FILE_ENTRY = 0x74,
     TYPE_NEWSUB = 0x7A, TYPE_END_OF_ARCHIVE = 0x7B,
 };
 
