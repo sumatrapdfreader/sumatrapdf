@@ -51,6 +51,17 @@ static bool br_fill(ar_archive_rar *rar, int bits)
     if (rar->progr.data_left < (size_t)count)
         count = (int)rar->progr.data_left;
 
+    if (bits > rar->uncomp.br.available + 8 * count && rar->solid.next_offset) {
+        br_fill(rar, rar->progr.data_left * 8 + rar->uncomp.br.available);
+        if (ar_seek(rar->super.stream, rar->solid.next_offset, SEEK_SET)) {
+            rar->progr.data_left = rar->solid.next_size;
+            rar->solid.next_offset = 0;
+            rar->solid.next_size = 0;
+            return br_fill(rar, bits);
+        }
+        warn("Couldn't seek to offset %" PRIu64, rar->solid.next_offset);
+    }
+
     if (bits > rar->uncomp.br.available + 8 * count || ar_read(rar->super.stream, bytes, count) != (size_t)count) {
         warn("Unexpected EOF during decompression (truncated file?)");
         rar->uncomp.br.at_eof = true;

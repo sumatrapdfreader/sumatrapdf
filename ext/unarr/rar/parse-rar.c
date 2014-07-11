@@ -96,15 +96,12 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
         log("Skipping LHD_SALT");
         ar_skip(rar->super.stream, 8);
     }
-    if (entry->method != METHOD_STORE && entry->version != 29) {
-        warn("Unsupported compression version: %d", entry->version);
-        return false;
-    }
 
+    rar->entry.version = entry->version;
     rar->entry.method = entry->method;
     rar->entry.crc = entry->crc;
     rar->entry.header_size = header->size;
-    rar->entry.restart_solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
+    rar->entry.solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
     free(rar->entry.name);
     rar->entry.name = NULL;
     free(rar->entry.name_w);

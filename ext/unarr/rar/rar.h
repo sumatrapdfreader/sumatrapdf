@@ -61,14 +61,14 @@ struct rar_entry {
     uint8_t method;
     uint16_t namelen;
     uint32_t attrs;
-    bool solid;
 };
 
 struct ar_archive_rar_entry {
+    uint8_t version;
     uint8_t method;
     uint32_t crc;
     uint16_t header_size;
-    bool restart_solid;
+    bool solid;
     char *name;
     wchar16_t *name_w;
 };
@@ -187,12 +187,21 @@ struct ar_archive_rar_progress {
     uint32_t crc;
 };
 
+struct ar_archive_rar_solid {
+    off64_t curr_offset;
+    bool part_done;
+    bool restart;
+    off64_t next_offset;
+    size_t next_size;
+};
+
 struct ar_archive_rar_s {
     ar_archive super;
     uint16_t archive_flags;
     struct ar_archive_rar_entry entry;
     struct ar_archive_rar_uncomp uncomp;
     struct ar_archive_rar_progress progr;
+    struct ar_archive_rar_solid solid;
 };
 
 #endif

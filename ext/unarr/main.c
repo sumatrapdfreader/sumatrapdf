@@ -11,15 +11,15 @@
 #include <crtdbg.h>
 #endif
 
-#define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); goto CleanUp; } step++
+#define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); goto CleanUp; } error_step++
 
 int main(int argc, char *argv[])
 {
     ar_stream *stream = NULL;
     ar_archive *ar = NULL;
-    int count = 1;
-    int skips = 0;
-    int step = 1;
+    int entry_count = 1;
+    int entry_skips = 0;
+    int error_step = 1;
 
 #if !defined(NDEBUG) && defined(_MSC_VER)
     if (!IsDebuggerPresent()) {
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     printf("Parsing \"%s\":\n", argv[1]);
     while (ar_parse_entry(ar)) {
         size_t size = ar_entry_get_size(ar);
-        printf("%02d. %s (@%" PRIi64 ")\n", count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
+        printf("%02d. %s (@%" PRIi64 ")\n", entry_count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
         while (size > 0) {
             unsigned char buffer[1024];
             size_t count = size < sizeof(buffer) ? size : sizeof(buffer);
@@ -52,14 +52,14 @@ int main(int argc, char *argv[])
         }
         if (size > 0) {
             fprintf(stderr, "Warning: Failed to uncompress... skipping\n");
-            skips++;
+            entry_skips++;
         }
     }
-    FailIf(!ar_at_eof(ar), "Error: Failed to parse entry %d!", count);
-    step = skips > 0 ? 1000 + skips : 0;
+    FailIf(!ar_at_eof(ar), "Error: Failed to parse entry %d!", entry_count);
+    error_step = entry_skips > 0 ? 1000 + entry_skips : 0;
 
 CleanUp:
     ar_close_archive(ar);
     ar_close(stream);
-    return step;
+    return error_step;
 }
