@@ -69,10 +69,27 @@ def run_cmd(*args):
     return (res[0], res[1], cmdproc.returncode)
 
 
+def strip_empty_lines(s):
+    lines = []
+    for l in s.splitlines():
+        l = l.strip()
+        if len(l) == 0:
+            continue
+        lines.append(l)
+    return "\n".join(lines)
+
+
+def get_file_size(p):
+    try:
+        si = os.stat(p)
+        return si.st_size
+    except:
+        return 0
+
 
 def test_unarr(dir):
     global files_tested, files_failed, fo
-    print("Directory: %s" % dir)
+    #print("Directory: %s" % dir)
     unarr = detect_unarr_exe()
     files = os.listdir(dir)
     for f in files:
@@ -84,11 +101,14 @@ def test_unarr(dir):
             continue
         (out, err, errcode) = run_cmd(unarr, p)
         if errcode != 0:
+            out = strip_empty_lines(out)
+            err = strip_empty_lines(err)
             files_failed.append(p)
             files_failed.append(out)
             files_failed.append(err)
-            print("%s failed with out: '%s' err: '%s'" % (p, out, err))
-            fo.write("%s failed with out: '%s' err: '%s'\n" % (p, out, err))
+            file_size = get_file_size(p)
+            print("%s of %d failed with out: '%s' err: '%s'" % (p, file_size, out, err))
+            fo.write("%s of %d failed with out: '%s' err: '%s'\n" % (p, file_size, out, err))
         files_tested += 1
         if files_tested % 100 == 0:
             print("tested %d files" % files_tested)
