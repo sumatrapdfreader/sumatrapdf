@@ -102,6 +102,7 @@ void rar_clear_filters(struct ar_archive_rar_filters *filters);
 
 /***** uncompress-rar *****/
 
+#define LZSS_WINDOW_SIZE   0x400000
 #define MAINCODE_SIZE      299
 #define OFFSETCODE_SIZE    60
 #define LOWOFFSETCODE_SIZE 17
@@ -146,7 +147,6 @@ struct ar_archive_rar_uncomp {
     bool start_new_table;
 
     LZSS lzss;
-    uint32_t dict_size;
     size_t bytes_ready;
     struct huffman_code maincode;
     struct huffman_code offsetcode;
@@ -189,11 +189,9 @@ struct ar_archive_rar_progress {
 
 struct ar_archive_rar_solid {
     off64_t curr_offset;
+    size_t size_total;
     bool part_done;
     bool restart;
-    off64_t next_offset;
-    size_t next_size;
-    size_t size_total;
 };
 
 struct ar_archive_rar_s {

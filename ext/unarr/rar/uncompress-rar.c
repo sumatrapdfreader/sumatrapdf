@@ -35,13 +35,6 @@ static void *gSzAlloc_Alloc(void *self, size_t size) { (void)self; return malloc
 static void gSzAlloc_Free(void *self, void *ptr) { (void)self; free(ptr); }
 static ISzAlloc gSzAlloc = { gSzAlloc_Alloc, gSzAlloc_Free };
 
-static inline size_t next_power_of_2(size_t value)
-{
-    size_t pow2;
-    for (pow2 = 1; pow2 < value && pow2 != 0; pow2 <<= 1);
-    return pow2;
-}
-
 static bool br_fill(ar_archive_rar *rar, int bits)
 {
     uint8_t bytes[8];
@@ -50,17 +43,6 @@ static bool br_fill(ar_archive_rar *rar, int bits)
     count = (64 - rar->uncomp.br.available) / 8;
     if (rar->progr.data_left < (size_t)count)
         count = (int)rar->progr.data_left;
-
-    if (bits > rar->uncomp.br.available + 8 * count && rar->solid.next_offset) {
-        br_fill(rar, rar->progr.data_left * 8 + rar->uncomp.br.available);
-        if (ar_seek(rar->super.stream, rar->solid.next_offset, SEEK_SET)) {
-            rar->progr.data_left = rar->solid.next_size;
-            rar->solid.next_offset = 0;
-            rar->solid.next_size = 0;
-            return br_fill(rar, bits);
-        }
-        warn("Couldn't seek to offset %" PRIu64, rar->solid.next_offset);
-    }
 
     if (bits > rar->uncomp.br.available + 8 * count || ar_read(rar->super.stream, bytes, count) != (size_t)count) {
         warn("Unexpected EOF during decompression (truncated file?)");
@@ -152,14 +134,19 @@ static void PpmdRAR_RangeDec_CreateVTable(struct CPpmdRAR_RangeDec *p, IByteIn *
     p->Stream = stream;
 }
 
-static void rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp)
+static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp)
 {
     if (uncomp->initialized)
-        return;
+        return true;
     memset(uncomp, 0, sizeof(*uncomp));
     uncomp->start_new_table = true;
     uncomp->filters.filterstart = SIZE_MAX;
+    if (!lzss_initialize(&uncomp->lzss, LZSS_WINDOW_SIZE)) {
+        warn("OOM during decompression");
+        return false;
+    }
     uncomp->initialized = true;
+    return true;
 }
 
 static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp);
@@ -367,14 +354,16 @@ static bool rar_parse_codes(ar_archive_rar *rar)
     uncomp->is_ppmd_block = br_bits(rar, 1) != 0;
     if (uncomp->is_ppmd_block) {
         uint8_t ppmd_flags;
+        uint32_t max_alloc = 0;
+
         if (!br_check(rar, 7))
             return false;
         ppmd_flags = (uint8_t)br_bits(rar, 7);
-        /* memory is allocated in MB */
         if ((ppmd_flags & 0x20)) {
             if (!br_check(rar, 8))
                 return false;
-            uncomp->dict_size = ((uint8_t)br_bits(rar, 8) + 1) << 20;
+            /* memory is allocated in MB */
+            max_alloc = ((uint8_t)br_bits(rar, 8) + 1) << 20;
         }
         if ((ppmd_flags & 0x40)) {
             if (!br_check(rar, 8))
@@ -392,7 +381,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
 
             Ppmd7_Free(&uncomp->ppmd7_context, &gSzAlloc);
             Ppmd7_Construct(&uncomp->ppmd7_context);
-            if (!Ppmd7_Alloc(&uncomp->ppmd7_context, uncomp->dict_size, &gSzAlloc)) {
+            if (!Ppmd7_Alloc(&uncomp->ppmd7_context, max_alloc, &gSzAlloc)) {
                 warn("OOM during decompression");
                 return false;
             }
@@ -507,18 +496,6 @@ PrecodeError:
             return false;
         if (!rar_create_code(rar, &uncomp->lengthcode, uncomp->lengthtable + MAINCODE_SIZE + OFFSETCODE_SIZE + LOWOFFSETCODE_SIZE, LENGTHCODE_SIZE))
             return false;
-    }
-
-    if (!uncomp->dict_size || !uncomp->lzss.window) {
-        /* libarchive tries to minimize memory usage in this way */
-        if (rar->super.entry_size_uncompressed > 0x200000)
-            uncomp->dict_size = 0x400000;
-        else
-            uncomp->dict_size = (uint32_t)next_power_of_2(rar->super.entry_size_uncompressed);
-        if (!lzss_initialize(&rar->uncomp.lzss, rar->uncomp.dict_size)) {
-            warn("OOM during decompression");
-            return false;
-        }
     }
 
     uncomp->start_new_table = false;
@@ -847,7 +824,8 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     size_t end;
 
-    rar_init_uncompress(uncomp);
+    if (!rar_init_uncompress(uncomp))
+        return false;
 
     for (;;) {
         if (uncomp->filters.bytes_ready > 0) {
@@ -861,7 +839,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         }
         else if (uncomp->bytes_ready > 0) {
             int count = (int)min(uncomp->bytes_ready, buffer_size);
-            lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progr.bytes_done, count);
+            lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progr.bytes_done + rar->solid.size_total, count);
             uncomp->bytes_ready -= count;
             rar->progr.bytes_done += count;
             buffer_size -= count;
@@ -882,13 +860,13 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        end = rar->progr.bytes_done + uncomp->dict_size;
+        end = rar->progr.bytes_done + rar->solid.size_total + LZSS_WINDOW_SIZE;
         if (uncomp->filters.filterstart < end)
             end = uncomp->filters.filterstart;
         end = (size_t)rar_expand(rar, end);
-        if (end < rar->progr.bytes_done)
+        if (end < rar->progr.bytes_done + rar->solid.size_total)
             return false;
-        uncomp->bytes_ready = end - rar->progr.bytes_done;
+        uncomp->bytes_ready = end - rar->progr.bytes_done - rar->solid.size_total;
         uncomp->filters.lastend = end;
 
         if (uncomp->is_ppmd_block && uncomp->start_new_table && !rar_parse_codes(rar))
