@@ -273,11 +273,11 @@ static struct RARFilter *rar_create_filter(struct RARProgramCode *prog, const ui
         return NULL;
     filter->prog = prog;
     filter->globaldatalen = globaldatalen > RARProgramSystemGlobalSize ? globaldatalen : RARProgramSystemGlobalSize;
-    filter->globaldata = malloc(filter->globaldatalen);
+    filter->globaldata = calloc(1, filter->globaldatalen);
     if (!filter->globaldata)
         return NULL;
     if (globaldata)
-        memcpy(filter->globaldata, globaldata, filter->globaldatalen);
+        memcpy(filter->globaldata, globaldata, globaldatalen);
     if (registers)
         memcpy(filter->initialregisters, registers, sizeof(filter->initialregisters));
     filter->blockstartpos = startpos;
@@ -306,16 +306,43 @@ static bool rar_execute_filter_delta(struct RARFilter *filter, RARVirtualMachine
     if (length > RARProgramWorkSize / 2)
         return false;
 
-    filter->filteredblockaddress = length;
-    filter->filteredblocklength = length;
-
     src = &vm->memory[0];
-    dst = &vm->memory[filter->filteredblockaddress];
+    dst = &vm->memory[length];
     for (i = 0; i < numchannels; i++) {
         uint8_t lastbyte = 0;
         for (idx = i; idx < length; idx += numchannels)
             lastbyte = dst[idx] = lastbyte - *src++;
     }
+
+    filter->filteredblockaddress = length;
+    filter->filteredblocklength = length;
+
+    return true;
+}
+
+static bool rar_execute_filter_e8(struct RARFilter *filter, RARVirtualMachine *vm, size_t pos, bool e9also)
+{
+    uint32_t length = filter->initialregisters[4];
+    uint32_t filesize = 0x1000000;
+    uint32_t i;
+
+    if (length > RARProgramWorkSize || length < 4)
+        return false;
+
+    for (i = 0; i <= length - 5; i++) {
+        if (vm->memory[i] == 0xE8 || (e9also && vm->memory[i] == 0xE9)) {
+            uint32_t currpos = (uint32_t)pos + i + 1;
+            int32_t address = (int32_t)RARVirtualMachineRead32(vm, i + 1);
+            if (address < 0 && currpos >= (uint32_t)-address)
+                RARVirtualMachineWrite32(vm, i + 1, address + filesize);
+            else if (address >= 0 && (uint32_t)address < filesize)
+                RARVirtualMachineWrite32(vm, i + 1, address - currpos);
+            i += 4;
+        }
+    }
+
+    filter->filteredblockaddress = 0;
+    filter->filteredblocklength = length;
 
     return true;
 }
@@ -324,6 +351,10 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
 {
     if (filter->prog->fingerprint == 0x1D0E06077D)
         return rar_execute_filter_delta(filter, vm, pos);
+    if (filter->prog->fingerprint == 0x35AD576887)
+        return rar_execute_filter_e8(filter, vm, pos, false);
+    if (filter->prog->fingerprint == 0x393CD7E57E)
+        return rar_execute_filter_e8(filter, vm, pos, true);
 
     // TODO: XADRAR30Filter.m @executeOnVirtualMachine claims that this is required
     if (filter->prog->globalbackuplen > RARProgramSystemGlobalSize) {
@@ -332,6 +363,7 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
             free(filter->globaldata);
             filter->globaldata = newglobaldata;
             filter->globaldatalen = filter->prog->globalbackuplen;
+            memcpy(filter->globaldata, filter->prog->globalbackup, filter->prog->globalbackuplen);
         }
     }
 
@@ -355,6 +387,7 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
             free(filter->prog->globalbackup);
             filter->prog->globalbackup = newglobalbackup;
             filter->prog->globalbackuplen = filter->globaldatalen;
+            memcpy(filter->prog->globalbackup, filter->globaldata, filter->globaldatalen);
         }
     }
     else

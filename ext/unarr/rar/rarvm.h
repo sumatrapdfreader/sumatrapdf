@@ -92,6 +92,14 @@ bool RARIsProgramTerminated(RARProgram *prog);
 
 bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog);
 
+// Memory and register access (convenience)
+
+void RARSetVirtualMachineRegisters(RARVirtualMachine *vm, uint32_t registers[8]);
+uint32_t RARVirtualMachineRead32(RARVirtualMachine *vm, uint32_t address);
+void RARVirtualMachineWrite32(RARVirtualMachine *vm, uint32_t address, uint32_t val);
+uint8_t RARVirtualMachineRead8(RARVirtualMachine *vm, uint32_t address);
+void RARVirtualMachineWrite8(RARVirtualMachine *vm, uint32_t address, uint8_t val);
+
 // Instruction properties
 
 int NumberOfRARInstructionOperands(uint8_t instruction);
@@ -101,12 +109,10 @@ bool RARInstructionIsRelativeJump(uint8_t instruction);
 bool RARInstructionWritesFirstOperand(uint8_t instruction);
 bool RARInstructionWritesSecondOperand(uint8_t instruction);
 
-// Memory and register access (convenience)
+// Program debugging
 
-void RARSetVirtualMachineRegisters(RARVirtualMachine *vm, uint32_t registers[8]);
-uint32_t RARVirtualMachineRead32(RARVirtualMachine *vm, uint32_t address);
-void RARVirtualMachineWrite32(RARVirtualMachine *vm, uint32_t address, uint32_t val);
-uint8_t RARVirtualMachineRead8(RARVirtualMachine *vm, uint32_t address);
-void RARVirtualMachineWrite8(RARVirtualMachine *vm, uint32_t address, uint8_t val);
+#ifndef NDEBUG
+void RARPrintProgram(RARProgram *prog);
+#endif
 
 #endif

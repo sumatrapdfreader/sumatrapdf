@@ -58,6 +58,8 @@ bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode)
 {
     if (instruction >= RARNumberOfInstructions)
         return false;
+    if (bytemode && !RARInstructionHasByteMode(instruction))
+        return false;
     if (prog->length + 1 >= prog->capacity) {
         /* in my small file sample, 16 is the value needed most often */
         uint32_t newCapacity = prog->capacity ? prog->capacity * 4 : 32;
@@ -97,8 +99,6 @@ bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t
         setterfunctions = OperandSetters_32;
     }
     else if (opcode->bytemode) {
-        if (!RARInstructionHasByteMode(opcode->instruction))
-            return false;
         getterfunctions = OperandGetters_8;
         setterfunctions = OperandSetters_8;
     }
@@ -161,8 +161,8 @@ bool RARIsProgramTerminated(RARProgram *prog)
 #define SetOperand1(data) opcode->operand1setter(vm, opcode->value1, data)
 #define SetOperand2(data) opcode->operand2setter(vm, opcode->value2, data)
 
-#define SetFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint32_t result = (res); flags = (result == 0 ? ZeroFlag : (result & SignFlag)) | ((carry) ? 1 : 0); EXTMACRO_END
-#define SetByteFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint8_t result = (res); flags = (result == 0 ? ZeroFlag : (SignExtend(result) & SignFlag)) | ((carry) ? 1 : 0); EXTMACRO_END
+#define SetFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint32_t result = (res); flags = (result == 0 ? ZeroFlag : (result & SignFlag)) | ((carry) ? CarryFlag : 0); EXTMACRO_END
+#define SetByteFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint8_t result = (res); flags = (result == 0 ? ZeroFlag : (SignExtend(result) & SignFlag)) | ((carry) ? CarryFlag : 0); EXTMACRO_END
 #define SetFlags(res) SetFlagsWithCarry(res, 0)
 
 #define SetOperand1AndFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint32_t r = (res); SetFlagsWithCarry(r, carry); SetOperand1(r); EXTMACRO_END
@@ -182,7 +182,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
     if (!RARIsProgramTerminated(prog))
         return false;
 
-    vm->flags = 0; // ?
+    vm->flags = 0;
 
     while ((uint32_t)(opcode - prog->opcodes) < prog->length && counter++ < RARRuntimeMaxInstructions) {
         switch (opcode->instruction) {
@@ -347,7 +347,7 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
             for (i = 0; i < 8; i++) {
                 vm->registers[i] = RARVirtualMachineRead32(vm, vm->registers[7] + 28 - i * 4);
             }
-            // TODO: vm->registers[7] += 32; ?
+            vm->registers[7] += 32;
             NextInstruction();
 
         case RARPushfInstruction:
@@ -704,3 +704,51 @@ bool RARInstructionWritesSecondOperand(uint8_t instruction)
         return false;
     return (InstructionFlags[instruction] & RARWritesSecondOperandFlag) != 0;
 }
+
+// Program debugging
+
+#ifndef NDEBUG
+#include <stdio.h>
+
+static void RARPrintOperand(uint8_t addressingmode, uint32_t value)
+{
+    if (RARRegisterAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterAddressingMode(7))
+        printf("r%d", addressingmode - RARRegisterAddressingMode(0));
+    else if (RARRegisterIndirectAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterIndirectAddressingMode(7))
+        printf("@(r%d)", addressingmode - RARRegisterIndirectAddressingMode(0));
+    else if (RARIndexedAbsoluteAddressingMode(0) <= addressingmode && addressingmode <= RARIndexedAbsoluteAddressingMode(7))
+        printf("@(r%d+$%02x)", addressingmode - RARIndexedAbsoluteAddressingMode(0), value);
+    else if (addressingmode == RARAbsoluteAddressingMode)
+        printf("@($%02x)", value);
+    else if (addressingmode == RARImmediateAddressingMode)
+        printf("$%02x", value);
+}
+
+void RARPrintProgram(RARProgram *prog)
+{
+    static const char *instructionNames[RARNumberOfInstructions] = {
+        "Mov", "Cmp", "Add", "Sub", "Jz", "Jnz", "Inc", "Dec", "Jmp", "Xor",
+        "And", "Or", "Test", "Js", "Jns", "Jb", "Jbe", "Ja", "Jae", "Push",
+        "Pop", "Call", "Ret", "Not", "Shl", "Shr", "Sar", "Neg", "Pusha", "Popa",
+        "Pushf", "Popf", "Movzx", "Movsx", "Xchg", "Mul", "Div", "Adc", "Sbb", "Print",
+    };
+
+    uint32_t i;
+    for (i = 0; i < prog->length; i++) {
+        RAROpcode *opcode = &prog->opcodes[i];
+        int numoperands = NumberOfRARInstructionOperands(opcode->instruction);
+        printf("  %02x: %s", i, instructionNames[opcode->instruction]);
+        if (opcode->bytemode)
+            printf("B");
+        if (numoperands >= 1) {
+            printf(" ");
+            RARPrintOperand(opcode->addressingmode1, opcode->value1);
+        }
+        if (numoperands == 2) {
+            printf(", ");
+            RARPrintOperand(opcode->addressingmode2, opcode->value2);
+        }
+        printf("\n");
+    }
+}
+#endif
