@@ -69,13 +69,14 @@ def run_cmd(*args):
     return (res[0], res[1], cmdproc.returncode)
 
 
-def strip_empty_lines(s):
+def strip_empty_lines_and_dedup(s):
     lines = []
     for l in s.splitlines():
         l = l.strip()
         if len(l) == 0:
             continue
-        lines.append(l)
+        if l not in lines:
+            lines.append(l)
     return "\n".join(lines)
 
 
@@ -101,8 +102,8 @@ def test_unarr(dir):
             continue
         (out, err, errcode) = run_cmd(unarr, p)
         if errcode != 0:
-            out = strip_empty_lines(out)
-            err = strip_empty_lines(err)
+            out = strip_empty_lines_and_dedup(out)
+            err = strip_empty_lines_and_dedup(err)
             files_failed.append(p)
             files_failed.append(out)
             files_failed.append(err)
