@@ -1280,10 +1280,7 @@ void HtmlWindow::OnLButtonDown() const
 
 void HtmlWindow::SetVisible(bool visible)
 {
-    if (visible)
-        ShowWindow(hwndParent, SW_SHOW);
-    else
-        ShowWindow(hwndParent, SW_HIDE);
+    win::SetVisibility(hwndParent, visible);
     if (webBrowser)
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
 }

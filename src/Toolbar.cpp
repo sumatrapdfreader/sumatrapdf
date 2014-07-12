@@ -311,9 +311,9 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
 void UpdateToolbarFindText(WindowInfo *win)
 {
     bool showUI = NeedsFindUI(win);
-    ShowWindow(win->hwndFindText, showUI ? SW_SHOW : SW_HIDE);
-    ShowWindow(win->hwndFindBg, showUI ? SW_SHOW : SW_HIDE);
-    ShowWindow(win->hwndFindBox, showUI ? SW_SHOW : SW_HIDE);
+    win::SetVisibility(win->hwndFindText, showUI);
+    win::SetVisibility(win->hwndFindBg, showUI);
+    win::SetVisibility(win->hwndFindBox, showUI);
     if (!showUI)
         return;
 

@@ -1000,7 +1000,7 @@ static void ShowTabBar(WindowInfo *win, bool show)
     if (show == win->tabsVisible)
         return;
     win->tabsVisible = show;
-    ShowWindow(win->hwndTabBar, show ? SW_SHOW : SW_HIDE);
+    win::SetVisibility(win->hwndTabBar, show);
     ClientRect rect(win->hwndFrame);
     SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
 }

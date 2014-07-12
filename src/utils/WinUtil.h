@@ -112,6 +112,10 @@ int GetHwndDpi(HWND hwnd, float *uiDPIFactor=NULL);
 int GlobalDpiAdjust(int value);
 int GlobalDpiAdjust(float value);
 
+inline void SetVisibility(HWND hwnd, bool visible) {
+    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+}
+
 namespace menu {
 
 inline void SetChecked(HMENU m, UINT id, bool isChecked)

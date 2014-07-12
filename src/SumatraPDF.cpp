@@ -3761,10 +3761,10 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         SetFocus(win->hwndFrame);
     }
 
-    ShowWindow(GetSplitterHwnd(win->sidebarSplitter), tocVisible || showFavorites ? SW_SHOW : SW_HIDE);
-    ShowWindow(win->hwndTocBox, tocVisible ? SW_SHOW : SW_HIDE);
-    ShowWindow(GetSplitterHwnd(win->favSplitter), tocVisible && showFavorites ? SW_SHOW : SW_HIDE);
-    ShowWindow(win->hwndFavBox, showFavorites ? SW_SHOW : SW_HIDE);
+    win::SetVisibility(GetSplitterHwnd(win->sidebarSplitter), tocVisible || showFavorites);
+    win::SetVisibility(win->hwndTocBox, tocVisible);
+    win::SetVisibility(GetSplitterHwnd(win->favSplitter), tocVisible && showFavorites);
+    win::SetVisibility(win->hwndFavBox, showFavorites);
 
     RelayoutFrame(win, false);
 }

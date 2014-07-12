@@ -454,7 +454,7 @@ inline void EnableAndShow(HWND hwnd, bool enable)
 {
     if (!hwnd)
         return;
-    ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
+    win::SetVisibility(hwnd, enable);
     EnableWindow(hwnd, enable);
 }
 
