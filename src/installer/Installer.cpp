@@ -997,7 +997,8 @@ static void InstallInstallerCrashHandler()
 }
 #endif
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
+                     LPSTR /* lpCmdLine*/, int nCmdShow)
 {
     int ret = 1;
 
@@ -1043,7 +1044,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!RegisterWinClass())
         goto Exit;
 
-    if (!InstanceInit(hInstance, nCmdShow))
+    if (!InstanceInit(nCmdShow))
         goto Exit;
 
     ret = RunApp();
