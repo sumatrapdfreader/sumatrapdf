@@ -5,7 +5,6 @@
 #define Splitter_h
 
 HWND CreateHSplitter(HWND parent);
-HWND CreateVSplitter(HWND parent);
 
 struct Splitter;
 
@@ -14,10 +13,14 @@ enum SplitterType {
     SplitterVert
 };
 
-typedef bool (*onMouseMove)(void *ctx);
+// called on WM_MOUSEMOVE. the owner returns false if it doesn't allow
+// resizing to current cursor position
+typedef bool (*onMove)(void *ctx);
+typedef void (*onMoveDone)(void *ctx);
 
-Splitter *  CreateSpliter(HWND parent, SplitterType *type, void *ctx, onMouseMove cb);
+void        RegisterSplitterWndClass();
+Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, onMove cbMove, onMoveDone cbMoveDone);
 void        DeleteSplitter(Splitter *);
+HWND        GetSplitterHwnd(Splitter *);
 
 #endif
-

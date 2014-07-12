@@ -113,7 +113,7 @@ static bool RegisterWinClass()
     CrashIf(!atom);
 
     RegisterNotificationsWndClass();
-
+    RegisterSplitterWndClass();
     return true;
 }
 

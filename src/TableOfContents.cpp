@@ -321,7 +321,9 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 void UpdateTocColors(WindowInfo *win)
 {
     if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
-        TreeView_SetBkColor(win->hwndTocTree, gGlobalPrefs->ebookUI.backgroundColor);
+        COLORREF c = gGlobalPrefs->ebookUI.backgroundColor;
+        TreeView_SetBkColor(win->hwndTocTree, c);
+
         // TODO: more work needed to to ensure consistent look of the ebook window:
         // - change the tree item text color
         // - change the tree item background color when selected (for both focused and non-focused cases)
@@ -506,6 +508,8 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 }
 
+static HBRUSH hdrBkgnd = NULL; // TODO: must be on WindowInfo
+
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -525,6 +529,21 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                 return TRUE;
             }
             break;
+
+        /* TODO: needed to harmonize the look of ebook window
+        case WM_CTLCOLORSTATIC:
+            if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
+                HDC hdcStatic = (HDC) wParam;
+                COLORREF bgCol = gGlobalPrefs->ebookUI.backgroundColor;
+                SetTextColor(hdcStatic, RGB(255,255,255));
+                SetBkColor(hdcStatic, bgCol);
+        
+                if (hdrBkgnd == NULL)
+                    hdrBkgnd = CreateSolidBrush(bgCol);
+                return (INT_PTR)hdrBkgnd;
+            }
+            return FALSE;
+        */
 
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_TOC_CLOSE && HIWORD(wParam) == STN_CLICKED)

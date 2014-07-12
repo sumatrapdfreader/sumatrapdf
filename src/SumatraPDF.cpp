@@ -135,9 +135,9 @@ Favorites                    gFavorites;
 
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorScroll;
-static HCURSOR                      gCursorSizeWE;
-static HCURSOR                      gCursorSizeNS;
-static HCURSOR                      gCursorNo;
+       HCURSOR                      gCursorSizeWE;
+       HCURSOR                      gCursorSizeNS;
+       HCURSOR                      gCursorNo;
 static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static bool                         gCrashOnOpen = false;
@@ -155,6 +155,7 @@ static WStrVec                      gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec                      gAllowedFileTypes;
 
+static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1);
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void CloseDocumentInWindow(WindowInfo *win);
@@ -162,6 +163,8 @@ static void EnterFullScreen(WindowInfo& win, bool presentation=false);
 static void ExitFullScreen(WindowInfo& win);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static bool CanResizeSidebar(void *ctx);
+static void ResizeSidebarDone(void *ctx);
 
 bool HasPermission(int permission)
 {
@@ -1259,8 +1262,8 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->hwndSidebarSplitter = CreateVSplitter(win->hwndFrame);
-    CrashIf(!win->hwndSidebarSplitter);
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, CanResizeSidebar, ResizeSidebarDone);
+    CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
     win->hwndFavSplitter = CreateHSplitter(win->hwndFrame);
@@ -2858,7 +2861,7 @@ void ShowOrHideSingleTabGlobally()
 #define SB_HPAGEUP   (WM_USER + 1)
 #define SB_HPAGEDOWN (WM_USER + 2)
 
-static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1)
+static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
 {
     ClientRect rc(win->hwndFrame);
     // don't relayout while the window is minimized
@@ -2929,7 +2932,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
         RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
-        dh.MoveWindow(win->hwndSidebarSplitter, rSplitH);
+        dh.MoveWindow(GetSplitterHwnd(win->sidebarSplitter), rSplitH);
 
         rc.x += toc.dx + SPLITTER_DX;
         rc.dx -= toc.dx + SPLITTER_DX;
@@ -3596,7 +3599,6 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
     return false;
 }
 
-
 static void UpdateSidebarTitles(WindowInfo& win)
 {
     HWND tocTitle = GetDlgItem(win.hwndTocBox, IDC_TOC_TITLE);
@@ -3626,8 +3628,9 @@ static void UpdateUITextForLanguage()
     }
 }
 
-void ResizeSidebar(WindowInfo *win)
+static bool CanResizeSidebar(void *ctx)
 {
+    WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
@@ -3639,12 +3642,23 @@ void ResizeSidebar(WindowInfo *win)
     ClientRect rToc(win->hwndTocBox);
     if (sidebarDx < min(SIDEBAR_MIN_WIDTH, rToc.dx) ||
         sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
-        SetCursor(gCursorNo);
+        return false;
     }
-    else {
-        SetCursor(gCursorSizeWE);
-        RelayoutFrame(win, false, sidebarDx);
+    // TODO: this shouldn't re-layout
+    RelayoutFrame(win, false, pcur.x);
+    return true;
+}
+
+static void ResizeSidebarDone(void *ctx)
+{
+/*
+    WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
+    if (CanResizeSidebar(win)) {
+        PointI pcur;
+        GetCursorPosInHwnd(win->hwndFrame, pcur);
+        RelayoutFrame(win, false, pcur.x);
     }
+*/
 }
 
 void ResizeFav(WindowInfo *win)
@@ -3759,7 +3773,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         SetFocus(win->hwndFrame);
     }
 
-    ShowWindow(win->hwndSidebarSplitter, tocVisible || showFavorites ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetSplitterHwnd(win->sidebarSplitter), tocVisible || showFavorites ? SW_SHOW : SW_HIDE);
     ShowWindow(win->hwndTocBox, tocVisible ? SW_SHOW : SW_HIDE);
     ShowWindow(win->hwndFavSplitter, tocVisible && showFavorites ? SW_SHOW : SW_HIDE);
     ShowWindow(win->hwndFavBox, showFavorites ? SW_SHOW : SW_HIDE);

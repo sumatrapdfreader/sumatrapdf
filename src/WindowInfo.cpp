@@ -14,6 +14,7 @@
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
+#include "Splitter.h"
 #include "uia/Provider.h"
 #include "WinUtil.h"
 
@@ -27,7 +28,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
     hwndTocBox(NULL), hwndTocTree(NULL),
-    hwndSidebarSplitter(NULL), hwndFavSplitter(NULL),
+    sidebarSplitter(NULL), hwndFavSplitter(NULL),
     hwndInfotip(NULL), infotipVisible(false),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
@@ -74,6 +75,7 @@ WindowInfo::~WindowInfo()
     // cbHandler is passed into Controller and
     // must be deleted afterwards
     delete cbHandler;
+    DeleteSplitter(sidebarSplitter);
 
     free(loadedFilePath);
 }
