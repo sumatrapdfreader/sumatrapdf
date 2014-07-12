@@ -304,6 +304,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\Splitter.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Splitter.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\ThreadUtil.cpp"
 					>
 				</File>
@@ -692,14 +700,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\Splitter.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\Splitter.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

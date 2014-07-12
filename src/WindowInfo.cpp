@@ -14,7 +14,6 @@
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
-#include "Splitter.h"
 #include "uia/Provider.h"
 #include "WinUtil.h"
 

@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "Splitter.h"
+
 #include "WinUtil.h"
 
 /*
@@ -34,6 +35,7 @@ static void OnPaint(Splitter *splitter, HWND hwnd)
     HDC hdc = BeginPaint(hwnd, &ps);
     HBRUSH br = CreateSolidBrush(splitter->bgCol);
     FillRect(hdc, &ps.rcPaint, br);
+    DeleteObject(br);
     EndPaint(hwnd, &ps);
 }
 
