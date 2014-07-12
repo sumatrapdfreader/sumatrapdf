@@ -11,7 +11,6 @@
 
 #include "Timer.h"
 #include "WinUtil.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used

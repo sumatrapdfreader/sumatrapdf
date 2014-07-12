@@ -6,7 +6,6 @@
 
 namespace svg {
 
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 GraphicsPath *GraphicsPathFromPathData(const char *s);

@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include <wincodec.h>
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 
 #include "ByteReader.h"

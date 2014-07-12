@@ -4,7 +4,6 @@
 #include "Mui.h"
 #include "SumatraAbout2.h"
 
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

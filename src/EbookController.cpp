@@ -10,7 +10,6 @@
 #include "EbookControls.h"
 #include "EbookDoc.h"
 #include "EbookFormatter.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"

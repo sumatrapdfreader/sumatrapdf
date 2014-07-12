@@ -6,7 +6,6 @@
 
 #include "AppPrefs.h"
 #include "Controller.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "FileHistory.h"
 #include "FileUtil.h"

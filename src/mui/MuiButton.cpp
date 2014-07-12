@@ -4,7 +4,6 @@
 #include "Mui.h"
 
 #include "DebugLog.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
 

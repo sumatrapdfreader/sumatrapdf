@@ -25,7 +25,6 @@
 #include "FileThumbnails.h"
 #include "FileUtil.h"
 #include "FileWatcher.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
 #include "Menu.h"

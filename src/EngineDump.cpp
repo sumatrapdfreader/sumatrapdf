@@ -7,7 +7,6 @@
 #include "EngineManager.h"
 #include "FileModifications.h"
 #include "FileUtil.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "MiniMui.h"
 #include "PdfEngine.h"

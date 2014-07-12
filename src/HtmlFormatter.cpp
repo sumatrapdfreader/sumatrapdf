@@ -5,7 +5,6 @@
 #include "HtmlFormatter.h"
 
 #include "CssParser.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"

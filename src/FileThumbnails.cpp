@@ -8,7 +8,6 @@
 #include "CryptoUtil.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 

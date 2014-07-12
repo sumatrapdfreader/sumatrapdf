@@ -7,7 +7,6 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Controller.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

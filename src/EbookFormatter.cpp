@@ -6,7 +6,6 @@ using namespace mui;
 
 #include "EbookFormatter.h"
 #include "EbookDoc.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"

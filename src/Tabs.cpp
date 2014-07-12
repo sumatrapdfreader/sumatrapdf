@@ -8,7 +8,6 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "FileWatcher.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

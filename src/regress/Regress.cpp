@@ -24,7 +24,6 @@ using namespace mui;
 #include "EbookFormatter.h"
 #include "EbookDoc.h"
 #include "FileUtil.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
