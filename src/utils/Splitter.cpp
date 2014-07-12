@@ -3,8 +3,6 @@
 
 #include "BaseUtil.h"
 #include "Splitter.h"
-#include "SumatraPDF.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
 
 /*
@@ -16,6 +14,11 @@ TODO:
 */
 
 #define SPLITTER_CLASS_NAME          L"SumatraSplitter"
+
+static HCURSOR cursorArrow;
+static HCURSOR cursorSizeWE;
+static HCURSOR cursorSizeNS;
+static HCURSOR cursorNo;
 
 struct Splitter {
     // we don't own this data
@@ -64,25 +67,25 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     if (WM_LBUTTONUP == msg) {
         ReleaseCapture();
         splitter->cb(splitter->ctx, true);
-        SetCursor(gCursorArrow);
+        SetCursor(cursorArrow);
         return 0;
     }
 
     if (WM_MOUSELEAVE == msg) {
-        SetCursor(gCursorArrow);
+        SetCursor(cursorArrow);
         return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
         if (SplitterVert == splitter->type) {
-            SetCursor(gCursorSizeWE);
+            SetCursor(cursorSizeWE);
         } else {
-            SetCursor(gCursorSizeNS);
+            SetCursor(cursorSizeNS);
         }
         if (hwnd == GetCapture()) {
             bool resizingAllowed = splitter->cb(splitter->ctx, false);
             if (!resizingAllowed) {
-                SetCursor(gCursorNo);
+                SetCursor(cursorNo);
             }
         }
         return 0;
@@ -99,8 +102,17 @@ Exit:
 
 void RegisterSplitterWndClass()
 {
+    if (cursorArrow) {
+        return;
+    }
+    cursorArrow  = LoadCursor(NULL, IDC_ARROW);
+    cursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
+    cursorSizeNS = LoadCursor(NULL, IDC_SIZENS);
+    cursorNo     = LoadCursor(NULL, IDC_NO);
+
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
+    //wcex.hCursor = cursorArrow;
     RegisterClassEx(&wcex);
 }
 
