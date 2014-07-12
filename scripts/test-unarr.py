@@ -69,7 +69,7 @@ def run_cmd(*args):
     return (res[0], res[1], cmdproc.returncode)
 
 
-def strip_empty_lines_and_dedup(s):
+def strip_empty_lines_and_dedup(s, only_last=-1):
     lines = []
     for l in s.splitlines():
         l = l.strip()
@@ -77,6 +77,8 @@ def strip_empty_lines_and_dedup(s):
             continue
         if l not in lines:
             lines.append(l)
+    if only_last != -1:
+        lines = lines[-only_last:]
     return "\n".join(lines)
 
 
@@ -85,8 +87,7 @@ def shorten_err(s):
 
 
 def shorten_out(s):
-    lines = strip_empty_lines_and_dedup(s)
-    return lines[-3:]
+    return strip_empty_lines_and_dedup(s, 3)
 
 
 def get_file_size(p):
@@ -117,8 +118,8 @@ def test_unarr(dir):
             files_failed.append(out)
             files_failed.append(err)
             file_size = get_file_size(p)
-            print("%s of %d failed with out:\n'%s'\nerr:\n'%s'" % (p, file_size, out, err))
-            fo.write("%s of %d failed with out:\n'%s'\nerr:\n'%s'\n" % (p, file_size, out, err))
+            print("%s of %d failed with out:\n%s\nerr:\n%s\n" % (p, file_size, out, err))
+            fo.write("%s of %d failed with out:\n%s\nerr:\n%s\n\n" % (p, file_size, out, err))
         files_tested += 1
         if files_tested % 100 == 0:
             print("tested %d files" % files_tested)
