@@ -4,8 +4,6 @@
 #ifndef Splitter_h
 #define Splitter_h
 
-HWND CreateHSplitter(HWND parent);
-
 struct Splitter;
 
 enum SplitterType {
@@ -22,4 +20,5 @@ void        RegisterSplitterWndClass();
 Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
 HWND        GetSplitterHwnd(Splitter *);
 void        SetSplitterBgCol(Splitter *, COLORREF);
+
 #endif

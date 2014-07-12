@@ -117,7 +117,7 @@ public:
     Splitter *      sidebarSplitter;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    HWND            hwndFavSplitter;
+    Splitter *      favSplitter;
 
     HWND            hwndTabBar;
     bool            tabsVisible;

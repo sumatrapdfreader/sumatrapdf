@@ -9,7 +9,6 @@
 
 /*
 TODO:
- - have only one window/class that calls a callback on WM_MOUSEMOVE
  - implement splitter like in Visual Studio, where during move we don't
    re-layout everything, only show how the splitter would move and only
    on WM_LBUTTONUP we would trigger re-layout. This is probably done
@@ -17,36 +16,7 @@ TODO:
  - move to src/utils
 */
 
-#define FAV_SPLITTER_CLASS_NAME      L"FavSplitter"
 #define SPLITTER_CLASS_NAME          L"SumatraSplitter"
-
-// TODO: temporary
-// in SumatraPDF.cpp
-extern void ResizeFav(WindowInfo *win);
-
-static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
-        return DefWindowProc(hwnd, msg, wp, lp);
-
-    switch (msg)
-    {
-        case WM_MOUSEMOVE:
-            if (hwnd == GetCapture()) {
-                ResizeFav(win);
-                return 0;
-            }
-            break;
-        case WM_LBUTTONDOWN:
-            SetCapture(hwnd);
-            break;
-        case WM_LBUTTONUP:
-            ReleaseCapture();
-            break;
-    }
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
 
 struct Splitter {
     // we don't own this data
@@ -131,21 +101,8 @@ Exit:
 void RegisterSplitterWndClass()
 {
     WNDCLASSEX wcex;
-
-    FillWndClassEx(wcex, FAV_SPLITTER_CLASS_NAME, WndProcFavSplitter);
-    wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    RegisterClassEx(&wcex);
-
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
     RegisterClassEx(&wcex);
-}
-
-HWND CreateHSplitter(HWND parent)
-{
-    return CreateWindow(FAV_SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
-                        0, 0, 0, 0, parent, (HMENU)0,
-                        GetModuleHandle(NULL), NULL);
 }
 
 // to delete, free()

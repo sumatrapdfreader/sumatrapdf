@@ -162,6 +162,7 @@ static void CloseDocumentInWindow(WindowInfo *win);
 static void EnterFullScreen(WindowInfo& win, bool presentation=false);
 static void ExitFullScreen(WindowInfo& win);
 static bool SidebarSplitterCb(void *ctx, bool done);
+static bool FavSplitterCb(void *ctx, bool done);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -1265,8 +1266,8 @@ static void CreateSidebar(WindowInfo* win)
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    win->hwndFavSplitter = CreateHSplitter(win->hwndFrame);
-    CrashIf(!win->hwndFavSplitter);
+    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterHoriz, win, FavSplitterCb);
+    CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
     if (win->tocVisible) {
@@ -2922,7 +2923,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
                 RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
-                dh.MoveWindow(win->hwndFavSplitter, rSplitV);
+                dh.MoveWindow(GetSplitterHwnd(win->favSplitter), rSplitV);
                 toc.dy += SPLITTER_DY;
             }
         }
@@ -3643,13 +3644,14 @@ static bool SidebarSplitterCb(void *ctx, bool done)
         sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
         return false;
     }
-    // TODO: this shouldn't re-layout
-    RelayoutFrame(win, false, pcur.x);
+    // TODO: only re-layout when done is true
+    RelayoutFrame(win, false, sidebarDx);
     return true;
 }
 
-void ResizeFav(WindowInfo *win)
+static bool FavSplitterCb(void *ctx, bool done)
 {
+    WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
@@ -3660,13 +3662,12 @@ void ResizeFav(WindowInfo *win)
     AssertCrash(rToc.dx == ClientRect(win->hwndFavBox).dx);
     if (tocDy < min(TOC_MIN_DY, rToc.dy) ||
         tocDy > max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
-        SetCursor(gCursorNo);
+        return false;
     }
-    else {
-        SetCursor(gCursorSizeNS);
-        gGlobalPrefs->tocDy = tocDy;
-        RelayoutFrame(win, false, rToc.dx);
-    }
+    gGlobalPrefs->tocDy = tocDy;
+    // TODO: only re-layout when done is true
+    RelayoutFrame(win, false, rToc.dx);
+    return true;
 }
 
 // A tree container, used for toc and favorites, is a window with following children:
@@ -3762,7 +3763,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 
     ShowWindow(GetSplitterHwnd(win->sidebarSplitter), tocVisible || showFavorites ? SW_SHOW : SW_HIDE);
     ShowWindow(win->hwndTocBox, tocVisible ? SW_SHOW : SW_HIDE);
-    ShowWindow(win->hwndFavSplitter, tocVisible && showFavorites ? SW_SHOW : SW_HIDE);
+    ShowWindow(GetSplitterHwnd(win->favSplitter), tocVisible && showFavorites ? SW_SHOW : SW_HIDE);
     ShowWindow(win->hwndFavBox, showFavorites ? SW_SHOW : SW_HIDE);
 
     RelayoutFrame(win, false);
