@@ -221,10 +221,9 @@ const char *zip_get_name(ar_archive *ar)
 
         if ((entry.flags & (1 << 11))) {
             zip->entry.name = name;
-            zip->entry.name_w = NULL;
         }
         else {
-            zip->entry.name = ar_conv_dos_to_utf8_utf16(name, &zip->entry.name_w);
+            zip->entry.name = ar_conv_dos_to_utf8_wide(name, &zip->entry.name_w);
             free(name);
         }
         /* normalize path separators */
@@ -249,6 +248,6 @@ const wchar_t *zip_get_name_w(ar_archive *ar)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     if (!zip->entry.name_w && zip_get_name(ar) && !zip->entry.name_w)
-        zip->entry.name_w = ar_conv_utf8_to_utf16(zip->entry.name);
+        zip->entry.name_w = ar_conv_utf8_to_wide(zip->entry.name);
     return zip->entry.name_w;
 }

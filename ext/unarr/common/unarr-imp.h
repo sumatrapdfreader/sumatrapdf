@@ -36,9 +36,9 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 /***** string ****/
 
-size_t ar_conv_rune_to_utf8(wchar_t rune, char *out);
-wchar_t *ar_conv_utf8_to_utf16(const char *str);
-char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar_t **wstr_opt);
+size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size);
+wchar_t *ar_conv_utf8_to_wide(const char *str);
+char *ar_conv_dos_to_utf8_wide(const char *astr, wchar_t **wstr_opt);
 time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
 
 /***** unarr *****/

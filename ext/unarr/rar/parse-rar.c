@@ -110,7 +110,7 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
     return true;
 }
 
-/* this seems to be what RAR apparently considers "Unicode" */
+/* this seems to be what RAR considers "Unicode" */
 static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
 {
 #define Check(cond) if (!(cond)) { free(str); return NULL; } else ((void)0)
@@ -118,7 +118,7 @@ static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
     uint8_t highbyte, flagbyte, flagbits, size, length, i;
     const uint8_t *in = (uint8_t *)data + strlen(data) + 1;
     const uint8_t *end_in = (uint8_t *)data + len;
-    char *str = malloc(len * 3 + 1);
+    char *str = calloc(len + 1, 3);
     char *out = str;
     char *end_out = str + len * 3;
 
@@ -134,7 +134,7 @@ static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
     flagbits = 0;
     size = 0;
 
-    while (in < end_in) {
+    while (in < end_in && out < end_out) {
         if (flagbits == 0) {
             flagbyte = *in++;
             flagbits = 8;
@@ -142,18 +142,18 @@ static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
         flagbits -= 2;
         switch ((flagbyte >> flagbits) & 3) {
         case 0:
-            Check(in + 1 <= end_in && out + 3 <= end_out);
-            out += ar_conv_rune_to_utf8(*in++, out);
+            Check(in + 1 <= end_in);
+            out += ar_conv_rune_to_utf8(*in++, out, end_out - out);
             size++;
             break;
         case 1:
-            Check(in + 1 <= end_in && out + 3 <= end_out);
-            out += ar_conv_rune_to_utf8(((uint16_t)highbyte << 8) | *in++, out);
+            Check(in + 1 <= end_in);
+            out += ar_conv_rune_to_utf8(((uint16_t)highbyte << 8) | *in++, out, end_out - out);
             size++;
             break;
         case 2:
-            Check(in + 2 <= end_in && out + 3 <= end_out);
-            out += ar_conv_rune_to_utf8(((uint16_t)*(in + 1) << 8) | *in, out);
+            Check(in + 2 <= end_in);
+            out += ar_conv_rune_to_utf8(((uint16_t)*(in + 1) << 8) | *in, out, end_out - out);
             in += 2;
             size++;
             break;
@@ -163,15 +163,15 @@ static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
             if ((length & 0x80)) {
                 uint8_t correction = *in++;
                 for (i = 0; i < (length & 0x7F) + 2; i++) {
-                    Check(out + 3 <= end_out && size < len);
-                    out += ar_conv_rune_to_utf8(((uint16_t)highbyte << 8) | (data[size] + (correction & 0xFF)), out);
+                    Check(size < len);
+                    out += ar_conv_rune_to_utf8(((uint16_t)highbyte << 8) | (data[size] + (correction & 0xFF)), out, end_out - out);
                     size++;
                 }
             }
             else {
                 for (i = 0; i < (length & 0x7F) + 2; i++) {
-                    Check(out + 3 <= end_out && size < len);
-                    out += ar_conv_rune_to_utf8(data[size], out);
+                    Check(size < len);
+                    out += ar_conv_rune_to_utf8(data[size], out, end_out - out);
                     size++;
                 }
             }
@@ -179,7 +179,6 @@ static char *rar_conv_unicode_to_utf8(const char *data, uint16_t len)
         }
     }
 
-    *out = '\0';
     return str;
 
 #undef Check
@@ -212,16 +211,14 @@ const char *rar_get_name(ar_archive *ar)
         name[namelen] = '\0';
 
         if (!(header.flags & LHD_UNICODE)) {
-            rar->entry.name = ar_conv_dos_to_utf8_utf16(name, &rar->entry.name_w);
+            rar->entry.name = ar_conv_dos_to_utf8_wide(name, &rar->entry.name_w);
             free(name);
         }
         else if (namelen == strlen(name)) {
             rar->entry.name = name;
-            rar->entry.name_w = NULL;
         }
         else {
             rar->entry.name = rar_conv_unicode_to_utf8(name, namelen);
-            rar->entry.name_w = NULL;
             free(name);
         }
         /* normalize path separators */
@@ -249,6 +246,6 @@ const wchar_t *rar_get_name_w(ar_archive *ar)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     if (!rar->entry.name_w && rar_get_name(ar) && !rar->entry.name_w)
-        rar->entry.name_w = ar_conv_utf8_to_utf16(rar->entry.name);
+        rar->entry.name_w = ar_conv_utf8_to_wide(rar->entry.name);
     return rar->entry.name_w;
 }
