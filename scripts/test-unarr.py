@@ -121,7 +121,9 @@ def dump_failures():
     n = len(files_failed) / 3
     i = 0
     while i < n:
-        fo.write("%s failed\n" % files_failed[i*3])
+        p = files_failed[i*3]
+        size = get_file_size(p)
+        fo.write("%s of %d failed\n" % (p, size))
         i += 1
     print("Failed %d out of %d" % (n, files_tested))
     fo.write("Failed %d out of %d\n" % (n, files_tested))
