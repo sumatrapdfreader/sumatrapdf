@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
-#include <windowsx.h>
 #include "BitManip.h"
 #include "DebugLog.h"
 

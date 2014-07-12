@@ -4,10 +4,6 @@
 #ifndef WinUtil_h
 #define WinUtil_h
 
-#include <WindowsX.h>
-#include <CommCtrl.h>
-#include <WinSafer.h>
-
 // the following are only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #ifndef USER_DEFAULT_SCREEN_DPI
 #define USER_DEFAULT_SCREEN_DPI 96

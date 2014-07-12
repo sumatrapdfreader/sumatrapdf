@@ -1,8 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include <Windowsx.h>
-
 #include "Mui.h"
 
 #include "DebugLog.h"
@@ -36,8 +34,6 @@ messages and paints child windows on WM_PAINT.
 Event handling is loosly coupled and uses slots/signals via
 sigslot library.
 */
-
-#include "Mui.h"
 
 namespace mui {
 

@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
-#include <malloc.h>
 #include <wininet.h>
 
 #include "AppPrefs.h"

@@ -17,6 +17,9 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <gdiplus.h>
+#include <CommCtrl.h>
+#include <WindowsX.h>
+#include <WinSafer.h>
 
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
@@ -42,6 +45,9 @@
 #include <stdint.h>
 #include <time.h>
 #include <locale.h>
+#include <malloc.h>
+#include <io.h>
+#include <fcntl.h>
 
 #define _USE_MATH_DEFINES
 #include <math.h>

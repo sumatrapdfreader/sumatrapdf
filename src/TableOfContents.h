@@ -4,8 +4,6 @@
 #ifndef TableOfContents_h
 #define TableOfContents_h
 
-#include <CommCtrl.h>
-
 class WindowInfo;
 
 void CreateToc(WindowInfo *win);

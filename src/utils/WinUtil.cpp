@@ -4,8 +4,6 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-#include <io.h>
-#include <fcntl.h>
 #include <mlang.h>
 
 #include "DebugLog.h"
