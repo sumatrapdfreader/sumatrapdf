@@ -13,13 +13,13 @@ enum SplitterType {
     SplitterVert
 };
 
-// called when user drags the splitter and when drag is finished (when done is
-// true). the owner can constrain where splitter can go by using current cursor
+// called when user drags the splitter ('done' is false) and when drag is finished ('done' is
+// true). the owner can constrain splitter by using current cursor
 // position and returning false if it's not allowed to go there
 typedef bool (*SplitterCallback)(void *ctx, bool done);
 
 void        RegisterSplitterWndClass();
 Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
 HWND        GetSplitterHwnd(Splitter *);
-
+void        SetSplitterBgCol(Splitter *, COLORREF);
 #endif

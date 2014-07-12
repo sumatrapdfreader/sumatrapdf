@@ -9,8 +9,6 @@
 
 /*
 TODO:
- - allow setting background color of splitter window (to better blend with
-   ebook window)
  - have only one window/class that calls a callback on WM_MOUSEMOVE
  - implement splitter like in Visual Studio, where during move we don't
    re-layout everything, only show how the splitter would move and only
@@ -56,14 +54,23 @@ struct Splitter {
     void *              ctx;
     SplitterType        type;
     SplitterCallback    cb;
+    COLORREF            bgCol;
 };
+
+static void OnPaint(Splitter *splitter, HWND hwnd)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
+    HBRUSH br = CreateSolidBrush(splitter->bgCol);
+    FillRect(hdc, &ps.rcPaint, br);
+    EndPaint(hwnd, &ps);
+}
 
 static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    /*
     if (WM_ERASEBKGND == msg) {
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
-    }*/
+    }
 
     Splitter *splitter = NULL;
     if (WM_NCCREATE == msg) {
@@ -82,19 +89,19 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONDOWN == msg) {
         SetCapture(hwnd);
-        goto Exit;
+        return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
         ReleaseCapture();
         splitter->cb(splitter->ctx, true);
         SetCursor(gCursorArrow);
-        goto Exit;
+        return 0;
     }
 
     if (WM_MOUSELEAVE == msg) {
         SetCursor(gCursorArrow);
-        goto Exit;
+        return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
@@ -112,6 +119,11 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
+    if (WM_PAINT == msg) {
+        OnPaint(splitter, hwnd);
+        return 0;
+    }
+
 Exit:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
@@ -126,7 +138,6 @@ void RegisterSplitterWndClass()
     RegisterClassEx(&wcex);
 
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClassEx(&wcex);
 }
 
@@ -144,6 +155,7 @@ Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCall
     s->ctx = ctx;
     s->cb = cb;
     s->type = type;
+    s->bgCol = GetSysColor(COLOR_BTNFACE);
     s->hwnd = CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
                            0, 0, 0, 0, parent, (HMENU)0,
                            GetModuleHandle(NULL), s);
@@ -153,4 +165,10 @@ Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCall
 HWND GetSplitterHwnd(Splitter *s)
 {
     return s->hwnd;
+}
+
+void SetSplitterBgCol(Splitter *s, COLORREF c)
+{
+    s->bgCol = c;
+    InvalidateRect(s->hwnd, NULL, false);
 }
