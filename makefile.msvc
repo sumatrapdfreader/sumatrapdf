@@ -161,7 +161,7 @@ UTILS_OBJS = \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\CryptoUtil.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
-	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OS)\Splitter.obj \
+	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\Splitter.obj \
 	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj
 
 !if "$(CFG)"=="dbg"
