@@ -15,7 +15,6 @@ TODO:
 
 #define SPLITTER_CLASS_NAME          L"SumatraSplitter"
 
-static HCURSOR cursorArrow;
 static HCURSOR cursorSizeWE;
 static HCURSOR cursorSizeNS;
 static HCURSOR cursorNo;
@@ -96,17 +95,15 @@ Exit:
 
 void RegisterSplitterWndClass()
 {
-    if (cursorArrow) {
+    if (cursorNo) {
         return;
     }
-    cursorArrow  = LoadCursor(NULL, IDC_ARROW);
+    cursorNo     = LoadCursor(NULL, IDC_NO);
     cursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
     cursorSizeNS = LoadCursor(NULL, IDC_SIZENS);
-    cursorNo     = LoadCursor(NULL, IDC_NO);
 
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
-    wcex.hCursor = cursorArrow;
     RegisterClassEx(&wcex);
 }
 
