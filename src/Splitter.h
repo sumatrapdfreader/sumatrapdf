@@ -7,5 +7,17 @@
 HWND CreateHSplitter(HWND parent);
 HWND CreateVSplitter(HWND parent);
 
+struct Splitter;
+
+enum SplitterType {
+    SplitterHoriz,
+    SplitterVert
+};
+
+typedef bool (*onMouseMove)(void *ctx);
+
+Splitter *  CreateSpliter(HWND parent, SplitterType *type, void *ctx, onMouseMove cb);
+void        DeleteSplitter(Splitter *);
+
 #endif
 
