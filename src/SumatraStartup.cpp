@@ -155,7 +155,7 @@ static bool InstanceInit(int nCmdShow)
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
     if (!gCursorHand) // IDC_HAND isn't available if WINVER < 0x0500
-        gCursorHand = gCursorDrag
+        gCursorHand = gCursorDrag;
 
     gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
