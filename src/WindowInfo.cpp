@@ -75,7 +75,7 @@ WindowInfo::~WindowInfo()
     // cbHandler is passed into Controller and
     // must be deleted afterwards
     delete cbHandler;
-    DeleteSplitter(sidebarSplitter);
+    free(sidebarSplitter);
 
     free(loadedFilePath);
 }

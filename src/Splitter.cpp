@@ -16,6 +16,7 @@ TODO:
    re-layout everything, only show how the splitter would move and only
    on WM_LBUTTONUP we would trigger re-layout. This is probably done
    with over-laid top-level window which moves with the cursor
+ - move to src/utils
 */
 
 #define FAV_SPLITTER_CLASS_NAME      L"FavSplitter"
@@ -50,15 +51,11 @@ static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARA
 }
 
 struct Splitter {
-    Splitter() {};
-    ~Splitter() {};
-
-    HWND            hwnd;
     // we don't own this data
-    void *          ctx;
-    onMove          cbMove;
-    onMoveDone      cbMoveDone;
-    SplitterType    type;
+    HWND                hwnd;
+    void *              ctx;
+    SplitterType        type;
+    SplitterCallback    cb;
 };
 
 static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -90,8 +87,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONUP == msg) {
         ReleaseCapture();
-        // TODO: possibly only call cbMoveDone() whe last cbMove() returned false
-        splitter->cbMoveDone(splitter->ctx);
+        splitter->cb(splitter->ctx, true);
         SetCursor(gCursorArrow);
         goto Exit;
     }
@@ -108,7 +104,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             SetCursor(gCursorSizeNS);
         }
         if (hwnd == GetCapture()) {
-            bool resizingAllowed = splitter->cbMove(splitter->ctx);
+            bool resizingAllowed = splitter->cb(splitter->ctx, false);
             if (!resizingAllowed) {
                 SetCursor(gCursorNo);
             }
@@ -141,23 +137,17 @@ HWND CreateHSplitter(HWND parent)
                         GetModuleHandle(NULL), NULL);
 }
 
-Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, onMove cbMove, onMoveDone cbMoveDone)
+// to delete, free()
+Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
 {
-    Splitter *s = new Splitter();
+    Splitter *s = AllocStruct<Splitter>();
     s->ctx = ctx;
-    s->cbMove = cbMove;
-    s->cbMoveDone = cbMoveDone;
+    s->cb = cb;
     s->type = type;
     s->hwnd = CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
                            0, 0, 0, 0, parent, (HMENU)0,
                            GetModuleHandle(NULL), s);
     return s;
-}
-
-void DeleteSplitter(Splitter *s)
-{
-    // Splitter::hwnd will be destroyed when parent is destroyed
-    delete s;
 }
 
 HWND GetSplitterHwnd(Splitter *s)

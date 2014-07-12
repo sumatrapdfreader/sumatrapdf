@@ -13,14 +13,13 @@ enum SplitterType {
     SplitterVert
 };
 
-// called on WM_MOUSEMOVE. the owner returns false if it doesn't allow
-// resizing to current cursor position
-typedef bool (*onMove)(void *ctx);
-typedef void (*onMoveDone)(void *ctx);
+// called when user drags the splitter and when drag is finished (when done is
+// true). the owner can constrain where splitter can go by using current cursor
+// position and returning false if it's not allowed to go there
+typedef bool (*SplitterCallback)(void *ctx, bool done);
 
 void        RegisterSplitterWndClass();
-Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, onMove cbMove, onMoveDone cbMoveDone);
-void        DeleteSplitter(Splitter *);
+Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
 HWND        GetSplitterHwnd(Splitter *);
 
 #endif

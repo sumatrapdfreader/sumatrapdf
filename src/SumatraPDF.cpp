@@ -161,10 +161,9 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void CloseDocumentInWindow(WindowInfo *win);
 static void EnterFullScreen(WindowInfo& win, bool presentation=false);
 static void ExitFullScreen(WindowInfo& win);
+static bool SidebarSplitterCb(void *ctx, bool done);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static bool CanResizeSidebar(void *ctx);
-static void ResizeSidebarDone(void *ctx);
 
 bool HasPermission(int permission)
 {
@@ -1262,7 +1261,7 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, CanResizeSidebar, ResizeSidebarDone);
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, SidebarSplitterCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
@@ -3628,7 +3627,7 @@ static void UpdateUITextForLanguage()
     }
 }
 
-static bool CanResizeSidebar(void *ctx)
+static bool SidebarSplitterCb(void *ctx, bool done)
 {
     WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
     PointI pcur;
@@ -3647,18 +3646,6 @@ static bool CanResizeSidebar(void *ctx)
     // TODO: this shouldn't re-layout
     RelayoutFrame(win, false, pcur.x);
     return true;
-}
-
-static void ResizeSidebarDone(void *ctx)
-{
-/*
-    WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
-    if (CanResizeSidebar(win)) {
-        PointI pcur;
-        GetCursorPosInHwnd(win->hwndFrame, pcur);
-        RelayoutFrame(win, false, pcur.x);
-    }
-*/
 }
 
 void ResizeFav(WindowInfo *win)
