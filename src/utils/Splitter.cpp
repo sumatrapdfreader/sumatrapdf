@@ -13,7 +13,7 @@ TODO:
    with over-laid top-level window which moves with the cursor
 */
 
-#define SPLITTER_CLASS_NAME          L"SumatraSplitter"
+#define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
 static HCURSOR cursorSizeWE;
 static HCURSOR cursorSizeNS;
