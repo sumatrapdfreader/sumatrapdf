@@ -70,14 +70,14 @@ struct ar_archive_rar_entry {
     uint16_t header_size;
     bool solid;
     char *name;
-    wchar16_t *name_w;
+    wchar_t *name_w;
 };
 
 bool rar_parse_header(ar_archive *ar, struct rar_header *header);
 bool rar_check_header_crc(ar_archive *ar);
 bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, struct rar_entry *entry);
 const char *rar_get_name(ar_archive *ar);
-const wchar16_t *rar_get_name_w(ar_archive *ar);
+const wchar_t *rar_get_name_w(ar_archive *ar);
 
 /***** filter-rar *****/
 

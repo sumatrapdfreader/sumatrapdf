@@ -36,10 +36,9 @@ ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_f
 
 /***** string ****/
 
-wchar16_t *ar_conv_utf8_to_utf16(const char *str);
-char *ar_conv_utf16_to_utf8(const wchar16_t *wstr);
-char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
-char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt);
+size_t ar_conv_rune_to_utf8(wchar_t rune, char *out);
+wchar_t *ar_conv_utf8_to_utf16(const char *str);
+char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar_t **wstr_opt);
 time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
 
 /***** unarr *****/
@@ -55,7 +54,7 @@ void ar_log(const char *prefix, const char *file, int line, const char *msg, ...
 typedef void (* ar_archive_close_fn)(ar_archive *ar);
 typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
 typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
-typedef const wchar16_t *(* ar_entry_get_name_w_fn)(ar_archive *ar);
+typedef const wchar_t *(* ar_entry_get_name_w_fn)(ar_archive *ar);
 typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
 typedef size_t (* ar_get_global_comment_fn)(ar_archive *ar, void *buffer, size_t count);
 

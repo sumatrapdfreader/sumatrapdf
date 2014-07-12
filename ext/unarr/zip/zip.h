@@ -75,7 +75,7 @@ struct ar_archive_zip_entry {
     uint16_t flags;
     uint32_t crc;
     char *name;
-    wchar16_t *name_w;
+    wchar_t *name_w;
     uint32_t dosdate;
 };
 
@@ -84,7 +84,7 @@ bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry);
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd);
 off64_t zip_find_end_of_central_directory(ar_stream *stream);
 const char *zip_get_name(ar_archive *ar);
-const wchar16_t *zip_get_name_w(ar_archive *ar);
+const wchar_t *zip_get_name_w(ar_archive *ar);
 
 /***** uncompress-zip *****/
 

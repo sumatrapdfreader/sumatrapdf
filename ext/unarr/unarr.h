@@ -9,11 +9,6 @@
 #include <stdbool.h>
 typedef int64_t off64_t;
 typedef int64_t time64_t;
-#ifdef _WIN32
-typedef wchar_t wchar16_t;
-#else
-typedef unsigned short wchar16_t;
-#endif
 
 /***** common/stream *****/
 
@@ -26,7 +21,7 @@ bool ar_skip(ar_stream *stream, off64_t count);
 off64_t ar_tell(ar_stream *stream);
 
 ar_stream *ar_open_file(const char *path);
-ar_stream *ar_open_file_w(const wchar16_t *path);
+ar_stream *ar_open_file_w(const wchar_t *path);
 ar_stream *ar_open_memory(const void *data, size_t datalen);
 #ifdef _WIN32
 typedef struct IStream IStream;
@@ -43,7 +38,7 @@ bool ar_parse_entry(ar_archive *ar);
 bool ar_parse_entry_at(ar_archive *ar, off64_t offset);
 
 const char *ar_entry_get_name(ar_archive *ar);
-const wchar16_t *ar_entry_get_name_w(ar_archive *ar);
+const wchar_t *ar_entry_get_name_w(ar_archive *ar);
 off64_t ar_entry_get_offset(ar_archive *ar);
 size_t ar_entry_get_size(ar_archive *ar);
 time64_t ar_entry_get_filetime(ar_archive *ar);

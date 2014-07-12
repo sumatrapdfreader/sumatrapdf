@@ -7,48 +7,39 @@
 
 #include <windows.h>
 
-wchar16_t *ar_conv_utf8_to_utf16(const char *str)
+size_t ar_conv_rune_to_utf8(wchar_t rune, char *out)
+{
+    return WideCharToMultiByte(CP_UTF8, 0, &rune, 1, out, 3, NULL, NULL);
+}
+
+wchar_t *ar_conv_utf8_to_utf16(const char *str)
 {
     int res = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    wchar16_t *wstr = calloc(res, sizeof(wchar16_t));
+    wchar_t *wstr = calloc(res, sizeof(wchar_t));
     if (wstr)
         MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, res);
     return wstr;
 }
 
-char *ar_conv_utf16_to_utf8(const wchar16_t *wstr)
-{
-    int res = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-    char *str = malloc(res);
-    if (str)
-        WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, res, NULL, NULL);
-    return str;
-}
+#define CP_DOS 437
 
-static char *ar_conv_cp_to_utf8_utf16(UINT cp, const char *astr, wchar16_t **wstr_opt)
+char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar_t **wstr_opt)
 {
     char *str = NULL;
-    int res = MultiByteToWideChar(cp, 0, astr, -1, NULL, 0);
-    wchar16_t *wstr = calloc(res, sizeof(wchar16_t));
+    int res = MultiByteToWideChar(CP_DOS, 0, astr, -1, NULL, 0);
+    wchar_t *wstr = calloc(res, sizeof(wchar_t));
     if (wstr) {
-        MultiByteToWideChar(cp, 0, astr, -1, wstr, res);
-        str = ar_conv_utf16_to_utf8(wstr);
+        MultiByteToWideChar(CP_DOS, 0, astr, -1, wstr, res);
+        res = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+        str = malloc(res);
+        if (str)
+            WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, res, NULL, NULL);
     }
     if (wstr_opt)
         *wstr_opt = wstr;
     else
         free(wstr);
     return str;
-}
-
-char *ar_conv_ansi_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
-{
-    return ar_conv_cp_to_utf8_utf16(CP_ACP, astr, wstr_opt);
-}
-
-char *ar_conv_dos_to_utf8_utf16(const char *astr, wchar16_t **wstr_opt)
-{
-    return ar_conv_cp_to_utf8_utf16(437, astr, wstr_opt);
 }
 
 time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate)

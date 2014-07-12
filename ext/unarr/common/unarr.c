@@ -51,7 +51,7 @@ const char *ar_entry_get_name(ar_archive *ar)
     return ar->get_name(ar);
 }
 
-const wchar16_t *ar_entry_get_name_w(ar_archive *ar)
+const wchar_t *ar_entry_get_name_w(ar_archive *ar)
 {
     return ar->get_name_w(ar);
 }

@@ -85,7 +85,7 @@ ar_stream *ar_open_file(const char *path)
     return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
 }
 
-ar_stream *ar_open_file_w(const wchar16_t *path)
+ar_stream *ar_open_file_w(const wchar_t *path)
 {
 #ifdef _WIN32
     FILE *f = _wfopen(path, L"rb");

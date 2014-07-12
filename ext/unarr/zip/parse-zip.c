@@ -235,7 +235,7 @@ const char *zip_get_name(ar_archive *ar)
             }
         }
         if (zip->entry.name_w) {
-            wchar16_t *pw;
+            wchar_t *pw;
             for (pw = zip->entry.name_w; *pw; pw++) {
                 if (*pw == '\\')
                     *pw = '/';
@@ -245,7 +245,7 @@ const char *zip_get_name(ar_archive *ar)
     return zip->entry.name;
 }
 
-const wchar16_t *zip_get_name_w(ar_archive *ar)
+const wchar_t *zip_get_name_w(ar_archive *ar)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     if (!zip->entry.name_w && zip_get_name(ar) && !zip->entry.name_w)
