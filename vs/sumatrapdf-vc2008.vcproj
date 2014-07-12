@@ -692,6 +692,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\Splitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\Splitter.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -967,14 +975,6 @@
 				</File>
 				<File
 					RelativePath="..\src\Selection.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Splitter.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\Splitter.h"
 					>
 				</File>
 				<File

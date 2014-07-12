@@ -109,7 +109,6 @@
     <ClCompile Include="..\src\RenderCache.cpp" />
     <ClCompile Include="..\src\Search.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
-    <ClCompile Include="..\src\Splitter.cpp" />
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraAbout.cpp" />
     <ClCompile Include="..\src\SumatraAbout2.cpp" />
@@ -190,6 +189,7 @@
     <ClCompile Include="..\src\utils\RarUtil.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
+    <ClCompile Include="..\src\utils\Splitter.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrSlice.cpp" />
@@ -384,7 +384,6 @@
     <ClInclude Include="..\src\Search.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
-    <ClInclude Include="..\src\Splitter.h" />
     <ClInclude Include="..\src\StressTesting.h" />
     <ClInclude Include="..\src\SumatraAbout.h" />
     <ClInclude Include="..\src\SumatraAbout2.h" />
@@ -473,6 +472,7 @@
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\Sigslot.h" />
     <ClInclude Include="..\src\utils\SimpleLog.h" />
+    <ClInclude Include="..\src\utils\Splitter.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
     <ClInclude Include="..\src\utils\StrHash.h" />

@@ -161,7 +161,7 @@ UTILS_OBJS = \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\CryptoUtil.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
-	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj \
+	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OS)\Splitter.obj \
 	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj
 
 !if "$(CFG)"=="dbg"
@@ -205,7 +205,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\Doc.obj \
 	$(OS)\MuiEbookPageDef.obj $(OS)\PagesLayoutDef.obj \
-	$(OS)\Splitter.obj $(OS)\Tester.obj $(OS)\Regress.obj \
+	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj \
 	$(OS)\ChmModel.obj \

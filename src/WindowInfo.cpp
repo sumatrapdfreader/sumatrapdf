@@ -76,6 +76,7 @@ WindowInfo::~WindowInfo()
     // must be deleted afterwards
     delete cbHandler;
     free(sidebarSplitter);
+    free(favSplitter);
 
     free(loadedFilePath);
 }

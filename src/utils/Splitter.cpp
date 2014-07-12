@@ -13,7 +13,6 @@ TODO:
    re-layout everything, only show how the splitter would move and only
    on WM_LBUTTONUP we would trigger re-layout. This is probably done
    with over-laid top-level window which moves with the cursor
- - move to src/utils
 */
 
 #define SPLITTER_CLASS_NAME          L"SumatraSplitter"

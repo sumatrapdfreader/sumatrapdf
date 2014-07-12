@@ -129,9 +129,6 @@
     <ClCompile Include="..\src\Selection.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Splitter.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -370,6 +367,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SettingsUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Splitter.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
@@ -950,9 +950,6 @@
     <ClInclude Include="..\src\SettingsStructs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Splitter.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1215,6 +1212,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SimpleLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Splitter.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SquareTreeParser.h">
