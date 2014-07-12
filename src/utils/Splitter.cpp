@@ -67,12 +67,6 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     if (WM_LBUTTONUP == msg) {
         ReleaseCapture();
         splitter->cb(splitter->ctx, true);
-        SetCursor(cursorArrow);
-        return 0;
-    }
-
-    if (WM_MOUSELEAVE == msg) {
-        SetCursor(cursorArrow);
         return 0;
     }
 
@@ -112,7 +106,7 @@ void RegisterSplitterWndClass()
 
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
-    //wcex.hCursor = cursorArrow;
+    wcex.hCursor = cursorArrow;
     RegisterClassEx(&wcex);
 }
 
