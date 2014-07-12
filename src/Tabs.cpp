@@ -753,7 +753,7 @@ void CreateTabbar(WindowInfo *win)
         WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | 
         TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT, 
         0, 0, 0, 0, 
-        win->hwndFrame, (HMENU)IDC_TABBAR, ghinst, NULL);
+        win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(NULL), NULL);
 
 #ifdef OWN_TAB_DRAWING
     DefWndProcTabBar = (WNDPROC)SetWindowLongPtr(win->hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);

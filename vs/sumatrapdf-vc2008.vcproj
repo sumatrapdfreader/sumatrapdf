@@ -1210,6 +1210,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\Splitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Splitter.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

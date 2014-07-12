@@ -327,7 +327,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
            CW_USEDEFAULT, CW_USEDEFAULT,
            CW_USEDEFAULT, CW_USEDEFAULT,
            NULL, NULL,
-           ghinst, NULL);
+           GetModuleHandle(NULL), NULL);
     if (!hwnd)
         return false;
 

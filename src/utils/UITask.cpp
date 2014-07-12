@@ -46,8 +46,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, 
 void Initialize()
 {
     WNDCLASSEX  wcex;
-    HINSTANCE hinst = GetModuleHandle(NULL);
-    FillWndClassEx(wcex, hinst, UITASK_CLASS_NAME, WndProcTaskDispatch);
+    FillWndClassEx(wcex, UITASK_CLASS_NAME, WndProcTaskDispatch);
     RegisterClassEx(&wcex);
 
     CrashIf(gTaskDispatchHwnd);
@@ -56,7 +55,7 @@ void Initialize()
             WS_OVERLAPPED,
             0, 0, 0, 0,
             NULL, NULL,
-            hinst, NULL);
+            GetModuleHandle(NULL), NULL);
 }
 
 void DrainQueue()

@@ -205,7 +205,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\Doc.obj \
 	$(OS)\MuiEbookPageDef.obj $(OS)\PagesLayoutDef.obj \
-	$(OS)\Tester.obj $(OS)\Regress.obj \
+	$(OS)\Splitter.obj $(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj \
 	$(OS)\ChmModel.obj \

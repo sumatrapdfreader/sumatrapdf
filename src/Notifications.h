@@ -97,6 +97,6 @@ public:
     virtual void RemoveNotification(NotificationWnd *wnd);
 };
 
-void RegisterNotificationsWndClass(HINSTANCE inst);
+void RegisterNotificationsWndClass();
 
 #endif

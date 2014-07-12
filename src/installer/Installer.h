@@ -115,7 +115,6 @@ struct PayloadInfo {
 extern GlobalData   gGlobalData;
 extern PayloadInfo  gPayloadData[];
 extern WCHAR *      gSupportedExts[];
-extern HINSTANCE    ghinst;
 extern HWND         gHwndFrame;
 extern HWND         gHwndButtonExit;
 extern HWND         gHwndButtonInstUninst;

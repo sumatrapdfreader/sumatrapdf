@@ -425,7 +425,7 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
     gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST,
         TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        gHwndAbout, NULL, ghinst, NULL);
+        gHwndAbout, NULL, GetModuleHandle(NULL), NULL);
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
@@ -523,8 +523,8 @@ void OnMenuAbout()
 
     if (!gAtomAbout) {
         WNDCLASSEX  wcex;
-        FillWndClassEx(wcex, ghinst, ABOUT_CLASS_NAME, WndProcAbout);
-        wcex.hIcon = LoadIcon(ghinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
+        wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }
@@ -535,7 +535,7 @@ void OnMenuAbout()
             CW_USEDEFAULT, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT,
             NULL, NULL,
-            ghinst, NULL);
+            GetModuleHandle(NULL), NULL);
     if (!gHwndAbout)
         return;
 

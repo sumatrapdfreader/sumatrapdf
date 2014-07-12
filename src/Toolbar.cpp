@@ -376,14 +376,14 @@ static void CreateFindBox(WindowInfo& win)
 {
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
                             0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     SetWindowFont(label, gDefaultGuiFont, FALSE);
     SetWindowFont(find, gDefaultGuiFont, FALSE);
@@ -523,18 +523,22 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 static void CreatePageBox(WindowInfo& win)
 {
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor),
+                            (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
+                            win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND page = CreateWindowEx(0, WC_EDIT, L"0", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
-                            win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)),
+                            (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
+                            win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
+                            GetModuleHandle(NULL), NULL);
 
     HWND total = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
+                            0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
+                            GetModuleHandle(NULL), NULL);
 
     SetWindowFont(label, gDefaultGuiFont, FALSE);
     SetWindowFont(page, gDefaultGuiFont, FALSE);
@@ -558,7 +562,8 @@ static void CreatePageBox(WindowInfo& win)
 void CreateToolbar(WindowInfo *win)
 {
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_TOOLBAR,
-                                      0, 0, 0, 0, win->hwndFrame,(HMENU)IDC_TOOLBAR, ghinst, NULL);
+                                      0, 0, 0, 0, win->hwndFrame,(HMENU)IDC_TOOLBAR,
+                                      GetModuleHandle(NULL), NULL);
     win->hwndToolbar = hwndToolbar;
     SendMessage(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
@@ -567,7 +572,7 @@ void CreateToolbar(WindowInfo *win)
 
     // the name of the bitmap contains the number of icons so that after adding/removing
     // icons a complete default toolbar is used rather than an incomplete customized one
-    HBITMAP hbmp = LoadExternalBitmap(ghinst, L"toolbar_11.bmp", IDB_TOOLBAR);
+    HBITMAP hbmp = LoadExternalBitmap(GetModuleHandle(NULL), L"toolbar_11.bmp", IDB_TOOLBAR);
     SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
@@ -608,7 +613,7 @@ void CreateToolbar(WindowInfo *win)
 
     DWORD  reBarStyle = WS_REBAR | WS_VISIBLE;
     win->hwndReBar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL, reBarStyle,
-                                    0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_REBAR, ghinst, NULL);
+                                    0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_REBAR, GetModuleHandle(NULL), NULL);
 
     REBARINFO rbi;
     rbi.cbSize = sizeof(REBARINFO);

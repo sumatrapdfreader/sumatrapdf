@@ -90,39 +90,29 @@ static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
     SetFocus(win.hwndFrame);
 }
 
-static bool RegisterWinClass(HINSTANCE hinst)
+static bool RegisterWinClass()
 {
     WNDCLASSEX  wcex;
     ATOM        atom;
 
-    FillWndClassEx(wcex, hinst, FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon  = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
+    wcex.hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    CrashIf(!wcex.hIcon);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
-    FillWndClassEx(wcex, hinst, CANVAS_CLASS_NAME, WndProcCanvas);
+    FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
     wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
-    FillWndClassEx(wcex, hinst, PROPERTIES_CLASS_NAME, WndProcProperties);
-    wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    FillWndClassEx(wcex, PROPERTIES_CLASS_NAME, WndProcProperties);
+    wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    CrashIf(!wcex.hIcon);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
-    FillWndClassEx(wcex, hinst, SIDEBAR_SPLITTER_CLASS_NAME, WndProcSidebarSplitter);
-    wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
-
-    FillWndClassEx(wcex, hinst, FAV_SPLITTER_CLASS_NAME, WndProcFavSplitter);
-    wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
-
-    RegisterNotificationsWndClass(hinst);
+    RegisterNotificationsWndClass();
 
     return true;
 }
@@ -157,18 +147,17 @@ COLORREF GetNoDocBgColor()
     return COL_WINDOW_BG;
 }
 
-static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
+static bool InstanceInit(int nCmdShow)
 {
-    ghinst = hInstance;
-
+    gCursorDrag     = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSORDRAG));
+    CrashIf(!gCursorDrag);
     gCursorArrow = LoadCursor(NULL, IDC_ARROW);
     gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
     gCursorHand  = LoadCursor(NULL, IDC_HAND);
     if (!gCursorHand) // IDC_HAND isn't available if WINVER < 0x0500
-        gCursorHand = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
+        gCursorHand = gCursorDrag
 
     gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
-    gCursorDrag     = LoadCursor(ghinst, MAKEINTRESOURCE(IDC_CURSORDRAG));
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
     gCursorSizeNS   = LoadCursor(NULL, IDC_SIZENS);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
@@ -177,8 +166,8 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
-    gBitmapReloadingCue = LoadBitmap(ghinst, MAKEINTRESOURCE(IDB_RELOADING_CUE));
-
+    gBitmapReloadingCue = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_RELOADING_CUE));
+    CrashIf(!gBitmapReloadingCue);
     return true;
 }
 
@@ -479,9 +468,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
     DebugGdiPlusDevice(gUseGdiRenderer);
 
-    if (!RegisterWinClass(hInstance))
+    if (!RegisterWinClass())
         goto Exit;
-    if (!InstanceInit(hInstance, nCmdShow))
+
+    CrashIf(hInstance != GetModuleHandle(NULL));
+    if (!InstanceInit(nCmdShow))
         goto Exit;
 
     if (i.hwndPluginParent) {

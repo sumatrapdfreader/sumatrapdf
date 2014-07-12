@@ -42,7 +42,6 @@ using namespace Gdiplus;
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0
 
-HINSTANCE       ghinst;
 HWND            gHwndFrame = NULL;
 HWND            gHwndButtonExit = NULL;
 HWND            gHwndButtonInstUninst = NULL;
@@ -490,7 +489,7 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
     HWND button = CreateWindow(WC_BUTTON, label,
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         rc.x, rc.y, rc.dx, rc.dy, hwndParent,
-                        (HMENU)id, ghinst, NULL);
+                        (HMENU)id, GetModuleHandle(NULL), NULL);
     SetWindowFont(button, gFontDefault, TRUE);
 
     return button;
@@ -832,20 +831,20 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     return 0;
 }
 
-static BOOL RegisterWinClass(HINSTANCE hInstance)
+static bool RegisterWinClass()
 {
     WNDCLASSEX  wcex;
 
-    FillWndClassEx(wcex, hInstance, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
+    wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
 
     ATOM atom = RegisterClassEx(&wcex);
+    CrashIf(atom == NULL);
     return atom != NULL;
 }
 
-static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
+static BOOL InstanceInit(int nCmdShow)
 {
-    ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
     win::GetHwndDpi(HWND_DESKTOP, &gUiDPIFactor);
     trans::SetCurrentLangByCode(trans::DetectUserLang());
@@ -1041,7 +1040,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (!RegisterWinClass(hInstance))
+    if (!RegisterWinClass())
         goto Exit;
 
     if (!InstanceInit(hInstance, nCmdShow))

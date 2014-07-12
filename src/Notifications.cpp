@@ -22,7 +22,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 
     self = CreateWindowEx(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
                           TL_MARGIN, TL_MARGIN, 0, 0,
-                          parent, (HMENU)0, ghinst, NULL);
+                          parent, (HMENU)0, GetModuleHandle(NULL), NULL);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message, true);
@@ -279,10 +279,10 @@ void Notifications::Relayout()
     }
 }
 
-void RegisterNotificationsWndClass(HINSTANCE inst)
+void RegisterNotificationsWndClass()
 {
     WNDCLASSEX wcex;
-    FillWndClassEx(wcex, inst, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
+    FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
     wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
     RegisterClassEx(&wcex);
 }

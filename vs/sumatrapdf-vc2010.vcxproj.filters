@@ -129,6 +129,9 @@
     <ClCompile Include="..\src\Selection.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Splitter.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -945,6 +948,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SettingsStructs.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Splitter.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">

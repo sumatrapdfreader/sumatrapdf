@@ -37,12 +37,12 @@ void InitAllCommonControls()
     InitCommonControlsEx(&cex);
 }
 
-void FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const WCHAR *clsName, WNDPROC wndproc)
+void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc)
 {
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.hInstance      = hInstance;
+    wcex.hInstance      = GetModuleHandle(NULL);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.lpszClassName  = clsName;
     wcex.lpfnWndProc    = wndproc;

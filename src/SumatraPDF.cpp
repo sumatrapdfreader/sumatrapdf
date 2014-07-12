@@ -40,6 +40,7 @@
 #include "resource.h"
 #include "Search.h"
 #include "Selection.h"
+#include "Splitter.h"
 #include "SquareTreeParser.h"
 #include "SumatraAbout.h"
 #include "SumatraAbout2.h"
@@ -96,8 +97,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #endif
 
 #define CANVAS_CLASS_NAME            L"SUMATRA_PDF_CANVAS"
-#define SIDEBAR_SPLITTER_CLASS_NAME  L"SidebarSplitter"
-#define FAV_SPLITTER_CLASS_NAME      L"FavSplitter"
 #define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
 #define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
 
@@ -124,8 +123,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
 #define EBOOK_LAYOUT_TIMER_ID       6
-
-HINSTANCE                    ghinst = NULL;
 
 HCURSOR                      gCursorArrow;
 HCURSOR                      gCursorHand;
@@ -1262,12 +1259,12 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, L"",
-        WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
-
+    win->hwndSidebarSplitter = CreateVSplitter(win->hwndFrame);
+    CrashIf(!win->hwndSidebarSplitter);
     CreateToc(win);
-    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, L"",
-        WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
+
+    win->hwndFavSplitter = CreateHSplitter(win->hwndFrame);
+    CrashIf(!win->hwndFavSplitter);
     CreateFavorites(win);
 
     if (win->tocVisible) {
@@ -1294,7 +1291,7 @@ static WindowInfo* CreateWindowInfo()
             WS_OVERLAPPEDWINDOW,
             windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             NULL, NULL,
-            ghinst, NULL);
+            GetModuleHandle(NULL), NULL);
     if (!hwndFrame)
         return NULL;
 
@@ -1309,7 +1306,7 @@ static WindowInfo* CreateWindowInfo()
             WS_CHILD | WS_HSCROLL | WS_VSCROLL,
             0, 0, 0, 0, /* position and size determined in OnSize */
             hwndFrame, NULL,
-            ghinst, NULL);
+            GetModuleHandle(NULL), NULL);
     if (!win->hwndCanvas) {
         delete win;
         return NULL;
@@ -1330,7 +1327,7 @@ static WindowInfo* CreateWindowInfo()
     win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST,
         TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        win->hwndCanvas, NULL, ghinst, NULL);
+        win->hwndCanvas, NULL, GetModuleHandle(NULL), NULL);
 
     CreateTabbar(win);
     CreateToolbar(win);
@@ -3629,7 +3626,7 @@ static void UpdateUITextForLanguage()
     }
 }
 
-static void ResizeSidebar(WindowInfo *win)
+void ResizeSidebar(WindowInfo *win)
 {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
@@ -3650,7 +3647,7 @@ static void ResizeSidebar(WindowInfo *win)
     }
 }
 
-static void ResizeFav(WindowInfo *win)
+void ResizeFav(WindowInfo *win)
 {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
@@ -3669,55 +3666,6 @@ static void ResizeFav(WindowInfo *win)
         gGlobalPrefs->tocDy = tocDy;
         RelayoutFrame(win, false, rToc.dx);
     }
-}
-
-static LRESULT CALLBACK WndProcFavSplitter(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
-        return DefWindowProc(hwnd, message, wParam, lParam);
-
-    switch (message)
-    {
-        case WM_MOUSEMOVE:
-            if (hwnd == GetCapture()) {
-                ResizeFav(win);
-                return 0;
-            }
-            break;
-        case WM_LBUTTONDOWN:
-            SetCapture(hwnd);
-            break;
-        case WM_LBUTTONUP:
-            ReleaseCapture();
-            break;
-    }
-    return DefWindowProc(hwnd, message, wParam, lParam);
-}
-
-static LRESULT CALLBACK WndProcSidebarSplitter(HWND hwnd, UINT message,
-                                               WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
-        return DefWindowProc(hwnd, message, wParam, lParam);
-
-    switch (message)
-    {
-        case WM_MOUSEMOVE:
-            if (hwnd == GetCapture()) {
-                ResizeSidebar(win);
-                return 0;
-            }
-            break;
-        case WM_LBUTTONDOWN:
-            SetCapture(hwnd);
-            break;
-        case WM_LBUTTONUP:
-            ReleaseCapture();
-            break;
-    }
-    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 // A tree container, used for toc and favorites, is a window with following children:
@@ -4521,7 +4469,7 @@ InitMouseWheelInfo:
 
 static int RunMessageLoop()
 {
-    HACCEL accTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    HACCEL accTable = LoadAccelerators(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_SUMATRAPDF));
     MSG msg = { 0 };
 
     while (GetMessage(&msg, NULL, 0, 0)) {

@@ -71,7 +71,6 @@ class DisplayModel;
 struct TabData;
 
 // all defined in SumatraPDF.cpp
-extern HINSTANCE                ghinst;
 extern bool                     gDebugShowLinks;
 extern bool                     gUseGdiRenderer;
 extern HCURSOR                  gCursorHand;

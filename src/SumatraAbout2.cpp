@@ -341,8 +341,8 @@ void OnMenuAbout2()
     }
 
     if (!gAboutWndAtom) {
-        FillWndClassEx(wcex, ghinst, WND_CLASS_ABOUT2, WndProcAbout2);
-        wcex.hIcon = LoadIcon(ghinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        FillWndClassEx(wcex, WND_CLASS_ABOUT2, WndProcAbout2);
+        wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAboutWndAtom = RegisterClassEx(&wcex);
         CrashIf(!gAboutWndAtom);
     }
@@ -352,7 +352,7 @@ void OnMenuAbout2()
             CW_USEDEFAULT, CW_USEDEFAULT,
             520, 400,
             NULL, NULL,
-            ghinst, NULL);
+            GetModuleHandle(NULL), NULL);
     if (!gHwndAbout2)
         return;
 

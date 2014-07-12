@@ -331,7 +331,7 @@ void CreateMainWindow()
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
         NULL, NULL,
-        ghinst, NULL);
+        GetModuleHandle(NULL), NULL);
 }
 
 void ShowUsage()
