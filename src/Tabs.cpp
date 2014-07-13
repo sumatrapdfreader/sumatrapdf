@@ -385,21 +385,6 @@ public:
     }
 
 private:
-    float GetLightness(COLORREF c) {
-        BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
-        BYTE M = max(max(R, G), B), m = min(min(R, G), B);
-        return (M + m) / 2.0f;
-    }
-
-    // Adjusts lightness by 1/255 units.
-    COLORREF AdjustLightness2(COLORREF c, float units) {
-        float lightness = GetLightness(c);
-        units = limitValue(units, -lightness, 255.0f - lightness);
-        if (0.0f == lightness)
-            return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
-        return AdjustLightness(c, 1.0f + units / lightness);
-    }
-
     Brush *LoadBrush(SolidBrush &b, COLORREF c) {
         b.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
         return &b;
@@ -891,7 +876,6 @@ void TabsOnLoadedDoc(WindowInfo *win)
         DeleteTabData(td, false);
 }
 
-
 // Refresh the tab's title
 void TabsOnChangedDoc(WindowInfo *win)
 {
@@ -1126,3 +1110,19 @@ void MenuBarAsPopupMenu(HWND hwnd, int x, int y)
         RemoveMenu(popup, count, MF_BYPOSITION);
     DestroyMenu(popup);
 }
+
+float GetLightness(COLORREF c) {
+    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
+    return (M + m) / 2.0f;
+}
+
+// Adjusts lightness by 1/255 units.
+COLORREF AdjustLightness2(COLORREF c, float units) {
+    float lightness = GetLightness(c);
+    units = limitValue(units, -lightness, 255.0f - lightness);
+    if (0.0f == lightness)
+        return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
+    return AdjustLightness(c, 1.0f + units / lightness);
+}
+

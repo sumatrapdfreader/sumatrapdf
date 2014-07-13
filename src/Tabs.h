@@ -53,4 +53,7 @@ void SwapTabs(WindowInfo *win, int tab1, int tab2);
 void SetTabsInTitlebar(WindowInfo *win, bool set);
 void MenuBarAsPopupMenu(HWND hwnd, int x, int y);
 
+COLORREF AdjustLightness2(COLORREF c, float units);
+float GetLightness(COLORREF c);
+
 #endif

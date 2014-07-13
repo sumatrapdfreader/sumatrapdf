@@ -322,30 +322,35 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 
 void UpdateTocColors(WindowInfo *win)
 {
+    COLORREF bgCol = RGB(0xff, 0xff, 0xff);
+    COLORREF txtCol = GetSysColor(COLOR_WINDOWTEXT);
+    COLORREF treeBgCol = (DWORD)-1;
+    COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
-        COLORREF bgCol = gGlobalPrefs->ebookUI.backgroundColor;
-        COLORREF txtCol = gGlobalPrefs->ebookUI.textColor;
-        TreeView_SetBkColor(win->hwndTocTree, bgCol);
-        SetBgCol(win->tocLabelWithClose, bgCol);
-        SetTextCol(win->tocLabelWithClose, txtCol);
-        // TODO: this should be color derived from bgCol e.g. darkened color
-        SetBgCol(win->sidebarSplitter, txtCol);
-
-        // TODO: if we have favorites in ebook view, we'll need this
-        //SetBgCol(win->favLabelWithClose, bgCol);
-        //SetTextCol(win->favLabelWithClose, txtCol);
-        //SetBgCol(win->favSplitter, txtCol);
-
-        // TODO: more work needed to to ensure consistent look of the ebook window:
-        // - tab bar should match the color
-        // - change the tree item text color
-        // - change the tree item background color when selected (for both focused and non-focused cases)
-        // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
-        //   and match their colors as well
+        bgCol = gGlobalPrefs->ebookUI.backgroundColor;
+        txtCol = gGlobalPrefs->ebookUI.textColor;
+        treeBgCol = bgCol;
+        float factor = 14.f;
+        int sign = GetLightness(bgCol) + factor > 255 ? 1 : -1;
+        splitterCol = AdjustLightness2(bgCol, sign * factor);
     }
-    else {
-        TreeView_SetBkColor(win->hwndTocTree, -1);
-    }
+
+    TreeView_SetBkColor(win->hwndTocTree, treeBgCol);
+    SetBgCol(win->tocLabelWithClose, bgCol);
+    SetTextCol(win->tocLabelWithClose, txtCol);
+    SetBgCol(win->sidebarSplitter, splitterCol);
+
+    // TODO: if we have favorites in ebook view, we'll need this
+    //SetBgCol(win->favLabelWithClose, bgCol);
+    //SetTextCol(win->favLabelWithClose, txtCol);
+    //SetBgCol(win->favSplitter, txtCol);
+
+    // TODO: more work needed to to ensure consistent look of the ebook window:
+    // - tab bar should match the color
+    // - change the tree item text color
+    // - change the tree item background color when selected (for both focused and non-focused cases)
+    // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
+    //   and match their colors as well
 }
 
 // copied from mupdf/fitz/dev_text.c
@@ -517,8 +522,6 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 }
 
-static HBRUSH hdrBkgnd = NULL; // TODO: must be on WindowInfo
-
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -561,7 +564,7 @@ void CreateToc(WindowInfo *win)
     SetFont(l, gDefaultGuiFont);
     // label is set in UpdateSidebarTitles()
 
-    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
+    win->hwndTocTree = CreateWindowEx(0, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
