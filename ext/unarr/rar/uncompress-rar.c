@@ -134,10 +134,19 @@ static void PpmdRAR_RangeDec_CreateVTable(struct CPpmdRAR_RangeDec *p, IByteIn *
     p->Stream = stream;
 }
 
-static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp)
+static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp, uint8_t version)
 {
-    if (uncomp->initialized)
+    if (uncomp->initialized) {
+        if (uncomp->version != version) {
+            warn("Compression version mismatch: %d != %d", version, uncomp->version);
+            return false;
+        }
         return true;
+    }
+    if (version != 29 && version != 36) {
+        warn("Unsupported compression version: %d", version);
+        return false;
+    }
     memset(uncomp, 0, sizeof(*uncomp));
     uncomp->start_new_table = true;
     uncomp->filters.filterstart = SIZE_MAX;
@@ -145,6 +154,7 @@ static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp)
         warn("OOM during decompression");
         return false;
     }
+    uncomp->version = version;
     uncomp->initialized = true;
     return true;
 }
@@ -824,7 +834,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     size_t end;
 
-    if (!rar_init_uncompress(uncomp))
+    if (!rar_init_uncompress(uncomp, rar->entry.version))
         return false;
 
     for (;;) {

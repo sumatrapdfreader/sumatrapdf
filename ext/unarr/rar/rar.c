@@ -64,8 +64,11 @@ static bool rar_parse_entry(ar_archive *ar)
             if ((header.flags & LHD_PASSWORD))
                 warn("Encrypted entries will fail to uncompress");
             if ((header.flags & LHD_DIRECTORY) == LHD_DIRECTORY) {
-                log("Skipping directory entry \"%s\"", rar_get_name(ar));
-                break;
+                if (header.datasize == 0) {
+                    log("Skipping directory entry \"%s\"", rar_get_name(ar));
+                    break;
+                }
+                warn("Can't skip directory entries containing data");
             }
             if ((header.flags & (LHD_SPLIT_BEFORE | LHD_SPLIT_AFTER)))
                 warn("Splitting files isn't really supported");
@@ -165,10 +168,6 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
     if (rar->entry.method == METHOD_STORE) {
         if (!rar_copy_stored(rar, buffer, count))
             return false;
-    }
-    else if (rar->entry.version != 29) {
-        warn("Unsupported compression version: %d", rar->entry.version);
-        return false;
     }
     else if (rar->entry.method == METHOD_FASTEST || rar->entry.method == METHOD_FAST ||
              rar->entry.method == METHOD_NORMAL || rar->entry.method == METHOD_GOOD ||

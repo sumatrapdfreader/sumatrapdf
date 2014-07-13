@@ -144,6 +144,7 @@ struct CPpmdRAR_RangeDec {
 
 struct ar_archive_rar_uncomp {
     bool initialized;
+    uint8_t version;
     bool start_new_table;
 
     LZSS lzss;
