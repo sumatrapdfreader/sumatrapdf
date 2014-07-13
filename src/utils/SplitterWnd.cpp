@@ -135,4 +135,3 @@ void SetBgCol(SplitterWnd *w, COLORREF c)
     w->bgCol = c;
     ScheduleRepaint(w->hwnd);
 }
-

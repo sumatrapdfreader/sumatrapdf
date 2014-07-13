@@ -17,4 +17,3 @@ void                SetPaddingXY(LabelWithCloseWnd*, int x, int y);
 SizeI               GetIdealSize(LabelWithCloseWnd*);
 
 #endif
-
