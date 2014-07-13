@@ -864,7 +864,9 @@ WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form)
 
 bool IsRtl(HWND hwnd)
 {
-    // TODO: write me
+    DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if ((style & WS_EX_LAYOUTRTL) == WS_EX_LAYOUTRTL)
+        return true;
     return false;
 }
 

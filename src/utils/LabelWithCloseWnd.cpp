@@ -10,6 +10,8 @@
 /*
 TODO:
  . dpi adjust values
+ . for rtl, the button should be drawn on the other side. strangely, IsMouseOverClose()
+   works correctly
 */
 
 #define CLOSE_BTN_DX 16
