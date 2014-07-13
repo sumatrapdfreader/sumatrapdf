@@ -216,6 +216,12 @@ void SetBgCol(LabelWithCloseWnd *w, COLORREF c)
     ScheduleRepaint(w->hwnd);
 }
 
+void SetTextCol(LabelWithCloseWnd* w, COLORREF c)
+{
+    w->txtCol = c;
+    ScheduleRepaint(w->hwnd);
+}
+
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
 // free() to delete

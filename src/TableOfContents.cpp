@@ -11,6 +11,7 @@
 #include "LabelWithCloseWnd.h"
 #include "resource.h"
 #include "SumatraPDF.h"
+#include "SplitterWnd.h"
 #include "Tabs.h"
 #include "Translations.h"
 #include "UITask.h"
@@ -322,16 +323,23 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 void UpdateTocColors(WindowInfo *win)
 {
     if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
-        COLORREF c = gGlobalPrefs->ebookUI.backgroundColor;
-        TreeView_SetBkColor(win->hwndTocTree, c);
+        COLORREF bgCol = gGlobalPrefs->ebookUI.backgroundColor;
+        COLORREF txtCol = gGlobalPrefs->ebookUI.textColor;
+        TreeView_SetBkColor(win->hwndTocTree, bgCol);
+        SetBgCol(win->tocLabelWithClose, bgCol);
+        SetTextCol(win->tocLabelWithClose, txtCol);
+        // TODO: this should be color derived from bgCol e.g. darkened color
+        SetBgCol(win->sidebarSplitter, txtCol);
+
+        // TODO: if we have favorites in ebook view, we'll need this
+        //SetBgCol(win->favLabelWithClose, bgCol);
+        //SetTextCol(win->favLabelWithClose, txtCol);
+        //SetBgCol(win->favSplitter, txtCol);
 
         // TODO: more work needed to to ensure consistent look of the ebook window:
+        // - tab bar should match the color
         // - change the tree item text color
         // - change the tree item background color when selected (for both focused and non-focused cases)
-        // - "Bookmarks" header and close buttom should also match ebook window background
-        // - splitter color should be derived from backround color (e.g. change the hue so that
-        //   it has a matching color but subtly different. alternatively we could use exactly the same
-        //   color but add some indicator about splitter (some programs use 3 dots in the middle)
         // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
         //   and match their colors as well
     }
