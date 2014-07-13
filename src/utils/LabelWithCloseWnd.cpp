@@ -9,13 +9,13 @@
 
 /*
 TODO:
- . dpi adjust values
  . for rtl, the button should be drawn on the other side. strangely, IsMouseOverClose()
    works correctly
 */
 
-#define CLOSE_BTN_DX 16
-#define CLOSE_BTN_DY 16
+#define CLOSE_BTN_DX            16
+#define CLOSE_BTN_DY            16
+#define LABEL_BUTTON_SPACE_DX   8
 
 #define WND_CLASS_NAME          L"LabelWithCloseWndClass"
 
@@ -28,7 +28,7 @@ struct LabelWithCloseWnd {
     COLORREF                txtCol;
     COLORREF                bgCol;
 
-    // in pixels
+    // in points
     int                     padL, padR, padT, padB;
 };
 
@@ -79,8 +79,8 @@ static void OnPaint(LabelWithCloseWnd *w)
 
     ClientRect cr(w->hwnd);
 
-    int x = w->padL;
-    int y = w->padT;
+    int x = win::DpiAdjust(w->hwnd, w->padL);
+    int y = win::DpiAdjust(w->hwnd, w->padT);
     UINT opts = ETO_OPAQUE;
     if (IsRtl(w->hwnd)) {
         opts = opts | ETO_RTLREADING;
@@ -100,7 +100,7 @@ static void OnPaint(LabelWithCloseWnd *w)
     // the background, which is not the pretties but works.
     // A better way would be to intelligently truncate text or shrink the font
     // size (within reason)
-    x = w->closeBtnPos.x - 8;
+    x = w->closeBtnPos.x - win::DpiAdjust(w->hwnd, LABEL_BUTTON_SPACE_DX);
     RectI ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ri.ToRECT();
     FillRect(hdc, &r, br);
@@ -112,13 +112,14 @@ static void OnPaint(LabelWithCloseWnd *w)
 
 static void CalcCloseButtonPos(LabelWithCloseWnd *w, int dx, int dy)
 {
-    // TODO: dpi-adjust
-    int x = dx - w->padR - CLOSE_BTN_DX;
+    int btnDx = win::DpiAdjust(w->hwnd, CLOSE_BTN_DX);
+    int btnDy = win::DpiAdjust(w->hwnd, CLOSE_BTN_DY);
+    int x = dx - btnDx - win::DpiAdjust(w->hwnd, w->padR);
     int y = 0;
-    if (dy > CLOSE_BTN_DY) {
-        y  = (dy - CLOSE_BTN_DY) / 2;
+    if (dy > btnDy) {
+        y  = (dy - btnDy) / 2;
     }
-    w->closeBtnPos = RectI(x, y, CLOSE_BTN_DX, CLOSE_BTN_DY);
+    w->closeBtnPos = RectI(x, y, btnDx, btnDy);
 }
 
 static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -243,15 +244,15 @@ SizeI GetIdealSize(LabelWithCloseWnd* w)
     WCHAR *s = win::GetText(w->hwnd);
     SizeI size = TextSizeInHwnd(w->hwnd, s);
     free(s);
-    // TDOO: dpi-adjust close button size
-    size.dx += CLOSE_BTN_DX;
-    // TODO: dpi-adjust 8
-    size.dx += 8; // minimum distance between text and and close button
-    size.dx += w->padL + w->padR;
-    if (size.dy < CLOSE_BTN_DY) {
-        size.dy = CLOSE_BTN_DY;
+    int btnDx = win::DpiAdjust(w->hwnd, CLOSE_BTN_DX);
+    int btnDy = win::DpiAdjust(w->hwnd, CLOSE_BTN_DY);
+    size.dx += btnDx;
+    size.dx += win::DpiAdjust(w->hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += win::DpiAdjust(w->hwnd, w->padL) + win::DpiAdjust(w->hwnd, w->padR);
+    if (size.dy < btnDy) {
+        size.dy = btnDy;
     }
-    size.dy += w->padT + w->padB;
+    size.dy += win::DpiAdjust(w->hwnd, w->padT) + win::DpiAdjust(w->hwnd, w->padB);
     return size;
 }
 

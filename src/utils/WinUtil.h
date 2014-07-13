@@ -109,14 +109,14 @@ inline size_t GetTextLen(HWND hwnd)
    caller needs to free() the text */
 WCHAR *GetText(HWND hwnd);
 
-inline void SetText(HWND hwnd, const WCHAR *txt)
-{
-    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
-}
+inline void SetText(HWND hwnd, const WCHAR *txt) { SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt); }
 
 int GetHwndDpi(HWND hwnd, float *uiDPIFactor=NULL);
 int GlobalDpiAdjust(int value);
 int GlobalDpiAdjust(float value);
+int DpiAdjust(HWND, int);
+int DpiAdjust(HWND, float);
+
 
 inline void SetVisibility(HWND hwnd, bool visible) {
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
@@ -124,10 +124,7 @@ inline void SetVisibility(HWND hwnd, bool visible) {
 
 namespace menu {
 
-inline void SetChecked(HMENU m, UINT id, bool isChecked)
-{
-    CheckMenuItem(m, id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
-}
+inline void SetChecked(HMENU m, UINT id, bool isChecked) { CheckMenuItem(m, id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED)); }
 
 inline bool SetEnabled(HMENU m, UINT id, bool isEnabled)
 {
@@ -135,15 +132,8 @@ inline bool SetEnabled(HMENU m, UINT id, bool isEnabled)
     return ret != -1;
 }
 
-inline void Remove(HMENU m, UINT id)
-{
-    RemoveMenu(m, id, MF_BYCOMMAND);
-}
-
-inline void Empty(HMENU m)
-{
-    while (RemoveMenu(m, 0, MF_BYPOSITION));
-}
+inline void Remove(HMENU m, UINT id) { RemoveMenu(m, id, MF_BYCOMMAND); }
+inline void Empty(HMENU m) { while (RemoveMenu(m, 0, MF_BYPOSITION)); }
 
 void SetText(HMENU m, UINT id, WCHAR *s);
 WCHAR *ToSafeString(const WCHAR *str);

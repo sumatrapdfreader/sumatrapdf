@@ -910,6 +910,20 @@ int GlobalDpiAdjust(float value)
     return (int)(value * dpiFactor);
 }
 
+int DpiAdjust(HWND hwnd, float n)
+{
+    float dpiFactor;
+    GetHwndDpi(hwnd, &dpiFactor);
+    float res = n * dpiFactor;
+    return (int)ceilf(res);
+
+}
+
+int DpiAdjust(HWND hwnd, int n)
+{
+    return DpiAdjust(hwnd, (float)n);
+}
+
 }
 
 SizeI GetBitmapSize(HBITMAP hbmp)
