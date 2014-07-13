@@ -230,7 +230,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    if (entry->pageNo && win && win->IsDocLoaded()) {
+    if (entry->pageNo && win && win->IsDocLoaded() && !win->AsEbook()) {
         ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(entry->pageNo));
         ScopedMem<WCHAR> text(str::Format(L"%s  %s", entry->title, label));
         tvinsert.itemex.pszText = text;
@@ -322,28 +322,33 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 
 void UpdateTocColors(WindowInfo *win)
 {
-    COLORREF bgCol = RGB(0xff, 0xff, 0xff);
-    COLORREF txtCol = GetSysColor(COLOR_WINDOWTEXT);
+    COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
+    COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol = (DWORD)-1;
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
+    bool flatTreeWnd = false;
+
     if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
-        bgCol = gGlobalPrefs->ebookUI.backgroundColor;
-        txtCol = gGlobalPrefs->ebookUI.textColor;
-        treeBgCol = bgCol;
+        labelBgCol = gGlobalPrefs->ebookUI.backgroundColor;
+        labelTxtCol = gGlobalPrefs->ebookUI.textColor;
+        treeBgCol = labelBgCol;
         float factor = 14.f;
-        int sign = GetLightness(bgCol) + factor > 255 ? 1 : -1;
-        splitterCol = AdjustLightness2(bgCol, sign * factor);
+        int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
+        splitterCol = AdjustLightness2(labelBgCol, sign * factor);
+        flatTreeWnd = true;
     }
 
     TreeView_SetBkColor(win->hwndTocTree, treeBgCol);
-    SetBgCol(win->tocLabelWithClose, bgCol);
-    SetTextCol(win->tocLabelWithClose, txtCol);
+    SetBgCol(win->tocLabelWithClose, labelBgCol);
+    SetTextCol(win->tocLabelWithClose, labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
+    ToggleWindowStyle(win->hwndTocTree, WS_EX_STATICEDGE, !flatTreeWnd, GWL_EXSTYLE);
+    SetWindowPos(win->hwndTocTree, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
     // TODO: if we have favorites in ebook view, we'll need this
-    //SetBgCol(win->favLabelWithClose, bgCol);
-    //SetTextCol(win->favLabelWithClose, txtCol);
-    //SetBgCol(win->favSplitter, txtCol);
+    //SetBgCol(win->favLabelWithClose, labelBgCol);
+    //SetTextCol(win->favLabelWithClose, labelTxtCol);
+    //SetBgCol(win->favSplitter, labelTxtCol);
 
     // TODO: more work needed to to ensure consistent look of the ebook window:
     // - tab bar should match the color
@@ -446,16 +451,18 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 
         case NM_CUSTOMDRAW:
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
+            if (win->AsEbook())
+                return CDRF_DODEFAULT;
             switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
-                case CDDS_PREPAINT:
-                    return CDRF_NOTIFYITEMDRAW;
-                case CDDS_ITEMPREPAINT:
-                    return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-                case CDDS_ITEMPOSTPAINT:
-                    RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
-                    // fall through
-                default:
-                    return CDRF_DODEFAULT;
+            case CDDS_PREPAINT:
+                return CDRF_NOTIFYITEMDRAW;
+            case CDDS_ITEMPREPAINT:
+                return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+            case CDDS_ITEMPOSTPAINT:
+                RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
+                // fall through
+            default:
+                return CDRF_DODEFAULT;
             }
             break;
 #else
@@ -564,7 +571,7 @@ void CreateToc(WindowInfo *win)
     SetFont(l, gDefaultGuiFont);
     // label is set in UpdateSidebarTitles()
 
-    win->hwndTocTree = CreateWindowEx(0, WC_TREEVIEW, L"TOC",
+    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,

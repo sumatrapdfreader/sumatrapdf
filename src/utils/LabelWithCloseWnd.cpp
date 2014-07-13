@@ -230,7 +230,7 @@ LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd)
     LabelWithCloseWnd *w = AllocStruct<LabelWithCloseWnd>();
     w->cmd = cmd;
     w->bgCol = GetSysColor(COLOR_BTNFACE);
-    w->txtCol = GetSysColor(COLOR_WINDOWTEXT);
+    w->txtCol = GetSysColor(COLOR_BTNTEXT);
 
     // sets w->hwnd during WM_NCCREATE
     CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD,
