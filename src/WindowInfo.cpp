@@ -77,9 +77,8 @@ WindowInfo::~WindowInfo()
     delete cbHandler;
     free(sidebarSplitter);
     free(favSplitter);
-    Free(tocLabelWithClose);
-    Free(favLabelWithClose);
-
+    free(tocLabelWithClose);
+    free(favLabelWithClose);
     free(loadedFilePath);
 }
 

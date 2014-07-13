@@ -13,6 +13,5 @@ void                SetLabel(LabelWithCloseWnd*, const WCHAR*);
 void                SetFont(LabelWithCloseWnd*, HFONT);
 void                SetPaddingXY(LabelWithCloseWnd*, int x, int y);
 SizeI               GetIdealSize(LabelWithCloseWnd*);
-void                Free(LabelWithCloseWnd*);
 
 #endif

@@ -28,9 +28,6 @@ struct LabelWithCloseWnd {
 
     // in pixels
     int                     padL, padR, padT, padB;
-
-    // data that needs to be freed
-    const WCHAR *           label;
 };
 
 static bool IsMouseOverClose(LabelWithCloseWnd *w)
@@ -93,7 +90,9 @@ static void OnPaint(LabelWithCloseWnd *w)
     ::SetTextColor(hdc, w->txtCol);
     ::SetBkColor(hdc, w->bgCol);
 
-    ExtTextOutW(hdc, x, y, opts, NULL, w->label, str::Len(w->label), NULL);
+    WCHAR *s = win::GetText(w->hwnd);
+    ExtTextOutW(hdc, x, y, opts, NULL, s, str::Len(s), NULL);
+    free(s);
 
     // Text might be too long and invade close button area. We just re-paint
     // the background, which is not the pretties but works.
@@ -204,10 +203,7 @@ void RegisterLabelWithCloseWnd()
 
 void SetLabel(LabelWithCloseWnd *w, const WCHAR *label)
 {
-    free((void*)w->label);
-    // TODO: use SetWindowText() instead?
-    w->label = str::Dup(label);
-    // TODO: only when visible and parent visible?
+    win::SetText(w->hwnd, label);
     ScheduleRepaint(w->hwnd);
 }
 
@@ -219,6 +215,7 @@ void SetBgCol(LabelWithCloseWnd *w, COLORREF c)
 
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
+// free() to delete
 LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd)
 {
     LabelWithCloseWnd *w = AllocStruct<LabelWithCloseWnd>();
@@ -241,7 +238,9 @@ HWND GetHwnd(LabelWithCloseWnd* w)
 
 SizeI GetIdealSize(LabelWithCloseWnd* w)
 {
-    SizeI size = TextSizeInHwnd(w->hwnd, w->label);
+    WCHAR *s = win::GetText(w->hwnd);
+    SizeI size = TextSizeInHwnd(w->hwnd, s);
+    free(s);
     // TDOO: dpi-adjust close button size
     size.dx += CLOSE_BTN_DX;
     // TODO: dpi-adjust 8
@@ -266,11 +265,5 @@ void SetPaddingXY(LabelWithCloseWnd *w, int x, int y)
     w->padT = y;
     w->padB = y;
     ScheduleRepaint(w->hwnd);
-}
-
-void Free(LabelWithCloseWnd* w)
-{
-    free((void*)w->label);
-    free(w);
 }
 
