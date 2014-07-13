@@ -304,6 +304,22 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\LabelWithCloseWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\LabelWithCloseWnd.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SplitterWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SplitterWnd.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\ThreadUtil.cpp"
 					>
 				</File>
@@ -692,22 +708,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\LabelWithCloseWnd.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\LabelWithCloseWnd.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\SplitterWnd.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\SplitterWnd.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

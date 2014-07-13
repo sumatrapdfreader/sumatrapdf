@@ -9,7 +9,6 @@
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
-#include "LabelWithCloseWnd.h"
 #include "Notifications.h"
 #include "resource.h"
 #include "Selection.h"
