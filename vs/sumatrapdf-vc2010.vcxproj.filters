@@ -351,6 +351,9 @@
     <ClCompile Include="..\src\utils\JsonParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\LabelWithCloseWnd.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1182,6 +1185,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\JsonParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\LabelWithCloseWnd.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">

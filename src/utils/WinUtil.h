@@ -52,10 +52,7 @@ bool   CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
 IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd=NULL);
 DWORD GetFileVersion(const WCHAR *path);
 
-inline bool IsKeyPressed(int key)
-{
-    return GetKeyState(key) & 0x8000 ? true : false;
-}
+inline bool IsKeyPressed(int key) { return GetKeyState(key) & 0x8000 ? true : false; }
 inline bool IsShiftPressed() { return IsKeyPressed(VK_SHIFT); }
 inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
 inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
@@ -88,8 +85,17 @@ void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
 UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
 WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
+bool    IsRtl(HWND hwnd);
+void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 
-void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
+// schedule WM_PAINT at window's leasure
+inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, NULL, FALSE); }
+
+// do WM_PAINT immediately
+inline void RepaintNow(HWND hwnd) {
+    InvalidateRect(hwnd, NULL, FALSE);
+    UpdateWindow(hwnd);
+}
 
 namespace win {
 

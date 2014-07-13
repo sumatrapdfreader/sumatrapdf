@@ -155,13 +155,11 @@
 #define IDC_SECTION_PRINT_COMPATIBILITY 1070
 #define IDC_PRINT_AS_IMAGE              1071
 #define IDC_TOC_BOX                     1100
-#define IDC_TOC_TITLE                   1101
-#define IDC_TOC_CLOSE                   1102
-#define IDC_TOC_TREE                    1103
+#define IDC_TOC_LABEL_WITH_CLOSE        1101
+#define IDC_TOC_TREE                    1102
 #define IDC_FAV_BOX                     1105
-#define IDC_FAV_TITLE                   1106
-#define IDC_FAV_CLOSE                   1107
-#define IDC_FAV_TREE                    1108
+#define IDC_FAV_LABEL_WITH_CLOSE        1106
+#define IDC_FAV_TREE                    1107
 #define IDC_TABBAR                      1110
 #define IDB_TOOLBAR                     2000
 #define IDB_RELOADING_CUE               2010

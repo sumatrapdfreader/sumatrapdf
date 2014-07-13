@@ -16,6 +16,7 @@ class SumatraUIAutomationProvider;
 struct TabData;
 enum EngineType;
 struct Splitter;
+struct LabelWithCloseWnd;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -99,6 +100,7 @@ public:
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND            hwndTocBox;
+    LabelWithCloseWnd *tocLabelWithClose;
     HWND            hwndTocTree;
     bool            tocLoaded;
     bool            tocVisible;
@@ -110,6 +112,7 @@ public:
 
     // state related to favorites
     HWND            hwndFavBox;
+    LabelWithCloseWnd *favLabelWithClose;
     HWND            hwndFavTree;
     Vec<DisplayState *> expandedFavorites;
 

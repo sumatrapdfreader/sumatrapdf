@@ -862,6 +862,12 @@ WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form)
     return res.StealData();
 }
 
+bool IsRtl(HWND hwnd)
+{
+    // TODO: write me
+    return false;
+}
+
 namespace win {
 
 WCHAR *GetText(HWND hwnd)

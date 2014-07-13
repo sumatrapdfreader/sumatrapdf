@@ -700,6 +700,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\LabelWithCloseWnd.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\LabelWithCloseWnd.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

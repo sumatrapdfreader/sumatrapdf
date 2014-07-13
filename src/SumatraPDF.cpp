@@ -25,6 +25,7 @@
 #include "FileUtil.h"
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
+#include "LabelWithCloseWnd.h"
 #include "HttpUtil.h"
 #include "Menu.h"
 #include "MobiDoc.h"
@@ -554,11 +555,11 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    HWND tocBoxTitle = GetDlgItem(win->hwndTocBox, IDC_TOC_TITLE);
+    HWND tocBoxTitle = GetHwnd(win->tocLabelWithClose);
     ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     ToggleWindowStyle(win->hwndFavBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    HWND favBoxTitle = GetDlgItem(win->hwndFavBox, IDC_FAV_TITLE);
+    HWND favBoxTitle = GetHwnd(win->favLabelWithClose);
     ToggleWindowStyle(favBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndFavTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
@@ -2923,7 +2924,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
                 RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
-                dh.MoveWindow(GetSplitterHwnd(win->favSplitter), rSplitV);
+                dh.MoveWindow(GetHwnd(win->favSplitter), rSplitV);
                 toc.dy += SPLITTER_DY;
             }
         }
@@ -2932,7 +2933,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
         RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
-        dh.MoveWindow(GetSplitterHwnd(win->sidebarSplitter), rSplitH);
+        dh.MoveWindow(GetHwnd(win->sidebarSplitter), rSplitH);
 
         rc.x += toc.dx + SPLITTER_DX;
         rc.dx -= toc.dx + SPLITTER_DX;
@@ -3599,21 +3600,10 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
     return false;
 }
 
-static void UpdateSidebarTitles(WindowInfo& win)
+static void UpdateSidebarTitles(WindowInfo* win)
 {
-    HWND tocTitle = GetDlgItem(win.hwndTocBox, IDC_TOC_TITLE);
-    win::SetText(tocTitle, _TR("Bookmarks"));
-    if (win.tocVisible) {
-        InvalidateRect(win.hwndTocBox, NULL, TRUE);
-        UpdateWindow(win.hwndTocBox);
-    }
-
-    HWND favTitle = GetDlgItem(win.hwndFavBox, IDC_FAV_TITLE);
-    win::SetText(favTitle, _TR("Favorites"));
-    if (gGlobalPrefs->showFavorites) {
-        InvalidateRect(win.hwndFavBox, NULL, TRUE);
-        UpdateWindow(win.hwndFavBox);
-    }
+    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
+    SetLabel(win->favLabelWithClose, _TR("Favorites"));
 }
 
 static void UpdateUITextForLanguage()
@@ -3624,7 +3614,7 @@ static void UpdateUITextForLanguage()
         UpdateToolbarFindText(win);
         UpdateToolbarButtonsToolTipsForWindow(win);
         // also update the sidebar title at this point
-        UpdateSidebarTitles(*win);
+        UpdateSidebarTitles(win);
     }
 }
 
@@ -3670,68 +3660,15 @@ static bool FavSplitterCb(void *ctx, bool done)
     return true;
 }
 
-// A tree container, used for toc and favorites, is a window with following children:
-// - title (id + 1)
-// - close button (id + 2)
-// - tree window (id + 3)
-// This function lays out the child windows inside the container based
-// on the container size.
-void LayoutTreeContainer(HWND hwndContainer, int id)
+// Position label with close button and tree window within their parent.
+// Used for toc and favorites.
+void LayoutTreeContainer(LabelWithCloseWnd *l, HWND hwndTree)
 {
-    HWND hwndTitle = GetDlgItem(hwndContainer, id + 1);
-    HWND hwndClose = GetDlgItem(hwndContainer, id + 2);
-    HWND hwndTree  = GetDlgItem(hwndContainer, id + 3);
-
-    ScopedMem<WCHAR> title(win::GetText(hwndTitle));
-    SizeI size = TextSizeInHwnd(hwndTitle, title);
-
-    WindowInfo *win = FindWindowInfoByHwnd(hwndContainer);
-    AssertCrash(win);
-    int offset = win ? (int)(2 * win->uiDPIFactor) : 2;
-    if (size.dy < 16)
-        size.dy = 16;
-    size.dy += 2 * offset;
-
+    HWND hwndContainer = GetParent(hwndTree);
+    SizeI labelSize = GetIdealSize(l);
     WindowRect rc(hwndContainer);
-    MoveWindow(hwndTitle, offset, offset, rc.dx - 2 * offset - 16, size.dy - 2 * offset, TRUE);
-    MoveWindow(hwndClose, rc.dx - 16, (size.dy - 16) / 2, 16, 16, TRUE);
-    MoveWindow(hwndTree, 0, size.dy, rc.dx, rc.dy - size.dy, TRUE);
-}
-
-WNDPROC DefWndProcCloseButton = NULL;
-// logic needed to track OnHover state of a close button by looking at
-// WM_MOUSEMOVE and WM_MOUSELEAVE messages.
-// We call it a button, but hwnd is really a static text.
-// We persist the state by setting hwnd's text: if cursor is over the hwnd,
-// text is "1", else it's something else.
-LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    bool stateChanged = false;
-    if (WM_MOUSEMOVE == msg) {
-        ScopedMem<WCHAR> s(win::GetText(hwnd));
-        if (!str::Eq(s, BUTTON_HOVER_TEXT)) {
-            win::SetText(hwnd, BUTTON_HOVER_TEXT);
-            stateChanged = true;
-            // ask for WM_MOUSELEAVE notifications
-            TRACKMOUSEEVENT tme = { 0 };
-            tme.cbSize = sizeof(tme);
-            tme.dwFlags = TME_LEAVE;
-            tme.hwndTrack = hwnd;
-            TrackMouseEvent(&tme);
-        }
-    } else if (WM_MOUSELEAVE == msg) {
-        win::SetText(hwnd, L"");
-        stateChanged = true;
-    } else if (WM_ERASEBKGND == msg) {
-        return FALSE;
-    }
-
-    if (stateChanged) {
-        InvalidateRect(hwnd, NULL, TRUE);
-        UpdateWindow(hwnd);
-    }
-
-    return CallWindowProc(DefWndProcCloseButton, hwnd, msg, wParam, lParam);
+    MoveWindow(GetHwnd(l), 0, 0, rc.dx, labelSize.dy, TRUE);
+    MoveWindow(hwndTree, 0, labelSize.dy, rc.dx, rc.dy - labelSize.dy, TRUE);
 }
 
 void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
@@ -3761,9 +3698,9 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         SetFocus(win->hwndFrame);
     }
 
-    win::SetVisibility(GetSplitterHwnd(win->sidebarSplitter), tocVisible || showFavorites);
+    win::SetVisibility(GetHwnd(win->sidebarSplitter), tocVisible || showFavorites);
     win::SetVisibility(win->hwndTocBox, tocVisible);
-    win::SetVisibility(GetSplitterHwnd(win->favSplitter), tocVisible && showFavorites);
+    win::SetVisibility(GetHwnd(win->favSplitter), tocVisible && showFavorites);
     win::SetVisibility(win->hwndFavBox, showFavorites);
 
     RelayoutFrame(win, false);

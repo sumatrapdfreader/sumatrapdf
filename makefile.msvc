@@ -162,7 +162,8 @@ UTILS_OBJS = \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\CryptoUtil.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\Splitter.obj \
-	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj
+	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj \
+	$(OU)\LabelWithCloseWnd.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj

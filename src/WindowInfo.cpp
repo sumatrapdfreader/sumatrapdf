@@ -9,6 +9,7 @@
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
+#include "LabelWithCloseWnd.h"
 #include "Notifications.h"
 #include "resource.h"
 #include "Selection.h"
@@ -26,7 +27,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
     hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
-    hwndTocBox(NULL), hwndTocTree(NULL),
+    hwndTocBox(NULL), hwndTocTree(NULL), tocLabelWithClose(NULL),
     sidebarSplitter(NULL), favSplitter(NULL),
     hwndInfotip(NULL), infotipVisible(false),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
@@ -35,7 +36,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
-    hwndFavBox(NULL), hwndFavTree(NULL),
+    hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
     uia_provider(NULL), cbHandler(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL)
 {
@@ -76,6 +77,8 @@ WindowInfo::~WindowInfo()
     delete cbHandler;
     free(sidebarSplitter);
     free(favSplitter);
+    Free(tocLabelWithClose);
+    Free(favLabelWithClose);
 
     free(loadedFilePath);
 }

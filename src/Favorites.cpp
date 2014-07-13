@@ -9,6 +9,7 @@
 #include "GdiPlusUtil.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
+#include "LabelWithCloseWnd.h"
 #include "Menu.h"
 #include "resource.h"
 #include "SumatraDialogs.h"
@@ -747,19 +748,11 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
     switch (message) {
 
         case WM_SIZE:
-            LayoutTreeContainer(hwnd, IDC_FAV_BOX);
-            break;
-
-        case WM_DRAWITEM:
-            if (IDC_FAV_CLOSE == wParam) {
-                DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis);
-                return TRUE;
-            }
+            LayoutTreeContainer(win->favLabelWithClose, win->hwndFavTree);
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_FAV_CLOSE && HIWORD(wParam) == STN_CLICKED)
+            if (LOWORD(wParam) == IDC_FAV_LABEL_WITH_CLOSE)
                 ToggleFavorites(win);
             break;
 
@@ -788,25 +781,18 @@ void CreateFavorites(WindowInfo *win)
     win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
-    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                              0, 0, 0, 0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, GetModuleHandle(NULL), NULL);
-    SetWindowFont(title, gDefaultGuiFont, FALSE);
-    win::SetText(title, _TR("Favorites"));
-
-    HWND hwndClose = CreateWindow(WC_STATIC, L"",
-                                  SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                                  0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, GetModuleHandle(NULL), NULL);
+    LabelWithCloseWnd *l =  CreateLabelWithCloseWnd(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
+    win->favLabelWithClose = l;
+    int padXY = (int)(2 * win->uiDPIFactor);
+    SetPaddingXY(l, padXY, padXY);
+    SetFont(l, gDefaultGuiFont);
+    // label is set in UpdateSidebarTitles()
 
     win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
                                       0, 0, 0, 0, win->hwndFavBox, (HMENU)IDC_FAV_TREE, GetModuleHandle(NULL), NULL);
-
-    // Note: those must be consecutive numbers and in title/close/tree order
-    STATIC_ASSERT(IDC_FAV_BOX + 1 == IDC_FAV_TITLE &&
-            IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&
-            IDC_FAV_BOX + 3 == IDC_FAV_TREE, consecutive_fav_ids);
 
     TreeView_SetUnicodeFormat(win->hwndFavTree, true);
 
@@ -817,8 +803,4 @@ void CreateFavorites(WindowInfo *win)
     if (NULL == DefWndProcFavBox)
         DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
-
-    if (NULL == DefWndProcCloseButton)
-        DefWndProcCloseButton = (WNDPROC)GetWindowLongPtr(hwndClose, GWLP_WNDPROC);
-    SetWindowLongPtr(hwndClose, GWLP_WNDPROC, (LONG_PTR)WndProcCloseButton);
 }

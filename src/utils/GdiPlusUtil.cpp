@@ -188,43 +188,6 @@ REAL GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo)
 #endif
 }
 
-// Draws the 'x' close button in regular state or onhover state
-// Tries to mimic visual style of Chrome tab close button
-void DrawCloseButton(DRAWITEMSTRUCT *dis)
-{
-    RectI r(RectI::FromRECT(dis->rcItem));
-    ScopedMem<WCHAR> s(win::GetText(dis->hwndItem));
-    bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
-
-    Graphics g(dis->hDC);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
-
-    Color c;
-    c.SetFromCOLORREF(GetSysColor(COLOR_BTNFACE)); // hoping this is always the right color
-    SolidBrush bgBrush(c);
-    g.FillRectangle(&bgBrush, r.x-1, r.y-1, r.dx+2, r.dy+2);  //A little bigger than our target to prevent edge smoothing blending background in
-
-    // in onhover state, background is a red-ish circle
-    if (onHover) {
-        c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
-        SolidBrush b(c);
-        g.FillEllipse(&b, r.x, r.y, r.dx-2, r.dy-2);
-    }
-
-    // draw 'x'
-    c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
-    Pen p(c, 2);
-    if (onHover) {
-        g.DrawLine(&p, Point(4,      4), Point(r.dx-6, r.dy-6));
-        g.DrawLine(&p, Point(r.dx-6, 4), Point(4,      r.dy-6));
-    } else {
-        g.DrawLine(&p, Point(4,      5), Point(r.dx-6, r.dy-5));
-        g.DrawLine(&p, Point(r.dx-6, 5), Point(4,      r.dy-5));
-    }
-}
-
 void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
 {
     rotation = rotation % 360;

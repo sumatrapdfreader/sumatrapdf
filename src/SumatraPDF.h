@@ -69,6 +69,7 @@ class WindowInfo;
 class Favorites;
 class DisplayModel;
 struct TabData;
+struct LabelWithCloseWnd;
 
 // all defined in SumatraPDF.cpp
 extern bool                     gDebugShowLinks;
@@ -88,7 +89,6 @@ extern WNDPROC                  DefWndProcCloseButton;
 
 #define gPluginMode             (gPluginURL != NULL)
 
-LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();
 bool  LaunchBrowser(const WCHAR *url);
@@ -97,7 +97,7 @@ void  AssociateExeWithPdfExtension();
 void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
 void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
 void  RememberFavTreeExpansionState(WindowInfo *win);
-void  LayoutTreeContainer(HWND hwndContainer, int id);
+void  LayoutTreeContainer(LabelWithCloseWnd *l, HWND hwndTree);
 void  AdvanceFocus(WindowInfo* win);
 bool  WindowInfoStillValid(WindowInfo *win);
 void  SetCurrentLanguageAndRefreshUi(const char *langCode);

@@ -29,14 +29,14 @@ struct Splitter {
     COLORREF            bgCol;
 };
 
-static void OnPaint(Splitter *splitter, HWND hwnd)
+static void OnPaint(Splitter *w)
 {
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    HBRUSH br = CreateSolidBrush(splitter->bgCol);
+    HDC hdc = BeginPaint(w->hwnd, &ps);
+    HBRUSH br = CreateSolidBrush(w->bgCol);
     FillRect(hdc, &ps.rcPaint, br);
     DeleteObject(br);
-    EndPaint(hwnd, &ps);
+    EndPaint(w->hwnd, &ps);
 }
 
 static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -45,18 +45,18 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
 
-    Splitter *splitter = NULL;
+    Splitter *w = NULL;
     if (WM_NCCREATE == msg) {
         LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
-        splitter = reinterpret_cast<Splitter *>(lpcs->lpCreateParams);
-        splitter->hwnd = hwnd;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(splitter));
+        w = reinterpret_cast<Splitter *>(lpcs->lpCreateParams);
+        w->hwnd = hwnd;
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
         goto Exit;
     } else {
-        splitter = reinterpret_cast<Splitter *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        w = reinterpret_cast<Splitter *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
-    if (!splitter) {
+    if (!w) {
         goto Exit;
     }
 
@@ -67,18 +67,18 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONUP == msg) {
         ReleaseCapture();
-        splitter->cb(splitter->ctx, true);
+        w->cb(w->ctx, true);
         return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
-        if (SplitterVert == splitter->type) {
+        if (SplitterVert == w->type) {
             SetCursor(cursorSizeWE);
         } else {
             SetCursor(cursorSizeNS);
         }
         if (hwnd == GetCapture()) {
-            bool resizingAllowed = splitter->cb(splitter->ctx, false);
+            bool resizingAllowed = w->cb(w->ctx, false);
             if (!resizingAllowed) {
                 SetCursor(cursorNo);
             }
@@ -87,7 +87,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     }
 
     if (WM_PAINT == msg) {
-        OnPaint(splitter, hwnd);
+        OnPaint(w);
         return 0;
     }
 
@@ -112,24 +112,27 @@ void RegisterSplitterWndClass()
 // to delete, free()
 Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
 {
-    Splitter *s = AllocStruct<Splitter>();
-    s->ctx = ctx;
-    s->cb = cb;
-    s->type = type;
-    s->bgCol = GetSysColor(COLOR_BTNFACE);
-    s->hwnd = CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
+    Splitter *w = AllocStruct<Splitter>();
+    w->ctx = ctx;
+    w->cb = cb;
+    w->type = type;
+    w->bgCol = GetSysColor(COLOR_BTNFACE);
+    // sets w->hwnd during WM_NCCREATE
+    CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
                            0, 0, 0, 0, parent, (HMENU)0,
-                           GetModuleHandle(NULL), s);
-    return s;
+                           GetModuleHandle(NULL), w);
+    CrashIf(!w->hwnd);
+    return w;
 }
 
-HWND GetSplitterHwnd(Splitter *s)
+HWND GetHwnd(Splitter *s)
 {
     return s->hwnd;
 }
 
-void SetSplitterBgCol(Splitter *s, COLORREF c)
+void SetBgCol(Splitter *w, COLORREF c)
 {
-    s->bgCol = c;
-    InvalidateRect(s->hwnd, NULL, false);
+    w->bgCol = c;
+    ScheduleRepaint(w->hwnd);
 }
+

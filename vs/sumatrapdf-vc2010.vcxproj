@@ -183,6 +183,7 @@
     <ClCompile Include="..\src\utils\HtmlWindow.cpp" />
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
+    <ClCompile Include="..\src\utils\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
@@ -462,6 +463,7 @@
     <ClInclude Include="..\src\utils\HtmlWindow.h" />
     <ClInclude Include="..\src\utils\HttpUtil.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
+    <ClInclude Include="..\src\utils\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />

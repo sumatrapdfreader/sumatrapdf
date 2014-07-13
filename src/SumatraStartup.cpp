@@ -114,6 +114,7 @@ static bool RegisterWinClass()
 
     RegisterNotificationsWndClass();
     RegisterSplitterWndClass();
+    RegisterLabelWithCloseWnd();
     return true;
 }
 

@@ -18,7 +18,7 @@ typedef bool (*SplitterCallback)(void *ctx, bool done);
 
 void        RegisterSplitterWndClass();
 Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
-HWND        GetSplitterHwnd(Splitter *);
-void        SetSplitterBgCol(Splitter *, COLORREF);
+HWND        GetHwnd(Splitter *);
+void        SetBgCol(Splitter *, COLORREF);
 
 #endif

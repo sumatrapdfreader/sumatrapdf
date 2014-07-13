@@ -8,6 +8,7 @@
 #include "AppTools.h"
 #include "Controller.h"
 #include "GdiPlusUtil.h"
+#include "LabelWithCloseWnd.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
@@ -519,34 +520,11 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(hwnd, IDC_TOC_BOX);
+            LayoutTreeContainer(win->tocLabelWithClose, win->hwndTocTree);
             break;
-
-        case WM_DRAWITEM:
-            if (IDC_TOC_CLOSE == wParam) {
-                DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-                DrawCloseButton(dis);
-                return TRUE;
-            }
-            break;
-
-        /* TODO: needed to harmonize the look of ebook window
-        case WM_CTLCOLORSTATIC:
-            if (win->AsEbook() && !gGlobalPrefs->useSysColors) {
-                HDC hdcStatic = (HDC) wParam;
-                COLORREF bgCol = gGlobalPrefs->ebookUI.backgroundColor;
-                SetTextColor(hdcStatic, RGB(255,255,255));
-                SetBkColor(hdcStatic, bgCol);
-        
-                if (hdrBkgnd == NULL)
-                    hdrBkgnd = CreateSolidBrush(bgCol);
-                return (INT_PTR)hdrBkgnd;
-            }
-            return FALSE;
-        */
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_TOC_CLOSE && HIWORD(wParam) == STN_CLICKED)
+            if (LOWORD(wParam) == IDC_TOC_LABEL_WITH_CLOSE)
                 ToggleTocBox(win);
             break;
 
@@ -567,25 +545,19 @@ void CreateToc(WindowInfo *win)
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
-    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                              0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, GetModuleHandle(NULL), NULL);
-    SetWindowFont(title, gDefaultGuiFont, FALSE);
-    win::SetText(title, _TR("Bookmarks"));
 
-    HWND hwndClose = CreateWindow(WC_STATIC, L"",
-                                  SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
-                                  0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, GetModuleHandle(NULL), NULL);
+    LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+    win->tocLabelWithClose = l;
+    int padXY = (int)(2 * win->uiDPIFactor);
+    SetPaddingXY(l, padXY, padXY);
+    SetFont(l, gDefaultGuiFont);
+    // label is set in UpdateSidebarTitles()
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
                                       0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, GetModuleHandle(NULL), NULL);
-
-    // Note: those must be consecutive numbers and in title/close/tree order
-    STATIC_ASSERT(IDC_TOC_BOX + 1 == IDC_TOC_TITLE &&
-            IDC_TOC_BOX + 2 == IDC_TOC_CLOSE &&
-            IDC_TOC_BOX + 3 == IDC_TOC_TREE, consecutive_toc_ids);
 
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
 
@@ -596,8 +568,4 @@ void CreateToc(WindowInfo *win)
     if (NULL == DefWndProcTocBox)
         DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
-
-    if (NULL == DefWndProcCloseButton)
-        DefWndProcCloseButton = (WNDPROC)GetWindowLongPtr(hwndClose, GWLP_WNDPROC);
-    SetWindowLongPtr(hwndClose, GWLP_WNDPROC, (LONG_PTR)WndProcCloseButton);
 }
