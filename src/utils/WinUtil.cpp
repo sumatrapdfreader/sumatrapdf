@@ -896,13 +896,7 @@ int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
 
 int GlobalDpiAdjust(int value)
 {
-    static float dpiFactor = 0.f;
-    if (0.f == dpiFactor) {
-        win::GetHwndDpi(HWND_DESKTOP, &dpiFactor);
-        if (0.f == dpiFactor)
-            dpiFactor = 1.f;
-    }
-    return (int)(value * dpiFactor);
+    return GlobalDpiAdjust((float)value);
 }
 
 int GlobalDpiAdjust(float value)
