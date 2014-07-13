@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Splitter.h"
+#include "SplitterWnd.h"
 
 #include "WinUtil.h"
 
@@ -20,7 +20,7 @@ static HCURSOR cursorSizeWE;
 static HCURSOR cursorSizeNS;
 static HCURSOR cursorNo;
 
-struct Splitter {
+struct SplitterWnd {
     // we don't own this data
     HWND                hwnd;
     void *              ctx;
@@ -29,7 +29,7 @@ struct Splitter {
     COLORREF            bgCol;
 };
 
-static void OnPaint(Splitter *w)
+static void OnPaint(SplitterWnd *w)
 {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(w->hwnd, &ps);
@@ -45,15 +45,15 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
 
-    Splitter *w = NULL;
+    SplitterWnd *w = NULL;
     if (WM_NCCREATE == msg) {
         LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
-        w = reinterpret_cast<Splitter *>(lpcs->lpCreateParams);
+        w = reinterpret_cast<SplitterWnd *>(lpcs->lpCreateParams);
         w->hwnd = hwnd;
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LPARAM>(w));
         goto Exit;
     } else {
-        w = reinterpret_cast<Splitter *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        w = reinterpret_cast<SplitterWnd *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
     if (!w) {
@@ -110,9 +110,9 @@ void RegisterSplitterWndClass()
 }
 
 // to delete, free()
-Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
+SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
 {
-    Splitter *w = AllocStruct<Splitter>();
+    SplitterWnd *w = AllocStruct<SplitterWnd>();
     w->ctx = ctx;
     w->cb = cb;
     w->type = type;
@@ -125,12 +125,12 @@ Splitter *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCall
     return w;
 }
 
-HWND GetHwnd(Splitter *s)
+HWND GetHwnd(SplitterWnd *s)
 {
     return s->hwnd;
 }
 
-void SetBgCol(Splitter *w, COLORREF c)
+void SetBgCol(SplitterWnd *w, COLORREF c)
 {
     w->bgCol = c;
     ScheduleRepaint(w->hwnd);

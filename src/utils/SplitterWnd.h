@@ -1,10 +1,10 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Splitter_h
-#define Splitter_h
+#ifndef SplitterWnd_h
+#define SplitterWnd_h
 
-struct Splitter;
+struct SplitterWnd;
 
 enum SplitterType {
     SplitterHoriz,
@@ -16,9 +16,9 @@ enum SplitterType {
 // position and returning false if it's not allowed to go there
 typedef bool (*SplitterCallback)(void *ctx, bool done);
 
-void        RegisterSplitterWndClass();
-Splitter *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
-HWND        GetHwnd(Splitter *);
-void        SetBgCol(Splitter *, COLORREF);
+void           RegisterSplitterWndClass();
+SplitterWnd *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
+HWND           GetHwnd(SplitterWnd *);
+void           SetBgCol(SplitterWnd *, COLORREF);
 
 #endif
