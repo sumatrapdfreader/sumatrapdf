@@ -534,7 +534,7 @@ $(OS)\SumatraPDF.obj: $B\src\utils\CryptoUtil.h $B\src\utils\DbgHelpDyn.h $B\src
 $(OS)\SumatraPDF.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GdiPlusUtil.h
 $(OS)\SumatraPDF.obj: $B\src\utils\GeomUtil.h $B\src\utils\HttpUtil.h $B\src\utils\LabelWithCloseWnd.h
 $(OS)\SumatraPDF.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\SumatraPDF.obj: $B\src\utils\Splitter.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
+$(OS)\SumatraPDF.obj: $B\src\utils\SplitterWnd.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
 $(OS)\SumatraPDF.obj: $B\src\utils\ThreadUtil.h $B\src\utils\Touch.h $B\src\utils\UITask.h
 $(OS)\SumatraPDF.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\SumatraPDF.obj: $B\src\WindowInfo.h
@@ -725,9 +725,9 @@ $(OU)\SerializeTxt.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\u
 $(OU)\SettingsUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\SettingsUtil.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\SquareTreeParser.h
 $(OU)\SettingsUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\Splitter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OU)\Splitter.obj: $B\src\utils\Scoped.h $B\src\utils\Splitter.h $B\src\utils\StrUtil.h
-$(OU)\Splitter.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OU)\SplitterWnd.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\SplitterWnd.obj: $B\src\utils\Scoped.h $B\src\utils\SplitterWnd.h $B\src\utils\StrUtil.h
+$(OU)\SplitterWnd.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
 $(OU)\SquareTreeParser.obj: $B\src\utils\Vec.h

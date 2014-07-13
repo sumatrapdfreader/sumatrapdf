@@ -15,7 +15,7 @@ struct WatchedFile;
 class SumatraUIAutomationProvider;
 struct TabData;
 enum EngineType;
-struct Splitter;
+struct SplitterWnd;
 struct LabelWithCloseWnd;
 
 /* Describes actions which can be performed by mouse */
@@ -117,10 +117,10 @@ public:
     Vec<DisplayState *> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    Splitter *      sidebarSplitter;
+    SplitterWnd *   sidebarSplitter;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    Splitter *      favSplitter;
+    SplitterWnd *   favSplitter;
 
     HWND            hwndTabBar;
     bool            tabsVisible;

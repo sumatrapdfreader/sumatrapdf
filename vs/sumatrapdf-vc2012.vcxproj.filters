@@ -372,7 +372,7 @@
     <ClCompile Include="..\src\utils\SettingsUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\Splitter.cpp">
+    <ClCompile Include="..\src\utils\SplitterWnd.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
@@ -1220,7 +1220,7 @@
     <ClInclude Include="..\src\utils\SimpleLog.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Splitter.h">
+    <ClInclude Include="..\src\utils\SplitterWnd.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SquareTreeParser.h">

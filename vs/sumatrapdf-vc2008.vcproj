@@ -304,14 +304,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Splitter.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Splitter.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\ThreadUtil.cpp"
 					>
 				</File>
@@ -706,6 +698,14 @@
 			</File>
 			<File
 				RelativePath="..\src\utils\LabelWithCloseWnd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\SplitterWnd.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\SplitterWnd.h"
 				>
 			</File>
 		</Filter>

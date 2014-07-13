@@ -41,7 +41,7 @@
 #include "resource.h"
 #include "Search.h"
 #include "Selection.h"
-#include "Splitter.h"
+#include "SplitterWnd.h"
 #include "SquareTreeParser.h"
 #include "SumatraAbout.h"
 #include "SumatraAbout2.h"

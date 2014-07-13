@@ -209,7 +209,7 @@
     <ClCompile Include="..\src\utils\RarUtil.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
-    <ClCompile Include="..\src\utils\Splitter.cpp" />
+    <ClCompile Include="..\src\utils\SplitterWnd.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrSlice.cpp" />
@@ -493,7 +493,7 @@
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\Sigslot.h" />
     <ClInclude Include="..\src\utils\SimpleLog.h" />
-    <ClInclude Include="..\src\utils\Splitter.h" />
+    <ClInclude Include="..\src\utils\SplitterWnd.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
     <ClInclude Include="..\src\utils\StrHash.h" />
