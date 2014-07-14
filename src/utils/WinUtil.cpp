@@ -1117,16 +1117,6 @@ Run:
     SafeCloseHandle(&h);
 }
 
-static int RectDx(RECT& r)
-{
-    return r.right - r.left;
-}
-
-static int RectDy(RECT& r)
-{
-    return r.bottom - r.top;
-}
-
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu)
 {
     WINDOWINFO wi = { 0 };

@@ -88,6 +88,9 @@ WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 bool    IsRtl(HWND hwnd);
 void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 
+inline int RectDx(const RECT& r) { return r.right - r.left; }
+inline int RectDy(const RECT& r) { return r.bottom - r.top; }
+
 // schedule WM_PAINT at window's leasure
 inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, NULL, FALSE); }
 

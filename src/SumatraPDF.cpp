@@ -167,6 +167,12 @@ static bool FavSplitterCb(void *ctx, bool done);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// for controlling if resizing using a splitter window does immediate layout (live)
+// or only at the end
+static bool isLiveResize() {
+    return false;
+}
+
 bool HasPermission(int permission)
 {
     return (permission & gPolicyRestrictions) == permission;
@@ -1263,11 +1269,13 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, SidebarSplitterCb);
+    SplitterType st = isLiveResize() ? SplitterVertLive : SplitterVert;
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, st, win, SidebarSplitterCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterHoriz, win, FavSplitterCb);
+    st = isLiveResize() ? SplitterHorizLive : SplitterHoriz;
+    win->favSplitter = CreateSplitter(win->hwndFrame, st, win, FavSplitterCb);
     CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
@@ -3621,6 +3629,7 @@ static void UpdateUITextForLanguage()
 static bool SidebarSplitterCb(void *ctx, bool done)
 {
     WindowInfo *win = reinterpret_cast<WindowInfo*>(ctx);
+
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
@@ -3634,8 +3643,10 @@ static bool SidebarSplitterCb(void *ctx, bool done)
         sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
         return false;
     }
-    // TODO: only re-layout when done is true
-    RelayoutFrame(win, false, sidebarDx);
+
+    if (isLiveResize() || done) {
+        RelayoutFrame(win, false, sidebarDx);
+    }
     return true;
 }
 
@@ -3655,8 +3666,9 @@ static bool FavSplitterCb(void *ctx, bool done)
         return false;
     }
     gGlobalPrefs->tocDy = tocDy;
-    // TODO: only re-layout when done is true
-    RelayoutFrame(win, false, rToc.dx);
+    if (isLiveResize() || done) {
+        RelayoutFrame(win, false, rToc.dx);
+    }
     return true;
 }
 

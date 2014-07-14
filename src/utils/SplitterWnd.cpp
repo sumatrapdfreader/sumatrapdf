@@ -6,13 +6,8 @@
 
 #include "WinUtil.h"
 
-/*
-TODO:
- - implement splitter like in Visual Studio, where during move we don't
-   re-layout everything, only show how the splitter would move and only
-   on WM_LBUTTONUP we would trigger re-layout. This is probably done
-   with over-laid top-level window which moves with the cursor
-*/
+// the technique for drawing the splitter for non-live resize is described
+// at http://www.catch22.net/tuts/splitter-windows
 
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
@@ -21,13 +16,19 @@ static HCURSOR cursorSizeNS;
 static HCURSOR cursorNo;
 
 struct SplitterWnd {
-    // we don't own this data
+    // none of this data needs to be freed by us
     HWND                hwnd;
     void *              ctx;
     SplitterType        type;
     SplitterCallback    cb;
     COLORREF            bgCol;
+    int                 prevResizeLinePos;
 };
+
+static bool IsLive(SplitterWnd *w)
+{
+    return (SplitterHorizLive == w->type) || (SplitterVertLive == w->type);
+}
 
 static void OnPaint(SplitterWnd *w)
 {
@@ -37,6 +38,93 @@ static void OnPaint(SplitterWnd *w)
     FillRect(hdc, &ps.rcPaint, br);
     DeleteObject(br);
     EndPaint(w->hwnd, &ps);
+}
+
+static void DrawLineHAtY(HDC hdc, RECT& rc, int y)
+{
+    MoveToEx(hdc, rc.left, y, NULL);
+    LineTo(hdc, rc.right, y);
+}
+
+static void DrawLineVAtX(HDC hdc, RECT& rc, int x)
+{
+    MoveToEx(hdc, x, rc.top, NULL);
+    LineTo(hdc, x, rc.bottom);
+}
+
+static HDC InitDraw(SplitterWnd *w, RECT& rc)
+{
+    GetClientRect(GetParent(w->hwnd), &rc);
+
+    // constraint the size to my size, not the parent's
+    // Note: not sure if it covers all possibilities
+    RECT me;
+    GetClientRect(w->hwnd, &me);
+    rc.top = rc.bottom - RectDy(me);
+    rc.right = rc.left + RectDx(me);
+    HDC hdc = GetDC(GetParent(w->hwnd));
+    SetROP2(hdc, R2_NOTXORPEN);
+    return hdc;
+}
+
+static void DrawResizeLineV(SplitterWnd *w, int x)
+{
+    RECT rc;
+    HDC hdc = InitDraw(w, rc);
+    for (int i=0; i<4; i++) {
+        DrawLineVAtX(hdc, rc, x+i);
+    }
+    ReleaseDC(GetParent(w->hwnd), hdc);
+}
+
+static void DrawResizeLineH(SplitterWnd *w, int y)
+{
+    RECT rc;
+    HDC hdc = InitDraw(w, rc);
+    for (int i=0; i<4; i++) {
+        DrawLineHAtY(hdc, rc, y+i);
+    }
+    ReleaseDC(GetParent(w->hwnd), hdc);
+}
+
+static int GetCursorPos(SplitterWnd *w, bool& vert)
+{
+    POINT cp;
+    GetCursorPos(&cp);
+    ScreenToClient(GetParent(w->hwnd), &cp);
+
+    if (w->type == SplitterHoriz) {
+        vert = false;
+        return cp.y;
+    }
+    vert = true;
+    return cp.x;
+}
+
+static void DrawResizeLine(SplitterWnd *w, bool isVert, int pos)
+{
+    if (isVert)
+        DrawResizeLineV(w, pos);
+    else
+        DrawResizeLineH(w, pos);
+}
+
+static void DrawResizeLine(SplitterWnd *w, bool erasePrev, bool drawCurr)
+{
+    if (IsLive(w)) {
+        return;
+    }
+    bool isVert;
+    int pos = GetCursorPos(w, isVert);
+
+    if (erasePrev) {
+        DrawResizeLine(w, isVert, w->prevResizeLinePos);
+    }
+
+    if (drawCurr) {
+        DrawResizeLine(w, isVert, pos);
+    }
+    w->prevResizeLinePos = pos;
 }
 
 static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -62,27 +150,32 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONDOWN == msg) {
         SetCapture(hwnd);
+        DrawResizeLine(w, false, true);
         return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
+        DrawResizeLine(w, true, false);
         ReleaseCapture();
         w->cb(w->ctx, true);
+        ScheduleRepaint(w->hwnd);
         return 0;
     }
 
     if (WM_MOUSEMOVE == msg) {
-        if (SplitterVert == w->type) {
-            SetCursor(cursorSizeWE);
-        } else {
-            SetCursor(cursorSizeNS);
+        HCURSOR cur = cursorSizeNS;
+        if ((SplitterVert == w->type) || (SplitterVertLive == w->type)) {
+            cur = cursorSizeWE;
         }
         if (hwnd == GetCapture()) {
             bool resizingAllowed = w->cb(w->ctx, false);
             if (!resizingAllowed) {
-                SetCursor(cursorNo);
+                cur = cursorNo;
+            } else {
+                DrawResizeLine(w, true, true);
             }
         }
+        SetCursor(cur);
         return 0;
     }
 
