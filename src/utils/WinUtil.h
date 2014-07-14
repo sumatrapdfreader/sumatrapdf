@@ -79,6 +79,7 @@ WCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const WCHAR *text, bool appendOnly=false);
 bool    CopyImageToClipboard(HBITMAP hbmp, bool appendOnly=false);
 void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
+RECT    ChildPosWithinParent(HWND hwnd);
 
 IStream*CreateStreamFromData(const void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
@@ -90,6 +91,7 @@ void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 
 inline int RectDx(const RECT& r) { return r.right - r.left; }
 inline int RectDy(const RECT& r) { return r.bottom - r.top; }
+      void MoveXY(RECT& rc, int dx, int dy);
 
 // schedule WM_PAINT at window's leasure
 inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, NULL, FALSE); }
@@ -119,7 +121,6 @@ int GlobalDpiAdjust(int value);
 int GlobalDpiAdjust(float value);
 int DpiAdjust(HWND, int);
 int DpiAdjust(HWND, float);
-
 
 inline void SetVisibility(HWND hwnd, bool visible) {
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);

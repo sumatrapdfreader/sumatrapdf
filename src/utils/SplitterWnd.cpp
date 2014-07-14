@@ -51,14 +51,7 @@ static void DrawLineVAtX(HDC hdc, RECT& rc, int x)
 
 static HDC InitDraw(SplitterWnd *w, RECT& rc)
 {
-    GetClientRect(GetParent(w->hwnd), &rc);
-
-    // constraint the size to my size, not the parent's
-    // Note: not sure if it covers all possibilities
-    RECT me;
-    GetClientRect(w->hwnd, &me);
-    rc.top = rc.bottom - RectDy(me);
-    rc.right = rc.left + RectDx(me);
+    rc = ChildPosWithinParent(w->hwnd);
     HDC hdc = GetDC(GetParent(w->hwnd));
     SetROP2(hdc, R2_NOTXORPEN);
     return hdc;
