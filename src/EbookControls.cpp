@@ -173,13 +173,22 @@ ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
 
 void SetMainWndBgCol(EbookControls *ctrls)
 {
-    Style *styleMainWnd = StyleByName("styleMainWnd");
-    CrashIf(!styleMainWnd);
     COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
     if (gGlobalPrefs->useSysColors)
         bgColor = GetSysColor(COLOR_WINDOW);
+
+    Style *styleMainWnd = StyleByName("styleMainWnd");
+    CrashIf(!styleMainWnd);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->mainWnd->SetStyle(styleMainWnd);
+
+    Style *styleStatus = StyleByName("styleStatus");
+    styleStatus->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
+    ctrls->status->SetStyle(styleStatus);
+
+    // TODO: should also allow to change text color
+    // TODO: also match the colors of progress bar to be based on background color
+
     // note: callers are expected to update the background of tree control and 
     // other colors that are supposed to match background color
 }

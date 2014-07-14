@@ -29,7 +29,7 @@ Style [
 Style [
     name: styleStatus
     parent: buttonDefault
-    bg_col: light gray
+    bg_col: sepia
     col: black
     font_size: 8
     font_weight: regular
