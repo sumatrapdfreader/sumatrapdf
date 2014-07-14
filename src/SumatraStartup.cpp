@@ -594,6 +594,7 @@ Exit:
 
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
+    DeleteSplitterBrush();
 
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)

@@ -161,12 +161,6 @@ static bool FavSplitterCb(void *ctx, bool done);
 // in Canvas.cpp
 static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-// for controlling if resizing using a splitter window does immediate layout (live)
-// or only at the end
-static bool isLiveResize() {
-    return false;
-}
-
 bool HasPermission(int permission)
 {
     return (permission & gPolicyRestrictions) == permission;
@@ -1263,13 +1257,11 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    SplitterType st = isLiveResize() ? SplitterVertLive : SplitterVert;
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, st, win, SidebarSplitterCb);
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, SidebarSplitterCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    st = isLiveResize() ? SplitterHorizLive : SplitterHoriz;
-    win->favSplitter = CreateSplitter(win->hwndFrame, st, win, FavSplitterCb);
+    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterHoriz, win, FavSplitterCb);
     CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
@@ -3638,7 +3630,7 @@ static bool SidebarSplitterCb(void *ctx, bool done)
         return false;
     }
 
-    if (isLiveResize() || done) {
+    if (done || !win->AsEbook()) {
         RelayoutFrame(win, false, sidebarDx);
     }
     return true;
@@ -3660,7 +3652,7 @@ static bool FavSplitterCb(void *ctx, bool done)
         return false;
     }
     gGlobalPrefs->tocDy = tocDy;
-    if (isLiveResize() || done) {
+    if (done || !win->AsEbook()) {
         RelayoutFrame(win, false, rToc.dx);
     }
     return true;
@@ -3706,8 +3698,11 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 
     win::SetVisibility(GetHwnd(win->sidebarSplitter), tocVisible || showFavorites);
     win::SetVisibility(win->hwndTocBox, tocVisible);
+    SetSplitterLive(win->sidebarSplitter, !win->AsEbook());
+
     win::SetVisibility(GetHwnd(win->favSplitter), tocVisible && showFavorites);
     win::SetVisibility(win->hwndFavBox, showFavorites);
+    SetSplitterLive(win->favSplitter, !win->AsEbook());
 
     RelayoutFrame(win, false);
 }

@@ -652,22 +652,12 @@ void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type)
     SetWindowLong(hwnd, type, style);
 }
 
-// move rectangly by dx/dy, can be negative.
-void MoveXY(RECT& rc, int dx, int dy)
+RectI ChildPosWithinParent(HWND hwnd)
 {
-    rc.left += dx;
-    rc.right += dx;
-    rc.top += dy;
-    rc.bottom += dy;
-}
-
-RECT ChildPosWithinParent(HWND hwnd)
-{
-    POINT pr = {0,0};
-    ClientToScreen(GetParent(hwnd),&pr);
-    RECT rc;
-    GetWindowRect(hwnd, &rc);
-    MoveXY(rc, -pr.x, -pr.y);
+    POINT pt = { 0, 0 };
+    ClientToScreen(GetParent(hwnd), &pt);
+    WindowRect rc(hwnd);
+    rc.Offset(-pt.x, -pt.y);
     return rc;
 }
 

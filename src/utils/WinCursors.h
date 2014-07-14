@@ -8,4 +8,3 @@ HCURSOR GetCursor(LPWSTR id);
 void    SetCursor(LPWSTR id);
 
 #endif
-

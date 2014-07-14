@@ -19,7 +19,7 @@ static HCURSOR cachedCursors[dimof(knownCursorIds)] = { };
 HCURSOR GetCursor(LPWSTR id)
 {
     int cursorIdx = -1;
-    for (int i=0; i<dimof(knownCursorIds); i++) {
+    for (int i = 0; i < dimof(knownCursorIds); i++) {
         if (id == knownCursorIds[i]) {
             cursorIdx = i;
             break;
@@ -37,4 +37,3 @@ void SetCursor(LPWSTR id)
 {
     SetCursor(GetCursor(id));
 }
-

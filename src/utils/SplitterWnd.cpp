@@ -12,10 +12,9 @@
 
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
-// TODO: always use checkered as it looks nicer than solid?
+// TODO: always use checkered as it looks nicer than solid? (by all means)
 static const bool useCheckeredBar = true;
 
-// TODO: should call DeleteObject() on them on exit
 static HBITMAP splitterBmp = NULL;
 static HBRUSH splitterBrush = NULL;
 
@@ -26,13 +25,9 @@ struct SplitterWnd {
     SplitterType        type;
     SplitterCallback    cb;
     COLORREF            bgCol;
-    int                 prevResizeLinePos;
+    bool                isLive;
+    PointI              prevResizeLinePos;
 };
-
-static bool IsLive(SplitterWnd *w)
-{
-    return (SplitterHorizLive == w->type) || (SplitterVertLive == w->type);
-}
 
 static void OnPaint(SplitterWnd *w)
 {
@@ -44,16 +39,16 @@ static void OnPaint(SplitterWnd *w)
     EndPaint(w->hwnd, &ps);
 }
 
-static void DrawLineHAtY(HDC hdc, RECT& rc, int y)
+static void DrawLineHAtY(HDC hdc, RectI& rc, int y)
 {
-    MoveToEx(hdc, rc.left, y, NULL);
-    LineTo(hdc, rc.right, y);
+    MoveToEx(hdc, rc.x, y, NULL);
+    LineTo(hdc, rc.x + rc.dx, y);
 }
 
-static void DrawLineVAtX(HDC hdc, RECT& rc, int x)
+static void DrawLineVAtX(HDC hdc, RectI& rc, int x)
 {
-    MoveToEx(hdc, x, rc.top, NULL);
-    LineTo(hdc, x, rc.bottom);
+    MoveToEx(hdc, x, rc.y, NULL);
+    LineTo(hdc, x, rc.y + rc.dy);
 }
 
 static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height)
@@ -64,7 +59,7 @@ static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height)
     SelectObject(hdc, hbrushOld);
 }
 
-static HDC InitDraw(SplitterWnd *w, RECT& rc)
+static HDC InitDraw(SplitterWnd *w, RectI& rc)
 {
     rc = ChildPosWithinParent(w->hwnd);
     HDC hdc = GetDC(GetParent(w->hwnd));
@@ -74,13 +69,13 @@ static HDC InitDraw(SplitterWnd *w, RECT& rc)
 
 static void DrawResizeLineV(SplitterWnd *w, int x)
 {
-    RECT rc;
+    RectI rc;
     HDC hdc = InitDraw(w, rc);
     if (useCheckeredBar) {
-        DrawXorBar(hdc, x, rc.top, 4, RectDy(rc));
+        DrawXorBar(hdc, x, rc.y, 4, rc.dy);
     } else {
-        for (int i=0; i<4; i++) {
-            DrawLineVAtX(hdc, rc, x+i);
+        for (int i = 0; i < 4; i++) {
+            DrawLineVAtX(hdc, rc, x + i);
         }
     }
     ReleaseDC(GetParent(w->hwnd), hdc);
@@ -88,55 +83,38 @@ static void DrawResizeLineV(SplitterWnd *w, int x)
 
 static void DrawResizeLineH(SplitterWnd *w, int y)
 {
-    RECT rc;
+    RectI rc;
     HDC hdc = InitDraw(w, rc);
 
     if (useCheckeredBar) {
-        DrawXorBar(hdc, rc.left, y, RectDx(rc), 4);
+        DrawXorBar(hdc, rc.x, y, rc.dx, 4);
     } else {
-        for (int i=0; i<4; i++) {
-            DrawLineHAtY(hdc, rc, y+i);
+        for (int i = 0; i < 4; i++) {
+            DrawLineHAtY(hdc, rc, y + i);
         }
     }
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
 
-static int GetCursorPos(SplitterWnd *w, bool& vert)
-{
-    POINT cp;
-    GetCursorPos(&cp);
-    ScreenToClient(GetParent(w->hwnd), &cp);
-
-    if (w->type == SplitterHoriz) {
-        vert = false;
-        return cp.y;
-    }
-    vert = true;
-    return cp.x;
-}
-
-static void DrawResizeLine(SplitterWnd *w, bool isVert, int pos)
+static void DrawResizeLineVH(SplitterWnd *w, bool isVert, PointI pos)
 {
     if (isVert)
-        DrawResizeLineV(w, pos);
+        DrawResizeLineV(w, pos.x);
     else
-        DrawResizeLineH(w, pos);
+        DrawResizeLineH(w, pos.y);
 }
 
 static void DrawResizeLine(SplitterWnd *w, bool erasePrev, bool drawCurr)
 {
-    if (IsLive(w)) {
-        return;
-    }
-    bool isVert;
-    int pos = GetCursorPos(w, isVert);
+    PointI pos;
+    GetCursorPosInHwnd(GetParent(w->hwnd), pos);
+    bool isVert = w->type != SplitterHoriz;
 
     if (erasePrev) {
-        DrawResizeLine(w, isVert, w->prevResizeLinePos);
+        DrawResizeLineVH(w, isVert, w->prevResizeLinePos);
     }
-
     if (drawCurr) {
-        DrawResizeLine(w, isVert, pos);
+        DrawResizeLineVH(w, isVert, pos);
     }
     w->prevResizeLinePos = pos;
 }
@@ -164,12 +142,14 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONDOWN == msg) {
         SetCapture(hwnd);
-        DrawResizeLine(w, false, true);
+        if (!w->isLive)
+            DrawResizeLine(w, false, true);
         return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
-        DrawResizeLine(w, true, false);
+        if (!w->isLive)
+            DrawResizeLine(w, true, false);
         ReleaseCapture();
         w->cb(w->ctx, true);
         ScheduleRepaint(w->hwnd);
@@ -178,14 +158,14 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_MOUSEMOVE == msg) {
         LPWSTR curId = IDC_SIZENS;
-        if ((SplitterVert == w->type) || (SplitterVertLive == w->type)) {
+        if (SplitterVert == w->type) {
             curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
             bool resizingAllowed = w->cb(w->ctx, false);
             if (!resizingAllowed) {
                 curId = IDC_NO;
-            } else {
+            } else if (!w->isLive) {
                 DrawResizeLine(w, true, true);
             }
         }
@@ -229,6 +209,7 @@ SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterC
     w->cb = cb;
     w->type = type;
     w->bgCol = GetSysColor(COLOR_BTNFACE);
+    w->isLive = true;
     // sets w->hwnd during WM_NCCREATE
     CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
                            0, 0, 0, 0, parent, (HMENU)0,
@@ -246,4 +227,17 @@ void SetBgCol(SplitterWnd *w, COLORREF c)
 {
     w->bgCol = c;
     ScheduleRepaint(w->hwnd);
+}
+
+void SetSplitterLive(SplitterWnd *w, bool live)
+{
+    w->isLive = live;
+}
+
+void DeleteSplitterBrush()
+{
+    DeleteObject(splitterBrush);
+    splitterBrush = NULL;
+    DeleteObject(splitterBmp);
+    splitterBmp = NULL;
 }
