@@ -4045,7 +4045,7 @@ const char * gTranslations_et =
   "Lehek\303\274lje visualiseerimine ei \303\265nnestunud\0"\
   "Loodud:\0"\
   "Praegune fail\0"\
-  "\0"\
+  "Kursori asukoht\0"\
   "&Muu suurendus...\tCtrl+Y\0"\
   "Vaike&k\303\274ljend:\0"\
   "Vaike&suurendus:\0"\
@@ -4158,7 +4158,7 @@ const char * gTranslations_et =
   "V&ali k\303\265ik\0"\
   "V&ali k\303\265ik\tCtrl+A\0"\
   "Sisu valimiseks Ctrl+vasak hiirenupp\0"\
-  "\0"\
+  "Valik:\0"\
   "Saada &e-postiga\0"\
   "Loo p\303\266\303\266ratud otsingu k\303\244surida\0"\
   "N\303\244ita &j\303\244rjehoidjaid\0"\
@@ -4181,7 +4181,7 @@ const char * gTranslations_et =
   "Tekstidokumendid\0"\
   "P\303\244is:\0"\
   "Tundmatu l\303\244htefail (%s)\0"\
-  "\0"\
+  "Kasuta &kaarte\0"\
   "Vaade\0"\
   "&K\303\274lasta kodulehte\0"\
   "Hoiatus\0"\

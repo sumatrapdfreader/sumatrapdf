@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c750b3e46106e081113233fbfb91eb88e06f8387
+0f5968fff976ea13fd7750003a10a31aead3c61c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6456,6 +6456,7 @@ br:Posição do cursor:
 bs:Pozicija kursora:
 cz:Pozice kurzoru:
 de:Zeigerposition:
+et:Kursori asukoht
 fa:مکان نما, موقعیت
 fr:Position du curseur :
 he:מיקום סמן:
@@ -13869,6 +13870,7 @@ br:Seleção:
 bs:Selekcija:
 cz:Výběr:
 de:Auswahl:
+et:Valik:
 fa:انتخاب
 fr:Sélection :
 he:בחירה:
@@ -15761,6 +15763,7 @@ vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
 am:Ավելացնել &ներդիրներ
 de:Dokumente in &Tabs öffnen
+et:Kasuta &kaarte
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
 id:Gunakan &tab
