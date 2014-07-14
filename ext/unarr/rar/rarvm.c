@@ -9,20 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef uint32_t (* RARGetterFunction)(RARVirtualMachine *vm, uint32_t value);
-typedef void (* RARSetterFunction)(RARVirtualMachine *vm, uint32_t value, uint32_t data);
-
 typedef struct RAROpcode_s RAROpcode;
 
 struct RAROpcode_s {
-    RARGetterFunction operand1getter;
-    RARSetterFunction operand1setter;
     uint32_t value1;
-
-    RARGetterFunction operand2getter;
-    RARSetterFunction operand2setter;
     uint32_t value2;
-
     uint8_t instruction;
     uint8_t bytemode;
     uint8_t addressingmode1;
@@ -34,11 +25,6 @@ struct RARProgram_s {
     uint32_t length;
     uint32_t capacity;
 };
-
-static RARGetterFunction OperandGetters_32[RARNumberOfAddressingModes];
-static RARGetterFunction OperandGetters_8[RARNumberOfAddressingModes];
-static RARSetterFunction OperandSetters_32[RARNumberOfAddressingModes];
-static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes];
 
 /* Program building */
 
@@ -73,7 +59,12 @@ bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode)
     }
     memset(&prog->opcodes[prog->length], 0, sizeof(prog->opcodes[prog->length]));
     prog->opcodes[prog->length].instruction = instruction;
-    prog->opcodes[prog->length].bytemode = bytemode ? 1 : 0;
+    if (instruction == RARMovzxInstruction || instruction == RARMovsxInstruction)
+        prog->opcodes[prog->length].bytemode = 2; /* second argument only */
+    else if (bytemode)
+        prog->opcodes[prog->length].bytemode = (1 | 2);
+    else
+        prog->opcodes[prog->length].bytemode = 0;
     prog->length++;
     return true;
 }
@@ -81,8 +72,6 @@ bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode)
 bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t value1, uint8_t addressingmode2, uint32_t value2)
 {
     RAROpcode *opcode = &prog->opcodes[prog->length - 1];
-    RARGetterFunction *getterfunctions;
-    RARSetterFunction *setterfunctions;
     int numoperands;
 
     if (addressingmode1 >= RARNumberOfAddressingModes || addressingmode2 >= RARNumberOfAddressingModes)
@@ -94,41 +83,14 @@ bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t
     if (numoperands == 0)
         return true;
 
-    if (opcode->instruction == RARMovsxInstruction || opcode->instruction == RARMovzxInstruction) {
-        getterfunctions = OperandGetters_8;
-        setterfunctions = OperandSetters_32;
-    }
-    else if (opcode->bytemode) {
-        getterfunctions = OperandGetters_8;
-        setterfunctions = OperandSetters_8;
-    }
-    else {
-        getterfunctions = OperandGetters_32;
-        setterfunctions = OperandSetters_32;
-    }
-
-    opcode->operand1getter = getterfunctions[addressingmode1];
-    opcode->operand1setter = setterfunctions[addressingmode1];
-    if (addressingmode1 == RARImmediateAddressingMode) {
-        if (RARInstructionWritesFirstOperand(opcode->instruction))
-            return false;
-    }
-    else if (addressingmode1 == RARAbsoluteAddressingMode) {
-        value1 &= RARProgramMemoryMask;
-    }
+    if (addressingmode1 == RARImmediateAddressingMode && RARInstructionWritesFirstOperand(opcode->instruction))
+        return false;
     opcode->addressingmode1 = addressingmode1;
     opcode->value1 = value1;
 
     if (numoperands == 2) {
-        opcode->operand2getter = getterfunctions[addressingmode2];
-        opcode->operand2setter = setterfunctions[addressingmode2];
-        if (addressingmode2 == RARImmediateAddressingMode) {
-            if (RARInstructionWritesSecondOperand(opcode->instruction))
-                return false;
-        }
-        else if (addressingmode2 == RARAbsoluteAddressingMode) {
-            value2 &= RARProgramMemoryMask;
-        }
+        if (addressingmode2 == RARImmediateAddressingMode && RARInstructionWritesSecondOperand(opcode->instruction))
+            return false;
         opcode->addressingmode2 = addressingmode2;
         opcode->value2 = value2;
     }
@@ -156,10 +118,13 @@ bool RARIsProgramTerminated(RARProgram *prog)
 
 #define SignExtend(a) ((uint32_t)((int8_t)(a)))
 
-#define GetOperand1() (opcode->operand1getter(vm, opcode->value1))
-#define GetOperand2() (opcode->operand2getter(vm, opcode->value2))
-#define SetOperand1(data) opcode->operand1setter(vm, opcode->value1, data)
-#define SetOperand2(data) opcode->operand2setter(vm, opcode->value2, data)
+static uint32_t _RARGetOperand(RARVirtualMachine *vm, uint8_t addressingmode, uint32_t value, bool bytemode);
+static void _RARSetOperand(RARVirtualMachine *vm, uint8_t addressingmode, uint32_t value, bool bytemode, uint32_t data);
+
+#define GetOperand1() _RARGetOperand(vm, opcode->addressingmode1, opcode->value1, opcode->bytemode & 1)
+#define GetOperand2() _RARGetOperand(vm, opcode->addressingmode2, opcode->value2, opcode->bytemode & 2)
+#define SetOperand1(data) _RARSetOperand(vm, opcode->addressingmode1, opcode->value1, opcode->bytemode & 1, data)
+#define SetOperand2(data) _RARSetOperand(vm, opcode->addressingmode2, opcode->value2, opcode->bytemode & 2, data)
 
 #define SetFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint32_t result = (res); flags = (result == 0 ? ZeroFlag : (result & SignFlag)) | ((carry) ? CarryFlag : 0); EXTMACRO_END
 #define SetByteFlagsWithCarry(res, carry) EXTMACRO_BEGIN uint8_t result = (res); flags = (result == 0 ? ZeroFlag : (SignExtend(result) & SignFlag)) | ((carry) ? CarryFlag : 0); EXTMACRO_END
@@ -455,156 +420,59 @@ void RARVirtualMachineWrite8(RARVirtualMachine *vm, uint32_t address, uint8_t va
     vm->memory[address & RARProgramMemoryMask] = val;
 }
 
-static uint32_t RegisterGetter0_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[0]; }
-static uint32_t RegisterGetter1_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[1]; }
-static uint32_t RegisterGetter2_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[2]; }
-static uint32_t RegisterGetter3_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[3]; }
-static uint32_t RegisterGetter4_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[4]; }
-static uint32_t RegisterGetter5_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[5]; }
-static uint32_t RegisterGetter6_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[6]; }
-static uint32_t RegisterGetter7_32(RARVirtualMachine *vm, uint32_t value) { return vm->registers[7]; }
-static uint32_t RegisterGetter0_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[0] & 0xFF; }
-static uint32_t RegisterGetter1_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[1] & 0xFF; }
-static uint32_t RegisterGetter2_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[2] & 0xFF; }
-static uint32_t RegisterGetter3_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[3] & 0xFF; }
-static uint32_t RegisterGetter4_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[4] & 0xFF; }
-static uint32_t RegisterGetter5_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[5] & 0xFF; }
-static uint32_t RegisterGetter6_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[6] & 0xFF; }
-static uint32_t RegisterGetter7_8(RARVirtualMachine *vm, uint32_t value) { return vm->registers[7] & 0xFF; }
+static uint32_t _RARGetOperand(RARVirtualMachine *vm, uint8_t addressingmode, uint32_t value, bool bytemode)
+{
+    if (RARRegisterAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterAddressingMode(7)) {
+        uint32_t result = vm->registers[addressingmode % 8];
+        if (bytemode)
+            result = result & 0xFF;
+        return result;
+    }
+    if (RARRegisterIndirectAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterIndirectAddressingMode(7)) {
+        if (bytemode)
+            return RARVirtualMachineRead8(vm, vm->registers[addressingmode % 8]);
+        return RARVirtualMachineRead32(vm, vm->registers[addressingmode % 8]);
+    }
+    if (RARIndexedAbsoluteAddressingMode(0) <= addressingmode && addressingmode <= RARIndexedAbsoluteAddressingMode(7)) {
+        if (bytemode)
+            return RARVirtualMachineRead8(vm, value + vm->registers[addressingmode % 8]);
+        return RARVirtualMachineRead32(vm, value + vm->registers[addressingmode % 8]);
+    }
+    if (addressingmode == RARAbsoluteAddressingMode) {
+        if (bytemode)
+            return RARVirtualMachineRead8(vm, value);
+        return RARVirtualMachineRead32(vm, value);
+    }
+    /* if (addressingmode == RARImmediateAddressingMode) */
+    return value;
+}
 
-static uint32_t RegisterIndirectGetter0_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[0]); }
-static uint32_t RegisterIndirectGetter1_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[1]); }
-static uint32_t RegisterIndirectGetter2_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[2]); }
-static uint32_t RegisterIndirectGetter3_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[3]); }
-static uint32_t RegisterIndirectGetter4_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[4]); }
-static uint32_t RegisterIndirectGetter5_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[5]); }
-static uint32_t RegisterIndirectGetter6_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[6]); }
-static uint32_t RegisterIndirectGetter7_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, vm->registers[7]); }
-static uint32_t RegisterIndirectGetter0_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[0]); }
-static uint32_t RegisterIndirectGetter1_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[1]); }
-static uint32_t RegisterIndirectGetter2_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[2]); }
-static uint32_t RegisterIndirectGetter3_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[3]); }
-static uint32_t RegisterIndirectGetter4_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[4]); }
-static uint32_t RegisterIndirectGetter5_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[5]); }
-static uint32_t RegisterIndirectGetter6_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[6]); }
-static uint32_t RegisterIndirectGetter7_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, vm->registers[7]); }
-
-static uint32_t IndexedAbsoluteGetter0_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[0]); }
-static uint32_t IndexedAbsoluteGetter1_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[1]); }
-static uint32_t IndexedAbsoluteGetter2_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[2]); }
-static uint32_t IndexedAbsoluteGetter3_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[3]); }
-static uint32_t IndexedAbsoluteGetter4_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[4]); }
-static uint32_t IndexedAbsoluteGetter5_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[5]); }
-static uint32_t IndexedAbsoluteGetter6_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[6]); }
-static uint32_t IndexedAbsoluteGetter7_32(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead32(vm, value + vm->registers[7]); }
-static uint32_t IndexedAbsoluteGetter0_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[0]); }
-static uint32_t IndexedAbsoluteGetter1_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[1]); }
-static uint32_t IndexedAbsoluteGetter2_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[2]); }
-static uint32_t IndexedAbsoluteGetter3_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[3]); }
-static uint32_t IndexedAbsoluteGetter4_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[4]); }
-static uint32_t IndexedAbsoluteGetter5_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[5]); }
-static uint32_t IndexedAbsoluteGetter6_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[6]); }
-static uint32_t IndexedAbsoluteGetter7_8(RARVirtualMachine *vm, uint32_t value) { return RARVirtualMachineRead8(vm, value + vm->registers[7]); }
-
-/* Note: Absolute addressing is pre-masked in RARSetLastInstrOperands. */
-static uint32_t AbsoluteGetter_32(RARVirtualMachine *vm, uint32_t value) { return _RARRead32(&vm->memory[value]); }
-static uint32_t AbsoluteGetter_8(RARVirtualMachine *vm, uint32_t value) { return vm->memory[value]; }
-static uint32_t ImmediateGetter(RARVirtualMachine *vm, uint32_t value) { return value; }
-
-static void RegisterSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[0] = data; }
-static void RegisterSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[1] = data; }
-static void RegisterSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[2] = data; }
-static void RegisterSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[3] = data; }
-static void RegisterSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[4] = data; }
-static void RegisterSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[5] = data; }
-static void RegisterSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[6] = data; }
-static void RegisterSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[7] = data; }
-static void RegisterSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[0] = data & 0xFF; }
-static void RegisterSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[1] = data & 0xFF; }
-static void RegisterSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[2] = data & 0xFF; }
-static void RegisterSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[3] = data & 0xFF; }
-static void RegisterSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[4] = data & 0xFF; }
-static void RegisterSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[5] = data & 0xFF; }
-static void RegisterSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[6] = data & 0xFF; }
-static void RegisterSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->registers[7] = data & 0xFF; }
-
-static void RegisterIndirectSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[0], data); }
-static void RegisterIndirectSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[1], data); }
-static void RegisterIndirectSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[2], data); }
-static void RegisterIndirectSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[3], data); }
-static void RegisterIndirectSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[4], data); }
-static void RegisterIndirectSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[5], data); }
-static void RegisterIndirectSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[6], data); }
-static void RegisterIndirectSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, vm->registers[7], data); }
-static void RegisterIndirectSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[0], (uint8_t)data); }
-static void RegisterIndirectSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[1], (uint8_t)data); }
-static void RegisterIndirectSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[2], (uint8_t)data); }
-static void RegisterIndirectSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[3], (uint8_t)data); }
-static void RegisterIndirectSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[4], (uint8_t)data); }
-static void RegisterIndirectSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[5], (uint8_t)data); }
-static void RegisterIndirectSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[6], (uint8_t)data); }
-static void RegisterIndirectSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, vm->registers[7], (uint8_t)data); }
-
-static void IndexedAbsoluteSetter0_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[0], data); }
-static void IndexedAbsoluteSetter1_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[1], data); }
-static void IndexedAbsoluteSetter2_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[2], data); }
-static void IndexedAbsoluteSetter3_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[3], data); }
-static void IndexedAbsoluteSetter4_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[4], data); }
-static void IndexedAbsoluteSetter5_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[5], data); }
-static void IndexedAbsoluteSetter6_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[6], data); }
-static void IndexedAbsoluteSetter7_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite32(vm, value + vm->registers[7], data); }
-static void IndexedAbsoluteSetter0_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[0], (uint8_t)data); }
-static void IndexedAbsoluteSetter1_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[1], (uint8_t)data); }
-static void IndexedAbsoluteSetter2_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[2], (uint8_t)data); }
-static void IndexedAbsoluteSetter3_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[3], (uint8_t)data); }
-static void IndexedAbsoluteSetter4_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[4], (uint8_t)data); }
-static void IndexedAbsoluteSetter5_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[5], (uint8_t)data); }
-static void IndexedAbsoluteSetter6_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[6], (uint8_t)data); }
-static void IndexedAbsoluteSetter7_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { RARVirtualMachineWrite8(vm, value + vm->registers[7], (uint8_t)data); }
-
-/* Note: Absolute addressing is pre-masked in RARSetLastInstrOperands. */
-static void AbsoluteSetter_32(RARVirtualMachine *vm, uint32_t value, uint32_t data) { _RARWrite32(&vm->memory[value], data); }
-static void AbsoluteSetter_8(RARVirtualMachine *vm, uint32_t value, uint32_t data) { vm->memory[value] = (uint8_t)data; }
-
-static RARGetterFunction OperandGetters_32[RARNumberOfAddressingModes] = {
-    RegisterGetter0_32, RegisterGetter1_32, RegisterGetter2_32, RegisterGetter3_32,
-    RegisterGetter4_32, RegisterGetter5_32, RegisterGetter6_32, RegisterGetter7_32,
-    RegisterIndirectGetter0_32, RegisterIndirectGetter1_32, RegisterIndirectGetter2_32, RegisterIndirectGetter3_32,
-    RegisterIndirectGetter4_32, RegisterIndirectGetter5_32, RegisterIndirectGetter6_32, RegisterIndirectGetter7_32,
-    IndexedAbsoluteGetter0_32, IndexedAbsoluteGetter1_32, IndexedAbsoluteGetter2_32, IndexedAbsoluteGetter3_32,
-    IndexedAbsoluteGetter4_32, IndexedAbsoluteGetter5_32, IndexedAbsoluteGetter6_32, IndexedAbsoluteGetter7_32,
-    AbsoluteGetter_32, ImmediateGetter,
-};
-
-static RARGetterFunction OperandGetters_8[RARNumberOfAddressingModes] = {
-    RegisterGetter0_8, RegisterGetter1_8, RegisterGetter2_8, RegisterGetter3_8,
-    RegisterGetter4_8, RegisterGetter5_8, RegisterGetter6_8, RegisterGetter7_8,
-    RegisterIndirectGetter0_8, RegisterIndirectGetter1_8, RegisterIndirectGetter2_8, RegisterIndirectGetter3_8,
-    RegisterIndirectGetter4_8, RegisterIndirectGetter5_8, RegisterIndirectGetter6_8, RegisterIndirectGetter7_8,
-    IndexedAbsoluteGetter0_8, IndexedAbsoluteGetter1_8, IndexedAbsoluteGetter2_8, IndexedAbsoluteGetter3_8,
-    IndexedAbsoluteGetter4_8, IndexedAbsoluteGetter5_8, IndexedAbsoluteGetter6_8, IndexedAbsoluteGetter7_8,
-    AbsoluteGetter_8, ImmediateGetter,
-};
-
-static RARSetterFunction OperandSetters_32[RARNumberOfAddressingModes] = {
-    RegisterSetter0_32, RegisterSetter1_32, RegisterSetter2_32, RegisterSetter3_32,
-    RegisterSetter4_32, RegisterSetter5_32, RegisterSetter6_32, RegisterSetter7_32,
-    RegisterIndirectSetter0_32, RegisterIndirectSetter1_32, RegisterIndirectSetter2_32, RegisterIndirectSetter3_32,
-    RegisterIndirectSetter4_32, RegisterIndirectSetter5_32, RegisterIndirectSetter6_32, RegisterIndirectSetter7_32,
-    IndexedAbsoluteSetter0_32, IndexedAbsoluteSetter1_32, IndexedAbsoluteSetter2_32, IndexedAbsoluteSetter3_32,
-    IndexedAbsoluteSetter4_32, IndexedAbsoluteSetter5_32, IndexedAbsoluteSetter6_32, IndexedAbsoluteSetter7_32,
-    AbsoluteSetter_32, NULL,
-};
-
-static RARSetterFunction OperandSetters_8[RARNumberOfAddressingModes] = {
-    RegisterSetter0_8, RegisterSetter1_8, RegisterSetter2_8, RegisterSetter3_8,
-    RegisterSetter4_8, RegisterSetter5_8, RegisterSetter6_8, RegisterSetter7_8,
-    RegisterIndirectSetter0_8, RegisterIndirectSetter1_8, RegisterIndirectSetter2_8, RegisterIndirectSetter3_8,
-    RegisterIndirectSetter4_8, RegisterIndirectSetter5_8, RegisterIndirectSetter6_8, RegisterIndirectSetter7_8,
-    IndexedAbsoluteSetter0_8, IndexedAbsoluteSetter1_8, IndexedAbsoluteSetter2_8, IndexedAbsoluteSetter3_8,
-    IndexedAbsoluteSetter4_8, IndexedAbsoluteSetter5_8, IndexedAbsoluteSetter6_8, IndexedAbsoluteSetter7_8,
-    AbsoluteSetter_8, NULL,
-};
+static void _RARSetOperand(RARVirtualMachine *vm, uint8_t addressingmode, uint32_t value, bool bytemode, uint32_t data)
+{
+    if (RARRegisterAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterAddressingMode(7)) {
+        if (bytemode)
+            data = data & 0xFF;
+        vm->registers[addressingmode % 8] = data;
+    }
+    else if (RARRegisterIndirectAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterIndirectAddressingMode(7)) {
+        if (bytemode)
+            RARVirtualMachineWrite8(vm, vm->registers[addressingmode % 8], (uint8_t)data);
+        else
+            RARVirtualMachineWrite32(vm, vm->registers[addressingmode % 8], data);
+    }
+    else if (RARIndexedAbsoluteAddressingMode(0) <= addressingmode && addressingmode <= RARIndexedAbsoluteAddressingMode(7)) {
+        if (bytemode)
+            RARVirtualMachineWrite8(vm, value + vm->registers[addressingmode % 8], (uint8_t)data);
+        else
+            RARVirtualMachineWrite32(vm, value + vm->registers[addressingmode % 8], data);
+    }
+    else if (addressingmode == RARAbsoluteAddressingMode) {
+        if (bytemode)
+            RARVirtualMachineWrite8(vm, value, (uint8_t)data);
+        else
+            RARVirtualMachineWrite32(vm, value, data);
+    }
+}
 
 /* Instruction properties */
 
@@ -713,11 +581,11 @@ bool RARInstructionWritesSecondOperand(uint8_t instruction)
 static void RARPrintOperand(uint8_t addressingmode, uint32_t value)
 {
     if (RARRegisterAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterAddressingMode(7))
-        printf("r%d", addressingmode - RARRegisterAddressingMode(0));
+        printf("r%d", addressingmode % 8);
     else if (RARRegisterIndirectAddressingMode(0) <= addressingmode && addressingmode <= RARRegisterIndirectAddressingMode(7))
-        printf("@(r%d)", addressingmode - RARRegisterIndirectAddressingMode(0));
+        printf("@(r%d)", addressingmode % 8);
     else if (RARIndexedAbsoluteAddressingMode(0) <= addressingmode && addressingmode <= RARIndexedAbsoluteAddressingMode(7))
-        printf("@(r%d+$%02x)", addressingmode - RARIndexedAbsoluteAddressingMode(0), value);
+        printf("@(r%d+$%02x)", addressingmode % 8, value);
     else if (addressingmode == RARAbsoluteAddressingMode)
         printf("@($%02x)", value);
     else if (addressingmode == RARImmediateAddressingMode)
