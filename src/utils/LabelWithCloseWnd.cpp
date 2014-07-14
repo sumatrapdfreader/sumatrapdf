@@ -70,15 +70,10 @@ static void DrawCloseButton(HDC hdc, RectI& r, bool onHover)
     }
 }
 
-static void OnPaint(LabelWithCloseWnd *w)
+static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
 {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(w->hwnd, &ps);
-    DoubleBuffer buffer(w->hwnd, RectI::FromRECT(ps.rcPaint));
-    HDC hdcBuffer = buffer.GetDC();
-
     HBRUSH br = CreateSolidBrush(w->bgCol);
-    FillRect(hdcBuffer, &ps.rcPaint, br);
+    FillRect(hdc, &ps.rcPaint, br);
 
     ClientRect cr(w->hwnd);
 
@@ -90,13 +85,13 @@ static void OnPaint(LabelWithCloseWnd *w)
     }
 
     if (w->font) {
-        SelectObject(hdcBuffer, w->font);
+        SelectObject(hdc, w->font);
     }
-    SetTextColor(hdcBuffer, w->txtCol);
-    SetBkColor(hdcBuffer, w->bgCol);
+    SetTextColor(hdc, w->txtCol);
+    SetBkColor(hdc, w->bgCol);
 
     WCHAR *s = win::GetText(w->hwnd);
-    ExtTextOutW(hdcBuffer, x, y, opts, NULL, s, str::Len(s), NULL);
+    ExtTextOutW(hdc, x, y, opts, NULL, s, str::Len(s), NULL);
     free(s);
 
     // Text might be too long and invade close button area. We just re-paint
@@ -106,11 +101,18 @@ static void OnPaint(LabelWithCloseWnd *w)
     x = w->closeBtnPos.x - win::DpiAdjust(w->hwnd, LABEL_BUTTON_SPACE_DX);
     RectI ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ri.ToRECT();
-    FillRect(hdcBuffer, &r, br);
+    FillRect(hdc, &r, br);
 
-    DrawCloseButton(hdcBuffer, w->closeBtnPos, IsMouseOverClose(w));
+    DrawCloseButton(hdc, w->closeBtnPos, IsMouseOverClose(w));
     DeleteObject(br);
+}
 
+static void OnPaint(LabelWithCloseWnd *w)
+{
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(w->hwnd, &ps);
+    DoubleBuffer buffer(w->hwnd, RectI::FromRECT(ps.rcPaint));
+    PaintHDC(w, buffer.GetDC(), ps);
     buffer.Flush(hdc);
     EndPaint(w->hwnd, &ps);
 }
