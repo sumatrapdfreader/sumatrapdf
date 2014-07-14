@@ -12,6 +12,13 @@
 
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
+// TODO: always use checkered as it looks nicer than solid?
+static const bool useCheckeredBar = true;
+
+// TODO: should call DeleteObject() on them on exit
+static HBITMAP splitterBmp = NULL;
+static HBRUSH splitterBrush = NULL;
+
 struct SplitterWnd {
     // none of this data needs to be freed by us
     HWND                hwnd;
@@ -49,6 +56,14 @@ static void DrawLineVAtX(HDC hdc, RECT& rc, int x)
     LineTo(hdc, x, rc.bottom);
 }
 
+static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height)
+{
+    SetBrushOrgEx(hdc, x1, y1, 0);
+    HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, splitterBrush);
+    PatBlt(hdc, x1, y1, width, height, PATINVERT);
+    SelectObject(hdc, hbrushOld);
+}
+
 static HDC InitDraw(SplitterWnd *w, RECT& rc)
 {
     rc = ChildPosWithinParent(w->hwnd);
@@ -61,8 +76,12 @@ static void DrawResizeLineV(SplitterWnd *w, int x)
 {
     RECT rc;
     HDC hdc = InitDraw(w, rc);
-    for (int i=0; i<4; i++) {
-        DrawLineVAtX(hdc, rc, x+i);
+    if (useCheckeredBar) {
+        DrawXorBar(hdc, x, rc.top, 4, RectDy(rc));
+    } else {
+        for (int i=0; i<4; i++) {
+            DrawLineVAtX(hdc, rc, x+i);
+        }
     }
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
@@ -71,8 +90,13 @@ static void DrawResizeLineH(SplitterWnd *w, int y)
 {
     RECT rc;
     HDC hdc = InitDraw(w, rc);
-    for (int i=0; i<4; i++) {
-        DrawLineHAtY(hdc, rc, y+i);
+
+    if (useCheckeredBar) {
+        DrawXorBar(hdc, rc.left, y, RectDx(rc), 4);
+    } else {
+        for (int i=0; i<4; i++) {
+            DrawLineHAtY(hdc, rc, y+i);
+        }
     }
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
@@ -180,6 +204,18 @@ Exit:
 
 void RegisterSplitterWndClass()
 {
+    if (splitterBmp)
+        return;
+
+    static WORD dotPatternBmp[8] = 
+    { 
+        0x00aa, 0x0055, 0x00aa, 0x0055, 
+        0x00aa, 0x0055, 0x00aa, 0x0055
+    };
+
+    splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
+    splitterBrush = CreatePatternBrush(splitterBmp);
+
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
     RegisterClassEx(&wcex);
