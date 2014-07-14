@@ -9,6 +9,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
+#include "WinCursors.h"
 #include "WinUtil.h"
 
 using namespace mui;
@@ -253,7 +254,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
         if (url) {
             b = new Button(right, styleBtnRight, styleBtnRight);
             b->SetToolTip(url);
-            b->hCursor = gCursorHand;
+            b->hCursor = GetCursor(IDC_HAND);
         } else {
             b = new Button(right, styleBtnLeft, styleBtnLeft);
         }

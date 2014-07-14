@@ -5,6 +5,7 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include <mlang.h>
+#include "WinCursors.h"
 
 #include "DebugLog.h"
 
@@ -43,7 +44,7 @@ void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc)
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.hInstance      = GetModuleHandle(NULL);
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor        = GetCursor(IDC_ARROW);
     wcex.lpszClassName  = clsName;
     wcex.lpfnWndProc    = wndproc;
 }

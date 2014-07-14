@@ -11,6 +11,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
+#include "WinCursors.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -475,7 +476,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
                 StaticLinkInfo linkInfo;
                 if (GetStaticLink(gLinkInfo, pt.x, pt.y, &linkInfo)) {
                     CreateInfotipForLink(linkInfo);
-                    SetCursor(gCursorHand);
+                    SetCursor(IDC_HAND);
                     return TRUE;
                 }
             }

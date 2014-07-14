@@ -414,6 +414,9 @@
     <ClCompile Include="..\src\utils\WebpReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\WinCursors.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1272,6 +1275,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\WebpReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinCursors.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\WinUtil.h">

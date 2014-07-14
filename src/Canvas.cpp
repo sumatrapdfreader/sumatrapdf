@@ -135,7 +135,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
         return;
 
     if (GetCursor())
-        SetCursor(gCursorArrow);
+        SetCursor(IDC_ARROW);
     ReleaseCapture();
 
     if (aborted)
@@ -153,7 +153,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if (PointI(x, y) != win.dragPrevPos && !GetCursor()) {
             if (win.mouseAction == MA_IDLE)
-                SetCursor(gCursorArrow);
+                SetCursor(IDC_ARROW);
             else
                 SendMessage(win.hwndCanvas, WM_SETCURSOR, 0, 0);
             SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
@@ -178,7 +178,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
         break;
     case MA_SELECTING_TEXT:
         if (GetCursor())
-            SetCursor(gCursorIBeam);
+            SetCursor(IDC_IBEAM);
         /* fall through */
     case MA_SELECTING:
         win.selectionRect.dx = x - win.selectionRect.x;
@@ -274,7 +274,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination *dest = link->AsLink();
         win.linkHandler->GotoLink(dest);
-        SetCursor(gCursorArrow);
+        SetCursor(IDC_ARROW);
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(&win, true);
@@ -358,7 +358,7 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
         // record current mouse position, the farther the mouse is moved
         // from this position, the faster we scroll the document
         win.dragStart = PointI(x, y);
-        SetCursor(gCursorScroll);
+        SetCursor(IDC_SIZEALL);
         break;
 
     case MA_SCROLLING:
@@ -692,17 +692,17 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
         SetCursor(gCursorDrag);
         return TRUE;
     case MA_SCROLLING:
-        SetCursor(gCursorScroll);
+        SetCursor(IDC_SIZEALL);
         return TRUE;
     case MA_SELECTING_TEXT:
-        SetCursor(gCursorIBeam);
+        SetCursor(IDC_IBEAM);
         return TRUE;
     case MA_SELECTING:
         break;
     case MA_IDLE:
         if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win.AsFixed()) {
             if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
-                SetCursor(LoadCursor(NULL, IDC_CROSS));
+                SetCursor(IDC_CROSS);
                 return TRUE;
             }
             DisplayModel *dm = win.AsFixed();
@@ -716,16 +716,16 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
                 delete pageEl;
 
                 if (isLink) {
-                    SetCursor(gCursorHand);
+                    SetCursor(IDC_HAND);
                     return TRUE;
                 }
             }
             else
                 win.DeleteInfotip();
             if (dm->IsOverText(pt))
-                SetCursor(gCursorIBeam);
+                SetCursor(IDC_IBEAM);
             else
-                SetCursor(gCursorArrow);
+                SetCursor(IDC_ARROW);
             return TRUE;
         }
         win.DeleteInfotip();
@@ -1156,11 +1156,11 @@ static LRESULT OnSetCursorAbout(WindowInfo& win, HWND hwnd)
         StaticLinkInfo linkInfo;
         if (GetStaticLink(win.staticLinks, pt.x, pt.y, &linkInfo)) {
             win.CreateInfotip(linkInfo.infotip, linkInfo.rect);
-            SetCursor(gCursorHand);
+            SetCursor(IDC_HAND);
         }
         else {
             win.DeleteInfotip();
-            SetCursor(gCursorArrow);
+            SetCursor(IDC_ARROW);
         }
         return TRUE;
     }
@@ -1309,7 +1309,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
     case HIDE_CURSOR_TIMER_ID:
         KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
         if (win.presentation)
-            SetCursor(NULL);
+            SetCursor((HCURSOR)NULL);
         break;
 
     case HIDE_FWDSRCHMARK_TIMER_ID:

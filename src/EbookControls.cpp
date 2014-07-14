@@ -13,13 +13,11 @@
 #include "Timer.h"
 #include "TrivialHtmlParser.h"
 #include "TxtParser.h"
+#include "WinCursors.h"
 #include "WinUtil.h"
 
 #define NOLOG 1
 #include "DebugLog.h"
-
-static HCURSOR gCursorArrow = NULL;
-static HCURSOR gCursorHand = NULL;
 
 PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
 {
@@ -58,7 +56,7 @@ void PageControl::NotifyMouseMove(int x, int y)
 {
     DrawInstr *link = GetLinkAt(x, y);
     if (!link) {
-        SetCursor(gCursorArrow);
+        SetCursor(IDC_ARROW);
         if (toolTip) {
             Control::NotifyMouseLeave();
             str::ReplacePtr(&toolTip, NULL);
@@ -66,7 +64,7 @@ void PageControl::NotifyMouseMove(int x, int y)
         return;
     }
 
-    SetCursor(gCursorHand);
+    SetCursor(IDC_HAND);
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
         Control::NotifyMouseLeave();
@@ -188,11 +186,11 @@ void SetMainWndBgCol(EbookControls *ctrls)
 
 EbookControls *CreateEbookControls(HWND hwnd)
 {
-    if (!gCursorHand) {
+    static bool wasRegistered = false;
+    if (!wasRegistered) {
         RegisterControlCreatorFor("EbookPage", &CreatePageControl);
         RegisterLayoutCreatorFor("PagesLayout", &CreatePagesLayout);
-        gCursorArrow = LoadCursor(NULL, IDC_ARROW);
-        gCursorHand  = LoadCursor(NULL, IDC_HAND);
+        wasRegistered = true;
     }
 
     ParsedMui *muiDef = new ParsedMui();
@@ -208,7 +206,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     CrashIf(!ctrls->status);
     ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
-    ctrls->progress->hCursor = gCursorHand;
+    ctrls->progress->hCursor = GetCursor(IDC_HAND);
 
     ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);

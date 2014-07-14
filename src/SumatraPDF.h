@@ -74,12 +74,6 @@ struct LabelWithCloseWnd;
 // all defined in SumatraPDF.cpp
 extern bool                     gDebugShowLinks;
 extern bool                     gUseGdiRenderer;
-extern HCURSOR                  gCursorHand;
-extern HCURSOR                  gCursorArrow;
-extern HCURSOR                  gCursorIBeam;
-extern HCURSOR                  gCursorSizeWE;
-extern HCURSOR                  gCursorSizeNS;
-extern HCURSOR                  gCursorNo;
 extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;

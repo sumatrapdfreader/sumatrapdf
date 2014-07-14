@@ -12,6 +12,7 @@
 #include "Search.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "WinCursors.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -205,10 +206,10 @@ void UpdateFindbox(WindowInfo* win)
     UpdateWindow(win->hwndToolbar);
 
     if (!win->IsDocLoaded()) {  // Avoid focus on Find box
-        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorArrow);
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)GetCursor(IDC_ARROW));
         HideCaret(NULL);
     } else {
-        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)gCursorIBeam);
+        SetClassLongPtr(win->hwndFindBox, GCLP_HCURSOR, (LONG_PTR)GetCursor(IDC_IBEAM));
         ShowCaret(NULL);
     }
 }

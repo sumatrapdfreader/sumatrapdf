@@ -57,6 +57,7 @@
 #include "uia/Provider.h"
 #include "UITask.h"
 #include "Version.h"
+#include "WinCursors.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -125,9 +126,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define EBOOK_LAYOUT_TIMER_ID       6
 
-HCURSOR                      gCursorArrow;
-HCURSOR                      gCursorHand;
-HCURSOR                      gCursorIBeam;
 HFONT                        gDefaultGuiFont;
 
 Vec<WindowInfo*>             gWindows;
@@ -135,10 +133,6 @@ FileHistory                  gFileHistory;
 Favorites                    gFavorites;
 
 static HCURSOR                      gCursorDrag;
-static HCURSOR                      gCursorScroll;
-       HCURSOR                      gCursorSizeWE;
-       HCURSOR                      gCursorSizeNS;
-       HCURSOR                      gCursorNo;
 static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static bool                         gCrashOnOpen = false;
@@ -3213,7 +3207,7 @@ static void ExitFullScreen(WindowInfo& win)
 
     if (wasPresentation) {
         KillTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID);
-        SetCursor(gCursorArrow);
+        SetCursor(IDC_ARROW);
     }
 
     bool tocVisible = win.IsDocLoaded() && win.tocBeforeFullScreen;

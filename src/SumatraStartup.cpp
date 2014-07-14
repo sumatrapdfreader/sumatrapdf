@@ -152,16 +152,6 @@ static bool InstanceInit(int nCmdShow)
 {
     gCursorDrag     = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSORDRAG));
     CrashIf(!gCursorDrag);
-    gCursorArrow = LoadCursor(NULL, IDC_ARROW);
-    gCursorIBeam = LoadCursor(NULL, IDC_IBEAM);
-    gCursorHand  = LoadCursor(NULL, IDC_HAND);
-    if (!gCursorHand) // IDC_HAND isn't available if WINVER < 0x0500
-        gCursorHand = gCursorDrag;
-
-    gCursorScroll   = LoadCursor(NULL, IDC_SIZEALL);
-    gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
-    gCursorSizeNS   = LoadCursor(NULL, IDC_SIZENS);
-    gCursorNo       = LoadCursor(NULL, IDC_NO);
 
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);

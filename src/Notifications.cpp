@@ -5,6 +5,7 @@
 #include "Notifications.h"
 
 #include "SumatraPDF.h"
+#include "WinCursors.h"
 #include "WinUtil.h"
 
 #define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
@@ -174,7 +175,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         PointI pt;
         if (GetCursorPosInHwnd(hwnd, pt) &&
             GetCancelRect(hwnd).Contains(pt)) {
-            SetCursor(LoadCursor(NULL, IDC_HAND));
+            SetCursor(IDC_HAND);
             return TRUE;
         }
     }

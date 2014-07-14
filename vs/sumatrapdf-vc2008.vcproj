@@ -708,6 +708,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\WinCursors.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\WinCursors.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

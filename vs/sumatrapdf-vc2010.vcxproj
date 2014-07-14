@@ -204,6 +204,7 @@
     <ClCompile Include="..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\src\utils\VarintGob.cpp" />
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
+    <ClCompile Include="..\src\utils\WinCursors.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp" />
@@ -492,6 +493,7 @@
     <ClInclude Include="..\src\utils\Vec.h" />
     <ClInclude Include="..\src\utils\VecSegmented.h" />
     <ClInclude Include="..\src\utils\WebpReader.h" />
+    <ClInclude Include="..\src\utils\WinCursors.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h" />

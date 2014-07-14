@@ -4,16 +4,13 @@
 #include "BaseUtil.h"
 #include "SplitterWnd.h"
 
+#include "WinCursors.h"
 #include "WinUtil.h"
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows
 
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
-
-static HCURSOR cursorSizeWE;
-static HCURSOR cursorSizeNS;
-static HCURSOR cursorNo;
 
 struct SplitterWnd {
     // none of this data needs to be freed by us
@@ -163,19 +160,19 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     }
 
     if (WM_MOUSEMOVE == msg) {
-        HCURSOR cur = cursorSizeNS;
+        LPWSTR curId = IDC_SIZENS;
         if ((SplitterVert == w->type) || (SplitterVertLive == w->type)) {
-            cur = cursorSizeWE;
+            curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
             bool resizingAllowed = w->cb(w->ctx, false);
             if (!resizingAllowed) {
-                cur = cursorNo;
+                curId = IDC_NO;
             } else {
                 DrawResizeLine(w, true, true);
             }
         }
-        SetCursor(cur);
+        SetCursor(curId);
         return 0;
     }
 
@@ -190,13 +187,6 @@ Exit:
 
 void RegisterSplitterWndClass()
 {
-    if (cursorNo) {
-        return;
-    }
-    cursorNo     = LoadCursor(NULL, IDC_NO);
-    cursorSizeWE = LoadCursor(NULL, IDC_SIZEWE);
-    cursorSizeNS = LoadCursor(NULL, IDC_SIZENS);
-
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
     RegisterClassEx(&wcex);
