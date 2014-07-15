@@ -172,6 +172,8 @@ void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp)
     uncomp->initialized = false;
 }
 
+/***** Huffman tables *****/
+
 static bool rar_new_node(struct huffman_code *code)
 {
     if (!code->tree) {
@@ -350,6 +352,24 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
     return code->tree[node].branches[0];
 }
 
+static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
+{
+    free(uncomp->maincode.tree);
+    free(uncomp->maincode.table);
+    memset(&uncomp->maincode, 0, sizeof(uncomp->maincode));
+    free(uncomp->offsetcode.tree);
+    free(uncomp->offsetcode.table);
+    memset(&uncomp->offsetcode, 0, sizeof(uncomp->offsetcode));
+    free(uncomp->lowoffsetcode.tree);
+    free(uncomp->lowoffsetcode.table);
+    memset(&uncomp->lowoffsetcode, 0, sizeof(uncomp->lowoffsetcode));
+    free(uncomp->lengthcode.tree);
+    free(uncomp->lengthcode.table);
+    memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
+}
+
+/***** RAR version 29 decompression *****/
+
 static bool rar_parse_codes(ar_archive_rar *rar)
 {
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
@@ -510,22 +530,6 @@ PrecodeError:
 
     uncomp->start_new_table = false;
     return true;
-}
-
-static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
-{
-    free(uncomp->maincode.tree);
-    free(uncomp->maincode.table);
-    memset(&uncomp->maincode, 0, sizeof(uncomp->maincode));
-    free(uncomp->offsetcode.tree);
-    free(uncomp->offsetcode.table);
-    memset(&uncomp->offsetcode, 0, sizeof(uncomp->offsetcode));
-    free(uncomp->lowoffsetcode.tree);
-    free(uncomp->lowoffsetcode.table);
-    memset(&uncomp->lowoffsetcode, 0, sizeof(uncomp->lowoffsetcode));
-    free(uncomp->lengthcode.tree);
-    free(uncomp->lengthcode.table);
-    memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
 }
 
 static bool rar_read_filter(ar_archive_rar *rar, bool (* decode_byte)(ar_archive_rar *rar, uint8_t *byte), int64_t *end)
@@ -827,6 +831,57 @@ int64_t rar_expand(ar_archive_rar *rar, int64_t end)
 
         lzss_emit_match(&uncomp->lzss, offs, len);
     }
+}
+
+/***** RAR version 20 decompression *****/
+
+static int rar_decode_audio(struct AudioState *state, int8_t *channeldelta, int8_t delta)
+{
+    uint8_t predbyte, byte;
+    int prederror;
+
+    state->delta[3] = state->delta[2];
+    state->delta[2] = state->delta[1];
+    state->delta[1] = state->lastdelta - state->delta[0];
+    state->delta[0] = state->lastdelta;
+
+    predbyte = ((8 * state->lastbyte + state->weight[0] * state->delta[0] + state->weight[1] * state->delta[1] + state->weight[2] * state->delta[2] + state->weight[3] * state->delta[3] + state->weight[4] * *channeldelta) >> 3) & 0xFF;
+    byte = (predbyte - delta) & 0xFF;
+
+    prederror = delta << 3;
+    state->error[0] += abs(prederror);
+    state->error[1] += abs(prederror - state->delta[0]); state->error[2] += abs(prederror + state->delta[0]);
+    state->error[3] += abs(prederror - state->delta[1]); state->error[4] += abs(prederror + state->delta[1]);
+    state->error[5] += abs(prederror - state->delta[2]); state->error[6] += abs(prederror + state->delta[2]);
+    state->error[7] += abs(prederror - state->delta[3]); state->error[8] += abs(prederror + state->delta[3]);
+    state->error[9] += abs(prederror - *channeldelta); state->error[10] += abs(prederror + *channeldelta);
+
+    *channeldelta = state->lastdelta = (int8_t)(byte - state->lastbyte);
+    state->lastbyte = byte;
+
+    if (!(++state->count & 0x1F)) {
+        uint8_t i, idx = 0;
+        for (i = 1; i < 11; i++) {
+            if (state->error[i] < state->error[idx])
+                idx = i;
+        }
+        memset(state->error, 0, sizeof(state->error));
+
+        switch (idx) {
+        case 1: if (state->weight[0] >= -16) state->weight[0]--; break;
+        case 2: if (state->weight[0] < 16) state->weight[0]++; break;
+        case 3: if (state->weight[1] >= -16) state->weight[1]--; break;
+        case 4: if (state->weight[1] < 16) state->weight[1]++; break;
+        case 5: if (state->weight[2] >= -16) state->weight[2]--; break;
+        case 6: if (state->weight[2] < 16) state->weight[2]++; break;
+        case 7: if (state->weight[3] >= -16) state->weight[3]--; break;
+        case 8: if (state->weight[3] < 16) state->weight[3]++; break;
+        case 9: if (state->weight[4] >= -16) state->weight[4]--; break;
+        case 10: if (state->weight[4] < 16) state->weight[4]++; break;
+        }
+    }
+
+    return byte;
 }
 
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)

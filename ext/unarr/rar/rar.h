@@ -144,6 +144,15 @@ struct CPpmdRAR_RangeDec {
     IByteIn *Stream;
 };
 
+struct AudioState {
+    int8_t weight[5];
+    int16_t delta[4];
+    int8_t lastdelta;
+    int error[11];
+    int count;
+    uint8_t lastbyte;
+};
+
 struct ar_archive_rar_uncomp {
     bool initialized;
     uint8_t version;
@@ -168,6 +177,9 @@ struct ar_archive_rar_uncomp {
     CPpmd7 ppmd7_context;
     struct CPpmdRAR_RangeDec range_dec;
     struct ByteReader bytein;
+
+    bool is_audio_block;
+    struct AudioState audio;
 
     struct ar_archive_rar_filters filters;
 

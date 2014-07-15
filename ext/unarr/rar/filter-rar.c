@@ -170,8 +170,6 @@ static struct RARProgramCode *rar_compile_program(const uint8_t *bytes, size_t l
         rar_delete_program(prog);
         return NULL;
     }
-    /* XADRARVirtualMachine calculates a fingerprint so that known,
-       often used programs can be run natively instead of in the VM */
     prog->fingerprint = ar_crc32(0, bytes, length) | ((uint64_t)length << 32);
 
     if (br_bits(&br, 1)) {
@@ -347,6 +345,62 @@ static bool rar_execute_filter_e8(struct RARFilter *filter, RARVirtualMachine *v
     return true;
 }
 
+static bool rar_execute_filter_audio(struct RARFilter *filter, RARVirtualMachine *vm)
+{
+    uint32_t length = filter->initialregisters[4];
+    uint32_t numchannels = filter->initialregisters[0];
+    uint8_t *src, *dst;
+    uint32_t i, j;
+
+    if (length > RARProgramWorkSize / 2)
+        return false;
+
+    src = &vm->memory[0];
+    dst = &vm->memory[length];
+    for (i = 0; i < numchannels; i++) {
+        struct AudioState state;
+        memset(&state, 0, sizeof(state));
+        for (j = i; j < length; j += numchannels) {
+            int8_t delta = (int8_t)*src++;
+            uint8_t predbyte, byte;
+            int prederror;
+            state.delta[2] = state.delta[1];
+            state.delta[1] = state.lastdelta - state.delta[0];
+            state.delta[0] = state.lastdelta;
+            predbyte = ((8 * state.lastbyte + state.weight[0] * state.delta[0] + state.weight[1] * state.delta[1] + state.weight[2] * state.delta[2]) >> 3) & 0xFF;
+            byte = (predbyte - delta) & 0xFF;
+            prederror = delta << 3;
+            state.error[0] += abs(prederror);
+            state.error[1] += abs(prederror - state.delta[0]); state.error[2] += abs(prederror + state.delta[0]);
+            state.error[3] += abs(prederror - state.delta[1]); state.error[4] += abs(prederror + state.delta[1]);
+            state.error[5] += abs(prederror - state.delta[2]); state.error[6] += abs(prederror + state.delta[2]);
+            state.lastdelta = (int8_t)(byte - state.lastbyte);
+            dst[j] = state.lastbyte = byte;
+            if (!(state.count++ & 0x1F)) {
+                uint8_t k, idx = 0;
+                for (k = 1; k < 7; k++) {
+                    if (state.error[k] < state.error[idx])
+                        idx = k;
+                }
+                memset(state.error, 0, sizeof(state.error));
+                switch (idx) {
+                case 1: if (state.weight[0] >= -16) state.weight[0]--; break;
+                case 2: if (state.weight[0] < 16) state.weight[0]++; break;
+                case 3: if (state.weight[1] >= -16) state.weight[1]--; break;
+                case 4: if (state.weight[1] < 16) state.weight[1]++; break;
+                case 5: if (state.weight[2] >= -16) state.weight[2]--; break;
+                case 6: if (state.weight[2] < 16) state.weight[2]++; break;
+                }
+            }
+        }
+    }
+
+    filter->filteredblockaddress = length;
+    filter->filteredblocklength = length;
+
+    return true;
+}
+
 static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, size_t pos)
 {
     if (filter->prog->fingerprint == 0x1D0E06077D)
@@ -355,8 +409,11 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
         return rar_execute_filter_e8(filter, vm, pos, false);
     if (filter->prog->fingerprint == 0x393CD7E57E)
         return rar_execute_filter_e8(filter, vm, pos, true);
+    if (filter->prog->fingerprint == 0xD8BC85E701)
+        return rar_execute_filter_audio(filter, vm);
+    log("Unknown parsing filter 0x%x%08x", (uint32_t)(filter->prog->fingerprint >> 32), (uint32_t)filter->prog->fingerprint);
 
-    /* TODO: XADRAR30Filter.m @executeOnVirtualMachine claims that this is required */
+    /* XADRAR30Filter.m @executeOnVirtualMachine claims that this is required */
     if (filter->prog->globalbackuplen > RARProgramSystemGlobalSize) {
         uint8_t *newglobaldata = malloc(filter->prog->globalbackuplen);
         if (newglobaldata) {
