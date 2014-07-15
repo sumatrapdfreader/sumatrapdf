@@ -765,10 +765,10 @@ $(OU)\WebpReader.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\uti
 $(OU)\WebpReader.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WebpReader.h
 $(OU)\WinCursors.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\WinCursors.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
-$(OU)\WinUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
-$(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinCursors.h
-$(OU)\WinUtil.obj: $B\src\utils\WinUtil.h
+$(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
+$(OU)\WinUtil.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OU)\WinUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\WinUtil.obj: $B\src\utils\WinCursors.h $B\src\utils\WinUtil.h
 $(OU)\ZipUtil.obj: $B\ext\unarr\unarr.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OU)\ZipUtil.obj: $B\src\utils\ByteWriter.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
 $(OU)\ZipUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h

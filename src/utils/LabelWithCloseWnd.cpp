@@ -84,14 +84,15 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
         opts = opts | ETO_RTLREADING;
     }
 
+    HGDIOBJ prevFont = NULL;
     if (w->font) {
-        SelectObject(hdc, w->font);
+        prevFont = SelectObject(hdc, w->font);
     }
     SetTextColor(hdc, w->txtCol);
     SetBkColor(hdc, w->bgCol);
 
     WCHAR *s = win::GetText(w->hwnd);
-    ExtTextOutW(hdc, x, y, opts, NULL, s, str::Len(s), NULL);
+    ExtTextOut(hdc, x, y, opts, NULL, s, (UINT)str::Len(s), NULL);
     free(s);
 
     // Text might be too long and invade close button area. We just re-paint
@@ -105,6 +106,10 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
 
     DrawCloseButton(hdc, w->closeBtnPos, IsMouseOverClose(w));
     DeleteObject(br);
+
+    if (w->font) {
+        SelectObject(hdc, prevFont);
+    }
 }
 
 static void OnPaint(LabelWithCloseWnd *w)

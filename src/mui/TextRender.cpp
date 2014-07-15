@@ -141,7 +141,7 @@ void TextRenderGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     UINT opts = ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOutW(hdcGfxLocked, x, y, opts, NULL, s, (int)sLen, NULL);
+    ExtTextOut(hdcGfxLocked, x, y, opts, NULL, s, (UINT)sLen, NULL);
 #endif
 }
 
@@ -200,7 +200,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool
     UINT opts = 0; //ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOutW(memHdc, 0, 0, opts, NULL, s, (int)sLen, NULL);
+    ExtTextOut(memHdc, 0, 0, opts, NULL, s, (UINT)sLen, NULL);
 #endif
 
     BLENDFUNCTION bf = {};
