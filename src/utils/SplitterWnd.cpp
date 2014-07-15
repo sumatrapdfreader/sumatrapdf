@@ -12,9 +12,6 @@
 
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
-// TODO: always use checkered as it looks nicer than solid? (by all means)
-static const bool useCheckeredBar = true;
-
 static HBITMAP splitterBmp = NULL;
 static HBRUSH splitterBrush = NULL;
 
@@ -39,18 +36,6 @@ static void OnPaint(SplitterWnd *w)
     EndPaint(w->hwnd, &ps);
 }
 
-static void DrawLineHAtY(HDC hdc, RectI& rc, int y)
-{
-    MoveToEx(hdc, rc.x, y, NULL);
-    LineTo(hdc, rc.x + rc.dx, y);
-}
-
-static void DrawLineVAtX(HDC hdc, RectI& rc, int x)
-{
-    MoveToEx(hdc, x, rc.y, NULL);
-    LineTo(hdc, x, rc.y + rc.dy);
-}
-
 static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height)
 {
     SetBrushOrgEx(hdc, x1, y1, 0);
@@ -71,13 +56,7 @@ static void DrawResizeLineV(SplitterWnd *w, int x)
 {
     RectI rc;
     HDC hdc = InitDraw(w, rc);
-    if (useCheckeredBar) {
-        DrawXorBar(hdc, x, rc.y, 4, rc.dy);
-    } else {
-        for (int i = 0; i < 4; i++) {
-            DrawLineVAtX(hdc, rc, x + i);
-        }
-    }
+    DrawXorBar(hdc, x, rc.y, 4, rc.dy);
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
 
@@ -85,14 +64,7 @@ static void DrawResizeLineH(SplitterWnd *w, int y)
 {
     RectI rc;
     HDC hdc = InitDraw(w, rc);
-
-    if (useCheckeredBar) {
-        DrawXorBar(hdc, rc.x, y, rc.dx, 4);
-    } else {
-        for (int i = 0; i < 4; i++) {
-            DrawLineHAtY(hdc, rc, y + i);
-        }
-    }
+    DrawXorBar(hdc, rc.x, y, rc.dx, 4);
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
 
@@ -201,7 +173,7 @@ void RegisterSplitterWndClass()
     RegisterClassEx(&wcex);
 }
 
-// to delete, free()
+// to delete, call free()
 SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
 {
     SplitterWnd *w = AllocStruct<SplitterWnd>();

@@ -171,7 +171,6 @@
     <ClCompile Include="..\src\utils\DialogSizer.cpp" />
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\DirIter.cpp" />
-    <ClCompile Include="..\src\utils\Experiments.cpp" />
     <ClCompile Include="..\src\utils\FileTransactions.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\FileWatcher.cpp" />

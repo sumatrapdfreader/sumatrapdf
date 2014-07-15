@@ -364,10 +364,6 @@
 				Name="unused"
 				>
 				<File
-					RelativePath="..\src\utils\Experiments.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\NoFreeAllocator.cpp"
 					>
 				</File>

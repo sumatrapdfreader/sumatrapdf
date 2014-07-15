@@ -166,7 +166,7 @@ UTILS_OBJS = \
 	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj
 
 !if "$(CFG)"=="dbg"
-UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
+UTILS_OBJS = $(UTILS_OBJS)
 !endif
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)

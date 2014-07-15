@@ -231,7 +231,7 @@ void SetTextCol(LabelWithCloseWnd* w, COLORREF c)
 
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
-// free() to delete
+// call free() to delete
 LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd)
 {
     LabelWithCloseWnd *w = AllocStruct<LabelWithCloseWnd>();

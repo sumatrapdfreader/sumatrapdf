@@ -56,8 +56,8 @@
 
 // This code is structured in a similar way as wxWindows'
 // browser wrapper
-// http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.h
-// http://codesearch.google.com/#cbxlbgWFJ4U/wxCode/components/iehtmlwin/src/IEHtmlWin.cpp
+// https://github.com/Aegisub/traydict/blob/master/IEHtmlWin.h
+// https://github.com/Aegisub/traydict/blob/master/IEHtmlWin.cpp
 
 // Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
 

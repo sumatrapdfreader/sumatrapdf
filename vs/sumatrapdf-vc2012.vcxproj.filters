@@ -315,9 +315,6 @@
     <ClCompile Include="..\src\utils\DirIter.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\Experiments.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\FileTransactions.cpp">
       <Filter>utils</Filter>
     </ClCompile>
