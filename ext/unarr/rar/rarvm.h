@@ -30,7 +30,6 @@ typedef struct RARVirtualMachine RARVirtualMachine;
 
 struct RARVirtualMachine {
     uint32_t registers[8];
-    uint32_t flags;
     uint8_t memory[RARProgramMemorySize + sizeof(uint32_t) /* overflow sentinel */];
 };
 

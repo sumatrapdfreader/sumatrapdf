@@ -12,12 +12,12 @@
 typedef struct RAROpcode_s RAROpcode;
 
 struct RAROpcode_s {
-    uint32_t value1;
-    uint32_t value2;
     uint8_t instruction;
     uint8_t bytemode;
     uint8_t addressingmode1;
     uint8_t addressingmode2;
+    uint32_t value1;
+    uint32_t value2;
 };
 
 struct RARProgram_s {
@@ -140,14 +140,12 @@ static void _RARSetOperand(RARVirtualMachine *vm, uint8_t addressingmode, uint32
 bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
 {
     RAROpcode *opcode = prog->opcodes;
-    uint32_t flags = vm->flags;
+    uint32_t flags = 0;
     uint32_t op1, op2, carry, i;
     uint32_t counter = 0;
 
     if (!RARIsProgramTerminated(prog))
         return false;
-
-    vm->flags = 0;
 
     while ((uint32_t)(opcode - prog->opcodes) < prog->length && counter++ < RARRuntimeMaxInstructions) {
         switch (opcode->instruction) {
@@ -267,10 +265,8 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
             Jump(GetOperand1());
 
         case RARRetInstruction:
-            if (vm->registers[7] >= RARProgramMemorySize) {
-                vm->flags = flags;
+            if (vm->registers[7] >= RARProgramMemorySize)
                 return true;
-            }
             i = RARVirtualMachineRead32(vm, vm->registers[7]);
             vm->registers[7] += 4;
             Jump(i);
@@ -302,16 +298,14 @@ bool RARExecuteProgram(RARVirtualMachine *vm, RARProgram *prog)
             NextInstruction();
 
         case RARPushaInstruction:
-            for (i = 0; i < 8; i++) {
-                RARVirtualMachineWrite32(vm, vm->registers[7] - 4 - i * 4, vm->registers[i]);
-            }
             vm->registers[7] -= 32;
+            for (i = 0; i < 8; i++)
+                RARVirtualMachineWrite32(vm, vm->registers[7] + (7 - i) * 4, vm->registers[i]);
             NextInstruction();
 
         case RARPopaInstruction:
-            for (i = 0; i < 8; i++) {
-                vm->registers[i] = RARVirtualMachineRead32(vm, vm->registers[7] + 28 - i * 4);
-            }
+            for (i = 0; i < 8; i++)
+                vm->registers[i] = RARVirtualMachineRead32(vm, vm->registers[7] + (7 - i) * 4);
             vm->registers[7] += 32;
             NextInstruction();
 

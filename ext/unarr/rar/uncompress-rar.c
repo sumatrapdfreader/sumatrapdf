@@ -870,7 +870,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        end = rar->progr.bytes_done + rar->solid.size_total + LZSS_WINDOW_SIZE;
+        end = rar->progr.bytes_done + rar->solid.size_total + LZSS_WINDOW_SIZE - LZSS_OVERFLOW_SIZE;
         if (uncomp->filters.filterstart < end)
             end = uncomp->filters.filterstart;
         end = (size_t)rar_expand(rar, end);

@@ -103,6 +103,8 @@ void rar_clear_filters(struct ar_archive_rar_filters *filters);
 /***** uncompress-rar *****/
 
 #define LZSS_WINDOW_SIZE   0x400000
+#define LZSS_OVERFLOW_SIZE 288
+
 #define MAINCODE_SIZE      299
 #define OFFSETCODE_SIZE    60
 #define LOWOFFSETCODE_SIZE 17
