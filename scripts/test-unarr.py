@@ -102,7 +102,10 @@ def test_unarr(dir):
     global files_tested, files_failed, fo
     #print("Directory: %s" % dir)
     unarr = detect_unarr_exe()
-    files = os.listdir(dir)
+    try:
+        files = os.listdir(dir)
+    except:
+        return
     for f in files:
         p = os.path.join(dir, f)
         if os.path.isdir(p):
