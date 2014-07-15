@@ -154,6 +154,7 @@ Exit:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
+// call only once at the beginning of program
 void RegisterSplitterWndClass()
 {
     if (splitterBmp)
@@ -173,7 +174,7 @@ void RegisterSplitterWndClass()
     RegisterClassEx(&wcex);
 }
 
-// to delete, call free()
+// caller needs to free() the result
 SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
 {
     SplitterWnd *w = AllocStruct<SplitterWnd>();

@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "BitManip.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include <mlang.h>
@@ -875,9 +876,7 @@ WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form)
 bool IsRtl(HWND hwnd)
 {
     DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
-    if ((style & WS_EX_LAYOUTRTL) == WS_EX_LAYOUTRTL)
-        return true;
-    return false;
+    return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
 }
 
 namespace win {
