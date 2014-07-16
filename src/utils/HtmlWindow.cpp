@@ -1565,6 +1565,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
             }
             htmlSetInProgress = NULL;
             htmlSetInProgressUrl = NULL;
+            SetScrollbarToAuto();
             return;
         }
     }
@@ -1579,6 +1580,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
     currentURL.Set(urlReal.StealData());
     if (htmlWinCb)
         htmlWinCb->OnDocumentComplete(currentURL);
+    SetScrollbarToAuto();
 }
 
 HRESULT HtmlWindow::OnDragEnter(IDataObject *dataObj)
