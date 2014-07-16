@@ -389,7 +389,7 @@ int64_t rar_expand_20(ar_archive_rar *rar, int64_t end)
     struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
     int symbol, offs, len;
 
-    if (end > rar->super.entry_size_uncompressed)
+    if ((uint64_t)end > rar->super.entry_size_uncompressed)
         end = rar->super.entry_size_uncompressed;
 
     for (;;) {
