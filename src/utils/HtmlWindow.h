@@ -53,6 +53,10 @@ protected:
     HtmlMoniker *       htmlContent;
     HWND                oleObjectHwnd;
 
+    const char *        htmlSetInProgress;
+    size_t              htmlSetInProgressLen;
+    const WCHAR *       htmlSetInProgressUrl;
+
     DWORD               adviseCookie;
     bool                blankWasShown;
 
@@ -65,6 +69,8 @@ protected:
 
     void SubclassHwnd();
     void UnsubclassHwnd();
+    void SetScrollbarToAuto();
+    void SetHtmlReal(const char *s, size_t len=-1);
 
 public:
     ~HtmlWindow();
@@ -73,7 +79,7 @@ public:
     void SetVisible(bool visible);
     void NavigateToUrl(const WCHAR *url);
     void NavigateToDataUrl(const WCHAR *url);
-    void SetHtml(const char *s, size_t len=-1);
+    void SetHtml(const char *s, size_t len=-1, const WCHAR *url=NULL);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);
@@ -85,7 +91,6 @@ public:
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
-    void SetScrollbarToAuto();
 
     bool canGoBack;
     bool canGoForward;

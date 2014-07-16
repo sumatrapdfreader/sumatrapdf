@@ -13,16 +13,6 @@
 #include "WinUtil.h"
 #include "GdiPlusUtil.h"
 
-// TODO: implement SetHtml() by:
-// - remember the text
-// - navigate to "about:blank"
-// - in OnDocumentComplete(), set the remembered text (see
-//   http://msdn.microsoft.com/en-us/library/aa752047(v=vs.85).aspx for some
-//   inspiration)
-// - call owner's OnDocumentComplete() handler
-// That way we fix the problem of having owner be aware of "about:blank"
-// and SetHtml() will trigger OnDocumentComplete() as well
-
 // An important (to Sumatra) use case is displaying CHM documents. First we used
 // IE's built-in support form CHM documents (using its: protocol http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
 // However, that doesn't work for CHM documents from network drives (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
@@ -1197,7 +1187,7 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
     oleInPlaceObject(NULL), viewObject(NULL),
     connectionPoint(NULL), htmlContent(NULL), oleObjectHwnd(NULL),
-    adviseCookie(0), blankWasShown(false), htmlWinCb(cb),
+    adviseCookie(0), htmlWinCb(cb),
     wndProcBrowserPrev(NULL),
     canGoBack(false), canGoForward(false)
 {
@@ -1275,7 +1265,8 @@ bool HtmlWindow::CreateBrowser()
     webBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
 
-    NavigateToAboutBlank();
+    // TODO: do I need this anymore?
+    //NavigateToAboutBlank();
     SubclassHwnd();
 
     return true;
@@ -1418,9 +1409,16 @@ void HtmlWindow::CopySelection()
 
 void HtmlWindow::NavigateToAboutBlank()
 {
-    if (blankWasShown)
-        return;
     NavigateToUrl(L"about:blank");
+}
+
+void HtmlWindow::SetHtml(const char *s, size_t len, const WCHAR *url)
+{
+    htmlSetInProgress = s;
+    htmlSetInProgressLen = len;
+    htmlSetInProgressUrl = url;
+    NavigateToAboutBlank();
+    // the real work will happen in OnDocumentComplete()
 }
 
 // TODO: we don't call OnDocumentComplete() on this because the url
@@ -1429,10 +1427,8 @@ void HtmlWindow::NavigateToAboutBlank()
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtml(const char *s, size_t len)
+void HtmlWindow::SetHtmlReal(const char *s, size_t len)
 {
-    assert(blankWasShown);
-
     if (-1 == len)
         len = str::Len(s);
 
@@ -1556,13 +1552,21 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
     if (IsBlankUrl(url)) {
-        // don't notify about subsequent about:blank because if we call
-        // SetHtml(), the url here will still be about:blank (or whatever
-        // the last url was?).
-        // TODO: probably should figure out how to clear url in SetHtml()
-        if (blankWasShown)
+        if (htmlSetInProgress != NULL) {
+            // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
+            // which we should ignore?
+            SetHtmlReal(htmlSetInProgress, htmlSetInProgressLen);
+            if (htmlWinCb) {                
+                if (htmlSetInProgressUrl) {
+                    htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
+                } else {
+                    htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
+                }
+            }
+            htmlSetInProgress = NULL;
+            htmlSetInProgressUrl = NULL;
             return;
-        blankWasShown = true;
+        }
     }
 
     // if it's url for our internal protocol, strip the protocol
