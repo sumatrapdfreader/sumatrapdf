@@ -6,6 +6,7 @@ import util2
 
 def usage_and_exit():
     print("Usage: test-unrar.py dir")
+    print("       test-unrar.py summary [file]")
     sys.exit(1)
 
 
@@ -154,9 +155,54 @@ def dump_failures():
     fo.write("Failed %d out of %d\n" % (n, files_tested))
 
 
+def errors_to_sorted_array(errors):
+    a = []
+    for (err, count) in errors.items():
+        a.append([count, err])
+    return sorted(a, cmp=lambda x,y: cmp(y[0], x[0]))
+
+
+def print_errors(arr):
+    for el in arr:
+        print("%s: %d" % (el[1], el[0]))
+
+
+def do_summary_on_file(path):
+    fo = open(path, "r")
+    errors = {}  # map error string to number of failures
+    seen_error = False
+    for l in fo:
+        l = l.strip()
+        if l == "err:":
+            seen_error = False
+            continue
+        if seen_error:
+            continue
+        if not l.startswith("!"):
+            continue
+        seen_error = True
+        errors[l] = errors.get(l, 0) + 1
+    fo.close()
+    arr = errors_to_sorted_array(errors)
+    print_errors(arr)
+
+
+def do_summary():
+    fn = "unarr_failed.txt"
+    if len(sys.argv) > 2:
+        fn = sys.argv[2]
+    do_summary_on_file(fn)
+
+
 def main():
     global fo
     detect_unarr_exe()  # detect early if doesn't exist
+    if len(sys.argv) < 2:
+        usage_and_exit()
+    if sys.argv[1] == "summary":
+        do_summary()
+        return
+
     if len(sys.argv) != 2:
         usage_and_exit()
     fo = open("unarr_failed.txt", "w")
