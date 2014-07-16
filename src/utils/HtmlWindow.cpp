@@ -101,6 +101,11 @@ inline void VariantSetLong(VARIANT *res, long val)
     res->lVal = val;
 }
 
+bool IsBlankUrl(const WCHAR *url)
+{
+    return str::EqI(L"about:blank", url);
+}
+
 // HW stands for HtmlWindow
 // FrameSite ties together HtmlWindow and all the COM interfaces we need to implement
 // to support it
@@ -1437,7 +1442,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     currentURL.Set(NULL);
     if (!htmlWinCb)
         return true;
-    if (str::EqI(L"about:blank", url))
+    if (IsBlankUrl(url))
         return true;
 
     // if it's url for our internal protocol, strip the protocol
@@ -1452,10 +1457,14 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 
 void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
-    // we don't notify about "about:blank"
-    if (str::EqI(L"about:blank", url)) {
+    if (IsBlankUrl(url)) {
+        // don't notify about subsequent about:blank because if we call
+        // SetHtml(), the url here will still be about:blank (or whatever
+        // the last url was?).
+        // TODO: probably should figure out how to clear url in SetHtml()
+        if (blankWasShown)
+            return;
         blankWasShown = true;
-        return;
     }
 
     // if it's url for our internal protocol, strip the protocol

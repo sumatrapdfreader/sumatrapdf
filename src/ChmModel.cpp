@@ -332,7 +332,7 @@ ChmCacheEntry *ChmModel::FindDataForUrl(const WCHAR *url)
 // the right page number, select the right item in toc tree)
 void ChmModel::OnDocumentComplete(const WCHAR *url)
 {
-    if (!url)
+    if (!url || IsBlankUrl(url))
         return;
     if (*url == '/')
         ++url;
