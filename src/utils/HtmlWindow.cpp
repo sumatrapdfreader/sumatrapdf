@@ -76,6 +76,7 @@
 // http://code.google.com/p/svnprotocolhandler/ (IInternetProtocolInfo implementation)
 // https://github.com/facebook/ie-toolbar (also IInternetProtocolInfo implementation)
 // http://code.google.com/p/veryie/
+// http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
@@ -761,6 +762,7 @@ public:
     void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
 };
 
+// http://www.popkistopki.ru/ch09b.shtml
 class HW_IDocHostUIHandler : public IDocHostUIHandler
 {
     FrameSite * fs;
@@ -1380,6 +1382,12 @@ void HtmlWindow::NavigateToAboutBlank()
     NavigateToUrl(L"about:blank");
 }
 
+// TODO: we don't call OnDocumentComplete() on this because the url
+// reports "about:blank" and we suppress that. Figure out a way
+// to fix that (change the url somehow?)
+// TODO: IHtmlDocument2->write() seems like a simpler method
+// http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
+// https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
 void HtmlWindow::SetHtml(const char *s, size_t len)
 {
     assert(blankWasShown);
@@ -1408,6 +1416,40 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
         return;
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
     hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
+}
+
+// http://stackoverflow.com/questions/9778206/how-i-can-get-information-about-the-scrollbars-of-an-webbrowser-control-instance
+//http://stackoverflow.com/questions/8630173/hide-scrollbars-in-webbrowser-control-mfc
+// This is equivalent of <body scroll=auto> but for any html
+// This seems to be the only way to hide vertical scrollbar if it's not necessary
+void HtmlWindow::SetScrollbarToAuto()
+{
+    ScopedComPtr<IDispatch> docDispatch;
+    HRESULT hr = webBrowser->get_Document(&docDispatch);
+    if (FAILED(hr) || !docDispatch)
+        return;
+
+    IHTMLDocument2 *doc2 = NULL;
+    docDispatch->QueryInterface(IID_IHTMLDocument2, (void**) &doc2);
+
+    IHTMLElement *bodyElement = NULL; 
+    IHTMLBodyElement *body = NULL; 
+
+    hr = doc2->get_body(&bodyElement);
+    if (SUCCEEDED(hr) && bodyElement)
+    {
+        hr = bodyElement->QueryInterface(IID_IHTMLBodyElement, (void**) &body);
+        if (SUCCEEDED(hr) && body)
+        {
+            BSTR s;
+            s = SysAllocString(L"auto");
+            hr = body->put_scroll(s);
+            body->Release();
+            SysFreeString(s);
+        }
+    }
+    bodyElement->Release();
+    doc2->Release();
 }
 
 // Take a screenshot of a given <area> inside an html window and resize

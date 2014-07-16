@@ -85,6 +85,7 @@ public:
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
+    void SetScrollbarToAuto();
 
     bool canGoBack;
     bool canGoForward;
