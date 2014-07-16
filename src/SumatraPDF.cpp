@@ -1011,21 +1011,15 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     } else if (args.allowFailure || !prevCtrl) {
         CrashIf(!args.allowFailure);
         delete prevCtrl;
-        const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
-        ScopedMem<WCHAR> title2(str::Format(L"%s - %s", titlePath, SUMATRA_WINDOW_TITLE));
-        win::SetText(win->hwndFrame, title2);
-        goto Error;
+        state = NULL;
     } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
         win->ctrl = prevCtrl;
     }
 
-    // make sure that scrollbars are always hidden for non-FixedPageUI document types
-    if (win->ctrl != prevCtrl && !win->AsFixed())
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-
     if (state) {
+        CrashIf(!win->IsDocLoaded());
         zoomVirtual = prefs::conv::ToZoom(state->zoom);
         if (win->ctrl->ValidPageNo(startPage)) {
             ss.page = startPage;
@@ -1041,37 +1035,42 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->tocState = *state->tocState;
     }
 
+    // menu for chm and ebook docs is different, so we have to re-create it
+    RebuildMenuBarForWindow(win);
+    // the toolbar isn't supported for ebook docs (yet)
+    ShowOrHideToolbarForWindow(win);
+    // remove the scrollbars before EbookController starts layouting
+    UpdateToolbarAndScrollbarState(*win);
+
     if (win->AsFixed())
         win->AsFixed()->Relayout(zoomVirtual, rotation);
-    else
+    else if (win->IsDocLoaded())
         win->ctrl->SetZoomVirtual(zoomVirtual);
 
-    if (!args.isNewWindow) {
+    if (!args.isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
         OnMenuFindMatchCase(win);
     }
     UpdateFindbox(win);
 
-    // menu for chm and ebook docs is different, so we have to re-create it
-    RebuildMenuBarForWindow(win);
-    // the toolbar isn't supported for ebook docs (yet)
-    ShowOrHideToolbarForWindow(win);
-
-    int pageCount = win->ctrl->PageCount();
-    if (pageCount > 0) {
-        UpdateToolbarPageText(win, pageCount);
-        UpdateToolbarFindText(win);
+    if (win->IsDocLoaded()) {
+        int pageCount = win->ctrl->PageCount();
+        if (pageCount > 0) {
+            UpdateToolbarPageText(win, pageCount);
+            UpdateToolbarFindText(win);
+        }
     }
 
-    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? win->ctrl->FilePath() : path::GetBaseName(win->ctrl->FilePath());
-    WCHAR *docTitle = win->ctrl->GetProperty(Prop_Title);
-    if (docTitle) {
+    const WCHAR *filePath = win->IsDocLoaded() ? win->ctrl->FilePath() : args.fileName;
+    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? filePath : path::GetBaseName(filePath);
+    WCHAR *docTitle = NULL;
+    if (win->IsDocLoaded() && (docTitle = win->ctrl->GetProperty(Prop_Title)) != NULL) {
         str::NormalizeWS(docTitle);
-        if (!str::IsEmpty(docTitle)) {
-            ScopedMem<WCHAR> docTitleBit(str::Format(L"- [%s] ", docTitle));
-            free(docTitle);
-            docTitle = docTitleBit.StealData();
-        }
+        WCHAR *docTitlePart = NULL;
+        if (!str::IsEmpty(docTitle))
+            docTitlePart = str::Format(L"- [%s] ", docTitle);
+        free(docTitle);
+        docTitle = docTitlePart;
     }
     title.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
     if (IsUIRightToLeft()) {
@@ -1079,7 +1078,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
     }
     free(docTitle);
-    if (needRefresh)
+    if (needRefresh && win->IsDocLoaded())
         title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
     win::SetText(win->hwndFrame, title);
 
@@ -1097,10 +1096,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     // reallow resizing/relayout/repaining
     if (win->AsEbook())
         win->AsEbook()->EnableMessageHandling(true);
-
-Error:
-    // remove the scrollbars before EbookController starts layouting
-    UpdateToolbarAndScrollbarState(*win);
 
     if (args.isNewWindow || args.placeWindow && state) {
         if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {
