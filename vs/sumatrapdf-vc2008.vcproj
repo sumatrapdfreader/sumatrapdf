@@ -2272,10 +2272,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\ext\unarr\common\lzss.h"
-					>
-				</File>
-				<File
 					RelativePath="..\ext\unarr\common\stream.c"
 					>
 				</File>
@@ -2297,6 +2293,14 @@
 				>
 				<File
 					RelativePath="..\ext\unarr\rar\filter-rar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\huffman-rar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\rar\lzss.h"
 					>
 				</File>
 				<File

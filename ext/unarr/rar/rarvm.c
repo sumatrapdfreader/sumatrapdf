@@ -1,7 +1,7 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.h */
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/RARVirtualMachine.c */
 
 #include "rarvm.h"
 #include "../common/allocator.h"

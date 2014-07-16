@@ -1,33 +1,8 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-/* adapted from https://github.com/libarchive/libarchive/blob/master/libarchive/archive_read_support_format_rar.c */
-
-/*-
-* Copyright (c) 2003-2007 Tim Kientzle
-* Copyright (c) 2011 Andres Mejia
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions
-* are met:
-* 1. Redistributions of source code must retain the above copyright
-*    notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright
-*    notice, this list of conditions and the following disclaimer in the
-*    documentation and/or other materials provided with the distribution.
-*
-* THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) ``AS IS'' AND ANY EXPRESS OR
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-* NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRAR30Handle.m */
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRAR20Handle.m */
 
 #include "rar.h"
 
@@ -159,7 +134,13 @@ static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp, uint8_t ve
     return true;
 }
 
-static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp);
+static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
+{
+    rar_free_code(&uncomp->maincode);
+    rar_free_code(&uncomp->offsetcode);
+    rar_free_code(&uncomp->lowoffsetcode);
+    rar_free_code(&uncomp->lengthcode);
+}
 
 void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp)
 {
@@ -170,142 +151,6 @@ void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp)
     Ppmd7_Free(&uncomp->ppmd7_context, &gSzAlloc);
     rar_clear_filters(&uncomp->filters);
     uncomp->initialized = false;
-}
-
-/***** Huffman tables *****/
-
-static bool rar_new_node(struct huffman_code *code)
-{
-    if (!code->tree) {
-        code->minlength = INT_MAX;
-        code->maxlength = INT_MIN;
-    }
-    if (code->numentries + 1 >= code->capacity) {
-        /* in my small file sample, 1024 is the value needed most often */
-        int new_capacity = code->capacity ? code->capacity * 2 : 1024;
-        void *new_tree = calloc(new_capacity, sizeof(*code->tree));
-        if (!new_tree) {
-            warn("OOM during decompression");
-            return false;
-        }
-        memcpy(new_tree, code->tree, code->capacity * sizeof(*code->tree));
-        free(code->tree);
-        code->tree = new_tree;
-        code->capacity = new_capacity;
-    }
-    code->tree[code->numentries].branches[0] = -1;
-    code->tree[code->numentries].branches[1] = -2;
-    code->numentries++;
-    return true;
-}
-
-static bool rar_add_value(struct huffman_code *code, int value, int codebits, int length)
-{
-    int lastnode, bitpos, bit;
-
-    free(code->table);
-    code->table = NULL;
-
-    if (length > code->maxlength)
-        code->maxlength = length;
-    if (length < code->minlength)
-        code->minlength = length;
-
-    lastnode = 0;
-    for (bitpos = length - 1; bitpos >= 0; bitpos--) {
-        bit = (codebits >> bitpos) & 1;
-        /* check for leaf node */
-        if (code->tree[lastnode].branches[0] == code->tree[lastnode].branches[1]) {
-            warn("Invalid data in bitstream"); /* prefix found */
-            return false;
-        }
-        /* check for open branch */
-        if (code->tree[lastnode].branches[bit] < 0) {
-            if (!rar_new_node(code))
-                return false;
-            code->tree[lastnode].branches[bit] = code->numentries - 1;
-        }
-        /* select branch */
-        lastnode = code->tree[lastnode].branches[bit];
-    }
-    /* check for empty leaf */
-    if (code->tree[lastnode].branches[0] != -1 || code->tree[lastnode].branches[1] != -2) {
-        warn("Invalid data in bitstream"); /* prefix found */
-        return false;
-    }
-    /* set leaf value */
-    code->tree[lastnode].branches[0] = value;
-    code->tree[lastnode].branches[1] = value;
-    return true;
-}
-
-static bool rar_create_code(struct huffman_code *code, uint8_t *lengths, int numsymbols)
-{
-    int symbolsleft = numsymbols;
-    int codebits = 0;
-    int i, j;
-
-    if (!rar_new_node(code))
-        return false;
-
-    for (i = 1; i <= 0x0F; i++) {
-        for (j = 0; j < numsymbols; j++) {
-            if (lengths[j] != i)
-                continue;
-            if (!rar_add_value(code, j, codebits, i))
-                return false;
-            if (--symbolsleft <= 0)
-                return true;
-            codebits++;
-        }
-        codebits <<= 1;
-    }
-    return true;
-}
-
-static bool rar_make_table_rec(struct huffman_code *code, int node, struct huffman_table_entry *table, int depth, int maxdepth)
-{
-    int currtablesize = 1 << (maxdepth - depth);
-    int i;
-
-    if (node < 0 || code->numentries <= node) {
-        warn("Invalid data in bitstream"); /* invalid location to Huffman tree specified */
-        return false;
-    }
-
-    if (code->tree[node].branches[0] == code->tree[node].branches[1]) {
-        for (i = 0; i < currtablesize; i++) {
-            table[i].length = depth;
-            table[i].value = code->tree[node].branches[0];
-        }
-    }
-    else if (depth == maxdepth) {
-        table[0].length = maxdepth + 1;
-        table[0].value = node;
-    }
-    else {
-        if (!rar_make_table_rec(code, code->tree[node].branches[0], table, depth + 1, maxdepth))
-            return false;
-        if (!rar_make_table_rec(code, code->tree[node].branches[1], table + currtablesize / 2, depth + 1, maxdepth))
-            return false;
-    }
-    return true;
-}
-
-static bool rar_make_table(struct huffman_code *code)
-{
-    if (code->minlength <= code->maxlength && code->maxlength <= 10)
-        code->tablesize = code->maxlength;
-    else
-        code->tablesize = 10;
-
-    code->table = calloc(1ULL << code->tablesize, sizeof(*code->table));
-    if (!code->table) {
-        warn("OOM during decompression");
-        return false;
-    }
-
-    return rar_make_table_rec(code, 0, code->table, 0, code->tablesize);
 }
 
 static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
@@ -335,7 +180,6 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
         return value;
     }
 
-
     node = value;
     while (code->tree[node].branches[0] != code->tree[node].branches[1]) {
         if (!br_check(rar, 1))
@@ -350,22 +194,6 @@ static int rar_read_next_symbol(ar_archive_rar *rar, struct huffman_code *code)
     }
 
     return code->tree[node].branches[0];
-}
-
-static void rar_free_codes(struct ar_archive_rar_uncomp *uncomp)
-{
-    free(uncomp->maincode.tree);
-    free(uncomp->maincode.table);
-    memset(&uncomp->maincode, 0, sizeof(uncomp->maincode));
-    free(uncomp->offsetcode.tree);
-    free(uncomp->offsetcode.table);
-    memset(&uncomp->offsetcode, 0, sizeof(uncomp->offsetcode));
-    free(uncomp->lowoffsetcode.tree);
-    free(uncomp->lowoffsetcode.table);
-    memset(&uncomp->lowoffsetcode, 0, sizeof(uncomp->lowoffsetcode));
-    free(uncomp->lengthcode.tree);
-    free(uncomp->lengthcode.table);
-    memset(&uncomp->lengthcode, 0, sizeof(uncomp->lengthcode));
 }
 
 /***** RAR version 29 decompression *****/
@@ -513,8 +341,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         }
         ok = true;
 PrecodeError:
-        free(precode.tree);
-        free(precode.table);
+        rar_free_code(&precode);
         if (!ok)
             return false;
 

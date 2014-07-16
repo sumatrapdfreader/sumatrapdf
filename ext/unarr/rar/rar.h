@@ -6,7 +6,7 @@
 
 #include "../common/unarr-imp.h"
 
-#include "../common/lzss.h"
+#include "lzss.h"
 #include "../ppmd/Ppmd7.h"
 #include <limits.h>
 
@@ -100,6 +100,29 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
 bool rar_run_filters(ar_archive_rar *rar);
 void rar_clear_filters(struct ar_archive_rar_filters *filters);
 
+/***** huffman-rar *****/
+
+struct huffman_code {
+    struct {
+        int branches[2];
+    } *tree;
+    int numentries;
+    int capacity;
+    int minlength;
+    int maxlength;
+    struct {
+        int length;
+        int value;
+    } *table;
+    int tablesize;
+};
+
+bool rar_new_node(struct huffman_code *code);
+bool rar_add_value(struct huffman_code *code, int value, int codebits, int length);
+bool rar_create_code(struct huffman_code *code, uint8_t *lengths, int numsymbols);
+bool rar_make_table(struct huffman_code *code);
+void rar_free_code(struct huffman_code *code);
+
 /***** uncompress-rar *****/
 
 #define LZSS_WINDOW_SIZE   0x400000
@@ -110,25 +133,6 @@ void rar_clear_filters(struct ar_archive_rar_filters *filters);
 #define LOWOFFSETCODE_SIZE 17
 #define LENGTHCODE_SIZE    28
 #define HUFFMAN_TABLE_SIZE MAINCODE_SIZE + OFFSETCODE_SIZE + LOWOFFSETCODE_SIZE + LENGTHCODE_SIZE
-
-struct huffman_tree_node {
-    int branches[2];
-};
-
-struct huffman_table_entry {
-    int length;
-    int value;
-};
-
-struct huffman_code {
-    struct huffman_tree_node *tree;
-    int numentries;
-    int capacity;
-    int minlength;
-    int maxlength;
-    int tablesize;
-    struct huffman_table_entry *table;
-};
 
 struct ByteReader {
     IByteIn super;
@@ -177,9 +181,6 @@ struct ar_archive_rar_uncomp {
     CPpmd7 ppmd7_context;
     struct CPpmdRAR_RangeDec range_dec;
     struct ByteReader bytein;
-
-    bool is_audio_block;
-    struct AudioState audio;
 
     struct ar_archive_rar_filters filters;
 

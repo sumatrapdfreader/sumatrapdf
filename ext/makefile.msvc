@@ -111,7 +111,7 @@ UNARR_OBJS = \
 	$(OUN)\CpuArch.obj $(OUN)\Ppmd7.obj $(OUN)\Ppmd7Dec.obj \
 	$(OUN)\Ppmd8.obj $(OUN)\Ppmd8Dec.obj \
 	$(OUN)\filter-rar.obj $(OUN)\parse-rar.obj $(OUN)\rar.obj \
-	$(OUN)\rarvm.obj $(OUN)\uncompress-rar.obj \
+	$(OUN)\rarvm.obj $(OUN)\uncompress-rar.obj $(OUN)\huffman-rar.obj \
 	$(OUN)\parse-zip.obj $(OUN)\uncompress-zip.obj $(OUN)\zip.obj
 
 $(OE): force
