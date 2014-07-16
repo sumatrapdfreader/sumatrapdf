@@ -98,6 +98,15 @@ def get_file_size(p):
         return 0
 
 
+# some errors we don't want to fix
+def err_whitelisted(s):
+    if "Splitting files isn't really supported" in s:
+        return True
+    if "Unsupported compression version: 15" in s:
+        return True
+    return False
+
+
 def test_unarr(dir):
     global files_tested, files_failed, fo
     #print("Directory: %s" % dir)
@@ -117,6 +126,8 @@ def test_unarr(dir):
         if errcode != 0:
             out = shorten_out(out)
             err = shorten_err(err)
+            if err_whitelisted(err):
+                continue
             files_failed.append(p)
             files_failed.append(out)
             files_failed.append(err)
