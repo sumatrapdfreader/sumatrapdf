@@ -5,6 +5,7 @@
 #include "rarvm.h"
 
 /* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRARVirtualMachine.m */
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRAR30Filter.m */
 
 struct MemBitReader {
     const uint8_t *bytes;

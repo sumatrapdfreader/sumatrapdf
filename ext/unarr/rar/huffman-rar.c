@@ -45,28 +45,23 @@ bool rar_add_value(struct huffman_code *code, int value, int codebits, int lengt
     lastnode = 0;
     for (bitpos = length - 1; bitpos >= 0; bitpos--) {
         bit = (codebits >> bitpos) & 1;
-        /* check for leaf node */
-        if (code->tree[lastnode].branches[0] == code->tree[lastnode].branches[1]) {
+        if (rar_is_leaf_node(code, lastnode)) {
             warn("Invalid data in bitstream"); /* prefix found */
             return false;
         }
-        /* check for open branch */
         if (code->tree[lastnode].branches[bit] < 0) {
             if (!rar_new_node(code))
                 return false;
             code->tree[lastnode].branches[bit] = code->numentries - 1;
         }
-        /* select branch */
         lastnode = code->tree[lastnode].branches[bit];
     }
-    /* check for empty leaf */
+
     if (code->tree[lastnode].branches[0] != -1 || code->tree[lastnode].branches[1] != -2) {
         warn("Invalid data in bitstream"); /* prefix found */
         return false;
     }
-    /* set leaf value */
-    code->tree[lastnode].branches[0] = value;
-    code->tree[lastnode].branches[1] = value;
+    code->tree[lastnode].branches[0] = code->tree[lastnode].branches[1] = value;
     return true;
 }
 
@@ -103,7 +98,7 @@ static bool rar_make_table_rec(struct huffman_code *code, int node, int offset, 
         return false;
     }
 
-    if (code->tree[node].branches[0] == code->tree[node].branches[1]) {
+    if (rar_is_leaf_node(code, node)) {
         int i;
         for (i = 0; i < currtablesize; i++) {
             code->table[offset + i].length = depth;

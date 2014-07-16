@@ -1,6 +1,8 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
+/* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRARParser.m */
+
 #include "rar.h"
 
 inline uint8_t uint8le(unsigned char *data) { return data[0]; }
