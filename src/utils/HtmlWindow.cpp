@@ -13,6 +13,16 @@
 #include "WinUtil.h"
 #include "GdiPlusUtil.h"
 
+// TODO: implement SetHtml() by:
+// - remember the text
+// - navigate to "about:blank"
+// - in OnDocumentComplete(), set the remembered text (see
+//   http://msdn.microsoft.com/en-us/library/aa752047(v=vs.85).aspx for some
+//   inspiration)
+// - call owner's OnDocumentComplete() handler
+// That way we fix the problem of having owner be aware of "about:blank"
+// and SetHtml() will trigger OnDocumentComplete() as well
+
 // An important (to Sumatra) use case is displaying CHM documents. First we used
 // IE's built-in support form CHM documents (using its: protocol http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
 // However, that doesn't work for CHM documents from network drives (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
@@ -61,7 +71,15 @@
 
 // Info about IInternetProtocol: http://www.codeproject.com/KB/IP/DataProtocol.aspx
 
-// All the ways to load html into mshtml: http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
+// All the ways to load html into mshtml:
+// http://qualapps.blogspot.com/2008/10/how-to-load-mshtml-with-data.html
+
+// how to handle custom protocol like myapp://
+// http://www.nuonsoft.com/blog/2010/04/05/how-to-handle-custom-url-protocols-with-the-microsoft-webbrowser-control/
+// http://www.nuonsoft.com/blog/2010/04/05/how-to-navigate-to-an-anchor-in-the-microsoft-webbrowser-control-when-rendering-html-from-memory/
+// http://www.nuonsoft.com/blog/2010/03/24/how-to-use-the-microsoft-webbrowser-control-to-render-html-from-memory/
+
+// http://geekswithblogs.net/dotnetnomad/archive/2008/01/29/119065.aspx
 
 // Other code that does advanced things with embedding IE or providing it with non-trivial
 // interfaces:
@@ -77,6 +95,29 @@
 // https://github.com/facebook/ie-toolbar (also IInternetProtocolInfo implementation)
 // http://code.google.com/p/veryie/
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla
+// http://www.codeproject.com/Articles/642/Processing-HTML-Forms-From-a-CHtmlView
+// https://github.com/salsita/ProtocolLibrary
+// https://github.com/salsita/libbhohelper
+// https://github.com/salsita/libprothandlers
+// http://www.codeproject.com/Articles/1094/The-MFC-CDHtmlDialog-class#xx568889xx
+// http://www.codeproject.com/Articles/642/Processing-HTML-Forms-From-a-CHtmlView
+// http://www.codeproject.com/Articles/10401/Handling-HTML-Element-Events-in-CHtmlView-and-Reus
+// http://www.codeproject.com/Articles/3919/Using-the-WebBrowser-control-simplified
+
+// https://groups.google.com/forum/#!topic/microsoft.public.inetsdk.programming.mshtml_hosting/jogeNC4NXzU
+// https://blog.javascripting.com/2012/11/07/igor-tandetniks-passthrough-app-now-on-github/
+
+// Series of articles:
+// http://starkravingfinkle.org/blog/2005/04/mshtml-hosting-drawing-on-webbrowser/
+// http://starkravingfinkle.org/blog/2005/04/mshtml-hosting-more-tricks/
+// http://starkravingfinkle.org/blog/2005/02/mshtml-hosting-editing-tricks/
+// http://starkravingfinkle.org/blog/2005/01/mshtml-hosting-more-editing/
+// http://starkravingfinkle.org/blog/2004/12/mshtml-hosting-calling-javascript-from-host/
+// http://starkravingfinkle.org/blog/2004/10/mshtml-hosting-editing/
+// http://starkravingfinkle.org/blog/2004/10/mshtml-hosting-idochostuihandler/
+// http://starkravingfinkle.org/blog/2004/09/mshtml-hosting-odds-ends/
+// http://starkravingfinkle.org/blog/2004/09/mshtml-hosting-building-uis/
+// http://starkravingfinkle.org/blog/2004/08/mshtml-hosting-the-basics/
 
 class HW_IOleInPlaceFrame;
 class HW_IOleInPlaceSiteWindowless;
