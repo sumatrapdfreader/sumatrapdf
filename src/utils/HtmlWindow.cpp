@@ -775,7 +775,7 @@ public:
 
     // IDocHostUIHandler
     STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) { return S_FALSE; }
-    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo) { return E_NOTIMPL; }
+    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo);
     STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc) { return S_FALSE; }
     STDMETHODIMP HideUI(void) { return E_NOTIMPL; }
     STDMETHODIMP UpdateUI(void) { return E_NOTIMPL; }
@@ -790,6 +790,21 @@ public:
     STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) { return S_FALSE; }
     STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) { if (ppDORet) *ppDORet = NULL; return S_FALSE; }
 };
+
+STDMETHODIMP HW_IDocHostUIHandler::GetHostInfo(DOCHOSTUIINFO *pInfo)
+{
+    if (!pInfo)
+        return S_FALSE;
+    pInfo->pchHostCss = NULL;
+    pInfo->pchHostNS = NULL;
+
+    // Note: I was hoping that also setting  DOCHOSTUIFLAG_SCROLL_NO
+    // would get rid of vertical scrollbar when not necessary, but alas it
+    // always removes it
+    pInfo->dwFlags = DOCHOSTUIFLAG_NO3DBORDER | DOCHOSTUIFLAG_NO3DOUTERBORDER;
+    pInfo->dwDoubleClick = DOCHOSTUIDBLCLK_DEFAULT;    
+    return S_OK;
+}
 
 class HW_IDropTarget : public IDropTarget
 {
