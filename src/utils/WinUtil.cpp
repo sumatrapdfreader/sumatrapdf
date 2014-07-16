@@ -1217,3 +1217,33 @@ Exit:
 
     return ok;
 }
+
+// given r,  sets r1, r2 and r3 so that:
+//  [         r       ]
+//  [ r1 ][  r2 ][ r3 ]
+//        ^     ^
+//        y     y+dy
+void DivideRectV(const RECT&r, int x, int dx, RECT& r1, RECT& r2, RECT& r3)
+{
+    r1 = r2 = r3 = r;
+    r1.right = x;
+    r2.left = x;
+    r2.right = x + dx;
+    r3.left = x + dx + 1;
+}
+
+// like DivideRectV
+void DivideRectH(const RECT&r, int y, int dy, RECT& r1, RECT& r2, RECT& r3)
+{
+    r1 = r2 = r3 = r;
+    r1.bottom = y;
+    r2.top = y;
+    r2.bottom = y + dy;
+    r3.top = y + dy + 1;
+}
+
+void RectInflateTB(RECT& r, int top, int bottom)
+{
+    r.top += top;
+    r.bottom += bottom;
+}

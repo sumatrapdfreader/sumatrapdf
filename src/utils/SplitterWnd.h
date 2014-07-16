@@ -20,6 +20,8 @@ void           RegisterSplitterWndClass();
 SplitterWnd *  CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
 HWND           GetHwnd(SplitterWnd *);
 void           SetBgCol(SplitterWnd *, COLORREF);
+
+// call at the end of program
 void           DeleteSplitterBrush();
 
 // If a splitter is "live", the owner will re-layout windows in the callback,
