@@ -1,6 +1,12 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// SetWindowSubclass, RemoveWindowSubclass and DefSubclassProc require the WinXP SDK
+// per http://msdn.microsoft.com/en-us/library/windows/desktop/bb762102%28v=vs.85%29.aspx
+// these functions should also be available under Win2000, though
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+
 #include "BaseUtil.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"

@@ -364,6 +364,14 @@
 				Name="unused"
 				>
 				<File
+					RelativePath="..\src\utils\FrameRateWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\FrameRateWnd.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\NoFreeAllocator.cpp"
 					>
 				</File>

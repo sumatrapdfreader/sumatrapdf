@@ -659,6 +659,9 @@ $(OU)\FileWatcher.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\u
 $(OU)\FileWatcher.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h
 $(OU)\FileWatcher.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h
 $(OU)\FileWatcher.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OU)\FrameRateWnd.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FrameRateWnd.h
+$(OU)\FrameRateWnd.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OU)\FrameRateWnd.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz.h $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\buffer.h $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\context.h $B\mupdf\include\mupdf\fitz\crypt.h $B\mupdf\include\mupdf\fitz\device.h

@@ -63,7 +63,7 @@ CFLAGSOPT = $(CFLAGSOPT) /I$(SRCDIR)/utils/msvc
 # Their meaning: http://msdn.microsoft.com/en-us/library/aa383745(VS.85).aspx
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
 # We set the features uniformly to Windows 2000 or later.
-CFLAGS = $(CFLAGS) /D "WINVER=0x0501" /D "_WIN32_WINNT=0x0501"
+CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 # Suppress warning C4800: forcing value to bool 'true' or 'false'
 CFLAGS = $(CFLAGS) /wd4800
 
