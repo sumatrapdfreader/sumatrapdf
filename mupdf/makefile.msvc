@@ -285,7 +285,7 @@ MUPDF_ALL_OBJS = \
 MUDOC_OBJS = \
 	$(OX)\mucbz.obj $(OX)\muimage.obj $(OX)\mutiff.obj $(OFZ)\document-all.obj $(OFZ)\document-no-run.obj \
 	$(OFZ)\svg-device.obj $(OFZ)\output-pcl.obj $(OFZ)\output-pwg.obj \
-	$(OFZ)\stream-prog.obj
+	$(OFZ)\stream-prog.obj $(OFZ)\test-device.obj
 
 MUTOOLS_OBJS = \
 	$(OA)\mudraw.obj $(OA)\mutool.obj $(OA)\pdfclean.obj $(OA)\pdfextract.obj \

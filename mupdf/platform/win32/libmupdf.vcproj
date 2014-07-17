@@ -670,6 +670,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\test-device.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\text.c"
 				>
 			</File>

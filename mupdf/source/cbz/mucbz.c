@@ -2,8 +2,6 @@
 
 #include <zlib.h>
 
-#include <ctype.h> /* for tolower */
-
 #define ZIP_LOCAL_FILE_SIG 0x04034b50
 #define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
 #define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
@@ -167,6 +165,57 @@ cbz_read_zip_entry(cbz_document *doc, int offset, int *sizep)
 	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown zip method: %d", method);
 }
 
+static inline int cbz_isdigit(int c)
+{
+	return c >= '0' && c <= '9';
+}
+
+static inline int cbz_toupper(int c)
+{
+	if (c >= 'a' && c <= 'z')
+		return c - 'a' + 'A';
+	return c;
+}
+
+static inline int
+cbz_strnatcmp(const char *a, const char *b)
+{
+	int x, y;
+
+	/* SumatraPDF: prevent buffer overrun */
+	while (*a || *b)
+	{
+		if (cbz_isdigit(*a) && cbz_isdigit(*b))
+		{
+			x = *a++ - '0';
+			while (cbz_isdigit(*a))
+				x = x * 10 + *a++ - '0';
+			y = *b++ - '0';
+			while (cbz_isdigit(*b))
+				y = y * 10 + *b++ - '0';
+		}
+		else
+		{
+			x = cbz_toupper(*a++);
+			y = cbz_toupper(*b++);
+		}
+		if (x < y)
+			return -1;
+		if (x > y)
+			return 1;
+	}
+
+	return 0;
+}
+
+static int
+cbz_compare_entries(const void *a_, const void *b_)
+{
+	const cbz_entry *a = a_;
+	const cbz_entry *b = b_;
+	return cbz_strnatcmp(a->name, b->name);
+}
+
 static void
 cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 {
@@ -226,6 +275,8 @@ cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 		fz_seek(file, metasize, 1);
 		fz_seek(file, commentsize, 1);
 	}
+
+	qsort(doc->entry, count, sizeof(cbz_entry), cbz_compare_entries);
 
 	doc->page_count = 0;
 	doc->page = fz_malloc_array(ctx, count, sizeof(int));

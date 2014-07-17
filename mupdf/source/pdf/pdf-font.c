@@ -239,14 +239,14 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 	{
 		unsigned char *data;
 		unsigned int len;
+		int index;
 
-		data = pdf_lookup_substitute_cjk_font(ros, serif, &len);
+		data = pdf_lookup_substitute_cjk_font(ros, serif, fontdesc->wmode, &len, &index);
 		if (!data)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find builtin CJK font");
 
-		/* The DroidSansFallback fonts have both H and V variants in the TTC */
-		/* A glyph bbox cache is too big for DroidSansFallback (51k glyphs!) */
-		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, fontdesc->wmode, 0);
+		/* A glyph bbox cache is too big for CJK fonts. */
+		fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, index, 0);
 	}
 
 	fontdesc->font->ft_substitute = 1;

@@ -132,6 +132,7 @@ static int memtrace_current = 0;
 static int memtrace_peak = 0;
 static int memtrace_total = 0;
 static int showmemory = 0;
+static int showfeatures = 0;
 static fz_text_sheet *sheet = NULL;
 static fz_colorspace *colorspace;
 static char *filename;
@@ -172,6 +173,7 @@ static void usage(void)
 		"\t-G -\tgamma correct output\n"
 		"\t-I\tinvert output\n"
 		"\t-l\tprint outline\n"
+		"\t-T\ttest for features (grayscale or color)\n"
 		"\t-i\tignore errors and continue with the next file\n"
 		"\tpages\tcomma separated list of ranges\n");
 	exit(1);
@@ -461,8 +463,21 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 	}
 
-	if (showmd5 || showtime)
+	if (showmd5 || showtime || showfeatures)
 		printf("page %s %d", filename, pagenum);
+
+	if (showfeatures)
+	{
+		int iscolor;
+		dev = fz_new_test_device(ctx, &iscolor);
+		if (list)
+			fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, NULL);
+		else
+			fz_run_page(doc, page, dev, &fz_identity, &cookie);
+		fz_free_device(dev);
+		dev = NULL;
+		printf(" %s", iscolor ? "color" : "grayscale");
+	}
 
 	if (pdfout)
 	{
@@ -815,7 +830,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		printf(" %dms", diff);
 	}
 
-	if (showmd5 || showtime)
+	if (showmd5 || showtime || showfeatures)
 		printf("\n");
 
 	if (showmemory)
@@ -970,7 +985,7 @@ int main(int argc, char **argv)
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "lo:F:p:r:R:b:c:dgmtx5G:Iw:h:fiMB:")) != -1)
+	while ((c = fz_getopt(argc, argv, "lo:F:p:r:R:b:c:dgmTtx5G:Iw:h:fiMB:")) != -1)
 	{
 		switch (c)
 		{
@@ -987,6 +1002,7 @@ int main(int argc, char **argv)
 		case 't': showtext++; break;
 		case 'x': showxml++; break;
 		case '5': showmd5++; break;
+		case 'T': showfeatures++; break;
 		case 'g': out_cs = CS_GRAY; break;
 		case 'd': uselist = 0; break;
 		case 'c': out_cs = parse_colorspace(fz_optarg); break;
@@ -1003,7 +1019,7 @@ int main(int argc, char **argv)
 	if (fz_optind == argc)
 		usage();
 
-	if (!showtext && !showxml && !showtime && !showmd5 && !showoutline && !output)
+	if (!showtext && !showxml && !showtime && !showmd5 && !showoutline && !showfeatures && !output)
 	{
 		printf("nothing to do\n");
 		exit(0);
@@ -1077,7 +1093,6 @@ int main(int argc, char **argv)
 			fprintf(stderr, "Banded operation not compatible with MD5\n");
 			exit(1);
 		}
-
 	}
 
 	{
@@ -1193,7 +1208,7 @@ int main(int argc, char **argv)
 				if (showoutline)
 					drawoutline(ctx, doc);
 
-				if (showtext || showxml || showtime || showmd5 || output)
+				if (showtext || showxml || showtime || showmd5 || showfeatures || output)
 				{
 					if (fz_optind == argc || !isrange(argv[fz_optind]))
 						drawrange(ctx, doc, "1-");

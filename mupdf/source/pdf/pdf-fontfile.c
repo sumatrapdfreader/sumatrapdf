@@ -136,13 +136,15 @@ pdf_lookup_substitute_font(int mono, int serif, int bold, int italic, unsigned i
 }
 
 unsigned char *
-pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
+pdf_lookup_substitute_cjk_font(int ros, int serif, int wmode, unsigned int *len, int *index)
 {
 #ifndef NOCJKFONT
 #ifndef NOCJKFULL
+	*index = wmode;
 	*len = sizeof pdf_font_DroidSansFallbackFull;
 	return (unsigned char*) pdf_font_DroidSansFallbackFull;
 #else
+	*index = wmode;
 	*len = sizeof pdf_font_DroidSansFallback;
 	return (unsigned char*) pdf_font_DroidSansFallback;
 #endif

@@ -554,6 +554,7 @@ xps_recognize(fz_context *doc, const char *magic)
 	}
 	if (!strcmp(magic, "xps") || !strcmp(magic, "oxps") ||
 		!strcmp(magic, "application/vnd.ms-xpsdocument") ||
+		!strcmp(magic, "application/xps") ||
 		!strcmp(magic, "application/oxps"))
 		return 100;
 

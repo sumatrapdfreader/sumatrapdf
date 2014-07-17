@@ -292,6 +292,13 @@ fz_device *fz_new_trace_device(fz_context *ctx);
 fz_device *fz_new_bbox_device(fz_context *ctx, fz_rect *rectp);
 
 /*
+	fz_new_test_device: Create a device to test for features.
+
+	Currently only tests for the presence of non-grayscale colors.
+*/
+fz_device *fz_new_test_device(fz_context *ctx, int *iscolor);
+
+/*
 	fz_new_draw_device: Create a device to draw on a pixmap.
 
 	dest: Target pixmap for the draw device. See fz_new_pixmap*

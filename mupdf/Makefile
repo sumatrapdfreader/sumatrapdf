@@ -335,6 +335,12 @@ tarball:
 tags: $(shell find include source platform -name '*.[ch]')
 	ctags $^
 
+cscope.files: $(shell find include source platform -name '*.[ch]')
+	@ echo $^ | tr ' ' '\n' > $@
+
+cscope.out: cscope.files
+	cscope -b
+
 all: libs apps
 
 clean:
