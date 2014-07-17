@@ -78,6 +78,10 @@ static bool rar_parse_entry(ar_archive *ar)
                 rar_clear_uncompress(&rar->uncomp);
                 memset(&rar->solid, 0, sizeof(rar->solid));
             }
+            else {
+                /* skip to next full byte */
+                rar->uncomp.br.available &= ~0x07;
+            }
             /* per XADRARParser.m @handleForSolidStreamWithObject these versions are identical */
             if (rar->entry.version == 26)
                 rar->entry.version = 20;

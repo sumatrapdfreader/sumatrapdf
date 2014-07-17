@@ -385,8 +385,8 @@ int64_t rar_expand_20(ar_archive_rar *rar, int64_t end)
     LZSS *lzss = &rar->uncomp.lzss;
     int symbol, offs, len;
 
-    if ((uint64_t)end > rar->super.entry_size_uncompressed)
-        end = rar->super.entry_size_uncompressed;
+    if ((uint64_t)end > rar->super.entry_size_uncompressed + rar->solid.size_total)
+        end = rar->super.entry_size_uncompressed + rar->solid.size_total;
 
     for (;;) {
         if (lzss_position(lzss) >= end)
@@ -518,7 +518,7 @@ static bool rar_parse_codes(ar_archive_rar *rar)
 
     rar_free_codes(&rar->uncomp);
 
-    /* skip to next byte */
+    /* skip to next full byte */
     rar->uncomp.br.available &= ~0x07;
 
     if (!br_check(rar, 1))
