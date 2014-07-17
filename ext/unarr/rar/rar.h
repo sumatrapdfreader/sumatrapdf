@@ -136,11 +136,6 @@ inline bool rar_is_leaf_node(struct huffman_code *code, int node) { return code-
 #define LENGTHCODE_SIZE    28
 #define HUFFMAN_TABLE_SIZE MAINCODE_SIZE + OFFSETCODE_SIZE + LOWOFFSETCODE_SIZE + LENGTHCODE_SIZE
 
-#define MAINCODE_SIZE_20        298
-#define OFFSETCODE_SIZE_20      48
-#define LENGTHCODE_SIZE_20      28
-#define HUFFMAN_TABLE_SIZE_20   4 * 257
-
 struct ByteReader {
     IByteIn super;
     ar_archive_rar *rar;
@@ -155,43 +150,7 @@ struct CPpmdRAR_RangeDec {
     IByteIn *Stream;
 };
 
-struct AudioState {
-    int8_t weight[5];
-    int16_t delta[4];
-    int8_t lastdelta;
-    int error[11];
-    int count;
-    uint8_t lastbyte;
-};
-
-struct ar_archive_rar_uncomp {
-    bool initialized;
-    uint8_t version;
-    bool start_new_table;
-
-    LZSS lzss;
-    size_t bytes_ready;
-
-    /* version 20 */
-
-    /* struct huffman_code maincode; */
-    /* struct huffman_code offsetcode; */
-    /* struct huffman_code lengthcode; */
-    struct huffman_code audiocode[4];
-    uint8_t lengthtable20[HUFFMAN_TABLE_SIZE_20];
-    /* uint32_t lastoffset; */
-    /* uint32_t lastlength; */
-    /* uint32_t oldoffset[4]; */
-    uint32_t oldoffsetindex;
-
-    bool audioblock;
-    uint8_t channel;
-    uint8_t numchannels;
-    struct AudioState audiostate[4];
-    int8_t channeldelta;
-
-    /* version 29 */
-
+struct ar_archive_rar_uncomp_29 {
     struct huffman_code maincode;
     struct huffman_code offsetcode;
     struct huffman_code lowoffsetcode;
@@ -211,6 +170,52 @@ struct ar_archive_rar_uncomp {
     struct ByteReader bytein;
 
     struct ar_archive_rar_filters filters;
+};
+
+#define MAINCODE_SIZE_20        298
+#define OFFSETCODE_SIZE_20      48
+#define LENGTHCODE_SIZE_20      28
+#define HUFFMAN_TABLE_SIZE_20   4 * 257
+
+struct AudioState {
+    int8_t weight[5];
+    int16_t delta[4];
+    int8_t lastdelta;
+    int error[11];
+    int count;
+    uint8_t lastbyte;
+};
+
+struct ar_archive_rar_uncomp_20 {
+    struct huffman_code maincode;
+    struct huffman_code offsetcode;
+    struct huffman_code lengthcode;
+    struct huffman_code audiocode[4];
+    uint8_t lengthtable[HUFFMAN_TABLE_SIZE_20];
+    uint32_t lastoffset;
+    uint32_t lastlength;
+    uint32_t oldoffset[4];
+    uint32_t oldoffsetindex;
+
+    bool audioblock;
+    uint8_t channel;
+    uint8_t numchannels;
+    struct AudioState audiostate[4];
+    int8_t channeldelta;
+};
+
+struct ar_archive_rar_uncomp {
+    bool initialized;
+    uint8_t version;
+
+    LZSS lzss;
+    size_t bytes_ready;
+    bool start_new_table;
+
+    union {
+        struct ar_archive_rar_uncomp_29 v29;
+        struct ar_archive_rar_uncomp_20 v20;
+    } state;
 
     struct StreamBitReader {
         uint64_t bits;

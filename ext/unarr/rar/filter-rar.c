@@ -456,7 +456,7 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
 
 bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length, uint8_t flags)
 {
-    struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
+    struct ar_archive_rar_uncomp_29 *uncomp = &rar->uncomp.state.v29;
     struct ar_archive_rar_filters *filters = &uncomp->filters;
 
     struct MemBitReader br = { 0 };
@@ -507,7 +507,7 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
     if (prog)
         prog->usagecount++;
 
-    blockstartpos = br_next_rarvm_number(&br) + (size_t)lzss_position(&uncomp->lzss);
+    blockstartpos = br_next_rarvm_number(&br) + (size_t)lzss_position(&rar->uncomp.lzss);
     if ((flags & 0x40))
         blockstartpos += 258;
     if ((flags & 0x20))
@@ -600,8 +600,7 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
 
 bool rar_run_filters(ar_archive_rar *rar)
 {
-    struct ar_archive_rar_uncomp *uncomp = &rar->uncomp;
-    struct ar_archive_rar_filters *filters = &uncomp->filters;
+    struct ar_archive_rar_filters *filters = &rar->uncomp.state.v29.filters;
     struct RARFilter *filter = filters->stack;
     size_t start = filters->filterstart;
     size_t end = start + filter->blocklength;
@@ -615,7 +614,7 @@ bool rar_run_filters(ar_archive_rar *rar)
         return false;
     }
 
-    lzss_copy_bytes_from_window(&uncomp->lzss, filters->vm->memory, start, filter->blocklength);
+    lzss_copy_bytes_from_window(&rar->uncomp.lzss, filters->vm->memory, start, filter->blocklength);
     if (!rar_execute_filter(filter, filters->vm, rar->progr.bytes_done)) {
         warn("Failed to execute parsing filter");
         return false;
