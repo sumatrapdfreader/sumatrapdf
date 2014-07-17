@@ -1569,8 +1569,8 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
         if (htmlSetInProgress != NULL) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
-            SetHtmlReal(htmlSetInProgress, -1);
-            if (htmlWinCb) {                
+            SetHtmlReal(htmlSetInProgress);
+            if (htmlWinCb) {
                 if (htmlSetInProgressUrl) {
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
                 } else {

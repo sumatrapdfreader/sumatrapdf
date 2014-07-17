@@ -93,12 +93,12 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
     CrashIf(!IsVisible());
 
-    Timer timerAll(true);
+    Timer timerAll;
 
     CachedStyle *s = cachedStyle;
     Rect r(offX, offY, pos.Width, pos.Height);
     Brush *br = BrushFromColorData(s->bgColor, r);
-    Timer timerFill(true);
+    Timer timerFill;
     gfx->FillRectangle(br, r);
     double durFill = timerFill.Stop();
 
@@ -131,7 +131,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
         bgCol.SetFromCOLORREF(gGlobalPrefs->ebookUI.backgroundColor);
     textRender->SetTextBgColor(bgCol);
 
-    Timer timerDrawHtml(true);
+    Timer timerDrawHtml;
     DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
     double durDraw = timerDrawHtml.Stop();
     gfx->SetClip(&origClipRegion, CombineModeReplace);

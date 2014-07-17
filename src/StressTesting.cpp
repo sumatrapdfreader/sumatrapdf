@@ -92,7 +92,7 @@ inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 
 static void BenchLoadRender(BaseEngine *engine, int pagenum)
 {
-    Timer t(true);
+    Timer t;
     bool ok = engine->BenchLoadPage(pagenum);
     t.Stop();
 
@@ -144,7 +144,7 @@ static int FormatWholeDoc(Doc& doc) {
 
 static int TimeOneMethod(Doc&doc, TextRenderMethod method, const WCHAR *methodName) {
     SetTextRenderMethod(method);
-    Timer t(true);
+    Timer t;
     int nPages = FormatWholeDoc(doc);
     double timesms = t.Stop();
     logbench(L"%s: %.2f ms", methodName, timesms);
@@ -169,7 +169,7 @@ void BenchEbookLayout(const WCHAR *filePath) {
         logbench(L"Error: not an ebook file");
         return;
     }
-    Timer t(true);
+    Timer t;
     Doc doc = Doc::CreateFromFile(filePath);
     if (doc.LoadingFailed()) {
         logbench(L"Error: failed to load the file as doc");
@@ -199,10 +199,10 @@ void BenchEbookLayout(const WCHAR *filePath) {
 
 static void BenchChmLoadOnly(const WCHAR *filePath)
 {
-    Timer total(true);
+    Timer total;
     logbench(L"Starting: %s", filePath);
 
-    Timer t(true);
+    Timer t;
     ChmModel *chmModel = ChmModel::Create(filePath, NULL);
     if (!chmModel) {
         logbench(L"Error: failed to load %s", filePath);
@@ -238,10 +238,10 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
         return;
     }
 
-    Timer total(true);
+    Timer total;
     logbench(L"Starting: %s", filePath);
 
-    Timer t(true);
+    Timer t;
     BaseEngine *engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         logbench(L"Error: failed to load %s", filePath);

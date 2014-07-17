@@ -19,13 +19,15 @@ class Timer {
     }
 
 public:
-    explicit Timer(bool start=false) {
-        end.QuadPart = 0;
-        if (start)
-            Start();
+    explicit Timer() {
+        Start();
     }
 
-    void Start() { QueryPerformanceCounter(&start); }
+    void Start() {
+        end.QuadPart = 0;
+        QueryPerformanceCounter(&start);
+    }
+
     double Stop() { 
         QueryPerformanceCounter(&end);
         return GetTimeInMs();

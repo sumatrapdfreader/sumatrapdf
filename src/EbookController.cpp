@@ -183,7 +183,7 @@ bool EbookFormattingThread::Format()
 
 void EbookFormattingThread::Run()
 {
-    Timer t(true);
+    Timer t;
     Format();
     //lf("Formatting time: %.2f ms", t.Stop());
 }

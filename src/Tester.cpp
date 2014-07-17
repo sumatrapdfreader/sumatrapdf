@@ -80,11 +80,11 @@ diff: 0.929000
 static void BenchMD5Size(void *data, size_t dataSize, char *desc)
 {
     unsigned char d1[16], d2[16];
-    Timer t1(true);
+    Timer t1;
     CalcMD5Digest((unsigned char*)data, dataSize, d1);
     double dur1 = t1.GetTimeInMs();
 
-    Timer t2(true);
+    Timer t2;
     CalcMD5DigestWin(data, dataSize, d2);
     bool same = memeq(d1, d2, 16);
     CrashAlwaysIf(!same);
@@ -170,7 +170,7 @@ static void MobiTestFile(const WCHAR *filePath)
     }
 
     if (gLayout) {
-        Timer t(true);
+        Timer t;
         MobiLayout(mobiDoc);
         wprintf(L"Spent %.2f ms laying out %s\n", t.GetTimeInMs(), filePath);
     }
