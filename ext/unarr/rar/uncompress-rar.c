@@ -1031,11 +1031,6 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (uncomp29)
             uncomp29->filters.lastend = end;
 
-        if (!uncomp->bytes_ready && !(uncomp29 && uncomp29->filters.bytes_ready) && !uncomp->start_new_table) {
-            warn("Failed to produce more data");
-            return false;
-        }
-
         if (uncomp29 && uncomp29->is_ppmd_block && uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
     }
