@@ -663,6 +663,9 @@
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\test-device.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\text.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

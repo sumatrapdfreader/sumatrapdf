@@ -1576,6 +1576,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\test-device.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\text.c"
 					>
 				</File>

@@ -306,6 +306,7 @@
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\mupdf\source\fitz\string.c" />
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\test-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\text.c" />
     <ClCompile Include="..\mupdf\source\fitz\time.c" />
     <ClCompile Include="..\mupdf\source\fitz\trace-device.c" />

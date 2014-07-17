@@ -1035,17 +1035,19 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->tocState = *state->tocState;
     }
 
+    // DisplayModel needs a valid zoom value before any relayout
+    // caused by showing/hiding UI elements happends
+    if (win->AsFixed())
+        win->AsFixed()->Relayout(zoomVirtual, rotation);
+    else if (win->IsDocLoaded())
+        win->ctrl->SetZoomVirtual(zoomVirtual);
+
     // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
     // remove the scrollbars before EbookController starts layouting
     UpdateToolbarAndScrollbarState(*win);
-
-    if (win->AsFixed())
-        win->AsFixed()->Relayout(zoomVirtual, rotation);
-    else if (win->IsDocLoaded())
-        win->ctrl->SetZoomVirtual(zoomVirtual);
 
     if (!args.isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
@@ -1105,12 +1107,11 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect);
         }
-
         if (args.showWin)
             ShowWindow(win->hwndFrame, showType);
-
         UpdateWindow(win->hwndFrame);
     }
+
     if (win->IsDocLoaded()) {
         ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, !win->ctrl->HasPageLabels());
         // if the window isn't shown and win.canvasRc is still empty, zoom
@@ -1131,6 +1132,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         win->RedrawAll();
         return false;
     }
+
     // This should only happen after everything else is ready
     if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen)
         EnterFullScreen(*win);
