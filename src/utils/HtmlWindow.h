@@ -54,7 +54,6 @@ protected:
     HWND                oleObjectHwnd;
 
     const char *        htmlSetInProgress;
-    size_t              htmlSetInProgressLen;
     const WCHAR *       htmlSetInProgressUrl;
 
     DWORD               adviseCookie;
@@ -71,6 +70,7 @@ protected:
     void UnsubclassHwnd();
     void SetScrollbarToAuto();
     void SetHtmlReal(const char *s, size_t len=-1);
+    void FreeHtmlSetInProgressData();
 
 public:
     ~HtmlWindow();

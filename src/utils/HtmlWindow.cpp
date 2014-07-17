@@ -1194,6 +1194,8 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     assert(hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
+    htmlSetInProgress = NULL;
+    htmlSetInProgressUrl = NULL;
 }
 
 bool HtmlWindow::CreateBrowser()
@@ -1311,6 +1313,7 @@ HtmlWindow::~HtmlWindow()
 
     FreeWindowId(windowId);
     UnregisterInternetProtocolFactory();
+    FreeHtmlSetInProgressData();
 }
 
 void HtmlWindow::OnSize(SizeI size)
@@ -1414,9 +1417,12 @@ void HtmlWindow::NavigateToAboutBlank()
 
 void HtmlWindow::SetHtml(const char *s, size_t len, const WCHAR *url)
 {
-    htmlSetInProgress = s;
-    htmlSetInProgressLen = len;
-    htmlSetInProgressUrl = url;
+    FreeHtmlSetInProgressData();
+    if (len == (size_t)-1) {
+        len = str::Len(s);
+    }
+    htmlSetInProgress = str::DupN(s, len);
+    htmlSetInProgressUrl = str::Dup(url);
     NavigateToAboutBlank();
     // the real work will happen in OnDocumentComplete()
 }
@@ -1549,13 +1555,21 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     return shouldNavigate;
 }
 
+void HtmlWindow::FreeHtmlSetInProgressData()
+{
+    free((void*)htmlSetInProgress);
+    free((void*)htmlSetInProgressUrl);
+    htmlSetInProgress = NULL;
+    htmlSetInProgressUrl = NULL;
+}
+
 void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress != NULL) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
-            SetHtmlReal(htmlSetInProgress, htmlSetInProgressLen);
+            SetHtmlReal(htmlSetInProgress, -1);
             if (htmlWinCb) {                
                 if (htmlSetInProgressUrl) {
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
@@ -1563,8 +1577,8 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
                 }
             }
-            htmlSetInProgress = NULL;
-            htmlSetInProgressUrl = NULL;
+            
+            FreeHtmlSetInProgressData();
             SetScrollbarToAuto();
             return;
         }
