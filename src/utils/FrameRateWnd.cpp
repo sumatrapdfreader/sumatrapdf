@@ -17,10 +17,7 @@ The window must follow associated window so that it maintains an illusion
 that it's actually a part of that window.
 */
 
-/*
-TODO:
- - hook into associated window so that we move when the parent moves
-*/
+// TODO: nicer font
 
 #define FRAME_RATE_CLASS_NAME L"FrameRateWnd"
 
@@ -96,6 +93,17 @@ static void FrameRateOnPaint(FrameRateWnd *w)
     EndPaint(w->hwnd, &ps);
 }
 
+static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+    if (WM_MOVING == msg ||
+        WM_SIZING == msg ||
+        WM_MOVE == msg) {
+        FrameRateWnd *w = (FrameRateWnd*) dwRefData;
+        PositionWindow(w, w->maxSizeSoFar);
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
 static LRESULT CALLBACK WndProcFrameRate(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     FrameRateWnd *w;
@@ -150,13 +158,14 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
     // WS_POPUP removes all decorations
     DWORD dwStyle = WS_POPUP | WS_VISIBLE;
     RECT r = GetClientRect(w->hwndAssociatedWith);
-    // TODO: position in relation to w->hwndAssociatedWith
     HWND hwnd = CreateWindowEx(WS_EX_LAYERED, FRAME_RATE_CLASS_NAME, NULL, dwStyle,
              0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), w);
     CrashIf(hwnd != w->hwnd);
-    if (!w->hwnd) {
+    if (!hwnd) {
         return false;
     }
+    SetWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0, (DWORD_PTR) w);
+
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);
     ShowFrameRate(w, 0);
     return true;
@@ -164,6 +173,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
 
 void DeleteFrameRateWnd(FrameRateWnd *w)
 {
+    RemoveWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0);
     free(w);
 }
 
