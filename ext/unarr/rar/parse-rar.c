@@ -106,8 +106,6 @@ bool rar_parse_header_entry(ar_archive_rar *rar, struct rar_header *header, stru
     rar->entry.solid = entry->version < 20 ? (rar->archive_flags & MHD_SOLID) : (header->flags & LHD_SOLID);
     free(rar->entry.name);
     rar->entry.name = NULL;
-    free(rar->entry.name_w);
-    rar->entry.name_w = NULL;
 
     return true;
 }
@@ -213,7 +211,7 @@ const char *rar_get_name(ar_archive *ar)
         name[namelen] = '\0';
 
         if (!(header.flags & LHD_UNICODE)) {
-            rar->entry.name = ar_conv_dos_to_utf8_wide(name, &rar->entry.name_w);
+            rar->entry.name = ar_conv_dos_to_utf8(name);
             free(name);
         }
         else if (namelen == strlen(name)) {
@@ -230,24 +228,9 @@ const char *rar_get_name(ar_archive *ar)
                 *p = '/';
             }
         }
-        if (rar->entry.name_w) {
-            wchar_t *pw;
-            for (pw = rar->entry.name_w; *pw; pw++) {
-                if (*pw == '\\')
-                    *pw = '/';
-            }
-        }
 
         if (!ar_seek(ar->stream, ar->entry_offset + rar->entry.header_size, SEEK_SET))
             warn("Couldn't seek back to the end of the entry header");
     }
     return rar->entry.name;
-}
-
-const wchar_t *rar_get_name_w(ar_archive *ar)
-{
-    ar_archive_rar *rar = (ar_archive_rar *)ar;
-    if (!rar->entry.name_w && rar_get_name(ar) && !rar->entry.name_w)
-        rar->entry.name_w = ar_conv_utf8_to_wide(rar->entry.name);
-    return rar->entry.name_w;
 }

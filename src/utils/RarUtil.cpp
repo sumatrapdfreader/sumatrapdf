@@ -79,8 +79,8 @@ void RarFile::ExtractFilenames()
 {
     if (ar) {
         while (ar_parse_entry(ar)) {
-            const WCHAR *name = ar_entry_get_name_w(ar);
-            filenames.Append(str::Dup(name));
+            const char *name = ar_entry_get_name(ar);
+            filenames.Append(str::conv::FromUtf8(name));
             filepos.Append(ar_entry_get_offset(ar));
         }
     }

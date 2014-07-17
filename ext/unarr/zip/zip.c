@@ -7,7 +7,6 @@ static void zip_close(ar_archive *ar)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     free(zip->entry.name);
-    free(zip->entry.name_w);
     zip_clear_uncompress(&zip->uncomp);
 }
 
@@ -45,8 +44,6 @@ static bool zip_parse_entry(ar_archive *ar)
     zip->entry.crc = entry.crc;
     free(zip->entry.name);
     zip->entry.name = NULL;
-    free(zip->entry.name_w);
-    zip->entry.name_w = NULL;
     zip->entry.dosdate = entry.dosdate;
 
     zip->progress.crc = 0;
@@ -147,7 +144,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
     if (!zip_parse_end_of_central_directory(stream, &eocd))
         return NULL;
 
-    ar = ar_open_archive(stream, sizeof(ar_archive_zip), zip_close, zip_parse_entry, zip_get_name, zip_get_name_w, zip_uncompress);
+    ar = ar_open_archive(stream, sizeof(ar_archive_zip), zip_close, zip_parse_entry, zip_get_name, zip_uncompress, zip_get_global_comment);
     if (!ar)
         return NULL;
 
@@ -158,7 +155,6 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
     zip->comment_offset = offset + 22;
     zip->comment_size = eocd.commentlen;
     ar->entry_offset_next = zip->dir.offset;
-    ar->get_comment = zip_get_global_comment;
 
     return ar;
 }

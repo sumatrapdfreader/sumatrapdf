@@ -7,7 +7,6 @@ static void rar_close(ar_archive *ar)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     free(rar->entry.name);
-    free(rar->entry.name_w);
     rar_clear_uncompress(&rar->uncomp);
 }
 
@@ -227,5 +226,5 @@ ar_archive *ar_open_rar_archive(ar_stream *stream)
         return NULL;
     }
 
-    return ar_open_archive(stream, sizeof(ar_archive_rar), rar_close, rar_parse_entry, rar_get_name, rar_get_name_w, rar_uncompress);
+    return ar_open_archive(stream, sizeof(ar_archive_rar), rar_close, rar_parse_entry, rar_get_name, rar_uncompress, NULL);
 }

@@ -38,7 +38,6 @@ bool ar_parse_entry(ar_archive *ar);
 bool ar_parse_entry_at(ar_archive *ar, off64_t offset);
 
 const char *ar_entry_get_name(ar_archive *ar);
-const wchar_t *ar_entry_get_name_w(ar_archive *ar);
 off64_t ar_entry_get_offset(ar_archive *ar);
 size_t ar_entry_get_size(ar_archive *ar);
 time64_t ar_entry_get_filetime(ar_archive *ar);

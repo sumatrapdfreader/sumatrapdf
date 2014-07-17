@@ -12,33 +12,21 @@ size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size)
     return WideCharToMultiByte(CP_UTF8, 0, &rune, 1, out, (int)size, NULL, NULL);
 }
 
-wchar_t *ar_conv_utf8_to_wide(const char *str)
-{
-    int res = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
-    wchar_t *wstr = calloc(res, sizeof(wchar_t));
-    if (wstr)
-        MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, res);
-    return wstr;
-}
-
 #define CP_DOS 437
 
-char *ar_conv_dos_to_utf8_wide(const char *astr, wchar_t **wstr_opt)
+char *ar_conv_dos_to_utf8(const char *astr)
 {
     char *str = NULL;
     int res = MultiByteToWideChar(CP_DOS, 0, astr, -1, NULL, 0);
     wchar_t *wstr = calloc(res, sizeof(wchar_t));
-    if (wstr) {
-        MultiByteToWideChar(CP_DOS, 0, astr, -1, wstr, res);
-        res = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-        str = malloc(res);
-        if (str)
-            WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, res, NULL, NULL);
-    }
-    if (wstr_opt)
-        *wstr_opt = wstr;
-    else
-        free(wstr);
+    if (!wstr)
+        return NULL;
+    MultiByteToWideChar(CP_DOS, 0, astr, -1, wstr, res);
+    res = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+    str = malloc(res);
+    if (str)
+        WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, res, NULL, NULL);
+    free(wstr);
     return str;
 }
 
@@ -96,54 +84,20 @@ size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size)
     return 1;
 }
 
-wchar_t *ar_conv_utf8_to_wide(const char *str)
+char *ar_conv_dos_to_utf8(const char *astr)
 {
-    size_t size = strlen(str) + 1;
-    wchar_t *wstr = calloc(size, sizeof(wchar_t));
-
+    char *str, *out, *end_out;
     const char *in;
-    wchar_t *wout;
+    size_t size;
 
-    if (!wstr)
-        return NULL;
-
-    for (in = str, wout = wstr; *in; in++) {
-        if (*in < 0x80)
-            *wout++ = *in;
-        else if (*in < 0xC0)
-            *wout++ = '?';
-        else if (*in < 0xE0 && (*(in + 1) & 0xC0) == 0x80)
-            *wout++ = ((*in & 0x1F) << 5) | (*(in + 1) & 0x3F);
-        else if (*in < 0xF0 && (*(in + 1) & 0xC0) == 0x80 && (*(in + 2) & 0xC0) == 0x80)
-            *wout++ = ((*in & 0x0F) << 12) | ((*(in + 1) & 0x3F) << 6) | (*(in + 2) & 0x3F);
-        else
-            *wout++ = '?';
-        while ((*(in + 1) & 0xC0) == 0x80)
-            in++;
-    }
-
-    return wstr;
-}
-
-char *ar_conv_dos_to_utf8_wide(const char *astr, wchar_t **wstr_opt)
-{
-    size_t size = strlen(astr) + 1;
-    char *str = calloc(size, 3);
-    char *end_out = str + size * 3;
-    wchar_t *wout = NULL;
-
-    const char *in;
-    char *out;
-
+    size = strlen(astr) + 1;
+    str = calloc(size, 3);
     if (!str)
         return NULL;
-    if (wstr_opt)
-        wout = *wstr_opt = calloc(size, sizeof(wchar_t));
 
+    end_out = str + size * 3;
     for (in = astr, out = str; *in; in++) {
         out += ar_conv_rune_to_utf8(gCp437[(uint8_t)*in], out, end_out - out);
-        if (wout)
-            *wout++ = gCp437[(uint8_t)*in];
     }
 
     return str;
