@@ -346,6 +346,46 @@ static bool rar_execute_filter_e8(struct RARFilter *filter, RARVirtualMachine *v
     return true;
 }
 
+static bool rar_execute_filter_rgb(struct RARFilter *filter, RARVirtualMachine *vm)
+{
+    uint32_t stride = filter->initialregisters[0];
+    uint32_t byteoffset = filter->initialregisters[1];
+    uint32_t blocklength = filter->initialregisters[4];
+    uint8_t *src, *dst;
+    uint32_t i, j;
+
+    if (blocklength > RARProgramWorkSize / 2 || stride > blocklength)
+        return false;
+
+    src = &vm->memory[0];
+    dst = &vm->memory[blocklength];
+    for (i = 0; i < 3; i++) {
+        uint8_t byte = 0;
+        uint8_t *prev = dst + i - stride;
+        for (j = i; j < blocklength; j += 3) {
+            if (prev >= dst) {
+                uint32_t delta1 = abs(prev[3] - prev[0]);
+                uint32_t delta2 = abs(byte - prev[0]);
+                uint32_t delta3 = abs(prev[3] - prev[0] + byte - prev[0]);
+                if (delta1 > delta2 || delta1 > delta3)
+                    byte = delta2 <= delta3 ? prev[3] : prev[0];
+            }
+            byte -= *src++;
+            dst[j] = byte;
+            prev += 3;
+        }
+    }
+    for (i = byteoffset; i < blocklength - 2; i += 3) {
+        dst[i] += dst[i + 1];
+        dst[i + 2] += dst[i + 1];
+    }
+
+    filter->filteredblockaddress = blocklength;
+    filter->filteredblocklength = blocklength;
+
+    return true;
+}
+
 static bool rar_execute_filter_audio(struct RARFilter *filter, RARVirtualMachine *vm)
 {
     uint32_t length = filter->initialregisters[4];
@@ -410,6 +450,8 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
         return rar_execute_filter_e8(filter, vm, pos, false);
     if (filter->prog->fingerprint == 0x393CD7E57E)
         return rar_execute_filter_e8(filter, vm, pos, true);
+    if (filter->prog->fingerprint == 0x951C2C5DC8)
+        return rar_execute_filter_rgb(filter, vm);
     if (filter->prog->fingerprint == 0xD8BC85E701)
         return rar_execute_filter_audio(filter, vm);
     log("Unknown parsing filter 0x%x%08x", (uint32_t)(filter->prog->fingerprint >> 32), (uint32_t)filter->prog->fingerprint);
