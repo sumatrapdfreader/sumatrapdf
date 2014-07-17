@@ -70,6 +70,7 @@ HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=NULL, DWORD fla
 void    PaintRect(HDC hdc, const RectI& rect);
 void    PaintLine(HDC hdc, const RectI& rect);
 void    DrawCenteredText(HDC hdc, const RectI& r, const WCHAR *txt, bool isRTL=false);
+void    DrawCenteredText(HDC hdc, const RECT& r, const WCHAR *txt, bool isRTL=false);
 SizeI   TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
