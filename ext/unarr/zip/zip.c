@@ -49,9 +49,9 @@ static bool zip_parse_entry(ar_archive *ar)
     zip->entry.name_w = NULL;
     zip->entry.dosdate = entry.dosdate;
 
-    zip->progr.crc = 0;
-    zip->progr.bytes_done = 0;
-    zip->progr.data_left = (size_t)entry.datasize;
+    zip->progress.crc = 0;
+    zip->progress.bytes_done = 0;
+    zip->progress.data_left = (size_t)entry.datasize;
     zip_clear_uncompress(&zip->uncomp);
 
     if (ar->entry_size_uncompressed == 0 && (entry.version & 0xFF00) == 0 && (entry.attr_external & 0x10)) {
@@ -64,23 +64,23 @@ static bool zip_parse_entry(ar_archive *ar)
 
 static bool zip_copy_stored(ar_archive_zip *zip, void *buffer, size_t count)
 {
-    if (count > zip->progr.data_left) {
-        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", zip->progr.data_left, count);
+    if (count > zip->progress.data_left) {
+        warn("Unexpected EOS in stored data");
         return false;
     }
     if (ar_read(zip->super.stream, buffer, count) != count) {
         warn("Unexpected EOF in stored data");
         return false;
     }
-    zip->progr.data_left -= count;
-    zip->progr.bytes_done += count;
+    zip->progress.data_left -= count;
+    zip->progress.bytes_done += count;
     return true;
 }
 
 static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
-    if (zip->progr.bytes_done == 0) {
+    if (zip->progress.bytes_done == 0) {
         if ((zip->entry.flags & ((1 << 0) | (1 << 6)))) {
             warn("Encrypted archives aren't supported");
             return false;
@@ -89,6 +89,10 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
             warn("Couldn't find data for file %s", ar_entry_get_name(ar));
             return false;
         }
+    }
+    if (count > ar->entry_size_uncompressed - zip->progress.bytes_done) {
+        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", ar->entry_size_uncompressed - zip->progress.bytes_done, count);
+        return false;
     }
     if (zip->entry.method == METHOD_STORE) {
         if (!zip_copy_stored(zip, buffer, count))
@@ -103,12 +107,12 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
             return false;
     }
 
-    zip->progr.crc = ar_crc32(zip->progr.crc, buffer, count);
-    if (zip->progr.bytes_done < ar->entry_size_uncompressed)
+    zip->progress.crc = ar_crc32(zip->progress.crc, buffer, count);
+    if (zip->progress.bytes_done < ar->entry_size_uncompressed)
         return true;
-    if (zip->progr.data_left || (zip->uncomp.initialized && zip->uncomp.input.bytes_left))
+    if (zip->progress.data_left || (zip->uncomp.initialized && zip->uncomp.input.bytes_left))
         log("Compressed block has more data than required");
-    if (zip->progr.crc != zip->entry.crc) {
+    if (zip->progress.crc != zip->entry.crc) {
         warn("Checksum of extracted data doesn't match");
         return false;
     }

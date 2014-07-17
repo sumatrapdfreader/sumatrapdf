@@ -15,13 +15,13 @@ static bool zip_fill_input_buffer(ar_archive_zip *zip)
         uncomp->input.offset = 0;
     }
     count = sizeof(uncomp->input.data) - uncomp->input.bytes_left;
-    if (count > zip->progr.data_left)
-        count = zip->progr.data_left;
+    if (count > zip->progress.data_left)
+        count = zip->progress.data_left;
     if (ar_read(zip->super.stream, &uncomp->input.data[uncomp->input.bytes_left], count) != count) {
         warn("Unexpected EOF during decompression (invalid data size?)");
         return false;
     }
-    zip->progr.data_left -= count;
+    zip->progress.data_left -= count;
     uncomp->input.bytes_left += (uint16_t)count;
 
     return true;
@@ -200,7 +200,7 @@ static void gPpmd_Free(void *self, void *ptr) { (void)self; free(ptr); }
 static Byte gPpmd_ByteIn_Read(void *p)
 {
     struct ByteReader *self = p;
-    if (!self->input->bytes_left && (!self->zip->progr.data_left || !zip_fill_input_buffer(self->zip)))
+    if (!self->input->bytes_left && (!self->zip->progress.data_left || !zip_fill_input_buffer(self->zip)))
         return 0;
     self->input->bytes_left--;
     return self->input->data[self->input->offset++];
@@ -261,7 +261,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
     }
 
     /* TODO: simplify checking for last uncompressed block */
-    if (uncomp->state.ppmd8.bytein.zip->progr.bytes_done + bytes_done == uncomp->state.ppmd8.bytein.zip->super.entry_size_uncompressed) {
+    if (uncomp->state.ppmd8.bytein.zip->progress.bytes_done + bytes_done == uncomp->state.ppmd8.bytein.zip->super.entry_size_uncompressed) {
         int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
         if (symbol != -1 || !Ppmd8_RangeDec_IsFinishedOK(&uncomp->state.ppmd8.ctx)) {
             warn("Invalid PPMd data stream");
@@ -347,7 +347,7 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
         if (buffer_size == 0)
             return true;
 
-        if (uncomp->input.bytes_left < sizeof(uncomp->input.data) / 2 && zip->progr.data_left) {
+        if (uncomp->input.bytes_left < sizeof(uncomp->input.data) / 2 && zip->progress.data_left) {
             if (!zip_fill_input_buffer(zip))
                 return false;
         }
@@ -356,11 +356,11 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
         count = uncomp->uncompress_data(uncomp, buffer, count);
         if (count == ERR_UNCOMP)
             return false;
-        if (count == 0 && !zip->progr.data_left) {
+        if (count == 0 && !zip->progress.data_left) {
             warn("Insufficient data in compressed stream");
             return false;
         }
-        zip->progr.bytes_done += count;
+        zip->progress.bytes_done += count;
         buffer = (uint8_t *)buffer + count;
         buffer_size -= count;
     }

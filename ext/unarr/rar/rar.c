@@ -91,9 +91,9 @@ static bool rar_parse_entry(ar_archive *ar)
             rar->solid.restart = rar->entry.solid && (out_of_order || !rar->solid.part_done);
             rar->solid.curr_offset = ar->entry_offset;
             rar->solid.part_done = !ar->entry_size_uncompressed;
-            rar->progr.data_left = (size_t)header.datasize;
-            rar->progr.bytes_done = 0;
-            rar->progr.crc = 0;
+            rar->progress.data_left = (size_t)header.datasize;
+            rar->progress.bytes_done = 0;
+            rar->progress.crc = 0;
 
             /* TODO: CRC checks don't always hold (claim in XADRARParser.m @readBlockHeader) */
             if (!rar_check_header_crc(ar))
@@ -129,16 +129,16 @@ static bool rar_parse_entry(ar_archive *ar)
 
 static bool rar_copy_stored(ar_archive_rar *rar, void *buffer, size_t count)
 {
-    if (count > rar->progr.data_left) {
-        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", rar->progr.data_left, count);
+    if (count > rar->progress.data_left) {
+        warn("Unexpected EOS in stored data");
         return false;
     }
     if (ar_read(rar->super.stream, buffer, count) != count) {
         warn("Unexpected EOF in stored data");
         return false;
     }
-    rar->progr.data_left -= count;
-    rar->progr.bytes_done += count;
+    rar->progress.data_left -= count;
+    rar->progress.bytes_done += count;
     return true;
 }
 
@@ -156,11 +156,12 @@ static bool rar_restart_solid(ar_archive *ar)
         rar->solid.restart = false;
         while (size > 0) {
             unsigned char buffer[1024];
-            if (!ar_entry_uncompress(ar, buffer, min(size, sizeof(buffer)))) {
+            size_t count = size < sizeof(buffer) ? size : sizeof(buffer);
+            if (!ar_entry_uncompress(ar, buffer, count)) {
                 ar_parse_entry_at(ar, current_offset);
                 return false;
             }
-            size -= min(size, sizeof(buffer));
+            size -= count;
         }
         if (!ar_parse_entry(ar)) {
             ar_parse_entry_at(ar, current_offset);
@@ -174,6 +175,10 @@ static bool rar_restart_solid(ar_archive *ar)
 static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
+    if (count > ar->entry_size_uncompressed - rar->progress.bytes_done) {
+        warn("Requesting too much data (%" PRIuPTR " < %" PRIuPTR ")", ar->entry_size_uncompressed - rar->progress.bytes_done, count);
+        return false;
+    }
     if (rar->entry.method == METHOD_STORE) {
         if (!rar_copy_stored(rar, buffer, count))
             return false;
@@ -193,14 +198,14 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
         return false;
     }
 
-    rar->progr.crc = ar_crc32(rar->progr.crc, buffer, count);
-    if (rar->progr.bytes_done < ar->entry_size_uncompressed)
+    rar->progress.crc = ar_crc32(rar->progress.crc, buffer, count);
+    if (rar->progress.bytes_done < ar->entry_size_uncompressed)
         return true;
-    if (rar->progr.data_left)
+    if (rar->progress.data_left)
         log("Compressed block has more data than required");
     rar->solid.part_done = true;
-    rar->solid.size_total += rar->progr.bytes_done;
-    if (rar->progr.crc != rar->entry.crc) {
+    rar->solid.size_total += rar->progress.bytes_done;
+    if (rar->progress.crc != rar->entry.crc) {
         warn("Checksum of extracted data doesn't match");
         return false;
     }

@@ -155,7 +155,7 @@ struct ar_archive_zip_s {
     struct ar_archive_zip_dir dir;
     struct ar_archive_zip_entry entry;
     struct ar_archive_zip_uncomp uncomp;
-    struct ar_archive_zip_progress progr;
+    struct ar_archive_zip_progress progress;
     bool deflateonly;
     off64_t comment_offset;
     uint16_t comment_size;

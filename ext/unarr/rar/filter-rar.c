@@ -615,7 +615,7 @@ bool rar_run_filters(ar_archive_rar *rar)
     }
 
     lzss_copy_bytes_from_window(&rar->uncomp.lzss, filters->vm->memory, start, filter->blocklength);
-    if (!rar_execute_filter(filter, filters->vm, rar->progr.bytes_done)) {
+    if (!rar_execute_filter(filter, filters->vm, rar->progress.bytes_done)) {
         warn("Failed to execute parsing filter");
         return false;
     }
@@ -628,7 +628,7 @@ bool rar_run_filters(ar_archive_rar *rar)
 
     while ((filter = filters->stack) != NULL && filter->blockstartpos == filters->filterstart && filter->blocklength == lastfilterlength) {
         memmove(&filters->vm->memory[0], &filters->vm->memory[lastfilteraddress], lastfilterlength);
-        if (!rar_execute_filter(filter, filters->vm, rar->progr.bytes_done)) {
+        if (!rar_execute_filter(filter, filters->vm, rar->progress.bytes_done)) {
             warn("Failed to execute parsing filter");
             return false;
         }

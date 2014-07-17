@@ -16,15 +16,15 @@ static bool br_fill(ar_archive_rar *rar, int bits)
     int count, i;
     /* read as many bits as possible */
     count = (64 - rar->uncomp.br.available) / 8;
-    if (rar->progr.data_left < (size_t)count)
-        count = (int)rar->progr.data_left;
+    if (rar->progress.data_left < (size_t)count)
+        count = (int)rar->progress.data_left;
 
     if (bits > rar->uncomp.br.available + 8 * count || ar_read(rar->super.stream, bytes, count) != (size_t)count) {
         warn("Unexpected EOF during decompression (truncated file?)");
         rar->uncomp.br.at_eof = true;
         return false;
     }
-    rar->progr.data_left -= count;
+    rar->progress.data_left -= count;
     for (i = 0; i < count; i++) {
         rar->uncomp.br.bits = (rar->uncomp.br.bits << 8) | bytes[i];
     }
@@ -994,15 +994,15 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
             memcpy(buffer, uncomp29->filters.bytes, count);
             uncomp29->filters.bytes_ready -= count;
             uncomp29->filters.bytes += count;
-            rar->progr.bytes_done += count;
+            rar->progress.bytes_done += count;
             buffer_size -= count;
             buffer = (uint8_t *)buffer + count;
         }
         else if (uncomp->bytes_ready > 0) {
             int count = (int)min(uncomp->bytes_ready, buffer_size);
-            lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progr.bytes_done + rar->solid.size_total, count);
+            lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progress.bytes_done + rar->solid.size_total, count);
             uncomp->bytes_ready -= count;
-            rar->progr.bytes_done += count;
+            rar->progress.bytes_done += count;
             buffer_size -= count;
             buffer = (uint8_t *)buffer + count;
         }
@@ -1021,13 +1021,13 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
-        end = rar->progr.bytes_done + rar->solid.size_total + LZSS_WINDOW_SIZE - LZSS_OVERFLOW_SIZE;
+        end = rar->progress.bytes_done + rar->solid.size_total + LZSS_WINDOW_SIZE - LZSS_OVERFLOW_SIZE;
         if (uncomp29 && uncomp29->filters.filterstart < end)
             end = uncomp29->filters.filterstart;
         end = (size_t)rar_expand(rar, end);
-        if (end < rar->progr.bytes_done + rar->solid.size_total)
+        if (end < rar->progress.bytes_done + rar->solid.size_total)
             return false;
-        uncomp->bytes_ready = end - rar->progr.bytes_done - rar->solid.size_total;
+        uncomp->bytes_ready = end - rar->progress.bytes_done - rar->solid.size_total;
         if (uncomp29)
             uncomp29->filters.lastend = end;
 

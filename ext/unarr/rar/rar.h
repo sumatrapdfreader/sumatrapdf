@@ -248,7 +248,7 @@ struct ar_archive_rar_s {
     uint16_t archive_flags;
     struct ar_archive_rar_entry entry;
     struct ar_archive_rar_uncomp uncomp;
-    struct ar_archive_rar_progress progr;
+    struct ar_archive_rar_progress progress;
     struct ar_archive_rar_solid solid;
 };
 
