@@ -54,7 +54,7 @@ void Initialize()
             UITASK_CLASS_NAME, L"UITask Dispatch Window",
             WS_OVERLAPPED,
             0, 0, 0, 0,
-            NULL, NULL,
+            HWND_MESSAGE, NULL,
             GetModuleHandle(NULL), NULL);
 }
 
