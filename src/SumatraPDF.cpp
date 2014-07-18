@@ -24,6 +24,7 @@
 #include "FileThumbnails.h"
 #include "FileUtil.h"
 #include "FileWatcher.h"
+#include "FrameRateWnd.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
 #include "HttpUtil.h"
@@ -51,6 +52,7 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 #include "ThreadUtil.h"
+#include "Timer.h"
 #include "Toolbar.h"
 #include "Touch.h"
 #include "Translations.h"
@@ -67,6 +69,12 @@
 bool             gDebugShowLinks = true;
 #else
 bool             gDebugShowLinks = false;
+#endif
+
+#ifdef DEBUG
+bool             gShowFrameRate = true;
+#else
+bool             gShowFrameRate = false;
 #endif
 
 /* if true, we're rendering everything with the GDI+ back-end,
@@ -876,7 +884,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
         if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
             doc.Delete();
         else if (doc.IsDocLoaded()) {
-            ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler);
+            ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
             // TODO: SetDoc triggers a relayout which spins the message loop early
             // through UpdateWindow - make sure that Canvas uses the correct WndProc
             win->ctrl = ctrl;
@@ -1305,6 +1313,11 @@ static WindowInfo* CreateWindowInfo()
     if (!win->hwndCanvas) {
         delete win;
         return NULL;
+    }
+
+    if (gShowFrameRate) {
+        win->frameRateWnd = AllocFrameRateWnd(hwndFrame);
+        CreateFrameRateWnd(win->frameRateWnd);
     }
 
     // hide scrollbars to avoid showing/hiding on empty window

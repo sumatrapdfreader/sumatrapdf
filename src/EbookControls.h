@@ -6,6 +6,8 @@
 
 #include "Mui.h"
 
+struct FrameRateWnd;
+
 class HtmlFormatter;
 class HtmlFormatterArgs;
 class PageControl;
@@ -23,7 +25,7 @@ struct EbookControls {
     PagesLayout *       pagesLayout;
 };
 
-EbookControls * CreateEbookControls(HWND hwnd);
+EbookControls * CreateEbookControls(HWND hwnd, FrameRateWnd *);
 void            DestroyEbookControls(EbookControls* controls);
 void            SetMainWndBgCol(EbookControls *ctrls);
 

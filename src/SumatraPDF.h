@@ -73,6 +73,7 @@ struct LabelWithCloseWnd;
 
 // all defined in SumatraPDF.cpp
 extern bool                     gDebugShowLinks;
+extern bool                     gShowFrameRate;
 extern bool                     gUseGdiRenderer;
 extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;

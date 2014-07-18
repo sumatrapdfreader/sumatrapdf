@@ -8,14 +8,17 @@
 #include "Doc.h"
 #include "Sigslot.h"
 
-class   EbookController;
-struct  EbookControls;
-class   HtmlPage;
 struct  DrawInstr;
-class   EbookFormattingThread;
+struct  EbookControls;
 struct  EbookFormattingData;
-class   HtmlFormatterArgs;
+struct  FrameRateWnd;
+
+class   EbookController;
+class   EbookFormattingThread;
 class   HtmlFormatter;
+class   HtmlFormatterArgs;
+class   HtmlPage;
+
 namespace mui { class Control; }
 using namespace mui;
 
@@ -73,7 +76,7 @@ public:
     int  CurrentTocPageNo() const;
 
     // call SetDoc before using this EbookController
-    static EbookController *Create(HWND hwnd, ControllerCallback *cb);
+    static EbookController *Create(HWND hwnd, ControllerCallback *cb, FrameRateWnd *);
 
 protected:
 

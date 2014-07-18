@@ -193,7 +193,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
     // other colors that are supposed to match background color
 }
 
-EbookControls *CreateEbookControls(HWND hwnd)
+EbookControls *CreateEbookControls(HWND hwnd, FrameRateWnd *frameRateWnd)
 {
     static bool wasRegistered = false;
     if (!wasRegistered) {
@@ -223,6 +223,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     CrashIf(!ctrls->pagesLayout);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
+    ctrls->mainWnd->frameRateWnd = frameRateWnd;
     ctrls->mainWnd->SetMinSize(Size(320, 200));
 
     SetMainWndBgCol(ctrls);

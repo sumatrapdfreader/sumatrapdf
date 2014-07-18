@@ -30,6 +30,8 @@ public:
     // center the content within the window. Incompatible with sizeToFit
     bool                centerContent;
 
+    FrameRateWnd *      frameRateWnd;
+
     HwndWrapper(HWND hwnd = NULL);
     virtual ~HwndWrapper();
 

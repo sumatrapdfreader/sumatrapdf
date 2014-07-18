@@ -8,6 +8,8 @@
 #include "BaseUtil.h"
 #include "Sigslot.h"
 
+struct FrameRateWnd;
+
 enum AlignAttr;
 struct TxtNode;
 

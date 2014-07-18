@@ -56,6 +56,10 @@ static void PositionWindow(FrameRateWnd *w, SIZE s)
     POINT p = { rc.right - s.cx, rc.top };
     ClientToScreen(w->hwndAssociatedWith, &p);
     // put the window above associated window in z order
+    // TODO: I just want it to be above hwndAssociatedWith (and all its children)
+    // not above everything, but passing hwndAssociatedWith in place of
+    // HWND_TOPMOST doesn't seem to work. Maybe making it a child via
+    // SetParent() would work?
     SetWindowPos(w->hwnd, HWND_TOPMOST, p.x, p.y, s.cx, s.cy, SWP_NOACTIVATE);
 }
 
@@ -89,6 +93,11 @@ void ShowFrameRate(FrameRateWnd *w, int frameRate)
     SIZE s = GetIdealSize(w);
     PositionWindow(w, s);
     ScheduleRepaint(w->hwnd);
+}
+
+void ShowFrameRateDur(FrameRateWnd *w, double durMs)
+{
+    ShowFrameRate(w, FrameRateFromDuration(durMs));
 }
 
 static void FrameRateOnPaint(FrameRateWnd *w)
@@ -179,8 +188,10 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
 
 void DeleteFrameRateWnd(FrameRateWnd *w)
 {
-    RemoveWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0);
-    free(w);
+    if (w) {        
+        RemoveWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0);
+        free(w);
+    }
 }
 
 int FrameRateFromDuration(double durMs)

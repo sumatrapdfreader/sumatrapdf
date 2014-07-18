@@ -6,17 +6,20 @@
 
 #include "Controller.h"
 
+enum EngineType;
+
 class DoubleBuffer;
-class SelectionOnPage;
 class LinkHandler;
 class Notifications;
+class SelectionOnPage;
 class StressTest;
-struct WatchedFile;
 class SumatraUIAutomationProvider;
-struct TabData;
-enum EngineType;
-struct SplitterWnd;
+
+struct FrameRateWnd;
 struct LabelWithCloseWnd;
+struct TabData;
+struct SplitterWnd;
+struct WatchedFile;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -218,6 +221,8 @@ public:
     StressTest *    stressTest;
 
     TouchState      touchState;
+
+    FrameRateWnd *  frameRateWnd;
 
     SumatraUIAutomationProvider * uia_provider;
 

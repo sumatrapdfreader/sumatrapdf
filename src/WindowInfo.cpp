@@ -9,6 +9,7 @@
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "FileUtil.h"
+#include "FrameRateWnd.h"
 #include "Notifications.h"
 #include "resource.h"
 #include "Selection.h"
@@ -36,7 +37,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
-    uia_provider(NULL), cbHandler(NULL),
+    uia_provider(NULL), cbHandler(NULL), frameRateWnd(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
@@ -74,6 +75,7 @@ WindowInfo::~WindowInfo()
     // cbHandler is passed into Controller and
     // must be deleted afterwards
     delete cbHandler;
+    DeleteFrameRateWnd(frameRateWnd);
     free(sidebarSplitter);
     free(favSplitter);
     free(tocLabelWithClose);

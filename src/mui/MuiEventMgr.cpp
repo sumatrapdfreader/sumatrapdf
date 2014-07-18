@@ -2,7 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
+
 #include "BitManip.h"
+#include "FrameRateWnd.h"
+#include "Timer.h"
+
 #include "DebugLog.h"
 
 namespace mui {

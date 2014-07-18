@@ -926,9 +926,9 @@ void EbookController::CopyNavHistory(EbookController& orig)
     navHistoryIx = orig.navHistoryIx;
 }
 
-EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb)
+EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb, FrameRateWnd *frameRateWnd)
 {
-    EbookControls *ctrls = CreateEbookControls(hwnd);
+    EbookControls *ctrls = CreateEbookControls(hwnd, frameRateWnd);
     if (!ctrls)
         return NULL;
     return new EbookController(ctrls, cb);

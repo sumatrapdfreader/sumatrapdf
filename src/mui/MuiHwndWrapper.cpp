@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "Mui.h"
+
+#include "FrameRateWnd.h"
+#include "Timer.h"
 #include "WinUtil.h"
 
 //#define NOLOG 0
@@ -133,7 +136,11 @@ void HwndWrapper::LayoutIfRequested()
 void HwndWrapper::OnPaint(HWND hwnd)
 {
     CrashIf(hwnd != hwndParent);
+    Timer t;
     painter->Paint(hwnd, markedForRepaint);
+    if (frameRateWnd) {
+        ShowFrameRateDur(frameRateWnd, t.GetTimeInMs());
+    }
     markedForRepaint = false;
 }
 

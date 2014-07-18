@@ -661,6 +661,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 
 static void OnPaintDocument(WindowInfo& win)
 {
+    Timer t;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
@@ -677,6 +678,9 @@ static void OnPaintDocument(WindowInfo& win)
     }
 
     EndPaint(win.hwndCanvas, &ps);
+    if (gShowFrameRate) {
+        ShowFrameRateDur(win.frameRateWnd, t.GetTimeInMs());
+    }
 }
 
 static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
@@ -1085,6 +1089,7 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM
 
 static void OnPaintAbout(WindowInfo& win)
 {
+    Timer t;
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
@@ -1096,6 +1101,9 @@ static void OnPaintAbout(WindowInfo& win)
     win.buffer->Flush(hdc);
 
     EndPaint(win.hwndCanvas, &ps);
+    if (gShowFrameRate) {
+        ShowFrameRateDur(win.frameRateWnd, t.GetTimeInMs());
+    }
 }
 
 static void OnMouseLeftButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
