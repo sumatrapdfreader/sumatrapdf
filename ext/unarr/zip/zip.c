@@ -95,7 +95,7 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
         if (!zip_copy_stored(zip, buffer, count))
             return false;
     }
-    else if (zip->deflateonly && zip->entry.method != METHOD_DEFLATE) {
+    else if (zip->deflatedonly && zip->entry.method != METHOD_DEFLATE) {
         warn("Only store and deflate compression methods are allowed");
         return false;
     }
@@ -130,7 +130,7 @@ size_t zip_get_global_comment(ar_archive *ar, void *buffer, size_t count)
     return ar_read(ar->stream, buffer, count);
 }
 
-ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
+ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly)
 {
     ar_archive *ar;
     ar_archive_zip *zip;
@@ -151,7 +151,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflateonly)
     zip = (ar_archive_zip *)ar;
     zip->dir.offset = eocd.dir_offset;
     zip->dir.length = eocd.numentries;
-    zip->deflateonly = deflateonly;
+    zip->deflatedonly = deflatedonly;
     zip->comment_offset = offset + 22;
     zip->comment_size = eocd.commentlen;
     ar->entry_offset_next = zip->dir.offset;

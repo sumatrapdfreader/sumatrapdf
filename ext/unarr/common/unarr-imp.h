@@ -1,6 +1,8 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
+/* this is the common private/implementation API of unarr which should only be used by unarr code */
+
 #ifndef common_unarr_imp_h
 #define common_unarr_imp_h
 

@@ -85,17 +85,15 @@ ar_stream *ar_open_file(const char *path)
     return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
 }
 
+#ifdef _WIN32
 ar_stream *ar_open_file_w(const wchar_t *path)
 {
-#ifdef _WIN32
     FILE *f = _wfopen(path, L"rb");
     if (!f)
         return NULL;
     return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
-#else
-    return NULL;
-#endif
 }
+#endif
 
 /***** stream based on preallocated memory *****/
 
