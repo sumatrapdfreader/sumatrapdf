@@ -20,6 +20,7 @@ class RarFile {
     UnRarDll *fallback;
 
     void ExtractFilenames();
+    char *GetFileFromCallback(size_t fileindex, size_t *len=NULL);
 
 public:
     explicit RarFile(const WCHAR *path);
