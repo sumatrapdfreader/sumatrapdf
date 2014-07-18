@@ -55,12 +55,7 @@ static void PositionWindow(FrameRateWnd *w, SIZE s)
     RECT rc = GetClientRect(w->hwndAssociatedWith);
     POINT p = { rc.right - s.cx, rc.top };
     ClientToScreen(w->hwndAssociatedWith, &p);
-    // put the window above associated window in z order
-    // TODO: I just want it to be above hwndAssociatedWith (and all its children)
-    // not above everything, but passing hwndAssociatedWith in place of
-    // HWND_TOPMOST doesn't seem to work. Maybe making it a child via
-    // SetParent() would work?
-    SetWindowPos(w->hwnd, HWND_TOPMOST, p.x, p.y, s.cx, s.cy, SWP_NOACTIVATE);
+    MoveWindow(w->hwnd, p.x, p.y, s.cx, s.cy, TRUE);
 }
 
 static SIZE GetIdealSize(FrameRateWnd *w)
@@ -159,6 +154,8 @@ static void RegisterFrameRateWndClass()
     }
 }
 
+// Note: hwndAssociatedWIth must be a WS_OVERLAPEPED or WS_POPUP
+// TODO: add an assert to check that
 FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith)
 {
     RegisterFrameRateWndClass();
@@ -171,10 +168,14 @@ FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith)
 bool CreateFrameRateWnd(FrameRateWnd *w)
 {
     // WS_POPUP removes all decorations
-    DWORD dwStyle = WS_POPUP | WS_VISIBLE;
+    DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_DISABLED;
     RECT r = GetClientRect(w->hwndAssociatedWith);
+    // since this is WS_POPUP window, providing w->hwndAssocatedWith doesn't establish
+    // parent-child relationship but ownership relationship (as long as hwndAssociatedWith
+    // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
+    // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
     HWND hwnd = CreateWindowEx(WS_EX_LAYERED, FRAME_RATE_CLASS_NAME, NULL, dwStyle,
-             0, 0, 0, 0, NULL, NULL, GetModuleHandle(NULL), w);
+             0, 0, 0, 0, w->hwndAssociatedWith, NULL, GetModuleHandle(NULL), w);
     CrashIf(hwnd != w->hwnd);
     if (!hwnd) {
         return false;
@@ -188,7 +189,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
 
 void DeleteFrameRateWnd(FrameRateWnd *w)
 {
-    if (w) {        
+    if (w) {
         RemoveWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0);
         free(w);
     }

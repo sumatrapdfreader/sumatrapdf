@@ -3,6 +3,11 @@ marked "risky" are likely to cause disturbance to existing code, so should be
 done at the beginning of the dev cycle. I also estimate the complexity (time to
 implement) as low/med/high
 
+-- fullscreen (low)
+
+See if http://stackoverflow.com/questions/2382464/win32-full-screen-and-hiding-taskbar 
+has better way of switching to fullscreen
+
 -- text viewer (high)
 
 Important thing: make it work even with gigantic files by limiting how much of
