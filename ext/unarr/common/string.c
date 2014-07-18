@@ -3,42 +3,6 @@
 
 #include "unarr-imp.h"
 
-#ifdef _WIN32
-
-#include <windows.h>
-
-size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size)
-{
-    return WideCharToMultiByte(CP_UTF8, 0, &rune, 1, out, (int)size, NULL, NULL);
-}
-
-#define CP_DOS 437
-
-char *ar_conv_dos_to_utf8(const char *astr)
-{
-    char *str = NULL;
-    int res = MultiByteToWideChar(CP_DOS, 0, astr, -1, NULL, 0);
-    wchar_t *wstr = calloc(res, sizeof(wchar_t));
-    if (!wstr)
-        return NULL;
-    MultiByteToWideChar(CP_DOS, 0, astr, -1, wstr, res);
-    res = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
-    str = malloc(res);
-    if (str)
-        WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, res, NULL, NULL);
-    free(wstr);
-    return str;
-}
-
-time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate)
-{
-    FILETIME ft;
-    DosDateTimeToFileTime(HIWORD(dosdate), LOWORD(dosdate), &ft);
-    return ft.dwLowDateTime | (time64_t)ft.dwHighDateTime << 32;
-}
-
-#else
-
 #include <time.h>
 
 /* data from http://en.wikipedia.org/wiki/Cp437 */
@@ -74,7 +38,9 @@ size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size)
         *out++ = 0x80 | (rune & 0x3F);
         return 2;
     }
-    if (rune < 0x10000 && size >= 3) {
+    if (size >= 3) {
+        if ((0xD800 <= rune && rune <= 0xDFFF) || rune >= 0x10000)
+            rune = 0xFFFD;
         *out++ = 0xE0 | ((rune >> 12) & 0x0F);
         *out++ = 0x80 | ((rune >> 6) & 0x3F);
         *out++ = 0x80 | (rune & 0x3F);
@@ -86,19 +52,24 @@ size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size)
 
 char *ar_conv_dos_to_utf8(const char *astr)
 {
-    char *str, *out, *end_out;
+    char *str, *out;
     const char *in;
     size_t size;
 
-    size = strlen(astr) + 1;
-    str = calloc(size, 3);
+    size = 0;
+    for (in = astr; *in; in++) {
+        char buf[4];
+        size += ar_conv_rune_to_utf8(gCp437[(uint8_t)*in], buf, sizeof(buf));
+    }
+
+    str = malloc(size + 1);
     if (!str)
         return NULL;
 
-    end_out = str + size * 3;
     for (in = astr, out = str; *in; in++) {
-        out += ar_conv_rune_to_utf8(gCp437[(uint8_t)*in], out, end_out - out);
+        out += ar_conv_rune_to_utf8(gCp437[(uint8_t)*in], out, str + size - out);
     }
+    *out = '\0';
 
     return str;
 }
@@ -106,16 +77,18 @@ char *ar_conv_dos_to_utf8(const char *astr)
 time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate)
 {
     struct tm tm;
+    time_t t1, t2;
 
     tm.tm_sec = (dosdate & 0x1F) * 2;
     tm.tm_min = (dosdate >> 5) & 0x3F;
     tm.tm_hour = (dosdate >> 11) & 0x1F;
     tm.tm_mday = (dosdate >> 16) & 0x1F;
-    tm.tm_mon = (dosdate >> 21) & 0x0F;
+    tm.tm_mon = ((dosdate >> 21) & 0x0F) - 1;
     tm.tm_year = ((dosdate >> 25) & 0x7F) + 80;
     tm.tm_isdst = -1;
 
-    return (uint64_t)(mktime(&tm) + 11644473600) * 10000000;
-}
+    t1 = mktime(&tm);
+    t2 = mktime(gmtime(&t1));
 
-#endif
+    return (time64_t)(2 * t1 - t2 + 11644473600) * 10000000;
+}
