@@ -1169,11 +1169,11 @@ pdf_init_document(pdf_document *doc)
 				pdf_drop_obj(dict);
 				dict = NULL;
 			}
-		}
 
-		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2610 */
-		if (repaired && doc->crypt)
-			pdf_clear_xref(doc);
+			/* ensure that strings are not used in their repaired, non-decrypted form */
+			if (doc->crypt)
+				pdf_clear_xref(doc);
+		}
 	}
 	fz_catch(ctx)
 	{

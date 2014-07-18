@@ -1252,20 +1252,18 @@ pdf_show_char(pdf_csi *csi, pdf_run_state *pr, int cid)
 		fz_matrix composed;
 		fz_concat(&composed, &trm, &gstate->ctm);
 		fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, &composed, gstate, pr->nested_depth);
+		/* Render text invisibly so that it can still be extracted. */
+		pr->text_mode = 3;
 	}
-	/* SumatraPDF: still allow text extraction */
-	if (render_direct)
-		pr->text_mode = 3 /* invisible */;
-	{
-		fz_union_rect(&pr->text_bbox, &bbox);
 
-		/* add glyph to textobject */
-		fz_add_text(ctx, pr->text, gid, ucsbuf[0], trm.e, trm.f);
+	fz_union_rect(&pr->text_bbox, &bbox);
 
-		/* add filler glyphs for one-to-many unicode mapping */
-		for (i = 1; i < ucslen; i++)
-			fz_add_text(ctx, pr->text, -1, ucsbuf[i], trm.e, trm.f);
-	}
+	/* add glyph to textobject */
+	fz_add_text(ctx, pr->text, gid, ucsbuf[0], trm.e, trm.f);
+
+	/* add filler glyphs for one-to-many unicode mapping */
+	for (i = 1; i < ucslen; i++)
+		fz_add_text(ctx, pr->text, -1, ucsbuf[i], trm.e, trm.f);
 
 	if (fontdesc->wmode == 0)
 	{

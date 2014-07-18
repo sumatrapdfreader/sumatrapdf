@@ -291,8 +291,7 @@ fz_expand_tiff_colormap(struct tiff *tiff)
 	if (tiff->samplesperpixel != 1 && tiff->samplesperpixel != 2)
 		fz_throw(tiff->ctx, FZ_ERROR_GENERIC, "invalid number of samples for RGBPal");
 
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2562 */
-	if (tiff->bitspersample != 4 && tiff->bitspersample != 8 && tiff->bitspersample != 1)
+	if (tiff->bitspersample != 1 && tiff->bitspersample != 4 && tiff->bitspersample != 8)
 		fz_throw(tiff->ctx, FZ_ERROR_GENERIC, "invalid number of bits for RGBPal");
 
 	if (tiff->colormaplen < (unsigned)maxval * 3)

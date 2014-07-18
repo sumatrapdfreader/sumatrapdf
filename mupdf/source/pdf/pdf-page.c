@@ -294,7 +294,6 @@ static int
 pdf_xobject_uses_blending(pdf_document *doc, pdf_obj *dict)
 {
 	pdf_obj *obj = pdf_dict_gets(dict, "Resources");
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2540 */
 	if (!strcmp(pdf_to_name(pdf_dict_getp(dict, "Group/S")), "Transparency"))
 		return 1;
 	return pdf_resources_use_blending(doc, obj);
@@ -532,7 +531,6 @@ pdf_load_page_by_obj(pdf_document *doc, int number, pdf_obj *pageref)
 
 		if (pdf_resources_use_blending(doc, page->resources))
 			page->transparency = 1;
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2107 */
 		else if (!strcmp(pdf_to_name(pdf_dict_getp(pageobj, "Group/S")), "Transparency"))
 			page->transparency = 1;
 

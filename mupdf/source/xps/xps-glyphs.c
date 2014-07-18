@@ -530,8 +530,15 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 		fz_try(doc->ctx)
 		{
 			fz_buffer *buf = fz_new_buffer_from_data(doc->ctx, part->data, part->size);
+			/* SumatraPDF: prevent memory leak */
+			part->data = NULL;
+			fz_try(doc->ctx) {
 			font = fz_new_font_from_buffer(doc->ctx, NULL, buf, subfontid, 1);
+			} fz_always(doc->ctx) {
 			fz_drop_buffer(doc->ctx, buf);
+			} fz_catch(doc->ctx) {
+				fz_rethrow(doc->ctx);
+			}
 		}
 		fz_catch(doc->ctx)
 		{
