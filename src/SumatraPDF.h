@@ -88,6 +88,7 @@ bool  IsUIRightToLeft();
 bool  LaunchBrowser(const WCHAR *url);
 bool  OpenFileExternally(const WCHAR *path);
 void  AssociateExeWithPdfExtension();
+void  CloseTab(WindowInfo *win, bool quitIfLast=false);
 void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose=false);
 void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
 void  RememberFavTreeExpansionState(WindowInfo *win);

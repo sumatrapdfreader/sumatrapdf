@@ -972,17 +972,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     }
 
     AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->ctrl != NULL));
-    /* see http://code.google.com/p/sumatrapdf/issues/detail?id=1570
-    if (!win->ctrl) {
-        // TODO: this should be "Error opening %s". Change after 1.7 is released
-        ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win->loadedFilePath));
-        win->ShowNotification(msg, true, false);
-        // TODO: CloseWindow() does slightly more than this
-        //       (also, some code presumes that there is at least one window with
-        //        IsAboutWindow() == true and that that window is gWindows.At(0))
-        str::ReplacePtr(&win->loadedFilePath, NULL);
-    }
-    */
+    // TODO: http://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (win->ctrl) {
         if (win->AsFixed()) {
             DisplayModel *dm = win->AsFixed();
@@ -2245,11 +2235,28 @@ static void CloseDocumentInWindow(WindowInfo *win)
 #endif
 }
 
+// closes the current tab, selecting the next one
+// if there's only a single tab left, the window is closed if there
+// are other windows, else the Frequently Read page is displayed
+void CloseTab(WindowInfo *win, bool quitIfLast)
+{
+    CrashIf(!win);
+    if (!win) return;
+
+    int tabCount = TabsGetCount(win);
+    if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
+        CloseWindow(win, quitIfLast);
+    }
+    else {
+        CrashIf(gPluginMode && gWindows.Find(win) == 0);
+        TabsOnCloseDoc(win);
+    }
+}
+
 /* Close the document associated with window 'hwnd'.
    Closes the window unless this is the last window in which
    case it switches to empty window and disables the "File\Close"
    menu item. */
-// TODO: separate CloseTab and CloseWindow (make Alt+F4 actually close the window)
 void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 {
     CrashIf(!win);
@@ -2268,15 +2275,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             return;
     }
 
-    if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
-        // TODO: warn about unsaved changes
-    }
-
-    TabsOnCloseDoc(win);
-    // don't proceed if there are still other tabs in this window
-    if (TabsGetCount(win) > 0)
-        return;
-
     if (win->AsFixed())
         win->AsFixed()->dontRenderFlag = true;
     else if (win->AsEbook())
@@ -2292,6 +2290,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         prefs::Save();
     else
         UpdateCurrentFileDisplayStateForWin(win);
+
+    TabsOnCloseWindow(win);
 
     if (forceClose) {
         // WM_DESTROY has already been sent, so don't destroy win->hwndFrame again
@@ -3454,8 +3454,9 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             win.notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
         return;
     case 'q':
-        // close the current document/window. Quit if this is the last window
-        CloseWindow(&win, true);
+        // close the current document (it's too easy to press for discarding multiple tabs)
+        // quit if this is the last window
+        CloseTab(&win, true);
         return;
     case 'r':
         ReloadDocument(&win);
@@ -3821,12 +3822,9 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             OnMenuPrint(win);
             break;
 
-        case IDT_FILE_EXIT:
         case IDM_CLOSE:
-            // close the document and its window, unless it's the last window
-            // in which case we close the document but convert the window
-            // to about window
-            CloseWindow(win, false);
+        case IDT_FILE_EXIT:
+            CloseTab(win);
             break;
 
         case IDM_EXIT:

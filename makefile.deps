@@ -558,14 +558,14 @@ $(OS)\TableOfContents.obj: $B\src\utils\LabelWithCloseWnd.h $B\src\utils\Scoped.
 $(OS)\TableOfContents.obj: $B\src\utils\SplitterWnd.h $B\src\utils\StrUtil.h $B\src\utils\UITask.h
 $(OS)\TableOfContents.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Tabs.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\ChmModel.h
-$(OS)\Tabs.obj: $B\src\Controller.h $B\src\DisplayState.h $B\src\Favorites.h
-$(OS)\Tabs.obj: $B\src\FileHistory.h $B\src\resource.h $B\src\SettingsStructs.h
-$(OS)\Tabs.obj: $B\src\SumatraPDF.h $B\src\TableOfContents.h $B\src\Tabs.h
-$(OS)\Tabs.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\Tabs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GdiPlusUtil.h
-$(OS)\Tabs.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OS)\Tabs.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\Tabs.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Tabs.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\DisplayState.h
+$(OS)\Tabs.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\resource.h
+$(OS)\Tabs.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\TableOfContents.h
+$(OS)\Tabs.obj: $B\src\Tabs.h $B\src\Translations.h $B\src\utils\Allocator.h
+$(OS)\Tabs.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
+$(OS)\Tabs.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OS)\Tabs.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\UITask.h
+$(OS)\Tabs.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Tester.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\EbookFormatter.h
 $(OS)\Tester.obj: $B\src\HtmlFormatter.h $B\src\MobiDoc.h $B\src\mui\Mui.h
 $(OS)\Tester.obj: $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h

@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "ChmModel.h"
 #include "Controller.h"
+#include "DisplayModel.h"
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
 #include "resource.h"
@@ -900,6 +901,10 @@ void TabsOnCloseDoc(WindowInfo *win)
     if (count <= 0)
         return;
 
+    if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
+        // TODO: warn about unsaved changes
+    }
+
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     TabData *tdata = GetTabData(win, current);
     win->tabSelectionHistory->Remove(tdata);
@@ -958,7 +963,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
             if (tab1 == current) {
-                CloseWindow(win, false);
+                CloseTab(win);
             }
             else {
                 TabData *tdata = GetTabData(win, tab1);
