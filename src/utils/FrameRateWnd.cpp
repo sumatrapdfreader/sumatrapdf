@@ -107,6 +107,7 @@ static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM w
 {
     if (WM_MOVING == msg ||
         WM_SIZING == msg ||
+        WM_WINDOWPOSCHANGED  == msg ||
         WM_MOVE == msg) {
         FrameRateWnd *w = (FrameRateWnd*) dwRefData;
         PositionWindow(w, w->maxSizeSoFar);
