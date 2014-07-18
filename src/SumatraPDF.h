@@ -75,7 +75,6 @@ struct LabelWithCloseWnd;
 extern bool                     gDebugShowLinks;
 extern bool                     gShowFrameRate;
 extern bool                     gUseGdiRenderer;
-extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites                gFavorites;

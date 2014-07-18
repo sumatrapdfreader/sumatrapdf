@@ -153,10 +153,6 @@ static bool InstanceInit(int nCmdShow)
     gCursorDrag     = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSORDRAG));
     CrashIf(!gCursorDrag);
 
-    NONCLIENTMETRICS ncm = { 0 };
-    ncm.cbSize = sizeof(ncm);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     gBitmapReloadingCue = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_RELOADING_CUE));
     CrashIf(!gBitmapReloadingCue);
     return true;
@@ -592,7 +588,7 @@ Exit:
 
 #else
 
-    DeleteObject(gDefaultGuiFont);
+    DeleteObject(GetDefaultGuiFont());
     DeleteBitmap(gBitmapReloadingCue);
     DeleteSplitterBrush();
 

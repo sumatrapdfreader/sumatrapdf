@@ -81,6 +81,7 @@ bool    CopyTextToClipboard(const WCHAR *text, bool appendOnly=false);
 bool    CopyImageToClipboard(HBITMAP hbmp, bool appendOnly=false);
 void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
 RectI   ChildPosWithinParent(HWND hwnd);
+HFONT   GetDefaultGuiFont();
 
 IStream*CreateStreamFromData(const void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);

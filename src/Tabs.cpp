@@ -239,7 +239,7 @@ public:
         SolidBrush br(Color(0, 0, 0));
         Pen pen(&br);
 
-        Font f(memDC, gDefaultGuiFont);
+        Font f(memDC, GetDefaultGuiFont());
         RectF layout(3.0f, 0.0f, REAL(width - 20), (REAL)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
@@ -746,7 +746,7 @@ void CreateTabbar(WindowInfo *win)
     SetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 #endif //OWN_TAB_DRAWING
 
-    SetWindowFont(win->hwndTabBar, gDefaultGuiFont, FALSE);
+    SetWindowFont(win->hwndTabBar, GetDefaultGuiFont(), FALSE);
     TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
 
     win->tabSelectionHistory = new Vec<TabData *>();

@@ -461,8 +461,8 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
         return;
 
     HDC hdc = CreateCompatibleDC(NULL);
-    HGDIOBJ prevBmp = SelectObject(hdc, bmp->GetBitmap());
     {
+        ScopedHdcSelect bmp(hdc, bmp->GetBitmap());
         using namespace Gdiplus;
         Graphics g(hdc);
         g.SetCompositingQuality(CompositingQualityHighQuality);
@@ -513,7 +513,6 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
             }
         }
     }
-    SelectObject(hdc, prevBmp);
     DeleteDC(hdc);
 }
 

@@ -23,8 +23,6 @@ The window must follow associated window so that it maintains an illusion
 that it's actually a part of that window.
 */
 
-// TODO: nicer font
-
 #define FRAME_RATE_CLASS_NAME L"FrameRateWnd"
 
 #define COL_WHITE         RGB(0xff, 0xff, 0xff)
@@ -45,6 +43,7 @@ static void FrameRatePaint(FrameRateWnd *w, HDC hdc, PAINTSTRUCT& ps)
 
     SetTextColor(hdc, COL_WHITE);
 
+    ScopedHdcSelect selFont(hdc, w->font);
     WCHAR *txt = str::Format(L"%d", w->frameRate);
     DrawCenteredText(hdc, rc, txt);
     free(txt);
@@ -136,6 +135,16 @@ static LRESULT CALLBACK WndProcFrameRate(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // other clients that might use WM_SETFONT/WM_GETFONT
+    if (WM_GETFONT == msg) {
+        return (LRESULT)w->font;
+    }
+
+    if (WM_SETFONT == msg) {
+        w->font = (HFONT)wp;
+        return 0;
+    }
+
     if (WM_PAINT == msg) {
         FrameRateOnPaint(w);
         return 0;
@@ -181,6 +190,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
     if (!hwnd) {
         return false;
     }
+    w->font = GetDefaultGuiFont();
     SetWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0, (DWORD_PTR) w);
 
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);

@@ -785,7 +785,7 @@ void CreateFavorites(WindowInfo *win)
     win->favLabelWithClose = l;
     int padXY = (int)(2 * win->uiDPIFactor);
     SetPaddingXY(l, padXY, padXY);
-    SetFont(l, gDefaultGuiFont);
+    SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateSidebarTitles()
 
     win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav",

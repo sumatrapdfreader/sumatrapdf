@@ -123,6 +123,14 @@ public:
 };
 typedef ScopedGdiObj<HFONT> ScopedFont;
 
+class ScopedHdcSelect {
+    HDC hdc;
+    HGDIOBJ prev;
+public:
+    ScopedHdcSelect(HDC hdc, HGDIOBJ obj) : hdc(hdc) { prev = SelectObject(hdc, obj); }
+    ~ScopedHdcSelect() { SelectObject(hdc, prev); }
+};
+
 class ScopedCom {
 public:
     ScopedCom() { CoInitialize(NULL); }

@@ -386,8 +386,8 @@ static void CreateFindBox(WindowInfo& win)
     HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
-    SetWindowFont(label, gDefaultGuiFont, FALSE);
-    SetWindowFont(find, gDefaultGuiFont, FALSE);
+    SetWindowFont(label, GetDefaultGuiFont(), FALSE);
+    SetWindowFont(find, GetDefaultGuiFont(), FALSE);
 
     if (!DefWndProcToolbar)
         DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC);
@@ -541,9 +541,9 @@ static void CreatePageBox(WindowInfo& win)
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
                             GetModuleHandle(NULL), NULL);
 
-    SetWindowFont(label, gDefaultGuiFont, FALSE);
-    SetWindowFont(page, gDefaultGuiFont, FALSE);
-    SetWindowFont(total, gDefaultGuiFont, FALSE);
+    SetWindowFont(label, GetDefaultGuiFont(), FALSE);
+    SetWindowFont(page, GetDefaultGuiFont(), FALSE);
+    SetWindowFont(total, GetDefaultGuiFont(), FALSE);
 
     if (!DefWndProcPageBox)
         DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);

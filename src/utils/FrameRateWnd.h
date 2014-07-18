@@ -8,6 +8,8 @@ struct FrameRateWnd {
     HWND hwndAssociatedWith;
 
     HWND hwnd;
+    HFONT font;
+
     SIZE maxSizeSoFar;
     int  frameRate;
 };

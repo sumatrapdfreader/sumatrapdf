@@ -134,8 +134,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define EBOOK_LAYOUT_TIMER_ID       6
 
-HFONT                        gDefaultGuiFont;
-
 Vec<WindowInfo*>             gWindows;
 FileHistory                  gFileHistory;
 Favorites                    gFavorites;

@@ -10,6 +10,8 @@
 
 #include "DebugLog.h"
 
+static HFONT gDefaultGuiFont = NULL;
+
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const WCHAR *dllName)
 {
@@ -666,6 +668,17 @@ RectI ChildPosWithinParent(HWND hwnd)
     WindowRect rc(hwnd);
     rc.Offset(-pt.x, -pt.y);
     return rc;
+}
+
+HFONT GetDefaultGuiFont()
+{
+    if (!gDefaultGuiFont) {
+        NONCLIENTMETRICS ncm = { 0 };
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
+    }
+    return gDefaultGuiFont;
 }
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
