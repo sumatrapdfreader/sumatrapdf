@@ -997,6 +997,8 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
             rar->progress.bytes_done += count;
             buffer_size -= count;
             buffer = (uint8_t *)buffer + count;
+            if (rar->progress.bytes_done == rar->super.entry_size_uncompressed)
+                goto FinishBlock;
         }
         else if (uncomp->bytes_ready > 0) {
             int count = (int)min(uncomp->bytes_ready, buffer_size);
@@ -1018,7 +1020,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
             continue;
         }
 
-FinishPpmdBlock:
+FinishBlock:
         if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
@@ -1033,6 +1035,6 @@ FinishPpmdBlock:
             uncomp29->filters.lastend = end;
 
         if (uncomp29 && uncomp29->is_ppmd_block && uncomp->start_new_table)
-            goto FinishPpmdBlock;
+            goto FinishBlock;
     }
 }
