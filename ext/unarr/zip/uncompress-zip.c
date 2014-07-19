@@ -65,7 +65,7 @@ static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp
         warn("Unexpected ZLIB error %d", err);
         return ERR_UNCOMP;
     }
-    if (err == Z_STREAM_END && uncomp->input.bytes_left && uncomp->state.zstream.avail_out == buffer_size) {
+    if (err == Z_STREAM_END && uncomp->state.zstream.avail_out) {
         warn("Premature EOS in Deflate stream");
         return ERR_UNCOMP;
     }
@@ -115,7 +115,7 @@ static uint32_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, 
         warn("Unexpected BZIP2 error %d", err);
         return ERR_UNCOMP;
     }
-    if (err == BZ_STREAM_END && uncomp->input.bytes_left && uncomp->state.bstream.avail_out == buffer_size) {
+    if (err == BZ_STREAM_END && uncomp->state.bstream.avail_out) {
         warn("Premature EOS in BZIP2 stream");
         return ERR_UNCOMP;
     }
