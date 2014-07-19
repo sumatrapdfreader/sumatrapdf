@@ -1,8 +1,10 @@
 import sys
 import os
 import subprocess
+import shutil
 import util2
 
+g_get_files = False
 
 def usage_and_exit():
     print("Usage: test-unrar.py dir")
@@ -105,6 +107,8 @@ def err_whitelisted(s):
         return True
     if "Unsupported compression version: 15" in s:
         return True
+    if "Encrypted entries will fail to uncompress" in s:
+        return True
     return False
 
 
@@ -162,17 +166,61 @@ def errors_to_sorted_array(errors):
     return sorted(a, cmp=lambda x,y: cmp(y[0], x[0]))
 
 
-def print_errors(arr):
+def get_files_for_error(error_to_files, err):
+    res = []
+    files = error_to_files[err]
+    for f in files:
+        try:
+            size = os.path.getsize(f)
+            res.append([size, f])
+        except:
+            pass
+    return sorted(res, cmp=lambda x,y: cmp(x[0], y[0]))
+
+
+def copy_file_here(f, n, m):
+    fn, ext = os.path.splitext(f)
+    dst = "%2d-%2d%s" % (n, m, ext)
+    dst = os.path.join("files", dst)
+    shutil.copyfile(f, dst)
+
+
+def print_errors(arr, error_to_files):
+    global g_get_files
+    n = 1
     for el in arr:
         print("%s: %d" % (el[1], el[0]))
+        if not g_get_files:
+            continue
+        files = get_files_for_error(error_to_files, el[1])
+        m = 1
+        for f in files:
+            print(" %6d %s" % (f[0], f[1][:40]))
+            copy_file_here(f[1], n, m)
+            m += 1
+        print("")
+        print("")
+        n += 1
+
+
+def extract_file_path(l):
+    idx = l.find(" of ")
+    if idx == -1:
+        return None
+    return l[:idx]
 
 
 def do_summary_on_file(path):
+
     fo = open(path, "r")
     errors = {}  # map error string to number of failures
+    error_to_files = {}
     seen_error = False
+    file_path = None
     for l in fo:
         l = l.strip()
+        if "failed with out" in l:
+            file_path = extract_file_path(l)
         if l == "err:":
             seen_error = False
             continue
@@ -182,9 +230,13 @@ def do_summary_on_file(path):
             continue
         seen_error = True
         errors[l] = errors.get(l, 0) + 1
+        if file_path is not None:
+            a = error_to_files.get(l, [])
+            a.append(file_path)
+            error_to_files[l] = a
     fo.close()
     arr = errors_to_sorted_array(errors)
-    print_errors(arr)
+    print_errors(arr, error_to_files)
 
 
 def do_summary():
@@ -194,6 +246,14 @@ def do_summary():
     do_summary_on_file(fn)
 
 
+def do_getfiles():
+    global g_get_files
+    g_get_files = True
+    if not os.path.exists("files"):
+        os.makedirs("files")
+    do_summary()
+
+
 def main():
     global fo
     detect_unarr_exe()  # detect early if doesn't exist
@@ -201,6 +261,9 @@ def main():
         usage_and_exit()
     if sys.argv[1] == "summary":
         do_summary()
+        return
+    if sys.argv[1] == "getfiles":
+        do_getfiles()
         return
 
     if len(sys.argv) != 2:
