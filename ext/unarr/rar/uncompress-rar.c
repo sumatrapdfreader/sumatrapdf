@@ -1018,6 +1018,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
             continue;
         }
 
+FinishPpmdBlock:
         if (uncomp->start_new_table && !rar_parse_codes(rar))
             return false;
 
@@ -1031,7 +1032,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
         if (uncomp29)
             uncomp29->filters.lastend = end;
 
-        if (uncomp29 && uncomp29->is_ppmd_block && uncomp->start_new_table && !rar_parse_codes(rar))
-            return false;
+        if (uncomp29 && uncomp29->is_ppmd_block && uncomp->start_new_table)
+            goto FinishPpmdBlock;
     }
 }
