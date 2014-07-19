@@ -193,7 +193,7 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
             return false;
     }
     else {
-        warn("Unknown compression method %02x", rar->entry.method);
+        warn("Unknown compression method %#02x", rar->entry.method);
         return false;
     }
 

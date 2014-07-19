@@ -511,12 +511,6 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
     uint32_t registers[8] = { 0 };
     uint32_t i;
 
-    if (!filters->vm) {
-        filters->vm = calloc(1, sizeof(*filters->vm));
-        if (!filters->vm)
-            return false;
-    }
-
     br.bytes = bytes;
     br.length = length;
 
@@ -654,6 +648,12 @@ bool rar_run_filters(ar_archive_rar *rar)
     if (end != start + filter->blocklength) {
         warn("Failed to expand the expected amout of bytes");
         return false;
+    }
+
+    if (!filters->vm) {
+        filters->vm = calloc(1, sizeof(*filters->vm));
+        if (!filters->vm)
+            return false;
     }
 
     lzss_copy_bytes_from_window(&rar->uncomp.lzss, filters->vm->memory, start, filter->blocklength);
