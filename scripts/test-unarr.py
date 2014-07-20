@@ -189,7 +189,7 @@ def copy_file_here(f, n, m):
 def get_all_files(files, n):
     m = 1
     for f in files:
-        print(" %6d %s" % (f[0], f[1][:40]))
+        print(" %6d %s" % (f[0], f[1]))
         copy_file_here(f[1], n, m)
         m += 1
 
@@ -213,7 +213,6 @@ def print_errors(arr, error_to_files):
             show_files(files)
         if g_get_files:
             get_all_files(files, n)
-            continue
         n += 1
     print("\nTotal: %d" % total)
 
@@ -243,8 +242,8 @@ def do_summary_on_file(path):
         if not l.startswith("!"):
             continue
         seen_error = True
-        errors[l] = errors.get(l, 0) + 1
-        if file_path is not None:
+        if file_path is not None and os.path.exists(file_path):
+            errors[l] = errors.get(l, 0) + 1
             a = error_to_files.get(l, [])
             a.append(file_path)
             error_to_files[l] = a
