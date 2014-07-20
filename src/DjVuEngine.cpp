@@ -13,6 +13,7 @@
 
 #include "ByteReader.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
 
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,
@@ -180,12 +181,16 @@ public:
     }
 
     void SpinMessageLoop(bool wait=true) {
+        const ddjvu_message_t *msg;
 #if THREADMODEL!=NOTHREADS
         if (wait)
             ddjvu_message_wait(ctx);
 #endif
-        while (ddjvu_message_peek(ctx))
+        while ((msg = ddjvu_message_peek(ctx)) != NULL) {
+            if (DDJVU_NEWSTREAM == msg->m_any.tag && msg->m_newstream.streamid != 0)
+                ddjvu_stream_close(msg->m_any.document, msg->m_newstream.streamid, /* stop */ FALSE);
             ddjvu_message_pop(ctx);
+        }
     }
 
     ddjvu_document_t *OpenFile(const WCHAR *fileName) {
@@ -194,6 +199,15 @@ public:
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
+    }
+
+    ddjvu_document_t *OpenStream(IStream *stream) {
+        ScopedCritSec scope(&lock);
+        size_t datalen;
+        ScopedMem<char> data((char *)GetDataFromStream(stream, &datalen));
+        if (!data || datalen > ULONG_MAX)
+            return NULL;
+        return ddjvu_document_create_by_data(ctx, data, (ULONG)datalen);
     }
 };
 
@@ -204,6 +218,8 @@ public:
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
     virtual BaseEngine *Clone() {
+        if (stream)
+            return CreateFromStream(stream);
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
@@ -256,9 +272,11 @@ public:
     virtual int GetPageByLabel(const WCHAR *label) const;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
+    static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
     WCHAR *fileName;
+    IStream *stream;
 
     int pageCount;
     RectD *mediaboxes;
@@ -277,11 +295,14 @@ protected:
     char *ResolveNamedDest(const char *name);
     DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter);
     bool Load(const WCHAR *fileName);
+    bool Load(IStream *stream);
+    bool FinishLoading();
     bool LoadMediaboxes();
 };
 
-DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), pageCount(0), mediaboxes(NULL),
-    doc(NULL), outline(miniexp_nil), annos(NULL), hasPageLabels(false)
+DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), stream(NULL),
+    pageCount(0), mediaboxes(NULL), doc(NULL),
+    outline(miniexp_nil), annos(NULL), hasPageLabels(false)
 {
 }
 
@@ -303,6 +324,8 @@ DjVuEngineImpl::~DjVuEngineImpl()
         ddjvu_miniexp_release(doc, outline);
     if (doc)
         ddjvu_document_release(doc);
+    if (stream)
+        stream->Release();
 }
 
 // Most functions of the ddjvu API such as ddjvu_document_get_pageinfo
@@ -340,6 +363,8 @@ STATIC_ASSERT(sizeof(DjVuInfoChunk) == 10, djvuInfoChunkSize);
 
 bool DjVuEngineImpl::LoadMediaboxes()
 {
+    if (!fileName)
+        return false;
     ScopedHandle h(file::OpenReadOnly(fileName));
     if (h == INVALID_HANDLE_VALUE)
         return false;
@@ -385,6 +410,22 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
 
     this->fileName = str::Dup(fileName);
     doc = gDjVuContext.OpenFile(fileName);
+
+    return FinishLoading();
+}
+
+bool DjVuEngineImpl::Load(IStream *stream)
+{
+    if (!gDjVuContext.Initialize())
+        return false;
+
+    doc = gDjVuContext.OpenStream(stream);
+
+    return FinishLoading();
+}
+
+bool DjVuEngineImpl::FinishLoading()
+{
     if (!doc)
         return false;
 
@@ -705,11 +746,26 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
 
 unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 {
+    if (stream) {
+        ScopedMem<void> data(GetDataFromStream(stream, cbCount));
+        if (data)
+            return (unsigned char *)data.StealData();
+    }
+    if (!fileName)
+        return NULL;
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
 bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    if (stream) {
+        size_t len;
+        ScopedMem<void> data(GetDataFromStream(stream, &len));
+        if (data && file::WriteAll(copyFileName, data, len))
+            return true;
+    }
+    if (!fileName)
+        return false;
     return CopyFile(fileName, copyFileName, FALSE);
 }
 
@@ -1030,6 +1086,16 @@ BaseEngine *DjVuEngineImpl::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
+BaseEngine *DjVuEngineImpl::CreateFromStream(IStream *stream)
+{
+    DjVuEngineImpl *engine = new DjVuEngineImpl();
+    if (!engine->Load(stream)) {
+        delete engine;
+        return NULL;
+    }
+    return engine;
+}
+
 namespace DjVuEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
@@ -1043,6 +1109,11 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
     return DjVuEngineImpl::CreateFromFile(fileName);
+}
+
+BaseEngine *CreateFromStream(IStream *stream)
+{
+    return DjVuEngineImpl::CreateFromStream(stream);
 }
 
 }

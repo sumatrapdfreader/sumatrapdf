@@ -52,6 +52,7 @@ EXPORTS
 	ddjvu_anno_get_hyperlinks
 	ddjvu_context_create
 	ddjvu_context_release
+	ddjvu_document_create_by_data
 	ddjvu_document_create_by_filename_utf8
 	ddjvu_document_get_fileinfo_imp
 	ddjvu_document_get_filenum
@@ -75,6 +76,8 @@ EXPORTS
 	ddjvu_page_job
 	ddjvu_page_render
 	ddjvu_page_set_rotation
+	ddjvu_stream_close
+	ddjvu_stream_write
 	miniexp_caddr
 	miniexp_cadr
 	miniexp_cddr

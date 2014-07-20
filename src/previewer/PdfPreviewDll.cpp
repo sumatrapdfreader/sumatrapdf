@@ -63,6 +63,10 @@ public:
         else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CXpsPreview(&g_lRefCount);
 #endif
+#ifdef BUILD_DJVU_PREVIEW
+        else if (SUCCEEDED(CLSIDFromString(SZ_DJVU_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
+            pObject = new CDjVuPreview(&g_lRefCount);
+#endif
 #ifdef BUILD_EPUB_PREVIEW
         else if (SUCCEEDED(CLSIDFromString(SZ_EPUB_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CEpubPreview(&g_lRefCount);
@@ -153,6 +157,9 @@ static struct {
 #ifdef BUILD_XPS_PREVIEW
     { SZ_XPS_PREVIEW_CLSID, L".xps" },
     { SZ_XPS_PREVIEW_CLSID, L".oxps" },
+#endif
+#ifdef BUILD_DJVU_PREVIEW
+    { SZ_DJVU_PREVIEW_CLSID,L".djvu" },
 #endif
 #ifdef BUILD_EPUB_PREVIEW
     { SZ_EPUB_PREVIEW_CLSID,L".epub" },

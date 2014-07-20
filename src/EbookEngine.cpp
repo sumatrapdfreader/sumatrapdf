@@ -715,6 +715,8 @@ public:
     EpubEngineImpl() : EbookEngine(), doc(NULL), stream(NULL) { }
     virtual ~EpubEngineImpl();
     virtual BaseEngine *Clone() {
+        if (stream)
+            return CreateFromStream(stream);
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 

@@ -1053,6 +1053,45 @@ ddjvu_document_create_by_filename_utf8(ddjvu_context_t *ctx,
   return ddjvu_document_create_by_filename_imp(ctx,filename,cache,1);
 }
 
+/* SumatraPDF: ddjvu_document_create_by_data */
+ddjvu_document_t *
+ddjvu_document_create_by_data(ddjvu_context_t *ctx,
+                              const char *data,
+                              unsigned long datalen)
+{
+  ddjvu_document_t *d = 0;
+  G_TRY
+    {
+      d = new ddjvu_document_s;
+      ref(d);
+      GMonitorLock lock(&d->monitor);
+      d->streams[0] = DataPool::create();
+      d->streamid = -1;
+      d->fileflag = false;
+      d->docinfoflag = false;
+      d->pageinfoflag = false;
+      d->myctx = ctx;
+      d->mydoc = 0;
+      d->doc = DjVuDocument::create_noinit();
+      ddjvu_stream_write(d, 0, data, datalen);
+      ddjvu_stream_close(d, 0, 0);
+      GUTF8String s;
+      s.format("ddjvu:///doc%d/index.djvu", ++(ctx->uniqueid));;
+      GURL gurl = s;
+      d->urlflag = false;
+      d->doc->start_init(gurl, d, 0);
+    }
+  G_CATCH(ex)
+    {
+      if (d) 
+        unref(d);
+      d = 0;
+      ERROR1(ctx, ex);
+    }
+  G_ENDCATCH;
+  return d;
+}
+
 ddjvu_job_t *
 ddjvu_document_job(ddjvu_document_t *document)
 {

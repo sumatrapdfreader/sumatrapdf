@@ -530,6 +530,18 @@ ddjvu_document_create_by_filename_utf8(ddjvu_context_t *context,
                                        const char *filename,
                                        int cache);
 
+
+/* SumatraPDF: ddvu_document_create_by_data ---
+   Creates a document from in-memory data
+   (needed as an alternative to ddjvu_document_create when
+   compiling libdjvu without thread support) */
+
+DDJVUAPI ddjvu_document_t *
+ddjvu_document_create_by_data(ddjvu_context_t *context,
+                              const char *data,
+                              unsigned long datalen);
+
+
 /* ddjvu_document_job ---
    Access the job object in charge of decoding the document header. 
    In fact <ddjvu_document_t> is a subclass of <ddjvu_job_t>

@@ -319,6 +319,15 @@ BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 }
 #endif
 
+#ifdef BUILD_DJVU_PREVIEW
+#include "DjVuEngine.h"
+
+BaseEngine *CDjVuPreview::LoadEngine(IStream *stream)
+{
+    return DjVuEngine::CreateFromStream(stream);
+}
+#endif
+
 #ifdef BUILD_EPUB_PREVIEW
 #include "EbookEngine.h"
 #include "MiniMui.h"
