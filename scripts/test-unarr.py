@@ -5,6 +5,7 @@ import shutil
 import util2
 
 g_get_files = False
+g_show_files = False
 
 def usage_and_exit():
     print("Usage: test-unrar.py dir")
@@ -185,22 +186,36 @@ def copy_file_here(f, n, m):
     shutil.copyfile(f, dst)
 
 
+def get_all_files(files, n):
+    m = 1
+    for f in files:
+        print(" %6d %s" % (f[0], f[1][:40]))
+        copy_file_here(f[1], n, m)
+        m += 1
+
+
+def show_files(files):
+    for f in files:
+        print(" %6d %s" % (f[0], f[1]))
+    print("")
+    print("")
+
+
 def print_errors(arr, error_to_files):
-    global g_get_files
+    global g_get_files, g_show_files
     n = 1
+    total = 0
     for el in arr:
         print("%s: %d" % (el[1], el[0]))
-        if not g_get_files:
-            continue
         files = get_files_for_error(error_to_files, el[1])
-        m = 1
-        for f in files:
-            print(" %6d %s" % (f[0], f[1][:40]))
-            copy_file_here(f[1], n, m)
-            m += 1
-        print("")
-        print("")
+        total += el[0]
+        if g_get_files or g_show_files:
+            show_files(files)
+        if g_get_files:
+            get_all_files(files, n)
+            continue
         n += 1
+    print("\nTotal: %d" % total)
 
 
 def extract_file_path(l):
@@ -211,7 +226,6 @@ def extract_file_path(l):
 
 
 def do_summary_on_file(path):
-
     fo = open(path, "r")
     errors = {}  # map error string to number of failures
     error_to_files = {}
