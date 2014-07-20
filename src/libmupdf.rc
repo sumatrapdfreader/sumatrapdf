@@ -15,13 +15,13 @@ BEGIN
     //language ID = U.S. English, char set = Windows, Multilingual
 
     BEGIN
-      VALUE "FileDescription",  "MuPDF Rendering Library"
+      VALUE "FileDescription",  "MuPDF rendering library, DjVu rendering library and various helper libraries"
       VALUE "FileVersion",      VER_RESOURCE_STR
       VALUE "LegalCopyright",   COPYRIGHT_STR
       VALUE "OriginalFilename", "libmupdf.dll"
       VALUE "ProductName",      "SumatraPDF"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "CompanyName",      "Artifex Software"
+      VALUE "CompanyName",      "Artifex Software et al."
     END
   END
   BLOCK "VarFileInfo"

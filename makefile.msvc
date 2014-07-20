@@ -144,10 +144,14 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
 MUPDF_LIB   = $(O)\libmupdfs.lib
+UNARR_LIB   = $(O)\unarr.lib
 UTILS_LIB   = $(O)\utils.lib
 MUI_LIB     = $(O)\mui.lib
 ENGINES_LIB = $(O)\engines.lib
 MAIN_UI_LIB = $(O)\sumatra.lib
+
+# these are all included in libmupdf.dll for reuse by PdfPreview.dll
+FORMAT_LIBS = $(MUPDF_LIB) $(DJVU_OBJS) $(UNARR_LIB) $(WEBP_OBJS)
 
 UTILS_OBJS = \
 	$(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
@@ -162,16 +166,9 @@ UTILS_OBJS = \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\CryptoUtil.obj \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\SplitterWnd.obj \
-	$(OU)\WebpReader.obj $(WEBP_OBJS) $(OU)\FzImgReader.obj \
+	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
+	$(OU)\ZipUtil.obj $(OU)\RarUtil.obj $(OU)\LzmaSimpleArchive.obj \
 	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj
-
-!if "$(CFG)"=="dbg"
-UTILS_OBJS = $(UTILS_OBJS)
-!endif
-
-# requires either MuPDF/libmupdf or $(ZLIB_OBJS)
-ZIP_OBJS = $(OU)\ZipUtil.obj $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) \
-	$(OU)\LzmaSimpleArchive.obj $(OU)\RarUtil.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
@@ -186,8 +183,7 @@ EBOOK_OBJS = \
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj $(OS)\PdfCreator.obj \
-	$(OS)\ImagesEngine.obj $(ZIP_OBJS) \
-	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
+	$(OS)\ImagesEngine.obj $(OS)\DjVuEngine.obj \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EngineManager.obj $(OS)\FileModifications.obj
 
@@ -218,7 +214,7 @@ SUMATRA_OBJS = \
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) $(ZLIB_OBJS) $(ZIP_OBJS) \
+	$(UTILS_LIB) $(ZLIB_OBJS) $(UNARR_LIB) \
 	$(OS)\Translations.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
@@ -227,14 +223,14 @@ UNINSTALLER_OBJS = \
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
-	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
+	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
 
 PDFPREVIEW_OBJS = \
 	$(ODLL)\PdfPreviewDll.obj $(ODLL)\PdfPreview.obj $(PDFPREVIEW_RES) \
-	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
+	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINES_LIB) $(MUPDF_LIB) $(UTILS_LIB) $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
+	$(OS)\EngineDump.obj $(ENGINES_LIB) $(FORMAT_LIBS) $(UTILS_LIB) $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
@@ -289,7 +285,7 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_MOBI_PREVIEW"
 
 !if "$(BUILD_CBZ_PREVIEW)$(BUILD_CBR_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
 PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj \
-	$(OU)\JsonParser.obj $(OS)\PdfCreator.obj
+	$(OU)\JsonParser.obj $(OS)\PdfCreator.obj $(OU)\RarUtil.obj
 !if "$(BUILD_CBZ_PREVIEW)"!=""
 PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
 !endif
@@ -333,7 +329,7 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h $(SRCDIR)\EbookWinDesc.txt
 	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\SumatraPDF.rc
 
-$(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)
+$(SUMATRA_APP): $(SUMATRA_OBJS) $(FORMAT_LIBS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj
@@ -342,8 +338,8 @@ $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj
 $(LIBMUPDF_RES): $(SRCDIR)\libmupdf.rc $(SRCDIR)\Version.h
 	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\libmupdf.rc
 
-$(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
-	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
+$(LIBMUPDF_DLL): $(FORMAT_LIBS) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
+	$(LD) /DLL $(LDFLAGS) $(FORMAT_LIBS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(LIBMUPDF_LIB): $(LIBMUPDF_DLL)
 
@@ -414,6 +410,9 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
 
 $(MUPDF_LIB): $(MUPDF_ALL_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(UNARR_LIB): $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
 
 $(UTILS_LIB): $(UTILS_OBJS)

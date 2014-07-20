@@ -819,33 +819,92 @@ EXPORTS
 	xps_lookup_alternate_content
 	xps_extract_anchor_info
 
-; jpeg exports (required for libdjvu)
+; unarr exports (required for ZipUtil, RarUtil)
 
-	jpeg_resync_to_restart
-	jpeg_finish_decompress
-	jpeg_read_scanlines
-	jpeg_start_decompress
-	jpeg_read_header
-	jpeg_CreateDecompress
-	jpeg_destroy_decompress
-	jpeg_std_error
+	ar_open_file
+	ar_open_file_w
+	ar_open_memory
+	ar_open_istream
+	ar_close
+	ar_read
+	ar_seek
+	ar_skip
+	ar_tell
+	ar_close_archive
+	ar_parse_entry
+	ar_parse_entry_at
+	ar_at_eof
+	ar_entry_get_name
+	ar_entry_get_offset
+	ar_entry_get_size
+	ar_entry_get_filetime
+	ar_entry_uncompress
+	ar_get_global_comment
+	ar_open_rar_archive
+	ar_open_zip_archive
 
-; zlib exports (required for ZipUtil, PsEngine, LzmaSimpleArchive)
+; djvu exports (required for DjVuEngine)
 
-	gzerror
-	gzprintf
-	gzopen
-	gzopen_w
-	gzseek
-	gztell
-	gzread
-	gzclose
-	inflateInit_
-	inflateInit2_
-	inflate
-	inflateEnd
-	deflateInit_
-	deflateInit2_
+	ddjvu_anno_get_hyperlinks
+	ddjvu_context_create
+	ddjvu_context_release
+	ddjvu_document_create_by_filename_utf8
+	ddjvu_document_get_fileinfo_imp
+	ddjvu_document_get_filenum
+	ddjvu_document_get_outline
+	ddjvu_document_get_pageanno
+	ddjvu_document_get_pageinfo_imp
+	ddjvu_document_get_pagenum
+	ddjvu_document_get_pagetext
+	ddjvu_document_job
+	ddjvu_format_create
+	ddjvu_format_release
+	ddjvu_format_set_row_order
+	ddjvu_job_release
+	ddjvu_job_status
+	ddjvu_message_peek
+	ddjvu_message_pop
+	ddjvu_message_wait
+	ddjvu_miniexp_release
+	ddjvu_page_create_by_pageno
+	ddjvu_page_get_type
+	ddjvu_page_job
+	ddjvu_page_render
+	ddjvu_page_set_rotation
+	miniexp_caddr
+	miniexp_cadr
+	miniexp_cddr
+	miniexp_stringp
+	miniexp_symbol
+	miniexp_to_str
+	minilisp_finish
+
+; zlib exports (required for ZipUtil, PsEngine, PdfCreator, LzmaSimpleArchive)
+
+	crc32
 	deflate
 	deflateEnd
-	crc32
+	deflateInit_
+	deflateInit2_
+	gzclose
+	gzerror
+	gzopen
+	gzopen_w
+	gzprintf
+	gzread
+	gzseek
+	gztell
+	inflate
+	inflateEnd
+	inflateInit_
+	inflateInit2_
+
+; lzma exports (required for LzmaSimpleArchive)
+
+	LzmaDecode
+	x86_Convert
+
+; libwebp exports (required for WebpReader)
+
+	WebPDecodeBGRAInto
+	WebPGetInfo

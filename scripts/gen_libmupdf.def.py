@@ -2,7 +2,9 @@
 
 """
 Generates a list of all exports from libmupdf.dll from the function lists
-contained in the mupdf/include/* headers (only MuPDF and MuXPS are included).
+contained in the mupdf/include/* headers (only MuPDF and MuXPS are included)
+and adds exports for the other libraries contained within libmupdf.dll but
+used by SumatraPDF-no-MuPDF.exe (unarr, libdjvu, zlib, lzma, libwebp).
 """
 
 import os, re, util2
@@ -41,36 +43,75 @@ EXPORTS
 
 %(muxps_exports)s
 
-; jpeg exports (required for libdjvu)
+; unarr exports (required for ZipUtil, RarUtil)
 
-	jpeg_resync_to_restart
-	jpeg_finish_decompress
-	jpeg_read_scanlines
-	jpeg_start_decompress
-	jpeg_read_header
-	jpeg_CreateDecompress
-	jpeg_destroy_decompress
-	jpeg_std_error
+%(unarr_exports)s
 
-; zlib exports (required for ZipUtil, PsEngine, LzmaSimpleArchive)
+; djvu exports (required for DjVuEngine)
 
-	gzerror
-	gzprintf
-	gzopen
-	gzopen_w
-	gzseek
-	gztell
-	gzread
-	gzclose
-	inflateInit_
-	inflateInit2_
-	inflate
-	inflateEnd
-	deflateInit_
-	deflateInit2_
+	ddjvu_anno_get_hyperlinks
+	ddjvu_context_create
+	ddjvu_context_release
+	ddjvu_document_create_by_filename_utf8
+	ddjvu_document_get_fileinfo_imp
+	ddjvu_document_get_filenum
+	ddjvu_document_get_outline
+	ddjvu_document_get_pageanno
+	ddjvu_document_get_pageinfo_imp
+	ddjvu_document_get_pagenum
+	ddjvu_document_get_pagetext
+	ddjvu_document_job
+	ddjvu_format_create
+	ddjvu_format_release
+	ddjvu_format_set_row_order
+	ddjvu_job_release
+	ddjvu_job_status
+	ddjvu_message_peek
+	ddjvu_message_pop
+	ddjvu_message_wait
+	ddjvu_miniexp_release
+	ddjvu_page_create_by_pageno
+	ddjvu_page_get_type
+	ddjvu_page_job
+	ddjvu_page_render
+	ddjvu_page_set_rotation
+	miniexp_caddr
+	miniexp_cadr
+	miniexp_cddr
+	miniexp_stringp
+	miniexp_symbol
+	miniexp_to_str
+	minilisp_finish
+
+; zlib exports (required for ZipUtil, PsEngine, PdfCreator, LzmaSimpleArchive)
+
+	crc32
 	deflate
 	deflateEnd
-	crc32
+	deflateInit_
+	deflateInit2_
+	gzclose
+	gzerror
+	gzopen
+	gzopen_w
+	gzprintf
+	gzread
+	gzseek
+	gztell
+	inflate
+	inflateEnd
+	inflateInit_
+	inflateInit2_
+
+; lzma exports (required for LzmaSimpleArchive)
+
+	LzmaDecode
+	x86_Convert
+
+; libwebp exports (required for WebpReader)
+
+	WebPDecodeBGRAInto
+	WebPGetInfo
 """
 
 def main():
@@ -87,6 +128,7 @@ def main():
 	fitz_exports = generateExports("include/mupdf/fitz", doc_exports + more_formats + misc_exports)
 	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + sign_exports + ["pdf_open_compressed_stream"])
 	muxps_exports = generateExports("include/mupdf/xps.h", ["xps_parse_solid_color_brush", "xps_print_path"])
+	unarr_exports = generateExports("../ext/unarr/unarr.h")
 	
 	list = LIBMUPDF_DEF % locals()
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
