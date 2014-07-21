@@ -498,7 +498,7 @@ static bool rar_execute_filter(struct RARFilter *filter, RARVirtualMachine *vm, 
 
 bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length, uint8_t flags)
 {
-    struct ar_archive_rar_uncomp_29 *uncomp = &rar->uncomp.state.v29;
+    struct ar_archive_rar_uncomp_v3 *uncomp = &rar->uncomp.state.v3;
     struct ar_archive_rar_filters *filters = &uncomp->filters;
 
     struct MemBitReader br = { 0 };
@@ -636,7 +636,7 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
 
 bool rar_run_filters(ar_archive_rar *rar)
 {
-    struct ar_archive_rar_filters *filters = &rar->uncomp.state.v29.filters;
+    struct ar_archive_rar_filters *filters = &rar->uncomp.state.v3.filters;
     struct RARFilter *filter = filters->stack;
     size_t start = filters->filterstart;
     size_t end = start + filter->blocklength;

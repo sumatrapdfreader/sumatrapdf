@@ -147,7 +147,7 @@ struct CPpmdRAR_RangeDec {
     IByteIn *Stream;
 };
 
-struct ar_archive_rar_uncomp_29 {
+struct ar_archive_rar_uncomp_v3 {
     struct huffman_code maincode;
     struct huffman_code offsetcode;
     struct huffman_code lowoffsetcode;
@@ -182,7 +182,7 @@ struct AudioState {
     uint8_t lastbyte;
 };
 
-struct ar_archive_rar_uncomp_20 {
+struct ar_archive_rar_uncomp_v2 {
     struct huffman_code maincode;
     struct huffman_code offsetcode;
     struct huffman_code lengthcode;
@@ -201,7 +201,6 @@ struct ar_archive_rar_uncomp_20 {
 };
 
 struct ar_archive_rar_uncomp {
-    bool initialized;
     uint8_t version;
 
     LZSS lzss;
@@ -209,8 +208,8 @@ struct ar_archive_rar_uncomp {
     bool start_new_table;
 
     union {
-        struct ar_archive_rar_uncomp_29 v29;
-        struct ar_archive_rar_uncomp_20 v20;
+        struct ar_archive_rar_uncomp_v3 v3;
+        struct ar_archive_rar_uncomp_v2 v2;
     } state;
 
     struct StreamBitReader {
@@ -223,6 +222,7 @@ struct ar_archive_rar_uncomp {
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size);
 int64_t rar_expand(ar_archive_rar *rar, int64_t end);
 void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp);
+inline void br_clear_leftover_bits(struct ar_archive_rar_uncomp *uncomp) { uncomp->br.available &= ~0x07; }
 
 /***** rar *****/
 

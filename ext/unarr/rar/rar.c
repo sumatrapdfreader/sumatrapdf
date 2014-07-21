@@ -78,14 +78,8 @@ static bool rar_parse_entry(ar_archive *ar)
                 memset(&rar->solid, 0, sizeof(rar->solid));
             }
             else {
-                /* skip to next full byte */
-                rar->uncomp.br.available &= ~0x07;
+                br_clear_leftover_bits(&rar->uncomp);
             }
-            /* per XADRARParser.m @handleForSolidStreamWithObject these versions are identical */
-            if (rar->entry.version == 26)
-                rar->entry.version = 20;
-            else if (rar->entry.version == 36)
-                rar->entry.version = 29;
 
             rar->solid.restart = rar->entry.solid && (out_of_order || !rar->solid.part_done);
             rar->solid.curr_offset = ar->entry_offset;
