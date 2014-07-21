@@ -109,6 +109,7 @@ solution "all_tests"
       "src/utils/UtAssert*",
       "src/utils/VarintGob*",
       "src/utils/Vec.*",
+      "src/utils/WinCursors*",
       "src/utils/WinUtil*",
       "src/utils/tests/*",
       --"src/AppTools.*",
