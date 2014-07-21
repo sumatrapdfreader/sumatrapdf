@@ -55,34 +55,34 @@ static void ByteIn_CreateVTable(struct ByteReader *br, ar_archive_rar *rar)
 }
 
 /* Ppmd7 range decoder differs between 7z and RAR */
-static Bool PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
+static void PpmdRAR_RangeDec_Init(struct CPpmdRAR_RangeDec *p)
 {
     int i;
+    p->Code = 0;
     p->Low = 0;
-    p->Bottom = 0x8000;
     p->Range = 0xFFFFFFFF;
     for (i = 0; i < 4; i++) {
         p->Code = (p->Code << 8) | p->Stream->Read(p->Stream);
     }
-    return (p->Code < 0xFFFFFFFF) != 0;
 }
 
 static UInt32 Range_GetThreshold(void *p, UInt32 total)
 {
     struct CPpmdRAR_RangeDec *self = p;
-    return (self->Code - self->Low) / (self->Range /= total);
+    return self->Code / (self->Range /= total);
 }
 
 static void Range_Decode_RAR(void *p, UInt32 start, UInt32 size)
 {
     struct CPpmdRAR_RangeDec *self = p;
     self->Low += start * self->Range;
+    self->Code -= start * self->Range;
     self->Range *= size;
     for (;;) {
         if ((self->Low ^ (self->Low + self->Range)) >= (1 << 24)) {
-            if (self->Range >= self->Bottom)
+            if (self->Range >= (1 << 15))
                 break;
-            self->Range = ((uint32_t)(-(int32_t)self->Low)) & (self->Bottom - 1);
+            self->Range = ((uint32_t)(-(int32_t)self->Low)) & ((1 << 15) - 1);
         }
         self->Code = (self->Code << 8) | self->Stream->Read(self->Stream);
         self->Range <<= 8;
@@ -94,7 +94,7 @@ static UInt32 Range_DecodeBit_RAR(void *p, UInt32 size0)
 {
     UInt32 value = Range_GetThreshold(p, PPMD_BIN_SCALE);
     UInt32 bit = value < size0 ? 0 : 1;
-    if (value < size0)
+    if (!bit)
         Range_Decode_RAR(p, 0, size0);
     else
         Range_Decode_RAR(p, size0, PPMD_BIN_SCALE - size0);
@@ -128,8 +128,10 @@ static bool rar_init_uncompress(struct ar_archive_rar_uncomp *uncomp, uint8_t ve
         warn("OOM during decompression");
         return false;
     }
-    if (version == 29)
+    if (version == 29) {
+        uncomp->state.v29.ppmd_escape = 2;
         uncomp->state.v29.filters.filterstart = SIZE_MAX;
+    }
     uncomp->version = version;
     uncomp->initialized = true;
     return true;
@@ -539,10 +541,8 @@ static bool rar_parse_codes(ar_archive_rar *rar)
         if ((ppmd_flags & 0x40)) {
             if (!br_check(rar, 8))
                 return false;
-            uncomp29->ppmd_escape = uncomp29->ppmd7_context.InitEsc = (uint8_t)br_bits(rar, 8);
+            uncomp29->ppmd_escape = (uint8_t)br_bits(rar, 8);
         }
-        else
-            uncomp29->ppmd_escape = 2;
         if ((ppmd_flags & 0x20)) {
             uint32_t maxorder = (ppmd_flags & 0x1F) + 1;
             if (maxorder == 1)
@@ -558,22 +558,15 @@ static bool rar_parse_codes(ar_archive_rar *rar)
             }
             ByteIn_CreateVTable(&uncomp29->bytein, rar);
             PpmdRAR_RangeDec_CreateVTable(&uncomp29->range_dec, &uncomp29->bytein.super);
-            if (!PpmdRAR_RangeDec_Init(&uncomp29->range_dec)) {
-                warn("Invalid data in bitstream"); /* unable to initialize PPMd range decoder */
-                return false;
-            }
+            PpmdRAR_RangeDec_Init(&uncomp29->range_dec);
             Ppmd7_Init(&uncomp29->ppmd7_context, maxorder);
-            uncomp29->ppmd_valid = true;
         }
         else {
-            if (!uncomp29->ppmd_valid) {
+            if (!Ppmd7_WasAllocated(&uncomp29->ppmd7_context)) {
                 warn("Invalid data in bitstream"); /* invalid PPMd sequence */
                 return false;
             }
-            if (!PpmdRAR_RangeDec_Init(&uncomp29->range_dec)) {
-                warn("Invalid data in bitstream"); /* unable to initialize PPMd range decoder */
-                return false;
-            }
+            PpmdRAR_RangeDec_Init(&uncomp29->range_dec);
         }
     }
     else {

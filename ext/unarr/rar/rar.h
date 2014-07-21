@@ -144,7 +144,6 @@ struct CPpmdRAR_RangeDec {
     UInt32 Range;
     UInt32 Code;
     UInt32 Low;
-    UInt32 Bottom;
     IByteIn *Stream;
 };
 
@@ -161,7 +160,6 @@ struct ar_archive_rar_uncomp_29 {
     uint32_t numlowoffsetrepeats;
 
     bool is_ppmd_block;
-    bool ppmd_valid;
     int ppmd_escape;
     CPpmd7 ppmd7_context;
     struct CPpmdRAR_RangeDec range_dec;
