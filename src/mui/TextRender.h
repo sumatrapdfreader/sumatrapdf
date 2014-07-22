@@ -13,6 +13,7 @@ enum TextRenderMethod {
     TextRenderMethodGdiplus, // uses MeasureTextAccurate, which is slower than MeasureTextQuick
     TextRenderMethodGdiplusQuick, // uses MeasureTextQuick
     TextRenderMethodGdi,
+    TextRenderMethodHdc,
     //TODO: implement TextRenderDirectDraw
     //TextRenderDirectDraw
 };
@@ -44,6 +45,8 @@ public:
     virtual void Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false) = 0;
 
     virtual ~ITextRender() {};
+
+    TextRenderMethod method;
 };
 
 class TextRenderGdi : public ITextRender {
@@ -127,6 +130,43 @@ public:
     virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
 
     virtual ~TextRenderGdiplus();
+};
+
+class TextRenderHdc : public ITextRender {
+    HDC                     hdc;
+    HBITMAP                 bmp;
+    void *                  bmpData;
+
+    // We don't own gfx and currFont
+    Gdiplus::Graphics *     gfx;
+    CachedFont *            currFont;
+    Gdiplus::Color          textColor;
+    Gdiplus::Color          textBgColor;
+    WCHAR                   txtConvBuf[512];
+
+    TextRenderHdc() : hdc(NULL), bmp(NULL), bmpData(NULL), currFont(NULL),
+        textColor(0,0,0,0), textBgColor(0,0,0,0) {}
+
+public:
+    static TextRenderHdc* Create(Gdiplus::Graphics *gfx);
+
+    virtual void                SetFont(CachedFont *font);
+    virtual void                SetTextColor(Gdiplus::Color col);
+    virtual void                SetTextBgColor(Gdiplus::Color col);
+
+    virtual float               GetCurrFontLineSpacing();
+
+    virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);
+    virtual Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen);
+
+    virtual void Lock() {}
+    virtual void Unlock() {}
+
+    virtual void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
+    virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
+
+    virtual ~TextRenderHdc();    
+
 };
 
 ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx);

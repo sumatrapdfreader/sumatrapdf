@@ -313,19 +313,135 @@ void TextRenderGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) 
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
+TextRenderHdc *TextRenderHdc::Create(Graphics *gfx) {
+    TextRenderHdc *res = new TextRenderHdc();
+    res->gfx = gfx;
+    /*
+    HDC hdc = gfx->GetHDC();
+    res->hdc = CreateCompatibleDC(hdc);
+    HWND hwnd = WindowFromDC(hdc);
+    RECT wr;
+    GetClientRect(hwnd, &wr);
+    gfx->ReleaseHDC(hdc);
 
+    Region rgn;
+    gfx->ResetClip();
+    gfx->GetClip(&rgn);
+
+    Rect r;
+    rgn.GetBounds(&r, gfx);
+
+    int dx = r.Width;
+    int dy = r.Height;
+    */
+
+    // TODO: how to get the size of Graphics ?
+    int dx = 0;
+    int dy = 0;
+
+    BITMAPINFO bmi = { };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = dx;
+    bmi.bmiHeader.biHeight = dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
+
+    res->bmp = CreateDIBSection(res->hdc, &bmi, DIB_RGB_COLORS, &res->bmpData, NULL, 0);
+    if (!res->bmp) {
+        delete res;
+        return NULL;
+    }
+
+    ZeroMemory(res->bmpData, dx * dy * 4);
+    SelectObject(res->hdc, res->bmp);
+
+    // default to red to make mistakes stand out
+    res->SetTextColor(Color(0xff, 0xff, 0x0, 0x0));
+    return res;
+}
+
+void TextRenderHdc::SetFont(CachedFont *font) {
+    // I'm not sure how expensive SelectFont() is so avoid it just in case
+    if (currFont == font) {
+        return;
+    }
+    currFont = font;
+    SelectFont(hdc, font->GetHFont());
+}
+
+void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
+    if (textColor.GetValue() == col.GetValue()) {
+        return;
+    }
+    textColor = col;
+    ::SetTextColor(hdc, col.ToCOLORREF());
+}
+
+void TextRenderHdc::SetTextBgColor(Gdiplus::Color col) {
+    if (textBgColor.GetValue() == col.GetValue()) {
+        return;
+    }
+    textBgColor = col;
+    ::SetBkColor(hdc, textBgColor.ToCOLORREF());
+}
+
+float TextRenderHdc::GetCurrFontLineSpacing() {
+    return currFont->font->GetHeight(gfx);
+}
+
+Gdiplus::RectF TextRenderHdc::Measure(const char *s, size_t sLen) {
+    CrashIf(!currFont);
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    return Measure(txtConvBuf, strLen);
+}
+
+Gdiplus::RectF TextRenderHdc::Measure(const WCHAR *s, size_t sLen) {
+    SIZE txtSize;
+    GetTextExtentPoint32W(hdc, s, (int) sLen, &txtSize);
+    RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
+    return res;
+}
+
+void TextRenderHdc::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
+    size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
+    return Draw(txtConvBuf, strLen, bb, isRtl);
+}
+
+void TextRenderHdc::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
+    CrashIf(!hdc);
+    int x = (int) bb.X;
+    int y = (int) bb.Y;
+    UINT opts = ETO_OPAQUE;
+    if (isRtl)
+        opts = opts | ETO_RTLREADING;
+    ExtTextOut(hdc, x, y, opts, NULL, s, (UINT)sLen, NULL);
+}
+
+TextRenderHdc::~TextRenderHdc() {
+    DeleteObject(bmp);
+    free(bmpData);
+    DeleteDC(hdc);
+}
+
+ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
+    ITextRender *res = NULL;
     if (TextRenderMethodGdiplus == method) {
-        return TextRenderGdiplus::Create(gfx);
+        res = TextRenderGdiplus::Create(gfx);
     }
     if (TextRenderMethodGdiplusQuick == method) {
-        return TextRenderGdiplus::Create(gfx, MeasureTextQuick);
+        res = TextRenderGdiplus::Create(gfx, MeasureTextQuick);
     }
     if (TextRenderMethodGdi == method) {
-        return TextRenderGdi::Create(gfx);
+        res = TextRenderGdi::Create(gfx);
     }
-    CrashIf(true);
-    return NULL;
+    if (TextRenderMethodHdc == method) {
+        res = TextRenderHdc::Create(gfx);
+    }
+    CrashIf(!res);
+    res->method = method;
+    return res;
 }
 
 // returns number of characters of string s that fits in a given width dx
