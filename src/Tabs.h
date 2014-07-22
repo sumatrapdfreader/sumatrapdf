@@ -9,6 +9,9 @@
 #define TAB_WIDTH        200
 #define TAB_HEIGHT       TABBAR_HEIGHT - 1
 
+#define TAB_COLOR_BG      COLOR_BTNFACE
+#define TAB_COLOR_TEXT    COLOR_BTNTEXT
+
 class WindowInfo;
 class Controller;
 struct WatchedFile;
@@ -51,9 +54,7 @@ void TabsOnCtrlTab(WindowInfo *win, bool reverse);
 void UpdateTabWidth(WindowInfo *win);
 void SwapTabs(WindowInfo *win, int tab1, int tab2);
 void SetTabsInTitlebar(WindowInfo *win, bool set);
-void MenuBarAsPopupMenu(HWND hwnd, int x, int y);
 
 COLORREF AdjustLightness2(COLORREF c, float units);
-float GetLightness(COLORREF c);
 
 #endif

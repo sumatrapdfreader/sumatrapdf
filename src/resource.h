@@ -38,6 +38,7 @@
 #define IDM_VIEW_FULLSCREEN             421
 #define IDM_SELECT_ALL                  422
 #define IDM_VIEW_SHOW_HIDE_MENUBAR      423
+#define IDM_VIEW_TABS_IN_TITLEBAR       424
 #define IDM_COPY_IMAGE                  427
 #define IDM_COPY_LINK_TARGET            428
 #define IDM_COPY_COMMENT                429

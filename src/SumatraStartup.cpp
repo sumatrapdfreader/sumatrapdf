@@ -98,6 +98,8 @@ static bool RegisterWinClass()
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
     CrashIf(!wcex.hIcon);
+    // For the extended translucent frame to be visible, we need black background.
+    wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
@@ -115,6 +117,7 @@ static bool RegisterWinClass()
     RegisterNotificationsWndClass();
     RegisterSplitterWndClass();
     RegisterLabelWithCloseWnd();
+    RegisterCaptionWndClass();
     return true;
 }
 

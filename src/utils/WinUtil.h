@@ -27,7 +27,7 @@ BOOL    SafeDestroyWindow(HWND *hwnd);
 void    FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc);
 inline void MoveWindow(HWND hwnd, RectI rect) { MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE); }
 
-bool   IsAppThemed();
+bool   _IsAppThemed();
 bool   IsRunningInWow64();
 bool   IsVistaOrGreater();
 
@@ -201,6 +201,7 @@ SizeI   GetBitmapSize(HBITMAP hbmp);
 void    UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 COLORREF AdjustLightness(COLORREF c, float factor);
+float GetLightness(COLORREF c);
 double  GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);

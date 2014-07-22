@@ -5,11 +5,13 @@
 #include "Tabs.h"
 
 #include "AppPrefs.h"
+#include "Caption.h"
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
+#include "Menu.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "TableOfContents.h"
@@ -21,29 +23,20 @@
 #define OWN_TAB_DRAWING
 
 #ifdef OWN_TAB_DRAWING
-#define TAB_COLOR_BG                        COLOR_BTNFACE
-#define TAB_COLOR_TEXT                      COLOR_BTNTEXT
-#define TAB_COLOR_ACTIVEBACKGROUND          COLOR_GRADIENTACTIVECAPTION
-#define TAB_COLOR_INACTIVEBACKGROUND        COLOR_GRADIENTINACTIVECAPTION
-#define TAB_COLOR_ACTIVECAPTIONELEMENT      COLOR_CAPTIONTEXT
-#define TAB_COLOR_INACTIVECAPTIONELEMENT    COLOR_INACTIVECAPTIONTEXT
 
 #define T_CLOSING   (TCN_LAST + 1)
 #define T_CLOSE     (TCN_LAST + 2)
 #define T_DRAG      (TCN_LAST + 3)
 
-#define BTN_STATE_DEF    0x00
-#define BTN_STATE_HIGH   0x01
-#define BTN_STATE_CLICK  0x02
 
 class TabPainter
 {
     WStrVec text;
     PathData *data;
-    int width, height, buttonSize;
+    int width, height;
     HWND hwnd;
     struct {
-        COLORREF background, highlight, select, outline, bar, text, x_highlight, x_click, x_line, element;
+        COLORREF background, highlight, select, outline, bar, text, x_highlight, x_click, x_line;
     } color;
 
 public:
@@ -52,16 +45,14 @@ public:
     LPARAM mouseCoordinates;
     int nextTab;
     bool inTitlebar;
-    WORD buttonsState;
 
     TabPainter(HWND wnd, int tabWidth, int tabHeight) :
-        hwnd(wnd), data(NULL), width(0), height(0), buttonSize(0),
+        hwnd(wnd), data(NULL), width(0), height(0),
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
         isMouseInClientArea(false), isDragging(false), inTitlebar(false) {
         Reshape(tabWidth, tabHeight);
         EvaluateColors();
         memset(&color, 0, sizeof(color));
-        buttonsState = MAKEWORD(-1, BTN_STATE_DEF);
     }
 
     ~TabPainter() {
@@ -76,7 +67,6 @@ public:
         if (width == dx && height == dy)
             return false;
         width = dx; height = dy;
-        buttonSize = dy;
 
         GraphicsPath shape;
         // define tab's body
@@ -98,35 +88,6 @@ public:
         shape.AddLine(p.X+c-o, p.Y+o, p.X+o, p.Y+c-o);
         shape.SetMarker();
 
-        // define button's body
-        Rect r1(0, 0, buttonSize, buttonSize);
-        shape.AddRectangle(r1);
-        shape.SetMarker();
-        c = int((float)buttonSize * 0.3f + 0.5f); // amount of deflation for the rectangle
-        r1.Inflate(-c, -c);
-        r1.Width++;
-        r1.Height++;
-        // define "minimize" button
-        shape.AddLine(r1.GetLeft(), r1.GetBottom(), r1.GetRight(), r1.GetBottom());
-        shape.SetMarker();
-        // define "maximize" button
-        shape.AddRectangle(r1);
-        shape.SetMarker();
-        // define "restore" button
-        Rect r2(r1);
-        r2.Inflate(-1, -1);
-        r2.Offset(1, -1);
-        shape.AddLine(r2.GetLeft(), r2.GetTop(), r2.GetRight(), r2.GetTop());
-        shape.AddLine(r2.GetRight(), r2.GetTop(), r2.GetRight(), r2.GetBottom());
-        r2.Offset(-2, 2);
-        shape.AddRectangle(r2);
-        shape.SetMarker();
-        // define "close" button
-        shape.AddLine(r1.GetLeft(), r1.GetTop(), r1.GetRight(), r1.GetBottom());
-        shape.StartFigure();
-        shape.AddLine(r1.GetLeft(), r1.GetBottom(), r1.GetRight(), r1.GetTop());
-        shape.SetMarker();
-
         delete data;
         data = new PathData();
         shape.GetPathData(data);
@@ -143,7 +104,8 @@ public:
         iterator.NextMarker(&shape);
 
         ClientRect rClient(hwnd);
-        graphics.TranslateTransform(1.0f, REAL(rClient.dy - height - 1));
+        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
+        graphics.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
             Point pt(point);
             graphics.TransformPoints( CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
@@ -160,30 +122,6 @@ public:
         return -1;
     }
 
-    // Finds the index of the button, which contains the given point.
-    int ButtonFromPoint(int x, int y) {
-        if (!inTitlebar)
-            return -1;
-        Point point(x, y);
-        Graphics graphics(hwnd);
-        GraphicsPath shapes(data->Points, data->Types, data->Count);
-        GraphicsPath shape;
-        GraphicsPathIterator iterator(&shapes);
-        iterator.NextMarker(&shape); iterator.NextMarker(&shape);
-        iterator.NextMarker(&shape); iterator.NextMarker(&shape);
-
-        ClientRect rClient(hwnd);
-        graphics.TranslateTransform((REAL)rClient.dx, 0.0f);
-        for (int i = 0; i < 3; i++) {
-            graphics.TranslateTransform(REAL(-buttonSize - 1), 0.0f);
-            Point pt(point);
-            graphics.TransformPoints( CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
-            if (shape.IsVisible(pt, &graphics))
-                return i;
-        }
-        return -1;
-    }
-
     // Invalidates the tab's region in the client area.
     void Invalidate(int index) {
         if (index < 0) return;
@@ -196,20 +134,8 @@ public:
         Region region(&shape);
 
         ClientRect rClient(hwnd);
-        graphics.TranslateTransform(REAL((width + 1) * index) + 1.0f, REAL(rClient.dy - height - 1));
-        HRGN hRgn = region.GetHRGN(&graphics);
-        InvalidateRgn(hwnd, hRgn, FALSE);
-        DeleteObject(hRgn);
-    }
-
-    // Invalidates the buttons' region in the client area.
-    void InvalidateButtons() {
-        if (!inTitlebar)
-            return;
-        ClientRect rClient(hwnd);
-        Graphics graphics(hwnd);
-        graphics.TranslateTransform(REAL(rClient.dx - 3*(buttonSize + 1)), 0.0f);
-        Region region(Rect(0, 0, 3*(buttonSize + 1) + 1, buttonSize + 1));
+        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
+        graphics.TranslateTransform(REAL((width + 1) * index) + 1.0f, yPosTab);
         HRGN hRgn = region.GetHRGN(&graphics);
         InvalidateRgn(hwnd, hRgn, FALSE);
         DeleteObject(hRgn);
@@ -224,18 +150,36 @@ public:
         IntersectClipRect(memDC, rc.left, rc.top, rc.right, rc.bottom);
 
         // paint the background
-        HBRUSH brush = CreateSolidBrush(color.bar);
-        FillRect(memDC, &rc, brush);
-        DeleteObject(brush);
+        bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
+        if (isTranslucentMode)
+            PaintParentBackground(hwnd, memDC);
+        else {
+            HBRUSH brush = CreateSolidBrush(color.bar);
+            FillRect(memDC, &rc, brush);
+            DeleteObject(brush);
+        }
 
         Graphics graphics(memDC);
         graphics.SetCompositingMode(CompositingModeSourceOver);
         graphics.SetCompositingQuality(CompositingQualityHighQuality);
         graphics.SetSmoothingMode(SmoothingModeHighQuality);
+        graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
         graphics.SetPageUnit(UnitPixel);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
         GraphicsPathIterator iterator(&shapes);
+
+        // create PathGradientBrush, used for painting the translucent tabs
+        iterator.NextMarker(&shape);
+        PathGradientBrush pbr(&shape);
+        pbr.SetCenterPoint(Point(width/2, height/2));
+        iterator.Rewind();
+        ARGB argb = Color::MakeARGB(255, GetRValueSafe(color.select), GetGValueSafe(color.select), GetBValueSafe(color.select));
+        pbr.SetCenterColor(Color(argb));
+        argb &= 0x00ffffff;
+        Color colors[] = {Color(argb)};
+        int cnt = 1;
+        pbr.SetSurroundColors(colors, &cnt);
 
         SolidBrush br(Color(0, 0, 0));
         Pen pen(&br);
@@ -246,19 +190,35 @@ public:
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
         sf.SetTrimming(StringTrimmingEllipsisCharacter);
+        if (isTranslucentMode)
+            sf.SetAlignment(StringAlignmentCenter);
 
-        graphics.TranslateTransform(1.0f, REAL(rClient.dy - height - 1));
+        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
+        graphics.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
             if (graphics.IsVisible(0, 0, width + 1, height + 1)) {
                 // paint tab's body
                 iterator.NextMarker(&shape);
-                if (current == (int)i)
-                    graphics.FillPath(LoadBrush(br, color.select), &shape);
-                else if (highlighted == (int)i)
-                    graphics.FillPath(LoadBrush(br, color.highlight), &shape);
+                if (current == (int)i) {
+                    LoadBrush(br, color.select);
+                    pbr.SetFocusScales(0.8f, 0.8f);
+                }
+                else if (highlighted == (int)i) {
+                    LoadBrush(br, color.highlight);
+                    pbr.SetFocusScales(0.7f, 0.5f);
+                }
+                else {
+                    LoadBrush(br, color.background);
+                    pbr.SetFocusScales(0.0f, 0.0f);
+                }
+                if (isTranslucentMode) {
+                    graphics.SetCompositingMode(CompositingModeSourceCopy);
+                    graphics.FillPath(&pbr, &shape);
+                }
                 else
-                    graphics.FillPath(LoadBrush(br, color.background), &shape);
+                    graphics.FillPath(&br, &shape);
                 graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
+                graphics.SetCompositingMode(CompositingModeSourceOver);
 
                 // draw tab's text
                 graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
@@ -282,40 +242,6 @@ public:
             }
             graphics.TranslateTransform(REAL(width + 1), 0.0f);
         }
-        // draw the line at the bottom of the tab bar
-        graphics.DrawLine(LoadPen(pen, color.outline, 1.0f), 0, height, rc.right, height);
-
-        // draw the buttons
-        if (inTitlebar) {
-            graphics.ResetTransform();
-            graphics.TranslateTransform((REAL)rClient.dx, 0.0f);
-            if (graphics.IsVisible(0, 0, -3*(buttonSize + 1) - 1, buttonSize + 1)) {
-                iterator.NextMarker(&shape); iterator.NextMarker(&shape);
-                iterator.NextMarker(&shape); iterator.NextMarker(&shape);
-                for (BYTE i = 0; i < 3; i++) {
-                    graphics.TranslateTransform(REAL(-buttonSize - 1), 0.0f);
-                    if (i == LOBYTE(buttonsState)) {
-                        if (BTN_STATE_CLICK & HIBYTE(buttonsState)) {
-                            LoadBrush(br, i == 0 ? color.x_click : color.background);
-                            graphics.FillPath(&br, &shape);
-                        }
-                        else if (BTN_STATE_HIGH & HIBYTE(buttonsState)) {
-                            LoadBrush(br, i == 0 ? color.x_highlight : color.select);
-                            graphics.FillPath(&br, &shape);
-                        }
-                    }
-                }
-                graphics.SetSmoothingMode(SmoothingModeNone);
-                BOOL isMaximized = IsZoomed(GetParent(hwnd));
-                for (BYTE i = 0; i < 3; i++) {
-                    iterator.NextMarker(&shape);
-                    if (i == 1 && isMaximized || i == 2 && !isMaximized)
-                        iterator.NextMarker(&shape);
-                    graphics.DrawPath(LoadPen(pen, color.element, 2.0f), &shape);
-                    graphics.TranslateTransform(REAL(buttonSize + 1), 0.0f);
-                }
-            }
-        }
 
         BitBlt(hdc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, memDC, rc.left, rc.top, SRCCOPY);
 
@@ -328,11 +254,8 @@ public:
         COLORREF bg;
         COLORREF txt = GetSysColor(TAB_COLOR_TEXT);
         if (inTitlebar) {
-            bool active = GetParent(hwnd) == GetForegroundWindow() ? true : false;
-            bg = active ? GetSysColor(TAB_COLOR_ACTIVEBACKGROUND)
-                        : GetSysColor(TAB_COLOR_INACTIVEBACKGROUND);
-            color.element = active ? GetSysColor(TAB_COLOR_ACTIVECAPTIONELEMENT)
-                                   : GetSysColor(TAB_COLOR_INACTIVECAPTIONELEMENT);
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            bg = win->caption->bgColor;
         }
         else
             bg = GetSysColor(TAB_COLOR_BG);
@@ -440,7 +363,7 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 {
     PAINTSTRUCT ps;
     HDC hdc;
-    int index, xPos, yPos;
+    int index;
     LPTCITEM tcs;
 
     TabPainter *tab = (TabPainter *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -525,7 +448,15 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         }
 
     case WM_NCHITTEST:
-        return HTCLIENT;
+        {
+            if (!tab->inTitlebar || hwnd == GetCapture())
+                return HTCLIENT;
+            POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+            ScreenToClient(hwnd, &pt);
+            if (-1 != tab->IndexFromPoint(pt.x, pt.y))
+                return HTCLIENT;
+        }
+        return HTTRANSPARENT;
 
     case WM_MOUSELEAVE:
         PostMessage(hwnd, WM_MOUSEMOVE, 0xFF, 0);
@@ -571,17 +502,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             }
             if (!inX)
                 tab->xClicked = -1;
-
-            if (tab->inTitlebar && hl == -1) {
-                int btn = tab->ButtonFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-                BYTE state = (BYTE)btn == LOBYTE(tab->buttonsState) ? BTN_STATE_HIGH | HIBYTE(tab->buttonsState)
-                                                                    : BTN_STATE_HIGH;
-                WORD btnsState = MAKEWORD(btn, state);
-                if (tab->buttonsState != btnsState) {
-                    tab->InvalidateButtons();
-                    tab->buttonsState = btnsState;
-                }
-            }
         }
         return 0;
 
@@ -602,29 +522,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             tab->isDragging = true;
             SetCapture(hwnd);
         }
-        else if (tab->inTitlebar) {
-            int btn = tab->ButtonFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-            if (btn == -1) {
-                HWND parent = GetParent(hwnd);
-                if (!IsZoomed(parent)) {
-                    // Cancel the mouse's tracking and post a message to the parent to move the window.
-                    TRACKMOUSEEVENT tme;
-                    tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                    tme.dwFlags = TME_CANCEL | TME_LEAVE;
-                    tme.hwndTrack = hwnd;
-                    if (TrackMouseEvent(&tme))
-                        tab->isMouseInClientArea = false;
-                    PostMessage(parent, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-                }
-            }
-            else {
-                WORD btnsState = MAKEWORD(btn, BTN_STATE_HIGH | BTN_STATE_CLICK);
-                if (tab->buttonsState != btnsState) {
-                    tab->InvalidateButtons();
-                    tab->buttonsState = btnsState;
-                }
-            }
-        }
         return 0;
 
     case WM_LBUTTONUP:
@@ -638,27 +535,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (tab->isDragging) {
             tab->isDragging = false;
             ReleaseCapture();
-        }
-        if (tab->inTitlebar && BTN_STATE_CLICK & HIBYTE(tab->buttonsState)) {
-            BYTE btn = LOBYTE(tab->buttonsState);
-            tab->buttonsState = MAKEWORD(btn, HIBYTE(tab->buttonsState) & ~BTN_STATE_CLICK);
-            if (btn < 3) {
-                HWND parent = GetParent(hwnd);
-                WPARAM wp = 0 == btn ? SC_CLOSE : 2 == btn ? SC_MINIMIZE : IsZoomed(parent) ? SC_RESTORE : SC_MAXIMIZE;
-                PostMessage(parent, WM_SYSCOMMAND, wp, 0);
-                tab->InvalidateButtons();
-            }
-        }
-        return 0;
-
-    case WM_LBUTTONDBLCLK:
-        if (tab->inTitlebar) {
-            xPos = GET_X_LPARAM(lParam);
-            yPos = GET_Y_LPARAM(lParam);
-            if (-1 == tab->IndexFromPoint(xPos, yPos) && -1 == tab->ButtonFromPoint(xPos, yPos)) {
-                HWND parent = GetParent(hwnd);
-                PostMessage(parent, WM_SYSCOMMAND, IsZoomed(parent) ? SC_RESTORE : SC_MAXIMIZE, 0);
-            }
         }
         return 0;
 
@@ -679,37 +555,6 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             uitask::Post(new TabNotification(win, T_CLOSE, tab->xClicked));
             tab->Invalidate(tab->xClicked);
             tab->xClicked = -1;
-        }
-        return 0;
-
-    case WM_RBUTTONDOWN:
-        if (tab->inTitlebar) {
-            xPos = GET_X_LPARAM(lParam);
-            yPos = GET_Y_LPARAM(lParam);
-            if (-1 == tab->IndexFromPoint(xPos, yPos) && -1 == tab->ButtonFromPoint(xPos, yPos))
-                SetCapture(hwnd);
-        }
-        return 0;
-
-    case WM_RBUTTONUP:
-        if (tab->inTitlebar && hwnd == GetCapture()) {
-            ReleaseCapture();
-            xPos = GET_X_LPARAM(lParam);
-            yPos = GET_Y_LPARAM(lParam);
-            ClientRect rClient(hwnd);
-            if (rClient.Contains(PointI(xPos, yPos)) && -1 == tab->IndexFromPoint(xPos, yPos)
-                                                     && -1 == tab->ButtonFromPoint(xPos, yPos)) {
-                // Cancel the mouse's tracking and show the menu.
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                tme.dwFlags = TME_CANCEL | TME_LEAVE;
-                tme.hwndTrack = hwnd;
-                if (TrackMouseEvent(&tme))
-                    tab->isMouseInClientArea = false;
-                POINT pt = {xPos, yPos};
-                ClientToScreen(hwnd, &pt);
-                MenuBarAsPopupMenu(GetParent(hwnd), pt.x, pt.y);
-            }
         }
         return 0;
 
@@ -997,12 +842,11 @@ static void ShowTabBar(WindowInfo *win, bool show)
 void UpdateTabWidth(WindowInfo *win)
 {
     int count = TabsGetCount(win);
-    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab;
-    if (count > (showSingleTab ? 0 : 1) || win->tabsInTitlebar) {
+    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab || win->tabsInTitlebar;
+    if (count > (showSingleTab ? 0 : 1)) {
         ShowTabBar(win, true);
-        ClientRect rect(win->hwndFrame);
-        int buttonsWidth = win->tabsInTitlebar ? 3*TAB_HEIGHT : 0;
-        int tabWidth = count ? (rect.dx - buttonsWidth - 3) / count : TAB_WIDTH;
+        ClientRect rect(win->hwndTabBar);
+        int tabWidth = (rect.dx - 3) / count;
         TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH < tabWidth ? TAB_WIDTH : tabWidth, TAB_HEIGHT);
     }
     else {
@@ -1012,15 +856,27 @@ void UpdateTabWidth(WindowInfo *win)
 
 void SetTabsInTitlebar(WindowInfo *win, bool set)
 {
-#ifdef OWN_TAB_DRAWING
     if (set == win->tabsInTitlebar)
         return;
     win->tabsInTitlebar = set;
     TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
     tab->inTitlebar = set;
-    UpdateTabWidth(win);
+    SetParent(win->hwndTabBar, set ? win->hwndCaption : win->hwndFrame);
+    ShowWindow(win->hwndCaption, set ? SW_SHOW : SW_HIDE);
+    if (set != win->isMenuHidden)
+        ShowHideMenuBar(win);
+    if (set) {
+        win->caption->UpdateTheme();
+        win->caption->UpdateBackgroundColor(win->hwndFrame == GetForegroundWindow());
+        win->caption->UpdateBackgroundAlpha();
+        RelayoutCaption(win);
+    }
+    else if (dwm::IsCompositionEnabled()) {
+        // remove the extended frame
+        MARGINS margins = { 0 };
+        dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
+    }
     SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
-#endif //OWN_TAB_DRAWING
 }
 
 // Selects the given tab (0-based index).
@@ -1087,41 +943,6 @@ void SwapTabs(WindowInfo *win, int tab1, int tab2)
         TabCtrl_SetCurSel(win->hwndTabBar, tab1);
 }
 
-void MenuBarAsPopupMenu(HWND hwnd, int x, int y)
-{
-    HMENU menu = GetMenu(hwnd);
-    int count = GetMenuItemCount(menu);
-    if (count <= 0)
-        return;
-    HMENU popup = CreatePopupMenu();
-
-    MENUITEMINFO mii;
-    mii.cbSize = sizeof(MENUITEMINFO);
-    mii.fMask = MIIM_SUBMENU | MIIM_STRING;
-    for (int i = 0; i < count; i++) {
-        mii.dwTypeData = NULL;
-        GetMenuItemInfo(menu, i, TRUE, &mii);
-        if (!mii.hSubMenu || !mii.cch)
-            continue;
-        mii.cch++;
-        ScopedMem<WCHAR> subMenuName(AllocArray<WCHAR>(mii.cch));
-        mii.dwTypeData = subMenuName;
-        GetMenuItemInfo(menu, i, TRUE, &mii);
-        AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
-    }
-    TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, hwnd, NULL);
-
-    while (--count >= 0)
-        RemoveMenu(popup, count, MF_BYPOSITION);
-    DestroyMenu(popup);
-}
-
-float GetLightness(COLORREF c) {
-    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
-    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
-    return (M + m) / 2.0f;
-}
-
 // Adjusts lightness by 1/255 units.
 COLORREF AdjustLightness2(COLORREF c, float units) {
     float lightness = GetLightness(c);
@@ -1130,4 +951,3 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
         return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
     return AdjustLightness(c, 1.0f + units / lightness);
 }
-

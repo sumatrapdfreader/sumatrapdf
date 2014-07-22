@@ -54,7 +54,7 @@ void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc)
 
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
-bool IsAppThemed()
+bool _IsAppThemed()
 {
     FARPROC pIsAppThemed = LoadDllFunc(L"uxtheme.dll", "IsAppThemed");
     if (!pIsAppThemed)
@@ -1072,6 +1072,14 @@ COLORREF AdjustLightness(COLORREF c, float factor)
     G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
     B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
     return RGB(R, G, B);
+}
+
+// cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
+float GetLightness(COLORREF c)
+{
+    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
+    return (M + m) / 2.0f;
 }
 
 // This is meant to measure program startup time from the user perspective.

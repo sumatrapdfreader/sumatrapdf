@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "WindowInfo.h"
 
+#include "Caption.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
@@ -38,7 +39,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
     uia_provider(NULL), cbHandler(NULL), frameRateWnd(NULL),
-    hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL)
+    hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL),
+    hwndCaption(NULL), caption(NULL)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;
@@ -68,6 +70,7 @@ WindowInfo::~WindowInfo()
     delete tocRoot;
     delete notifications;
     delete tabSelectionHistory;
+    delete caption;
     // delete DisplayModel/BaseEngine last, as e.g.
     // DocTocItem or PageElement might still need the
     // BaseEngine in their destructors

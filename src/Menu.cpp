@@ -94,6 +94,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Tabs in Titlebar"),             IDM_VIEW_TABS_IN_TITLEBAR,  0 },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
@@ -459,6 +460,9 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     // TODO: is this check too expensive?
     if (win->IsDocLoaded() && !file::Exists(win->ctrl->FilePath()))
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
+
+    win::menu::SetEnabled(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, gGlobalPrefs->useTabs);
+    win::menu::SetChecked(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, win->tabsInTitlebar);
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
