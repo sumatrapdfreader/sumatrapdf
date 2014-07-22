@@ -9,6 +9,11 @@ using namespace Gdiplus;
 
 /*
 TODO:
+ - text drawing is still too slow. each html page takes ~20ms to draw, which is
+   terrible and much slower than what I think the test render was doing (~1ms)
+   Is it beacuase it draws to gfx->GetHDC() instead of e.g. natural or bitmap
+   HDC? In which case maybe I should render text to bitmap hdc and then
+   blit that once to Graphics?
  - add transparent rendering to GDI, see:
    http://stackoverflow.com/questions/1340166/transparency-to-text-in-gdi
    http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/
@@ -47,6 +52,8 @@ void TextRenderGdi::CreateHdcForTextMeasure() {
 }
 
 TextRenderGdi::~TextRenderGdi() {
+    FreeMemBmp();
+    DeleteDC(memHdc);
     ReleaseDC(NULL, hdcForTextMeasure);
     CrashIf(hdcGfxLocked); // hasn't been Unlock()ed
 }
@@ -154,26 +161,28 @@ void TextRenderGdi::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) {
 #endif
 }
 
-// based on http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/,
-// TODO: look into using http://theartofdev.wordpress.com/2014/01/12/gdi-text-rendering-to-image/
-// TODO: doesn't actually look good (i.e. similar to DrawText when using transparent SetBkMode())
-// which kind of makes sense, because I'm using transparent mode to draw to in-memory bitmap as well
-// TODO: doesn't actually do alpha bf.SourceConstantAlpha > 4 looks the same, values 1-4 produce
-// different, but not expected, results
-// TODO: the bitmap should be cached so that we don't call CreateDIBSection every time
-// TODO: I would like to figure out a way to draw text without the need to Lock()/Unlock()
-// maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
-// Graphics object
-void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
-    CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
-    //SetBkMode(hdcGfxLocked, 1);
+void TextRenderGdi::FreeMemBmp()
+{
+    DeleteObject(memBmp);
+}
 
-    HDC memHdc = CreateCompatibleDC(hdcGfxLocked);
-    SetBkMode(memHdc, TRANSPARENT);
-    int x = (int) bb.X;
-    int y = (int) bb.Y;
-    int dx = (int) bb.Width;
-    int dy = (int) bb.Height;
+void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy)
+{
+    // set minimums for less allocations
+    if (dx < 128)
+        dx = 128;
+    if (dy < 48)
+        dy = 48;
+
+    if (dx <= memBmpDx && dy <= memBmpDy) {
+        ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
+        return;
+    }
+    if (!memHdc) {
+        memHdc = CreateCompatibleDC(hdcGfxLocked);
+    }
+
+    FreeMemBmp();
 
     BITMAPINFO bmi = { };
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -184,12 +193,36 @@ void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool
     bmi.bmiHeader.biCompression = BI_RGB;
     bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
 
-    unsigned char *bmpData = NULL;
-    HBITMAP dib = CreateDIBSection(memHdc, &bmi, DIB_RGB_COLORS, (void **)&bmpData, NULL, 0);
-    if (!dib)
+    memBmp = CreateDIBSection(memHdc, &bmi, DIB_RGB_COLORS, &memBmpData, NULL, 0);
+    if (!memBmp)
         return;
-    memset(bmpData, 0, bmi.bmiHeader.biSizeImage);
-    SelectObject(memHdc, dib);
+
+    ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
+
+    SelectObject(memHdc, memBmp);
+}
+
+// based on http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/,
+// TODO: look into using http://theartofdev.wordpress.com/2014/01/12/gdi-text-rendering-to-image/
+// TODO: doesn't actually look good (i.e. similar to DrawText when using transparent SetBkMode())
+// which kind of makes sense, because I'm using transparent mode to draw to in-memory bitmap as well
+// TODO: doesn't actually do alpha bf.SourceConstantAlpha > 4 looks the same, values 1-4 produce
+// different, but not expected, results
+// TODO: I would like to figure out a way to draw text without the need to Lock()/Unlock()
+// maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
+// Graphics object
+void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
+    CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
+
+    int x = (int) bb.X;
+    int y = (int) bb.Y;
+    int dx = (int) bb.Width;
+    int dy = (int) bb.Height;
+
+    CreateClearBmpOfSize(dx,dy);
+    //SetBkMode(hdcGfxLocked, 1);
+    SetBkMode(memHdc, TRANSPARENT);
+
     //BitBlt(memHdc, 0, 0, dx, dy, hdcGfxLocked, x, y, SRCCOPY);
     SelectObject(memHdc, currFont);
     ::SetTextColor(memHdc, textColor.ToCOLORREF());
@@ -209,8 +242,6 @@ void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool
     bf.AlphaFormat = 0; // 0 - ignore source alpha, AC_SRC_ALPHA (1) - use source alpha
     bf.SourceConstantAlpha = 0x3; //textColor.GetA();
     AlphaBlend(hdcGfxLocked, x, y, dx, dy, memHdc, 0, 0, dx, dy, bf);
-    DeleteObject(dib);
-    DeleteDC(memHdc);
 }
 
 void TextRenderGdi::DrawTransparent(const char *s, size_t sLen, RectF& bb, bool isRtl) {

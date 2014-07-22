@@ -96,10 +96,12 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     Timer timerAll;
 
     CachedStyle *s = cachedStyle;
-    Rect r(offX, offY, pos.Width, pos.Height);
-    Brush *br = BrushFromColorData(s->bgColor, r);
     Timer timerFill;
-    gfx->FillRectangle(br, r);
+    Rect r(offX, offY, pos.Width, pos.Height);
+    if (!s->bgColor->IsTransparent()) {
+        Brush *br = BrushFromColorData(s->bgColor, r);
+        gfx->FillRectangle(br, r);
+    }
     double durFill = timerFill.Stop();
 
     if (!page)

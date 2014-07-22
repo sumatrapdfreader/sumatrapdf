@@ -56,7 +56,18 @@ private:
     Gdiplus::Color          textBgColor;
     WCHAR                   txtConvBuf[512];
 
-    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), currFont(NULL), gfx(NULL) { }
+    HDC                     memHdc;
+    HBITMAP                 memBmp;
+    void *                  memBmpData;
+    int                     memBmpDx, memBmpDy;
+    
+
+    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), 
+        currFont(NULL), gfx(NULL), memHdc(NULL), memBmp(NULL), memBmpData(NULL),
+        memBmpDx(0), memBmpDy(0) { }
+
+    void        FreeMemBmp();
+    void        CreateClearBmpOfSize(int dx, int dy);
 
 public:
     void CreateHdcForTextMeasure();

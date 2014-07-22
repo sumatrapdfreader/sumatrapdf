@@ -148,6 +148,7 @@ struct ColorData {
     };
 
     bool operator==(const ColorData& other) const;
+    bool IsTransparent() const { return type == ColorSolid && solid.color == 0; }
 };
 
 struct Padding {
