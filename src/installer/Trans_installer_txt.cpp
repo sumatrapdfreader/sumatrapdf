@@ -254,7 +254,7 @@ const char * gTranslations_eu =
   "Hutsegitea kentzaile erregistro giltzak ezabatzerakoan\0"\
   "Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan\0"\
   "Hutsegitea kentze argibideak erregistroan idazterakoan\0"\
-  "Ezkutatu A&ukerak\0"\
+  "Ezkuta A&ukerak\0"\
   "Ezarri SumatraPDF\0"\
   "Ezarri Su&matraPDF agiritegi honetan:\0"\
   "Ezarpen hutsegitea!\0"\

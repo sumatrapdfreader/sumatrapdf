@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0f5968fff976ea13fd7750003a10a31aead3c61c
+6df2c02251713be9f67198900418b34131e3f79d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4780,7 +4780,7 @@ dk:Skift sprog (Change Language)
 el:Αλλαγή Γλώσσας (Change Language)
 es:Cambiar idioma (Change Language)
 et:Vali keel (Change Language)
-eu:Aldatu Hizkuntza
+eu:&Aldatu Hizkuntza
 fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
@@ -6457,6 +6457,7 @@ bs:Pozicija kursora:
 cz:Pozice kurzoru:
 de:Zeigerposition:
 et:Kursori asukoht
+eu:Kurtsorearen kokapena:
 fa:مکان نما, موقعیت
 fr:Position du curseur :
 he:מיקום סמן:
@@ -6468,6 +6469,8 @@ nl:Cursor positie
 pl:Pozycja kursora:
 ru:Позиция курсора:
 sl:Položaj kurzorja:
+sp-rs:Pozicija kursora
+sr-rs:Позиција курсора
 uk:Позиція вказівника:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
@@ -9514,7 +9517,7 @@ de:&Optionen
 dk:Gem &Valgmuligheder
 es:Menos &opciones
 et:Peida &sätted
-eu:Ezkutatu A&ukerak
+eu:Ezkuta A&ukerak
 fa:مخفی & تنظیمات
 fi:Piilota
 fr:Masque les &options
@@ -13871,6 +13874,7 @@ bs:Selekcija:
 cz:Výběr:
 de:Auswahl:
 et:Valik:
+eu:Hautatpena:
 fa:انتخاب
 fr:Sélection :
 he:בחירה:
@@ -13882,6 +13886,8 @@ nl:Selectie
 pl:Selekcja:
 ru:Выделение:
 sl:Izbor:
+sp-rs:Izbor
+sr-rs:Избор
 uk:Виділення:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
@@ -15764,6 +15770,7 @@ vn:Không rõ tập tin nguồn (%s)
 am:Ավելացնել &ներդիրներ
 de:Dokumente in &Tabs öffnen
 et:Kasuta &kaarte
+eu:Erabili &hegatsak
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
 id:Gunakan &tab
@@ -15772,6 +15779,8 @@ ja:タブを使う(&t)
 nl:Gebruik &tabs
 pl:Włącz wyświetlanie &kart
 ru:Использовать &вкладки
+sp-rs:Koristiti tab
+sr-rs:Користити таб
 uk:Використовувати вкладки
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
