@@ -293,12 +293,14 @@ void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
         BYTE buttonRGB = CBS_PUSHED == stateId ? 0 : CBS_HOT == stateId ? 255 : 1;
         if (buttonRGB != 1) {
             // paint the background
+            if (GetLightness(win->caption->textColor) > GetLightness(win->caption->bgColor))
+                buttonRGB ^= 0xff;
             BYTE buttonAlpha = BYTE((255 - abs((int)GetLightness(win->caption->bgColor) - buttonRGB)) / 2);
             SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
             graphics.FillRectangle(&br, 0, 0, dx, dy);
         }
         // draw the three lines
-        COLORREF c = GetSysColor(TAB_COLOR_TEXT);
+        COLORREF c = win->caption->textColor;
         Pen p(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)), floor((float)dy / 8.0f));
         InflateRect(&r, -int((float)dx * 0.2f + 0.5f), -int((float)dy * 0.3f + 0.5f));
         int o = (r.bottom - r.top) / 2;   // line's offset
@@ -420,7 +422,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             break;
 
         case WM_NCACTIVATE:
-            win->caption->UpdateBackgroundColor((bool)wParam);
+            win->caption->UpdateColors((bool)wParam);
             if (!IsIconic(hwnd))
                 RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
             break;
@@ -440,7 +442,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             return 0;
 
         case WM_NCACTIVATE:
-            win->caption->UpdateBackgroundColor((bool)wParam);
+            win->caption->UpdateColors((bool)wParam);
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
                 win->caption->btn[i].inactive = wParam == FALSE;
             if (!IsIconic(hwnd)) {
@@ -551,7 +553,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         break;
 
     case WM_SYSCOLORCHANGE:
-        win->caption->UpdateBackgroundColor(hwnd == GetForegroundWindow());
+        win->caption->UpdateColors(hwnd == GetForegroundWindow());
         break;
 
     case WM_DWMCOMPOSITIONCHANGED:

@@ -24,6 +24,9 @@
 
 #ifdef OWN_TAB_DRAWING
 
+#define TAB_COLOR_BG      COLOR_BTNFACE
+#define TAB_COLOR_TEXT    COLOR_BTNTEXT
+
 #define T_CLOSING   (TCN_LAST + 1)
 #define T_CLOSE     (TCN_LAST + 2)
 #define T_DRAG      (TCN_LAST + 3)
@@ -251,29 +254,28 @@ public:
 
     // Evaluates the colors for the tab's elements.
     void EvaluateColors() {
-        COLORREF bg;
-        COLORREF txt = GetSysColor(TAB_COLOR_TEXT);
+        COLORREF bg, txt;
         if (inTitlebar) {
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
             bg = win->caption->bgColor;
+            txt = win->caption->textColor;
         }
-        else
+        else {
             bg = GetSysColor(TAB_COLOR_BG);
+            txt = GetSysColor(TAB_COLOR_TEXT);
+        }
         if (bg == color.bar && txt == color.text)
             return;
 
         color.bar  = bg;
         color.text = txt;
 
-        int sign = 240.0f < GetLightness(color.bar) ? -1 : 1;
+        int sign = GetLightness(color.text) > GetLightness(color.bar) ? -1 : 1;
 
         color.select      = AdjustLightness2(color.bar, sign * 25.0f);
         color.highlight   = AdjustLightness2(color.bar, sign * 15.0f);
         color.background  = AdjustLightness2(color.bar, -sign * 15.0f);
-
-        sign = GetLightness(color.text) < GetLightness(color.bar) ? -1 : 1;
-
-        color.outline     = AdjustLightness2(color.bar, sign * 60.0f);
+        color.outline     = AdjustLightness2(color.bar, -sign * 60.0f);
         color.x_line      = COL_CLOSE_X_HOVER;
         color.x_highlight = COL_CLOSE_HOVER_BG;
         color.x_click     = AdjustLightness2(color.x_highlight, -10.0f);
@@ -867,7 +869,7 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
         ShowHideMenuBar(win);
     if (set) {
         win->caption->UpdateTheme();
-        win->caption->UpdateBackgroundColor(win->hwndFrame == GetForegroundWindow());
+        win->caption->UpdateColors(win->hwndFrame == GetForegroundWindow());
         win->caption->UpdateBackgroundAlpha();
         RelayoutCaption(win);
     }

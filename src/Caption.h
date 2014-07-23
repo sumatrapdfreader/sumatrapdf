@@ -19,10 +19,6 @@
 
 #define CAPTION_HEIGHT    (int)(1.5f * TABBAR_HEIGHT)
 
-#define CAPTION_ACTIVEBACKGROUND      COLOR_GRADIENTACTIVECAPTION
-#define CAPTION_INACTIVEBACKGROUND    COLOR_GRADIENTINACTIVECAPTION
-
-
 class WindowInfo;
 
 void CreateCaption(WindowInfo *win);
@@ -80,12 +76,13 @@ public:
     ButtonInfo  btn[CB_BTN_COUNT];
     HTHEME      theme;
     COLORREF    bgColor;
+    COLORREF    textColor;
     BYTE        bgAlpha;
     bool        isMenuOpen;
 
     CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(NULL), isMenuOpen(false) {
         UpdateTheme();
-        UpdateBackgroundColor(true);
+        UpdateColors(true);
         UpdateBackgroundAlpha();
     }
 
@@ -104,16 +101,18 @@ public:
             theme = vss::OpenThemeData(hwnd, L"WINDOW");
     }
 
-    void UpdateBackgroundColor(bool activeWindow)
+    void UpdateColors(bool activeWindow)
     {
-        if (theme) {
-            if (SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
-                activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
-                    return;
-            }
+        if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+            activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
+                bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
+                                       : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
         }
-        bgColor = activeWindow ? GetSysColor(CAPTION_ACTIVEBACKGROUND)
-                               : GetSysColor(CAPTION_INACTIVEBACKGROUND);
+        if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+            activeWindow ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
+                textColor = activeWindow ? GetSysColor(COLOR_CAPTIONTEXT)
+                                         : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+        }
     }
 
     void UpdateBackgroundAlpha()

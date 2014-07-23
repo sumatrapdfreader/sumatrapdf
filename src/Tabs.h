@@ -9,9 +9,6 @@
 #define TAB_WIDTH        200
 #define TAB_HEIGHT       TABBAR_HEIGHT - 1
 
-#define TAB_COLOR_BG      COLOR_BTNFACE
-#define TAB_COLOR_TEXT    COLOR_BTNTEXT
-
 class WindowInfo;
 class Controller;
 struct WatchedFile;
