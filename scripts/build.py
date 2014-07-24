@@ -100,10 +100,10 @@ def get_real_name(f):
 def get_in_archive_name(f):
     if type(f) in [types.ListType, types.TupleType]:
         assert len(f) == 2
-        return f[1]
-    return f
+        return f[1].encode("UTF-8")
+    return f.encode("UTF-8")
 
-g_lzsa_archive_magic_id = 0x4c7a5341
+
 def get_file_crc32(path):
     with open(path, "rb") as fo:
         d = fo.read()
@@ -111,15 +111,18 @@ def get_file_crc32(path):
     return checksum & 0xFFFFFFFF
 
 
+g_lzsa_archive_magic_id = 0x41537a4c
+
 """
 Create a simple lzma archive in format:
 
-u32   magic_id 0x4c7a5341 ("LzSA' for "Lzma Simple Archive")
+u32   magic_id 0x41537a4c ("LzSA' for "Lzma Simple Archive")
 u32   number of files
 for each file:
-  u32        file size uncompressed
+  u32        length of file metadata (from this field to file name's 0-terminator)
   u32        file size compressed
-  u32        crc32 checksum of compressed data
+  u32        file size uncompressed
+  u32        crc32 checksum of uncompressed data
   FILETIME   last modification time in Windows's FILETIME format
   char[...]  file name, 0-terminated
 u32   crc32 checksum of the header (i.e. data so far)
@@ -144,13 +147,15 @@ def create_lzsa_archive(dir, archiveName, files):
     for f in files:
         real_name = get_real_name(f)
         path = os.path.join(dir, real_name)
-        d += struct.pack("<I", os.path.getsize(path))
-        d += struct.pack("<I", os.path.getsize(path + ".lzma"))
-        d += struct.pack("<I", get_file_crc32(path + ".lzma"))
-        d += struct.pack("<Q",
-                         int((os.path.getmtime(path) + 11644473600L) * 10000000))
-        f = get_in_archive_name(f)
-        d += f + "\0"
+        data = struct.pack("<I", 0) # length to be corrected below
+        data += struct.pack("<I", os.path.getsize(path + ".lzma"))
+        data += struct.pack("<I", os.path.getsize(path))
+        data += struct.pack("<I", get_file_crc32(path))
+        data += struct.pack("<Q",
+                            int((os.path.getmtime(path) + 11644473600L) * 10000000))
+        entry_name = get_in_archive_name(f)
+        data += entry_name + "\0"
+        d += struct.pack("<I", len(data)) + data[4:]
     checksum = crc32(d, 0) & 0xFFFFFFFF
     d += struct.pack("<I", checksum)
 

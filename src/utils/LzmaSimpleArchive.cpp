@@ -18,7 +18,7 @@ Archives are simple to create (in Sumatra, we use a python script).
 */
 
 // 'LzSA' for "Lzma Simple Archive"
-#define LZMA_MAGIC_ID 0x4c7a5341
+#define LZMA_MAGIC_ID 0x41537a4c
 
 namespace lzma {
 
@@ -41,73 +41,67 @@ static uint32_t Read4Skip(const char **in)
 
 struct ISzAllocatorAlloc : ISzAlloc {
     Allocator *allocator;
+
+    static void *_Alloc(void *p, size_t size) {
+        ISzAllocatorAlloc *a = (ISzAllocatorAlloc *)p;
+        return Allocator::Alloc(a->allocator, size);
+    }
+    static void _Free(void *p, void *address) {
+        ISzAllocatorAlloc *a = (ISzAllocatorAlloc *)p;
+        Allocator::Free(a->allocator, address);
+    }
+
+    ISzAllocatorAlloc(Allocator *allocator) {
+        this->Alloc = _Alloc;
+        this->Free = _Free;
+        this->allocator = allocator;
+    }
 };
 
-static void *LzmaAllocatorAlloc(void *p, size_t size)
+bool Decompress(const char *compressed, size_t compressedSize, char *out, size_t *uncompressedSizeInOut, Allocator *allocator)
 {
-    ISzAllocatorAlloc *a = (ISzAllocatorAlloc*)p;
-    return Allocator::Alloc(a->allocator, size);
-}
-
-static void LzmaAllocatorFree(void *p, void *address)
-{
-    ISzAllocatorAlloc *a = (ISzAllocatorAlloc*)p;
-    Allocator::Free(a->allocator, address);
-}
-
-char* Decompress(const char *compressed, size_t compressedSize, size_t* uncompressedSizeOut, Allocator *allocator)
-{
-    ISzAllocatorAlloc lzmaAlloc;
-    lzmaAlloc.Alloc = LzmaAllocatorAlloc;
-    lzmaAlloc.Free = LzmaAllocatorFree;
-    lzmaAlloc.allocator = allocator;
+    ISzAllocatorAlloc lzmaAlloc(allocator);
 
     if (compressedSize < LZMA86_HEADER_SIZE)
-        return NULL;
+        return false;
 
     uint8_t usesX86Filter = (uint8_t)compressed[0];
     if (usesX86Filter > 1)
-        return NULL;
+        return false;
 
-    const uint8_t* compressed2 = (const uint8_t*)compressed;
-    SizeT uncompressedSize = Read4(compressed2 + LZMA86_SIZE_OFFSET);
-    uint8_t* uncompressed = (uint8_t*)Allocator::Alloc(allocator, uncompressedSize);
-    if (!uncompressed)
-        return NULL;
-
+    SizeT uncompressedSize = Read4((Byte *)compressed + LZMA86_SIZE_OFFSET);
     SizeT compressedSizeTmp = compressedSize - LZMA86_HEADER_SIZE;
-    SizeT uncompressedSizeTmp = uncompressedSize;
+    SizeT uncompressedSizeTmp = *uncompressedSizeInOut;
 
     ELzmaStatus status;
     // Note: would be nice to understand why status returns LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK and
     // not LZMA_STATUS_FINISHED_WITH_MARK. It seems to work, though.
-    int res = LzmaDecode(uncompressed, &uncompressedSizeTmp,
-        compressed2 + LZMA86_HEADER_SIZE, &compressedSizeTmp,
-        compressed2 + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END, &status,
+    int res = LzmaDecode((Byte *)out, &uncompressedSizeTmp,
+        (Byte *)compressed + LZMA86_HEADER_SIZE, &compressedSizeTmp,
+        (Byte *)compressed + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END, &status,
         &lzmaAlloc);
 
-    if (SZ_OK != res) {
-        Allocator::Free(allocator, uncompressed);
-        return NULL;
-    }
+    if (SZ_OK != res)
+        return false;
 
     if (usesX86Filter) {
         UInt32 x86State;
         x86_Convert_Init(x86State);
-        x86_Convert(uncompressed, uncompressedSizeTmp, 0, &x86State, 0);
+        x86_Convert((Byte *)out, uncompressedSizeTmp, 0, &x86State, 0);
     }
-    *uncompressedSizeOut = uncompressedSize;
-    return (char*)uncompressed;
+    *uncompressedSizeInOut = uncompressedSize;
+    return true;
 }
 
 /* archiveHeader points to the beginning of archive, which has a following format:
 
-u32   magic_id 0x4c7a5341 ("LzSA' for "Lzma Simple Archive")
+u32   magic_id 0x41537a4c ("LzSA' for "Lzma Simple Archive")
 u32   number of files
 for each file:
-  u32        file size uncompressed
+  u32        length of file metadata (from this field to file name's 0-terminator)
   u32        file size compressed
-  u32        crc32 checksum of compressed data
+  u32        file size uncompressed
+  u32        crc32 checksum of uncompressed data
   FILETIME   last modification time in Windows's FILETIME format (8 bytes)
   char[...]  file name, 0-terminated
 u32   crc32 checksum of the header (i.e. data so far)
@@ -120,8 +114,8 @@ Integers are little-endian.
 // magic_id + number of files
 #define HEADER_START_SIZE (4 + 4)
 
-// u32 + u3 + u32 + FILETIME + name
-#define FILE_ENTRY_MIN_SIZE (4 + 4 + 4 + 8 + 1)
+// 4 * u32 + FILETIME + name
+#define FILE_ENTRY_MIN_SIZE (4 * 4 + 8 + 1)
 
 bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive* archiveOut)
 {
@@ -147,18 +141,21 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
         if (data + FILE_ENTRY_MIN_SIZE > dataEnd)
             return false;
 
+        uint32_t fileHeaderSize = Read4Skip(&data);
+        if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024)
+            return false;
+        if (data + fileHeaderSize > dataEnd)
+            return false;
+
         fi = &archiveOut->files[i];
-        fi->uncompressedSize = Read4Skip(&data);
         fi->compressedSize = Read4Skip(&data);
-        fi->compressedCrc32 = Read4Skip(&data);
+        fi->uncompressedSize = Read4Skip(&data);
+        fi->uncompressedCrc32 = Read4Skip(&data);
         fi->ftModified.dwLowDateTime = Read4Skip(&data);
         fi->ftModified.dwHighDateTime = Read4Skip(&data);
         fi->name = data;
-        while ((data < dataEnd) && *data) {
-            ++data;
-        }
-        ++data;
-        if (data >= dataEnd)
+        data += fileHeaderSize - FILE_ENTRY_MIN_SIZE;
+        if (*data++ != '\0')
             return false;
     }
 
@@ -175,15 +172,12 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
         fi = &archiveOut->files[i];
         fi->compressedData = data;
         data += fi->compressedSize;
+        // overflow check
+        if (data < fi->compressedData)
+            return false;
     }
 
     return data == dataEnd;
-}
-
-static bool IsFileCrcValid(FileInfo *fi)
-{
-    uint32_t realCrc = crc32(0, (const uint8_t *)fi->compressedData, fi->compressedSize);
-    return fi->compressedCrc32 == realCrc;
 }
 
 int GetIdxFromName(SimpleArchive *archive, const char *fileName)
@@ -198,20 +192,28 @@ int GetIdxFromName(SimpleArchive *archive, const char *fileName)
 
 char *GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator)
 {
-    size_t uncompressedSize;
-
-    FileInfo *fi = &archive->files[idx];
-    if (!IsFileCrcValid(fi))
+    if (idx >= archive->filesCount)
         return NULL;
 
-    char *uncompressed = Decompress(fi->compressedData, fi->compressedSize, &uncompressedSize, allocator);
+    FileInfo *fi = &archive->files[idx];
+
+    char *uncompressed = (char *)Allocator::Alloc(allocator, fi->uncompressedSize);
     if (!uncompressed)
         return NULL;
 
-    if (uncompressedSize != fi->uncompressedSize) {
+    size_t uncompressedSize = fi->uncompressedSize;
+    bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, &uncompressedSize, allocator);
+    if (!ok || uncompressedSize != fi->uncompressedSize) {
         Allocator::Free(allocator, uncompressed);
         return NULL;
     }
+
+    uint32_t realCrc = crc32(0, (const uint8_t *)uncompressed, fi->uncompressedSize);
+    if (realCrc != fi->uncompressedCrc32) {
+        Allocator::Free(allocator, uncompressed);
+        return NULL;
+    }
+
     return uncompressed;
 }
 
@@ -258,7 +260,7 @@ bool ExtractFileByName(SimpleArchive *archive, const char *fileName, const char 
 bool ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator)
 {
     size_t archiveDataSize;
-    const char *archiveData = (const char*)file::ReadAllUtf(archivePath, &archiveDataSize);
+    ScopedMem<char> archiveData(file::ReadAllUtf(archivePath, &archiveDataSize));
     if (!archiveData)
         return false;
 
@@ -273,7 +275,6 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
             break;
         ExtractFileByName(&archive, file, dstDir, allocator);
     }
-    free((void*)archiveData);
     return true;
 }
 
