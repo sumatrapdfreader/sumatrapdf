@@ -313,42 +313,37 @@ void TextRenderGdiplus::Draw(const char *s, size_t sLen, RectF& bb, bool isRtl) 
     Draw(txtConvBuf, strLen, bb, isRtl);
 }
 
-TextRenderHdc *TextRenderHdc::Create(Graphics *gfx) {
+void TextRenderHdc::Lock()
+{
+    int dx = bmi.bmiHeader.biWidth;
+    int dy = bmi.bmiHeader.biHeight;
+    ZeroMemory(bmpData, dx * dy * 4);
+}
+
+void TextRenderHdc::Unlock()
+{
+    Bitmap *b = Bitmap::FromBITMAPINFO(&bmi, bmpData);
+    gfx->DrawImage(b, 0, 0);
+    delete b;
+}
+
+TextRenderHdc *TextRenderHdc::Create(Graphics *gfx, int dx, int dy) {
     TextRenderHdc *res = new TextRenderHdc();
     res->gfx = gfx;
-    /*
-    HDC hdc = gfx->GetHDC();
+
+    HDC hdc =gfx->GetHDC();
     res->hdc = CreateCompatibleDC(hdc);
-    HWND hwnd = WindowFromDC(hdc);
-    RECT wr;
-    GetClientRect(hwnd, &wr);
     gfx->ReleaseHDC(hdc);
 
-    Region rgn;
-    gfx->ResetClip();
-    gfx->GetClip(&rgn);
+    res->bmi.bmiHeader.biSize = sizeof(res->bmi.bmiHeader);
+    res->bmi.bmiHeader.biWidth = dx;
+    res->bmi.bmiHeader.biHeight = dy;
+    res->bmi.bmiHeader.biPlanes = 1;
+    res->bmi.bmiHeader.biBitCount = 32;
+    res->bmi.bmiHeader.biCompression = BI_RGB;
+    res->bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
 
-    Rect r;
-    rgn.GetBounds(&r, gfx);
-
-    int dx = r.Width;
-    int dy = r.Height;
-    */
-
-    // TODO: how to get the size of Graphics ?
-    int dx = 0;
-    int dy = 0;
-
-    BITMAPINFO bmi = { };
-    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biWidth = dx;
-    bmi.bmiHeader.biHeight = dy;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
-
-    res->bmp = CreateDIBSection(res->hdc, &bmi, DIB_RGB_COLORS, &res->bmpData, NULL, 0);
+    res->bmp = CreateDIBSection(res->hdc, &res->bmi, DIB_RGB_COLORS, &res->bmpData, NULL, 0);
     if (!res->bmp) {
         delete res;
         return NULL;
@@ -363,6 +358,7 @@ TextRenderHdc *TextRenderHdc::Create(Graphics *gfx) {
 }
 
 void TextRenderHdc::SetFont(CachedFont *font) {
+    CrashIf(!hdc);
     // I'm not sure how expensive SelectFont() is so avoid it just in case
     if (currFont == font) {
         return;
@@ -372,6 +368,7 @@ void TextRenderHdc::SetFont(CachedFont *font) {
 }
 
 void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
+    CrashIf(!hdc);
     if (textColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -380,6 +377,7 @@ void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
 }
 
 void TextRenderHdc::SetTextBgColor(Gdiplus::Color col) {
+    CrashIf(!hdc);
     if (textBgColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -393,12 +391,14 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 
 Gdiplus::RectF TextRenderHdc::Measure(const char *s, size_t sLen) {
     CrashIf(!currFont);
+    CrashIf(!hdc);
     size_t strLen = str::Utf8ToWcharBuf(s, sLen, txtConvBuf, dimof(txtConvBuf));
     return Measure(txtConvBuf, strLen);
 }
 
 Gdiplus::RectF TextRenderHdc::Measure(const WCHAR *s, size_t sLen) {
     SIZE txtSize;
+    CrashIf(!hdc);
     GetTextExtentPoint32W(hdc, s, (int) sLen, &txtSize);
     RectF res(0.0f, 0.0f, (float) txtSize.cx, (float) txtSize.cy);
     return res;
@@ -414,18 +414,20 @@ void TextRenderHdc::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     int x = (int) bb.X;
     int y = (int) bb.Y;
     UINT opts = ETO_OPAQUE;
+#if 0
     if (isRtl)
         opts = opts | ETO_RTLREADING;
+#endif
     ExtTextOut(hdc, x, y, opts, NULL, s, (UINT)sLen, NULL);
 }
 
 TextRenderHdc::~TextRenderHdc() {
     DeleteObject(bmp);
-    free(bmpData);
+    //free(bmpData);
     DeleteDC(hdc);
 }
 
-ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
+ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx, int dx, int dy) {
     ITextRender *res = NULL;
     if (TextRenderMethodGdiplus == method) {
         res = TextRenderGdiplus::Create(gfx);
@@ -437,7 +439,7 @@ ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx) {
         res = TextRenderGdi::Create(gfx);
     }
     if (TextRenderMethodHdc == method) {
-        res = TextRenderHdc::Create(gfx);
+        res = TextRenderHdc::Create(gfx, dx, dy);
     }
     CrashIf(!res);
     res->method = method;

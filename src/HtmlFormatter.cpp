@@ -181,7 +181,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
-    textMeasure = CreateTextRender(args->textRenderMethod, gfx);
+    textMeasure = CreateTextRender(args->textRenderMethod, gfx, 10, 10);
     defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
 

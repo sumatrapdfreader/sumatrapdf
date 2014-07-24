@@ -124,8 +124,8 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     else
         textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
 
-    ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx);
-    //ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx);
+    ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.Width, pos.Height);
+    //ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx, pos.Width, pos.Height);
 
     Color bgCol;
     if (gGlobalPrefs->useSysColors)

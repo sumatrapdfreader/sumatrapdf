@@ -132,7 +132,12 @@ public:
     virtual ~TextRenderGdiplus();
 };
 
+// Note: this is not meant to be used, just exists so that I can see
+// perf compared to other TextRender* implementations
 class TextRenderHdc : public ITextRender {
+
+    BITMAPINFO              bmi;
+    
     HDC                     hdc;
     HBITMAP                 bmp;
     void *                  bmpData;
@@ -145,10 +150,12 @@ class TextRenderHdc : public ITextRender {
     WCHAR                   txtConvBuf[512];
 
     TextRenderHdc() : hdc(NULL), bmp(NULL), bmpData(NULL), currFont(NULL),
-        textColor(0,0,0,0), textBgColor(0,0,0,0) {}
+        textColor(0,0,0,0), textBgColor(0,0,0,0) {
+            ZeroMemory(&bmi, sizeof(bmi));
+        }
 
 public:
-    static TextRenderHdc* Create(Gdiplus::Graphics *gfx);
+    static TextRenderHdc* Create(Gdiplus::Graphics *gfx, int dx, int dy);
 
     virtual void                SetFont(CachedFont *font);
     virtual void                SetTextColor(Gdiplus::Color col);
@@ -159,17 +166,16 @@ public:
     virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);
     virtual Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen);
 
-    virtual void Lock() {}
-    virtual void Unlock() {}
+    virtual void Lock();
+    virtual void Unlock();
 
     virtual void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
     virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
 
-    virtual ~TextRenderHdc();    
-
+    virtual ~TextRenderHdc();
 };
 
-ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx);
+ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx, int dx, int dy);
 
 size_t  StringLenForWidth(ITextRender *textRender, const WCHAR *s, size_t len, float dx);
 REAL    GetSpaceDx(ITextRender *textRender);
