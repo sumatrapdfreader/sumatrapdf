@@ -83,10 +83,12 @@ ChmModel::ChmModel(ControllerCallback *cb) : Controller(cb),
     doc(NULL), htmlWindow(NULL), htmlWindowCb(NULL), tocTrace(NULL),
     currentPageNo(1), initZoom(INVALID_ZOOM)
 {
+    InitializeCriticalSection(&docAccess);
 }
 
 ChmModel::~ChmModel()
 {
+    EnterCriticalSection(&docAccess);
     // TODO: deleting htmlWindow seems to spin a modal loop which
     //       can lead to WM_PAINT being dispatched for the parent
     //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
@@ -95,6 +97,8 @@ ChmModel::~ChmModel()
     delete doc;
     delete tocTrace;
     DeleteVecMembers(urlDataCache);
+    LeaveCriticalSection(&docAccess);
+    DeleteCriticalSection(&docAccess);
 }
 
 int ChmModel::PageCount() const
@@ -374,6 +378,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 // Load and cache data for a given url inside CHM file.
 const unsigned char *ChmModel::GetDataForUrl(const WCHAR *url, size_t *len)
 {
+    ScopedCritSec scope(&docAccess);
     ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
@@ -508,17 +513,23 @@ class ChmThumbnailTask : public HtmlWindowCallback, public UITask
     ThumbnailCallback *tnCb;
     ScopedMem<WCHAR> homeUrl;
     Vec<unsigned char *> data;
+    CRITICAL_SECTION docAccess;
 
 public:
     ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, ThumbnailCallback *tnCb) :
-        doc(doc), hwnd(hwnd), hw(NULL), size(size), tnCb(tnCb) { }
+        doc(doc), hwnd(hwnd), hw(NULL), size(size), tnCb(tnCb) {
+        InitializeCriticalSection(&docAccess);
+    }
 
     ~ChmThumbnailTask() {
+        EnterCriticalSection(&docAccess);
         delete hw;
         DestroyWindow(hwnd);
         delete doc;
         delete tnCb;
         FreeVecMembers(data);
+        LeaveCriticalSection(&docAccess);
+        DeleteCriticalSection(&docAccess);
     }
 
     void CreateThumbnail(HtmlWindow *hw) {
@@ -546,6 +557,7 @@ public:
     }
     virtual void OnLButtonDown() { }
     virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) {
+        ScopedCritSec scope(&docAccess);
         ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8, len));

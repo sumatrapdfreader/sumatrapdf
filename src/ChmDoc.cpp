@@ -8,7 +8,6 @@
 #include "FileUtil.h"
 #include "TrivialHtmlParser.h"
 
-#define CHM_MT
 #define PPC_BSTR
 #include <chm_lib.h>
 

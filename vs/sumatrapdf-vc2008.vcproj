@@ -942,6 +942,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\Caption.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\Caption.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\EbookControls.cpp"
 					>
 				</File>
@@ -1238,14 +1246,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\Caption.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\Caption.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

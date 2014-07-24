@@ -77,6 +77,7 @@ public:
 protected:
     ScopedMem<WCHAR> fileName;
     ChmDoc *doc;
+    CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem> *tocTrace;
 
     WStrList pages;
