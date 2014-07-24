@@ -877,6 +877,7 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
         // remove the extended frame
         MARGINS margins = { 0 };
         dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
+        win->extendedFrameHeight = 0;
     }
     SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
 }

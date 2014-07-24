@@ -135,6 +135,7 @@ public:
 
     HWND            hwndCaption;
     CaptionInfo *   caption;
+    int             extendedFrameHeight;
 
     HWND            hwndInfotip;
 

@@ -40,7 +40,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
     uia_provider(NULL), cbHandler(NULL), frameRateWnd(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL),
-    hwndCaption(NULL), caption(NULL)
+    hwndCaption(NULL), caption(NULL), extendedFrameHeight(0)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;

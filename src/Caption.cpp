@@ -407,7 +407,19 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         switch (msg)
         {
         case WM_ERASEBKGND:
-            *callDef = false;
+            {
+                // Erase the background only under the extended frame.
+                *callDef = false;
+                if (win->extendedFrameHeight == 0)
+                    return TRUE;
+                ClientRect rc(hwnd);
+                rc.dy = win->extendedFrameHeight;
+                HRGN extendedFrameRegion = CreateRectRgn(rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy);
+                int newRegionComplexity = ExtSelectClipRgn((HDC)wParam, extendedFrameRegion, RGN_AND);
+                DeleteObject(extendedFrameRegion);
+                if (newRegionComplexity == NULLREGION)
+                    return TRUE;
+            }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_SIZE:
@@ -418,6 +430,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 int captionHeight = !(ws & WS_CAPTION) ? 0 : IsZoomed(hwnd) ? TABBAR_HEIGHT : CAPTION_HEIGHT;
                 MARGINS margins = {0, 0, frameThickness + captionHeight, 0};
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
+                win->extendedFrameHeight = frameThickness + captionHeight;
             }
             break;
 
