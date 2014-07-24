@@ -233,7 +233,6 @@ struct ar_archive_rar_progress {
 };
 
 struct ar_archive_rar_solid {
-    off64_t curr_offset;
     size_t size_total;
     bool part_done;
     bool restart;

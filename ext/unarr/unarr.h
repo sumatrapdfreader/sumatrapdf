@@ -48,8 +48,10 @@ typedef struct ar_archive_s ar_archive;
 void ar_close_archive(ar_archive *ar);
 /* reads the next archive entry; returns false on error or at the end of the file (use ar_at_eof to distinguish the two cases) */
 bool ar_parse_entry(ar_archive *ar);
-/* reads the archive entry at the given offset as returned by ar_entry_get_offset; should always succeed */
+/* reads the archive entry at the given offset as returned by ar_entry_get_offset (offset 0 always restarts at the first entry); should always succeed */
 bool ar_parse_entry_at(ar_archive *ar, off64_t offset);
+/* reads the (first) archive entry associated with the given name; returns false if the entry couldn't be found */
+bool ar_parse_entry_for(ar_archive *ar, const char *entry_name);
 /* returns whether the last ar_parse_entry call has reached the file's expected end */
 bool ar_at_eof(ar_archive *ar);
 
@@ -61,6 +63,7 @@ off64_t ar_entry_get_offset(ar_archive *ar);
 size_t ar_entry_get_size(ar_archive *ar);
 /* returns the stored modification date of the current entry in 100ns since 1601/01/01 */
 time64_t ar_entry_get_filetime(ar_archive *ar);
+/* WARNING: don't manually seek in the stream between ar_parse_entry and the last corresponding ar_entry_uncompress call! */
 /* uncompresses the next 'count' bytes of the current entry into buffer; returns false on error */
 bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count);
 

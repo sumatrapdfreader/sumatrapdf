@@ -10,31 +10,31 @@ static void zip_close(ar_archive *ar)
     zip_clear_uncompress(&zip->uncomp);
 }
 
-static bool zip_parse_entry(ar_archive *ar)
+static bool zip_parse_entry(ar_archive *ar, off64_t offset)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     struct zip_entry entry;
 
-    if (zip->dir.seen_count == zip->dir.length && zip->dir.seen_last_offset == ar->entry_offset) {
+    if (zip->dir.seen_count == zip->dir.length && offset >= zip->dir.seen_last_end_offset) {
         ar->at_eof = true;
         return false;
     }
-    if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
-        warn("Couldn't seek to offset %" PRIi64, ar->entry_offset_next);
+    if (!ar_seek(ar->stream, offset, SEEK_SET)) {
+        warn("Couldn't seek to offset %" PRIi64, offset);
         return false;
     }
     if (!zip_parse_directory_entry(zip, &entry)) {
-        warn("Couldn't read directory entry number %" PRIu64, zip->dir.seen_count + 1);
+        warn("Couldn't read directory entry number %" PRIu64 " @%" PRIi64, zip->dir.seen_count + 1, offset);
         return false;
     }
 
-    ar->entry_offset = ar->entry_offset_next;
-    ar->entry_offset_next += ZIP_DIR_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + entry.commentlen;
+    ar->entry_offset = offset;
+    ar->entry_offset_next = offset + ZIP_DIR_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + entry.commentlen;
     ar->entry_size_uncompressed = (size_t)entry.uncompressed;
     ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
 
-    if (ar->entry_offset > zip->dir.seen_last_offset) {
-        zip->dir.seen_last_offset = ar->entry_offset;
+    if (ar->entry_offset_next > zip->dir.seen_last_end_offset) {
+        zip->dir.seen_last_end_offset = ar->entry_offset_next;
         zip->dir.seen_count++;
     }
 
@@ -53,7 +53,7 @@ static bool zip_parse_entry(ar_archive *ar)
 
     if (entry.datasize == 0 && (entry.version & 0xFF00) == 0 && (entry.attr_external & 0x10)) {
         log("Skipping directory entry \"%s\"", zip_get_name(ar));
-        return zip_parse_entry(ar);
+        return zip_parse_entry(ar, ar->entry_offset_next);
     }
 
     return true;
@@ -144,17 +144,15 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly)
     if (!zip_parse_end_of_central_directory(stream, &eocd))
         return NULL;
 
-    ar = ar_open_archive(stream, sizeof(ar_archive_zip), zip_close, zip_parse_entry, zip_get_name, zip_uncompress, zip_get_global_comment);
+    ar = ar_open_archive(stream, sizeof(ar_archive_zip), zip_close, zip_parse_entry, zip_get_name, zip_uncompress, zip_get_global_comment, eocd.dir_offset);
     if (!ar)
         return NULL;
 
     zip = (ar_archive_zip *)ar;
-    zip->dir.offset = eocd.dir_offset;
     zip->dir.length = eocd.numentries;
     zip->deflatedonly = deflatedonly;
     zip->comment_offset = offset + 22;
     zip->comment_size = eocd.commentlen;
-    ar->entry_offset_next = zip->dir.offset;
 
     return ar;
 }

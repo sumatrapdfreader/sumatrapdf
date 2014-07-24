@@ -10,18 +10,16 @@ static void rar_close(ar_archive *ar)
     rar_clear_uncompress(&rar->uncomp);
 }
 
-static bool rar_parse_entry(ar_archive *ar)
+static bool rar_parse_entry(ar_archive *ar, off64_t offset)
 {
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     struct rar_header header;
     struct rar_entry entry;
-    bool out_of_order = ar->entry_offset != rar->solid.curr_offset;
+    bool out_of_order = offset != ar->entry_offset_next;
 
-    if (ar->entry_offset > 0) {
-        if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIi64, ar->entry_offset_next);
-            return false;
-        }
+    if (!ar_seek(ar->stream, offset, SEEK_SET)) {
+        warn("Couldn't seek to offset %" PRIi64, offset);
+        return false;
     }
 
     for (;;) {
@@ -82,7 +80,6 @@ static bool rar_parse_entry(ar_archive *ar)
             }
 
             rar->solid.restart = rar->entry.solid && (out_of_order || !rar->solid.part_done);
-            rar->solid.curr_offset = ar->entry_offset;
             rar->solid.part_done = !ar->entry_size_uncompressed;
             rar->progress.data_left = (size_t)header.datasize;
             rar->progress.bytes_done = 0;
@@ -140,11 +137,11 @@ static bool rar_restart_solid(ar_archive *ar)
     ar_archive_rar *rar = (ar_archive_rar *)ar;
     off64_t current_offset = ar->entry_offset;
     log("Restarting decompression for solid entry");
-    if (!ar_parse_entry_at(ar, FILE_SIGNATURE_SIZE)) {
+    if (!ar_parse_entry_at(ar, ar->entry_offset_first)) {
         ar_parse_entry_at(ar, current_offset);
         return false;
     }
-    while (ar->entry_offset != current_offset) {
+    while (ar->entry_offset < current_offset) {
         size_t size = ar->entry_size_uncompressed;
         rar->solid.restart = false;
         while (size > 0) {
@@ -208,6 +205,8 @@ static bool rar_uncompress(ar_archive *ar, void *buffer, size_t count)
 ar_archive *ar_open_rar_archive(ar_stream *stream)
 {
     char signature[FILE_SIGNATURE_SIZE];
+    if (!ar_seek(stream, 0, SEEK_SET))
+        return NULL;
     if (ar_read(stream, signature, sizeof(signature)) != sizeof(signature))
         return NULL;
     if (memcmp(signature, "Rar!\x1A\x07\x00", sizeof(signature)) != 0) {
@@ -220,5 +219,5 @@ ar_archive *ar_open_rar_archive(ar_stream *stream)
         return NULL;
     }
 
-    return ar_open_archive(stream, sizeof(ar_archive_rar), rar_close, rar_parse_entry, rar_get_name, rar_uncompress, NULL);
+    return ar_open_archive(stream, sizeof(ar_archive_rar), rar_close, rar_parse_entry, rar_get_name, rar_uncompress, NULL, FILE_SIGNATURE_SIZE);
 }

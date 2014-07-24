@@ -53,7 +53,7 @@ time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
 void ar_log(const char *prefix, const char *file, int line, const char *msg, ...);
 
 typedef void (* ar_archive_close_fn)(ar_archive *ar);
-typedef bool (* ar_parse_entry_fn)(ar_archive *ar);
+typedef bool (* ar_parse_entry_fn)(ar_archive *ar, off64_t offset);
 typedef const char *(* ar_entry_get_name_fn)(ar_archive *ar);
 typedef bool (* ar_entry_uncompress_fn)(ar_archive *ar, void *buffer, size_t count);
 typedef size_t (* ar_get_global_comment_fn)(ar_archive *ar, void *buffer, size_t count);
@@ -68,12 +68,14 @@ struct ar_archive_s {
     ar_stream *stream;
     bool at_eof;
     off64_t entry_offset;
+    off64_t entry_offset_first;
     off64_t entry_offset_next;
     size_t entry_size_uncompressed;
     time64_t entry_filetime;
 };
 
 ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
-                            ar_entry_get_name_fn get_name, ar_entry_uncompress_fn uncompress, ar_get_global_comment_fn get_comment);
+                            ar_entry_get_name_fn get_name, ar_entry_uncompress_fn uncompress, ar_get_global_comment_fn get_comment,
+                            off64_t first_entry_offset);
 
 #endif

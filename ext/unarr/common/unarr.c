@@ -4,7 +4,8 @@
 #include "unarr-imp.h"
 
 ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_close_fn close, ar_parse_entry_fn parse_entry,
-                            ar_entry_get_name_fn get_name, ar_entry_uncompress_fn uncompress, ar_get_global_comment_fn get_comment)
+                            ar_entry_get_name_fn get_name, ar_entry_uncompress_fn uncompress, ar_get_global_comment_fn get_comment,
+                            off64_t first_entry_offset)
 {
     ar_archive *ar = malloc(struct_size);
     if (!ar)
@@ -16,6 +17,8 @@ ar_archive *ar_open_archive(ar_stream *stream, size_t struct_size, ar_archive_cl
     ar->uncompress = uncompress;
     ar->get_comment = get_comment;
     ar->stream = stream;
+    ar->entry_offset_first = first_entry_offset;
+    ar->entry_offset_next = first_entry_offset;
     return ar;
 }
 
@@ -33,17 +36,28 @@ bool ar_at_eof(ar_archive *ar)
 
 bool ar_parse_entry(ar_archive *ar)
 {
-    return ar->parse_entry(ar);
+    return ar->parse_entry(ar, ar->entry_offset_next);
 }
 
 bool ar_parse_entry_at(ar_archive *ar, off64_t offset)
 {
-    if (!ar_seek(ar->stream, offset, SEEK_SET))
-        return false;
-    ar->entry_offset = 0;
-    ar->entry_offset_next = offset;
     ar->at_eof = false;
-    return ar->parse_entry(ar);
+    return ar->parse_entry(ar, offset ? offset : ar->entry_offset_first);
+}
+
+bool ar_parse_entry_for(ar_archive *ar, const char *entry_name)
+{
+    ar->at_eof = false;
+    if (!entry_name)
+        return false;
+    if (!ar_parse_entry_at(ar, ar->entry_offset_first))
+        return false;
+    do {
+        const char *name = ar_entry_get_name(ar);
+        if (name && !strcmp(name, entry_name))
+            return true;
+    } while (ar_parse_entry(ar));
+    return false;
 }
 
 const char *ar_entry_get_name(ar_archive *ar)
