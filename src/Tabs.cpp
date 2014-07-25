@@ -22,6 +22,8 @@
 // Comment this for default drawing.
 #define OWN_TAB_DRAWING
 
+static void SwapTabs(WindowInfo *win, int tab1, int tab2);
+
 #ifdef OWN_TAB_DRAWING
 
 #define TAB_COLOR_BG      COLOR_BTNFACE
@@ -360,8 +362,8 @@ public:
     }
 };
 
-WNDPROC DefWndProcTabBar;
-LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static WNDPROC DefWndProcTabBar = NULL;
+static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
     HDC hdc;
@@ -582,26 +584,31 @@ LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 void CreateTabbar(WindowInfo *win)
 {
-    win->hwndTabBar = CreateWindow(WC_TABCONTROL, L"", 
+    HWND hwndTabBar = CreateWindow(WC_TABCONTROL, L"", 
         WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | 
         TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT, 
         0, 0, 0, 0, 
         win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(NULL), NULL);
 
 #ifdef OWN_TAB_DRAWING
-    DefWndProcTabBar = (WNDPROC)SetWindowLongPtr(win->hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
-    TabPainter *tp = new TabPainter(win->hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
-    SetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
+    if (!DefWndProcTabBar)
+        DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
+    SetWindowLongPtr(hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
+
+    TabPainter *tp = new TabPainter(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
+    SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 #endif //OWN_TAB_DRAWING
 
-    SetWindowFont(win->hwndTabBar, GetDefaultGuiFont(), FALSE);
-    TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
+    SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE);
+    TabCtrl_SetItemSize(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
+
+    win->hwndTabBar = hwndTabBar;
 
     win->tabSelectionHistory = new Vec<TabData *>();
 }
 
 // Saves some of the document's data from the WindowInfo to the TabData.
-void SaveTabData(WindowInfo *win, TabData *tdata)
+static void SaveTabData(WindowInfo *win, TabData *tdata)
 {
     tdata->tocState = win->tocState;
     tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
@@ -686,7 +693,7 @@ static int FindTabIndex(WindowInfo *win, TabData *tdata)
     return -1;
 }
 
-void DeleteTabData(TabData *tdata, bool deleteModel)
+static void DeleteTabData(TabData *tdata, bool deleteModel)
 {
     if (!tdata) {
         return;
@@ -909,7 +916,7 @@ void TabsOnCtrlTab(WindowInfo *win, bool reverse)
     TabsSelect(win, next);
 }
 
-void SwapTabs(WindowInfo *win, int tab1, int tab2)
+static void SwapTabs(WindowInfo *win, int tab1, int tab2)
 {
     if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
         return;

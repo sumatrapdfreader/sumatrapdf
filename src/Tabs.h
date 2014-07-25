@@ -32,11 +32,9 @@ struct TabData
         watcher(NULL), reloadOnFocus(false) { }
 };
 
-void SaveTabData(WindowInfo *win, TabData *tdata);
 void SaveCurrentTabData(WindowInfo *win);
 int TabsGetCount(WindowInfo *win);
 TabData *GetTabData(WindowInfo *win, int tabIndex);
-void DeleteTabData(TabData *tdata, bool deleteModel);
 void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
 
 void CreateTabbar(WindowInfo *win);
@@ -49,7 +47,6 @@ void TabsSelect(WindowInfo *win, int tabIndex);
 void TabsOnCtrlTab(WindowInfo *win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(WindowInfo *win);
-void SwapTabs(WindowInfo *win, int tab1, int tab2);
 void SetTabsInTitlebar(WindowInfo *win, bool set);
 
 COLORREF AdjustLightness2(COLORREF c, float units);

@@ -18,38 +18,13 @@ using namespace Gdiplus;
 #define DO_NOT_REOPEN_MENU_TIMER_ID       1
 #define DO_NOT_REOPEN_MENU_DELAY_IN_MS    200
 
-WNDPROC DefWndProcButton;
 
-LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
-void PaintCaptionBackground(HDC hdc, WindowInfo *win);
-void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
+static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
+static void PaintCaptionBackground(HDC hdc, WindowInfo *win);
+static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
 
 
-void CreateCaption(WindowInfo *win)
-{
-    win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", WS_CHILDWINDOW | WS_CLIPCHILDREN,
-        0, 0, 0, 0, win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
-
-    win->caption = new CaptionInfo(win->hwndCaption);
-
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        win->caption->btn[i].hwnd = CreateWindow(L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
-            0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(NULL), NULL);
-        DefWndProcButton = (WNDPROC)SetWindowLongPtr(win->caption->btn[i].hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcButton);
-    }
-}
-
-void RegisterCaptionWndClass()
-{
-    WNDCLASSEX wcex;
-    FillWndClassEx(wcex, CUSTOM_CAPTION_CLASS_NAME, WndProcCaption);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    RegisterClassEx(&wcex);
-}
-
-LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
 
@@ -126,7 +101,8 @@ LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     return 0;
 }
 
-LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static WNDPROC DefWndProcButton = NULL;
+static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     int index = GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
@@ -176,6 +152,33 @@ LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
     return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
 }
 
+void CreateCaption(WindowInfo *win)
+{
+    win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", WS_CHILDWINDOW | WS_CLIPCHILDREN,
+        0, 0, 0, 0, win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
+
+    win->caption = new CaptionInfo(win->hwndCaption);
+
+    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+        HWND btn = CreateWindow(L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
+            0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(NULL), NULL);
+
+        if (!DefWndProcButton)
+            DefWndProcButton = (WNDPROC)GetWindowLongPtr(btn, GWLP_WNDPROC);
+        SetWindowLongPtr(btn, GWLP_WNDPROC, (LONG_PTR)WndProcButton);
+
+        win->caption->btn[i].hwnd = btn;
+    }
+}
+
+void RegisterCaptionWndClass()
+{
+    WNDCLASSEX wcex;
+    FillWndClassEx(wcex, CUSTOM_CAPTION_CLASS_NAME, WndProcCaption);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    RegisterClassEx(&wcex);
+}
+
 void RelayoutCaption(WindowInfo *win)
 {
     ClientRect rc(win->hwndCaption);
@@ -218,7 +221,7 @@ void RelayoutCaption(WindowInfo *win)
     UpdateTabWidth(win);
 }
 
-void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
+static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 {
     if (!item || item->CtlType != ODT_BUTTON)
         return;
@@ -324,7 +327,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc)
     SetViewportOrgEx(hdc, pt.x, pt.y, NULL);
 }
 
-void PaintCaptionBackground(HDC hdc, WindowInfo *win)
+static void PaintCaptionBackground(HDC hdc, WindowInfo *win)
 {
     RECT rClip;
     GetClipBox(hdc, &rClip);
@@ -363,7 +366,7 @@ void PaintCaptionBackground(HDC hdc, WindowInfo *win)
     }
 }
 
-void DrawFrame(HWND hwnd, WindowInfo *win)
+static void DrawFrame(HWND hwnd, WindowInfo *win)
 {
     HDC hdc = GetWindowDC(hwnd);
 
@@ -385,7 +388,7 @@ void DrawFrame(HWND hwnd, WindowInfo *win)
     ReleaseDC(hwnd, hdc);
 }
 
-void SetVisibleStyle(HWND hwnd, bool set)
+static void SetVisibleStyle(HWND hwnd, bool set)
 {
     long ws = GetWindowLong(hwnd, GWL_STYLE);
     if (bool(ws & WS_VISIBLE) == set)
@@ -583,7 +586,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     return 0;
 }
 
-void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
+static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
 {
     int count = GetMenuItemCount(win->menu);
     if (count <= 0)
