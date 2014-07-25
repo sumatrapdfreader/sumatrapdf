@@ -105,6 +105,11 @@ CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
 # 4324 : structure was padded due to __declspec(align())
 CFLAGSB = $(CFLAGSB) /wd4428 /wd4324
 
+!if "$(PLATFORM)$(STRICT_X64)"=="X64"
+# disable warnings-as-errors for x64 builds (unless STRICT_X64 is set)
+CFLAGSB = $(CFLAGSB: /WX = )
+!endif
+
 # /Ox  : maximum optimizations
 # /O2  : maximize speed
 # docs say /Ox better, my tests say /O2 better
