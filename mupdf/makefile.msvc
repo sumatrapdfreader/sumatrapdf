@@ -82,7 +82,8 @@ CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 # /Gy  : separate functions for linker
 # /GF  : enable read-only string pooling
 # /MP  : use muliple processors to speed up compilation
-CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF /MP
+# Note: /MP not used as it might be causing extreme flakiness on EC2 buildbot
+CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF
 
 # on 64-bit SSE2 is always used, so no need to specify it
 #!if "$(PLATFORM)"!="X64" && "$(WITHOUT_ARCH_SSE2)"==""
