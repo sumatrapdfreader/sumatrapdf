@@ -3,7 +3,7 @@
 # CFG=dbg|rel (default: dbg)
 # EXTDIR=<directory where zlib/freetype/jpeg lib live> (default: ..\ext)
 #  e.g. ..\sumatrapdf\ext
-# NASM=<path to nasm.exe> (default: nasm.exe)
+# NASM=<path to nasm.exe> (default: ..\bin\nasm.exe)
 # PLATFORM=X86
 #  the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #  note: building on X64 isn't officially supported and might unintentionally be broken
@@ -55,9 +55,11 @@ OPENJPEG_DIR=$(EXTDIR)\openjpeg
 JBIG2_DIR=$(EXTDIR)\jbig2dec
 MUPDF_GEN_DIR = $(MUPDF_DIR)\generated
 
-# full path to NASM can be passed in or we'll assume it's in PATH
+# by default, the included NASM is used
+# (path relative to EXTDIR for when an external MuPDF is built)
+# TODO: does NASM have to be replaceable at all?
 !if "$(NASM)"==""
-NASM=nasm.exe
+NASM=$(EXTDIR)\..\bin\nasm.exe
 !endif
 
 CC = cl.exe

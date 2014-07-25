@@ -25,8 +25,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe SumatraPDF Installer Uninstaller PDFFilter PdfPreview EngineDump mudraw mutool EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot;"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe rebuild"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg SumatraPDF Installer Uninstaller PDFFilter PdfPreview EngineDump mudraw mutool EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot;"
+				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;DISABLE_EBOOK_UI"
@@ -46,8 +46,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel NASM=..\bin\nasm.exe all_sumatrapdf all"
-				ReBuildCommandLine="nmake -f makefile.msvc BASEDIR=.. CFG=rel NASM=..\bin\nasm.exe rebuild"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel all_sumatrapdf all"
+				ReBuildCommandLine="nmake -f makefile.msvc BASEDIR=.. CFG=rel rebuild"
 				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG"
@@ -109,8 +109,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe unarr_test"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe rebuild unarr_test"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg unarr_test"
+				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\unarr.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA"
