@@ -18,6 +18,14 @@ using namespace Gdiplus;
 #define DO_NOT_REOPEN_MENU_TIMER_ID       1
 #define DO_NOT_REOPEN_MENU_DELAY_IN_MS    200
 
+// undocumented caption buttons state
+#define CBS_INACTIVE  5
+
+// undocumented window messages
+#define WM_NCUAHDRAWCAPTION  0xAE
+#define WM_NCUAHDRAWFRAME    0xAF
+#define WM_POPUPSYSTEMMENU   0x313
+
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win);
@@ -270,7 +278,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
         state |= DFCS_INACTIVE;
     }
     else if (ODS_INACTIVE & item->itemState)
-        stateId = 5;    // CBS_INACTIVE (undocumented)
+        stateId = CBS_INACTIVE;
     else
         stateId = CBS_NORMAL;
 
@@ -469,13 +477,13 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             }
             break;
 
-        case 0xAE:  // WM_NCUAHDRAWCAPTION (undocumented)
-        case 0xAF:  // WM_NCUAHDRAWFRAME (undocumented)
+        case WM_NCUAHDRAWCAPTION:
+        case WM_NCUAHDRAWFRAME:
             DrawFrame(hwnd, win);
             *callDef = false;
             return TRUE;
 
-        case 0x313:  // WM_POPUPSYSTEMMENU (undocumented)
+        case WM_POPUPSYSTEMMENU:
         case WM_SETCURSOR:
         case WM_SETTEXT:
         case WM_SETICON:
