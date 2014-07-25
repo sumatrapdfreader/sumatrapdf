@@ -3162,11 +3162,10 @@ static void OnMenuGoToPage(WindowInfo& win)
 
 static void EnterFullScreen(WindowInfo& win, bool presentation)
 {
-    if (!HasPermission(Perm_FullscreenAccess))
+    if (!HasPermission(Perm_FullscreenAccess) || gPluginMode)
         return;
 
-    if ((presentation ? win.presentation : win.isFullScreen) ||
-        !IsWindowVisible(win.hwndFrame) || gPluginMode)
+    if ((presentation ? win.presentation : win.isFullScreen) || !IsWindowVisible(win.hwndFrame))
         return;
 
     AssertCrash(presentation ? !win.isFullScreen : !win.presentation);

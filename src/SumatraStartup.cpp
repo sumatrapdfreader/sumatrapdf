@@ -218,8 +218,11 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
     if (!win->IsDocLoaded() || !isFirstWin)
         return win;
 
-    if (i.enterPresentation || i.enterFullScreen)
+    if (i.enterPresentation || i.enterFullScreen) {
+        if (i.enterPresentation && win->isFullScreen || i.enterFullScreen && win->presentation)
+            ExitFullScreen(*win);
         EnterFullScreen(*win, i.enterPresentation);
+    }
     if (i.startView != DM_AUTOMATIC)
         SwitchToDisplayMode(win, i.startView);
     if (i.startZoom != INVALID_ZOOM)
