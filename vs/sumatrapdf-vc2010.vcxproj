@@ -48,7 +48,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</IntDir>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg OnlySumatraPDF</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuildquick</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;UNICODE;SYNCTEX_FEATURE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
@@ -62,8 +62,8 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</IntDir>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel OnlySumatraPDF</NMakeBuildCommandLine>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel WITH_ANALYZE=yes</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel rebuild</NMakeReBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel WITH_ANALYZE=yes rebuild</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel rebuildquick</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel WITH_ANALYZE=yes rebuildquick</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc  BASEDIR=.. CFG=rel clean</NMakeCleanCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel WITH_ANALYZE=yes clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
