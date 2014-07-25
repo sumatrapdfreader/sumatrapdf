@@ -22,6 +22,9 @@ Nice to have:
   a tab as there's argument that if we only have one document in the window,
   we don't have to show tab strip, which saves screen space)
 
+. save and restore session (opened files when tabs enabled and closing a window
+  with multiple tabs). Like chrome.
+
 Done:
 
 . TBD: go single-process? Currently we might end up with multiple Sumatra processes.
