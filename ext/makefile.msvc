@@ -91,9 +91,7 @@ CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
 LZMA_OBJS = \
-	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj
-
-LZMAENC_OBJS = \
+	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj \
 	$(OLZ)\LzmaEnc.obj $(OLZ)\LzFind.obj $(OLZ)\LzFindMt.obj $(OLZ)\Threads.obj
 
 WEBP_OBJS = \

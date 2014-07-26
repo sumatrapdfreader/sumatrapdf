@@ -25,11 +25,18 @@ struct SimpleArchive {
 };
 
 bool   ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive *archiveOut);
-bool   Decompress(const char *in, size_t inSize, char *out, size_t *uncompressedSizeInOut, Allocator *allocator);
 int    GetIdxFromName(SimpleArchive *archive, const char *name);
 char * GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator);
 char * GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator *allocator);
+// files is an array of char * entries, last element must be NULL
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);
+
+// the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
+bool   Compress(const char *uncompressed, size_t uncompressedSize, char *compressed, size_t *compressedSize, Allocator *allocator=NULL);
+bool   Decompress(const char *compressed, size_t compressedSize, char *uncompressed, size_t uncompressedSize, Allocator *allocator=NULL);
+
+// for every file, names must contain a relative path to srcDir followed by either NULL or the desired in-archive name
+bool   CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names);
 
 }
 

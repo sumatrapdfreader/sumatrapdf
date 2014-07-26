@@ -42,7 +42,7 @@ EXTDIR=$(BASEDIR)\ext
 !endif
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview EngineDump LzzaEnc
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview EngineDump MakeLzsa
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -143,6 +143,7 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
+MAKELZSA_APP = $(O)\MakeLzsa.exe
 LZZAENC_APP = $(O)\LzzaEnc.exe
 
 MUPDF_LIB   = $(O)\libmupdfs.lib
@@ -235,8 +236,11 @@ PDFPREVIEW_OBJS = \
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINES_LIB) $(FORMAT_LIBS) $(UTILS_LIB) $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
 
+MAKELZSA_OBJS = \
+	$(OS)\MakeLzsa.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
+
 LZZAENC_OBJS = \
-	$(OS)\LzzaEnc.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS) $(LZMAENC_OBJS)
+	$(OS)\LzzaEnc.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
@@ -323,7 +327,7 @@ Uninstaller:   $(OS) $(UNINSTALLER_APP)
 PDFFilter:     $(OS) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(PDFPREVIEW_DLL)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
-LzzaEnc:       $(OS) $(LZZAENC_APP)
+MakeLzsa:      $(OS) $(MAKELZSA_APP) $(LZZAENC_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
@@ -388,6 +392,9 @@ $(MEMTRACE_DLL): $(MEMTRACE_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
+$(MAKELZSA_APP): $(MAKELZSA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(LZZAENC_APP): $(LZZAENC_OBJS)

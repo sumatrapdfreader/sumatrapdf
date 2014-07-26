@@ -1222,6 +1222,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\MakeLzSA.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\MuiEbookPageDef.cpp"
 					>
 				</File>
