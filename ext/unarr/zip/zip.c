@@ -107,7 +107,7 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
     zip->progress.crc = ar_crc32(zip->progress.crc, buffer, count);
     if (zip->progress.bytes_done < ar->entry_size_uncompressed)
         return true;
-    if (zip->progress.data_left || (zip->uncomp.initialized && zip->uncomp.input.bytes_left))
+    if (zip->uncomp.initialized ? !zip->uncomp.input.at_eof || zip->uncomp.input.bytes_left : zip->progress.data_left)
         log("Compressed block has more data than required");
     if (zip->progress.crc != zip->entry.crc) {
         warn("Checksum of extracted data doesn't match");

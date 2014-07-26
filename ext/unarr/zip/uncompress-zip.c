@@ -23,6 +23,7 @@ static bool zip_fill_input_buffer(ar_archive_zip *zip)
     }
     zip->progress.data_left -= count;
     uncomp->input.bytes_left += (uint16_t)count;
+    uncomp->input.at_eof = !zip->progress.data_left;
 
     return true;
 }
@@ -47,7 +48,7 @@ static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bo
     return err == Z_OK;
 }
 
-static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
+static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk)
 {
     int err;
 
@@ -97,7 +98,7 @@ static bool zip_init_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
     return err == BZ_OK;
 }
 
-static uint32_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
+static uint32_t zip_uncompress_data_bzip2(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk)
 {
     int err;
 
@@ -144,11 +145,12 @@ static bool zip_init_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp, uint1
     return true;
 }
 
-static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
+static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk)
 {
     SizeT srclen, dstlen;
     ELzmaStatus status;
-    SRes res = SZ_OK;
+    ELzmaFinishMode finish;
+    SRes res;
 
     if (!uncomp->state.lzma.dec.dic) {
         uint8_t propsize;
@@ -171,13 +173,16 @@ static uint32_t zip_uncompress_data_lzma(struct ar_archive_zip_uncomp *uncomp, v
 
     srclen = uncomp->input.bytes_left;
     dstlen = buffer_size;
-    res = LzmaDec_DecodeToBuf(&uncomp->state.lzma.dec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, uncomp->state.lzma.finish, &status);
+    finish = uncomp->input.at_eof && is_last_chunk ? uncomp->state.lzma.finish : LZMA_FINISH_ANY;
+    res = LzmaDec_DecodeToBuf(&uncomp->state.lzma.dec, buffer, &dstlen, &uncomp->input.data[uncomp->input.offset], &srclen, finish, &status);
 
     uncomp->input.offset += (uint16_t)srclen;
     uncomp->input.bytes_left -= (uint16_t)srclen;
 
-    if (res != SZ_OK || (srclen == 0 && dstlen == 0))
+    if (res != SZ_OK || (srclen == 0 && dstlen == 0)) {
+        warn("Unexpected LZMA error %d", res);
         return ERR_UNCOMP;
+    }
     if (status == LZMA_STATUS_FINISHED_WITH_MARK && uncomp->input.bytes_left) {
         warn("Premature EOS in LZMA stream");
         return ERR_UNCOMP;
@@ -219,7 +224,7 @@ static bool zip_init_uncompress_ppmd(ar_archive_zip *zip)
     return true;
 }
 
-static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size)
+static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk)
 {
     uint32_t bytes_done = 0;
 
@@ -260,8 +265,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
         ((uint8_t *)buffer)[bytes_done++] = (uint8_t)symbol;
     }
 
-    /* TODO: simplify checking for last uncompressed block */
-    if (uncomp->state.ppmd8.bytein.zip->progress.bytes_done + bytes_done == uncomp->state.ppmd8.bytein.zip->super.entry_size_uncompressed) {
+    if (is_last_chunk) {
         int symbol = Ppmd8_DecodeSymbol(&uncomp->state.ppmd8.ctx);
         if (symbol != -1 || !Ppmd8_RangeDec_IsFinishedOK(&uncomp->state.ppmd8.ctx)) {
             warn("Invalid PPMd data stream");
@@ -353,7 +357,7 @@ bool zip_uncompress_part(ar_archive_zip *zip, void *buffer, size_t buffer_size)
         }
 
         count = buffer_size >= UINT32_MAX ? UINT32_MAX - 1 : (uint32_t)buffer_size;
-        count = uncomp->uncompress_data(uncomp, buffer, count);
+        count = uncomp->uncompress_data(uncomp, buffer, count, zip->progress.bytes_done + count == zip->super.entry_size_uncompressed);
         if (count == ERR_UNCOMP)
             return false;
         if (count == 0 && !zip->progress.data_left) {

@@ -88,13 +88,14 @@ const char *zip_get_name(ar_archive *ar);
 
 struct ar_archive_zip_uncomp;
 
-typedef uint32_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size);
+typedef uint32_t (* zip_uncomp_uncompress_data_fn)(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk);
 typedef void (* zip_uncomp_clear_state_fn)(struct ar_archive_zip_uncomp *uncomp);
 
 struct InputBuffer {
     uint8_t data[4096];
     uint16_t offset;
     uint16_t bytes_left;
+    bool at_eof;
 };
 
 struct ByteReader {
