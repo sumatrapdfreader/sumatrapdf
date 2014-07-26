@@ -1,6 +1,6 @@
 diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
 --- libdjvu.orig\ddjvuapi.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\ddjvuapi.cpp	Sun Jul 20 23:20:44 2014
++++ libdjvu\ddjvuapi.cpp	Mon Jul 21 01:38:09 2014
 @@ -1051,10 +1051,49 @@
                                         int cache)
  {
@@ -66,7 +66,7 @@ diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
    return get_bytestream_anno(file->get_merged_anno());
 diff -rPu5 libdjvu.orig\ddjvuapi.h libdjvu\ddjvuapi.h
 --- libdjvu.orig\ddjvuapi.h	Tue May 08 04:56:53 2012
-+++ libdjvu\ddjvuapi.h	Sun Jul 20 23:14:56 2014
++++ libdjvu\ddjvuapi.h	Mon Jul 21 01:38:09 2014
 @@ -528,10 +528,22 @@
  DDJVUAPI ddjvu_document_t *
  ddjvu_document_create_by_filename_utf8(ddjvu_context_t *context,
@@ -269,6 +269,23 @@ diff -rPu5 libdjvu.orig\GURL.cpp libdjvu\GURL.cpp
      return GUTF8String(url_ptr, ptr-url_ptr);
    return GUTF8String();
  }
+diff -rPu5 libdjvu.orig\IW44Image.cpp libdjvu\IW44Image.cpp
+--- libdjvu.orig\IW44Image.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\IW44Image.cpp	Sat Jul 26 23:31:55 2014
+@@ -682,10 +682,13 @@
+ void 
+ IW44Image::Map::image(signed char *img8, int rowsize, int pixsep, int fast)
+ {
+   // Allocate reconstruction buffer
+   short *data16;
++  // cf. http://sourceforge.net/p/djvu/djvulibre-git/ci/7993b445f071a15248bd4be788a10643213cb9d2/
++  if (INT_MAX / bw < bh)
++    G_THROW("IW44Image: image size exceeds maximum (corrupted file?)");
+   GPBuffer<short> gdata16(data16,bw*bh);
+   // Copy coefficients
+   int i;
+   short *p = data16;
+   const IW44Image::Block *block = blocks;
 diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
 --- libdjvu.orig\miniexp.cpp	Tue May 08 04:56:53 2012
 +++ libdjvu\miniexp.cpp	Tue May 14 21:21:21 2013

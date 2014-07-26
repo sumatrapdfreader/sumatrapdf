@@ -684,6 +684,9 @@ IW44Image::Map::image(signed char *img8, int rowsize, int pixsep, int fast)
 {
   // Allocate reconstruction buffer
   short *data16;
+  // cf. http://sourceforge.net/p/djvu/djvulibre-git/ci/7993b445f071a15248bd4be788a10643213cb9d2/
+  if (INT_MAX / bw < bh)
+    G_THROW("IW44Image: image size exceeds maximum (corrupted file?)");
   GPBuffer<short> gdata16(data16,bw*bh);
   // Copy coefficients
   int i;
