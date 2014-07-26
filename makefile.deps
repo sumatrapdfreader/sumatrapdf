@@ -325,6 +325,9 @@ $(OS)\Installer.obj: $B\src\utils\FileUtil.h $B\src\utils\FrameTimeoutCalculator
 $(OS)\Installer.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
 $(OS)\Installer.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
 $(OS)\Installer.obj: $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\LzzaEnc.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
+$(OS)\LzzaEnc.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\LzzaUtil.h
+$(OS)\LzzaEnc.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Menu.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
 $(OS)\Menu.obj: $B\src\DisplayModel.h $B\src\DisplayState.h $B\src\EngineManager.h
 $(OS)\Menu.obj: $B\src\ExternalPdfViewer.h $B\src\Favorites.h $B\src\FileHistory.h
@@ -720,6 +723,11 @@ $(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\Lzma86.h $B\ext\l
 $(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Types.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\LzzaUtil.obj: $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\LzmaEnc.h $B\ext\lzma\C\Types.h
+$(OU)\LzzaUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteReader.h
+$(OU)\LzzaUtil.obj: $B\src\utils\ByteWriter.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OU)\LzzaUtil.obj: $B\src\utils\LzzaUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OU)\LzzaUtil.obj: $B\src\utils\Vec.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\NoFreeAllocator.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\Vec.h

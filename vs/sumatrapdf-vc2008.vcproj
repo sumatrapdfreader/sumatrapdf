@@ -188,6 +188,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\LzzaUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\LzzaUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\PalmDbReader.cpp"
 					>
 				</File>
@@ -1209,6 +1217,10 @@
 			<Filter
 				Name="Varia"
 				>
+				<File
+					RelativePath="..\src\LzzaEnc.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\src\MuiEbookPageDef.cpp"
 					>

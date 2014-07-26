@@ -225,56 +225,47 @@ char *GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator 
     return NULL;
 }
 
-bool ExtractFileByIdx(SimpleArchive *archive, int idx, const char *dstDir, Allocator *allocator)
+static bool ExtractFileByIdx(SimpleArchive *archive, int idx, const char *dstDir, Allocator *allocator)
 {
-    bool ok;
-    const char *filePath = NULL;
     FileInfo *fi = &archive->files[idx];
 
     char *uncompressed = GetFileDataByIdx(archive, idx, allocator);
     if (!uncompressed)
-        goto Error;
+        return false;
 
-    const char *fileName = fi->name;
-    filePath = path::JoinUtf(dstDir, fileName, allocator);
+    bool ok = false;
+    char *filePath = path::JoinUtf(dstDir, fi->name, allocator);
+    if (filePath)
+        ok = file::WriteAllUtf(filePath, uncompressed, fi->uncompressedSize);
 
-    ok = file::WriteAllUtf(filePath, uncompressed, fi->uncompressedSize);
-Exit:
-    Allocator::Free(allocator, (void*)filePath);
+    Allocator::Free(allocator, filePath);
     Allocator::Free(allocator, uncompressed);
-    return ok;
-Error:
-    ok = false;
-    goto Exit;
-}
 
-bool ExtractFileByName(SimpleArchive *archive, const char *fileName, const char *dstDir, Allocator *allocator)
-{
-    int idx = GetIdxFromName(archive, fileName);
-    if (-1 != idx)
-        return ExtractFileByIdx(archive, idx, dstDir, allocator);
-    return false;
+    return ok;
 }
 
 // files is an array of char * entries, last element must be NULL
 bool ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator)
 {
     size_t archiveDataSize;
-    ScopedMem<char> archiveData(file::ReadAllUtf(archivePath, &archiveDataSize));
+    char *archiveData = file::ReadAllUtf(archivePath, &archiveDataSize, allocator);
     if (!archiveData)
         return false;
 
     SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, archiveDataSize, &archive);
-    if (!ok)
+    if (!ok) {
+        Allocator::Free(allocator, archiveData);
         return false;
-    int i = 0;
-    for (;;) {
-        const char *file = files[i++];
-        if (!file)
-            break;
-        ExtractFileByName(&archive, file, dstDir, allocator);
     }
+    for (; *files; files++) {
+        int idx = GetIdxFromName(&archive, *files);
+        if (-1 != idx) {
+            // TODO: check result?
+            ExtractFileByIdx(&archive, idx, dstDir, allocator);
+        }
+    }
+    Allocator::Free(allocator, archiveData);
     return true;
 }
 

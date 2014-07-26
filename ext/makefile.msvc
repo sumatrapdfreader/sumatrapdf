@@ -93,6 +93,9 @@ CHMLIB_OBJS = \
 LZMA_OBJS = \
 	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj
 
+LZMAENC_OBJS = \
+	$(OLZ)\LzmaEnc.obj $(OLZ)\LzFind.obj $(OLZ)\LzFindMt.obj $(OLZ)\Threads.obj
+
 WEBP_OBJS = \
 	$(OWP)\alpha.obj $(OWP)\buffer.obj $(OWP)\frame.obj $(OWP)\idec.obj \
 	$(OWP)\io.obj $(OWP)\layer.obj $(OWP)\quant.obj $(OWP)\tree.obj \
