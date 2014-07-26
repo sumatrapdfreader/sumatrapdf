@@ -1,7 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "LzmaSimpleArchive.h"
 
@@ -9,14 +8,14 @@
 #include "ByteWriter.h"
 #include "FileUtil.h"
 #include <LzmaDec.h>
-#include <LzmaEnc.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
 
 /*
 Implements extracting data from a simple archive format, made up by me.
 For the description of the format, see comment below, above ParseSimpleArchive().
-Archives are simple to create (in SumatraPDF, we used to use lzma.exe and a python script).
+Archives are simple to create (in SumatraPDF, we used to use lzma.exe and a python script)
+there's a tool for creating them in ../MakeLzSA.cpp
 */
 
 // 'LzSA' for "Lzma Simple Archive"
@@ -48,7 +47,8 @@ struct ISzAllocatorAlloc : ISzAlloc {
 
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
-bool Decompress(const char *compressed, size_t compressedSize, char *uncompressed, size_t uncompressedSize, Allocator *allocator)
+// the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
+static bool Decompress(const char *compressed, size_t compressedSize, char *uncompressed, size_t uncompressedSize, Allocator *allocator)
 {
     if (compressedSize < 1)
         return false;
@@ -84,52 +84,6 @@ bool Decompress(const char *compressed, size_t compressedSize, char *uncompresse
         UInt32 x86State;
         x86_Convert_Init(x86State);
         x86_Convert((Byte *)uncompressed, uncompressedSize, 0, &x86State, 0);
-    }
-
-    return true;
-}
-
-bool Compress(const char *uncompressed, size_t uncompressedSize, char *compressed, size_t *compressedSize, Allocator *allocator)
-{
-    ISzAllocatorAlloc lzmaAlloc(allocator);
-
-    if (*compressedSize < uncompressedSize + 1)
-        return false;
-    if (*compressedSize < LZMA_HEADER_SIZE)
-        goto Store;
-
-    CLzmaEncProps props;
-    LzmaEncProps_Init(&props);
-
-    // always apply the BJC filter for speed (else two or three compression passes would be required)
-    size_t lzma_size = (size_t)-1;
-    uint8_t *bjc_enc = (uint8_t *)Allocator::Alloc(allocator, uncompressedSize);
-    if (bjc_enc) {
-        memcpy(bjc_enc, uncompressed, uncompressedSize);
-        UInt32 x86State;
-        x86_Convert_Init(x86State);
-        x86_Convert(bjc_enc, uncompressedSize, 0, &x86State, 1);
-    }
-
-    SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
-    SizeT propsSize = LZMA_PROPS_SIZE;
-    SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
-                          bjc_enc ? bjc_enc : (const Byte *)uncompressed, uncompressedSize,
-                          &props, (Byte *)compressed + 1, &propsSize,
-                          TRUE /* add EOS marker */, NULL, &lzmaAlloc, &lzmaAlloc);
-    if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
-        lzma_size = outSize + LZMA_HEADER_SIZE;
-    Allocator::Free(allocator, bjc_enc);
-
-    if (lzma_size < uncompressedSize + 1) {
-        compressed[0] = bjc_enc ? 1 : 0;
-        *compressedSize = lzma_size;
-    }
-    else {
-Store:
-        compressed[0] = (uint8_t)-1;
-        memcpy(compressed + 1, uncompressed, uncompressedSize);
-        *compressedSize = uncompressedSize + 1;
     }
 
     return true;
@@ -304,84 +258,6 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
     }
     Allocator::Free(allocator, archiveData);
     return ok;
-}
-
-static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR *filePath, const char *inArchiveName, FileInfo *fi=NULL)
-{
-    size_t headerSize = 25 + str::Len(inArchiveName);
-    FILETIME ft = file::GetModificationTime(filePath);
-    if (fi && FileTimeEq(ft, fi->ftModified)) {
-ReusePrevious:
-        ByteWriterLE meta(data.AppendBlanks(24), 24);
-        meta.Write32(headerSize);
-        meta.Write32(fi->compressedSize);
-        meta.Write32(fi->uncompressedSize);
-        meta.Write32(fi->uncompressedCrc32);
-        meta.Write32(ft.dwLowDateTime);
-        meta.Write32(ft.dwHighDateTime);
-        strcpy_s(data.AppendBlanks(headerSize - 24), headerSize - 24, inArchiveName);
-        return content.AppendChecked(fi->compressedData, fi->compressedSize);
-    }
-
-    size_t fileDataLen;
-    ScopedMem<char> fileData(file::ReadAll(filePath, &fileDataLen));
-    if (!fileData || fileDataLen > UINT32_MAX)
-        return false;
-    uint32_t fileDataCrc = crc32(0, (const uint8_t *)fileData.Get(), (uint32_t)fileDataLen);
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileDataLen)
-        goto ReusePrevious;
-
-    ScopedMem<char> compressed((char *)malloc(fileDataLen + 1));
-    if (!compressed)
-        return false;
-    size_t compressedSize = fileDataLen + 1;
-    if (!Compress(fileData, fileDataLen, compressed, &compressedSize))
-        return false;
-
-    ByteWriterLE meta(data.AppendBlanks(24), 24);
-    meta.Write32(headerSize);
-    meta.Write32(compressedSize);
-    meta.Write32((uint32_t)fileDataLen);
-    meta.Write32(fileDataCrc);
-    meta.Write32(ft.dwLowDateTime);
-    meta.Write32(ft.dwHighDateTime);
-    strcpy_s(data.AppendBlanks(headerSize - 24), headerSize - 24, inArchiveName);
-    return content.AppendChecked(compressed, compressedSize);
-}
-
-bool CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names)
-{
-    size_t prevDataLen = 0;
-    ScopedMem<char> prevData(file::ReadAll(archivePath, &prevDataLen));
-    SimpleArchive prevArchive;
-    if (!ParseSimpleArchive(prevData, prevDataLen, &prevArchive))
-        prevArchive.filesCount = 0;
-
-    str::Str<char> data;
-    str::Str<char> content;
-
-    ByteWriterLE lzsaHeader(data.AppendBlanks(8), 8);
-    lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32(names.Count() / 2);
-
-    for (size_t i = 0; i < names.Count(); i += 2) {
-        ScopedMem<WCHAR> filePath(path::Join(srcDir, names.At(i)));
-        ScopedMem<char> utf8Name(str::conv::ToUtf8(names.At(names.At(i + 1) ? i + 1 : i)));
-        str::TransChars(utf8Name, "/", "\\");
-        int idx = GetIdxFromName(&prevArchive, utf8Name);
-        FileInfo *fi = NULL;
-        if (idx != -1)
-            fi = &prevArchive.files[idx];
-        if (!AppendEntry(data, content, filePath, utf8Name, fi))
-            return false;
-    }
-
-    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.Size());
-    ByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
-    if (!data.AppendChecked(content.Get(), content.Size()))
-        return false;
-
-    return file::WriteAll(archivePath, data.Get(), data.Size());
 }
 
 }
