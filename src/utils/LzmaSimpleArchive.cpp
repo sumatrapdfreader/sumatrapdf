@@ -4,9 +4,9 @@
 #include "BaseUtil.h"
 #include "LzmaSimpleArchive.h"
 
+#include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 #include <LzmaDec.h>
-#include <Lzma86.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
 
@@ -21,23 +21,6 @@ Archives are simple to create (in Sumatra, we use a python script).
 #define LZMA_MAGIC_ID 0x41537a4c
 
 namespace lzma {
-
-// read u32, little-endian
-static uint32_t Read4(const uint8_t* in)
-{
-    return (static_cast<uint32_t>(in[3]) << 24)
-      |    (static_cast<uint32_t>(in[2]) << 16)
-      |    (static_cast<uint32_t>(in[1]) <<  8)
-      |    (static_cast<uint32_t>(in[0])      );
-}
-
-static uint32_t Read4Skip(const char **in)
-{
-    const uint8_t *tmp = (const uint8_t*)*in;
-    uint32_t res = Read4(tmp);
-    *in = *in + 4;
-    return res;
-}
 
 struct ISzAllocatorAlloc : ISzAlloc {
     Allocator *allocator;
@@ -58,38 +41,43 @@ struct ISzAllocatorAlloc : ISzAlloc {
     }
 };
 
+// adapted from lzma/C/Lzma86Dec.c
+
+#define LZMA86_HEADER_SIZE (1 + LZMA_PROPS_SIZE + sizeof(uint64_t))
+
 bool Decompress(const char *compressed, size_t compressedSize, char *out, size_t *uncompressedSizeInOut, Allocator *allocator)
 {
-    ISzAllocatorAlloc lzmaAlloc(allocator);
-
     if (compressedSize < LZMA86_HEADER_SIZE)
         return false;
 
-    uint8_t usesX86Filter = (uint8_t)compressed[0];
+    ByteOrderDecoder br(compressed, compressedSize, ByteOrderDecoder::LittleEndian);
+    uint8_t usesX86Filter = br.UInt8();
     if (usesX86Filter > 1)
         return false;
 
-    SizeT uncompressedSize = Read4((Byte *)compressed + LZMA86_SIZE_OFFSET);
+    br.Skip(LZMA_PROPS_SIZE);
+    SizeT uncompressedSize = (SizeT)br.UInt64();
+    if (uncompressedSize > *uncompressedSizeInOut)
+        return false;
+    CrashIf(br.Offset() != LZMA86_HEADER_SIZE);
     SizeT compressedSizeTmp = compressedSize - LZMA86_HEADER_SIZE;
-    SizeT uncompressedSizeTmp = *uncompressedSizeInOut;
 
+    ISzAllocatorAlloc lzmaAlloc(allocator);
     ELzmaStatus status;
-    // Note: would be nice to understand why status returns LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK and
-    // not LZMA_STATUS_FINISHED_WITH_MARK. It seems to work, though.
-    int res = LzmaDecode((Byte *)out, &uncompressedSizeTmp,
+    int res = LzmaDecode((Byte *)out, uncompressedSizeInOut,
         (Byte *)compressed + LZMA86_HEADER_SIZE, &compressedSizeTmp,
-        (Byte *)compressed + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END, &status,
+        (Byte *)compressed + 1, LZMA_PROPS_SIZE, LZMA_FINISH_ANY, &status,
         &lzmaAlloc);
 
-    if (SZ_OK != res)
+    if (SZ_OK != res || (status != LZMA_STATUS_FINISHED_WITH_MARK && status != LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK))
         return false;
 
     if (usesX86Filter) {
         UInt32 x86State;
         x86_Convert_Init(x86State);
-        x86_Convert((Byte *)out, uncompressedSizeTmp, 0, &x86State, 0);
+        x86_Convert((Byte *)out, *uncompressedSizeInOut, 0, &x86State, 0);
     }
-    *uncompressedSizeInOut = uncompressedSize;
+
     return true;
 }
 
@@ -119,65 +107,63 @@ Integers are little-endian.
 
 bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive* archiveOut)
 {
-    const char *data = archiveHeader;
-    const char *dataEnd = data + dataLen;
-
     if (dataLen < HEADER_START_SIZE)
         return false;
     if (dataLen > (uint32_t)-1)
         return false;
 
-    uint32_t magic_id = Read4Skip(&data);
+    ByteOrderDecoder br(archiveHeader, dataLen, ByteOrderDecoder::LittleEndian);
+    uint32_t magic_id = br.UInt32();
     if (magic_id != LZMA_MAGIC_ID)
         return false;
 
-    int filesCount = (int)Read4Skip(&data);
+    uint32_t filesCount = br.UInt32();
     archiveOut->filesCount = filesCount;
-    if (filesCount > MAX_LZMA_ARCHIVE_FILES)
+    if (filesCount > dimof(archiveOut->files))
         return false;
 
     FileInfo *fi;
-    for (int i = 0; i < filesCount; i++) {
-        if (data + FILE_ENTRY_MIN_SIZE > dataEnd)
+    for (uint32_t i = 0; i < filesCount; i++) {
+        if (br.Offset() + FILE_ENTRY_MIN_SIZE > dataLen)
             return false;
 
-        uint32_t fileHeaderSize = Read4Skip(&data);
+        uint32_t fileHeaderSize = br.UInt32();
         if (fileHeaderSize < FILE_ENTRY_MIN_SIZE || fileHeaderSize > 1024)
             return false;
-        if (data + fileHeaderSize > dataEnd)
+        if (br.Offset() + fileHeaderSize - 4 > dataLen)
             return false;
 
         fi = &archiveOut->files[i];
-        fi->compressedSize = Read4Skip(&data);
-        fi->uncompressedSize = Read4Skip(&data);
-        fi->uncompressedCrc32 = Read4Skip(&data);
-        fi->ftModified.dwLowDateTime = Read4Skip(&data);
-        fi->ftModified.dwHighDateTime = Read4Skip(&data);
-        fi->name = data;
-        data += fileHeaderSize - FILE_ENTRY_MIN_SIZE;
-        if (*data++ != '\0')
+        fi->compressedSize = br.UInt32();
+        fi->uncompressedSize = br.UInt32();
+        fi->uncompressedCrc32 = br.UInt32();
+        fi->ftModified.dwLowDateTime = br.UInt32();
+        fi->ftModified.dwHighDateTime = br.UInt32();
+        fi->name = archiveHeader + br.Offset();
+        br.Skip(fileHeaderSize - FILE_ENTRY_MIN_SIZE);
+        if (br.Char() != '\0')
             return false;
     }
 
-    if (data + 4 > dataEnd)
+    if (br.Offset() + 4 > dataLen)
         return false;
 
-    uint32_t headerSize = (uint32_t)(data - archiveHeader);
-    uint32_t headerCrc32 = Read4Skip(&data);
+    uint32_t headerSize = br.Offset();
+    uint32_t headerCrc32 = br.UInt32();
     uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, headerSize);
     if (headerCrc32 != realCrc)
         return false;
 
-    for (int i = 0; i < filesCount; i++) {
+    for (uint32_t i = 0; i < filesCount; i++) {
         fi = &archiveOut->files[i];
-        fi->compressedData = data;
-        data += fi->compressedSize;
         // overflow check
-        if (data < fi->compressedData)
+        if (fi->compressedSize > dataLen || br.Offset() + fi->compressedSize > dataLen)
             return false;
+        fi->compressedData = archiveHeader + br.Offset();
+        br.Skip(fi->compressedSize);
     }
 
-    return data == dataEnd;
+    return br.Offset() == dataLen;
 }
 
 int GetIdxFromName(SimpleArchive *archive, const char *fileName)
@@ -261,12 +247,11 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
     for (; *files; files++) {
         int idx = GetIdxFromName(&archive, *files);
         if (-1 != idx) {
-            // TODO: check result?
-            ExtractFileByIdx(&archive, idx, dstDir, allocator);
+            ok &= ExtractFileByIdx(&archive, idx, dstDir, allocator);
         }
     }
     Allocator::Free(allocator, archiveData);
-    return true;
+    return ok;
 }
 
 }

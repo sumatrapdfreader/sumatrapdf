@@ -719,8 +719,8 @@ $(OU)\JsonParser.obj: $B\src\utils\Vec.h
 $(OU)\LabelWithCloseWnd.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GdiPlusUtil.h
 $(OU)\LabelWithCloseWnd.obj: $B\src\utils\GeomUtil.h $B\src\utils\LabelWithCloseWnd.h $B\src\utils\Scoped.h
 $(OU)\LabelWithCloseWnd.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\Lzma86.h $B\ext\lzma\C\LzmaDec.h
-$(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Types.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
+$(OU)\LzmaSimpleArchive.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteOrderDecoder.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h
 $(OU)\LzmaSimpleArchive.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\LzzaUtil.obj: $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\LzmaEnc.h $B\ext\lzma\C\Types.h

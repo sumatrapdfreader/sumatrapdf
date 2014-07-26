@@ -66,6 +66,14 @@ uint32 ByteOrderDecoder::UInt32()
     return v;
 }
 
+uint64 ByteOrderDecoder::UInt64()
+{
+    uint64 first = UInt32();
+    if (LittleEndian == byteOrder)
+        return first | ((uint64)UInt32() << 32);
+    return (first << 32) | UInt32();
+}
+
 void ByteOrderDecoder::Bytes(char *dest, size_t len)
 {
     CrashIf(left < len);

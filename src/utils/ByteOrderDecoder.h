@@ -21,6 +21,8 @@ public:
     int16  Int16() { return (int16)UInt16(); }
     uint32 UInt32();
     int32  Int32() { return (int32)UInt32(); }
+    uint64 UInt64();
+    int64  Int64() { return (int64)UInt64(); }
 
     void   Bytes(char *dest, size_t len);
 
