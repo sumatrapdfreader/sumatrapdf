@@ -594,10 +594,13 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
         //       in debug builds when passing in DDJVU_RENDER_COLOR
         ddjvu_render_mode_t mode = DDJVU_RENDER_MASKONLY;
 #endif
-        if (ddjvu_page_render(page, mode, &prect, &rrect, fmt, stride, bmpData.Get())) {
-            bmp = new RenderedDjVuPixmap(bmpData, screen.Size(), isBitonal);
-            AddUserAnnots(bmp, pageNo, zoom, rotation, screen);
+        if (!ddjvu_page_render(page, mode, &prect, &rrect, fmt, stride, bmpData.Get())) {
+            // nothing was rendered, leave the page blank (same as WinDjView)
+            memset(bmpData, 0xFF, stride * screen.dy);
+            isBitonal = true;
         }
+        bmp = new RenderedDjVuPixmap(bmpData, screen.Size(), isBitonal);
+        AddUserAnnots(bmp, pageNo, zoom, rotation, screen);
     }
 
     ddjvu_format_release(fmt);
