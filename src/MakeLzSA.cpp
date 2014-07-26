@@ -76,7 +76,9 @@ StoreUncompressed:
 
 static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR *filePath, const char *inArchiveName, lzma::FileInfo *fi=NULL)
 {
-    size_t headerSize = 25 + str::Len(inArchiveName);
+    size_t nameLen = str::Len(inArchiveName);
+    CrashIf(nameLen > UINT32_MAX - 25);
+    uint32_t headerSize = 25 + (uint32_t)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
     if (fi && FileTimeEq(ft, fi->ftModified)) {
 ReusePrevious:
@@ -87,7 +89,7 @@ ReusePrevious:
         meta.Write32(fi->uncompressedCrc32);
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
-        strcpy_s(data.AppendBlanks(headerSize - 24), headerSize - 24, inArchiveName);
+        strcpy_s(data.AppendBlanks(nameLen + 1), nameLen + 1, inArchiveName);
         return content.AppendChecked(fi->compressedData, fi->compressedSize);
     }
 
@@ -108,12 +110,12 @@ ReusePrevious:
 
     ByteWriterLE meta(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);
-    meta.Write32(compressedSize);
+    meta.Write32((uint32_t)compressedSize);
     meta.Write32((uint32_t)fileDataLen);
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
-    strcpy_s(data.AppendBlanks(headerSize - 24), headerSize - 24, inArchiveName);
+    strcpy_s(data.AppendBlanks(nameLen + 1), nameLen + 1, inArchiveName);
     return content.AppendChecked(compressed, compressedSize);
 }
 
@@ -130,7 +132,7 @@ bool CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names
 
     ByteWriterLE lzsaHeader(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32(names.Count() / 2);
+    lzsaHeader.Write32((uint32_t)(names.Count() / 2));
 
     for (size_t i = 0; i < names.Count(); i += 2) {
         ScopedMem<WCHAR> filePath(path::Join(srcDir, names.At(i)));

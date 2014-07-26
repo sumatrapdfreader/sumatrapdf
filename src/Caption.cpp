@@ -113,7 +113,7 @@ static WNDPROC DefWndProcButton = NULL;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-    int index = GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
+    int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
     switch (message)
     {

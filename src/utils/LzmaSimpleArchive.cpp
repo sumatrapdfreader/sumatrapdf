@@ -5,7 +5,6 @@
 #include "LzmaSimpleArchive.h"
 
 #include "ByteOrderDecoder.h"
-#include "ByteWriter.h"
 #include "FileUtil.h"
 #include <LzmaDec.h>
 #include <Bra.h>
@@ -156,9 +155,9 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
     if (br.Offset() + 4 > dataLen)
         return false;
 
-    uint32_t headerSize = br.Offset();
+    size_t headerSize = br.Offset();
     uint32_t headerCrc32 = br.UInt32();
-    uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, headerSize);
+    uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, (uint32_t)headerSize);
     if (headerCrc32 != realCrc)
         return false;
 
