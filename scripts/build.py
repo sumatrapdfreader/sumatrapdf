@@ -59,7 +59,6 @@ from util import load_config, verify_path_exists, get_svn_branch
 import trans_upload
 import trans_download
 import upload_sources
-from binascii import crc32
 
 
 def usage():
@@ -74,130 +73,20 @@ def get_top_dir():
     return os.path.realpath(os.path.join(scripts_dir, ".."))
 
 
-def lzma_compress(src, dst):
-    d = os.path.dirname(__file__)
-    lzma = os.path.realpath(os.path.join(d, "..", "bin", "lzma.exe"))
-    run_cmd_throw(lzma, "e", src, dst, "-f86")
-
-
 def copy_to_dst_dir(src_path, dst_dir):
     name_in_obj_rel = os.path.basename(src_path)
     dst_path = os.path.join(dst_dir, name_in_obj_rel)
     shutil.copy(src_path, dst_path)
 
 
-def is_more_recent(src_path, dst_path):
-    return os.path.getmtime(src_path) > os.path.getmtime(dst_path)
-
-
-def get_real_name(f):
-    if type(f) in [types.ListType, types.TupleType]:
-        assert len(f) == 2
-        return f[0]
-    return f
-
-
-def get_in_archive_name(f):
-    if type(f) in [types.ListType, types.TupleType]:
-        assert len(f) == 2
-        return f[1].encode("UTF-8")
-    return f.encode("UTF-8")
-
-
-def get_file_crc32(path):
-    with open(path, "rb") as fo:
-        d = fo.read()
-    checksum = crc32(d, 0)
-    return checksum & 0xFFFFFFFF
-
-
-g_lzsa_archive_magic_id = 0x41537a4c
-
-"""
-Create a simple lzma archive in format:
-
-u32   magic_id 0x41537a4c ("LzSA' for "Lzma Simple Archive")
-u32   number of files
-for each file:
-  u32        length of file metadata (from this field to file name's 0-terminator)
-  u32        file size compressed
-  u32        file size uncompressed
-  u32        crc32 checksum of uncompressed data
-  FILETIME   last modification time in Windows's FILETIME format
-  char[...]  file name, 0-terminated
-u32   crc32 checksum of the header (i.e. data so far)
-for each file:
-  compressed file data
-
-Integers are little-endian.
-
-You can over-write the file name in the archive by using list instead of
-a string in files: ["foo.txt", "bar.txt"] will add file "foo.txt" under name
-"bar.txt"
-"""
-def create_lzsa_archive(dir, archiveName, files):
-    for f in files:
-        f = get_real_name(f)
-        src = os.path.join(dir, f)
-        dst = src + ".lzma"
-        if not os.path.exists(dst) or is_more_recent(src, dst):
-            lzma_compress(src, dst)
-
-    d = struct.pack("<II", g_lzsa_archive_magic_id, len(files))
-    for f in files:
-        real_name = get_real_name(f)
-        path = os.path.join(dir, real_name)
-        data = struct.pack("<I", 0) # length to be corrected below
-        data += struct.pack("<I", os.path.getsize(path + ".lzma"))
-        data += struct.pack("<I", os.path.getsize(path))
-        data += struct.pack("<I", get_file_crc32(path))
-        data += struct.pack("<Q",
-                            int((os.path.getmtime(path) + 11644473600L) * 10000000))
-        entry_name = get_in_archive_name(f)
-        data += entry_name + "\0"
-        d += struct.pack("<I", len(data)) + data[4:]
-    checksum = crc32(d, 0) & 0xFFFFFFFF
-    d += struct.pack("<I", checksum)
-
-    archive_path = os.path.join(dir, archiveName)
-    with open(archive_path, "wb") as fo:
-        fo.write(d)
-        for f in files:
-            f = get_real_name(f)
-            path = os.path.join(dir, f) + ".lzma"
-            with open(path, "rb") as fi:
-                d = fi.read()
-                fo.write(d)
-    print("Created archive: %s" % archive_path)
-    return archive_path
-
-
-# build installer data, will be included as part of Installer.exe resources
-def build_installer_data(dir):
-    src = os.path.join("mupdf", "resources", "fonts",
-                       "droid", "DroidSansFallback.ttf")
-    if not os.path.exists(src):
-        # location before
-        # https://code.google.com/p/sumatrapdf/source/detail?r=8266
-        src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
-    assert os.path.exists(src)
-    dst = os.path.join(dir, "DroidSansFallback.ttf")
-    if not os.path.exists(dst) or is_more_recent(src, dst):
-        copy_to_dst_dir(src, dir)
-
-    files = [
-        ["SumatraPDF-no-MuPDF.exe", "SumatraPDF.exe"], "DroidSansFallback.ttf",
-        "libmupdf.dll", "PdfFilter.dll", "PdfPreview.dll",
-        "uninstall.exe"]
-    create_lzsa_archive(dir, "InstallerData.dat", files)
-    installer_res = os.path.join(dir, "sumatrapdf", "Installer.res")
-    util.delete_file(installer_res)
-
-
 def create_pdb_lzsa_archive(dir, archive_name):
+    archive_path = os.path.join(dir, archive_name)
+    MakeLzsa = os.path.join(dir, "MakeLzsa.exe")
     files = ["libmupdf.pdb", "Installer.pdb",
              "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
-    return create_lzsa_archive(dir, archive_name, files)
+    files = [os.path.join(dir, file) + ":" + file for file in files]
+    run_cmd_throw(MakeLzsa, archive_path, *files)
+    return archive_path
 
 
 def create_pdb_zip_archive(dir, archive_name):
@@ -460,8 +349,10 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
     platform = "PLATFORM=%s" % (target_platform or "X86")
 
+    # build executables for signing (building the installer will build the rest)
     (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc",
-                               config, extcflags, platform, "all_sumatrapdf")
+                               config, extcflags, platform,
+                               "SumatraPDF", "Uninstaller")
     if build_test_installer:
         print_run_resp(out, err)
 
@@ -470,7 +361,6 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     sign_retry(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"), cert_pwd)
     sign_retry(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
-    build_installer_data(obj_dir)
     (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc",
                                "Installer", config, platform, extcflags)
     if build_test_installer:

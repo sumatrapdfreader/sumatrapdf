@@ -44,16 +44,16 @@ struct ISzAllocatorAlloc : ISzAlloc {
 };
 
 // adapted from lzma/C/Lzma86Dec.c
+// (main difference: the uncompressed size isn't stored in bytes 6 to 13)
 
-#define LZMA86_HEADER_SIZE (1 + LZMA_PROPS_SIZE + sizeof(uint64_t))
+#define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
 bool Decompress(const char *compressed, size_t compressedSize, char *uncompressed, size_t uncompressedSize, Allocator *allocator)
 {
     if (compressedSize < 1)
         return false;
 
-    ByteOrderDecoder br(compressed, compressedSize, ByteOrderDecoder::LittleEndian);
-    uint8_t usesX86Filter = br.UInt8();
+    uint8_t usesX86Filter = compressed[0];
     // handle stored data
     if (usesX86Filter == (uint8_t)-1) {
         if (uncompressedSize != compressedSize - 1)
@@ -62,24 +62,20 @@ bool Decompress(const char *compressed, size_t compressedSize, char *uncompresse
         return true;
     }
 
-    if (compressedSize < LZMA86_HEADER_SIZE || usesX86Filter > 1)
+    if (compressedSize < LZMA_HEADER_SIZE || usesX86Filter > 1)
         return false;
 
-    br.Skip(LZMA_PROPS_SIZE);
-    SizeT uncompressedSizeCmp = (SizeT)br.UInt64();
-    if (uncompressedSizeCmp != uncompressedSize)
-        return false;
-    CrashIf(br.Offset() != LZMA86_HEADER_SIZE);
-    SizeT compressedSizeTmp = compressedSize - LZMA86_HEADER_SIZE;
+    SizeT uncompressedSizeCmp = uncompressedSize;
+    SizeT compressedSizeTmp = compressedSize - LZMA_HEADER_SIZE;
 
     ISzAllocatorAlloc lzmaAlloc(allocator);
     ELzmaStatus status;
     int res = LzmaDecode((Byte *)uncompressed, &uncompressedSizeCmp,
-        (Byte *)compressed + LZMA86_HEADER_SIZE, &compressedSizeTmp,
-        (Byte *)compressed + 1, LZMA_PROPS_SIZE, LZMA_FINISH_ANY, &status,
+        (Byte *)compressed + LZMA_HEADER_SIZE, &compressedSizeTmp,
+        (Byte *)compressed + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END, &status,
         &lzmaAlloc);
 
-    if (SZ_OK != res || (status != LZMA_STATUS_FINISHED_WITH_MARK && status != LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK))
+    if (SZ_OK != res || status != LZMA_STATUS_FINISHED_WITH_MARK)
         return false;
     if (uncompressedSizeCmp != uncompressedSize)
         return false;
@@ -99,58 +95,43 @@ bool Compress(const char *uncompressed, size_t uncompressedSize, char *compresse
 
     if (*compressedSize < uncompressedSize + 1)
         return false;
-    if (*compressedSize < LZMA86_HEADER_SIZE)
+    if (*compressedSize < LZMA_HEADER_SIZE)
         goto Store;
 
     CLzmaEncProps props;
     LzmaEncProps_Init(&props);
 
-    size_t bjc_size = (size_t)-1, lzma_size = (size_t)-1;
-
-    SizeT outSize = *compressedSize - LZMA86_HEADER_SIZE;
-    SizeT propsSize = LZMA_PROPS_SIZE;
-    SRes res = LzmaEncode((Byte *)compressed + LZMA86_HEADER_SIZE, &outSize, (const Byte *)uncompressed, uncompressedSize, &props, (Byte *)compressed + 1, &propsSize, FALSE, NULL, &lzmaAlloc, &lzmaAlloc);
-    if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
-        lzma_size = outSize + LZMA86_HEADER_SIZE;
-
+    // always apply the BJC filter for speed (else two or three compression passes would be required)
+    size_t lzma_size = (size_t)-1;
     uint8_t *bjc_enc = (uint8_t *)Allocator::Alloc(allocator, uncompressedSize);
     if (bjc_enc) {
         memcpy(bjc_enc, uncompressed, uncompressedSize);
         UInt32 x86State;
         x86_Convert_Init(x86State);
         x86_Convert(bjc_enc, uncompressedSize, 0, &x86State, 1);
-
-        outSize = *compressedSize - LZMA86_HEADER_SIZE;
-        propsSize = LZMA_PROPS_SIZE;
-        res = LzmaEncode((Byte *)compressed + LZMA86_HEADER_SIZE, &outSize, bjc_enc, uncompressedSize, &props, (Byte *)compressed + 1, &propsSize, FALSE, NULL, &lzmaAlloc, &lzmaAlloc);
-        if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
-            bjc_size = outSize + LZMA86_HEADER_SIZE;
-
-        Allocator::Free(allocator, bjc_enc);
     }
 
-    if (bjc_size < lzma_size) {
-        compressed[0] = 1;
-        *compressedSize = bjc_size;
-    }
-    else if (lzma_size < uncompressedSize + 1) {
-        compressed[0] = 0;
+    SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
+    SizeT propsSize = LZMA_PROPS_SIZE;
+    SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
+                          bjc_enc ? bjc_enc : (const Byte *)uncompressed, uncompressedSize,
+                          &props, (Byte *)compressed + 1, &propsSize,
+                          TRUE /* add EOS marker */, NULL, &lzmaAlloc, &lzmaAlloc);
+    if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
+        lzma_size = outSize + LZMA_HEADER_SIZE;
+    Allocator::Free(allocator, bjc_enc);
+
+    if (lzma_size < uncompressedSize + 1) {
+        compressed[0] = bjc_enc ? 1 : 0;
         *compressedSize = lzma_size;
-        if (bjc_enc) {
-            outSize = *compressedSize - LZMA86_HEADER_SIZE;
-            propsSize = LZMA_PROPS_SIZE;
-            LzmaEncode((Byte *)compressed + LZMA86_HEADER_SIZE, &outSize, (const Byte *)uncompressed, uncompressedSize, &props, (Byte *)compressed + 1, &propsSize, FALSE, NULL, &lzmaAlloc, &lzmaAlloc);
-        }
     }
     else {
 Store:
         compressed[0] = (uint8_t)-1;
         memcpy(compressed + 1, uncompressed, uncompressedSize);
         *compressedSize = uncompressedSize + 1;
-        return true;
     }
-    // TODO: don't save this redundant information
-    ByteWriterLE(compressed + 1 + LZMA_PROPS_SIZE, LZMA86_HEADER_SIZE - 1 - LZMA_PROPS_SIZE).Write64(uncompressedSize);
+
     return true;
 }
 

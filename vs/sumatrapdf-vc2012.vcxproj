@@ -118,7 +118,6 @@
     <ClCompile Include="..\src\FileModifications.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\LzzaEnc.cpp" />
     <ClCompile Include="..\src\MakeLzSA.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
@@ -207,7 +206,6 @@
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
-    <ClCompile Include="..\src\utils\LzzaUtil.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\RarUtil.cpp" />
@@ -492,7 +490,6 @@
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
-    <ClInclude Include="..\src\utils\LzzaUtil.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\RarUtil.h" />

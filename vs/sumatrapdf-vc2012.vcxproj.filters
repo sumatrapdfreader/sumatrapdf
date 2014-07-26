@@ -99,9 +99,6 @@
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\LzzaEnc.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\MakeLzSA.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -364,9 +361,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\LzzaUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp">
@@ -1215,9 +1209,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\LzzaUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\NoFreeAllocator.h">

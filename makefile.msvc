@@ -145,7 +145,6 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
 MAKELZSA_APP = $(O)\MakeLzsa.exe
-LZZAENC_APP = $(O)\LzzaEnc.exe
 
 MUPDF_LIB   = $(O)\libmupdfs.lib
 UNARR_LIB   = $(O)\unarr.lib
@@ -172,8 +171,7 @@ UTILS_OBJS = \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\SplitterWnd.obj \
 	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
 	$(OU)\ZipUtil.obj $(OU)\RarUtil.obj $(OU)\LzmaSimpleArchive.obj \
-	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj \
-	$(OU)\LzzaUtil.obj
+	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
@@ -239,9 +237,6 @@ ENGINEDUMP_OBJS = \
 
 MAKELZSA_OBJS = \
 	$(OS)\MakeLzsa.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
-
-LZZAENC_OBJS = \
-	$(OS)\LzzaEnc.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
@@ -334,7 +329,7 @@ Uninstaller:   $(OS) $(UNINSTALLER_APP)
 PDFFilter:     $(OS) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(PDFPREVIEW_DLL)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
-MakeLzsa:      $(OS) $(MAKELZSA_APP) $(LZZAENC_APP)
+MakeLzsa:      $(OS) $(MAKELZSA_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
@@ -401,9 +396,6 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(MAKELZSA_APP): $(MAKELZSA_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(LZZAENC_APP): $(LZZAENC_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 {$(SRCDIR)\utils}.cpp{$(OU)}.obj::
