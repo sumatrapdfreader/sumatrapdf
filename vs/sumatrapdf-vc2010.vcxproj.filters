@@ -102,6 +102,9 @@
     <ClCompile Include="..\src\LzzaEnc.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MakeLzSA.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Menu.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>

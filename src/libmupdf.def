@@ -833,6 +833,7 @@ EXPORTS
 	ar_close_archive
 	ar_parse_entry
 	ar_parse_entry_at
+	ar_parse_entry_for
 	ar_at_eof
 	ar_entry_get_name
 	ar_entry_get_offset
@@ -905,6 +906,8 @@ EXPORTS
 ; lzma exports (required for LzmaSimpleArchive)
 
 	LzmaDecode
+	LzmaEncode
+	LzmaEncProps_Init
 	x86_Convert
 
 ; libwebp exports (required for WebpReader)

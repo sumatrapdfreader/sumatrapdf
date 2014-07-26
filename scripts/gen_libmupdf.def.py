@@ -109,6 +109,8 @@ EXPORTS
 ; lzma exports (required for LzmaSimpleArchive)
 
 	LzmaDecode
+	LzmaEncode
+	LzmaEncProps_Init
 	x86_Convert
 
 ; libwebp exports (required for WebpReader)

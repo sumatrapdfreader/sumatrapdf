@@ -118,7 +118,7 @@ bool Compress(const char *uncompressed, size_t uncompressedSize, char *compresse
         memcpy(bjc_enc, uncompressed, uncompressedSize);
         UInt32 x86State;
         x86_Convert_Init(x86State);
-        x86_Convert(bjc_enc, uncompressedSize, 0, &x86State, 0);
+        x86_Convert(bjc_enc, uncompressedSize, 0, &x86State, 1);
 
         outSize = *compressedSize - LZMA86_HEADER_SIZE;
         propsSize = LZMA_PROPS_SIZE;
