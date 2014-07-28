@@ -22,7 +22,6 @@ from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
 from util import load_config, run_cmd, strip_empty_lines
 from util import verify_path_exists, verify_started_in_right_directory
-from build import build_installer_data
 from buildbot_html import gen_analyze_html, build_index_html, rebuild_trans_src_path_cache
 from buildbot_html import build_sizes_json, g_first_analyze_build
 import runtests
@@ -240,7 +239,8 @@ def build_release(stats, ver):
 
     clean_release()
     (out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc",
-                                  config, extcflags, platform, "all_sumatrapdf")
+                                  config, extcflags, platform,
+                                  "all_sumatrapdf")
 
     log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
     build_log = out + "\n====STDERR:\n" + err
@@ -261,12 +261,7 @@ def build_release(stats, ver):
     stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll", 0)
     stats.rel_pdffilter_dll_size = file_size_in_obj("PdfFilter.dll")
     stats.rel_pdfpreview_dll_size = file_size_in_obj("PdfPreview.dll")
-
-    build_installer_data(obj_dir)
-    run_cmd_throw("nmake", "-f", "makefile.msvc",
-                  "Installer", config, platform, extcflags)
-    p = os.path.join(obj_dir, "Installer.exe")
-    stats.rel_installer_exe_size = file_size(p)
+    stats.rel_installer_exe_size = file_size_in_obj("Installer.exe")
 
 
 def build_analyze(stats, ver):
