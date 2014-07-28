@@ -3810,6 +3810,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 {
     int wmId = LOWORD(wParam);
 
+    if (wmId >= 0xF000) {
+        // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
+        return SendMessage(hwnd, WM_SYSCOMMAND, wParam, lParam);
+    }
+
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
     if ((wmId >= IDM_FILE_HISTORY_FIRST) && (wmId <= IDM_FILE_HISTORY_LAST))

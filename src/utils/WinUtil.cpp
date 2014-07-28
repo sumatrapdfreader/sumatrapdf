@@ -654,11 +654,13 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly)
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type)
 {
     DWORD style = GetWindowLong(hwnd, type);
+    DWORD newStyle;
     if (enable)
-        style = style | flag;
+        newStyle = style | flag;
     else
-        style = style & ~flag;
-    SetWindowLong(hwnd, type, style);
+        newStyle = style & ~flag;
+    if (newStyle != style)
+        SetWindowLong(hwnd, type, style);
 }
 
 RectI ChildPosWithinParent(HWND hwnd)

@@ -7,6 +7,7 @@
 using namespace Gdiplus;
 #include "SumatraPDF.h"
 #include "Tabs.h"
+#include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -29,6 +30,7 @@ using namespace Gdiplus;
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win);
+static HMENU GetUpdatedSystemMenu(HWND hwnd);
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
 
 
@@ -396,15 +398,6 @@ static void DrawFrame(HWND hwnd, WindowInfo *win)
     ReleaseDC(hwnd, hdc);
 }
 
-static void SetVisibleStyle(HWND hwnd, bool set)
-{
-    long ws = GetWindowLong(hwnd, GWL_STYLE);
-    if (bool(ws & WS_VISIBLE) == set)
-        return;
-    ws ^= WS_VISIBLE;
-    SetWindowLong(hwnd, GWL_STYLE, ws);
-}
-
 LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool *callDef, WindowInfo *win)
 {
     if (dwm::IsCompositionEnabled()) {
@@ -487,12 +480,12 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_SETCURSOR:
         case WM_SETTEXT:
         case WM_SETICON:
-            // Remove the WS_VISIBLE style, to prevent DefWindowProc from drawing
-            // in the caption's area, when processing these mesages.
             if (!win->caption->theme) {
-                SetVisibleStyle(hwnd, false);
+                // Remove the WS_VISIBLE style to prevent DefWindowProc from drawing
+                // in the caption's area when processing these mesages.
+                ToggleWindowStyle(hwnd, WS_VISIBLE, false);
                 LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
-                SetVisibleStyle(hwnd, true);
+                ToggleWindowStyle(hwnd, WS_VISIBLE, true);
                 *callDef = false;
                 return res;
             }
@@ -540,29 +533,15 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_NCRBUTTONUP:
         // Prepare and show the system menu.
         if (wParam == HTCAPTION) {
-            GetSystemMenu(hwnd, TRUE);
-            HMENU menu = GetSystemMenu(hwnd, FALSE);
-            if (menu) {
-                SetMenuDefaultItem(menu, SC_CLOSE, FALSE);
-                SetVisibleStyle(hwnd, false);    // prevents drawing in the caption's area
-                if (IsZoomed(hwnd)) {
-                    EnableMenuItem(menu, SC_MOVE, MF_GRAYED);
-                    EnableMenuItem(menu, SC_SIZE, MF_GRAYED);
-                    EnableMenuItem(menu, SC_MAXIMIZE, MF_GRAYED);
-                }
-                else
-                    EnableMenuItem(menu, SC_RESTORE, MF_GRAYED);
-                SetVisibleStyle(hwnd, true);
-
-                UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
-                if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
-                    flags |= TPM_RIGHTALIGN;
-                WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, NULL);
-                if (cmd)
-                    PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
-                *callDef = false;
-                return 0;
-            }
+            HMENU menu = GetUpdatedSystemMenu(hwnd);
+            UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
+            if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
+                flags |= TPM_RIGHTALIGN;
+            WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, NULL);
+            if (cmd)
+                PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
+            *callDef = false;
+            return 0;
         }
         break;
 
@@ -594,6 +573,29 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     return 0;
 }
 
+static HMENU GetUpdatedSystemMenu(HWND hwnd)
+{
+    // don't reset the system menu (in case other applications have added to it)
+    HMENU menu = GetSystemMenu(hwnd, FALSE);
+
+    // prevents drawing in the caption's area
+    // TODO: how can this even happen?
+    ToggleWindowStyle(hwnd, WS_VISIBLE, false);
+
+    bool isZoomed = IsZoomed(hwnd);
+    EnableMenuItem(menu, SC_SIZE, isZoomed ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(menu, SC_MOVE, isZoomed ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(menu, SC_MINIMIZE, MF_ENABLED);
+    EnableMenuItem(menu, SC_MAXIMIZE, isZoomed ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(menu, SC_CLOSE, MF_ENABLED);
+    EnableMenuItem(menu, SC_RESTORE, isZoomed ? MF_ENABLED : MF_GRAYED);
+    SetMenuDefaultItem(menu, isZoomed ? SC_RESTORE : SC_MAXIMIZE, FALSE);
+
+    ToggleWindowStyle(hwnd, WS_VISIBLE, true);
+
+    return menu;
+}
+
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
 {
     int count = GetMenuItemCount(win->menu);
@@ -615,6 +617,9 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
+    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame), _TR("&Window"));
+    count++;
+
     TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, NULL);
 
     while (--count >= 0)
