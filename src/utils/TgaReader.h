@@ -8,8 +8,6 @@
 // (as e.g. produced by EngineDump and mudraw)
 // spec: http://www.gamers.org/dEngine/quake3/TGA.ps.gz
 
-#include "BaseUtil.h"
-
 namespace tga {
 
 bool                HasSignature(const char *data, size_t len);

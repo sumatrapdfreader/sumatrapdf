@@ -4,9 +4,6 @@
 #ifndef EbookBase_h
 #define EbookBase_h
 
-// needed for enum DocumentProperty
-#include "BaseEngine.h"
-
 // this is a collection of structs and classes that are
 // useful for more than one ebook format
 

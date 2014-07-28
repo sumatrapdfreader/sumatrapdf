@@ -4,8 +4,6 @@
 #ifndef WebpReader_h
 #define WebpReader_h
 
-#include "BaseUtil.h"
-
 namespace webp {
 
 bool                HasSignature(const char *data, size_t len);

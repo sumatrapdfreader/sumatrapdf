@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "RenderCache.h"
+
+#include "DisplayModel.h"
 #include "TextSelection.h"
 #include "WinUtil.h"
 

@@ -4,8 +4,6 @@
 #ifndef FzImgReader_h
 #define FzImgReader_h
 
-#include "BaseUtil.h"
-
 namespace fitz {
 
 Gdiplus::Bitmap *ImageFromData(const char *data, size_t len);

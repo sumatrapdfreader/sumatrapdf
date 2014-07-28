@@ -4,8 +4,10 @@
 #include "BaseUtil.h"
 #include "MobiDoc.h"
 
+#include "BaseEngine.h"
 #include "BitReader.h"
 #include "ByteOrderDecoder.h"
+#include "EbookBase.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"

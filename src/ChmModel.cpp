@@ -7,6 +7,7 @@
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmDoc.h"
 #include "Dict.h"
+#include "EbookBase.h"
 #include "HtmlWindow.h"
 #include "UITask.h"
 

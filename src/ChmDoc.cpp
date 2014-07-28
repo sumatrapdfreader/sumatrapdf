@@ -4,7 +4,9 @@
 #include "BaseUtil.h"
 #include "ChmDoc.h"
 
+#include "BaseEngine.h"
 #include "ByteReader.h"
+#include "EbookBase.h"
 #include "FileUtil.h"
 #include "TrivialHtmlParser.h"
 

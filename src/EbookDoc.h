@@ -4,6 +4,7 @@
 #ifndef EpubDoc_h
 #define EpubDoc_h
 
+#include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ZipUtil.h"
 
