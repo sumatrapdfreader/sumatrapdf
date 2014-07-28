@@ -15,6 +15,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EngineManager.h"
+#include "FileUtil.h"
 #include "Notifications.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"

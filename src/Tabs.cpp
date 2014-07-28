@@ -9,6 +9,7 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "FileUtil.h"
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
 #include "Menu.h"

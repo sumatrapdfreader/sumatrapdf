@@ -4,10 +4,6 @@
 #ifndef SumatraPDF_h
 #define SumatraPDF_h
 
-#include "FileHistory.h"
-#include "Favorites.h"
-#include "Translations.h"
-
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
@@ -65,11 +61,12 @@ enum MenuToolbarFlags {
 // for backward compatibility use a value that older versions will render as yellow
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
-class WindowInfo;
 class Favorites;
-class DisplayModel;
-struct TabData;
+class FileHistory;
+class WindowInfo;
+enum DisplayMode;
 struct LabelWithCloseWnd;
+struct TabData;
 
 // all defined in SumatraPDF.cpp
 extern bool                     gDebugShowLinks;

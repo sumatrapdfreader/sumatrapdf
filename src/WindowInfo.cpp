@@ -16,6 +16,7 @@
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
+#include "Translations.h"
 #include "uia/Provider.h"
 #include "WinUtil.h"
 
