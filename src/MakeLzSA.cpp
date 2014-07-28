@@ -40,28 +40,28 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
     CLzmaEncProps props;
     LzmaEncProps_Init(&props);
 
-    // always apply the BJC filter for speed (else two or three compression passes would be required)
+    // always apply the BCJ filter for speed (else two or three compression passes would be required)
     size_t lzma_size = (size_t)-1;
-    uint8_t *bjc_enc = (uint8_t *)malloc(uncompressedSize);
-    if (bjc_enc) {
-        memcpy(bjc_enc, uncompressed, uncompressedSize);
+    uint8_t *bcj_enc = (uint8_t *)malloc(uncompressedSize);
+    if (bcj_enc) {
+        memcpy(bcj_enc, uncompressed, uncompressedSize);
         UInt32 x86State;
         x86_Convert_Init(x86State);
-        x86_Convert(bjc_enc, uncompressedSize, 0, &x86State, 1);
+        x86_Convert(bcj_enc, uncompressedSize, 0, &x86State, 1);
     }
 
     SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
     SizeT propsSize = LZMA_PROPS_SIZE;
     SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
-                          bjc_enc ? bjc_enc : (const Byte *)uncompressed, uncompressedSize,
+                          bcj_enc ? bcj_enc : (const Byte *)uncompressed, uncompressedSize,
                           &props, (Byte *)compressed + 1, &propsSize,
                           TRUE /* add EOS marker */, NULL, &lzmaAlloc, &lzmaAlloc);
     if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
         lzma_size = outSize + LZMA_HEADER_SIZE;
-    free(bjc_enc);
+    free(bcj_enc);
 
     if (lzma_size < uncompressedSize + 1) {
-        compressed[0] = bjc_enc ? 1 : 0;
+        compressed[0] = bcj_enc ? 1 : 0;
         *compressedSize = lzma_size;
     }
     else {
@@ -89,22 +89,22 @@ ReusePrevious:
         meta.Write32(fi->uncompressedCrc32);
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
-        strcpy_s(data.AppendBlanks(nameLen + 1), nameLen + 1, inArchiveName);
+        data.Append(inArchiveName, nameLen + 1);
         return content.AppendChecked(fi->compressedData, fi->compressedSize);
     }
 
     size_t fileDataLen;
     ScopedMem<char> fileData(file::ReadAll(filePath, &fileDataLen));
-    if (!fileData || fileDataLen > UINT32_MAX)
+    if (!fileData || fileDataLen >= UINT32_MAX)
         return false;
     uint32_t fileDataCrc = crc32(0, (const uint8_t *)fileData.Get(), (uint32_t)fileDataLen);
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileDataLen)
         goto ReusePrevious;
 
-    ScopedMem<char> compressed((char *)malloc(fileDataLen + 1));
+    size_t compressedSize = fileDataLen + 1;
+    ScopedMem<char> compressed((char *)malloc(compressedSize));
     if (!compressed)
         return false;
-    size_t compressedSize = fileDataLen + 1;
     if (!Compress(fileData, fileDataLen, compressed, &compressedSize))
         return false;
 
@@ -115,7 +115,7 @@ ReusePrevious:
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
-    strcpy_s(data.AppendBlanks(nameLen + 1), nameLen + 1, inArchiveName);
+    data.Append(inArchiveName, nameLen + 1);
     return content.AppendChecked(compressed, compressedSize);
 }
 
