@@ -13,9 +13,11 @@ using namespace Gdiplus;
 
 
 #define CUSTOM_CAPTION_CLASS_NAME  L"CustomCaption"
+#define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
 
 #define BTN_ID_FIRST  100
 
+// TODO: why is this needed?
 #define DO_NOT_REOPEN_MENU_TIMER_ID       1
 #define DO_NOT_REOPEN_MENU_DELAY_IN_MS    200
 
@@ -398,6 +400,11 @@ static void DrawFrame(HWND hwnd, WindowInfo *win)
     ReleaseDC(hwnd, hdc);
 }
 
+// accelerator key which was pressed when invoking the "menubar",
+// needs to be passed from WM_SYSCOMMAND to WM_INITMENUPOPUP
+// (can be static because there can only be one menu active at a time)
+static WCHAR gMenuAccelPressed = 0;
+
 LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool *callDef, WindowInfo *win)
 {
     if (dwm::IsCompositionEnabled()) {
@@ -547,11 +554,26 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
     case WM_SYSCOMMAND:
         if (wParam == SC_KEYMENU) {
-            // Set the keyboard focus to the menu's button.
-            HWND hwndMenu = win->caption->btn[CB_MENU].hwnd;
-            SetFocus(hwndMenu == GetFocus() ? win->hwndFrame : hwndMenu);
+            // Show the "menu bar" (and the desired submenu)
+            gMenuAccelPressed = (WCHAR)lParam;
+            if (' ' == gMenuAccelPressed) {
+                // map space to the accelerator of the Window menu
+                if (str::FindChar(_TR("&Window"), '&'))
+                    gMenuAccelPressed = *(str::FindChar(_TR("&Window"), '&') + 1);
+            }
+            PostMessage(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
             *callDef = false;
             return 0;
+        }
+        break;
+
+    case WM_INITMENUPOPUP:
+        if (gMenuAccelPressed) {
+            // poorly documented hack: find the menu window and send it the accelerator key
+            HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, NULL);
+            if (hMenu)
+                PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+            gMenuAccelPressed = 0;
         }
         break;
 
@@ -783,6 +805,3 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWOR
 }
 
 };
-
-
-
