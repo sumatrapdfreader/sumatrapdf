@@ -997,11 +997,10 @@ pdf_create_highlight_annot(pdf_document *doc, pdf_obj *obj)
 }
 
 static pdf_annot *
-pdf_create_markup_annot(pdf_document *doc, pdf_obj *obj, char *type)
+pdf_create_markup_annot(pdf_document *doc, pdf_obj *obj, fz_annot_type annot_type)
 {
 	fz_context *ctx = doc->ctx;
 	fz_buffer *content = NULL;
-	fz_annot_type annot_type;
 	pdf_obj *quad_points;
 	fz_rect rect, a, b;
 	float rgb[3], dot;
@@ -1010,7 +1009,6 @@ pdf_create_markup_annot(pdf_document *doc, pdf_obj *obj, char *type)
 
 	fz_var(content);
 
-	annot_type = !strcmp(type, "Underline") ? FZ_ANNOT_UNDERLINE : !strcmp(type, "StrikeOut") ? FZ_ANNOT_STRIKEOUT : FZ_ANNOT_SQUIGGLY;
 	pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"), &rect);
 	quad_points = pdf_dict_gets(obj, "QuadPoints");
 	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
@@ -1516,23 +1514,27 @@ pdf_create_freetext_annot(pdf_document *doc, pdf_obj *obj)
 static pdf_annot *
 pdf_create_annot_with_appearance(pdf_document *doc, pdf_obj *obj)
 {
-	char *type = pdf_to_name(pdf_dict_gets(obj, "Subtype"));
-
-	if (!strcmp(type, "Link"))
+	fz_annot_type annot_type = pdf_annot_obj_type(obj);
+	switch (annot_type)
+	{
+	case FZ_ANNOT_LINK:
 		return pdf_create_link_annot(doc, obj);
-	if (!strcmp(type, "Text"))
+	case FZ_ANNOT_TEXT:
 		return pdf_create_text_annot(doc, obj);
-	if (!strcmp(type, "FileAttachment"))
+	case FZ_ANNOT_FILEATTACHMENT:
 		return pdf_create_file_annot(doc, obj);
-	/* TODO: Adobe Reader seems to sometimes ignore the appearance stream for highlights(?) */
-	if (!strcmp(type, "Highlight"))
+	case FZ_ANNOT_HIGHLIGHT:
+		/* TODO: Adobe Reader seems to sometimes ignore the appearance stream for highlights(?) */
 		return pdf_create_highlight_annot(doc, obj);
-	if (!strcmp(type, "Underline") || !strcmp(type, "StrikeOut") || !strcmp(type, "Squiggly"))
-		return pdf_create_markup_annot(doc, obj, type);
-	if (!strcmp(type, "FreeText"))
+	case FZ_ANNOT_UNDERLINE:
+	case FZ_ANNOT_STRIKEOUT:
+	case FZ_ANNOT_SQUIGGLY:
+		return pdf_create_markup_annot(doc, obj, annot_type);
+	case FZ_ANNOT_FREETEXT:
 		return pdf_create_freetext_annot(doc, obj);
-
-	return NULL;
+	default:
+		return NULL;
+	}
 }
 
 void
