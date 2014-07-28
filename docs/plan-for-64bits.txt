@@ -22,3 +22,4 @@ If the OS cannot be auto-detected, it presents 32-bit builds.
 
 We would also need to audit all registry keys we write to make sure that installing
 32 bit over 64 bit version (or the other way around) doesn't mess things up.
+
