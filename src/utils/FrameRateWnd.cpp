@@ -80,7 +80,7 @@ static SIZE GetIdealSize(FrameRateWnd *w)
 
 void ShowFrameRate(FrameRateWnd *w, int frameRate)
 {
-    if (w->frameRate == frameRate) {
+    if (!w || w->frameRate == frameRate) {
         return;
     }
     w->frameRate = frameRate;
