@@ -1755,7 +1755,7 @@ const char * gTranslations_es =
   "&Instalar SumatraPDF en la siguiente carpeta:\0"\
   "\302\241La instalaci\303\263n ha fallado!\0"\
   "Instalaci\303\263n en progreso...\0"\
-  "\0"\
+  "Mantener instalado el complemento de &navegador (ahora obsoleto)\0"\
   "Permitir que la b\303\272squeda de Windows encuentre documentos PDF\0"\
   "Mostrar miniaturas en los iconos de documentos &PDF\0"\
   "Necesita cerrar %s para continuar.\0"\
