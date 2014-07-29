@@ -165,6 +165,9 @@ public:
             DeleteObject(brush);
         }
 
+        // disable gradient background on tabs because it's ugly
+        isTranslucentMode = false;
+
         Graphics graphics(memDC);
         graphics.SetCompositingMode(CompositingModeSourceOver);
         graphics.SetCompositingQuality(CompositingQualityHighQuality);
