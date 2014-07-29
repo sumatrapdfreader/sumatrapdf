@@ -184,7 +184,8 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
     // parent-child relationship but ownership relationship (as long as hwndAssociatedWith
     // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
     // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
-    HWND hwnd = CreateWindowEx(WS_EX_LAYERED, FRAME_RATE_CLASS_NAME, NULL, dwStyle,
+    // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
+    HWND hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, NULL, dwStyle,
              0, 0, 0, 0, w->hwndAssociatedWith, NULL, GetModuleHandle(NULL), w);
     CrashIf(hwnd != w->hwnd);
     if (!hwnd) {
