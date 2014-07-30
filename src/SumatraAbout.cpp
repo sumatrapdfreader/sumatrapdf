@@ -572,14 +572,14 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  1
-#define DOCLIST_MARGIN_LEFT        40
-#define DOCLIST_MARGIN_BETWEEN_X   30
-#define DOCLIST_MARGIN_RIGHT       40
-#define DOCLIST_MARGIN_TOP         60
-#define DOCLIST_MARGIN_BETWEEN_Y   50
-#define DOCLIST_MARGIN_BOTTOM      40
+#define DOCLIST_MARGIN_LEFT         (int)(40 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_BETWEEN_X    (int)(30 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_RIGHT        (int)(40 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_TOP          (int)(60 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_BETWEEN_Y    (int)(50 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_BOTTOM       (int)(40 * win.uiDPIFactor)
 #define DOCLIST_MAX_THUMBNAILS_X    5
-#define DOCLIST_BOTTOM_BOX_DY      50
+#define DOCLIST_BOTTOM_BOX_DY       (int)(50 * win.uiDPIFactor)
 
 void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
@@ -654,8 +654,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             DisplayState *state = list.At(h * width + w);
 
-            RectI page(offset.x + w * (int)(THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X * win.uiDPIFactor),
-                       offset.y + h * (int)(THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y * win.uiDPIFactor),
+            RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
+                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
                        THUMBNAIL_DX, THUMBNAIL_DY);
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
