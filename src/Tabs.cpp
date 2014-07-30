@@ -581,7 +581,16 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         if (!wParam) EndPaint(hwnd, &ps);
         return 0;
+
+    case WM_SIZE:
+        {
+            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+            if (win)
+                UpdateTabWidth(win);
+        }
+        break;
     }
+
     return CallWindowProc(DefWndProcTabBar, hwnd, msg, wParam, lParam);
 }
 #endif //OWN_TAB_DRAWING

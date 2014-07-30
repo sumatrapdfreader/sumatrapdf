@@ -2902,10 +2902,8 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
             rc.dy -= captionHeight;
         }
         else if (win->tabsVisible) {
-            if (updateToolbars) {
+            if (updateToolbars)
                 dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
-                UpdateTabWidth(win);
-            }
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
             if (!win->IsAboutWindow()) {
                 rc.y += TABBAR_HEIGHT;

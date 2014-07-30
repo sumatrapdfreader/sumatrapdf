@@ -230,7 +230,6 @@ void RelayoutCaption(WindowInfo *win)
     rc.dx -= TABBAR_HEIGHT;
     dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
     dh.End();
-    UpdateTabWidth(win);
 }
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
