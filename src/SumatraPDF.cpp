@@ -160,7 +160,7 @@ static WStrVec                      gAllowedFileTypes;
 static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1);
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
-static void CloseDocumentInWindow(WindowInfo *win);
+static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false);
 static void EnterFullScreen(WindowInfo& win, bool presentation=false);
 static void ExitFullScreen(WindowInfo& win);
 static bool SidebarSplitterCb(void *ctx, bool done);
@@ -1529,8 +1529,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     CrashIf(openNewTab && args.forceReuse);
     if (!win->IsAboutWindow()) {
         CrashIf(!args.forceReuse && !openNewTab);
-        // TODO: simplify for when opening a new tab
-        CloseDocumentInWindow(win);
+        CloseDocumentInTab(win, true);
     }
     // invalidate the links on the Frequently Read page
     win->staticLinks.Reset();
@@ -1599,28 +1598,11 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 {
     if (!win || !tdata) return;
 
-    FileWatcherUnsubscribe(win->watcher);
-    win->watcher = NULL;
-
-    ClearTocBox(win);
-    AbortFinding(win);
-    delete win->linkOnLastButtonDown;
-    win->linkOnLastButtonDown = NULL;
-    if (win->uia_provider)
-        win->uia_provider->OnDocumentUnload();
-
-    win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
-    win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
-    win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
-    // TODO: this can cause a mouse capture to stick around (cf. OnSelectionStop)
-    win->mouseAction = MA_IDLE;
-
-    DeletePropertiesWindow(win->hwndFrame);
+    CloseDocumentInTab(win, true);
 
     str::ReplacePtr(&win->loadedFilePath, tdata->ctrl ? tdata->ctrl->FilePath() : tdata->filePath);
     win::SetText(win->hwndFrame, tdata->title);
 
-    delete win->ctrl;
     win->ctrl = tdata->ctrl;
     win->watcher = tdata->watcher;
 
@@ -2198,9 +2180,11 @@ static void OnMenuExit()
     PostQuitMessage(0);
 }
 
-// closes a document inside a WindowInfo and turns it into
-// about window
-static void CloseDocumentInWindow(WindowInfo *win)
+// closes a document inside a WindowInfo and optionally turns it into
+// about window (set keepUIEnabled if a new document will be loaded
+// into the tab right afterwards and LoadDocIntoWindow would revert
+// the UI disabling afterwards anyway)
+static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
 {
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm())
@@ -2219,21 +2203,25 @@ static void CloseDocumentInWindow(WindowInfo *win)
     win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
     win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
+    // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MA_IDLE;
 
-    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     DeletePropertiesWindow(win->hwndFrame);
-    UpdateToolbarPageText(win, 0);
-    UpdateToolbarFindText(win);
-    if (wasntFixed) {
-        // restore the full menu and toolbar
-        RebuildMenuBarForWindow(win);
-        ShowOrHideToolbarForWindow(win);
+    DeleteOldSelectionInfo(win, true);
+
+    if (!keepUIEnabled) {
+        SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+        UpdateToolbarPageText(win, 0);
+        UpdateToolbarFindText(win);
+        UpdateFindbox(win);
+        if (wasntFixed) {
+            // restore the full menu and toolbar
+            RebuildMenuBarForWindow(win);
+            ShowOrHideToolbarForWindow(win);
+        }
+        win->RedrawAll();
     }
 
-    DeleteOldSelectionInfo(win, true);
-    win->RedrawAll();
-    UpdateFindbox(win);
     SetFocus(win->hwndFrame);
 
 #ifdef DEBUG
@@ -2307,7 +2295,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         DeleteWindowInfo(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        CloseDocumentInWindow(win);
+        CloseDocumentInTab(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);
@@ -2613,7 +2601,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     UpdateCurrentFileDisplayStateForWin(&win);
     // note: srcFileName is deleted together with the DisplayModel
     ScopedMem<WCHAR> srcFilePath(str::Dup(srcFileName));
-    CloseDocumentInWindow(&win);
+    CloseDocumentInTab(&win, true);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
     BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
