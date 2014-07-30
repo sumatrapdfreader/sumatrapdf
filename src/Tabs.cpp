@@ -20,12 +20,7 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-// Comment this for default drawing.
-#define OWN_TAB_DRAWING
-
 static void SwapTabs(WindowInfo *win, int tab1, int tab2);
-
-#ifdef OWN_TAB_DRAWING
 
 #define TAB_COLOR_BG      COLOR_BTNFACE
 #define TAB_COLOR_TEXT    COLOR_BTNTEXT
@@ -593,7 +588,6 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
     return CallWindowProc(DefWndProcTabBar, hwnd, msg, wParam, lParam);
 }
-#endif //OWN_TAB_DRAWING
 
 void CreateTabbar(WindowInfo *win)
 {
@@ -603,14 +597,12 @@ void CreateTabbar(WindowInfo *win)
         0, 0, 0, 0, 
         win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(NULL), NULL);
 
-#ifdef OWN_TAB_DRAWING
     if (!DefWndProcTabBar)
         DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
     SetWindowLongPtr(hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
 
     TabPainter *tp = new TabPainter(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
-#endif //OWN_TAB_DRAWING
 
     SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE);
     TabCtrl_SetItemSize(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
@@ -821,7 +813,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
         }
         break;
 
-#ifdef OWN_TAB_DRAWING
     case T_CLOSING:
         // allow the closure
         return FALSE;
@@ -846,7 +837,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     case T_DRAG:
         SwapTabs(win, tab1, tab2);
         break;
-#endif //OWN_TAB_DRAWING
     }
     return TRUE;
 }
