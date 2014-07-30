@@ -711,6 +711,9 @@ void EbookController::ExtractPageAnchors()
 
 int EbookController::ResolvePageAnchor(const WCHAR *id)
 {
+    if (!id)
+        return -1;
+
     ExtractPageAnchors();
 
     int reparseIdx = -1;
