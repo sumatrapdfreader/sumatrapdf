@@ -1344,7 +1344,7 @@ static WindowInfo* CreateWindowInfo()
         Touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
-    SetTabsInTitlebar(win, gGlobalPrefs->useTabs && gGlobalPrefs->tabBarAsTitleBar);
+    SetTabsInTitlebar(win, gGlobalPrefs->useTabs && gGlobalPrefs->tabsInTitlebar);
 
     return win;
 }
@@ -3954,6 +3954,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_TABS_IN_TITLEBAR:
             SetTabsInTitlebar(win, !win->tabsInTitlebar);
+            gGlobalPrefs->tabsInTitlebar = win->tabsInTitlebar;
             break;
 
         case IDM_CHANGE_LANGUAGE:

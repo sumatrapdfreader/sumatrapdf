@@ -14,7 +14,7 @@ Next version:
 * deprecated the browser plugin (remains installed if used)
 * support LZMA and PPMd compression in Comic Book (CBZ) files
 * allow saving Comic Book files as PDF
-* new advanced settings: ShowSingleTab, FullPathInTitle, TabBarAsTitleBar,
+* new advanced settings: ShowSingleTab, FullPathInTitle, TabsInTitlebar,
   UseSysColors (no longer exposed through the Options dialog)
 * replaced non-free UnRAR with a free RAR extraction library
   (if some CBR files fail to open for you, please download unrar.dll from

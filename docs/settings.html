@@ -175,7 +175,8 @@ ExternalViewers [
 ]
 
 <span class=cm id="ShowMenubar">if false, the menu bar will be hidden for all newly opened windows (use F9 to show it until the 
-window closes or Alt to show it just briefly) (introduced in version 2.5)</span>
+window closes or Alt to show it just briefly), only applies if UseTabs is false (introduced in 
+version 2.5)</span>
 ShowMenubar = true
 
 <span class=cm id="ReloadModifiedDocuments">if true, a document will be reloaded automatically whenever it's changed (currently doesn't work for 
@@ -185,11 +186,12 @@ ReloadModifiedDocuments = true
 <span class=cm id="FullPathInTitle">if true, we show the full path to a file in the title bar (introduced in version 2.6)</span>
 FullPathInTitle = false
 
-<span class=cm id="ShowSingleTab">if false, the tab bar is hidden if there's only a single tab (introduced in version 2.6)</span>
+<span class=cm id="ShowSingleTab">if false, the tab bar is hidden if there's only a single tab (applies only if UseTabs is true and 
+TabsInTitlebar is false) (introduced in version 2.6)</span>
 ShowSingleTab = true
 
-<span class=cm id="TabBarAsTitleBar">if true, the tab bar replaces the title bar (introduced in version 2.6)</span>
-TabBarAsTitleBar = false
+<span class=cm id="TabsInTitlebar">if true, the tab bar replaces the title bar (introduced in version 2.6)</span>
+TabsInTitlebar = true
 
 <span class=cm id="ZoomLevels">sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400</span>
 ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400

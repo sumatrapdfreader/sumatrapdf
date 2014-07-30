@@ -357,7 +357,7 @@ GlobalPrefs = [
 		expert=True),
 	Field("ShowMenubar", Bool, True,
 		"if false, the menu bar will be hidden for all newly opened windows " +
-		"(use F9 to show it until the window closes or Alt to show it just briefly)",
+		"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false",
 		expert=True, version="2.5"),
 	Field("ReloadModifiedDocuments", Bool, True,
 		"if true, a document will be reloaded automatically whenever it's changed " +
@@ -367,9 +367,10 @@ GlobalPrefs = [
 		"if true, we show the full path to a file in the title bar",
 		expert=True, version="2.6"),
 	Field("ShowSingleTab", Bool, True,
-		"if false, the tab bar is hidden if there's only a single tab",
+		"if false, the tab bar is hidden if there's only a single tab " +
+		"(applies only if UseTabs is true and TabsInTitlebar is false)",
 		expert=True, version="2.6"),
-	Field("TabBarAsTitleBar", Bool, False,
+	Field("TabsInTitlebar", Bool, True,
 		"if true, the tab bar replaces the title bar",
 		expert=True, version="2.6"),
 	# the below prefs don't apply to EbookUI (so far)

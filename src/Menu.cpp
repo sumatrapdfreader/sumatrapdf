@@ -95,8 +95,8 @@ static MenuDef menuDefView[] = {
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     // TODO: this should remain an advanced setting (if we intend to support both "classic" tabbar
     //       and tabs in titlebar at all - we could also just pick one and stick to it)
-    // TODO: else this requires an accesskey ("Tabs &in Titlebar") before being translated,
-    //       the setting should be persisted and the menu item hidden for tab-less windows
+    // TODO: else this requires an accesskey ("Tabs &in Titlebar") before being translated
+    //       and the menu item hidden for tab-less windows
     { "Tabs in Titlebar",                   IDM_VIEW_TABS_IN_TITLEBAR,  0 },
 #endif
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
