@@ -711,9 +711,6 @@ void EbookController::ExtractPageAnchors()
 
 int EbookController::ResolvePageAnchor(const WCHAR *id)
 {
-    if (!id)
-        return -1;
-
     ExtractPageAnchors();
 
     int reparseIdx = -1;
@@ -747,11 +744,13 @@ public:
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         EbookTocDest *item = NULL;
-        if (url && url::IsAbsolute(url))
+        if (!url)
+            item = new EbookTocDest(name, 0);
+        else if (url::IsAbsolute(url))
             item = new EbookTocDest(name, url);
         else {
             int idx = ctrl->ResolvePageAnchor(url);
-            if (idx < 0 && url && str::FindChar(url, '%')) {
+            if (idx < 0 && str::FindChar(url, '%')) {
                 ScopedMem<WCHAR> decodedUrl(str::Dup(url));
                 url::DecodeInPlace(decodedUrl);
                 idx = ctrl->ResolvePageAnchor(url);
