@@ -443,6 +443,10 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
 // no pdf is opened or a document without window dimension information
 static void RememberDefaultWindowPosition(WindowInfo& win)
 {
+    // ignore spurious WM_SIZE and WM_MOVE messages happening during initialization
+    if (!IsWindowVisible(win.hwndFrame))
+        return;
+
     if (win.presentation)
         gGlobalPrefs->windowState = win.windowStateBeforePresentation;
     else if (win.isFullScreen)
@@ -1351,19 +1355,20 @@ static WindowInfo* CreateWindowInfo()
 
 WindowInfo *CreateAndShowWindowInfo()
 {
-    bool enterFullScreen = (WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState);
+    // CreateWindowInfo shouldn't change the windowState value
+    int windowState = gGlobalPrefs->windowState;
     WindowInfo *win = CreateWindowInfo();
     if (!win)
         return NULL;
+    CrashIf(windowState != gGlobalPrefs->windowState);
 
-    if (WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState ||
-        WIN_STATE_MAXIMIZED == gGlobalPrefs->windowState)
+    if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState)
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
     else
         ShowWindow(win->hwndFrame, SW_SHOW);
     UpdateWindow(win->hwndFrame);
 
-    if (enterFullScreen)
+    if (WIN_STATE_FULLSCREEN == windowState)
         EnterFullScreen(*win);
     return win;
 }
