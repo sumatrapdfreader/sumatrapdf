@@ -2883,7 +2883,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
                 rc.y += frameThickness;
                 rc.dy -= frameThickness;
             }
-            int captionHeight = IsZoomed(win->hwndFrame) ? TABBAR_HEIGHT : CAPTION_HEIGHT;
+            int captionHeight = GetTabbarHeight(win, IsZoomed(win->hwndFrame) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
             if (updateToolbars) {
                 int captionWidth;
                 RECT capButtons;
@@ -2902,12 +2902,13 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
             rc.dy -= captionHeight;
         }
         else if (win->tabsVisible) {
+            int tabHeight = GetTabbarHeight(win);
             if (updateToolbars)
-                dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
+                dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
             if (!win->IsAboutWindow()) {
-                rc.y += TABBAR_HEIGHT;
-                rc.dy -= TABBAR_HEIGHT;
+                rc.y += tabHeight;
+                rc.dy -= tabHeight;
             }
         }
     }

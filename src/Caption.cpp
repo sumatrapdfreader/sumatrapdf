@@ -224,11 +224,12 @@ void RelayoutCaption(WindowInfo *win)
         dh.SetWindowPos(ci->btn[CB_MINIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER | SWP_SHOWWINDOW);
     }
 
-    rc.y += rc.dy - TABBAR_HEIGHT;
-    dh.SetWindowPos(ci->btn[CB_MENU].hwnd, NULL, rc.x, rc.y, TABBAR_HEIGHT, TABBAR_HEIGHT, SWP_NOZORDER);
-    rc.x += TABBAR_HEIGHT;
-    rc.dx -= TABBAR_HEIGHT;
-    dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, TABBAR_HEIGHT, SWP_NOZORDER);
+    int tabHeight = GetTabbarHeight(win);
+    rc.y += rc.dy - tabHeight;
+    dh.SetWindowPos(ci->btn[CB_MENU].hwnd, NULL, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
+    rc.x += tabHeight;
+    rc.dx -= tabHeight;
+    dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
     dh.End();
 }
 
@@ -437,7 +438,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
                 long ws = GetWindowLong(hwnd, GWL_STYLE);
                 int frameThickness = !(ws & WS_THICKFRAME) ? 0 : GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int captionHeight = !(ws & WS_CAPTION) ? 0 : IsZoomed(hwnd) ? TABBAR_HEIGHT : CAPTION_HEIGHT;
+                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, IsZoomed(hwnd) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
                 MARGINS margins = {0, 0, frameThickness + captionHeight, 0};
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
                 win->extendedFrameHeight = frameThickness + captionHeight;

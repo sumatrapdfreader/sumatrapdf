@@ -4,11 +4,6 @@
 #ifndef Tabs_h
 #define Tabs_h
 
-// TODO: take WindowInfo::uiDPIFactor into account?
-#define TABBAR_HEIGHT    24
-#define TAB_WIDTH        200
-#define TAB_HEIGHT       TABBAR_HEIGHT - 1
-
 class WindowInfo;
 class Controller;
 struct WatchedFile;
@@ -31,6 +26,8 @@ struct TabData
     TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL),
         watcher(NULL), reloadOnFocus(false) { }
 };
+
+int GetTabbarHeight(WindowInfo *win, float factor=1.f);
 
 void SaveCurrentTabData(WindowInfo *win);
 int TabsGetCount(WindowInfo *win);

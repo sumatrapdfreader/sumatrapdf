@@ -29,6 +29,19 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 #define T_CLOSE     (TCN_LAST + 2)
 #define T_DRAG      (TCN_LAST + 3)
 
+#define TABBAR_HEIGHT    24
+#define TAB_WIDTH        200
+
+int GetTabbarHeight(WindowInfo *win, float factor)
+{
+    return (int)(TABBAR_HEIGHT * win->uiDPIFactor * factor);
+}
+
+static inline SizeI GetTabSize(WindowInfo *win)
+{
+    // TODO: why - 1?
+    return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT - 1) * win->uiDPIFactor));
+}
 
 class TabPainter
 {
@@ -47,11 +60,11 @@ public:
     int nextTab;
     bool inTitlebar;
 
-    TabPainter(HWND wnd, int tabWidth, int tabHeight) :
+    TabPainter(HWND wnd, SizeI tabSize) :
         hwnd(wnd), data(NULL), width(0), height(0),
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
         isMouseInClientArea(false), isDragging(false), inTitlebar(false) {
-        Reshape(tabWidth, tabHeight);
+        Reshape(tabSize.dx, tabSize.dy);
         EvaluateColors();
         memset(&color, 0, sizeof(color));
     }
@@ -601,11 +614,12 @@ void CreateTabbar(WindowInfo *win)
         DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
     SetWindowLongPtr(hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
 
-    TabPainter *tp = new TabPainter(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
+    SizeI tabSize = GetTabSize(win);
+    TabPainter *tp = new TabPainter(hwndTabBar, tabSize);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 
     SetWindowFont(hwndTabBar, GetDefaultGuiFont(), FALSE);
-    TabCtrl_SetItemSize(hwndTabBar, TAB_WIDTH, TAB_HEIGHT);
+    TabCtrl_SetItemSize(hwndTabBar, tabSize.dx, tabSize.dy);
 
     win->hwndTabBar = hwndTabBar;
 
@@ -858,8 +872,10 @@ void UpdateTabWidth(WindowInfo *win)
     if (count > (showSingleTab ? 0 : 1)) {
         ShowTabBar(win, true);
         ClientRect rect(win->hwndTabBar);
-        int tabWidth = (rect.dx - 3) / count;
-        TabCtrl_SetItemSize(win->hwndTabBar, TAB_WIDTH < tabWidth ? TAB_WIDTH : tabWidth, TAB_HEIGHT);
+        SizeI tabSize = GetTabSize(win);
+        if (tabSize.dx > (rect.dx - 3) / count)
+            tabSize.dx = (rect.dx - 3) / count;
+        TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);
     }
     else {
         ShowTabBar(win, false);

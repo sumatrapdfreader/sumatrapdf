@@ -17,7 +17,8 @@
 #define SM_CXPADDEDBORDER 92
 #endif
 
-#define CAPTION_HEIGHT    (int)(1.5f * TABBAR_HEIGHT)
+// factor by how large the non-maximized caption should be in relation to the tabbar
+#define CAPTION_TABBAR_HEIGHT_FACTOR  1.25f
 
 class WindowInfo;
 
