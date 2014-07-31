@@ -577,6 +577,9 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     ToggleWindowStyle(win->hwndCaption, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // TODO: why isn't SetWindowPos(..., SWP_FRAMECHANGED) enough?
+    SendMessage(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
+    RelayoutCaption(win);
     // TODO: make tab bar RTL aware
     // ToggleWindowStyle(win->hwndTabBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 

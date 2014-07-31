@@ -4,6 +4,11 @@
 #include "BaseUtil.h"
 #include "Translations.h"
 
+#ifdef DEBUG
+// define for adding "English RTL" for testing RTL layout
+#define ADD_EN_RTL_TEST_LANGUAGE
+#endif
+
 // set to 0 for not compressed. Must match trans_gen.py (gen_c_code_for_dir).
 // Also, in Sumatra, when using compressed, UNINSTALLER_OBJS need to include $(ZLIB_OBJS)
 // in makefile.msvc
@@ -87,6 +92,12 @@ const char **           gLangsStringsUncompressed = NULL;
 const char *   GetTranslationsForLang(int langIdx);
 #endif
 
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+#define EN_RTL_CODE "en-rtl"
+#define EN_RTL_NAME "English RTL for testing"
+#define EN_RTL_IDX  gLangsCount
+#endif
+
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs access.
 
@@ -129,7 +140,11 @@ static const WCHAR *FindOrAddMissingTranslation(const char *s)
 
 int GetLangsCount()
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    return gLangsCount + 1;
+#else
     return gLangsCount;
+#endif
 }
 
 const char *GetCurrentLangCode()
@@ -139,6 +154,10 @@ const char *GetCurrentLangCode()
 
 static WCHAR **GetTransCacheForLang(int langIdx)
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (langIdx == EN_RTL_IDX)
+        langIdx = 0;
+#endif
     if (!gLangsTransCache[langIdx])
         gLangsTransCache[langIdx] = AllocArray<WCHAR *>(gStringsCount);
     return gLangsTransCache[langIdx];
@@ -166,7 +185,11 @@ static void FreeTransCache()
 
 static void BuildStringsIndexForLang(int langIdx)
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (0 == gCurrLangIdx || EN_RTL_IDX == gCurrLangIdx) {
+#else
     if (0 == gCurrLangIdx) {
+#endif
         const char **origStrings = GetOriginalStrings();
         for (int idx = 0; idx < gStringsCount; idx++) {
             gCurrLangStrings[idx] = origStrings[idx];
@@ -218,6 +241,10 @@ void SetCurrentLangByCode(const char *langCode)
         return;
 
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE))
+        idx = EN_RTL_IDX;
+#endif
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
@@ -227,6 +254,10 @@ void SetCurrentLangByCode(const char *langCode)
 const char *ValidateLangCode(const char *langCode)
 {
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE))
+        idx = EN_RTL_IDX;
+#endif
     if (-1 == idx)
         return NULL;
     return GetLangCodeByIdx(idx);
@@ -234,16 +265,28 @@ const char *ValidateLangCode(const char *langCode)
 
 const char *GetLangCodeByIdx(int idx)
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (idx == EN_RTL_IDX)
+        return EN_RTL_CODE;
+#endif
     return seqstrings::IdxToStr(gLangCodes, idx);
 }
 
 const char *GetLangNameByIdx(int idx)
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (idx == EN_RTL_IDX)
+        return EN_RTL_NAME;
+#endif
     return seqstrings::IdxToStr(gLangNames, idx);
 }
 
 bool IsCurrLangRtl()
 {
+#ifdef ADD_EN_RTL_TEST_LANGUAGE
+    if (gCurrLangIdx == EN_RTL_IDX)
+        return true;
+#endif
     return IsLangRtl(gCurrLangIdx);
 }
 

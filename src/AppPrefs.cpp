@@ -103,7 +103,7 @@ bool Load()
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start
-        gGlobalPrefs->uiLanguage = str::Dup(trans::DetectUserLang());
+        str::ReplacePtr(&gGlobalPrefs->uiLanguage, trans::DetectUserLang());
     }
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     gGlobalPrefs->defaultDisplayModeEnum = conv::ToDisplayMode(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
