@@ -157,7 +157,6 @@ public:
 
     // Paints the tabs that intersect the window's update rectangle.
     void Paint(HDC hdc, RECT &rc) {
-        ClientRect rClient(hwnd);
         IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
         // paint the background
@@ -169,6 +168,10 @@ public:
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
         }
+
+        // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
+        XFORM ctm = { 1.0, 0, 0, 1.0, 0, 0 };
+        SetWorldTransform(hdc, &ctm);
 
         Graphics graphics(hdc);
         graphics.SetCompositingMode(CompositingModeSourceOver);
@@ -191,13 +194,13 @@ public:
         sf.SetLineAlignment(StringAlignmentCenter);
         sf.SetTrimming(StringTrimmingEllipsisCharacter);
 
-        REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
+        REAL yPosTab = inTitlebar ? 0.0f : REAL(ClientRect(hwnd).dy - height - 1);
         for (int i = 0; i < Count(); i++) {
+            graphics.ResetTransform();
+            graphics.TranslateTransform(1.f + (REAL)(width + 1) * i - (REAL)rc.left, yPosTab - (REAL)rc.top);
+
             if (!graphics.IsVisible(0, 0, width + 1, height + 1))
                 continue;
-
-            graphics.ResetTransform();
-            graphics.TranslateTransform(1.f + REAL(width + 1) * i, yPosTab);
 
             // paint tab's body
             iterator.NextMarker(&shape);
@@ -209,7 +212,6 @@ public:
                 LoadBrush(br, color.background);
             graphics.FillPath(&br, &shape);
             graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
-            graphics.SetCompositingMode(CompositingModeSourceOver);
 
             // draw tab's text
             graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
