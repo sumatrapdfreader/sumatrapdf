@@ -660,7 +660,7 @@ void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type)
     else
         newStyle = style & ~flag;
     if (newStyle != style)
-        SetWindowLong(hwnd, type, style);
+        SetWindowLong(hwnd, type, newStyle);
 }
 
 RectI ChildPosWithinParent(HWND hwnd)
