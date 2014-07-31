@@ -1318,7 +1318,7 @@ static WindowInfo* CreateWindowInfo()
     }
 
     if (gShowFrameRate) {
-        win->frameRateWnd = AllocFrameRateWnd(hwndFrame);
+        win->frameRateWnd = AllocFrameRateWnd(win->hwndCanvas);
         CreateFrameRateWnd(win->frameRateWnd);
     }
 
