@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4024d44f1b6cce5865d27dc44934da26e1046239
+393410d157536fd8bfca3a040f105449c1030072
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2932,6 +2932,8 @@ tw:檢視(&V)
 uk:Ви&гляд
 uz:&Ko'rish
 vn:Hiển thị
+:&Window
+de:Fe&nster
 :&Yes
 am:&Այո
 ar:&نعم
@@ -14071,6 +14073,65 @@ tw:顯示書籤 (&B)
 uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
+:Show &Pages Continuously
+am:Էջերը &ցույց տալ շարունակական
+ar:عرض الصفحات باستمرار
+az:Səhifələri &ardıcıl göstər
+bg:&Непрекъснати страници
+br:Exibir páginas de modo contínuo
+bs:Prikaži stranice slijedno
+ca-xv:Mostra les &pàgines de forma contínua
+ca:Mostra les &pàgines de forma contínua
+cn:连续显示页面(&P)
+cy:Dangos &tudalennau'n ddidor
+cz:Zobrazit stránky &průběžně
+de:Seiten &fortlaufend anzeigen
+dk:Vis &sider fortløbende
+el:&Συνεχής εμφάνιση σελίδων
+es:Mostrar &páginas de forma continua
+et:Näita &lehekülgi pidevana
+eu:&Erakutsi Orrialdeak Jarraian
+fa:نمایش &پیوسته‌ی صفحات
+fi:Näytä &sivut peräkkäin
+fr:&Vue continue
+fy-nl:Toan sides kontinue
+ga:Teaspáin na leathanaigh go leanúnach
+gl:Amosar páxinas seguidas
+he:הצג עמודים ברציפות
+hi:पृष्ठों को लगातार दिखाएँ
+hr:Prikaži stranice slijedno
+hu:Folyamatos nézet
+id:Tampilkan Halaman Secara &Kontinu
+it:&Pagine in modo continuo
+ja:連続してページを表示(&P)
+ka:&გვერდების შეუწყვეტლივ ჩვენება
+kr:연속적으로 페이지 보이기(&P)
+ku:پیشاندانی پەڕەکان &بە بەردەوامی
+kw:Diskwedhes folennow heb aswa
+lt:&Puslapius rodyti nenutrūkstamai
+mk:Прикажувај страници непрекинато
+my:Papar mukasurat secara berterusan
+ne:पृष्ठहरु &निरन्तर देखाउनुहोस्
+nl:Toon pagina's doorlopend
+no:Vis sider kontinuerlig
+pl:Wyświetlaj strony w układzie &ciągłym
+pt:M&ostrar páginas contínuas
+ro:Arată &paginile continuu
+ru:&Разрешить прокрутку
+si:අඛණ්ඩව &පිටු පෙන්වන්න
+sk:Zobraziť &strany priebežne
+sl:&Prikaži strani nepretrgano
+sp-rs:Prikaži stranice bez prekida
+sq:Tregoj &faqet në vazhdimësi
+sr-rs:Прикажи странице без прекида
+sv:Visa sidor fortlöpande
+ta:பக்கங்களை தொடர்ச்சியாக காட்டு
+tl:Ipakita nang tuloy-tuloy ang mga &pahina
+tr:&Sayfaları devamlı göster
+tw:連續顯示頁面(&P)
+uk:Відображати сторінки безперервно
+uz:&Betlarni uzluksiz ko'rsatish
+vn:Xem trang liên tiếp
 :Show &Toolbar
 af:Vertoon Toolbar
 am:Ցույց տալ գործիքները
@@ -14139,65 +14200,6 @@ tw:顯示工具列(&T)
 uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
-:Show &pages continuously
-am:Էջերը &ցույց տալ շարունակական
-ar:عرض الصفحات باستمرار
-az:Səhifələri &ardıcıl göstər
-bg:&Непрекъснати страници
-br:Exibir páginas de modo contínuo
-bs:Prikaži stranice slijedno
-ca-xv:Mostra les &pàgines de forma contínua
-ca:Mostra les &pàgines de forma contínua
-cn:连续显示页面(&P)
-cy:Dangos &tudalennau'n ddidor
-cz:Zobrazit stránky &průběžně
-de:Seiten &fortlaufend anzeigen
-dk:Vis &sider fortløbende
-el:&Συνεχής εμφάνιση σελίδων
-es:Mostrar &páginas de forma continua
-et:Näita &lehekülgi pidevana
-eu:&Erakutsi Orrialdeak Jarraian
-fa:نمایش &پیوسته‌ی صفحات
-fi:Näytä &sivut peräkkäin
-fr:&Vue continue
-fy-nl:Toan sides kontinue
-ga:Teaspáin na leathanaigh go leanúnach
-gl:Amosar páxinas seguidas
-he:הצג עמודים ברציפות
-hi:पृष्ठों को लगातार दिखाएँ
-hr:Prikaži stranice slijedno
-hu:Folyamatos nézet
-id:Tampilkan Halaman Secara &Kontinu
-it:&Pagine in modo continuo
-ja:連続してページを表示(&P)
-ka:&გვერდების შეუწყვეტლივ ჩვენება
-kr:연속적으로 페이지 보이기(&P)
-ku:پیشاندانی پەڕەکان &بە بەردەوامی
-kw:Diskwedhes folennow heb aswa
-lt:&Puslapius rodyti nenutrūkstamai
-mk:Прикажувај страници непрекинато
-my:Papar mukasurat secara berterusan
-ne:पृष्ठहरु &निरन्तर देखाउनुहोस्
-nl:Toon pagina's doorlopend
-no:Vis sider kontinuerlig
-pl:Wyświetlaj strony w układzie &ciągłym
-pt:M&ostrar páginas contínuas
-ro:Arată &paginile continuu
-ru:&Разрешить прокрутку
-si:අඛණ්ඩව &පිටු පෙන්වන්න
-sk:Zobraziť &strany priebežne
-sl:&Prikaži strani nepretrgano
-sp-rs:Prikaži stranice bez prekida
-sq:Tregoj &faqet në vazhdimësi
-sr-rs:Прикажи странице без прекида
-sv:Visa sidor fortlöpande
-ta:பக்கங்களை தொடர்ச்சியாக காட்டு
-tl:Ipakita nang tuloy-tuloy ang mga &pahina
-tr:&Sayfaları devamlı göster
-tw:連續顯示頁面(&P)
-uk:Відображати сторінки безперервно
-uz:&Betlarni uzluksiz ko'rsatish
-vn:Xem trang liên tiếp
 :Show Favorites
 am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
