@@ -17,9 +17,10 @@ using namespace Gdiplus;
 
 #define BTN_ID_FIRST  100
 
-// TODO: why is this needed?
+// This will prevent menu reopening, if we click the menu button,
+// while the menu is open.
 #define DO_NOT_REOPEN_MENU_TIMER_ID       1
-#define DO_NOT_REOPEN_MENU_DELAY_IN_MS    200
+#define DO_NOT_REOPEN_MENU_DELAY_IN_MS    1
 
 // undocumented caption buttons state
 #define CBS_INACTIVE  5
