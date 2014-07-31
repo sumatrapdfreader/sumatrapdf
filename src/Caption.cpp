@@ -626,6 +626,8 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame), _TR("&Window"));
     count++;
 
+    if (IsUIRightToLeft())
+        x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
     TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, NULL);
 
     while (--count >= 0)

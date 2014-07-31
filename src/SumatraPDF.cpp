@@ -576,6 +576,10 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     ToggleWindowStyle(win->hwndFindText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
     ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
+    ToggleWindowStyle(win->hwndCaption, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // TODO: make tab bar RTL aware
+    // ToggleWindowStyle(win->hwndTabBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+
     win->notifications->Relayout();
 
     // TODO: also update the canvas scrollbars (?)
@@ -2890,9 +2894,12 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
                 if (dwm::IsCompositionEnabled() &&
                     SUCCEEDED(dwm::GetWindowAttribute(win->hwndFrame, DWMWA_CAPTION_BUTTON_BOUNDS, &capButtons, sizeof(RECT)))) {
                         WindowRect wr(win->hwndFrame);
-                        POINT pt = {wr.x + capButtons.left, wr.y + capButtons.top};
+                        POINT pt = { wr.x + capButtons.left, wr.y + capButtons.top };
                         ScreenToClient(win->hwndFrame, &pt);
-                        captionWidth = pt.x - rc.x;
+                        if (IsUIRightToLeft())
+                            captionWidth = rc.x + rc.dx - pt.x;
+                        else
+                            captionWidth = pt.x - rc.x;
                 }
                 else
                     captionWidth = rc.dx;
