@@ -30,7 +30,7 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 #define T_DRAG      (TCN_LAST + 3)
 
 #define TABBAR_HEIGHT    24
-#define TAB_WIDTH        200
+#define TAB_WIDTH        300
 
 int GetTabbarHeight(WindowInfo *win, float factor)
 {
@@ -158,112 +158,79 @@ public:
     // Paints the tabs that intersect the window's update rectangle.
     void Paint(HDC hdc, RECT &rc) {
         ClientRect rClient(hwnd);
-        HBITMAP hMemBmp = CreateCompatibleBitmap(hdc, rClient.dx, rClient.dy);
-        HDC memDC = CreateCompatibleDC(hdc);
-        DeleteObject(SelectObject(memDC, hMemBmp));
-        IntersectClipRect(memDC, rc.left, rc.top, rc.right, rc.bottom);
+        IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
         // paint the background
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
         if (isTranslucentMode)
-            PaintParentBackground(hwnd, memDC);
+            PaintParentBackground(hwnd, hdc);
         else {
             HBRUSH brush = CreateSolidBrush(color.bar);
-            FillRect(memDC, &rc, brush);
+            FillRect(hdc, &rc, brush);
             DeleteObject(brush);
         }
 
-        // disable gradient background on tabs because it's ugly
-        isTranslucentMode = false;
-
-        Graphics graphics(memDC);
+        Graphics graphics(hdc);
         graphics.SetCompositingMode(CompositingModeSourceOver);
         graphics.SetCompositingQuality(CompositingQualityHighQuality);
         graphics.SetSmoothingMode(SmoothingModeHighQuality);
-        graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+        graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
         graphics.SetPageUnit(UnitPixel);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
         GraphicsPathIterator iterator(&shapes);
 
-        // create PathGradientBrush, used for painting the translucent tabs
-        iterator.NextMarker(&shape);
-        PathGradientBrush pbr(&shape);
-        pbr.SetCenterPoint(Point(width/2, height/2));
-        iterator.Rewind();
-        ARGB argb = Color::MakeARGB(255, GetRValueSafe(color.select), GetGValueSafe(color.select), GetBValueSafe(color.select));
-        pbr.SetCenterColor(Color(argb));
-        argb &= 0x00ffffff;
-        Color colors[] = {Color(argb)};
-        int cnt = 1;
-        pbr.SetSurroundColors(colors, &cnt);
-
         SolidBrush br(Color(0, 0, 0));
         Pen pen(&br);
 
-        Font f(memDC, GetDefaultGuiFont());
-        RectF layout(3.0f, 0.0f, REAL(width - 20), (REAL)height);
+        Font f(hdc, GetDefaultGuiFont());
+        // TODO: adjust these constant values for DPI?
+        RectF layout(3.0f, 1.0f, REAL(width - 20), (REAL)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
         sf.SetTrimming(StringTrimmingEllipsisCharacter);
-        if (isTranslucentMode)
-            sf.SetAlignment(StringAlignmentCenter);
 
         REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
-        graphics.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
-            if (graphics.IsVisible(0, 0, width + 1, height + 1)) {
-                // paint tab's body
-                iterator.NextMarker(&shape);
-                if (current == (int)i) {
-                    LoadBrush(br, color.select);
-                    pbr.SetFocusScales(0.8f, 0.8f);
-                }
-                else if (highlighted == (int)i) {
-                    LoadBrush(br, color.highlight);
-                    pbr.SetFocusScales(0.7f, 0.5f);
-                }
-                else {
-                    LoadBrush(br, color.background);
-                    pbr.SetFocusScales(0.0f, 0.0f);
-                }
-                if (isTranslucentMode) {
-                    graphics.SetCompositingMode(CompositingModeSourceCopy);
-                    graphics.FillPath(&pbr, &shape);
-                }
-                else
-                    graphics.FillPath(&br, &shape);
-                graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
-                graphics.SetCompositingMode(CompositingModeSourceOver);
+            if (!graphics.IsVisible(0, 0, width + 1, height + 1))
+                continue;
 
-                // draw tab's text
-                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+            graphics.ResetTransform();
+            graphics.TranslateTransform(1.f + REAL(width + 1) * i, yPosTab);
 
-                // paint "x"'s circle
-                iterator.NextMarker(&shape);
-                if (xClicked == (int)i)
-                    graphics.FillPath(LoadBrush(br, color.x_click), &shape);
-                else if (xHighlighted == (int)i)
-                    graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
+            // paint tab's body
+            iterator.NextMarker(&shape);
+            if (current == i)
+                LoadBrush(br, color.select);
+            else if (highlighted == i)
+                LoadBrush(br, color.highlight);
+            else
+                LoadBrush(br, color.background);
+            graphics.FillPath(&br, &shape);
+            graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
+            graphics.SetCompositingMode(CompositingModeSourceOver);
 
-                // paint "x"
-                iterator.NextMarker(&shape);
-                if (xClicked == (int)i || xHighlighted == (int)i)
-                    LoadPen(pen, color.x_line, 2.0f);
-                else
-                    LoadPen(pen, color.outline, 2.0f);
-                graphics.DrawPath(&pen, &shape);
+            // draw tab's text
+            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
 
-                iterator.Rewind();
-            }
-            graphics.TranslateTransform(REAL(width + 1), 0.0f);
+            // paint "x"'s circle
+            iterator.NextMarker(&shape);
+            if (xClicked == i)
+                graphics.FillPath(LoadBrush(br, color.x_click), &shape);
+            else if (xHighlighted == i)
+                graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
+
+            // paint "x"
+            iterator.NextMarker(&shape);
+            if (xClicked == i || xHighlighted == i)
+                LoadPen(pen, color.x_line, 2.0f);
+            else
+                LoadPen(pen, color.outline, 2.0f);
+            graphics.DrawPath(&pen, &shape);
+
+            iterator.Rewind();
         }
-
-        BitBlt(hdc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, memDC, rc.left, rc.top, SRCCOPY);
-
-        DeleteDC(memDC);
-        DeleteObject(hMemBmp);
     }
 
     // Evaluates the colors for the tab's elements.
@@ -578,17 +545,22 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         return TRUE;
 
     case WM_PAINT:
-        RECT rc;
-        GetUpdateRect(hwnd, &rc, FALSE);
+        {
+            RECT rc;
+            GetUpdateRect(hwnd, &rc, FALSE);
+            // TODO: when is wParam != NULL?
+            hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
 
-        hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
-        ValidateRect(hwnd, NULL);
+            DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
+            tab->EvaluateColors();
+            tab->Paint(buffer.GetDC(), rc);
+            buffer.Flush(hdc);
 
-        tab->EvaluateColors();
-        tab->Paint(hdc, rc);
-
-        if (!wParam) EndPaint(hwnd, &ps);
-        return 0;
+            ValidateRect(hwnd, NULL);
+            if (!wParam)
+                EndPaint(hwnd, &ps);
+            return 0;
+        }
 
     case WM_SIZE:
         {

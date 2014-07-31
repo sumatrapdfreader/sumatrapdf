@@ -31,7 +31,7 @@ using namespace Gdiplus;
 
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
-static void PaintCaptionBackground(HDC hdc, WindowInfo *win);
+static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer);
 static HMENU GetUpdatedSystemMenu(HWND hwnd);
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
 
@@ -85,7 +85,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
 
     case WM_ERASEBKGND:
         if (win)
-            PaintCaptionBackground((HDC)wParam, win);
+            PaintCaptionBackground((HDC)wParam, win, true);
         return TRUE;
 
     case WM_DRAWITEM:
@@ -238,17 +238,14 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     if (!item || item->CtlType != ODT_BUTTON)
         return;
 
-    int dx = item->rcItem.right - item->rcItem.left;
-    int dy = item->rcItem.bottom - item->rcItem.top;
-    RECT r = {0, 0, dx, dy};
+    RectI rc = RectI::FromRECT(item->rcItem);
 
-    HBITMAP hMemBmp = CreateCompatibleBitmap(item->hDC, dx, dy);
-    HDC memDC = CreateCompatibleDC(item->hDC);
-    DeleteObject(SelectObject(memDC, hMemBmp));
+    DoubleBuffer buffer(item->hwndItem, rc);
+    HDC memDC = buffer.GetDC();
 
     UINT button = item->CtlID - BTN_ID_FIRST;
     int partId = 0, stateId;
-    UINT state = 10;
+    UINT state = (UINT)-1;
     switch (button)
     {
         case CB_MINIMIZE:
@@ -290,16 +287,16 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     if (win->caption->theme) {
         if (partId) {
             if (vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
-                PaintCaptionBackground(memDC, win);
-            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, NULL);
+                PaintCaptionBackground(memDC, win, false);
+            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &item->rcItem, NULL);
         }
     }
-    else if (state != 10)
-        DrawFrameControl(memDC, &r, DFC_CAPTION, state);
+    else if (state != (UINT)-1)
+        DrawFrameControl(memDC, &item->rcItem, DFC_CAPTION, state);
 
     // draw menu's button
     if (button == CB_MENU) {
-        PaintCaptionBackground(memDC, win);
+        PaintCaptionBackground(memDC, win, false);
         Graphics graphics(memDC);
 
         if (CBS_PUSHED != stateId && ODS_FOCUS & item->itemState)
@@ -312,21 +309,18 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
                 buttonRGB ^= 0xff;
             BYTE buttonAlpha = BYTE((255 - abs((int)GetLightness(win->caption->bgColor) - buttonRGB)) / 2);
             SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
-            graphics.FillRectangle(&br, 0, 0, dx, dy);
+            graphics.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);
         }
         // draw the three lines
         COLORREF c = win->caption->textColor;
-        Pen p(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)), floor((float)dy / 8.0f));
-        InflateRect(&r, -int((float)dx * 0.2f + 0.5f), -int((float)dy * 0.3f + 0.5f));
-        int o = (r.bottom - r.top) / 2;   // line's offset
-        graphics.DrawLine(&p, r.left, r.top, r.right, r.top);
-        graphics.DrawLine(&p, r.left, r.top + o, r.right, r.top + o);
-        graphics.DrawLine(&p, r.left, r.top + 2*o, r.right, r.top + 2*o);
+        Pen p(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)), floor((float)rc.dy / 8.0f));
+        rc.Inflate(-int(rc.dx * 0.2f + 0.5f), -int(rc.dy * 0.3f + 0.5f));
+        for (int i = 0; i < 3; i++) {
+            graphics.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
+        }
     }
 
-    BitBlt(item->hDC, item->rcItem.left, item->rcItem.top, dx, dy, memDC, 0, 0, SRCCOPY);
-    DeleteDC(memDC);
-    DeleteObject(hMemBmp);
+    buffer.Flush(item->hDC);
 }
 
 void PaintParentBackground(HWND hwnd, HDC hdc)
@@ -339,7 +333,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc)
     SetViewportOrgEx(hdc, pt.x, pt.y, NULL);
 }
 
-static void PaintCaptionBackground(HDC hdc, WindowInfo *win)
+static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer)
 {
     RECT rClip;
     GetClipBox(hdc, &rClip);
@@ -356,25 +350,14 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win)
         graphics.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
     }
     else {
-        HDC memDC = NULL;
-        HBITMAP memBmp = NULL;
-        if (OBJ_MEMDC == GetObjectType(hdc))
-            memDC = hdc;
-        else {
-            memBmp = CreateCompatibleBitmap(hdc, r.dx, r.dy);
-            memDC = CreateCompatibleDC(hdc);
-            DeleteObject(SelectObject(memDC, memBmp));
-            r.x = r.y = 0;
-        }
+        DoubleBuffer buffer(win->hwndCaption, r);
+        HDC memDC = useDoubleBuffer ? buffer.GetDC() : hdc;
         PaintParentBackground(win->hwndCaption, memDC);
         Graphics graphics(memDC);
         SolidBrush br(Color(win->caption->bgAlpha, GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
         graphics.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
-        if (memDC != hdc) {
-            BitBlt(hdc, rClip.left, rClip.top, r.dx, r.dy, memDC, 0, 0, SRCCOPY);
-            DeleteDC(memDC);
-            DeleteObject(memBmp);
-        }
+        if (useDoubleBuffer)
+            buffer.Flush(hdc);
     }
 }
 
