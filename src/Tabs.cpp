@@ -767,6 +767,7 @@ void TabsOnChangedDoc(WindowInfo *win)
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
+    UpdateCurrentTabBgColForWindow(win);
 }
 
 // Called when we're closing a document
