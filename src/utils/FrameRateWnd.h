@@ -6,6 +6,7 @@
 
 struct FrameRateWnd {
     HWND hwndAssociatedWith;
+    HWND hwndAssociatedWithTopLevel;
 
     HWND hwnd;
     HFONT font;

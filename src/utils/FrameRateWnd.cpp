@@ -106,6 +106,7 @@ static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM w
 {
     if (WM_MOVING == msg ||
         WM_SIZING == msg ||
+        WM_SIZE == msg ||
         WM_WINDOWPOSCHANGED  == msg ||
         WM_MOVE == msg) {
         FrameRateWnd *w = (FrameRateWnd*) dwRefData;
@@ -164,8 +165,6 @@ static void RegisterFrameRateWndClass()
     }
 }
 
-// Note: hwndAssociatedWIth must be a WS_OVERLAPEPED or WS_POPUP
-// TODO: add an assert to check that
 FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith)
 {
     RegisterFrameRateWndClass();
@@ -177,9 +176,17 @@ FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith)
 
 bool CreateFrameRateWnd(FrameRateWnd *w)
 {
+    // if hwndAssociatedWith is a child window, we need to find its top-level parent
+    // so that we can intercept moving messages and re-position frame rate window
+    // during main window moves
+    HWND topLevel = w->hwndAssociatedWith;
+    while (GetParent(topLevel) != NULL) {
+        topLevel = GetParent(topLevel);
+    }
+    w->hwndAssociatedWithTopLevel = topLevel;
     // WS_POPUP removes all decorations
     DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_DISABLED;
-    RECT r = GetClientRect(w->hwndAssociatedWith);
+    RECT r = GetClientRect(w->hwndAssociatedWithTopLevel);
     // since this is WS_POPUP window, providing w->hwndAssocatedWith doesn't establish
     // parent-child relationship but ownership relationship (as long as hwndAssociatedWith
     // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
@@ -192,7 +199,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
         return false;
     }
     w->font = GetDefaultGuiFont();
-    SetWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0, (DWORD_PTR) w);
+    SetWindowSubclass(w->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0, (DWORD_PTR) w);
 
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);
     ShowFrameRate(w, 0);
@@ -202,7 +209,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w)
 void DeleteFrameRateWnd(FrameRateWnd *w)
 {
     if (w) {
-        RemoveWindowSubclass(w->hwndAssociatedWith, WndProcFrameRateAssociated, 0);
+        RemoveWindowSubclass(w->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
         free(w);
     }
 }
