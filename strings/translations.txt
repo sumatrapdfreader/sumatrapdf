@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-393410d157536fd8bfca3a040f105449c1030072
+1fc5fbb980a69233d4b2942674dfab5374a9fc16
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1006,7 +1006,7 @@ et:&Liigu
 eu:&Joan Hona
 fa:&برو به
 fi:&Siirry
-fr:&Atteindre
+fr:A&ller …
 fy-nl:&Gean nei
 ga:&Téigh Chuig
 gl:Ir &a
@@ -2934,6 +2934,8 @@ uz:&Ko'rish
 vn:Hiển thị
 :&Window
 de:Fe&nster
+fr:F&enêtre
+ru:&Окно
 :&Yes
 am:&Այո
 ar:&نعم
@@ -14117,7 +14119,7 @@ no:Vis sider kontinuerlig
 pl:Wyświetlaj strony w układzie &ciągłym
 pt:M&ostrar páginas contínuas
 ro:Arată &paginile continuu
-ru:&Разрешить прокрутку
+ru:Разрешить &прокрутку
 si:අඛණ්ඩව &පිටු පෙන්වන්න
 sk:Zobraziť &strany priebežne
 sl:&Prikaži strani nepretrgano
