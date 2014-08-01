@@ -118,21 +118,16 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     r.Inflate(1,0);
     gfx->SetClip(r, CombineModeReplace);
 
-    Color textColor;
-    if (gGlobalPrefs->useSysColors)
-        textColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
-    else
-        textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
+    COLORREF txtCol, bgCol;
+    GetEbookColors(&txtCol, &bgCol);
+    Color textColor, bgColor;
+    textColor.SetFromCOLORREF(txtCol);
 
     ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.Width, pos.Height);
     //ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx, pos.Width, pos.Height);
 
-    Color bgCol;
-    if (gGlobalPrefs->useSysColors)
-        bgCol.SetFromCOLORREF(GetSysColor(COLOR_WINDOW));
-    else
-        bgCol.SetFromCOLORREF(gGlobalPrefs->ebookUI.backgroundColor);
-    textRender->SetTextBgColor(bgCol);
+    bgColor.SetFromCOLORREF(bgCol);
+    textRender->SetTextBgColor(bgColor);
 
     Timer timerDrawHtml;
     DrawHtmlPage(gfx, textRender, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
@@ -176,9 +171,8 @@ ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
 
 void SetMainWndBgCol(EbookControls *ctrls)
 {
-    COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
-    if (gGlobalPrefs->useSysColors)
-        bgColor = GetSysColor(COLOR_WINDOW);
+    COLORREF bgColor;
+    GetEbookColors(NULL, &bgColor);
 
     Style *styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
@@ -191,6 +185,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
 
     // TODO: should also allow to change text color
     // TODO: also match the colors of progress bar to be based on background color
+    // TODO: update tab color
 
     // note: callers are expected to update the background of tree control and 
     // other colors that are supposed to match background color
@@ -284,3 +279,21 @@ void PagesLayout::Arrange(const Rect finalRect)
     r.X = r.X + dx + spaceDx;
     page2->Arrange(r);
 }
+
+void GetEbookColors(COLORREF* txtColOut, COLORREF* bgColOut)
+{
+    if (txtColOut) {
+        if (gGlobalPrefs->useSysColors)
+            *txtColOut = GetSysColor(COLOR_WINDOWTEXT);
+        else
+            *txtColOut = gGlobalPrefs->ebookUI.textColor;
+    }
+
+    if (bgColOut) {
+        if (gGlobalPrefs->useSysColors)
+            *bgColOut = GetSysColor(COLOR_WINDOW);
+        else
+            *bgColOut = gGlobalPrefs->ebookUI.backgroundColor;
+    }
+}
+

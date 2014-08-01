@@ -9,6 +9,7 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "EbookControls.h"
 #include "FileUtil.h"
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
@@ -675,13 +676,13 @@ void SaveCurrentTabData(WindowInfo *win)
 
 static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
 {
+    COLORREF bgCol = DEFAULT_CURRENT_BG_COL;
     if (win->AsEbook()) {
-        // TODO: get the real background color
-        SetCurrentTabBgCol(win, RGB(0xfb, 0xf0, 0xd9));
+        GetEbookColors(NULL, &bgCol);
     } else {
         // TODO: match either the toolbar (if shown) or background
-        SetCurrentTabBgCol(win, DEFAULT_CURRENT_BG_COL);
     }
+    SetCurrentTabBgCol(win, bgCol);
     RepaintNow(win->hwndTabBar);
 }
 
