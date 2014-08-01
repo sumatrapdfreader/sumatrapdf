@@ -22,6 +22,8 @@
 
 static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
+#define DEFAULT_CURRENT_BG_COL (COLORREF)-1
+
 #define TAB_COLOR_BG      COLOR_BTNFACE
 #define TAB_COLOR_TEXT    COLOR_BTNTEXT
 
@@ -39,8 +41,7 @@ int GetTabbarHeight(WindowInfo *win, float factor)
 
 static inline SizeI GetTabSize(WindowInfo *win)
 {
-    // TODO: why - 1?
-    return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT - 1) * win->uiDPIFactor));
+    return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT) * win->uiDPIFactor));
 }
 
 class TabPainter
@@ -49,21 +50,21 @@ class TabPainter
     PathData *data;
     int width, height;
     HWND hwnd;
-    struct {
-        COLORREF background, highlight, select, outline, bar, text, x_highlight, x_click, x_line;
-    } color;
-
 public:
     int current, highlighted, xClicked, xHighlighted;
     bool isMouseInClientArea, isDragging;
     LPARAM mouseCoordinates;
     int nextTab;
     bool inTitlebar;
+    COLORREF currBgCol;
+    struct {
+        COLORREF background, highlight, current, outline, bar, text, x_highlight, x_click, x_line;
+    } color;
 
     TabPainter(HWND wnd, SizeI tabSize) :
         hwnd(wnd), data(NULL), width(0), height(0),
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
-        isMouseInClientArea(false), isDragging(false), inTitlebar(false) {
+        isMouseInClientArea(false), isDragging(false), inTitlebar(false), currBgCol(DEFAULT_CURRENT_BG_COL) {
         Reshape(tabSize.dx, tabSize.dy);
         EvaluateColors();
         memset(&color, 0, sizeof(color));
@@ -100,6 +101,10 @@ public:
         shape.AddLine(p.X+o, p.Y+o, p.X+c-o, p.Y+c-o);
         shape.StartFigure();
         shape.AddLine(p.X+c-o, p.Y+o, p.X+o, p.Y+c-o);
+        shape.SetMarker();
+
+        // define the line at the bottom (so that we can erase it)
+        shape.AddLine(width-1, height, 1, height);
         shape.SetMarker();
 
         delete data;
@@ -202,14 +207,15 @@ public:
             if (!graphics.IsVisible(0, 0, width + 1, height + 1))
                 continue;
 
+            COLORREF bgCol = color.background;;
+            if (current == i)
+                bgCol = color.current;
+            else if (highlighted == i)
+                bgCol = color.highlight;
+
             // paint tab's body
             iterator.NextMarker(&shape);
-            if (current == i)
-                LoadBrush(br, color.select);
-            else if (highlighted == i)
-                LoadBrush(br, color.highlight);
-            else
-                LoadBrush(br, color.background);
+            LoadBrush(br, bgCol);
             graphics.FillPath(&br, &shape);
             graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
 
@@ -231,12 +237,17 @@ public:
                 LoadPen(pen, color.outline, 2.0f);
             graphics.DrawPath(&pen, &shape);
 
+            // erase the bottom line
+            iterator.NextMarker(&shape);
+            LoadPen(pen, bgCol, 1.0f);
+            graphics.DrawPath(&pen, &shape);
+
             iterator.Rewind();
         }
     }
 
     // Evaluates the colors for the tab's elements.
-    void EvaluateColors() {
+    void EvaluateColors(bool force=false) {
         COLORREF bg, txt;
         if (inTitlebar) {
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -247,7 +258,7 @@ public:
             bg = GetSysColor(TAB_COLOR_BG);
             txt = GetSysColor(TAB_COLOR_TEXT);
         }
-        if (bg == color.bar && txt == color.text)
+        if (!force && bg == color.bar && txt == color.text)
             return;
 
         color.bar  = bg;
@@ -255,13 +266,16 @@ public:
 
         int sign = GetLightness(color.text) > GetLightness(color.bar) ? -1 : 1;
 
-        color.select      = AdjustLightness2(color.bar, sign * 25.0f);
+        color.current      = AdjustLightness2(color.bar, sign * 25.0f);
         color.highlight   = AdjustLightness2(color.bar, sign * 15.0f);
         color.background  = AdjustLightness2(color.bar, -sign * 15.0f);
         color.outline     = AdjustLightness2(color.bar, -sign * 60.0f);
         color.x_line      = COL_CLOSE_X_HOVER;
         color.x_highlight = COL_CLOSE_HOVER_BG;
         color.x_click     = AdjustLightness2(color.x_highlight, -10.0f);
+        if (currBgCol != DEFAULT_CURRENT_BG_COL) {
+            color.current = currBgCol;
+        }
     }
 
     int Count() {
@@ -659,6 +673,18 @@ void SaveCurrentTabData(WindowInfo *win)
     win->tabSelectionHistory->Push((TabData *)tcs.lParam);
 }
 
+static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
+{
+    if (win->AsEbook()) {
+        // TODO: get the real background color
+        SetCurrentTabBgCol(win, RGB(0xfb, 0xf0, 0xd9));
+    } else {
+        // TODO: match either the toolbar (if shown) or background
+        SetCurrentTabBgCol(win, DEFAULT_CURRENT_BG_COL);
+    }
+    RepaintNow(win->hwndTabBar);
+}
+
 int TabsGetCount(WindowInfo *win)
 {
     if (!win)
@@ -722,6 +748,7 @@ void TabsOnLoadedDoc(WindowInfo *win)
     }
     else
         DeleteTabData(td, false);
+    UpdateCurrentTabBgColForWindow(win);
 }
 
 // Refresh the tab's title
@@ -763,6 +790,7 @@ void TabsOnCloseDoc(WindowInfo *win)
         tdata = win->tabSelectionHistory->Pop();
         TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win, tdata));
         LoadModelIntoTab(win, tdata);
+        UpdateCurrentTabBgColForWindow(win);
     }
 }
 
@@ -798,6 +826,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
             LoadModelIntoTab(win, GetTabData(win, current));
+            UpdateCurrentTabBgColForWindow(win);
         }
         break;
 
@@ -854,6 +883,13 @@ void UpdateTabWidth(WindowInfo *win)
     else {
         ShowTabBar(win, false);
     }
+}
+
+void SetCurrentTabBgCol(WindowInfo *win, COLORREF bgCol)
+{
+    TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+    tab->currBgCol = bgCol;
+    tab->EvaluateColors(true);
 }
 
 void SetTabsInTitlebar(WindowInfo *win, bool set)

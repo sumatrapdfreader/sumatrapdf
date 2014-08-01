@@ -1273,14 +1273,12 @@ static void CreateSidebar(WindowInfo* win)
     CreateFavorites(win);
 
     if (win->tocVisible) {
-        InvalidateRect(win->hwndTocBox, NULL, TRUE);
-        UpdateWindow(win->hwndTocBox);
+        RepaintNow(win->hwndTocBox);
     }
 
     if (gGlobalPrefs->showFavorites) {
-        InvalidateRect(win->hwndFavBox, NULL, TRUE);
-        UpdateWindow(win->hwndFavBox);
-    }
+        RepaintNow(win->hwndFavBox);
+   }
 }
 
 static WindowInfo* CreateWindowInfo()
