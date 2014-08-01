@@ -60,10 +60,15 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
 
             if (button == CB_MENU) {
                 if (!KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->caption->isMenuOpen) {
-                    WindowRect wr(win->caption->btn[CB_MENU].hwnd);
+                    HWND hMenuButton = win->caption->btn[CB_MENU].hwnd;
+                    WindowRect wr(hMenuButton);
                     win->caption->isMenuOpen = true;
+                    if (!lParam)    // if the WM_COMMAND message was sent as a result of keyboard command
+                        InvalidateRgn(hMenuButton, NULL, FALSE);
                     MenuBarAsPopupMenu(win, wr.x, wr.y + wr.dy);
                     win->caption->isMenuOpen = false;
+                    if (!lParam)
+                        InvalidateRgn(hMenuButton, NULL, FALSE);
                     SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, NULL);
                 }
                 SetFocus(win->hwndFrame);
