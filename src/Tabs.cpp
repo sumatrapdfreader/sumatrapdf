@@ -35,6 +35,8 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 #define TABBAR_HEIGHT    24
 #define TAB_WIDTH        300
 
+static bool g_FirefoxStyle = false;
+
 int GetTabbarHeight(WindowInfo *win, float factor)
 {
     return (int)(TABBAR_HEIGHT * win->uiDPIFactor * factor);
@@ -79,7 +81,8 @@ public:
     // Calculates tab's elements, based on its width and height.
     // Generates a GraphicsPath, which is used for painting the tab, etc.
     bool Reshape(int dx, int dy) {
-        dx--; dy--;
+        dx--;
+        //dy--;
         if (width == dx && height == dy)
             return false;
         width = dx; height = dy;
@@ -180,7 +183,7 @@ public:
         SetWorldTransform(hdc, &ctm);
 
         Graphics graphics(hdc);
-        graphics.SetCompositingMode(CompositingModeSourceOver);
+        graphics.SetCompositingMode(CompositingModeSourceCopy);
         graphics.SetCompositingQuality(CompositingQualityHighQuality);
         graphics.SetSmoothingMode(SmoothingModeHighQuality);
         graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
@@ -214,34 +217,54 @@ public:
             else if (highlighted == i)
                 bgCol = color.highlight;
 
+            // in firefox style we only paint current and highlighed tabs
+            // all other tabs only show 
+            bool shouldPaint = !g_FirefoxStyle || ((current == i) || (highlighted == i));
+
             // paint tab's body
-            iterator.NextMarker(&shape);
-            LoadBrush(br, bgCol);
-            graphics.FillPath(&br, &shape);
-            graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
+            if (shouldPaint) {
+                graphics.SetCompositingMode(CompositingModeSourceCopy);
+                iterator.NextMarker(&shape);
+                LoadBrush(br, bgCol);
+                graphics.FillPath(&br, &shape);
+                //graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
+            }
 
             // draw tab's text
-            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+            if (shouldPaint) {
+                graphics.SetCompositingMode(CompositingModeSourceOver);
+                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+            } else {
+                // TODO: draw the background with the same color as caption
+                // transparent text looks funny
+                graphics.SetCompositingMode(CompositingModeSourceOver);
+                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+            }
 
-            // paint "x"'s circle
-            iterator.NextMarker(&shape);
-            if (xClicked == i)
-                graphics.FillPath(LoadBrush(br, color.x_click), &shape);
-            else if (xHighlighted == i)
-                graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
+            if (shouldPaint) {
 
-            // paint "x"
-            iterator.NextMarker(&shape);
-            if (xClicked == i || xHighlighted == i)
-                LoadPen(pen, color.x_line, 2.0f);
-            else
-                LoadPen(pen, color.outline, 2.0f);
-            graphics.DrawPath(&pen, &shape);
+                // paint "x"'s circle
+                iterator.NextMarker(&shape);
+                if (xClicked == i)
+                    graphics.FillPath(LoadBrush(br, color.x_click), &shape);
+                else if (xHighlighted == i)
+                    graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
 
+                // paint "x"
+                iterator.NextMarker(&shape);
+                if (xClicked == i || xHighlighted == i)
+                    LoadPen(pen, color.x_line, 2.0f);
+                else
+                    LoadPen(pen, color.outline, 2.0f);
+                graphics.DrawPath(&pen, &shape);
+            }
+
+#if 0
             // erase the bottom line
             iterator.NextMarker(&shape);
             LoadPen(pen, bgCol, 1.0f);
             graphics.DrawPath(&pen, &shape);
+#endif
 
             iterator.Rewind();
         }
