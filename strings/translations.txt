@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1fc5fbb980a69233d4b2942674dfab5374a9fc16
+ab292f865f2b7fc2a900c17c4e11de2e9b21c15f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2936,6 +2936,7 @@ vn:Hiển thị
 de:Fe&nster
 fr:F&enêtre
 ru:&Окно
+sk:&Okno
 :&Yes
 am:&Այո
 ar:&نعم
@@ -6474,6 +6475,7 @@ ja:カーソル位置：
 nl:Cursor positie
 pl:Pozycja kursora:
 ru:Позиция курсора:
+sk:Pozícia kurzora:
 sl:Položaj kurzorja:
 sp-rs:Pozicija kursora
 sr-rs:Позиција курсора
@@ -13894,6 +13896,7 @@ ja:Selection:
 nl:Selectie
 pl:Selekcja:
 ru:Выделение:
+sk:Výber:
 sl:Izbor:
 sp-rs:Izbor
 sr-rs:Избор

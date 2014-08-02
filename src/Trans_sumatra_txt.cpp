@@ -11177,7 +11177,7 @@ const char * gTranslations_sk =
   "&Presko\304\215i\305\245 t\303\272to verziu\0"\
   "Pou\305\276i\305\245 origin\303\241lne ve\304\276kosti str\303\241n\0"\
   "&Zobrazi\305\245\0"\
-  "\0"\
+  "&Okno\0"\
   "&\303\201no\0"\
   "&Zv\303\244\304\215\305\241enie\0"\
   "(z %d)\0"\
@@ -11225,7 +11225,7 @@ const char * gTranslations_sk =
   "Nepodarilo sa na\304\215\303\255ta\305\245 stranu\0"\
   "Vytvoren\303\275:\0"\
   "Aktu\303\241lny s\303\272bor\0"\
-  "\0"\
+  "Poz\303\255cia kurzora:\0"\
   "Vlastn\303\241 &zmena ve\304\276kosti...\tCtrl+Y\0"\
   "Predvolen\303\251 &zobrazenie:\0"\
   "Predvolen\303\241 &ve\304\276kos\305\245\0"\
@@ -11338,7 +11338,7 @@ const char * gTranslations_sk =
   "Vybra\305\245 &v\305\241etko\0"\
   "Vybra\305\245 &v\305\241etko\tCtrl+A\0"\
   "Ozna\304\215i\305\245 obsah s \"Ctrl + \304\276av\303\251 tla\304\215idlo my\305\241i\"\0"\
-  "\0"\
+  "V\303\275ber:\0"\
   "Odosla\305\245 &e-mailom...\0"\
   "Nastavi\305\245 inverzn\303\251 vyh\304\276ad\303\241vanie\0"\
   "Zobrazi\305\245 &Z\303\241lo\305\276ky\0"\
