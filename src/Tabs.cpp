@@ -82,7 +82,6 @@ public:
     // Generates a GraphicsPath, which is used for painting the tab, etc.
     bool Reshape(int dx, int dy) {
         dx--;
-        //dy--;
         if (width == dx && height == dy)
             return false;
         width = dx; height = dy;
@@ -105,10 +104,6 @@ public:
         shape.AddLine(p.X+o, p.Y+o, p.X+c-o, p.Y+c-o);
         shape.StartFigure();
         shape.AddLine(p.X+c-o, p.Y+o, p.X+o, p.Y+c-o);
-        shape.SetMarker();
-
-        // define the line at the bottom (so that we can erase it)
-        shape.AddLine(width-1, height, 1, height);
         shape.SetMarker();
 
         delete data;
@@ -211,61 +206,71 @@ public:
             if (!graphics.IsVisible(0, 0, width + 1, height + 1))
                 continue;
 
-            COLORREF bgCol = color.background;;
-            if (current == i)
-                bgCol = color.current;
-            else if (highlighted == i)
-                bgCol = color.highlight;
-
             // in firefox style we only paint current and highlighed tabs
             // all other tabs only show 
-            bool shouldPaint = !g_FirefoxStyle || ((current == i) || (highlighted == i));
+            bool onlyText = g_FirefoxStyle && !((current == i) || (highlighted == i));
+            if (onlyText) {
+#if 0
+                // we need to first paint the background with the same color as caption,
+                // otherwise the text looks funny (because is transparent?)
+                // TODO: what is the damn bg color of caption? bar is too light, outline is too dark
+                Color bgColTmp;
+                bgColTmp.SetFromCOLORREF(color.bar);
+                {
+                    SolidBrush bgBr(bgColTmp);
+                    graphics.FillRectangle(&bgBr, layout);
+                }
+                bgColTmp.SetFromCOLORREF(color.outline);
+                {
+                    SolidBrush bgBr(bgColTmp);
+                    graphics.FillRectangle(&bgBr, layout);
+                }
+#endif
+                // TODO: this is a hack. If use use no background and cleartype, the
+                // text looks funny (is bold).
+                // CompositingModeSourceCopy doesn't work with clear type
+                // another option is to draw background before drawing text, but
+                // I can't figure out what is the actual color of caption
+                graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
+                graphics.SetCompositingMode(CompositingModeSourceCopy);
+                //graphics.SetCompositingMode(CompositingModeSourceOver);
+                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+                graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+                continue;
+            }
+
+
+            COLORREF bgCol = color.background;;
+            if (current == i) {
+                bgCol = color.current;
+            } else if (highlighted == i) {
+                bgCol = color.highlight;
+            }
 
             // paint tab's body
-            if (shouldPaint) {
-                graphics.SetCompositingMode(CompositingModeSourceCopy);
-                iterator.NextMarker(&shape);
-                LoadBrush(br, bgCol);
-                graphics.FillPath(&br, &shape);
-                //graphics.DrawPath(LoadPen(pen, color.outline, 1.0f), &shape);
-            }
+            graphics.SetCompositingMode(CompositingModeSourceCopy);
+            iterator.NextMarker(&shape);
+            LoadBrush(br, bgCol);
+            graphics.FillPath(&br, &shape);
 
             // draw tab's text
-            if (shouldPaint) {
-                graphics.SetCompositingMode(CompositingModeSourceOver);
-                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
-            } else {
-                // TODO: draw the background with the same color as caption
-                // transparent text looks funny
-                graphics.SetCompositingMode(CompositingModeSourceOver);
-                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
-            }
+            graphics.SetCompositingMode(CompositingModeSourceOver);
+            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
 
-            if (shouldPaint) {
-
-                // paint "x"'s circle
-                iterator.NextMarker(&shape);
-                if (xClicked == i)
-                    graphics.FillPath(LoadBrush(br, color.x_click), &shape);
-                else if (xHighlighted == i)
-                    graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
-
-                // paint "x"
-                iterator.NextMarker(&shape);
-                if (xClicked == i || xHighlighted == i)
-                    LoadPen(pen, color.x_line, 2.0f);
-                else
-                    LoadPen(pen, color.outline, 2.0f);
-                graphics.DrawPath(&pen, &shape);
-            }
-
-#if 0
-            // erase the bottom line
+            // paint "x"'s circle
             iterator.NextMarker(&shape);
-            LoadPen(pen, bgCol, 1.0f);
-            graphics.DrawPath(&pen, &shape);
-#endif
+            if (xClicked == i)
+                graphics.FillPath(LoadBrush(br, color.x_click), &shape);
+            else if (xHighlighted == i)
+                graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
 
+            // paint "x"
+            iterator.NextMarker(&shape);
+            if (xClicked == i || xHighlighted == i)
+                LoadPen(pen, color.x_line, 2.0f);
+            else
+                LoadPen(pen, color.outline, 2.0f);
+            graphics.DrawPath(&pen, &shape);
             iterator.Rewind();
         }
     }
