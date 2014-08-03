@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF "
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
 				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\sumatrapdf.exe"
@@ -46,7 +46,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
 				ReBuildCommandLine="nmake -f makefile.msvc BASEDIR=.. CFG=rel rebuild"
 				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\sumatrapdf.exe"
@@ -802,10 +802,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\EngineDump.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\EngineManager.cpp"
 					>
 				</File>
@@ -1209,6 +1205,10 @@
 			<Filter
 				Name="Varia"
 				>
+				<File
+					RelativePath="..\src\EngineDump.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\src\MakeLzSA.cpp"
 					>

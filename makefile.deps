@@ -254,11 +254,11 @@ $(OS)\EbookFormatter.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\
 $(OS)\EbookFormatter.obj: $B\src\utils\HtmlPullParser.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
 $(OS)\EbookFormatter.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\ZipUtil.h
 $(OS)\EngineDump.obj: $B\src\BaseEngine.h $B\src\EngineManager.h $B\src\FileModifications.h
-$(OS)\EngineDump.obj: $B\src\mui\MiniMui.h $B\src\PdfEngine.h $B\src\utils\Allocator.h
-$(OS)\EngineDump.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h
-$(OS)\EngineDump.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
-$(OS)\EngineDump.obj: $B\src\utils\StrUtil.h $B\src\utils\TgaReader.h $B\src\utils\Vec.h
-$(OS)\EngineDump.obj: $B\src\utils\WinUtil.h
+$(OS)\EngineDump.obj: $B\src\mui\MiniMui.h $B\src\PdfCreator.h $B\src\PdfEngine.h
+$(OS)\EngineDump.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
+$(OS)\EngineDump.obj: $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
+$(OS)\EngineDump.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\TgaReader.h
+$(OS)\EngineDump.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\EngineManager.obj: $B\src\BaseEngine.h $B\src\DjVuEngine.h $B\src\EbookEngine.h
 $(OS)\EngineManager.obj: $B\src\EngineManager.h $B\src\ImagesEngine.h $B\src\PdfEngine.h
 $(OS)\EngineManager.obj: $B\src\PsEngine.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h

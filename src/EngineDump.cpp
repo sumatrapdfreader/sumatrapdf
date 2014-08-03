@@ -9,6 +9,7 @@
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "MiniMui.h"
+#include "PdfCreator.h"
 #include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
@@ -310,14 +311,58 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
+#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
 
-void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f, bool silent=false)
+bool CheckRenderPath(const WCHAR *path)
 {
+    CrashIf(!path);
+    bool hasArg = false;
+    const WCHAR *p = path - 1;
+    while ((p = str::FindChar(p + 1, '%')) != NULL) {
+        p++;
+        if (*p == '%')
+            continue;
+        if (*p == '0' && '1' <= *(p + 1) && *(p + 1) <= '9')
+            p += 2;
+        if (hasArg || *p != 'd') {
+            ErrOut("Error: Render path may contain '%%d' only once, other '%%' signs must be doubled!");
+            return false;
+        }
+        hasArg = true;
+    }
+    return true;
+}
+
+bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f, bool silent=false)
+{
+    if (!CheckRenderPath(renderPath))
+        return false;
+
+    if (str::EndsWithI(renderPath, L".txt")) {
+        str::Str<WCHAR> text(1024);
+        for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++)
+            text.AppendAndFree(engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export));
+        if (silent)
+            return true;
+        ScopedMem<WCHAR> txtFilePath(str::Format(renderPath, 0));
+        ScopedMem<char> textUTF8(str::conv::ToUtf8(text.Get()));
+        ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
+        return file::WriteAll(txtFilePath, textUTF8BOM, str::Len(textUTF8BOM));
+    }
+
+    if (str::EndsWithI(renderPath, L".pdf")) {
+        if (silent)
+            return false;
+        ScopedMem<WCHAR> pdfFilePath(str::Format(renderPath, 0));
+        return engine->SaveFileAsPDF(pdfFilePath, true) || PdfCreator::RenderToFile(pdfFilePath, engine);
+    }
+
+    bool success = true;
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, 0);
+        success &= bmp != NULL;
         if (!bmp && !silent)
-            ErrOut("Error: Failed to render page %d for %s!\n", pageNo, engine->FileName());
+            ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FileName());
         if (!bmp || silent) {
             delete bmp;
             continue;
@@ -342,6 +387,8 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         }
         delete bmp;
     }
+
+    return success;
 }
 
 class PasswordHolder : public PasswordUI {
@@ -363,7 +410,7 @@ int main(int argc, char **argv)
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:
-        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>\n",
+        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
             path::GetBaseName(argList.At(0)));
         return 2;
     }
@@ -449,7 +496,7 @@ Usage:
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
     if (!engine) {
-        ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
+        ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseName(filePath));
         return 1;
     }
     Vec<PageAnnotation> *userAnnots = LoadFileModifications(engine->FileName());
