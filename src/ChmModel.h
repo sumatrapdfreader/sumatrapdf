@@ -34,7 +34,7 @@ public:
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
-    virtual float GetZoomVirtual() const;
+    virtual float GetZoomVirtual(bool absolute=false) const;
     virtual float GetNextZoomStep(float towards) const;
     virtual void SetViewPortSize(SizeI size) { /* not needed(?) */ }
 

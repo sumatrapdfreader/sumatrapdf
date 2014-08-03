@@ -70,7 +70,7 @@ public:
     virtual DisplayMode GetDisplayMode() const = 0;
     virtual void SetPresentationMode(bool enable) = 0;
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) = 0;
-    virtual float GetZoomVirtual() const = 0;
+    virtual float GetZoomVirtual(bool absolute=false) const = 0;
     virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(SizeI size) = 0;
 

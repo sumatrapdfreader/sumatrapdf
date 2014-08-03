@@ -84,8 +84,8 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
     virtual DisplayMode GetDisplayMode() const { return displayMode; }
     virtual void SetPresentationMode(bool enable);
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { ZoomTo(zoom, fixPt); }
-    virtual float GetZoomVirtual() const { return zoomVirtual; }
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
+    virtual float GetZoomVirtual(bool absolute=false) const;
     virtual float GetNextZoomStep(float towards) const;
     virtual void SetViewPortSize(SizeI size);
 
@@ -159,8 +159,6 @@ public:
     /* a "virtual" zoom level. Can be either a real zoom level in percent
        (i.e. 100.0 is original size) or one of virtual values ZOOM_FIT_PAGE,
        ZOOM_FIT_WIDTH or ZOOM_FIT_CONTENT, whose real value depends on draw area size */
-    void            ZoomTo(float zoomVirtual, PointI *fixPt=NULL);
-    void            ZoomBy(float zoomFactor, PointI *fixPt=NULL);
     void            RotateBy(int rotation);
 
     WCHAR *         GetTextInRegion(int pageNo, RectD region);
@@ -205,7 +203,6 @@ protected:
     void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
     void            CalcZoomVirtual(float zoomVirtual);
-    float           GetZoomAbsolute() const { return zoomReal * 100 / dpiFactor; }
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
     bool            GoToPrevPage(int scrollY);
     int             GetPageNextToPoint(PointI pt);

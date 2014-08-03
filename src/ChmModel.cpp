@@ -228,6 +228,8 @@ void ChmModel::Navigate(int dir)
 
 void ChmModel::SetZoomVirtual(float zoom, PointI *fixPt)
 {
+    if (zoom > 0)
+        zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     if (zoom <= 0 || !IsValidZoom(zoom))
         zoom = 100.0f;
     ZoomTo(zoom);
@@ -240,7 +242,7 @@ void ChmModel::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-float ChmModel::GetZoomVirtual() const
+float ChmModel::GetZoomVirtual(bool absolute) const
 {
     if (!htmlWindow)
         return 100;
@@ -455,7 +457,7 @@ DocTocItem *ChmModel::GetTocTree()
 // adapted from DisplayModel::NextZoomStep
 float ChmModel::GetNextZoomStep(float towardsLevel) const
 {
-    float currZoom = GetZoomVirtual();
+    float currZoom = GetZoomVirtual(true);
 
     if (gGlobalPrefs->zoomIncrement > 0) {
         if (currZoom < towardsLevel)

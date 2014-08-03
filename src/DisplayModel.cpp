@@ -1031,7 +1031,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         // disable the window margin during presentations
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         SetDisplayMode(DM_SINGLE_PAGE);
-        ZoomTo(ZOOM_FIT_PAGE);
+        SetZoomVirtual(ZOOM_FIT_PAGE);
     }
     else {
         if (_engine && _engine->IsImageCollection())
@@ -1045,7 +1045,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         SetDisplayMode(presDisplayMode);
         if (!IsValidZoom(presZoomVirtual))
             presZoomVirtual = zoomVirtual;
-        ZoomTo(presZoomVirtual);
+        SetZoomVirtual(presZoomVirtual);
     }
 }
 
@@ -1220,10 +1220,13 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     RepaintDisplay();
 }
 
-void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
+void DisplayModel::SetZoomVirtual(float zoomLevel, PointI *fixPt)
 {
+    if (zoomLevel > 0)
+        zoomLevel = limitValue(zoomLevel, ZOOM_MIN, ZOOM_MAX);
     if (!IsValidZoom(zoomLevel))
         return;
+
     bool scrollToFitPage = ZOOM_FIT_PAGE == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
     if (zoomVirtual == zoomLevel && (fixPt || !scrollToFitPage))
         return;
@@ -1246,7 +1249,7 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
         ss.x = ss.y = -1;
     }
 
-    //lf("DisplayModel::zoomTo() zoomLevel=%.6f", _zoomLevel);
+    //lf("DisplayModel::SetZoomVirtual() zoomLevel=%.6f", _zoomLevel);
     Relayout(zoomLevel, rotation);
     SetScrollState(ss);
 
@@ -1260,19 +1263,19 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
     }
 }
 
-void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
+float DisplayModel::GetZoomVirtual(bool absolute) const
 {
-    // zoomTo expects a zoomVirtual, so undo the dpiFactor here
-    float newZoom = GetZoomAbsolute() * zoomFactor;
-    newZoom = limitValue(newZoom, ZOOM_MIN, ZOOM_MAX);
-    //lf("DisplayModel::zoomBy() zoomReal=%.6f, zoomFactor=%.2f, newZoom=%.2f", zoomReal, zoomFactor, newZoom);
-    ZoomTo(newZoom, fixPt);
+    if (absolute) {
+        // revert the dpiFactor premultiplication for converting zoomReal back to zoomVirtual
+        return zoomReal * 100 / dpiFactor;
+    }
+    return zoomVirtual;
 }
 
 float DisplayModel::GetNextZoomStep(float towardsLevel) const
 {
     if (gGlobalPrefs->zoomIncrement > 0) {
-        float zoom = GetZoomAbsolute();
+        float zoom = GetZoomVirtual(true);
         if (zoom < towardsLevel)
             return min(zoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
         if (zoom > towardsLevel)
@@ -1294,7 +1297,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
     CrashIf(zoomLevels->Count() != 0 && (zoomLevels->At(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
     CrashIf(zoomLevels->Count() != 0 && zoomLevels->At(0) > zoomLevels->Last());
 
-    float currZoom = GetZoomAbsolute();
+    float currZoom = GetZoomVirtual(true);
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         if (PageShown(pageNo)) {
@@ -1586,7 +1589,7 @@ void DisplayModel::ScrollToLink(PageDestination *dest)
     /* // ignore author-set zoom settings (at least as long as there's no way to overrule them)
     if (zoom != INVALID_ZOOM) {
         // TODO: adjust the zoom level before calculating the scrolling coordinates
-        zoomTo(zoom);
+        SetZoomVirtual(zoom);
         UpdateToolbarState(owner);
     }
     // */

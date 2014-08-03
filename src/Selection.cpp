@@ -173,59 +173,46 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relative)
 {
-    if (win->AsChm()) {
-        win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual() : 1));
-        UpdateToolbarState(win);
-        return;
-    }
-
-    if (!win->AsFixed())
-        return;
-
     PointI pt;
-    bool zoomToPt = win->showSelection && win->selectionOnPage;
-    DisplayModel *dm = win->AsFixed();
+    bool zoomToPt = false;
 
-    // either scroll towards the center of the current selection
-    if (zoomToPt) {
-        RectI selRect;
-        for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
-            selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(dm));
-        }
-
-        ClientRect rc(win->hwndCanvas);
-        pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
-        pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
-
-        pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
-        pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
-
-        int pageNo = dm->GetPageNoByPoint(pt);
-        if (!win->ctrl->ValidPageNo(pageNo) || !dm->PageVisible(pageNo))
+    if (win->AsFixed()) {
+        DisplayModel *dm = win->AsFixed();
+        // when not zooming to fit (which contradicts zooming to a specific point), ...
+        if (!relative && (ZOOM_FIT_PAGE == factor || ZOOM_FIT_CONTENT == factor) && scrollToFit) {
             zoomToPt = false;
-    }
-    // or towards the top-left-most part of the first visible page
-    else {
-        int page = dm->FirstVisiblePageNo();
-        PageInfo *pageInfo = dm->GetPageInfo(page);
-        if (pageInfo) {
-            RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
-            pt = visible.TL();
+        }
+        // either scroll towards the center of the current selection (if there is any) ...
+        else if (win->showSelection && win->selectionOnPage) {
+            RectI selRect;
+            for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
+                selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(dm));
+            }
+
+            ClientRect rc(win->hwndCanvas);
+            pt.x = 2 * selRect.x + selRect.dx - rc.dx / 2;
+            pt.y = 2 * selRect.y + selRect.dy - rc.dy / 2;
+            pt.x = limitValue(pt.x, selRect.x, selRect.x + selRect.dx);
+            pt.y = limitValue(pt.y, selRect.y, selRect.y + selRect.dy);
 
             int pageNo = dm->GetPageNoByPoint(pt);
-            if (!visible.IsEmpty() && win->ctrl->ValidPageNo(pageNo) && dm->PageVisible(pageNo))
-                zoomToPt = true;
+            zoomToPt = dm->ValidPageNo(pageNo) && dm->PageVisible(pageNo);
+        }
+        // or towards the top-left-most part of the first visible page
+        else {
+            int page = dm->FirstVisiblePageNo();
+            PageInfo *pageInfo = dm->GetPageInfo(page);
+            if (pageInfo) {
+                RectI visible = pageInfo->pageOnScreen.Intersect(win->canvasRc);
+                pt = visible.TL();
+
+                int pageNo = dm->GetPageNoByPoint(pt);
+                zoomToPt = !visible.IsEmpty() && dm->ValidPageNo(pageNo) && dm->PageVisible(pageNo);
+            }
         }
     }
 
-    if (!relative && (ZOOM_FIT_PAGE == factor || ZOOM_FIT_CONTENT == factor) && scrollToFit)
-        zoomToPt = false;
-
-    if (relative)
-        dm->ZoomBy(factor, zoomToPt ? &pt : NULL);
-    else
-        dm->ZoomTo(factor, zoomToPt ? &pt : NULL);
-
+    win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual(true) : 1), zoomToPt ? &pt : NULL);
     UpdateToolbarState(win);
 }
 
