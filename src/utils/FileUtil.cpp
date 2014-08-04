@@ -118,9 +118,26 @@ WCHAR *Normalize(const WCHAR *path)
     cch = GetLongPathName(fullpath, NULL, 0);
     if (!cch)
         return fullpath.StealData();
-    WCHAR *normpath = AllocArray<WCHAR>(cch);
+    ScopedMem<WCHAR> normpath(AllocArray<WCHAR>(cch));
     GetLongPathName(fullpath, normpath, cch);
-    return normpath;
+    if (cch <= MAX_PATH)
+        return normpath.StealData();
+    // handle overlong paths: first, try to shorten the path
+    cch = GetShortPathName(fullpath, NULL, 0);
+    if (cch <= MAX_PATH) {
+        ScopedMem<WCHAR> shortpath(AllocArray<WCHAR>(cch));
+        GetShortPathName(fullpath, shortpath, cch);
+        if (str::Len(path::GetBaseName(normpath)) + path::GetBaseName(shortpath) - shortpath < MAX_PATH) {
+            // keep the long filename if possible
+            *(WCHAR *)path::GetBaseName(shortpath) = '\0';
+            return str::Join(shortpath, path::GetBaseName(normpath));
+        }
+        return shortpath.StealData();
+    }
+    // else mark the path as overlong
+    if (str::StartsWith(normpath.Get(), L"\\\\?\\"))
+        return normpath.StealData();
+    return str::Join(L"\\\\?\\", normpath);
 }
 
 // Normalizes the file path and the converts it into a short form that
