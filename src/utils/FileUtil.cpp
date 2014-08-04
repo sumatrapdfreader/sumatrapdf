@@ -124,7 +124,7 @@ WCHAR *Normalize(const WCHAR *path)
         return normpath.StealData();
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathName(fullpath, NULL, 0);
-    if (cch <= MAX_PATH) {
+    if (cch && cch <= MAX_PATH) {
         ScopedMem<WCHAR> shortpath(AllocArray<WCHAR>(cch));
         GetShortPathName(fullpath, shortpath, cch);
         if (str::Len(path::GetBaseName(normpath)) + path::GetBaseName(shortpath) - shortpath < MAX_PATH) {
