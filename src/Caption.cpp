@@ -560,8 +560,14 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (gMenuAccelPressed) {
             // poorly documented hack: find the menu window and send it the accelerator key
             HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, NULL);
-            if (hMenu)
-                PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+            if (hMenu) {
+                if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
+                    gMenuAccelPressed -= 'a' - 'A';
+                if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z')
+                    PostMessage(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
+                else
+                    PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+            }
             gMenuAccelPressed = 0;
         }
         break;
