@@ -92,13 +92,6 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    // TODO: this should remain an advanced setting (if we intend to support both "classic" tabbar
-    //       and tabs in titlebar at all - we could also just pick one and stick to it)
-    // TODO: else this requires an accesskey ("Tabs &in Titlebar") before being translated
-    //       and the menu item hidden for tab-less windows
-    { "Tabs in Titlebar",                   IDM_VIEW_TABS_IN_TITLEBAR,  0 },
-#endif
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
@@ -172,6 +165,11 @@ static MenuDef menuDefDebug[] = {
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
+    // TODO: this should remain an advanced setting (if we intend to support both "classic" tabbar
+    //       and tabs in titlebar at all - we could also just pick one and stick to it)
+    // TODO: else this requires an accesskey ("Tabs &in Titlebar") before being translated
+    //       and the menu item hidden for tab-less windows
+    { "Tabs in Titlebar",                   IDM_VIEW_TABS_IN_TITLEBAR,  MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
@@ -465,9 +463,6 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     if (win->IsDocLoaded() && !file::Exists(win->ctrl->FilePath()))
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
-    win::menu::SetEnabled(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, gGlobalPrefs->useTabs);
-    win::menu::SetChecked(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, win->tabsInTitlebar);
-
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
@@ -475,6 +470,8 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->engine()->SupportsAnnotation() &&
                                                            win->showSelection && win->selectionOnPage);
+    win::menu::SetEnabled(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, gGlobalPrefs->useTabs);
+    win::menu::SetChecked(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, win->tabsInTitlebar);
 #endif
 }
 
