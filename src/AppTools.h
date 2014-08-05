@@ -4,6 +4,7 @@
 #ifndef AppTools_h
 #define AppTools_h
 
+bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 WCHAR *AppGenDataFilename(const WCHAR *pFilename);
 

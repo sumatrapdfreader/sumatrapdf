@@ -1827,8 +1827,59 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish)
         DragFinish(hDrop);
 }
 
+#if defined(SUPPORTS_AUTO_UPDATE) && !defined(PUBLIC_APP_KEY_PATH)
+#error Auto-update without authentication of the downloaded data is not recommended
+#endif
+
 #ifdef SUPPORTS_AUTO_UPDATE
-static void RememberCurrentlyOpenedFiles()
+static bool AutoUpdateMain()
+{
+    WStrVec argList;
+    ParseCmdLine(GetCommandLine(), argList, 4);
+    if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
+        // the argument was misinterpreted, let SumatraPDF start as usual
+        return false;
+    }
+    const WCHAR *otherExe = NULL;
+    if (str::Eq(argList.At(2), L"replace")) {
+        // older 2.6 prerelease versions used implicit paths
+        ScopedMem<WCHAR> exePath(GetExePath());
+        CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
+        exePath[str::Len(exePath) - 12] = '\0';
+        free(argList.At(2));
+        argList.At(2) = str::Format(L"replace:\"%s\"", exePath);
+    }
+    if (str::StartsWith(argList.At(2), L"replace:"))
+        otherExe = argList.At(2) + 8;
+    else if (str::StartsWith(argList.At(2), L"cleanup:"))
+        otherExe = argList.At(2) + 8;
+    if (!file::Exists(otherExe) || !str::EndsWithI(otherExe, L".exe")) {
+        CrashIf(true);
+        return false;
+    }
+    for (int tries = 10; tries > 0; tries--) {
+        if (file::Delete(otherExe))
+            break;
+        Sleep(200);
+    }
+    if (str::StartsWith(argList.At(2), L"cleanup:")) {
+        // continue startup, restoring the previous session
+        return false;
+    }
+    ScopedMem<WCHAR> thisExe(GetExePath());
+    bool ok = CopyFile(thisExe, otherExe, FALSE);
+    // TODO: somehow indicate success or failure
+    ScopedMem<WCHAR> cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
+    for (int tries = 10; tries > 0; tries--) {
+        ok = LaunchFile(otherExe, cleanupArgs);
+        if (ok)
+            break;
+        Sleep(200);
+    }
+    return true;
+}
+
+static void RememberCurrentlyOpenedFiles(bool savePrefs)
 {
     CrashIf(gGlobalPrefs->reopenOnce);
     str::Str<WCHAR> cmdLine;
@@ -1849,6 +1900,8 @@ static void RememberCurrentlyOpenedFiles()
         cmdLine.Pop();
         gGlobalPrefs->reopenOnce = cmdLine.StealData();
     }
+    if (savePrefs)
+        prefs::Save();
 }
 
 static void OnMenuExit();
@@ -1859,10 +1912,12 @@ bool AutoUpdateInitiate(const char *updateData)
     SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
     CrashIf(!node);
 
-    // TODO: support auto-updating using the installer
-    SquareTreeNode *data = node->GetChild("Portable");
-    const char *url = data ? data->GetValue("URL") : NULL;
-    const char *hash = data ? data->GetValue("Hash") : NULL;
+    bool installer = HasBeenInstalled();
+    SquareTreeNode *data = node->GetChild(installer ? "Installer" : "Portable");
+    if (!data)
+        return false;
+    const char *url = data->GetValue("URL");
+    const char *hash = data->GetValue("Hash");
     if (!url || !hash || !str::EndsWithI(url, ".exe"))
         return false;
 
@@ -1877,18 +1932,31 @@ bool AutoUpdateInitiate(const char *updateData)
     if (!str::EqI(fingerPrint, hash))
         return false;
 
-    // TODO: use %TEMP% instead of portable path(?)
-    ScopedMem<WCHAR> updater(GetExePath());
-    updater.Set(str::Join(updater, L"-updater.exe"));
-    bool ok = file::WriteAll(updater, req.data->Get(), req.data->Size());
+    ScopedMem<WCHAR> updateExe, updateArgs;
+    if (installer) {
+        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
+        updateExe.Set(path::Join(tmpDir, L"SumatraPDF-install-update.exe"));
+        // TODO: make the installer delete itself after the update?
+        updateArgs.Set(str::Dup(L"-autoupdate"));
+    }
+    else {
+        ScopedMem<WCHAR> thisExe(GetExePath());
+        updateExe.Set(str::Join(thisExe, L"-update.exe"));
+        updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
+    }
+
+    bool ok = file::WriteAll(updateExe, req.data->Get(), req.data->Size());
     if (!ok)
         return false;
 
-    ok = LaunchFile(updater, L"-autoupdate replace");
-    if (ok) {
-        RememberCurrentlyOpenedFiles();
+    // save session before launching the installer (which force-quits SumatraPDF)
+    RememberCurrentlyOpenedFiles(installer);
+
+    ok = LaunchFile(updateExe, updateArgs);
+    if (ok)
         OnMenuExit();
-    }
+    else
+        str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
     return ok;
 }
 #endif
@@ -1986,48 +2054,6 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 
     return 0;
 }
-
-#ifdef SUPPORTS_AUTO_UPDATE
-static bool AutoUpdateMain()
-{
-    WStrVec argList;
-    ParseCmdLine(GetCommandLine(), argList, 4);
-    if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
-        // the argument was misinterpreted, let SumatraPDF start as usual
-        return false;
-    }
-    ScopedMem<WCHAR> thisExe(GetExePath());
-    ScopedMem<WCHAR> otherExe;
-    bool beforeUpdate = str::Eq(argList.At(2), L"replace");
-    if (beforeUpdate) {
-        CrashIf(!str::EndsWith(thisExe, L".exe-updater.exe"));
-        otherExe.Set(str::DupN(thisExe, str::Len(thisExe) - 12));
-    }
-    else {
-        CrashIf(!str::Eq(argList.At(2), L"cleanup"));
-        otherExe.Set(str::Join(thisExe, L"-updater.exe"));
-    }
-    for (int tries = 10; tries > 0; tries--) {
-        if (file::Delete(otherExe))
-            break;
-        Sleep(200);
-    }
-    if (!beforeUpdate) {
-        // continue startup
-        // TODO: restore previous session?
-        return false;
-    }
-    bool ok = CopyFile(thisExe, otherExe, FALSE);
-    // TODO: somehow indicate success or failure
-    for (int tries = 10; tries > 0; tries--) {
-        ok = LaunchFile(otherExe, L"-autoupdate cleanup");
-        if (ok)
-            break;
-        Sleep(200);
-    }
-    return true;
-}
-#endif
 
 static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
 {

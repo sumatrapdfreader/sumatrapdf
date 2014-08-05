@@ -11,11 +11,32 @@
 #include "Version.h"
 #include "WinUtil.h"
 
+#define REG_PATH_UNINST L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
+
+/* Returns true, if a Registry entry indicates that this executable has been
+   created by an installer (and should be updated through an installer) */
+bool HasBeenInstalled()
+{
+    ScopedMem<WCHAR> installedPath;
+    // cf. GetInstallationDir() in installer\Installer.cpp
+    installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
+    if (!installedPath)
+        installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    if (!installedPath)
+        return false;
+
+    ScopedMem<WCHAR> exePath(GetExePath());
+    if (!exePath)
+        return false;
+
+    if (!str::EndsWithI(installedPath, L".exe"))
+        installedPath.Set(path::Join(installedPath, path::GetBaseName(exePath)));
+    return path::IsSame(installedPath, exePath);
+}
+
 /* Return false if this program has been started from "Program Files" directory
    (which is an indicator that it has been installed) or from the last known
    location of a SumatraPDF installation: */
-#define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
-
 bool IsRunningInPortableMode()
 {
     // cache the result so that it will be consistent during the lifetime of the process
@@ -24,27 +45,15 @@ bool IsRunningInPortableMode()
         return sCacheIsPortable != 0;
     sCacheIsPortable = 1;
 
-    ScopedMem<WCHAR> exePath(GetExePath());
-    if (!exePath)
-        return true;
-
-    // if we can't get a path, assume we're not running from "Program Files"
-    ScopedMem<WCHAR> installedPath;
-    // cf. GetInstallationDir() in installer\Installer.cpp
-    installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
-    if (!installedPath)
-        installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
-    if (installedPath) {
-        if (!str::EndsWithI(installedPath.Get(), L".exe"))
-            installedPath.Set(path::Join(installedPath.Get(), path::GetBaseName(exePath)));
-        if (path::IsSame(installedPath, exePath)) {
-            sCacheIsPortable = 0;
-            return false;
-        }
+    if (HasBeenInstalled()) {
+        sCacheIsPortable = 0;
+        return false;
     }
 
+    ScopedMem<WCHAR> exePath(GetExePath());
     ScopedMem<WCHAR> programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
-    if (!programFilesDir)
+    // if we can't get a path, assume we're not running from "Program Files"
+    if (!exePath || !programFilesDir)
         return true;
 
     // check if one of the exePath's parent directories is "Program Files"
