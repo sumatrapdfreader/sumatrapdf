@@ -1840,15 +1840,15 @@ static bool AutoUpdateMain()
         // the argument was misinterpreted, let SumatraPDF start as usual
         return false;
     }
-    const WCHAR *otherExe = NULL;
     if (str::Eq(argList.At(2), L"replace")) {
         // older 2.6 prerelease versions used implicit paths
         ScopedMem<WCHAR> exePath(GetExePath());
         CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
         exePath[str::Len(exePath) - 12] = '\0';
         free(argList.At(2));
-        argList.At(2) = str::Format(L"replace:\"%s\"", exePath);
+        argList.At(2) = str::Format(L"replace:%s", exePath);
     }
+    const WCHAR *otherExe = NULL;
     if (str::StartsWith(argList.At(2), L"replace:"))
         otherExe = argList.At(2) + 8;
     else if (str::StartsWith(argList.At(2), L"cleanup:"))
