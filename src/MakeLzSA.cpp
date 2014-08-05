@@ -32,6 +32,7 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
 {
     ISzCrtAlloc lzmaAlloc;
 
+    CrashIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1)
         return false;
     if (*compressedSize < LZMA_HEADER_SIZE)
@@ -95,8 +96,10 @@ ReusePrevious:
 
     size_t fileDataLen;
     ScopedMem<char> fileData(file::ReadAll(filePath, &fileDataLen));
-    if (!fileData || fileDataLen >= UINT32_MAX)
+    if (!fileData || fileDataLen >= UINT32_MAX) {
+        fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
+    }
     uint32_t fileDataCrc = crc32(0, (const uint8_t *)fileData.Get(), (uint32_t)fileDataLen);
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileDataLen)
         goto ReusePrevious;
@@ -119,7 +122,11 @@ ReusePrevious:
     return content.AppendChecked(compressed, compressedSize);
 }
 
-bool CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names)
+// creates an archive from files (starting at index skipFiles);
+// file paths may be relative to the current directory or absolute and
+// may end in a colon followed by the desired path in the archive
+// (this is required for absolute paths)
+bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 {
     size_t prevDataLen = 0;
     ScopedMem<char> prevData(file::ReadAll(archivePath, &prevDataLen));
@@ -132,12 +139,26 @@ bool CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names
 
     ByteWriterLE lzsaHeader(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32((uint32_t)(names.Count() / 2));
+    lzsaHeader.Write32((uint32_t)(files.Count() - skipFiles));
 
-    for (size_t i = 0; i < names.Count(); i += 2) {
-        ScopedMem<WCHAR> filePath(path::Join(srcDir, names.At(i)));
-        ScopedMem<char> utf8Name(str::conv::ToUtf8(names.At(names.At(i + 1) ? i + 1 : i)));
+    for (size_t i = skipFiles; i < files.Count(); i++) {
+        ScopedMem<WCHAR> filePath(str::Dup(files.At(i)));
+        WCHAR *sep = str::FindCharLast(filePath, ':');
+        ScopedMem<char> utf8Name;
+        if (sep) {
+            utf8Name.Set(str::conv::ToUtf8(sep + 1));
+            *sep = '\0';
+        }
+        else {
+            utf8Name.Set(str::conv::ToUtf8(filePath));
+        }
+
         str::TransChars(utf8Name, "/", "\\");
+        if ('/' == *utf8Name || str::Find(utf8Name, "../")) {
+            fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name);
+            return false;
+        }
+
         int idx = GetIdxFromName(&prevArchive, utf8Name);
         lzma::FileInfo *fi = NULL;
         if (idx != -1)
@@ -158,6 +179,26 @@ bool CreateArchive(const WCHAR *archivePath, const WCHAR *srcDir, WStrVec& names
 
 #define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); return errorStep; } errorStep++
 
+int mainVerify(const WCHAR *archivePath)
+{
+    int errorStep = 1;
+    size_t fileDataLen;
+    ScopedMem<char> fileData(file::ReadAll(archivePath, &fileDataLen));
+    FailIf(!fileData, "Failed to read \"%S\"", archivePath);
+
+    lzma::SimpleArchive lzsa;
+    bool ok = lzma::ParseSimpleArchive(fileData, fileDataLen, &lzsa);
+    FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
+
+    for (int i = 0; i < lzsa.filesCount; i++) {
+        ScopedMem<char> data(lzma::GetFileDataByIdx(&lzsa, i, NULL));
+        FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
+    }
+
+    printf("Verified all %d archive entries\n", lzsa.filesCount);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
@@ -167,47 +208,16 @@ int main(int argc, char **argv)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    int errorStep = 1;
-
     WStrVec args;
     ParseCmdLine(GetCommandLine(), args);
+    int errorStep = 1;
 
-    if (args.Count() == 2 && file::Exists(args.At(1))) {
-        // verify LzSA file
-        size_t fileDataLen;
-        ScopedMem<char> fileData(file::ReadAll(args.At(1), &fileDataLen));
-        FailIf(!fileData, "Failed to read \"%S\"", args.At(1));
-        lzma::SimpleArchive lzsa;
-        bool ok = lzma::ParseSimpleArchive(fileData, fileDataLen, &lzsa);
-        FailIf(!ok, "\"%S\" is no valid LzSA file", args.At(1));
-        for (int i = 0; i < lzsa.filesCount; i++) {
-            ScopedMem<char> data(lzma::GetFileDataByIdx(&lzsa, i, NULL));
-            FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
-        }
-        printf("Verified all %d archive entries\n", lzsa.filesCount);
-        return 0;
-    }
+    if (args.Count() == 2 && file::Exists(args.At(1)))
+        return mainVerify(args.At(1));
 
     FailIf(args.Count() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.At(0)));
 
-    WStrVec names;
-    for (size_t i = 2; i < args.Count(); i++) {
-        const WCHAR *sep = str::FindChar(args.At(i), ':');
-        if (sep) {
-            names.Append(str::DupN(args.At(i), sep - args.At(i)));
-            names.Append(str::Dup(sep + 1));
-        }
-        else {
-            names.Append(str::Dup(args.At(i)));
-            names.Append(NULL);
-        }
-    }
-
-    WCHAR srcDir[MAX_PATH];
-    DWORD srcDirLen = GetCurrentDirectory(dimof(srcDir), srcDir);
-    FailIf(!srcDirLen || srcDirLen == dimof(srcDir), "Failed to determine the current directory");
-
-    bool ok = lzsa::CreateArchive(args.At(1), srcDir, names);
+    bool ok = lzsa::CreateArchive(args.At(1), args, 2);
     FailIf(!ok, "Failed to create \"%S\"", args.At(1));
 
     return 0;
