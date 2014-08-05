@@ -24,9 +24,9 @@ void ShowUsage(const WCHAR *exeName)
     ErrOut("Syntax: %s", path::GetBaseName(exeName));
     ErrOut("\t[-cert CertName]\t- name of the certificate to use"); // when omitted uses first available
     ErrOut("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
+    ErrOut("\t[-comment #]\t\t- comment syntax for signed text files"); // needed when saving the signature into the signed file
     ErrOut("\t[-pubkey public.key]\t- where to save the public key"); // usually not needed
-    ErrOut("\t[-comment #]\t- comment syntax for saving the signature into the file");
-    ErrOut("\tfilename.in");
+    ErrOut("\tfilename.in"); // usually needed, optional when -pubkey is present
     ErrOut("");
 
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"My");
@@ -81,7 +81,7 @@ int main()
             goto SyntaxError;
     }
 #undef is_arg
-    if (!filePath) {
+    if (!filePath && !pubkeyPath) {
 SyntaxError:
         ShowUsage(args.At(0));
         return 1;
@@ -143,6 +143,7 @@ SyntaxError:
     if (pubkeyPath) {
         ok = file::WriteAll(pubkeyPath, pubkey.Get(), pubkeyLen);
         QuitIfNot(ok, "Error: Failed to write the public key to \"%s\"!", pubkeyPath);
+        QuitIfNot(filePath, "Wrote the public key to \"%s\", no file to sign.", pubkeyPath);
     }
 
     // prepare data for signing
