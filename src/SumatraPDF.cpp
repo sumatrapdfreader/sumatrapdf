@@ -1827,7 +1827,7 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish)
         DragFinish(hDrop);
 }
 
-#if defined(SUPPORTS_AUTO_UPDATE) && !defined(PUBLIC_APP_KEY_PATH)
+#if defined(SUPPORTS_AUTO_UPDATE) && !defined(HAS_PUBLIC_APP_KEY)
 #error Auto-update without authentication of the downloaded data is not recommended
 #endif
 
@@ -1998,7 +1998,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     if (!str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
         return ERROR_INTERNET_LOGIN_FAILURE;
 
-#ifdef PUBLIC_APP_KEY_PATH
+#ifdef HAS_PUBLIC_APP_KEY
     size_t pubkeyLen;
     const char *pubkey = LoadTextResource(IDD_PUBLIC_APP_KEY, &pubkeyLen);
     CrashIf(!pubkey);
