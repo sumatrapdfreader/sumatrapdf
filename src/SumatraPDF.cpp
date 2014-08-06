@@ -245,10 +245,10 @@ bool OpenFileExternally(const WCHAR *path)
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
         perceivedType.Set(str::Dup(L"webpage"));
-    if (str::IsEmpty(perceivedType.Get()))
-        return false;
     str::ToLower(perceivedType);
-    if (!gAllowedFileTypes.Contains(perceivedType) && !gAllowedFileTypes.Contains(L"*"))
+    if (gAllowedFileTypes.Contains(L"*"))
+        /* allow all file types (not recommended) */;
+    else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType))
         return false;
 
     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
