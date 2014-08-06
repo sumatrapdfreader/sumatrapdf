@@ -157,7 +157,6 @@ static WStrVec                      gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec                      gAllowedFileTypes;
 
-static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1);
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false);
@@ -2892,7 +2891,7 @@ void ShowOrHideSingleTabGlobally()
 #define SB_HPAGEUP   (WM_USER + 1)
 #define SB_HPAGEDOWN (WM_USER + 2)
 
-static void RelayoutFrame(WindowInfo *win, bool updateToolbars, int sidebarDx)
+static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1)
 {
     ClientRect rc(win->hwndFrame);
     // don't relayout while the window is minimized

@@ -222,16 +222,16 @@ void RelayoutCaption(WindowInfo *win)
         // or font size change. For this to work, I assume that SM_CXSIZE == SM_CYSIZE.
         int btnDx = GetSystemMetrics(IsVistaOrGreater() ? SM_CXSIZE : SM_CYSIZE) - xEdge * (isClassicStyle ? 1 : 2);
         int btnDy = GetSystemMetrics(SM_CYSIZE) - yEdge * (isClassicStyle ? 1 : 2);
-        bool isMaximized = TRUE == IsZoomed(win->hwndFrame);
-        int yPosBtn = rc.y + (isMaximized ? 0 : yEdge);
+        bool maximized = IsZoomed(win->hwndFrame);
+        int yPosBtn = rc.y + (maximized ? 0 : yEdge);
 
-        rc.dx -= btnDx + (isMaximized ? 0 : xEdge);
+        rc.dx -= btnDx + (maximized ? 0 : xEdge);
         dh.SetWindowPos(ci->btn[CB_CLOSE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER | SWP_SHOWWINDOW);
         rc.dx -= btnDx + xEdge;
-        dh.SetWindowPos(ci->btn[CB_RESTORE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER |
-            (isMaximized ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
-        dh.SetWindowPos(ci->btn[CB_MAXIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER |
-            (isMaximized ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
+        dh.SetWindowPos(ci->btn[CB_RESTORE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy,
+                        SWP_NOZORDER | (maximized ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
+        dh.SetWindowPos(ci->btn[CB_MAXIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy,
+                        SWP_NOZORDER | (maximized ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
         rc.dx -= btnDx + (isClassicStyle ? 0 : xEdge);
         dh.SetWindowPos(ci->btn[CB_MINIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER | SWP_SHOWWINDOW);
     }
@@ -414,8 +414,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         switch (msg)
         {
         case WM_NCPAINT:
-            if (NON_CLIENT_BAND)
+#if NON_CLIENT_BAND > 0
+            if (IsZoomed(hwnd))
                 DrawFrame(hwnd, RGB(0,0,0), false);
+#endif
             break;
 
         case WM_ERASEBKGND:
@@ -438,9 +440,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             // Extend the translucent frame in the client area.
             if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
                 long ws = GetWindowLong(hwnd, GWL_STYLE);
+                bool maximized = IsZoomed(hwnd);
                 int frameThickness = !(ws & WS_THICKFRAME) ? 0 : GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, IsZoomed(hwnd) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
-                MARGINS margins = {0, 0, frameThickness + captionHeight, NON_CLIENT_BAND};
+                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, maximized ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
+                MARGINS margins = { 0, 0, frameThickness + captionHeight, maximized ? NON_CLIENT_BAND : 0 };
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
                 win->extendedFrameHeight = frameThickness + captionHeight;
             }
@@ -507,7 +510,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_NCCALCSIZE:
         {
             // In order to have custom caption, we have to include its area in the client rectangle.
-            RECT *r = wParam == TRUE ? &((LPNCCALCSIZE_PARAMS)lParam)->rgrc[0] : (RECT *)lParam;
+            RECT *r = wParam == TRUE ? &((NCCALCSIZE_PARAMS *)lParam)->rgrc[0] : (RECT *)lParam;
             RECT rWindow = *r;
             // Let DefWindowProc calculate the client rectangle.
             DefWindowProc(hwnd, msg, wParam, lParam);
@@ -518,7 +521,8 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             else
                 rClient.top = rWindow.top + rWindow.bottom - rClient.bottom;
             // prevents the hiding of the topmost windows, when this window is maximized
-            rClient.bottom -= NON_CLIENT_BAND;
+            if (IsZoomed(hwnd))
+                rClient.bottom -= NON_CLIENT_BAND;
             *r = rClient;
             *callDef = false;
         }
@@ -612,14 +616,14 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd)
     // TODO: how can this even happen?
     ToggleWindowStyle(hwnd, WS_VISIBLE, false);
 
-    bool isZoomed = IsZoomed(hwnd);
-    EnableMenuItem(menu, SC_SIZE, isZoomed ? MF_GRAYED : MF_ENABLED);
-    EnableMenuItem(menu, SC_MOVE, isZoomed ? MF_GRAYED : MF_ENABLED);
+    bool maximized = IsZoomed(hwnd);
+    EnableMenuItem(menu, SC_SIZE, maximized ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(menu, SC_MOVE, maximized ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(menu, SC_MINIMIZE, MF_ENABLED);
-    EnableMenuItem(menu, SC_MAXIMIZE, isZoomed ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(menu, SC_MAXIMIZE, maximized ? MF_GRAYED : MF_ENABLED);
     EnableMenuItem(menu, SC_CLOSE, MF_ENABLED);
-    EnableMenuItem(menu, SC_RESTORE, isZoomed ? MF_ENABLED : MF_GRAYED);
-    SetMenuDefaultItem(menu, isZoomed ? SC_RESTORE : SC_MAXIMIZE, FALSE);
+    EnableMenuItem(menu, SC_RESTORE, maximized ? MF_ENABLED : MF_GRAYED);
+    SetMenuDefaultItem(menu, maximized ? SC_RESTORE : SC_MAXIMIZE, FALSE);
 
     ToggleWindowStyle(hwnd, WS_VISIBLE, true);
 
