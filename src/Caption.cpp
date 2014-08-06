@@ -30,6 +30,12 @@ using namespace Gdiplus;
 #define WM_NCUAHDRAWFRAME    0xAF
 #define WM_POPUPSYSTEMMENU   0x313
 
+// When a top level window is maximized the window manager checks whether its client
+// area covers the entire screen. If it does, the manager assumes that this is a fullscreen
+// window and hides the taskbar and any topmost window. A simple workaround is to
+// expand the non-client border at the expense of client area.
+#define NON_CLIENT_BAND  1
+
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer);
@@ -367,7 +373,7 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffe
     }
 }
 
-static void DrawFrame(HWND hwnd, WindowInfo *win)
+static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge=true)
 {
     HDC hdc = GetWindowDC(hwnd);
 
@@ -381,10 +387,11 @@ static void DrawFrame(HWND hwnd, WindowInfo *win)
     ExcludeClipRect(hdc, rClient.left, rClient.top, rClient.right, rClient.bottom);
     // convert the window rectangle, from screen to window coordinates, and draw the frame
     OffsetRect(&rWindow, -rWindow.left, -rWindow.top);
-    HBRUSH br = CreateSolidBrush(win->caption->bgColor);
+    HBRUSH br = CreateSolidBrush(color);
     FillRect(hdc, &rWindow, br);
     DeleteObject(br);
-    DrawEdge(hdc, &rWindow, EDGE_RAISED, BF_RECT | BF_FLAT);
+    if (drawEdge)
+        DrawEdge(hdc, &rWindow, EDGE_RAISED, BF_RECT | BF_FLAT);
 
     ReleaseDC(hwnd, hdc);
 }
@@ -406,6 +413,11 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
         switch (msg)
         {
+        case WM_NCPAINT:
+            if (NON_CLIENT_BAND)
+                DrawFrame(hwnd, RGB(0,0,0), false);
+            break;
+
         case WM_ERASEBKGND:
             {
                 // Erase the background only under the extended frame.
@@ -428,7 +440,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 long ws = GetWindowLong(hwnd, GWL_STYLE);
                 int frameThickness = !(ws & WS_THICKFRAME) ? 0 : GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
                 int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, IsZoomed(hwnd) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
-                MARGINS margins = {0, 0, frameThickness + captionHeight, 0};
+                MARGINS margins = {0, 0, frameThickness + captionHeight, NON_CLIENT_BAND};
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
                 win->extendedFrameHeight = frameThickness + captionHeight;
             }
@@ -450,7 +462,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             break;
 
         case WM_NCPAINT:
-            DrawFrame(hwnd, win);
+            DrawFrame(hwnd, win->caption->bgColor);
             *callDef = false;
             return 0;
 
@@ -459,7 +471,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
                 win->caption->btn[i].inactive = wParam == FALSE;
             if (!IsIconic(hwnd)) {
-                DrawFrame(hwnd, win);
+                DrawFrame(hwnd, win->caption->bgColor);
                 RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
                 *callDef = false;
                 return TRUE;
@@ -468,7 +480,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
         case WM_NCUAHDRAWCAPTION:
         case WM_NCUAHDRAWFRAME:
-            DrawFrame(hwnd, win);
+            DrawFrame(hwnd, win->caption->bgColor);
             *callDef = false;
             return TRUE;
 
@@ -505,7 +517,8 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 rClient.top = rWindow.top;
             else
                 rClient.top = rWindow.top + rWindow.bottom - rClient.bottom;
-            rClient.bottom--;   // prevents the hiding of the topmost windows, when this window is maximized
+            // prevents the hiding of the topmost windows, when this window is maximized
+            rClient.bottom -= NON_CLIENT_BAND;
             *r = rClient;
             *callDef = false;
         }
