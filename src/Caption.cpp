@@ -36,6 +36,9 @@ using namespace Gdiplus;
 // expand the non-client border at the expense of client area.
 #define NON_CLIENT_BAND  1
 
+// Ordinal value of the undocumented dwmapi.dll function DwmGetColorizationParameters.
+// http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
+#define DWMGETCOLORIZATIONPARAMETERS  127
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer);
@@ -593,6 +596,12 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         win->caption->UpdateColors(hwnd == GetForegroundWindow());
         break;
 
+    case WM_DWMCOLORIZATIONCOLORCHANGED:
+        win->caption->UpdateColors(hwnd == GetForegroundWindow());
+        if (!IsIconic(hwnd))
+            RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+        break;
+
     case WM_DWMCOMPOSITIONCHANGED:
         win->caption->UpdateBackgroundAlpha();
         ClientRect cr(hwnd);
@@ -757,6 +766,7 @@ typedef HRESULT (WINAPI *DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
 typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaProc)(HWND hwnd, const MARGINS *pMarInset);
 typedef BOOL (WINAPI *DwmDefWindowProcProc)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 typedef HRESULT (WINAPI *DwmGetWindowAttributeProc)(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
+typedef HRESULT (WINAPI *DwmGetColorizationParametersProc)(DWMCOLORIZATIONPARAMS *colorParams);
 
 namespace dwm {
 
@@ -765,6 +775,7 @@ static DwmIsCompositionEnabledProc _DwmIsCompositionEnabled = NULL;
 static DwmExtendFrameIntoClientAreaProc _DwmExtendFrameIntoClientArea = NULL;
 static DwmDefWindowProcProc _DwmDefWindowProc = NULL;
 static DwmGetWindowAttributeProc _DwmGetWindowAttribute = NULL;
+static DwmGetColorizationParametersProc _DwmGetColorizationParameters = NULL;
 
 void Initialize()
 {
@@ -779,6 +790,7 @@ void Initialize()
     Load(DwmDefWindowProc);
     Load(DwmGetWindowAttribute);
 #undef Load
+    _DwmGetColorizationParameters = (DwmGetColorizationParametersProc)GetProcAddress(h, (LPCSTR)DWMGETCOLORIZATIONPARAMETERS);
 
     funcsLoaded = true;
 }
@@ -816,6 +828,14 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWOR
     if (!_DwmGetWindowAttribute)
         return E_NOTIMPL;
     return _DwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+}
+
+HRESULT GetColorizationParameters(DWMCOLORIZATIONPARAMS *colorParams)
+{
+    Initialize();
+    if (!_DwmGetColorizationParameters)
+        return E_NOTIMPL;
+    return _DwmGetColorizationParameters(colorParams);
 }
 
 };

@@ -16,6 +16,9 @@
 #ifndef SM_CXPADDEDBORDER
 #define SM_CXPADDEDBORDER 92
 #endif
+#ifndef WM_DWMCOLORIZATIONCOLORCHANGED
+#define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
+#endif
 
 // factor by how large the non-maximized caption should be in relation to the tabbar
 #define CAPTION_TABBAR_HEIGHT_FACTOR  1.25f
@@ -40,6 +43,17 @@ HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COL
 
 };
 
+struct DWMCOLORIZATIONPARAMS
+{
+    DWORD ColorizationColor; 
+    DWORD ColorizationAfterglow; 
+    DWORD ColorizationColorBalance; 
+    DWORD ColorizationAfterglowBalance; 
+    DWORD ColorizationBlurBalance; 
+    DWORD ColorizationGlassReflectionIntensity; 
+    DWORD ColorizationOpaqueBlend;
+};
+
 namespace dwm {
 
 void Initialize();
@@ -47,6 +61,7 @@ BOOL IsCompositionEnabled();
 HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset);
 BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
+HRESULT GetColorizationParameters(DWMCOLORIZATIONPARAMS *colorParams);
 
 };
 
@@ -104,7 +119,23 @@ public:
 
     void UpdateColors(bool activeWindow)
     {
-        if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+        DWMCOLORIZATIONPARAMS cp;
+        if (dwm::IsCompositionEnabled() && SUCCEEDED(dwm::GetColorizationParameters(&cp))) {
+            BYTE A, R, G, B, white;
+            A = BYTE((cp.ColorizationColor >> 24) & 0xff);
+            R = BYTE((cp.ColorizationColor >> 16) & 0xff);
+            G = BYTE((cp.ColorizationColor >> 8) & 0xff);
+            B = BYTE(cp.ColorizationColor & 0xff);
+            white = BYTE(255 - A);
+            float factor = A / 255.0f;
+            R = BYTE((int)floor(R * factor + 0.5f) + white);
+            G = BYTE((int)floor(G * factor + 0.5f) + white);
+            B = BYTE((int)floor(B * factor + 0.5f) + white);
+            bgColor = RGB(R, G, B);
+            // TODO: are these calculations correct if ColorizationOpaqueBlend == TRUE?
+            // TODO: what color to use for the inactive window state?
+        }
+        else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
             activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
                 bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
                                        : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
