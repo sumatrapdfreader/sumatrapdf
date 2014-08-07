@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SplitterWnd.h"
 
+#include "BitManip.h"
 #include "WinCursors.h"
 #include "WinUtil.h"
 
@@ -13,7 +14,7 @@
 #define SPLITTER_CLASS_NAME          L"SplitterWndClass"
 
 static HBITMAP splitterBmp = NULL;
-static HBRUSH splitterBrush = NULL;
+static HBRUSH  splitterBrush = NULL;
 
 struct SplitterWnd {
     // none of this data needs to be freed by us
@@ -24,6 +25,10 @@ struct SplitterWnd {
     COLORREF            bgCol;
     bool                isLive;
     PointI              prevResizeLinePos;
+    // if a parent clips children, DrawXorBar() doesn't work, so for
+    // non-live resize, we need to remove WS_CLIPCHILDREN style from
+    // parent and restore it when we're done
+    bool                parentClipsChildren;
 };
 
 static void OnPaint(SplitterWnd *w)
@@ -114,14 +119,22 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_LBUTTONDOWN == msg) {
         SetCapture(hwnd);
-        if (!w->isLive)
+        if (!w->isLive) {
+            if (w->parentClipsChildren) {
+                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
+            }
             DrawResizeLine(w, false, true);
+        }
         return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
-        if (!w->isLive)
+        if (!w->isLive) {
             DrawResizeLine(w, true, false);
+            if (w->parentClipsChildren) {
+                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
+            }
+        }
         ReleaseCapture();
         w->cb(w->ctx, true);
         ScheduleRepaint(w->hwnd);
@@ -183,7 +196,9 @@ SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterC
     w->type = type;
     w->bgCol = GetSysColor(COLOR_BTNFACE);
     w->isLive = true;
-    // sets w->hwnd during WM_NCCREATE
+    DWORD style = GetWindowLong(parent, GWL_STYLE);
+    w->parentClipsChildren = bit::IsMaskSet<DWORD>(style, WS_CLIPCHILDREN);
+    // w->hwnd is set during WM_NCCREATE
     CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
                            0, 0, 0, 0, parent, (HMENU)0,
                            GetModuleHandle(NULL), w);
