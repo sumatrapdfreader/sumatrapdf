@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ab292f865f2b7fc2a900c17c4e11de2e9b21c15f
+98d3ec8310839f1149fde656bd4d0f5b37dfa5c1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2933,8 +2933,12 @@ uk:Ви&гляд
 uz:&Ko'rish
 vn:Hiển thị
 :&Window
+am:&Պատուհան
 de:Fe&nster
+fi:Ikkuna
 fr:F&enêtre
+he:&חלון
+it:&Finestra
 ru:&Окно
 sk:&Okno
 :&Yes
@@ -6466,6 +6470,7 @@ es:Posición del cursor:
 et:Kursori asukoht
 eu:Kurtsorearen kokapena:
 fa:مکان نما, موقعیت
+fi:Kohdistimen sijainti:
 fr:Position du curseur :
 he:מיקום סמן:
 hr:Pozicija pokazivača:
@@ -10001,6 +10006,7 @@ es:Mantener instalado el complemento de &navegador (ahora obsoleto)
 et:Jäta alles PDF &brauseri plugin (enam ei toetata)
 eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
 fa:و نصب مرور پلاگین (پشتبانی دائمی وجود ندارد PDF نگهداری
+fi:Pidä PDF-selainlaajennus asennettuna (ei enää tuettu)
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
@@ -13887,6 +13893,7 @@ es:Selección:
 et:Valik:
 eu:Hautatpena:
 fa:انتخاب
+fi:Valinta:
 fr:Sélection :
 he:בחירה:
 hr:Odabir:
@@ -15785,6 +15792,7 @@ de:Dokumente in &Tabs öffnen
 es:Usar &pestañas
 et:Kasuta &kaarte
 eu:Erabili &hegatsak
+fi:Käytä välilehtiä
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
 id:Gunakan &tab
@@ -16568,7 +16576,7 @@ es:copiado de texto
 et:teksti kopeerimine
 eu:idazkia kopiatzen
 fa:در حال رونوشت متن
-fi:Kopioidaan tekstiä
+fi:Tekstin kopiointi
 fr:copie de texte
 ga:ag macasamhlú an téacs
 gl:copiando texto

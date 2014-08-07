@@ -743,7 +743,7 @@ const char * gTranslations_fi =
   "Asenna SumatraPDF kansioon:\0"\
   "Asentaminen ep\303\244onnistui!\0"\
   "Asennus k\303\244ynniss\303\244...\0"\
-  "\0"\
+  "Pid\303\244 PDF-selainlaajennus asennettuna (ei en\303\244\303\244 tuettu)\0"\
   "&Anna Windowsin hakutoiminnon etsi\303\244 PDF-asiakirjoista\0"\
   "Anna Windowsin n\303\244ytt\303\244\303\244 &esikatselukuvat PDF-asiakirjoille\0"\
   "Sulje %s jatkaaksesi!\0"\

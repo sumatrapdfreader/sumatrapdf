@@ -803,7 +803,7 @@ const char * gTranslations_am =
   "&\324\262\325\241\326\201 \325\251\325\270\325\262\325\266\325\245\325\254 \325\241\325\265\325\275 \325\277\325\241\326\200\325\242\325\245\326\200\325\241\325\257\325\250\0"\
   "&\325\225\325\243\325\277\325\241\325\243\325\270\326\200\325\256\325\245\325\254 \325\247\325\273\325\245\326\200\325\253 \325\253\326\200\325\241\325\257\325\241\325\266 \325\271\325\241\326\203\325\250\0"\
   "&\325\217\325\245\325\275\326\204\325\250\0"\
-  "\0"\
+  "&\325\212\325\241\325\277\325\270\326\202\325\260\325\241\325\266\0"\
   "&\324\261\325\265\325\270\0"\
   "&\325\211\325\241\326\203\325\250\0"\
   "(%d-\325\253\326\201)\0"\
@@ -4261,7 +4261,7 @@ const char * gTranslations_fi =
   "&Ohita t\303\244m\303\244 versio\0"\
   "&K\303\244yt\303\244 alkuper\303\244isi\303\244 sivukokoja\0"\
   "&N\303\244yt\303\244\0"\
-  "\0"\
+  "Ikkuna\0"\
   "&Kyll\303\244\0"\
   "&Zoomaus\0"\
   "(%d:st\303\244)\0"\
@@ -4309,7 +4309,7 @@ const char * gTranslations_fi =
   "Sivun tulkinta ep\303\244onnistui\0"\
   "Luotu:\0"\
   "Nykyinen tiedosto\0"\
-  "\0"\
+  "Kohdistimen sijainti:\0"\
   "&Mukautettu zoomaustaso...\tCtrl+Y\0"\
   "Oletus&tyyli:\0"\
   "Oletus&zoomaus:\0"\
@@ -4422,7 +4422,7 @@ const char * gTranslations_fi =
   "V&alitse kaikki\0"\
   "V&alitse kaikki\tCtrl+A\0"\
   "Valitse sis\303\244lt\303\266\303\244 Ctrl+vasemmanpuoleinen hiiren painike\0"\
-  "\0"\
+  "Valinta:\0"\
   "L\303\244&het\303\244 s\303\244hk\303\266postilla\0"\
   "Aseta k\303\244\303\244nteinen haku komentorivill\303\244\0"\
   "N\303\244yt\303\244 &Kirjanmerkit\0"\
@@ -4445,7 +4445,7 @@ const char * gTranslations_fi =
   "Tekstiasiakirjat\0"\
   "Otsikko:\0"\
   "Tuntematon l\303\244hdetiedosto (%s)\0"\
-  "\0"\
+  "K\303\244yt\303\244 v\303\244lilehti\303\244\0"\
   "N\303\244yt\303\244\0"\
   "&Vieraile ohjelman kotisivuilla\0"\
   "Varoitus\0"\
@@ -4457,7 +4457,7 @@ const char * gTranslations_fi =
   "Loitonna\0"\
   "Zoomaustaso\0"\
   "[Muutoksia tunnistettiin; p\303\244ivitet\303\244\303\244n] %s\0"\
-  "Kopioidaan teksti\303\244\0"\
+  "Tekstin kopiointi\0"\
   "tulostetaan asiakirjaa\0";
 
 const char * gTranslations_fr = 
@@ -5743,7 +5743,7 @@ const char * gTranslations_he =
   "\327\223\327\234\327\222 \327\242\327\234 \327\222\327\250\327\241\327\224 \327\226\327\225\0"\
   "\327\224\327\251\327\252\327\236\327\251 \327\221\327\236\327\231\327\223\327\225\327\252 \327\242\327\236\327\225\327\223 \327\236\327\247\327\225\327\250\327\231\327\225\327\252\0"\
   "&\327\252\327\246\327\225\327\222\327\224\0"\
-  "\0"\
+  "&\327\227\327\234\327\225\327\237\0"\
   "\327\233\327\237\0"\
   "&\327\226\327\225\327\235\0"\
   "(\327\236\327\252\327\225\327\232 %d)\0"\
@@ -6978,7 +6978,7 @@ const char * gTranslations_it =
   "&Ignora questa versione\0"\
   "&Usa larghezza pagina originale\0"\
   "&Visualizza\0"\
-  "\0"\
+  "&Finestra\0"\
   "&S\303\254\0"\
   "&Ingrandimento\0"\
   "(di %d)\0"\
