@@ -297,6 +297,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel *dm, int pageNo, int rotation)
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize()
 {
+    fprintf(stderr, "RenderCache: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
     if (maxTileSize.dx < 200 || maxTileSize.dy < 200)
         return false;
 

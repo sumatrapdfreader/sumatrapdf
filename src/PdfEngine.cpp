@@ -156,8 +156,9 @@ ProducingPaletteDone:
         fz_drop_pixmap(ctx, bgrPixmap);
     free(bmi);
 
-    if (!hbmp)
-        return NULL;
+    // return a RenderedBitmap even if hbmp is NULL so that callers can
+    // distinguish rendering errors from GDI resource exhaustion
+    // (and in the latter case retry using smaller target rectangles)
     return new RenderedBitmap(hbmp, SizeI(pixmap->w, pixmap->h));
 }
 
