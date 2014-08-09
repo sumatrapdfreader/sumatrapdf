@@ -100,6 +100,10 @@ bool Load()
     if (!file::Exists(path))
         gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
 #endif
+#ifdef DISABLE_TABS
+    if (!file::Exists(path))
+        gGlobalPrefs->useTabs = false;
+#endif
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start
