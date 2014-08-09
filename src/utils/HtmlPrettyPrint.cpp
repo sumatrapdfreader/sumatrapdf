@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "HtmlPrettyPrint.h"
+
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 
 static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, size_t nesting)

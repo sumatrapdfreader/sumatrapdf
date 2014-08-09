@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "CEpubFilter.h"
 #include "EbookDoc.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "WinUtil.h"
 

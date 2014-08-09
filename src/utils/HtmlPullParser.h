@@ -4,7 +4,7 @@
 #ifndef HtmlPullParser_h
 #define HtmlPullParser_h
 
-#include "HtmlParserLookup.h"
+enum HtmlTag;
 
 struct AttrInfo {
     const char *      name;

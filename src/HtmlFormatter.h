@@ -4,11 +4,15 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
-#include "Mui.h"
-using namespace mui;
+namespace mui {
+class ITextRender;
+enum TextRenderMethod;
+struct CachedFont;
+}
+enum AlignAttr;
+enum HtmlTag;
 
 #include "EbookBase.h"
-#include "HtmlParserLookup.h"
 using namespace Gdiplus;
 
 // Layout information for a given page is a list of
@@ -46,7 +50,7 @@ struct DrawInstr {
             const char *s;
             size_t      len;
         } str;          // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
-        CachedFont *    font;         // InstrSetFont
+        mui::CachedFont *font;        // InstrSetFont
         ImageData       img;          // InstrImage
     };
     RectF bbox; // common to most instructions
@@ -58,7 +62,7 @@ struct DrawInstr {
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char *s, size_t len, RectF bbox, bool rtl=false);
     static DrawInstr Image(char *data, size_t len, RectF bbox);
-    static DrawInstr SetFont(CachedFont *font);
+    static DrawInstr SetFont(mui::CachedFont *font);
     static DrawInstr FixedSpace(float dx);
     static DrawInstr LinkStart(const char *s, size_t len);
     static DrawInstr Anchor(const char *s, size_t len, RectF bbox);
@@ -76,7 +80,7 @@ struct StyleRule {
     Unit        textIndentUnit;
     AlignAttr   textAlign;
 
-    StyleRule() : tag(Tag_NotFound), textIndentUnit(inherit), textAlign(Align_NotFound) { }
+    StyleRule();
 
     void Merge(StyleRule& source);
 
@@ -85,7 +89,7 @@ struct StyleRule {
 };
 
 struct DrawStyle {
-    CachedFont *font;
+    mui::CachedFont *font;
     AlignAttr align;
     bool dirRtl;
 };
@@ -106,21 +110,13 @@ public:
 // just to pack args to HtmlFormatter
 class HtmlFormatterArgs {
 public:
-    HtmlFormatterArgs() :
-      pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
-      textAllocator(NULL), htmlStr(0), htmlStrLen(0),
-      reparseIdx(0), textRenderMethod(TextRenderMethodGdiplus)
-    { }
-
-    ~HtmlFormatterArgs() {
-        free(fontName);
-    }
+    HtmlFormatterArgs();
 
     REAL            pageDx;
     REAL            pageDy;
 
     void SetFontName(const WCHAR *s) {
-        str::ReplacePtr(&fontName, s);
+        fontName.Set(str::Dup(s));
     }
 
     const WCHAR *GetFontName() { return fontName; }
@@ -133,7 +129,7 @@ public:
        used to allocate this text. */
     Allocator *     textAllocator;
 
-    TextRenderMethod textRenderMethod;
+    mui::TextRenderMethod textRenderMethod;
 
     const char *    htmlStr;
     size_t          htmlStrLen;
@@ -142,7 +138,7 @@ public:
     int             reparseIdx;
 
 private:
-    WCHAR *         fontName;
+    ScopedMem<WCHAR> fontName;
 };
 
 class HtmlPullParser;
@@ -194,9 +190,9 @@ protected:
     bool  EnsureDx(float dx);
 
     DrawStyle *CurrStyle() { return &styleStack.Last(); }
-    CachedFont *CurrFont() { return CurrStyle()->font; }
+    mui::CachedFont *CurrFont() { return CurrStyle()->font; }
     void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
-    void  SetFontBasedOn(CachedFont *origFont, FontStyle fs, float fontSize=-1);
+    void  SetFontBasedOn(mui::CachedFont *origFont, FontStyle fs, float fontSize=-1);
     void  ChangeFontStyle(FontStyle fs, bool isStart);
     void  SetAlignment(AlignAttr align);
     void  RevertStyleChange();
@@ -220,7 +216,7 @@ protected:
     ScopedMem<WCHAR>    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
-    ITextRender *       textMeasure;
+    mui::ITextRender *  textMeasure;
 
     // style stack of the current line
     Vec<DrawStyle>      styleStack;
@@ -275,10 +271,10 @@ public:
     Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
-void DrawHtmlPage(Graphics *g, ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
+void DrawHtmlPage(Graphics *g, mui::ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
 
-TextRenderMethod GetTextRenderMethod();
-void SetTextRenderMethod(TextRenderMethod method);
+mui::TextRenderMethod GetTextRenderMethod();
+void SetTextRenderMethod(mui::TextRenderMethod method);
 HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator=NULL);
 
 #endif

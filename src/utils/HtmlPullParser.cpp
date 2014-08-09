@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include "HtmlPullParser.h"
 
+#include "HtmlParserLookup.h"
+
 // returns -1 if didn't find
 int HtmlEntityNameToRune(const char *name, size_t nameLen)
 {

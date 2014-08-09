@@ -13,6 +13,7 @@
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
+#include "Mui.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
@@ -395,7 +396,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
 
-    ITextRender *textDraw = TextRenderGdiplus::Create(&g);
+    mui::ITextRender *textDraw = mui::TextRenderGdiplus::Create(&g);
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
@@ -613,7 +614,7 @@ WCHAR *EbookEngine::ExtractFontList()
 {
     ScopedCritSec scope(&pagesAccess);
 
-    Vec<CachedFont *> seenFonts;
+    Vec<mui::CachedFont *> seenFonts;
     WStrVec fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
@@ -786,7 +787,7 @@ bool EpubEngineImpl::FinishLoading()
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplusQuick;
+    args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -936,7 +937,7 @@ bool Fb2EngineImpl::FinishLoading()
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplusQuick;
+    args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1051,7 +1052,7 @@ bool MobiEngineImpl::FinishLoading()
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplusQuick;
+    args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1185,7 +1186,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplusQuick;
+    args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages();
     if (!ExtractPageAnchors())
@@ -1488,7 +1489,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplusQuick;
+    args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1627,7 +1628,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplus;
+    args.textRenderMethod = mui::TextRenderMethodGdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
@@ -1743,7 +1744,7 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
-    args.textRenderMethod = TextRenderMethodGdiplus;
+    args.textRenderMethod = mui::TextRenderMethodGdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
     if (!ExtractPageAnchors())

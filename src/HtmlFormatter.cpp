@@ -6,6 +6,7 @@
 
 #include "CssParser.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"
 #include "Timer.h"
@@ -76,7 +77,7 @@ DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox, bool rtl)
     return di;
 }
 
-DrawInstr DrawInstr::SetFont(CachedFont *font)
+DrawInstr DrawInstr::SetFont(mui::CachedFont *font)
 {
     DrawInstr di(InstrSetFont);
     di.font = font;
@@ -115,6 +116,8 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     di.bbox = bbox;
     return di;
 }
+
+StyleRule::StyleRule() : tag(Tag_NotFound), textIndentUnit(inherit), textAlign(Align_NotFound) { }
 
 // parses size in the form "1em", "3pt" or "15px"
 static void ParseSizeWithUnit(const char *s, size_t len, float *size, StyleRule::Unit *unit)
@@ -167,6 +170,13 @@ void StyleRule::Merge(StyleRule& source)
     }
 }
 
+HtmlFormatterArgs::HtmlFormatterArgs() :
+    pageDx(0), pageDy(0), fontSize(0),
+    textAllocator(NULL), htmlStr(0), htmlStrLen(0),
+    reparseIdx(0), textRenderMethod(mui::TextRenderMethodGdiplus)
+{
+}
+
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     pageDx(args->pageDx), pageDy(args->pageDy),
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
@@ -186,7 +196,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     defaultFontSize = args->fontSize;
 
     DrawStyle style;
-    style.font = GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
+    style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
     style.dirRtl = false;
     styleStack.Append(style);
@@ -227,7 +237,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (fontSize < 0) {
         fontSize = CurrFont()->GetSize();
     }
-    CachedFont *newFont = GetCachedFont(fontName, fontSize, fs);
+    mui::CachedFont *newFont = mui::GetCachedFont(fontName, fontSize, fs);
     if (CurrFont() != newFont) {
         AppendInstr(DrawInstr::SetFont(newFont));
     }
@@ -237,7 +247,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     styleStack.Append(style);
 }
 
-void HtmlFormatter::SetFontBasedOn(CachedFont *font, FontStyle fs, float fontSize)
+void HtmlFormatter::SetFontBasedOn(mui::CachedFont *font, FontStyle fs, float fontSize)
 {
     const WCHAR *fontName = font->GetName();
     if (NULL == fontName)
@@ -1345,7 +1355,7 @@ Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
+void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie)
 {
     Pen debugPen(Color(255, 0, 0), 1);
     //Pen linePen(Color(0, 0, 0), 2.f);
@@ -1431,14 +1441,16 @@ void DrawHtmlPage(Graphics *g, ITextRender *textDraw, Vec<DrawInstr> *drawInstru
     }
 }
 
-static TextRenderMethod gTextRenderMethod = TextRenderMethodGdi;
-// static TextRenderMethod gTextRenderMethod = TextRenderMethodGdiplus;
+static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdi;
+// static mui::TextRenderMethod gTextRenderMethod = mui::TextRenderMethodGdiplus;
 
-TextRenderMethod GetTextRenderMethod() {
+mui::TextRenderMethod GetTextRenderMethod()
+{
     return gTextRenderMethod;
 }
 
-void SetTextRenderMethod(TextRenderMethod method) {
+void SetTextRenderMethod(mui::TextRenderMethod method)
+{
     gTextRenderMethod = method;
 }
 

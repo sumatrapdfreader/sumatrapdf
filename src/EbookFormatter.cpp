@@ -7,6 +7,7 @@ using namespace mui;
 #include "EbookFormatter.h"
 #include "EbookDoc.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 

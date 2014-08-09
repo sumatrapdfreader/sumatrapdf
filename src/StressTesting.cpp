@@ -17,6 +17,7 @@
 #include "FileUtil.h"
 #include "HtmlWindow.h"
 #include "ParseCommandLine.h"
+#include "Mui.h"
 #include "RenderCache.h"
 #include "SimpleLog.h"
 #include "Search.h"
