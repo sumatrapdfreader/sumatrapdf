@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import os
 from metadata import Struct, Field, String, WString, I32, Array, Compact
-from gen_txt import gen_for_top_level_vals, set_whitespace
+from gen_txt import gen_for_top_level_vals
 
 import sys
-sys.path.append("scripts") # assumes is being run as ./scrpts/metadata/gen_mui.py
+sys.path.append("scripts")  # assumes is being run as ./scrpts/metadata/gen_mui.py
 import util
 
 g_script_dir = os.path.realpath(os.path.dirname(__file__))
@@ -48,8 +48,8 @@ class EbookPageDef(Struct):
 class DirectionalLayoutDataDef(Struct):
     fields = [
         Field("controlName", String(None)),
-        Field("sla", String(None)), # this is really a float
-        Field("snla", String(None)), # this is really a float
+        Field("sla", String(None)),  # this is really a float
+        Field("snla", String(None)),  # this is really a float
         Field("align", String(None)),
     ]
 

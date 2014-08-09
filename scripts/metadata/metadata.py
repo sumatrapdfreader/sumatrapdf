@@ -3,20 +3,20 @@ import types
 def is_valid_signed(bits, val):
     if type(val) not in (types.IntType, types.LongType): return False
     e = bits - 1
-    min_val = -(2**e)
+    min_val = -(2 ** e)
     if val < min_val: return False
-    max_val = (2**e)-1
+    max_val = (2 ** e) - 1
     if val > max_val: return False
     return True
 
 def is_valid_unsigned(bits, val):
     if type(val) not in (types.IntType, types.LongType): return False
     if val < 0: return False
-    if val > 2**bits: return False
+    if val > 2 ** bits: return False
     return True
 
 def is_valid_string(val):
-    if val == None: return True
+    if val is None: return True
     return type(val) in (types.StringType, types.UnicodeType)
 
 class Type(object):
@@ -29,7 +29,7 @@ class Type(object):
         self.val = val
 
     def c_type(self):
-        if self.c_type_override != None:
+        if self.c_type_override is not None:
             return self.c_type_override
         return self.c_type_class
 
@@ -257,4 +257,3 @@ class Field(object):
                 s = s + " | TYPE_STORE_COMPACT_MASK"
             return s + ")"
         return type_enum
-
