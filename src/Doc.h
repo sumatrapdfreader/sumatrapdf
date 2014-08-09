@@ -16,7 +16,10 @@ class MobiDoc;
 
 struct ImageData;
 enum DocumentProperty;
+enum PdbDocType;
 class EbookTocVisitor;
+class HtmlFormatter;
+class HtmlFormatterArgs;
 
 enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi };
 enum DocError { Error_None, Error_Unknown };
@@ -62,15 +65,12 @@ public:
     // note: find a better name, if possible
     bool IsNone() const { return Doc_None == type; }
     bool IsDocLoaded() const { return !IsNone(); }
+    DocType Type() const { return type; }
 
     bool LoadingFailed() const {
         CrashIf(error && !IsNone());
         return error != Error_None;
     }
-
-    EpubDoc *AsEpub() const;
-    Fb2Doc *AsFb2() const;
-    MobiDoc *AsMobi() const;
 
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement
@@ -82,6 +82,8 @@ public:
     ImageData *GetCoverImage() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor) const;
+    PdbDocType GetPdbDocType() const;
+    HtmlFormatter *CreateFormatter(HtmlFormatterArgs *args) const;
 
     static Doc CreateFromFile(const WCHAR *filePath);
     static bool IsSupportedFile(const WCHAR *filePath, bool sniff=false);

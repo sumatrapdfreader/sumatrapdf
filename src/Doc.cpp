@@ -5,6 +5,7 @@
 #include "Doc.h"
 
 #include "EbookDoc.h"
+#include "EbookFormatter.h"
 #include "MobiDoc.h"
 
 Doc::Doc(const Doc& other)
@@ -81,27 +82,6 @@ void Doc::Clear()
     generic = NULL;
     error = Error_None;
     filePath.Set(NULL);
-}
-
-MobiDoc *Doc::AsMobi() const
-{
-    if (Doc_Mobi == type)
-        return mobiDoc;
-    return NULL;
-}
-
-EpubDoc *Doc::AsEpub() const
-{
-    if (Doc_Epub == type)
-        return epubDoc;
-    return NULL;
-}
-
-Fb2Doc *Doc::AsFb2() const
-{
-    if (Doc_Fb2 == type)
-        return fb2Doc;
-    return NULL;
 }
 
 // the caller should make sure there is a document object
@@ -237,6 +217,29 @@ bool Doc::ParseToc(EbookTocVisitor *visitor) const
         return mobiDoc->ParseToc(visitor);
     default:
         return false;
+    }
+}
+
+PdbDocType Doc::GetPdbDocType() const
+{
+    if (Doc_Mobi == type)
+        return mobiDoc->GetDocType();
+    CrashIf(true);
+    return Pdb_Unknown;
+}
+
+HtmlFormatter *Doc::CreateFormatter(HtmlFormatterArgs *args) const
+{
+    switch (type) {
+    case Doc_Epub:
+        return new EpubFormatter(args, epubDoc);
+    case Doc_Fb2:
+        return new Fb2Formatter(args, fb2Doc);
+    case Doc_Mobi:
+        return new MobiFormatter(args, mobiDoc);
+    default:
+        CrashIf(true);
+        return NULL;
     }
 }
 

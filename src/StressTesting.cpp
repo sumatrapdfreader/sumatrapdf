@@ -131,7 +131,7 @@ static int FormatWholeDoc(Doc& doc) {
     PoolAllocator textAllocator;
     HtmlFormatterArgs *formatterArgs = CreateFormatterArgsDoc(doc, PAGE_DX, PAGE_DY, &textAllocator);
 
-    HtmlFormatter *formatter = CreateFormatter(doc, formatterArgs);
+    HtmlFormatter *formatter = doc.CreateFormatter(formatterArgs);
     int nPages = 0;
     for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         delete pd;

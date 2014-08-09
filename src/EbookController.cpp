@@ -9,8 +9,8 @@
 #include "DebugLog.h"
 #include "EbookControls.h"
 #include "EbookDoc.h"
-#include "EbookFormatter.h"
 #include "GdiPlusUtil.h"
+#include "HtmlFormatter.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 #include "ThreadUtil.h"
@@ -39,18 +39,6 @@ HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *te
     args->SetFontName(GetFontName());
     args->fontSize = GetFontSize();
     return args;
-}
-
-HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
-{
-    if (doc.AsEpub())
-        return new EpubFormatter(args, doc.AsEpub());
-    if (doc.AsFb2())
-        return new Fb2Formatter(args, doc.AsFb2());
-    if (doc.AsMobi())
-        return new MobiFormatter(args, doc.AsMobi());
-    CrashIf(true);
-    return NULL;
 }
 
 class EbookTocDest : public DocTocItem, public PageDestination {
@@ -148,7 +136,7 @@ bool EbookFormattingThread::Format()
     int totalPageCount = 0;
     formatterArgs->reparseIdx = 0;
     pagesAfterReparseIdx = 0;
-    HtmlFormatter *formatter = CreateFormatter(doc, formatterArgs);
+    HtmlFormatter *formatter = doc.CreateFormatter(formatterArgs);
     for (HtmlPage *pd = formatter->Next(); pd; pd = formatter->Next()) {
         if (WasCancelRequested()) {
             //lf("layout cancelled");
@@ -403,7 +391,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr *link)
         return;
     }
 
-    if (_doc.AsEpub() && pages && (size_t)pageNo <= pages->Count()) {
+    if (Doc_Epub == _doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
         // normalize the URL by combining it with the chapter's base path
         for (int j = pageNo; j > 0; j--) {
             HtmlPage *p = pages->At(j - 1);
@@ -571,7 +559,7 @@ static RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
     TextRenderMethod renderMethod = args->textRenderMethod;
-    HtmlFormatter *formatter = CreateFormatter(doc, args);
+    HtmlFormatter *formatter = doc.CreateFormatter(args);
     HtmlPage *pd = formatter->Next();
     delete formatter;
     delete args;
@@ -684,7 +672,7 @@ void EbookController::ExtractPageAnchors()
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag())
             continue;
         AttrInfo *attr = tok->GetAttrByName("id");
-        if (!attr && Tag_A == tok->tag && !_doc.AsFb2())
+        if (!attr && Tag_A == tok->tag && _doc.Type() != Doc_Fb2)
             attr = tok->GetAttrByName("name");
         if (attr) {
             ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
@@ -695,13 +683,13 @@ void EbookController::ExtractPageAnchors()
         if (Tag_Pagebreak == tok->tag &&
             (attr = tok->GetAttrByName("page_path")) != NULL &&
             str::StartsWith(attr->val + attr->valLen, "\" page_marker />")) {
-            CrashIf(!_doc.AsEpub());
+            CrashIf(_doc.Type() != Doc_Epub);
             epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Dup(epubPagePath));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // create FB2 title anchors (cf. Fb2Doc::ParseToc)
-        if (Tag_Title == tok->tag && tok->IsStartTag() && _doc.AsFb2()) {
+        if (Tag_Title == tok->tag && tok->IsStartTag() && Doc_Fb2 == _doc.Type()) {
             ScopedMem<WCHAR> id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
             pageAnchorIds->Append(id.StealData());
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
@@ -714,7 +702,7 @@ int EbookController::ResolvePageAnchor(const WCHAR *id)
     ExtractPageAnchors();
 
     int reparseIdx = -1;
-    if (_doc.AsMobi() && str::Parse(id, L"%d%$", &reparseIdx) &&
+    if (Doc_Mobi == _doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) &&
         0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
         return reparseIdx;
@@ -723,7 +711,7 @@ int EbookController::ResolvePageAnchor(const WCHAR *id)
     int idx = pageAnchorIds->Find(id);
     if (idx != -1)
         return pageAnchorIdxs->At(idx);
-    if (!_doc.AsEpub() || !str::FindChar(id, '#'))
+    if (_doc.Type() != Doc_Epub || !str::FindChar(id, '#'))
         return -1;
 
     ScopedMem<WCHAR> chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
@@ -803,7 +791,7 @@ void EbookController::ScrollToLink(PageDestination *dest)
 PageDestination *EbookController::GetNamedDest(const WCHAR *name)
 {
     int reparseIdx = -1;
-    if (_doc.AsMobi() && str::Parse(name, L"%d%$", &reparseIdx) &&
+    if (Doc_Mobi == _doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) &&
         0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
     }

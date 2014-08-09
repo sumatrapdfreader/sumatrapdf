@@ -892,7 +892,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
     else if (!engine && Doc::IsSupportedFile(filePath)) {
         Doc doc = Doc::CreateFromFile(filePath);
         // don't load PalmDoc, etc. files as long as they're not correctly formatted
-        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
+        if (Doc_Mobi == doc.Type() && Pdb_Mobipocket != doc.GetPdbDocType())
             doc.Delete();
         else if (doc.IsDocLoaded()) {
             ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
@@ -2351,8 +2351,12 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
     else if (ctrl->AsChm())
         type = Engine_Chm2;
     else if (ctrl->AsEbook()) {
-        const Doc *doc = ctrl->AsEbook()->doc();
-        type = doc->AsEpub() ? Engine_Epub : doc->AsFb2() ? Engine_Fb2 : doc->AsMobi() ? Engine_Mobi : Engine_None;
+        switch (ctrl->AsEbook()->doc()->Type()) {
+        case Doc_Epub: type = Engine_Epub; break;
+        case Doc_Fb2:  type = Engine_Fb2;  break;
+        case Doc_Mobi: type = Engine_Mobi; break;
+        default: type = Engine_None; break;
+        }
     }
     switch (type) {
         case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
