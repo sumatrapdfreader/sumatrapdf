@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "HtmlPullParser.h"
+#include "HtmlParserLookup.h"
 
 // must be last due to assert() over-write
 #include "UtAssert.h"
