@@ -96,61 +96,12 @@ public:
     BYTE        bgAlpha;
     bool        isMenuOpen;
 
-    CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(NULL), isMenuOpen(false) {
-        UpdateTheme();
-        UpdateColors(true);
-        UpdateBackgroundAlpha();
-    }
+    CaptionInfo(HWND hwndCaption);
+    ~CaptionInfo();
 
-    ~CaptionInfo() {
-        if (theme)
-            vss::CloseThemeData(theme);
-    }
-
-    void UpdateTheme()
-    {
-        if (theme) {
-            vss::CloseThemeData(theme);
-            theme = NULL;
-        }
-        if (vss::IsThemeActive())
-            theme = vss::OpenThemeData(hwnd, L"WINDOW");
-    }
-
-    void UpdateColors(bool activeWindow)
-    {
-        DWMCOLORIZATIONPARAMS cp;
-        if (dwm::IsCompositionEnabled() && SUCCEEDED(dwm::GetColorizationParameters(&cp))) {
-            BYTE A, R, G, B, white;
-            A = BYTE((cp.ColorizationColor >> 24) & 0xff);
-            R = BYTE((cp.ColorizationColor >> 16) & 0xff);
-            G = BYTE((cp.ColorizationColor >> 8) & 0xff);
-            B = BYTE(cp.ColorizationColor & 0xff);
-            white = BYTE(255 - A);
-            float factor = A / 255.0f;
-            R = BYTE((int)floor(R * factor + 0.5f) + white);
-            G = BYTE((int)floor(G * factor + 0.5f) + white);
-            B = BYTE((int)floor(B * factor + 0.5f) + white);
-            bgColor = RGB(R, G, B);
-            // TODO: are these calculations correct if ColorizationOpaqueBlend == TRUE?
-            // TODO: what color to use for the inactive window state?
-        }
-        else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
-            activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
-                bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
-                                       : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
-        }
-        if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
-            activeWindow ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
-                textColor = activeWindow ? GetSysColor(COLOR_CAPTIONTEXT)
-                                         : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
-        }
-    }
-
-    void UpdateBackgroundAlpha()
-    {
-        bgAlpha = dwm::IsCompositionEnabled() ? 0 : 255;
-    }
+    void UpdateTheme();
+    void UpdateColors(bool activeWindow);
+    void UpdateBackgroundAlpha();
 };
 
 #endif

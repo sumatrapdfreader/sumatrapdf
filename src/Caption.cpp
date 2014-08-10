@@ -45,6 +45,63 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffe
 static HMENU GetUpdatedSystemMenu(HWND hwnd);
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
 
+CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(NULL), isMenuOpen(false) {
+    UpdateTheme();
+    UpdateColors(true);
+    UpdateBackgroundAlpha();
+}
+
+CaptionInfo::~CaptionInfo() {
+    if (theme)
+        vss::CloseThemeData(theme);
+}
+
+void CaptionInfo::UpdateBackgroundAlpha()
+{
+    bgAlpha = dwm::IsCompositionEnabled() ? 0 : 255;
+}
+
+void CaptionInfo::UpdateTheme()
+{
+    if (theme) {
+        vss::CloseThemeData(theme);
+        theme = NULL;
+    }
+    if (vss::IsThemeActive())
+        theme = vss::OpenThemeData(hwnd, L"WINDOW");
+}
+
+void CaptionInfo::UpdateColors(bool activeWindow)
+{
+    DWMCOLORIZATIONPARAMS cp;
+    if (dwm::IsCompositionEnabled() && SUCCEEDED(dwm::GetColorizationParameters(&cp))) {
+        BYTE A, R, G, B, white;
+        A = BYTE((cp.ColorizationColor >> 24) & 0xff);
+        R = BYTE((cp.ColorizationColor >> 16) & 0xff);
+        G = BYTE((cp.ColorizationColor >> 8) & 0xff);
+        B = BYTE(cp.ColorizationColor & 0xff);
+        white = BYTE(255 - A);
+        float factor = A / 255.0f;
+        R = BYTE((int)floor(R * factor + 0.5f) + white);
+        G = BYTE((int)floor(G * factor + 0.5f) + white);
+        B = BYTE((int)floor(B * factor + 0.5f) + white);
+        bgColor = RGB(R, G, B);
+        // TODO: are these calculations correct if ColorizationOpaqueBlend == TRUE?
+        // TODO: what color to use for the inactive window state?
+    }
+    else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+        activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
+            bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
+                                    : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
+    }
+    if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+        activeWindow ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
+            textColor = activeWindow ? GetSysColor(COLOR_CAPTIONTEXT)
+                                        : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+    }
+}
+
+
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -672,8 +729,6 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     DestroyMenu(popup);
 }
 
-
-
 typedef HTHEME (WINAPI *OpenThemeDataProc)(HWND hwnd, LPCWSTR pszClassList);
 typedef HRESULT (WINAPI *CloseThemeDataProc)(HTHEME hTheme);
 typedef HRESULT (WINAPI *DrawThemeBackgroundProc)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
@@ -759,8 +814,6 @@ HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COL
 }
 
 };
-
-
 
 typedef HRESULT (WINAPI *DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
 typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaProc)(HWND hwnd, const MARGINS *pMarInset);
