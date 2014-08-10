@@ -11,7 +11,6 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-
 #define CUSTOM_CAPTION_CLASS_NAME  L"CustomCaption"
 #define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
 
@@ -100,8 +99,6 @@ void CaptionInfo::UpdateColors(bool activeWindow)
                                         : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
 }
-
-
 
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -356,12 +353,10 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
         stateId = CBS_NORMAL;
 
     // draw system button
-    if (win->caption->theme) {
-        if (partId) {
-            if (vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
-                PaintCaptionBackground(memDC, win, false);
-            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &item->rcItem, NULL);
-        }
+    if (win->caption->theme && partId != 0) {
+        if (vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
+            PaintCaptionBackground(memDC, win, false);
+        vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &item->rcItem, NULL);
     }
     else if (state != (UINT)-1)
         DrawFrameControl(memDC, &item->rcItem, DFC_CAPTION, state);
@@ -374,7 +369,12 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
         if (CBS_PUSHED != stateId && ODS_FOCUS & item->itemState)
             stateId = CBS_HOT;
 
-        BYTE buttonRGB = CBS_PUSHED == stateId ? 0 : CBS_HOT == stateId ? 255 : 1;
+        BYTE buttonRGB = 1;
+        if (CBS_PUSHED == stateId)
+            buttonRGB = 0;
+        else if (CBS_HOT == stateId)
+            buttonRGB = 255;
+
         if (buttonRGB != 1) {
             // paint the background
             if (GetLightness(win->caption->textColor) > GetLightness(win->caption->bgColor))
