@@ -955,7 +955,7 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
         ScopedMem<char> link(ResolveNamedDest(urlUtf8));
         els->Append(new DjVuLink(pageNo, rect, link ? link : urlUtf8, commentUtf8));
     }
-    free(links);
+    ddjvu_free(links);
 
     return els;
 }

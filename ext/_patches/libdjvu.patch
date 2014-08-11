@@ -1,6 +1,6 @@
 diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
 --- libdjvu.orig\ddjvuapi.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\ddjvuapi.cpp	Mon Jul 21 01:38:09 2014
++++ libdjvu\ddjvuapi.cpp	Mon Aug 11 14:45:43 2014
 @@ -1051,10 +1051,49 @@
                                         int cache)
  {
@@ -64,9 +64,20 @@ diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
      }
    // Access annotation data
    return get_bytestream_anno(file->get_merged_anno());
+@@ -4090,5 +4131,10 @@
+ {
+   return document->doc;
+ }
+ 
+ 
++/* SumatraPDF: access to free() mirroring malloc() above */
++void ddjvu_free(void *ptr)
++{
++  free(ptr);
++}
 diff -rPu5 libdjvu.orig\ddjvuapi.h libdjvu\ddjvuapi.h
 --- libdjvu.orig\ddjvuapi.h	Tue May 08 04:56:53 2012
-+++ libdjvu\ddjvuapi.h	Mon Jul 21 01:38:09 2014
++++ libdjvu\ddjvuapi.h	Mon Aug 11 14:49:17 2014
 @@ -528,10 +528,22 @@
  DDJVUAPI ddjvu_document_t *
  ddjvu_document_create_by_filename_utf8(ddjvu_context_t *context,
@@ -90,6 +101,17 @@ diff -rPu5 libdjvu.orig\ddjvuapi.h libdjvu\ddjvuapi.h
     In fact <ddjvu_document_t> is a subclass of <ddjvu_job_t>
     and this function is a type cast. */
  
+@@ -1673,7 +1685,10 @@
+ DDJVUAPI GP<DjVuDocument>
+ ddjvu_get_DjVuDocument(ddjvu_document_t *document);
+ #  endif
+ # endif
+ #endif
++
++/* SumatraPDF: implementation of <free> mentioned above */
++void ddjvu_free(void *ptr);
+ 
+ #endif /* DDJVUAPI_H */
 diff -rPu5 libdjvu.orig\djvu_all.cpp libdjvu\djvu_all.cpp
 --- libdjvu.orig\djvu_all.cpp	Thu Jan 01 01:00:00 1970
 +++ libdjvu\djvu_all.cpp	Tue May 14 21:21:21 2013

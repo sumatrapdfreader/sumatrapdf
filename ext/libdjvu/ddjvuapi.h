@@ -1688,4 +1688,7 @@ ddjvu_get_DjVuDocument(ddjvu_document_t *document);
 # endif
 #endif
 
+/* SumatraPDF: implementation of <free> mentioned above */
+void ddjvu_free(void *ptr);
+
 #endif /* DDJVUAPI_H */

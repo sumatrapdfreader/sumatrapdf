@@ -65,6 +65,7 @@ EXPORTS
 	ddjvu_format_create
 	ddjvu_format_release
 	ddjvu_format_set_row_order
+	ddjvu_free
 	ddjvu_job_release
 	ddjvu_job_status
 	ddjvu_message_peek

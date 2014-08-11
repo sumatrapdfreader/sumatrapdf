@@ -4133,3 +4133,8 @@ ddjvu_get_DjVuDocument(ddjvu_document_t *document)
 }
 
 
+/* SumatraPDF: access to free() mirroring malloc() above */
+void ddjvu_free(void *ptr)
+{
+  free(ptr);
+}
