@@ -88,14 +88,13 @@ bool             gUseGdiRenderer = false;
 // embedded (e.g. in a web browser)
 WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-//#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00) // yellow
+// "SumatraPDF yellow" similar to the one use for icon and installer
+#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
 
 // it's very light gray but not white so that there's contrast between
 // background and thumbnail, which often have white background because
 // most PDFs have white background
-#define ABOUT_BG_LOGO_COLOR     RGB(0xf2,0xf2,0xf2);
-
-#define ABOUT_BG_GRAY_COLOR     RGB(0xCC, 0xCC, 0xCC)
+#define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
 
 // Background color comparison:
 // Adobe Reader X   0x565656 without any frame border

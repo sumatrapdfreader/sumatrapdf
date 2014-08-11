@@ -121,21 +121,23 @@ static bool RegisterWinClass()
     return true;
 }
 
+// returns the background color for the "SumatraPDF" logo in start page and About window
 COLORREF GetLogoBgColor()
 {
-    COLORREF bgColor = ABOUT_BG_LOGO_COLOR;
+#ifdef ABOUT_USE_LESS_COLORS
+    return ABOUT_BG_LOGO_COLOR;
+#else
+    return GetAboutBgColor();
+#endif
+}
+
+// returns the background color for start page, About window and Properties dialog
+COLORREF GetAboutBgColor()
+{
+    COLORREF bgColor = ABOUT_BG_GRAY_COLOR;
     if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground)
         bgColor = gGlobalPrefs->mainWindowBackground;
     return bgColor;
-}
-
-COLORREF GetAboutBgColor()
-{
-#ifdef ABOUT_USE_LESS_COLORS
-    return ABOUT_BG_GRAY_COLOR;
-#else
-    return GetLogoBgColor();
-#endif
 }
 
 COLORREF GetNoDocBgColor()
