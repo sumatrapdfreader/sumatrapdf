@@ -3499,10 +3499,9 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 {
-    if (key >= 0x100 && info) {
+    if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
-        UINT vsc = (info >> 16) & 0xFF;
-        UINT vk = MapVirtualKey(vsc, MAPVK_VSC_TO_VK);
+        UINT vk = MapVirtualKey((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
         if ('A' <= vk && vk <= 'Z')
             key = vk;
     }
