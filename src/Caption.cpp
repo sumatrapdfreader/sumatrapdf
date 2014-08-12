@@ -551,9 +551,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_SETCURSOR:
         case WM_SETTEXT:
         case WM_SETICON:
-            if (!win->caption->theme) {
+            if (!win->caption->theme && IsWindowVisible(hwnd)) {
                 // Remove the WS_VISIBLE style to prevent DefWindowProc from drawing
                 // in the caption's area when processing these mesages.
+                // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
                 ToggleWindowStyle(hwnd, WS_VISIBLE, false);
                 LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
                 ToggleWindowStyle(hwnd, WS_VISIBLE, true);
