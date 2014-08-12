@@ -3497,8 +3497,16 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     return true;
 }
 
-static void FrameOnChar(WindowInfo& win, WPARAM key)
+static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 {
+    if (key >= 0x100 && info) {
+        // determine the intended keypress by scan code for non-Latin keyboard layouts
+        UINT vsc = (info >> 16) & 0xFF;
+        UINT vk = MapVirtualKey(vsc, MAPVK_VSC_TO_VK);
+        if ('A' <= vk && vk <= 'Z')
+            key = vk;
+    }
+
     if (IsCharUpper((WCHAR)key))
         key = (WCHAR)CharLower((LPWSTR)(WCHAR)key);
 
@@ -4295,7 +4303,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_CHAR:
             if (win)
-                FrameOnChar(*win, wParam);
+                FrameOnChar(*win, wParam, lParam);
             break;
 
         case WM_KEYDOWN:
