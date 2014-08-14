@@ -4,12 +4,13 @@
 #include "BaseUtil.h"
 #include "Caption.h"
 
-using namespace Gdiplus;
 #include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+
+using namespace Gdiplus;
 
 #define CUSTOM_CAPTION_CLASS_NAME  L"CustomCaption"
 #define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"

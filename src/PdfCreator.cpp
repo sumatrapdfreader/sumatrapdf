@@ -12,7 +12,6 @@ extern "C" {
 #include "PdfCreator.h"
 
 #include "BaseEngine.h"
-using namespace Gdiplus;
 #include "GdiplusUtil.h"
 
 #include <zlib.h>

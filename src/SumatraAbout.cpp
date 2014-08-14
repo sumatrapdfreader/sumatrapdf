@@ -128,8 +128,8 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
-
     ScopedHdcSelect selFont(hdc, fontSumatraTxt);
+
     SIZE txtSize;
     /* calculate minimal top box size */
     const WCHAR *txt = APP_NAME_STR;
@@ -179,7 +179,6 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-
     ScopedGdiObj<HPEN> penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
     ScopedHdcSelect font(hdc, fontLeftTxt);
 

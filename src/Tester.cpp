@@ -5,19 +5,16 @@
    executable and related makefile additions for each test, we have one test
    driver which dispatches desired test based on cmd-line arguments. */
 
-#include "Mui.h"
-
-using namespace mui;
-
+#include "BaseUtil.h"
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
+#include "Mui.h"
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"

@@ -498,13 +498,14 @@ static inline Gdiplus::Color FromColor(PageAnnotation::Color c)
 
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen)
 {
+    using namespace Gdiplus;
+
     if (!bmp || userAnnots.Count() == 0)
         return;
 
     HDC hdc = CreateCompatibleDC(NULL);
     {
-        ScopedHdcSelect bmp(hdc, bmp->GetBitmap());
-        using namespace Gdiplus;
+        ScopedHdcSelect bmpScope(hdc, bmp->GetBitmap());
         Graphics g(hdc);
         g.SetCompositingQuality(CompositingQualityHighQuality);
         g.SetPageUnit(UnitPixel);

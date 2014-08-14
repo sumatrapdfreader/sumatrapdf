@@ -3,7 +3,6 @@
 
 #include "Mui.h"
 
-using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
