@@ -1544,7 +1544,7 @@ const char * gTranslations_bs =
   "&Propusti ovu verziju.\0"\
   "Koristi &originalne veli\304\215ine stranica\0"\
   "&Prikaz\0"\
-  "\0"\
+  "&Prozor\0"\
   "&Da\0"\
   "&Uve\304\207aj\0"\
   "(od %d)\0"\
@@ -1728,7 +1728,7 @@ const char * gTranslations_bs =
   "Tekstualni dokumenti\0"\
   "Naslov:\0"\
   "Nepoznat izvorni fajl (%s)\0"\
-  "\0"\
+  "Koristi &tabove\0"\
   "Prikaz\0"\
   "&Posjeti web stranicu\0"\
   "Upozorenje\0"\

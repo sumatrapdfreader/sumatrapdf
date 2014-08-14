@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-98d3ec8310839f1149fde656bd4d0f5b37dfa5c1
+0baabb24b884c69a3176a703b8156e419354a29c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2934,6 +2934,7 @@ uz:&Ko'rish
 vn:Hiển thị
 :&Window
 am:&Պատուհան
+bs:&Prozor
 de:Fe&nster
 fi:Ikkuna
 fr:F&enêtre
@@ -15787,6 +15788,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
 am:Ավելացնել &ներդիրներ
+bs:Koristi &tabove
 cn:使用标签页(&T)
 de:Dokumente in &Tabs öffnen
 es:Usar &pestañas
