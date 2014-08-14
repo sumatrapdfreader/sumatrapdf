@@ -35,9 +35,10 @@ class RenderedBitmap {
 protected:
     HBITMAP hbmp;
     SizeI size;
+    ScopedHandle hMap;
 
 public:
-    RenderedBitmap(HBITMAP hbmp, SizeI size) : hbmp(hbmp), size(size) { }
+    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap=NULL) : hbmp(hbmp), size(size), hMap(hMap) { }
     ~RenderedBitmap() { DeleteObject(hbmp); }
 
     RenderedBitmap *Clone() const {

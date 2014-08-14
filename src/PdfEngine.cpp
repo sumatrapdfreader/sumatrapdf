@@ -77,19 +77,18 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
 
-    BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    ScopedMem<BITMAPINFO> bmi((BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)));
 
     // always try to produce an 8-bit palette for saving some memory
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
-    if (!bmpData) {
-        free(bmi);
+    if (!bmpData)
         return NULL;
-    }
     fz_pixmap *bgrPixmap = NULL;
     if (bmpData && pixmap->n == 4 &&
         pixmap->colorspace == fz_device_rgb(ctx)) {
         unsigned char *dest = bmpData;
         unsigned char *source = pixmap->samples;
+        RGBQUAD *palette = bmi.Get()->bmiColors;
 
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
@@ -103,13 +102,13 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
                 /* find this color in the palette */
                 int k;
                 for (k = 0; k < paletteSize; k++)
-                    if (*(int *)&bmi->bmiColors[k] == *(int *)&c)
+                    if (*(int *)&palette[k] == *(int *)&c)
                         break;
                 /* add it to the palette if it isn't in there and if there's still space left */
                 if (k == paletteSize) {
                     if (k >= 256)
                         goto ProducingPaletteDone;
-                    *(int *)&bmi->bmiColors[paletteSize] = *(int *)&c;
+                    *(int *)&palette[paletteSize] = *(int *)&c;
                     paletteSize++;
                 }
                 /* 8-bit data consists of indices into the color palette */
@@ -130,36 +129,43 @@ ProducingPaletteDone:
             fz_convert_pixmap(ctx, bgrPixmap, pixmap);
         }
         fz_catch(ctx) {
-            free(bmi);
             return NULL;
         }
     }
     AssertCrash(hasPalette || bgrPixmap);
 
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = w;
-    bmi->bmiHeader.biHeight = -h;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biBitCount = hasPalette ? 8 : 32;
-    bmi->bmiHeader.biSizeImage = h * (hasPalette ? rows8 : w * 4);
-    bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
+    BITMAPINFOHEADER *bmih = &bmi.Get()->bmiHeader;
+    bmih->biSize = sizeof(*bmih);
+    bmih->biWidth = w;
+    bmih->biHeight = -h;
+    bmih->biPlanes = 1;
+    bmih->biCompression = BI_RGB;
+    bmih->biBitCount = hasPalette ? 8 : 32;
+    bmih->biSizeImage = h * (hasPalette ? rows8 : w * 4);
+    bmih->biClrUsed = hasPalette ? paletteSize : 0;
 
+#if 1
+    void *data = NULL;
+    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmih->biSizeImage, NULL);
+    HBITMAP hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    if (hbmp)
+        memcpy(data, hasPalette ? bmpData : bgrPixmap->samples, bmih->biSizeImage);
+#else
+    HANDLE hMap = NULL;
     HDC hDC = GetDC(NULL);
-    HBITMAP hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
-        hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
+    HBITMAP hbmp = CreateDIBitmap(hDC, bmih, CBM_INIT, hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
+#endif
 
     if (hasPalette)
         free(bmpData);
     else
         fz_drop_pixmap(ctx, bgrPixmap);
-    free(bmi);
 
     // return a RenderedBitmap even if hbmp is NULL so that callers can
     // distinguish rendering errors from GDI resource exhaustion
     // (and in the latter case retry using smaller target rectangles)
-    return new RenderedBitmap(hbmp, SizeI(pixmap->w, pixmap->h));
+    return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
 }
 
 fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
