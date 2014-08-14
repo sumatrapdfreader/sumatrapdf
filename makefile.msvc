@@ -306,10 +306,6 @@ PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_TGA_PREVIEW"
 
 CJK_FALLBACK_FONT = $(MUPDF_DIR)\resources\fonts\droid\DroidSansFallback.ttf
 
-INSTALLER_PAYLOAD = \
-	$(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL) $(CJK_FALLBACK_FONT) \
-	$(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
-
 ##### SumatraPDF-specific build rules #####
 
 rebuild: clean all_sumatrapdf
@@ -359,10 +355,8 @@ $(LIBMUPDF_DLL): $(FORMAT_LIBS) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
 
 $(LIBMUPDF_LIB): $(LIBMUPDF_DLL)
 
-$(INSTALLER_DATA): $(INSTALLER_PAYLOAD) $(MAKELZSA_APP)
+$(INSTALLER_DATA): $(MAKELZSA_APP) $(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL) $(CJK_FALLBACK_FONT) $(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
 	$(MAKELZSA_APP) $@ $(SUMATRA_APP_NO_MUPDF):SumatraPDF.exe $(LIBMUPDF_DLL):libmupdf.dll $(CJK_FALLBACK_FONT):DroidSansFallback.ttf $(PDFFILTER_DLL):PdfFilter.dll $(PDFPREVIEW_DLL):PdfPreview.dll $(UNINSTALLER_APP):uninstall.exe
-# temporary: verify installer data integrity
-	$(MAKELZSA_APP) $@
 
 $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
 	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
