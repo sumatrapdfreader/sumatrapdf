@@ -32,7 +32,7 @@ static TxtNode *AllocTxtNode(Allocator *allocator, TxtNodeType nodeType)
     void *p = Allocator::AllocZero(allocator, sizeof(TxtNode));
     TxtNode *node = new (p) TxtNode(nodeType);
     if (TextNode != nodeType) {
-        p = allocator->Alloc(sizeof(Vec<TxtNode*>));
+        p = Allocator::AllocZero(allocator, sizeof(Vec<TxtNode*>));
         node->children = new (p) Vec<TxtNode*>(0, allocator);
     }
     return node;
