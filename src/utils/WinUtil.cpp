@@ -156,6 +156,13 @@ bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const 
     return ERROR_SUCCESS == res;
 }
 
+bool ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD& value)
+{
+    DWORD size = sizeof(DWORD);
+    LSTATUS res = SHGetValue(keySub, keyName, valName, NULL, &value, &size);
+    return ERROR_SUCCESS == res && sizeof(DWORD) == size;
+}
+
 bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value)
 {
     LSTATUS res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));

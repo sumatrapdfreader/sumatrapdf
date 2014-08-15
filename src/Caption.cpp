@@ -76,10 +76,9 @@ void CaptionInfo::UpdateTheme()
 void CaptionInfo::UpdateColors(bool activeWindow)
 {
     ARGB colorizationColor;
-    DWORD size = sizeof(colorizationColor);
     if (dwm::IsCompositionEnabled() &&
         // get the color from the Registry and blend it with white background
-        ERROR_SUCCESS == SHGetValue(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", NULL, &colorizationColor, &size)) {
+        ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", colorizationColor)) {
             BYTE A, R, G, B, white;
             A = BYTE((colorizationColor >> 24) & 0xff);
             if (!activeWindow)

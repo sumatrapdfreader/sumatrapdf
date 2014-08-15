@@ -35,6 +35,7 @@ void   LogLastError(DWORD err=0);
 bool   RegKeyExists(HKEY keySub, const WCHAR *keyName);
 WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName);
 bool   WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value);
+bool   ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD& value);
 bool   WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value);
 bool   CreateRegKey(HKEY keySub, const WCHAR *keyName);
 bool   DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst=false);
