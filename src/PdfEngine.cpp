@@ -2225,9 +2225,10 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         fz_concat(&ctm, &ctm, fz_translate(&trans, (float)-bbox.x0, (float)-bbox.y0));
 
         // for now, don't render directly into a DC but produce an HBITMAP instead
+        HANDLE hMap = NULL;
+        HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
         HDC hDC = GetDC(NULL);
         HDC hDCMem = CreateCompatibleDC(hDC);
-        HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
@@ -2237,9 +2238,10 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         ReleaseDC(NULL, hDC);
         if (!ok) {
             DeleteObject(hbmp);
+            CloseHandle(hMap);
             return NULL;
         }
-        return new RenderedBitmap(hbmp, SizeI(w, h));
+        return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
     }
 
     fz_pixmap *image = NULL;
@@ -4149,9 +4151,10 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         fz_concat(&ctm, &ctm, fz_translate(&trans, (float)-bbox.x0, (float)-bbox.y0));
 
         // for now, don't render directly into a DC but produce an HBITMAP instead
+        HANDLE hMap = NULL;
+        HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
         HDC hDC = GetDC(NULL);
         HDC hDCMem = CreateCompatibleDC(hDC);
-        HBITMAP hbmp = CreateCompatibleBitmap(hDC, w, h);
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
@@ -4160,9 +4163,10 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         ReleaseDC(NULL, hDC);
         if (!ok) {
             DeleteObject(hbmp);
+            CloseHandle(hMap);
             return NULL;
         }
-        return new RenderedBitmap(hbmp, SizeI(w, h));
+        return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
     }
 
     fz_pixmap *image = NULL;

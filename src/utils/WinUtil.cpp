@@ -1055,6 +1055,24 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     return bmpData;
 }
 
+HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping)
+{
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = -size.dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    // trading memory for speed (32 bits yields far better performance)
+    bmi.bmiHeader.biBitCount = 24;
+    bmi.bmiHeader.biSizeImage = (size.dx * 3 + 3) / 4 * 4 * size.dy;
+
+    void *data = NULL;
+    if (hDataMapping && !*hDataMapping)
+        *hDataMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, NULL);
+    return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : NULL, 0);
+}
+
 COLORREF AdjustLightness(COLORREF c, float factor)
 {
     BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);

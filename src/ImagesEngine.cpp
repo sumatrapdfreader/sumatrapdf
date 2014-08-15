@@ -123,20 +123,24 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     screen.Offset(-screen.x, -screen.y);
 
+    HANDLE hMap = NULL;
+    HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
+
     HDC hDC = GetDC(NULL);
     HDC hDCMem = CreateCompatibleDC(hDC);
-    HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
     DeleteObject(SelectObject(hDCMem, hbmp));
 
     bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
+
     DeleteDC(hDCMem);
     ReleaseDC(NULL, hDC);
     if (!ok) {
         DeleteObject(hbmp);
+        CloseHandle(hMap);
         return NULL;
     }
 
-    return new RenderedBitmap(hbmp, screen.Size());
+    return new RenderedBitmap(hbmp, screen.Size(), hMap);
 }
 
 bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)

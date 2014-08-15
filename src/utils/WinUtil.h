@@ -201,6 +201,7 @@ void    InitAllCommonControls();
 SizeI   GetBitmapSize(HBITMAP hbmp);
 void    UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
+HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping=NULL);
 COLORREF AdjustLightness(COLORREF c, float factor);
 float GetLightness(COLORREF c);
 double  GetProcessRunningTime();
