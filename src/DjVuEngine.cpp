@@ -20,41 +20,6 @@
 //       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
 //       cf. http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
-class RenderedDjVuPixmap : public RenderedBitmap {
-public:
-    RenderedDjVuPixmap(const char *data, SizeI size, bool grayscale);
-};
-
-RenderedDjVuPixmap::RenderedDjVuPixmap(const char *data, SizeI size, bool grayscale) :
-    RenderedBitmap(NULL, size)
-{
-    int bpc = grayscale ? 1 : 3;
-    int stride = ((size.dx * bpc + 3) / 4) * 4;
-    int colors = grayscale ? 256 : 0;
-
-    BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + colors * sizeof(RGBQUAD));
-    if (!bmi)
-        return;
-    for (int i = 0; i < colors; i++) {
-        bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = (BYTE)i;
-    }
-
-    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth = size.dx;
-    bmi->bmiHeader.biHeight = -size.dy;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biBitCount = (WORD)(bpc * 8);
-    bmi->bmiHeader.biSizeImage = size.dy * stride;
-    bmi->bmiHeader.biClrUsed = colors;
-
-    HDC hDC = GetDC(NULL);
-    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT, data, bmi, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hDC);
-
-    free(bmi);
-}
-
 class DjVuDestination : public PageDestination {
     // the link format can be any of
     //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
@@ -289,6 +254,7 @@ protected:
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 
+    RenderedBitmap *CreateRenderedBitmap(const char *bmpData, SizeI size, bool grayscale) const;
     void AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen);
     bool ExtractPageText(miniexp_t item, const WCHAR *lineSep,
                          str::Str<WCHAR>& extracted, Vec<RectI>& coords);
@@ -558,6 +524,40 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
     DeleteDC(hdc);
 }
 
+RenderedBitmap *DjVuEngineImpl::CreateRenderedBitmap(const char *bmpData, SizeI size, bool grayscale) const
+{
+    int stride = ((size.dx * (grayscale ? 1 : 3) + 3) / 4) * 4;
+
+    BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + (grayscale ? 256 * sizeof(RGBQUAD) : 0));
+    if (!bmi)
+        return NULL;
+
+    if (grayscale) {
+        for (int i = 0; i < 256; i++) {
+            bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = (BYTE)i;
+        }
+    }
+
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = size.dx;
+    bmi->bmiHeader.biHeight = -size.dy;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biCompression = BI_RGB;
+    bmi->bmiHeader.biBitCount = grayscale ? 8 : 24;
+    bmi->bmiHeader.biSizeImage = size.dy * stride;
+    bmi->bmiHeader.biClrUsed = grayscale ? 256 : 0;
+
+    void *data = NULL;
+    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, NULL);
+    HBITMAP hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    if (hbmp)
+        memcpy(data, bmpData, bmi->bmiHeader.biSizeImage);
+
+    free(bmi);
+
+    return new RenderedBitmap(hbmp, size, hMap);
+}
+
 RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
@@ -600,7 +600,7 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
             memset(bmpData, 0xFF, stride * screen.dy);
             isBitonal = true;
         }
-        bmp = new RenderedDjVuPixmap(bmpData, screen.Size(), isBitonal);
+        bmp = CreateRenderedBitmap(bmpData, screen.Size(), isBitonal);
         AddUserAnnots(bmp, pageNo, zoom, rotation, screen);
     }
 

@@ -144,18 +144,11 @@ ProducingPaletteDone:
     bmih->biSizeImage = h * (hasPalette ? rows8 : w * 4);
     bmih->biClrUsed = hasPalette ? paletteSize : 0;
 
-#if 1
     void *data = NULL;
     HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmih->biSizeImage, NULL);
     HBITMAP hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &data, hMap, 0);
     if (hbmp)
         memcpy(data, hasPalette ? bmpData : bgrPixmap->samples, bmih->biSizeImage);
-#else
-    HANDLE hMap = NULL;
-    HDC hDC = GetDC(NULL);
-    HBITMAP hbmp = CreateDIBitmap(hDC, bmih, CBM_INIT, hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hDC);
-#endif
 
     if (hasPalette)
         free(bmpData);
