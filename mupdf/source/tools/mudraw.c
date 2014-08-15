@@ -217,9 +217,9 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	HDC dc, dc_main;
 	RECT rc;
 	HBRUSH bg_brush;
+	HANDLE hmap;
 	HBITMAP hbmp;
 	BITMAPINFO bmi = { 0 };
-	int bmp_data_len;
 	unsigned char *bmp_data;
 
 	fz_bound_page(doc, page, &bounds);
@@ -259,10 +259,20 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	w = ibounds.x1 - ibounds.x0;
 	h = ibounds.y1 - ibounds.y0;
 
-	dc_main = GetDC(NULL);
-	hbmp = CreateCompatibleBitmap(dc_main, w, h);
+	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+	bmi.bmiHeader.biWidth = w;
+	bmi.bmiHeader.biHeight = output_format == OUT_TGA ? -h : h;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = output_format == OUT_TGA ? 32 : 24;
+	bmi.bmiHeader.biCompression = BI_RGB;
+	bmi.bmiHeader.biSizeImage = (output_format == OUT_TGA ? w : ((w * 3 + 3) / 4)) * h * 4;
+
+	hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, NULL);
+	hbmp = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &bmp_data, hmap, 0);
 	if (!hbmp)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "failed to create a %d x %d bitmap for page %d", w, h, pagenum);
+
+	dc_main = GetDC(NULL);
 	dc = CreateCompatibleDC(dc_main);
 	DeleteObject(SelectObject(dc, hbmp));
 
@@ -278,21 +288,9 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 		fz_run_page(doc, page, dev, &ctm, cookie);
 	fz_free_device(dev);
 
-	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-	bmi.bmiHeader.biWidth = w;
-	bmi.bmiHeader.biHeight = output_format == OUT_TGA ? -h : h;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = output_format == OUT_TGA ? 32 : 24;
-	bmi.bmiHeader.biCompression = BI_RGB;
-
-	bmp_data_len = output_format == OUT_TGA ? w * h * 4 : ((w * 3 + 3) / 4) * 4 * h;
-	bmp_data = fz_malloc(ctx, bmp_data_len);
-	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot draw page %d", pagenum, filename);
-
+	GdiFlush();
 	DeleteDC(dc);
 	ReleaseDC(NULL, dc_main);
-	DeleteObject(hbmp);
 
 	if (output)
 	{
@@ -319,11 +317,11 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 			bmpfh.bfType = MAKEWORD('B', 'M');
 			bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
-			bmpfh.bfSize = bmpfh.bfOffBits + bmp_data_len;
+			bmpfh.bfSize = bmpfh.bfOffBits + bmi.bmiHeader.biSizeImage;
 
 			fwrite(&bmpfh, sizeof(bmpfh), 1, f);
 			fwrite(&bmi, sizeof(bmi), 1, f);
-			fwrite(bmp_data, 1, bmp_data_len, f);
+			fwrite(bmp_data, 1, bmi.bmiHeader.biSizeImage, f);
 		}
 
 		fclose(f);
@@ -331,7 +329,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	if (showmd5)
 	{
-		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), bmp_data_len / 4 / h, h, bmp_data);
+		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), bmi.bmiHeader.biSizeImage / 4 / h, h, bmp_data);
 		unsigned char digest[16];
 		int i;
 
@@ -343,7 +341,8 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 		fz_drop_pixmap(ctx, pix);
 	}
 
-	fz_free(ctx, bmp_data);
+	DeleteObject(hbmp);
+	CloseHandle(hmap);
 }
 #endif
 
