@@ -1063,9 +1063,9 @@ HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping)
     bmi.bmiHeader.biHeight = -size.dy;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biCompression = BI_RGB;
-    // trading memory for speed (32 bits yields far better performance)
-    bmi.bmiHeader.biBitCount = 24;
-    bmi.bmiHeader.biSizeImage = (size.dx * 3 + 3) / 4 * 4 * size.dy;
+    // trading speed for memory (32 bits yields far better performance)
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biSizeImage = size.dx * 4 * size.dy;
 
     void *data = NULL;
     if (hDataMapping && !*hDataMapping)
