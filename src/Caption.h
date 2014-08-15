@@ -43,17 +43,6 @@ HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COL
 
 };
 
-struct DWMCOLORIZATIONPARAMS
-{
-    DWORD ColorizationColor; 
-    DWORD ColorizationAfterglow; 
-    DWORD ColorizationColorBalance; 
-    DWORD ColorizationAfterglowBalance; 
-    DWORD ColorizationBlurBalance; 
-    DWORD ColorizationGlassReflectionIntensity; 
-    DWORD ColorizationOpaqueBlend;
-};
-
 namespace dwm {
 
 void Initialize();
@@ -61,7 +50,6 @@ BOOL IsCompositionEnabled();
 HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset);
 BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
-HRESULT GetColorizationParameters(DWMCOLORIZATIONPARAMS *colorParams);
 
 };
 

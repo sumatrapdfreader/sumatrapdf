@@ -36,9 +36,11 @@ using namespace Gdiplus;
 // expand the non-client border at the expense of client area.
 #define NON_CLIENT_BAND  1
 
-// Ordinal value of the undocumented dwmapi.dll function DwmGetColorizationParameters.
 // http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
-#define DWMGETCOLORIZATIONPARAMETERS  127
+#define REG_DWM  L"Software\\Microsoft\\Windows\\DWM"
+
+// When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
+#define ACTIVE_INACTIVE_ALPHA_RATIO  2.0f
 
 static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer);
@@ -73,21 +75,24 @@ void CaptionInfo::UpdateTheme()
 
 void CaptionInfo::UpdateColors(bool activeWindow)
 {
-    DWMCOLORIZATIONPARAMS cp;
-    if (dwm::IsCompositionEnabled() && SUCCEEDED(dwm::GetColorizationParameters(&cp))) {
-        BYTE A, R, G, B, white;
-        A = BYTE((cp.ColorizationColor >> 24) & 0xff);
-        R = BYTE((cp.ColorizationColor >> 16) & 0xff);
-        G = BYTE((cp.ColorizationColor >> 8) & 0xff);
-        B = BYTE(cp.ColorizationColor & 0xff);
-        white = BYTE(255 - A);
-        float factor = A / 255.0f;
-        R = BYTE((int)floor(R * factor + 0.5f) + white);
-        G = BYTE((int)floor(G * factor + 0.5f) + white);
-        B = BYTE((int)floor(B * factor + 0.5f) + white);
-        bgColor = RGB(R, G, B);
-        // TODO: are these calculations correct if ColorizationOpaqueBlend == TRUE?
-        // TODO: what color to use for the inactive window state?
+    ARGB colorizationColor;
+    DWORD size = sizeof(colorizationColor);
+    if (dwm::IsCompositionEnabled() &&
+        // get the color from the Registry and blend it with white background
+        ERROR_SUCCESS == SHGetValue(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", NULL, &colorizationColor, &size)) {
+            BYTE A, R, G, B, white;
+            A = BYTE((colorizationColor >> 24) & 0xff);
+            if (!activeWindow)
+                A = (BYTE)floor(A / ACTIVE_INACTIVE_ALPHA_RATIO + 0.5f);
+            R = BYTE((colorizationColor >> 16) & 0xff);
+            G = BYTE((colorizationColor >> 8) & 0xff);
+            B = BYTE(colorizationColor & 0xff);
+            white = BYTE(255 - A);
+            float factor = A / 255.0f;
+            R = BYTE((int)floor(R * factor + 0.5f) + white);
+            G = BYTE((int)floor(G * factor + 0.5f) + white);
+            B = BYTE((int)floor(B * factor + 0.5f) + white);
+            bgColor = RGB(R, G, B);
     }
     else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
         activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
@@ -821,7 +826,6 @@ typedef HRESULT (WINAPI *DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
 typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaProc)(HWND hwnd, const MARGINS *pMarInset);
 typedef BOOL (WINAPI *DwmDefWindowProcProc)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 typedef HRESULT (WINAPI *DwmGetWindowAttributeProc)(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
-typedef HRESULT (WINAPI *DwmGetColorizationParametersProc)(DWMCOLORIZATIONPARAMS *colorParams);
 
 namespace dwm {
 
@@ -830,7 +834,6 @@ static DwmIsCompositionEnabledProc _DwmIsCompositionEnabled = NULL;
 static DwmExtendFrameIntoClientAreaProc _DwmExtendFrameIntoClientArea = NULL;
 static DwmDefWindowProcProc _DwmDefWindowProc = NULL;
 static DwmGetWindowAttributeProc _DwmGetWindowAttribute = NULL;
-static DwmGetColorizationParametersProc _DwmGetColorizationParameters = NULL;
 
 void Initialize()
 {
@@ -845,7 +848,6 @@ void Initialize()
     Load(DwmDefWindowProc);
     Load(DwmGetWindowAttribute);
 #undef Load
-    _DwmGetColorizationParameters = (DwmGetColorizationParametersProc)GetProcAddress(h, (LPCSTR)DWMGETCOLORIZATIONPARAMETERS);
 
     funcsLoaded = true;
 }
@@ -883,14 +885,6 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWOR
     if (!_DwmGetWindowAttribute)
         return E_NOTIMPL;
     return _DwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
-}
-
-HRESULT GetColorizationParameters(DWMCOLORIZATIONPARAMS *colorParams)
-{
-    Initialize();
-    if (!_DwmGetColorizationParameters)
-        return E_NOTIMPL;
-    return _DwmGetColorizationParameters(colorParams);
 }
 
 };
