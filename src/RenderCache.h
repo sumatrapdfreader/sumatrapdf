@@ -10,6 +10,11 @@
 #define RENDER_DELAY_FAILED    ((UINT)-2)
 #define INVALID_TILE_RES       ((USHORT)-1)
 
+#define MAX_PAGE_REQUESTS 8
+// keep this value reasonably low, else we'll run out of
+// GDI resources/memory when caching many larger bitmaps
+#define MAX_BITMAPS_CACHED 64
+
 class RenderingCallback {
 public:
     virtual void Callback(RenderedBitmap *bmp=NULL) = 0;
@@ -67,12 +72,6 @@ struct PageRenderRequest {
     RenderingCallback * renderCb;
 };
 
-#define MAX_PAGE_REQUESTS 8
-
-// keep this value reasonably low, else we'll run
-// out of GDI memory when caching many larger bitmaps
-#define MAX_BITMAPS_CACHED 64
-
 class RenderCache
 {
 private:
@@ -126,9 +125,7 @@ private:
     USHORT  GetMaxTileRes(DisplayModel *dm, int pageNo, int rotation);
     bool    ReduceTileSize();
 
-    bool    IsRenderQueueFull() const {
-                return requestCount == MAX_PAGE_REQUESTS;
-            }
+    bool    IsRenderQueueFull() const { return requestCount == MAX_PAGE_REQUESTS; }
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
     void    RequestRendering(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueueForPage=true);
     bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,

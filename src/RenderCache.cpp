@@ -8,6 +8,7 @@
 #include "TextSelection.h"
 #include "WinUtil.h"
 
+// TODO: remove this and always conserve memory?
 /* Define if you want to conserve memory by always freeing cached bitmaps
    for pages not visible. Disabling this might lead to pages not rendering
    due to insufficient (GDI) memory. */
