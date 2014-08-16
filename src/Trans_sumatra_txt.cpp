@@ -4014,7 +4014,7 @@ const char * gTranslations_et =
   "&J\303\244ta see versioon vahele\0"\
   "&Kasuta algseid lehek\303\274lje suuruseid\0"\
   "&Vaade\0"\
-  "\0"\
+  "A&ken\0"\
   "&Jah\0"\
   "&Suurendus\0"\
   "(%d:st)\0"\

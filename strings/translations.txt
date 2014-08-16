@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0baabb24b884c69a3176a703b8156e419354a29c
+6ceec4fbd5e88cb3fbe6fa2f2de9216644a777fd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2936,6 +2936,7 @@ vn:Hiển thị
 am:&Պատուհան
 bs:&Prozor
 de:Fe&nster
+et:A&ken
 fi:Ikkuna
 fr:F&enêtre
 he:&חלון
