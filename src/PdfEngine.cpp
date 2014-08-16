@@ -77,7 +77,7 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
     int h = pixmap->h;
     int rows8 = ((w + 3) / 4) * 4;
 
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)));
+    ScopedMem<BITMAPINFO> bmi((BITMAPINFO *)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
     // always try to produce an 8-bit palette for saving some memory
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
@@ -88,28 +88,29 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
         pixmap->colorspace == fz_device_rgb(ctx)) {
         unsigned char *dest = bmpData;
         unsigned char *source = pixmap->samples;
-        RGBQUAD *palette = bmi.Get()->bmiColors;
+        uint32_t *palette = (uint32_t *)bmi.Get()->bmiColors;
 
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
-                RGBQUAD c = { 0 };
+                RGBQUAD c;
 
                 c.rgbRed = *source++;
                 c.rgbGreen = *source++;
                 c.rgbBlue = *source++;
+                c.rgbReserved = 0;
                 source++;
 
                 /* find this color in the palette */
                 int k;
-                for (k = 0; k < paletteSize; k++)
-                    if (*(int *)&palette[k] == *(int *)&c)
+                for (k = 0; k < paletteSize; k++) {
+                    if (palette[k] == *(uint32_t *)&c)
                         break;
+                }
                 /* add it to the palette if it isn't in there and if there's still space left */
                 if (k == paletteSize) {
-                    if (k >= 256)
+                    if (++paletteSize > 256)
                         goto ProducingPaletteDone;
-                    *(int *)&palette[paletteSize] = *(int *)&c;
-                    paletteSize++;
+                    palette[k] = *(uint32_t *)&c;
                 }
                 /* 8-bit data consists of indices into the color palette */
                 *dest++ = k;
@@ -117,7 +118,7 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
             dest += rows8 - w;
         }
 ProducingPaletteDone:
-        hasPalette = paletteSize < 256;
+        hasPalette = paletteSize <= 256;
     }
     if (!hasPalette) {
         free(bmpData);
