@@ -325,8 +325,7 @@ public:
 
     bool Delete(int index) {
         if (index < Count()) {
-            free(text.At(index));
-            text.RemoveAt(index);
+            free(text.PopAt(index));
             return true;
         }
         return false;

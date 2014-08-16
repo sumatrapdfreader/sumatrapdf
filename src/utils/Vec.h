@@ -217,6 +217,13 @@ public:
         return el;
     }
 
+    T PopAt(size_t idx) {
+        CrashIf(idx >= len);
+        T el = At(idx);
+        RemoveAt(idx);
+        return el;
+    }
+
     T& Last() const {
         CrashIf(0 == len);
         return At(len - 1);

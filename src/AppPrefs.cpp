@@ -127,7 +127,7 @@ bool Load()
     gGlobalPrefs->zoomLevels->Sort(cmpFloat);
     while (gGlobalPrefs->zoomLevels->Count() > 0 &&
            gGlobalPrefs->zoomLevels->At(0) < ZOOM_MIN) {
-        gGlobalPrefs->zoomLevels->RemoveAt(0);
+        gGlobalPrefs->zoomLevels->PopAt(0);
     }
     while (gGlobalPrefs->zoomLevels->Count() > 0 &&
            gGlobalPrefs->zoomLevels->Last() > ZOOM_MAX) {

@@ -498,16 +498,13 @@ bool DirFileProvider::OpenDir(const WCHAR *dirPath)
 
 WCHAR *DirFileProvider::NextFile()
 {
-    while (filesToOpen.Count() > 0) {
-        ScopedMem<WCHAR> path(filesToOpen.At(0));
-        filesToOpen.RemoveAt(0);
-        return path.StealData();
+    if (filesToOpen.Count() > 0) {
+        return filesToOpen.PopAt(0);
     }
 
     if (dirsToVisit.Count() > 0) {
         // test next directory
-        ScopedMem<WCHAR> path(dirsToVisit.At(0));
-        dirsToVisit.RemoveAt(0);
+        ScopedMem<WCHAR> path(dirsToVisit.PopAt(0));
         OpenDir(path);
         return NextFile();
     }
@@ -531,8 +528,7 @@ static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec
             fflush(stdout);
         }
 
-        ScopedMem<WCHAR> path(dirsToVisit[0]);
-        dirsToVisit.RemoveAt(0);
+        ScopedMem<WCHAR> path(dirsToVisit.PopAt(0));
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
         ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", path));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);

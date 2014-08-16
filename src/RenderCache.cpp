@@ -695,8 +695,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
     bool neededScaling = false;
 
     while (queue.Count() > 0) {
-        TilePosition tile = queue.At(0);
-        queue.RemoveAt(0);
+        TilePosition tile = queue.PopAt(0);
         RectI tileOnScreen = GetTileOnScreen(dm->engine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             // display an error message when only empty tiles should be drawn (i.e. on page loading errors)

@@ -1305,8 +1305,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
     {
         // send out all pages accumulated so far
         while (pagesToSend.Count() > 0) {
-            HtmlPage *ret = pagesToSend.At(0);
-            pagesToSend.RemoveAt(0);
+            HtmlPage *ret = pagesToSend.PopAt(0);
             pageCount++;
             if (skipEmptyPages && IsEmptyPage(ret))
                 delete ret;

@@ -50,8 +50,7 @@ public:
         for (size_t i = 0; i < paths.Count() && !WasCancelRequested(); i++) {
             WCHAR *path = paths.At(i);
             if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-                paths.RemoveAt(i--);
-                free(path);
+                free(paths.PopAt(i--));
             }
         }
         if (!WasCancelRequested())
