@@ -89,6 +89,7 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
         unsigned char *dest = bmpData;
         unsigned char *source = pixmap->samples;
         uint32_t *palette = (uint32_t *)bmi.Get()->bmiColors;
+        BYTE grayIdxs[256] = { 0 };
 
         for (int j = 0; j < h; j++) {
             for (int i = 0; i < w; i++) {
@@ -102,14 +103,19 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
 
                 /* find this color in the palette */
                 int k;
-                for (k = 0; k < paletteSize; k++) {
-                    if (palette[k] == *(uint32_t *)&c)
-                        break;
+                bool isGray = c.rgbRed == c.rgbGreen && c.rgbRed == c.rgbBlue;
+                if (isGray) {
+                    k = grayIdxs[c.rgbRed] || palette[0] == *(uint32_t *)&c ? grayIdxs[c.rgbRed] : paletteSize;
+                }
+                else {
+                    for (k = 0; k < paletteSize && palette[k] != *(uint32_t *)&c; k++);
                 }
                 /* add it to the palette if it isn't in there and if there's still space left */
                 if (k == paletteSize) {
                     if (++paletteSize > 256)
                         goto ProducingPaletteDone;
+                    if (isGray)
+                        grayIdxs[c.rgbRed] = (BYTE)k;
                     palette[k] = *(uint32_t *)&c;
                 }
                 /* 8-bit data consists of indices into the color palette */
