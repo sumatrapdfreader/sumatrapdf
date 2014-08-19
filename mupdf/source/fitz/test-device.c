@@ -10,7 +10,7 @@ fz_test_colorspace(fz_context *ctx, fz_colorspace *colorspace, int *iscolor)
 static void
 fz_test_color(fz_context *ctx, fz_colorspace *colorspace, float *color, int *iscolor)
 {
-	if (*iscolor != 0 && colorspace && colorspace != fz_device_gray(ctx))
+	if (!*iscolor && colorspace && colorspace != fz_device_gray(ctx))
 	{
 		float rgb[3];
 		fz_convert_color(ctx, fz_device_rgb(ctx), rgb, colorspace, color);

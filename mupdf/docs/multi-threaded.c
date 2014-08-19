@@ -17,6 +17,7 @@
 //	build/debug/libmupdf.a \
 //	build/debug/libfreetype.a build/debug/libjbig2dec.a \
 //	build/debug/libjpeg.a build/debug/libopenjpeg.a \
+//	build/debug/libmujs.a \
 //	build/debug/libz.a -lpthread -lm
 //
 // build/debug/example-mt /path/to/document.pdf

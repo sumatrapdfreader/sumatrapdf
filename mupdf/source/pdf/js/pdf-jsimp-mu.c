@@ -84,13 +84,13 @@ static void wrapmethod(js_State *J)
 	int argc = js_gettop(J) - 1;
 
 	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, "jsctx", -1);
+	jsctx = js_touserdata(J, -1, "jsctx");
 	js_pop(J, 1);
 
 	js_currentfunction(J);
 	{
 		js_getproperty(J, -1, "__call");
-		meth = js_touserdata(J, "method", -1);
+		meth = js_touserdata(J, -1, "method");
 		js_pop(J, 1);
 
 		js_getproperty(J, -1, "__type");
@@ -99,8 +99,8 @@ static void wrapmethod(js_State *J)
 	}
 	js_pop(J, 1);
 
-	if (js_isuserdata(J, type, 0))
-		obj = js_touserdata(J, type, 0);
+	if (js_isuserdata(J, 0, type))
+		obj = js_touserdata(J, 0, type);
 	else
 		obj = NULL;
 
@@ -125,13 +125,13 @@ static void wrapgetter(js_State *J)
 	void *obj;
 
 	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, "jsctx", -1);
+	jsctx = js_touserdata(J, -1, "jsctx");
 	js_pop(J, 1);
 
 	js_currentfunction(J);
 	{
 		js_getproperty(J, -1, "__get");
-		get = js_touserdata(J, "getter", -1);
+		get = js_touserdata(J, -1, "getter");
 		js_pop(J, 1);
 
 		js_getproperty(J, -1, "__type");
@@ -140,8 +140,8 @@ static void wrapgetter(js_State *J)
 	}
 	js_pop(J, 1);
 
-	if (js_isuserdata(J, type, 0))
-		obj = js_touserdata(J, type, 0);
+	if (js_isuserdata(J, 0, type))
+		obj = js_touserdata(J, 0, type);
 	else
 		obj = NULL;
 
@@ -160,13 +160,13 @@ static void wrapsetter(js_State *J)
 	void *obj;
 
 	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, "jsctx", -1);
+	jsctx = js_touserdata(J, -1, "jsctx");
 	js_pop(J, 1);
 
 	js_currentfunction(J);
 	{
 		js_getproperty(J, -1, "__set");
-		set = js_touserdata(J, "setter", -1);
+		set = js_touserdata(J, -1, "setter");
 		js_pop(J, 1);
 
 		js_getproperty(J, -1, "__type");
@@ -175,8 +175,8 @@ static void wrapsetter(js_State *J)
 	}
 	js_pop(J, 1);
 
-	if (js_isuserdata(J, type, 0))
-		obj = js_touserdata(J, type, 0);
+	if (js_isuserdata(J, 0, type))
+		obj = js_touserdata(J, 0, type);
 	else
 		obj = NULL;
 

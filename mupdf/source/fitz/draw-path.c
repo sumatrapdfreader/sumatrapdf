@@ -980,8 +980,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
-	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2339 */
-	if (stroke->dash_len > 0 && phase_len == 0.0f)
+	if (stroke->dash_len > 0 && phase_len == 0)
 		return;
 	fz_gel_scissor(gel, &s.rect);
 	if (fz_try_invert_matrix(&inv, ctm))

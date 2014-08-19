@@ -281,9 +281,16 @@ cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
 	doc->page = fz_malloc_array(ctx, count, sizeof(int));
 
 	for (i = 0; i < count; i++)
+	{
 		for (k = 0; cbz_ext_list[k]; k++)
+		{
 			if (strstr(doc->entry[i].name, cbz_ext_list[k]))
+			{
 				doc->page[doc->page_count++] = i;
+				break;
+			}
+		}
+	}
 }
 
 static void

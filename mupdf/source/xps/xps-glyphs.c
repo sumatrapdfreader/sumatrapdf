@@ -101,7 +101,6 @@ xps_deobfuscate_font_resource(xps_document *doc, xps_part *part)
 	char *p;
 	int i;
 
-	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2651 */
 	if (part->size < 32)
 	{
 		fz_warn(doc->ctx, "insufficient data for font deobfuscation");
@@ -510,6 +509,9 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 	font = xps_lookup_font(doc, fakename);
 	if (!font)
 	{
+		fz_buffer *buf = NULL;
+		fz_var(buf);
+
 		fz_try(doc->ctx)
 		{
 			part = xps_read_part(doc, partname);
@@ -529,22 +531,20 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 
 		fz_try(doc->ctx)
 		{
-			fz_buffer *buf = fz_new_buffer_from_data(doc->ctx, part->data, part->size);
-			/* SumatraPDF: prevent memory leak */
+			buf = fz_new_buffer_from_data(doc->ctx, part->data, part->size);
+			/* part->data is now owned by buf */
 			part->data = NULL;
-			fz_try(doc->ctx) {
 			font = fz_new_font_from_buffer(doc->ctx, NULL, buf, subfontid, 1);
-			} fz_always(doc->ctx) {
+		}
+		fz_always(doc->ctx)
+		{
 			fz_drop_buffer(doc->ctx, buf);
-			} fz_catch(doc->ctx) {
-				fz_rethrow(doc->ctx);
-			}
+			xps_free_part(doc, part);
 		}
 		fz_catch(doc->ctx)
 		{
 			fz_rethrow_if(doc->ctx, FZ_ERROR_TRYLATER);
 			fz_warn(doc->ctx, "cannot load font resource '%s'", partname);
-			xps_free_part(doc, part);
 			return;
 		}
 
@@ -555,15 +555,10 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 		}
 
 		xps_select_best_font_encoding(doc, font);
-
 		xps_insert_font(doc, fakename, font);
 
 		/* SumatraPDF: prevent assertion in Freetype 2.5 */
 		FT_Set_Char_Size(font->ft_face, 64, 64, 72, 72);
-
-		/* NOTE: we already saved part->data in the buffer in the font */
-		fz_free(doc->ctx, part->name);
-		fz_free(doc->ctx, part);
 	}
 
 	/*

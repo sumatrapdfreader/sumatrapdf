@@ -120,7 +120,7 @@ static void savefont(pdf_obj *dict, int num)
 
 		obj = pdf_dict_gets(obj, "Subtype");
 		if (obj && !pdf_is_name(obj))
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Invalid font descriptor subtype");
+			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid font descriptor subtype");
 
 		subtype = pdf_to_name(obj);
 		if (!strcmp(subtype, "Type1C"))
@@ -130,12 +130,12 @@ static void savefont(pdf_obj *dict, int num)
 		else if (!strcmp(subtype, "OpenType"))
 			ext = "otf";
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "Unhandled font type '%s'", subtype);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled font type '%s'", subtype);
 	}
 
 	if (!stream)
 	{
-		fz_warn(ctx, "Unhandled font type");
+		fz_warn(ctx, "unhandled font type");
 		return;
 	}
 
@@ -146,15 +146,15 @@ static void savefont(pdf_obj *dict, int num)
 
 	f = fopen(namebuf, "wb");
 	if (!f)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Error creating font file");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create font file");
 
 	len = fz_buffer_storage(ctx, buf, &data);
 	n = fwrite(data, 1, len, f);
 	if (n < len)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Error writing font file");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot write font file");
 
 	if (fclose(f) < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Error closing font file");
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot close font file");
 
 	fz_drop_buffer(ctx, buf);
 }
@@ -166,14 +166,21 @@ static void showobject(int num)
 	if (!doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no file specified");
 
-	obj = pdf_load_object(doc, num, 0);
+	fz_try(ctx)
+	{
+		obj = pdf_load_object(doc, num, 0);
 
-	if (isimage(obj))
-		saveimage(num);
-	else if (isfontdesc(obj))
-		savefont(obj, num);
+		if (isimage(obj))
+			saveimage(num);
+		else if (isfontdesc(obj))
+			savefont(obj, num);
 
-	pdf_drop_obj(obj);
+		pdf_drop_obj(obj);
+	}
+	fz_catch(ctx)
+	{
+		fz_warn(ctx, "ignoring object %d", num);
+	}
 }
 
 int pdfextract_main(int argc, char **argv)
