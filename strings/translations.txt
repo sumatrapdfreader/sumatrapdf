@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6ceec4fbd5e88cb3fbe6fa2f2de9216644a777fd
+b5c045fe9d5dc8e01f2aa5fbdc879b30b9de7f4b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -90,7 +90,7 @@ el:Πραγματικό &Μέγεθος\tCtrl+1
 es:T&amaño real\tCtrl+1
 et:&Tegelik suurus\tCtrl+1
 eu:&Oraingo Neurria\tKtrl+1
-fa:&ابعاد اصلی‌\tCtrl+1
+fa:&اندازه واقعی\tCtrl+1
 fi:&Todellinen koko\tCtrl+1
 fr:&Taille réelle\tCtrl+1
 fy-nl:Wiere grutte\tCtrl+1
@@ -266,7 +266,7 @@ el:&Πίσω\tAlt+<-
 es:A&trás\tAlt+Izq
 et:&Tagasi\tAlt+Vasaknool
 eu:A&tzera\tAlt+Ezker Gezia
-fa:&عقب\tAlt+←
+fa:جای &قبلی\tAlt+←‎
 fi:&Takaisin\tAlt+Vasen nuoli
 fr:&Retour\tAlt+<-
 fy-nl:Tebek\tAlt+<-
@@ -326,7 +326,7 @@ el:&Προβολή Βιβλίου\tCtrl+8
 es:&Vista de libro\tCtrl+8
 et:&Raamatuvaade\tCtrl+8
 eu:&Liburu Ikuspegia\tKtrl+8
-fa:نمایش &کتابی
+fa:&کتابی\tCtrl+8
 fi:&Kirjanäkymä\tCtrl+8
 fr:Comme un livre\tCtrl+8
 ga:&Leabhar-amharc\tCtrl+8
@@ -451,7 +451,7 @@ el:&Αντιγραφή Επιλογής
 es:&Copiar selección
 et:K&opeeri valik
 eu:&Kopiatu Hautapena
-fa:&رونوشت از انتخاب شده
+fa:&رونوشت از قسمت انتخاب شده
 fi:Kopioi &valinta
 fr:&Copier la sélection
 ga:&Macasamhlaigh an Roghnúchán
@@ -509,7 +509,7 @@ el:Αντιγραφή Επι&λεγμένων\tCtrl+C
 es:&Copiar selección\tCtrl+C
 et:K&opeeri valik\tCtrl+C
 eu:&Kopiatu Hautapena\tKtrl+C
-fa:&رونوشت از انتخاب شده
+fa:&رونوشت از قسمت انتخاب شده\tCtrl+C
 fi:Ko&pioi valinta\tCtrl+C
 fr:&Copier la sélection
 fy-nl:Kopiearje seleksje\tCtrl+C
@@ -693,7 +693,7 @@ el:&Αντικριστές σελίδες\tCtrl+7
 es:&Caras opuestas\tCtrl+7
 et:&Kaheleheküljeline\tCtrl+7
 eu:&Bi Aldeetatik\tKtrl+7
-fa:&دوصفحه‌ای
+fa:&دوصفحه‌ای\tCtrl+7
 fi:&Rinnakkain\tCtrl+7
 fr:Double page\tCtrl+7
 ga:&Dhá Leathanach\tCtrl+7
@@ -1816,7 +1816,7 @@ el:&Επιλογές
 es:&Opciones
 et:&Sätted
 eu:A&ukerak
-fa:&تنظیمات
+fa:&گزینه‌ها
 fi:&Asetukset
 fr:&Options
 gl:&Opcións
@@ -2937,6 +2937,7 @@ am:&Պատուհան
 bs:&Prozor
 de:Fe&nster
 et:A&ken
+fa:&پنجره
 fi:Ikkuna
 fr:F&enêtre
 he:&חלון
@@ -2962,7 +2963,7 @@ el:&Ναι
 es:&Sí
 et:&Jah
 eu:&Bai
-fa:بلی
+fa:&بلی
 fi:&Kyllä
 fr:&Oui
 fy-nl:&Ja
@@ -3024,7 +3025,7 @@ el:&Ζουμ
 es:&Zoom
 et:&Suurendus
 eu:&Zooma
-fa:&تغییر ابعاد نمایش
+fa:&بزرگنمایی
 fi:&Zoomaus
 fr:&Zoom
 fy-nl:&Zoom
@@ -3275,7 +3276,7 @@ el:Προσθήκη Αγαπημένου
 es:Añadir favorito
 et:Lisa lemmik
 eu:Gehitu Gogokoena
-fa:افزودن به موارد برگزیده
+fa:افزودن به علاقه‌مندی‌ها
 fi:Lisää suosikki
 fr:Ajouter aux favoris
 ga:Cuir ceanán leis
@@ -3334,7 +3335,7 @@ el:Προσθήκη της σελίδας %s στα αγαπημένα
 es:Añadir página %s a favoritos
 et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
-fa:افزودن صفحه‌ی %s به موارد برگزیده
+fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها
 fi:&Lisää sivu %s suosikkeihin
 fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
@@ -3392,7 +3393,7 @@ el:Προσθήκη σελίδας %s στα αγαπημένα με (προαι
 es:Añadir página %s a favoritos con nombre (opcional):
 et:Lisa lehekülg %s lemmikutesse (valikulise) nimega:
 eu:Gehitu %s Gogokoenetara (aukerazkoa) Izenarekin:
-fa:افزودن صفحه‌ی %s به موارد برگزیده با نام(اختیاری):
+fa:افزودن صفحه‌ی %s به علاقه‌مندی‌ها با نامی اختیاری:
 fi:Lisää sivu %s suosikkeihin (valinnaisella) nimellä:
 fr:Ajouter la page %s aux favoris avec un nom (optionnel):
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
@@ -3452,7 +3453,7 @@ el:Προσθήκη στα αγαπημένα
 es:Añadir a favoritos
 et:Lisa lemmikutesse
 eu:Gehitu Gogokoenetara
-fa:افزودن به موارد برگزیده
+fa:افزودن به علاقه‌مندی‌ها
 fi:Lisää suosikkeihin
 fr:Ajouter aux favoris
 ga:Cuir le na ceanáin
@@ -3760,7 +3761,7 @@ el:Είστε σίγουροι πως επιθυμείτε την απεγκατ
 es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
-fa:شما مطمئن هستید که می خواهید سوماترا پی دی اف پاک شود
+fa:آیا برای پاک کردن برنامه‌ی سوماترا پی‌دی‌اف مطمئن هستید؟
 fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 gl:Seguro que queres desinstalar SumatraPDF?
@@ -3944,7 +3945,7 @@ el:Δημιουργός:
 es:Autor:
 et:Autor:
 eu:Egilea:
-fa:مؤلّف:
+fa:مؤلف:
 fi:Tekijä:
 fr:Auteur :
 fy-nl:Auteur:
@@ -4068,7 +4069,7 @@ el:Αυτόματος έλεγχος για &ενημερώσεις
 es:B&uscar actualizaciones automáticamente
 et:Uuendusi k&ontrollitakse automaatselt
 eu:&Berezgaitasunez egiaztatu eguneraketak
-fa:به صورت خودکار برای نسخه‌ی &جدید جستجو کن
+fa:بررسی خودکار برای به‌روزرسانی‌ها
 fi:Tarkista pä&ivitykset automaattisesti
 fr:Vérifier &automatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
@@ -4129,7 +4130,7 @@ el:Προβολή Βιβλίου
 es:Vista de libro
 et:Raamatuvaade
 eu:Liburu Ikuspena
-fa:نمایش کتابی‌
+fa:کتابی
 fi:Kirjanäkymä
 fr:Comme un livre
 fy-nl:Boekbyld
@@ -4193,7 +4194,7 @@ el:&Σελιδοδείκτες\tF12
 es:&Marcadores\tF12
 et:Jär&jehoidjad\tF12
 eu:&Gogokoenak\tF12
-fa:ن&شانه‌ی صفحه‌ها\tF12
+fa:ن&شانک‌ها\tF12
 fi:K&irjanmerkit\tF12
 fr:Signets\tF12
 fy-nl:Blêdwizers\tF12
@@ -4258,7 +4259,7 @@ el:Συντομεύσεις Σελιδοδεικτών
 es:Marcar atajos
 et:Järjehoidjate otseteed
 eu:Gogoekoenen Lasterbideak
-fa:میانبرهای نشانه‌گذاری‌ها
+fa:میانبرهای نشانک
 fi:Pikakuvakkeet
 fr:Raccourcis des signets
 ga:Déan ceanáin d'aicearraí
@@ -4313,7 +4314,7 @@ el:Συντόμευση σελιδοδείκτη στη σελίδα %s του %
 es:Marcar atajo a la página %s de %s
 et:Tee järjehoidja otsetee leheküljele %s/%s
 eu:Lastermarka lasterbidea %s orrialdeari %s-tik
-fa:میانبر به نشانه‌گذاری صفحه‌ی %s از %s
+fa:میانبر به نشانک صفحه‌ی %s از %s
 fi:Tee pikakuvake sivulle %s/%s
 fr:Raccourci du signet de la page %s de %s
 ga:Cruthaigh aicearra chuig lch %s as %s
@@ -4369,7 +4370,7 @@ el:Σελιδοδείκτες
 es:Marcadores
 et:Järjehoidjad
 eu:Gogokoenak
-fa:نشانه‌گذاری‌ها
+fa:نشانک‌ها
 fi:Kirjanmerkit
 fr:Signets
 ga:Ceanáin
@@ -4859,7 +4860,7 @@ el:Έ&λεγχος για νέα έκδοση
 es:&Buscar actualizaciones
 et:Vaata, kas on &uuendusi
 eu:&Egiaztatu Eguneraketak
-fa:بررسی برای نسخه‌ی &جدیدتر
+fa:بررسی برای به‌روزرسانی‌ها
 fi:Tarkista &päivitysten saatavuus
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
@@ -5093,7 +5094,7 @@ el:Μια σελίδα, συνεχόμενα
 es:Continua
 et:Jätkuv
 eu:Jarraian
-fa:نمایش پیوسته
+fa:پیوسته
 fi:Peräkkäin
 fr:Vue continue
 fy-nl:Trochrinnend
@@ -5158,7 +5159,7 @@ el:Συνεχόμενη Προβολή Βιβλίου
 es:Vista continua de libro
 et:Jätkuv raamatuvaade
 eu:Liburu Ikuspegi Jarraia
-fa:نمایش کتابی‌ پیوسته
+fa:کتابی پیوسته
 fi:Kirjanäkymä, peräkkäin
 fr:Vue continue, comme un livre
 fy-nl:Fierder mei boekbyld
@@ -5221,7 +5222,7 @@ el:Δύο σελίδες, συνεχόμενα
 es:Página doble continua
 et:Jätkuv kaheleheküljeline
 eu:Bi Aldeetatik Jarraian
-fa:نمایش دو صفحه‌ای پیوسته
+fa:دو صفحه‌ای پیوسته
 fi:Peräkkäin ja rinnakkain
 fr:Vue continue, page double
 fy-nl:Dûbele side trochrinnend
@@ -5698,7 +5699,7 @@ el:Αδυναμία δημιουργίας προσωρινού φακέλου
 es:No se pudo crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
-fa:فهرست موقت را نمی توان ایجاد کرد
+fa:نمی‌توان پوشه‌ی موقت را ایجاد کرد
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
 gl:Non se puido crear o cartafol temporal
@@ -5749,7 +5750,7 @@ el:Αδυναμία δημιουργίας φακέλου εγκατάσταση
 es:No se pudo crear la carpeta de instalación
 et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
-fa:عدم توانایی در ایجاد پوشه نصب
+fa:نمی‌توان پوشه‌ی نصب را ایجاد کرد
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
 gl:Non se puido crear o cartafol de instalación
@@ -5859,7 +5860,7 @@ dk:Kunne ikke installere PDF viser
 es:No se pudo instalar el previsualizador de PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
-fa:pdf عدم توانایی در نصب پیش نمایش
+fa:نمی‌توان پیش‌نمایشگر PDF را نصب کرد.
 fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
 gl:Non se puido instalado o previsualizador de PDF
@@ -5908,7 +5909,7 @@ dk:Kunne ikke installere PDF søge filter
 es:No se pudo instalar el filtro de búsqueda PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
-fa:عدم توانایی در نصب فیلتر جستجوی pdf
+fa:نمی‌توان فیلتر جستجوی PDF را نصب کرد.
 fi:PDF-hakusuodattimen asentaminen epäonnistui
 fr:Impossible d'installer le filtre de recherche PDF
 gl:Non se puido instalar o filtro de busca de PDF
@@ -5957,7 +5958,7 @@ el:Αδυναμία ανάκτησης προσωρινού φακέλου
 es:No se pudo obtener la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
-fa:فهرست موقت را نمی توان به دست آورد
+fa:دسترسی به پوشه‌ی موقت مقدور نیست
 fi:Väliaikaishakemiston käyttäminen epäonnistui
 fr:Impossible d'obtenir un répertoire temporaire
 gl:Non se puido obter o cartafol temporal
@@ -6006,7 +6007,7 @@ el:Αδυναμία μετακίνησης φακέλου εγκατάσταση
 es:No se pudo eliminar la carpeta de instalación
 et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
-fa:پوشه نصب شده را نمی توان حذف کرد
+fa:نمی‌توان پوشه‌ی نصب را حذف کرد
 fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
 gl:Non se puido eliminar o cartafol de instalación
@@ -6056,7 +6057,7 @@ el:Αδυναμία απομάκρυνσης συντόμευσης
 es:No se pudo eliminar el acceso directo
 et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
-fa:میانبرنمی تواند حذف شود
+fa:نمی‌توان میانبر را حذف کرد
 fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
 gl:Non se puido eliminar o atallo
@@ -6165,7 +6166,7 @@ el:Δεν ήταν δυνατή η απεγκατάσταση του PDF preview
 es:No se pudo desinstalar el previsualizador de PDF
 et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
-fa:ازقبلا دیده شده را نمی توان پاک کردpdf
+fa:نمی‌توان پیش‌نمایشگر PDF را پاک کرد
 fi:PDF-esikatselijan poistaminen epäonnistui
 fr:Impossible de désinstaller l'aperçu PDF
 gl:Non se puido desinstalar o previsualizador de PDFs
@@ -6213,7 +6214,7 @@ dk:Kunne ikke afinstallere PDF søge filter
 es:No se pudo desinstalar el filtro de búsqueda PDF
 et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
-fa:جستجو شده را نمی توان پاک کردpdf فیلتر
+fa:نمی‌توان فیلتر جستجوی PDF را پاک کرد
 fi:PDF-hakusuodattimen poistaminen epäonnistui
 fr:Impossible de désinstaller le filtre de recherche PDF
 gl:Non se puido desinstalar o filtro de buscas de PDF
@@ -6261,7 +6262,7 @@ dk:Kunne ikke fjerne browser plugin
 es:No se pudo desinstalar el complemento del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
-fa:مرورگر پلاگین را نمی توان پاک کرد
+fa:نمی‌توان افزونه‌ی مرورگر را پاک کرد
 fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 gl:Non se puido desinstalar o engadido do navegador
@@ -6310,7 +6311,7 @@ el:Αδυναμία εγγραφής %s στον δίσκο
 es:No se puede escribir %s en el disco
 et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
-fa:نمی توانید بنویسید  %s بر روی دیسک
+fa:نمی‌توان %s را روی دیسک نوشت
 fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 gl:Non se puido escribir %s no disco
@@ -6471,7 +6472,7 @@ de:Zeigerposition:
 es:Posición del cursor:
 et:Kursori asukoht
 eu:Kurtsorearen kokapena:
-fa:مکان نما, موقعیت
+fa:موقعیت مکان‌نما
 fi:Kohdistimen sijainti:
 fr:Position du curseur :
 he:מיקום סמן:
@@ -6505,7 +6506,7 @@ el:&Προσαρμοσμένο Ζουμ...\tCtrl+Y
 es:&Zoom personalizado...\tCtrl+Y
 et:&Muu suurendus...\tCtrl+Y
 eu:Egile Zoo&ma...\tKtrl+Y
-fa:ابعاد نمایش &سفارشی...\tCtrl+Y
+fa:بزرگنمایی &سفارشی...\tCtrl+Y
 fi:&Mukautettu zoomaustaso...\tCtrl+Y
 fr:&Zoom personnalisé...\tCtrl+Y
 fy-nl:&Oanpaste Zoom...\tCtrl+Y
@@ -6566,7 +6567,7 @@ el:Προκαθορισμένη &Διαμόρφωση:
 es:Apariencia pre&determinada:
 et:Vaike&küljend:
 eu:Berezko &Egitura:
-fa:&نمایش پیش‌فرض:
+fa:&صفحه‌بندی پیش‌فرض:
 fi:Oletus&tyyli:
 fr:Mise en &page par défaut :
 fy-nl:Standert &Layout:
@@ -6627,7 +6628,7 @@ el:Προκαθορισμένο &Ζουμ:
 es:Am&pliación predeterminada:
 et:Vaike&suurendus:
 eu:Berezko &Zooma:
-fa:&ابعاد نمایش پیش‌فرض:
+fa:&بزرگنمایی پیش‌فرض:
 fi:Oletus&zoomaus:
 fr:&Zoom par défaut :
 fy-nl:Standert &Zoom:
@@ -6688,7 +6689,7 @@ el:Δε μπορεί να γίνει συσχετισμός σε portable mode
 es:No se puede cambiar el lector PDF predeterminado en el modo «portable», sin instalación
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
-fa:خواننده‌ی پیش‌فرض پرونده‌های PDF را نمی‌توان در نسخه‌ی همراه تغییر داد.
+fa:نمی‌توان خواننده‌ی پیش‌فرض پرونده‌های PDF را در نسخه‌ی قابل حمل تغییر داد.
 fi:PDF-oletuslukijaa ei voi vaihtaa kannettavassa tilassa
 fr:Le lecteur de PDF ne peut être changé en mode portable
 fy-nl:Standert PDF-lêzer kin net oanpast wurde yn portable moadus
@@ -6864,7 +6865,7 @@ el:Ιδιότητες Εγγράφου
 es:Propiedades del documento
 et:Dokumendi omadused
 eu:Agiriaren Ezaugarriak
-fa:ویژگی‌های سند
+fa:مشخصات سند
 fi:Asiakirjan ominaisuudet
 fr:Propriétés du document
 fy-nl:Dokuminteigenskippen
@@ -7353,7 +7354,7 @@ el:Α&γαπημένα
 es:&Favoritos
 et:L&emmikud
 eu:&Gogokoenak
-fa:موارد &منتخب
+fa:&علاقه‌مندی‌ها
 fi:S&uosikit
 fr:Fa&voris
 ga:Ce&anáin
@@ -7408,7 +7409,7 @@ el:Εμπ&ρός\tAlt+->
 es:Adelante\tAlt+Der
 et:E&dasi\tAlt+Paremnool
 eu:A&urrera\tAlt+Eskuin Gezia
-fa:&جلو\tAlt+→
+fa:جای &بعدی\tAlt+→‎
 fi:Se&uraava\tAlt+Oikea nuoli
 fr:&Avancer\tAlt+->
 fy-nl:Fierder\tAlt+->
@@ -7602,7 +7603,7 @@ dk:Kunne ikke kopiere fra midlertidig folder
 es:Error al copiar el desinstalador al directorio temporal
 et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
-fa:کپی برنامه برای حذف در پوشه موقت ناموفق
+fa:کپی کردن برنامه‌ی حذف به پوشه‌ی موقت ناموفق بود
 fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 gl:Fallou a copia do desinstalador no cartafol temporal
@@ -7651,7 +7652,7 @@ el:Αποτυχία δημιουργίας συντόμευσης
 es:No se pudo crear un acceso directo
 et:Ei õnnestu luua otseteed
 eu:Hutsegitea lasterbidea sortzerakoan
-fa:خطا در ایجاد فایل میانبر
+fa:خطا در ایجاد میانبر
 fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
 gl:Fallou a creación do atallo
@@ -7699,7 +7700,7 @@ dk:Kunne ikke slette afinstallering nøger i registreringsdatabasen
 es:Error al eliminar las claves del registro del desinstalador
 et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
-fa:برای حذف کلید های ثبت برنامه ، حذف به انجام نرسید
+fa:کلیدهای رجیستری برنامه‌ی حذف پاک نشد
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 gl:Fallou o borrado das claves de rexistro
@@ -7748,7 +7749,7 @@ el:Η μετονομασία του αρχείου απέτυχε!
 es:No se pudo renombrar el archivo.
 et:Faili ümbernimetamine ebaõnnestus.
 eu:Hutsegitea agiria berrizendatzerakoan!
-fa:تغییر نام پرونده با شکست مواجه شد!
+fa:تغییر نام پرونده ناموفق بود!
 fi:Tiedoston uudelleennimeäminen epäonnistui!
 fr:Impossible de renommer le fichier!
 ga:Theip ar athainmniú an chomhaid!
@@ -7804,7 +7805,7 @@ el:Αποτυχία αποθήκευσης αρχείου
 es:Error al guardar un archivo
 et:Faili salvestamine ebaõnnestus
 eu:Hutsegitea agiria gordetzerakoan
-fa:ذخیره کردن فایل با مشکل روبرو شد
+fa:ذخیره کردن پرونده با شکست مواجه شد
 fi:Tiedoston tallennus epäonnistui
 fr:Échec à l'enregistrement du fichier
 fy-nl:Flater by bewarjen bestân
@@ -7914,7 +7915,7 @@ dk:Kunne ikke skrive afinstallerings information i registreringsdatabasen
 es:Error al escribir información de desinstalación en el registro
 et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
-fa:اطلاعات ارسالی ثبت شده برای حذف ناموق
+fa:ثبت اطلاعات فرآیند حذف در رجیستری ناموفق بود
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
 gl:Fallouse ao escribir a información de desintalación no rexistro
@@ -7963,7 +7964,7 @@ el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización rápida en Web
 et:Kiire veebivaade
 eu:Web Ikuspen Azkarra
-fa:تماشای بی درنگ
+fa:نمایش بی‌درنگ
 fi:Nopea web-näkymä
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
@@ -8016,7 +8017,7 @@ el:Αγαπημένα
 es:Favoritos
 et:Lemmikud
 eu:Gogokoenak
-fa:موارد منتخب
+fa:علاقه‌مندی‌ها
 fi:suosikit
 fr:Favoris
 ga:Ceanáin
@@ -8072,7 +8073,7 @@ el:Έγγραφα FictionBook
 es:Documentos FictionBook
 et:FictionBook-dokumendid
 eu:FikzioLiburu agiriak
-fa:اسناد کتاب تخیلی
+fa:اسناد FictionBook
 fi:FictionBook-asiakirjat
 fr:Documents FictionBook
 gl:Documentos FictionBook
@@ -9345,7 +9346,7 @@ el:Συχνά Αναγνωσμένα Αρχεία
 es:Lo más leído
 et:Sageli loetud dokumendid
 eu:Sarri Irakurriak
-fa:آخرین خوانده‌ها
+fa:آخرین چیزهایی که خوانده‌اید
 fi:Usein luetut
 fr:Documents lus fréquemment
 ga:Léite Go Minic
@@ -9533,7 +9534,7 @@ dk:Gem &Valgmuligheder
 es:Menos &opciones
 et:Peida &sätted
 eu:Ezkuta A&ukerak
-fa:مخفی & تنظیمات
+fa:مخفی کردن &گزینه‌ها
 fi:Piilota
 fr:Masque les &options
 gl:Agochar as &opcións
@@ -9582,7 +9583,7 @@ el:Απόκρυψη συχνών αναγνωσμένων αρχείων
 es:Ocultar "lo más leído"
 et:Peida sageli loetud dokumendid
 eu:Ezkutatu sarri irakurriak
-fa:پنهان کردن آخرین خوانده‌ها
+fa:پنهان کردن آخرین چیزهایی که خوانده‌اید
 fi:Piilota usein luetut
 fr:Masquer les documents lus fréquemment
 ga:Folaigh cinn léite go minic
@@ -9637,7 +9638,7 @@ el:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση τ
 es:Consejo: Presione F3 para mostrar el siguiente resultado
 et:Soovitus: Uuesti otsimiseks vajuta F3-klahvi
 eu:Oharra: Erabili F3 tekla berriro bilatzeko
-fa:اشاره: برای جستجوی مجدد از کلید F3 استفاده کنید
+fa:نکته: برای جستجوی مجدد از کلید F3 استفاده کنید
 fi:Vihje: Käytä F3-näppäintä etsiäksesi uudestaan
 fr:Remarque : utilisez la touche F3 pour trouver de nouveau
 fy-nl:Tip: Brûk de funksjetoets F3 om fierder te sykjen
@@ -9751,7 +9752,7 @@ el:Εγκατάσταση SumatraPDF
 es:Instalar SumatraPDF
 et:Paigalda SumatraPDF
 eu:Ezarri SumatraPDF
-fa:sumatra pdf نصب
+fa:نصب کردن SumatraPDF
 fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
 gl:Instalar SumatraPDF
@@ -9799,7 +9800,7 @@ el:Εγκατάσταση SumatraPDF σε &folder:
 es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
-fa:در &پوشه sumatra pdf نصب
+fa:SumatraPDF را در این &پوشه نصب کن:
 fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
 gl:Instalar SumatraPDF no &cartafol:
@@ -9895,7 +9896,7 @@ el:Εγκατάσταση σε εξέλιξη...
 es:Instalación en progreso...
 et:Toimub paigaldamine...
 eu:Ezarpena garatzen...
-fa:نصب در حال بارگذاری
+fa:در حال نصب...
 fi:Asennus käynnissä...
 fr:Installation en cours…
 gl:Instalación en curso...
@@ -10007,7 +10008,7 @@ de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
 es:Mantener instalado el complemento de &navegador (ahora obsoleto)
 et:Jäta alles PDF &brauseri plugin (enam ei toetata)
 eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
-fa:و نصب مرور پلاگین (پشتبانی دائمی وجود ندارد PDF نگهداری
+fa:افزونه‌ی PDF نصب شده روی مرورگر باقی بماند (دیگر پشتیبانی نمی‌شود)
 fi:Pidä PDF-selainlaajennus asennettuna (ei enää tuettu)
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
@@ -13200,7 +13201,7 @@ el:Αφαίρεση από τα αγαπημένα
 es:Eliminar de favoritos
 et:Kustuta lemmikutest
 eu:Kendu Gogokoenetatik
-fa:حذف از موارد برگزیده
+fa:حذف از علاقه‌مندی‌ها
 fi:&Poista suosikeista
 fr:Enlever des favoris
 ga:Bain ó na ceanáin
@@ -13255,7 +13256,7 @@ el:Αφαίρεση σελίδας %s από τα αγαπημένα
 es:Eliminar página %s de favoritos
 et:Kustuta lehekülg %s lemmikutest
 eu:Kendu %s orrialdea gogokoenetatik
-fa:حذف صفحه‌ی %s از موارد برگزیده
+fa:حذف صفحه‌ی %s از علاقه‌مندی‌ها
 fi:Poista sivu %s suosikeista
 fr:Enlever page %s des favoris
 ga:Bain leathanach a %s ó na ceanáin
@@ -13368,7 +13369,7 @@ el:Περιστροφή Αριστερά\tCtrl+Shift+-
 es:Girar a la izquierda\tCtrl+Mayús+-
 et:Pööra &vasemale\tCtrl+Shift+-
 eu:Itzulikatu E&zkerrerantz\tKtrl+Shift+-
-fa:چرخاندن به &چپ\tCtrl+Shift+-
+fa:چرخاندن به &چپ\tCtrl+Shift+-‎
 fi:Käännä &vasemmalle\tCtrl+Shift+-
 fr:Rotation &antihoraire\tCtrl+Shift+-
 fy-nl:Linksom draaie\tCtrl+Shift+-
@@ -13436,7 +13437,7 @@ el:Περιστροφή Δεξιά\tCtrl+Shift++
 es:Girar a la derecha\tCtrl+Mayús++
 et:Pööra &paremale\tCtrl+Shift++
 eu:Itzulikatu E&skuinera\tKtrl+Shift++
-fa:چرخاندن به &راست\tCtrl+Shift++
+fa:چرخاندن به &راست\tCtrl+Shift++‎
 fi:Käännä &oikealle\tCtrl+Shift++
 fr:Rotation &horaire\tCtrl+Shift++
 fy-nl:Rjochtsom draaie\tCtrl+Shift++
@@ -14052,7 +14053,7 @@ el:Εμφάνιση &Σελιδοδεικτών
 es:Mostrar &marcadores
 et:Näita &järjehoidjaid
 eu:Erakutsi Laster&markak
-fa:ن&شانه‌ها را نشان بده
+fa:ن&شانک‌ها را نشان بده
 fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
@@ -14105,7 +14106,7 @@ el:&Συνεχής εμφάνιση σελίδων
 es:Mostrar &páginas de forma continua
 et:Näita &lehekülgi pidevana
 eu:&Erakutsi Orrialdeak Jarraian
-fa:نمایش &پیوسته‌ی صفحات
+fa:به صورت &پیوسته
 fi:Näytä &sivut peräkkäin
 fr:&Vue continue
 fy-nl:Toan sides kontinue
@@ -14232,7 +14233,7 @@ el:Εμφάνιση Αγαπημένων
 es:Mostrar favoritos
 et:Näita lemmikuid
 eu:Erakutsi Gogokoenak
-fa:نشان دادن موارد برگزیده
+fa:علاقه‌مندی‌ها را نشان بده
 fi:&Näytä suosikit
 fr:Voir Favoris
 ga:Taispeáin Ceanáin
@@ -14343,7 +14344,7 @@ el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών 
 es:Mostrar la barra de &marcadores cuando esté disponible
 et:Näita &järjehoidjate külgriba kui võimalik
 eu:E&rakutsi lastermarka albobarra eskuragarri dagoenean
-fa:هنگامیکه نوار ن&شانه‌ها در دسترس است آن را نشان بده
+fa:نوار ن&شانک‌ها را در صورت وجود نشان بده
 fi:Näytä &kirjanmerkit sivupalkissa, kun saatavilla
 fr:Voir la barre latérale des &signets lorsqu'elle est disponible
 fy-nl:Toan de &blêdwizerarkbalke as beskikber
@@ -15795,6 +15796,7 @@ de:Dokumente in &Tabs öffnen
 es:Usar &pestañas
 et:Kasuta &kaarte
 eu:Erabili &hegatsak
+fa:استفاده از &سربرگ
 fi:Käytä välilehtiä
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
@@ -15824,7 +15826,7 @@ el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
 es:Usar SumatraPDF como lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
-fa:به عنوان پی دی اف خوان پیشفرضsumatra pdf استفاده از
+fa:استفاده از SumatraPDF به عنوان پی‌دی‌اف خوان &پیشفرض
 fi:Käytä SumatraPDF:ää PDF-asiakirjojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 gl:Emprega SumatraPDF como o lector de PDF por &defecto
@@ -16259,7 +16261,7 @@ el:Ζουμ
 es:Ampliar
 et:Suurenda
 eu:Zooma
-fa:ابعاد نمایش
+fa:بزرگنمایی
 fi:Zoomaus
 fr:Zoom
 fy-nl:Zoom
@@ -16456,7 +16458,7 @@ el:Ποσοστό μεγέθυνσης
 es:Proporción de zoom
 et:Suurendusaste
 eu:Zomm ezaugarria
-fa:ضریب ابعاد نمایش
+fa:ضریب بزرگنمایی
 fi:Zoomaustaso
 fr:Facteur de zoom
 fy-nl:Zoomfaktor
