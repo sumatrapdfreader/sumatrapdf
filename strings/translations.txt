@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b5c045fe9d5dc8e01f2aa5fbdc879b30b9de7f4b
+0d634d17296e788d4ecd741b5396bbee5b35e78a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1389,7 +1389,7 @@ el:Ταίριασμα πεζών/κεφαλαίων
 es:&Coincidir mayúsculas y minúsculas
 et:&Tõstutundlik
 eu:&Hizki larri-xeheak bereizi
-fa:با توجه به &قالب حروف
+fa:دقیقا &مثل عبارت وارد شده
 fi:Sama kirjainkoko
 fr:&Respecter la casse
 fy-nl:Haad-/lytse letters tapasse
@@ -2165,7 +2165,7 @@ el:&Εκτύπωση... (απαγορεύεται)
 es:&Imprimir... (protegido)
 et:&Prindi... (keelatud)
 eu:&Irarkitu... (ukatuta)
-fa:&چاپ (ممنوع)...
+fa:&چاپ... (ممنوع شده)
 fi:&Tulosta... (kielletty)
 fr:&Imprimer... (Interdit)
 ga:&Clóbhualadh... (diúltaithe)
@@ -2646,7 +2646,7 @@ el:Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (
 es:&Reducir páginas hasta llegar al área imprimible (si es necesario)
 et:Mahuta leheküljed pr&inditavale alale (kui vaja)
 eu:&Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)
-fa:اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &کاهش بده (اگر لازم است)
+fa:صفحات را متناسب با ناحیه‌ی قابل چاپ روی کاغذ &جمع و جور کن (اگر لازم است)
 fi:P&ienennä sivut tulostettavalle alueelle (jos tarpeellista)
 fr:&Réduire les pages à la zone d'impression (si nécessaire)
 ga:&Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
@@ -2703,7 +2703,7 @@ el:&Μονή Σελίδα\tCtrl+6
 es:Página única\tCtrl+6
 et:Ü&heleheküljeline\tCtrl+6
 eu:&Orrialde Bakarra\tKtrl+6
-fa:&تک‌صفحه‌ای
+fa:&تک صفحه‌ای\tCtrl+6
 fi:&Yksittäinen sivu\tCtrl+6
 fr:Une &seule page\tCtrl+6
 ga:&Leathanach amháin\tCtrl+6
@@ -7242,7 +7242,7 @@ el:Εισάγετε την εντολή προς εκτέλεση με διπλ�
 es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
 et:Sisesta käsurida, mis käivitatakse, kui teed topeltklõpsu PDF dokumendil:
 eu:Idatzi deitzeko agindu-lerroa PDF agirian klik-bikoitza egiten duzunean:
-fa:خط دستور را برای فراخوانی هنگام کلیک روی پرونده‌ی PDF وارد کنید:
+fa:خط دستور را برای فراخوانی هنگام دوبار کلیک روی سند PDF وارد کنید:
 fi:Anna komentorivin komento, joka ajetaan kun PDF-asiakirjaa kaksoisnapsautetaan:
 fr:Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le document PDF :
 ga:Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar cháipéis PDF:
@@ -7299,7 +7299,7 @@ el:Σφάλμα φόρτωσης του %s
 es:Error al cargar %s
 et:Viga laadimisel: %s
 eu:Akatsa %s gertatzerakoan
-fa:نمایش خطا %s
+fa:خطا هنگام بارگذاری %s
 fi:Virhe ladattaessa: %s
 fr:Erreur de chargement de %s
 ga:Tharla botún ag luchtú %s
@@ -10044,7 +10044,7 @@ dk:Lad Windows skrivebord Søge &søg PDF dokumenter
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
-fa:اچازه جستجو دهید  PDFدر صفحه نمایش گر ویندوز و فایل
+fa:جستجوگر ویندوز امکان &جستجو در اسناد PDF را داشته باشد
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
@@ -10091,7 +10091,7 @@ dk:Lad Windows vise &femvisning af PDF dokumenter
 es:Mostrar miniaturas en los iconos de documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
-fa:اجازه داده شودPDFنمایش ویندوز و از فایل
+fa:ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
@@ -10391,7 +10391,7 @@ el:Αντιστοίχιση πεζών-κεφαλαίων
 es:Coincidir mayúsculas y minúsculas
 et:Tõstutundlik
 eu:Hizki Larriak-xeheak Bereizi
-fa:متناسب با مورد
+fa:دقیقا مثل عبارت وارد شده
 fi:Sama kirjainkoko
 fr:Respecter la casse
 fy-nl:Haadlettergefoelich
@@ -10572,7 +10572,7 @@ el:Η νέα έκδοση %s είναι διαθέσιμη. Να γίνει λή
 es:Está disponible la nueva versión %s. ¿Desea descargarla?
 et:Uus %s versioon on saadaval. Kas laadin alla uue versiooni?
 eu:%s bertsio berria eskuragarri dago. Jeitsi bertsio berria?
-fa:نسخه جدید %s موجود است. آیا می‌خواهید آن را دریافت کنید؟
+fa:نسخه جدید %s موجود است. آن را دریافت می‌کنید؟
 fi:Uudempi versio %s saatavilla. Ladataanko uudempi versio?
 fr:La version %s est disponible. Télécharger la nouvelle version ?
 fy-nl:Nije ferzje %s is beskikber. Wolle jo dizze ynlade?
@@ -10704,7 +10704,7 @@ el:Δε βρέθηκε το κείμενο
 es:No se encontraron coincidencias
 et:Otsitavat teksti ei leitud
 eu:Ez da emaitzik aurkitu
-fa:مورد مرتبطی یافت نشد
+fa:موردی یافت نشد
 fi:Osumia ei löytynyt
 fr:Aucun résultat n'a été trouvé
 fy-nl:Gjin sykresultaat fûn
@@ -11243,7 +11243,7 @@ el:Άνοιγμα σε %s
 es:Abrir con %s
 et:Ava rakenduses %s
 eu:Irekitzea %s
-fa:%s بازشدن در
+fa:باز کردن در %s
 fi:Avaa ohjelmassa %s
 fr:Ouvrir dans %s
 gl:Abrir en %s
@@ -11531,7 +11531,7 @@ el:&Ιδιότητες
 es:P&ropiedades
 et:O&madused
 eu:Eza&ugarriak
-fa:وی&ژگی‌ها
+fa:م&شخصات
 fi:Ominaisuudet
 fr:P&ropriétés
 ga:Ai&ríonna
@@ -11587,7 +11587,7 @@ el:&Ιδιότητες\tCtrl+D
 es:P&ropiedades...\tCtrl+D
 et:O&madused\tCtrl+D
 eu:&Ezaugarriak\tKtrl+D
-fa:وی&ژگی‌ها\tCtrl+D
+fa:م&شخصات\tCtrl+D
 fi:O&minaisuudet\tCtrl+D
 fr:&Propriétés\tCtrl+D
 fy-nl:E&igenskippen...\tCtrl+D
@@ -11707,7 +11707,7 @@ el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 et:PDF-i optimeerimised:
 eu:PDF Hobekuntzak:
-fa:PDF بهینه سازی
+fa:PDF بهینه‌سازی
 fi:PDF-optimoinnit:
 fr:Optimisations PDF
 ga:Optimisations PDF
@@ -12301,7 +12301,7 @@ el:Παρακαλώ κλείστε %s για να συνεχίσετε!
 es:Necesita cerrar %s para continuar.
 et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
-fa:لطفا آن را ببندید %s برای دسترسی کامل
+fa:پیش از ادامه لطفا %s را ببندید!
 fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
 gl:Peche %s para continuar
@@ -12465,7 +12465,7 @@ el:&Παρουσίαση\tCtrl+L
 es:Pr&esentación\tCtrl+L
 et:&Esitlus\tCtrl+L
 eu:&Aurkezpena\tKtrl+L
-fa:ارا&ئه\tCtrl+L
+fa:ارا&ئه\tF5
 fi:&Esitys\tCtrl+L
 fr:P&résentation\tCtrl+L
 ga:Cur i láthair\tCtrl+L
@@ -12809,7 +12809,7 @@ el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
 et:Printimine on pooleli.
 eu:Irarketa garatzen.
-fa:در حال چاپ شدن.
+fa:فرآیند چاپ در جریان است.
 fi:Tulostaminen käynnissä.
 fr:Impression en cours
 gl:Impresión en curso.
@@ -12859,7 +12859,7 @@ el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση
 es:Impresión aún en progreso. ¿Cancelar y salir?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
-fa:در حال چاپ شدن. انصراف و خروج؟
+fa:فرآیند چاپ هنوز در جریان است. انصراف و خروج؟
 fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
 fr:Impression toujours en cours. Annuler et quitter ?
 gl:Ainda se está imprimindo. Quere detela e saír?
@@ -12909,7 +12909,7 @@ el:Η εκτύπωση βρίσκεται σε εξέλιξη. Να ακυρωθ
 es:La impresión está en progreso. ¿Quiere interrumpirla e iniciar de nuevo?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
-fa:در حال چاپ کردن.انصراف و شروع مجدد؟
+fa:فرآیند چاپ هنوز در جریان است. انصراف و شروع مجدد؟
 fi:Tulostaminen on vielä käynnissä. Keskeytetäänkö ja aloitetaan uudelleen?
 fr:Impression toujours en cours. Annuler et recommencer ?
 ga:Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
@@ -12964,7 +12964,7 @@ el:Εκτύπωση σελίδας %d από %d...
 es:Imprimiendo página %d de %d...
 et:Lehekülje %d/%d printimine...
 eu:%d orria %d-tik irarkitzen...
-fa:چاپ کردن صفحه‌ی %d از %d...
+fa:در حال چاپ کردن صفحه‌ی %d از %d...
 fi:Tulostetaan sivua %d/%d...
 fr:Impression de la page %d sur %d...
 ga:Ag clóbhualadh leathanach a %d as %d...
@@ -13505,7 +13505,7 @@ el:Αποθήκευση ως
 es:Guardar como
 et:Salvesta kui...
 eu:Gorde Honela
-fa:ذخیره با نام
+fa:ذخیره کردن با نام
 fi:Tallenna nimellä
 fr:Enregistrer sous
 fy-nl:Bewarje as
@@ -13625,7 +13625,7 @@ el:Αναζήτηση %d από %d...
 es:Buscando %d de %d...
 et:Otsitakse %d/%d...
 eu:%d-tik %d bilatzen...
-fa:در حال جستجو %d از %d...
+fa:در حال جستجوی %d از %d...
 fi:Etsitään %d/%d...
 fr:Recherche de %d à %d...
 fy-nl:Sykje %d fan %d...
@@ -13796,7 +13796,7 @@ el:Επιλέξτε περιεχόμενο με Ctrl+αριστερό πλήκτ
 es:Seleccionar con Ctrl+Botón. Izq. del ratón
 et:Sisu valimiseks Ctrl+vasak hiirenupp
 eu:Hautatu edukia Ktrl+ezker sagu botoiarekin
-fa:متن مورد نظر را با کلید Ctrl و کلید سمت چپ موس انتخاب کنید
+fa:انتخاب محتوا با نگه داشتن کلید Ctrl و کلید سمت چپ موشی
 fi:Valitse sisältöä Ctrl+vasemmanpuoleinen hiiren painike
 fr:Sélectionner avec Ctrl+bouton gauche de la souris
 fy-nl:Selektearje ynhâld mei Ctrl+linker mûsknop
@@ -13853,7 +13853,7 @@ dk:Vælg folderen hvor SumatraPDF skal installeres:
 es:Seleccione la carpeta de instalación de SumatraPDF:
 et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
-fa:که سوماترا باید در آن نصب شود را انتخاب کنید PDFپوشه ای
+fa:پوشه‌ای را برای نصب Sumatra PDF انتخاب کنید:
 fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
 gl:Escolla o cartafol onde quere instalar SumatraPDF
@@ -14288,7 +14288,7 @@ el:Εμφάνιση συχνά αναγνωσμένων αρχείων
 es:Mostrar «lo más leído»
 et:Näita sageli loetud dokumente
 eu:Erakutsi Sarri irakurriak
-fa:نشان دادن آخرین خوانده‌ها
+fa:نشان دادن آخرین چیزهایی که خوانده‌اید
 fi:Näytä usein luetut
 fr:Montrer les documents fréquemment lus
 ga:Taispeáin cinn léite go minic
@@ -14406,7 +14406,7 @@ el:Μονή Σελίδα
 es:Página única
 et:Üheleheküljeline
 eu:Orrialde Bakarra
-fa:نمایش تک صفحه‌ای
+fa:تک صفحه‌ای
 fi:Yksittäinen sivu
 fr:Une seule page
 fy-nl:Inkele side
@@ -14469,7 +14469,7 @@ dk:Nogle installations filer er beskadiget eller mangler
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
 et:Mõned paigaldatavad failid on viga saanud või puuduvad
 eu:Ezarritako zenbait agiri hondatuta edo galduta daude
-fa:بخشی از فایهای نصب شده خراب شده و یا گم شده
+fa:بعضی از فایل‌های نصب خراب هستند یا وجود ندارند
 fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 gl:Algúns ficheiros que se precisan instalar están danados ou faltan
@@ -14518,7 +14518,7 @@ el:Μας συγχωρείτε για το αναπάντεχο σφάλμα π�
 es:Lo sentimos, esto no debería haber sucedido...\n\nPresione «cancelar» si quiere ayudarnos a arreglar la causa del fallo.
 et:Vabandust, seda ei oleks tohtinud juhtuda!\n\nPalun vajuta 'Loobu' kui soovid aidata meil parandada selle kokkujooksmise põhjust.
 eu:Barkatu, hau ez litzake gertatu behar!\n\nMesedez sakatu 'ezeztatu', matxura hau eragin duena zuzentzen laguntzea nahi badiguzu.
-fa:متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید که برای برطرف شدن مشکل ما را یاری نمایید، کلید لغو را بزنید.
+fa:متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید تا این مشکل را برطرف کنیم، کلید لغو را بزنید.
 fi:Pahoittelut, jotain odottamatonta tapahtui!\n\nPaina 'Peruuta' jos haluat auttaa tekijöitä korjaamaan tämän virheen.
 fr:Désolé, cela n'aurait pas dû se produire !\n\n Cliquez sur "Annuler" si vous voulez nous aider à remédier à ce crash
 ga:Faraor, níor chóir go dtarlódh sin!\n\nBrúigh 'Cealaigh' le do thoil, más mian leat cuidiú linn údar an chliste seo a dheisiú.
@@ -14633,7 +14633,7 @@ el:Έναρξη SumatraPDF
 es:Iniciar SumatraPDF
 et:Käivita SumatraPDF
 eu:Abiarazi SumatraPDF
-fa:اجرای sumatra pdf
+fa:اجرای Sumatra PDF
 fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
 gl:Iniciar SumatraPDF
@@ -14741,7 +14741,7 @@ dk:SumatraPDF %s installer
 es:Instalador de SumatraPDF %s
 et:SumatraPDF %s paigaldamine
 eu:SumatraPDF %s Ezartzailea
-fa:نصب کننده sumatra pdf %s
+fa:نصب کننده SumatraPDF %s
 fi:SumatraPDF %s asennusohjelma
 fr:Installeur de SumatraPDF %s
 gl:Instalador %s SumatraPDF
@@ -14788,7 +14788,7 @@ dk:SumatraPDF %s afinstallere
 es:Desinstalador de SumatraPDF %s
 et:SumatraPDF %s eemaldamine
 eu:SumatraPDF %s Kentzailea
-fa:حذف کننده sumatra pdf %s
+fa:حذف کننده SumatraPDF %s
 fi:SumatraPDF %s poisto-ohjelma
 fr:Désinstalleur de SumatraPDF %s
 gl:Desinstalador %s SumatraPDF
@@ -15008,7 +15008,7 @@ el:Το SumatraPDF απεγκαταστάθηκε.
 es:Se ha desinstalado SumatraPDF.
 et:SumatraPDF on eemaldatud.
 eu:SumatraPDF kendu da.
-fa:پاک شد sumatra pdf
+fa:SumatraPDF پاک شد.
 fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
 gl:Desintalouse SumatraPDF
@@ -15056,7 +15056,7 @@ el:Η εγκατάσταση του SumatraPDF δεν βρέθηκε.
 es:Instalación de SumatraPDF no encontrada.
 et:SumatraPDF paigaldust ei leitud.
 eu:SumatraPDF ezarpena ez da aurkitu.
-fa:نصب شده sumatra pdf پیدا نشد.
+fa:نصب شده‌ی SumatraPDF پیدا نشد.
 fi:SumatraPDF-asennusta ei löytynyt.
 fr:Installation de SumatraPDF non trouvée
 gl:Non se atopou ningunha instalación de SumatraPDF.
@@ -15166,7 +15166,7 @@ el:Το SumatraPDF πρέπει να είναι τώρα συσχετισμέν�
 es:A partir de ahora SumatraPDF será el lector PDF predeterminado
 et:SumatraPDF peaks nüüd olema vaikimisi PDF-lehitseja
 eu:SumatraPDF orain zure berezko PDF irakurlea izan beharko litzake
-fa:اکنون SumatraPDF باید برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شما باشد
+fa:SumatraPDF باید اکنون برنامه‌ی پیش‌فرض PDF خوان شما باشد
 fi:SumatraPDF:n pitäisi nyt olla oletuslukijasi PDF-asiakirjoille
 fr:SumatraPDF doit maintenant être votre lecteur de PDF par défaut
 fy-nl:SumatraPDF soe no de standert PDF-lêzer wêze moatte
@@ -15285,7 +15285,7 @@ el:PDF με ετικέττα
 es:PDF etiquetado
 et:Siltidega PDF
 eu:PDF etiketatua
-fa:نشان دار  PDF
+fa:PDF برچسب‌گذاری شده
 fi:Merkitty PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
@@ -15396,7 +15396,7 @@ el:Ευχαριστούμε που διαλέξατε το SumatraPDF!
 es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
-fa:sumatra pdf با تشکر از شما جهت انتخاب
+fa:به خاطر انتخاب SumatraPDF از شما متشکریم!
 fi:Kiitos, että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
 gl:Graciñas por escoller SumatraPDF!
@@ -15444,7 +15444,7 @@ el:Ευχαριστούμε! Το SumatraPDF εγκαταστάθηκε.
 es:¡Gracias! SumatraPDF ha sido instalado.
 et:Täname! SumatraPDF on paigaldatud.
 eu:Mila esker! SumatraPDF ezarri da.
-fa:با تشکر ! sumapra pdf نصب شد
+fa:با تشکر! SumatraPDF نصب شد.
 fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
 gl:Parabéns! Xa tes SumatraPDF instalado.
@@ -15492,7 +15492,7 @@ el:Το πρόγραμμα εγκατάστασης έχει καταστραφ�
 es:El instalador está dañado, pruebe descargándolo de nuevo.\n¡Perdón por las molestias!
 et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
-fa:با عرض معذرت از این مزاحمت نا خواسته  /n .نصب خراب شده است.لطفا دوباره دانلود کنید
+fa:برنامه نصب خراب شده است. لطفا دوباره دانلود کنید.\nبا عرض پوزش به خاطر اشکال به وجود آمده..
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
 gl:O instalador está corrompido. Descárgao de novo.
@@ -15600,7 +15600,7 @@ el:Απεγκατάσταση SumatraPDF
 es:Desinstalar SumatraPDF
 et:Eemalda SumatraPDF
 eu:Kendu SumatraPDF
-fa:پاک کردن sumatra pdf
+fa:پاک کردن SumatraPDF
 fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
 gl:Desinstalar SumatraPDF
@@ -15648,7 +15648,7 @@ el:Αποτυχία απεγκατάστασης
 es:Falló la desinstalación
 et:Eemaldamine ebaõnnestus
 eu:Kentze hutsegitea
-fa:خطا در پاک کردن
+fa:پاک کردن برنامه ناموفق بود
 fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
 gl:Fallou a desinstalación
@@ -15697,7 +15697,7 @@ el:Απεγκατάσταση σε εξέλιξη...
 es:Desinstalación en progreso...
 et:Toimub eemaldamine...
 eu:Kentzea garatzen...
-fa:حذف شدن در حال بارگذاری
+fa:فرآیند حذف برنامه در جریان است...
 fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
 gl:Desinstalación en procreso...
@@ -15747,7 +15747,7 @@ el:Άγνωστο αρχείο προέλευσης (%s)
 es:Archivo de origen desconocido (%s)
 et:Tundmatu lähtefail (%s)
 eu:Iturburu agiri ezezaguna: (%s)
-fa:پرونده‌ی منبع نامعلوم است (%s)
+fa:پرونده‌ی منبع ناشناخته (%s)
 fi:Tuntematon lähdetiedosto (%s)
 fr:Fichier source inconnue (%s)
 fy-nl:Unbekend boarnebestân (%s)
