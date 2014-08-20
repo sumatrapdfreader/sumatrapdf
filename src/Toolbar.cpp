@@ -89,7 +89,7 @@ static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     case IDM_PRINT:
-        return !win->AsFixed() || win->AsFixed()->engine()->AllowsPrinting();
+        return !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #endif
 
     case IDM_FIND_NEXT:

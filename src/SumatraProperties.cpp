@@ -230,7 +230,7 @@ static WCHAR *FormatPermissions(Controller *ctrl)
 
     WStrVec denials;
 
-    BaseEngine *engine = ctrl->AsFixed()->engine();
+    BaseEngine *engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting())
         denials.Push(str::Dup(_TR("printing document")));
     if (!engine->AllowsCopyingText())
@@ -404,7 +404,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     int64 fileSize = file::GetSize(ctrl->FilePath());
     if (-1 == fileSize && ctrl->AsFixed()) {
         size_t fileSizeT;
-        if (ScopedMem<unsigned char>(ctrl->AsFixed()->engine()->GetFileData(&fileSizeT)))
+        if (ScopedMem<unsigned char>(ctrl->AsFixed()->GetEngine()->GetFileData(&fileSizeT)))
             fileSize = fileSizeT;
     }
     if (-1 != fileSize) {
@@ -419,7 +419,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     }
 
     if (ctrl->AsFixed()) {
-        str = FormatPageSize(ctrl->AsFixed()->engine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->GetRotation());
+        str = FormatPageSize(ctrl->AsFixed()->GetEngine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->GetRotation());
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)

@@ -160,8 +160,8 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, TilePosition tile, float
 {
     if (!dm) return false;
     PageInfo *pageInfo = dm->GetPageInfo(pageNo);
-    if (!dm->engine() || !pageInfo) return false;
-    RectI tileOnScreen = GetTileOnScreen(dm->engine(), pageNo, dm->GetRotation(), dm->GetZoomReal(), tile, pageInfo->pageOnScreen);
+    if (!dm->GetEngine() || !pageInfo) return false;
+    RectI tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, dm->GetRotation(), dm->GetZoomReal(), tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
@@ -242,7 +242,7 @@ void RenderCache::Invalidate(DisplayModel *dm, int pageNo, RectD rect)
 
     ScopedCritSec scopeCache(&cacheAccess);
 
-    RectD mediabox = dm->engine()->PageMediabox(pageNo);
+    RectD mediabox = dm->GetEngine()->PageMediabox(pageNo);
     for (int i = 0; i < cacheCount; i++) {
         if (cache[i]->dm == dm && cache[i]->pageNo == pageNo &&
             !GetTileRect(mediabox, cache[i]->tile).Intersect(rect).IsEmpty()) {
@@ -255,8 +255,8 @@ void RenderCache::Invalidate(DisplayModel *dm, int pageNo, RectD rect)
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
 {
-    RectD mediabox = dm->engine()->PageMediabox(pageNo);
-    RectD pixelbox = dm->engine()->Transform(mediabox, pageNo, dm->GetZoomReal(), dm->GetRotation());
+    RectD mediabox = dm->GetEngine()->PageMediabox(pageNo);
+    RectD pixelbox = dm->GetEngine()->Transform(mediabox, pageNo, dm->GetZoomReal(), dm->GetRotation());
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -270,7 +270,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     // without clipping optimizations
     if (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_WIDTH ||
         pixelbox.dx <= dm->GetViewPort().dx || pixelbox.dy < dm->GetViewPort().dy ||
-        !dm->engine()->HasClipOptimizations(pageNo)) {
+        !dm->GetEngine()->HasClipOptimizations(pageNo)) {
         factorAvg /= 2.0;
     }
 
@@ -431,7 +431,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     newRequest->rotation = rotation;
     newRequest->zoom = zoom;
     if (tile) {
-        newRequest->pageRect = GetTileRectUser(dm->engine(), pageNo, rotation, zoom, *tile);
+        newRequest->pageRect = GetTileRectUser(dm->GetEngine(), pageNo, rotation, zoom, *tile);
         newRequest->tile = *tile;
     }
     else if (pageRect) {
@@ -579,7 +579,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.dm->textCache->GetData(req.pageNo);
 
         CrashIf(req.abortCookie != NULL);
-        bmp = req.dm->engine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abortCookie);
+        bmp = req.dm->GetEngine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abortCookie);
         if (req.abort) {
             delete bmp;
             if (req.renderCb)
@@ -594,7 +594,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         }
         else {
             // don't replace colors for individual images
-            if (bmp && !req.dm->engine()->IsImageCollection())
+            if (bmp && !req.dm->GetEngine()->IsImageCollection())
                 UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
             cache->Add(req, bmp);
             req.dm->RepaintDisplay();
@@ -697,7 +697,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
     while (queue.Count() > 0) {
         TilePosition tile = queue.PopAt(0);
-        RectI tileOnScreen = GetTileOnScreen(dm->engine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
+        RectI tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
             renderDelayMin = min(RENDER_DELAY_FAILED, renderDelayMin);

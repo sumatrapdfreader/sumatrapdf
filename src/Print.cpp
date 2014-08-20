@@ -511,7 +511,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     DisplayModel *dm = win->AsFixed();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->engine()->AllowsPrinting())
+    if (!dm->GetEngine()->AllowsPrinting())
         return;
 #endif
 
@@ -528,7 +528,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // the Print dialog allows access to the file system, so fall back
     // to printing the entire document without dialog if that isn't desired
     if (!HasPermission(Perm_DiskAccess)) {
-        PrintFile(dm->engine());
+        PrintFile(dm->GetEngine());
         return;
     }
 
@@ -611,7 +611,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
-    PrintData *data = new PrintData(dm->engine(), &printerInfo, devMode, ranges, advanced,
+    PrintData *data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
                                     dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
@@ -624,9 +624,9 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // unexpectedly deleted
     // TODO: instead prevent closing the document so that printing
     // can still happen on a separate thread and be interruptible
-    bool failedEngineClone = dm->engine() && !data->engine;
+    bool failedEngineClone = dm->GetEngine() && !data->engine;
     if (failedEngineClone)
-        data->engine = dm->engine();
+        data->engine = dm->GetEngine();
 
     if (!waitForCompletion && !failedEngineClone)
         PrintToDeviceOnThread(win, data);

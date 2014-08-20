@@ -366,7 +366,7 @@ void MenuUpdateZoom(WindowInfo* win)
 void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     bool filePrintEnabled = win->IsDocLoaded();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    bool filePrintAllowed = !filePrintEnabled || !win->AsFixed() || win->AsFixed()->engine()->AllowsPrinting();
+    bool filePrintAllowed = !filePrintEnabled || !win->AsFixed() || win->AsFixed()->GetEngine()->AllowsPrinting();
 #else
     bool filePrintAllowed = true;
 #endif
@@ -457,7 +457,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     }
 
     if (win->AsFixed())
-        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->AsFixed()->engine()->IsImageCollection());
+        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->AsFixed()->GetEngine()->IsImageCollection());
 
     // TODO: is this check too expensive?
     if (win->IsDocLoaded() && !file::Exists(win->ctrl->FilePath()))
@@ -468,7 +468,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
-    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->engine()->SupportsAnnotation() &&
+    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->GetEngine()->SupportsAnnotation() &&
                                                            win->showSelection && win->selectionOnPage);
     win::menu::SetEnabled(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, gGlobalPrefs->useTabs);
     win::menu::SetChecked(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, win->tabsInTitlebar);

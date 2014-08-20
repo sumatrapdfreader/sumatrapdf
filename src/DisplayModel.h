@@ -69,10 +69,10 @@ public:
     ~DisplayModel();
 
     // meta data
-    virtual const WCHAR *FilePath() const { return _engine->FileName(); }
-    virtual const WCHAR *DefaultFileExt() const { return _engine->GetDefaultFileExt(); }
-    virtual int PageCount() const { return _engine->PageCount(); }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return _engine->GetProperty(prop); }
+    virtual const WCHAR *FilePath() const { return engine->FileName(); }
+    virtual const WCHAR *DefaultFileExt() const { return engine->GetDefaultFileExt(); }
+    virtual int PageCount() const { return engine->PageCount(); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return engine->GetProperty(prop); }
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const;
@@ -90,10 +90,10 @@ public:
     virtual void SetViewPortSize(SizeI size);
 
     // table of contents
-    virtual bool HasTocTree() const { return _engine->HasTocTree(); }
-    virtual DocTocItem *GetTocTree() { return _engine->GetTocTree(); }
+    virtual bool HasTocTree() const { return engine->HasTocTree(); }
+    virtual DocTocItem *GetTocTree() { return engine->GetTocTree(); }
     virtual void ScrollToLink(PageDestination *dest);
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return _engine->GetNamedDest(name); }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return engine->GetNamedDest(name); }
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds);
@@ -101,12 +101,12 @@ public:
     virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(this, size, tnCb); }
 
     // page labels (optional)
-    virtual bool HasPageLabels() const { return _engine->HasPageLabels(); }
-    virtual WCHAR *GetPageLabel(int pageNo) const { return _engine->GetPageLabel(pageNo); }
-    virtual int GetPageByLabel(const WCHAR *label) const { return _engine->GetPageByLabel(label); }
+    virtual bool HasPageLabels() const { return engine->HasPageLabels(); }
+    virtual WCHAR *GetPageLabel(int pageNo) const { return engine->GetPageLabel(pageNo); }
+    virtual int GetPageByLabel(const WCHAR *label) const { return engine->GetPageByLabel(label); }
 
     // common shortcuts
-    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= _engine->PageCount(); }
+    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
     virtual bool GoToNextPage();
     virtual bool GoToPrevPage(bool toBottom=false) { return GoToPrevPage(toBottom ? -1 : 0); }
     virtual bool GoToFirstPage();
@@ -118,7 +118,7 @@ public:
 public:
     // the following is specific to DisplayModel
 
-    BaseEngine *engine() const { return _engine; }
+    BaseEngine *GetEngine() const { return engine; }
 
     // controller-specific data (easier to save here than on WindowInfo)
     EngineType      engineType;
@@ -207,7 +207,7 @@ protected:
     bool            GoToPrevPage(int scrollY);
     int             GetPageNextToPoint(PointI pt);
 
-    BaseEngine *    _engine;
+    BaseEngine *    engine;
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo *      pagesInfo;

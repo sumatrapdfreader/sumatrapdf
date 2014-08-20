@@ -742,15 +742,15 @@ public:
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb)
 {
-    RectD pageRect = dm->engine()->PageMediabox(1);
+    RectD pageRect = dm->GetEngine()->PageMediabox(1);
     if (pageRect.IsEmpty())
         return;
 
-    pageRect = dm->engine()->Transform(pageRect, 1, 1.0f, 0);
+    pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0);
     float zoom = size.dx / (float)pageRect.dx;
     if (pageRect.dy > (float)size.dy / zoom)
         pageRect.dy = (float)size.dy / zoom;
-    pageRect = dm->engine()->Transform(pageRect, 1, 1.0f, 0, true);
+    pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0, true);
 
     RenderingCallback *callback = new ThumbnailRenderingTask(tnCb);
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
@@ -786,8 +786,8 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
-    if (win.AsFixed() && win.AsFixed()->engine()->IsPasswordProtected() &&
-        !ScopedMem<char>(win.AsFixed()->engine()->GetDecryptionKey())) {
+    if (win.AsFixed() && win.AsFixed()->GetEngine()->IsPasswordProtected() &&
+        !ScopedMem<char>(win.AsFixed()->GetEngine()->GetDecryptionKey())) {
         RemoveThumbnail(ds);
         return;
     }
@@ -1006,7 +1006,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             // reload user annotations
             dm->userAnnots = LoadFileModifications(args.fileName);
             dm->userAnnotsModified = false;
-            dm->engine()->UpdateUserAnnotations(dm->userAnnots);
+            dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
             // tell UI Automation about content change
             if (win->uia_provider)
                 win->uia_provider->OnDocumentLoad(dm);
@@ -1103,7 +1103,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         CrashIf(win->AsFixed()->pdfSync && win->ctrl != prevCtrl);
         delete win->AsFixed()->pdfSync;
         win->AsFixed()->pdfSync = NULL;
-        int res = Synchronizer::Create(args.fileName, win->AsFixed()->engine(), &win->AsFixed()->pdfSync);
+        int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
@@ -1244,7 +1244,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     if (win->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        ScopedMem<char> decryptionKey(win->AsFixed()->engine()->GetDecryptionKey());
+        ScopedMem<char> decryptionKey(win->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
             DisplayState *state = gFileHistory.Find(ds->filePath);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
@@ -1727,7 +1727,7 @@ static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, Notification
         unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
 
     CrashIf(!win->AsFixed());
-    BaseEngine *engine = win->AsFixed()->engine();
+    BaseEngine *engine = win->AsFixed()->GetEngine();
     PointD pt = win->AsFixed()->CvtFromScreen(pos);
     ScopedMem<WCHAR> posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
@@ -2398,7 +2398,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     AssertCrash(srcFileName);
     if (!srcFileName) return;
 
-    BaseEngine *engine = win.AsFixed() ? win.AsFixed()->engine() : NULL;
+    BaseEngine *engine = win.AsFixed() ? win.AsFixed()->GetEngine() : NULL;
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
     bool canConvertToPDF = engine && win.GetEngineType() != Engine_PDF;
 #ifndef DEBUG
@@ -3652,7 +3652,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 #endif
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     case 'h': // convert selection to highlight annotation
-        if (win.AsFixed() && win.AsFixed()->engine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
+        if (win.AsFixed() && win.AsFixed()->GetEngine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
             if (!win.AsFixed()->userAnnots)
                 win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
@@ -3661,7 +3661,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
                 gRenderCache.Invalidate(win.AsFixed(), sel.pageNo, sel.rect);
             }
             win.AsFixed()->userAnnotsModified = true;
-            win.AsFixed()->engine()->UpdateUserAnnotations(win.AsFixed()->userAnnots);
+            win.AsFixed()->GetEngine()->UpdateUserAnnotations(win.AsFixed()->userAnnots);
             ClearSearchResult(&win); // causes invalidated tiles to be rerendered
         }
 #endif

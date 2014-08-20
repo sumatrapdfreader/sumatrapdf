@@ -30,7 +30,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
 {
     Vec<SelectionOnPage> *sel = new Vec<SelectionOnPage>();
 
-    for (int pageNo = dm->engine()->PageCount(); pageNo >= 1; --pageNo) {
+    for (int pageNo = dm->GetEngine()->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         assert(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo || !pageInfo->shown)
@@ -229,11 +229,11 @@ void CopySelectionToClipboard(WindowInfo *win)
 
     DisplayModel *dm = win->AsFixed();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->engine()->AllowsCopyingText())
+    if (!dm->GetEngine()->AllowsCopyingText())
         win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
     else
 #endif
-    if (!dm->engine()->IsImageCollection()) {
+    if (!dm->GetEngine()->IsImageCollection()) {
         ScopedMem<WCHAR> selText;
         bool isTextSelection = dm->textSelection->result.len > 0;
         if (isTextSelection) {
@@ -263,7 +263,7 @@ void CopySelectionToClipboard(WindowInfo *win)
 
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
-    RenderedBitmap * bmp = dm->engine()->RenderBitmap(selOnPage->pageNo,
+    RenderedBitmap * bmp = dm->GetEngine()->RenderBitmap(selOnPage->pageNo,
         dm->GetZoomReal(), dm->GetRotation(), &selOnPage->rect, Target_Export);
     if (bmp)
         CopyImageToClipboard(bmp->GetBitmap(), true);
