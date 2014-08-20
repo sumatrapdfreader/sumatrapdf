@@ -28,10 +28,10 @@ public:
     EbookController(EbookControls *ctrls, ControllerCallback *cb);
     virtual ~EbookController();
 
-    virtual const WCHAR *FilePath() const { return _doc.GetFilePath(); }
-    virtual const WCHAR *DefaultFileExt() const { return _doc.GetDefaultFileExt(); }
+    virtual const WCHAR *FilePath() const { return doc.GetFilePath(); }
+    virtual const WCHAR *DefaultFileExt() const { return doc.GetDefaultFileExt(); }
     virtual int PageCount() const { return GetMaxPageCount(); }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return _doc.GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc.GetProperty(prop); }
 
     virtual int CurrentPageNo() const { return currPageNo; }
     virtual void GoToPage(int pageNo, bool addNavPoint);
@@ -46,7 +46,7 @@ public:
     virtual float GetNextZoomStep(float towards) const { return 100; }
     virtual void SetViewPortSize(SizeI size);
 
-    virtual bool HasTocTree() const { return _doc.HasToc(); }
+    virtual bool HasTocTree() const { return doc.HasToc(); }
     virtual DocTocItem *GetTocTree();
     virtual void ScrollToLink(PageDestination *dest);
     virtual PageDestination *GetNamedDest(const WCHAR *name);
@@ -62,8 +62,7 @@ public:
 public:
     // the following is specific to EbookController
 
-    const Doc *doc() const { return &_doc; }
-
+    DocType GetDocType() const { return doc.Type(); }
     LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled);
     void EnableMessageHandling(bool enable) { handleMsgs = enable; }
     void UpdateDocumentColors();
@@ -82,7 +81,7 @@ protected:
 
     EbookControls * ctrls;
 
-    Doc             _doc;
+    Doc             doc;
 
     // TODO: this should be recycled along with pages so that its
     // memory use doesn't grow without bounds

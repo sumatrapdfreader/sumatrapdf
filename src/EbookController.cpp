@@ -241,7 +241,7 @@ void EbookController::CloseCurrentDocument()
     ctrls->pagesLayout->GetPage2()->SetPage(NULL);
     StopFormattingThread();
     DeletePages(&pages);
-    _doc.Delete();
+    doc.Delete();
     pageSize = SizeI(0, 0);
 }
 
@@ -328,7 +328,7 @@ void EbookController::TriggerLayout()
         return;
     }
     // CrashIf(size.dx < 100 || size.dy < 40);
-    if (!_doc.IsDocLoaded())
+    if (!doc.IsDocLoaded())
         return;
 
     if (pageSize == size) {
@@ -343,8 +343,8 @@ void EbookController::TriggerLayout()
     CrashIf(incomingPages);
     incomingPages = new Vec<HtmlPage*>(1024);
 
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(_doc, size.dx, size.dy, &textAllocator);
-    formattingThread = new EbookFormattingThread(_doc, args, this, currPageReparseIdx, cb);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
+    formattingThread = new EbookFormattingThread(doc, args, this, currPageReparseIdx, cb);
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();
     UpdateStatus();
@@ -391,7 +391,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr *link)
         return;
     }
 
-    if (Doc_Epub == _doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
+    if (Doc_Epub == doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
         // normalize the URL by combining it with the chapter's base path
         for (int j = pageNo; j > 0; j--) {
             HtmlPage *p = pages->At(j - 1);
@@ -539,7 +539,7 @@ void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg, DisplayMode dis
         currPageReparseIdx = 0;
     CloseCurrentDocument();
 
-    _doc = newDoc;
+    doc = newDoc;
     // displayMode could be any value if alternate UI was used, we have to limit it to
     // either DM_SINGLE_PAGE or DM_FACING
     if (DM_AUTOMATIC == displayMode)
@@ -626,15 +626,15 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc, SizeI size)
 void EbookController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
 {
     // TODO: create thumbnail asynchronously
-    CrashIf(!_doc.IsDocLoaded());
+    CrashIf(!doc.IsDocLoaded());
     // if there is cover image, we use it to generate thumbnail by scaling
     // image width to thumbnail dx, scaling height proportionally and using
     // as much of it as fits in thumbnail dy
-    RenderedBitmap *bmp = ThumbFromCoverPage(_doc, size);
+    RenderedBitmap *bmp = ThumbFromCoverPage(doc, size);
     if (!bmp) {
         // no cover image so generate thumbnail from first page
         SizeI pageSize(size.dx * 3, size.dy * 3);
-        bmp = RenderFirstDocPageToBitmap(_doc, pageSize, size, 10);
+        bmp = RenderFirstDocPageToBitmap(doc, pageSize, size, 10);
     }
     tnCb->SaveThumbnail(bmp);
 }
@@ -665,14 +665,14 @@ void EbookController::ExtractPageAnchors()
     ScopedMem<WCHAR> epubPagePath;
     int fb2TitleCount = 0;
     size_t len;
-    const char *data = _doc.GetHtmlData(len);
+    const char *data = doc.GetHtmlData(len);
     HtmlPullParser parser(data, len);
     HtmlToken *tok;
     while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag())
             continue;
         AttrInfo *attr = tok->GetAttrByName("id");
-        if (!attr && Tag_A == tok->tag && _doc.Type() != Doc_Fb2)
+        if (!attr && Tag_A == tok->tag && doc.Type() != Doc_Fb2)
             attr = tok->GetAttrByName("name");
         if (attr) {
             ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
@@ -683,13 +683,13 @@ void EbookController::ExtractPageAnchors()
         if (Tag_Pagebreak == tok->tag &&
             (attr = tok->GetAttrByName("page_path")) != NULL &&
             str::StartsWith(attr->val + attr->valLen, "\" page_marker />")) {
-            CrashIf(_doc.Type() != Doc_Epub);
+            CrashIf(doc.Type() != Doc_Epub);
             epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Dup(epubPagePath));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // create FB2 title anchors (cf. Fb2Doc::ParseToc)
-        if (Tag_Title == tok->tag && tok->IsStartTag() && Doc_Fb2 == _doc.Type()) {
+        if (Tag_Title == tok->tag && tok->IsStartTag() && Doc_Fb2 == doc.Type()) {
             ScopedMem<WCHAR> id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
             pageAnchorIds->Append(id.StealData());
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
@@ -702,8 +702,8 @@ int EbookController::ResolvePageAnchor(const WCHAR *id)
     ExtractPageAnchors();
 
     int reparseIdx = -1;
-    if (Doc_Mobi == _doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) &&
-        0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
+    if (Doc_Mobi == doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) &&
+        0 <= reparseIdx && (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
         return reparseIdx;
     }
@@ -711,7 +711,7 @@ int EbookController::ResolvePageAnchor(const WCHAR *id)
     int idx = pageAnchorIds->Find(id);
     if (idx != -1)
         return pageAnchorIdxs->At(idx);
-    if (_doc.Type() != Doc_Epub || !str::FindChar(id, '#'))
+    if (doc.Type() != Doc_Epub || !str::FindChar(id, '#'))
         return -1;
 
     ScopedMem<WCHAR> chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
@@ -771,7 +771,7 @@ public:
 DocTocItem *EbookController::GetTocTree()
 {
     EbookTocCollector visitor(this);
-    _doc.ParseToc(&visitor);
+    doc.ParseToc(&visitor);
     EbookTocDest *root = visitor.GetRoot();
     if (root)
         root->OpenSingleNode();
@@ -791,8 +791,8 @@ void EbookController::ScrollToLink(PageDestination *dest)
 PageDestination *EbookController::GetNamedDest(const WCHAR *name)
 {
     int reparseIdx = -1;
-    if (Doc_Mobi == _doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) &&
-        0 <= reparseIdx && (size_t)reparseIdx <= _doc.GetHtmlDataSize()) {
+    if (Doc_Mobi == doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) &&
+        0 <= reparseIdx && (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
     }
     else if (!str::FindChar(name, '#')) {
@@ -804,7 +804,7 @@ PageDestination *EbookController::GetNamedDest(const WCHAR *name)
     }
     if (reparseIdx < 0)
         return NULL;
-    CrashIf((size_t)reparseIdx > _doc.GetHtmlDataSize());
+    CrashIf((size_t)reparseIdx > doc.GetHtmlDataSize());
     return new EbookTocDest(NULL, reparseIdx + 1);
 }
 
@@ -815,8 +815,8 @@ int EbookController::CurrentTocPageNo() const
 
 void EbookController::UpdateDisplayState(DisplayState *ds)
 {
-    if (!ds->filePath || !str::EqI(ds->filePath, _doc.GetFilePath()))
-        str::ReplacePtr(&ds->filePath, _doc.GetFilePath());
+    if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath()))
+        str::ReplacePtr(&ds->filePath, doc.GetFilePath());
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
