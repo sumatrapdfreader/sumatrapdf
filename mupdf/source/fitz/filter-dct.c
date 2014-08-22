@@ -1,11 +1,12 @@
 #include "mupdf/fitz.h"
 
 #include <jpeglib.h>
+#include <setjmp.h>
+
 #ifndef SHARE_JPEG
 typedef void * backing_store_ptr;
 #include "jmemcust.h"
 #endif
-#include <setjmp.h>
 
 typedef struct fz_dctd_s fz_dctd;
 

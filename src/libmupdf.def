@@ -358,6 +358,7 @@ EXPORTS
 	fz_clear_pixmap_rect_with_value
 	fz_clear_pixmap
 	fz_invert_pixmap
+	fz_tint_pixmap
 	fz_invert_pixmap_rect
 	fz_gamma_pixmap
 	fz_unmultiply_pixmap

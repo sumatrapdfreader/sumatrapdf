@@ -417,6 +417,53 @@ fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity)
 }
 
 void
+fz_tint_pixmap(fz_context *ctx, fz_pixmap *pix, int r, int g, int b)
+{
+	unsigned char *s = pix->samples;
+	int x, y;
+
+	if (pix->colorspace == fz_device_bgr(ctx))
+	{
+		int save = r;
+		r = b;
+		b = save;
+	}
+	else if (pix->colorspace == fz_device_gray(ctx))
+	{
+		g = (r + g + b) / 3;
+	}
+	else if (pix->colorspace != fz_device_rgb(ctx))
+	{
+		fz_throw(ctx, FZ_ERROR_GENERIC, "can only tint RGB, BGR and Gray pixmaps");
+	}
+
+	if (pix->n == 4)
+	{
+		for (x = 0; x < pix->w; x++)
+		{
+			for (y = 0; y < pix->h; y++)
+			{
+				s[0] = fz_mul255(s[0], r);
+				s[1] = fz_mul255(s[1], g);
+				s[2] = fz_mul255(s[2], b);
+				s += 4;
+			}
+		}
+	}
+	else if (pix->n == 2)
+	{
+		for (x = 0; x < pix->w; x++)
+		{
+			for (y = 0; y < pix->h; y++)
+			{
+				*s = fz_mul255(*s, g);
+				s += 2;
+			}
+		}
+	}
+}
+
+void
 fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
 	unsigned char *s = pix->samples;
