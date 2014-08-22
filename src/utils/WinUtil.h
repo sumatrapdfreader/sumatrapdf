@@ -12,6 +12,8 @@
 #define WM_MOUSEHWHEEL 0x020E
 #endif
 
+#define NO_COLOR        (COLORREF)-1
+
 #define WIN_COL_WHITE   RGB(0xff, 0xff, 0xff)
 #define WIN_COL_BLACK   RGB(0, 0, 0)
 
@@ -103,6 +105,8 @@ inline void RepaintNow(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
     UpdateWindow(hwnd);
 }
+
+inline BOOL toBOOL(bool b) { return b ? TRUE : FALSE; }
 
 namespace win {
 
