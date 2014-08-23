@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0d634d17296e788d4ecd741b5396bbee5b35e78a
+f442cd0dcd19824cd21681c2297521c2a29f9f0e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2941,6 +2941,7 @@ fa:&پنجره
 fi:Ikkuna
 fr:F&enêtre
 he:&חלון
+hr:P&rozor
 it:&Finestra
 ru:&Окно
 sk:&Okno
@@ -15800,12 +15801,14 @@ fa:استفاده از &سربرگ
 fi:Käytä välilehtiä
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
+hr:Koristi &kartice
 id:Gunakan &tab
 it:Usa &schede
 ja:タブを使う(&t)
 nl:Gebruik &tabs
 pl:Włącz wyświetlanie &kart
 ru:Использовать &вкладки
+sk:Povoliť &záložky
 sp-rs:Koristiti tab
 sr-rs:Користити таб
 uk:Використовувати вкладки

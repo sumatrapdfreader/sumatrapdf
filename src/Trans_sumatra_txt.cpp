@@ -3026,7 +3026,7 @@ const char * gTranslations_hr =
   "&Propusti ovu ina\304\215icu.\0"\
   "Koristi &originalne veli\304\215ine stranica\0"\
   "&Pogled\0"\
-  "\0"\
+  "P&rozor\0"\
   "&Da\0"\
   "&Uve\304\207aj\0"\
   "(od %d)\0"\
@@ -3210,7 +3210,7 @@ const char * gTranslations_hr =
   "Tekstualni dokumenti\0"\
   "Naslov:\0"\
   "Nepoznata izvorna datoteka (%s)\0"\
-  "\0"\
+  "Koristi &kartice\0"\
   "Pogled\0"\
   "&Posjeti internetsku stranicu\0"\
   "Upozorenje\0"\
@@ -11361,7 +11361,7 @@ const char * gTranslations_sk =
   "Textov\303\251 dokumenty\0"\
   "N\303\241zov:\0"\
   "Nezn\303\241my zdrojov\303\275 s\303\272bor (%s)\0"\
-  "\0"\
+  "Povoli\305\245 &z\303\241lo\305\276ky\0"\
   "Zobrazi\305\245\0"\
   "&Nav\305\241t\303\255vi\305\245 webov\303\272 str\303\241nku\0"\
   "Upozornenie\0"\
