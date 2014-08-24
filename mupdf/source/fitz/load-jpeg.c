@@ -194,12 +194,12 @@ static int extract_app13_resolution(jpeg_saved_marker_ptr marker, int *xres, int
 	for (data += 14; data + 12 < data_end; ) {
 		int data_size = -1;
 		int tag = read_value(data + 4, 2, 1);
-		unsigned int value_off = 11 + read_value(data + 6, 2, 1);
+		int value_off = 11 + read_value(data + 6, 2, 1);
 		if (value_off % 2 == 1)
 			value_off++;
-		if (read_value(data, 4, 1) == 0x3842494D /* 8BIM */ && value_off <= marker->data_length)
+		if (read_value(data, 4, 1) == 0x3842494D /* 8BIM */ && value_off <= data_end - data)
 			data_size = read_value(data + value_off - 4, 4, 1);
-		if (data_size < 0 || data_size > (int)(marker->data_length - value_off))
+		if (data_size < 0 || data_size > data_end - data - value_off)
 			return 0;
 		if (tag == 0x3ED && data_size == 16)
 		{
