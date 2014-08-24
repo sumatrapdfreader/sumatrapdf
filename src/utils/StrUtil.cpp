@@ -199,6 +199,25 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
     return str::EqI(txt + txtLen - endLen, end);
 }
 
+const char *FindI(const char *s, const char *toFind)
+{
+    if (!s || !toFind) {
+        return false;
+    }
+    char first = (char)tolower(*toFind);
+    const char *rest = toFind + 1;
+    while (*s) {
+        char c = (char) tolower(*s);
+        if (c == first) {
+            if (str::StartsWithI(s + 1, rest)) {
+                return s;
+            }
+        }
+        s++;
+    }
+    return NULL;
+}
+
 void ReplacePtr(char **s, const char *snew)
 {
     free(*s);
@@ -252,7 +271,6 @@ char *Join(const char *s1, const char *s2, const char *s3, Allocator *allocator)
 
     return res;
 }
-
 
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
