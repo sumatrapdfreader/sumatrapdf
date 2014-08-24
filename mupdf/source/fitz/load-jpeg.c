@@ -133,7 +133,7 @@ static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int 
 		return 0;
 
 	offset = read_value(data + 10, 4, is_big_endian) + 6;
-	if (offset < 14 || offset + 2 > marker->data_length)
+	if (offset < 14 || offset > marker->data_length - 2)
 		return 0;
 	ifd_len = read_value(data + offset, 2, is_big_endian);
 	for (offset += 2; ifd_len > 0 && offset + 12 < marker->data_length; ifd_len--, offset += 12)
@@ -145,11 +145,11 @@ static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int 
 		switch (tag)
 		{
 		case 0x11A:
-			if (type == 5 && value_off > offset && value_off + 8 <= marker->data_length)
+			if (type == 5 && value_off > offset && value_off <= marker->data_length - 8)
 				x_res = 1.0f * read_value(data + value_off, 4, is_big_endian) / read_value(data + value_off + 4, 4, is_big_endian);
 			break;
 		case 0x11B:
-			if (type == 5 && value_off > offset && value_off + 8 <= marker->data_length)
+			if (type == 5 && value_off > offset && value_off <= marker->data_length - 8)
 				y_res = 1.0f * read_value(data + value_off, 4, is_big_endian) / read_value(data + value_off + 4, 4, is_big_endian);
 			break;
 		case 0x128:
@@ -194,12 +194,12 @@ static int extract_app13_resolution(jpeg_saved_marker_ptr marker, int *xres, int
 	for (data += 14; data + 12 < data_end; ) {
 		int data_size = -1;
 		int tag = read_value(data + 4, 2, 1);
-		int value_off = 11 + read_value(data + 6, 2, 1);
+		unsigned int value_off = 11 + read_value(data + 6, 2, 1);
 		if (value_off % 2 == 1)
 			value_off++;
-		if (read_value(data, 4, 1) == 0x3842494D /* 8BIM */ && data + value_off <= data_end)
+		if (read_value(data, 4, 1) == 0x3842494D /* 8BIM */ && value_off <= marker->data_length)
 			data_size = read_value(data + value_off - 4, 4, 1);
-		if (data_size < 0 || data + value_off + data_size > data_end)
+		if (data_size < 0 || data_size > (int)(marker->data_length - value_off))
 			return 0;
 		if (tag == 0x3ED && data_size == 16)
 		{
