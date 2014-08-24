@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f442cd0dcd19824cd21681c2297521c2a29f9f0e
+77ce080e773e63fe0032cb595e6a934d22d45244
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2945,6 +2945,7 @@ hr:P&rozor
 it:&Finestra
 ru:&Окно
 sk:&Okno
+uk:&Вікно
 :&Yes
 am:&Այո
 ar:&نعم
@@ -4770,7 +4771,7 @@ th:ไม่สามารถค้นหาคำสั่งที่ตร�
 tl:Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
 tr:Sondan başa arama komutu başlatılamadı. Ayarlarda komut satırını kontrol ediniz.
 tw:無法進行逆向搜尋。請檢查設定值裡的命令列。
-uk:Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командної стрічки.
+uk:Неможливо запустити команду зворотнього пошуку. Перевірте налашутвання командного рядка.
 uz:Qayta qidirish buyrug'i xatosi. Buyruq satri parametrlarini tekshiring.
 vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần dòng lệnh trong Cài đặt.
 :Change Language
@@ -5678,7 +5679,7 @@ ta:அச்சுப்பொறியின் பண்புகள் ப
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tr:Yazıcı özellikleri temin edilemedi
 tw:無法取得印表機特性
-uk:Неможливо отримати налаштування друкарки
+uk:Неможливо отримати налаштування принтера
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
@@ -6195,7 +6196,7 @@ sv:Kunde inte avinstallera förhandstitt på PDF:er
 ta:PDF முன்னோட்டத்தை நீக்க முடியவில்லை
 tr:PDF önizleyicisi kaldırılamadı
 tw:無法解除安裝 PDF 預覽器
-uk:Не вдалося видалити програму для попереднього перегляду PDF
+uk:Не вдалося видалити програму попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall PDF search filter
@@ -7850,7 +7851,7 @@ th:การบันทึกไฟล์ล้มเหลว
 tl:Hindi ma-i-save ang file
 tr:Dosya kaydedilirken hata çıktı.
 tw:檔案儲存失敗
-uk:Не можна зберегти файл.
+uk:Не вдалося зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Failed to write the extended file extension information to the registry
@@ -9677,7 +9678,7 @@ ta:சிறுகுரிப்பு: F3 தட்டை பயன்பட�
 tl:Payo: Pindutin ang F3 para maghanap muli
 tr:İpucu: yeniden bulmak için F3 tuşunu kullanın
 tw:提示: 按 F3 重新尋找。
-uk:Примітка: Для повторного пошуку натисніть F3
+uk:Підказка: Для повторного пошуку натисніть F3
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Image files (*.%s)
@@ -10322,7 +10323,7 @@ th:ตั้ง SumatraPDF ตั้งเป็นโปรแกรมหล�
 tl:Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files
 tr:Varsayılan PDF okuyucusu yap
 tw:把 SumatraPDF 作為預設的 PDF 閱讀工具
-uk:Зробити SumatraPDF типовим переглядачем PDF
+uk:Зробити SumatraPDF переглядачем PDF за замовчуванням
 uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
 :Man&ga Mode
@@ -10744,7 +10745,7 @@ ta:ஒரு பொருத்தமும் இல்லை
 tl:Walang makitang kapareha
 tr:Sonuç bulunamadı
 tw:找不到結果
-uk:Співпадінь не знайдено
+uk:Співпадінь не виявлено
 uz:Mos keladigan topilmadi
 vn:Không tìm thấy
 :No result found around line %u in file %s
@@ -12789,7 +12790,7 @@ sv:Det finns ingen skrivade med angivet namn
 ta:குறிபிட்ட பெயரில் அச்சுப்பொறி இல்லை.
 tr:Girilen isimli Yazıcı bulunamadı
 tw:指定之印表機不存在
-uk:Друкарки з даним іменем не існує
+uk:Принтера з даним іменем не існує
 uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
@@ -14614,7 +14615,7 @@ ta:%s முல கோப்பிர்க்கு ஒத்தியங்க
 tl:Walang synchronization point ang source file na %s
 tr:%s kaynak dosyasında senkronizasyon noktası yoktur
 tw:來源檔案 %s 沒有同步點
-uk:Файл-джерело %s немає точки синхронізації
+uk:Файл сирцевого коду %s не має точки синхронізації
 uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Start SumatraPDF
@@ -15857,7 +15858,7 @@ sv:Använd SumatraPDF som standardläsare för PDF-filer
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
 tr:SumatraPDF varsayılan PDF okuyucum olsun
 tw:使用 SumatraPDF 作為預設的 PDF 閱讀器(&U)
-uk:Використовувати SumatraPDF як переглядач по замовчуванню для PDF
+uk:Використовувати SumatraPDF як переглядач для PDF за замовчуванням
 uz:SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish
 vn:Đặt SumatraPDF là trình đọc PDF mặc định
 :View
