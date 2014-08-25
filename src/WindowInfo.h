@@ -244,6 +244,7 @@ public:
     void Focus() {
         if (IsIconic(hwndFrame))
             ShowWindow(hwndFrame, SW_RESTORE);
+        SetForegroundWindow(hwndFrame);
         SetFocus(hwndFrame);
     }
 

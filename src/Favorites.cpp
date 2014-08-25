@@ -341,15 +341,12 @@ public:
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
             return;
-        SetForegroundWindow(win->hwndFrame);
-        if (win->IsDocLoaded()) {
-            if (win->ctrl->ValidPageNo(pageNo))
-                win->ctrl->GoToPage(pageNo, true);
-            // we might have been invoked by clicking on a tree view
-            // switch focus so that keyboard navigation works, which enables
-            // a fluid experience
-            SetFocus(win->hwndFrame);
-        }
+        if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo))
+            win->ctrl->GoToPage(pageNo, true);
+        // we might have been invoked by clicking on a tree view
+        // switch focus so that keyboard navigation works, which enables
+        // a fluid experience
+        win->Focus();
     }
 };
 

@@ -192,10 +192,8 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
         // try WM_COPYDATA first, as that allows targetting a specific window
         COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
         LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
-        if (res) {
-            SetForegroundWindow(targetWnd);
+        if (res)
             return;
-        }
     }
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
@@ -356,8 +354,10 @@ Retry:
     while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)) != NULL) {
         DWORD wndProcId;
         GetWindowThreadProcessId(hwnd, &wndProcId);
-        if (wndProcId == prevProcId)
+        if (wndProcId == prevProcId) {
+            AllowSetForegroundWindow(prevProcId);
             return hwnd;
+        }
     }
 
     // fall through
