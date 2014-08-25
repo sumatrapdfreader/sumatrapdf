@@ -201,15 +201,36 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 
 const char *FindI(const char *s, const char *toFind)
 {
-    if (!s || !toFind) {
-        return false;
-    }
+    if (!s || !toFind)
+        return NULL;
+
     char first = (char)tolower(*toFind);
-    const char *rest = toFind + 1;
+    if (!first)
+        return s;
     while (*s) {
-        char c = (char) tolower(*s);
+        char c = (char)tolower(*s);
         if (c == first) {
-            if (str::StartsWithI(s + 1, rest)) {
+            if (str::StartsWithI(s, toFind)) {
+                return s;
+            }
+        }
+        s++;
+    }
+    return NULL;
+}
+
+const WCHAR *FindI(const WCHAR *s, const WCHAR *toFind)
+{
+    if (!s || !toFind)
+        return NULL;
+
+    WCHAR first = towlower(*toFind);
+    if (!first)
+        return s;
+    while (*s) {
+        WCHAR c = towlower(*s);
+        if (c == first) {
+            if (str::StartsWithI(s, toFind)) {
                 return s;
             }
         }

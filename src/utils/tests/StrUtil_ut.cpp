@@ -485,6 +485,26 @@ void StrTest()
         }
     }
 
+    {
+        utassert(str::Eq(str::FindI(L"test", NULL), NULL));
+        utassert(str::Eq(str::FindI(NULL, L"test"), NULL));
+        utassert(str::Eq(str::FindI(L"test", L""), L"test"));
+        utassert(str::Eq(str::FindI(L"test", L"ES"), L"est"));
+        utassert(str::Eq(str::FindI(L"test", L"Te"), L"test"));
+        utassert(str::Eq(str::FindI(L"testx", L"X"), L"x"));
+        utassert(str::Eq(str::FindI(L"test", L"st"), L"st"));
+        utassert(str::Eq(str::FindI(L"t\xE4st", L"\xC4s"), NULL));
+        utassert(str::Eq(str::FindI(L"t\xE4st", L"T\xC5"), NULL));
+
+        utassert(str::Eq(str::FindI("test", NULL), NULL));
+        utassert(str::Eq(str::FindI(NULL, "test"), NULL));
+        utassert(str::Eq(str::FindI("test", ""), "test"));
+        utassert(str::Eq(str::FindI("test", "ES"), "est"));
+        utassert(str::Eq(str::FindI("test", "Te"), "test"));
+        utassert(str::Eq(str::FindI("testx", "X"), "x"));
+        utassert(str::Eq(str::FindI("test", "st"), "st"));
+    }
+
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();
