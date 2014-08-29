@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-77ce080e773e63fe0032cb595e6a934d22d45244
+ad8c77114bcaf37db719855cfb8efa2e9ea43edb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2934,6 +2934,7 @@ uz:&Ko'rish
 vn:Hiển thị
 :&Window
 am:&Պատուհան
+az:&Pəncərə
 bs:&Prozor
 de:Fe&nster
 et:A&ken
@@ -2942,6 +2943,7 @@ fi:Ikkuna
 fr:F&enêtre
 he:&חלון
 hr:P&rozor
+id:&Jendela
 it:&Finestra
 ru:&Окно
 sk:&Okno
@@ -15792,6 +15794,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
 am:Ավելացնել &ներդիրներ
+az:&Tab-vərəqələrdən istifadə et
 bs:Koristi &tabove
 cn:使用标签页(&T)
 de:Dokumente in &Tabs öffnen
@@ -16568,7 +16571,7 @@ vn:[Phát hiện thay đổi; đang cập nhật] %s
 :copying text
 am:Տեքստը պատճենվում է
 ar:يتم حالياً نسخ النص
-az:mətn kopyalanır
+az:mətnin kopyalanması
 bg:копиране на текст
 bn:লেখা কপি করা হচ্ছে
 br:copiando texto

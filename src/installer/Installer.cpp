@@ -865,36 +865,9 @@ static BOOL InstanceInit(int nCmdShow)
 static int RunApp()
 {
     MSG msg;
-    FrameTimeoutCalculator ftc(60);
-    Timer t;
-    for (;;) {
-        const DWORD timeout = ftc.GetTimeoutInMilliseconds();
-        DWORD res = WAIT_TIMEOUT;
-        if (timeout > 0) {
-            res = MsgWaitForMultipleObjects(0, 0, TRUE, timeout, QS_ALLINPUT);
-        }
-        if (res == WAIT_TIMEOUT) {
-            AnimStep();
-            ftc.Step();
-        }
-
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                return (int)msg.wParam;
-            }
-            if (!IsDialogMessage(gHwndFrame, &msg)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-        // check if there are processes that need to be closed but
-        // not more frequently than once per ten seconds and
-        // only before (un)installation starts.
-        if (t.GetTimeInMs() > 10000 &&
-            gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
-            CheckInstallUninstallPossible(true);
-            t.Start();
-        }
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
 }
 

@@ -1050,7 +1050,7 @@ const char * gTranslations_az =
   "Bu &versiyan\304\261 burax\0"\
   "S\311\231hif\311\231l\311\231rin &h\311\231qiqi \303\266l\303\247\303\274s\303\274\0"\
   "&G\303\266r\303\274nt\303\274\0"\
-  "\0"\
+  "&P\311\231nc\311\231r\311\231\0"\
   "&B\311\231li\0"\
   "&Miqyas\0"\
   "/ %d\0"\
@@ -1234,7 +1234,7 @@ const char * gTranslations_az =
   "M\311\231tn s\311\231n\311\231dl\311\231ri\0"\
   "Ba\305\237l\304\261q:\0"\
   "Nam\311\231lum m\311\231nb\311\231 fayl\304\261 (%s)\0"\
-  "\0"\
+  "&Tab-v\311\231r\311\231q\311\231l\311\231rd\311\231n istifad\311\231 et\0"\
   "G\303\266r\303\274nt\303\274\0"\
   "Proqram\304\261n &vebsayt\304\261na ke\303\247\0"\
   "X\311\231b\311\231rdarl\304\261q\0"\
@@ -1246,7 +1246,7 @@ const char * gTranslations_az =
   "Ki\303\247ilt\0"\
   "Miqyas\0"\
   "[D\311\231yi\305\237iklikl\311\231r m\303\274\311\231yy\311\231n edildi; yenil\311\231nm\311\231] %s\0"\
-  "m\311\231tn kopyalan\304\261r\0"\
+  "m\311\231tnin kopyalanmas\304\261\0"\
   "s\311\231n\311\231d \303\247ap olunur\0";
 
 const char * gTranslations_eu = 
@@ -6484,7 +6484,7 @@ const char * gTranslations_id =
   "&Lewatkan versi ini\0"\
   "&Gunakan ukuran halaman sebenarnya\0"\
   "&Tampilan\0"\
-  "\0"\
+  "&Jendela\0"\
   "&Ya\0"\
   "&Ukuran\0"\
   "(atau %d)\0"\
