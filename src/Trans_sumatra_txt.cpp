@@ -1297,7 +1297,7 @@ const char * gTranslations_eu =
   "&Ahaztu bertsio hau\0"\
   "E&rabili jatorrizko orrilde neurria\0"\
   "I&kusi\0"\
-  "\0"\
+  "&Leihoa\0"\
   "&Bai\0"\
   "&Zooma\0"\
   "(%d-tik)\0"\
@@ -1428,7 +1428,7 @@ const char * gTranslations_eu =
   "PDF agiriak\0"\
   "&Orrialdea...\tKtrl+G\0"\
   "%s Orrialdea\0"\
-  "Orrilde Neurria:\0"\
+  "Orrialde Neurria:\0"\
   "%u orrialde zenbakia ez dago\0"\
   "Orrialdea neurriratzen\0"\
   "Orrialdea:\0"\

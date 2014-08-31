@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ad8c77114bcaf37db719855cfb8efa2e9ea43edb
+da18c1c7bf213e6e33f0c32251237f9fe4d014fa
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2938,6 +2938,7 @@ az:&Pəncərə
 bs:&Prozor
 de:Fe&nster
 et:A&ken
+eu:&Leihoa
 fa:&پنجره
 fi:Ikkuna
 fr:F&enêtre
@@ -12065,7 +12066,7 @@ dk:Sidestørrelse:
 el:Μέγεθος Σελίδας:
 es:Tamaño de página:
 et:Lehekülje suurus:
-eu:Orrilde Neurria:
+eu:Orrialde Neurria:
 fa:ابعاد صفحه:
 fi:Sivun koko:
 fr:Dimensions de la page :
