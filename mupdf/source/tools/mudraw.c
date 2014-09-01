@@ -214,7 +214,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	int w, h;
 	fz_device *dev;
-	HDC dc, dc_main;
+	HDC dc;
 	RECT rc;
 	HBRUSH bg_brush;
 	HANDLE hmap;
@@ -272,8 +272,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	if (!hbmp)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "failed to create a %d x %d bitmap for page %d", w, h, pagenum);
 
-	dc_main = GetDC(NULL);
-	dc = CreateCompatibleDC(dc_main);
+	dc = CreateCompatibleDC(NULL);
 	DeleteObject(SelectObject(dc, hbmp));
 
 	SetRect(&rc, 0, 0, w, h);
@@ -290,7 +289,6 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	GdiFlush();
 	DeleteDC(dc);
-	ReleaseDC(NULL, dc_main);
 
 	if (output)
 	{

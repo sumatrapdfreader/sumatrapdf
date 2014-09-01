@@ -2234,15 +2234,13 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         // for now, don't render directly into a DC but produce an HBITMAP instead
         HANDLE hMap = NULL;
         HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
-        HDC hDC = GetDC(NULL);
-        HDC hDCMem = CreateCompatibleDC(hDC);
-        DeleteObject(SelectObject(hDCMem, hbmp));
+        HDC hDC = CreateCompatibleDC(NULL);
+        DeleteObject(SelectObject(hDC, hbmp));
 
         RectI rc(0, 0, w, h);
         RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target, cookie_out);
-        DeleteDC(hDCMem);
-        ReleaseDC(NULL, hDC);
+        bool ok = RenderPage(hDC, page, rc, &ctm, 0, 0, &pageRect2, target, cookie_out);
+        DeleteDC(hDC);
         if (!ok) {
             DeleteObject(hbmp);
             CloseHandle(hMap);
@@ -4160,14 +4158,12 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         // for now, don't render directly into a DC but produce an HBITMAP instead
         HANDLE hMap = NULL;
         HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
-        HDC hDC = GetDC(NULL);
-        HDC hDCMem = CreateCompatibleDC(hDC);
-        DeleteObject(SelectObject(hDCMem, hbmp));
+        HDC hDC = CreateCompatibleDC(NULL);
+        DeleteObject(SelectObject(hDC, hbmp));
 
         RectI rc(0, 0, w, h);
-        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect, cookie_out);
-        DeleteDC(hDCMem);
-        ReleaseDC(NULL, hDC);
+        bool ok = RenderPage(hDC, page, rc, &ctm, 0, 0, pageRect, cookie_out);
+        DeleteDC(hDC);
         if (!ok) {
             DeleteObject(hbmp);
             CloseHandle(hMap);

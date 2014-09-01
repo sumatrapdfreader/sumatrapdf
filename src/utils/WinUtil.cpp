@@ -993,10 +993,56 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
         255
     };
 
-    HDC hDC = GetDC(NULL);
-    BITMAPINFO bmi = { 0 };
-    SizeI size = GetBitmapSize(hbmp);
+    DIBSECTION info = { 0 };
+    int ret = GetObject(hbmp, sizeof(info), &info);
+    CrashIf(ret < sizeof(info.dsBm));
+    SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
+    // for mapped 32-bit DI bitmaps: directly access the pixel data
+    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits &&
+        32 == info.dsBm.bmBitsPixel && size.dx * 4 == info.dsBm.bmWidthBytes) {
+        int bmpBytes = size.dx * size.dy * 4;
+        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        for (int i = 0; i < bmpBytes; i++) {
+            int k = i % 4;
+            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
+        }
+        return;
+    }
+
+    // for mapped 24-bit DI bitmaps: directly access the pixel data
+    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits &&
+        24 == info.dsBm.bmBitsPixel && info.dsBm.bmWidthBytes >= size.dx * 3) {
+        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        for (int y = 0; y < size.dy; y++) {
+            for (int x = 0; x < size.dx * 3; x++) {
+                int k = x % 3;
+                bmpData[x] = (BYTE)(base[k] + mul255(bmpData[x], diff[k]));
+            }
+            bmpData += info.dsBm.bmWidthBytes;
+        }
+        return;
+    }
+
+    // for paletted DI bitmaps: only update the color palette
+    if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
+        CrashIf(info.dsBmih.biBitCount != 8);
+        RGBQUAD palette[256];
+        HDC hDC = CreateCompatibleDC(NULL);
+        DeleteObject(SelectObject(hDC, hbmp));
+        UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
+        for (UINT i = 0; i < num; i++) {
+            palette[i].rgbRed = (BYTE)(base[2] + mul255(palette[i].rgbRed, diff[2]));
+            palette[i].rgbBlue = (BYTE)(base[1] + mul255(palette[i].rgbBlue, diff[1]));
+            palette[i].rgbGreen = (BYTE)(base[0] + mul255(palette[i].rgbGreen, diff[0]));
+        }
+        if (num > 0)
+            SetDIBColorTable(hDC, 0, num, palette);
+        DeleteDC(hDC);
+        return;
+    }
+
+    BITMAPINFO bmi = { 0 };
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = size.dy;
@@ -1004,18 +1050,20 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
+    HDC hDC = CreateCompatibleDC(NULL);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<unsigned char> bmpData((unsigned char *)malloc(bmpBytes));
+    ScopedMem<BYTE> bmpData((BYTE *)malloc(bmpBytes));
     CrashIf(!bmpData);
+
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = (uint8_t)(base[k] + mul255(bmpData[i], diff[k]));
+            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
-    ReleaseDC(NULL, hDC);
+    DeleteDC(hDC);
 }
 
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP

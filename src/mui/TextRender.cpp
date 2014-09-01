@@ -330,7 +330,7 @@ TextRenderHdc *TextRenderHdc::Create(Graphics *gfx, int dx, int dy) {
     TextRenderHdc *res = new TextRenderHdc();
     res->gfx = gfx;
 
-    HDC hdc =gfx->GetHDC();
+    HDC hdc = gfx->GetHDC();
     res->hdc = CreateCompatibleDC(hdc);
     gfx->ReleaseHDC(hdc);
 

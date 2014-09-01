@@ -292,15 +292,11 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
 
     HANDLE hMap = NULL;
     HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
+    HDC hDC = CreateCompatibleDC(NULL);
+    DeleteObject(SelectObject(hDC, hbmp));
 
-    HDC hDC = GetDC(NULL);
-    HDC hDCMem = CreateCompatibleDC(hDC);
-    DeleteObject(SelectObject(hDCMem, hbmp));
-
-    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
-
-    DeleteDC(hDCMem);
-    ReleaseDC(NULL, hDC);
+    bool ok = RenderPage(hDC, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
+    DeleteDC(hDC);
     if (!ok) {
         DeleteObject(hbmp);
         CloseHandle(hMap);
