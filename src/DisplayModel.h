@@ -81,7 +81,7 @@ public:
     virtual void Navigate(int dir);
 
     // view settings
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=true);
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
     virtual DisplayMode GetDisplayMode() const { return displayMode; }
     virtual void SetPresentationMode(bool enable);
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
