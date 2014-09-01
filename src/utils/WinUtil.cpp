@@ -1033,8 +1033,8 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
         UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
         for (UINT i = 0; i < num; i++) {
             palette[i].rgbRed = (BYTE)(base[2] + mul255(palette[i].rgbRed, diff[2]));
-            palette[i].rgbBlue = (BYTE)(base[1] + mul255(palette[i].rgbBlue, diff[1]));
-            palette[i].rgbGreen = (BYTE)(base[0] + mul255(palette[i].rgbGreen, diff[0]));
+            palette[i].rgbGreen = (BYTE)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
+            palette[i].rgbBlue = (BYTE)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
         }
         if (num > 0)
             SetDIBColorTable(hDC, 0, num, palette);
