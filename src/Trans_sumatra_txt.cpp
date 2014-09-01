@@ -13400,7 +13400,7 @@ const char * gTranslations_cy =
   "&Hepgor y fersiwn yma.\0"\
   "&Defnyddio maint gwreiddiol y dudalen\0"\
   "&Gweld\0"\
-  "\0"\
+  "&Ffenestr\0"\
   "&Iawn\0"\
   "&Chwyddo\0"\
   "(o %d)\0"\
@@ -13448,7 +13448,7 @@ const char * gTranslations_cy =
   "Methu cyflwyno'r dudalen\0"\
   "Cr\303\253wyd:\0"\
   "Ffeil cyfredol\0"\
-  "\0"\
+  "Safle'r cyrchwr:\0"\
   "&Addasu Chwyddo...\tCtrl+Y\0"\
   "&Cynllun Rhagosodedig:\0"\
   "C&hwyddo Rhagosodedig:\0"\
@@ -13561,7 +13561,7 @@ const char * gTranslations_cy =
   "Dewis &Popeth\0"\
   "Dewis &Popeth\tCtrl+A\0"\
   "Dewis cynnwys drwy Ctrl a botwm chwith y llygoden\0"\
-  "\0"\
+  "Dewis:\0"\
   "Anfon drwy &E-bost...\0"\
   "Gosod linell-orchymyn chwilio gwrthdro\0"\
   "Dangos &Nodau Tudalen\0"\
@@ -13584,7 +13584,7 @@ const char * gTranslations_cy =
   "Dogfennau testun\0"\
   "Teitl:\0"\
   "Ffeil ffynhonnell anhysbys (%s)\0"\
-  "\0"\
+  "Defnyddio &tabiau\0"\
   "Gweld\0"\
   "&Ymweld \303\242'r Wefan\0"\
   "Rhybudd\0"\

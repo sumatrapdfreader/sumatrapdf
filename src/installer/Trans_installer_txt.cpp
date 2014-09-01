@@ -2063,7 +2063,7 @@ const char * gTranslations_cy =
   "Gosod SumatraPDF yn &ffolder:\0"\
   "Methodd y gosod!\0"\
   "Wrthi'n gosod\0"\
-  "\0"\
+  "Cadw yr ategyn porwr PDF wedi ei osod (ddim yn cael ei gynnal bellach)\0"\
   "Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF\0"\
   "Gadael i Windows ddangos &rhagolwg o ddogfennau PDF\0"\
   "Cau %s i barhau!\0"\

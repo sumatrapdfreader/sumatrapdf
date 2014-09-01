@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-da18c1c7bf213e6e33f0c32251237f9fe4d014fa
+9b7c3f43bd2922acdfd6c0ae03e74d6e3c102da0
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2936,6 +2936,7 @@ vn:Hiển thị
 am:&Պատուհան
 az:&Pəncərə
 bs:&Prozor
+cy:&Ffenestr
 de:Fe&nster
 et:A&ken
 eu:&Leihoa
@@ -6472,6 +6473,7 @@ az:Kursorun mövqeyi:
 br:Posição do cursor:
 bs:Pozicija kursora:
 cn:光标位置:
+cy:Safle'r cyrchwr:
 cz:Pozice kurzoru:
 de:Zeigerposition:
 es:Posición del cursor:
@@ -10008,6 +10010,7 @@ bs:Ostavi plugin instaliran u &browseru (više nije podržano)
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
 ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
+cy:Cadw yr ategyn porwr PDF wedi ei osod (ddim yn cael ei gynnal bellach)
 cz:Ponechat nainstalovaný plugin &prohlížeč PDF (již není podporován)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
 es:Mantener instalado el complemento de &navegador (ahora obsoleto)
@@ -13895,6 +13898,7 @@ az:Seçmə:
 br:Seleção:
 bs:Selekcija:
 cn:选择:
+cy:Dewis:
 cz:Výběr:
 de:Auswahl:
 es:Selección:
@@ -15798,6 +15802,7 @@ am:Ավելացնել &ներդիրներ
 az:&Tab-vərəqələrdən istifadə et
 bs:Koristi &tabove
 cn:使用标签页(&T)
+cy:Defnyddio &tabiau
 de:Dokumente in &Tabs öffnen
 es:Usar &pestañas
 et:Kasuta &kaarte
