@@ -111,7 +111,7 @@ static bool rar_parse_entry(ar_archive *ar, off64_t offset)
         if (!rar_check_header_crc(ar))
             warn("Invalid header checksum @%" PRIi64, ar->entry_offset);
         if (!ar_seek(ar->stream, ar->entry_offset_next, SEEK_SET)) {
-            warn("Couldn't seek to offset %" PRIu64, ar->entry_offset_next);
+            warn("Couldn't seek to offset %" PRIi64, ar->entry_offset_next);
             return false;
         }
     }
