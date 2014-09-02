@@ -288,6 +288,9 @@
     <ClCompile Include="..\src\mui\TextRender.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\7zUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1117,6 +1120,9 @@
     </ClInclude>
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\7zUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Allocator.h">
       <Filter>utils</Filter>

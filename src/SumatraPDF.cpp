@@ -2766,7 +2766,7 @@ void OnMenuOpen(WindowInfo& win)
         { _TR("XPS documents"),         L"*.xps;*.oxps",true },
         { _TR("DjVu documents"),        L"*.djvu",      true },
         { _TR("Postscript documents"),  L"*.ps;*.eps",  PsEngine::IsAvailable() },
-        { _TR("Comic books"),           L"*.cbz;*.cbr", true },
+        { _TR("Comic books"),           L"*.cbz;*.cbr;*.cb7", true },
         { _TR("CHM documents"),         L"*.chm",       true },
         { _TR("Mobi documents"),        L"*.mobi",      true },
         { _TR("EPUB ebooks"),           L"*.epub",      true },

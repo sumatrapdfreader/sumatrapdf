@@ -132,6 +132,14 @@
 				Name="dataformats"
 				>
 				<File
+					RelativePath="..\src\utils\7zUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\7zUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\CssParser.cpp"
 					>
 				</File>

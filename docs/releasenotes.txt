@@ -7,6 +7,7 @@ Next version:
 
 * Tabs!
 * support table of contents and links in ebook UI
+* add support for displaying CB7 comic books (in addition to CBZ/CBR)
 * added a document measurement helper (invoke by pressing M)
 * swapped keybindings:
   * F11 : Fullscreen mode (still also Ctrl+Shift+L)

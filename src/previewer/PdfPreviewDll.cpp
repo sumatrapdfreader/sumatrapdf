@@ -79,7 +79,7 @@ public:
         else if (SUCCEEDED(CLSIDFromString(SZ_MOBI_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CMobiPreview(&g_lRefCount);
 #endif
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW)
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW)
         else if (SUCCEEDED(CLSIDFromString(SZ_CBX_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CCbxPreview(&g_lRefCount);
 #endif
@@ -174,8 +174,11 @@ static struct {
 #ifdef BUILD_CBZ_PREVIEW
     { SZ_CBX_PREVIEW_CLSID, L".cbz" },
 #endif
-#ifdef BUILD_CBZ_PREVIEW
+#ifdef BUILD_CBR_PREVIEW
     { SZ_CBX_PREVIEW_CLSID, L".cbr" },
+#endif
+#ifdef BUILD_CB7_PREVIEW
+    { SZ_CBX_PREVIEW_CLSID, L".cb7" },
 #endif
 #ifdef BUILD_TGA_PREVIEW
     { SZ_TGA_PREVIEW_CLSID, L".tga" },
