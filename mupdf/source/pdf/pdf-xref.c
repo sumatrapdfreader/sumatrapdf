@@ -1366,6 +1366,8 @@ pdf_load_obj_stm(pdf_document *doc, int num, int gen, pdf_lexbuf *buf)
 			}
 			fz_catch(ctx)
 			{
+				if (stm->eof)
+					break;
 				continue;
 			}
 
