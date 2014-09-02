@@ -37,7 +37,9 @@ int main(int argc, char *argv[])
     ar = ar_open_rar_archive(stream);
     if (!ar)
         ar = ar_open_zip_archive(stream, strstr(argv[1], ".xps") || strstr(argv[1], ".epub"));
-    FailIf(!ar, "Error: File \"%s\" is no valid RAR or ZIP archive!", argv[1]);
+    if (!ar)
+        ar = ar_open_7z_archive(stream);
+    FailIf(!ar, "Error: File \"%s\" is no valid RAR, ZIP or 7Z archive!", argv[1]);
 
     printf("Parsing \"%s\":\n", argv[1]);
     while (ar_parse_entry(ar)) {

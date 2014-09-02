@@ -150,6 +150,9 @@ ar_archive *ar_open_7z_archive(ar_stream *stream)
     ar_archive_7z *_7z;
     SRes res;
 
+    if (!ar_seek(stream, 0, SEEK_SET))
+        return NULL;
+
     ar = ar_open_archive(stream, sizeof(ar_archive_7z), _7z_close, _7z_parse_entry, _7z_get_name, _7z_uncompress, NULL, 0);
     if (!ar)
         return NULL;

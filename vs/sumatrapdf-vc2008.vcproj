@@ -113,7 +113,7 @@
 				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\unarr.exe"
-				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA"
+				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA;HAVE_7Z"
 				IncludeSearchPath="..\ext\zlib;..\ext\lzma\C;..\ext\bzip2;..\src\utils\msvc"
 				ForcedIncludes=""
 				AssemblySearchPath=""

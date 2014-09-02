@@ -37,14 +37,14 @@ CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "PPC_BSTR"
 CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4267
 !endif
 
-LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
+LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C /D "_7ZIP_PPMD_SUPPPORT"
 
 WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
 
 UNARR_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_BZIP2" /I$(EXTDIR)/bzip2
-UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_LZMA" /I$(EXTDIR)/lzma/C
+UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_LZMA" /D "HAVE_7Z" /I$(EXTDIR)/lzma/C
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -93,6 +93,10 @@ CHMLIB_OBJS = \
 LZMA_OBJS = \
 	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj \
 	$(OLZ)\LzmaEnc.obj $(OLZ)\LzFind.obj $(OLZ)\LzFindMt.obj $(OLZ)\Threads.obj
+
+_7Z_OBJS = \
+	$(OLZ)\7zBuf.obj $(OLZ)\7zDec.obj $(OLZ)\7zIn.obj $(OLZ)\7zStream.obj \
+	$(OLZ)\Bcj2.obj $(OLZ)\Bra.obj $(OLZ)\Lzma2Dec.obj
 
 WEBP_OBJS = \
 	$(OWP)\alpha.obj $(OWP)\buffer.obj $(OWP)\frame.obj $(OWP)\idec.obj \
@@ -170,5 +174,5 @@ unarr_test: $(O) $(OE) $(O)\unarr.exe
 {$(EXTDIR)\unarr}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
-$(O)\unarr.exe: $(UNARR_OBJS) $(OUN)\main.obj $(ZLIB_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS)
+$(O)\unarr.exe: $(UNARR_OBJS) $(OUN)\main.obj $(ZLIB_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) $(_7Z_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE

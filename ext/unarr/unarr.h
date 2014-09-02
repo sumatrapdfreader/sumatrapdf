@@ -83,7 +83,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly);
 
 /***** _7z/_7z *****/
 
-/* checks whether 'stream' could contain 7z data and prepares for archive listing/extraction; returns NULL on failure */
+/* checks whether 'stream' could contain 7Z data and prepares for archive listing/extraction; returns NULL on failure */
 ar_archive *ar_open_7z_archive(ar_stream *stream);
 
 #endif

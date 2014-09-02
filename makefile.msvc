@@ -426,7 +426,7 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 $(MUPDF_LIB): $(MUPDF_ALL_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
 
-$(UNARR_LIB): $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS)
+$(UNARR_LIB): $(UNARR_OBJS) $(BZIP2_OBJS) $(LZMA_OBJS) $(_7Z_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
 
 $(UTILS_LIB): $(UTILS_OBJS)
