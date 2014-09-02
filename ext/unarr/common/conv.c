@@ -62,6 +62,8 @@ char *ar_conv_dos_to_utf8(const char *astr)
         size += ar_conv_rune_to_utf8(gCp437[(uint8_t)*in], buf, sizeof(buf));
     }
 
+    if (size == (size_t)-1)
+        return NULL;
     str = malloc(size + 1);
     if (!str)
         return NULL;

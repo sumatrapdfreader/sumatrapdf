@@ -2288,6 +2288,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\ext\unarr\common\conv.c"
+					>
+				</File>
+				<File
 					RelativePath="..\ext\unarr\common\crc32.c"
 					>
 				</File>
@@ -2297,10 +2301,6 @@
 				</File>
 				<File
 					RelativePath="..\ext\unarr\common\stream.c"
-					>
-				</File>
-				<File
-					RelativePath="..\ext\unarr\common\string.c"
 					>
 				</File>
 				<File

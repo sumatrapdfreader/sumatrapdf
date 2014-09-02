@@ -804,6 +804,7 @@ $(OUIA)\TextRange.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\s
 $(OUIA)\TextRange.obj: $B\src\uia\Provider.h $B\src\uia\TextRange.h $B\src\utils\Allocator.h
 $(OUIA)\TextRange.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OUIA)\TextRange.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OUN)\conv.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\crc32.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
@@ -825,7 +826,6 @@ $(OUN)\rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\
 $(OUN)\rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\unarr.h
 $(OUN)\rarvm.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\rar\rarvm.h
 $(OUN)\stream.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
-$(OUN)\string.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\unarr.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\uncompress-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\uncompress-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h

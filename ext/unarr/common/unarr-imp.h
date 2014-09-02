@@ -15,6 +15,12 @@
 #include <string.h>
 #include <inttypes.h>
 
+/***** conv ****/
+
+size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size);
+char *ar_conv_dos_to_utf8(const char *astr);
+time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
+
 /***** crc32 *****/
 
 uint32_t ar_crc32(uint32_t crc32, const unsigned char *data, size_t data_len);
@@ -35,12 +41,6 @@ struct ar_stream_s {
 };
 
 ar_stream *ar_open_stream(void *data, ar_stream_close_fn close, ar_stream_read_fn read, ar_stream_seek_fn seek, ar_stream_tell_fn tell);
-
-/***** string ****/
-
-size_t ar_conv_rune_to_utf8(wchar_t rune, char *out, size_t size);
-char *ar_conv_dos_to_utf8(const char *astr);
-time64_t ar_conv_dosdate_to_filetime(uint32_t dosdate);
 
 /***** unarr *****/
 
