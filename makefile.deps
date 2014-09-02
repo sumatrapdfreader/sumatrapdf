@@ -804,6 +804,9 @@ $(OUIA)\TextRange.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\s
 $(OUIA)\TextRange.obj: $B\src\uia\Provider.h $B\src\uia\TextRange.h $B\src\utils\Allocator.h
 $(OUIA)\TextRange.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OUIA)\TextRange.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OUN)\_7z.obj: $B\ext\lzma\C\7z.h $B\ext\lzma\C\7zBuf.h $B\ext\lzma\C\Types.h
+$(OUN)\_7z.obj: $B\ext\unarr\_7z\_7z.h $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h
+$(OUN)\_7z.obj: $B\ext\unarr\ppmd\Types.h $B\ext\unarr\unarr.h
 $(OUN)\conv.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\crc32.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h

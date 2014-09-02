@@ -81,4 +81,9 @@ ar_archive *ar_open_rar_archive(ar_stream *stream);
 /* set deflatedonly for extracting XPS, EPUB, etc. documents where non-Deflate compression methods are not supported by specification */
 ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly);
 
+/***** _7z/_7z *****/
+
+/* checks whether 'stream' could contain 7z data and prepares for archive listing/extraction; returns NULL on failure */
+ar_archive *ar_open_7z_archive(ar_stream *stream);
+
 #endif

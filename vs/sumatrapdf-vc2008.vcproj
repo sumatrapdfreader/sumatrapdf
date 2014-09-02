@@ -2372,6 +2372,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="_7z"
+				>
+				<File
+					RelativePath="..\ext\unarr\_7z\_7z.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\_7z\_7z.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\docs\releasenotes.txt"
