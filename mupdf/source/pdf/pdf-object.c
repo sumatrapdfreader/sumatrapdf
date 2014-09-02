@@ -1518,10 +1518,10 @@ static void fmt_str(struct fmt *fmt, pdf_obj *obj)
 		else if (c == '\\')
 			fmt_puts(fmt, "\\\\");
 		else if (c < 32 || c >= 127) {
-			char buf[16];
 			fmt_putc(fmt, '\\');
-			sprintf(buf, "%03o", c);
-			fmt_puts(fmt, buf);
+			fmt_putc(fmt, '0' + ((c / 64) & 7));
+			fmt_putc(fmt, '0' + ((c / 8) & 7));
+			fmt_putc(fmt, '0' + ((c) & 7));
 		}
 		else
 			fmt_putc(fmt, c);
@@ -1645,7 +1645,7 @@ static void fmt_obj(struct fmt *fmt, pdf_obj *obj)
 		fmt_puts(fmt, "<NULL>");
 	else if (pdf_is_indirect(obj))
 	{
-		sprintf(buf, "%d %d R", pdf_to_num(obj), pdf_to_gen(obj));
+		fz_snprintf(buf, sizeof buf, "%d %d R", pdf_to_num(obj), pdf_to_gen(obj));
 		fmt_puts(fmt, buf);
 	}
 	else if (pdf_is_null(obj))
@@ -1654,14 +1654,12 @@ static void fmt_obj(struct fmt *fmt, pdf_obj *obj)
 		fmt_puts(fmt, pdf_to_bool(obj) ? "true" : "false");
 	else if (pdf_is_int(obj))
 	{
-		sprintf(buf, "%d", pdf_to_int(obj));
+		fz_snprintf(buf, sizeof buf, "%d", pdf_to_int(obj));
 		fmt_puts(fmt, buf);
 	}
 	else if (pdf_is_real(obj))
 	{
-		sprintf(buf, "%1.9g", pdf_to_real(obj));
-		if (strchr(buf, 'e')) /* bad news! */
-			sprintf(buf, fabsf(pdf_to_real(obj)) > 1 ? "%1.1f" : "%1.8f", pdf_to_real(obj));
+		fz_snprintf(buf, sizeof buf, "%g", pdf_to_real(obj));
 		fmt_puts(fmt, buf);
 	}
 	else if (pdf_is_string(obj))

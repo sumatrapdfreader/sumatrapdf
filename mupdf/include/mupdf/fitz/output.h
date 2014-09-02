@@ -107,4 +107,7 @@ int fz_vsnprintf(char *buffer, int space, const char *fmt, va_list args);
 */
 int fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list ap);
 
+
+int fz_snprintf(char *buffer, int space, const char *fmt, ...);
+
 #endif

@@ -43,7 +43,7 @@ static OPJ_SIZE_T fz_opj_stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, voi
 	if (len < 0)
 		len = 0;
 	if (len == 0)
-		return (OPJ_SIZE_T)-1;  /* End of file! */
+		return (OPJ_SIZE_T)-1; /* End of file! */
 	if ((OPJ_SIZE_T)len > p_nb_bytes)
 		len = p_nb_bytes;
 	memcpy(p_buffer, sb->data + sb->pos, len);

@@ -486,6 +486,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\dtoa.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\error.c"
 				>
 			</File>

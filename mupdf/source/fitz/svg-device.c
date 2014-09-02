@@ -326,7 +326,7 @@ svg_dev_text_as_paths_defs(fz_device *dev, fz_text *text, const fz_matrix *ctm)
 		{
 			int newmax = sdev->max_fonts * 2;
 			if (newmax == 0)
-				newmax =  4;
+				newmax = 4;
 			sdev->fonts = fz_resize_array(ctx, sdev->fonts, newmax, sizeof(*sdev->fonts));
 			memset(&sdev->fonts[font_idx], 0, (newmax - font_idx) * sizeof(sdev->fonts[0]));
 			sdev->max_fonts = newmax;

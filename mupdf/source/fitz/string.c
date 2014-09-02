@@ -247,7 +247,7 @@ float fz_atof(const char *s)
 	 * don't read a number that's OK as a double and then become invalid
 	 * as we convert to a float. */
 	errno = 0;
-	d = strtod(s, NULL);
+	d = fz_strtod(s, NULL);
 	if (errno == ERANGE || isnan(d)) {
 		/* Return 1.0, as it's a small known value that won't cause a divide by 0. */
 		return 1.0;

@@ -628,11 +628,7 @@ void pdf_print_token(fz_context *ctx, fz_buffer *fzbuf, int tok, pdf_lexbuf *buf
 		break;
 	case PDF_TOK_REAL:
 		{
-			char sbuf[256];
-			sprintf(sbuf, "%g", buf->f);
-			if (strchr(sbuf, 'e')) /* bad news! */
-				sprintf(sbuf, fabsf(buf->f) > 1 ? "%1.1f" : "%1.8f", buf->f);
-			fz_buffer_printf(ctx, fzbuf, "%s", sbuf);
+			fz_buffer_printf(ctx, fzbuf, "%g", buf->f);
 		}
 		break;
 	default:

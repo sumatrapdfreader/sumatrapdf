@@ -321,6 +321,7 @@ EXPORTS
 	fz_rebind_output
 	fz_vsnprintf
 	fz_vfprintf
+	fz_snprintf
 	fz_new_path
 	fz_currentpoint
 	fz_moveto
@@ -421,6 +422,8 @@ EXPORTS
 	fz_chartorune
 	fz_runetochar
 	fz_runelen
+	fz_strtod
+	fz_dtoa
 	fz_text_char_at
 	fz_text_char_bbox
 	fz_new_text_sheet

@@ -22,7 +22,7 @@
 #define PCL_ANY_SPACING \
 	(PCL3_SPACING | PCL4_SPACING | PCL5_SPACING)
 
-/* Individual printer properties.  Any subset of these may be included. */
+/* Individual printer properties. Any subset of these may be included. */
 #define PCL_MODE_2_COMPRESSION		8	/* compression mode 2 supported */
 						/* (PCL 4) */
 #define PCL_MODE_3_COMPRESSION		16	/* compression modes 2 & 3 supported */
@@ -491,7 +491,7 @@ fz_output_pcl(fz_output *out, const fz_pixmap *pixmap, fz_pcl_options *pcl)
 /*
  * Mode 2 Row compression routine for the HP DeskJet & LaserJet IIp.
  * Compresses data from row up to end_row, storing the result
- * starting at compressed.  Returns the number of bytes stored.
+ * starting at compressed. Returns the number of bytes stored.
  * Runs of K<=127 literal bytes are encoded as K-1 followed by
  * the bytes; runs of 2<=K<=127 identical bytes are encoded as
  * 257-K followed by the byte.

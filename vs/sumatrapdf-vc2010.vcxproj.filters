@@ -540,6 +540,9 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\dtoa.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\error.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

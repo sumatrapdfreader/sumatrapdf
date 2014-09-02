@@ -84,4 +84,17 @@ int fz_runetochar(char *str, int rune);
 */
 int fz_runelen(int rune);
 
+/*
+	fz_strtod: Locale-independent implementation of strtod().
+*/
+double fz_strtod(const char *s, char **es);
+
+/*
+	fz_dtoa: Compute decimal integer m, exp such that:
+		f = m * 10^exp
+		m is as short as possible without losing exactness
+	Assumes special cases (NaN, +Inf, -Inf) have been handled.
+*/
+void fz_dtoa(double f, char *s, int *exp, int *neg, int *ns);
+
 #endif

@@ -265,7 +265,7 @@ FITZ_OBJS = \
 	$(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
 	$(OFZ)\trace-device.obj $(OFZ)\transition.obj $(OFZ)\ucdn.obj $(OFZ)\xml.obj \
 	$(OFZ)\glyph.obj $(OFZ)\tree.obj $(OFZ)\document.obj $(OFZ)\filter-leech.obj \
-	$(OFZ)\printf.obj $(OFZ)\gdiplus-device.obj
+	$(OFZ)\printf.obj $(OFZ)\dtoa.obj $(OFZ)\gdiplus-device.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf-annot.obj $(OP)\pdf-cmap-load.obj $(OP)\pdf-cmap-parse.obj $(OP)\pdf-cmap-table.obj \

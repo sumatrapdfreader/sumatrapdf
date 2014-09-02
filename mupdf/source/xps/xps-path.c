@@ -12,7 +12,7 @@ xps_parse_float_array(char *s, int num, float *x)
 	{
 		while (*s == 0x0d || *s == '\t' || *s == ' ' || *s == 0x0a)
 			s++;
-		x[k] = (float)strtod(s, &s);
+		x[k] = (float)fz_strtod(s, &s);
 		while (*s == 0x0d || *s == '\t' || *s == ' ' || *s == 0x0a)
 			s++;
 		if (*s == ',')

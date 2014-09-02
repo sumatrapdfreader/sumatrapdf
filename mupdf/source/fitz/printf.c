@@ -15,44 +15,6 @@ static void fmtputc(struct fmtbuf *out, int c)
 }
 
 /*
- * Compute decimal integer m, exp such that:
- *	f = m*10^exp
- *	m is as short as possible with losing exactness
- * assumes special cases (NaN, +Inf, -Inf) have been handled.
- */
-static void fz_dtoa(float f, char *digits, int *exp, int *neg, int *ndigits)
-{
-	char buf[20], *s, *p, *e;
-	int n;
-
-	/* TODO: binary search */
-	for (n = 1; n < 9; ++n) {
-		sprintf(buf, "%+.*e", n, f);
-		if (strtof(buf, NULL) == f)
-			break;
-	}
-
-	*neg = (buf[0] == '-');
-
-	p = buf + 3;
-	e = strchr(p, 'e');
-	*exp = atoi(e + 1) - (e - p);
-
-	if (e[-1] == '0') {
-		--e;
-		++(*exp);
-	}
-
-	s = digits;
-	*s++ = buf[1];
-	while (p < e)
-		*s++ = *p++;
-	*s = 0;
-
-	*ndigits = s - digits;
-}
-
-/*
  * Convert float to shortest possible string that won't lose precision, except:
  * NaN to 0, +Inf to FLT_MAX, -Inf to -FLT_MAX.
  */
@@ -289,4 +251,15 @@ fz_vfprintf(fz_context *ctx, FILE *file, const char *fmt, va_list old_args)
 		fz_free(ctx, b);
 
 	return l;
+}
+
+int
+fz_snprintf(char *buffer, int space, const char *fmt, ...)
+{
+	int n;
+	va_list ap;
+	va_start(ap, fmt);
+	n = fz_vsnprintf(buffer, space, fmt, ap);
+	va_end(ap);
+	return n;
 }

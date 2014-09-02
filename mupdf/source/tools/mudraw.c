@@ -466,7 +466,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	if (showfeatures)
 	{
 		int iscolor;
-		dev = fz_new_test_device(ctx, &iscolor);
+		dev = fz_new_test_device(ctx, &iscolor, 0.02f);
 		if (list)
 			fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, NULL);
 		else

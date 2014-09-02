@@ -49,6 +49,10 @@ freetype2, jbig2dec, libjpeg, openjpeg, and zlib. These libraries are contained
 in the source archive. If you are using git, they are included as git
 submodules.
 
+You will also need the X11 headers and libraries if you're building on Linux.
+These can typically be found in the xorg-dev package. Alternatively, if you
+only want the command line tools, you can build with HAVE_X11=no.
+
 DOWNLOAD
 
 The latest development source is available directly from the git repository:

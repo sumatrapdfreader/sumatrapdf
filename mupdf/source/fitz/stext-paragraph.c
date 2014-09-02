@@ -1177,9 +1177,9 @@ force_paragraph:
 
 	/* Simple line region analysis:
 	 * For each line:
-	 *    form a list of 'start/stop' points (henceforth a 'region mask')
-	 *    find the normalised baseline vector for the line.
-	 *    Store the region mask and baseline vector.
+	 *	form a list of 'start/stop' points (henceforth a 'region mask')
+	 *	find the normalised baseline vector for the line.
+	 *	Store the region mask and baseline vector.
 	 * Collate lines that have compatible region masks and identical
 	 * baseline vectors.
 	 * If the collated masks are column-like, then split into columns.

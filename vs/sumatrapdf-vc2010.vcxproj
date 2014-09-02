@@ -246,6 +246,7 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-path.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
+    <ClCompile Include="..\mupdf\source\fitz\dtoa.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-dct.c" />

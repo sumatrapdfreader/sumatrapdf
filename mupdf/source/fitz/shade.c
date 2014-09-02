@@ -5,7 +5,10 @@
 static inline void
 paint_tri(fz_mesh_processor *painter, fz_vertex *v0, fz_vertex *v1, fz_vertex *v2)
 {
-	painter->process(painter->process_arg, v0, v1, v2);
+	if (painter->process)
+	{
+		painter->process(painter->process_arg, v0, v1, v2);
+	}
 }
 
 static inline void
@@ -30,21 +33,30 @@ paint_quad(fz_mesh_processor *painter, fz_vertex *v0, fz_vertex *v1, fz_vertex *
 	 * the process functions where it matters order the edges from top to
 	 * bottom before walking them.
 	 */
-	painter->process(painter->process_arg, v0, v1, v3);
-	painter->process(painter->process_arg, v3, v2, v1);
+	if (painter->process)
+	{
+		painter->process(painter->process_arg, v0, v1, v3);
+		painter->process(painter->process_arg, v3, v2, v1);
+	}
 }
 
 static inline void
 fz_prepare_color(fz_mesh_processor *painter, fz_vertex *v, float *c)
 {
-	painter->prepare(painter->process_arg, v, c);
+	if (painter->prepare)
+	{
+		painter->prepare(painter->process_arg, v, c);
+	}
 }
 
 static inline void
 fz_prepare_vertex(fz_mesh_processor *painter, fz_vertex *v, const fz_matrix *ctm, float x, float y, float *c)
 {
 	fz_transform_point_xy(&v->p, ctm, x, y);
-	painter->prepare(painter->process_arg, v, c);
+	if (painter->prepare)
+	{
+		painter->prepare(painter->process_arg, v, c);
+	}
 }
 
 static void

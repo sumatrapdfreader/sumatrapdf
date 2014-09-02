@@ -295,8 +295,12 @@ fz_device *fz_new_bbox_device(fz_context *ctx, fz_rect *rectp);
 	fz_new_test_device: Create a device to test for features.
 
 	Currently only tests for the presence of non-grayscale colors.
+
+	threshold: The difference from grayscale that will be tolerated.
+	Typical values to use are either 0 (be exact) and 0.02 (allow an
+	imperceptible amount of slop).
 */
-fz_device *fz_new_test_device(fz_context *ctx, int *iscolor);
+fz_device *fz_new_test_device(fz_context *ctx, int *is_color, float threshold);
 
 /*
 	fz_new_draw_device: Create a device to draw on a pixmap.
