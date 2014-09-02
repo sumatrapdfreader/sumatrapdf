@@ -586,7 +586,7 @@ def build_pre_release():
             shutil.copyfile(cert_path(), cert_dst_path)
         print("Building pre-release")
         build.build_pre_release()
-    except Exception, e:
+    except BaseException, e:
         s = str(e)
         print(s)
         # a bit of a hack. not every kind of failure should stop the buildbot
@@ -617,6 +617,8 @@ def main():
     # test_build_html_index()
     # build_sizes_json()
     # build_curr(force=True)
+
+    # TODO: add a try/catch and e-mail if failed for unexpected reasons
     buildbot_loop()
 
 if __name__ == "__main__":
