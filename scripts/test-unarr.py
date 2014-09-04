@@ -26,7 +26,12 @@ def detect_unarr_exe():
 
 
 def should_test_file(f):
-    exts = [".rar", ".zip", ".cbz", ".cbr", ".epub", ".xps"]
+    exts = [
+        ".rar", ".cbr",
+        ".zip", ".cbz", ".epub", ".xps", ".fb2z",
+        ".7z", ".cb7",
+        ".tar", ".cbt"
+    ]
     f = f.lower()
     for ext in exts:
         if f.endswith(ext):
