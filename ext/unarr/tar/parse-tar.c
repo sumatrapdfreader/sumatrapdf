@@ -54,6 +54,14 @@ bool tar_parse_header(ar_archive_tar *tar)
     free(tar->entry.name);
     tar->entry.name = NULL;
 
+    if (tar->entry.filetype == TYPE_FILE_OLD) {
+        i = 100;
+        while (--i > 0 && data[i] == '\0');
+        if (data[i] == '/')
+            tar->entry.filetype = TYPE_DIRECTORY;
+    }
+    tar->entry.is_ustar = !memcmp(data + 257, "ustar\x0000", 8) && memcmp(data + 508, "tar\0", 4) != 0;
+
     if (tar->entry.filesize > (size_t)-1 - tar->super.entry_offset - 2 * TAR_BLOCK_SIZE)
         return false;
 
@@ -88,7 +96,28 @@ const char *tar_get_name(ar_archive *ar)
             return NULL;
         }
         name[100] = '\0';
-        ar_skip(ar->stream, TAR_BLOCK_SIZE - 100);
+
+        if (tar->entry.is_ustar) {
+            char *prefixed = malloc(256 + 1);
+            if (!ar_skip(ar->stream, 245) || ar_read(ar->stream, prefixed, 167) != 167) {
+                free(name);
+                free(prefixed);
+                ar_seek(ar->stream, ar->entry_offset + TAR_BLOCK_SIZE, SEEK_SET);
+                return NULL;
+            }
+            if (prefixed[0] != '\0') {
+                prefixed[156] = '\0';
+                strcat(prefixed, "/");
+                strcat(prefixed, name);
+                free(name);
+                name = prefixed;
+                prefixed = NULL;
+            }
+            free(prefixed);
+        }
+        else
+            ar_skip(ar->stream, TAR_BLOCK_SIZE - 100);
+
         /* TODO: determine proper encoding */
         tar->entry.name = ar_conv_dos_to_utf8(name);
         free(name);

@@ -13,9 +13,10 @@ typedef struct ar_archive_tar_s ar_archive_tar;
 #define TAR_BLOCK_SIZE 512
 
 enum tar_filetype {
-    TYPE_FILE = '0', TYPE_FILE2 = 0,
+    TYPE_FILE = '0', TYPE_FILE_OLD = '\0',
     TYPE_HARD_LINK = '1', TYPE_SOFT_LINK = '2',
     TYPE_DIRECTORY = '5',
+    TYPE_LONGNAME = 'L',
 };
 
 struct tar_entry {
@@ -24,6 +25,7 @@ struct tar_entry {
     time64_t mtime;
     uint32_t checksum;
     char filetype;
+    bool is_ustar;
 };
 
 bool tar_parse_header(ar_archive_tar *tar);
