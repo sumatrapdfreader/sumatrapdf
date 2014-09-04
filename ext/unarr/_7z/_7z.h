@@ -14,7 +14,7 @@
 typedef struct ar_archive_7z_s ar_archive_7z;
 
 struct CSeekStream {
-    ISeekInStream base;
+    ISeekInStream super;
     ar_stream *stream;
 };
 

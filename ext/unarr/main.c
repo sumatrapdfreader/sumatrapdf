@@ -11,6 +11,18 @@
 #include <crtdbg.h>
 #endif
 
+ar_archive *ar_open_any_archive(ar_stream *stream, const char *fileext)
+{
+    ar_archive *ar = ar_open_rar_archive(stream);
+    if (!ar)
+        ar = ar_open_zip_archive(stream, fileext && (!strcmp(fileext, ".xps") || !strcmp(fileext, ".epub")));
+    if (!ar)
+        ar = ar_open_7z_archive(stream);
+    if (!ar)
+        ar = ar_open_tar_archive(stream);
+    return ar;
+}
+
 #define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); goto CleanUp; } error_step++
 
 int main(int argc, char *argv[])
@@ -34,12 +46,8 @@ int main(int argc, char *argv[])
     stream = ar_open_file(argv[1]);
     FailIf(!stream, "Error: File \"%s\" not found!", argv[1]);
 
-    ar = ar_open_rar_archive(stream);
-    if (!ar)
-        ar = ar_open_zip_archive(stream, strstr(argv[1], ".xps") || strstr(argv[1], ".epub"));
-    if (!ar)
-        ar = ar_open_7z_archive(stream);
-    FailIf(!ar, "Error: File \"%s\" is no valid RAR, ZIP or 7Z archive!", argv[1]);
+    ar = ar_open_any_archive(stream, strrchr(argv[1], '.'));
+    FailIf(!ar, "Error: File \"%s\" is no valid RAR, ZIP, 7Z or TAR archive!", argv[1]);
 
     printf("Parsing \"%s\":\n", argv[1]);
     while (ar_parse_entry(ar)) {

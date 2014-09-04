@@ -322,10 +322,10 @@ $(OS)\Installer.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h $B\s
 $(OS)\Installer.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
 $(OS)\Installer.obj: $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\MakeLzSA.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\LzmaEnc.h $B\ext\lzma\C\Types.h
-$(OS)\MakeLzSA.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteWriter.h
-$(OS)\MakeLzSA.obj: $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(OS)\MakeLzSA.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\MakeLzSA.obj: $B\src\utils\Vec.h
+$(OS)\MakeLzSA.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\src\utils\Allocator.h
+$(OS)\MakeLzSA.obj: $B\src\utils\BaseUtil.h $B\src\utils\ByteWriter.h $B\src\utils\CmdLineParser.h
+$(OS)\MakeLzSA.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h
+$(OS)\MakeLzSA.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Menu.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
 $(OS)\Menu.obj: $B\src\DisplayModel.h $B\src\DisplayState.h $B\src\EngineManager.h
 $(OS)\Menu.obj: $B\src\ExternalPdfViewer.h $B\src\Favorites.h $B\src\FileHistory.h
@@ -365,30 +365,30 @@ $(OS)\ParseCommandLine.obj: $B\src\SumatraPDF.h $B\src\utils\Allocator.h $B\src\
 $(OS)\ParseCommandLine.obj: $B\src\utils\CmdLineParser.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OS)\ParseCommandLine.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\ParseCommandLine.obj: $B\src\utils\WinUtil.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz.h $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\buffer.h $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\context.h $B\mupdf\include\mupdf\fitz\crypt.h $B\mupdf\include\mupdf\fitz\device.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\display-list.h $B\mupdf\include\mupdf\fitz\document.h $B\mupdf\include\mupdf\fitz\filter.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\font.h $B\mupdf\include\mupdf\fitz\function.h $B\mupdf\include\mupdf\fitz\getopt.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\glyph-cache.h $B\mupdf\include\mupdf\fitz\glyph.h $B\mupdf\include\mupdf\fitz\hash.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\image.h $B\mupdf\include\mupdf\fitz\link.h $B\mupdf\include\mupdf\fitz\math.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\meta.h $B\mupdf\include\mupdf\fitz\outline.h $B\mupdf\include\mupdf\fitz\output-pcl.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\output-png.h $B\mupdf\include\mupdf\fitz\output-pnm.h $B\mupdf\include\mupdf\fitz\output-pwg.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\output-svg.h $B\mupdf\include\mupdf\fitz\output-tga.h $B\mupdf\include\mupdf\fitz\output.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\path.h $B\mupdf\include\mupdf\fitz\pixmap.h $B\mupdf\include\mupdf\fitz\shade.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\store.h $B\mupdf\include\mupdf\fitz\stream.h $B\mupdf\include\mupdf\fitz\string.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\structured-text.h $B\mupdf\include\mupdf\fitz\system.h $B\mupdf\include\mupdf\fitz\text.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\transition.h $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\version.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h $B\mupdf\include\mupdf\pdf.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\annot.h $B\mupdf\include\mupdf\pdf\appearance.h $B\mupdf\include\mupdf\pdf\cmap.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\crypt.h $B\mupdf\include\mupdf\pdf\document.h $B\mupdf\include\mupdf\pdf\event.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\field.h $B\mupdf\include\mupdf\pdf\font.h $B\mupdf\include\mupdf\pdf\javascript.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\object.h $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mupdf\pdf\page.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\parse.h $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\xref.h $B\src\BaseEngine.h $B\src\PdfCreator.h
-$(OS)\PdfCreator.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GdiplusUtil.h
-$(OS)\PdfCreator.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\PdfCreator.obj: $B\src\utils\Vec.h
+$(OS)\PdfCreator.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\mupdf\include\mupdf\fitz.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h $B\mupdf\include\mupdf\fitz\buffer.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h $B\mupdf\include\mupdf\fitz\context.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\crypt.h $B\mupdf\include\mupdf\fitz\device.h $B\mupdf\include\mupdf\fitz\display-list.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\document.h $B\mupdf\include\mupdf\fitz\filter.h $B\mupdf\include\mupdf\fitz\font.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\function.h $B\mupdf\include\mupdf\fitz\getopt.h $B\mupdf\include\mupdf\fitz\glyph-cache.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\glyph.h $B\mupdf\include\mupdf\fitz\hash.h $B\mupdf\include\mupdf\fitz\image.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\link.h $B\mupdf\include\mupdf\fitz\math.h $B\mupdf\include\mupdf\fitz\meta.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\outline.h $B\mupdf\include\mupdf\fitz\output-pcl.h $B\mupdf\include\mupdf\fitz\output-png.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\output-pnm.h $B\mupdf\include\mupdf\fitz\output-pwg.h $B\mupdf\include\mupdf\fitz\output-svg.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\output-tga.h $B\mupdf\include\mupdf\fitz\output.h $B\mupdf\include\mupdf\fitz\path.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\pixmap.h $B\mupdf\include\mupdf\fitz\shade.h $B\mupdf\include\mupdf\fitz\store.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\stream.h $B\mupdf\include\mupdf\fitz\string.h $B\mupdf\include\mupdf\fitz\structured-text.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\system.h $B\mupdf\include\mupdf\fitz\text.h $B\mupdf\include\mupdf\fitz\transition.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\version.h $B\mupdf\include\mupdf\fitz\write-document.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\xml.h $B\mupdf\include\mupdf\pdf.h $B\mupdf\include\mupdf\pdf\annot.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\appearance.h $B\mupdf\include\mupdf\pdf\cmap.h $B\mupdf\include\mupdf\pdf\crypt.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\document.h $B\mupdf\include\mupdf\pdf\event.h $B\mupdf\include\mupdf\pdf\field.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\font.h $B\mupdf\include\mupdf\pdf\javascript.h $B\mupdf\include\mupdf\pdf\object.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mupdf\pdf\page.h $B\mupdf\include\mupdf\pdf\parse.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h $B\mupdf\include\mupdf\pdf\xref.h
+$(OS)\PdfCreator.obj: $B\src\BaseEngine.h $B\src\PdfCreator.h $B\src\utils\Allocator.h
+$(OS)\PdfCreator.obj: $B\src\utils\BaseUtil.h $B\src\utils\GdiplusUtil.h $B\src\utils\GeomUtil.h
+$(OS)\PdfCreator.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz.h $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\buffer.h $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\context.h $B\mupdf\include\mupdf\fitz\crypt.h $B\mupdf\include\mupdf\fitz\device.h
@@ -429,10 +429,11 @@ $(OS)\Print.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\Ge
 $(OS)\Print.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
 $(OS)\Print.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\Print.obj: $B\src\WindowInfo.h
-$(OS)\PsEngine.obj: $B\src\BaseEngine.h $B\src\PdfEngine.h $B\src\PsEngine.h
-$(OS)\PsEngine.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteReader.h
-$(OS)\PsEngine.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
-$(OS)\PsEngine.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\PsEngine.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\src\BaseEngine.h
+$(OS)\PsEngine.obj: $B\src\PdfEngine.h $B\src\PsEngine.h $B\src\utils\Allocator.h
+$(OS)\PsEngine.obj: $B\src\utils\BaseUtil.h $B\src\utils\ByteReader.h $B\src\utils\FileUtil.h
+$(OS)\PsEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OS)\PsEngine.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\Regress.obj: $B\src\BaseEngine.h $B\src\Doc.h $B\src\EbookBase.h
 $(OS)\Regress.obj: $B\src\EbookDoc.h $B\src\EbookFormatter.h $B\src\HtmlFormatter.h
 $(OS)\Regress.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
@@ -599,9 +600,9 @@ $(OS)\Trans_installer_txt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h 
 $(OS)\Trans_installer_txt.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Trans_sumatra_txt.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OS)\Trans_sumatra_txt.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\Translations.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\Translations.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\Translations.obj: $B\src\utils\Vec.h
+$(OS)\Translations.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\src\Translations.h
+$(OS)\Translations.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OS)\Translations.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\Uninstall.obj: $B\src\installer\Installer.h $B\src\installer\Resource.h $B\src\Translations.h
 $(OS)\Uninstall.obj: $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h $B\src\utils\Timer.h
 $(OS)\Uninstall.obj: $B\src\utils\WinUtil.h $B\src\Version.h
@@ -711,9 +712,10 @@ $(OU)\LabelWithCloseWnd.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B
 $(OU)\LabelWithCloseWnd.obj: $B\src\utils\GeomUtil.h $B\src\utils\LabelWithCloseWnd.h $B\src\utils\Scoped.h
 $(OU)\LabelWithCloseWnd.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\LzmaSimpleArchive.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
-$(OU)\LzmaSimpleArchive.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteOrderDecoder.h
-$(OU)\LzmaSimpleArchive.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h
-$(OU)\LzmaSimpleArchive.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\LzmaSimpleArchive.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\src\utils\Allocator.h
+$(OU)\LzmaSimpleArchive.obj: $B\src\utils\BaseUtil.h $B\src\utils\ByteOrderDecoder.h $B\src\utils\FileUtil.h
+$(OU)\LzmaSimpleArchive.obj: $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\Scoped.h
+$(OU)\LzmaSimpleArchive.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\NoFreeAllocator.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\NoFreeAllocator.obj: $B\src\utils\Vec.h
@@ -775,10 +777,11 @@ $(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils
 $(OU)\WinUtil.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OU)\WinUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\WinUtil.obj: $B\src\utils\WinCursors.h $B\src\utils\WinUtil.h
-$(OU)\ZipUtil.obj: $B\ext\unarr\unarr.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\ByteWriter.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\Vec.h $B\src\utils\ZipUtil.h
+$(OU)\ZipUtil.obj: $B\ext\unarr\unarr.h $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h
+$(OU)\ZipUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteWriter.h
+$(OU)\ZipUtil.obj: $B\src\utils\DirIter.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OU)\ZipUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\ZipUtil.obj: $B\src\utils\ZipUtil.h
 $(OUIA)\DocumentProvider.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
 $(OUIA)\DocumentProvider.obj: $B\src\DisplayState.h $B\src\SettingsStructs.h $B\src\uia\Constants.h
 $(OUIA)\DocumentProvider.obj: $B\src\uia\DocumentProvider.h $B\src\uia\PageProvider.h $B\src\uia\Provider.h
@@ -809,6 +812,7 @@ $(OUN)\_7z.obj: $B\ext\unarr\_7z\_7z.h $B\ext\unarr\common\allocator.h $B\ext\un
 $(OUN)\_7z.obj: $B\ext\unarr\ppmd\Types.h $B\ext\unarr\unarr.h
 $(OUN)\conv.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\crc32.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
+$(OUN)\crc32.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
 $(OUN)\filter-rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\rar\rarvm.h
@@ -820,15 +824,20 @@ $(OUN)\main.obj: $B\ext\unarr\unarr.h
 $(OUN)\parse-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\parse-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
 $(OUN)\parse-rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\unarr.h
+$(OUN)\parse-tar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\tar\tar.h
+$(OUN)\parse-tar.obj: $B\ext\unarr\unarr.h
 $(OUN)\parse-zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\parse-zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\parse-zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\parse-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h
+$(OUN)\parse-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
+$(OUN)\parse-zip.obj: $B\ext\zlib\zlib.h
 $(OUN)\rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
 $(OUN)\rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\unarr.h
 $(OUN)\rarvm.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\rar\rarvm.h
 $(OUN)\stream.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
+$(OUN)\tar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\tar\tar.h
+$(OUN)\tar.obj: $B\ext\unarr\unarr.h
 $(OUN)\unarr.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\unarr.h
 $(OUN)\uncompress-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\uncompress-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
@@ -836,8 +845,10 @@ $(OUN)\uncompress-rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext
 $(OUN)\uncompress-zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\uncompress-zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\uncompress-zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\uncompress-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h
+$(OUN)\uncompress-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
+$(OUN)\uncompress-zip.obj: $B\ext\zlib\zlib.h
 $(OUN)\zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h
+$(OUN)\zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
+$(OUN)\zip.obj: $B\ext\zlib\zlib.h

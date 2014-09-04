@@ -1,4 +1,4 @@
-unarr is a decompression library for RAR, ZIP and 7z archives.
+unarr is a decompression library for RAR, TAR, ZIP and 7z archives.
 
 unarr originated as a port of the RAR extraction features from
 The Unarchiver project required for extracting images from comic

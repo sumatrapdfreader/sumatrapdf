@@ -9,9 +9,34 @@ leads to the recompilation of all the files depending on this header.
 import os, re, fnmatch, util2, update_vs, update_vs2008
 pjoin = os.path.join
 
-DIRS = ["src", pjoin("src", "utils"), pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "previewer"), pjoin("src", "mui"), pjoin("src", "memtrace"), pjoin("src", "regress"), pjoin("src", "uia"), pjoin("ext", "unarr"), pjoin("ext", "unarr", "common"), pjoin("ext", "unarr", "rar"), pjoin("ext", "unarr", "zip"), pjoin("ext", "unarr", "_7z")]
-INCLUDE_DIRS = DIRS + [pjoin("mupdf", "include"), pjoin("ext", "bzip2"), pjoin("ext", "CHMlib", "src"), pjoin("ext", "freetype2", "include"), pjoin("ext", "jbig2dec"), pjoin("ext", "libdjvu"), pjoin("ext", "libjpeg-turbo"), pjoin("ext", "libwebp"), pjoin("ext", "lzma", "C"), pjoin("ext", "openjpeg"), pjoin("ext", "synctex"), pjoin("zlib")]
-OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)", "src\\mui": "$(OMUI)", "src\\memtrace": "$(OM)", "src\\uia": "$(OUIA)", "ext\\unarr": "$(OUN)", "ext\\unarr\\common": "$(OUN)", "ext\\unarr\\rar": "$(OUN)", "ext\\unarr\\zip": "$(OUN)" } # default: "$(OS)"
+DIRS = [
+	"src", pjoin("src", "utils"), pjoin("src", "mui"), 
+	pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "previewer"),
+	pjoin("src", "memtrace"), pjoin("src", "regress"), pjoin("src", "uia"),
+	pjoin("ext", "unarr"), pjoin("ext", "unarr", "common"),
+] + [pjoin("ext", "unarr", format) for format in ["rar", "tar", "zip", "_7z"]]
+INCLUDE_DIRS = DIRS + [
+	pjoin("mupdf", "include"),
+	pjoin("ext", "bzip2"),
+	pjoin("ext", "CHMlib", "src"),
+	pjoin("ext", "freetype2", "include"),
+	pjoin("ext", "jbig2dec"),
+	pjoin("ext", "libdjvu"),
+	pjoin("ext", "libjpeg-turbo"),
+	pjoin("ext", "libwebp"),
+	pjoin("ext", "lzma", "C"),
+	pjoin("ext", "openjpeg"),
+	pjoin("ext", "synctex"),
+	pjoin("ext", "zlib"),
+]
+OBJECT_DIRS = {
+	"src\\utils": "$(OU)",
+	"src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)",
+	"src\\mui": "$(OMUI)",
+	"src\\memtrace": "$(OM)",
+	"src\\uia": "$(OUIA)",
+	"ext\\unarr": "$(OUN)", "ext\\unarr\\common": "$(OUN)", "ext\\unarr\\rar": "$(OUN)", "ext\\unarr\\tar": "$(OUN)", "ext\\unarr\\zip": "$(OUN)", "ext\\unarr\\_7z": "$(OUN)"
+} # default: "$(OS)"
 MAKEFILE = "makefile.deps"
 DEPENDENCIES_PER_LINE = 3
 

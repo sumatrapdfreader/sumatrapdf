@@ -2388,6 +2388,22 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="tar"
+				>
+				<File
+					RelativePath="..\ext\unarr\tar\parse-tar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\tar\tar.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\tar\tar.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\docs\releasenotes.txt"

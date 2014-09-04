@@ -25,6 +25,7 @@ DIR_STRUCT = [
 	(pjoin("ext", "unarr"), ("unarr")),
 	(pjoin("ext", "unarr", "common"), ("unarr", "common")),
 	(pjoin("ext", "unarr", "rar"), ("unarr", "rar")),
+	(pjoin("ext", "unarr", "tar"), ("unarr", "tar")),
 	(pjoin("ext", "unarr", "zip"), ("unarr", "zip")),
 	(pjoin("ext", "unarr", "_7z"), ("unarr", "_7z")),
 ]

@@ -117,7 +117,7 @@ UNARR_OBJS = \
 	$(OUN)\filter-rar.obj $(OUN)\parse-rar.obj $(OUN)\rar.obj \
 	$(OUN)\rarvm.obj $(OUN)\uncompress-rar.obj $(OUN)\huffman-rar.obj \
 	$(OUN)\parse-zip.obj $(OUN)\uncompress-zip.obj $(OUN)\zip.obj \
-	$(OUN)\_7z.obj
+	$(OUN)\_7z.obj $(OUN)\tar.obj $(OUN)\parse-tar.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
@@ -159,6 +159,9 @@ $(OE): force
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTDIR)\unarr\rar}.c{$(OUN)}.obj::
+	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\unarr\tar}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTDIR)\unarr\zip}.c{$(OUN)}.obj::

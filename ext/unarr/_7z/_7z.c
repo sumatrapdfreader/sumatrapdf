@@ -27,8 +27,8 @@ static SRes CSeekStream_Seek(void *p, Int64 *pos, ESzSeek origin)
 
 static void CSeekStream_CreateVTable(struct CSeekStream *in_stream, ar_stream *stream)
 {
-    in_stream->base.Read = CSeekStream_Read;
-    in_stream->base.Seek = CSeekStream_Seek;
+    in_stream->super.Read = CSeekStream_Read;
+    in_stream->super.Seek = CSeekStream_Seek;
     in_stream->stream = stream;
 }
 
@@ -160,7 +160,7 @@ ar_archive *ar_open_7z_archive(ar_stream *stream)
     _7z = (ar_archive_7z *)ar;
     CSeekStream_CreateVTable(&_7z->in_stream, stream);
     LookToRead_CreateVTable(&_7z->look_stream, False);
-    _7z->look_stream.realStream = &_7z->in_stream.base;
+    _7z->look_stream.realStream = &_7z->in_stream.super;
     LookToRead_Init(&_7z->look_stream);
 
 #ifdef USE_7Z_CRC32
@@ -170,7 +170,8 @@ ar_archive *ar_open_7z_archive(ar_stream *stream)
     SzArEx_Init(&_7z->data);
     res = SzArEx_Open(&_7z->data, &_7z->look_stream.s, &gSzAlloc, &gSzAlloc);
     if (res != SZ_OK) {
-        warn("Invalid 7z archive (failed with error %d)", res);
+        if (res != SZ_ERROR_NO_ARCHIVE)
+            warn("Invalid 7z archive (failed with error %d)", res);
         free(ar);
         return NULL;
     }
@@ -182,6 +183,7 @@ ar_archive *ar_open_7z_archive(ar_stream *stream)
 
 ar_archive *ar_open_7z_archive(ar_stream *stream)
 {
+    (void)stream;
     warn("7z support requires 7z SDK (define HAVE_7Z)");
     return NULL;
 }
