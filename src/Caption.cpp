@@ -485,9 +485,8 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge=true)
     GetWindowRect(hwnd, &rWindow);
     GetClientRect(hwnd, &rClient);
     // convert the client rectangle to window coordinates and exclude it from the clipping region
-    POINT pt = {rWindow.left, rWindow.top};
-    ScreenToClient(hwnd, &pt);
-    OffsetRect(&rClient, -pt.x, -pt.y);
+    MapWindowPoints(hwnd, HWND_DESKTOP, (LPPOINT)&rClient, 2);
+    OffsetRect(&rClient, -rWindow.left, -rWindow.top);
     ExcludeClipRect(hdc, rClient.left, rClient.top, rClient.right, rClient.bottom);
     // convert the window rectangle, from screen to window coordinates, and draw the frame
     OffsetRect(&rWindow, -rWindow.left, -rWindow.top);
