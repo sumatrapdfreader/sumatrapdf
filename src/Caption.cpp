@@ -208,20 +208,27 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
     switch (message)
     {
         case WM_MOUSEMOVE:
-            if (win) {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                tme.dwFlags = TME_QUERY;
-                tme.hwndTrack = hwnd;
-                TrackMouseEvent(&tme);
-                if (0 == (tme.dwFlags & TME_LEAVE)) {
-                    tme.dwFlags = TME_LEAVE;
+            {
+                ClientRect rc(hwnd);
+                if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+                    ReleaseCapture();
+                    return 0;
+                }
+                if (win) {
+                    TRACKMOUSEEVENT tme;
+                    tme.cbSize = sizeof(TRACKMOUSEEVENT);
+                    tme.dwFlags = TME_QUERY;
                     tme.hwndTrack = hwnd;
                     TrackMouseEvent(&tme);
-                    win->caption->btn[index].highlighted = true;
-                    InvalidateRgn(hwnd, NULL, FALSE);
+                    if (0 == (tme.dwFlags & TME_LEAVE)) {
+                        tme.dwFlags = TME_LEAVE;
+                        tme.hwndTrack = hwnd;
+                        TrackMouseEvent(&tme);
+                        win->caption->btn[index].highlighted = true;
+                        InvalidateRgn(hwnd, NULL, FALSE);
+                    }
+                    return 0;
                 }
-                return 0;
             }
             break;
 
