@@ -43,7 +43,7 @@ EXPORTS
 
 %(muxps_exports)s
 
-; unarr exports (required for ZipUtil, RarUtil)
+; unarr exports (required for ArchUtil, ZipUtil)
 
 %(unarr_exports)s
 

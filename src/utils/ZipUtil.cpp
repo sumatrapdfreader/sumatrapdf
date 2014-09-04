@@ -14,7 +14,7 @@ extern "C" {
 #include <zlib.h>
 }
 
-ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
+ZipFileAlloc::ZipFileAlloc(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
     ar(NULL), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
 {
     data = ar_open_file_w(path);
@@ -23,7 +23,7 @@ ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
     ExtractFilenames();
 }
 
-ZipFile::ZipFile(IStream *stream, bool deflatedOnly, Allocator *allocator) :
+ZipFileAlloc::ZipFileAlloc(IStream *stream, bool deflatedOnly, Allocator *allocator) :
     ar(NULL), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
 {
     data = ar_open_istream(stream);
@@ -32,13 +32,13 @@ ZipFile::ZipFile(IStream *stream, bool deflatedOnly, Allocator *allocator) :
     ExtractFilenames();
 }
 
-ZipFile::~ZipFile()
+ZipFileAlloc::~ZipFileAlloc()
 {
     ar_close_archive(ar);
     ar_close(data);
 }
 
-void ZipFile::ExtractFilenames()
+void ZipFileAlloc::ExtractFilenames()
 {
     if (!ar)
         return;
@@ -52,30 +52,30 @@ void ZipFile::ExtractFilenames()
     }
 }
 
-size_t ZipFile::GetFileIndex(const WCHAR *fileName)
+size_t ZipFileAlloc::GetFileIndex(const WCHAR *fileName)
 {
     return filenames.FindI(fileName);
 }
 
-size_t ZipFile::GetFileCount() const
+size_t ZipFileAlloc::GetFileCount() const
 {
     CrashIf(filenames.Count() != filepos.Count());
     return filenames.Count();
 }
 
-const WCHAR *ZipFile::GetFileName(size_t fileindex)
+const WCHAR *ZipFileAlloc::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
         return NULL;
     return filenames.At(fileindex);
 }
 
-char *ZipFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
+char *ZipFileAlloc::GetFileDataByName(const WCHAR *fileName, size_t *len)
 {
     return GetFileDataByIdx(GetFileIndex(fileName), len);
 }
 
-char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
+char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
     if (!ar)
         return NULL;
@@ -103,12 +103,12 @@ char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     return data;
 }
 
-FILETIME ZipFile::GetFileTime(const WCHAR *fileName)
+FILETIME ZipFileAlloc::GetFileTime(const WCHAR *fileName)
 {
     return GetFileTime(GetFileIndex(fileName));
 }
 
-FILETIME ZipFile::GetFileTime(size_t fileindex)
+FILETIME ZipFileAlloc::GetFileTime(size_t fileindex)
 {
     FILETIME ft = { (DWORD)-1, (DWORD)-1 };
     if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
@@ -118,7 +118,7 @@ FILETIME ZipFile::GetFileTime(size_t fileindex)
     return ft;
 }
 
-char *ZipFile::GetComment(size_t *len)
+char *ZipFileAlloc::GetComment(size_t *len)
 {
     if (!ar)
         return NULL;
@@ -137,7 +137,7 @@ char *ZipFile::GetComment(size_t *len)
     return comment;
 }
 
-bool ZipFile::UnzipFile(const WCHAR *fileName, const WCHAR *dir, const WCHAR *unzippedName)
+bool ZipFileAlloc::UnzipFile(const WCHAR *fileName, const WCHAR *dir, const WCHAR *unzippedName)
 {
     size_t len;
     char *data = GetFileDataByName(fileName, &len);

@@ -9,7 +9,8 @@ typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
 }
 
-class ZipFile {
+// TODO: unused - remove?
+class ZipFileAlloc {
     Allocator *allocator;
     WStrList filenames;
     Vec<int64_t> filepos;
@@ -20,9 +21,9 @@ class ZipFile {
     void ExtractFilenames();
 
 public:
-    explicit ZipFile(const WCHAR *path, bool deflatedOnly=false, Allocator *allocator=NULL);
-    explicit ZipFile(IStream *stream, bool deflatedOnly=false, Allocator *allocator=NULL);
-    ~ZipFile();
+    explicit ZipFileAlloc(const WCHAR *path, bool deflatedOnly=false, Allocator *allocator=NULL);
+    explicit ZipFileAlloc(IStream *stream, bool deflatedOnly=false, Allocator *allocator=NULL);
+    ~ZipFileAlloc();
 
     size_t GetFileCount() const;
     // the result is owned by ZipFile

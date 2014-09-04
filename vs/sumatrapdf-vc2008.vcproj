@@ -132,11 +132,11 @@
 				Name="dataformats"
 				>
 				<File
-					RelativePath="..\src\utils\7zUtil.cpp"
+					RelativePath="..\src\utils\ArchUtil.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\7zUtil.h"
+					RelativePath="..\src\utils\ArchUtil.h"
 					>
 				</File>
 				<File
@@ -201,14 +201,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\PalmDbReader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\RarUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\RarUtil.h"
 					>
 				</File>
 				<File
@@ -1420,6 +1412,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\source\fitz\dtoa.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\source\fitz\error.c"
 					>
 				</File>
@@ -1633,10 +1629,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\source\fitz\xml.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\source\fitz\dtoa.c"
 					>
 				</File>
 			</Filter>

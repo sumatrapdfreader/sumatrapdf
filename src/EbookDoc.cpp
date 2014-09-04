@@ -10,7 +10,6 @@
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
-#include "ZipUtil.h"
 
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure

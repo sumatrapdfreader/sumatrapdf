@@ -288,7 +288,7 @@
     <ClCompile Include="..\src\mui\TextRender.cpp">
       <Filter>mui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\7zUtil.cpp">
+    <ClCompile Include="..\src\utils\ArchUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
@@ -370,9 +370,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\RarUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SerializeTxt.cpp">
@@ -1124,10 +1121,10 @@
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\7zUtil.h">
+    <ClInclude Include="..\src\utils\Allocator.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Allocator.h">
+    <ClInclude Include="..\src\utils\ArchUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\BaseUtil.h">
@@ -1224,9 +1221,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\PalmDbReader.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\RarUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\RefCounted.h">

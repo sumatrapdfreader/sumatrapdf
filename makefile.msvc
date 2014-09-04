@@ -170,7 +170,7 @@ UTILS_OBJS = \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\SplitterWnd.obj \
 	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
-	$(OU)\ZipUtil.obj $(OU)\RarUtil.obj $(OU)\LzmaSimpleArchive.obj $(OU)\7zUtil.obj \
+	$(OU)\ArchUtil.obj $(OU)\ZipUtil.obj $(OU)\LzmaSimpleArchive.obj \
 	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj
 
 MUI_OBJS = \

@@ -823,7 +823,7 @@ EXPORTS
 	xps_lookup_alternate_content
 	xps_extract_anchor_info
 
-; unarr exports (required for ZipUtil, RarUtil)
+; unarr exports (required for ArchUtil, ZipUtil)
 
 	ar_open_file
 	ar_open_file_w

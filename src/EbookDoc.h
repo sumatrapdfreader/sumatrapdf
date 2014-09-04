@@ -6,7 +6,7 @@
 
 #include "BaseEngine.h"
 #include "EbookBase.h"
-#include "ZipUtil.h"
+#include "ArchUtil.h"
 
 struct ImageData2 {
     ImageData base;

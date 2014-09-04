@@ -2,97 +2,70 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "RarUtil.h"
+#include "ArchUtil.h"
+
+extern "C" {
+#include <unarr.h>
+}
 
 // if this is defined, SumatraPDF will look for unrar.dll in
 // the same directory as SumatraPDF.exe whenever a RAR archive
 // fails to open or extract and uses that as a fallback
 #define ENABLE_UNRARDLL_FALLBACK
 
-extern "C" {
-#include <unarr.h>
-}
-
 #ifdef ENABLE_UNRARDLL_FALLBACK
 #include "FileUtil.h"
-
-class UnRarDll {
-    ScopedMem<WCHAR> rarPath;
-
-public:
-    UnRarDll(const WCHAR *rarPath);
-    ~UnRarDll() { };
-
-    bool ExtractFilenames(WStrList& filenames);
-    char *GetFileByName(const WCHAR *filename, size_t *len=NULL);
-};
-#else
-
-class UnRarDll { };
-
 #endif
 
-RarFile::RarFile(const WCHAR *path) : path(str::Dup(path)), fallback(NULL), ar(NULL)
+ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : data(data), ar(NULL)
 {
-    data = ar_open_file_w(path);
-    if (data)
-        ar = ar_open_rar_archive(data);
-    ExtractFilenames();
+    if (data && openFormat)
+        ar = openFormat(data);
+    if (!ar) {
+        (void)GetFileFromCallback((size_t)-1);
+        return;
+    }
+    while (ar_parse_entry(ar)) {
+        const char *name = ar_entry_get_name(ar);
+        filenames.Append(str::conv::FromUtf8(name));
+        filepos.Append(ar_entry_get_offset(ar));
+    }
+    if (!ar_at_eof(ar))
+        (void)GetFileFromCallback((size_t)-1);
 }
 
-RarFile::RarFile(IStream *stream) : path(NULL), fallback(NULL), ar(NULL)
-{
-    data = ar_open_istream(stream);
-    if (data)
-        ar = ar_open_rar_archive(data);
-    ExtractFilenames();
-}
-
-RarFile::~RarFile()
+ArchFile::~ArchFile()
 {
     ar_close_archive(ar);
     ar_close(data);
-    delete fallback;
 }
 
-size_t RarFile::GetFileCount() const
+size_t ArchFile::GetFileIndex(const WCHAR *fileName)
 {
+    return filenames.FindI(fileName);
+}
+
+size_t ArchFile::GetFileCount() const
+{
+    CrashIf(filenames.Count() != filepos.Count());
     return filenames.Count();
 }
 
-const WCHAR *RarFile::GetFileName(size_t fileindex)
+const WCHAR *ArchFile::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
         return NULL;
     return filenames.At(fileindex);
 }
 
-size_t RarFile::GetFileIndex(const WCHAR *fileName)
-{
-    return filenames.FindI(fileName);
-}
-
-char *RarFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
+char *ArchFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 {
     return GetFileDataByIdx(GetFileIndex(fileName), len);
 }
 
-void RarFile::ExtractFilenames()
+char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
-    if (ar) {
-        while (ar_parse_entry(ar)) {
-            const char *name = ar_entry_get_name(ar);
-            filenames.Append(str::conv::FromUtf8(name));
-            filepos.Append(ar_entry_get_offset(ar));
-        }
-    }
-    if (!ar || !ar_at_eof(ar))
-        GetFileFromCallback((size_t)-1);
-}
-
-char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
-{
-    if (fileindex >= filepos.Count())
+    if (fileindex >= filenames.Count())
         return NULL;
 
     if (!ar || !ar_parse_entry_at(ar, filepos.At(fileindex)))
@@ -114,19 +87,83 @@ char *RarFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     return data.StealData();
 }
 
+FILETIME ArchFile::GetFileTime(const WCHAR *fileName)
+{
+    return GetFileTime(GetFileIndex(fileName));
+}
+
+FILETIME ArchFile::GetFileTime(size_t fileindex)
+{
+    FILETIME ft = { (DWORD)-1, (DWORD)-1 };
+    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
+        time64_t filetime = ar_entry_get_filetime(ar);
+        LocalFileTimeToFileTime((FILETIME *)&filetime, &ft);
+    }
+    return ft;
+}
+
+char *ArchFile::GetComment(size_t *len)
+{
+    if (!ar)
+        return NULL;
+    size_t commentLen = ar_get_global_comment(ar, NULL, 0);
+    if (0 == commentLen || (size_t)-1 == commentLen)
+        return NULL;
+    ScopedMem<char> comment((char *)malloc(commentLen + 1));
+    if (!comment)
+        return NULL;
+    size_t read = ar_get_global_comment(ar, comment, commentLen);
+    if (read != commentLen)
+        return NULL;
+    comment[commentLen] = '\0';
+    if (len)
+        *len = commentLen;
+    return comment.StealData();
+}
+
+///// format specific handling /////
+
+static ar_archive *ar_open_zip_archive_any(ar_stream *stream) { return ar_open_zip_archive(stream, false); }
+static ar_archive *ar_open_zip_archive_deflated(ar_stream *stream) { return ar_open_zip_archive(stream, true); }
+#define GetZipOpener(deflatedOnly) ((deflatedOnly) ? ar_open_zip_archive_deflated : ar_open_zip_archive_any)
+
+ZipFile::ZipFile(const WCHAR *path, bool deflatedOnly) : ArchFile(ar_open_file_w(path), GetZipOpener(deflatedOnly)) { }
+ZipFile::ZipFile(IStream *stream, bool deflatedOnly) : ArchFile(ar_open_istream(stream), GetZipOpener(deflatedOnly)) { }
+
+_7zFile::_7zFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_7z_archive) { }
+_7zFile::_7zFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_7z_archive) { }
+
+#ifdef ENABLE_UNRARDLL_FALLBACK
+class UnRarDll {
+public:
+    UnRarDll();
+
+    bool ExtractFilenames(const WCHAR *rarPath, WStrList& filenames);
+    char *GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_t *len=NULL);
+};
+#else
+class UnRarDll { };
+#endif
+
+RarFile::RarFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_rar_archive),
+    path(str::Dup(path)), fallback(NULL) { }
+RarFile::RarFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_rar_archive),
+    path(NULL), fallback(NULL) { }
+RarFile::~RarFile() { delete fallback; }
+
 char *RarFile::GetFileFromCallback(size_t fileindex, size_t *len)
 {
 #ifdef ENABLE_UNRARDLL_FALLBACK
     if (path) {
         if (!fallback)
-            fallback = new UnRarDll(path);
+            fallback = new UnRarDll();
         if (fileindex != (size_t)-1) {
             // always use the fallback for this file from now on
             filepos.At(fileindex) = -1;
-            return fallback->GetFileByName(filenames.At(fileindex), len);
+            return fallback->GetFileByName(path, filenames.At(fileindex), len);
         }
         // if fileindex == -1, (re)load the entire archive listing using UnRAR
-        fallback->ExtractFilenames(filenames);
+        fallback->ExtractFilenames(path, filenames);
         // always use the fallback for all additionally found files
         while (filepos.Count() < filenames.Count()) {
             filepos.Append(-1);
@@ -208,7 +245,7 @@ static RARProcessFileProc   RARProcessFile = NULL;
 static RARCloseArchiveProc  RARCloseArchive = NULL;
 static RARGetDllVersionProc RARGetDllVersion = NULL;
 
-UnRarDll::UnRarDll(const WCHAR *rarPath) : rarPath(str::Dup(rarPath))
+UnRarDll::UnRarDll()
 {
     if (!RARGetDllVersion) {
         ScopedMem<WCHAR> dllPath(path::GetAppPath(L"unrar.dll"));
@@ -228,13 +265,13 @@ UnRarDll::UnRarDll(const WCHAR *rarPath) : rarPath(str::Dup(rarPath))
     }
 }
 
-bool UnRarDll::ExtractFilenames(WStrList &filenames)
+bool UnRarDll::ExtractFilenames(const WCHAR *rarPath, WStrList &filenames)
 {
-    if (!RARGetDllVersion || RARGetDllVersion() != RAR_DLL_VERSION)
+    if (!RARGetDllVersion || RARGetDllVersion() != RAR_DLL_VERSION || !rarPath)
         return false;
 
     RAROpenArchiveDataEx arcData = { 0 };
-    arcData.ArcNameW = rarPath;
+    arcData.ArcNameW = (WCHAR *)rarPath;
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
@@ -267,15 +304,15 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     return ok ? 1 : -1;
 }
 
-char *UnRarDll::GetFileByName(const WCHAR *filename, size_t *len)
+char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_t *len)
 {
-    if (!RARGetDllVersion || RARGetDllVersion() != RAR_DLL_VERSION)
+    if (!RARGetDllVersion || RARGetDllVersion() != RAR_DLL_VERSION || !rarPath)
         return false;
 
     str::Str<char> data;
 
     RAROpenArchiveDataEx arcData = { 0 };
-    arcData.ArcNameW = rarPath;
+    arcData.ArcNameW = (WCHAR *)rarPath;
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
     arcData.UserData = (LPARAM)&data;

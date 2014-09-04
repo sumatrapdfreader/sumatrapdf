@@ -12,6 +12,7 @@ extern "C" {
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 
+#include "ArchUtil.h"
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "TrivialHtmlParser.h"

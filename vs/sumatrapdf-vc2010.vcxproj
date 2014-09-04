@@ -162,7 +162,7 @@
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\TextRender.cpp" />
-    <ClCompile Include="..\src\utils\7zUtil.cpp" />
+    <ClCompile Include="..\src\utils\ArchUtil.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
@@ -190,7 +190,6 @@
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\utils\RarUtil.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\SplitterWnd.cpp" />
@@ -442,8 +441,8 @@
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
-    <ClInclude Include="..\src\utils\7zUtil.h" />
     <ClInclude Include="..\src\utils\Allocator.h" />
+    <ClInclude Include="..\src\utils\ArchUtil.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitManip.h" />
     <ClInclude Include="..\src\utils\BitReader.h" />
@@ -476,7 +475,6 @@
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
-    <ClInclude Include="..\src\utils\RarUtil.h" />
     <ClInclude Include="..\src\utils\RefCounted.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\SerializeTxt.h" />
