@@ -46,7 +46,7 @@ bool tar_parse_header(ar_archive_tar *tar)
         memset(&tar->entry, 0, sizeof(tar->entry));
         return true;
     }
-        
+
     tar->entry.filesize = (size_t)tar_parse_number(data + 124, 12);
     tar->entry.mtime = (tar_parse_number(data + 136, 12) + 11644473600) * 10000000;
     tar->entry.checksum = (uint32_t)tar_parse_number(data + 148, 8);

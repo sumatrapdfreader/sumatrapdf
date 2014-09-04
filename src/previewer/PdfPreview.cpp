@@ -391,7 +391,7 @@ BaseEngine *CMobiPreview::LoadEngine(IStream *stream)
 }
 #endif
 
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW)
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 #include "ImagesEngine.h"
 
 BaseEngine *CCbxPreview::LoadEngine(IStream *stream)

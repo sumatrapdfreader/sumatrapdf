@@ -6,13 +6,13 @@ Next version:
 2.6 (????-??-??)
 
 * Tabs!
+* deprecated the browser plugin (remains installed if used)
 * support table of contents and links in ebook UI
-* add support for displaying CB7 comic books (in addition to CBZ/CBR)
 * added a document measurement helper (invoke by pressing M)
 * swapped keybindings:
   * F11 : Fullscreen mode (still also Ctrl+Shift+L)
   * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
-* deprecated the browser plugin (remains installed if used)
+* add support for displaying CB7 and CBT comic books (in addition to CBZ/CBR)
 * support LZMA and PPMd compression in Comic Book (CBZ) files
 * allow saving Comic Book files as PDF
 * new advanced settings: ShowSingleTab, FullPathInTitle, TabsInTitlebar,

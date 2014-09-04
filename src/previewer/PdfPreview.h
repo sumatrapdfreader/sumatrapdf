@@ -20,7 +20,7 @@
 #ifdef BUILD_MOBI_PREVIEW
 #define SZ_MOBI_PREVIEW_CLSID   L"{42CA907E-BDF5-4A75-994A-E1AEC8A10954}"
 #endif
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW)
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 #define SZ_CBX_PREVIEW_CLSID    L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #endif
 #ifdef BUILD_TGA_PREVIEW
@@ -312,7 +312,7 @@ protected:
 };
 #endif
 
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW)
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 class CCbxPreview : public PreviewBase {
 public:
     CCbxPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_CBX_PREVIEW_CLSID) {

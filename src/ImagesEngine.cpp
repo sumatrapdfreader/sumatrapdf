@@ -802,9 +802,9 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 }
 
-///// CbxEngine handles comic book files (either .cbz, .cbr or .cb7) /////
+///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
-enum CbxFormat { Arch_Zip, Arch_Rar, Arch_7z };
+enum CbxFormat { Arch_Zip, Arch_Rar, Arch_7z, Arch_Tar };
 
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 public:
@@ -1076,6 +1076,7 @@ const WCHAR *CbxEngineImpl::GetDefaultFileExt() const
     case Arch_Zip: return L".cbz";
     case Arch_Rar: return L".cbr";
     case Arch_7z:  return L".cb7";
+    case Arch_Tar: return L".cbt";
     default: CrashIf(true); return NULL;
     }
 }
@@ -1141,6 +1142,12 @@ BaseEngine *CbxEngineImpl::CreateFromFile(const WCHAR *fileName)
             return engine;
         delete engine;
     }
+    if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
+        CbxEngineImpl *engine = new CbxEngineImpl(new TarFile(fileName), Arch_Tar);
+        if (engine->LoadFromFile(fileName))
+            return engine;
+        delete engine;
+    }
     return NULL;
 }
 
@@ -1161,6 +1168,11 @@ BaseEngine *CbxEngineImpl::CreateFromStream(IStream *stream)
         return engine;
     delete engine;
 
+    engine = new CbxEngineImpl(new TarFile(stream), Arch_Tar);
+    if (engine->LoadFromStream(stream))
+        return engine;
+    delete engine;
+
     return NULL;
 }
 
@@ -1171,6 +1183,7 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
+        // TODO: add TAR format sniffing
         return file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
                file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN) ||
                file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C");
@@ -1179,9 +1192,11 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, L".cbz") ||
            str::EndsWithI(fileName, L".cbr") ||
            str::EndsWithI(fileName, L".cb7") ||
+           str::EndsWithI(fileName, L".cbt") ||
            str::EndsWithI(fileName, L".zip") && !str::EndsWithI(fileName, L".fb2.zip") ||
            str::EndsWithI(fileName, L".rar") ||
-           str::EndsWithI(fileName, L".7z");
+           str::EndsWithI(fileName, L".7z")  ||
+           str::EndsWithI(fileName, L".tar");
 }
 
 BaseEngine *CreateFromFile(const WCHAR *fileName)

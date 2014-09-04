@@ -846,6 +846,7 @@ EXPORTS
 	ar_entry_uncompress
 	ar_get_global_comment
 	ar_open_rar_archive
+	ar_open_tar_archive
 	ar_open_zip_archive
 	ar_open_7z_archive
 

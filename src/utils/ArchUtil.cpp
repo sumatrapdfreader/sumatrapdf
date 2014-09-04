@@ -133,6 +133,9 @@ ZipFile::ZipFile(IStream *stream, bool deflatedOnly) : ArchFile(ar_open_istream(
 _7zFile::_7zFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_7z_archive) { }
 _7zFile::_7zFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_7z_archive) { }
 
+TarFile::TarFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_tar_archive) { }
+TarFile::TarFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_tar_archive) { }
+
 #ifdef ENABLE_UNRARDLL_FALLBACK
 class UnRarDll {
 public:

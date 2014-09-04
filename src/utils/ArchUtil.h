@@ -53,6 +53,12 @@ public:
     explicit _7zFile(IStream *stream);
 };
 
+class TarFile : public ArchFile {
+public:
+    explicit TarFile(const WCHAR *path);
+    explicit TarFile(IStream *stream);
+};
+
 class UnRarDll;
 
 class RarFile : public ArchFile {
