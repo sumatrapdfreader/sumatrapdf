@@ -68,8 +68,12 @@ struct ButtonInfo
     HWND hwnd;
     bool highlighted;
     bool inactive;
+    // form the inner rectangle where the button image is drawn
+    RECT margins;
 
-    ButtonInfo(): hwnd(NULL), highlighted(false), inactive(false) { }
+    ButtonInfo();
+
+    void SetMargins(LONG left, LONG top, LONG right, LONG bottom);
 };
 
 class CaptionInfo

@@ -105,6 +105,18 @@ void CaptionInfo::UpdateColors(bool activeWindow)
     }
 }
 
+ButtonInfo::ButtonInfo(): hwnd(NULL), highlighted(false), inactive(false) {
+    SetMargins(0, 0, 0, 0);
+}
+
+void ButtonInfo::SetMargins(LONG left, LONG top, LONG right, LONG bottom)
+{
+    margins.left   = left;
+    margins.top    = top;
+    margins.right  = right;
+    margins.bottom = bottom;
+}
+
 static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -269,6 +281,7 @@ void RelayoutCaption(WindowInfo *win)
 {
     ClientRect rc(win->hwndCaption);
     CaptionInfo *ci = win->caption;
+    ButtonInfo *button;
     DeferWinPosHelper dh;
 
     if (dwm::IsCompositionEnabled()) {
@@ -283,24 +296,40 @@ void RelayoutCaption(WindowInfo *win)
         // Under WIN XP GetSystemMetrics(SM_CXSIZE) returns wrong (previous) value, after theme change
         // or font size change. For this to work, I assume that SM_CXSIZE == SM_CYSIZE.
         int btnDx = GetSystemMetrics(IsVistaOrGreater() ? SM_CXSIZE : SM_CYSIZE) - xEdge * (isClassicStyle ? 1 : 2);
-        int btnDy = GetSystemMetrics(SM_CYSIZE) - yEdge * (isClassicStyle ? 1 : 2);
+        int btnDy = GetSystemMetrics(SM_CYSIZE) - yEdge * 2;
         bool maximized = IsZoomed(win->hwndFrame);
         int yPosBtn = rc.y + (maximized ? 0 : yEdge);
+        int topMargin = maximized ? yEdge : 0;
 
-        rc.dx -= btnDx + (maximized ? 0 : xEdge);
-        dh.SetWindowPos(ci->btn[CB_CLOSE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER | SWP_SHOWWINDOW);
+        button = &ci->btn[CB_CLOSE];
         rc.dx -= btnDx + xEdge;
-        dh.SetWindowPos(ci->btn[CB_RESTORE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy,
+        int rightMargin = maximized ? xEdge : 0;
+        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx + rightMargin, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        button->SetMargins(0, topMargin, rightMargin, 0);
+
+        button = &ci->btn[CB_RESTORE];
+        rc.dx -= btnDx + xEdge;
+        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
                         SWP_NOZORDER | (maximized ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
-        dh.SetWindowPos(ci->btn[CB_MAXIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy,
+        button->SetMargins(0, topMargin, 0, 0);
+
+        button = &ci->btn[CB_MAXIMIZE];
+        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
                         SWP_NOZORDER | (maximized ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
+        button->SetMargins(0, topMargin, 0, 0);
+
+        button = &ci->btn[CB_MINIMIZE];
         rc.dx -= btnDx + (isClassicStyle ? 0 : xEdge);
-        dh.SetWindowPos(ci->btn[CB_MINIMIZE].hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy, SWP_NOZORDER | SWP_SHOWWINDOW);
+        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        button->SetMargins(0, topMargin, 0, 0);
     }
 
+    button = &ci->btn[CB_MENU];
     int tabHeight = GetTabbarHeight(win);
     rc.y += rc.dy - tabHeight;
-    dh.SetWindowPos(ci->btn[CB_MENU].hwnd, NULL, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
+    dh.SetWindowPos(button->hwnd, NULL, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
+    button->SetMargins(0, 0, 0, 0);
+
     rc.x += tabHeight;
     rc.dx -= tabHeight;
     dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
@@ -312,12 +341,19 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     if (!item || item->CtlType != ODT_BUTTON)
         return;
 
-    RectI rc = RectI::FromRECT(item->rcItem);
+    RectI rButton = RectI::FromRECT(item->rcItem);
 
-    DoubleBuffer buffer(item->hwndItem, rc);
+    DoubleBuffer buffer(item->hwndItem, rButton);
     HDC memDC = buffer.GetDC();
 
     UINT button = item->CtlID - BTN_ID_FIRST;
+    ButtonInfo *bi = &win->caption->btn[button];
+    RectI rc(rButton);
+    rc.x += bi->margins.left;
+    rc.y += bi->margins.top;
+    rc.dx -= bi->margins.left + bi->margins.right;
+    rc.dy -= bi->margins.top + bi->margins.bottom;
+
     int partId = 0, stateId;
     UINT state = (UINT)-1;
     switch (button)
@@ -358,13 +394,16 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
         stateId = CBS_NORMAL;
 
     // draw system button
-    if (win->caption->theme && partId != 0) {
-        if (vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
+    if (partId) {
+        if (rc != rButton || vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
             PaintCaptionBackground(memDC, win, false);
-        vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &item->rcItem, NULL);
+
+        RECT r = rc.ToRECT();
+        if (win->caption->theme)
+            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, NULL);
+        else
+            DrawFrameControl(memDC, &r, DFC_CAPTION, state);
     }
-    else if (state != (UINT)-1)
-        DrawFrameControl(memDC, &item->rcItem, DFC_CAPTION, state);
 
     // draw menu's button
     if (button == CB_MENU) {
