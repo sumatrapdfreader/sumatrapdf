@@ -70,7 +70,7 @@ bool tar_parse_header(ar_archive_tar *tar)
     memset(data + 148, ' ', 8);
     for (i = 0; i < sizeof(data); i++) {
         checksum += (unsigned char)data[i];
-        checksum2 += (char)data[i];
+        checksum2 += (signed char)data[i];
     }
 
     if (checksum != (uint32_t)checksum2 && tar->entry.checksum == (uint32_t)checksum2) {
@@ -78,6 +78,25 @@ bool tar_parse_header(ar_archive_tar *tar)
         tar->entry.checksum = checksum;
     }
     return tar->entry.checksum == checksum;
+}
+
+static bool ar_is_valid_utf8(const char *string)
+{
+    const unsigned char *s;
+    for (s = (const unsigned char *)string; *s; s++) {
+        int skip = *s < 0x80 ? 0 :
+                   *s < 0xC0 ? -1 :
+                   *s < 0xE0 ? 1 :
+                   *s < 0xF0 ? 2 :
+                   *s < 0xF5 ? 3 : -1;
+        if (skip < 0)
+            return false;
+        while (skip-- > 0) {
+            if ((*++s & 0xC0) != 0x80)
+                return false;
+        }
+    }
+    return true;
 }
 
 const char *tar_get_name(ar_archive *ar)
@@ -118,9 +137,14 @@ const char *tar_get_name(ar_archive *ar)
         else
             ar_skip(ar->stream, TAR_BLOCK_SIZE - 100);
 
-        /* TODO: determine proper encoding */
-        tar->entry.name = ar_conv_dos_to_utf8(name);
-        free(name);
+        /* name could be in any encoding, assume UTF-8 or whatever (DOS) */
+        if (ar_is_valid_utf8(name)) {
+            tar->entry.name = name;
+        }
+        else {
+            tar->entry.name = ar_conv_dos_to_utf8(name);
+            free(name);
+        }
         /* normalize path separators */
         if (tar->entry.name) {
             char *p = tar->entry.name;
