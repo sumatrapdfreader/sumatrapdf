@@ -18,7 +18,7 @@ protected:
     ar_archive *ar;
 
     // call with fileindex = -1 for filename extraction using the fallback
-    virtual char *GetFileFromCallback(size_t fileindex, size_t *len=NULL) { return NULL; }
+    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=NULL) { return NULL; }
 
 public:
     ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *));
@@ -37,7 +37,7 @@ public:
     FILETIME GetFileTime(const WCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
-    // caller must free() the result (or rather Allocator::Free it)
+    // caller must free() the result
     char *GetComment(size_t *len=NULL);
 };
 
@@ -59,7 +59,7 @@ class RarFile : public ArchFile {
     ScopedMem<WCHAR> path;
     UnRarDll *fallback;
 
-    virtual char *GetFileFromCallback(size_t fileindex, size_t *len);
+    virtual char *GetFileFromFallback(size_t fileindex, size_t *len);
 
 public:
     explicit RarFile(const WCHAR *path);

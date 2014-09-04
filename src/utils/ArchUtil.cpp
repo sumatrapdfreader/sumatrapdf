@@ -22,7 +22,7 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
     if (data && openFormat)
         ar = openFormat(data);
     if (!ar) {
-        (void)GetFileFromCallback((size_t)-1);
+        (void)GetFileFromFallback((size_t)-1);
         return;
     }
     while (ar_parse_entry(ar)) {
@@ -31,7 +31,7 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
         filepos.Append(ar_entry_get_offset(ar));
     }
     if (!ar_at_eof(ar))
-        (void)GetFileFromCallback((size_t)-1);
+        (void)GetFileFromFallback((size_t)-1);
 }
 
 ArchFile::~ArchFile()
@@ -69,7 +69,7 @@ char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
         return NULL;
 
     if (!ar || !ar_parse_entry_at(ar, filepos.At(fileindex)))
-        return GetFileFromCallback(fileindex, len);
+        return GetFileFromFallback(fileindex, len);
 
     size_t size = ar_entry_get_size(ar);
     if (size > SIZE_MAX - 2)
@@ -78,7 +78,7 @@ char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (!data)
         return NULL;
     if (!ar_entry_uncompress(ar, data, size))
-        return GetFileFromCallback(fileindex, len);
+        return GetFileFromFallback(fileindex, len);
     // zero-terminate for convenience
     data[size] = data[size + 1] = '\0';
 
@@ -151,7 +151,7 @@ RarFile::RarFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_ra
     path(NULL), fallback(NULL) { }
 RarFile::~RarFile() { delete fallback; }
 
-char *RarFile::GetFileFromCallback(size_t fileindex, size_t *len)
+char *RarFile::GetFileFromFallback(size_t fileindex, size_t *len)
 {
 #ifdef ENABLE_UNRARDLL_FALLBACK
     if (path) {
