@@ -236,7 +236,6 @@ bool Reload()
 
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
-    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab;
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
     gFileHistory.UpdateStatesSource(NULL);
@@ -258,8 +257,6 @@ bool Reload()
     if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage))
         SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
 
-    if (showSingleTab != (gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab))
-        ShowOrHideSingleTabGlobally();
     if (gGlobalPrefs->showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
 

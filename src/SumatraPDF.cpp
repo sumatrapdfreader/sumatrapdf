@@ -2888,14 +2888,6 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     LoadDocument(args);
 }
 
-void ShowOrHideSingleTabGlobally()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        UpdateTabWidth(win);
-    }
-}
-
 // scrolls half a page down/up (needed for Shift+Up/Down)
 #define SB_HPAGEUP   (WM_USER + 1)
 #define SB_HPAGEDOWN (WM_USER + 2)

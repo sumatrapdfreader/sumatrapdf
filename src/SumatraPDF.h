@@ -95,7 +95,6 @@ bool  WindowInfoStillValid(WindowInfo *win);
 void  SetCurrentLanguageAndRefreshUi(const char *langCode);
 void  ShowOrHideToolbarGlobally();
 void  ShowOrHideToolbarForWindow(WindowInfo *win);
-void  ShowOrHideSingleTabGlobally();
 void  UpdateDocumentColors();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabData *td);

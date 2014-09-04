@@ -12,10 +12,10 @@ Next version:
 * swapped keybindings:
   * F11 : Fullscreen mode (still also Ctrl+Shift+L)
   * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
-* add support for displaying CB7 and CBT comic books (in addition to CBZ/CBR)
-* support LZMA and PPMd compression in Comic Book (CBZ) files
+* add support for displaying CB7 and CBT comic books (in addition to CBZ and CBR)
+* add support for LZMA and PPMd compression in CBZ comic books
 * allow saving Comic Book files as PDF
-* new advanced settings: ShowSingleTab, FullPathInTitle, TabsInTitlebar,
+* new advanced settings: FullPathInTitle, TabsInTitlebar,
   UseSysColors (no longer exposed through the Options dialog)
 * replaced non-free UnRAR with a free RAR extraction library
   (if some CBR files fail to open for you, please download unrar.dll from

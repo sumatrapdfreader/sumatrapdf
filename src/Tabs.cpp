@@ -900,7 +900,7 @@ static void ShowTabBar(WindowInfo *win, bool show)
 void UpdateTabWidth(WindowInfo *win)
 {
     int count = TabsGetCount(win);
-    bool showSingleTab = gGlobalPrefs->useTabs && gGlobalPrefs->showSingleTab || win->tabsInTitlebar;
+    bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     if (count > (showSingleTab ? 0 : 1)) {
         ShowTabBar(win, true);
         ClientRect rect(win->hwndTabBar);

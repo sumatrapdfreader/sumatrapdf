@@ -366,10 +366,6 @@ GlobalPrefs = [
 	Field("FullPathInTitle", Bool, False,
 		"if true, we show the full path to a file in the title bar",
 		expert=True, version="2.6"),
-	Field("ShowSingleTab", Bool, True,
-		"if false, the tab bar is hidden if there's only a single tab " +
-		"(applies only if UseTabs is true and TabsInTitlebar is false)",
-		expert=True, version="2.6"),
 	Field("TabsInTitlebar", Bool, True,
 		"if true, the tab bar replaces the title bar",
 		expert=True, version="2.6"),
