@@ -137,7 +137,7 @@ void zip_clear_uncompress(struct ar_archive_zip_uncomp *uncomp);
 /***** zip *****/
 
 struct ar_archive_zip_dir {
-    /* off64_t offset; /* use ar_archive::entry_offset_first */
+    /* off64_t offset; // use ar_archive::entry_offset_first */
     uint64_t length;
     off64_t seen_last_end_offset;
     uint64_t seen_count;

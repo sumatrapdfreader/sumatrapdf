@@ -7,9 +7,9 @@
 #define inline __inline
 #endif
 
-inline uint16_t uint16le(unsigned char *data) { return data[0] | data[1] << 8; }
-inline uint32_t uint32le(unsigned char *data) { return data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24; }
-inline uint64_t uint64le(unsigned char *data) { return (uint64_t)uint32le(data) | (uint64_t)uint32le(data + 4) << 32; }
+static inline uint16_t uint16le(unsigned char *data) { return data[0] | data[1] << 8; }
+static inline uint32_t uint32le(unsigned char *data) { return data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24; }
+static inline uint64_t uint64le(unsigned char *data) { return (uint64_t)uint32le(data) | (uint64_t)uint32le(data + 4) << 32; }
 
 bool zip_seek_to_compressed_data(ar_archive_zip *zip)
 {

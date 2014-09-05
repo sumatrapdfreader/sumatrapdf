@@ -5,9 +5,9 @@
 
 #include "rar.h"
 
-inline uint8_t uint8le(unsigned char *data) { return data[0]; }
-inline uint16_t uint16le(unsigned char *data) { return data[0] | data[1] << 8; }
-inline uint32_t uint32le(unsigned char *data) { return data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24; }
+static inline uint8_t uint8le(unsigned char *data) { return data[0]; }
+static inline uint16_t uint16le(unsigned char *data) { return data[0] | data[1] << 8; }
+static inline uint32_t uint32le(unsigned char *data) { return data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24; }
 
 bool rar_parse_header(ar_archive *ar, struct rar_header *header)
 {
@@ -63,10 +63,10 @@ bool rar_check_header_crc(ar_archive *ar)
 
     crc32 = ar_crc32(0, buffer + 2, 5);
     while (size > 0) {
-        if (ar_read(ar->stream, buffer, min(size, sizeof(buffer))) != min(size, sizeof(buffer)))
+        if (ar_read(ar->stream, buffer, mins(size, sizeof(buffer))) != mins(size, sizeof(buffer)))
             return false;
-        crc32 = ar_crc32(crc32, buffer, min(size, sizeof(buffer)));
-        size -= min(size, sizeof(buffer));
+        crc32 = ar_crc32(crc32, buffer, mins(size, sizeof(buffer)));
+        size -= (uint16_t)mins(size, sizeof(buffer));
     }
     return (crc32 & 0xFFFF) == crc16;
 }

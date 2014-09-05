@@ -986,7 +986,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
 
     for (;;) {
         if (uncomp_v3 && uncomp_v3->filters.bytes_ready > 0) {
-            size_t count = min(uncomp_v3->filters.bytes_ready, buffer_size);
+            size_t count = mins(uncomp_v3->filters.bytes_ready, buffer_size);
             memcpy(buffer, uncomp_v3->filters.bytes, count);
             uncomp_v3->filters.bytes_ready -= count;
             uncomp_v3->filters.bytes += count;
@@ -997,7 +997,7 @@ bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size)
                 goto FinishBlock;
         }
         else if (uncomp->bytes_ready > 0) {
-            int count = (int)min(uncomp->bytes_ready, buffer_size);
+            int count = (int)mins(uncomp->bytes_ready, buffer_size);
             lzss_copy_bytes_from_window(&uncomp->lzss, buffer, rar->progress.bytes_done + rar->solid.size_total, count);
             uncomp->bytes_ready -= count;
             rar->progress.bytes_done += count;

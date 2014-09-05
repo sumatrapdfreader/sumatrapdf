@@ -6,17 +6,18 @@ book archives (.cbr). It was written as an alternative to
 libarchive which didn't have support for parsing filters or solid
 compression at the time.
 
-There is currently no dedicated Makefile for building unarr (see
-../makefile.msvc for what SumatraPDF does). Compiling unarr should
-however be as simple as compiling all files with a C99 compatible
-compiler (omit main.c if you want to use it as a library).
+There is currently only an experimental Linux Makefile for building
+unarr (see ../makefile.msvc for what SumatraPDF does under Windows).
+In any case, compiling unarr should be as simple as compiling all
+files with a C99 compatible compiler (omit main.c if you want to use
+it as a library).
 
 The following symbols can be defined if other libraries are present
 in the include path:
 
 Symbol          Required header Required for (format/method)
-------------------------------------------------------------
-HAVE_ZLIB       zlib.h          ZIP / Deflate (Deflate64)
+-------------------------------------------------------------
+HAVE_ZLIB       zlib.h          ZIP / Deflate (and Deflate64)
 HAVE_BZIP2      bzlib.h         ZIP / Bzip2
 HAVE_LZMA       LzmaDec.h       ZIP / LZMA
 HAVE_7Z         7z.h            7Z  / LZMA, LZMA2, BCJ

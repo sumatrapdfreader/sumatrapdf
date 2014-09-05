@@ -10,6 +10,8 @@
 #include "../ppmd/Ppmd7.h"
 #include <limits.h>
 
+static inline size_t mins(size_t a, size_t b) { return a < b ? a : b; }
+
 typedef struct ar_archive_rar_s ar_archive_rar;
 
 /***** parse-rar *****/
@@ -121,7 +123,7 @@ bool rar_create_code(struct huffman_code *code, uint8_t *lengths, int numsymbols
 bool rar_make_table(struct huffman_code *code);
 void rar_free_code(struct huffman_code *code);
 
-inline bool rar_is_leaf_node(struct huffman_code *code, int node) { return code->tree[node].branches[0] == code->tree[node].branches[1]; }
+static inline bool rar_is_leaf_node(struct huffman_code *code, int node) { return code->tree[node].branches[0] == code->tree[node].branches[1]; }
 
 /***** uncompress-rar *****/
 
@@ -222,7 +224,7 @@ struct ar_archive_rar_uncomp {
 bool rar_uncompress_part(ar_archive_rar *rar, void *buffer, size_t buffer_size);
 int64_t rar_expand(ar_archive_rar *rar, int64_t end);
 void rar_clear_uncompress(struct ar_archive_rar_uncomp *uncomp);
-inline void br_clear_leftover_bits(struct ar_archive_rar_uncomp *uncomp) { uncomp->br.available &= ~0x07; }
+static inline void br_clear_leftover_bits(struct ar_archive_rar_uncomp *uncomp) { uncomp->br.available &= ~0x07; }
 
 /***** rar *****/
 
