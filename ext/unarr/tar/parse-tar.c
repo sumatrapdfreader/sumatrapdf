@@ -80,7 +80,7 @@ bool tar_parse_header(ar_archive_tar *tar)
     return tar->entry.checksum == checksum;
 }
 
-static bool ar_is_valid_utf8(const char *string)
+bool ar_is_valid_utf8(const char *string)
 {
     const unsigned char *s;
     for (s = (const unsigned char *)string; *s; s++) {

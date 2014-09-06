@@ -29,6 +29,7 @@ struct tar_entry {
 };
 
 bool tar_parse_header(ar_archive_tar *tar);
+bool ar_is_valid_utf8(const char *string);
 const char *tar_get_name(ar_archive *ar);
 
 /***** tar *****/

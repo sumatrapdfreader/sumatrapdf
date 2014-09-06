@@ -56,7 +56,14 @@ static bool tar_parse_entry(ar_archive *ar, off64_t offset)
             return false;
         }
         ar->entry_offset = offset;
-        tar->entry.name = longname;
+        /* name could be in any encoding, assume UTF-8 or whatever (DOS) */
+        if (ar_is_valid_utf8(longname)) {
+            tar->entry.name = longname;
+        }
+        else {
+            tar->entry.name = ar_conv_dos_to_utf8(longname);
+            free(longname);
+        }
         return true;
     default:
         warn("Unknown entry type '%c'", tar->entry.filetype);
