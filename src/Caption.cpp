@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Caption.h"
 
+#include "AppPrefs.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Translations.h"
@@ -96,12 +97,16 @@ void CaptionInfo::UpdateColors(bool activeWindow)
     else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
         activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
             bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
-                                    : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
+                                   : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
     }
     if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
-        activeWindow ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
-            textColor = activeWindow ? GetSysColor(COLOR_CAPTIONTEXT)
-                                        : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+        (activeWindow || dwm::IsCompositionEnabled()) ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
+            textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
+                                                                      : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+    }
+    if (gGlobalPrefs->invertCaptionTextLightness) {
+        float textLightness = GetLightness(textColor);
+        textColor = textLightness ? AdjustLightness(textColor, 255.0f / textLightness - 1.0f) : RGB(255, 255, 255);
     }
 }
 
