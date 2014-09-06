@@ -104,10 +104,6 @@ void CaptionInfo::UpdateColors(bool activeWindow)
             textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
                                                                       : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
-    if (gGlobalPrefs->invertCaptionTextLightness) {
-        float textLightness = GetLightness(textColor);
-        textColor = textLightness ? AdjustLightness(textColor, 255.0f / textLightness - 1.0f) : RGB(255, 255, 255);
-    }
 }
 
 ButtonInfo::ButtonInfo(): hwnd(NULL), highlighted(false), inactive(false) {

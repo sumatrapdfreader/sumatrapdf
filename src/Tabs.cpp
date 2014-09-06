@@ -247,6 +247,15 @@ public:
                 bgCol = color.highlight;
             }
 
+            // ensure contrast between text and background color
+            // TODO: adjust threshold (and try adjusting both current/background tabs)
+            COLORREF textCol = color.text;
+            float bgLight = GetLightness(bgCol), textLight = GetLightness(textCol);
+            if (textLight < bgLight ? bgLight < 0x70 : bgLight > 0x90)
+                textCol = textLight ? AdjustLightness(textCol, 255.0f / textLight - 1.0f) : RGB(255, 255, 255);
+            if (fabs(textLight - bgLight) < 0x40)
+                textCol = bgLight < 0x80 ? RGB(255, 255, 255) : RGB(0, 0, 0);
+
             // paint tab's body
             graphics.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
@@ -255,7 +264,7 @@ public:
 
             // draw tab's text
             graphics.SetCompositingMode(CompositingModeSourceOver);
-            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, textCol));
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
