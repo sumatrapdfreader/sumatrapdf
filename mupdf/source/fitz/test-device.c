@@ -134,6 +134,55 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 	if (*t->is_color || !image->colorspace || image->colorspace == fz_device_gray(ctx))
 		return;
 
+	if (image->buffer && image->bpc == 8)
+	{
+		fz_stream *stream = fz_open_compressed_buffer(ctx, image->buffer);
+		count = (unsigned int)image->w * (unsigned int)image->h;
+		if (image->colorspace == fz_device_rgb(ctx))
+		{
+			int threshold_u8 = t->threshold * 255;
+			for (i = 0; i < count; i++)
+			{
+				int r = fz_read_byte(stream);
+				int g = fz_read_byte(stream);
+				int b = fz_read_byte(stream);
+				if (is_rgb_color_u8(threshold_u8, r, g, b))
+				{
+					*t->is_color = 1;
+					dev->hints |= FZ_IGNORE_IMAGE;
+					break;
+				}
+			}
+		}
+		else
+		{
+			fz_color_converter cc;
+			unsigned int n = (unsigned int)image->n;
+
+			fz_init_cached_color_converter(ctx, &cc, fz_device_rgb(ctx), image->colorspace);
+			for (i = 0; i < count; i++)
+			{
+				float cs[FZ_MAX_COLORS];
+				float ds[FZ_MAX_COLORS];
+
+				for (k = 0; k < n; k++)
+					cs[k] = fz_read_byte(stream) / 255.0f;
+
+				cc.convert(&cc, ds, cs);
+
+				if (is_rgb_color(t->threshold, ds[0], ds[1], ds[2]))
+				{
+					*t->is_color = 1;
+					dev->hints |= FZ_IGNORE_IMAGE;
+					break;
+				}
+			}
+			fz_fin_cached_color_converter(&cc);
+		}
+		fz_close(stream);
+		return;
+	}
+
 	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
 	if (pix == NULL) /* Should never happen really, but... */
 		return;
@@ -146,7 +195,7 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 		int threshold_u8 = t->threshold * 255;
 		for (i = 0; i < count; i++)
 		{
-			if (is_rgb_color_u8(threshold_u8, s[0], s[1], s[2]))
+			if (s[3] != 0 && is_rgb_color_u8(threshold_u8, s[0], s[1], s[2]))
 			{
 				*t->is_color = 1;
 				dev->hints |= FZ_IGNORE_IMAGE;
@@ -168,7 +217,8 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 
 			for (k = 0; k < n; k++)
 				cs[k] = (*s++) / 255.0f;
-			s++;
+			if (*s++ == 0)
+				continue;
 
 			cc.convert(&cc, ds, cs);
 

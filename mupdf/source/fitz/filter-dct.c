@@ -292,8 +292,12 @@ close_dctd(fz_context *ctx, void *state_)
 		goto skip;
 	}
 
+	/* We call jpeg_abort rather than the more usual
+	 * jpeg_finish_decompress here. This has the same effect,
+	 * but doesn't spew warnings if we didn't read enough data etc.
+	 */
 	if (state->init)
-		jpeg_finish_decompress(&state->cinfo);
+		jpeg_abort((j_common_ptr)&state->cinfo);
 
 skip:
 	if (state->cinfo.src)

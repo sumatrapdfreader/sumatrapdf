@@ -180,7 +180,6 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	/* Determine encryption key length */
 
 	crypt->length = 40;
-	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2710 */
 	if (crypt->v == 2 || crypt->v == 4)
 	{
 		obj = pdf_dict_gets(dict, "Length");
