@@ -565,7 +565,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     if (gGlobalPrefs->checkForUpdates)
-        AutoUpdateCheckAsync(win->hwndFrame, true);
+        UpdateCheckAsync(win, true);
 
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {

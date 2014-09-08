@@ -2063,30 +2063,29 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 
 static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
 {
-    ScopedMem<WCHAR> msg;
-
-    if (!IsWindowVisible(hwnd) || !req)
-        goto Exit;
     DWORD error = ShowAutoUpdateDialog(hwnd, req, autoCheck);
-    if ((0 == error) || autoCheck)
-        goto Exit;
-
-    // notify the user about network error during a manual update check
-    msg.Set(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
-    MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
-Exit:
-    delete req;
+    if (error != 0 && !autoCheck) {
+        // notify the user about network error during a manual update check
+        ScopedMem<WCHAR> msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
+        MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
+    }
 }
+
+// prevent multiple update tasks from happening simultaneously
+// (this might e.g. happen if a user checks manually very quickly after startup)
+class UpdateDownloadTask;
+static UpdateDownloadTask *gUpdateTaskInProgress = NULL;
 
 class UpdateDownloadTask : public UITask, public HttpReqCallback
 {
-    HWND        hwnd;
+    WindowInfo *win;
     bool        autoCheck;
     HttpReq *   req;
 
 public:
-    UpdateDownloadTask(HWND hwnd, bool autoCheck) :
-        hwnd(hwnd), autoCheck(autoCheck), req(NULL) { }
+    UpdateDownloadTask(WindowInfo *win, bool autoCheck) :
+        win(win), autoCheck(autoCheck), req(NULL) { }
+    virtual ~UpdateDownloadTask() { delete req; }
 
     virtual void Callback(HttpReq *aReq) {
         req = aReq;
@@ -2094,7 +2093,13 @@ public:
     }
 
     virtual void Execute() {
-        ProcessAutoUpdateCheckResult(hwnd, req, autoCheck);
+        gUpdateTaskInProgress = NULL;
+        if (req && WindowInfoStillValid(win))
+            ProcessAutoUpdateCheckResult(win->hwndFrame, req, autoCheck);
+    }
+
+    void DisableAutoCheck() {
+        autoCheck = false;
     }
 };
 
@@ -2102,7 +2107,7 @@ public:
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-static void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
+static void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
 {
     if (!HasPermission(Perm_InternetAccess))
         return;
@@ -2128,10 +2133,17 @@ static void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
             return;
     }
 
-    const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
-    new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
-
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
+    if (gUpdateTaskInProgress) {
+        gUpdateTaskInProgress->DisableAutoCheck();
+        CrashIf(autoCheck);
+        return;
+    }
+
+    const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
+    gUpdateTaskInProgress = new UpdateDownloadTask(win, autoCheck);
+    // HttpReq is later passed to UpdateDownloadTask for ownership
+    new HttpReq(url, gUpdateTaskInProgress);
 }
 
 static void RerenderEverything()
@@ -4085,7 +4097,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_CHECK_UPDATE:
-            AutoUpdateCheckAsync(win->hwndFrame, false);
+            UpdateCheckAsync(win, false);
             break;
 
         case IDM_OPTIONS:
