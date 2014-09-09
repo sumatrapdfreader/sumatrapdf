@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9b7c3f43bd2922acdfd6c0ae03e74d6e3c102da0
+35fe08b4c072c3decd72fd9b90c1938bb8ef0a57
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2936,6 +2936,7 @@ vn:Hiển thị
 am:&Պատուհան
 az:&Pəncərə
 bs:&Prozor
+cn:窗口(&W)
 cy:&Ffenestr
 de:Fe&nster
 et:A&ken
