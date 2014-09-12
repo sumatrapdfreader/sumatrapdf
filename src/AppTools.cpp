@@ -160,15 +160,15 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", NULL, L"open");
 
-    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath)); // "${exePath}" "%1" %*
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", NULL, cmdPath);
 
     // also register for printing
-    cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath)); // "${exePath}" -print-to-default "%1"
+    cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get())); // "${exePath}" -print-to-default "%1"
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\print\\command", NULL, cmdPath);
 
     // also register for printing to specific printer
-    cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath)); // "${exePath}" -print-to "%2" "%1"
+    cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get())); // "${exePath}" -print-to "%2" "%1"
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
@@ -316,7 +316,7 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
             continue;
         }
 
-        ScopedMem<WCHAR> editorCmd(str::Format(L"\"%s\" %s", exePath, editor_rules[i].InverseSearchArgs));
+        ScopedMem<WCHAR> editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
