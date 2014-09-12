@@ -77,7 +77,7 @@ protected:
     ScopedComPtr<IStream> fileStream;
 
     CRITICAL_SECTION cacheAccess;
-    Vec<ImagePage *, MAX_IMAGE_PAGE_CACHE+1> pageCache;
+    Vec<ImagePage *> pageCache;
     Vec<RectD> mediaboxes;
 
     void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);

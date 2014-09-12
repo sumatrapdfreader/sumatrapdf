@@ -12,7 +12,7 @@ Vec<char> and Vec<WCHAR> a C-compatible string. Although it's
 not useful for other types, the code is simpler if we always do it
 (rather than have it an optional behavior).
 */
-template <typename T, size_t BUF_SIZE=16>
+template <typename T>
 class Vec {
 protected:
     static const size_t PADDING = 1;
@@ -21,7 +21,7 @@ protected:
     size_t      cap;
     size_t      capacityHint;
     T *         els;
-    T           buf[BUF_SIZE];
+    T           buf[16];
     Allocator * allocator;
 
     // state of the IterStart()/IterNext() iterator
@@ -124,7 +124,7 @@ public:
 
     void Reset() {
         len = 0;
-        cap = BUF_SIZE - PADDING;
+        cap = dimof(buf) - PADDING;
         FreeEls();
         els = buf;
         memset(buf, 0, sizeof(buf));
