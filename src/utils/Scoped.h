@@ -123,6 +123,7 @@ public:
             ptr = NULL;
         return ptr;
     }
+    operator T*() const { return ptr; }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }
     T* operator=(T* newPtr) {
