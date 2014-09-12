@@ -136,7 +136,10 @@ func (t *MingwCcTask) Run() (error, []byte, []byte) {
 	}
 	args := []string{}
 	if t.IncDirs != "" {
-		args = append(args, "-I", t.IncDirs)
+		dirs := strings.Split(t.IncDirs, ";")
+		for _, dir := range dirs {
+			args = append(args, "-I", dir)
+		}
 	}
 	args = append(args, "-c", t.In, "-o", t.Out)
 	cmd := exec.Command(cc, args...)
@@ -152,9 +155,12 @@ func main() {
 		TaskContext: TaskContext{NewContext()},
 		ToRun: []Task{
 			&MkdirTask{Dir: "rel"},
+			&MingwCcTask{In: "src/ChmDoc.cpp", Out: "rel/ChmDoc.o", IncDirs: "src/utils;ext/CHMLib/src"},
 			&MingwCcTask{In: "ext/zlib/adler32.c", Out: "rel/adler32.o"},
 			&MingwCcTask{In: "src/AppPrefs.cpp", Out: "rel/AppPrefs.o", IncDirs: "src/utils"},
 			&MingwCcTask{In: "src/AppTools.cpp", Out: "rel/AppTools.o", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/AppUtil.cpp", Out: "rel/AppUtil.o", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/Caption.cpp", Out: "rel/Caption.o", IncDirs: "src/utils"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()
