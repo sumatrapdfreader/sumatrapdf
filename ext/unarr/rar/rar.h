@@ -10,7 +10,7 @@
 #include "../ppmd/Ppmd7.h"
 #include <limits.h>
 
-static inline size_t mins(size_t a, size_t b) { return a < b ? a : b; }
+static inline size_t smin(size_t a, size_t b) { return a < b ? a : b; }
 
 typedef struct ar_archive_rar_s ar_archive_rar;
 

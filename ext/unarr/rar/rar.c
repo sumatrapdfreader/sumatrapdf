@@ -146,7 +146,7 @@ static bool rar_restart_solid(ar_archive *ar)
         rar->solid.restart = false;
         while (size > 0) {
             unsigned char buffer[1024];
-            size_t count = mins(size, sizeof(buffer));
+            size_t count = smin(size, sizeof(buffer));
             if (!ar_entry_uncompress(ar, buffer, count)) {
                 ar_parse_entry_at(ar, current_offset);
                 return false;

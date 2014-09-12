@@ -60,7 +60,7 @@ bool tar_parse_header(ar_archive_tar *tar)
         if (data[i] == '/')
             tar->entry.filetype = TYPE_DIRECTORY;
     }
-    tar->entry.is_ustar = !memcmp(data + 257, "ustar\x0000", 8) && memcmp(data + 508, "tar\0", 4) != 0;
+    tar->entry.is_ustar = memcmp(data + 257, "ustar\x0000", 8) == 0 && memcmp(data + 508, "tar\0", 4) != 0;
 
     if (tar->entry.filesize > (size_t)-1 - tar->super.entry_offset - 2 * TAR_BLOCK_SIZE)
         return false;

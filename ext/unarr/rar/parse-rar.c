@@ -63,10 +63,10 @@ bool rar_check_header_crc(ar_archive *ar)
 
     crc32 = ar_crc32(0, buffer + 2, 5);
     while (size > 0) {
-        if (ar_read(ar->stream, buffer, mins(size, sizeof(buffer))) != mins(size, sizeof(buffer)))
+        if (ar_read(ar->stream, buffer, smin(size, sizeof(buffer))) != smin(size, sizeof(buffer)))
             return false;
-        crc32 = ar_crc32(crc32, buffer, mins(size, sizeof(buffer)));
-        size -= (uint16_t)mins(size, sizeof(buffer));
+        crc32 = ar_crc32(crc32, buffer, smin(size, sizeof(buffer)));
+        size -= (uint16_t)smin(size, sizeof(buffer));
     }
     return (crc32 & 0xFFFF) == crc16;
 }
