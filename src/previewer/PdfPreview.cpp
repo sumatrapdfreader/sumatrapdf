@@ -12,7 +12,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
         return E_FAIL;
 
     RectD page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
-    float zoom = min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
+    float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
     RectI thumb = RectD(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
     BITMAPINFO bmi = { 0 };

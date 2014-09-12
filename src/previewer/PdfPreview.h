@@ -212,7 +212,7 @@ public:
         if (!prgSize || !pdwFlags)
             return E_INVALIDARG;
         // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail
-        m_extractCx = min(prgSize->cx, prgSize->cy);
+        m_extractCx = std::min(prgSize->cx, prgSize->cy);
         *pdwFlags |= IEIFLAG_CACHE;
         return S_OK;
     }

@@ -234,7 +234,7 @@ public:
 
         ULONG cchTotal = static_cast<ULONG>(wcslen(m_currentChunk.GetString()));
         ULONG cchLeft = cchTotal - m_iText;
-        ULONG cchToCopy = min(*pcwcBuffer - 1, cchLeft);
+        ULONG cchToCopy = std::min(*pcwcBuffer - 1, cchLeft);
 
         if (!cchToCopy)
             return FILTER_E_NO_MORE_TEXT;

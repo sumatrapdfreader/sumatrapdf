@@ -438,12 +438,12 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
     shadow.Offset(SHADOW_OFFSET, SHADOW_OFFSET);
     if (frame.x < 0) {
         // the left of the page isn't visible, so start the shadow at the left
-        int diff = min(-pageRect.x, SHADOW_OFFSET);
+        int diff = std::min(-pageRect.x, SHADOW_OFFSET);
         shadow.x -= diff; shadow.dx += diff;
     }
     if (frame.y < 0) {
         // the top of the page isn't visible, so start the shadow at the top
-        int diff = min(-pageRect.y, SHADOW_OFFSET);
+        int diff = std::min(-pageRect.y, SHADOW_OFFSET);
         shadow.y -= diff; shadow.dy += diff;
     }
 

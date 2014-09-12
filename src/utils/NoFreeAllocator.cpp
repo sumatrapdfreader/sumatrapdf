@@ -133,7 +133,7 @@ void *alloc(size_t size)
     MemBlock *m = gCurrMemBlock;
 
     if (!m || (size > m->left)) {
-        size_t blockSize = max(MEM_BLOCK_SIZE, size + sizeof(MemBlock));
+        size_t blockSize = std::max(MEM_BLOCK_SIZE, size + sizeof(MemBlock));
         MemBlock *block = (MemBlock*)malloc(blockSize);
         if (!block)
             return NULL;

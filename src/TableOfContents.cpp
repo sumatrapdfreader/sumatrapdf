@@ -123,7 +123,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
         DrawText(ncd->hdc, label, -1, &rcPageNo, DT_SINGLELINE | DT_VCENTER | DT_NOPREFIX);
 
         // Reduce the size of the label and cut off the page number
-        rcItem.right = max(rcItem.right - txtSize.cx, 0);
+        rcItem.right = std::max(rcItem.right - txtSize.cx, 0);
         szText[str::Len(szText) - str::Len(label)] = '\0';
     }
 

@@ -1575,7 +1575,7 @@ void DisplayModel::ScrollToLink(PageDestination *dest)
         scroll = rectD.TL().ToInt();
 
         // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
-        // zoom = 100.0f * min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
+        // zoom = 100.0f * std::min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
     }
     else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
