@@ -74,7 +74,7 @@ static char *DecodeTextToUtf8(const char *s, bool isXML=false)
         size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
         tmp.Set((char *)memdup(s, byteCount));
         for (size_t i = 0; i < byteCount; i += 2) {
-            Swap(tmp[i], tmp[i+1]);
+            std::swap(tmp[i], tmp[i+1]);
         }
         s = tmp;
     }

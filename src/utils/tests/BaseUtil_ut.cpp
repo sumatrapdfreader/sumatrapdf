@@ -60,7 +60,7 @@ static void GeomTest()
         utassert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
 
         /* if we swap rectangles, the results should be the same */
-        Swap(rx1, rx2);
+        std::swap(rx1, rx2);
         isect = rx1.Intersect(rx2);
         if (curr->intersect) {
             utassert(!isect.IsEmpty());
@@ -88,7 +88,7 @@ void BaseUtilTest()
     utassert(RoundToPowerOf2(3) == 4);
     utassert(RoundToPowerOf2(15) == 16);
     utassert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
-    utassert(RoundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
+    utassert(RoundToPowerOf2((size_t)-42) == (size_t)-1);
 
     utassert(MurmurHash2(NULL, 0) == 0x342CE6C);
     utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));

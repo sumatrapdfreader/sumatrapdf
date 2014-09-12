@@ -2169,7 +2169,7 @@ static void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
         bg = gGlobalPrefs->fixedPageUI.backgroundColor;
     }
     if (gGlobalPrefs->fixedPageUI.invertColors) {
-        Swap(text, bg);
+        std::swap(text, bg);
     }
 }
 

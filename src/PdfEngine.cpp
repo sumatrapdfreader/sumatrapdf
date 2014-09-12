@@ -594,9 +594,9 @@ static fz_link *FixupPageLinks(fz_link *root)
         // there are PDFs that have x,y positions in reverse order, so fix them up
         fz_link *link = new_root;
         if (link->rect.x0 > link->rect.x1)
-            Swap(link->rect.x0, link->rect.x1);
+            std::swap(link->rect.x0, link->rect.x1);
         if (link->rect.y0 > link->rect.y1)
-            Swap(link->rect.y0, link->rect.y1);
+            std::swap(link->rect.y0, link->rect.y1);
         assert(link->rect.x1 >= link->rect.x0);
         assert(link->rect.y1 >= link->rect.y0);
     }
@@ -2887,7 +2887,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
     fz_transform_rect(&r, fz_invert_matrix(&invctm, &page->ctm));
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
     if ((rotation % 180) == 90)
-        Swap(dx, dy);
+        std::swap(dx, dy);
     float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
     // rotate the QuadPoints to match the page
     ScopedMem<char> quad_tpl;
@@ -3324,7 +3324,7 @@ xps_bound_page_quick(xps_document *doc, int number)
     ScopedMem<char> dataUtf8;
     if (str::StartsWith(data, UTF16BE_BOM)) {
         for (int i = 0; i < part->size; i += 2) {
-            Swap(part->data[i], part->data[i+1]);
+            std::swap(part->data[i], part->data[i+1]);
         }
     }
     if (str::StartsWith(data, UTF16_BOM)) {

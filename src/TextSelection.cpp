@@ -229,7 +229,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        Swap(fromGlyph, toGlyph);
+        std::swap(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
@@ -292,5 +292,5 @@ void TextSelection::GetGlyphRange(int *fromPage, int *fromGlyph, int *toPage, in
     *fromGlyph = (*fromPage == endPage ? endGlyph : startGlyph);
     *toGlyph = (*fromPage == endPage ? startGlyph : endGlyph);
     if (*fromPage == *toPage && *fromGlyph > *toGlyph)
-        Swap(*fromGlyph, *toGlyph);
+        std::swap(*fromGlyph, *toGlyph);
 }

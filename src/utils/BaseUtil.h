@@ -87,15 +87,12 @@ typedef uint32_t uint32;
 typedef int64_t   int64;
 typedef uint64_t uint64;
 
-// useful for setting an 'invalid' state for size_t variables
-#define MAX_SIZE_T (size_t)(-1)
-
 STATIC_ASSERT(2 == sizeof(int16),   int16_is_2_bytes);
 STATIC_ASSERT(2 == sizeof(uint16), uint16_is_2_bytes);
 STATIC_ASSERT(4 == sizeof(int32),   int32_is_4_bytes);
-STATIC_ASSERT(4 == sizeof(uint32),  uint32_is_4_bytes);
+STATIC_ASSERT(4 == sizeof(uint32), uint32_is_4_bytes);
 STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
-STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
+STATIC_ASSERT(8 == sizeof(uint64), uint64_is_8_bytes);
 
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
@@ -151,12 +148,6 @@ inline void CrashMe()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
 #define AssertCrash(exp) CrashIf(!(exp))
-
-template <typename T>
-inline void Swap(T& one, T&two)
-{
-    T tmp = one; one = two; two = tmp;
-}
 
 template <typename T>
 inline T limitValue(T val, T min, T max)

@@ -74,9 +74,9 @@ public:
 
     static RectT FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
-            Swap(xs, xe);
+            std::swap(xs, xe);
         if (ys > ye)
-            Swap(ys, ye);
+            std::swap(ys, ye);
         return RectT(xs, ys, xe - xs, ye - ys);
     }
     static RectT FromXY(PointT<T> TL, PointT<T> BR) {

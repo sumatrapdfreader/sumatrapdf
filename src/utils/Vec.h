@@ -273,7 +273,7 @@ public:
 
     void Reverse() {
         for (size_t i = 0; i < len / 2; i++) {
-            Swap(els[i], els[len - i - 1]);
+            std::swap(els[i], els[len - i - 1]);
         }
     }
 

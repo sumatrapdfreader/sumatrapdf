@@ -8,8 +8,10 @@ size_t RoundToPowerOf2(size_t size)
     size_t n = 1;
     while (n < size) {
         n *= 2;
-        if (0 == n)
-            return MAX_SIZE_T;
+        if (0 == n) {
+            // TODO: no power of 2
+            return (size_t)-1;
+        }
     }
     return n;
 }

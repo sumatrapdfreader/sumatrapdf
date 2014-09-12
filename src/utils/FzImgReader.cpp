@@ -69,7 +69,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
                 if (read != cs->n)
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
                 if (3 == cs->n) { // RGB -> BGR
-                    Swap(line[0], line[2]);
+                    std::swap(line[0], line[2]);
                     line += 3;
                 }
                 else if (1 == cs->n) { // gray -> BGR

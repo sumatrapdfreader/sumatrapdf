@@ -996,7 +996,7 @@ static const char *ParseLimitedNumber(const char *str, const char *format,
     const char *endF = Parse(format, "%u%c", &width, &f2[1]);
     if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min(width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
         const char *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = str + width;
@@ -1012,7 +1012,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
     const WCHAR *endF = Parse(format, L"%u%c", &width, &f2[1]);
     if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, std::min(width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min((size_t)width + 1, dimof(limited)), str);
         const WCHAR *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = str + width;
