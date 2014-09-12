@@ -174,7 +174,7 @@ size_t Doc::GetHtmlDataSize() const
         return mobiDoc->GetBookHtmlSize();
     default:
         CrashIf(true);
-        return NULL;
+        return 0;
     }
 }
 

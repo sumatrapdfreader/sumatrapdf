@@ -244,7 +244,7 @@ func main() {
 		ToRun: []Task{
 			&MkdirOutTask{},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
-			&MingwCcDirTask{Dir: "src", Files: []string{"CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "Doc.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui"},
+			&MingwCcDirTask{Dir: "src", Files: []string{"CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "Doc.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()

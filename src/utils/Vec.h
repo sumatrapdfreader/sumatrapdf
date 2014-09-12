@@ -330,7 +330,7 @@ public:
 
     void Append(T c)
     {
-        InsertAt(Vec<T>::len, c);
+        Vec<T>::InsertAt(Vec<T>::len, c);
     }
 
     void Append(const T* src, size_t size=-1)

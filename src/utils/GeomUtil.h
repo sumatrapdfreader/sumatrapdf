@@ -169,7 +169,7 @@ public:
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
 
-#ifdef GDIPVER
+#if 1 //def GDIPVER, note: GDIPVER not defined in mingw?
     Gdiplus::Rect ToGdipRect() const {
         RectT<int> rect(this->ToInt());
         return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
