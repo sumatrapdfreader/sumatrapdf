@@ -413,7 +413,7 @@ void EnsureAreaVisibility(RectI& r)
 
     // make sure that the window is neither too small nor bigger than the monitor
     if (r.dx < MIN_WIN_DX || r.dx > work.dx)
-        r.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);
+        r.dx = min((int)((double)work.dy * DEF_PAGE_RATIO), work.dx);
     if (r.dy < MIN_WIN_DY || r.dy > work.dy)
         r.dy = work.dy;
 
@@ -432,7 +432,7 @@ RectI GetDefaultWindowPos()
     RectI work = RectI::FromRECT(workArea);
 
     RectI r = work;
-    r.dx = (int)min(r.dy * DEF_PAGE_RATIO, work.dx);
+    r.dx = min((int)((double)r.dy * DEF_PAGE_RATIO), work.dx);
     r.x = (work.dx - r.dx) / 2;
 
     return r;

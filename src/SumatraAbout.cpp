@@ -141,7 +141,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
     SelectObject(hdc, fontVersionTxt);
     txt = VERSION_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    int minWidth = txtSize.cx;
+    LONG minWidth = txtSize.cx;
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = max(txtSize.cx, minWidth);

@@ -278,7 +278,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     if (factorAvg > 1.5)
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
-    return min(res, 30);
+    return min(res, (USHORT)30);
 }
 
 // get the maximum resolution available for the given page

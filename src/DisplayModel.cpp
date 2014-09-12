@@ -1460,7 +1460,7 @@ void DisplayModel::SetScrollState(ScrollState state)
     if (state.x < 0 && state.y < 0)
         return;
 
-    PointD newPtD(max(state.x, 0), max(state.y, 0));
+    PointD newPtD(max(state.x, (double)0), max(state.y, (double)0));
     PointI newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested

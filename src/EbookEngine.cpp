@@ -1387,7 +1387,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
     if (!strstr(html, "charset="))
         return 0;
 
-    HtmlPullParser parser(html, min(htmlLen, 1024));
+    HtmlPullParser parser(html, min(htmlLen, (size_t)1024));
     HtmlToken *tok;
     while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->tag != Tag_Meta)

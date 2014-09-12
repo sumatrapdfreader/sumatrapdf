@@ -4,12 +4,19 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #ifndef UNICODE
 #define UNICODE
 #endif
 #ifndef _UNICODE
 #define _UNICODE
 #endif
+
+#include <algorithm>
+using namespace std;
 
 // #include <winsock2.h>
 #include <windows.h>

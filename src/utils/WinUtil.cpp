@@ -872,7 +872,7 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT defVal)
     if (!pMLang.Create(CLSID_CMultiLanguage))
         return defVal;
 
-    int ilen = (int)min(len, INT_MAX);
+    int ilen = min((int)len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info = { 0 };
     HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
