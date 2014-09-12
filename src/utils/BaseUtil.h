@@ -11,15 +11,15 @@
 #define _UNICODE
 #endif
 
-// #include <WinSock2.h>
+// #include <winsock2.h>
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <gdiplus.h>
-#include <CommCtrl.h>
-#include <WindowsX.h>
-#include <WinSafer.h>
+#include <commctrl.h>
+#include <windowsx.h>
+#include <winsafer.h>
 
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
