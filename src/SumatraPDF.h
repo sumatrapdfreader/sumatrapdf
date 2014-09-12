@@ -4,6 +4,8 @@
 #ifndef SumatraPDF_h
 #define SumatraPDF_h
 
+#include "DisplayState.h"
+
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
@@ -64,7 +66,6 @@ enum MenuToolbarFlags {
 class Favorites;
 class FileHistory;
 class WindowInfo;
-enum DisplayMode;
 struct LabelWithCloseWnd;
 struct TabData;
 
