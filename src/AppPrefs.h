@@ -32,9 +32,9 @@ void UnregisterForFileChanges();
 namespace conv {
 
 const WCHAR *   FromDisplayMode(DisplayMode mode);
-DisplayMode     ToDisplayMode(const WCHAR *s, DisplayMode default=DM_AUTOMATIC);
+DisplayMode     ToDisplayMode(const WCHAR *s, DisplayMode defVal=DM_AUTOMATIC);
 void            FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140=NULL);
-float           ToZoom(const char *s, float default=ZOOM_FIT_PAGE);
+float           ToZoom(const char *s, float defVal=ZOOM_FIT_PAGE);
 
 };
 
