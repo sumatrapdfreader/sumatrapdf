@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -118,6 +119,26 @@ func cmdString(cmd *exec.Cmd) string {
 	return strings.Join(arr, " ")
 }
 
+func panicif(cond bool, msgs ...string) {
+	if cond {
+		var msg string
+		if len(msgs) > 0 {
+			msg = msgs[0]
+		} else {
+			msg = "error"
+		}
+		panic(msg)
+	}
+}
+
+func genOut(dir, in, ext string) string {
+	panicif(ext[0] != '.')
+	in = filepath.Base(in)
+	e := filepath.Ext(in)
+	in = in[:len(in)-len(e)]
+	return filepath.Join(dir, in+ext)
+}
+
 // MingwCcTask compiles a c/c++ file with mingw
 type MingwCcTask struct {
 	TaskContext
@@ -128,6 +149,10 @@ type MingwCcTask struct {
 }
 
 func (t *MingwCcTask) Run() (error, []byte, []byte) {
+	if t.Out == "" {
+		t.Out = genOut("rel", t.In, ".o")
+		// TODO: ensure t.Out hasn't be generated in other tasks
+	}
 	// use gcc for *.c files, g++ for everything else
 	cc := MINGW32_CPP
 	// TODO: use case-insensitive check
@@ -155,12 +180,12 @@ func main() {
 		TaskContext: TaskContext{NewContext()},
 		ToRun: []Task{
 			&MkdirTask{Dir: "rel"},
-			&MingwCcTask{In: "src/ChmDoc.cpp", Out: "rel/ChmDoc.o", IncDirs: "src/utils;ext/CHMLib/src"},
-			&MingwCcTask{In: "ext/zlib/adler32.c", Out: "rel/adler32.o"},
-			&MingwCcTask{In: "src/AppPrefs.cpp", Out: "rel/AppPrefs.o", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/AppTools.cpp", Out: "rel/AppTools.o", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/AppUtil.cpp", Out: "rel/AppUtil.o", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/Caption.cpp", Out: "rel/Caption.o", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/ChmDoc.cpp", IncDirs: "src/utils;ext/CHMLib/src"},
+			&MingwCcTask{In: "ext/zlib/adler32.c"},
+			&MingwCcTask{In: "src/AppPrefs.cpp", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/AppTools.cpp", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/AppUtil.cpp", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/Caption.cpp", IncDirs: "src/utils"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()
