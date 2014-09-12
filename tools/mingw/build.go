@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+const (
+	OUT_DIR_VAR = "OUT_DIR"
+)
+
 var (
 	MINGW32_CC  = "i686-w64-mingw32-gcc"
 	MINGW32_CPP = "i686-w64-mingw32-g++"
@@ -46,6 +50,16 @@ func (c Context) GetStrVal(k string) string {
 	return ""
 }
 
+func (c Context) GetStrValMust(k string) string {
+	if v, exists := c[k]; exists {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	panicif(true, fmt.Sprintf("value for %q doesn't exist or is not a string", k))
+	return ""
+}
+
 // Task is a single build operation e.g. running compiler for a given .c file
 type Task interface {
 	// Run executes the task. Most tasks involve executing other programs (like
@@ -70,8 +84,24 @@ type MkdirTask struct {
 }
 
 func (t *MkdirTask) Run() (error, []byte, []byte) {
-	fmt.Printf("mkdir %s\n", t.Dir)
-	err := os.MkdirAll(t.Dir, 0755)
+	dir := t.Dir
+	panicif(dir == "")
+	fmt.Printf("mkdir %s\n", dir)
+	err := os.MkdirAll(dir, 0755)
+	if os.IsExist(err) {
+		err = nil
+	}
+	return err, nil, nil
+}
+
+type MkdirOutTask struct {
+	TaskContext
+}
+
+func (t *MkdirOutTask) Run() (error, []byte, []byte) {
+	dir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
+	fmt.Printf("mkdir %s\n", dir)
+	err := os.MkdirAll(dir, 0755)
 	if os.IsExist(err) {
 		err = nil
 	}
@@ -149,8 +179,9 @@ type MingwCcTask struct {
 }
 
 func (t *MingwCcTask) Run() (error, []byte, []byte) {
+	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
 	if t.Out == "" {
-		t.Out = genOut("rel", t.In, ".o")
+		t.Out = genOut(outDir, t.In, ".o")
 		// TODO: ensure t.Out hasn't be generated in other tasks
 	}
 	// use gcc for *.c files, g++ for everything else
@@ -176,10 +207,12 @@ func (t *MingwCcTask) Run() (error, []byte, []byte) {
 
 func main() {
 	fmt.Printf("Hello to a build system\n")
+	ctx := NewContext()
+	ctx[OUT_DIR_VAR] = "rel"
 	rootTask := Tasks{
-		TaskContext: TaskContext{NewContext()},
+		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
-			&MkdirTask{Dir: "rel"},
+			&MkdirOutTask{},
 			&MingwCcTask{In: "src/ChmDoc.cpp", IncDirs: "src/utils;ext/CHMLib/src"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 			&MingwCcTask{In: "src/AppPrefs.cpp", IncDirs: "src/utils"},
