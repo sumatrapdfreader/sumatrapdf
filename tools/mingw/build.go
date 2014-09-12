@@ -172,37 +172,67 @@ func genOut(dir, in, ext string) string {
 // MingwCcTask compiles a c/c++ file with mingw
 type MingwCcTask struct {
 	TaskContext
-	In  string
-	Out string
+	In string
 	// TODO: move IncDirs to Context
 	IncDirs string
 }
 
+func mingwCcExe(src string) string {
+	ext := strings.ToLower(filepath.Ext(src))
+	if strings.HasSuffix(ext, ".c") {
+		return MINGW32_CC
+	}
+	return MINGW32_CPP
+}
+
+func mingwIncArgs(incDirs string) []string {
+	args := make([]string, 0)
+	dirs := strings.Split(incDirs, ";")
+	for _, dir := range dirs {
+		args = append(args, "-I", dir)
+	}
+	return args
+}
+
 func (t *MingwCcTask) Run() (error, []byte, []byte) {
 	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
-	if t.Out == "" {
-		t.Out = genOut(outDir, t.In, ".o")
-		// TODO: ensure t.Out hasn't be generated in other tasks
-	}
+	out := genOut(outDir, t.In, ".o")
+	cc := mingwCcExe(t.In)
+	// TODO: ensure out hasn't be generated in other tasks
 	// use gcc for *.c files, g++ for everything else
-	cc := MINGW32_CPP
-	// TODO: use case-insensitive check
-	if strings.HasSuffix(t.In, ".c") {
-		cc = MINGW32_CC
-	}
-	args := []string{}
-	if t.IncDirs != "" {
-		dirs := strings.Split(t.IncDirs, ";")
-		for _, dir := range dirs {
-			args = append(args, "-I", dir)
-		}
-	}
-	args = append(args, "-c", t.In, "-o", t.Out)
+	args := mingwIncArgs(t.IncDirs)
+	args = append(args, "-c", t.In, "-o", out)
 	cmd := exec.Command(cc, args...)
 	fmt.Println(cmdString(cmd))
 	// TODO: get stdout, stderr separately
 	stdout, err := cmd.CombinedOutput()
 	return err, stdout, nil
+}
+
+type MingwCcDirTask struct {
+	TaskContext
+	Dir     string
+	Files   []string
+	IncDirs string
+}
+
+func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
+	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
+	for _, f := range t.Files {
+		out := genOut(outDir, f, ".o")
+		cc := mingwCcExe(f)
+		args := mingwIncArgs(t.IncDirs)
+		path := filepath.Join(t.Dir, f)
+		args = append(args, "-c", path, "-o", out)
+		cmd := exec.Command(cc, args...)
+		fmt.Println(cmdString(cmd))
+		// TODO: get stdout, stderr separately
+		stdout, err := cmd.CombinedOutput()
+		if err != nil {
+			return err, stdout, nil
+		}
+	}
+	return nil, nil, nil
 }
 
 func main() {
@@ -213,12 +243,8 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
-			&MingwCcTask{In: "src/ChmDoc.cpp", IncDirs: "src/utils;ext/CHMLib/src"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
-			&MingwCcTask{In: "src/AppPrefs.cpp", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/AppTools.cpp", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/AppUtil.cpp", IncDirs: "src/utils"},
-			&MingwCcTask{In: "src/Caption.cpp", IncDirs: "src/utils"},
+			&MingwCcDirTask{Dir: "src", Files: []string{"CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "Doc.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()

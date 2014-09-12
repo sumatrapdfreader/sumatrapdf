@@ -133,7 +133,7 @@ static void SendCrashInfo(char *s)
         return;
     }
 
-    char *boundary = "0xKhTmLbOuNdArY";
+    const char *boundary = "0xKhTmLbOuNdArY";
     str::Str<char> headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
 
@@ -319,7 +319,8 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
 #endif
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
-    bool fullDump = (NULL != GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", NULL, 0));
+    DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", NULL, 0);
+    bool fullDump = (0 != n);
     dbghelp::WriteMiniDump(gCrashDumpPath, &gMei, fullDump);
     return 0;
 }
@@ -413,7 +414,7 @@ static void GetProcessorName(str::Str<char>& s)
         return;
 
     ScopedMem<char> tmp(str::conv::ToUtf8(name));
-    s.AppendFmt("Processor: %s\r\n", tmp);
+    s.AppendFmt("Processor: %s\r\n", tmp.Get());
     free(name);
 }
 
@@ -458,16 +459,16 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
             break;
         ScopedMem<char> v1a(str::conv::ToUtf8(v1));
         s.AppendFmt("Graphics driver %d\r\n", i);
-        s.AppendFmt("  DriverDesc:         %s\r\n", v1);
+        s.AppendFmt("  DriverDesc:         %s\r\n", v1.Get());
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
         if (v1) {
             v1a.Set(str::conv::ToUtf8(v1));
-            s.AppendFmt("  DriverVersion:      %s\r\n", v1a);
+            s.AppendFmt("  DriverVersion:      %s\r\n", v1a.Get());
         }
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
         if (v1) {
             v1a.Set(str::conv::ToUtf8(v1));
-            s.AppendFmt("  UserModeDriverName: %s\r\n", v1a);
+            s.AppendFmt("  UserModeDriverName: %s\r\n", v1a.Get());
         }
     }
 }
@@ -521,7 +522,7 @@ static bool GetModules(str::Str<char>& s)
         if (str::EqI(nameA.Get(), "winex11.drv"))
             isWine = true;
         ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
-        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
+        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
