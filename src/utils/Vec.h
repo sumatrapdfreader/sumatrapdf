@@ -326,18 +326,18 @@ namespace str {
 template <typename T>
 class Str : public Vec<T> {
 public:
-    explicit Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
+    explicit Str(size_t capHint=0, Allocator *allocator=NULL) : Vec<T>(capHint, allocator) { }
 
     void Append(T c)
     {
-        InsertAt(len, c);
+        InsertAt(Vec<T>::len, c);
     }
 
     void Append(const T* src, size_t size=-1)
     {
         if ((size_t)-1 == size)
             size = Len(src);
-        Vec::Append(src, size);
+        Vec<T>::Append(src, size);
     }
 
     void AppendFmt(const T* fmt, ...)
@@ -360,23 +360,23 @@ public:
     bool Replace(const T *toReplace, const T *replaceWith)
     {
         // fast path: nothing to replace
-        if (!str::Find(els, toReplace))
+        if (!str::Find(Vec<T>::els, toReplace))
             return false;
-        char *newStr = str::Replace(els, toReplace, replaceWith);
-        Reset();
+        char *newStr = str::Replace(Vec<T>::els, toReplace, replaceWith);
+        Vec<T>::Reset();
         AppendAndFree(newStr);
         return true;
     }
 
     void Set(const T* s)
     {
-        Reset();
+        Vec<T>::Reset();
         Append(s);
     }
 
     T *Get() const
     {
-        return els;
+        return Vec<T>::els;
     }
 };
 
@@ -503,7 +503,7 @@ class WStrList {
         size_t len = str::Len(str);
         ScopedMem<char> data(AllocArray<char>(len));
         WCHAR c;
-        for (char *dst = data; (c = *str++) != NULL; dst++) {
+        for (char *dst = data; (c = *str++) != 0; dst++) {
             *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? (char)(c + 'a' - 'A') : (char)c;
         }
         return MurmurHash2(data, len);

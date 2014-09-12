@@ -95,13 +95,25 @@ public:
 };
 
 template <class T>
-class ScopedComQIPtr : public ScopedComPtr<T> {
+class ScopedComQIPtr {
+protected:
+    T *ptr;
 public:
-    ScopedComQIPtr() : ScopedComPtr() { }
+    ScopedComQIPtr() : ptr(NULL) { }
     explicit ScopedComQIPtr(IUnknown *unk) {
         HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr))
             ptr = NULL;
+    }
+    ~ScopedComQIPtr() {
+        if (ptr)
+            ptr->Release();
+    }
+    bool Create(const CLSID clsid) {
+        CrashIf(ptr);
+        if (ptr) return false;
+        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
+        return SUCCEEDED(hr);
     }
     T* operator=(IUnknown *newUnk) {
         if (ptr)
@@ -110,6 +122,13 @@ public:
         if (FAILED(hr))
             ptr = NULL;
         return ptr;
+    }
+    T** operator&() { return &ptr; }
+    T* operator->() const { return ptr; }
+    T* operator=(T* newPtr) {
+        if (ptr)
+            ptr->Release();
+        return (ptr = newPtr);
     }
 };
 
