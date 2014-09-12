@@ -168,7 +168,7 @@ static LRESULT OnPaint(HWND hwnd)
         RectD page = preview->renderer->GetPageRect(pageNo);
         if (!page.IsEmpty()) {
             rect.Inflate(-PREVIEW_MARGIN, -PREVIEW_MARGIN);
-            float zoom = (float)min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
+            float zoom = (float)std::min(rect.dx / page.dx, rect.dy / page.dy) - 0.001f;
             RectI onScreen = RectD(rect.x, rect.y, page.dx * zoom, page.dy * zoom).Round();
             onScreen.Offset((rect.dx - onScreen.dx) / 2, (rect.dy - onScreen.dy) / 2);
 
