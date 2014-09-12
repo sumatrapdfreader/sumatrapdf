@@ -693,8 +693,12 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
 
     signal(SIGABRT, onSignalAbort);
+#if defined(_MSC_VER)
+    // those are only in msvc? There is std::set_terminate() and
+    // std::set_unexpected() in C++ in <exception>
     set_terminate(onTerminate);
     set_unexpected(onUnexpected);
+#endif
 }
 
 void UninstallCrashHandler()
