@@ -14,12 +14,7 @@ public:
     PointT() : x(0), y(0) { }
     PointT(T x, T y) : x(x), y(y) { }
 
-    template <typename S>
-    PointT<S> Convert() const {
-        return PointT<S>((S)x, (S)y);
-    }
-    template <>
-    PointT<int> Convert() const {
+    PointT<int> ToInt() const {
         return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
 
@@ -44,8 +39,8 @@ public :
     SizeT<S> Convert() const {
         return SizeT<S>((S)dx, (S)dy);
     }
-    template <>
-    SizeT<int> Convert() const {
+
+    SizeT<int> ToInt() const {
         return SizeT<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 
@@ -87,8 +82,8 @@ public:
     RectT<S> Convert() const {
         return RectT<S>((S)x, (S)y, (S)dx, (S)dy);
     }
-    template <>
-    RectT<int> Convert() const {
+
+    RectT<int> ToInt() const {
         return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5),
                           (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
@@ -166,7 +161,7 @@ public:
 
 #ifdef _WIN32
     RECT ToRECT() const {
-        RectT<int> rectI(this->Convert<int>());
+        RectT<int> rectI(this->ToInt());
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
         return result;
     }
@@ -176,7 +171,7 @@ public:
 
 #ifdef GDIPVER
     Gdiplus::Rect ToGdipRect() const {
-        RectT<int> rect(this->Convert<int>());
+        RectT<int> rect(this->ToInt());
         return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
     }
     Gdiplus::RectF ToGdipRectF() const {

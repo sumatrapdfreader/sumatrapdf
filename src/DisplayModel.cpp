@@ -92,7 +92,7 @@ void DisplayModel::UpdateDisplayState(DisplayState *ds)
     if (presentationMode)
         ds->scrollPos = PointI();
     else
-        ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
+        ds->scrollPos = PointD(ss.x, ss.y).ToInt();
     ds->rotation = rotation;
     ds->displayR2L = displayR2L;
 
@@ -757,7 +757,7 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
     p.x += 0.499 + pageInfo->pageOnScreen.x;
     p.y += 0.499 + pageInfo->pageOnScreen.y;
 
-    return p.Convert<int>();
+    return p.ToInt();
 }
 
 RectI DisplayModel::CvtToScreen(int pageNo, RectD r)
@@ -919,7 +919,7 @@ PointI DisplayModel::GetContentStart(int pageNo)
     RectD contentBox = GetContentBox(pageNo);
     if (contentBox.IsEmpty())
         return PointI(0, 0);
-    return contentBox.TL().Convert<int>();
+    return contentBox.TL().ToInt();
 }
 
 // TODO: what's GoToPage supposed to do for Facing at 400% zoom?
@@ -1559,7 +1559,7 @@ void DisplayModel::ScrollToLink(PageDestination *dest)
         // PDF: /XYZ top left
         // scroll to rect.TL()
         PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
-        scroll = scrollD.Convert<int>();
+        scroll = scrollD.ToInt();
 
         // default values for the coordinates mean: keep the current position
         if (DEST_USE_DEFAULT == rect.x)
@@ -1572,7 +1572,7 @@ void DisplayModel::ScrollToLink(PageDestination *dest)
     else if (rect.dx != DEST_USE_DEFAULT && rect.dy != DEST_USE_DEFAULT) {
         // PDF: /FitR left bottom right top
         RectD rectD = engine->Transform(rect, pageNo, zoomReal, rotation);
-        scroll = rectD.TL().Convert<int>();
+        scroll = rectD.TL().ToInt();
 
         // Rect<float> rectF = _engine->Transform(rect, pageNo, 1.0, rotation).Convert<float>();
         // zoom = 100.0f * min(viewPort.dx / rectF.dx, viewPort.dy / rectF.dy);
@@ -1580,7 +1580,7 @@ void DisplayModel::ScrollToLink(PageDestination *dest)
     else if (rect.y != DEST_USE_DEFAULT) {
         // PDF: /FitH top  or  /FitBH top
         PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
-        scroll.y = scrollD.Convert<int>().y;
+        scroll.y = scrollD.ToInt().y;
 
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
     }

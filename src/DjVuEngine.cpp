@@ -624,7 +624,7 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     // render in 1 MB bands, as otherwise GDI can run out of memory
     RectD rect = pageRect ? *pageRect : mediabox;
     int bandDy = (int)((1 << 20) / (rect.dy * zoom));
-    PointI pt = Transform(rect, pageNo, zoom, rotation).TL().Convert<int>();
+    PointI pt = Transform(rect, pageNo, zoom, rotation).TL().ToInt();
 
     for (int y = 0; y * bandDy < rect.dy; y++) {
         RectD pageBand(rect.x, y * bandDy, rect.dx, bandDy);

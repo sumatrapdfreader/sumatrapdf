@@ -111,7 +111,7 @@ static RectI ExtractDSCPageSize(const WCHAR *fileName)
     while ((nl = strchr(nl + 1, '\n')) != NULL && '%' == nl[1]) {
         if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
             str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
-            return bbox.Convert<int>();
+            return bbox.ToInt();
         }
     }
 

@@ -419,7 +419,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     if (!win->ctrl->ValidPageNo(pageNo))
         return false;
 
-    PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).Convert<int>();
+    PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).ToInt();
     ScopedMem<WCHAR> srcfilepath;
     UINT line, col;
     int err = win->AsFixed()->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
