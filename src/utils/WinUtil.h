@@ -89,7 +89,7 @@ HFONT   GetDefaultGuiFont();
 IStream*CreateStreamFromData(const void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
-UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
+UINT    GuessTextCodepage(const char *data, size_t len, UINT defVal=CP_ACP);
 WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 bool    IsRtl(HWND hwnd);
 void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
