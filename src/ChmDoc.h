@@ -4,8 +4,9 @@
 #ifndef ChmDoc_h
 #define ChmDoc_h
 
+#include "BaseEngine.h"
+
 class EbookTocVisitor;
-enum DocumentProperty;
 
 class ChmDoc {
     struct chmFile *chmHandle;
