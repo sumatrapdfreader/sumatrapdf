@@ -365,7 +365,7 @@ static const FieldInfo gFixedPageUIFields[] = {
     { offsetof(FixedPageUI, selectionColor),  Type_Color,      0x0cfcf5                     },
     { offsetof(FixedPageUI, windowMargin),    Type_Compact,    (intptr_t)&gWindowMarginInfo },
     { offsetof(FixedPageUI, pageSpacing),     Type_Compact,    (intptr_t)&gSizeIInfo        },
-    { offsetof(FixedPageUI, gradientColors),  Type_ColorArray, NULL                         },
+    { offsetof(FixedPageUI, gradientColors),  Type_ColorArray, 0                            },
 };
 static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 6, gFixedPageUIFields, "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors" };
 
@@ -405,9 +405,9 @@ static const FieldInfo gChmUIFields[] = {
 static const StructInfo gChmUIInfo = { sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI" };
 
 static const FieldInfo gExternalViewerFields[] = {
-    { offsetof(ExternalViewer, commandLine), Type_String, NULL },
-    { offsetof(ExternalViewer, name),        Type_String, NULL },
-    { offsetof(ExternalViewer, filter),      Type_String, NULL },
+    { offsetof(ExternalViewer, commandLine), Type_String, 0 },
+    { offsetof(ExternalViewer, name),        Type_String, 0 },
+    { offsetof(ExternalViewer, filter),      Type_String, 0 },
 };
 static const StructInfo gExternalViewerInfo = { sizeof(ExternalViewer), 3, gExternalViewerFields, "CommandLine\0Name\0Filter" };
 
@@ -440,9 +440,9 @@ static const FieldInfo gRectIFields[] = {
 static const StructInfo gRectIInfo = { sizeof(RectI), 4, gRectIFields, "X\0Y\0Dx\0Dy" };
 
 static const FieldInfo gFavoriteFields[] = {
-    { offsetof(Favorite, name),      Type_String, NULL },
-    { offsetof(Favorite, pageNo),    Type_Int,    0    },
-    { offsetof(Favorite, pageLabel), Type_String, NULL },
+    { offsetof(Favorite, name),      Type_String, 0 },
+    { offsetof(Favorite, pageNo),    Type_Int,    0 },
+    { offsetof(Favorite, pageLabel), Type_String, 0 },
 };
 static const StructInfo gFavoriteInfo = { sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel" };
 
@@ -461,12 +461,12 @@ static const FieldInfo gRectI_1_Fields[] = {
 static const StructInfo gRectI_1_Info = { sizeof(RectI), 4, gRectI_1_Fields, "X\0Y\0Dx\0Dy" };
 
 static const FieldInfo gFileStateFields[] = {
-    { offsetof(FileState, filePath),        Type_String,     NULL                     },
+    { offsetof(FileState, filePath),        Type_String,     0                        },
     { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
     { offsetof(FileState, isMissing),       Type_Bool,       false                    },
     { offsetof(FileState, openCount),       Type_Int,        0                        },
-    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
+    { offsetof(FileState, decryptionKey),   Type_Utf8String, 0                        },
     { offsetof(FileState, useDefaultState), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
@@ -479,7 +479,7 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, displayR2L),      Type_Bool,       false                    },
     { offsetof(FileState, reparseIdx),      Type_Int,        0                        },
-    { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
+    { offsetof(FileState, tocState),        Type_IntArray,   0                        },
 };
 static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
 
@@ -491,12 +491,12 @@ static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, 
 
 static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,    (intptr_t)"For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings2.6.html"                    },
-    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
+    { (size_t)-1,                                      Type_Comment,    0                                                                                                                     },
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, useSysColors),             Type_Bool,       false                                                                                                                 },
-    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
+    { (size_t)-1,                                      Type_Comment,    0                                                                                                                     },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,     (intptr_t)&gFixedPageUIInfo                                                                                           },
     { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,     (intptr_t)&gEbookUIInfo                                                                                               },
     { offsetof(GlobalPrefs, comicBookUI),              Type_Struct,     (intptr_t)&gComicBookUIInfo                                                                                           },
@@ -508,23 +508,23 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, tabsInTitlebar),           Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, zoomLevels),               Type_FloatArray, (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
     { offsetof(GlobalPrefs, zoomIncrement),            Type_Float,      (intptr_t)"0"                                                                                                         },
-    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
+    { (size_t)-1,                                      Type_Comment,    0                                                                                                                     },
     { offsetof(GlobalPrefs, printerDefaults),          Type_Struct,     (intptr_t)&gPrinterDefaultsInfo                                                                                       },
     { offsetof(GlobalPrefs, forwardSearch),            Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
     { offsetof(GlobalPrefs, annotationDefaults),       Type_Prerelease, (intptr_t)&gAnnotationDefaultsInfo                                                                                    },
-    { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, defaultPasswords),         Type_String,     0                                                                                                                     },
     { offsetof(GlobalPrefs, customScreenDPI),          Type_Int,        0                                                                                                                     },
-    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
+    { (size_t)-1,                                      Type_Comment,    0                                                                                                                     },
     { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, uiLanguage),               Type_Utf8String, NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, uiLanguage),               Type_Utf8String, 0                                                                                                                     },
     { offsetof(GlobalPrefs, showToolbar),              Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, showFavorites),            Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, associatedExtensions),     Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, associatedExtensions),     Type_String,     0                                                                                                                     },
     { offsetof(GlobalPrefs, associateSilently),        Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, checkForUpdates),          Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, versionToSkip),            Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, versionToSkip),            Type_String,     0                                                                                                                     },
     { offsetof(GlobalPrefs, rememberOpenedFiles),      Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, inverseSearchCmdLine),     Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, inverseSearchCmdLine),     Type_String,     0                                                                                                                     },
     { offsetof(GlobalPrefs, enableTeXEnhancements),    Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, defaultDisplayMode),       Type_String,     (intptr_t)L"automatic"                                                                                                },
     { offsetof(GlobalPrefs, defaultZoom),              Type_Utf8String, (intptr_t)"fit page"                                                                                                  },
@@ -535,9 +535,9 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, useTabs),                  Type_Bool,       true                                                                                                                  },
-    { (size_t)-1,                                      Type_Comment,    NULL                                                                                                                  },
+    { (size_t)-1,                                      Type_Comment,    0                                                                                                                     },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
-    { offsetof(GlobalPrefs, reopenOnce),               Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, reopenOnce),               Type_String,     0                                                                                                                     },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };

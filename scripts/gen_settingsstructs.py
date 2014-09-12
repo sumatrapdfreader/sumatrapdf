@@ -38,16 +38,16 @@ class Field(object):
 		if self.type is Int:
 			return "%d" % self.default
 		if self.type is String:
-			return '(intptr_t)L"%s"' % self.default if self.default is not None else "NULL"
+			return '(intptr_t)L"%s"' % self.default if self.default is not None else "0"
 		if self.type is Utf8String:
-			return '(intptr_t)"%s"' % self.default.encode("utf-8") if self.default is not None else "NULL"
+			return '(intptr_t)"%s"' % self.default.encode("utf-8") if self.default is not None else "0"
 		if self.type.name in ["Struct", "Array", "Compact", "Prerelease"]:
 			id = built.count(self.structName)
 			return "(intptr_t)&g%sInfo" % (self.structName + ("" if not id else "_%d_" % id))
 		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
-			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
+			return '(intptr_t)"%s"' % self.default if self.default is not None else "0"
 		if self.type.name == "Comment":
-			return '(intptr_t)"%s"' % self.comment.encode("utf-8") if self.comment is not None else "NULL"
+			return '(intptr_t)"%s"' % self.comment.encode("utf-8") if self.comment is not None else "0"
 		return None
 
 	def inidefault(self, commentChar=";"):
