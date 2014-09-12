@@ -8,4 +8,4 @@ vagrant up
 
 vagrant provision
 
-vagrant halt
+#vagrant halt
