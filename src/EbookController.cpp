@@ -396,7 +396,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr *link)
         for (int j = pageNo; j > 0; j--) {
             HtmlPage *p = pages->At(j - 1);
             // <pagebreak src="..." page_marker /> is usually the second instruction on a page
-            for (size_t k = 0; k < min((size_t)2, p->instructions.Count()); k++) {
+            for (size_t k = 0; k < std::min((size_t)2, p->instructions.Count()); k++) {
                 DrawInstr& di = p->instructions.At(k);
                 if (InstrAnchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
                     ScopedMem<char> basePath(str::DupN(di.str.s, di.str.len));

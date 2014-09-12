@@ -373,7 +373,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
         RectI rect = win->fwdSearchMark.rects.At(i);
         rect = dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
         if (gGlobalPrefs->forwardSearch.highlightOffset > 0) {
-            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs->forwardSearch.highlightOffset * dm->GetZoomReal());
+            rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs->forwardSearch.highlightOffset * dm->GetZoomReal());
             rect.dx = (int)((gGlobalPrefs->forwardSearch.highlightWidth > 0 ? gGlobalPrefs->forwardSearch.highlightWidth : 15.0) * dm->GetZoomReal());
             rect.y -= 4;
             rect.dy += 8;

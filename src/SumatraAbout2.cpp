@@ -287,7 +287,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     size_t maxLen = 0;
     for (size_t i = 0; i < dimof(gAboutLayoutInfo); i++) {
         AboutLayoutInfoEl& el = gAboutLayoutInfo[i];
-        maxLen = max(maxLen, str::Len(el.leftTxt));
+        maxLen = std::max(maxLen, str::Len(el.leftTxt));
     }
     for (size_t i = 0; i < dimof(gAboutLayoutInfo); i++) {
         AboutLayoutInfoEl& el = gAboutLayoutInfo[i];

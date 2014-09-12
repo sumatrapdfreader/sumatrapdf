@@ -3716,8 +3716,8 @@ static bool SidebarSplitterCb(void *ctx, bool done)
     //       stuck at its width if it accidentally got too wide or too narrow
     ClientRect rFrame(win->hwndFrame);
     ClientRect rToc(win->hwndTocBox);
-    if (sidebarDx < min(SIDEBAR_MIN_WIDTH, rToc.dx) ||
-        sidebarDx > max(rFrame.dx / 2, rToc.dx)) {
+    if (sidebarDx < std::min(SIDEBAR_MIN_WIDTH, rToc.dx) ||
+        sidebarDx > std::max(rFrame.dx / 2, rToc.dx)) {
         return false;
     }
 
@@ -3738,8 +3738,8 @@ static bool FavSplitterCb(void *ctx, bool done)
     ClientRect rFrame(win->hwndFrame);
     ClientRect rToc(win->hwndTocBox);
     AssertCrash(rToc.dx == ClientRect(win->hwndFavBox).dx);
-    if (tocDy < min(TOC_MIN_DY, rToc.dy) ||
-        tocDy > max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
+    if (tocDy < std::min(TOC_MIN_DY, rToc.dy) ||
+        tocDy > std::max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
         return false;
     }
     gGlobalPrefs->tocDy = tocDy;

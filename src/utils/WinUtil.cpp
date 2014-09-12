@@ -872,7 +872,7 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT defVal)
     if (!pMLang.Create(CLSID_CMultiLanguage))
         return defVal;
 
-    int ilen = min((int)len, INT_MAX);
+    int ilen = std::min((int)len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info = { 0 };
     HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
@@ -1125,7 +1125,7 @@ COLORREF AdjustLightness(COLORREF c, float factor)
 {
     BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
-    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
+    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     if (M == m) {
         // for grayscale values, lightness is proportional to the color value
         BYTE X = (BYTE)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
@@ -1153,7 +1153,7 @@ COLORREF AdjustLightness(COLORREF c, float factor)
 float GetLightness(COLORREF c)
 {
     BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
-    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
+    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     return (M + m) / 2.0f;
 }
 

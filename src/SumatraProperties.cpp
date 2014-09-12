@@ -347,8 +347,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     WindowRect wRc(hwnd);
     ClientRect cRc(hwnd);
     RectI work = GetWorkAreaRect(WindowRect(hParent));
-    wRc.dx = min(rc.dx + wRc.dx - cRc.dx, work.dx);
-    wRc.dy = min(rc.dy + wRc.dy - cRc.dy, work.dy);
+    wRc.dx = std::min(rc.dx + wRc.dx - cRc.dx, work.dx);
+    wRc.dy = std::min(rc.dy + wRc.dy - cRc.dy, work.dy);
     MoveWindow(hwnd, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
     CenterDialog(hwnd, hParent);
 

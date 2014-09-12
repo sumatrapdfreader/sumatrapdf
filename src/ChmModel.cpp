@@ -461,9 +461,9 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const
 
     if (gGlobalPrefs->zoomIncrement > 0) {
         if (currZoom < towardsLevel)
-            return min(currZoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::min(currZoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
         if (currZoom > towardsLevel)
-            return max(currZoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::max(currZoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
         return currZoom;
     }
 

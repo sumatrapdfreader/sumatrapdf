@@ -144,7 +144,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
     LONG minWidth = txtSize.cx;
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    txtSize.cx = max(txtSize.cx, minWidth);
+    txtSize.cx = std::max(txtSize.cx, minWidth);
     result.dx += 2 * (txtSize.cx + ABOUT_INNER_PADDING);
 
     return result;
@@ -385,7 +385,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     size_t maxLen = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
-        maxLen = max(maxLen, str::Len(el->leftTxt));
+        maxLen = std::max(maxLen, str::Len(el->leftTxt));
     }
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--)
@@ -623,7 +623,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     fileHistory.GetFrequencyOrder(list);
 
     int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
-    int height = min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
+    int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;

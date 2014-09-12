@@ -310,9 +310,9 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
 static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha)
 {
     alpha = (BYTE)(alpha * c.a / 255.f);
-    BYTE R = (BYTE)floorf(max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
     return Gdiplus::Color(alpha, R, G, B);
 }
 
@@ -1387,7 +1387,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
     if (!strstr(html, "charset="))
         return 0;
 
-    HtmlPullParser parser(html, min(htmlLen, (size_t)1024));
+    HtmlPullParser parser(html, std::min(htmlLen, (size_t)1024));
     HtmlToken *tok;
     while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->tag != Tag_Meta)

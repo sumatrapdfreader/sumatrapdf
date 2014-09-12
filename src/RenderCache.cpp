@@ -278,7 +278,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     if (factorAvg > 1.5)
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
-    return min(res, (USHORT)30);
+    return std::min(res, (USHORT)30);
 }
 
 // get the maximum resolution available for the given page
@@ -289,7 +289,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel *dm, int pageNo, int rotation)
     for (int i = 0; i < cacheCount; i++) {
         if (cache[i]->dm == dm && cache[i]->pageNo == pageNo &&
             cache[i]->rotation == rotation) {
-            maxRes = max(cache[i]->tile.res, maxRes);
+            maxRes = std::max(cache[i]->tile.res, maxRes);
         }
     }
     return maxRes;
@@ -637,9 +637,9 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
     HDC bmpDC = CreateCompatibleDC(hdc);
     if (bmpDC) {
         SizeI bmpSize = renderedBmp->Size();
-        int xSrc = -min(tileOnScreen.x, 0);
-        int ySrc = -min(tileOnScreen.y, 0);
-        float factor = min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
+        int xSrc = -std::min(tileOnScreen.x, 0);
+        int ySrc = -std::min(tileOnScreen.y, 0);
+        float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
 
         SelectObject(bmpDC, hbmp);
         if (factor != 1.0f)
@@ -700,7 +700,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         RectI tileOnScreen = GetTileOnScreen(dm->GetEngine(), pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
             // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
-            renderDelayMin = min(RENDER_DELAY_FAILED, renderDelayMin);
+            renderDelayMin = std::min(RENDER_DELAY_FAILED, renderDelayMin);
             continue;
         }
         tileOnScreen = pageInfo->pageOnScreen.Intersect(tileOnScreen);
@@ -719,7 +719,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         }
         if (isTargetRes && renderDelay > 0)
             neededScaling = true;
-        renderDelayMin = min(renderDelay, renderDelayMin);
+        renderDelayMin = std::min(renderDelay, renderDelayMin);
         // paint tiles from left to right from top to bottom
         if (tile.res > 0 && queue.Count() > 0 && tile.res < queue.At(0).res)
             queue.Sort(cmpTilePosition);

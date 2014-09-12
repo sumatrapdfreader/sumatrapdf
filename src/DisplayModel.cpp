@@ -137,7 +137,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     int lastPageNo = FirstPageInARowNo(pageNo, columns, showCover) + columns - 1;
     if (showCover && pageNo < columns)
         lastPageNo--;
-    return min(lastPageNo, pageCount);
+    return std::min(lastPageNo, pageCount);
 }
 
 // must call SetInitialViewSettings() after creation
@@ -458,7 +458,7 @@ float DisplayModel::GetZoomReal(int pageNo) const
     pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(mode), IsBookView(mode));
     if (pageNo == PageCount() || pageNo == 1 && IsBookView(mode))
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
-    return min(ZoomRealFromVirtualForPage(zoomVirtual, pageNo), ZoomRealFromVirtualForPage(zoomVirtual, pageNo + 1));
+    return std::min(ZoomRealFromVirtualForPage(zoomVirtual, pageNo), ZoomRealFromVirtualForPage(zoomVirtual, pageNo + 1));
 }
 
 /* Given zoom and rotation, calculate the position of each page on a
@@ -641,7 +641,7 @@ RestartLayout:
         }
     }
 
-    canvasSize = SizeI(max(canvasDx, viewPort.dx), max(canvasDy, viewPort.dy));
+    canvasSize = SizeI(std::max(canvasDx, viewPort.dx), std::max(canvasDy, viewPort.dy));
 }
 
 void DisplayModel::ChangeStartPage(int newStartPage)
@@ -960,7 +960,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         if (ColumnsFromDisplayMode(GetDisplayMode()) > 1) {
             int lastPageNo = LastPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), IsBookView(GetDisplayMode()), PageCount());
             PointI second = GetContentStart(lastPageNo);
-            scrollY = min(scrollY, second.y);
+            scrollY = std::min(scrollY, second.y);
         }
         viewPort.x = scrollX + pageInfo->pos.x - windowMargin.left;
     }
@@ -1085,7 +1085,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
     PageInfo * pageInfo = GetPageInfo(currPageNo);
     if (zoomVirtual == ZOOM_FIT_CONTENT && -pageInfo->pageOnScreen.y <= top.y)
         scrollY = 0; // continue, even though the current page isn't fully visible
-    else if (max(-pageInfo->pageOnScreen.y, 0) > scrollY && IsContinuous(GetDisplayMode())) {
+    else if (std::max(-pageInfo->pageOnScreen.y, 0) > scrollY && IsContinuous(GetDisplayMode())) {
         /* the current page isn't fully visible, so show it first */
         GoToPage(currPageNo, scrollY);
         return true;
@@ -1277,9 +1277,9 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
     if (gGlobalPrefs->zoomIncrement > 0) {
         float zoom = GetZoomVirtual(true);
         if (zoom < towardsLevel)
-            return min(zoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::min(zoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
         if (zoom > towardsLevel)
-            return max(zoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+            return std::max(zoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
         return zoom;
     }
 
@@ -1302,9 +1302,9 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         if (PageShown(pageNo)) {
             float pagePageZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, pageNo);
-            pageZoom = min(pageZoom, pagePageZoom);
+            pageZoom = std::min(pageZoom, pagePageZoom);
             float pageWidthZoom = ZoomRealFromVirtualForPage(ZOOM_FIT_WIDTH, pageNo);
-            widthZoom = min(widthZoom, pageWidthZoom);
+            widthZoom = std::min(widthZoom, pageWidthZoom);
         }
     }
     CrashIf(pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL);
@@ -1405,17 +1405,17 @@ bool DisplayModel::ShowResultRectToScreen(TextSel *res)
     if (extremes.y < viewPort.dy * 2 / 5)
         sy = extremes.y - viewPort.dy * 2 / 5;
     else if (extremes.y + extremes.dy > viewPort.dy * 3 / 5)
-        sy = min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
+        sy = std::min(extremes.y + extremes.dy - viewPort.dy * 3 / 5,
                  extremes.y + extremes.dy / 2 - viewPort.dy * 2 / 5);
 
     // horizontally, we try to position the search result at the
     // center of the screen, but don't scroll further than page
     // boundaries, so that as much context as possible remains visible
     if (extremes.x < 0)
-        sx = max(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+        sx = std::max(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
         pageInfo->pageOnScreen.x);
     else if (extremes.x + extremes.dx >= viewPort.dx)
-        sx = min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
+        sx = std::min(extremes.x + extremes.dx / 2 - viewPort.dx / 2,
                  pageInfo->pageOnScreen.x + pageInfo->pageOnScreen.dx - viewPort.dx);
 
     if (sx != 0)
@@ -1460,7 +1460,7 @@ void DisplayModel::SetScrollState(ScrollState state)
     if (state.x < 0 && state.y < 0)
         return;
 
-    PointD newPtD(max(state.x, (double)0), max(state.y, (double)0));
+    PointD newPtD(std::max(state.x, (double)0), std::max(state.y, (double)0));
     PointI newPt = CvtToScreen(state.page, newPtD);
 
     // Also show the margins, if this has been requested

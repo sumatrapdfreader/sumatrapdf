@@ -367,7 +367,7 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
         codeLength = codeLen;
     else {
         assert(codeLen == codeLength);
-        codeLength = min(codeLength, codeLen);
+        codeLength = std::min(codeLength, codeLen);
     }
     assert(hdrLen == kCdicHeaderLen);
     if (hdrLen != kCdicHeaderLen)

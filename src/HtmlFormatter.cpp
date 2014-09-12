@@ -635,12 +635,12 @@ bool HtmlFormatter::EmitImage(ImageData *img)
         FlushCurrLine(false);
     // move overly large images to a new page
     // (if they don't fit even when scaled down to 75%)
-    REAL scalePage = min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
-    if (currY > 0 && currY + newSize.Height * min(scalePage, 0.75f) > pageDy)
+    REAL scalePage = std::min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
+    if (currY > 0 && currY + newSize.Height * std::min(scalePage, 0.75f) > pageDy)
         ForceNewPage();
     // if image is bigger than the available space, scale it down
     if (newSize.Width > pageDx - currX || newSize.Height > pageDy - currY) {
-        REAL scale = min(scalePage, (pageDy - currY) / newSize.Height);
+        REAL scale = std::min(scalePage, (pageDy - currY) / newSize.Height);
         // scale down images that follow right after a line
         // containing a single image as little as possible,
         // as they might be intended to be of the same size
@@ -649,8 +649,8 @@ bool HtmlFormatter::EmitImage(ImageData *img)
             scale = scalePage;
         }
         if (scale < 1) {
-            newSize.Width = min(newSize.Width * scale, pageDx - currX);
-            newSize.Height = min(newSize.Height * scale, pageDy - currY);
+            newSize.Width = std::min(newSize.Width * scale, pageDx - currX);
+            newSize.Height = std::min(newSize.Height * scale, pageDy - currY);
         }
     }
 

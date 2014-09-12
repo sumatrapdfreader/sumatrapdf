@@ -451,9 +451,9 @@ bool DjVuEngineImpl::FinishLoading()
 static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha)
 {
     alpha = (BYTE)(alpha * c.a / 255.f);
-    BYTE R = (BYTE)floorf(max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
     return Gdiplus::Color(alpha, R, G, B);
 }
 
@@ -667,7 +667,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
     // render the page in 8-bit grayscale up to 250x250 px in size
     ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, NULL);
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
-    double zoom = min(min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
+    double zoom = std::min(std::min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
     RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy }, rrect = prect;
 

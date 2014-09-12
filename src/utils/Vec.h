@@ -64,7 +64,7 @@ protected:
     }
 
     T* MakeSpaceAt(size_t idx, size_t count, bool allowFailure=false) {
-        size_t newLen = max(len, idx) + count;
+        size_t newLen = std::max(len, idx) + count;
         if (!allowFailure)
             EnsureCapCrash(newLen);
         else if (!EnsureCapTry(newLen))

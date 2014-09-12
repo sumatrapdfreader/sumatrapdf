@@ -757,7 +757,7 @@ size_t BufSet(char *dst, size_t dstCchSize, const char *src)
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
-    size_t toCopy = min(dstCchSize - 1, srcCchSize);
+    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
 
     errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
     CrashIf(err || dst[toCopy] != '\0');
@@ -770,7 +770,7 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
     CrashAlwaysIf(0 == dstCchSize);
 
     size_t srcCchSize = str::Len(src);
-    size_t toCopy = min(dstCchSize - 1, srcCchSize);
+    size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
 
     errno_t err = wcsncpy_s(dst, dstCchSize, src, toCopy);
     CrashIf(err || dst[toCopy] != '\0');
@@ -789,7 +789,7 @@ size_t BufAppend(char *dst, size_t dstCchSize, const char *s)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t srcCchSize = str::Len(s);
-    size_t toCopy = min(left, srcCchSize);
+    size_t toCopy = std::min(left, srcCchSize);
 
     errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
@@ -806,7 +806,7 @@ size_t BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t srcCchSize = str::Len(s);
-    size_t toCopy = min(left, srcCchSize);
+    size_t toCopy = std::min(left, srcCchSize);
 
     errno_t err = wcsncat_s(dst, dstCchSize, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
@@ -996,7 +996,7 @@ static const char *ParseLimitedNumber(const char *str, const char *format,
     const char *endF = Parse(format, "%u%c", &width, &f2[1]);
     if (endF && FindChar("udx", f2[1]) && width <= Len(str)) {
         char limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, min(width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min(width + 1, dimof(limited)), str);
         const char *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = str + width;
@@ -1012,7 +1012,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
     const WCHAR *endF = Parse(format, L"%u%c", &width, &f2[1]);
     if (endF && FindChar(L"udx", f2[1]) && width <= Len(str)) {
         WCHAR limited[16]; // 32-bit integers are at most 11 characters long
-        str::BufSet(limited, min(width + 1, dimof(limited)), str);
+        str::BufSet(limited, std::min(width + 1, dimof(limited)), str);
         const WCHAR *end = Parse(limited, f2, valueOut);
         if (end && !*end)
             *endOut = str + width;

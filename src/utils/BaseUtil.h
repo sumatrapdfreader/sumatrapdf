@@ -4,10 +4,6 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-
 #ifndef UNICODE
 #define UNICODE
 #endif
@@ -15,23 +11,29 @@
 #define _UNICODE
 #endif
 
-#include <algorithm>
-using namespace std;
-
 // #include <winsock2.h>
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <gdiplus.h>
 #include <commctrl.h>
 #include <windowsx.h>
 #include <winsafer.h>
+#include <gdiplus.h>
+
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
 
 #ifdef DEBUG
 #define _CRTDBG_MAP_ALLOC
 #endif
 
+#include <algorithm>
 #include <stdlib.h>
 
 // TODO: this breaks placement new

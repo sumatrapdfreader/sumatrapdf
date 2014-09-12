@@ -163,7 +163,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
     const RectI printable(GetDeviceCaps(hdc, PHYSICALOFFSETX),
                           GetDeviceCaps(hdc, PHYSICALOFFSETY),
                           GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
-    const float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
+    const float dpiFactor = std::min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
                                 GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
     if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
@@ -181,12 +181,12 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
             StartPage(hdc);
 
             geomutil::SizeT<float> bSize = bounds.Size().Convert<float>();
-            float zoom = min((float)printable.dx / bSize.dx,
+            float zoom = std::min((float)printable.dx / bSize.dx,
                              (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
             if (PrintScaleShrink == pd.advData.scale)
-                zoom = min(dpiFactor, zoom);
+                zoom = std::min(dpiFactor, zoom);
             else if (PrintScaleNone == pd.advData.scale)
                 zoom = dpiFactor;
 
@@ -280,9 +280,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
                 // and the whole document page on the physical paper
                 RectD rect = engine.PageContentBox(pageNo, Target_Print);
                 geomutil::RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
-                zoom = min((float)printable.dx / cbox.dx,
-                       min((float)printable.dy / cbox.dy,
-                       min((float)paperSize.dx / pSize.dx,
+                zoom = std::min((float)printable.dx / cbox.dx,
+                       std::min((float)printable.dy / cbox.dy,
+                       std::min((float)paperSize.dx / pSize.dx,
                            (float)paperSize.dy / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)

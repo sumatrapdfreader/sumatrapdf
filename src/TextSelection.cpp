@@ -225,7 +225,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx)
     }
 
     result.len = 0;
-    int fromPage = min(startPage, endPage), toPage = max(startPage, endPage);
+    int fromPage = std::min(startPage, endPage), toPage = std::max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
@@ -287,8 +287,8 @@ WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
 
 void TextSelection::GetGlyphRange(int *fromPage, int *fromGlyph, int *toPage, int *toGlyph) const
 {
-    *fromPage = min(startPage, endPage);
-    *toPage = max(startPage, endPage);
+    *fromPage = std::min(startPage, endPage);
+    *toPage = std::max(startPage, endPage);
     *fromGlyph = (*fromPage == endPage ? endGlyph : startGlyph);
     *toGlyph = (*fromPage == endPage ? startGlyph : endGlyph);
     if (*fromPage == *toPage && *fromGlyph > *toGlyph)

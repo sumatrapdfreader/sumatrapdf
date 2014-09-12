@@ -640,9 +640,9 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
             int size = (int)(16 * win.uiDPIFactor);
-            int cx = min(bounds.dx, 2 * size), cy = min(bounds.dy, 2 * size);
-            StretchBlt(hdc, bounds.x + bounds.dx - min((cx + size) / 2, cx),
-                bounds.y + max((cy - size) / 2, 0), min(cx, size), min(cy, size),
+            int cx = std::min(bounds.dx, 2 * size), cy = std::min(bounds.dy, 2 * size);
+            StretchBlt(hdc, bounds.x + bounds.dx - std::min((cx + size) / 2, cx),
+                bounds.y + std::max((cy - size) / 2, 0), std::min(cx, size), std::min(cy, size),
                 bmpDC, 0, 0, 16, 16, SRCCOPY);
 
             DeleteDC(bmpDC);

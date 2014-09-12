@@ -42,7 +42,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
 
     RectI rectMsg = RectI::FromRECT(rc);
     if (hasCancel) {
-        rectMsg.dy = max(rectMsg.dy, 16);
+        rectMsg.dy = std::max(rectMsg.dy, 16);
         rectMsg.dx += 20;
     }
     rectMsg.Inflate(PADDING, PADDING);
@@ -52,7 +52,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
         SetWindowPos(self, NULL, 0, 0, rectMsg.dx, rectMsg.dy, SWP_NOMOVE | SWP_NOZORDER);
     } else if (init) {
         RectI rect = WindowRect(self);
-        rect.dx = max(progressWidth + 2 * PADDING, rectMsg.dx);
+        rect.dx = std::max(progressWidth + 2 * PADDING, rectMsg.dx);
         rect.dy = rectMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
         SetWindowPos(self, NULL, 0, 0, rect.dx, rect.dy, SWP_NOMOVE | SWP_NOZORDER);
     } else if (rectMsg.dx > progressWidth + 2 * PADDING) {

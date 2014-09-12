@@ -103,7 +103,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
     str::NormalizeWS(selection);
     SetText(selection);
 
-    findPage = min(startPage, endPage);
+    findPage = std::min(startPage, endPage);
     findIndex = (findPage == startPage ? startGlyph : endGlyph) + (int)str::Len(findText);
     pageText = textCache->GetData(findPage);
     forward = true;
