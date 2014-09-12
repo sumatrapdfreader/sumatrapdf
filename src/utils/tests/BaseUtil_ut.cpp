@@ -10,7 +10,7 @@ static void GeomTest()
 {
     PointD ptD(12.4, -13.6);
     utassert(ptD.x == 12.4 && ptD.y == -13.6);
-    PointI ptI = ptD.Convert<int>();
+    PointI ptI = ptD.ToInt();
     utassert(ptI.x == 12 && ptI.y == -14);
     ptD = ptI.Convert<double>();
     utassert(PointD(12, -14) == ptD);
@@ -18,7 +18,7 @@ static void GeomTest()
 
     SizeD szD(7.7, -3.3);
     utassert(szD.dx == 7.7 && szD.dy == -3.3);
-    SizeI szI = szD.Convert<int>();
+    SizeI szI = szD.ToInt();
     utassert(szI.dx == 8 && szI.dy == -3);
     szD = szI.Convert<double>();
     utassert(SizeD(8, -3) == szD);

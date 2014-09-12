@@ -14,6 +14,11 @@ public:
     PointT() : x(0), y(0) { }
     PointT(T x, T y) : x(x), y(y) { }
 
+    template <typename S>
+    PointT<S> Convert() const {
+        return PointT<S>((S)x, (S)y);
+    }
+
     PointT<int> ToInt() const {
         return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
