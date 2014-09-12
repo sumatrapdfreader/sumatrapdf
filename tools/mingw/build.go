@@ -154,6 +154,7 @@ func main() {
 			&MkdirTask{Dir: "rel"},
 			&MingwCcTask{In: "ext/zlib/adler32.c", Out: "rel/adler32.o"},
 			&MingwCcTask{In: "src/AppPrefs.cpp", Out: "rel/AppPrefs.o", IncDirs: "src/utils"},
+			&MingwCcTask{In: "src/AppTools.cpp", Out: "rel/AppTools.o", IncDirs: "src/utils"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()
