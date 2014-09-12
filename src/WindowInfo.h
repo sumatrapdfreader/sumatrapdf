@@ -5,8 +5,7 @@
 #define WindowInfo_h
 
 #include "Controller.h"
-
-enum EngineType;
+#include "EngineManager.h"
 
 class DoubleBuffer;
 class LinkHandler;

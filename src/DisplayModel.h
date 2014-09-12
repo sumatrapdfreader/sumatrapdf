@@ -5,6 +5,7 @@
 #define DisplayModel_h
 
 #include "Controller.h"
+#include "EngineManager.h"
 
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
@@ -52,7 +53,6 @@ class TextSelection;
 class TextSearch;
 struct TextSel;
 class Synchronizer;
-enum EngineType;
 
 // TODO: in hindsight, zoomVirtual is not a good name since it's either
 // virtual zoom level OR physical zoom level. Would be good to find
