@@ -165,11 +165,6 @@ static MenuDef menuDefDebug[] = {
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
-    // TODO: this should remain an advanced setting (if we intend to support both "classic" tabbar
-    //       and tabs in titlebar at all - we could also just pick one and stick to it)
-    // TODO: else this requires an accesskey ("Tabs &in Titlebar") before being translated
-    //       and the menu item hidden for tab-less windows
-    { "Tabs in Titlebar",                   IDM_VIEW_TABS_IN_TITLEBAR,  MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
@@ -470,8 +465,6 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->GetEngine()->SupportsAnnotation() &&
                                                            win->showSelection && win->selectionOnPage);
-    win::menu::SetEnabled(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, gGlobalPrefs->useTabs);
-    win::menu::SetChecked(win->menu, IDM_VIEW_TABS_IN_TITLEBAR, win->tabsInTitlebar);
 #endif
 }
 

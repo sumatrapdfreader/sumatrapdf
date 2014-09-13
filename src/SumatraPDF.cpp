@@ -1359,7 +1359,7 @@ static WindowInfo* CreateWindowInfo()
         Touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
-    SetTabsInTitlebar(win, gGlobalPrefs->useTabs && gGlobalPrefs->tabsInTitlebar);
+    SetTabsInTitlebar(win, gGlobalPrefs->useTabs);
 
     return win;
 }
@@ -3088,6 +3088,10 @@ static void OnMenuOptions(HWND hwnd)
     }
     UpdateDocumentColors();
 
+    // note: ideally we would also update state for useTabs changes but that's complicated since
+    // to do it right we would have to convert tabs to windows. When moving no tabs -> tabs,
+    // there's no problem. When moving tabs -> no tabs, a half solution would be to only
+    // call SetTabsInTitlebar() for windows that have only one tab, but that's somewhat inconsistent
     prefs::Save();
 }
 
@@ -3995,11 +3999,6 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_VIEW_SHOW_HIDE_MENUBAR:
             if (!win->tabsInTitlebar)
                 ShowHideMenuBar(win);
-            break;
-
-        case IDM_VIEW_TABS_IN_TITLEBAR:
-            SetTabsInTitlebar(win, !win->tabsInTitlebar);
-            gGlobalPrefs->tabsInTitlebar = win->tabsInTitlebar;
             break;
 
         case IDM_CHANGE_LANGUAGE:
