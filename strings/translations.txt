@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-35fe08b4c072c3decd72fd9b90c1938bb8ef0a57
+c4149d47309cc4b1be9dbdc66492696ac677efaa
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2936,9 +2936,11 @@ vn:Hiển thị
 am:&Պատուհան
 az:&Pəncərə
 bs:&Prozor
+ca:&Finestra
 cn:窗口(&W)
 cy:&Ffenestr
 de:Fe&nster
+es:&Ventana
 et:A&ken
 eu:&Leihoa
 fa:&پنجره
@@ -5228,7 +5230,7 @@ dk:Fortløbende modstående
 el:Δύο σελίδες, συνεχόμενα
 es:Página doble continua
 et:Jätkuv kaheleheküljeline
-eu:Bi Aldeetatik Jarraian
+eu:Bi aldeetatik jarraian
 fa:دو صفحه‌ای پیوسته
 fi:Peräkkäin ja rinnakkain
 fr:Vue continue, page double
@@ -6473,6 +6475,7 @@ am:Նշորդի դիրքը.
 az:Kursorun mövqeyi:
 br:Posição do cursor:
 bs:Pozicija kursora:
+ca:Posició del cursor
 cn:光标位置:
 cy:Safle'r cyrchwr:
 cz:Pozice kurzoru:
@@ -6694,7 +6697,7 @@ cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
 dk:Standard PDF-læser kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
-es:No se puede cambiar el lector PDF predeterminado en el modo «portable», sin instalación
+es:No se puede cambiar el lector PDF predeterminado en el modo portátil
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
 eu:Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu
 fa:نمی‌توان خواننده‌ی پیش‌فرض پرونده‌های PDF را در نسخه‌ی قابل حمل تغییر داد.
@@ -8185,7 +8188,7 @@ dk:Filstørrelse:
 el:Μέγεθος Αρχείου:
 es:Tamaño de archivo:
 et:Faili suurus:
-eu:Agiriaren Neurria:
+eu:Agiriaren neurria:
 fa:حجم پرونده:
 fi:Tiedoston koko:
 fr:Taille du fichier :
@@ -13898,6 +13901,7 @@ am:Նշվածը.
 az:Seçmə:
 br:Seleção:
 bs:Selekcija:
+ca:Selecció:
 cn:选择:
 cy:Dewis:
 cz:Výběr:

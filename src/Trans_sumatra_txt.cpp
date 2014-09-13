@@ -1333,7 +1333,7 @@ const char * gTranslations_eu =
   "Bateragarritasuna\0"\
   "Jarraian\0"\
   "Liburu Ikuspegi Jarraia\0"\
-  "Bi Aldeetatik Jarraian\0"\
+  "Bi aldeetatik jarraian\0"\
   "Lagundu Itzultzen\0"\
   "Kopiatu &Irudia\0"\
   "Kopiatu &Lotura Helbidea\0"\
@@ -1370,7 +1370,7 @@ const char * gTranslations_eu =
   "Gogokoenak\0"\
   "FikzioLiburu agiriak\0"\
   "%s agiria ez da aurkitu\0"\
-  "Agiriaren Neurria:\0"\
+  "Agiriaren neurria:\0"\
   "Agiria:\0"\
   "&Bilatu...\tKtrl+F\0"\
   "Bilatu\0"\
@@ -2038,7 +2038,7 @@ const char * gTranslations_ca =
   "&Omet aquesta versi\303\263\0"\
   "&Usa la mida de p\303\240gina original\0"\
   "&Visualitza\0"\
-  "\0"\
+  "&Finestra\0"\
   "&S\303\255\0"\
   "&Escalat\0"\
   "(de %d)\0"\
@@ -2086,7 +2086,7 @@ const char * gTranslations_ca =
   "No es pot representar la p\303\240gina\0"\
   "Creat:\0"\
   "Fitxer actual\0"\
-  "\0"\
+  "Posici\303\263 del cursor\0"\
   "Escala &predeterminada\342\200\246\tCtrl+Y\0"\
   "&Visualitzaci\303\263 predeterminada:\0"\
   "&Zoom predeterminat\0"\
@@ -2199,7 +2199,7 @@ const char * gTranslations_ca =
   "Selecciona-ho &tot\0"\
   "Seleccciona-ho &tot\tCtrl+A\0"\
   "Seleccioneu contigut amb la combinaci\303\263 Ctrl+bot\303\263 secundari del ratol\303\255\0"\
-  "\0"\
+  "Selecci\303\263:\0"\
   "Envia per correu-&e...\0"\
   "Cerca cap enrere\0"\
   "Mostra els &marcadors\0"\
@@ -11671,7 +11671,7 @@ const char * gTranslations_es =
   "&Ignorar esta versi\303\263n\0"\
   "&Usar el tama\303\261o original de la p\303\241gina\0"\
   "&Ver\0"\
-  "\0"\
+  "&Ventana\0"\
   "&S\303\255\0"\
   "\0"\
   "(de %d)\0"\
@@ -11723,7 +11723,7 @@ const char * gTranslations_es =
   "&Zoom personalizado...\tCtrl+Y\0"\
   "Apariencia pre&determinada:\0"\
   "Am&pliaci\303\263n predeterminada:\0"\
-  "No se puede cambiar el lector PDF predeterminado en el modo \302\253portable\302\273, sin instalaci\303\263n\0"\
+  "No se puede cambiar el lector PDF predeterminado en el modo port\303\241til\0"\
   "Permisos denegados:\0"\
   "Documentos DjVu\0"\
   "Propiedades del documento\0"\
