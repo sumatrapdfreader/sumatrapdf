@@ -4,15 +4,9 @@
 #ifndef HtmlFormatter_h
 #define HtmlFormatter_h
 
-namespace mui {
-class ITextRender;
-enum TextRenderMethod;
-struct CachedFont;
-}
-enum AlignAttr;
-enum HtmlTag;
-
 #include "EbookBase.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
 using namespace Gdiplus;
 
 // Layout information for a given page is a list of
