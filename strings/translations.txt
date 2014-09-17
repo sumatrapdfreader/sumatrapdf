@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c4149d47309cc4b1be9dbdc66492696ac677efaa
+3666feb606adb853859e7548411a63d1c3870bc4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2950,6 +2950,7 @@ he:&חלון
 hr:P&rozor
 id:&Jendela
 it:&Finestra
+ja:ウィンドウ(&W)
 ru:&Окно
 sk:&Okno
 uk:&Вікно
