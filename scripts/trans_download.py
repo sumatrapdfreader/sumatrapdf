@@ -55,11 +55,10 @@ def downloadTranslations():
     print("Download done")
     return s
 
+
 # Returns 'strings' dict that maps an original, untranslated string to
 # an array of translation, where each translation is a tuple
 # (language, text translated into this language)
-
-
 def parseTranslations(s):
     lines = [l for l in s.split("\n")[2:]]
     # strip empty lines from the end
@@ -69,6 +68,13 @@ def parseTranslations(s):
     curr_str = None
     curr_translations = None
     for l in lines:
+        #print("'%s'" % l)
+        #TODO: looks like apptranslator doesn't deal well with strings that
+        # have newlines in them. Newline at the end ends up as an empty line
+        # apptranslator should escape newlines and tabs etc. but for now
+        # skip those lines as harmless
+        if len(l) == 0:
+            continue
         if l[0] == ':':
             if curr_str != None:
                 assert curr_translations != None

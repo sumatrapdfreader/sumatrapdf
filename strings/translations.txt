@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3666feb606adb853859e7548411a63d1c3870bc4
+47745fc00317ec01e8aecdb5a1230a33731658ad
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -225,6 +225,7 @@ kr:선택한 모든 페이지(&A)
 ku:هەموو پەڕە دیاریکراوەکان&
 lt:&Visi pažymėti puslapiai
 mk:&Сите означени страници
+ml:&തിരഞ്ഞെടുത്ത താളുകളെല്ലാം
 my:&Semua mukasurat pilihan
 ne:चयन गरिएका &सबै पृष्ठहरु
 nl:&Alle geselecteerde pagina's
@@ -836,6 +837,7 @@ ku:دۆزینەوەی&:
 kw:&Kavos pyth:
 lt:&Surasti
 mk:&Најди што:
+ml:എന്തു തിരയണം
 my:&carian:
 ne:के फेला पार्ने:
 nl:&Zoek naar:
@@ -1089,6 +1091,7 @@ ku:چوون بۆ پەڕە&:
 kw:&Mos dhe folen:
 lt:&Eiti į puslapį:
 mk:&Појди на страница:
+ml:താളിലേക്ക് പോകുക
 my:&Pergi ke halaman:
 ne:&पृष्ठमा जानुहोस्
 nl:&Ga naar pagina:
@@ -1654,6 +1657,7 @@ kr:홀수 페이지만(&O)
 ku:تەنها پەڕە تاکەکان&
 lt:&Tik nelyginiai puslapiai
 mk:Само &непарни страници
+ml:ഒറ്റ സംഖ്യാ താളുകള്‍ മാത്രം
 my:&Mukasurat ganjil sahaja
 ne:&बिजोर पृष्ठ मात्र
 nl:Alleen &Oneven pagina's
@@ -1945,6 +1949,7 @@ ku:تێپەڕە ووشە&:
 kw:&Ger-tremena:
 lt:&Slaptažodis:
 mk:&Лозинка:
+ml:രഹസ്യവാക്ക്
 my:&Kata laluan
 ne:&पासवर्ड
 nl:&Wachtwoord:
@@ -3304,6 +3309,7 @@ kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
 lt:Sukurti žymą
 mk:Додај омилен
+ml:പ്രീയപ്പെട്ടതായി ചേര്‍ക്കുക
 my:Tambah pada Kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg Favoriet toe
@@ -3481,6 +3487,7 @@ kr:즐겨찾기에 추가
 ku:زیادکردن بۆ پەسەندەکان
 lt:Sukurti žymą
 mk:Додај во омилени
+ml:പ്രീയപ്പെട്ടതിലേക്ക് കൂട്ടിച്ചേര്‍ക്കുക.
 my:Tambah pada kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg toe aan favorieten
@@ -3544,6 +3551,7 @@ ku:پەرەسەندوو
 kw:Avonsyes
 lt:Kitos
 mk:Напредни
+ml:പുരോഗമിച്ചത്
 my:Lanjutan
 ne:उन्नत
 nl:Geavanceerd
@@ -3607,6 +3615,7 @@ ku:هەموو فایلەکان
 kw:Pub restren
 lt:Visi failai
 mk:Сите датотеки
+ml:എല്ലാ ഫയലുകളും
 my:Semua fail
 ne:सबै फाइलहरु
 nl:Alle bestanden
@@ -3973,6 +3982,7 @@ kr:저자:
 ku:دانەر:
 lt:Autorius:
 mk:Автор:
+ml:രചയിതാവ്
 my:Pengarang
 ne:लेखक
 nl:Auteur:
@@ -4037,6 +4047,7 @@ ku:خۆکار
 kw:Awtomatek
 lt:Automatinis
 mk:Автоматски
+ml:സ്വയമേവ.
 my:Automatik
 ne:स्वत:
 nl:Automatisch
@@ -4098,6 +4109,7 @@ ku:پشکنین بۆ نوێکردنەوە بە &خۆکاری
 kw:Checkya rag nowythyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
 mk:Проверувај за &надградби автоматски
+ml:പുതിയ പതിപ്പുണ്ടോയെന്ന് സ്വയം പരിശോധിയ്ക്കുക
 my:Semak &kemas kini secara automatik
 ne:&अद्यावधिकहरु स्वतः जाँच्नुहोस्
 nl:Automatisch controleren op &updates
@@ -4397,6 +4409,7 @@ kr:책갈피
 ku:نیشانەکراوەکان
 lt:Žymės
 mk:Обележувачи
+ml:അടയാളം വയ്ക്കുക
 my:Penanda
 ne:पुस्तकचिनो
 nl:Bladwijzers
@@ -4457,6 +4470,7 @@ kr:바이트
 ku:بایت
 lt:baitų
 mk:бајти
+ml:Bytes
 my:Bytes
 ne:बाईट
 nl:Bytes
@@ -4636,6 +4650,7 @@ ku:پاشگەزبونەوە
 kw:Hedhi
 lt:Atsisakyti
 mk:Откажи
+ml:വേണ്ടാ
 my:Batal
 ne:रद्द गर्नुहोस्
 nl:Annuleren
@@ -4699,6 +4714,7 @@ ku:ناتوانرێت ئەم فایلە چاپ بکرێت
 kw:Ny yllir pryntya an restren ma
 lt:Nepavyko išspausdinti failo
 mk:Не можам да ја печатам оваа датотека
+ml:ഈ ഫയല്‍ അച്ചടിക്കാന്‍ പറ്റില്ല.
 my:Tidak boleh cetak fail ini
 ne:यो फाइल छाप्न सकिंदैन
 nl:Dit bestand kan niet worden afgedrukt
@@ -4822,6 +4838,7 @@ ku:گۆڕینی زمان (Change Language)
 kw:Chanjya yeth (Change Language)
 lt:Keisti kalbą (Change Language)
 mk:Смени јазик (Change Language)
+ml:ഭാഷ മാറ്റുക
 mm:စာ စကား ပြောင်းရန် (Change Language)
 my:Tukar bahasa (Change Language)
 ne:भाषा परिवर्तन गर्नुहोस् (Change Language)
@@ -4950,6 +4967,7 @@ ja:閉じる
 kr:닫기
 ku:داخستن
 mk:Затвори
+ml:അടയ്ക്കുക
 my:Tutup
 nl:Sluiten
 pl:Zamknij
@@ -5611,6 +5629,7 @@ ja:コピーライト:
 kr:저작권:
 ku:مافی لەبەرگرتنەوە:
 mk:Авторско право:
+ml:പകര്‍പ്പവകാശം
 my:Hakcipta
 ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
@@ -6389,6 +6408,7 @@ kr:만든 날짜:
 ku:دروستکراو:
 lt:Sukurtas:
 mk:Создадено на:
+ml:സൃഷ്ടിച്ചു
 my:Dicipta:
 ne:सिर्जना गरिएको:
 nl:Gemaakt:
@@ -6449,6 +6469,7 @@ kr:현재 파일
 ku:فایلی ئێستا
 lt:Esamasis failas
 mk:Активна датотека
+ml:നിലവിലെ ഫയല്‍
 my:Fail semasa
 ne:हालको फाइल
 nl:Huidig bestand
@@ -7082,6 +7103,7 @@ kr:ePub 문서
 ku:EPUB پەرتووکە ئەلکترۆنیەکانی
 lt:EPUB dokumentai
 mk:EPUB-е-книги
+ml:EPUB പുസ്തകങ്ങള്‍
 my:Ebook EPUB
 ne:EPUB ई-पुस्तकहरु
 nl:EPUB-bestanden
@@ -7142,6 +7164,7 @@ ku:تێپەڕە ووشە بنوسە
 kw:Ri ger-tremena
 lt:Įveskite slaptažodį
 mk:Внеси лозинка
+ml:രഹസ്യവാക്ക് നള്‍കുക
 mm:လျှို့ဝှက် ထည့်သွင်းရန်
 my:Masukkan kata laluan
 ne:पासवर्ड भर्नुहोस्
@@ -8046,6 +8069,7 @@ kr:즐겨찾기
 ku:پەسەندەکان
 lt:Parankiniai
 mk:Омилени
+ml:പ്രിയപ്പെട്ടത്
 my:Kegemaran
 ne:मनपर्नेहरु
 nl:Favorieten
@@ -8208,6 +8232,7 @@ kr:파일 크기:
 ku:قەبارەی فایل:
 lt:Failo dydis:
 mk:Големина на датотека:
+ml:ഫയല്‍ വലുപ്പം
 my:Saiz fail:
 ne:फाइल साइज
 nl:Bestandsgrootte
@@ -8266,6 +8291,7 @@ kr:파일:
 ku:فایل:
 lt:Failas:
 mk:Датотека:
+ml:ഫയല്‍
 my:Fail:
 ne:फाइल:
 nl:Bestand:
@@ -8394,6 +8420,7 @@ ku:دۆزینەوە
 kw:Kavos
 lt:Ieškoti
 mk:Најди
+ml:തിരയുക.
 my:Cari
 ne:फेला पार्नुहोस्
 nl:Zoeken
@@ -8908,7 +8935,7 @@ ku:گونجاندنی پەڕە
 kw:Desedha Folen
 lt:Visas puslapis
 mk:Прилагоди на страница
-ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക
+ml:താളില്‍ ഉള്‍ക്കൊള്ളിക്കുക
 mm:စာမျက်နှာ ပြည့်
 my:Muatkan mukasurat
 ne:पृष्ठ अटाउनुहोस्
@@ -9096,6 +9123,7 @@ kr:한 페이지 맞춤
 ku:گونجاندنی یەک پەڕە
 lt:Visas puslapis
 mk:Прилагоди на поединечна страница
+ml:ഒരൊറ്റ താള്‍ ഉള്‍ക്കൊള്ളിക്കുക
 my:Muatkan Halaman Tunggal
 ne:एकल पृष्ठ अटाउनुहोस्
 nl:Hele pagina passend maken
@@ -9151,6 +9179,7 @@ ja:フォント:
 kr:글꼴:
 ku:فۆنت:
 mk:Букви:
+ml:ലിപികള്‍
 my:Fon:
 ne:फन्टहरू:
 nl:Lettertypen:
@@ -9375,6 +9404,7 @@ kr:최근에 읽은 파일
 ku:زۆرترین خوێندراوە
 lt:Dažniausiai skaitomi
 mk:Често читани
+ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
 ne:प्रायजसो पढिएको
 nl:Eerder Gelezen
@@ -9503,6 +9533,7 @@ ku:چوون بۆ پەڕە
 kw:Mos dhe folen
 lt:Eiti į puslapį
 mk:Појди на страница
+ml:താളിലേക്ക് പോകുക
 mm:သွားရန် စာမျက်နှာ
 my:Pergi ke mukasurat
 ne:पृष्ठमा जानुहोस्
@@ -10542,6 +10573,7 @@ kr:고친 날짜:
 ku:دەستکاریکراو:
 lt:Keistas:
 mk:Изменето на:
+ml:പരിഷ്കരിച്ചത്
 my:Diubah:
 ne:परिमार्जित:
 nl:Aangepast:
@@ -10736,6 +10768,7 @@ ku:هیچ ئەنجامێک نەدۆزرایەوە
 kw:Ny veu keyvys par vyth
 lt:Nerasta atitikmenų
 mk:Не се пронајдени совпаѓања
+ml:തുല്യമായത് കണ്ടില്ല
 my:Tiada padanan dijumpai
 ne:जोडाहरु प्राप्त भएन
 nl:Geen zoekresultaat gevonden
@@ -10971,6 +11004,7 @@ kr:페이지 수:
 ku:ژمارەی پەڕەکان:
 lt:Puslapių skaičius:
 mk:Број на страници:
+ml:താളുകളുടെ എണ്ണം
 my:Jumlah mukasurat:
 ne:पृष्ठ संख्या:
 nl:Aantal pagina's:
@@ -11032,6 +11066,7 @@ ku:باشە
 kw:Da lowr
 lt:Gerai
 mk:Во ред
+ml:ശരി
 my:OK
 ne:ठीक
 nl:OK
@@ -12093,6 +12128,7 @@ kr:페이지 크기:
 ku:قەبارەی پەڕە:
 lt:Puslapio dydis:
 mk:Големина на страница:
+ml:താള്‍ വലുപ്പം
 my:Saiz mukasurat
 ne:पृष्ठ साइज:
 nl:Paginagrootte:
@@ -12271,6 +12307,7 @@ ku:پەڕە:
 kw:Folen:
 lt:Puslapis:
 mk:Страница:
+ml:താള്‍
 mm:စာ မျက်နှာ
 my:Mukasurat:
 ne:पृष्ठ:
@@ -12619,6 +12656,7 @@ kr:인쇄
 ku:چاپکردن
 lt:Spausdinti
 mk:Печати
+ml:അച്ചടിയ്ക്കുക.
 my:Cetak
 ne:छाप्नुहोस्
 nl:Afdrukken
@@ -12836,6 +12874,7 @@ ja:印刷を実行中です。
 kr:인쇄 작업 중입니다.
 ku:چاپکردن لە ئەنجامداندایە
 mk:Печатењето е во тек.
+ml:അച്ചടി പുരോഗമിക്കുന്നു
 my:Cetakan sedang dijalankan.
 nl:Aan het printen.
 pl:Trwa drukowanie.
@@ -15575,6 +15614,7 @@ kr:제목:
 ku:ناونیشان:
 lt:Pavadinimas:
 mk:Наслов:
+ml:തലക്കെട്ട്
 my:Tajuk:
 ne:शीर्षक:
 nl:Titel:
@@ -15628,6 +15668,7 @@ ja:SumatraPDFをアンインストール
 kr:SumatraPDF 제거
 ku:سڕینەوەی SumatraPDF
 mk:Избриши SumatraPDF
+ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
 my:Membuang SumatraPDF
 nl:Deinstalleer SumatraPDF
 pl:Usuń SumatraPDF
@@ -16051,6 +16092,7 @@ ku:ئاگادارکردنەوە
 kw:Gwarnyans
 lt:Įspėjimas
 mk:Предупредување
+ml:മുന്നറിയിപ്പ്
 my:Amaran
 ne:चेतावनी
 nl:Waarschuwing
@@ -16616,6 +16658,7 @@ kr:문자열 복사하는 중...
 ku:لەبەرگرتنەوەی دەق
 lt:kopijuojamas tekstas
 mk:копирам текст
+ml:വാക്യങ്ങള്‍ പകര്‍ത്തിക്കൊണ്ടിരിക്കുന്നു.
 my:menyalin teks
 ne:पाठ प्रतिलिपि बनाईदैछ
 nl:tekst kopiëren
