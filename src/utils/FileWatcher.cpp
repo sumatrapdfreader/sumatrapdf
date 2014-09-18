@@ -15,6 +15,9 @@
 This code is tricky, so here's a high-level overview. More info at:
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
 
+Also, we did have a bug caused by incorrect use of CancelIo(). Here's a good
+description of its intricacies: http://blogs.msdn.com/b/oldnewthing/archive/2011/02/02/10123392.aspx
+
 We use ReadDirectoryChangesW() with overlapped i/o and i/o completion
 callback function.
 
