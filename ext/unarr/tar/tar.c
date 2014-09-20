@@ -12,7 +12,6 @@ static void tar_close(ar_archive *ar)
 static bool tar_parse_entry(ar_archive *ar, off64_t offset)
 {
     ar_archive_tar *tar = (ar_archive_tar *)ar;
-    char *longname;
 
     if (!ar_seek(ar->stream, offset, SEEK_SET)) {
         warn("Couldn't seek to offset %" PRIi64, offset);
@@ -40,31 +39,13 @@ static bool tar_parse_entry(ar_archive *ar, off64_t offset)
     case TYPE_DIRECTORY:
         log("Skipping directory entry \"%s\"", tar_get_name(ar));
         return tar_parse_entry(ar, ar->entry_offset_next);
-    case TYPE_LONGNAME:
-        longname = malloc(tar->entry.filesize + 1);
-        if (!longname) {
-            log("Falling back to the short filename on OOM");
-            return tar_parse_entry(ar, ar->entry_offset_next);
-        }
-        if (!ar_entry_uncompress(ar, longname, tar->entry.filesize)) {
-            free(longname);
-            return false;
-        }
-        longname[tar->entry.filesize] = '\0';
-        if (!tar_parse_entry(ar, ar->entry_offset_next)) {
-            free(longname);
-            return false;
-        }
-        ar->entry_offset = offset;
-        /* name could be in any encoding, assume UTF-8 or whatever (DOS) */
-        if (ar_is_valid_utf8(longname)) {
-            tar->entry.name = longname;
-        }
-        else {
-            tar->entry.name = ar_conv_dos_to_utf8(longname);
-            free(longname);
-        }
+    case TYPE_PAX_GLOBAL:
+        log("Skipping PAX global extended header record");
         return true;
+    case TYPE_PAX_EXTENDED:
+        return tar_handle_pax_extended(ar);
+    case TYPE_GNU_LONGNAME:
+        return tar_handle_gnu_longname(ar);
     default:
         warn("Unknown entry type '%c'", tar->entry.filetype);
         return true;

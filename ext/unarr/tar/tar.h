@@ -16,7 +16,8 @@ enum tar_filetype {
     TYPE_FILE = '0', TYPE_FILE_OLD = '\0',
     TYPE_HARD_LINK = '1', TYPE_SOFT_LINK = '2',
     TYPE_DIRECTORY = '5',
-    TYPE_LONGNAME = 'L',
+    TYPE_GNU_LONGNAME = 'L',
+    TYPE_PAX_GLOBAL = 'g', TYPE_PAX_EXTENDED = 'x',
 };
 
 struct tar_entry {
@@ -29,7 +30,8 @@ struct tar_entry {
 };
 
 bool tar_parse_header(ar_archive_tar *tar);
-bool ar_is_valid_utf8(const char *string);
+bool tar_handle_pax_extended(ar_archive *ar);
+bool tar_handle_gnu_longname(ar_archive *ar);
 const char *tar_get_name(ar_archive *ar);
 
 /***** tar *****/

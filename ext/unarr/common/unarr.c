@@ -54,7 +54,7 @@ bool ar_parse_entry_for(ar_archive *ar, const char *entry_name)
         return false;
     do {
         const char *name = ar_entry_get_name(ar);
-        if (name && !strcmp(name, entry_name))
+        if (name && strcmp(name, entry_name) == 0)
             return true;
     } while (ar_parse_entry(ar));
     return false;

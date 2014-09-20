@@ -15,7 +15,7 @@ ar_archive *ar_open_any_archive(ar_stream *stream, const char *fileext)
 {
     ar_archive *ar = ar_open_rar_archive(stream);
     if (!ar)
-        ar = ar_open_zip_archive(stream, fileext && (!strcmp(fileext, ".xps") || !strcmp(fileext, ".epub")));
+        ar = ar_open_zip_archive(stream, fileext && (strcmp(fileext, ".xps") == 0 || strcmp(fileext, ".epub") == 0));
     if (!ar)
         ar = ar_open_7z_archive(stream);
     if (!ar)
