@@ -252,6 +252,7 @@ pdf_run_keyword(pdf_csi *csi, char *buf)
 		}
 		fz_catch(ctx)
 		{
+			fz_rethrow_if(ctx, FZ_ERROR_ABORT);
 			switch (op)
 			{
 			case PDF_OP_Do:
@@ -453,16 +454,22 @@ pdf_process_stream(pdf_csi *csi, pdf_lexbuf *buf)
 		}
 		fz_catch(ctx)
 		{
+			int caught;
+
 			if (!csi->cookie)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
 			}
-			else if (fz_caught(ctx) == FZ_ERROR_TRYLATER)
+			else if ((caught = fz_caught(ctx)) == FZ_ERROR_TRYLATER)
 			{
 				if (csi->cookie->incomplete_ok)
 					csi->cookie->incomplete++;
 				else
 					fz_rethrow(ctx);
+			}
+			else if (caught == FZ_ERROR_ABORT)
+			{
+				fz_rethrow(ctx);
 			}
 			else
 			{
@@ -527,6 +534,7 @@ pdf_process_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	fz_catch(ctx)
 	{
 		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+		fz_rethrow_if(ctx, FZ_ERROR_ABORT);
 		fz_warn(ctx, "Content stream parsing error - rendering truncated");
 	}
 }
@@ -625,6 +633,7 @@ pdf_process_stream_object(pdf_document *doc, pdf_obj *obj, const pdf_process *pr
 	}
 	fz_catch(ctx)
 	{
+		fz_rethrow_if(ctx, FZ_ERROR_ABORT);
 		fz_rethrow_message(ctx, "cannot parse content stream");
 	}
 }
@@ -646,6 +655,7 @@ pdf_process_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, pd
 	}
 	fz_catch(ctx)
 	{
+		fz_rethrow_if(ctx, FZ_ERROR_ABORT);
 		fz_rethrow_message(ctx, "cannot parse glyph content stream");
 	}
 }

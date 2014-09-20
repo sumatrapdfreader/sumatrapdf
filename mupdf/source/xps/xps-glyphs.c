@@ -446,13 +446,13 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 
 	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(fz_xml_tag(node), "Glyphs.RenderTransform"))
+		if (fz_xml_is_tag(node, "Glyphs.RenderTransform"))
 			transform_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "Glyphs.OpacityMask"))
+		if (fz_xml_is_tag(node, "Glyphs.OpacityMask"))
 			opacity_mask_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "Glyphs.Clip"))
+		if (fz_xml_is_tag(node, "Glyphs.Clip"))
 			clip_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "Glyphs.Fill"))
+		if (fz_xml_is_tag(node, "Glyphs.Fill"))
 			fill_tag = fz_xml_down(node);
 	}
 

@@ -13,7 +13,7 @@ xps_lookup_alternate_content(fz_xml *node)
 {
 	for (node = fz_xml_down(node); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(fz_xml_tag(node), "Choice") && fz_xml_att(node, "Requires"))
+		if (fz_xml_is_tag(node, "Choice") && fz_xml_att(node, "Requires"))
 		{
 			char list[64];
 			char *next = list, *item;
@@ -22,7 +22,7 @@ xps_lookup_alternate_content(fz_xml *node)
 			if (!item)
 				return fz_xml_down(node);
 		}
-		else if (!strcmp(fz_xml_tag(node), "Fallback"))
+		else if (fz_xml_is_tag(node, "Fallback"))
 			return fz_xml_down(node);
 	}
 	return NULL;
@@ -34,13 +34,13 @@ xps_parse_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, ch
 	if (doc->cookie && doc->cookie->abort)
 		return;
 	/* SolidColorBrushes are handled in a special case and will never show up here */
-	if (!strcmp(fz_xml_tag(node), "ImageBrush"))
+	if (fz_xml_is_tag(node, "ImageBrush"))
 		xps_parse_image_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(fz_xml_tag(node), "VisualBrush"))
+	else if (fz_xml_is_tag(node, "VisualBrush"))
 		xps_parse_visual_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(fz_xml_tag(node), "LinearGradientBrush"))
+	else if (fz_xml_is_tag(node, "LinearGradientBrush"))
 		xps_parse_linear_gradient_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(fz_xml_tag(node), "RadialGradientBrush"))
+	else if (fz_xml_is_tag(node, "RadialGradientBrush"))
 		xps_parse_radial_gradient_brush(doc, ctm, area, base_uri, dict, node);
 	else
 		fz_warn(doc->ctx, "unknown brush tag: %s", fz_xml_tag(node));
@@ -51,13 +51,13 @@ xps_parse_element(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, 
 {
 	if (doc->cookie && doc->cookie->abort)
 		return;
-	if (!strcmp(fz_xml_tag(node), "Path"))
+	if (fz_xml_is_tag(node, "Path"))
 		xps_parse_path(doc, ctm, base_uri, dict, node);
-	if (!strcmp(fz_xml_tag(node), "Glyphs"))
+	if (fz_xml_is_tag(node, "Glyphs"))
 		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
-	if (!strcmp(fz_xml_tag(node), "Canvas"))
+	if (fz_xml_is_tag(node, "Canvas"))
 		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
-	if (!strcmp(fz_xml_tag(node), "AlternateContent"))
+	if (fz_xml_is_tag(node, "AlternateContent"))
 	{
 		node = xps_lookup_alternate_content(node);
 		if (node)
@@ -159,7 +159,7 @@ xps_parse_matrix_transform(xps_document *doc, fz_xml *root, fz_matrix *matrix)
 
 	*matrix = fz_identity;
 
-	if (!strcmp(fz_xml_tag(root), "MatrixTransform"))
+	if (fz_xml_is_tag(root, "MatrixTransform"))
 	{
 		transform = fz_xml_att(root, "Matrix");
 		if (transform)

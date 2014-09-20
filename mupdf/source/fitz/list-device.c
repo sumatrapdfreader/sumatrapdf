@@ -873,6 +873,8 @@ visible:
 			/* Swallow the error */
 			if (cookie)
 				cookie->errors++;
+			if (fz_caught(ctx) == FZ_ERROR_ABORT)
+				break;
 			fz_warn(ctx, "Ignoring error during interpretation");
 		}
 	}

@@ -51,7 +51,7 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, fz_xml *node,
 	count = 0;
 	while (node && count < maxcount)
 	{
-		if (!strcmp(fz_xml_tag(node), "GradientStop"))
+		if (fz_xml_is_tag(node, "GradientStop"))
 		{
 			char *offset = fz_xml_att(node, "Offset");
 			char *color = fz_xml_att(node, "Color");
@@ -463,13 +463,13 @@ xps_parse_gradient_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect 
 
 	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(fz_xml_tag(node), "LinearGradientBrush.Transform"))
+		if (fz_xml_is_tag(node, "LinearGradientBrush.Transform"))
 			transform_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "RadialGradientBrush.Transform"))
+		if (fz_xml_is_tag(node, "RadialGradientBrush.Transform"))
 			transform_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "LinearGradientBrush.GradientStops"))
+		if (fz_xml_is_tag(node, "LinearGradientBrush.GradientStops"))
 			stop_tag = fz_xml_down(node);
-		if (!strcmp(fz_xml_tag(node), "RadialGradientBrush.GradientStops"))
+		if (fz_xml_is_tag(node, "RadialGradientBrush.GradientStops"))
 			stop_tag = fz_xml_down(node);
 	}
 

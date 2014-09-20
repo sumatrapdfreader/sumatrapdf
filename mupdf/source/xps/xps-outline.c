@@ -22,7 +22,7 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 	int last_level = 1, this_level;
 	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(fz_xml_tag(node), "OutlineEntry"))
+		if (fz_xml_is_tag(node, "OutlineEntry"))
 		{
 			char *level = fz_xml_att(node, "OutlineLevel");
 			char *target = fz_xml_att(node, "OutlineTarget");
@@ -84,13 +84,13 @@ static fz_outline *
 xps_parse_document_structure(xps_document *doc, fz_xml *root)
 {
 	fz_xml *node;
-	if (!strcmp(fz_xml_tag(root), "DocumentStructure"))
+	if (fz_xml_is_tag(root, "DocumentStructure"))
 	{
 		node = fz_xml_down(root);
-		if (node && !strcmp(fz_xml_tag(node), "DocumentStructure.Outline"))
+		if (node && fz_xml_is_tag(node, "DocumentStructure.Outline"))
 		{
 			node = fz_xml_down(node);
-			if (node && !strcmp(fz_xml_tag(node), "DocumentOutline"))
+			if (node && fz_xml_is_tag(node, "DocumentOutline"))
 				return xps_parse_document_outline(doc, node);
 		}
 	}
@@ -107,7 +107,7 @@ xps_load_document_structure(xps_document *doc, xps_fixdoc *fixdoc)
 	part = xps_read_part(doc, fixdoc->outline);
 	fz_try(doc->ctx)
 	{
-		root = fz_parse_xml(doc->ctx, part->data, part->size);
+		root = fz_parse_xml(doc->ctx, part->data, part->size, 0);
 	}
 	fz_always(doc->ctx)
 	{

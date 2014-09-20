@@ -462,8 +462,11 @@ EXPORTS
 
 
 	fz_parse_xml
+	fz_xml_prev
 	fz_xml_next
+	fz_xml_up
 	fz_xml_down
+	fz_xml_is_tag
 	fz_xml_tag
 	fz_xml_att
 	fz_xml_text

@@ -38,6 +38,7 @@ fz_test_color(fz_device *dev, fz_colorspace *colorspace, const float *color)
 			{
 				*t->is_color = 1;
 				dev->hints |= FZ_IGNORE_IMAGE;
+				fz_throw(ctx, FZ_ERROR_ABORT, "Page found as color; stopping interpretation");
 			}
 		}
 		else
@@ -48,6 +49,7 @@ fz_test_color(fz_device *dev, fz_colorspace *colorspace, const float *color)
 			{
 				*t->is_color = 1;
 				dev->hints |= FZ_IGNORE_IMAGE;
+				fz_throw(ctx, FZ_ERROR_ABORT, "Page found as color; stopping interpretation");
 			}
 		}
 	}
@@ -150,6 +152,8 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 				{
 					*t->is_color = 1;
 					dev->hints |= FZ_IGNORE_IMAGE;
+					fz_close(stream);
+					fz_throw(ctx, FZ_ERROR_ABORT, "Page found as color; stopping interpretation");
 					break;
 				}
 			}
@@ -199,6 +203,8 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 			{
 				*t->is_color = 1;
 				dev->hints |= FZ_IGNORE_IMAGE;
+				fz_drop_pixmap(ctx, pix);
+				fz_throw(ctx, FZ_ERROR_ABORT, "Page found as color; stopping interpretation");
 				break;
 			}
 			s += 4;
@@ -226,6 +232,8 @@ fz_test_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float 
 			{
 				*t->is_color = 1;
 				dev->hints |= FZ_IGNORE_IMAGE;
+				fz_drop_pixmap(ctx, pix);
+				fz_throw(ctx, FZ_ERROR_ABORT, "Page found as color; stopping interpretation");
 				break;
 			}
 		}

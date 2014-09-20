@@ -158,14 +158,17 @@ void fz_throw_imp(fz_context *ctx, char *file, int line, int code, const char *f
 	vsnprintf(ctx->error->message, sizeof ctx->error->message, fmt, args);
 	va_end(args);
 
-	fz_flush_warnings(ctx);
-	fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
-	LOGE("error: %s\n", ctx->error->message);
+	if (code != FZ_ERROR_ABORT)
+	{
+		fz_flush_warnings(ctx);
+		fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
+		LOGE("error: %s\n", ctx->error->message);
 #ifdef USE_OUTPUT_DEBUG_STRING
-	OutputDebugStringA("error: ");
-	OutputDebugStringA(ctx->error->message);
-	OutputDebugStringA("\n");
+		OutputDebugStringA("error: ");
+		OutputDebugStringA(ctx->error->message);
+		OutputDebugStringA("\n");
 #endif
+	}
 
 	throw(ctx->error);
 }
@@ -187,14 +190,17 @@ void fz_rethrow_message_imp(fz_context *ctx, char *file, int line, const char *f
 	vsnprintf(ctx->error->message, sizeof ctx->error->message, fmt, args);
 	va_end(args);
 
-	fz_flush_warnings(ctx);
-	fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
-	LOGE("error: %s\n", ctx->error->message);
+	if (ctx->error->errcode != FZ_ERROR_ABORT)
+	{
+		fz_flush_warnings(ctx);
+		fprintf(stderr, "! %s:%d: %s\n", get_base_name(file), line, ctx->error->message);
+		LOGE("error: %s\n", ctx->error->message);
 #ifdef USE_OUTPUT_DEBUG_STRING
-	OutputDebugStringA("error: ");
-	OutputDebugStringA(ctx->error->message);
-	OutputDebugStringA("\n");
+		OutputDebugStringA("error: ");
+		OutputDebugStringA(ctx->error->message);
+		OutputDebugStringA("\n");
 #endif
+	}
 
 	throw(ctx->error);
 }

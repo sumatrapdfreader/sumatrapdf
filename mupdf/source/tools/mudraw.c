@@ -467,12 +467,22 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	{
 		int iscolor;
 		dev = fz_new_test_device(ctx, &iscolor, 0.02f);
-		if (list)
-			fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, NULL);
-		else
-			fz_run_page(doc, page, dev, &fz_identity, &cookie);
-		fz_free_device(dev);
-		dev = NULL;
+		fz_try(ctx)
+		{
+			if (list)
+				fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, NULL);
+			else
+				fz_run_page(doc, page, dev, &fz_identity, &cookie);
+		}
+		fz_always(ctx)
+		{
+			fz_free_device(dev);
+			dev = NULL;
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
 		printf(" %s", iscolor ? "color" : "grayscale");
 	}
 

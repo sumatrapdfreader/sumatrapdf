@@ -3370,7 +3370,7 @@ xps_open_and_parse(xps_document *doc, char *path)
     xps_part *part = xps_read_part(doc, path);
 
     fz_try(doc->ctx) {
-        root = fz_parse_xml(doc->ctx, part->data, part->size);
+        root = fz_parse_xml(doc->ctx, part->data, part->size, 0);
     }
     fz_always(doc->ctx) {
         xps_free_part(doc, part);
@@ -3409,14 +3409,14 @@ xps_extract_doc_props(xps_document *doc)
 {
     fz_xml *root = xps_open_and_parse(doc, "/_rels/.rels");
 
-    if (!root || !str::Eq(fz_xml_tag(root), "Relationships")) {
+    if (!root || !fz_xml_is_tag(root, "Relationships")) {
         fz_free_xml(doc->ctx, root);
         fz_throw(doc->ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
     }
 
     bool has_correct_root = false;
     for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
-        if (str::Eq(fz_xml_tag(item), "Relationship") &&
+        if (fz_xml_is_tag(item, "Relationship") &&
             str::Eq(fz_xml_att(item, "Type"), REL_CORE_PROPERTIES) && fz_xml_att(item, "Target")) {
             char path[1024];
             xps_resolve_url(path, "", fz_xml_att(item, "Target"), nelem(path));
@@ -3435,15 +3435,15 @@ xps_extract_doc_props(xps_document *doc)
     xps_doc_props *props = new xps_doc_props();
 
     for (fz_xml *item = fz_xml_down(root); item; item = fz_xml_next(item)) {
-        if (str::Eq(fz_xml_tag(item), /*"dc:"*/"title") && !props->title)
+        if (fz_xml_is_tag(item, /*"dc:"*/"title") && !props->title)
             props->title.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), /*"dc:"*/"creator") && !props->author)
+        else if (fz_xml_is_tag(item, /*"dc:"*/"creator") && !props->author)
             props->author.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), /*"dc:"*/"subject") && !props->subject)
+        else if (fz_xml_is_tag(item, /*"dc:"*/"subject") && !props->subject)
             props->subject.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), /*"dcterms:"*/"created") && !props->creation_date)
+        else if (fz_xml_is_tag(item, /*"dcterms:"*/"created") && !props->creation_date)
             props->creation_date.Set(xps_get_core_prop(doc->ctx, item));
-        else if (str::Eq(fz_xml_tag(item), /*"dcterms:"*/"modified") && !props->modification_date)
+        else if (fz_xml_is_tag(item, /*"dcterms:"*/"modified") && !props->modification_date)
             props->modification_date.Set(xps_get_core_prop(doc->ctx, item));
     }
     fz_free_xml(doc->ctx, root);

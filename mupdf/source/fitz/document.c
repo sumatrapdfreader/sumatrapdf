@@ -244,14 +244,38 @@ void
 fz_run_page_contents(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	if (doc && doc->run_page_contents && page)
-		doc->run_page_contents(doc, page, dev, transform, cookie);
+	{
+		fz_context *ctx = dev->ctx;
+
+		fz_try(ctx)
+		{
+			doc->run_page_contents(doc, page, dev, transform, cookie);
+		}
+		fz_catch(ctx)
+		{
+			if (fz_caught(ctx) != FZ_ERROR_ABORT)
+				fz_rethrow(ctx);
+		}
+	}
 }
 
 void
 fz_run_annot(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	if (doc && doc->run_annot && page && annot)
-		doc->run_annot(doc, page, annot, dev, transform, cookie);
+	{
+		fz_context *ctx = dev->ctx;
+
+		fz_try(ctx)
+		{
+			doc->run_annot(doc, page, annot, dev, transform, cookie);
+		}
+		fz_catch(ctx)
+		{
+			if (fz_caught(ctx) != FZ_ERROR_ABORT)
+				fz_rethrow(ctx);
+		}
+	}
 }
 
 void
