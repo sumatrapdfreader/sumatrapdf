@@ -40,6 +40,7 @@ struct ar_archive_tar_s {
     ar_archive super;
     struct tar_entry entry;
     size_t bytes_done;
+    off64_t last_seen_dir;
 };
 
 #endif

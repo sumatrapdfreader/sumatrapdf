@@ -128,6 +128,10 @@ bool tar_handle_pax_extended(ar_archive *ar)
         free(data);
         return false;
     }
+    if (tar->last_seen_dir > offset) {
+        free(data);
+        return true;
+    }
 
     line = data;
     while (line < data + size) {
@@ -191,6 +195,10 @@ bool tar_handle_gnu_longname(ar_archive *ar)
     if (!ar_entry_uncompress(ar, longname, size) || !ar_parse_entry(ar)) {
         free(longname);
         return false;
+    }
+    if (tar->last_seen_dir > offset) {
+        free(longname);
+        return true;
     }
     if (tar->entry.name) {
         log("Skipping GNU long filename in favor of PAX name");

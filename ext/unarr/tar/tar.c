@@ -32,16 +32,20 @@ static bool tar_parse_entry(ar_archive *ar, off64_t offset)
     ar->entry_filetime = tar->entry.mtime;
     tar->bytes_done = 0;
 
+    if (tar->last_seen_dir > offset)
+        tar->last_seen_dir = 0;
+
     switch (tar->entry.filetype) {
     case TYPE_FILE:
     case TYPE_FILE_OLD:
         return true;
     case TYPE_DIRECTORY:
         log("Skipping directory entry \"%s\"", tar_get_name(ar));
+        tar->last_seen_dir = ar->entry_offset;
         return tar_parse_entry(ar, ar->entry_offset_next);
     case TYPE_PAX_GLOBAL:
         log("Skipping PAX global extended header record");
-        return true;
+        return tar_parse_entry(ar, ar->entry_offset_next);
     case TYPE_PAX_EXTENDED:
         return tar_handle_pax_extended(ar);
     case TYPE_GNU_LONGNAME:
