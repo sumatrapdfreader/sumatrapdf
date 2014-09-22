@@ -2309,6 +2309,9 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
                 ScopedCritSec scope(&ctxAccess);
 
                 ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+                // TODO: use separate classes for comments and tooltips?
+                if (str::IsEmpty(contents.Get()) && FZ_ANNOT_WIDGET == annot->annot_type)
+                    contents.Set(str::conv::FromPdf(pdf_dict_gets(annot->obj, "TU")));
                 return new PdfComment(contents, fz_rect_to_RectD(rect), pageNo);
             }
         }
@@ -2348,6 +2351,8 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
             fz_rect rect = annot->rect;
             fz_transform_rect(&rect, &page->ctm);
             ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+            if (str::IsEmpty(contents.Get()) && FZ_ANNOT_WIDGET == annot->annot_type)
+                contents.Set(str::conv::FromPdf(pdf_dict_gets(annot->obj, "TU")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
         }
     }
@@ -2424,6 +2429,10 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
         }
         else if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) && annot->annot_type != FZ_ANNOT_FREETEXT) {
             annots.Append(annot);
+        }
+        else if (FZ_ANNOT_WIDGET == annot->annot_type && !str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "TU")))) {
+            if (!(pdf_to_int(pdf_dict_gets(annot->obj, "Ff")) & Ff_ReadOnly))
+                annots.Append(annot);
         }
     }
 

@@ -1512,6 +1512,21 @@ pdf_create_freetext_annot(pdf_document *doc, pdf_obj *obj)
 }
 
 static pdf_annot *
+pdf_create_widget_annot(pdf_document *doc, pdf_obj *obj)
+{
+	fz_context *ctx = doc->ctx;
+	fz_rect rect;
+
+	/* TODO: synthesize a full appearance stream */
+	if (!pdf_is_string(pdf_dict_gets(obj, "TU")))
+		return NULL;
+
+	pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"), &rect);
+
+	return pdf_create_annot_ex(doc, &rect, pdf_keep_obj(obj), fz_new_buffer(ctx, 0), NULL, 0, FZ_ANNOT_WIDGET);
+}
+
+static pdf_annot *
 pdf_create_annot_with_appearance(pdf_document *doc, pdf_obj *obj)
 {
 	fz_annot_type annot_type = pdf_annot_obj_type(obj);
@@ -1532,6 +1547,8 @@ pdf_create_annot_with_appearance(pdf_document *doc, pdf_obj *obj)
 		return pdf_create_markup_annot(doc, obj, annot_type);
 	case FZ_ANNOT_FREETEXT:
 		return pdf_create_freetext_annot(doc, obj);
+	case FZ_ANNOT_WIDGET:
+		return pdf_create_widget_annot(doc, obj);
 	default:
 		return NULL;
 	}
