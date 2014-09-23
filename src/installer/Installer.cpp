@@ -72,7 +72,8 @@ Color            COLOR_MSG_FAILED(gCol1);
 WCHAR *gSupportedExts[] = {
     L".pdf", L".xps", L".oxps",
     L".cbz", L".cbr", L".cb7", L".cbt",
-    L".djvu", L".chm", L".mobi", L".epub",
+    L".djvu", L".chm",
+    L".mobi", L".epub", L".fb2", L".fb2z",
     NULL
 };
 
