@@ -643,6 +643,30 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
+static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode)
+{
+    CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
+    if (!(devMode->dmFields & DM_DEFAULTSOURCE))
+        return devMode->dmDefaultSource;
+    DWORD count = DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINS, NULL, NULL);
+    DWORD count2 = DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINNAMES, NULL, NULL);
+    if (count != count2 || 0 == count)
+        return devMode->dmDefaultSource;
+    // try to determine the paper bin number by name
+    ScopedMem<WORD> bins(AllocArray<WORD>(count));
+    ScopedMem<WCHAR> binNames(AllocArray<WCHAR>(24 * count + 1));
+    DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINS, (WCHAR *)bins.Get(), NULL);
+    DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINNAMES, binNames.Get(), NULL);
+    for (DWORD i = 0; i < count; i++) {
+        if (str::EqIS(binNames.Get() + 24 * i, name))
+            return bins.Get()[i];
+    }
+    // alternatively allow indicating the paper bin directly by number
+    if (str::Parse(L"%u%$", name, &count))
+        return (short)count;
+    return devMode->dmDefaultSource;
+}
+
 static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced, LPDEVMODE devMode)
 {
     WStrVec rangeList;
@@ -661,24 +685,28 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Eq(rangeList.At(i), L"even"))
+        else if (str::EqI(rangeList.At(i), L"even"))
             advanced.range = PrintRangeEven;
-        else if (str::Eq(rangeList.At(i), L"odd"))
+        else if (str::EqI(rangeList.At(i), L"odd"))
             advanced.range = PrintRangeOdd;
-        else if (str::Eq(rangeList.At(i), L"noscale"))
+        else if (str::EqI(rangeList.At(i), L"noscale"))
             advanced.scale = PrintScaleNone;
-        else if (str::Eq(rangeList.At(i), L"shrink"))
+        else if (str::EqI(rangeList.At(i), L"shrink"))
             advanced.scale = PrintScaleShrink;
-        else if (str::Eq(rangeList.At(i), L"fit"))
+        else if (str::EqI(rangeList.At(i), L"fit"))
             advanced.scale = PrintScaleFit;
-        else if (str::Eq(rangeList.At(i), L"compat"))
+        else if (str::EqI(rangeList.At(i), L"compat"))
             advanced.asImage = true;
         else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000)
             devMode->dmCopies = (short)val;
-        else if (str::Eq(rangeList.At(i), L"duplex") || str::Eq(rangeList.At(i), L"duplexlong"))
+        else if (str::EqI(rangeList.At(i), L"simplex"))
+            devMode->dmDuplex = DMDUP_SIMPLEX;
+        else if (str::EqI(rangeList.At(i), L"duplex") || str::EqI(rangeList.At(i), L"duplexlong"))
             devMode->dmDuplex = DMDUP_VERTICAL;
-        else if (str::Eq(rangeList.At(i), L"duplexshort"))
+        else if (str::EqI(rangeList.At(i), L"duplexshort"))
             devMode->dmDuplex = DMDUP_HORIZONTAL;
+        else if (str::StartsWithI(rangeList.At(i), L"bin="))
+            devMode->dmDefaultSource = GetPaperSourceByName(rangeList.At(i) + 4, devMode);
     }
 
     if (ranges.Count() == 0) {

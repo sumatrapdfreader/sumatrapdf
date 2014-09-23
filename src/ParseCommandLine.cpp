@@ -13,6 +13,8 @@
 #ifdef DEBUG
 static void EnumeratePrinters()
 {
+    str::Str<WCHAR> output;
+
     PRINTER_INFO_5 *info5Arr = NULL;
     DWORD bufSize = 0, printersCount;
     bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
@@ -22,27 +24,39 @@ static void EnumeratePrinters()
         fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
             5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
-    if (!info5Arr)
+    if (!fOk || !info5Arr) {
+        output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
+        MessageBox(NULL, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         return;
-    assert(fOk);
-    if (!fOk) return;
-    printf("Printers: %ld\n", printersCount);
+    }
+    ScopedMem<WCHAR> defName(GetDefaultPrinterName());
     for (DWORD i = 0; i < printersCount; i++) {
         const WCHAR *printerName = info5Arr[i].pPrinterName;
         const WCHAR *printerPort = info5Arr[i].pPortName;
-        bool fDefault = false;
-        if (info5Arr[i].Attributes & PRINTER_ATTRIBUTE_DEFAULT)
-            fDefault = true;
-        wprintf(L"Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
-    }
-    WCHAR buf[512];
-    bufSize = dimof(buf);
-    fOk = GetDefaultPrinter(buf, &bufSize);
-    if (!fOk) {
-        if (ERROR_FILE_NOT_FOUND == GetLastError())
-            printf("No default printer\n");
+        bool fDefault = str::Eq(defName, printerName);
+        output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes, fDefault ? L", default" : L"");
+
+        DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, NULL, NULL);
+        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, NULL, NULL);
+        CrashIf(bins != binNames);
+        if (0 == bins) {
+            output.Append(L" - no paper bins available\n");
+        }
+        else if (bins == (DWORD)-1) {
+            output.AppendFmt(L" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
+        }
+        else {
+            ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
+            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(), NULL);
+            ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * binNames));
+            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), NULL);
+            for (DWORD j = 0; j < bins; j++) {
+                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j, binValues.Get()[j]);
+            }
+        }
     }
     free(info5Arr);
+    MessageBox(NULL, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
 #endif
 
@@ -132,6 +146,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
+            str::TransChars(printSettings, L";", L",");
         }
         else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
