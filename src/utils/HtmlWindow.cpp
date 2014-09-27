@@ -1049,7 +1049,6 @@ HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
     htmlData = str::DupN(s, len);
     if (htmlStream)
         htmlStream->Release();
-    // TODO: SHCreateMemStream() might be faster
     htmlStream = CreateStreamFromData(htmlData, len);
     return S_OK;
 }
