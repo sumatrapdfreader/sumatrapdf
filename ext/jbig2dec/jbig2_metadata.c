@@ -134,10 +134,10 @@ int jbig2_comment_ascii(Jbig2Ctx *ctx, Jbig2Segment *segment,
     /* loop over the segment data pulling out the key,value pairs */
     while (s < end && *s) {
         key = s;
-        value = memchr(key, '0', end - key);
+        value = memchr(key, '\0', end - key);
         if (!value) goto too_short;
         value++;
-        s = memchr(value, '0', end - value);
+        s = memchr(value, '\0', end - value);
         if (!s) goto too_short;
         s++;
         jbig2_metadata_add(ctx, comment, key, value - key, value, s - value);
