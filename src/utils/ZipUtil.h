@@ -26,7 +26,7 @@ public:
     ~ZipFileAlloc();
 
     size_t GetFileCount() const;
-    // the result is owned by ZipFile
+    // the result is owned by ZipFileAlloc
     const WCHAR *GetFileName(size_t fileindex);
     // reverts GetFileName
     size_t GetFileIndex(const WCHAR *filename);

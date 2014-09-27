@@ -6,12 +6,6 @@
 
 #include "BaseEngine.h"
 
-// TODO: this should probably should go away
-// It used to make sense to have those as enums but after adding book view and
-// manga mode, which are really 2 bool modifiers, there's combinatorial explosion
-// of possible combinations. We should switch to separate bool flags, which is
-// what PageLayoutType already does
-// Note: these seven options are possible default layouts - Manga Mode doesn't fit
 enum DisplayMode {
     DM_FIRST = 0,
     // automatic means: the continuous form of single page, facing or

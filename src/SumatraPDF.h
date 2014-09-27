@@ -113,7 +113,6 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab);
 
-// TODO: this is hopefully temporary
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs

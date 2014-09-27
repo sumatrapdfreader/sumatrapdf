@@ -1225,11 +1225,6 @@ static void OnPaintError(WindowInfo& win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win.hwndCanvas, &ps);
 
-    // TODO: replace with notifications as far as reasonably possible
-    // note: currently it's possible to easily reload the document
-    // and/or open it in an external viewer (e.g. Adobe Reader might
-    // be able to handle PDFs that are too broken for MuPDF),
-    // a notification would break this
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));

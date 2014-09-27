@@ -357,7 +357,6 @@ private:
     }
 };
 
-// TODO: why can't we just call TabsOnNotify directly?
 class TabNotification : public UITask {
     WindowInfo *win;
     UINT  code;
