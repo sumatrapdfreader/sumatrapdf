@@ -208,6 +208,7 @@ Page Size:
 Page number %u inexistant
 Page scaling
 Page:
+PalmDoc documents
 Please close %s to proceed!
 Please wait - rendering...
 Postscript documents

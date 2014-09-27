@@ -2383,7 +2383,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Fb2:    fileFilter.Append(_TR("FictionBook documents")); break;
-        case Engine_Pdb:    fileFilter.Append(L"PalmDOC"); break;
+        case Engine_Pdb:    fileFilter.Append(_TR("PalmDoc documents")); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
@@ -2777,11 +2777,11 @@ void OnMenuOpen(WindowInfo& win)
         { _TR("Postscript documents"),  L"*.ps;*.eps",  PsEngine::IsAvailable() },
         { _TR("Comic books"),           L"*.cbz;*.cbr;*.cb7;*.cbt", true },
         { _TR("CHM documents"),         L"*.chm",       true },
-        { _TR("Mobi documents"),        L"*.mobi",      true },
         { _TR("EPUB ebooks"),           L"*.epub",      true },
+        { _TR("Mobi documents"),        L"*.mobi",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true },
+        { _TR("PalmDoc documents"),     L"*.pdb",       true },
         { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
-        { NULL, /* further ebooks */    L"*.pdb", gGlobalPrefs->ebookUI.useFixedPageUI },
         { _TR("Text documents"),        L"*.txt;*.log;*.nfo;rfc*.txt;file_id.diz;read.me;*.tcr", gGlobalPrefs->ebookUI.useFixedPageUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the

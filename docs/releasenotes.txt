@@ -8,13 +8,14 @@ Next version:
 * Tabs!
 * deprecated the browser plugin (remains installed if used)
 * support table of contents and links in ebook UI
-* added a document measurement helper (invoke by pressing M)
-* swapped keybindings:
-  * F11 : Fullscreen mode (still also Ctrl+Shift+L)
-  * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
+* add support for PalmDoc ebooks
 * add support for displaying CB7 and CBT comic books (in addition to CBZ and CBR)
 * add support for LZMA and PPMd compression in CBZ comic books
 * allow saving Comic Book files as PDF
+* swapped keybindings:
+  * F11 : Fullscreen mode (still also Ctrl+Shift+L)
+  * F5  : Presentation mode (also Shift+F11, still also Ctrl+L)
+* added a document measurement helper (invoke by pressing M)
 * new advanced settings: FullPathInTitle, UseSysColors (no longer exposed through the Options dialog)
 * replaced non-free UnRAR with a free RAR extraction library
   (if some CBR files fail to open for you, please download unrar.dll from
