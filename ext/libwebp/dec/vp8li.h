@@ -20,7 +20,6 @@
 #include "../utils/bit_reader.h"
 #include "../utils/color_cache.h"
 #include "../utils/huffman.h"
-#include "../webp/format_constants.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,10 +39,6 @@ struct VP8LTransform {
   int                    ysize_;  // transform window Y index.
   uint32_t              *data_;   // transform data.
 };
-
-typedef struct {
-  HuffmanTree htrees_[HUFFMAN_CODES_PER_META_CODE];
-} HTreeGroup;
 
 typedef struct {
   int             color_cache_size_;

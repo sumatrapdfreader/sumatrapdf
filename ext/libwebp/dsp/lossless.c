@@ -15,21 +15,16 @@
 
 #include "./dsp.h"
 
-#if defined(WEBP_USE_SSE2)
-#include <emmintrin.h>
-#endif
-
 #include <math.h>
 #include <stdlib.h>
-#include "./lossless.h"
 #include "../dec/vp8li.h"
+#include "../utils/endian_inl.h"
+#include "./lossless.h"
 #include "./yuv.h"
 
 #define MAX_DIFF_COST (1e30f)
 
 // lookup table for small values of log2(int)
-#define APPROX_LOG_MAX  4096
-#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 const float kLog2Table[LOG_LOOKUP_IDX_MAX] = {
   0.0000000000000000f, 0.0000000000000000f,
   1.0000000000000000f, 1.5849625007211560f,
@@ -331,30 +326,59 @@ const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX] = {
   112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126
 };
 
-float VP8LFastSLog2Slow(int v) {
+// The threshold till approximate version of log_2 can be used.
+// Practically, we can get rid of the call to log() as the two values match to
+// very high degree (the ratio of these two is 0.99999x).
+// Keeping a high threshold for now.
+#define APPROX_LOG_WITH_CORRECTION_MAX  65536
+#define APPROX_LOG_MAX                   4096
+#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
+static float FastSLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
-  if (v < APPROX_LOG_MAX) {
+  if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
+    uint32_t y = 1;
+    int correction = 0;
     const float v_f = (float)v;
-    while (v >= LOG_LOOKUP_IDX_MAX) {
+    const uint32_t orig_v = v;
+    do {
       ++log_cnt;
       v = v >> 1;
-    }
-    return v_f * (kLog2Table[v] + log_cnt);
+      y = y << 1;
+    } while (v >= LOG_LOOKUP_IDX_MAX);
+    // vf = (2^log_cnt) * Xf; where y = 2^log_cnt and Xf < 256
+    // Xf = floor(Xf) * (1 + (v % y) / v)
+    // log2(Xf) = log2(floor(Xf)) + log2(1 + (v % y) / v)
+    // The correction factor: log(1 + d) ~ d; for very small d values, so
+    // log2(1 + (v % y) / v) ~ LOG_2_RECIPROCAL * (v % y)/v
+    // LOG_2_RECIPROCAL ~ 23/16
+    correction = (23 * (orig_v & (y - 1))) >> 4;
+    return v_f * (kLog2Table[v] + log_cnt) + correction;
   } else {
     return (float)(LOG_2_RECIPROCAL * v * log((double)v));
   }
 }
 
-float VP8LFastLog2Slow(int v) {
+static float FastLog2Slow(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
-  if (v < APPROX_LOG_MAX) {
+  if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     int log_cnt = 0;
-    while (v >= LOG_LOOKUP_IDX_MAX) {
+    uint32_t y = 1;
+    const uint32_t orig_v = v;
+    double log_2;
+    do {
       ++log_cnt;
       v = v >> 1;
+      y = y << 1;
+    } while (v >= LOG_LOOKUP_IDX_MAX);
+    log_2 = kLog2Table[v] + log_cnt;
+    if (orig_v >= APPROX_LOG_MAX) {
+      // Since the division is still expensive, add this correction factor only
+      // for large values of 'v'.
+      const int correction = (23 * (orig_v & (y - 1))) >> 4;
+      log_2 += (double)correction / orig_v;
     }
-    return kLog2Table[v] + log_cnt;
+    return (float)log_2;
   } else {
     return (float)(LOG_2_RECIPROCAL * log((double)v));
   }
@@ -362,6 +386,9 @@ float VP8LFastLog2Slow(int v) {
 
 //------------------------------------------------------------------------------
 // Image transforms.
+
+// Mostly used to reduce code size + readability
+static WEBP_INLINE int GetMin(int a, int b) { return (a > b) ? b : a; }
 
 // In-place sum of each component with mod 256.
 static WEBP_INLINE void AddPixelsEq(uint32_t* a, uint32_t b) {
@@ -406,7 +433,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
                                          (c1 >> 8) & 0xff,
                                          (c2 >> 8) & 0xff);
   const int b = AddSubtractComponentFull(c0 & 0xff, c1 & 0xff, c2 & 0xff);
-  return (a << 24) | (r << 16) | (g << 8) | b;
+  return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
 }
 
 static WEBP_INLINE int AddSubtractComponentHalf(int a, int b) {
@@ -420,7 +447,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
   const int r = AddSubtractComponentHalf((ave >> 16) & 0xff, (c2 >> 16) & 0xff);
   const int g = AddSubtractComponentHalf((ave >> 8) & 0xff, (c2 >> 8) & 0xff);
   const int b = AddSubtractComponentHalf((ave >> 0) & 0xff, (c2 >> 0) & 0xff);
-  return (a << 24) | (r << 16) | (g << 8) | b;
+  return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
 }
 
 static WEBP_INLINE int Sub3(int a, int b, int c) {
@@ -489,21 +516,19 @@ static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
   return pred;
 }
 static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = VP8LSelect(top[0], left, top[-1]);
+  const uint32_t pred = Select(top[0], left, top[-1]);
   return pred;
 }
 static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = VP8LClampedAddSubtractFull(left, top[0], top[-1]);
+  const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
   return pred;
 }
 static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = VP8LClampedAddSubtractHalf(left, top[0], top[-1]);
+  const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
 
-// TODO(vikasa): Export the predictor array, to allow SSE2 variants.
-typedef uint32_t (*PredictorFunc)(uint32_t left, const uint32_t* const top);
-static const PredictorFunc kPredictors[16] = {
+static const VP8LPredictorFunc kPredictorsC[16] = {
   Predictor0, Predictor1, Predictor2, Predictor3,
   Predictor4, Predictor5, Predictor6, Predictor7,
   Predictor8, Predictor9, Predictor10, Predictor11,
@@ -511,10 +536,9 @@ static const PredictorFunc kPredictors[16] = {
   Predictor0, Predictor0    // <- padding security sentinels
 };
 
-// TODO(vikasa): Replace 256 etc with defines.
-static float PredictionCostSpatial(const int* counts,
-                                   int weight_0, double exp_val) {
-  const int significant_symbols = 16;
+static float PredictionCostSpatial(const int counts[256], int weight_0,
+                                   double exp_val) {
+  const int significant_symbols = 256 >> 4;
   const double exp_decay_factor = 0.6;
   double bits = weight_0 * counts[0];
   int i;
@@ -526,19 +550,19 @@ static float PredictionCostSpatial(const int* counts,
 }
 
 // Compute the combined Shanon's entropy for distribution {X} and {X+Y}
-static float CombinedShannonEntropy(const int* const X,
-                                    const int* const Y, int n) {
+static float CombinedShannonEntropy(const int X[256], const int Y[256]) {
   int i;
   double retval = 0.;
   int sumX = 0, sumXY = 0;
-  for (i = 0; i < n; ++i) {
+  for (i = 0; i < 256; ++i) {
     const int x = X[i];
-    const int xy = X[i] + Y[i];
+    const int xy = x + Y[i];
     if (x != 0) {
       sumX += x;
       retval -= VP8LFastSLog2(x);
-    }
-    if (xy != 0) {
+      sumXY += xy;
+      retval -= VP8LFastSLog2(xy);
+    } else if (xy != 0) {
       sumXY += xy;
       retval -= VP8LFastSLog2(xy);
     }
@@ -547,50 +571,53 @@ static float CombinedShannonEntropy(const int* const X,
   return (float)retval;
 }
 
-static float PredictionCostSpatialHistogram(int accumulated[4][256],
-                                            int tile[4][256]) {
+static float PredictionCostSpatialHistogram(const int accumulated[4][256],
+                                            const int tile[4][256]) {
   int i;
   double retval = 0;
   for (i = 0; i < 4; ++i) {
     const double kExpValue = 0.94;
     retval += PredictionCostSpatial(tile[i], 1, kExpValue);
-    retval += CombinedShannonEntropy(tile[i], accumulated[i], 256);
+    retval += CombinedShannonEntropy(tile[i], accumulated[i]);
   }
   return (float)retval;
 }
 
+static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {
+  ++histo_argb[0][argb >> 24];
+  ++histo_argb[1][(argb >> 16) & 0xff];
+  ++histo_argb[2][(argb >> 8) & 0xff];
+  ++histo_argb[3][argb & 0xff];
+}
+
 static int GetBestPredictorForTile(int width, int height,
                                    int tile_x, int tile_y, int bits,
-                                   int accumulated[4][256],
+                                   const int accumulated[4][256],
                                    const uint32_t* const argb_scratch) {
   const int kNumPredModes = 14;
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
   const int tile_size = 1 << bits;
-  const int ymax = (tile_size <= height - row_start) ?
-      tile_size : height - row_start;
-  const int xmax = (tile_size <= width - col_start) ?
-      tile_size : width - col_start;
-  int histo[4][256];
+  const int max_y = GetMin(tile_size, height - row_start);
+  const int max_x = GetMin(tile_size, width - col_start);
   float best_diff = MAX_DIFF_COST;
   int best_mode = 0;
-
   int mode;
   for (mode = 0; mode < kNumPredModes; ++mode) {
     const uint32_t* current_row = argb_scratch;
-    const PredictorFunc pred_func = kPredictors[mode];
+    const VP8LPredictorFunc pred_func = VP8LPredictors[mode];
     float cur_diff;
     int y;
-    memset(&histo[0][0], 0, sizeof(histo));
-    for (y = 0; y < ymax; ++y) {
+    int histo_argb[4][256];
+    memset(histo_argb, 0, sizeof(histo_argb));
+    for (y = 0; y < max_y; ++y) {
       int x;
       const int row = row_start + y;
       const uint32_t* const upper_row = current_row;
       current_row = upper_row + width;
-      for (x = 0; x < xmax; ++x) {
+      for (x = 0; x < max_x; ++x) {
         const int col = col_start + x;
         uint32_t predict;
-        uint32_t predict_diff;
         if (row == 0) {
           predict = (col == 0) ? ARGB_BLACK : current_row[col - 1];  // Left.
         } else if (col == 0) {
@@ -598,14 +625,11 @@ static int GetBestPredictorForTile(int width, int height,
         } else {
           predict = pred_func(current_row[col - 1], upper_row + col);
         }
-        predict_diff = VP8LSubPixels(current_row[col], predict);
-        ++histo[0][predict_diff >> 24];
-        ++histo[1][((predict_diff >> 16) & 0xff)];
-        ++histo[2][((predict_diff >> 8) & 0xff)];
-        ++histo[3][(predict_diff & 0xff)];
+        UpdateHisto(histo_argb, VP8LSubPixels(current_row[col], predict));
       }
     }
-    cur_diff = PredictionCostSpatialHistogram(accumulated, histo);
+    cur_diff = PredictionCostSpatialHistogram(
+        accumulated, (const int (*)[256])histo_argb);
     if (cur_diff < best_diff) {
       best_diff = cur_diff;
       best_mode = mode;
@@ -622,20 +646,18 @@ static void CopyTileWithPrediction(int width, int height,
   const int col_start = tile_x << bits;
   const int row_start = tile_y << bits;
   const int tile_size = 1 << bits;
-  const int ymax = (tile_size <= height - row_start) ?
-      tile_size : height - row_start;
-  const int xmax = (tile_size <= width - col_start) ?
-      tile_size : width - col_start;
-  const PredictorFunc pred_func = kPredictors[mode];
+  const int max_y = GetMin(tile_size, height - row_start);
+  const int max_x = GetMin(tile_size, width - col_start);
+  const VP8LPredictorFunc pred_func = VP8LPredictors[mode];
   const uint32_t* current_row = argb_scratch;
 
   int y;
-  for (y = 0; y < ymax; ++y) {
+  for (y = 0; y < max_y; ++y) {
     int x;
     const int row = row_start + y;
     const uint32_t* const upper_row = current_row;
     current_row = upper_row + width;
-    for (x = 0; x < xmax; ++x) {
+    for (x = 0; x < max_x; ++x) {
       const int col = col_start + x;
       const int pix = row * width + col;
       uint32_t predict;
@@ -681,7 +703,8 @@ void VP8LResidualImage(int width, int height, int bits,
       if (all_x_max > width) {
         all_x_max = width;
       }
-      pred = GetBestPredictorForTile(width, height, tile_x, tile_y, bits, histo,
+      pred = GetBestPredictorForTile(width, height, tile_x, tile_y, bits,
+                                     (const int (*)[256])histo,
                                      argb_scratch);
       image[tile_y * tiles_per_row + tile_x] = 0xff000000u | (pred << 8);
       CopyTileWithPrediction(width, height, tile_x, tile_y, bits, pred,
@@ -695,11 +718,7 @@ void VP8LResidualImage(int width, int height, int bits,
         }
         ix = all_y * width + tile_x_offset;
         for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
-          const uint32_t a = argb[ix];
-          ++histo[0][a >> 24];
-          ++histo[1][((a >> 16) & 0xff)];
-          ++histo[2][((a >> 8) & 0xff)];
-          ++histo[3][(a & 0xff)];
+          UpdateHisto(histo, argb[ix]);
         }
       }
     }
@@ -724,29 +743,36 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
 
   {
     int y = y_start;
-    const int mask = (1 << transform->bits_) - 1;
+    const int tile_width = 1 << transform->bits_;
+    const int mask = tile_width - 1;
+    const int safe_width = width & ~mask;
     const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
     const uint32_t* pred_mode_base =
         transform->data_ + (y >> transform->bits_) * tiles_per_row;
 
     while (y < y_end) {
-      int x;
       const uint32_t pred2 = Predictor2(data[-1], data - width);
       const uint32_t* pred_mode_src = pred_mode_base;
-      PredictorFunc pred_func;
-
+      VP8LPredictorFunc pred_func;
+      int x = 1;
+      int t = 1;
       // First pixel follows the T (mode=2) mode.
       AddPixelsEq(data, pred2);
-
       // .. the rest:
-      pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
-      for (x = 1; x < width; ++x) {
-        uint32_t pred;
-        if ((x & mask) == 0) {    // start of tile. Read predictor function.
-          pred_func = kPredictors[((*pred_mode_src++) >> 8) & 0xf];
+      while (x < safe_width) {
+        pred_func = VP8LPredictors[((*pred_mode_src++) >> 8) & 0xf];
+        for (; t < tile_width; ++t, ++x) {
+          const uint32_t pred = pred_func(data[x - 1], data + x - width);
+          AddPixelsEq(data + x, pred);
         }
-        pred = pred_func(data[x - 1], data + x - width);
-        AddPixelsEq(data + x, pred);
+        t = 0;
+      }
+      if (x < width) {
+        pred_func = VP8LPredictors[((*pred_mode_src++) >> 8) & 0xf];
+        for (; x < width; ++x) {
+          const uint32_t pred = pred_func(data[x - 1], data + x - width);
+          AddPixelsEq(data + x, pred);
+        }
       }
       data += width;
       ++y;
@@ -757,9 +783,9 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
   }
 }
 
-static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs) {
-  int i = 0;
-  for (; i < num_pixs; ++i) {
+void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = argb_data[i];
     const uint32_t green = (argb >> 8) & 0xff;
     const uint32_t new_r = (((argb >> 16) & 0xff) - green) & 0xff;
@@ -770,26 +796,19 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixs) {
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
-static void AddGreenToBlueAndRed(uint32_t* data, const uint32_t* data_end) {
-  while (data < data_end) {
-    const uint32_t argb = *data;
+void VP8LAddGreenToBlueAndRed_C(uint32_t* data, int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint32_t argb = data[i];
     const uint32_t green = ((argb >> 8) & 0xff);
     uint32_t red_blue = (argb & 0x00ff00ffu);
     red_blue += (green << 16) | green;
     red_blue &= 0x00ff00ffu;
-    *data++ = (argb & 0xff00ff00u) | red_blue;
+    data[i] = (argb & 0xff00ff00u) | red_blue;
   }
 }
 
-typedef struct {
-  // Note: the members are uint8_t, so that any negative values are
-  // automatically converted to "mod 256" values.
-  uint8_t green_to_red_;
-  uint8_t green_to_blue_;
-  uint8_t red_to_blue_;
-} Multipliers;
-
-static WEBP_INLINE void MultipliersClear(Multipliers* m) {
+static WEBP_INLINE void MultipliersClear(VP8LMultipliers* const m) {
   m->green_to_red_ = 0;
   m->green_to_blue_ = 0;
   m->red_to_blue_ = 0;
@@ -801,40 +820,54 @@ static WEBP_INLINE uint32_t ColorTransformDelta(int8_t color_pred,
 }
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
-                                               Multipliers* const m) {
+                                               VP8LMultipliers* const m) {
   m->green_to_red_  = (color_code >>  0) & 0xff;
   m->green_to_blue_ = (color_code >>  8) & 0xff;
   m->red_to_blue_   = (color_code >> 16) & 0xff;
 }
 
-static WEBP_INLINE uint32_t MultipliersToColorCode(Multipliers* const m) {
+static WEBP_INLINE uint32_t MultipliersToColorCode(
+    const VP8LMultipliers* const m) {
   return 0xff000000u |
          ((uint32_t)(m->red_to_blue_) << 16) |
          ((uint32_t)(m->green_to_blue_) << 8) |
          m->green_to_red_;
 }
 
-static WEBP_INLINE uint32_t TransformColor(const Multipliers* const m,
-                                           uint32_t argb, int inverse) {
-  const uint32_t green = argb >> 8;
-  const uint32_t red = argb >> 16;
-  uint32_t new_red = red;
-  uint32_t new_blue = argb;
-
-  if (inverse) {
-    new_red += ColorTransformDelta(m->green_to_red_, green);
-    new_red &= 0xff;
-    new_blue += ColorTransformDelta(m->green_to_blue_, green);
-    new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
-    new_blue &= 0xff;
-  } else {
+void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
+                          int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint32_t argb = data[i];
+    const uint32_t green = argb >> 8;
+    const uint32_t red = argb >> 16;
+    uint32_t new_red = red;
+    uint32_t new_blue = argb;
     new_red -= ColorTransformDelta(m->green_to_red_, green);
     new_red &= 0xff;
     new_blue -= ColorTransformDelta(m->green_to_blue_, green);
     new_blue -= ColorTransformDelta(m->red_to_blue_, red);
     new_blue &= 0xff;
+    data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
   }
-  return (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+}
+
+void VP8LTransformColorInverse_C(const VP8LMultipliers* const m, uint32_t* data,
+                                 int num_pixels) {
+  int i;
+  for (i = 0; i < num_pixels; ++i) {
+    const uint32_t argb = data[i];
+    const uint32_t green = argb >> 8;
+    const uint32_t red = argb >> 16;
+    uint32_t new_red = red;
+    uint32_t new_blue = argb;
+    new_red += ColorTransformDelta(m->green_to_red_, green);
+    new_red &= 0xff;
+    new_blue += ColorTransformDelta(m->green_to_blue_, green);
+    new_blue += ColorTransformDelta(m->red_to_blue_, new_red);
+    new_blue &= 0xff;
+    data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
+  }
 }
 
 static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
@@ -856,225 +889,251 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
   return (new_blue & 0xff);
 }
 
-static WEBP_INLINE int SkipRepeatedPixels(const uint32_t* const argb,
-                                          int ix, int xsize) {
-  const uint32_t v = argb[ix];
-  if (ix >= xsize + 3) {
-    if (v == argb[ix - xsize] &&
-        argb[ix - 1] == argb[ix - xsize - 1] &&
-        argb[ix - 2] == argb[ix - xsize - 2] &&
-        argb[ix - 3] == argb[ix - xsize - 3]) {
-      return 1;
-    }
-    return v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1];
-  } else if (ix >= 3) {
-    return v == argb[ix - 3] && v == argb[ix - 2] && v == argb[ix - 1];
-  }
-  return 0;
-}
-
 static float PredictionCostCrossColor(const int accumulated[256],
                                       const int counts[256]) {
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
   static const double kExpValue = 2.4;
-  return CombinedShannonEntropy(counts, accumulated, 256) +
+  return CombinedShannonEntropy(counts, accumulated) +
          PredictionCostSpatial(counts, 3, kExpValue);
 }
 
-static Multipliers GetBestColorTransformForTile(
-    int tile_x, int tile_y, int bits,
-    Multipliers prevX,
-    Multipliers prevY,
-    int step, int xsize, int ysize,
-    int* accumulated_red_histo,
-    int* accumulated_blue_histo,
+static float GetPredictionCostCrossColorRed(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_red,
+    const int accumulated_red_histo[256], const uint32_t* const argb) {
+  int all_y;
+  int histo[256] = { 0 };
+  float cur_diff;
+  for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
+    int ix = all_y * xsize + tile_x_offset;
+    int all_x;
+    for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
+      ++histo[TransformColorRed(green_to_red, argb[ix])];  // red.
+    }
+  }
+  cur_diff = PredictionCostCrossColor(accumulated_red_histo, histo);
+  if ((uint8_t)green_to_red == prev_x.green_to_red_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if ((uint8_t)green_to_red == prev_y.green_to_red_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if (green_to_red == 0) {
+    cur_diff -= 3;
+  }
+  return cur_diff;
+}
+
+static void GetBestGreenToRed(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
+    const int accumulated_red_histo[256], const uint32_t* const argb,
+    VP8LMultipliers* const best_tx) {
+  int min_green_to_red = -64;
+  int max_green_to_red = 64;
+  int green_to_red = 0;
+  int eval_min = 1;
+  int eval_max = 1;
+  float cur_diff_min = MAX_DIFF_COST;
+  float cur_diff_max = MAX_DIFF_COST;
+  // Do a binary search to find the optimal green_to_red color transform.
+  while (max_green_to_red - min_green_to_red > 2) {
+    if (eval_min) {
+      cur_diff_min = GetPredictionCostCrossColorRed(
+          tile_x_offset, tile_y_offset, all_x_max, all_y_max, xsize,
+          prev_x, prev_y, min_green_to_red, accumulated_red_histo, argb);
+      eval_min = 0;
+    }
+    if (eval_max) {
+      cur_diff_max = GetPredictionCostCrossColorRed(
+          tile_x_offset, tile_y_offset, all_x_max, all_y_max, xsize,
+          prev_x, prev_y, max_green_to_red, accumulated_red_histo, argb);
+      eval_max = 0;
+    }
+    if (cur_diff_min < cur_diff_max) {
+      green_to_red = min_green_to_red;
+      max_green_to_red = (max_green_to_red + min_green_to_red) / 2;
+      eval_max = 1;
+    } else {
+      green_to_red = max_green_to_red;
+      min_green_to_red = (max_green_to_red + min_green_to_red) / 2;
+      eval_min = 1;
+    }
+  }
+  best_tx->green_to_red_ = green_to_red;
+}
+
+static float GetPredictionCostCrossColorBlue(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y,
+    int green_to_blue, int red_to_blue, const int accumulated_blue_histo[256],
     const uint32_t* const argb) {
+  int all_y;
+  int histo[256] = { 0 };
+  float cur_diff;
+  for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
+    int all_x;
+    int ix = all_y * xsize + tile_x_offset;
+    for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
+      ++histo[TransformColorBlue(green_to_blue, red_to_blue, argb[ix])];
+    }
+  }
+  cur_diff = PredictionCostCrossColor(accumulated_blue_histo, histo);
+  if ((uint8_t)green_to_blue == prev_x.green_to_blue_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if ((uint8_t)green_to_blue == prev_y.green_to_blue_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if ((uint8_t)red_to_blue == prev_x.red_to_blue_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if ((uint8_t)red_to_blue == prev_y.red_to_blue_) {
+    cur_diff -= 3;  // favor keeping the areas locally similar
+  }
+  if (green_to_blue == 0) {
+    cur_diff -= 3;
+  }
+  if (red_to_blue == 0) {
+    cur_diff -= 3;
+  }
+  return cur_diff;
+}
+
+static void GetBestGreenRedToBlue(
+    int tile_x_offset, int tile_y_offset, int all_x_max, int all_y_max,
+    int xsize, VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
+    const int accumulated_blue_histo[256], const uint32_t* const argb,
+    VP8LMultipliers* const best_tx) {
   float best_diff = MAX_DIFF_COST;
   float cur_diff;
-  const int halfstep = step / 2;
+  const int step = (quality < 25) ? 32 : (quality > 50) ? 8 : 16;
+  const int min_green_to_blue = -32;
+  const int max_green_to_blue = 32;
+  const int min_red_to_blue = -32;
+  const int max_red_to_blue = 32;
+  const int num_iters =
+      (1 + (max_green_to_blue - min_green_to_blue) / step) *
+      (1 + (max_red_to_blue - min_red_to_blue) / step);
+  // Number of tries to get optimal green_to_blue & red_to_blue color transforms
+  // after finding a local minima.
+  const int max_tries_after_min = 4 + (num_iters >> 2);
+  int num_tries_after_min = 0;
+  int green_to_blue;
+  for (green_to_blue = min_green_to_blue;
+       green_to_blue <= max_green_to_blue &&
+       num_tries_after_min < max_tries_after_min;
+       green_to_blue += step) {
+    int red_to_blue;
+    for (red_to_blue = min_red_to_blue;
+         red_to_blue <= max_red_to_blue &&
+         num_tries_after_min < max_tries_after_min;
+         red_to_blue += step) {
+      cur_diff = GetPredictionCostCrossColorBlue(
+          tile_x_offset, tile_y_offset, all_x_max, all_y_max, xsize, prev_x,
+          prev_y, green_to_blue, red_to_blue, accumulated_blue_histo, argb);
+      if (cur_diff < best_diff) {
+        best_diff = cur_diff;
+        best_tx->green_to_blue_ = green_to_blue;
+        best_tx->red_to_blue_ = red_to_blue;
+        num_tries_after_min = 0;
+      } else {
+        ++num_tries_after_min;
+      }
+    }
+  }
+}
+
+static VP8LMultipliers GetBestColorTransformForTile(
+    int tile_x, int tile_y, int bits,
+    VP8LMultipliers prev_x,
+    VP8LMultipliers prev_y,
+    int quality, int xsize, int ysize,
+    const int accumulated_red_histo[256],
+    const int accumulated_blue_histo[256],
+    const uint32_t* const argb) {
   const int max_tile_size = 1 << bits;
   const int tile_y_offset = tile_y * max_tile_size;
   const int tile_x_offset = tile_x * max_tile_size;
-  int green_to_red;
-  int green_to_blue;
-  int red_to_blue;
-  int all_x_max = tile_x_offset + max_tile_size;
-  int all_y_max = tile_y_offset + max_tile_size;
-  Multipliers best_tx;
+  const int all_x_max = GetMin(tile_x_offset + max_tile_size, xsize);
+  const int all_y_max = GetMin(tile_y_offset + max_tile_size, ysize);
+  VP8LMultipliers best_tx;
   MultipliersClear(&best_tx);
-  if (all_x_max > xsize) {
-    all_x_max = xsize;
-  }
-  if (all_y_max > ysize) {
-    all_y_max = ysize;
-  }
 
-  for (green_to_red = -64; green_to_red <= 64; green_to_red += halfstep) {
-    int histo[256] = { 0 };
-    int all_y;
-
-    for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
-      int ix = all_y * xsize + tile_x_offset;
-      int all_x;
-      for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
-        if (SkipRepeatedPixels(argb, ix, xsize)) {
-          continue;
-        }
-        ++histo[TransformColorRed(green_to_red, argb[ix])];  // red.
-      }
-    }
-    cur_diff = PredictionCostCrossColor(&accumulated_red_histo[0], &histo[0]);
-    if ((uint8_t)green_to_red == prevX.green_to_red_) {
-      cur_diff -= 3;  // favor keeping the areas locally similar
-    }
-    if ((uint8_t)green_to_red == prevY.green_to_red_) {
-      cur_diff -= 3;  // favor keeping the areas locally similar
-    }
-    if (green_to_red == 0) {
-      cur_diff -= 3;
-    }
-    if (cur_diff < best_diff) {
-      best_diff = cur_diff;
-      best_tx.green_to_red_ = green_to_red;
-    }
-  }
-  best_diff = MAX_DIFF_COST;
-  for (green_to_blue = -32; green_to_blue <= 32; green_to_blue += step) {
-    for (red_to_blue = -32; red_to_blue <= 32; red_to_blue += step) {
-      int all_y;
-      int histo[256] = { 0 };
-      for (all_y = tile_y_offset; all_y < all_y_max; ++all_y) {
-        int all_x;
-        int ix = all_y * xsize + tile_x_offset;
-        for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
-          if (SkipRepeatedPixels(argb, ix, xsize)) {
-            continue;
-          }
-          ++histo[TransformColorBlue(green_to_blue, red_to_blue, argb[ix])];
-        }
-      }
-      cur_diff =
-          PredictionCostCrossColor(&accumulated_blue_histo[0], &histo[0]);
-      if ((uint8_t)green_to_blue == prevX.green_to_blue_) {
-        cur_diff -= 3;  // favor keeping the areas locally similar
-      }
-      if ((uint8_t)green_to_blue == prevY.green_to_blue_) {
-        cur_diff -= 3;  // favor keeping the areas locally similar
-      }
-      if ((uint8_t)red_to_blue == prevX.red_to_blue_) {
-        cur_diff -= 3;  // favor keeping the areas locally similar
-      }
-      if ((uint8_t)red_to_blue == prevY.red_to_blue_) {
-        cur_diff -= 3;  // favor keeping the areas locally similar
-      }
-      if (green_to_blue == 0) {
-        cur_diff -= 3;
-      }
-      if (red_to_blue == 0) {
-        cur_diff -= 3;
-      }
-      if (cur_diff < best_diff) {
-        best_diff = cur_diff;
-        best_tx.green_to_blue_ = green_to_blue;
-        best_tx.red_to_blue_ = red_to_blue;
-      }
-    }
-  }
+  GetBestGreenToRed(tile_x_offset, tile_y_offset, all_x_max, all_y_max, xsize,
+                    prev_x, prev_y, accumulated_red_histo, argb, &best_tx);
+  GetBestGreenRedToBlue(tile_x_offset, tile_y_offset, all_x_max, all_y_max,
+                        xsize, prev_x, prev_y, quality, accumulated_blue_histo,
+                        argb, &best_tx);
   return best_tx;
 }
 
 static void CopyTileWithColorTransform(int xsize, int ysize,
-                                       int tile_x, int tile_y, int bits,
-                                       Multipliers color_transform,
-                                       uint32_t* const argb) {
-  int y;
-  int xscan = 1 << bits;
-  int yscan = 1 << bits;
-  tile_x <<= bits;
-  tile_y <<= bits;
-  if (xscan > xsize - tile_x) {
-    xscan = xsize - tile_x;
-  }
-  if (yscan > ysize - tile_y) {
-    yscan = ysize - tile_y;
-  }
-  yscan += tile_y;
-  for (y = tile_y; y < yscan; ++y) {
-    int ix = y * xsize + tile_x;
-    const int end_ix = ix + xscan;
-    for (; ix < end_ix; ++ix) {
-      argb[ix] = TransformColor(&color_transform, argb[ix], 0);
-    }
+                                       int tile_x, int tile_y,
+                                       int max_tile_size,
+                                       VP8LMultipliers color_transform,
+                                       uint32_t* argb) {
+  const int xscan = GetMin(max_tile_size, xsize - tile_x);
+  int yscan = GetMin(max_tile_size, ysize - tile_y);
+  argb += tile_y * xsize + tile_x;
+  while (yscan-- > 0) {
+    VP8LTransformColor(&color_transform, argb, xscan);
+    argb += xsize;
   }
 }
 
-void VP8LColorSpaceTransform(int width, int height, int bits, int step,
+void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                              uint32_t* const argb, uint32_t* image) {
   const int max_tile_size = 1 << bits;
-  int tile_xsize = VP8LSubSampleSize(width, bits);
-  int tile_ysize = VP8LSubSampleSize(height, bits);
+  const int tile_xsize = VP8LSubSampleSize(width, bits);
+  const int tile_ysize = VP8LSubSampleSize(height, bits);
   int accumulated_red_histo[256] = { 0 };
   int accumulated_blue_histo[256] = { 0 };
-  int tile_y;
-  int tile_x;
-  Multipliers prevX;
-  Multipliers prevY;
-  MultipliersClear(&prevY);
-  MultipliersClear(&prevX);
+  int tile_x, tile_y;
+  VP8LMultipliers prev_x, prev_y;
+  MultipliersClear(&prev_y);
+  MultipliersClear(&prev_x);
   for (tile_y = 0; tile_y < tile_ysize; ++tile_y) {
     for (tile_x = 0; tile_x < tile_xsize; ++tile_x) {
-      Multipliers color_transform;
-      int all_x_max;
       int y;
-      const int tile_y_offset = tile_y * max_tile_size;
       const int tile_x_offset = tile_x * max_tile_size;
+      const int tile_y_offset = tile_y * max_tile_size;
+      const int all_x_max = GetMin(tile_x_offset + max_tile_size, width);
+      const int all_y_max = GetMin(tile_y_offset + max_tile_size, height);
+      const int offset = tile_y * tile_xsize + tile_x;
       if (tile_y != 0) {
-        ColorCodeToMultipliers(image[tile_y * tile_xsize + tile_x - 1], &prevX);
-        ColorCodeToMultipliers(image[(tile_y - 1) * tile_xsize + tile_x],
-                               &prevY);
-      } else if (tile_x != 0) {
-        ColorCodeToMultipliers(image[tile_y * tile_xsize + tile_x - 1], &prevX);
+        ColorCodeToMultipliers(image[offset - tile_xsize], &prev_y);
       }
-      color_transform =
-          GetBestColorTransformForTile(tile_x, tile_y, bits,
-                                       prevX, prevY,
-                                       step, width, height,
-                                       &accumulated_red_histo[0],
-                                       &accumulated_blue_histo[0],
-                                       argb);
-      image[tile_y * tile_xsize + tile_x] =
-          MultipliersToColorCode(&color_transform);
-      CopyTileWithColorTransform(width, height, tile_x, tile_y, bits,
-                                 color_transform, argb);
+      prev_x = GetBestColorTransformForTile(tile_x, tile_y, bits,
+                                            prev_x, prev_y,
+                                            quality, width, height,
+                                            accumulated_red_histo,
+                                            accumulated_blue_histo,
+                                            argb);
+      image[offset] = MultipliersToColorCode(&prev_x);
+      CopyTileWithColorTransform(width, height, tile_x_offset, tile_y_offset,
+                                 max_tile_size, prev_x, argb);
 
       // Gather accumulated histogram data.
-      all_x_max = tile_x_offset + max_tile_size;
-      if (all_x_max > width) {
-        all_x_max = width;
-      }
-      for (y = 0; y < max_tile_size; ++y) {
-        int ix;
-        int all_x;
-        int all_y = tile_y_offset + y;
-        if (all_y >= height) {
-          break;
-        }
-        ix = all_y * width + tile_x_offset;
-        for (all_x = tile_x_offset; all_x < all_x_max; ++all_x, ++ix) {
+      for (y = tile_y_offset; y < all_y_max; ++y) {
+        int ix = y * width + tile_x_offset;
+        const int ix_end = ix + all_x_max - tile_x_offset;
+        for (; ix < ix_end; ++ix) {
+          const uint32_t pix = argb[ix];
           if (ix >= 2 &&
-              argb[ix] == argb[ix - 2] &&
-              argb[ix] == argb[ix - 1]) {
+              pix == argb[ix - 2] &&
+              pix == argb[ix - 1]) {
             continue;  // repeated pixels are handled by backward references
           }
           if (ix >= width + 2 &&
               argb[ix - 2] == argb[ix - width - 2] &&
               argb[ix - 1] == argb[ix - width - 1] &&
-              argb[ix] == argb[ix - width]) {
+              pix == argb[ix - width]) {
             continue;  // repeated pixels are handled by backward references
           }
-          ++accumulated_red_histo[(argb[ix] >> 16) & 0xff];
-          ++accumulated_blue_histo[argb[ix] & 0xff];
+          ++accumulated_red_histo[(pix >> 16) & 0xff];
+          ++accumulated_blue_histo[(pix >> 0) & 0xff];
         }
       }
     }
@@ -1085,7 +1144,10 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int step,
 static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
                                        int y_start, int y_end, uint32_t* data) {
   const int width = transform->xsize_;
-  const int mask = (1 << transform->bits_) - 1;
+  const int tile_width = 1 << transform->bits_;
+  const int mask = tile_width - 1;
+  const int safe_width = width & ~mask;
+  const int remaining_width = width - safe_width;
   const int tiles_per_row = VP8LSubSampleSize(width, transform->bits_);
   int y = y_start;
   const uint32_t* pred_row =
@@ -1093,14 +1155,19 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
 
   while (y < y_end) {
     const uint32_t* pred = pred_row;
-    Multipliers m = { 0, 0, 0 };
-    int x;
-
-    for (x = 0; x < width; ++x) {
-      if ((x & mask) == 0) ColorCodeToMultipliers(*pred++, &m);
-      data[x] = TransformColor(&m, data[x], 1);
+    VP8LMultipliers m = { 0, 0, 0 };
+    const uint32_t* const data_safe_end = data + safe_width;
+    const uint32_t* const data_end = data + width;
+    while (data < data_safe_end) {
+      ColorCodeToMultipliers(*pred++, &m);
+      VP8LTransformColorInverse(&m, data, tile_width);
+      data += tile_width;
     }
-    data += width;
+    if (data < data_end) {  // Left-overs using C-version.
+      ColorCodeToMultipliers(*pred++, &m);
+      VP8LTransformColorInverse(&m, data, remaining_width);
+      data += remaining_width;
+    }
     ++y;
     if ((y & mask) == 0) pred_row += tiles_per_row;;
   }
@@ -1173,7 +1240,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
   assert(row_end <= transform->ysize_);
   switch (transform->type_) {
     case SUBTRACT_GREEN:
-      VP8LAddGreenToBlueAndRed(out, out + (row_end - row_start) * width);
+      VP8LAddGreenToBlueAndRed(out, (row_end - row_start) * width);
       break;
     case PREDICTOR_TRANSFORM:
       PredictorInverseTransform(transform, row_start, row_end, out);
@@ -1218,8 +1285,8 @@ static int is_big_endian(void) {
   return (tmp.b[0] != 1);
 }
 
-static void ConvertBGRAToRGB(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+void VP8LConvertBGRAToRGB_C(const uint32_t* src,
+                            int num_pixels, uint8_t* dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
@@ -1229,8 +1296,8 @@ static void ConvertBGRAToRGB(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToRGBA(const uint32_t* src,
-                              int num_pixels, uint8_t* dst) {
+void VP8LConvertBGRAToRGBA_C(const uint32_t* src,
+                             int num_pixels, uint8_t* dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
@@ -1241,8 +1308,8 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToRGBA4444(const uint32_t* src,
-                                  int num_pixels, uint8_t* dst) {
+void VP8LConvertBGRAToRGBA4444_C(const uint32_t* src,
+                                 int num_pixels, uint8_t* dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
@@ -1258,8 +1325,8 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToRGB565(const uint32_t* src,
-                                int num_pixels, uint8_t* dst) {
+void VP8LConvertBGRAToRGB565_C(const uint32_t* src,
+                               int num_pixels, uint8_t* dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
@@ -1275,8 +1342,8 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToBGR(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+void VP8LConvertBGRAToBGR_C(const uint32_t* src,
+                            int num_pixels, uint8_t* dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
@@ -1291,29 +1358,18 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
   if (is_big_endian() == swap_on_big_endian) {
     const uint32_t* const src_end = src + num_pixels;
     while (src < src_end) {
-      uint32_t argb = *src++;
+      const uint32_t argb = *src++;
 
-#if !defined(__BIG_ENDIAN__)
+#if !defined(WORDS_BIGENDIAN)
 #if !defined(WEBP_REFERENCE_IMPLEMENTATION)
-#if defined(__i386__) || defined(__x86_64__)
-      __asm__ volatile("bswap %0" : "=r"(argb) : "0"(argb));
-      *(uint32_t*)dst = argb;
-#elif defined(_MSC_VER)
-      argb = _byteswap_ulong(argb);
-      *(uint32_t*)dst = argb;
-#else
-      dst[0] = (argb >> 24) & 0xff;
-      dst[1] = (argb >> 16) & 0xff;
-      dst[2] = (argb >>  8) & 0xff;
-      dst[3] = (argb >>  0) & 0xff;
-#endif
+      *(uint32_t*)dst = BSwap32(argb);
 #else  // WEBP_REFERENCE_IMPLEMENTATION
       dst[0] = (argb >> 24) & 0xff;
       dst[1] = (argb >> 16) & 0xff;
       dst[2] = (argb >>  8) & 0xff;
       dst[3] = (argb >>  0) & 0xff;
 #endif
-#else  // __BIG_ENDIAN__
+#else  // WORDS_BIGENDIAN
       dst[0] = (argb >>  0) & 0xff;
       dst[1] = (argb >>  8) & 0xff;
       dst[2] = (argb >> 16) & 0xff;
@@ -1330,17 +1386,17 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
                          WEBP_CSP_MODE out_colorspace, uint8_t* const rgba) {
   switch (out_colorspace) {
     case MODE_RGB:
-      ConvertBGRAToRGB(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGB(in_data, num_pixels, rgba);
       break;
     case MODE_RGBA:
-      ConvertBGRAToRGBA(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA(in_data, num_pixels, rgba);
       break;
     case MODE_rgbA:
-      ConvertBGRAToRGBA(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA(in_data, num_pixels, rgba);
       WebPApplyAlphaMultiply(rgba, 0, num_pixels, 1, 0);
       break;
     case MODE_BGR:
-      ConvertBGRAToBGR(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToBGR(in_data, num_pixels, rgba);
       break;
     case MODE_BGRA:
       CopyOrSwap(in_data, num_pixels, rgba, 1);
@@ -1357,20 +1413,21 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
       WebPApplyAlphaMultiply(rgba, 1, num_pixels, 1, 0);
       break;
     case MODE_RGBA_4444:
-      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
       break;
     case MODE_rgbA_4444:
-      ConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGBA4444(in_data, num_pixels, rgba);
       WebPApplyAlphaMultiply4444(rgba, num_pixels, 1, 0);
       break;
     case MODE_RGB_565:
-      ConvertBGRAToRGB565(in_data, num_pixels, rgba);
+      VP8LConvertBGRAToRGB565(in_data, num_pixels, rgba);
       break;
     default:
       assert(0);          // Code flow should not reach here.
   }
 }
 
+//------------------------------------------------------------------------------
 // Bundles multiple (1, 2, 4 or 8) pixels into a single pixel.
 void VP8LBundleColorMap(const uint8_t* const row, int width,
                         int xbits, uint32_t* const dst) {
@@ -1394,129 +1451,161 @@ void VP8LBundleColorMap(const uint8_t* const row, int width,
 
 //------------------------------------------------------------------------------
 
-// TODO(vikasa): Move the SSE2 functions to lossless_dsp.c (new file), once
-// color-space conversion methods (ConvertFromBGRA) are also updated for SSE2.
-#if defined(WEBP_USE_SSE2)
-static WEBP_INLINE uint32_t ClampedAddSubtractFullSSE2(uint32_t c0, uint32_t c1,
-                                                       uint32_t c2) {
-  const __m128i zero = _mm_setzero_si128();
-  const __m128i C0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c0), zero);
-  const __m128i C1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c1), zero);
-  const __m128i C2 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c2), zero);
-  const __m128i V1 = _mm_add_epi16(C0, C1);
-  const __m128i V2 = _mm_sub_epi16(V1, C2);
-  const __m128i b = _mm_packus_epi16(V2, V2);
-  const uint32_t output = _mm_cvtsi128_si32(b);
-  return output;
+static double ExtraCost(const uint32_t* population, int length) {
+  int i;
+  double cost = 0.;
+  for (i = 2; i < length - 2; ++i) cost += (i >> 1) * population[i + 2];
+  return cost;
 }
 
-static WEBP_INLINE uint32_t ClampedAddSubtractHalfSSE2(uint32_t c0, uint32_t c1,
-                                                       uint32_t c2) {
-  const uint32_t ave = Average2(c0, c1);
-  const __m128i zero = _mm_setzero_si128();
-  const __m128i A0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(ave), zero);
-  const __m128i B0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c2), zero);
-  const __m128i A1 = _mm_sub_epi16(A0, B0);
-  const __m128i BgtA = _mm_cmpgt_epi16(B0, A0);
-  const __m128i A2 = _mm_sub_epi16(A1, BgtA);
-  const __m128i A3 = _mm_srai_epi16(A2, 1);
-  const __m128i A4 = _mm_add_epi16(A0, A3);
-  const __m128i A5 = _mm_packus_epi16(A4, A4);
-  const uint32_t output = _mm_cvtsi128_si32(A5);
-  return output;
+static double ExtraCostCombined(const uint32_t* X, const uint32_t* Y,
+                                int length) {
+  int i;
+  double cost = 0.;
+  for (i = 2; i < length - 2; ++i) {
+    const int xy = X[i + 2] + Y[i + 2];
+    cost += (i >> 1) * xy;
+  }
+  return cost;
 }
 
-static WEBP_INLINE uint32_t SelectSSE2(uint32_t a, uint32_t b, uint32_t c) {
-  int pa_minus_pb;
-  const __m128i zero = _mm_setzero_si128();
-  const __m128i A0 = _mm_cvtsi32_si128(a);
-  const __m128i B0 = _mm_cvtsi32_si128(b);
-  const __m128i C0 = _mm_cvtsi32_si128(c);
-  const __m128i AC0 = _mm_subs_epu8(A0, C0);
-  const __m128i CA0 = _mm_subs_epu8(C0, A0);
-  const __m128i BC0 = _mm_subs_epu8(B0, C0);
-  const __m128i CB0 = _mm_subs_epu8(C0, B0);
-  const __m128i AC = _mm_or_si128(AC0, CA0);
-  const __m128i BC = _mm_or_si128(BC0, CB0);
-  const __m128i pa = _mm_unpacklo_epi8(AC, zero);  // |a - c|
-  const __m128i pb = _mm_unpacklo_epi8(BC, zero);  // |b - c|
-  const __m128i diff = _mm_sub_epi16(pb, pa);
+// Returns the various RLE counts
+static VP8LStreaks HuffmanCostCount(const uint32_t* population, int length) {
+  int i;
+  int streak = 0;
+  VP8LStreaks stats;
+  memset(&stats, 0, sizeof(stats));
+  for (i = 0; i < length - 1; ++i) {
+    ++streak;
+    if (population[i] == population[i + 1]) {
+      continue;
+    }
+    stats.counts[population[i] != 0] += (streak > 3);
+    stats.streaks[population[i] != 0][(streak > 3)] += streak;
+    streak = 0;
+  }
+  ++streak;
+  stats.counts[population[i] != 0] += (streak > 3);
+  stats.streaks[population[i] != 0][(streak > 3)] += streak;
+  return stats;
+}
+
+static VP8LStreaks HuffmanCostCombinedCount(const uint32_t* X,
+                                            const uint32_t* Y, int length) {
+  int i;
+  int streak = 0;
+  VP8LStreaks stats;
+  memset(&stats, 0, sizeof(stats));
+  for (i = 0; i < length - 1; ++i) {
+    const int xy = X[i] + Y[i];
+    const int xy_next = X[i + 1] + Y[i + 1];
+    ++streak;
+    if (xy == xy_next) {
+      continue;
+    }
+    stats.counts[xy != 0] += (streak > 3);
+    stats.streaks[xy != 0][(streak > 3)] += streak;
+    streak = 0;
+  }
   {
-    int16_t out[8];
-    _mm_storeu_si128((__m128i*)out, diff);
-    pa_minus_pb = out[0] + out[1] + out[2] + out[3];
+    const int xy = X[i] + Y[i];
+    ++streak;
+    stats.counts[xy != 0] += (streak > 3);
+    stats.streaks[xy != 0][(streak > 3)] += streak;
   }
-  return (pa_minus_pb <= 0) ? a : b;
+  return stats;
 }
 
-static void SubtractGreenFromBlueAndRedSSE2(uint32_t* argb_data, int num_pixs) {
-  int i = 0;
-  const __m128i mask = _mm_set1_epi32(0x0000ff00);
-  for (; i + 4 < num_pixs; i += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
-    const __m128i in_00g0 = _mm_and_si128(in, mask);     // 00g0|00g0|...
-    const __m128i in_0g00 = _mm_slli_epi32(in_00g0, 8);  // 0g00|0g00|...
-    const __m128i in_000g = _mm_srli_epi32(in_00g0, 8);  // 000g|000g|...
-    const __m128i in_0g0g = _mm_or_si128(in_0g00, in_000g);
-    const __m128i out = _mm_sub_epi8(in, in_0g0g);
-    _mm_storeu_si128((__m128i*)&argb_data[i], out);
-  }
-  // fallthrough and finish off with plain-C
-  for (; i < num_pixs; ++i) {
-    const uint32_t argb = argb_data[i];
-    const uint32_t green = (argb >> 8) & 0xff;
-    const uint32_t new_r = (((argb >> 16) & 0xff) - green) & 0xff;
-    const uint32_t new_b = ((argb & 0xff) - green) & 0xff;
-    argb_data[i] = (argb & 0xff00ff00) | (new_r << 16) | new_b;
-  }
-}
-
-static void AddGreenToBlueAndRedSSE2(uint32_t* data, const uint32_t* data_end) {
-  const __m128i mask = _mm_set1_epi32(0x0000ff00);
-  for (; data + 4 < data_end; data += 4) {
-    const __m128i in = _mm_loadu_si128((__m128i*)data);
-    const __m128i in_00g0 = _mm_and_si128(in, mask);     // 00g0|00g0|...
-    const __m128i in_0g00 = _mm_slli_epi32(in_00g0, 8);  // 0g00|0g00|...
-    const __m128i in_000g = _mm_srli_epi32(in_00g0, 8);  // 000g|000g|...
-    const __m128i in_0g0g = _mm_or_si128(in_0g00, in_000g);
-    const __m128i out = _mm_add_epi8(in, in_0g0g);
-    _mm_storeu_si128((__m128i*)data, out);
-  }
-  // fallthrough and finish off with plain-C
-  while (data < data_end) {
-    const uint32_t argb = *data;
-    const uint32_t green = ((argb >> 8) & 0xff);
-    uint32_t red_blue = (argb & 0x00ff00ffu);
-    red_blue += (green << 16) | green;
-    red_blue &= 0x00ff00ffu;
-    *data++ = (argb & 0xff00ff00u) | red_blue;
-  }
-}
-
-extern void VP8LDspInitSSE2(void);
-
-void VP8LDspInitSSE2(void) {
-  VP8LClampedAddSubtractFull = ClampedAddSubtractFullSSE2;
-  VP8LClampedAddSubtractHalf = ClampedAddSubtractHalfSSE2;
-  VP8LSelect = SelectSSE2;
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRedSSE2;
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRedSSE2;
-}
-#endif
 //------------------------------------------------------------------------------
 
-VP8LPredClampedAddSubFunc VP8LClampedAddSubtractFull;
-VP8LPredClampedAddSubFunc VP8LClampedAddSubtractHalf;
-VP8LPredSelectFunc VP8LSelect;
-VP8LSubtractGreenFromBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
-VP8LAddGreenToBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+static void HistogramAdd(const VP8LHistogram* const a,
+                         const VP8LHistogram* const b,
+                         VP8LHistogram* const out) {
+  int i;
+  const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
+  assert(a->palette_code_bits_ == b->palette_code_bits_);
+  if (b != out) {
+    for (i = 0; i < literal_size; ++i) {
+      out->literal_[i] = a->literal_[i] + b->literal_[i];
+    }
+    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+      out->distance_[i] = a->distance_[i] + b->distance_[i];
+    }
+    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+      out->red_[i] = a->red_[i] + b->red_[i];
+      out->blue_[i] = a->blue_[i] + b->blue_[i];
+      out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
+    }
+  } else {
+    for (i = 0; i < literal_size; ++i) {
+      out->literal_[i] += a->literal_[i];
+    }
+    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
+      out->distance_[i] += a->distance_[i];
+    }
+    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+      out->red_[i] += a->red_[i];
+      out->blue_[i] += a->blue_[i];
+      out->alpha_[i] += a->alpha_[i];
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+
+VP8LProcessBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+VP8LProcessBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+VP8LPredictorFunc VP8LPredictors[16];
+
+VP8LTransformColorFunc VP8LTransformColor;
+VP8LTransformColorFunc VP8LTransformColorInverse;
+
+VP8LConvertFunc VP8LConvertBGRAToRGB;
+VP8LConvertFunc VP8LConvertBGRAToRGBA;
+VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
+VP8LConvertFunc VP8LConvertBGRAToRGB565;
+VP8LConvertFunc VP8LConvertBGRAToBGR;
+
+VP8LFastLog2SlowFunc VP8LFastLog2Slow;
+VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+
+VP8LCostFunc VP8LExtraCost;
+VP8LCostCombinedFunc VP8LExtraCostCombined;
+
+VP8LCostCountFunc VP8LHuffmanCostCount;
+VP8LCostCombinedCountFunc VP8LHuffmanCostCombinedCount;
+
+VP8LHistogramAddFunc VP8LHistogramAdd;
+
+extern void VP8LDspInitSSE2(void);
+extern void VP8LDspInitNEON(void);
+extern void VP8LDspInitMIPS32(void);
 
 void VP8LDspInit(void) {
-  VP8LClampedAddSubtractFull = ClampedAddSubtractFull;
-  VP8LClampedAddSubtractHalf = ClampedAddSubtractHalf;
-  VP8LSelect = Select;
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
+  memcpy(VP8LPredictors, kPredictorsC, sizeof(VP8LPredictors));
+
+  VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
+  VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
+
+  VP8LTransformColor = VP8LTransformColor_C;
+  VP8LTransformColorInverse = VP8LTransformColorInverse_C;
+
+  VP8LConvertBGRAToRGB = VP8LConvertBGRAToRGB_C;
+  VP8LConvertBGRAToRGBA = VP8LConvertBGRAToRGBA_C;
+  VP8LConvertBGRAToRGBA4444 = VP8LConvertBGRAToRGBA4444_C;
+  VP8LConvertBGRAToRGB565 = VP8LConvertBGRAToRGB565_C;
+  VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
+
+  VP8LFastLog2Slow = FastLog2Slow;
+  VP8LFastSLog2Slow = FastSLog2Slow;
+
+  VP8LExtraCost = ExtraCost;
+  VP8LExtraCostCombined = ExtraCostCombined;
+
+  VP8LHuffmanCostCount = HuffmanCostCount;
+  VP8LHuffmanCostCombinedCount = HuffmanCostCombinedCount;
+
+  VP8LHistogramAdd = HistogramAdd;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
@@ -1525,8 +1614,17 @@ void VP8LDspInit(void) {
       VP8LDspInitSSE2();
     }
 #endif
+#if defined(WEBP_USE_NEON)
+    if (VP8GetCPUInfo(kNEON)) {
+      VP8LDspInitNEON();
+    }
+#endif
+#if defined(WEBP_USE_MIPS32)
+    if (VP8GetCPUInfo(kMIPS32)) {
+      VP8LDspInitMIPS32();
+    }
+#endif
   }
 }
 
 //------------------------------------------------------------------------------
-

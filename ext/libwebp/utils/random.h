@@ -45,7 +45,8 @@ static WEBP_INLINE int VP8RandomBits2(VP8Random* const rg, int num_bits,
   rg->tab_[rg->index1_] = diff;
   if (++rg->index1_ == VP8_RANDOM_TABLE_SIZE) rg->index1_ = 0;
   if (++rg->index2_ == VP8_RANDOM_TABLE_SIZE) rg->index2_ = 0;
-  diff = (diff << 1) >> (32 - num_bits);         // sign-extend, 0-center
+  // sign-extend, 0-center
+  diff = (int)((uint32_t)diff << 1) >> (32 - num_bits);
   diff = (diff * amp) >> VP8_RANDOM_DITHER_FIX;  // restrict range
   diff += 1 << (num_bits - 1);                   // shift back to 0.5-center
   return diff;

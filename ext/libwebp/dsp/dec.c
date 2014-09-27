@@ -15,37 +15,6 @@
 #include "../dec/vp8i.h"
 
 //------------------------------------------------------------------------------
-// run-time tables (~4k)
-
-static uint8_t abs0[255 + 255 + 1];     // abs(i)
-static uint8_t abs1[255 + 255 + 1];     // abs(i)>>1
-static int8_t sclip1[1020 + 1020 + 1];  // clips [-1020, 1020] to [-128, 127]
-static int8_t sclip2[112 + 112 + 1];    // clips [-112, 112] to [-16, 15]
-static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
-
-// We declare this variable 'volatile' to prevent instruction reordering
-// and make sure it's set to true _last_ (so as to be thread-safe)
-static volatile int tables_ok = 0;
-
-static void DspInitTables(void) {
-  if (!tables_ok) {
-    int i;
-    for (i = -255; i <= 255; ++i) {
-      abs0[255 + i] = (i < 0) ? -i : i;
-      abs1[255 + i] = abs0[255 + i] >> 1;
-    }
-    for (i = -1020; i <= 1020; ++i) {
-      sclip1[1020 + i] = (i < -128) ? -128 : (i > 127) ? 127 : i;
-    }
-    for (i = -112; i <= 112; ++i) {
-      sclip2[112 + i] = (i < -16) ? -16 : (i > 15) ? 15 : i;
-    }
-    for (i = -255; i <= 255 + 255; ++i) {
-      clip1[255 + i] = (i < 0) ? 0 : (i > 255) ? 255 : i;
-    }
-    tables_ok = 1;
-  }
-}
 
 static WEBP_INLINE uint8_t clip_8b(int v) {
   return (!(v & ~0xff)) ? v : (v < 0) ? 0 : 255;
@@ -146,10 +115,10 @@ static void TransformDC(const int16_t *in, uint8_t* dst) {
 }
 
 static void TransformDCUV(const int16_t* in, uint8_t* dst) {
-  if (in[0 * 16]) TransformDC(in + 0 * 16, dst);
-  if (in[1 * 16]) TransformDC(in + 1 * 16, dst + 4);
-  if (in[2 * 16]) TransformDC(in + 2 * 16, dst + 4 * BPS);
-  if (in[3 * 16]) TransformDC(in + 3 * 16, dst + 4 * BPS + 4);
+  if (in[0 * 16]) VP8TransformDC(in + 0 * 16, dst);
+  if (in[1 * 16]) VP8TransformDC(in + 1 * 16, dst + 4);
+  if (in[2 * 16]) VP8TransformDC(in + 2 * 16, dst + 4 * BPS);
+  if (in[3 * 16]) VP8TransformDC(in + 3 * 16, dst + 4 * BPS + 4);
 }
 
 #undef STORE
@@ -184,7 +153,7 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
   }
 }
 
-void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
+void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 
 //------------------------------------------------------------------------------
 // Intra predictions
@@ -193,7 +162,7 @@ void (*VP8TransformWHT)(const int16_t* in, int16_t* out) = TransformWHT;
 
 static WEBP_INLINE void TrueMotion(uint8_t *dst, int size) {
   const uint8_t* top = dst - BPS;
-  const uint8_t* const clip0 = clip1 + 255 - top[-1];
+  const uint8_t* const clip0 = VP8kclip1 - top[-1];
   int y;
   for (y = 0; y < size; ++y) {
     const uint8_t* const clip = clip0 + dst[-1];
@@ -448,14 +417,9 @@ static void HE8uv(uint8_t *dst) {    // horizontal
 // helper for chroma-DC predictions
 static WEBP_INLINE void Put8x8uv(uint8_t value, uint8_t* dst) {
   int j;
-#ifndef WEBP_REFERENCE_IMPLEMENTATION
-  const uint64_t v = (uint64_t)value * 0x0101010101010101ULL;
   for (j = 0; j < 8; ++j) {
-    *(uint64_t*)(dst + j * BPS) = v;
+    memset(dst + j * BPS, value, 8);
   }
-#else
-  for (j = 0; j < 8; ++j) memset(dst + j * BPS, value, 8);
-#endif
 }
 
 static void DC8uv(uint8_t *dst) {     // DC
@@ -512,61 +476,62 @@ const VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES] = {
 // 4 pixels in, 2 pixels out
 static WEBP_INLINE void do_filter2(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
-  const int a = 3 * (q0 - p0) + sclip1[1020 + p1 - q1];
-  const int a1 = sclip2[112 + ((a + 4) >> 3)];
-  const int a2 = sclip2[112 + ((a + 3) >> 3)];
-  p[-step] = clip1[255 + p0 + a2];
-  p[    0] = clip1[255 + q0 - a1];
+  const int a = 3 * (q0 - p0) + VP8ksclip1[p1 - q1];  // in [-893,892]
+  const int a1 = VP8ksclip2[(a + 4) >> 3];            // in [-16,15]
+  const int a2 = VP8ksclip2[(a + 3) >> 3];
+  p[-step] = VP8kclip1[p0 + a2];
+  p[    0] = VP8kclip1[q0 - a1];
 }
 
 // 4 pixels in, 4 pixels out
 static WEBP_INLINE void do_filter4(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   const int a = 3 * (q0 - p0);
-  const int a1 = sclip2[112 + ((a + 4) >> 3)];
-  const int a2 = sclip2[112 + ((a + 3) >> 3)];
+  const int a1 = VP8ksclip2[(a + 4) >> 3];
+  const int a2 = VP8ksclip2[(a + 3) >> 3];
   const int a3 = (a1 + 1) >> 1;
-  p[-2*step] = clip1[255 + p1 + a3];
-  p[-  step] = clip1[255 + p0 + a2];
-  p[      0] = clip1[255 + q0 - a1];
-  p[   step] = clip1[255 + q1 - a3];
+  p[-2*step] = VP8kclip1[p1 + a3];
+  p[-  step] = VP8kclip1[p0 + a2];
+  p[      0] = VP8kclip1[q0 - a1];
+  p[   step] = VP8kclip1[q1 - a3];
 }
 
 // 6 pixels in, 6 pixels out
 static WEBP_INLINE void do_filter6(uint8_t* p, int step) {
   const int p2 = p[-3*step], p1 = p[-2*step], p0 = p[-step];
   const int q0 = p[0], q1 = p[step], q2 = p[2*step];
-  const int a = sclip1[1020 + 3 * (q0 - p0) + sclip1[1020 + p1 - q1]];
+  const int a = VP8ksclip1[3 * (q0 - p0) + VP8ksclip1[p1 - q1]];
+  // a is in [-128,127], a1 in [-27,27], a2 in [-18,18] and a3 in [-9,9]
   const int a1 = (27 * a + 63) >> 7;  // eq. to ((3 * a + 7) * 9) >> 7
   const int a2 = (18 * a + 63) >> 7;  // eq. to ((2 * a + 7) * 9) >> 7
   const int a3 = (9  * a + 63) >> 7;  // eq. to ((1 * a + 7) * 9) >> 7
-  p[-3*step] = clip1[255 + p2 + a3];
-  p[-2*step] = clip1[255 + p1 + a2];
-  p[-  step] = clip1[255 + p0 + a1];
-  p[      0] = clip1[255 + q0 - a1];
-  p[   step] = clip1[255 + q1 - a2];
-  p[ 2*step] = clip1[255 + q2 - a3];
+  p[-3*step] = VP8kclip1[p2 + a3];
+  p[-2*step] = VP8kclip1[p1 + a2];
+  p[-  step] = VP8kclip1[p0 + a1];
+  p[      0] = VP8kclip1[q0 - a1];
+  p[   step] = VP8kclip1[q1 - a2];
+  p[ 2*step] = VP8kclip1[q2 - a3];
 }
 
 static WEBP_INLINE int hev(const uint8_t* p, int step, int thresh) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
-  return (abs0[255 + p1 - p0] > thresh) || (abs0[255 + q1 - q0] > thresh);
+  return (VP8kabs0[p1 - p0] > thresh) || (VP8kabs0[q1 - q0] > thresh);
 }
 
-static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int thresh) {
-  const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
-  return (2 * abs0[255 + p0 - q0] + abs1[255 + p1 - q1]) <= thresh;
+static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int t) {
+  const int p1 = p[-2 * step], p0 = p[-step], q0 = p[0], q1 = p[step];
+  return ((4 * VP8kabs0[p0 - q0] + VP8kabs0[p1 - q1]) <= t);
 }
 
 static WEBP_INLINE int needs_filter2(const uint8_t* p,
                                      int step, int t, int it) {
-  const int p3 = p[-4*step], p2 = p[-3*step], p1 = p[-2*step], p0 = p[-step];
-  const int q0 = p[0], q1 = p[step], q2 = p[2*step], q3 = p[3*step];
-  if ((2 * abs0[255 + p0 - q0] + abs1[255 + p1 - q1]) > t)
-    return 0;
-  return abs0[255 + p3 - p2] <= it && abs0[255 + p2 - p1] <= it &&
-         abs0[255 + p1 - p0] <= it && abs0[255 + q3 - q2] <= it &&
-         abs0[255 + q2 - q1] <= it && abs0[255 + q1 - q0] <= it;
+  const int p3 = p[-4 * step], p2 = p[-3 * step], p1 = p[-2 * step];
+  const int p0 = p[-step], q0 = p[0];
+  const int q1 = p[step], q2 = p[2 * step], q3 = p[3 * step];
+  if ((4 * VP8kabs0[p0 - q0] + VP8kabs0[p1 - q1]) > t) return 0;
+  return VP8kabs0[p3 - p2] <= it && VP8kabs0[p2 - p1] <= it &&
+         VP8kabs0[p1 - p0] <= it && VP8kabs0[q3 - q2] <= it &&
+         VP8kabs0[q2 - q1] <= it && VP8kabs0[q1 - q0] <= it;
 }
 
 //------------------------------------------------------------------------------
@@ -574,8 +539,9 @@ static WEBP_INLINE int needs_filter2(const uint8_t* p,
 
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   int i;
+  const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i, stride, thresh)) {
+    if (needs_filter(p + i, stride, thresh2)) {
       do_filter2(p + i, stride);
     }
   }
@@ -583,8 +549,9 @@ static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
 
 static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
   int i;
+  const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i * stride, 1, thresh)) {
+    if (needs_filter(p + i * stride, 1, thresh2)) {
       do_filter2(p + i * stride, 1);
     }
   }
@@ -612,8 +579,9 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 static WEBP_INLINE void FilterLoop26(uint8_t* p,
                                      int hstride, int vstride, int size,
                                      int thresh, int ithresh, int hev_thresh) {
+  const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh, ithresh)) {
+    if (needs_filter2(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
         do_filter2(p, hstride);
       } else {
@@ -627,8 +595,9 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
 static WEBP_INLINE void FilterLoop24(uint8_t* p,
                                      int hstride, int vstride, int size,
                                      int thresh, int ithresh, int hev_thresh) {
+  const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh, ithresh)) {
+    if (needs_filter2(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
         do_filter2(p, hstride);
       } else {
@@ -717,10 +686,12 @@ VP8SimpleFilterFunc VP8SimpleHFilter16i;
 
 extern void VP8DspInitSSE2(void);
 extern void VP8DspInitNEON(void);
+extern void VP8DspInitMIPS32(void);
 
 void VP8DspInit(void) {
-  DspInitTables();
+  VP8InitClipTables();
 
+  VP8TransformWHT = TransformWHT;
   VP8Transform = TransformTwo;
   VP8TransformUV = TransformUV;
   VP8TransformDC = TransformDC;
@@ -741,7 +712,7 @@ void VP8DspInit(void) {
   VP8SimpleHFilter16i = SimpleHFilter16i;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
-  if (VP8GetCPUInfo) {
+  if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8DspInitSSE2();
@@ -749,6 +720,10 @@ void VP8DspInit(void) {
 #elif defined(WEBP_USE_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8DspInitNEON();
+    }
+#elif defined(WEBP_USE_MIPS32)
+    if (VP8GetCPUInfo(kMIPS32)) {
+      VP8DspInitMIPS32();
     }
 #endif
   }

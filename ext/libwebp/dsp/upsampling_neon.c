@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <arm_neon.h>
 #include <string.h>
+#include "./neon.h"
 #include "./yuv.h"
 
 #ifdef FANCY_UPSAMPLING
@@ -61,8 +62,9 @@
   d = vrhadd_u8(d, diag1);                                              \
                                                                         \
   {                                                                     \
-    const uint8x8x2_t a_b = {{ a, b }};                                 \
-    const uint8x8x2_t c_d = {{ c, d }};                                 \
+    uint8x8x2_t a_b, c_d;                                               \
+    INIT_VECTOR2(a_b, a, b);                                            \
+    INIT_VECTOR2(c_d, c, d);                                            \
     vst2_u8(out,      a_b);                                             \
     vst2_u8(out + 32, c_d);                                             \
   }                                                                     \
@@ -89,25 +91,29 @@ static void Upsample16Pixels(const uint8_t *r1, const uint8_t *r2,
 
 static const int16_t kCoeffs[4] = { kYScale, kVToR, kUToG, kVToG };
 
-#define v255 vmov_n_u8(255)
+#define v255 vdup_n_u8(255)
 
 #define STORE_Rgb(out, r, g, b) do {                                    \
-  const uint8x8x3_t r_g_b = {{ r, g, b }};                              \
+  uint8x8x3_t r_g_b;                                                    \
+  INIT_VECTOR3(r_g_b, r, g, b);                                         \
   vst3_u8(out, r_g_b);                                                  \
 } while (0)
 
 #define STORE_Bgr(out, r, g, b) do {                                    \
-  const uint8x8x3_t b_g_r = {{ b, g, r }};                              \
+  uint8x8x3_t b_g_r;                                                    \
+  INIT_VECTOR3(b_g_r, b, g, r);                                         \
   vst3_u8(out, b_g_r);                                                  \
 } while (0)
 
 #define STORE_Rgba(out, r, g, b) do {                                   \
-  const uint8x8x4_t r_g_b_v255 = {{ r, g, b, v255 }};                   \
+  uint8x8x4_t r_g_b_v255;                                               \
+  INIT_VECTOR4(r_g_b_v255, r, g, b, v255);                              \
   vst4_u8(out, r_g_b_v255);                                             \
 } while (0)
 
 #define STORE_Bgra(out, r, g, b) do {                                   \
-  const uint8x8x4_t b_g_r_v255 = {{ b, g, r, v255 }};                   \
+  uint8x8x4_t b_g_r_v255;                                               \
+  INIT_VECTOR4(b_g_r_v255, b, g, r, v255);                              \
   vst4_u8(out, b_g_r_v255);                                             \
 } while (0)
 
@@ -190,9 +196,9 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
   const int v_diag = ((top_v[0] + cur_v[0]) >> 1) + 1;                  \
                                                                         \
   const int16x4_t cf16 = vld1_s16(kCoeffs);                             \
-  const int32x2_t cf32 = vmov_n_s32(kUToB);                             \
-  const uint8x8_t u16  = vmov_n_u8(16);                                 \
-  const uint8x8_t u128 = vmov_n_u8(128);                                \
+  const int32x2_t cf32 = vdup_n_s32(kUToB);                             \
+  const uint8x8_t u16  = vdup_n_u8(16);                                 \
+  const uint8x8_t u128 = vdup_n_u8(128);                                \
                                                                         \
   /* Treat the first pixel in regular way */                            \
   assert(top_y != NULL);                                                \
@@ -225,10 +231,10 @@ static void FUNC_NAME(const uint8_t *top_y, const uint8_t *bottom_y,    \
 }
 
 // NEON variants of the fancy upsampler.
-NEON_UPSAMPLE_FUNC(UpsampleRgbLinePairNEON,  Rgb,  3)
-NEON_UPSAMPLE_FUNC(UpsampleBgrLinePairNEON,  Bgr,  3)
-NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePairNEON, Rgba, 4)
-NEON_UPSAMPLE_FUNC(UpsampleBgraLinePairNEON, Bgra, 4)
+NEON_UPSAMPLE_FUNC(UpsampleRgbLinePair,  Rgb,  3)
+NEON_UPSAMPLE_FUNC(UpsampleBgrLinePair,  Bgr,  3)
+NEON_UPSAMPLE_FUNC(UpsampleRgbaLinePair, Rgba, 4)
+NEON_UPSAMPLE_FUNC(UpsampleBgraLinePair, Bgra, 4)
 
 #endif  // FANCY_UPSAMPLING
 
@@ -236,30 +242,26 @@ NEON_UPSAMPLE_FUNC(UpsampleBgraLinePairNEON, Bgra, 4)
 
 //------------------------------------------------------------------------------
 
+extern void WebPInitUpsamplersNEON(void);
+
 #ifdef FANCY_UPSAMPLING
 
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
 void WebPInitUpsamplersNEON(void) {
 #if defined(WEBP_USE_NEON)
-  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePairNEON;
-  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePairNEON;
-  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePairNEON;
-  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePairNEON;
-#endif   // WEBP_USE_NEON
-}
-
-void WebPInitPremultiplyNEON(void) {
-#if defined(WEBP_USE_NEON)
-  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePairNEON;
-  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePairNEON;
+  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
+  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
 #endif   // WEBP_USE_NEON
 }
 
 #else
 
 // this empty function is to avoid an empty .o
-void WebPInitPremultiplyNEON(void) {}
+void WebPInitUpsamplersNEON(void) {}
 
 #endif  // FANCY_UPSAMPLING
-

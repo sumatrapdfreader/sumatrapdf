@@ -177,6 +177,15 @@ void VP8InitDithering(const WebPDecoderOptions* const options,
         dec->dither_ = 1;
       }
     }
+#if WEBP_DECODER_ABI_VERSION > 0x0203
+    // potentially allow alpha dithering
+    dec->alpha_dithering_ = options->alpha_dithering_strength;
+    if (dec->alpha_dithering_ > 100) {
+      dec->alpha_dithering_ = 100;
+    } else if (dec->alpha_dithering_ < 0) {
+      dec->alpha_dithering_ = 0;
+    }
+#endif
   }
 }
 
@@ -347,7 +356,7 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
   } else {
     WebPWorker* const worker = &dec->worker_;
     // Finish previous job *before* updating context
-    ok &= WebPWorkerSync(worker);
+    ok &= WebPGetWorkerInterface()->Sync(worker);
     assert(worker->status_ == OK);
     if (ok) {   // spawn a new deblocking/output job
       ctx->io_ = *io;
@@ -367,7 +376,8 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
         ctx->f_info_ = dec->f_info_;
         dec->f_info_ = tmp;
       }
-      WebPWorkerLaunch(worker);    // (reconstruct)+filter in parallel
+      // (reconstruct)+filter in parallel
+      WebPGetWorkerInterface()->Launch(worker);
       if (++dec->cache_id_ == dec->num_caches_) {
         dec->cache_id_ = 0;
       }
@@ -437,7 +447,7 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
 int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
   int ok = 1;
   if (dec->mt_method_ > 0) {
-    ok = WebPWorkerSync(&dec->worker_);
+    ok = WebPGetWorkerInterface()->Sync(&dec->worker_);
   }
 
   if (io->teardown != NULL) {
@@ -478,7 +488,7 @@ static int InitThreadContext(VP8Decoder* const dec) {
   dec->cache_id_ = 0;
   if (dec->mt_method_ > 0) {
     WebPWorker* const worker = &dec->worker_;
-    if (!WebPWorkerReset(worker)) {
+    if (!WebPGetWorkerInterface()->Reset(worker)) {
       return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                          "thread initialization failed.");
     }
@@ -502,7 +512,7 @@ int VP8GetThreadMethod(const WebPDecoderOptions* const options,
   (void)headers;
   (void)width;
   (void)height;
-  assert(!headers->is_lossless);
+  assert(headers == NULL || !headers->is_lossless);
 #if defined(WEBP_USE_THREAD)
   if (width < MIN_WIDTH_FOR_THREADS) return 0;
   // TODO(skal): tune the heuristic further
@@ -549,7 +559,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
 
   if (needed != (size_t)needed) return 0;  // check for overflow
   if (needed > dec->mem_size_) {
-    free(dec->mem_);
+    WebPSafeFree(dec->mem_);
     dec->mem_size_ = 0;
     dec->mem_ = WebPSafeMalloc(needed, sizeof(uint8_t));
     if (dec->mem_ == NULL) {

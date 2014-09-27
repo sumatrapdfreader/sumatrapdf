@@ -442,11 +442,19 @@ struct WebPDecoderOptions {
   int scaled_width, scaled_height;    // final resolution
   int use_threads;                    // if true, use multi-threaded decoding
   int dithering_strength;             // dithering strength (0=Off, 100=full)
+#if WEBP_DECODER_ABI_VERSION > 0x0203
+  int flip;                           // flip output vertically
+  int alpha_dithering_strength;       // alpha dithering strength in [0..100]
+#endif
 
   // Unused for now:
   int force_rotation;                 // forced rotation (to be applied _last_)
   int no_enhancement;                 // if true, discard enhancement layer
+#if WEBP_DECODER_ABI_VERSION > 0x0203
+  uint32_t pad[3];                    // padding for later use
+#else
   uint32_t pad[5];                    // padding for later use
+#endif
 };
 
 // Main object storing the configuration for advanced decoding.

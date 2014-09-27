@@ -14,6 +14,10 @@
 #ifndef WEBP_DSP_DSP_H_
 #define WEBP_DSP_DSP_H_
 
+#ifdef HAVE_CONFIG_H
+#include "../webp/config.h"
+#endif
+
 #include "../webp/types.h"
 
 #ifdef __cplusplus
@@ -23,27 +27,50 @@ extern "C" {
 //------------------------------------------------------------------------------
 // CPU detection
 
+#if defined(__GNUC__)
+# define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
+# define LOCAL_GCC_PREREQ(maj, min) \
+    (LOCAL_GCC_VERSION >= (((maj) << 8) | (min)))
+#else
+# define LOCAL_GCC_PREREQ(maj, min) 0
+#endif
+
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
 #define WEBP_MSC_SSE2  // Visual C++ SSE2 targets
 #endif
 
-#if defined(__SSE2__) || defined(WEBP_MSC_SSE2)
+// WEBP_HAVE_* are used to indicate the presence of the instruction set in dsp
+// files without intrinsics, allowing the corresponding Init() to be called.
+// Files containing intrinsics will need to be built targeting the instruction
+// set so should succeed on one of the earlier tests.
+#if defined(__SSE2__) || defined(WEBP_MSC_SSE2) || defined(WEBP_HAVE_SSE2)
 #define WEBP_USE_SSE2
+#endif
+
+#if defined(__AVX2__) || defined(WEBP_HAVE_AVX2)
+#define WEBP_USE_AVX2
 #endif
 
 #if defined(__ANDROID__) && defined(__ARM_ARCH_7A__)
 #define WEBP_ANDROID_NEON  // Android targets that might support NEON
 #endif
 
-#if defined(__ARM_NEON__) || defined(WEBP_ANDROID_NEON)
+#if defined(__ARM_NEON__) || defined(WEBP_ANDROID_NEON) || defined(__aarch64__)
 #define WEBP_USE_NEON
+#endif
+
+#if defined(__mips__)
+#define WEBP_USE_MIPS32
 #endif
 
 typedef enum {
   kSSE2,
   kSSE3,
-  kNEON
+  kAVX,
+  kAVX2,
+  kNEON,
+  kMIPS32
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
@@ -61,7 +88,6 @@ typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
 typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
 extern VP8Idct VP8ITransform;
 extern VP8Fdct VP8FTransform;
-extern VP8WHT VP8ITransformWHT;
 extern VP8WHT VP8FTransformWHT;
 // Predictions
 // *dst is the destination block. *top and *left can be NULL.
@@ -83,7 +109,7 @@ extern VP8BlockCopy VP8Copy4x4;
 // Quantization
 struct VP8Matrix;   // forward declaration
 typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
-                                int n, const struct VP8Matrix* const mtx);
+                                const struct VP8Matrix* const mtx);
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
 
 // specific to 2nd transform:
@@ -120,6 +146,13 @@ typedef void (*VP8PredFunc)(uint8_t* dst);
 extern const VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
 extern const VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
 extern const VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
+
+// clipping tables (for filtering)
+extern const int8_t* const VP8ksclip1;  // clips [-1020, 1020] to [-128, 127]
+extern const int8_t* const VP8ksclip2;  // clips [-112, 112] to [-16, 15]
+extern const uint8_t* const VP8kclip1;  // clips [-255,511] to [0,255]
+extern const uint8_t* const VP8kabs0;   // abs(x) for x in [-255,255]
+void VP8InitClipTables(void);           // must be called first
 
 // simple filter (only for luma)
 typedef void (*VP8SimpleFilterFunc)(uint8_t* p, int stride, int thresh);
@@ -166,21 +199,20 @@ typedef void (*WebPUpsampleLinePairFunc)(
 // Fancy upsampling functions to convert YUV to RGB(A) modes
 extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 
-// Initializes SSE2 version of the fancy upsamplers.
-void WebPInitUpsamplersSSE2(void);
-
-// NEON version
-void WebPInitUpsamplersNEON(void);
-
 #endif    // FANCY_UPSAMPLING
 
-// Point-sampling methods.
-typedef void (*WebPSampleLinePairFunc)(
-    const uint8_t* top_y, const uint8_t* bottom_y,
-    const uint8_t* u, const uint8_t* v,
-    uint8_t* top_dst, uint8_t* bottom_dst, int len);
+// Per-row point-sampling methods.
+typedef void (*WebPSamplerRowFunc)(const uint8_t* y,
+                                   const uint8_t* u, const uint8_t* v,
+                                   uint8_t* dst, int len);
+// Generic function to apply 'WebPSamplerRowFunc' to the whole plane:
+void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
+                             const uint8_t* u, const uint8_t* v, int uv_stride,
+                             uint8_t* dst, int dst_stride,
+                             int width, int height, WebPSamplerRowFunc func);
 
-extern const WebPSampleLinePairFunc WebPSamplers[/* MODE_LAST */];
+// Sampling functions to convert rows of YUV to RGB(A)
+extern WebPSamplerRowFunc WebPSamplers[/* MODE_LAST */];
 
 // General function for converting two lines of ARGB or RGBA.
 // 'alpha_is_last' should be true if 0xff000000 is stored in memory as
@@ -194,11 +226,14 @@ typedef void (*WebPYUV444Converter)(const uint8_t* y,
 
 extern const WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
 
-// Main function to be called
+// Must be called before using the WebPUpsamplers[] (and for premultiplied
+// colorspaces like rgbA, rgbA4444, etc)
 void WebPInitUpsamplers(void);
+// Must be called before using WebPSamplers[]
+void WebPInitSamplers(void);
 
 //------------------------------------------------------------------------------
-// Pre-multiply planes with alpha values
+// Utilities for processing transparent channel.
 
 // Apply alpha pre-multiply on an rgba, bgra or argb plane of size w * h.
 // alpha_first should be 0 for argb, 1 for rgba or bgra (where alpha is last).
@@ -209,13 +244,27 @@ extern void (*WebPApplyAlphaMultiply)(
 extern void (*WebPApplyAlphaMultiply4444)(
     uint8_t* rgba4444, int w, int h, int stride);
 
+// Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
+// Un-Multiply operation transforms x into x * 255 / A.
+
+// Pre-Multiply or Un-Multiply (if 'inverse' is true) argb values in a row.
+extern void (*WebPMultARGBRow)(uint32_t* const ptr, int width, int inverse);
+
+// Same a WebPMultARGBRow(), but for several rows.
+void WebPMultARGBRows(uint8_t* ptr, int stride, int width, int num_rows,
+                      int inverse);
+
+// Same for a row of single values, with side alpha values.
+extern void (*WebPMultRow)(uint8_t* const ptr, const uint8_t* const alpha,
+                           int width, int inverse);
+
+// Same a WebPMultRow(), but for several 'num_rows' rows.
+void WebPMultRows(uint8_t* ptr, int stride,
+                  const uint8_t* alpha, int alpha_stride,
+                  int width, int num_rows, int inverse);
+
 // To be called first before using the above.
-void WebPInitPremultiply(void);
-
-void WebPInitPremultiplySSE2(void);   // should not be called directly.
-void WebPInitPremultiplyNEON(void);
-
-//------------------------------------------------------------------------------
+void WebPInitAlphaProcessing(void);
 
 #ifdef __cplusplus
 }    // extern "C"

@@ -14,8 +14,32 @@
 #include <assert.h>
 #include <string.h>   // for memset()
 #include "./thread.h"
+#include "./utils.h"
 
 #ifdef WEBP_USE_THREAD
+
+#if defined(_WIN32)
+
+#include <windows.h>
+typedef HANDLE pthread_t;
+typedef CRITICAL_SECTION pthread_mutex_t;
+typedef struct {
+  HANDLE waiting_sem_;
+  HANDLE received_sem_;
+  HANDLE signal_event_;
+} pthread_cond_t;
+
+#else  // !_WIN32
+
+#include <pthread.h>
+
+#endif  // _WIN32
+
+struct WebPWorkerImpl {
+  pthread_mutex_t mutex_;
+  pthread_cond_t  condition_;
+  pthread_t       thread_;
+};
 
 #if defined(_WIN32)
 
@@ -129,23 +153,25 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
 
 //------------------------------------------------------------------------------
 
+static void Execute(WebPWorker* const worker);  // Forward declaration.
+
 static THREADFN ThreadLoop(void* ptr) {
   WebPWorker* const worker = (WebPWorker*)ptr;
   int done = 0;
   while (!done) {
-    pthread_mutex_lock(&worker->mutex_);
+    pthread_mutex_lock(&worker->impl_->mutex_);
     while (worker->status_ == OK) {   // wait in idling mode
-      pthread_cond_wait(&worker->condition_, &worker->mutex_);
+      pthread_cond_wait(&worker->impl_->condition_, &worker->impl_->mutex_);
     }
     if (worker->status_ == WORK) {
-      WebPWorkerExecute(worker);
+      Execute(worker);
       worker->status_ = OK;
     } else if (worker->status_ == NOT_OK) {   // finish the worker
       done = 1;
     }
     // signal to the main thread that we're done (for Sync())
-    pthread_cond_signal(&worker->condition_);
-    pthread_mutex_unlock(&worker->mutex_);
+    pthread_cond_signal(&worker->impl_->condition_);
+    pthread_mutex_unlock(&worker->impl_->mutex_);
   }
   return THREAD_RETURN(NULL);    // Thread is finished
 }
@@ -153,32 +179,36 @@ static THREADFN ThreadLoop(void* ptr) {
 // main thread state control
 static void ChangeState(WebPWorker* const worker,
                         WebPWorkerStatus new_status) {
-  // no-op when attempting to change state on a thread that didn't come up
-  if (worker->status_ < OK) return;
+  // No-op when attempting to change state on a thread that didn't come up.
+  // Checking status_ without acquiring the lock first would result in a data
+  // race.
+  if (worker->impl_ == NULL) return;
 
-  pthread_mutex_lock(&worker->mutex_);
-  // wait for the worker to finish
-  while (worker->status_ != OK) {
-    pthread_cond_wait(&worker->condition_, &worker->mutex_);
+  pthread_mutex_lock(&worker->impl_->mutex_);
+  if (worker->status_ >= OK) {
+    // wait for the worker to finish
+    while (worker->status_ != OK) {
+      pthread_cond_wait(&worker->impl_->condition_, &worker->impl_->mutex_);
+    }
+    // assign new status and release the working thread if needed
+    if (new_status != OK) {
+      worker->status_ = new_status;
+      pthread_cond_signal(&worker->impl_->condition_);
+    }
   }
-  // assign new status and release the working thread if needed
-  if (new_status != OK) {
-    worker->status_ = new_status;
-    pthread_cond_signal(&worker->condition_);
-  }
-  pthread_mutex_unlock(&worker->mutex_);
+  pthread_mutex_unlock(&worker->impl_->mutex_);
 }
 
 #endif  // WEBP_USE_THREAD
 
 //------------------------------------------------------------------------------
 
-void WebPWorkerInit(WebPWorker* const worker) {
+static void Init(WebPWorker* const worker) {
   memset(worker, 0, sizeof(*worker));
   worker->status_ = NOT_OK;
 }
 
-int WebPWorkerSync(WebPWorker* const worker) {
+static int Sync(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
   ChangeState(worker, OK);
 #endif
@@ -186,56 +216,94 @@ int WebPWorkerSync(WebPWorker* const worker) {
   return !worker->had_error;
 }
 
-int WebPWorkerReset(WebPWorker* const worker) {
+static int Reset(WebPWorker* const worker) {
   int ok = 1;
   worker->had_error = 0;
   if (worker->status_ < OK) {
 #ifdef WEBP_USE_THREAD
-    if (pthread_mutex_init(&worker->mutex_, NULL) ||
-        pthread_cond_init(&worker->condition_, NULL)) {
+    worker->impl_ = (WebPWorkerImpl*)WebPSafeCalloc(1, sizeof(*worker->impl_));
+    if (worker->impl_ == NULL) {
       return 0;
     }
-    pthread_mutex_lock(&worker->mutex_);
-    ok = !pthread_create(&worker->thread_, NULL, ThreadLoop, worker);
+    if (pthread_mutex_init(&worker->impl_->mutex_, NULL)) {
+      goto Error;
+    }
+    if (pthread_cond_init(&worker->impl_->condition_, NULL)) {
+      pthread_mutex_destroy(&worker->impl_->mutex_);
+      goto Error;
+    }
+    pthread_mutex_lock(&worker->impl_->mutex_);
+    ok = !pthread_create(&worker->impl_->thread_, NULL, ThreadLoop, worker);
     if (ok) worker->status_ = OK;
-    pthread_mutex_unlock(&worker->mutex_);
+    pthread_mutex_unlock(&worker->impl_->mutex_);
+    if (!ok) {
+      pthread_mutex_destroy(&worker->impl_->mutex_);
+      pthread_cond_destroy(&worker->impl_->condition_);
+ Error:
+      WebPSafeFree(worker->impl_);
+      worker->impl_ = NULL;
+      return 0;
+    }
 #else
     worker->status_ = OK;
 #endif
   } else if (worker->status_ > OK) {
-    ok = WebPWorkerSync(worker);
+    ok = Sync(worker);
   }
   assert(!ok || (worker->status_ == OK));
   return ok;
 }
 
-void WebPWorkerExecute(WebPWorker* const worker) {
+static void Execute(WebPWorker* const worker) {
   if (worker->hook != NULL) {
     worker->had_error |= !worker->hook(worker->data1, worker->data2);
   }
 }
 
-void WebPWorkerLaunch(WebPWorker* const worker) {
+static void Launch(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
   ChangeState(worker, WORK);
 #else
-  WebPWorkerExecute(worker);
+  Execute(worker);
 #endif
 }
 
-void WebPWorkerEnd(WebPWorker* const worker) {
-  if (worker->status_ >= OK) {
+static void End(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
+  if (worker->impl_ != NULL) {
     ChangeState(worker, NOT_OK);
-    pthread_join(worker->thread_, NULL);
-    pthread_mutex_destroy(&worker->mutex_);
-    pthread_cond_destroy(&worker->condition_);
-#else
-    worker->status_ = NOT_OK;
-#endif
+    pthread_join(worker->impl_->thread_, NULL);
+    pthread_mutex_destroy(&worker->impl_->mutex_);
+    pthread_cond_destroy(&worker->impl_->condition_);
+    WebPSafeFree(worker->impl_);
+    worker->impl_ = NULL;
   }
+#else
+  worker->status_ = NOT_OK;
+  assert(worker->impl_ == NULL);
+#endif
   assert(worker->status_ == NOT_OK);
 }
 
 //------------------------------------------------------------------------------
 
+static WebPWorkerInterface g_worker_interface = {
+  Init, Reset, Sync, Launch, Execute, End
+};
+
+int WebPSetWorkerInterface(const WebPWorkerInterface* const winterface) {
+  if (winterface == NULL ||
+      winterface->Init == NULL || winterface->Reset == NULL ||
+      winterface->Sync == NULL || winterface->Launch == NULL ||
+      winterface->Execute == NULL || winterface->End == NULL) {
+    return 0;
+  }
+  g_worker_interface = *winterface;
+  return 1;
+}
+
+const WebPWorkerInterface* WebPGetWorkerInterface(void) {
+  return &g_worker_interface;
+}
+
+//------------------------------------------------------------------------------

@@ -52,25 +52,23 @@ void WebPRescalerInit(WebPRescaler* const rescaler,
 int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
                            int max_num_lines);
 
-// Import a row of data and save its contribution in the rescaler.
-// 'channel' denotes the channel number to be imported.
-void WebPRescalerImportRow(WebPRescaler* const rescaler,
-                           const uint8_t* const src, int channel);
-
 // Import multiple rows over all channels, until at least one row is ready to
 // be exported. Returns the actual number of lines that were imported.
 int WebPRescalerImport(WebPRescaler* const rescaler, int num_rows,
                        const uint8_t* src, int src_stride);
+
+// Import a row of data and save its contribution in the rescaler.
+// 'channel' denotes the channel number to be imported.
+extern void (*WebPRescalerImportRow)(WebPRescaler* const wrk,
+                                     const uint8_t* const src, int channel);
+// Export one row (starting at x_out position) from rescaler.
+extern void (*WebPRescalerExportRow)(WebPRescaler* const wrk, int x_out);
 
 // Return true if there is pending output rows ready.
 static WEBP_INLINE
 int WebPRescalerHasPendingOutput(const WebPRescaler* const rescaler) {
   return (rescaler->y_accum <= 0);
 }
-
-// Export one row from rescaler. Returns the pointer where output was written,
-// or NULL if no row was pending.
-uint8_t* WebPRescalerExportRow(WebPRescaler* const rescaler);
 
 // Export as many rows as possible. Return the numbers of rows written.
 int WebPRescalerExport(WebPRescaler* const rescaler);

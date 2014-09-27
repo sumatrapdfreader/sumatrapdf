@@ -68,51 +68,46 @@ static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
 
 //------------------------------------------------------------------------------
 // VP8LBitWriter
-// TODO(vikasa): VP8LBitWriter is copied as-is from lossless code. There's scope
-// of re-using VP8BitWriter. Will evaluate once basic lossless encoder is
-// implemented.
+
+#if defined(__x86_64__) || defined(_M_X64)   // 64bit
+typedef uint64_t vp8l_atype_t;   // accumulator type
+typedef uint32_t vp8l_wtype_t;   // writing type
+#define WSWAP HToLE32
+#else
+typedef uint32_t vp8l_atype_t;
+typedef uint16_t vp8l_wtype_t;
+#define WSWAP HToLE16
+#endif
 
 typedef struct {
-  uint8_t* buf_;
-  size_t bit_pos_;
-  size_t max_bytes_;
+  vp8l_atype_t bits_;   // bit accumulator
+  int          used_;   // number of bits used in accumulator
+  uint8_t*     buf_;    // start of buffer
+  uint8_t*     cur_;    // current write position
+  uint8_t*     end_;    // end of buffer
 
-  // After all bits are written, the caller must observe the state of
-  // error_. A value of 1 indicates that a memory allocation failure
-  // has happened during bit writing. A value of 0 indicates successful
+  // After all bits are written (VP8LBitWriterFinish()), the caller must observe
+  // the state of error_. A value of 1 indicates that a memory allocation
+  // failure has happened during bit writing. A value of 0 indicates successful
   // writing of bits.
   int error_;
 } VP8LBitWriter;
 
 static WEBP_INLINE size_t VP8LBitWriterNumBytes(VP8LBitWriter* const bw) {
-  return (bw->bit_pos_ + 7) >> 3;
+  return (bw->cur_ - bw->buf_) + ((bw->used_ + 7) >> 3);
 }
 
-static WEBP_INLINE uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw) {
-  return bw->buf_;
-}
+uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
 
 // Returns 0 in case of memory allocation error.
 int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
 
 void VP8LBitWriterDestroy(VP8LBitWriter* const bw);
 
-// This function writes bits into bytes in increasing addresses, and within
-// a byte least-significant-bit first.
-//
-// The function can write up to 16 bits in one go with WriteBits
-// Example: let's assume that 3 bits (Rs below) have been written already:
-//
-// BYTE-0     BYTE+1       BYTE+2
-//
-// 0000 0RRR    0000 0000    0000 0000
-//
-// Now, we could write 5 or less bits in MSB by just sifting by 3
-// and OR'ing to BYTE-0.
-//
-// For n bits, we take the last 5 bytes, OR that with high bits in BYTE-0,
-// and locate the rest in BYTE+1 and BYTE+2.
-//
+// This function writes bits into bytes in increasing addresses (little endian),
+// and within a byte least-significant-bit first.
+// This function can write up to 32 bits in one go, but VP8LBitReader can only
+// read 24 bits max (VP8L_MAX_NUM_BIT_READ).
 // VP8LBitWriter's error_ flag is set in case of  memory allocation error.
 void VP8LWriteBits(VP8LBitWriter* const bw, int n_bits, uint32_t bits);
 

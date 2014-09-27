@@ -39,7 +39,7 @@ CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4267
 
 LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C /D "_7ZIP_PPMD_SUPPPORT"
 
-WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4204 /wd4244
+WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4057 /wd4204 /wd4244
 
 UNARR_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
@@ -100,15 +100,16 @@ _7Z_OBJS = \
 
 WEBP_OBJS = \
 	$(OWP)\alpha.obj $(OWP)\buffer.obj $(OWP)\frame.obj $(OWP)\idec.obj \
-	$(OWP)\io.obj $(OWP)\layer.obj $(OWP)\quant.obj $(OWP)\tree.obj \
+	$(OWP)\io.obj $(OWP)\quant.obj $(OWP)\tree.obj \
 	$(OWP)\vp8.obj $(OWP)\vp8l.obj $(OWP)\webp.obj \
-	$(OWP)\cpu.obj $(OWP)\dec.obj $(OWP)\dec_neon.obj $(OWP)\dec_sse2.obj \
-	$(OWP)\lossless.obj $(OWP)\upsampling.obj $(OWP)\upsampling_neon.obj \
-	$(OWP)\upsampling_sse2.obj $(OWP)\yuv.obj \
+	$(OWP)\alpha_processing.obj $(OWP)\cpu.obj $(OWP)\dec.obj $(OWP)\dec_sse2.obj \
+	$(OWP)\lossless.obj $(OWP)\lossless_sse2.obj $(OWP)\upsampling.obj \
+	$(OWP)\upsampling_sse2.obj $(OWP)\yuv.obj $(OWP)\yuv_sse2.obj \
+	$(OWP)\dec_clip_tables.obj \
 	$(OWP)\bit_reader.obj $(OWP)\color_cache.obj $(OWP)\filters.obj \
 	$(OWP)\huffman.obj $(OWP)\quant_levels_dec.obj $(OWP)\rescaler.obj \
-	$(OWP)\thread.obj $(OWP)\utils.obj $(OWP)\alpha_processing.obj \
-	$(OWP)\random.obj
+	$(OWP)\thread.obj $(OWP)\utils.obj $(OWP)\random.obj
+	
 
 UNARR_OBJS = \
 	$(OUN)\conv.obj $(OUN)\crc32.obj $(OUN)\stream.obj $(OUN)\unarr.obj \

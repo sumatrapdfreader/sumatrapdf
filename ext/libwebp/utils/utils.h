@@ -35,10 +35,13 @@ extern "C" {
 // somewhere (like: malloc(num_pixels * sizeof(*something))). That's why this
 // safe malloc() borrows the signature from calloc(), pointing at the dangerous
 // underlying multiply involved.
-void* WebPSafeMalloc(uint64_t nmemb, size_t size);
+WEBP_EXTERN(void*) WebPSafeMalloc(uint64_t nmemb, size_t size);
 // Note that WebPSafeCalloc() expects the second argument type to be 'size_t'
 // in order to favor the "calloc(num_foo, sizeof(foo))" pattern.
-void* WebPSafeCalloc(uint64_t nmemb, size_t size);
+WEBP_EXTERN(void*) WebPSafeCalloc(uint64_t nmemb, size_t size);
+
+// Companion deallocation function to the above allocations.
+WEBP_EXTERN(void) WebPSafeFree(void* const ptr);
 
 //------------------------------------------------------------------------------
 // Reading/writing data.
@@ -73,6 +76,41 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data, (int)(val & 0xffff));
   PutLE16(data + 2, (int)(val >> 16));
 }
+
+// Returns (int)floor(log2(n)). n must be > 0.
+// use GNU builtins where available.
+#if defined(__GNUC__) && \
+    ((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  return 31 ^ __builtin_clz(n);
+}
+#elif defined(_MSC_VER) && _MSC_VER > 1310 && \
+      (defined(_M_X64) || defined(_M_IX86))
+#include <intrin.h>
+#pragma intrinsic(_BitScanReverse)
+
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  uint32_t first_set_bit;
+  _BitScanReverse(&first_set_bit, n);
+  return first_set_bit;
+}
+#else
+static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  int log = 0;
+  uint32_t value = n;
+  int i;
+
+  for (i = 4; i >= 0; --i) {
+    const int shift = (1 << i);
+    const uint32_t x = value >> shift;
+    if (x != 0) {
+      value = x;
+      log += shift;
+    }
+  }
+  return log;
+}
+#endif
 
 //------------------------------------------------------------------------------
 

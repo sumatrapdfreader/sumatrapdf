@@ -245,6 +245,10 @@ void VP8YUVInit(void);
 
 #if defined(WEBP_USE_SSE2)
 
+// When the following is defined, tables are initialized statically, adding ~12k
+// to the binary size. Otherwise, they are initialized at run-time (small cost).
+#define WEBP_YUV_USE_SSE2_TABLES
+
 #if defined(FANCY_UPSAMPLING)
 // Process 32 pixels and store the result (24b or 32b per pixel) in *dst.
 void VP8YuvToRgba32(const uint8_t* y, const uint8_t* u, const uint8_t* v,
@@ -298,12 +302,12 @@ static WEBP_INLINE int VP8RGBToY(int r, int g, int b, int rounding) {
   return (luma + rounding) >> YUV_FIX;  // no need to clip
 }
 
-static WEBP_INLINE int VP8_RGB_TO_U(int r, int g, int b, int rounding) {
+static WEBP_INLINE int VP8RGBToU(int r, int g, int b, int rounding) {
   const int u = -11058 * r - 21710 * g + 32768 * b;
   return VP8ClipUV(u, rounding);
 }
 
-static WEBP_INLINE int VP8_RGB_TO_V(int r, int g, int b, int rounding) {
+static WEBP_INLINE int VP8RGBToV(int r, int g, int b, int rounding) {
   const int v = 32768 * r - 27439 * g - 5329 * b;
   return VP8ClipUV(v, rounding);
 }

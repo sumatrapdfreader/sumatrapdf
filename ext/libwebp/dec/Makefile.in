@@ -47,7 +47,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_pthread.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/config.h
+CONFIG_HEADER = $(top_builddir)/src/webp/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
@@ -55,14 +55,14 @@ libwebpdecode_la_LIBADD =
 am_libwebpdecode_la_OBJECTS = libwebpdecode_la-alpha.lo \
 	libwebpdecode_la-buffer.lo libwebpdecode_la-frame.lo \
 	libwebpdecode_la-idec.lo libwebpdecode_la-io.lo \
-	libwebpdecode_la-layer.lo libwebpdecode_la-quant.lo \
-	libwebpdecode_la-tree.lo libwebpdecode_la-vp8.lo \
-	libwebpdecode_la-vp8l.lo libwebpdecode_la-webp.lo
+	libwebpdecode_la-quant.lo libwebpdecode_la-tree.lo \
+	libwebpdecode_la-vp8.lo libwebpdecode_la-vp8l.lo \
+	libwebpdecode_la-webp.lo
 libwebpdecode_la_OBJECTS = $(am_libwebpdecode_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/webp
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -130,6 +130,7 @@ AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
+AVX2_FLAGS = @AVX2_FLAGS@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -195,6 +196,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE2_FLAGS = @SSE2_FLAGS@
 STRIP = @STRIP@
 TIFF_INCLUDES = @TIFF_INCLUDES@
 TIFF_LIBS = @TIFF_LIBS@
@@ -259,11 +261,10 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/src
 noinst_LTLIBRARIES = libwebpdecode.la
 libwebpdecode_la_SOURCES = alpha.c alphai.h buffer.c decode_vp8.h \
-	frame.c idec.c io.c layer.c quant.c tree.c vp8.c vp8i.h vp8l.c \
-	vp8li.h webp.c webpi.h
+	frame.c idec.c io.c quant.c tree.c vp8.c vp8i.h vp8l.c vp8li.h \
+	webp.c webpi.h
 libwebpdecodeinclude_HEADERS = ../webp/decode.h ../webp/types.h
 noinst_HEADERS = ../webp/format_constants.h
 libwebpdecode_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE)
@@ -325,7 +326,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-frame.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-idec.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-layer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-quant.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-tree.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdecode_la-vp8.Plo@am__quote@
@@ -390,13 +390,6 @@ libwebpdecode_la-io.lo: io.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io.c' object='libwebpdecode_la-io.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdecode_la-io.lo `test -f 'io.c' || echo '$(srcdir)/'`io.c
-
-libwebpdecode_la-layer.lo: layer.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdecode_la-layer.lo -MD -MP -MF $(DEPDIR)/libwebpdecode_la-layer.Tpo -c -o libwebpdecode_la-layer.lo `test -f 'layer.c' || echo '$(srcdir)/'`layer.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdecode_la-layer.Tpo $(DEPDIR)/libwebpdecode_la-layer.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='layer.c' object='libwebpdecode_la-layer.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdecode_la-layer.lo `test -f 'layer.c' || echo '$(srcdir)/'`layer.c
 
 libwebpdecode_la-quant.lo: quant.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdecode_la-quant.lo -MD -MP -MF $(DEPDIR)/libwebpdecode_la-quant.Tpo -c -o libwebpdecode_la-quant.lo `test -f 'quant.c' || echo '$(srcdir)/'`quant.c

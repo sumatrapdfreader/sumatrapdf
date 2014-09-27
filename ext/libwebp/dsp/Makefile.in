@@ -48,18 +48,20 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_pthread.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/config.h
+CONFIG_HEADER = $(top_builddir)/src/webp/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-libwebpdsp_la_LIBADD =
-am__objects_1 = libwebpdsp_la-cpu.lo libwebpdsp_la-dec.lo \
-	libwebpdsp_la-dec_neon.lo libwebpdsp_la-dec_sse2.lo \
-	libwebpdsp_la-lossless.lo libwebpdsp_la-upsampling.lo \
-	libwebpdsp_la-upsampling_neon.lo \
-	libwebpdsp_la-upsampling_sse2.lo libwebpdsp_la-yuv.lo
-am__objects_2 = libwebpdsp_la-enc.lo libwebpdsp_la-enc_neon.lo \
-	libwebpdsp_la-enc_sse2.lo
+libwebpdsp_la_DEPENDENCIES = libwebpdsp_avx2.la libwebpdsp_sse2.la
+am__objects_1 = libwebpdsp_la-alpha_processing.lo libwebpdsp_la-cpu.lo \
+	libwebpdsp_la-dec.lo libwebpdsp_la-dec_clip_tables.lo \
+	libwebpdsp_la-dec_mips32.lo libwebpdsp_la-dec_neon.lo \
+	libwebpdsp_la-lossless.lo libwebpdsp_la-lossless_mips32.lo \
+	libwebpdsp_la-lossless_neon.lo libwebpdsp_la-upsampling.lo \
+	libwebpdsp_la-upsampling_neon.lo libwebpdsp_la-yuv.lo \
+	libwebpdsp_la-yuv_mips32.lo
+am__objects_2 = libwebpdsp_la-enc.lo libwebpdsp_la-enc_mips32.lo \
+	libwebpdsp_la-enc_neon.lo
 am_libwebpdsp_la_OBJECTS = $(am__objects_1) $(am__objects_2)
 libwebpdsp_la_OBJECTS = $(am_libwebpdsp_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -68,18 +70,37 @@ am__v_lt_0 = --silent
 libwebpdsp_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libwebpdsp_la_LDFLAGS) $(LDFLAGS) -o $@
-libwebpdspdecode_la_LIBADD =
-am__libwebpdspdecode_la_SOURCES_DIST = cpu.c dec.c dec_neon.c \
-	dec_sse2.c dsp.h lossless.c lossless.h upsampling.c \
-	upsampling_neon.c upsampling_sse2.c yuv.c yuv.h
-am__objects_3 = libwebpdspdecode_la-cpu.lo libwebpdspdecode_la-dec.lo \
+libwebpdsp_avx2_la_LIBADD =
+am_libwebpdsp_avx2_la_OBJECTS = libwebpdsp_avx2_la-enc_avx2.lo
+libwebpdsp_avx2_la_OBJECTS = $(am_libwebpdsp_avx2_la_OBJECTS)
+libwebpdsp_avx2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libwebpdsp_avx2_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libwebpdsp_sse2_la_DEPENDENCIES = libwebpdspdecode_sse2.la
+am_libwebpdsp_sse2_la_OBJECTS = libwebpdsp_sse2_la-enc_sse2.lo
+libwebpdsp_sse2_la_OBJECTS = $(am_libwebpdsp_sse2_la_OBJECTS)
+libwebpdsp_sse2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libwebpdsp_sse2_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+@BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_DEPENDENCIES =  \
+@BUILD_LIBWEBPDECODER_TRUE@	libwebpdspdecode_sse2.la
+am__libwebpdspdecode_la_SOURCES_DIST = alpha_processing.c cpu.c dec.c \
+	dec_clip_tables.c dec_mips32.c dec_neon.c dsp.h lossless.c \
+	lossless.h lossless_mips32.c lossless_neon.c neon.h \
+	upsampling.c upsampling_neon.c yuv.c yuv.h yuv_mips32.c
+am__objects_3 = libwebpdspdecode_la-alpha_processing.lo \
+	libwebpdspdecode_la-cpu.lo libwebpdspdecode_la-dec.lo \
+	libwebpdspdecode_la-dec_clip_tables.lo \
+	libwebpdspdecode_la-dec_mips32.lo \
 	libwebpdspdecode_la-dec_neon.lo \
-	libwebpdspdecode_la-dec_sse2.lo \
 	libwebpdspdecode_la-lossless.lo \
+	libwebpdspdecode_la-lossless_mips32.lo \
+	libwebpdspdecode_la-lossless_neon.lo \
 	libwebpdspdecode_la-upsampling.lo \
 	libwebpdspdecode_la-upsampling_neon.lo \
-	libwebpdspdecode_la-upsampling_sse2.lo \
-	libwebpdspdecode_la-yuv.lo
+	libwebpdspdecode_la-yuv.lo libwebpdspdecode_la-yuv_mips32.lo
 @BUILD_LIBWEBPDECODER_TRUE@am_libwebpdspdecode_la_OBJECTS =  \
 @BUILD_LIBWEBPDECODER_TRUE@	$(am__objects_3)
 libwebpdspdecode_la_OBJECTS = $(am_libwebpdspdecode_la_OBJECTS)
@@ -88,7 +109,19 @@ libwebpdspdecode_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_CFLAGS) $(CFLAGS) $(libwebpdspdecode_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 @BUILD_LIBWEBPDECODER_TRUE@am_libwebpdspdecode_la_rpath =
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+libwebpdspdecode_sse2_la_LIBADD =
+am_libwebpdspdecode_sse2_la_OBJECTS =  \
+	libwebpdspdecode_sse2_la-dec_sse2.lo \
+	libwebpdspdecode_sse2_la-lossless_sse2.lo \
+	libwebpdspdecode_sse2_la-upsampling_sse2.lo \
+	libwebpdspdecode_sse2_la-yuv_sse2.lo
+libwebpdspdecode_sse2_la_OBJECTS =  \
+	$(am_libwebpdspdecode_sse2_la_OBJECTS)
+libwebpdspdecode_sse2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/webp
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -114,9 +147,13 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_@AM_V@)
 am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(libwebpdsp_la_SOURCES) $(libwebpdspdecode_la_SOURCES)
-DIST_SOURCES = $(libwebpdsp_la_SOURCES) \
-	$(am__libwebpdspdecode_la_SOURCES_DIST)
+SOURCES = $(libwebpdsp_la_SOURCES) $(libwebpdsp_avx2_la_SOURCES) \
+	$(libwebpdsp_sse2_la_SOURCES) $(libwebpdspdecode_la_SOURCES) \
+	$(libwebpdspdecode_sse2_la_SOURCES)
+DIST_SOURCES = $(libwebpdsp_la_SOURCES) $(libwebpdsp_avx2_la_SOURCES) \
+	$(libwebpdsp_sse2_la_SOURCES) \
+	$(am__libwebpdspdecode_la_SOURCES_DIST) \
+	$(libwebpdspdecode_sse2_la_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -157,6 +194,7 @@ AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
+AVX2_FLAGS = @AVX2_FLAGS@
 AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -222,6 +260,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SSE2_FLAGS = @SSE2_FLAGS@
 STRIP = @STRIP@
 TIFF_INCLUDES = @TIFF_INCLUDES@
 TIFF_LIBS = @TIFF_LIBS@
@@ -286,21 +325,35 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/src
-noinst_LTLIBRARIES = libwebpdsp.la $(am__append_1)
+noinst_LTLIBRARIES = libwebpdsp.la libwebpdsp_avx2.la \
+	libwebpdsp_sse2.la libwebpdspdecode_sse2.la $(am__append_1)
 common_HEADERS = ../webp/types.h
 commondir = $(includedir)/webp
-COMMON_SOURCES = cpu.c dec.c dec_neon.c dec_sse2.c dsp.h lossless.c \
-	lossless.h upsampling.c upsampling_neon.c upsampling_sse2.c \
-	yuv.c yuv.h
-ENC_SOURCES = enc.c enc_neon.c enc_sse2.c
+COMMON_SOURCES = alpha_processing.c cpu.c dec.c dec_clip_tables.c \
+	dec_mips32.c dec_neon.c dsp.h lossless.c lossless.h \
+	lossless_mips32.c lossless_neon.c neon.h upsampling.c \
+	upsampling_neon.c yuv.c yuv.h yuv_mips32.c
+ENC_SOURCES = enc.c enc_mips32.c enc_neon.c
+libwebpdsp_avx2_la_SOURCES = enc_avx2.c
+libwebpdsp_avx2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+libwebpdsp_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
+libwebpdspdecode_sse2_la_SOURCES = dec_sse2.c lossless_sse2.c \
+	upsampling_sse2.c yuv_sse2.c yuv_tables_sse2.h
+libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
+libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
+libwebpdsp_sse2_la_SOURCES = enc_sse2.c
+libwebpdsp_sse2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+libwebpdsp_sse2_la_CFLAGS = $(AM_CFLAGS) $(SSE2_FLAGS)
+libwebpdsp_sse2_la_LIBADD = libwebpdspdecode_sse2.la
 libwebpdsp_la_SOURCES = $(COMMON_SOURCES) $(ENC_SOURCES)
 noinst_HEADERS = ../dec/decode_vp8.h ../webp/decode.h
-libwebpdsp_la_LDFLAGS = -lm
 libwebpdsp_la_CPPFLAGS = $(USE_EXPERIMENTAL_CODE) $(USE_SWAP_16BIT_CSP)
+libwebpdsp_la_LDFLAGS = -lm
+libwebpdsp_la_LIBADD = libwebpdsp_avx2.la libwebpdsp_sse2.la
 @BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_SOURCES = $(COMMON_SOURCES)
-@BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_LDFLAGS = $(libwebpdsp_la_LDFLAGS)
 @BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
+@BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_LDFLAGS = $(libwebpdsp_la_LDFLAGS)
+@BUILD_LIBWEBPDECODER_TRUE@libwebpdspdecode_la_LIBADD = libwebpdspdecode_sse2.la
 all: all-am
 
 .SUFFIXES:
@@ -346,8 +399,14 @@ clean-noinstLTLIBRARIES:
 	done
 libwebpdsp.la: $(libwebpdsp_la_OBJECTS) $(libwebpdsp_la_DEPENDENCIES) $(EXTRA_libwebpdsp_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libwebpdsp_la_LINK)  $(libwebpdsp_la_OBJECTS) $(libwebpdsp_la_LIBADD) $(LIBS)
+libwebpdsp_avx2.la: $(libwebpdsp_avx2_la_OBJECTS) $(libwebpdsp_avx2_la_DEPENDENCIES) $(EXTRA_libwebpdsp_avx2_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libwebpdsp_avx2_la_LINK)  $(libwebpdsp_avx2_la_OBJECTS) $(libwebpdsp_avx2_la_LIBADD) $(LIBS)
+libwebpdsp_sse2.la: $(libwebpdsp_sse2_la_OBJECTS) $(libwebpdsp_sse2_la_DEPENDENCIES) $(EXTRA_libwebpdsp_sse2_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libwebpdsp_sse2_la_LINK)  $(libwebpdsp_sse2_la_OBJECTS) $(libwebpdsp_sse2_la_LIBADD) $(LIBS)
 libwebpdspdecode.la: $(libwebpdspdecode_la_OBJECTS) $(libwebpdspdecode_la_DEPENDENCIES) $(EXTRA_libwebpdspdecode_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libwebpdspdecode_la_LINK) $(am_libwebpdspdecode_la_rpath) $(libwebpdspdecode_la_OBJECTS) $(libwebpdspdecode_la_LIBADD) $(LIBS)
+libwebpdspdecode_sse2.la: $(libwebpdspdecode_sse2_la_OBJECTS) $(libwebpdspdecode_sse2_la_DEPENDENCIES) $(EXTRA_libwebpdspdecode_sse2_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libwebpdspdecode_sse2_la_LINK)  $(libwebpdspdecode_sse2_la_OBJECTS) $(libwebpdspdecode_sse2_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -355,27 +414,41 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_avx2_la-enc_avx2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-alpha_processing.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-cpu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-dec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-dec_clip_tables.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-dec_mips32.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-dec_neon.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-dec_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-enc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-enc_mips32.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-enc_neon.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-enc_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-lossless.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-lossless_mips32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-lossless_neon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-upsampling.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-upsampling_neon.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-upsampling_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-yuv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_la-yuv_mips32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdsp_sse2_la-enc_sse2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-alpha_processing.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-cpu.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-dec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-dec_clip_tables.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-dec_mips32.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-dec_neon.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-dec_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-lossless.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-lossless_mips32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-lossless_neon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-upsampling.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-upsampling_neon.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-upsampling_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-yuv.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-yuv_mips32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-lossless_sse2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-upsampling_sse2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-yuv_sse2.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -401,6 +474,13 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
+libwebpdsp_la-alpha_processing.lo: alpha_processing.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-alpha_processing.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-alpha_processing.Tpo -c -o libwebpdsp_la-alpha_processing.lo `test -f 'alpha_processing.c' || echo '$(srcdir)/'`alpha_processing.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-alpha_processing.Tpo $(DEPDIR)/libwebpdsp_la-alpha_processing.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='alpha_processing.c' object='libwebpdsp_la-alpha_processing.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-alpha_processing.lo `test -f 'alpha_processing.c' || echo '$(srcdir)/'`alpha_processing.c
+
 libwebpdsp_la-cpu.lo: cpu.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-cpu.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-cpu.Tpo -c -o libwebpdsp_la-cpu.lo `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-cpu.Tpo $(DEPDIR)/libwebpdsp_la-cpu.Plo
@@ -415,6 +495,20 @@ libwebpdsp_la-dec.lo: dec.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-dec.lo `test -f 'dec.c' || echo '$(srcdir)/'`dec.c
 
+libwebpdsp_la-dec_clip_tables.lo: dec_clip_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-dec_clip_tables.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-dec_clip_tables.Tpo -c -o libwebpdsp_la-dec_clip_tables.lo `test -f 'dec_clip_tables.c' || echo '$(srcdir)/'`dec_clip_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-dec_clip_tables.Tpo $(DEPDIR)/libwebpdsp_la-dec_clip_tables.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_clip_tables.c' object='libwebpdsp_la-dec_clip_tables.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-dec_clip_tables.lo `test -f 'dec_clip_tables.c' || echo '$(srcdir)/'`dec_clip_tables.c
+
+libwebpdsp_la-dec_mips32.lo: dec_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-dec_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-dec_mips32.Tpo -c -o libwebpdsp_la-dec_mips32.lo `test -f 'dec_mips32.c' || echo '$(srcdir)/'`dec_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-dec_mips32.Tpo $(DEPDIR)/libwebpdsp_la-dec_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_mips32.c' object='libwebpdsp_la-dec_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-dec_mips32.lo `test -f 'dec_mips32.c' || echo '$(srcdir)/'`dec_mips32.c
+
 libwebpdsp_la-dec_neon.lo: dec_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-dec_neon.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-dec_neon.Tpo -c -o libwebpdsp_la-dec_neon.lo `test -f 'dec_neon.c' || echo '$(srcdir)/'`dec_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-dec_neon.Tpo $(DEPDIR)/libwebpdsp_la-dec_neon.Plo
@@ -422,19 +516,26 @@ libwebpdsp_la-dec_neon.lo: dec_neon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-dec_neon.lo `test -f 'dec_neon.c' || echo '$(srcdir)/'`dec_neon.c
 
-libwebpdsp_la-dec_sse2.lo: dec_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-dec_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-dec_sse2.Tpo -c -o libwebpdsp_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-dec_sse2.Tpo $(DEPDIR)/libwebpdsp_la-dec_sse2.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_sse2.c' object='libwebpdsp_la-dec_sse2.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
-
 libwebpdsp_la-lossless.lo: lossless.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-lossless.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-lossless.Tpo -c -o libwebpdsp_la-lossless.lo `test -f 'lossless.c' || echo '$(srcdir)/'`lossless.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-lossless.Tpo $(DEPDIR)/libwebpdsp_la-lossless.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless.c' object='libwebpdsp_la-lossless.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-lossless.lo `test -f 'lossless.c' || echo '$(srcdir)/'`lossless.c
+
+libwebpdsp_la-lossless_mips32.lo: lossless_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-lossless_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-lossless_mips32.Tpo -c -o libwebpdsp_la-lossless_mips32.lo `test -f 'lossless_mips32.c' || echo '$(srcdir)/'`lossless_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-lossless_mips32.Tpo $(DEPDIR)/libwebpdsp_la-lossless_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless_mips32.c' object='libwebpdsp_la-lossless_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-lossless_mips32.lo `test -f 'lossless_mips32.c' || echo '$(srcdir)/'`lossless_mips32.c
+
+libwebpdsp_la-lossless_neon.lo: lossless_neon.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-lossless_neon.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-lossless_neon.Tpo -c -o libwebpdsp_la-lossless_neon.lo `test -f 'lossless_neon.c' || echo '$(srcdir)/'`lossless_neon.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-lossless_neon.Tpo $(DEPDIR)/libwebpdsp_la-lossless_neon.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless_neon.c' object='libwebpdsp_la-lossless_neon.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-lossless_neon.lo `test -f 'lossless_neon.c' || echo '$(srcdir)/'`lossless_neon.c
 
 libwebpdsp_la-upsampling.lo: upsampling.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-upsampling.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-upsampling.Tpo -c -o libwebpdsp_la-upsampling.lo `test -f 'upsampling.c' || echo '$(srcdir)/'`upsampling.c
@@ -450,19 +551,19 @@ libwebpdsp_la-upsampling_neon.lo: upsampling_neon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-upsampling_neon.lo `test -f 'upsampling_neon.c' || echo '$(srcdir)/'`upsampling_neon.c
 
-libwebpdsp_la-upsampling_sse2.lo: upsampling_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-upsampling_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-upsampling_sse2.Tpo -c -o libwebpdsp_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-upsampling_sse2.Tpo $(DEPDIR)/libwebpdsp_la-upsampling_sse2.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='upsampling_sse2.c' object='libwebpdsp_la-upsampling_sse2.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
-
 libwebpdsp_la-yuv.lo: yuv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-yuv.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-yuv.Tpo -c -o libwebpdsp_la-yuv.lo `test -f 'yuv.c' || echo '$(srcdir)/'`yuv.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-yuv.Tpo $(DEPDIR)/libwebpdsp_la-yuv.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv.c' object='libwebpdsp_la-yuv.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-yuv.lo `test -f 'yuv.c' || echo '$(srcdir)/'`yuv.c
+
+libwebpdsp_la-yuv_mips32.lo: yuv_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-yuv_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-yuv_mips32.Tpo -c -o libwebpdsp_la-yuv_mips32.lo `test -f 'yuv_mips32.c' || echo '$(srcdir)/'`yuv_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-yuv_mips32.Tpo $(DEPDIR)/libwebpdsp_la-yuv_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv_mips32.c' object='libwebpdsp_la-yuv_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-yuv_mips32.lo `test -f 'yuv_mips32.c' || echo '$(srcdir)/'`yuv_mips32.c
 
 libwebpdsp_la-enc.lo: enc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-enc.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-enc.Tpo -c -o libwebpdsp_la-enc.lo `test -f 'enc.c' || echo '$(srcdir)/'`enc.c
@@ -471,6 +572,13 @@ libwebpdsp_la-enc.lo: enc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-enc.lo `test -f 'enc.c' || echo '$(srcdir)/'`enc.c
 
+libwebpdsp_la-enc_mips32.lo: enc_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-enc_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-enc_mips32.Tpo -c -o libwebpdsp_la-enc_mips32.lo `test -f 'enc_mips32.c' || echo '$(srcdir)/'`enc_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-enc_mips32.Tpo $(DEPDIR)/libwebpdsp_la-enc_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enc_mips32.c' object='libwebpdsp_la-enc_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-enc_mips32.lo `test -f 'enc_mips32.c' || echo '$(srcdir)/'`enc_mips32.c
+
 libwebpdsp_la-enc_neon.lo: enc_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-enc_neon.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-enc_neon.Tpo -c -o libwebpdsp_la-enc_neon.lo `test -f 'enc_neon.c' || echo '$(srcdir)/'`enc_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-enc_neon.Tpo $(DEPDIR)/libwebpdsp_la-enc_neon.Plo
@@ -478,12 +586,26 @@ libwebpdsp_la-enc_neon.lo: enc_neon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-enc_neon.lo `test -f 'enc_neon.c' || echo '$(srcdir)/'`enc_neon.c
 
-libwebpdsp_la-enc_sse2.lo: enc_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdsp_la-enc_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_la-enc_sse2.Tpo -c -o libwebpdsp_la-enc_sse2.lo `test -f 'enc_sse2.c' || echo '$(srcdir)/'`enc_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_la-enc_sse2.Tpo $(DEPDIR)/libwebpdsp_la-enc_sse2.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enc_sse2.c' object='libwebpdsp_la-enc_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+libwebpdsp_avx2_la-enc_avx2.lo: enc_avx2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_avx2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdsp_avx2_la_CFLAGS) $(CFLAGS) -MT libwebpdsp_avx2_la-enc_avx2.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_avx2_la-enc_avx2.Tpo -c -o libwebpdsp_avx2_la-enc_avx2.lo `test -f 'enc_avx2.c' || echo '$(srcdir)/'`enc_avx2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_avx2_la-enc_avx2.Tpo $(DEPDIR)/libwebpdsp_avx2_la-enc_avx2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enc_avx2.c' object='libwebpdsp_avx2_la-enc_avx2.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdsp_la-enc_sse2.lo `test -f 'enc_sse2.c' || echo '$(srcdir)/'`enc_sse2.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_avx2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdsp_avx2_la_CFLAGS) $(CFLAGS) -c -o libwebpdsp_avx2_la-enc_avx2.lo `test -f 'enc_avx2.c' || echo '$(srcdir)/'`enc_avx2.c
+
+libwebpdsp_sse2_la-enc_sse2.lo: enc_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdsp_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdsp_sse2_la-enc_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdsp_sse2_la-enc_sse2.Tpo -c -o libwebpdsp_sse2_la-enc_sse2.lo `test -f 'enc_sse2.c' || echo '$(srcdir)/'`enc_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdsp_sse2_la-enc_sse2.Tpo $(DEPDIR)/libwebpdsp_sse2_la-enc_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='enc_sse2.c' object='libwebpdsp_sse2_la-enc_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdsp_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdsp_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdsp_sse2_la-enc_sse2.lo `test -f 'enc_sse2.c' || echo '$(srcdir)/'`enc_sse2.c
+
+libwebpdspdecode_la-alpha_processing.lo: alpha_processing.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-alpha_processing.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-alpha_processing.Tpo -c -o libwebpdspdecode_la-alpha_processing.lo `test -f 'alpha_processing.c' || echo '$(srcdir)/'`alpha_processing.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-alpha_processing.Tpo $(DEPDIR)/libwebpdspdecode_la-alpha_processing.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='alpha_processing.c' object='libwebpdspdecode_la-alpha_processing.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-alpha_processing.lo `test -f 'alpha_processing.c' || echo '$(srcdir)/'`alpha_processing.c
 
 libwebpdspdecode_la-cpu.lo: cpu.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-cpu.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-cpu.Tpo -c -o libwebpdspdecode_la-cpu.lo `test -f 'cpu.c' || echo '$(srcdir)/'`cpu.c
@@ -499,6 +621,20 @@ libwebpdspdecode_la-dec.lo: dec.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-dec.lo `test -f 'dec.c' || echo '$(srcdir)/'`dec.c
 
+libwebpdspdecode_la-dec_clip_tables.lo: dec_clip_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-dec_clip_tables.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-dec_clip_tables.Tpo -c -o libwebpdspdecode_la-dec_clip_tables.lo `test -f 'dec_clip_tables.c' || echo '$(srcdir)/'`dec_clip_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-dec_clip_tables.Tpo $(DEPDIR)/libwebpdspdecode_la-dec_clip_tables.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_clip_tables.c' object='libwebpdspdecode_la-dec_clip_tables.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-dec_clip_tables.lo `test -f 'dec_clip_tables.c' || echo '$(srcdir)/'`dec_clip_tables.c
+
+libwebpdspdecode_la-dec_mips32.lo: dec_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-dec_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-dec_mips32.Tpo -c -o libwebpdspdecode_la-dec_mips32.lo `test -f 'dec_mips32.c' || echo '$(srcdir)/'`dec_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-dec_mips32.Tpo $(DEPDIR)/libwebpdspdecode_la-dec_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_mips32.c' object='libwebpdspdecode_la-dec_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-dec_mips32.lo `test -f 'dec_mips32.c' || echo '$(srcdir)/'`dec_mips32.c
+
 libwebpdspdecode_la-dec_neon.lo: dec_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-dec_neon.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-dec_neon.Tpo -c -o libwebpdspdecode_la-dec_neon.lo `test -f 'dec_neon.c' || echo '$(srcdir)/'`dec_neon.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-dec_neon.Tpo $(DEPDIR)/libwebpdspdecode_la-dec_neon.Plo
@@ -506,19 +642,26 @@ libwebpdspdecode_la-dec_neon.lo: dec_neon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-dec_neon.lo `test -f 'dec_neon.c' || echo '$(srcdir)/'`dec_neon.c
 
-libwebpdspdecode_la-dec_sse2.lo: dec_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-dec_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-dec_sse2.Tpo -c -o libwebpdspdecode_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-dec_sse2.Tpo $(DEPDIR)/libwebpdspdecode_la-dec_sse2.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_sse2.c' object='libwebpdspdecode_la-dec_sse2.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
-
 libwebpdspdecode_la-lossless.lo: lossless.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-lossless.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-lossless.Tpo -c -o libwebpdspdecode_la-lossless.lo `test -f 'lossless.c' || echo '$(srcdir)/'`lossless.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-lossless.Tpo $(DEPDIR)/libwebpdspdecode_la-lossless.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless.c' object='libwebpdspdecode_la-lossless.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-lossless.lo `test -f 'lossless.c' || echo '$(srcdir)/'`lossless.c
+
+libwebpdspdecode_la-lossless_mips32.lo: lossless_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-lossless_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-lossless_mips32.Tpo -c -o libwebpdspdecode_la-lossless_mips32.lo `test -f 'lossless_mips32.c' || echo '$(srcdir)/'`lossless_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-lossless_mips32.Tpo $(DEPDIR)/libwebpdspdecode_la-lossless_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless_mips32.c' object='libwebpdspdecode_la-lossless_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-lossless_mips32.lo `test -f 'lossless_mips32.c' || echo '$(srcdir)/'`lossless_mips32.c
+
+libwebpdspdecode_la-lossless_neon.lo: lossless_neon.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-lossless_neon.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-lossless_neon.Tpo -c -o libwebpdspdecode_la-lossless_neon.lo `test -f 'lossless_neon.c' || echo '$(srcdir)/'`lossless_neon.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-lossless_neon.Tpo $(DEPDIR)/libwebpdspdecode_la-lossless_neon.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless_neon.c' object='libwebpdspdecode_la-lossless_neon.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-lossless_neon.lo `test -f 'lossless_neon.c' || echo '$(srcdir)/'`lossless_neon.c
 
 libwebpdspdecode_la-upsampling.lo: upsampling.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-upsampling.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-upsampling.Tpo -c -o libwebpdspdecode_la-upsampling.lo `test -f 'upsampling.c' || echo '$(srcdir)/'`upsampling.c
@@ -534,19 +677,47 @@ libwebpdspdecode_la-upsampling_neon.lo: upsampling_neon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-upsampling_neon.lo `test -f 'upsampling_neon.c' || echo '$(srcdir)/'`upsampling_neon.c
 
-libwebpdspdecode_la-upsampling_sse2.lo: upsampling_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-upsampling_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-upsampling_sse2.Tpo -c -o libwebpdspdecode_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-upsampling_sse2.Tpo $(DEPDIR)/libwebpdspdecode_la-upsampling_sse2.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='upsampling_sse2.c' object='libwebpdspdecode_la-upsampling_sse2.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
-
 libwebpdspdecode_la-yuv.lo: yuv.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-yuv.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-yuv.Tpo -c -o libwebpdspdecode_la-yuv.lo `test -f 'yuv.c' || echo '$(srcdir)/'`yuv.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-yuv.Tpo $(DEPDIR)/libwebpdspdecode_la-yuv.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv.c' object='libwebpdspdecode_la-yuv.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-yuv.lo `test -f 'yuv.c' || echo '$(srcdir)/'`yuv.c
+
+libwebpdspdecode_la-yuv_mips32.lo: yuv_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_la-yuv_mips32.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_la-yuv_mips32.Tpo -c -o libwebpdspdecode_la-yuv_mips32.lo `test -f 'yuv_mips32.c' || echo '$(srcdir)/'`yuv_mips32.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_la-yuv_mips32.Tpo $(DEPDIR)/libwebpdspdecode_la-yuv_mips32.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv_mips32.c' object='libwebpdspdecode_la-yuv_mips32.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-yuv_mips32.lo `test -f 'yuv_mips32.c' || echo '$(srcdir)/'`yuv_mips32.c
+
+libwebpdspdecode_sse2_la-dec_sse2.lo: dec_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-dec_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Tpo -c -o libwebpdspdecode_sse2_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Tpo $(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='dec_sse2.c' object='libwebpdspdecode_sse2_la-dec_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_sse2_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c
+
+libwebpdspdecode_sse2_la-lossless_sse2.lo: lossless_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-lossless_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-lossless_sse2.Tpo -c -o libwebpdspdecode_sse2_la-lossless_sse2.lo `test -f 'lossless_sse2.c' || echo '$(srcdir)/'`lossless_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_sse2_la-lossless_sse2.Tpo $(DEPDIR)/libwebpdspdecode_sse2_la-lossless_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='lossless_sse2.c' object='libwebpdspdecode_sse2_la-lossless_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_sse2_la-lossless_sse2.lo `test -f 'lossless_sse2.c' || echo '$(srcdir)/'`lossless_sse2.c
+
+libwebpdspdecode_sse2_la-upsampling_sse2.lo: upsampling_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-upsampling_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-upsampling_sse2.Tpo -c -o libwebpdspdecode_sse2_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_sse2_la-upsampling_sse2.Tpo $(DEPDIR)/libwebpdspdecode_sse2_la-upsampling_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='upsampling_sse2.c' object='libwebpdspdecode_sse2_la-upsampling_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_sse2_la-upsampling_sse2.lo `test -f 'upsampling_sse2.c' || echo '$(srcdir)/'`upsampling_sse2.c
+
+libwebpdspdecode_sse2_la-yuv_sse2.lo: yuv_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-yuv_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-yuv_sse2.Tpo -c -o libwebpdspdecode_sse2_la-yuv_sse2.lo `test -f 'yuv_sse2.c' || echo '$(srcdir)/'`yuv_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_sse2_la-yuv_sse2.Tpo $(DEPDIR)/libwebpdspdecode_sse2_la-yuv_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv_sse2.c' object='libwebpdspdecode_sse2_la-yuv_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_sse2_la-yuv_sse2.lo `test -f 'yuv_sse2.c' || echo '$(srcdir)/'`yuv_sse2.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
