@@ -898,10 +898,7 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
     }
     else if (!engine && Doc::IsSupportedFile(filePath)) {
         Doc doc = Doc::CreateFromFile(filePath);
-        // don't load PalmDoc, etc. files as long as they're not correctly formatted
-        if (Doc_Mobi == doc.Type() && Pdb_Mobipocket != doc.GetPdbDocType())
-            doc.Delete();
-        else if (doc.IsDocLoaded()) {
+        if (doc.IsDocLoaded()) {
             ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
             // TODO: SetDoc triggers a relayout which spins the message loop early
             // through UpdateWindow - make sure that Canvas uses the correct WndProc
@@ -2374,6 +2371,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case Doc_Epub: type = Engine_Epub; break;
         case Doc_Fb2:  type = Engine_Fb2;  break;
         case Doc_Mobi: type = Engine_Mobi; break;
+        case Doc_Pdb:  type = Engine_Pdb;  break;
         default: type = Engine_None; break;
         }
     }

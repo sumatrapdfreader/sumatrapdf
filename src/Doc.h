@@ -13,6 +13,7 @@
 class EpubDoc;
 class Fb2Doc;
 class MobiDoc;
+class PalmDoc;
 
 struct ImageData;
 enum DocumentProperty;
@@ -21,7 +22,7 @@ class EbookTocVisitor;
 class HtmlFormatter;
 class HtmlFormatterArgs;
 
-enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi };
+enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi, Doc_Pdb };
 enum DocError { Error_None, Error_Unknown };
 
 class Doc
@@ -45,6 +46,7 @@ protected:
         EpubDoc *   epubDoc;
         Fb2Doc *    fb2Doc;
         MobiDoc *   mobiDoc;
+        PalmDoc *   palmDoc;
     };
 
     const WCHAR *GetFilePathFromDoc() const;
@@ -59,6 +61,7 @@ public:
     explicit Doc(EpubDoc *doc);
     explicit Doc(Fb2Doc *doc);
     explicit Doc(MobiDoc *doc);
+    explicit Doc(PalmDoc *doc);
 
     void Delete();
 
@@ -82,7 +85,6 @@ public:
     ImageData *GetCoverImage() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor) const;
-    PdbDocType GetPdbDocType() const;
     HtmlFormatter *CreateFormatter(HtmlFormatterArgs *args) const;
 
     static Doc CreateFromFile(const WCHAR *filePath);

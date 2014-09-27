@@ -45,6 +45,9 @@ void Doc::Delete()
     case Doc_Mobi:
         delete mobiDoc;
         break;
+    case Doc_Pdb:
+        delete palmDoc;
+        break;
     case Doc_None:
         break;
     default:
@@ -76,6 +79,13 @@ Doc::Doc(MobiDoc *doc)
     mobiDoc = doc;
 }
 
+Doc::Doc(PalmDoc *doc)
+{
+    Clear();
+    type = doc ? Doc_Pdb : Doc_None;
+    palmDoc = doc;
+}
+
 void Doc::Clear()
 {
     type = Doc_None;
@@ -94,6 +104,8 @@ const WCHAR *Doc::GetFilePathFromDoc() const
         return fb2Doc->GetFileName();
     case Doc_Mobi:
         return mobiDoc->GetFileName();
+    case Doc_Pdb:
+        return palmDoc->GetFileName();
     case Doc_None:
         return NULL;
     default:
@@ -123,6 +135,8 @@ const WCHAR *Doc::GetDefaultFileExt() const
         return fb2Doc->IsZipped() ? L".fb2z" : L".fb2";
     case Doc_Mobi:
         return L".mobi";
+    case Doc_Pdb:
+        return L".pdb";
     case Doc_None:
         return NULL;
     default:
@@ -140,6 +154,8 @@ WCHAR *Doc::GetProperty(DocumentProperty prop) const
         return fb2Doc->GetProperty(prop);
     case Doc_Mobi:
         return mobiDoc->GetProperty(prop);
+    case Doc_Pdb:
+        return palmDoc->GetProperty(prop);
     case Doc_None:
         return NULL;
     default:
@@ -157,6 +173,8 @@ const char *Doc::GetHtmlData(size_t &len) const
         return fb2Doc->GetTextData(&len);
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlData(len);
+    case Doc_Pdb:
+        return palmDoc->GetTextData(&len);
     default:
         CrashIf(true);
         return NULL;
@@ -172,6 +190,8 @@ size_t Doc::GetHtmlDataSize() const
         return fb2Doc->GetTextDataSize();
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlSize();
+    case Doc_Pdb:
+        return palmDoc->GetTextDataSize();
     default:
         CrashIf(true);
         return 0;
@@ -181,12 +201,12 @@ size_t Doc::GetHtmlDataSize() const
 ImageData *Doc::GetCoverImage() const
 {
     switch (type) {
-    case Doc_Epub:
-        return NULL;
     case Doc_Fb2:
         return fb2Doc->GetCoverImage();
     case Doc_Mobi:
         return mobiDoc->GetCoverImage();
+    case Doc_Epub:
+    case Doc_Pdb:
     default:
         return NULL;
     }
@@ -201,6 +221,8 @@ bool Doc::HasToc() const
         return fb2Doc->HasToc();
     case Doc_Mobi:
         return mobiDoc->HasToc();
+    case Doc_Pdb:
+        return palmDoc->HasToc();
     default:
         return false;
     }
@@ -215,17 +237,11 @@ bool Doc::ParseToc(EbookTocVisitor *visitor) const
         return fb2Doc->ParseToc(visitor);
     case Doc_Mobi:
         return mobiDoc->ParseToc(visitor);
+    case Doc_Pdb:
+        return palmDoc->ParseToc(visitor);
     default:
         return false;
     }
-}
-
-PdbDocType Doc::GetPdbDocType() const
-{
-    if (Doc_Mobi == type)
-        return mobiDoc->GetDocType();
-    CrashIf(true);
-    return Pdb_Unknown;
 }
 
 HtmlFormatter *Doc::CreateFormatter(HtmlFormatterArgs *args) const
@@ -237,6 +253,8 @@ HtmlFormatter *Doc::CreateFormatter(HtmlFormatterArgs *args) const
         return new Fb2Formatter(args, fb2Doc);
     case Doc_Mobi:
         return new MobiFormatter(args, mobiDoc);
+    case Doc_Pdb:
+        return new HtmlFormatter(args);
     default:
         CrashIf(true);
         return NULL;
@@ -250,8 +268,14 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
         doc = Doc(EpubDoc::CreateFromFile(filePath));
     else if (Fb2Doc::IsSupportedFile(filePath))
         doc = Doc(Fb2Doc::CreateFromFile(filePath));
-    else if (MobiDoc::IsSupportedFile(filePath))
+    else if (MobiDoc::IsSupportedFile(filePath)) {
         doc = Doc(MobiDoc::CreateFromFile(filePath));
+        // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
+        if (doc.mobiDoc && doc.mobiDoc->GetDocType() != Pdb_Mobipocket)
+            doc.Clear();
+    }
+    else if (PalmDoc::IsSupportedFile(filePath))
+        doc = Doc(PalmDoc::CreateFromFile(filePath));
 
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message
@@ -271,5 +295,6 @@ bool Doc::IsSupportedFile(const WCHAR *filePath, bool sniff)
 {
     return EpubDoc::IsSupportedFile(filePath, sniff) ||
            Fb2Doc::IsSupportedFile(filePath, sniff) ||
-           MobiDoc::IsSupportedFile(filePath, sniff);
+           MobiDoc::IsSupportedFile(filePath, sniff) ||
+           PalmDoc::IsSupportedFile(filePath, sniff);
 }

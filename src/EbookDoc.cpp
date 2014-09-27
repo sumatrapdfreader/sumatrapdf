@@ -1099,6 +1099,11 @@ const char *PalmDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
+size_t PalmDoc::GetTextDataSize()
+{
+    return htmlData.Size();
+}
+
 WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
 {
     return NULL;

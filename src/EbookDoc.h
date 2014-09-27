@@ -125,6 +125,7 @@ public:
     ~PalmDoc();
 
     const char *GetTextData(size_t *lenOut);
+    size_t GetTextDataSize();
 
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
