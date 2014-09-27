@@ -23,11 +23,11 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
            CbxEngine::IsSupportedFile(filePath, sniff)  ||
            PsEngine::IsSupportedFile(filePath, sniff)   ||
            Chm2Engine::IsSupportedFile(filePath, sniff) ||
-           PdbEngine::IsSupportedFile(filePath, sniff)  ||
            enableEbookEngines && (
                EpubEngine::IsSupportedFile(filePath, sniff) ||
                Fb2Engine::IsSupportedFile(filePath, sniff)  ||
                MobiEngine::IsSupportedFile(filePath, sniff) ||
+               PdbEngine::IsSupportedFile(filePath, sniff)  ||
                HtmlEngine::IsSupportedFile(filePath, sniff) ||
                TxtEngine::IsSupportedFile(filePath, sniff)
            );
@@ -65,9 +65,6 @@ RetrySniffing:
     } else if (enableChm2Engine && Chm2Engine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm2) {
         engine = Chm2Engine::CreateFromFile(filePath);
         engineType = Engine_Chm2;
-    } else if (PdbEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Pdb) {
-        engine = PdbEngine::CreateFromFile(filePath);
-        engineType = Engine_Pdb;
     } else if (!enableEbookEngines) {
         // don't try to create any of the below ebook engines
     } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
@@ -79,6 +76,9 @@ RetrySniffing:
     } else if (MobiEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Mobi) {
         engine = MobiEngine::CreateFromFile(filePath);
         engineType = Engine_Mobi;
+    } else if (PdbEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Pdb) {
+        engine = PdbEngine::CreateFromFile(filePath);
+        engineType = Engine_Pdb;
     } else if (HtmlEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Html) {
         engine = HtmlEngine::CreateFromFile(filePath);
         engineType = Engine_Html;
