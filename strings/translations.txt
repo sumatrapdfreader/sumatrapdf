@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5ea068622c02c87e21cb33b8f9ed458b636b26a1
+e6ce2cc94a65158dfb012b44d9adee4dd037c438
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8105,7 +8105,7 @@ ca:Documents FictionBook
 cn:小说文档
 cy:Dogfennau FictionBook
 cz:Dokumenty FictionBook
-de:FictionBook-Dokumente
+de:FictionBook E-Bücher
 dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
@@ -12336,6 +12336,8 @@ tw:頁:
 uk:Сторінка:
 uz:Bet:
 vn:Trang:
+:PalmDoc documents
+de:PalmDoc E-Bücher
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
