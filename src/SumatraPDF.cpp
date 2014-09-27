@@ -876,7 +876,12 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
                                                      gGlobalPrefs->chmUI.useFixedPageUI,
                                                      gGlobalPrefs->ebookUI.useFixedPageUI);
 
-    if (!engine && ChmModel::IsSupportedFile(filePath)) {
+    if (engine) {
+LoadEngineInFixedPageUI:
+        ctrl = new DisplayModel(engine, engineType, win->cbHandler);
+        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
+    }
+    else if (ChmModel::IsSupportedFile(filePath)) {
         ChmModel *chmModel = ChmModel::Create(filePath, win->cbHandler);
         if (chmModel) {
             // make sure that MSHTML can't be used as a potential exploit
@@ -890,13 +895,13 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
                 delete chmModel;
                 engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType);
                 CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
-                goto LoadChmInFixedPageUI;
+                goto LoadEngineInFixedPageUI;
             }
             ctrl = chmModel;
-            CrashIf(!ctrl || !ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook());
         }
+        CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
     }
-    else if (!engine && Doc::IsSupportedFile(filePath)) {
+    else if (Doc::IsSupportedFile(filePath)) {
         Doc doc = Doc::CreateFromFile(filePath);
         if (doc.IsDocLoaded()) {
             ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
@@ -907,14 +912,6 @@ static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pw
             ctrl->AsEbook()->SetDoc(doc, reparseIdx, displayMode);
         }
         CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
-    }
-    else if (!engine) {
-        ctrl = NULL;
-    }
-    else {
-LoadChmInFixedPageUI:
-        ctrl = new DisplayModel(engine, engineType, win->cbHandler);
-        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
     }
 
     return ctrl;
