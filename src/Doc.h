@@ -17,7 +17,6 @@ class PalmDoc;
 
 struct ImageData;
 enum DocumentProperty;
-enum PdbDocType;
 class EbookTocVisitor;
 class HtmlFormatter;
 class HtmlFormatterArgs;
@@ -42,7 +41,7 @@ protected:
     ScopedMem<WCHAR> filePath;
 
     union {
-        void *generic;
+        void *      generic;
         EpubDoc *   epubDoc;
         Fb2Doc *    fb2Doc;
         MobiDoc *   mobiDoc;

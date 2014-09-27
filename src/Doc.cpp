@@ -272,7 +272,7 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
         doc = Doc(MobiDoc::CreateFromFile(filePath));
         // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
         if (doc.mobiDoc && doc.mobiDoc->GetDocType() != Pdb_Mobipocket)
-            doc.Clear();
+            doc.Delete();
     }
     else if (PalmDoc::IsSupportedFile(filePath))
         doc = Doc(PalmDoc::CreateFromFile(filePath));
