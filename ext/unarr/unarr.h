@@ -12,6 +12,8 @@
 typedef int64_t off64_t;
 typedef int64_t time64_t;
 
+#define UNARR_API_VERSION 100
+
 /***** common/stream *****/
 
 typedef struct ar_stream_s ar_stream;
