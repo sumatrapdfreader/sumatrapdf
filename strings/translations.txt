@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e6ce2cc94a65158dfb012b44d9adee4dd037c438
+a271ab040576788c314aa43f1e3260f73836c4ff
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2959,6 +2959,7 @@ ja:ウィンドウ(&W)
 kr:창(&W)
 ru:&Окно
 sk:&Okno
+sl:&Okno
 uk:&Вікно
 :&Yes
 am:&Այո
@@ -12337,7 +12338,11 @@ uk:Сторінка:
 uz:Bet:
 vn:Trang:
 :PalmDoc documents
+am:PalmDoc փաստաթղթեր
 de:PalmDoc E-Bücher
+fr:Fichiers PalmDoc
+it:Documenti PalmDoc
+sl:PalmDoc dokumenti
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
@@ -15872,6 +15877,7 @@ nl:Gebruik &tabs
 pl:Włącz wyświetlanie &kart
 ru:Использовать &вкладки
 sk:Povoliť &záložky
+sl:Uporabljaj &zavihke
 sp-rs:Koristiti tab
 sr-rs:Користити таб
 uk:Використовувати вкладки

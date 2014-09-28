@@ -941,7 +941,7 @@ const char * gTranslations_am =
   "%u \325\247\325\273\325\250 \325\243\325\270\325\265\325\270\326\202\325\251\325\265\325\270\326\202\325\266 \325\271\325\270\326\202\325\266\325\253\0"\
   "\324\267\325\273\325\253 \325\267\325\241\326\200\325\252\325\250\0"\
   "\324\267\325\273\325\250.\0"\
-  "\0"\
+  "PalmDoc \326\203\325\241\325\275\325\277\325\241\325\251\325\262\325\251\325\245\326\200\0"\
   "\324\275\325\266\325\244\326\200\325\270\326\202\325\264 \325\245\325\266\326\204 \325\275\325\272\325\241\325\275\325\245\325\254...\0"\
   "\325\200\325\245\325\277\325\243\326\200\325\276\325\241\325\256\326\204\325\241\325\265\325\253\325\266 \326\206\325\241\325\265\325\254\325\245\326\200\0"\
   "\325\206\325\245\326\200&\325\257\325\241\325\265\325\241\326\201\325\270\326\202\325\264\325\250\tCtrl+L\0"\
@@ -4661,7 +4661,7 @@ const char * gTranslations_fr =
   "La page %u n'existe pas\0"\
   "Mise \303\240 l'\303\251chelle\0"\
   "Page\302\240:\0"\
-  "\0"\
+  "Fichiers PalmDoc\0"\
   "Patientez s'il vous pla\303\256t (g\303\251n\303\251ration...)\0"\
   "Documents Postscript\0"\
   "P&r\303\251sentation\tCtrl+L\0"\
@@ -7141,7 +7141,7 @@ const char * gTranslations_it =
   "Pagina numero %u inesistente\0"\
   "Adattamento pagina\0"\
   "Pagina:\0"\
-  "\0"\
+  "Documenti PalmDoc\0"\
   "Rendering in corso - attendere...\0"\
   "Documenti PostScript\0"\
   "Pr&esentazione\t<Ctrl>+L\0"\
@@ -11470,7 +11470,7 @@ const char * gTranslations_sl =
   "&Presko\304\215i to razli\304\215ico\0"\
   "&Uporabi izvirno velikost strani\0"\
   "&Pogled\0"\
-  "\0"\
+  "&Okno\0"\
   "&Da\0"\
   "Po&ve\304\215ava\0"\
   "(od %d)\0"\
@@ -11605,7 +11605,7 @@ const char * gTranslations_sl =
   "Stran \305\241tevilka %u ne obstaja\0"\
   "Merilo strani\0"\
   "Stran:\0"\
-  "\0"\
+  "PalmDoc dokumenti\0"\
   "Po\304\215akajte trenutek, upodobitev poteka \342\200\246\0"\
   "Postscript dokumenti\0"\
   "Pr&edstavitev\tCtrl+L\0"\
@@ -11655,7 +11655,7 @@ const char * gTranslations_sl =
   "Tekstovni dokumenti\0"\
   "Naslov:\0"\
   "Neznana izvorna datoteka (%s)\0"\
-  "\0"\
+  "Uporabljaj &zavihke\0"\
   "Pogled\0"\
   "Ob&i\305\241\304\215i doma\304\215o stran\0"\
   "Opozorilo\0"\
