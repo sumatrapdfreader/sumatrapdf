@@ -58,7 +58,7 @@ static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
 static WCHAR *ExtractHtmlText(EpubDoc *doc)
 {
     size_t len;
-    const char *data = doc->GetTextData(&len);
+    const char *data = doc->GetHtmlData(&len);
 
     str::Str<char> text(len / 2);
     HtmlPullParser p(data, len);

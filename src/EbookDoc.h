@@ -48,8 +48,8 @@ public:
     explicit EpubDoc(IStream *stream);
     ~EpubDoc();
 
-    const char *GetTextData(size_t *lenOut);
-    size_t GetTextDataSize();
+    const char *GetHtmlData(size_t *lenOut) const;
+    size_t GetHtmlDataSize() const;
     ImageData *GetImageData(const char *id, const char *pagePath);
     char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut);
 
@@ -91,8 +91,8 @@ public:
     explicit Fb2Doc(IStream *stream);
     ~Fb2Doc();
 
-    const char *GetTextData(size_t *lenOut);
-    size_t GetTextDataSize();
+    const char *GetXmlData(size_t *lenOut) const;
+    size_t GetXmlDataSize() const;
     ImageData *GetImageData(const char *id);
     ImageData *GetCoverImage();
 
@@ -124,8 +124,8 @@ public:
     explicit PalmDoc(const WCHAR *fileName);
     ~PalmDoc();
 
-    const char *GetTextData(size_t *lenOut);
-    size_t GetTextDataSize();
+    const char *GetHtmlData(size_t *lenOut) const;
+    size_t GetHtmlDataSize() const;
 
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
@@ -153,7 +153,7 @@ public:
     explicit HtmlDoc(const WCHAR *fileName);
     ~HtmlDoc();
 
-    const char *GetTextData(size_t *lenOut);
+    const char *GetHtmlData(size_t *lenOut) const;
     ImageData *GetImageData(const char *id);
     char *GetFileData(const char *relPath, size_t *lenOut);
 
@@ -176,7 +176,7 @@ class TxtDoc {
 public:
     explicit TxtDoc(const WCHAR *fileName);
 
-    const char *GetTextData(size_t *lenOut);
+    const char *GetHtmlData(size_t *lenOut) const;
 
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;

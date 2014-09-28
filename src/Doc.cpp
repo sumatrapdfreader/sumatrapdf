@@ -168,13 +168,13 @@ const char *Doc::GetHtmlData(size_t &len) const
 {
     switch (type) {
     case Doc_Epub:
-        return epubDoc->GetTextData(&len);
+        return epubDoc->GetHtmlData(&len);
     case Doc_Fb2:
-        return fb2Doc->GetTextData(&len);
+        return fb2Doc->GetXmlData(&len);
     case Doc_Mobi:
-        return mobiDoc->GetBookHtmlData(len);
+        return mobiDoc->GetHtmlData(len);
     case Doc_Pdb:
-        return palmDoc->GetTextData(&len);
+        return palmDoc->GetHtmlData(&len);
     default:
         CrashIf(true);
         return NULL;
@@ -185,13 +185,13 @@ size_t Doc::GetHtmlDataSize() const
 {
     switch (type) {
     case Doc_Epub:
-        return epubDoc->GetTextDataSize();
+        return epubDoc->GetHtmlDataSize();
     case Doc_Fb2:
-        return fb2Doc->GetTextDataSize();
+        return fb2Doc->GetXmlDataSize();
     case Doc_Mobi:
-        return mobiDoc->GetBookHtmlSize();
+        return mobiDoc->GetHtmlDataSize();
     case Doc_Pdb:
-        return palmDoc->GetTextDataSize();
+        return palmDoc->GetHtmlDataSize();
     default:
         CrashIf(true);
         return 0;

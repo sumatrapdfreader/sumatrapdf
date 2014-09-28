@@ -111,7 +111,7 @@ static void MobiSaveHtml(const WCHAR *filePathBase, MobiDoc *mb)
     ScopedMem<WCHAR> outFile(str::Join(filePathBase, L"_pp.html"));
 
     size_t htmlLen;
-    const char *html = mb->GetBookHtmlData(htmlLen);
+    const char *html = mb->GetHtmlData(htmlLen);
     size_t ppHtmlLen;
     char *ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
     file::WriteAll(outFile.Get(), ppHtml, ppHtmlLen);
@@ -148,7 +148,7 @@ static void MobiLayout(MobiDoc *mobiDoc)
     args.pageDy = 480;
     args.SetFontName(L"Tahoma");
     args.fontSize = 12;
-    args.htmlStr = mobiDoc->GetBookHtmlData(args.htmlStrLen);
+    args.htmlStr = mobiDoc->GetHtmlData(args.htmlStrLen);
     args.textAllocator = &textAllocator;
 
     MobiFormatter mf(&args, mobiDoc);

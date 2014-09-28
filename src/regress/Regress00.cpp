@@ -37,7 +37,7 @@ static void Regress00()
 
     PoolAllocator textAllocator;
     HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
-    args->htmlStr = doc->GetTextData(&args->htmlStrLen);
+    args->htmlStr = doc->GetHtmlData(&args->htmlStrLen);
     HtmlPage *pages[3];
     HtmlFormatter *formatter = new EpubFormatter(args, doc);
     int page = 0;
@@ -51,7 +51,7 @@ static void Regress00()
     CrashAlwaysIf(page != 3);
 
     args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
-    args->htmlStr = doc->GetTextData(&args->htmlStrLen);
+    args->htmlStr = doc->GetHtmlData(&args->htmlStrLen);
     args->reparseIdx = pages[2]->reparseIdx;
     formatter = new EpubFormatter(args, doc);
     // if bug is present, this will crash in formatter->Next()

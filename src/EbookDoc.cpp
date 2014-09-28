@@ -416,13 +416,13 @@ void EpubDoc::ParseMetadata(const char *content)
     }
 }
 
-const char *EpubDoc::GetTextData(size_t *lenOut)
+const char *EpubDoc::GetHtmlData(size_t *lenOut) const
 {
     *lenOut = htmlData.Size();
     return htmlData.Get();
 }
 
-size_t EpubDoc::GetTextDataSize()
+size_t EpubDoc::GetHtmlDataSize() const
 {
     return htmlData.Size();
 }
@@ -846,13 +846,13 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
     images.Append(data);
 }
 
-const char *Fb2Doc::GetTextData(size_t *lenOut)
+const char *Fb2Doc::GetXmlData(size_t *lenOut) const
 {
     *lenOut = xmlData.Size();
     return xmlData.Get();
 }
 
-size_t Fb2Doc::GetTextDataSize()
+size_t Fb2Doc::GetXmlDataSize() const
 {
     return xmlData.Size();
 }
@@ -901,7 +901,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor *visitor)
     int level = 0;
 
     size_t xmlLen;
-    const char *xmlData = GetTextData(&xmlLen);
+    const char *xmlData = GetXmlData(&xmlLen);
     HtmlPullParser parser(xmlData, xmlLen);
     HtmlToken *tok;
     while ((tok = parser.Next()) != NULL && !tok->IsError()) {
@@ -1073,7 +1073,7 @@ bool PalmDoc::Load()
     }
 
     size_t textLen;
-    const char *text = mobiDoc->GetBookHtmlData(textLen);
+    const char *text = mobiDoc->GetHtmlData(textLen);
     UINT codePage = GuessTextCodepage(text, textLen, CP_ACP);
     ScopedMem<char> textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
     textLen = str::Len(textUtf8);
@@ -1093,13 +1093,13 @@ bool PalmDoc::Load()
     return true;
 }
 
-const char *PalmDoc::GetTextData(size_t *lenOut)
+const char *PalmDoc::GetHtmlData(size_t *lenOut) const
 {
     *lenOut = htmlData.Size();
     return htmlData.Get();
 }
 
-size_t PalmDoc::GetTextDataSize()
+size_t PalmDoc::GetHtmlDataSize() const
 {
     return htmlData.Size();
 }
@@ -1199,7 +1199,7 @@ bool HtmlDoc::Load()
     return true;
 }
 
-const char *HtmlDoc::GetTextData(size_t *lenOut)
+const char *HtmlDoc::GetHtmlData(size_t *lenOut) const
 {
     *lenOut = str::Len(htmlData);
     return htmlData;
@@ -1469,7 +1469,7 @@ bool TxtDoc::Load()
     return true;
 }
 
-const char *TxtDoc::GetTextData(size_t *lenOut)
+const char *TxtDoc::GetHtmlData(size_t *lenOut) const
 {
     *lenOut = htmlData.Size();
     return htmlData.Get();

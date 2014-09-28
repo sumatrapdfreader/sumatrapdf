@@ -834,7 +834,7 @@ bool MobiDoc::LoadDocument(PdbReader *pdbReader)
     return true;
 }
 
-char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
+char *MobiDoc::GetHtmlData(size_t& lenOut) const
 {
     lenOut = doc->Size();
     return doc->Get();

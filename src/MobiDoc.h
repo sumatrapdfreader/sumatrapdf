@@ -56,8 +56,8 @@ public:
 
     ~MobiDoc();
 
-    char *              GetBookHtmlData(size_t& lenOut) const;
-    size_t              GetBookHtmlSize() const { return doc->Size(); }
+    char *              GetHtmlData(size_t& lenOut) const;
+    size_t              GetHtmlDataSize() const { return doc->Size(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     const WCHAR *       GetFileName() const { return fileName; }
