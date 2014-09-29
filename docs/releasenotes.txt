@@ -3,7 +3,7 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-2.6 (????-??-??)
+3.0 (????-??-??)
 
 * Tabs!
 * deprecated the browser plugin (remains installed if used)
