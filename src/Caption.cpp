@@ -35,9 +35,9 @@ using namespace Gdiplus;
 // area covers the entire screen. If it does, the manager assumes that this is a fullscreen
 // window and hides the taskbar and any topmost window. A simple workaround is to
 // expand the non-client border at the expense of client area.
-// Note(kjk): not sure what problem setting NON_CLIENT_BAND to 1 was meant to solve
-// but it also causes https://code.google.com/p/sumatrapdf/issues/detail?id=2729
-#define NON_CLIENT_BAND  0
+#define NON_CLIENT_BAND  1
+// This non-client-band hack is only needed for maximized non-fullscreen windows:
+static inline bool NeedsNonClientBandHack(HWND hwnd) { return IsZoomed(hwnd) && (GetWindowLong(hwnd, GWL_STYLE) & WS_CAPTION); }
 
 // http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
 #define REG_DWM  L"Software\\Microsoft\\Windows\\DWM"
@@ -528,7 +528,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         {
         case WM_NCPAINT:
 #if NON_CLIENT_BAND > 0
-            if (IsZoomed(hwnd))
+            if (NeedsNonClientBandHack(hwnd))
                 DrawFrame(hwnd, RGB(0,0,0), false);
 #endif
             break;
@@ -552,11 +552,10 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_SIZE:
             // Extend the translucent frame in the client area.
             if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
-                long ws = GetWindowLong(hwnd, GWL_STYLE);
-                bool maximized = IsZoomed(hwnd);
+                LONG ws = GetWindowLong(hwnd, GWL_STYLE);
                 int frameThickness = !(ws & WS_THICKFRAME) ? 0 : GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, maximized ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
-                MARGINS margins = { 0, 0, frameThickness + captionHeight, maximized ? NON_CLIENT_BAND : 0 };
+                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, IsZoomed(hwnd) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
+                MARGINS margins = { 0, 0, frameThickness + captionHeight, NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0 };
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
                 win->extendedFrameHeight = frameThickness + captionHeight;
             }
@@ -635,7 +634,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             else
                 rClient.top = rWindow.top + rWindow.bottom - rClient.bottom;
             // prevents the hiding of the topmost windows, when this window is maximized
-            if (IsZoomed(hwnd))
+            if (NeedsNonClientBandHack(hwnd))
                 rClient.bottom -= NON_CLIENT_BAND;
             *r = rClient;
             *callDef = false;
