@@ -2269,7 +2269,10 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
         win->RedrawAll();
     }
 
-    SetFocus(win->hwndFrame);
+    // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
+    // edit ctrl doesn't receive WM_KILLFOCUS if we do SetFocus() here, even if we call SetFocus() later
+    // on.
+    //SetFocus(win->hwndFrame);
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
     // HeapValidate() is left here to help us catch the possibility that the fix
