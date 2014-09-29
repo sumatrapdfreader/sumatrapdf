@@ -3022,19 +3022,16 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
+    RelayoutFrame(win);
+
     if (win->presentation || win->isFullScreen) {
         RectI fullscreen = GetFullscreenRect(win->hwndFrame);
         WindowRect rect(win->hwndFrame);
         // Windows XP sometimes seems to change the window size on it's own
         if (rect != fullscreen && rect != GetVirtualScreenRect()) {
             MoveWindow(win->hwndFrame, fullscreen);
-            // changing size will trigger WM_SIZE and FrameOnSize() will be called again,
-            // so no need to call RelayouFrame() now
-            return;
         }
     }
-
-    RelayoutFrame(win);
 }
 
 void SetCurrentLanguageAndRefreshUi(const char *langCode)
