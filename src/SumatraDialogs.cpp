@@ -57,7 +57,6 @@ static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM d
     return DialogBoxIndirectParam(NULL, rtlDlgTemplate, parent, DlgProc, data);
 }
 
-
 /* For passing data to/from GetPassword dialog */
 struct Dialog_GetPassword_Data {
     const WCHAR *  fileName;   /* name of the file for which we need the password */

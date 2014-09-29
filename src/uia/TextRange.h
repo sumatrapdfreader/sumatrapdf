@@ -10,7 +10,6 @@
 class TextSelection;
 class SumatraUIAutomationDocumentProvider;
 
-
 class SumatraUIAutomationTextRange : public ITextRangeProvider {
     LONG refCount;
 

@@ -534,7 +534,6 @@ void OnMenuAbout()
     if (!gHwndAbout)
         return;
 
-
     ToggleWindowStyle(gHwndAbout, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
 
     // get the dimensions required for the about box's content

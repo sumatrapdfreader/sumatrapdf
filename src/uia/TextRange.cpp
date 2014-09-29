@@ -720,7 +720,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
         return E_INVALIDARG;
     }
 
-
     // apply
     if (srcEndPoint == TextPatternRangeEndpoint_Start) {
         startPage = target_page;
@@ -737,7 +736,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
     } else {
         return E_INVALIDARG;
     }
-
 
     return S_OK;
 }

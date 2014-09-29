@@ -239,7 +239,6 @@ public:
                 continue;
             }
 
-
             COLORREF bgCol = color.background;;
             if (current == i) {
                 bgCol = color.current;

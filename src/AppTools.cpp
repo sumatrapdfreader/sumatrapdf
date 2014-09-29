@@ -92,7 +92,6 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
     return path::Join(path, fileName);
 }
 
-
 /*
 Structure of registry entries for associating Sumatra with PDF files.
 

@@ -127,7 +127,6 @@ Corrupted:
     goto Exit;
 }
 
-
 /* Caller needs to free() the result. */
 static WCHAR *GetDefaultPdfViewer()
 {

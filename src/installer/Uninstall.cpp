@@ -181,7 +181,6 @@ static BOOL RemoveInstalledFiles()
     return success;
 }
 
-
 // If this is uninstaller and we're running from installation directory,
 // copy uninstaller to temp directory and execute from there, exiting
 // ourselves. This is needed so that uninstaller can delete itself

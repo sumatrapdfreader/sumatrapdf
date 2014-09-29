@@ -15,7 +15,6 @@
 HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
 
-
 class CClassFactory : public IClassFactory
 {
 public:
@@ -91,7 +90,6 @@ private:
     long m_lRef;
     CLSID m_clsid;
 };
-
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {

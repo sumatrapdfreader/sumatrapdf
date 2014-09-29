@@ -153,7 +153,6 @@ ILayout *FindElementNamed(ParsedMui& muiInfo, const char *name)
     return FindLayoutNamed(muiInfo, name);
 }
 
-
 static TxtNode *GetRootArray(TxtParser* parser)
 {
     TxtNode *root = parser->nodes.At(0);

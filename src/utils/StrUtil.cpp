@@ -19,6 +19,7 @@ char *Dup(const char *s)
 {
     return s ? _strdup(s) : NULL;
 }
+
 WCHAR *Dup(const WCHAR *s)
 {
     return s ? _wcsdup(s) : NULL;
