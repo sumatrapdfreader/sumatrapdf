@@ -2912,7 +2912,8 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
     if (rc.IsEmpty())
         return;
 
-    if (PM_DISABLED != win->presentation) {
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        // make the black/white canvas cover the entire window
         MoveWindow(win->hwndCanvas, rc);
         return;
     }
