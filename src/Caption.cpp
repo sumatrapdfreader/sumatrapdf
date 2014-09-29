@@ -35,7 +35,9 @@ using namespace Gdiplus;
 // area covers the entire screen. If it does, the manager assumes that this is a fullscreen
 // window and hides the taskbar and any topmost window. A simple workaround is to
 // expand the non-client border at the expense of client area.
-#define NON_CLIENT_BAND  1
+// Note(kjk): not sure what problem setting NON_CLIENT_BAND to 1 was meant to solve
+// but it also causes https://code.google.com/p/sumatrapdf/issues/detail?id=2729
+#define NON_CLIENT_BAND  0
 
 // http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
 #define REG_DWM  L"Software\\Microsoft\\Windows\\DWM"
