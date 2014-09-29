@@ -226,7 +226,7 @@ public:
                     graphics.FillRectangle(&bgBr, layout);
                 }
 #endif
-                // TODO: this is a hack. If use use no background and cleartype, the
+                // TODO: this is a hack. If I use no background and cleartype, the
                 // text looks funny (is bold).
                 // CompositingModeSourceCopy doesn't work with clear type
                 // another option is to draw background before drawing text, but

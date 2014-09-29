@@ -362,6 +362,9 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         return true;
 
+    case WM_KILLFOCUS:
+        return false; // for easier debugging (make setting a breakpoint possible)
+
     case WM_SETFOCUS:
         if (!delayFocus)
             PostMessage(hwnd, UWM_DELAYED_SET_FOCUS, 0, 0);

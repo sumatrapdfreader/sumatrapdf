@@ -1664,6 +1664,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     UpdateFindbox(win);
     UpdateTextSelection(win, false);
 
+    SetFocus(win->hwndFrame);
     win->RedrawAll(true);
 
     if (tdata->reloadOnFocus) {
@@ -2264,8 +2265,6 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
         }
         win->RedrawAll();
     }
-
-    SetFocus(win->hwndFrame);
 
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
