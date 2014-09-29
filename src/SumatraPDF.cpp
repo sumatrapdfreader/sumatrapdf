@@ -2269,6 +2269,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
         win->RedrawAll();
     }
 
+    SetFocus(win->hwndFrame);
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
     // HeapValidate() is left here to help us catch the possibility that the fix
