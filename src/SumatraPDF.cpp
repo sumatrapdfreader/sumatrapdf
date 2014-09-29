@@ -64,6 +64,9 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+#define NOLOG 0
+#include "DebugLog.h"
+
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #ifdef DEBUG
@@ -3235,7 +3238,8 @@ static void EnterFullScreen(WindowInfo& win, bool presentation)
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
     if (!presentation || !win.isFullScreen)
         win.nonFullScreenWindowStyle = ws;
-    ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
+    // remove window styles that add to non-client area
+    ws &= ~(WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
     win.nonFullScreenFrameRect = WindowRect(win.hwndFrame);
@@ -4256,6 +4260,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
                 RememberDefaultWindowPosition(*win);
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
+                //dbglog::LogF("dx: %d, dy: %d", dx, dy);
                 FrameOnSize(win, dx, dy);
             }
             break;
