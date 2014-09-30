@@ -15,7 +15,8 @@
 #include "../source/fitz/buffer.c"
 #include "../source/fitz/stream-open.c"
 #include "../source/fitz/stream-read.c"
-#include "../source/fitz/dtoa.c"
+#include "../source/fitz/strtod.c"
+#include "../source/fitz/ftoa.c"
 #include "../source/fitz/printf.c"
 
 #include "../source/pdf/pdf-lex.c"

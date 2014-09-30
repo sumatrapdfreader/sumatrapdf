@@ -905,8 +905,8 @@ fz_load_tiff_info_subimage(fz_context *ctx, unsigned char *buf, int len, int *wp
 
 		*wp = tiff.imagewidth;
 		*hp = tiff.imagelength;
-		*xresp = tiff.xresolution;
-		*yresp = tiff.yresolution;
+		*xresp = (tiff.xresolution ? tiff.xresolution : 96);
+		*yresp = (tiff.yresolution ? tiff.yresolution : 96);
 		*cspacep = tiff.colorspace;
 	}
 	fz_always(ctx)

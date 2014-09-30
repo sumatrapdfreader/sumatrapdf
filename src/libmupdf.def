@@ -423,7 +423,7 @@ EXPORTS
 	fz_runetochar
 	fz_runelen
 	fz_strtod
-	fz_dtoa
+	fz_ftoa
 	fz_text_char_at
 	fz_text_char_bbox
 	fz_new_text_sheet

@@ -26,7 +26,7 @@ static void fmtfloat(struct fmtbuf *out, float f)
 	if (isnan(f)) f = 0;
 	if (isinf(f)) f = f < 0 ? -FLT_MAX : FLT_MAX;
 
-	fz_dtoa(f, digits, &exp, &neg, &ndigits);
+	fz_ftoa(f, digits, &exp, &neg, &ndigits);
 	point = exp + ndigits;
 
 	if (neg)

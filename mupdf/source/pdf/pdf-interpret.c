@@ -143,7 +143,7 @@ pdf_run_keyword(pdf_csi *csi, char *buf)
 
 	switch (key)
 	{
-	case A('"'): op = PDF_OP_dquote;break;
+	case A('"'): op = PDF_OP_dquote; break;
 	case A('\''): op = PDF_OP_squote; break;
 	case A('B'): op = PDF_OP_B; break;
 	case B('B','*'): op = PDF_OP_Bstar; break;

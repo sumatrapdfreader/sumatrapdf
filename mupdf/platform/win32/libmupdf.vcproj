@@ -486,10 +486,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\fitz\dtoa.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\fitz\error.c"
 				>
 			</File>
@@ -527,6 +523,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\fitz\font.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\fitz\ftoa.c"
 				>
 			</File>
 			<File
@@ -667,6 +667,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\fitz\string.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\fitz\strtod.c"
 				>
 			</File>
 			<File

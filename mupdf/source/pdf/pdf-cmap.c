@@ -81,13 +81,6 @@ pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned in
 		return;
 	}
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695501 */
-	if (high - low > 0x10FFFF)
-	{
-		fz_warn(ctx, "capping at 0x10FFFF entries per code space range");
-		high = low + 0x10FFFF;
-	}
-
 	cmap->codespace[cmap->codespace_len].n = n;
 	cmap->codespace[cmap->codespace_len].low = low;
 	cmap->codespace[cmap->codespace_len].high = high;

@@ -90,11 +90,11 @@ int fz_runelen(int rune);
 double fz_strtod(const char *s, char **es);
 
 /*
-	fz_dtoa: Compute decimal integer m, exp such that:
+	fz_ftoa: Compute decimal integer m, exp such that:
 		f = m * 10^exp
 		m is as short as possible without losing exactness
 	Assumes special cases (NaN, +Inf, -Inf) have been handled.
 */
-void fz_dtoa(double f, char *s, int *exp, int *neg, int *ns);
+void fz_ftoa(float f, char *s, int *exp, int *neg, int *ns);
 
 #endif
