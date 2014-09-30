@@ -245,7 +245,6 @@
     <ClCompile Include="..\mupdf\source\fitz\draw-path.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
-    <ClCompile Include="..\mupdf\source\fitz\dtoa.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-dct.c" />
@@ -256,6 +255,7 @@
     <ClCompile Include="..\mupdf\source\fitz\filter-lzw.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-predict.c" />
     <ClCompile Include="..\mupdf\source\fitz\font.c" />
+    <ClCompile Include="..\mupdf\source\fitz\ftoa.c" />
     <ClCompile Include="..\mupdf\source\fitz\function.c" />
     <ClCompile Include="..\mupdf\source\fitz\gdiplus-device.cpp" />
     <ClCompile Include="..\mupdf\source\fitz\geometry.c" />
@@ -289,6 +289,7 @@
     <ClCompile Include="..\mupdf\source\fitz\stream-prog.c" />
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\mupdf\source\fitz\string.c" />
+    <ClCompile Include="..\mupdf\source\fitz\strtod.c" />
     <ClCompile Include="..\mupdf\source\fitz\svg-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\test-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\text.c" />

@@ -51,6 +51,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     }
 }
 
+//[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
@@ -75,7 +76,9 @@ static MenuDef menuDefFile[] = {
     { SEP_ITEM,                             0,                          0 },
     { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
 };
+//] ACCESSKEY_GROUP File Menu
 
+//[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
@@ -96,7 +99,9 @@ static MenuDef menuDefView[] = {
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
 };
+//] ACCESSKEY_GROUP View Menu
 
+//[ ACCESSKEY_GROUP GoTo Menu
 static MenuDef menuDefGoTo[] = {
     { _TRN("&Next Page\tRight Arrow"),      IDM_GOTO_NEXT_PAGE,         0 },
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
@@ -109,7 +114,9 @@ static MenuDef menuDefGoTo[] = {
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("Fin&d...\tCtrl+F"),             IDM_FIND_FIRST,             MF_NOT_FOR_EBOOK_UI },
 };
+//] ACCESSKEY_GROUP GoTo Menu
 
+//[ ACCESSKEY_GROUP Zoom Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefZoom[] = {
     { _TRN("Fit &Page\tCtrl+0"),            IDM_ZOOM_FIT_PAGE,          MF_NOT_FOR_CHM },
@@ -132,7 +139,9 @@ static MenuDef menuDefZoom[] = {
     { "12.5%",                              IDM_ZOOM_12_5,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { "8.33%",                              IDM_ZOOM_8_33,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
 };
+//] ACCESSKEY_GROUP Zoom Menu
 
+//[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
     { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
 #if 0
@@ -141,15 +150,20 @@ static MenuDef menuDefSettings[] = {
 #endif
     { _TRN("&Options..."),                  IDM_OPTIONS,                MF_REQ_PREF_ACCESS },
     { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
+    /*@ ACCESSKEY_GROUP "Settings Menu" @*/
 };
+//] ACCESSKEY_GROUP Settings Menu
 
+//[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
     { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
     { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
 };
+//] ACCESSKEY_GROUP Favorites Menu
 
+//[ ACCESSKEY_GROUP Help Menu
 static MenuDef menuDefHelp[] = {
     { _TRN("Visit &Website"),               IDM_VISIT_WEBSITE,          MF_REQ_DISK_ACCESS },
     { _TRN("&Manual"),                      IDM_MANUAL,                 MF_REQ_DISK_ACCESS },
@@ -157,8 +171,10 @@ static MenuDef menuDefHelp[] = {
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     { _TRN("&About"),                       IDM_ABOUT,                  0 },
 };
+//] ACCESSKEY_GROUP Help Menu
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
+//[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
@@ -168,8 +184,10 @@ static MenuDef menuDefDebug[] = {
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
+//] ACCESSKEY_GROUP Debug Menu
 #endif
 
+//[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
@@ -184,13 +202,16 @@ static MenuDef menuDefContext[] = {
     { _TRN("Show &Bookmarks"),              IDM_VIEW_BOOKMARKS,         MF_PLUGIN_MODE_ONLY },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
+//] ACCESSKEY_GROUP Context Menu (Content)
 
+//[ ACCESSKEY_GROUP Context Menu (Start)
 static MenuDef menuDefContextStart[] = {
     { _TRN("&Open Document"),               IDM_OPEN_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS },
     { _TRN("&Pin Document"),                IDM_PIN_SELECTED_DOCUMENT,  MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
+//] ACCESSKEY_GROUP Context Menu (Start)
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter)
 {
@@ -628,6 +649,7 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
 }
 
+//[ ACCESSKEY_GROUP Main Menubar
 HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
@@ -675,6 +697,7 @@ HMENU BuildMenu(WindowInfo *win)
 
     return mainMenu;
 }
+//] ACCESSKEY_GROUP Main Menubar
 
 void UpdateMenu(WindowInfo *win, HMENU m)
 {

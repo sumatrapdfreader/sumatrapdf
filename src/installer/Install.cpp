@@ -592,6 +592,7 @@ bool OnWmCommand(WPARAM wParam)
     return true;
 }
 
+//[ ACCESSKEY_GROUP Installer
 // TODO: since we have a variable UI, for better layout (anchored to the bottom,
 // not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
@@ -697,6 +698,7 @@ void OnCreateWindow(HWND hwnd)
         PostMessage(hwnd, WM_COMMAND, IDOK, 0);
     }
 }
+//] ACCESSKEY_GROUP Installer
 
 void CreateMainWindow()
 {
