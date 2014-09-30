@@ -2345,6 +2345,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
         CloseDocumentInTab(win);
+        SetFocus(win->hwndFrame);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);
