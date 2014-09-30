@@ -2657,12 +2657,14 @@ static void OnMenuRenameFile(WindowInfo &win)
     // note: srcFileName is deleted together with the DisplayModel
     ScopedMem<WCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInTab(&win, true);
+    SetFocus(win.hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
     BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
         LoadArgs args(srcFilePath, &win);
+        args.forceReuse = true;
         LoadDocument(args);
         win.ShowNotification(_TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
         return;
