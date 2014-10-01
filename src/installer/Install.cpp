@@ -469,7 +469,15 @@ static void OnButtonOptions()
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
     EnableAndShow(gHwndCheckboxKeepBrowserPlugin, gShowOptions);
 
-    win::SetText(gHwndButtonOptions, gShowOptions ? _TR("Hide &Options") : _TR("&Options"));
+//[ ACCESSKEY_GROUP Installer
+//[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
+    if (gShowOptions)
+        win::SetText(gHwndButtonOptions, _TR("Hide &Options"));
+//| ACCESSKEY_ALTERNATIVE
+    else 
+        win::SetText(gHwndButtonOptions, _TR("&Options"));
+//] ACCESSKEY_ALTERNATIVE
+//] ACCESSKEY_GROUP Installer
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;

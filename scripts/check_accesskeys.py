@@ -17,6 +17,7 @@ import re, trans_download, trans_gen, trans_langs, util2
 def extract_accesskey_groups(path):
 	groups = {}
 	group, group_name = None, None
+	alt_group = None
 	
 	for line in open(path, "r").readlines():
 		if line.startswith("//[ ACCESSKEY_GROUP ") or line.startswith("//] ACCESSKEY_GROUP "):
@@ -24,51 +25,90 @@ def extract_accesskey_groups(path):
 			if line[2] == '[':
 				assert group is None, "Group '%s' doesn't end before group '%s' starts" % (group_name, new_name)
 				group_name = new_name
-				group = groups[group_name] = groups.get(group_name, [])
+				group = groups[group_name] = groups.get(group_name, [[]])
 			else:
 				assert group is not None, "Unexpected group end ('%s')" % new_name
 				assert group_name == new_name, "Group end mismatch: '%s' != '%s'" (new_name, group_name)
 				group = None
+		
+		elif line.startswith("//[ ACCESSKEY_ALTERNATIVE") or  line.startswith("//| ACCESSKEY_ALTERNATIVE") or  line.startswith("//] ACCESSKEY_ALTERNATIVE"):
+			assert group is not None, "Can't use ACCESSKEY_ALTERNATIVE outside of group"
+			assert line[25].isspace(), "Typo?"
+			if line[2] == '[':
+				assert alt_group is None, "Nested ACCESSKEY_ALTERNATIVE isn't supported"
+				alt_group = [[]]
+				group[0].append(alt_group)
+			elif line[2] == '|':
+				assert alt_group is not None, "Unexpected ACCESSKEY_ALTERNATIVE alternative"
+				alt_group.append([])
+			else:
+				assert alt_group is not None, "Unexpected ACCESSKEY_ALTERNATIVE end"
+				alt_group = None
+		
 		elif group is not None:
 			strings = re.findall(trans_gen.TRANSLATION_PATTERN, line)
 			for string in strings:
-				assert len(re.findall("&", string)) <= 1, "TODO: handle multiple '&' in strings"
-				group.append(string)
+				if string not in group:
+					assert len(re.findall("&", string)) <= 1, "TODO: handle multiple '&' in strings"
+					group.append(string)
+				if alt_group is not None:
+					alt_group[-1].append(string)
 	
 	return groups
 
+def get_alternate_ix(alternates, string):
+	for i in range(len(alternates)):
+		for j in range(len(alternates[i])):
+			if string in alternates[i][j]:
+				return (i, j)
+	return None
+
 def detect_accesskey_clashes(groups, translations):
 	for lang in trans_langs.g_langs:
-		print "Checking language '%s'" % lang[0]
-		print "=" * (20 + len(lang[0]))
+		print "Accesskey issues for '%s'" % lang[1]
+		print "=" * (23 + len(lang[1]))
+		warnings = []
+		
 		for (name, strings) in groups.items():
-			used_keys, duplicates = {}, []
+			used_keys, duplicates, alternates = {}, [], {}
 			
-			for string in strings:
+			for string in strings[1:]:
 				trans = ([item[1] for item in translations[string] if item[0] == lang[0]] + [string])[0]
 				ix = trans.find("&")
 				if ix == -1:
+					if "&" in string:
+						warnings.append("WARNING: Translation has no accesskey where original does:")
+						warnings.append("         \"%s\", \"%s\"" % (string, trans))
 					continue
 				if ix == len(trans) - 1:
-					print "ERROR: '&' must be followed by a letter (\"%s\")" % trans
+					warnings.append("ERROR: '&' must be followed by a letter (\"%s\")" % trans)
 					continue
+				if "&" not in string:
+					warnings.append("WARNING: Translation has accesskey where original doesn't:")
+					warnings.append("         \"%s\", \"%s\"" % (string, trans))
+				
 				key = trans[ix + 1].upper()
+				alternates[key] = alternates.get(key, [])
 				if key in used_keys.keys():
-					# TODO: allow marking items which never appear together
-					if string != "Open in &Microsoft HTML Help" or "XPS" not in used_keys[key].replace("&", ""):
+					if None in alternates[key] or get_alternate_ix(strings[0], string) in alternates[key]:
 						duplicates.append((key, trans))
+					else:
+						alternates[key].append(get_alternate_ix(strings[0], string))
 				else:
 					if not key.isalnum():
-						print "WARNING: Access key '%s' might not work on all keyboards (\"%s\")" % (key, trans)
+						warnings.append("WARNING: Access key '%s' might not work on all keyboards (\"%s\")" % (key, trans))
 					used_keys[key] = trans
+					alternates[key].append(get_alternate_ix(strings[0], string))
 			
 			if duplicates:
-				print "Duplicates for accesskey group '%s':" % name
+				print "Clashes in accesskey group '%s':" % name
 				for item in duplicates:
 					print " * %s: \"%s\" and \"%s\"" % (item[0].upper(), item[1], used_keys[item[0].upper()])
 				available = [chr(i) for i in range(ord("A"), ord("Z") + 1) if chr(i) not in used_keys.keys()]
 				print "   (available keys: %s)" % "".join(available)
 				print
+		
+		print "\n".join(warnings)
 		print
 
 def main():
