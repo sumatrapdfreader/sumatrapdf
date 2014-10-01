@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a271ab040576788c314aa43f1e3260f73836c4ff
+e9ae17504742bf40d3a277c218a3dc157edfd79f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2957,6 +2957,9 @@ id:&Jendela
 it:&Finestra
 ja:ウィンドウ(&W)
 kr:창(&W)
+mk:&Прозорец
+pl:&Okno
+pt:&Janela
 ru:&Окно
 sk:&Okno
 sl:&Okno
@@ -4966,6 +4969,7 @@ hu:Bezár
 id:Tutup
 it:Chiudi
 ja:閉じる
+jv:Tutup
 kr:닫기
 ku:داخستن
 mk:Затвори
@@ -5888,6 +5892,7 @@ cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
 dk:Kunne ikke installere PDF viser
+el:Δεν ήταν δυνατή η εγκατάσταση του PDF previewer
 es:No se pudo instalar el previsualizador de PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
@@ -6516,8 +6521,10 @@ id:Posisi kursor:
 it:Posizione cursore
 ja:カーソル位置：
 kr:커서 위치:
+mk:Местоположба на покажувач:
 nl:Cursor positie
 pl:Pozycja kursora:
+pt:Posição do cursor:
 ru:Позиция курсора:
 sk:Pozícia kurzora:
 sl:Položaj kurzorja:
@@ -6974,6 +6981,7 @@ hu:Letöltés
 id:Unduh
 it:Scarica
 ja:ダウンロード
+jv:Ngunduh
 ka:ჩამოტვირთვა
 kr:예
 ku:داگرتن
@@ -10064,6 +10072,7 @@ id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
 it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
+mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
 pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
@@ -12341,7 +12350,12 @@ vn:Trang:
 am:PalmDoc փաստաթղթեր
 de:PalmDoc E-Bücher
 fr:Fichiers PalmDoc
+he:קובצי PalmDoc
 it:Documenti PalmDoc
+mk:документи на PalmDoc
+pl:Dokumenty PalmDoc
+pt:Documentos PalmDoc
+ru:Документы PalmDoc
 sl:PalmDoc dokumenti
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
@@ -13967,8 +13981,10 @@ id:Seleksi:
 it:Selezione
 ja:Selection:
 kr:선택:
+mk:Селекција:
 nl:Selectie
 pl:Selekcja:
+pt:Selecção:
 ru:Выделение:
 sk:Výber:
 sl:Izbor:
@@ -14530,6 +14546,7 @@ cy:Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll
 cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
 de:Einige Dateien konnten nicht korrekt installiert werden
 dk:Nogle installations filer er beskadiget eller mangler
+el:Ορισμένα αρχεία προς εγκατάσταση είναι κατεστραμμένα ή λείπουν
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
 et:Mõned paigaldatavad failid on viga saanud või puuduvad
 eu:Ezarritako zenbait agiri hondatuta edo galduta daude
@@ -15619,6 +15636,7 @@ hu:Cím:
 id:Judul:
 it:Titolo:
 ja:タイトル:
+jv:Judul
 ka:სათაური:
 kr:제목:
 ku:ناونیشان:
@@ -15873,8 +15891,10 @@ id:Gunakan &tab
 it:Usa &schede
 ja:タブを使う(&t)
 kr:탭 사용(&T)
+mk:Користи &табови
 nl:Gebruik &tabs
 pl:Włącz wyświetlanie &kart
+pt:&Utilizar separadores
 ru:Использовать &вкладки
 sk:Povoliť &záložky
 sl:Uporabljaj &zavihke
