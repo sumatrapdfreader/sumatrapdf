@@ -2789,7 +2789,7 @@ void OnMenuOpen(WindowInfo& win)
         { _TR("EPUB ebooks"),           L"*.epub",      true },
         { _TR("Mobi documents"),        L"*.mobi",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true },
-        { _TR("PalmDoc documents"),     L"*.pdb",       true },
+        { _TR("PalmDoc documents"),     L"*.pdb;*.prc", true },
         { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
         { _TR("Text documents"),        L"*.txt;*.log;*.nfo;rfc*.txt;file_id.diz;read.me;*.tcr", gGlobalPrefs->ebookUI.useFixedPageUI },
     };

@@ -195,10 +195,10 @@ static void MobiTestFile(const WCHAR *filePath)
 
 static bool IsMobiFile(const WCHAR *f)
 {
-    // TODO: also .prc and .pdb ?
     return str::EndsWithI(f, L".mobi") ||
            str::EndsWithI(f, L".azw") ||
-           str::EndsWithI(f, L".azw1");
+           str::EndsWithI(f, L".azw1") ||
+           str::EndsWithI(f, L".prc");
 }
 
 static void MobiTestDir(WCHAR *dir)

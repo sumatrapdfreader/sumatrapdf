@@ -1136,7 +1136,8 @@ bool PalmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
                str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
     }
 
-    return str::EndsWithI(fileName, L".pdb");
+    return str::EndsWithI(fileName, L".pdb") ||
+           str::EndsWithI(fileName, L".prc");
 }
 
 PalmDoc *PalmDoc::CreateFromFile(const WCHAR *fileName)

@@ -271,8 +271,12 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
     else if (MobiDoc::IsSupportedFile(filePath)) {
         doc = Doc(MobiDoc::CreateFromFile(filePath));
         // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
-        if (doc.mobiDoc && doc.mobiDoc->GetDocType() != Pdb_Mobipocket)
+        if (doc.mobiDoc && doc.mobiDoc->GetDocType() != Pdb_Mobipocket) {
             doc.Delete();
+            // .prc files can be both MobiDoc or PalmDoc
+            if (PalmDoc::IsSupportedFile(filePath))
+                doc = Doc(PalmDoc::CreateFromFile(filePath));
+        }
     }
     else if (PalmDoc::IsSupportedFile(filePath))
         doc = Doc(PalmDoc::CreateFromFile(filePath));
