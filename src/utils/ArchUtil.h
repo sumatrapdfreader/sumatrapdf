@@ -65,7 +65,8 @@ class RarFile : public ArchFile {
     ScopedMem<WCHAR> path;
     UnRarDll *fallback;
 
-    virtual char *GetFileFromFallback(size_t fileindex, size_t *len);
+    void ExtractFilenamesWithFallback();
+    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=NULL);
 
 public:
     explicit RarFile(const WCHAR *path);

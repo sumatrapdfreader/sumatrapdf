@@ -21,17 +21,15 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
 {
     if (data && openFormat)
         ar = openFormat(data);
-    if (!ar) {
-        (void)GetFileFromFallback((size_t)-1);
+    if (!ar)
         return;
-    }
     while (ar_parse_entry(ar)) {
         const char *name = ar_entry_get_name(ar);
         filenames.Append(str::conv::FromUtf8(name));
         filepos.Append(ar_entry_get_offset(ar));
     }
-    if (!ar_at_eof(ar))
-        (void)GetFileFromFallback((size_t)-1);
+    // extract (further) filenames with fallback in derived class constructor
+    // once GetFileFromFallback has been correctly set in the vtable
 }
 
 ArchFile::~ArchFile()
@@ -149,10 +147,16 @@ class UnRarDll { };
 #endif
 
 RarFile::RarFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_rar_archive),
-    path(str::Dup(path)), fallback(NULL) { }
+    path(str::Dup(path)), fallback(NULL) { ExtractFilenamesWithFallback(); }
 RarFile::RarFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_rar_archive),
-    path(NULL), fallback(NULL) { }
+    path(NULL), fallback(NULL) { ExtractFilenamesWithFallback(); }
 RarFile::~RarFile() { delete fallback; }
+
+void RarFile::ExtractFilenamesWithFallback()
+{
+    if (!ar || !ar_at_eof(ar))
+        (void)GetFileFromFallback((size_t)-1);
+}
 
 char *RarFile::GetFileFromFallback(size_t fileindex, size_t *len)
 {
