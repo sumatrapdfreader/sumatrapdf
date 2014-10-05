@@ -1189,7 +1189,7 @@ const char * gTranslations_az =
   "S\311\231hif\311\231 %u m\303\266vcud deyil\0"\
   "S\311\231hif\311\231l\311\231rin miqyaslanmas\304\261\0"\
   "S\311\231hif\311\231:\0"\
-  "\0"\
+  "PalmDoc s\311\231n\311\231dl\311\231ri\0"\
   "G\303\266r\303\274nt\303\274 haz\304\261rlan\304\261r, l\303\274tf\311\231n g\303\266zl\311\231yin...\0"\
   "Postscript s\311\231n\311\231dl\311\231ri\0"\
   "T\311\231&qdimat\tCtrl+L\0"\
@@ -2677,7 +2677,7 @@ const char * gTranslations_cn =
   "\346\211\276\344\270\215\345\210\260\351\241\265\347\240\201 %u\0"\
   "\351\241\265\351\235\242\347\274\251\346\224\276\346\257\224\344\276\213\0"\
   "\351\241\265\347\240\201:\0"\
-  "\0"\
+  "PalmDoc \346\226\207\346\241\243\0"\
   "\350\257\267\347\250\215\347\255\211\342\224\200\346\255\243\345\234\250\346\270\262\346\237\223...\0"\
   "Postscript \346\226\207\344\273\266\0"\
   "\345\271\273\347\201\257\347\211\207(&E)\tCtrl+L\0"\
@@ -7637,7 +7637,7 @@ const char * gTranslations_kr =
   "%u \355\216\230\354\235\264\354\247\200\352\260\200 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "\355\216\230\354\235\264\354\247\200 \353\260\260\354\234\250 \354\241\260\354\240\225\0"\
   "\355\216\230\354\235\264\354\247\200:\0"\
-  "\0"\
+  "PalmDoc \353\254\270\354\204\234\0"\
   "\353\240\214\353\215\224\353\247\201 \354\244\221, \354\236\240\354\213\234 \352\270\260\353\213\244\353\246\254\354\204\270\354\232\224...\0"\
   "Postscript \353\254\270\354\204\234\0"\
   "\355\224\204\353\240\210\354\240\240\355\205\214\354\235\264\354\205\230(&E)\tCtrl+L\0"\
@@ -11853,7 +11853,7 @@ const char * gTranslations_es =
   "La p\303\241gina %u no existe\0"\
   "Escalado de p\303\241gina\0"\
   "P\303\241gina:\0"\
-  "\0"\
+  "Documentos PalmDoc\0"\
   "Espere un momento mientras se carga la visualizaci\303\263n...\0"\
   "Documentos Postscript\0"\
   "Pr&esentaci\303\263n\tCtrl+L\0"\
@@ -11966,7 +11966,7 @@ const char * gTranslations_sv =
   "Hoppa \303\266ver denna version\0"\
   "Anv\303\244nd u&rsprunglig sidstorlek\0"\
   "Vi&sa\0"\
-  "\0"\
+  "F\303\266nster\0"\
   "&Ja\0"\
   "\0"\
   "(av %d)\0"\
@@ -12014,7 +12014,7 @@ const char * gTranslations_sv =
   "Kunde ej visa sidan\0"\
   "Skapad:\0"\
   "Aktuell fil\0"\
-  "\0"\
+  "Muspekarens position:\0"\
   "&Anpassad zoom...\tCtrl+Y\0"\
   "F\303\266rvalt &utseende\0"\
   "F\303\266rvalt &zooml\303\244ge\0"\
@@ -12101,7 +12101,7 @@ const char * gTranslations_sv =
   "Sidnummer %u finns ej\0"\
   "Skala om vid utskrift\0"\
   "Sida:\0"\
-  "\0"\
+  "PalmDoc dokument\0"\
   "Ett \303\266gonblick - f\303\266rbereder...\0"\
   "Postscript-dokument\0"\
   "Pr&esentation\tCtrl+L\0"\
@@ -12128,7 +12128,7 @@ const char * gTranslations_sv =
   "Markera &alla\0"\
   "V\303\244lj &Allt\tCtrl+A\0"\
   "Markera med Ctrl + v\303\244nster musknapp\0"\
-  "\0"\
+  "Markering:\0"\
   "S&kicka som epost...\0"\
   "S\303\244tt motsatt s\303\266k-kommandorad\0"\
   "Visa &Bokm\303\244rken\0"\
@@ -12151,7 +12151,7 @@ const char * gTranslations_sv =
   "Text-dokument\0"\
   "Titel:\0"\
   "Ok\303\244nd k\303\244llfil (%s)\0"\
-  "\0"\
+  "Anv\303\244nd flikar\0"\
   "Visa\0"\
   "Bes\303\266k webbplats\0"\
   "Varning\0"\
@@ -12462,7 +12462,7 @@ const char * gTranslations_tr =
   "Bu s&\303\274r\303\274m\303\274 atla\0"\
   "Orijinal sayfa boyutlar\304\261n\304\261 &kullan\0"\
   "G\303\266s&ter\0"\
-  "\0"\
+  "&Pencere\0"\
   "&Evet\0"\
   "&Yak\304\261nla\305\237t\304\261rma\0"\
   "(toplam %d)\0"\
@@ -12510,7 +12510,7 @@ const char * gTranslations_tr =
   "Sayfa olu\305\237turulamad\304\261\0"\
   "Olu\305\237turma tarihi:\0"\
   "Y\303\274r\303\274rl\303\274kteki dosya\0"\
-  "\0"\
+  "\304\260mle\303\247 konumu:\0"\
   "Ki\305\237iselle\305\237tirilmi\305\237 &Yak\304\261nla\305\237t\304\261rma... \tCtrl+Y\0"\
   "Varsay\304\261lan &D\303\274zen:\0"\
   "Varsay\304\261lan &Yak\304\261nla\305\237t\304\261rma:\0"\
@@ -12597,7 +12597,7 @@ const char * gTranslations_tr =
   "%u numaral\304\261 sayfa mevcut de\304\237ildir\0"\
   "Sayfa \303\266l\303\247eklendirme\0"\
   "Sayfa:\0"\
-  "\0"\
+  "PalmDoc belgeleri\0"\
   "Bekleyiniz - olu\305\237turulmakta...\0"\
   "Postscript belgeleri\0"\
   "Tan&\304\261t\304\261m\tCtrl+L\0"\
@@ -12624,7 +12624,7 @@ const char * gTranslations_tr =
   "&Hepsini Se\303\247\0"\
   "T&\303\274m\303\274n\303\274 Se\303\247\tCtrl+A\0"\
   "\304\260\303\247eri\304\237i Ctrl+sol fare butonu ile se\303\247\0"\
-  "\0"\
+  "Se\303\247im:\0"\
   "&E-mail ile yolla...\0"\
   "Sondan ba\305\237a arama komut sat\304\261r\304\261\0"\
   "G\303\266ster &S\304\261k Kullan\304\261lanlar\0"\
@@ -12647,7 +12647,7 @@ const char * gTranslations_tr =
   "Metin belgeler\0"\
   "Ba\305\237l\304\261k:\0"\
   "Bilinmeyen kaynak dosyas\304\261 (%s)\0"\
-  "\0"\
+  "&Sekmeler kullan\0"\
   "G\303\266r\303\274n\303\274m\0"\
   "&Website ziyaret et\0"\
   "Uyar\304\261\0"\

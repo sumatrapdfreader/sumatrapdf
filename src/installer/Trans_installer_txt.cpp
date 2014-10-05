@@ -1449,7 +1449,7 @@ const char * gTranslations_pt =
   "A instalar...\0"\
   "&Manter plugin de navegador instalado (j\303\241 n\303\243o \303\251 suportado)\0"\
   "Permitir que o Windows Desktop &Search localize os PDF\0"\
-  "&Permitir que o WIndows mostre uma antevis\303\243o dos PDF\0"\
+  "&Permitir que o Windows mostre uma antevis\303\243o dos PDF\0"\
   "Para continuar, feche o %s!\0"\
   "Escolha a pasta de instala\303\247\303\243o do SumatraPDF:\0"\
   "Alguns ficheiros do instalador est\303\243o danificados\0"\
@@ -1461,7 +1461,7 @@ const char * gTranslations_pt =
   "Obrigado por ter escolhido o SumatraPDF!\0"\
   "O SumatraPDF foi instalado.\0"\
   "O instalador est\303\241 danificado. Efetue uma nova transfer\303\252ncia.\nDesculpe o inconveniente.\0"\
-  "Desinstalar SumatraPDF\0"\
+  "Remover SumatraPDF\0"\
   "Falha na desinstala\303\247\303\243o!\0"\
   "A desinstalar...\0"\
   "Utilizar o SumatraPDF como leitor pa&dr\303\243o de PDF\0";
@@ -1799,7 +1799,7 @@ const char * gTranslations_sv =
   "Installera SumatraPDF i katalog:\0"\
   "Installationen misslyckades!\0"\
   "Installerar...\0"\
-  "\0"\
+  "Beh\303\245ll webbl\303\244sarens insticksprogram f\303\266r PDF (st\303\266ds inte l\303\244ngre)\0"\
   "L\303\245t Windows inbyggda s\303\266kfunktion indexera PDF-dokument\0"\
   "Visa f\303\266rhandstitt av PDF-dokument i Windows\0"\
   "V\303\244nligen st\303\244ng %s innan du forts\303\244tter!\0"\

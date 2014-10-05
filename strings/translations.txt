@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e9ae17504742bf40d3a277c218a3dc157edfd79f
+4d64631acd01e4b4d237162f6cb580390982e4f4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2963,6 +2963,8 @@ pt:&Janela
 ru:&Окно
 sk:&Okno
 sl:&Okno
+sv:Fönster
+tr:&Pencere
 uk:&Вікно
 :&Yes
 am:&Այո
@@ -6530,6 +6532,8 @@ sk:Pozícia kurzora:
 sl:Položaj kurzorja:
 sp-rs:Pozicija kursora
 sr-rs:Позиција курсора
+sv:Muspekarens position:
+tr:İmleç konumu:
 uk:Позиція вказівника:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
@@ -10080,6 +10084,7 @@ sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
 sl:Obdržati PDF vtičnik &brskalnika nameščen (ni več podprt)
 sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
 sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
+sv:Behåll webbläsarens insticksprogram för PDF (stöds inte längre)
 tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
 uk:Залишити розширення для браузера (більше не підтримується)
@@ -10163,7 +10168,7 @@ mk:Дозволи Windows да прикажува слики за PDF-докум
 my:Biarkan Windows menunjukkan &preview dokumen PDF
 nl:Laat Windows &voorbeelden tonen van PDF documenten
 pl:Windows ma pokazywać &podgląd plików PDF
-pt:&Permitir que o WIndows mostre uma antevisão dos PDF
+pt:&Permitir que o Windows mostre uma antevisão dos PDF
 ro:Permite Windows-ului sa arate &previzualizari ale documentelor PDF
 ru:&Просмотр документов PDF средствами Windows
 sk:Povoliť, aby Windows zobrazoval &náhľad PDF dokumentov
@@ -12348,15 +12353,21 @@ uz:Bet:
 vn:Trang:
 :PalmDoc documents
 am:PalmDoc փաստաթղթեր
+az:PalmDoc sənədləri
+cn:PalmDoc 文档
 de:PalmDoc E-Bücher
+es:Documentos PalmDoc
 fr:Fichiers PalmDoc
 he:קובצי PalmDoc
 it:Documenti PalmDoc
+kr:PalmDoc 문서
 mk:документи на PalmDoc
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
 ru:Документы PalmDoc
 sl:PalmDoc dokumenti
+sv:PalmDoc dokument
+tr:PalmDoc belgeleri
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
@@ -13990,6 +14001,8 @@ sk:Výber:
 sl:Izbor:
 sp-rs:Izbor
 sr-rs:Избор
+sv:Markering:
+tr:Seçim:
 uk:Виділення:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
@@ -15700,7 +15713,7 @@ ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്
 my:Membuang SumatraPDF
 nl:Deinstalleer SumatraPDF
 pl:Usuń SumatraPDF
-pt:Desinstalar SumatraPDF
+pt:Remover SumatraPDF
 ro:Dezinstalare SumatraPDF
 ru:Удалить SumatraPDF
 sk:Odinštalovanie SumatraPDF
@@ -15900,6 +15913,8 @@ sk:Povoliť &záložky
 sl:Uporabljaj &zavihke
 sp-rs:Koristiti tab
 sr-rs:Користити таб
+sv:Använd flikar
+tr:&Sekmeler kullan
 uk:Використовувати вкладки
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
