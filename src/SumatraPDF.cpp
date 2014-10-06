@@ -139,9 +139,12 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define HIDE_CURSOR_DELAY_IN_MS     3000
 
 #define AUTO_RELOAD_TIMER_ID        5
-#define AUTO_RELOAD_DELAY_IN_MS     100
+#define AUTO_RELOAD_DELAY_IN_MS     200
 
-#define EBOOK_LAYOUT_TIMER_ID       6
+#define AUTO_RELOAD_RETRY_TIMER_ID  6
+#define AUTO_RELOAD_RETRY_DELAY_IN_MS 1000
+
+#define EBOOK_LAYOUT_TIMER_ID       7
 
 Vec<WindowInfo*>             gWindows;
 FileHistory                  gFileHistory;
@@ -1093,8 +1096,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
     }
     free(docTitle);
-    if (needRefresh && win->IsDocLoaded())
+    if (needRefresh && win->IsDocLoaded()) {
+        // TODO: this isn't visible when tabs are used
         title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
+    }
     win::SetText(win->hwndFrame, title);
 
     if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
@@ -1201,6 +1206,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         }
         return;
     }
+
     DisplayState *ds = NewDisplayState(win->loadedFilePath);
     win->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds);

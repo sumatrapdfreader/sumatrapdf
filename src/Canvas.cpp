@@ -1331,8 +1331,19 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         break;
 
     case AUTO_RELOAD_TIMER_ID:
+    case AUTO_RELOAD_RETRY_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-        ReloadDocument(&win, true);
+        KillTimer(hwnd, AUTO_RELOAD_RETRY_TIMER_ID);
+        // try again a bit later, if reloading has failed the first time (i.e. when the controller hasn't changed)
+        if (AUTO_RELOAD_TIMER_ID == timerId) {
+            Controller *prevCtrl = win.ctrl;
+            ReloadDocument(&win, true);
+            if (prevCtrl == win.ctrl)
+                SetTimer(hwnd, AUTO_RELOAD_RETRY_TIMER_ID, AUTO_RELOAD_RETRY_DELAY_IN_MS, NULL);
+        }
+        else {
+            ReloadDocument(&win, true);
+        }
         break;
 
     case EBOOK_LAYOUT_TIMER_ID:
