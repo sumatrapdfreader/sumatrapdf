@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4d64631acd01e4b4d237162f6cb580390982e4f4
+9d218443057b04e678faf0f7a661653b7c9f188d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15,7 +15,7 @@ ca:&Quant a...
 cn:关于(&A)...
 cy:&Ynghylch...
 cz:&O programu
-de:&Über SumatraPDF
+de:Über &SumatraPDF
 dk:&Om
 el:&Σχετικά
 es:&Acerca de
@@ -992,7 +992,7 @@ ar:&الذهاب إلى
 az:K&eçid
 bg:&Отиди на
 bn:এতে চলুন...
-br:Ir &para
+br:&Ir para
 bs:Idi na
 by:Перайсці да
 ca-xv:&Vés a
@@ -1137,7 +1137,7 @@ et:&Abi
 eu:&Laguntza
 fa:&راهنما
 fi:&Ohje
-fr:&Aide
+fr:Ai&de
 fy-nl:&Help
 ga:&Cabhair
 gl:A&xuda
@@ -2945,7 +2945,7 @@ ca:&Finestra
 cn:窗口(&W)
 cy:&Ffenestr
 de:Fe&nster
-es:&Ventana
+es:V&entana
 et:A&ken
 eu:&Leihoa
 fa:&پنجره
@@ -7391,7 +7391,7 @@ am:Ը&նտրյալներ
 ar:المفضلة
 az:&Seçilmişlər
 bg:&Любими
-br:F&avoritos
+br:&Favoritos
 bs:F&avoriti
 ca-xv:F&avorits
 ca:Pr&eferits
@@ -7434,7 +7434,7 @@ sl:Priljubljeni
 sp-rs:Odabir
 sq:P&ëlqej
 sr-rs:Одабир
-sv:F&avoriter
+sv:&Favoriter
 ta:பிடித்தவை
 tr:S&ık kullanılanlar
 tw:我的最愛(&A)
@@ -12368,6 +12368,7 @@ ru:Документы PalmDoc
 sl:PalmDoc dokumenti
 sv:PalmDoc dokument
 tr:PalmDoc belgeleri
+uk:Документи PalmDoc
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
@@ -16047,7 +16048,7 @@ ca:Visiteu el lloc &web
 cn:访问网站(&W)
 cy:&Ymweld â'r Wefan
 cz:Navštívit &webovou stránku
-de:&SumatraPDF im Internet
+de:SumatraPDF im &Internet
 dk:Besøg &webside
 el:&Ιστοσελίδα Προγράμματος
 es:Visitar sitio &Web
@@ -16732,7 +16733,7 @@ vn:đang chép văn bản
 :printing document
 am:Ֆայլը տպվում է
 ar:تتم حالياً الطباعة
-az:sənəd çap olunur
+az:sənədin çap olunması
 bg:отпечатване на документ
 br:imprimindo documento
 bs:štampam dokument

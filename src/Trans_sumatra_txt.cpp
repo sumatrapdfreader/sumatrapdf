@@ -1252,7 +1252,7 @@ const char * gTranslations_az =
   "Miqyas\0"\
   "[D\311\231yi\305\237iklikl\311\231r m\303\274\311\231yy\311\231n edildi; yenil\311\231nm\311\231] %s\0"\
   "m\311\231tnin kopyalanmas\304\261\0"\
-  "s\311\231n\311\231d \303\247ap olunur\0";
+  "s\311\231n\311\231din \303\247ap olunmas\304\261\0";
 
 const char * gTranslations_eu = 
   "&Honi buruz...\0"\
@@ -4497,7 +4497,7 @@ const char * gTranslations_fr =
   "&Ajuster les pages \303\240 la zone d'impression\0"\
   "A&ller \342\200\246\0"\
   "&Aller \303\240 la page\302\240:\0"\
-  "&Aide\0"\
+  "Ai&de\0"\
   "&Derni\303\250re page\tEnd\0"\
   "&Grossissement\302\240:\0"\
   "&Manuel\0"\
@@ -5223,7 +5223,7 @@ const char * gTranslations_ka =
   "\341\203\223\341\203\235\341\203\231\341\203\243\341\203\233\341\203\224\341\203\234\341\203\242\341\203\230 \341\203\230\341\203\221\341\203\224\341\203\255\341\203\223\341\203\224\341\203\221\341\203\220\0";
 
 const char * gTranslations_de = 
-  "&\303\234ber SumatraPDF\0"\
+  "\303\234ber &SumatraPDF\0"\
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
   "&Mehr Optionen\342\200\246\0"\
   "&Alle angegebenen Seiten\0"\
@@ -5457,7 +5457,7 @@ const char * gTranslations_de =
   "Unbekannte Datei (%s)\0"\
   "Dokumente in &Tabs \303\266ffnen\0"\
   "Ansicht\0"\
-  "&SumatraPDF im Internet\0"\
+  "SumatraPDF im &Internet\0"\
   "Warnung\0"\
   "XPS-Dokumente\0"\
   "Sie haben die neuste Version installiert.\0"\
@@ -9703,7 +9703,7 @@ const char * gTranslations_br =
   "&Localizar o qu\303\252:\0"\
   "Primeira p\303\241gina\tHome\0"\
   "Ajustar p\303\241ginas \303\240 \303\241rea de impress\303\243o\0"\
-  "Ir &para\0"\
+  "&Ir para\0"\
   "&Ir para a p\303\241gina:\0"\
   "A&juda\0"\
   "\303\232ltima p\303\241gina\tEnd\0"\
@@ -9797,7 +9797,7 @@ const char * gTranslations_br =
   "Digite a senha de %s\0"\
   "Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:\0"\
   "Erro ao carregar %s\0"\
-  "F&avoritos\0"\
+  "&Favoritos\0"\
   "Avan\303\247ar\tAlt+->\0"\
   "Tela cheia\tCtrl+Shift+L\0"\
   "P\303\241gina dupla\0"\
@@ -11718,7 +11718,7 @@ const char * gTranslations_es =
   "&Ignorar esta versi\303\263n\0"\
   "&Usar el tama\303\261o original de la p\303\241gina\0"\
   "&Ver\0"\
-  "&Ventana\0"\
+  "V&entana\0"\
   "&S\303\255\0"\
   "\0"\
   "(de %d)\0"\
@@ -12029,7 +12029,7 @@ const char * gTranslations_sv =
   "Ange l\303\266senord f\303\266r %s\0"\
   "Ange kommandorad att aktivera n\303\244r du dubbelklickar p\303\245 PDF-dokumentet:\0"\
   "Fel vid \303\266ppning av %s\0"\
-  "F&avoriter\0"\
+  "&Favoriter\0"\
   "Fram\303\245t\tAlt+Pil h\303\266ger\0"\
   "Fullsk\303\244rm\tCtrl+Shift+L\0"\
   "Uppslag\0"\
@@ -12845,7 +12845,7 @@ const char * gTranslations_uk =
   "\320\235\320\265\321\226\321\201\320\275\321\203\321\216\321\207\320\270\320\271 \320\275\320\276\320\274\320\265\321\200 \321\201\321\202\320\276\321\200\321\226\320\275\320\272\320\270 %u\0"\
   "\320\234\320\260\321\201\321\210\321\202\320\260\320\261 \321\201\321\202\320\276\321\200\321\226\320\275\320\272\320\270\0"\
   "\320\241\321\202\320\276\321\200\321\226\320\275\320\272\320\260:\0"\
-  "\0"\
+  "\320\224\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270 PalmDoc\0"\
   "\320\227\320\260\321\207\320\265\320\272\320\260\320\271\321\202\320\265 - \320\263\320\265\320\275\320\265\321\200\321\203\321\224\321\202\321\214\321\201\321\217...\0"\
   "\320\224\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270 postscript\0"\
   "\320\237\321\200\320\265\320\267\320\265\320\275\321\202\320\260\321\206\321\226\321\217\tCtrl+L\0"\
