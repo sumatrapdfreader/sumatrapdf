@@ -4591,7 +4591,7 @@ const char * gTranslations_fr =
   "Erreur de chargement de %s\0"\
   "Fa&voris\0"\
   "&Avancer\tAlt+->\0"\
-  "&Plein \303\251cran\tCtrl+Shift+L\0"\
+  "&Plein \303\251cran\tCtrl+Maj+L\0"\
   "Page double\0"\
   "Impossible de renommer le fichier!\0"\
   "\303\211chec \303\240 l'enregistrement du fichier\0"\
@@ -4680,8 +4680,8 @@ const char * gTranslations_fr =
   "Enlever des favoris\0"\
   "Enlever page %s des favoris\0"\
   "Renommer En\0"\
-  "Rotation &antihoraire\tCtrl+Shift+-\0"\
-  "Rotation &horaire\tCtrl+Shift++\0"\
+  "Rotation &antihoraire\tCtrl+Maj+-\0"\
+  "Rotation &horaire\tCtrl+Maj++\0"\
   "Enregistrer sous\0"\
   "Enregistrer un raccourci... \tCtrl+Maj-S\0"\
   "Recherche de %d \303\240 %d...\0"\

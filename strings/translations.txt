@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9d218443057b04e678faf0f7a661653b7c9f188d
+9b72dc77fc6124190f8caadd533fb6fb0e4eb2fb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7523,7 +7523,7 @@ et:&Täisekraanvaade\tCtrl+Shift+L
 eu:&Ikusleiho-osoan\tKtrl+Shift+L
 fa:&تمام‌صفحه\tCtrl+Shift+L
 fi:Koko &näyttö\tCtrl+Shift+L
-fr:&Plein écran\tCtrl+Shift+L
+fr:&Plein écran\tCtrl+Maj+L
 fy-nl:Folslein skerm\tCtrl+Shift+L
 ga:Lánscáileán\tCtrl+Shift+L
 gl:A toda pantalla\tCtrl+Shift+L
@@ -13458,7 +13458,7 @@ et:Pööra &vasemale\tCtrl+Shift+-
 eu:Itzulikatu E&zkerrerantz\tKtrl+Shift+-
 fa:چرخاندن به &چپ\tCtrl+Shift+-‎
 fi:Käännä &vasemmalle\tCtrl+Shift+-
-fr:Rotation &antihoraire\tCtrl+Shift+-
+fr:Rotation &antihoraire\tCtrl+Maj+-
 fy-nl:Linksom draaie\tCtrl+Shift+-
 ga:Rothlaigh tuathalach\tCtrl+Shift+-
 gl:Xirar á esquerda\tCtrl+Shift+-
@@ -13526,7 +13526,7 @@ et:Pööra &paremale\tCtrl+Shift++
 eu:Itzulikatu E&skuinera\tKtrl+Shift++
 fa:چرخاندن به &راست\tCtrl+Shift++‎
 fi:Käännä &oikealle\tCtrl+Shift++
-fr:Rotation &horaire\tCtrl+Shift++
+fr:Rotation &horaire\tCtrl+Maj++
 fy-nl:Rjochtsom draaie\tCtrl+Shift++
 ga:Rothlaigh deiseal\tCtrl+Shift++
 gl:Xirar á dereita\tCtrl+Shift++
