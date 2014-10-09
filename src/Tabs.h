@@ -32,6 +32,7 @@ int GetTabbarHeight(WindowInfo *win, float factor=1.f);
 void SaveCurrentTabData(WindowInfo *win);
 int TabsGetCount(WindowInfo *win);
 TabData *GetTabData(WindowInfo *win, int tabIndex);
+TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl);
 void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
 
 void CreateTabbar(WindowInfo *win);

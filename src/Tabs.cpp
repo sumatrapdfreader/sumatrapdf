@@ -737,6 +737,16 @@ TabData *GetTabData(WindowInfo *win, int tabIndex)
     return NULL;
 }
 
+TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl)
+{
+    TabData *td;
+    for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
+        if (ctrl == td->ctrl)
+            return td;
+    }
+    return NULL;
+}
+
 static int FindTabIndex(WindowInfo *win, TabData *tdata)
 {
     int count = TabsGetCount(win);
