@@ -12,7 +12,7 @@
 typedef int64_t off64_t;
 typedef int64_t time64_t;
 
-#define UNARR_API_VERSION 100
+#define UNARR_API_VERSION 101
 
 /***** common/stream *****/
 
@@ -68,6 +68,8 @@ time64_t ar_entry_get_filetime(ar_archive *ar);
 /* WARNING: don't manually seek in the stream between ar_parse_entry and the last corresponding ar_entry_uncompress call! */
 /* uncompresses the next 'count' bytes of the current entry into buffer; returns false on error */
 bool ar_entry_uncompress(ar_archive *ar, void *buffer, size_t count);
+/* returns a stream for uncompressing the current entry (internally calls ar_entry_uncompress, close before calling ar_parse_entry again) */
+ar_stream *ar_entry_open(ar_archive *ar);
 
 /* copies at most 'count' bytes of the archive's global comment (if any) into buffer; returns the actual amout of bytes copied (or, if 'buffer' is NULL, the required buffer size) */
 size_t ar_get_global_comment(ar_archive *ar, void *buffer, size_t count);
