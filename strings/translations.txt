@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9b72dc77fc6124190f8caadd533fb6fb0e4eb2fb
+7b9a26a18b6fa48c71ce833cfbab3c4bb9c69b57
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1121,7 +1121,7 @@ ar:&مساعدة
 az:&Kömək
 bg:&Помощ
 bn:&সাহায্য
-br:A&juda
+br:Aj&uda
 bs:&Pomoć
 by:Дапамога
 ca-xv:&Ajuda
@@ -2939,7 +2939,9 @@ uz:&Ko'rish
 vn:Hiển thị
 :&Window
 am:&Պատուհան
+ar:النافذة
 az:&Pəncərə
+br:&Janela
 bs:&Prozor
 ca:&Finestra
 cn:窗口(&W)
@@ -6503,6 +6505,7 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
+ar:إحداثيات المؤشر
 az:Kursorun mövqeyi:
 br:Posição do cursor:
 bs:Pozicija kursora:
@@ -10055,6 +10058,7 @@ uz:KB
 vn:KB
 :Keep the PDF &browser plugin installed (no longer supported)
 am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
+ar:حافظ على تكميلة البرنامج في المتصفح
 az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
 bs:Ostavi plugin instaliran u &browseru (više nije podržano)
@@ -10387,6 +10391,7 @@ uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
 :Man&ga Mode
 am:Man&ga եղանակ
+ar:Man&ga وضعية 
 az:Man&qa rejimi
 br:Modo Man&gá
 bs:Man&ga režim
@@ -12353,7 +12358,9 @@ uz:Bet:
 vn:Trang:
 :PalmDoc documents
 am:PalmDoc փաստաթղթեր
+ar:وثائق بالم دوك
 az:PalmDoc sənədləri
+br:Documentos PalmDoc
 cn:PalmDoc 文档
 de:PalmDoc E-Bücher
 es:Documentos PalmDoc
@@ -13973,6 +13980,7 @@ uz:SumatraPDF o'rnatish uchun jildni tanlang:
 vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 :Selection:
 am:Նշվածը.
+ar:التحديد
 az:Seçmə:
 br:Seleção:
 bs:Selekcija:
@@ -15888,7 +15896,9 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use &tabs
 am:Ավելացնել &ներդիրներ
+ar:الإستعمال & التبويبات
 az:&Tab-vərəqələrdən istifadə et
+br:Usar &abas
 bs:Koristi &tabove
 cn:使用标签页(&T)
 cy:Defnyddio &tabiau
