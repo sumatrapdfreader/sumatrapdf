@@ -634,21 +634,21 @@ const char * gTranslations_nl =
   "&Opties\0"\
   "Bent u zeker dat u SumatraPDF wilt verwijderen?\0"\
   "Sluiten\0"\
-  "Kon tijdelijke folder niet aanmaken\0"\
-  "Kon de installatie folder niet aanmaken\0"\
-  "Kon PDF voorbeeld niet installeren\0"\
-  "Kon PDF zoek filter niet installeren\0"\
-  "Kon tijdelijke folder niet verkrijgen\0"\
-  "Kon installatie folder niet verwijderen\0"\
+  "Kan tijdelijke map niet aanmaken\0"\
+  "Kan de installatiemap niet aanmaken\0"\
+  "Kan PDF-previewer niet installeren\0"\
+  "Kan PDF-zoekfilter niet installeren\0"\
+  "Kan tijdelijke map niet verkrijgen\0"\
+  "Kan installatiemap niet verwijderen\0"\
   "Kon snelkoppeling niet verwijderen\0"\
-  "Kon PDF-voorbeeldweergever niet verwijderen\0"\
+  "Kan PDF-previewer niet verwijderen\0"\
   "Kon PDF zoek filter niet de\303\257nstalleren\0"\
-  "Kon browserplugin niet verwijderen\0"\
+  "Kan browserplugin niet verwijderen\0"\
   "Kon %s niet op schijf wegschrijven\0"\
   "Kon deinstallatie programma niet kopieren naar tijdelijke folder\0"\
   "Kon snelkoppeling niet aanmaken\0"\
   "Kon deinstallatie register sleutels niet verwijderen\0"\
-  "Kon uitgebreide bestandsextensie informatie niet wegschrijven in register\0"\
+  "Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register\0"\
   "Kan de\303\257nstallatie-informatie niet wegschrijven in het register\0"\
   "Verberg &Opties\0"\
   "Installeer SumatraPDF\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7b9a26a18b6fa48c71ce833cfbab3c4bb9c69b57
+4b7ae672f41d588be2b2d9eb7fb5c7f2928b5d17
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5753,7 +5753,7 @@ kr:임시 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
-nl:Kon tijdelijke folder niet aanmaken
+nl:Kan tijdelijke map niet aanmaken
 pl:Nie można utworzyć katalogu tymczasowego
 pt:Não foi possível criar a pasta temporária
 ro:Nu s-a putut crea un director temporar
@@ -5804,7 +5804,7 @@ kr:설치 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
-nl:Kon de installatie folder niet aanmaken
+nl:Kan de installatiemap niet aanmaken
 pl:Nie można utworzyć katalogu instalacyjnego
 pt:Não foi possível criar a pasta de instalação
 ro:Nu s-a putut crea directorul de instalare
@@ -5914,7 +5914,7 @@ kr:PDF 미리보기를 설치할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
-nl:Kon PDF voorbeeld niet installeren
+nl:Kan PDF-previewer niet installeren
 pl:Nie można zainstalować podglądu PDF
 pt:Não foi possível instalar o antevisão de PDF
 ro:Nu s-a putut instala previzualizatorul PDF
@@ -5963,7 +5963,7 @@ kr:PDF 검색 필터를 설치할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
-nl:Kon PDF zoek filter niet installeren
+nl:Kan PDF-zoekfilter niet installeren
 pl:Nie można zainstalować filtru przeszukiwania PDF
 pt:Não foi possível instalar o filtro de procuras
 ro:Nu s-a putut instala filtrul de cautare PDF
@@ -6012,7 +6012,7 @@ kr:임시 디렉토리를 가져올 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
-nl:Kon tijdelijke folder niet verkrijgen
+nl:Kan tijdelijke map niet verkrijgen
 pl:Nie można uzyskać katalogu tymczasowego
 pt:Não foi possível obter a pasta temporária
 ro:Nu s-a putut obtine directorul temporar
@@ -6061,7 +6061,7 @@ kr:설치 디렉토리를 제거할 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
-nl:Kon installatie folder niet verwijderen
+nl:Kan installatiemap niet verwijderen
 pl:Nie można usunąć katalogu instalacyjnego
 pt:Não foi possível remover a pasta de instalação
 ro:Nu s-a putut sterge directorul de instalare
@@ -6220,7 +6220,7 @@ kr:PDF 미리보기를 제거할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
-nl:Kon PDF-voorbeeldweergever niet verwijderen
+nl:Kan PDF-previewer niet verwijderen
 pl:Nie można usunąć podglądu PDF
 pt:Não foi possível desinstalar a antevisão de PDF
 ro:Nu s-a putut dezinstala previzualizatorul PDF
@@ -6316,7 +6316,7 @@ kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
-nl:Kon browserplugin niet verwijderen
+nl:Kan browserplugin niet verwijderen
 pl:Nie można usunąć wtyczki do przeglądarek
 pt:Não foi possível desinstalar o plugin do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
@@ -7935,7 +7935,7 @@ kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습�
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
-nl:Kon uitgebreide bestandsextensie informatie niet wegschrijven in register
+nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
 pl:Nie można wprowadzić poszerzonych informacji o rozszerzeniu pliku do rejestru
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
