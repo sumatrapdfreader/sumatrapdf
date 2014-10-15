@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4b7ae672f41d588be2b2d9eb7fb5c7f2928b5d17
+9139a717aa473f76b9b4a1db674634209807f095
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2946,6 +2946,7 @@ bs:&Prozor
 ca:&Finestra
 cn:窗口(&W)
 cy:&Ffenestr
+cz:&Okno
 de:Fe&nster
 es:V&entana
 et:A&ken
@@ -12362,10 +12363,12 @@ ar:وثائق بالم دوك
 az:PalmDoc sənədləri
 br:Documentos PalmDoc
 cn:PalmDoc 文档
+cz:PalmDoc dokumenty
 de:PalmDoc E-Bücher
 es:Documentos PalmDoc
 fr:Fichiers PalmDoc
 he:קובצי PalmDoc
+hr:PalmDoc dokumenti
 it:Documenti PalmDoc
 kr:PalmDoc 문서
 mk:документи на PalmDoc
@@ -15902,6 +15905,7 @@ br:Usar &abas
 bs:Koristi &tabove
 cn:使用标签页(&T)
 cy:Defnyddio &tabiau
+cz:Použít &karty
 de:Dokumente in &Tabs öffnen
 es:Usar &pestañas
 et:Kasuta &kaarte

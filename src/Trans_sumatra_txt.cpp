@@ -3173,7 +3173,7 @@ const char * gTranslations_hr =
   "Stranica %u ne postoji\0"\
   "Skaliranje stranice\0"\
   "Stranica:\0"\
-  "\0"\
+  "PalmDoc dokumenti\0"\
   "Molim pri\304\215ekajte, iscrtavam...\0"\
   "Postscript dokumenti\0"\
   "Pr&ezentacija\tCtrl+L\0"\
@@ -3286,7 +3286,7 @@ const char * gTranslations_cz =
   "&P\305\231esko\304\215it tuto verzi\0"\
   "Po&u\305\276\303\255t p\305\257vodn\303\255 velikost str\303\241nky\0"\
   "&Zobrazit\0"\
-  "\0"\
+  "&Okno\0"\
   "&Ano\0"\
   "Z&v\304\233t\305\241en\303\255\0"\
   "(z %d)\0"\
@@ -3421,7 +3421,7 @@ const char * gTranslations_cz =
   "Str\303\241nka \304\215\303\255slo %u neexistuje\0"\
   "M\304\233\305\231\303\255tko str\303\241nky\0"\
   "Str\303\241nka:\0"\
-  "\0"\
+  "PalmDoc dokumenty\0"\
   "Pros\303\255m \304\215ekejte, prob\303\255h\303\241 vykreslov\303\241n\303\255...\0"\
   "Dokumenty PostScript\0"\
   "Pr&ezentace\tF5\0"\
@@ -3471,7 +3471,7 @@ const char * gTranslations_cz =
   "Textov\303\251 dokumenty\0"\
   "N\303\241zev:\0"\
   "Nezn\303\241m\303\275 zdrojov\303\275 soubor (%s)\0"\
-  "\0"\
+  "Pou\305\276\303\255t &karty\0"\
   "Zobrazen\303\255\0"\
   "Nav\305\241t\303\255vit &webovou str\303\241nku\0"\
   "Upozorn\304\233n\303\255\0"\
