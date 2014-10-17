@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9139a717aa473f76b9b4a1db674634209807f095
+7ed90b621a326175e61c401f543d3fc397e2da0c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -163,7 +163,7 @@ gl:&Opcións avanzadas...
 he:הגדרות מתקדמות...
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
-id:&Pilihan Lanjutan...
+id:&Pengaturan Lanjutan...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
@@ -3738,7 +3738,7 @@ he:יישום:
 hi:आवेदन:
 hr:Aplikacija:
 hu:Alkalmazás:
-id:Aplikasi
+id:Aplikasi:
 it:Creato con:
 ja:アプリケーション:
 jv:Aplikasi
@@ -12369,6 +12369,7 @@ es:Documentos PalmDoc
 fr:Fichiers PalmDoc
 he:קובצי PalmDoc
 hr:PalmDoc dokumenti
+id:Dokumen PalmDoc
 it:Documenti PalmDoc
 kr:PalmDoc 문서
 mk:документи на PalmDoc
@@ -16078,7 +16079,7 @@ he:בקר באתר...
 hi:वेबसाइट देखें(&W)
 hr:&Posjeti internetsku stranicu
 hu:&Weboldal
-id:&Kunjungi Halaman Web
+id:&Kunjungi Situs
 it:Visita il sito &web
 ja:Web サイトの訪問(&W)
 ka:&ვებ-გვერდზე გადასვლა

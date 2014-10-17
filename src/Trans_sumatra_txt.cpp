@@ -6465,7 +6465,7 @@ const char * gTranslations_hu =
 const char * gTranslations_id = 
   "&Tentang\0"\
   "&Ukuran Sebenarnya\tCtrl+1\0"\
-  "&Pilihan Lanjutan...\0"\
+  "&Pengaturan Lanjutan...\0"\
   "&Semua halaman yang dipilih\0"\
   "Kembali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
@@ -6523,7 +6523,7 @@ const char * gTranslations_id =
   "Lanjutan\0"\
   "Semua Berkas\0"\
   "Semua dokumen yang didukung\0"\
-  "Aplikasi\0"\
+  "Aplikasi:\0"\
   "Asosiasikan dengan berkas PDF?\0"\
   "Lampiran: %s\0"\
   "Pencipta:\0"\
@@ -6645,7 +6645,7 @@ const char * gTranslations_id =
   "Halaman %u tidak tersedia\0"\
   "Mengukur halaman\0"\
   "Halaman:\0"\
-  "\0"\
+  "Dokumen PalmDoc\0"\
   "Harap tunggu - sedang proses rendering...\0"\
   "Dokumen Postscript\0"\
   "Presentasi\tCtrl+L\0"\
@@ -6697,7 +6697,7 @@ const char * gTranslations_id =
   "Berkas asal (%s) tidak diketahui\0"\
   "Gunakan &tab\0"\
   "Tampilan\0"\
-  "&Kunjungi Halaman Web\0"\
+  "&Kunjungi Situs\0"\
   "Peringatan\0"\
   "Dokumen XPS\0"\
   "Anda telah memiliki versi terbaru\0"\
