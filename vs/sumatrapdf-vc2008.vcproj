@@ -2383,6 +2383,14 @@
 					RelativePath="..\ext\unarr\zip\zip.h"
 					>
 				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\inflate.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\inflate.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="_7z"

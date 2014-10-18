@@ -837,6 +837,7 @@ $(OUN)\filter-rar.obj: $B\ext\unarr\unarr.h
 $(OUN)\huffman-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\huffman-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
 $(OUN)\huffman-rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\unarr.h
+$(OUN)\inflate.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\zip\inflate.h
 $(OUN)\main.obj: $B\ext\unarr\unarr.h
 $(OUN)\parse-rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\parse-rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
@@ -846,8 +847,8 @@ $(OUN)\parse-tar.obj: $B\ext\unarr\unarr.h
 $(OUN)\parse-zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\parse-zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\parse-zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\parse-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
-$(OUN)\parse-zip.obj: $B\ext\zlib\zlib.h
+$(OUN)\parse-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\inflate.h $B\ext\unarr\zip\zip.h
+$(OUN)\parse-zip.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h
 $(OUN)\rar.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\rar.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd7.h $B\ext\unarr\ppmd\Types.h
 $(OUN)\rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext\unarr\unarr.h
@@ -862,10 +863,10 @@ $(OUN)\uncompress-rar.obj: $B\ext\unarr\rar\lzss.h $B\ext\unarr\rar\rar.h $B\ext
 $(OUN)\uncompress-zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\uncompress-zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\uncompress-zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\uncompress-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
-$(OUN)\uncompress-zip.obj: $B\ext\zlib\zlib.h
+$(OUN)\uncompress-zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\inflate.h $B\ext\unarr\zip\zip.h
+$(OUN)\uncompress-zip.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h
 $(OUN)\zip.obj: $B\ext\bzip2\bzlib.h $B\ext\lzma\C\LzmaDec.h $B\ext\lzma\C\Types.h
 $(OUN)\zip.obj: $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h $B\ext\unarr\ppmd\CpuArch.h
 $(OUN)\zip.obj: $B\ext\unarr\ppmd\Ppmd.h $B\ext\unarr\ppmd\Ppmd8.h $B\ext\unarr\ppmd\Types.h
-$(OUN)\zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\zip.h $B\ext\zlib\zconf.h
-$(OUN)\zip.obj: $B\ext\zlib\zlib.h
+$(OUN)\zip.obj: $B\ext\unarr\unarr.h $B\ext\unarr\zip\inflate.h $B\ext\unarr\zip\zip.h
+$(OUN)\zip.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h

@@ -30,7 +30,41 @@ static bool zip_fill_input_buffer(ar_archive_zip *zip)
 
 /***** Deflate and Deflate64 compression *****/
 
-#ifdef HAVE_ZLIB
+#ifndef HAVE_ZLIB
+static bool zip_init_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp, bool deflate64)
+{
+    uncomp->state.inflate = inflate_create(deflate64);
+
+    return uncomp->state.inflate != NULL;
+}
+
+static uint32_t zip_uncompress_data_deflate(struct ar_archive_zip_uncomp *uncomp, void *buffer, uint32_t buffer_size, bool is_last_chunk)
+{
+    size_t avail_in = uncomp->input.bytes_left;
+    size_t avail_out = buffer_size;
+
+    int result = inflate_process(uncomp->state.inflate, &uncomp->input.data[uncomp->input.offset], &avail_in, buffer, &avail_out);
+
+    uncomp->input.offset += uncomp->input.bytes_left - (uint16_t)avail_in;
+    uncomp->input.bytes_left = (uint16_t)avail_in;
+
+    if (result && result != EOF) {
+        warn("Unexpected Inflate error %d", result);
+        return ERR_UNCOMP;
+    }
+    if (result == EOF && avail_out) {
+        warn("Premature EOS in Deflate stream");
+        return ERR_UNCOMP;
+    }
+
+    return buffer_size - (uint32_t)avail_out;
+}
+
+static void zip_clear_uncompress_deflate(struct ar_archive_zip_uncomp *uncomp)
+{
+    inflate_free(uncomp->state.inflate);
+}
+#else
 static void *gZlib_Alloc(void *opaque, uInt count, uInt size) { (void)opaque; return calloc(count, size); }
 static void gZlib_Free(void *opaque, void *ptr) { (void)opaque; free(ptr); }
 
@@ -290,14 +324,10 @@ static bool zip_init_uncompress(ar_archive_zip *zip)
         return true;
     memset(uncomp, 0, sizeof(*uncomp));
     if (zip->entry.method == METHOD_DEFLATE || zip->entry.method == METHOD_DEFLATE64) {
-#ifdef HAVE_ZLIB
         if (zip_init_uncompress_deflate(uncomp, zip->entry.method == METHOD_DEFLATE64)) {
             uncomp->uncompress_data = zip_uncompress_data_deflate;
             uncomp->clear_state = zip_clear_uncompress_deflate;
         }
-#else
-        warn("Deflate support requires ZLIB (define HAVE_ZLIB)");
-#endif
     }
     else if (zip->entry.method == METHOD_BZIP2) {
 #ifdef HAVE_BZIP2
