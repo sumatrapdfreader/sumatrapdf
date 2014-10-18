@@ -156,7 +156,7 @@ $(OE): force
 {$(EXTDIR)\unarr\common}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
-{$(EXTDIR)\unarr\ppmd}.c{$(OUN)}.obj::
+{$(EXTDIR)\unarr\lzmasdk}.c{$(OUN)}.obj::
 	$(CC) $(UNARR_CFLAGS) /Fo$(OUN)\ /Fd$(O)\vc80.pdb $<
 
 {$(EXTDIR)\unarr\rar}.c{$(OUN)}.obj::

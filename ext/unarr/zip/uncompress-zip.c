@@ -166,7 +166,6 @@ static void zip_clear_uncompress_bzip2(struct ar_archive_zip_uncomp *uncomp)
 
 /***** LZMA compression *****/
 
-#ifdef HAVE_LZMA
 static void *gLzma_Alloc(void *self, size_t size) { (void)self; return malloc(size); }
 static void gLzma_Free(void *self, void *ptr) { (void)self; free(ptr); }
 
@@ -229,7 +228,6 @@ static void zip_clear_uncompress_lzma(struct ar_archive_zip_uncomp *uncomp)
 {
     LzmaDec_Free(&uncomp->state.lzma.dec, &uncomp->state.lzma.alloc);
 }
-#endif
 
 /***** PPMd compression *****/
 
@@ -340,14 +338,10 @@ static bool zip_init_uncompress(ar_archive_zip *zip)
 #endif
     }
     else if (zip->entry.method == METHOD_LZMA) {
-#ifdef HAVE_LZMA
         if (zip_init_uncompress_lzma(uncomp, zip->entry.flags)) {
             uncomp->uncompress_data = zip_uncompress_data_lzma;
             uncomp->clear_state = zip_clear_uncompress_lzma;
         }
-#else
-        warn("LZMA support requires LZMA SDK (define HAVE_LZMA)");
-#endif
     }
     else if (zip->entry.method == METHOD_PPMD) {
         if (zip_init_uncompress_ppmd(zip)) {

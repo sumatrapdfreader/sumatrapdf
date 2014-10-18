@@ -7,7 +7,7 @@
 #include "../common/unarr-imp.h"
 
 #include "lzss.h"
-#include "../ppmd/Ppmd7.h"
+#include "../lzmasdk/Ppmd7.h"
 #include <limits.h>
 
 static inline size_t smin(size_t a, size_t b) { return a < b ? a : b; }

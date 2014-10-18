@@ -19,7 +19,6 @@ Symbol          Required header Required for (format/method)
 -------------------------------------------------------------
 HAVE_ZLIB       zlib.h          faster CRC-32 and Deflate(64)
 HAVE_BZIP2      bzlib.h         ZIP / Bzip2
-HAVE_LZMA       LzmaDec.h       ZIP / LZMA
 HAVE_7Z         7z.h            7Z  / LZMA, LZMA2, BCJ
 
 _7ZIP_PPMD_SUPPPORT             7Z  / PPMd

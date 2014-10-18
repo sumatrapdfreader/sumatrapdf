@@ -10,8 +10,7 @@
 
 #define MAX_BITS 16
 #define MAX_TREE_NODES 320
-
-#define nelem(array) (sizeof(array) / sizeof(array[0]))
+#define MAX_CODE_LENGTHS 318
 
 enum inflate_step {
     STEP_NEXT_BLOCK = 0,
@@ -41,7 +40,7 @@ struct inflate_state_s {
         int hdist;
         int hclen;
         int idx;
-        int clens[318];
+        int clens[MAX_CODE_LENGTHS];
     } prepare;
     bool inflate64;
     bool is_final_block;
@@ -391,21 +390,23 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                     if (!br_ensure(state, 2))
                         return RESULT_NOT_DONE;
                     repeat = (int)br_bits(state, 2) + 3;
-                    while (repeat-- > 0 && state->prepare.idx < nelem(state->prepare.clens))
-                        state->prepare.clens[state->prepare.idx++] = state->prepare.clens[state->prepare.idx - 1];
+                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS) {
+                        state->prepare.clens[state->prepare.idx] = state->prepare.clens[state->prepare.idx - 1];
+                        state->prepare.idx++;
+                    }
                 }
                 else if (state->state.code == 17) {
                     if (!br_ensure(state, 3))
                         return RESULT_NOT_DONE;
                     repeat = (int)br_bits(state, 3) + 3;
-                    while (repeat-- > 0 && state->prepare.idx < nelem(state->prepare.clens))
+                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS)
                         state->prepare.clens[state->prepare.idx++] = 0;
                 }
                 else {
                     if (!br_ensure(state, 7))
                         return RESULT_NOT_DONE;
                     repeat = (int)br_bits(state, 7) + 11;
-                    while (repeat-- > 0 && state->prepare.idx < nelem(state->prepare.clens))
+                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS)
                         state->prepare.clens[state->prepare.idx++] = 0;
                 }
                 state->state.code = -1;

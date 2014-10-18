@@ -39,13 +39,13 @@ LINK_CMD = $(QUIET_LINK) $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 # --- Third party libraries ---
 
-# TODO: build zlib, bzip2, lzma and 7z when available
+# TODO: build zlib, bzip2 and 7z when available
 
 # --- unarr files ---
 
 UNARR_OUT := $(OUT)/unarr
 
-UNARR_DIRS := common ppmd rar tar zip _7z
+UNARR_DIRS := common lzmasdk rar tar zip _7z
 UNARR_SRC := $(wildcard $(UNARR_DIRS:=/*.c))
 UNARR_OBJ := $(addprefix $(UNARR_OUT)/, $(addsuffix .o, $(basename $(UNARR_SRC))))
 

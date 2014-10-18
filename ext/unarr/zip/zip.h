@@ -14,10 +14,8 @@
 #ifdef HAVE_BZIP2
 #include <bzlib.h>
 #endif
-#ifdef HAVE_LZMA
-#include <LzmaDec.h>
-#endif
-#include "../ppmd/Ppmd8.h"
+#include "../lzmasdk/LzmaDec.h"
+#include "../lzmasdk/Ppmd8.h"
 
 typedef struct ar_archive_zip_s ar_archive_zip;
 
@@ -119,13 +117,11 @@ struct ar_archive_zip_uncomp {
 #ifdef HAVE_BZIP2
         bz_stream bstream;
 #endif
-#ifdef HAVE_LZMA
         struct {
             CLzmaDec dec;
             ELzmaFinishMode finish;
             ISzAlloc alloc;
         } lzma;
-#endif
         struct {
             CPpmd8 ctx;
             struct ByteReader bytein;
