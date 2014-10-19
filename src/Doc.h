@@ -10,13 +10,14 @@
 // possible.
 // It's small enough to be passed by value.
 
+#include "BaseEngine.h"
+
 class EpubDoc;
 class Fb2Doc;
 class MobiDoc;
 class PalmDoc;
 
 struct ImageData;
-enum DocumentProperty;
 class EbookTocVisitor;
 class HtmlFormatter;
 class HtmlFormatterArgs;
