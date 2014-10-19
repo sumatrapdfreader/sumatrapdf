@@ -1370,6 +1370,8 @@ WindowInfo *CreateAndShowWindowInfo()
         ShowWindow(win->hwndFrame, SW_SHOW);
     UpdateWindow(win->hwndFrame);
 
+    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+
     if (WIN_STATE_FULLSCREEN == windowState)
         EnterFullScreen(*win);
     return win;
