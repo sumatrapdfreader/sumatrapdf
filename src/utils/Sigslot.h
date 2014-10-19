@@ -29,11 +29,11 @@ class list : protected Vec<T> {
 public:
     list() { }
 
-    T* begin() const { return els; }
-    T* end() const { return els + len; }
+    T* begin() const { return this->els; }
+    T* end() const { return this->els + this->len; }
 
-    void push_back(T el) { Append(el); }
-    void erase(T *el, T *end=NULL) { RemoveAt(el - els, end ? end - el : 1); }
+    void push_back(T el) { this->Append(el); }
+    void erase(T *el, T *end=NULL) { this->RemoveAt(el - this->els, end ? end - el : 1); }
 
     typedef T* iterator;
     typedef const T* const_iterator;
