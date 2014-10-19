@@ -364,7 +364,8 @@ template<class arg1_t>
 class _signal_base1 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base1<arg1_t> *>  connections_list;
+    typedef _connection_base1<arg1_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base1() { }
 
@@ -372,32 +373,20 @@ public:
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-            {
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-            }
-
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -409,58 +398,38 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;
 };
 
 template<class arg1_t, class arg2_t>
@@ -1546,25 +1515,18 @@ public:
     template<class desttype>
     void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_t))
     {
-        lock_block lock;
         typedef _connection1<desttype, arg1_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.push_back(conn);
         pclass->signal_connect(this);
     }
 
     void emit(arg1_t a1)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1);
         }
     }
 
@@ -1587,18 +1549,18 @@ public:
     template<class desttype>
     void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_t, arg2_t))
     {
-        lock_block lock;
         typedef _connection2<desttype, arg1_t, arg2_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connections.Append(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
     void emit(arg1_t a1, arg2_t a2)
     {
         lock_block lock;
-        for (size_t i = 0; i < m_connections.Count(); i++) {
-            m_connections.At(i)->emit(a1, a2);
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2);
         }
     }
 
@@ -1624,15 +1586,15 @@ public:
         typedef _connection3<desttype, arg1_t, arg2_t, arg3_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connections.Append(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
     void emit(arg1_t a1, arg2_t a2, arg3_t a3)
     {
         lock_block lock;
-        for (size_t i = 0; i < m_connections.Count(); i++) {
-            m_connections.At(i)->emit(a1, a2, a3);
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3);
         }
     }
 
@@ -1656,10 +1618,10 @@ public:
     template<class desttype>
     void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t))
     {
-        lock_block lock;
         typedef _connection4<desttype, arg1_t, arg2_t, arg3_t, arg4_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connected_slots.push_back(conn);
         pclass->signal_connect(this);
     }
 
@@ -1702,8 +1664,8 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_t,
         arg2_t, arg3_t, arg4_t, arg5_t))
     {
-        lock_block lock;
         typedef _connection5<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
         m_connected_slots.push_back(conn);
         pclass->signal_connect(this);
@@ -1749,8 +1711,8 @@ public:
         void connect(desttype* pclass, void (desttype::*pmemfun)(arg1_t,
         arg2_t, arg3_t, arg4_t, arg5_t, arg6_t))
     {
-        lock_block lock;
         typedef _connection6<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
         m_connected_slots.push_back(conn);
         pclass->signal_connect(this);
@@ -1798,8 +1760,8 @@ public:
         arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, 
         arg7_t))
     {
-        lock_block lock;
         typedef _connection7<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
         m_connected_slots.push_back(conn);
         pclass->signal_connect(this);
@@ -1845,8 +1807,8 @@ public:
         arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, 
         arg7_t, arg8_t))
     {
-        lock_block lock;
         typedef _connection8<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t> conn_t;
+        lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
         m_connected_slots.push_back(conn);
         pclass->signal_connect(this);
