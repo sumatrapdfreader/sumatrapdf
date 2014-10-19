@@ -1117,8 +1117,8 @@ class _connection0 : public _connection_base0
 public:
     _connection0()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection0(dest_type* pobject, void (dest_type::*pmemfun)())
@@ -1158,8 +1158,8 @@ class _connection1 : public _connection_base1<arg1_t>
 public:
     _connection1()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection1(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t))
@@ -1199,8 +1199,8 @@ class _connection2 : public _connection_base2<arg1_t, arg2_t>
 public:
     _connection2()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection2(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t,
@@ -1241,8 +1241,8 @@ class _connection3 : public _connection_base3<arg1_t, arg2_t, arg3_t>
 public:
     _connection3()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection3(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t,
@@ -1283,8 +1283,8 @@ class _connection4 : public _connection_base4<arg1_t, arg2_t, arg3_t, arg4_t>
 public:
     _connection4()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection4(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t))
@@ -1324,8 +1324,8 @@ class _connection5 : public _connection_base5<arg1_t, arg2_t, arg3_t, arg4_t, ar
 public:
     _connection5()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection5(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t, arg5_t))
@@ -1365,8 +1365,8 @@ class _connection6 : public _connection_base6<arg1_t, arg2_t, arg3_t, arg4_t, ar
 public:
     _connection6()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection6(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t))
@@ -1406,8 +1406,8 @@ class _connection7 : public _connection_base7<arg1_t, arg2_t, arg3_t, arg4_t, ar
 public:
     _connection7()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection7(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t))
@@ -1447,8 +1447,8 @@ class _connection8 : public _connection_base8<arg1_t, arg2_t, arg3_t, arg4_t, ar
 public:
     _connection8()
     {
-        pobject = NULL;
-        pmemfun = NULL;
+        m_pobject = NULL;
+        m_pmemfun = NULL;
     }
 
     _connection8(dest_type* pobject, void (dest_type::*pmemfun)(arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t))
