@@ -6,11 +6,17 @@ Vagrant.
 This is to detect code that is compiler dependent (i.e. assumes things about
 MSVC that aren't true for gcc).
 
-There are no plans to publish those build.
+There are no plans to publish those builds.
 
-There are two options to run the build.
+There are 3 options to run the build.
 
 Option 1:
+* install cygwin
+* install mingw in cygwin
+* install go (native Windows binaries)
+* go run tools/mingw/build.go
+
+Option 2:
 * get access to some recent Linux (I use Ubuntu 14.04) distro e.g.:
  - use VM running under VirtualBox or VMWare
  - or install Linux on a PC
@@ -19,7 +25,7 @@ Option 1:
   commands needed to install those on Ubuntu)
 * go run tools/mingw/build.go to run the build
 
-Option 2:
+Option 3:
 * get a Mac (might also work on Windows but haven't tried)
 * install latest VirtualBox
 * install latest Vagrant

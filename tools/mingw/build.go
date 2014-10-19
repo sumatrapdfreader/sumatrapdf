@@ -236,19 +236,18 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 }
 
 func main() {
-	fmt.Printf("Hello to a build system\n")
 	ctx := NewContext()
 	ctx[OUT_DIR_VAR] = "rel"
 	rootTask := Tasks{
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
+			&MingwCcDirTask{Dir: "src", Files: []string{"Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
-			&MingwCcDirTask{Dir: "src", Files: []string{"CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "Doc.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 		},
 	}
 	err, stdout, stderr := rootTask.Run()
 	if err != nil {
-		fmt.Printf("Failed with %q, stdout:\n%s\nstderr:\n%s\n", err, string(stdout), string(stderr))
+		fmt.Printf("Failed with %s, stdout:\n%s\nstderr:\n%s\n", err, string(stdout), string(stderr))
 	}
 }
