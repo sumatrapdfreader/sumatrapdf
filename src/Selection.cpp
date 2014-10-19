@@ -16,6 +16,9 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+#define NOLOG 0
+#include "DebugLog.h"
+
 RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {
     // if the page is not visible, we return an empty rectangle
@@ -356,11 +359,16 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     win->showSelection = true;
     win->mouseAction = MA_SELECTING;
 
+    bool isShift = IsShiftPressed();
+    bool isCtrl = IsCtrlPressed();
+    // plogf("OnSelectionStart: isCtrl: %d, isShift: %d", (int)isCtrl, (int)isShift);
+
     // Ctrl+drag forces a rectangular selection
-    if (!(key & MK_CONTROL) || (key & MK_SHIFT)) {
+    if (!isCtrl || isShift) {
         DisplayModel *dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(PointI(x, y));
         if (dm->ValidPageNo(pageNo)) {
+            //plogf("OnSelectionStart: changing to MA_SELECTING_TEXT");
             PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
             dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
