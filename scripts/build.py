@@ -427,7 +427,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
 
     if not build_prerelease:
         svn_tag_release(ver)
-        upload_sources(ver)
+        upload_sources.upload(ver)
 
     # Note: for release builds, must run scripts/update_auto_update_ver.py
 
