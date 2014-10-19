@@ -20,12 +20,14 @@
 #ifndef SigSlot_h
 #define SigSlot_h
 
+#define NEW_COMPILER 1
+
 // including <list> at this point breaks debug compilation
 // under VS2008 due to the redefined operator new
 namespace std {
 
 template <typename T>
-class list : protected Vec<T> {
+class list : public Vec<T> {
 public:
     list() { }
 
@@ -257,6 +259,14 @@ public:
         : _signal_base(s)
     {
         lock_block lock;
+#if NEW_COMPILER
+        size_t n = s.m_connected_slots.Size();
+        for (size_t i = 0; i < n; i++) {
+            _connection_base0 *c = s.m_connected_slots.At(i);
+            c->getdest()->signal_connect(this);
+            m_connected_slots.push_back(c->clone());
+        }
+#else  // this version is not acceptable by newer c++ compilers
         connections_list::const_iterator it = s.m_connected_slots.begin();
         connections_list::const_iterator itEnd = s.m_connected_slots.end();
 
@@ -266,6 +276,7 @@ public:
             m_connected_slots.push_back((*it)->clone());
             ++it;
         }
+#endif
     }
 
     ~_signal_base0()
