@@ -676,7 +676,7 @@ void EbookController::ExtractPageAnchors()
             attr = tok->GetAttrByName("name");
         if (attr) {
             ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
-            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id));
+            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // update EPUB page paths and create an anchor per chapter

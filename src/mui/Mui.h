@@ -7,10 +7,10 @@
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "Sigslot.h"
+#include "HtmlParserLookup.h"
 
 struct FrameRateWnd;
 
-enum AlignAttr;
 struct TxtNode;
 
 namespace mui {

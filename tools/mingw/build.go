@@ -242,7 +242,7 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
-			&MingwCcDirTask{Dir: "src", Files: []string{"Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookController.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
+			&MingwCcDirTask{Dir: "src", Files: []string{"EbookController.cpp", "Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
 	}
