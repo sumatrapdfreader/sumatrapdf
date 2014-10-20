@@ -191,9 +191,9 @@ static WCHAR *FavCompactReadableName(DisplayState *fav, Favorite *fn, bool isCur
 {
     ScopedMem<WCHAR> rn(FavReadableName(fn));
     if (isCurrent)
-        return str::Format(L"%s : %s", _TR("Current file"), rn);
+        return str::Format(L"%s : %s", _TR("Current file"), rn.Get());
     const WCHAR *fp = path::GetBaseName(fav->filePath);
-    return str::Format(L"%s : %s", fp, rn);
+    return str::Format(L"%s : %s", fp, rn.Get());
 }
 
 static void AppendFavMenuItems(HMENU m, DisplayState *f, UINT& idx, bool combined, bool isCurrent)
@@ -308,11 +308,11 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            ScopedMem<WCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Remove page %s from favorites"), label.Get()));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites"), label.Get()));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, win->ctrl->FilePath());
@@ -446,7 +446,7 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, DisplayState *fav, bool isExpa
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_STATE | TVIF_PARAM;
     tvinsert.itemex.state = isExpanded ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
-    tvinsert.itemex.lParam = NULL;
+    tvinsert.itemex.lParam = 0;
     if (collapsed) {
         Favorite *fn = fav->favorites->At(0);
         tvinsert.itemex.lParam = (LPARAM)fn;

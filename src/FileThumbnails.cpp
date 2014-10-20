@@ -37,7 +37,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
         return NULL;
     ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
-    return str::Format(L"%s\\%s.png", thumbsPath, fname);
+    return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
@@ -161,7 +161,7 @@ void SaveThumbnail(DisplayState& ds)
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Bitmap bmp(ds.thumbnail->GetBitmap(), NULL);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        bmp.Save(bmpPath, &tmpClsid);
+        bmp.Save(bmpPath.Get(), &tmpClsid, NULL);
     }
 }
 
