@@ -11,6 +11,7 @@
 // - we only use multi_threaded_global threading policy, support for other
 //   policies has been removed
 // - we replaced use of stl with our Vec
+// - rewrote things so that it compiles both with msvc and moder C++ compilers
 //
 // TODO: optimize storage. Instead of having a Vec inside each has_slot,
 // they could use linked list and only a single pointer to the list.
@@ -19,29 +20,6 @@
 
 #ifndef SigSlot_h
 #define SigSlot_h
-
-#define NEW_COMPILER 1
-
-// including <list> at this point breaks debug compilation
-// under VS2008 due to the redefined operator new
-namespace std {
-
-template <typename T>
-class list : public Vec<T> {
-public:
-    list() { }
-
-    T* begin() const { return this->els; }
-    T* end() const { return this->els + this->len; }
-
-    void push_back(T el) { this->Append(el); }
-    void erase(T *el, T *end=NULL) { this->RemoveAt(el - this->els, end ? end - el : 1); }
-
-    typedef T* iterator;
-    typedef const T* const_iterator;
-};
-
-}
 
 namespace sigslot {
 
@@ -251,32 +229,30 @@ public:
 class _signal_base0 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base0 *>  connections_list;
+    typedef _connection_base0 conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base0() { }
 
-    _signal_base0(const _signal_base0& s)
+    _signal_base0(_signal_base0& s)
         : _signal_base(s)
     {
         lock_block lock;
-#if NEW_COMPILER
-        size_t n = s.m_connected_slots.Size();
-        for (size_t i = 0; i < n; i++) {
-            _connection_base0 *c = s.m_connected_slots.At(i);
-            c->getdest()->signal_connect(this);
-            m_connected_slots.push_back(c->clone());
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
-#else  // this version is not acceptable by newer c++ compilers
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
+    }
 
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-            ++it;
+    void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
+    {
+        lock_block lock;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
-#endif
     }
 
     ~_signal_base0()
@@ -287,77 +263,38 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-
-            if ((*it)->getdest() == pslot)
-            {
-                m_connected_slots.erase(it);
-            }
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-    void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
-    {
-        lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-            {
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-            }
-
-            ++it;
-        }
-    }
-
-protected:
-    connections_list m_connected_slots;   
 };
 
 template<class arg1_t>
@@ -369,7 +306,7 @@ public:
 
     _signal_base1() { }
 
-    _signal_base1(const _signal_base1<arg1_t>& s)
+    _signal_base1(_signal_base1<arg1_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
@@ -442,7 +379,7 @@ protected:
 public:
     _signal_base2() { }
 
-    _signal_base2(const _signal_base2<arg1_t, arg2_t>& s)
+    _signal_base2(_signal_base2<arg1_t, arg2_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
@@ -515,7 +452,7 @@ protected:
 public:
     _signal_base3() { }
 
-    _signal_base3(const _signal_base3<arg1_t, arg2_t, arg3_t>& s)
+    _signal_base3(_signal_base3<arg1_t, arg2_t, arg3_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
@@ -582,41 +519,30 @@ template<class arg1_t, class arg2_t, class arg3_t, class arg4_t>
 class _signal_base4 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base4<arg1_t, arg2_t, arg3_t,
-        arg4_t> *>  connections_list;
+    typedef _connection_base4<arg1_t, arg2_t, arg3_t, arg4_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base4() { }
 
-    _signal_base4(const _signal_base4<arg1_t, arg2_t, arg3_t, arg4_t>& s)
+    _signal_base4(_signal_base4<arg1_t, arg2_t, arg3_t, arg4_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
+
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-            {
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-            }
-
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -628,59 +554,38 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;   
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
@@ -688,42 +593,30 @@ class arg5_t>
 class _signal_base5 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base5<arg1_t, arg2_t, arg3_t,
-        arg4_t, arg5_t> *>  connections_list;
+    typedef _connection_base5<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base5() { }
 
-    _signal_base5(const _signal_base5<arg1_t, arg2_t, arg3_t, arg4_t,
+    _signal_base5(_signal_base5<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-            {
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-            }
-
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -735,97 +628,67 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;   
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t, class arg5_t, class arg6_t>
 class _signal_base6 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base6<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t> *>  connections_list;
+    typedef _connection_base6<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base6() { }
 
-    _signal_base6(const _signal_base6<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t>& s)
+    _signal_base6(_signal_base6<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-            {
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-            }
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -837,95 +700,67 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;   
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t, class arg5_t, class arg6_t, class arg7_t>
 class _signal_base7 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base7<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t> *>  connections_list;
+    typedef _connection_base7<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base7() {}
 
-    _signal_base7(const _signal_base7<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t>& s)
+    _signal_base7(_signal_base7<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -937,95 +772,67 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;
 };
 
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t, class arg5_t, class arg6_t, class arg7_t, class arg8_t>
 class _signal_base8 : public _signal_base
 {
 public:
-    typedef std::list<_connection_base8<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t> *>
-        connections_list;
+    typedef _connection_base8<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t> conn_t;
+    Vec<conn_t *> m_connections;
 
     _signal_base8() { }
 
-    _signal_base8(const _signal_base8<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t>& s)
+    _signal_base8(_signal_base8<arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t>& s)
         : _signal_base(s)
     {
         lock_block lock;
-        connections_list::const_iterator it = s.m_connected_slots.begin();
-        connections_list::const_iterator itEnd = s.m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_connect(this);
-            m_connected_slots.push_back((*it)->clone());
-
-            ++it;
+        for (conn_t** c = s.m_connections.IterStart(); c; c = s.m_connections.IterNext()) {
+            (*c)->getdest()->signal_connect(this);
+            m_connections.Append((*c)->clone());
         }
     }
 
     void slot_duplicate(const has_slots* oldtarget, has_slots* newtarget)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == oldtarget)
-                m_connected_slots.push_back((*it)->duplicate(newtarget));
-
-            ++it;
+        size_t end = m_connections.Count(); // cache because we modify m_connections
+        for (size_t i = 0; i < end; i++) {
+            conn_t *c = m_connections.At(i);
+            if (c->getdest() == oldtarget)
+                m_connections.Append(c->duplicate(newtarget));
         }
     }
 
@@ -1037,58 +844,38 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        connections_list::const_iterator it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            (*it)->getdest()->signal_disconnect(this);
-            delete *it;
-            ++it;
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            (*c)->getdest()->signal_disconnect(this);
+            delete *c;
         }
-
-        m_connected_slots.erase(m_connected_slots.begin(), m_connected_slots.end());
+        m_connections.Reset();
     }
 
     void disconnect(has_slots* pclass)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            if ((*it)->getdest() == pclass)
+        for (conn_t** c = m_connections.IterStart(); c; c = m_connections.IterNext()) {
+            if ((*c)->getdest() == pclass)
             {
-                delete *it;
-                m_connected_slots.erase(it);
+                delete *c; // must delete before Remove()
+                m_connections.Remove(*c);
                 pclass->signal_disconnect(this);
                 return;
             }
-
-            ++it;
         }
     }
 
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        connections_list::iterator it = m_connected_slots.begin();
-        connections_list::iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            connections_list::iterator itNext = it;
-            ++itNext;
-            if ((*it)->getdest() == pslot)
-                m_connected_slots.erase(it);
-
-            it = itNext;
+        size_t i = 0;
+        while (i < m_connections.Count()) {
+            if (m_connections.At(i)->getdest() == pslot)
+                m_connections.RemoveAtFast(i);
+            else
+                i++;
         }
     }
-
-protected:
-    connections_list m_connected_slots;
 };
 
 template<class dest_type>
@@ -1467,7 +1254,7 @@ class signal0 : public _signal_base0
 public:
     signal0() { }
 
-    signal0(const signal0& s)
+    signal0(signal0& s)
         : _signal_base0(s)
     { }
 
@@ -1477,22 +1264,15 @@ public:
         lock_block lock;
         typedef _connection0<desttype> conn_t;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
     void emit()
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit();
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit();
         }
     }
 
@@ -1508,7 +1288,7 @@ class signal1 : public _signal_base1<arg1_t>
 public:
     signal1() { }
 
-    signal1(const signal1<arg1_t>& s)
+    signal1(signal1<arg1_t>& s)
         : _signal_base1<arg1_t>(s)
     { }
 
@@ -1518,7 +1298,7 @@ public:
         typedef _connection1<desttype, arg1_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        this->m_connections.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
@@ -1542,7 +1322,7 @@ class signal2 : public _signal_base2<arg1_t, arg2_t>
 public:
     signal2() { }
 
-    signal2(const signal2<arg1_t, arg2_t>& s)
+    signal2(signal2<arg1_t, arg2_t>& s)
         : _signal_base2<arg1_t, arg2_t>(s)
     { }
 
@@ -1576,7 +1356,7 @@ class signal3 : public _signal_base3<arg1_t, arg2_t, arg3_t>
 public:
     signal3() { }
 
-    signal3(const signal3<arg1_t, arg2_t, arg3_t>& s)
+    signal3(signal3<arg1_t, arg2_t, arg3_t>& s)
         : _signal_base3<arg1_t, arg2_t, arg3_t>(s)
     { }
 
@@ -1611,7 +1391,7 @@ class signal4 : public _signal_base4<arg1_t, arg2_t, arg3_t,
 public:
     signal4() { }
 
-    signal4(const signal4<arg1_t, arg2_t, arg3_t, arg4_t>& s)
+    signal4(signal4<arg1_t, arg2_t, arg3_t, arg4_t>& s)
         : _signal_base4<arg1_t, arg2_t, arg3_t, arg4_t>(s)
     { }
 
@@ -1621,22 +1401,15 @@ public:
         typedef _connection4<desttype, arg1_t, arg2_t, arg3_t, arg4_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        this->m_connected_slots.push_back(conn);
+        this->m_connected_slots.Append(conn);
         pclass->signal_connect(this);
     }
 
     void emit(arg1_t a1, arg2_t a2, arg3_t a3, arg4_t a4)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1, a2, a3, a4);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3, a4);
         }
     }
 
@@ -1654,7 +1427,7 @@ class signal5 : public _signal_base5<arg1_t, arg2_t, arg3_t,
 public:
     signal5() { }
 
-    signal5(const signal5<arg1_t, arg2_t, arg3_t, arg4_t,
+    signal5(signal5<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t>& s)
         : _signal_base5<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t>(s)
@@ -1667,7 +1440,7 @@ public:
         typedef _connection5<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
@@ -1675,14 +1448,8 @@ public:
         arg5_t a5)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1, a2, a3, a4, a5);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3, a4, a5);
         }
     }
 
@@ -1714,7 +1481,7 @@ public:
         typedef _connection6<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
@@ -1722,15 +1489,8 @@ public:
         arg5_t a5, arg6_t a6)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1, a2, a3, a4, a5, a6);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3, a4, a5, a6);
         }
     }
 
@@ -1749,7 +1509,7 @@ class signal7 : public _signal_base7<arg1_t, arg2_t, arg3_t,
 public:
     signal7() { }
 
-    signal7(const signal7<arg1_t, arg2_t, arg3_t, arg4_t,
+    signal7(signal7<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t>& s)
         : _signal_base7<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t>(s)
@@ -1763,22 +1523,15 @@ public:
         typedef _connection7<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
     void emit(arg1_t a1, arg2_t a2, arg3_t a3, arg4_t a4, arg5_t a5, arg6_t a6, arg7_t a7)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1, a2, a3, a4, a5, a6, a7);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3, a4, a5, a6, a7);
         }
     }
 
@@ -1796,7 +1549,7 @@ class signal8 : public _signal_base8<arg1_t, arg2_t, arg3_t,
 public:
     signal8() { }
 
-    signal8(const signal8<arg1_t, arg2_t, arg3_t, arg4_t,
+    signal8(signal8<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t, arg8_t>& s)
         : _signal_base8<arg1_t, arg2_t, arg3_t, arg4_t,
         arg5_t, arg6_t, arg7_t, arg8_t>(s)
@@ -1810,7 +1563,7 @@ public:
         typedef _connection8<desttype, arg1_t, arg2_t, arg3_t, arg4_t, arg5_t, arg6_t, arg7_t, arg8_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        m_connected_slots.push_back(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
@@ -1818,15 +1571,8 @@ public:
         arg5_t a5, arg6_t a6, arg7_t a7, arg8_t a8)
     {
         lock_block lock;
-        connections_list::const_iterator itNext, it = m_connected_slots.begin();
-        connections_list::const_iterator itEnd = m_connected_slots.end();
-
-        while (it != itEnd)
-        {
-            itNext = it;
-            ++itNext;
-            (*it)->emit(a1, a2, a3, a4, a5, a6, a7, a8);
-            it = itNext;
+        for (size_t i = 0; i < this->m_connections.Count(); i++) {
+            this->m_connections.At(i)->emit(a1, a2, a3, a4, a5, a6, a7, a8);
         }
     }
 
