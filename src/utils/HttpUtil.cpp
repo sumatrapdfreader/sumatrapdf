@@ -15,18 +15,19 @@
 DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;
+    DWORD dwRead = 0;
+    DWORD flags = 0;
 
     HINTERNET hFile = NULL;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Error;
 
-    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
+    flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
     hFile = InternetOpenUrl(hInet, url, NULL, 0, flags, 0);
     if (!hFile)
         goto Error;
 
-    DWORD dwRead;
     do {
         char buf[1024];
         if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
@@ -54,8 +55,9 @@ Error:
 bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
 {
     bool ok = false;
-    char buf[1024];
     HINTERNET hFile = NULL, hInet = NULL;
+    DWORD dwRead = 0;
+    char buf[1024];
 
     HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
             CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL);
@@ -70,7 +72,6 @@ bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
     if (!hFile)
         goto Exit;
 
-    DWORD dwRead;
     for (;;) {
         if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
             goto Exit;
@@ -102,7 +103,18 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
 {
     str::Str<char> resp(2048);
     bool ok = false;
+    DWORD flags = 0;
+    char *hdr = NULL;
+    DWORD hdrLen = 0;
     HINTERNET hConn = NULL, hReq = NULL;
+    void *d = NULL;
+    DWORD dLen = 0;
+    unsigned int timeoutMs = 15 * 1000;
+    // Get the response status.
+    DWORD respHttpCode = 0;
+    DWORD respHttpCodeSize = sizeof(respHttpCode);
+    DWORD dwRead = 0;
+
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
@@ -111,24 +123,18 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
     if (!hConn)
         goto Exit;
 
-    DWORD flags = 0;
     hReq = HttpOpenRequest(hConn, L"POST", url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
-    char *hdr = NULL;
-    DWORD hdrLen = 0;
     if (headers && headers->Count() > 0) {
         hdr = headers->Get();
         hdrLen = (DWORD)headers->Count();
     }
-    void *d = NULL;
-    DWORD dLen = 0;
     if (data && data->Count() > 0) {
         d = data->Get();
         dLen = (DWORD)data->Count();
     }
 
-    unsigned int timeoutMs = 15 * 1000;
     InternetSetOption(hReq, INTERNET_OPTION_SEND_TIMEOUT,
                       &timeoutMs, sizeof(timeoutMs));
 
@@ -138,13 +144,9 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
     if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen))
         goto Exit;
 
-    // Get the response status.
-    DWORD respHttpCode = 0;
-    DWORD respHttpCodeSize = sizeof(respHttpCode);
     HttpQueryInfo(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
                        &respHttpCode, &respHttpCodeSize, 0);
 
-    DWORD dwRead;
     do {
         char buf[1024];
         if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))

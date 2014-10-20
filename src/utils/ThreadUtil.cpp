@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include "ThreadUtil.h"
 
+#if defined(_MSC_VER)
+
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
 const DWORD MS_VC_EXCEPTION=0x406D1388;
 
@@ -39,6 +41,12 @@ void SetThreadName(DWORD threadId, const char *threadName)
    }
 }
 #pragma warning(push)
+#else
+void SetThreadName(DWORD, const char *)
+{
+    // nothing
+}
+#endif
 
 // We need a way to uniquely identified threads (so that we can test for equality).
 // Thread id assigned by the OS might be recycled. The memory address given to ThreadBase

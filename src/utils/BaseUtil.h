@@ -51,6 +51,7 @@
 #include <float.h>
 #include <stddef.h>
 #include <stdio.h>
+#define __STDC_LIMIT_MACROS // so that mingw defines UINT32_MAX even in C++ code
 #include <stdint.h>
 #include <time.h>
 #include <locale.h>

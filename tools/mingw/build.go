@@ -243,6 +243,20 @@ func main() {
 		ToRun: []Task{
 			&MkdirOutTask{},
 			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"FileTransactions.cpp",
+				"FileUtil.cpp",
+				"FileWatcher.cpp",
+				"FrameRateWnd.cpp",
+				//"FzImgReader.cpp", // mingw complains about fz_warn()
+				"GdiPlusUtil.cpp",
+				"HtmlParserLookup.cpp",
+				"HtmlPrettyPrint.cpp",
+				"HtmlPullParser.cpp",
+				// "HtmlWindow.cpp", // mingw doesn't have QITAB
+				"HttpUtil.cpp",
+				"JsonParser.cpp",
+				}, IncDirs: "src/utils;mupdf/include"},
+			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"ArchUtil.cpp",
 				"BaseUtil.cpp",
 				"BitReader.cpp",
@@ -256,6 +270,33 @@ func main() {
 				"Dict.cpp",
 				"DirIter.cpp",
 				}, IncDirs: "src/utils;ext/unarr;mupdf/include"},
+			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"LabelWithCloseWnd.cpp",
+				"LzmaSimpleArchive.cpp",
+				"NoFreeAllocator.cpp",
+				"PalmDbReader.cpp",
+				"SerializeTxt.cpp",
+				"SettingsUtil.cpp",
+				"SplitterWnd.cpp",
+				"SquareTreeParser.cpp",
+				"StrFormat.cpp",
+				"StrSlice.cpp",
+				// "StrUtil.cpp", // mingw doesn't have _vsnprintf_s, sprintf_s, sscanf_s
+				//"TgaReader.cpp", // mingw doesn't have _snprintf_s
+				}, IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib"},
+			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"ThreadUtil.cpp",
+				"Touch.cpp",
+				"TrivialHtmlParser.cpp",
+				"TxtParser.cpp",
+				"UITask.cpp",
+				"UtAssert.cpp",
+				"VarintGob.cpp",
+				"WebpReader.cpp",
+				"WinCursors.cpp",
+				"WinUtil.cpp",
+				//"ZipUtil.cpp", // mingw doesn't have QITAB
+				}, IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr"},
 			&MingwCcDirTask{Dir: "src", Files: []string{
 				"EbookController.cpp", "Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},

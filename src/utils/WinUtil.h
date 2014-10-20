@@ -23,7 +23,7 @@
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
 HMODULE SafeLoadLibrary(const WCHAR *dllName);
-FARPROC LoadDllFunc(WCHAR *dllName, const char *funcName);
+FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName);
 BOOL    SafeCloseHandle(HANDLE *h);
 BOOL    SafeDestroyWindow(HWND *hwnd);
 void    FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc);

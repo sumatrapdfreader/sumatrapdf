@@ -21,7 +21,7 @@ HMODULE SafeLoadLibrary(const WCHAR *dllName)
     return LoadLibrary(dllPath);
 }
 
-FARPROC LoadDllFunc(WCHAR *dllName, const char *funcName)
+FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName)
 {
     HMODULE h = SafeLoadLibrary(dllName);
     if (!h)
@@ -1282,12 +1282,15 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command)
     HSZ hszServer = NULL, hszTopic = NULL;
     HCONV hconv = NULL;
     bool ok = false;
+    UINT result = 0;
+    DWORD cbLen = 0;
+    HDDEDATA answer;
 
     CrashIf(str::Len(command) >= INT_MAX - 1);
     if (str::Len(command) >= INT_MAX - 1)
         return false;
 
-    UINT result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
+    result = DdeInitialize(&inst, DdeCallback, APPCMD_CLIENTONLY, 0);
     if (result != DMLERR_NO_ERROR)
         return false;
 
@@ -1301,8 +1304,8 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command)
     if (!hconv)
         goto Exit;
 
-    DWORD cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    HDDEDATA answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, NULL);
+    cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
+    answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, NULL);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
