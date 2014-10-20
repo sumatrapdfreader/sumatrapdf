@@ -242,7 +242,22 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
-			&MingwCcDirTask{Dir: "src", Files: []string{"EbookController.cpp", "Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
+			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"ArchUtil.cpp",
+				"BaseUtil.cpp",
+				"BitReader.cpp",
+				"ByteOrderDecoder.cpp",
+				"CmdLineParser.cpp",
+				//"CryptoUtil.cpp", // mingw complains about sscanf_s
+				"CssParser.cpp",
+				"DbgHelpDyn.cpp",
+				"DebugLog.cpp",
+				"DialogSizer.cpp",
+				"Dict.cpp",
+				"DirIter.cpp",
+				}, IncDirs: "src/utils;ext/unarr;mupdf/include"},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				"EbookController.cpp", "Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
 	}

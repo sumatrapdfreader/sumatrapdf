@@ -219,9 +219,9 @@ static bool ExtractSignature(const char *hexSignature, const void *data, size_t&
 
 bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignature, const void *pubkey, size_t pubkeyLen)
 {
-    HCRYPTPROV hProv = NULL;
-    HCRYPTKEY hPubKey = NULL;
-    HCRYPTHASH hHash = NULL;
+    HCRYPTPROV hProv = 0;
+    HCRYPTKEY hPubKey = 0;
+    HCRYPTHASH hHash = 0;
     BOOL ok = false;
     ScopedMem<BYTE> signature;
     size_t signatureLen;
