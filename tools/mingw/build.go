@@ -243,7 +243,7 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 		out := genOut(outDir, f, ".o")
 		cc := mingwCcExe(f)
 		var args []string
-		args = append(args, "-fpermissive")
+		//args = append(args, "-fpermissive")
 		args = append(args, mingwIncArgs(t.IncDirs)...)
 		path := filepath.Join(t.Dir, f)
 		args = append(args, "-c", path, "-o", out)
@@ -269,7 +269,7 @@ func main() {
 				"EbookControls.cpp",
 				"EbookDoc.cpp",
 				"EbookEngine.cpp",
-				//"EbookFormatter.cpp",  // mingw: no sprintf_s
+				"EbookFormatter.cpp",
 				//"EngineDump.cpp",  // mingw: __VA_ARGS__
 				"EngineManager.cpp",
 				"ExternalPdfViewer.cpp",

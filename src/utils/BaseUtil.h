@@ -61,6 +61,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "mingw_compat.h"
+
 template <typename T>
 inline T *AllocArray(size_t n)
 {

@@ -720,6 +720,10 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\mingw_compat.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

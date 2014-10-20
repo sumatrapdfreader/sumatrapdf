@@ -1220,6 +1220,9 @@
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\mingw_compat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\NoFreeAllocator.h">
       <Filter>utils</Filter>
     </ClInclude>
