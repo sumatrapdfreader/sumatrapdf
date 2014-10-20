@@ -248,7 +248,7 @@ func main() {
 				"FileWatcher.cpp",
 				"FrameRateWnd.cpp",
 				//"FzImgReader.cpp", // mingw complains about fz_warn()
-				"GdiPlusUtil.cpp",
+				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
 				"HtmlParserLookup.cpp",
 				"HtmlPrettyPrint.cpp",
 				"HtmlPullParser.cpp",
