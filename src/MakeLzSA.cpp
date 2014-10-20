@@ -31,6 +31,12 @@ struct ISzCrtAlloc : ISzAlloc {
 static bool Compress(const char *uncompressed, size_t uncompressedSize, char *compressed, size_t *compressedSize)
 {
     ISzCrtAlloc lzmaAlloc;
+    CLzmaEncProps props;
+    size_t lzma_size = (size_t)-1;
+    uint8_t *bcj_enc = NULL;
+    SizeT outSize;
+    SizeT propsSize = LZMA_PROPS_SIZE;
+    SRes res;
 
     CrashIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1)
@@ -38,22 +44,18 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
     if (*compressedSize < LZMA_HEADER_SIZE)
         goto StoreUncompressed;
 
-    CLzmaEncProps props;
     LzmaEncProps_Init(&props);
 
     // always apply the BCJ filter for speed (else two or three compression passes would be required)
-    size_t lzma_size = (size_t)-1;
-    uint8_t *bcj_enc = (uint8_t *)malloc(uncompressedSize);
+    bcj_enc = (uint8_t *)malloc(uncompressedSize);
     if (bcj_enc) {
         memcpy(bcj_enc, uncompressed, uncompressedSize);
         UInt32 x86State;
         x86_Convert_Init(x86State);
         x86_Convert(bcj_enc, uncompressedSize, 0, &x86State, 1);
     }
-
-    SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
-    SizeT propsSize = LZMA_PROPS_SIZE;
-    SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
+    outSize = *compressedSize - LZMA_HEADER_SIZE;
+    res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
                           bcj_enc ? bcj_enc : (const Byte *)uncompressed, uncompressedSize,
                           &props, (Byte *)compressed + 1, &propsSize,
                           TRUE /* add EOS marker */, NULL, &lzmaAlloc, &lzmaAlloc);
@@ -155,7 +157,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 
         str::TransChars(utf8Name, "/", "\\");
         if ('/' == *utf8Name || str::Find(utf8Name, "../")) {
-            fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name);
+            fprintf(stderr, "In-archive name must not be an absolute path: %s\n", utf8Name.Get());
             return false;
         }
 

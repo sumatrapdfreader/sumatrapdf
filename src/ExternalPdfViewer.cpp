@@ -48,7 +48,7 @@ static WCHAR *GetPDFXChangePath()
     if (!path)
         path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
-        return false;
+        return NULL;
     ScopedMem<WCHAR> exePath(path::Join(path, L"PDFXCview.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
@@ -125,7 +125,7 @@ bool CanViewWithFoxit(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
+bool ViewWithFoxit(WindowInfo *win, const WCHAR *args)
 {
     if (!CanViewWithFoxit(win))
         return false;
@@ -156,7 +156,7 @@ bool CanViewWithPDFXChange(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
+bool ViewWithPDFXChange(WindowInfo *win, const WCHAR *args)
 {
     if (!CanViewWithPDFXChange(win))
         return false;
@@ -187,7 +187,7 @@ bool CanViewWithAcrobat(WindowInfo *win)
     return exePath != NULL;
 }
 
-bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
+bool ViewWithAcrobat(WindowInfo *win, const WCHAR *args)
 {
     if (!CanViewWithAcrobat(win))
         return false;
@@ -229,7 +229,7 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
+bool ViewWithXPSViewer(WindowInfo *win, const WCHAR *args)
 {
     if (!CanViewWithXPSViewer(win))
         return false;
@@ -264,7 +264,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
+bool ViewWithHtmlHelp(WindowInfo *win, const WCHAR *args)
 {
     if (!CanViewWithHtmlHelp(win))
         return false;
@@ -311,6 +311,6 @@ bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
     if (str::Find(params, L"%1"))
         params.Set(str::Replace(params, L"%1", filePath));
     else
-        params.Set(str::Format(L"%s \"%s\"", params, filePath));
+        params.Set(str::Format(L"%s \"%s\"", params.Get(), filePath));
     return LaunchFile(args.At(0), params);
 }

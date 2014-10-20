@@ -248,7 +248,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(file->ctx, buffer);
 }
 
-WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_out=NULL)
+static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coords_out=NULL)
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
@@ -1206,7 +1206,7 @@ public:
     virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
@@ -1282,7 +1282,7 @@ protected:
                                const fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target, AbortCookie **cookie_out);
     bool            PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip);
-    WCHAR         * ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **coords_out=NULL,
+    WCHAR         * ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
     Vec<PdfPageRun *> runCache; // ordered most recently used first
@@ -2489,7 +2489,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     return bmp;
 }
 
-WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
+WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
 {
     if (!page)
         return NULL;
@@ -2533,7 +2533,7 @@ WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **co
     return content;
 }
 
-WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
@@ -2746,7 +2746,7 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 
     static struct {
         DocumentProperty prop;
-        char *name;
+        const char *name;
     } pdfPropNames[] = {
         { Prop_Title, "Title" }, { Prop_Author, "Author" },
         { Prop_Subject, "Subject" }, { Prop_Copyright, "Copyright" },
@@ -2911,7 +2911,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
         F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj), //F and P
-        quad_tpl));
+        quad_tpl.Get()));
     ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
 
@@ -3504,7 +3504,7 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
@@ -3562,7 +3562,7 @@ protected:
     bool            RenderPage(HDC hDC, xps_page *page, RectI screenRect,
                                const fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, AbortCookie **cookie_out);
-    WCHAR         * ExtractPageText(xps_page *page, WCHAR *lineSep,
+    WCHAR         * ExtractPageText(xps_page *page, const WCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     Vec<XpsPageRun *> runCache; // ordered most recently used first
@@ -4220,7 +4220,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **coords_out, bool cacheRun)
+WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, const WCHAR *lineSep, RectI **coords_out, bool cacheRun)
 {
     if (!page)
         return NULL;
@@ -4302,7 +4302,7 @@ WCHAR *XpsEngineImpl::ExtractFontList()
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
         ScopedMem<WCHAR> path(str::conv::FromUtf8(font->name));
         ScopedMem<WCHAR> name(str::conv::FromUtf8(font->font->name));
-        fonts.Append(str::Format(L"%s (%s)", name, path::GetBaseName(path)));
+        fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseName(path)));
     }
     if (fonts.Count() == 0)
         return NULL;

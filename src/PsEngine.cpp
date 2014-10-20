@@ -14,7 +14,7 @@
 
 static WCHAR *GetGhostscriptPath()
 {
-    WCHAR *gsProducts[] = {
+   const WCHAR *gsProducts[] = {
         L"AFPL Ghostscript",
         L"Aladdin Ghostscript",
         L"GPL Ghostscript",
@@ -136,7 +136,7 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
 
     ScopedMem<WCHAR> cmdLine(str::Format(
         L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c \".setpdfwrite%s\" -f \"%s\"",
-        gswin32c, tmpFile, psSetup ? psSetup : L"", shortPath));
+        gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get()));
     fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseName(__FILE__), __LINE__, gswin32c.Get(), path::GetBaseName(tmpFile));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -257,7 +257,7 @@ public:
     virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target);
     }

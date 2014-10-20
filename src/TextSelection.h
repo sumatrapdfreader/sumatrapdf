@@ -54,7 +54,7 @@ public:
     }
     void SelectWordAt(int pageNo, double x, double y);
     void CopySelection(TextSelection *orig);
-    WCHAR *ExtractText(WCHAR *lineSep);
+    WCHAR *ExtractText(const WCHAR *lineSep);
     void Reset();
 
     TextSel result;

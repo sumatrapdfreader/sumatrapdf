@@ -259,7 +259,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
     if (!filePath || !menuFile) return;
 
     ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName));
+    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName.Get()));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }

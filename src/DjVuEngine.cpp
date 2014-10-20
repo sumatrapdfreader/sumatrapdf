@@ -208,7 +208,7 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
@@ -829,7 +829,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
     return !item;
 }
 
-WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 

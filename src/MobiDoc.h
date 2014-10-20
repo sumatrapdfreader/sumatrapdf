@@ -4,10 +4,11 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
+#include "BaseEngine.h"
+
 class EbookTocVisitor;
 class HuffDicDecompressor;
 class PdbReader;
-enum DocumentProperty;
 struct ImageData;
 
 enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };

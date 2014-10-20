@@ -266,7 +266,7 @@ void TextSelection::CopySelection(TextSelection *orig)
     SelectUpTo(orig->endPage, orig->endGlyph);
 }
 
-WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
+WCHAR *TextSelection::ExtractText(const WCHAR *lineSep)
 {
     WStrVec lines;
 

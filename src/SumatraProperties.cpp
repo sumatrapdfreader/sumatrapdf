@@ -140,7 +140,7 @@ static WCHAR *FormatSizeSuccint(size_t size)
     ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
-    return str::Format(L"%s %s", sizestr, unit);
+    return str::Format(L"%s %s", sizestr.Get(), unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -151,7 +151,7 @@ static WCHAR *FormatFileSize(size_t size)
     ScopedMem<WCHAR> n1(FormatSizeSuccint(size));
     ScopedMem<WCHAR> n2(str::FormatNumWithThousandSep(size));
 
-    return str::Format(L"%s (%s %s)", n1, n2, _TR("Bytes"));
+    return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
@@ -194,7 +194,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
     ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
-    return str::Format(L"%s x %s %s%s", strWidth, strHeight, unit, formatName);
+    return str::Format(L"%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
 static WCHAR *FormatPdfFileStructure(Controller *ctrl)
@@ -423,7 +423,9 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            str = str::Format(L"\u202A%s\u202C", ScopedMem<WCHAR>(str));
+            WCHAR *tmp = str;
+            str = str::Format(L"\u202A%s\u202C", tmp);
+            free(tmp);
         }
         layoutData->AddProperty(_TR("Page Size:"), str);
     }

@@ -233,9 +233,9 @@ struct FindThreadData : public ProgressUpdateUI {
             wnd->UpdateMessage(_TR("No matches were found"), 3000);
         else {
             ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetCurrentPageNo()));
-            ScopedMem<WCHAR> buf(str::Format(_TR("Found text at page %s"), label));
+            ScopedMem<WCHAR> buf(str::Format(_TR("Found text at page %s"), label.Get()));
             if (loopedAround) {
-                buf.Set(str::Format(_TR("Found text at page %s (again)"), label));
+                buf.Set(str::Format(_TR("Found text at page %s (again)"), label.Get()));
                 MessageBeep(MB_ICONINFORMATION);
             }
             wnd->UpdateMessage(buf, 3000, loopedAround);
@@ -666,7 +666,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_PAGE L"(\"%S\",%u)]",
                                    &pdfFile, &page);
     if (!next)
-        return false;
+        return NULL;
 
     // check if the PDF is already opened
     WindowInfo *win = FindWindowInfoByFile(pdfFile, true);

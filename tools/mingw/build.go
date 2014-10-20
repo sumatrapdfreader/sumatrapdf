@@ -8,6 +8,27 @@ import (
 	"strings"
 )
 
+/*
+TODO:
+msvc and gcc (in C mode) support __VA_ARGS___
+g++ supports ##args in C++ mode
+
+We need to update all uses of __VA_ARGS___:
+
+#ifdef DEBUG
+        #define dbgprint(format,args...) \
+        fprintf(stderr, format, ##args)
+#else
+        #define dbgprint(format,args...)
+#endif
+
+c99 （gcc） / vs2005
+
+#define dgbmsg(fmt,...) \
+             printf(fmt,__VA_ARGS__)
+
+*/
+
 const (
 	OUT_DIR_VAR = "OUT_DIR"
 )
@@ -221,7 +242,9 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 	for _, f := range t.Files {
 		out := genOut(outDir, f, ".o")
 		cc := mingwCcExe(f)
-		args := mingwIncArgs(t.IncDirs)
+		var args []string
+		args = append(args, "-fpermissive")
+		args = append(args, mingwIncArgs(t.IncDirs)...)
 		path := filepath.Join(t.Dir, f)
 		args = append(args, "-c", path, "-o", out)
 		cmd := exec.Command(cc, args...)
@@ -242,6 +265,70 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				"EbookControls.cpp",
+				"EbookDoc.cpp",
+				"EbookEngine.cpp",
+				//"EbookFormatter.cpp",  // mingw: no sprintf_s
+				//"EngineDump.cpp",  // mingw: __VA_ARGS__
+				"EngineManager.cpp",
+				"ExternalPdfViewer.cpp",
+				"Favorites.cpp",
+				"FileModifications.cpp",
+				"FileThumbnails.cpp",
+				"HtmlFormatter.cpp",
+				"ImagesEngine.cpp",
+				},
+				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu",
+				},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				"MakeLzSA.cpp",
+				"Menu.cpp",
+				//"MobiDoc.cpp",  // mingw: __VA_ARGS__
+				"MuiEbookPageDef.cpp",
+				"MuPDF_Exports.cpp",
+				"Notifications.cpp",
+				"PagesLayoutDef.cpp",
+				"ParseCommandLine.cpp",
+				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
+				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
+				"PdfSync.cpp",
+				//"Print.cpp",  // mingw: goto crossing var initialization
+				},
+				IncDirs: "src/utils;src/mui;ext/lzma/C;ext/zlib;mupdf/include;ext/synctex",
+				},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				//"PsEngine.cpp",  // mingw: no _wfopen_s
+				"RenderCache.cpp",
+				"Search.cpp",
+				//"Selection.cpp", // mingw: no IRawElementProviderFragment
+				//"StressTesting.cpp", // mingw: many issues
+				"SumatraAbout.cpp",
+				"SumatraAbout2.cpp",
+				"SumatraDialogs.cpp",
+				//"SumatraPDF.cpp", // mingw: many issues
+				"SumatraProperties.cpp",
+				//"SumatraStartup.cpp",  // we don't compile this
+				"TableOfContents.cpp",
+				},
+				IncDirs: "src/utils;src/mui;ext/zlib",
+				},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				"AppPrefs.cpp",
+				"AppTools.cpp",
+				"AppUtil.cpp",
+				//"Canvas.cpp",  // we don't compile this
+				"Caption.cpp",
+				"ChmDoc.cpp",
+				"ChmModel.cpp",
+				"CrashHandler.cpp",
+				"DisplayModel.cpp",
+				"DjVuEngine.cpp",
+				"Doc.cpp",
+				"EbookController.cpp",
+				},
+				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu",
+				},
 			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"FileTransactions.cpp",
 				"FileUtil.cpp",
@@ -297,8 +384,6 @@ func main() {
 				"WinUtil.cpp",
 				//"ZipUtil.cpp", // mingw doesn't have QITAB
 				}, IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr"},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				"EbookController.cpp", "Doc.cpp", "CrashHandler.cpp", "DisplayModel.cpp", "DjVuEngine.cpp", "EbookControls.cpp", "AppPrefs.cpp", "AppTools.cpp", "AppUtil.cpp", "Caption.cpp", "ChmDoc.cpp", "ChmModel.cpp"}, IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu"},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
 	}

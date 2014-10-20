@@ -29,7 +29,7 @@ static UINT GetCodepageFromPI(const char *xmlPI)
 
     ScopedMem<char> encoding(str::DupN(enc->val, enc->valLen));
     struct {
-        char *namePart;
+        const char *namePart;
         UINT codePage;
     } encodings[] = {
         { "UTF", CP_UTF8 }, { "utf", CP_UTF8 },
@@ -367,7 +367,7 @@ bool EpubDoc::Load()
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         CrashIfDebugOnly(str::FindChar(utf8_path, '"'));
         str::TransChars(utf8_path, "\"", "'");
-        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path);
+        htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
         htmlData.Append(html);
     }
 

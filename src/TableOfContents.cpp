@@ -67,7 +67,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     }
 
     if (Dest_LaunchEmbedded == link->GetDestType())
-        path.Set(str::Format(_TR("Attachment: %s"), path));
+        path.Set(str::Format(_TR("Attachment: %s"), path.Get()));
 
     infotip.Append(path);
     str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());

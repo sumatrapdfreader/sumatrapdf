@@ -89,7 +89,7 @@ public:
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -411,7 +411,7 @@ static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
     return bbox.Round();
 }
 
-WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&pagesAccess);
 
@@ -1466,7 +1466,7 @@ public:
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
         if (!pageHtml)
             return;
-        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
+        html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());
         html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char *)pageHtml.Get(), pageHtmlLen)));
         added.Append(plainUrl.StealData());
     }
