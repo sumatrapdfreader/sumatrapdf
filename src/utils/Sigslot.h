@@ -1401,7 +1401,7 @@ public:
         typedef _connection4<desttype, arg1_t, arg2_t, arg3_t, arg4_t> conn_t;
         lock_block lock;
         conn_t* conn = new conn_t(pclass, pmemfun);
-        this->m_connected_slots.Append(conn);
+        this->m_connections.Append(conn);
         pclass->signal_connect(this);
     }
 
