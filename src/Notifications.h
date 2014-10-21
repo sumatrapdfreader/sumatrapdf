@@ -16,10 +16,8 @@ public:
 };
 
 class NotificationWnd : public ProgressUpdateUI {
+public:
     static const int TIMEOUT_TIMER_ID = 1;
-    static const int PROGRESS_WIDTH = 188;
-    static const int PROGRESS_HEIGHT = 5;
-    static const int PADDING = 6;
 
     HWND self;
     bool hasProgress;
@@ -38,22 +36,26 @@ class NotificationWnd : public ProgressUpdateUI {
     void CreatePopup(HWND parent, const WCHAR *message);
     void UpdateWindowPosition(const WCHAR *message, bool init=false);
 
-public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
+    // to reduce flicker, we might ask the window to never shrink the size
+    bool noShrink;
+
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
-        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL) {
+        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL), noShrink(false) {
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
+
     NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
-        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0) {
+        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0), noShrink(false) {
         this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }
+
     ~NotificationWnd() {
         DestroyWindow(self);
         DeleteObject(font);
@@ -61,10 +63,6 @@ public:
     }
 
     HWND hwnd() { return self; }
-
-    static RectI GetCancelRect(HWND hwnd) {
-        return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
-    }
 
     void UpdateMessage(const WCHAR *message, int timeoutInMS=0, bool highlight=false);
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

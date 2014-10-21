@@ -208,6 +208,9 @@ void WindowInfo::DeleteInfotip()
 void WindowInfo::ShowNotification(const WCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
 {
     NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, notifications);
+    if (NG_CURSOR_POS_HELPER == groupId) {
+        wnd->noShrink = true;
+    }
     notifications->Add(wnd, groupId);
 }
 

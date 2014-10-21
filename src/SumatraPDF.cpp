@@ -1690,7 +1690,7 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
     }
 }
 
-enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in };
+enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in, Unit_max = Unit_in };
 
 static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasurementUnit unit)
 {
@@ -1715,12 +1715,18 @@ static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasurementUni
     return str::Format(L"%s x %s %s", xPos, yPos, unitName);
 }
 
-static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd=NULL)
+static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd)
 {
     static MeasurementUnit unit = Unit_pt;
     // toggle measurement unit by repeatedly invoking the helper
-    if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
-        unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
+    if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+        int newUnit = ((int)unit + 1) % (int)Unit_max;
+        unit = (MeasurementUnit)newUnit;
+    }
+
+    if (!wnd) {
+        wnd =  win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
+    }
 
     CrashIf(!win->AsFixed());
     BaseEngine *engine = win->AsFixed()->GetEngine();
@@ -3650,12 +3656,13 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             UpdatePageInfoHelper(&win);
         break;
     case 'm':
-        // experimental "cursor position" tip: make figuring out the current
+        // "cursor position" tip: make figuring out the current
         // cursor position in cm/in/pt possible (for exact layouting)
         if (win.AsFixed()) {
             PointI pt;
-            if (GetCursorPosInHwnd(win.hwndCanvas, pt))
-                UpdateCursorPositionHelper(&win, pt);
+            if (GetCursorPosInHwnd(win.hwndCanvas, pt)) {
+                UpdateCursorPositionHelper(&win, pt, NULL);
+            }
         }
         break;
 #ifdef DEBUG

@@ -10,6 +10,14 @@
 
 #define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
+static const int PROGRESS_WIDTH = 188;
+static const int PROGRESS_HEIGHT = 5;
+static const int PADDING = 6;
+
+static RectI GetCancelRect(HWND hwnd) {
+    return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
+}
+
 void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 {
     NONCLIENTMETRICS ncm = { 0 };
@@ -34,6 +42,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
 {
     // compute the length of the message
     RECT rc = ClientRect(self).ToRECT();
+
     HDC hdc = GetDC(self);
     HFONT oldfnt = SelectFont(hdc, font);
     DrawText(hdc, message, -1, &rc, DT_CALCRECT | DT_SINGLELINE | DT_NOPREFIX);
@@ -46,6 +55,16 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
         rectMsg.dx += 20;
     }
     rectMsg.Inflate(PADDING, PADDING);
+
+    if (noShrink) {
+        ClientRect rcOrig(self);
+        if (rcOrig.dx > rectMsg.dx) {
+            rectMsg.dx = rcOrig.dx;
+        }
+        if (rcOrig.dy > rectMsg.dy) {
+            rectMsg.dy = rcOrig.dy;
+        }
+    }
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
     if (!hasProgress) {
@@ -98,80 +117,88 @@ void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool 
         SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
 }
 
-LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)\
+static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
+{
+    PAINTSTRUCT ps;
+    HDC hdcWnd = BeginPaint(hwnd, &ps);
+
+    ClientRect rect(hwnd);
+    DoubleBuffer buffer(hwnd, rect);
+    HDC hdc = buffer.GetDC();
+    HFONT oldfnt = SelectFont(hdc, wnd->font);
+
+    RECT rTmp = rect.ToRECT();
+    DrawFrameControl(hdc, &rTmp, DFC_BUTTON, DFCS_BUTTONPUSH);
+    if (wnd->highlight) {
+        SetBkMode(hdc, OPAQUE);
+        SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+        SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+    }
+    else {
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+    }
+
+    rect.Inflate(-PADDING, -PADDING);
+    RectI rectMsg = rect;
+    if (wnd->hasProgress)
+        rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
+    if (wnd->hasCancel)
+        rectMsg.dx -= 20;
+    ScopedMem<WCHAR> text(win::GetText(hwnd));
+    rTmp = rectMsg.ToRECT();
+    DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
+
+    if (wnd->hasCancel) {
+        rTmp = GetCancelRect(hwnd).ToRECT();
+        DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+    }
+
+    if (wnd->hasProgress) {
+        rect.dx = wnd->progressWidth;
+        rect.y += rectMsg.dy + PADDING / 2;
+        rect.dy = PROGRESS_HEIGHT;
+        PaintRect(hdc, rect);
+
+        rect.x += 2;
+        rect.dx = (wnd->progressWidth - 3) * wnd->progress / 100;
+        rect.y += 2;
+        rect.dy -= 3;
+
+        HBRUSH brush = GetStockBrush(BLACK_BRUSH);
+        rTmp = rect.ToRECT();
+        FillRect(hdc, &rTmp, brush);
+        DeleteObject(brush);
+    }
+
+    SelectFont(hdc, oldfnt);
+
+    buffer.Flush(hdcWnd);
+    EndPaint(hwnd, &ps);
+}
+
+LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     NotificationWnd *wnd = (NotificationWnd *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-    if (WM_ERASEBKGND == message) {
+    if (WM_ERASEBKGND == msg) {
         // do nothing, helps to avoid flicker
         return TRUE;
     }
-    if (WM_TIMER == message && TIMEOUT_TIMER_ID == wParam) {
+
+    if (WM_TIMER == msg && TIMEOUT_TIMER_ID == wParam) {
         if (wnd->notificationCb)
             wnd->notificationCb->RemoveNotification(wnd);
         else
             delete wnd;
         return 0;
     }
-    if (WM_PAINT == message && wnd) {
-        PAINTSTRUCT ps;
-        HDC hdcWnd = BeginPaint(hwnd, &ps);
 
-        ClientRect rect(hwnd);
-        DoubleBuffer buffer(hwnd, rect);
-        HDC hdc = buffer.GetDC();
-        HFONT oldfnt = SelectFont(hdc, wnd->font);
-
-        RECT rTmp = rect.ToRECT();
-        DrawFrameControl(hdc, &rTmp, DFC_BUTTON, DFCS_BUTTONPUSH);
-        if (wnd->highlight) {
-            SetBkMode(hdc, OPAQUE);
-            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-        }
-        else {
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
-        }
-
-        rect.Inflate(-PADDING, -PADDING);
-        RectI rectMsg = rect;
-        if (wnd->hasProgress)
-            rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
-        if (wnd->hasCancel)
-            rectMsg.dx -= 20;
-        ScopedMem<WCHAR> text(win::GetText(hwnd));
-        rTmp = rectMsg.ToRECT();
-        DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
-
-        if (wnd->hasCancel) {
-            rTmp = GetCancelRect(hwnd).ToRECT();
-            DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
-        }
-
-        if (wnd->hasProgress) {
-            rect.dx = wnd->progressWidth;
-            rect.y += rectMsg.dy + PADDING / 2;
-            rect.dy = PROGRESS_HEIGHT;
-            PaintRect(hdc, rect);
-
-            rect.x += 2;
-            rect.dx = (wnd->progressWidth - 3) * wnd->progress / 100;
-            rect.y += 2;
-            rect.dy -= 3;
-
-            HBRUSH brush = GetStockBrush(BLACK_BRUSH);
-            rTmp = rect.ToRECT();
-            FillRect(hdc, &rTmp, brush);
-            DeleteObject(brush);
-        }
-
-        SelectFont(hdc, oldfnt);
-
-        buffer.Flush(hdcWnd);
-        EndPaint(hwnd, &ps);
+    if (WM_PAINT == msg && wnd) {
+        NotificationWndOnPaint(hwnd, wnd);
         return 0;
     }
-    if (WM_SETCURSOR == message && wnd->hasCancel) {
+
+    if (WM_SETCURSOR == msg && wnd->hasCancel) {
         PointI pt;
         if (GetCursorPosInHwnd(hwnd, pt) &&
             GetCancelRect(hwnd).Contains(pt)) {
@@ -179,7 +206,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             return TRUE;
         }
     }
-    if (WM_LBUTTONUP == message && wnd->hasCancel) {
+
+    if (WM_LBUTTONUP == msg && wnd->hasCancel) {
         if (GetCancelRect(hwnd).Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
             if (wnd->notificationCb)
                 wnd->notificationCb->RemoveNotification(wnd);
@@ -188,7 +216,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             return 0;
         }
     }
-    return DefWindowProc(hwnd, message, wParam, lParam);
+
+    return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 int Notifications::GetWndX(NotificationWnd *wnd)
