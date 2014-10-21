@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7ed90b621a326175e61c401f543d3fc397e2da0c
+6bb0650b52c2e298d6672c83f1a621011452287d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -250,7 +250,7 @@ uk:Обрано всі сторінки
 uz:&Hamma tanlangan betlar
 vn:Tất cả các tr&ang được chọn
 :&Back\tAlt+Left Arrow
-am:Հետ\tAlt+<-
+am:&Նախորդը\tAlt+Left Arrow
 ar:&الخلف\tAlt+السهم الأيسر
 az:&Geri\tAlt+Left Arrow
 bg:На&зад\tAlt+Лява стрелка
@@ -2961,6 +2961,7 @@ it:&Finestra
 ja:ウィンドウ(&W)
 kr:창(&W)
 mk:&Прозорец
+nl:&Window
 pl:&Okno
 pt:&Janela
 ru:&Окно
@@ -3651,7 +3652,7 @@ uk:Всі файли
 uz:Hamma fayllar
 vn:Mọi tập tin
 :All supported documents
-am:Աջակցվող բոլոր փասթաթղթերը
+am:Աջակցող բոլոր փասթաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
@@ -3710,7 +3711,7 @@ uz:Hamma qo'llanadigan hujjatlar
 vn:Tất cả các định dạng được hỗ trợ
 :Application:
 af:Applikasie
-am:Ծրագիրը.
+am:Ծրագիր.
 ar:التطبيق
 az:Proqram:
 bg:Приложение:
@@ -4144,7 +4145,7 @@ uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
 :Book View
-am:Գրքի նման
+am:Գրքի տեսքով
 ar:عرض الكتاب
 az:Kitab formatı
 bg:Изглед като книга
@@ -4207,7 +4208,7 @@ uz:Kitob ko'rinishi
 vn:Xem dạng sách
 :Book&marks\tF12
 af:Boekmerke\tF12
-am:Էջերը\tF12
+am:Էջան&իշեր\tF12
 ar:العلامات\tF12
 az:&Əlfəcinlər\tF12
 bg:&Отметки\tF12
@@ -4384,7 +4385,7 @@ uk:Закладка ярлика на сторінку %s з %s
 uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
 :Bookmarks
-am:Էջեր
+am:Էջանիշեր
 ar:العلامات
 az:Əlfəcinlər
 bg:Отметки
@@ -4622,7 +4623,7 @@ uz:Internet ulanmagan (xato %#x).
 vn:Không thể kết nối Internet (lỗi %#x).
 :Cancel
 af:Kanselleer
-am:Մերժել
+am:Չեղարկել
 ar:إلغاء
 az:İmtina
 bg:Отказ
@@ -4749,7 +4750,7 @@ uk:Не можу надрукувати цей файл
 uz:Faylni chop etib bo'lmadi
 vn:Không in được tập tin này
 :Cannot start inverse search command. Please check the command line in the settings.
-am:Հնարավոր չէ որոնել։Ստուգեք հրամանների տողի կարգավորումները։
+am:Հնարավոր չէ որոնել։ Ստուգեք հրամանների տողի կարգավորումները։
 ar:لايمكن البدء في البحث في الاتجاه المعاكس. يرجى التحقق من الأمر في الإعدادات
 az:Tərs axtarış komandasını icra etmək mümkün deyil. Komanda sətrinin parametrlərini yoxlayın.
 bg:Обратното търсене не може да започне. Моля проверете параметрите в настройките.
@@ -9051,7 +9052,7 @@ uk:Припасувати до ширини
 uz:Eniga moslash
 vn:Vừa chiều rộng
 :Fit Width and Show Pages Continuously
-am:Ձգել լայնությամբ և ցույց տալ էջերը անդադար
+am:Ձգել լայնությամբ և ցուցադրել էջերը անդադար
 ar:احتواء بالعرض وعرض الصفحات باستمرار
 az:Səhifənin genişliyinə görə sığışdır və səhifələri ardıcıl göstər
 bg:Оразмери по широчина и покажи страниците непрекъснато
@@ -10082,6 +10083,7 @@ it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
+nl:Behoud de PDF &browser plugin geïnstalleerd (niet ondersteund)
 pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
@@ -12373,6 +12375,7 @@ id:Dokumen PalmDoc
 it:Documenti PalmDoc
 kr:PalmDoc 문서
 mk:документи на PalmDoc
+nl:PalmDoc documenten
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
 ru:Документы PalmDoc
@@ -12544,7 +12547,7 @@ uk:Документи postscript
 uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation\tF5
-am:Ներ&կայացումը\tCtrl+L
+am:Ներ&կայացում\tF5
 ar:عرض ملء الشاشة \tCtrl+L
 az:Tə&qdimat\tCtrl+L
 bg:&Презентация\tCtrl+L
@@ -14195,7 +14198,7 @@ uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
 :Show &Pages Continuously
-am:Էջերը &ցույց տալ շարունակական
+am:Էջերը &ցուցադրել շարունակական
 ar:عرض الصفحات باستمرار
 az:Səhifələri &ardıcıl göstər
 bg:&Непрекъснати страници
@@ -14255,7 +14258,7 @@ uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
 :Show &Toolbar
 af:Vertoon Toolbar
-am:Ցույց տալ գործիքները
+am:Ցուցադրել &գործիքները
 ar:عرض شريط الأدوات
 az:Alətlər &panelini göstər
 bg:Лен&та с инструменти
@@ -14432,7 +14435,7 @@ uk:Найбільш часто читані
 uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show the &bookmarks sidebar when available
-am:Հնարավորության դեպքում ցույց տալ &Էջերը
+am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:عرض الاختصارات المرجعية في الشريط الجانبي عند وجودها
 az:Mümkündürsə, ə&lfəcinlər panelini göstər
 bg:Покажи &показалеца в страничната колона когато е възможно
@@ -14608,7 +14611,7 @@ uk:Деякі файли необхідні для встановлення ві
 uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
 vn:Một số tập tin dùng để cài đặt đã bị lỗi hoặc bị thiếu
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
+am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
 az:Bağışlayın, gözlənilməz xəta baş verdi!\n\nProblemin həllində bizə kömək etmək üçün "İmtina" düyməsinə basın.
 bg:Извинете, това не би трябвало да се случва!\n\nМоля, натиснете „Отказ“, ако искате да ни помогнете да поправим причината за този срив (спиране).
@@ -14833,7 +14836,7 @@ uz:Mavzu:
 vn:Chủ đề:
 :SumatraPDF %s Installer
 af:SumatraPDF %s Installeerder
-am:SumatraPDF %s-ի տեղադրիչ
+am:SumatraPDF %s-ը տեղակայելու ծրագիր
 ar:SumatraPDF %s منصب
 az:SumatraPDF quraşdırıcısı %s
 br:SumatraPDF %s instalador
@@ -14880,7 +14883,7 @@ uk:Інсталятор SumatraPDF %s
 uz:SumatraPDF %s o'rnatuvchisi
 vn:Bộ cài đặt %s SumatraPDF
 :SumatraPDF %s Uninstaller
-am:SumatraPDF %s-ի Ջնջիչ
+am:SumatraPDF %s-ը հեռացնելու ծրագիր
 ar:SumatraPDF %s مزيل التنصيب
 az:SumatraPDF deinstalyatoru %s
 br:SumatraPDF %s desinstalador
