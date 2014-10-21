@@ -9,6 +9,7 @@
 #include <string.h>
 
 #define MAX_BITS 16
+#define TREE_FAST_BITS 10
 #define MAX_TREE_NODES 320
 #define MAX_CODE_LENGTHS 318
 
@@ -16,15 +17,23 @@ enum inflate_step {
     STEP_NEXT_BLOCK = 0,
     STEP_COPY_INIT, STEP_COPY,
     STEP_INFLATE_STATIC_INIT, STEP_INFLATE_DYNAMIC_INIT, STEP_INFLATE_DYNAMIC_INIT_PRETREE, STEP_INFLATE_DYNAMIC_INIT_TABLES,
-    STEP_INFLATE_INIT, STEP_INFLATE, STEP_INFLATE_DISTANCE, STEP_INFLATE_REPEAT,
+    STEP_INFLATE_INIT, STEP_INFLATE_CODE, STEP_INFLATE, STEP_INFLATE_DISTANCE, STEP_INFLATE_REPEAT,
 };
 enum inflate_result { RESULT_EOS = -1, RESULT_NOT_DONE = 0, RESULT_ERROR = 1 };
 
-struct tree_node {
+struct tree {
     struct {
-        unsigned value : 15;
+        unsigned value : 9;
         unsigned is_value : 1;
-    } node[2];
+        unsigned length : 4;
+    } fast[1 << TREE_FAST_BITS];
+    struct {
+        struct {
+            unsigned value : 9;
+            unsigned is_value : 1;
+        } node[2];
+    } nodes[MAX_TREE_NODES + 1];
+    int free_node;
 };
 
 struct inflate_state_s {
@@ -44,8 +53,8 @@ struct inflate_state_s {
     } prepare;
     bool inflate64;
     bool is_final_block;
-    struct tree_node tree_lengths[MAX_TREE_NODES];
-    struct tree_node tree_dists[MAX_TREE_NODES];
+    struct tree tree_lengths;
+    struct tree tree_dists;
     struct {
         const uint8_t *data_in;
         size_t *avail_in;
@@ -85,8 +94,8 @@ static const struct {
 
 static const int table_code_length_idxs[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-static struct tree_node tree_lengths_static[MAX_TREE_NODES];
-static struct tree_node tree_dists_static[MAX_TREE_NODES];
+static struct tree tree_lengths_static;
+static struct tree tree_dists_static;
 
 static bool br_ensure(inflate_state *state, int bits)
 {
@@ -112,56 +121,115 @@ static void output(inflate_state *state, uint8_t value)
 {
     *state->out.data_out++ = value;
     (*state->out.avail_out)--;
-    state->out.window[state->out.offset++ % sizeof(state->out.window)] = value;
+    state->out.window[state->out.offset++ & (sizeof(state->out.window) - 1)] = value;
 }
 
-static bool tree_add_value(struct tree_node tree[MAX_TREE_NODES], int *free_node, int key, int bits, int value)
+static bool tree_add_value(struct tree *tree, int key, int bits, int value)
 {
-    int idx = 0;
-    int bit;
+    int rkey = 0, bit, i;
+    for (i = 0; i < bits; i++)
+        rkey = (rkey << 1) | ((key >> i) & 1);
+
+    if (bits <= TREE_FAST_BITS) {
+        if (tree->fast[rkey].length)
+            return false;
+        tree->fast[rkey].length = bits;
+        tree->fast[rkey].value = value;
+        tree->fast[rkey].is_value = true;
+        for (i = 1; i < (1 << (TREE_FAST_BITS - bits)); i++) {
+            if (tree->fast[rkey | (i << bits)].length)
+                return false;
+            tree->fast[rkey | (i << bits)] = tree->fast[rkey];
+        }
+        return true;
+    }
+
+    rkey &= (1 << TREE_FAST_BITS) - 1;
+    if (tree->fast[rkey].is_value)
+        return false;
+    tree->fast[rkey].length = TREE_FAST_BITS + 1;
+    if (!tree->fast[rkey].value)
+        tree->fast[rkey].value = ++tree->free_node;
+    i = tree->fast[rkey].value;
+    bits -= TREE_FAST_BITS;
+
     while (bits > 1) {
         bit = (key >> (bits - 1)) & 1;
-        if (tree[idx].node[bit].is_value)
+        if (tree->nodes[i].node[bit].is_value)
             return false;
-        if (!tree[idx].node[bit].value) {
-            if (*free_node == MAX_TREE_NODES)
+        if (!tree->nodes[i].node[bit].value) {
+            if (tree->free_node == MAX_TREE_NODES)
                 return false;
-            tree[idx].node[bit].value = (*free_node)++;
+            tree->nodes[i].node[bit].value = ++tree->free_node;
         }
-        idx = tree[idx].node[bit].value;
+        i = tree->nodes[i].node[bit].value;
         bits--;
     }
     bit = key & 1;
-    if (tree[idx].node[bit].value || tree[idx].node[bit].is_value)
+    if (tree->nodes[i].node[bit].value || tree->nodes[i].node[bit].is_value)
         return false;
-    tree[idx].node[bit].value = value;
-    tree[idx].node[bit].is_value = true;
+    tree->nodes[i].node[bit].value = value;
+    tree->nodes[i].node[bit].is_value = true;
+
     return true;
+}
+
+static int tree_get_value(inflate_state *state, struct tree *tree)
+{
+    if (state->state.tree_idx == 0) {
+        int key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
+        while (state->in.available < TREE_FAST_BITS && state->in.available < (int)tree->fast[key].length) {
+            if (!br_ensure(state, tree->fast[key].length))
+                return RESULT_NOT_DONE;
+            key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
+        }
+        if (tree->fast[key].length == 0)
+            return RESULT_ERROR;
+        if (tree->fast[key].is_value) {
+            state->state.code = tree->fast[key].value;
+            (void)br_bits(state, tree->fast[key].length);
+            return RESULT_EOS;
+        }
+        (void)br_bits(state, TREE_FAST_BITS);
+        state->state.tree_idx = tree->fast[key].value;
+    }
+    while (state->state.code == -1) {
+        int bit;
+        if (!br_ensure(state, 1))
+            return RESULT_NOT_DONE;
+        bit = (int)br_bits(state, 1);
+        if (tree->nodes[state->state.tree_idx].node[bit].is_value)
+            state->state.code = tree->nodes[state->state.tree_idx].node[bit].value;
+        else if (tree->nodes[state->state.tree_idx].node[bit].value)
+            state->state.tree_idx = tree->nodes[state->state.tree_idx].node[bit].value;
+        else
+            return RESULT_ERROR;
+    }
+    state->state.tree_idx = 0;
+    return RESULT_EOS;
 }
 
 static void setup_static_trees()
 {
     static bool initialized = false;
-    int free_node, i;
+    int i;
 
     if (initialized)
         return;
 
-    memset(tree_lengths_static, 0, sizeof(tree_lengths_static));
-    free_node = 1;
+    memset(&tree_lengths_static, 0, sizeof(tree_lengths_static));
     for (i = 0; i < 144; i++)
-        tree_add_value(tree_lengths_static, &free_node, i + 48, 8, i);
+        tree_add_value(&tree_lengths_static, i + 48, 8, i);
     for (i = 144; i < 256; i++)
-        tree_add_value(tree_lengths_static, &free_node, i + 256, 9, i);
+        tree_add_value(&tree_lengths_static, i + 256, 9, i);
     for (i = 256; i < 280; i++)
-        tree_add_value(tree_lengths_static, &free_node, i - 256, 7, i);
+        tree_add_value(&tree_lengths_static, i - 256, 7, i);
     for (i = 280; i < 288; i++)
-        tree_add_value(tree_lengths_static, &free_node, i - 88, 8, i);
+        tree_add_value(&tree_lengths_static, i - 88, 8, i);
 
-    memset(tree_dists_static, 0, sizeof(tree_dists_static));
-    free_node = 1;
+    memset(&tree_dists_static, 0, sizeof(tree_dists_static));
     for (i = 0; i < 32; i++)
-        tree_add_value(tree_dists_static, &free_node, i, 5, i);
+        tree_add_value(&tree_dists_static, i, 5, i);
 
     initialized = true;
 }
@@ -181,6 +249,8 @@ void inflate_free(inflate_state *state)
 
 int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in, void *data_out, size_t *avail_out)
 {
+    int res;
+
     if (!state || !data_in || !avail_in || !data_out || !avail_out)
         return RESULT_ERROR;
 
@@ -200,7 +270,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             state->is_final_block = br_bits(state, 1) != 0;
             switch (br_bits(state, 2)) {
             case 0:
-                state->in.available &= ~7;
+                (void)br_bits(state, state->in.available % 8);
                 state->step = STEP_COPY_INIT;
                 break;
             case 1:
@@ -221,7 +291,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             if (state->state.length != 0xFFFF - (uint16_t)br_bits(state, 16))
                 return RESULT_ERROR;
             state->step = STEP_COPY;
-            break;
+            /* fall through */
 
         case STEP_COPY:
             while (state->state.length > 0) {
@@ -235,35 +305,80 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
 
         case STEP_INFLATE_STATIC_INIT:
             setup_static_trees();
-            memcpy(state->tree_lengths, tree_lengths_static, sizeof(state->tree_lengths));
-            memcpy(state->tree_dists, tree_dists_static, sizeof(state->tree_dists));
+            state->tree_lengths = tree_lengths_static;
+            state->tree_dists = tree_dists_static;
+            state->step = STEP_INFLATE_INIT;
+            /* fall through */
+
+        case STEP_INFLATE_INIT:
+            if (!br_ensure(state, state->inflate64 ? 49 : 48)) {
+                state->state.code = -1;
+                state->step = STEP_INFLATE_CODE;
+                break;
+            }
+
             state->state.code = -1;
+            res = tree_get_value(state, &state->tree_lengths);
+            if (res != RESULT_EOS)
+                return res;
+            if (state->state.code < 256) {
+                if (*avail_out == 0) {
+                    state->step = STEP_INFLATE;
+                    return RESULT_NOT_DONE;
+                }
+                output(state, (uint8_t)state->state.code);
+                state->step = STEP_INFLATE_INIT;
+                break;
+            }
+            if (state->state.code == 256) {
+                state->step = STEP_NEXT_BLOCK;
+                break;
+            }
+            if (state->state.code > 285) {
+                return RESULT_ERROR;
+            }
+            if (state->inflate64 && state->state.code == 285) {
+                if (!br_ensure(state, 45)) {
+                    state->step = STEP_INFLATE;
+                    break;
+                }
+                state->state.code = 286;
+            }
+            state->state.length = table_lengths[state->state.code - 257].length + (int)br_bits(state, table_lengths[state->state.code - 257].bits);
+            state->state.code = -1;
+            res = tree_get_value(state, &state->tree_dists);
+            if (res != RESULT_EOS)
+                return res;
+            state->state.dist = table_dists[state->state.code].dist + (int)br_bits(state, table_dists[state->state.code].bits);
+            if ((size_t)state->state.dist > state->out.offset || state->state.dist > (state->inflate64 ? (1 << 16) : (1 << 15)))
+                return RESULT_ERROR;
+            state->step = STEP_INFLATE_REPEAT;
+            /* fall through */
+
+        case STEP_INFLATE_REPEAT:
+            while (state->state.length > 0) {
+                if (*avail_out == 0)
+                    return RESULT_NOT_DONE;
+                output(state, state->out.window[(state->out.offset - state->state.dist) & (sizeof(state->out.window) - 1)]);
+                state->state.length--;
+            }
             state->step = STEP_INFLATE_INIT;
             break;
 
-        case STEP_INFLATE_INIT:
-            while (state->state.code == -1) {
-                int bit;
-                if (!br_ensure(state, 1))
-                    return RESULT_NOT_DONE;
-                bit = (int)br_bits(state, 1);
-                if (state->tree_lengths[state->state.tree_idx].node[bit].is_value)
-                    state->state.code = state->tree_lengths[state->state.tree_idx].node[bit].value;
-                else if (state->tree_lengths[state->state.tree_idx].node[bit].value)
-                    state->state.tree_idx = state->tree_lengths[state->state.tree_idx].node[bit].value;
-                else
-                    return RESULT_ERROR;
+        case STEP_INFLATE_CODE:
+            if (state->state.code == -1) {
+                res = tree_get_value(state, &state->tree_lengths);
+                if (res != RESULT_EOS)
+                    return res;
             }
-            state->state.tree_idx = 0;
             state->step = STEP_INFLATE;
-            break;
+            /* fall through */
 
         case STEP_INFLATE:
             if (state->state.code < 256) {
                 if (*avail_out == 0)
                     return RESULT_NOT_DONE;
                 output(state, (uint8_t)state->state.code);
-                state->state.code = -1;
                 state->step = STEP_INFLATE_INIT;
                 break;
             }
@@ -281,39 +396,20 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             state->state.length = table_lengths[state->state.code - 257].length + (int)br_bits(state, table_lengths[state->state.code - 257].bits);
             state->state.code = -1;
             state->step = STEP_INFLATE_DISTANCE;
-            break;
+            /* fall through */
 
         case STEP_INFLATE_DISTANCE:
-            while (state->state.code == -1) {
-                int bit;
-                if (!br_ensure(state, 1))
-                    return RESULT_NOT_DONE;
-                bit = (int)br_bits(state, 1);
-                if (state->tree_dists[state->state.tree_idx].node[bit].is_value)
-                    state->state.code = state->tree_dists[state->state.tree_idx].node[bit].value;
-                else if (state->tree_dists[state->state.tree_idx].node[bit].value)
-                    state->state.tree_idx = state->tree_dists[state->state.tree_idx].node[bit].value;
-                else
-                    return RESULT_ERROR;
+            if (state->state.code == -1) {
+                res = tree_get_value(state, &state->tree_dists);
+                if (res != RESULT_EOS)
+                    return res;
             }
-            state->state.tree_idx = 0;
             if (!br_ensure(state, table_dists[state->state.code].bits))
                 return RESULT_NOT_DONE;
             state->state.dist = table_dists[state->state.code].dist + (int)br_bits(state, table_dists[state->state.code].bits);
             if ((size_t)state->state.dist > state->out.offset || state->state.dist > (state->inflate64 ? (1 << 16) : (1 << 15)))
                 return RESULT_ERROR;
             state->step = STEP_INFLATE_REPEAT;
-            break;
-
-        case STEP_INFLATE_REPEAT:
-            while (state->state.length > 0) {
-                if (*avail_out == 0)
-                    return RESULT_NOT_DONE;
-                output(state, state->out.window[(state->out.offset - state->state.dist) % sizeof(state->out.window)]);
-                state->state.length--;
-            }
-            state->state.code = -1;
-            state->step = STEP_INFLATE_INIT;
             break;
 
         case STEP_INFLATE_DYNAMIC_INIT:
@@ -325,7 +421,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             memset(state->prepare.clens, 0, sizeof(state->prepare.clens));
             state->prepare.idx = 0;
             state->step = STEP_INFLATE_DYNAMIC_INIT_PRETREE;
-            break;
+            /* fall through */
 
         case STEP_INFLATE_DYNAMIC_INIT_PRETREE:
             while (state->prepare.idx < state->prepare.hclen) {
@@ -335,7 +431,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                 state->prepare.idx++;
             }
             {
-                int code = 0, free_node = 1, i;
+                int code = 0, i;
                 int bl_count[MAX_BITS] = { 0 };
                 int next_code[MAX_BITS];
 
@@ -349,10 +445,10 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                     next_code[i] = code;
                 }
 
-                memset(state->tree_lengths, 0, sizeof(state->tree_lengths));
+                memset(&state->tree_lengths, 0, sizeof(state->tree_lengths));
                 for (i = 0; i < 19; i++) {
                     if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(state->tree_lengths, &free_node, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
+                        if (!tree_add_value(&state->tree_lengths, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
                             return RESULT_ERROR;
                         next_code[state->prepare.clens[i]]++;
                     }
@@ -360,27 +456,18 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             }
             state->prepare.idx = 0;
             state->state.code = -1;
-            state->state.tree_idx = 0;
             memset(state->prepare.clens, 0, sizeof(state->prepare.clens));
             state->step = STEP_INFLATE_DYNAMIC_INIT_TABLES;
-            break;
+            /* fall through */
 
         case STEP_INFLATE_DYNAMIC_INIT_TABLES:
             while (state->prepare.idx < state->prepare.hlit + state->prepare.hdist) {
                 int repeat;
-                while (state->state.code == -1) {
-                    int bit;
-                    if (!br_ensure(state, 1))
-                        return RESULT_NOT_DONE;
-                    bit = (int)br_bits(state, 1);
-                    if (state->tree_lengths[state->state.tree_idx].node[bit].is_value)
-                        state->state.code = state->tree_lengths[state->state.tree_idx].node[bit].value;
-                    else if (state->tree_lengths[state->state.tree_idx].node[bit].value)
-                        state->state.tree_idx = state->tree_lengths[state->state.tree_idx].node[bit].value;
-                    else
-                        return RESULT_ERROR;
+                if (state->state.code == -1) {
+                    res = tree_get_value(state, &state->tree_lengths);
+                    if (res != RESULT_EOS)
+                        return res;
                 }
-                state->state.tree_idx = 0;
                 if (state->state.code < 16) {
                     state->prepare.clens[state->prepare.idx++] = state->state.code;
                 }
@@ -412,11 +499,11 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                 state->state.code = -1;
             }
 
-            memset(state->tree_lengths, 0, sizeof(state->tree_lengths));
-            memset(state->tree_dists, 0, sizeof(state->tree_dists));
+            memset(&state->tree_lengths, 0, sizeof(state->tree_lengths));
+            memset(&state->tree_dists, 0, sizeof(state->tree_dists));
 
             {
-                int code, free_node, i;
+                int code, i;
                 int bl_count[MAX_BITS];
                 int next_code[MAX_BITS];
 
@@ -431,10 +518,9 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                         return RESULT_ERROR;
                     next_code[i] = code;
                 }
-                free_node = 1;
                 for (i = 0; i < state->prepare.hlit; i++) {
                     if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(state->tree_lengths, &free_node, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
+                        if (!tree_add_value(&state->tree_lengths, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
                             return RESULT_ERROR;
                         next_code[state->prepare.clens[i]]++;
                     }
@@ -452,16 +538,14 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                         return RESULT_ERROR;
                     next_code[i] = code;
                 }
-                free_node = 1;
                 for (i = state->prepare.hlit; i < state->prepare.hlit + state->prepare.hdist; i++) {
                     if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(state->tree_dists, &free_node, next_code[state->prepare.clens[i]], state->prepare.clens[i], i - state->prepare.hlit))
+                        if (!tree_add_value(&state->tree_dists, next_code[state->prepare.clens[i]], state->prepare.clens[i], i - state->prepare.hlit))
                             return RESULT_ERROR;
                         next_code[state->prepare.clens[i]]++;
                     }
                 }
             }
-            state->state.code = -1;
             state->step = STEP_INFLATE_INIT;
             break;
         }
