@@ -361,14 +361,12 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 
     bool isShift = IsShiftPressed();
     bool isCtrl = IsCtrlPressed();
-    // plogf("OnSelectionStart: isCtrl: %d, isShift: %d", (int)isCtrl, (int)isShift);
 
     // Ctrl+drag forces a rectangular selection
     if (!isCtrl || isShift) {
         DisplayModel *dm = win->AsFixed();
         int pageNo = dm->GetPageNoByPoint(PointI(x, y));
         if (dm->ValidPageNo(pageNo)) {
-            //plogf("OnSelectionStart: changing to MA_SELECTING_TEXT");
             PointD pt = dm->CvtFromScreen(PointI(x, y), pageNo);
             dm->textSelection->StartAt(pageNo, pt.x, pt.y);
             win->mouseAction = MA_SELECTING_TEXT;
@@ -377,7 +375,6 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
 
     SetCapture(win->hwndCanvas);
     SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
-
     win->RepaintAsync();
 }
 
