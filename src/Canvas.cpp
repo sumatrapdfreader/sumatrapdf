@@ -228,32 +228,17 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     win.dragStartPending = true;
     win.dragStart = PointI(x, y);
 
-    // TODO: rectangular selection is busted. At least on my win 8 in vmware,
-    // Left MB with Ctrl is converted, system wide, to Right MB, so we're never
-    // here with Ctrl being pressed.
-    // How to fix it:
-    // - use Alt instead of Ctrl as a modifier
-    // - simplify things. Since rmb (including ctrl + lmb) is always drag
-    //   and lmb if not over text is drag and lmb over text is selection,
-    //   and rectangular selection allows copy&paste of its text (like text selection)
-    //   could use Shift to force rectangular selection 
-
     // - without modifiers, clicking on text starts a text selection
     //   and clicking somewhere else starts a drag
-    // - pressing Shift forces dragging
-    // - pressing Ctrl forces a rectangular selection
-    // - pressing Ctrl+Shift forces text selection
     // - not having CopySelection permission forces dragging
+    // - pressing Shift forces rectangular selection
     bool isShift = IsShiftPressed();
-    bool isCtrl = IsAltPressed();
     bool canCopy = HasPermission(Perm_CopySelection);
     bool isOverText = dm->IsOverText(PointI(x,y));
-    //plogf("isShift: %d, isCtrl: %d, canCopy: %d, key: 0x%x", (int)isShift, (int)isCtrl, (int)canCopy, (int)key);
-    if (!canCopy || (isShift || !isOverText) && !isCtrl) {
-        //plogf("dragging");
-        OnDraggingStart(win, x, y);
-    } else {
+    if (canCopy && (isOverText || isShift)) {
         OnSelectionStart(&win, x, y, key);
+    } else {
+        OnDraggingStart(win, x, y);
     }
 }
 
