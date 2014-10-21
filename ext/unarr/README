@@ -16,8 +16,8 @@ The following symbols can be defined if other libraries are present
 in the include path:
 
 Symbol          Required header Required for (format/method)
--------------------------------------------------------------
-HAVE_ZLIB       zlib.h          faster CRC-32 and Deflate(64)
+------------------------------------------------------------
+HAVE_ZLIB       zlib.h          faster CRC-32 and Deflate
 HAVE_BZIP2      bzlib.h         ZIP / Bzip2
 HAVE_7Z         7z.h            7Z  / LZMA, LZMA2, BCJ
 

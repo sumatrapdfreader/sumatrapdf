@@ -6,11 +6,10 @@
 
 #include "../common/unarr-imp.h"
 
-#ifndef HAVE_ZLIB
-#include "inflate.h"
-#else
+#ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
+#include "inflate.h"
 #ifdef HAVE_BZIP2
 #include <bzlib.h>
 #endif
@@ -109,11 +108,10 @@ struct ar_archive_zip_uncomp {
     zip_uncomp_uncompress_data_fn uncompress_data;
     zip_uncomp_clear_state_fn clear_state;
     union {
-#ifndef HAVE_ZLIB
-        inflate_state *inflate;
-#else
+#ifdef HAVE_ZLIB
         z_stream zstream;
 #endif
+        inflate_state *inflate;
 #ifdef HAVE_BZIP2
         bz_stream bstream;
 #endif

@@ -118,9 +118,6 @@ file (GLOB ZLIB_SRC
 	"ext/zlib/gzread.c"
 	"ext/zlib/gzwrite.c"
 	"ext/zlib/gzclose.c"
-
-	"ext/zlib/infback9/*.h"
-	"ext/zlib/infback9/inftree9.c"
 	)
 
 file (GLOB LIBJPEG_TURBO_SRC

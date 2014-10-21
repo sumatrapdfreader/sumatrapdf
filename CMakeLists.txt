@@ -96,7 +96,7 @@ ENDIF(NOT_DEFINED)
 
 IF(NOT_DEFINED)
 add_library(zlib ${ZLIB_SRC})
-target_include_directories(zlib PRIVATE "ext/zlib" "ext/zlib/infback9")
+target_include_directories(zlib PRIVATE "ext/zlib")
 ENDIF(NOT_DEFINED)
 
 

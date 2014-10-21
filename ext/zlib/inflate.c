@@ -84,11 +84,6 @@
 #include "inftrees.h"
 #include "inflate.h"
 #include "inffast.h"
-/* SumatraPDF: support Deflate 64 */
-#include "inftree2.h"
-#if defined(MAKEFIXED) || defined(BUILDFIXED)
-#error Deflate64 support is incompatible with BUILDFIXED
-#endif
 
 #ifdef MAKEFIXED
 #  ifndef BUILDFIXED
@@ -169,7 +164,7 @@ int windowBits;
     }
 
     /* set number of window bits, free window if different */
-    if (windowBits && (windowBits < 8 || windowBits > 16))
+    if (windowBits && (windowBits < 8 || windowBits > 15))
         return Z_STREAM_ERROR;
     if (state->window != Z_NULL && state->wbits != (unsigned)windowBits) {
         ZFREE(strm, state->window);
@@ -179,7 +174,6 @@ int windowBits;
     /* update state and reset the rest of it */
     state->wrap = wrap;
     state->wbits = (unsigned)windowBits;
-    state->inflate_table = windowBits == 16 ? inflate_table9 : inflate_table;
     return inflateReset(strm);
 }
 
@@ -300,17 +294,10 @@ struct inflate_state FAR *state;
     }
 #else /* !BUILDFIXED */
 #   include "inffixed.h"
-
-#define lenfix lenfix9
-#define distfix distfix9
-#   include "inffix9.h"
-#undef lenfix
-#undef distfix
-
 #endif /* BUILDFIXED */
-    state->lencode = state->wbits == 16 ? lenfix9 : lenfix;
+    state->lencode = lenfix;
     state->lenbits = 9;
-    state->distcode = state->wbits == 16 ? distfix9 : distfix;
+    state->distcode = distfix;
     state->distbits = 5;
 }
 
@@ -916,7 +903,7 @@ int flush;
             state->ncode = BITS(4) + 4;
             DROPBITS(4);
 #ifndef PKZIP_BUG_WORKAROUND
-            if (state->nlen > 286 || (state->wbits < 16 && state->ndist > 30)) {
+            if (state->nlen > 286 || state->ndist > 30) {
                 strm->msg = (char *)"too many length or distance symbols";
                 state->mode = BAD;
                 break;
@@ -936,7 +923,7 @@ int flush;
             state->next = state->codes;
             state->lencode = (const code FAR *)(state->next);
             state->lenbits = 7;
-            ret = state->inflate_table(CODES, state->lens, 19, &(state->next),
+            ret = inflate_table(CODES, state->lens, 19, &(state->next),
                                 &(state->lenbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid code lengths set";
@@ -1011,7 +998,7 @@ int flush;
             state->next = state->codes;
             state->lencode = (const code FAR *)(state->next);
             state->lenbits = 9;
-            ret = state->inflate_table(LENS, state->lens, state->nlen, &(state->next),
+            ret = inflate_table(LENS, state->lens, state->nlen, &(state->next),
                                 &(state->lenbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid literal/lengths set";
@@ -1020,7 +1007,7 @@ int flush;
             }
             state->distcode = (const code FAR *)(state->next);
             state->distbits = 6;
-            ret = state->inflate_table(DISTS, state->lens + state->nlen, state->ndist,
+            ret = inflate_table(DISTS, state->lens + state->nlen, state->ndist,
                             &(state->next), &(state->distbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid distances set";
@@ -1033,7 +1020,7 @@ int flush;
         case LEN_:
             state->mode = LEN;
         case LEN:
-            if (state->wbits < 16 && have >= 6 && left >= 258) {
+            if (have >= 6 && left >= 258) {
                 RESTORE();
                 inflate_fast(strm, out);
                 LOAD();
@@ -1079,7 +1066,7 @@ int flush;
                 state->mode = BAD;
                 break;
             }
-            state->extra = (unsigned)(here.op) & (state->wbits < 16 ? 15 : 31);
+            state->extra = (unsigned)(here.op) & 15;
             state->mode = LENEXT;
         case LENEXT:
             if (state->extra) {

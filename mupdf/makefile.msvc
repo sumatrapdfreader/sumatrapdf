@@ -135,7 +135,7 @@ CFLAGSB = $(CFLAGSB) /MTd
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
 !endif
 
-ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
+ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR)
 
 # 4703 - potentially uninitialized local variable (frequent with vs 2012)
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
@@ -199,8 +199,7 @@ ZLIB_OBJS = \
 	$(OZ)\adler32.obj $(OZ)\compress.obj $(OZ)\crc32.obj $(OZ)\deflate.obj \
 	$(OZ)\inffast.obj $(OZ)\inflate.obj $(OZ)\inftrees.obj $(OZ)\trees.obj \
 	$(OZ)\zutil.obj \
-	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj \
-	$(OZ)\inftree9.obj
+	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj
 
 JPEG_TURBO_OBJS = \
 	$(OT)\jcomapi.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \
@@ -373,9 +372,6 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)}.c{$(OZ)}.obj::
-	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(ZLIB_DIR)\infback9}.c{$(OZ)}.obj::
 	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(JPEG_TURBO_DIR)}.c{$(OT)}.obj::
