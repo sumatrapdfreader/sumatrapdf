@@ -8,6 +8,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef _MSC_VER
+#define __forceinline inline
+#endif
+
 #define MAX_BITS 16
 #define TREE_FAST_BITS 10
 #define MAX_TREE_NODES 320
@@ -19,21 +23,19 @@ enum inflate_step {
     STEP_INFLATE_STATIC_INIT, STEP_INFLATE_DYNAMIC_INIT, STEP_INFLATE_DYNAMIC_INIT_PRETREE, STEP_INFLATE_DYNAMIC_INIT_TABLES,
     STEP_INFLATE_INIT, STEP_INFLATE_CODE, STEP_INFLATE, STEP_INFLATE_DISTANCE, STEP_INFLATE_REPEAT,
 };
-enum inflate_result { RESULT_EOS = -1, RESULT_NOT_DONE = 0, RESULT_ERROR = 1 };
+enum { RESULT_EOS = -1, RESULT_NOT_DONE = 0, RESULT_ERROR = 1 };
+
+#if defined(_MSC_VER) || defined(__GNUC__)
+#define RESULT_ERROR (RESULT_ERROR + __COUNTER__)
+#endif
 
 struct tree {
     struct {
-        unsigned value : 9;
+        unsigned value : 11;
         unsigned is_value : 1;
         unsigned length : 4;
-    } fast[1 << TREE_FAST_BITS];
-    struct {
-        struct {
-            unsigned value : 9;
-            unsigned is_value : 1;
-        } node[2];
-    } nodes[MAX_TREE_NODES + 1];
-    int free_node;
+    } nodes[(1 << TREE_FAST_BITS) + MAX_TREE_NODES * 2];
+    int next_node;
 };
 
 struct inflate_state_s {
@@ -97,7 +99,7 @@ static const int table_code_length_idxs[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5
 static struct tree tree_lengths_static;
 static struct tree tree_dists_static;
 
-static bool br_ensure(inflate_state *state, int bits)
+static __forceinline bool br_ensure(inflate_state *state, int bits)
 {
     while (state->in.available < bits) {
         if (*state->in.avail_in == 0)
@@ -109,7 +111,7 @@ static bool br_ensure(inflate_state *state, int bits)
     return true;
 }
 
-static uint64_t br_bits(inflate_state *state, int bits)
+static __forceinline uint64_t br_bits(inflate_state *state, int bits)
 {
     uint64_t res = state->in.bits & (((uint64_t)1 << bits) - 1);
     state->in.available -= bits;
@@ -117,7 +119,7 @@ static uint64_t br_bits(inflate_state *state, int bits)
     return res;
 }
 
-static void output(inflate_state *state, uint8_t value)
+static __forceinline void output(inflate_state *state, uint8_t value)
 {
     *state->out.data_out++ = value;
     (*state->out.avail_out)--;
@@ -126,82 +128,82 @@ static void output(inflate_state *state, uint8_t value)
 
 static bool tree_add_value(struct tree *tree, int key, int bits, int value)
 {
-    int rkey = 0, bit, i;
+    int rkey = 0, i;
     for (i = 0; i < bits; i++)
         rkey = (rkey << 1) | ((key >> i) & 1);
 
     if (bits <= TREE_FAST_BITS) {
-        if (tree->fast[rkey].length)
+        if (tree->nodes[rkey].length)
             return false;
-        tree->fast[rkey].length = bits;
-        tree->fast[rkey].value = value;
-        tree->fast[rkey].is_value = true;
+        tree->nodes[rkey].length = bits;
+        tree->nodes[rkey].value = value;
+        tree->nodes[rkey].is_value = true;
         for (i = 1; i < (1 << (TREE_FAST_BITS - bits)); i++) {
-            if (tree->fast[rkey | (i << bits)].length)
+            if (tree->nodes[rkey | (i << bits)].length)
                 return false;
-            tree->fast[rkey | (i << bits)] = tree->fast[rkey];
+            tree->nodes[rkey | (i << bits)] = tree->nodes[rkey];
         }
         return true;
     }
 
     rkey &= (1 << TREE_FAST_BITS) - 1;
-    if (tree->fast[rkey].is_value)
+    if (tree->nodes[rkey].is_value)
         return false;
-    tree->fast[rkey].length = TREE_FAST_BITS + 1;
-    if (!tree->fast[rkey].value)
-        tree->fast[rkey].value = ++tree->free_node;
-    i = tree->fast[rkey].value;
+    tree->nodes[rkey].length = TREE_FAST_BITS + 1;
+    if (!tree->nodes[rkey].value)
+        tree->nodes[rkey].value = (1 << TREE_FAST_BITS) + tree->next_node++ * 2;
+    i = tree->nodes[rkey].value;
     bits -= TREE_FAST_BITS;
 
     while (bits > 1) {
-        bit = (key >> (bits - 1)) & 1;
-        if (tree->nodes[i].node[bit].is_value)
+        i |= (key >> (bits - 1)) & 1;
+        if (tree->nodes[i].is_value)
             return false;
-        if (!tree->nodes[i].node[bit].value) {
-            if (tree->free_node == MAX_TREE_NODES)
+        if (!tree->nodes[i].value) {
+            if (tree->next_node == MAX_TREE_NODES)
                 return false;
-            tree->nodes[i].node[bit].value = ++tree->free_node;
+            tree->nodes[i].value = (1 << TREE_FAST_BITS) + tree->next_node++ * 2;
         }
-        i = tree->nodes[i].node[bit].value;
+        i = tree->nodes[i].value;
         bits--;
     }
-    bit = key & 1;
-    if (tree->nodes[i].node[bit].value || tree->nodes[i].node[bit].is_value)
+    i |= key & 1;
+    if (tree->nodes[i].value || tree->nodes[i].is_value)
         return false;
-    tree->nodes[i].node[bit].value = value;
-    tree->nodes[i].node[bit].is_value = true;
+    tree->nodes[i].value = value;
+    tree->nodes[i].is_value = true;
 
     return true;
 }
 
-static int tree_get_value(inflate_state *state, struct tree *tree)
+static __forceinline int tree_get_value(inflate_state *state, struct tree *tree)
 {
     if (state->state.tree_idx == 0) {
         int key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
-        while (state->in.available < TREE_FAST_BITS && state->in.available < (int)tree->fast[key].length) {
-            if (!br_ensure(state, tree->fast[key].length))
+        while (state->in.available < TREE_FAST_BITS && state->in.available < (int)tree->nodes[key].length) {
+            if (!br_ensure(state, tree->nodes[key].length))
                 return RESULT_NOT_DONE;
             key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
         }
-        if (tree->fast[key].length == 0)
-            return RESULT_ERROR;
-        if (tree->fast[key].is_value) {
-            state->state.code = tree->fast[key].value;
-            (void)br_bits(state, tree->fast[key].length);
+        if (tree->nodes[key].is_value) {
+            state->state.code = tree->nodes[key].value;
+            (void)br_bits(state, tree->nodes[key].length);
             return RESULT_EOS;
         }
+        if (tree->nodes[key].length == 0)
+            return RESULT_ERROR;
         (void)br_bits(state, TREE_FAST_BITS);
-        state->state.tree_idx = tree->fast[key].value;
+        state->state.tree_idx = tree->nodes[key].value;
     }
     while (state->state.code == -1) {
-        int bit;
+        int idx;
         if (!br_ensure(state, 1))
             return RESULT_NOT_DONE;
-        bit = (int)br_bits(state, 1);
-        if (tree->nodes[state->state.tree_idx].node[bit].is_value)
-            state->state.code = tree->nodes[state->state.tree_idx].node[bit].value;
-        else if (tree->nodes[state->state.tree_idx].node[bit].value)
-            state->state.tree_idx = tree->nodes[state->state.tree_idx].node[bit].value;
+        idx = state->state.tree_idx | (int)br_bits(state, 1);
+        if (tree->nodes[idx].is_value)
+            state->state.code = tree->nodes[idx].value;
+        else if (tree->nodes[idx].value)
+            state->state.tree_idx = tree->nodes[idx].value;
         else
             return RESULT_ERROR;
     }

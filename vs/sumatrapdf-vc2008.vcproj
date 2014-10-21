@@ -668,6 +668,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\mingw_compat.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\Scoped.h"
 					>
 				</File>
@@ -720,10 +724,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\mingw_compat.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -2372,6 +2372,14 @@
 				Name="zip"
 				>
 				<File
+					RelativePath="..\ext\unarr\zip\inflate.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ext\unarr\zip\inflate.h"
+					>
+				</File>
+				<File
 					RelativePath="..\ext\unarr\zip\parse-zip.c"
 					>
 				</File>
@@ -2385,14 +2393,6 @@
 				</File>
 				<File
 					RelativePath="..\ext\unarr\zip\zip.h"
-					>
-				</File>
-				<File
-					RelativePath="..\ext\unarr\zip\inflate.c"
-					>
-				</File>
-				<File
-					RelativePath="..\ext\unarr\zip\inflate.h"
 					>
 				</File>
 			</Filter>
