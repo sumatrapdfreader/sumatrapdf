@@ -14,14 +14,13 @@
 
 #define MAX_BITS 16
 #define TREE_FAST_BITS 10
-#define MAX_TREE_NODES 320
-#define MAX_CODE_LENGTHS 318
+#define MAX_TREE_NODES 288
 
 enum inflate_step {
     STEP_NEXT_BLOCK = 0,
     STEP_COPY_INIT, STEP_COPY,
-    STEP_INFLATE_STATIC_INIT, STEP_INFLATE_DYNAMIC_INIT, STEP_INFLATE_DYNAMIC_INIT_PRETREE, STEP_INFLATE_DYNAMIC_INIT_TABLES,
-    STEP_INFLATE_INIT, STEP_INFLATE_CODE, STEP_INFLATE, STEP_INFLATE_DISTANCE, STEP_INFLATE_REPEAT,
+    STEP_INFLATE_STATIC_INIT, STEP_INFLATE_DYNAMIC_INIT, STEP_INFLATE_DYNAMIC_INIT_PRETREE, STEP_INFLATE_DYNAMIC_INIT_TREES,
+    STEP_INFLATE_CODE, STEP_INFLATE, STEP_INFLATE_DISTANCE_CODE, STEP_INFLATE_DISTANCE, STEP_INFLATE_REPEAT,
 };
 enum { RESULT_EOS = -1, RESULT_NOT_DONE = 0, RESULT_ERROR = 1 };
 
@@ -41,7 +40,7 @@ struct tree {
 struct inflate_state_s {
     enum inflate_step step;
     struct {
-        int code;
+        int value;
         int length;
         int dist;
         int tree_idx;
@@ -51,7 +50,7 @@ struct inflate_state_s {
         int hdist;
         int hclen;
         int idx;
-        int clens[MAX_CODE_LENGTHS];
+        int clens[288 + 32];
     } prepare;
     bool inflate64;
     bool is_final_block;
@@ -95,9 +94,6 @@ static const struct {
 };
 
 static const int table_code_length_idxs[19] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
-
-static struct tree tree_lengths_static;
-static struct tree tree_dists_static;
 
 static __forceinline bool br_ensure(inflate_state *state, int bits)
 {
@@ -186,7 +182,7 @@ static __forceinline int tree_get_value(inflate_state *state, const struct tree 
             key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
         }
         if (tree->nodes[key].is_value) {
-            state->state.code = tree->nodes[key].value;
+            state->state.value = tree->nodes[key].value;
             (void)br_bits(state, tree->nodes[key].length);
             return RESULT_EOS;
         }
@@ -195,13 +191,13 @@ static __forceinline int tree_get_value(inflate_state *state, const struct tree 
         (void)br_bits(state, TREE_FAST_BITS);
         state->state.tree_idx = tree->nodes[key].value;
     }
-    while (state->state.code == -1) {
+    while (state->state.value == -1) {
         int idx;
         if (not_fast && !br_ensure(state, 1))
             return RESULT_NOT_DONE;
         idx = state->state.tree_idx | (int)br_bits(state, 1);
         if (tree->nodes[idx].is_value)
-            state->state.code = tree->nodes[idx].value;
+            state->state.value = tree->nodes[idx].value;
         else if (tree->nodes[idx].value)
             state->state.tree_idx = tree->nodes[idx].value;
         else
@@ -211,29 +207,52 @@ static __forceinline int tree_get_value(inflate_state *state, const struct tree 
     return RESULT_EOS;
 }
 
-static void setup_static_trees()
+static void setup_static_trees(inflate_state *state)
 {
-    static bool initialized = false;
     int i;
 
-    if (initialized)
-        return;
-
-    memset(&tree_lengths_static, 0, sizeof(tree_lengths_static));
+    memset(&state->tree_lengths, 0, sizeof(state->tree_lengths));
     for (i = 0; i < 144; i++)
-        tree_add_value(&tree_lengths_static, i + 48, 8, i);
+        tree_add_value(&state->tree_lengths, i + 48, 8, i);
     for (i = 144; i < 256; i++)
-        tree_add_value(&tree_lengths_static, i + 256, 9, i);
+        tree_add_value(&state->tree_lengths, i + 256, 9, i);
     for (i = 256; i < 280; i++)
-        tree_add_value(&tree_lengths_static, i - 256, 7, i);
+        tree_add_value(&state->tree_lengths, i - 256, 7, i);
     for (i = 280; i < 288; i++)
-        tree_add_value(&tree_lengths_static, i - 88, 8, i);
+        tree_add_value(&state->tree_lengths, i - 88, 8, i);
 
-    memset(&tree_dists_static, 0, sizeof(tree_dists_static));
+    memset(&state->tree_dists, 0, sizeof(state->tree_dists));
     for (i = 0; i < 32; i++)
-        tree_add_value(&tree_dists_static, i, 5, i);
+        tree_add_value(&state->tree_dists, i, 5, i);
+}
 
-    initialized = true;
+static bool setup_dynamic_tree(struct tree *tree, int *clens, int count)
+{
+    int code, i;
+    int bl_count[MAX_BITS];
+    int next_code[MAX_BITS];
+
+    memset(bl_count, 0, sizeof(bl_count));
+    for (i = 0; i < count; i++)
+        bl_count[clens[i]]++;
+    bl_count[0] = 0;
+
+    code = 0;
+    for (i = 1; i < MAX_BITS; i++) {
+        code = (code + bl_count[i - 1]) << 1;
+        next_code[i] = code;
+    }
+
+    memset(tree, 0, sizeof(*tree));
+    for (i = 0; i < count; i++) {
+        if (clens[i] != 0) {
+            if (!tree_add_value(tree, next_code[clens[i]], clens[i], i))
+                return false;
+            next_code[clens[i]]++;
+        }
+    }
+
+    return true;
 }
 
 inflate_state *inflate_create(bool inflate64)
@@ -273,7 +292,6 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             state->is_final_block = br_bits(state, 1) != 0;
             switch (br_bits(state, 2)) {
             case 0:
-                (void)br_bits(state, state->in.available % 8);
                 state->step = STEP_COPY_INIT;
                 break;
             case 1:
@@ -290,6 +308,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
         case STEP_COPY_INIT:
             if (!br_ensure(state, 32))
                 return RESULT_NOT_DONE;
+            (void)br_bits(state, state->in.available & 0x7);
             state->state.length = (uint16_t)br_bits(state, 16);
             if (state->state.length != 0xFFFF - (uint16_t)br_bits(state, 16))
                 return RESULT_ERROR;
@@ -307,61 +326,64 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             break;
 
         case STEP_INFLATE_STATIC_INIT:
-            setup_static_trees();
-            state->tree_lengths = tree_lengths_static;
-            state->tree_dists = tree_dists_static;
-            state->step = STEP_INFLATE_INIT;
+            setup_static_trees(state);
             /* fall through */
 
-        case STEP_INFLATE_INIT:
+        STEP_INFLATE_START:
             not_fast = !br_ensure(state, state->inflate64 ? 49 : 48);
-            state->state.code = -1;
-            state->step = STEP_INFLATE_CODE;
+            state->state.value = -1;
             /* fall through */
 
         case STEP_INFLATE_CODE:
             res = tree_get_value(state, &state->tree_lengths, not_fast);
-            if (res != RESULT_EOS)
+            if (res != RESULT_EOS) {
+                state->step = STEP_INFLATE_CODE;
                 return res;
-            state->step = STEP_INFLATE;
+            }
             /* fall through */
 
         case STEP_INFLATE:
-            if (state->state.code < 256) {
-                if (*avail_out == 0)
+            if (state->state.value < 256) {
+                if (*avail_out == 0) {
+                    state->step = STEP_INFLATE;
                     return RESULT_NOT_DONE;
-                output(state, (uint8_t)state->state.code);
-                state->step = STEP_INFLATE_INIT;
-                break;
+                }
+                output(state, (uint8_t)state->state.value);
+                goto STEP_INFLATE_START;
             }
-            if (state->state.code == 256) {
+            if (state->state.value == 256) {
                 state->step = STEP_NEXT_BLOCK;
                 break;
             }
-            if (state->state.code > 285) {
+            if (state->state.value > 285)
                 return RESULT_ERROR;
-            }
-            if (state->inflate64 && state->state.code == 285) {
+            if (state->inflate64 && state->state.value == 285) {
                 not_fast = !br_ensure(state, 45);
-                state->state.code = 286;
+                state->state.value = 286;
             }
-            if (not_fast && !br_ensure(state, table_lengths[state->state.code - 257].bits))
+            if (not_fast && !br_ensure(state, table_lengths[state->state.value - 257].bits)) {
+                state->step = STEP_INFLATE;
                 return RESULT_NOT_DONE;
-            state->state.length = table_lengths[state->state.code - 257].length + (int)br_bits(state, table_lengths[state->state.code - 257].bits);
-            state->state.code = -1;
-            state->step = STEP_INFLATE_DISTANCE;
+            }
+            state->state.length = table_lengths[state->state.value - 257].length + (int)br_bits(state, table_lengths[state->state.value - 257].bits);
+            state->state.value = -1;
+            /* fall through */
+
+        case STEP_INFLATE_DISTANCE_CODE:
+            res = tree_get_value(state, &state->tree_dists, not_fast);
+            if (res != RESULT_EOS) {
+                state->step = STEP_INFLATE_DISTANCE_CODE;
+                return res;
+            }
             /* fall through */
 
         case STEP_INFLATE_DISTANCE:
-            if (state->state.code == -1) {
-                res = tree_get_value(state, &state->tree_dists, not_fast);
-                if (res != RESULT_EOS)
-                    return res;
-            }
-            if (not_fast && !br_ensure(state, table_dists[state->state.code].bits))
+            if (not_fast && !br_ensure(state, table_dists[state->state.value].bits)) {
+                state->step = STEP_INFLATE_DISTANCE;
                 return RESULT_NOT_DONE;
-            state->state.dist = table_dists[state->state.code].dist + (int)br_bits(state, table_dists[state->state.code].bits);
-            if ((size_t)state->state.dist > state->out.offset || state->state.dist > (state->inflate64 ? (1 << 16) : (1 << 15)))
+            }
+            state->state.dist = table_dists[state->state.value].dist + (int)br_bits(state, table_dists[state->state.value].bits);
+            if ((size_t)state->state.dist > state->out.offset || (state->state.value > 30 && !state->inflate64))
                 return RESULT_ERROR;
             state->step = STEP_INFLATE_REPEAT;
             /* fall through */
@@ -373,8 +395,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                 output(state, state->out.window[(state->out.offset - state->state.dist) & (sizeof(state->out.window) - 1)]);
                 state->state.length--;
             }
-            state->step = STEP_INFLATE_INIT;
-            break;
+            goto STEP_INFLATE_START;
 
         case STEP_INFLATE_DYNAMIC_INIT:
             if (!br_ensure(state, 14))
@@ -394,124 +415,58 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
                 state->prepare.clens[table_code_length_idxs[state->prepare.idx]] = (int)br_bits(state, 3);
                 state->prepare.idx++;
             }
-            {
-                int code = 0, i;
-                int bl_count[MAX_BITS] = { 0 };
-                int next_code[MAX_BITS];
-
-                for (i = 0; i < 19; i++)
-                    bl_count[state->prepare.clens[i]]++;
-                bl_count[0] = 0;
-                for (i = 1 ; i < MAX_BITS; i++) {
-                    code = (code + bl_count[i - 1]) << 1;
-                    if (code > (1 << i))
-                        return RESULT_ERROR;
-                    next_code[i] = code;
-                }
-
-                memset(&state->tree_lengths, 0, sizeof(state->tree_lengths));
-                for (i = 0; i < 19; i++) {
-                    if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(&state->tree_lengths, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
-                            return RESULT_ERROR;
-                        next_code[state->prepare.clens[i]]++;
-                    }
-                }
-            }
-            state->prepare.idx = 0;
-            state->state.code = -1;
+            if (!setup_dynamic_tree(&state->tree_lengths, state->prepare.clens, 19))
+                return RESULT_ERROR;
             memset(state->prepare.clens, 0, sizeof(state->prepare.clens));
-            state->step = STEP_INFLATE_DYNAMIC_INIT_TABLES;
+            state->prepare.idx = 0;
+            state->state.value = -1;
+            state->step = STEP_INFLATE_DYNAMIC_INIT_TREES;
             /* fall through */
 
-        case STEP_INFLATE_DYNAMIC_INIT_TABLES:
+        case STEP_INFLATE_DYNAMIC_INIT_TREES:
             while (state->prepare.idx < state->prepare.hlit + state->prepare.hdist) {
-                int repeat;
-                if (state->state.code == -1) {
+                int value = 0, repeat = 0;
+                if (state->state.value == -1) {
                     res = tree_get_value(state, &state->tree_lengths, true);
                     if (res != RESULT_EOS)
                         return res;
                 }
-                if (state->state.code < 16) {
-                    state->prepare.clens[state->prepare.idx++] = state->state.code;
+                if (state->state.value < 16) {
+                    state->prepare.clens[state->prepare.idx++] = state->state.value;
                 }
-                else if (state->state.code == 16) {
+                else if (state->state.value == 16) {
                     if (state->prepare.idx == 0)
                         return RESULT_ERROR;
                     if (!br_ensure(state, 2))
                         return RESULT_NOT_DONE;
+                    value = state->prepare.clens[state->prepare.idx - 1];
                     repeat = (int)br_bits(state, 2) + 3;
-                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS) {
-                        state->prepare.clens[state->prepare.idx] = state->prepare.clens[state->prepare.idx - 1];
-                        state->prepare.idx++;
-                    }
                 }
-                else if (state->state.code == 17) {
+                else if (state->state.value == 17) {
                     if (!br_ensure(state, 3))
                         return RESULT_NOT_DONE;
+                    value = 0;
                     repeat = (int)br_bits(state, 3) + 3;
-                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS)
-                        state->prepare.clens[state->prepare.idx++] = 0;
                 }
                 else {
                     if (!br_ensure(state, 7))
                         return RESULT_NOT_DONE;
+                    value = 0;
                     repeat = (int)br_bits(state, 7) + 11;
-                    while (repeat-- > 0 && state->prepare.idx < MAX_CODE_LENGTHS)
-                        state->prepare.clens[state->prepare.idx++] = 0;
                 }
-                state->state.code = -1;
-            }
-
-            memset(&state->tree_lengths, 0, sizeof(state->tree_lengths));
-            memset(&state->tree_dists, 0, sizeof(state->tree_dists));
-
-            {
-                int code, i;
-                int bl_count[MAX_BITS];
-                int next_code[MAX_BITS];
-
-                memset(bl_count, 0, sizeof(bl_count));
-                for (i = 0; i < state->prepare.hlit; i++)
-                    bl_count[state->prepare.clens[i]]++;
-                bl_count[0] = 0;
-                code = 0;
-                for (i = 1; i < MAX_BITS; i++) {
-                    code = (code + bl_count[i - 1]) << 1;
-                    if (code > (1 << i))
+                if (repeat) {
+                    if (state->prepare.idx + repeat > state->prepare.hlit + state->prepare.hdist)
                         return RESULT_ERROR;
-                    next_code[i] = code;
+                    while (repeat-- > 0)
+                        state->prepare.clens[state->prepare.idx++] = value;
                 }
-                for (i = 0; i < state->prepare.hlit; i++) {
-                    if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(&state->tree_lengths, next_code[state->prepare.clens[i]], state->prepare.clens[i], i))
-                            return RESULT_ERROR;
-                        next_code[state->prepare.clens[i]]++;
-                    }
-                }
-
-                memset(bl_count, 0, sizeof(bl_count));
-                for (i = state->prepare.hlit; i < state->prepare.hlit + state->prepare.hdist; i++) {
-                    bl_count[state->prepare.clens[i]]++;
-                }
-                bl_count[0] = 0;
-                code = 0;
-                for (i = 1; i < MAX_BITS; i++) {
-                    code = (code + bl_count[i - 1]) << 1;
-                    if (code > (1 << i))
-                        return RESULT_ERROR;
-                    next_code[i] = code;
-                }
-                for (i = state->prepare.hlit; i < state->prepare.hlit + state->prepare.hdist; i++) {
-                    if (state->prepare.clens[i] != 0) {
-                        if (!tree_add_value(&state->tree_dists, next_code[state->prepare.clens[i]], state->prepare.clens[i], i - state->prepare.hlit))
-                            return RESULT_ERROR;
-                        next_code[state->prepare.clens[i]]++;
-                    }
-                }
+                state->state.value = -1;
             }
-            state->step = STEP_INFLATE_INIT;
-            break;
+            if (!setup_dynamic_tree(&state->tree_lengths, state->prepare.clens, state->prepare.hlit))
+                return RESULT_ERROR;
+            if (!setup_dynamic_tree(&state->tree_dists, state->prepare.clens + state->prepare.hlit, state->prepare.hdist))
+                return RESULT_ERROR;
+            goto STEP_INFLATE_START;
         }
     }
 }
