@@ -164,7 +164,11 @@ bool IsSame(const WCHAR *path1, const WCHAR *path2)
     if (handle1 != INVALID_HANDLE_VALUE && handle2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
         if (GetFileInformationByHandle(handle1, &fi1) && GetFileInformationByHandle(handle2, &fi2)) {
-            isSame = memeq(&fi1, &fi2, sizeof(BY_HANDLE_FILE_INFORMATION));
+            isSame = fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber &&
+                     fi1.nFileIndexLow == fi2.nFileIndexLow && fi1.nFileIndexHigh == fi2.nFileIndexHigh &&
+                     fi1.nFileSizeLow == fi2.nFileSizeLow && fi1.nFileSizeHigh == fi2.nFileSizeHigh &&
+                     fi1.dwFileAttributes == fi2.dwFileAttributes && fi1.nNumberOfLinks == fi2.nNumberOfLinks &&
+                     FileTimeEq(fi1.ftLastWriteTime, fi2.ftLastWriteTime) && FileTimeEq(fi1.ftCreationTime, fi2.ftCreationTime);
             needFallback = false;
         }
     }
