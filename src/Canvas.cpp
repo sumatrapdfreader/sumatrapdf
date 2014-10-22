@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "SumatraPDF.h"
+#include "Canvas.h"
 
 #include "AppPrefs.h"
 #include "Caption.h"
@@ -13,9 +13,11 @@
 #include "Menu.h"
 #include "Notifications.h"
 #include "uia/Provider.h"
+#include "RenderCache.h"
 #include "Search.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
+#include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Timer.h"
 #include "Toolbar.h"
@@ -1340,6 +1342,26 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
             win.AsEbook()->TriggerLayout();
         break;
     }
+}
+
+static void OnDropFiles(HDROP hDrop, bool dragFinish)
+{
+    WCHAR filePath[MAX_PATH];
+    const int count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
+
+    for (int i = 0; i < count; i++) {
+        DragQueryFile(hDrop, i, filePath, dimof(filePath));
+        if (str::EndsWithI(filePath, L".lnk")) {
+            ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
+            if (resolved)
+                str::BufSet(filePath, dimof(filePath), resolved);
+        }
+        // The first dropped document may override the current window
+        LoadArgs args(filePath);
+        LoadDocument(args);
+    }
+    if (dragFinish)
+        DragFinish(hDrop);
 }
 
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

@@ -899,6 +899,9 @@
     <ClInclude Include="..\src\AppUtil.h">
       <Filter>sumatra</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\Canvas.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Caption.h">
       <Filter>sumatra</Filter>
     </ClInclude>

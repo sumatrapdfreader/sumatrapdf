@@ -10,7 +10,6 @@ class ChmModel;
 class DisplayModel;
 class EbookController;
 struct EbookFormattingData;
-class WindowInfo;
 
 // call SaveThumbnail on success or delete ThumbnailCallback on failure
 class ThumbnailCallback {

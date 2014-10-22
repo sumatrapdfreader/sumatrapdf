@@ -8,6 +8,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "AppUtil.h"
+#include "Canvas.h"
 #include "Caption.h"
 #include "ChmModel.h"
 #include "CmdLineParser.h"
@@ -139,6 +140,12 @@ Favorites                    gFavorites;
 HBITMAP                      gBitmapReloadingCue;
 RenderCache                  gRenderCache;
 HCURSOR                      gCursorDrag;
+
+// TODO: shared with Canvas.cpp - figure out better way of interaction
+// these can be global, as the mouse wheel can't affect more than one window at once
+int                          gDeltaPerLine = 0;         // for mouse wheel logic
+bool                         gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
+bool                         gSuppressAltKey = false;   // set after scrolling horizontally (to prevent the menu from getting the focus)
 
 static bool                         gCrashOnOpen = false;
 
@@ -1842,26 +1849,6 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
     AssociateExeWithPdfExtension();
     return true;
-}
-
-void OnDropFiles(HDROP hDrop, bool dragFinish)
-{
-    WCHAR       filePath[MAX_PATH];
-    const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
-
-    for (int i = 0; i < count; i++) {
-        DragQueryFile(hDrop, i, filePath, dimof(filePath));
-        if (str::EndsWithI(filePath, L".lnk")) {
-            ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
-            if (resolved)
-                str::BufSet(filePath, dimof(filePath), resolved);
-        }
-        // The first dropped document may override the current window
-        LoadArgs args(filePath);
-        LoadDocument(args);
-    }
-    if (dragFinish)
-        DragFinish(hDrop);
 }
 
 #if defined(SUPPORTS_AUTO_UPDATE) && !defined(HAS_PUBLIC_APP_KEY)
@@ -4266,12 +4253,6 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
     info->ptMinTrackSize.y = MIN_WIN_DY;
     return 0;
 }
-
-// TODO: shared with Canvas.cpp - figure out better way of interaction
-// these can be global, as the mouse wheel can't affect more than one window at once
-int  gDeltaPerLine = 0;         // for mouse wheel logic
-bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
-bool gSuppressAltKey = false;   // set after scrolling horizontally (to prevent the menu from getting the focus)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

@@ -386,6 +386,7 @@
     <ClInclude Include="..\src\AppPrefs.h" />
     <ClInclude Include="..\src\AppTools.h" />
     <ClInclude Include="..\src\AppUtil.h" />
+    <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
     <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\Controller.h" />

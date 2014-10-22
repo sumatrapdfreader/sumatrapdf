@@ -5,7 +5,6 @@
 #define SumatraPDF_h
 
 #include "DisplayState.h"
-#include "RenderCache.h"
 
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
@@ -86,6 +85,7 @@ class Favorites;
 class FileHistory;
 class WindowInfo;
 class NotificationWnd;
+class RenderCache;
 struct LabelWithCloseWnd;
 struct TabData;
 
@@ -131,8 +131,6 @@ void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCon
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);
-void OnDropFiles(HDROP hDrop, bool dragFinish);
-LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 COLORREF GetLogoBgColor();
 COLORREF GetAboutBgColor();
