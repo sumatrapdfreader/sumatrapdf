@@ -109,7 +109,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel unarr_test"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg unarr_test"
 				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\unarr.exe"

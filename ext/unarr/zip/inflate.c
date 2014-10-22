@@ -176,11 +176,11 @@ static bool tree_add_value(struct tree *tree, int key, int bits, int value)
     return true;
 }
 
-static __forceinline int tree_get_value(inflate_state *state, struct tree *tree)
+static __forceinline int tree_get_value(inflate_state *state, const struct tree *tree, bool not_fast)
 {
     if (state->state.tree_idx == 0) {
         int key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
-        while (state->in.available < TREE_FAST_BITS && state->in.available < (int)tree->nodes[key].length) {
+        while (not_fast && state->in.available < TREE_FAST_BITS && state->in.available < (int)tree->nodes[key].length) {
             if (!br_ensure(state, tree->nodes[key].length))
                 return RESULT_NOT_DONE;
             key = state->in.bits & ((1 << TREE_FAST_BITS) - 1);
@@ -197,7 +197,7 @@ static __forceinline int tree_get_value(inflate_state *state, struct tree *tree)
     }
     while (state->state.code == -1) {
         int idx;
-        if (!br_ensure(state, 1))
+        if (not_fast && !br_ensure(state, 1))
             return RESULT_NOT_DONE;
         idx = state->state.tree_idx | (int)br_bits(state, 1);
         if (tree->nodes[idx].is_value)
@@ -251,6 +251,7 @@ void inflate_free(inflate_state *state)
 
 int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in, void *data_out, size_t *avail_out)
 {
+    bool not_fast = true;
     int res;
 
     if (!state || !data_in || !avail_in || !data_out || !avail_out)
@@ -313,66 +314,15 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             /* fall through */
 
         case STEP_INFLATE_INIT:
-            if (!br_ensure(state, state->inflate64 ? 49 : 48)) {
-                state->state.code = -1;
-                state->step = STEP_INFLATE_CODE;
-                break;
-            }
-
+            not_fast = !br_ensure(state, state->inflate64 ? 49 : 48);
             state->state.code = -1;
-            res = tree_get_value(state, &state->tree_lengths);
-            if (res != RESULT_EOS)
-                return res;
-            if (state->state.code < 256) {
-                if (*avail_out == 0) {
-                    state->step = STEP_INFLATE;
-                    return RESULT_NOT_DONE;
-                }
-                output(state, (uint8_t)state->state.code);
-                state->step = STEP_INFLATE_INIT;
-                break;
-            }
-            if (state->state.code == 256) {
-                state->step = STEP_NEXT_BLOCK;
-                break;
-            }
-            if (state->state.code > 285) {
-                return RESULT_ERROR;
-            }
-            if (state->inflate64 && state->state.code == 285) {
-                if (!br_ensure(state, 45)) {
-                    state->step = STEP_INFLATE;
-                    break;
-                }
-                state->state.code = 286;
-            }
-            state->state.length = table_lengths[state->state.code - 257].length + (int)br_bits(state, table_lengths[state->state.code - 257].bits);
-            state->state.code = -1;
-            res = tree_get_value(state, &state->tree_dists);
-            if (res != RESULT_EOS)
-                return res;
-            state->state.dist = table_dists[state->state.code].dist + (int)br_bits(state, table_dists[state->state.code].bits);
-            if ((size_t)state->state.dist > state->out.offset || state->state.dist > (state->inflate64 ? (1 << 16) : (1 << 15)))
-                return RESULT_ERROR;
-            state->step = STEP_INFLATE_REPEAT;
+            state->step = STEP_INFLATE_CODE;
             /* fall through */
 
-        case STEP_INFLATE_REPEAT:
-            while (state->state.length > 0) {
-                if (*avail_out == 0)
-                    return RESULT_NOT_DONE;
-                output(state, state->out.window[(state->out.offset - state->state.dist) & (sizeof(state->out.window) - 1)]);
-                state->state.length--;
-            }
-            state->step = STEP_INFLATE_INIT;
-            break;
-
         case STEP_INFLATE_CODE:
-            if (state->state.code == -1) {
-                res = tree_get_value(state, &state->tree_lengths);
-                if (res != RESULT_EOS)
-                    return res;
-            }
+            res = tree_get_value(state, &state->tree_lengths, not_fast);
+            if (res != RESULT_EOS)
+                return res;
             state->step = STEP_INFLATE;
             /* fall through */
 
@@ -391,9 +341,11 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             if (state->state.code > 285) {
                 return RESULT_ERROR;
             }
-            if (state->inflate64 && state->state.code == 285)
+            if (state->inflate64 && state->state.code == 285) {
+                not_fast = !br_ensure(state, 45);
                 state->state.code = 286;
-            if (!br_ensure(state, table_lengths[state->state.code - 257].bits))
+            }
+            if (not_fast && !br_ensure(state, table_lengths[state->state.code - 257].bits))
                 return RESULT_NOT_DONE;
             state->state.length = table_lengths[state->state.code - 257].length + (int)br_bits(state, table_lengths[state->state.code - 257].bits);
             state->state.code = -1;
@@ -402,16 +354,26 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
 
         case STEP_INFLATE_DISTANCE:
             if (state->state.code == -1) {
-                res = tree_get_value(state, &state->tree_dists);
+                res = tree_get_value(state, &state->tree_dists, not_fast);
                 if (res != RESULT_EOS)
                     return res;
             }
-            if (!br_ensure(state, table_dists[state->state.code].bits))
+            if (not_fast && !br_ensure(state, table_dists[state->state.code].bits))
                 return RESULT_NOT_DONE;
             state->state.dist = table_dists[state->state.code].dist + (int)br_bits(state, table_dists[state->state.code].bits);
             if ((size_t)state->state.dist > state->out.offset || state->state.dist > (state->inflate64 ? (1 << 16) : (1 << 15)))
                 return RESULT_ERROR;
             state->step = STEP_INFLATE_REPEAT;
+            /* fall through */
+
+        case STEP_INFLATE_REPEAT:
+            while (state->state.length > 0) {
+                if (*avail_out == 0)
+                    return RESULT_NOT_DONE;
+                output(state, state->out.window[(state->out.offset - state->state.dist) & (sizeof(state->out.window) - 1)]);
+                state->state.length--;
+            }
+            state->step = STEP_INFLATE_INIT;
             break;
 
         case STEP_INFLATE_DYNAMIC_INIT:
@@ -466,7 +428,7 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
             while (state->prepare.idx < state->prepare.hlit + state->prepare.hdist) {
                 int repeat;
                 if (state->state.code == -1) {
-                    res = tree_get_value(state, &state->tree_lengths);
+                    res = tree_get_value(state, &state->tree_lengths, true);
                     if (res != RESULT_EOS)
                         return res;
                 }
