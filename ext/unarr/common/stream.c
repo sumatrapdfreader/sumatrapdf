@@ -209,38 +209,3 @@ ar_stream *ar_open_istream(IStream *stream)
     return ar_open_stream(stream, stream_close, stream_read, stream_seek, stream_tell);
 }
 #endif
-
-/***** stream based on an ar_archive entry *****/
-
-struct EntryStream {
-    struct MemoryStream base;
-    ar_archive *ar;
-    size_t uncompressed;
-    uint8_t buffer[1];
-};
-
-static size_t entry_read(void *data, void *buffer, size_t count)
-{
-    struct EntryStream *stm = data;
-    if (stm->base.offset > stm->uncompressed || stm->uncompressed - stm->base.offset < count) {
-        if (stm->base.length - stm->base.offset < count)
-            count = stm->base.length - stm->base.offset;
-        if (!ar_entry_uncompress(stm->ar, stm->buffer + stm->uncompressed, stm->base.offset + count - stm->uncompressed))
-            return 0;
-        stm->uncompressed = stm->base.offset + count;
-    }
-    return memory_read(data, buffer, count);
-}
-
-ar_stream *ar_entry_open(ar_archive *ar)
-{
-    struct EntryStream *stm = malloc(sizeof(struct EntryStream) + ar->entry_size_uncompressed);
-    if (!stm)
-        return NULL;
-    stm->base.data = stm->buffer;
-    stm->base.length = ar->entry_size_uncompressed;
-    stm->base.offset = 0;
-    stm->ar = ar;
-    stm->uncompressed = 0;
-    return ar_open_stream(stm, memory_close, entry_read, memory_seek, memory_tell);
-}
