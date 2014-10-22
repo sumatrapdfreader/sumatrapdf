@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "WinCursors.h"
 
 static LPWSTR knownCursorIds[] = {
     IDC_ARROW,

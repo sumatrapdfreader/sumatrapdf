@@ -208,7 +208,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj \
-	$(OS)\ChmModel.obj $(OS)\Caption.obj \
+	$(OS)\ChmModel.obj $(OS)\Caption.obj $(OS)\Canvas.obj \
 	$(UIA_OBJS)
 
 SUMATRA_OBJS = \

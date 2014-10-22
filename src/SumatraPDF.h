@@ -5,6 +5,7 @@
 #define SumatraPDF_h
 
 #include "DisplayState.h"
+#include "RenderCache.h"
 
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
@@ -16,6 +17,24 @@
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/develop.html"
 #endif
+
+// scrolls half a page down/up (needed for Shift+Up/Down)
+#define SB_HPAGEUP   (WM_USER + 1)
+#define SB_HPAGEDOWN (WM_USER + 2)
+
+#define HIDE_CURSOR_TIMER_ID        3
+#define HIDE_CURSOR_DELAY_IN_MS     3000
+
+#define REPAINT_TIMER_ID            1
+#define REPAINT_MESSAGE_DELAY_IN_MS 1000
+
+#define AUTO_RELOAD_TIMER_ID        5
+#define AUTO_RELOAD_DELAY_IN_MS     100
+
+#define AUTO_RELOAD_RETRY_TIMER_ID  6
+#define AUTO_RELOAD_RETRY_DELAY_IN_MS 1000
+
+#define EBOOK_LAYOUT_TIMER_ID       7
 
 // permissions that can be revoked (or explicitly set) through Group Policies
 enum {
@@ -66,6 +85,7 @@ enum MenuToolbarFlags {
 class Favorites;
 class FileHistory;
 class WindowInfo;
+class NotificationWnd;
 struct LabelWithCloseWnd;
 struct TabData;
 
@@ -78,6 +98,13 @@ extern Vec<WindowInfo*>         gWindows;
 extern Favorites                gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
+extern RenderCache              gRenderCache;
+extern bool                     gShowFrameRate;
+extern bool                     gWheelMsgRedirect;
+extern int                      gDeltaPerLine;
+extern bool                     gSuppressAltKey;
+extern HBITMAP                  gBitmapReloadingCue;
+extern HCURSOR                  gCursorDrag;
 
 #define gPluginMode             (gPluginURL != NULL)
 
@@ -103,6 +130,9 @@ bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfiel
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
+void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);
+void OnDropFiles(HDROP hDrop, bool dragFinish);
+LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 COLORREF GetLogoBgColor();
 COLORREF GetAboutBgColor();
@@ -136,5 +166,6 @@ WindowInfo *CreateAndShowWindowInfo();
 
 UINT MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL);
+void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd);
 
 #endif

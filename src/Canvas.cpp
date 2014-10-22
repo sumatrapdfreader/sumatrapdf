@@ -1,56 +1,32 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// TODO: for the moment it needs to be included from SumatraPDF.cpp
-// and not compiled as stand-alone
+#include "BaseUtil.h"
+#include "SumatraPDF.h"
+
+#include "AppPrefs.h"
+#include "Caption.h"
+#include "Controller.h"
+#include "DisplayModel.h"
+#include "EbookController.h"
+#include "FrameRateWnd.h"
+#include "Menu.h"
+#include "Notifications.h"
+#include "uia/Provider.h"
+#include "Search.h"
+#include "Selection.h"
+#include "SumatraAbout.h"
+#include "Tabs.h"
+#include "Timer.h"
+#include "Toolbar.h"
+#include "Touch.h"
+#include "Translations.h"
+#include "UITask.h"
+#include "WinCursors.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
-
-void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
-{
-    CrashIf(!win->AsFixed());
-    DisplayModel *dm = win->AsFixed();
-
-    SCROLLINFO si = { 0 };
-    si.cbSize = sizeof(si);
-    si.fMask = SIF_ALL;
-
-    SizeI viewPort = dm->GetViewPort().Size();
-
-    if (viewPort.dx >= canvas.dx) {
-        si.nPos = 0;
-        si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
-    } else {
-        si.nPos = dm->GetViewPort().x;
-        si.nMin = 0;
-        si.nMax = canvas.dx - 1;
-        si.nPage = viewPort.dx;
-    }
-    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
-    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
-
-    if (viewPort.dy >= canvas.dy) {
-        si.nPos = 0;
-        si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
-    } else {
-        si.nPos = dm->GetViewPort().y;
-        si.nMin = 0;
-        si.nMax = canvas.dy - 1;
-        si.nPage = viewPort.dy;
-
-        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
-            // keep the top/bottom 5% of the previous page visible after paging down/up
-            si.nPage = (UINT)(si.nPage * 0.95);
-            si.nMax -= viewPort.dy - si.nPage;
-        }
-    }
-    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
-    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
-}
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
@@ -938,7 +914,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
 
         case GID_TWOFINGERTAP:
             // Two-finger tap toggles fullscreen mode
-            OnMenuViewFullscreen(win);
+            OnMenuViewFullscreen(&win);
             break;
 
         case GID_PRESSANDTAP:
@@ -1366,7 +1342,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
     }
 }
 
-static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     // messages that don't require win
     switch (msg) {

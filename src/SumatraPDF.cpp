@@ -132,27 +132,14 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define MIN_WIN_DX 480
 #define MIN_WIN_DY 320
 
-#define REPAINT_TIMER_ID            1
-#define REPAINT_MESSAGE_DELAY_IN_MS 1000
-
-#define HIDE_CURSOR_TIMER_ID        3
-#define HIDE_CURSOR_DELAY_IN_MS     3000
-
-#define AUTO_RELOAD_TIMER_ID        5
-#define AUTO_RELOAD_DELAY_IN_MS     100
-
-#define AUTO_RELOAD_RETRY_TIMER_ID  6
-#define AUTO_RELOAD_RETRY_DELAY_IN_MS 1000
-
-#define EBOOK_LAYOUT_TIMER_ID       7
-
 Vec<WindowInfo*>             gWindows;
 FileHistory                  gFileHistory;
 Favorites                    gFavorites;
 
-static HCURSOR                      gCursorDrag;
-static HBITMAP                      gBitmapReloadingCue;
-static RenderCache                  gRenderCache;
+HBITMAP                      gBitmapReloadingCue;
+RenderCache                  gRenderCache;
+HCURSOR                      gCursorDrag;
+
 static bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
@@ -175,8 +162,6 @@ static void EnterFullScreen(WindowInfo& win, bool presentation=false);
 static void ExitFullScreen(WindowInfo& win);
 static bool SidebarSplitterCb(void *ctx, bool done);
 static bool FavSplitterCb(void *ctx, bool done);
-// in Canvas.cpp
-static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 bool HasPermission(int permission)
 {
@@ -695,26 +680,6 @@ static void RebuildMenuBarForAllWindows()
     }
 }
 
-class ControllerCallbackHandler : public ControllerCallback {
-    WindowInfo *win;
-
-public:
-    ControllerCallbackHandler(WindowInfo *win) : win(win) { }
-    virtual ~ControllerCallbackHandler() { }
-
-    virtual void Repaint() { win->RepaintAsync(); }
-    virtual void PageNoChanged(int pageNo);
-    virtual void UpdateScrollbars(SizeI canvas);
-    virtual void RequestRendering(int pageNo);
-    virtual void CleanUp(DisplayModel *dm);
-    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb);
-    virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
-    virtual void FocusFrame(bool always);
-    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
-    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data);
-    virtual void RequestDelayedLayout(int delay);
-};
-
 static bool ShouldSaveThumbnail(DisplayState& ds)
 {
     // don't create thumbnails if we won't be needing them at all
@@ -746,6 +711,26 @@ public:
         tnCb = NULL;
         delete this;
     }
+};
+
+class ControllerCallbackHandler : public ControllerCallback {
+    WindowInfo *win;
+
+public:
+    ControllerCallbackHandler(WindowInfo *win) : win(win) { }
+    virtual ~ControllerCallbackHandler() { }
+
+    virtual void Repaint() { win->RepaintAsync(); }
+    virtual void PageNoChanged(int pageNo);
+    virtual void UpdateScrollbars(SizeI canvas);
+    virtual void RequestRendering(int pageNo);
+    virtual void CleanUp(DisplayModel *dm);
+    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb);
+    virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
+    virtual void FocusFrame(bool always);
+    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
+    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data);
+    virtual void RequestDelayedLayout(int delay);
 };
 
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb)
@@ -913,6 +898,52 @@ LoadEngineInFixedPageUI:
     }
 
     return ctrl;
+}
+
+void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
+{
+    CrashIf(!win->AsFixed());
+    DisplayModel *dm = win->AsFixed();
+
+    SCROLLINFO si = { 0 };
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+
+    SizeI viewPort = dm->GetViewPort().Size();
+
+    if (viewPort.dx >= canvas.dx) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->GetViewPort().x;
+        si.nMin = 0;
+        si.nMax = canvas.dx - 1;
+        si.nPage = viewPort.dx;
+    }
+    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
+    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
+
+    if (viewPort.dy >= canvas.dy) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->GetViewPort().y;
+        si.nMin = 0;
+        si.nMax = canvas.dy - 1;
+        si.nPage = viewPort.dy;
+
+        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
+            // keep the top/bottom 5% of the previous page visible after paging down/up
+            si.nPage = (UINT)(si.nPage * 0.95);
+            si.nMax -= viewPort.dy - si.nPage;
+        }
+    }
+    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
+    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
 // meaning of the internal values of LoadArgs:
@@ -1715,7 +1746,7 @@ static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasurementUni
     return str::Format(L"%s x %s %s", xPos, yPos, unitName);
 }
 
-static void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd)
+void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd)
 {
     static MeasurementUnit unit = Unit_pt;
     // toggle measurement unit by repeatedly invoking the helper
@@ -1813,7 +1844,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-static void OnDropFiles(HDROP hDrop, bool dragFinish)
+void OnDropFiles(HDROP hDrop, bool dragFinish)
 {
     WCHAR       filePath[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
@@ -2906,10 +2937,6 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     LoadDocument(args);
 }
 
-// scrolls half a page down/up (needed for Shift+Up/Down)
-#define SB_HPAGEUP   (WM_USER + 1)
-#define SB_HPAGEDOWN (WM_USER + 2)
-
 static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebarDx=-1)
 {
     ClientRect rc(win->hwndFrame);
@@ -3316,23 +3343,23 @@ static void ExitFullScreen(WindowInfo& win)
         RelayoutFrame(&win);
 }
 
-static void OnMenuViewFullscreen(WindowInfo& win, bool presentation=false)
+void OnMenuViewFullscreen(WindowInfo* win, bool presentation)
 {
-    bool enterFullScreen = presentation ? !win.presentation : !win.isFullScreen;
+    bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
-    if (!win.presentation && !win.isFullScreen)
-        RememberDefaultWindowPosition(win);
+    if (!win->presentation && !win->isFullScreen)
+        RememberDefaultWindowPosition(*win);
     else
-        ExitFullScreen(win);
+        ExitFullScreen(*win);
 
-    if (enterFullScreen && (!presentation || win.IsDocLoaded()))
-        EnterFullScreen(win, presentation);
+    if (enterFullScreen && (!presentation || win->IsDocLoaded()))
+        EnterFullScreen(*win, presentation);
 }
 
 static void OnMenuViewPresentation(WindowInfo& win)
 {
     // only DisplayModel currently supports an actual presentation mode
-    OnMenuViewFullscreen(win, win.AsFixed() != NULL);
+    OnMenuViewFullscreen(&win, win.AsFixed() != NULL);
 }
 
 void AdvanceFocus(WindowInfo* win)
@@ -3542,7 +3569,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
         else if (gGlobalPrefs->escToExit)
             CloseWindow(&win, true);
         else if (win.isFullScreen)
-            OnMenuViewFullscreen(win);
+            OnMenuViewFullscreen(&win);
         else if (win.showSelection)
             ClearSearchResult(&win);
         else if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER))
@@ -4048,7 +4075,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_FULLSCREEN:
-            OnMenuViewFullscreen(*win);
+            OnMenuViewFullscreen(win);
             break;
 
         case IDM_VIEW_ROTATE_LEFT:
@@ -4242,9 +4269,9 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
 
 // TODO: shared with Canvas.cpp - figure out better way of interaction
 // these can be global, as the mouse wheel can't affect more than one window at once
-static int  gDeltaPerLine = 0;         // for mouse wheel logic
-static bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
-static bool gSuppressAltKey = false;   // set after scrolling horizontally (to prevent the menu from getting the focus)
+int  gDeltaPerLine = 0;         // for mouse wheel logic
+bool gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
+bool gSuppressAltKey = false;   // set after scrolling horizontally (to prevent the menu from getting the focus)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -4507,9 +4534,6 @@ void CrashHandlerMessage()
             LaunchBrowser(CRASH_REPORT_URL);
     }
 }
-
-// TODO: make this stand-alone
-#include "Canvas.cpp"
 
 // TODO: a hackish but cheap way to separate startup code.
 // Could be made to compile stand-alone
