@@ -141,11 +141,8 @@ HBITMAP                      gBitmapReloadingCue;
 RenderCache                  gRenderCache;
 HCURSOR                      gCursorDrag;
 
-// TODO: shared with Canvas.cpp - figure out better way of interaction
-// these can be global, as the mouse wheel can't affect more than one window at once
-int                          gDeltaPerLine = 0;         // for mouse wheel logic
-bool                         gWheelMsgRedirect = false; // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
-bool                         gSuppressAltKey = false;   // set after scrolling horizontally (to prevent the menu from getting the focus)
+// set after mouse shortcuts involving the Alt key (so that the menu bar isn't activated)
+bool                         gSuppressAltKey = false;
 
 static bool                         gCrashOnOpen = false;
 
@@ -4256,10 +4253,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
 
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    WindowInfo *    win;
-    ULONG           ulScrollLines;                   // for mouse wheel logic
-
-    win = FindWindowInfoByHwnd(hwnd);
+    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
 
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;
@@ -4369,15 +4363,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         case WM_SETTINGCHANGE:
 InitMouseWheelInfo:
-            SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
-            // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
-            // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
-            if (ulScrollLines == (ULONG)-1)
-                gDeltaPerLine = -1;
-            else if (ulScrollLines != 0)
-                gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
-            else
-                gDeltaPerLine = 0;
+            UpdateDeltaPerLine();
 
             if (win) {
                 // in tablets it's possible to rotate the screen. if we're

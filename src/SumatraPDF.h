@@ -100,8 +100,6 @@ extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
 extern RenderCache              gRenderCache;
 extern bool                     gShowFrameRate;
-extern bool                     gWheelMsgRedirect;
-extern int                      gDeltaPerLine;
 extern bool                     gSuppressAltKey;
 extern HBITMAP                  gBitmapReloadingCue;
 extern HCURSOR                  gCursorDrag;

@@ -28,6 +28,25 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+// these can be global, as the mouse wheel can't affect more than one window at once
+static int gDeltaPerLine = 0;
+// set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
+static bool gWheelMsgRedirect = false;
+
+void UpdateDeltaPerLine()
+{
+    ULONG ulScrollLines;
+    SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
+    // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
+    // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
+    if (ulScrollLines == (ULONG)-1)
+        gDeltaPerLine = -1;
+    else if (ulScrollLines != 0)
+        gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
+    else
+        gDeltaPerLine = 0;
+}
+
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
