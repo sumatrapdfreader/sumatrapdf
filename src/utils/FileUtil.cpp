@@ -164,9 +164,7 @@ bool IsSame(const WCHAR *path1, const WCHAR *path2)
     if (handle1 != INVALID_HANDLE_VALUE && handle2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
         if (GetFileInformationByHandle(handle1, &fi1) && GetFileInformationByHandle(handle2, &fi2)) {
-            isSame = fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber &&
-                     fi1.nFileIndexHigh == fi2.nFileIndexHigh &&
-                     fi1.nFileIndexLow == fi2.nFileIndexLow;
+            isSame = memeq(&fi1, &fi2, sizeof(BY_HANDLE_FILE_INFORMATION));
             needFallback = false;
         }
     }
@@ -180,9 +178,7 @@ bool IsSame(const WCHAR *path1, const WCHAR *path2)
     ScopedMem<WCHAR> npath1(Normalize(path1));
     ScopedMem<WCHAR> npath2(Normalize(path2));
     // consider the files different, if their paths can't be normalized
-    if (!npath1 || !npath2)
-        return false;
-    return str::EqI(npath1, npath2);
+    return npath1 && str::EqI(npath1, npath2);
 }
 
 bool HasVariableDriveLetter(const WCHAR *path)
