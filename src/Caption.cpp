@@ -519,7 +519,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
-        if (TRUE == dwm::DefWindowProc_(hwnd, msg, wParam, lParam, &res)) {
+        if (dwm::DefWindowProc_(hwnd, msg, wParam, lParam, &res)) {
             *callDef = false;
             return res;
         }
@@ -801,8 +801,7 @@ static GetThemeColorProc _GetThemeColor = NULL;
 
 void Initialize()
 {
-    static bool funcsLoaded = false;
-    if (funcsLoaded)
+    if (gFuncsLoaded)
         return;
 
     HMODULE h = SafeLoadLibrary(L"UxTheme.dll");
@@ -815,7 +814,7 @@ void Initialize()
     Load(GetThemeColor);
 #undef Load
 
-    funcsLoaded = true;
+    gFuncsLoaded = true;
 }
 
 HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
@@ -883,8 +882,7 @@ static DwmGetWindowAttributeProc _DwmGetWindowAttribute = NULL;
 
 void Initialize()
 {
-    static bool funcsLoaded = false;
-    if (funcsLoaded)
+    if (gFuncsLoaded)
         return;
 
     HMODULE h = SafeLoadLibrary(L"Dwmapi.dll");
@@ -895,7 +893,7 @@ void Initialize()
     Load(DwmGetWindowAttribute);
 #undef Load
 
-    funcsLoaded = true;
+    gFuncsLoaded = true;
 }
 
 BOOL IsCompositionEnabled()

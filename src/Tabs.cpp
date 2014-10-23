@@ -942,6 +942,11 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
 {
     if (set == win->tabsInTitlebar)
         return;
+    if (set) {
+        // make sure to load Dwmapi.dll before WndProcFrame -> CustomCaptionFrameProc ->
+        // dwm::DefWindowProc_ -> dwm::Initialize might produce an infinite loop
+        dwm::Initialize();
+    }
     win->tabsInTitlebar = set;
     TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
     tab->inTitlebar = set;
