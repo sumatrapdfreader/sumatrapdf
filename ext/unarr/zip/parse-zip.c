@@ -13,61 +13,33 @@ static inline uint64_t uint64le(unsigned char *data) { return (uint64_t)uint32le
 
 bool zip_seek_to_compressed_data(ar_archive_zip *zip)
 {
-    uint8_t data[30];
+    struct zip_entry entry;
 
     if (!ar_seek(zip->super.stream, zip->entry.offset, SEEK_SET))
         return false;
-    if (ar_read(zip->super.stream, data, sizeof(data)) != sizeof(data))
+    if (!zip_parse_local_file_entry(zip, &entry))
         return false;
-    if (uint32le(data + 0) != SIG_LOCAL_FILE_HEADER)
-        return false;
-    if (uint16le(data + 8) != zip->entry.method) {
-        warn("Compression methods don't match: %d != %d", zip->entry.method, uint16le(data + 8));
+    if (zip->entry.method != entry.method) {
+        warn("Compression methods don't match: %d != %d", zip->entry.method, entry.method);
         if (!zip->entry.method)
-            zip->entry.method = uint16le(data + 8);
+            zip->entry.method = entry.method;
     }
-    if (uint32le(data + 10) != zip->entry.dosdate) {
+    if (zip->entry.dosdate != entry.dosdate) {
         warn("Timestamps don't match");
         if (!zip->entry.dosdate) {
-            zip->entry.dosdate = uint32le(data + 10);
+            zip->entry.dosdate = entry.dosdate;
             zip->super.entry_filetime = ar_conv_dosdate_to_filetime(zip->entry.dosdate);
         }
     }
-    /* skip filename and extra field */
-    if (!ar_skip(zip->super.stream, uint16le(data + 26) + uint16le(data + 28)))
-        return false;
 
-    return true;
+    return ar_seek(zip->super.stream, zip->entry.offset + ZIP_LOCAL_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen, SEEK_SET);
 }
 
-bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry)
+static bool zip_parse_extra_fields(ar_archive_zip *zip, struct zip_entry *entry)
 {
-    uint8_t data[ZIP_DIR_ENTRY_FIXED_SIZE];
     uint8_t *extra;
     uint16_t idx;
 
-    if (ar_read(zip->super.stream, data, sizeof(data)) != sizeof(data))
-        return false;
-
-    entry->signature = uint32le(data + 0);
-    entry->version = uint16le(data + 4);
-    entry->min_version = uint16le(data + 6);
-    entry->flags = uint16le(data + 8);
-    entry->method = uint16le(data + 10);
-    entry->dosdate = uint32le(data + 12);
-    entry->crc = uint32le(data + 16);
-    entry->datasize = uint32le(data + 20);
-    entry->uncompressed = uint32le(data + 24);
-    entry->namelen = uint16le(data + 28);
-    entry->extralen = uint16le(data + 30);
-    entry->commentlen = uint16le(data + 32);
-    entry->disk = uint16le(data + 34);
-    entry->attr_internal = uint16le(data + 36);
-    entry->attr_external = uint32le(data + 38);
-    entry->header_offset = uint32le(data + 42);
-
-    if (entry->signature != SIG_CENTRAL_DIRECTORY)
-        return false;
     if (!entry->extralen)
         return true;
 
@@ -105,6 +77,83 @@ bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry)
     free(extra);
 
     return true;
+}
+
+bool zip_parse_local_file_entry(ar_archive_zip *zip, struct zip_entry *entry)
+{
+    uint8_t data[ZIP_LOCAL_ENTRY_FIXED_SIZE];
+
+    if (ar_read(zip->super.stream, data, sizeof(data)) != sizeof(data))
+        return false;
+
+    memset(entry, 0, sizeof(*entry));
+    entry->signature = uint32le(data + 0);
+    entry->version = uint16le(data + 4);
+    entry->flags = uint16le(data + 6);
+    entry->method = uint16le(data + 8);
+    entry->dosdate = uint32le(data + 10);
+    entry->crc = uint32le(data + 14);
+    entry->datasize = uint32le(data + 18);
+    entry->uncompressed = uint32le(data + 22);
+    entry->namelen = uint16le(data + 26);
+    entry->extralen = uint16le(data + 28);
+
+    if (entry->signature != SIG_LOCAL_FILE_HEADER)
+        return false;
+
+    return zip_parse_extra_fields(zip, entry);
+}
+
+off64_t zip_find_next_local_file_entry(ar_stream *stream, off64_t offset)
+{
+    uint8_t data[512];
+    int count, i;
+
+    if (!ar_seek(stream, offset, SEEK_SET))
+        return false;
+    count = (int)ar_read(stream, data, sizeof(data));
+
+    while (count >= ZIP_LOCAL_ENTRY_FIXED_SIZE) {
+        for (i = 0; i < count - 4; i++) {
+            if (uint32le(data + i) == SIG_LOCAL_FILE_HEADER)
+                return offset + i;
+        }
+        memmove(data, data + count - 4, count);
+        offset += count - 4;
+        count = (int)ar_read(stream, data + 4, sizeof(data) - 4) + 4;
+    }
+
+    return -1;
+}
+
+bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry)
+{
+    uint8_t data[ZIP_DIR_ENTRY_FIXED_SIZE];
+
+    if (ar_read(zip->super.stream, data, sizeof(data)) != sizeof(data))
+        return false;
+
+    entry->signature = uint32le(data + 0);
+    entry->version = uint16le(data + 4);
+    entry->min_version = uint16le(data + 6);
+    entry->flags = uint16le(data + 8);
+    entry->method = uint16le(data + 10);
+    entry->dosdate = uint32le(data + 12);
+    entry->crc = uint32le(data + 16);
+    entry->datasize = uint32le(data + 20);
+    entry->uncompressed = uint32le(data + 24);
+    entry->namelen = uint16le(data + 28);
+    entry->extralen = uint16le(data + 30);
+    entry->commentlen = uint16le(data + 32);
+    entry->disk = uint16le(data + 34);
+    entry->attr_internal = uint16le(data + 36);
+    entry->attr_external = uint32le(data + 38);
+    entry->header_offset = uint32le(data + 42);
+
+    if (entry->signature != SIG_CENTRAL_DIRECTORY)
+        return false;
+
+    return zip_parse_extra_fields(zip, entry);
 }
 
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd)
@@ -205,12 +254,22 @@ const char *zip_get_name(ar_archive *ar)
         struct zip_entry entry;
         char *name;
 
-        if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
-            return NULL;
-        if (!zip_parse_directory_entry(zip, &entry))
-            return NULL;
-        if (!ar_seek(ar->stream, ar->entry_offset + ZIP_DIR_ENTRY_FIXED_SIZE, SEEK_SET))
-            return NULL;
+        if (zip->dir.seen_count > 0) {
+            if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
+                return NULL;
+            if (!zip_parse_directory_entry(zip, &entry))
+                return NULL;
+            if (!ar_seek(ar->stream, ar->entry_offset + ZIP_DIR_ENTRY_FIXED_SIZE, SEEK_SET))
+                return NULL;
+        }
+        else {
+            if (!ar_seek(ar->stream, zip->entry.offset, SEEK_SET))
+                return NULL;
+            if (!zip_parse_local_file_entry(zip, &entry))
+                return NULL;
+            if (!ar_seek(ar->stream, ar->entry_offset + ZIP_LOCAL_ENTRY_FIXED_SIZE, SEEK_SET))
+                return NULL;
+        }
 
         name = malloc(entry.namelen + 1);
         if (!name || ar_read(ar->stream, name, entry.namelen) != entry.namelen) {

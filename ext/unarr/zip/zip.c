@@ -10,6 +10,49 @@ static void zip_close(ar_archive *ar)
     zip_clear_uncompress(&zip->uncomp);
 }
 
+static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
+{
+    ar_archive_zip *zip = (ar_archive_zip *)ar;
+    struct zip_entry entry;
+
+    offset = zip_find_next_local_file_entry(ar->stream, offset);
+    if (offset < 0) {
+        ar->at_eof = true;
+        return false;
+    }
+    if (!ar_seek(ar->stream, offset, SEEK_SET)) {
+        warn("Couldn't seek to offset %" PRIi64, offset);
+        return false;
+    }
+    if (!zip_parse_local_file_entry(zip, &entry))
+        return false;
+
+    ar->entry_offset = offset;
+    ar->entry_offset_next = offset + ZIP_LOCAL_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + (off64_t)entry.datasize;
+    ar->entry_size_uncompressed = (size_t)entry.uncompressed;
+    ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
+
+    zip->entry.offset = offset;
+    zip->entry.method = entry.method;
+    zip->entry.flags = entry.flags;
+    zip->entry.crc = entry.crc;
+    free(zip->entry.name);
+    zip->entry.name = NULL;
+    zip->entry.dosdate = entry.dosdate;
+
+    zip->progress.crc = 0;
+    zip->progress.bytes_done = 0;
+    zip->progress.data_left = (size_t)entry.datasize;
+    zip_clear_uncompress(&zip->uncomp);
+
+    if (entry.datasize == 0 && zip_get_name(ar) && zip->entry.name[entry.namelen - 1] == '/') {
+        log("Skipping directory entry \"%s\"", zip->entry.name);
+        return zip_parse_local_entry(ar, ar->entry_offset_next);
+    }
+
+    return true;
+}
+
 static bool zip_parse_entry(ar_archive *ar, off64_t offset)
 {
     ar_archive_zip *zip = (ar_archive_zip *)ar;
@@ -24,6 +67,12 @@ static bool zip_parse_entry(ar_archive *ar, off64_t offset)
         return false;
     }
     if (!zip_parse_directory_entry(zip, &entry)) {
+        if (zip->dir.seen_count == 0) {
+            warn("Couldn't read first directory entry @%" PRIi64 ", trying to work around...", offset);
+            ar->parse_entry = zip_parse_local_entry;
+            ar->entry_offset_first = 0;
+            return zip_parse_local_entry(ar, 0);
+        }
         warn("Couldn't read directory entry number %" PRIu64 " @%" PRIi64, zip->dir.seen_count + 1, offset);
         return false;
     }

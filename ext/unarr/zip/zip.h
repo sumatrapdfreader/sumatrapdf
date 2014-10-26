@@ -34,6 +34,7 @@ enum compression_method {
     METHOD_PPMD = 98,
 };
 
+#define ZIP_LOCAL_ENTRY_FIXED_SIZE 30
 #define ZIP_DIR_ENTRY_FIXED_SIZE 46
 
 struct zip_entry {
@@ -78,6 +79,8 @@ struct ar_archive_zip_entry {
 };
 
 bool zip_seek_to_compressed_data(ar_archive_zip *zip);
+bool zip_parse_local_file_entry(ar_archive_zip *zip, struct zip_entry *entry);
+off64_t zip_find_next_local_file_entry(ar_stream *stream, off64_t offset);
 bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry);
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd);
 off64_t zip_find_end_of_central_directory(ar_stream *stream);
