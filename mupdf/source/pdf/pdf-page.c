@@ -155,7 +155,8 @@ pdf_count_pages_before_kid(pdf_document *doc, pdf_obj *parent, int kid_num)
 		{
 			pdf_obj *count = pdf_dict_gets(kid, "Count");
 			int n = pdf_to_int(count);
-			if (count == NULL || n <= 0)
+			/* SumatraPDF: tolerate nodes with /Count 0 /Kids [ ] */
+			if (!pdf_is_int(count) || n < 0)
 				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "illegal or missing count in pages tree");
 			total += n;
 		}
