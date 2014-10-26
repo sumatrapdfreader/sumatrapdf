@@ -3,8 +3,8 @@
 
 /* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/LZSS.h */
 
-#ifndef common_lzss_h
-#define common_lzss_h
+#ifndef rar_lzss_h
+#define rar_lzss_h
 
 #include <stdlib.h>
 #include <stdint.h>
