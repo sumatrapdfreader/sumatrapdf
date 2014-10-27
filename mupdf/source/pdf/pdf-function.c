@@ -988,6 +988,11 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 
 	stream = pdf_open_stream(doc, num, gen);
 
+	/* SumatraPDF: fix memory leak */
+	fz_var(stream);
+	fz_try(ctx)
+	{
+
 	/* read samples */
 	for (i = 0; i < samplecount; i++)
 	{
@@ -996,7 +1001,6 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 
 		if (fz_is_eof_bits(stream))
 		{
-			fz_close(stream);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated sample function stream");
 		}
 
@@ -1026,14 +1030,23 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 			s = x / 4294967295.0f;
 			break;
 		default:
-			fz_close(stream);
 			fz_throw(ctx, FZ_ERROR_GENERIC, "sample stream bit depth %d unsupported", bps);
 		}
 
 		func->u.sa.samples[i] = s;
 	}
 
+	}
+	fz_always(ctx)
+	{
+
 	fz_close(stream);
+
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 static float
