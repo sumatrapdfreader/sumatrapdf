@@ -17,7 +17,10 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
 
     offset = zip_find_next_local_file_entry(ar->stream, offset);
     if (offset < 0) {
-        ar->at_eof = true;
+        if (ar->entry_offset_next > 0)
+            ar->at_eof = true;
+        else
+            warn("Work around failed, no entries found in this file");
         return false;
     }
     if (!ar_seek(ar->stream, offset, SEEK_SET)) {
@@ -49,6 +52,8 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
         log("Skipping directory entry \"%s\"", zip->entry.name);
         return zip_parse_local_entry(ar, ar->entry_offset_next);
     }
+    if ((entry.datasize == 0 || entry.uncompressed == 0) && (entry.flags & (1 << 3)))
+        warn("Reporting file with deferred size as empty (data descriptor isn't supported)");
 
     return true;
 }
@@ -70,7 +75,7 @@ static bool zip_parse_entry(ar_archive *ar, off64_t offset)
         if (zip->dir.seen_count == 0) {
             warn("Couldn't read first directory entry @%" PRIi64 ", trying to work around...", offset);
             ar->parse_entry = zip_parse_local_entry;
-            ar->entry_offset_first = 0;
+            ar->entry_offset_first = ar->entry_offset_next = 0;
             return zip_parse_local_entry(ar, 0);
         }
         warn("Couldn't read directory entry number %" PRIu64 " @%" PRIi64, zip->dir.seen_count + 1, offset);
