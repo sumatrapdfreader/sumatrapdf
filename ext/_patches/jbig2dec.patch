@@ -1,0 +1,37 @@
+diff -rPu5 jbig2dec.orig\jbig2_arith.c jbig2dec\jbig2_arith.c
+--- jbig2dec.orig\jbig2_arith.c	Fri Jan 17 21:17:09 2014
++++ jbig2dec\jbig2_arith.c	Mon Oct 27 22:33:29 2014
+@@ -380,11 +380,12 @@
+ }
+ 
+ int
+ jbig2_arith_get_offset(Jbig2ArithState *as)
+ {
+-  return as->offset;
++  /* SumatraPDF: take unconsumed bytes into account (except for the terminating marker) */
++  return as->offset - (as->next_word_bytes > 2 ? as->next_word_bytes : 0);
+ }
+ 
+ #ifdef TEST
+ 
+ static int
+diff -rPu5 jbig2dec.orig\jbig2_metadata.c jbig2dec\jbig2_metadata.c
+--- jbig2dec.orig\jbig2_metadata.c	Tue Jan 14 08:11:54 2014
++++ jbig2dec\jbig2_metadata.c	Tue Sep 30 15:03:28 2014
+@@ -132,14 +132,14 @@
+         return -1;
+     }
+     /* loop over the segment data pulling out the key,value pairs */
+     while (s < end && *s) {
+         key = s;
+-        value = memchr(key, '0', end - key);
++        value = memchr(key, '\0', end - key);
+         if (!value) goto too_short;
+         value++;
+-        s = memchr(value, '0', end - value);
++        s = memchr(value, '\0', end - value);
+         if (!s) goto too_short;
+         s++;
+         jbig2_metadata_add(ctx, comment, key, value - key, value, s - value);
+         jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
+             "'%s'\t'%s'", key, value);

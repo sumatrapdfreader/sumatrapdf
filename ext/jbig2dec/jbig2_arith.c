@@ -382,7 +382,8 @@ jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx)
 int
 jbig2_arith_get_offset(Jbig2ArithState *as)
 {
-  return as->offset;
+  /* SumatraPDF: take unconsumed bytes into account (except for the terminating marker) */
+  return as->offset - (as->next_word_bytes > 2 ? as->next_word_bytes : 0);
 }
 
 #ifdef TEST
