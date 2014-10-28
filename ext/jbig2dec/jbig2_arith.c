@@ -379,11 +379,11 @@ jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx)
     }
 }
 
-int
-jbig2_arith_get_offset(Jbig2ArithState *as)
+/* SumatraPDF: returns true if the end of the data stream has been reached (for sanity checks) */
+bool
+jbig2_arith_has_reached_marker(Jbig2ArithState *as)
 {
-  /* SumatraPDF: take unconsumed bytes into account (except for the terminating marker) */
-  return as->offset - (as->next_word_bytes > 2 ? as->next_word_bytes : 0);
+  return as->next_word_bytes == 2 && (as->next_word >> 16) > 0xFF8F;
 }
 
 #ifdef TEST

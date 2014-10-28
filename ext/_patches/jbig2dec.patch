@@ -1,20 +1,40 @@
 diff -rPu5 jbig2dec.orig\jbig2_arith.c jbig2dec\jbig2_arith.c
 --- jbig2dec.orig\jbig2_arith.c	Fri Jan 17 21:17:09 2014
-+++ jbig2dec\jbig2_arith.c	Mon Oct 27 22:33:29 2014
-@@ -380,11 +380,12 @@
++++ jbig2dec\jbig2_arith.c	Tue Oct 28 14:43:53 2014
+@@ -377,14 +377,15 @@
+ 	return -1;
+       return D;
+     }
  }
  
- int
- jbig2_arith_get_offset(Jbig2ArithState *as)
+-int
+-jbig2_arith_get_offset(Jbig2ArithState *as)
++/* SumatraPDF: returns true if the end of the data stream has been reached (for sanity checks) */
++bool
++jbig2_arith_has_reached_marker(Jbig2ArithState *as)
  {
 -  return as->offset;
-+  /* SumatraPDF: take unconsumed bytes into account (except for the terminating marker) */
-+  return as->offset - (as->next_word_bytes > 2 ? as->next_word_bytes : 0);
++  return as->next_word_bytes == 2 && (as->next_word >> 16) > 0xFF8F;
  }
  
  #ifdef TEST
  
  static int
+diff -rPu5 jbig2dec.orig\jbig2_arith.h jbig2dec\jbig2_arith.h
+--- jbig2dec.orig\jbig2_arith.h	Fri Jan 17 21:17:09 2014
++++ jbig2dec\jbig2_arith.h	Tue Oct 28 14:44:04 2014
+@@ -31,8 +31,8 @@
+ 
+ /* decode a bit */
+ bool
+ jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx);
+ 
+-/* return the state's offset (for sanity checks) */
+-int
+-jbig2_arith_get_offset(Jbig2ArithState *as);
++/* SumatraPDF: returns true if the end of the data stream has been reached (for sanity checks) */
++bool
++jbig2_arith_has_reached_marker(Jbig2ArithState *as);
 diff -rPu5 jbig2dec.orig\jbig2_metadata.c jbig2dec\jbig2_metadata.c
 --- jbig2dec.orig\jbig2_metadata.c	Tue Jan 14 08:11:54 2014
 +++ jbig2dec\jbig2_metadata.c	Tue Sep 30 15:03:28 2014
@@ -35,3 +55,19 @@ diff -rPu5 jbig2dec.orig\jbig2_metadata.c jbig2dec\jbig2_metadata.c
          jbig2_metadata_add(ctx, comment, key, value - key, value, s - value);
          jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
              "'%s'\t'%s'", key, value);
+diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
+--- jbig2dec.orig\jbig2_symbol_dict.c	Fri Jan 17 21:17:09 2014
++++ jbig2dec\jbig2_symbol_dict.c	Tue Oct 28 14:44:14 2014
+@@ -359,11 +359,11 @@
+       if (code != 0) {
+ 	jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+ 	  "error or OOB decoding height class delta (%d)\n", code);
+       }
+ 
+-      if (!params->SDHUFF && jbig2_arith_get_offset(as) >= size) {
++      if (!params->SDHUFF && jbig2_arith_has_reached_marker(as)) {
+           code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+               "prevent DOS while decoding height classes");
+           goto cleanup2;
+       }
+ 
