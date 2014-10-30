@@ -156,6 +156,25 @@ bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry)
     return zip_parse_extra_fields(zip, entry);
 }
 
+off64_t zip_find_end_of_last_directory_entry(ar_stream *stream, struct zip_eocd64 *eocd)
+{
+    uint8_t data[ZIP_DIR_ENTRY_FIXED_SIZE];
+    uint64_t i;
+
+    if (!ar_seek(stream, eocd->dir_offset, SEEK_SET))
+        return 0;
+    for (i = 0; i < eocd->numentries; i++) {
+        if (ar_read(stream, data, sizeof(data)) != sizeof(data))
+            return 0;
+        if (uint32le(data + 0) != SIG_CENTRAL_DIRECTORY)
+            return 0;
+        if (!ar_skip(stream, uint16le(data + 28) + uint16le(data + 30) + uint16le(data + 32)))
+            return 0;
+    }
+
+    return ar_tell(stream);
+}
+
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd)
 {
     uint8_t data[56];
@@ -254,7 +273,7 @@ const char *zip_get_name(ar_archive *ar)
         struct zip_entry entry;
         char *name;
 
-        if (zip->dir.seen_count > 0) {
+        if (zip->dir.end_offset) {
             if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
                 return NULL;
             if (!zip_parse_directory_entry(zip, &entry))

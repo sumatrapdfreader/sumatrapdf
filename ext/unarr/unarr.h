@@ -1,8 +1,6 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
-/* this is the public API of unarr; see main.c for an example of how to use it */
-
 #ifndef unarr_h
 #define unarr_h
 
@@ -57,7 +55,7 @@ bool ar_parse_entry_for(ar_archive *ar, const char *entry_name);
 /* returns whether the last ar_parse_entry call has reached the file's expected end */
 bool ar_at_eof(ar_archive *ar);
 
-/* returns the name of the current entry as UTF-8 string; this pointer is only valid until the next call to ar_parse_entry */
+/* returns the name of the current entry as UTF-8 string; this pointer is only valid until the next call to ar_parse_entry; returns NULL on failure */
 const char *ar_entry_get_name(ar_archive *ar);
 /* returns the stream offset of the current entry for use with ar_parse_entry_at */
 off64_t ar_entry_get_offset(ar_archive *ar);

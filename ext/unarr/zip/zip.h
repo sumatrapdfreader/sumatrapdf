@@ -82,6 +82,7 @@ bool zip_seek_to_compressed_data(ar_archive_zip *zip);
 bool zip_parse_local_file_entry(ar_archive_zip *zip, struct zip_entry *entry);
 off64_t zip_find_next_local_file_entry(ar_stream *stream, off64_t offset);
 bool zip_parse_directory_entry(ar_archive_zip *zip, struct zip_entry *entry);
+off64_t zip_find_end_of_last_directory_entry(ar_stream *stream, struct zip_eocd64 *eocd);
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd);
 off64_t zip_find_end_of_central_directory(ar_stream *stream);
 const char *zip_get_name(ar_archive *ar);
@@ -139,9 +140,7 @@ void zip_clear_uncompress(struct ar_archive_zip_uncomp *uncomp);
 
 struct ar_archive_zip_dir {
     /* off64_t offset; // use ar_archive::entry_offset_first */
-    uint64_t length;
-    off64_t seen_last_end_offset;
-    uint64_t seen_count;
+    off64_t end_offset;
 };
 
 struct ar_archive_zip_progress {

@@ -44,10 +44,14 @@ void ZipFileAlloc::ExtractFilenames()
         return;
     while (ar_parse_entry(ar)) {
         const char *nameUtf8 = ar_entry_get_name(ar);
-        int len = MultiByteToWideChar(CP_UTF8, 0, nameUtf8, -1, NULL, 0);
-        WCHAR *name = Allocator::Alloc<WCHAR>(allocator, len);
-        str::Utf8ToWcharBuf(nameUtf8, str::Len(nameUtf8), name, len);
-        filenames.Append(name);
+        if (nameUtf8) {
+            int len = MultiByteToWideChar(CP_UTF8, 0, nameUtf8, -1, NULL, 0);
+            WCHAR *name = Allocator::Alloc<WCHAR>(allocator, len);
+            str::Utf8ToWcharBuf(nameUtf8, str::Len(nameUtf8), name, len);
+            filenames.Append(name);
+        }
+        else
+            filenames.Append(NULL);
         filepos.Append(ar_entry_get_offset(ar));
     }
 }

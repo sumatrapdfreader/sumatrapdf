@@ -17,7 +17,7 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
 
     offset = zip_find_next_local_file_entry(ar->stream, offset);
     if (offset < 0) {
-        if (ar->entry_offset_next > 0)
+        if (ar->entry_offset_next)
             ar->at_eof = true;
         else
             warn("Work around failed, no entries found in this file");
@@ -48,12 +48,14 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
     zip->progress.data_left = (size_t)entry.datasize;
     zip_clear_uncompress(&zip->uncomp);
 
-    if (entry.datasize == 0 && zip_get_name(ar) && zip->entry.name[strlen(zip->entry.name) - 1] == '/') {
+    if (entry.datasize == 0 && ar_entry_get_name(ar) && zip->entry.name[strlen(zip->entry.name) - 1] == '/') {
         log("Skipping directory entry \"%s\"", zip->entry.name);
         return zip_parse_local_entry(ar, ar->entry_offset_next);
     }
-    if ((entry.datasize == 0 || entry.uncompressed == 0) && (entry.flags & (1 << 3)))
-        warn("Reporting file with deferred size as empty (data descriptor isn't supported)");
+    if (entry.datasize == 0 && entry.uncompressed == 0 && (entry.flags & (1 << 3))) {
+        warn("Deferring sizes to data descriptor isn't supported");
+        ar->entry_size_uncompressed = 1;
+    }
 
     return true;
 }
@@ -63,7 +65,7 @@ static bool zip_parse_entry(ar_archive *ar, off64_t offset)
     ar_archive_zip *zip = (ar_archive_zip *)ar;
     struct zip_entry entry;
 
-    if (zip->dir.seen_count == zip->dir.length && offset >= zip->dir.seen_last_end_offset) {
+    if (offset >= zip->dir.end_offset) {
         ar->at_eof = true;
         return false;
     }
@@ -72,13 +74,7 @@ static bool zip_parse_entry(ar_archive *ar, off64_t offset)
         return false;
     }
     if (!zip_parse_directory_entry(zip, &entry)) {
-        if (zip->dir.seen_count == 0) {
-            warn("Couldn't read first directory entry @%" PRIi64 ", trying to work around...", offset);
-            ar->parse_entry = zip_parse_local_entry;
-            ar->entry_offset_first = ar->entry_offset_next = 0;
-            return zip_parse_local_entry(ar, 0);
-        }
-        warn("Couldn't read directory entry number %" PRIu64 " @%" PRIi64, zip->dir.seen_count + 1, offset);
+        warn("Couldn't read directory entry @%" PRIi64, offset);
         return false;
     }
 
@@ -86,11 +82,6 @@ static bool zip_parse_entry(ar_archive *ar, off64_t offset)
     ar->entry_offset_next = offset + ZIP_DIR_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + entry.commentlen;
     ar->entry_size_uncompressed = (size_t)entry.uncompressed;
     ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
-
-    if (ar->entry_offset_next > zip->dir.seen_last_end_offset) {
-        zip->dir.seen_last_end_offset = ar->entry_offset_next;
-        zip->dir.seen_count++;
-    }
 
     zip->entry.offset = entry.header_offset;
     zip->entry.method = entry.method;
@@ -137,7 +128,7 @@ static bool zip_uncompress(ar_archive *ar, void *buffer, size_t count)
             return false;
         }
         if (!zip_seek_to_compressed_data(zip)) {
-            warn("Couldn't find data for file %s", ar_entry_get_name(ar));
+            warn("Couldn't find data for file");
             return false;
         }
     }
@@ -203,7 +194,12 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly)
         return NULL;
 
     zip = (ar_archive_zip *)ar;
-    zip->dir.length = eocd.numentries;
+    zip->dir.end_offset = zip_find_end_of_last_directory_entry(stream, &eocd);
+    if (!zip->dir.end_offset) {
+        warn("Couldn't read central directory @%" PRIi64 ", trying to work around...", eocd.dir_offset);
+        ar->parse_entry = zip_parse_local_entry;
+        ar->entry_offset_first = ar->entry_offset_next = 0;
+    }
     zip->deflatedonly = deflatedonly;
     zip->comment_offset = offset + 22;
     zip->comment_size = eocd.commentlen;

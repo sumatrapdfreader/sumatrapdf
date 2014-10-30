@@ -54,7 +54,11 @@ static bool _7z_parse_entry(ar_archive *ar, off64_t offset)
     ar_archive_7z *_7z = (ar_archive_7z *)ar;
     const CSzFileItem *item = _7z->data.db.Files + offset;
 
-    if (offset >= _7z->data.db.NumFiles) {
+    if (offset < 0 || offset > _7z->data.db.NumFiles) {
+        warn("Offsets must be between 0 and %u", _7z->data.db.NumFiles);
+        return false;
+    }
+    if (offset == _7z->data.db.NumFiles) {
         ar->at_eof = true;
         return false;
     }

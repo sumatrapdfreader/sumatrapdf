@@ -25,7 +25,10 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
         return;
     while (ar_parse_entry(ar)) {
         const char *name = ar_entry_get_name(ar);
-        filenames.Append(str::conv::FromUtf8(name));
+        if (name)
+            filenames.Append(str::conv::FromUtf8(name));
+        else
+            filenames.Append(NULL);
         filepos.Append(ar_entry_get_offset(ar));
     }
     // extract (further) filenames with fallback in derived class constructor

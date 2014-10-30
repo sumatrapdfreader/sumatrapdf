@@ -1,6 +1,9 @@
 /* Copyright 2014 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
+/* demonstration of most of the public unarr API:
+   parses and decompresses an archive into memory (integrity test) */
+
 #include "unarr.h"
 
 #include <stdio.h>
@@ -41,15 +44,15 @@ int main(int argc, char *argv[])
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    FailIf(argc < 2, "Syntax: %s <filename.ext>", argv[0]);
+    FailIf(argc != 2, "Syntax: %s <filename.ext>", argv[0]);
 
     stream = ar_open_file(argv[1]);
     FailIf(!stream, "Error: File \"%s\" not found!", argv[1]);
 
-    ar = ar_open_any_archive(stream, strrchr(argv[1], '.'));
-    FailIf(!ar, "Error: File \"%s\" is no valid RAR, ZIP, 7Z or TAR archive!", argv[1]);
-
     printf("Parsing \"%s\":\n", argv[1]);
+    ar = ar_open_any_archive(stream, strrchr(argv[1], '.'));
+    FailIf(!ar, "Error: No valid RAR, ZIP, 7Z or TAR archive!", argv[1]);
+
     while (ar_parse_entry(ar)) {
         size_t size = ar_entry_get_size(ar);
         printf("%02d. %s (@%" PRIi64 ")\n", entry_count++, ar_entry_get_name(ar), ar_entry_get_offset(ar));
