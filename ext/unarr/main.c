@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     printf("Parsing \"%s\":\n", argv[1]);
     ar = ar_open_any_archive(stream, strrchr(argv[1], '.'));
-    FailIf(!ar, "Error: No valid RAR, ZIP, 7Z or TAR archive!", argv[1]);
+    FailIf(!ar, "Error: No valid %s archive!", "RAR, ZIP, 7Z or TAR");
 
     while (ar_parse_entry(ar)) {
         size_t size = ar_entry_get_size(ar);
