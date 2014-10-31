@@ -33,6 +33,6 @@ jbig2_arith_new (Jbig2Ctx *ctx, Jbig2WordStream *ws);
 bool
 jbig2_arith_decode (Jbig2ArithState *as, Jbig2ArithCx *pcx);
 
-/* SumatraPDF: returns true if the end of the data stream has been reached (for sanity checks) */
+/* returns true if the end of the data stream has been reached (for sanity checks) */
 bool
 jbig2_arith_has_reached_marker(Jbig2ArithState *as);

@@ -27,7 +27,10 @@
 #define NAN (INFINITY-INFINITY)
 #endif
 
+#ifndef DEFINED_ULONG
+#define DEFINED_ULONG
 typedef unsigned long ulong;
+#endif
 
 enum { NSIGNIF	= 9 };
 
@@ -36,8 +39,8 @@ enum { NSIGNIF	= 9 };
  */
 static float pows10[] =
 {
-	1e0,	1e1,	1e2,	1e3,	1e4,	1e5,	1e6,	1e7,	1e8,	1e9,
-	1e10,	1e11f,	1e12f,	1e13f,	1e14f,	1e15f,	1e16f,	1e17f,	1e18f,	1e19f,
+	1e0f,	1e1f,	1e2f,	1e3f,	1e4f,	1e5f,	1e6f,	1e7f,	1e8f,	1e9f,
+	1e10f,	1e11f,	1e12f,	1e13f,	1e14f,	1e15f,	1e16f,	1e17f,	1e18f,	1e19f,
 	1e20f,	1e21f,	1e22f,	1e23f,	1e24f,	1e25f,	1e26f,	1e27f,	1e28f,	1e29f,
 	1e30f,	1e31f,	1e32f,	1e33f,	1e34f,	1e35f,	1e36f,	1e37f,	1e38f
 };

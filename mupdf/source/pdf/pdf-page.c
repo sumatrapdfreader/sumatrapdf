@@ -64,22 +64,7 @@ pdf_lookup_page_loc_imp(pdf_document *doc, pdf_obj *node, int *skip, pdf_obj **p
 			{
 				pdf_obj *kid = pdf_array_get(kids, i);
 				char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
-				if (!strcmp(type, "Page") || (!*type && pdf_dict_gets(kid, "MediaBox")))
-				{
-tolerate_broken_page_tree:
-					if (*skip == 0)
-					{
-						if (parentp) *parentp = node;
-						if (indexp) *indexp = i;
-						hit = kid;
-						break;
-					}
-					else
-					{
-						(*skip)--;
-					}
-				}
-				else if (!strcmp(type, "Pages") || (!*type && pdf_dict_gets(kid, "Kids")))
+				if (*type ? !strcmp(type, "Pages") : pdf_dict_gets(kid, "Kids") && !pdf_dict_gets(kid, "MediaBox"))
 				{
 					int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
 					if (*skip < count)
@@ -94,10 +79,19 @@ tolerate_broken_page_tree:
 				}
 				else
 				{
-					/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2582 */
-					/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2608 */
-					fz_warn(ctx, "non-page object in page tree (%s)", type);
-					goto tolerate_broken_page_tree;
+					if (*type ? strcmp(type, "Page") != 0 : !pdf_dict_gets(kid, "MediaBox"))
+						fz_warn(ctx, "non-page object in page tree (%s)", type);
+					if (*skip == 0)
+					{
+						if (parentp) *parentp = node;
+						if (indexp) *indexp = i;
+						hit = kid;
+						break;
+					}
+					else
+					{
+						(*skip)--;
+					}
 				}
 			}
 		}
@@ -155,7 +149,6 @@ pdf_count_pages_before_kid(pdf_document *doc, pdf_obj *parent, int kid_num)
 		{
 			pdf_obj *count = pdf_dict_gets(kid, "Count");
 			int n = pdf_to_int(count);
-			/* SumatraPDF: tolerate nodes with /Count 0 /Kids [ ] */
 			if (!pdf_is_int(count) || n < 0)
 				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "illegal or missing count in pages tree");
 			total += n;

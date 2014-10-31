@@ -918,6 +918,8 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 	int bps;
 	int i;
 
+	fz_var(stream);
+
 	func->u.sa.samples = NULL;
 
 	obj = pdf_dict_gets(dict, "Size");
@@ -988,60 +990,52 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 
 	stream = pdf_open_stream(doc, num, gen);
 
-	/* SumatraPDF: fix memory leak */
-	fz_var(stream);
 	fz_try(ctx)
 	{
-
-	/* read samples */
-	for (i = 0; i < samplecount; i++)
-	{
-		unsigned int x;
-		float s;
-
-		if (fz_is_eof_bits(stream))
+		/* read samples */
+		for (i = 0; i < samplecount; i++)
 		{
-			fz_throw(ctx, FZ_ERROR_GENERIC, "truncated sample function stream");
+			unsigned int x;
+			float s;
+	
+			if (fz_is_eof_bits(stream))
+				fz_throw(ctx, FZ_ERROR_GENERIC, "truncated sample function stream");
+	
+			switch (bps)
+			{
+			case 1: s = fz_read_bits(stream, 1); break;
+			case 2: s = fz_read_bits(stream, 2) / 3.0f; break;
+			case 4: s = fz_read_bits(stream, 4) / 15.0f; break;
+			case 8: s = fz_read_byte(stream) / 255.0f; break;
+			case 12: s = fz_read_bits(stream, 12) / 4095.0f; break;
+			case 16:
+				x = fz_read_byte(stream) << 8;
+				x |= fz_read_byte(stream);
+				s = x / 65535.0f;
+				break;
+			case 24:
+				x = fz_read_byte(stream) << 16;
+				x |= fz_read_byte(stream) << 8;
+				x |= fz_read_byte(stream);
+				s = x / 16777215.0f;
+				break;
+			case 32:
+				x = fz_read_byte(stream) << 24;
+				x |= fz_read_byte(stream) << 16;
+				x |= fz_read_byte(stream) << 8;
+				x |= fz_read_byte(stream);
+				s = x / 4294967295.0f;
+				break;
+			default:
+				fz_throw(ctx, FZ_ERROR_GENERIC, "sample stream bit depth %d unsupported", bps);
+			}
+	
+			func->u.sa.samples[i] = s;
 		}
-
-		switch (bps)
-		{
-		case 1: s = fz_read_bits(stream, 1); break;
-		case 2: s = fz_read_bits(stream, 2) / 3.0f; break;
-		case 4: s = fz_read_bits(stream, 4) / 15.0f; break;
-		case 8: s = fz_read_byte(stream) / 255.0f; break;
-		case 12: s = fz_read_bits(stream, 12) / 4095.0f; break;
-		case 16:
-			x = fz_read_byte(stream) << 8;
-			x |= fz_read_byte(stream);
-			s = x / 65535.0f;
-			break;
-		case 24:
-			x = fz_read_byte(stream) << 16;
-			x |= fz_read_byte(stream) << 8;
-			x |= fz_read_byte(stream);
-			s = x / 16777215.0f;
-			break;
-		case 32:
-			x = fz_read_byte(stream) << 24;
-			x |= fz_read_byte(stream) << 16;
-			x |= fz_read_byte(stream) << 8;
-			x |= fz_read_byte(stream);
-			s = x / 4294967295.0f;
-			break;
-		default:
-			fz_throw(ctx, FZ_ERROR_GENERIC, "sample stream bit depth %d unsupported", bps);
-		}
-
-		func->u.sa.samples[i] = s;
-	}
-
 	}
 	fz_always(ctx)
 	{
-
-	fz_close(stream);
-
+		fz_close(stream);
 	}
 	fz_catch(ctx)
 	{

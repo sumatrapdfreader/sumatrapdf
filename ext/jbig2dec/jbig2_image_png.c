@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <png.h>
+#include <pngstruct.h>
+#define CVT_PTR(ptr) (ptr)
 
 #include "jbig2.h"
 #include "jbig2_priv.h"
