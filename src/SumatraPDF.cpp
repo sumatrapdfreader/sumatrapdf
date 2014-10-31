@@ -1944,11 +1944,11 @@ bool AutoUpdateInitiate(const char *updateData)
 
     ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
     HttpReq req(exeUrl);
-    if (req.error)
+    if (req.rsp.error || req.rsp.httpStatusCode != 200)
         return false;
 
     unsigned char digest[32];
-    CalcSHA2Digest((const unsigned char *)req.data->Get(), req.data->Size(), digest);
+    CalcSHA2Digest((const unsigned char *)req.rsp.data.Get(), req.rsp.data.Size(), digest);
     ScopedMem<char> fingerPrint(_MemToHex(&digest));
     if (!str::EqI(fingerPrint, hash))
         return false;
@@ -1966,7 +1966,7 @@ bool AutoUpdateInitiate(const char *updateData)
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteAll(updateExe, req.data->Get(), req.data->Size());
+    bool ok = file::WriteAll(updateExe, req.rsp.data.Get(), req.rsp.data.Size());
     if (!ok)
         return false;
 
@@ -2026,7 +2026,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     size_t pubkeyLen;
     const char *pubkey = LoadTextResource(IDD_PUBLIC_APP_KEY, &pubkeyLen);
     CrashIf(!pubkey);
-    bool ok = VerifySHA1Signature(ctx->data->Get(), ctx->data->Size(), NULL, pubkey, pubkeyLen);
+    bool ok = VerifySHA1Signature(data->Get(), data->Size(), NULL, pubkey, pubkeyLen);
     if (!ok)
         return ERROR_INTERNET_SEC_CERT_ERRORS;
 #endif
@@ -2069,7 +2069,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     }
     if (IDYES == res) {
 #ifdef SUPPORTS_AUTO_UPDATE
-        if (AutoUpdateInitiate(ctx->data->Get()))
+        if (AutoUpdateInitiate(data->Get()))
             return 0;
 #endif
         LaunchBrowser(SVN_UPDATE_LINK);
