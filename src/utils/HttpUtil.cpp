@@ -11,43 +11,57 @@
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 #define USER_AGENT L"BaseHTTP"
 
-// returns ERROR_SUCCESS or an error code
-DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut)
+bool HttpRspOk(HttpRsp* rsp)
 {
-    DWORD error = ERROR_SUCCESS;
-    DWORD dwRead = 0;
-    DWORD flags = 0;
+    return (rsp->error == ERROR_SUCCESS) && (rsp->httpStatusCode == 200);
+}
 
-    HINTERNET hFile = NULL;
+// returns false if failed to download or status code is not 200
+// for other scenarios, check HttpRsp
+bool  HttpGet(const WCHAR *url, HttpRsp *rspOut)
+{
+    HINTERNET hReq = NULL;
+
+    rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Error;
 
-    flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
-    hFile = InternetOpenUrl(hInet, url, NULL, 0, flags, 0);
-    if (!hFile)
+    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
+    hReq = InternetOpenUrl(hInet, url, NULL, 0, flags, 0);
+    if (!hReq)
         goto Error;
 
-    do {
+    DWORD headerBuffSize = sizeof(DWORD);
+    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &rspOut->httpStatusCode, &headerBuffSize, NULL)) {
+        goto Error;
+    }
+
+    for (;;) {
         char buf[1024];
-        if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
+        DWORD dwRead = 0;
+        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
             goto Error;
-        bool ok = dataOut->AppendChecked(buf, dwRead);
+        }
+        if (0 == dwRead) {
+            break;
+        }
+        bool ok = rspOut->data.AppendChecked(buf, dwRead);
         if (!ok)
             goto Error;
-    } while (dwRead > 0);
+    }
 
 Exit:
-    if (hFile)
-        InternetCloseHandle(hFile);
+    if (hReq)
+        InternetCloseHandle(hReq);
     if (hInet)
         InternetCloseHandle(hInet);
-    return error;
+    return HttpRspOk(rspOut);
 
 Error:
-    error = GetLastError();
-    if (!error)
-        error = ERROR_GEN_FAILURE;
+    rspOut->error = GetLastError();
+    if (0 == rspOut->error)
+        rspOut->error = ERROR_GEN_FAILURE;
     goto Exit;
 }
 
@@ -55,7 +69,7 @@ Error:
 bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
 {
     bool ok = false;
-    HINTERNET hFile = NULL, hInet = NULL;
+    HINTERNET  hReq = NULL, hInet = NULL;
     DWORD dwRead = 0;
     char buf[1024];
 
@@ -68,16 +82,24 @@ bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
     if (!hInet)
         goto Exit;
 
-    hFile = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
-    if (!hFile)
+    hReq = InternetOpenUrl(hInet, url, NULL, 0, 0, 0);
+    if (!hReq)
         goto Exit;
 
+    DWORD headerBuffSize = sizeof(DWORD);
+    DWORD statusCode = 0;
+    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &headerBuffSize, NULL)) {
+        goto Exit;
+    }
+    if (statusCode != 200) {
+        goto Exit;
+    }
+
     for (;;) {
-        if (!InternetReadFile(hFile, buf, sizeof(buf), &dwRead))
+        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))
             goto Exit;
         if (dwRead == 0)
             break;
-
         DWORD size;
         BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, NULL);
         if (!wroteOk)
@@ -90,8 +112,8 @@ bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
     ok = true;
 Exit:
     CloseHandle(hf);
-    if (hFile)
-        InternetCloseHandle(hFile);
+    if (hReq)
+        InternetCloseHandle(hReq);
     if (hInet)
         InternetCloseHandle(hInet);
     if (!ok)
@@ -178,25 +200,25 @@ Exit:
 DWORD WINAPI HttpReq::DownloadThread(LPVOID data)
 {
     HttpReq *req = (HttpReq *)data;
-    req->error = HttpGet(req->url, req->data);
+    HttpGet(req->url, &req->rsp);
     req->callback->Callback(req);
     return 0;
 }
 
 HttpReq::HttpReq(const WCHAR *url, HttpReqCallback *callback) :
-    thread(NULL), callback(callback), error(0),
-    url(str::Dup(url)), data(new str::Str<char>(256))
+    thread(NULL), callback(callback),
+    url(str::Dup(url))
 {
     assert(url);
+
     if (callback)
         thread = CreateThread(NULL, 0, DownloadThread, this, 0, 0);
     else
-        error = HttpGet(url, data);
+        HttpGet(url, &rsp);
 }
 
 HttpReq::~HttpReq()
 {
     CloseHandle(thread);
     free(url);
-    delete data;
 }

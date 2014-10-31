@@ -4,8 +4,16 @@
 #ifndef HttpUtil_h
 #define HttpUtil_h
 
+struct HttpRsp {
+    str::Str<char>  data;
+    DWORD           error;
+    DWORD           httpStatusCode;
+};
+
+bool HttpRspOk(HttpRsp*);
+
 bool  HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data);
-DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut);
+bool  HttpGet(const WCHAR *url, HttpRsp *rspOut);
 bool  HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath);
 
 class HttpReqCallback;
@@ -19,8 +27,7 @@ class HttpReq {
 
 public:
     WCHAR *         url;
-    str::Str<char> *data;
-    DWORD           error;
+    HttpRsp         rsp;
 
     explicit HttpReq(const WCHAR *url, HttpReqCallback *callback=NULL);
     ~HttpReq();

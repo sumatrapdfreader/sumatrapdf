@@ -2005,18 +2005,21 @@ Portable [
 
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 {
-    if (ctx->error)
-        return ctx->error;
+    if (ctx->rsp.error)
+        return ctx->rsp.error;
+    if (ctx->rsp.httpStatusCode != 200)
+        return ERROR_INTERNET_INVALID_URL;
     if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
-    if (0 == ctx->data->Size())
+    str::Str<char> *data = &ctx->rsp.data;
+    if (0 == data->Size())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
     // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
     // our query. Make sure to check whether the returned data is sane.
-    if (!str::StartsWith(ctx->data->Get(), '[' == ctx->data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
+    if (!str::StartsWith(data->Get(), '[' == data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
         return ERROR_INTERNET_LOGIN_FAILURE;
 
 #ifdef HAS_PUBLIC_APP_KEY
@@ -2028,7 +2031,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
         return ERROR_INTERNET_SEC_CERT_ERRORS;
 #endif
 
-    SquareTree tree(ctx->data->Get());
+    SquareTree tree(data->Get());
     SquareTreeNode *node = tree.root ? tree.root->GetChild("SumatraPDF") : NULL;
     const char *latest = node ? node->GetValue("Latest") : NULL;
     if (!latest || !IsValidProgramVersion(latest))
