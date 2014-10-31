@@ -1944,7 +1944,7 @@ bool AutoUpdateInitiate(const char *updateData)
 
     ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
     HttpReq req(exeUrl);
-    if (req.rsp.error || req.rsp.httpStatusCode != 200)
+    if (!HttpRspOk(&req.rsp))
         return false;
 
     unsigned char digest[32];

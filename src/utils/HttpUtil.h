@@ -10,7 +10,7 @@ struct HttpRsp {
     DWORD           httpStatusCode;
 };
 
-bool HttpRspOk(HttpRsp*);
+bool HttpRspOk(const HttpRsp*);
 
 bool  HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data);
 bool  HttpGet(const WCHAR *url, HttpRsp *rspOut);
