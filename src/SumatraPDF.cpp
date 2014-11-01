@@ -1725,7 +1725,7 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
     }
 }
 
-enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in, Unit_max = Unit_in };
+enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in };
 
 static WCHAR *FormatCursorPosition(BaseEngine *engine, PointD pt, MeasurementUnit unit)
 {
@@ -1755,12 +1755,8 @@ void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wn
     static MeasurementUnit unit = Unit_pt;
     // toggle measurement unit by repeatedly invoking the helper
     if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
-        int newUnit = ((int)unit + 1) % (int)Unit_max;
-        unit = (MeasurementUnit)newUnit;
-    }
-
-    if (!wnd) {
-        wnd =  win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
+        unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
+        wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     }
 
     CrashIf(!win->AsFixed());
