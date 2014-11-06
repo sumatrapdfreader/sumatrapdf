@@ -963,7 +963,7 @@ const char * gTranslations_hu =
   "SumatraPDF telep\303\255t\303\251se a k\303\266vetkez\305\221 &k\303\266nyvt\303\241rba:\0"\
   "Telep\303\255t\303\251s sikertelen!\0"\
   "Telep\303\255t\303\251s folyamatban...\0"\
-  "\0"\
+  "Hagyja a PDF b\303\266ng\303\251sz\305\221 be\303\251p\303\274l\305\221t telep\303\255tve (m\303\241r nem t\303\241mogatott)\0"\
   "Hagyja a Windows Desktop Search-re a PDF dokumentumok keres\303\251s\303\251t\0"\
   "Hagyja a Windows-ra a PDF dokumentumok el\305\221n\303\251zet\303\251nek megjelen\303\255t\303\251s\303\251t\0"\
   "A(z) %s bez\303\241r\303\241sa sz\303\274ks\303\251ges a folytat\303\241shoz!\0"\

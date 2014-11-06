@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6bb0650b52c2e298d6672c83f1a621011452287d
+690645402ae473ac4ac1f1eceb5ab7c361a63134
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2956,6 +2956,7 @@ fi:Ikkuna
 fr:F&enêtre
 he:&חלון
 hr:P&rozor
+hu:&Ablak
 id:&Jendela
 it:&Finestra
 ja:ウィンドウ(&W)
@@ -2967,6 +2968,8 @@ pt:&Janela
 ru:&Окно
 sk:&Okno
 sl:&Okno
+sp-rs:P&rozor
+sr-rs:П&розор
 sv:Fönster
 tr:&Pencere
 uk:&Вікно
@@ -3127,7 +3130,7 @@ he:(מתוך %d)
 hi:(का %d)
 hr:(od %d)
 hu:(a %d-ból)
-id:(atau %d)
+id:(dari %d)
 it:(di %d)
 ja:(%d 中)
 ka:(დან %d)
@@ -4473,7 +4476,7 @@ he:Bytes
 hi:बाइट्स
 hr:Bajtova
 hu:bájt
-id:Bytes
+id:Byte
 it:Byte
 ja:バイト
 ka:ბაიტი
@@ -6524,6 +6527,7 @@ fi:Kohdistimen sijainti:
 fr:Position du curseur :
 he:מיקום סמן:
 hr:Pozicija pokazivača:
+hu:Kurzor pozíció:
 id:Posisi kursor:
 it:Posizione cursore
 ja:カーソル位置：
@@ -7175,7 +7179,7 @@ he:הכנס ססמה
 hi:पहचान शब्द भरें
 hr:Unesi lozinku
 hu:Írja be a jelszót
-id:Masukkan kata kunci
+id:Masukkan kata sandi
 it:Inserisci password
 ja:パスワードの入力
 ka:შეიყვანეთ პაროლი
@@ -7243,7 +7247,7 @@ he:הכנס ססמה ל- %s
 hi:%s के लिए पहचान शब्द भरें
 hr:Unesi lozinku za %s
 hu:Írja be a(z) %s jelszavát
-id:Masukkan kata kunci untuk %s
+id:Masukkan kata sandi untuk %s
 it:Inserisci password per %s
 ja:%s のパスワードを入力します
 ka:შეიყვანეთ პაროლი %s-ისთვის
@@ -9193,7 +9197,7 @@ he:גופנים:
 hi:अक्षर का आकर
 hr:Fontovi:
 hu:Betűk:
-id:Huruf
+id:Huruf:
 it:Font:
 ja:フォント:
 kr:글꼴:
@@ -10078,6 +10082,7 @@ fi:Pidä PDF-selainlaajennus asennettuna (ei enää tuettu)
 fr:Conserver le plugin pour navigateur (plus de support)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
+hu:Hagyja a PDF böngésző beépülőt telepítve (már nem támogatott)
 id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
 it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
@@ -11021,7 +11026,7 @@ he:מספר עמודים:
 hi:पृषठ संख्या
 hr:Broj stranica:
 hu:Oldalak száma:
-id:Jumlah Halaman:
+id:Banyak Halaman:
 it:Numero pagine:
 ja:ページ数:
 ka:გვერდების რაოდენობა:
@@ -12371,6 +12376,7 @@ es:Documentos PalmDoc
 fr:Fichiers PalmDoc
 he:קובצי PalmDoc
 hr:PalmDoc dokumenti
+hu:PalmDoc dokumentumok
 id:Dokumen PalmDoc
 it:Documenti PalmDoc
 kr:PalmDoc 문서
@@ -12379,7 +12385,10 @@ nl:PalmDoc documenten
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
 ru:Документы PalmDoc
+sk:PalmDoc dokumenty
 sl:PalmDoc dokumenti
+sp-rs:PalmDoc dokumenti
+sr-rs:PalmDoc документи
 sv:PalmDoc dokument
 tr:PalmDoc belgeleri
 uk:Документи PalmDoc
@@ -12573,7 +12582,7 @@ he:מצגת\tCtrl+L
 hi:&प्रस्तुति\tCtrl+L
 hr:Pr&ezentacija\tCtrl+L
 hu:Bemutató\tCtrl+L
-id:Presentasi\tCtrl+L
+id:Pr&esentasi\tF5
 it:Pr&esentazione\t<Ctrl>+L
 ja:プレゼンテーション(&E)\tCtrl+L
 ka:წარმოდგ&ენა\tCtrl+L
@@ -12807,7 +12816,7 @@ he:טווח הדפסה
 hi:छपाई सीमा
 hr:Ispiši raspon
 hu:Nyomtatási tartomány
-id:Kisaran cetakan
+id:Rentang cetakan
 it:Stampa intervallo
 ja:印刷範囲
 ka:ბეჭდვის დიაპაზონი
@@ -14004,6 +14013,7 @@ fi:Valinta:
 fr:Sélection :
 he:בחירה:
 hr:Odabir:
+hu:Kijelölés:
 id:Seleksi:
 it:Selezione
 ja:Selection:
@@ -15072,7 +15082,7 @@ he:התוכנה SumatraPDF קרסה.
 hi:Sumatra पीडीएफ दुर्घटनाग्रस्त हो गया
 hr:SumatraPDF se srušio
 hu:SumatraPDF működése leállt
-id:SumatraPDF gagal
+id:SumatraPDF berhenti berfungsi
 it:SumatraPDF ha incontrato un errore irreparabile
 ja:SumatraPDF がクラッシュしました
 ka:SumatraPDF-ის მუშაობა ავარიულად დასრულდა
@@ -15919,6 +15929,7 @@ fi:Käytä välilehtiä
 fr:Utiliser les ongle&ts
 he:השתמש בלשוניות
 hr:Koristi &kartice
+hu:Fülek használata
 id:Gunakan &tab
 it:Usa &schede
 ja:タブを使う(&t)

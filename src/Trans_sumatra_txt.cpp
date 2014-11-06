@@ -6262,7 +6262,7 @@ const char * gTranslations_hu =
   "Verzi\303\263 kihagy\303\241sa\0"\
   "Eredeti oldalm\303\251ret haszn\303\241lata\0"\
   "&N\303\251zet\0"\
-  "\0"\
+  "&Ablak\0"\
   "&Igen\0"\
   "&Nagy\303\255t\303\241s\0"\
   "(a %d-b\303\263l)\0"\
@@ -6310,7 +6310,7 @@ const char * gTranslations_hu =
   "Oldalfeldolgoz\303\241si hiba\0"\
   "K\303\251sz\303\274lt:\0"\
   "Jelenlegi f\303\241jl\0"\
-  "\0"\
+  "Kurzor poz\303\255ci\303\263:\0"\
   "... Egy\303\251ni m\303\251ret\tCtrl+Y\0"\
   "Oldalmegjelen\303\255t\303\251si m\303\263d:\0"\
   "Alap nagy\303\255t\303\241s:\0"\
@@ -6397,7 +6397,7 @@ const char * gTranslations_hu =
   "A(z) %u oldalsz\303\241m nem l\303\251tezik\0"\
   "Lapm\303\251rethez igaz\303\255t\303\241s\0"\
   "Oldal:\0"\
-  "\0"\
+  "PalmDoc dokumentumok\0"\
   "Feldolgoz\303\241s, k\303\251rem v\303\241rjon\0"\
   "Postscript f\303\241jlok\0"\
   "Bemutat\303\263\tCtrl+L\0"\
@@ -6424,7 +6424,7 @@ const char * gTranslations_hu =
   "&\303\226sszes kijel\303\266l\303\251se\0"\
   "\303\226sszes &kijel\303\266l\303\251se\tCtrl+A\0"\
   "Jel\303\266lje ki a m\303\241soland\303\263 r\303\251szt Ctrl+Bal eg\303\251rgombbal\0"\
-  "\0"\
+  "Kijel\303\266l\303\251s:\0"\
   "F\303\241jl k\303\274ld\303\251se &e-mail-ben\0"\
   "Ford\303\255tott keres\303\251s parancs\303\241nak be\303\241ll\303\255t\303\241sa\0"\
   "K\303\266nyvjelz\305\221k mutat\303\241sa\0"\
@@ -6447,7 +6447,7 @@ const char * gTranslations_hu =
   "Sz\303\266veges f\303\241jlok\0"\
   "C\303\255m:\0"\
   "Ismeretlen forr\303\241sf\303\241jl (%s)\0"\
-  "\0"\
+  "F\303\274lek haszn\303\241lata\0"\
   "Alap\303\251rtelmezett n\303\251zet\0"\
   "&Weboldal\0"\
   "Figyelmeztet\303\251s\0"\
@@ -6513,7 +6513,7 @@ const char * gTranslations_id =
   "&Jendela\0"\
   "&Ya\0"\
   "&Ukuran\0"\
-  "(atau %d)\0"\
+  "(dari %d)\0"\
   "(halaman %s)\0"\
   "Tentang SumatraPDF\0"\
   "Tambah Favorit\0"\
@@ -6534,7 +6534,7 @@ const char * gTranslations_id =
   "Jalan Pintas Markah\0"\
   "Jalan pintas markah ke halaman %s dari %s\0"\
   "Markah\0"\
-  "\0"\
+  "Byte\0"\
   "Dokumen CHM\0"\
   "Tidak bisa terhubung ke Internet (kesalahan %#x).\0"\
   "Batalkan\0"\
@@ -6569,8 +6569,8 @@ const char * gTranslations_id =
   "Unduh\0"\
   "&Keluar\tCtrl+Q\0"\
   "Dokumen EPUB\0"\
-  "Masukkan kata kunci\0"\
-  "Masukkan kata kunci untuk %s\0"\
+  "Masukkan kata sandi\0"\
+  "Masukkan kata sandi untuk %s\0"\
   "Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:\0"\
   "Kesalahan memuat %s\0"\
   "F&avorit\0"\
@@ -6598,7 +6598,7 @@ const char * gTranslations_id =
   "Sesuaikan Dengan Lebar\0"\
   "Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu\0"\
   "Sesuaikan Halaman Tunggal\0"\
-  "Huruf\0"\
+  "Huruf:\0"\
   "Memformat buku... %d halaman\0"\
   "Teks ditemukan pada halaman %s\0"\
   "Teks ditemukan pada halaman %s (lagi)\0"\
@@ -6622,7 +6622,7 @@ const char * gTranslations_id =
   "Tidak ditemukan hasil pada baris %u di dalam berkas %s\0"\
   "Tidak ada berkas sinkronisasi ditemukan\0"\
   "Tidak ada informasi sinkronisasi pada lokasi ini\0"\
-  "Jumlah Halaman:\0"\
+  "Banyak Halaman:\0"\
   "\0"\
   "Buka\0"\
   "Buka di PDF-&XChange\0"\
@@ -6648,11 +6648,11 @@ const char * gTranslations_id =
   "Dokumen PalmDoc\0"\
   "Harap tunggu - sedang proses rendering...\0"\
   "Dokumen Postscript\0"\
-  "Presentasi\tCtrl+L\0"\
+  "Pr&esentasi\tF5\0"\
   "Halaman Sebelumnya\0"\
   "Cetak\0"\
   "Cetak sebagai gambar (butuh lebih banyak memori)\0"\
-  "Kisaran cetakan\0"\
+  "Rentang cetakan\0"\
   "Printer dengan nama tersebut tidak ada\0"\
   "Dalam proses mencetak\0"\
   "Sedang dalam proses mencetak. Batalkan dan keluar?\0"\
@@ -6687,7 +6687,7 @@ const char * gTranslations_id =
   "Perihal:\0"\
   "Pengaturan SumatraPDF\0"\
   "Pembaruan SumatraPDF\0"\
-  "SumatraPDF gagal\0"\
+  "SumatraPDF berhenti berfungsi\0"\
   "SumatraPDF adalah pembaca berkas PDF utama Anda\0"\
   "SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda\0"\
   "Berkas sinkronisasi tidak dapat dibuka\0"\
@@ -10726,7 +10726,7 @@ const char * gTranslations_sr_rs =
   "\320\237\321\200\320\265\321\201\320\272\320\276\321\207\320\270 \320\276\320\262\321\203 \320\262\320\265\321\200\320\267\320\270\321\230\321\203\0"\
   "\320\243\320\277\320\276\321\202\321\200\320\265\320\261\320\270 \320\276\321\200\320\270\320\263\320\270\320\275\320\260\320\273\320\275\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\260\0"\
   "\320\237\321\200\320\270\320\272\320\260\320\267\0"\
-  "\0"\
+  "\320\237&\321\200\320\276\320\267\320\276\321\200\0"\
   "\320\224\320\260\0"\
   "\320\243\320\262\320\265\321\233\320\260\321\232\320\265\0"\
   "(\320\276\320\264 %d)\0"\
@@ -10861,7 +10861,7 @@ const char * gTranslations_sr_rs =
   "\320\241\321\202\321\200\320\260\320\275\320\270\321\206\320\260 \320\261\321\200\320\276\321\230 %u \320\275\320\265 \320\277\320\276\321\201\321\202\320\276\321\230\320\270\0"\
   "\320\237\320\276\320\264\320\265\321\210\320\260\320\262\320\260\321\232\320\265 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\265\0"\
   "\320\241\321\202\321\200\320\260\320\275\320\270\321\206\320\260:\0"\
-  "\0"\
+  "PalmDoc \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270\0"\
   "\320\241\320\277\321\200\320\265\320\274\320\260\321\232\320\265 \320\277\321\200\320\270\320\272\320\260\320\267\320\260...\0"\
   "Postscript \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\270\0"\
   "\320\237\321\200\320\265\320\267\320\265\320\275\321\202\320\260\321\206\320\270\321\230\320\260\tCtrl+L\0"\
@@ -10974,7 +10974,7 @@ const char * gTranslations_sp_rs =
   "Presko\304\215i ovu verziju\0"\
   "Upotrebi originalne veli\304\215ine stranica\0"\
   "Prikaz\0"\
-  "\0"\
+  "P&rozor\0"\
   "Da\0"\
   "Uve\304\207anje\0"\
   "(od %d)\0"\
@@ -11109,7 +11109,7 @@ const char * gTranslations_sp_rs =
   "Stranica broj %u ne postoji\0"\
   "Pode\305\241avanje veli\304\215ine stranice\0"\
   "Stranica:\0"\
-  "\0"\
+  "PalmDoc dokumenti\0"\
   "Spremanje prikaza...\0"\
   "Postscript dokumenti\0"\
   "Prezentacija\tCtrl+L\0"\
@@ -11357,7 +11357,7 @@ const char * gTranslations_sk =
   "\304\214\303\255slo strany %u neexistuje\0"\
   "Mierka strany\0"\
   "Strana:\0"\
-  "\0"\
+  "PalmDoc dokumenty\0"\
   "Pros\303\255m po\304\215kajte - zobrazovanie...\0"\
   "Postscript dokumenty\0"\
   "Pr&ezent\303\241cia\tCtrl+L\0"\
