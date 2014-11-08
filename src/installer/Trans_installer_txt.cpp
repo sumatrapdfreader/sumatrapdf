@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   47
+#define LANGS_COUNT   48
 #define STRINGS_COUNT 42
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1290,6 +1290,50 @@ const char * gTranslations_my =
   "Penyahpasangan sedang dijalankan ...\0"\
   "Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda\0";
 
+const char * gTranslations_no = 
+  "&Tillegg\0"\
+  "Vil du virkelig avinstallere SumatraPDF?\0"\
+  "Lukk\0"\
+  "Kunne ikke opprette en midlertidig mappe\0"\
+  "Kunne ikke opprette installasjonsmappen \0"\
+  "Kunne ikke installere PDF forh\303\245ndsvisning\0"\
+  "Kunne ikke installere PDF s\303\270kefilter\0"\
+  "Kunne ikke finne midlertidig mappe\0"\
+  "Kunne ikke fjerne installasjonsmappen\0"\
+  "Kunne ikke fjerne snarveien\0"\
+  "Kunne ikke avinstallere PDF forh\303\245ndsvisning\0"\
+  "Kunne ikke avinstallere PDF s\303\270kefilter\0"\
+  "Kunne ikke avinstallere nettlesertillegget\0"\
+  "Kunne ikke skrive %s til disk \0"\
+  "Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe\0"\
+  "Kan ikke opprette snarvei\0"\
+  "Kan ikke slette avinstalleringsn\303\270kler i Registeret\0"\
+  "Kan ikke lagre utvidet filtypeinformasjon i Registeret\0"\
+  "Kan ikke lagre avinstalleringsinformasjon i Registeret\0"\
+  "Skjule &Tillegg\0"\
+  "Installer SumatraPDF\0"\
+  "Installere SumatraPDF i &mappe:\0"\
+  "Feil ved installering!\0"\
+  "Installasjon p\303\245g\303\245r...\0"\
+  "Behold PDF &nettleser -tillegg installert (ingen support lenger)\0"\
+  "La Windows s\303\270kemotor &s\303\270ke PDF dokumenter\0"\
+  "La Windows vise &forh\303\245ndsvisning av PDF-dokumenter\0"\
+  "Vennligst lukk %s for \303\245 fortsette!\0"\
+  "Velg mappe der SumatraPDF skal installeres:\0"\
+  "Noen filer som skal installeres er skadet eller mangler\0"\
+  "\0"\
+  "SumatraPDF %s installering \0"\
+  "SumatraPDF %s avinstallering\0"\
+  "SumatraPDF har blitt avinstallert.\0"\
+  "SumatraPDF installering ikke funnet.\0"\
+  "Takk for at du valgte SumatraPDF!\0"\
+  "Takk! SumatraPDF har blitt installert.\0"\
+  "Installeringsprogrammet er defekt. Vennligst last det ned p\303\245 nytt. \nBeklager!\0"\
+  "Avinstaller SumatraPDF\0"\
+  "Feil ved avinstallering\0"\
+  "Avinstallering p\303\245g\303\245r...\0"\
+  "Bruk SumatraPDF som &standard PDF-leser\0";
+
 const char * gTranslations_fa = 
   "&\332\257\330\262\333\214\331\206\331\207\342\200\214\331\207\330\247\0"\
   "\330\242\333\214\330\247 \330\250\330\261\330\247\333\214 \331\276\330\247\332\251 \332\251\330\261\330\257\331\206 \330\250\330\261\331\206\330\247\331\205\331\207\342\200\214\333\214 \330\263\331\210\331\205\330\247\330\252\330\261\330\247 \331\276\333\214\342\200\214\330\257\333\214\342\200\214\330\247\331\201 \331\205\330\267\331\205\330\246\331\206 \331\207\330\263\330\252\333\214\330\257\330\237\0"\
@@ -2113,6 +2157,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ku, 
   gTranslations_mk, 
   gTranslations_my, 
+  gTranslations_no, 
   gTranslations_fa, 
   gTranslations_pl, 
   gTranslations_br, 
@@ -2165,6 +2210,7 @@ const char *gLangCodes =   "en\0" \
   "ku\0" \
   "mk\0" \
   "my\0" \
+  "no\0" \
   "fa\0" \
   "pl\0" \
   "br\0" \
@@ -2213,6 +2259,7 @@ const char *gLangNames =   "English\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
   "Malaysian (Bahasa Melayu)\0" \
+  "Norwegian (Norsk)\0" \
   "Persian (\331\201\330\247\330\261\330\263\333\214)\0" \
   "Polish (Polski)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
@@ -2273,6 +2320,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
   _LANGID(LANG_MACEDONIAN),
   _LANGID(LANG_MALAY),
+  MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
   _LANGID(LANG_FARSI),
   _LANGID(LANG_POLISH),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
@@ -2296,7 +2344,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (20 == idx) || (26 == idx) || (29 == idx);
+  return (2 == idx) || (20 == idx) || (26 == idx) || (30 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

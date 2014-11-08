@@ -3344,7 +3344,7 @@ const char * gTranslations_cz =
   "Vlastnosti dokumentu\0"\
   "St\303\241hnout\0"\
   "&Konec\tCtrl+Q\0"\
-  "EPUB dokumenty\0"\
+  "Dokumenty EPUB\0"\
   "Zadejte heslo\0"\
   "Zadejte heslo pro %s\0"\
   "Dvojit\303\251 kliknut\303\255 na PDF dokument vykon\303\241 zadan\303\275 p\305\231\303\255kazov\303\275 \305\231\303\241dek:\0"\
@@ -3353,7 +3353,7 @@ const char * gTranslations_cz =
   "V&p\305\231ed\tAlt+\305\240ipka vpravo\0"\
   "&Cel\303\241 obrazovka\tF11\0"\
   "Dvojstr\303\241nky\0"\
-  "Soubor se nepoda\305\231ilo p\305\231ejmenovat!\0"\
+  "P\305\231ejmenov\303\241n\303\255 souboru se nezda\305\231ilo!\0"\
   "Soubor se nepoda\305\231ilo ulo\305\276it\0"\
   "Rychl\303\251 zobrazov\303\241n\303\255 z webu\0"\
   "Obl\303\255ben\303\251 polo\305\276ky\0"\
@@ -3421,7 +3421,7 @@ const char * gTranslations_cz =
   "Str\303\241nka \304\215\303\255slo %u neexistuje\0"\
   "M\304\233\305\231\303\255tko str\303\241nky\0"\
   "Str\303\241nka:\0"\
-  "PalmDoc dokumenty\0"\
+  "Dokumenty PalmDoc\0"\
   "Pros\303\255m \304\215ekejte, prob\303\255h\303\241 vykreslov\303\241n\303\255...\0"\
   "Dokumenty PostScript\0"\
   "Pr&ezentace\tF5\0"\
@@ -8945,7 +8945,7 @@ const char * gTranslations_ne =
 const char * gTranslations_no = 
   "&Om\0"\
   "Fak&tisk st\303\270rrelse\tCtrl+1\0"\
-  "\0"\
+  "&Avanserte tilleggsfunksjoner\0"\
   "&Alle valgte sider\0"\
   "Tilbake\tAlt+Pil venstre\0"\
   "&Bokvisning\tCtrl+8\0"\
@@ -8990,7 +8990,7 @@ const char * gTranslations_no =
   "&Ignorer denne versjonen\0"\
   "&Benytt opprinnelige sidest\303\270rrelser\0"\
   "&Vis\0"\
-  "\0"\
+  "&Vindu\0"\
   "&Ja\0"\
   "\0"\
   "(av %d)\0"\
@@ -9038,7 +9038,7 @@ const char * gTranslations_no =
   "Kunne ikke vise siden\0"\
   "Opprettet:\0"\
   "Gjeldende fil\0"\
-  "\0"\
+  "Skrivemerkeposisjon:\0"\
   "&Egendefinert zoom...\tCtrl+Y\0"\
   "Standard sideoppsett:\0"\
   "Standard&zoom:\0"\
@@ -9107,7 +9107,7 @@ const char * gTranslations_no =
   "\303\205pne\0"\
   "\303\205pne i PDF-XChange\0"\
   "\303\205pne et dokument...\0"\
-  "\0"\
+  "\303\205pne i %s\0"\
   "\303\205pne i &Adobe Reader\0"\
   "\303\205pne i &Foxit Reader\0"\
   "\303\205pne i Microsoft HTML Help\0"\
@@ -9125,7 +9125,7 @@ const char * gTranslations_no =
   "Sidetallet '%u' finnes ikke i dokumentet\0"\
   "Sideskalering\0"\
   "Side:\0"\
-  "\0"\
+  "PalmDoc dokumenter\0"\
   "Vennligst vent - arbeider...\0"\
   "Postscript-dokumenter\0"\
   "Pr&esentasjon\tCtrl+L\0"\
@@ -9134,8 +9134,8 @@ const char * gTranslations_no =
   "Skriv ut som &bilde (krever mer minne)\0"\
   "Utskriftsomr\303\245de\0"\
   "Skriver med gjeldende navn eksisterer ikke\0"\
-  "\0"\
-  "\0"\
+  "Utskrift p\303\245g\303\245r.\0"\
+  "Skriver ut fortsatt. Avbryte?\0"\
   "Utskriften p\303\245g\303\245r fortsatt. Avbryte og starte p\303\245 nytt?\0"\
   "Skriver ut side %d av %d...\0"\
   "Problem med utskrift.\0"\
@@ -9152,7 +9152,7 @@ const char * gTranslations_no =
   "Merk &alt\0"\
   "Merk &alle\tCtrl+A\0"\
   "Velg innhold med Ctrl+Venstre museknapp\0"\
-  "\0"\
+  "Valg:\0"\
   "Send med e-post...\0"\
   "Sett invers kommandolinje for s\303\270k\0"\
   "Vis &Bookmarks\0"\
@@ -9175,7 +9175,7 @@ const char * gTranslations_no =
   "Tekstdokumenter\0"\
   "Tittel:\0"\
   "Ukjent kildefil (%s)\0"\
-  "\0"\
+  "Bruk &tabs\0"\
   "Vis\0"\
   "\303\205pne &hjemmesiden\0"\
   "Advarsel\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-690645402ae473ac4ac1f1eceb5ab7c361a63134
+a53a0b244e04e5433c7c4314fb5acbaf5d9e8e03
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -172,6 +172,7 @@ ku:هەڵبژاردنی پەرەسەندوو ...&
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
 nl:&Geavanceerde Opties...
+no:&Avanserte tilleggsfunksjoner
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
 ro:Opțiuni &avansate...
@@ -1835,6 +1836,7 @@ ku:هەڵبژاردنەکان&
 mk:&Опции
 my:&Tetapan
 nl:&Opties
+no:&Tillegg
 pl:&Opcje
 pt:&Opções
 ro:&Optiuni
@@ -2963,6 +2965,7 @@ ja:ウィンドウ(&W)
 kr:창(&W)
 mk:&Прозорец
 nl:&Window
+no:&Vindu
 pl:&Okno
 pt:&Janela
 ru:&Окно
@@ -3811,6 +3814,7 @@ ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
 nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
+no:Vil du virkelig avinstallere SumatraPDF?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
@@ -4985,6 +4989,7 @@ mk:Затвори
 ml:അടയ്ക്കുക
 my:Tutup
 nl:Sluiten
+no:Lukk
 pl:Zamknij
 pt:Fechar
 ro:Inchidere
@@ -5759,6 +5764,7 @@ ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
 nl:Kan tijdelijke map niet aanmaken
+no:Kunne ikke opprette en midlertidig mappe
 pl:Nie można utworzyć katalogu tymczasowego
 pt:Não foi possível criar a pasta temporária
 ro:Nu s-a putut crea un director temporar
@@ -5810,6 +5816,7 @@ ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
 nl:Kan de installatiemap niet aanmaken
+no:Kunne ikke opprette installasjonsmappen 
 pl:Nie można utworzyć katalogu instalacyjnego
 pt:Não foi possível criar a pasta de instalação
 ro:Nu s-a putut crea directorul de instalare
@@ -5920,6 +5927,7 @@ ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
 nl:Kan PDF-previewer niet installeren
+no:Kunne ikke installere PDF forhåndsvisning
 pl:Nie można zainstalować podglądu PDF
 pt:Não foi possível instalar o antevisão de PDF
 ro:Nu s-a putut instala previzualizatorul PDF
@@ -5969,6 +5977,7 @@ ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
 nl:Kan PDF-zoekfilter niet installeren
+no:Kunne ikke installere PDF søkefilter
 pl:Nie można zainstalować filtru przeszukiwania PDF
 pt:Não foi possível instalar o filtro de procuras
 ro:Nu s-a putut instala filtrul de cautare PDF
@@ -6018,6 +6027,7 @@ ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
 nl:Kan tijdelijke map niet verkrijgen
+no:Kunne ikke finne midlertidig mappe
 pl:Nie można uzyskać katalogu tymczasowego
 pt:Não foi possível obter a pasta temporária
 ro:Nu s-a putut obtine directorul temporar
@@ -6067,6 +6077,7 @@ ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
 nl:Kan installatiemap niet verwijderen
+no:Kunne ikke fjerne installasjonsmappen
 pl:Nie można usunąć katalogu instalacyjnego
 pt:Não foi possível remover a pasta de instalação
 ro:Nu s-a putut sterge directorul de instalare
@@ -6117,6 +6128,7 @@ ku:ناتوانرێت کورتە ئایکۆن لابدرێت
 mk:Не можам да ја избришам кратенката
 my:Tidak dapat membuang shortcut
 nl:Kon snelkoppeling niet verwijderen
+no:Kunne ikke fjerne snarveien
 pl:Nie można usunąć skrótu
 pt:Não foi possível remover o atalho
 ro:Nu s-au putut sterge scurtatura
@@ -6226,6 +6238,7 @@ ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
 nl:Kan PDF-previewer niet verwijderen
+no:Kunne ikke avinstallere PDF forhåndsvisning
 pl:Nie można usunąć podglądu PDF
 pt:Não foi possível desinstalar a antevisão de PDF
 ro:Nu s-a putut dezinstala previzualizatorul PDF
@@ -6274,6 +6287,7 @@ ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
 mk:Не можам да го избришам филтерот за пребарување на PDF
 my:Tidak dapat memadam penapis carian PDF
 nl:Kon PDF zoek filter niet deïnstalleren
+no:Kunne ikke avinstallere PDF søkefilter
 pl:Nie można usunąć filtru przeszukiwania PDF
 pt:Não foi possível desinstalar o filtro de procura
 ro:Nu s-a putut dezinstala filtrul de cautare PDF
@@ -6322,6 +6336,7 @@ ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
 nl:Kan browserplugin niet verwijderen
+no:Kunne ikke avinstallere nettlesertillegget
 pl:Nie można usunąć wtyczki do przeglądarek
 pt:Não foi possível desinstalar o plugin do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
@@ -6371,6 +6386,7 @@ ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
 mk:Не можам да ја снимам %s на диск
 my:Tidak boleh memasukkan data %s ke cakera
 nl:Kon %s niet op schijf wegschrijven
+no:Kunne ikke skrive %s til disk 
 pl:Nie można zapisać %s na dysk
 pt:Não foi possível escrever %s no disco
 ro:Nu s-a putut scrie %s pe disc
@@ -6534,6 +6550,7 @@ ja:カーソル位置：
 kr:커서 위치:
 mk:Местоположба на покажувач:
 nl:Cursor positie
+no:Skrivemerkeposisjon:
 pl:Pozycja kursora:
 pt:Posição do cursor:
 ru:Позиция курсора:
@@ -7102,7 +7119,7 @@ ca-xv:Documents EPUB
 ca:Documents EPUB
 cn:EPUB 文档
 cy:eLyfrau EPUB
-cz:EPUB dokumenty
+cz:Dokumenty EPUB
 de:EPUB E-Bücher
 dk:EPUB-dokumenter
 el:Έγγραφα EPUB
@@ -7677,6 +7694,7 @@ ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو ن�
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
 nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
+no:Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe
 pl:Nie można skopiować deinstalatora do katalogu tymczasowego
 pt:Falha ao copiar o desinstalador para a pasta temporária
 ro:Eroare la copierea dezinstalatorului in directorul temporar
@@ -7726,6 +7744,7 @@ ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
 nl:Kon snelkoppeling niet aanmaken
+no:Kan ikke opprette snarvei
 pl:Błąd przy tworzeniu skrótu
 pt:Erro ao criar atalho
 ro:Eroare la crearea unei scurtaturi
@@ -7774,6 +7793,7 @@ ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەت
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
 nl:Kon deinstallatie register sleutels niet verwijderen
+no:Kan ikke slette avinstalleringsnøkler i Registeret
 pl:Nie można usunąć kluczy deinstalatora z rejestru
 pt:Falha ao eliminar as chaves do registo
 ro:Eroare la stergerea inregistrarilor de dezinstalare din registri
@@ -7801,7 +7821,7 @@ ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名!
 cy:Methwyd ailenwi'r ffeil!
-cz:Soubor se nepodařilo přejmenovat!
+cz:Přejmenování souboru se nezdařilo!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
@@ -7942,6 +7962,7 @@ ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
+no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
 pl:Nie można wprowadzić poszerzonych informacji o rozszerzeniu pliku do rejestru
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
@@ -7989,6 +8010,7 @@ ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە �
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
+no:Kan ikke lagre avinstalleringsinformasjon i Registeret
 pl:Nie można zapisać informacji o usunięciu programu do rejestru
 pt:Falha ao escrever as informações de desinstalação no registo
 ro:Eroare la scrierea informatiilor de dezinstalare in registri
@@ -9616,6 +9638,7 @@ ku:هەڵبژاردنەکانی &شاردنەوە
 mk:Скриј &опции
 my:Sembunyi &Tetapan
 nl:Verberg &Opties
+no:Skjule &Tillegg
 pl:Ukryj &Opcje
 pt:&Ocultar opções
 ro:Ascundere &Optiuni
@@ -9834,6 +9857,7 @@ ku:دابەزاندنی SumatraPDF
 mk:Инсталирај SumatraPDF
 my:Pasang SumatraPDF
 nl:Installeer SumatraPDF
+no:Installer SumatraPDF
 pl:Zainstaluj SumatraPDF
 pt:Instalar SumatraPDF
 ro:Instalare SumatraPDF
@@ -9882,6 +9906,7 @@ ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
 mk:Инсталирај SumatraPDF во &папка:
 my:Pasang SumatraPDF dalam &folder
 nl:Installeer SumatraPDF in &folder
+no:Installere SumatraPDF i &mappe:
 pl:Zainstaluj SumatraPDF w &folderze:
 pt:Instalar SumatraPD&F na pasta:
 ro:Instalare SumatraPDF in &folderul:
@@ -9930,6 +9955,7 @@ ku:دابەزاندن سەرکەوتو نەبوو!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
 nl:Installatie mislukt!
+no:Feil ved installering!
 pl:Błąd instalacji!
 pt:A instalação falhou!
 ro:Instalare esuata!
@@ -9978,6 +10004,7 @@ ku:دابەزاندن لە ئەنجامداندایە...
 mk:Инсталирањето е во тек...
 my:Pemasangan sedang dijalankan...
 nl:Installatie is bezig...
+no:Installasjon pågår...
 pl:Trwa instalacja...
 pt:A instalar...
 ro:Se instaleaza...
@@ -10089,6 +10116,7 @@ ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された�
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
 nl:Behoud de PDF &browser plugin geïnstalleerd (niet ondersteund)
+no:Behold PDF &nettleser -tillegg installert (ingen support lenger)
 pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
@@ -10132,6 +10160,7 @@ ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕ�
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 my:Biarkan Windows Desktop Search &mencari dokumen PDF
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
+no:La Windows søkemotor &søke PDF dokumenter
 pl:Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwać pliki PDF
 pt:Permitir que o Windows Desktop &Search localize os PDF
 ro:Permite Windows Desktop &Search sa caute in documente PDF
@@ -10179,6 +10208,7 @@ ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &
 mk:Дозволи Windows да прикажува слики за PDF-документи
 my:Biarkan Windows menunjukkan &preview dokumen PDF
 nl:Laat Windows &voorbeelden tonen van PDF documenten
+no:La Windows vise &forhåndsvisning av PDF-dokumenter
 pl:Windows ma pokazywać &podgląd plików PDF
 pt:&Permitir que o Windows mostre uma antevisão dos PDF
 ro:Permite Windows-ului sa arate &previzualizari ale documentelor PDF
@@ -11336,6 +11366,7 @@ ku:کردنەوە لە %s
 mk:Отвори во %s
 my:Buka dalam %s
 nl:Open in %s
+no:Åpne i %s
 pl:Otwórz w %s
 pt:Abrir em %s
 ro:deschide în %s
@@ -12370,7 +12401,7 @@ ar:وثائق بالم دوك
 az:PalmDoc sənədləri
 br:Documentos PalmDoc
 cn:PalmDoc 文档
-cz:PalmDoc dokumenty
+cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
 es:Documentos PalmDoc
 fr:Fichiers PalmDoc
@@ -12382,6 +12413,7 @@ it:Documenti PalmDoc
 kr:PalmDoc 문서
 mk:документи на PalmDoc
 nl:PalmDoc documenten
+no:PalmDoc dokumenter
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
 ru:Документы PalmDoc
@@ -12424,6 +12456,7 @@ ku:تکایە %s دابخە بۆ بەردەوامبون!
 mk:Ве молам затворете го %s, за да продолжите!
 my:Sila tutup %s untuk meneruskan!
 nl:Sluit %s om verder te gaan!
+no:Vennligst lukk %s for å fortsette!
 pl:Zamknij  %s, aby kontynuować!
 pt:Para continuar, feche o %s!
 ro:Rugam inchideti %s pentru a putea continua!
@@ -12935,6 +12968,7 @@ mk:Печатењето е во тек.
 ml:അച്ചടി പുരോഗമിക്കുന്നു
 my:Cetakan sedang dijalankan.
 nl:Aan het printen.
+no:Utskrift pågår.
 pl:Trwa drukowanie.
 pt:Impressão em curso
 ro:Tiparire in curs.
@@ -12985,6 +13019,7 @@ ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان �
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
 my:Cetakan sedang dilakukan. Batal dan Henti?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
+no:Skriver ut fortsatt. Avbryte?
 pl:Nadal trwa drukowanie. Przerwać i wyjść?
 pt:Impressão ainda em curso. Abortar e sair?
 ro:In prezent se tipareste ceva. Anulati si renuntati?
@@ -13978,6 +14013,7 @@ ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
 my:Pilih folder di mana SumatraPDF harus dipasang:
 nl:Kies de folder waar SumatraPDF geinstalleerd moet worden:
+no:Velg mappe der SumatraPDF skal installeres:
 pl:Wybierz folder, w którym należy zainstalować program SumatraPDF:
 pt:Escolha a pasta de instalação do SumatraPDF:
 ro:Alegeti folderul in care sa se instaleze SumatraPDF:
@@ -14020,6 +14056,7 @@ ja:Selection:
 kr:선택:
 mk:Селекција:
 nl:Selectie
+no:Valg:
 pl:Selekcja:
 pt:Selecção:
 ru:Выделение:
@@ -14604,6 +14641,7 @@ ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوو
 mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
 my:Sesetengah fail yang akan dipasang akan rosak atau hilang
 nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
+no:Noen filer som skal installeres er skadet eller mangler
 pl:Niektóre pliki instalacyjne są uszkodzone lub niedostępne
 pt:Alguns ficheiros do instalador estão danificados
 ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
@@ -14769,6 +14807,7 @@ ku:SumatraPDF دەستپێکردنی
 mk:Стартувај SumatraPDF
 my:Mula SumatraPDF
 nl:Start SumatraPDF
+no:Start SumatraPDF
 pl:Uruchom SumatraPDF
 pt:Iniciar SumatraPDF
 ro:Pornire SumatraPDF
@@ -14876,6 +14915,7 @@ ku:SumatraPDF %s دابەزاندنی
 mk:Инсталација на SumatraPDF %s
 my:Installer SumatraPDF %s
 nl:SumatraPDF %s installatieprogramma
+no:SumatraPDF %s installering 
 pl:Instalator SumatraPDF %s
 pt:Instalador do SumatraPDF %s
 ro:Programul de instalare %s SumatraPDF
@@ -14923,6 +14963,7 @@ ku:SumatraPDF %s سڕینەوەی
 mk:Деинсталација на SumatraPDF %s
 my:SumatraPDF %s Uninstaller
 nl:SumatraPDF %s deinstallatieprogramma
+no:SumatraPDF %s avinstallering
 pl:Usuń SumatraPDF %s
 pt:Desinstalador do SumatraPDF %s
 ro:Programul de dezinstalare a %s SumatraPDF
@@ -15143,6 +15184,7 @@ ku:.سڕایەوە SumatraPDF
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
 nl:SumatraPDF werd verwijderd.
+no:SumatraPDF har blitt avinstallert.
 pl:Program SumatraPDF został usunięty.
 pt:O SumatraPDF foi desinstalado.
 ro:SumatraPDF a fost dezinstalat.
@@ -15191,6 +15233,7 @@ ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
 mk:Не најдов инсталации на SumatraPDF.
 my:Pemasangan SumatraPDF tidak dijumpai.
 nl:SumatraPDF-installatie niet gevonden.
+no:SumatraPDF installering ikke funnet.
 pl:Program SumatraPDF nie został znaleziony.
 pt:O SumatraPDF não foi encontrado.
 ro:Nu s-a gasit instalarea SumatraPDF.
@@ -15531,6 +15574,7 @@ ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
 mk:Ви благодарам што го одбравте SumatraPDF!
 my:Terima kasih kerana memilih SumatraPDF!
 nl:Dank u om voor SumatraPDF te kiezen!
+no:Takk for at du valgte SumatraPDF!
 pl:Dziękujemy za wybór SumatraPDF!
 pt:Obrigado por ter escolhido o SumatraPDF!
 ro:Va multumim pentru ca ati ales SumatraPDF!
@@ -15579,6 +15623,7 @@ ku:سوپاس! SumatraPDF دابەزێنرا.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
 my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 nl:Dank u! SumatraPDF werd geinstalleerd.
+no:Takk! SumatraPDF har blitt installert.
 pl:Program SumatraPDF został zainstalowany.
 pt:O SumatraPDF foi instalado.
 ro:Multumim! SumatraPDF a fost dezinstalat.
@@ -15627,6 +15672,7 @@ ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەو
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
 nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
+no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
 pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o inconveniente.
 ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!
@@ -15738,6 +15784,7 @@ mk:Избриши SumatraPDF
 ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
 my:Membuang SumatraPDF
 nl:Deinstalleer SumatraPDF
+no:Avinstaller SumatraPDF
 pl:Usuń SumatraPDF
 pt:Remover SumatraPDF
 ro:Dezinstalare SumatraPDF
@@ -15786,6 +15833,7 @@ ku:سڕینەوە سەرکەوتو نەبوو
 mk:Бришењето не успеа
 my:Penyahpasangan gagal
 nl:Deinstallatie mislukt
+no:Feil ved avinstallering
 pl:Usunięcie programu nie powiodło się
 pt:Falha na desinstalação!
 ro:Dezinstalarea a esuat
@@ -15835,6 +15883,7 @@ ku:سڕینەوە لە ئەنجامداندایە...
 mk:Бришењето е во тек...
 my:Penyahpasangan sedang dijalankan ...
 nl:Deinstallatie is bezig...
+no:Avinstallering pågår...
 pl:Trwa usuwanie...
 pt:A desinstalar...
 ro:Dezinstalare in curs...
@@ -15936,6 +15985,7 @@ ja:タブを使う(&t)
 kr:탭 사용(&T)
 mk:Користи &табови
 nl:Gebruik &tabs
+no:Bruk &tabs
 pl:Włącz wyświetlanie &kart
 pt:&Utilizar separadores
 ru:Использовать &вкладки
@@ -15978,6 +16028,7 @@ ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنا
 mk:Користи го SumatraPDF како &основен читач на PDF
 my:Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda
 nl:Gebruik SumatraPDF als &standaard PDF lezer
+no:Bruk SumatraPDF som &standard PDF-leser
 pl:Używaj SumatraPDF jako domyślnej przeglądarki PDF
 pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
 ro:Folosiți SumatraPDF ca cititor implicit pentru fișiere P&DF
