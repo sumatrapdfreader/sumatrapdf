@@ -997,10 +997,10 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 		{
 			unsigned int x;
 			float s;
-	
+
 			if (fz_is_eof_bits(stream))
 				fz_throw(ctx, FZ_ERROR_GENERIC, "truncated sample function stream");
-	
+
 			switch (bps)
 			{
 			case 1: s = fz_read_bits(stream, 1); break;
@@ -1029,7 +1029,7 @@ load_sample_func(pdf_function *func, pdf_document *doc, pdf_obj *dict, int num, 
 			default:
 				fz_throw(ctx, FZ_ERROR_GENERIC, "sample stream bit depth %d unsupported", bps);
 			}
-	
+
 			func->u.sa.samples[i] = s;
 		}
 	}
