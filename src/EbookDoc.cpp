@@ -534,14 +534,16 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             level++;
         else if (tok->IsEndTag() && Tag_Ol == tok->tag && level > 0)
             level--;
-        if (tok->IsStartTag() && Tag_A == tok->tag) {
-            AttrInfo *attrInfo = tok->GetAttrByName("href");
-            if (!attrInfo)
-                continue;
-            ScopedMem<char> href(str::DupN(attrInfo->val, attrInfo->valLen));
-            ScopedMem<char> text;
+        if (tok->IsStartTag() && (Tag_A == tok->tag || Tag_Span == tok->tag)) {
+            HtmlTag itemTag = tok->tag;
+            ScopedMem<char> text, href;
+            if (Tag_A == tok->tag) {
+                AttrInfo *attrInfo = tok->GetAttrByName("href");
+                if (attrInfo)
+                    href.Set(str::DupN(attrInfo->val, attrInfo->valLen));
+            }
             while ((tok = parser.Next()) != NULL && !tok->IsError() &&
-                   (!tok->IsEndTag() || Tag_A != tok->tag)) {
+                   (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
                     ScopedMem<char> part(str::DupN(tok->s, tok->sLen));
                     if (!text)
@@ -552,10 +554,13 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             }
             if (!text)
                 continue;
-            href.Set(NormalizeURL(href, pagePath));
-            ScopedMem<WCHAR> itemSrc(str::conv::FromHtmlUtf8(href, str::Len(href)));
             ScopedMem<WCHAR> itemText(str::conv::FromUtf8(text));
             str::NormalizeWS(itemText);
+            ScopedMem<WCHAR> itemSrc;
+            if (href) {
+                href.Set(NormalizeURL(href, pagePath));
+                itemSrc.Set(str::conv::FromHtmlUtf8(href, str::Len(href)));
+            }
             visitor->Visit(itemText, itemSrc, level);
         }
     }
