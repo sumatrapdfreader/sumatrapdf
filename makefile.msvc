@@ -171,7 +171,8 @@ UTILS_OBJS = \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\SplitterWnd.obj \
 	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
 	$(OU)\ArchUtil.obj $(OU)\ZipUtil.obj $(OU)\LzmaSimpleArchive.obj \
-	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj
+	$(OU)\LabelWithCloseWnd.obj $(OU)\WinCursors.obj $(OU)\FrameRateWnd.obj \
+	$(OU)\Dpi.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \

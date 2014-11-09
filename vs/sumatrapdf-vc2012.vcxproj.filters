@@ -324,6 +324,9 @@
     <ClCompile Include="..\src\utils\DirIter.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\FileTransactions.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1173,6 +1176,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\DirIter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\FileTransactions.h">
