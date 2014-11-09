@@ -1,3 +1,6 @@
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef Dpi_h
 #define Dpi_h
 
