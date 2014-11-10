@@ -25,6 +25,7 @@
 #define COMPRESSION_NONE 1
 #define COMPRESSION_PALM 2
 #define COMPRESSION_HUFF 17480
+#define COMPRESSION_UNSUPPORTED_DRM -1
 
 #define ENCRYPTION_NONE 0
 #define ENCRYPTION_OLD  1
@@ -542,7 +543,12 @@ bool MobiDoc::ParseHeader()
     }
     if (mobiHdr.drmEntriesCount != (uint32)-1) {
         lf("DRM is unsupported");
-        return false;
+        // load an empty document and display a warning
+        compressionType = COMPRESSION_UNSUPPORTED_DRM;
+        Metadata prop;
+        prop.prop = Prop_UnsupportedFeatures;
+        prop.value = str::conv::ToCodePage(L"DRM", mobiHdr.textEncoding);
+        props.Append(prop);
     }
     textEncoding = mobiHdr.textEncoding;
 
@@ -800,6 +806,12 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
         if (!ok)
             lf("HuffDic decompression failed");
         return ok;
+    }
+    if (COMPRESSION_UNSUPPORTED_DRM == compressionType) {
+        // ensure a single blank page
+        if (1 == recNo)
+            strOut.Append("&nbsp;");
+        return true;
     }
 
     assert(0);
