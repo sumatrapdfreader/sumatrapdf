@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a53a0b244e04e5433c7c4314fb5acbaf5d9e8e03
+3185ae96575be85e5dfb5fca6b56912f3b244a1a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -12404,6 +12404,8 @@ cn:PalmDoc 文档
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
 es:Documentos PalmDoc
+et:PalmDoc-dokumendid
+eu:PalmDoc agiriak
 fr:Fichiers PalmDoc
 he:קובצי PalmDoc
 hr:PalmDoc dokumenti
@@ -15689,6 +15691,9 @@ tw:安裝程式已損壞。請重新下載。\n抱歉帶來不便！
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
 uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
+:This document uses unsupported features (%s) and might not render properly
+de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
+fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 :Title:
 af:Titel:
 am:Անունը.
