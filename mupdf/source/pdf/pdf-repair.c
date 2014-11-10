@@ -211,6 +211,12 @@ pdf_repair_obj_stm(pdf_document *doc, int num, int gen)
 			}
 
 			entry = pdf_get_populating_xref_entry(doc, n);
+			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2767 */
+			if (entry->type == 'n')
+			{
+				fz_warn(ctx, "ignoring object redefinition within stream (%d %d R)", n, i);
+				continue;
+			}
 			entry->ofs = num;
 			entry->gen = i;
 			entry->stm_ofs = 0;
