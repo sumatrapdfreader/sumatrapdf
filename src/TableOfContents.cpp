@@ -488,7 +488,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             return FALSE;
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
-                DestroyWindow(win->hwndFrame);
+                CloseWindow(win, true);
             break;
         case WM_KEYDOWN:
             // consistently expand/collapse whole (sub)trees

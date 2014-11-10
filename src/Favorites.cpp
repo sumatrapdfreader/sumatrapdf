@@ -722,7 +722,7 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
-                DestroyWindow(win->hwndFrame);
+                CloseWindow(win, true);
             break;
 
         case WM_MOUSEWHEEL:

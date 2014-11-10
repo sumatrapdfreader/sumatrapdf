@@ -3555,16 +3555,14 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             win.notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
         else if (win.notifications->GetForGroup(NG_PAGE_INFO_HELPER))
             win.notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
-        else if (win.presentation)
-            OnMenuViewPresentation(win);
-        else if (gGlobalPrefs->escToExit)
-            CloseWindow(&win, true);
-        else if (win.isFullScreen)
-            OnMenuViewFullscreen(&win);
-        else if (win.showSelection)
-            ClearSearchResult(&win);
         else if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER))
             win.notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
+        else if (win.showSelection)
+            ClearSearchResult(&win);
+        else if (gGlobalPrefs->escToExit)
+            CloseWindow(&win, true);
+        else if (win.presentation || win.isFullScreen)
+            OnMenuViewFullscreen(&win, win.presentation != PM_DISABLED);
         return;
     case 'q':
         // close the current document (it's too easy to press for discarding multiple tabs)
