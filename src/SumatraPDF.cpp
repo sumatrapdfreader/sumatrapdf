@@ -1178,6 +1178,12 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         return false;
     }
 
+    ScopedMem<WCHAR> unsupported(win->ctrl->GetProperty(Prop_UnsupportedFeatures));
+    if (unsupported) {
+        unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"), unsupported));
+        win->ShowNotification(unsupported, false /* autoDismiss */, true /* highlight */, NG_PERSISTENT_WARNING);
+    }
+
     // This should only happen after everything else is ready
     if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen)
         EnterFullScreen(*win);
@@ -3545,6 +3551,8 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
     case VK_ESCAPE:
         if (win.findThread)
             AbortFinding(&win);
+        else if (win.notifications->GetForGroup(NG_PERSISTENT_WARNING))
+            win.notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
         else if (win.notifications->GetForGroup(NG_PAGE_INFO_HELPER))
             win.notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
         else if (win.presentation)

@@ -1750,8 +1750,10 @@ bool PdfEngineImpl::FinishLoading()
             }
             pdf_dict_puts_drop(_info, "OutputIntents", list);
         }
-        else
-            pdf_dict_dels(_info, "OutputIntents");
+        // also note common unsupported features (such as XFA forms)
+        pdf_obj *xfa = pdf_dict_getp(pdf_trailer(_doc), "Root/AcroForm/XFA");
+        if (pdf_is_array(xfa))
+            pdf_dict_puts_drop(_info, "Unsupported_XFA", pdf_new_bool(_doc, 1));
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load document properties");
@@ -2739,6 +2741,12 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
             }
         }
         return fstruct.Count() > 0 ? fstruct.Join(L",") : NULL;
+    }
+
+    if (Prop_UnsupportedFeatures == prop) {
+        if (pdf_to_bool(pdf_dict_gets(_info, "Unsupported_XFA")))
+            return str::Dup(L"XFA");
+        return NULL;
     }
 
     if (Prop_FontList == prop)

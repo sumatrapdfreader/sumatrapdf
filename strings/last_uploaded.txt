@@ -267,6 +267,7 @@ Text documents
 Thank you for choosing SumatraPDF!
 Thank you! SumatraPDF has been installed.
 The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
+This document uses unsupported features (%s) and might not render properly
 Title:
 Uninstall SumatraPDF
 Uninstallation failed
