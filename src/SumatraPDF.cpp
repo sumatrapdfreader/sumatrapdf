@@ -1181,7 +1181,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     ScopedMem<WCHAR> unsupported(win->ctrl->GetProperty(Prop_UnsupportedFeatures));
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"), unsupported));
-        win->ShowNotification(unsupported, false /* autoDismiss */, true /* highlight */, NG_PERSISTENT_WARNING);
+        win->ShowNotification(unsupported, NOS_WARNING, NG_PERSISTENT_WARNING);
     }
 
     // This should only happen after everything else is ready
@@ -1528,7 +1528,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     // there is a window the user has just been interacting with
     if (failEarly) {
         ScopedMem<WCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
-        win->ShowNotification(msg, true /* autoDismiss */, true /* highlight */);
+        win->ShowNotification(msg, NOS_HIGHLIGHT);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
@@ -1723,8 +1723,8 @@ static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=NULL, int
         pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
-        bool autoDismiss = !IsShiftPressed();
-        win->ShowNotification(pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
+        int options = IsShiftPressed() ? NOS_PERSIST : NOS_DEFAULT;
+        win->ShowNotification(pageInfo, options, NG_PAGE_INFO_HELPER);
     }
     else {
         wnd->UpdateMessage(pageInfo);
@@ -1778,7 +1778,7 @@ void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wn
     if (selStr)
         posInfo.Set(str::Format(L"%s - %s %s", posInfo, _TR("Selection:"), selStr));
     if (!wnd)
-        win->ShowNotification(posInfo, false, false, NG_CURSOR_POS_HELPER);
+        win->ShowNotification(posInfo, NOS_PERSIST, NG_CURSOR_POS_HELPER);
     else
         wnd->UpdateMessage(posInfo);
 }
@@ -2688,7 +2688,7 @@ static void OnMenuRenameFile(WindowInfo &win)
         LoadArgs args(srcFilePath, &win);
         args.forceReuse = true;
         LoadDocument(args);
-        win.ShowNotification(_TR("Failed to rename the file!"), false /* autoDismiss */, true /* highlight */);
+        win.ShowNotification(_TR("Failed to rename the file!"), NOS_WARNING);
         return;
     }
 

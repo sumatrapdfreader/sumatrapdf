@@ -41,6 +41,13 @@ enum NotificationGroup {
     NG_STRESS_TEST_SUMMARY,
 };
 
+enum NotificationOptions {
+    NOS_DEFAULT = 0, // timeout after 3 seconds, no highlight
+    NOS_PERSIST = (1 << 0),
+    NOS_HIGHLIGHT = (1 << 1),
+    NOS_WARNING = NOS_PERSIST | NOS_HIGHLIGHT,
+};
+
 enum PresentationMode {
     PM_DISABLED = 0,
     PM_ENABLED,
@@ -253,7 +260,7 @@ public:
 
     void CreateInfotip(const WCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
-    void ShowNotification(const WCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
+    void ShowNotification(const WCHAR *message, int options=NOS_DEFAULT, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
 
     bool CreateUIAProvider();
 };
