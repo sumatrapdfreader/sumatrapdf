@@ -612,11 +612,7 @@ Exit:
     trans::Destroy();
     DpiRemoveAll();
 
-#ifdef DEBUG
-    // HACK: Give time for DeleteWatchedDir() to happen in ReadDirectoryChangesNotification
-    // otherwise it shows up as memory leak in debug build
-    Sleep(100);
-#endif
+    FileWatcherWaitForShutdown();
 
     SaveCallstackLogs();
     dbghelp::FreeCallstackLogs();

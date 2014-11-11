@@ -14,5 +14,6 @@ struct WatchedFile;
 
 WatchedFile *FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer);
 void         FileWatcherUnsubscribe(WatchedFile *wf);
+void         FileWatcherWaitForShutdown();
 
 #endif

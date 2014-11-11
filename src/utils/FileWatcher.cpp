@@ -99,6 +99,8 @@ static CRITICAL_SECTION g_threadCritSec;
 static WatchedDir *     g_watchedDirs = NULL;
 static WatchedFile *    g_watchedFiles = NULL;
 
+static LONG             gRemovalsPending = 0;
+
 static void StartMonitoringDirForChanges(WatchedDir *wd);
 
 static void AwakeWatcherThread()
@@ -187,6 +189,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
     if (errCode == ERROR_OPERATION_ABORTED) {
         lf("   ERROR_OPERATION_ABORTED");
         DeleteWatchedDir(wd);
+        InterlockedDecrement(&gRemovalsPending);
         return;
     }
 
@@ -451,7 +454,31 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
     bool ok = ListRemove(&g_watchedDirs, wd);
     CrashIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
+    InterlockedIncrement(&gRemovalsPending);
     QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
+}
+
+void FileWatcherWaitForShutdown()
+{
+    // this is meant to be called at the end so we shouldn't
+    // have any file watching subscriptions pending
+    CrashIf(g_watchedFiles != NULL);
+    CrashIf(g_watchedDirs != NULL);
+
+    // wait for ReadDirectoryChangesNotification() process actions triggered
+    // in RemoveWatchedDirIfNotReferenced
+    LONG v;
+    int maxWait = 100; // 1 sec
+    for (;;) {
+        v = InterlockedCompareExchange(&gRemovalsPending, 0, 0);
+        if (v == 0) {
+            return;
+        }
+        Sleep(10);
+        if (--maxWait < 0) {
+            return;
+        }
+    }
 }
 
 static void RemoveWatchedFile(WatchedFile *wf)
