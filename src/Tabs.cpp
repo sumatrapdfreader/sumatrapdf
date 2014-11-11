@@ -47,6 +47,17 @@ static inline SizeI GetTabSize(WindowInfo *win)
     return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT) * win->uiDPIFactor));
 }
 
+static Brush *LoadBrush(SolidBrush &b, COLORREF c) {
+    b.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
+    return &b;
+}
+
+static Pen *LoadPen(Pen &p, COLORREF c, REAL width) {
+    p.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
+    p.SetWidth(width);
+    return &p;
+}
+
 class TabPainter
 {
     WStrVec text;
@@ -341,18 +352,6 @@ public:
 
     void DeleteAll() {
         text.Reset();
-    }
-
-private:
-    Brush *LoadBrush(SolidBrush &b, COLORREF c) {
-        b.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        return &b;
-    }
-
-    Pen *LoadPen(Pen &p, COLORREF c, REAL width) {
-        p.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        p.SetWidth(width);
-        return &p;
     }
 };
 
