@@ -125,4 +125,12 @@ void DpiRemove(HWND hwnd) {
     DpiNode *n = DpiNodeFindByHwnd(hwnd);
     CrashIf(NULL == n);
     ListRemove(&g_dpis, n);
+    free(n);
+}
+
+void DpiRemoveAll() {
+    while (g_dpis != NULL) {
+        DpiNode *n = g_dpis;
+        DpiRemove(n->dpi.hwnd);
+    }
 }

@@ -5,6 +5,7 @@
 // and not compiled as stand-alone
 
 #include "DbgHelpDyn.h"
+#include "Dpi.h"
 
 #ifdef DEBUG
 static bool TryLoadMemTrace()
@@ -609,6 +610,13 @@ Exit:
     mui::Destroy();
     uitask::Destroy();
     trans::Destroy();
+    DpiRemoveAll();
+
+#ifdef DEBUG
+    // HACK: Give time for DeleteWatchedDir() to happen in ReadDirectoryChangesNotification
+    // otherwise it shows up as memory leak in debug build
+    Sleep(100);
+#endif
 
     SaveCallstackLogs();
     dbghelp::FreeCallstackLogs();

@@ -21,4 +21,6 @@ inline void DpiUpdate(HWND hwnd) { return DpiUpdate(DpiGet(hwnd)); }
 
 void DpiRemove(HWND);
 
+void DpiRemoveAll();
+
 #endif
