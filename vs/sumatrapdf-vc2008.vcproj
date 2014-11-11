@@ -256,6 +256,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\Dpi.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Dpi.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\FileTransactions.cpp"
 					>
 				</File>
@@ -363,14 +371,6 @@
 			<Filter
 				Name="unused"
 				>
-				<File
-					RelativePath="..\src\utils\Dpi.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Dpi.h"
-					>
-				</File>
 				<File
 					RelativePath="..\src\utils\FrameRateWnd.cpp"
 					>

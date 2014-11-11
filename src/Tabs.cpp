@@ -48,15 +48,9 @@ static inline SizeI GetTabSize(WindowInfo *win)
     return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT) * win->uiDPIFactor));
 }
 
-static Brush *LoadBrush(SolidBrush &b, COLORREF c) {
-    b.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-    return &b;
-}
-
-static Pen *LoadPen(Pen &p, COLORREF c, REAL width) {
-    p.SetColor(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-    p.SetWidth(width);
-    return &p;
+static inline Color ToColor(COLORREF c)
+{
+    return Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
 }
 
 class TabPainter
@@ -205,7 +199,7 @@ public:
         GraphicsPathIterator iterator(&shapes);
 
         SolidBrush br(Color(0, 0, 0));
-        Pen pen(&br);
+        Pen pen(&br, 2.0f);
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
@@ -251,7 +245,8 @@ public:
                 graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
                 graphics.SetCompositingMode(CompositingModeSourceCopy);
                 //graphics.SetCompositingMode(CompositingModeSourceOver);
-                graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, color.text));
+                br.SetColor(ToColor(color.text));
+                graphics.DrawString(text.At(i), -1, &f, layout, &sf, &br);
                 graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
                 continue;
             }
@@ -275,26 +270,27 @@ public:
             // paint tab's body
             graphics.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
-            LoadBrush(br, bgCol);
+            br.SetColor(ToColor(bgCol));
             graphics.FillPath(&br, &shape);
 
             // draw tab's text
             graphics.SetCompositingMode(CompositingModeSourceOver);
-            graphics.DrawString(text.At(i), -1, &f, layout, &sf, LoadBrush(br, textCol));
+            br.SetColor(ToColor(textCol));
+            graphics.DrawString(text.At(i), -1, &f, layout, &sf, &br);
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
-            if (xClicked == i)
-                graphics.FillPath(LoadBrush(br, color.x_click), &shape);
-            else if (xHighlighted == i)
-                graphics.FillPath(LoadBrush(br, color.x_highlight), &shape);
+            if (xClicked == i || xHighlighted == i) {
+                br.SetColor(ToColor(i == xClicked ? color.x_click : color.x_highlight));
+                graphics.FillPath(&br, &shape);
+            }
 
             // paint "x"
             iterator.NextMarker(&shape);
             if (xClicked == i || xHighlighted == i)
-                LoadPen(pen, color.x_line, 2.0f);
+                pen.SetColor(ToColor(color.x_line));
             else
-                LoadPen(pen, color.outline, 2.0f);
+                pen.SetColor(ToColor(color.outline));
             graphics.DrawPath(&pen, &shape);
             iterator.Rewind();
         }

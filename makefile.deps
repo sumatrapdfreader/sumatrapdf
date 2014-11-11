@@ -622,11 +622,11 @@ $(OS)\Tabs.obj: $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h $B\src\mui\Mu
 $(OS)\Tabs.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h $B\src\resource.h
 $(OS)\Tabs.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\TableOfContents.h
 $(OS)\Tabs.obj: $B\src\Tabs.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\Tabs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GdiPlusUtil.h
-$(OS)\Tabs.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\mingw_compat.h
-$(OS)\Tabs.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\Tabs.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\Tabs.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Tabs.obj: $B\src\utils\Dpi.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
+$(OS)\Tabs.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
+$(OS)\Tabs.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\Tabs.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\UITask.h
+$(OS)\Tabs.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Tester.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\EbookFormatter.h
 $(OS)\Tester.obj: $B\src\HtmlFormatter.h $B\src\MobiDoc.h $B\src\mui\Mui.h
 $(OS)\Tester.obj: $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h
