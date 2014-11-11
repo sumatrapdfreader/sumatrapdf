@@ -9,6 +9,7 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "Dpi.h"
 #include "EbookControls.h"
 #include "FileUtil.h"
 #include "FileWatcher.h"
@@ -105,9 +106,14 @@ public:
         shape.AddLine(width, height, 0, height);
         shape.CloseFigure();
         shape.SetMarker();
+
         // define "x"'s circle
-        c = height > 17 ? 14 : int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
-        Point p(width - c - 3, (height - c) / 2); // circle's position
+        c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
+        int maxC = DpiScaleX(hwnd, 17);
+        if (height > maxC) {
+            c = DpiScaleX(hwnd, 17);
+        }
+        Point p(width - c - DpiScaleX(hwnd, 3), (height - c) / 2); // circle's position
         shape.AddEllipse(p.X, p.Y, c, c);
         shape.SetMarker();
         // define "x"
@@ -203,7 +209,7 @@ public:
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
-        RectF layout(3.0f, 1.0f, REAL(width - 20), (REAL)height);
+        RectF layout((REAL)DpiScaleX(hwnd,3), 1.0f, REAL(width - DpiScaleX(hwnd,20)), (REAL)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
