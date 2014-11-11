@@ -39,19 +39,20 @@ public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
-    // to reduce flicker, we might ask the window to never shrink the size
-    bool noShrink;
+    // to reduce flicker, we might ask the window to shrink the size less often
+    // (notifcation windows are only shrunken if by less than factor shrinkLimit)
+    float shrinkLimit;
 
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
-        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL), noShrink(false) {
+        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL), shrinkLimit(1.0f) {
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
 
     NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
-        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0), noShrink(false) {
+        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0), shrinkLimit(1.0f) {
         this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }

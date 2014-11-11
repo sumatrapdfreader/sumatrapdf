@@ -56,14 +56,10 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
     }
     rectMsg.Inflate(PADDING, PADDING);
 
-    if (noShrink) {
+    if (shrinkLimit < 1.0f) {
         ClientRect rcOrig(self);
-        if (rcOrig.dx > rectMsg.dx) {
+        if (rectMsg.dx < rcOrig.dx && rectMsg.dx > rcOrig.dx * shrinkLimit)
             rectMsg.dx = rcOrig.dx;
-        }
-        if (rcOrig.dy > rectMsg.dy) {
-            rectMsg.dy = rcOrig.dy;
-        }
     }
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)

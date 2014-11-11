@@ -212,7 +212,7 @@ void WindowInfo::ShowNotification(const WCHAR *message, int options, Notificatio
 
     NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, notifications);
     if (NG_CURSOR_POS_HELPER == groupId) {
-        wnd->noShrink = true;
+        wnd->shrinkLimit = 0.7f;
     }
     notifications->Add(wnd, groupId);
 }
