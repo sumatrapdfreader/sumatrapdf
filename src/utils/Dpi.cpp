@@ -10,12 +10,12 @@ DPI Unaware: virtualized to 96 DPI and scaled by the system for the DPI of the m
 
 System DPI Aware:
  These apps render themselves according to the DPI of the display where they
- are launched, and they expect that scaling to remain constant for all displays on the system. 
- These apps are scaled up or down when moved to a display with a different DPI from the system DPI. 
+ are launched, and they expect that scaling to remain constant for all displays on the system.
+ These apps are scaled up or down when moved to a display with a different DPI from the system DPI.
 
 Per-Monitor DPI Aware:
  These apps render themselves for any DPI, and re-render when the DPI changes
- (as indicated by the WM_DPICHANGED window message). 
+ (as indicated by the WM_DPICHANGED window message).
 */
 
 /*
@@ -40,7 +40,7 @@ struct DpiNode {
 
 static DpiNode *g_dpis = NULL;
 
-static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
+static void GetDpiXY(HWND hwnd, int &scaleX, int &scaleY) {
 #if 0
     // TODO: only available in 8.1
     UINT dpiX = 96, dpiY = 96;
@@ -84,7 +84,7 @@ static DpiNode *DpiNodeFindByHwnd(HWND hwnd) {
 
 static Dpi *DpiFindByHwnd(HWND hwnd) {
     DpiNode *n = DpiNodeFindByHwnd(hwnd);
-    if (n == NULL ) {
+    if (n == NULL) {
         return NULL;
     }
     return &n->dpi;
@@ -126,4 +126,3 @@ void DpiRemove(HWND hwnd) {
     CrashIf(NULL == n);
     ListRemove(&g_dpis, n);
 }
-
