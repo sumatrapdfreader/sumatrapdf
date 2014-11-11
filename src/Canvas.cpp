@@ -232,7 +232,7 @@ static void OnMouseLeftButtonDown(WindowInfo& win, int x, int y, WPARAM key)
     // - pressing Ctrl+Shift forces text selection
     // - not having CopySelection permission forces dragging
     bool isShift = IsShiftPressed();
-    bool isCtrl = IsAltPressed();
+    bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm_CopySelection);
     bool isOverText = dm->IsOverText(PointI(x,y));
     if (!canCopy || (isShift || !isOverText) && !isCtrl) {
