@@ -6,15 +6,14 @@
 
 struct Dpi {
     HWND hwnd;
-    // for efficiency we store them as dpi * 100 / 96
-    int scaleX;
-    int scaleY;
+    int dpiX;
+    int dpiY;
 };
 
 Dpi *DpiGet(HWND);
 
-inline int DpiScaleX(HWND hwnd, int x) { return MulDiv(x, DpiGet(hwnd)->scaleX, 100); }
-inline int DpiScaleY(HWND hwnd, int y) { return MulDiv(y, DpiGet(hwnd)->scaleY, 100); }
+inline int DpiScaleX(HWND hwnd, int x) { return MulDiv(x, DpiGet(hwnd)->dpiX, 96); }
+inline int DpiScaleY(HWND hwnd, int y) { return MulDiv(y, DpiGet(hwnd)->dpiY, 96); }
 
 void DpiUpdate(Dpi *);
 inline void DpiUpdate(HWND hwnd) { return DpiUpdate(DpiGet(hwnd)); }

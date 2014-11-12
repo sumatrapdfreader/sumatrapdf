@@ -91,11 +91,9 @@ static Dpi *DpiFindByHwnd(HWND hwnd) {
 }
 
 void DpiUpdate(Dpi *dpi) {
-    int dpiX = 96;
-    int dpiY = 96;
-    GetDpiXY(dpi->hwnd, dpiX, dpiY);
-    dpi->scaleX = MulDiv(dpiX, 100, 96);
-    dpi->scaleY = MulDiv(dpiY, 100, 96);
+    dpi->dpiX = 96;
+    dpi->dpiY = 96;
+    GetDpiXY(dpi->hwnd, dpi->dpiX, dpi->dpiY);
 }
 
 Dpi *DpiGet(HWND hwnd) {
