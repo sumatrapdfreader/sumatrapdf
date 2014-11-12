@@ -527,6 +527,55 @@ static int RunMessageLoop()
     return (int)msg.wParam;
 }
 
+#ifdef SUPPORTS_AUTO_UPDATE
+static bool AutoUpdateMain()
+{
+    WStrVec argList;
+    ParseCmdLine(GetCommandLine(), argList, 4);
+    if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
+        // the argument was misinterpreted, let SumatraPDF start as usual
+        return false;
+    }
+    if (str::Eq(argList.At(2), L"replace")) {
+        // older 2.6 prerelease versions used implicit paths
+        ScopedMem<WCHAR> exePath(GetExePath());
+        CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
+        exePath[str::Len(exePath) - 12] = '\0';
+        free(argList.At(2));
+        argList.At(2) = str::Format(L"replace:%s", exePath);
+    }
+    const WCHAR *otherExe = NULL;
+    if (str::StartsWith(argList.At(2), L"replace:"))
+        otherExe = argList.At(2) + 8;
+    else if (str::StartsWith(argList.At(2), L"cleanup:"))
+        otherExe = argList.At(2) + 8;
+    if (!file::Exists(otherExe) || !str::EndsWithI(otherExe, L".exe")) {
+        CrashIf(true);
+        return false;
+    }
+    for (int tries = 10; tries > 0; tries--) {
+        if (file::Delete(otherExe))
+            break;
+        Sleep(200);
+    }
+    if (str::StartsWith(argList.At(2), L"cleanup:")) {
+        // continue startup, restoring the previous session
+        return false;
+    }
+    ScopedMem<WCHAR> thisExe(GetExePath());
+    bool ok = CopyFile(thisExe, otherExe, FALSE);
+    // TODO: somehow indicate success or failure
+    ScopedMem<WCHAR> cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
+    for (int tries = 10; tries > 0; tries--) {
+        ok = LaunchFile(otherExe, cleanupArgs);
+        if (ok)
+            break;
+        Sleep(200);
+    }
+    return true;
+}
+#endif
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
