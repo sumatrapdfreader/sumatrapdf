@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Controller.h"
+#include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
 #include "resource.h"
@@ -566,7 +567,7 @@ void CreateToc(WindowInfo *win)
 
     LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
-    int padXY = (int)(2 * win->uiDPIFactor);
+    int padXY = DpiScaleX(win->hwndFrame, 2);
     SetPaddingXY(l, padXY, padXY);
     SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateSidebarTitles()

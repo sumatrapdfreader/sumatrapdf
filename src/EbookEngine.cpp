@@ -8,6 +8,7 @@
 #include "EbookEngine.h"
 
 #include "BaseEngine.h"
+#include "Dpi.h"
 #include "EbookDoc.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
@@ -31,7 +32,7 @@ static float GetDefaultFontSize()
 {
     // fonts are scaled at higher DPI settings,
     // undo this here for (mostly) consistent results
-    return gDefaultFontSize * 96 / win::GetHwndDpi(HWND_DESKTOP);
+    return DpiUnScaleY(HWND_DESKTOP, gDefaultFontSize);
 }
 
 void SetDefaultEbookFont(const WCHAR *name, float size)

@@ -8,6 +8,7 @@
 #include "Caption.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "Dpi.h"
 #include "EbookController.h"
 #include "FrameRateWnd.h"
 #include "Menu.h"
@@ -641,12 +642,14 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
-            int size = (int)(16 * win.uiDPIFactor);
-            int cx = std::min(bounds.dx, 2 * size), cy = std::min(bounds.dy, 2 * size);
-            StretchBlt(hdc, bounds.x + bounds.dx - std::min((cx + size) / 2, cx),
-                bounds.y + std::max((cy - size) / 2, 0), std::min(cx, size), std::min(cy, size),
-                bmpDC, 0, 0, 16, 16, SRCCOPY);
-
+            int size = DpiScaleY(win.hwndFrame, 16);
+            int cx = std::min(bounds.dx, 2 * size);
+            int cy = std::min(bounds.dy, 2 * size);
+            int x = bounds.x + bounds.dx - std::min((cx + size) / 2, cx);
+            int y = bounds.y + std::max((cy - size) / 2, 0);
+            int dxDest = std::min(cx, size);
+            int dyDest = std::min(cy, size);
+            StretchBlt(hdc, x, y, dxDest, dyDest, bmpDC, 0, 0, 16, 16, SRCCOPY);
             DeleteDC(bmpDC);
         }
     }

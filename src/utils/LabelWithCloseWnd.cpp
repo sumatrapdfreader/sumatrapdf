@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "LabelWithCloseWnd.h"
 
+#include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
@@ -77,8 +78,8 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
 
     ClientRect cr(w->hwnd);
 
-    int x = win::DpiAdjust(w->hwnd, w->padL);
-    int y = win::DpiAdjust(w->hwnd, w->padT);
+    int x = DpiScaleX(w->hwnd, w->padL);
+    int y = DpiScaleY(w->hwnd, w->padT);
     UINT opts = ETO_OPAQUE;
     if (IsRtl(w->hwnd)) {
         opts = opts | ETO_RTLREADING;
@@ -99,7 +100,7 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
     // the background, which is not the pretties but works.
     // A better way would be to intelligently truncate text or shrink the font
     // size (within reason)
-    x = w->closeBtnPos.x - win::DpiAdjust(w->hwnd, LABEL_BUTTON_SPACE_DX);
+    x = w->closeBtnPos.x - DpiScaleX(w->hwnd, LABEL_BUTTON_SPACE_DX);
     RectI ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ri.ToRECT();
     FillRect(hdc, &r, br);
@@ -124,9 +125,9 @@ static void OnPaint(LabelWithCloseWnd *w)
 
 static void CalcCloseButtonPos(LabelWithCloseWnd *w, int dx, int dy)
 {
-    int btnDx = win::DpiAdjust(w->hwnd, CLOSE_BTN_DX);
-    int btnDy = win::DpiAdjust(w->hwnd, CLOSE_BTN_DY);
-    int x = dx - btnDx - win::DpiAdjust(w->hwnd, w->padR);
+    int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
+    int x = dx - btnDx - DpiScaleX(w->hwnd, w->padR);
     int y = 0;
     if (dy > btnDy) {
         y  = (dy - btnDy) / 2;
@@ -262,15 +263,15 @@ SizeI GetIdealSize(LabelWithCloseWnd* w)
     WCHAR *s = win::GetText(w->hwnd);
     SizeI size = TextSizeInHwnd(w->hwnd, s);
     free(s);
-    int btnDx = win::DpiAdjust(w->hwnd, CLOSE_BTN_DX);
-    int btnDy = win::DpiAdjust(w->hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;
-    size.dx += win::DpiAdjust(w->hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += win::DpiAdjust(w->hwnd, w->padL) + win::DpiAdjust(w->hwnd, w->padR);
+    size.dx += DpiScaleX(w->hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += DpiScaleX(w->hwnd, w->padL) + DpiScaleX(w->hwnd, w->padR);
     if (size.dy < btnDy) {
         size.dy = btnDy;
     }
-    size.dy += win::DpiAdjust(w->hwnd, w->padT) + win::DpiAdjust(w->hwnd, w->padB);
+    size.dy += DpiScaleY(w->hwnd, w->padT) + DpiScaleY(w->hwnd, w->padB);
     return size;
 }
 

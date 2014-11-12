@@ -40,12 +40,15 @@ static bool g_FirefoxStyle = false;
 
 int GetTabbarHeight(WindowInfo *win, float factor)
 {
-    return (int)(TABBAR_HEIGHT * win->uiDPIFactor * factor);
+    int dy = DpiScaleY(win->hwndFrame, TABBAR_HEIGHT);
+    return (int)(dy * factor);
 }
 
 static inline SizeI GetTabSize(WindowInfo *win)
 {
-    return SizeI((int)(TAB_WIDTH * win->uiDPIFactor), (int)((TABBAR_HEIGHT) * win->uiDPIFactor));
+    int dx = DpiScaleX(win->hwndFrame, TAB_WIDTH);
+    int dy = DpiScaleY(win->hwndFrame, TABBAR_HEIGHT);
+    return SizeI(dx, dy);
 }
 
 static inline Color ToColor(COLORREF c)

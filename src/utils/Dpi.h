@@ -11,15 +11,12 @@ struct Dpi {
 };
 
 Dpi *DpiGet(HWND);
-
 inline int DpiScaleX(HWND hwnd, int x) { return MulDiv(x, DpiGet(hwnd)->dpiX, 96); }
 inline int DpiScaleY(HWND hwnd, int y) { return MulDiv(y, DpiGet(hwnd)->dpiY, 96); }
-
+inline float DpiUnScaleY(HWND hwnd, float y) { return (y * 96.f) / (float)DpiGet(hwnd)->dpiY; }
 void DpiUpdate(Dpi *);
 inline void DpiUpdate(HWND hwnd) { return DpiUpdate(DpiGet(hwnd)); }
-
 void DpiRemove(HWND);
-
 void DpiRemoveAll();
 
 #endif

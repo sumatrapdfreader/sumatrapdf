@@ -176,6 +176,16 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 size_t      RoundToPowerOf2(size_t size);
 uint32_t    MurmurHash2(const void *key, size_t len);
 
+static inline size_t RoundUp(size_t n, size_t rounding)
+{
+    return ((n+rounding-1)/rounding)*rounding;
+}
+
+static inline int RoundUp(int n, int rounding)
+{
+    return ((n+rounding-1)/rounding)*rounding;
+}
+
 template <typename T>
 void ListInsert(T** root, T* el)
 {

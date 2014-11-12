@@ -37,7 +37,7 @@ using namespace Gdiplus;
 // expand the non-client border at the expense of client area.
 #define NON_CLIENT_BAND  1
 // This non-client-band hack is only needed for maximized non-fullscreen windows:
-static inline bool NeedsNonClientBandHack(HWND hwnd) { return IsZoomed(hwnd) && (GetWindowLong(hwnd, GWL_STYLE) & WS_CAPTION); }
+static inline bool NeedsNonClientBandHack(HWND hwnd) { return IsZoomed(hwnd) && win::HasCaption(hwnd); }
 
 // http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
 #define REG_DWM  L"Software\\Microsoft\\Windows\\DWM"
@@ -552,10 +552,21 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_SIZE:
             // Extend the translucent frame in the client area.
             if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
-                LONG ws = GetWindowLong(hwnd, GWL_STYLE);
-                int frameThickness = !(ws & WS_THICKFRAME) ? 0 : GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int captionHeight = !(ws & WS_CAPTION) ? 0 : GetTabbarHeight(win, IsZoomed(hwnd) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
-                MARGINS margins = { 0, 0, frameThickness + captionHeight, NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0 };
+                int frameThickness = 0;
+                if (win::HasFrameThickness(hwnd)) {
+                    frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                }
+                int captionHeight = 0;
+                if (win::HasCaption(hwnd)) {
+                    float tabScale = CAPTION_TABBAR_HEIGHT_FACTOR;
+                    if (IsZoomed(hwnd)) {
+                        tabScale = 1.f;
+                    }
+                    captionHeight = GetTabbarHeight(win, tabScale);
+                }
+                int top = frameThickness + captionHeight;
+                int bottom = NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0;
+                MARGINS margins = { 0, 0, top, bottom };
                 dwm::ExtendFrameIntoClientArea(hwnd, &margins);
                 win->extendedFrameHeight = frameThickness + captionHeight;
             }

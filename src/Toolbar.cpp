@@ -7,6 +7,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DisplayModel.h"
+#include "Dpi.h"
 #include "Menu.h"
 #include "resource.h"
 #include "Search.h"
@@ -375,12 +376,14 @@ void UpdateToolbarState(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo& win)
 {
+    int boxWidth = DpiScaleX(win.hwndFrame, FIND_BOX_WIDTH);
+    int minIconSize = DpiScaleX(win.hwndFrame, TOOLBAR_MIN_ICON_SIZE);
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
+                            0, 1, boxWidth, minIconSize + 4,
                             win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
-                            0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
+                            0, 1, boxWidth - 2 * GetSystemMetrics(SM_CXEDGE), minIconSize + 2,
                             win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
@@ -523,23 +526,25 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 
 static void CreatePageBox(WindowInfo& win)
 {
-    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor),
-                            (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
+    int boxWidth = DpiScaleX(win.hwndFrame, PAGE_BOX_WIDTH);
+    int minIconSize = DpiScaleX(win.hwndFrame, TOOLBAR_MIN_ICON_SIZE);
+    DWORD style = WS_VISIBLE | WS_CHILD;
+    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style,
+                            0, 1, boxWidth, minIconSize + 4,
                             win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
-    HWND page = CreateWindowEx(0, WC_EDIT, L"0", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
-                            0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)),
-                            (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
-                            win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
-
-    HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
+    HWND label = CreateWindowEx(0, WC_STATIC, L"", style,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
                             GetModuleHandle(NULL), NULL);
 
-    HWND total = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
+    HWND total = CreateWindowEx(0, WC_STATIC, L"", style,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
                             GetModuleHandle(NULL), NULL);
+
+    style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
+    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style,
+                        0, 1, boxWidth - 2 * GetSystemMetrics(SM_CXEDGE),  minIconSize + 2,
+                        win.hwndToolbar, (HMENU)0, GetModuleHandle(NULL), NULL);
 
     SetWindowFont(label, GetDefaultGuiFont(), FALSE);
     SetWindowFont(page, GetDefaultGuiFont(), FALSE);
@@ -577,9 +582,14 @@ void CreateToolbar(WindowInfo *win)
     SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    if (size.dy < TOOLBAR_MIN_ICON_SIZE * win->uiDPIFactor) {
-        size.dx *= (int)(win->uiDPIFactor + 0.5f);
-        size.dy *= (int)(win->uiDPIFactor + 0.5f);
+    int minIconSize = DpiScaleX(win->hwndFrame, TOOLBAR_MIN_ICON_SIZE);
+    if (size.dy < minIconSize) {
+        Dpi *dpi = DpiGet(win->hwndFrame);
+        // scale toolbar images only by integral sizes (2, 3 etc.)
+        int scaleX = (int)ceilf((float)dpi->dpiX / 96.f);
+        int scaleY = (int)ceilf((float)dpi->dpiY / 96.f);
+        size.dx *= scaleX;
+        size.dy *= scaleY;
         hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, LR_COPYDELETEORG);
     }
     // Assume square icons

@@ -63,11 +63,6 @@ public:
     }
 };
 
-static inline size_t RoundUp(size_t n, size_t rounding)
-{
-    return ((n+rounding-1)/rounding)*rounding;
-}
-
 // PoolAllocator is for the cases where we need to allocate pieces of memory
 // that are meant to be freed together. It simplifies the callers (only need
 // to track this object and not all allocated pieces). Allocation and freeing

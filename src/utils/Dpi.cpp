@@ -94,6 +94,9 @@ void DpiUpdate(Dpi *dpi) {
     dpi->dpiX = 96;
     dpi->dpiY = 96;
     GetDpiXY(dpi->hwnd, dpi->dpiX, dpi->dpiY);
+    // round up unusual DPIs
+    dpi->dpiX = RoundUp(dpi->dpiX, 4);
+    dpi->dpiY = RoundUp(dpi->dpiY, 4);
 }
 
 Dpi *DpiGet(HWND hwnd) {

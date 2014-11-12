@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "Controller.h"
+#include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
@@ -780,7 +781,7 @@ void CreateFavorites(WindowInfo *win)
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
     LabelWithCloseWnd *l =  CreateLabelWithCloseWnd(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
     win->favLabelWithClose = l;
-    int padXY = (int)(2 * win->uiDPIFactor);
+    int padXY = DpiScaleX(win->hwndFrame, 2);
     SetPaddingXY(l, padXY, padXY);
     SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateSidebarTitles()

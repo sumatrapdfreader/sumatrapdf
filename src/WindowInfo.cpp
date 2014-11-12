@@ -43,7 +43,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL),
     hwndCaption(NULL), caption(NULL), extendedFrameHeight(0)
 {
-    dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(*this);

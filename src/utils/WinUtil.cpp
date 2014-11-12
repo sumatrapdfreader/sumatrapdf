@@ -731,6 +731,19 @@ void DoubleBuffer::Flush(HDC hdc)
 namespace win {
     namespace menu {
 
+void SetChecked(HMENU m, UINT id, bool isChecked) {
+    CheckMenuItem(m, id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
+}
+
+bool SetEnabled(HMENU m, UINT id, bool isEnabled)
+{
+    BOOL ret = EnableMenuItem(m, id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
+    return ret != -1;
+}
+
+void Remove(HMENU m, UINT id) { RemoveMenu(m, id, MF_BYCOMMAND); }
+void Empty(HMENU m) { while (RemoveMenu(m, 0, MF_BYPOSITION)); }
+
 void SetText(HMENU m, UINT id, WCHAR *s)
 {
     MENUITEMINFO mii = { 0 };
@@ -909,6 +922,8 @@ bool IsRtl(HWND hwnd)
 
 namespace win {
 
+/* return text of window or edit control, NULL in case of an error.
+caller needs to free() the result */
 WCHAR *GetText(HWND hwnd)
 {
     size_t  cchTxtLen = GetTextLen(hwnd);
@@ -920,45 +935,29 @@ WCHAR *GetText(HWND hwnd)
     return txt;
 }
 
-int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
+size_t GetTextLen(HWND hwnd)
 {
-    HDC dc = GetDC(hwnd);
-    int dpi = GetDeviceCaps(dc, LOGPIXELSY);
-    // round untypical resolutions up to the nearest quarter
-    if (uiDPIFactor)
-        *uiDPIFactor = ceil(dpi * 4.0f / USER_DEFAULT_SCREEN_DPI) / 4.0f;
-    ReleaseDC(hwnd, dc);
-    return dpi;
+    return (size_t)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
 }
 
-int GlobalDpiAdjust(int value)
+void SetText(HWND hwnd, const WCHAR *txt)
 {
-    return GlobalDpiAdjust((float)value);
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
 }
 
-int GlobalDpiAdjust(float value)
+void SetVisibility(HWND hwnd, bool visible)
 {
-    static float dpiFactor = 0.f;
-    if (0.f == dpiFactor) {
-        win::GetHwndDpi(HWND_DESKTOP, &dpiFactor);
-        if (0.f == dpiFactor)
-            dpiFactor = 1.f;
-    }
-    return (int)(value * dpiFactor);
+    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
 }
 
-int DpiAdjust(HWND hwnd, float n)
+bool HasFrameThickness(HWND hwnd)
 {
-    float dpiFactor;
-    GetHwndDpi(hwnd, &dpiFactor);
-    float res = n * dpiFactor;
-    return (int)ceilf(res);
-
+    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_THICKFRAME);
 }
 
-int DpiAdjust(HWND hwnd, int n)
+bool HasCaption(HWND hwnd)
 {
-    return DpiAdjust(hwnd, (float)n);
+    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION); 
 }
 
 }

@@ -5,6 +5,7 @@
 #include "SumatraAbout.h"
 
 #include "AppPrefs.h"
+#include "Dpi.h"
 #include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "resource.h"
@@ -570,14 +571,14 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  1
-#define DOCLIST_MARGIN_LEFT         (int)(40 * win.uiDPIFactor)
-#define DOCLIST_MARGIN_BETWEEN_X    (int)(30 * win.uiDPIFactor)
-#define DOCLIST_MARGIN_RIGHT        (int)(40 * win.uiDPIFactor)
-#define DOCLIST_MARGIN_TOP          (int)(60 * win.uiDPIFactor)
-#define DOCLIST_MARGIN_BETWEEN_Y    (int)(50 * win.uiDPIFactor)
-#define DOCLIST_MARGIN_BOTTOM       (int)(40 * win.uiDPIFactor)
+#define DOCLIST_MARGIN_LEFT         DpiScaleX(win.hwndFrame, 40)
+#define DOCLIST_MARGIN_BETWEEN_X    DpiScaleX(win.hwndFrame, 30)
+#define DOCLIST_MARGIN_RIGHT        DpiScaleX(win.hwndFrame, 40)
+#define DOCLIST_MARGIN_TOP          DpiScaleY(win.hwndFrame, 60)
+#define DOCLIST_MARGIN_BETWEEN_Y    DpiScaleY(win.hwndFrame, 50)
+#define DOCLIST_MARGIN_BOTTOM       DpiScaleY(win.hwndFrame, 40)
 #define DOCLIST_MAX_THUMBNAILS_X    5
-#define DOCLIST_BOTTOM_BOX_DY       (int)(50 * win.uiDPIFactor)
+#define DOCLIST_BOTTOM_BOX_DY       DpiScaleY(win.hwndFrame, 50)
 
 void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
@@ -677,7 +678,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            int iconSpace = (int)(20 * win.uiDPIFactor);
+            int iconSpace = DpiScaleX(win.hwndFrame, 20);
             RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
@@ -687,7 +688,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             SHFILEINFO sfi;
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
             ImageList_Draw(himl, sfi.iIcon, hdc,
-                           isRtl ? page.x + page.dx - (int)(16 * win.uiDPIFactor) : page.x,
+                           isRtl ? page.x + page.dx - DpiScaleX(win.hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
 
             win.staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));

@@ -131,7 +131,7 @@ def delete_old_pre_release_builds():
 def sign(file_path, cert_pwd):
     # not everyone has a certificate, in which case don't sign
     if cert_pwd is None:
-        print("Skipping signing file_path")
+        print("Skipping signing %s", file_path)
         return
     # the sign tool is finicky, so copy it and cert to the same dir as
     # exe we're signing

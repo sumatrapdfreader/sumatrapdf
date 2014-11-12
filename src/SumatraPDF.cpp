@@ -17,6 +17,7 @@
 #include "CryptoUtil.h"
 #include "DirIter.h"
 #include "DisplayModel.h"
+#include "Dpi.h"
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "ExternalPdfViewer.h"
@@ -1023,8 +1024,11 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     if (win->ctrl) {
         if (win->AsFixed()) {
             DisplayModel *dm = win->AsFixed();
-            dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(),
-                                       gGlobalPrefs->customScreenDPI > 0 ? gGlobalPrefs->customScreenDPI : win->dpi);
+            int dpi = DpiGet(win->hwndFrame)->dpiX;
+            if (gGlobalPrefs->customScreenDPI > 0) {
+                dpi = gGlobalPrefs->customScreenDPI;
+            }
+            dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (win->GetEngineType() == Engine_ComicBook || win->GetEngineType() == Engine_ImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);

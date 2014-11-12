@@ -24,6 +24,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
+#include "Dpi.h"
 #include "FrameTimeoutCalculator.h"
 #include "ParseCommandLine.h"
 
@@ -849,7 +850,7 @@ static bool RegisterWinClass()
 static BOOL InstanceInit(int nCmdShow)
 {
     gFontDefault = CreateDefaultGuiFont();
-    win::GetHwndDpi(HWND_DESKTOP, &gUiDPIFactor);
+    gUiDPIFactor = (float)DpiGet(HWND_DESKTOP)->dpiX / 96.f;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 
     CreateMainWindow();

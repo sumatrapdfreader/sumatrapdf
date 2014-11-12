@@ -8,6 +8,7 @@
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "Dpi.h"
 #include "SumatraPDF.h"
 #include "TextSelection.h"
 #include "Toolbar.h"
@@ -312,8 +313,8 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
     win->RepaintAsync();
 }
 
-#define SELECT_AUTOSCROLL_AREA_WIDTH (15 * win->uiDPIFactor)
-#define SELECT_AUTOSCROLL_STEP_LENGTH (int)(10 * win->uiDPIFactor)
+#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScaleX(win->hwndFrame, 15)
+#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScaleY(win->hwndFrame, 10)
 
 bool NeedsSelectionEdgeAutoscroll(WindowInfo *win, int x, int y)
 {

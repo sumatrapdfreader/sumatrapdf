@@ -150,9 +150,6 @@ public:
     HMENU           menu;
     bool            isMenuHidden; // not persisted at shutdown
 
-    int             dpi;
-    float           uiDPIFactor;
-
     DoubleBuffer *  buffer;
 
     MouseAction     mouseAction;
