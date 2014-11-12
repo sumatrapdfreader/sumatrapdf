@@ -1024,10 +1024,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     if (win->ctrl) {
         if (win->AsFixed()) {
             DisplayModel *dm = win->AsFixed();
-            int dpi = DpiGet(win->hwndFrame)->dpiX;
-            if (gGlobalPrefs->customScreenDPI > 0) {
-                dpi = gGlobalPrefs->customScreenDPI;
-            }
+            int dpi = gGlobalPrefs->customScreenDPI > 0 ? dpi = gGlobalPrefs->customScreenDPI : DpiGetPreciseX(win->hwndFrame);
             dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (win->GetEngineType() == Engine_ComicBook || win->GetEngineType() == Engine_ImageDir)

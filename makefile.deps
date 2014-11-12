@@ -192,9 +192,9 @@ $(OS)\Caption.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Caption.h
 $(OS)\Caption.obj: $B\src\Controller.h $B\src\DisplayState.h $B\src\EngineManager.h
 $(OS)\Caption.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\Tabs.h
 $(OS)\Caption.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\Caption.obj: $B\src\utils\BitManip.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
-$(OS)\Caption.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\Caption.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Caption.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OS)\Caption.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\Caption.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\ChmDoc.obj: $B\ext\CHMlib\src\chm_lib.h $B\src\BaseEngine.h $B\src\ChmDoc.h
 $(OS)\ChmDoc.obj: $B\src\EbookBase.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\ChmDoc.obj: $B\src\utils\ByteReader.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
@@ -359,11 +359,12 @@ $(OS)\Installer.obj: $B\src\ifilter\PdfFilter.h $B\src\installer\Install.cpp $B\
 $(OS)\Installer.obj: $B\src\installer\Resource.h $B\src\installer\Uninstall.cpp $B\src\ParseCommandLine.h
 $(OS)\Installer.obj: $B\src\previewer\PdfPreview.h $B\src\SettingsStructs.h $B\src\Translations.h
 $(OS)\Installer.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteOrderDecoder.h
-$(OS)\Installer.obj: $B\src\utils\CmdLineParser.h $B\src\utils\DebugLog.h $B\src\utils\FileTransactions.h
-$(OS)\Installer.obj: $B\src\utils\FileUtil.h $B\src\utils\FrameTimeoutCalculator.h $B\src\utils\GeomUtil.h
-$(OS)\Installer.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
-$(OS)\Installer.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Timer.h
-$(OS)\Installer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\Installer.obj: $B\src\utils\CmdLineParser.h $B\src\utils\DebugLog.h $B\src\utils\Dpi.h
+$(OS)\Installer.obj: $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h $B\src\utils\FrameTimeoutCalculator.h
+$(OS)\Installer.obj: $B\src\utils\GeomUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h
+$(OS)\Installer.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
+$(OS)\Installer.obj: $B\src\utils\Timer.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Installer.obj: $B\src\Version.h
 $(OS)\MakeLzSA.obj: $B\ext\lzma\C\Bra.h $B\ext\lzma\C\LzmaEnc.h $B\ext\lzma\C\Types.h
 $(OS)\MakeLzSA.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\src\utils\Allocator.h
 $(OS)\MakeLzSA.obj: $B\src\utils\BaseUtil.h $B\src\utils\ByteWriter.h $B\src\utils\CmdLineParser.h

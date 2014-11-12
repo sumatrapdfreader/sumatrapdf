@@ -32,7 +32,7 @@ static float GetDefaultFontSize()
 {
     // fonts are scaled at higher DPI settings,
     // undo this here for (mostly) consistent results
-    return DpiUnScaleY(HWND_DESKTOP, gDefaultFontSize);
+    return gDefaultFontSize * 96.0f / DpiGetPreciseY(HWND_DESKTOP);
 }
 
 void SetDefaultEbookFont(const WCHAR *name, float size)

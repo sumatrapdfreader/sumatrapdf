@@ -122,6 +122,20 @@ Dpi *DpiGet(HWND hwnd) {
     return &n->dpi;
 }
 
+int DpiGetPreciseX(HWND hwnd)
+{
+    int dpiX, dpiY;
+    GetDpiXY(hwnd, dpiX, dpiY);
+    return dpiX;
+}
+
+int DpiGetPreciseY(HWND hwnd)
+{
+    int dpiX, dpiY;
+    GetDpiXY(hwnd, dpiX, dpiY);
+    return dpiY;
+}
+
 void DpiRemove(HWND hwnd) {
     DpiNode *n = DpiNodeFindByHwnd(hwnd);
     CrashIf(NULL == n);
