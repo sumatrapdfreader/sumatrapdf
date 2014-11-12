@@ -6,6 +6,7 @@
 
 #include "DisplayState.h"
 
+#define CANVAS_CLASS_NAME       L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
@@ -15,6 +16,22 @@
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/develop.html"
+#endif
+
+// Background color comparison:
+// Adobe Reader X   0x565656 without any frame border
+// Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
+// PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
+// Google Chrome    0xCCCCCC with a symmetric gradient shadow
+// Evince           0xD7D1CB with a pronounced frame shadow
+#ifdef DRAW_PAGE_SHADOWS
+// SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
+#define COL_WINDOW_BG           RGB(0xCC, 0xCC, 0xCC)
+#define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
+#define COL_PAGE_SHADOW         RGB(0x40, 0x40, 0x40)
+#else
+// SumatraPDF       0x999999 without any frame border
+#define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
@@ -93,6 +110,10 @@ struct TabData;
 extern bool                     gDebugShowLinks;
 extern bool                     gShowFrameRate;
 extern bool                     gUseGdiRenderer;
+extern int                      gPolicyRestrictions;
+extern WStrVec                  gAllowedLinkProtocols;
+extern WStrVec                  gAllowedFileTypes;
+
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites                gFavorites;
@@ -103,6 +124,7 @@ extern bool                     gShowFrameRate;
 extern bool                     gSuppressAltKey;
 extern HBITMAP                  gBitmapReloadingCue;
 extern HCURSOR                  gCursorDrag;
+extern bool                     gCrashOnOpen;
 
 #define gPluginMode             (gPluginURL != NULL)
 
@@ -163,5 +185,15 @@ WindowInfo *CreateAndShowWindowInfo();
 UINT MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL);
 void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd);
+bool DocumentPathExists(const WCHAR *path);
+void EnterFullScreen(WindowInfo* win, bool presentation=false);
+void ExitFullScreen(WindowInfo* win);
+void SetCurrentLang(const char *langCode);
+void UpdateUITextForLanguage();
+void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
+void UpdateToolbarAndScrollbarState(WindowInfo *win);
+void RebuildMenuBarForWindow(WindowInfo *win);
+void UpdateCheckAsync(WindowInfo *win, bool autoCheck);
+void DeleteWindowInfo(WindowInfo *win);
 
 #endif

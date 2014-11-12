@@ -213,7 +213,7 @@ MAIN_UI_OBJS = \
 	$(UIA_OBJS)
 
 SUMATRA_OBJS = \
-	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
+	$(OS)\SumatraPDF.obj $(OS)\SumatraStartup.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
 	$(UTILS_LIB) $(MUI_LIB) $(ENGINES_LIB) $(SYNCTEX_OBJS)
 
 INSTALLER_OBJS = \

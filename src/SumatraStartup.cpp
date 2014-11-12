@@ -1,11 +1,62 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// TODO: for the moment it needs to be included from SumatraPDF.cpp
-// and not compiled as stand-alone
+#include "BaseUtil.h"
+#include "SumatraPDF.h"
 
+#include "AppPrefs.h"
+#include "AppTools.h"
+#include "Caption.h"
+#include "Canvas.h"
+#include "CmdLineParser.h"
+#include "CrashHandler.h"
 #include "DbgHelpDyn.h"
+#include "DisplayModel.h"
 #include "Dpi.h"
+#include "FileUtil.h"
+#include "FileHistory.h"
+#include "FileThumbnails.h"
+#include "FileWatcher.h"
+#include "LabelWithCloseWnd.h"
+#include "Mui.h"
+#include "Notifications.h"
+#include "ParseCommandLine.h"
+#include "PdfEngine.h"
+#include "PdfSync.h"
+#include "Print.h"
+#include "RenderCache.h"
+#include "resource.h"
+#include "Search.h"
+#include "Selection.h"
+#include "SplitterWnd.h"
+#include "SquareTreeParser.h"
+#include "StressTesting.h"
+#include "SumatraDialogs.h"
+#include "SumatraProperties.h"
+#include "ThreadUtil.h"
+#include "Translations.h"
+#include "uia/Provider.h"
+#include "UITask.h"
+#include "Version.h"
+#include "WindowInfo.h"
+#include "WinUtil.h"
+
+// "SumatraPDF yellow" similar to the one use for icon and installer
+#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
+
+// it's very light gray but not white so that there's contrast between
+// background and thumbnail, which often have white background because
+// most PDFs have white background
+#define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
+
+#define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
+#define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
+
+#define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
+#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video"
+
+// in SumatraPDF.cpp
+extern LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #ifdef DEBUG
 static bool TryLoadMemTrace()
@@ -220,8 +271,8 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
 
     if (i.enterPresentation || i.enterFullScreen) {
         if (i.enterPresentation && win->isFullScreen || i.enterFullScreen && win->presentation)
-            ExitFullScreen(*win);
-        EnterFullScreen(*win, i.enterPresentation);
+            ExitFullScreen(win);
+        EnterFullScreen(win, i.enterPresentation);
     }
     if (i.startView != DM_AUTOMATIC)
         SwitchToDisplayMode(win, i.startView);
@@ -237,7 +288,7 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         UINT page;
         Vec<RectI> rects;
-            ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+        ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
@@ -370,6 +421,111 @@ Error:
 }
 
 extern void RedirectDllIOToConsole();
+
+static int GetPolicies(bool isRestricted)
+{
+    static struct {
+        const char *name;
+        int perm;
+    } policies[] = {
+        { "InternetAccess", Perm_InternetAccess },
+        { "DiskAccess",     Perm_DiskAccess },
+        { "SavePreferences",Perm_SavePreferences },
+        { "RegistryAccess", Perm_RegistryAccess },
+        { "PrinterAccess",  Perm_PrinterAccess },
+        { "CopySelection",  Perm_CopySelection },
+        { "FullscreenAccess",Perm_FullscreenAccess },
+    };
+
+    gAllowedLinkProtocols.Reset();
+    gAllowedFileTypes.Reset();
+
+    // allow to restrict SumatraPDF's functionality from an INI file in the
+    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
+    ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
+    if (file::Exists(restrictPath)) {
+        ScopedMem<char> restrictData(file::ReadAll(restrictPath, NULL));
+        SquareTree sqt(restrictData);
+        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : NULL;
+        if (!polsec)
+            return Perm_RestrictedUse;
+
+        int policy = Perm_RestrictedUse;
+        for (size_t i = 0; i < dimof(policies); i++) {
+            const char *value = polsec->GetValue(policies[i].name);
+            if (value && atoi(value) != 0)
+                policy = policy | policies[i].perm;
+        }
+        // determine the list of allowed link protocols and perceived file types
+        if ((policy & Perm_DiskAccess)) {
+            const char *value;
+            if ((value = polsec->GetValue("LinkProtocols")) != NULL) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
+                str::ToLower(protocols);
+                str::TransChars(protocols, L":; ", L",,,");
+                gAllowedLinkProtocols.Split(protocols, L",", true);
+            }
+            if ((value = polsec->GetValue("SafeFileTypes")) != NULL) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
+                str::ToLower(protocols);
+                str::TransChars(protocols, L":; ", L",,,");
+                gAllowedFileTypes.Split(protocols, L",", true);
+            }
+        }
+
+        return policy;
+    }
+
+    if (isRestricted)
+        return Perm_RestrictedUse;
+
+    gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
+    gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
+    return Perm_All;
+}
+
+// Registering happens either through the Installer or the Options dialog;
+// here we just make sure that we're still registered
+static bool RegisterForPdfExtentions(HWND hwnd)
+{
+    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode)
+        return false;
+
+    if (IsExeAssociatedWithPdfExtension())
+        return true;
+
+    /* Ask user for permission, unless he previously said he doesn't want to
+       see this dialog */
+    if (!gGlobalPrefs->associateSilently) {
+        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
+        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : NULL);
+    }
+    // for now, .pdf is the only choice
+    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf"))
+        return false;
+
+    AssociateExeWithPdfExtension();
+    return true;
+}
+
+static int RunMessageLoop()
+{
+    HACCEL accTable = LoadAccelerators(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    MSG msg = { 0 };
+
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        // dispatch the accelerator to the correct window
+        WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
+        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+        if (TranslateAccelerator(accHwnd, accTable, &msg))
+            continue;
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return (int)msg.wParam;
+}
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -550,7 +706,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     UpdateUITextForLanguage(); // needed for RTL languages
     if (win->IsAboutWindow()) {
         // TODO: shouldn't CreateAndShowWindowInfo take care of this?
-        UpdateToolbarAndScrollbarState(*win);
+        UpdateToolbarAndScrollbarState(win);
     }
 
     // Make sure that we're still registered as default,

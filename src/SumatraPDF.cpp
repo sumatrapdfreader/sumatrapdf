@@ -93,37 +93,6 @@ bool             gUseGdiRenderer = false;
 // embedded (e.g. in a web browser)
 WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-// "SumatraPDF yellow" similar to the one use for icon and installer
-#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
-
-// it's very light gray but not white so that there's contrast between
-// background and thumbnail, which often have white background because
-// most PDFs have white background
-#define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
-
-// Background color comparison:
-// Adobe Reader X   0x565656 without any frame border
-// Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
-// PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
-// Google Chrome    0xCCCCCC with a symmetric gradient shadow
-// Evince           0xD7D1CB with a pronounced frame shadow
-#ifdef DRAW_PAGE_SHADOWS
-// SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
-#define COL_WINDOW_BG           RGB(0xCC, 0xCC, 0xCC)
-#define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
-#define COL_PAGE_SHADOW         RGB(0x40, 0x40, 0x40)
-#else
-// SumatraPDF       0x999999 without any frame border
-#define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
-#endif
-
-#define CANVAS_CLASS_NAME            L"SUMATRA_PDF_CANVAS"
-#define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
-#define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
-
-#define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
-#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video"
-
 #define SPLITTER_DX         5
 #define SIDEBAR_MIN_WIDTH   150
 
@@ -145,26 +114,22 @@ HCURSOR                      gCursorDrag;
 // set after mouse shortcuts involving the Alt key (so that the menu bar isn't activated)
 bool                         gSuppressAltKey = false;
 
-static bool                         gCrashOnOpen = false;
+bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
 // opening files, printing, following URLs), so that SumatraPDF
 // can be used as a PDF reader on locked down systems
-static int                          gPolicyRestrictions = Perm_All;
+int                          gPolicyRestrictions = Perm_All;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm_DiskAccess)
-static WStrVec                      gAllowedLinkProtocols;
+WStrVec                      gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static WStrVec                      gAllowedFileTypes;
+WStrVec                      gAllowedFileTypes;
 
-static void UpdateUITextForLanguage();
-static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false);
-static void EnterFullScreen(WindowInfo& win, bool presentation=false);
-static void ExitFullScreen(WindowInfo& win);
 static bool SidebarSplitterCb(void *ctx, bool done);
 static bool FavSplitterCb(void *ctx, bool done);
 
@@ -173,7 +138,7 @@ bool HasPermission(int permission)
     return (permission & gPolicyRestrictions) == permission;
 }
 
-static void SetCurrentLang(const char *langCode)
+void SetCurrentLang(const char *langCode)
 {
     if (langCode) {
         if (langCode != gGlobalPrefs->uiLanguage)
@@ -607,69 +572,7 @@ void UpdateRtlLayoutForAllWindows()
     }
 }
 
-static int GetPolicies(bool isRestricted)
-{
-    static struct {
-        const char *name;
-        int perm;
-    } policies[] = {
-        { "InternetAccess", Perm_InternetAccess },
-        { "DiskAccess",     Perm_DiskAccess },
-        { "SavePreferences",Perm_SavePreferences },
-        { "RegistryAccess", Perm_RegistryAccess },
-        { "PrinterAccess",  Perm_PrinterAccess },
-        { "CopySelection",  Perm_CopySelection },
-        { "FullscreenAccess",Perm_FullscreenAccess },
-    };
-
-    gAllowedLinkProtocols.Reset();
-    gAllowedFileTypes.Reset();
-
-    // allow to restrict SumatraPDF's functionality from an INI file in the
-    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
-    ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
-    if (file::Exists(restrictPath)) {
-        ScopedMem<char> restrictData(file::ReadAll(restrictPath, NULL));
-        SquareTree sqt(restrictData);
-        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : NULL;
-        if (!polsec)
-            return Perm_RestrictedUse;
-
-        int policy = Perm_RestrictedUse;
-        for (size_t i = 0; i < dimof(policies); i++) {
-            const char *value = polsec->GetValue(policies[i].name);
-            if (value && atoi(value) != 0)
-                policy = policy | policies[i].perm;
-        }
-        // determine the list of allowed link protocols and perceived file types
-        if ((policy & Perm_DiskAccess)) {
-            const char *value;
-            if ((value = polsec->GetValue("LinkProtocols")) != NULL) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-                str::ToLower(protocols);
-                str::TransChars(protocols, L":; ", L",,,");
-                gAllowedLinkProtocols.Split(protocols, L",", true);
-            }
-            if ((value = polsec->GetValue("SafeFileTypes")) != NULL) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-                str::ToLower(protocols);
-                str::TransChars(protocols, L":; ", L",,,");
-                gAllowedFileTypes.Split(protocols, L",", true);
-            }
-        }
-
-        return policy;
-    }
-
-    if (isRestricted)
-        return Perm_RestrictedUse;
-
-    gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
-    gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
-    return Perm_All;
-}
-
-static void RebuildMenuBarForWindow(WindowInfo *win)
+void RebuildMenuBarForWindow(WindowInfo *win)
 {
     HMENU oldMenu = win->menu;
     win->menu = BuildMenu(win);
@@ -1089,7 +992,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // remove the scrollbars before EbookController starts layouting
-    UpdateToolbarAndScrollbarState(*win);
+    UpdateToolbarAndScrollbarState(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
 
@@ -1187,7 +1090,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
 
     // This should only happen after everything else is ready
     if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen)
-        EnterFullScreen(*win);
+        EnterFullScreen(win);
     if (!args.isNewWindow && win->presentation && win->ctrl)
         win->ctrl->SetPresentationMode(true);
 
@@ -1292,13 +1195,13 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     DeleteDisplayState(ds);
 }
 
-static void UpdateToolbarAndScrollbarState(WindowInfo& win)
+void UpdateToolbarAndScrollbarState(WindowInfo *win)
 {
-    ToolbarUpdateStateForWindow(&win, true);
-    if (!win.AsFixed())
-        ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
-    if (win.IsAboutWindow())
-        win::SetText(win.hwndFrame, SUMATRA_WINDOW_TITLE);
+    ToolbarUpdateStateForWindow(win, true);
+    if (!win->AsFixed())
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+    if (win->IsAboutWindow())
+        win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
 }
 
 static void CreateSidebar(WindowInfo* win)
@@ -1415,11 +1318,11 @@ WindowInfo *CreateAndShowWindowInfo()
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
 
     if (WIN_STATE_FULLSCREEN == windowState)
-        EnterFullScreen(*win);
+        EnterFullScreen(win);
     return win;
 }
 
-static void DeleteWindowInfo(WindowInfo *win)
+void DeleteWindowInfo(WindowInfo *win)
 {
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
@@ -1470,7 +1373,7 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
 
 // document path is either a file or a directory
 // (when browsing images inside directory).
-static bool DocumentPathExists(const WCHAR *path)
+bool DocumentPathExists(const WCHAR *path)
 {
     if (file::Exists(path) || dir::Exists(path))
         return true;
@@ -1665,7 +1568,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
-    UpdateToolbarAndScrollbarState(*win);
+    UpdateToolbarAndScrollbarState(win);
     UpdateToolbarState(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
@@ -1825,30 +1728,6 @@ void AssociateExeWithPdfExtension()
     // Remind the user, when a different application takes over
     str::ReplacePtr(&gGlobalPrefs->associatedExtensions, L".pdf");
     gGlobalPrefs->associateSilently = false;
-}
-
-// Registering happens either through the Installer or the Options dialog;
-// here we just make sure that we're still registered
-static bool RegisterForPdfExtentions(HWND hwnd)
-{
-    if (IsRunningInPortableMode() || !HasPermission(Perm_RegistryAccess) || gPluginMode)
-        return false;
-
-    if (IsExeAssociatedWithPdfExtension())
-        return true;
-
-    /* Ask user for permission, unless he previously said he doesn't want to
-       see this dialog */
-    if (!gGlobalPrefs->associateSilently) {
-        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
-        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : NULL);
-    }
-    // for now, .pdf is the only choice
-    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf"))
-        return false;
-
-    AssociateExeWithPdfExtension();
-    return true;
 }
 
 #if defined(SUPPORTS_AUTO_UPDATE) && !defined(HAS_PUBLIC_APP_KEY)
@@ -2128,7 +2007,7 @@ public:
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-static void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
+void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
 {
     if (!HasPermission(Perm_InternetAccess))
         return;
@@ -2179,7 +2058,7 @@ static void RerenderEverything()
     }
 }
 
-static void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
+void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
 {
     if (gGlobalPrefs->useSysColors) {
         text = GetSysColor(COLOR_WINDOWTEXT);
@@ -2349,7 +2228,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     else if (win->AsEbook())
         win->AsEbook()->EnableMessageHandling(false);
     if (win->presentation)
-        ExitFullScreen(*win);
+        ExitFullScreen(win);
 
     bool lastWindow = (1 == gWindows.Count());
     // hide the window before saving prefs (closing seems slightly faster that way)
@@ -2380,7 +2259,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         PostQuitMessage(0);
     } else if (lastWindow && !quitIfLast) {
         CrashIf(!gWindows.Contains(win));
-        UpdateToolbarAndScrollbarState(*win);
+        UpdateToolbarAndScrollbarState(win);
         UpdateTabWidth(win);
     }
 }
@@ -3227,110 +3106,110 @@ static void OnMenuGoToPage(WindowInfo& win)
         win.ctrl->GoToPage(newPageNo, true);
 }
 
-static void EnterFullScreen(WindowInfo& win, bool presentation)
+void EnterFullScreen(WindowInfo* win, bool presentation)
 {
     if (!HasPermission(Perm_FullscreenAccess) || gPluginMode)
         return;
 
-    if ((presentation ? win.presentation : win.isFullScreen) || !IsWindowVisible(win.hwndFrame))
+    if ((presentation ? win->presentation : win->isFullScreen) || !IsWindowVisible(win->hwndFrame))
         return;
 
-    AssertCrash(presentation ? !win.isFullScreen : !win.presentation);
+    AssertCrash(presentation ? !win->isFullScreen : !win->presentation);
     if (presentation) {
-        AssertCrash(win.ctrl);
-        if (!win.IsDocLoaded())
+        AssertCrash(win->ctrl);
+        if (!win->IsDocLoaded())
             return;
 
-        if (IsZoomed(win.hwndFrame))
-            win.windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
+        if (IsZoomed(win->hwndFrame))
+            win->windowStateBeforePresentation = WIN_STATE_MAXIMIZED;
         else
-            win.windowStateBeforePresentation = WIN_STATE_NORMAL;
-        win.presentation = PM_ENABLED;
-        win.tocBeforeFullScreen = win.tocVisible;
+            win->windowStateBeforePresentation = WIN_STATE_NORMAL;
+        win->presentation = PM_ENABLED;
+        win->tocBeforeFullScreen = win->tocVisible;
 
-        SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
+        SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
-        win.isFullScreen = true;
-        win.tocBeforeFullScreen = win.IsDocLoaded() ? win.tocVisible : false;
+        win->isFullScreen = true;
+        win->tocBeforeFullScreen = win->IsDocLoaded() ? win->tocVisible : false;
     }
 
     // Remove TOC and favorites from full screen, add back later on exit fullscreen
     // TODO: make showFavorites a per-window pref
     bool showFavoritesTmp = gGlobalPrefs->showFavorites;
-    if (win.tocVisible || gGlobalPrefs->showFavorites) {
-        SetSidebarVisibility(&win, false, false);
+    if (win->tocVisible || gGlobalPrefs->showFavorites) {
+        SetSidebarVisibility(win, false, false);
         // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
     }
 
-    long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
-    if (!presentation || !win.isFullScreen)
-        win.nonFullScreenWindowStyle = ws;
+    long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
+    if (!presentation || !win->isFullScreen)
+        win->nonFullScreenWindowStyle = ws;
     // remove window styles that add to non-client area
     ws &= ~(WS_CAPTION|WS_THICKFRAME);
     ws |= WS_MAXIMIZE;
 
-    win.nonFullScreenFrameRect = WindowRect(win.hwndFrame);
-    RectI rect = GetFullscreenRect(win.hwndFrame);
+    win->nonFullScreenFrameRect = WindowRect(win->hwndFrame);
+    RectI rect = GetFullscreenRect(win->hwndFrame);
 
-    SetMenu(win.hwndFrame, NULL);
-    ShowWindow(win.hwndReBar, SW_HIDE);
-    ShowWindow(win.hwndTabBar, SW_HIDE);
-    ShowWindow(win.hwndCaption, SW_HIDE);
+    SetMenu(win->hwndFrame, NULL);
+    ShowWindow(win->hwndReBar, SW_HIDE);
+    ShowWindow(win->hwndTabBar, SW_HIDE);
+    ShowWindow(win->hwndCaption, SW_HIDE);
 
-    SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
-    SetWindowPos(win.hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
+    SetWindowPos(win->hwndFrame, NULL, rect.x, rect.y, rect.dx, rect.dy, SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER);
 
     if (presentation)
-        win.ctrl->SetPresentationMode(true);
+        win->ctrl->SetPresentationMode(true);
 
     // Make sure that no toolbar/sidebar keeps the focus
-    SetFocus(win.hwndFrame);
+    SetFocus(win->hwndFrame);
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
-static void ExitFullScreen(WindowInfo& win)
+void ExitFullScreen(WindowInfo *win)
 {
-    if (!win.isFullScreen && !win.presentation)
+    if (!win->isFullScreen && !win->presentation)
         return;
 
-    bool wasPresentation = PM_DISABLED != win.presentation;
-    if (wasPresentation && win.IsDocLoaded()) {
-        win.ctrl->SetPresentationMode(false);
-        win.presentation = PM_DISABLED;
+    bool wasPresentation = PM_DISABLED != win->presentation;
+    if (wasPresentation && win->IsDocLoaded()) {
+        win->ctrl->SetPresentationMode(false);
+        win->presentation = PM_DISABLED;
     }
     else
-        win.isFullScreen = false;
+        win->isFullScreen = false;
 
     if (wasPresentation) {
-        KillTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID);
+        KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
         SetCursor(IDC_ARROW);
     }
 
-    bool tocVisible = win.IsDocLoaded() && win.tocBeforeFullScreen;
+    bool tocVisible = win->IsDocLoaded() && win->tocBeforeFullScreen;
     if (tocVisible || gGlobalPrefs->showFavorites)
-        SetSidebarVisibility(&win, tocVisible, gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
 
-    if (win.tabsInTitlebar)
-        ShowWindow(win.hwndCaption, SW_SHOW);
-    if (win.tabsVisible)
-        ShowWindow(win.hwndTabBar, SW_SHOW);
-    if (gGlobalPrefs->showToolbar && !win.AsEbook())
-        ShowWindow(win.hwndReBar, SW_SHOW);
-    if (!win.isMenuHidden)
-        SetMenu(win.hwndFrame, win.menu);
+    if (win->tabsInTitlebar)
+        ShowWindow(win->hwndCaption, SW_SHOW);
+    if (win->tabsVisible)
+        ShowWindow(win->hwndTabBar, SW_SHOW);
+    if (gGlobalPrefs->showToolbar && !win->AsEbook())
+        ShowWindow(win->hwndReBar, SW_SHOW);
+    if (!win->isMenuHidden)
+        SetMenu(win->hwndFrame, win->menu);
 
-    ClientRect cr(win.hwndFrame);
-    SetWindowLong(win.hwndFrame, GWL_STYLE, win.nonFullScreenWindowStyle);
+    ClientRect cr(win->hwndFrame);
+    SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
     UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
-    SetWindowPos(win.hwndFrame, NULL, 0, 0, 0, 0, flags);
-    MoveWindow(win.hwndFrame, win.nonFullScreenFrameRect);
+    SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, flags);
+    MoveWindow(win->hwndFrame, win->nonFullScreenFrameRect);
     // TODO: this CrashIf() fires in pre-release e.g. 64011
     //CrashIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
     // We have to relayout here, because it isn't done in the SetWindowPos nor MoveWindow,
     // if the client rectangle hasn't changed.
-    if (ClientRect(win.hwndFrame) == cr)
-        RelayoutFrame(&win);
+    if (ClientRect(win->hwndFrame) == cr)
+        RelayoutFrame(win);
 }
 
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation)
@@ -3340,10 +3219,10 @@ void OnMenuViewFullscreen(WindowInfo* win, bool presentation)
     if (!win->presentation && !win->isFullScreen)
         RememberDefaultWindowPosition(*win);
     else
-        ExitFullScreen(*win);
+        ExitFullScreen(win);
 
     if (enterFullScreen && (!presentation || win->IsDocLoaded()))
-        EnterFullScreen(*win, presentation);
+        EnterFullScreen(win, presentation);
 }
 
 static void OnMenuViewPresentation(WindowInfo& win)
@@ -3722,7 +3601,7 @@ static void UpdateSidebarTitles(WindowInfo* win)
     SetLabel(win->favLabelWithClose, _TR("Favorites"));
 }
 
-static void UpdateUITextForLanguage()
+void UpdateUITextForLanguage()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -4257,7 +4136,7 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
     return 0;
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
 
@@ -4375,9 +4254,9 @@ InitMouseWheelInfo:
                 // in tablets it's possible to rotate the screen. if we're
                 // in full screen, resize our window to match new screen size
                 if (win->presentation)
-                    EnterFullScreen(*win, true);
+                    EnterFullScreen(win, true);
                 else if (win->isFullScreen)
-                    EnterFullScreen(*win, false);
+                    EnterFullScreen(win, false);
             }
 
             return 0;
@@ -4457,25 +4336,6 @@ InitMouseWheelInfo:
     return 0;
 }
 
-static int RunMessageLoop()
-{
-    HACCEL accTable = LoadAccelerators(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_SUMATRAPDF));
-    MSG msg = { 0 };
-
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        // dispatch the accelerator to the correct window
-        WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
-        HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        if (TranslateAccelerator(accHwnd, accTable, &msg))
-            continue;
-
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    return (int)msg.wParam;
-}
-
 void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
@@ -4507,7 +4367,3 @@ void CrashHandlerMessage()
             LaunchBrowser(CRASH_REPORT_URL);
     }
 }
-
-// TODO: a hackish but cheap way to separate startup code.
-// Could be made to compile stand-alone
-#include "SumatraStartup.cpp"
