@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3185ae96575be85e5dfb5fca6b56912f3b244a1a
+90fc2e7917e988f8c6f8d852af40579a03bb09b6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -134,7 +134,7 @@ ta:மெய் அளவு\tCtrl+1
 th:ขนาดจริง\tCtrl+1
 tl:Tunay na Laki\tCtrl+1
 tr:Gerçek &Boyut\tCtrl+1
-tw:實際大小(&U)\tCtrl+1
+tw:實際大小(&A)\tCtrl+1
 uk:Справжній розмір\tCtrl+1
 uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
@@ -6560,6 +6560,7 @@ sp-rs:Pozicija kursora
 sr-rs:Позиција курсора
 sv:Muspekarens position:
 tr:İmleç konumu:
+tw:游標位置
 uk:Позиція вказівника:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
@@ -15694,6 +15695,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 :This document uses unsupported features (%s) and might not render properly
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
+id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 :Title:
 af:Titel:
 am:Անունը.
