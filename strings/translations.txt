@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-90fc2e7917e988f8c6f8d852af40579a03bb09b6
+193ee1f8df5896601b2e16341e29bee745425fd3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15695,6 +15695,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 :This document uses unsupported features (%s) and might not render properly
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
+he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 :Title:
 af:Titel:
