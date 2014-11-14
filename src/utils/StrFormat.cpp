@@ -21,15 +21,7 @@ static Arg::Type typeFromChar(char c) {
     return Arg::Invalid;
 }
 
-Fmt::Fmt(const char *fmt) {
-    isOk = true;
-    nStrings = 0;
-    nArgDefs = 0;
-    nArgsExpected = 0;
-    nArgs = 0;
-    currPercArg = 0;
-    parseFormat(fmt);
-}
+Fmt::Fmt(const char *fmt) { ParseFormat(fmt); }
 
 void Fmt::addStr(const char *s, size_t len) {
     CrashIf(nStrings >= MaxArgs);
@@ -38,21 +30,30 @@ void Fmt::addStr(const char *s, size_t len) {
     nStrings++;
 }
 
-void Fmt::addArg(const char *s, size_t len) {
-    CrashIf(nArgDefs >= MaxArgs);
-    if (*s == '{') {
-        CrashIf(s[len - 1] != '}');
-        argDefs[nArgDefs].t = Arg::Any;
-        // TODO: extract number between { } and set as argDefs[nArgs].argNo
-        CrashIf(true);
-    } else if (*s == '%') {
-        argDefs[nArgDefs].t = typeFromChar(s[1]);
-        argDefs[nArgDefs].argNo = currPercArg;
-        ++currPercArg;
-    } else {
-        CrashIf(true);
+const char *Fmt::parseArgDefPositional(const char *fmt) {
+    CrashIf(*fmt != '{');
+    ++fmt;
+    int n = 0;
+    while (*fmt != '}') {
+        // TODO: this could be more featurful
+        CrashIf(!str::IsDigit(*fmt));
+        n = n * 10 + (*fmt - '0');
+        ++fmt;
     }
+    argDefs[nArgDefs].t = Arg::Any;
+    argDefs[nArgDefs].argNo = n;
     ++nArgDefs;
+    return fmt + 1;
+}
+
+const char *Fmt::parseArgDefPerc(const char *fmt) {
+    CrashIf(*fmt != '%');
+    // TODO: more features
+    argDefs[nArgDefs].t = typeFromChar(fmt[1]);
+    argDefs[nArgDefs].argNo = currPercArg;
+    ++nArgDefs;
+    ++currPercArg;
+    return fmt + 2;
 }
 
 // get until a %$c or {$n}
@@ -72,7 +73,7 @@ const char *Fmt::parseStr(const char *fmt) {
         }
         if ('{' == c) {
             addStr(start, fmt - start);
-            return fmt;
+            return parseArgDefPositional(fmt);
         }
         if ('%' == c) {
             // detect and skip %%
@@ -81,34 +82,11 @@ const char *Fmt::parseStr(const char *fmt) {
                 continue;
             }
             addStr(start, fmt - start);
-            return fmt;
+            return parseArgDefPerc(fmt);
         }
         ++fmt;
     }
     return NULL;
-}
-
-const char *Fmt::parseArg(const char *fmt) {
-    const char *start = fmt;
-    if ('{' == *fmt) {
-        ++fmt;
-        while (*fmt != '}') {
-            // TODO: this could be more featurful
-            CrashIf(0 == *fmt);
-            CrashIf(!str::IsDigit(*fmt));
-            ++fmt;
-        }
-        ++fmt;
-        addArg(fmt, start - fmt);
-    } else if ('%' == *fmt) {
-        // TODO: this assumes only a single-letter format like %s
-        ++fmt;
-        ++fmt;
-        addArg(start, start - fmt);
-    } else {
-        CrashIf(true);
-    }
-    return fmt;
 }
 
 static bool hasArgDefWithNo(Arg *argDefs, int nArgDefs, int no) {
@@ -120,10 +98,16 @@ static bool hasArgDefWithNo(Arg *argDefs, int nArgDefs, int no) {
     return false;
 }
 
-void Fmt::parseFormat(const char *fmt) {
+Fmt &Fmt::ParseFormat(const char *fmt) {
+    nStrings = 0;
+    nArgDefs = 0;
+    nArgsExpected = 0;
+    nArgs = 0;
+    currPercArg = 0;
+    res.Reset();
+
     while (*fmt) {
         fmt = parseStr(fmt);
-        fmt = parseArg(fmt);
     }
     // check that arg numbers in {$n} makes sense
     for (int i = 0; i < nArgDefs; i++) {
@@ -137,6 +121,7 @@ void Fmt::parseFormat(const char *fmt) {
     for (int i = 0; i <= nArgsExpected; i++) {
         CrashIf(!hasArgDefWithNo(argDefs, nArgDefs, i));
     }
+    return *this;
 }
 
 Fmt &Fmt::i(int i) {
@@ -248,38 +233,12 @@ char *Fmt::Get() {
 }
 
 char *Fmt::GetDup() { return str::Dup(Get()); }
-};
+}
 
 void RunFmtTests() {
     fmt::Fmt f("int: %d, s: %s");
     const char *s = f.i(5).s("foo").Get();
     CrashIf(!str::Eq(s, "int: 5, s: foo"));
+    s = f.ParseFormat("int: {1}, s: {0}").s(L"hello").i(-1).Get();
+    CrashIf(!str::Eq(s, "int: -1, s: hello"));
 }
-
-#if 0
-namespace str {
-
-// parse '{$n}' part. Returns true if string follows this pattern
-// and false if not.
-// If returns true, sInOut is repositioned after '}'
-static bool ParsePositional(const char **sInOut, int *nOut) {
-    const char *s = *sInOut;
-    CrashIf(*s != '{');
-    s++;
-    int n = 0;
-    while (IsDigit(*s)) {
-        n = n * 10 + (*s - '0');
-        ++s;
-    }
-    if (s == *sInOut)
-        return false;
-    if (*s != '}')
-        return false;
-    s++;
-    *sInOut = s;
-    *nOut = n;
-    return true;
-}
-
-}
-#endif

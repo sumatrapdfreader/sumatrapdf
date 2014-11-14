@@ -62,14 +62,17 @@ class Fmt {
     Fmt &c(char);
     Fmt &f(float);
     Fmt &f(double);
+
+    Fmt &ParseFormat(const char *fmt);
     char *Get();
     char *GetDup();
 
-    void parseFormat(const char *fmt);
     const char *parseStr(const char *fmt);
-    const char *parseArg(const char *fmt);
+    const char *parseArgDef(const char *fmt);
     void addStr(const char *s, size_t len);
-    void addArg(const char *s, size_t len);
+    const char *parseArgDefPerc(const char *);
+    const char *parseArgDefPositional(const char *);
+
     void serializeArg(int argDefNo);
 
     // when "foo {0} bar %d" is parsed,
@@ -78,7 +81,6 @@ class Fmt {
     FmtStr strings[MaxArgs];
     Arg argDefs[MaxArgs];
     Arg args[MaxArgs];
-    bool isOk;
     int nStrings;
     int nArgDefs;
     int nArgsExpected;
