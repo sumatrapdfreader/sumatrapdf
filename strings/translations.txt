@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-193ee1f8df5896601b2e16341e29bee745425fd3
+56657456ebaca73d3d8b96f49f52d1736c462aa9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7967,7 +7967,7 @@ no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
 pl:Nie można wprowadzić poszerzonych informacji o rozszerzeniu pliku do rejestru
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
-ru:Не удалось записать полную информацию о расширении файла в регистр
+ru:Не удалось записать полную информацию о расширении файла в реестр
 sk:Zápis rozšírených informácií o prípone súboru do registrov bolo neúspešné
 sl:Pisanje v register informacij o razširjenem podaljšku datoteke ni uspelo
 sp-rs:Neuspeli upis proširene ekstenzije fajla u registri
@@ -8015,7 +8015,7 @@ no:Kan ikke lagre avinstalleringsinformasjon i Registeret
 pl:Nie można zapisać informacji o usunięciu programu do rejestru
 pt:Falha ao escrever as informações de desinstalação no registo
 ro:Eroare la scrierea informatiilor de dezinstalare in registri
-ru:Не удалось записать информацию для деинсталлятора в регистр
+ru:Не удалось записать информацию для деинсталлятора в реестр
 sk:Uloženie informácií pre odinštalovanie do registrov bolo neúspešné
 sl:Pisanje v register informacij o odstranitvi ni uspelo
 sp-rs:Neuspeli upis instalacionih informacija u registri
@@ -10344,7 +10344,7 @@ pa:PDF ਫਾਈਲਾਂ SumatraPDF ਵਿੱਚ ਖੋਲੋ?
 pl:Ustawić program SumatraPDF jako domyślną przeglądarkę plików PDF?
 pt:Tornar SumatraPDF a aplicação principal para PDFs?
 ro:Setați SumatraPDF ca program implicit pentru fișierele PDF?
-ru:Сделать SumatraPDF стандартной программой просмотра PDF-файлов?
+ru:Сделать SumatraPDF программой просмотра PDF-файлов по умолчанию?
 si:PDF ගොනු සදහා පෙරනිමි මෘදුකාංගය ලෙස SumatraPDF සකසන්නද?
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 sl:Naj bo SumatraPDF privezti program za datoteke PDF?
@@ -13970,7 +13970,7 @@ no:Velg innhold med Ctrl+Venstre museknapp
 pl:Zaznacz zawartość wciskając Ctrl i lewy przycisk myszy
 pt:Selecione o conteúdo com Ctrl+botão esquerdo do rato
 ro:Selectați conținut cu Ctrl+buton stânga maus
-ru:Выберите содержимое, нажав <Ctrl> и левую кнопку мыши
+ru:Выберите содержимое, нажав Ctrl и левую кнопку мыши
 si:Ctrl+left mouse button සමග අන්තර්ගතය තෝරන්න
 sk:Označiť obsah s "Ctrl + ľavé tlačidlo myši"
 sl:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
@@ -15697,6 +15697,7 @@ de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlende
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
+ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 :Title:
 af:Titel:
 am:Անունը.
