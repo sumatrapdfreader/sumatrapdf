@@ -27,7 +27,30 @@ enum { MaxArgs = 16 };
 struct FmtStr {
     const char *s;
     size_t len;
-    int argNo; // only for argDefs
+};
+
+// both a definition of the expected type and argument value
+struct Arg {
+    enum Type {
+        Char,
+        Int,
+        Float,
+        Double,
+        Str,
+        WStr,
+        Any,
+        Invalid,
+    };
+    Type t;
+    int argNo;
+    union {
+        char c;
+        int i;
+        float f;
+        double d;
+        const char *s;
+        const WCHAR *ws;
+    };
 };
 
 class Fmt {
@@ -39,23 +62,29 @@ class Fmt {
     Fmt &c(char);
     Fmt &f(float);
     Fmt &f(double);
-    char *get();
+    char *Get();
+    char *GetDup();
 
     void parseFormat(const char *fmt);
     const char *parseStr(const char *fmt);
     const char *parseArg(const char *fmt);
     void addStr(const char *s, size_t len);
     void addArg(const char *s, size_t len);
+    void serializeArg(int argDefNo);
 
     // when "foo {0} bar %d" is parsed,
     // strings has "foo ", " bar "
     // argDefs has "{0}" and "%d"
     FmtStr strings[MaxArgs];
-    FmtStr argDefs[MaxArgs];
+    Arg argDefs[MaxArgs];
+    Arg args[MaxArgs];
     bool isOk;
     int nStrings;
+    int nArgDefs;
+    int nArgsExpected;
     int nArgs;
     int currPercArg;
+    str::Str<char> res;
 };
 }
 

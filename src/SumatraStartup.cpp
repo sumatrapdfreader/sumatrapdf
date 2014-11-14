@@ -576,6 +576,8 @@ static bool AutoUpdateMain()
 }
 #endif
 
+extern void RunFmtTests();
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -671,6 +673,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!RegisterWinClass())
         goto Exit;
 
+    //RunFmtTests();
     CrashIf(hInstance != GetModuleHandle(NULL));
     if (!InstanceInit(nCmdShow))
         goto Exit;
