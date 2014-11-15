@@ -11,7 +11,6 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "Dpi.h"
-#include "EbookBase.h"
 #include "Mui.h"
 #include "EbookControls.h"
 #include "FileUtil.h"

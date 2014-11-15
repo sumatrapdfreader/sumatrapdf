@@ -34,7 +34,6 @@
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "HtmlParserLookup.h"
-#include "EbookBase.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"

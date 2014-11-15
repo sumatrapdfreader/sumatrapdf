@@ -22,7 +22,6 @@
 #include "FileWatcher.h"
 #include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
-#include "EbookBase.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
