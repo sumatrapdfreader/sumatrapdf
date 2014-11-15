@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-56657456ebaca73d3d8b96f49f52d1736c462aa9
+337e09a98eb9b743666ce71978c018d6aaa370fd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2364,7 +2364,7 @@ gl:&Lembrar estes axustes para cada documento
 he:קבע הגדרות אלו לכל הקבצים
 hi:प्रत्येक दस्तावेज़ के लिए इन सेटिंग्स को &याद रखें
 hr:&Upamti ove postavke za svaki pojedini dokument
-hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
+hu:Eltérő nézetbeállítások megjegyzése dokumentumonként
 id:&Ingat pengaturan ini untuk setiap dokumen
 it:&Ricorda queste impostazioni per ogni documento
 ja:ドキュメントごとにこれらの設定を記憶する(&R)
@@ -3434,7 +3434,7 @@ gl:Engadir páxina %s aos favoritos  cun nome (opcional):
 he:הוסף את עמוד מס' %s למועדפים בשם:
 hi:पृष्ठ %s को पसंदीदा सूचि में नाम (वैकल्पिक) के साथ: जोड़ें:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
-hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
+hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (nem kötelező):
 id:Tambah Halaman %s Ke Favorit Dengan Nama:
 it:Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 ja:ページ %s に名前を付けて追加
@@ -3557,7 +3557,7 @@ gl:Avanzado
 he:מתקדם
 hi:उन्नत
 hr:Napredno
-hu:Haladó
+hu:Speciális
 id:Lanjutan
 it:Avanzate
 ja:詳細設定
@@ -3862,7 +3862,7 @@ gl:Asociar con ficheiros PDF?
 he:לשייך לקובצי PDF?
 hi:PDF फाईलों से संबंध बनाइए?
 hr:Asocirati sa PDF datotekama?
-hu:Társítsuk a PDF fájlokkal?
+hu:Társítás a PDF fájlokkal?
 id:Asosiasikan dengan berkas PDF?
 it:Associare ai file PDF?
 ja:PDF ファイルと関連付けますか？
@@ -3928,7 +3928,7 @@ gl:Adxunto: %s
 he:נספח: %s
 hi:संलान्गित : %s
 hr:Prilog: %s
-hu:Csatolmány: %s
+hu:Melléklet: %s
 id:Lampiran: %s
 it:Allegato: %s
 ja:添付: %s
@@ -4722,7 +4722,7 @@ gl:Non se pode imprimir este ficheiro
 he:הדפסת הקובץ נכשלה.
 hi:इस फ़ाइल का छपाई नहीं किया जा सकता
 hr:Ne mogu ispisati ovu datoteku
-hu:Ez a file nem nyomtatható
+hu:Ez a fájl nem nyomtatható
 id:Tidak dapat mencetak berkas ini
 it:Impossibile stampare questo file
 ja:このファイルを印刷できません
@@ -4783,7 +4783,7 @@ gl:Non se pode iniciar o comando de búsqueda inversa. Revisa a liña de comando
 he:פקודת חיפוש הפוך נכשלה. אנא בדוק את שורת הפקודה בהגדרות.
 hi:उलटा खोज कमांड शुरू हो पा रहा । कृपया सेटिंग्स में कमांड लाइन की जाँच करें ।
 hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredbeni redak u postavkama.
-hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban, a beállításokat.
+hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban a beállításokat.
 id:Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
 it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
 ja:逆順検索コマンドを開始できません。設定でコマンド ラインをチェックしてください。
@@ -4978,7 +4978,7 @@ gl:Pechar
 he:סגור
 hi:Close
 hr:Zatvori
-hu:Bezár
+hu:Bezárás
 id:Tutup
 it:Chiudi
 ja:閉じる
@@ -5347,7 +5347,7 @@ gl:Axudar coa traducción
 he:סייע בתרגום
 hi:अनुवाद करने में मदद करें
 hr:Pomozi prijevodom
-hu:&Járulj hozzá a fordításhoz
+hu:&Hozzájárulás a fordításhoz
 id:Bantu Alihbahasa
 it:Contribuisci alla traduzione
 ja:翻訳の提供
@@ -6711,7 +6711,7 @@ gl:&Aumento por defecto:
 he:זום ברירת מחדל:
 hi:डिफ़ॉल्ट पृष्ठ &आकार:
 hr:Pretpostavljeno &uvećanje:
-hu:Alap nagyítás:
+hu:Alapnagyítás:
 id:Pembesaran &Standar
 it:&Ingrandimento predefinito:
 ja:既定の拡大率(&Z):
@@ -7686,7 +7686,7 @@ fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 gl:Fallou a copia do desinstalador no cartafol temporal
 he:העתקת מסיר התוכנה לתיקייה הזמנית נכשלה.
 hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
-hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
+hu:Az eltávolító ideiglenes könyvtárba másolása nem sikerült
 id:Gagal mengkopi uninstaller ke direktori temp
 it:Impossibile copiare programma disinstallazione nella cartella temporanea
 ja:アンインストーラを一時ディレクトリへコピーするのに失敗しました
@@ -7785,7 +7785,7 @@ fr:La suppression des clés de la base de registre du désinstalleur a échoué
 gl:Fallou o borrado das claves de rexistro
 he:מחיקת מפתחות רישום של מסיר התוכנה נכשלה.
 hr:Neuspjeh kod brisanja ključeva registra deinstalatera
-hu:Az eltávolító registry kulcsainak törlése sikertelen
+hu:Az eltávolító rendszerleíró adatbázis kulcsainak törlése sikertelen
 id:Gagal menghapus kunci registry uninstaller
 it:Impossibile rimuovere chiavi registro
 ja:アンインストーラのレジストリキーを削除するのに失敗しました
@@ -8002,7 +8002,7 @@ fr:L'écriture des informations de désinstallation dans la base de registre a �
 gl:Fallouse ao escribir a información de desintalación no rexistro
 he:כתיבת נתוני הסרת התוכנה ברישום נכשלה.
 hr:Neuspjeh kod zapisivanja deinstalacijskih informacija u registar
-hu:Eltávolítással kapcsolatos információk registry-be írása sikertelen
+hu:Eltávolítással kapcsolatos információk rendszerleíró adatbázisba írása sikertelen
 id:Gagal menulis info penghapusan program ke registry
 it:Scrittura fallita informazione disinstallazione nel registro
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
@@ -9738,7 +9738,7 @@ gl:Usar "F3" para amosar seguinte resultado
 he:לחיפוש המופע הבא, לחץ על F3
 hi:सुझाव: फिर से खोजने के लिए F3 कुंजी का प्रयोग करें
 hr:Pomoć: upotrijebite tipku F3 za ponovnu pretragu
-hu:Tipp: Nyomja meg az F3-at a következő találathoz
+hu:Tipp: Nyomja meg az F3 gombot a következő találathoz
 id:Tips : Gunakan tombol F3 untuk mengulangi pencarian
 it:Consiglio: usare <F3> per trovare il successivo
 ja:ヒント: 再び検索するには F3 キーを使用します
@@ -11247,7 +11247,7 @@ gl:Abrir no PDF-XChange
 he:פתח ב- PDF-XChange
 hi:पीडीएफ &Xchange में खोलें
 hr:Otvori u programu PDF-XChange
-hu:Megnyitás PDF-XChangeben
+hu:Megnyitás PDF-XChange-ben
 id:Buka di PDF-&XChange
 it:Apri con PDF-XChange
 ja:PDF-XChange で開く(&I)
@@ -14400,7 +14400,7 @@ gl:Amosar Favoritos
 he:הצג מועדפים
 hi:पसंदीदा दिखाएँ
 hr:Prikaži favorite
-hu:Mutasd a kedvenceket
+hu:Kedvencek megjelenítése
 id:Tampilkan Favorit
 it:Visualizza Preferiti
 ja:お気に入りの表示
@@ -14687,7 +14687,7 @@ gl:Desculpe, isto non debería ocurrir\n\nPor favor, prema 'Cancelar', se quere 
 he:מצטערים על התקלה!\n\nאנא לחץ על 'ביטול' אם ברצונך לסייע לנו בפתרון הבעיה.
 hi:क्षमा करें, ऐसा नहीं होना चाहिए; अगर आप इस दुर्घटना को ठीक करने में मदद करना चाहते है : \n\n कृपया  'रद्द करें' दबाएँ |
 hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
-hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a 'Mégse' gombot, ha segíteni szeretne nekünk a hiba kijavításában.
+hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a Mégse gombot, ha segíteni szeretne nekünk a hiba kijavításában.
 id:Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.
 it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona <Annulla>.
 ja:謎のエラーが発生しました！\n\n「キャンセル」をクリックして、このエラーが起こった状況を報告して下さると助かります。
@@ -15281,7 +15281,7 @@ gl:SumatraPDF é o seu lector de PDF por defecto
 he:SumatraPDF מוגדרת כתוכנת ברירת מחדל ל- PDF
 hi:Sumatra पीडीएफ आपका डिफ़ॉल्ट पीडीएफ रीडर है
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
-hu:A SumatraPDF az alapértelmezett PDF-olvasója
+hu:A SumatraPDF az alapértelmezett PDF-olvasó
 id:SumatraPDF adalah pembaca berkas PDF utama Anda
 it:SumatraPDF è il lettore PDF predefinito
 ja:SumatraPDF は規定の PDF リーダーです
@@ -15696,6 +15696,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
+hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 :Title:

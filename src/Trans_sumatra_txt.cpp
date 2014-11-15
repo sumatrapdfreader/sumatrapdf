@@ -6277,7 +6277,7 @@ const char * gTranslations_hu =
   "Nyomt&at\303\241s...\tCtrl+P\0"\
   "Nyomtat\303\241s... (tiltott)\0"\
   "Jelsz\303\263 megjegyz\303\251se a dokumentumhoz\0"\
-  "Elt\303\251r\305\221 n\303\251zet-be\303\241ll\303\255t\303\241sok megjegyz\303\251se dokumentumonk\303\251nt\0"\
+  "Elt\303\251r\305\221 n\303\251zetbe\303\241ll\303\255t\303\241sok megjegyz\303\251se dokumentumonk\303\251nt\0"\
   "&Elt\303\241vol\303\255t\303\241s a list\303\241b\303\263l\0"\
   "&Ment\303\251s m\303\241sk\303\251nt...\0"\
   "Ment&\303\251s m\303\241sk\303\251nt...\tCtrl+S\0"\
@@ -6295,14 +6295,14 @@ const char * gTranslations_hu =
   "A SumatraPDF n\303\251vjegye\0"\
   "Hozz\303\241ad\303\241s a kedvencekhez\0"\
   "%s. oldal hozz\303\241ad\303\241sa a kedvencekhez\0"\
-  "%s. oldal hozz\303\241ad\303\241sa a kedvencekhez, megnevez\303\251ssel (opcion\303\241lis):\0"\
+  "%s. oldal hozz\303\241ad\303\241sa a kedvencekhez, megnevez\303\251ssel (nem k\303\266telez\305\221):\0"\
   "Hozz\303\241ad\303\241s a kedvencekhez\0"\
-  "Halad\303\263\0"\
+  "Speci\303\241lis\0"\
   "Minden f\303\241jl\0"\
   "Minden t\303\241mogatott f\303\241jlt\303\255pus\0"\
   "Alkalmaz\303\241s:\0"\
-  "T\303\241rs\303\255tsuk a PDF f\303\241jlokkal?\0"\
-  "Csatolm\303\241ny: %s\0"\
+  "T\303\241rs\303\255t\303\241s a PDF f\303\241jlokkal?\0"\
+  "Mell\303\251klet: %s\0"\
   "K\303\251sz\303\255t\305\221:\0"\
   "Automatikus\0"\
   "&Friss\303\255t\303\251sek automatikus keres\303\251se\0"\
@@ -6315,8 +6315,8 @@ const char * gTranslations_hu =
   "CHM f\303\241jlok\0"\
   "Nem siker\303\274lt kapcsol\303\263dni az Internetre (hiba %#x).\0"\
   "M\303\251gse\0"\
-  "Ez a file nem nyomtathat\303\263\0"\
-  "Nem ind\303\255that\303\263 a ford\303\255tott keres\303\251si parancs. Ellen\305\221rizze a parancssorban, a be\303\241ll\303\255t\303\241sokat.\0"\
+  "Ez a f\303\241jl nem nyomtathat\303\263\0"\
+  "Nem ind\303\255that\303\263 a ford\303\255tott keres\303\251si parancs. Ellen\305\221rizze a parancssorban a be\303\241ll\303\255t\303\241sokat.\0"\
   "Nyelv kiv\303\241laszt\303\241sa (Change Language)\0"\
   "&Friss\303\255t\303\251sek keres\303\251se\0"\
   "K\303\251preg\303\251ny f\303\241jlok\0"\
@@ -6324,7 +6324,7 @@ const char * gTranslations_hu =
   "Folyamatos\0"\
   "Folyamatos k\303\266nyv\0"\
   "Folyamatos oldalp\303\241r\0"\
-  "&J\303\241rulj hozz\303\241 a ford\303\255t\303\241shoz\0"\
+  "&Hozz\303\241j\303\241rul\303\241s a ford\303\255t\303\241shoz\0"\
   "&K\303\251p m\303\241sol\303\241sa\0"\
   "&Hivatkoz\303\241s c\303\255m\303\251nek m\303\241sol\303\241sa\0"\
   "Me&gjegyz\303\251s m\303\241sol\303\241sa\0"\
@@ -6338,7 +6338,7 @@ const char * gTranslations_hu =
   "Kurzor poz\303\255ci\303\263:\0"\
   "... Egy\303\251ni m\303\251ret\tCtrl+Y\0"\
   "Oldalmegjelen\303\255t\303\251si m\303\263d:\0"\
-  "Alap nagy\303\255t\303\241s:\0"\
+  "Alapnagy\303\255t\303\241s:\0"\
   "Nem tehet\305\221 alap\303\251rtelmezett PDF-olvas\303\263v\303\241 hordozhat\303\263 m\303\263dban\0"\
   "Tiltott m\305\261veletek:\0"\
   "DjVu f\303\241jlok\0"\
@@ -6383,7 +6383,7 @@ const char * gTranslations_hu =
   "Gb\0"\
   "Ugr\303\241s adott oldalra\0"\
   "Leggyakrabban olvasottak elrejt\303\251se\0"\
-  "Tipp: Nyomja meg az F3-at a k\303\266vetkez\305\221 tal\303\241lathoz\0"\
+  "Tipp: Nyomja meg az F3 gombot a k\303\266vetkez\305\221 tal\303\241lathoz\0"\
   "K\303\251pf\303\241jlok (*.%s)\0"\
   "Kb\0"\
   "Mb\0"\
@@ -6402,7 +6402,7 @@ const char * gTranslations_hu =
   "Oldalak sz\303\241ma:\0"\
   "\0"\
   "Megny&it\303\241s\0"\
-  "Megnyit\303\241s PDF-XChangeben\0"\
+  "Megnyit\303\241s PDF-XChange-ben\0"\
   "F\303\241jl megnyit\303\241sa...\0"\
   "Megnyit\303\241s %s\0"\
   "Megnyit\303\241s &Adobe Acrobat-ban\0"\
@@ -6455,22 +6455,22 @@ const char * gTranslations_hu =
   "K\303\266nyvjelz\305\221k mutat\303\241sa\0"\
   "Folyamatos n\303\251zet\0"\
   "Eszk\303\266zt\303\241r\0"\
-  "Mutasd a kedvenceket\0"\
+  "Kedvencek megjelen\303\255t\303\251se\0"\
   "Leggyakrabban olvasott f\303\241jlok mutat\303\241sa\0"\
   "Dokumentumba \303\241gyazott k\303\266nyvjelz\305\221k mutat\303\241sa\0"\
   "Egy oldalas\0"\
-  "Sajn\303\241ljuk, v\303\241ratlan hiba t\303\266rt\303\251nt!\n\nK\303\251rj\303\274k nyomja meg a 'M\303\251gse' gombot, ha seg\303\255teni szeretne nek\303\274nk a hiba kijav\303\255t\303\241s\303\241ban.\0"\
+  "Sajn\303\241ljuk, v\303\241ratlan hiba t\303\266rt\303\251nt!\n\nK\303\251rj\303\274k nyomja meg a M\303\251gse gombot, ha seg\303\255teni szeretne nek\303\274nk a hiba kijav\303\255t\303\241s\303\241ban.\0"\
   "A '%s' forr\303\241sf\303\241jlban nincs szinkroniz\303\241ci\303\263s hely\0"\
   "T\303\241rgy:\0"\
   "A SumatraPDF be\303\241ll\303\255t\303\241sai\0"\
   "SumatraPDF friss\303\255t\303\251s\0"\
   "SumatraPDF m\305\261k\303\266d\303\251se le\303\241llt\0"\
-  "A SumatraPDF az alap\303\251rtelmezett PDF-olvas\303\263ja\0"\
+  "A SumatraPDF az alap\303\251rtelmezett PDF-olvas\303\263\0"\
   "Mostant\303\263l a SumatraPDF az alap\303\251rtelmezett PDF-olvas\303\263ja\0"\
   "Nem siker\303\274lt megnyitni a szinkroniz\303\241ci\303\263s f\303\241jlt\0"\
   "C\303\255mk\303\251zett PDF\0"\
   "Sz\303\266veges f\303\241jlok\0"\
-  "\0"\
+  "Ez a f\303\241jl nem t\303\241mogatott funkci\303\263kat (%s) tartalmaz \303\251s lehet, hogy nem pontosan ker\303\274l megjelen\303\255t\303\251sre\0"\
   "C\303\255m:\0"\
   "Ismeretlen forr\303\241sf\303\241jl (%s)\0"\
   "F\303\274lek haszn\303\241lata\0"\

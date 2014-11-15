@@ -941,7 +941,7 @@ const char * gTranslations_he =
 const char * gTranslations_hu = 
   "&Be\303\241ll\303\255t\303\241sok\0"\
   "Biztosan el szeretn\303\251 t\303\241vol\303\255tani a SumatraPDF-et?\0"\
-  "Bez\303\241r\0"\
+  "Bez\303\241r\303\241s\0"\
   "Ideiglenes k\303\266nyvt\303\241r l\303\251trehoz\303\241sa sikertelen\0"\
   "Telep\303\255t\303\251si k\303\266nyvt\303\241r l\303\251trehoz\303\241sa sikertelen\0"\
   "PDF el\305\221n\303\251zet-megjelen\303\255t\305\221 telep\303\255t\303\251se sikertelen\0"\
@@ -953,11 +953,11 @@ const char * gTranslations_hu =
   "PDF keres\303\251si sz\305\261r\305\221 elt\303\241vol\303\255t\303\241sa sikertelen\0"\
   "B\303\266ng\303\251sz\305\221 be\303\251p\303\274l\305\221 elt\303\241vol\303\255t\303\241sa sikertelen\0"\
   "%s lemezre \303\255r\303\241sa sikertelen\0"\
-  "Az uninstaller ideiglenes k\303\266nyvt\303\241rba val\303\263 m\303\241sol\303\241sa nem siker\303\274lt\0"\
+  "Az elt\303\241vol\303\255t\303\263 ideiglenes k\303\266nyvt\303\241rba m\303\241sol\303\241sa nem siker\303\274lt\0"\
   "Nem siker\303\274lt l\303\251trehozni a parancsikont\0"\
-  "Az elt\303\241vol\303\255t\303\263 registry kulcsainak t\303\266rl\303\251se sikertelen\0"\
+  "Az elt\303\241vol\303\255t\303\263 rendszerle\303\255r\303\263 adatb\303\241zis kulcsainak t\303\266rl\303\251se sikertelen\0"\
   "Nem siker\303\274lt \303\255rni a kiterjesztett f\303\241jlkiterjeszt\303\251st inform\303\241ci\303\263kat a rendszerle\303\255r\303\263 adatb\303\241zisban\0"\
-  "Elt\303\241vol\303\255t\303\241ssal kapcsolatos inform\303\241ci\303\263k registry-be \303\255r\303\241sa sikertelen\0"\
+  "Elt\303\241vol\303\255t\303\241ssal kapcsolatos inform\303\241ci\303\263k rendszerle\303\255r\303\263 adatb\303\241zisba \303\255r\303\241sa sikertelen\0"\
   "Be\303\241ll\303\255t\303\241sok elrejt\303\251se\0"\
   "SumatraPDF telep\303\255t\303\251se\0"\
   "SumatraPDF telep\303\255t\303\251se a k\303\266vetkez\305\221 &k\303\266nyvt\303\241rba:\0"\
