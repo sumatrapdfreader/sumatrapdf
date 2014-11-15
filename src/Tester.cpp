@@ -6,11 +6,10 @@
    driver which dispatches desired test based on cmd-line arguments. */
 
 #include "BaseUtil.h"
-
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"
+#include "Sigslot.h"
 #include "Mui.h"
-
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
@@ -20,7 +19,6 @@
 #include "GdiPlusUtil.h"
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
-#include "Mui.h"
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"

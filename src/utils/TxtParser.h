@@ -1,12 +1,7 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef TxtParser_h
-#define TxtParser_h
-
 #define SERIALIZE_ESCAPE_CHAR '$'
-
-#include "StrSlice.h"
 
 enum Token {
     TokenFinished = 0,
@@ -133,5 +128,3 @@ struct TxtParser {
 
 bool ParseTxt(TxtParser& parser);
 char *PrettyPrintTxt(const TxtParser& parser);
-
-#endif

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SplitterWnd_h
-#define SplitterWnd_h
-
 struct SplitterWnd;
 
 enum SplitterType {
@@ -29,5 +26,3 @@ void           DeleteSplitterBrush();
 // at the end of resize and the owner only re-layouts when callback is called
 // with 'done' set to true
 void           SetSplitterLive(SplitterWnd *, bool live);
-
-#endif

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef UITask_h
-#define UITask_h
-
 // Base class for code that has to be executed on UI thread. Derive your class
 // from UITask and call uitask::Post() to schedule execution
 // of its Execute() method on UI thread
@@ -36,4 +33,3 @@ void    Post(UITask *);
 void    PostFunc(UITaskFuncPtr, void *arg);
 }
 
-#endif

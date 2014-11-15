@@ -4,9 +4,8 @@
 #include "BaseUtil.h"
 #include "ArchUtil.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
-using namespace mui;
-
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"

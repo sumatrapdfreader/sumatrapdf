@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ThreadUtil_h
-#define ThreadUtil_h
-
 /* A very simple thread class that allows stopping a thread */
 class ThreadBase {
 private:
@@ -48,5 +45,3 @@ public:
 };
 
 void SetThreadName(DWORD threadId, const char *threadName);
-
-#endif

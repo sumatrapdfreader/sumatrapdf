@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "SumatraPDF.h"
 #include <wininet.h>
-
+#include "Sigslot.h"
+#include "SumatraPDF.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "AppUtil.h"

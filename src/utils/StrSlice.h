@@ -1,5 +1,5 @@
-#ifndef StrSlice_h
-#define StrSlice_h
+/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
 
 namespace str {
 
@@ -44,4 +44,3 @@ struct Slice {
 
 } // namespace str
 
-#endif

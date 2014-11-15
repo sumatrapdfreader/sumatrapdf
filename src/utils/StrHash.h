@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef StrHash_h
-#define StrHash_h
-
 /* This is a trie-hash for strings. It maps a binary string (i.e. can
 contain embedded 0) to a value of arbitrary type.
 
@@ -104,4 +101,3 @@ public:
     }
 };
 
-#endif

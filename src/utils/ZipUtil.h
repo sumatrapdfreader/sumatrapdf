@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ZipUtil_h
-#define ZipUtil_h
-
 extern "C" {
 typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
@@ -65,5 +62,3 @@ public:
 };
 
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive=false);
-
-#endif

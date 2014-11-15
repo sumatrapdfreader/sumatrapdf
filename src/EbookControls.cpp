@@ -2,15 +2,14 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "StrSlice.h"
 #include "HtmlParserLookup.h"
+#include "EbookBase.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "EbookControls.h"
-
 #include "AppPrefs.h"
 #include "BitManip.h"
-
-#include "EbookBase.h"
-#include "Mui.h"
 #include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
@@ -20,7 +19,6 @@
 #include "TxtParser.h"
 #include "WinCursors.h"
 #include "WinUtil.h"
-
 #define NOLOG 1
 #include "DebugLog.h"
 

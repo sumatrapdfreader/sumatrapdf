@@ -2,9 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "StrSlice.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
-
 #include "MuiDefs.h"
 #include "SvgPath.h"
 #include "TxtParser.h"

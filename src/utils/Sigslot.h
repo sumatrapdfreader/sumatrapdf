@@ -18,9 +18,6 @@
 // allocations would be done from a single VecSegmented and freed item
 // would be put on a free list, so that we can reuse them
 
-#ifndef SigSlot_h
-#define SigSlot_h
-
 namespace sigslot {
 
 class lock_block
@@ -1584,5 +1581,3 @@ public:
 };
 
 }; // namespace sigslot
-
-#endif // SIGSLOT_H__

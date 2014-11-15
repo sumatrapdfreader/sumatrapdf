@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "StressTesting.h"
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "ChmModel.h"
@@ -11,6 +10,7 @@
 #include "DirIter.h"
 #include "DisplayModel.h"
 #include "Doc.h"
+#include "Sigslot.h"
 #include "EbookController.h"
 #include "EbookBase.h"
 #include "HtmlParserLookup.h"

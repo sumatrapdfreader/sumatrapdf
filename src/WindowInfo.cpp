@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "WindowInfo.h"
-
+#include "Sigslot.h"
 #include "Caption.h"
 #include "Controller.h"
 #include "DisplayModel.h"

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Touch_h
-#define Touch_h
-
 #ifndef _QWORD_DEFINED
 #define _QWORD_DEFINED
 typedef unsigned __int64 QWORD, *LPQWORD;
@@ -112,5 +109,3 @@ BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo);
 BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
 
 }
-
-#endif // Touch_h

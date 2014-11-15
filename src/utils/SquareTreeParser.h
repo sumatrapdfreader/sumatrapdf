@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SquareTreeParser_h
-#define SquareTreeParser_h
-
 class SquareTreeNode {
 public:
     SquareTreeNode() { }
@@ -36,5 +33,3 @@ public:
 
     SquareTreeNode *root;
 };
-
-#endif

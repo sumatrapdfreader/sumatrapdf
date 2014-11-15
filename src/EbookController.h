@@ -6,7 +6,6 @@
 
 #include "Controller.h"
 #include "Doc.h"
-#include "Sigslot.h"
 
 struct  DrawInstr;
 struct  EbookControls;

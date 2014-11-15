@@ -5,14 +5,13 @@
 
 #include "EbookBase.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "HtmlFormatter.h"
-
 #include "CssParser.h"
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "Timer.h"
-
 #define NOLOG 1
 #include "DebugLog.h"
 

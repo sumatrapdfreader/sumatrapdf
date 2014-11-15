@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "Canvas.h"
-
+#include "Sigslot.h"
 #include "AppPrefs.h"
 #include "Caption.h"
 #include "Controller.h"

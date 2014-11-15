@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef UtAssert_h
-#define UtAssert_h
-
 /* This is assert for unit tests that can be used in non-interactive usage.
 Instead of showing a UI to the user, like regular assert(), it simply
 remembers number of failed asserts. */
@@ -16,5 +13,3 @@ int  utassert_print_results();
 
 #undef assert
 #define assert use_utassert_insteadof_assert
-
-#endif

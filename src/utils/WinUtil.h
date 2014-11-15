@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef WinUtil_h
-#define WinUtil_h
-
 // the following are only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #ifndef USER_DEFAULT_SCREEN_DPI
 #define USER_DEFAULT_SCREEN_DPI 96
@@ -196,5 +193,3 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command);
 void RectInflateTB(RECT& r, int top, int bottom);
 void DivideRectH(const RECT&r, int y, int dy, RECT& r1, RECT& r2, RECT& r3);
 void DivideRectV(const RECT&r, int x, int dx, RECT& r1, RECT& r2, RECT& r3);
-
-#endif

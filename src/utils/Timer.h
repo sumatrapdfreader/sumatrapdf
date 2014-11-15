@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Timer_h
-#define Timer_h
-
 // Relatively high-precision timer. Can be used e.g. for measuring execution
 // time of a piece of code.
 class Timer {
@@ -46,4 +43,3 @@ public:
     }
 };
 
-#endif

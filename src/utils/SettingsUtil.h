@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SettingsUtil_h
-#define SettingsUtil_h
-
 /*
 Since version 2.3, settings are serialized in a structure of the following form:
 
@@ -53,4 +50,3 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *pre
 void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=NULL);
 void FreeStruct(const StructInfo *info, void *strct);
 
-#endif

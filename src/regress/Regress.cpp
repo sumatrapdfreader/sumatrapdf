@@ -16,14 +16,11 @@ To write new regression test:
 */
 
 #include "BaseUtil.h"
+#include "Sigslot.h"
 #include "ArchUtil.h"
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"
 #include "Mui.h"
-
-#include "Mui.h"
-using namespace mui;
-
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"

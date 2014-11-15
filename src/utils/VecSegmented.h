@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef VecSegmented_h
-#define VecSegmented_h
-
 /* VecSegmented has (mostly) the same API as Vec but allocates
    using PoolAllocator. This means it's append only (we have no
    easy way to remove an item). The upside is that we can retain
@@ -99,4 +96,3 @@ inline void DeleteVecMembers(VecSegmented<T>& v)
 }
 #endif
 
-#endif

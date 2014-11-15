@@ -3,9 +3,9 @@
 
 #include "BaseUtil.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "SumatraAbout2.h"
-
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"

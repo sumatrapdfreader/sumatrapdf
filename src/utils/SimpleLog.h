@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SimpleLog_h
-#define SimpleLog_h
-
 namespace slog {
 
 class Logger {
@@ -130,6 +127,4 @@ public:
     }
 };
 
-} // namespace Log
-
-#endif
+} // namespace slog

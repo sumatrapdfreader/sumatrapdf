@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Caption.h"
@@ -12,7 +11,6 @@
 #include "CrashHandler.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
-
 #include "DbgHelpDyn.h"
 #include "DisplayModel.h"
 #include "Dpi.h"
@@ -22,6 +20,7 @@
 #include "FileWatcher.h"
 #include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"

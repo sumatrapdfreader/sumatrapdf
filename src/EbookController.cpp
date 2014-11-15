@@ -2,12 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Sigslot.h"
 #include "EbookController.h"
-
 #include "AppPrefs.h" // for gGlobalPrefs
-//#define NOLOG 0
-#include "DebugLog.h"
-
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"
 #include "Mui.h"
@@ -22,6 +19,8 @@
 #include "Timer.h"
 #include "Translations.h"
 #include "TrivialHtmlParser.h"
+//#define NOLOG 0
+#include "DebugLog.h"
 
 static const WCHAR *GetFontName()
 {

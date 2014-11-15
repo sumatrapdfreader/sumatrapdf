@@ -10,6 +10,7 @@
 #include "BaseEngine.h"
 #include "EbookEngine.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "HtmlPullParser.h"
 #include "Dpi.h"

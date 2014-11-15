@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "Menu.h"
-
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "Controller.h"
@@ -15,6 +14,7 @@
 #include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "Selection.h"
 #include "WindowInfo.h"

@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "StrSlice.h"
 #include "SerializeTxt.h"
 #include "TxtParser.h"
 

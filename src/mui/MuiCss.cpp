@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "HtmlParserLookup.h"
+#include "Sigslot.h"
 #include "Mui.h"
 #include "VecSegmented.h"
 
