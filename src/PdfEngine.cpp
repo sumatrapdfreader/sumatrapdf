@@ -2644,6 +2644,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
     WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
         const char *name = NULL, *type = NULL, *encoding = NULL;
+        ScopedMem<char> anonFontName;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj *font = fontList.At(i);
@@ -2652,8 +2653,15 @@ WCHAR *PdfEngineImpl::ExtractFontList()
                 font2 = font;
 
             name = pdf_to_name(pdf_dict_getsa(font2, "BaseFont", "Name"));
-            if (str::IsEmpty(name))
-                fz_throw(ctx, FZ_ERROR_GENERIC, "ignoring font with empty name");
+            bool needAnonName = str::IsEmpty(name);
+            if (needAnonName && font2 != font) {
+                name = pdf_to_name(pdf_dict_getsa(font, "BaseFont", "Name"));
+                needAnonName = str::IsEmpty(name);
+            }
+            if (needAnonName) {
+                anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(font2)));
+                name = anonFontName;
+            }
             embedded = false;
             pdf_obj *desc = pdf_dict_gets(font2, "FontDescriptor");
             if (desc && (pdf_dict_gets(desc, "FontFile") || pdf_dict_getsa(desc, "FontFile2", "FontFile3")))
@@ -2669,6 +2677,8 @@ WCHAR *PdfEngineImpl::ExtractFontList()
                 else if (str::Eq(type2, "CIDFontType2"))
                     type = "TrueType (CID)";
             }
+            if (str::Eq(type, "Type3"))
+                embedded = pdf_dict_gets(font2, "CharProcs") != NULL;
 
             encoding = pdf_to_name(pdf_dict_gets(font, "Encoding"));
             if (str::Eq(encoding, "WinAnsiEncoding"))
