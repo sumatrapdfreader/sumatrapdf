@@ -28,4 +28,3 @@ public:
 bool Parse(const char *data, ValueVisitor *visitor);
 
 }
-

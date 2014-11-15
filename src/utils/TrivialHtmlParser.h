@@ -101,4 +101,3 @@ inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
 
     }
 }
-

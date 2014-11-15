@@ -58,4 +58,3 @@ public:
         return Write32((val >> 32) & 0xFFFFFFFF) && Write32(val & 0xFFFFFFFF);
     }
 };
-

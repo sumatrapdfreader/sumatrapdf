@@ -19,4 +19,3 @@ void            ShowFrameRate(FrameRateWnd *, int frameRate);
 void            ShowFrameRateDur(FrameRateWnd *, double durMs);
 
 int             FrameRateFromDuration(double durMs);
-

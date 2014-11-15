@@ -41,4 +41,3 @@ uint16 UInt16BE(const uint8* d);
 uint16 UInt16LE(const uint8* d);
 uint32 UInt32BE(const uint8* d);
 uint32 UInt32LE(const uint8* d);
-

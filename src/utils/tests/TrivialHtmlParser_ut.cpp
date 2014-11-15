@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "FileUtil.h"
+#include "HtmlParserLookup.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 

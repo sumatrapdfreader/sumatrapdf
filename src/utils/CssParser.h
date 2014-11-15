@@ -43,4 +43,3 @@ public:
     const CssSelector *NextSelector();
     const CssProperty *NextProperty();
 };
-

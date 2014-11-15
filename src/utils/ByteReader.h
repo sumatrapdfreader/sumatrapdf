@@ -119,4 +119,3 @@ public:
         return Unpack(strct, size, format, off, isBE);
     }
 };
-

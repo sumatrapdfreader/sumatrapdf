@@ -6,4 +6,3 @@ namespace fitz {
 Gdiplus::Bitmap *ImageFromData(const char *data, size_t len);
 
 }
-

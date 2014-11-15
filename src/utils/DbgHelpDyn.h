@@ -25,4 +25,3 @@ void GetAllThreadsCallstacks(str::Str<char>& s);
 void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers);
 
 }
-

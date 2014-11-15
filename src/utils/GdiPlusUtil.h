@@ -24,4 +24,3 @@ bool          IsGdiPlusNativeFormat(const char *data, size_t len);
 Bitmap *      BitmapFromData(const char *data, size_t len);
 Size          BitmapSizeFromData(const char *data, size_t len);
 CLSID         GetEncoderClsid(const WCHAR *format);
-

@@ -12,4 +12,3 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 #define SLINK_LIST_HIDE L"<View,HideList>"
 
 void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
-

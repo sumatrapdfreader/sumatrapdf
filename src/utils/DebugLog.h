@@ -49,4 +49,3 @@ const char *GetCrashLog();
 // permanent (mostly for rarely executed code paths so that
 // the log isn't unnecessarily spammed)
 #define plogf(fmt, ...) lf(fmt, __VA_ARGS__)
-

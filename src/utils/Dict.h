@@ -64,4 +64,3 @@ public:
 
     int             nInternCalls; // so we know how effective interning is
 };
-

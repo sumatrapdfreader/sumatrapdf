@@ -13,4 +13,3 @@ bool    HasThumbnail(DisplayState& ds);
 void    SetThumbnail(DisplayState *ds, RenderedBitmap *bmp);
 void    SaveThumbnail(DisplayState& ds);
 void    RemoveThumbnail(DisplayState& ds);
-

@@ -44,4 +44,3 @@ public:
         timeLast.QuadPart += ticksPerFrame;
     }
 };
-

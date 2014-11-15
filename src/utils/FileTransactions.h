@@ -23,4 +23,3 @@ public:
     bool Delete(const WCHAR *filePath);
     bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
 };
-

@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HtmlPullParser.h"
 #include "HtmlParserLookup.h"
+#include "HtmlPullParser.h"
 
 // must be last due to assert() over-write
 #include "UtAssert.h"

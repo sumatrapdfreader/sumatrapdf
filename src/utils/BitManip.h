@@ -49,4 +49,3 @@ bool IsMaskSet(T v, T mask)
 }
 
 }
-

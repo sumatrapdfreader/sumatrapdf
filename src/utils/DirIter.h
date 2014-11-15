@@ -35,4 +35,3 @@ public:
 };
 
 bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=false);
-

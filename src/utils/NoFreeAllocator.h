@@ -56,4 +56,3 @@ inline char *   ToAnsi(const WCHAR *src) { return ToCodePage(src, CP_ACP); }
 } // namespace str
 
 } // namespace nf
-
