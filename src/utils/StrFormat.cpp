@@ -239,6 +239,7 @@ char *Fmt::Get() {
 char *Fmt::GetDup() { return str::Dup(Get()); }
 }
 
+// TODO: merge into tests\StrFormat_ut.cpp
 void RunFmtTests() {
     fmt::Fmt f("int: %d, s: %s");
     const char *s = f.i(5).s("foo").Get();

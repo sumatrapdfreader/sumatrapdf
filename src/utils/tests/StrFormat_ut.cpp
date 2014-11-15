@@ -7,6 +7,8 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
+#if 0
+
 static void StrFormatCheck(const char *s, const char *expected)
 {
     utassert(str::Eq(s, expected));
@@ -34,3 +36,13 @@ void StrFormatTest()
     StrFormatCheck(str::Fmt(L"{1}-{0}", str::Arg("so"), str::Arg(L"r")), L"r-so");
 
 }
+
+#else
+
+void StrFormatTest()
+{
+    // TODO: merge tests with broken tests above
+    RunFmtTests();
+}
+
+#endif
