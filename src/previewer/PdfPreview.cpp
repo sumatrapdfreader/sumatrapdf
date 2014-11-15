@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "PdfPreview.h"
 #include "WinUtil.h"
 

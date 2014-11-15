@@ -20,11 +20,9 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "BaseUtil.h"
-
 #include <Tlhelp32.h>
 #include <objidl.h>
 #include <io.h>
-
 #include "FileUtil.h"
 #include "FileTransactions.h"
 #include "Translations.h"
@@ -32,15 +30,13 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "Timer.h"
 #include "Version.h"
 #include "WinUtil.h"
-
+#include "BaseEngine.h"
 #include "Installer.h"
-
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
 #include "Dpi.h"
 #include "FrameTimeoutCalculator.h"
 #include "ParseCommandLine.h"
-
 #include "DebugLog.h"
 
 // TODO: can't build these separately without breaking TEST_UNINSTALLER
