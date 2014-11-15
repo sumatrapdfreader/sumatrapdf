@@ -2,12 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-
+#include "BaseEngine.h"
 #include "WindowInfo.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
 #include "SumatraAbout.h"
-
 #include "AppPrefs.h"
 #include "Dpi.h"
 #include "FileThumbnails.h"

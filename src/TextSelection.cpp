@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "TextSelection.h"
 
 PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)

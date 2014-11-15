@@ -6,19 +6,18 @@
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
-#include "CrashHandler.h"
-
-#include "AppTools.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"
+#include "CrashHandler.h"
+#include "BaseEngine.h"
+#include "AppTools.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
 #include "LzmaSimpleArchive.h"
 #include "SumatraPDF.h"
 #include "Version.h"
 #include "WinUtil.h"
-
 #define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 

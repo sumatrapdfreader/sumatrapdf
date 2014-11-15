@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Toolbar.h"
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DisplayModel.h"

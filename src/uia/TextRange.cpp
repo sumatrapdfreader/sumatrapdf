@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "uia/TextRange.h"
-
+#include "BaseEngine.h"
 #include "DisplayModel.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Constants.h"

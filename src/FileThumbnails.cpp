@@ -2,12 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-
+#include "BaseEngine.h"
 #include "DisplayState.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
 #include "FileThumbnails.h"
-
 #include "AppTools.h"
 #include "CryptoUtil.h"
 #include "GdiPlusUtil.h"

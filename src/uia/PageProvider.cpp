@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "uia/PageProvider.h"
-
+#include "BaseEngine.h"
 #include "DisplayModel.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"

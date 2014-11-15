@@ -4,8 +4,6 @@
 #ifndef DisplayState_h
 #define DisplayState_h
 
-#include "BaseEngine.h"
-
 enum DisplayMode {
     DM_FIRST = 0,
     // automatic means: the continuous form of single page, facing or

@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "SumatraDialogs.h"
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DialogSizer.h"

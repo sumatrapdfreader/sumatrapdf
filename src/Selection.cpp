@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Selection.h"
-
 #include "AppPrefs.h"
 #include "ChmModel.h"
 #include "Controller.h"

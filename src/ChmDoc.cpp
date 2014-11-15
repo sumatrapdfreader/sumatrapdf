@@ -2,9 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "ChmDoc.h"
-
 #include "BaseEngine.h"
+#include "ChmDoc.h"
 #include "ByteReader.h"
 #include "EbookBase.h"
 #include "FileUtil.h"

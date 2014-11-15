@@ -4,8 +4,6 @@
 #ifndef ChmDoc_h
 #define ChmDoc_h
 
-#include "BaseEngine.h"
-
 class EbookTocVisitor;
 
 class ChmDoc {

@@ -4,10 +4,6 @@
 #ifndef TextSelection_h
 #define TextSelection_h
 
-#include "BaseEngine.h"
-
-class WStrVec;
-
 #define iswordchar(c) IsCharAlphaNumeric(c)
 
 inline unsigned int distSq(int x, int y) { return x * x + y * y; }

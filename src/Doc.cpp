@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "ArchUtil.h"
+#include "BaseEngine.h"
 #include "Doc.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

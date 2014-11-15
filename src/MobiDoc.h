@@ -4,8 +4,6 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
-#include "BaseEngine.h"
-
 class EbookTocVisitor;
 class HuffDicDecompressor;
 class PdbReader;

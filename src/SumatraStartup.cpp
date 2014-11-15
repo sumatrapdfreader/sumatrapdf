@@ -2,6 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <dbghelp.h>
+#include <tlhelp32.h>
+#include "DbgHelpDyn.h"
+#include "Dpi.h"
+#include "Sigslot.h"
+#include "BaseEngine.h"
 #include "SumatraPDF.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -9,18 +15,13 @@
 #include "Canvas.h"
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
-#include <dbghelp.h>
-#include <tlhelp32.h>
-#include "DbgHelpDyn.h"
 #include "DisplayModel.h"
-#include "Dpi.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "FileWatcher.h"
 #include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"

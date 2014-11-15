@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "StressTesting.h"
 #include "AppPrefs.h"
 #include "AppTools.h"

@@ -27,8 +27,6 @@
 #define SZ_TGA_PREVIEW_CLSID    L"{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}"
 #endif
 
-#include "BaseEngine.h"
-
 #include <Thumbcache.h>
 
 class PageRenderer;

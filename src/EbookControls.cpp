@@ -7,6 +7,7 @@
 #include "EbookBase.h"
 #include "Sigslot.h"
 #include "Mui.h"
+#include "BaseEngine.h"
 #include "EbookControls.h"
 #include "AppPrefs.h"
 #include "BitManip.h"

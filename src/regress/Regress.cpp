@@ -16,14 +16,15 @@ To write new regression test:
 */
 
 #include "BaseUtil.h"
-#include "Sigslot.h"
+#include <dbghelp.h>
+#include <tlhelp32.h>
 #include "ArchUtil.h"
+#include "Sigslot.h"
+#include "DbgHelpDyn.h"
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"
 #include "Mui.h"
-#include <dbghelp.h>
-#include <tlhelp32.h>
-#include "DbgHelpDyn.h"
+#include "BaseEngine.h"
 #include "DirIter.h"
 #include "Doc.h"
 #include "HtmlFormatter.h"

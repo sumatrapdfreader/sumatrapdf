@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Print.h"
-
 #include "AppPrefs.h"
 #include "AppUtil.h"
 #include "ChmModel.h"

@@ -2,11 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "WindowInfo.h"
 #include "Sigslot.h"
 #include "Caption.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "Doc.h"
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "FileUtil.h"

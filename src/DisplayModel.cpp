@@ -44,6 +44,7 @@
 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "DisplayModel.h"
 
 #include "AppPrefs.h" // needed for gGlobalPrefs

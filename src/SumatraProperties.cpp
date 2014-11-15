@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "SumatraProperties.h"
-
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EngineManager.h"

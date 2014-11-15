@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Caption.h"
-
 #include "AppPrefs.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"

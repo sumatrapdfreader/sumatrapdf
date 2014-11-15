@@ -7,8 +7,8 @@
 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Search.h"
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "ChmModel.h"

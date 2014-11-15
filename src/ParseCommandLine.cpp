@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "ParseCommandLine.h"
-
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "StressTesting.h"

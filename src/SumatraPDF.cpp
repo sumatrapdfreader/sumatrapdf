@@ -3,7 +3,9 @@
 
 #include "BaseUtil.h"
 #include <wininet.h>
+#include "Dpi.h"
 #include "Sigslot.h"
+#include "BaseEngine.h"
 #include "SumatraPDF.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -17,7 +19,7 @@
 #include "CryptoUtil.h"
 #include "DirIter.h"
 #include "DisplayModel.h"
-#include "Dpi.h"
+#include "Doc.h"
 #include "EbookController.h"
 #include "EngineManager.h"
 #include "ExternalPdfViewer.h"

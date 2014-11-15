@@ -5,6 +5,7 @@
 #include "HtmlParserLookup.h"
 #include "Sigslot.h"
 #include "Mui.h"
+#include "BaseEngine.h"
 #include "SumatraAbout2.h"
 #include "GdiPlusUtil.h"
 #include "resource.h"

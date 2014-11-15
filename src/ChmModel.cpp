@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "ChmModel.h"
-
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmDoc.h"
 #include "Dict.h"

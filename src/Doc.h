@@ -1,16 +1,11 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Doc_h
-#define Doc_h
-
 // Doc is to EbookController what BaseEngine is to DisplayModel:
 // It simply abstracts all document objects, allows querying the type, casting
 // to the wrapped object and present as much of the unified interface as
 // possible.
 // It's small enough to be passed by value.
-
-#include "BaseEngine.h"
 
 class EpubDoc;
 class Fb2Doc;
@@ -91,4 +86,3 @@ public:
     static bool IsSupportedFile(const WCHAR *filePath, bool sniff=false);
 };
 
-#endif

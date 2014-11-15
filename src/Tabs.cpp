@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Tabs.h"
 #include "HtmlParserLookup.h"
 #include "AppPrefs.h"

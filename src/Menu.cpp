@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "Menu.h"
 #include "AppPrefs.h"
 #include "CmdLineParser.h"

@@ -3,6 +3,9 @@
 
 #include "BaseUtil.h"
 #include "Sigslot.h"
+#include "BaseEngine.h"
+#include "Controller.h"
+#include "Doc.h"
 #include "EbookController.h"
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "HtmlParserLookup.h"

@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "BaseEngine.h"
 #include "RenderCache.h"
-
 #include "DisplayModel.h"
 #include "TextSelection.h"
 #include "WinUtil.h"
