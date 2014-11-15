@@ -5,16 +5,19 @@
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "BaseUtil.h"
-#include "EbookEngine.h"
-
+#include "ArchUtil.h"
+#include "EbookBase.h"
 #include "BaseEngine.h"
+#include "EbookEngine.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
+#include "HtmlPullParser.h"
 #include "Dpi.h"
 #include "EbookDoc.h"
+#include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
-#include "HtmlPullParser.h"
-#include "Mui.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"

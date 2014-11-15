@@ -2,8 +2,8 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Mui.h"
 #include "HtmlParserLookup.h"
+#include "Mui.h"
 #include "VecSegmented.h"
 
 using namespace Gdiplus;

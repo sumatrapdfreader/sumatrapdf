@@ -1,9 +1,5 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
-#ifndef HtmlWindow_h
-#define HtmlWindow_h
-
-#include <exdisp.h>
 
 class FrameSite;
 class HtmlMoniker;
@@ -106,5 +102,3 @@ public:
 
     static HtmlWindow *Create(HWND hwndParent, HtmlWindowCallback *cb);
 };
-
-#endif

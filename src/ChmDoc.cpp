@@ -8,6 +8,7 @@
 #include "ByteReader.h"
 #include "EbookBase.h"
 #include "FileUtil.h"
+#include "HtmlParserLookup.h"
 #include "TrivialHtmlParser.h"
 
 #define PPC_BSTR

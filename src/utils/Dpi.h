@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Dpi_h
-#define Dpi_h
-
 struct Dpi {
     HWND hwnd;
     int dpiX;
@@ -19,5 +16,3 @@ void DpiUpdate(Dpi *);
 inline void DpiUpdate(HWND hwnd) { return DpiUpdate(DpiGet(hwnd)); }
 void DpiRemove(HWND);
 void DpiRemoveAll();
-
-#endif

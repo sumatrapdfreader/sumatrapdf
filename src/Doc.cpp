@@ -2,9 +2,14 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ArchUtil.h"
 #include "Doc.h"
 
+#include "EbookBase.h"
 #include "EbookDoc.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
+#include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "MobiDoc.h"
 

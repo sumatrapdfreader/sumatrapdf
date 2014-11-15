@@ -4,18 +4,6 @@
 #ifndef Installer_h
 #define Installer_h
 
-#include <Tlhelp32.h>
-#include <objidl.h>
-#include <io.h>
-
-#include "FileTransactions.h"
-#include "FileUtil.h"
-#include "Translations.h"
-#include "Resource.h"
-#include "Timer.h"
-#include "Version.h"
-#include "WinUtil.h"
-
 #define EXENAME             APP_NAME_STR L".exe"
 
 #define INSTALLER_FRAME_CLASS_NAME    L"SUMATRA_PDF_INSTALLER_FRAME"

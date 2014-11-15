@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef PalmDbReader_h
-#define PalmDbReader_h
-
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 #define kPdbHeaderLen 78
 
@@ -26,5 +23,3 @@ public:
     size_t GetRecordCount();
     const char *GetRecord(size_t recNo, size_t *sizeOut);
 };
-
-#endif

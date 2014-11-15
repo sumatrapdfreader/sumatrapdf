@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef DebugLog_h
-#define DebugLog_h
-
 /* Simple logging for ad-hoc logging with OutputDebugString().
 Only enabled in debug builds by default.
 
@@ -53,4 +50,3 @@ const char *GetCrashLog();
 // the log isn't unnecessarily spammed)
 #define plogf(fmt, ...) lf(fmt, __VA_ARGS__)
 
-#endif

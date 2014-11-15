@@ -5,7 +5,6 @@
 #define FileHistory_h
 
 #include "DisplayState.h"
-#include "FileUtil.h"
 
 /* Handling of file history list.
 

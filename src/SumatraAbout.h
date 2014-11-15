@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SumatraAbout_h
-#define SumatraAbout_h
-
-#include "FileHistory.h"
-#include "WindowInfo.h" // for StaticLinkInfo
-
 void OnMenuAbout();
 
 void  DrawAboutPage(WindowInfo& win, HDC hdc);
@@ -19,4 +13,3 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 
 void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
 
-#endif

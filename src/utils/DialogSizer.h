@@ -24,8 +24,6 @@ File:	DialogSizer.h
 Owner:	russf@gipsysoft.com
 Purpose:	Main include file for sizeable dialogs API
 ----------------------------------------------------------------------*/
-#ifndef DIALOGSIZER_H
-#define DIALOGSIZER_H
 
 //	Predefined sizing information
 #define DS_MoveX		1
@@ -47,4 +45,3 @@ typedef struct DialogSizerSizingItem	//	sdi
 //	Set a window as sizeable, passing the sizing data for each control.
 extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOOL bShowSizingGrip);
 
-#endif

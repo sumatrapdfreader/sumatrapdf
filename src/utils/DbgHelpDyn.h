@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-#ifndef DbgHelpDyn_h
-#define DbgHelpDyn_h
-
-#include <dbghelp.h>
-#include <tlhelp32.h>
-
 // We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate
 // memory. We use plog because it's similar to plogf() but we don't want to lie
 // by claiming we support formatted strings.
@@ -32,4 +26,3 @@ void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers);
 
 }
 
-#endif

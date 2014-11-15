@@ -15,12 +15,21 @@ To write new regression test:
 - call Regress${NN} function from RunTests()
 */
 
+#include "BaseUtil.h"
+#include "ArchUtil.h"
+#include "HtmlParserLookup.h"
+#include "EbookBase.h"
+#include "Mui.h"
+
 #include "Mui.h"
 using namespace mui;
 
+#include <dbghelp.h>
+#include <tlhelp32.h>
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
+#include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "EbookDoc.h"
 #include "FileUtil.h"

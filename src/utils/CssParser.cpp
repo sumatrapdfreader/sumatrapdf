@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "HtmlParserLookup.h"
 #include "CssParser.h"
 
 // TODO: the following parser doesn't comply yet with

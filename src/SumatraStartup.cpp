@@ -10,6 +10,9 @@
 #include "Canvas.h"
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
+#include <dbghelp.h>
+#include <tlhelp32.h>
+
 #include "DbgHelpDyn.h"
 #include "DisplayModel.h"
 #include "Dpi.h"
@@ -18,6 +21,8 @@
 #include "FileThumbnails.h"
 #include "FileWatcher.h"
 #include "LabelWithCloseWnd.h"
+#include "HtmlParserLookup.h"
+#include "EbookBase.h"
 #include "Mui.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"

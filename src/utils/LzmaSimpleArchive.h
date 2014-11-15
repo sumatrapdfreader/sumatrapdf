@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef LzmaSimpleArchive_h
-#define LzmaSimpleArchive_h
-
 namespace lzma {
 
 struct FileInfo {
@@ -32,5 +29,3 @@ char * GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);
 
 }
-
-#endif

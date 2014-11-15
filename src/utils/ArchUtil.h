@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ArchUtil_h
-#define ArchUtil_h
-
 extern "C" {
 typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
@@ -73,5 +70,3 @@ public:
     explicit RarFile(IStream *stream);
     virtual ~RarFile();
 };
-
-#endif

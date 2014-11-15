@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef JsonParser_h
-#define JsonParser_h
-
 // simple push parser for JSON files (cf. http://www.json.org/ )
 
 namespace json {
@@ -32,4 +29,3 @@ bool Parse(const char *data, ValueVisitor *visitor);
 
 }
 
-#endif

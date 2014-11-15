@@ -4,10 +4,6 @@
 #ifndef EpubDoc_h
 #define EpubDoc_h
 
-#include "BaseEngine.h"
-#include "EbookBase.h"
-#include "ArchUtil.h"
-
 struct ImageData2 {
     ImageData base;
     char *  id;  // path by which content refers to this image

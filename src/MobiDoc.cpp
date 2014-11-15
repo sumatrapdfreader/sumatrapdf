@@ -10,6 +10,7 @@
 #include "EbookBase.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"

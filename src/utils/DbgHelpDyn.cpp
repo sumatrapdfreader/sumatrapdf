@@ -8,6 +8,9 @@
 */
 
 #include "BaseUtil.h"
+
+#include <dbghelp.h>
+#include <tlhelp32.h>
 #include "DbgHelpDyn.h"
 
 #include "FileUtil.h"
@@ -17,7 +20,7 @@
    have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
    doesn't work.
    I had to provide symbol path in SymInitialize() (and either invideProcess=TRUE
-   or invideProcess=FALSE and call SymRefreshModuleList()). There's probably
+   or invideProcess=FALSE and caappll SymRefreshModuleList()). There's probably
    a way to force it, but I'm happy I found a way that works.
 */
 

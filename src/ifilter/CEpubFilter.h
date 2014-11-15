@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "FilterBase.h"
-#include "PdfFilter.h"
-
 enum EPUB_FILTER_STATE { STATE_EPUB_START, STATE_EPUB_AUTHOR, STATE_EPUB_TITLE, STATE_EPUB_DATE, STATE_EPUB_CONTENT, STATE_EPUB_END };
 
 class EpubDoc;

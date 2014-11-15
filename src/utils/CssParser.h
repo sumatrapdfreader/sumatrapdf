@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef CssParser_h
-#define CssParser_h
-
-#include "HtmlParserLookup.h"
-
 #define Tag_Any ((HtmlTag)-1)
 
 struct CssSelector {
@@ -49,4 +44,3 @@ public:
     const CssProperty *NextProperty();
 };
 
-#endif

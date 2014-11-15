@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef FrameTimeoutCalculator_h
-#define FrameTimeoutCalculator_h
-
 class FrameTimeoutCalculator {
 
     LARGE_INTEGER   timeStart;
@@ -48,4 +45,3 @@ public:
     }
 };
 
-#endif

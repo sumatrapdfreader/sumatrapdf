@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef GdiPlusUtil_h
-#define GdiPlusUtil_h
-
 using namespace Gdiplus;
 
 #define COL_CLOSE_X         RGB(0xa0, 0xa0, 0xa0)
@@ -28,4 +25,3 @@ Bitmap *      BitmapFromData(const char *data, size_t len);
 Size          BitmapSizeFromData(const char *data, size_t len);
 CLSID         GetEncoderClsid(const WCHAR *format);
 
-#endif

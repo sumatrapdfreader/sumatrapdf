@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef HtmlPullParser_h
-#define HtmlPullParser_h
-
-#include "HtmlParserLookup.h"
-
 struct AttrInfo {
     const char *      name;
     size_t            nameLen;
@@ -105,4 +100,3 @@ const char *ResolveHtmlEntity(const char *s, size_t len, int& rune);
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc);
 char *      ResolveHtmlEntities(const char *s, size_t len);
 
-#endif

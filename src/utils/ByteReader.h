@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ByteReader_h
-#define ByteReader_h
-
 class ByteReader {
     const uint8_t *d;
     size_t len;
@@ -123,4 +120,3 @@ public:
     }
 };
 
-#endif

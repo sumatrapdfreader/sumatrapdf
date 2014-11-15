@@ -119,7 +119,9 @@ Fmt &Fmt::ParseFormat(const char *fmt) {
     // (we can have positional arg like {0} multiple times
     // but must cover all space from 0..nArgsExpected
     for (int i = 0; i <= nArgsExpected; i++) {
-        CrashIf(!hasArgDefWithNo(argDefs, nArgDefs, i));
+        if (!hasArgDefWithNo(argDefs, nArgDefs, i)) {
+            CrashIf(true);
+        }
     }
     return *this;
 }
@@ -199,7 +201,9 @@ void Fmt::serializeArg(int argDefNo) {
     int argNo = argDefs[argDefNo].argNo;
     Arg::Type defType = argDefs[argDefNo].t;
     Arg arg = args[argNo];
-    CrashIf(!validArgTypes(defType, arg.t));
+    if (!validArgTypes(defType, arg.t)) {
+        CrashIf(true);
+    }
     switch (arg.t) {
         case Arg::Char:
             res.Append(arg.c);

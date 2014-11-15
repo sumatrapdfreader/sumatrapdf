@@ -20,6 +20,19 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "BaseUtil.h"
+
+#include <Tlhelp32.h>
+#include <objidl.h>
+#include <io.h>
+
+#include "FileUtil.h"
+#include "FileTransactions.h"
+#include "Translations.h"
+#include "Resource.h"
+#include "Timer.h"
+#include "Version.h"
+#include "WinUtil.h"
+
 #include "Installer.h"
 
 #include "CmdLineParser.h"
@@ -34,6 +47,11 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #ifdef BUILD_UNINSTALLER
 #include "Uninstall.cpp"
 #else
+#include "ByteOrderDecoder.h"
+#include "LzmaSimpleArchive.h"
+
+#include "../ifilter/PdfFilter.h"
+#include "../previewer/PdfPreview.h"
 #include "Install.cpp"
 #endif
 

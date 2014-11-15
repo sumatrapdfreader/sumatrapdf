@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef HtmlFormatter_h
-#define HtmlFormatter_h
-
-#include "EbookBase.h"
-#include "HtmlParserLookup.h"
-#include "Mui.h"
 using namespace Gdiplus;
 
 // Layout information for a given page is a list of
@@ -270,5 +264,3 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textRender, Vec<DrawInstr> *dra
 mui::TextRenderMethod GetTextRenderMethod();
 void SetTextRenderMethod(mui::TextRenderMethod method);
 HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator=NULL);
-
-#endif

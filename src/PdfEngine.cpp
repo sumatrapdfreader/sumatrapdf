@@ -14,6 +14,7 @@ extern "C" {
 
 #include "ArchUtil.h"
 #include "FileUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"

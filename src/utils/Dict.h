@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Dict_h
-#define Dict_h
-
 namespace dict {
 
 struct HashTable;
@@ -68,4 +65,3 @@ public:
     int             nInternCalls; // so we know how effective interning is
 };
 
-#endif

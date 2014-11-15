@@ -8,6 +8,7 @@
 #include "BaseEngine.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
 #include "PdfCreator.h"

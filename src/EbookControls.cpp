@@ -1,11 +1,16 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#include "BaseUtil.h"
+#include "HtmlParserLookup.h"
 #include "Mui.h"
 #include "EbookControls.h"
 
 #include "AppPrefs.h"
 #include "BitManip.h"
+
+#include "EbookBase.h"
+#include "Mui.h"
 #include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"

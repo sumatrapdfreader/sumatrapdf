@@ -1,18 +1,10 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Note: this is not built by itself but included in Installer.cpp
 #ifdef BUILD_UNINSTALLER
 #error BUILD_UNINSTALLER must not be defined!!!
 #endif
-
-#include "Installer.h"
-#include "ByteOrderDecoder.h"
-#include "FileUtil.h"
-#include "FileTransactions.h"
-#include "LzmaSimpleArchive.h"
-
-#include "../ifilter/PdfFilter.h"
-#include "../previewer/PdfPreview.h"
 
 #define ID_CHECKBOX_MAKE_DEFAULT      14
 #define ID_CHECKBOX_BROWSER_PLUGIN    15

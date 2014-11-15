@@ -5,6 +5,8 @@
 #include "AppTools.h"
 
 #include "CmdLineParser.h"
+#include <dbghelp.h>
+#include <tlhelp32.h>
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "Translations.h"

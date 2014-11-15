@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef HttpUtil_h
-#define HttpUtil_h
-
 struct HttpRsp {
     str::Str<char>  data;
     DWORD           error;
@@ -38,5 +35,3 @@ public:
     virtual void Callback(HttpReq *ctx=NULL) = 0;
     virtual ~HttpReqCallback() { }
 };
-
-#endif

@@ -2,8 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "TrivialHtmlParser.h"
 
+#include "HtmlParserLookup.h"
+#include "TrivialHtmlParser.h"
 #include "HtmlPullParser.h"
 
 /*

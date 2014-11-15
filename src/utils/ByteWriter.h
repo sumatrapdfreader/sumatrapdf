@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ByteWriter_h
-#define ByteWriter_h
-
 class ByteWriterLE {
     uint8_t *dst;
     size_t bytesLeft;
@@ -62,4 +59,3 @@ public:
     }
 };
 
-#endif

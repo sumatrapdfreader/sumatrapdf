@@ -2,13 +2,15 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+
+#include "EbookBase.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
 #include "HtmlFormatter.h"
 
 #include "CssParser.h"
 #include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
-#include "Mui.h"
 #include "Timer.h"
 
 #define NOLOG 1

@@ -2,18 +2,20 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+
+#include "WindowInfo.h"
+#include "FileUtil.h"
+#include "FileHistory.h"
 #include "SumatraAbout.h"
 
 #include "AppPrefs.h"
 #include "Dpi.h"
-#include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
 #include "WinCursors.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
 
 #ifndef ABOUT_USE_LESS_COLORS

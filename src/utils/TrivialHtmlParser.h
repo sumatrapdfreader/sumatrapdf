@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef TrivialHtmlParser_h
-#define TrivialHtmlParser_h
-
-#include "HtmlParserLookup.h"
-
 enum HtmlParseError {
     ErrParsingNoError,
     ErrParsingElement, // syntax error parsing element
@@ -107,4 +102,3 @@ inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
     }
 }
 
-#endif

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef BitReader_h
-#define BitReader_h
-
 class BitReader
 {
     uint8_t GetByte(size_t pos) {
@@ -24,5 +21,3 @@ public:
     size_t      currBitPos;
     size_t      bitsCount;
 };
-
-#endif

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef FileTransactions_h
-#define FileTransactions_h
-
 // cf. http://www.codeproject.com/KB/vista/VistaKTM.aspx for the inspiration
 
 class FileTransaction {
@@ -27,4 +24,3 @@ public:
     bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
 };
 
-#endif

@@ -1,9 +1,10 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
+#include "HtmlParserLookup.h"
 #include "Mui.h"
 
-#include "HtmlParserLookup.h"
 #include "MuiDefs.h"
 #include "SvgPath.h"
 #include "TxtParser.h"

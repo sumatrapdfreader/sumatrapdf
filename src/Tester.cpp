@@ -6,9 +6,15 @@
    driver which dispatches desired test based on cmd-line arguments. */
 
 #include "BaseUtil.h"
+
+#include "HtmlParserLookup.h"
+#include "EbookBase.h"
+#include "Mui.h"
+
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
+#include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"

@@ -2,9 +2,15 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ArchUtil.h"
+#include "HtmlParserLookup.h"
+
+#include "FilterBase.h"
+#include "EbookBase.h"
+#include "BaseEngine.h"
+#include "PdfFilter.h"
 #include "CEpubFilter.h"
 #include "EbookDoc.h"
-#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "WinUtil.h"
 

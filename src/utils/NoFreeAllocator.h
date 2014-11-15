@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef NoFreeAllocator_h
-#define NoFreeAllocator_h
-
-#include "BaseUtil.h"
-
 namespace nf {
 
 // Per-thread stats for no-free allocator. Knowing them allows
@@ -62,4 +57,3 @@ inline char *   ToAnsi(const WCHAR *src) { return ToCodePage(src, CP_ACP); }
 
 } // namespace nf
 
-#endif

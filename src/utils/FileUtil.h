@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef FileUtil_h
-#define FileUtil_h
-
 namespace path {
 
 bool         IsSep(WCHAR c);
@@ -63,4 +60,3 @@ inline bool FileTimeEq(const FILETIME& a, const FILETIME& b)
     return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
 }
 
-#endif

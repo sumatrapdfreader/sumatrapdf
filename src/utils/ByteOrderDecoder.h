@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef ByteOrderDecoder_h
-#define ByteOrderDecoder_h
-
 // class for decoding of byte buffer as a sequence of numbers
 class ByteOrderDecoder
 {
@@ -45,4 +42,3 @@ uint16 UInt16LE(const uint8* d);
 uint32 UInt32BE(const uint8* d);
 uint32 UInt32LE(const uint8* d);
 
-#endif

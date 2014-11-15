@@ -1,6 +1,8 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
+#include "HtmlParserLookup.h"
 #include "Mui.h"
 #include "DebugLog.h"
 
@@ -41,6 +43,11 @@ void Painter::PaintBackground(Graphics *g, Rect r)
     g->FillRectangle(br, r);
 }
 
+// TODO: figure out how INT16_MIN was defined
+// This is in <intsafe.h> and utils\msvc\stdint.h under some conditions
+#define MY_INT16_MIN       (-32767i16 - 1)
+#define MY_INT16_MAX       32767i16
+
 // Paint windows in z-order by first collecting the windows
 // and then painting consecutive layers with the same z-order,
 // starting with the lowest z-order.
@@ -56,10 +63,10 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c)
 
     CollectWindowsBreathFirst(c, 0, 0, &wndFilter, &toPaint);
     size_t paintedCount = 0;
-    int16 lastPaintedZOrder = INT16_MIN;
+    int16 lastPaintedZOrder = MY_INT16_MIN;
     for (;;) {
         // find which z-order should we paint now
-        int16 minUnpaintedZOrder = INT16_MAX;
+        int16 minUnpaintedZOrder = MY_INT16_MAX;
         for (coff = toPaint.IterStart(); coff; coff = toPaint.IterNext()) {
             int16 zOrder = coff->c->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))

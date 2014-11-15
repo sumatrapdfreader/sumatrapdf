@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Thumbnails_h
-#define Thumbnails_h
-
-#include "DisplayState.h"
-#include "FileHistory.h"
-
 // thumbnails are 150px high and have a ratio of sqrt(2) : 1
 #define THUMBNAIL_DX        212
 #define THUMBNAIL_DY        150
@@ -20,4 +14,3 @@ void    SetThumbnail(DisplayState *ds, RenderedBitmap *bmp);
 void    SaveThumbnail(DisplayState& ds);
 void    RemoveThumbnail(DisplayState& ds);
 
-#endif

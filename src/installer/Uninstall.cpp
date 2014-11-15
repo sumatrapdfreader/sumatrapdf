@@ -1,11 +1,10 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Note: this is not built by itself but included in Installer.cpp
 #ifndef BUILD_UNINSTALLER
 #error "BUILD_UNINSTALLER must be defined!!!"
 #endif
-
-#include "Installer.h"
 
 #define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY

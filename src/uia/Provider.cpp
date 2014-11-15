@@ -9,6 +9,10 @@
 #include "uia/StartPageProvider.h"
 #include "WinUtil.h"
 
+#include <dbghelp.h>
+#include <tlhelp32.h>
+#include "DbgHelpDyn.h"
+
 // not available under Win2000
 typedef LRESULT (WINAPI *UiaReturnRawElementProviderProc)(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *el);
 typedef HRESULT (WINAPI *UiaHostProviderFromHwndProc)(HWND hwnd, IRawElementProviderSimple ** pProvider);
@@ -84,8 +88,6 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue)
 }
 
 };
-
-#include "DbgHelpDyn.h"
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(HWND hwnd) :
     refCount(1), canvasHwnd(hwnd), startpage(NULL), document(NULL)

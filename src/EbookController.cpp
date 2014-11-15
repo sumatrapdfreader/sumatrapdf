@@ -7,7 +7,12 @@
 #include "AppPrefs.h" // for gGlobalPrefs
 //#define NOLOG 0
 #include "DebugLog.h"
+
+#include "HtmlParserLookup.h"
+#include "EbookBase.h"
+#include "Mui.h"
 #include "EbookControls.h"
+#include "ArchUtil.h"
 #include "EbookDoc.h"
 #include "GdiPlusUtil.h"
 #include "HtmlFormatter.h"

@@ -2,9 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "EbookBase.h"
+#include "BaseEngine.h"
+#include "ArchUtil.h"
 #include "EbookDoc.h"
-
 #include "FileUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 #include "PalmDbReader.h"
