@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "Favorites.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "Controller.h"
 #include "Dpi.h"

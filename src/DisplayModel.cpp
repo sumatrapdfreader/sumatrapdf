@@ -47,6 +47,7 @@
 #include "BaseEngine.h"
 #include "DisplayModel.h"
 
+#include "DisplayState.h"
 #include "AppPrefs.h" // needed for gGlobalPrefs
 #include "PdfSync.h"
 #include "TextSearch.h"

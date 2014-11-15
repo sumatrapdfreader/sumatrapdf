@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "Print.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppUtil.h"
 #include "ChmModel.h"

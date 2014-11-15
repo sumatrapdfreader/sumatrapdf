@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef AppPrefs_h
-#define AppPrefs_h
-
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remembered position and size */
@@ -12,7 +9,6 @@ enum {
     WIN_STATE_MINIMIZED,
 };
 
-#include "DisplayState.h"
 
 extern GlobalPrefs *gGlobalPrefs;
 
@@ -40,4 +36,3 @@ float           ToZoom(const char *s, float defVal=ZOOM_FIT_PAGE);
 
 };
 
-#endif

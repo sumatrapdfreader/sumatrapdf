@@ -2,12 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Dpi.h"
 #include "BaseEngine.h"
 #include "TableOfContents.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Controller.h"
-#include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
 #include "resource.h"

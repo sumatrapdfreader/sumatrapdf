@@ -2,13 +2,14 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Dpi.h"
 #include "BaseEngine.h"
 #include "Selection.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "ChmModel.h"
 #include "Controller.h"
 #include "DisplayModel.h"
-#include "Dpi.h"
 #include "SumatraPDF.h"
 #include "TextSelection.h"
 #include "Toolbar.h"
@@ -16,7 +17,6 @@
 #include "uia/Provider.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
-
 #define NOLOG 0
 #include "DebugLog.h"
 

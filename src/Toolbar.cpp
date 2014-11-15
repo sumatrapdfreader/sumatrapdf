@@ -2,12 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Dpi.h"
 #include "BaseEngine.h"
 #include "Toolbar.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DisplayModel.h"
-#include "Dpi.h"
 #include "Menu.h"
 #include "resource.h"
 #include "Search.h"

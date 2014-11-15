@@ -9,6 +9,7 @@
 #include "Mui.h"
 #include "BaseEngine.h"
 #include "EbookControls.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"

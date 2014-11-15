@@ -4,8 +4,8 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
-#include "AppPrefs.h"
 #include "DisplayState.h"
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "DebugLog.h"
 #include "EbookEngine.h"

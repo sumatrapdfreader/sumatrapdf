@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "ChmModel.h"
+#include "DisplayState.h"
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmDoc.h"
 #include "Dict.h"

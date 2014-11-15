@@ -7,6 +7,7 @@
 #include "Sigslot.h"
 #include "BaseEngine.h"
 #include "SumatraPDF.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "AppUtil.h"

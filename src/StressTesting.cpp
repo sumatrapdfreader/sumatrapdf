@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "StressTesting.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "ChmModel.h"

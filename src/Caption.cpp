@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "Caption.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"

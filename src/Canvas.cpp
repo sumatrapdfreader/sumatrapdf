@@ -7,6 +7,7 @@
 #include "Sigslot.h"
 #include "BaseEngine.h"
 #include "Canvas.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "Caption.h"
 #include "Controller.h"

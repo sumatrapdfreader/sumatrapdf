@@ -9,6 +9,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "Search.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "ChmModel.h"

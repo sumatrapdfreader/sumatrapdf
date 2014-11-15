@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "ExternalPdfViewer.h"
+#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "Controller.h"
