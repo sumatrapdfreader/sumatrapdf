@@ -587,7 +587,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
     if (pd.dwResultAction == PD_RESULT_PRINT || pd.dwResultAction == PD_RESULT_APPLY) {
         // remember settings for this process
-        LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+        devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
         if (devMode) {
             defaultDevMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
             GlobalUnlock(pd.hDevMode);

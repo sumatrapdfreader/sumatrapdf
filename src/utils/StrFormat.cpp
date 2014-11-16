@@ -65,6 +65,7 @@ const char *Fmt::parseStr(const char *fmt) {
         c = *fmt;
         if ('\\' == c) {
             // detect and skip \{
+            // TODO: need to remove '\' from the string, as it is escaping character
             if ('{' == fmt[1]) {
                 fmt += 2;
                 continue;
@@ -86,7 +87,8 @@ const char *Fmt::parseStr(const char *fmt) {
         }
         ++fmt;
     }
-    return NULL;
+    addStr(start, fmt - start);
+    return fmt;
 }
 
 static bool hasArgDefWithNo(Arg *argDefs, int nArgDefs, int no) {
@@ -194,6 +196,7 @@ static bool validArgTypes(Arg::Type defType, Arg::Type argType) {
 }
 
 void Fmt::serializeArg(int argDefNo) {
+    CrashIf(argDefNo >= dimof(argDefs));
     if (argDefNo >= nArgDefs) {
         return;
     }
