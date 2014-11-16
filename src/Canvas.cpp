@@ -21,6 +21,7 @@
 #include "FrameRateWnd.h"
 #include "resource.h"
 #include "Menu.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "uia/Provider.h"

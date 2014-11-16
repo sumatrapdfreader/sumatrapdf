@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef TextSearch_h
-#define TextSearch_h
-
-#include "TextSelection.h"
-
 enum TextSearchDirection {
     FIND_BACKWARD = false,
     FIND_FORWARD  = true
@@ -67,5 +62,3 @@ private:
     WCHAR *lastText;
     BYTE *findCache;
 };
-
-#endif

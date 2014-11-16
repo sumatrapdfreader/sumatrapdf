@@ -13,6 +13,7 @@
 #include "EngineManager.h"
 #include "DisplayModel.h"
 #include "FileUtil.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "Selection.h"

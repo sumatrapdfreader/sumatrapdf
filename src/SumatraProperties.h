@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SumatraProperties_h
-#define SumatraProperties_h
-
 #define PROPERTIES_CLASS_NAME   L"SUMATRA_PDF_PROPERTIES"
 
 enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
@@ -43,5 +40,3 @@ class WindowInfo;
 void OnMenuProperties(WindowInfo *win);
 void DeletePropertiesWindow(HWND hwndParent);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-#endif

@@ -8,6 +8,8 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 #include "Search.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
@@ -18,7 +20,6 @@
 #include "EngineManager.h"
 #include "DisplayModel.h"
 #include "FileUtil.h"
-#include "TextSearch.h"
 #include "Notifications.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"

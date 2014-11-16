@@ -29,6 +29,7 @@
 #include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"

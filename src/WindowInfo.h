@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef WindowInfo_h
-#define WindowInfo_h
-
 class DoubleBuffer;
 class LinkHandler;
 class Notifications;
@@ -282,5 +279,3 @@ public:
 
     virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount);
 };
-
-#endif

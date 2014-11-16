@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef PdfCreator_h
-#define PdfCreator_h
-
 typedef struct fz_context_s fz_context;
 typedef struct fz_image_s fz_image;
 typedef struct pdf_document_s pdf_document;
@@ -36,4 +33,3 @@ public:
     static bool RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
 };
 
-#endif

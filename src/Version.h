@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Version_h
-#define Version_h
-
 // CURR_VERSION can be over-written externally (via makefile)
 #ifndef CURR_VERSION
 #define CURR_VERSION 3.1
@@ -58,4 +55,3 @@
 #define COPYRIGHT_STR      "Copyright 2006-2014 all authors (GPLv3)"
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
 
-#endif

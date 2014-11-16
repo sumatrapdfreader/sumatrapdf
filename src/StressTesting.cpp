@@ -26,6 +26,8 @@
 #include "ParseCommandLine.h"
 #include "RenderCache.h"
 #include "SimpleLog.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 #include "Search.h"
 #include "SumatraPDF.h"
 #include "Timer.h"

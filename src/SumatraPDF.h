@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SumatraPDF_h
-#define SumatraPDF_h
-
 #define CANVAS_CLASS_NAME       L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
@@ -193,5 +190,3 @@ void UpdateToolbarAndScrollbarState(WindowInfo *win);
 void RebuildMenuBarForWindow(WindowInfo *win);
 void UpdateCheckAsync(WindowInfo *win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo *win);
-
-#endif

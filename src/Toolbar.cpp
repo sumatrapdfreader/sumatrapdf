@@ -14,6 +14,8 @@
 #include "DisplayModel.h"
 #include "resource.h"
 #include "Menu.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 #include "Search.h"
 #include "SumatraPDF.h"
 #include "Translations.h"

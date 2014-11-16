@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Tabs_h
-#define Tabs_h
-
 class WindowInfo;
 class Controller;
 struct WatchedFile;
@@ -49,5 +46,3 @@ void SetTabsInTitlebar(WindowInfo *win, bool set);
 void SetCurrentTabBgCol(WindowInfo *win, COLORREF bgCol);
 
 COLORREF AdjustLightness2(COLORREF c, float units);
-
-#endif

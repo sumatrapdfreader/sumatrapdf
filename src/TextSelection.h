@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef TextSelection_h
-#define TextSelection_h
-
-#define iswordchar(c) IsCharAlphaNumeric(c)
-
 inline unsigned int distSq(int x, int y) { return x * x + y * y; }
 
 class PageTextCache {
@@ -67,5 +62,3 @@ protected:
     int FindClosestGlyph(int pageNo, double x, double y);
     void FillResultRects(int pageNo, int glyph, int length, WStrVec *lines=NULL);
 };
-
-#endif

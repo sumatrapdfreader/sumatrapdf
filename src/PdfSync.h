@@ -2,9 +2,6 @@
    License: GPLv3 */
 // PDF-source synchronizer based on .pdfsync file
 
-#ifndef PdfSync_h
-#define PdfSync_h
-
 // Error codes returned by the synchronization functions
 enum {
     PDFSYNCERR_SUCCESS,                   // the synchronization succeeded
@@ -59,4 +56,3 @@ public:
     static int Create(const WCHAR *pdffilename, BaseEngine *engine, Synchronizer **sync);
 };
 
-#endif

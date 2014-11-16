@@ -52,8 +52,8 @@
 #include "DisplayModel.h"
 #include "AppPrefs.h" // needed for gGlobalPrefs
 #include "PdfSync.h"
-#include "TextSearch.h"
 #include "TextSelection.h"
+#include "TextSearch.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.

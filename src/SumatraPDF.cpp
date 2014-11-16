@@ -42,6 +42,7 @@
 #include "MobiDoc.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
@@ -73,7 +74,6 @@
 #include "Version.h"
 #include "WinCursors.h"
 #include "WinUtil.h"
-
 #define NOLOG 0
 #include "DebugLog.h"
 

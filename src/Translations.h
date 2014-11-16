@@ -1,9 +1,6 @@
 /* Copyright 2014 Krzysztof Kowalczyk.
    License: BSD */
 
-#ifndef Translations_h
-#define Translations_h
-
 namespace trans {
 
 int GetLangsCount();
@@ -30,5 +27,3 @@ void            Destroy();
 // of a struct). This allows the translation manager script to see the string
 // but they'll need additional code that does Trans::GetTranslation() on them
 #define _TRN(x) (x)
-
-#endif

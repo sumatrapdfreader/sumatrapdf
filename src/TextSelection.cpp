@@ -249,14 +249,16 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y)
     int textLen;
     const WCHAR *text = textCache->GetData(pageNo, &textLen);
 
-    for (; ix > 0; ix--)
-        if (!iswordchar(text[ix - 1]))
+    for (; ix > 0; ix--) {
+        if (!IsCharAlphaNumeric(text[ix - 1]))
             break;
+    }
     StartAt(pageNo, ix);
 
-    for (; ix < textLen; ix++)
-        if (!iswordchar(text[ix]))
+    for (; ix < textLen; ix++) {
+        if (!IsCharAlphaNumeric(text[ix]))
             break;
+    }
     SelectUpTo(pageNo, ix);
 }
 

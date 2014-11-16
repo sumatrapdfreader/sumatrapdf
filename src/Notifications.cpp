@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
 #include "SettingsStructs.h"

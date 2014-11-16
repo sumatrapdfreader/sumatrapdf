@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef SumatraDialogs_h
-#define SumatraDialogs_h
-
 struct GlobalPrefs;
 
 WCHAR *   Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
@@ -31,5 +28,3 @@ struct Print_Advanced_Data {
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
-
-#endif

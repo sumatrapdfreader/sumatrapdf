@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Selection_h
-#define Selection_h
-
 #define SMOOTHSCROLL_TIMER_ID       2
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
@@ -40,4 +37,3 @@ void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);
 void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key);
 void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted);
 
-#endif
