@@ -5,6 +5,7 @@
 #include "AppUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
+#include "StrFormat.h"
 
 // must be last due to assert() over-write
 #include "UtAssert.h"

@@ -32,6 +32,7 @@ extern void TrivialHtmlParser_UnitTests();
 extern void VarintGobTest();
 extern void VecTest();
 extern void WinUtilTest();
+extern void StrFormatTest();
 
 int main(int argc, char **argv)
 {
@@ -58,6 +59,8 @@ int main(int argc, char **argv)
     WinUtilTest();
     SumatraPDF_UnitTests();
     SvgPath_UnitTests();
+    StrFormatTest();
+
     int res = utassert_print_results();
     return res;
 }
