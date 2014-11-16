@@ -9,6 +9,7 @@
 #include "BaseEngine.h"
 #include "Tabs.h"
 #include "HtmlParserLookup.h"
+#include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "AppPrefs.h"
 #include "Caption.h"

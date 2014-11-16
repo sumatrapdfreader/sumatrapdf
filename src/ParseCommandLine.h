@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef ParseCommandLine_h
-#define ParseCommandLine_h
-
-#include "DisplayState.h"
-
 class CommandLineInfo {
 public:
     WStrVec     fileNames;
@@ -71,5 +66,3 @@ public:
 
     void ParseCommandLine(const WCHAR *cmdLine);
 };
-
-#endif

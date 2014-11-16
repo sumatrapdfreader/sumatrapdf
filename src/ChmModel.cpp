@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Dict.h"
 #include "BaseEngine.h"
+#include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "Controller.h"
 #include "ChmModel.h"

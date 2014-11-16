@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "Notifications.h"
+#include "SettingsStructs.h"
 #include "SumatraPDF.h"
 #include "WinCursors.h"
 #include "WinUtil.h"

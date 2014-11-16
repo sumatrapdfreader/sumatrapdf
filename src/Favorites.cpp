@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "SettingsStructs.h"
 #include "Favorites.h"
 #include "DisplayState.h"
 #include "AppPrefs.h"

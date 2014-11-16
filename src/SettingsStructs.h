@@ -6,6 +6,19 @@
 #ifndef SettingsStructs_h
 #define SettingsStructs_h
 
+enum DisplayMode {
+    DM_FIRST = 0,
+    // automatic means: the continuous form of single page, facing or
+    // book view - depending on the document's desired PageLayout
+    DM_AUTOMATIC = DM_FIRST,
+    DM_SINGLE_PAGE,
+    DM_FACING,
+    DM_BOOK_VIEW,
+    DM_CONTINUOUS,
+    DM_CONTINUOUS_FACING,
+    DM_CONTINUOUS_BOOK_VIEW,
+};
+
 // top, right, bottom and left margin (in that order) between window and
 // document
 struct WindowMargin {
@@ -212,6 +225,8 @@ struct FileState {
     // temporary value needed for FileHistory::cmpOpenCount
     size_t index;
 };
+
+typedef FileState DisplayState;
 
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt (previously in

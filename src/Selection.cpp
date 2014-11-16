@@ -5,6 +5,7 @@
 #include "Dpi.h"
 #include "BaseEngine.h"
 #include "Selection.h"
+#include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "AppPrefs.h"
 #include "Controller.h"

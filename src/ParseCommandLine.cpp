@@ -3,8 +3,9 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "ParseCommandLine.h"
+#include "SettingsStructs.h"
 #include "DisplayState.h"
+#include "ParseCommandLine.h"
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
 #include "StressTesting.h"

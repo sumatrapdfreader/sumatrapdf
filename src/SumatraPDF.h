@@ -4,8 +4,6 @@
 #ifndef SumatraPDF_h
 #define SumatraPDF_h
 
-#include "DisplayState.h"
-
 #define CANVAS_CLASS_NAME       L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"

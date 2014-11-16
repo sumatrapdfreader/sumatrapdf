@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "Controller.h"
 #include "EngineManager.h"

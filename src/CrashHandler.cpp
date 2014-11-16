@@ -15,6 +15,7 @@
 #include "FileUtil.h"
 #include "HttpUtil.h"
 #include "LzmaSimpleArchive.h"
+#include "SettingsStructs.h"
 #include "SumatraPDF.h"
 #include "Version.h"
 #include "WinUtil.h"
