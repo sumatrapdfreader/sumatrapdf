@@ -1337,6 +1337,9 @@
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\previewer\PdfPreviewBase.h">
+      <Filter>previewer</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\installer\Installer.h">
       <Filter>installer</Filter>
     </ClInclude>

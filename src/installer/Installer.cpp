@@ -21,14 +21,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 
 #include "BaseUtil.h"
 #include <Tlhelp32.h>
-#include <objidl.h>
 #include <io.h>
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "EngineManager.h"
-#include "DisplayState.h"
-#include "DisplayModel.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
 #include "Translations.h"
@@ -41,7 +34,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "CrashHandler.h"
 #include "Dpi.h"
 #include "FrameTimeoutCalculator.h"
-#include "ParseCommandLine.h"
 #include "DebugLog.h"
 
 // TODO: can't build these separately without breaking TEST_UNINSTALLER

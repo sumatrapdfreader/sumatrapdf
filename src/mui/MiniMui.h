@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Mui_h
-#define Mui_h
-
 // as little of mui as necessary to make ../EngineDump.cpp compile
 // TODO: extract from UI toolkit so that it can be used in model independent of view
 
@@ -44,5 +41,3 @@ public:
     ScopedMiniMui() { mui::Initialize(); }
     ~ScopedMiniMui() { mui::Destroy(); }
 };
-
-#endif

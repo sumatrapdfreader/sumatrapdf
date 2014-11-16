@@ -5,6 +5,7 @@
 #include "WinUtil.h"
 #include "BaseEngine.h"
 #include "PdfPreview.h"
+#include "PdfPreviewBase.h"
 #include "PdfEngine.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
 #include "EbookEngine.h"

@@ -1,6 +1,3 @@
-#ifndef UIAutomationConstants_h
-#define UIAutomationConstants_h
-
 // define necessary constants here if UIAutomationClient.h is not available
 
 #ifndef __UIA_PatternIds_MODULE_DEFINED__
@@ -28,5 +25,3 @@ const long UIA_IsValuePatternAvailablePropertyId = 30043;
 const long UIA_CustomControlTypeId = 50025;
 const long UIA_DocumentControlTypeId = 50030;
 #endif //__UIA_ControlTypeIds_MODULE_DEFINED__
-
-#endif //UIAutomationConstants_h

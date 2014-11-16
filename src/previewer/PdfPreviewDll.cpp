@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "PdfPreview.h"
+#include "PdfPreviewBase.h"
 #include "WinUtil.h"
 
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx

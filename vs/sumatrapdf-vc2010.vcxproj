@@ -513,6 +513,7 @@
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
+    <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
     <ClInclude Include="..\src\installer\Installer.h" />
     <ClInclude Include="..\src\installer\Resource.h" />
     <ClInclude Include="..\ext\CHMLib\src\chm_lib.h" />
