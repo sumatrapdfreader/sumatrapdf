@@ -137,7 +137,6 @@ CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
 
 ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR)
 
-# 4703 - potentially uninitialized local variable (frequent with vs 2012)
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4244 /wd4703 /wd4996
 
@@ -154,11 +153,11 @@ JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f 
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win32
 !endif
 
-# 4703 - potentially uninitialized local variable (frequent with vs 2012)
+# disable warning C4703: potentially uninitialized local variable (affects VS2012 and later)
 MUPDF_CFLAGS = $(CFLAGS) /TC /I$(MUPDF_DIR)/include /I$(MUPDF_DIR)/generated \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
-	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR)
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4703
+	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR) \
+	/wd4703
 
 !if "$(CFG)"=="dbg"
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"

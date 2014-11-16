@@ -38,6 +38,27 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug-VC12|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="0"
+			BuildLogFile="..\obj-dbg\BuildLog.htm"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
+				ReBuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
+				CleanCommandLine="del /s ..\obj-dbg\*.obj"
+				Output="..\obj-dbg\sumatrapdf.exe"
+				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;DISABLE_EBOOK_UI"
+				IncludeSearchPath="..\src;..\src\utils;..\src\mui;..\mupdf\include"
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
