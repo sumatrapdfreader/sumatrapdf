@@ -365,63 +365,18 @@ func main() {
 			},
 				IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr",
 			},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				"AppPrefs.cpp",
-				"AppTools.cpp",
-				"AppUtil.cpp",
-				//"Canvas.cpp",  // uia stuff
-				"Caption.cpp",
-				"ChmDoc.cpp",
-				"ChmModel.cpp",
-				"CrashHandler.cpp",
-				"DisplayModel.cpp",
-				"DjVuEngine.cpp",
-				"Doc.cpp",
-				"EbookController.cpp",
-				"EbookControls.cpp",
-				"EbookDoc.cpp",
-				"EbookEngine.cpp",
-				"EbookFormatter.cpp",
-				//"EngineDump.cpp",  // mingw: __VA_ARGS__
-				"EngineManager.cpp",
-				"ExternalPdfViewer.cpp",
-				"Favorites.cpp",
-				"FileModifications.cpp",
-				"FileThumbnails.cpp",
-				"HtmlFormatter.cpp",
-				"ImagesEngine.cpp",
-				"MakeLzSA.cpp",
-				"Menu.cpp",
-				//"MobiDoc.cpp",  // mingw: __VA_ARGS__
-				"MuiEbookPageDef.cpp",
-				"MuPDF_Exports.cpp",
-				"Notifications.cpp",
-				"PagesLayoutDef.cpp",
-				"ParseCommandLine.cpp",
-				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
-				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
-				"PdfSync.cpp",
-				"Print.cpp",
-				//"PsEngine.cpp",  // mingw: no _wfopen_s
-				"RenderCache.cpp",
-				"Search.cpp",
-				//"Selection.cpp", // mingw: no IRawElementProviderFragment
-				//"StressTesting.cpp", // mingw: many issues
-				"SumatraAbout.cpp",
-				"SumatraAbout2.cpp",
-				"SumatraDialogs.cpp",
-				//"SumatraPDF.cpp", // mingw: many issues
-				"SumatraProperties.cpp",
-				//"SumatraStartup.cpp",  // uia and many others
-				"TableOfContents.cpp",
-				"Tabs.cpp",
-				"Tester.cpp",
-				"TextSearch.cpp",
-				"TextSelection.cpp",
-				"Toolbar.cpp",
-				"Trans_sumatra_txt.cpp",
-				"UnitTests.cpp",
-				//"WindowInfo.cpp",  // uia stuff
+			&MingwCcDirAllTask{Dir: "src", Exclude: []string{
+				"Canvas.cpp",  // uia stuff
+				"EngineDump.cpp",  // mingw: __VA_ARGS__
+				"MobiDoc.cpp",  // mingw: __VA_ARGS__
+				"PdfCreator.cpp",  // mingw: __VA_ARGS__
+				"PdfEngine.cpp",  // mingw: __VA_ARGS__
+				"PsEngine.cpp",  // mingw: no _wfopen_s
+				"Selection.cpp", // mingw: no IRawElementProviderFragment
+				"StressTesting.cpp", // mingw: many issues
+				"SumatraPDF.cpp", // mingw: many issues
+				"SumatraStartup.cpp",  // uia and many others
+				"WindowInfo.cpp",  // uia stuff
 			},
 				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu;ext/lzma/C;ext/zlib;mupdf/include;ext/synctex",
 			},
