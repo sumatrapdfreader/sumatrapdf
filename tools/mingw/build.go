@@ -354,55 +354,14 @@ func main() {
 		ToRun: []Task{
 			&MkdirOutTask{},
 			&MingwCcDirAllTask{Dir: "src/mui", IncDirs: "src/utils;src/utils/mui"},
-			&MingwCcDirTask{Dir: "src/utils", Files: []string{
-				"ArchUtil.cpp",
-				"BaseUtil.cpp",
-				"BitReader.cpp",
-				"ByteOrderDecoder.cpp",
-				"CmdLineParser.cpp",
-				//"CryptoUtil.cpp", // mingw complains about sscanf_s
-				"CssParser.cpp",
-				"DbgHelpDyn.cpp",
-				"DebugLog.cpp",
-				"DialogSizer.cpp",
-				"Dict.cpp",
-				"DirIter.cpp",
-				"Dpi.cpp",
-				"FileTransactions.cpp",
-				"FileUtil.cpp",
-				"FileWatcher.cpp",
-				"FrameRateWnd.cpp",
-				//"FzImgReader.cpp", // mingw complains about fz_warn()
-				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
-				"HtmlParserLookup.cpp",
-				"HtmlPrettyPrint.cpp",
-				"HtmlPullParser.cpp",
-				// "HtmlWindow.cpp", // mingw doesn't have QITAB
-				"HttpUtil.cpp",
-				"JsonParser.cpp",
-				"LabelWithCloseWnd.cpp",
-				"LzmaSimpleArchive.cpp",
-				"NoFreeAllocator.cpp",
-				"PalmDbReader.cpp",
-				"SerializeTxt.cpp",
-				"SettingsUtil.cpp",
-				"SplitterWnd.cpp",
-				"SquareTreeParser.cpp",
-				"StrFormat.cpp",
-				// "StrUtil.cpp", // mingw doesn't have _vsnprintf_s, sprintf_s, sscanf_s
-				"StrSlice.cpp",
-				//"TgaReader.cpp", // mingw doesn't have _snprintf_s
-				"ThreadUtil.cpp",
-				"Touch.cpp",
-				"TrivialHtmlParser.cpp",
-				"TxtParser.cpp",
-				"UITask.cpp",
-				"UtAssert.cpp",
-				"VarintGob.cpp",
-				"WebpReader.cpp",
-				"WinCursors.cpp",
-				"WinUtil.cpp",
-				//"ZipUtil.cpp", // mingw doesn't have QITAB
+			&MingwCcDirAllTask{Dir: "src/utils", Exclude: []string{
+				"CryptoUtil.cpp", // mingw complains about sscanf_s
+				"FzImgReader.cpp", // mingw complains about fz_warn()
+				"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
+				"HtmlWindow.cpp", // mingw doesn't have QITAB
+				"StrUtil.cpp", // mingw doesn't have _vsnprintf_s, sprintf_s, sscanf_s
+				"TgaReader.cpp", // mingw doesn't have _snprintf_s
+				"ZipUtil.cpp", // mingw doesn't have QITAB
 			},
 				IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr",
 			},
@@ -453,7 +412,7 @@ func main() {
 				"SumatraDialogs.cpp",
 				//"SumatraPDF.cpp", // mingw: many issues
 				"SumatraProperties.cpp",
-				//"SumatraStartup.cpp",  // we don't compile this
+				//"SumatraStartup.cpp",  // uia and many others
 				"TableOfContents.cpp",
 				"Tabs.cpp",
 				"Tester.cpp",
@@ -464,7 +423,7 @@ func main() {
 				"UnitTests.cpp",
 				//"WindowInfo.cpp",  // uia stuff
 			},
-				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu;ext/lzma/C;ext/zlib;/mupdf/include;ext/synctex",
+				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu;ext/lzma/C;ext/zlib;mupdf/include;ext/synctex",
 			},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
