@@ -121,7 +121,8 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
 
     ScopedMem<char> prevData(file::ReadAll(modificationsPath, NULL));
     Vec<PageAnnotation> *prevList = ParseFileModifications(prevData);
-    if (prevList) {
+    bool isUpdate = prevList != NULL;
+    if (isUpdate) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
         // added annotation types and properties this version doesn't know anything about)
@@ -138,7 +139,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     if (list->Count() == offset)
         return true; // nothing (new) to save
 
-    data.AppendFmt("[@%s]\r\n", prevList ? "update" : "meta");
+    data.AppendFmt("[@%s]\r\n", isUpdate ? "update" : "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     int64 size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX)

@@ -675,11 +675,16 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
                 RenderedBitmap *clone = state->thumbnail->Clone();
-                UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
-                clone->StretchDIBits(hdc, page);
+                if (clone) {
+                    UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
+                    clone->StretchDIBits(hdc, page);
+                    delete clone;
+                }
+                else {
+                    state->thumbnail->StretchDIBits(hdc, page);
+                }
                 SelectClipRgn(hdc, NULL);
                 DeleteObject(clip);
-                delete clone;
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 

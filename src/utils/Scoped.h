@@ -153,13 +153,13 @@ public:
 
 class ScopedCom {
 public:
-    ScopedCom() { CoInitialize(NULL); }
+    ScopedCom() { (void)CoInitialize(NULL); }
     ~ScopedCom() { CoUninitialize(); }
 };
 
 class ScopedOle {
 public:
-    ScopedOle() { OleInitialize(NULL); }
+    ScopedOle() { (void)OleInitialize(NULL); }
     ~ScopedOle() { OleUninitialize(); }
 };
 

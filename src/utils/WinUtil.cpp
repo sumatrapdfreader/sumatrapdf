@@ -16,8 +16,12 @@ static HFONT gDefaultGuiFont = NULL;
 HMODULE SafeLoadLibrary(const WCHAR *dllName)
 {
     WCHAR dllPath[MAX_PATH];
-    GetSystemDirectory(dllPath, dimof(dllPath));
-    PathAppend(dllPath, dllName);
+    UINT res = GetSystemDirectory(dllPath, dimof(dllPath));
+    if (!res || res >= dimof(dllPath))
+        return NULL;
+    BOOL ok = PathAppend(dllPath, dllName);
+    if (!ok)
+        return NULL;
     return LoadLibrary(dllPath);
 }
 
@@ -97,8 +101,8 @@ void LogLastError(DWORD err)
     char *msgBuf = NULL;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang =  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    FormatMessageA(flags, NULL, err, lang, (LPSTR)&msgBuf, 0, NULL);
-    if (!msgBuf) return;
+    DWORD res = FormatMessageA(flags, NULL, err, lang, (LPSTR)&msgBuf, 0, NULL);
+    if (!res || !msgBuf) return;
     plogf("LogLastError: %s", msgBuf);
     LocalFree(msgBuf);
 }
@@ -390,8 +394,11 @@ IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd)
         ScopedComPtr<IShellFolder> pShellFolder;
         LPCITEMIDLIST pidlChild;
         hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
-        if (SUCCEEDED(hr))
-            pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
+        if (SUCCEEDED(hr)) {
+            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
+            if (FAILED(hr))
+                pDataObject = NULL;
+        }
         CoTaskMemFree(pidl);
     }
 

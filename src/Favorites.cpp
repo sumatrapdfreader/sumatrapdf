@@ -277,6 +277,7 @@ static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
     for (size_t i = 0; i < menusCount; i++) {
         const WCHAR *filePath = filePathsSorted.At(i);
         DisplayState *f = gFavorites.GetFavByFilePath(filePath);
+        CrashIf(!f);
         HMENU sub = m;
         bool combined = (f->favorites->Count() == 1);
         if (!combined)

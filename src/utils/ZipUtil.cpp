@@ -221,8 +221,10 @@ bool ZipCreator::WriteData(const void *data, size_t size)
 {
     ULONG written = 0;
     HRESULT res = stream->Write(data, (ULONG)size, &written);
+    if (FAILED(res) || written != size)
+        return false;
     bytesWritten += written;
-    return SUCCEEDED(res) && written == size;
+    return true;
 }
 
 static uint32_t zip_deflate(void *dst, uint32_t dstlen, const void *src, uint32_t srclen)

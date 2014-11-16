@@ -851,6 +851,7 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
             fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
             fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
             stroke = fz_new_stroke_state_with_dash_len(dev->ctx, 2);
+            CrashIf(!stroke);
             stroke->linewidth = 0.5f;
             stroke->dash_list[stroke->dash_len++] = 1;
             stroke->dash_list[stroke->dash_len++] = 1;
@@ -2392,6 +2393,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
             fz_link *link = fz_new_link(ctx, &list->coords.At(i), ld);
+            CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
             link->next = page->links;
             page->links = link;
         }
@@ -4437,6 +4439,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
             fz_link *link = fz_new_link(ctx, &list->coords.At(i), ld);
+            CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
             link->next = page->links;
             page->links = link;
         }

@@ -209,7 +209,7 @@ static void CopyMetadata(const char *data, size_t len, Bitmap *bmp)
     if (IsFieldSet((const char *)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
         char dateTime[20];
         int count = _snprintf_s(dateTime, dimof(dateTime), _TRUNCATE,
-            "%04d-%02d-%02d %02d:%02d:%02d",
+            "%04u-%02u-%02u %02u:%02u:%02u",
             convLE(extAreaLE->dateTime[2]), convLE(extAreaLE->dateTime[1]),
             convLE(extAreaLE->dateTime[0]), convLE(extAreaLE->dateTime[3]),
             convLE(extAreaLE->dateTime[4]), convLE(extAreaLE->dateTime[5]));

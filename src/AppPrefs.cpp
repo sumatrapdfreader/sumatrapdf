@@ -61,7 +61,8 @@ static int GetWeekCount()
     SYSTEMTIME date20110101 = { 0 };
     date20110101.wYear = 2011; date20110101.wMonth = 1; date20110101.wDay = 1;
     FILETIME origTime, currTime;
-    SystemTimeToFileTime(&date20110101, &origTime);
+    BOOL ok = SystemTimeToFileTime(&date20110101, &origTime);
+    CrashIf(!ok);
     GetSystemTimeAsFileTime(&currTime);
     return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)

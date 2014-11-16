@@ -491,8 +491,8 @@ CLSID GetEncoderClsid(const WCHAR *format)
 {
     CLSID null = { 0 };
     UINT numEncoders, size;
-    GetImageEncodersSize(&numEncoders, &size);
-    if (0 == size)
+    Status ok = GetImageEncodersSize(&numEncoders, &size);
+    if (ok != Ok || 0 == size)
         return null;
     ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
     if (!codecInfo)

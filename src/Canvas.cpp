@@ -51,7 +51,9 @@ static bool gWheelMsgRedirect = false;
 void UpdateDeltaPerLine()
 {
     ULONG ulScrollLines;
-    SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
+    BOOL ok = SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
+    if (!ok)
+        return;
     // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
     // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
     if (ulScrollLines == (ULONG)-1)

@@ -373,7 +373,7 @@ static const char *OsNameFromVer(OSVERSIONINFOEX ver)
 
     // either a newer or an older NT version, neither of which we support
     static char osVerStr[32];
-    wsprintfA(osVerStr, "NT %d.%d", ver.dwMajorVersion, ver.dwMinorVersion);
+    wsprintfA(osVerStr, "NT %u.%u", ver.dwMajorVersion, ver.dwMinorVersion);
     return osVerStr;
 }
 
@@ -384,6 +384,7 @@ static void GetOsVersion(str::Str<char>& s)
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
 #pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
+#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
     // starting with Windows 8.1, GetVersionEx will report a wrong version number
     // unless the OS's GUID has been explicitly added to the compatibility manifest
     BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
