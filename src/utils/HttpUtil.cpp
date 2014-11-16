@@ -20,18 +20,18 @@ bool HttpRspOk(const HttpRsp* rsp)
 bool  HttpGet(const WCHAR *url, HttpRsp *rspOut)
 {
     HINTERNET hReq = NULL;
+    DWORD headerBuffSize = sizeof(DWORD);
+    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Error;
 
-    DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
     hReq = InternetOpenUrl(hInet, url, NULL, 0, flags, 0);
     if (!hReq)
         goto Error;
 
-    DWORD headerBuffSize = sizeof(DWORD);
     if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &rspOut->httpStatusCode, &headerBuffSize, NULL)) {
         goto Error;
     }
@@ -70,6 +70,8 @@ bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
     bool ok = false;
     HINTERNET  hReq = NULL, hInet = NULL;
     DWORD dwRead = 0;
+    DWORD headerBuffSize = sizeof(DWORD);
+    DWORD statusCode = 0;
     char buf[1024];
 
     HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
@@ -85,8 +87,6 @@ bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
     if (!hReq)
         goto Exit;
 
-    DWORD headerBuffSize = sizeof(DWORD);
-    DWORD statusCode = 0;
     if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &headerBuffSize, NULL)) {
         goto Exit;
     }

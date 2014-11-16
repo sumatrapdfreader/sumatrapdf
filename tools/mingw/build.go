@@ -203,7 +203,10 @@ func mingwCcExe(src string) string {
 	if strings.HasSuffix(ext, ".c") {
 		return MINGW32_CC
 	}
-	return MINGW32_CPP
+	if strings.HasSuffix(ext, ".cpp") {
+		return MINGW32_CPP
+	}
+	panic(fmt.Sprintf("unsupported suffix: %s", ext))
 }
 
 func mingwIncArgs(incDirs string) []string {
@@ -221,8 +224,10 @@ func (t *MingwCcTask) Run() (error, []byte, []byte) {
 	cc := mingwCcExe(t.In)
 	// TODO: ensure out hasn't be generated in other tasks
 	// use gcc for *.c files, g++ for everything else
-	args := mingwIncArgs(t.IncDirs)
-	args = append(args, "-c", t.In, "-o", out)
+	var args []string
+	args = append(args, mingwIncArgs(t.IncDirs)...)
+	args = append(args, "-o", out)
+	args = append(args, "-c", t.In)
 	cmd := exec.Command(cc, args...)
 	fmt.Println(cmdString(cmd))
 	// TODO: get stdout, stderr separately
@@ -243,10 +248,10 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 		out := genOut(outDir, f, ".o")
 		cc := mingwCcExe(f)
 		var args []string
-		//args = append(args, "-fpermissive")
 		args = append(args, mingwIncArgs(t.IncDirs)...)
 		path := filepath.Join(t.Dir, f)
-		args = append(args, "-c", path, "-o", out)
+		args = append(args, "-o", out)
+		args = append(args, "-c", path)
 		cmd := exec.Command(cc, args...)
 		fmt.Println(cmdString(cmd))
 		// TODO: get stdout, stderr separately
@@ -265,6 +270,20 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
+			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"FileTransactions.cpp",
+				"FileUtil.cpp",
+				"FileWatcher.cpp",
+				"FrameRateWnd.cpp",
+				//"FzImgReader.cpp", // mingw complains about fz_warn()
+				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
+				"HtmlParserLookup.cpp",
+				"HtmlPrettyPrint.cpp",
+				"HtmlPullParser.cpp",
+				// "HtmlWindow.cpp", // mingw doesn't have QITAB
+				"JsonParser.cpp",
+				"HttpUtil.cpp",
+				}, IncDirs: "src/utils;mupdf/include"},
 			&MingwCcDirTask{Dir: "src", Files: []string{
 				"EbookControls.cpp",
 				"EbookDoc.cpp",
@@ -329,20 +348,6 @@ func main() {
 				},
 				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu",
 				},
-			&MingwCcDirTask{Dir: "src/utils", Files: []string{
-				"FileTransactions.cpp",
-				"FileUtil.cpp",
-				"FileWatcher.cpp",
-				"FrameRateWnd.cpp",
-				//"FzImgReader.cpp", // mingw complains about fz_warn()
-				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
-				"HtmlParserLookup.cpp",
-				"HtmlPrettyPrint.cpp",
-				"HtmlPullParser.cpp",
-				// "HtmlWindow.cpp", // mingw doesn't have QITAB
-				"HttpUtil.cpp",
-				"JsonParser.cpp",
-				}, IncDirs: "src/utils;mupdf/include"},
 			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"ArchUtil.cpp",
 				"BaseUtil.cpp",

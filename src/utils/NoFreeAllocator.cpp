@@ -66,6 +66,7 @@ This allocator bears some resemblance to NSAutoReleasePool and
 garbage-collection in general.
 */
 
+#include "BaseUtil.h"
 #include "NoFreeAllocator.h"
 
 enum {
