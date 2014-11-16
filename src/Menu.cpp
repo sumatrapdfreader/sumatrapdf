@@ -559,7 +559,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     PageElement *pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
     ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
     // TODO: this assertion doesn't prevent /analyze from assuming that value && !pageEl might be possible below
-    CrashIf(value && pageEl);
+    CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
