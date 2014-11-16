@@ -1,12 +1,7 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Caption_h
-#define Caption_h
-
-#include <dwmapi.h>
-#include <vssym32.h>
-
+/* for win SDKs that don't have this */
 #ifndef WM_THEMECHANGED
 #define WM_THEMECHANGED 0x031A
 #endif
@@ -95,5 +90,3 @@ public:
     void UpdateColors(bool activeWindow);
     void UpdateBackgroundAlpha();
 };
-
-#endif

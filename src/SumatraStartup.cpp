@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <dwmapi.h>
+#include <vssym32.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"

@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <dwmapi.h>
+#include <vssym32.h>
 #include "BaseEngine.h"
 #include "WindowInfo.h"
 #include "Sigslot.h"

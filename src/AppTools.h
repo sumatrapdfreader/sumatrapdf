@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef AppTools_h
-#define AppTools_h
-
 bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 WCHAR *AppGenDataFilename(const WCHAR *pFilename);
@@ -18,5 +15,3 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void EnsureAreaVisibility(RectI& rect);
 RectI GetDefaultWindowPos();
 void SaveCallstackLogs();
-
-#endif
