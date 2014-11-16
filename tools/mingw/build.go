@@ -220,14 +220,19 @@ func mingwIncArgs(incDirs string) []string {
 
 func (t *MingwCcTask) Run() (error, []byte, []byte) {
 	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
-	out := genOut(outDir, t.In, ".o")
+	src := t.In
+	dst := genOut(outDir, t.In, ".o")
+	if isUpToDate(src, dst) {
+		return nil, nil, nil
+	}
+
 	cc := mingwCcExe(t.In)
 	// TODO: ensure out hasn't be generated in other tasks
 	// use gcc for *.c files, g++ for everything else
 	var args []string
 	args = append(args, mingwIncArgs(t.IncDirs)...)
-	args = append(args, "-o", out)
-	args = append(args, "-c", t.In)
+	args = append(args, "-o", dst)
+	args = append(args, "-c", src)
 	cmd := exec.Command(cc, args...)
 	fmt.Println(cmdString(cmd))
 	// TODO: get stdout, stderr separately
@@ -242,16 +247,29 @@ type MingwCcDirTask struct {
 	IncDirs string
 }
 
+func isUpToDate(srcPath, dstPath string) bool {
+	dstFi, err := os.Stat(dstPath)
+	if err != nil {
+		return false
+	}
+	srcFi, err := os.Stat(srcPath)
+	panicif(err != nil)
+	return dstFi.ModTime().Sub(srcFi.ModTime()) > 0
+}
+
 func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
 	for _, f := range t.Files {
-		out := genOut(outDir, f, ".o")
+		src := filepath.Join(t.Dir, f)
+		dst := genOut(outDir, f, ".o")
+		if isUpToDate(src, dst) {
+			continue
+		}
 		cc := mingwCcExe(f)
 		var args []string
 		args = append(args, mingwIncArgs(t.IncDirs)...)
-		path := filepath.Join(t.Dir, f)
-		args = append(args, "-o", out)
-		args = append(args, "-c", path)
+		args = append(args, "-o", dst)
+		args = append(args, "-c", src)
 		cmd := exec.Command(cc, args...)
 		fmt.Println(cmdString(cmd))
 		// TODO: get stdout, stderr separately
@@ -265,89 +283,11 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 
 func main() {
 	ctx := NewContext()
-	ctx[OUT_DIR_VAR] = "rel"
+	ctx[OUT_DIR_VAR] = "rel-mingw"
 	rootTask := Tasks{
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
-			&MingwCcDirTask{Dir: "src/utils", Files: []string{
-				"FileTransactions.cpp",
-				"FileUtil.cpp",
-				"FileWatcher.cpp",
-				"FrameRateWnd.cpp",
-				//"FzImgReader.cpp", // mingw complains about fz_warn()
-				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
-				"HtmlParserLookup.cpp",
-				"HtmlPrettyPrint.cpp",
-				"HtmlPullParser.cpp",
-				// "HtmlWindow.cpp", // mingw doesn't have QITAB
-				"JsonParser.cpp",
-				"HttpUtil.cpp",
-				}, IncDirs: "src/utils;mupdf/include"},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				"EbookControls.cpp",
-				"EbookDoc.cpp",
-				"EbookEngine.cpp",
-				"EbookFormatter.cpp",
-				//"EngineDump.cpp",  // mingw: __VA_ARGS__
-				"EngineManager.cpp",
-				"ExternalPdfViewer.cpp",
-				"Favorites.cpp",
-				"FileModifications.cpp",
-				"FileThumbnails.cpp",
-				"HtmlFormatter.cpp",
-				"ImagesEngine.cpp",
-				},
-				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu",
-				},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				"MakeLzSA.cpp",
-				"Menu.cpp",
-				//"MobiDoc.cpp",  // mingw: __VA_ARGS__
-				"MuiEbookPageDef.cpp",
-				"MuPDF_Exports.cpp",
-				"Notifications.cpp",
-				"PagesLayoutDef.cpp",
-				"ParseCommandLine.cpp",
-				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
-				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
-				"PdfSync.cpp",
-				//"Print.cpp",  // mingw: goto crossing var initialization
-				},
-				IncDirs: "src/utils;src/mui;ext/lzma/C;ext/zlib;mupdf/include;ext/synctex",
-				},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				//"PsEngine.cpp",  // mingw: no _wfopen_s
-				"RenderCache.cpp",
-				"Search.cpp",
-				//"Selection.cpp", // mingw: no IRawElementProviderFragment
-				//"StressTesting.cpp", // mingw: many issues
-				"SumatraAbout.cpp",
-				"SumatraAbout2.cpp",
-				"SumatraDialogs.cpp",
-				//"SumatraPDF.cpp", // mingw: many issues
-				"SumatraProperties.cpp",
-				//"SumatraStartup.cpp",  // we don't compile this
-				"TableOfContents.cpp",
-				},
-				IncDirs: "src/utils;src/mui;ext/zlib",
-				},
-			&MingwCcDirTask{Dir: "src", Files: []string{
-				"AppPrefs.cpp",
-				"AppTools.cpp",
-				"AppUtil.cpp",
-				//"Canvas.cpp",  // we don't compile this
-				"Caption.cpp",
-				"ChmDoc.cpp",
-				"ChmModel.cpp",
-				"CrashHandler.cpp",
-				"DisplayModel.cpp",
-				"DjVuEngine.cpp",
-				"Doc.cpp",
-				"EbookController.cpp",
-				},
-				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu",
-				},
 			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"ArchUtil.cpp",
 				"BaseUtil.cpp",
@@ -361,8 +301,18 @@ func main() {
 				"DialogSizer.cpp",
 				"Dict.cpp",
 				"DirIter.cpp",
-				}, IncDirs: "src/utils;ext/unarr;mupdf/include"},
-			&MingwCcDirTask{Dir: "src/utils", Files: []string{
+				"FileTransactions.cpp",
+				"FileUtil.cpp",
+				"FileWatcher.cpp",
+				"FrameRateWnd.cpp",
+				//"FzImgReader.cpp", // mingw complains about fz_warn()
+				//"GdiPlusUtil.cpp",  // mingw complains about lack of UINT32_MAX
+				"HtmlParserLookup.cpp",
+				"HtmlPrettyPrint.cpp",
+				"HtmlPullParser.cpp",
+				// "HtmlWindow.cpp", // mingw doesn't have QITAB
+				"JsonParser.cpp",
+				"HttpUtil.cpp",
 				"LabelWithCloseWnd.cpp",
 				"LzmaSimpleArchive.cpp",
 				"NoFreeAllocator.cpp",
@@ -375,8 +325,6 @@ func main() {
 				"StrSlice.cpp",
 				// "StrUtil.cpp", // mingw doesn't have _vsnprintf_s, sprintf_s, sscanf_s
 				//"TgaReader.cpp", // mingw doesn't have _snprintf_s
-				}, IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib"},
-			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"ThreadUtil.cpp",
 				"Touch.cpp",
 				"TrivialHtmlParser.cpp",
@@ -388,7 +336,69 @@ func main() {
 				"WinCursors.cpp",
 				"WinUtil.cpp",
 				//"ZipUtil.cpp", // mingw doesn't have QITAB
-				}, IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr"},
+				},
+				IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr",
+				},
+			&MingwCcDirTask{Dir: "src", Files: []string{
+				"AppPrefs.cpp",
+				"AppTools.cpp",
+				"AppUtil.cpp",
+				//"Canvas.cpp",  // uia stuff
+				"Caption.cpp",
+				"ChmDoc.cpp",
+				"ChmModel.cpp",
+				"CrashHandler.cpp",
+				"DisplayModel.cpp",
+				"DjVuEngine.cpp",
+				"Doc.cpp",
+				"EbookController.cpp",
+				"EbookControls.cpp",
+				"EbookDoc.cpp",
+				"EbookEngine.cpp",
+				"EbookFormatter.cpp",
+				//"EngineDump.cpp",  // mingw: __VA_ARGS__
+				"EngineManager.cpp",
+				"ExternalPdfViewer.cpp",
+				"Favorites.cpp",
+				"FileModifications.cpp",
+				"FileThumbnails.cpp",
+				"HtmlFormatter.cpp",
+				"ImagesEngine.cpp",
+				"MakeLzSA.cpp",
+				"Menu.cpp",
+				//"MobiDoc.cpp",  // mingw: __VA_ARGS__
+				"MuiEbookPageDef.cpp",
+				"MuPDF_Exports.cpp",
+				"Notifications.cpp",
+				"PagesLayoutDef.cpp",
+				"ParseCommandLine.cpp",
+				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
+				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
+				"PdfSync.cpp",
+				//"Print.cpp",  // mingw: goto crossing var initialization
+				//"PsEngine.cpp",  // mingw: no _wfopen_s
+				"RenderCache.cpp",
+				"Search.cpp",
+				//"Selection.cpp", // mingw: no IRawElementProviderFragment
+				//"StressTesting.cpp", // mingw: many issues
+				"SumatraAbout.cpp",
+				"SumatraAbout2.cpp",
+				"SumatraDialogs.cpp",
+				//"SumatraPDF.cpp", // mingw: many issues
+				"SumatraProperties.cpp",
+				//"SumatraStartup.cpp",  // we don't compile this
+				"TableOfContents.cpp",
+				"Tabs.cpp",
+				"Tester.cpp",
+				"TextSearch.cpp",
+				"TextSelection.cpp",
+				"Toolbar.cpp",
+				"Trans_sumatra_txt.cpp",
+				"UnitTests.cpp",
+				//"WindowInfo.cpp",  // uia stuff
+				},
+				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu;ext/lzma/C;ext/zlib;/mupdf/include;ext/synctex",
+				},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
 	}
