@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Menu_h
-#define Menu_h
-
-#include "resource.h"
-
 #define SEP_ITEM "-----"
 
 // those are defined here instead of resource.h to avoid
@@ -42,4 +37,3 @@ void  ShowHideMenuBar(WindowInfo *win, bool showTemporarily=false);
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 
-#endif

@@ -14,6 +14,7 @@
 #include "AppPrefs.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "SerializeTxt.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #include "resource.h"

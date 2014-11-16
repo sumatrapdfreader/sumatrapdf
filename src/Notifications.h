@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Notifications_h
-#define Notifications_h
-
-#include "TextSearch.h" // for ProgressUpdateUI
-
 class NotificationWnd;
 
 class NotificationWndCallback {
@@ -97,5 +92,3 @@ public:
 };
 
 void RegisterNotificationsWndClass();
-
-#endif

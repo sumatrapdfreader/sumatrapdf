@@ -17,6 +17,7 @@
 #include "EbookController.h"
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
+#include "TextSearch.h"
 #include "Notifications.h"
 #include "resource.h"
 #include "Selection.h"

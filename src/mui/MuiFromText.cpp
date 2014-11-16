@@ -6,6 +6,7 @@
 #include "HtmlParserLookup.h"
 #include "Sigslot.h"
 #include "Mui.h"
+#include "SerializeTxt.h"
 #include "MuiDefs.h"
 #include "SvgPath.h"
 #include "TxtParser.h"

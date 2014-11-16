@@ -18,6 +18,7 @@
 #include "EngineManager.h"
 #include "DisplayModel.h"
 #include "FileUtil.h"
+#include "TextSearch.h"
 #include "Notifications.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"

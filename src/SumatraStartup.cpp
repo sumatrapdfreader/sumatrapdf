@@ -29,6 +29,7 @@
 #include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
+#include "TextSearch.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
 #include "PdfEngine.h"

@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef ExternalPdfViewer_h
-#define ExternalPdfViewer_h
-
 class WindowInfo;
 
 bool CanViewExternally(WindowInfo *win=NULL);
@@ -23,5 +20,3 @@ bool CanViewWithHtmlHelp(WindowInfo *win);
 bool ViewWithHtmlHelp(WindowInfo *win, const WCHAR *args=NULL);
 
 bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo=0);
-
-#endif

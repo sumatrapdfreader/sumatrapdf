@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "resource.h"
 #include "Menu.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
