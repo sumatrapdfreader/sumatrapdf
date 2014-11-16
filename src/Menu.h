@@ -36,4 +36,3 @@ void  ShowHideMenuBar(WindowInfo *win, bool showTemporarily=false);
 #if defined(DEBUG) && !defined(SHOW_DEBUG_MENU_ITEMS)
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
-

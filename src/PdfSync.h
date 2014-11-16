@@ -55,4 +55,3 @@ protected:
 public:
     static int Create(const WCHAR *pdffilename, BaseEngine *engine, Synchronizer **sync);
 };
-

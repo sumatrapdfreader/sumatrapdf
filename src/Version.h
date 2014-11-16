@@ -54,4 +54,3 @@
 
 #define COPYRIGHT_STR      "Copyright 2006-2014 all authors (GPLv3)"
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"
-

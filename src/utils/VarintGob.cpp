@@ -118,4 +118,3 @@ int VarintGobEncode(int64_t val, uint8_t *d, int dLen)
     }
     return UVarintGobEncode(uVal, d, dLen);
 }
-

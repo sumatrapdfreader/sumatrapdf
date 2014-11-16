@@ -19,4 +19,3 @@ public:
 
     void Paint(HWND hwnd, bool isDirty);
 };
-

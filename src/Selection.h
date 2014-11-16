@@ -36,4 +36,3 @@ bool NeedsSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);
 void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);
 void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key);
 void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted);
-

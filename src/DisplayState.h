@@ -30,4 +30,3 @@ inline bool IsValidZoom(float zoomLevel) {
     return (ZOOM_MIN - 0.01f <= zoomLevel && zoomLevel <= ZOOM_MAX + 0.01f) ||
            ZOOM_FIT_PAGE == zoomLevel || ZOOM_FIT_WIDTH == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
 }
-

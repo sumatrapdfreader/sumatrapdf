@@ -303,4 +303,3 @@ void GetEbookColors(COLORREF* txtColOut, COLORREF* bgColOut)
             *bgColOut = gGlobalPrefs->ebookUI.backgroundColor;
     }
 }
-

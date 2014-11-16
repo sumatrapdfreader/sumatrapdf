@@ -100,4 +100,3 @@ public:
         return res;
     }
 };
-

@@ -193,4 +193,3 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
 }
 
 }
-

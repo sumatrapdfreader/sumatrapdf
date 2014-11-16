@@ -23,4 +23,3 @@ BaseEngine *CreateFromFile(const WCHAR *fileName);
 BaseEngine *CreateFromStream(IStream *stream);
 
 }
-

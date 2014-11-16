@@ -49,4 +49,3 @@ struct StructInfo {
 char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData=NULL, size_t *sizeOut=NULL);
 void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=NULL);
 void FreeStruct(const StructInfo *info, void *strct);
-

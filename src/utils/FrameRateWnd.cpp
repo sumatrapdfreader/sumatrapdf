@@ -217,4 +217,3 @@ int FrameRateFromDuration(double durMs)
 {
     return (int)(double(1000) / durMs);
 }
-

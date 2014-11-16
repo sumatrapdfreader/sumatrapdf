@@ -119,4 +119,3 @@ public:
     virtual ChmModel *AsChm() { return NULL; }
     virtual EbookController *AsEbook() { return NULL; }
 };
-

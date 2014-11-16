@@ -734,4 +734,3 @@ uint8_t *Serialize(const uint8_t *rootStruct, const StructMetadata *def, size_t 
 }
 
 } // namespace sertxt
-

@@ -35,4 +35,3 @@ float           ToZoom(const char *s, float defVal=ZOOM_FIT_PAGE);
 };
 
 };
-

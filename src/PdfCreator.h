@@ -32,4 +32,3 @@ public:
     // creates a simple PDF with all pages rendered as a single image
     static bool RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
 };
-

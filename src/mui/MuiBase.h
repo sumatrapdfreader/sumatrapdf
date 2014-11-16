@@ -42,4 +42,3 @@ Graphics *  AllocGraphicsForMeasureText();
 void        FreeGraphicsForMeasureText(Graphics *gfx);
 
 int         CeilI(float n);
-

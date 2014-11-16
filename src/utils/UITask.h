@@ -32,4 +32,3 @@ void    Post(UITask *);
 
 void    PostFunc(UITaskFuncPtr, void *arg);
 }
-

@@ -256,4 +256,3 @@ public:
         return &(stackBuf[0]);
     }
 };
-

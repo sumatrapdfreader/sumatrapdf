@@ -106,4 +106,3 @@ protected:
     // desired size calculated in Measure()
     Size            desiredSize;
 };
-

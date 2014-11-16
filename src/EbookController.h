@@ -127,4 +127,3 @@ protected:
 };
 
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=NULL);
-

@@ -44,4 +44,3 @@ int utassert_print_results()
     }
     return g_nFailed;
 }
-

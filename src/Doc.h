@@ -85,4 +85,3 @@ public:
     static Doc CreateFromFile(const WCHAR *filePath);
     static bool IsSupportedFile(const WCHAR *filePath, bool sniff=false);
 };
-

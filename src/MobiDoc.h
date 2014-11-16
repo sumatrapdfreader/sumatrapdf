@@ -67,4 +67,3 @@ public:
     static MobiDoc *    CreateFromFile(const WCHAR *fileName);
     static MobiDoc *    CreateFromStream(IStream *stream);
 };
-

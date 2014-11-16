@@ -95,4 +95,3 @@ inline void DeleteVecMembers(VecSegmented<T>& v)
     v.Reset();
 }
 #endif
-

@@ -31,4 +31,3 @@ inline void FreePagesLayoutDef(PagesLayoutDef *val)
 {
     FreeStruct((uint8_t*)val, &gPagesLayoutDefMetadata);
 }
-

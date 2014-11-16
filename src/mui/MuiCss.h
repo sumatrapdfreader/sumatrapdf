@@ -274,4 +274,3 @@ ARGB ParseCssColor(const char *color);
 Size GetBorderAndPaddingSize(CachedStyle *s);
 
 } // namespace css
-

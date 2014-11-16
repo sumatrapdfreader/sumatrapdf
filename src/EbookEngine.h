@@ -56,4 +56,3 @@ BaseEngine *CreateFromFile(const WCHAR *fileName);
 }
 
 void SetDefaultEbookFont(const WCHAR *name, float size);
-

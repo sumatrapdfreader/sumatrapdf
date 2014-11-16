@@ -181,4 +181,3 @@ public:
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static TxtDoc *CreateFromFile(const WCHAR *fileName);
 };
-

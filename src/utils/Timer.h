@@ -42,4 +42,3 @@ public:
         return TimeSince(end);
     }
 };
-

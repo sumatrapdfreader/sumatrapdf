@@ -43,4 +43,3 @@ struct Slice {
 };
 
 } // namespace str
-

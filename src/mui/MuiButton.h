@@ -64,4 +64,3 @@ public:
     void    SetMouseOverStyle(Style *style);
     void    SetStyles(Style *def, Style *mouseOver);
 };
-

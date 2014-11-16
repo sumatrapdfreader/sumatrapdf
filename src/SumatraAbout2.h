@@ -2,4 +2,3 @@
    License: GPLv3 */
 
 void OnMenuAbout2();
-

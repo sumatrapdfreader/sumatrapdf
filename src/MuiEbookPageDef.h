@@ -29,4 +29,3 @@ inline void FreeEbookPageDef(EbookPageDef *val)
 {
     FreeStruct((uint8_t*)val, &gEbookPageDefMetadata);
 }
-

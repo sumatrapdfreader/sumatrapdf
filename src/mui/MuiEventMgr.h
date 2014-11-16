@@ -70,4 +70,3 @@ public:
     void SetMinSize(Size s);
     void SetMaxSize(Size s);
 };
-

@@ -166,4 +166,3 @@ inline void FreeVerticalLayoutDef(VerticalLayoutDef *val)
 {
     FreeStruct((uint8_t*)val, &gVerticalLayoutDefMetadata);
 }
-
