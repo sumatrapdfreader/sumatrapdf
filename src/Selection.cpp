@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "Controller.h"
 #include "ChmModel.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "TextSelection.h"

@@ -6,6 +6,7 @@
 #include "BaseEngine.h"
 #include "DisplayState.h"
 #include "Controller.h"
+#include "EngineManager.h"
 #include "WindowInfo.h"
 #include "FileUtil.h"
 #include "FileHistory.h"

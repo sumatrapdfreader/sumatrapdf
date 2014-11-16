@@ -14,6 +14,7 @@
 #include "Caption.h"
 #include "Controller.h"
 #include "ChmModel.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "Mui.h"
 #include "EbookControls.h"

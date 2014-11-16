@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef RenderCache_h
-#define RenderCache_h
-
-#include "DisplayModel.h"
-
 #define RENDER_DELAY_UNDEFINED ((UINT)-1)
 #define RENDER_DELAY_FAILED    ((UINT)-2)
 #define INVALID_TILE_RES       ((USHORT)-1)
@@ -147,5 +142,3 @@ private:
                       TilePosition tile, RectI tileOnScreen, bool renderMissing,
                       bool *renderOutOfDateCue, bool *renderedReplacement);
 };
-
-#endif

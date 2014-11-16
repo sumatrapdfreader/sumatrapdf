@@ -18,6 +18,7 @@
 #include "Translations.h"
 #include "UITask.h"
 #include "Controller.h"
+#include "EngineManager.h"
 #include "WindowInfo.h"
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"

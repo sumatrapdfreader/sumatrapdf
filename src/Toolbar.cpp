@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Controller.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "Menu.h"
 #include "resource.h"

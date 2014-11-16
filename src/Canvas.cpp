@@ -13,6 +13,7 @@
 #include "AppPrefs.h"
 #include "Caption.h"
 #include "Controller.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "Doc.h"
 #include "EbookController.h"

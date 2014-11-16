@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef DisplayModel_h
-#define DisplayModel_h
-
-#include "EngineManager.h"
-
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
@@ -254,5 +249,3 @@ protected:
 };
 
 int     NormalizeRotation(int rotation);
-
-#endif

@@ -5,8 +5,9 @@
 #include "BaseEngine.h"
 #include "DisplayState.h"
 #include "Controller.h"
-#include "RenderCache.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
+#include "RenderCache.h"
 #include "TextSelection.h"
 #include "WinUtil.h"
 

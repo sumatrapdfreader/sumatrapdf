@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef EngineManager_h
-#define EngineManager_h
-
 enum EngineType {
     Engine_None = 0,
     // the EngineManager tries to create a new engine
@@ -26,5 +23,3 @@ bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEn
 BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL, bool enableChm2Engine=true, bool enableEbookEngines=true);
 
 }
-
-#endif

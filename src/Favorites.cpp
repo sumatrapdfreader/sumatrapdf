@@ -19,6 +19,7 @@
 #include "Tabs.h"
 #include "Translations.h"
 #include "UITask.h"
+#include "EngineManager.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 

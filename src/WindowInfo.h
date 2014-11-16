@@ -4,8 +4,6 @@
 #ifndef WindowInfo_h
 #define WindowInfo_h
 
-#include "EngineManager.h"
-
 class DoubleBuffer;
 class LinkHandler;
 class Notifications;

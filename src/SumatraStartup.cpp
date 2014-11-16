@@ -19,6 +19,7 @@
 #include "Canvas.h"
 #include "CmdLineParser.h"
 #include "CrashHandler.h"
+#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
