@@ -3233,7 +3233,7 @@ const char * gTranslations_hr =
   "Datoteka uskla\304\221enja se ne mo\305\276e otvoriti\0"\
   "Strukturirani PDF\0"\
   "Tekstualni dokumenti\0"\
-  "\0"\
+  "Ovaj dokument koristi nepodr\305\276ane zna\304\215ajke (%s) i mo\305\276da se ne\304\207e ispravno prikazati\0"\
   "Naslov:\0"\
   "Nepoznata izvorna datoteka (%s)\0"\
   "Koristi &kartice\0"\
@@ -7217,7 +7217,7 @@ const char * gTranslations_it =
   "Il file di sincronizzazione non pu\303\262 essere aperto\0"\
   "PDF marcati\0"\
   "Documenti di testo\0"\
-  "\0"\
+  "Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene\0"\
   "Titolo:\0"\
   "File sorgente sconosciuto (%s)\0"\
   "Usa &schede\0"\
