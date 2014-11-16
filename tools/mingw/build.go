@@ -375,7 +375,7 @@ func main() {
 				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
 				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
 				"PdfSync.cpp",
-				//"Print.cpp",  // mingw: goto crossing var initialization
+				"Print.cpp",  // mingw: goto crossing var initialization
 				//"PsEngine.cpp",  // mingw: no _wfopen_s
 				"RenderCache.cpp",
 				"Search.cpp",

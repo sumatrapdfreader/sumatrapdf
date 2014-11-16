@@ -561,6 +561,11 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
 
+    LPDEVNAMES devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
+    LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+    bool failedEngineClone;
+    PrintData *data = NULL;
+
     // restore remembered settings
     if (defaultDevMode) {
         DEVMODE *p = defaultDevMode.Get();
@@ -608,14 +613,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             ranges.Append(pd.lpPageRanges[i]);
     }
 
-    LPDEVNAMES devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
-    LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
     if (devNames) {
         printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
         printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
-    PrintData *data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
+    data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
                                     dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
@@ -628,7 +631,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // unexpectedly deleted
     // TODO: instead prevent closing the document so that printing
     // can still happen on a separate thread and be interruptible
-    bool failedEngineClone = dm->GetEngine() && !data->engine;
+    failedEngineClone = dm->GetEngine() && !data->engine;
     if (failedEngineClone)
         data->engine = dm->GetEngine();
 
@@ -749,6 +752,8 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
         return false;
     }
 
+    LONG returnCode = 0;
+    LONG structSize = 0;
     LPDEVMODE devMode = NULL;
     // get printer driver information
     DWORD needed = 0;
@@ -759,7 +764,7 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
     if (!res || !infoData || needed <= sizeof(PRINTER_INFO_2))
         goto Exit;
 
-    LONG structSize = DocumentProperties(NULL,
+    structSize = DocumentProperties(NULL,
         printer,
         printerName,
         NULL,                   /* Asking for size, so */
@@ -776,7 +781,7 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
         goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
-    LONG returnCode = DocumentProperties(NULL,
+    returnCode = DocumentProperties(NULL,
         printer,
         printerName,
         devMode,        /* The address of the buffer to fill. */
