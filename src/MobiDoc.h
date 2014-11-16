@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef MobiDoc_h
-#define MobiDoc_h
-
 class EbookTocVisitor;
 class HuffDicDecompressor;
 class PdbReader;
@@ -71,4 +68,3 @@ public:
     static MobiDoc *    CreateFromStream(IStream *stream);
 };
 
-#endif

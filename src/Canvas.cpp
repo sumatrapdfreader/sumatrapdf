@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include <dwmapi.h>
 #include <vssym32.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "Timer.h"
 #include "Sigslot.h"

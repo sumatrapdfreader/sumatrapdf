@@ -2,13 +2,16 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "uia/PageProvider.h"
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
+#include <OleAcc.h>
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "Controller.h"
 #include "EngineManager.h"
 #include "DisplayModel.h"
+#include "uia/PageProvider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Provider.h"

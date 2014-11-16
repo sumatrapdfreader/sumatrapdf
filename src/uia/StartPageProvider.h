@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef UIAutomationStartPageProvider_h
-#define UIAutomationStartPageProvider_h
-
-#include <UIAutomationCore.h>
-
 class SumatraUIAutomationProvider;
 class SumatraUIAutomationStartPageProvider : public IRawElementProviderFragment, public IRawElementProviderSimple {
     LONG                         refCount;
@@ -35,5 +30,3 @@ public:
     HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(IRawElementProviderSimple **pRetVal);
     HRESULT STDMETHODCALLTYPE get_ProviderOptions(ProviderOptions *pRetVal);
 };
-
-#endif //UIAutomationStartPageProvider_h

@@ -5,6 +5,8 @@
 #include <wininet.h>
 #include <dwmapi.h>
 #include <vssym32.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "Sigslot.h"
 #include "BaseEngine.h"

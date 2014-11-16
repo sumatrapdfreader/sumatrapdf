@@ -2,9 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "EngineManager.h"
-
 #include "BaseEngine.h"
+#include "EngineManager.h"
 #include "DjVuEngine.h"
 #include "EbookEngine.h"
 #include "ImagesEngine.h"

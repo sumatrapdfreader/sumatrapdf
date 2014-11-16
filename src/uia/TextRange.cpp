@@ -2,8 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "uia/TextRange.h"
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
+#include <OleAcc.h>
 #include "BaseEngine.h"
+#include "uia/TextRange.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
 #include "Controller.h"

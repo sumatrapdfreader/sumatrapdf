@@ -2,17 +2,16 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "ImagesEngine.h"
-
 #include "ArchUtil.h"
 #include "BaseEngine.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
+#include "JsonParser.h"
 #include "GdiPlusUtil.h"
+#include "ImagesEngine.h"
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
-#include "JsonParser.h"
 #include "PdfCreator.h"
-#include "WinUtil.h"
 
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE    10

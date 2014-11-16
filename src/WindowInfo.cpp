@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "Sigslot.h"

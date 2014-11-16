@@ -2,16 +2,17 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "uia/Provider.h"
-
-#include "uia/Constants.h"
-#include "uia/DocumentProvider.h"
-#include "uia/StartPageProvider.h"
-#include "WinUtil.h"
-
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
+#include <OleAcc.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"
+#include "WinUtil.h"
+#include "uia/Provider.h"
+#include "uia/Constants.h"
+#include "uia/DocumentProvider.h"
+#include "uia/StartPageProvider.h"
 
 // not available under Win2000
 typedef LRESULT (WINAPI *UiaReturnRawElementProviderProc)(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *el);

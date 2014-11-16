@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef PdfPreview_h
-#define PdfPreview_h
-
 #define SZ_PDF_PREVIEW_CLSID    L"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}"
 #ifdef BUILD_XPS_PREVIEW
 #define SZ_XPS_PREVIEW_CLSID    L"{D427A82C-6545-4FBE-8E87-030EDB3BE46D}"
@@ -332,6 +329,4 @@ public:
 protected:
     virtual BaseEngine *LoadEngine(IStream *stream);
 };
-#endif
-
 #endif

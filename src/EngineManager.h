@@ -14,7 +14,6 @@ enum EngineType {
         Engine_Chm2, Engine_Html, Engine_Txt,
 };
 
-class BaseEngine;
 class PasswordUI;
 
 namespace EngineManager {

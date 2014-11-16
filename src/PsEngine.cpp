@@ -2,15 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "PsEngine.h"
-
+#include <zlib.h>
 #include "BaseEngine.h"
+#include "PsEngine.h"
 #include "ByteReader.h"
 #include "FileUtil.h"
 #include "PdfEngine.h"
 #include "WinUtil.h"
-
-#include <zlib.h>
 
 static WCHAR *GetGhostscriptPath()
 {

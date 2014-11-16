@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef UIAutomationProvider_h
-#define UIAutomationProvider_h
-
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-
 const int SUMATRA_UIA_STARTPAGE_RUNTIME_ID = 1;
 const int SUMATRA_UIA_DOCUMENT_RUNTIME_ID = 2;
 
@@ -70,5 +64,3 @@ HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, Struct
 HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
 
 };
-
-#endif //UIAutomationProvider_h

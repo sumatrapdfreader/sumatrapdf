@@ -2,9 +2,17 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "WinUtil.h"
 #include "BaseEngine.h"
 #include "PdfPreview.h"
-#include "WinUtil.h"
+#include "PdfEngine.h"
+#if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
+#include "EbookEngine.h"
+#include "MiniMui.h"
+#endif
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
+#include "ImagesEngine.h"
+#endif
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
 {
@@ -304,16 +312,12 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     return S_OK;
 }
 
-#include "PdfEngine.h"
-
 BaseEngine *CPdfPreview::LoadEngine(IStream *stream)
 {
     return PdfEngine::CreateFromStream(stream);
 }
 
 #ifdef BUILD_XPS_PREVIEW
-#include "PdfEngine.h"
-
 BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 {
     return XpsEngine::CreateFromStream(stream);
@@ -330,8 +334,6 @@ BaseEngine *CDjVuPreview::LoadEngine(IStream *stream)
 #endif
 
 #ifdef BUILD_EPUB_PREVIEW
-#include "EbookEngine.h"
-#include "MiniMui.h"
 
 CEpubPreview::CEpubPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID)
 {
@@ -351,8 +353,6 @@ BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
 #endif
 
 #ifdef BUILD_FB2_PREVIEW
-#include "EbookEngine.h"
-#include "MiniMui.h"
 
 CFb2Preview::CFb2Preview(long *plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID)
 {
@@ -372,8 +372,6 @@ BaseEngine *CFb2Preview::LoadEngine(IStream *stream)
 #endif
 
 #ifdef BUILD_MOBI_PREVIEW
-#include "EbookEngine.h"
-#include "MiniMui.h"
 
 CMobiPreview::CMobiPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID)
 {
@@ -393,7 +391,6 @@ BaseEngine *CMobiPreview::LoadEngine(IStream *stream)
 #endif
 
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
-#include "ImagesEngine.h"
 
 BaseEngine *CCbxPreview::LoadEngine(IStream *stream)
 {
@@ -402,7 +399,6 @@ BaseEngine *CCbxPreview::LoadEngine(IStream *stream)
 #endif
 
 #ifdef BUILD_TGA_PREVIEW
-#include "ImagesEngine.h"
 
 BaseEngine *CTgaPreview::LoadEngine(IStream *stream)
 {

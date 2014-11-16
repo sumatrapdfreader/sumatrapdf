@@ -2,14 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "ChmDoc.h"
 #include "ByteReader.h"
-#include "EbookBase.h"
 #include "FileUtil.h"
+#include "BaseEngine.h"
+#include "EbookBase.h"
+#include "ChmDoc.h"
 #include "HtmlParserLookup.h"
 #include "TrivialHtmlParser.h"
-
 #define PPC_BSTR
 #include <chm_lib.h>
 

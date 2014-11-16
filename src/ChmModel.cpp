@@ -9,8 +9,8 @@
 #include "Controller.h"
 #include "ChmModel.h"
 #include "AppPrefs.h" // for gGlobalPrefs
-#include "ChmDoc.h"
 #include "EbookBase.h"
+#include "ChmDoc.h"
 #include "HtmlWindow.h"
 #include "UITask.h"
 

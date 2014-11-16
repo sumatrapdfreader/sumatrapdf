@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef ChmDoc_h
-#define ChmDoc_h
-
-class EbookTocVisitor;
-
 class ChmDoc {
     struct chmFile *chmHandle;
 
@@ -45,5 +40,3 @@ public:
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static ChmDoc *CreateFromFile(const WCHAR *fileName);
 };
-
-#endif

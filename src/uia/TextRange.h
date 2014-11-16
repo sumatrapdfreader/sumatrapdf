@@ -1,12 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef UIAutomationTextRange_h
-#define UIAutomationTextRange_h
-
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-
 class TextSelection;
 class SumatraUIAutomationDocumentProvider;
 
@@ -75,5 +69,3 @@ public:
     HRESULT STDMETHODCALLTYPE ScrollIntoView(BOOL alignToTop);
     HRESULT STDMETHODCALLTYPE GetChildren(SAFEARRAY **children);
 };
-
-#endif // UIAutomationTextRange_h

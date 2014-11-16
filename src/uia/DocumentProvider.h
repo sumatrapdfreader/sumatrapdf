@@ -1,13 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef UIAutomationDocumentProvider_h
-#define UIAutomationDocumentProvider_h
-
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-#include <OleAcc.h>
-
 class DisplayModel;
 class SumatraUIAutomationProvider;
 class SumatraUIAutomationPageProvider;
@@ -73,5 +66,3 @@ public:
     // IAccIdentity
     HRESULT STDMETHODCALLTYPE GetIdentityString(DWORD dwIDChild, BYTE **ppIDString, DWORD *pdwIDStringLen);
 };
-
-#endif //UIAutomationDocumentProvider_h

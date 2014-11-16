@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "BaseEngine.h"
 #include "Selection.h"
