@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "DirIter.h"
-
 #include "FileUtil.h"
 
 // Start directory traversal in a given dir

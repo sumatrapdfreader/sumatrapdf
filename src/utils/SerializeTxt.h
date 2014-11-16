@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SerializeTxt_h
-#define SerializeTxt_h
-
 struct TxtNode;
 
 namespace sertxt {
@@ -55,5 +52,3 @@ uint8_t*    Deserialize(char *data, size_t dataSize, const StructMetadata *def);
 void        FreeStruct(uint8_t *data, const StructMetadata *def);
 
 } // namespace sertxt
-
-#endif

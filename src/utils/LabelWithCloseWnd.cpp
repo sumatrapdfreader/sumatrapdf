@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "LabelWithCloseWnd.h"
-
 #include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"

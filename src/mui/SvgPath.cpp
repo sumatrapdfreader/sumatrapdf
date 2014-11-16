@@ -25,6 +25,7 @@ understand.
 */
 
 #include "BaseUtil.h"
+#include "GdiPlusUtil.h"
 #include "SvgPath.h"
 #include "VecSegmented.h"
 

@@ -1,14 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Mui_h
-#error "this is only meant to be included by Mui.h inside mui namespace"
-#endif
-#ifdef MuiLayout_h
-#error "dont include twice!"
-#endif
-#define MuiLayout_h
-
 // WPF-like layout system. Measure() should update DesiredSize()
 // After Measure() the parent uses DesiredSize() to calculate the
 // size of its children and uses Arrange() to set it.

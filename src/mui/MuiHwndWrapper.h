@@ -1,14 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Mui_h
-#error "this is only meant to be included by Mui.h inside mui namespace"
-#endif
-#ifdef MuiHwndWrapper_h
-#error "dont include twice!"
-#endif
-#define MuiHwndWrapper_h
-
 class Painter;
 class EventMgr;
 

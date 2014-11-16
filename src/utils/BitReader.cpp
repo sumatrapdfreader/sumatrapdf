@@ -16,7 +16,13 @@ BitReader::BitReader(uint8_t *data, size_t len) :
 BitReader::~BitReader() {
 }
 
-// advance position in the bit stream
+uint8_t BitReader::GetByte(size_t pos) {
+    if (pos >= dataLen)
+        return 0;
+    return data[pos];
+}
+
+    // advance position in the bit stream
 // returns false if we've eaten bits more than we have
 bool BitReader::Eat(size_t bitsCount) {
     currBitPos += bitsCount;

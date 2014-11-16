@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include <wincodec.h>
 #include "GdiPlusUtil.h"
-
 #include "ByteReader.h"
 #include "FzImgReader.h"
 #include "TgaReader.h"

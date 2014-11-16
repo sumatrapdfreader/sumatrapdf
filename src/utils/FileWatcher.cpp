@@ -3,11 +3,9 @@
 
 #include "BaseUtil.h"
 #include "FileWatcher.h"
-
 #include "FileUtil.h"
 #include "ThreadUtil.h"
 #include "WinUtil.h"
-
 #define NOLOG 1
 #include "DebugLog.h"
 

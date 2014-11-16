@@ -1,14 +1,7 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Mui_h
-#define Mui_h
-
-#define __STDC_LIMIT_MACROS
-#include "BaseUtil.h"
-
 struct FrameRateWnd;
-
 struct TxtNode;
 
 namespace mui {
@@ -83,5 +76,3 @@ void        DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
 HwndWrapper *GetRootHwndWnd(const Control *c);
 
 } // namespace mui
-
-#endif

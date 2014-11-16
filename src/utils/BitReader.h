@@ -3,11 +3,7 @@
 
 class BitReader
 {
-    uint8_t GetByte(size_t pos) {
-        if (pos >= dataLen)
-            return 0;
-        return data[pos];
-    }
+    uint8_t GetByte(size_t pos);
 
 public:
     BitReader(uint8_t *data, size_t len);

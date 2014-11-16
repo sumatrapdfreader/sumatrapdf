@@ -1,9 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Installer_h
-#define Installer_h
-
 #define EXENAME             APP_NAME_STR L".exe"
 
 #define INSTALLER_FRAME_CLASS_NAME    L"SUMATRA_PDF_INSTALLER_FRAME"
@@ -158,7 +155,5 @@ void OnInstallationFinished();
 bool IsPdfFilterInstalled();
 bool IsPdfPreviewerInstalled();
 DWORD WINAPI InstallerThread(LPVOID data);
-
-#endif
 
 #endif

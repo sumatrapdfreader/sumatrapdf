@@ -47,39 +47,11 @@ int gThisIsGlobalVariable;
 
 We use spaces, not tabs, with 4 space indentation.
 
-3. Naming of header guards
---------------------------
-
-We use Webkit's style:
-
-"#define, #ifdef "header guards" should be named exactly the same as the file (
-including case), replacing the '.' with a '_'."
-
-http://www.webkit.org/coding/coding-style.html
-
-4. #include statements
+3. #include statements
 ----------------------
 
-.cpp files:
-- #include "BaseUtil.h" first
-- followed by .h corresponding to .cpp i.e. Foo.cpp => #include "Foo.h"
-- followed by system headers (C library, additional windows headers)
-- followed by .h for Sumatra's files, sorted by name
-- as an exception to the "sort by name" rule, #include "DebugLog.h" 
-  can be at the end
-
-.h files:
-- should never include "BaseUtil.h"
-- need to include all the .h files they depend on, although it's preferred
-  to use pointers in APIs and pre-declaring types i.e.:
-
-// Bar.h
-class Foo;
-void Bar(Foo *);
-
-is better than:
-
-// Bar.h
-#include "Foo.h"
-void Bar(Foo& );
-
+Our include scheme is not traditiona. The rules are:
+- .h files don't #include other .h files
+- we don't have traditional #ifdef .h header guards
+- .cpp files #include "BaseUtil.h" first and then all the necessary
+  .h files

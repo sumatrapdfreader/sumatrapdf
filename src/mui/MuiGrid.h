@@ -1,14 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Mui_h
-#error "this is only meant to be included by Mui.h inside mui namespace"
-#endif
-#ifdef MuiGrid_h
-#error "dont include twice!"
-#endif
-#define MuiGrid_h
-
 // Grid consits of cells arranged as an array of rows and columns
 // It's also its own layout, because layout needs intimate knowledge
 // of grid data
