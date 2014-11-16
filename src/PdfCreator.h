@@ -4,8 +4,6 @@
 typedef struct fz_context_s fz_context;
 typedef struct fz_image_s fz_image;
 typedef struct pdf_document_s pdf_document;
-enum DocumentProperty;
-class BaseEngine;
 
 class PdfCreator {
     fz_context *ctx;

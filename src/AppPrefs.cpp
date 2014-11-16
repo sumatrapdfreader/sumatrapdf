@@ -55,16 +55,6 @@ void DeleteDisplayState(DisplayState *ds)
     FreeStruct(&gFileStateInfo, ds);
 }
 
-void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
-{
-    if (!globalPrefs)
-        return;
-    for (size_t i = 0; i < globalPrefs->fileStates->Count(); i++) {
-        delete globalPrefs->fileStates->At(i)->thumbnail;
-    }
-    FreeStruct(&gGlobalPrefsInfo, globalPrefs);
-}
-
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
 {
@@ -89,7 +79,7 @@ WCHAR *GetSettingsPath()
     return AppGenDataFilename(PREFS_FILE_NAME);
 }
 
-/* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
+/* Caller needs to prefs::CleanUp() */
 bool Load()
 {
     CrashIf(gGlobalPrefs);
@@ -242,8 +232,7 @@ bool Reload()
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
     gFileHistory.UpdateStatesSource(NULL);
-    DeleteGlobalPrefs(gGlobalPrefs);
-    gGlobalPrefs = NULL;
+    CleanUp();
 
     bool ok = Load();
     CrashAlwaysIf(!ok || !gGlobalPrefs);
@@ -267,6 +256,17 @@ bool Reload()
     UpdateFavoritesTreeForAllWindows();
 
     return true;
+}
+
+void CleanUp()
+{
+    if (!gGlobalPrefs)
+        return;
+    for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
+        delete gGlobalPrefs->fileStates->At(i)->thumbnail;
+    }
+    FreeStruct(&gGlobalPrefsInfo, gGlobalPrefs);
+    gGlobalPrefs = NULL;
 }
 
 class SettingsFileObserver : public FileChangeObserver, public UITask {

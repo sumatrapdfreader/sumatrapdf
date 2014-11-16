@@ -6,15 +6,13 @@
 
 extern "C" {
 #include <mupdf/pdf.h>
+#include <zlib.h>
 }
 
 #include "BaseUtil.h"
-#include "PdfCreator.h"
-
 #include "BaseEngine.h"
+#include "PdfCreator.h"
 #include "GdiplusUtil.h"
-
-#include <zlib.h>
 
 static ScopedMem<WCHAR> gPdfProducer;
 

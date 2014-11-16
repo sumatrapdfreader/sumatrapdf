@@ -9,10 +9,7 @@ enum {
     WIN_STATE_MINIMIZED,
 };
 
-
 extern GlobalPrefs *gGlobalPrefs;
-
-void DeleteGlobalPrefs(GlobalPrefs *globalPrefs);
 
 namespace prefs {
 
@@ -21,6 +18,7 @@ WCHAR *GetSettingsPath();
 bool Load();
 bool Save();
 bool Reload();
+void CleanUp();
 
 void RegisterForFileChanges();
 void UnregisterForFileChanges();

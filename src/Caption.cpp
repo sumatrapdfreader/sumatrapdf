@@ -11,7 +11,6 @@
 #include "Controller.h"
 #include "EngineManager.h"
 #include "DisplayModel.h"
-#include "AppPrefs.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Translations.h"

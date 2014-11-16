@@ -839,7 +839,7 @@ Exit:
     // must be after uitask::Destroy() because we might have queued prefs::Reload()
     // which crashes if gGlobalPrefs is freed
     gFileHistory.UpdateStatesSource(NULL);
-    DeleteGlobalPrefs(gGlobalPrefs);
+    prefs::CleanUp();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely

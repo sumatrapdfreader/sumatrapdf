@@ -6,7 +6,6 @@
 #include "SumatraDialogs.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
-#include "AppPrefs.h"
 #include "AppTools.h"
 #include "DialogSizer.h"
 #include "resource.h"

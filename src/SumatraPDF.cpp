@@ -47,7 +47,6 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
-#include "ParseCommandLine.h"
 #include "PdfCreator.h"
 #include "PdfEngine.h"
 #include "PdfSync.h"
