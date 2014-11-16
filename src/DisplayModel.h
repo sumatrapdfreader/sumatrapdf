@@ -4,7 +4,6 @@
 #ifndef DisplayModel_h
 #define DisplayModel_h
 
-#include "Controller.h"
 #include "EngineManager.h"
 
 // define the following if you want shadows drawn around the pages

@@ -8,6 +8,7 @@
 #include "DisplayState.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "Controller.h"
 #include "DisplayModel.h"
 #include "Menu.h"
 #include "resource.h"

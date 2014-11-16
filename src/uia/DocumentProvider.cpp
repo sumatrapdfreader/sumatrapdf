@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include "uia/DocumentProvider.h"
 #include "BaseEngine.h"
+#include "DisplayState.h"
+#include "Controller.h"
 #include "DisplayModel.h"
 #include "FileUtil.h"
 #include "uia/Constants.h"

@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef ChmModel_h
-#define ChmModel_h
-
-#include "Controller.h"
-
 class ChmDoc;
 struct ChmTocTraceItem;
 class HtmlWindow;
@@ -98,5 +93,3 @@ protected:
 
     void ZoomTo(float zoomLevel);
 };
-
-#endif

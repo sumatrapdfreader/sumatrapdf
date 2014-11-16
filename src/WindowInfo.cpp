@@ -4,11 +4,12 @@
 #include "BaseUtil.h"
 #include <dwmapi.h>
 #include <vssym32.h>
-#include "BaseEngine.h"
-#include "WindowInfo.h"
 #include "Sigslot.h"
-#include "Caption.h"
+#include "BaseEngine.h"
+#include "DisplayState.h"
 #include "Controller.h"
+#include "WindowInfo.h"
+#include "Caption.h"
 #include "DisplayModel.h"
 #include "Doc.h"
 #include "EbookController.h"

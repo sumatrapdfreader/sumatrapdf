@@ -1,11 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#ifndef Controller_h
-#define Controller_h
-
-#include "DisplayState.h"
-
 class ChmModel;
 class DisplayModel;
 class EbookController;
@@ -125,4 +120,3 @@ public:
     virtual EbookController *AsEbook() { return NULL; }
 };
 
-#endif

@@ -4,7 +4,6 @@
 #ifndef WindowInfo_h
 #define WindowInfo_h
 
-#include "Controller.h"
 #include "EngineManager.h"
 
 class DoubleBuffer;

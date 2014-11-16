@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
+#include "DisplayState.h"
+#include "Controller.h"
 #include "RenderCache.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"

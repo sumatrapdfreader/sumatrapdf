@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "SumatraProperties.h"
+#include "DisplayState.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EngineManager.h"

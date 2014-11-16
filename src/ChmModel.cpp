@@ -2,12 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "Dict.h"
 #include "BaseEngine.h"
-#include "ChmModel.h"
 #include "DisplayState.h"
+#include "Controller.h"
+#include "ChmModel.h"
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "ChmDoc.h"
-#include "Dict.h"
 #include "EbookBase.h"
 #include "HtmlWindow.h"
 #include "UITask.h"

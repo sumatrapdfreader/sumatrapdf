@@ -12,6 +12,7 @@
 #include "BaseEngine.h"
 #include "SumatraPDF.h"
 #include "DisplayState.h"
+#include "Controller.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Caption.h"

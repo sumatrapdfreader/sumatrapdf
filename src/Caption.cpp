@@ -7,6 +7,8 @@
 #include "BaseEngine.h"
 #include "Caption.h"
 #include "DisplayState.h"
+#include "Controller.h"
+#include "DisplayModel.h"
 #include "AppPrefs.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"

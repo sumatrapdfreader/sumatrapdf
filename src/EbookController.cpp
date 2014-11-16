@@ -4,10 +4,10 @@
 #include "BaseUtil.h"
 #include "Sigslot.h"
 #include "BaseEngine.h"
+#include "DisplayState.h"
 #include "Controller.h"
 #include "Doc.h"
 #include "EbookController.h"
-#include "DisplayState.h"
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"
