@@ -5,7 +5,6 @@
 #include "HtmlParserLookup.h"
 #include "Sigslot.h"
 #include "Mui.h"
-
 #include "DebugLog.h"
 
 /*

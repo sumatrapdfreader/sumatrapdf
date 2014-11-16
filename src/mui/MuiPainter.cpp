@@ -46,8 +46,8 @@ void Painter::PaintBackground(Graphics *g, Rect r)
 
 // TODO: figure out how INT16_MIN was defined
 // This is in <intsafe.h> and utils\msvc\stdint.h under some conditions
-#define MY_INT16_MIN       (-32767i16 - 1)
-#define MY_INT16_MAX       32767i16
+#define MY_INT16_MIN       (-32767 - 1)
+#define MY_INT16_MAX       32767
 
 // Paint windows in z-order by first collecting the windows
 // and then painting consecutive layers with the same z-order,
