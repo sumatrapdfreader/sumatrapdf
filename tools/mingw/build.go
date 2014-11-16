@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -190,12 +191,40 @@ func genOut(dir, in, ext string) string {
 	return filepath.Join(dir, in+ext)
 }
 
-// MingwCcTask compiles a c/c++ file with mingw
+func isUpToDate(srcPath, dstPath string) bool {
+	dstFi, err := os.Stat(dstPath)
+	if err != nil {
+		return false
+	}
+	srcFi, err := os.Stat(srcPath)
+	panicif(err != nil)
+	return dstFi.ModTime().Sub(srcFi.ModTime()) > 0
+}
+
+func mingwCompile(src, dst, incDirs string) (error, []byte, []byte) {
+	cc := mingwCcExe(src)
+	var args []string
+	args = append(args, mingwIncArgs(incDirs)...)
+	args = append(args, "-o", dst)
+	args = append(args, "-c", src)
+	cmd := exec.Command(cc, args...)
+	fmt.Println(cmdString(cmd))
+	// TODO: get stdout, stderr separately
+	stdout, err := cmd.CombinedOutput()
+	return err, stdout, nil
+}
+
+// MingwCcTask compiles a single c/c++ file with mingw
 type MingwCcTask struct {
 	TaskContext
 	In string
 	// TODO: move IncDirs to Context
 	IncDirs string
+}
+
+func isCppFile(src string) bool {
+	ext := strings.ToLower(filepath.Ext(src))
+	return ext == ".c" || ext == ".cpp"
 }
 
 func mingwCcExe(src string) string {
@@ -225,36 +254,15 @@ func (t *MingwCcTask) Run() (error, []byte, []byte) {
 	if isUpToDate(src, dst) {
 		return nil, nil, nil
 	}
-
-	cc := mingwCcExe(t.In)
-	// TODO: ensure out hasn't be generated in other tasks
-	// use gcc for *.c files, g++ for everything else
-	var args []string
-	args = append(args, mingwIncArgs(t.IncDirs)...)
-	args = append(args, "-o", dst)
-	args = append(args, "-c", src)
-	cmd := exec.Command(cc, args...)
-	fmt.Println(cmdString(cmd))
-	// TODO: get stdout, stderr separately
-	stdout, err := cmd.CombinedOutput()
-	return err, stdout, nil
+	return mingwCompile(src, dst, t.IncDirs)
 }
 
+// compile Files in a Dir
 type MingwCcDirTask struct {
 	TaskContext
 	Dir     string
 	Files   []string
 	IncDirs string
-}
-
-func isUpToDate(srcPath, dstPath string) bool {
-	dstFi, err := os.Stat(dstPath)
-	if err != nil {
-		return false
-	}
-	srcFi, err := os.Stat(srcPath)
-	panicif(err != nil)
-	return dstFi.ModTime().Sub(srcFi.ModTime()) > 0
 }
 
 func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
@@ -265,17 +273,74 @@ func (t *MingwCcDirTask) Run() (error, []byte, []byte) {
 		if isUpToDate(src, dst) {
 			continue
 		}
-		cc := mingwCcExe(f)
-		var args []string
-		args = append(args, mingwIncArgs(t.IncDirs)...)
-		args = append(args, "-o", dst)
-		args = append(args, "-c", src)
-		cmd := exec.Command(cc, args...)
-		fmt.Println(cmdString(cmd))
-		// TODO: get stdout, stderr separately
-		stdout, err := cmd.CombinedOutput()
+		// TODO: ensure dst hasn't been generated in other tasks
+		err, stdout, stderr := mingwCompile(src, dst, t.IncDirs)
 		if err != nil {
-			return err, stdout, nil
+			return err, stdout, stderr
+		}
+	}
+	return nil, nil, nil
+}
+
+// compile all .c and .cpp files in a directory, possibly excluding some
+type MingwCcDirAllTask struct {
+	TaskContext
+	Dir     string
+	Exclude []string
+	IncDirs string
+}
+
+func getCppFiles(dir string) ([]string, error) {
+	fileInfos, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]string, 0)
+	for _, fi := range fileInfos {
+		name := fi.Name()
+		if isCppFile(name) {
+			res = append(res, name)
+		}
+	}
+	return res, nil
+}
+
+func filterStrings(a, toFilter []string) []string {
+	if len(toFilter) == 0 {
+		return a
+	}
+	m := make(map[string]struct{})
+	for _, s := range toFilter {
+		m[s] = struct{}{}
+	}
+
+	res := make([]string, 0)
+	for _, s := range a {
+		if _, ok := m[s]; ok {
+			continue
+		}
+		res = append(res, s)
+	}
+	return res
+}
+
+func (t *MingwCcDirAllTask) Run() (error, []byte, []byte) {
+	outDir := t.Ctx.GetStrValMust(OUT_DIR_VAR)
+	files, err := getCppFiles(t.Dir)
+	if err != nil {
+		return err, nil, nil
+	}
+	files = filterStrings(files, t.Exclude)
+	for _, f := range files {
+		src := filepath.Join(t.Dir, f)
+		dst := genOut(outDir, f, ".o")
+		if isUpToDate(src, dst) {
+			continue
+		}
+		// TODO: ensure dst hasn't been generated in other tasks
+		err, stdout, stderr := mingwCompile(src, dst, t.IncDirs)
+		if err != nil {
+			return err, stdout, stderr
 		}
 	}
 	return nil, nil, nil
@@ -288,26 +353,7 @@ func main() {
 		TaskContext: TaskContext{ctx},
 		ToRun: []Task{
 			&MkdirOutTask{},
-			&MingwCcDirTask{Dir: "src/mui", Files: []string{
-				"Mui.cpp",
-				"MuiBase.cpp",
-				"MuiButton.cpp",
-				"MuiControl.cpp",
-				"MuiCss.cpp",
-				"MuiDefs.cpp",
-				"MuiEventMgr.cpp",
-				"MuiFromText.cpp",
-				"MuiGrid.cpp",
-				"MuiHwndWrapper.cpp",
-				"MuiLayout.cpp",
-				"MuiPainter.cpp",
-				"MuiScrollBar.cpp",
-				"SvgPath.cpp",
-				"SvgPath_ut.cpp",
-				"TextRender.cpp",
-				},
-				IncDirs: "src/utils;src/utils/mui",
-				},
+			&MingwCcDirAllTask{Dir: "src/mui", IncDirs: "src/utils;src/utils/mui"},
 			&MingwCcDirTask{Dir: "src/utils", Files: []string{
 				"ArchUtil.cpp",
 				"BaseUtil.cpp",
@@ -357,9 +403,9 @@ func main() {
 				"WinCursors.cpp",
 				"WinUtil.cpp",
 				//"ZipUtil.cpp", // mingw doesn't have QITAB
-				},
+			},
 				IncDirs: "src/utils;mupdf/include;ext/lzma/C;ext/zlib;ext/libwebp;ext/unarr",
-				},
+			},
 			&MingwCcDirTask{Dir: "src", Files: []string{
 				"AppPrefs.cpp",
 				"AppTools.cpp",
@@ -396,7 +442,7 @@ func main() {
 				//"PdfCreator.cpp",  // mingw: __VA_ARGS__
 				//"PdfEngine.cpp",  // mingw: __VA_ARGS__
 				"PdfSync.cpp",
-				"Print.cpp",  // mingw: goto crossing var initialization
+				"Print.cpp",
 				//"PsEngine.cpp",  // mingw: no _wfopen_s
 				"RenderCache.cpp",
 				"Search.cpp",
@@ -417,9 +463,9 @@ func main() {
 				"Trans_sumatra_txt.cpp",
 				"UnitTests.cpp",
 				//"WindowInfo.cpp",  // uia stuff
-				},
+			},
 				IncDirs: "src/utils;ext/CHMLib/src;src/mui;ext/libdjvu;ext/lzma/C;ext/zlib;/mupdf/include;ext/synctex",
-				},
+			},
 			&MingwCcTask{In: "ext/zlib/adler32.c"},
 		},
 	}
