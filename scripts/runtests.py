@@ -16,15 +16,6 @@ import os
 import util
 
 
-def is_vs2008():
-    # vcbuild.exe no longer exists for VS2010 and later
-    try:
-        (out, err, errcode) = util.run_cmd("vcbuild", "/help")
-        return errcode == 0
-    except:
-        return False
-
-
 def run_premake(action="vs2010"):
     try:
         (out, err, errcode) = util.run_cmd("premake4", action)
@@ -60,8 +51,7 @@ def fmt_out_err(out, err):
 def run_tests2():
     if not os.path.exists("premake4.lua"):
         return "premake4.lua doesn't exist in current directory (%s)" % os.getcwd()
-    vs_action = "vs2010" if not is_vs2008() else "vs2008"
-    err = run_premake(vs_action)
+    err = run_premake()
     if err != None:
         return err
     p = os.path.join("vs-premake", "all_tests.sln")
@@ -72,22 +62,13 @@ def run_tests2():
         util.kill_msbuild()
     except:
         return "util.kill_msbuild() failed"
-    if vs_action == "vs2010":
-        try:
-            (out, err, errcode) = util.run_cmd("devenv",
-                                               "all_tests.sln", "/build", "Release")
-            if errcode != 0:
-                return "devenv.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
-        except:
-            return "devenv.exe not found"
-    else:
-        try:
-            (out, err, errcode) = util.run_cmd("vcbuild",
-                                               "all_tests.sln", "Release^|Win32")
-            if errcode != 0:
-                return "vcbuild.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
-        except:
-            return "vcbuild.exe not found"
+    try:
+        (out, err, errcode) = util.run_cmd("devenv",
+                                           "all_tests.sln", "/build", "Release")
+        if errcode != 0:
+            return "devenv.exe failed to build all_tests.sln\n" + fmt_out_err(out, err)
+    except:
+        return "devenv.exe not found"
     p = os.path.join("..", "obj-rel")
     os.chdir(p)
     test_files = [f for f in os.listdir(".") if is_test_exe(f)]

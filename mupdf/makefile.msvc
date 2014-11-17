@@ -66,11 +66,7 @@ CC = cl.exe
 LD = link.exe
 
 # CFLAGSB - CFLAGS base (use CFLAGS or CFLAGSOPT later on)
-
-# TODO: also add  /D "_USING_V110_SDK71_" for rc ?
-!if "$(WITH_ANALYZE)"!="yes"
-CFLAGSB = $(CFLAGSB) /nologo /c /D "_USING_V110_SDK71_"
-!endif
+CFLAGSB = $(CFLAGSB) /nologo /c
 
 # standard windows defines
 !if "$(PLATFORM)"=="X64"
@@ -78,6 +74,10 @@ CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
 !endif
 # WIN32 means any Windows, not just 32-bit Windows
 CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
+# TODO: also add  /D "_USING_V110_SDK71_" for rc ?
+!if "$(WITH_ANALYZE)"!="yes"
+CFLAGSB = $(CFLAGSB) /D "_USING_V110_SDK71_"
+!endif
 
 # /WX  : treat warnings as errors
 # /GR- : disable RTTI

@@ -25,29 +25,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
-				CleanCommandLine="del /s ..\obj-dbg\*.obj"
-				Output="..\obj-dbg\sumatrapdf.exe"
-				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;DISABLE_EBOOK_UI"
-				IncludeSearchPath="..\src;..\src\utils;..\src\mui;..\mupdf\include"
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug-VC12|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="0"
-			BuildLogFile="..\obj-dbg\BuildLog.htm"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
-				ReBuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
+				BuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
+				ReBuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;DISABLE_EBOOK_UI"
@@ -67,8 +46,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
-				ReBuildCommandLine="nmake -f makefile.msvc BASEDIR=.. CFG=rel rebuild"
+				BuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; SumatraPDF EngineDump"
+				ReBuildCommandLine="..\scripts\vc.bat &amp; nmake -f makefile.msvc BASEDIR=.. CFG=rel rebuild"
 				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG"
@@ -88,29 +67,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; Installer"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
-				CleanCommandLine="del /s ..\obj-dbg\*.obj"
-				Output="..\obj-dbg\Installer.exe"
-				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
-				IncludeSearchPath="..\src\installer;..\src\utils"
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Installer-Debug-VC12|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="0"
-			BuildLogFile="..\obj-dbg\BuildLog-inst.htm"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; Installer"
-				ReBuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
+				BuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; Installer"
+				ReBuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\Installer.exe"
 				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
@@ -130,8 +88,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; Installer"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel rebuild"
+				BuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel EXTCFLAGS=&quot;/DDISABLE_EBOOK_UI&quot; Installer"
+				ReBuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel rebuild"
 				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\Installer.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
@@ -151,29 +109,8 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg unarr_test"
-				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
-				CleanCommandLine="del /s ..\obj-dbg\*.obj"
-				Output="..\obj-dbg\unarr.exe"
-				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA;HAVE_7Z"
-				IncludeSearchPath="..\ext\zlib;..\ext\lzma\C;..\ext\bzip2;..\src\utils\msvc"
-				ForcedIncludes=""
-				AssemblySearchPath=""
-				ForcedUsingAssemblies=""
-				CompileAsManaged=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="unarr-test-VC12|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="0"
-			BuildLogFile="..\obj-dbg\BuildLog.htm"
-			>
-			<Tool
-				Name="VCNMakeTool"
-				BuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg unarr_test"
-				ReBuildCommandLine="..\scripts\vc.bat vc13 &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
+				BuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg unarr_test"
+				ReBuildCommandLine="..\scripts\vc.bat &amp; nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg rebuild unarr_test"
 				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\unarr.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;HAVE_ZLIB;HAVE_BZIP2;HAVE_LZMA;HAVE_7Z"
