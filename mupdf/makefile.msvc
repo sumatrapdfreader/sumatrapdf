@@ -67,7 +67,8 @@ LD = link.exe
 
 # CFLAGSB - CFLAGS base (use CFLAGS or CFLAGSOPT later on)
 
-CFLAGSB = $(CFLAGSB) /nologo /c
+# TODO: also add  /D "_USING_V110_SDK71_" for rc ?
+CFLAGSB = $(CFLAGSB) /nologo /c /D "_USING_V110_SDK71_"
 # standard windows defines
 !if "$(PLATFORM)"=="X64"
 CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
