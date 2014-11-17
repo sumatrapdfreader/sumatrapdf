@@ -14,7 +14,7 @@ public:
 class NamedEvents
 {
 public:
-    sigslot::signal3<Control*, int, int> Clicked;
+    std::function<void(Control*, int, int)> Clicked;
 };
 
 // A single EventMgr is associated with a single HwndWrapper

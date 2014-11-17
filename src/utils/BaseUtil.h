@@ -63,6 +63,9 @@
 
 #include "mingw_compat.h"
 
+#include <functional>
+
+
 template <typename T>
 inline T *AllocArray(size_t n)
 {

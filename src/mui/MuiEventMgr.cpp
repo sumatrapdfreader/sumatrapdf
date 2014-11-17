@@ -77,10 +77,6 @@ void EventMgr::DisconnectEvents(sigslot::has_slots *target)
         h->events->Clicked.disconnect(target);
         h->events->SizeChanged.disconnect(target);
     }
-    NamedEventHandler *nh;
-    for (nh = namedEventHandlers.IterStart(); nh; nh = namedEventHandlers.IterNext()) {
-        nh->namedEvents->Clicked.disconnect(target);
-    }
 }
 
 ControlEvents *EventMgr::EventsForControl(Control *c)
@@ -117,7 +113,7 @@ void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y)
     NamedEventHandler *h;
     for (h = namedEventHandlers.IterStart(); h; h = namedEventHandlers.IterNext()) {
         if (str::EqI(h->name, name)) {
-            return h->namedEvents->Clicked.emit(c, x, y);
+            return h->namedEvents->Clicked(c, x, y);
         }
     }
 }

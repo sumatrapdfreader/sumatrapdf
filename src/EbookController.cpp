@@ -202,8 +202,13 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     navHistoryIx(0)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
-    em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
-    em->EventsForName("prev")->Clicked.connect(this, &EbookController::ClickedPrev);
+    // TODO: do I need lambada here, can I just pass EbookController::ClickedNext directly?
+    em->EventsForName("next")->Clicked = [&](Control *c, int x, int y) {
+        EbookController::ClickedNext(c, x, y);
+    };
+    em->EventsForName("prev")->Clicked = [&](Control *c, int x, int y) {
+        EbookController::ClickedPrev(c, x, y);
+    }; 
     em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
     PageControl *page1 = ctrls->pagesLayout->GetPage1();
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
