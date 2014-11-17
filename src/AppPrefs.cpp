@@ -270,17 +270,13 @@ void CleanUp()
     gGlobalPrefs = NULL;
 }
 
-class SettingsFileObserver : public FileChangeObserver, public UITask {
+class SettingsFileObserver : public FileChangeObserver {
 public:
     SettingsFileObserver() { }
 
     virtual void OnFileChanged() {
         // don't Reload directly so as to prevent potential race conditions
-        uitask::Post(new SettingsFileObserver());
-    }
-
-    virtual void Execute() {
-        prefs::Reload();
+        uitask::Post([] { prefs::Reload(); });
     }
 };
 

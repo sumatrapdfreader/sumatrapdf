@@ -202,27 +202,27 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
     // TODO: do I need lambada here, can I just pass EbookController::ClickedNext directly?
-    em->EventsForName("next")->Clicked = [&](Control *c, int x, int y) {
-        EbookController::ClickedNext(c, x, y);
+    em->EventsForName("next")->Clicked = [=](Control *c, int x, int y) {
+        this->ClickedNext(c, x, y);
     };
-    em->EventsForName("prev")->Clicked = [&](Control *c, int x, int y) {
-        EbookController::ClickedPrev(c, x, y);
+    em->EventsForName("prev")->Clicked = [=](Control *c, int x, int y) {
+        this->ClickedPrev(c, x, y);
     }; 
-    em->EventsForControl(ctrls->progress)->Clicked = [&](Control *c, int x, int y) {
+    em->EventsForControl(ctrls->progress)->Clicked = [=](Control *c, int x, int y) {
         this->ClickedProgress(c, x, y);
     };
     PageControl *page1 = ctrls->pagesLayout->GetPage1();
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
-    em->EventsForControl(page1)->SizeChanged = [&](Control *c, int dx, int dy) {
+    em->EventsForControl(page1)->SizeChanged = [=](Control *c, int dx, int dy) {
         this->SizeChangedPage(c, dx, dy);
     };
-    em->EventsForControl(page2)->SizeChanged = [&](Control *c, int dx, int dy) {
+    em->EventsForControl(page2)->SizeChanged = [=](Control *c, int dx, int dy) {
         this->SizeChangedPage(c, dx, dy);
     };
-    em->EventsForControl(page1)->Clicked = [&](Control *c, int x, int y) {
+    em->EventsForControl(page1)->Clicked = [=](Control *c, int x, int y) {
         this->ClickedPage1(c, x, y);
     };
-    em->EventsForControl(page2)->Clicked = [&](Control *c, int x, int y) {
+    em->EventsForControl(page2)->Clicked = [=](Control *c, int x, int y) {
         this->ClickedPage2(c, x, y);
     };
 }

@@ -1280,7 +1280,7 @@ void WindowInfo::RepaintAsync(UINT delay)
 {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post([&]{
+    uitask::Post([=]{
         if (!WindowInfoStillValid(this))
             return;
         if (!delay)

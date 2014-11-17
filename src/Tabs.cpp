@@ -367,41 +367,31 @@ public:
     }
 };
 
-class TabNotification : public UITask {
-    WindowInfo *win;
-    UINT  code;
-    int   index1, index2;
-
-public:
-    TabNotification(WindowInfo *win, UINT code, int index1=-1, int index2=-1) :
-        win(win), code(code), index1(index1), index2(index2) { }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win)) {
-            return;
-        }
-        NMHDR nmhdr = { NULL, 0, code };
-        if (TabsOnNotify(win, (LPARAM)&nmhdr, index1, index2)) {
-            return;
-        }
-        TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
-        if (T_CLOSING == code) {
-            // if we have permission to close the tab
-            tab->Invalidate(tab->nextTab);
-            tab->xClicked = tab->nextTab;
-            return;
-        }
-        if (TCN_SELCHANGING == code) {
-            // if we have permission to select the tab
-            tab->Invalidate(tab->current);
-            tab->Invalidate(tab->nextTab);
-            tab->current = tab->nextTab;
-            // send notification that the tab is selected
-            nmhdr.code = TCN_SELCHANGE;
-            TabsOnNotify(win, (LPARAM)&nmhdr);
-        }
+static void TabNotification(WindowInfo *win, UINT code, int idx1, int idx2) {
+    if (!WindowInfoStillValid(win)) {
+        return;
     }
-};
+    NMHDR nmhdr = { NULL, 0, code };
+    if (TabsOnNotify(win, (LPARAM)&nmhdr, idx1, idx2)) {
+        return;
+    }
+    TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
+    if (T_CLOSING == code) {
+        // if we have permission to close the tab
+        tab->Invalidate(tab->nextTab);
+        tab->xClicked = tab->nextTab;
+        return;
+    }
+    if (TCN_SELCHANGING == code) {
+        // if we have permission to select the tab
+        tab->Invalidate(tab->current);
+        tab->Invalidate(tab->nextTab);
+        tab->current = tab->nextTab;
+        // send notification that the tab is selected
+        nmhdr.code = TCN_SELCHANGE;
+        TabsOnNotify(win, (LPARAM)&nmhdr);
+    }
+}
 
 static WNDPROC DefWndProcTabBar = NULL;
 static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -525,14 +515,16 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
             bool inX = false;
             int hl = wParam == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &inX);
-            if (tab->isDragging && hl == -1)
+            if (tab->isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
                 hl = tab->highlighted;
+            }
             if (tab->highlighted != hl) {
                 if (tab->isDragging) {
                     // send notification if the highlighted tab is dragged over another
                     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-                    uitask::Post(new TabNotification(win, T_DRAG, tab->highlighted, hl));
+                    int tabNo = tab->highlighted;
+                    uitask::Post([=] { TabNotification(win, T_DRAG, tabNo, hl); });
                 }
 
                 tab->Invalidate(hl);
@@ -556,13 +548,14 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         if (inX) {
             // send request to close the tab
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            uitask::Post(new TabNotification(win, T_CLOSING, tab->nextTab));
+            int next = tab->nextTab;
+            uitask::Post([=] { TabNotification(win, T_CLOSING, next, -1); });
         }
         else if (tab->nextTab != -1) {
             if (tab->nextTab != tab->current) {
                 // send request to select tab
                 WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-                uitask::Post(new TabNotification(win, TCN_SELCHANGING));
+                uitask::Post([=] { TabNotification(win, TCN_SELCHANGING, -1, -1); });
             }
             tab->isDragging = true;
             SetCapture(hwnd);
@@ -573,8 +566,9 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         if (tab->xClicked != -1) {
             // send notification that the tab is closed
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            uitask::Post(new TabNotification(win, T_CLOSE, tab->xClicked));
-            tab->Invalidate(tab->xClicked);
+            int clicked = tab->xClicked;
+            uitask::Post([=] { TabNotification(win, T_CLOSE, clicked, -1); });
+            tab->Invalidate(clicked);
             tab->xClicked = -1;
         }
         if (tab->isDragging) {
@@ -589,7 +583,8 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             // send request to close the tab
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            uitask::Post(new TabNotification(win, T_CLOSING, tab->nextTab));
+            int next = tab->nextTab;
+            uitask::Post([=] { TabNotification(win, T_CLOSING, next, -1); });
         }
         return 0;
 
@@ -597,8 +592,9 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         if (tab->xClicked != -1) {
             // send notification that the tab is closed
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            uitask::Post(new TabNotification(win, T_CLOSE, tab->xClicked));
-            tab->Invalidate(tab->xClicked);
+            int clicked = tab->xClicked;
+            uitask::Post([=] { TabNotification(win, T_CLOSE, clicked, -1); });
+            tab->Invalidate(clicked);
             tab->xClicked = -1;
         }
         return 0;

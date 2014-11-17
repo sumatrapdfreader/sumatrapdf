@@ -335,25 +335,16 @@ void ToggleFavorites(WindowInfo *win)
     }
 }
 
-class GoToFavoriteTask : public UITask
-{
-    int pageNo;
-    WindowInfo *win;
-public:
-    explicit GoToFavoriteTask(WindowInfo *win, int pageNo = -1) :
-        win(win), pageNo(pageNo) {}
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo))
-            win->ctrl->GoToPage(pageNo, true);
-        // we might have been invoked by clicking on a tree view
-        // switch focus so that keyboard navigation works, which enables
-        // a fluid experience
-        win->Focus();
-    }
-};
+static void GoToFavorite(WindowInfo *win, int pageNo) {
+    if (!WindowInfoStillValid(win))
+        return;
+    if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo))
+        win->ctrl->GoToPage(pageNo, true);
+    // we might have been invoked by clicking on a tree view
+    // switch focus so that keyboard navigation works, which enables
+    // a fluid experience
+    win->Focus();
+}
 
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
@@ -365,7 +356,8 @@ static void GoToFavorite(WindowInfo *win, DisplayState *f, Favorite *fn)
 
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath, true);
     if (existingWin) {
-        uitask::Post(new GoToFavoriteTask(existingWin, fn->pageNo));
+        int pageNo = fn->pageNo;
+        uitask::Post([=] { GoToFavorite(existingWin, pageNo); });
         return;
     }
 
@@ -386,8 +378,9 @@ static void GoToFavorite(WindowInfo *win, DisplayState *f, Favorite *fn)
 
     LoadArgs args(f->filePath, win);
     win = LoadDocument(args);
-    if (win)
-        uitask::Post(new GoToFavoriteTask(win, pageNo));
+    if (win) {
+        uitask::Post([=] { (win, pageNo); }); 
+    }
 }
 
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
