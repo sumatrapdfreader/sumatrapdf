@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9864d06996c215d895deffc5b0719a9a090db652
+622b18237d3445dc4a3094729b5cbc9e193ce01f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1652,7 +1652,7 @@ hr:Samo &neparne stranice
 hu:Csak a páratlan oldalak
 id:Hanya halaman ganji&l
 it:S&olo pagine dispari
-ja:偶数ページのみ(&O)
+ja:奇数ページのみ(&O)
 ka:მხოლოდ &კენტი გვერდები
 kr:홀수 페이지만(&O)
 ku:تەنها پەڕە تاکەکان&
