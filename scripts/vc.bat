@@ -3,41 +3,41 @@
 REM append ..\bin to PATH to make nasm.exe available
 FOR %%p IN (nasm.exe) DO IF "%%~$PATH:p" == "" SET PATH=%PATH%;%~dp0..\bin
 
-REM Allow to explicitly specify the desired Visual Studio version
-IF /I "%1" == "vc13" GOTO TRY_VS13
-IF /I "%1" == "vc12" GOTO TRY_VS12
-IF /I "%1" == "vc10" GOTO TRY_VS10
-IF /I "%1" == "vc9" GOTO TRY_VS9
-
-REM Try Visual Studio 2008 first, as it still supports Windows 2000,
-REM Then try 2010 and 2012
-
-REM vs9 is VS 2008
-:TRY_VS9
-CALL "%VS90COMNTOOLS%\vsvars32.bat" 2>NUL
-IF NOT ERRORLEVEL 1 EXIT /B
-
-REM vs10 is VS 2010
-:TRY_VS10
-CALL "%VS100COMNTOOLS%\vsvars32.bat" 2>NUL
-IF NOT ERRORLEVEL 1 EXIT /B
-
-REM vs12 is VS 2012
-:TRY_VS12
-CALL "%VS110COMNTOOLS%\vsvars32.bat" 2>NUL
-IF NOT ERRORLEVEL 1 EXIT /B
-REM xp support http://blogs.msdn.com/b/vcblog/archive/2012/10/08/10357555.aspx
-SET "INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
-SET "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
-SET "LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
-REM TODO: for 64bit it should be:
-REM set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
-set CL=/D_USING_V110_SDK71_;%CL%
-
 REM vs13 is VS 2013
 :TRY_VS13
 CALL "%VS120COMNTOOLS%\vsvars32.bat" 2>NUL
-IF NOT ERRORLEVEL 1 EXIT /B
+IF ERRORLEVEL 1 GOTO NO_VS
 
-ECHO Visual Studio 2013, 2012, 2010, or 2008 doesn't seem to be installed
+IF NOT "%ProgramFiles(x86)%"=="" GOTO XP_WIN64
+IF NOT "%PROGRAMFILES%"=="" GOTO XP_WIN32
+GOTO NO_VS
+
+:XP_WIN64
+ECHO Setting up VS 2013 with XP toolkit in WIN 64
+SET "INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
+SET "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
+SET "LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
+@REM REM TODO: for 64bit it should be:
+@REM REM set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
+@REM https://github.com/ssendeavour/SchoolPersonnelMgmt/blob/master/set_env_var.bat
+REM use toolchain for WinXP 32bit, change 5.01 to 5.02 for 64bit
+set CL=/D_USING_V120_SDK71_;%CL%
+GOTO OK
+
+:XP_WIN32
+ECHO setting up VS 2013 with XP toolkit in WIN 32
+SET "INCLUDE=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
+SET "PATH=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
+SET "LIB=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
+@REM REM TODO: for 64bit it should be:
+@REM REM set LIB=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
+@REM https://github.com/ssendeavour/SchoolPersonnelMgmt/blob/master/set_env_var.bat
+REM use toolchain for WinXP 32bit, change 5.01 to 5.02 for 64bit
+set CL=/D_USING_V120_SDK71_;%CL%
+GOTO OK
+
+:NO_VS
+ECHO Visual Studio 2013 doesn't seem to be installed
 EXIT /B 1
+
+:OK
