@@ -52,10 +52,6 @@ all_sumatrapdf: SumatraPDF Installer EngineDump
 
 SRCDIR = $(BASEDIR)\src
 
-# some libraries require stdint.h
-CFLAGS = $(CFLAGS) /I$(SRCDIR)/utils/msvc
-CFLAGSOPT = $(CFLAGSOPT) /I$(SRCDIR)/utils/msvc
-
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
 

@@ -53,7 +53,7 @@ solution "efi"
       "src/utils/Dict*",
       "src/utils/StrUtil*",
     }
-    includedirs { "src/utils", "src/utils/msvc" }
+    includedirs { "src/utils" }
     links { }
 
     --configuration {"vs*"}
@@ -75,7 +75,7 @@ solution "efi"
       "src/utils/UtilTests.cpp",
       "src/utils/Touch*",
     }
-    includedirs { "src/utils", "src/utils/msvc" }
+    includedirs { "src/utils" }
 --]]
 
 solution "all_tests"
@@ -121,7 +121,7 @@ solution "all_tests"
       "tools/tests/UnitMain.cpp"
     }
     defines { "NO_LIBMUPDF" }
-    includedirs { "src/utils", "src/utils/msvc" }
+    includedirs { "src/utils" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
 solution "plugin-test"
@@ -140,7 +140,7 @@ solution "plugin-test"
       "src/utils/Vec.*",
       "tools/plugin-test/plugin-test.cpp"
     }
-    includedirs { "src/utils", "src/utils/msvc" }
+    includedirs { "src/utils" }
     flags { "NoManifest", "WinMain" }
     links { "shlwapi" }
 
@@ -161,5 +161,5 @@ solution "signfile"
       "tools/signfile/signfile.cpp"
     }
     defines { "NO_LIBMUPDF" }
-    includedirs { "src/utils", "src/utils/msvc" }
+    includedirs { "src/utils" }
     links { "shlwapi", "crypt32" }
