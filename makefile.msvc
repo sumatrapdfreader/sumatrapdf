@@ -67,8 +67,9 @@ CFLAGS = $(CFLAGS) /wd4800
 CFLAGS = /analyze:WX- $(CFLAGS)
 # suppress warning C6211: Leaking memory 'foo' due to an exception
 # suppress warning C28125: The function must be called from within a try/except block. (InitializeCriticalSection could have thrown before Windows Vista.)
+# suppress warning C28204: <function> : Only one of this overload and the one at <filename>(<line>) are annotated for <paramname>: both or neither must be annotated.
 # TODO: verify that new doesn't throw
-CFLAGS = $(CFLAGS) /wd6211 /wd28125
+CFLAGS = $(CFLAGS) /wd6211 /wd28125 /wd28204
 !endif
 
 !if "$(CFG)"=="dbg"
