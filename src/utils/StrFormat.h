@@ -2,47 +2,70 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 /*
-fmt::Fmt is similar to C# String.Format() i.e. we use positional {0}, {1}
-formatting directives.
+fmt::Fmt is type-safe printf()-like system with support for both %-style formatting
+directives and C#-like positional directives ({0}, {1} etc.).
 
-For backwards compatiblity, we also support %-style formatting directives.
+Type safety is achieved by using strongly typed methods for adding arguments
+(i(), c(), s() etc.). We also verify that the type of the argument matches
+the type of formatting directive.
 
-Poistional args have 2 advantages:
-- it's safer (no way to mismatch % directive and the type of the argument)
-- it's more flexible. In some languages it's impossible to write a non-awkward
-  translation without changing the order of words, which is impossible with %-style formatting
+Positional directives are useful in translations with more than 1 argument
+because in some languages translation is akward if you can't re-arrange
+the order of arguments.
 
-When using %-style formatting, we also verify the type of the argument is right.
+TODO: we should change at least those translations that involve 2 or more arguments.
 
-TODO: once this is working and apptranslator.org has ability to rename translations, we should
-change at least those translations that involve 2 or more substitutions.
+TODO: ultimately we shouldn't use sprintf() in the implementation, so that we are
+sure what the semantics are and they are always the same (independent of platform).
+We should serialize all values ourselves.
 
 TODO: similar approach could be used for type-safe scanf() replacement.
+
+Idiomatic usage:
+fmt::Fmt fmt("%d = %s");
+char *s = fmt.i(5).s("5").Get(); // returns "5 = 5"
+// s is valid until fmt is valid
+// use .GetDup() to get a copy that must be free()d
+// you can re-use fmt as:
+s = fmt.ParseFormat("{1} = {2} + {0}").i(3).s("3").s(L"
+
+You can mix % and {} directives but beware, as the rule for assigning argument
+number to % directive is simple (n-th argument position for n-th % directive)
+but it's easy to mis-count when adding {} to the mix.
+
 */
 
 namespace fmt {
 
-enum { MaxArgs = 16 };
+// arbitrary limits, but should be large enough for us
+// the bigger the limit, the bigger the sizeof(Fmt)
+enum { MaxInstructions = 32 };
+enum { MaxArgs = 32 + 8 }; // more than MaxInstructions for positional args
 
-struct FmtStr {
-    const char *s;
-    size_t len;
+enum Type {
+    FormatStr, // from format string
+    Char,
+    Int,
+    Float,
+    Double,
+    Str,
+    WStr,
+    Any,
+    Invalid,
 };
 
-// both a definition of the expected type and argument value
-struct Arg {
-    enum Type {
-        Char,
-        Int,
-        Float,
-        Double,
-        Str,
-        WStr,
-        Any,
-        Invalid,
-    };
+// formatting instruction
+struct Inst {
     Type t;
-    int argNo;
+    int argNo; // <0 for strings that come from formatting string
+};
+
+// argument to a formatting instruction
+// at the front are arguments given with i(), s() etc.
+// at the end are FormatStr arguments from format string
+struct Arg {
+    Type t;
+    size_t len; // for s when FormatStr
     union {
         char c;
         int i;
@@ -67,27 +90,25 @@ class Fmt {
     char *Get();
     char *GetDup();
 
-    const char *parseStr(const char *fmt);
+    bool isOk; // true if mismatch between formatting instruction and args
+
+  private:
     const char *parseArgDef(const char *fmt);
-    void addStr(const char *s, size_t len);
+    void addFormatStr(const char *s, size_t len);
     const char *parseArgDefPerc(const char *);
     const char *parseArgDefPositional(const char *);
+    Fmt &addArgType(Type t);
+    void serializeInst(int n);
 
-    void serializeArg(int argDefNo);
-
-    // when "foo {0} bar %d" is parsed,
-    // strings has "foo ", " bar "
-    // argDefs has "{0}" and "%d"
-    FmtStr strings[MaxArgs];
-    Arg argDefs[MaxArgs];
+    const char *format;
+    Inst instructions[MaxInstructions];
+    int nInst;
     Arg args[MaxArgs];
-    int nStrings;
-    int nArgDefs;
-    int nArgsExpected;
     int nArgs;
-    int currPercArg;
+    int nArgsUsed;
+    int maxArgNo;
+    int currPercArgNo;
+    int currArgFromFormatNo; // counts from the end of args
     str::Str<char> res;
 };
 }
-
-void RunFmtTests();

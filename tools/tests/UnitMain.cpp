@@ -51,7 +51,6 @@ int main(int argc, char **argv)
     SigSlotTest();
     SimpleLogTest();
     SquareTreeTest();
-    StrFormatTest();
     StrTest();
     TrivialHtmlParser_UnitTests();
     VarintGobTest();
