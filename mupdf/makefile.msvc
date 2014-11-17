@@ -89,10 +89,10 @@ CFLAGSB = $(CFLAGSB) /D "_USING_V110_SDK71_"
 # Note: /MP not used as it might be causing extreme flakiness on EC2 buildbot
 CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF
 
-# on 64-bit SSE2 is always used, so no need to specify it
-#!if "$(PLATFORM)"!="X64" && "$(WITHOUT_ARCH_SSE2)"==""
-#CFLAGSB = $(CFLAGSB) /arch:SSE2
-#!endif
+# disable the default /arch:SSE2 for 32-bit builds
+!if "$(PLATFORM)"!="X64"
+CFLAGSB = $(CFLAGSB) /arch:IA32
+!endif
 
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGSB = $(CFLAGSB) /EHs-c-
