@@ -1250,9 +1250,6 @@
     <ClInclude Include="..\src\utils\SettingsUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Sigslot.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\SimpleLog.h">
       <Filter>utils</Filter>
     </ClInclude>

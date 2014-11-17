@@ -14,7 +14,6 @@
 #include "EngineManager.h"
 #include "DisplayModel.h"
 #include "Doc.h"
-#include "Sigslot.h"
 #include "EbookController.h"
 #include "EbookBase.h"
 #include "HtmlParserLookup.h"

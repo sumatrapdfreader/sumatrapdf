@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
@@ -201,7 +200,7 @@ void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
     }
 }
 
-class ButtonUrlHandler : public sigslot::has_slots
+class ButtonUrlHandler
 {
 public:
     void Clicked(Control *c, int x, int y);
@@ -262,7 +261,9 @@ static void CreateAboutMuiWindow(HWND hwnd)
         } else {
             b = new Button(right, styleBtnLeft, styleBtnLeft);
         }
-        em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
+        em->EventsForControl(b)->Clicked = [&](Control*c, int x, int y) {
+            gButtonUrlHandler->Clicked(c, x, y);
+        };
         ld.Set(b, row, 1);
         grid->Add(ld);
     }

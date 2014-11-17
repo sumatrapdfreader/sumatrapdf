@@ -551,10 +551,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Sigslot.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\SimpleLog.h"
 					>
 				</File>

@@ -9,7 +9,6 @@
 #include "HtmlParserLookup.h"
 #include "BaseEngine.h"
 #include "EbookBase.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
@@ -225,7 +224,7 @@ static void MobiTest(WCHAR *dirOrFile)
 }
 
 // we assume this is called from main sumatradirectory, e.g. as:
-// ./obj-dbg/tester.exe, so we use the known files 
+// ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest()
 {
     WCHAR *zipFileName = L"tester-tmp.zip";

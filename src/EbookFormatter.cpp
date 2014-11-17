@@ -3,15 +3,14 @@
 
 #include "BaseUtil.h"
 #include "ArchUtil.h"
+#include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "EbookDoc.h"
-#include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 

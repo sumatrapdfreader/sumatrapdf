@@ -117,7 +117,6 @@
     <ClInclude Include="..\..\src\utils\Scoped.h" />
     <ClInclude Include="..\..\src\utils\SerializeTxt.h" />
     <ClInclude Include="..\..\src\utils\SettingsUtil.h" />
-    <ClInclude Include="..\..\src\utils\Sigslot.h" />
     <ClInclude Include="..\..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\..\src\utils\StrFormat.h" />

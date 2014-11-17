@@ -2,7 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "Sigslot.h"
+#include "ArchUtil.h"
+#include "GdiPlusUtil.h"
+#include "ThreadUtil.h"
+#include "Timer.h"
+#include "Translations.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "DisplayState.h"
@@ -14,15 +18,10 @@
 #include "EbookBase.h"
 #include "Mui.h"
 #include "EbookControls.h"
-#include "ArchUtil.h"
 #include "EbookDoc.h"
-#include "GdiPlusUtil.h"
 #include "HtmlFormatter.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
-#include "ThreadUtil.h"
-#include "Timer.h"
-#include "Translations.h"
 #include "TrivialHtmlParser.h"
 //#define NOLOG 0
 #include "DebugLog.h"
@@ -209,13 +208,23 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
     em->EventsForName("prev")->Clicked = [&](Control *c, int x, int y) {
         EbookController::ClickedPrev(c, x, y);
     }; 
-    em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
+    em->EventsForControl(ctrls->progress)->Clicked = [&](Control *c, int x, int y) {
+        this->ClickedProgress(c, x, y);
+    };
     PageControl *page1 = ctrls->pagesLayout->GetPage1();
     PageControl *page2 = ctrls->pagesLayout->GetPage2();
-    em->EventsForControl(page1)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
-    em->EventsForControl(page2)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
-    em->EventsForControl(page1)->Clicked.connect(this, &EbookController::ClickedPage1);
-    em->EventsForControl(page2)->Clicked.connect(this, &EbookController::ClickedPage2);
+    em->EventsForControl(page1)->SizeChanged = [&](Control *c, int dx, int dy) {
+        this->SizeChangedPage(c, dx, dy);
+    };
+    em->EventsForControl(page2)->SizeChanged = [&](Control *c, int dx, int dy) {
+        this->SizeChangedPage(c, dx, dy);
+    };
+    em->EventsForControl(page1)->Clicked = [&](Control *c, int x, int y) {
+        this->ClickedPage1(c, x, y);
+    };
+    em->EventsForControl(page2)->Clicked = [&](Control *c, int x, int y) {
+        this->ClickedPage2(c, x, y);
+    };
 }
 
 EbookController::~EbookController()
@@ -226,7 +235,6 @@ EbookController::~EbookController()
     // destroyed after EbookController, and EbookController destructor
     // will disconnect slots without deleting them, causing leaks
     // TODO: this seems fragile
-    evtMgr->DisconnectEvents(this);
     EnableMessageHandling(false);
     CloseCurrentDocument();
     DestroyEbookControls(ctrls);

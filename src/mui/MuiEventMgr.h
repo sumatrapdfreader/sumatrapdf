@@ -7,8 +7,8 @@ class Control;
 class ControlEvents
 {
 public:
-    sigslot::signal3<Control*, int, int> Clicked;
-    sigslot::signal3<Control*, int, int> SizeChanged;
+    std::function<void(Control*, int, int)> Clicked;
+    std::function<void(Control*, int, int)> SizeChanged;
 };
 
 class NamedEvents
@@ -59,7 +59,6 @@ public:
     NamedEvents *  EventsForName(const char *name);
 
     void           RemoveEventsForControl(Control *c);
-    void           DisconnectEvents(sigslot::has_slots *target);
 
     void           NotifyClicked(Control *c, int x, int y);
     void           NotifySizeChanged(Control *c, int dx, int dy);

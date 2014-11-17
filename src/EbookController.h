@@ -15,7 +15,7 @@ class   HtmlPage;
 namespace mui { class Control; }
 using namespace mui;
 
-class EbookController : public Controller, public sigslot::has_slots
+class EbookController : public Controller
 {
 public:
     EbookController(EbookControls *ctrls, ControllerCallback *cb);

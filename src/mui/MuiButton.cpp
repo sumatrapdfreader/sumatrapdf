@@ -3,11 +3,9 @@
 
 #include "BaseUtil.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
-
-#include "DebugLog.h"
 #include "GdiPlusUtil.h"
+#include "DebugLog.h"
 
 namespace mui {
 

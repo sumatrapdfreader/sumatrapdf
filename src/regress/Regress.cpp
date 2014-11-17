@@ -19,7 +19,6 @@ To write new regression test:
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "ArchUtil.h"
-#include "Sigslot.h"
 #include "DbgHelpDyn.h"
 #include "HtmlParserLookup.h"
 #include "EbookBase.h"

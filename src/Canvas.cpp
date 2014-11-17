@@ -8,7 +8,6 @@
 #include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "Timer.h"
-#include "Sigslot.h"
 #include "BaseEngine.h"
 #include "Canvas.h"
 #include "SettingsStructs.h"

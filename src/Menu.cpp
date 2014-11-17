@@ -18,7 +18,6 @@
 #include "FileHistory.h"
 #include "FileThumbnails.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "Selection.h"
 #include "WindowInfo.h"

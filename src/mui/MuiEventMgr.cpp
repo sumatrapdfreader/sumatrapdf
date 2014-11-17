@@ -2,14 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "Sigslot.h"
-#include "Mui.h"
-
 #include "BitManip.h"
-#include "FrameRateWnd.h"
 #include "Timer.h"
-
+#include "HtmlParserLookup.h"
+#include "Mui.h"
+#include "FrameRateWnd.h"
 #include "DebugLog.h"
 
 namespace mui {
@@ -70,15 +67,6 @@ void EventMgr::RemoveEventsForControl(Control *c)
     }
 }
 
-void EventMgr::DisconnectEvents(sigslot::has_slots *target)
-{
-    EventHandler *h;
-    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        h->events->Clicked.disconnect(target);
-        h->events->SizeChanged.disconnect(target);
-    }
-}
-
 ControlEvents *EventMgr::EventsForControl(Control *c)
 {
     EventHandler *h;
@@ -123,7 +111,7 @@ void EventMgr::NotifyClicked(Control *c, int x, int y)
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
-            return h->events->Clicked.emit(c, x, y);
+            return h->events->Clicked(c, x, y);
     }
 }
 
@@ -132,7 +120,9 @@ void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
-            h->events->SizeChanged.emit(c, dx, dy);
+            if (h->events->SizeChanged) {
+                h->events->SizeChanged(c, dx, dy);
+            }
     }
 }
 

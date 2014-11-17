@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "DebugLog.h"
 
@@ -33,8 +32,7 @@ be positioned outside of parent's bounds.
 There must be a parent window backed by HWND which handles windows
 messages and paints child windows on WM_PAINT.
 
-Event handling is loosly coupled and uses slots/signals via
-sigslot library.
+Event handling is loosly coupled.
 */
 
 namespace mui {

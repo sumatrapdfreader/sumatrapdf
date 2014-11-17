@@ -66,9 +66,6 @@ mui::RegisterParsingForControl("SumatraButton", MuiControlParserFunc *parserFunc
 2.2 Ability to add name and/or id to UIElement and ability to find
 elements of a given type/(name/id), like in html's DOM.
 
-2.3 Ability to hook actions to controls in a more loosly way, using
-sigslot.h.
-
 ----------------------
 Even more ratical idea of how to structure mui is to use DrawInstr-like
 mechanizm instead of inheritance. Classes/objects are just a  way to

@@ -5,7 +5,6 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "Dpi.h"
-#include "Sigslot.h"
 #include "BaseEngine.h"
 #include "Tabs.h"
 #include "HtmlParserLookup.h"

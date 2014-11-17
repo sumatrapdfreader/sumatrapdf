@@ -2,12 +2,10 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "Sigslot.h"
-#include "Mui.h"
-
-#include "GdiPlusUtil.h"
 #include "WinUtil.h"
+#include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
 
 /*
 TODO:

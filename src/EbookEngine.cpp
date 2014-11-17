@@ -6,23 +6,22 @@
 
 #include "BaseUtil.h"
 #include "ArchUtil.h"
+#include "FileUtil.h"
+#include "GdiPlusUtil.h"
+#include "WinUtil.h"
+#include "ZipUtil.h"
 #include "EbookBase.h"
 #include "BaseEngine.h"
 #include "EbookEngine.h"
 #include "HtmlParserLookup.h"
-#include "Sigslot.h"
 #include "Mui.h"
 #include "HtmlPullParser.h"
 #include "Dpi.h"
 #include "EbookDoc.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
-#include "FileUtil.h"
-#include "GdiPlusUtil.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
-#include "WinUtil.h"
-#include "ZipUtil.h"
 
 static ScopedMem<WCHAR> gDefaultFontName;
 static float gDefaultFontSize = 10.f;

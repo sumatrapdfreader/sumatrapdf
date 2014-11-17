@@ -23,7 +23,6 @@ extern void HtmlPrettyPrintTest();
 extern void HtmlPullParser_UnitTests();
 extern void JsonTest();
 extern void SettingsUtilTest();
-extern void SigSlotTest();
 extern void SimpleLogTest();
 extern void SquareTreeTest();
 extern void StrFormatTest();
@@ -48,7 +47,6 @@ int main(int argc, char **argv)
     HtmlPullParser_UnitTests();
     JsonTest();
     SettingsUtilTest();
-    SigSlotTest();
     SimpleLogTest();
     SquareTreeTest();
     StrTest();

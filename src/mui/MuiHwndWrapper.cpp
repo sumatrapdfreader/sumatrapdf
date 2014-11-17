@@ -2,14 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "Sigslot.h"
-#include "Mui.h"
-
-#include "FrameRateWnd.h"
 #include "Timer.h"
 #include "WinUtil.h"
-
+#include "HtmlParserLookup.h"
+#include "Mui.h"
+#include "FrameRateWnd.h"
 //#define NOLOG 0
 #include "DebugLog.h"
 
