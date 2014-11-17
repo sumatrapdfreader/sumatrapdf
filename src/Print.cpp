@@ -561,8 +561,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.lphPropertyPages = &hPsp;
     pd.nPropertyPages = 1;
 
-    LPDEVNAMES devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
-    LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
+    LPDEVNAMES devNames;
+    LPDEVMODE devMode;
     bool failedEngineClone;
     PrintData *data = NULL;
 
@@ -613,13 +613,15 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             ranges.Append(pd.lpPageRanges[i]);
     }
 
+    devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
+    devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
     if (devNames) {
         printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
         printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
     data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
-                                    dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
+                         dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
     if (devMode)
