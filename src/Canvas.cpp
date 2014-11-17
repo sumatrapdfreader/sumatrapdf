@@ -1276,32 +1276,18 @@ static LRESULT WndProcCanvasLoadError(WindowInfo& win, HWND hwnd, UINT msg, WPAR
 
 ///// methods needed for all types of canvas /////
 
-class RepaintCanvasTask : public UITask
-{
-    UINT delay;
-    WindowInfo *win;
-
-public:
-    RepaintCanvasTask(WindowInfo *win, UINT delay)
-        : win(win), delay(delay) {
-        name = "RepaintCanvasTask";
-    }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        if (!delay)
-            WndProcCanvas(win->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
-        else if (!win->delayedRepaintTimer)
-            win->delayedRepaintTimer = SetTimer(win->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
-    }
-};
-
 void WindowInfo::RepaintAsync(UINT delay)
 {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post(new RepaintCanvasTask(this, delay));
+    uitask::Post([&]{
+        if (!WindowInfoStillValid(this))
+            return;
+        if (!delay)
+            WndProcCanvas(this->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        else if (!this->delayedRepaintTimer)
+            this->delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
+    });
 }
 
 static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)

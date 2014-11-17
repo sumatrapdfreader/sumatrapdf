@@ -4,9 +4,8 @@
 // Base class for code that has to be executed on UI thread. Derive your class
 // from UITask and call uitask::Post() to schedule execution
 // of its Execute() method on UI thread
-class UITask
-{
-public:
+class UITask {
+  public:
     // for debugging
     const char *name;
 
@@ -20,15 +19,16 @@ typedef void (*UITaskFuncPtr)(void *arg);
 namespace uitask {
 
 // Call Initialize() at program startup and Destroy() at the end
-void    Initialize();
-void    Destroy();
+void Initialize();
+void Destroy();
 
 // call only from the same thread as Initialize() and Destroy()
-void    DrainQueue();
+void DrainQueue();
 
 // Can be called from any thread. Queues the task to be executed
 // as soon as possible on ui thread.
-void    Post(UITask *);
+void Post(UITask *);
 
-void    PostFunc(UITaskFuncPtr, void *arg);
+void PostFunc(UITaskFuncPtr, void *arg);
+void Post(const std::function<void()> &);
 }
