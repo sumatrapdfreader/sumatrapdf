@@ -434,15 +434,11 @@ def main():
     files = build_files(g_filters, pj(top_dir(), "vs"))
 
     vcxproj_part = gen_vcxproj_part(files)
-    file_path = os.path.join("vs", "sumatrapdf-vc2010.vcxproj")
-    replace_item_group(file_path, file_path, vcxproj_part)
-    file_path = os.path.join("vs", "sumatrapdf-vc2012.vcxproj")
+    file_path = os.path.join("vs", "sumatrapdf-vc2013.vcxproj")
     replace_item_group(file_path, file_path, vcxproj_part)
 
     filters_part = gen_vcxproj_filters_part(g_filters, files)
-    file_path = os.path.join("vs", "sumatrapdf-vc2010.vcxproj.filters")
-    replace_item_group(file_path, file_path, filters_part)
-    file_path = os.path.join("vs", "sumatrapdf-vc2012.vcxproj.filters")
+    file_path = os.path.join("vs", "sumatrapdf-vc2013.vcxproj.filters")
     replace_item_group(file_path, file_path, filters_part)
 
 if __name__ == "__main__":

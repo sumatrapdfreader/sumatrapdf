@@ -15,7 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>sumatrapdf-vc2010</ProjectName>
+    <ProjectName>Sumatra Reader</ProjectName>
     <ProjectGuid>{9458F693-A9CC-4786-B79A-A2103EC71FA3}</ProjectGuid>
     <RootNamespace>sumatrapdf</RootNamespace>
     <Keyword>MakeFileProj</Keyword>
