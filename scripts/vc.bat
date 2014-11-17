@@ -10,6 +10,8 @@ IF NOT "%ProgramFiles(x86)%"=="" GOTO XP_WIN64
 IF NOT "%PROGRAMFILES%"=="" GOTO XP_WIN32
 GOTO NO_VS
 
+@rem TODO: for /analyze, we shouldn't use XP toolset
+
 :XP_WIN64
 ECHO Setting up VS 2013 with XP toolkit in WIN 64
 SET "INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
