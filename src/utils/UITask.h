@@ -29,6 +29,5 @@ void DrainQueue();
 // as soon as possible on ui thread.
 void Post(UITask *);
 
-void PostFunc(UITaskFuncPtr, void *arg);
 void Post(const std::function<void()> &);
 }
