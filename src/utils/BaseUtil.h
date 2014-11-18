@@ -61,7 +61,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#if defined(__MINGW32__)
 #include "mingw_compat.h"
+#endif
 
 #include <functional>
 
