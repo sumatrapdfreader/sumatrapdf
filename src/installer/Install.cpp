@@ -492,7 +492,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
         {
             WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
-                SHFILEINFO sfi;
+                SHFILEINFO sfi = { 0 };
                 SHGetFileInfo((LPCWSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK))
                     break;

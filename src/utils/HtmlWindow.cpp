@@ -1371,7 +1371,7 @@ void HtmlWindow::GoForward()
 
 int HtmlWindow::GetZoomPercent()
 {
-    VARIANT vtOut;
+    VARIANT vtOut = { 0 };
     HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
                                     NULL, &vtOut);
     if (FAILED(hr))
@@ -1381,7 +1381,8 @@ int HtmlWindow::GetZoomPercent()
 
 void HtmlWindow::SetZoomPercent(int zoom)
 {
-    VARIANT vtIn, vtOut;
+    VARIANT vtIn = { 0 };
+    VARIANT vtOut = { 0 };
     VariantSetLong(&vtIn, zoom);
     webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
                        &vtIn, &vtOut);
