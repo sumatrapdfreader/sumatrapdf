@@ -631,12 +631,7 @@ def verify_can_send_email():
 
 
 def main():
-    print("20: %s\n" % pretty_print_secs(20))
-    print("68: %s\n" % pretty_print_secs(68))
-    print("12334: %s\n" % pretty_print_secs(12334))
-    sys.exit(1)
     cert_path()  # early check and ensures value is memoized
-
     verify_efi_present()
     verify_started_in_right_directory()
     # to avoid problems, we build a separate source tree, just for the buildbot
