@@ -19,7 +19,7 @@ set TMP=
 set TEMP=
 
 echo running cmake
-cmake -G "Visual Studio 13" ..\..
+cmake -G "Visual Studio 12" ..\..
 IF NOT ERRORLEVEL 1 GOTO CMAKEOK
 ECHO cmake failed
 EXIT /B 1
