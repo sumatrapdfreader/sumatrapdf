@@ -567,9 +567,31 @@ def buildbot_loop():
                 build_pre_release()
                 g_time_of_last_build = None
 
-        print("Sleeping for 15 minutes, %s seconds until pre-release" %
-              str(secs_until_prerelease))
+        print("Sleeping for 15 minutes, %s until pre-release" %
+              pretty_print_secso(secs_until_prerelease))
         time.sleep(60 * 15)  # 15 mins
+
+
+def plural(n, suff):
+    if n == 1:
+        return "%d %s" % (n, suff)
+    return "%d %ss" % (n, suff)
+
+
+def pretty_print_secs(secs):
+    hrs = 0
+    mins = 0
+    if secs > 60:
+        mins = secs / 60
+        secs = secs % 60
+    if mins > 60:
+        hrs = mins / 60
+        mins = mins % 60
+    if hrs > 0:
+        return "%s %s %s" % (plural(hrs, "hr"), plural(mins, "min"), plural(secs, "sec"))
+    if mins > 0:
+        return "%s %s" % (plural(mins, "min"), plural(secs, "sec"))
+    return "%s" % plural(secs, "sec")
 
 
 def ignore_pre_release_build_error(s):
@@ -609,6 +631,10 @@ def verify_can_send_email():
 
 
 def main():
+    print("20: %s\n" % pretty_print_secs(20))
+    print("68: %s\n" % pretty_print_secs(68))
+    print("12334: %s\n" % pretty_print_secs(12334))
+    sys.exit(1)
     cert_path()  # early check and ensures value is memoized
 
     verify_efi_present()
