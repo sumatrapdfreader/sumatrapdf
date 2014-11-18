@@ -482,6 +482,7 @@ def email_build_failed(ver):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
     if not c.HasNotifierEmail():
+        print("email_build_failed() not ran because not c.HasNotifierEmail()")
         return
     sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
     subject = "SumatraPDF build %s failed" % str(ver)
@@ -600,8 +601,16 @@ def test_email_tests_failed():
     sys.exit(1)
 
 
+def verify_can_send_email():
+    c = load_config()
+    if not c.HasNotifierEmail():
+        print("can't run. scripts/config.py missing notifier_email and/or notifier_email_pwd")
+        sys.exit(1)
+
+
 def main():
     cert_path()  # early check and ensures value is memoized
+
     verify_efi_present()
     verify_started_in_right_directory()
     # to avoid problems, we build a separate source tree, just for the buildbot
