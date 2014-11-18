@@ -631,6 +631,7 @@ def verify_can_send_email():
 
 
 def main():
+    verify_can_send_email()
     cert_path()  # early check and ensures value is memoized
     verify_efi_present()
     verify_started_in_right_directory()
