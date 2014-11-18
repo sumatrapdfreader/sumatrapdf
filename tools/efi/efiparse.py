@@ -386,7 +386,6 @@ def find_added(name, diff_syms1, diff_syms2):
 	return []
 
 def diff(parse1, parse2):
-	return ""
 	assert isinstance(parse1, ParseState)
 	assert isinstance(parse2, ParseState)
 	diff_syms1 = SymbolStats()
