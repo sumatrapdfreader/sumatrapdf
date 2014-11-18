@@ -423,7 +423,7 @@ def sendmail(sender, senderpwd, to, subject, body):
     mail.attach(MIMEText(body))
     msg = mail.as_string()
     # print(msg)
-    mailServer = smtplib.SMTP("smtp.gmail.com", 587)
+    mailServer = smtplib.SMTP("smtp.mandrillapp.com", 587)
     mailServer.ehlo()
     mailServer.starttls()
     mailServer.ehlo()
