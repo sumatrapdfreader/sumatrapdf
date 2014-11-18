@@ -572,7 +572,7 @@ def buildbot_loop():
                 g_time_of_last_build = None
 
         print("Sleeping for 15 minutes, %s until pre-release" %
-              pretty_print_secso(secs_until_prerelease))
+              pretty_print_secs(secs_until_prerelease))
         time.sleep(60 * 15)  # 15 mins
 
 
