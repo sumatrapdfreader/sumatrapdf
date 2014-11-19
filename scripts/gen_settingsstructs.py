@@ -403,13 +403,7 @@ GlobalPrefs = [
 	Field("RememberStatePerDocument", Bool, True,
 		"if true, we store display settings for each document separately (i.e. everything " +
 		"after UseDefaultState in FileStates)"),
-	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
-	# auto-detected language
-	# zeniko: one issue with "auto": since that setting isn't exposed in the UI, this
-	# can result in two unexpected behaviors for portable versions: either the UI language
-	# unexpectedly changes when using it abroad; or if a user ever closed the Choose Language
-	# dialog with OK, the language never again adapts to system changes
-	Field("UiLanguage", Utf8String, None, # TODO: "auto"
+	Field("UiLanguage", Utf8String, None,
 		"ISO code of the current UI language",
 		doc="[ISO code](langs.html) of the current UI language"),
 	Field("ShowToolbar", Bool, True,
