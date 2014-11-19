@@ -50,6 +50,8 @@ struct SutStruct {
     char *nullUtf8String;
     char *escapedUtf8String;
     Vec<int> *intArray;
+    Vec<WCHAR *> *strArray;
+    Vec<WCHAR *> *emptyStrArray;
     PointI point;
     Vec<SutStructItem *> *sutStructItems;
     char *internalString;
@@ -68,11 +70,13 @@ static const FieldInfo gSutStructFields[] = {
     { offsetof(SutStruct, nullUtf8String), Type_Utf8String, NULL },
     { offsetof(SutStruct, escapedUtf8String), Type_Utf8String, (intptr_t)"$\nstring " },
     { offsetof(SutStruct, intArray), Type_IntArray, (intptr_t)"1 2 -3" },
+    { offsetof(SutStruct, strArray), Type_StringArray, (intptr_t)"one \"two three\" \"\"" },
+    { offsetof(SutStruct, emptyStrArray), Type_StringArray, NULL },
     { offsetof(SutStruct, point), Type_Struct, (intptr_t)&gSutPointIInfo },
     { (size_t)-1, Type_Comment, NULL },
     { offsetof(SutStruct, sutStructItems), Type_Array, (intptr_t)&gSutStructItemInfo },
 };
-static const StructInfo gSutStructInfo = { sizeof(SutStruct), 15, gSutStructFields, "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0Point\0\0SutStructItems" };
+static const StructInfo gSutStructInfo = { sizeof(SutStruct), 17, gSutStructFields, "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0StrArray\0EmptyStrArray\0Point\0\0SutStructItems" };
 
 void SettingsUtilTest()
 {
@@ -86,6 +90,7 @@ EscapedString = $\t$r$n$$ $\r\n\
 Utf8String = another string\r\n\
 EscapedUtf8String = $r$n[]\t$\r\n\
 IntArray = 3 1\r\n\
+StrArray = \"with space\" plain \"quote:\"\"\"\r\n\
 Point [\r\n\
 \tX = -17\r\n\
 \tY = -18\r\n\
@@ -144,6 +149,8 @@ Key = Value";
     utassert(str::Eq(data->escapedString, L"\t\r\n$ "));
     utassert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
     utassert(2 == data->intArray->Count() && 3 == data->intArray->At(0));
+    utassert(3 == data->strArray->Count() && 0 == data->emptyStrArray->Count());
+    utassert(str::Eq(data->strArray->At(0), L"with space") && str::Eq(data->strArray->At(1), L"plain") && str::Eq(data->strArray->At(2), L"quote:\""));
     utassert(2 == data->sutStructItems->Count());
     utassert(PointI(-1, 5) == data->sutStructItems->At(0)->compactPoint);
     utassert(2 == data->sutStructItems->At(0)->floatArray->Count());
@@ -164,6 +171,8 @@ Key = Value";
     utassert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String && str::Eq(data->escapedUtf8String, "$\nstring "));
     utassert(data->intArray && 3 == data->intArray->Count() && 1 == data->intArray->At(0));
     utassert(2 == data->intArray->At(1) && -3 == data->intArray->At(2));
+    utassert(3 == data->strArray->Count() && 0 == data->emptyStrArray->Count());
+    utassert(str::Eq(data->strArray->At(0), L"one") && str::Eq(data->strArray->At(1), L"two three") && str::Eq(data->strArray->At(2), L""));
     utassert(PointI(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == data->sutStructItems->Count());
     FreeStruct(&gSutStructInfo, data);

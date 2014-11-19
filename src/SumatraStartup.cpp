@@ -712,15 +712,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (gGlobalPrefs->reopenOnce) {
-        WStrVec moreFileNames;
-        ParseCmdLine(gGlobalPrefs->reopenOnce, moreFileNames);
-        moreFileNames.Reverse();
-        for (WCHAR **fileName = moreFileNames.IterStart(); fileName; fileName = moreFileNames.IterNext()) {
-            i.fileNames.Append(*fileName);
-        }
-        moreFileNames.RemoveAt(0, moreFileNames.Count());
-        str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
+    while (gGlobalPrefs->reopenOnce->Count() > 0) {
+        i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
     }
 
     HANDLE hMutex = NULL;

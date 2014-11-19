@@ -19,7 +19,6 @@
 #include "Caption.h"
 #include "Controller.h"
 #include "ChmModel.h"
-#include "CmdLineParser.h"
 #include "CrashHandler.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
@@ -361,12 +360,10 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
 class HwndPasswordUI : public PasswordUI
 {
     HWND hwnd;
-    WStrVec defaults;
+    size_t pwdIdx;
 
 public:
-    explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd) {
-        ParseCmdLine(gGlobalPrefs->defaultPasswords, defaults);
-    }
+    explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) { }
 
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
@@ -389,8 +386,8 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
     *saveKey = false;
 
     // try the list of default passwords before asking the user
-    if (defaults.Count() > 0)
-        return defaults.Pop();
+    if (pwdIdx < gGlobalPrefs->defaultPasswords->Count())
+        return str::Dup(gGlobalPrefs->defaultPasswords->At(pwdIdx++));
 
     if (IsStressTesting())
         return NULL;
@@ -1743,29 +1740,21 @@ void AssociateExeWithPdfExtension()
 #endif
 
 #ifdef SUPPORTS_AUTO_UPDATE
-static void RememberCurrentlyOpenedFiles(bool savePrefs)
+static void RememberCurrentlyOpenedFiles()
 {
-    CrashIf(gGlobalPrefs->reopenOnce);
-    str::Str<WCHAR> cmdLine;
-
+    CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
         if (win->tabsVisible) {
             TabData *td;
             for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
-                cmdLine.Append('"'); cmdLine.Append(td->filePath); cmdLine.Append(L"\" ");
+                gGlobalPrefs->reopenOnce->Append(str::Dup(td->filePath));
             }
         }
         else if (!win->IsAboutWindow()) {
-            cmdLine.Append('"'); cmdLine.Append(win->loadedFilePath); cmdLine.Append(L"\" ");
+            gGlobalPrefs->reopenOnce->Append(str::Dup(win->loadedFilePath));
         }
     }
-    if (cmdLine.Size() > 0) {
-        cmdLine.Pop();
-        gGlobalPrefs->reopenOnce = cmdLine.StealData();
-    }
-    if (savePrefs)
-        prefs::Save();
 }
 
 static void OnMenuExit();
@@ -1813,14 +1802,16 @@ bool AutoUpdateInitiate(const char *updateData)
     if (!ok)
         return false;
 
+    RememberCurrentlyOpenedFiles();
     // save session before launching the installer (which force-quits SumatraPDF)
-    RememberCurrentlyOpenedFiles(installer);
+    if (installer)
+        prefs::Save();
 
     ok = LaunchFile(updateExe, updateArgs);
     if (ok)
         OnMenuExit();
     else
-        str::ReplacePtr(&gGlobalPrefs->reopenOnce, NULL);
+        FreeVecMembers(*gGlobalPrefs->reopenOnce);
     return ok;
 }
 #endif

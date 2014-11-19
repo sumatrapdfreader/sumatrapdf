@@ -79,6 +79,76 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
+// string arrays are serialized by quoting strings containing spaces
+// or quotation marks (doubling quotation marks within quotes);
+// this is simpler than full command line serialization as read by ParseCmdLine
+static char *SerializeStringArray(const Vec<WCHAR *> *strArray)
+{
+    str::Str<WCHAR> serialized;
+
+    for (size_t i = 0; i < strArray->Count(); i++) {
+        if (i > 0)
+            serialized.Append(' ');
+        const WCHAR *str = strArray->At(i);
+        bool needsQuotes = !*str;
+        for (const WCHAR *c = str; !needsQuotes && *c; c++) {
+            needsQuotes = str::IsWs(*c) || '"' == *c;
+        }
+        if (!needsQuotes) {
+            serialized.Append(str);
+        }
+        else {
+            serialized.Append('"');
+            for (const WCHAR *c = str; *c; c++) {
+                if ('"' == *c)
+                    serialized.Append('"');
+                serialized.Append(*c);
+            }
+            serialized.Append('"');
+        }
+    }
+
+    return str::conv::ToUtf8(serialized.Get());
+}
+
+static void DeserializeStringArray(Vec<WCHAR *> *strArray, const char *serialized)
+{
+    ScopedMem<WCHAR> str(str::conv::FromUtf8(serialized));
+    const WCHAR *s = str.Get();
+
+    for (;;) {
+        while (str::IsWs(*s))
+            s++;
+        if (!*s)
+            return;
+        if ('"' == *s) {
+            str::Str<WCHAR> part;
+            for (s++; *s && (*s != '"' || *(s + 1) == '"'); s++) {
+                if ('"' == *s)
+                    s++;
+                part.Append(*s);
+            }
+            strArray->Append(part.StealData());
+            if ('"' == *s)
+                s++;
+        }
+        else {
+            const WCHAR *e;
+            for (e = s; *e && !str::IsWs(*e); e++);
+            strArray->Append(str::DupN(s, e - s));
+            s = e;
+        }
+    }
+}
+
+static void FreeStringArray(Vec<WCHAR *> *strArray)
+{
+    if (!strArray)
+        return;
+    FreeVecMembers(*strArray);
+    delete strArray;
+}
+
 static void FreeArray(Vec<void *> *array, const FieldInfo& field)
 {
     for (size_t j = 0; array && j < array->Count(); j++) {
@@ -168,6 +238,14 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
         }
         // prevent empty arrays from being replaced with the defaults
         return (*(Vec<int> **)fieldPtr)->Count() > 0 || field.value != NULL;
+    case Type_StringArray:
+        value.Set(SerializeStringArray(*(Vec<WCHAR *> **)fieldPtr));
+        if (!NeedsEscaping(value))
+            out.Append(value);
+        else
+            EscapeStr(out, value);
+        // prevent empty arrays from being replaced with the defaults
+        return (*(Vec<WCHAR *> **)fieldPtr)->Count() > 0 || field.value != NULL;
     default:
         CrashIf(true);
         return false;
@@ -238,6 +316,14 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
             for (; *value && !str::IsWs(*value); value++);
             for (; str::IsWs(*value); value++);
         }
+        break;
+    case Type_StringArray:
+        FreeStringArray(*(Vec<WCHAR *> **)fieldPtr);
+        *(Vec<WCHAR *> **)fieldPtr = new Vec<WCHAR *>();
+        if (value)
+            DeserializeStringArray(*(Vec<WCHAR *> **)fieldPtr, ScopedMem<char>(UnescapeStr(value)));
+        else if (field.value)
+            DeserializeStringArray(*(Vec<WCHAR *> **)fieldPtr, (const char *)field.value);
         break;
     default:
         CrashIf(true);
@@ -426,6 +512,8 @@ static void FreeStructData(const StructInfo *info, uint8_t *base)
             free(*(void **)fieldPtr);
         else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type)
             delete *(Vec<int> **)fieldPtr;
+        else if (Type_StringArray == field.type)
+            FreeStringArray(*(Vec<WCHAR *> **)fieldPtr);
     }
 }
 

@@ -27,7 +27,7 @@ the deserialization of such a settings file.
 enum SettingType {
     Type_Struct, Type_Array, Type_Compact,
     Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
-    Type_ColorArray, Type_FloatArray, Type_IntArray,
+    Type_ColorArray, Type_FloatArray, Type_IntArray, Type_StringArray,
     Type_Comment,
     Type_Prerelease, // same as Type_Struct but won't be written out in release builds
 };
