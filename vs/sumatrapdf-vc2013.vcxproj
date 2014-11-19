@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -15,7 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>Sumatra Reader</ProjectName>
+    <ProjectName>SumatraPDF</ProjectName>
     <ProjectGuid>{9458F693-A9CC-4786-B79A-A2103EC71FA3}</ProjectGuid>
     <RootNamespace>sumatrapdf</RootNamespace>
     <Keyword>MakeFileProj</Keyword>

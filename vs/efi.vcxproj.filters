@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<Filter Include="tools">
+			<UniqueIdentifier>{782AF1A3-C478-2C49-915B-3445B098EB2D}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="tools\efi">
+			<UniqueIdentifier>{B65E60B3-7EDA-DB43-8265-86B6926D61D4}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="src">
+			<UniqueIdentifier>{1E1F3BB6-0679-BA4C-93C9-C0FEC5DCD52F}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="src\utils">
+			<UniqueIdentifier>{1143E85D-C316-7146-82E5-E5D69D8E9BF6}</UniqueIdentifier>
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClInclude Include="..\tools\efi\Dia2Subset.h">
+			<Filter>tools\efi</Filter>
+		</ClInclude>
+		<ClInclude Include="..\tools\efi\Util.h">
+			<Filter>tools\efi</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\utils\BaseUtil.h">
+			<Filter>src\utils</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\utils\BitManip.h">
+			<Filter>src\utils</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\utils\Dict.h">
+			<Filter>src\utils</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\utils\StrUtil.h">
+			<Filter>src\utils</Filter>
+		</ClInclude>
+	</ItemGroup>
+	<ItemGroup>
+		<ClCompile Include="..\tools\efi\main.cpp">
+			<Filter>tools\efi</Filter>
+		</ClCompile>
+		<ClCompile Include="..\tools\efi\Util.cpp">
+			<Filter>tools\efi</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\utils\BaseUtil.cpp">
+			<Filter>src\utils</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\utils\Dict.cpp">
+			<Filter>src\utils</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\utils\StrUtil.cpp">
+			<Filter>src\utils</Filter>
+		</ClCompile>
+	</ItemGroup>
+</Project>
