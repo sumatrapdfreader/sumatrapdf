@@ -560,7 +560,22 @@ SettingsStructs_Header = """\
 #ifndef SettingsStructs_h
 #define SettingsStructs_h
 
+enum DisplayMode {
+    DM_FIRST = 0,
+    // automatic means: the continuous form of single page, facing or
+    // book view - depending on the document's desired PageLayout
+    DM_AUTOMATIC = DM_FIRST,
+    DM_SINGLE_PAGE,
+    DM_FACING,
+    DM_BOOK_VIEW,
+    DM_CONTINUOUS,
+    DM_CONTINUOUS_FACING,
+    DM_CONTINUOUS_BOOK_VIEW,
+};
+
 %(structDef)s
+
+typedef FileState DisplayState;
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
 
