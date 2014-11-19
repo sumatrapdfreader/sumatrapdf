@@ -546,6 +546,10 @@ add_char_to_span(fz_context *ctx, fz_text_span *span, int c, fz_point *p, fz_poi
 	span->len++;
 }
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2776 */
+static inline int is_character_composing(int c) { return 0x0300 <= c && c <= 0x036F; }
+static int is_character_ornate(int c);
+
 static void
 fz_add_text_char_imp(fz_context *ctx, fz_text_device *dev, fz_text_style *style, int c, fz_matrix *trm, float adv, int wmode)
 {
@@ -596,6 +600,9 @@ fz_add_text_char_imp(fz_context *ctx, fz_text_device *dev, fz_text_style *style,
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2486 */
 		if (delta.x < 0 && delta.x > (dev->cur_span->text[dev->cur_span->len-1].p.x - dev->cur_span->max.x) * 0.85)
 			delta.x = 0;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2776 */
+		if (-0.01 < delta.x && delta.x < 0.01 && (is_character_composing(c) || is_character_ornate(c)))
+			delta.y = 0;
 
 		/* The transform has not changed, so we know we're in the same
 		 * direction. Calculate 2 distances; how far off the previous
@@ -885,7 +892,6 @@ fixup_text_span(fz_text_span *span)
 	int i;
 	for (i = 0; i < span->len; i++)
 	{
-		// TODO: some ornates now are on their own line
 		if (is_character_ornate(span->text[i].c) && i + 1 < span->len)
 		{
 			/* recombine characters and their accents */
