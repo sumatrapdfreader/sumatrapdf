@@ -364,11 +364,11 @@ def build_and_upload_efi_txt_diff(ver):
         print("didn't find efi output for %s" % str(prev_ver))
         return
     obj_file_splitters = ["obj-rel\\", "INTEL\\"]
-    #efi1 = efiparse.parse_file(efi_path_prev, obj_file_splitters)
-    #efi2 = efiparse.parse_file(efi_path_curr, obj_file_splitters)
-    #diff = efiparse.diff(efi1, efi2)
-    #s = str(diff)
-    #s = s + "\n" + efi_diff_as_txt(diff)
+    efi1 = efiparse.parse_file(efi_path_prev, obj_file_splitters)
+    efi2 = efiparse.parse_file(efi_path_curr, obj_file_splitters)
+    diff = efiparse.diff(efi1, efi2)
+    s = str(diff)
+    s = s + "\n" + efi_diff_as_txt(diff)
     s = ""
     s3dir = "sumatrapdf/buildbot/%s/" % str(ver)
     s3.upload_data_public_with_content_type(
