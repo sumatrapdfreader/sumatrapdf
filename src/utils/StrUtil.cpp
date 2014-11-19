@@ -1128,9 +1128,11 @@ const char *Parse(const char *str, size_t len, const char *fmt, ...)
     const char *res = ParseV(s, fmt, args);
     va_end(args);
 
+    if (res)
+        res = str + (res - s);
     if (s != buf)
         free(s);
-    return res ? str + (res - s) : NULL;
+    return res;
 }
 
 const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)

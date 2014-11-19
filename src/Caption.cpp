@@ -7,7 +7,6 @@
 #include "BaseEngine.h"
 #include "Caption.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
 #include "Controller.h"
 #include "EngineManager.h"
 #include "DisplayModel.h"

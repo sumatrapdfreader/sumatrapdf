@@ -93,9 +93,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
         if (!str) str.Set(m_pdfEngine->GetProperty(Prop_CreationDate));
         if (!str::IsEmpty(str.Get())) {
             SYSTEMTIME systime;
-            if (PdfDateParse(str, &systime)) {
-                FILETIME filetime;
-                SystemTimeToFileTime(&systime, &filetime);
+            FILETIME filetime;
+            if (PdfDateParse(str, &systime) && SystemTimeToFileTime(&systime, &filetime)) {
                 chunkValue.SetFileTimeValue(PKEY_ItemDate, filetime);
                 return S_OK;
             }

@@ -1070,7 +1070,8 @@ static LPOLESTR OleStrDup(WCHAR *s)
 {
     size_t cb = sizeof(WCHAR) * (str::Len(s) + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
-    memcpy(ret, s, cb);
+    if (ret)
+        memcpy(ret, s, cb);
     return ret;
 }
 
@@ -1079,11 +1080,8 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
 {
     if (!ppszDisplayName)
         return E_POINTER;
-    if (baseUrl)
-        *ppszDisplayName = OleStrDup(baseUrl);
-    else
-        *ppszDisplayName = OleStrDup(L"");
-    return S_OK;
+    *ppszDisplayName = OleStrDup(baseUrl ? baseUrl : L"");
+    return *ppszDisplayName ? S_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
@@ -1206,13 +1204,14 @@ bool HtmlWindow::CreateBrowser()
     hr = p->QueryInterface(&oleObject);
     if (FAILED(hr)) return false;
 
-    FrameSite *fs = new FrameSite(this);
-    ScopedComPtr<IUnknown> fsScope(fs);
-
     DWORD status;
-    oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
+    hr = oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
+    if (FAILED(hr)) return false;
     bool setClientSiteFirst = 0 != (status & OLEMISC_SETCLIENTSITEFIRST);
     bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
+
+    FrameSite *fs = new FrameSite(this);
+    ScopedComPtr<IUnknown> fsScope(fs);
 
     if (setClientSiteFirst)
         oleObject->SetClientSite(fs->oleClientSite);
@@ -1461,7 +1460,7 @@ void HtmlWindow::SetHtmlReal(const char *s, size_t len)
 }
 
 // http://stackoverflow.com/questions/9778206/how-i-can-get-information-about-the-scrollbars-of-an-webbrowser-control-instance
-//http://stackoverflow.com/questions/8630173/hide-scrollbars-in-webbrowser-control-mfc
+// http://stackoverflow.com/questions/8630173/hide-scrollbars-in-webbrowser-control-mfc
 // This is equivalent of <body scroll=auto> but for any html
 // This seems to be the only way to hide vertical scrollbar if it's not necessary
 void HtmlWindow::SetScrollbarToAuto()
@@ -1471,27 +1470,22 @@ void HtmlWindow::SetScrollbarToAuto()
     if (FAILED(hr) || !docDispatch)
         return;
 
-    IHTMLDocument2 *doc2 = NULL;
-    docDispatch->QueryInterface(IID_IHTMLDocument2, (void**) &doc2);
+    ScopedComQIPtr<IHTMLDocument2> doc2(docDispatch);
+    if (!doc2)
+        return;
 
-    IHTMLElement *bodyElement = NULL; 
-    IHTMLBodyElement *body = NULL; 
-
+    ScopedComPtr<IHTMLElement> bodyElement;
     hr = doc2->get_body(&bodyElement);
-    if (SUCCEEDED(hr) && bodyElement)
-    {
-        hr = bodyElement->QueryInterface(IID_IHTMLBodyElement, (void**) &body);
-        if (SUCCEEDED(hr) && body)
-        {
-            BSTR s;
-            s = SysAllocString(L"auto");
-            hr = body->put_scroll(s);
-            body->Release();
-            SysFreeString(s);
-        }
-    }
-    bodyElement->Release();
-    doc2->Release();
+    if (FAILED(hr) || !bodyElement)
+        return;
+
+    ScopedComQIPtr<IHTMLBodyElement> body(bodyElement); 
+    if (!body)
+        return;
+
+    BSTR s = SysAllocString(L"auto");
+    hr = body->put_scroll(s);
+    SysFreeString(s);
 }
 
 // Take a screenshot of a given <area> inside an html window and resize

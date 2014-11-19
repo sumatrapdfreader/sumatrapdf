@@ -409,11 +409,10 @@ IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd)
 DWORD GetFileVersion(const WCHAR *path)
 {
     DWORD fileVersion = 0;
-    DWORD handle;
-    DWORD size = GetFileVersionInfoSize(path, &handle);
+    DWORD size = GetFileVersionInfoSize(path, NULL);
     ScopedMem<void> versionInfo(malloc(size));
 
-    if (versionInfo && GetFileVersionInfo(path, handle, size, versionInfo)) {
+    if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
         VS_FIXEDFILEINFO *fileInfo;
         UINT len;
         if (VerQueryValue(versionInfo, L"\\", (LPVOID *)&fileInfo, &len))

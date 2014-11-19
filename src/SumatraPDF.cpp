@@ -4180,13 +4180,13 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOMMAND:
             // temporarily show the menu bar if it has been hidden
-            if (wParam == SC_KEYMENU && win->isMenuHidden)
+            if (wParam == SC_KEYMENU && win && win->isMenuHidden)
                 ShowHideMenuBar(win, true);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
-            if (!wParam && win->isMenuHidden)
+            if (!wParam && win && win->isMenuHidden)
                 SetMenu(hwnd, NULL);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
