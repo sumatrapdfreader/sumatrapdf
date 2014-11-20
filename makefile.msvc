@@ -207,7 +207,7 @@ MAIN_UI_OBJS = \
 	$(OS)\MuiEbookPageDef.obj $(OS)\PagesLayoutDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
-	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj \
+	$(OS)\Tabs.obj $(OS)\FileThumbnails.obj $(OS)\FileHistory.obj \
 	$(OS)\ChmModel.obj $(OS)\Caption.obj $(OS)\Canvas.obj \
 	$(UIA_OBJS)
 
