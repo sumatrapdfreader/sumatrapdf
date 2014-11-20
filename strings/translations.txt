@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-622b18237d3445dc4a3094729b5cbc9e193ce01f
+768676724a463d2735aa0aa62f083b7e01092e2e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15693,6 +15693,7 @@ uk:Інсталятор було пошкоджено. Будь ласка за�
 uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
 :This document uses unsupported features (%s) and might not render properly
+cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.

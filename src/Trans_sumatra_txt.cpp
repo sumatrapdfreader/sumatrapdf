@@ -3482,7 +3482,7 @@ const char * gTranslations_cz =
   "Soubor synchronizace nelze otev\305\231\303\255t\0"\
   "Tagovan\303\251 PDF\0"\
   "Textov\303\251 dokumenty\0"\
-  "\0"\
+  "Tento dokument pou\305\276\303\255v\303\241 nepodporovan\303\251 funkce (%s) a t\303\255mto se nemus\303\255 vykreslit spr\303\241vn\304\233\0"\
   "N\303\241zev:\0"\
   "Nezn\303\241m\303\275 zdrojov\303\275 soubor (%s)\0"\
   "Pou\305\276\303\255t &karty\0"\
