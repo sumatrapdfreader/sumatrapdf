@@ -18,8 +18,6 @@
 // factor by how large the non-maximized caption should be in relation to the tabbar
 #define CAPTION_TABBAR_HEIGHT_FACTOR  1.25f
 
-class WindowInfo;
-
 void CreateCaption(WindowInfo *win);
 void RegisterCaptionWndClass();
 LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool *callDef, WindowInfo *win);

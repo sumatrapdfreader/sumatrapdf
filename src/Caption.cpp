@@ -5,15 +5,15 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "BaseEngine.h"
-#include "Caption.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineManager.h"
+#include "WindowInfo.h"
+#include "Caption.h"
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Translations.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
 
 using namespace Gdiplus;
