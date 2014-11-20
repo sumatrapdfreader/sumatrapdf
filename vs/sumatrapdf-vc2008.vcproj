@@ -902,6 +902,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\FileHistory.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\FileHistory.h"
 					>
 				</File>

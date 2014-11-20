@@ -318,6 +318,11 @@ $(OS)\Favorites.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\u
 $(OS)\Favorites.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
 $(OS)\Favorites.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
 $(OS)\Favorites.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\FileHistory.obj: $B\src\BaseEngine.h $B\src\DisplayState.h $B\src\FileHistory.h
+$(OS)\FileHistory.obj: $B\src\SettingsStructs.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\FileHistory.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
+$(OS)\FileHistory.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
+$(OS)\FileHistory.obj: $B\src\utils\Vec.h
 $(OS)\FileModifications.obj: $B\src\BaseEngine.h $B\src\FileModifications.h $B\src\utils\Allocator.h
 $(OS)\FileModifications.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h
 $(OS)\FileModifications.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h

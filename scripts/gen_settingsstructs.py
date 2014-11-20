@@ -82,11 +82,15 @@ class Field(object):
 		assert False
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None, version=None, prerelease=False):
+	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, doc=None, version=None, prerelease=False):
 		self.structName = structName or name
 		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc, version, prerelease)
 		if prerelease: self.type.name = "Prerelease"
-		elif compact: self.type.name = "Compact"
+
+class CompactStruct(Struct):
+	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, doc=None, version=None):
+		super(CompactStruct, self).__init__(name, fields, comment, structName, internal, expert, doc, version)
+		self.type.name = "Compact"
 
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, version=None):
@@ -174,12 +178,11 @@ FixedPageUI = [
 		"color value with which white (background) will be substituted"),
 	Field("SelectionColor", Color, RGB(0xF5, 0xFC, 0x0C),
 		"color value for the text selection rectangle (also used to highlight found text)", version="2.4"),
-	Struct("WindowMargin", WindowMargin_FixedPageUI,
-		"top, right, bottom and left margin (in that order) between window and document",
-		compact=True),
-	Struct("PageSpacing", PageSpacing,
+	CompactStruct("WindowMargin", WindowMargin_FixedPageUI,
+		"top, right, bottom and left margin (in that order) between window and document"),
+	CompactStruct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
-		structName="SizeI", compact=True),
+		structName="SizeI"),
 	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
 		"colors to use for the gradient from top to bottom (stops will be inserted " +
 		"at regular intervals throughout the document); currently only up to three " +
@@ -203,12 +206,11 @@ EbookUI = [
 ]
 
 ComicBookUI = [
-	Struct("WindowMargin", WindowMargin_ComicBookUI,
-		"top, right, bottom and left margin (in that order) between window and document",
-		compact=True),
-	Struct("PageSpacing", PageSpacing,
+	CompactStruct("WindowMargin", WindowMargin_ComicBookUI,
+		"top, right, bottom and left margin (in that order) between window and document"),
+	CompactStruct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
-		structName="SizeI", compact=True),
+		structName="SizeI"),
 	Field("CbxMangaMode", Bool, False,
 		"if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 ]
@@ -282,9 +284,9 @@ FileSettings = [
 		"DefaultDisplayMode after deserialization and before serialization",
 		doc="layout of pages. valid values: automatic, single page, facing, book view, " +
 		"continuous, continuous facing, continuous book view"),
-	Struct("ScrollPos", ScrollPos,
+	CompactStruct("ScrollPos", ScrollPos,
 		"how far this document has been scrolled (in x and y direction)",
-		structName="PointI", compact=True),
+		structName="PointI"),
 	Field("PageNo", Int, 1,
 		"number of the last read page"),
 	Field("Zoom", Utf8String, "fit page",
@@ -294,8 +296,8 @@ FileSettings = [
 	Field("WindowState", Int, 0,
 		"state of the window. 1 is normal, 2 is maximized, "+
 		"3 is fullscreen, 4 is minimized"),
-	Struct("WindowPos", WindowPos,
-		"default position (can be on any monitor)", structName="RectI", compact=True),
+	CompactStruct("WindowPos", WindowPos,
+		"default position (can be on any monitor)", structName="RectI"),
 	Field("ShowToc", Bool, True,
 		"if true, we show table of contents (Bookmarks) sidebar if it's present " +
 		"in the document"),
@@ -325,7 +327,7 @@ FileSettings = [
 ]
 
 WindowTabsInfo = [
-	Struct("Pos", WindowPos, "position of the window (can be on any monitor)", structName="RectI"),
+	CompactStruct("Pos", WindowPos, "position of the window (can be on any monitor)", structName="RectI"),
 	CompactArray("Files", String, None, "list of files (tabs) opened in this window"),
 ]
 
@@ -448,8 +450,8 @@ GlobalPrefs = [
 		"default state of new windows (same as the last closed)",
 		doc="default state of the window. 1 is normal, 2 is maximized, "+
 		"3 is fullscreen, 4 is minimized"),
-	Struct("WindowPos", WindowPos,
-		"default position (can be on any monitor)", structName="RectI", compact=True,
+	CompactStruct("WindowPos", WindowPos,
+		"default position (can be on any monitor)", structName="RectI",
 		doc="default position (x, y) and size (width, height) of the window"),
 	Field("ShowToc", Bool, True,
 		"if true, we show table of contents (Bookmarks) sidebar if it's present " +
@@ -476,17 +478,16 @@ GlobalPrefs = [
 		"(needed for auto-updating)",
 		doc="data required for reloading documents after an auto-update",
 		version="2.6"),
-	Struct("TimeOfLastUpdateCheck", FileTime,
-		"timestamp of the last update check",
-		structName="FILETIME", compact=True,
+	CompactStruct("TimeOfLastUpdateCheck", FileTime,
+		"timestamp of the last update check", structName="FILETIME",
 		doc="data required to determine when SumatraPDF last checked for updates"),
 	Field("OpenCountWeek", Int, 0,
 		"week count since 2011-01-01 needed to \"age\" openCount values in file history",
 		doc="value required to determine recency for the OpenCount value in FileStates"),
 	# non-serialized fields
-	Struct("LastPrefUpdate", FileTime,
+	CompactStruct("LastPrefUpdate", FileTime,
 		"modification time of the preferences file when it was last read",
-		structName="FILETIME", compact=True, internal=True),
+		structName="FILETIME", internal=True),
 	Field("DefaultDisplayModeEnum", Type(None, "DisplayMode"), "DM_AUTOMATIC",
 		"value of DefaultDisplayMode for internal usage",
 		internal=True),
@@ -536,7 +537,7 @@ def BuildStruct(struct, built=[]):
 			continue
 		lines += FormatComment(field.comment, "\t//")
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
-		if type(field) in [Struct, Array] and field.name in [field.structName, field.structName + "s"] and field.name not in built:
+		if type(field) in [Struct, CompactStruct, Array] and field.name in [field.structName, field.structName + "s"] and field.name not in built:
 			required += [BuildStruct(field), ""]
 			built.append(field.name)
 	lines.append("};")
@@ -550,7 +551,7 @@ def BuildMetaData(struct, built=[]):
 			continue
 		data.append(("offsetof(%s, %s)" % (struct.structName, field.cname), "Type_%s" % field.type.name, field.cdefault(built)))
 		names.append(field.name)
-		if type(field) in [Struct, Array]:
+		if type(field) in [Struct, CompactStruct, Array]:
 			lines += [BuildMetaData(field), ""]
 			built.append(field.structName)
 		elif type(field) is Comment:

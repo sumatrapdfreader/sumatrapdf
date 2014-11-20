@@ -96,6 +96,7 @@
     <ClCompile Include="..\src\Doc.cpp" />
     <ClCompile Include="..\src\ExternalPdfViewer.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
+    <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileModifications.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />

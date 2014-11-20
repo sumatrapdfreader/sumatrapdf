@@ -509,7 +509,7 @@ static const FieldInfo gRectI_2_Fields[] = {
 static const StructInfo gRectI_2_Info = { sizeof(RectI), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy" };
 
 static const FieldInfo gWindowTabsInfoFields[] = {
-    { offsetof(WindowTabsInfo, pos),   Type_Struct,      (intptr_t)&gRectI_2_Info },
+    { offsetof(WindowTabsInfo, pos),   Type_Compact,     (intptr_t)&gRectI_2_Info },
     { offsetof(WindowTabsInfo, files), Type_StringArray, 0                        },
 };
 static const StructInfo gWindowTabsInfoInfo = { sizeof(WindowTabsInfo), 2, gWindowTabsInfoFields, "Pos\0Files" };

@@ -256,13 +256,13 @@ def gen_struct(struct, indent="", prerelease=False):
             comment += " (introduced in version %s)" % field.version
         field_id = struct.name + "_" + field.name if indent else field.name
         lines += gen_comment(comment, field_id, indent, first)
-        if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
+        if type(field) is gen_settingsstructs.Array:
             indent2 = indent + indent_str[:len(indent_str) / 2]
             start = "%s%s [\n%s[" % (indent, field.name, indent2)
             end = "%s]\n%s]" % (indent2, indent)
             inside = gen_struct(field, indent + indent_str, prerelease)
             lines += [start, inside, end]
-        elif type(field) is gen_settingsstructs.Struct and not field.type.name == "Compact":
+        elif type(field) is gen_settingsstructs.Struct:
             start = "%s%s [" % (indent, field.name)
             end = "%s]" % indent
             inside = gen_struct(field, indent + indent_str, prerelease)

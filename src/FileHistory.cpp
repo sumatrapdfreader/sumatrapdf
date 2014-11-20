@@ -178,4 +178,3 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
         DeleteDisplayState(state);
     }
 }
-

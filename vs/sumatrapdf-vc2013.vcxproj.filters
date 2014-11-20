@@ -90,6 +90,9 @@
     <ClCompile Include="..\src\Favorites.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\FileHistory.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\FileModifications.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
