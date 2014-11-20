@@ -92,7 +92,7 @@ bool tar_parse_header(ar_archive_tar *tar)
         if (data[i] == '/')
             tar->entry.filetype = TYPE_DIRECTORY;
     }
-    tar->entry.is_ustar = memcmp(data + 257, "ustar\x0000", 8) == 0 && memcmp(data + 508, "tar\0", 4) != 0;
+    tar->entry.is_ustar = memcmp(data + 257, "ustar\x00""00", 8) == 0 && memcmp(data + 508, "tar\0", 4) != 0;
 
     if (tar->entry.filesize > (size_t)-1 - tar->super.entry_offset - 2 * TAR_BLOCK_SIZE)
         return false;
@@ -238,7 +238,7 @@ const char *tar_get_name(ar_archive *ar)
 
         if (tar->entry.is_ustar) {
             char *prefixed = malloc(256 + 1);
-            if (!ar_skip(ar->stream, 245) || ar_read(ar->stream, prefixed, 167) != 167) {
+            if (!prefixed || !ar_skip(ar->stream, 245) || ar_read(ar->stream, prefixed, 167) != 167) {
                 free(name);
                 free(prefixed);
                 ar_seek(ar->stream, ar->entry_offset + TAR_BLOCK_SIZE, SEEK_SET);
