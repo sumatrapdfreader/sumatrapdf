@@ -224,6 +224,14 @@ struct FileState {
     size_t index;
 };
 
+// window and which files they had opened
+struct WindowTabsInfo {
+    // position of the window (can be on any monitor)
+    RectI pos;
+    // list of files (tabs) opened in this window
+    Vec<WCHAR *> * files;
+};
+
 // Most values on this structure can be updated through the UI and are
 // persisted in SumatraPDF-settings.txt (previously in
 // sumatrapdfprefs.dat)
@@ -332,6 +340,8 @@ struct GlobalPrefs {
     bool useTabs;
     // information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
+    // window and which files they had opened
+    Vec<WindowTabsInfo *> * windowTabsInfo;
     // a list of paths for files to be reopened at the next start (needed
     // for auto-updating)
     Vec<WCHAR *> * reopenOnce;
@@ -490,6 +500,20 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
 
+static const FieldInfo gRectI_2_Fields[] = {
+    { offsetof(RectI, x),  Type_Int, 0 },
+    { offsetof(RectI, y),  Type_Int, 0 },
+    { offsetof(RectI, dx), Type_Int, 0 },
+    { offsetof(RectI, dy), Type_Int, 0 },
+};
+static const StructInfo gRectI_2_Info = { sizeof(RectI), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy" };
+
+static const FieldInfo gWindowTabsInfoFields[] = {
+    { offsetof(WindowTabsInfo, pos),   Type_Struct,      (intptr_t)&gRectI_2_Info },
+    { offsetof(WindowTabsInfo, files), Type_StringArray, 0                        },
+};
+static const StructInfo gWindowTabsInfoInfo = { sizeof(WindowTabsInfo), 2, gWindowTabsInfoFields, "Pos\0Files" };
+
 static const FieldInfo gFILETIMEFields[] = {
     { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },
     { offsetof(FILETIME, dwLowDateTime),  Type_Int, 0 },
@@ -543,10 +567,11 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, useTabs),                  Type_Bool,        true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,       (intptr_t)&gFileStateInfo                                                                                             },
+    { offsetof(GlobalPrefs, windowTabsInfo),           Type_Array,       (intptr_t)&gWindowTabsInfoInfo                                                                                        },
     { offsetof(GlobalPrefs, reopenOnce),               Type_StringArray, 0                                                                                                                     },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,     (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,         0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 49, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 50, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0WindowTabsInfo\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif

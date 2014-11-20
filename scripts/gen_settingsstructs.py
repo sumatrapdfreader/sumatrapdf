@@ -324,6 +324,11 @@ FileSettings = [
 		internal=True),
 ]
 
+WindowTabsInfo = [
+	Struct("Pos", WindowPos, "position of the window (can be on any monitor)", structName="RectI"),
+	CompactArray("Files", String, None, "list of files (tabs) opened in this window"),
+]
+
 # list of fields which aren't serialized when UseDefaultState is set
 rememberedDisplayState = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
 
@@ -464,6 +469,7 @@ GlobalPrefs = [
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files (in most recently used order)"),
+	Array("WindowTabsInfo", WindowTabsInfo, "window and which files they had opened", structName="WindowTabsInfo"),
 	# TODO: remove once sessions can be restored in general
 	CompactArray("ReopenOnce", String, None,
 		"a list of paths for files to be reopened at the next start " +
@@ -487,6 +493,7 @@ GlobalPrefs = [
 	Field("DefaultZoomFloat", Float, -1,
 		"value of DefaultZoom for internal usage",
 		internal=True),
+
 ]
 
 GlobalPrefs = Struct("GlobalPrefs", GlobalPrefs,
