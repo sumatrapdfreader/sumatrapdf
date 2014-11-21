@@ -10,7 +10,6 @@
 #include "BaseEngine.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Search.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -23,13 +22,14 @@
 #include "PdfEngine.h"
 #include "PdfSync.h"
 #include "resource.h"
-#include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Selection.h"
+#include "Search.h"
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific

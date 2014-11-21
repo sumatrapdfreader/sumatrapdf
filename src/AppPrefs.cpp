@@ -10,7 +10,6 @@
 #include "AppTools.h"
 #include "DebugLog.h"
 #include "EbookEngine.h"
-#include "Favorites.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
 #include "FileTransactions.h"
@@ -20,6 +19,7 @@
 #include "UITask.h"
 #include "EngineManager.h"
 #include "WindowInfo.h"
+#include "Favorites.h"
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
 

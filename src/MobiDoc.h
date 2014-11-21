@@ -1,10 +1,8 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-class EbookTocVisitor;
 class HuffDicDecompressor;
 class PdbReader;
-struct ImageData;
 
 enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
 

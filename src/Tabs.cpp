@@ -6,12 +6,10 @@
 #include <vssym32.h>
 #include "Dpi.h"
 #include "BaseEngine.h"
-#include "Tabs.h"
 #include "HtmlParserLookup.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
-#include "Caption.h"
 #include "ChmModel.h"
 #include "EngineManager.h"
 #include "DisplayModel.h"
@@ -21,12 +19,14 @@
 #include "FileWatcher.h"
 #include "GdiPlusUtil.h"
 #include "resource.h"
-#include "Menu.h"
 #include "SumatraPDF.h"
 #include "TableOfContents.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Tabs.h"
+#include "Caption.h"
+#include "Menu.h"
 
 static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 

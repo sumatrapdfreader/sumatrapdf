@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
-#include "Favorites.h"
 #include "Controller.h"
 #include "AppPrefs.h"
 #include "Dpi.h"
@@ -13,15 +12,16 @@
 #include "FileHistory.h"
 #include "LabelWithCloseWnd.h"
 #include "resource.h"
-#include "Menu.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
-#include "Tabs.h"
 #include "Translations.h"
 #include "UITask.h"
 #include "EngineManager.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Favorites.h"
+#include "Menu.h"
+#include "Tabs.h"
 
 Favorite *Favorites::GetByMenuId(int menuId, DisplayState **dsOut)
 {

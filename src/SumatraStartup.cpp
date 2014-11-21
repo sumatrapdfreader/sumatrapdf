@@ -42,7 +42,6 @@
 #include "Selection.h"
 #include "SplitterWnd.h"
 #include "SquareTreeParser.h"
-#include "StressTesting.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "ThreadUtil.h"
@@ -52,6 +51,7 @@
 #include "Version.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "StressTesting.h"
 
 // "SumatraPDF yellow" similar to the one use for icon and installer
 #define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
@@ -772,7 +772,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         // don't save file history and preference changes
         gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~Perm_SavePreferences;
         RebuildMenuBarForWindow(win);
-        StartStressTest(&i, win, &gRenderCache);
+        StartStressTest(&i, win);
     }
 
     if (gGlobalPrefs->checkForUpdates)

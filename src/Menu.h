@@ -20,8 +20,6 @@ struct MenuDef {
     int         flags;
 };
 
-class WindowInfo;
-
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter=0);
 HMENU BuildMenu(WindowInfo *win);
 void  OnContextMenu(WindowInfo* win, int x, int y);

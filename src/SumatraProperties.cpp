@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "SumatraProperties.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineManager.h"
@@ -14,6 +13,7 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "SumatraProperties.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX  8
 #define PROPERTIES_RECT_PADDING         8

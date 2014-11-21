@@ -35,8 +35,6 @@ public:
     HWND    hwndParent;
 };
 
-class WindowInfo;
-
 void OnMenuProperties(WindowInfo *win);
 void DeletePropertiesWindow(HWND hwndParent);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

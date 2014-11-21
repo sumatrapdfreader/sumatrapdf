@@ -8,8 +8,8 @@
 #include "ParseCommandLine.h"
 #include "AppPrefs.h"
 #include "CmdLineParser.h"
-#include "StressTesting.h"
 #include "SumatraPDF.h"
+#include "StressTesting.h"
 #include "WinUtil.h"
 
 #ifdef DEBUG

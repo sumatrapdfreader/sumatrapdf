@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "StressTesting.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -26,11 +25,12 @@
 #include "SimpleLog.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Search.h"
 #include "SumatraPDF.h"
 #include "Timer.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Search.h"
+#include "StressTesting.h"
 
 #define FIRST_STRESS_TIMER_ID 101
 
@@ -548,7 +548,6 @@ of PDFs before a release to make sure we're crash proof. */
 
 class StressTest {
     WindowInfo *      win;
-    RenderCache *     renderCache;
     Timer             currPageRenderTime;
     int               currPage;
     int               pageForSearchStart;
@@ -575,8 +574,8 @@ class StressTest {
     void Finished(bool success);
 
 public:
-    StressTest(WindowInfo *win, RenderCache *renderCache, bool exitWhenDone) :
-        win(win), renderCache(renderCache), currPage(0), pageForSearchStart(0),
+    StressTest(WindowInfo *win, bool exitWhenDone) :
+        win(win), currPage(0), pageForSearchStart(0),
         filesCount(0), cycles(1), fileIndex(0), fileProvider(NULL),
         exitWhenDone(exitWhenDone)
     {
@@ -807,7 +806,7 @@ void StressTest::OnTimer(int timerIdGot)
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
     DisplayModel *dm = win->AsFixed();
-    bool didRender = renderCache->Exists(dm, currPage, dm->GetRotation());
+    bool didRender = gRenderCache.Exists(dm, currPage, dm->GetRotation());
     if (!didRender && dm->ShouldCacheRendering(currPage)) {
         double timeInMs = currPageRenderTime.GetTimeInMs();
         if (timeInMs > 3.0 * 1000) {
@@ -914,7 +913,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     }
 }
 
-void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCache)
+void StartStressTest(CommandLineInfo *i, WindowInfo *win)
 {
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
@@ -960,7 +959,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         for (int j = 0; j < n; j++) {
             // dst will be deleted when the stress ends
             win = windows[j];
-            StressTest *dst = new StressTest(win, renderCache, i->exitWhenDone);
+            StressTest *dst = new StressTest(win, i->exitWhenDone);
             win->stressTest = dst;
             // divide filesToTest among each window
             FilesProvider *filesProvider = new FilesProvider(filesToTest, n, j);
@@ -970,7 +969,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         free(windows);
     } else {
         // dst will be deleted when the stress ends
-        StressTest *dst = new StressTest(win, renderCache, i->exitWhenDone);
+        StressTest *dst = new StressTest(win, i->exitWhenDone);
         win->stressTest = dst;
         dst->Start(i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
     }

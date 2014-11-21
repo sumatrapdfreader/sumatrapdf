@@ -14,8 +14,6 @@ enum EngineType {
         Engine_Chm2, Engine_Html, Engine_Txt,
 };
 
-class PasswordUI;
-
 namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEngines=true);

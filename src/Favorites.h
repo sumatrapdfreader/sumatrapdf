@@ -1,8 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class WindowInfo;
-
 /*
 A favorite is a bookmark (we call it a favorite, like Internet Explorer, to
 differentiate from bookmarks inside a PDF file (which really are

@@ -6,7 +6,6 @@
 #include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "BaseEngine.h"
-#include "Selection.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -20,6 +19,7 @@
 #include "uia/Provider.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Selection.h"
 #define NOLOG 0
 #include "DebugLog.h"
 

@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "MobiDoc.h"
 #include "BitReader.h"
 #include "ByteOrderDecoder.h"
 #include "EbookBase.h"
@@ -13,6 +12,7 @@
 #include "HtmlPullParser.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
+#include "MobiDoc.h"
 #include "DebugLog.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI

@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "Print.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -15,13 +14,14 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
-#include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Selection.h"
+#include "Print.h"
 
 struct PrintData {
     ScopedMem<WCHAR> driverName, printerName, portName;

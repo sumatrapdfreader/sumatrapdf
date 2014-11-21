@@ -1,8 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class WindowInfo;
-class Controller;
 struct WatchedFile;
 
 // This is the data, for every opened document, which is preserved between

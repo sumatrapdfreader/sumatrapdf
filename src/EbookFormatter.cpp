@@ -10,8 +10,8 @@
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
-#include "EbookDoc.h"
 #include "HtmlPullParser.h"
+#include "EbookDoc.h"
 #include "MobiDoc.h"
 
 /* Mobi-specific formatting methods */

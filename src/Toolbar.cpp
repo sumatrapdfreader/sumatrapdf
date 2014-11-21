@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "Dpi.h"
 #include "BaseEngine.h"
-#include "Toolbar.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -12,15 +11,16 @@
 #include "EngineManager.h"
 #include "DisplayModel.h"
 #include "resource.h"
-#include "Menu.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Search.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WinCursors.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "Search.h"
+#include "Menu.h"
+#include "Toolbar.h"
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */

@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "Dpi.h"
 #include "BaseEngine.h"
-#include "TableOfContents.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -20,6 +19,7 @@
 #include "EngineManager.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "TableOfContents.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS

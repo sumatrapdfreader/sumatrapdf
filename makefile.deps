@@ -229,8 +229,8 @@ $(OS)\Doc.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiG
 $(OS)\Doc.obj: $B\src\mui\MuiHwndWrapper.h $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h
 $(OS)\Doc.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\TextRender.h $B\src\utils\Allocator.h
 $(OS)\Doc.obj: $B\src\utils\ArchUtil.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OS)\Doc.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
-$(OS)\Doc.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\Doc.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\mingw_compat.h
+$(OS)\Doc.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\EbookController.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
 $(OS)\EbookController.obj: $B\src\Doc.h $B\src\EbookBase.h $B\src\EbookController.h
 $(OS)\EbookController.obj: $B\src\EbookControls.h $B\src\EbookDoc.h $B\src\HtmlFormatter.h

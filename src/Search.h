@@ -45,8 +45,6 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wparam, LPARAM lparam);
 #define HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS     100
 #define HIDE_FWDSRCHMARK_STEPS                   5
 
-class WindowInfo;
-
 bool NeedsFindUI(WindowInfo *win);
 void ClearSearchResult(WindowInfo *win);
 bool OnInverseSearch(WindowInfo *win, int x, int y);

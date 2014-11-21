@@ -7,11 +7,9 @@ void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
 void BenchEbookLayout(WCHAR *filePath);
 
-class WindowInfo;
-class RenderCache;
 class CommandLineInfo;
 
-void StartStressTest(CommandLineInfo *, WindowInfo *, RenderCache *);
+void StartStressTest(CommandLineInfo *i, WindowInfo *win);
 
 void OnStressTestTimer(WindowInfo *win, int timerId);
 void FinishStressTest(WindowInfo *win);

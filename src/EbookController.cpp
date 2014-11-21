@@ -17,9 +17,9 @@
 #include "EbookBase.h"
 #include "Mui.h"
 #include "EbookControls.h"
-#include "EbookDoc.h"
 #include "HtmlFormatter.h"
 #include "HtmlPullParser.h"
+#include "EbookDoc.h"
 #include "MobiDoc.h"
 #include "TrivialHtmlParser.h"
 //#define NOLOG 0

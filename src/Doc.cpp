@@ -6,11 +6,12 @@
 #include "BaseEngine.h"
 #include "Doc.h"
 #include "EbookBase.h"
-#include "EbookDoc.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
+#include "HtmlPullParser.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
+#include "EbookDoc.h"
 #include "MobiDoc.h"
 
 Doc::Doc(const Doc& other)

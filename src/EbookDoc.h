@@ -62,9 +62,6 @@ public:
 
 #define FB2_TOC_ENTRY_MARK "ToC!Entry!"
 
-class HtmlPullParser;
-struct HtmlToken;
-
 class Fb2Doc {
     ScopedMem<WCHAR> fileName;
     IStream *stream;

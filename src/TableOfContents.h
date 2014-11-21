@@ -1,8 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-class WindowInfo;
-
 void CreateToc(WindowInfo *win);
 void ClearTocBox(WindowInfo *win);
 void ToggleTocBox(WindowInfo *win);

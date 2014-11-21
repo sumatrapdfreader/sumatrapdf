@@ -5,10 +5,6 @@
 #define SMOOTHSCROLL_DELAY_IN_MS    20
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
-class WindowInfo;
-class DisplayModel;
-struct TextSel;
-
 /* Represents selected area on given page */
 class SelectionOnPage {
 public:

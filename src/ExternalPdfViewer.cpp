@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include "BaseEngine.h"
-#include "ExternalPdfViewer.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "AppPrefs.h"
@@ -13,6 +12,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "ExternalPdfViewer.h"
 
 static WCHAR *GetAcrobatPath()
 {
