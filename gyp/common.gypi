@@ -82,6 +82,9 @@
         # 'WarnAsError': 'true'
         #'EnablePREfast': 'true',
         #'AdditionalOptions': [ '/wd4800' ],
+        'AdditionalOptions': [
+           '/MP', # compile across multiple CPUs
+         ],
       },
       'VCLinkerTool': {
         'SubSystem': '2',   # Windows
