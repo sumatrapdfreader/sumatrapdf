@@ -2,7 +2,8 @@
   'target_defaults': {
     'configurations': {
       'Debug': {
-        'defines': [ '_DEBUG' ],
+        'defines': [ '_DEBUG', 'DEBUG' ],
+        'msbuild_toolset': 'v120_xp',
         'msvs_settings': {
           'VCCLCompilerTool': {
             'Optimization': '0',
@@ -12,6 +13,7 @@
       },
       'Release': {
         'defines': [ 'NDEBUG' ],
+        'msbuild_toolset': 'v120_xp',
         'msvs_settings': {
           'VCCLCompilerTool': {
             'InlineFunctionExpansion': 2, # AnySuitable
@@ -32,17 +34,42 @@
           },
         },
       },
+      'Release Analyze': {
+        'defines': [ 'NDEBUG' ],
+        # TODO: why I can't over-ride msbuild_toolset for a configuration?
+        # a bug in gyp
+        'msbuild_toolset': 'v120',
+        'msvs_settings': {
+          'VCCLCompilerTool': {
+            'InlineFunctionExpansion': 2, # AnySuitable
+            'EnableIntrinsicFunctions': 'true',
+            'EnableFunctionLevelLinking': 'true',
+            'FavorSizeOrSpeed': 1,      # Speed
+            'OmitFramePointers': 'true',
+            'Optimization': 2,          # MaxSpeed
+            'StringPooling': 'true',
+            'WholeProgramOptimization': 'true',
+            'RuntimeLibrary': '0',  # /MT
+            'EnablePREfast': 'true',
+          },
+          'VCLinkerTool': {
+            'EnableCOMDATFolding': 2,   # /OPT:ICF
+            'OptimizeReferences': 2,    # /OPT:REF
+            'LinkTimeCodeGeneration': 1,# UseLinkTimeCodeGeneration
+            'LinkIncremental': 1, # disable incremental linking
+          },
+        },
+      },
     },
     'defines': ['_WINDOWS', 'WINVER=0x0501', '_CRT_SECURE_NO_DEPRECATE'],
     'msvs_configuration_attributes': {
       'CharacterSet': '1',  # Unicode
     },
-    'msbuild_toolset': 'v120_xp',
     'msvs_cygwin_shell': 0, # TODO: don't know what that means
     'msvs_disabled_warnings': [4800],
     'msvs_settings': {
       'VCCLCompilerTool': {
-        'WarningLevel': 3,
+        'WarningLevel'  : 3,
         'OmitFramePointers': 'false',
         'DebugInformationFormat': 3, # Generate a PDB
         'BufferSecurityCheck': 'true',
