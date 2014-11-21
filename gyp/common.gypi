@@ -34,6 +34,33 @@
           },
         },
       },
+      # TODO: seems to work but not sure if is kosher, libuv seems
+      # to generate 2 solutions, one for 32bit and one for 64bit
+      # https://github.com/joyent/libuv
+      'Release 64': {
+        'defines': [ 'NDEBUG' ],
+        'msbuild_toolset': 'v120_xp',
+        'msvs_configuration_platform': 'x64',
+        'msvs_settings': {
+          'VCCLCompilerTool': {
+            'InlineFunctionExpansion': 2, # AnySuitable
+            'EnableIntrinsicFunctions': 'true',
+            'EnableFunctionLevelLinking': 'true',
+            'FavorSizeOrSpeed': 1,      # Speed
+            'OmitFramePointers': 'true',
+            'Optimization': 2,          # MaxSpeed
+            'StringPooling': 'true',
+            'WholeProgramOptimization': 'true',
+            'RuntimeLibrary': '0',  # /MT
+          },
+          'VCLinkerTool': {
+            'EnableCOMDATFolding': 2,   # /OPT:ICF
+            'OptimizeReferences': 2,    # /OPT:REF
+            'LinkTimeCodeGeneration': 1,# UseLinkTimeCodeGeneration
+            'LinkIncremental': 1, # disable incremental linking
+          },
+        },
+      },
       'Release Analyze': {
         'defines': [ 'NDEBUG' ],
         # TODO: why I can't over-ride msbuild_toolset for a configuration?
