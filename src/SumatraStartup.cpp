@@ -12,7 +12,6 @@
 #include "Dpi.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
 #include "SumatraPDF.h"
 #include "Controller.h"
 #include "AppPrefs.h"

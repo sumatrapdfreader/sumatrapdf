@@ -375,7 +375,6 @@
     <ClInclude Include="..\src\Controller.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
-    <ClInclude Include="..\src\DisplayState.h" />
     <ClInclude Include="..\src\Doc.h" />
     <ClInclude Include="..\src\ExternalPdfViewer.h" />
     <ClInclude Include="..\src\Favorites.h" />

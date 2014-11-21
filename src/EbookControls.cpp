@@ -13,7 +13,7 @@
 #include "BaseEngine.h"
 #include "EbookControls.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
+#include "Controller.h"
 #include "AppPrefs.h"
 #include "HtmlFormatter.h"
 #include "SerializeTxt.h"

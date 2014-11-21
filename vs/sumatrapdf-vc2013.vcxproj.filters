@@ -923,9 +923,6 @@
     <ClInclude Include="..\src\DisplayModel.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DisplayState.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Doc.h">
       <Filter>sumatra</Filter>
     </ClInclude>

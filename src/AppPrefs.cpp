@@ -5,7 +5,7 @@
 #include "BaseEngine.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
-#include "DisplayState.h"
+#include "Controller.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DebugLog.h"
@@ -18,7 +18,6 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "UITask.h"
-#include "Controller.h"
 #include "EngineManager.h"
 #include "WindowInfo.h"
 

@@ -5,7 +5,6 @@
 #include "Dict.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
 #include "Controller.h"
 #include "ChmModel.h"
 #include "AppPrefs.h" // for gGlobalPrefs

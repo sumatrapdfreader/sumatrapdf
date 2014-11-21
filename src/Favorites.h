@@ -47,6 +47,3 @@ void PopulateFavTreeIfNeeded(WindowInfo *win);
 void RememberFavTreeExpansionStateForAllWindows();
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
 void UpdateFavoritesTreeForAllWindows();
-
-Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
-void DeleteFavorite(Favorite *fav);

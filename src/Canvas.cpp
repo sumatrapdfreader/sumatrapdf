@@ -15,7 +15,6 @@
 #include "DisplayModel.h"
 #include "WindowInfo.h"
 #include "Canvas.h"
-#include "DisplayState.h"
 #include "AppPrefs.h"
 #include "Caption.h"
 #include "Doc.h"

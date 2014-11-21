@@ -890,10 +890,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\DisplayState.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\EbookController.cpp"
 					>
 				</File>

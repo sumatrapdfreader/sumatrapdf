@@ -11,6 +11,12 @@ enum {
 
 extern GlobalPrefs *gGlobalPrefs;
 
+Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
+void DeleteFavorite(Favorite *fav);
+
+DisplayState *NewDisplayState(const WCHAR *filePath);
+void DeleteDisplayState(DisplayState *ds);
+
 namespace prefs {
 
 WCHAR *GetSettingsPath();

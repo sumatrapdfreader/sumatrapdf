@@ -6,7 +6,8 @@ License: GPLv3 */
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
-#include "DisplayState.h"
+#include "Controller.h"
+#include "AppPrefs.h"
 
 /* Handling of file history list.
 

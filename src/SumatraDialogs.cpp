@@ -5,7 +5,7 @@
 #include "BaseEngine.h"
 #include "SumatraDialogs.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
+#include "Controller.h"
 #include "AppTools.h"
 #include "DialogSizer.h"
 #include "resource.h"

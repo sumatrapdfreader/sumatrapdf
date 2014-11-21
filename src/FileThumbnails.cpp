@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
-#include "DisplayState.h"
 #include "FileUtil.h"
 #include "FileHistory.h"
 #include "FileThumbnails.h"
