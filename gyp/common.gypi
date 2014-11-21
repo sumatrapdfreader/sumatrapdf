@@ -51,6 +51,8 @@
         #'FavorSizeOrSpeed': 1, # /Ot, favour speed over size
         #'InlineFunctionExpansion': 2, # /Ob2, inline anything eligible
         # 'ExceptionHandling': '2',  # /EHsc
+        # 'WarnAsError': 'true'
+        'AdditionalOptions': [ '/wd4800' ],
       },
       'VCLinkerTool': {
         'SubSystem': '2',   # Windows
