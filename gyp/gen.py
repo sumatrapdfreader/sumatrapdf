@@ -18,8 +18,9 @@ if __name__ == '__main__':
 
     # TODO: other possible args:
     # --depth=build\ia32 -f msvs -I common.gypi --generator-output=build\ia32 -G msvs_version=2012 -Dtarget_arch=ia32 -Dhost_arch=ia32
-    args = ["-G", "msvs_version=2013"]
-
-
-
+    # -f:
+    #   msvs - generates .sln VS solution
+    #   ninja - generates ninja makefile
+    #   msvs-ninja - generates .sln VS solution that call ninja for the build
+    args = ["-G", "msvs_version=2013", "-f", "msvs"]
     gyp.main(args)
