@@ -2185,12 +2185,14 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     // hide the window before saving prefs (closing seems slightly faster that way)
     if (lastWindow && quitIfLast && !forceClose)
         ShowWindow(win->hwndFrame, SW_HIDE);
-    if (lastWindow)
+    if (lastWindow) {
+        TabsOnCloseWindow(win);
         prefs::Save();
-    else
+    }
+    else {
         UpdateCurrentFileDisplayStateForWin(win);
-
-    TabsOnCloseWindow(win);
+        TabsOnCloseWindow(win);
+    }
 
     if (forceClose) {
         // WM_DESTROY has already been sent, so don't destroy win->hwndFrame again

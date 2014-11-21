@@ -61,10 +61,13 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
             lzma_size = outSize + LZMA_HEADER_SIZE;
     }
 
-    *compressedSize = std::min(lzma_size, uncompressedSize + 1);
-    if (*compressedSize < lzma_size) {
+    if (lzma_size <= uncompressedSize) {
+        *compressedSize = lzma_size;
+    }
+    else {
         compressed[0] = (uint8_t)-1;
         memcpy(compressed + 1, uncompressed, uncompressedSize);
+        *compressedSize = uncompressedSize + 1;
     }
 
     return true;
