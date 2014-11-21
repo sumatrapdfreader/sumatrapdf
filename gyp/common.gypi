@@ -20,7 +20,6 @@
             'FavorSizeOrSpeed': 1,      # Speed
             'OmitFramePointers': 'true',
             'Optimization': 2,          # MaxSpeed
-            'RuntimeTypeInfo': 'false',
             'StringPooling': 'true',
             'WholeProgramOptimization': 'true',
             'RuntimeLibrary': '0',  # /MT
@@ -40,19 +39,22 @@
     },
     'msbuild_toolset': 'v120_xp',
     'msvs_cygwin_shell': 0, # TODO: don't know what that means
+    'msvs_disabled_warnings': [4800],
     'msvs_settings': {
       'VCCLCompilerTool': {
         'WarningLevel': 3,
         'OmitFramePointers': 'false',
         'DebugInformationFormat': 3, # Generate a PDB
         'BufferSecurityCheck': 'true',
+        'RuntimeTypeInfo': 'false',
         #'EnableIntrinsicFunctions': 'false'
         #'BasicRuntimeChecks': 3, # /RTC1
         #'FavorSizeOrSpeed': 1, # /Ot, favour speed over size
         #'InlineFunctionExpansion': 2, # /Ob2, inline anything eligible
         # 'ExceptionHandling': '2',  # /EHsc
         # 'WarnAsError': 'true'
-        'AdditionalOptions': [ '/wd4800' ],
+        #'EnablePREfast': 'true',
+        #'AdditionalOptions': [ '/wd4800' ],
       },
       'VCLinkerTool': {
         'SubSystem': '2',   # Windows
