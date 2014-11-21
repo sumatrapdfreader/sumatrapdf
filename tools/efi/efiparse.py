@@ -202,7 +202,7 @@ class ParseState(object):
 
 def parse_start(state):
 	l = state.readline()
-	if len(l) == 0:
+	if l is None or len(l) == 0:
 		return None
 	assert l == "Format: 1", "unexpected line: '%s'" % l
 	return parse_next_section

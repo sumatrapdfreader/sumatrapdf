@@ -482,6 +482,16 @@ def email_tests_failed(ver, err):
     util.sendmail(sender, senderpwd, g_email_to, subject, body)
 
 
+def email_msg(msg):
+    c = load_config()
+    if not c.HasNotifierEmail():
+        print("email_build_failed() not ran because not c.HasNotifierEmail()")
+        return
+    sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
+    subject = "SumatraPDF buildbot failed"
+    util.sendmail(sender, senderpwd, ["kkowalczyk@gmail.com"], subject, msg)
+
+
 def email_build_failed(ver):
     s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
@@ -660,4 +670,9 @@ def main():
     buildbot_loop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception, e:
+        msg = "buildbot failed\nException: " + str(e) + "\n"
+        email_msg(msg)
+
