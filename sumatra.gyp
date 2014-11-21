@@ -1,4 +1,6 @@
 {
+    'includes': ['gyp/common.gypi'],
+
     'variables': {
     },
 
@@ -8,7 +10,7 @@
             'type': 'executable',
 
             'include_dirs': [
-                'src/utils'
+                'src/utils',
             ],
             'sources': [
               "src/AppUtil.h",
@@ -83,22 +85,35 @@
               "src/mui/SvgPath.h",
               "src/mui/SvgPath.cpp",
               "src/mui/SvgPath_ut.cpp",
-              "tools/tests/UnitMain.cpp"
+              "tools/tests/UnitMain.cpp",
             ],
             'defines': [
                 'NO_LIBMUPDF'
             ],
             'link_settings': {
-                # TODO: why do I need ';' in libraries?
-                # that's not how examples look like
                 'libraries': [
-                    'gdiplus.lib;'
-                    'comctl32.lib;'
-                    'shlwapi.lib;'
-                    'Version.lib;'
-                    '%(AdditionalDependencies)'
+                    'gdiplus.lib',
+                    'comctl32.lib',
+                    'shlwapi.lib',
+                    'Version.lib',
+                    'user32.lib',
+                    'kernel32.lib',
+                    'gdi32.lib',
+                    'ole32.lib',
+                    'advapi32.lib',
+                    'shell32.lib',
+                    'oleaut32.lib',
+                    'winspool.lib',
+
                 ]
-            }
-        }
-    ]
+            },
+            'msvs_settings':
+            {
+              'VCLinkerTool':
+              {
+                'SubSystem': '1',   # Console
+              },
+            },
+        },
+    ],
 }

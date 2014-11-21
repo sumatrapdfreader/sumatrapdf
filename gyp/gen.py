@@ -11,7 +11,15 @@ sys.path.append(gyp_dir)
 
 import gyp
 
+
 if __name__ == '__main__':
     # TODO: set the right generators, it seems to default to msvc
     print("Generating sumatra.sln from sumatra.gyp")
-    sys.exit(gyp.script_main())
+
+    # TODO: other possible args:
+    # --depth=build\ia32 -f msvs -I common.gypi --generator-output=build\ia32 -G msvs_version=2012 -Dtarget_arch=ia32 -Dhost_arch=ia32
+    args = ["-G", "msvs_version=2013"]
+
+
+
+    gyp.main(args)
