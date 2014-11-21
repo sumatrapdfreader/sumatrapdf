@@ -62,7 +62,10 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
     } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
     } else {
+#pragma warning(push)
+#pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the specification for the function 'SHDeleteValueW'
         SHDeleteValue(hkey, REG_CLASSES_PDF, NULL);
+#pragma warning(pop)
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf

@@ -555,15 +555,14 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         return;
 
     PageElement *pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
-    ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
-    // TODO: this assertion doesn't prevent /analyze from assuming that value && !pageEl might be possible below
-    CrashIf(value && !pageEl);
-    RenderedBitmap *bmp = NULL;
+    ScopedMem<WCHAR> value;
+    if (pageEl)
+        value.Set(pageEl->GetValue());
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!value || pageEl->GetType() != Element_Link)
+    if (!pageEl || pageEl->GetType() != Element_Link || !value)
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
-    if (!value || pageEl->GetType() != Element_Comment)
+    if (!pageEl || pageEl->GetType() != Element_Comment || !value)
         win::menu::Remove(popup, IDM_COPY_COMMENT);
     if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
@@ -595,7 +594,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
 
     case IDM_COPY_IMAGE:
         if (pageEl) {
-            bmp = pageEl->GetImage();
+            RenderedBitmap *bmp = pageEl->GetImage();
             if (bmp)
                 CopyImageToClipboard(bmp->GetBitmap());
             delete bmp;

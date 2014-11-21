@@ -317,23 +317,22 @@ IRawElementProviderFragment* SumatraUIAutomationProvider::GetElementFromPoint(do
 
     // check the children
     IRawElementProviderFragment* it;
-    root->Navigate(NavigateDirection_FirstChild,&it);
+    HRESULT hr = root->Navigate(NavigateDirection_FirstChild, &it);
 
-    while (it) {
+    while (SUCCEEDED(hr) && it) {
         UiaRect rect;
-        it->get_BoundingRectangle(&rect);
+        hr = it->get_BoundingRectangle(&rect);
 
         // step into
-        if (rect.left <= x && x <= rect.left+rect.width &&
-            rect.top <= y && y <= rect.top+rect.height) {
-            IRawElementProviderFragment* leaf = GetElementFromPoint(x,y,it);
+        if (SUCCEEDED(hr) && rect.left <= x && x <= rect.left + rect.width && rect.top <= y && y <= rect.top + rect.height) {
+            IRawElementProviderFragment* leaf = GetElementFromPoint(x, y, it);
             it->Release();
             return leaf;
         }
 
         // go to next element, release old one
         IRawElementProviderFragment* old_it = it;
-        old_it->Navigate(NavigateDirection_NextSibling,&it);
+        hr = old_it->Navigate(NavigateDirection_NextSibling, &it);
         old_it->Release();
     }
 

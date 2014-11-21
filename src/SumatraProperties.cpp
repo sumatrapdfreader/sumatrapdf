@@ -269,8 +269,9 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     int leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
+        const WCHAR *txt = el->leftTxt;
         RECT rc = { 0 };
-        DrawText(hdc, el->leftTxt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
 
@@ -285,8 +286,9 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     int textDy = 0;
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
+        const WCHAR *txt = el->rightTxt;
         RECT rc = { 0 };
-        DrawText(hdc, el->rightTxt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
+        DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->rightPos.dx = rc.right - rc.left;
         el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
         textDy += el->rightPos.dy;
@@ -492,19 +494,21 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SelectObject(hdc, fontLeftTxt);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
+        const WCHAR *txt = el->leftTxt;
         rTmp = el->leftPos.ToRECT();
-        DrawText(hdc, el->leftTxt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
+        DrawText(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
+        const WCHAR *txt = el->rightTxt;
         RectI rc = el->rightPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
         rTmp = rc.ToRECT();
-        DrawText(hdc, el->rightTxt, -1, &rTmp, DT_LEFT | DT_PATH_ELLIPSIS | DT_NOPREFIX);
+        DrawText(hdc, txt, -1, &rTmp, DT_LEFT | DT_PATH_ELLIPSIS | DT_NOPREFIX);
     }
 
     SelectObject(hdc, origFont);

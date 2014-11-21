@@ -1577,7 +1577,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
 
-    int pageCount = win->IsDocLoaded() ? win->ctrl->PageCount() : 0;
+    int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
     UpdateToolbarPageText(win, pageCount);
     if (pageCount > 0)
         UpdateToolbarFindText(win);
@@ -1588,7 +1588,7 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     else
         SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
-    bool enable = !win->IsDocLoaded() || !win->ctrl->HasPageLabels();
+    bool enable = !win->ctrl || !win->ctrl->HasPageLabels();
     ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
     if (win->AsFixed()) {

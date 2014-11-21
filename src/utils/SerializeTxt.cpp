@@ -32,17 +32,21 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)data;
             FreeStruct(*p, GetStructDef(fieldDef));
+            *p = NULL;
         } else if (TYPE_ARRAY == type) {
             Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
             Vec<uint8_t*> *vec = *vecPtr;
+            CrashIf(!vec);
             for (size_t j = 0; j < vec->Count(); j++) {
                 FreeStruct(vec->At(j), GetStructDef(fieldDef));
             }
             delete vec;
+            *vecPtr = NULL;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)data;
             char *s = *sp;
             free(s);
+            *sp = NULL;
         }
     }
     free(structStart);
