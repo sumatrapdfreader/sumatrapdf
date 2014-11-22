@@ -8,6 +8,7 @@
         'gyp/freetype.gyp',
         'gyp/libwebp.gyp',
         'gyp/djvu.gyp',
+        'gyp/bzip2.gyp',
     ],
 
     'variables': {
@@ -136,6 +137,7 @@
                 "freetype",
                 "libwebp",
                 "djvu",
+                "bzip2",
             ],
             'include_dirs': [
                 'ext/zlib',
