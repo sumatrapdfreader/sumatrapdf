@@ -7,6 +7,7 @@
         'gyp/jbig2dec.gyp',
         'gyp/freetype.gyp',
         'gyp/libwebp.gyp',
+        'gyp/djvu.gyp',
     ],
 
     'variables': {
@@ -134,6 +135,7 @@
                 "jbig2dec",
                 "freetype",
                 "libwebp",
+                "djvu",
             ],
             'include_dirs': [
                 'ext/zlib',
@@ -143,6 +145,7 @@
                 "ext/jbig2dec",
                 "ext/lzma/C",
                 'ext/libwebp',
+                "ext/libdjvu",
             ],
             'sources': [
               "gyp/dummy_main.cpp",

@@ -88,9 +88,11 @@
         },
       },
     },
-    'defines': ['_WINDOWS', 'WINVER=0x0501', '_CRT_SECURE_NO_DEPRECATE'],
+    'defines': ['_WINDOWS', 'WINVER=0x0501', '_WIN32_WINNT=0x0501', 'WIN32',
+      '_CRT_SECURE_NO_DEPRECATE'],
     'msvs_configuration_attributes': {
-      'CharacterSet': '1',  # Unicode
+      #TODO: setting this break libdjvu
+      #'CharacterSet': '1',  # Unicode
     },
     'msvs_cygwin_shell': 0, # TODO: don't know what that means
     'msvs_disabled_warnings': [4800],
@@ -109,9 +111,7 @@
         # 'WarnAsError': 'true'
         #'EnablePREfast': 'true',
         #'AdditionalOptions': [ '/wd4800' ],
-        'AdditionalOptions': [
-           '/MP', # compile across multiple CPUs
-         ],
+        #'AdditionalOptions': [ '/MP', # compile across multiple CPUs ],
       },
       'VCLinkerTool': {
         'SubSystem': '2',   # Windows
