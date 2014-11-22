@@ -1,5 +1,5 @@
 {
-    'includes': ['gyp/common.gypi'],
+    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp'],
 
     'variables': {
     },
@@ -104,7 +104,6 @@
                     'shell32.lib',
                     'oleaut32.lib',
                     'winspool.lib',
-
                 ]
             },
             'msvs_settings':
@@ -115,5 +114,34 @@
               },
             },
         },
+
+        {
+            'target_name': 'dummy_test',
+            'type': 'executable',
+
+            'dependencies': [ "zlib" ],
+
+            'include_dirs': [
+                'src/zlib',
+            ],
+            'sources': [
+              "gyp/dummy_main.cpp",
+            ],
+            'defines': [
+            ],
+            'link_settings': {
+                'libraries': [
+                ]
+            },
+            'msvs_settings':
+            {
+              'VCLinkerTool':
+              {
+                'SubSystem': '1',   # Console
+              },
+            },
+        },
+
+
     ],
 }
