@@ -5,6 +5,7 @@
         'gyp/openjpeg.gyp',
         'gyp/lzma.gyp',
         'gyp/jbig2dec.gyp',
+        'gyp/freetype.gyp',
     ],
 
     'variables': {
@@ -130,6 +131,7 @@
                 "openjpeg",
                 "lzma",
                 "jbig2dec",
+                "freetype",
             ],
             'include_dirs': [
                 'src/zlib',
