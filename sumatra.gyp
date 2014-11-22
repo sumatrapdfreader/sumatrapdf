@@ -6,6 +6,7 @@
         'gyp/lzma.gyp',
         'gyp/jbig2dec.gyp',
         'gyp/freetype.gyp',
+        'gyp/libwebp.gyp',
     ],
 
     'variables': {
@@ -132,10 +133,16 @@
                 "lzma",
                 "jbig2dec",
                 "freetype",
+                "libwebp",
             ],
             'include_dirs': [
-                'src/zlib',
-                'src/openjpeg',
+                'ext/zlib',
+                "ext/freetype2/config",
+                "ext/freetype2/include",
+                'ext/openjpeg',
+                "ext/jbig2dec",
+                "ext/lzma/C",
+                'ext/libwebp',
             ],
             'sources': [
               "gyp/dummy_main.cpp",
