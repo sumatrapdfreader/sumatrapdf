@@ -1,5 +1,5 @@
 {
-    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp', 'gyp/openjpeg.gyp'],
+    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp', 'gyp/openjpeg.gyp', 'gyp/lzma.gyp'],
 
     'variables': {
     },
@@ -122,6 +122,7 @@
             'dependencies': [
                 "zlib",
                 "openjpeg",
+                "lzma",
             ],
             'include_dirs': [
                 'src/zlib',

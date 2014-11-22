@@ -63,9 +63,9 @@
       },
       'Release Analyze': {
         'defines': [ 'NDEBUG' ],
-        # TODO: why I can't over-ride msbuild_toolset for a configuration?
-        # a bug in gyp
-        'msbuild_toolset': 'v120',
+        # TODO: msbuild_toolset seems to be per-project, so I might need
+        # to generate a separate solution/project just for analyze
+        'msbuild_toolset': 'v120_xp',
         'msvs_settings': {
           'VCCLCompilerTool': {
             'InlineFunctionExpansion': 2, # AnySuitable
