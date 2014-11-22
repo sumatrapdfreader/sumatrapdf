@@ -1,5 +1,11 @@
 {
-    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp', 'gyp/openjpeg.gyp', 'gyp/lzma.gyp'],
+    'includes': [
+        'gyp/common.gypi',
+        'gyp/zlib.gyp',
+        'gyp/openjpeg.gyp',
+        'gyp/lzma.gyp',
+        'gyp/jbig2dec.gyp',
+    ],
 
     'variables': {
     },
@@ -123,6 +129,7 @@
                 "zlib",
                 "openjpeg",
                 "lzma",
+                "jbig2dec",
             ],
             'include_dirs': [
                 'src/zlib',
