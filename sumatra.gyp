@@ -1,5 +1,5 @@
 {
-    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp'],
+    'includes': ['gyp/common.gypi', 'gyp/zlib.gyp', 'gyp/openjpeg.gyp'],
 
     'variables': {
     },
@@ -119,10 +119,13 @@
             'target_name': 'dummy_test',
             'type': 'executable',
 
-            'dependencies': [ "zlib" ],
-
+            'dependencies': [
+                "zlib",
+                "openjpeg",
+            ],
             'include_dirs': [
                 'src/zlib',
+                'src/openjpeg',
             ],
             'sources': [
               "gyp/dummy_main.cpp",
