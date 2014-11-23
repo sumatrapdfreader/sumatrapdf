@@ -10,6 +10,7 @@
         'gyp/djvu.gyp',
         'gyp/bzip2.gyp',
         'ext/libjpeg-turbo/libjpeg.gyp',
+        'gyp/chmlib.gyp',
     ],
 
     'variables': {
@@ -141,6 +142,7 @@
                 "djvu",
                 "bzip2",
                 "libjpeg",
+                "chmlib",
             ],
             'include_dirs': [
                 'ext/zlib',

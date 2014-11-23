@@ -1,0 +1,7 @@
+1. if A depends on B, B's direct_dependent_settings is what is added to A.
+Useful e.g. to only define include_dirs on B and have it inherited by A.
+
+2. msbuild_toolset seems to be per-project. What that means we can't
+have /analyze target alongside with regular targets because /analyze
+doesn't work it xp toolset and regular build requires xp toolset.
+We'll probably need a separate solution for that.
