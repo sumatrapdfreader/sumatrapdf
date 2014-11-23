@@ -159,6 +159,13 @@
               [ 'target_arch=="ia32"', {
                 'nasm_flags': [
                   '-f', 'win32',
+                  # TODO: chrome version had equivalent of -I win
+                  # but it seems like rules is executed in top-level directory
+                  # so paths must be relative to it as well
+                  # Note: /// looks stupid but is necessary so that gyp generates:
+                  # "-I" "ext/libjpeg-turbo/win/"
+                  # as cmd-line args to nasm because nasm insists on "-I win/" and
+                  # doesn't work if it's just "-I win". We could switch to yasm
                   '-I', 'ext/libjpeg-turbo/win///',
                 ],
               }, {
