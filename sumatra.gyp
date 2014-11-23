@@ -9,9 +9,11 @@
         'gyp/libwebp.gyp',
         'gyp/djvu.gyp',
         'gyp/bzip2.gyp',
+        'ext/libjpeg-turbo/libjpeg.gyp',
     ],
 
     'variables': {
+        'nasm_dir': 'bin',
     },
 
     'targets': [
@@ -138,6 +140,7 @@
                 "libwebp",
                 "djvu",
                 "bzip2",
+                "libjpeg",
             ],
             'include_dirs': [
                 'ext/zlib',

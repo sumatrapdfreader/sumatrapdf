@@ -1,4 +1,7 @@
 {
+  'variables': {
+    'target_arch%': 'ia32', # x64 for 64-bit build
+  },
   'target_defaults': {
     'configurations': {
       'Debug': {
