@@ -6,6 +6,11 @@
             'include_dirs': [
                 "../ext/zlib",
             ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/zlib",
+                ],
+            },
             'msvs_disabled_warnings': [4996],
             'sources': [
                 "../ext/zlib/adler32.c",

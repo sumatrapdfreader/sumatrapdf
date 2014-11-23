@@ -3,13 +3,13 @@
         {
             'target_name': 'chmlib',
             'type': 'static_library',
-            'include_dirs': [
-                "../ext/CHMLib",
-            ],
             'defines': [
                 'PPC_BSTR',
                 'UNICODE',
                 '_UNICODE',
+            ],
+            'include_dirs': [
+                "../ext/CHMLib",
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
