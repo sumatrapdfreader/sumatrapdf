@@ -17,6 +17,7 @@
         'ext/libjpeg-turbo/libjpeg.gyp',
         'gyp/chmlib.gyp',
         'gyp/utils.gyp',
+        'gyp/unarr.gyp',
     ],
 
     'targets': [
@@ -36,6 +37,7 @@
                 "libjpeg",
                 "chmlib",
                 "utils",
+                "unarr",
             ],
             'include_dirs': [
                 "ext/freetype2/config",
