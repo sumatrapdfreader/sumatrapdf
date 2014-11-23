@@ -158,9 +158,15 @@ OPENJPEG_CFLAGS = $(CFLAGS) /TC /I$(OPENJPEG_DIR) /wd4244 /wd4996
 JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4245 /wd4996
 !if "$(PLATFORM)"=="X64"
-JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win64 -D__x86_64__ -DWIN64 -DMSVC
+JPEG_TURBO_NASM_FLAGS = -D__x86_64__ -DWIN64 -DMSVC -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win64
 !else
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win32
+!endif
+
+!if "$(PLATFORM)"=="X64"
+MUPDF_NASM_FLAGS = -D__x86_64__ -DWIN64 -DMSVC -I $(MUPDF_DIR)\ -f win64
+!else
+MUPDF_NASM_FLAGS = -I $(MUPDF_DIR)\ -f win32
 !endif
 
 # disable warning C4703: potentially uninitialized local variable (affects VS2012 and later)
@@ -287,7 +293,8 @@ MUPDF_OBJS = \
 	$(OP)\pdf-unicode.obj $(OP)\pdf-write.obj $(OP)\pdf-xobject.obj $(OP)\pdf-xref-aux.obj \
 	$(OP)\pdf-xref.obj $(OP)\pdf-js-none.obj $(OP)\pdf-appearance.obj \
 	$(OP)\pdf-run.obj $(OP)\pdf-op-run.obj $(OP)\pdf-op-buffer.obj $(OP)\pdf-op-filter.obj \
-	$(OP)\pdf-clean.obj $(OP)\pdf-annot-edit.obj
+	$(OP)\pdf-clean.obj $(OP)\pdf-annot-edit.obj \
+	$(OP)\font_base14.obj
 
 MUXPS_OBJS = \
 	$(OX)\xps-common.obj $(OX)\xps-doc.obj $(OX)\xps-glyphs.obj $(OX)\xps-gradient.obj \
@@ -424,6 +431,9 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 
 {$(MUPDF_DIR)\source\tiff}.c{$(OX)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
+
+{$(MUPDF_DIR)}.asm{$(OP)}.obj:
+	$(NASM) $(MUPDF_NASM_FLAGS) -o $@ $<
 
 # files that might have to be generated first:
 
