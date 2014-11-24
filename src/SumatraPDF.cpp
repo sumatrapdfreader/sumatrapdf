@@ -1837,15 +1837,15 @@ Portable [
 # Signature sha1:<SHA-1 signature to be verified using IDD_PUBLIC_APP_KEY>
 */
 
-static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
+static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp *rsp, bool silent)
 {
-    if (ctx->rsp.error)
-        return ctx->rsp.error;
-    if (ctx->rsp.httpStatusCode != 200)
+    if (rsp->error != 0)
+        return rsp->error;
+    if (rsp->httpStatusCode != 200)
         return ERROR_INTERNET_INVALID_URL;
-    if (!str::StartsWith(ctx->url, SUMATRA_UPDATE_INFO_URL))
+    if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
-    str::Str<char> *data = &ctx->rsp.data;
+    str::Str<char> *data = &rsp->data;
     if (0 == data->Size())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
@@ -1913,47 +1913,20 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     return 0;
 }
 
-static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
+
+// prevent multiple update tasks from happening simultaneously
+// (this might e.g. happen if a user checks manually very quickly after startup)
+bool gUpdateTaskInProgress = false;
+
+static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp *rsp, bool autoCheck)
 {
-    DWORD error = ShowAutoUpdateDialog(hwnd, req, autoCheck);
+    DWORD error = ShowAutoUpdateDialog(hwnd, rsp, autoCheck);
     if (error != 0 && !autoCheck) {
         // notify the user about network error during a manual update check
         ScopedMem<WCHAR> msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
         MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
     }
 }
-
-// prevent multiple update tasks from happening simultaneously
-// (this might e.g. happen if a user checks manually very quickly after startup)
-class UpdateDownloadTask;
-static UpdateDownloadTask *gUpdateTaskInProgress = NULL;
-
-class UpdateDownloadTask : public UITask, public HttpReqCallback
-{
-    WindowInfo *win;
-    bool        autoCheck;
-    HttpReq *   req;
-
-public:
-    UpdateDownloadTask(WindowInfo *win, bool autoCheck) :
-        win(win), autoCheck(autoCheck), req(NULL) { }
-    virtual ~UpdateDownloadTask() { delete req; }
-
-    virtual void Callback(HttpReq *aReq) {
-        req = aReq;
-        uitask::Post(this);
-    }
-
-    virtual void Execute() {
-        gUpdateTaskInProgress = NULL;
-        if (req && WindowInfoStillValid(win))
-            ProcessAutoUpdateCheckResult(win->hwndFrame, req, autoCheck);
-    }
-
-    void DisableAutoCheck() {
-        autoCheck = false;
-    }
-};
 
 // start auto-update check by downloading auto-update information from url
 // on a background thread and processing the retrieved data on ui thread
@@ -1987,15 +1960,18 @@ void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
 
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
     if (gUpdateTaskInProgress) {
-        gUpdateTaskInProgress->DisableAutoCheck();
-        CrashIf(autoCheck);
         return;
     }
-
+    gUpdateTaskInProgress = true;
+    HWND hwnd = win->hwndFrame;
     const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
-    gUpdateTaskInProgress = new UpdateDownloadTask(win, autoCheck);
-    // HttpReq is later passed to UpdateDownloadTask for ownership
-    new HttpReq(url, gUpdateTaskInProgress);
+    HttpGetAsync(url, [=](HttpRsp* rsp) {
+        gUpdateTaskInProgress = false;
+        uitask::Post([=] {
+            ProcessAutoUpdateCheckResult(hwnd, rsp, autoCheck);
+            delete rsp;
+        });
+    });
 }
 
 static void RerenderEverything()

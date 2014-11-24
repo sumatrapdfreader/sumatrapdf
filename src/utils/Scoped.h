@@ -7,22 +7,26 @@
 template <typename T>
 class ScopedMem
 {
-    T *obj;
+    T *a;
 public:
-    ScopedMem() : obj(NULL) {}
-    explicit ScopedMem(T* obj) : obj(obj) {}
-    ~ScopedMem() { free(obj); }
-    void Set(T *o) {
-        free(obj);
-        obj = o;
+    ScopedMem() : a(NULL) {}
+    explicit ScopedMem(T* a) : a(a) {}
+    ~ScopedMem() { free(a); }
+    void Set(T *na) {
+        free(a);
+        a = na;
     }
-    T *Get() const { return obj; }
+    ScopedMem& operator = (T* oa) {
+        Set(oa);
+        return *this;
+    }
+    T *Get() const { return a; }
     T *StealData() {
-        T *tmp = obj;
-        obj = NULL;
+        T *tmp = a;
+        a = NULL;
         return tmp;
     }
-    operator T*() const { return obj; }
+    operator T*() const { return a; }
 };
 
 class ScopedCritSec

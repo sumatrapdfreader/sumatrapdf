@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include <Wininet.h>
+#include <memory>
+#include <thread>
 #include "HttpUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -196,28 +198,31 @@ Exit:
     return ok;
 }
 
-DWORD WINAPI HttpReq::DownloadThread(LPVOID data)
-{
-    HttpReq *req = (HttpReq *)data;
-    HttpGet(req->url, &req->rsp);
-    req->callback->Callback(req);
-    return 0;
+// callback function f is responsible for deleting HttpRsp
+void HttpGetAsync(const WCHAR *url, const std::function<void(HttpRsp *)> &f) {
+    std::thread t([=] {
+        auto rsp = new HttpRsp;
+        rsp->url = str::Dup(url);
+        HttpGet(url, rsp);
+        f(rsp);
+    });
+    t.detach();
 }
 
-HttpReq::HttpReq(const WCHAR *url, HttpReqCallback *callback) :
-    thread(NULL), callback(callback),
-    url(str::Dup(url))
-{
-    assert(url);
-
-    if (callback)
-        thread = CreateThread(NULL, 0, DownloadThread, this, 0, 0);
-    else
-        HttpGet(url, &rsp);
+#if 0
+// returns false if failed to download or status code is not 200
+// for other scenarios, check HttpRsp
+static bool  HttpGet(const char *url, HttpRsp *rspOut) {
+    ScopedMem<WCHAR> urlW(str::conv::FromUtf8(url));
+    return HttpGet(urlW, rspOut);
 }
 
-HttpReq::~HttpReq()
-{
-    CloseHandle(thread);
-    free(url);
+void HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &f) {
+    std::thread t([=] {
+        auto rsp = new HttpRsp;
+        HttpGet(url, rsp.get());
+        f(rsp.get());
+    });
+    t.detach();
 }
+#endif
