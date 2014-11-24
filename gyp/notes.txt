@@ -10,7 +10,6 @@ We'll probably need a separate solution for that.
 into a single project (instead of 8 or so)
 
 TODO:
-* get SumatraPDF to compile
 * add dlls
 * add installer
 * sumatra with libmupdf.dll

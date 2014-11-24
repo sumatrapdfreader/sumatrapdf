@@ -1,9 +1,4 @@
 {
-    'includes': [
-        # TODO: fishy, I depend on it but can't include it twice?
-        # (is also included by mupdf)
-        #'libjpeg.gyp',
-    ],
     'targets': [
         {
             'target_name': 'djvu',
@@ -12,7 +7,11 @@
             'include_dirs': [
                 "../ext/libjpeg-turbo",
             ],
-            # TODO: make it dependent of libjpeg-turbo?
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/libdjvu",
+                ],
+            },
             'defines': [
                 'NEED_JPEG_DECODER',
                 'THREADMODEL=0',

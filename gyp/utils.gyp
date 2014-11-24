@@ -3,13 +3,15 @@
         {
             'target_name': 'utils',
             'type': 'static_library',
+            'dependencies': [
+                'lzma',
+                'zlib',
+                'unarr',
+            ],
             'include_dirs': [
                 "../src/utils",
-                "../ext/unarr",
                 "../mupdf/include",
-                "../ext/lzma/C",
                 "../ext/libwebp",
-                "../ext/zlib",
             ],
             'direct_dependent_settings': {
                 'include_dirs': [

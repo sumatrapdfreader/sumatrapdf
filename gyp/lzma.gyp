@@ -6,6 +6,11 @@
             'include_dirs': [
                 "../ext/lzma/C",
             ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/lzma/C",
+                ],
+            },
             'msvs_disabled_warnings': [4996],
             'sources': [
                 "../ext/lzma/C/7z.h",

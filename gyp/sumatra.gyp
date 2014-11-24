@@ -34,9 +34,6 @@
                 'mui',
             ],
             'include_dirs': [
-                "../ext/lzma/C",
-                '../ext/libwebp',
-                "../ext/libdjvu",
                 "../src",
                 "../ext/synctex",
             ],
@@ -199,7 +196,6 @@
             },
             'msvs_settings': {
               'VCLinkerTool': {
-                'GenerateManifest': 'false',
                 'SubSystem': '2',
               },
             },
