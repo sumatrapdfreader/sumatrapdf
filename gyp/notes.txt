@@ -13,6 +13,15 @@ TODO:
 * get SumatraPDF to compile
 * add dlls
 * add installer
+* sumatra with libmupdf.dll
 * tighten warnings (bump to /w4 and add necessary adjustments to each component)
 * figure out /analyze target
 * add 64bit (additional configuration or do we need a separate .sln)
+* convert premake targets and remove premake files
+* fix guids for generated projects
+
+Current linking options  for release:
+1>      link.exe  /nologo /DEBUG /RELEASE /opt:ref /opt:icf /MACHINE:X86 /LTCG /DYNAMICBASE /FIXED:NO /SUBSYSTEM:WINDOWS,5.1  *.obj  advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib ole32.lib WindowsCodecs.lib  comctl32.lib Msimg32.lib Winspool.lib wininet.lib urlmon.lib  ole32.lib OleAut32.lib shlwapi.lib version.lib WindowsCodecs.lib /PDB:..\obj-rel\SumatraPDF.pdb /OUT:..\obj-rel\SumatraPDF.exe
+
+before disabling manifest:
+/OUT:"Z:\src\sumatrapdf\gyp\Debug\SumatraPDF.exe" /MANIFEST /NXCOMPAT /PDB:"Z:\src\sumatrapdf\gyp\Debug\SumatraPDF.pdb" /DYNAMICBASE "gdiplus.lib" "comctl32.lib" "shlwapi.lib" "Version.lib" "user32.lib" "kernel32.lib" "gdi32.lib" "ole32.lib" "advapi32.lib" "shell32.lib" "oleaut32.lib" "winspool.lib" "comdlg32.lib" "urlmon.lib" "windowscodecs.lib" "wininet.lib" "msimg32.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\zlib.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\lzma.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\libwebp.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\djvu.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\bzip2.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\chmlib.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\utils.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\unarr.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\mupdf.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\mui.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\libjpeg.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\jbig2dec.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\freetype.lib" "Z:\src\sumatrapdf\gyp\Debug\lib\openjpeg.lib" /DEBUG /MACHINE:X86 /SAFESEH /PGD:"Z:\src\sumatrapdf\gyp\Debug\SumatraPDF.pgd" /SUBSYSTEM:WINDOWS",5.01" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /ManifestFile:"Debug\obj\SumatraPDF\SumatraPDF.exe.intermediate.manifest" /ERRORREPORT:PROMPT /NOLOGO /TLBID:1

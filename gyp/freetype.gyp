@@ -4,7 +4,7 @@
             'target_name': 'freetype',
             'type': 'static_library',
             'include_dirs': [
-                #"../ext/freetype2/config",
+                "../ext/freetype2/config",
                 "../ext/freetype2/include",
             ],
             'direct_dependent_settings': {
@@ -82,6 +82,10 @@
                 "../ext/freetype2/src/smooth/smooth.c",
                 "../ext/freetype2/src/truetype/truetype.c",
                 "../ext/freetype2/src/type1/type1.c",
+
+                # TODO: only in debug build
+                "../ext/freetype2/src/base/ftdebug.c",
+
             ],
         }
     ],

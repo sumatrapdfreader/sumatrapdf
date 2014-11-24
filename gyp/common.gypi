@@ -117,6 +117,7 @@
         #'AdditionalOptions': [ '/MP', # compile across multiple CPUs ],
       },
       'VCLinkerTool': {
+        'GenerateManifest': 'false',
         'SubSystem': '2',   # Windows
         'GenerateDebugInformation': 'true',
         #'LinkIncremental': 2, # enable incremental linking

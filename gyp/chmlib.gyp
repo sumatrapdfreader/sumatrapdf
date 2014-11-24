@@ -13,7 +13,7 @@
             ],
             'direct_dependent_settings': {
                 'include_dirs': [
-                    "../ext/CHMLib",
+                    "../ext/CHMLib/src",
                 ],
             },
             'msvs_disabled_warnings': [4244, 4996, 4018],

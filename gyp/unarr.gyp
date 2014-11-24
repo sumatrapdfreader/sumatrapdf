@@ -14,6 +14,7 @@
             'msvs_disabled_warnings': [4996],
             'sources': [
                 "../ext/unarr/unarr.h",
+                "../ext/unarr/_7z/_7z.c",
                 "../ext/unarr/common/allocator.h",
                 "../ext/unarr/common/conv.c",
                 "../ext/unarr/common/crc32.c",

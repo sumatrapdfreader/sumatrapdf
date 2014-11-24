@@ -1,8 +1,14 @@
 {
+    'includes': [
+        # TODO: fishy, I depend on it but can't include it twice?
+        # (is also included by mupdf)
+        #'libjpeg.gyp',
+    ],
     'targets': [
         {
             'target_name': 'djvu',
             'type': 'static_library',
+            'dependencies': ['libjpeg'],
             'include_dirs': [
                 "../ext/libjpeg-turbo",
             ],

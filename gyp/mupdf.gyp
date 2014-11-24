@@ -1,7 +1,7 @@
 {
     'includes': [
         'zlib.gyp',
-        '../ext/libjpeg-turbo/libjpeg.gyp',
+        'libjpeg.gyp',
         'jbig2dec.gyp',
         'freetype.gyp',
         'openjpeg.gyp',
@@ -63,7 +63,7 @@
                   'action': [
                     '<(nasm_path)',
                     '<@(nasm_flags)',
-                    '-I', "mupdf///",
+                    '-I', "../mupdf///",
                     '-o', '<(shared_generated_dir)/<(RULE_INPUT_ROOT).<(object_suffix)',
                     '<(RULE_INPUT_PATH)',
                   ],
@@ -200,6 +200,7 @@
                 "../mupdf/source/pdf/pdf-xobject.c",
                 "../mupdf/source/pdf/pdf-xref-aux.c",
                 "../mupdf/source/pdf/pdf-xref.c",
+                "../mupdf/source/pdf/js/pdf-js-none.c",
                 "../mupdf/source/xps/xps-common.c",
                 "../mupdf/source/xps/xps-doc.c",
                 "../mupdf/source/xps/xps-glyphs.c",
