@@ -9,6 +9,17 @@ We'll probably need a separate solution for that.
 3. to make the generation solution smaller, maybe put all dependencies
 into a single project (instead of 8 or so)
 
+4. examples
+
+https://github.com/cybertk/zlib-gyp/blob/master/zlib.gyp
+is a more complete zlib example for all platforms
+
+https://github.com/cybertk/libstrophe-gyp/blob/master/libstrophe.gyp
+shows how to use variables
+
+https://github.com/lianliuwei/chromium_base/blob/master/build_proj.bat
+this is how chromium base is built with all.gyp target
+
 TODO:
 * add dlls
 * add installer
@@ -18,6 +29,11 @@ TODO:
 * add 64bit (additional configuration or do we need a separate .sln)
 * convert premake targets and remove premake files
 * fix guids for generated projects
+* -f ninja fails (on cygwin it complains about SYSTEMROOT, in dos throws
+  KeyError: 'Release 64_x64')
+* make sumatra-all.gyp works, it should just be a dummy target that includes
+  all others, but I have a hard time making it work
+
 
 Current linking options  for release:
 1>      link.exe

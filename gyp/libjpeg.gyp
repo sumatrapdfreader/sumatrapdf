@@ -156,7 +156,7 @@
         }],
         [ 'OS=="win"', {
           'variables': {
-            'nasm_path': '<(nasm_dir)/nasm<(EXECUTABLE_SUFFIX)',
+            'nasm_path': '../bin/nasm<(EXECUTABLE_SUFFIX)',
             'conditions': [
               [ 'target_arch=="ia32"', {
                 'nasm_flags': [
