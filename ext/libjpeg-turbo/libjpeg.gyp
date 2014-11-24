@@ -24,6 +24,11 @@
       'include_dirs': [
         '.',
       ],
+      'direct_dependent_settings': {
+        'include_dirs': [
+          '.',
+        ],
+      },
       'defines': [
         #'WITH_SIMD', 'MOTION_JPEG_SUPPORTED',
       ],

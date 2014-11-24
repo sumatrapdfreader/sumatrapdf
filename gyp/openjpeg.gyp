@@ -6,6 +6,11 @@
             'include_dirs': [
                 "../ext/openjpeg",
             ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/openjpeg",
+                ],
+            },
             #'msvs_disabled_warnings': [4996],
             'sources': [
                 "../ext/openjpeg/bio.c",

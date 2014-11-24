@@ -6,6 +6,12 @@
             'include_dirs': [
                 "../ext/jbig2dec",
             ],
+            'direct_dependent_settings': {
+                'type': 'static_library',
+                'include_dirs': [
+                    "../ext/jbig2dec",
+                ],
+            },
             'msvs_disabled_warnings': [4996, 4018],
             'sources': [
                 "../ext/jbig2dec/config_win32.h",

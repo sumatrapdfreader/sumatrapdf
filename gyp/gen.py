@@ -22,5 +22,8 @@ if __name__ == '__main__':
     #   msvs - generates .sln VS solution
     #   ninja - generates ninja makefile
     #   msvs-ninja - generates .sln VS solution that call ninja for the build
+    # -d : variables, includes, general, all
     args = ["-G", "msvs_version=2013", "-f", "msvs", "--depth=."]
+    # when something goes wrong, add -d all arg to get reasonable error message
+    #args.append("-d"); args.append("all")
     gyp.main(args)

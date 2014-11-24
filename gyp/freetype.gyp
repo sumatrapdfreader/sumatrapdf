@@ -4,9 +4,14 @@
             'target_name': 'freetype',
             'type': 'static_library',
             'include_dirs': [
-                "../ext/freetype2/config",
+                #"../ext/freetype2/config",
                 "../ext/freetype2/include",
             ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/freetype2/include",
+                ],
+            },
             'defines': [
                 'FT2_BUILD_LIBRARY',
                 'FT_OPTION_AUTOFIT2',

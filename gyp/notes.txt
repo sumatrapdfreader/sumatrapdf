@@ -5,3 +5,14 @@ Useful e.g. to only define include_dirs on B and have it inherited by A.
 have /analyze target alongside with regular targets because /analyze
 doesn't work it xp toolset and regular build requires xp toolset.
 We'll probably need a separate solution for that.
+
+3. to make the generation solution smaller, maybe put all dependencies
+into a single project (instead of 8 or so)
+
+TODO:
+* get SumatraPDF to compile
+* add dlls
+* add installer
+* tighten warnings (bump to /w4 and add necessary adjustments to each component)
+* figure out /analyze target
+* add 64bit (additional configuration or do we need a separate .sln)
