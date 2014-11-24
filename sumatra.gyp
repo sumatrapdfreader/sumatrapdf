@@ -16,9 +16,10 @@
         'gyp/bzip2.gyp',
         #'ext/libjpeg-turbo/libjpeg.gyp',
         'gyp/chmlib.gyp',
-        'gyp/utils.gyp',
+        #'gyp/utils.gyp',
         'gyp/unarr.gyp',
         'gyp/mupdf.gyp',
+        'gyp/mui.gyp',
     ],
 
     'targets': [
@@ -37,9 +38,10 @@
                 "bzip2",
                 #"libjpeg",
                 "chmlib",
-                "utils",
+                #"utils",
                 "unarr",
                 'mupdf',
+                'mui',
             ],
             'include_dirs': [
                 #"ext/freetype2/config",
