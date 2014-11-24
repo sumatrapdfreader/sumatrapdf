@@ -10,6 +10,7 @@
 		'mupdf.gyp',
 		'mui.gyp',
 		'makelzsa.gyp',
+		'pdffilter.gyp',
 	],
 	'targets': [
 		{
@@ -27,6 +28,7 @@
 				"unarr",
 				'mupdf',
 				'mui',
+				'PdfFilter',
 			],
 			'include_dirs': [
 				"../src",

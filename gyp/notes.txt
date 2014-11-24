@@ -21,6 +21,7 @@ https://github.com/lianliuwei/chromium_base/blob/master/build_proj.bat
 this is how chromium base is built with all.gyp target
 
 TODO:
+* add libmupdf.dll
 * add dlls
 * add installer
 * sumatra with libmupdf.dll
