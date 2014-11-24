@@ -7,11 +7,11 @@
                 'lzma',
                 'zlib',
                 'unarr',
+                'libwebp',
             ],
             'include_dirs': [
                 "../src/utils",
                 "../mupdf/include",
-                "../ext/libwebp",
             ],
             'direct_dependent_settings': {
                 'include_dirs': [

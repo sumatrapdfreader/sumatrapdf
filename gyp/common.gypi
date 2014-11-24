@@ -120,6 +120,8 @@
         'GenerateManifest': 'false',
         'SubSystem': '2',   # Windows
         'GenerateDebugInformation': 'true',
+        'ErrorReporting' : 0, # None
+        'EnableUAC': 'false',
         #'LinkIncremental': 2, # enable incremental linking
       },
       'VCMIDLTool': {

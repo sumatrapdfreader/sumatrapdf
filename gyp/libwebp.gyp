@@ -6,6 +6,11 @@
             'include_dirs': [
                 "../ext/libwebp",
             ],
+            'direct_dependent_settings': {
+                'include_dirs': [
+                    "../ext/libwebp",
+                ],
+            },
             'msvs_disabled_warnings': [],
             'sources': [
                 "../ext/libwebp/dec/alpha.c",
