@@ -1,4 +1,7 @@
 {
+    'variables': {
+        'nasm_path': '../bin/nasm.exe',
+    },
     'includes': [
         'zlib.gyp',
         'libjpeg.gyp',
@@ -35,7 +38,6 @@
             'conditions': [
                 [ 'OS=="win"', {
                   'variables': {
-                    'nasm_path': '../bin/nasm<(EXECUTABLE_SUFFIX)',
                     'conditions': [
                       [ 'target_arch=="ia32"', {
                         'nasm_flags': [

@@ -84,7 +84,6 @@
 				"../src/HtmlFormatter.h",
 				"../src/ImagesEngine.cpp",
 				"../src/ImagesEngine.h",
-				"../src/MakeLzSA.cpp",
 				"../src/Menu.cpp",
 				"../src/Menu.h",
 				"../src/MobiDoc.cpp",

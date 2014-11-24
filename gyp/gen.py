@@ -12,8 +12,10 @@ sys.path.append(gyp_dir)
 import gyp
 
 if __name__ == '__main__':
-    # TODO: set the right generators, it seems to default to msvc
-    print("Generating sumatra.sln from sumatra.gyp")
+    #gyp_file = "sumatra-all.gyp"
+    gyp_file = "sumatra.gyp"
+    sln_file = gyp_file.split(".")[0]+".sln"
+    print("Processing %s to generate %s" % (gyp_file, sln_file))
 
     os.chdir("gyp")
     # TODO: other possible args:
@@ -23,7 +25,16 @@ if __name__ == '__main__':
     #   ninja - generates ninja makefile
     #   msvs-ninja - generates .sln VS solution that call ninja for the build
     # -d : variables, includes, general, all
-    args = ["-G", "msvs_version=2013", "-f", "msvs", "--depth=.", "-Icommon.gypi", "sumatra.gyp"]
+    args = ["-G", "msvs_version=2013",
+            "-f", "msvs",
+            "-Icommon.gypi",
+            "--depth", ".",
+            #"--depth", "build/32",
+            # TODO: this fails with:
+            # Warning: Missing input files:
+            # build/32/..\..\..\..\..\..\..\bin\nasm.exe
+            #"--generator-output=build/32",
+            gyp_file]
     # when something goes wrong, add -d all arg to get reasonable error message
     #args.append("-d"); args.append("all")
     gyp.main(args)
