@@ -14,6 +14,7 @@
 #include "Controller.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "HtmlWindow.h"
 #include "ChmModel.h"
 #include "EngineManager.h"
 #include "DisplayModel.h"

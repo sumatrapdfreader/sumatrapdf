@@ -6,11 +6,11 @@
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
+#include "HtmlWindow.h"
 #include "ChmModel.h"
 #include "AppPrefs.h" // for gGlobalPrefs
 #include "EbookBase.h"
 #include "ChmDoc.h"
-#include "HtmlWindow.h"
 #include "UITask.h"
 
 static bool IsExternalUrl(const WCHAR *url)

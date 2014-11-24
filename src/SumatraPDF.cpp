@@ -17,6 +17,7 @@
 #include "AppUtil.h"
 #include "Canvas.h"
 #include "Caption.h"
+#include "HtmlWindow.h"
 #include "ChmModel.h"
 #include "CrashHandler.h"
 #include "CryptoUtil.h"
