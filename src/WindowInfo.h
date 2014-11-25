@@ -12,7 +12,6 @@ struct FrameRateWnd;
 struct LabelWithCloseWnd;
 struct TabData;
 struct SplitterWnd;
-struct WatchedFile;
 class CaptionInfo;
 
 /* Describes actions which can be performed by mouse */
@@ -176,9 +175,6 @@ public:
 
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLinkInfo> staticLinks;
-
-    // file change watcher
-    WatchedFile *   watcher;
 
     bool            isFullScreen;
     PresentationMode presentation;

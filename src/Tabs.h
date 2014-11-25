@@ -1,8 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct WatchedFile;
-
 // This is the data, for every opened document, which is preserved between
 // tab selections. It's loaded back in the WindowInfo for the currently active document.
 struct TabData
@@ -14,12 +12,10 @@ struct TabData
     WCHAR *     filePath;
     // canvas dimensions when the document was last visible
     RectI       canvasRc;
-    WatchedFile*watcher;
     // if true, the document should be auto-reloaded when it's visible again
     bool        reloadOnFocus;
 
-    TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL),
-        watcher(NULL), reloadOnFocus(false) { }
+    TabData(): ctrl(NULL), showToc(false), title(NULL), filePath(NULL), reloadOnFocus(false) { }
 };
 
 int GetTabbarHeight(WindowInfo *win, float factor=1.f);

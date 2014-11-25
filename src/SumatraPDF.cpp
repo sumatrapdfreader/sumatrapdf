@@ -1101,37 +1101,82 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     return true;
 }
 
-class FileChangeCallback : public UITask, public FileChangeObserver
-{
-    WindowInfo *win;
-    Controller *ctrl;
-
+class ModifiedDocReloaderItem : public FileChangeObserver {
 public:
-    explicit FileChangeCallback(WindowInfo *win, Controller *ctrl) : win(win), ctrl(ctrl) { }
+    ScopedMem<WCHAR> path;
+    WindowInfo *win;
+    WatchedFile *token;
+    int refCount;
+
+    ModifiedDocReloaderItem(const WCHAR *path, WindowInfo *win) :
+        path(str::Dup(path)), win(win), refCount(1) {
+        token = FileWatcherSubscribe(path, this);
+    }
 
     virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions
-        // between the watching thread and the main thread (and only pass a copy of this
-        // callback to uitask::Post, as the object will be deleted after use)
-        uitask::Post(new FileChangeCallback(win, ctrl));
-    }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win)) {
-            if (win->ctrl != ctrl && win->tabsVisible) {
-                // make sure that ctrl actually belongs to a background tab
-                // and isn't a previous controller of the current tab
-                TabData *bgTab = GetTabDataByCtrl(win, ctrl);
-                if (bgTab) {
-                    bgTab->reloadOnFocus = true;
-                    return;
+        // between the watching thread and the main thread
+        uitask::Post([=] {
+            if (!WindowInfoStillValid(win))
+                return;
+            if (win->tabsVisible) {
+                TabData *td;
+                for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
+                    if (str::Eq(path, td->filePath)) {
+                        td->reloadOnFocus = true;
+                    }
                 }
             }
-            // delay the reload slightly, in case we get another request immediately after this one
-            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+            if (str::Eq(path, win->loadedFilePath)) {
+                // delay the reload slightly, in case we get another request immediately after this one
+                SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+            }
+        });
+    }
+};
+
+class ModifiedDocReloader {
+    Vec<ModifiedDocReloaderItem *> items;
+
+    ModifiedDocReloaderItem *FindItem(const WCHAR *path, WindowInfo *win) {
+        for (size_t i = 0; i < items.Count(); i++) {
+            ModifiedDocReloaderItem *item = items.At(i);
+            if (win == item->win && str::Eq(path, item->path))
+                return item;
+        }
+        return NULL;
+    }
+
+public:
+    ~ModifiedDocReloader() { CrashIf(items.Count() > 0); }
+
+    void Track(const WCHAR *path, WindowInfo *win) {
+        if (!gGlobalPrefs->reloadModifiedDocuments)
+            return;
+
+        ModifiedDocReloaderItem *item = FindItem(path, win);
+        if (item)
+            item->refCount++;
+        else
+            items.Append(new ModifiedDocReloaderItem(path, win));
+    }
+
+    void Untrack(const WCHAR *path, WindowInfo *win) {
+        ModifiedDocReloaderItem *item = FindItem(path, win);
+        if (item && 0 == --item->refCount) {
+            items.Remove(item);
+            // item is owned by item->token and deleted in DeleteWatchedFile
+            FileWatcherUnsubscribe(item->token);
         }
     }
 };
+
+static ModifiedDocReloader gModifiedDocReloader;
+
+void UnobserveFileChanges(const WCHAR *path, WindowInfo *win)
+{
+    gModifiedDocReloader.Untrack(path, win);
+}
 
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
@@ -1154,8 +1199,6 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
     ds->useDefaultState = false;
-    FileWatcherUnsubscribe(win->watcher);
-    win->watcher = NULL;
 
     ScopedMem<WCHAR> path(str::Dup(win->loadedFilePath));
     HwndPasswordUI pwdUI(win->hwndFrame);
@@ -1173,8 +1216,13 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
     TabsOnChangedDoc(win);
-    if (gGlobalPrefs->reloadModifiedDocuments)
-        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win, win->ctrl));
+
+    if (win->tabsVisible) {
+        TabData *td = GetTabDataByCtrl(win, win->ctrl);
+        if (td) {
+            td->reloadOnFocus = false;
+        }
+    }
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
@@ -1328,8 +1376,7 @@ WindowInfo *CreateAndShowWindowInfo()
 
 void DeleteWindowInfo(WindowInfo *win)
 {
-    FileWatcherUnsubscribe(win->watcher);
-    win->watcher = NULL;
+    UnobserveFileChanges(win->loadedFilePath, win);
 
     DeletePropertiesWindow(win->hwndFrame);
     gWindows.Remove(win);
@@ -1482,6 +1529,8 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     CrashIf(openNewTab && args.forceReuse);
     if (!win->IsAboutWindow()) {
         CrashIf(!args.forceReuse && !openNewTab);
+        if (args.forceReuse)
+            UnobserveFileChanges(win->loadedFilePath, win);
         CloseDocumentInTab(win, true);
     }
     // invalidate the links on the Frequently Read page
@@ -1517,9 +1566,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return win;
     }
 
-    CrashIf(win->watcher);
-    if (gGlobalPrefs->reloadModifiedDocuments)
-        win->watcher = FileWatcherSubscribe(win->loadedFilePath, new FileChangeCallback(win, win->ctrl));
+    gModifiedDocReloader.Track(win->loadedFilePath, win);
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
@@ -1557,7 +1604,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     win::SetText(win->hwndFrame, tdata->title);
 
     win->ctrl = tdata->ctrl;
-    win->watcher = tdata->watcher;
 
     if (win->AsChm())
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
@@ -2065,8 +2111,6 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm())
         win->AsChm()->RemoveParentHwnd();
-    FileWatcherUnsubscribe(win->watcher);
-    win->watcher = NULL;
     ClearTocBox(win);
     AbortFinding(win, true);
     delete win->linkOnLastButtonDown;
@@ -2124,6 +2168,7 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
     }
     else {
         CrashIf(gPluginMode && gWindows.Find(win) == 0);
+        UnobserveFileChanges(win->loadedFilePath, win);
         TabsOnCloseDoc(win);
     }
 }
@@ -2175,6 +2220,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         DeleteWindowInfo(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
+        UnobserveFileChanges(win->loadedFilePath, win);
         CloseDocumentInTab(win);
         SetFocus(win->hwndFrame);
     } else {
@@ -2444,7 +2490,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!win.IsDocLoaded()) return;
     if (gPluginMode) return;
 
-    const WCHAR *srcFileName = win.ctrl->FilePath();
+    ScopedMem<WCHAR> srcFileName(str::Dup(win.ctrl->FilePath()));
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName))
         return;
@@ -2485,16 +2531,14 @@ static void OnMenuRenameFile(WindowInfo &win)
         return;
 
     UpdateCurrentFileDisplayStateForWin(&win);
-    // note: srcFileName is deleted together with the DisplayModel
-    ScopedMem<WCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInTab(&win, true);
     SetFocus(win.hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileEx(srcFilePath.Get(), dstFileName, flags);
+    BOOL moveOk = MoveFileEx(srcFileName.Get(), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadArgs args(srcFilePath, &win);
+        LoadArgs args(srcFileName, &win);
         args.forceReuse = true;
         LoadDocument(args);
         win.ShowNotification(_TR("Failed to rename the file!"), NOS_WARNING);
@@ -2502,7 +2546,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     }
 
     ScopedMem<WCHAR> newPath(path::Normalize(dstFileName));
-    RenameFileInHistory(srcFilePath, newPath);
+    RenameFileInHistory(srcFileName, newPath);
 
     LoadArgs args(dstFileName, &win);
     args.forceReuse = true;

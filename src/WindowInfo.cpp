@@ -45,7 +45,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), watcher(NULL), stressTest(NULL),
+    delayedRepaintTimer(0), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
     uia_provider(NULL), cbHandler(NULL), frameRateWnd(NULL),
     hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL),
@@ -61,7 +61,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo()
 {
     FinishStressTest(this);
-    CrashIf(watcher);
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere

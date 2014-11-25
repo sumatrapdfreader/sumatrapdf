@@ -16,7 +16,6 @@
 #include "Mui.h"
 #include "EbookControls.h"
 #include "FileUtil.h"
-#include "FileWatcher.h"
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"
@@ -665,7 +664,6 @@ static void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->title = win::GetText(win->hwndFrame);
     str::ReplacePtr(&tdata->filePath, win->loadedFilePath);
     tdata->canvasRc = win->canvasRc;
-    tdata->watcher = win->watcher;
 }
 
 static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
@@ -686,7 +684,6 @@ static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
     SaveTabData(win, *tdata);
     // prevent data from being deleted
     win->ctrl = NULL;
-    win->watcher = NULL;
 }
 
 // Must be called when the active tab is losing selection.
@@ -763,14 +760,14 @@ static int FindTabIndex(WindowInfo *win, TabData *tdata)
     return -1;
 }
 
-static void DeleteTabData(TabData *tdata, bool deleteModel)
+static void DeleteTabData(WindowInfo *win, TabData *tdata, bool deleteModel)
 {
     if (!tdata) {
         return;
     }
     if (deleteModel) {
+        UnobserveFileChanges(tdata->filePath, win);
         delete tdata->ctrl;
-        FileWatcherUnsubscribe(tdata->watcher);
     }
     free(tdata->title);
     free(tdata->filePath);
@@ -798,7 +795,7 @@ void TabsOnLoadedDoc(WindowInfo *win)
         UpdateTabWidth(win);
     }
     else
-        DeleteTabData(td, false);
+        DeleteTabData(win, td, false);
     UpdateCurrentTabBgColForWindow(win);
 }
 
@@ -835,7 +832,7 @@ void TabsOnCloseDoc(WindowInfo *win)
     TabData *tdata = GetTabData(win, current);
     win->tabSelectionHistory->Remove(tdata);
     UpdateTabFileDisplayStateForWin(win, tdata);
-    DeleteTabData(tdata, false);
+    DeleteTabData(win, tdata, false);
     TabCtrl_DeleteItem(win->hwndTabBar, current);
     UpdateTabWidth(win);
     if (count > 1) {
@@ -854,7 +851,7 @@ void TabsOnCloseWindow(WindowInfo *win)
         TabData *tdata = GetTabData(win, i);
         if (tdata) {
             UpdateTabFileDisplayStateForWin(win, tdata);
-            DeleteTabData(tdata, win->ctrl != tdata->ctrl);
+            DeleteTabData(win, tdata, win->ctrl != tdata->ctrl);
         }
     }
     win->tabSelectionHistory->Reset();
@@ -896,7 +893,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 TabData *tdata = GetTabData(win, tab1);
                 win->tabSelectionHistory->Remove(tdata);
                 UpdateTabFileDisplayStateForWin(win, tdata);
-                DeleteTabData(tdata, true);
+                DeleteTabData(win, tdata, true);
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
             }

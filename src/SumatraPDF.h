@@ -42,9 +42,6 @@
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
-#define AUTO_RELOAD_RETRY_TIMER_ID  6
-#define AUTO_RELOAD_RETRY_DELAY_IN_MS 1000
-
 #define EBOOK_LAYOUT_TIMER_ID       7
 
 // permissions that can be revoked (or explicitly set) through Group Policies
@@ -143,6 +140,7 @@ void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabData *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
+void  UnobserveFileChanges(const WCHAR *path, WindowInfo *win);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);
