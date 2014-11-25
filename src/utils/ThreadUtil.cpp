@@ -102,6 +102,5 @@ static DWORD WINAPI ThreadFunc(void *data) {
 
 void RunAsync(const std::function<void()> &func) {
     auto fw = new FuncWrapper(func);
-    // TODO: do I need to CloseHandle(hThread) ?
-    CreateThread(NULL, 0, ThreadFunc, fw, 0, 0);
+    ScopedHandle h(CreateThread(NULL, 0, ThreadFunc, fw, 0, 0));
 }

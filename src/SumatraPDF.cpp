@@ -1774,12 +1774,12 @@ bool AutoUpdateInitiate(const char *updateData)
         return false;
 
     ScopedMem<WCHAR> exeUrl(str::conv::FromUtf8(url));
-    HttpReq req(exeUrl);
-    if (!HttpRspOk(&req.rsp))
+    HttpRsp rsp;
+    if (!HttpGet(exeUrl, &rsp))
         return false;
 
     unsigned char digest[32];
-    CalcSHA2Digest((const unsigned char *)req.rsp.data.Get(), req.rsp.data.Size(), digest);
+    CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.Size(), digest);
     ScopedMem<char> fingerPrint(_MemToHex(&digest));
     if (!str::EqI(fingerPrint, hash))
         return false;
@@ -1797,7 +1797,7 @@ bool AutoUpdateInitiate(const char *updateData)
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteAll(updateExe, req.rsp.data.Get(), req.rsp.data.Size());
+    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.Size());
     if (!ok)
         return false;
 
