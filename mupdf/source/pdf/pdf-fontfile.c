@@ -18,14 +18,13 @@
 #define NOCJKFONT
 #endif
 
-/*
-sumatrapdf: instead of generating font data as a large .h file in generate.bat,
-use nasm to include as binary
-TODO: we need a script that updates the size of the fonts when they change,
-to be run manually after font update. It could be a separate .h file or
-we could directly change this file.
-//#include "gen_font_base14.h"
-*/
+/* SumatraPDF: allow using NASM to include fonts as binary instead of requiring a separate generate.bat build step */
+#ifdef NOASMFONTS
+#include "gen_font_base14.h"
+#else
+/* TODO: we need a script that updates the size of the fonts when they change,
+   to be run manually after font update. It could be a separate .h file
+   (such as gen_font_base14.h) or we could directly change this file. */
 extern const unsigned char pdf_font_Dingbats[29728];
 extern const unsigned char pdf_font_NimbusMon_Bol[58025];
 extern const unsigned char pdf_font_NimbusMon_BolObl[57153];
@@ -40,6 +39,7 @@ extern const unsigned char pdf_font_NimbusSan_BolIta[35353];
 extern const unsigned char pdf_font_NimbusSan_Ita[34733];
 extern const unsigned char pdf_font_NimbusSan_Reg[31517];
 extern const unsigned char pdf_font_StandardSymL[19828];
+#endif
 
 #ifndef NODROIDFONT
 #include "gen_font_droid.h"
