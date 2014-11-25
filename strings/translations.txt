@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-768676724a463d2735aa0aa62f083b7e01092e2e
+890c021eeee92501d366b9aaab8b5d513661dd63
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15693,6 +15693,7 @@ uk:Інсталятор було пошкоджено. Будь ласка за�
 uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
 :This document uses unsupported features (%s) and might not render properly
+br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
@@ -15702,6 +15703,9 @@ hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pon
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
+sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
+sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
+uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
 :Title:
 af:Titel:
 am:Անունը.

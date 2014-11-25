@@ -42,6 +42,7 @@ g_langs = [
     ('ku', 'Kurdish (كوردی)', 'MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ)', 'RTL'),
     ('kw', 'Cornish (Kernewek)', '(LANGID)-1'),
     ('lt', 'Lithuanian (Lietuvių)', '_LANGID(LANG_LITHUANIAN)'),
+    ('lv', 'Latvian (latviešu valoda)', '_LANGID(LANG_LATVIAN)'),
     ('mk', 'Macedonian (македонски)', '_LANGID(LANG_MACEDONIAN)'),
     ('ml', 'Malayalam (മലയാളം)', '_LANGID(LANG_MALAYALAM)'),
     ('mm', 'Burmese (ဗမာ စာ)', '(LANGID)-1'),
