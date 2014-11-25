@@ -14,6 +14,7 @@ DIRS = ["src",
         pj("src", "installer"),
         pj("src", "ifilter"),
         pj("src", "previewer"),
+        pj("src", "uia"),
         ]
 
 
