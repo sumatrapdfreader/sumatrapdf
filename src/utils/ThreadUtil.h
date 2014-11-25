@@ -45,3 +45,7 @@ public:
 };
 
 void SetThreadName(DWORD threadId, const char *threadName);
+
+void RunAsync(const std::function<void()>&);
+
+

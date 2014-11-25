@@ -95,3 +95,22 @@ bool ThreadBase::Join(DWORD waitMs)
     }
     return false;
 }
+
+struct FuncWrapper {
+    std::function<void()> func;
+    FuncWrapper(const std::function<void()>& func) : func(func) {}
+};
+
+static DWORD WINAPI ThreadFunc(void *data) {
+    FuncWrapper *fw = reinterpret_cast<FuncWrapper*>(data);
+    fw->func();
+    delete fw;
+    return 0;
+}
+
+void RunAsync(const std::function<void()>& func) {
+    auto fw = new FuncWrapper(func);
+    // TODO: do I need to CloseHandle(hThread) ?
+    CreateThread(NULL, 0, ThreadFunc, fw, 0, 0);
+}
+

@@ -4,8 +4,8 @@
 #include "BaseUtil.h"
 #include <Wininet.h>
 #include <memory>
-#include <thread>
 #include "HttpUtil.h"
+#include "ThreadUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 
@@ -200,13 +200,12 @@ Exit:
 
 // callback function f is responsible for deleting HttpRsp
 void HttpGetAsync(const WCHAR *url, const std::function<void(HttpRsp *)> &f) {
-    std::thread t([=] {
+    RunAsync([=] {
         auto rsp = new HttpRsp;
         rsp->url = str::Dup(url);
         HttpGet(url, rsp);
         f(rsp);
     });
-    t.detach();
 }
 
 #if 0
