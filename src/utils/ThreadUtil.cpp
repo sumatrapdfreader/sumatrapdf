@@ -7,43 +7,39 @@
 #if defined(_MSC_VER)
 
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
-const DWORD MS_VC_EXCEPTION=0x406D1388;
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
 #include <pshpack8.h>
 
-typedef struct tagTHREADNAME_INFO
-{
-    DWORD dwType;       // Must be 0x1000.
-    LPCSTR szName;      // Pointer to name (in user addr space).
-    DWORD dwThreadID;   // Thread ID (-1=caller thread).
-    DWORD dwFlags;      // Reserved for future use, must be zero.
+typedef struct tagTHREADNAME_INFO {
+    DWORD dwType;     // Must be 0x1000.
+    LPCSTR szName;    // Pointer to name (in user addr space).
+    DWORD dwThreadID; // Thread ID (-1=caller thread).
+    DWORD dwFlags;    // Reserved for future use, must be zero.
 } THREADNAME_INFO;
 
 #include <poppack.h>
 
 #pragma warning(push)
-#pragma warning(disable: 6320) // silence /analyze: Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were not intended to be handled
-#pragma warning(disable: 6322) // silence /analyze: Empty _except block
-void SetThreadName(DWORD threadId, const char *threadName)
-{
-   THREADNAME_INFO info;
-   info.dwType = 0x1000;
-   info.szName = threadName;
-   info.dwThreadID = threadId;
-   info.dwFlags = 0;
+#pragma warning(disable : 6320) // silence /analyze: Exception-filter expression is the constant
+                                // EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were
+                                // not intended to be handled
+#pragma warning(disable : 6322) // silence /analyze: Empty _except block
+void SetThreadName(DWORD threadId, const char *threadName) {
+    THREADNAME_INFO info;
+    info.dwType = 0x1000;
+    info.szName = threadName;
+    info.dwThreadID = threadId;
+    info.dwFlags = 0;
 
-   __try
-   {
-      RaiseException(MS_VC_EXCEPTION, 0, sizeof(info)/sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-   }
-   __except(EXCEPTION_EXECUTE_HANDLER)
-   {
-   }
+    __try {
+        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR *)&info);
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {}
 }
 #pragma warning(push)
 #else
-void SetThreadName(DWORD, const char *)
-{
+void SetThreadName(DWORD, const char *) {
     // nothing
 }
 #endif
@@ -53,40 +49,36 @@ void SetThreadName(DWORD, const char *)
 // object can be recycled as well, so we keep our own counter.
 static int GenUniqueThreadId() {
     static LONG gThreadNoSeq = 0;
-    return (int) InterlockedIncrement(&gThreadNoSeq);
+    return (int)InterlockedIncrement(&gThreadNoSeq);
 }
 
-ThreadBase::ThreadBase(const char *name) :
-    hThread(NULL), cancelRequested(false),
-    threadNo(GenUniqueThreadId()),
-    threadName(str::Dup(name))
-{
-    //lf("ThreadBase() %d", threadNo);
+ThreadBase::ThreadBase(const char *name)
+    : hThread(NULL),
+      cancelRequested(false),
+      threadNo(GenUniqueThreadId()),
+      threadName(str::Dup(name)) {
+    // lf("ThreadBase() %d", threadNo);
 }
 
-ThreadBase::~ThreadBase()
-{
-    //lf("~ThreadBase() %d", threadNo);
+ThreadBase::~ThreadBase() {
+    // lf("~ThreadBase() %d", threadNo);
     CloseHandle(hThread);
 }
 
-DWORD WINAPI ThreadBase::ThreadProc(void *data)
-{
-    ThreadBase *thread = reinterpret_cast<ThreadBase*>(data);
+DWORD WINAPI ThreadBase::ThreadProc(void *data) {
+    ThreadBase *thread = reinterpret_cast<ThreadBase *>(data);
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
     return 0;
 }
 
-void ThreadBase::Start()
-{
+void ThreadBase::Start() {
     CrashIf(hThread);
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 
-bool ThreadBase::Join(DWORD waitMs)
-{
+bool ThreadBase::Join(DWORD waitMs) {
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res) {
         CloseHandle(hThread);
@@ -98,19 +90,18 @@ bool ThreadBase::Join(DWORD waitMs)
 
 struct FuncWrapper {
     std::function<void()> func;
-    FuncWrapper(const std::function<void()>& func) : func(func) {}
+    FuncWrapper(const std::function<void()> &func) : func(func) {}
 };
 
 static DWORD WINAPI ThreadFunc(void *data) {
-    FuncWrapper *fw = reinterpret_cast<FuncWrapper*>(data);
+    FuncWrapper *fw = reinterpret_cast<FuncWrapper *>(data);
     fw->func();
     delete fw;
     return 0;
 }
 
-void RunAsync(const std::function<void()>& func) {
+void RunAsync(const std::function<void()> &func) {
     auto fw = new FuncWrapper(func);
     // TODO: do I need to CloseHandle(hThread) ?
     CreateThread(NULL, 0, ThreadFunc, fw, 0, 0);
 }
-

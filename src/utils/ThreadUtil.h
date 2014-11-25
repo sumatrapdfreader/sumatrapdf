@@ -3,16 +3,16 @@
 
 /* A very simple thread class that allows stopping a thread */
 class ThreadBase {
-private:
-    int                 threadNo;
-    HANDLE              hThread;
-    bool                cancelRequested;
+  private:
+    int threadNo;
+    HANDLE hThread;
+    bool cancelRequested;
 
     static DWORD WINAPI ThreadProc(void *data);
 
-protected:
+  protected:
     // for debugging
-    ScopedMem<char>     threadName;
+    ScopedMem<char> threadName;
 
     virtual ~ThreadBase();
 
@@ -20,9 +20,9 @@ protected:
     //       only ever changed from false to true
     bool WasCancelRequested() { return cancelRequested; }
 
-public:
+  public:
     // name is for debugging purposes, can be NULL.
-    explicit ThreadBase(const char *name=NULL);
+    explicit ThreadBase(const char *name = NULL);
 
     // call this to start executing Run() function.
     void Start();
@@ -33,7 +33,7 @@ public:
 
     // synchronously waits for the thread to end
     // returns true if thread stopped by itself and false if waiting timed out
-    bool Join(DWORD waitMs=INFINITE);
+    bool Join(DWORD waitMs = INFINITE);
 
     // get a unique number that identifies a thread and unlike an
     // address of the object, will not be reused
@@ -46,6 +46,4 @@ public:
 
 void SetThreadName(DWORD threadId, const char *threadName);
 
-void RunAsync(const std::function<void()>&);
-
-
+void RunAsync(const std::function<void()> &);
