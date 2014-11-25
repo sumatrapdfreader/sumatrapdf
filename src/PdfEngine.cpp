@@ -1242,8 +1242,8 @@ public:
     virtual WCHAR *GetPageLabel(int pageNo) const;
     virtual int GetPageByLabel(const WCHAR *label) const;
 
-    virtual bool IsPasswordProtected() const { return isProtected; }
-    virtual char *GetDecryptionKey() const;
+    virtual bool IsPasswordProtected() const override { return isProtected; }
+    virtual char *GetDecryptionKey() const override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
     static BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
