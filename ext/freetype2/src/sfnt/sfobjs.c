@@ -1077,6 +1077,10 @@
             face->horizontal.number_Of_HMetrics = 0;
             error                               = FT_Err_Ok;
           }
+#else /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2778 */
+          FT_ERROR(("sfnt_load_face: horizontal metrics (hmtx) table missing\n"));
+          face->horizontal.number_Of_HMetrics = 0;
+          error                               = FT_Err_Ok;
 #endif
         }
       }

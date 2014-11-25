@@ -71,3 +71,21 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
 +
  /* END */
+diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
+--- freetype2.orig\src\sfnt\sfobjs.c	Mon Dec 02 09:48:39 2013
++++ freetype2\src\sfnt\sfobjs.c	Tue Nov 25 21:56:56 2014
+@@ -1075,10 +1075,14 @@
+                  get_glyph_metrics                                 )
+           {
+             face->horizontal.number_Of_HMetrics = 0;
+             error                               = FT_Err_Ok;
+           }
++#else /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2778 */
++          FT_ERROR(("sfnt_load_face: horizontal metrics (hmtx) table missing\n"));
++          face->horizontal.number_Of_HMetrics = 0;
++          error                               = FT_Err_Ok;
+ #endif
+         }
+       }
+       else if ( FT_ERR_EQ( error, Table_Missing ) )
+       {
