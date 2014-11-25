@@ -3,6 +3,8 @@
 
 class ChmDoc;
 struct ChmTocTraceItem;
+class HtmlWindow;
+class HtmlWindowCallback;
 class ChmCacheEntry;
 
 class ChmModel : public Controller {
