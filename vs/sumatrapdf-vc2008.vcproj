@@ -1317,6 +1317,10 @@
 			Name="mupdf"
 			>
 			<File
+				RelativePath="..\mupdf\font_base14.asm"
+				>
+			</File>
+			<File
 				RelativePath="..\src\MuPDF_Exports.cpp"
 				>
 			</File>
