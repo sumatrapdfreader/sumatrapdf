@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-890c021eeee92501d366b9aaab8b5d513661dd63
+605a0f8fc489b50acd01d270284c363d0155265d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2976,6 +2976,7 @@ sr-rs:П&розор
 sv:Fönster
 tr:&Pencere
 uk:&Вікно
+vn:&Cửa sổ
 :&Yes
 am:&Այո
 ar:&نعم
@@ -6562,6 +6563,7 @@ sv:Muspekarens position:
 tr:İmleç konumu:
 tw:游標位置
 uk:Позиція вказівника:
+vn:Vị trí con trỏ:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
@@ -12427,6 +12429,7 @@ sr-rs:PalmDoc документи
 sv:PalmDoc dokument
 tr:PalmDoc belgeleri
 uk:Документи PalmDoc
+vn:Tài liệu PalmDoc
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
@@ -14070,6 +14073,7 @@ sr-rs:Избор
 sv:Markering:
 tr:Seçim:
 uk:Виділення:
+vn:Lựa chọn:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
@@ -15706,6 +15710,7 @@ ru:Этот документ использует неподдерживаемы
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
+vn:Tài liệu này có vài tính năng không được hỗ trợ (%s) và không được dựng chính xác
 :Title:
 af:Titel:
 am:Անունը.
@@ -16013,6 +16018,7 @@ sr-rs:Користити таб
 sv:Använd flikar
 tr:&Sekmeler kullan
 uk:Використовувати вкладки
+vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
