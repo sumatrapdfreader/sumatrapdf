@@ -540,6 +540,16 @@ static int RunMessageLoop()
 }
 
 #ifdef SUPPORTS_AUTO_UPDATE
+static bool RetryIO(const std::function<bool ()>& func, int tries=10)
+{
+    while (tries-- > 0) {
+        if (func())
+            return true;
+        Sleep(200);
+    }
+    return false;
+}
+
 static bool AutoUpdateMain()
 {
     WStrVec argList;
@@ -561,29 +571,20 @@ static bool AutoUpdateMain()
         otherExe = argList.At(2) + 8;
     else if (str::StartsWith(argList.At(2), L"cleanup:"))
         otherExe = argList.At(2) + 8;
-    if (!file::Exists(otherExe) || !str::EndsWithI(otherExe, L".exe")) {
+    if (!str::EndsWithI(otherExe, L".exe") || !file::Exists(otherExe)) {
         CrashIf(true);
         return false;
     }
-    for (int tries = 10; tries > 0; tries--) {
-        if (file::Delete(otherExe))
-            break;
-        Sleep(200);
-    }
+    RetryIO([&] { return file::Delete(otherExe); });
     if (str::StartsWith(argList.At(2), L"cleanup:")) {
         // continue startup, restoring the previous session
         return false;
     }
     ScopedMem<WCHAR> thisExe(GetExePath());
-    bool ok = CopyFile(thisExe, otherExe, FALSE);
+    RetryIO([&] { return CopyFile(thisExe, otherExe, FALSE) != 0; });
     // TODO: somehow indicate success or failure
     ScopedMem<WCHAR> cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
-    for (int tries = 10; tries > 0; tries--) {
-        ok = LaunchFile(otherExe, cleanupArgs);
-        if (ok)
-            break;
-        Sleep(200);
-    }
+    RetryIO([&] { return LaunchFile(otherExe, cleanupArgs); });
     return true;
 }
 #endif
