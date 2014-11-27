@@ -730,11 +730,7 @@ int TabsGetCount(WindowInfo *win)
 
 TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl)
 {
-    for (TabData **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
-        if (ctrl == (*tab)->ctrl)
-            return *tab;
-    }
-    return NULL;
+    return win->tabs.FindEl([&](TabData *tab) { return ctrl == tab->ctrl; });
 }
 
 static void DeleteTabData(WindowInfo *win, TabData *tdata, bool deleteModel)
@@ -824,12 +820,10 @@ void TabsOnCloseDoc(WindowInfo *win)
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo *win)
 {
-    for (TabData **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
-        if (*tab) {
-            UpdateTabFileDisplayStateForWin(win, *tab);
-            DeleteTabData(win, *tab, win->ctrl != (*tab)->ctrl);
-        }
-    }
+    win->tabs.ForEach([&](TabData *tab) {
+        UpdateTabFileDisplayStateForWin(win, tab);
+        DeleteTabData(win, tab, win->ctrl != tab->ctrl);
+    });
     win->tabSelectionHistory->Reset();
     win->tabs.Reset();
     TabCtrl_DeleteAllItems(win->hwndTabBar);

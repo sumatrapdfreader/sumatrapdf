@@ -277,6 +277,20 @@ public:
         }
     }
 
+    void ForEach(const std::function<void (T&)> func) {
+        for (size_t i = 0; i < len; i++) {
+            func(els[i]);
+        }
+    }
+
+    T FindEl(const std::function<bool (T&)> check) {
+        for (size_t i = 0; i < len; i++) {
+            if (check(els[i]))
+                return els[i];
+        }
+        return els[len]; // NULL-sentinel
+    }
+
     // Iteration API meant to be used in the following way:
     // for (T *el = vec.IterStart(); el; el = vec.IterNext()) { ... }
     T *IterStart() {

@@ -111,9 +111,7 @@ bool Load()
     gGlobalPrefs->openCountWeek = GetWeekCount();
     if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
-        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
-            (*ds)->openCount >>= weekDiff;
-        }
+        gGlobalPrefs->fileStates->ForEach([&](DisplayState *ds) { ds->openCount >>= weekDiff; });
     }
 
     // make sure that zoom levels are in the order expected by DisplayModel
@@ -164,9 +162,7 @@ bool Save()
     ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
 
     if (!gGlobalPrefs->rememberStatePerDocument || !gGlobalPrefs->rememberOpenedFiles) {
-        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
-            (*ds)->useDefaultState = true;
-        }
+        gGlobalPrefs->fileStates->ForEach([](DisplayState *ds) { ds->useDefaultState = true; });
         // prevent unnecessary settings from being written out
         uint16_t fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
