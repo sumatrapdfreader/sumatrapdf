@@ -2123,6 +2123,9 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
         delete win->currentTab->ctrl;
         win->currentTab->ctrl = NULL;
     }
+    else {
+        win->currentTab = NULL;
+    }
     win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
     win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);

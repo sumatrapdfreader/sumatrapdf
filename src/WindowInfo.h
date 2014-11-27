@@ -151,6 +151,7 @@ public:
     // an array of ids for ToC items that have been expanded/collapsed by user
     // TODO: use currentTab->tocState instead
     Vec<int>      * tocState; // owned by currentTab
+    // TODO: move to TabInfo (and tocLoaded; or drop tocLoaded) or reload ToC on switching tabs?
     DocTocItem *    tocRoot;
 
     // state related to favorites
@@ -199,6 +200,7 @@ public:
        of the mouse from the point where the user middle clicked. */
     int             xScrollSpeed, yScrollSpeed;
 
+    // TODO: move to TabInfo (together with selection* below) or cancel selections when switching tabs?
     bool            showSelection;
 
     /* selection rectangle in screen coordinates
@@ -218,11 +220,13 @@ public:
     bool            isFullScreen;
     PresentationMode presentation;
     // were we showing toc before entering full screen or presentation mode
+    // TODO: move to TabInfo
     bool            tocBeforeFullScreen;
     int             windowStateBeforePresentation;
 
     long            nonFullScreenWindowStyle;
     RectI           nonFullScreenFrameRect;
+    // TODO: move to TabInfo?
     float           prevZoomVirtual;
     DisplayMode     prevDisplayMode;
 
@@ -232,6 +236,7 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
+    // TODO: move to TabInfo or cancel notifications when switching tabs?
     Notifications * notifications; // only access from UI thread
 
     HANDLE          printThread;
@@ -249,6 +254,7 @@ public:
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
+    // TODO: move to TabInfo?
     struct {
         bool show;          // are the markers visible?
         Vec<RectI> rects;   // location of the markers in user coordinates
