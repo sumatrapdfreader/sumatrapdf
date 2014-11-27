@@ -651,43 +651,24 @@ void CreateTabbar(WindowInfo *win)
 
     win->hwndTabBar = hwndTabBar;
 
-    win->tabSelectionHistory = new Vec<TabData *>();
+    win->tabSelectionHistory = new Vec<TabInfo *>();
 }
 
-// Saves some of the document's data from the WindowInfo to the TabData.
-static void SaveTabData(WindowInfo *win, TabData *tdata)
+// Saves some of the document's data from the WindowInfo to the TabInfo.
+static void SaveTabInfo(WindowInfo *win, TabInfo *tdata)
 {
-    tdata->tocState = win->tocState;
+    CrashIf(tdata->ctrl != win->ctrl);
+    CrashIf(!str::Eq(tdata->filePath, win->loadedFilePath));
+    CrashIf(win->tocState != &tdata->tocState);
     tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
-    tdata->ctrl = win->ctrl;
-    tdata->tabTitle.Set(win::GetText(win->hwndFrame));
-    tdata->filePath.Set(str::Dup(win->loadedFilePath));
+    tdata->frameTitle.Set(win::GetText(win->hwndFrame));
+    tdata->tabTitle = path::GetBaseName(tdata->filePath);
     tdata->canvasRc = win->canvasRc;
-}
-
-static void PrepareAndSaveTabData(WindowInfo *win, TabData **tdata)
-{
-    if (*tdata == NULL)
-        *tdata = new TabData();
-
-    if (win->tocLoaded) {
-        win->tocState.Reset();
-        HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
-        if (hRoot)
-            UpdateTocExpansionState(win, hRoot);
-    }
-
-    if (win->AsChm())
-        win->AsChm()->RemoveParentHwnd();
-
-    SaveTabData(win, *tdata);
-    // prevent data from being deleted
-    win->ctrl = NULL;
 }
 
 // Must be called when the active tab is losing selection.
 // This happens when a new document is loaded or when another tab is selected.
-void SaveCurrentTabData(WindowInfo *win)
+void SaveCurrentTabInfo(WindowInfo *win)
 {
     if (!win)
         return;
@@ -697,9 +678,17 @@ void SaveCurrentTabData(WindowInfo *win)
         return;
     }
 
-    TabData *tdata = win->tabs.At(current);
-    PrepareAndSaveTabData(win, &tdata);
-    win->tabs.At(current) = tdata;
+    TabInfo *tdata = win->tabs.At(current);
+    CrashIf(!tdata);
+    if (win->tocLoaded) {
+        win->tocState->Reset();
+        HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+        if (hRoot)
+            UpdateTocExpansionState(win, hRoot);
+    }
+    if (win->AsChm())
+        win->AsChm()->RemoveParentHwnd();
+    SaveTabInfo(win, tdata);
 
     // update the selection history
     win->tabSelectionHistory->Remove(tdata);
@@ -719,29 +708,24 @@ static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
 }
 
 // TODO: inline
-int TabsGetCount(WindowInfo *win)
+int TabsGetCount(WindowInfo *win, bool onOpenNew)
 {
-    if (!win)
-        return -1;
-    int count = TabCtrl_GetItemCount(win->hwndTabBar);
-    CrashIf(count != (int)win->tabs.Count());
-    return count;
+    return win->tabs.Count() - (onOpenNew ? 1 : 0);
 }
 
-TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl)
+TabInfo *GetTabInfoByCtrl(WindowInfo *win, Controller *ctrl)
 {
-    return win->tabs.FindEl([&](TabData *tab) { return ctrl == tab->ctrl; });
+    return win->tabs.FindEl([&](TabInfo *tab) { return ctrl == tab->ctrl; });
 }
 
-static void DeleteTabData(WindowInfo *win, TabData *tdata, bool deleteModel)
+static void DeleteTabInfo(WindowInfo *win, TabInfo *tdata)
 {
-    if (!tdata) {
+    if (!tdata)
         return;
-    }
-    if (deleteModel) {
-        UnobserveFileChanges(tdata->filePath, win);
-        delete tdata->ctrl;
-    }
+    UnobserveFileChanges(tdata->filePath, win);
+    if (tdata->AsChm())
+        tdata->AsChm()->RemoveParentHwnd();
+    delete tdata->ctrl;
     delete tdata;
 }
 
@@ -752,22 +736,22 @@ void TabsOnLoadedDoc(WindowInfo *win)
     if (!win)
         return;
 
-    TabData *td = new TabData();
-    SaveTabData(win, td);
+    TabInfo *td = win->tabs.Last();
+    SaveTabInfo(win, td);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR *)path::GetBaseName(td->filePath);
+    tcs.pszText = (WCHAR *)td->tabTitle;
 
-    int count = TabsGetCount(win);
+    int count = TabsGetCount(win, true);
     if (-1 != TabCtrl_InsertItem(win->hwndTabBar, count, &tcs)) {
-        win->tabs.Append(td);
-        win->currentTab = td;
         TabCtrl_SetCurSel(win->hwndTabBar, count);
         UpdateTabWidth(win);
     }
-    else
-        DeleteTabData(win, td, false);
+    else {
+        // TODO: what now?
+        CrashIf(true);
+    }
     UpdateCurrentTabBgColForWindow(win);
 }
 
@@ -778,13 +762,13 @@ void TabsOnChangedDoc(WindowInfo *win)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    TabData *tdata = win->currentTab;
+    TabInfo *tdata = win->currentTab;
     CrashIf(!tdata);
-    SaveTabData(win, tdata);
+    SaveTabInfo(win, tdata);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR *)path::GetBaseName(tdata->filePath);
+    tcs.pszText = (WCHAR *)tdata->tabTitle;
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
     UpdateCurrentTabBgColForWindow(win);
 }
@@ -801,16 +785,20 @@ void TabsOnCloseDoc(WindowInfo *win)
     }
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    TabData *tdata = win->currentTab;
+    TabInfo *tdata = win->currentTab;
     UpdateTabFileDisplayStateForWin(win, tdata);
     win->tabSelectionHistory->Remove(tdata);
     win->tabs.Remove(tdata);
-    DeleteTabData(win, tdata, false);
+    DeleteTabInfo(win, tdata);
     TabCtrl_DeleteItem(win->hwndTabBar, current);
+    win->loadedFilePath = NULL;
+    win->ctrl = NULL;
+    win->tocState = NULL;
+    win->currentTab = NULL;
     UpdateTabWidth(win);
+
     if (count > 1) {
         tdata = win->tabSelectionHistory->Pop();
-        win->currentTab = tdata;
         TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tdata));
         LoadModelIntoTab(win, tdata);
         UpdateCurrentTabBgColForWindow(win);
@@ -820,13 +808,18 @@ void TabsOnCloseDoc(WindowInfo *win)
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo *win)
 {
-    win->tabs.ForEach([&](TabData *tab) {
+    TabCtrl_DeleteAllItems(win->hwndTabBar);
+    // TODO: move into SumatraPDF.cpp
+    win->tabs.ForEach([&](TabInfo *tab) {
         UpdateTabFileDisplayStateForWin(win, tab);
-        DeleteTabData(win, tab, win->ctrl != tab->ctrl);
+        DeleteTabInfo(win, tab);
     });
     win->tabSelectionHistory->Reset();
     win->tabs.Reset();
-    TabCtrl_DeleteAllItems(win->hwndTabBar);
+    win->currentTab = NULL;
+    win->ctrl = NULL;
+    win->loadedFilePath = NULL;
+    win->tocState = NULL;
 }
 
 // On tab selection, we save the data for the tab which is losing selection and
@@ -839,7 +832,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     case TCN_SELCHANGING:
         // TODO: Should we allow the switch of the tab if we are in process of printing?
 
-        SaveCurrentTabData(win);
+        SaveCurrentTabInfo(win);
         return FALSE;
 
     case TCN_SELCHANGE:
@@ -861,11 +854,11 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 CloseTab(win);
             }
             else {
-                TabData *tdata = win->tabs.At(tab1);
+                TabInfo *tdata = win->tabs.At(tab1);
                 UpdateTabFileDisplayStateForWin(win, tdata);
                 win->tabSelectionHistory->Remove(tdata);
                 win->tabs.Remove(tdata);
-                DeleteTabData(win, tdata, true);
+                DeleteTabInfo(win, tdata);
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
             }
@@ -981,11 +974,11 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2)
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR *)path::GetBaseName(win->tabs.At(tab1)->filePath);
+    tcs.pszText = (WCHAR *)win->tabs.At(tab1)->tabTitle;
     TabCtrl_SetItem(win->hwndTabBar, tab1, &tcs);
 
     tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR *)path::GetBaseName(win->tabs.At(tab2)->filePath);
+    tcs.pszText = (WCHAR *)win->tabs.At(tab2)->tabTitle;
     TabCtrl_SetItem(win->hwndTabBar, tab2, &tcs);
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);

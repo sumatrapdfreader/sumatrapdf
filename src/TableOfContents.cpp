@@ -315,7 +315,7 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
         DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : NULL;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
         if (wasToggled)
-            win->tocState.Append(tocItem->id);
+            win->tocState->Append(tocItem->id);
 
         if (tocItem && tocItem->child)
             UpdateTocExpansionState(win, TreeView_GetChild(win->hwndTocTree, hItem));
@@ -401,7 +401,7 @@ void LoadTocTree(WindowInfo *win)
 
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    PopulateTocTreeView(win->hwndTocTree, win->tocRoot, win->tocState);
+    PopulateTocTreeView(win->hwndTocTree, win->tocRoot, *win->tocState);
     UpdateTocColors(win);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

@@ -95,7 +95,7 @@ class FileHistory;
 class WindowInfo;
 class NotificationWnd;
 class RenderCache;
-class DocInfo;
+class TabInfo;
 struct LabelWithCloseWnd;
 
 // all defined in SumatraPDF.cpp
@@ -137,7 +137,7 @@ void  ShowOrHideToolbarGlobally();
 void  ShowOrHideToolbarForWindow(WindowInfo *win);
 void  UpdateDocumentColors();
 void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
-void  UpdateTabFileDisplayStateForWin(WindowInfo *win, DocInfo *td);
+void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  UnobserveFileChanges(const WCHAR *path, WindowInfo *win);

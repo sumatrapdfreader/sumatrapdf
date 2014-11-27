@@ -560,7 +560,7 @@ void AddFavorite(WindowInfo *win)
 void DelFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
-    WCHAR *filePath = win->loadedFilePath;
+    const WCHAR *filePath = win->loadedFilePath;
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites.Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();

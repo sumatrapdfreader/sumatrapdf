@@ -61,6 +61,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo()
 {
     FinishStressTest(this);
+    CrashIf(tabs.Count() > 0);
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
@@ -90,23 +91,12 @@ WindowInfo::~WindowInfo()
     free(favSplitter);
     free(tocLabelWithClose);
     free(favLabelWithClose);
-    free(loadedFilePath);
 }
 
-EngineType DocInfo::GetEngineType() const
+EngineType TabInfo::GetEngineType() const
 {
     if (ctrl && ctrl->AsFixed())
         return ctrl->AsFixed()->engineType;
-    return Engine_None;
-}
-
-EngineType WindowInfo::GetEngineType() const
-{
-    if (ctrl && ctrl->AsFixed()) {
-        // CrashIf(!currentTab || currentTab->GetEngineType() != ctrl->AsFixed()->engineType);
-        return ctrl->AsFixed()->engineType;
-    }
-    // CrashIf(currentTab && currentTab->GetEngineType() != Engine_None);
     return Engine_None;
 }
 

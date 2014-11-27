@@ -67,16 +67,17 @@ struct StaticLinkInfo {
 };
 
 /* Data related to a single document loaded into a tab/window */
-/* (none of these depend on WindowInfo, so that a DocInfo could
+/* (none of these depend on WindowInfo, so that a TabInfo could
    be moved between windows once this is supported) */
-/* TODO: move document properties from WindowInfo into DocInfo */
-class DocInfo
+/* TODO: move document properties from WindowInfo into TabInfo */
+class TabInfo
 {
 public:
     ScopedMem<WCHAR> filePath;
     Controller *ctrl;
-    // TODO: could this be generated on demand?
-    ScopedMem<WCHAR> tabTitle;
+    const WCHAR *tabTitle;
+    // text of win->hwndFrame when the tab is selected
+    ScopedMem<WCHAR> frameTitle;
     // state of the table of contents
     bool showToc;
     Vec<int> tocState;
@@ -85,7 +86,7 @@ public:
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus;
 
-    DocInfo() : ctrl(NULL), showToc(false), reloadOnFocus(false) { }
+    TabInfo() : ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false) { }
 
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
@@ -105,11 +106,11 @@ public:
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
     bool IsAboutWindow() const {
-        // CrashIf(!loadedFilePath != !currentTab);
+        CrashIf(!loadedFilePath != !currentTab);
         return !loadedFilePath;
     }
     bool IsDocLoaded() const {
-        // CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
+        CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
         return this->ctrl != NULL;
     }
 
@@ -117,15 +118,15 @@ public:
     ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
     EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
 
-    EngineType GetEngineType() const;
+    EngineType GetEngineType() const { return currentTab ? currentTab->GetEngineType() : Engine_None; }
 
     // TODO: use currentTab->filePath instead
-    WCHAR *         loadedFilePath;
+    const WCHAR *   loadedFilePath; // owned by currentTab
     // TODO: use currentTab->ctrl instead
-    Controller *    ctrl;
+    Controller *    ctrl; // owned by currentTab
 
-    Vec<DocInfo *>  tabs;
-    DocInfo *       currentTab; // points into tabs
+    Vec<TabInfo *>  tabs;
+    TabInfo *       currentTab; // points into tabs
 
     HWND            hwndFrame;
     HWND            hwndCanvas;
@@ -148,7 +149,8 @@ public:
     // set to temporarily disable UpdateTocSelection
     bool            tocKeepSelection;
     // an array of ids for ToC items that have been expanded/collapsed by user
-    Vec<int>        tocState;
+    // TODO: use currentTab->tocState instead
+    Vec<int>      * tocState; // owned by currentTab
     DocTocItem *    tocRoot;
 
     // state related to favorites
@@ -168,7 +170,7 @@ public:
     bool            tabsInTitlebar;
     // keeps the sequence of tab selection. This is needed for restoration 
     // of the previous tab when the current one is closed. (Points into tabs.)
-    Vec<DocInfo *> *tabSelectionHistory;
+    Vec<TabInfo *> *tabSelectionHistory;
 
     HWND            hwndCaption;
     CaptionInfo *   caption;

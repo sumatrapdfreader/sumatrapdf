@@ -135,7 +135,7 @@ WStrVec                      gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 WStrVec                      gAllowedFileTypes;
 
-static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false);
+static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false, bool deleteModel=false);
 static bool SidebarSplitterCb(void *ctx, bool done);
 static bool FavSplitterCb(void *ctx, bool done);
 
@@ -318,7 +318,7 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
             for (size_t j = 0; j < win->tabs.Count(); j++) {
-                DocInfo *tab = win->tabs.At(j);
+                TabInfo *tab = win->tabs.At(j);
                 if (path::IsSame(tab->filePath, normFile)) {
                     TabsSelect(win, (int)j);
                     return win;
@@ -344,7 +344,7 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
             for (size_t j = 0; j < win->tabs.Count(); j++) {
-                DocInfo *tab = win->tabs.At(j);
+                TabInfo *tab = win->tabs.At(j);
                 if (tab->AsFixed() && tab->AsFixed()->pdfSync &&
                     tab->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
                     TabsSelect(win, (int)j);
@@ -451,13 +451,13 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
     ds->showToc = win->tocVisible;
 
     if (win->tocLoaded) {
-        win->tocState.Reset();
+        win->tocState->Reset();
         HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
         if (hRoot)
             UpdateTocExpansionState(win, hRoot);
     }
 
-    *ds->tocState = win->tocState;
+    *ds->tocState = *win->tocState;
 }
 
 void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
@@ -473,7 +473,7 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     UpdateSidebarDisplayState(win, ds);
 }
 
-void UpdateTabFileDisplayStateForWin(WindowInfo *win, DocInfo *td)
+void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td)
 {
     RememberDefaultWindowPosition(*win);
     if (!td->ctrl)
@@ -483,7 +483,7 @@ void UpdateTabFileDisplayStateForWin(WindowInfo *win, DocInfo *td)
         return;
     td->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds, false);
-    if (win->ctrl == td->ctrl) {
+    if (td == win->currentTab) {
         UpdateSidebarDisplayState(win, ds);
         if (win->presentation != PM_DISABLED)
             ds->showToc = win->tocBeforeFullScreen;
@@ -743,7 +743,7 @@ public:
         win(win), ctrl(ctrl), data(data) { }
 
     virtual void Execute() {
-        if (WindowInfoStillValid(win) && GetTabDataByCtrl(win, ctrl)) {
+        if (WindowInfoStillValid(win) && GetTabInfoByCtrl(win, ctrl)) {
             ctrl->HandlePagesFromEbookLayout(data);
         }
     }
@@ -803,6 +803,7 @@ LoadEngineInFixedPageUI:
             // TODO: SetDoc triggers a relayout which spins the message loop early
             // through UpdateWindow - make sure that Canvas uses the correct WndProc
             win->ctrl = ctrl;
+            win->currentTab->ctrl = ctrl;
             ctrl->AsEbook()->EnableMessageHandling(false);
             ctrl->AsEbook()->SetDoc(doc, reparseIdx, displayMode);
         }
@@ -866,10 +867,11 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *state=NULL)
+static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayState *state=NULL)
 {
     ScopedMem<WCHAR> title;
     WindowInfo *win = args.win;
+    CrashIf(!win->currentTab);
 
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     int rotation = 0;
@@ -912,8 +914,11 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     AbortFinding(args.win);
 
     Controller *prevCtrl = win->ctrl;
-    str::ReplacePtr(&win->loadedFilePath, args.fileName);
     win->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
+    win->currentTab->filePath.Set(str::Dup(args.fileName));
+    win->currentTab->tabTitle = path::GetBaseName(win->currentTab->filePath);
+    win->currentTab->ctrl = win->ctrl;
+    win->loadedFilePath = win->currentTab->filePath;
 
     bool needRefresh = !win->ctrl;
 
@@ -967,6 +972,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
         win->ctrl = prevCtrl;
+        win->currentTab->ctrl = prevCtrl;
     }
 
     if (state) {
@@ -983,7 +989,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
             ss.page = win->ctrl->PageCount();
         }
         rotation = state->rotation;
-        win->tocState = *state->tocState;
+        *win->tocState = *state->tocState;
     }
 
     // DisplayModel needs a valid zoom value before any relayout
@@ -1120,7 +1126,7 @@ public:
             if (!WindowInfoStillValid(win))
                 return;
             if (win->tabsVisible) {
-                win->tabs.ForEach([&](DocInfo *tab) {
+                win->tabs.ForEach([&](TabInfo *tab) {
                     if (str::Eq(this->path, tab->filePath))
                         tab->reloadOnFocus = true;
                 });
@@ -1208,7 +1214,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     // we postpone the reload until the next autorefresh event
     args.allowFailure = !autorefresh;
     args.placeWindow = false;
-    if (!LoadDocIntoWindow(args, &pwdUI, ds)) {
+    if (!LoadDocIntoCurrentTab(args, &pwdUI, ds)) {
         DeleteDisplayState(ds);
         TabsOnChangedDoc(win);
         return;
@@ -1216,7 +1222,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     TabsOnChangedDoc(win);
 
     if (win->tabsVisible) {
-        TabData *td = GetTabDataByCtrl(win, win->ctrl);
+        TabInfo *td = GetTabInfoByCtrl(win, win->ctrl);
         if (td) {
             td->reloadOnFocus = false;
         }
@@ -1504,7 +1510,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
                 args.isNewWindow = false;
             }
         }
-        SaveCurrentTabData(args.win);
+        SaveCurrentTabInfo(args.win);
     }
 
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
@@ -1529,7 +1535,14 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         CrashIf(!args.forceReuse && !openNewTab);
         if (args.forceReuse)
             UnobserveFileChanges(win->loadedFilePath, win);
-        CloseDocumentInTab(win, true);
+        else
+            win->tabs.Append((win->currentTab = new TabInfo()));
+        win->tocState = &win->currentTab->tocState;
+        CloseDocumentInTab(win, true, true);
+    }
+    else if (!win->currentTab || openNewTab) {
+        win->tabs.Append((win->currentTab = new TabInfo()));
+        win->tocState = &win->currentTab->tocState;
     }
     // invalidate the links on the Frequently Read page
     win->staticLinks.Reset();
@@ -1539,17 +1552,11 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     args.allowFailure = true;
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
-    bool loaded = LoadDocIntoWindow(args, &pwdUI);
+    bool loaded = LoadDocIntoCurrentTab(args, &pwdUI);
     // don't fail if a user tries to load an SMX file instead
     if (!loaded && IsModificationsFile(fullPath)) {
         *(WCHAR *)path::GetExt(fullPath) = '\0';
-        loaded = LoadDocIntoWindow(args, &pwdUI);
-    }
-
-    if (gPluginMode) {
-        // hide the menu for embedded documents opened from the plugin
-        SetMenu(win->hwndFrame, NULL);
-        return win;
+        loaded = LoadDocIntoCurrentTab(args, &pwdUI);
     }
 
     // insert new tab item for the loaded document
@@ -1557,6 +1564,12 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         TabsOnLoadedDoc(win);
     else
         TabsOnChangedDoc(win);
+
+    if (gPluginMode) {
+        // hide the menu for embedded documents opened from the plugin
+        SetMenu(win->hwndFrame, NULL);
+        return win;
+    }
 
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
@@ -1592,17 +1605,17 @@ WindowInfo* LoadDocument(LoadArgs& args)
 }
 
 // Loads document data into the WindowInfo.
-void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
+void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
 {
     if (!win || !tdata) return;
-    CrashIf(win->currentTab != tdata);
 
     CloseDocumentInTab(win, true);
 
-    str::ReplacePtr(&win->loadedFilePath, tdata->ctrl ? tdata->ctrl->FilePath() : tdata->filePath);
-    win::SetText(win->hwndFrame, tdata->tabTitle);
-
+    win->currentTab = tdata;
+    win->loadedFilePath = tdata->filePath;
     win->ctrl = tdata->ctrl;
+    win->tocState = &tdata->tocState;
+    win::SetText(win->hwndFrame, tdata->frameTitle);
 
     if (win->AsChm())
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
@@ -1627,7 +1640,6 @@ void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
     if (pageCount > 0)
         UpdateToolbarFindText(win);
 
-    win->tocState = tdata->tocState;
     if (win->isFullScreen || win->presentation != PM_DISABLED)
         win->tocBeforeFullScreen = tdata->showToc;
     else
@@ -1832,7 +1844,7 @@ bool AutoUpdateInitiate(const char *updateData)
     // remember currently opened files for reloading after the update
     CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
     gWindows.ForEach([](WindowInfo *win) {
-        win->tabs.ForEach([](DocInfo *tab) {
+        win->tabs.ForEach([](TabInfo *tab) {
             gGlobalPrefs->reopenOnce->Append(str::Dup(tab->filePath));
         });
     });
@@ -2092,9 +2104,9 @@ static void OnMenuExit()
 
 // closes a document inside a WindowInfo and optionally turns it into
 // about window (set keepUIEnabled if a new document will be loaded
-// into the tab right afterwards and LoadDocIntoWindow would revert
+// into the tab right afterwards and LoadDocIntoCurrentTab would revert
 // the UI disabling afterwards anyway)
-static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
+static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteModel)
 {
     bool wasntFixed = !win->AsFixed();
     if (win->AsChm())
@@ -2105,9 +2117,12 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
     win->linkOnLastButtonDown = NULL;
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
-    delete win->ctrl;
     win->ctrl = NULL;
-    str::ReplacePtr(&win->loadedFilePath, NULL);
+    win->loadedFilePath = NULL;
+    if (deleteModel) {
+        delete win->currentTab->ctrl;
+        win->currentTab->ctrl = NULL;
+    }
     win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
     win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
@@ -2128,6 +2143,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled)
             ShowOrHideToolbarForWindow(win);
         }
         win->RedrawAll();
+        CrashIf(win->tabs.Count() != 0 || win->currentTab);
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
@@ -2519,7 +2535,7 @@ static void OnMenuRenameFile(WindowInfo &win)
         return;
 
     UpdateCurrentFileDisplayStateForWin(&win);
-    CloseDocumentInTab(&win, true);
+    CloseDocumentInTab(&win, true, true);
     SetFocus(win.hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;

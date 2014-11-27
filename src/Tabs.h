@@ -1,14 +1,12 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-typedef DocInfo TabData;
-
 int GetTabbarHeight(WindowInfo *win, float factor=1.f);
 
-void SaveCurrentTabData(WindowInfo *win);
-int TabsGetCount(WindowInfo *win);
-TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl);
-void LoadModelIntoTab(WindowInfo *win, TabData *tdata);
+void SaveCurrentTabInfo(WindowInfo *win);
+int TabsGetCount(WindowInfo *win, bool onOpenNew=false);
+TabInfo *GetTabInfoByCtrl(WindowInfo *win, Controller *ctrl);
+void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata);
 
 void CreateTabbar(WindowInfo *win);
 void TabsOnLoadedDoc(WindowInfo *win);
