@@ -802,8 +802,8 @@ LoadEngineInFixedPageUI:
             ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
             // TODO: SetDoc triggers a relayout which spins the message loop early
             // through UpdateWindow - make sure that Canvas uses the correct WndProc
-            win->ctrl = ctrl;
             win->currentTab->ctrl = ctrl;
+            win->ctrl = win->currentTab->ctrl;
             ctrl->AsEbook()->EnableMessageHandling(false);
             ctrl->AsEbook()->SetDoc(doc, reparseIdx, displayMode);
         }
@@ -869,9 +869,9 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
 //   before (isNewWindow=false)
 static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayState *state=NULL)
 {
-    ScopedMem<WCHAR> title;
     WindowInfo *win = args.win;
-    CrashIf(!win->currentTab);
+    TabInfo *tab = win->currentTab;
+    CrashIf(!tab);
 
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     int rotation = 0;
@@ -914,11 +914,11 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     AbortFinding(args.win);
 
     Controller *prevCtrl = win->ctrl;
-    win->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
-    win->currentTab->filePath.Set(str::Dup(args.fileName));
-    win->currentTab->tabTitle = path::GetBaseName(win->currentTab->filePath);
-    win->currentTab->ctrl = win->ctrl;
-    win->loadedFilePath = win->currentTab->filePath;
+    tab->filePath.Set(str::Dup(args.fileName));
+    tab->tabTitle = path::GetBaseName(tab->filePath);
+    win->loadedFilePath = tab->filePath;
+    tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
+    win->ctrl = tab->ctrl;
 
     bool needRefresh = !win->ctrl;
 
@@ -971,8 +971,8 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     } else {
         // if there is an error while reading the document and a repair is not requested
         // then fallback to the previous state
-        win->ctrl = prevCtrl;
-        win->currentTab->ctrl = prevCtrl;
+        tab->ctrl = prevCtrl;
+        win->ctrl = tab->ctrl;
     }
 
     if (state) {
@@ -1031,17 +1031,17 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         free(docTitle);
         docTitle = docTitlePart;
     }
-    title.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
+    tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
     if (IsUIRightToLeft()) {
         // explicitly revert the title, so that filenames aren't garbled
-        title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
     }
     free(docTitle);
     if (needRefresh && win->IsDocLoaded()) {
         // TODO: this isn't visible when tabs are used
-        title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));
+        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle));
     }
-    win::SetText(win->hwndFrame, title);
+    win::SetText(win->hwndFrame, tab->frameTitle);
 
     if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
         CrashIf(!win->AsFixed());

@@ -660,9 +660,9 @@ static void SaveTabInfo(WindowInfo *win, TabInfo *tdata)
     CrashIf(tdata->ctrl != win->ctrl);
     CrashIf(!str::Eq(tdata->filePath, win->loadedFilePath));
     CrashIf(win->tocState != &tdata->tocState);
+    CrashIf(!str::Eq(ScopedMem<WCHAR>(win::GetText(win->hwndFrame)), tdata->frameTitle));
+    CrashIf(!str::Eq(tdata->tabTitle, path::GetBaseName(tdata->filePath)));
     tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
-    tdata->frameTitle.Set(win::GetText(win->hwndFrame));
-    tdata->tabTitle = path::GetBaseName(tdata->filePath);
     tdata->canvasRc = win->canvasRc;
 }
 
