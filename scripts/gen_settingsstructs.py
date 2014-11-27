@@ -329,6 +329,7 @@ FileSettings = [
 WindowTabsInfo = [
 	CompactStruct("Pos", WindowPos, "position of the window (can be on any monitor)", structName="RectI"),
 	CompactArray("Files", String, None, "list of files (tabs) opened in this window"),
+	Field("Index", Int, 1, "index of the currently selected tab (1-based)"),
 ]
 
 # list of fields which aren't serialized when UseDefaultState is set

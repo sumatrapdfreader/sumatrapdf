@@ -317,10 +317,10 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
             return win;
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
-            TabData *td;
-            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
-                if (path::IsSame(td->filePath, normFile)) {
-                    TabsSelect(win, j);
+            for (size_t j = 0; j < win->tabs.Count(); j++) {
+                DocInfo *tab = win->tabs.At(j);
+                if (path::IsSame(tab->filePath, normFile)) {
+                    TabsSelect(win, (int)j);
                     return win;
                 }
             }
@@ -343,11 +343,11 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
         }
         if (win->tabsVisible && focusTab) {
             // bring a background tab to the foreground
-            TabData *td;
-            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
-                if (td->ctrl && td->ctrl->AsFixed() && td->ctrl->AsFixed()->pdfSync &&
-                    td->ctrl->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, j);
+            for (size_t j = 0; j < win->tabs.Count(); j++) {
+                DocInfo *tab = win->tabs.At(j);
+                if (tab->AsFixed() && tab->AsFixed()->pdfSync &&
+                    tab->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+                    TabsSelect(win, (int)j);
                     return win;
                 }
             }
@@ -473,7 +473,7 @@ void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
     UpdateSidebarDisplayState(win, ds);
 }
 
-void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabData *td)
+void UpdateTabFileDisplayStateForWin(WindowInfo *win, DocInfo *td)
 {
     RememberDefaultWindowPosition(*win);
     if (!td->ctrl)
@@ -1120,11 +1120,9 @@ public:
             if (!WindowInfoStillValid(win))
                 return;
             if (win->tabsVisible) {
-                TabData *td;
-                for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
-                    if (str::Eq(path, td->filePath)) {
-                        td->reloadOnFocus = true;
-                    }
+                for (DocInfo **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
+                    if (str::Eq(path, (*tab)->filePath))
+                        (*tab)->reloadOnFocus = true;
                 }
             }
             if (str::Eq(path, win->loadedFilePath)) {
@@ -1597,11 +1595,12 @@ WindowInfo* LoadDocument(LoadArgs& args)
 void LoadModelIntoTab(WindowInfo *win, TabData *tdata)
 {
     if (!win || !tdata) return;
+    CrashIf(win->currentTab != tdata);
 
     CloseDocumentInTab(win, true);
 
     str::ReplacePtr(&win->loadedFilePath, tdata->ctrl ? tdata->ctrl->FilePath() : tdata->filePath);
-    win::SetText(win->hwndFrame, tdata->title);
+    win::SetText(win->hwndFrame, tdata->tabTitle);
 
     win->ctrl = tdata->ctrl;
 
@@ -1785,23 +1784,6 @@ void AssociateExeWithPdfExtension()
 #endif
 
 #ifdef SUPPORTS_AUTO_UPDATE
-static void RememberCurrentlyOpenedFiles()
-{
-    CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (win->tabsVisible) {
-            TabData *td;
-            for (int j = 0; (td = GetTabData(win, j)) != NULL; j++) {
-                gGlobalPrefs->reopenOnce->Append(str::Dup(td->filePath));
-            }
-        }
-        else if (!win->IsAboutWindow()) {
-            gGlobalPrefs->reopenOnce->Append(str::Dup(win->loadedFilePath));
-        }
-    }
-}
-
 static void OnMenuExit();
 
 bool AutoUpdateInitiate(const char *updateData)
@@ -1847,7 +1829,14 @@ bool AutoUpdateInitiate(const char *updateData)
     if (!ok)
         return false;
 
-    RememberCurrentlyOpenedFiles();
+    // remember currently opened files for reloading after the update
+    CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        for (DocInfo **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
+            gGlobalPrefs->reopenOnce->Append(str::Dup(td->filePath));
+        }
+    }
     // save session before launching the installer (which force-quits SumatraPDF)
     if (installer)
         prefs::Save();

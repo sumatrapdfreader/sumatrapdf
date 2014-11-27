@@ -1342,15 +1342,10 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case EBOOK_LAYOUT_TIMER_ID:
         KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
-        if (win.tabsVisible) {
-            TabData *td;
-            for (int i = 0; (td = GetTabData(&win, i)) != NULL; i++) {
-                if (td->ctrl && td->ctrl->AsEbook())
-                    td->ctrl->AsEbook()->TriggerLayout();
-            }
+        for (DocInfo **tab = win.tabs.IterStart(); tab; tab = win.tabs.IterNext()) {
+            if ((*tab)->AsEbook())
+                (*tab)->AsEbook()->TriggerLayout();
         }
-        else if (win.AsEbook())
-            win.AsEbook()->TriggerLayout();
         break;
     }
 }

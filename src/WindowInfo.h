@@ -10,7 +10,6 @@ class SumatraUIAutomationProvider;
 
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
-struct TabData;
 struct SplitterWnd;
 class CaptionInfo;
 
@@ -67,6 +66,33 @@ struct StaticLinkInfo {
     const WCHAR *infotip;
 };
 
+/* Data related to a single document loaded into a tab/window */
+/* (none of these depend on WindowInfo, so that a DocInfo could
+   be moved between windows once this is supported) */
+/* TODO: move document properties from WindowInfo into DocInfo */
+class DocInfo
+{
+public:
+    ScopedMem<WCHAR> filePath;
+    Controller *ctrl;
+    // TODO: could this be generated on demand?
+    ScopedMem<WCHAR> tabTitle;
+    // state of the table of contents
+    bool showToc;
+    Vec<int> tocState;
+    // canvas dimensions when the document was last visible
+    RectI canvasRc;
+    // whether to auto-reload the document when the tab is selected
+    bool reloadOnFocus;
+
+    DocInfo() : ctrl(NULL), showToc(false), reloadOnFocus(false) { }
+
+    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
+    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
+    EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
+    EngineType GetEngineType() const;
+};
+
 /* Describes information related to one window with (optional) a document
    on the screen */
 class WindowInfo
@@ -78,8 +104,14 @@ public:
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
-    bool IsAboutWindow() const { return !loadedFilePath; }
-    bool IsDocLoaded() const { return this->ctrl != NULL; }
+    bool IsAboutWindow() const {
+        // CrashIf(!loadedFilePath != !currentTab);
+        return !loadedFilePath;
+    }
+    bool IsDocLoaded() const {
+        // CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
+        return this->ctrl != NULL;
+    }
 
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
@@ -87,8 +119,13 @@ public:
 
     EngineType GetEngineType() const;
 
+    // TODO: use currentTab->filePath instead
     WCHAR *         loadedFilePath;
+    // TODO: use currentTab->ctrl instead
     Controller *    ctrl;
+
+    Vec<DocInfo *>  tabs;
+    DocInfo *       currentTab; // points into tabs
 
     HWND            hwndFrame;
     HWND            hwndCanvas;
@@ -130,8 +167,8 @@ public:
     bool            tabsVisible;
     bool            tabsInTitlebar;
     // keeps the sequence of tab selection. This is needed for restoration 
-    // of the previous tab when the current one is closed.
-    Vec<TabData *> *tabSelectionHistory;
+    // of the previous tab when the current one is closed. (Points into tabs.)
+    Vec<DocInfo *> *tabSelectionHistory;
 
     HWND            hwndCaption;
     CaptionInfo *   caption;

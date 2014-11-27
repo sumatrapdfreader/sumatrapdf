@@ -230,6 +230,8 @@ struct WindowTabsInfo {
     RectI pos;
     // list of files (tabs) opened in this window
     Vec<WCHAR *> * files;
+    // index of the currently selected tab (1-based)
+    int index;
 };
 
 // Most values on this structure can be updated through the UI and are
@@ -511,8 +513,9 @@ static const StructInfo gRectI_2_Info = { sizeof(RectI), 4, gRectI_2_Fields, "X\
 static const FieldInfo gWindowTabsInfoFields[] = {
     { offsetof(WindowTabsInfo, pos),   Type_Compact,     (intptr_t)&gRectI_2_Info },
     { offsetof(WindowTabsInfo, files), Type_StringArray, 0                        },
+    { offsetof(WindowTabsInfo, index), Type_Int,         1                        },
 };
-static const StructInfo gWindowTabsInfoInfo = { sizeof(WindowTabsInfo), 2, gWindowTabsInfoFields, "Pos\0Files" };
+static const StructInfo gWindowTabsInfoInfo = { sizeof(WindowTabsInfo), 3, gWindowTabsInfoFields, "Pos\0Files\0Index" };
 
 static const FieldInfo gFILETIMEFields[] = {
     { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },

@@ -660,9 +660,8 @@ static void SaveTabData(WindowInfo *win, TabData *tdata)
     tdata->tocState = win->tocState;
     tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
     tdata->ctrl = win->ctrl;
-    free(tdata->title);
-    tdata->title = win::GetText(win->hwndFrame);
-    str::ReplacePtr(&tdata->filePath, win->loadedFilePath);
+    tdata->tabTitle.Set(win::GetText(win->hwndFrame));
+    tdata->filePath.Set(str::Dup(win->loadedFilePath));
     tdata->canvasRc = win->canvasRc;
 }
 
@@ -697,18 +696,14 @@ void SaveCurrentTabData(WindowInfo *win)
     if (current == -1) {
         return;
     }
-    TCITEM tcs;
-    tcs.mask = TCIF_PARAM;
-    if (!TabCtrl_GetItem(win->hwndTabBar, current, &tcs)) {
-        return;
-    }
-    // we use the lParam member of the TCITEM structure of the tab, to save the TabData pointer in
-    PrepareAndSaveTabData(win, (TabData **)&tcs.lParam);
-    TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
+
+    TabData *tdata = win->tabs.At(current);
+    PrepareAndSaveTabData(win, &tdata);
+    win->tabs.At(current) = tdata;
 
     // update the selection history
-    win->tabSelectionHistory->Remove((TabData *)tcs.lParam);
-    win->tabSelectionHistory->Push((TabData *)tcs.lParam);
+    win->tabSelectionHistory->Remove(tdata);
+    win->tabSelectionHistory->Push(tdata);
 }
 
 static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
@@ -723,41 +718,23 @@ static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
     RepaintNow(win->hwndTabBar);
 }
 
+// TODO: inline
 int TabsGetCount(WindowInfo *win)
 {
     if (!win)
         return -1;
-    return TabCtrl_GetItemCount(win->hwndTabBar);
-}
-
-// Gets the TabData pointer from the lParam member of the TCITEM structure of the tab.
-TabData *GetTabData(WindowInfo *win, int tabIndex)
-{
-    TCITEM tcs;
-    tcs.mask = TCIF_PARAM;
-    if (TabCtrl_GetItem(win->hwndTabBar, tabIndex, &tcs))
-        return (TabData *)tcs.lParam;
-    return NULL;
+    int count = TabCtrl_GetItemCount(win->hwndTabBar);
+    CrashIf(count != (int)win->tabs.Count());
+    return count;
 }
 
 TabData *GetTabDataByCtrl(WindowInfo *win, Controller *ctrl)
 {
-    TabData *td;
-    for (int i = 0; (td = GetTabData(win, i)) != NULL; i++) {
-        if (ctrl == td->ctrl)
-            return td;
+    for (TabData **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
+        if (ctrl == (*tab)->ctrl)
+            return *tab;
     }
     return NULL;
-}
-
-static int FindTabIndex(WindowInfo *win, TabData *tdata)
-{
-    int count = TabsGetCount(win);
-    for (int i = 0; i < count; i++) {
-        if (tdata == GetTabData(win, i))
-            return i;
-    }
-    return -1;
 }
 
 static void DeleteTabData(WindowInfo *win, TabData *tdata, bool deleteModel)
@@ -769,8 +746,6 @@ static void DeleteTabData(WindowInfo *win, TabData *tdata, bool deleteModel)
         UnobserveFileChanges(tdata->filePath, win);
         delete tdata->ctrl;
     }
-    free(tdata->title);
-    free(tdata->filePath);
     delete tdata;
 }
 
@@ -785,12 +760,13 @@ void TabsOnLoadedDoc(WindowInfo *win)
     SaveTabData(win, td);
 
     TCITEM tcs;
-    tcs.mask = TCIF_TEXT | TCIF_PARAM;
-    tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
-    tcs.lParam = (LPARAM)td;
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR *)path::GetBaseName(td->filePath);
 
     int count = TabsGetCount(win);
     if (-1 != TabCtrl_InsertItem(win->hwndTabBar, count, &tcs)) {
+        win->tabs.Append(td);
+        win->currentTab = td;
         TabCtrl_SetCurSel(win->hwndTabBar, count);
         UpdateTabWidth(win);
     }
@@ -806,13 +782,13 @@ void TabsOnChangedDoc(WindowInfo *win)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    TabData *tdata = GetTabData(win, current);
+    TabData *tdata = win->currentTab;
     CrashIf(!tdata);
     SaveTabData(win, tdata);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR *)path::GetBaseName(win->loadedFilePath);
+    tcs.pszText = (WCHAR *)path::GetBaseName(tdata->filePath);
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
     UpdateCurrentTabBgColForWindow(win);
 }
@@ -829,15 +805,17 @@ void TabsOnCloseDoc(WindowInfo *win)
     }
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    TabData *tdata = GetTabData(win, current);
-    win->tabSelectionHistory->Remove(tdata);
+    TabData *tdata = win->currentTab;
     UpdateTabFileDisplayStateForWin(win, tdata);
+    win->tabSelectionHistory->Remove(tdata);
+    win->tabs.Remove(tdata);
     DeleteTabData(win, tdata, false);
     TabCtrl_DeleteItem(win->hwndTabBar, current);
     UpdateTabWidth(win);
     if (count > 1) {
         tdata = win->tabSelectionHistory->Pop();
-        TabCtrl_SetCurSel(win->hwndTabBar, FindTabIndex(win, tdata));
+        win->currentTab = tdata;
+        TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tdata));
         LoadModelIntoTab(win, tdata);
         UpdateCurrentTabBgColForWindow(win);
     }
@@ -846,15 +824,14 @@ void TabsOnCloseDoc(WindowInfo *win)
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo *win)
 {
-    int count = TabsGetCount(win);
-    for (int i = 0; i < count; i++) {
-        TabData *tdata = GetTabData(win, i);
-        if (tdata) {
-            UpdateTabFileDisplayStateForWin(win, tdata);
-            DeleteTabData(win, tdata, win->ctrl != tdata->ctrl);
+    for (TabData **tab = win->tabs.IterStart(); tab; tab = win->tabs.IterNext()) {
+        if (*tab) {
+            UpdateTabFileDisplayStateForWin(win, *tab);
+            DeleteTabData(win, *tab, win->ctrl != (*tab)->ctrl);
         }
     }
     win->tabSelectionHistory->Reset();
+    win->tabs.Reset();
     TabCtrl_DeleteAllItems(win->hwndTabBar);
 }
 
@@ -874,7 +851,7 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     case TCN_SELCHANGE:
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
-            LoadModelIntoTab(win, GetTabData(win, current));
+            LoadModelIntoTab(win, win->tabs.At(current));
             UpdateCurrentTabBgColForWindow(win);
         }
         break;
@@ -890,9 +867,10 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 CloseTab(win);
             }
             else {
-                TabData *tdata = GetTabData(win, tab1);
-                win->tabSelectionHistory->Remove(tdata);
+                TabData *tdata = win->tabs.At(tab1);
                 UpdateTabFileDisplayStateForWin(win, tdata);
+                win->tabSelectionHistory->Remove(tdata);
+                win->tabs.Remove(tdata);
                 DeleteTabData(win, tdata, true);
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
@@ -981,6 +959,7 @@ void TabsSelect(WindowInfo *win, int tabIndex)
     NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
     if (TabsOnNotify(win, (LPARAM)&ntd))
         return;
+    win->currentTab = win->tabs.At(tabIndex);
     int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
     if (prevIndex != -1) {
         ntd.code = TCN_SELCHANGE;
@@ -1004,29 +983,15 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2)
     if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
         return;
 
-    WCHAR buf1[MAX_PATH], buf2[MAX_PATH];
-    LPARAM lp;
+    std::swap(win->tabs.At(tab1), win->tabs.At(tab2));
+
     TCITEM tcs;
-    tcs.mask = TCIF_TEXT | TCIF_PARAM;
-    tcs.cchTextMax = MAX_PATH;
-
-    tcs.pszText = buf1;
-    if (!TabCtrl_GetItem(win->hwndTabBar, tab1, &tcs))
-        return;
-    if (tcs.pszText != buf1)
-        str::BufSet(buf1, dimof(buf1), tcs.pszText);
-    lp = tcs.lParam;
-
-    tcs.pszText = buf2;
-    if (!TabCtrl_GetItem(win->hwndTabBar, tab2, &tcs))
-        return;
-    if (tcs.pszText != buf2)
-        str::BufSet(buf2, dimof(buf2), tcs.pszText);
-
-    tcs.pszText = buf2;
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR *)path::GetBaseName(win->tabs.At(tab1)->filePath);
     TabCtrl_SetItem(win->hwndTabBar, tab1, &tcs);
-    tcs.pszText = buf1;
-    tcs.lParam = lp;
+
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR *)path::GetBaseName(win->tabs.At(tab2)->filePath);
     TabCtrl_SetItem(win->hwndTabBar, tab2, &tcs);
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
@@ -1037,7 +1002,8 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2)
 }
 
 // Adjusts lightness by 1/255 units.
-COLORREF AdjustLightness2(COLORREF c, float units) {
+COLORREF AdjustLightness2(COLORREF c, float units)
+{
     float lightness = GetLightness(c);
     units = limitValue(units, -lightness, 255.0f - lightness);
     if (0.0f == lightness)

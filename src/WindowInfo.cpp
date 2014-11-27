@@ -29,7 +29,7 @@
 #include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    ctrl(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
+    ctrl(NULL), currentTab(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
     tocLoaded(false), tocVisible(false), tocRoot(NULL), tocKeepSelection(false),
     isFullScreen(false), presentation(PM_DISABLED), tocBeforeFullScreen(false),
@@ -93,10 +93,20 @@ WindowInfo::~WindowInfo()
     free(loadedFilePath);
 }
 
-EngineType WindowInfo::GetEngineType() const
+EngineType DocInfo::GetEngineType() const
 {
     if (ctrl && ctrl->AsFixed())
         return ctrl->AsFixed()->engineType;
+    return Engine_None;
+}
+
+EngineType WindowInfo::GetEngineType() const
+{
+    if (ctrl && ctrl->AsFixed()) {
+        // CrashIf(!currentTab || currentTab->GetEngineType() != ctrl->AsFixed()->engineType);
+        return ctrl->AsFixed()->engineType;
+    }
+    // CrashIf(currentTab && currentTab->GetEngineType() != Engine_None);
     return Engine_None;
 }
 
