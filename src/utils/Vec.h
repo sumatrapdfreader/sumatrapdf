@@ -277,12 +277,6 @@ public:
         }
     }
 
-    void ForEach(const std::function<void (T&)> func) {
-        for (size_t i = 0; i < len; i++) {
-            func(els[i]);
-        }
-    }
-
     T FindEl(const std::function<bool (T&)> check) {
         for (size_t i = 0; i < len; i++) {
             if (check(els[i]))
@@ -312,6 +306,32 @@ public:
         size_t idx = iterCurr - els;
         CrashIf(0 == idx);
         return idx - 1;
+    }
+
+    // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    class Iter {
+        Vec<T> *vec;
+        size_t pos;
+    public:
+        Iter(Vec<T> *vec, size_t pos) : vec(vec), pos(pos) { }
+
+        bool operator!=(const Iter& other) const {
+            return vec != other.vec || pos != other.pos;
+        }
+        T& operator*() const {
+            return vec->At(pos);
+        }
+        Iter& operator++() {
+            pos++;
+            return *this;
+        }
+    };
+
+    Iter begin() {
+        return Iter(this, 0);
+    }
+    Iter end() {
+        return Iter(this, len);
     }
 };
 

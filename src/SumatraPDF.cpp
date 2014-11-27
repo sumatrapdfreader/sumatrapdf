@@ -1126,10 +1126,10 @@ public:
             if (!WindowInfoStillValid(win))
                 return;
             if (win->tabsVisible) {
-                win->tabs.ForEach([&](TabInfo *tab) {
+                for (TabInfo *tab : win->tabs) {
                     if (str::Eq(this->path, tab->filePath))
                         tab->reloadOnFocus = true;
-                });
+                }
             }
             if (str::Eq(path, win->loadedFilePath)) {
                 // delay the reload slightly, in case we get another request immediately after this one
@@ -1843,11 +1843,11 @@ bool AutoUpdateInitiate(const char *updateData)
 
     // remember currently opened files for reloading after the update
     CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
-    gWindows.ForEach([](WindowInfo *win) {
-        win->tabs.ForEach([](TabInfo *tab) {
+    for (WindowInfo *win : gWindows) {
+        for (TabInfo *tab : win->tabs) {
             gGlobalPrefs->reopenOnce->Append(str::Dup(tab->filePath));
-        });
-    });
+        }
+    }
     // save session before launching the installer (which force-quits SumatraPDF)
     if (installer)
         prefs::Save();

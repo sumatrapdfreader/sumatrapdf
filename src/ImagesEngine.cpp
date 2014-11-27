@@ -924,7 +924,9 @@ bool CbxEngineImpl::FinishLoading()
         json::Parse(metadata, this);
 
     pageFileNames.Sort(cmpAscii);
-    pageFileNames.ForEach([&](const WCHAR *fn) { fileIdxs.Append(allFileNames.Find(fn)); });
+    for (const WCHAR *fn : pageFileNames) {
+        fileIdxs.Append(allFileNames.Find(fn));
+    }
     AssertCrash(pageFileNames.Count() == fileIdxs.Count());
     if (fileIdxs.Count() == 0)
         return false;

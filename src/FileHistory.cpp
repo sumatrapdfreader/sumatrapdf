@@ -137,10 +137,10 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
 void FileHistory::GetFrequencyOrder(Vec<DisplayState *>& list) {
     CrashIf(list.Count() > 0);
     size_t i = 0;
-    for (DisplayState **ds = states->IterStart(); ds; ds = states->IterNext()) {
-        (*ds)->index = i++;
-        if (!(*ds)->isMissing || (*ds)->isPinned)
-            list.Append(*ds);
+    for (DisplayState *ds : *states) {
+        ds->index = i++;
+        if (!ds->isMissing || ds->isPinned)
+            list.Append(ds);
     }
     list.Sort(cmpOpenCount);
 }

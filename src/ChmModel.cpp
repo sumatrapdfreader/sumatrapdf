@@ -435,13 +435,13 @@ DocTocItem *ChmModel::GetTocTree()
     Vec<DocTocItem *> levels;
     int idCounter = 0;
 
-    for (ChmTocTraceItem *ti = tocTrace->IterStart(); ti; ti = tocTrace->IterNext()) {
-        ChmTocItem *item = new ChmTocItem(ti->title, ti->pageNo, ti->url);
+    for (ChmTocTraceItem& ti : *tocTrace) {
+        ChmTocItem *item = new ChmTocItem(ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         // append the item at the correct level
-        CrashIf(ti->level < 1);
-        if ((size_t)ti->level <= levels.Count()) {
-            levels.RemoveAt(ti->level, levels.Count() - ti->level);
+        CrashIf(ti.level < 1);
+        if ((size_t)ti.level <= levels.Count()) {
+            levels.RemoveAt(ti.level, levels.Count() - ti.level);
             levels.Last()->AddSibling(item);
         }
         else {

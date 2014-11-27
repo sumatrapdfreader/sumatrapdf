@@ -810,10 +810,10 @@ void TabsOnCloseWindow(WindowInfo *win)
 {
     TabCtrl_DeleteAllItems(win->hwndTabBar);
     // TODO: move into SumatraPDF.cpp
-    win->tabs.ForEach([&](TabInfo *tab) {
+    for (TabInfo *tab : win->tabs) {
         UpdateTabFileDisplayStateForWin(win, tab);
         DeleteTabInfo(win, tab);
-    });
+    }
     win->tabSelectionHistory->Reset();
     win->tabs.Reset();
     win->currentTab = NULL;

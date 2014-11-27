@@ -67,14 +67,14 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
     }
 
     Vec<PageAnnotation> *list = new Vec<PageAnnotation>();
-    for (SquareTreeNode::DataItem *i = sqt.root->data.IterStart(); i; i = sqt.root->data.IterNext()) {
-        PageAnnotType type = str::EqI(i->key, "highlight") ? Annot_Highlight :
-                             str::EqI(i->key, "underline") ? Annot_Underline :
-                             str::EqI(i->key, "strikeout") ? Annot_StrikeOut :
-                             str::EqI(i->key, "squiggly")  ? Annot_Squiggly  :
+    for (SquareTreeNode::DataItem& i : sqt.root->data) {
+        PageAnnotType type = str::EqI(i.key, "highlight") ? Annot_Highlight :
+                             str::EqI(i.key, "underline") ? Annot_Underline :
+                             str::EqI(i.key, "strikeout") ? Annot_StrikeOut :
+                             str::EqI(i.key, "squiggly")  ? Annot_Squiggly  :
                              Annot_None;
-        CrashIf(!i->isChild);
-        if (Annot_None == type || !i->isChild)
+        CrashIf(!i.isChild);
+        if (Annot_None == type || !i.isChild)
             continue;
 
         int pageNo;
@@ -83,7 +83,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
         float opacity;
         int r, g, b;
 
-        SquareTreeNode *node = i->value.child;
+        SquareTreeNode *node = i.value.child;
         const char *value = node->GetValue("page");
         if (!value || !str::Parse(value, "%d%$", &pageNo))
             continue;

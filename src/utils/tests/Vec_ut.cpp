@@ -125,7 +125,9 @@ void VecTest()
     ints.Append(last);
     utassert(ints.AtPtr(501) == &ints.At(501));
 
-    ints.ForEach([](int& value) { utassert(0 <= value && value < 1000); });
+    for (int& value : ints) {
+        utassert(0 <= value && value < 1000);
+    }
     utassert(ints.FindEl([](int& value) { return value == 999; }) == 999);
     utassert(ints.FindEl([](int& value) { return value == 500; }) == 0);
 

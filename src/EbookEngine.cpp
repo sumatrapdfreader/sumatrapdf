@@ -118,7 +118,7 @@ protected:
     Vec<DrawInstr *> baseAnchors;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
     PoolAllocator allocator;
-    // needed since pages::IterStart/IterNext aren't thread-safe
+    // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
     // access to userAnnots is protected by pagesAccess
     Vec<PageAnnotation> userAnnots;
@@ -408,9 +408,9 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     return !(cookie && cookie->abort);
 }
 
-static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
+static RectI GetInstrBbox(DrawInstr& instr, float pageBorder)
 {
-    geomutil::RectT<float> bbox(instr->bbox.X, instr->bbox.Y, instr->bbox.Width, instr->bbox.Height);
+    geomutil::RectT<float> bbox(instr.bbox.X, instr.bbox.Y, instr.bbox.Width, instr.bbox.Height);
     bbox.Offset(pageBorder, pageBorder);
     return bbox.Round();
 }
@@ -424,9 +424,9 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
     bool insertSpace = false;
 
     Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
-    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
+    for (DrawInstr& i : *pageInstrs) {
         RectI bbox = GetInstrBbox(i, pageBorder);
-        switch (i->type) {
+        switch (i.type) {
         case InstrString:
             if (coords.Count() > 0 && (bbox.x < coords.Last().BR().x ||
                                        bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
@@ -443,7 +443,7 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             }
             insertSpace = false;
             {
-                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
+                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -467,7 +467,7 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             }
             insertSpace = false;
             {
-                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
+                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -527,13 +527,11 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
     Vec<PageElement *> *els = new Vec<PageElement *>();
 
     Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
-    // CreatePageLink -> GetNamedDest might use pageInstrs->IterStart()
-    for (size_t k = 0; k < pageInstrs->Count(); k++) {
-        DrawInstr *i = &pageInstrs->At(k);
-        if (InstrImage == i->type)
-            els->Append(new ImageDataElement(pageNo, &i->img, GetInstrBbox(i, pageBorder)));
-        else if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea()) {
-            PageElement *link = CreatePageLink(i, GetInstrBbox(i, pageBorder), pageNo);
+    for (DrawInstr& i : *pageInstrs) {
+        if (InstrImage == i.type)
+            els->Append(new ImageDataElement(pageNo, &i.img, GetInstrBbox(i, pageBorder)));
+        else if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea()) {
+            PageElement *link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link)
                 els->Append(link);
         }
@@ -626,19 +624,18 @@ WCHAR *EbookEngine::ExtractFontList()
         if (!pageInstrs)
             continue;
 
-        for (size_t k = 0; k < pageInstrs->Count(); k++) {
-            DrawInstr *i = &pageInstrs->At(k);
-            if (InstrSetFont != i->type || seenFonts.Contains(i->font))
+        for (DrawInstr& i : *pageInstrs) {
+            if (InstrSetFont != i.type || seenFonts.Contains(i.font))
                 continue;
-            seenFonts.Append(i->font);
+            seenFonts.Append(i.font);
 
             FontFamily family;
-            if (!i->font->font) {
+            if (!i.font->font) {
                 // TODO: handle gdi
-                CrashIf(!i->font->GetHFont());
+                CrashIf(!i.font->GetHFont());
                 continue;
             }
-            Status ok = i->font->font->GetFamily(&family);
+            Status ok = i.font->font->GetFamily(&family);
             if (ok != Ok)
                 continue;
             WCHAR fontName[LF_FACESIZE];
@@ -1087,11 +1084,11 @@ PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
     // link to the bottom of the page, if filePos points
     // beyond the last visible DrawInstr of a page
     float currY = (float)pageRect.dy;
-    for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-        if ((InstrString == i->type || InstrRtlString == i->type) &&
-            i->str.s >= start && i->str.s <= start + htmlLen &&
-            i->str.s - start >= filePos) {
-            currY = i->bbox.Y;
+    for (DrawInstr& i : *pageInstrs) {
+        if ((InstrString == i.type || InstrRtlString == i.type) &&
+            i.str.s >= start && i.str.s <= start + htmlLen &&
+            i.str.s - start >= filePos) {
+            currY = i.bbox.Y;
             break;
         }
     }
