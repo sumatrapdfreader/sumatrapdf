@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-605a0f8fc489b50acd01d270284c363d0155265d
+c81884104ff02d2a4b938f9d5fb83208d73085c5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -14151,7 +14151,7 @@ cz:Nastavit inverzní vyhledávání z příkazového řádku
 de:Befehlszeile für die Inverssuche setzen
 dk:Indstil komando-linje til invers søgning
 el:Εμφάνιση γραμμής αντίστροφης αναζήτησης
-es:Establecer línea de comandos para búsqueda inversa
+es:Establecer orden de consola para búsqueda inversa
 et:Loo pööratud otsingu käsurida
 eu:Ezarri alderantzizko bilaketa agindu-lerroa
 fa:تنظیم خط فرمان جستجوی وارونه
@@ -15700,12 +15700,14 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
+es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrarse adecuadamente
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno prikazati
 hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
+kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
@@ -16532,7 +16534,7 @@ cz:Zvětšit
 de:Vergrößern
 dk:Zoom ind
 el:Μεγέθυνση
-es:Acercar zoom
+es:Acercar
 et:Suurenda
 eu:Zooma Handitu
 fa:بزرگ نمایی
@@ -16601,7 +16603,7 @@ cz:Zmenšit
 de:Verkleinern
 dk:Zoom ud
 el:Σμίκρυνση
-es:Alejar zoom
+es:Alejar
 et:Vähenda
 eu:Zooma Gutxitu
 fa:کوچک نمایی
@@ -16667,7 +16669,7 @@ cz:Měřítko přiblížení
 de:Zoomfaktor
 dk:Zoomfaktor
 el:Ποσοστό μεγέθυνσης
-es:Proporción de zoom
+es:Proporción de escala
 et:Suurendusaste
 eu:Zomm ezaugarria
 fa:ضریب بزرگنمایی

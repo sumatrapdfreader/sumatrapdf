@@ -7715,7 +7715,7 @@ const char * gTranslations_kr =
   "\353\217\231\352\270\260\355\231\224 \355\214\214\354\235\274\354\235\204 \354\227\264 \354\210\230 \354\227\206\354\212\265\353\213\210\353\213\244.\0"\
   "\355\203\234\352\267\270\354\236\210\353\212\224 PDF\0"\
   "\355\205\215\354\212\244\355\212\270 \353\254\270\354\204\234\0"\
-  "\0"\
+  "\354\235\264 \353\254\270\354\204\234\353\212\224 \354\247\200\354\233\220\353\220\230\354\247\200 \354\225\212\353\212\224 \352\270\260\353\212\245 (%s)\354\235\204 \354\202\254\354\232\251\355\226\210\352\263\240, \354\240\234\353\214\200\353\241\234 \353\240\214\353\215\224\353\247\201\353\220\230\354\247\200 \354\225\212\354\235\204 \354\210\230 \354\236\210\354\212\265\353\213\210\353\213\244.\0"\
   "\354\240\234\353\252\251:\0"\
   "\354\225\214 \354\210\230 \354\227\206\353\212\224 \354\233\220\353\263\270 \355\214\214\354\235\274 (%s)\0"\
   "\355\203\255 \354\202\254\354\232\251(&T)\0"\
@@ -11929,7 +11929,7 @@ const char * gTranslations_es =
   "Seleccionar con Ctrl+Bot\303\263n. Izq. del rat\303\263n\0"\
   "Selecci\303\263n:\0"\
   "Enviar por correo &electr\303\263nico\0"\
-  "Establecer l\303\255nea de comandos para b\303\272squeda inversa\0"\
+  "Establecer orden de consola para b\303\272squeda inversa\0"\
   "Mostrar &marcadores\0"\
   "Mostrar &p\303\241ginas de forma continua\0"\
   "Mostrar barra de &herramientas\0"\
@@ -11948,7 +11948,7 @@ const char * gTranslations_es =
   "No se pudo abrir el archivo de sincronizaci\303\263n\0"\
   "PDF etiquetado\0"\
   "Documentos de texto\0"\
-  "\0"\
+  "Este documento utiliza funcionalidades no admitidas (%s) y podr\303\255a no mostrarse adecuadamente\0"\
   "T\303\255tulo:\0"\
   "Archivo de origen desconocido (%s)\0"\
   "Usar &pesta\303\261as\0"\
@@ -11959,9 +11959,9 @@ const char * gTranslations_es =
   "Esta es la \303\272ltima versi\303\263n disponible.\0"\
   "La versi\303\263n actual es: %s\0"\
   "Ampliar\0"\
-  "Acercar zoom\0"\
-  "Alejar zoom\0"\
-  "Proporci\303\263n de zoom\0"\
+  "Acercar\0"\
+  "Alejar\0"\
+  "Proporci\303\263n de escala\0"\
   "[Cambios detectados; actualizando] %s\0"\
   "copiado de texto\0"\
   "imprimiendo documento\0";
