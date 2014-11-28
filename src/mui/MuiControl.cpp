@@ -46,8 +46,8 @@ static void ClearInfotip(HWND hwndParent)
 }
 
 // we use uint16 for those
-STATIC_ASSERT(Control::WantedInputBitLast < 16, max16bitsForWantedIntputBits);
-STATIC_ASSERT(Control::StateBitLast < 16, max16bitsForStateBits);
+static_assert(Control::WantedInputBitLast < 16, "too many bits used for WantedInputBits");
+static_assert(Control::StateBitLast < 16, "too many bits used for StateBits");
 
 Control::Control(Control *newParent)
 {

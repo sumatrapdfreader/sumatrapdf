@@ -83,9 +83,6 @@ inline T *AllocStruct()
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)
 
-/* compile-time assert */
-#define STATIC_ASSERT(exp, name) typedef int assert_##name [(exp) != FALSE]
-
 typedef unsigned char uint8;
 typedef int16_t   int16;
 typedef uint16_t uint16;
@@ -94,12 +91,9 @@ typedef uint32_t uint32;
 typedef int64_t   int64;
 typedef uint64_t uint64;
 
-STATIC_ASSERT(2 == sizeof(int16),   int16_is_2_bytes);
-STATIC_ASSERT(2 == sizeof(uint16), uint16_is_2_bytes);
-STATIC_ASSERT(4 == sizeof(int32),   int32_is_4_bytes);
-STATIC_ASSERT(4 == sizeof(uint32), uint32_is_4_bytes);
-STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
-STATIC_ASSERT(8 == sizeof(uint64), uint64_is_8_bytes);
+static_assert(2 == sizeof(int16) && 2 == sizeof(uint16), "(u)int16 must be two bytes");
+static_assert(4 == sizeof(int32) && 4 == sizeof(uint32), "(u)int32 must be four bytes");
+static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight bytes");
 
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer

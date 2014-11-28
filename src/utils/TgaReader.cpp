@@ -68,9 +68,9 @@ struct TgaExtArea {
 
 #include <poppack.h>
 
-STATIC_ASSERT(sizeof(TgaHeader) == 18, tgaHeaderSize);
-STATIC_ASSERT(sizeof(TgaFooter) == 26, tgaFooterSize);
-STATIC_ASSERT(sizeof(TgaExtArea) == 495, tgaExtAreaSize);
+static_assert(sizeof(TgaHeader) == 18, "wrong size of TgaHeader structure");
+static_assert(sizeof(TgaFooter) == 26, "wrong size of TgaFooter structure");
+static_assert(sizeof(TgaExtArea) == 495, "wrong size of TgaExtArea structure");
 
 static inline uint16_t convLE(uint16_t x)
 {

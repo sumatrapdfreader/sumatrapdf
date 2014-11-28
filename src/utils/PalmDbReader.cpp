@@ -36,8 +36,8 @@ struct PdbRecordHeader {
 
 #include <poppack.h>
 
-STATIC_ASSERT(sizeof(PdbHeader) == kPdbHeaderLen, pdbHeaderSize);
-STATIC_ASSERT(sizeof(PdbRecordHeader) == 8, pdbRecHeaderSize);
+static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader structure");
+static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
 
 PdbReader::PdbReader(const WCHAR *filePath) :
     data(file::ReadAll(filePath, &dataSize))

@@ -114,7 +114,7 @@ struct MobiHeader {
     int32        indxRec;
 };
 
-STATIC_ASSERT(kMobiHeaderLen == sizeof(MobiHeader), validMobiHeader);
+static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader structure");
 
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
@@ -168,7 +168,7 @@ struct HuffHeader
     // like baseTableOffset except data is in little endian
     uint32       baseTableLEOffset; // should be 24 + 1024 + 256 + 1024
 };
-STATIC_ASSERT(kHuffHeaderLen == sizeof(HuffHeader), validHuffHeader);
+static_assert(kHuffHeaderLen == sizeof(HuffHeader), "wrong size of HuffHeader structure");
 
 #define kCdicHeaderLen 16
 struct CdicHeader
@@ -179,7 +179,7 @@ struct CdicHeader
     uint32      codeLen;
 };
 
-STATIC_ASSERT(kCdicHeaderLen == sizeof(CdicHeader), validCdicHeader);
+static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader structure");
 
 #define kCacheItemCount     256
 #define kCacheDataLen      (kCacheItemCount * sizeof(uint32))

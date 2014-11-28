@@ -325,7 +325,7 @@ struct DjVuInfoChunk {
 
 #include <poppack.h>
 
-STATIC_ASSERT(sizeof(DjVuInfoChunk) == 10, djvuInfoChunkSize);
+static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool DjVuEngineImpl::LoadMediaboxes()
 {
