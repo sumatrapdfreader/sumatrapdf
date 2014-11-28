@@ -91,10 +91,6 @@ class PoolAllocator : public Allocator {
     MemBlockNode *  currBlock;
     MemBlockNode *  firstBlock;
 
-    // iteration state
-    MemBlockNode *  currIter;
-    size_t          iterPos;
-
     void Init() {
         currBlock = NULL;
         firstBlock = NULL;
@@ -102,37 +98,7 @@ class PoolAllocator : public Allocator {
     }
 
 public:
-
-    // Iterator for easily traversing allocated memory as array
-    // of values of type T. The caller has to enforce the fact
-    // that the values stored are indeed values of T
-    // Meant to be used in this way:
-    // for (T *el = allocator.IterStart<T>(); el; el = allocator.IterNext<T>()) { ... }
-    template <typename T>
-    T *IterStart() {
-        currIter = firstBlock;
-        iterPos = 0;
-        // minimum check that the allocated values are of type T
-        CrashIf(currIter && (currIter->Used() % sizeof(T) != 0));
-        return IterNext<T>();
-    }
-
-    template <typename T>
-    T* IterNext() {
-        if (!currIter)
-            return NULL;
-        if (currIter->Used() == iterPos) {
-            currIter = currIter->next;
-            if (!currIter)
-                return NULL;
-        }
-        T *elPtr = reinterpret_cast<T*>(currIter->DataStart() + iterPos);
-        iterPos += sizeof(T);
-        return elPtr;
-    }
-
-    explicit PoolAllocator(size_t rounding=8) : minBlockSize(4096),
-        allocRounding(rounding), currIter(NULL), iterPos((size_t)-1) {
+    explicit PoolAllocator(size_t rounding=8) : minBlockSize(4096), allocRounding(rounding) {
         Init();
     }
 
@@ -227,6 +193,47 @@ public:
     template <typename T>
     T *AllocStruct() {
         return (T *)Alloc(sizeof(T));
+    }
+
+    // Iterator for easily traversing allocated memory as array
+    // of values of type T. The caller has to enforce the fact
+    // that the values stored are indeed values of T
+    // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    template <typename T>
+    class Iter {
+        MemBlockNode *block;
+        size_t blockPos;
+
+    public:
+        Iter(MemBlockNode *block) : block(block), blockPos(0) {
+            CrashIf(block && (block->Used() % sizeof(T)) != 0);
+            CrashIf(block && block->Used() == 0);
+        }
+
+        bool operator!=(const Iter& other) const {
+            return block != other.block || blockPos != other.blockPos;
+        }
+        T& operator*() const {
+            return *(T *)(block->DataStart() + blockPos);
+        }
+        Iter& operator++() {
+            blockPos += sizeof(T);
+            if (block->Used() == blockPos) {
+                block = block->next;
+                blockPos = 0;
+                CrashIf(block && block->Used() == 0);
+            }
+            return *this;
+        }
+    };
+
+    template <typename T>
+    Iter<T> begin() {
+        return Iter<T>(firstBlock);
+    }
+    template <typename T>
+    Iter<T> end() {
+        return Iter<T>(NULL);
     }
 };
 

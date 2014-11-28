@@ -73,8 +73,8 @@ void DictTestMapStrToInt()
         CrashIf(!ok);
         CrashIf(i != val);
     }
-    for (char **k = toRemove.IterStart(); k; k = toRemove.IterNext()) {
-        ok = d.Remove(*k, NULL);
+    for (const char *k : toRemove) {
+        ok = d.Remove(k, NULL);
         utassert(ok);
     }
     FreeVecMembers(toRemove);

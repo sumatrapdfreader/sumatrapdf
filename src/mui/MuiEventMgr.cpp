@@ -21,14 +21,12 @@ EventMgr::EventMgr(HwndWrapper *wndRoot)
 EventMgr::~EventMgr()
 {
     // unsubscribe event handlers for all controls
-    EventHandler *h;
-    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        delete h->events;
+    for (EventHandler& h : eventHandlers) {
+        delete h.events;
     }
-    NamedEventHandler *nh;
-    for (nh = namedEventHandlers.IterStart(); nh; nh = namedEventHandlers.IterNext()) {
-        free((void*)nh->name);
-        delete nh->namedEvents;
+    for (NamedEventHandler& nh : namedEventHandlers) {
+        free((void *)nh.name);
+        delete nh.namedEvents;
     }
 }
 
@@ -69,10 +67,9 @@ void EventMgr::RemoveEventsForControl(Control *c)
 
 ControlEvents *EventMgr::EventsForControl(Control *c)
 {
-    EventHandler *h;
-    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        if (h->ctrlSource == c)
-            return h->events;
+    for (EventHandler& h : eventHandlers) {
+        if (h.ctrlSource == c)
+            return h.events;
     }
     ControlEvents *events = new ControlEvents();
     EventHandler eh = { c, events };
@@ -82,13 +79,12 @@ ControlEvents *EventMgr::EventsForControl(Control *c)
 
 NamedEvents * EventMgr::EventsForName(const char *name)
 {
-    NamedEventHandler *h;
-    for (h = namedEventHandlers.IterStart(); h; h = namedEventHandlers.IterNext()) {
-        if (str::EqI(h->name, name))
-            return h->namedEvents;
+    for (NamedEventHandler& h : namedEventHandlers) {
+        if (str::EqI(h.name, name))
+            return h.namedEvents;
     }
     NamedEvents *namedEvents = new NamedEvents();
-    NamedEventHandler eh = { (const char*)str::Dup(name), namedEvents };
+    NamedEventHandler eh = { str::Dup(name), namedEvents };
     namedEventHandlers.Append(eh);
     return namedEvents;
 }
@@ -98,31 +94,30 @@ void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y)
     const char *name = c->namedEventClick;
     if (!name)
         return;
-    NamedEventHandler *h;
-    for (h = namedEventHandlers.IterStart(); h; h = namedEventHandlers.IterNext()) {
-        if (str::EqI(h->name, name)) {
-            return h->namedEvents->Clicked(c, x, y);
+    for (NamedEventHandler& h : namedEventHandlers) {
+        if (str::EqI(h.name, name)) {
+            h.namedEvents->Clicked(c, x, y);
+            return;
         }
     }
 }
 
 void EventMgr::NotifyClicked(Control *c, int x, int y)
 {
-    EventHandler *h;
-    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        if (h->ctrlSource == c)
-            return h->events->Clicked(c, x, y);
+    for (EventHandler& h : eventHandlers) {
+        if (h.ctrlSource == c) {
+            h.events->Clicked(c, x, y);
+            return;
+        }
     }
 }
 
 void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
 {
-    EventHandler *h;
-    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
-        if (h->ctrlSource == c)
-            if (h->events->SizeChanged) {
-                h->events->SizeChanged(c, dx, dy);
-            }
+    for (EventHandler& h : eventHandlers) {
+        if (h.ctrlSource == c && h.events->SizeChanged) {
+            h.events->SizeChanged(c, dx, dy);
+        }
     }
 }
 

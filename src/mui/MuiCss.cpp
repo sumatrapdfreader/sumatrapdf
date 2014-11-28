@@ -130,14 +130,13 @@ void Initialize()
 
 void Destroy()
 {
-    for (Prop *p = gAllProps->IterStart(); p; p = gAllProps->IterNext()) {
-        p->Free();
+    for (Prop& p : *gAllProps) {
+        p.Free();
     }
-
     delete gAllProps;
-    StyleCacheEntry *e;
-    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
-        delete e->style;
+
+    for (StyleCacheEntry& e : *gStyleCache) {
+        delete e.style;
     }
     delete gStyleCache;
 }
@@ -336,9 +335,9 @@ bool Prop::Eq(const Prop *other) const
 
 static Prop *FindExistingProp(Prop *prop)
 {
-    for (Prop *p = gAllProps->IterStart(); p; p = gAllProps->IterNext()) {
-        if (p->Eq(prop))
-            return p;
+    for (Prop& p : *gAllProps) {
+        if (p.Eq(prop))
+            return &p;
     }
     return NULL;
 }
@@ -494,13 +493,12 @@ size_t Style::GetIdentity() const
 void Style::Set(Prop *prop)
 {
     CrashIf(!prop);
-    for (Prop **p = props.IterStart(); p; p = props.IterNext()) {
-        if ((*p)->type == prop->type) {
-            if (!prop->Eq(*p))
-                ++gen;
-            *p = prop;
-            return;
-        }
+    Prop *& p = props.FindEl([&](Prop *p2) { return p2->type == prop->type; });
+    if (p) {
+        if (!prop->Eq(p))
+            ++gen;
+        p = prop;
+        return;
     }
     props.Append(prop);
     ++gen;
@@ -561,15 +559,15 @@ static bool GetAllProps(Style *style, Prop **props)
 {
     bool inherited = false;
     while (style) {
-        for (Prop **p = style->props.IterStart(); p; p = style->props.IterNext()) {
+        for (Prop *p : style->props) {
             // PropStyleName is not inheritable
-            if ((PropStyleName == (*p)->type) && inherited)
+            if ((PropStyleName == p->type) && inherited)
                 continue;
-            int propIdx = (int)(*p)->type;
+            int propIdx = (int)p->type;
             CrashIf(propIdx >= (int)PropsCount);
             bool didSet = false;
             if (!props[propIdx]) {
-                props[propIdx] = *p;
+                props[propIdx] = p;
                 didSet = true;
             }
             if (didSet && FoundAllProps(props))
@@ -601,14 +599,14 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut)
     *changedOut = false;
 
     ScopedMuiCritSec muiCs;
-    StyleCacheEntry *e;
-    bool updateEntry = false;
-    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
-        if (e->style == style) {
-            if (e->styleId == GetStyleId(style)) {
-                return &e->cachedStyle;
+    StyleCacheEntry *e = NULL;
+
+    for (StyleCacheEntry& e2 : *gStyleCache) {
+        if (e2.style == style) {
+            if (e2.styleId == GetStyleId(style)) {
+                return &e2.cachedStyle;
             }
-            updateEntry = true;
+            e = &e2;
             break;
         }
     }
@@ -644,7 +642,7 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut)
     s.stroke               = &(props[PropStroke]->color);
     s.strokeWidth          = props[PropStrokeWidth]->width;
 
-    if (updateEntry) {
+    if (e) {
         e->cachedStyle = s;
         e->styleId = GetStyleId(style);
         return &e->cachedStyle;
@@ -657,10 +655,11 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut)
 
 CachedStyle* CachedStyleByName(const char *name)
 {
-    StyleCacheEntry *e;
-    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
-        if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))
-            return &e->cachedStyle;
+    if (!name)
+        return NULL;
+    for (StyleCacheEntry& e : *gStyleCache) {
+        if (str::Eq(e.cachedStyle.styleName, name))
+            return &e.cachedStyle;
     }
     return NULL;
 }
@@ -669,10 +668,9 @@ Style *StyleByName(const char *name)
 {
     if (!name)
         return NULL;
-    StyleCacheEntry *e;
-    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
-        if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))
-            return e->style;
+    for (StyleCacheEntry& e : *gStyleCache) {
+        if (str::Eq(e.cachedStyle.styleName, name))
+            return e.style;
     }
     return NULL;
 }

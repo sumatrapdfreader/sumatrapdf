@@ -219,11 +219,6 @@ void VecTest()
             v.InsertAt(pos, new PointI(i, i));
         }
         utassert(v.Count() == 128 * 2);
-        size_t idx = 0;
-        for (PointI **p = v.IterStart(); p; p = v.IterNext()) {
-            utassert(idx == v.IterIdx());
-            ++idx;
-        }
 
         while (v.Count() > 64) {
             size_t pos = rand() % v.Count();

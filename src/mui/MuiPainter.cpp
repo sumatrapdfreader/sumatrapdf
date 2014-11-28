@@ -58,7 +58,6 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c)
 {
     Vec<CtrlAndOffset>  toPaint;
     WndFilter           wndFilter;
-    CtrlAndOffset *     coff;
     Pen                 debugPen(Color(255, 0, 0), 1);
 
     CollectWindowsBreathFirst(c, 0, 0, &wndFilter, &toPaint);
@@ -67,16 +66,16 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c)
     for (;;) {
         // find which z-order should we paint now
         int16 minUnpaintedZOrder = MY_INT16_MAX;
-        for (coff = toPaint.IterStart(); coff; coff = toPaint.IterNext()) {
-            int16 zOrder = coff->c->zOrder;
+        for (CtrlAndOffset& coff : toPaint) {
+            int16 zOrder = coff.c->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }
-        for (coff = toPaint.IterStart(); coff; coff = toPaint.IterNext()) {
-            if (minUnpaintedZOrder == coff->c->zOrder) {
-                coff->c->Paint(g, coff->offX, coff->offY);
+        for (CtrlAndOffset& coff : toPaint) {
+            if (minUnpaintedZOrder == coff.c->zOrder) {
+                coff.c->Paint(g, coff.offX, coff.offY);
                 if (IsDebugPaint()) {
-                    Rect bbox(coff->offX, coff->offY, coff->c->pos.Width, coff->c->pos.Height);
+                    Rect bbox(coff.offX, coff.offY, coff.c->pos.Width, coff.c->pos.Height);
                     g->DrawRectangle(&debugPen, bbox);
                 }
                 ++paintedCount;

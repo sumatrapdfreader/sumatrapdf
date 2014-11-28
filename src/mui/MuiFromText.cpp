@@ -443,9 +443,7 @@ static VerticalLayout *VerticalLayoutFromDef(ParsedMui& parsed, TxtNode *structD
 // TODO: create the rest of controls
 static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
 {
-    TxtNode **n;
-    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
-        TxtNode *node = *n;
+    for (TxtNode *node : *root->children) {
         CrashIf(!node->IsStruct());
         if (node->IsStructWithName("Style")) {
             CacheStyleFromStruct(node);

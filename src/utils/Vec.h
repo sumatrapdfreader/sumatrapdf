@@ -24,9 +24,6 @@ protected:
     T           buf[16];
     Allocator * allocator;
 
-    // state of the IterStart()/IterNext() iterator
-    T *         iterCurr;
-
     bool EnsureCapTry(size_t needed) {
         if (cap >= needed)
             return true;
@@ -87,7 +84,7 @@ protected:
 public:
     // allocator is not owned by Vec and must outlive it
     explicit Vec(size_t capHint=0, Allocator *allocator=NULL) :
-        capacityHint(capHint), allocator(allocator), iterCurr(NULL)
+        capacityHint(capHint), allocator(allocator)
     {
         els = buf;
         Reset();
@@ -99,7 +96,7 @@ public:
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& orig) : capacityHint(0), allocator(NULL), iterCurr(NULL) {
+    Vec(const Vec& orig) : capacityHint(0), allocator(NULL) {
         els = buf;
         Reset();
         EnsureCapCrash(orig.cap);
@@ -277,7 +274,7 @@ public:
         }
     }
 
-    T FindEl(const std::function<bool (T&)> check) {
+    T& FindEl(const std::function<bool (T&)> check) {
         for (size_t i = 0; i < len; i++) {
             if (check(els[i]))
                 return els[i];
@@ -285,38 +282,16 @@ public:
         return els[len]; // NULL-sentinel
     }
 
-    // Iteration API meant to be used in the following way:
-    // for (T *el = vec.IterStart(); el; el = vec.IterNext()) { ... }
-    T *IterStart() {
-        iterCurr = els;
-        return IterNext();
-    }
-
-    T *IterNext() {
-        T *end = els + len;
-        if (end == iterCurr)
-            return NULL;
-        T *res = iterCurr;
-        ++iterCurr;
-        return res;
-    }
-
-    // return the index of the item returned by last IterStart()/IterNext()
-    size_t IterIdx() {
-        size_t idx = iterCurr - els;
-        CrashIf(0 == idx);
-        return idx - 1;
-    }
-
     // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     class Iter {
         Vec<T> *vec;
         size_t pos;
+
     public:
         Iter(Vec<T> *vec, size_t pos) : vec(vec), pos(pos) { }
 
         bool operator!=(const Iter& other) const {
-            return vec != other.vec || pos != other.pos;
+            return pos != other.pos;
         }
         T& operator*() const {
             return vec->At(pos);
@@ -339,8 +314,8 @@ public:
 template <typename T>
 inline void FreeVecMembers(Vec<T>& v)
 {
-    for (T* el = v.IterStart(); el; el = v.IterNext()) {
-        free(*el);
+    for (T& el : v) {
+        free(el);
     }
     v.Reset();
 }
@@ -349,8 +324,8 @@ inline void FreeVecMembers(Vec<T>& v)
 template <typename T>
 inline void DeleteVecMembers(Vec<T>& v)
 {
-    for (T* el = v.IterStart(); el; el = v.IterNext()) {
-        delete *el;
+    for (T& el : v) {
+        delete el;
     }
     v.Reset();
 }
@@ -548,8 +523,8 @@ public:
         items(capHint, allocator), count(0), allocator(allocator) { }
 
     ~WStrList() {
-        for (Item *item = items.IterStart(); item; item = items.IterNext()) {
-            Allocator::Free(allocator, item->string);
+        for (Item& item : items) {
+            Allocator::Free(allocator, item.string);
         }
     }
 

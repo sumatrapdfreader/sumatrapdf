@@ -63,13 +63,12 @@ void Grid::RebuildCellDataIfNeeded()
     cols = 0;
     rows = 0;
 
-    Grid::CellData *d;
-    for (d = els.IterStart(); d; d = els.IterNext()) {
-        int maxCols = d->col + d->colSpan;
+    for (Grid::CellData& d : els) {
+        int maxCols = d.col + d.colSpan;
         if (maxCols > cols)
             cols = maxCols;
-        if (d->row >= rows)
-            rows = d->row + 1;
+        if (d.row >= rows)
+            rows = d.row + 1;
     }
 
     free(cells);
@@ -114,15 +113,14 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
     Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
 
-    Grid::CellData *d;
-    for (d = els.IterStart(); d; d = els.IterNext()) {
-        if (!d->cachedStyle)
+    for (Grid::CellData& d : els) {
+        if (!d.cachedStyle)
             continue;
 
-        Rect cellRect(GetCellBbox(d));
+        Rect cellRect(GetCellBbox(&d));
         cellRect.X += offX;
         cellRect.Y += offY;
-        s = d->cachedStyle;
+        s = d.cachedStyle;
         DrawBorder(gfx, cellRect, s);
     }
 }
@@ -135,11 +133,11 @@ Size Grid::Measure(const Size availableSize)
 
     Cell *cell;
     Control *el;
-    for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
-        cell = GetCell(d->row, d->col);
+    for (Grid::CellData& d : els) {
+        cell = GetCell(d.row, d.col);
         cell->desiredSize.Width = 0;
         cell->desiredSize.Height = 0;
-        el = d->el;
+        el = d.el;
         if (!el->IsVisible())
             continue;
 
@@ -151,36 +149,36 @@ Size Grid::Measure(const Size availableSize)
 
         cell->desiredSize = el->DesiredSize();
         // if a cell spans multiple columns, we don't count its size here
-        if (d->colSpan == 1) {
-            if (cell->desiredSize.Width > maxColWidth[d->col])
-                maxColWidth[d->col] = cell->desiredSize.Width;
+        if (d.colSpan == 1) {
+            if (cell->desiredSize.Width > maxColWidth[d.col])
+                maxColWidth[d.col] = cell->desiredSize.Width;
         }
-        if (cell->desiredSize.Height > maxRowHeight[d->row])
-            maxRowHeight[d->row] = cell->desiredSize.Height;
+        if (cell->desiredSize.Height > maxRowHeight[d.row])
+            maxRowHeight[d.row] = cell->desiredSize.Height;
     }
 
     // account for cells with colSpan > 1. If cell.dx > total dx
     // of columns it spans, we widen the columns by equally
     // re-distributing the difference among columns
-    for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
-        if (d->colSpan == 1)
+    for (Grid::CellData& d : els) {
+        if (d.colSpan == 1)
             continue;
-        cell = GetCell(d->row, d->col);
+        cell = GetCell(d.row, d.col);
 
         int totalDx = 0;
-        for (int i = d->col; i < d->col + d->colSpan; i++) {
+        for (int i = d.col; i < d.col + d.colSpan; i++) {
             totalDx += maxColWidth[i];
         }
         int diff = cell->desiredSize.Width - totalDx;
         if (diff > 0) {
-            int diffPerCol = diff / d->colSpan;
-            int rest = diff % d->colSpan;
+            int diffPerCol = diff / d.colSpan;
+            int rest = diff % d.colSpan;
             // note: we could try to redistribute rest for ideal sizing instead of
             // over-sizing but not sure if that would matter in practice
             if (rest > 0)
                 diffPerCol += 1;
-            CrashIf(diffPerCol * d->colSpan < diff);
-            for (int i = d->col; i < d->col + d->colSpan; i++) {
+            CrashIf(diffPerCol * d.colSpan < diff);
+            for (int i = d.col; i < d.col + d.colSpan; i++) {
                 maxColWidth[i] += diffPerCol;
             }
         }
@@ -205,21 +203,21 @@ void Grid::Arrange(const Rect finalRect)
     Cell *cell;
     Control *el;
 
-    for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
-        cell = GetCell(d->row, d->col);
-        el = d->el;
-        Point pos(GetCellPos(d->row, d->col));
+    for (Grid::CellData& d : els) {
+        cell = GetCell(d.row, d.col);
+        el = d.el;
+        Point pos(GetCellPos(d.row, d.col));
         int elDx = el->DesiredSize().Width;
         int containerDx = 0;
-        for (int i = d->col; i < d->col + d->colSpan; i++) {
+        for (int i = d.col; i < d.col + d.colSpan; i++) {
             containerDx += maxColWidth[i];
         }
 
-        int xOff = d->horizAlign.CalcOffset(elDx, containerDx);
+        int xOff = d.horizAlign.CalcOffset(elDx, containerDx);
         pos.X += xOff;
         int elDy = el->DesiredSize().Height;
-        int containerDy = maxRowHeight[d->row];
-        int yOff = d->vertAlign.CalcOffset(elDy, containerDy);
+        int containerDy = maxRowHeight[d.row];
+        int yOff = d.vertAlign.CalcOffset(elDy, containerDy);
         pos.Y += yOff;
         Rect r(pos, cell->desiredSize);
         el->Arrange(r);

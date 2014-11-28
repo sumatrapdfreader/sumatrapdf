@@ -116,8 +116,8 @@ void InitializeBase()
 void DestroyBase()
 {
     FreeGraphicsForMeasureText(gGraphicsCache->At(0).gfx);
-    for (GraphicsCacheEntry *e = gGraphicsCache->IterStart(); e; e = gGraphicsCache->IterNext()) {
-        e->Free();
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
+        e.Free();
     }
     delete gGraphicsCache;
     delete gFontsCache;
@@ -184,10 +184,10 @@ Graphics *AllocGraphicsForMeasureText()
     ScopedMuiCritSec muiCs;
 
     DWORD threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry *e = gGraphicsCache->IterStart(); e; e = gGraphicsCache->IterNext()) {
-        if (e->threadId == threadId) {
-            e->refCount++;
-            return e->gfx;
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
+        if (e.threadId == threadId) {
+            e.refCount++;
+            return e.gfx;
         }
     }
     GraphicsCacheEntry ce;
@@ -216,11 +216,11 @@ void FreeGraphicsForMeasureText(Graphics *gfx)
     ScopedMuiCritSec muiCs;
 
     DWORD threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry *e = gGraphicsCache->IterStart(); e; e = gGraphicsCache->IterNext()) {
-        if (e->gfx == gfx) {
-            CrashIf(e->threadId != threadId);
-            e->refCount--;
-            CrashIf(e->refCount < 0);
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
+        if (e.gfx == gfx) {
+            CrashIf(e.threadId != threadId);
+            e.refCount--;
+            CrashIf(e.refCount < 0);
             return;
         }
     }

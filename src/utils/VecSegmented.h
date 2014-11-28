@@ -16,14 +16,6 @@ protected:
     PoolAllocator allocator;
 
 public:
-
-    T *IterStart() {
-        return allocator.IterStart<T>();
-    }
-    T *IterNext() {
-        return allocator.IterNext<T>();
-    }
-
     VecSegmented() : len(0) {
         allocator.SetAllocRounding(sizeof(T));
     }
@@ -70,6 +62,13 @@ public:
         memcpy(els, src, count * sizeof(T));
     }
 #endif
+
+    PoolAllocator::Iter<T> begin() {
+        return allocator.begin<T>();
+    }
+    PoolAllocator::Iter<T> end() {
+        return allocator.end<T>();
+    }
 };
 
 #if 0
