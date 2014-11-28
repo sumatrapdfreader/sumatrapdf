@@ -50,9 +50,9 @@ DrawInstr *PageControl::GetLinkAt(int x, int y) const
         return NULL;
 
     PointF pt((REAL)(x - cachedStyle->padding.left), (REAL)(y - cachedStyle->padding.top));
-    for (DrawInstr *i = page->instructions.IterStart(); i; i = page->instructions.IterNext()) {
-        if (InstrLinkStart == i->type && !i->bbox.IsEmptyArea() && i->bbox.Contains(pt)) {
-            return i;
+    for (DrawInstr& i : page->instructions) {
+        if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea() && i.bbox.Contains(pt)) {
+            return &i;
         }
     }
     return NULL;

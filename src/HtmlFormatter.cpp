@@ -295,9 +295,9 @@ void HtmlFormatter::RevertStyleChange()
     }
 }
 
-static bool IsVisibleDrawInstr(DrawInstr *i)
+static bool IsVisibleDrawInstr(DrawInstr& i)
 {
-    switch (i->type) {
+    switch (i.type) {
         case InstrString: case InstrRtlString:
         case InstrLine:
         case InstrImage:
@@ -311,15 +311,15 @@ static bool IsVisibleDrawInstr(DrawInstr *i)
 REAL HtmlFormatter::CurrLineDx()
 {
     REAL dx = NewLineX();
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type || InstrRtlString == i->type) {
-            dx += i->bbox.Width;
-        } else if (InstrImage == i->type) {
-            dx += i->bbox.Width;
-        } else if (InstrElasticSpace == i->type) {
+    for (DrawInstr& i : currLineInstr) {
+        if (InstrString == i.type || InstrRtlString == i.type) {
+            dx += i.bbox.Width;
+        } else if (InstrImage == i.type) {
+            dx += i.bbox.Width;
+        } else if (InstrElasticSpace == i.type) {
             dx += spaceDx;
-        } else if (InstrFixedSpace == i->type) {
-            dx += i->bbox.Width;
+        } else if (InstrFixedSpace == i.type) {
+            dx += i.bbox.Width;
         }
     }
     return dx;
@@ -329,10 +329,10 @@ REAL HtmlFormatter::CurrLineDx()
 float HtmlFormatter::CurrLineDy()
 {
     float dy = lineSpacing;
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
+    for (DrawInstr& i : currLineInstr) {
         if (IsVisibleDrawInstr(i)) {
-            if (i->bbox.Height > dy)
-                dy = i->bbox.Height;
+            if (i.bbox.Height > dy)
+                dy = i.bbox.Height;
         }
     }
     return dy;
@@ -359,16 +359,16 @@ void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
     int instrCount = 0;
 
     REAL x = offX + NewLineX();
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type || InstrRtlString == i->type || InstrImage == i->type) {
-            i->bbox.X = x;
-            x += i->bbox.Width;
-            lastInstr = i;
+    for (DrawInstr& i : currLineInstr) {
+        if (InstrString == i.type || InstrRtlString == i.type || InstrImage == i.type) {
+            i.bbox.X = x;
+            x += i.bbox.Width;
+            lastInstr = &i;
             instrCount++;
-        } else if (InstrElasticSpace == i->type) {
+        } else if (InstrElasticSpace == i.type) {
             x += spaceDx;
-        } else if (InstrFixedSpace == i->type) {
-            x += i->bbox.Width;
+        } else if (InstrFixedSpace == i.type) {
+            x += i.bbox.Width;
         }
     }
 
@@ -382,9 +382,9 @@ void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
 // record for each element)
 static void SetYPos(Vec<DrawInstr>& instr, float y)
 {
-    for (DrawInstr *i = instr.IterStart(); i; i = instr.IterNext()) {
+    for (DrawInstr& i : instr) {
         if (IsVisibleDrawInstr(i))
-            i->bbox.Y = y;
+            i.bbox.Y = y;
     }
 }
 
@@ -407,14 +407,14 @@ void HtmlFormatter::JustifyLineBoth()
     LayoutLeftStartingAt(0.f);
     size_t spaces = 0;
     bool endsWithSpace = false;
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrElasticSpace == i->type) {
+    for (DrawInstr& i : currLineInstr) {
+        if (InstrElasticSpace == i.type) {
             ++spaces;
             endsWithSpace = true;
         }
-        else if (InstrString == i->type || InstrRtlString == i->type)
+        else if (InstrString == i.type || InstrRtlString == i.type)
             endsWithSpace = false;
-        else if (InstrImage == i->type)
+        else if (InstrImage == i.type)
             endsWithSpace = false;
     }
     // don't take a space at the end of the line into account 
@@ -427,12 +427,12 @@ void HtmlFormatter::JustifyLineBoth()
     REAL extraSpaceDx = extraSpaceDxTotal / (float)spaces;
     float offX = 0.f;
     DrawInstr *lastStr = NULL;
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrElasticSpace == i->type)
+    for (DrawInstr& i : currLineInstr) {
+        if (InstrElasticSpace == i.type)
             offX += extraSpaceDx;
-        else if (InstrString == i->type || InstrRtlString == i->type || InstrImage == i->type) {
-            i->bbox.X += offX;
-            lastStr = i;
+        else if (InstrString == i.type || InstrRtlString == i.type || InstrImage == i.type) {
+            i.bbox.X += offX;
+            lastStr = &i;
         }
     }
     // align the last element perfectly against the right edge in case
@@ -443,7 +443,7 @@ void HtmlFormatter::JustifyLineBoth()
 
 bool HtmlFormatter::IsCurrLineEmpty()
 {
-    for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
+    for (DrawInstr& i : currLineInstr) {
         if (IsVisibleDrawInstr(i))
             return false;
     }
@@ -476,9 +476,9 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align)
     // when the reading direction is right-to-left, mirror the entire page
     // so that the first element on a line is the right-most, etc.
     if (dirRtl) {
-        for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
+        for (DrawInstr& i : currLineInstr) {
             if (IsVisibleDrawInstr(i))
-                i->bbox.X = pageDx - i->bbox.X - i->bbox.Width;
+                i.bbox.X = pageDx - i.bbox.X - i.bbox.Width;
         }
     }
 }
@@ -496,12 +496,12 @@ static RectF RectFUnion(RectF& r1, RectF& r2)
 
 void HtmlFormatter::UpdateLinkBboxes(HtmlPage *page)
 {
-    for (DrawInstr *i = page->instructions.IterStart(); i; i = page->instructions.IterNext()) {
-        if (InstrLinkStart != i->type)
+    for (DrawInstr& i : page->instructions) {
+        if (InstrLinkStart != i.type)
             continue;
-        for (DrawInstr *i2 = i + 1; i2->type != InstrLinkEnd; i2++) {
-            if (IsVisibleDrawInstr(i2))
-                i->bbox = RectFUnion(i->bbox, i2->bbox);
+        for (DrawInstr *i2 = &i + 1; i2->type != InstrLinkEnd; i2++) {
+            if (IsVisibleDrawInstr(*i2))
+                i.bbox = RectFUnion(i.bbox, i2->bbox);
         }
     }
 }
@@ -527,8 +527,8 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         currLineTopPadding = 0;
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (size_t k = currLineInstr.Count(); k > 0; k--) {
-            DrawInstr *i = &currLineInstr.At(k - 1);
-            if (InstrFixedSpace == i->type || InstrElasticSpace == i->type)
+            DrawInstr& i = currLineInstr.At(k - 1);
+            if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
         }
         return false;
@@ -592,8 +592,8 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
         currX = NewLineX();
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (size_t k = currLineInstr.Count(); k > 0; k--) {
-            DrawInstr *i = &currLineInstr.At(k - 1);
-            if (InstrFixedSpace == i->type || InstrElasticSpace == i->type)
+            DrawInstr& i = currLineInstr.At(k - 1);
+            if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
 
         }
@@ -606,17 +606,17 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs)
 {
     REAL imageY = -1;
     for (size_t idx = instrs.Count(); idx > 0; idx--) {
-        DrawInstr *i = &instrs.At(idx - 1);
+        DrawInstr& i = instrs.At(idx - 1);
         if (!IsVisibleDrawInstr(i))
             continue;
         if (-1 != imageY) {
             // if another visible item precedes the image,
             // it must be completely above it (previous line)
-            return i->bbox.Y + i->bbox.Height <= imageY;
+            return i.bbox.Y + i.bbox.Height <= imageY;
         }
-        if (InstrImage != i->type)
+        if (InstrImage != i.type)
             return false;
-        imageY = i->bbox.Y;
+        imageY = i.bbox.Y;
     }
     return imageY != -1;
 }
@@ -1263,11 +1263,11 @@ void HtmlFormatter::HandleText(const char *s, size_t sLen)
 // we ignore the content of <head>, <script>, <style> and <title> tags
 bool HtmlFormatter::IgnoreText()
 {
-    for (HtmlTag *tag = tagNesting.IterStart(); tag; tag = tagNesting.IterNext()) {
-        if ((Tag_Head == *tag) ||
-            (Tag_Script == *tag) ||
-            (Tag_Style == *tag) ||
-            (Tag_Title == *tag)) {
+    for (HtmlTag& tag : tagNesting) {
+        if ((Tag_Head == tag) ||
+            (Tag_Script == tag) ||
+            (Tag_Style == tag) ||
+            (Tag_Title == tag)) {
                 return true;
         }
     }
@@ -1279,12 +1279,11 @@ static bool IsEmptyPage(HtmlPage *p)
 {
     if (!p)
         return false;
-    DrawInstr *i;
-    for (i = p->instructions.IterStart(); i; i = p->instructions.IterNext()) {
+    for (DrawInstr& i : p->instructions) {
         // if a page only consits of lines we consider it empty. It's different
         // than what Kindle does but I don't see the purpose of showing such
         // pages to the user
-        if (InstrLine == i->type)
+        if (InstrLine == i.type)
             continue;
         if (IsVisibleDrawInstr(i))
             return false;
@@ -1360,7 +1359,6 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawI
     Pen linePen(Color(0x5F, 0x4B, 0x32), 2.f);
 
     WCHAR buf[512];
-    DrawInstr *i;
 
     // GDI text rendering suffers terribly if we call GetHDC()/ReleaseHDC() around every
     // draw, so first draw text and then paint everything else
@@ -1368,15 +1366,15 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawI
     Status status = Ok;
     Timer t;
     textDraw->Lock();
-    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
-        RectF bbox = i->bbox;
+    for (DrawInstr& i : *drawInstructions) {
+        RectF bbox = i.bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrString == i->type || InstrRtlString == i->type) {
-            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
-            textDraw->Draw(buf, strLen, bbox, InstrRtlString == i->type);
-        } else if (InstrSetFont == i->type) {
-            textDraw->SetFont(i->font);
+        if (InstrString == i.type || InstrRtlString == i.type) {
+            size_t strLen = str::Utf8ToWcharBuf(i.str.s, i.str.len, buf, dimof(buf));
+            textDraw->Draw(buf, strLen, bbox, InstrRtlString == i.type);
+        } else if (InstrSetFont == i.type) {
+            textDraw->SetFont(i.font);
         }
         if (abortCookie && *abortCookie)
             break;
@@ -1385,11 +1383,11 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawI
     double dur = t.Stop();
     lf("DrawHtmlPage: textDraw %.2f ms", dur);
 
-    for (i = drawInstructions->IterStart(); i; i = drawInstructions->IterNext()) {
-        RectF bbox = i->bbox;
+    for (DrawInstr& i : *drawInstructions) {
+        RectF bbox = i.bbox;
         bbox.X += offX;
         bbox.Y += offY;
-        if (InstrLine == i->type) {
+        if (InstrLine == i.type) {
             // hr is a line drawn in the middle of bounding box
             REAL y = floorf(bbox.Y + bbox.Height / 2.f + 0.5f);
             PointF p1(bbox.X, y);
@@ -1400,16 +1398,16 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawI
             }
             status = g->DrawLine(&linePen, p1, p2);
             CrashIf(status != Ok);
-        } else if (InstrImage == i->type) {
+        } else if (InstrImage == i.type) {
             // TODO: cache the bitmap somewhere (?)
-            Bitmap *bmp = BitmapFromData(i->img.data, i->img.len);
+            Bitmap *bmp = BitmapFromData(i.img.data, i.img.len);
             if (bmp) {
                 status = g->DrawImage(bmp, bbox, 0, 0, (REAL)bmp->GetWidth(), (REAL)bmp->GetHeight(), UnitPixel);
                 // GDI+ sometimes seems to succeed in loading an image because it lazily decodes it
                 CrashIf(status != Ok && status != Win32Error);
             }
             delete bmp;
-        } else if (InstrLinkStart == i->type) {
+        } else if (InstrLinkStart == i.type) {
             // TODO: set text color to blue
             REAL y = floorf(bbox.Y + bbox.Height + 0.5f);
             PointF p1(bbox.X, y);
@@ -1417,19 +1415,19 @@ void DrawHtmlPage(Graphics *g, mui::ITextRender *textDraw, Vec<DrawInstr> *drawI
             Pen linkPen(textColor);
             status = g->DrawLine(&linkPen, p1, p2);
             CrashIf(status != Ok);
-        } else if (InstrString == i->type || InstrRtlString == i->type) {
+        } else if (InstrString == i.type || InstrRtlString == i.type) {
             if (showBbox) {
                 status = g->DrawRectangle(&debugPen, bbox);
                 CrashIf(status != Ok);
             }
-        } else if (InstrLinkEnd == i->type) {
+        } else if (InstrLinkEnd == i.type) {
             // TODO: set text color back again
-        } else if ((InstrElasticSpace == i->type) ||
-                   (InstrFixedSpace == i->type) ||
-                   (InstrString == i->type) ||
-                   (InstrRtlString == i->type) ||
-                   (InstrSetFont == i->type) ||
-                   (InstrAnchor == i->type)) {
+        } else if ((InstrElasticSpace == i.type) ||
+                   (InstrFixedSpace == i.type) ||
+                   (InstrString == i.type) ||
+                   (InstrRtlString == i.type) ||
+                   (InstrSetFont == i.type) ||
+                   (InstrAnchor == i.type)) {
             // ignore
         } else {
             CrashIf(true);

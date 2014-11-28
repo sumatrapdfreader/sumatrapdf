@@ -224,8 +224,8 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
 
     StartMonitoringDirForChanges(wd);
 
-    for (WCHAR **f = changedFiles.IterStart(); f; f = changedFiles.IterNext()) {
-        NotifyAboutFile(wd, *f);
+    for (const WCHAR *f : changedFiles) {
+        NotifyAboutFile(wd, f);
     }
 }
 
