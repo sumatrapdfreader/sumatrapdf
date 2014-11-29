@@ -356,6 +356,11 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
     return NULL;
 }
 
+WindowInfo *FindWindowInfoByTab(TabInfo *tab)
+{
+    return gWindows.FindEl([&](WindowInfo *win) { return win->tabs.Contains(tab); });
+}
+
 class HwndPasswordUI : public PasswordUI
 {
     HWND hwnd;
@@ -733,25 +738,14 @@ void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned ch
     LinkSaver(*win, fileName).SaveEmbedded(data, len);
 }
 
-class EbookFormattingTask : public UITask {
-    WindowInfo *win;
-    EbookController *ctrl;
-    EbookFormattingData *data;
-
-public:
-    EbookFormattingTask(WindowInfo *win, EbookController *ctrl, EbookFormattingData *data) :
-        win(win), ctrl(ctrl), data(data) { }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win) && GetTabInfoByCtrl(win, ctrl)) {
-            ctrl->HandlePagesFromEbookLayout(data);
-        }
-    }
-};
-
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data)
 {
-    uitask::Post(new EbookFormattingTask(win, ctrl, data));
+    TabInfo *tdata = win->tabs.FindEl([&](TabInfo *tab) { return ctrl == tab->ctrl; });
+    uitask::Post([=]{
+        if (FindWindowInfoByTab(tdata) && tdata->ctrl == ctrl) {
+            ctrl->HandlePagesFromEbookLayout(data);
+        }
+    });
 }
 
 void ControllerCallbackHandler::RequestDelayedLayout(int delay)
@@ -1221,12 +1215,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     }
     TabsOnChangedDoc(win);
 
-    if (win->tabsVisible) {
-        TabInfo *td = GetTabInfoByCtrl(win, win->ctrl);
-        if (td) {
-            td->reloadOnFocus = false;
-        }
-    }
+    win->currentTab->reloadOnFocus = false;
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file

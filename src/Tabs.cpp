@@ -1,31 +1,34 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "Dpi.h"
-#include "BaseEngine.h"
-#include "HtmlParserLookup.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "ChmModel.h"
-#include "EngineManager.h"
-#include "DisplayModel.h"
-#include "Mui.h"
-#include "EbookControls.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
-#include "resource.h"
-#include "SumatraPDF.h"
-#include "TableOfContents.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
 #include "UITask.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
-#include "Tabs.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EngineManager.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "ChmModel.h"
+#include "DisplayModel.h"
+#include "EbookControls.h"
+// ui
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "resource.h"
+#include "AppPrefs.h"
 #include "Caption.h"
 #include "Menu.h"
+#include "TableOfContents.h"
+#include "Tabs.h"
 
 static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
@@ -705,11 +708,6 @@ static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
     }
     SetCurrentTabBgCol(win, bgCol);
     RepaintNow(win->hwndTabBar);
-}
-
-TabInfo *GetTabInfoByCtrl(WindowInfo *win, Controller *ctrl)
-{
-    return win->tabs.FindEl([&](TabInfo *tab) { return ctrl == tab->ctrl; });
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
