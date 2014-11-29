@@ -707,26 +707,9 @@ static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
     RepaintNow(win->hwndTabBar);
 }
 
-// TODO: inline
-int TabsGetCount(WindowInfo *win, bool onOpenNew)
-{
-    return win->tabs.Count() - (onOpenNew ? 1 : 0);
-}
-
 TabInfo *GetTabInfoByCtrl(WindowInfo *win, Controller *ctrl)
 {
     return win->tabs.FindEl([&](TabInfo *tab) { return ctrl == tab->ctrl; });
-}
-
-static void DeleteTabInfo(WindowInfo *win, TabInfo *tdata)
-{
-    if (!tdata)
-        return;
-    UnobserveFileChanges(tdata->filePath, win);
-    if (tdata->AsChm())
-        tdata->AsChm()->RemoveParentHwnd();
-    delete tdata->ctrl;
-    delete tdata;
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
@@ -743,9 +726,9 @@ void TabsOnLoadedDoc(WindowInfo *win)
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR *)td->tabTitle;
 
-    int count = TabsGetCount(win, true);
-    if (-1 != TabCtrl_InsertItem(win->hwndTabBar, count, &tcs)) {
-        TabCtrl_SetCurSel(win->hwndTabBar, count);
+    int index = (int)win->tabs.Count() - 1;
+    if (-1 != TabCtrl_InsertItem(win->hwndTabBar, index, &tcs)) {
+        TabCtrl_SetCurSel(win->hwndTabBar, index);
         UpdateTabWidth(win);
     }
     else {
@@ -758,7 +741,7 @@ void TabsOnLoadedDoc(WindowInfo *win)
 // Refresh the tab's title
 void TabsOnChangedDoc(WindowInfo *win)
 {
-    if (TabsGetCount(win) <= 0)
+    if (win->tabs.Count() == 0)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
@@ -776,8 +759,7 @@ void TabsOnChangedDoc(WindowInfo *win)
 // Called when we're closing a document
 void TabsOnCloseDoc(WindowInfo *win)
 {
-    int count = TabsGetCount(win);
-    if (count <= 0)
+    if (win->tabs.Count() == 0)
         return;
 
     if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
@@ -789,7 +771,8 @@ void TabsOnCloseDoc(WindowInfo *win)
     UpdateTabFileDisplayStateForWin(win, tdata);
     win->tabSelectionHistory->Remove(tdata);
     win->tabs.Remove(tdata);
-    DeleteTabInfo(win, tdata);
+    UnobserveFileChanges(tdata->filePath, win);
+    delete tdata;
     TabCtrl_DeleteItem(win->hwndTabBar, current);
     win->loadedFilePath = NULL;
     win->ctrl = NULL;
@@ -797,7 +780,7 @@ void TabsOnCloseDoc(WindowInfo *win)
     win->currentTab = NULL;
     UpdateTabWidth(win);
 
-    if (count > 1) {
+    if (win->tabs.Count() > 0) {
         tdata = win->tabSelectionHistory->Pop();
         TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tdata));
         LoadModelIntoTab(win, tdata);
@@ -812,7 +795,8 @@ void TabsOnCloseWindow(WindowInfo *win)
     // TODO: move into SumatraPDF.cpp
     for (TabInfo *tab : win->tabs) {
         UpdateTabFileDisplayStateForWin(win, tab);
-        DeleteTabInfo(win, tab);
+        UnobserveFileChanges(tab->filePath, win);
+        delete tab;
     }
     win->tabSelectionHistory->Reset();
     win->tabs.Reset();
@@ -858,7 +842,8 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 UpdateTabFileDisplayStateForWin(win, tdata);
                 win->tabSelectionHistory->Remove(tdata);
                 win->tabs.Remove(tdata);
-                DeleteTabInfo(win, tdata);
+                UnobserveFileChanges(tdata->filePath, win);
+                delete tdata;
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
             }
@@ -884,7 +869,7 @@ static void ShowTabBar(WindowInfo *win, bool show)
 
 void UpdateTabWidth(WindowInfo *win)
 {
-    int count = TabsGetCount(win);
+    int count = (int)win->tabs.Count();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     if (count > (showSingleTab ? 0 : 1)) {
         ShowTabBar(win, true);
@@ -940,7 +925,7 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
 // Selects the given tab (0-based index).
 void TabsSelect(WindowInfo *win, int tabIndex)
 {
-    int count = TabsGetCount(win);
+    int count = (int)win->tabs.Count();
     if (count < 2 || tabIndex < 0 || tabIndex >= count)
         return;
     NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
@@ -957,7 +942,7 @@ void TabsSelect(WindowInfo *win, int tabIndex)
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(WindowInfo *win, bool reverse)
 {
-    int count = TabsGetCount(win);
+    size_t count = win->tabs.Count();
     if (count < 2)
         return;
 

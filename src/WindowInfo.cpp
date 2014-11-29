@@ -1,32 +1,36 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils (in any order)
 #include "BaseUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <dwmapi.h>
 #include <vssym32.h>
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "EngineManager.h"
-#include "WindowInfo.h"
-#include "Caption.h"
-#include "DisplayModel.h"
-#include "Doc.h"
-#include "EbookController.h"
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EngineManager.h"
+#include "Doc.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "ChmModel.h"
+#include "DisplayModel.h"
+#include "EbookController.h"
+// ui
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "Caption.h"
 #include "Notifications.h"
 #include "resource.h"
 #include "Selection.h"
 #include "StressTesting.h"
-#include "SumatraPDF.h"
 #include "Translations.h"
 #include "uia/Provider.h"
-#include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     ctrl(NULL), currentTab(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
@@ -91,6 +95,19 @@ WindowInfo::~WindowInfo()
     free(favSplitter);
     free(tocLabelWithClose);
     free(favLabelWithClose);
+}
+
+TabInfo::TabInfo() :
+    ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false)
+{
+}
+
+TabInfo::~TabInfo()
+{
+    // TODO: UnobserveFileChanges(filePath, win);
+    if (AsChm())
+        AsChm()->RemoveParentHwnd();
+    delete ctrl;
 }
 
 EngineType TabInfo::GetEngineType() const

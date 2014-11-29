@@ -2169,7 +2169,7 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
     CrashIf(!win);
     if (!win) return;
 
-    int tabCount = TabsGetCount(win);
+    size_t tabCount = win->tabs.Count();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         CloseWindow(win, quitIfLast);
     }
@@ -3568,7 +3568,7 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
 {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win.tabsVisible && ('1' <= key && key <= '9')) {
-        TabsSelect(&win, key < '9' ? (int)(key - '1') : TabsGetCount(&win) - 1);
+        TabsSelect(&win, key < '9' ? (int)(key - '1') : (int)win.tabs.Count() - 1);
         return true;
     }
 

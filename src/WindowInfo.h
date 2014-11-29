@@ -86,7 +86,8 @@ public:
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus;
 
-    TabInfo() : ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false) { }
+    TabInfo();
+    ~TabInfo();
 
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
     ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }

@@ -4,7 +4,6 @@
 int GetTabbarHeight(WindowInfo *win, float factor=1.f);
 
 void SaveCurrentTabInfo(WindowInfo *win);
-int TabsGetCount(WindowInfo *win, bool onOpenNew=false);
 TabInfo *GetTabInfoByCtrl(WindowInfo *win, Controller *ctrl);
 void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata);
 
