@@ -8,6 +8,7 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "FileUtil.h"
+#include "FileWatcher.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"
 // model (engines, helpers, controllers)
@@ -65,7 +66,11 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo()
 {
     FinishStressTest(this);
+
     CrashIf(tabs.Count() > 0);
+    while (tabs.Count() > 0) {
+        delete tabs.Pop();
+    }
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
@@ -98,13 +103,13 @@ WindowInfo::~WindowInfo()
 }
 
 TabInfo::TabInfo() :
-    ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false)
+    ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false), watcher(NULL)
 {
 }
 
 TabInfo::~TabInfo()
 {
-    // TODO: UnobserveFileChanges(filePath, win);
+    FileWatcherUnsubscribe(watcher);
     if (AsChm())
         AsChm()->RemoveParentHwnd();
     delete ctrl;

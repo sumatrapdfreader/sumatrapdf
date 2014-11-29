@@ -140,7 +140,6 @@ void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
-void  UnobserveFileChanges(const WCHAR *path, WindowInfo *win);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);

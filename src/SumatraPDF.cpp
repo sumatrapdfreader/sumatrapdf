@@ -1101,81 +1101,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     return true;
 }
 
-class ModifiedDocReloaderItem : public FileChangeObserver {
-public:
-    ScopedMem<WCHAR> path;
-    WindowInfo *win;
-    WatchedFile *token;
-    int refCount;
-
-    ModifiedDocReloaderItem(const WCHAR *path, WindowInfo *win) :
-        path(str::Dup(path)), win(win), refCount(1) {
-        token = FileWatcherSubscribe(path, this);
-    }
-
-    virtual void OnFileChanged() {
-        // We cannot call win->Reload directly as it could cause race conditions
-        // between the watching thread and the main thread
-        uitask::Post([=] {
-            if (!WindowInfoStillValid(win))
-                return;
-            if (win->tabsVisible) {
-                for (TabInfo *tab : win->tabs) {
-                    if (str::Eq(this->path, tab->filePath))
-                        tab->reloadOnFocus = true;
-                }
-            }
-            if (str::Eq(path, win->loadedFilePath)) {
-                // delay the reload slightly, in case we get another request immediately after this one
-                SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
-            }
-        });
-    }
-};
-
-class ModifiedDocReloader {
-    Vec<ModifiedDocReloaderItem *> items;
-
-    ModifiedDocReloaderItem *FindItem(const WCHAR *path, WindowInfo *win) {
-        for (size_t i = 0; i < items.Count(); i++) {
-            ModifiedDocReloaderItem *item = items.At(i);
-            if (win == item->win && str::Eq(path, item->path))
-                return item;
-        }
-        return NULL;
-    }
-
-public:
-    ~ModifiedDocReloader() { CrashIf(items.Count() > 0); }
-
-    void Track(const WCHAR *path, WindowInfo *win) {
-        if (!gGlobalPrefs->reloadModifiedDocuments)
-            return;
-
-        ModifiedDocReloaderItem *item = FindItem(path, win);
-        if (item)
-            item->refCount++;
-        else
-            items.Append(new ModifiedDocReloaderItem(path, win));
-    }
-
-    void Untrack(const WCHAR *path, WindowInfo *win) {
-        ModifiedDocReloaderItem *item = FindItem(path, win);
-        if (item && 0 == --item->refCount) {
-            items.Remove(item);
-            // item is owned by item->token and deleted in DeleteWatchedFile
-            FileWatcherUnsubscribe(item->token);
-        }
-    }
-};
-
-static ModifiedDocReloader gModifiedDocReloader;
-
-void UnobserveFileChanges(const WCHAR *path, WindowInfo *win)
-{
-    gModifiedDocReloader.Untrack(path, win);
-}
-
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
     if (!win->IsDocLoaded()) {
@@ -1369,8 +1294,6 @@ WindowInfo *CreateAndShowWindowInfo()
 
 void DeleteWindowInfo(WindowInfo *win)
 {
-    UnobserveFileChanges(win->loadedFilePath, win);
-
     DeletePropertiesWindow(win->hwndFrame);
     gWindows.Remove(win);
 
@@ -1447,6 +1370,28 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
 }
 #endif
 
+class TabReloadHandler : public FileChangeObserver {
+    TabInfo *tab;
+
+public:
+    explicit TabReloadHandler(TabInfo *tab) : tab(tab) { }
+
+    virtual void OnFileChanged() override {
+        // to prevent race conditions between file changes and closing tabs,
+        // use the tab only on the main UI thread
+        uitask::Post([=] {
+            WindowInfo *win = FindWindowInfoByTab(tab);
+            if (!win)
+                return;
+            tab->reloadOnFocus = true;
+            if (tab == win->currentTab) {
+                // delay the reload slightly, in case we get another request immediately after this one
+                SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, NULL);
+            }
+        });
+    }
+};
+
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
 // file (and showing progress/load failures in topmost window) and placing
@@ -1522,9 +1467,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     CrashIf(openNewTab && args.forceReuse);
     if (!win->IsAboutWindow()) {
         CrashIf(!args.forceReuse && !openNewTab);
-        if (args.forceReuse)
-            UnobserveFileChanges(win->loadedFilePath, win);
-        else
+        if (!args.forceReuse)
             win->tabs.Append((win->currentTab = new TabInfo()));
         win->tocState = &win->currentTab->tocState;
         CloseDocumentInTab(win, true, true);
@@ -1566,7 +1509,11 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return win;
     }
 
-    gModifiedDocReloader.Track(win->loadedFilePath, win);
+    CrashIf(win->currentTab->watcher);
+    if (gGlobalPrefs->reloadModifiedDocuments) {
+        TabReloadHandler *observer = new TabReloadHandler(win->currentTab);
+        win->currentTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, observer);
+    }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
@@ -2111,6 +2058,8 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     if (deleteModel) {
         delete win->currentTab->ctrl;
         win->currentTab->ctrl = NULL;
+        FileWatcherUnsubscribe(win->currentTab->watcher);
+        win->currentTab->watcher = NULL;
     }
     else {
         win->currentTab = NULL;
@@ -2164,7 +2113,6 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
     }
     else {
         CrashIf(gPluginMode && gWindows.Find(win) == 0);
-        UnobserveFileChanges(win->loadedFilePath, win);
         TabsOnCloseDoc(win);
     }
 }
@@ -2216,7 +2164,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         DeleteWindowInfo(win);
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
-        UnobserveFileChanges(win->loadedFilePath, win);
         CloseDocumentInTab(win);
         SetFocus(win->hwndFrame);
     } else {

@@ -1337,7 +1337,8 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
 
     case AUTO_RELOAD_TIMER_ID:
         KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-        ReloadDocument(&win, true);
+        if (win.currentTab && win.currentTab->reloadOnFocus)
+            ReloadDocument(&win, true);
         break;
 
     case EBOOK_LAYOUT_TIMER_ID:

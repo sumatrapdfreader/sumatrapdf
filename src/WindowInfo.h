@@ -7,7 +7,7 @@ class Notifications;
 class SelectionOnPage;
 class StressTest;
 class SumatraUIAutomationProvider;
-
+struct WatchedFile;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
 struct SplitterWnd;
@@ -85,6 +85,8 @@ public:
     RectI canvasRc;
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus;
+    // FileWatcher token for unsubscribing
+    WatchedFile *watcher;
 
     TabInfo();
     ~TabInfo();

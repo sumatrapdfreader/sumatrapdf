@@ -769,7 +769,6 @@ void TabsOnCloseDoc(WindowInfo *win)
     UpdateTabFileDisplayStateForWin(win, tdata);
     win->tabSelectionHistory->Remove(tdata);
     win->tabs.Remove(tdata);
-    UnobserveFileChanges(tdata->filePath, win);
     delete tdata;
     TabCtrl_DeleteItem(win->hwndTabBar, current);
     win->loadedFilePath = NULL;
@@ -793,7 +792,6 @@ void TabsOnCloseWindow(WindowInfo *win)
     // TODO: move into SumatraPDF.cpp
     for (TabInfo *tab : win->tabs) {
         UpdateTabFileDisplayStateForWin(win, tab);
-        UnobserveFileChanges(tab->filePath, win);
         delete tab;
     }
     win->tabSelectionHistory->Reset();
@@ -840,7 +838,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
                 UpdateTabFileDisplayStateForWin(win, tdata);
                 win->tabSelectionHistory->Remove(tdata);
                 win->tabs.Remove(tdata);
-                UnobserveFileChanges(tdata->filePath, win);
                 delete tdata;
                 TabCtrl_DeleteItem(win->hwndTabBar, tab1);
                 UpdateTabWidth(win);
