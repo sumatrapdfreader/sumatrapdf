@@ -7,9 +7,9 @@
 				"../src",
 			],
 			'dependencies': [
-				'utils',
-				'zlib',
-				'lzma',
+				'utils.gyp:utils',
+				'zlib.gyp:zlib',
+				'lzma.gyp:lzma',
 			],
 			'msvs_disabled_warnings': [4996],
 			'sources': [

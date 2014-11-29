@@ -3,7 +3,7 @@
         {
             'target_name': 'djvu',
             'type': 'static_library',
-            'dependencies': ['libjpeg'],
+            'dependencies': ['libjpeg.gyp:libjpeg'],
             'include_dirs': [
                 "../ext/libjpeg-turbo",
             ],

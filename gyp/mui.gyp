@@ -1,13 +1,10 @@
 {
-    'includes': [
-        'utils.gyp',
-    ],
     'targets': [
         {
             'target_name': 'mui',
             'type': 'static_library',
             'dependencies': [
-                'utils',
+                'utils.gyp:utils',
             ],
             'include_dirs': [
                 "../src/mui",

@@ -5,7 +5,7 @@
             'type': 'executable',
 
             'include_dirs': [
-                'src/utils',
+                '../src/utils',
             ],
             'sources': [
               "../src/AppUtil.h",

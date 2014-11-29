@@ -1,15 +1,13 @@
 {
 	# TODO: this should link with libmupdf.dll
-	'includes': [
-	],
 	'targets': [
 		{
 			'target_name': 'PdfFilter',
 			'type': 'shared_library',
 			'msvs_disabled_warnings': [4244],
 			'dependencies': [
-				"utils",
-				'mupdf',
+				"utils.gyp:utils",
+				'mupdf.gyp:mupdf',
 			],
 			'include_dirs': [
 				"../src",

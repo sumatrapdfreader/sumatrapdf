@@ -1,24 +1,25 @@
 {
     'variables': {
         #'nasm_path': '<(DEPTH)/bin/nasm.exe',
+        'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)',
+        'conditions': [
+          [ 'OS=="win"', {
+            'object_suffix': 'obj',
+          }, {
+            'object_suffix': 'o',
+          }],
+        ],
     },
-    'includes': [
-        'zlib.gyp',
-        'libjpeg.gyp',
-        'jbig2dec.gyp',
-        'freetype.gyp',
-        'openjpeg.gyp',
-    ],
     'targets': [
         {
             'target_name': 'mupdf',
             'type': 'static_library',
             'dependencies': [
-                'zlib',
-                'libjpeg',
-                'jbig2dec',
-                'freetype',
-                'openjpeg',
+                'zlib.gyp:zlib',
+                'libjpeg.gyp:libjpeg',
+                'jbig2dec.gyp:jbig2dec',
+                'freetype.gyp:freetype',
+                'openjpeg.gyp:openjpeg',
             ],
             'defines': [
                 'NOCJKFONT',

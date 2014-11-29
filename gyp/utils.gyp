@@ -4,10 +4,10 @@
             'target_name': 'utils',
             'type': 'static_library',
             'dependencies': [
-                'lzma',
-                'zlib',
-                'unarr',
-                'libwebp',
+                'lzma.gyp:lzma',
+                'zlib.gyp:zlib',
+                'unarr.gyp:unarr',
+                'libwebp.gyp:libwebp',
             ],
             'include_dirs': [
                 "../src/utils",
