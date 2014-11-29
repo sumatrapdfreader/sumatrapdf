@@ -1,7 +1,7 @@
 {
   'variables': {
     'target_arch%': 'ia32', # x64 for 64-bit build
-    'nasm_path': '../bin/nasm.exe',
+    'nasm_path': '<(DEPTH)/bin/nasm.exe',
   },
   'target_defaults': {
     'configurations': {

@@ -5,7 +5,7 @@
 
 {
   'variables': {
-    'nasm_path': '../bin/nasm.exe',
+    #'nasm_path': '<(DEPTH)/bin/nasm.exe',
     #'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)/third_party/libjpeg_turbo',
     'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)',
     'conditions': [
@@ -155,11 +155,10 @@
         }],
         [ 'OS=="win"', {
           'variables': {
-            'nasm_path': '../bin/nasm<(EXECUTABLE_SUFFIX)',
             'conditions': [
               [ 'target_arch=="ia32"', {
                 'nasm_flags': [
-                  '-f', 'win32',
+                  '-f win32',
                   # TODO: chrome version had equivalent of -I win
                   # but it seems like rules is executed in top-level directory
                   # so paths must be relative to it as well
@@ -172,7 +171,7 @@
               }, {
                 # TODO: verify those
                 'nasm_flags': [
-                  '-f', 'win64',
+                  '-f win64',
                   '-I../ext/libjpeg-turbo/win/',
                 ],
               }],

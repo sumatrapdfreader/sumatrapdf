@@ -1,6 +1,6 @@
 {
     'variables': {
-        'nasm_path': '../bin/nasm.exe',
+        #'nasm_path': '<(DEPTH)/bin/nasm.exe',
     },
     'includes': [
         'zlib.gyp',
@@ -41,11 +41,11 @@
                     'conditions': [
                       [ 'target_arch=="ia32"', {
                         'nasm_flags': [
-                          '-f', 'win32',
+                          '-fwin32',
                         ],
                       }, {
                         'nasm_flags': [
-                          '-f', 'win64',
+                          '-fwin64',
                         ],
                       }],
                     ],

@@ -5,4 +5,10 @@
 @rem call ..\..\gyp\gyp.bat -G msvs_version=2013 -f msvs -Icommon.gypi sumatra.gyp
 @rem cd ..
 
-call ..\gyp\gyp.bat -G msvs_version=2013 -f msvs -Igyp\common.gypi gyp\sumatra.gyp
+call ..\gyp\gyp.bat -G msvs_version=2013 -f msvs --depth=. -Igyp\common.gypi gyp\sumatra.gyp
+
+@rem TODO: still can't figure out how to make --geenrator-output work
+@rem nasm rules break if the generator-output directory has a different level than gyp directory
+@rem call ..\gyp\gyp.bat -G msvs_version=2013 -f msvs --depth=. --generator-output=build32 -Igyp\common.gypi gyp\sumatra.gyp
+
+
