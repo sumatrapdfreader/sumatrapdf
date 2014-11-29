@@ -167,13 +167,13 @@
                   # "-I" "ext/libjpeg-turbo/win/"
                   # as cmd-line args to nasm because nasm insists on "-I win/" and
                   # doesn't work if it's just "-I win". We could switch to yasm
-                  '-I', '../ext/libjpeg-turbo/win///',
+                  '-I../ext/libjpeg-turbo/win/',
                 ],
               }, {
                 # TODO: verify those
                 'nasm_flags': [
                   '-f', 'win64',
-                  '-I', '../ext/libjpeg-turbo/win///',
+                  '-I../ext/libjpeg-turbo/win/',
                 ],
               }],
             ],
@@ -193,7 +193,7 @@
               'action': [
                 '<(nasm_path)',
                 '<@(nasm_flags)',
-                '-I', "../ext/libjpeg-turbo/simd///",
+                '-I../ext/libjpeg-turbo/simd/',
                 '-o', '<(shared_generated_dir)/<(RULE_INPUT_ROOT).<(object_suffix)',
                 '<(RULE_INPUT_PATH)',
               ],

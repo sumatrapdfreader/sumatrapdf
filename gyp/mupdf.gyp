@@ -65,7 +65,7 @@
                   'action': [
                     '<(nasm_path)',
                     '<@(nasm_flags)',
-                    '-I', "../mupdf///",
+                    '-I../mupdf/',
                     '-o', '<(shared_generated_dir)/<(RULE_INPUT_ROOT).<(object_suffix)',
                     '<(RULE_INPUT_PATH)',
                   ],
