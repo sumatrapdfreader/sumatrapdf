@@ -46,16 +46,16 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
 static bool g_FirefoxStyle = false;
 
-int GetTabbarHeight(WindowInfo *win, float factor)
+int GetTabbarHeight(HWND hwnd, float factor)
 {
-    int dy = DpiScaleY(win->hwndFrame, TABBAR_HEIGHT);
+    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return (int)(dy * factor);
 }
 
-static inline SizeI GetTabSize(WindowInfo *win)
+static inline SizeI GetTabSize(HWND hwnd)
 {
-    int dx = DpiScaleX(win->hwndFrame, TAB_WIDTH);
-    int dy = DpiScaleY(win->hwndFrame, TABBAR_HEIGHT);
+    int dx = DpiScaleX(hwnd, TAB_WIDTH);
+    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
 
@@ -645,7 +645,7 @@ void CreateTabbar(WindowInfo *win)
         DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
     SetWindowLongPtr(hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
 
-    SizeI tabSize = GetTabSize(win);
+    SizeI tabSize = GetTabSize(win->hwndFrame);
     TabPainter *tp = new TabPainter(hwndTabBar, tabSize);
     SetWindowLongPtr(hwndTabBar, GWLP_USERDATA, (LONG_PTR)tp);
 
@@ -872,7 +872,7 @@ void UpdateTabWidth(WindowInfo *win)
     if (count > (showSingleTab ? 0 : 1)) {
         ShowTabBar(win, true);
         ClientRect rect(win->hwndTabBar);
-        SizeI tabSize = GetTabSize(win);
+        SizeI tabSize = GetTabSize(win->hwndFrame);
         if (tabSize.dx > (rect.dx - 3) / count)
             tabSize.dx = (rect.dx - 3) / count;
         TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);

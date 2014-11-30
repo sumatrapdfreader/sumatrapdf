@@ -2798,7 +2798,8 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
                 rc.y += frameThickness;
                 rc.dy -= frameThickness;
             }
-            int captionHeight = GetTabbarHeight(win, IsZoomed(win->hwndFrame) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR);
+            float scale = IsZoomed(win->hwndFrame) ? 1.f : CAPTION_TABBAR_HEIGHT_FACTOR;
+            int captionHeight = GetTabbarHeight(win->hwndFrame, scale);
             if (updateToolbars) {
                 int captionWidth;
                 RECT capButtons;
@@ -2820,7 +2821,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
             rc.dy -= captionHeight;
         }
         else if (win->tabsVisible) {
-            int tabHeight = GetTabbarHeight(win);
+            int tabHeight = GetTabbarHeight(win->hwndFrame);
             if (updateToolbars)
                 dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)

@@ -340,7 +340,7 @@ void RelayoutCaption(WindowInfo *win)
     }
 
     button = &ci->btn[CB_MENU];
-    int tabHeight = GetTabbarHeight(win);
+    int tabHeight = GetTabbarHeight(win->hwndFrame);
     rc.y += rc.dy - tabHeight;
     dh.SetWindowPos(button->hwnd, NULL, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
     button->SetMargins(0, 0, 0, 0);
@@ -567,7 +567,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                     if (IsZoomed(hwnd)) {
                         tabScale = 1.f;
                     }
-                    captionHeight = GetTabbarHeight(win, tabScale);
+                    captionHeight = GetTabbarHeight(win->hwndFrame, tabScale);
                 }
                 int top = frameThickness + captionHeight;
                 int bottom = NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0;
