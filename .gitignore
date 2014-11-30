@@ -10,3 +10,7 @@ gyp/*.vcxproj.filters
 gyp/*props
 gyp/*targets
 gyp/*.xml
+gyp/Debug/
+*.suo
+*.opensdf
+*.sdf
