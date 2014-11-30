@@ -79,7 +79,7 @@ public:
     // text of win->hwndFrame when the tab is selected
     ScopedMem<WCHAR> frameTitle;
     // state of the table of contents
-    bool showToc, showTocFullscreen;
+    bool showToc, showTocPresentation;
     DocTocItem *tocRoot;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;

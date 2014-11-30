@@ -455,7 +455,7 @@ static void UpdateSidebarDisplayState(WindowInfo *win, TabInfo *tab, DisplayStat
 {
     CrashIf(!tab);
 
-    ds->showToc = tab->showToc || (win->isFullScreen && tab->showTocFullscreen);
+    ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
         tab->tocState.Reset();
         HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
@@ -1462,6 +1462,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     else if (!win->currentTab || openNewTab) {
         win->tabs.Append((win->currentTab = new TabInfo()));
     }
+    win->currentTab->canvasRc = win->canvasRc;
     // invalidate the links on the Frequently Read page
     win->staticLinks.Reset();
 
@@ -1561,8 +1562,8 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     if (pageCount > 0)
         UpdateToolbarFindText(win);
 
-    if (win->isFullScreen || win->presentation != PM_DISABLED)
-        SetSidebarVisibility(win, tdata->showTocFullscreen, gGlobalPrefs->showFavorites);
+    if (win->presentation != PM_DISABLED)
+        SetSidebarVisibility(win, tdata->showTocPresentation, gGlobalPrefs->showFavorites);
     else
         SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
@@ -3034,16 +3035,11 @@ void EnterFullScreen(WindowInfo* win, bool presentation)
         win->isFullScreen = true;
     }
 
-    // Remove TOC and favorites from full screen, add back later on exit fullscreen
+    // ToC and Favorites sidebars are hidden when entering presentation mode
     // TODO: make showFavorites a per-window pref
     bool showFavoritesTmp = gGlobalPrefs->showFavorites;
-    if (win->tocVisible || gGlobalPrefs->showFavorites) {
+    if (presentation && (win->tocVisible || gGlobalPrefs->showFavorites)) {
         SetSidebarVisibility(win, false, false);
-        // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
-    }
-    else if (win->currentTab) {
-        // this is otherwise set by SetSidebarVisibility above
-        win->currentTab->showTocFullscreen = false;
     }
 
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
@@ -3069,6 +3065,7 @@ void EnterFullScreen(WindowInfo* win, bool presentation)
 
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win->hwndFrame);
+    // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
@@ -3078,22 +3075,23 @@ void ExitFullScreen(WindowInfo *win)
         return;
 
     bool wasPresentation = PM_DISABLED != win->presentation;
-    if (wasPresentation && win->IsDocLoaded()) {
-        win->ctrl->SetPresentationMode(false);
+    if (wasPresentation) {
         win->presentation = PM_DISABLED;
+        if (win->IsDocLoaded())
+            win->ctrl->SetPresentationMode(false);
+        // re-enable the auto-hidden cursor
+        KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
+        SetCursor(IDC_ARROW);
+        // ensure that no ToC is shown when entering presentation mode the next time
+        for (TabInfo *tab : win->tabs) {
+            tab->showTocPresentation = false;
+        }
     }
     else {
         win->isFullScreen = false;
     }
 
-    if (wasPresentation) {
-        KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
-        SetCursor(IDC_ARROW);
-    }
-
-    // showing ToC during fullscreen mode carries over into normal mode
-    // (a ToC used exclusively for presentation is hidden again)
-    bool tocVisible = win->currentTab && (win->currentTab->showToc || (!wasPresentation && win->currentTab->showTocFullscreen));
+    bool tocVisible = win->currentTab && win->currentTab->showToc;
     SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
 
     if (win->tabsInTitlebar)
@@ -3598,10 +3596,10 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 
     if (!win->currentTab)
         CrashIf(tocVisible);
-    else if (win->isFullScreen || PM_ENABLED == win->presentation)
-        win->currentTab->showTocFullscreen = tocVisible;
     else if (!win->presentation)
         win->currentTab->showToc = tocVisible;
+    else if (PM_ENABLED == win->presentation)
+        win->currentTab->showTocPresentation = tocVisible;
     win->tocVisible = tocVisible;
 
     // TODO: make this a per-window setting as well?

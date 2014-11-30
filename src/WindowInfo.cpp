@@ -103,7 +103,7 @@ WindowInfo::~WindowInfo()
 
 TabInfo::TabInfo() :
     ctrl(NULL), tabTitle(NULL),
-    showToc(false), showTocFullscreen(false), tocRoot(NULL),
+    showToc(false), showTocPresentation(false), tocRoot(NULL),
     reloadOnFocus(false), watcher(NULL)
 {
 }
@@ -141,6 +141,7 @@ void WindowInfo::UpdateCanvasSize()
     if (IsDocLoaded()) {
         // the display model needs to know the full size (including scroll bars)
         ctrl->SetViewPortSize(GetViewPortSize());
+        currentTab->canvasRc = canvasRc;
     }
 
     // keep the notifications visible (only needed for right-to-left layouts)

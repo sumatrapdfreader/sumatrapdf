@@ -655,15 +655,15 @@ void CreateTabbar(WindowInfo *win)
     win->tabSelectionHistory = new Vec<TabInfo *>();
 }
 
-// Saves some of the document's data from the WindowInfo to the TabInfo.
-static void SaveTabInfo(WindowInfo *win, TabInfo *tdata)
+// verifies that TabInfo state is consistent with WindowInfo state
+static void VerifyTabInfo(WindowInfo *win, TabInfo *tdata)
 {
     CrashIf(tdata->ctrl != win->ctrl);
     CrashIf(!str::Eq(tdata->filePath, win->loadedFilePath));
     CrashIf(!str::Eq(ScopedMem<WCHAR>(win::GetText(win->hwndFrame)), tdata->frameTitle));
     CrashIf(!str::Eq(tdata->tabTitle, path::GetBaseName(tdata->filePath)));
-    CrashIf(win->tocVisible != (win->isFullScreen || PM_ENABLED == win->presentation ? tdata->showTocFullscreen : !win->presentation ? tdata->showToc : false));
-    tdata->canvasRc = win->canvasRc;
+    CrashIf(win->tocVisible != (!win->presentation ? tdata->showToc : PM_ENABLED == win->presentation ? tdata->showTocPresentation : false));
+    CrashIf(tdata->canvasRc != win->canvasRc);
 }
 
 // Must be called when the active tab is losing selection.
@@ -686,7 +686,7 @@ void SaveCurrentTabInfo(WindowInfo *win)
         if (hRoot)
             UpdateTocExpansionState(tdata, win->hwndTocTree, hRoot);
     }
-    SaveTabInfo(win, tdata);
+    VerifyTabInfo(win, tdata);
 
     // update the selection history
     win->tabSelectionHistory->Remove(tdata);
@@ -713,7 +713,7 @@ void TabsOnLoadedDoc(WindowInfo *win)
         return;
 
     TabInfo *td = win->tabs.Last();
-    SaveTabInfo(win, td);
+    VerifyTabInfo(win, td);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
@@ -740,7 +740,7 @@ void TabsOnChangedDoc(WindowInfo *win)
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     TabInfo *tdata = win->currentTab;
     CrashIf(!tdata);
-    SaveTabInfo(win, tdata);
+    VerifyTabInfo(win, tdata);
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
