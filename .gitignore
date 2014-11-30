@@ -4,3 +4,9 @@ obj-rel/
 obj-dbg/
 builds/
 mupdf/generated/
+gyp/*.sln
+gyp/*.vcxproj
+gyp/*.vcxproj.filters
+gyp/*props
+gyp/*targets
+gyp/*.xml
