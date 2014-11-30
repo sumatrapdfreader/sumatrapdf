@@ -1241,7 +1241,7 @@ const char * gTranslations_az =
   "Sinxronla\305\237d\304\261rma fayl\304\261n\304\261 a\303\247maq m\303\274mk\303\274n deyil\0"\
   "Teql\311\231nmi\305\237 PDF\0"\
   "M\311\231tn s\311\231n\311\231dl\311\231ri\0"\
-  "\0"\
+  "Bu s\311\231n\311\231d d\311\231st\311\231kl\311\231nm\311\231y\311\231n funksiyalardan (%s) istifad\311\231 edir v\311\231 d\303\274zg\303\274n \311\231ks olunmaya bil\311\231r\0"\
   "Ba\305\237l\304\261q:\0"\
   "Nam\311\231lum m\311\231nb\311\231 fayl\304\261 (%s)\0"\
   "&Tab-v\311\231r\311\231q\311\231l\311\231rd\311\231n istifad\311\231 et\0"\
