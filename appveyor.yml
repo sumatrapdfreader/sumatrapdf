@@ -1,0 +1,17 @@
+# docs: http://www.appveyor.com/docs/appveyor-yml
+
+version: 3.1.{build}
+
+branches:
+  only:
+    - master
+
+# set env var when running in appveyor so that we can distinguish
+# from running locally
+environment:
+  inappveyor: 1
+
+skip_tags: true
+
+build_script:
+  - scripts\appveyor-build.bat
