@@ -7,4 +7,4 @@ void ToggleTocBox(WindowInfo *win);
 void LoadTocTree(WindowInfo *win);
 void UpdateTocColors(WindowInfo *win);
 void UpdateTocSelection(WindowInfo *win, int currPageNo);
-void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem);
+void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem);

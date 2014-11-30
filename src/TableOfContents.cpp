@@ -149,15 +149,16 @@ class GoToTocLinkTask : public UITask
 {
     DocTocItem *tocItem;
     WindowInfo *win;
+    TabInfo *tab;
     Controller *ctrl;
 
 public:
-    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, Controller *ctrl) :
-        win(win), tocItem(tocItem), ctrl(ctrl) { }
+    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem) :
+        win(win), tocItem(tocItem), tab(win->currentTab), ctrl(tab->ctrl) { }
 
     virtual void Execute() {
-        // tocItem is invalid if the DisplayModel has been replaced
-        if (!WindowInfoStillValid(win) || !win->tocLoaded || win->ctrl != ctrl)
+        // tocItem is invalid if the Controller has been replaced
+        if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
             return;
 
         // make sure that the tree item that the user selected
@@ -166,7 +167,7 @@ public:
         if (tocItem->GetLink())
             win->linkHandler->GotoLink(tocItem->GetLink());
         else if (tocItem->pageNo)
-            win->ctrl->GoToPage(tocItem->pageNo, true);
+            ctrl->GoToPage(tocItem->pageNo, true);
         win->tocKeepSelection = false;
     }
 };
@@ -185,24 +186,22 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
         return;
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        uitask::Post(new GoToTocLinkTask(win, tocItem, win->ctrl));
+        uitask::Post(new GoToTocLinkTask(win, tocItem));
     }
 }
 
 void ClearTocBox(WindowInfo *win)
 {
-    if (!win->tocLoaded) return;
+    if (!win->tocLoaded)
+        return;
 
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(win->hwndTocTree);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
     RedrawWindow(win->hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
-    delete win->tocRoot;
-    win->tocRoot = NULL;
-
-    win->tocLoaded = false;
     win->currPageNo = 0;
+    win->tocLoaded = false;
 }
 
 void ToggleTocBox(WindowInfo *win)
@@ -302,24 +301,25 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
     TreeView_SelectItem(win->hwndTocTree, hItem);
 }
 
-void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
+void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
 {
     while (hItem) {
         TVITEM item;
         item.hItem = hItem;
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
-        TreeView_GetItem(win->hwndTocTree, &item);
+        TreeView_GetItem(hwndTocTree, &item);
 
         // add the ids of toggled items to tocState
         DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : NULL;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasToggled)
-            win->tocState->Append(tocItem->id);
+        if (wasToggled) {
+            tab->tocState.Append(tocItem->id);
+        }
 
         if (tocItem && tocItem->child)
-            UpdateTocExpansionState(win, TreeView_GetChild(win->hwndTocTree, hItem));
-        hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
+            UpdateTocExpansionState(tab, hwndTocTree, TreeView_GetChild(hwndTocTree, hItem));
+        hItem = TreeView_GetNextSibling(hwndTocTree, hItem);
     }
 }
 
@@ -383,25 +383,28 @@ static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
 
 void LoadTocTree(WindowInfo *win)
 {
-    CrashIf(!win->IsDocLoaded());
+    TabInfo *tab = win->currentTab;
+    CrashIf(!tab);
 
     if (win->tocLoaded)
         return;
     win->tocLoaded = true;
 
-    win->tocRoot = win->ctrl->GetTocTree();
-    if (!win->tocRoot)
-        return;
+    if (!tab->tocRoot) {
+        tab->tocRoot = tab->ctrl->GetTocTree();
+        if (!tab->tocRoot)
+            return;
+    }
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
     int l2r = 0, r2l = 0;
-    GetLeftRightCounts(win->tocRoot, l2r, r2l);
+    GetLeftRightCounts(tab->tocRoot, l2r, r2l);
     bool isRTL = r2l > l2r;
 
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     ToggleWindowStyle(win->hwndTocTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    PopulateTocTreeView(win->hwndTocTree, win->tocRoot, *win->tocState);
+    PopulateTocTreeView(win->hwndTocTree, tab->tocRoot, tab->tocState);
     UpdateTocColors(win);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

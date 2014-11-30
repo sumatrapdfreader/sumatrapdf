@@ -36,8 +36,8 @@
 WindowInfo::WindowInfo(HWND hwnd) :
     ctrl(NULL), currentTab(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
     linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
-    tocLoaded(false), tocVisible(false), tocRoot(NULL), tocKeepSelection(false),
-    isFullScreen(false), presentation(PM_DISABLED), tocBeforeFullScreen(false),
+    tocVisible(false), tocLoaded(false), tocKeepSelection(false),
+    isFullScreen(false), presentation(PM_DISABLED),
     windowStateBeforePresentation(0), nonFullScreenWindowStyle(0),
     hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
     hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
@@ -84,7 +84,6 @@ WindowInfo::~WindowInfo()
     delete buffer;
     delete selectionOnPage;
     delete linkOnLastButtonDown;
-    delete tocRoot;
     delete notifications;
     delete tabSelectionHistory;
     delete caption;
@@ -103,7 +102,9 @@ WindowInfo::~WindowInfo()
 }
 
 TabInfo::TabInfo() :
-    ctrl(NULL), tabTitle(NULL), showToc(false), reloadOnFocus(false), watcher(NULL)
+    ctrl(NULL), tabTitle(NULL),
+    showToc(false), showTocFullscreen(false), tocRoot(NULL),
+    reloadOnFocus(false), watcher(NULL)
 {
 }
 
@@ -112,6 +113,7 @@ TabInfo::~TabInfo()
     FileWatcherUnsubscribe(watcher);
     if (AsChm())
         AsChm()->RemoveParentHwnd();
+    delete tocRoot;
     delete ctrl;
 }
 

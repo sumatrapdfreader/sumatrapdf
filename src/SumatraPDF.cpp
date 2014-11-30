@@ -451,52 +451,36 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
     ds.sidebarDx   = gGlobalPrefs->sidebarDx;
 }
 
-static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
+static void UpdateSidebarDisplayState(WindowInfo *win, TabInfo *tab, DisplayState *ds)
 {
-    ds->showToc = win->tocVisible;
+    CrashIf(!tab);
 
-    if (win->tocLoaded) {
-        win->tocState->Reset();
+    ds->showToc = tab->showToc || (win->isFullScreen && tab->showTocFullscreen);
+    if (win->tocLoaded && tab == win->currentTab) {
+        tab->tocState.Reset();
         HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
         if (hRoot)
-            UpdateTocExpansionState(win, hRoot);
+            UpdateTocExpansionState(tab, win->hwndTocTree, hRoot);
     }
+    *ds->tocState = tab->tocState;
+}
 
-    *ds->tocState = *win->tocState;
+void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *tab)
+{
+    RememberDefaultWindowPosition(*win);
+    if (!tab || tab->ctrl)
+        return;
+    DisplayState *ds = gFileHistory.Find(tab->filePath);
+    if (!ds)
+        return;
+    tab->ctrl->UpdateDisplayState(ds);
+    UpdateDisplayStateWindowRect(*win, *ds, false);
+    UpdateSidebarDisplayState(win, tab, ds);
 }
 
 void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
 {
-    RememberDefaultWindowPosition(*win);
-    if (!win->IsDocLoaded())
-        return;
-    DisplayState *ds = gFileHistory.Find(win->loadedFilePath);
-    if (!ds)
-        return;
-    win->ctrl->UpdateDisplayState(ds);
-    UpdateDisplayStateWindowRect(*win, *ds, false);
-    UpdateSidebarDisplayState(win, ds);
-}
-
-void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td)
-{
-    RememberDefaultWindowPosition(*win);
-    if (!td->ctrl)
-        return;
-    DisplayState *ds = gFileHistory.Find(td->filePath);
-    if (!ds)
-        return;
-    td->ctrl->UpdateDisplayState(ds);
-    UpdateDisplayStateWindowRect(*win, *ds, false);
-    if (td == win->currentTab) {
-        UpdateSidebarDisplayState(win, ds);
-        if (win->presentation != PM_DISABLED)
-            ds->showToc = win->tocBeforeFullScreen;
-    }
-    else {
-        *ds->tocState = td->tocState;
-        ds->showToc = win->isFullScreen ? false : td->showToc;
-    }
+    UpdateTabFileDisplayStateForWin(win, win->currentTab);
 }
 
 bool IsUIRightToLeft()
@@ -983,7 +967,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
             ss.page = win->ctrl->PageCount();
         }
         rotation = state->rotation;
-        *win->tocState = *state->tocState;
+        tab->tocState = *state->tocState;
     }
 
     // DisplayModel needs a valid zoom value before any relayout
@@ -1112,10 +1096,11 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
 
+    TabInfo *tab = win->currentTab;
     DisplayState *ds = NewDisplayState(win->loadedFilePath);
     win->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
-    UpdateSidebarDisplayState(win, ds);
+    UpdateSidebarDisplayState(win, tab, ds);
     // Set the windows state based on the actual window's placement
     ds->windowState = win->isFullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
@@ -1140,7 +1125,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     }
     TabsOnChangedDoc(win);
 
-    win->currentTab->reloadOnFocus = false;
+    tab->reloadOnFocus = false;
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
@@ -1464,17 +1449,18 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         }
     }
 
+    if (win->AsChm())
+        win->AsChm()->RemoveParentHwnd();
+
     CrashIf(openNewTab && args.forceReuse);
     if (!win->IsAboutWindow()) {
         CrashIf(!args.forceReuse && !openNewTab);
         if (!args.forceReuse)
             win->tabs.Append((win->currentTab = new TabInfo()));
-        win->tocState = &win->currentTab->tocState;
         CloseDocumentInTab(win, true, true);
     }
     else if (!win->currentTab || openNewTab) {
         win->tabs.Append((win->currentTab = new TabInfo()));
-        win->tocState = &win->currentTab->tocState;
     }
     // invalidate the links on the Frequently Read page
     win->staticLinks.Reset();
@@ -1550,7 +1536,6 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     win->currentTab = tdata;
     win->loadedFilePath = tdata->filePath;
     win->ctrl = tdata->ctrl;
-    win->tocState = &tdata->tocState;
     win::SetText(win->hwndFrame, tdata->frameTitle);
 
     if (win->AsChm())
@@ -1577,7 +1562,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
         UpdateToolbarFindText(win);
 
     if (win->isFullScreen || win->presentation != PM_DISABLED)
-        win->tocBeforeFullScreen = tdata->showToc;
+        SetSidebarVisibility(win, tdata->showTocFullscreen, gGlobalPrefs->showFavorites);
     else
         SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
 
@@ -2790,7 +2775,7 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
     // ToC and Favorites sidebars at the left
     bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm_DiskAccess);
-    bool tocVisible = win->tocLoaded && win->tocVisible;
+    bool tocVisible = win->tocVisible;
     if (tocVisible || showFavorites) {
         SizeI toc = sidebarDx < 0 ? ClientRect(win->hwndTocBox).Size() : SizeI(sidebarDx, rc.y);
         if (0 == toc.dx) {
@@ -3042,13 +3027,11 @@ void EnterFullScreen(WindowInfo* win, bool presentation)
         else
             win->windowStateBeforePresentation = WIN_STATE_NORMAL;
         win->presentation = PM_ENABLED;
-        win->tocBeforeFullScreen = win->tocVisible;
 
         SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
     }
     else {
         win->isFullScreen = true;
-        win->tocBeforeFullScreen = win->IsDocLoaded() ? win->tocVisible : false;
     }
 
     // Remove TOC and favorites from full screen, add back later on exit fullscreen
@@ -3057,6 +3040,10 @@ void EnterFullScreen(WindowInfo* win, bool presentation)
     if (win->tocVisible || gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(win, false, false);
         // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
+    }
+    else if (win->currentTab) {
+        // this is otherwise set by SetSidebarVisibility above
+        win->currentTab->showTocFullscreen = false;
     }
 
     long ws = GetWindowLong(win->hwndFrame, GWL_STYLE);
@@ -3095,17 +3082,19 @@ void ExitFullScreen(WindowInfo *win)
         win->ctrl->SetPresentationMode(false);
         win->presentation = PM_DISABLED;
     }
-    else
+    else {
         win->isFullScreen = false;
+    }
 
     if (wasPresentation) {
         KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
         SetCursor(IDC_ARROW);
     }
 
-    bool tocVisible = win->IsDocLoaded() && win->tocBeforeFullScreen;
-    if (tocVisible || gGlobalPrefs->showFavorites)
-        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
+    // showing ToC during fullscreen mode carries over into normal mode
+    // (a ToC used exclusively for presentation is hidden again)
+    bool tocVisible = win->currentTab && (win->currentTab->showToc || (!wasPresentation && win->currentTab->showTocFullscreen));
+    SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
 
     if (win->tabsInTitlebar)
         ShowWindow(win->hwndCaption, SW_SHOW);
@@ -3600,12 +3589,21 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
         showFavorites = false;
     }
 
-    if (tocVisible)
+    if (tocVisible) {
         LoadTocTree(win);
+        CrashIf(!win->tocLoaded);
+    }
     if (showFavorites)
         PopulateFavTreeIfNeeded(win);
 
+    if (!win->currentTab)
+        CrashIf(tocVisible);
+    else if (win->isFullScreen || PM_ENABLED == win->presentation)
+        win->currentTab->showTocFullscreen = tocVisible;
+    else if (!win->presentation)
+        win->currentTab->showToc = tocVisible;
     win->tocVisible = tocVisible;
+
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 

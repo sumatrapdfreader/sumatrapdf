@@ -17,8 +17,6 @@
 #include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "ChmModel.h"
-#include "DisplayModel.h"
 #include "EbookControls.h"
 // ui
 #include "SumatraPDF.h"
@@ -662,10 +660,9 @@ static void SaveTabInfo(WindowInfo *win, TabInfo *tdata)
 {
     CrashIf(tdata->ctrl != win->ctrl);
     CrashIf(!str::Eq(tdata->filePath, win->loadedFilePath));
-    CrashIf(win->tocState != &tdata->tocState);
     CrashIf(!str::Eq(ScopedMem<WCHAR>(win::GetText(win->hwndFrame)), tdata->frameTitle));
     CrashIf(!str::Eq(tdata->tabTitle, path::GetBaseName(tdata->filePath)));
-    tdata->showToc = win->isFullScreen || win->presentation != PM_DISABLED ? win->tocBeforeFullScreen : win->tocVisible;
+    CrashIf(win->tocVisible != (win->isFullScreen || PM_ENABLED == win->presentation ? tdata->showTocFullscreen : !win->presentation ? tdata->showToc : false));
     tdata->canvasRc = win->canvasRc;
 }
 
@@ -677,20 +674,18 @@ void SaveCurrentTabInfo(WindowInfo *win)
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    if (current == -1) {
+    if (-1 == current)
         return;
-    }
+    CrashIf(win->currentTab != win->tabs.At(current));
 
-    TabInfo *tdata = win->tabs.At(current);
+    TabInfo *tdata = win->currentTab;
     CrashIf(!tdata);
     if (win->tocLoaded) {
-        win->tocState->Reset();
+        tdata->tocState.Reset();
         HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
         if (hRoot)
-            UpdateTocExpansionState(win, hRoot);
+            UpdateTocExpansionState(tdata, win->hwndTocTree, hRoot);
     }
-    if (win->AsChm())
-        win->AsChm()->RemoveParentHwnd();
     SaveTabInfo(win, tdata);
 
     // update the selection history
@@ -760,9 +755,9 @@ void TabsOnCloseDoc(WindowInfo *win)
     if (win->tabs.Count() == 0)
         return;
 
-    if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
+    /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
         // TODO: warn about unsaved changes
-    }
+    } */
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     TabInfo *tdata = win->currentTab;
@@ -773,7 +768,6 @@ void TabsOnCloseDoc(WindowInfo *win)
     TabCtrl_DeleteItem(win->hwndTabBar, current);
     win->loadedFilePath = NULL;
     win->ctrl = NULL;
-    win->tocState = NULL;
     win->currentTab = NULL;
     UpdateTabWidth(win);
 
@@ -799,7 +793,6 @@ void TabsOnCloseWindow(WindowInfo *win)
     win->currentTab = NULL;
     win->ctrl = NULL;
     win->loadedFilePath = NULL;
-    win->tocState = NULL;
 }
 
 // On tab selection, we save the data for the tab which is losing selection and
@@ -811,7 +804,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
     switch(data->code) {
     case TCN_SELCHANGING:
         // TODO: Should we allow the switch of the tab if we are in process of printing?
-
         SaveCurrentTabInfo(win);
         return FALSE;
 

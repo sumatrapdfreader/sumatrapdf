@@ -79,7 +79,9 @@ public:
     // text of win->hwndFrame when the tab is selected
     ScopedMem<WCHAR> frameTitle;
     // state of the table of contents
-    bool showToc;
+    bool showToc, showTocFullscreen;
+    DocTocItem *tocRoot;
+    // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     // canvas dimensions when the document was last visible
     RectI canvasRc;
@@ -147,15 +149,12 @@ public:
     HWND            hwndTocBox;
     LabelWithCloseWnd *tocLabelWithClose;
     HWND            hwndTocTree;
+    // whether the current tab's ToC has been loaded into the tree
     bool            tocLoaded;
+    // whether the ToC sidebar is currently visible
     bool            tocVisible;
     // set to temporarily disable UpdateTocSelection
     bool            tocKeepSelection;
-    // an array of ids for ToC items that have been expanded/collapsed by user
-    // TODO: use currentTab->tocState instead
-    Vec<int>      * tocState; // owned by currentTab
-    // TODO: move to TabInfo (and tocLoaded; or drop tocLoaded) or reload ToC on switching tabs?
-    DocTocItem *    tocRoot;
 
     // state related to favorites
     HWND            hwndFavBox;
@@ -222,9 +221,6 @@ public:
 
     bool            isFullScreen;
     PresentationMode presentation;
-    // were we showing toc before entering full screen or presentation mode
-    // TODO: move to TabInfo
-    bool            tocBeforeFullScreen;
     int             windowStateBeforePresentation;
 
     long            nonFullScreenWindowStyle;
