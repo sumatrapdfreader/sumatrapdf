@@ -6,9 +6,6 @@ REM scripts\appveyor-build.bat
 
 @rem TODO: don't call when inappveyor env variable is set
 @rem because Visual Studio is already in %PATH%
-@rem also it seems that python is installed, so we could
-@rem write build script in python
-@rem alternatively, the script could be written in PowerShell
 CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1
 
