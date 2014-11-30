@@ -103,6 +103,8 @@ def build_clean(ver):
 
 
 def build_ver(ver):
+    raise BaseException("NYI for git")
+
     print("Building release version %d" % ver)
     obj_dir = "obj-rel"
 

@@ -49,13 +49,14 @@ import time
 import re
 import struct
 import types
+import subprocess
 import s3
 import util
 import util2
 from util import test_for_flag, run_cmd_throw, run_cmd
-from util import verify_started_in_right_directory, parse_svninfo_out, log
-from util import extract_sumatra_version, zip_file
-from util import load_config, verify_path_exists, get_svn_branch
+from util import verify_started_in_right_directory, log
+from util import extract_sumatra_version, zip_file, get_git_linear_version
+from util import load_config, verify_path_exists
 import trans_upload
 import trans_download
 import upload_sources
@@ -211,25 +212,29 @@ def get_short_ver(ver):
 # when doing a release build, we must be on /svn/branches/${ver_short}working
 # branch
 def verify_correct_branch(ver):
-    short_ver = get_short_ver(ver)
-    branch = get_svn_branch()
-    expected = "/branches/%sworking" % short_ver
-    assert branch == expected, "svn branch is '%s' and should be '%s' for version %s (%s)" % (branch, expected, ver, short_ver)
+    # TODO: update for git
+    raise BaseException("implement for git")
+    #short_ver = get_short_ver(ver)
+    #branch = get_svn_branch()
+    #expected = "/branches/%sworking" % short_ver
+    #assert branch == expected, "svn branch is '%s' and should be '%s' for version %s (%s)" % (branch, expected, ver, short_ver)
 
 
 # if we haven't tagged this release in svn yet, svn info for the /tags/${ver}rel
 # must fail
 def verify_not_tagged_yet(ver):
-    out, err, errcode = run_cmd("svn", "info", "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver)
-    #print("out: '%s'\nerr:'%s'\nerrcode:%d" % (out, err, errcode))
-    assert errcode == 1, "out: '%s'\nerr:'%s'\nerrcode:%d" % (out, err, errcode)
+    # TODO: update for git
+    raise BaseException("implement for git")
+    #out, err, errcode = run_cmd("svn", "info", "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver)
+    #assert errcode == 1, "out: '%s'\nerr:'%s'\nerrcode:%d" % (out, err, errcode)
 
 
 def svn_tag_release(ver):
-    working = "https://sumatrapdf.googlecode.com/svn/branches/%sworking" % get_short_ver(ver)
-    rel = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
-    msg = "tag %s release" % ver
-    run_cmd_throw("svn", "copy", working, rel, "-m", msg)
+    raise BaseException("implement for git")
+    #working = "https://sumatrapdf.googlecode.com/svn/branches/%sworking" % get_short_ver(ver)
+    #rel = "https://sumatrapdf.googlecode.com/svn/tags/%srel" % ver
+    #msg = "tag %s release" % ver
+    #run_cmd_throw("svn", "copy", working, rel, "-m", msg)
 
 
 def try_find_scripts_file(file_name):
@@ -267,9 +272,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     try_find_config_files()
     if build_prerelease:
         if svn_revision is None:
-            run_cmd_throw("svn", "update")
-            (out, err) = run_cmd_throw("svn", "info")
-            ver = str(parse_svninfo_out(out))
+            ver = str(get_git_linear_version())
         else:
             # allow to pass in an SVN revision, in case SVN itself isn't
             # available
@@ -468,4 +471,5 @@ def test_zip():
     sys.exit(0)
 
 if __name__ == "__main__":
+    #print("svn ver: %d"  % get_git_linear_version())
     main()

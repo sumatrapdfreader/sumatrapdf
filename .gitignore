@@ -1,0 +1,6 @@
+scripts/cert.pfx
+scripts/config.py
+obj-rel/
+obj-dbg/
+builds/
+mupdf/generated/

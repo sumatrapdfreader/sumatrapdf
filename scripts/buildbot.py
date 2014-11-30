@@ -19,7 +19,7 @@ import util2
 import efiparse
 import build
 from util import file_remove_try_hard, run_cmd_throw
-from util import parse_svnlog_out, Serializable, create_dir
+from util import Serializable, create_dir
 from util import load_config, run_cmd, strip_empty_lines
 from util import verify_path_exists, verify_started_in_right_directory
 from buildbot_html import gen_analyze_html, build_index_html, rebuild_trans_src_path_cache
@@ -179,6 +179,7 @@ def save_svn_log_data(data):
 
 def checkin_comment_for_ver(ver):
     global g_svn_log_per_ver
+    raise BaseException("NYI for git")
     ver = str(ver)
     if g_svn_log_per_ver is None:
         g_svn_log_per_ver = load_svn_log_data()
@@ -511,6 +512,7 @@ def email_build_failed(ver):
 
 # for testing
 def build_curr(force=False):
+    raise BaseException("NYI for git")
     (local_ver, latest_ver) = util.get_svn_versions()
     print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
     if not has_already_been_built(local_ver) or force:

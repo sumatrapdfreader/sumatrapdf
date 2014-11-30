@@ -41,6 +41,7 @@ def extract_url_ver_from_svn_out(txt):
 
 
 def get_url_ver():
+    raise BaseException("NYI for git")
     (out, err) = util.run_cmd_throw("svn", "info")
     return extract_url_ver_from_svn_out(out)
 
