@@ -4,6 +4,9 @@ SETLOCAL
 REM assumes we're being run from top-level directory as:
 REM scripts\appveyor-build.bat
 
+CALL scripts\vc.bat
+IF ERRORLEVEL 1 EXIT /B 1
+
 REM add our nasm.exe to the path
 SET PATH=%CD%\bin;%PATH%
 
