@@ -55,5 +55,5 @@ void OnMenuFindNext(WindowInfo *win);
 void OnMenuFind(WindowInfo *win);
 void OnMenuFindMatchCase(WindowInfo *win);
 void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction);
-void AbortFinding(WindowInfo *win, bool hideMessage=false);
+void AbortFinding(WindowInfo *win, bool hideMessage);
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress);

@@ -891,7 +891,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         showToc = state->showToc;
     }
 
-    AbortFinding(args.win);
+    AbortFinding(args.win, false);
 
     Controller *prevCtrl = win->ctrl;
     tab->filePath.Set(str::Dup(args.fileName));
@@ -1287,7 +1287,7 @@ void DeleteWindowInfo(WindowInfo *win)
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
-    AbortFinding(win);
+    AbortFinding(win, false);
     AbortPrinting(win);
 
     if (win->uia_provider) {
@@ -2015,7 +2015,7 @@ static void OnMenuExit()
             if (IDNO == res)
                 return;
         }
-        AbortFinding(win);
+        AbortFinding(win, true);
         AbortPrinting(win);
 
         TabsOnCloseWindow(win);
@@ -3336,7 +3336,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
     switch (key) {
     case VK_ESCAPE:
         if (win.findThread)
-            AbortFinding(&win);
+            AbortFinding(&win, false);
         else if (win.notifications->GetForGroup(NG_PERSISTENT_WARNING))
             win.notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
         else if (win.notifications->GetForGroup(NG_PAGE_INFO_HELPER))

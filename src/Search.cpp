@@ -140,7 +140,7 @@ void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
         return;
 
     win::SetText(win->hwndFindBox, selection);
-    AbortFinding(win); // cancel FAYT
+    AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindBox, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
 

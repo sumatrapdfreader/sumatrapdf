@@ -270,7 +270,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
         switch (wParam) {
         case VK_ESCAPE:
             if (win->findThread)
-                AbortFinding(win);
+                AbortFinding(win, false);
             else
                 SetFocus(win->hwndFrame);
             return 1;
