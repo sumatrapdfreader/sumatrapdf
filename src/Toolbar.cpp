@@ -251,7 +251,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
         WindowInfo *win = FindWindowInfoByHwnd(hEdit);
         // "find as you type"
         if (EN_UPDATE == HIWORD(wParam) && hEdit == win->hwndFindBox && gGlobalPrefs->showToolbar) {
-            FindTextOnThread(win, FIND_FORWARD, true);
+            FindTextOnThread(win, FIND_FORWARD, false);
         }
     }
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);
@@ -276,7 +276,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_RETURN:
-            FindTextOnThread(win, IsShiftPressed() ? FIND_BACKWARD : FIND_FORWARD);
+            FindTextOnThread(win, IsShiftPressed() ? FIND_BACKWARD : FIND_FORWARD, true);
             return 1;
 
         case VK_TAB:

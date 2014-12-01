@@ -98,7 +98,7 @@ void OnMenuFind(WindowInfo *win)
         dm->textSearch->SetSensitive(matchCase);
     }
 
-    FindTextOnThread(win, FIND_FORWARD);
+    FindTextOnThread(win, FIND_FORWARD, true);
 }
 
 void OnMenuFindNext(WindowInfo *win)
@@ -106,7 +106,7 @@ void OnMenuFindNext(WindowInfo *win)
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
-        FindTextOnThread(win, FIND_FORWARD);
+        FindTextOnThread(win, FIND_FORWARD, true);
 }
 
 void OnMenuFindPrev(WindowInfo *win)
@@ -114,7 +114,7 @@ void OnMenuFindPrev(WindowInfo *win)
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
-        FindTextOnThread(win, FIND_BACKWARD);
+        FindTextOnThread(win, FIND_BACKWARD, true);
 }
 
 void OnMenuFindMatchCase(WindowInfo *win)
@@ -144,7 +144,7 @@ void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
     Edit_SetModify(win->hwndFindBox, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
 
-    FindTextOnThread(win, direction);
+    FindTextOnThread(win, direction, true);
 }
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)
@@ -333,7 +333,7 @@ void AbortFinding(WindowInfo *win, bool hideMessage)
         win->notifications->RemoveForGroup(NG_FIND_PROGRESS);
 }
 
-void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
+void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress)
 {
     AbortFinding(win, true);
 
@@ -345,7 +345,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
         return;
     }
 
-    ftd->ShowUI(!FAYT);
+    ftd->ShowUI(showProgress);
     win->findThread = NULL;
     win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
