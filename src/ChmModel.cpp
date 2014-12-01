@@ -509,7 +509,7 @@ void ChmModel::UpdateDisplayState(DisplayState *ds)
     ds->scrollPos = PointI();
 }
 
-class ChmThumbnailTask : public HtmlWindowCallback, public UITask
+class ChmThumbnailTask : public HtmlWindowCallback
 {
     ChmDoc *doc;
     HWND hwnd;
@@ -557,7 +557,6 @@ public:
                 tnCb->SaveThumbnail(bmp);
                 tnCb = NULL;
             }
-            uitask::Post(this);
         }
     }
     virtual void OnLButtonDown() { }
@@ -569,8 +568,6 @@ public:
         return data.Last();
     }
     virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) { }
-
-    virtual void Execute() { }
 };
 
 // Create a thumbnail of chm document by loading it again and rendering
