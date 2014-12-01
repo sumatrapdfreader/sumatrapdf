@@ -145,32 +145,21 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 }
 #endif
 
-class GoToTocLinkTask : public UITask
-{
-    DocTocItem *tocItem;
-    WindowInfo *win;
-    TabInfo *tab;
-    Controller *ctrl;
 
-public:
-    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem) :
-        win(win), tocItem(tocItem), tab(win->currentTab), ctrl(tab->ctrl) { }
+static void GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, TabInfo *tab, Controller *ctrl) {
+    // tocItem is invalid if the Controller has been replaced
+    if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
+        return;
 
-    virtual void Execute() {
-        // tocItem is invalid if the Controller has been replaced
-        if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
-            return;
-
-        // make sure that the tree item that the user selected
-        // isn't unselected in UpdateTocSelection right again
-        win->tocKeepSelection = true;
-        if (tocItem->GetLink())
-            win->linkHandler->GotoLink(tocItem->GetLink());
-        else if (tocItem->pageNo)
-            ctrl->GoToPage(tocItem->pageNo, true);
-        win->tocKeepSelection = false;
-    }
-};
+    // make sure that the tree item that the user selected
+    // isn't unselected in UpdateTocSelection right again
+    win->tocKeepSelection = true;
+    if (tocItem->GetLink())
+        win->linkHandler->GotoLink(tocItem->GetLink());
+    else if (tocItem->pageNo)
+        ctrl->GoToPage(tocItem->pageNo, true);
+    win->tocKeepSelection = false;
+}
 
 static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
 {
@@ -186,7 +175,11 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
         return;
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        uitask::Post(new GoToTocLinkTask(win, tocItem));
+        TabInfo *tab = win->currentTab;
+        Controller *ctrl = win->ctrl;
+        uitask::Post([=] {
+            GoToTocLinkTask(win, tocItem, tab, ctrl);
+        });
     }
 }
 
