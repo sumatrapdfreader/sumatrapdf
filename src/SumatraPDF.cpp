@@ -468,7 +468,7 @@ static void UpdateSidebarDisplayState(WindowInfo *win, TabInfo *tab, DisplayStat
 void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *tab)
 {
     RememberDefaultWindowPosition(*win);
-    if (!tab || tab->ctrl)
+    if (!tab || !tab->ctrl)
         return;
     DisplayState *ds = gFileHistory.Find(tab->filePath);
     if (!ds)
