@@ -98,7 +98,7 @@ void OnMenuFind(WindowInfo *win)
         dm->textSearch->SetSensitive(matchCase);
     }
 
-    FindTextOnThread(win);
+    FindTextOnThread(win, FIND_FORWARD);
 }
 
 void OnMenuFindNext(WindowInfo *win)
@@ -202,9 +202,10 @@ struct FindThreadData : public ProgressUpdateUI {
     // owned by win->notifications, as FindThreadData
     // can be deleted before the notification times out
     NotificationWnd *wnd;
+    HANDLE thread;
 
-    FindThreadData(WindowInfo& win, TextSearchDirection direction, HWND findBox) :
-        win(&win), direction(direction), text(win::GetText(findBox)),
+    FindThreadData(WindowInfo *win, TextSearchDirection direction, HWND findBox) :
+        win(win), direction(direction), text(win::GetText(findBox)),
         wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
 
     void ShowUI(bool showProgress) {
@@ -255,44 +256,30 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 };
 
-class FindEndTask : public UITask {
-    FindThreadData *ftd;
-    TextSel*textSel;
-    ScopedHandle    thread;
-    bool    wasModifiedCanceled;
-    bool    loopedAround;
-    WindowInfo *win;
-
-public:
-    FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
-                    bool wasModifiedCanceled, bool loopedAround=false) :
-        win(win), ftd(ftd), textSel(textSel),
-        thread(win->findThread), // close the find thread handle after execution
-        loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
-    ~FindEndTask() { delete ftd; }
-
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        if (win->findThread != thread) {
-            // Race condition: FindTextOnThread/AbortFinding was
-            // called after the previous find thread ended but
-            // before this FindEndTask could be executed
-            return;
-        }
-        if (!win->IsDocLoaded()) {
-            // the UI has already been disabled and hidden
-        } else if (textSel) {
-            ShowSearchResult(*win, textSel, wasModifiedCanceled);
-            ftd->HideUI(true, loopedAround);
-        } else {
-            // nothing found or search canceled
-            ClearSearchResult(win);
-            ftd->HideUI(false, !wasModifiedCanceled);
-        }
-        win->findThread = NULL;
+static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel, 
+    bool wasModifiedCanceled, bool loopedAround) {
+    if (!WindowInfoStillValid(win))
+        return;
+    if (win->findThread != ftd->thread) {
+        // Race condition: FindTextOnThread/AbortFinding was
+        // called after the previous find thread ended but
+        // before this FindEndTask could be executed
+        // TODO: should CloseHandle(ftd->thread) ?
+        return;
     }
-};
+    if (!win->IsDocLoaded()) {
+        // the UI has already been disabled and hidden
+    } else if (textSel) {
+        ShowSearchResult(*win, textSel, wasModifiedCanceled);
+        ftd->HideUI(true, loopedAround);
+    } else {
+        // nothing found or search canceled
+        ClearSearchResult(win);
+        ftd->HideUI(false, !wasModifiedCanceled);
+    }
+    CloseHandle(win->findThread);
+    win->findThread = NULL;
+}
 
 static DWORD WINAPI FindThread(LPVOID data)
 {
@@ -322,13 +309,20 @@ static DWORD WINAPI FindThread(LPVOID data)
     // wait for FindTextOnThread to return so that
     // FindEndTask closes the correct handle to
     // the current find thread
-    while (!win->findThread)
+    while (!win->findThread) {
         Sleep(1);
+    }
 
-    if (!win->findCanceled && rect)
-        uitask::Post(new FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround));
-    else
-        uitask::Post(new FindEndTask(win, ftd, NULL, win->findCanceled));
+   
+    if (!win->findCanceled && rect) {
+        uitask::Post([=] {
+            FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround);
+        });
+    } else {
+        uitask::Post([=] {
+            FindEndTask(win, ftd, nullptr, win->findCanceled, false);
+        });
+    }
 
     return 0;
 }
@@ -349,7 +343,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
 {
     AbortFinding(win, true);
 
-    FindThreadData *ftd = new FindThreadData(*win, direction, win->hwndFindBox);
+    FindThreadData *ftd = new FindThreadData(win, direction, win->hwndFindBox);
     Edit_SetModify(win->hwndFindBox, FALSE);
 
     if (str::IsEmpty(ftd->text.Get())) {
@@ -360,6 +354,7 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool FAYT)
     ftd->ShowUI(!FAYT);
     win->findThread = NULL;
     win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
+    ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 
 void PaintForwardSearchMark(WindowInfo *win, HDC hdc)

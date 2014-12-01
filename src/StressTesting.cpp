@@ -717,7 +717,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     if (1 == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         win::SetText(win->hwndFindBox, L"!z_yt");
-        FindTextOnThread(win);
+        FindTextOnThread(win, FIND_FORWARD);
     }
 
     int secs = SecsSinceSystemTime(stressStartTime);
@@ -757,7 +757,7 @@ bool StressTest::GoToNextPage()
     if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         win::SetText(win->hwndFindBox, L"!z_yt");
-        FindTextOnThread(win);
+        FindTextOnThread(win, FIND_FORWARD);
     }
 
     if (1 == rand() % 3) {

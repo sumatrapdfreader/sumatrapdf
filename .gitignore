@@ -14,3 +14,4 @@ gyp/Debug/
 *.suo
 *.opensdf
 *.sdf
+vs/obj/

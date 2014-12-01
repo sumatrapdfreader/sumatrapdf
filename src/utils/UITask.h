@@ -14,8 +14,6 @@ class UITask {
     virtual void Execute() = 0;
 };
 
-typedef void (*UITaskFuncPtr)(void *arg);
-
 namespace uitask {
 
 // Call Initialize() at program startup and Destroy() at the end
