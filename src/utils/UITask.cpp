@@ -5,11 +5,6 @@
 #include "WinUtil.h"
 #include "UITask.h"
 
-struct FuncWrapper {
-    std::function<void()> func;
-    FuncWrapper(const std::function<void()> func) : func(func) { }
-};
-
 namespace uitask {
 
 static HWND gTaskDispatchHwnd = NULL;
@@ -19,9 +14,9 @@ static HWND gTaskDispatchHwnd = NULL;
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (WM_EXECUTE_TASK == msg) {
-        auto task = (FuncWrapper *)lParam;
-        task->func();
-        delete task;
+        auto func = (std::function<void()> *)lParam;
+        (*func)();
+        delete func;
         return 0;
     }
     return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -52,7 +47,7 @@ void Destroy() {
 }
 
 void Post(const std::function<void()> &f) {
-    auto task = new FuncWrapper(f);
-    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
+    auto func = new std::function<void()>(f);
+    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
 }
 }
