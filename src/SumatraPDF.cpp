@@ -2115,9 +2115,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
         if (IDNO == res)
             return;
-        AbortPrinting(win);
     }
     AbortFinding(win, true);
+    AbortPrinting(win);
 
     if (win->AsFixed())
         win->AsFixed()->dontRenderFlag = true;
