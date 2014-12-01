@@ -599,17 +599,18 @@ static bool ShouldSaveThumbnail(DisplayState& ds)
     return true;
 }
 
+// TODO: replace with std::function
 class ThumbnailRenderingTask : public RenderingCallback
 {
-    ThumbnailCallback *tnCb;
+    std::function<void(RenderedBitmap*)> saveThumbnail;
 
 public:
-    explicit ThumbnailRenderingTask(ThumbnailCallback *tnCb) : tnCb(tnCb) { }
-    ~ThumbnailRenderingTask() { delete tnCb; }
+    explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)> &saveThumbnail)
+        : saveThumbnail(saveThumbnail) { }
+    ~ThumbnailRenderingTask() { }
 
     virtual void Callback(RenderedBitmap *bmp) {
-        tnCb->SaveThumbnail(bmp);
-        tnCb = NULL;
+        saveThumbnail(bmp);
         delete this;
     }
 };
@@ -626,7 +627,7 @@ public:
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RequestRendering(int pageNo);
     virtual void CleanUp(DisplayModel *dm);
-    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb);
+    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>&);
     virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
     virtual void FocusFrame(bool always);
     virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
@@ -634,7 +635,7 @@ public:
     virtual void RequestDelayedLayout(int delay);
 };
 
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb)
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail)
 {
     RectD pageRect = dm->GetEngine()->PageMediabox(1);
     if (pageRect.IsEmpty())
@@ -646,38 +647,22 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, Th
         pageRect.dy = (float)size.dy / zoom;
     pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0, true);
 
-    RenderingCallback *callback = new ThumbnailRenderingTask(tnCb);
+    RenderingCallback *callback = new ThumbnailRenderingTask(saveThumbnail);
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
 
 static void SetFileThumbnail(WCHAR *filePath, RenderedBitmap *bmp) {
-    if (bmp) {
+    if (bmp)
         SetThumbnail(gFileHistory.Find(filePath), bmp);
-        delete bmp;
-    }
     free(filePath);
 }
-
-class ThumbnailCreated : public ThumbnailCallback {
-    WCHAR *filePath;
-
-public:
-    ThumbnailCreated(const WCHAR *filePath) : filePath(str::Dup(filePath)) { }
-    virtual ~ThumbnailCreated() { }
-
-    virtual void SaveThumbnail(RenderedBitmap *bmp) {
-        uitask::Post([=] {
-            SetFileThumbnail(filePath, bmp);
-        });
-    }
-};
 
 static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
     if (!ShouldSaveThumbnail(ds))
         return;
 
-    AssertCrash(win.IsDocLoaded());
+    CrashIf(!win.IsDocLoaded());
     if (!win.IsDocLoaded()) return;
 
     // don't create thumbnails for password protected documents
@@ -688,8 +673,13 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         return;
     }
 
-    ThumbnailCreated *tnCb = new ThumbnailCreated(win.ctrl->FilePath());
-    win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), tnCb);
+    // filePath will be freed in SetFileThumbnail()
+    WCHAR *filePath = str::Dup(win.ctrl->FilePath());
+    win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY),[=] (RenderedBitmap*bmp) {
+        uitask::Post([=] {
+            SetFileThumbnail(filePath, bmp);
+        });
+    });
 }
 
 /* Send the request to render a given page to a rendering thread */

@@ -14,14 +14,6 @@ class DisplayModel;
 class EbookController;
 struct EbookFormattingData;
 
-// call SaveThumbnail on success or delete ThumbnailCallback on failure
-// TODO: remove in favor of std::function
-class ThumbnailCallback {
-public:
-    virtual ~ThumbnailCallback() { }
-    virtual void SaveThumbnail(RenderedBitmap *bmp) = 0;
-};
-
 class ControllerCallback {
 public:
     virtual ~ControllerCallback() { }
@@ -36,7 +28,7 @@ public:
     virtual void UpdateScrollbars(SizeI canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel *dm) = 0;
-    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, ThumbnailCallback *tnCb) = 0;
+    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>&) = 0;
     // ChmModel //
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
@@ -86,8 +78,8 @@ public:
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds) = 0;
-    // asynchronously calls ThumbnailCallback::SaveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) = 0;
+    // asynchronously calls sveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }

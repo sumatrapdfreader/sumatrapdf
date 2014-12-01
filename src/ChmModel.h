@@ -41,8 +41,8 @@ public:
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds);
-    // asynchronously calls ThumbnailCallback::SaveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb);
+    // asynchronously calls saveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail);
 
     // for quick type determination and type-safe casting
     virtual ChmModel *AsChm() { return this; }

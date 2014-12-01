@@ -515,14 +515,14 @@ class ChmThumbnailTask : public HtmlWindowCallback
     HWND hwnd;
     HtmlWindow *hw;
     SizeI size;
-    ThumbnailCallback *tnCb;
+    std::function<void(RenderedBitmap*)> saveThumbnail;
     ScopedMem<WCHAR> homeUrl;
     Vec<unsigned char *> data;
     CRITICAL_SECTION docAccess;
 
 public:
-    ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, ThumbnailCallback *tnCb) :
-        doc(doc), hwnd(hwnd), hw(NULL), size(size), tnCb(tnCb) {
+    ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, const std::function<void(RenderedBitmap*)> saveThumbnail) :
+        doc(doc), hwnd(hwnd), hw(NULL), size(size), saveThumbnail(saveThumbnail) {
         InitializeCriticalSection(&docAccess);
     }
 
@@ -531,7 +531,6 @@ public:
         delete hw;
         DestroyWindow(hwnd);
         delete doc;
-        delete tnCb;
         FreeVecMembers(data);
         LeaveCriticalSection(&docAccess);
         DeleteCriticalSection(&docAccess);
@@ -554,8 +553,7 @@ public:
             HBITMAP hbmp = hw->TakeScreenshot(area, size);
             if (hbmp) {
                 RenderedBitmap *bmp = new RenderedBitmap(hbmp, size);
-                tnCb->SaveThumbnail(bmp);
-                tnCb = NULL;
+                saveThumbnail(bmp);
             }
         }
     }
@@ -572,12 +570,12 @@ public:
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
-void ChmModel::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
+void ChmModel::CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail)
 {
     // doc and window will be destroyed by the callback once it's invoked
     ChmDoc *doc = ChmDoc::CreateFromFile(fileName);
     if (!doc) {
-        delete tnCb;
+        return;
     }
 
     // We render twice the size of thumbnail and scale it down
@@ -588,7 +586,6 @@ void ChmModel::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
     HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
                              0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
     if (!hwnd) {
-        delete tnCb;
         delete doc;
         return;
     }
@@ -596,13 +593,13 @@ void ChmModel::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
     ShowWindow(hwnd, SW_SHOW);
 #endif
 
-    ChmThumbnailTask *thumbCb = new ChmThumbnailTask(doc, hwnd, size, tnCb);
-    HtmlWindow *hw = HtmlWindow::Create(hwnd, thumbCb);
+    ChmThumbnailTask *thumbnailTask = new ChmThumbnailTask(doc, hwnd, size, saveThumbnail);
+    HtmlWindow *hw = HtmlWindow::Create(hwnd, thumbnailTask);
     if (!hw) {
-        delete thumbCb;
+        delete thumbnailTask;
         return;
     }
-    thumbCb->CreateThumbnail(hw);
+    thumbnailTask->CreateThumbnail(hw);
 }
 
 bool ChmModel::IsSupportedFile(const WCHAR *fileName, bool sniff)

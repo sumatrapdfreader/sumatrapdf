@@ -91,8 +91,10 @@ public:
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds);
-    // asynchronously calls ThumbnailCallback::SaveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, ThumbnailCallback *tnCb) { cb->RenderThumbnail(this, size, tnCb); }
+    // asynchronously calls saveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) { 
+        cb->RenderThumbnail(this, size, saveThumbnail);
+    }
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return engine->HasPageLabels(); }

@@ -644,7 +644,7 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc, SizeI size)
     return NULL;
 }
 
-void EbookController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
+void EbookController::CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail)
 {
     // TODO: create thumbnail asynchronously
     CrashIf(!doc.IsDocLoaded());
@@ -657,7 +657,7 @@ void EbookController::CreateThumbnail(SizeI size, ThumbnailCallback *tnCb)
         SizeI pageSize(size.dx * 3, size.dy * 3);
         bmp = RenderFirstDocPageToBitmap(doc, pageSize, size, 10);
     }
-    tnCb->SaveThumbnail(bmp);
+    saveThumbnail(bmp);
 }
 
 void EbookController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
