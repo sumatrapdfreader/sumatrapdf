@@ -555,6 +555,8 @@ public:
                 RenderedBitmap *bmp = new RenderedBitmap(hbmp, size);
                 saveThumbnail(bmp);
             }
+            // TODO: why is destruction on the UI thread necessary?
+            uitask::Post([=] { delete this; });
         }
     }
     virtual void OnLButtonDown() { }
