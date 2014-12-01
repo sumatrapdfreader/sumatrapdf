@@ -25,7 +25,7 @@ public:
             row(other.row), col(other.col), colSpan(other.colSpan),
             vertAlign(other.vertAlign), horizAlign(other.horizAlign) { }
 
-        void Set(Control *el, int row, int col, ElAlign horizAlign=ElAlignLeft, ElAlign vertAlign=ElAlignBottom) {
+        void Set(Control *el, int row, int col, ElAlign horizAlign=ElAlign::Left, ElAlign vertAlign=ElAlign::Bottom) {
             this->el = el;
             this->cachedStyle = NULL;
             this->row = row;

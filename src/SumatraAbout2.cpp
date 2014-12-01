@@ -232,12 +232,12 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
     SumatraLogo *logo = new SumatraLogo();
     logo->SetStyle(styleLogo);
-    ld.Set(logo, 0, 0, ElAlignCenter);
+    ld.Set(logo, 0, 0, ElAlign::Center);
     ld.colSpan = 2;
     grid->Add(ld);
 
     Button *b = new Button(VERSION_TXT, styleBtnVer, styleBtnVer);
-    ld.Set(b, 1, 0, ElAlignCenter);
+    ld.Set(b, 1, 0, ElAlign::Center);
     ld.colSpan = 2;
     ld.SetStyle(styleCellVer);
     grid->Add(ld);
@@ -250,7 +250,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
         int row = n + 2;
         b = new Button(left, styleBtnLeft, styleBtnLeft);
-        ld.Set(b, row, 0, ElAlignRight);
+        ld.Set(b, row, 0, ElAlign::Right);
         ld.SetStyle(styleCellLeft);
         grid->Add(ld);
 

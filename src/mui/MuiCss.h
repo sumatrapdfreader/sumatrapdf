@@ -46,12 +46,12 @@ bool IsAlignProp(PropType type);
 // Top/Left and Bottom/Right are represented by the same ElAlignData
 // values but they're semantically different, so we given them unique names
 // Note: must start at 0 and the order must match g_ElAlignVals
-enum ElAlign {
-    ElAlignCenter = 0,
-    ElAlignTop,
-    ElAlignBottom,
-    ElAlignLeft,
-    ElAlignRight
+enum class ElAlign {
+    Center = 0,
+    Top,
+    Bottom,
+    Left,
+    Right
 };
 
 // A generalized way of specifying alignment (on a single axis,
@@ -84,28 +84,28 @@ extern struct ElAlignData g_ElAlignVals[5];
 // we can't have constructors in ElAlignData, so those are
 // helper methods for constructing them
 static inline ElAlignData GetElAlignCenter() {
-    return g_ElAlignVals[ElAlignCenter];
+    return g_ElAlignVals[(int)ElAlign::Center];
 }
 
 static inline ElAlignData GetElAlignTop() {
-    return g_ElAlignVals[ElAlignTop];
+    return g_ElAlignVals[(int)ElAlign::Top];
 }
 
 static inline ElAlignData GetElAlignLeft() {
-    return g_ElAlignVals[ElAlignLeft];
+    return g_ElAlignVals[(int)ElAlign::Left];
 }
 
 static inline ElAlignData GetElAlignBottom() {
-    return g_ElAlignVals[ElAlignBottom];
+    return g_ElAlignVals[(int)ElAlign::Bottom];
 }
 
 static inline ElAlignData GetElAlignRight() {
-    return g_ElAlignVals[ElAlignRight];
+    return g_ElAlignVals[(int)ElAlign::Right];
 }
 
 static inline ElAlignData GetElAlign(ElAlign align) {
-    CrashIf(align >= dimof(g_ElAlignVals));
-    return g_ElAlignVals[align];
+    CrashIf((size_t)align >= dimof(g_ElAlignVals));
+    return g_ElAlignVals[(int)align];
 }
 
 static inline ElAlignData GetElAlign(float ep, float cp) {

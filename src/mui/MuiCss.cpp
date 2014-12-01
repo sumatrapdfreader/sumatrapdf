@@ -101,8 +101,8 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
     gStyleDefault->Set(Prop::AllocPadding(0, 0, 0, 0));
     gStyleDefault->Set(Prop::AllocTextAlign(Align_Left));
-    gStyleDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
-    gStyleDefault->Set(Prop::AllocAlign(PropHorizAlign, ElAlignCenter));
+    gStyleDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlign::Center));
+    gStyleDefault->Set(Prop::AllocAlign(PropHorizAlign, ElAlign::Center));
     gStyleDefault->Set(Prop::AllocColorSolid(PropFill, "white"));
     gStyleDefault->Set(Prop::AllocColorSolid(PropStroke, "black"));
     gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
@@ -271,11 +271,11 @@ bool ElAlignData::operator==(const ElAlignData& other) const
 
 // Note: the order must match enum ElAlign
 struct ElAlignData g_ElAlignVals[5] = {
-    { .5f, .5f }, // ElAlignCenter
-    { 0.f, 0.f }, // ElAlignTop
-    { 1.f, 1.f }, // ElAlignBottom
-    { 0.f, 0.f }, // ElAlignLeft
-    { 1.f, 1.f }, // ElAlignRight
+    { .5f, .5f }, // ElAlign::Center
+    { 0.f, 0.f }, // ElAlign::Top
+    { 1.f, 1.f }, // ElAlign::Bottom
+    { 0.f, 0.f }, // ElAlign::Left
+    { 1.f, 1.f }, // ElAlign::Right
 };
 
 // calculates the offset of an element within container

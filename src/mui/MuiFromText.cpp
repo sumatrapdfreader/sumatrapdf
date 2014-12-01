@@ -197,17 +197,17 @@ static AlignAttr ParseAlignAttr(const char *s)
 static ElAlign ParseElAlign(const char *s)
 {
     if (str::EqI(s, "center"))
-        return ElAlignCenter;
+        return ElAlign::Center;
     if (str::EqI(s, "top"))
-        return ElAlignTop;
+        return ElAlign::Top;
     if (str::EqI(s, "bottom"))
-        return ElAlignBottom;
+        return ElAlign::Bottom;
     if (str::EqI(s, "left"))
-        return ElAlignLeft;
+        return ElAlign::Left;
     if (str::EqI(s, "right"))
-        return ElAlignRight;
+        return ElAlign::Right;
     CrashIf(true);
-    return ElAlignLeft;
+    return ElAlign::Left;
 }
 
 static ElAlignData ParseElAlignData(const char *s)
