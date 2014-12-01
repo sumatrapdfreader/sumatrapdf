@@ -11,7 +11,10 @@
 #define _UNICODE
 #endif
 
-// #include <winsock2.h>
+// this tells Visual Studio's STL to not use exceptions and try/catch
+// (otherwise we would have to compile with /EHsc)
+#define _HAS_EXCEPTIONS 0
+
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
@@ -66,7 +69,7 @@
 #endif
 
 #include <functional>
-
+#include <memory>
 
 template <typename T>
 inline T *AllocArray(size_t n)
