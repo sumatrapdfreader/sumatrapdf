@@ -912,8 +912,10 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
                 int deltaY = win.touchState.panPos.y - gi.ptsLocation.y;
                 win.touchState.panPos = gi.ptsLocation;
 
-                if ((gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
-                    // Switch pages once we hit inertia in a horizontal direction
+                if ((!win.AsFixed() || !IsContinuous(win.AsFixed()->GetDisplayMode())) &&
+                    (gi.dwFlags & GF_INERTIA) && abs(deltaX) > abs(deltaY)) {
+                    // Switch pages once we hit inertia in a horizontal direction (only in
+                    // non-continuous modes, cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/9 )
                     if (deltaX < 0)
                         win.ctrl->GoToPrevPage();
                     else if (deltaX > 0)
