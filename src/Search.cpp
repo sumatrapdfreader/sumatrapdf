@@ -172,27 +172,17 @@ void ClearSearchResult(WindowInfo *win)
     win->RepaintAsync();
 }
 
-class UpdateFindStatusTask : public UITask {
-    NotificationWnd *wnd;
-    int current, total;
-    WindowInfo *win;
-
-public:
-    UpdateFindStatusTask(WindowInfo *win, NotificationWnd *wnd, int current, int total)
-        : win(win), wnd(wnd), current(current), total(total) { }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win) && !win->findCanceled) {
-            if (win->notifications->Contains(wnd)) {
-                wnd->UpdateProgress(current, total);
-            }
-            else {
-                // the search has been canceled by closing the notification
-                win->findCanceled = true;
-            }
-        }
+static void UpdateFindStatusTask(WindowInfo *win, NotificationWnd *wnd, int current, int total) {
+    if (!WindowInfoStillValid(win) || win->findCanceled) {
+        return;
     }
-};
+    if (win->notifications->Contains(wnd)) {
+        wnd->UpdateProgress(current, total);
+    } else {
+        // the search has been canceled by closing the notification
+        win->findCanceled = true;
+    }
+}
 
 struct FindThreadData : public ProgressUpdateUI {
     WindowInfo *win;
@@ -247,8 +237,12 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     virtual void UpdateProgress(int current, int total) {
-        if (wnd && !WasCanceled())
-            uitask::Post(new UpdateFindStatusTask(win, wnd, current, total));
+        if (!wnd || WasCanceled()) {
+            return;
+        }
+        uitask::Post([=] {
+            UpdateFindStatusTask(win, wnd, current, total);
+        });
     }
 
     virtual bool WasCanceled() {
