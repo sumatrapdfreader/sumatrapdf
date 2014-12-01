@@ -604,6 +604,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
     int retCode = 1;    // by default it's error
 
+    CrashIf(hInstance != GetInstance());
+
 #ifdef DEBUG
     // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
     // regular termination so that leaks aren't checked on exceptions,
