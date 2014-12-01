@@ -343,20 +343,6 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
     return true;
 }
 
-static void PrintThreadUpdateTask(WindowInfo *win, NotificationWnd *wnd, int current, int total) {
-    if (WindowInfoStillValid(win) && win->notifications->Contains(wnd)) {
-        wnd->UpdateProgress(current, total);
-    }
-}
-
-static void PrintTheadDataUITask(WindowInfo *win, HANDLE thread) {
-    if (!WindowInfoStillValid(win))
-        return;
-    if (win->printThread != thread)
-        return;
-    win->printThread = NULL;
-}
-
 class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
     NotificationWnd *wnd;
     AbortCookieManager cookie;
@@ -383,7 +369,9 @@ public:
 
     virtual void UpdateProgress(int current, int total) {
         uitask::Post([=] {
-            PrintThreadUpdateTask(win, wnd, current, total);
+            if (WindowInfoStillValid(win) && win->notifications->Contains(wnd)) {
+                wnd->UpdateProgress(current, total);
+            }
         });
     }
 
@@ -403,21 +391,23 @@ public:
     static DWORD WINAPI PrintThread(LPVOID data)
     {
         PrintThreadData *threadData = (PrintThreadData *)data;
+        WindowInfo *win = threadData->win;
         // wait for PrintToDeviceOnThread to return so that we
         // close the correct handle to the current printing thread
-        while (!threadData->win->printThread)
+        while (!win->printThread)
             Sleep(1);
-        threadData->thread = threadData->win->printThread;
+
+        HANDLE thread = threadData->thread = win->printThread;
         PrintToDevice(*threadData->data, threadData, &threadData->cookie);
 
-        WindowInfo *win = threadData->win;
-        HANDLE thread = threadData->thread;
         uitask::Post([=] {
-            PrintTheadDataUITask(win, thread);
+            if (WindowInfoStillValid(win) && thread == win->printThread) {
+                win->printThread = NULL;
+            }
+            delete threadData;
         });
         return 0;
     }
-
 };
 
 static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)

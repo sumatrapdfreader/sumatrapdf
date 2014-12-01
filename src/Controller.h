@@ -78,8 +78,8 @@ public:
 
     // state export
     virtual void UpdateDisplayState(DisplayState *ds) = 0;
-    // asynchronously calls sveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) = 0;
+    // asynchronously calls saveThumbnail (fails silently)
+    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap *)>& saveThumbnail) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const { return false; }

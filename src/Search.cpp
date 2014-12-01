@@ -197,6 +197,7 @@ struct FindThreadData : public ProgressUpdateUI {
     FindThreadData(WindowInfo *win, TextSearchDirection direction, HWND findBox) :
         win(win), direction(direction), text(win::GetText(findBox)),
         wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
+    ~FindThreadData() { CloseHandle(thread); }
 
     void ShowUI(bool showProgress) {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
@@ -260,7 +261,6 @@ static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
         // Race condition: FindTextOnThread/AbortFinding was
         // called after the previous find thread ended but
         // before this FindEndTask could be executed
-        // TODO: should CloseHandle(ftd->thread) ?
         delete ftd;
         return;
     }
@@ -274,7 +274,6 @@ static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
         ClearSearchResult(win);
         ftd->HideUI(false, !wasModifiedCanceled);
     }
-    CloseHandle(win->findThread);
     win->findThread = NULL;
     delete ftd;
 }
@@ -311,7 +310,6 @@ static DWORD WINAPI FindThread(LPVOID data)
         Sleep(1);
     }
 
-   
     if (!win->findCanceled && rect) {
         uitask::Post([=] {
             FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround);

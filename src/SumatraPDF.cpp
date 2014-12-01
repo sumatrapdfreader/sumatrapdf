@@ -1277,7 +1277,8 @@ void DeleteWindowInfo(WindowInfo *win)
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
-    CrashIf((win->findThread && !win->findCanceled) || (win->printThread && !win->printCanceled));
+    CrashIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
+    CrashIf(win->printThread && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT);
 
     if (win->uia_provider) {
         // tell UIA to release all objects cached in its store
