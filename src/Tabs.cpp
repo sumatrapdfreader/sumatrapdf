@@ -27,10 +27,6 @@
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
-// TODO: only needed for AbortFind
-#include "TextSelection.h"
-#include "TextSearch.h"
-#include "Search.h"
 
 static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 
@@ -786,8 +782,6 @@ void TabsOnCloseDoc(WindowInfo *win)
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(WindowInfo *win)
 {
-    // TODO: this is ad-hoc, there must be a better, single place for this
-    AbortFinding(win, true);
     TabCtrl_DeleteAllItems(win->hwndTabBar);
     // TODO: move into SumatraPDF.cpp
     for (TabInfo *tab : win->tabs) {

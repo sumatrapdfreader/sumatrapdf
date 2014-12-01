@@ -1287,8 +1287,7 @@ void DeleteWindowInfo(WindowInfo *win)
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
-    AbortFinding(win, false);
-    AbortPrinting(win);
+    CrashIf((win->findThread && !win->findCanceled) || (win->printThread && !win->printCanceled));
 
     if (win->uia_provider) {
         // tell UIA to release all objects cached in its store
@@ -2101,6 +2100,7 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
     }
     else {
         CrashIf(gPluginMode && gWindows.Find(win) == 0);
+        AbortFinding(win, true);
         TabsOnCloseDoc(win);
     }
 }
@@ -2125,7 +2125,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
         if (IDNO == res)
             return;
+        AbortPrinting(win);
     }
+    AbortFinding(win, true);
 
     if (win->AsFixed())
         win->AsFixed()->dontRenderFlag = true;
