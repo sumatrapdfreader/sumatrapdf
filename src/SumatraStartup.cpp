@@ -85,63 +85,70 @@ static bool TryLoadMemTrace()
 // being set up
 class FileExistenceChecker : public ThreadBase
 {
-    WStrVec *paths;
+    WStrVec paths;
+
+    void GetFilePathsToCheck();
+    void HideMissingFiles();
+    void Terminate();
+
 public:
-    FileExistenceChecker();
+    FileExistenceChecker() { GetFilePathsToCheck(); }
     virtual void Run() override;
 };
 
 static FileExistenceChecker *gFileExistenceChecker = NULL;
 
-static void CheckFilesExist(WStrVec *paths) {
-    for (size_t i = 0; i < paths->Count(); i++) {
-        gFileHistory.MarkFileInexistent(paths->At(i), true);
-    }
-    // update the Frequently Read page in case it's been displayed already
-    if (paths->Count() > 0 && gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
-        gWindows.At(0)->RedrawAll(true);
-    // prepare for clean-up (Join() just to be safe)
-    delete paths;
-    gFileExistenceChecker->Join();
-    delete gFileExistenceChecker;
-    gFileExistenceChecker = NULL;
-}
-
-static WStrVec *GetFilePathsToCheck() {
-    WStrVec *paths = new WStrVec();
+void FileExistenceChecker::GetFilePathsToCheck()
+{
     DisplayState *state;
     for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != NULL; i++) {
         if (!state->isMissing)
-            paths->Append(str::Dup(state->filePath));
+            paths.Append(str::Dup(state->filePath));
     }
     // add missing paths from the list of most frequently opened documents
     Vec<DisplayState *> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
     for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_FREQUENT && i < frequencyList.Count(); i++) {
         state = frequencyList.At(i);
-        if (!paths->Contains(state->filePath))
-            paths->Append(str::Dup(state->filePath));
+        if (!paths.Contains(state->filePath))
+            paths.Append(str::Dup(state->filePath));
     }
-    return paths;
 }
 
-FileExistenceChecker::FileExistenceChecker() {
-    paths = GetFilePathsToCheck();
+void FileExistenceChecker::HideMissingFiles()
+{
+    for (const WCHAR *path : paths) {
+        gFileHistory.MarkFileInexistent(path, true);
+    }
+    // update the Frequently Read page in case it's been displayed already
+    if (paths.Count() > 0 && gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
+        gWindows.At(0)->RedrawAll(true);
+    }
 }
 
-void FileExistenceChecker::Run() {
+void FileExistenceChecker::Terminate()
+{
+    gFileExistenceChecker = NULL;
+    Join(); // just to be safe
+    delete this;
+}
+
+void FileExistenceChecker::Run()
+{
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
-    for (size_t i = 0; i < paths->Count(); i++) {
-        WCHAR *path = paths->At(i);
+    for (size_t i = 0; i < paths.Count(); i++) {
+        const WCHAR *path = paths.At(i);
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            free(paths->PopAt(i--));
+            free(paths.PopAt(i--));
         }
     }
 
     uitask::Post([=] {
-        CheckFilesExist(paths);
+        CrashIf(WasCancelRequested());
+        HideMissingFiles();
+        Terminate();
     });
 }
 
