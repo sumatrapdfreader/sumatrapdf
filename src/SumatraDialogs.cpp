@@ -247,6 +247,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
         if (data->searchTerm)
             SetDlgItemText(hDlg, IDC_FIND_EDIT, data->searchTerm);
+        data->searchTerm = nullptr;
         CheckDlgButton(hDlg, IDC_MATCH_CASE, data->matchCase ? BST_CHECKED : BST_UNCHECKED);
         data->editWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hDlg, IDC_FIND_EDIT), GWLP_WNDPROC, (LONG_PTR)Dialog_Find_Edit_Proc);
         Edit_SelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
@@ -278,7 +279,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
 /* Shows a 'Find' dialog and returns the new search term entered by the user
    or NULL if the search was canceled. previousSearch is the search term to
    be displayed as default. */
-WCHAR * Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase)
+WCHAR *Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase)
 {
     Dialog_Find_Data data;
     data.searchTerm = (WCHAR *)previousSearch;
@@ -287,7 +288,7 @@ WCHAR * Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase)
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd,
                                   Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK)
-        return NULL;
+        return nullptr;
 
     if (matchCase)
         *matchCase = data.matchCase;

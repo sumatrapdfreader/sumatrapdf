@@ -252,13 +252,16 @@ struct FindThreadData : public ProgressUpdateUI {
 
 static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel, 
     bool wasModifiedCanceled, bool loopedAround) {
-    if (!WindowInfoStillValid(win))
+    if (!WindowInfoStillValid(win)) {
+        delete ftd;
         return;
+    }
     if (win->findThread != ftd->thread) {
         // Race condition: FindTextOnThread/AbortFinding was
         // called after the previous find thread ended but
         // before this FindEndTask could be executed
         // TODO: should CloseHandle(ftd->thread) ?
+        delete ftd;
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -273,6 +276,7 @@ static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
     }
     CloseHandle(win->findThread);
     win->findThread = NULL;
+    delete ftd;
 }
 
 static DWORD WINAPI FindThread(LPVOID data)
