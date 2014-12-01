@@ -650,23 +650,25 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, Th
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
 
-class ThumbnailCreated : public ThumbnailCallback, public UITask {
-    ScopedMem<WCHAR> filePath;
-    RenderedBitmap *bmp;
+static void SetFileThumbnail(WCHAR *filePath, RenderedBitmap *bmp) {
+    if (bmp) {
+        SetThumbnail(gFileHistory.Find(filePath), bmp);
+        delete bmp;
+    }
+    free(filePath);
+}
+
+class ThumbnailCreated : public ThumbnailCallback {
+    WCHAR *filePath;
 
 public:
-    ThumbnailCreated(const WCHAR *filePath) : filePath(str::Dup(filePath)), bmp(NULL) { }
-    virtual ~ThumbnailCreated() { delete bmp; }
+    ThumbnailCreated(const WCHAR *filePath) : filePath(str::Dup(filePath)) { }
+    virtual ~ThumbnailCreated() { }
 
     virtual void SaveThumbnail(RenderedBitmap *bmp) {
-        this->bmp = bmp;
-        uitask::Post(this);
-    }
-
-    virtual void Execute() {
-        if (bmp)
-            SetThumbnail(gFileHistory.Find(filePath), bmp);
-        bmp = NULL;
+        uitask::Post([=] {
+            SetFileThumbnail(filePath, bmp);
+        });
     }
 };
 

@@ -15,6 +15,7 @@ class EbookController;
 struct EbookFormattingData;
 
 // call SaveThumbnail on success or delete ThumbnailCallback on failure
+// TODO: remove in favor of std::function
 class ThumbnailCallback {
 public:
     virtual ~ThumbnailCallback() { }
