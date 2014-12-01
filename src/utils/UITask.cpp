@@ -5,17 +5,9 @@
 #include "WinUtil.h"
 #include "UITask.h"
 
-class UITaskFunction : public UITask {
-    const std::function<void()> f;
-
-  public:
-    UITaskFunction(const std::function<void()> f) : f(f) { name = "UITaskFunction"; }
-
-    UITaskFunction &operator=(const UITaskFunction &) = delete;
-
-    virtual ~UITaskFunction() override {}
-
-    virtual void Execute() override { f(); }
+struct FuncWrapper {
+    std::function<void()> func;
+    FuncWrapper(const std::function<void()> func) : func(func) { }
 };
 
 namespace uitask {
@@ -26,10 +18,9 @@ static HWND gTaskDispatchHwnd = NULL;
 #define WM_EXECUTE_TASK (WM_USER + 1)
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    UITask *task;
     if (WM_EXECUTE_TASK == msg) {
-        task = (UITask *)lParam;
-        task->Execute();
+        auto task = (FuncWrapper *)lParam;
+        task->func();
         delete task;
         return 0;
     }
@@ -60,13 +51,8 @@ void Destroy() {
     gTaskDispatchHwnd = NULL;
 }
 
-void Post(UITask *task) {
-    CrashIf(!task || !gTaskDispatchHwnd);
-    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
-}
-
 void Post(const std::function<void()> &f) {
-    auto task = new UITaskFunction(f);
+    auto task = new FuncWrapper(f);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
 }
 }

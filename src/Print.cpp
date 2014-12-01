@@ -349,7 +349,15 @@ static void PrintThreadUpdateTask(WindowInfo *win, NotificationWnd *wnd, int cur
     }
 }
 
-class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UITask {
+static void PrintTheadDataUITask(WindowInfo *win, HANDLE thread) {
+    if (!WindowInfoStillValid(win))
+        return;
+    if (win->printThread != thread)
+        return;
+    win->printThread = NULL;
+}
+
+class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
     NotificationWnd *wnd;
     AbortCookieManager cookie;
     bool isCanceled;
@@ -401,17 +409,15 @@ public:
             Sleep(1);
         threadData->thread = threadData->win->printThread;
         PrintToDevice(*threadData->data, threadData, &threadData->cookie);
-        uitask::Post(threadData);
+
+        WindowInfo *win = threadData->win;
+        HANDLE thread = threadData->thread;
+        uitask::Post([=] {
+            PrintTheadDataUITask(win, thread);
+        });
         return 0;
     }
 
-    virtual void Execute() {
-        if (!WindowInfoStillValid(win))
-            return;
-        if (win->printThread != thread)
-            return;
-        win->printThread = NULL;
-    }
 };
 
 static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
