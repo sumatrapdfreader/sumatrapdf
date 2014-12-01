@@ -343,20 +343,11 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
     return true;
 }
 
-class PrintThreadUpdateTask : public UITask {
-    NotificationWnd *wnd;
-    int current, total;
-    WindowInfo *win;
-
-public:
-    PrintThreadUpdateTask(WindowInfo *win, NotificationWnd *wnd, int current, int total)
-        : win(win), wnd(wnd), current(current), total(total) { }
-
-    virtual void Execute() {
-        if (WindowInfoStillValid(win) && win->notifications->Contains(wnd))
-            wnd->UpdateProgress(current, total);
+static void PrintThreadUpdateTask(WindowInfo *win, NotificationWnd *wnd, int current, int total) {
+    if (WindowInfoStillValid(win) && win->notifications->Contains(wnd)) {
+        wnd->UpdateProgress(current, total);
     }
-};
+}
 
 class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UITask {
     NotificationWnd *wnd;
@@ -383,7 +374,9 @@ public:
     }
 
     virtual void UpdateProgress(int current, int total) {
-        uitask::Post(new PrintThreadUpdateTask(win, wnd, current, total));
+        uitask::Post([=] {
+            PrintThreadUpdateTask(win, wnd, current, total);
+        });
     }
 
     virtual bool WasCanceled() {

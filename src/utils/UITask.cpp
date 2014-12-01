@@ -4,8 +4,6 @@
 #include "BaseUtil.h"
 #include "WinUtil.h"
 #include "UITask.h"
-#define NOLOG 1
-#include "DebugLog.h"
 
 class UITaskFunction : public UITask {
     const std::function<void()> f;
@@ -31,7 +29,6 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, 
     UITask *task;
     if (WM_EXECUTE_TASK == msg) {
         task = (UITask *)lParam;
-        lf("executing %s", task->name);
         task->Execute();
         delete task;
         return 0;
@@ -65,7 +62,6 @@ void Destroy() {
 
 void Post(UITask *task) {
     CrashIf(!task || !gTaskDispatchHwnd);
-    lf("posting %s", task->name);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
 }
 
