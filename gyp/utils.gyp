@@ -53,6 +53,8 @@
                 "<(src)/DirIter.h",
                 "<(src)/Dpi.cpp",
                 "<(src)/Dpi.h",
+                "<(src)/EditCtrl.cpp",
+                "<(src)/EditCtrl.h",
                 "<(src)/FileTransactions.cpp",
                 "<(src)/FileTransactions.h",
                 "<(src)/FileUtil.cpp",

@@ -731,6 +731,10 @@ $(OU)\DirIter.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec
 $(OU)\Dpi.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\Dpi.h
 $(OU)\Dpi.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OU)\Dpi.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\EditCtrl.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
+$(OU)\EditCtrl.obj: $B\src\utils\EditCtrl.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
+$(OU)\EditCtrl.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OU)\EditCtrl.obj: $B\src\utils\WinUtil.h
 $(OU)\FileTransactions.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileTransactions.h
 $(OU)\FileTransactions.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OU)\FileTransactions.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -844,10 +848,9 @@ $(OU)\TrivialHtmlParser.obj: $B\src\utils\Vec.h
 $(OU)\TxtParser.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\TxtParser.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrSlice.h
 $(OU)\TxtParser.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
-$(OU)\UITask.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
-$(OU)\UITask.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
-$(OU)\UITask.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OU)\UITask.obj: $B\src\utils\WinUtil.h
+$(OU)\UITask.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\UITask.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OU)\UITask.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OU)\UtAssert.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\UtAssert.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\UtAssert.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h

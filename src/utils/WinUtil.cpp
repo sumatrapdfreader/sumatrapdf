@@ -1261,6 +1261,20 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu)
     MoveWindow(hwnd, x, y, dx, dy, TRUE);
 }
 
+// -1 to use existing value
+void ResizeWindow(HWND hwnd, int dx, int dy)
+{
+    RECT rc;
+    GetWindowRect(hwnd, &rc);
+    if (dx == -1) {
+        dx = RectDx(rc);
+    }
+    if (dy == -1) {
+        dy = RectDy(rc);
+    }
+    SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
+}
+
 void VariantInitBstr(VARIANT& urlVar, const WCHAR *s)
 {
     VariantInit(&urlVar);

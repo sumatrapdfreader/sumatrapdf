@@ -91,6 +91,7 @@ UINT    GuessTextCodepage(const char *data, size_t len, UINT defVal=CP_ACP);
 WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 bool    IsRtl(HWND hwnd);
 void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
+void    ResizeWindow(HWND, int dx, int dy);
 
 inline int RectDx(const RECT& r) { return r.right - r.left; }
 inline int RectDy(const RECT& r) { return r.bottom - r.top; }
