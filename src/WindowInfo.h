@@ -92,6 +92,9 @@ public:
     // list of rectangles of the last rectangular, text or image selection
     // (split by page, in user coordinates)
     Vec<SelectionOnPage> *selectionOnPage;
+    // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
+    float prevZoomVirtual;
+    DisplayMode prevDisplayMode;
 
     TabInfo();
     ~TabInfo();
@@ -221,9 +224,6 @@ public:
 
     long            nonFullScreenWindowStyle;
     RectI           nonFullScreenFrameRect;
-    // TODO: move to TabInfo?
-    float           prevZoomVirtual;
-    DisplayMode     prevDisplayMode;
 
     RectI           canvasRc; // size of the canvas (excluding any scroll bars)
     int             currPageNo; // cached value, needed to determine when to auto-update the ToC selection

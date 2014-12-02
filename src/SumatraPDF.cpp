@@ -2952,8 +2952,8 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
     DisplayMode newMode = pagesContinuously ? DM_CONTINUOUS : DM_SINGLE_PAGE;
 
     if (mode != newMode || zoom != newZoom) {
-        DisplayMode prevMode = win->prevDisplayMode;
-        float prevZoom = win->prevZoomVirtual;
+        float prevZoom = win->currentTab->prevZoomVirtual;
+        DisplayMode prevMode = win->currentTab->prevDisplayMode;
 
         if (mode != newMode)
             SwitchToDisplayMode(win, newMode);
@@ -2961,18 +2961,18 @@ static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuous
 
         // remember the previous values for when the toolbar button is unchecked
         if (INVALID_ZOOM == prevZoom) {
-            win->prevZoomVirtual = zoom;
-            win->prevDisplayMode = mode;
+            win->currentTab->prevZoomVirtual = zoom;
+            win->currentTab->prevDisplayMode = mode;
         }
         // keep the rememberd values when toggling between the two toolbar buttons
         else {
-            win->prevZoomVirtual = prevZoom;
-            win->prevDisplayMode = prevMode;
+            win->currentTab->prevZoomVirtual = prevZoom;
+            win->currentTab->prevDisplayMode = prevMode;
         }
     }
-    else if (win->prevZoomVirtual != INVALID_ZOOM) {
-        float prevZoom = win->prevZoomVirtual;
-        SwitchToDisplayMode(win, win->prevDisplayMode);
+    else if (win->currentTab->prevZoomVirtual != INVALID_ZOOM) {
+        float prevZoom = win->currentTab->prevZoomVirtual;
+        SwitchToDisplayMode(win, win->currentTab->prevDisplayMode);
         ZoomToSelection(win, prevZoom);
     }
 }

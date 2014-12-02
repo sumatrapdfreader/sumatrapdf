@@ -372,9 +372,9 @@ void UpdateToolbarState(WindowInfo *win)
         state &= ~TBSTATE_CHECKED;
     SendMessage(win->hwndToolbar, TB_SETSTATE, IDT_VIEW_FIT_PAGE, state);
 
-    isChecked &= (state & TBSTATE_CHECKED);
+    isChecked |= (state & TBSTATE_CHECKED);
     if (!isChecked)
-        win->prevZoomVirtual = INVALID_ZOOM;
+        win->currentTab->prevZoomVirtual = INVALID_ZOOM;
 }
 
 #define TOOLBAR_MIN_ICON_SIZE 16

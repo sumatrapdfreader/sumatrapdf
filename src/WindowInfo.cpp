@@ -47,7 +47,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndInfotip(NULL), infotipVisible(false),
     findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
-    prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), stressTest(NULL),
@@ -103,7 +102,8 @@ WindowInfo::~WindowInfo()
 TabInfo::TabInfo() :
     ctrl(NULL), tabTitle(NULL),
     showToc(false), showTocPresentation(false), tocRoot(NULL),
-    reloadOnFocus(false), watcher(NULL), selectionOnPage(NULL)
+    reloadOnFocus(false), watcher(NULL), selectionOnPage(NULL),
+    prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)
 {
 }
 
