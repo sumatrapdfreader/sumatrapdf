@@ -295,8 +295,8 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(&win, true);
-            win.selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
-            win.showSelection = win.selectionOnPage != NULL;
+            win.currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
+            win.showSelection = win.currentTab->selectionOnPage != NULL;
             win.RepaintAsync();
         }
     }
@@ -357,8 +357,8 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
         RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
 
         DeleteOldSelectionInfo(&win, true);
-        win.selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
-        win.showSelection = win.selectionOnPage != NULL;
+        win.currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
+        win.showSelection = win.currentTab->selectionOnPage != NULL;
         win.RepaintAsync();
     }
     delete pageEl;

@@ -493,7 +493,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->GetEngine()->SupportsAnnotation() &&
-                                                           win->showSelection && win->selectionOnPage);
+                                                           win->showSelection && win->currentTab->selectionOnPage);
 #endif
 }
 
@@ -567,7 +567,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
 
-    if (!win->selectionOnPage)
+    if (!win->currentTab->selectionOnPage)
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());

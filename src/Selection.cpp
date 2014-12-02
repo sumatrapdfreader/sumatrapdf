@@ -79,8 +79,10 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
 
 void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
 {
-    delete win->selectionOnPage;
-    win->selectionOnPage = NULL;
+    if (win->currentTab) {
+        delete win->currentTab->selectionOnPage;
+        win->currentTab->selectionOnPage = NULL;
+    }
     win->showSelection = false;
     win->selectionMeasure = SizeD();
 
@@ -136,21 +138,22 @@ void PaintSelection(WindowInfo *win, HDC hdc)
         // during text selection or after selection is done
         if (MA_SELECTING_TEXT == win->mouseAction) {
             UpdateTextSelection(win);
-            if (!win->selectionOnPage) {
+            if (!win->currentTab->selectionOnPage) {
                 // prevent the selection from disappearing while the
                 // user is still at it (OnSelectionStop removes it
                 // if it is still empty at the end)
-                win->selectionOnPage = new Vec<SelectionOnPage>();
+                win->currentTab->selectionOnPage = new Vec<SelectionOnPage>();
                 win->showSelection = true;
             }
         }
 
-        CrashIf(!win->selectionOnPage);
-        if (!win->selectionOnPage)
+        CrashIf(!win->currentTab->selectionOnPage);
+        if (!win->currentTab->selectionOnPage)
             return;
 
-        for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
-            rects.Append(win->selectionOnPage->At(i).GetRect(win->AsFixed()));
+        for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+            rects.Append(sel.GetRect(win->AsFixed()));
+        }
     }
 
     PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->fixedPageUI.selectionColor);
@@ -171,8 +174,8 @@ void UpdateTextSelection(WindowInfo *win, bool select)
     }
 
     DeleteOldSelectionInfo(win);
-    win->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
-    win->showSelection = win->selectionOnPage != NULL;
+    win->currentTab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = win->currentTab->selectionOnPage != NULL;
 
     if (win->uia_provider)
         win->uia_provider->OnSelectionChanged();
@@ -190,10 +193,10 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
             zoomToPt = false;
         }
         // either scroll towards the center of the current selection (if there is any) ...
-        else if (win->showSelection && win->selectionOnPage) {
+        else if (win->showSelection && win->currentTab->selectionOnPage) {
             RectI selRect;
-            for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
-                selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(dm));
+            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+                selRect = selRect.Union(sel.GetRect(dm));
             }
 
             ClientRect rc(win->hwndCanvas);
@@ -225,9 +228,9 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
 
 void CopySelectionToClipboard(WindowInfo *win)
 {
-    if (!win->selectionOnPage) return;
-    CrashIf(win->selectionOnPage->Count() == 0);
-    if (win->selectionOnPage->Count() == 0) return;
+    if (!win->currentTab || !win->currentTab->selectionOnPage) return;
+    CrashIf(win->currentTab->selectionOnPage->Count() == 0);
+    if (win->currentTab->selectionOnPage->Count() == 0) return;
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
 
@@ -248,9 +251,8 @@ void CopySelectionToClipboard(WindowInfo *win)
         }
         else {
             WStrVec selections;
-            for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
-                SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                WCHAR *text = dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
+            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+                WCHAR *text = dm->GetTextInRegion(sel.pageNo, sel.rect);
                 if (text)
                     selections.Push(text);
             }
@@ -269,7 +271,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     }
 
     /* also copy a screenshot of the current selection to the clipboard */
-    SelectionOnPage *selOnPage = &win->selectionOnPage->At(0);
+    SelectionOnPage *selOnPage = &win->currentTab->selectionOnPage->At(0);
     RenderedBitmap * bmp = dm->GetEngine()->RenderBitmap(selOnPage->pageNo,
         dm->GetZoomReal(), dm->GetRotation(), &selOnPage->rect, Target_Export);
     if (bmp)
@@ -309,10 +311,10 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
     else {
         DeleteOldSelectionInfo(win, true);
         win->selectionRect = RectI::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
-        win->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
+        win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 
-    win->showSelection = win->selectionOnPage != NULL;
+    win->showSelection = win->currentTab->selectionOnPage != NULL;
     win->RepaintAsync();
 }
 
@@ -393,11 +395,11 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
         UpdateTextSelection(win);
 
     win->selectionRect = RectI::FromXY(win->selectionRect.x, win->selectionRect.y, x, y);
-    if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->selectionOnPage))
+    if (aborted || (MA_SELECTING == win->mouseAction ? win->selectionRect.IsEmpty() : !win->currentTab->selectionOnPage))
         DeleteOldSelectionInfo(win, true);
     else if (win->mouseAction == MA_SELECTING) {
-        win->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
-        win->showSelection = win->selectionOnPage != NULL;
+        win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
+        win->showSelection = win->currentTab->selectionOnPage != NULL;
     }
     win->RepaintAsync();
 }

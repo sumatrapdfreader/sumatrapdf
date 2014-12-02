@@ -372,6 +372,14 @@
 				Name="unused"
 				>
 				<File
+					RelativePath="..\src\utils\EditCtrl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\EditCtrl.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\FrameRateWnd.cpp"
 					>
 				</File>
@@ -728,14 +736,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\EditCtrl.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\EditCtrl.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

@@ -35,7 +35,7 @@
 
 WindowInfo::WindowInfo(HWND hwnd) :
     ctrl(NULL), currentTab(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
-    linkOnLastButtonDown(NULL), url(NULL), selectionOnPage(NULL),
+    linkOnLastButtonDown(NULL), url(NULL),
     tocVisible(false), tocLoaded(false), tocKeepSelection(false),
     isFullScreen(false), presentation(PM_DISABLED),
     windowStateBeforePresentation(0), nonFullScreenWindowStyle(0),
@@ -82,7 +82,6 @@ WindowInfo::~WindowInfo()
 
     delete linkHandler;
     delete buffer;
-    delete selectionOnPage;
     delete linkOnLastButtonDown;
     delete notifications;
     delete tabSelectionHistory;
@@ -104,7 +103,7 @@ WindowInfo::~WindowInfo()
 TabInfo::TabInfo() :
     ctrl(NULL), tabTitle(NULL),
     showToc(false), showTocPresentation(false), tocRoot(NULL),
-    reloadOnFocus(false), watcher(NULL)
+    reloadOnFocus(false), watcher(NULL), selectionOnPage(NULL)
 {
 }
 
@@ -114,6 +113,7 @@ TabInfo::~TabInfo()
     if (AsChm())
         AsChm()->RemoveParentHwnd();
     delete tocRoot;
+    delete selectionOnPage;
     delete ctrl;
 }
 

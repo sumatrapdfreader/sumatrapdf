@@ -131,7 +131,7 @@ void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     DisplayModel *dm = win->AsFixed();
-    if (!win->selectionOnPage || 0 == dm->textSelection->result.len)
+    if (!win->currentTab->selectionOnPage || 0 == dm->textSelection->result.len)
         return;
 
     ScopedMem<WCHAR> selection(dm->textSelection->ExtractText(L" "));

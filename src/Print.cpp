@@ -529,7 +529,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win->hwndFrame;
     pd.Flags       = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
-    if (!win->selectionOnPage)
+    if (!win->currentTab->selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
     /* by default print all pages */
@@ -590,7 +590,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     if (pd.Flags & PD_CURRENTPAGE) {
         PRINTPAGERANGE pr = { dm->CurrentPageNo(), dm->CurrentPageNo() };
         ranges.Append(pr);
-    } else if (win->selectionOnPage && (pd.Flags & PD_SELECTION)) {
+    } else if (win->currentTab->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pd.Flags & PD_PAGENUMS)) {
         PRINTPAGERANGE pr = { 1, dm->PageCount() };
@@ -609,7 +609,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
     data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
-                         dm->GetRotation(), printSelection ? win->selectionOnPage : NULL);
+                         dm->GetRotation(), printSelection ? win->currentTab->selectionOnPage : NULL);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
     if (devMode)

@@ -6,8 +6,7 @@
 #define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
 
 /* Represents selected area on given page */
-class SelectionOnPage {
-public:
+struct SelectionOnPage {
     explicit SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
         pageNo(pageNo), rect(rect ? *rect : RectD()) { }
 

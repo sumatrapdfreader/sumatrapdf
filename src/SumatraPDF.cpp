@@ -1581,7 +1581,10 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
 
     OnMenuFindMatchCase(win);
     UpdateFindbox(win);
-    UpdateTextSelection(win, false);
+
+    win->showSelection = tdata->selectionOnPage != NULL;
+    if (win->uia_provider)
+        win->uia_provider->OnSelectionChanged();
 
     SetFocus(win->hwndFrame);
     win->RedrawAll(true);
@@ -3467,11 +3470,10 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 #endif
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     case 'h': // convert selection to highlight annotation
-        if (win.AsFixed() && win.AsFixed()->GetEngine()->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
+        if (win.AsFixed() && win.AsFixed()->GetEngine()->SupportsAnnotation() && win.showSelection && win.currentTab->selectionOnPage) {
             if (!win.AsFixed()->userAnnots)
                 win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
-            for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
-                SelectionOnPage& sel = win.selectionOnPage->At(i);
+            for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
                 win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
                 gRenderCache.Invalidate(win.AsFixed(), sel.pageNo, sel.rect);
             }
@@ -3974,7 +3976,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
                 break;
             else if (win->AsChm())
                 win->AsChm()->CopySelection();
-            else if (win->selectionOnPage)
+            else if (win->currentTab && win->currentTab->selectionOnPage)
                 CopySelectionToClipboard(win);
             else if (win->AsFixed())
                 win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));

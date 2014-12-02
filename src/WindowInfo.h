@@ -4,9 +4,9 @@
 class DoubleBuffer;
 class LinkHandler;
 class Notifications;
-class SelectionOnPage;
 class StressTest;
 class SumatraUIAutomationProvider;
+struct SelectionOnPage;
 struct WatchedFile;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
@@ -89,6 +89,9 @@ public:
     bool reloadOnFocus;
     // FileWatcher token for unsubscribing
     WatchedFile *watcher;
+    // list of rectangles of the last rectangular, text or image selection
+    // (split by page, in user coordinates)
+    Vec<SelectionOnPage> *selectionOnPage;
 
     TabInfo();
     ~TabInfo();
@@ -202,17 +205,10 @@ public:
        of the mouse from the point where the user middle clicked. */
     int             xScrollSpeed, yScrollSpeed;
 
-    // TODO: move to TabInfo (together with selection* below) or cancel selections when switching tabs?
+    // true while selecting and when currentTab->selectionOnPage != NULL
     bool            showSelection;
-
-    /* selection rectangle in screen coordinates
-     * while selecting, it represents area which is being selected */
+    // selection rectangle in screen coordinates (only needed while selecting)
     RectI           selectionRect;
-
-    /* after selection is done, the selected area is converted
-     * to user coordinates for each page which has not empty intersection with it */
-    Vec<SelectionOnPage> *selectionOnPage;
-
     // size of the current rectangular selection in document units
     SizeD           selectionMeasure;
 
