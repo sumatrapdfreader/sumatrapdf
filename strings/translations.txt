@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b0736bf3ee25aac6415f68d84cd6b419bb9aed11
+943188f77df19f671e9d5175ddef65ffe606f80d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -12403,6 +12403,7 @@ am:PalmDoc փաստաթղթեր
 ar:وثائق بالم دوك
 az:PalmDoc sənədləri
 br:Documentos PalmDoc
+bs:PalmDoc dokumenti
 cn:PalmDoc 文档
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
@@ -15699,6 +15700,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 :This document uses unsupported features (%s) and might not render properly
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
+bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrarse adecuadamente

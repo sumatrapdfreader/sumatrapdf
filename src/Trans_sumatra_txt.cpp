@@ -1691,7 +1691,7 @@ const char * gTranslations_bs =
   "Stranica %u ne postoji\0"\
   "Skaliranje stranice\0"\
   "Stranica:\0"\
-  "\0"\
+  "PalmDoc dokumenti\0"\
   "Molim pri\304\215ekajte, iscrtavam...\0"\
   "Postscript dokumenti\0"\
   "Pr&ezentacija\tCtrl+L\0"\
@@ -1739,7 +1739,7 @@ const char * gTranslations_bs =
   "Ne mogu otvoriti sinhronizacijski fajl\0"\
   "Ozna\304\215eni PDF\0"\
   "Tekstualni dokumenti\0"\
-  "\0"\
+  "Ovaj dokument koristi nepodr\305\276ane funkcionalnosti (%s) i zbog toga mo\305\276da ne\304\207e biti ispravno prikazan\0"\
   "Naslov:\0"\
   "Nepoznat izvorni fajl (%s)\0"\
   "Koristi &tabove\0"\
