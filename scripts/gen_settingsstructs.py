@@ -379,7 +379,7 @@ GlobalPrefs = [
 		expert=True, version="2.5"),
 	Field("FullPathInTitle", Bool, False,
 		"if true, we show the full path to a file in the title bar",
-		expert=True, version="2.6"),
+		expert=True, version="3.0"),
 	# the below prefs don't apply to EbookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
@@ -466,19 +466,19 @@ GlobalPrefs = [
 		"if true, we show a list of frequently read documents when no document is loaded"),
 	Field("UseTabs", Bool, True,
 		"if true, documents are opened in tabs instead of new windows",
-		version="2.6"),
+		version="3.0"),
 	EmptyLine(),
 
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files (in most recently used order)"),
-	Array("WindowTabsInfo", WindowTabsInfo, "window and which files they had opened", structName="WindowTabsInfo"),
+	Array("WindowTabsInfo", WindowTabsInfo, "window and which files they had opened", version="3.1"),
 	# TODO: remove once sessions can be restored in general
 	CompactArray("ReopenOnce", String, None,
 		"a list of paths for files to be reopened at the next start " +
 		"(needed for auto-updating)",
 		doc="data required for reloading documents after an auto-update",
-		version="2.6"),
+		version="3.0"),
 	CompactStruct("TimeOfLastUpdateCheck", FileTime,
 		"timestamp of the last update check", structName="FILETIME",
 		doc="data required to determine when SumatraPDF last checked for updates"),
@@ -495,7 +495,6 @@ GlobalPrefs = [
 	Field("DefaultZoomFloat", Float, -1,
 		"value of DefaultZoom for internal usage",
 		internal=True),
-
 ]
 
 GlobalPrefs = Struct("GlobalPrefs", GlobalPrefs,
