@@ -1817,7 +1817,8 @@ DocTocItem *PdfEngineImpl::GetTocTree()
 
 PageDestination *PdfEngineImpl::GetNamedDest(const WCHAR *name)
 {
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope1(&pagesAccess);
+    ScopedCritSec scope2(&ctxAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     pdf_obj *dest = NULL;
