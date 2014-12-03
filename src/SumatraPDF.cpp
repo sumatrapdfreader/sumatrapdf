@@ -1578,6 +1578,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
         if (tdata->canvasRc != win->canvasRc)
             win->ctrl->SetViewPortSize(win->GetViewPortSize());
     }
+    tdata->canvasRc = win->canvasRc;
 
     OnMenuFindMatchCase(win);
     UpdateFindbox(win);
