@@ -110,13 +110,13 @@ struct AboutLayoutInfoEl {
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
-#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
-#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/trunk/TRANSLATORS"
+#define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
 #else
-#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
-#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
-#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
+#define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
 #endif
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {

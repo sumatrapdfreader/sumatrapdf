@@ -5,12 +5,12 @@
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
-#define WEBSITE_MAIN_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/"
-#define WEBSITE_MANUAL_URL       L"http://blog.kowalczyk.info/software/sumatrapdf/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"http://code.google.com/p/sumatrapdf/wiki/HelpTranslateSumatra"
+#define WEBSITE_MAIN_URL         L"http://www.sumatrapdfreader.org/"
+#define WEBSITE_MANUAL_URL       L"http://www.sumatrapdfreader.org/manual.html"
+#define WEBSITE_TRANSLATIONS_URL L"https://github.com/sumatrapdfreader/sumatrapdf/wiki/Contribute-translation"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/develop.html"
+#define CRASH_REPORT_URL         L"http://www.sumatrapdfreader.org/develop.html"
 #endif
 
 // Background color comparison:

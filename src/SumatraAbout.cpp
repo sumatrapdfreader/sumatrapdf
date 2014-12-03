@@ -53,15 +53,19 @@
  #define VERSION_SUB_TXT        L""
 #endif
 
+#ifdef GIT_COMMIT_ID
+#define GIT_COMMIT_ID_STR       TEXT(QM(GIT_COMMIT_ID))
+#endif
+
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
-#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
-#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/trunk/TRANSLATORS"
+#define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"
+#define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"
 #else
-#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
-#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/AUTHORS"
-#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
+#define URL_LICENSE L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_AUTHORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/AUTHORS"
+#define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
 #endif
 
 #define LAYOUT_LTR              0
@@ -89,6 +93,10 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"programming",    L"The Programmers",      URL_AUTHORS },
     { L"translations",   L"The Translators",      URL_TRANSLATORS },
     { L"licenses",       L"Various Open Source",  URL_LICENSE },
+#ifdef GIT_COMMIT_ID
+    // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
+    { L"last change",    L"git commit " GIT_COMMIT_ID_STR, L"https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR },
+#endif
 #ifdef SVN_PRE_RELEASE_VER
     { L"a note",         L"Pre-release version, for testing only!", NULL },
 #endif
@@ -267,7 +275,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
-        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)str::Len(el->rightTxt));
+        int txtLen = (int)str::Len(el->rightTxt);
+#ifdef GIT_COMMIT_ID
+        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
+            txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
+#endif
+        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, txtLen);
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
@@ -322,7 +335,12 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     int rightDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
-        GetTextExtentPoint32(hdc, el->rightTxt, (int)str::Len(el->rightTxt), &txtSize);
+        int txtLen = (int)str::Len(el->rightTxt);
+#ifdef GIT_COMMIT_ID
+        if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
+            txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
+#endif
+        GetTextExtentPoint32(hdc, el->rightTxt, txtLen, &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 

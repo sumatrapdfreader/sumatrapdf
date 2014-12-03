@@ -336,7 +336,7 @@ WindowTabsInfo = [
 rememberedDisplayState = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
 
 GlobalPrefs = [
-	Comment("For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings%s.html" % util2.get_sumatrapdf_version()),
+	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util2.get_sumatrapdf_version()),
 	EmptyLine(),
 
 	Field("MainWindowBackground", Color, RGB(0xFF, 0xF2, 0x00, a=0x80),

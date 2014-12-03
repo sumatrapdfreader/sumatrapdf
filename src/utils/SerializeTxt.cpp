@@ -729,7 +729,7 @@ void SerializeRec(EncodeState& es, const uint8_t *structStart, const StructMetad
 uint8_t *Serialize(const uint8_t *rootStruct, const StructMetadata *def, size_t *sizeOut)
 {
     EncodeState es;
-    es.res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
+    es.res.Append(UTF8_BOM "; see http://www.sumatrapdfreader.org/settings.html for documentation" NL);
     es.nest = 0;
     SerializeRec(es, rootStruct, def);
     if (sizeOut)

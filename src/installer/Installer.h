@@ -60,9 +60,9 @@
 #define PUBLISHER L"Publisher"
 // REG_SZ, command line for uninstaller
 #define UNINSTALL_STRING L"UninstallString"
-// REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
+// REG_SZ, e.g. "http://www.sumatrapdfreader.org/"
 #define URL_INFO_ABOUT L"URLInfoAbout"
-// REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/news.html"
+// REG_SZ, e.g. "http://www.sumatrapdfreader.org/news.html"
 #define URL_UPDATE_INFO L"URLUpdateInfo"
 // REG_SZ, same as INSTALL_DIR below
 #define INSTALL_LOCATION L"InstallLocation"
