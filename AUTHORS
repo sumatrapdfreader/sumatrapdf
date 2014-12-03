@@ -37,7 +37,7 @@ Translations by various translators (see TRANSLATORS).
 External projects are by their various authors:
 
 Project        License                   Type Website
------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 MuPDF          mupdf/COPYING             AGPL http://mupdf.com/
 bzip2          ext/bzip2/LICENSE              http://bzip.org/
 CHMLIB         ext/CHMLib/COPYING        LGPL http://www.jedrea.com/chmlib/
@@ -50,7 +50,7 @@ SyncTeX        ext/.../synctex_parser.c       http://itexmac.sourceforge.net/Syn
 zlib           ext/zlib/zlib.h                http://www.zlib.net/
 lzma           ext/lzma/lzma.txt              http://www.7-zip.org/sdk.html
 libwebp        ext/libwebp/COPYING       BSD  https://developers.google.com/speed/webp/
-unarr          ext/unarr/COPYING         LGPL https://code.google.com/p/sumatrapdf/source/browse/trunk/ext/unarr/
+unarr          ext/unarr/COPYING         LGPL https://github.com/zeniko/unarr
 
 CMap Resources mupdf/.../cmaps/README         http://sourceforge.net/adobe/cmap/home/Home/
 XySSL          mupdf/.../crypt-aes.c     BSD  http://en.wikipedia.org/wiki/PolarSSL#History
