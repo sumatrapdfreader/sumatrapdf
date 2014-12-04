@@ -240,11 +240,11 @@ static WCHAR *FormatPermissions(Controller *ctrl)
     return denials.Join(L", ");
 }
 
-void PropertiesLayout::AddProperty(const WCHAR *key, WCHAR *value)
+void PropertiesLayout::AddProperty(const WCHAR *key, WCHAR *value, bool isPath)
 {
     // don't display value-less properties
     if (!str::IsEmpty(value))
-        Append(new PropertyEl(key, value));
+        Append(new PropertyEl(key, value, isPath));
     else
         free(value);
 }
@@ -364,7 +364,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     CrashIf(!ctrl);
 
     WCHAR *str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
-    layoutData->AddProperty(_TR("File:"), str);
+    layoutData->AddProperty(_TR("File:"), str, true);
 
     str = ctrl->GetProperty(Prop_Title);
     layoutData->AddProperty(_TR("Title:"), str);
@@ -508,7 +508,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
         rTmp = rc.ToRECT();
-        DrawText(hdc, txt, -1, &rTmp, DT_LEFT | DT_PATH_ELLIPSIS | DT_NOPREFIX);
+        UINT format = DT_LEFT | DT_NOPREFIX | (el->isPath ? DT_PATH_ELLIPSIS : DT_WORD_ELLIPSIS);
+        DrawText(hdc, txt, -1, &rTmp, format);
     }
 
     SelectObject(hdc, origFont);
