@@ -2633,9 +2633,17 @@ void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *fz_
 			opts.rev_gen_list[num] = pdf_get_xref_entry(doc, num)->gen;
 		}
 
+		if (opts.do_incremental && opts.do_garbage)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't do incremental writes with garbage collection");
+		if (opts.do_incremental && opts.do_linear)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "Can't do incremental writes with linearisation");
+
 		/* Make sure any objects hidden in compressed streams have been loaded */
 		if (!opts.do_incremental)
+		{
+			pdf_ensure_solid_xref(doc, xref_len);
 			preloadobjstms(doc);
+		}
 
 		/* Sweep & mark objects from the trailer */
 		if (opts.do_garbage >= 1)

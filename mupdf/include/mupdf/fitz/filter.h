@@ -22,7 +22,7 @@ fz_stream *fz_open_dctd(fz_stream *chain, int color_transform, int l2factor, fz_
 fz_stream *fz_open_faxd(fz_stream *chain,
 	int k, int end_of_line, int encoded_byte_align,
 	int columns, int rows, int end_of_block, int black_is_1);
-fz_stream *fz_open_flated(fz_stream *chain);
+fz_stream *fz_open_flated(fz_stream *chain, int window_bits);
 fz_stream *fz_open_lzwd(fz_stream *chain, int early_change);
 fz_stream *fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bpc);
 fz_stream *fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals);

@@ -74,4 +74,8 @@ void fz_detach_xml(fz_xml *node);
 */
 void fz_debug_xml(fz_xml *item, int level);
 
+fz_xml *fz_xml_find(fz_xml *item, const char *tag);
+fz_xml *fz_xml_find_next(fz_xml *item, const char *tag);
+fz_xml *fz_xml_find_down(fz_xml *item, const char *tag);
+
 #endif

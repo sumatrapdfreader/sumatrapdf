@@ -83,7 +83,7 @@ struct fz_xml_s
 	char name[40];
 	char *text;
 	struct attribute *atts;
-	fz_xml *up, *down, *prev, *next;
+	fz_xml *up, *down, *tail, *prev, *next;
 };
 
 static inline void indent(int n)
@@ -123,48 +123,75 @@ void fz_debug_xml(fz_xml *item, int level)
 
 fz_xml *fz_xml_prev(fz_xml *item)
 {
-	return item->prev;
+	return item ? item->prev : NULL;
 }
 
 fz_xml *fz_xml_next(fz_xml *item)
 {
-	return item->next;
+	return item ? item->next : NULL;
 }
 
 fz_xml *fz_xml_up(fz_xml *item)
 {
-	return item->up;
+	return item ? item->up : NULL;
 }
 
 fz_xml *fz_xml_down(fz_xml *item)
 {
-	return item->down;
+	return item ? item->down : NULL;
 }
 
 char *fz_xml_text(fz_xml *item)
 {
-	return item->text;
+	return item ? item->text : NULL;
 }
 
 char *fz_xml_tag(fz_xml *item)
 {
-	if (item->name[0])
-		return item->name;
-	return NULL;
+	return item && item->name[0] ? item->name : NULL;
 }
 
 int fz_xml_is_tag(fz_xml *item, const char *name)
 {
-	return item->name && !strcmp(item->name, name);
+	if (!item)
+		return 0;
+	return !strcmp(item->name, name);
 }
 
 char *fz_xml_att(fz_xml *item, const char *name)
 {
 	struct attribute *att;
+	if (!item)
+		return NULL;
 	for (att = item->atts; att; att = att->next)
 		if (!strcmp(att->name, name))
 			return att->value;
 	return NULL;
+}
+
+fz_xml *fz_xml_find(fz_xml *item, const char *tag)
+{
+	while (item)
+	{
+		if (!strcmp(item->name, tag))
+			return item;
+		item = item->next;
+	}
+	return NULL;
+}
+
+fz_xml *fz_xml_find_next(fz_xml *item, const char *tag)
+{
+	if (item)
+		item = item->next;
+	return fz_xml_find(item, tag);
+}
+
+fz_xml *fz_xml_find_down(fz_xml *item, const char *tag)
+{
+	if (item)
+		item = item->down;
+	return fz_xml_find(item, tag);
 }
 
 static void xml_free_attribute(fz_context *ctx, struct attribute *att)
@@ -285,13 +312,13 @@ static void xml_emit_open_tag(struct parser *parser, char *a, char *b)
 
 	if (!parser->head->down) {
 		parser->head->down = head;
+		parser->head->tail = head;
 	}
 	else {
-		tail = parser->head->down;
-		while (tail->next)
-			tail = tail->next;
+		tail = parser->head->tail;
 		tail->next = head;
 		head->prev = tail;
+		parser->head->tail = head;
 	}
 
 	parser->head = head;
@@ -406,7 +433,7 @@ static char *xml_parse_document_imp(struct parser *x, char *p)
 parse_text:
 	mark = p;
 	while (*p && *p != '<') ++p;
-	xml_emit_text(x, mark, p);
+	if (mark != p) xml_emit_text(x, mark, p);
 	if (*p == '<') { ++p; goto parse_element; }
 	return NULL;
 

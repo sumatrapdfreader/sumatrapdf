@@ -714,6 +714,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\fitz\unzip.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\fitz\xml.c"
 				>
 			</File>
@@ -1182,6 +1186,10 @@
 				</File>
 				<File
 					RelativePath="..\..\include\mupdf\fitz\transition.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\include\mupdf\fitz\unzip.h"
 					>
 				</File>
 				<File

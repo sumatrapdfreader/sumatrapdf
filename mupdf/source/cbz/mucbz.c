@@ -1,13 +1,5 @@
 #include "mupdf/cbz.h"
 
-#include <zlib.h>
-
-#define ZIP_LOCAL_FILE_SIG 0x04034b50
-#define ZIP_CENTRAL_DIRECTORY_SIG 0x02014b50
-#define ZIP_END_OF_CENTRAL_DIRECTORY_SIG 0x06054b50
-
-#define ZIP_ENCRYPTED_FLAG 0x1
-
 #define DPI 72.0f
 
 static void cbz_init_document(cbz_document *doc);
@@ -23,147 +15,14 @@ struct cbz_page_s
 	fz_image *image;
 };
 
-typedef struct cbz_entry_s cbz_entry;
-
-struct cbz_entry_s
-{
-	char *name;
-	int offset;
-	int csize, usize;
-};
-
 struct cbz_document_s
 {
 	fz_document super;
-
 	fz_context *ctx;
-	fz_stream *file;
-	int entry_count;
-	cbz_entry *entry;
+	fz_archive *zip;
 	int page_count;
-	int *page;
+	const char **page;
 };
-
-static inline int getshort(fz_stream *file)
-{
-	int a = fz_read_byte(file);
-	int b = fz_read_byte(file);
-	return a | b << 8;
-}
-
-static inline int getlong(fz_stream *file)
-{
-	int a = fz_read_byte(file);
-	int b = fz_read_byte(file);
-	int c = fz_read_byte(file);
-	int d = fz_read_byte(file);
-	return a | b << 8 | c << 16 | d << 24;
-}
-
-static void *
-cbz_zip_alloc_items(void *ctx, unsigned int items, unsigned int size)
-{
-	return fz_malloc_array(ctx, items, size);
-}
-
-static void
-cbz_zip_free(void *ctx, void *ptr)
-{
-	fz_free(ctx, ptr);
-}
-
-static unsigned char *
-cbz_read_zip_entry(cbz_document *doc, cbz_entry *entry, int *sizep)
-{
-	fz_context *ctx = doc->ctx;
-	fz_stream *file = doc->file;
-	int sig, general, method, namelength, extralength;
-	unsigned char *cdata;
-	int code;
-
-	fz_seek(file, entry->offset, 0);
-
-	sig = getlong(doc->file);
-	if (sig != ZIP_LOCAL_FILE_SIG)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "wrong zip local file signature (0x%x)", sig);
-
-	(void) getshort(doc->file); /* version */
-	general = getshort(doc->file); /* general */
-	if (general & ZIP_ENCRYPTED_FLAG)
-		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "zipfile content is encrypted");
-
-	method = getshort(doc->file);
-	(void) getshort(doc->file); /* file time */
-	(void) getshort(doc->file); /* file date */
-	(void) getlong(doc->file); /* crc-32 */
-	(void) getlong(doc->file); /* csize */
-	(void) getlong(doc->file); /* usize */
-	namelength = getshort(doc->file);
-	extralength = getshort(doc->file);
-
-	fz_seek(file, namelength + extralength, 1);
-
-	cdata = fz_malloc(ctx, entry->csize);
-	fz_try(ctx)
-	{
-		fz_read(file, cdata, entry->csize);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(ctx, cdata);
-		fz_rethrow(ctx);
-	}
-
-	if (method == 0)
-	{
-		*sizep = entry->usize;
-		return cdata;
-	}
-
-	if (method == 8)
-	{
-		unsigned char *udata = fz_malloc(ctx, entry->usize);
-		z_stream stream;
-
-		memset(&stream, 0, sizeof stream);
-		stream.zalloc = cbz_zip_alloc_items;
-		stream.zfree = cbz_zip_free;
-		stream.opaque = ctx;
-		stream.next_in = cdata;
-		stream.avail_in = entry->csize;
-		stream.next_out = udata;
-		stream.avail_out = entry->usize;
-
-		fz_try(ctx)
-		{
-			code = inflateInit2(&stream, -15);
-			if (code != Z_OK)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "zlib inflateInit2 error: %s", stream.msg);
-			code = inflate(&stream, Z_FINISH);
-			if (code != Z_STREAM_END) {
-				inflateEnd(&stream);
-				fz_throw(ctx, FZ_ERROR_GENERIC, "zlib inflate error: %s", stream.msg);
-			}
-			code = inflateEnd(&stream);
-			if (code != Z_OK)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "zlib inflateEnd error: %s", stream.msg);
-		}
-		fz_always(ctx)
-		{
-			fz_free(ctx, cdata);
-		}
-		fz_catch(ctx)
-		{
-			fz_free(ctx, udata);
-			fz_rethrow(ctx);
-		}
-
-		*sizep = entry->usize;
-		return udata;
-	}
-
-	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown zip method: %d", method);
-}
 
 static inline int cbz_isdigit(int c)
 {
@@ -208,121 +67,41 @@ cbz_strnatcmp(const char *a, const char *b)
 }
 
 static int
-cbz_compare_entries(const void *a_, const void *b_)
+cbz_compare_page_names(const void *a, const void *b)
 {
-	const cbz_entry *a = a_;
-	const cbz_entry *b = b_;
-	return cbz_strnatcmp(a->name, b->name);
+	return cbz_strnatcmp(*(const char **)a, *(const char **)b);
 }
 
 static void
-cbz_read_zip_dir_imp(cbz_document *doc, int startoffset)
+cbz_create_page_list(cbz_document *doc)
 {
 	fz_context *ctx = doc->ctx;
-	fz_stream *file = doc->file;
-	int sig, offset, count;
-	int namesize, metasize, commentsize;
-	int i, k;
+	fz_archive *zip = doc->zip;
+	int i, k, count;
 
-	fz_seek(file, startoffset, 0);
-
-	sig = getlong(file);
-	if (sig != ZIP_END_OF_CENTRAL_DIRECTORY_SIG)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "wrong zip end of central directory signature (0x%x)", sig);
-
-	(void) getshort(file); /* this disk */
-	(void) getshort(file); /* start disk */
-	(void) getshort(file); /* entries in this disk */
-	count = getshort(file); /* entries in central directory disk */
-	(void) getlong(file); /* size of central directory */
-	offset = getlong(file); /* offset to central directory */
-
-	doc->entry = fz_calloc(ctx, count, sizeof(cbz_entry));
-	doc->entry_count = count;
-
-	fz_seek(file, offset, 0);
-
-	for (i = 0; i < count; i++)
-	{
-		cbz_entry *entry = doc->entry + i;
-
-		sig = getlong(doc->file);
-		if (sig != ZIP_CENTRAL_DIRECTORY_SIG)
-			fz_throw(doc->ctx, FZ_ERROR_GENERIC, "wrong zip central directory signature (0x%x)", sig);
-
-		(void) getshort(file); /* version made by */
-		(void) getshort(file); /* version to extract */
-		(void) getshort(file); /* general */
-		(void) getshort(file); /* method */
-		(void) getshort(file); /* last mod file time */
-		(void) getshort(file); /* last mod file date */
-		(void) getlong(file); /* crc-32 */
-		entry->csize = getlong(file); /* csize */
-		entry->usize = getlong(file); /* usize */
-		namesize = getshort(file);
-		metasize = getshort(file);
-		commentsize = getshort(file);
-		(void) getshort(file); /* disk number start */
-		(void) getshort(file); /* int file atts */
-		(void) getlong(file); /* ext file atts */
-		entry->offset = getlong(file);
-
-		entry->name = fz_malloc(ctx, namesize + 1);
-		fz_read(file, (unsigned char *)entry->name, namesize);
-		entry->name[namesize] = 0;
-
-		fz_seek(file, metasize, 1);
-		fz_seek(file, commentsize, 1);
-	}
-
-	qsort(doc->entry, count, sizeof(cbz_entry), cbz_compare_entries);
+	count = fz_count_archive_entries(ctx, zip);
 
 	doc->page_count = 0;
-	doc->page = fz_malloc_array(ctx, count, sizeof(int));
+	doc->page = fz_malloc_array(ctx, count, sizeof *doc->page);
 
 	for (i = 0; i < count; i++)
 	{
 		for (k = 0; cbz_ext_list[k]; k++)
 		{
-			if (strstr(doc->entry[i].name, cbz_ext_list[k]))
+			const char *name = fz_list_archive_entry(ctx, zip, i);
+			if (strstr(name, cbz_ext_list[k]))
 			{
-				doc->page[doc->page_count++] = i;
+				doc->page[doc->page_count++] = name;
+printf("found page %d = '%s'\n", i, name);
 				break;
 			}
 		}
 	}
-}
 
-static void
-cbz_read_zip_dir(cbz_document *doc)
-{
-	fz_stream *file = doc->file;
-	unsigned char buf[512];
-	int filesize, back, maxback;
-	int i, n;
+	qsort((char **)doc->page, doc->page_count, sizeof *doc->page, cbz_compare_page_names);
 
-	fz_seek(file, 0, 2);
-	filesize = fz_tell(file);
-
-	maxback = fz_mini(filesize, 0xFFFF + sizeof buf);
-	back = fz_mini(maxback, sizeof buf);
-
-	while (back < maxback)
-	{
-		fz_seek(file, filesize - back, 0);
-		n = fz_read(file, buf, sizeof buf);
-		for (i = n - 4; i > 0; i--)
-		{
-			if (!memcmp(buf + i, "PK\5\6", 4))
-			{
-				cbz_read_zip_dir_imp(doc, filesize - back + i);
-				return;
-			}
-		}
-		back += sizeof buf - 4;
-	}
-
-	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "cannot find end of central directory");
+	for (i = 0; i < doc->page_count; ++i)
+		printf("  %d = %s\n", i, doc->page[i]);
 }
 
 cbz_document *
@@ -333,15 +112,13 @@ cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	doc = fz_malloc_struct(ctx, cbz_document);
 	cbz_init_document(doc);
 	doc->ctx = ctx;
-	doc->file = fz_keep_stream(file);
-	doc->entry_count = 0;
-	doc->entry = NULL;
 	doc->page_count = 0;
 	doc->page = NULL;
 
 	fz_try(ctx)
 	{
-		cbz_read_zip_dir(doc);
+		doc->zip = fz_open_archive_with_stream(ctx, file);
+		cbz_create_page_list(doc);
 	}
 	fz_catch(ctx)
 	{
@@ -381,14 +158,9 @@ cbz_open_document(fz_context *ctx, const char *filename)
 void
 cbz_close_document(cbz_document *doc)
 {
-	int i;
-	fz_context *ctx = doc->ctx;
-	for (i = 0; i < doc->entry_count; i++)
-		fz_free(ctx, doc->entry[i].name);
-	fz_free(ctx, doc->entry);
-	fz_free(ctx, doc->page);
-	fz_close(doc->file);
-	fz_free(ctx, doc);
+	fz_close_archive(doc->ctx, doc->zip);
+	fz_free(doc->ctx, (char **)doc->page);
+	fz_free(doc->ctx, doc);
 }
 
 int
@@ -403,7 +175,6 @@ cbz_load_page(cbz_document *doc, int number)
 	fz_context *ctx = doc->ctx;
 	unsigned char *data = NULL;
 	cbz_page *page = NULL;
-	int size;
 
 	if (number < 0 || number >= doc->page_count)
 		return NULL;
@@ -411,12 +182,15 @@ cbz_load_page(cbz_document *doc, int number)
 	fz_var(data);
 	fz_var(page);
 
+	fz_buffer *buf = fz_read_archive_entry(doc->ctx, doc->zip, doc->page[number]);
 	fz_try(ctx)
 	{
-		data = cbz_read_zip_entry(doc, &doc->entry[doc->page[number]], &size);
 		page = fz_malloc_struct(ctx, cbz_page);
-		page->image = fz_new_image_from_data(ctx, data, size);
-		data = NULL; /* image owns data now */
+		page->image = fz_new_image_from_buffer(ctx, buf);
+	}
+	fz_always(ctx)
+	{
+		fz_drop_buffer(doc->ctx, buf);
 	}
 	fz_catch(ctx)
 	{
@@ -475,7 +249,7 @@ static void
 cbz_rebind(cbz_document *doc, fz_context *ctx)
 {
 	doc->ctx = ctx;
-	fz_rebind_stream(doc->file, ctx);
+	fz_rebind_archive(doc->zip, ctx);
 }
 
 static void

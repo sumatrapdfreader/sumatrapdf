@@ -24,6 +24,7 @@ typedef void (fz_document_close_fn)(fz_document *doc);
 typedef int (fz_document_needs_password_fn)(fz_document *doc);
 typedef int (fz_document_authenticate_password_fn)(fz_document *doc, const char *password);
 typedef fz_outline *(fz_document_load_outline_fn)(fz_document *doc);
+typedef void (fz_document_layout_fn)(fz_document *doc, float w, float h, float em);
 typedef int (fz_document_count_pages_fn)(fz_document *doc);
 typedef fz_page *(fz_document_load_page_fn)(fz_document *doc, int number);
 typedef fz_link *(fz_document_load_links_fn)(fz_document *doc, fz_page *page);
@@ -45,6 +46,7 @@ struct fz_document_s
 	fz_document_needs_password_fn *needs_password;
 	fz_document_authenticate_password_fn *authenticate_password;
 	fz_document_load_outline_fn *load_outline;
+	fz_document_layout_fn *layout;
 	fz_document_count_pages_fn *count_pages;
 	fz_document_load_page_fn *load_page;
 	fz_document_load_links_fn *load_links;
@@ -146,6 +148,14 @@ int fz_authenticate_password(fz_document *doc, const char *password);
 	Should be freed by fz_free_outline.
 */
 fz_outline *fz_load_outline(fz_document *doc);
+
+/*
+	fz_layout_document: Layout reflowable document types.
+
+	w, h: Page size in points.
+	em: Default font size in points.
+*/
+void fz_layout_document(fz_document *doc, float w, float h, float em);
 
 /*
 	fz_count_pages: Return the number of pages in document

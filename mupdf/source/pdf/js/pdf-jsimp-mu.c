@@ -33,10 +33,7 @@ pdf_jsimp *pdf_new_jsimp(fz_context *ctx, void *jsctx)
 	pdf_jsimp *imp;
 
 	J = js_newstate(alloc, ctx);
-
-	js_pushnull(J); /* prototype for jsctx userdata object */
-	js_newuserdata(J, "jsctx", jsctx); /* create jsctx userdata object */
-	js_setregistry(J, "jsctx"); /* hide it in the registry */
+	js_setcontext(J, jsctx);
 
 	imp = fz_malloc_struct(ctx, pdf_jsimp);
 	imp->ctx = ctx;
@@ -83,9 +80,7 @@ static void wrapmethod(js_State *J)
 
 	int argc = js_gettop(J) - 1;
 
-	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, -1, "jsctx");
-	js_pop(J, 1);
+	jsctx = js_getcontext(J);
 
 	js_currentfunction(J);
 	{
@@ -124,9 +119,7 @@ static void wrapgetter(js_State *J)
 	void *jsctx;
 	void *obj;
 
-	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, -1, "jsctx");
-	js_pop(J, 1);
+	jsctx = js_getcontext(J);
 
 	js_currentfunction(J);
 	{
@@ -159,9 +152,7 @@ static void wrapsetter(js_State *J)
 	void *jsctx;
 	void *obj;
 
-	js_getregistry(J, "jsctx");
-	jsctx = js_touserdata(J, -1, "jsctx");
-	js_pop(J, 1);
+	jsctx = js_getcontext(J);
 
 	js_currentfunction(J);
 	{
@@ -190,7 +181,7 @@ void pdf_jsimp_addmethod(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_j
 	js_State *J = imp->J;
 	js_getregistry(J, (const char *)type);
 	{
-		js_newcfunction(J, wrapmethod, 0);
+		js_newcfunction(J, wrapmethod, name, 0);
 		{
 			js_pushnull(J);
 			js_newuserdata(J, "method", meth);
@@ -208,7 +199,7 @@ void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf
 	js_State *J = imp->J;
 	js_getregistry(J, (const char *)type);
 	{
-		js_newcfunction(J, wrapgetter, 0);
+		js_newcfunction(J, wrapgetter, name, 0);
 		{
 			js_pushnull(J);
 			js_newuserdata(J, "getter", get);
@@ -216,7 +207,7 @@ void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf
 			js_pushstring(J, (const char *)type);
 			js_defproperty(J, -2, "__type", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 		}
-		js_newcfunction(J, wrapsetter, 0);
+		js_newcfunction(J, wrapsetter, name, 0);
 		{
 			js_pushnull(J);
 			js_newuserdata(J, "setter", set);

@@ -418,17 +418,17 @@ $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\output-tga.h $B\mupdf\include\
 $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\pixmap.h $B\mupdf\include\mupdf\fitz\shade.h $B\mupdf\include\mupdf\fitz\store.h
 $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\stream.h $B\mupdf\include\mupdf\fitz\string.h $B\mupdf\include\mupdf\fitz\structured-text.h
 $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\system.h $B\mupdf\include\mupdf\fitz\text.h $B\mupdf\include\mupdf\fitz\transition.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\version.h $B\mupdf\include\mupdf\fitz\write-document.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\xml.h $B\mupdf\include\mupdf\pdf.h $B\mupdf\include\mupdf\pdf\annot.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\appearance.h $B\mupdf\include\mupdf\pdf\cmap.h $B\mupdf\include\mupdf\pdf\crypt.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\document.h $B\mupdf\include\mupdf\pdf\event.h $B\mupdf\include\mupdf\pdf\field.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\font.h $B\mupdf\include\mupdf\pdf\javascript.h $B\mupdf\include\mupdf\pdf\object.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mupdf\pdf\page.h $B\mupdf\include\mupdf\pdf\parse.h
-$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h $B\mupdf\include\mupdf\pdf\xref.h
-$(OS)\PdfCreator.obj: $B\src\BaseEngine.h $B\src\PdfCreator.h $B\src\utils\Allocator.h
-$(OS)\PdfCreator.obj: $B\src\utils\BaseUtil.h $B\src\utils\GdiplusUtil.h $B\src\utils\GeomUtil.h
-$(OS)\PdfCreator.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\PdfCreator.obj: $B\src\utils\Vec.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\unzip.h $B\mupdf\include\mupdf\fitz\version.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h $B\mupdf\include\mupdf\pdf.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\annot.h $B\mupdf\include\mupdf\pdf\appearance.h $B\mupdf\include\mupdf\pdf\cmap.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\crypt.h $B\mupdf\include\mupdf\pdf\document.h $B\mupdf\include\mupdf\pdf\event.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\field.h $B\mupdf\include\mupdf\pdf\font.h $B\mupdf\include\mupdf\pdf\javascript.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\object.h $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mupdf\pdf\page.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\parse.h $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h
+$(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\pdf\xref.h $B\src\BaseEngine.h $B\src\PdfCreator.h
+$(OS)\PdfCreator.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GdiplusUtil.h
+$(OS)\PdfCreator.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OS)\PdfCreator.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz.h $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\buffer.h $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\context.h $B\mupdf\include\mupdf\fitz\crypt.h $B\mupdf\include\mupdf\fitz\device.h
@@ -442,19 +442,20 @@ $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\output-svg.h $B\mupdf\include\m
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\path.h $B\mupdf\include\mupdf\fitz\pixmap.h $B\mupdf\include\mupdf\fitz\shade.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\store.h $B\mupdf\include\mupdf\fitz\stream.h $B\mupdf\include\mupdf\fitz\string.h
 $(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\structured-text.h $B\mupdf\include\mupdf\fitz\system.h $B\mupdf\include\mupdf\fitz\text.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\transition.h $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\version.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h $B\mupdf\include\mupdf\pdf.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\annot.h $B\mupdf\include\mupdf\pdf\appearance.h $B\mupdf\include\mupdf\pdf\cmap.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\crypt.h $B\mupdf\include\mupdf\pdf\document.h $B\mupdf\include\mupdf\pdf\event.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\field.h $B\mupdf\include\mupdf\pdf\font.h $B\mupdf\include\mupdf\pdf\javascript.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\object.h $B\mupdf\include\mupdf\pdf\output-pdf.h $B\mupdf\include\mupdf\pdf\page.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\parse.h $B\mupdf\include\mupdf\pdf\resource.h $B\mupdf\include\mupdf\pdf\widget.h
-$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\xref.h $B\mupdf\include\mupdf\xps.h $B\src\BaseEngine.h
-$(OS)\PdfEngine.obj: $B\src\PdfEngine.h $B\src\utils\Allocator.h $B\src\utils\ArchUtil.h
-$(OS)\PdfEngine.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
-$(OS)\PdfEngine.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\mingw_compat.h
-$(OS)\PdfEngine.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\TrivialHtmlParser.h
-$(OS)\PdfEngine.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\utils\ZipUtil.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\transition.h $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\unzip.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\fitz\version.h $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf.h $B\mupdf\include\mupdf\pdf\annot.h $B\mupdf\include\mupdf\pdf\appearance.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\cmap.h $B\mupdf\include\mupdf\pdf\crypt.h $B\mupdf\include\mupdf\pdf\document.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\event.h $B\mupdf\include\mupdf\pdf\field.h $B\mupdf\include\mupdf\pdf\font.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\javascript.h $B\mupdf\include\mupdf\pdf\object.h $B\mupdf\include\mupdf\pdf\output-pdf.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\page.h $B\mupdf\include\mupdf\pdf\parse.h $B\mupdf\include\mupdf\pdf\resource.h
+$(OS)\PdfEngine.obj: $B\mupdf\include\mupdf\pdf\widget.h $B\mupdf\include\mupdf\pdf\xref.h $B\mupdf\include\mupdf\xps.h
+$(OS)\PdfEngine.obj: $B\src\BaseEngine.h $B\src\PdfEngine.h $B\src\utils\Allocator.h
+$(OS)\PdfEngine.obj: $B\src\utils\ArchUtil.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
+$(OS)\PdfEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h
+$(OS)\PdfEngine.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OS)\PdfEngine.obj: $B\src\utils\TrivialHtmlParser.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\PdfEngine.obj: $B\src\utils\ZipUtil.h
 $(OS)\PdfSync.obj: $B\ext\synctex\synctex_parser.h $B\src\BaseEngine.h $B\src\PdfSync.h
 $(OS)\PdfSync.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
 $(OS)\PdfSync.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
@@ -762,11 +763,11 @@ $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\output-svg.h $B\mupdf\include
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\path.h $B\mupdf\include\mupdf\fitz\pixmap.h $B\mupdf\include\mupdf\fitz\shade.h
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\store.h $B\mupdf\include\mupdf\fitz\stream.h $B\mupdf\include\mupdf\fitz\string.h
 $(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\structured-text.h $B\mupdf\include\mupdf\fitz\system.h $B\mupdf\include\mupdf\fitz\text.h
-$(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\transition.h $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\version.h
-$(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h $B\src\utils\Allocator.h
-$(OU)\FzImgReader.obj: $B\src\utils\BaseUtil.h $B\src\utils\FzImgReader.h $B\src\utils\GeomUtil.h
-$(OU)\FzImgReader.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\FzImgReader.obj: $B\src\utils\Vec.h
+$(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\transition.h $B\mupdf\include\mupdf\fitz\tree.h $B\mupdf\include\mupdf\fitz\unzip.h
+$(OU)\FzImgReader.obj: $B\mupdf\include\mupdf\fitz\version.h $B\mupdf\include\mupdf\fitz\write-document.h $B\mupdf\include\mupdf\fitz\xml.h
+$(OU)\FzImgReader.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FzImgReader.h
+$(OU)\FzImgReader.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OU)\FzImgReader.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\ByteReader.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\FzImgReader.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OU)\GdiPlusUtil.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h

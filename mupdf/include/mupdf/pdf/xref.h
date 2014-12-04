@@ -48,10 +48,20 @@ enum
 	PDF_OBJ_FLAG_MARK = 1,
 };
 
+typedef struct pdf_xref_subsec_s pdf_xref_subsec;
+
+struct pdf_xref_subsec_s
+{
+	pdf_xref_subsec *next;
+	int len;
+	int start;
+	pdf_xref_entry *table;
+};
+
 struct pdf_xref_s
 {
-	int len;
-	pdf_xref_entry *table;
+	int num_objects;
+	pdf_xref_subsec *subsec;
 	pdf_obj *trailer;
 	pdf_obj *pre_repair_trailer;
 };
@@ -89,7 +99,7 @@ int pdf_xref_is_incremental(pdf_document *doc, int num);
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
 pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
-
+void pdf_ensure_solid_xref(pdf_document *doc, int num);
 void pdf_mark_xref(pdf_document *doc);
 void pdf_clear_xref(pdf_document *doc);
 void pdf_clear_xref_to_mark(pdf_document *doc);

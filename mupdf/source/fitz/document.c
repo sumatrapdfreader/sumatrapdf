@@ -180,6 +180,13 @@ fz_load_outline(fz_document *doc)
 	return NULL;
 }
 
+void
+fz_layout_document(fz_document *doc, float w, float h, float em)
+{
+	if (doc && doc->layout)
+		doc->layout(doc, w, h, em);
+}
+
 int
 fz_count_pages(fz_document *doc)
 {

@@ -145,6 +145,11 @@ int fz_read(fz_stream *stm, unsigned char *data, int len);
 */
 fz_buffer *fz_read_all(fz_stream *stm, int initial);
 
+/*
+	fz_read_file: Read all the contents of a file into a buffer.
+*/
+fz_buffer *fz_read_file(fz_context *ctx, const char *filename);
+
 enum
 {
 	FZ_STREAM_META_PROGRESSIVE = 1,

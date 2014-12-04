@@ -105,7 +105,7 @@ rebind_flated(fz_stream *s)
 }
 
 fz_stream *
-fz_open_flated(fz_stream *chain)
+fz_open_flated(fz_stream *chain, int window_bits)
 {
 	fz_flate *state = NULL;
 	int code = Z_OK;
@@ -125,7 +125,7 @@ fz_open_flated(fz_stream *chain)
 		state->z.next_in = NULL;
 		state->z.avail_in = 0;
 
-		code = inflateInit(&state->z);
+		code = inflateInit2(&state->z, window_bits);
 		if (code != Z_OK)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: inflateInit: %s", state->z.msg);
 	}

@@ -705,6 +705,9 @@
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\unzip.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\xml.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

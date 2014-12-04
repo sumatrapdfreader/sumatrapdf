@@ -3440,7 +3440,7 @@ xps_extract_doc_props(xps_document *doc)
 {
     fz_xml *root = xps_open_and_parse(doc, "/_rels/.rels");
 
-    if (!root || !fz_xml_is_tag(root, "Relationships")) {
+    if (!fz_xml_is_tag(root, "Relationships")) {
         fz_free_xml(doc->ctx, root);
         fz_throw(doc->ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
     }
@@ -3562,6 +3562,7 @@ protected:
     fz_context *    ctx;
     fz_locks_context fz_locks_ctx;
     xps_document *  _doc;
+    fz_stream *     _docStream;
 
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
@@ -3680,8 +3681,8 @@ public:
     }
 };
 
-XpsEngineImpl::XpsEngineImpl() : _fileName(NULL), _doc(NULL), _pages(NULL), _mediaboxes(NULL),
-    _outline(NULL), _info(NULL), imageRects(NULL)
+XpsEngineImpl::XpsEngineImpl() : _fileName(NULL), _doc(NULL), _docStream(NULL), _pages(NULL),
+    _mediaboxes(NULL), _outline(NULL), _info(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -3719,6 +3720,8 @@ XpsEngineImpl::~XpsEngineImpl()
 
     xps_close_document(_doc);
     _doc = NULL;
+    fz_close(_docStream);
+    _docStream = NULL;
     fz_free_context(ctx);
     ctx = NULL;
 
@@ -3736,7 +3739,7 @@ BaseEngine *XpsEngineImpl::Clone()
     ScopedCritSec scope(&ctxAccess);
 
     XpsEngineImpl *clone = new XpsEngineImpl();
-    if (!clone || !(_fileName ? clone->Load(_fileName) : clone->Load(_doc->file))) {
+    if (!clone || !(_fileName ? clone->Load(_fileName) : clone->Load(_docStream))) {
         delete clone;
         return NULL;
     }
@@ -3748,7 +3751,7 @@ BaseEngine *XpsEngineImpl::Clone()
 
 bool XpsEngineImpl::Load(const WCHAR *fileName)
 {
-    assert(!_fileName && !_doc && ctx);
+    AssertCrash(!_fileName && !_doc && !_docStream && ctx);
     _fileName = str::Dup(fileName);
     if (!_fileName || !ctx)
         return false;
@@ -3773,7 +3776,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
 
 bool XpsEngineImpl::Load(IStream *stream)
 {
-    assert(!_doc && ctx);
+    assert(!_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -3789,7 +3792,7 @@ bool XpsEngineImpl::Load(IStream *stream)
 
 bool XpsEngineImpl::Load(fz_stream *stm)
 {
-    assert(!_fileName && !_doc && ctx);
+    assert(!_fileName && !_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -3807,11 +3810,9 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
     if (!stm)
         return false;
 
+    _docStream = stm;
     fz_try(ctx) {
         _doc = xps_open_document_with_stream(ctx, stm);
-    }
-    fz_always(ctx) {
-        fz_close(stm);
     }
     fz_catch(ctx) {
         return false;
@@ -4289,7 +4290,7 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     unsigned char *data = NULL;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
-        data = fz_extract_stream_data(_doc->file, cbCount);
+        data = fz_extract_stream_data(_docStream, cbCount);
     }
     fz_catch(ctx) {
         return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : NULL;

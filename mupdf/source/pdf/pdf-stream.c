@@ -168,7 +168,7 @@ build_filter(fz_stream *chain, pdf_document *doc, pdf_obj *f, pdf_obj *p, int nu
 			params->u.flate.bpc = bpc;
 			return chain;
 		}
-		chain = fz_open_flated(chain);
+		chain = fz_open_flated(chain, 15);
 		if (predictor > 1)
 			chain = fz_open_predict(chain, predictor, columns, colors, bpc);
 		return chain;

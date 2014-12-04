@@ -28,19 +28,26 @@ static void pdf_free_xref_sections(pdf_document *doc)
 	for (x = 0; x < doc->num_xref_sections; x++)
 	{
 		pdf_xref *xref = &doc->xref_sections[x];
+		pdf_xref_subsec *sub = xref->subsec;
 
-		for (e = 0; e < xref->len; e++)
+		while (sub != NULL)
 		{
-			pdf_xref_entry *entry = &xref->table[e];
-
-			if (entry->obj)
+			pdf_xref_subsec *next_sub = sub->next;
+			for (e = 0; e < sub->len; e++)
 			{
-				pdf_drop_obj(entry->obj);
-				fz_drop_buffer(ctx, entry->stm_buf);
+				pdf_xref_entry *entry = &sub->table[e];
+
+				if (entry->obj)
+				{
+					pdf_drop_obj(entry->obj);
+					fz_drop_buffer(ctx, entry->stm_buf);
+				}
 			}
+			fz_free(ctx, sub->table);
+			fz_free(ctx, sub);
+			sub = next_sub;
 		}
 
-		fz_free(ctx, xref->table);
 		pdf_drop_obj(xref->pre_repair_trailer);
 		pdf_drop_obj(xref->trailer);
 	}
@@ -50,21 +57,34 @@ static void pdf_free_xref_sections(pdf_document *doc)
 	doc->num_xref_sections = 0;
 }
 
-static void pdf_resize_xref(fz_context *ctx, pdf_xref *xref, int newlen)
+/* This is only ever called when we already have an incremental
+ * xref. This means there will only be 1 subsec, and it will be
+ * a complete subsec. */
+static void pdf_resize_xref(fz_context *ctx, pdf_document *doc, int newlen)
 {
 	int i;
+	pdf_xref *xref = &doc->xref_sections[0];
+	pdf_xref_subsec *sub;
 
-	xref->table = fz_resize_array(ctx, xref->table, newlen, sizeof(pdf_xref_entry));
-	for (i = xref->len; i < newlen; i++)
+	assert(xref != NULL);
+	sub = xref->subsec;
+	assert(sub->next == NULL && sub->start == 0 && sub->len == xref->num_objects);
+	assert(newlen > xref->num_objects);
+
+	sub->table = fz_resize_array(ctx, sub->table, newlen, sizeof(pdf_xref_entry));
+	for (i = xref->num_objects; i < newlen; i++)
 	{
-		xref->table[i].type = 0;
-		xref->table[i].ofs = 0;
-		xref->table[i].gen = 0;
-		xref->table[i].stm_ofs = 0;
-		xref->table[i].stm_buf = NULL;
-		xref->table[i].obj = NULL;
+		sub->table[i].type = 0;
+		sub->table[i].ofs = 0;
+		sub->table[i].gen = 0;
+		sub->table[i].stm_ofs = 0;
+		sub->table[i].stm_buf = NULL;
+		sub->table[i].obj = NULL;
 	}
-	xref->len = newlen;
+	xref->num_objects = newlen;
+	sub->len = newlen;
+	if (doc->max_xref_len < newlen)
+		doc->max_xref_len = newlen;
 }
 
 static void pdf_populate_next_xref_level(pdf_document *doc)
@@ -74,8 +94,8 @@ static void pdf_populate_next_xref_level(pdf_document *doc)
 	doc->num_xref_sections++;
 
 	xref = &doc->xref_sections[doc->num_xref_sections - 1];
-	xref->len = 0;
-	xref->table = NULL;
+	xref->subsec = NULL;
+	xref->num_objects = 0;
 	xref->trailer = NULL;
 	xref->pre_repair_trailer = NULL;
 }
@@ -102,10 +122,59 @@ void pdf_set_populating_xref_trailer(pdf_document *doc, pdf_obj *trailer)
 
 int pdf_xref_len(pdf_document *doc)
 {
-	/* Return the length of the document's final xref section */
-	pdf_xref *xref = &doc->xref_sections[0];
+	return doc->max_xref_len;
+}
 
-	return xref == NULL ? 0 : xref->len;
+/* Ensure that the given xref has a single subsection
+ * that covers the entire range. */
+static void
+ensure_solid_xref(pdf_document *doc, int num, int which)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_xref *xref = &doc->xref_sections[which];
+	pdf_xref_subsec *sub = xref->subsec;
+	pdf_xref_subsec *new_sub;
+
+	if (num < xref->num_objects)
+		num = xref->num_objects;
+
+	if (sub != NULL && sub->next == NULL && sub->start == 0 && sub->len >= num)
+		return;
+
+	new_sub = fz_malloc_struct(ctx, pdf_xref_subsec);
+	fz_try(ctx)
+	{
+		new_sub->table = fz_calloc(ctx, num, sizeof(pdf_xref_entry));
+		new_sub->start = 0;
+		new_sub->len = num;
+		new_sub->next = NULL;
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, new_sub);
+		fz_rethrow(ctx);
+	}
+
+	/* Move objects over to the new subsection and destroy the old
+	 * ones */
+	sub = xref->subsec;
+	while (sub != NULL)
+	{
+		pdf_xref_subsec *next = sub->next;
+		int i;
+
+		for (i = 0; i < sub->len; i++)
+		{
+			new_sub->table[i+sub->start] = sub->table[i];
+		}
+		fz_free(ctx, sub->table);
+		fz_free(ctx, sub);
+		sub = next;
+	}
+	xref->num_objects = num;
+	xref->subsec = new_sub;
+	if (doc->max_xref_len < num)
+		doc->max_xref_len = num;
 }
 
 /* Used while reading the individual xref sections from a file */
@@ -113,7 +182,7 @@ pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int num)
 {
 	/* Return an entry within the xref currently being populated */
 	pdf_xref *xref;
-	int i;
+	pdf_xref_subsec *sub;
 
 	if (doc->num_xref_sections == 0)
 	{
@@ -125,50 +194,84 @@ pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int num)
 	if (num < 0)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object number must not be negative (%d)", num);
 
-	/* Ensure all xref sections map this entry */
-	for (i = doc->num_xref_sections - 1; i >= 0; i--)
-	{
-		xref = &doc->xref_sections[i];
+	/* Return the pointer to the entry in the last section. */
+	xref = &doc->xref_sections[doc->num_xref_sections-1];
 
-		if (num >= xref->len)
-			pdf_resize_xref(doc->ctx, xref, num+1);
-		else
-			break; /* Remaining sections already of sufficient size */
+	for (sub = xref->subsec; sub != NULL; sub = sub->next)
+	{
+		if (num >= sub->start && num < sub->start + sub->len)
+			return &sub->table[num-sub->start];
 	}
 
-	/* Loop leaves xref pointing at the populating section */
-	return &doc->xref_sections[doc->num_xref_sections-1].table[num];
+	/* We've been asked for an object that's not in a subsec. */
+	ensure_solid_xref(doc, num+1, doc->num_xref_sections-1);
+	xref = &doc->xref_sections[doc->num_xref_sections-1];
+	sub = xref->subsec;
+
+	return &sub->table[num-sub->start];
 }
 
 /* Used after loading a document to access entries */
+/* This will never throw anything, or return NULL if it is
+ * only asked to return objects in range within a 'solid'
+ * xref. */
 pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i)
 {
+	fz_context *ctx = doc->ctx;
+	pdf_xref *xref;
+	pdf_xref_subsec *sub;
 	int j;
+
+	if (i < 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "Negative object number requested");
 
 	/* Find the first xref section where the entry is defined. */
 	for (j = 0; j < doc->num_xref_sections; j++)
 	{
-		pdf_xref *xref = &doc->xref_sections[j];
+		xref = &doc->xref_sections[j];
 
-		if (i >= 0 && i < xref->len)
+		if (i >= 0 && i < xref->num_objects)
 		{
-			pdf_xref_entry *entry = &xref->table[i];
+			for (sub = xref->subsec; sub != NULL; sub = sub->next)
+			{
+				pdf_xref_entry *entry;
 
-			if (entry->type)
-				return entry;
+				if (i < sub->start || i >= sub->start + sub->len)
+					continue;
+
+				entry = &sub->table[i - sub->start];
+				if (entry->type)
+					return entry;
+			}
 		}
 	}
 
-	/*
-		Didn't find the entry in any section. Return the entry from the final
-		section.
-	*/
-	return &doc->xref_sections[0].table[i];
+	/* Didn't find the entry in any section. Return the entry from
+	 * the final section. */
+	if (i < xref->num_objects)
+	{
+		xref = &doc->xref_sections[0];
+		for (sub = xref->subsec; sub != NULL; sub = sub->next)
+		{
+			if (i >= sub->start && i < sub->start + sub->len)
+				return &sub->table[i - sub->start];
+		}
+	}
+
+	/* At this point, we solidify the xref. This ensures that we
+	 * can return a pointer. This is the only case where this function
+	 * might throw an exception, and it will never happen when we are
+	 * working within a 'solid' xref. */
+	ensure_solid_xref(doc, i+1, 0);
+	xref = &doc->xref_sections[0];
+	sub = xref->subsec;
+	return &sub->table[i - sub->start];
 }
 
 /*
-		Ensure we have an incremental xref section where we can store
-		updated versions of indirect objects
+	Ensure we have an incremental xref section where we can store
+	updated versions of indirect objects. This is a new xref section
+	consisting of a single xref subsection.
 */
 static void ensure_incremental_xref(pdf_document *doc)
 {
@@ -178,21 +281,27 @@ static void ensure_incremental_xref(pdf_document *doc)
 	{
 		pdf_xref *xref = &doc->xref_sections[0];
 		pdf_xref *pxref;
-		pdf_xref_entry *new_table = fz_calloc(ctx, xref->len, sizeof(pdf_xref_entry));
+		pdf_xref_entry *new_table = fz_calloc(ctx, xref->num_objects, sizeof(pdf_xref_entry));
+		pdf_xref_subsec *sub;
 		pdf_obj *trailer = NULL;
 
 		fz_var(trailer);
 		fz_try(ctx)
 		{
+			sub = fz_malloc_struct(ctx, pdf_xref_subsec);
 			trailer = pdf_copy_dict(xref->trailer);
 			doc->xref_sections = fz_resize_array(ctx, doc->xref_sections, doc->num_xref_sections + 1, sizeof(pdf_xref));
 			xref = &doc->xref_sections[0];
 			pxref = &doc->xref_sections[1];
 			memmove(pxref, xref, doc->num_xref_sections * sizeof(pdf_xref));
-			/* xref->len is already correct */
-			xref->table = new_table;
+			/* xref->num_objects is already correct */
+			xref->subsec = sub;
 			xref->trailer = trailer;
 			xref->pre_repair_trailer = NULL;
+			sub->next = NULL;
+			sub->len = xref->num_objects;
+			sub->start = 0;
+			sub->table = new_table;
 			doc->num_xref_sections++;
 			doc->xref_altered = 1;
 		}
@@ -210,28 +319,46 @@ static pdf_xref_entry *pdf_get_incremental_xref_entry(pdf_document *doc, int i)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_xref *xref;
+	pdf_xref_subsec *sub;
 
 	/* Make a new final xref section if we haven't already */
 	ensure_incremental_xref(doc);
 
 	xref = &doc->xref_sections[0];
-	if (i >= xref->len)
-		pdf_resize_xref(ctx, xref, i + 1);
+	if (i >= xref->num_objects)
+		pdf_resize_xref(ctx, doc, i + 1);
 
-	return &xref->table[i];
+	sub = xref->subsec;
+	assert(sub != NULL && sub->next == NULL);
+	assert(i >= sub->start && i < sub->start + sub->len);
+	return &sub->table[i - sub->start];
 }
 
 int pdf_xref_is_incremental(pdf_document *doc, int num)
 {
 	pdf_xref *xref = &doc->xref_sections[0];
+	pdf_xref_subsec *sub = xref->subsec;
 
-	return doc->xref_altered && num < xref->len && xref->table[num].type;
+	assert(sub != NULL && sub->next == NULL && sub->len == xref->num_objects && sub->start == 0);
+
+	return doc->xref_altered && num < xref->num_objects && sub->table[num].type;
+}
+
+/* Ensure that the current populating xref has a single subsection
+ * that covers the entire range. */
+void pdf_ensure_solid_xref(pdf_document *doc, int num)
+{
+	if (doc->num_xref_sections == 0)
+		pdf_populate_next_xref_level(doc);
+
+	ensure_solid_xref(doc, num, doc->num_xref_sections-1);
 }
 
 /* Ensure that an object has been cloned into the incremental xref section */
 void pdf_xref_ensure_incremental_object(pdf_document *doc, int num)
 {
 	pdf_xref_entry *new_entry, *old_entry;
+	pdf_xref_subsec *sub = NULL;
 	int i;
 
 	/* Make sure we have created an xref section for incremental updates */
@@ -241,16 +368,25 @@ void pdf_xref_ensure_incremental_object(pdf_document *doc, int num)
 	for (i = 0; i < doc->num_xref_sections; i++)
 	{
 		pdf_xref *xref = &doc->xref_sections[i];
-		if (num >= 0 && num < xref->len && xref->table[num].type)
+
+		if (num < 0 && num >= xref->num_objects)
+			break;
+		for (sub = xref->subsec; sub != NULL; sub = sub->next)
+		{
+			if (sub->start <= num && num < sub->start + sub->len && sub->table[num - sub->start].type)
+				break;
+		}
+		if (sub != NULL)
 			break;
 	}
+	/* sub == NULL implies we did not find it */
 
 	/* If we don't find it, or it's already in the incremental section, return */
-	if (i == 0 || i == doc->num_xref_sections)
+	if (i == 0 || sub == NULL)
 		return;
 
 	/* Move the object to the incremental section */
-	old_entry = &doc->xref_sections[i].table[num];
+	old_entry = &sub->table[num - sub->start];
 	new_entry = pdf_get_incremental_xref_entry(doc, num);
 	*new_entry = *old_entry;
 	old_entry->obj = NULL;
@@ -261,25 +397,33 @@ void pdf_replace_xref(pdf_document *doc, pdf_xref_entry *entries, int n)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_xref *xref;
+	pdf_xref_subsec *sub;
 	pdf_obj *trailer = pdf_keep_obj(pdf_trailer(doc));
 
-	/* The new table completely replaces the previous separate sections */
-	pdf_free_xref_sections(doc);
-
-	fz_var(trailer);
+	fz_var(xref);
 	fz_try(ctx)
 	{
-		xref = fz_calloc(ctx, 1, sizeof(pdf_xref));
-		xref->table = entries;
-		xref->len = n;
+		xref = fz_malloc_struct(ctx, pdf_xref);
+		sub = fz_malloc_struct(ctx, pdf_xref_subsec);
+
+		/* The new table completely replaces the previous separate sections */
+		pdf_free_xref_sections(doc);
+
+		sub->table = entries;
+		sub->start = 0;
+		sub->len = n;
+		xref->subsec = sub;
+		xref->num_objects = n;
 		xref->trailer = trailer;
 		trailer = NULL;
 
 		doc->xref_sections = xref;
 		doc->num_xref_sections = 1;
+		doc->max_xref_len = n;
 	}
 	fz_catch(ctx)
 	{
+		fz_free(ctx, xref);
 		pdf_drop_obj(trailer);
 		fz_rethrow(ctx);
 	}
@@ -428,6 +572,64 @@ pdf_new_ref(pdf_document *doc, pdf_obj *obj)
 	return pdf_new_indirect(doc, num, 0);
 }
 
+static pdf_xref_entry *
+pdf_xref_find_subsection(pdf_document *doc, int ofs, int len)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_xref *xref = &doc->xref_sections[doc->num_xref_sections-1];
+	pdf_xref_subsec *sub;
+	int new_max;
+
+	/* Different cases here. Case 1) We might be asking for a
+	 * subsection (or a subset of a subsection) that we already
+	 * have -  Just return it. Case 2) We might be asking for a
+	 * completely new subsection - Create it and return it.
+	 * Case 3) We might have an overlapping one - Create a 'solid'
+	 * subsection and return that. */
+
+	/* Sanity check */
+	for (sub = xref->subsec; sub != NULL; sub = sub->next)
+	{
+		if (ofs >= sub->start && ofs + len <= sub->start + sub->len)
+			return &sub->table[ofs-sub->start]; /* Case 1 */
+		if (ofs + len > sub->start && ofs <= sub->start + sub->len)
+			break; /* Case 3 */
+	}
+
+	new_max = xref->num_objects;
+	if (new_max < ofs + len)
+		new_max = ofs + len;
+
+	if (sub == NULL)
+	{
+		/* Case 2 */
+		sub = fz_malloc_struct(ctx, pdf_xref_subsec);
+		fz_try(ctx)
+		{
+			sub->table = fz_calloc(ctx, len, sizeof(pdf_xref_entry));
+			sub->start = ofs;
+			sub->len = len;
+			sub->next = xref->subsec;
+			xref->subsec = sub;
+		}
+		fz_catch(ctx)
+		{
+			fz_free(ctx, sub);
+			fz_rethrow(ctx);
+		}
+		xref->num_objects = new_max;
+		if (doc->max_xref_len < new_max)
+			doc->max_xref_len = new_max;
+	}
+	else
+	{
+		/* Case 3 */
+		ensure_solid_xref(doc, new_max, 0);
+		sub = xref->subsec;
+	}
+	return &sub->table[ofs-sub->start];
+}
+
 static pdf_obj *
 pdf_read_old_xref(pdf_document *doc, pdf_lexbuf *buf)
 {
@@ -439,10 +641,7 @@ pdf_read_old_xref(pdf_document *doc, pdf_lexbuf *buf)
 	int c;
 	pdf_obj *trailer;
 	int xref_len = pdf_xref_size_from_old_trailer(doc, buf);
-
-	/* Access last entry to ensure xref size up front and avoid reallocs */
-	if (xref_len > 0)
-		(void)pdf_get_populating_xref_entry(doc, xref_len - 1);
+	pdf_xref_entry *table;
 
 	fz_read_line(doc->file, buf->scratch, buf->size);
 	if (strncmp(buf->scratch, "xref", 4) != 0)
@@ -473,13 +672,13 @@ pdf_read_old_xref(pdf_document *doc, pdf_lexbuf *buf)
 		if (ofs + len > xref_len)
 		{
 			fz_warn(doc->ctx, "broken xref section, proceeding anyway.");
-			/* Access last entry to ensure size */
-			(void)pdf_get_populating_xref_entry(doc, ofs + len - 1);
 		}
+
+		table = pdf_xref_find_subsection(doc, ofs, len);
 
 		for (i = ofs; i < ofs + len; i++)
 		{
-			pdf_xref_entry *entry = pdf_get_populating_xref_entry(doc, i);
+			pdf_xref_entry *entry = &table[i-ofs];
 			n = fz_read(doc->file, (unsigned char *) buf->scratch, 20);
 			if (n != 20)
 				fz_throw(doc->ctx, FZ_ERROR_GENERIC, "unexpected EOF in xref table");
@@ -523,15 +722,17 @@ static void
 pdf_read_new_xref_section(pdf_document *doc, fz_stream *stm, int i0, int i1, int w0, int w1, int w2)
 {
 	int i, n;
+	pdf_xref_entry *table;
 
 	if (i0 < 0 || i1 < 0)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "negative xref stream entry index");
-	if (i0 + i1 > pdf_xref_len(doc))
-		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "xref stream has too many entries");
+	//if (i0 + i1 > pdf_xref_len(doc))
+	//	fz_throw(doc->ctx, FZ_ERROR_GENERIC, "xref stream has too many entries");
 
+	table = pdf_xref_find_subsection(doc, i0, i1);
 	for (i = i0; i < i0 + i1; i++)
 	{
-		pdf_xref_entry *entry = pdf_get_populating_xref_entry(doc, i);
+		pdf_xref_entry *entry = &table[i-i0];
 		int a = 0;
 		int b = 0;
 		int c = 0;
@@ -566,7 +767,7 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 	pdf_obj *trailer = NULL;
 	pdf_obj *index = NULL;
 	pdf_obj *obj = NULL;
-	int num, gen, stm_ofs;
+	int num, gen, ofs, stm_ofs;
 	int size, w0, w1, w2;
 	int t;
 	fz_context *ctx = doc->ctx;
@@ -576,16 +777,8 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 	fz_try(ctx)
 	{
-		pdf_xref_entry *entry;
-		int ofs = fz_tell(doc->file);
+		ofs = fz_tell(doc->file);
 		trailer = pdf_parse_ind_obj(doc, doc->file, buf, &num, &gen, &stm_ofs, NULL);
-		entry = pdf_get_populating_xref_entry(doc, num);
-		entry->ofs = ofs;
-		entry->gen = gen;
-		entry->stm_ofs = stm_ofs;
-		pdf_drop_obj(entry->obj);
-		entry->obj = pdf_keep_obj(trailer);
-		entry->type = 'n';
 	}
 	fz_catch(ctx)
 	{
@@ -595,14 +788,13 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 
 	fz_try(ctx)
 	{
+		pdf_xref_entry *entry;
+
 		obj = pdf_dict_gets(trailer, "Size");
 		if (!obj)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "xref stream missing Size entry (%d %d R)", num, gen);
 
 		size = pdf_to_int(obj);
-		/* Access xref entry to assure table size */
-		if (size > 0)
-			(void)pdf_get_populating_xref_entry(doc, size-1);
 
 		obj = pdf_dict_gets(trailer, "W");
 		if (!obj)
@@ -640,6 +832,13 @@ pdf_read_new_xref(pdf_document *doc, pdf_lexbuf *buf)
 				pdf_read_new_xref_section(doc, stm, i0, i1, w0, w1, w2);
 			}
 		}
+		entry = pdf_get_populating_xref_entry(doc, num);
+		entry->ofs = ofs;
+		entry->gen = gen;
+		entry->stm_ofs = stm_ofs;
+		pdf_drop_obj(entry->obj);
+		entry->obj = pdf_keep_obj(trailer);
+		entry->type = 'n';
 	}
 	fz_always(ctx)
 	{
@@ -2491,14 +2690,17 @@ void pdf_mark_xref(pdf_document *doc)
 	for (x = 0; x < doc->num_xref_sections; x++)
 	{
 		pdf_xref *xref = &doc->xref_sections[x];
+		pdf_xref_subsec *sub;
 
-		for (e = 0; e < xref->len; e++)
+		for (sub = xref->subsec; sub != NULL; sub = sub->next)
 		{
-			pdf_xref_entry *entry = &xref->table[e];
-
-			if (entry->obj)
+			for (e = 0; e < sub->len; e++)
 			{
-				entry->flags |= PDF_OBJ_FLAG_MARK;
+				pdf_xref_entry *entry = &sub->table[e];
+				if (entry->obj)
+				{
+					entry->flags |= PDF_OBJ_FLAG_MARK;
+				}
 			}
 		}
 	}
@@ -2511,19 +2713,22 @@ void pdf_clear_xref(pdf_document *doc)
 	for (x = 0; x < doc->num_xref_sections; x++)
 	{
 		pdf_xref *xref = &doc->xref_sections[x];
+		pdf_xref_subsec *sub;
 
-		for (e = 0; e < xref->len; e++)
+		for (sub = xref->subsec; sub != NULL; sub = sub->next)
 		{
-			pdf_xref_entry *entry = &xref->table[e];
-
-			/* We cannot drop objects if the stream buffer has
-			 * been updated */
-			if (entry->obj != NULL && entry->stm_buf == NULL)
+			for (e = 0; e < sub->len; e++)
 			{
-				if (pdf_obj_refs(entry->obj) == 1)
+				pdf_xref_entry *entry = &sub->table[e];
+				/* We cannot drop objects if the stream
+				 * buffer has been updated */
+				if (entry->obj != NULL && entry->stm_buf == NULL)
 				{
-					pdf_drop_obj(entry->obj);
-					entry->obj = NULL;
+					if (pdf_obj_refs(entry->obj) == 1)
+					{
+						pdf_drop_obj(entry->obj);
+						entry->obj = NULL;
+					}
 				}
 			}
 		}
@@ -2537,19 +2742,23 @@ void pdf_clear_xref_to_mark(pdf_document *doc)
 	for (x = 0; x < doc->num_xref_sections; x++)
 	{
 		pdf_xref *xref = &doc->xref_sections[x];
+		pdf_xref_subsec *sub;
 
-		for (e = 0; e < xref->len; e++)
+		for (sub = xref->subsec; sub != NULL; sub = sub->next)
 		{
-			pdf_xref_entry *entry = &xref->table[e];
-
-			/* We cannot drop objects if the stream buffer has
-			 * been updated */
-			if (entry->obj != NULL && entry->stm_buf == NULL)
+			for (e = 0; e < sub->len; e++)
 			{
-				if ((entry->flags & PDF_OBJ_FLAG_MARK) == 0 && pdf_obj_refs(entry->obj) == 1)
+				pdf_xref_entry *entry = &sub->table[e];
+
+				/* We cannot drop objects if the stream buffer has
+				 * been updated */
+				if (entry->obj != NULL && entry->stm_buf == NULL)
 				{
-					pdf_drop_obj(entry->obj);
-					entry->obj = NULL;
+					if ((entry->flags & PDF_OBJ_FLAG_MARK) == 0 && pdf_obj_refs(entry->obj) == 1)
+					{
+						pdf_drop_obj(entry->obj);
+						entry->obj = NULL;
+					}
 				}
 			}
 		}

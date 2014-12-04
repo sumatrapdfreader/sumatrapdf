@@ -167,7 +167,7 @@ fz_decode_tiff_lzw(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int w
 static void
 fz_decode_tiff_flate(struct tiff *tiff, fz_stream *chain, unsigned char *wp, int wlen)
 {
-	fz_stream *stm = fz_open_flated(chain);
+	fz_stream *stm = fz_open_flated(chain, 15);
 	fz_read(stm, wp, wlen);
 	fz_close(stm);
 }

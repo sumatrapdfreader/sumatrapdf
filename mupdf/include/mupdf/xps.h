@@ -72,11 +72,9 @@ struct xps_part_s
 {
 	char *name;
 	int size;
-	int cap;
 	unsigned char *data;
 };
 
-xps_part *xps_new_part(xps_document *doc, char *name, int size);
 int xps_has_part(xps_document *doc, char *partname);
 xps_part *xps_read_part(xps_document *doc, char *partname);
 void xps_free_part(xps_document *doc, xps_part *part);
@@ -226,12 +224,8 @@ struct xps_entry_s
 struct xps_document_s
 {
 	fz_document super;
-
 	fz_context *ctx;
-	char *directory;
-	fz_stream *file;
-	int zip_count;
-	xps_entry *zip_table;
+	fz_archive *zip;
 
 	char *start_part; /* fixed document sequence */
 	xps_fixdoc *first_fixdoc; /* first fixed document */

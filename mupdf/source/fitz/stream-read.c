@@ -86,7 +86,6 @@ fz_read_best(fz_stream *stm, int initial, int *truncated)
 			fz_rethrow(ctx);
 		}
 	}
-	fz_trim_buffer(ctx, buf);
 
 	return buf;
 }
@@ -161,4 +160,29 @@ int fz_stream_meta(fz_stream *stm, int key, int size, void *ptr)
 	if (!stm || !stm->meta)
 		return -1;
 	return stm->meta(stm, key, size, ptr);
+}
+
+fz_buffer *
+fz_read_file(fz_context *ctx, const char *filename)
+{
+	fz_stream *stm;
+	fz_buffer *buf = NULL;
+
+	fz_var(buf);
+
+	stm = fz_open_file(ctx, filename);
+	fz_try(ctx)
+	{
+		buf = fz_read_all(stm, 0);
+	}
+	fz_always(ctx)
+	{
+		fz_close(stm);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return buf;
 }

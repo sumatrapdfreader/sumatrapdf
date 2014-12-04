@@ -45,7 +45,7 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_stream *chain, fz_compression_pa
 		return fz_open_rld(chain);
 	case FZ_IMAGE_FLATE:
 		*l2factor = 0;
-		chain = fz_open_flated(chain);
+		chain = fz_open_flated(chain, 15);
 		if (params->u.flate.predictor > 1)
 			chain = fz_open_predict(chain, params->u.flate.predictor, params->u.flate.columns, params->u.flate.colors, params->u.flate.bpc);
 		return chain;

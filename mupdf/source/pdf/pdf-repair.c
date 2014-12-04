@@ -204,7 +204,7 @@ pdf_repair_obj_stm(pdf_document *doc, int num, int gen)
 				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
 				continue;
 			}
-			else if (n > MAX_OBJECT_NUMBER)
+			else if (n >= pdf_xref_len(doc))
 			{
 				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
 				continue;
@@ -474,7 +474,9 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 			Dummy access to entry to assure sufficient space in the xref table
 			and avoid repeated reallocs in the loop
 		*/
-		(void)pdf_get_populating_xref_entry(doc, maxnum);
+		/* Ensure that the first xref table is a 'solid' one from
+		 * 0 to maxnum. */
+		pdf_ensure_solid_xref(doc, maxnum);
 
 		for (i = 0; i < listlen; i++)
 		{

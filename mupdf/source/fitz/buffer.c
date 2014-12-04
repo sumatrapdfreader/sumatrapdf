@@ -44,12 +44,7 @@ fz_buffer *
 fz_keep_buffer(fz_context *ctx, fz_buffer *buf)
 {
 	if (buf)
-	{
-		if (buf->refs == 1 && buf->cap > buf->len+1)
-			fz_resize_buffer(ctx, buf, buf->len);
 		buf->refs ++;
-	}
-
 	return buf;
 }
 
@@ -138,7 +133,7 @@ void fz_write_buffer(fz_context *ctx, fz_buffer *buf, const void *data, int len)
 
 void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val)
 {
-	if (buf->len > buf->cap)
+	if (buf->len + 1 > buf->cap)
 		fz_grow_buffer(ctx, buf);
 	buf->data[buf->len++] = val;
 	buf->unused_bits = 0;

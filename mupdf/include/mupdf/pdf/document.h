@@ -210,6 +210,7 @@ struct pdf_document_s
 	pdf_ocg_descriptor *ocg;
 	pdf_hotspot hotspot;
 
+	int max_xref_len;
 	int num_xref_sections;
 	pdf_xref *xref_sections;
 	int xref_altered;

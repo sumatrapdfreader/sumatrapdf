@@ -1659,6 +1659,10 @@
 					RelativePath="..\mupdf\source\fitz\xml.c"
 					>
 				</File>
+				<File
+					RelativePath="..\mupdf\source\fitz\unzip.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="include"
@@ -1852,6 +1856,10 @@
 					</File>
 					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\xml.h"
+						>
+					</File>
+					<File
+						RelativePath="..\mupdf\include\mupdf\fitz\unzip.h"
 						>
 					</File>
 				</Filter>
