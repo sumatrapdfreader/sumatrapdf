@@ -2033,6 +2033,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     AbortFinding(win, true);
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = NULL;
+    win->fwdSearchMark.show = false;
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
     win->ctrl = NULL;

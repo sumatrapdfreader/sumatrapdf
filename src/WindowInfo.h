@@ -69,7 +69,6 @@ struct StaticLinkInfo {
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on WindowInfo, so that a TabInfo could
    be moved between windows once this is supported) */
-/* TODO: move document properties from WindowInfo into TabInfo */
 class TabInfo
 {
 public:
@@ -231,7 +230,6 @@ public:
     int             wheelAccumDelta;
     UINT_PTR        delayedRepaintTimer;
 
-    // TODO: move to TabInfo or cancel notifications when switching tabs?
     Notifications * notifications; // only access from UI thread
 
     HANDLE          printThread;
@@ -249,7 +247,6 @@ public:
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
      * and whether they should be shown. */
-    // TODO: move to TabInfo?
     struct {
         bool show;          // are the markers visible?
         Vec<RectI> rects;   // location of the markers in user coordinates
