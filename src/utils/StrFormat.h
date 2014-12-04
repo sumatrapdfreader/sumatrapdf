@@ -39,7 +39,9 @@ namespace fmt {
 
 // arbitrary limits, but should be large enough for us
 // the bigger the limit, the bigger the sizeof(Fmt)
-enum { MaxInstructions = 32 };
+enum {
+    MaxInstructions = 32
+};
 enum {
     // more than MaxInstructions for positional args
     MaxArgs = 32 + 8
