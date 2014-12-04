@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-943188f77df19f671e9d5175ddef65ffe606f80d
+69a63feb996d22d1c1265cfc19203507438a1e83
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -40,6 +40,7 @@ kr:정보(&A)
 ku:دەربارەی&
 kw:&A-dro dhe...
 lt:Apie
+lv:&Par
 mk:&За SumatraPDF...
 ml:പറ്റി
 mm:အကြောင်း
@@ -109,6 +110,7 @@ kr:실제 크기(&A)\tCtrl+1
 ku:قەبارەی ڕاستەقینە &\tCtrl+1
 kw:&Braster gwir\tCtrl+1
 lt:&Originalus\tCtrl+1
+lv:&Pilns izmērs\tCtrl+1
 mk:&Реална големина\tCtrl+1
 ml:ശരിയായ വലിപ്പം\tCtrl+1
 mm:ပုံမှန် အရွယ်\tCtrl+1
@@ -169,6 +171,7 @@ ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
+lv:&Papildus Uzstādījumi
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
 nl:&Geavanceerde Opties...
@@ -225,6 +228,7 @@ ka:&ყველა მონიშნული გვერდი
 kr:선택한 모든 페이지(&A)
 ku:هەموو پەڕە دیاریکراوەکان&
 lt:&Visi pažymėti puslapiai
+lv:Visas izvēlētās lapas
 mk:&Сите означени страници
 ml:&തിരഞ്ഞെടുത്ത താളുകളെല്ലാം
 my:&Semua mukasurat pilihan
@@ -286,6 +290,7 @@ kr:이전에 본 페이지(&B)\tAlt+왼쪽 방향키
 ku:&گەڕانەوە\tAlt+Left Arrow
 kw:War-lergh\tAlt+<-
 lt:At&gal\tAlt+Kairėn
+lv:&Atpakaļ\Alt+Kreisā bultiņa
 mk:Назад\tAlt+Left Arrow
 my:&Kembali\tAlt+Left Arrow
 ne:&पछाडि\tAlt+बायाँ बाण
@@ -344,6 +349,7 @@ ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
 ku:شێوازی پەرتووک&\tCtrl+8
 lt:Knyga\tCtrl+8
+lv:&Grāmatas Skats\tCtrl+8
 mk:Книга\tCtrl+8
 my:Lihat &buku\tCtrl+8
 ne:&पुस्तिका दृश्य\tCtrl+8
@@ -1025,6 +1031,7 @@ kr:가기(&G)
 ku:چوون بۆ&
 kw:&Mos dhe
 lt:&Eiti į
+lv:& Iet Uz
 mk:П&ојди на
 ml:അവിടെ സന്ദര്‍ശിക്കുക
 mm:သို့ သွား
@@ -1950,6 +1957,7 @@ kr:비밀번호(&P):
 ku:تێپەڕە ووشە&:
 kw:&Ger-tremena:
 lt:&Slaptažodis:
+lv:&Parole:
 mk:&Лозинка:
 ml:രഹസ്യവാക്ക്
 my:&Kata laluan
@@ -3260,6 +3268,7 @@ kr:SumatraPDF 정보
 ku:SumatraPDF دەربارەی
 kw:A-dro dhe SumatraPDF
 lt:Apie „SumatraPDF“
+lv:Par SumatraPDF
 mk:За SumatraPDF
 ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 mm:စူမာတရာ အကြောင်း
@@ -3326,6 +3335,7 @@ ka:რჩეულებში დამატება
 kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
 lt:Sukurti žymą
+lv:Pievienot Favorītu
 mk:Додај омилен
 ml:പ്രീയപ്പെട്ടതായി ചേര്‍ക്കുക
 my:Tambah pada Kegemaran
@@ -3386,6 +3396,7 @@ ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 ku:بۆ پەسەندەکان %s زیادکردنی پەڕەی
 lt:Sukurti žymą į %s puslapį
+lv:Pievienot lapu %s favorītiem
 mk:Додај страница %s во омилени
 my:Tambahkan halaman %s pada kegemaran
 ne:पृष्ठ %s लाई मनपर्नेमा थप्नुहोस्
@@ -3444,6 +3455,7 @@ ka:%s გვერდის დამატება რჩეულებში
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (선택 사항) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
+lv:Pievienot lapu %s favorītiem ar (nav obligāti) nosaukumu:
 mk:Додај страница %s во омилени со име по избор:
 my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
 ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
@@ -3504,6 +3516,7 @@ ka:რჩეულებში დამატება
 kr:즐겨찾기에 추가
 ku:زیادکردن بۆ پەسەندەکان
 lt:Sukurti žymą
+lv:Pievienot favorītiem
 mk:Додај во омилени
 ml:പ്രീയപ്പെട്ടതിലേക്ക് കൂട്ടിച്ചേര്‍ക്കുക.
 my:Tambah pada kegemaran
@@ -3568,6 +3581,7 @@ kr:고급
 ku:پەرەسەندوو
 kw:Avonsyes
 lt:Kitos
+lv:Papildus
 mk:Напредни
 ml:പുരോഗമിച്ചത്
 my:Lanjutan
@@ -3632,6 +3646,7 @@ kr:모든 파일
 ku:هەموو فایلەکان
 kw:Pub restren
 lt:Visi failai
+lv:Visi faili
 mk:Сите датотеки
 ml:എല്ലാ ഫയലുകളും
 my:Semua fail
@@ -3693,6 +3708,7 @@ ka:ყველა მხარდაჭერილი დოკუმენტ
 kr:지원하는 모든 문서
 ku:هەموو بەڵگەنامە گونجاوەکان
 lt:Visų palaikomų tipų dokumentai
+lv:Visi atbalstītie dokumenti
 mk:Сите поддражни документи
 my:Semua dokumen yang disokong
 ne:सबै समर्थनयोग्य कागजातहरू
@@ -3754,6 +3770,7 @@ ka:პროგრამა:
 kr:프로그램:
 ku:بەرنامە:
 lt:Programa:
+lv:Programma:
 mk:Апликација:
 my:Aplikasi
 ne:अनुप्रयोग:
@@ -3812,6 +3829,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
+lv:Vai tu esi pārliecināts, ka gribi dzēst SumatraPDF ?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
 nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
@@ -3873,6 +3891,7 @@ kr:PDF 파일 확장자를 연결할까요?
 ku:؟PDF پەیوەستکردن بە فایلەکانی
 kw:Keskelmi orth restrennow PDF?
 lt:Susieti su PDF failais?
+lv:Asociēt ar PDF failiem?
 mk:Да управувам со PDF-датотеки?
 ml:capture
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
@@ -3938,6 +3957,7 @@ ka:დანართი: %s
 kr:첨부: %s
 ku:%s :پاشکۆ
 lt:Priedas: %s
+lv:Pielikums: %s
 mk:Прилог: %s
 my:Lampiran: %s
 ne:संलग्नहरू: %s
@@ -4000,6 +4020,7 @@ ka:ავტორი:
 kr:저자:
 ku:دانەر:
 lt:Autorius:
+lv:Autors:
 mk:Автор:
 ml:രചയിതാവ്
 my:Pengarang
@@ -4065,6 +4086,7 @@ kr:자동
 ku:خۆکار
 kw:Awtomatek
 lt:Automatinis
+lv:Automātiski
 mk:Автоматски
 ml:സ്വയമേവ.
 my:Automatik
@@ -4127,6 +4149,7 @@ kr:자동으로 업데이트 확인(&U)
 ku:پشکنین بۆ نوێکردنەوە بە &خۆکاری
 kw:Checkya rag nowythyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
+lv:Automātiski pārbaudīt &atjauninājumus
 mk:Проверувај за &надградби автоматски
 ml:പുതിയ പതിപ്പുണ്ടോയെന്ന് സ്വയം പരിശോധിയ്ക്കുക
 my:Semak &kemas kini secara automatik
@@ -4189,6 +4212,7 @@ kr:책처럼 보기
 ku:شێوازی پەرتووک
 kw:Gwel-lyver
 lt:Knyga
+lv:Grāmatas Skats
 mk:Книга
 my:Paparan buku
 ne:पुस्तिका दृश्य
@@ -4253,6 +4277,7 @@ kr:책갈피(&M)\tF12
 ku:نیشانە&کراوەکان\tF12
 kw:Lyververkyow\tF12
 lt:Žymės\tF12
+lv:Grāmat&zīmes\tF12
 mk:Обележувачи\tF12
 mm:စာမျက်နှာ မှတ်သား\tF12
 my:Penanda\tF12
@@ -4549,6 +4574,7 @@ ka:CHM დოკუმენტები
 kr:CHM 문서
 ku:CHM بەڵگەنامەکانی جۆری
 lt:CHM dokumentai
+lv:CHM dokumenti
 mk:CHM-документи
 my:Dokumen CHM
 ne:CHM कागजातहरु
@@ -4732,6 +4758,7 @@ kr:이 파일을 인쇄할 수 없습니다.
 ku:ناتوانرێت ئەم فایلە چاپ بکرێت
 kw:Ny yllir pryntya an restren ma
 lt:Nepavyko išspausdinti failo
+lv:Nevar izdrukāt šo failu
 mk:Не можам да ја печатам оваа датотека
 ml:ഈ ഫയല്‍ അച്ചടിക്കാന്‍ പറ്റില്ല.
 my:Tidak boleh cetak fail ini
@@ -4986,6 +5013,7 @@ ja:閉じる
 jv:Tutup
 kr:닫기
 ku:داخستن
+lv:Aizvērt
 mk:Затвори
 ml:അടയ്ക്കുക
 my:Tutup
@@ -6440,6 +6468,7 @@ ka:შექმნილია:
 kr:만든 날짜:
 ku:دروستکراو:
 lt:Sukurtas:
+lv:Izveidots:
 mk:Создадено на:
 ml:സൃഷ്ടിച്ചു
 my:Dicipta:
@@ -6901,6 +6930,7 @@ ka:DjVu დოკუმენტები
 kr:DjVu 문서
 ku:DjVu بەڵگەنامەکانی
 lt:DjVu dokumentai
+lv:DjVu dokumenti
 mk:DjVu-документи
 my:Dokumen DjVu
 ne:DjVu कागजातहरु
@@ -7020,6 +7050,7 @@ kr:예
 ku:داگرتن
 kw:Iskarga
 lt:Atsisiųsti
+lv:Lejuplādēt
 mk:Преземи
 my:Muat turun
 ne:डाउनलोड
@@ -8280,6 +8311,7 @@ ka:ფაილის ზომა:
 kr:파일 크기:
 ku:قەبارەی فایل:
 lt:Failo dydis:
+lv:Faila Izmērs:
 mk:Големина на датотека:
 ml:ഫയല്‍ വലുപ്പം
 my:Saiz fail:
@@ -8339,6 +8371,7 @@ ka:ფაილი:
 kr:파일:
 ku:فایل:
 lt:Failas:
+lv:Fails:
 mk:Датотека:
 ml:ഫയല്‍
 my:Fail:
@@ -8468,6 +8501,7 @@ kr:찾기
 ku:دۆزینەوە
 kw:Kavos
 lt:Ieškoti
+lv:Meklēt
 mk:Најди
 ml:തിരയുക.
 my:Cari
@@ -8532,6 +8566,7 @@ kr:다음 찾기
 ku:دۆزینەوەی پێشتر
 kw:Kavos Nessa
 lt:Rasti kitą
+lv:Meklēt Nākamo
 mk:Најди следно
 ml:അടുത്തത് കണ്ടെത്തുക
 mm:နောက်တခု ရှာပါ
@@ -8666,6 +8701,7 @@ kr:찾기:
 ku:دۆزینەوە:
 kw:Kavos:
 lt:Ieškoti:
+lv:Meklēt:
 mk:Најди:
 ml:കണ്ടെത്തുക:
 mm:ရှာပါ
@@ -9452,6 +9488,7 @@ ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
 ku:زۆرترین خوێندراوە
 lt:Dažniausiai skaitomi
+lv:Bieži Lasītie
 mk:Често читани
 ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
@@ -11192,6 +11229,7 @@ kr:열기
 ku:کردنەوە
 kw:Ygeri
 lt:Atverti
+lv:Atvērt
 mk:Отвори
 ml:തുറക്കുക
 mm:ဖွင့်ပါ
@@ -13675,6 +13713,7 @@ kr:다른 이름으로 저장
 ku:پاراستن وەکو
 kw:Gwitha avel
 lt:Įrašyti kaip
+lv:Saglabāt kā
 mk:Зачувај како
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
 mm:ကဲ့သို့ သိမ်းပါ..
@@ -15189,6 +15228,7 @@ it:SumatraPDF è stata completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
+lv:SumatraPDF ir izdzēsts
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
 nl:SumatraPDF werd verwijderd.
@@ -16112,6 +16152,7 @@ kr:보기
 ku:پیشاندان
 kw:Gwel
 lt:Rodymas
+lv:Skats
 mk:Поглед
 ml:കാഴ്ച്ച
 mm:မြင်ကွင်း
