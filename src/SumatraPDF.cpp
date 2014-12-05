@@ -1147,8 +1147,6 @@ void UpdateToolbarAndScrollbarState(WindowInfo *win)
     ToolbarUpdateStateForWindow(win, true);
     if (!win->AsFixed())
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-    if (win->IsAboutWindow())
-        win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
 }
 
 static void CreateSidebar(WindowInfo* win)
@@ -2066,6 +2064,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
             ShowOrHideToolbarForWindow(win);
         }
         win->RedrawAll();
+        win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
         CrashIf(win->tabs.Count() != 0 || win->currentTab);
     }
 
@@ -2151,6 +2150,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         /* last window - don't delete it */
         CloseDocumentInTab(win);
         SetFocus(win->hwndFrame);
+        CrashIf(!gWindows.Contains(win));
+        UpdateToolbarAndScrollbarState(win);
+        UpdateTabWidth(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);
@@ -2160,10 +2162,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow && quitIfLast) {
         AssertCrash(0 == gWindows.Count());
         PostQuitMessage(0);
-    } else if (lastWindow && !quitIfLast) {
-        CrashIf(!gWindows.Contains(win));
-        UpdateToolbarAndScrollbarState(win);
-        UpdateTabWidth(win);
     }
 }
 
