@@ -11,7 +11,7 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 #define SkipWhitespace(c) for (; str::IsWs(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
-#define isnoncjkwordchar(c) (IsCharAlphaNumeric(c) && (unsigned short)(c) < 0x2E80)
+#define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
 
 TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
     TextSelection(engine, textCache),
@@ -117,7 +117,7 @@ int TextSearch::MatchLen(const WCHAR *start) const
 {
     const WCHAR *match = findText, *end = start;
 
-    if (matchWordStart && start > pageText && IsCharAlphaNumeric(start[-1]) && IsCharAlphaNumeric(start[0]))
+    if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0]))
         return -1;
 
     if (!match)
@@ -153,7 +153,7 @@ int TextSearch::MatchLen(const WCHAR *start) const
         }
     }
 
-    if (matchWordEnd && end > pageText && IsCharAlphaNumeric(end[-1]) && IsCharAlphaNumeric(end[0]))
+    if (matchWordEnd && end > pageText && isWordChar(end[-1]) && isWordChar(end[0]))
         return -1;
 
     return (int)(end - start);

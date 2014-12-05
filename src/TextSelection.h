@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 inline unsigned int distSq(int x, int y) { return x * x + y * y; }
+// underscore is mainly used for programming and is thus considered a word character
+inline bool isWordChar(WCHAR c) { return IsCharAlphaNumeric(c) || c == '_'; }
 
 class PageTextCache {
     BaseEngine* engine;

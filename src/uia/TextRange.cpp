@@ -139,16 +139,14 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
 
     if (dontReturnInitial) {
-        for (; idx > 0; idx--)
-        {
-            if (IsCharAlphaNumeric(pageText[idx - 1]))
+        for (; idx > 0; idx--) {
+            if (isWordChar(pageText[idx - 1]))
                 break;
         }
     }
 
-    for (; idx > 0; idx--)
-    {
-        if (!IsCharAlphaNumeric(pageText[idx - 1]))
+    for (; idx > 0; idx--) {
+        if (!isWordChar(pageText[idx - 1]))
             break;
     }
     return idx;
@@ -160,16 +158,14 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
 
     if (dontReturnInitial) {
-        for (; idx < textLen; idx++)
-        {
-            if (IsCharAlphaNumeric(pageText[idx]))
+        for (; idx < textLen; idx++) {
+            if (isWordChar(pageText[idx]))
                 break;
         }
     }
 
-    for (; idx < textLen; idx++)
-    {
-        if (!IsCharAlphaNumeric(pageText[idx]))
+    for (; idx < textLen; idx++) {
+        if (!isWordChar(pageText[idx]))
             break;
     }
     return idx;
