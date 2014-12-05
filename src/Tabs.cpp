@@ -693,15 +693,16 @@ void SaveCurrentTabInfo(WindowInfo *win)
     win->tabSelectionHistory->Push(tdata);
 }
 
-static void UpdateCurrentTabBgColForWindow(WindowInfo *win)
+void UpdateCurrentTabBgColor(WindowInfo *win)
 {
-    COLORREF bgCol = DEFAULT_CURRENT_BG_COL;
+    TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
     if (win->AsEbook()) {
-        GetEbookColors(NULL, &bgCol);
+        GetEbookColors(NULL, &tab->currBgCol);
     } else {
         // TODO: match either the toolbar (if shown) or background
+        tab->currBgCol = DEFAULT_CURRENT_BG_COL;
     }
-    SetCurrentTabBgCol(win, bgCol);
+    tab->EvaluateColors(true);
     RepaintNow(win->hwndTabBar);
 }
 
@@ -728,7 +729,7 @@ void TabsOnLoadedDoc(WindowInfo *win)
         // TODO: what now?
         CrashIf(true);
     }
-    UpdateCurrentTabBgColForWindow(win);
+    UpdateCurrentTabBgColor(win);
 }
 
 // Refresh the tab's title
@@ -746,7 +747,7 @@ void TabsOnChangedDoc(WindowInfo *win)
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR *)tdata->tabTitle;
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
-    UpdateCurrentTabBgColForWindow(win);
+    UpdateCurrentTabBgColor(win);
 }
 
 // Called when we're closing a document
@@ -775,7 +776,6 @@ void TabsOnCloseDoc(WindowInfo *win)
         tdata = win->tabSelectionHistory->Pop();
         TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tdata));
         LoadModelIntoTab(win, tdata);
-        UpdateCurrentTabBgColForWindow(win);
     }
 }
 
@@ -811,7 +811,6 @@ LRESULT TabsOnNotify(WindowInfo *win, LPARAM lparam, int tab1, int tab2)
         {
             int current = TabCtrl_GetCurSel(win->hwndTabBar);
             LoadModelIntoTab(win, win->tabs.At(current));
-            UpdateCurrentTabBgColForWindow(win);
         }
         break;
 
@@ -869,13 +868,6 @@ void UpdateTabWidth(WindowInfo *win)
     else {
         ShowTabBar(win, false);
     }
-}
-
-void SetCurrentTabBgCol(WindowInfo *win, COLORREF bgCol)
-{
-    TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
-    tab->currBgCol = bgCol;
-    tab->EvaluateColors(true);
 }
 
 void SetTabsInTitlebar(WindowInfo *win, bool set)

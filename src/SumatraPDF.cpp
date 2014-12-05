@@ -1546,6 +1546,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     UpdateToolbarState(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
+    UpdateCurrentTabBgColor(win);
 
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
     UpdateToolbarPageText(win, pageCount);

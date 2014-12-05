@@ -17,6 +17,6 @@ void TabsOnCtrlTab(WindowInfo *win, bool reverse);
 // also shows/hides the tabbar when necessary
 void UpdateTabWidth(WindowInfo *win);
 void SetTabsInTitlebar(WindowInfo *win, bool set);
-void SetCurrentTabBgCol(WindowInfo *win, COLORREF bgCol);
+void UpdateCurrentTabBgColor(WindowInfo *win);
 
 COLORREF AdjustLightness2(COLORREF c, float units);
