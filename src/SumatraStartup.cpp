@@ -1,6 +1,7 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
@@ -8,50 +9,53 @@
 #include <vssym32.h>
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#include "CmdLineParser.h"
 #include "DbgHelpDyn.h"
 #include "Dpi.h"
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "SumatraPDF.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "AppTools.h"
-#include "Caption.h"
-#include "Canvas.h"
-#include "CmdLineParser.h"
-#include "CrashHandler.h"
-#include "EngineManager.h"
-#include "DisplayModel.h"
 #include "FileUtil.h"
-#include "FileHistory.h"
-#include "FileThumbnails.h"
 #include "FileWatcher.h"
-#include "LabelWithCloseWnd.h"
 #include "HtmlParserLookup.h"
+#include "LabelWithCloseWnd.h"
 #include "Mui.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
-#include "Notifications.h"
-#include "ParseCommandLine.h"
-#include "PdfEngine.h"
-#include "PdfSync.h"
-#include "Print.h"
-#include "RenderCache.h"
-#include "resource.h"
-#include "Search.h"
-#include "Selection.h"
 #include "SplitterWnd.h"
 #include "SquareTreeParser.h"
+#include "ThreadUtil.h"
+#include "UITask.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "PdfEngine.h"
+#include "EngineManager.h"
+#include "PdfSync.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "DisplayModel.h"
+#include "FileHistory.h"
+#include "FileThumbnails.h"
+#include "RenderCache.h"
+// ui
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "resource.h"
+#include "AppPrefs.h"
+#include "AppTools.h"
+#include "Canvas.h"
+#include "Caption.h"
+#include "CrashHandler.h"
+#include "Notifications.h"
+#include "ParseCommandLine.h"
+#include "Print.h"
+#include "Search.h"
+#include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
-#include "ThreadUtil.h"
+#include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
-#include "UITask.h"
-#include "Version.h"
-#include "WindowInfo.h"
-#include "WinUtil.h"
 #include "StressTesting.h"
+#include "Version.h"
 
 // "SumatraPDF yellow" similar to the one use for icon and installer
 #define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
@@ -781,7 +785,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     UpdateUITextForLanguage(); // needed for RTL languages
     if (win->IsAboutWindow()) {
         // TODO: shouldn't CreateAndShowWindowInfo take care of this?
-        UpdateToolbarAndScrollbarState(win);
+        ToolbarUpdateStateForWindow(win, true);
     }
 
     // Make sure that we're still registered as default,

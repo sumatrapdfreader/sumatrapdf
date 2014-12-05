@@ -183,7 +183,6 @@ void ExitFullScreen(WindowInfo* win);
 void SetCurrentLang(const char *langCode);
 void UpdateUITextForLanguage();
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
-void UpdateToolbarAndScrollbarState(WindowInfo *win);
 void RebuildMenuBarForWindow(WindowInfo *win);
 void UpdateCheckAsync(WindowInfo *win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo *win);

@@ -964,17 +964,21 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
     // DisplayModel needs a valid zoom value before any relayout
     // caused by showing/hiding UI elements happends
-    if (win->AsFixed())
+    if (win->AsFixed()) {
         win->AsFixed()->Relayout(zoomVirtual, rotation);
-    else if (win->IsDocLoaded())
-        win->ctrl->SetZoomVirtual(zoomVirtual);
+    }
+    else {
+        // remove the scrollbars before EbookController starts layouting
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+        if (win->IsDocLoaded())
+            win->ctrl->SetZoomVirtual(zoomVirtual);
+    }
 
     // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
-    // remove the scrollbars before EbookController starts layouting
-    UpdateToolbarAndScrollbarState(win);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
+    ToolbarUpdateStateForWindow(win, true);
 
     if (!args.isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
@@ -1140,13 +1144,6 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     }
 
     DeleteDisplayState(ds);
-}
-
-void UpdateToolbarAndScrollbarState(WindowInfo *win)
-{
-    ToolbarUpdateStateForWindow(win, true);
-    if (!win->AsFixed())
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 }
 
 static void CreateSidebar(WindowInfo* win)
@@ -1540,8 +1537,11 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     // menu for chm docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
-    UpdateToolbarAndScrollbarState(win);
+    ToolbarUpdateStateForWindow(win, true);
     UpdateToolbarState(win);
+    // hide the scrollbars before any other relayouting (for assertion in WindowInfo::GetViewPortSize)
+    if (!win->AsFixed())
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
     // the toolbar isn't supported for ebook docs (yet)
     ShowOrHideToolbarForWindow(win);
     UpdateCurrentTabBgColor(win);
@@ -2055,14 +2055,17 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
 
     if (!keepUIEnabled) {
         SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+        ToolbarUpdateStateForWindow(win, true);
         UpdateToolbarPageText(win, 0);
         UpdateToolbarFindText(win);
         UpdateFindbox(win);
+        UpdateTabWidth(win);
         if (wasntFixed) {
             // restore the full menu and toolbar
             RebuildMenuBarForWindow(win);
             ShowOrHideToolbarForWindow(win);
         }
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
         win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
         CrashIf(win->tabs.Count() != 0 || win->currentTab);
@@ -2151,8 +2154,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         CloseDocumentInTab(win);
         SetFocus(win->hwndFrame);
         CrashIf(!gWindows.Contains(win));
-        UpdateToolbarAndScrollbarState(win);
-        UpdateTabWidth(win);
     } else {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteWindowInfo(win);
