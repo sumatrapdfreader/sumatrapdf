@@ -1,18 +1,21 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
 #include "CmdLineParser.h"
-#include "EngineManager.h"
-#include "FileModifications.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "MiniMui.h"
-#include "PdfCreator.h"
-#include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
+// model (engines, helpers)
+#include "BaseEngine.h"
+#include "PdfEngine.h"
+#include "DjVuEngine.h"
+#include "EngineManager.h"
+#include "PdfCreator.h"
+#include "FileModifications.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
@@ -498,6 +501,15 @@ Usage:
     EngineType engineType;
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
+#ifdef DEBUG
+    bool couldLeak = engineType == Engine_DjVu || DjVuEngine::IsSupportedFile(filePath) || DjVuEngine::IsSupportedFile(filePath, true);
+    if (!couldLeak) {
+        // report memory leaks on stderr for engines that shouldn't leak
+        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    }
+#endif
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!", path::GetBaseName(filePath));
         return 1;
@@ -510,15 +522,6 @@ Usage:
     if (renderPath)
         RenderDocument(engine, renderPath, renderZoom, silent);
     delete engine;
-
-#ifdef DEBUG
-    // report memory leaks on stderr for engines that shouldn't leak
-    if (engineType != Engine_DjVu) {
-        _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-        _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    }
-#endif
 
     return 0;
 }
