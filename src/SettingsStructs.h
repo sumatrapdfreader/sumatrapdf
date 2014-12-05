@@ -362,8 +362,6 @@ struct GlobalPrefs {
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
 
-#include "SettingsUtil.h"
-
 static const FieldInfo gWindowMarginFields[] = {
     { offsetof(WindowMargin, top),    Type_Int, 2 },
     { offsetof(WindowMargin, right),  Type_Int, 4 },

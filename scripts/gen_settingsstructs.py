@@ -591,8 +591,6 @@ typedef struct FileState DisplayState;
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
 
-#include "SettingsUtil.h"
-
 %(structMetadata)s
 
 #endif

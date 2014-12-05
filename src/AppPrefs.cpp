@@ -1,25 +1,29 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "DebugLog.h"
+#include "FileTransactions.h"
+#include "FileUtil.h"
+#include "FileWatcher.h"
+#include "SettingsUtil.h"
+#include "UITask.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EbookEngine.h"
+#include "EngineManager.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
 #include "Controller.h"
+#include "FileHistory.h"
+// ui
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
-#include "DebugLog.h"
-#include "EbookEngine.h"
-#include "FileUtil.h"
-#include "FileHistory.h"
-#include "FileTransactions.h"
-#include "FileWatcher.h"
-#include "SumatraPDF.h"
-#include "Translations.h"
-#include "UITask.h"
-#include "EngineManager.h"
-#include "WindowInfo.h"
 #include "Favorites.h"
+#include "Translations.h"
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
 
