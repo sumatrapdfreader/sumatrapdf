@@ -141,6 +141,8 @@ void WindowInfo::UpdateCanvasSize()
     if (IsDocLoaded()) {
         // the display model needs to know the full size (including scroll bars)
         ctrl->SetViewPortSize(GetViewPortSize());
+    }
+    if (currentTab) {
         currentTab->canvasRc = canvasRc;
     }
 

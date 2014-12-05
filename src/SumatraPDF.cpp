@@ -1441,22 +1441,20 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         }
     }
 
-    if (win->AsChm())
-        win->AsChm()->RemoveParentHwnd();
-
     CrashIf(openNewTab && args.forceReuse);
-    if (!win->IsAboutWindow()) {
+    if (win->IsAboutWindow()) {
+        // invalidate the links on the Frequently Read page
+        win->staticLinks.Reset();
+    }
+    else {
         CrashIf(!args.forceReuse && !openNewTab);
-        if (!args.forceReuse)
-            win->tabs.Append((win->currentTab = new TabInfo()));
-        CloseDocumentInTab(win, true, true);
+        CloseDocumentInTab(win, true, args.forceReuse);
     }
-    else if (!win->currentTab || openNewTab) {
-        win->tabs.Append((win->currentTab = new TabInfo()));
+    if (!args.forceReuse) {
+        win->currentTab = new TabInfo();
+        win->tabs.Append(win->currentTab);
+        win->currentTab->canvasRc = win->canvasRc;
     }
-    win->currentTab->canvasRc = win->canvasRc;
-    // invalidate the links on the Frequently Read page
-    win->staticLinks.Reset();
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     args.fileName = fullPath;
@@ -2037,7 +2035,6 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
     win->ctrl = NULL;
-    win->loadedFilePath = NULL;
     if (deleteModel) {
         delete win->currentTab->ctrl;
         win->currentTab->ctrl = NULL;
@@ -2046,6 +2043,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     }
     else {
         win->currentTab = NULL;
+        win->loadedFilePath = NULL;
     }
     win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
