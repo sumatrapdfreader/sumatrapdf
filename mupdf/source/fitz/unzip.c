@@ -372,6 +372,8 @@ static fz_buffer *read_zip_entry(fz_context *ctx, fz_archive *zip, struct zip_en
 		return ubuf;
 	}
 
+	/* SumatraPDF: fix memory leak */
+	fz_drop_buffer(ctx, ubuf);
 	fz_throw(ctx, FZ_ERROR_GENERIC, "unknown zip method: %d", method);
 }
 
