@@ -342,12 +342,12 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
 #endif
 
     // overflow check
-    if (size + sizeof(WCHAR) < sizeof(WCHAR))
+    if (size + 1 + sizeof(WCHAR) < sizeof(WCHAR) + 1)
         return NULL;
     /* allocate one character more and zero-terminate just in case it's a
        text file we'll want to treat as C string. Doesn't hurt for binary
-       files (note: two byte terminator for UTF-16 files) */
-    char *data = (char *)Allocator::Alloc(allocator, size + sizeof(WCHAR));
+       files (note: three byte terminator for UTF-16 files) */
+    char *data = (char *)Allocator::Alloc(allocator, size + sizeof(WCHAR) + 1);
     if (!data)
         return NULL;
 
@@ -357,7 +357,7 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
     }
 
     // zero-terminate for convenience
-    data[size] = data[size + 1] = '\0';
+    data[size] = data[size + 1] = data[size + 2] = '\0';
 
     if (fileSizeOut)
         *fileSizeOut = size;

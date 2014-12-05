@@ -73,15 +73,15 @@ char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
         return GetFileFromFallback(fileindex, len);
 
     size_t size = ar_entry_get_size(ar);
-    if (size > SIZE_MAX - 2)
+    if (size > SIZE_MAX - 3)
         return NULL;
-    ScopedMem<char> data((char *)malloc(size + 2));
+    ScopedMem<char> data((char *)malloc(size + 3));
     if (!data)
         return NULL;
     if (!ar_entry_uncompress(ar, data, size))
         return GetFileFromFallback(fileindex, len);
     // zero-terminate for convenience
-    data[size] = data[size + 1] = '\0';
+    data[size] = data[size + 1] = data[size + 2] = '\0';
 
     if (len)
         *len = size;
@@ -354,7 +354,8 @@ char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_
             }
         }
         // zero-terminate for convenience
-        data.Append("\0\0", 2);
+        if (!data.AppendChecked("\0\0\0", 3))
+            res = 1;
     }
 
     RARCloseArchive(hArc);

@@ -76,13 +76,13 @@ static char *DecodeTextToUtf8(const char *s, bool isXML=false)
     if (str::StartsWith(s, UTF16BE_BOM)) {
         size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
         tmp.Set((char *)memdup(s, byteCount));
-        for (size_t i = 0; i < byteCount; i += 2) {
+        for (size_t i = 0; i + 1 < byteCount; i += 2) {
             std::swap(tmp[i], tmp[i+1]);
         }
         s = tmp;
     }
     if (str::StartsWith(s, UTF16_BOM))
-        return str::ToMultiByte((WCHAR *)(s + 2), CP_UTF8);
+        return str::conv::ToUtf8((WCHAR *)(s + 2));
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;

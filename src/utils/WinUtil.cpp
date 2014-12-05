@@ -832,13 +832,13 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
     if (FAILED(res))
         return res;
     assert(0 == stat.cbSize.HighPart);
-    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR))
+    if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR) - 1)
         return E_OUTOFMEMORY;
 
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
     *len = stat.cbSize.LowPart;
-    *data = malloc(*len + sizeof(WCHAR));
+    *data = malloc(*len + sizeof(WCHAR) + 1);
     if (!*data)
         return E_OUTOFMEMORY;
 
@@ -853,6 +853,7 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
 
     ((char *)*data)[*len] = '\0';
     ((char *)*data)[*len + 1] = '\0';
+    ((char *)*data)[*len + 2] = '\0';
 
     return S_OK;
 }

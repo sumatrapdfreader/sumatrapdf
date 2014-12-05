@@ -8,10 +8,8 @@ extern "C" {
 #include <mupdf/fitz.h>
 }
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "PdfEngine.h"
-
 #include "ArchUtil.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
@@ -19,6 +17,9 @@ extern "C" {
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
+// model (engines)
+#include "BaseEngine.h"
+#include "PdfEngine.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -3354,12 +3355,12 @@ xps_bound_page_quick(xps_document *doc, int number)
 
     ScopedMem<char> dataUtf8;
     if (str::StartsWith(data, UTF16BE_BOM)) {
-        for (int i = 0; i < part->size; i += 2) {
+        for (int i = 0; i + 1 < part->size; i += 2) {
             std::swap(part->data[i], part->data[i+1]);
         }
     }
     if (str::StartsWith(data, UTF16_BOM)) {
-        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2), part->size / 2 - 1));
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(part->data + 2), (part->size - 2) / 2));
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
     }

@@ -90,9 +90,9 @@ char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
         return NULL;
 
     size_t size = ar_entry_get_size(ar);
-    if (size > SIZE_MAX - 2)
+    if (size > SIZE_MAX - 3)
         return NULL;
-    char *data = (char *)Allocator::Alloc(allocator, size + 2);
+    char *data = (char *)Allocator::Alloc(allocator, size + 3);
     if (!data)
         return NULL;
     if (!ar_entry_uncompress(ar, data, size)) {
@@ -100,7 +100,7 @@ char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
         return NULL;
     }
     // zero-terminate for convenience
-    data[size] = data[size + 1] = '\0';
+    data[size] = data[size + 1] = data[size + 2] = '\0';
 
     if (len)
         *len = size;
