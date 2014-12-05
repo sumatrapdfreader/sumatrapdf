@@ -1,18 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "ArchUtil.h"
 #include "HtmlParserLookup.h"
-
-#include "FilterBase.h"
-#include "EbookBase.h"
+#include "HtmlPullParser.h"
+#include "WinUtil.h"
+// model
 #include "BaseEngine.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
+// ui
+#include "FilterBase.h"
 #include "PdfFilter.h"
 #include "CEpubFilter.h"
-#include "HtmlPullParser.h"
-#include "EbookDoc.h"
-#include "WinUtil.h"
 
 VOID CEpubFilter::CleanUp()
 {

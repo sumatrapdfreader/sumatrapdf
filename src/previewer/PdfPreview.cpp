@@ -1,19 +1,22 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "WinUtil.h"
+// model
 #include "BaseEngine.h"
-#include "PdfPreview.h"
-#include "PdfPreviewBase.h"
 #include "PdfEngine.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
-#include "EbookEngine.h"
 #include "MiniMui.h"
+#include "EbookEngine.h"
 #endif
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
 #include "ImagesEngine.h"
 #endif
+// ui
+#include "PdfPreview.h"
+#include "PdfPreviewBase.h"
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
 {

@@ -7,14 +7,13 @@
 
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
+#include <LzmaEnc.h>
+#include <Bra.h>
+#include <zlib.h> // for crc32
 #include "ByteWriter.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "LzmaSimpleArchive.h"
-
-#include <LzmaEnc.h>
-#include <Bra.h>
-#include <zlib.h> // for crc32
 
 namespace lzsa {
 
