@@ -149,9 +149,11 @@ bool Save()
     if (!HasPermission(Perm_SavePreferences))
         return false;
 
-    /* mark currently shown files as visible */
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateCurrentFileDisplayStateForWin(gWindows.At(i));
+    // update display states for all tabs
+    for (WindowInfo *win : gWindows) {
+        for (TabInfo *tab : win->tabs) {
+            UpdateTabFileDisplayStateForWin(win, tab);
+        }
     }
 
     // remove entries which should (no longer) be remembered

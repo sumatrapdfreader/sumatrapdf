@@ -783,16 +783,11 @@ void TabsOnCloseDoc(WindowInfo *win)
 void TabsOnCloseWindow(WindowInfo *win)
 {
     TabCtrl_DeleteAllItems(win->hwndTabBar);
-    // TODO: move into SumatraPDF.cpp
-    for (TabInfo *tab : win->tabs) {
-        UpdateTabFileDisplayStateForWin(win, tab);
-        delete tab;
-    }
     win->tabSelectionHistory->Reset();
-    win->tabs.Reset();
     win->currentTab = NULL;
     win->ctrl = NULL;
     win->loadedFilePath = NULL;
+    DeleteVecMembers(win->tabs);
 }
 
 // On tab selection, we save the data for the tab which is losing selection and

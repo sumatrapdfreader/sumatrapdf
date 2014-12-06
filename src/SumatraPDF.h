@@ -136,7 +136,6 @@ void  SetCurrentLanguageAndRefreshUi(const char *langCode);
 void  ShowOrHideToolbarGlobally();
 void  ShowOrHideToolbarForWindow(WindowInfo *win);
 void  UpdateDocumentColors();
-void  UpdateCurrentFileDisplayStateForWin(WindowInfo *win);
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);

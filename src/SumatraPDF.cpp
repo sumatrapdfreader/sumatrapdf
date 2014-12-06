@@ -477,11 +477,6 @@ void UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *tab)
     UpdateSidebarDisplayState(win, tab, ds);
 }
 
-void UpdateCurrentFileDisplayStateForWin(WindowInfo* win)
-{
-    UpdateTabFileDisplayStateForWin(win, win->currentTab);
-}
-
 bool IsUIRightToLeft()
 {
     return trans::IsCurrLangRtl();
@@ -1998,22 +1993,16 @@ static void OnMenuExit()
     if (gPluginMode)
         return;
 
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (win->printThread && !win->printCanceled) {
-            int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
-            if (IDNO == res)
-                return;
+    while (gWindows.Count() > 0) {
+        WindowInfo *win = gWindows.Last();
+        CloseWindow(win, true);
+        if (gWindows.Contains(win)) {
+            // failed to close the window
+            // TODO: add CanCloseWindow so that all windows can be
+            // checked before closing them all in one swoop
+            return;
         }
-        AbortFinding(win, true);
-        AbortPrinting(win);
-
-        TabsOnCloseWindow(win);
-        SendMessage(win->hwndTabBar, WM_DESTROY, 0, 0);
     }
-
-    prefs::Save();
-    PostQuitMessage(0);
 }
 
 // closes a document inside a WindowInfo and optionally turns it into
@@ -2133,17 +2122,21 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         ExitFullScreen(win);
 
     bool lastWindow = (1 == gWindows.Count());
+    // RememberDefaultWindowPosition becomes a no-op once the window is hidden
+    RememberDefaultWindowPosition(*win);
     // hide the window before saving prefs (closing seems slightly faster that way)
-    if (lastWindow && quitIfLast && !forceClose)
+    if (!lastWindow || quitIfLast)
         ShowWindow(win->hwndFrame, SW_HIDE);
     if (lastWindow) {
-        TabsOnCloseWindow(win);
         prefs::Save();
     }
     else {
-        UpdateCurrentFileDisplayStateForWin(win);
-        TabsOnCloseWindow(win);
+        // this happens otherwise in prefs::Save
+        for (TabInfo *tab : win->tabs) {
+            UpdateTabFileDisplayStateForWin(win, tab);
+        }
     }
+    TabsOnCloseWindow(win);
 
     if (forceClose) {
         // WM_DESTROY has already been sent, so don't destroy win->hwndFrame again
@@ -2456,7 +2449,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!ok)
         return;
 
-    UpdateCurrentFileDisplayStateForWin(&win);
+    UpdateTabFileDisplayStateForWin(&win, win.currentTab);
     CloseDocumentInTab(&win, true, true);
     SetFocus(win.hwndFrame);
 
@@ -2699,7 +2692,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         index = (int)(index + files.Count() - 1) % files.Count();
 
     // TODO: check for unsaved modifications
-    UpdateCurrentFileDisplayStateForWin(&win);
+    UpdateTabFileDisplayStateForWin(&win, win.currentTab);
     LoadArgs args(files.At(index), &win);
     args.forceReuse = true;
     LoadDocument(args);
