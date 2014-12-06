@@ -6,7 +6,12 @@
 
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
+
+// A convenient way to grab the same value as HINSTANCE passed to WinMain
+HINSTANCE GetInstance()
+{
+    return (HINSTANCE)&__ImageBase;
+}
 
 namespace path {
 
@@ -276,7 +281,7 @@ WCHAR *GetAppPath(const WCHAR *fileName)
 {
     WCHAR modulePath[MAX_PATH];
     modulePath[0] = '\0';
-    GetModuleFileName(CURRENT_HMODULE, modulePath, dimof(modulePath));
+    GetModuleFileName(GetInstance(), modulePath, dimof(modulePath));
     modulePath[dimof(modulePath) - 1] = '\0';
     if (!fileName)
         return str::Dup(modulePath);

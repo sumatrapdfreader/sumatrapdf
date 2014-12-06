@@ -3,6 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
+#include "FileUtil.h"
 #include "WinUtil.h"
 // model
 #include "BaseEngine.h"
@@ -10,11 +11,6 @@
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
-// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define CURRENT_HMODULE ((HMODULE)&__ImageBase)
-
-HINSTANCE g_hInstance = NULL;
 long g_lRefCount = 0;
 
 class CClassFactory : public IClassFactory
@@ -116,8 +112,7 @@ private:
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
     if (dwReason == DLL_PROCESS_ATTACH) {
-        g_hInstance = hInstance;
-        CrashIf(g_hInstance != CURRENT_HMODULE);
+        CrashIf(hInstance != GetInstance());
     }
 
     return TRUE;
@@ -192,10 +187,9 @@ static struct {
 
 STDAPI DllRegisterServer()
 {
-    WCHAR dllPath[MAX_PATH];
-    if (!GetModuleFileName(g_hInstance, dllPath, dimof(dllPath)))
+    ScopedMem<WCHAR> dllPath(path::GetAppPath());
+    if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
-    dllPath[dimof(dllPath) - 1] = '\0';
 
 #define WriteOrFail_(key, value, data) WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data); \
     if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) return E_FAIL

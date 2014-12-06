@@ -19,7 +19,6 @@
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
-HINSTANCE GetInstance();
 HMODULE SafeLoadLibrary(const WCHAR *dllName);
 FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName);
 BOOL    SafeCloseHandle(HANDLE *h);

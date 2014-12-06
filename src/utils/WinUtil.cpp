@@ -11,14 +11,6 @@
 
 static HFONT gDefaultGuiFont = NULL;
 
-extern "C" IMAGE_DOS_HEADER __ImageBase;
-
-// This is convenient way to grab the same value as HINSTANCE passed
-// to WinMain
-HINSTANCE GetInstance() {
-    return (HINSTANCE)&__ImageBase;
-}
-
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const WCHAR *dllName)
 {
