@@ -5,15 +5,16 @@
 #define DDJVUAPI /**/
 #define MINILISPAPI /**/
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "DjVuEngine.h"
 #include <ddjvuapi.h>
 #include <miniexp.h>
-
 #include "ByteReader.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
+// model (engines)
+#include "BaseEngine.h"
+#include "DjVuEngine.h"
 
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,

@@ -1,17 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "CmdLineParser.h"
+#include "FileUtil.h"
+#include "WinUtil.h"
+// model (engines, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "AppPrefs.h"
-#include "CmdLineParser.h"
-#include "EngineManager.h"
-#include "FileUtil.h"
+// ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
+#include "AppPrefs.h"
 #include "ExternalPdfViewer.h"
 
 static WCHAR *GetAcrobatPath()

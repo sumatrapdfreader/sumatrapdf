@@ -1,12 +1,15 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "FileUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
-#include "FileHistory.h"
-#include "FileUtil.h"
 #include "Controller.h"
+#include "FileHistory.h"
+// ui
 #include "AppPrefs.h"
 
 /* Handling of file history list.

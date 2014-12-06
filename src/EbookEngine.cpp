@@ -4,24 +4,26 @@
 // engines which render flowed ebook formats into fixed pages through the BaseEngine API
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
+// utils
 #include "BaseUtil.h"
 #include "ArchUtil.h"
+#include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
+#include "HtmlPullParser.h"
+#include "Mui.h"
+#include "PalmDbReader.h"
+#include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-#include "EbookBase.h"
+// model (engines)
 #include "BaseEngine.h"
 #include "EbookEngine.h"
-#include "HtmlParserLookup.h"
-#include "Mui.h"
-#include "HtmlPullParser.h"
-#include "Dpi.h"
+#include "EbookBase.h"
 #include "EbookDoc.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
-#include "PalmDbReader.h"
-#include "TrivialHtmlParser.h"
 
 static ScopedMem<WCHAR> gDefaultFontName;
 static float gDefaultFontSize = 10.f;

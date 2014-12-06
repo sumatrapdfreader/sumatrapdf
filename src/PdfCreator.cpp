@@ -9,10 +9,12 @@ extern "C" {
 #include <zlib.h>
 }
 
+// utils
 #include "BaseUtil.h"
+#include "GdiplusUtil.h"
+// model (engines, helpers)
 #include "BaseEngine.h"
 #include "PdfCreator.h"
-#include "GdiplusUtil.h"
 
 static ScopedMem<WCHAR> gPdfProducer;
 

@@ -43,16 +43,19 @@
   those pages to a bitmap and display those bitmaps.
 */
 
+// utils
 #include "BaseUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
 #include "EngineManager.h"
-#include "DisplayModel.h"
-#include "AppPrefs.h" // needed for gGlobalPrefs
+#include "SettingsStructs.h"
 #include "PdfSync.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "Controller.h"
+#include "DisplayModel.h"
+// ui
+#include "AppPrefs.h" // needed for gGlobalPrefs
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.

@@ -1,16 +1,19 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "FileUtil.h"
-#include "FileHistory.h"
-#include "FileThumbnails.h"
-#include "AppTools.h"
 #include "CryptoUtil.h"
+#include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
+// model (engines, helpers)
+#include "BaseEngine.h"
+#include "SettingsStructs.h"
+#include "FileHistory.h"
+// ui
+#include "AppTools.h"
+#include "FileThumbnails.h"
 
 #define THUMBNAILS_DIR_NAME L"sumatrapdfcache"
 

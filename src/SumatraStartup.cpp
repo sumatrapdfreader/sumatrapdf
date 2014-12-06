@@ -33,7 +33,6 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
-#include "FileThumbnails.h"
 #include "RenderCache.h"
 // ui
 #include "SumatraPDF.h"
@@ -44,6 +43,7 @@
 #include "Canvas.h"
 #include "Caption.h"
 #include "CrashHandler.h"
+#include "FileThumbnails.h"
 #include "Notifications.h"
 #include "ParseCommandLine.h"
 #include "Print.h"

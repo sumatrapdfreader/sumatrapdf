@@ -1,15 +1,17 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
+#include "TextSelection.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EngineManager.h"
 #include "DisplayModel.h"
 #include "RenderCache.h"
-#include "TextSelection.h"
-#include "WinUtil.h"
 
 #pragma warning(disable: 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 

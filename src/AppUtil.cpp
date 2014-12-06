@@ -1,14 +1,13 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "AppUtil.h"
-
-// this file should have no dependencies on src/* so that its adding
+#include "FileUtil.h"
+// this file should have no further dependencies on src/* so that adding
 // unit tests for its content doesn't require for half of SumatraPDF
 // to be included (helpers with dependencies belong into AppTools.cpp)
-
-#include "FileUtil.h"
+#include "AppUtil.h"
 
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/

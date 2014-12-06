@@ -1,17 +1,18 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "AppTools.h"
-
-#include "CmdLineParser.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
+#include "CmdLineParser.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
+// ui
+#include "AppTools.h"
 #include "Translations.h"
 #include "Version.h"
-#include "WinUtil.h"
 
 #define REG_PATH_UNINST L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
 

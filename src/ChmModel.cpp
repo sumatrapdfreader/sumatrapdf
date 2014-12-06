@@ -1,17 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "Dict.h"
+#include "HtmlWindow.h"
+#include "UITask.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EbookBase.h"
+#include "ChmDoc.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
+// ui
 #include "AppPrefs.h" // for gGlobalPrefs
-#include "EbookBase.h"
-#include "ChmDoc.h"
-#include "HtmlWindow.h"
-#include "UITask.h"
 
 static bool IsExternalUrl(const WCHAR *url)
 {

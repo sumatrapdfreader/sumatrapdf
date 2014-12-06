@@ -1,14 +1,16 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include <zlib.h>
-#include "BaseEngine.h"
-#include "PsEngine.h"
 #include "ByteReader.h"
 #include "FileUtil.h"
-#include "PdfEngine.h"
 #include "WinUtil.h"
+// model (engines)
+#include "BaseEngine.h"
+#include "PdfEngine.h"
+#include "PsEngine.h"
 
 static WCHAR *GetGhostscriptPath()
 {
