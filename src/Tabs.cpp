@@ -40,7 +40,7 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 #define T_DRAG      (TCN_LAST + 3)
 
 #define TABBAR_HEIGHT    24
-#define TAB_WIDTH        300
+#define MIN_TAB_WIDTH   100
 
 static bool g_FirefoxStyle = false;
 
@@ -52,7 +52,7 @@ int GetTabbarHeight(HWND hwnd, float factor)
 
 static inline SizeI GetTabSize(HWND hwnd)
 {
-    int dx = DpiScaleX(hwnd, TAB_WIDTH);
+    int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
     int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
