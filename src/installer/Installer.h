@@ -121,7 +121,7 @@ WCHAR *GetInstalledBrowserPluginPath();
 void OnCreateWindow(HWND hwnd);
 void ShowUsage();
 void CreateMainWindow();
-WCHAR *GetOwnPath();
+const WCHAR *GetOwnPath();
 bool OnWmCommand(WPARAM wParam);
 bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args=NULL);
 WCHAR *GetUninstallerPath();

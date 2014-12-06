@@ -190,7 +190,7 @@ int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated)
     return killCount;
 }
 
-WCHAR *GetOwnPath()
+const WCHAR *GetOwnPath()
 {
     static WCHAR exePath[MAX_PATH];
     exePath[0] = '\0';

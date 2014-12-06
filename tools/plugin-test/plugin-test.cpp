@@ -72,18 +72,18 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         DeleteObject(brushBg);
         EndPaint(hwnd, &ps);
     }
+    else if (WM_DESTROY == msg) {
+        // clean-up happens automatically when the window is destroyed
+        PostQuitMessage(0);
+    }
 
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 WCHAR *GetSumatraExePath()
 {
-    WCHAR buf[MAX_PATH];
-    buf[0] = 0;
-    GetModuleFileName(NULL, buf, dimof(buf));
-    buf[max(path::GetBaseName(buf) - buf - 1, 0)] = 0;
-    ScopedMem<WCHAR> path(path::Join(buf, L"SumatraPDF.exe"));
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
+    ScopedMem<WCHAR> path(path::GetAppPath(L"SumatraPDF.exe"));
     if (!file::Exists(path))
         return str::Dup(L"SumatraPDF.exe");
     return path.StealData();
