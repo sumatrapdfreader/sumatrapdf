@@ -638,7 +638,7 @@ void StressTest::Finished(bool success)
         win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
     }
 
-    CloseWindow(win, exitWhenDone);
+    CloseWindow(win, exitWhenDone && MayCloseWindow(win));
     delete this;
 }
 

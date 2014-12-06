@@ -718,7 +718,7 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             return FALSE;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
+            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit && MayCloseWindow(win))
                 CloseWindow(win, true);
             break;
 

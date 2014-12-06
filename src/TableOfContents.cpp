@@ -486,7 +486,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
         case WM_ERASEBKGND:
             return FALSE;
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
+            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit && MayCloseWindow(win))
                 CloseWindow(win, true);
             break;
         case WM_KEYDOWN:

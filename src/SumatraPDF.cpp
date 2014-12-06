@@ -1993,15 +1993,16 @@ static void OnMenuExit()
     if (gPluginMode)
         return;
 
-    while (gWindows.Count() > 0) {
-        WindowInfo *win = gWindows.Last();
-        CloseWindow(win, true);
-        if (gWindows.Contains(win)) {
-            // failed to close the window
-            // TODO: add CanCloseWindow so that all windows can be
-            // checked before closing them all in one swoop
+    for (WindowInfo *win : gWindows) {
+        if (!MayCloseWindow(win))
             return;
-        }
+    }
+
+    // CloseWindow removes the WindowInfo from gWindows,
+    // so use a stable copy for iteration
+    Vec<WindowInfo *> toClose = gWindows;
+    for (WindowInfo *win : toClose) {
+        CloseWindow(win, true);
     }
 }
 
@@ -2081,13 +2082,32 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
 
     size_t tabCount = win->tabs.Count();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
-        CloseWindow(win, quitIfLast);
+        if (MayCloseWindow(win))
+            CloseWindow(win, quitIfLast);
     }
     else {
         CrashIf(gPluginMode && gWindows.Find(win) == 0);
         AbortFinding(win, true);
         TabsOnCloseDoc(win);
     }
+}
+
+bool MayCloseWindow(WindowInfo *win)
+{
+    CrashIf(!win);
+    if (!win)
+        return false;
+    // a plugin window should only be closed when its parent is destroyed
+    if (gPluginMode && gWindows.Find(win) == 0)
+        return false;
+
+    if (win->printThread && !win->printCanceled && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT) {
+        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
+        if (IDNO == res)
+            return false;
+    }
+
+    return true;
 }
 
 /* Close the document associated with window 'hwnd'.
@@ -2098,6 +2118,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 {
     CrashIf(!win);
     if (!win) return;
+
     CrashIf(forceClose && !quitIfLast);
     if (forceClose) quitIfLast = true;
 
@@ -2106,11 +2127,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (gPluginMode && gWindows.Find(win) == 0 && !forceClose)
         return;
 
-    if (win->printThread && !win->printCanceled && !forceClose) {
-        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
-        if (IDNO == res)
-            return;
-    }
     AbortFinding(win, true);
     AbortPrinting(win);
 
@@ -3333,7 +3349,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             win.notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
         else if (win.showSelection)
             ClearSearchResult(&win);
-        else if (gGlobalPrefs->escToExit)
+        else if (gGlobalPrefs->escToExit && MayCloseWindow(&win))
             CloseWindow(&win, true);
         else if (win.presentation || win.isFullScreen)
             OnMenuViewFullscreen(&win, win.presentation != PM_DISABLED);
@@ -4182,7 +4198,8 @@ InitMouseWheelInfo:
             return SendMessage(win->hwndCanvas, msg, wParam, lParam);
 
         case WM_CLOSE:
-            CloseWindow(win, true);
+            if (MayCloseWindow(win))
+                CloseWindow(win, true);
             break;
 
         case WM_DESTROY:
