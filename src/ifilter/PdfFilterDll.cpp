@@ -196,7 +196,7 @@ STDAPI DllUnregisterServer()
     const WCHAR *regKeys[] = {
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
         L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
-        L"Software\\Classes\\.pdf\\PersistentHandler"
+        L"Software\\Classes\\.pdf\\PersistentHandler",
 #ifdef BUILD_TEX_IFILTER
         L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
         L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
