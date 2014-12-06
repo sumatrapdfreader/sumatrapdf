@@ -545,3 +545,25 @@ def fmt_rows(rows, col_fmt=[]):
 if __name__ == "__main__":
     # test_load_config()
     test_gob()
+
+
+def plural(n, suff):
+    if n == 1:
+        return "%d %s" % (n, suff)
+    return "%d %ss" % (n, suff)
+
+
+def pretty_print_secs(secs):
+    hrs = 0
+    mins = 0
+    if secs > 60:
+        mins = secs / 60
+        secs = secs % 60
+    if mins > 60:
+        hrs = mins / 60
+        mins = mins % 60
+    if hrs > 0:
+        return "%s %s %s" % (plural(hrs, "hr"), plural(mins, "min"), plural(secs, "sec"))
+    if mins > 0:
+        return "%s %s" % (plural(mins, "min"), plural(secs, "sec"))
+    return "%s" % plural(secs, "sec")
