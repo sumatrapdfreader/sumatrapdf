@@ -93,9 +93,6 @@
 		<ClInclude Include="..\src\utils\Vec.h">
 			<Filter>src\utils</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\utils\WinCursors.h">
-			<Filter>src\utils</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\utils\WinUtil.h">
 			<Filter>src\utils</Filter>
 		</ClInclude>
@@ -162,9 +159,6 @@
 			<Filter>src\utils</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\utils\VarintGob.cpp">
-			<Filter>src\utils</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\utils\WinCursors.cpp">
 			<Filter>src\utils</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\utils\WinUtil.cpp">
