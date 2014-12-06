@@ -9,8 +9,7 @@ License: GPLv3 */
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"
-// ui
-#include "AppPrefs.h"
+#include "GlobalPrefs.h"
 
 /* Handling of file history list.
 

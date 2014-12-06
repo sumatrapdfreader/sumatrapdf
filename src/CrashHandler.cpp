@@ -1,6 +1,7 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
+// utils
 #include "BaseUtil.h"
 #include <dbghelp.h>
 #include <exception>
@@ -9,16 +10,18 @@
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"
-#include "CrashHandler.h"
-#include "BaseEngine.h"
-#include "AppTools.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
 #include "LzmaSimpleArchive.h"
-#include "SettingsStructs.h"
-#include "SumatraPDF.h"
-#include "Version.h"
 #include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "SettingsStructs.h"
+// ui
+#include "SumatraPDF.h"
+#include "AppTools.h"
+#include "CrashHandler.h"
+#include "Version.h"
 #define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 

@@ -1,25 +1,28 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "Dpi.h"
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "AppTools.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
-#include "resource.h"
-#include "SumatraPDF.h"
 #include "SplitterWnd.h"
+#include "UITask.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EngineManager.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "GlobalPrefs.h"
+// ui
+#include "SumatraPDF.h"
+#include "WindowInfo.h"
+#include "resource.h"
+#include "AppTools.h"
+#include "TableOfContents.h"
 #include "Tabs.h"
 #include "Translations.h"
-#include "UITask.h"
-#include "EngineManager.h"
-#include "WindowInfo.h"
-#include "WinUtil.h"
-#include "TableOfContents.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS

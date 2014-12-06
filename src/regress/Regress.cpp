@@ -15,23 +15,25 @@ To write new regression test:
 - call Regress${NN} function from RunTests()
 */
 
+// utils
 #include "BaseUtil.h"
 #include <dbghelp.h>
 #include <tlhelp32.h>
 #include "ArchUtil.h"
 #include "DbgHelpDyn.h"
-#include "HtmlParserLookup.h"
-#include "EbookBase.h"
-#include "Mui.h"
-#include "BaseEngine.h"
 #include "DirIter.h"
-#include "Doc.h"
-#include "HtmlFormatter.h"
-#include "EbookFormatter.h"
-#include "EbookDoc.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
+#include "Mui.h"
 #include "WinUtil.h"
+// model (engines, helpers)
+#include "BaseEngine.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
+#include "HtmlFormatter.h"
+#include "EbookFormatter.h"
+#include "Doc.h"
 
 static WCHAR *gTestFilesDir;
 

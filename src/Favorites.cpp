@@ -1,27 +1,31 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "Dpi.h"
+#include "FileUtil.h"
+#include "GdiPlusUtil.h"
+#include "LabelWithCloseWnd.h"
+#include "UITask.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "AppPrefs.h"
-#include "Dpi.h"
-#include "GdiPlusUtil.h"
-#include "FileUtil.h"
 #include "FileHistory.h"
-#include "LabelWithCloseWnd.h"
-#include "resource.h"
-#include "SumatraDialogs.h"
+#include "GlobalPrefs.h"
+// ui
 #include "SumatraPDF.h"
-#include "Translations.h"
-#include "UITask.h"
-#include "EngineManager.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
+#include "resource.h"
+#include "AppPrefs.h"
 #include "Favorites.h"
 #include "Menu.h"
+#include "SumatraDialogs.h"
 #include "Tabs.h"
+#include "Translations.h"
 
 Favorite *Favorites::GetByMenuId(int menuId, DisplayState **dsOut)
 {

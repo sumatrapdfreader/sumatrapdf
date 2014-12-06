@@ -1,16 +1,18 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#define PPC_BSTR
+#include <chm_lib.h>
 #include "ByteReader.h"
 #include "FileUtil.h"
+#include "HtmlParserLookup.h"
+#include "TrivialHtmlParser.h"
+// model (engines)
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"
-#include "HtmlParserLookup.h"
-#include "TrivialHtmlParser.h"
-#define PPC_BSTR
-#include <chm_lib.h>
 
 ChmDoc::~ChmDoc()
 {

@@ -1,18 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "EbookBase.h"
-#include "BaseEngine.h"
 #include "ArchUtil.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
-#include "EbookDoc.h"
-#include "MobiDoc.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
+// model (engines)
+#include "BaseEngine.h"
+#include "EbookBase.h"
+#include "EbookDoc.h"
+#include "MobiDoc.h"
 
 // tries to extract an encoding from <?xml encoding="..."?>
 // returns CP_ACP on failure

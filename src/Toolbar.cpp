@@ -1,25 +1,28 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "Dpi.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "AppTools.h"
 #include "EngineManager.h"
-#include "DisplayModel.h"
-#include "resource.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "DisplayModel.h"
+#include "GlobalPrefs.h"
+// ui
 #include "SumatraPDF.h"
-#include "Translations.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
-#include "Search.h"
+#include "resource.h"
+#include "AppTools.h"
 #include "Menu.h"
+#include "Search.h"
 #include "Toolbar.h"
+#include "Translations.h"
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */

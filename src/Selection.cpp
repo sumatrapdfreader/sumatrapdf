@@ -1,27 +1,28 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include "Dpi.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
+#include "TextSelection.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "AppPrefs.h"
 #include "ChmModel.h"
-#include "EngineManager.h"
 #include "DisplayModel.h"
+#include "GlobalPrefs.h"
+// ui
 #include "SumatraPDF.h"
-#include "TextSelection.h"
+#include "WindowInfo.h"
+#include "Selection.h"
 #include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
-#include "WindowInfo.h"
-#include "WinUtil.h"
-#include "Selection.h"
-#define NOLOG 0
-#include "DebugLog.h"
 
 RectI SelectionOnPage::GetRect(DisplayModel *dm)
 {

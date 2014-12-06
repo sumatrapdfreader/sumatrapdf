@@ -6,30 +6,33 @@
 * DDE commands, including search
 */
 
+// utils
 #include "BaseUtil.h"
+#include "FileUtil.h"
+#include "UITask.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "PdfEngine.h"
+#include "EngineManager.h"
+#include "PdfSync.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "AppPrefs.h"
-#include "AppTools.h"
 #include "ChmModel.h"
-#include "EngineManager.h"
 #include "DisplayModel.h"
-#include "FileUtil.h"
-#include "Notifications.h"
-#include "PdfEngine.h"
-#include "PdfSync.h"
-#include "resource.h"
-#include "SumatraDialogs.h"
-#include "SumatraPDF.h"
-#include "Translations.h"
-#include "UITask.h"
+#include "GlobalPrefs.h"
+// ui
 #include "WindowInfo.h"
-#include "WinUtil.h"
-#include "Selection.h"
+#include "SumatraPDF.h"
+#include "resource.h"
+#include "AppTools.h"
+#include "Notifications.h"
 #include "Search.h"
+#include "Selection.h"
+#include "SumatraDialogs.h"
+#include "Translations.h"
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific

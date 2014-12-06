@@ -24,12 +24,12 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
+#include "GlobalPrefs.h"
 #include "RenderCache.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
-#include "AppPrefs.h"
 #include "Canvas.h"
 #include "Caption.h"
 #include "Menu.h"

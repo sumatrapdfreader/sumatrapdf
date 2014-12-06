@@ -1,26 +1,29 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "BitManip.h"
-#include "StrSlice.h"
-#include "WinUtil.h"
-#include "Timer.h"
 #include "HtmlParserLookup.h"
-#include "EbookBase.h"
 #include "Mui.h"
-#include "BaseEngine.h"
-#include "EbookControls.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "HtmlFormatter.h"
 #include "SerializeTxt.h"
-#include "MuiEbookPageDef.h"
-#include "PagesLayoutDef.h"
-#include "resource.h"
+#include "StrSlice.h"
+#include "Timer.h"
 #include "TrivialHtmlParser.h"
 #include "TxtParser.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EbookBase.h"
+#include "HtmlFormatter.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "EbookControls.h"
+#include "GlobalPrefs.h"
+// ui
+#include "resource.h"
+#include "MuiEbookPageDef.h"
+#include "PagesLayoutDef.h"
 #define NOLOG 1
 #include "DebugLog.h"
 

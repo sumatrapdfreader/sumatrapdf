@@ -54,8 +54,7 @@
 #include "TextSearch.h"
 #include "Controller.h"
 #include "DisplayModel.h"
-// ui
-#include "AppPrefs.h" // needed for gGlobalPrefs
+#include "GlobalPrefs.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.

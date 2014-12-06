@@ -99,6 +99,9 @@
     <ClCompile Include="..\src\FileThumbnails.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\GlobalPrefs.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -942,6 +945,9 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\FileThumbnails.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\GlobalPrefs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\HtmlFormatter.h">

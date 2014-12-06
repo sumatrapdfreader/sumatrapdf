@@ -33,6 +33,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
+#include "GlobalPrefs.h"
 #include "RenderCache.h"
 // ui
 #include "SumatraPDF.h"

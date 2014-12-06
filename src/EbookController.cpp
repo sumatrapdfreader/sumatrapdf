@@ -1,27 +1,31 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "ArchUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
+#include "HtmlPullParser.h"
+#include "Mui.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
-#include "Translations.h"
+#include "TrivialHtmlParser.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "Doc.h"
-#include "EbookController.h"
-#include "AppPrefs.h" // for gGlobalPrefs
-#include "HtmlParserLookup.h"
 #include "EbookBase.h"
-#include "Mui.h"
-#include "EbookControls.h"
-#include "HtmlFormatter.h"
-#include "HtmlPullParser.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
-#include "TrivialHtmlParser.h"
+#include "HtmlFormatter.h"
+#include "Doc.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "EbookController.h"
+#include "EbookControls.h"
+#include "GlobalPrefs.h"
+// ui
+// TODO: replace dependency with ControllerCallback
+#include "Translations.h"
 //#define NOLOG 0
 #include "DebugLog.h"
 

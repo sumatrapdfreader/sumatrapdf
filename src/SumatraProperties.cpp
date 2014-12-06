@@ -1,19 +1,22 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+#include "FileUtil.h"
+#include "WinUtil.h"
+// models (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EngineManager.h"
 #include "DisplayModel.h"
-#include "FileUtil.h"
-#include "resource.h"
+// ui
 #include "SumatraPDF.h"
-#include "Translations.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
+#include "resource.h"
 #include "SumatraProperties.h"
+#include "Translations.h"
 
 #define PROPERTIES_LEFT_RIGHT_SPACE_DX  8
 #define PROPERTIES_RECT_PADDING         8

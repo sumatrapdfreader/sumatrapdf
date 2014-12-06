@@ -197,7 +197,7 @@ UIA_OBJS = \
 MAIN_UI_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
-	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
+	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj $(OS)\GlobalPrefs.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
 	$(OS)\AppTools.obj $(OS)\AppUtil.obj $(OS)\TableOfContents.obj \

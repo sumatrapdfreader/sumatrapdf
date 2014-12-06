@@ -1,14 +1,16 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
+// model (engines, helpers)
 #include "BaseEngine.h"
-#include "EngineManager.h"
 #include "DjVuEngine.h"
 #include "EbookEngine.h"
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
+#include "EngineManager.h"
 
 namespace EngineManager {
 

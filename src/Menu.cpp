@@ -1,30 +1,33 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "resource.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
 #include "CmdLineParser.h"
-#include "EngineManager.h"
-#include "DisplayModel.h"
 #include "FileUtil.h"
-#include "FileHistory.h"
-#include "FileThumbnails.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EngineManager.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "DisplayModel.h"
+#include "FileHistory.h"
+#include "GlobalPrefs.h"
+// ui
+#include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "resource.h"
+#include "ExternalPdfViewer.h"
+#include "Favorites.h"
+#include "FileThumbnails.h"
+#include "Menu.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
-#include "SumatraPDF.h"
 #include "Translations.h"
-#include "WinUtil.h"
-#include "ExternalPdfViewer.h"
-#include "Favorites.h"
-#include "Menu.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win)
 {

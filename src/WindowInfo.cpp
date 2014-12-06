@@ -22,7 +22,8 @@
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
-// ui (first: SumatraPDF.h, WindowInfo.h, resource.h)
+#include "GlobalPrefs.h"
+// ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"

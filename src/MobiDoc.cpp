@@ -1,17 +1,19 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
 #include "BitReader.h"
 #include "ByteOrderDecoder.h"
-#include "EbookBase.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
+// model (engines)
+#include "BaseEngine.h"
+#include "EbookBase.h"
 #include "MobiDoc.h"
 #include "DebugLog.h"
 

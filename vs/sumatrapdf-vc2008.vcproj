@@ -1098,6 +1098,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\GlobalPrefs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\GlobalPrefs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\ParseCommandLine.cpp"
 					>
 				</File>
@@ -1648,11 +1656,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\source\fitz\xml.c"
+					RelativePath="..\mupdf\source\fitz\unzip.c"
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\source\fitz\unzip.c"
+					RelativePath="..\mupdf\source\fitz\xml.c"
 					>
 				</File>
 			</Filter>
@@ -1839,6 +1847,10 @@
 						>
 					</File>
 					<File
+						RelativePath="..\mupdf\include\mupdf\fitz\unzip.h"
+						>
+					</File>
+					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\version.h"
 						>
 					</File>
@@ -1848,10 +1860,6 @@
 					</File>
 					<File
 						RelativePath="..\mupdf\include\mupdf\fitz\xml.h"
-						>
-					</File>
-					<File
-						RelativePath="..\mupdf\include\mupdf\fitz\unzip.h"
 						>
 					</File>
 				</Filter>

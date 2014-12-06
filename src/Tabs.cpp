@@ -18,11 +18,11 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EbookControls.h"
+#include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
-#include "AppPrefs.h"
 #include "Caption.h"
 #include "Menu.h"
 #include "TableOfContents.h"

@@ -1,17 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "SumatraDialogs.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppTools.h"
 #include "DialogSizer.h"
-#include "resource.h"
-#include "SumatraPDF.h"
-#include "Translations.h"
 #include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "SettingsStructs.h"
+#include "GlobalPrefs.h"
+// ui
+#include "SumatraPDF.h"
+#include "resource.h"
+#include "AppTools.h"
+#include "SumatraDialogs.h"
+#include "Translations.h"
 
 // cf. http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 struct DLGTEMPLATEEX {

@@ -42,6 +42,7 @@
 #include "DisplayModel.h"
 #include "EbookController.h"
 #include "FileHistory.h"
+#include "GlobalPrefs.h"
 #include "RenderCache.h"
 // ui
 #include "SumatraPDF.h"
@@ -865,7 +866,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     bool showToc = gGlobalPrefs->showToc;
     if (state) {
         startPage = state->pageNo;
-        displayMode = prefs::conv::ToDisplayMode(state->displayMode);
+        displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
             showType = SW_NORMAL;
@@ -942,7 +943,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
     if (state) {
         CrashIf(!win->IsDocLoaded());
-        zoomVirtual = prefs::conv::ToZoom(state->zoom);
+        zoomVirtual = prefs::conv::ToZoom(state->zoom, ZOOM_FIT_PAGE);
         if (win->ctrl->ValidPageNo(startPage)) {
             ss.page = startPage;
             if (ZOOM_FIT_CONTENT != zoomVirtual) {

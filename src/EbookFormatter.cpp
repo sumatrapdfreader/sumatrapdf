@@ -1,18 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "ArchUtil.h"
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
+#include "HtmlPullParser.h"
 #include "Mui.h"
+// model (engines, helpers)
 #include "BaseEngine.h"
 #include "EbookBase.h"
-#include "HtmlFormatter.h"
-#include "EbookFormatter.h"
-#include "HtmlPullParser.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
+#include "HtmlFormatter.h"
+#include "EbookFormatter.h"
 
 /* Mobi-specific formatting methods */
 

@@ -1,18 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include "ArchUtil.h"
-#include "BaseEngine.h"
-#include "Doc.h"
-#include "EbookBase.h"
 #include "HtmlParserLookup.h"
-#include "Mui.h"
 #include "HtmlPullParser.h"
-#include "HtmlFormatter.h"
-#include "EbookFormatter.h"
+#include "Mui.h"
+// model (engines, helpers)
+#include "BaseEngine.h"
+#include "EbookBase.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
+#include "HtmlFormatter.h"
+#include "EbookFormatter.h"
+#include "Doc.h"
 
 Doc::Doc(const Doc& other)
 {

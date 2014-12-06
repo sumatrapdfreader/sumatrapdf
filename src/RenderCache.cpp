@@ -11,6 +11,7 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
+#include "GlobalPrefs.h"
 #include "RenderCache.h"
 
 #pragma warning(disable: 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'

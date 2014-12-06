@@ -1,20 +1,23 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
 #include <dwmapi.h>
 #include <vssym32.h>
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
 #include "BaseEngine.h"
+#include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EngineManager.h"
+#include "DisplayModel.h"
+// ui
+#include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "Caption.h"
-#include "DisplayModel.h"
-#include "SumatraPDF.h"
 #include "Tabs.h"
 #include "Translations.h"
-#include "WinUtil.h"
 
 using namespace Gdiplus;
 

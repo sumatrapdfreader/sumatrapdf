@@ -1,15 +1,17 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// utils
 #include "BaseUtil.h"
 #include "GdiPlusUtil.h"
-#include "Timer.h"
-#include "EbookBase.h"
 #include "HtmlParserLookup.h"
-#include "Mui.h"
-#include "HtmlFormatter.h"
 #include "CssParser.h"
 #include "HtmlPullParser.h"
+#include "Mui.h"
+#include "Timer.h"
+// model (engines, helpers)
+#include "EbookBase.h"
+#include "HtmlFormatter.h"
 #define NOLOG 1
 #include "DebugLog.h"
 

@@ -11,10 +11,10 @@
 #include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
+#include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
-#include "AppPrefs.h"
 #include "ExternalPdfViewer.h"
 
 static WCHAR *GetAcrobatPath()

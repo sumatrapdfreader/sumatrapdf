@@ -1,27 +1,30 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// utils
 #include "BaseUtil.h"
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "AppPrefs.h"
-#include "AppUtil.h"
-#include "ChmModel.h"
-#include "EngineManager.h"
-#include "DisplayModel.h"
 #include "FileUtil.h"
+#include "UITask.h"
+#include "WinUtil.h"
+// model (engines, helpers, controllers)
+#include "BaseEngine.h"
+#include "EngineManager.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Notifications.h"
-#include "SumatraDialogs.h"
+#include "SettingsStructs.h"
+#include "Controller.h"
+#include "ChmModel.h"
+#include "DisplayModel.h"
+#include "GlobalPrefs.h"
+// ui
 #include "SumatraPDF.h"
-#include "Translations.h"
-#include "UITask.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
-#include "Selection.h"
+#include "AppUtil.h"
+#include "Notifications.h"
 #include "Print.h"
+#include "Selection.h"
+#include "SumatraDialogs.h"
+#include "Translations.h"
 
 struct PrintData {
     ScopedMem<WCHAR> driverName, printerName, portName;

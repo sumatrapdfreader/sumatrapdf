@@ -13,8 +13,7 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
-// ui
-#include "AppPrefs.h" // for gGlobalPrefs
+#include "GlobalPrefs.h"
 
 static bool IsExternalUrl(const WCHAR *url)
 {

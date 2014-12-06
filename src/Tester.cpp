@@ -5,23 +5,25 @@
    executable and related makefile additions for each test, we have one test
    driver which dispatches desired test based on cmd-line arguments. */
 
+// utils
 #include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "BaseEngine.h"
-#include "EbookBase.h"
-#include "Mui.h"
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
-#include "HtmlFormatter.h"
-#include "EbookFormatter.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
+#include "HtmlParserLookup.h"
 #include "HtmlPrettyPrint.h"
-#include "MobiDoc.h"
+#include "Mui.h"
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
+// model (engines, helpers)
+#include "BaseEngine.h"
+#include "EbookBase.h"
+#include "MobiDoc.h"
+#include "HtmlFormatter.h"
+#include "EbookFormatter.h"
 
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
