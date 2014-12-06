@@ -21,10 +21,9 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EbookController.h"
-#include "EbookControls.h"
 #include "GlobalPrefs.h"
 // ui
-// TODO: replace dependency with ControllerCallback
+#include "EbookControls.h"
 #include "Translations.h"
 //#define NOLOG 0
 #include "DebugLog.h"

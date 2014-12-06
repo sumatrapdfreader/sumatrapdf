@@ -906,6 +906,22 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\FileModifications.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\FileModifications.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\GlobalPrefs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\GlobalPrefs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\PdfSync.cpp"
 					>
 				</File>
@@ -919,6 +935,10 @@
 				</File>
 				<File
 					RelativePath="..\src\RenderCache.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\SettingsStructs.h"
 					>
 				</File>
 				<File
@@ -1039,7 +1059,7 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="Helpers"
+				Name="Support"
 				>
 				<File
 					RelativePath="..\src\AppPrefs.cpp"
@@ -1082,14 +1102,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\FileModifications.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\FileModifications.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\FileThumbnails.cpp"
 					>
 				</File>
@@ -1098,23 +1110,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\GlobalPrefs.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\GlobalPrefs.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\ParseCommandLine.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\ParseCommandLine.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\SettingsStructs.h"
 					>
 				</File>
 				<File
