@@ -352,14 +352,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\WinCursors.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\WinCursors.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\WinUtil.cpp"
 					>
 				</File>

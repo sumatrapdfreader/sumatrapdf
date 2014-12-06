@@ -55,8 +55,6 @@
               "<(src)/VarintGob.h",
               "<(src)/VarintGob.cpp",
               "<(src)/Vec.h",
-              "<(src)/WinCursors.h",
-              "<(src)/WinCursors.cpp",
               "<(src)/WinUtil.h",
               "<(src)/WinUtil.cpp",
               "<(src)/tests/BaseUtil_ut.cpp",

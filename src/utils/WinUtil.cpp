@@ -6,7 +6,6 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 #include <mlang.h>
-#include "WinCursors.h"
 
 #include "DebugLog.h"
 
@@ -1379,4 +1378,39 @@ void RectInflateTB(RECT& r, int top, int bottom)
 {
     r.top += top;
     r.bottom += bottom;
+}
+
+static LPWSTR knownCursorIds[] = {
+    IDC_ARROW,
+    IDC_IBEAM,
+    IDC_HAND,
+    IDC_SIZEALL,
+    IDC_SIZEWE,
+    IDC_SIZENS,
+    IDC_NO,
+    IDC_CROSS
+};
+
+static HCURSOR cachedCursors[dimof(knownCursorIds)] = {};
+
+HCURSOR GetCursor(LPWSTR id)
+{
+    int cursorIdx = -1;
+    for (int i = 0; i < dimof(knownCursorIds); i++) {
+        if (id == knownCursorIds[i]) {
+            cursorIdx = i;
+            break;
+        }
+    }
+    CrashIf(cursorIdx == -1);
+    if (NULL == cachedCursors[cursorIdx]) {
+        cachedCursors[cursorIdx] = LoadCursor(NULL, id);
+        CrashIf(cachedCursors[cursorIdx] == NULL);
+    }
+    return cachedCursors[cursorIdx];
+}
+
+void SetCursor(LPWSTR id)
+{
+    SetCursor(GetCursor(id));
 }

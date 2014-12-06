@@ -17,7 +17,6 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 
 #ifndef ABOUT_USE_LESS_COLORS

@@ -8,7 +8,6 @@
 #include "Notifications.h"
 #include "SettingsStructs.h"
 #include "SumatraPDF.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 
 #define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"

@@ -195,3 +195,6 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command);
 void RectInflateTB(RECT& r, int top, int bottom);
 void DivideRectH(const RECT&r, int y, int dy, RECT& r1, RECT& r2, RECT& r3);
 void DivideRectV(const RECT&r, int x, int dx, RECT& r1, RECT& r2, RECT& r3);
+
+HCURSOR GetCursor(LPWSTR id);
+void    SetCursor(LPWSTR id);

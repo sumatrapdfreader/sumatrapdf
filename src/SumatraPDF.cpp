@@ -70,7 +70,6 @@
 #include "uia/Provider.h"
 #include "UITask.h"
 #include "Version.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 #define NOLOG 0
 #include "DebugLog.h"

@@ -128,8 +128,6 @@
                 "<(src)/VecSegmented.h",
                 "<(src)/WebpReader.cpp",
                 "<(src)/WebpReader.h",
-                "<(src)/WinCursors.cpp",
-                "<(src)/WinCursors.h",
                 "<(src)/WinUtil.cpp",
                 "<(src)/WinUtil.h",
                 "<(src)/ZipUtil.cpp",

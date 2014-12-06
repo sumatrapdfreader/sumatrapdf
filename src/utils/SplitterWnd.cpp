@@ -5,7 +5,6 @@
 #include "SplitterWnd.h"
 
 #include "BitManip.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 
 // the technique for drawing the splitter for non-live resize is described

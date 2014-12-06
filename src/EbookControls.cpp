@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "BitManip.h"
 #include "StrSlice.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 #include "Timer.h"
 #include "HtmlParserLookup.h"

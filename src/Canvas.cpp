@@ -38,7 +38,6 @@
 #include "Touch.h"
 #include "Translations.h"
 #include "UITask.h"
-#include "WinCursors.h"
 #include "WinUtil.h"
 
 // these can be global, as the mouse wheel can't affect more than one window at once

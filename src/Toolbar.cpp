@@ -15,7 +15,6 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
-#include "WinCursors.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 #include "Search.h"
