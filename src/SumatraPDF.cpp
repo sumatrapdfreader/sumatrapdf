@@ -63,11 +63,14 @@
 #include "Print.h"
 #include "Search.h"
 #include "Selection.h"
-#include "SumatraAbout.h"
+#include "StressTesting.h"
+#ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
 #include "SumatraAbout2.h"
+#else
+#include "SumatraAbout.h"
+#endif
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
-#include "StressTesting.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
 #include "Toolbar.h"
@@ -1255,6 +1258,7 @@ WindowInfo *CreateAndShowWindowInfo()
     UpdateWindow(win->hwndFrame);
 
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
+    ToolbarUpdateStateForWindow(win, true);
 
     if (WIN_STATE_FULLSCREEN == windowState)
         EnterFullScreen(win);
@@ -3928,7 +3932,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_ABOUT:
-#if 0
+#ifdef ENABLE_ALTERNATIVE_ABOUT_DIALOG
             OnMenuAbout2();
 #else
             OnMenuAbout();

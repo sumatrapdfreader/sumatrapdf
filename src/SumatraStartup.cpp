@@ -53,7 +53,6 @@
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
-#include "Toolbar.h"
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "StressTesting.h"
@@ -785,10 +784,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     UpdateUITextForLanguage(); // needed for RTL languages
-    if (win->IsAboutWindow()) {
-        // TODO: shouldn't CreateAndShowWindowInfo take care of this?
-        ToolbarUpdateStateForWindow(win, true);
-    }
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be

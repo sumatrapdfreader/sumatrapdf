@@ -8,7 +8,6 @@
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
 #include "UITask.h"
 #include "WinUtil.h"
 // rendering engines
