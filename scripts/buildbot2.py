@@ -62,15 +62,18 @@ def buildbot_loop():
     time_of_last_change = None
     while True:
         if not is_git_up_to_date():
-            time_of_last_change = datetime.datetime()
+            # there was a new checking, it resets the wait time
+            time_of_last_change = datetime.datetime.now()
             print("New checkins detected, sleeping for 15 minutes, %s until pre-release" %
                   pretty_print_secs(TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS))
             time.sleep(60 * 15)  # 15 mins
             continue
 
         if time_of_last_change == None:
+            # no changes since last pre-relase, sleep until there is a checkin
             print("No checkins since last pre-release, sleeping for 15 minutes")
             time.sleep(60 * 15)  # 15 mins
+            continue
 
         td = datetime.datetime.now() - time_of_last_change
         secs_until_prerelease = TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS - \
@@ -107,7 +110,8 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception, e:
-        msg = "buildbot failed\nException: " + str(e) + "\n"
+    except BaseException, e:
+        msg = "buildbot failed\nException: " + str(e) + "\n" + traceback.format_exc() + "\n"
+        print(msg)
         email_msg(msg)
 
