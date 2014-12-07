@@ -15,6 +15,8 @@ enum DisplayMode {
     DM_CONTINUOUS_BOOK_VIEW,
 };
 
+class RenderedBitmap;
+
 typedef struct FileState DisplayState;
 
 // top, right, bottom and left margin (in that order) between window and

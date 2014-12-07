@@ -17,7 +17,7 @@ extern "C" {
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 

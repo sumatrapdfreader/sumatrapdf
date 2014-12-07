@@ -11,15 +11,14 @@
 #include "SimpleLog.h"
 #include "Timer.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "Doc.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -27,6 +26,8 @@
 #include "EbookController.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

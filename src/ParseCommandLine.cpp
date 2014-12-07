@@ -5,8 +5,7 @@
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
 #include "WinUtil.h"
-// model (engines, helpers)
-#include "BaseEngine.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 // ui

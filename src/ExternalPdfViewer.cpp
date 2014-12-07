@@ -6,9 +6,10 @@
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// model (engines, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"

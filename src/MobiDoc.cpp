@@ -11,7 +11,7 @@
 #include "HtmlPullParser.h"
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"

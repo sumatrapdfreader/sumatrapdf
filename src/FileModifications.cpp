@@ -6,7 +6,7 @@
 #include "FileTransactions.h"
 #include "FileUtil.h"
 #include "SquareTreeParser.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "FileModifications.h"
 // ui

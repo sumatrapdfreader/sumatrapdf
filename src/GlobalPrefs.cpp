@@ -6,7 +6,7 @@
 #include "DebugLog.h"
 #include "FileUtil.h"
 #include "SettingsUtil.h"
-// model (engines, helpers, controllers)
+// layout controllers
 #include "BaseEngine.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"

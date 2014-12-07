@@ -9,13 +9,13 @@
 #include "MiniMui.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #include "DjVuEngine.h"
 #include "EngineManager.h"
-#include "PdfCreator.h"
 #include "FileModifications.h"
+#include "PdfCreator.h"
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 

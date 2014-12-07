@@ -18,7 +18,7 @@
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"

@@ -5,8 +5,7 @@
 #include "BaseUtil.h"
 #include "DialogSizer.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
-#include "BaseEngine.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 // ui

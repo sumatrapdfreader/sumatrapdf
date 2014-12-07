@@ -10,7 +10,7 @@
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
 #include "WinUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "ImagesEngine.h"
 #include "PdfCreator.h"

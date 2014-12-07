@@ -4,15 +4,16 @@
 // utils
 #include "BaseUtil.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
-#include "TextSelection.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
+#include "TextSelection.h"
 
 #pragma warning(disable: 28159) // silence /analyze: Consider using 'GetTickCount64' instead of 'GetTickCount'
 

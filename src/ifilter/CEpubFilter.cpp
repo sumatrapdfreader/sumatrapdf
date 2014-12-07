@@ -7,7 +7,7 @@
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "WinUtil.h"
-// model
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

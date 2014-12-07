@@ -6,10 +6,11 @@
 #include "Dict.h"
 #include "HtmlWindow.h"
 #include "UITask.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"

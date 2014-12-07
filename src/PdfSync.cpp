@@ -5,7 +5,7 @@
 #include "BaseUtil.h"
 #include <synctex_parser.h>
 #include "FileUtil.h"
-// model (engines, helpers)
+// layout controllers
 #include "BaseEngine.h"
 #include "PdfSync.h"
 

@@ -45,16 +45,17 @@
 
 // utils
 #include "BaseUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
-#include "PdfSync.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "PdfSync.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.

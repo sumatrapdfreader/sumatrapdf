@@ -4,11 +4,10 @@
 // utils
 #include "BaseUtil.h"
 #include "WinUtil.h"
-// model (engines, helpers)
-#include "BaseEngine.h"
+// layout controllers
+class BaseEngine;
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "SettingsStructs.h"
 // ui
 #include "SumatraPDF.h"
 #include "Notifications.h"

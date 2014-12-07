@@ -8,7 +8,7 @@
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

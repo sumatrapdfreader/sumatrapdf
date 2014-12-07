@@ -818,6 +818,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\FileModifications.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\FileModifications.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\HtmlFormatter.cpp"
 					>
 				</File>
@@ -903,14 +911,6 @@
 				</File>
 				<File
 					RelativePath="..\src\FileHistory.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\FileModifications.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\FileModifications.h"
 					>
 				</File>
 				<File

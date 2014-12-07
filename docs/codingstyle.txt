@@ -54,4 +54,10 @@ Our include scheme is not traditiona. The rules are:
 - .h files don't #include other .h files
 - we don't have traditional #ifdef .h header guards
 - .cpp files #include "BaseUtil.h" first and then all the necessary
-  .h files
+  .h files from
+  1. src/utils
+  2. rendering engines (which can be used for other applications as well,
+     e.g. EngineDump, IFilter, PdfPreview)
+  3. layout controllers (which could be used mostly independently of SumatraPDF as well)
+  4. ui
+  (.cpp files should not include any headers from a group below their own)

@@ -7,7 +7,7 @@
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
-// model (engines, helpers)
+// layout controllers
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

@@ -4,7 +4,7 @@
 // utils
 #include "BaseUtil.h"
 #include "WinUtil.h"
-// model
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 // ui

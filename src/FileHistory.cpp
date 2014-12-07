@@ -4,7 +4,7 @@ License: GPLv3 */
 // utils
 #include "BaseUtil.h"
 #include "FileUtil.h"
-// model (engines, helpers, controllers)
+// layout controllers
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"

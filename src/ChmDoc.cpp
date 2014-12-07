@@ -9,7 +9,7 @@
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
 #include "TrivialHtmlParser.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"

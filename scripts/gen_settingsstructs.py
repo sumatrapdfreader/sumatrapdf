@@ -588,6 +588,8 @@ enum DisplayMode {
 	DM_CONTINUOUS_BOOK_VIEW,
 };
 
+class RenderedBitmap;
+
 typedef struct FileState DisplayState;
 
 %(structDef)s

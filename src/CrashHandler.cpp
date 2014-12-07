@@ -14,9 +14,6 @@
 #include "HttpUtil.h"
 #include "LzmaSimpleArchive.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
-#include "BaseEngine.h"
-#include "SettingsStructs.h"
 // ui
 #include "SumatraPDF.h"
 #include "AppTools.h"

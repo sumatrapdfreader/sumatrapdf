@@ -12,16 +12,17 @@
 #include "TrivialHtmlParser.h"
 #include "TxtParser.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EbookControls.h"
 #include "GlobalPrefs.h"
 // ui
 #include "resource.h"
+#include "EbookControls.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #define NOLOG 1

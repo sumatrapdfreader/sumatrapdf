@@ -27,7 +27,7 @@ To write new regression test:
 #include "HtmlParserLookup.h"
 #include "Mui.h"
 #include "WinUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

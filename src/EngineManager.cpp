@@ -3,7 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "DjVuEngine.h"
 #include "EbookEngine.h"

@@ -139,7 +139,6 @@ void  ShowOrHideToolbarForWindow(WindowInfo *win);
 void  UpdateDocumentColors();
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
-void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);

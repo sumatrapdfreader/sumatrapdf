@@ -25,7 +25,7 @@
 #include "Touch.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
@@ -33,9 +33,7 @@
 #include "Doc.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"
-#include "PdfSync.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -43,7 +41,10 @@
 #include "EbookController.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
+#include "PdfSync.h"
 #include "RenderCache.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

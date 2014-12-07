@@ -11,13 +11,14 @@
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "TrivialHtmlParser.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
 #include "Doc.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EbookController.h"

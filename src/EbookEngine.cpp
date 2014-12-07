@@ -17,7 +17,7 @@
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookEngine.h"
 #include "EbookBase.h"

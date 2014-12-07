@@ -11,21 +11,22 @@
 #include "FileUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #include "EngineManager.h"
-#include "PdfSync.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "PdfSync.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 // ui
-#include "WindowInfo.h"
 #include "SumatraPDF.h"
+#include "WindowInfo.h"
 #include "resource.h"
 #include "AppTools.h"
 #include "Notifications.h"

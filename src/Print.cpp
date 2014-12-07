@@ -6,16 +6,17 @@
 #include "FileUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
-#include "TextSelection.h"
-#include "TextSearch.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

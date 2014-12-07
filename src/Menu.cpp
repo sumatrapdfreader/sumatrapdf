@@ -8,9 +8,10 @@
 #include "HtmlParserLookup.h"
 #include "Mui.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"

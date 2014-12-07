@@ -12,18 +12,19 @@
 #include "Mui.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// model (engines, helpers, controllers)
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "EbookControls.h"
 #include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
 #include "Caption.h"
+#include "EbookControls.h"
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"

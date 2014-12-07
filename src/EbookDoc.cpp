@@ -10,7 +10,7 @@
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

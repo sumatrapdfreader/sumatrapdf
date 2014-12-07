@@ -312,3 +312,6 @@ public:
 
     virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount);
 };
+
+// TODO: this belongs in SumatraPDF.h but introduces a dependency on SettingsStructs.h
+void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous=false);

@@ -12,7 +12,7 @@ extern "C" {
 // utils
 #include "BaseUtil.h"
 #include "GdiplusUtil.h"
-// model (engines, helpers)
+// rendering engines
 #include "BaseEngine.h"
 #include "PdfCreator.h"
 

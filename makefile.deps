@@ -200,13 +200,12 @@ $(OS)\ChmModel.obj: $B\src\SettingsStructs.h $B\src\utils\Allocator.h $B\src\uti
 $(OS)\ChmModel.obj: $B\src\utils\Dict.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlWindow.h
 $(OS)\ChmModel.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OS)\ChmModel.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\CrashHandler.obj: $B\src\AppTools.h $B\src\BaseEngine.h $B\src\CrashHandler.h
-$(OS)\CrashHandler.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\utils\Allocator.h
-$(OS)\CrashHandler.obj: $B\src\utils\BaseUtil.h $B\src\utils\DbgHelpDyn.h $B\src\utils\DebugLog.h
-$(OS)\CrashHandler.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HttpUtil.h
-$(OS)\CrashHandler.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
-$(OS)\CrashHandler.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OS)\CrashHandler.obj: $B\src\Version.h
+$(OS)\CrashHandler.obj: $B\src\AppTools.h $B\src\CrashHandler.h $B\src\SumatraPDF.h
+$(OS)\CrashHandler.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DbgHelpDyn.h
+$(OS)\CrashHandler.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
+$(OS)\CrashHandler.obj: $B\src\utils\HttpUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h
+$(OS)\CrashHandler.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\CrashHandler.obj: $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\DisplayModel.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
 $(OS)\DisplayModel.obj: $B\src\EngineManager.h $B\src\GlobalPrefs.h $B\src\PdfSync.h
 $(OS)\DisplayModel.obj: $B\src\SettingsStructs.h $B\src\TextSearch.h $B\src\TextSelection.h
@@ -389,19 +388,18 @@ $(OS)\MuiEbookPageDef.obj: $B\src\MuiEbookPageDef.h $B\src\utils\Allocator.h $B\
 $(OS)\MuiEbookPageDef.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OS)\MuiEbookPageDef.obj: $B\src\utils\SerializeTxt.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: $B\mupdf\include\mupdf\fitz\math.h $B\mupdf\include\mupdf\fitz\system.h
-$(OS)\Notifications.obj: $B\src\BaseEngine.h $B\src\Notifications.h $B\src\SettingsStructs.h
-$(OS)\Notifications.obj: $B\src\SumatraPDF.h $B\src\TextSearch.h $B\src\TextSelection.h
-$(OS)\Notifications.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OS)\Notifications.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\Notifications.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Notifications.obj: $B\src\Notifications.h $B\src\SumatraPDF.h $B\src\TextSearch.h
+$(OS)\Notifications.obj: $B\src\TextSelection.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\Notifications.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OS)\Notifications.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\PagesLayoutDef.obj: $B\src\PagesLayoutDef.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\PagesLayoutDef.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OS)\PagesLayoutDef.obj: $B\src\utils\SerializeTxt.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\ParseCommandLine.obj: $B\src\BaseEngine.h $B\src\GlobalPrefs.h $B\src\ParseCommandLine.h
-$(OS)\ParseCommandLine.obj: $B\src\SettingsStructs.h $B\src\StressTesting.h $B\src\SumatraPDF.h
-$(OS)\ParseCommandLine.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
-$(OS)\ParseCommandLine.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
-$(OS)\ParseCommandLine.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\ParseCommandLine.obj: $B\src\GlobalPrefs.h $B\src\ParseCommandLine.h $B\src\SettingsStructs.h
+$(OS)\ParseCommandLine.obj: $B\src\StressTesting.h $B\src\SumatraPDF.h $B\src\utils\Allocator.h
+$(OS)\ParseCommandLine.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\GeomUtil.h
+$(OS)\ParseCommandLine.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OS)\ParseCommandLine.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\PdfCreator.obj: $B\ext\zlib\zconf.h $B\ext\zlib\zlib.h $B\mupdf\include\mupdf\fitz.h
 $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\annotation.h $B\mupdf\include\mupdf\fitz\bitmap.h $B\mupdf\include\mupdf\fitz\buffer.h
 $(OS)\PdfCreator.obj: $B\mupdf\include\mupdf\fitz\colorspace.h $B\mupdf\include\mupdf\fitz\compressed-buffer.h $B\mupdf\include\mupdf\fitz\context.h
@@ -542,12 +540,12 @@ $(OS)\SumatraAbout2.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\u
 $(OS)\SumatraAbout2.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
 $(OS)\SumatraAbout2.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OS)\SumatraAbout2.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
-$(OS)\SumatraDialogs.obj: $B\src\AppTools.h $B\src\BaseEngine.h $B\src\GlobalPrefs.h
-$(OS)\SumatraDialogs.obj: $B\src\resource.h $B\src\SettingsStructs.h $B\src\SumatraDialogs.h
-$(OS)\SumatraDialogs.obj: $B\src\SumatraPDF.h $B\src\Translations.h $B\src\utils\Allocator.h
-$(OS)\SumatraDialogs.obj: $B\src\utils\BaseUtil.h $B\src\utils\DialogSizer.h $B\src\utils\GeomUtil.h
-$(OS)\SumatraDialogs.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\SumatraDialogs.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\SumatraDialogs.obj: $B\src\AppTools.h $B\src\GlobalPrefs.h $B\src\resource.h
+$(OS)\SumatraDialogs.obj: $B\src\SettingsStructs.h $B\src\SumatraDialogs.h $B\src\SumatraPDF.h
+$(OS)\SumatraDialogs.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
+$(OS)\SumatraDialogs.obj: $B\src\utils\DialogSizer.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
+$(OS)\SumatraDialogs.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\SumatraDialogs.obj: $B\src\utils\WinUtil.h
 $(OS)\SumatraPDF.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\AppUtil.h
 $(OS)\SumatraPDF.obj: $B\src\BaseEngine.h $B\src\Canvas.h $B\src\Caption.h
 $(OS)\SumatraPDF.obj: $B\src\ChmModel.h $B\src\Controller.h $B\src\CrashHandler.h

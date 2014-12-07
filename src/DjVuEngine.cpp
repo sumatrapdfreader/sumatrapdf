@@ -12,7 +12,7 @@
 #include "ByteReader.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// model (engines)
+// rendering engines
 #include "BaseEngine.h"
 #include "DjVuEngine.h"
 

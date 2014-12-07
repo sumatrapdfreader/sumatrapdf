@@ -9,7 +9,7 @@
 #include "HtmlPullParser.h"
 #include "Mui.h"
 #include "Timer.h"
-// model (engines, helpers)
+// rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #define NOLOG 1
