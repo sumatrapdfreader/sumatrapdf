@@ -1958,6 +1958,19 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
     }
 }
 
+void GetEbookUiColors(COLORREF& text, COLORREF& bg)
+{
+    if (gGlobalPrefs->useSysColors) {
+        text = GetSysColor(COLOR_WINDOWTEXT);
+        bg = GetSysColor(COLOR_WINDOW);
+    }
+    else {
+        text = gGlobalPrefs->ebookUI.textColor;
+        bg = gGlobalPrefs->ebookUI.backgroundColor;
+    }
+    // TODO: respect gGlobalPrefs->fixedPageUI.invertColors?
+}
+
 void UpdateDocumentColors()
 {
     // TODO: only do this if colors have actually changed?

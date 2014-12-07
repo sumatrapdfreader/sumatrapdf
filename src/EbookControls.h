@@ -23,7 +23,6 @@ struct EbookControls {
 EbookControls * CreateEbookControls(HWND hwnd, FrameRateWnd *);
 void            DestroyEbookControls(EbookControls* controls);
 void            SetMainWndBgCol(EbookControls *ctrls);
-void            GetEbookColors(COLORREF *txtColOut, COLORREF *bgColOut);
 
 class HtmlPage;
 struct DrawInstr;
