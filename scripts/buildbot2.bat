@@ -14,4 +14,4 @@ rem work-around cygwin/msdev issue
 set tmp=
 set temp=
 
-python -u -B scripts/buildbot.py
+python -u -B scripts/buildbot2.py

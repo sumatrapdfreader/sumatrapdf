@@ -41,7 +41,7 @@ def verify_can_send_email():
 
 def is_git_up_to_date():
     out = subprocess.check_output(["git", "pull"])
-    return "Already up-to-date" in out:
+    return "Already up-to-date" in out
 
 def build_pre_release():
     try:
