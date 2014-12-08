@@ -13,27 +13,26 @@ TODO:
    works correctly
 */
 
-#define CLOSE_BTN_DX            16
-#define CLOSE_BTN_DY            16
-#define LABEL_BUTTON_SPACE_DX   8
+#define CLOSE_BTN_DX 16
+#define CLOSE_BTN_DY 16
+#define LABEL_BUTTON_SPACE_DX 8
 
-#define WND_CLASS_NAME          L"LabelWithCloseWndClass"
+#define WND_CLASS_NAME L"LabelWithCloseWndClass"
 
 struct LabelWithCloseWnd {
-    HWND                    hwnd;
-    HFONT                   font;
-    int                     cmd;
+    HWND hwnd;
+    HFONT font;
+    int cmd;
 
-    RectI                   closeBtnPos;
-    COLORREF                txtCol;
-    COLORREF                bgCol;
+    RectI closeBtnPos;
+    COLORREF txtCol;
+    COLORREF bgCol;
 
     // in points
-    int                     padL, padR, padT, padB;
+    int padL, padR, padT, padB;
 };
 
-static bool IsMouseOverClose(LabelWithCloseWnd *w)
-{
+static bool IsMouseOverClose(LabelWithCloseWnd *w) {
     PointI p;
     GetCursorPosInHwnd(w->hwnd, p);
     return w->closeBtnPos.Contains(p);
@@ -41,8 +40,7 @@ static bool IsMouseOverClose(LabelWithCloseWnd *w)
 
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
-static void DrawCloseButton(HDC hdc, RectI& r, bool onHover)
-{
+static void DrawCloseButton(HDC hdc, RectI &r, bool onHover) {
     Graphics g(hdc);
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
@@ -54,7 +52,7 @@ static void DrawCloseButton(HDC hdc, RectI& r, bool onHover)
     if (onHover) {
         c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
         SolidBrush b(c);
-        g.FillEllipse(&b, r.x, r.y, r.dx-2, r.dy-2);
+        g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
     }
 
     // draw 'x'
@@ -62,16 +60,15 @@ static void DrawCloseButton(HDC hdc, RectI& r, bool onHover)
     g.TranslateTransform((float)r.x, (float)r.y);
     Pen p(c, 2);
     if (onHover) {
-        g.DrawLine(&p, Point(4,      4), Point(r.dx-6, r.dy-6));
-        g.DrawLine(&p, Point(r.dx-6, 4), Point(4,      r.dy-6));
+        g.DrawLine(&p, Point(4, 4), Point(r.dx - 6, r.dy - 6));
+        g.DrawLine(&p, Point(r.dx - 6, 4), Point(4, r.dy - 6));
     } else {
-        g.DrawLine(&p, Point(4,      5), Point(r.dx-6, r.dy-5));
-        g.DrawLine(&p, Point(r.dx-6, 5), Point(4,      r.dy-5));
+        g.DrawLine(&p, Point(4, 5), Point(r.dx - 6, r.dy - 5));
+        g.DrawLine(&p, Point(r.dx - 6, 5), Point(4, r.dy - 5));
     }
 }
 
-static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
-{
+static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT &ps) {
     HBRUSH br = CreateSolidBrush(w->bgCol);
     FillRect(hdc, &ps.rcPaint, br);
 
@@ -112,8 +109,7 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT& ps)
     }
 }
 
-static void OnPaint(LabelWithCloseWnd *w)
-{
+static void OnPaint(LabelWithCloseWnd *w) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(w->hwnd, &ps);
     DoubleBuffer buffer(w->hwnd, RectI::FromRECT(ps.rcPaint));
@@ -122,20 +118,18 @@ static void OnPaint(LabelWithCloseWnd *w)
     EndPaint(w->hwnd, &ps);
 }
 
-static void CalcCloseButtonPos(LabelWithCloseWnd *w, int dx, int dy)
-{
+static void CalcCloseButtonPos(LabelWithCloseWnd *w, int dx, int dy) {
     int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
     int x = dx - btnDx - DpiScaleX(w->hwnd, w->padR);
     int y = 0;
     if (dy > btnDy) {
-        y  = (dy - btnDy) / 2;
+        y = (dy - btnDy) / 2;
     }
     w->closeBtnPos = RectI(x, y, btnDx, btnDy);
 }
 
-static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
-{
+static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_ERASEBKGND == msg) {
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
@@ -154,7 +148,7 @@ static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LP
     if (!w) {
         goto DoDefault;
     }
-    
+
     // to match other controls, preferred way is explict SetFont() call
     if (WM_SETFONT == msg) {
         SetFont(w, (HFONT)wp);
@@ -209,27 +203,23 @@ DoDefault:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-void RegisterLabelWithCloseWnd()
-{
+void RegisterLabelWithCloseWnd() {
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, WND_CLASS_NAME, WndProcLabelWithClose);
     RegisterClassEx(&wcex);
 }
 
-void SetLabel(LabelWithCloseWnd *w, const WCHAR *label)
-{
+void SetLabel(LabelWithCloseWnd *w, const WCHAR *label) {
     win::SetText(w->hwnd, label);
     ScheduleRepaint(w->hwnd);
 }
 
-void SetBgCol(LabelWithCloseWnd *w, COLORREF c)
-{
+void SetBgCol(LabelWithCloseWnd *w, COLORREF c) {
     w->bgCol = c;
     ScheduleRepaint(w->hwnd);
 }
 
-void SetTextCol(LabelWithCloseWnd* w, COLORREF c)
-{
+void SetTextCol(LabelWithCloseWnd *w, COLORREF c) {
     w->txtCol = c;
     ScheduleRepaint(w->hwnd);
 }
@@ -237,28 +227,22 @@ void SetTextCol(LabelWithCloseWnd* w, COLORREF c)
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
 // caller needs to free() the result
-LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd)
-{
+LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd) {
     LabelWithCloseWnd *w = AllocStruct<LabelWithCloseWnd>();
     w->cmd = cmd;
     w->bgCol = GetSysColor(COLOR_BTNFACE);
     w->txtCol = GetSysColor(COLOR_BTNTEXT);
 
     // sets w->hwnd during WM_NCCREATE
-    CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD,
-                           0, 0, 0, 0, parent, (HMENU)cmd,
-                           GetModuleHandle(NULL), w);
+    CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, parent, (HMENU)cmd,
+                 GetModuleHandle(NULL), w);
     CrashIf(!w->hwnd);
     return w;
 }
 
-HWND GetHwnd(LabelWithCloseWnd* w)
-{
-    return w->hwnd;
-}
+HWND GetHwnd(LabelWithCloseWnd *w) { return w->hwnd; }
 
-SizeI GetIdealSize(LabelWithCloseWnd* w)
-{
+SizeI GetIdealSize(LabelWithCloseWnd *w) {
     WCHAR *s = win::GetText(w->hwnd);
     SizeI size = TextSizeInHwnd(w->hwnd, s);
     free(s);
@@ -274,13 +258,9 @@ SizeI GetIdealSize(LabelWithCloseWnd* w)
     return size;
 }
 
-void SetFont(LabelWithCloseWnd* w, HFONT f)
-{
-    w->font = f;
-}
+void SetFont(LabelWithCloseWnd *w, HFONT f) { w->font = f; }
 
-void SetPaddingXY(LabelWithCloseWnd *w, int x, int y)
-{
+void SetPaddingXY(LabelWithCloseWnd *w, int x, int y) {
     w->padL = x;
     w->padR = x;
     w->padT = y;

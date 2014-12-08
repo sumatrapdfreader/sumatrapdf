@@ -9,13 +9,13 @@ struct FrameRateWnd {
     HFONT font;
 
     SIZE maxSizeSoFar;
-    int  frameRate;
+    int frameRate;
 };
 
-FrameRateWnd *  AllocFrameRateWnd(HWND hwndAssociatedWith);
-bool            CreateFrameRateWnd(FrameRateWnd *);
-void            DeleteFrameRateWnd(FrameRateWnd *);
-void            ShowFrameRate(FrameRateWnd *, int frameRate);
-void            ShowFrameRateDur(FrameRateWnd *, double durMs);
+FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith);
+bool CreateFrameRateWnd(FrameRateWnd *);
+void DeleteFrameRateWnd(FrameRateWnd *);
+void ShowFrameRate(FrameRateWnd *, int frameRate);
+void ShowFrameRateDur(FrameRateWnd *, double durMs);
 
-int             FrameRateFromDuration(double durMs);
+int FrameRateFromDuration(double durMs);

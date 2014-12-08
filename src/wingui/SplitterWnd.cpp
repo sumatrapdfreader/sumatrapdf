@@ -10,28 +10,27 @@
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows
 
-#define SPLITTER_CLASS_NAME          L"SplitterWndClass"
+#define SPLITTER_CLASS_NAME L"SplitterWndClass"
 
 static HBITMAP splitterBmp = NULL;
-static HBRUSH  splitterBrush = NULL;
+static HBRUSH splitterBrush = NULL;
 
 struct SplitterWnd {
     // none of this data needs to be freed by us
-    HWND                hwnd;
-    void *              ctx;
-    SplitterType        type;
-    SplitterCallback    cb;
-    COLORREF            bgCol;
-    bool                isLive;
-    PointI              prevResizeLinePos;
+    HWND hwnd;
+    void *ctx;
+    SplitterType type;
+    SplitterCallback cb;
+    COLORREF bgCol;
+    bool isLive;
+    PointI prevResizeLinePos;
     // if a parent clips children, DrawXorBar() doesn't work, so for
     // non-live resize, we need to remove WS_CLIPCHILDREN style from
     // parent and restore it when we're done
-    bool                parentClipsChildren;
+    bool parentClipsChildren;
 };
 
-static void OnPaint(SplitterWnd *w)
-{
+static void OnPaint(SplitterWnd *w) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(w->hwnd, &ps);
     HBRUSH br = CreateSolidBrush(w->bgCol);
@@ -40,48 +39,42 @@ static void OnPaint(SplitterWnd *w)
     EndPaint(w->hwnd, &ps);
 }
 
-static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height)
-{
+static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height) {
     SetBrushOrgEx(hdc, x1, y1, 0);
     HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, splitterBrush);
     PatBlt(hdc, x1, y1, width, height, PATINVERT);
     SelectObject(hdc, hbrushOld);
 }
 
-static HDC InitDraw(SplitterWnd *w, RectI& rc)
-{
+static HDC InitDraw(SplitterWnd *w, RectI &rc) {
     rc = ChildPosWithinParent(w->hwnd);
     HDC hdc = GetDC(GetParent(w->hwnd));
     SetROP2(hdc, R2_NOTXORPEN);
     return hdc;
 }
 
-static void DrawResizeLineV(SplitterWnd *w, int x)
-{
+static void DrawResizeLineV(SplitterWnd *w, int x) {
     RectI rc;
     HDC hdc = InitDraw(w, rc);
     DrawXorBar(hdc, x, rc.y, 4, rc.dy);
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
 
-static void DrawResizeLineH(SplitterWnd *w, int y)
-{
+static void DrawResizeLineH(SplitterWnd *w, int y) {
     RectI rc;
     HDC hdc = InitDraw(w, rc);
     DrawXorBar(hdc, rc.x, y, rc.dx, 4);
     ReleaseDC(GetParent(w->hwnd), hdc);
 }
 
-static void DrawResizeLineVH(SplitterWnd *w, bool isVert, PointI pos)
-{
+static void DrawResizeLineVH(SplitterWnd *w, bool isVert, PointI pos) {
     if (isVert)
         DrawResizeLineV(w, pos.x);
     else
         DrawResizeLineH(w, pos.y);
 }
 
-static void DrawResizeLine(SplitterWnd *w, bool erasePrev, bool drawCurr)
-{
+static void DrawResizeLine(SplitterWnd *w, bool erasePrev, bool drawCurr) {
     PointI pos;
     GetCursorPosInHwnd(GetParent(w->hwnd), pos);
     bool isVert = w->type != SplitterHoriz;
@@ -95,8 +88,7 @@ static void DrawResizeLine(SplitterWnd *w, bool erasePrev, bool drawCurr)
     w->prevResizeLinePos = pos;
 }
 
-static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
-{
+static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_ERASEBKGND == msg) {
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
@@ -167,15 +159,12 @@ Exit:
 }
 
 // call only once at the beginning of program
-void RegisterSplitterWndClass()
-{
+void RegisterSplitterWndClass() {
     if (splitterBmp)
         return;
 
-    static WORD dotPatternBmp[8] = 
-    { 
-        0x00aa, 0x0055, 0x00aa, 0x0055, 
-        0x00aa, 0x0055, 0x00aa, 0x0055
+    static WORD dotPatternBmp[8] = {
+        0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055
     };
 
     splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
@@ -187,8 +176,7 @@ void RegisterSplitterWndClass()
 }
 
 // caller needs to free() the result
-SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb)
-{
+SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb) {
     SplitterWnd *w = AllocStruct<SplitterWnd>();
     w->ctx = ctx;
     w->cb = cb;
@@ -198,31 +186,22 @@ SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterC
     DWORD style = GetWindowLong(parent, GWL_STYLE);
     w->parentClipsChildren = bit::IsMaskSet<DWORD>(style, WS_CLIPCHILDREN);
     // w->hwnd is set during WM_NCCREATE
-    CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW,
-                           0, 0, 0, 0, parent, (HMENU)0,
-                           GetModuleHandle(NULL), w);
+    CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW, 0, 0, 0, 0, parent, (HMENU)0,
+                 GetModuleHandle(NULL), w);
     CrashIf(!w->hwnd);
     return w;
 }
 
-HWND GetHwnd(SplitterWnd *s)
-{
-    return s->hwnd;
-}
+HWND GetHwnd(SplitterWnd *s) { return s->hwnd; }
 
-void SetBgCol(SplitterWnd *w, COLORREF c)
-{
+void SetBgCol(SplitterWnd *w, COLORREF c) {
     w->bgCol = c;
     ScheduleRepaint(w->hwnd);
 }
 
-void SetSplitterLive(SplitterWnd *w, bool live)
-{
-    w->isLive = live;
-}
+void SetSplitterLive(SplitterWnd *w, bool live) { w->isLive = live; }
 
-void DeleteSplitterBrush()
-{
+void DeleteSplitterBrush() {
     DeleteObject(splitterBrush);
     splitterBrush = NULL;
     DeleteObject(splitterBmp);
