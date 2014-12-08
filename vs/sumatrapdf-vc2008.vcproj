@@ -684,6 +684,58 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="wingui"
+				>
+				<File
+					RelativePath="..\src\wingui\DialogSizer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\DialogSizer.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\EditCtrl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\EditCtrl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\FrameRateWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\FrameRateWnd.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\LabelWithCloseWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\LabelWithCloseWnd.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\SplitterWnd.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\SplitterWnd.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\Win32Window.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\wingui\Win32Window.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Source Files"
