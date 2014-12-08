@@ -26,6 +26,9 @@ struct Win32Window {
 
     // public
     HWND hwnd;
+
+    // arbitrary data associated with this window
+    void *user;
 };
 
 Win32Window *AllocWin32Window(HWND parent, RECT *initialPosition);

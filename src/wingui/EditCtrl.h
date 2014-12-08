@@ -50,3 +50,4 @@ bool SetCueText(EditCtrl*, const WCHAR*);
 WCHAR* GetTextW(EditCtrl*);
 char* GetText(EditCtrl*);
 SIZE GetIdealSize(EditCtrl*);
+void SetPos(EditCtrl*, RECT*);

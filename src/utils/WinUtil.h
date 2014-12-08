@@ -16,6 +16,9 @@
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
+inline int RectDx(const RECT& r) { return r.right - r.left; }
+inline int RectDy(const RECT& r) { return r.bottom - r.top; }
+
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
@@ -25,6 +28,7 @@ BOOL    SafeCloseHandle(HANDLE *h);
 BOOL    SafeDestroyWindow(HWND *hwnd);
 void    FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc);
 inline void MoveWindow(HWND hwnd, RectI rect) { MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE); }
+inline void MoveWindow(HWND hwnd, RECT *r) { MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE); }
 
 bool   _IsAppThemed();
 bool   IsRunningInWow64();
@@ -91,9 +95,6 @@ WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 bool    IsRtl(HWND hwnd);
 void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void    ResizeWindow(HWND, int dx, int dy);
-
-inline int RectDx(const RECT& r) { return r.right - r.left; }
-inline int RectDy(const RECT& r) { return r.bottom - r.top; }
 
 // schedule WM_PAINT at window's leasure
 inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, NULL, FALSE); }

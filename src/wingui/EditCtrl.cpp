@@ -177,3 +177,5 @@ SIZE GetIdealSize(EditCtrl *w) {
 
     return res;
 }
+
+void SetPos(EditCtrl *w, RECT *r) { MoveWindow(w->hwnd, r); }
