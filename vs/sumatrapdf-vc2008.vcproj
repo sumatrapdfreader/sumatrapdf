@@ -612,10 +612,6 @@
 				Name="base"
 				>
 				<File
-					RelativePath="..\src\utils\Allocator.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\BaseUtil.cpp"
 					>
 				</File>

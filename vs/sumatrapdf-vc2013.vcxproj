@@ -448,7 +448,6 @@
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
-    <ClInclude Include="..\src\utils\Allocator.h" />
     <ClInclude Include="..\src\utils\ArchUtil.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitManip.h" />

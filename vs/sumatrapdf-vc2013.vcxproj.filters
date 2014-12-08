@@ -1145,9 +1145,6 @@
     <ClInclude Include="..\src\mui\TextRender.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Allocator.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\ArchUtil.h">
       <Filter>utils</Filter>
     </ClInclude>

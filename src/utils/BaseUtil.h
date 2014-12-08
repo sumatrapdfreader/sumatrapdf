@@ -212,7 +212,169 @@ bool ListRemove(T** root, T* el)
     return true;
 }
 
-#include "Allocator.h"
+// Base class for allocators that can be provided to Vec class
+// (and potentially others). Needed because e.g. in crash handler
+// we want to use Vec but not use standard malloc()/free() functions
+class Allocator {
+public:
+    Allocator() {}
+    virtual ~Allocator() { };
+    virtual void *Alloc(size_t size) = 0;
+    virtual void *Realloc(void *mem, size_t size) = 0;
+    virtual void Free(void *mem) = 0;
+
+    // helper functions that fallback to malloc()/free() if allocator is NULL
+    // helps write clients where allocator is optional
+    static void *Alloc(Allocator *a, size_t size);
+
+    template <typename T>
+    static T *Alloc(Allocator *a, size_t n=1) {
+        size_t size = n * sizeof(T);
+        return (T *)AllocZero(a, size);
+    }
+
+    static void *AllocZero(Allocator *a, size_t size);
+    static void Free(Allocator *a, void *p);
+    static void* Realloc(Allocator *a, void *mem, size_t size);
+    static void *Dup(Allocator *a, const void *mem, size_t size, size_t padding=0);
+    static char *StrDup(Allocator *a, const char *str);
+    static WCHAR *StrDup(Allocator *a, const WCHAR *str);
+};
+
+// PoolAllocator is for the cases where we need to allocate pieces of memory
+// that are meant to be freed together. It simplifies the callers (only need
+// to track this object and not all allocated pieces). Allocation and freeing
+// is faster. The downside is that free() is a no-op i.e. it can't free memory
+// for re-use.
+//
+// Note: we could be a bit more clever here by allocating data in 4K chunks
+// via VirtualAlloc() etc. instead of malloc(), which would lower the overhead
+class PoolAllocator : public Allocator {
+
+    // we'll allocate block of the minBlockSize unless
+    // asked for a block of bigger size
+    size_t  minBlockSize;
+    size_t  allocRounding;
+
+    struct MemBlockNode {
+        struct MemBlockNode *next;
+        size_t               size;
+        size_t               free;
+
+        size_t               Used() { return size - free; }
+        char *               DataStart() { return (char*)this + sizeof(MemBlockNode); }
+        // data follows here
+    };
+
+    MemBlockNode *  currBlock;
+    MemBlockNode *  firstBlock;
+
+    void Init();
+
+public:
+    explicit PoolAllocator(size_t rounding=8) : minBlockSize(4096), allocRounding(rounding) {
+        Init();
+    }
+
+    void SetMinBlockSize(size_t newMinBlockSize);
+    void SetAllocRounding(size_t newRounding);
+    void FreeAll();
+    virtual ~PoolAllocator() override;
+    void AllocBlock(size_t minSize);
+
+    // Allocator methods
+    virtual void *Realloc(void *mem, size_t size) override;
+
+    virtual void Free(void *mem) override {
+        // does nothing, we can't free individual pieces of memory
+    }
+
+    virtual void *Alloc(size_t size) override;
+
+    void *FindNthPieceOfSize(size_t size, size_t n) const;
+
+    template <typename T>
+    T *GetAtPtr(size_t idx) const {
+        void *mem = FindNthPieceOfSize(sizeof(T), idx);
+        return reinterpret_cast<T*>(mem);
+    }
+
+    // only valid for structs, could alloc objects with
+    // placement new()
+    template <typename T>
+    T *AllocStruct() {
+        return (T *)Alloc(sizeof(T));
+    }
+
+    // Iterator for easily traversing allocated memory as array
+    // of values of type T. The caller has to enforce the fact
+    // that the values stored are indeed values of T
+    // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    template <typename T>
+    class Iter {
+        MemBlockNode *block;
+        size_t blockPos;
+
+    public:
+        Iter(MemBlockNode *block) : block(block), blockPos(0) {
+            CrashIf(block && (block->Used() % sizeof(T)) != 0);
+            CrashIf(block && block->Used() == 0);
+        }
+
+        bool operator!=(const Iter& other) const {
+            return block != other.block || blockPos != other.blockPos;
+        }
+        T& operator*() const {
+            return *(T *)(block->DataStart() + blockPos);
+        }
+        Iter& operator++() {
+            blockPos += sizeof(T);
+            if (block->Used() == blockPos) {
+                block = block->next;
+                blockPos = 0;
+                CrashIf(block && block->Used() == 0);
+            }
+            return *this;
+        }
+    };
+
+    template <typename T>
+    Iter<T> begin() {
+        return Iter<T>(firstBlock);
+    }
+    template <typename T>
+    Iter<T> end() {
+        return Iter<T>(NULL);
+    }
+};
+
+// A helper for allocating an array of elements of type T
+// either on stack (if they fit within StackBufInBytes)
+// or in memory. Allocating on stack is a perf optimization
+// note: not the best name
+template <typename T, int StackBufInBytes>
+class FixedArray {
+    T stackBuf[StackBufInBytes / sizeof(T)];
+    T *memBuf;
+public:
+    explicit FixedArray(size_t elCount) {
+        memBuf = NULL;
+        size_t stackEls = StackBufInBytes / sizeof(T);
+        if (elCount > stackEls)
+            memBuf = (T*)malloc(elCount * sizeof(T));
+    }
+
+    ~FixedArray() {
+        free(memBuf);
+    }
+
+    T *Get() {
+        if (memBuf)
+            return memBuf;
+        return &(stackBuf[0]);
+    }
+};
+
 #include "GeomUtil.h"
 #include "Scoped.h"
 #include "StrUtil.h"

@@ -26,7 +26,6 @@
             },
             'msvs_disabled_warnings': [4996],
             'sources': [
-                "<(src)/Allocator.h",
                 "<(src)/ArchUtil.cpp",
                 "<(src)/ArchUtil.h",
                 "<(src)/BaseUtil.cpp",
