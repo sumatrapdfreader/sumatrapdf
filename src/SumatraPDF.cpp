@@ -236,25 +236,25 @@ bool OpenFileExternally(const WCHAR *path)
     static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
 
-bool CanSendAsEmailAttachment(WindowInfo *win)
+bool CanSendAsEmailAttachment(TabInfo *tab)
 {
     // Requirements: a valid filename and access to SendMail's IDropTarget interface
-    if (!CanViewExternally(win))
+    if (!CanViewExternally(tab))
         return false;
 
     ScopedComPtr<IDropTarget> pDropTarget;
     return pDropTarget.Create(CLSID_SendMail);
 }
 
-static bool SendAsEmailAttachment(WindowInfo *win)
+static bool SendAsEmailAttachment(TabInfo *tab, HWND hwndParent=nullptr)
 {
-    if (!CanSendAsEmailAttachment(win))
+    if (!tab || !CanSendAsEmailAttachment(tab))
         return false;
 
     // We use the SendTo drop target provided by SendMail.dll, which should ship with all
     // commonly used Windows versions, instead of MAPISendMail, which doesn't support
     // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(win->loadedFilePath, win->hwndFrame));
+    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(tab->filePath, hwndParent));
     if (!pDataObject)
         return false;
 
@@ -3920,27 +3920,27 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_WITH_ACROBAT:
-            ViewWithAcrobat(win);
+            ViewWithAcrobat(win->currentTab);
             break;
 
         case IDM_VIEW_WITH_FOXIT:
-            ViewWithFoxit(win);
+            ViewWithFoxit(win->currentTab);
             break;
 
         case IDM_VIEW_WITH_PDF_XCHANGE:
-            ViewWithPDFXChange(win);
+            ViewWithPDFXChange(win->currentTab);
             break;
 
         case IDM_VIEW_WITH_XPS_VIEWER:
-            ViewWithXPSViewer(win);
+            ViewWithXPSViewer(win->currentTab);
             break;
 
         case IDM_VIEW_WITH_HTML_HELP:
-            ViewWithHtmlHelp(win);
+            ViewWithHtmlHelp(win->currentTab);
             break;
 
         case IDM_SEND_BY_EMAIL:
-            SendAsEmailAttachment(win);
+            SendAsEmailAttachment(win->currentTab, win->hwndFrame);
             break;
 
         case IDM_PROPERTIES:

@@ -140,7 +140,7 @@ void  UpdateDocumentColors();
 void  UpdateTabFileDisplayStateForWin(WindowInfo *win, TabInfo *td);
 bool  FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield=false);
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
-bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
+bool  CanSendAsEmailAttachment(TabInfo *tab=nullptr);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);
 
 COLORREF GetLogoBgColor();

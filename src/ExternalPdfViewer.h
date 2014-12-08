@@ -1,20 +1,20 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-bool CanViewExternally(WindowInfo *win=NULL);
-bool CouldBePDFDoc(WindowInfo *win);
+bool CanViewExternally(TabInfo *tab=nullptr);
+bool CouldBePDFDoc(TabInfo *tab);
 
-bool CanViewWithFoxit(WindowInfo *win=NULL);
-bool ViewWithFoxit(WindowInfo *win, const WCHAR *args=NULL);
-bool CanViewWithPDFXChange(WindowInfo *win=NULL);
-bool ViewWithPDFXChange(WindowInfo *win, const WCHAR *args=NULL);
-bool CanViewWithAcrobat(WindowInfo *win=NULL);
-bool ViewWithAcrobat(WindowInfo *win, const WCHAR *args=NULL);
+bool CanViewWithFoxit(TabInfo *tab=nullptr);
+bool ViewWithFoxit(TabInfo *tab, const WCHAR *args=nullptr);
+bool CanViewWithPDFXChange(TabInfo *tab=nullptr);
+bool ViewWithPDFXChange(TabInfo *tab, const WCHAR *args=nullptr);
+bool CanViewWithAcrobat(TabInfo *tab=nullptr);
+bool ViewWithAcrobat(TabInfo *tab, const WCHAR *args=nullptr);
 
-bool CanViewWithXPSViewer(WindowInfo *win);
-bool ViewWithXPSViewer(WindowInfo *win, const WCHAR *args=NULL);
+bool CanViewWithXPSViewer(TabInfo *tab);
+bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args=nullptr);
 
-bool CanViewWithHtmlHelp(WindowInfo *win);
-bool ViewWithHtmlHelp(WindowInfo *win, const WCHAR *args=NULL);
+bool CanViewWithHtmlHelp(TabInfo *tab);
+bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args=nullptr);
 
 bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo=0);

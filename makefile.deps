@@ -288,7 +288,7 @@ $(OS)\ExternalPdfViewer.obj: $B\src\ExternalPdfViewer.h $B\src\GlobalPrefs.h $B\
 $(OS)\ExternalPdfViewer.obj: $B\src\SumatraPDF.h $B\src\TabInfo.h $B\src\utils\BaseUtil.h
 $(OS)\ExternalPdfViewer.obj: $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OS)\ExternalPdfViewer.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\ExternalPdfViewer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\ExternalPdfViewer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\Favorites.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\Controller.h
 $(OS)\Favorites.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\GlobalPrefs.h
 $(OS)\Favorites.obj: $B\src\Menu.h $B\src\resource.h $B\src\SettingsStructs.h

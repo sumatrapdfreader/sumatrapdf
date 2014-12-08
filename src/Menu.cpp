@@ -650,15 +650,15 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 
     // Also suppress PDF specific items for non-PDF documents
-    if (!CouldBePDFDoc(win) || !CanViewWithAcrobat())
+    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithAcrobat())
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (!CouldBePDFDoc(win) || !CanViewWithFoxit())
+    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithFoxit())
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (!CouldBePDFDoc(win) || !CanViewWithPDFXChange())
+    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithPDFXChange())
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
-    if (!CanViewWithXPSViewer(win))
+    if (!CanViewWithXPSViewer(win->currentTab))
         win::menu::Remove(menu, IDM_VIEW_WITH_XPS_VIEWER);
-    if (!CanViewWithHtmlHelp(win))
+    if (!CanViewWithHtmlHelp(win->currentTab))
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
 }
 

@@ -15,7 +15,6 @@
 #include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"
-#include "WindowInfo.h"
 #include "TabInfo.h"
 #include "ExternalPdfViewer.h"
 
@@ -106,34 +105,35 @@ static WCHAR *GetHtmlHelpPath()
     return NULL;
 }
 
-bool CanViewExternally(WindowInfo *win)
+bool CanViewExternally(TabInfo *tab)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;
-    if (!win || win->IsAboutWindow())
+    // if tab is nullptr, we're queried for the
+    // About window with disabled menu items
+    if (!tab)
         return true;
-    return file::Exists(win->loadedFilePath);
+    return file::Exists(tab->filePath);
 }
 
-bool CouldBePDFDoc(WindowInfo *win)
+bool CouldBePDFDoc(TabInfo *tab)
 {
-    CrashIf(!win);
     // consider any error state a potential PDF document
-    return !win->currentTab || win->currentTab->GetEngineType() == Engine_PDF;
+    return !tab || !tab->ctrl || tab->GetEngineType() == Engine_PDF;
 }
 
-bool CanViewWithFoxit(WindowInfo *win)
+bool CanViewWithFoxit(TabInfo *tab)
 {
     // Requirements: a valid filename and a valid path to Foxit
-    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
+    if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> path(GetFoxitPath());
     return path != NULL;
 }
 
-bool ViewWithFoxit(WindowInfo *win, const WCHAR *args)
+bool ViewWithFoxit(TabInfo *tab, const WCHAR *args)
 {
-    if (!CanViewWithFoxit(win))
+    if (!tab || !CanViewWithFoxit(tab))
         return false;
 
     ScopedMem<WCHAR> exePath(GetFoxitPath());
@@ -146,25 +146,25 @@ bool ViewWithFoxit(WindowInfo *win, const WCHAR *args)
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
     ScopedMem<WCHAR> params;
-    if (win->IsDocLoaded())
-        params.Set(str::Format(L"\"%s\" %s -n %d", win->ctrl->FilePath(), args, win->ctrl->CurrentPageNo()));
+    if (tab->ctrl)
+        params.Set(str::Format(L"\"%s\" %s -n %d", tab->ctrl->FilePath(), args, tab->ctrl->CurrentPageNo()));
     else
-        params.Set(str::Format(L"\"%s\" %s", win->loadedFilePath, args));
+        params.Set(str::Format(L"\"%s\" %s", tab->filePath, args));
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithPDFXChange(WindowInfo *win)
+bool CanViewWithPDFXChange(TabInfo *tab)
 {
     // Requirements: a valid filename and a valid path to PDF X-Change
-    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
+    if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> path(GetPDFXChangePath());
     return path != NULL;
 }
 
-bool ViewWithPDFXChange(WindowInfo *win, const WCHAR *args)
+bool ViewWithPDFXChange(TabInfo *tab, const WCHAR *args)
 {
-    if (!CanViewWithPDFXChange(win))
+    if (!tab || !CanViewWithPDFXChange(tab))
         return false;
 
     ScopedMem<WCHAR> exePath(GetPDFXChangePath());
@@ -177,25 +177,25 @@ bool ViewWithPDFXChange(WindowInfo *win, const WCHAR *args)
     // [/A "param=value [&param2=value ..."] [PDF filename]
     // /A params: page=<page number>
     ScopedMem<WCHAR> params;
-    if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, win->ctrl->CurrentPageNo(), win->ctrl->FilePath()));
+    if (tab->ctrl)
+        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, tab->ctrl->CurrentPageNo(), tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithAcrobat(WindowInfo *win)
+bool CanViewWithAcrobat(TabInfo *tab)
 {
     // Requirements: a valid filename and a valid path to Adobe Reader
-    if (win && !CouldBePDFDoc(win) || !CanViewExternally(win))
+    if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
 }
 
-bool ViewWithAcrobat(WindowInfo *win, const WCHAR *args)
+bool ViewWithAcrobat(TabInfo *tab, const WCHAR *args)
 {
-    if (!CanViewWithAcrobat(win))
+    if (!tab || !CanViewWithAcrobat(tab))
         return false;
 
     ScopedMem<WCHAR> exePath(GetAcrobatPath());
@@ -212,32 +212,32 @@ bool ViewWithAcrobat(WindowInfo *win, const WCHAR *args)
     //   /P <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
-    if (win->IsDocLoaded() && HIWORD(GetFileVersion(exePath)) >= 6)
-        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", win->ctrl->CurrentPageNo(), args, win->ctrl->FilePath()));
+    if (tab->ctrl && HIWORD(GetFileVersion(exePath)) >= 6)
+        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", tab->ctrl->CurrentPageNo(), args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
 
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithXPSViewer(WindowInfo *win)
+bool CanViewWithXPSViewer(TabInfo *tab)
 {
     // Requirements: a valid filename and a valid path to XPS-Viewer
-    if (!win || win->IsAboutWindow() || !CanViewExternally(win))
+    if (!tab || !CanViewExternally(tab))
         return false;
     // allow viewing with XPS-Viewer, if either an XPS document is loaded...
-    if (win->currentTab && win->currentTab->GetEngineType() != Engine_XPS)
+    if (tab->ctrl && tab->GetEngineType() != Engine_XPS)
         return false;
     // or a file ending in .xps or .oxps has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps") && !str::EndsWithI(win->loadedFilePath, L".oxps"))
+    if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".xps") && !str::EndsWithI(tab->filePath, L".oxps"))
         return false;
     ScopedMem<WCHAR> path(GetXPSViewerPath());
     return path != NULL;
 }
 
-bool ViewWithXPSViewer(WindowInfo *win, const WCHAR *args)
+bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args)
 {
-    if (!CanViewWithXPSViewer(win))
+    if (!tab || !CanViewWithXPSViewer(tab))
         return false;
 
     ScopedMem<WCHAR> exePath(GetXPSViewerPath());
@@ -248,31 +248,31 @@ bool ViewWithXPSViewer(WindowInfo *win, const WCHAR *args)
         args = L"";
 
     ScopedMem<WCHAR> params;
-    if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s \"%s\"", args, win->ctrl->FilePath()));
+    if (tab->ctrl)
+        params.Set(str::Format(L"%s \"%s\"", args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithHtmlHelp(WindowInfo *win)
+bool CanViewWithHtmlHelp(TabInfo *tab)
 {
     // Requirements: a valid filename and a valid path to HTML Help
-    if (!win || win->IsAboutWindow() || !CanViewExternally(win))
+    if (!tab || !CanViewExternally(tab))
         return false;
     // allow viewing with HTML Help, if either an CHM document is loaded...
-    if (win->currentTab && win->currentTab->GetEngineType() != Engine_Chm2 && !win->AsChm())
+    if (tab->ctrl && tab->GetEngineType() != Engine_Chm2 && !tab->AsChm())
         return false;
     // or a file ending in .chm has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))
+    if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".chm"))
         return false;
     ScopedMem<WCHAR> path(GetHtmlHelpPath());
     return path != NULL;
 }
 
-bool ViewWithHtmlHelp(WindowInfo *win, const WCHAR *args)
+bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args)
 {
-    if (!CanViewWithHtmlHelp(win))
+    if (!tab || !CanViewWithHtmlHelp(tab))
         return false;
 
     ScopedMem<WCHAR> exePath(GetHtmlHelpPath());
@@ -283,10 +283,10 @@ bool ViewWithHtmlHelp(WindowInfo *win, const WCHAR *args)
         args = L"";
 
     ScopedMem<WCHAR> params;
-    if (win->IsDocLoaded())
-        params.Set(str::Format(L"%s \"%s\"", args, win->ctrl->FilePath()));
+    if (tab->ctrl)
+        params.Set(str::Format(L"%s \"%s\"", args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
     return LaunchFile(exePath, params);
 }
 
