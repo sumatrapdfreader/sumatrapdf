@@ -113,7 +113,6 @@
     <ClInclude Include="..\..\src\utils\JsonParser.h" />
     <ClInclude Include="..\..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\..\src\utils\PalmDbReader.h" />
-    <ClInclude Include="..\..\src\utils\RefCounted.h" />
     <ClInclude Include="..\..\src\utils\Scoped.h" />
     <ClInclude Include="..\..\src\utils\SerializeTxt.h" />
     <ClInclude Include="..\..\src\utils\SettingsUtil.h" />

@@ -84,7 +84,6 @@
                 "<(src)/NoFreeAllocator.h",
                 "<(src)/PalmDbReader.cpp",
                 "<(src)/PalmDbReader.h",
-                "<(src)/RefCounted.h",
                 "<(src)/Scoped.h",
                 "<(src)/SerializeTxt.cpp",
                 "<(src)/SerializeTxt.h",

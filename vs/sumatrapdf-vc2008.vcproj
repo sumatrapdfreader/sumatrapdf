@@ -348,10 +348,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\RefCounted.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\StrFormat.cpp"
 					>
 				</File>
