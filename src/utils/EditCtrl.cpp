@@ -95,7 +95,10 @@ void SetColors(EditCtrl *w, COLORREF txtCol, COLORREF bgCol) {
 
 void SetText(EditCtrl *w, const WCHAR *s) { SetWindowTextW(w->hwnd, s); }
 
-void SetCueText(EditCtrl *w, const WCHAR *s) { Edit_SetCueBannerText(w->hwnd, s); }
+bool SetCueText(EditCtrl *w, const WCHAR *s) {
+    CrashIf(!w->hwnd);
+    return Edit_SetCueBannerText(w->hwnd, s) == TRUE;
+}
 
 // caller must free() the result
 WCHAR *GetTextW(EditCtrl *w) { return win::GetText(w->hwnd); }

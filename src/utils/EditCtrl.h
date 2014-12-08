@@ -39,14 +39,14 @@ struct EditCtrl {
 - CreateEditCtrl()
 */
 
-EditCtrl* AllocEditCtrl(HWND parent, RECT *initialPosition);
+EditCtrl* AllocEditCtrl(HWND parent, RECT* initialPosition);
 bool CreateEditCtrl(EditCtrl*);
 
 void DeleteEditCtrl(EditCtrl*);
 void SetColors(EditCtrl*, COLORREF bgCol, COLORREF txtCol);
 void SetFont(EditCtrl*, HFONT);
 void SetText(EditCtrl*, const WCHAR*);
-void SetCueText(EditCtrl*, const WCHAR*);
+bool SetCueText(EditCtrl*, const WCHAR*);
 WCHAR* GetTextW(EditCtrl*);
 char* GetText(EditCtrl*);
 SIZE GetIdealSize(EditCtrl*);
