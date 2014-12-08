@@ -212,6 +212,7 @@
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
+    <ClCompile Include="..\src\wingui\Win32Window.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CPdfFilter.cpp" />
     <ClCompile Include="..\src\ifilter\CTeXFilter.cpp" />
@@ -509,6 +510,7 @@
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
+    <ClInclude Include="..\src\wingui\Win32Window.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h" />
     <ClInclude Include="..\src\ifilter\CPdfFilter.h" />
     <ClInclude Include="..\src\ifilter\CTeXFilter.h" />

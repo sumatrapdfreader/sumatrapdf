@@ -137,7 +137,8 @@
                 "<(src2)/LabelWithCloseWnd.h",
                 "<(src2)/SplitterWnd.cpp",
                 "<(src2)/SplitterWnd.h",
-
+                "<(src2)/Win32Window.cpp",
+                "<(src2)/Win32Window.h",
             ],
         }
     ],

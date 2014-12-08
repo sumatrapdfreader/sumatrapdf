@@ -441,6 +441,9 @@
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\Win32Window.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>
@@ -1326,6 +1329,9 @@
       <Filter>wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\SplitterWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Win32Window.h">
       <Filter>wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ifilter\CEpubFilter.h">

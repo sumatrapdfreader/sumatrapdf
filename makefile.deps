@@ -678,6 +678,10 @@ $(OS)\UnitTests.obj: $B\src\AppUtil.h $B\src\utils\Allocator.h $B\src\utils\Base
 $(OS)\UnitTests.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\UnitTests.obj: $B\src\utils\Scoped.h $B\src\utils\StrFormat.h $B\src\utils\StrUtil.h
 $(OS)\UnitTests.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Win32Window.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
+$(OS)\Win32Window.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OS)\Win32Window.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Win32Window.obj: $B\src\wingui\EditCtrl.h $B\src\wingui\Win32Window.h
 $(OS)\WindowInfo.obj: $B\src\BaseEngine.h $B\src\Caption.h $B\src\ChmModel.h
 $(OS)\WindowInfo.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\Doc.h
 $(OS)\WindowInfo.obj: $B\src\EbookController.h $B\src\EngineManager.h $B\src\GlobalPrefs.h
