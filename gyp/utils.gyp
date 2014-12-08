@@ -79,8 +79,6 @@
                 "<(src)/JsonParser.h",
                 "<(src)/LzmaSimpleArchive.cpp",
                 "<(src)/LzmaSimpleArchive.h",
-                "<(src)/NoFreeAllocator.cpp",
-                "<(src)/NoFreeAllocator.h",
                 "<(src)/PalmDbReader.cpp",
                 "<(src)/PalmDbReader.h",
                 "<(src)/Scoped.h",

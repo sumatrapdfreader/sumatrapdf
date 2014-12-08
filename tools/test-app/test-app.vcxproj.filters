@@ -110,9 +110,6 @@
     <ClInclude Include="..\..\src\utils\JsonParser.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\utils\NoFreeAllocator.h">
-      <Filter>Source Files\utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\utils\PalmDbReader.h">
       <Filter>Source Files\utils</Filter>
     </ClInclude>
@@ -254,9 +251,6 @@
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\JsonParser.cpp">
-      <Filter>Source Files\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\utils\NoFreeAllocator.cpp">
       <Filter>Source Files\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\PalmDbReader.cpp">

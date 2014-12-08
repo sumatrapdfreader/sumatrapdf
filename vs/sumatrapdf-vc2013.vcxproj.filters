@@ -369,9 +369,6 @@
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\NoFreeAllocator.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1233,9 +1230,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\mingw_compat.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\NoFreeAllocator.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\PalmDbReader.h">

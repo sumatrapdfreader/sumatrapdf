@@ -188,7 +188,6 @@
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
-    <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
@@ -478,7 +477,6 @@
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\mingw_compat.h" />
-    <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\SerializeTxt.h" />

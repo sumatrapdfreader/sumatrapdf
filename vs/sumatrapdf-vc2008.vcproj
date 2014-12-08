@@ -340,14 +340,6 @@
 				Name="unused"
 				>
 				<File
-					RelativePath="..\src\utils\NoFreeAllocator.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\NoFreeAllocator.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\StrFormat.cpp"
 					>
 				</File>
