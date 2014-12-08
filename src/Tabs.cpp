@@ -8,8 +8,6 @@
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
-#include "Mui.h"
 #include "UITask.h"
 #include "WinUtil.h"
 // rendering engines
@@ -24,7 +22,6 @@
 #include "WindowInfo.h"
 #include "resource.h"
 #include "Caption.h"
-#include "EbookControls.h"
 #include "Menu.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
@@ -698,7 +695,8 @@ void UpdateCurrentTabBgColor(WindowInfo *win)
 {
     TabPainter *tab = (TabPainter *)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
     if (win->AsEbook()) {
-        GetEbookColors(NULL, &tab->currBgCol);
+        COLORREF txtCol;
+        GetEbookUiColors(txtCol, tab->currBgCol);
     } else {
         // TODO: match either the toolbar (if shown) or background
         tab->currBgCol = DEFAULT_CURRENT_BG_COL;

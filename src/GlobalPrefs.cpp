@@ -10,7 +10,6 @@
 #include "BaseEngine.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "GlobalPrefs.h"
 
 GlobalPrefs *gGlobalPrefs = NULL;

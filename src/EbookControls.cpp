@@ -13,14 +13,10 @@
 #include "TxtParser.h"
 #include "WinUtil.h"
 // rendering engines
-#include "BaseEngine.h"
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
-// layout controllers
-#include "SettingsStructs.h"
-#include "Controller.h"
-#include "GlobalPrefs.h"
 // ui
+#include "SumatraPDF.h"
 #include "resource.h"
 #include "EbookControls.h"
 #include "MuiEbookPageDef.h"
@@ -128,7 +124,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(r, CombineModeReplace);
 
     COLORREF txtCol, bgCol;
-    GetEbookColors(&txtCol, &bgCol);
+    GetEbookUiColors(txtCol, bgCol);
     Color textColor, bgColor;
     textColor.SetFromCOLORREF(txtCol);
 
@@ -180,8 +176,8 @@ ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
 
 void SetMainWndBgCol(EbookControls *ctrls)
 {
-    COLORREF bgColor;
-    GetEbookColors(NULL, &bgColor);
+    COLORREF txtColor, bgColor;
+    GetEbookUiColors(txtColor, bgColor);
 
     Style *styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
@@ -287,21 +283,4 @@ void PagesLayout::Arrange(const Rect finalRect)
     page1->Arrange(r);
     r.X = r.X + dx + spaceDx;
     page2->Arrange(r);
-}
-
-void GetEbookColors(COLORREF* txtColOut, COLORREF* bgColOut)
-{
-    if (txtColOut) {
-        if (gGlobalPrefs->useSysColors)
-            *txtColOut = GetSysColor(COLOR_WINDOWTEXT);
-        else
-            *txtColOut = gGlobalPrefs->ebookUI.textColor;
-    }
-
-    if (bgColOut) {
-        if (gGlobalPrefs->useSysColors)
-            *bgColOut = GetSysColor(COLOR_WINDOW);
-        else
-            *bgColOut = gGlobalPrefs->ebookUI.backgroundColor;
-    }
 }
