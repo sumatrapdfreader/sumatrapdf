@@ -60,8 +60,8 @@ EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
-    // Node: this is sent during creation, which is too early for us (we didn't subclass the window
-    // yet)
+    // Node: this is sent during creation, which is too early for us (we didn't
+    // subclass the window yet)
     // currently, we force it with SetWindowPos(... SMP_FRAMECHANGED)
     if (WM_NCCALCSIZE == msg) {
         NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
@@ -80,9 +80,13 @@ void SetFont(EditCtrl *w, HFONT f) { SetWindowFont(w->hwnd, f, TRUE); }
 
 void SetColors(EditCtrl *w, COLORREF txtCol, COLORREF bgCol) {
     DeleteObject(w->bgBrush);
-    w->bgBrush = NULL;
-    w->txtCol = txtCol;
-    w->bgCol = bgCol;
+    w->bgBrush = nullptr;
+    if (txtCol != NO_CHANGE) {
+        w->txtCol = txtCol;
+    }
+    if (bgCol != NO_CHANGE) {
+        w->bgCol = bgCol;
+    }
     if (w->bgCol != NO_COLOR) {
         w->bgBrush = CreateSolidBrush(bgCol);
     }
@@ -102,13 +106,17 @@ char *GetText(EditCtrl *w) {
     return str::conv::ToUtf8(su.Get());
 }
 
-EditCtrl *AllocEditCtrl(HWND parent, RECT &initialPosition) {
+EditCtrl *AllocEditCtrl(HWND parent, RECT *initialPosition) {
     auto w = AllocStruct<EditCtrl>();
     w->parent = parent;
-    w->initialPos = initialPosition;
+    if (initialPosition) {
+        w->initialPos = *initialPosition;
+    } else {
+        SetRect(&w->initialPos, 0, 0, 120, 28);
+    }
 
     w->dwExStyle = 0;
-    w->dwStyle = WS_CHILD | ES_LEFT | ES_AUTOHSCROLL;
+    w->dwStyle = WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL;
 
     w->txtCol = NO_COLOR;
     w->bgCol = NO_COLOR;
@@ -130,7 +138,7 @@ bool CreateEditCtrl(EditCtrl *w) {
     if (!w->hwnd) {
         return false;
     }
-
+    SetFont(w, GetDefaultGuiFont());
     SetWindowSubclass(w->hwnd, EditProc, 0, (DWORD_PTR)w);
     SetWindowSubclass(GetParent(w->hwnd), EditParentProc, 0, (DWORD_PTR)w);
     return true;

@@ -5,6 +5,9 @@ typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& d
 MsgFilter;
 typedef std::function<void(EditCtrl*)> EditCtrlCb;
 
+// pass to SetColor() function to indicate this color should not change
+#define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers
+
 struct EditCtrl {
     // creation parameters. must be set before CreateEditWnd() call
     HWND parent;
@@ -36,7 +39,7 @@ struct EditCtrl {
 - CreateEditCtrl()
 */
 
-EditCtrl* AllocEditCtrl(HWND parent, RECT& initialPosition);
+EditCtrl* AllocEditCtrl(HWND parent, RECT *initialPosition);
 bool CreateEditCtrl(EditCtrl*);
 
 void DeleteEditCtrl(EditCtrl*);
