@@ -6,12 +6,20 @@ class LinkHandler;
 class Notifications;
 class StressTest;
 class SumatraUIAutomationProvider;
-struct SelectionOnPage;
-struct WatchedFile;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
 struct SplitterWnd;
 class CaptionInfo;
+
+class PageElement;
+class PageDestination;
+class DocTocItem;
+class Controller;
+class ControllerCallback;
+class ChmModel;
+class DisplayModel;
+class EbookController;
+class TabInfo;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -66,44 +74,6 @@ struct StaticLinkInfo {
     const WCHAR *infotip;
 };
 
-/* Data related to a single document loaded into a tab/window */
-/* (none of these depend on WindowInfo, so that a TabInfo could
-   be moved between windows once this is supported) */
-class TabInfo
-{
-public:
-    ScopedMem<WCHAR> filePath;
-    Controller *ctrl;
-    const WCHAR *tabTitle;
-    // text of win->hwndFrame when the tab is selected
-    ScopedMem<WCHAR> frameTitle;
-    // state of the table of contents
-    bool showToc, showTocPresentation;
-    DocTocItem *tocRoot;
-    // an array of ids for ToC items that have been expanded/collapsed by user
-    Vec<int> tocState;
-    // canvas dimensions when the document was last visible
-    RectI canvasRc;
-    // whether to auto-reload the document when the tab is selected
-    bool reloadOnFocus;
-    // FileWatcher token for unsubscribing
-    WatchedFile *watcher;
-    // list of rectangles of the last rectangular, text or image selection
-    // (split by page, in user coordinates)
-    Vec<SelectionOnPage> *selectionOnPage;
-    // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
-    float prevZoomVirtual;
-    DisplayMode prevDisplayMode;
-
-    TabInfo();
-    ~TabInfo();
-
-    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
-    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
-    EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
-    EngineType GetEngineType() const;
-};
-
 /* Describes information related to one window with (optional) a document
    on the screen */
 class WindowInfo
@@ -115,20 +85,12 @@ public:
     // TODO: error windows currently have
     //       !IsAboutWindow() && !IsDocLoaded()
     //       which doesn't allow distinction between PDF, XPS, etc. errors
-    bool IsAboutWindow() const {
-        CrashIf(!loadedFilePath != !currentTab);
-        return !loadedFilePath;
-    }
-    bool IsDocLoaded() const {
-        CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
-        return this->ctrl != NULL;
-    }
+    bool IsAboutWindow() const;
+    bool IsDocLoaded() const;
 
-    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
-    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
-    EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
-
-    EngineType GetEngineType() const { return currentTab ? currentTab->GetEngineType() : Engine_None; }
+    DisplayModel *AsFixed() const;
+    ChmModel *AsChm() const;
+    EbookController *AsEbook() const;
 
     // TODO: use currentTab->filePath instead
     const WCHAR *   loadedFilePath; // owned by currentTab
@@ -301,16 +263,6 @@ public:
 
     void GotoLink(PageDestination *link);
     void GotoNamedDest(const WCHAR *name);
-};
-
-class LinkSaver : public LinkSaverUI {
-    WindowInfo *owner;
-    const WCHAR *fileName;
-
-public:
-    LinkSaver(WindowInfo& win, const WCHAR *fileName) : owner(&win), fileName(fileName) { }
-
-    virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount);
 };
 
 // TODO: this belongs in SumatraPDF.h but introduces a dependency on SettingsStructs.h

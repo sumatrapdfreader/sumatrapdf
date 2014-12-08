@@ -20,6 +20,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "Caption.h"
 #include "Menu.h"

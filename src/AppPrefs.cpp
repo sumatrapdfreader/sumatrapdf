@@ -10,10 +10,8 @@
 // rendering engines
 #include "BaseEngine.h"
 #include "EbookEngine.h"
-#include "EngineManager.h"
 // layout controllers
 #include "SettingsStructs.h"
-#include "Controller.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
 // ui

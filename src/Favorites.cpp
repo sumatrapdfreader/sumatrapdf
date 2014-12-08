@@ -9,10 +9,8 @@
 #include "LabelWithCloseWnd.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
-#include "BaseEngine.h"
-#include "EngineManager.h"
 // layout controllers
+#include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"

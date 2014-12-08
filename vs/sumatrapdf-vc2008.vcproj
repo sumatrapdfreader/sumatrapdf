@@ -1162,6 +1162,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\TabInfo.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\TabInfo.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\WindowInfo.cpp"
 					>
 				</File>

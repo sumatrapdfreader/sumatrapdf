@@ -8,7 +8,6 @@
 #include <dwmapi.h>
 #include <vssym32.h>
 #include "FileUtil.h"
-#include "FileWatcher.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"
 // rendering engines
@@ -27,6 +26,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "Caption.h"
 #include "Notifications.h"
@@ -101,30 +101,21 @@ WindowInfo::~WindowInfo()
     free(favLabelWithClose);
 }
 
-TabInfo::TabInfo() :
-    ctrl(NULL), tabTitle(NULL),
-    showToc(false), showTocPresentation(false), tocRoot(NULL),
-    reloadOnFocus(false), watcher(NULL), selectionOnPage(NULL),
-    prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)
+bool WindowInfo::IsAboutWindow() const
 {
+    CrashIf(!loadedFilePath != !currentTab);
+    return NULL == currentTab;
 }
 
-TabInfo::~TabInfo()
+bool WindowInfo::IsDocLoaded() const
 {
-    FileWatcherUnsubscribe(watcher);
-    if (AsChm())
-        AsChm()->RemoveParentHwnd();
-    delete tocRoot;
-    delete selectionOnPage;
-    delete ctrl;
+    CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
+    return this->ctrl != NULL;
 }
 
-EngineType TabInfo::GetEngineType() const
-{
-    if (ctrl && ctrl->AsFixed())
-        return ctrl->AsFixed()->engineType;
-    return Engine_None;
-}
+DisplayModel *WindowInfo::AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
+ChmModel *WindowInfo::AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
+EbookController *WindowInfo::AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
 
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
@@ -331,7 +322,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         }
         // offer to save other attachments to a file
         else {
-            LinkSaver linkSaverTmp(*owner, path);
+            LinkSaver linkSaverTmp(owner, path);
             link->SaveEmbedded(linkSaverTmp);
         }
     }

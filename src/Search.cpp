@@ -13,7 +13,6 @@
 #include "WinUtil.h"
 // rendering engines
 #include "BaseEngine.h"
-#include "PdfEngine.h"
 #include "EngineManager.h"
 // layout controllers
 #include "SettingsStructs.h"
@@ -27,6 +26,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "AppTools.h"
 #include "Notifications.h"
@@ -387,7 +387,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return false;
-    if (win->GetEngineType() != Engine_PDF) return false;
+    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_PDF) return false;
     DisplayModel *dm = win->AsFixed();
 
     // Clear the last forward-search result
@@ -578,7 +578,7 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
         }
     }
 
-    if (!win || win->GetEngineType() != Engine_PDF)
+    if (!win || !win->currentTab || win->currentTab->GetEngineType() != Engine_PDF)
         return next;
     if (!win->AsFixed()->pdfSync)
         return next;

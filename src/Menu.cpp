@@ -20,6 +20,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "ExternalPdfViewer.h"
 #include "Favorites.h"
@@ -52,7 +53,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
-    if (Engine_ComicBook == win->GetEngineType()) {
+    if (win->currentTab && win->currentTab->GetEngineType() == Engine_ComicBook) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
@@ -470,7 +471,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->ctrl->CanNavigate(1));
     }
 
-    if (win->GetEngineType() == Engine_ImageDir) {
+    if (win->currentTab && win->currentTab->GetEngineType() == Engine_ImageDir) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);
@@ -670,7 +671,7 @@ HMENU BuildMenu(WindowInfo *win)
         filter |= MF_NOT_FOR_CHM;
     else if (win->AsEbook())
         filter |= MF_NOT_FOR_EBOOK_UI;
-    if (win->GetEngineType() != Engine_ComicBook)
+    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook)
         filter |= MF_CBX_ONLY;
 
     HMENU m = CreateMenu();

@@ -48,6 +48,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -711,7 +712,7 @@ void ControllerCallbackHandler::FocusFrame(bool always)
 void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
 {
     ScopedMem<WCHAR> fileName(url::GetFileName(url));
-    LinkSaver(*win, fileName).SaveEmbedded(data, len);
+    LinkSaver(win, fileName).SaveEmbedded(data, len);
 }
 
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data)
@@ -909,7 +910,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
             int dpi = gGlobalPrefs->customScreenDPI > 0 ? dpi = gGlobalPrefs->customScreenDPI : DpiGetPreciseX(win->hwndFrame);
             dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
-            if (win->GetEngineType() == Engine_ComicBook || win->GetEngineType() == Engine_ImageDir)
+            if (tab->GetEngineType() == Engine_ComicBook || tab->GetEngineType() == Engine_ImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
@@ -1017,7 +1018,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     }
     win::SetText(win->hwndFrame, tab->frameTitle);
 
-    if (HasPermission(Perm_DiskAccess) && win->GetEngineType() == Engine_PDF) {
+    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF) {
         CrashIf(!win->AsFixed());
         CrashIf(win->AsFixed()->pdfSync && win->ctrl != prevCtrl);
         delete win->AsFixed()->pdfSync;
@@ -2247,11 +2248,11 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!srcFileName) return;
 
     BaseEngine *engine = win.AsFixed() ? win.AsFixed()->GetEngine() : NULL;
-    bool canConvertToTXT = engine && !engine->IsImageCollection() && win.GetEngineType() != Engine_Txt;
-    bool canConvertToPDF = engine && win.GetEngineType() != Engine_PDF;
+    bool canConvertToTXT = engine && !engine->IsImageCollection() && win.currentTab->GetEngineType() != Engine_Txt;
+    bool canConvertToPDF = engine && win.currentTab->GetEngineType() != Engine_PDF;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
-    if (canConvertToPDF && win.GetEngineType() != Engine_PS && !engine->IsImageCollection())
+    if (canConvertToPDF && win.currentTab->GetEngineType() != Engine_PS && !engine->IsImageCollection())
         canConvertToPDF = false;
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -2262,8 +2263,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (engine && !engine->AllowsPrinting())
         canConvertToPDF = false;
 #endif
-    CrashIf(canConvertToTXT && (!engine || engine->IsImageCollection() || Engine_Txt == win.GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || Engine_PDF == win.GetEngineType()));
+    CrashIf(canConvertToTXT && (!engine || engine->IsImageCollection() || Engine_Txt == win.currentTab->GetEngineType()));
+    CrashIf(canConvertToPDF && (!engine || Engine_PDF == win.currentTab->GetEngineType()));
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -2403,39 +2404,6 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     if (realDstFileName != dstFileName)
         free(realDstFileName);
-}
-
-bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
-{
-    if (!HasPermission(Perm_DiskAccess))
-        return false;
-
-    WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : L"");
-    CrashIf(fileName && str::FindChar(fileName, '/'));
-
-    // Prepare the file filters (use \1 instead of \0 so that the
-    // double-zero terminated string isn't cut by the string handling
-    // methods too early on)
-    ScopedMem<WCHAR> fileFilter(str::Format(L"%s\1*.*\1", _TR("All files")));
-    str::TransChars(fileFilter, L"\1", L"\0");
-
-    OPENFILENAME ofn = { 0 };
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = owner->hwndFrame;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter;
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-
-    bool ok = GetSaveFileName(&ofn);
-    if (!ok)
-        return false;
-    ok = file::WriteAll(dstFileName, data, len);
-    if (ok && IsUntrustedFile(owner->ctrl ? owner->ctrl->FilePath() : owner->loadedFilePath, gPluginURL))
-        file::SetZoneIdentifier(dstFileName);
-    return ok;
 }
 
 static void OnMenuRenameFile(WindowInfo &win)
@@ -2961,8 +2929,8 @@ static void OnMenuViewContinuous(WindowInfo& win)
 
 static void OnMenuViewMangaMode(WindowInfo *win)
 {
-    CrashIf(win->GetEngineType() != Engine_ComicBook);
-    if (win->GetEngineType() != Engine_ComicBook) return;
+    CrashIf(!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook);
+    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook) return;
     DisplayModel *dm = win->AsFixed();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());
     ScrollState state = dm->GetScrollState();
