@@ -19,6 +19,9 @@
     <Filter Include="utils">
       <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wingui">
+      <UniqueIdentifier>{94D37D24-CCF9-4A26-A95B-A4E6EE6F19C3}</UniqueIdentifier>
+    </Filter>
     <Filter Include="docs">
       <UniqueIdentifier>{367a3cbe-0f88-4739-8890-c93e3b756c3f}</UniqueIdentifier>
     </Filter>
@@ -321,9 +324,6 @@
     <ClCompile Include="..\src\utils\DebugLog.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\DialogSizer.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\Dict.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -333,9 +333,6 @@
     <ClCompile Include="..\src\utils\Dpi.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\EditCtrl.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\FileTransactions.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -343,9 +340,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\FileWatcher.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\FrameRateWnd.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\FzImgReader.cpp">
@@ -372,9 +366,6 @@
     <ClCompile Include="..\src\utils\JsonParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\LabelWithCloseWnd.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -388,9 +379,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SettingsUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\SplitterWnd.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
@@ -437,6 +425,21 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\ZipUtil.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DialogSizer.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\EditCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
+      <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <Filter>ifilter</Filter>
@@ -1178,9 +1181,6 @@
     <ClInclude Include="..\src\utils\DebugLog.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\DialogSizer.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\Dict.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -1190,9 +1190,6 @@
     <ClInclude Include="..\src\utils\Dpi.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\EditCtrl.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\FileTransactions.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -1200,9 +1197,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\FileWatcher.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\FrameRateWnd.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\FrameTimeoutCalculator.h">
@@ -1235,9 +1229,6 @@
     <ClInclude Include="..\src\utils\JsonParser.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\LabelWithCloseWnd.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -1263,9 +1254,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SimpleLog.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\SplitterWnd.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SquareTreeParser.h">
@@ -1324,6 +1312,21 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\ZipUtil.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DialogSizer.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\EditCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\FrameRateWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\SplitterWnd.h">
+      <Filter>wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ifilter\CEpubFilter.h">
       <Filter>ifilter</Filter>

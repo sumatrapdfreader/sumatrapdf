@@ -229,6 +229,7 @@ g_sumatra_ebook_files = list_top_dir_files("src", is_sumatra_ebook_src_file)
 g_sumatra_uia_files = list_top_dir_files(pj("src", "uia"), is_any_file)
 g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_or_docs_file)
 g_utils_files = list_top_dir_files(pj("src", "utils"), is_c_src_file)
+g_wingui_files = list_top_dir_files(pj("src", "wingui"), is_c_src_file)
 g_docs_files = list_top_dir_files("docs", is_docs_file)
 g_chm_files = list_top_dir_files(pj("ext", "CHMLib", "src"), is_c_src_file)
 g_resource_files = list_top_dir_files("src", is_resources_group_file)
@@ -255,6 +256,7 @@ g_filters = [
            "{9c5193d1-868c-46a9-bf38-fd1d816e5b54}", g_sumatra_uia_files),
     Filter("mui", "{0cbc9131-0370-46a1-a361-d8c441d9f9c5}", g_mui_files),
     Filter("utils", "{88c95b88-1f3f-4262-835b-91b32349401b}", g_utils_files),
+    Filter("wingui", "{94D37D24-CCF9-4A26-A95B-A4E6EE6F19C3}", g_wingui_files),
     Filter("docs", "{367a3cbe-0f88-4739-8890-c93e3b756c3f}", g_docs_files),
     Filter("Resource Files",
            "{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}", g_resource_files),

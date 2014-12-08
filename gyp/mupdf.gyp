@@ -155,6 +155,7 @@
                 "../mupdf/source/fitz/ucdn.c",
                 "../mupdf/source/fitz/ucdn.h",
                 "../mupdf/source/fitz/unicodedata_db.h",
+                "../mupdf/source/fitz/unzip.c",
                 "../mupdf/source/fitz/xml.c",
                 "../mupdf/source/pdf/pdf-annot-edit.c",
                 "../mupdf/source/pdf/pdf-annot.c",

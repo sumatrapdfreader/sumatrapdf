@@ -248,14 +248,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\DialogSizer.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\DialogSizer.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\Dpi.cpp"
 					>
 				</File>
@@ -312,22 +304,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\LabelWithCloseWnd.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\LabelWithCloseWnd.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SplitterWnd.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SplitterWnd.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\ThreadUtil.cpp"
 					>
 				</File>
@@ -363,22 +339,6 @@
 			<Filter
 				Name="unused"
 				>
-				<File
-					RelativePath="..\src\utils\EditCtrl.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\EditCtrl.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\FrameRateWnd.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\FrameRateWnd.h"
-					>
-				</File>
 				<File
 					RelativePath="..\src\utils\NoFreeAllocator.cpp"
 					>

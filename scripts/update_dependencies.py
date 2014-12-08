@@ -10,7 +10,7 @@ import os, re, fnmatch, util2, update_vs, update_vs2008
 pjoin = os.path.join
 
 DIRS = [
-	"src", pjoin("src", "utils"), pjoin("src", "mui"), 
+	"src", pjoin("src", "utils"), pjoin("src", "mui"),  pjoin("src", "wingui"),
 	pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "previewer"),
 	pjoin("src", "memtrace"), pjoin("src", "regress"), pjoin("src", "uia"),
 	pjoin("ext", "unarr"), pjoin("ext", "unarr", "common"),

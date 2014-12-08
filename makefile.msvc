@@ -78,7 +78,7 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 UTILS_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) \
+	/I$(SRCDIR)/utils /I$(SRCDIR)/wingui /I$(SRCDIR)/mui /I$(ZLIB_DIR) \
 	/I$(EXTDIR)/lzma/C /I$(EXTDIR)/libwebp /I$(EXTDIR)/unarr \
 	/I$(MUPDF_DIR)\include
 
@@ -403,6 +403,9 @@ $(MAKELZSA_APP): $(MAKELZSA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 {$(SRCDIR)\utils}.cpp{$(OU)}.obj::
+	$(CC) $(UTILS_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
+
+{$(SRCDIR)\wingui}.cpp{$(OU)}.obj::
 	$(CC) $(UTILS_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
 
 {$(SRCDIR)\mui}.cpp{$(OMUI)}.obj::

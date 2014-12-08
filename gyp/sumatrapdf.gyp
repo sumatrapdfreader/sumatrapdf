@@ -68,6 +68,8 @@
 				"../src/FileModifications.h",
 				"../src/FileThumbnails.cpp",
 				"../src/FileThumbnails.h",
+				"../src/GlobalPrefs.cpp",
+				"../src/GlobalPrefs.h",
 				"../src/HtmlFormatter.cpp",
 				"../src/HtmlFormatter.h",
 				"../src/ImagesEngine.cpp",
