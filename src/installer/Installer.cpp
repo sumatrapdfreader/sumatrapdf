@@ -854,8 +854,8 @@ static bool RegisterWinClass()
     wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
 
     ATOM atom = RegisterClassEx(&wcex);
-    CrashIf(atom == nullptr);
-    return atom != nullptr;
+    CrashIf(!atom);
+    return atom != 0;
 }
 
 static BOOL InstanceInit(int nCmdShow)
