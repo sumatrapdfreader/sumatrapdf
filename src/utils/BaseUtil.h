@@ -83,8 +83,10 @@ inline T *AllocStruct()
     return (T*)calloc(1, sizeof(T));
 }
 
-#define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)
+#define dimof(array) (sizeof(DimofSizeHelper(array)))
+template <typename T, size_t N>
+char(&DimofSizeHelper(T(&array)[N]))[N];
 
 typedef unsigned char uint8;
 typedef int16_t   int16;
