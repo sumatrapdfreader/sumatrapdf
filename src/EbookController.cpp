@@ -436,6 +436,10 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr *link)
     }
 
     int idx = ResolvePageAnchor(url);
+    if (-1 == idx && str::FindChar(url, '%')) {
+        url::DecodeInPlace(url);
+        idx = ResolvePageAnchor(url);
+    }
     if (idx != -1) {
         EbookTocDest dest(nullptr, idx);
         cb->GotoLink(&dest);
@@ -763,10 +767,10 @@ public:
             item = new EbookTocDest(name, url);
         else {
             int idx = ctrl->ResolvePageAnchor(url);
-            if (idx < 0 && str::FindChar(url, '%')) {
+            if (-1 == idx && str::FindChar(url, '%')) {
                 ScopedMem<WCHAR> decodedUrl(str::Dup(url));
                 url::DecodeInPlace(decodedUrl);
-                idx = ctrl->ResolvePageAnchor(url);
+                idx = ctrl->ResolvePageAnchor(decodedUrl);
             }
             item = new EbookTocDest(name, idx + 1);
         }
