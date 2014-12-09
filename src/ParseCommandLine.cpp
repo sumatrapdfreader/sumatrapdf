@@ -9,7 +9,6 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 // ui
-#include "SumatraPDF.h"
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
 

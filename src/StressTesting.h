@@ -8,6 +8,7 @@ bool IsStressTesting();
 void BenchEbookLayout(WCHAR *filePath);
 
 class CommandLineInfo;
+class WindowInfo;
 
 void StartStressTest(CommandLineInfo *i, WindowInfo *win);
 

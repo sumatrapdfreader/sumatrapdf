@@ -32,15 +32,15 @@ void ShowUsage(const WCHAR *exeName)
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"My");
     CrashAlwaysIf(!hStore);
     bool hasCert = false;
-    PCCERT_CONTEXT pCertCtx = NULL;
-    while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != NULL) {
+    PCCERT_CONTEXT pCertCtx = nullptr;
+    while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != nullptr) {
         WCHAR name[128];
-        DWORD res = CertGetNameString(pCertCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL, name, dimof(name));
+        DWORD res = CertGetNameString(pCertCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, name, dimof(name));
         if (!res)
             continue;
         HCRYPTPROV hProv = NULL;
         DWORD keySpec = 0;
-        BOOL ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, NULL, &hProv, &keySpec, NULL);
+        BOOL ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, nullptr, &hProv, &keySpec, nullptr);
         if (!ok || (keySpec & AT_SIGNATURE) != AT_SIGNATURE)
             continue;
         if (!hasCert) {
@@ -59,10 +59,10 @@ int main()
     WStrVec args;
     ParseCmdLine(GetCommandLine(), args);
 
-    const WCHAR *filePath = NULL;
-    const WCHAR *certName = NULL;
-    const WCHAR *signFilePath = NULL;
-    const WCHAR *pubkeyPath = NULL;
+    const WCHAR *filePath = nullptr;
+    const WCHAR *certName = nullptr;
+    const WCHAR *signFilePath = nullptr;
+    const WCHAR *pubkeyPath = nullptr;
     ScopedMem<char> inFileCommentSyntax;
 
 #define is_arg(name, var) (str::EqI(args.At(i), TEXT(name)) && i + 1 < args.Count() && !var)
@@ -90,7 +90,7 @@ SyntaxError:
     // find certificate
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"My");
     CrashAlwaysIf(!hStore);
-    PCCERT_CONTEXT pCertCtx = NULL;
+    PCCERT_CONTEXT pCertCtx = nullptr;
     HCRYPTPROV hProv = NULL;
     HCRYPTKEY hKey = NULL;
     HCRYPTHASH hHash = NULL;
@@ -107,13 +107,13 @@ SyntaxError:
     // find a certificate for hash signing
     if (!certName) {
         // find first available certificate (same as in ShowUsage)
-        while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != NULL) {
+        while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != nullptr) {
             WCHAR name[128];
-            DWORD res = CertGetNameString(pCertCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, NULL, name, dimof(name));
+            DWORD res = CertGetNameString(pCertCtx, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, name, dimof(name));
             if (!res)
                 continue;
             DWORD keySpec = 0;
-            ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, NULL, &hProv, &keySpec, NULL);
+            ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, nullptr, &hProv, &keySpec, nullptr);
             if (ok && (keySpec & AT_SIGNATURE) == AT_SIGNATURE)
                 break;
         }
@@ -126,7 +126,7 @@ SyntaxError:
             if (!pCertCtx)
                 break;
             keySpec = 0;
-            ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, NULL, &hProv, &keySpec, NULL);
+            ok = CryptAcquireCertificatePrivateKey(pCertCtx, 0, nullptr, &hProv, &keySpec, nullptr);
         } while (!ok || (keySpec & AT_SIGNATURE) != AT_SIGNATURE);
         QuitIfNot(pCertCtx, "Error: Failed to find a signature certificate for \"%s\" in store \"My\"!", certName);
     }
@@ -135,7 +135,7 @@ SyntaxError:
     ok = CryptGetUserKey(hProv, AT_SIGNATURE, &hKey);
     QuitIfNot(ok, "Error: Failed to export the public key!");
     DWORD pubkeyLen = 0;
-    ok = CryptExportKey(hKey, NULL, PUBLICKEYBLOB, 0, NULL, &pubkeyLen);
+    ok = CryptExportKey(hKey, NULL, PUBLICKEYBLOB, 0, nullptr, &pubkeyLen);
     QuitIfNot(ok, "Error: Failed to export the public key!");
     pubkey.Set(AllocArray<BYTE>(pubkeyLen));
     ok = CryptExportKey(hKey, NULL, PUBLICKEYBLOB, 0, pubkey.Get(), &pubkeyLen);
@@ -174,10 +174,10 @@ SyntaxError:
     ok = CryptHashData(hHash, (const BYTE *)data.Get(), dataLen, 0);
     QuitIfNot(ok, "Error: Failed to calculate the SHA-1 hash!");
     DWORD sigLen = 0;
-    ok = CryptSignHash(hHash, AT_SIGNATURE, NULL, 0, NULL, &sigLen);
+    ok = CryptSignHash(hHash, AT_SIGNATURE, nullptr, 0, nullptr, &sigLen);
     QuitIfNot(ok, "Error: Failed to sign the SHA-1 hash!");
     signature.Set(AllocArray<BYTE>(sigLen));
-    ok = CryptSignHash(hHash, AT_SIGNATURE, NULL, 0, signature.Get(), &sigLen);
+    ok = CryptSignHash(hHash, AT_SIGNATURE, nullptr, 0, signature.Get(), &sigLen);
     QuitIfNot(ok, "Error: Failed to sign the SHA-1 hash!");
 
     // convert signature to ASCII text
@@ -193,7 +193,7 @@ SyntaxError:
     }
 
     // verify signature
-    ok = VerifySHA1Signature(data.Get(), dataLen, inFileCommentSyntax ? NULL : hexSignature.Get(), pubkey, pubkeyLen);
+    ok = VerifySHA1Signature(data.Get(), dataLen, inFileCommentSyntax ? nullptr : hexSignature.Get(), pubkey, pubkeyLen);
     QuitIfNot(ok, "Error: Failed to verify signature!");
 
     // save/display signature
