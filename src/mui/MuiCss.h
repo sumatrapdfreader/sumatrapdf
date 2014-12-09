@@ -201,8 +201,8 @@ class Style {
     size_t          gen;
 
 public:
-    Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
-        gen = 1; // so that we can use 0 for NULL
+    Style(Style *inheritsFrom=nullptr) : inheritsFrom(inheritsFrom) {
+        gen = 1; // so that we can use 0 for nullptr
     }
 
     void SetName(const char *n);

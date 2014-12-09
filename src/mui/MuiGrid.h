@@ -18,7 +18,7 @@ public:
         ElAlignData   vertAlign;
         ElAlignData   horizAlign;
 
-        CellData() : el(NULL), cachedStyle(NULL), row(0), col(0), colSpan(1),
+        CellData() : el(nullptr), cachedStyle(nullptr), row(0), col(0), colSpan(1),
             vertAlign(GetElAlignTop()), horizAlign(GetElAlignLeft()) { }
 
         CellData(const CellData& other) : el(other.el), cachedStyle(other.cachedStyle),
@@ -27,7 +27,7 @@ public:
 
         void Set(Control *el, int row, int col, ElAlign horizAlign=ElAlign::Left, ElAlign vertAlign=ElAlign::Bottom) {
             this->el = el;
-            this->cachedStyle = NULL;
+            this->cachedStyle = nullptr;
             this->row = row;
             this->col = col;
             this->colSpan = 1; // this can be re-used, so re-set to default value
@@ -71,7 +71,7 @@ private:
 public:
     Vec<CellData>  els;
 
-    Grid(Style *style = NULL);
+    Grid(Style *style = nullptr);
     virtual ~Grid();
 
     Grid& Add(CellData&);

@@ -24,7 +24,7 @@ void LeaveMuiCriticalSection()
 
 class FontListItem {
 public:
-    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hFont) : next(NULL) {
+    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hFont) : next(nullptr) {
         cf.name = str::Dup(name);
         cf.sizePt = sizePt;
         cf.style = style;
@@ -43,7 +43,7 @@ public:
 };
 
 // Global, thread-safe font cache. Font objects live forever.
-static FontListItem *gFontsCache = NULL;
+static FontListItem *gFontsCache = nullptr;
 
 // Graphics objects cannot be used across threads. We have a per-thread
 // cache so that it's easy to grab Graphics object to be used for
@@ -67,7 +67,7 @@ struct GraphicsCacheEntry
     void Free();
 };
 
-static Vec<GraphicsCacheEntry> *gGraphicsCache = NULL;
+static Vec<GraphicsCacheEntry> *gGraphicsCache = nullptr;
 
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
@@ -160,7 +160,7 @@ CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style)
     ScopedMuiCritSec muiCs;
 
     for (FontListItem *item = gFontsCache; item; item = item->next) {
-        if (item->cf.SameAs(name, sizePt, style) && item->cf.font != NULL) {
+        if (item->cf.SameAs(name, sizePt, style) && item->cf.font != nullptr) {
             return &item->cf;
         }
     }
@@ -170,11 +170,11 @@ CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style)
         font = ::new Font(L"Times New Roman", sizePt, style);
         if (!font) {
             // if no font is available, return the last successfully created one
-            return gFontsCache ? &gFontsCache->cf : NULL;
+            return gFontsCache ? &gFontsCache->cf : nullptr;
         }
     }
 
-    FontListItem *item = new FontListItem(name, sizePt, style, font, NULL);
+    FontListItem *item = new FontListItem(name, sizePt, style, font, nullptr);
     ListInsert(&gFontsCache, item);
     return &item->cf;
 }

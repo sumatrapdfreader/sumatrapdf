@@ -141,7 +141,7 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
 {
     VecSegmented<SvgPathInstr> instr;
     if (!ParseSvgPathData(s, instr))
-        return NULL;
+        return nullptr;
     GraphicsPath *gp = ::new GraphicsPath();
     PointF prevEnd(0.f, 0.f);
     for (SvgPathInstr& i : instr) {

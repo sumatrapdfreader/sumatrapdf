@@ -26,12 +26,12 @@ public:
         StateBitLast
     };
 
-    Control(Control *newParent=NULL);
+    Control(Control *newParent=nullptr);
     virtual ~Control();
 
     void        SetParent(Control *newParent);
     void        AddChild(Control *c, int pos = -1);
-    void        AddChild(Control *c1, Control *c2, Control *c3 = NULL);
+    void        AddChild(Control *c1, Control *c2, Control *c3 = nullptr);
     Control *   GetChild(size_t idx) const;
     size_t      GetChildCount() const;
 

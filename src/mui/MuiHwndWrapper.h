@@ -24,7 +24,7 @@ public:
 
     FrameRateWnd *      frameRateWnd;
 
-    HwndWrapper(HWND hwnd = NULL);
+    HwndWrapper(HWND hwnd = nullptr);
     virtual ~HwndWrapper();
 
     void            SetMinSize(Size minSize);

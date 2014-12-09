@@ -56,12 +56,12 @@ struct FontCacheEntry {
 // An app might modify gStyleDefault but it should be done
 // as a first thing to avoid stale props from caching (cache
 // will be correctly refreshed if Control::SetStyle() is called)
-static Style *gStyleDefault = NULL;
+static Style *gStyleDefault = nullptr;
 // default button styles for convenience. The user must explicitly
 // use them in inheritance chain of their custom button styles
 // They can be obtained via GetStyleButtonDefault() and GetStyleButtonDefaultMouseOver()
-static Style *gStyleButtonDefault = NULL;
-static Style *gStyleButtonMouseOver = NULL;
+static Style *gStyleButtonDefault = nullptr;
+static Style *gStyleButtonMouseOver = nullptr;
 
 struct StyleCacheEntry {
     Style *     style;
@@ -71,8 +71,8 @@ struct StyleCacheEntry {
 
 // Those must be VecSegmented so that code can retain pointers to
 // their elements (we can't move the memory)
-static VecSegmented<Prop> *            gAllProps = NULL;
-static VecSegmented<StyleCacheEntry> * gStyleCache = NULL;
+static VecSegmented<Prop> *            gAllProps = nullptr;
+static VecSegmented<StyleCacheEntry> * gStyleCache = nullptr;
 
 void Initialize()
 {
@@ -123,9 +123,9 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     gStyleCache = new VecSegmented<StyleCacheEntry>();
-    CacheStyle(gStyleDefault, NULL);
-    CacheStyle(gStyleButtonDefault, NULL);
-    CacheStyle(gStyleButtonMouseOver, NULL);
+    CacheStyle(gStyleDefault, nullptr);
+    CacheStyle(gStyleButtonDefault, nullptr);
+    CacheStyle(gStyleButtonMouseOver, nullptr);
 }
 
 void Destroy()
@@ -339,7 +339,7 @@ static Prop *FindExistingProp(Prop *prop)
         if (p.Eq(prop))
             return &p;
     }
-    return NULL;
+    return nullptr;
 }
 
 static Prop *UniqifyProp(Prop& p)
@@ -425,7 +425,7 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color)
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
-    p.color.solid.cachedBrush = NULL;
+    p.color.solid.cachedBrush = nullptr;
     Prop *res = UniqifyProp(p);
     CrashIf(res->color.type != ColorSolid);
     CrashIf(res->color.solid.color != color);
@@ -453,7 +453,7 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     p.color.gradientLinear.endColor = endColor;
 
     p.color.gradientLinear.rect = ::new RectF();
-    p.color.gradientLinear.cachedBrush = NULL;
+    p.color.gradientLinear.cachedBrush = nullptr;
     return UniqifyProp(p);
 }
 
@@ -599,7 +599,7 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut)
     *changedOut = false;
 
     ScopedMuiCritSec muiCs;
-    StyleCacheEntry *e = NULL;
+    StyleCacheEntry *e = nullptr;
 
     for (StyleCacheEntry& e2 : *gStyleCache) {
         if (e2.style == style) {
@@ -656,23 +656,23 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut)
 CachedStyle* CachedStyleByName(const char *name)
 {
     if (!name)
-        return NULL;
+        return nullptr;
     for (StyleCacheEntry& e : *gStyleCache) {
         if (str::Eq(e.cachedStyle.styleName, name))
             return &e.cachedStyle;
     }
-    return NULL;
+    return nullptr;
 }
 
 Style *StyleByName(const char *name)
 {
     if (!name)
-        return NULL;
+        return nullptr;
     for (StyleCacheEntry& e : *gStyleCache) {
         if (str::Eq(e.cachedStyle.styleName, name))
             return e.style;
     }
-    return NULL;
+    return nullptr;
 }
 
 Brush *BrushFromColorData(ColorData *color, const RectF& r)

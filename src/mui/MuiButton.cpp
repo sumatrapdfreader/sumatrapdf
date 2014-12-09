@@ -11,7 +11,7 @@ namespace mui {
 
 Button::Button(const WCHAR *s, Style *def, Style *mouseOver)
 {
-    text = NULL;
+    text = nullptr;
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = def;
     styleMouseOver = mouseOver;
@@ -166,27 +166,27 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     int x = offX + alignedOffX + pad.left + (int)s->borderWidth.left;
     int y = offY + pad.top + (int)s->borderWidth.top;
     Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
-    
+
     CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     Font *font = cachedFont->font;
-    gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
+    gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), nullptr, brColor);
 }
 
 ButtonVector::ButtonVector()
 {
     wantedInputBits = (uint16)-1; // wants everything
-    styleDefault = NULL;
-    styleMouseOver = NULL;
-    graphicsPath = NULL;
+    styleDefault = nullptr;
+    styleMouseOver = nullptr;
+    graphicsPath = nullptr;
     SetStyle(styleDefault);
 }
 
 ButtonVector::ButtonVector(GraphicsPath *gp)
 {
     wantedInputBits = (uint16)-1; // wants everything
-    styleDefault = NULL;
-    styleMouseOver = NULL;
-    graphicsPath = NULL;
+    styleDefault = nullptr;
+    styleMouseOver = nullptr;
+    graphicsPath = nullptr;
     SetStyle(styleDefault);
     SetGraphicsPath(gp);
 }
@@ -237,7 +237,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
         // so set it explicitly to 1 for the size we expect
         pen.SetMiterLimit(1.f);
         pen.SetAlignment(PenAlignmentInset);
-        graphicsPath->GetBounds(&bbox, NULL, &pen);
+        graphicsPath->GetBounds(&bbox, nullptr, &pen);
     }
     desiredSize.Width  += bbox.Width;
     desiredSize.Height += bbox.Height;
@@ -279,11 +279,11 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     if (0.f == s->strokeWidth)
         graphicsPath->GetBounds(&gpBbox);
     else
-        graphicsPath->GetBounds(&gpBbox, NULL, &pen);
+        graphicsPath->GetBounds(&gpBbox, nullptr, &pen);
 
     // calculate the position of graphics path within given button position, size
     // and desired vertical/horizontal alignment.
-    // Note: alignment is calculated against the size after substracting 
+    // Note: alignment is calculated against the size after substracting
     // ncSize is the size of the non-client parts i.e. border and padding, on both sides
     Size ncSize = GetBorderAndPaddingSize(s);
     int elOffY = s->vertAlign.CalcOffset( gpBbox.Height, pos.Height - ncSize.Height);

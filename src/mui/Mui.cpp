@@ -74,7 +74,7 @@ HwndWrapper *GetRootHwndWnd(const Control *c)
         c = c->parent;
     }
     if (!c->hwndParent)
-        return NULL;
+        return nullptr;
     return (HwndWrapper*)c;
 }
 
@@ -85,7 +85,7 @@ HWND GetHwndParent(const Control *c)
     HwndWrapper *wHwnd = GetRootHwndWnd(c);
     if (wHwnd)
         return wHwnd->hwndParent;
-    return NULL;
+    return nullptr;
 }
 
 void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFilter, Vec<CtrlAndOffset> *ctrls)
@@ -172,7 +172,7 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY)
     InvalidateRect(hwnd, &rc, FALSE);
 }
 
-// r1 and r2 are relative to w. If both are NULL, we invalidate the whole w
+// r1 and r2 are relative to w. If both are nullptr, we invalidate the whole w
 void RequestRepaint(Control *c, const Rect *r1, const Rect *r2)
 {
     // we might be called when the control hasn't yet been

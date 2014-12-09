@@ -8,18 +8,18 @@
 
 namespace mui {
 
-static HWND gHwndControlTooltip = NULL;
+static HWND gHwndControlTooltip = nullptr;
 
 static void CreateInfotipForLink(HWND hwndParent, const WCHAR *url, RECT pos)
 {
     if (gHwndControlTooltip)
         return;
 
-    HINSTANCE hinst =  GetModuleHandle(NULL);
+    HINSTANCE hinst =  GetModuleHandle(nullptr);
     gHwndControlTooltip = CreateWindowEx(WS_EX_TOPMOST,
-        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        hwndParent, NULL, hinst, NULL);
+        hwndParent, nullptr, hinst, nullptr);
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
@@ -42,7 +42,7 @@ static void ClearInfotip(HWND hwndParent)
 
     SendMessage(gHwndControlTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
     DestroyWindow(gHwndControlTooltip);
-    gHwndControlTooltip = NULL;
+    gHwndControlTooltip = nullptr;
 }
 
 // we use uint16 for those
@@ -54,14 +54,14 @@ Control::Control(Control *newParent)
     wantedInputBits = 0;
     stateBits = 0;
     zOrder = 0;
-    toolTip = NULL;
-    parent = NULL;
-    hwndParent = NULL;
-    layout = NULL;
-    hCursor = NULL;
-    cachedStyle = NULL;
-    namedEventClick = NULL;
-    SetStyle(NULL);
+    toolTip = nullptr;
+    parent = nullptr;
+    hwndParent = nullptr;
+    layout = nullptr;
+    hCursor = nullptr;
+    cachedStyle = nullptr;
+    namedEventClick = nullptr;
+    SetStyle(nullptr);
     pos = Rect();
     if (newParent)
         SetParent(newParent);
@@ -70,7 +70,7 @@ Control::Control(Control *newParent)
 void Control::SetToolTip(const WCHAR *toolTip)
 {
     str::ReplacePtr(&this->toolTip, toolTip);
-    if (NULL == toolTip)
+    if (nullptr == toolTip)
         wantedInputBits &= WantsMouseOverBit;
     else
         wantedInputBits |= WantsMouseOverBit;
@@ -159,7 +159,7 @@ void Control::SetIsMouseOver(bool isOver)
 
 void Control::AddChild(Control *c, int pos)
 {
-    CrashIf(NULL == c);
+    CrashIf(nullptr == c);
     if ((pos < 0) || (pos >= (int)children.Count()))
         children.Append(c);
     else

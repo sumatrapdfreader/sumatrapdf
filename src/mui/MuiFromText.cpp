@@ -32,8 +32,8 @@ struct LayoutCreatorNode {
 
 // This is an extensiblity point that allows creating custom controls and layouts
 // unknown to mui that appear in text description
-static ControlCreatorNode *gControlCreators = NULL;
-static LayoutCreatorNode  *gLayoutCreators = NULL;
+static ControlCreatorNode *gControlCreators = nullptr;
+static LayoutCreatorNode  *gLayoutCreators = nullptr;
 
 void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator)
 {
@@ -51,7 +51,7 @@ static ControlCreatorFunc FindControlCreatorFuncFor(const char *typeName)
             return curr->creator;
         curr = curr->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 void FreeControlCreators()
@@ -82,7 +82,7 @@ static LayoutCreatorFunc FindLayoutCreatorFuncFor(const char *typeName)
             return curr->creator;
         curr = curr->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 void FreeLayoutCreators()
@@ -104,7 +104,7 @@ Button *FindButtonNamed(const ParsedMui& muiInfo, const char *name)
         if (c->IsNamed(name))
             return c;
     }
-    return NULL;
+    return nullptr;
 }
 
 ButtonVector *FindButtonVectorNamed(const ParsedMui& muiInfo, const char *name)
@@ -114,7 +114,7 @@ ButtonVector *FindButtonVectorNamed(const ParsedMui& muiInfo, const char *name)
         if (c->IsNamed(name))
             return c;
     }
-    return NULL;
+    return nullptr;
 }
 
 ScrollBar *FindScrollBarNamed(const ParsedMui& muiInfo, const char *name)
@@ -124,7 +124,7 @@ ScrollBar *FindScrollBarNamed(const ParsedMui& muiInfo, const char *name)
         if (c->IsNamed(name))
             return c;
     }
-    return NULL;
+    return nullptr;
 }
 
 Control *FindControlNamed(const ParsedMui& muiInfo, const char *name)
@@ -134,7 +134,7 @@ Control *FindControlNamed(const ParsedMui& muiInfo, const char *name)
         if (c->IsNamed(name))
             return c;
     }
-    return NULL;
+    return nullptr;
 }
 
 ILayout *FindLayoutNamed(const ParsedMui& muiInfo, const char *name)
@@ -144,7 +144,7 @@ ILayout *FindLayoutNamed(const ParsedMui& muiInfo, const char *name)
         if (l->IsNamed(name))
             return l;
     }
-    return NULL;
+    return nullptr;
 }
 
 ILayout *FindElementNamed(ParsedMui& muiInfo, const char *name)
@@ -312,7 +312,7 @@ static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName)
         if (node->IsTextWithKey(keyName))
             return node;
     }
-    return NULL;
+    return nullptr;
 }
 
 // styles are cached globally, so we only add a style if it doesn't
@@ -333,7 +333,7 @@ static void CacheStyleFromStruct(TxtNode* def)
         CrashIf(!node->IsText());
         AddStyleProp(style, node);
     }
-    CacheStyle(style, NULL);
+    CacheStyle(style, nullptr);
 }
 
 static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)

@@ -54,7 +54,7 @@ void TextRenderGdi::CreateHdcForTextMeasure() {
 TextRenderGdi::~TextRenderGdi() {
     FreeMemBmp();
     DeleteDC(memHdc);
-    ReleaseDC(NULL, hdcForTextMeasure);
+    ReleaseDC(nullptr, hdcForTextMeasure);
     CrashIf(hdcGfxLocked); // hasn't been Unlock()ed
 }
 
@@ -135,7 +135,7 @@ void TextRenderGdi::Lock() {
 void TextRenderGdi::Unlock() {
     CrashIf(!hdcGfxLocked);
     gfx->ReleaseHDC(hdcGfxLocked);
-    hdcGfxLocked = NULL;
+    hdcGfxLocked = nullptr;
 }
 
 void TextRenderGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
@@ -148,7 +148,7 @@ void TextRenderGdi::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     UINT opts = ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOut(hdcGfxLocked, x, y, opts, NULL, s, (UINT)sLen, NULL);
+    ExtTextOut(hdcGfxLocked, x, y, opts, nullptr, s, (UINT)sLen, nullptr);
 #endif
 }
 
@@ -193,7 +193,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy)
     bmi.bmiHeader.biCompression = BI_RGB;
     bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
 
-    memBmp = CreateDIBSection(memHdc, &bmi, DIB_RGB_COLORS, &memBmpData, NULL, 0);
+    memBmp = CreateDIBSection(memHdc, &bmi, DIB_RGB_COLORS, &memBmpData, nullptr, 0);
     if (!memBmp)
         return;
 
@@ -233,7 +233,7 @@ void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool
     UINT opts = 0; //ETO_OPAQUE;
     if (isRtl)
         opts = opts | ETO_RTLREADING;
-    ExtTextOut(memHdc, 0, 0, opts, NULL, s, (UINT)sLen, NULL);
+    ExtTextOut(memHdc, 0, 0, opts, nullptr, s, (UINT)sLen, nullptr);
 #endif
 
     BLENDFUNCTION bf = {};
@@ -252,8 +252,8 @@ void TextRenderGdi::DrawTransparent(const char *s, size_t sLen, RectF& bb, bool 
 TextRenderGdiplus *TextRenderGdiplus::Create(Graphics *gfx, RectF (*measureAlgo)(Graphics *g, Font *f, const WCHAR *s, int len)) {
     TextRenderGdiplus *res = new TextRenderGdiplus();
     res->gfx = gfx;
-    res->currFont = NULL;
-    if (NULL == measureAlgo)
+    res->currFont = nullptr;
+    if (nullptr == measureAlgo)
         res->measureAlgo = MeasureTextAccurate;
     else
         res->measureAlgo = measureAlgo;
@@ -299,7 +299,7 @@ void TextRenderGdiplus::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl)
     PointF pos;
     bb.GetLocation(&pos);
     if (!isRtl) {
-        gfx->DrawString(s, (INT)sLen, currFont->font, pos, NULL, textColorBrush);
+        gfx->DrawString(s, (INT)sLen, currFont->font, pos, nullptr, textColorBrush);
     } else {
         StringFormat rtl;
         rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
@@ -343,10 +343,10 @@ TextRenderHdc *TextRenderHdc::Create(Graphics *gfx, int dx, int dy) {
     res->bmi.bmiHeader.biCompression = BI_RGB;
     res->bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
 
-    res->bmp = CreateDIBSection(res->hdc, &res->bmi, DIB_RGB_COLORS, &res->bmpData, NULL, 0);
+    res->bmp = CreateDIBSection(res->hdc, &res->bmi, DIB_RGB_COLORS, &res->bmpData, nullptr, 0);
     if (!res->bmp) {
         delete res;
-        return NULL;
+        return nullptr;
     }
 
     ZeroMemory(res->bmpData, dx * dy * 4);
@@ -418,7 +418,7 @@ void TextRenderHdc::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
     if (isRtl)
         opts = opts | ETO_RTLREADING;
 #endif
-    ExtTextOut(hdc, x, y, opts, NULL, s, (UINT)sLen, NULL);
+    ExtTextOut(hdc, x, y, opts, nullptr, s, (UINT)sLen, nullptr);
 }
 
 TextRenderHdc::~TextRenderHdc() {
@@ -428,7 +428,7 @@ TextRenderHdc::~TextRenderHdc() {
 }
 
 ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx, int dx, int dy) {
-    ITextRender *res = NULL;
+    ITextRender *res = nullptr;
     if (TextRenderMethodGdiplus == method) {
         res = TextRenderGdiplus::Create(gfx);
     }

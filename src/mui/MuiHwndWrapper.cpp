@@ -13,7 +13,7 @@
 namespace mui {
 
 HwndWrapper::HwndWrapper(HWND hwnd) :
-    painter(NULL), evtMgr(NULL), layoutRequested(false), firstLayout(true), 
+    painter(nullptr), evtMgr(nullptr), layoutRequested(false), firstLayout(true),
     sizeToFit(false), centerContent(false), markedForRepaint(false)
 {
     if (hwnd)
@@ -48,7 +48,7 @@ void HwndWrapper::SetMaxSize(Size s)
 
 void HwndWrapper::SetHwnd(HWND hwnd)
 {
-    CrashIf(NULL != hwndParent);
+    CrashIf(nullptr != hwndParent);
     hwndParent = hwnd;
     evtMgr = new EventMgr(this);
     painter = new Painter(this);
@@ -123,7 +123,7 @@ void HwndWrapper::RequestLayout()
     layoutRequested = true;
     markedForRepaint = true;
     // trigger message queue so that the layout request is processed
-    InvalidateRect(hwndParent, NULL, TRUE);
+    InvalidateRect(hwndParent, nullptr, TRUE);
     UpdateWindow(hwndParent);
 }
 
@@ -144,7 +144,7 @@ void HwndWrapper::OnPaint(HWND hwnd)
     markedForRepaint = false;
 }
 
-bool HwndWrapper::IsInSizeMove() const 
+bool HwndWrapper::IsInSizeMove() const
 {
     return evtMgr->IsInSizeMove();
 }

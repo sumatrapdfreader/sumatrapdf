@@ -7,8 +7,8 @@
 class Button : public Control
 {
     // use SetStyles() to set
-    Style *         styleDefault;    // gStyleButtonDefault if styleDefault is NULL
-    Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
+    Style *         styleDefault;    // gStyleButtonDefault if styleDefault is nullptr
+    Style *         styleMouseOver;  // gStyleButtonMouseOver if nullptr
 
     void  UpdateAfterStyleChange();
 public:
@@ -38,8 +38,8 @@ public:
 class ButtonVector : public Control
 {
     // use SetStyles() to set
-    Style *         styleDefault;    // gStyleButtonDefault if styleDefault is NULL
-    Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
+    Style *         styleDefault;    // gStyleButtonDefault if styleDefault is nullptr
+    Style *         styleMouseOver;  // gStyleButtonMouseOver if nullptr
 
     GraphicsPath *  graphicsPath;
 

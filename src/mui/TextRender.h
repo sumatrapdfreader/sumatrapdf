@@ -55,10 +55,10 @@ private:
     HBITMAP                 memBmp;
     void *                  memBmpData;
     int                     memBmpDx, memBmpDy;
-    
 
-    TextRenderGdi() : hdcGfxLocked(NULL), hdcForTextMeasure(NULL), 
-        currFont(NULL), gfx(NULL), memHdc(NULL), memBmp(NULL), memBmpData(NULL),
+
+    TextRenderGdi() : hdcGfxLocked(nullptr), hdcForTextMeasure(nullptr),
+        currFont(nullptr), gfx(nullptr), memHdc(nullptr), memBmp(nullptr), memBmpData(nullptr),
         memBmpDx(0), memBmpDy(0) { }
 
     void        FreeMemBmp();
@@ -101,10 +101,10 @@ private:
     Gdiplus::Brush *     textColorBrush;
     WCHAR                txtConvBuf[512];
 
-    TextRenderGdiplus() : gfx(NULL), currFont(NULL), textColorBrush(NULL), textColor(0,0,0,0) {}
+    TextRenderGdiplus() : gfx(nullptr), currFont(nullptr), textColorBrush(nullptr), textColor(0,0,0,0) {}
 
 public:
-    static TextRenderGdiplus*  Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=NULL);
+    static TextRenderGdiplus*  Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=nullptr);
 
     virtual void                SetFont(CachedFont *font);
     virtual void                SetTextColor(Gdiplus::Color col);
@@ -129,7 +129,7 @@ public:
 class TextRenderHdc : public ITextRender {
 
     BITMAPINFO              bmi;
-    
+
     HDC                     hdc;
     HBITMAP                 bmp;
     void *                  bmpData;
@@ -141,7 +141,7 @@ class TextRenderHdc : public ITextRender {
     Gdiplus::Color          textBgColor;
     WCHAR                   txtConvBuf[512];
 
-    TextRenderHdc() : hdc(NULL), bmp(NULL), bmpData(NULL), currFont(NULL),
+    TextRenderHdc() : hdc(nullptr), bmp(nullptr), bmpData(nullptr), currFont(nullptr),
         textColor(0,0,0,0), textBgColor(0,0,0,0) {
             ZeroMemory(&bmi, sizeof(bmi));
         }

@@ -32,7 +32,7 @@ class CachedFontItem : public CachedFont {
 public:
     CachedFontItem *_next;
 
-    CachedFontItem(const WCHAR *name, float sizePt, FontStyle style, Font *font) : _next(NULL) {
+    CachedFontItem(const WCHAR *name, float sizePt, FontStyle style, Font *font) : _next(nullptr) {
         this->name = str::Dup(name); this->sizePt = sizePt; this->style = style; this->font = font;
     }
     ~CachedFontItem() {
@@ -43,7 +43,7 @@ public:
     }
 };
 
-static CachedFontItem *gFontCache = NULL;
+static CachedFontItem *gFontCache = nullptr;
 
 CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style)
 {
@@ -88,7 +88,7 @@ public:
     }
 };
 
-static GlobalGraphicsHack *gGraphicsHack = NULL;
+static GlobalGraphicsHack *gGraphicsHack = nullptr;
 
 Graphics *AllocGraphicsForMeasureText()
 {
@@ -114,9 +114,9 @@ void Destroy()
         return;
 
     delete gFontCache;
-    gFontCache = NULL;
+    gFontCache = nullptr;
     delete gGraphicsHack;
-    gGraphicsHack = NULL;
+    gGraphicsHack = nullptr;
 }
 
 }

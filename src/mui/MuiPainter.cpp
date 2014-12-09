@@ -10,7 +10,7 @@ namespace mui {
 
 static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy)
 {
-    if (NULL == bmp)
+    if (nullptr == bmp)
         return true;
     if (bmp->GetWidth() < (UINT)dx)
         return true;
@@ -20,7 +20,7 @@ static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy)
 }
 
 Painter::Painter(HwndWrapper *wnd)
-    : wnd(wnd), cacheBmp(NULL)
+    : wnd(wnd), cacheBmp(nullptr)
 {
 }
 

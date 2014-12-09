@@ -12,7 +12,7 @@
 namespace mui {
 
 EventMgr::EventMgr(HwndWrapper *wndRoot)
-    : wndRoot(wndRoot), currOver(NULL), inSizeMove(false)
+    : wndRoot(wndRoot), currOver(nullptr), inSizeMove(false)
 {
     CrashIf(!wndRoot);
     //CrashIf(wndRoot->hwnd);
@@ -134,7 +134,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
         if (currOver) {
             currOver->SetIsMouseOver(false);
             currOver->NotifyMouseLeave();
-            currOver = NULL;
+            currOver = nullptr;
         }
     } else {
         // TODO: should this take z-order into account ?

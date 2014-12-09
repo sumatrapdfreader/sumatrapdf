@@ -9,11 +9,11 @@ using namespace sertxt;
 
 #define of offsetof
 const FieldMetadata gButtonVectorDefFieldMetadata[] = {
-    { of(ButtonVectorDef, name),           TYPE_STR, NULL },
-    { of(ButtonVectorDef, clicked),        TYPE_STR, NULL },
-    { of(ButtonVectorDef, path),           TYPE_STR, NULL },
-    { of(ButtonVectorDef, styleDefault),   TYPE_STR, NULL },
-    { of(ButtonVectorDef, styleMouseOver), TYPE_STR, NULL },
+    { of(ButtonVectorDef, name),           TYPE_STR, 0 },
+    { of(ButtonVectorDef, clicked),        TYPE_STR, 0 },
+    { of(ButtonVectorDef, path),           TYPE_STR, 0 },
+    { of(ButtonVectorDef, styleDefault),   TYPE_STR, 0 },
+    { of(ButtonVectorDef, styleMouseOver), TYPE_STR, 0 },
 };
 
 const StructMetadata gButtonVectorDefMetadata = {
@@ -24,9 +24,9 @@ const StructMetadata gButtonVectorDefMetadata = {
 };
 
 const FieldMetadata gButtonDefFieldMetadata[] = {
-    { of(ButtonDef, name),  TYPE_STR,  NULL },
-    { of(ButtonDef, text),  TYPE_WSTR, NULL },
-    { of(ButtonDef, style), TYPE_STR,  NULL },
+    { of(ButtonDef, name),  TYPE_STR,  0 },
+    { of(ButtonDef, text),  TYPE_WSTR, 0 },
+    { of(ButtonDef, style), TYPE_STR,  0 },
 };
 
 const StructMetadata gButtonDefMetadata = {
@@ -37,9 +37,9 @@ const StructMetadata gButtonDefMetadata = {
 };
 
 const FieldMetadata gScrollBarDefFieldMetadata[] = {
-    { of(ScrollBarDef, name),   TYPE_STR, NULL },
-    { of(ScrollBarDef, style),  TYPE_STR, NULL },
-    { of(ScrollBarDef, cursor), TYPE_STR, NULL },
+    { of(ScrollBarDef, name),   TYPE_STR, 0 },
+    { of(ScrollBarDef, style),  TYPE_STR, 0 },
+    { of(ScrollBarDef, cursor), TYPE_STR, 0 },
 };
 
 const StructMetadata gScrollBarDefMetadata = {
@@ -50,10 +50,10 @@ const StructMetadata gScrollBarDefMetadata = {
 };
 
 const FieldMetadata gDirectionalLayoutDataDefFieldMetadata[] = {
-    { of(DirectionalLayoutDataDef, controlName), TYPE_STR, NULL },
-    { of(DirectionalLayoutDataDef, sla),         TYPE_STR, NULL },
-    { of(DirectionalLayoutDataDef, snla),        TYPE_STR, NULL },
-    { of(DirectionalLayoutDataDef, align),       TYPE_STR, NULL },
+    { of(DirectionalLayoutDataDef, controlName), TYPE_STR, 0 },
+    { of(DirectionalLayoutDataDef, sla),         TYPE_STR, 0 },
+    { of(DirectionalLayoutDataDef, snla),        TYPE_STR, 0 },
+    { of(DirectionalLayoutDataDef, align),       TYPE_STR, 0 },
 };
 
 const StructMetadata gDirectionalLayoutDataDefMetadata = {
@@ -64,7 +64,7 @@ const StructMetadata gDirectionalLayoutDataDefMetadata = {
 };
 
 const FieldMetadata gHorizontalLayoutDefFieldMetadata[] = {
-    { of(HorizontalLayoutDef, name),     TYPE_STR,                                     NULL                                          },
+    { of(HorizontalLayoutDef, name),     TYPE_STR,                                     0                                          },
     { of(HorizontalLayoutDef, children), (Type)(TYPE_ARRAY | TYPE_STORE_COMPACT_MASK), (uintptr_t)&gDirectionalLayoutDataDefMetadata },
 };
 
@@ -76,7 +76,7 @@ const StructMetadata gHorizontalLayoutDefMetadata = {
 };
 
 const FieldMetadata gVerticalLayoutDefFieldMetadata[] = {
-    { of(VerticalLayoutDef, name),     TYPE_STR,                                     NULL                                          },
+    { of(VerticalLayoutDef, name),     TYPE_STR,                                     0                                          },
     { of(VerticalLayoutDef, children), (Type)(TYPE_ARRAY | TYPE_STORE_COMPACT_MASK), (uintptr_t)&gDirectionalLayoutDataDefMetadata },
 };
 
