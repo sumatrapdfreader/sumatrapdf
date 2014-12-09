@@ -95,15 +95,15 @@ static bool HasVersion2Footer(const char *data, size_t len)
 static const TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
 {
     if (!HasVersion2Footer(data, len))
-        return NULL;
+        return nullptr;
     const TgaFooter *footerLE = (const TgaFooter *)(data + len - sizeof(TgaFooter));
     if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
         convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > len) {
-        return NULL;
+        return nullptr;
     }
     const TgaExtArea *extAreaLE = (const TgaExtArea *)(data + convLE(footerLE->extAreaOffset));
     if (convLE(extAreaLE->size) < sizeof(TgaExtArea))
-        return NULL;
+        return nullptr;
     return extAreaLE;
 }
 
@@ -291,7 +291,7 @@ static void ReadPixel(ReadState& s, char *dst)
 Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
 {
     if (len < sizeof(TgaHeader))
-        return NULL;
+        return nullptr;
 
     ReadState s = { 0 };
     const TgaHeader *headerLE = (const TgaHeader *)data;
@@ -310,7 +310,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
 
     PixelFormat format = GetPixelFormat(headerLE, GetAlphaType(data, len));
     if (!format)
-        return NULL;
+        return nullptr;
 
     int w = convLE(headerLE->width);
     int h = convLE(headerLE->height);
@@ -323,7 +323,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, format, &bmpData);
     if (ok != Ok)
-        return NULL;
+        return nullptr;
     for (int y = 0; y < h; y++) {
         char *rowOut = (char *)bmpData.Scan0 + bmpData.Stride * (invertY ? y : h - 1 - y);
         for (int x = 0; x < w; x++) {
@@ -332,7 +332,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     }
     bmp.UnlockBits(&bmpData);
     if (s.failed)
-        return NULL;
+        return nullptr;
     CopyMetadata(data, len, &bmp);
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, format);
@@ -355,7 +355,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     int stride = ((w * 3 + 3) / 4) * 4;
     ScopedMem<char> bmpData((char *)malloc(stride * h));
     if (!bmpData)
-        return NULL;
+        return nullptr;
 
     BITMAPINFO bmi = { 0 };
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -365,12 +365,12 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     bmi.bmiHeader.biBitCount = 24;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    HDC hDC = GetDC(NULL);
+    HDC hDC = GetDC(nullptr);
     if (!GetDIBits(hDC, hbmp, 0, h, bmpData, &bmi, DIB_RGB_COLORS)) {
-        ReleaseDC(NULL, hDC);
-        return NULL;
+        ReleaseDC(nullptr, hDC);
+        return nullptr;
     }
-    ReleaseDC(NULL, hDC);
+    ReleaseDC(nullptr, hDC);
 
     TgaHeader headerLE = { 0 };
     headerLE.imageType = Type_Truecolor_RLE;

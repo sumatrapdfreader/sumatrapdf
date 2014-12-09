@@ -9,7 +9,7 @@
 
 #include "DebugLog.h"
 
-static HFONT gDefaultGuiFont = NULL;
+static HFONT gDefaultGuiFont = nullptr;
 
 // Loads a DLL explicitly from the system's library collection
 HMODULE SafeLoadLibrary(const WCHAR *dllName)
@@ -17,10 +17,10 @@ HMODULE SafeLoadLibrary(const WCHAR *dllName)
     WCHAR dllPath[MAX_PATH];
     UINT res = GetSystemDirectory(dllPath, dimof(dllPath));
     if (!res || res >= dimof(dllPath))
-        return NULL;
+        return nullptr;
     BOOL ok = PathAppend(dllPath, dllName);
     if (!ok)
-        return NULL;
+        return nullptr;
     return LoadLibrary(dllPath);
 }
 
@@ -28,7 +28,7 @@ FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName)
 {
     HMODULE h = SafeLoadLibrary(dllName);
     if (!h)
-        return NULL;
+        return nullptr;
     return GetProcAddress(h, funcName);
 
     // Note: we don't unload the dll. It's harmless for those that would stay
@@ -49,7 +49,7 @@ void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc)
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize         = sizeof(WNDCLASSEX);
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.hInstance      = GetModuleHandle(NULL);
+    wcex.hInstance      = GetModuleHandle(nullptr);
     wcex.hCursor        = GetCursor(IDC_ARROW);
     wcex.lpszClassName  = clsName;
     wcex.lpfnWndProc    = wndproc;
@@ -97,10 +97,10 @@ void LogLastError(DWORD err)
     // allow to set a breakpoint in release builds
     if (0 == err)
         err = GetLastError();
-    char *msgBuf = NULL;
+    char *msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang =  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
-    DWORD res = FormatMessageA(flags, NULL, err, lang, (LPSTR)&msgBuf, 0, NULL);
+    DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
     if (!res || !msgBuf) return;
     plogf("LogLastError: %s", msgBuf);
     LocalFree(msgBuf);
@@ -124,19 +124,19 @@ bool RegKeyExists(HKEY keySub, const WCHAR *keyName)
 // called needs to free() the result
 WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName)
 {
-    WCHAR *val = NULL;
+    WCHAR *val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
     LONG res = RegOpenKeyEx(keySub, keyName, 0, access, &hKey);
     if (ERROR_SUCCESS == res) {
         DWORD valLen;
-        res = RegQueryValueEx(hKey, valName, NULL, NULL, NULL, &valLen);
+        res = RegQueryValueEx(hKey, valName, nullptr, nullptr, nullptr, &valLen);
         if (ERROR_SUCCESS == res) {
             val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
-            res = RegQueryValueEx(hKey, valName, NULL, NULL, (LPBYTE)val, &valLen);
+            res = RegQueryValueEx(hKey, valName, nullptr, nullptr, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res)
-                str::ReplacePtr(&val, NULL);
+                str::ReplacePtr(&val, nullptr);
         }
         RegCloseKey(hKey);
     }
@@ -162,7 +162,7 @@ bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const 
 bool ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD& value)
 {
     DWORD size = sizeof(DWORD);
-    LSTATUS res = SHGetValue(keySub, keyName, valName, NULL, &value, &size);
+    LSTATUS res = SHGetValue(keySub, keyName, valName, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
@@ -175,16 +175,16 @@ bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWOR
 bool CreateRegKey(HKEY keySub, const WCHAR *keyName)
 {
     HKEY hKey;
-    if (RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr) != ERROR_SUCCESS)
         return false;
     RegCloseKey(hKey);
     return true;
 }
 
 #pragma warning(push)
-#pragma warning(disable: 6248) // "Setting a SECURITY_DESCRIPTOR's DACL to NULL will result in an unprotected object"
+#pragma warning(disable: 6248) // "Setting a SECURITY_DESCRIPTOR's DACL to nullptr will result in an unprotected object"
 // try to remove any access restrictions on the key
-// by granting everybody all access to this key (NULL DACL)
+// by granting everybody all access to this key (nullptr DACL)
 static void ResetRegKeyAcl(HKEY keySub, const WCHAR *keyName)
 {
     HKEY hKey;
@@ -193,7 +193,7 @@ static void ResetRegKeyAcl(HKEY keySub, const WCHAR *keyName)
         return;
     SECURITY_DESCRIPTOR secdesc;
     InitializeSecurityDescriptor(&secdesc, SECURITY_DESCRIPTOR_REVISION);
-    SetSecurityDescriptorDacl(&secdesc, TRUE, NULL, TRUE);
+    SetSecurityDescriptorDacl(&secdesc, TRUE, nullptr, TRUE);
     RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
     RegCloseKey(hKey);
 }
@@ -214,9 +214,9 @@ WCHAR *GetSpecialFolder(int csidl, bool createIfMissing)
         csidl = csidl | CSIDL_FLAG_CREATE;
     WCHAR path[MAX_PATH];
     path[0] = '\0';
-    HRESULT res = SHGetFolderPath(NULL, csidl, NULL, 0, path);
+    HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res)
-        return NULL;
+        return nullptr;
     return str::Dup(path);
 }
 
@@ -273,17 +273,17 @@ void RedirectIOToConsole()
     // redirect unbuffered STDOUT to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     *stdout = *_fdopen(hConHandle, "w");
-    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdout, nullptr, _IONBF, 0);
 
     // redirect unbuffered STDERR to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
     *stderr = *_fdopen(hConHandle, "w");
-    setvbuf(stderr, NULL, _IONBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
 
     // redirect unbuffered STDIN to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *_fdopen(hConHandle, "r");
-    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdin, nullptr, _IONBF, 0);
 }
 
 /* Return the full exe path of my own executable.
@@ -292,7 +292,7 @@ WCHAR *GetExePath()
 {
     WCHAR buf[MAX_PATH];
     buf[0] = 0;
-    GetModuleFileName(NULL, buf, dimof(buf));
+    GetModuleFileName(nullptr, buf, dimof(buf));
     buf[dimof(buf) - 1] = '\0';
     // TODO: is normalization needed here at all?
     return path::Normalize(buf);
@@ -321,28 +321,28 @@ WCHAR *ResolveLnk(const WCHAR * path)
 {
     ScopedMem<OLECHAR> olePath(str::Dup(path));
     if (!olePath)
-        return NULL;
+        return nullptr;
 
     ScopedComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink))
-        return NULL;
+        return nullptr;
 
     ScopedComQIPtr<IPersistFile> file(lnk);
     if (!file)
-        return NULL;
+        return nullptr;
 
     HRESULT hRes = file->Load(olePath, STGM_READ);
     if (FAILED(hRes))
-        return NULL;
+        return nullptr;
 
-    hRes = lnk->Resolve(NULL, SLR_UPDATE);
+    hRes = lnk->Resolve(nullptr, SLR_UPDATE);
     if (FAILED(hRes))
-        return NULL;
+        return nullptr;
 
     WCHAR newPath[MAX_PATH];
-    hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
+    hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
     if (FAILED(hRes))
-        return NULL;
+        return nullptr;
 
     return str::Dup(newPath);
 }
@@ -383,20 +383,20 @@ IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd)
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr))
-        return NULL;
+        return nullptr;
 
-    IDataObject* pDataObject = NULL;
+    IDataObject* pDataObject = nullptr;
     ScopedMem<WCHAR> lpWPath(str::Dup(filePath));
     LPITEMIDLIST pidl;
-    hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
+    hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
     if (SUCCEEDED(hr)) {
         ScopedComPtr<IShellFolder> pShellFolder;
         LPCITEMIDLIST pidlChild;
         hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
         if (SUCCEEDED(hr)) {
-            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, NULL, (void **)&pDataObject);
+            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void **)&pDataObject);
             if (FAILED(hr))
-                pDataObject = NULL;
+                pDataObject = nullptr;
         }
         CoTaskMemFree(pidl);
     }
@@ -408,7 +408,7 @@ IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd)
 DWORD GetFileVersion(const WCHAR *path)
 {
     DWORD fileVersion = 0;
-    DWORD size = GetFileVersionInfoSize(path, NULL);
+    DWORD size = GetFileVersionInfoSize(path, nullptr);
     ScopedMem<void> versionInfo(malloc(size));
 
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
@@ -445,8 +445,8 @@ HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags)
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
     ScopedMem<WCHAR> cmdLineCopy(str::Dup(cmdLine));
-    if (!CreateProcess(NULL, cmdLineCopy, NULL, NULL, FALSE, flags, NULL, currDir, &si, &pi))
-        return NULL;
+    if (!CreateProcess(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si, &pi))
+        return nullptr;
 
     CloseHandle(pi.hThread);
     return pi.hProcess;
@@ -509,13 +509,13 @@ static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMon
 RectI GetVirtualScreenRect()
 {
     RectI result(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    EnumDisplayMonitors(NULL, NULL, GetMonitorRectProc, (LPARAM)&result);
+    EnumDisplayMonitors(nullptr, nullptr, GetMonitorRectProc, (LPARAM)&result);
     return result;
 }
 
 void PaintRect(HDC hdc, const RectI& rect)
 {
-    MoveToEx(hdc, rect.x, rect.y, NULL);
+    MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
     LineTo(hdc, rect.x, rect.y + rect.dy - 1);
@@ -524,7 +524,7 @@ void PaintRect(HDC hdc, const RectI& rect)
 
 void PaintLine(HDC hdc, const RectI& rect)
 {
-    MoveToEx(hdc, rect.x, rect.y, NULL);
+    MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
@@ -596,7 +596,7 @@ void CenterDialog(HWND hDlg, HWND hParent)
     SetWindowPos(hDlg, 0, rcDialog.x, rcDialog.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-/* Get the name of default printer or NULL if not exists.
+/* Get the name of default printer or nullptr if not exists.
    The caller needs to free() the result */
 WCHAR *GetDefaultPrinterName()
 {
@@ -604,7 +604,7 @@ WCHAR *GetDefaultPrinterName()
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize))
         return str::Dup(buf);
-    return NULL;
+    return nullptr;
 }
 
 bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
@@ -613,7 +613,7 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
     if (!text) return false;
 
     if (!appendOnly) {
-        if (!OpenClipboard(NULL))
+        if (!OpenClipboard(nullptr))
             return false;
         EmptyClipboard();
     }
@@ -630,13 +630,13 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
     if (!appendOnly)
         CloseClipboard();
 
-    return handle != NULL;
+    return handle != nullptr;
 }
 
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly)
 {
     if (!appendOnly) {
-        if (!OpenClipboard(NULL))
+        if (!OpenClipboard(nullptr))
             return false;
         EmptyClipboard();
     }
@@ -645,16 +645,16 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly)
     if (hbmp) {
         BITMAP bmpInfo;
         GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-        if (bmpInfo.bmBits != NULL) {
+        if (bmpInfo.bmBits != nullptr) {
             // GDI+ produced HBITMAPs are DIBs instead of DDBs which
             // aren't correctly handled by the clipboard, so create a
             // clipboard-safe clone
             ScopedGdiObj<HBITMAP> ddbBmp((HBITMAP)CopyImage(hbmp,
                 IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
-            ok = SetClipboardData(CF_BITMAP, ddbBmp) != NULL;
+            ok = SetClipboardData(CF_BITMAP, ddbBmp) != nullptr;
         }
         else
-            ok = SetClipboardData(CF_BITMAP, hbmp) != NULL;
+            ok = SetClipboardData(CF_BITMAP, hbmp) != nullptr;
     }
 
     if (!appendOnly)
@@ -696,7 +696,7 @@ HFONT GetDefaultGuiFont()
 }
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect) :
-    hTarget(hwnd), rect(rect), hdcBuffer(NULL), doubleBuffer(NULL)
+    hTarget(hwnd), rect(rect), hdcBuffer(nullptr), doubleBuffer(nullptr)
 {
     hdcCanvas = ::GetDC(hwnd);
 
@@ -796,18 +796,18 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize)
 IStream *CreateStreamFromData(const void *data, size_t len)
 {
     if (!data)
-        return NULL;
+        return nullptr;
 
     ScopedComPtr<IStream> stream;
-    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
-        return NULL;
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)))
+        return nullptr;
 
     ULONG written;
     if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len)
-        return NULL;
+        return nullptr;
 
     LARGE_INTEGER zero = { 0 };
-    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    stream->Seek(zero, STREAM_SEEK_SET, nullptr);
 
     stream->AddRef();
     return stream;
@@ -835,7 +835,7 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
 
     ULONG read;
     LARGE_INTEGER zero = { 0 };
-    stream->Seek(zero, STREAM_SEEK_SET, NULL);
+    stream->Seek(zero, STREAM_SEEK_SET, nullptr);
     res = stream->Read(*data, stat.cbSize.LowPart, &read);
     if (FAILED(res) || read != *len) {
         free(*data);
@@ -859,7 +859,7 @@ void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt)
     if (res_opt)
         *res_opt = res;
     if (FAILED(res))
-        return NULL;
+        return nullptr;
     return data;
 }
 
@@ -867,7 +867,7 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
 {
     LARGE_INTEGER off;
     off.QuadPart = offset;
-    HRESULT res = stream->Seek(off, STREAM_SEEK_SET, NULL);
+    HRESULT res = stream->Seek(off, STREAM_SEEK_SET, nullptr);
     if (FAILED(res))
         return false;
     ULONG read;
@@ -906,17 +906,17 @@ WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form)
     typedef int (WINAPI *NormalizeStringProc)(int /* NORM_FORM */, LPCWSTR, int, LPWSTR, int);
     NormalizeStringProc _NormalizeString = (NormalizeStringProc)LoadDllFunc(L"Normaliz.dll", "NormalizeString");
     if (!_NormalizeString)
-        return NULL;
-    int sizeEst = _NormalizeString(form, str, -1, NULL, 0);
+        return nullptr;
+    int sizeEst = _NormalizeString(form, str, -1, nullptr, 0);
     if (sizeEst <= 0)
-        return NULL;
+        return nullptr;
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 3 / 2 + 1;
     ScopedMem<WCHAR> res(AllocArray<WCHAR>(sizeEst));
     sizeEst = _NormalizeString(form, str, -1, res, sizeEst);
     if (sizeEst <= 0)
-        return NULL;
+        return nullptr;
     return res.StealData();
 }
 
@@ -928,14 +928,14 @@ bool IsRtl(HWND hwnd)
 
 namespace win {
 
-/* return text of window or edit control, NULL in case of an error.
+/* return text of window or edit control, nullptr in case of an error.
 caller needs to free() the result */
 WCHAR *GetText(HWND hwnd)
 {
     size_t  cchTxtLen = GetTextLen(hwnd);
     WCHAR * txt = AllocArray<WCHAR>(cchTxtLen + 1);
-    if (NULL == txt)
-        return NULL;
+    if (nullptr == txt)
+        return nullptr;
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
@@ -963,7 +963,7 @@ bool HasFrameThickness(HWND hwnd)
 
 bool HasCaption(HWND hwnd)
 {
-    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION); 
+    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
 }
 
 }
@@ -1033,7 +1033,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
     if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
         CrashIf(info.dsBmih.biBitCount != 8);
         RGBQUAD palette[256];
-        HDC hDC = CreateCompatibleDC(NULL);
+        HDC hDC = CreateCompatibleDC(nullptr);
         DeleteObject(SelectObject(hDC, hbmp));
         UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
         for (UINT i = 0; i < num; i++) {
@@ -1055,7 +1055,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    HDC hDC = CreateCompatibleDC(NULL);
+    HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
     ScopedMem<BYTE> bmpData((BYTE *)malloc(bmpBytes));
     CrashIf(!bmpData);
@@ -1072,7 +1072,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor)
 }
 
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
-// can be deserialized with LoadImage(NULL, ..., LD_LOADFROMFILE) and its
+// can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
 {
@@ -1081,7 +1081,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
     unsigned char *bmpData = AllocArray<unsigned char>(bmpBytes);
     if (!bmpData)
-        return NULL;
+        return nullptr;
 
     BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
     bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
@@ -1091,7 +1091,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     bmi->bmiHeader.biBitCount = 24;
     bmi->bmiHeader.biCompression = BI_RGB;
 
-    HDC hDC = GetDC(NULL);
+    HDC hDC = GetDC(nullptr);
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
         BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
         bmpfh->bfType = MAKEWORD('B', 'M');
@@ -1099,9 +1099,9 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
         bmpfh->bfSize = bmpBytes;
     } else {
         free(bmpData);
-        bmpData = NULL;
+        bmpData = nullptr;
     }
-    ReleaseDC(NULL, hDC);
+    ReleaseDC(nullptr, hDC);
 
     if (bmpBytesOut)
         *bmpBytesOut = bmpBytes;
@@ -1120,10 +1120,10 @@ HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping)
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biSizeImage = size.dx * 4 * size.dy;
 
-    void *data = NULL;
+    void *data = nullptr;
     if (hDataMapping && !*hDataMapping)
-        *hDataMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, NULL);
-    return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : NULL, 0);
+        *hDataMapping = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, nullptr);
+    return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
 }
 
 COLORREF AdjustLightness(COLORREF c, float factor)
@@ -1184,25 +1184,25 @@ double GetProcessRunningTime()
     return timeInMs;
 }
 
-// This is just to satisfy /analyze. CloseHandle(NULL) works perfectly fine
+// This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
 // but /analyze complains anyway
 BOOL SafeCloseHandle(HANDLE *h)
 {
     if (!*h)
         return TRUE;
     BOOL ok = CloseHandle(*h);
-    *h = NULL;
+    *h = nullptr;
     return ok;
 }
 
-// This is just to satisfy /analyze. DestroyWindow(NULL) works perfectly fine
+// This is just to satisfy /analyze. DestroyWindow(nullptr) works perfectly fine
 // but /analyze complains anyway
 BOOL SafeDestroyWindow(HWND *hwnd)
 {
     if (!hwnd || !*hwnd)
         return TRUE;
     BOOL ok = DestroyWindow(*hwnd);
-    *hwnd = NULL;
+    *hwnd = nullptr;
     return ok;
 }
 
@@ -1276,11 +1276,11 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR *s)
 
 char *LoadTextResource(int resId, size_t *sizeOut)
 {
-    HRSRC resSrc = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
+    HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
-    HGLOBAL res = LoadResource(NULL, resSrc);
+    HGLOBAL res = LoadResource(nullptr, resSrc);
     CrashIf(!res);
-    DWORD size = SizeofResource(NULL, resSrc);
+    DWORD size = SizeofResource(nullptr, resSrc);
     const char *resData = (const char*)LockResource(res);
     char *s = str::DupN(resData, size);
     if (sizeOut)
@@ -1298,8 +1298,8 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
 bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command)
 {
     DWORD inst = 0;
-    HSZ hszServer = NULL, hszTopic = NULL;
-    HCONV hconv = NULL;
+    HSZ hszServer = nullptr, hszTopic = nullptr;
+    HCONV hconv = nullptr;
     bool ok = false;
     UINT result = 0;
     DWORD cbLen = 0;
@@ -1319,12 +1319,12 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command)
     hszTopic = DdeCreateStringHandle(inst, topic, CP_WINNEUTRAL);
     if (!hszTopic)
         goto Exit;
-    hconv = DdeConnect(inst, hszServer, hszTopic, NULL);
+    hconv = DdeConnect(inst, hszServer, hszTopic, nullptr);
     if (!hconv)
         goto Exit;
 
     cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, NULL);
+    answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -1395,9 +1395,9 @@ HCURSOR GetCursor(LPWSTR id)
         }
     }
     CrashIf(cursorIdx == -1);
-    if (NULL == cachedCursors[cursorIdx]) {
-        cachedCursors[cursorIdx] = LoadCursor(NULL, id);
-        CrashIf(cachedCursors[cursorIdx] == NULL);
+    if (nullptr == cachedCursors[cursorIdx]) {
+        cachedCursors[cursorIdx] = LoadCursor(nullptr, id);
+        CrashIf(cachedCursors[cursorIdx] == nullptr);
     }
     return cachedCursors[cursorIdx];
 }

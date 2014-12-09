@@ -105,7 +105,7 @@ public:
 
     const char *Find(size_t off, uint8_t byte) const {
         if (off >= len)
-            return NULL;
+            return nullptr;
         return (const char *)memchr(d + off, byte, len - off);
     }
 

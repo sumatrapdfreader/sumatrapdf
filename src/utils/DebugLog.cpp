@@ -32,7 +32,7 @@ void LogF(const WCHAR *fmt, ...)
     va_end(args);
 }
 
-static str::Str<char> *gCrashLog = NULL;
+static str::Str<char> *gCrashLog = nullptr;
 
 void CrashLogF(const char *fmt, ...)
 {
@@ -51,7 +51,7 @@ void CrashLogF(const char *fmt, ...)
 const char *GetCrashLog()
 {
     if (!gCrashLog)
-        return NULL;
+        return nullptr;
     return gCrashLog->LendData();
 }
 

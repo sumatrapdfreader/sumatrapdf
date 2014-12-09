@@ -178,8 +178,8 @@ bool CreateFrameRateWnd(FrameRateWnd *w) {
     // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
     // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
     HWND hwnd =
-        CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0,
-                       0, 0, 0, w->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), w);
+        CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle,
+                       0, 0, 0, 0, w->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), w);
     CrashIf(hwnd != w->hwnd);
     if (!hwnd) {
         return false;

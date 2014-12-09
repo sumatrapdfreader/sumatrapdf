@@ -220,8 +220,8 @@ static int GenNewWindowId(HtmlWindow *htmlWin)
 
 static void FreeWindowId(int windowId)
 {
-    assert(NULL != gHtmlWindows.At(windowId));
-    gHtmlWindows.At(windowId) = NULL;
+    assert(nullptr != gHtmlWindows.At(windowId));
+    gHtmlWindows.At(windowId) = nullptr;
 }
 
 // Re-using its protocol, see comments at the top.
@@ -286,7 +286,7 @@ STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void **ppv)
 class HW_IInternetProtocol :public IInternetProtocol
 {
 public:
-    HW_IInternetProtocol() : refCount(1), data(NULL), dataLen(0), dataCurrPos(0) { }
+    HW_IInternetProtocol() : refCount(1), data(nullptr), dataLen(0), dataCurrPos(0) { }
 
 protected:
     virtual ~HW_IInternetProtocol() { }
@@ -354,7 +354,7 @@ static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, ScopedMem<WCHAR> 
 #define DEFAULT_MIME_TYPE   L"text/html"
 
 // caller must free() the result
-static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=NULL)
+static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
 {
     const WCHAR *ext = str::FindCharLast(url, '.');
     if (!ext)
@@ -447,7 +447,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     CrashIf(dataLen > ULONG_MAX);
 #endif
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, (ULONG)dataLen, (ULONG)dataLen);
-    pIProtSink->ReportResult(S_OK, 200, NULL);
+    pIProtSink->ReportResult(S_OK, 200, nullptr);
     return S_OK;
 }
 
@@ -518,7 +518,7 @@ STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void **ppv
 
 STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject)
 {
-    if (pUnkOuter != NULL)
+    if (pUnkOuter != nullptr)
         return CLASS_E_NOAGGREGATION;
     if (riid == IID_IInternetProtocol) {
         ScopedComPtr<IInternetProtocol> proto(new HW_IInternetProtocol());
@@ -532,7 +532,7 @@ STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown *pUnkOuter, RE
 }
 
 static LONG gProtocolFactoryRefCount = 0;
-HW_IInternetProtocolFactory *gInternetProtocolFactory = NULL;
+HW_IInternetProtocolFactory *gInternetProtocolFactory = nullptr;
 
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX
@@ -545,9 +545,9 @@ static void RegisterInternetProtocolFactory()
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
     assert(!FAILED(hr));
-    assert(NULL == gInternetProtocolFactory);
+    assert(nullptr == gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
-    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, NULL, 0);
+    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, nullptr, 0);
     assert(!FAILED(hr));
 }
 
@@ -562,7 +562,7 @@ static void UnregisterInternetProtocolFactory()
     internetSession->UnregisterNameSpace(gInternetProtocolFactory, HW_PROTO_PREFIX);
     ULONG refCount = gInternetProtocolFactory->Release();
     assert(0 == refCount);
-    gInternetProtocolFactory = NULL;
+    gInternetProtocolFactory = nullptr;
 }
 
 class HW_IOleInPlaceFrame : public IOleInPlaceFrame
@@ -779,7 +779,7 @@ public:
     void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) { }
     void STDMETHODCALLTYPE OnViewChange(DWORD, LONG) {
         // redraw the control
-        fs->oleInPlaceSiteWindowless->InvalidateRect(NULL, FALSE);
+        fs->oleInPlaceSiteWindowless->InvalidateRect(nullptr, FALSE);
     }
     void STDMETHODCALLTYPE OnRename(IMoniker*) { }
     void STDMETHODCALLTYPE OnSave() { }
@@ -818,23 +818,23 @@ public:
     STDMETHODIMP TranslateAccelerator(LPMSG lpMsg, const GUID *pguidCmdGroup, DWORD nCmdID) { return S_FALSE; }
     STDMETHODIMP GetOptionKeyPath(LPOLESTR *pchKey, DWORD dw) { return S_FALSE; }
     STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) { return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget)); }
-    STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = NULL; return S_FALSE; }
+    STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = nullptr; return S_FALSE; }
     STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) { return S_FALSE; }
-    STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) { if (ppDORet) *ppDORet = NULL; return S_FALSE; }
+    STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) { if (ppDORet) *ppDORet = nullptr; return S_FALSE; }
 };
 
 STDMETHODIMP HW_IDocHostUIHandler::GetHostInfo(DOCHOSTUIINFO *pInfo)
 {
     if (!pInfo)
         return S_FALSE;
-    pInfo->pchHostCss = NULL;
-    pInfo->pchHostNS = NULL;
+    pInfo->pchHostCss = nullptr;
+    pInfo->pchHostNS = nullptr;
 
     // Note: I was hoping that also setting  DOCHOSTUIFLAG_SCROLL_NO
     // would get rid of vertical scrollbar when not necessary, but alas it
     // always removes it
     pInfo->dwFlags = DOCHOSTUIFLAG_NO3DBORDER | DOCHOSTUIFLAG_NO3DOUTERBORDER;
-    pInfo->dwDoubleClick = DOCHOSTUIDBLCLK_DEFAULT;    
+    pInfo->dwDoubleClick = DOCHOSTUIDBLCLK_DEFAULT;
     return S_OK;
 }
 
@@ -918,7 +918,7 @@ public:
                           LONG grfBINDF, BINDINFO __RPC_FAR *pBindInfo, LPCOLESTR pszHeaders,
                           LPCOLESTR pszRedir, UINT uiCP) {
         LPOLESTR urlToFile;
-        HRESULT hr = pmk->GetDisplayName(pbc, NULL, &urlToFile);
+        HRESULT hr = pmk->GetDisplayName(pbc, nullptr, &urlToFile);
         if (FAILED(hr))
             return hr;
         // parse the URL (only internal its:// URLs are supported)
@@ -1027,9 +1027,9 @@ private:
 
 HtmlMoniker::HtmlMoniker()
     : refCount(1),
-      htmlData(NULL),
-      htmlStream(NULL),
-      baseUrl(NULL)
+      htmlData(nullptr),
+      htmlStream(nullptr),
+      baseUrl(nullptr)
 {
 }
 
@@ -1062,7 +1062,7 @@ HRESULT HtmlMoniker::SetBaseUrl(const WCHAR *newBaseUrl)
 STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
 {
     LARGE_INTEGER seek = {0};
-    htmlStream->Seek(seek, STREAM_SEEK_SET, NULL);
+    htmlStream->Seek(seek, STREAM_SEEK_SET, nullptr);
     return htmlStream->QueryInterface(riid, ppvObj);
 }
 
@@ -1180,18 +1180,18 @@ void HtmlWindow::UnsubclassHwnd()
 }
 
 HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
-    hwndParent(hwndParent), webBrowser(NULL), oleObject(NULL),
-    oleInPlaceObject(NULL), viewObject(NULL),
-    connectionPoint(NULL), htmlContent(NULL), oleObjectHwnd(NULL),
+    hwndParent(hwndParent), webBrowser(nullptr), oleObject(nullptr),
+    oleInPlaceObject(nullptr), viewObject(nullptr),
+    connectionPoint(nullptr), htmlContent(nullptr), oleObjectHwnd(nullptr),
     adviseCookie(0), htmlWinCb(cb),
-    wndProcBrowserPrev(NULL),
+    wndProcBrowserPrev(nullptr),
     canGoBack(false), canGoForward(false)
 {
     assert(hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
-    htmlSetInProgress = NULL;
-    htmlSetInProgressUrl = NULL;
+    htmlSetInProgress = nullptr;
+    htmlSetInProgressUrl = nullptr;
 }
 
 bool HtmlWindow::CreateBrowser()
@@ -1232,7 +1232,7 @@ bool HtmlWindow::CreateBrowser()
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
-        hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, NULL,
+        hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, nullptr,
                 fs->oleClientSite, 0, hwndParent, &rc);
 #if 0 // is this necessary?
         hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
@@ -1276,7 +1276,7 @@ HtmlWindow *HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback *cb)
     HtmlWindow *htmlWin = new HtmlWindow(hwndParent, cb);
     if (!htmlWin->CreateBrowser()) {
         delete htmlWin;
-        return NULL;
+        return nullptr;
     }
     return htmlWin;
 }
@@ -1295,7 +1295,7 @@ HtmlWindow::~HtmlWindow()
     }
     if (oleObject) {
         oleObject->Close(OLECLOSE_NOSAVE);
-        oleObject->SetClientSite(NULL);
+        oleObject->SetClientSite(nullptr);
         oleObject->Release();
     }
 
@@ -1351,7 +1351,7 @@ void HtmlWindow::NavigateToUrl(const WCHAR *url)
 {
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
-    currentURL.Set(NULL);
+    currentURL.Set(nullptr);
     webBrowser->Navigate2(&urlVar, 0, 0, 0, 0);
     VariantClear(&urlVar);
 }
@@ -1372,7 +1372,7 @@ int HtmlWindow::GetZoomPercent()
 {
     VARIANT vtOut = { 0 };
     HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
-                                    NULL, &vtOut);
+                                    nullptr, &vtOut);
     if (FAILED(hr))
         return 100;
     return vtOut.lVal;
@@ -1390,22 +1390,22 @@ void HtmlWindow::SetZoomPercent(int zoom)
 void HtmlWindow::PrintCurrentPage(bool showUI)
 {
     OLECMDEXECOPT cmdexecopt = showUI ? OLECMDEXECOPT_PROMPTUSER : OLECMDEXECOPT_DONTPROMPTUSER;
-    webBrowser->ExecWB(OLECMDID_PRINT, cmdexecopt, NULL, NULL);
+    webBrowser->ExecWB(OLECMDID_PRINT, cmdexecopt, nullptr, nullptr);
 }
 
 void HtmlWindow::FindInCurrentPage()
 {
-    webBrowser->ExecWB(OLECMDID_FIND, OLECMDEXECOPT_PROMPTUSER, NULL, NULL);
+    webBrowser->ExecWB(OLECMDID_FIND, OLECMDEXECOPT_PROMPTUSER, nullptr, nullptr);
 }
 
 void HtmlWindow::SelectAll()
 {
-    webBrowser->ExecWB(OLECMDID_SELECTALL, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    webBrowser->ExecWB(OLECMDID_SELECTALL, OLECMDEXECOPT_DODEFAULT, nullptr, nullptr);
 }
 
 void HtmlWindow::CopySelection()
 {
-    webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, nullptr, nullptr);
 }
 
 void HtmlWindow::NavigateToAboutBlank()
@@ -1456,7 +1456,7 @@ void HtmlWindow::SetHtmlReal(const char *s, size_t len)
     if (!perstMon)
         return;
     ScopedComQIPtr<IMoniker> htmlMon(htmlContent);
-    hr = perstMon->Load(TRUE, htmlMon, NULL, STGM_READ);
+    hr = perstMon->Load(TRUE, htmlMon, nullptr, STGM_READ);
 }
 
 // http://stackoverflow.com/questions/9778206/how-i-can-get-information-about-the-scrollbars-of-an-webbrowser-control-instance
@@ -1479,7 +1479,7 @@ void HtmlWindow::SetScrollbarToAuto()
     if (FAILED(hr) || !bodyElement)
         return;
 
-    ScopedComQIPtr<IHTMLBodyElement> body(bodyElement); 
+    ScopedComQIPtr<IHTMLBodyElement> body(bodyElement);
     if (!body)
         return;
 
@@ -1496,10 +1496,10 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)
-        return NULL;
+        return nullptr;
     ScopedComQIPtr<IViewObject2> view(docDispatch);
     if (!view)
-        return NULL;
+        return nullptr;
 
     // capture the whole window (including scrollbars)
     // to image and create imageRes containing the area
@@ -1510,10 +1510,10 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 
     HDC dc = g.GetHDC();
     RECTL rc = { 0, 0, winRc.dx, winRc.dy };
-    hr = view->Draw(DVASPECT_CONTENT, -1, NULL, NULL, dc, dc, &rc, NULL, NULL, 0);
+    hr = view->Draw(DVASPECT_CONTENT, -1, nullptr, nullptr, dc, dc, &rc, nullptr, nullptr, 0);
     g.ReleaseHDC(dc);
     if (FAILED(hr))
-        return NULL;
+        return nullptr;
 
     Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
     Graphics g2(&imageRes);
@@ -1524,7 +1524,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     HBITMAP hbmp;
     Status ok = imageRes.GetHBITMAP((ARGB)Color::White, &hbmp);
     if (ok != Ok)
-        return NULL;
+        return nullptr;
     return hbmp;
 }
 
@@ -1532,7 +1532,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 {
-    currentURL.Set(NULL);
+    currentURL.Set(nullptr);
     if (!htmlWinCb)
         return true;
     if (IsBlankUrl(url))
@@ -1552,14 +1552,14 @@ void HtmlWindow::FreeHtmlSetInProgressData()
 {
     free((void*)htmlSetInProgress);
     free((void*)htmlSetInProgressUrl);
-    htmlSetInProgress = NULL;
-    htmlSetInProgressUrl = NULL;
+    htmlSetInProgress = nullptr;
+    htmlSetInProgressUrl = nullptr;
 }
 
 void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
     if (IsBlankUrl(url)) {
-        if (htmlSetInProgress != NULL) {
+        if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
             // which we should ignore?
             SetHtmlReal(htmlSetInProgress);
@@ -1570,7 +1570,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
                     htmlWinCb->OnDocumentComplete(htmlSetInProgressUrl);
                 }
             }
-            
+
             FreeHtmlSetInProgressData();
             SetScrollbarToAuto();
             return;
@@ -1595,7 +1595,7 @@ HRESULT HtmlWindow::OnDragEnter(IDataObject *dataObj)
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
         return E_INVALIDARG;
-    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    FORMATETC fe = { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM stg = { 0 };
     if (FAILED(data->GetData(&fe, &stg)))
         return E_FAIL;
@@ -1608,7 +1608,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
         return E_INVALIDARG;
-    FORMATETC fe = { CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    FORMATETC fe = { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM stg = { 0 };
     if (FAILED(data->GetData(&fe, &stg)))
         return E_FAIL;
@@ -1619,7 +1619,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
         GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);
-    return hDrop != NULL ? S_OK : E_FAIL;
+    return hDrop != nullptr ? S_OK : E_FAIL;
 }
 
 LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
@@ -1647,7 +1647,7 @@ FrameSite::FrameSite(HtmlWindow * win)
     ambientShowGrabHandles = true;
     ambientAppearance = true;
 
-    //m_hDCBuffer = NULL;
+    //m_hDCBuffer = nullptr;
     hwndParent = htmlWindow->hwndParent;
 
     oleInPlaceFrame             = new HW_IOleInPlaceFrame(this);
@@ -1681,10 +1681,10 @@ FrameSite::~FrameSite()
 // IUnknown
 STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppv == NULL)
+    if (ppv == nullptr)
         return E_INVALIDARG;
 
-    *ppv = NULL;
+    *ppv = nullptr;
     if (riid == IID_IUnknown)
         *ppv = this;
     else if (riid == IID_IOleWindow ||
@@ -1738,7 +1738,7 @@ ULONG STDMETHODCALLTYPE FrameSite::Release()
 // IDispatch
 HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
 {
-    if (res == NULL)
+    if (res == nullptr)
         return E_INVALIDARG;
 
     switch (dispIdMember)
@@ -1861,7 +1861,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 // IOleWindow
 HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
 {
-    if (phwnd == NULL)
+    if (phwnd == nullptr)
         return E_INVALIDARG;
     *phwnd = fs->hwndParent;
     return S_OK;
@@ -1870,14 +1870,14 @@ HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
 // IOleInPlaceUIWindow
 HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder)
 {
-    if (lprectBorder == NULL)
+    if (lprectBorder == nullptr)
         return E_INVALIDARG;
     return INPLACE_E_NOTOOLSPACE;
 }
 
 HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
 {
-    if (pborderwidths == NULL)
+    if (pborderwidths == nullptr)
         return E_INVALIDARG;
     return INPLACE_E_NOTOOLSPACE;
 }
@@ -1900,13 +1900,13 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
     LPRECT lprcPosRect, LPRECT lprcClipRect,
     LPOLEINPLACEFRAMEINFO lpFrameInfo)
 {
-    if (ppFrame == NULL || ppDoc == NULL || lprcPosRect == NULL ||
-            lprcClipRect == NULL || lpFrameInfo == NULL)
+    if (ppFrame == nullptr || ppDoc == nullptr || lprcPosRect == nullptr ||
+            lprcClipRect == nullptr || lpFrameInfo == nullptr)
     {
-        if (ppFrame != NULL)
-            *ppFrame = NULL;
-        if (ppDoc != NULL)
-            *ppDoc = NULL;
+        if (ppFrame != nullptr)
+            *ppFrame = nullptr;
+        if (ppDoc != nullptr)
+            *ppDoc = nullptr;
         return E_INVALIDARG;
     }
 
@@ -1916,7 +1916,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
 
     lpFrameInfo->fMDIApp = FALSE;
     lpFrameInfo->hwndFrame = fs->hwndParent;
-    lpFrameInfo->haccel = NULL;
+    lpFrameInfo->haccel = nullptr;
     lpFrameInfo->cAccelEntries = 0;
 
     return S_OK;
@@ -1950,7 +1950,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
 
 HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC)
 {
-    if (phDC == NULL)
+    if (phDC == nullptr)
         return E_INVALIDARG;
 
 #if 0
@@ -1960,7 +1960,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* 
         return S_OK;
     }
 
-    if (fs->hDCBuffer != NULL)
+    if (fs->hDCBuffer != nullptr)
         return E_UNEXPECTED;
 #endif
     return E_NOTIMPL;
@@ -1969,14 +1969,14 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* 
 HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
 {
 
-    ::InvalidateRect(fs->hwndParent, NULL, fErase);
+    ::InvalidateRect(fs->hwndParent, nullptr, fErase);
     return S_OK;
 }
 
 // IOleClientSite
 HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 {
-    if (ppContainer == NULL)
+    if (ppContainer == nullptr)
         return E_INVALIDARG;
     return QueryInterface(IID_IOleContainer, (void**)ppContainer);
 }
@@ -1985,28 +1985,28 @@ HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
     DWORD dwSpeedNeeded, IBindCtx * pbc, REFIID riid, void ** ppvObject)
 {
-    if (pszItem == NULL)
+    if (pszItem == nullptr)
         return E_INVALIDARG;
-    if (ppvObject == NULL)
+    if (ppvObject == nullptr)
         return E_INVALIDARG;
-    *ppvObject = NULL;
+    *ppvObject = nullptr;
     return MK_E_NOOBJECT;
 }
 
 HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem,
     IBindCtx * pbc, REFIID riid, void ** ppvStorage)
 {
-    if (pszItem == NULL)
+    if (pszItem == nullptr)
         return E_INVALIDARG;
-    if (ppvStorage == NULL)
+    if (ppvStorage == nullptr)
         return E_INVALIDARG;
-    *ppvStorage = NULL;
+    *ppvStorage = nullptr;
     return MK_E_NOOBJECT;
 }
 
 HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem)
 {
-    if (pszItem == NULL)
+    if (pszItem == nullptr)
         return E_INVALIDARG;
     return MK_E_NOOBJECT;
 }
@@ -2022,9 +2022,9 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
     POINTF *pPtfContainer, DWORD dwFlags)
 {
     HRESULT hr = S_OK;
-    if (pPtlHimetric == NULL)
+    if (pPtlHimetric == nullptr)
             return E_INVALIDARG;
-    if (pPtfContainer == NULL)
+    if (pPtfContainer == nullptr)
             return E_INVALIDARG;
     return hr;
 }
@@ -2033,7 +2033,7 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
 HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup,
     ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
 {
-    if (prgCmds == NULL)
+    if (prgCmds == nullptr)
         return E_INVALIDARG;
     return OLECMDERR_E_UNKNOWNGROUP;
 }

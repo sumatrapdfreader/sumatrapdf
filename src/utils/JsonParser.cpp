@@ -55,17 +55,17 @@ static const char *ExtractString(str::Str<char>& string, const char *data)
                 if (str::Parse(data + 1, "%4x", &i) && 0 < i && i < 0x10000) {
                     char buf[5] = { 0 };
                     wchar_t c = (wchar_t)i;
-                    WideCharToMultiByte(CP_UTF8, 0, &c, 1, buf, dimof(buf), NULL, NULL);
+                    WideCharToMultiByte(CP_UTF8, 0, &c, 1, buf, dimof(buf), nullptr, nullptr);
                     string.Append(buf);
                     data += 4;
                     break;
                 }
-                return NULL;
+                return nullptr;
             default:
-                return NULL;
+                return nullptr;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static const char *ParseString(ParseArgs& args, const char *data)
@@ -88,7 +88,7 @@ static const char *ParseNumber(ParseArgs& args, const char *data)
     else if (str::IsDigit(*data))
         data = SkipDigits(data + 1);
     else
-        return NULL;
+        return nullptr;
     // fractional part
     if ('.' == *data)
         data = SkipDigits(data + 1);
@@ -101,7 +101,7 @@ static const char *ParseNumber(ParseArgs& args, const char *data)
     }
     // validity check
     if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data))
-        return NULL;
+        return nullptr;
 
     char *number = str::DupN(start, data - start);
     args.canceled = !args.visitor->Visit(args.path.Get(), number, Type_Number);
@@ -119,14 +119,14 @@ static const char *ParseObject(ParseArgs& args, const char *data)
     for (;;) {
         data = SkipWS(data);
         if ('"' != *data)
-            return NULL;
+            return nullptr;
         args.path.Append('/');
         data = ExtractString(args.path, data);
         if (!data)
-            return NULL;
+            return nullptr;
         data = SkipWS(data);
         if (':' != *data)
-            return NULL;
+            return nullptr;
 
         data = ParseValue(args, data + 1);
         if (args.canceled || !data)
@@ -137,7 +137,7 @@ static const char *ParseObject(ParseArgs& args, const char *data)
         if ('}' == *data)
             return data + 1;
         if (',' != *data)
-            return NULL;
+            return nullptr;
         data++;
     }
 }
@@ -160,7 +160,7 @@ static const char *ParseArray(ParseArgs& args, const char *data)
         if (']' == *data)
             return data + 1;
         if (',' != *data)
-            return NULL;
+            return nullptr;
         data++;
     }
 }
@@ -169,7 +169,7 @@ static const char *ParseKeyword(ParseArgs& args, const char *data,
                                 const char *keyword, DataType type)
 {
     if (!str::StartsWith(data, keyword))
-        return NULL;
+        return nullptr;
     args.canceled = !args.visitor->Visit(args.path.Get(), keyword, type);
     return data + str::Len(keyword);
 }
@@ -195,7 +195,7 @@ static const char *ParseValue(ParseArgs& args, const char *data)
     case 'n':
         return ParseKeyword(args, data, "null", Type_Null);
     default:
-        return NULL;
+        return nullptr;
     }
 }
 

@@ -9,7 +9,7 @@ class ScopedMem
 {
     T *a;
 public:
-    ScopedMem() : a(NULL) {}
+    ScopedMem() : a(nullptr) {}
     explicit ScopedMem(T* a) : a(a) {}
     ~ScopedMem() { free(a); }
     void Set(T *na) {
@@ -23,7 +23,7 @@ public:
     T *Get() const { return a; }
     T *StealData() {
         T *tmp = a;
-        a = NULL;
+        a = nullptr;
         return tmp;
     }
     operator T*() const { return a; }
@@ -55,12 +55,12 @@ class ScopedPtr
 {
     T *obj;
 public:
-    ScopedPtr() : obj(NULL) {}
+    ScopedPtr() : obj(nullptr) {}
     explicit ScopedPtr(T* obj) : obj(obj) {}
     ~ScopedPtr() { delete obj; }
     T *Detach() {
         T *tmp = obj;
-        obj = NULL;
+        obj = nullptr;
         return tmp;
     }
     operator T*() const { return obj; }
@@ -76,7 +76,7 @@ class ScopedComPtr {
 protected:
     T *ptr;
 public:
-    ScopedComPtr() : ptr(NULL) { }
+    ScopedComPtr() : ptr(nullptr) { }
     explicit ScopedComPtr(T *ptr) : ptr(ptr) { }
     ~ScopedComPtr() {
         if (ptr)
@@ -85,7 +85,7 @@ public:
     bool Create(const CLSID clsid) {
         CrashIf(ptr);
         if (ptr) return false;
-        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
+        HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
     operator T*() const { return ptr; }
@@ -103,11 +103,11 @@ class ScopedComQIPtr {
 protected:
     T *ptr;
 public:
-    ScopedComQIPtr() : ptr(NULL) { }
+    ScopedComQIPtr() : ptr(nullptr) { }
     explicit ScopedComQIPtr(IUnknown *unk) {
         HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr))
-            ptr = NULL;
+            ptr = nullptr;
     }
     ~ScopedComQIPtr() {
         if (ptr)
@@ -116,7 +116,7 @@ public:
     bool Create(const CLSID clsid) {
         CrashIf(ptr);
         if (ptr) return false;
-        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
+        HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
     T* operator=(IUnknown *newUnk) {
@@ -124,7 +124,7 @@ public:
             ptr->Release();
         HRESULT hr = newUnk->QueryInterface(&ptr);
         if (FAILED(hr))
-            ptr = NULL;
+            ptr = nullptr;
         return ptr;
     }
     operator T*() const { return ptr; }
@@ -157,13 +157,13 @@ public:
 
 class ScopedCom {
 public:
-    ScopedCom() { (void)CoInitialize(NULL); }
+    ScopedCom() { (void)CoInitialize(nullptr); }
     ~ScopedCom() { CoUninitialize(); }
 };
 
 class ScopedOle {
 public:
-    ScopedOle() { (void)OleInitialize(NULL); }
+    ScopedOle() { (void)OleInitialize(nullptr); }
     ~ScopedOle() { OleUninitialize(); }
 };
 

@@ -19,7 +19,7 @@ public:
     virtual void OnDocumentComplete(const WCHAR *url) = 0;
 
     // allows for providing data for a given url.
-    // returning NULL means data wasn't provided.
+    // returning nullptr means data wasn't provided.
     virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) = 0;
 
     // called when left mouse button is clicked in the web control window.
@@ -75,7 +75,7 @@ public:
     void SetVisible(bool visible);
     void NavigateToUrl(const WCHAR *url);
     void NavigateToDataUrl(const WCHAR *url);
-    void SetHtml(const char *s, size_t len=-1, const WCHAR *url=NULL);
+    void SetHtml(const char *s, size_t len=-1, const WCHAR *url=nullptr);
     void GoBack();
     void GoForward();
     void PrintCurrentPage(bool showUI);

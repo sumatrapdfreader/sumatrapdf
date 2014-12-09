@@ -37,17 +37,17 @@ void *Allocator::Dup(Allocator *a, const void *mem, size_t size, size_t padding)
 }
 
 char *Allocator::StrDup(Allocator *a, const char *str) {
-    return str ? (char *)Dup(a, str, strlen(str) + 1) : NULL;
+    return str ? (char *)Dup(a, str, strlen(str) + 1) : nullptr;
 }
 
 WCHAR *Allocator::StrDup(Allocator *a, const WCHAR *str) {
-    return str ? (WCHAR *)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : NULL;
+    return str ? (WCHAR *)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : nullptr;
 }
 
 
 void PoolAllocator::Init() {
-    currBlock = NULL;
-    firstBlock = NULL;
+    currBlock = nullptr;
+    firstBlock = nullptr;
     allocRounding = 8;
 }
 
@@ -97,7 +97,7 @@ void *PoolAllocator::Realloc(void *mem, size_t size) {
     // size of memory piece pointed by mem. We could remember it
     // within the block that we allocate
     CrashAlwaysIf(true);
-    return NULL;
+    return nullptr;
 }
 
 
@@ -125,7 +125,7 @@ void *PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
         n -= piecesInBlock;
         curr = curr->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 size_t RoundToPowerOf2(size_t size)

@@ -21,8 +21,8 @@ class ThreadBase {
     bool WasCancelRequested() { return cancelRequested; }
 
   public:
-    // name is for debugging purposes, can be NULL.
-    explicit ThreadBase(const char *name = NULL);
+    // name is for debugging purposes, can be nullptr.
+    explicit ThreadBase(const char *name = nullptr);
 
     // call this to start executing Run() function.
     void Start();

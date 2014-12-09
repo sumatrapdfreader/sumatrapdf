@@ -18,8 +18,8 @@ class ZipFileAlloc {
     void ExtractFilenames();
 
 public:
-    explicit ZipFileAlloc(const WCHAR *path, bool deflatedOnly=false, Allocator *allocator=NULL);
-    explicit ZipFileAlloc(IStream *stream, bool deflatedOnly=false, Allocator *allocator=NULL);
+    explicit ZipFileAlloc(const WCHAR *path, bool deflatedOnly=false, Allocator *allocator=nullptr);
+    explicit ZipFileAlloc(IStream *stream, bool deflatedOnly=false, Allocator *allocator=nullptr);
     ~ZipFileAlloc();
 
     size_t GetFileCount() const;
@@ -29,16 +29,16 @@ public:
     size_t GetFileIndex(const WCHAR *filename);
 
     // caller must free() the result (or rather Allocator::Free it)
-    char *GetFileDataByName(const WCHAR *filename, size_t *len=NULL);
-    char *GetFileDataByIdx(size_t fileindex, size_t *len=NULL);
+    char *GetFileDataByName(const WCHAR *filename, size_t *len=nullptr);
+    char *GetFileDataByIdx(size_t fileindex, size_t *len=nullptr);
 
     FILETIME GetFileTime(const WCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
     // caller must free() the result (or rather Allocator::Free it)
-    char *GetComment(size_t *len=NULL);
+    char *GetComment(size_t *len=nullptr);
 
-    bool UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName=NULL);
+    bool UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName=nullptr);
 };
 
 class ZipCreator {
@@ -55,7 +55,7 @@ public:
     ZipCreator(ISequentialStream *stream);
     ~ZipCreator();
 
-    bool AddFile(const WCHAR *filePath, const WCHAR *nameInZip=NULL);
+    bool AddFile(const WCHAR *filePath, const WCHAR *nameInZip=nullptr);
     bool AddFileFromDir(const WCHAR *filePath, const WCHAR *dir);
     bool AddDir(const WCHAR *dirPath, bool recursive=false);
     bool Finish();

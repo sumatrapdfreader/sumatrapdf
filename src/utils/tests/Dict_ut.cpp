@@ -35,10 +35,10 @@ void DictTestMapStrToInt()
     utassert(0 == d.Count());
     ok = d.Get("foo", &val);
     utassert(!ok);
-    ok = d.Remove("foo", NULL);
+    ok = d.Remove("foo", nullptr);
     utassert(!ok);
 
-    ok = d.Insert("foo", 5, NULL);
+    ok = d.Insert("foo", 5, nullptr);
     utassert(ok);
     utassert(1 == d.Count());
     ok = d.Get("foo", &val);
@@ -59,11 +59,11 @@ void DictTestMapStrToInt()
     utassert(val == 5);
     utassert(0 == d.Count());
 
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)time(nullptr));
     Vec<char *> toRemove;
     for (int i=0; i < 1024; i++) {
         char *k = GenRandomString();
-        ok = d.Insert(k, i, NULL);
+        ok = d.Insert(k, i, nullptr);
         // no guarantee that the string is unique, so Insert() doesn't always succeeds
         if (!ok)
             continue;
@@ -74,7 +74,7 @@ void DictTestMapStrToInt()
         CrashIf(i != val);
     }
     for (const char *k : toRemove) {
-        ok = d.Remove(k, NULL);
+        ok = d.Remove(k, nullptr);
         utassert(ok);
     }
     FreeVecMembers(toRemove);

@@ -152,7 +152,7 @@ void SquareTreeTest()
         utassert(!halfBroken.root->GetValue("node") && !halfBroken.root->GetChild("key"));
     }
 
-    SquareTree null(NULL);
+    SquareTree null(nullptr);
     utassert(!null.root);
 
     SquareTree empty("");

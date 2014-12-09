@@ -93,7 +93,7 @@ bool PdbReader::ParseHeader()
 const char *PdbReader::GetDbType()
 {
     if (recOffsets.Count() == 0)
-        return NULL;
+        return nullptr;
     return dbType;
 }
 
@@ -105,7 +105,7 @@ size_t PdbReader::GetRecordCount()
 const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
 {
     if (recNo + 1 >= recOffsets.Count())
-        return NULL;
+        return nullptr;
     size_t offset = recOffsets.At(recNo);
     if (sizeOut)
         *sizeOut = recOffsets.At(recNo + 1) - offset;

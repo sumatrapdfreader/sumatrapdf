@@ -54,7 +54,7 @@ public:
     explicit StrHashNT(size_t valueSize) : valueSize(valueSize)
     { }
     void *Create(const char *s, size_t strLen, uint32 hash, bool& createdOut) {
-        return NULL; // TODO: write me
+        return nullptr; // TODO: write me
     }
 
     void *Lookup(const char *s, size_t strLen, bool createIfNotExists, bool& createdOut) {
@@ -63,7 +63,7 @@ public:
         if (0 == nodex.Count()) {
             if (createIfNotExists)
                 return Create(s, strLen, hash, createdOut);
-            return NULL;
+            return nullptr;
         }
         size_t nodeIdx = 0;
         StrHashNode node;
@@ -78,7 +78,7 @@ public:
             if (0 == nodeIdx) {
                 if (createIfNotExists)
                     return Create(s, strLen, hash, createdOut);
-                return NULL;
+                return nullptr;
             }
         }
         // at this point nodeIdx is index within values and strKey arrays

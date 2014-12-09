@@ -106,7 +106,7 @@ const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
             return item.value.str;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) const
@@ -119,7 +119,7 @@ SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) cons
             return item.value.child;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
@@ -197,7 +197,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
     return node;
 }
 
-SquareTree::SquareTree(const char *data) : root(NULL)
+SquareTree::SquareTree(const char *data) : root(nullptr)
 {
     // convert the file content to UTF-8
     if (str::StartsWith(data, UTF8_BOM))

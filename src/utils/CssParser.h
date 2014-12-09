@@ -35,7 +35,7 @@ class CssPullParser {
 public:
     CssPullParser(const char *s, size_t len) :
         s(s), currPos(s), end(s + len), inProps(false),
-        inlineStyle(false), currSel(NULL) { }
+        inlineStyle(false), currSel(nullptr) { }
 
     // call NextRule first for parsing a style element and
     // NextProperty only for parsing a single style attribute

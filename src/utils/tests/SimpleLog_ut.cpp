@@ -28,7 +28,7 @@ void SimpleLogTest()
 
     {
         HANDLE hRead, hWrite;
-        CreatePipe(&hRead, &hWrite, NULL, 0);
+        CreatePipe(&hRead, &hWrite, nullptr, 0);
         slog::FileLogger fl(hWrite);
         log.AddLogger(&fl);
         log.Log(L"Test2");
@@ -39,7 +39,7 @@ void SimpleLogTest()
         char pipeData[32];
         char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
         DWORD len;
-        BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, NULL);
+        BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, nullptr);
         utassert(ok && len == str::Len(expected));
         pipeData[len] = '\0';
         utassert(str::Eq(pipeData, expected));
@@ -49,7 +49,7 @@ void SimpleLogTest()
     utassert(str::Eq(logAll.GetData(), L"Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n"));
     log.RemoveLogger(&logAll);
 
-    // don't leak the logger, don't crash on logging NULL
+    // don't leak the logger, don't crash on logging nullptr
     log.AddLogger(new slog::DebugLogger());
-    log.Log(NULL);
+    log.Log(nullptr);
 }

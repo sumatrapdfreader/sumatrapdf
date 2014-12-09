@@ -259,7 +259,7 @@ Again:
 
 static void ParseNodes(TxtParser& parser)
 {
-    TxtNode *currNode = NULL;
+    TxtNode *currNode = nullptr;
     for (;;) {
         ParseNextToken(parser);
         TokenVal& tok = parser.tok;

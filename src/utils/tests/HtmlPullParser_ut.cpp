@@ -60,7 +60,7 @@ static void HtmlEntities()
     };
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char *s = unchanged[i];
-        const char *res = ResolveHtmlEntities(s, s + str::Len(s), NULL);
+        const char *res = ResolveHtmlEntities(s, s + str::Len(s), nullptr);
         utassert(res == s);
     }
 
@@ -80,7 +80,7 @@ static void HtmlEntities()
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char *s = changed[i].s;
-        const char *res = ResolveHtmlEntities(s, s + str::Len(s), NULL);
+        const char *res = ResolveHtmlEntities(s, s + str::Len(s), nullptr);
         utassert(str::Eq(res, changed[i].res));
         free((void*)res);
     }

@@ -21,9 +21,9 @@ void ReplacePtr(char **s, const char *snew);
 void ReplacePtr(const char **s, const char *snew);
 void ReplacePtr(WCHAR **s, const WCHAR *snew);
 
-char *  Join(const char *s1, const char *s2, const char *s3=NULL);
+char *  Join(const char *s1, const char *s2, const char *s3=nullptr);
 char *  Join(const char *s1, const char *s2, const char *s3, Allocator *allocator);
-WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=NULL);
+WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=nullptr);
 
 bool Eq(const char *s1, const char *s2);
 bool Eq(const WCHAR *s1, const WCHAR *s2);

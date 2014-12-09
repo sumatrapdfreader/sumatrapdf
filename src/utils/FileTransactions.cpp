@@ -14,11 +14,11 @@ typedef BOOL (WINAPI * RollbackTransactionPtr)(HANDLE TransactionHandle);
 typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
 typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCWSTR lpFileName, HANDLE hTransaction);
 
-static CreateTransactionPtr     _CreateTransaction = NULL;
-static CommitTransactionPtr     _CommitTransaction = NULL;
-static RollbackTransactionPtr   _RollbackTransaction = NULL;
-static CreateFileTransactedPtr  _CreateFileTransacted = NULL;
-static DeleteFileTransactedPtr  _DeleteFileTransacted = NULL;
+static CreateTransactionPtr     _CreateTransaction = nullptr;
+static CommitTransactionPtr     _CommitTransaction = nullptr;
+static RollbackTransactionPtr   _RollbackTransaction = nullptr;
+static CreateFileTransactedPtr  _CreateFileTransacted = nullptr;
+static DeleteFileTransactedPtr  _DeleteFileTransacted = nullptr;
 
 static void InitializeTransactions()
 {
@@ -43,11 +43,11 @@ static void InitializeTransactions()
 #undef Load
 }
 
-FileTransaction::FileTransaction() : hTrans(NULL)
+FileTransaction::FileTransaction() : hTrans(nullptr)
 {
     InitializeTransactions();
     if (_CreateTransaction && _CommitTransaction && _RollbackTransaction && _CreateFileTransacted && _DeleteFileTransacted)
-        hTrans = _CreateTransaction(NULL, 0, 0, 0, 0, 0, NULL);
+        hTrans = _CreateTransaction(nullptr, 0, 0, 0, 0, 0, nullptr);
 }
 
 FileTransaction::~FileTransaction()
@@ -65,13 +65,13 @@ bool FileTransaction::Commit()
 HANDLE FileTransaction::CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
 {
     if (hTrans) {
-        HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL, hTrans, NULL, NULL);
+        HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, nullptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr, hTrans, nullptr, nullptr);
         DWORD err = GetLastError();
         if (INVALID_HANDLE_VALUE != hFile || ERROR_FILE_NOT_FOUND == err || ERROR_ACCESS_DENIED == err || ERROR_FILE_EXISTS  == err || ERROR_ALREADY_EXISTS  == err)
             return hFile;
         // fall back to untransacted file I/O, if transactions aren't supported
     }
-    return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+    return ::CreateFile(filePath, dwDesiredAccess, 0, nullptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 bool FileTransaction::WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
@@ -84,7 +84,7 @@ bool FileTransaction::WriteAll(const WCHAR *filePath, const void *data, size_t d
         return false;
 
     DWORD size;
-    BOOL ok = WriteFile(hFile, data, (DWORD)dataLen, &size, NULL);
+    BOOL ok = WriteFile(hFile, data, (DWORD)dataLen, &size, nullptr);
     assert(!ok || (dataLen == (size_t)size));
 
     return ok && dataLen == (size_t)size;
@@ -110,5 +110,5 @@ bool FileTransaction::SetModificationTime(const WCHAR *filePath, FILETIME lastMo
     ScopedHandle hFile(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, OPEN_EXISTING));
     if (INVALID_HANDLE_VALUE == hFile)
         return false;
-    return SetFileTime(hFile, NULL, NULL, &lastMod);
+    return SetFileTime(hFile, nullptr, nullptr, &lastMod);
 }

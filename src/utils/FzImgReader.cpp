@@ -20,8 +20,8 @@ namespace fitz {
 static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
 {
     int w = 0, h = 0, xres = 0, yres = 0;
-    fz_colorspace *cs = NULL;
-    fz_stream *stm = NULL;
+    fz_colorspace *cs = nullptr;
+    fz_stream *stm = nullptr;
 
     fz_var(cs);
     fz_var(stm);
@@ -29,11 +29,11 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
     fz_try(ctx) {
         fz_load_jpeg_info(ctx, (unsigned char *)data, len, &w, &h, &xres, &yres, &cs);
         stm = fz_open_memory(ctx, (unsigned char *)data, len);
-        stm = fz_open_dctd(stm, -1, 0, NULL);
+        stm = fz_open_dctd(stm, -1, 0, nullptr);
     }
     fz_catch(ctx) {
         fz_drop_colorspace(ctx, cs);
-        cs = NULL;
+        cs = nullptr;
     }
 
     PixelFormat fmt = fz_device_rgb(ctx) == cs ? PixelFormat24bppRGB :
@@ -43,7 +43,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
     if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
         fz_close(stm);
         fz_drop_colorspace(ctx, cs);
-        return NULL;
+        return nullptr;
     }
 
     Bitmap bmp(w, h, fmt);
@@ -55,7 +55,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
     if (ok != Ok) {
         fz_close(stm);
         fz_drop_colorspace(ctx, cs);
-        return NULL;
+        return nullptr;
     }
 
     fz_var(bmp);
@@ -90,7 +90,7 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
         fz_drop_colorspace(ctx, cs);
     }
     fz_catch(ctx) {
-        return NULL;
+        return nullptr;
     }
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
@@ -99,17 +99,17 @@ static Bitmap *ImageFromJpegData(fz_context *ctx, const char *data, int len)
 
 static Bitmap *ImageFromJp2Data(fz_context *ctx, const char *data, int len)
 {
-    fz_pixmap *pix = NULL;
-    fz_pixmap *pix_argb = NULL;
+    fz_pixmap *pix = nullptr;
+    fz_pixmap *pix_argb = nullptr;
 
     fz_var(pix);
     fz_var(pix_argb);
 
     fz_try(ctx) {
-        pix = fz_load_jpx(ctx, (unsigned char *)data, len, NULL, 0);
+        pix = fz_load_jpx(ctx, (unsigned char *)data, len, nullptr, 0);
     }
     fz_catch(ctx) {
-        return NULL;
+        return nullptr;
     }
 
     int w = pix->w, h = pix->h;
@@ -121,7 +121,7 @@ static Bitmap *ImageFromJp2Data(fz_context *ctx, const char *data, int len)
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok) {
         fz_drop_pixmap(ctx, pix);
-        return NULL;
+        return nullptr;
     }
 
     fz_var(bmp);
@@ -137,7 +137,7 @@ static Bitmap *ImageFromJp2Data(fz_context *ctx, const char *data, int len)
         fz_drop_pixmap(ctx, pix_argb);
     }
     fz_catch(ctx) {
-        return NULL;
+        return nullptr;
     }
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
@@ -147,13 +147,13 @@ static Bitmap *ImageFromJp2Data(fz_context *ctx, const char *data, int len)
 Bitmap *ImageFromData(const char *data, size_t len)
 {
     if (len > INT_MAX || len < 12)
-        return NULL;
+        return nullptr;
 
-    fz_context *ctx = fz_new_context(NULL, NULL, 0);
+    fz_context *ctx = fz_new_context(nullptr, nullptr, 0);
     if (!ctx)
-        return NULL;
+        return nullptr;
 
-    Bitmap *result = NULL;
+    Bitmap *result = nullptr;
     if (str::StartsWith(data, "\xFF\xD8"))
         result = ImageFromJpegData(ctx, data, (int)len);
     else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
@@ -169,7 +169,7 @@ Bitmap *ImageFromData(const char *data, size_t len)
 #else
 
 namespace fitz {
-Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return NULL; }
+Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return nullptr; }
 }
 
 #endif

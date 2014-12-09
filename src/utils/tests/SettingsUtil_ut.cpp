@@ -32,7 +32,7 @@ struct SutStructItem {
 
 static const FieldInfo gSutStructItemFields[] = {
     { offsetof(SutStructItem, compactPoint), Type_Compact, (intptr_t)&gSutPointIInfo },
-    { offsetof(SutStructItem, floatArray), Type_FloatArray, NULL },
+    { offsetof(SutStructItem, floatArray), Type_FloatArray, 0 },
     { offsetof(SutStructItem, nested), Type_Struct, (intptr_t)&gSutStructNestedInfo },
 };
 static const StructInfo gSutStructItemInfo = { sizeof(SutStructItem), 3, gSutStructItemFields, "CompactPoint\0FloatArray\0Nested" };
@@ -64,16 +64,16 @@ static const FieldInfo gSutStructFields[] = {
     { offsetof(SutStruct, floatingPoint), Type_Float, (intptr_t)"-3.14" },
     { offsetof(SutStruct, integer), Type_Int, 27 },
     { offsetof(SutStruct, string), Type_String, (intptr_t)L"String" },
-    { offsetof(SutStruct, nullString), Type_String, NULL },
+    { offsetof(SutStruct, nullString), Type_String, 0 },
     { offsetof(SutStruct, escapedString), Type_String, (intptr_t)L"$\nstring " },
     { offsetof(SutStruct, utf8String), Type_Utf8String, (intptr_t)"Utf-8 String" },
-    { offsetof(SutStruct, nullUtf8String), Type_Utf8String, NULL },
+    { offsetof(SutStruct, nullUtf8String), Type_Utf8String, 0 },
     { offsetof(SutStruct, escapedUtf8String), Type_Utf8String, (intptr_t)"$\nstring " },
     { offsetof(SutStruct, intArray), Type_IntArray, (intptr_t)"1 2 -3" },
     { offsetof(SutStruct, strArray), Type_StringArray, (intptr_t)"one \"two three\" \"\"" },
-    { offsetof(SutStruct, emptyStrArray), Type_StringArray, NULL },
+    { offsetof(SutStruct, emptyStrArray), Type_StringArray, 0 },
     { offsetof(SutStruct, point), Type_Struct, (intptr_t)&gSutPointIInfo },
-    { (size_t)-1, Type_Comment, NULL },
+    { (size_t)-1, Type_Comment, 0 },
     { offsetof(SutStruct, sutStructItems), Type_Array, (intptr_t)&gSutStructItemInfo },
 };
 static const StructInfo gSutStructInfo = { sizeof(SutStruct), 17, gSutStructFields, "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0StrArray\0EmptyStrArray\0Point\0\0SutStructItems" };
@@ -137,7 +137,7 @@ AnotherPoint: 7 8\r\n\
 Nested [\r\n\
 Key = Value";
 
-    SutStruct *data = NULL;
+    SutStruct *data = nullptr;
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
         utassert(data->internal == i);
@@ -164,7 +164,7 @@ Key = Value";
     utassert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
     FreeStruct(&gSutStructInfo, data);
 
-    data = (SutStruct *)DeserializeStruct(&gSutStructInfo, NULL);
+    data = (SutStruct *)DeserializeStruct(&gSutStructInfo, nullptr);
     utassert(data && data->boolean && 0xffcc9933 == data->color);
     utassert(-3.14f == data->floatingPoint && 27 == data->integer);
     utassert(str::Eq(data->string, L"String") && !data->nullString && str::Eq(data->escapedString, L"$\nstring "));

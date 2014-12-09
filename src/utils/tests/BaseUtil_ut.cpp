@@ -90,7 +90,7 @@ void BaseUtilTest()
     utassert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
     utassert(RoundToPowerOf2((size_t)-42) == (size_t)-1);
 
-    utassert(MurmurHash2(NULL, 0) == 0x342CE6C);
+    utassert(MurmurHash2(nullptr, 0) == 0x342CE6C);
     utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
 
     GeomTest();

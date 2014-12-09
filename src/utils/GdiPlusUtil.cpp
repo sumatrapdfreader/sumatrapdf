@@ -210,18 +210,18 @@ static Bitmap *WICDecodeImageFromStream(IStream *stream)
 {
     ScopedCom com;
 
-#define HR(hr) if (FAILED(hr)) return NULL;
+#define HR(hr) if (FAILED(hr)) return nullptr;
     ScopedComPtr<IWICImagingFactory> pFactory;
-    if (!pFactory.Create(CLSID_WICImagingFactory)) return NULL;
+    if (!pFactory.Create(CLSID_WICImagingFactory)) return nullptr;
     ScopedComPtr<IWICBitmapDecoder> pDecoder;
-    HR(pFactory->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand,
+    HR(pFactory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand,
                                          &pDecoder));
     ScopedComPtr<IWICBitmapFrameDecode> srcFrame;
     HR(pDecoder->GetFrame(0, &srcFrame));
     ScopedComPtr<IWICFormatConverter> pConverter;
     HR(pFactory->CreateFormatConverter(&pConverter));
     HR(pConverter->Initialize(srcFrame, GUID_WICPixelFormat32bppBGRA,
-                              WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom));
+                              WICBitmapDitherTypeNone, nullptr, 0.f, WICBitmapPaletteTypeCustom));
 
     UINT w, h;
     HR(pConverter->GetSize(&w, &h));
@@ -232,8 +232,8 @@ static Bitmap *WICDecodeImageFromStream(IStream *stream)
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok)
-        return NULL;
-    HR(pConverter->CopyPixels(NULL, bmpData.Stride, bmpData.Stride * h, (BYTE *)bmpData.Scan0));
+        return nullptr;
+    HR(pConverter->CopyPixels(nullptr, bmpData.Stride, bmpData.Stride * h, (BYTE *)bmpData.Scan0));
     bmp.UnlockBits(&bmpData);
     bmp.SetResolution((REAL)xres, (REAL)yres);
 #undef HR
@@ -285,7 +285,7 @@ const WCHAR *GfxFileExtFromData(const char *data, size_t len)
     case Img_TIFF: return L".tif";
     case Img_WebP: return L".webp";
     case Img_JP2:  return L".jp2";
-    default:       return NULL;
+    default:       return nullptr;
     }
 }
 
@@ -326,14 +326,14 @@ Bitmap *BitmapFromData(const char *data, size_t len)
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
-        return NULL;
+        return nullptr;
     if (Img_JXR == format)
         return WICDecodeImageFromStream(stream);
 
     Bitmap *bmp = Bitmap::FromStream(stream);
     if (bmp && bmp->GetLastStatus() != Ok) {
         delete bmp;
-        bmp = NULL;
+        bmp = nullptr;
     }
     // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
     if (bmp && Img_JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {

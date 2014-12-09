@@ -23,7 +23,7 @@ public:
     virtual ~ValueVisitor() { }
 };
 
-// data must be UTF-8 encoded and NULL-terminated
+// data must be UTF-8 encoded and nullptr-terminated
 // returns false on error
 bool Parse(const char *data, ValueVisitor *visitor);
 

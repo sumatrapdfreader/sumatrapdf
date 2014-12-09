@@ -26,7 +26,7 @@ public:
 
     size_t Count() const;
 
-    bool Insert(const char *key, int val, int *existingValOut=NULL, const char **existingKeyOut=NULL);
+    bool Insert(const char *key, int val, int *existingValOut=nullptr, const char **existingKeyOut=nullptr);
 
     bool Remove(const char *key, int *removedValOut);
     bool Get(const char *key, int *valOut);
@@ -58,7 +58,7 @@ class StringInterner {
 public:
     StringInterner() : nInternCalls(0) {}
 
-    int             Intern(const char *s, bool *alreadyPresent=NULL);
+    int             Intern(const char *s, bool *alreadyPresent=nullptr);
     size_t          StringsCount() const { return intToStr.Count(); }
     const char *    GetByIndex(int n) const { return intToStr.At(n); }
 

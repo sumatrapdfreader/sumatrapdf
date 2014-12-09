@@ -25,7 +25,7 @@ class DirIter
     bool TryNextDir();
 
 public:
-    DirIter(const WCHAR *dir, bool recursive=false) : foundNext(false), currFindHandle(NULL), recursive(recursive) {
+    DirIter(const WCHAR *dir, bool recursive=false) : foundNext(false), currFindHandle(nullptr), recursive(recursive) {
         startDir.Set(str::Dup(dir));
     }
     ~DirIter() { FindClose(currFindHandle); }

@@ -32,7 +32,7 @@ bool HtmlElement::NameIs(const char *name) const
 bool HtmlElement::NameIsNS(const char *name, const char *ns) const
 {
     CrashIf(!ns);
-    const char *nameStart = NULL;
+    const char *nameStart = nullptr;
     if (this->name) {
         nameStart = str::FindChar(this->name, ':');
     }
@@ -52,7 +52,7 @@ HtmlElement *HtmlElement::GetChildByTag(HtmlTag tag, int idx) const
             idx--;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static WCHAR IntToChar(int codepoint)
@@ -106,9 +106,9 @@ WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
     return fixed;
 }
 
-HtmlParser::HtmlParser() : html(NULL), freeHtml(false), rootElement(NULL),
-    currElement(NULL), elementsCount(0), attributesCount(0), codepage(CP_ACP),
-    error(ErrParsingNoError), errorContext(NULL)
+HtmlParser::HtmlParser() : html(nullptr), freeHtml(false), rootElement(nullptr),
+    currElement(nullptr), elementsCount(0), attributesCount(0), codepage(CP_ACP),
+    error(ErrParsingNoError), errorContext(nullptr)
 {
 }
 
@@ -122,12 +122,12 @@ void HtmlParser::Reset()
 {
     if (freeHtml)
         free(html);
-    html = NULL;
+    html = nullptr;
     freeHtml = false;
-    rootElement = currElement = NULL;
+    rootElement = currElement = nullptr;
     elementsCount = attributesCount = 0;
     error = ErrParsingNoError;
-    errorContext = NULL;
+    errorContext = nullptr;
     allocator.FreeAll();
 }
 
@@ -147,7 +147,7 @@ WCHAR *HtmlElement::GetAttribute(const char *name) const
         if (str::EqI(attr->name, name))
             return DecodeHtmlEntitites(attr->val, codepage);
     }
-    return NULL;
+    return nullptr;
 }
 
 HtmlElement *HtmlParser::AllocElement(HtmlTag tag, char *name, HtmlElement *parent)
@@ -176,7 +176,7 @@ HtmlElement *HtmlParser::FindParent(HtmlToken *tok)
 
 void HtmlParser::StartTag(HtmlToken *tok)
 {
-    char *tagName = NULL;
+    char *tagName = nullptr;
     if (Tag_NotFound == tok->tag) {
         tagName = (char *)tok->s;
         char *tagEnd = tagName + tok->nLen;
@@ -185,13 +185,13 @@ void HtmlParser::StartTag(HtmlToken *tok)
 
     HtmlElement *parent = FindParent(tok);
     currElement = AllocElement(tok->tag, tagName, parent);
-    if (NULL == rootElement)
+    if (nullptr == rootElement)
         rootElement = currElement;
 
     if (!parent) {
         // if this isn't the root tag, this tag
         // and all its children will be ignored
-    } else if (NULL == parent->down) {
+    } else if (nullptr == parent->down) {
         // parent has no children => set as a first child
         parent->down = currElement;
     } else {
@@ -206,7 +206,7 @@ void HtmlParser::StartTag(HtmlToken *tok)
 
 void HtmlParser::CloseTag(HtmlToken *tok)
 {
-    char *tagName = NULL;
+    char *tagName = nullptr;
     if (Tag_NotFound == tok->tag) {
         tagName = (char *)tok->s;
         char *tagEnd = tagName + tok->nLen;
@@ -242,7 +242,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
     HtmlPullParser parser(s, strlen(s));
     HtmlToken *tok;
 
-    while ((tok = parser.Next()) != NULL) {
+    while ((tok = parser.Next()) != nullptr) {
         if (tok->IsError()) {
             errorContext = tok->s;
             switch (tok->error) {
@@ -288,13 +288,13 @@ HtmlElement *HtmlParser::Parse(const char *s, UINT codepage)
 }
 
 // Does a depth-first search of element tree, looking for an element with
-// a given name. If from is NULL, it starts from rootElement otherwise
+// a given name. If from is nullptr, it starts from rootElement otherwise
 // it starts from *next* element in traversal order, which allows for
 // easy iteration over elements.
 // Note: name must be lower-case
 HtmlElement *HtmlParser::FindElementByName(const char *name, HtmlElement *from)
 {
-    return FindElementByNameNS(name, NULL, from);
+    return FindElementByNameNS(name, nullptr, from);
 }
 
 HtmlElement *HtmlParser::FindElementByNameNS(const char *name, const char *ns, HtmlElement *from)
@@ -303,7 +303,7 @@ HtmlElement *HtmlParser::FindElementByNameNS(const char *name, const char *ns, H
     if (from)
         goto FindNext;
     if (!el)
-        return NULL;
+        return nullptr;
 CheckNext:
     if (el->NameIs(name) || ns && el->NameIsNS(name, ns))
         return el;
@@ -325,5 +325,5 @@ FindNext:
         }
         parent = parent->up;
     }
-    return NULL;
+    return nullptr;
 }

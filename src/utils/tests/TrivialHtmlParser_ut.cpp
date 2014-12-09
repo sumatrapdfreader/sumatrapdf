@@ -32,15 +32,15 @@ static void HtmlParser01()
     HtmlElement *root = p.Parse("<A><bAh></a>");
     utassert(p.ElementsCount() == 2);
     utassert(Tag_A == root->tag && !root->name);
-    utassert(NULL == root->up);
-    utassert(NULL == root->next);
+    utassert(nullptr == root->up);
+    utassert(nullptr == root->next);
     HtmlElement *el = root->down;
-    utassert(NULL == el->firstAttr);
+    utassert(nullptr == el->firstAttr);
     utassert(el->NameIs("bah") && el->NameIs("BAH"));
     utassert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
     utassert(el->up == root);
-    utassert(NULL == el->down);
-    utassert(NULL == el->next);
+    utassert(nullptr == el->down);
+    utassert(nullptr == el->next);
 }
 
 static void HtmlParser05()
@@ -50,17 +50,17 @@ static void HtmlParser05()
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
-    utassert(NULL == root->up);
-    utassert(NULL == root->next);
+    utassert(nullptr == root->up);
+    utassert(nullptr == root->next);
     HtmlElement *el = root->down;
     utassert(el->NameIs("head"));
     HtmlElement *el2 = el->down;
     utassert(el2->NameIs("meta"));
-    utassert(NULL == el2->next);
-    utassert(NULL == el2->down);
+    utassert(nullptr == el2->next);
+    utassert(nullptr == el2->down);
     el2 = el->next;
     utassert(el2->NameIs("body"));
-    utassert(NULL == el2->next);
+    utassert(nullptr == el2->next);
     el2 = el2->down;
     utassert(el2->NameIs("object"));
     el = p.FindElementByName("html");
@@ -79,9 +79,9 @@ static void HtmlParser04()
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
-    utassert(NULL == root->next);
-    utassert(NULL == root->up);
-    utassert(NULL == root->down);
+    utassert(nullptr == root->next);
+    utassert(nullptr == root->up);
+    utassert(nullptr == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
     utassert(str::Eq(val, L"va'l"));
     utassert(!root->firstAttr->next);
@@ -94,9 +94,9 @@ static void HtmlParser03()
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
-    utassert(NULL == root->next);
-    utassert(NULL == root->up);
-    utassert(NULL == root->down);
+    utassert(nullptr == root->next);
+    utassert(nullptr == root->up);
+    utassert(nullptr == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
     utassert(str::Eq(val, L"v\"al"));
     utassert(!root->firstAttr->next);
@@ -109,7 +109,7 @@ static void HtmlParser02()
     utassert(4 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("a"));
-    utassert(NULL == root->next);
+    utassert(nullptr == root->next);
     HtmlElement *el = root->down;
     utassert(el->NameIs("b"));
     utassert(root == el->up);
@@ -118,7 +118,7 @@ static void HtmlParser02()
     utassert(root == el->up);
     el = el->next;
     utassert(el->NameIs("d"));
-    utassert(NULL == el->next);
+    utassert(nullptr == el->next);
     utassert(root == el->up);
     ScopedMem<WCHAR> val(el->GetAttribute("at1"));
     utassert(str::Eq(val, L"<quo&ted>"));
@@ -226,7 +226,7 @@ static void HtmlParserFile()
     const WCHAR *exeDir = path::GetBaseName(exePath);
     ScopedMem<WCHAR> p1(path::Join(exeDir, L"..\\src\\utils"));
     ScopedMem<WCHAR> p2(path::Join(p1, fileName));
-    char *d = file::ReadAll(p2, NULL);
+    char *d = file::ReadAll(p2, nullptr);
     // it's ok if we fail - we assume we were not run from the
     // right location
     if (!d)

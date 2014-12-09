@@ -89,7 +89,7 @@ static HashTable *NewHashTable(size_t size, Allocator *allocator)
     // number of hash table entries should be power of 2
     size = RoundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
-    // and we don't want to waste their memory after 
+    // and we don't want to waste their memory after
     h->entries = AllocArray<HashTableEntry*>(size);
     h->nEntries = size;
     return h;
@@ -138,10 +138,10 @@ static inline void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
     HashTableResize(h, hc);
 }
 
-// note: allocator must be NULL for get, non-NULL for create
+// note: allocator must be nullptr for get, non-nullptr for create
 static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uintptr_t key, Allocator *allocator, bool& newEntry)
 {
-    bool shouldCreate = (allocator != NULL);
+    bool shouldCreate = (allocator != nullptr);
     size_t hash = hc->Hash(key);
     size_t pos = hash % h->nEntries;
     HashTableEntry *e = h->entries[pos];
@@ -152,7 +152,7 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
         e = e->next;
     }
     if (!shouldCreate)
-        return NULL;
+        return nullptr;
 
     if (h->freeList) {
         e = h->freeList;
@@ -163,7 +163,7 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
     e->next = h->entries[pos];
     h->entries[pos] = e;
     h->nUsed++;
-    if (e->next != NULL)
+    if (e->next != nullptr)
         h->nCollisions++;
     newEntry = true;
     return e;
@@ -262,7 +262,7 @@ bool MapStrToInt::Get(const char *key, int* valOut)
 {
     StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, NULL, newEntry);
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
     if (!e)
         return false;
     *valOut = (int)e->val;
@@ -318,7 +318,7 @@ bool MapWStrToInt::Get(const WCHAR *key, int* valOut)
 {
     WStrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, NULL, newEntry);
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
     if (!e)
         return false;
     *valOut = (int)e->val;

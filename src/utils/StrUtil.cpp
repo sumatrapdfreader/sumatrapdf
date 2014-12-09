@@ -17,12 +17,12 @@ size_t Len(const WCHAR *s)
 
 char *Dup(const char *s)
 {
-    return s ? _strdup(s) : NULL;
+    return s ? _strdup(s) : nullptr;
 }
 
 WCHAR *Dup(const WCHAR *s)
 {
-    return s ? _wcsdup(s) : NULL;
+    return s ? _wcsdup(s) : nullptr;
 }
 
 // return true if s1 == s2, case sensitive
@@ -203,7 +203,7 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 const char *FindI(const char *s, const char *toFind)
 {
     if (!s || !toFind)
-        return NULL;
+        return nullptr;
 
     char first = (char)tolower(*toFind);
     if (!first)
@@ -217,13 +217,13 @@ const char *FindI(const char *s, const char *toFind)
         }
         s++;
     }
-    return NULL;
+    return nullptr;
 }
 
 const WCHAR *FindI(const WCHAR *s, const WCHAR *toFind)
 {
     if (!s || !toFind)
-        return NULL;
+        return nullptr;
 
     WCHAR first = towlower(*toFind);
     if (!first)
@@ -237,7 +237,7 @@ const WCHAR *FindI(const WCHAR *s, const WCHAR *toFind)
         }
         s++;
     }
-    return NULL;
+    return nullptr;
 }
 
 void ReplacePtr(char **s, const char *snew)
@@ -258,7 +258,7 @@ void ReplacePtr(WCHAR **s, const WCHAR *snew)
     *s = str::Dup(snew);
 }
 
-/* Concatenate 2 strings. Any string can be NULL.
+/* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 char *Join(const char *s1, const char *s2, const char *s3)
 {
@@ -294,7 +294,7 @@ char *Join(const char *s1, const char *s2, const char *s3, Allocator *allocator)
     return res;
 }
 
-/* Concatenate 2 strings. Any string can be NULL.
+/* Concatenate 2 strings. Any string can be nullptr.
    Caller needs to free() memory. */
 WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
 {
@@ -308,7 +308,7 @@ WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
 char *DupN(const char *s, size_t lenCch)
 {
     if (!s)
-        return NULL;
+        return nullptr;
     char *res = (char *)memdup((void *)s, lenCch + 1);
     if (res)
         res[lenCch] = 0;
@@ -318,7 +318,7 @@ char *DupN(const char *s, size_t lenCch)
 WCHAR *DupN(const WCHAR *s, size_t lenCch)
 {
     if (!s)
-        return NULL;
+        return nullptr;
     WCHAR *res = (WCHAR *)memdup((void *)s, (lenCch + 1) * sizeof(WCHAR));
     if (res)
         res[lenCch] = 0;
@@ -343,15 +343,15 @@ void ToLower(WCHAR *s)
 char *ToMultiByte(const WCHAR *txt, UINT codePage, int cchTxtLen)
 {
     AssertCrash(txt);
-    if (!txt) return NULL;
+    if (!txt) return nullptr;
 
-    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, NULL, 0, NULL, NULL);
+    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, nullptr, 0, nullptr, nullptr);
     if (0 == requiredBufSize)
-        return NULL;
+        return nullptr;
     char *res = AllocArray<char>(requiredBufSize+1);
     if (!res)
-        return NULL;
-    WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, requiredBufSize, NULL, NULL);
+        return nullptr;
+    WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, requiredBufSize, nullptr, nullptr);
     return res;
 }
 
@@ -359,14 +359,14 @@ char *ToMultiByte(const WCHAR *txt, UINT codePage, int cchTxtLen)
 char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 {
     AssertCrash(src);
-    if (!src) return NULL;
+    if (!src) return nullptr;
 
     if (codePageSrc == codePageDest)
         return str::Dup(src);
 
     ScopedMem<WCHAR> tmp(ToWideChar(src, codePageSrc));
     if (!tmp)
-        return NULL;
+        return nullptr;
 
     return ToMultiByte(tmp.Get(), codePageDest);
 }
@@ -375,14 +375,14 @@ char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 WCHAR *ToWideChar(const char *src, UINT codePage, int cbSrcLen)
 {
     AssertCrash(src);
-    if (!src) return NULL;
+    if (!src) return nullptr;
 
-    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, NULL, 0);
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, nullptr, 0);
     if (0 == requiredBufSize)
-        return NULL;
+        return nullptr;
     WCHAR *res = AllocArray<WCHAR>(requiredBufSize+1);
     if (!res)
-        return NULL;
+        return nullptr;
     MultiByteToWideChar(codePage, 0, src, cbSrcLen, res, requiredBufSize);
     return res;
 }
@@ -821,7 +821,7 @@ char *MemToHex(const unsigned char *buf, size_t len)
     /* 2 hex chars per byte, +1 for terminating 0 */
     char *ret = AllocArray<char>(2 * len + 1);
     if (!ret)
-        return NULL;
+        return nullptr;
     char *dst = ret;
     for (; len > 0; len--) {
         sprintf_s(dst, 3, "%02x", *buf++);
@@ -858,7 +858,7 @@ WCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     WCHAR *res = AllocArray<WCHAR>(resLen);
     if (!res)
-        return NULL;
+        return nullptr;
     WCHAR *next = res;
     int i = 3 - (str::Len(buf) % 3);
     for (const WCHAR *src = buf; *src; ) {
@@ -895,7 +895,7 @@ WCHAR *FormatFloatWithThousandSep(double number, LCID locale)
 WCHAR *FormatRomanNumeral(int number)
 {
     if (number < 1)
-        return NULL;
+        return nullptr;
 
     static struct {
         int value;
@@ -985,7 +985,7 @@ static T *ExtractUntil(const T *pos, T c, const T **endOut)
 {
     *endOut = FindChar(pos, c);
     if (!*endOut)
-        return NULL;
+        return nullptr;
     return str::DupN(pos, *endOut - pos);
 }
 
@@ -1023,7 +1023,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
 
 /* Parses a string into several variables sscanf-style (i.e. pass in pointers
    to where the parsed values are to be stored). Returns a pointer to the first
-   character that's not been parsed when successful and NULL otherwise.
+   character that's not been parsed when successful and nullptr otherwise.
 
    Supported formats:
      %u - parses an unsigned int
@@ -1048,13 +1048,13 @@ static const char *ParseV(const char *str, const char *format, va_list args)
     for (const char *f = format; *f; f++) {
         if (*f != '%') {
             if (*f != *str)
-                return NULL;
+                return nullptr;
             str++;
             continue;
         }
         f++;
 
-        const char *end = NULL;
+        const char *end = nullptr;
         if ('u' == *f)
             *va_arg(args, unsigned int *) = strtoul(str, (char **)&end, 10);
         else if ('d' == *f)
@@ -1090,7 +1090,7 @@ static const char *ParseV(const char *str, const char *format, va_list args)
         else if (str::IsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;
         if (!end || end == str)
-            return NULL;
+            return nullptr;
         str = end;
     }
     return str;
@@ -1099,7 +1099,7 @@ static const char *ParseV(const char *str, const char *format, va_list args)
 const char *Parse(const char *str, const char *fmt, ...)
 {
     if (!str || !fmt)
-        return NULL;
+        return nullptr;
 
     va_list args;
     va_start(args, fmt);
@@ -1116,7 +1116,7 @@ const char *Parse(const char *str, size_t len, const char *fmt, ...)
     char *s = buf;
 
     if (!str || !fmt)
-        return NULL;
+        return nullptr;
 
     if (len < dimof(buf))
         memcpy(buf, str, len);
@@ -1138,7 +1138,7 @@ const char *Parse(const char *str, size_t len, const char *fmt, ...)
 const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
 {
     if (!str)
-        return NULL;
+        return nullptr;
     va_list args;
     va_start(args, format);
     for (const WCHAR *f = format; *f; f++) {
@@ -1150,7 +1150,7 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
         }
         f++;
 
-        const WCHAR *end = NULL;
+        const WCHAR *end = nullptr;
         if ('u' == *f)
             *va_arg(args, unsigned int *) = wcstoul(str, (WCHAR **)&end, 10);
         else if ('d' == *f)
@@ -1194,7 +1194,7 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
 
 Failure:
     va_end(args);
-    return NULL;
+    return nullptr;
 }
 
 size_t Utf8ToWcharBuf(const char *s, size_t cbLen, WCHAR *bufOut, size_t cchBufOutSize)
@@ -1215,10 +1215,10 @@ size_t Utf8ToWcharBuf(const char *s, size_t cbLen, WCHAR *bufOut, size_t cchBufO
 size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
 {
     CrashIf(!bufOut || (0 == cbBufOutSize));
-    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, NULL, 0, NULL, NULL);
+    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
     if ((size_t)cbConverted >= cbBufOutSize)
         cbConverted = (int)cbBufOutSize - 1;
-    int res = WideCharToMultiByte(CP_UTF8, 0, s, (int)str::Len(s), bufOut, cbConverted, NULL, NULL);
+    int res = WideCharToMultiByte(CP_UTF8, 0, s, (int)str::Len(s), bufOut, cbConverted, nullptr, nullptr);
     CrashIf(res > cbConverted);
     bufOut[res] = '\0';
     return res;
@@ -1228,9 +1228,9 @@ size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
 
 /*
  * Copyright 2001-2004 Unicode, Inc.
- * 
+ *
  * Disclaimer
- * 
+ *
  * This source code is provided as is by Unicode, Inc. No claims are
  * made as to fitness for any particular purpose. No warranties of any
  * kind are expressed or implied. The recipient agrees to determine
@@ -1238,9 +1238,9 @@ size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
  * purchased on magnetic or optical media from Unicode, Inc., the
  * sole remedy for any claim will be exchange of defective media
  * within 90 days of receipt.
- * 
+ *
  * Limitations on Rights to Redistribute This Code
- * 
+ *
  * Unicode, Inc. hereby grants the right to freely use the information
  * supplied in this file in the creation of products supporting the
  * Unicode Standard, and to make copies of this file in any form
@@ -1372,7 +1372,7 @@ char *UnknownToUtf8(const char *s, size_t len)
 
 size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp)
 {
-    return WideCharToMultiByte(cp, 0, s, -1, buf, cbBufSize, NULL, NULL);
+    return WideCharToMultiByte(cp, 0, s, -1, buf, cbBufSize, nullptr, nullptr);
 }
 size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp)
 {
@@ -1436,7 +1436,7 @@ WCHAR *GetFileName(const WCHAR *url)
             break;
     }
     if (str::IsEmpty(base))
-        return NULL;
+        return nullptr;
     DecodeInPlace(base);
     return str::Dup(base);
 }
@@ -1468,7 +1468,7 @@ void SkipStr(const char *& s)
     s++;
 }
 
-// Returns NULL if s is the same as toFind
+// Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char *StrEqWeird(const char *s, const char *toFind)
 {
@@ -1477,7 +1477,7 @@ static inline const char *StrEqWeird(const char *s, const char *toFind)
         c = *s++;
         if (0 == c) {
             if (0 == *toFind)
-                return NULL;
+                return nullptr;
             return s;
         }
         if (c != *toFind++) {
@@ -1490,7 +1490,7 @@ static inline const char *StrEqWeird(const char *s, const char *toFind)
     }
 }
 
-// Returns NULL if s is the same as toFind
+// Returns nullptr if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char *StrEqWeird(const char *s, const WCHAR *toFind)
 {
@@ -1500,12 +1500,12 @@ static inline const char *StrEqWeird(const char *s, const WCHAR *toFind)
         c = *s++;
         if (0 == c) {
             if (0 == *toFind)
-                return NULL;
+                return nullptr;
             return s;
         }
         wc = *toFind++;
         if (wc > 255)
-            return NULL;
+            return nullptr;
         c2 = (char)wc;
         if (c != c2) {
             while (*s) {
@@ -1527,7 +1527,7 @@ int StrToIdx(const char *strings, const char *toFind)
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
-        if (NULL == s)
+        if (nullptr == s)
             return idx;
         ++idx;
     }
@@ -1543,7 +1543,7 @@ int StrToIdx(const char *strings, const WCHAR *toFind)
     int idx = 0;
     while (*s) {
         s = StrEqWeird(s, toFind);
-        if (NULL == s)
+        if (nullptr == s)
             return idx;
         ++idx;
     }

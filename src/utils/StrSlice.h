@@ -9,7 +9,7 @@ struct Slice {
     char *  end;
     char *  curr;
 
-    Slice() : begin(NULL), end(NULL), curr(NULL) { }
+    Slice() : begin(nullptr), end(nullptr), curr(nullptr) { }
 
     Slice(char *txt, size_t len) {
         Init(txt, len);

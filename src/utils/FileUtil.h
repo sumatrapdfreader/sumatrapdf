@@ -21,16 +21,16 @@ bool         IsOnFixedDrive(const WCHAR *path);
 bool         Match(const WCHAR *path, const WCHAR *filter);
 bool         IsAbsolute(const WCHAR *path);
 
-WCHAR *      GetTempPath(const WCHAR *filePrefix=NULL);
-WCHAR *      GetAppPath(const WCHAR *fileName=NULL);
+WCHAR *      GetTempPath(const WCHAR *filePrefix=nullptr);
+WCHAR *      GetAppPath(const WCHAR *fileName=nullptr);
 
 }
 
 namespace file {
 
 bool         Exists(const WCHAR *filePath);
-char *       ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator=NULL);
-char *       ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator=NULL);
+char *       ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator=nullptr);
+char *       ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator=nullptr);
 bool         ReadN(const WCHAR *filePath, char *buf, size_t toRead);
 bool         WriteAll(const WCHAR *filePath, const void *data, size_t dataLen);
 bool         WriteAllUtf(const char *filePath, const void *data, size_t dataLen);

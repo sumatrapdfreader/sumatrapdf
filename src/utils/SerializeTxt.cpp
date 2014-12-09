@@ -24,7 +24,7 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
     if (!structStart)
         return;
     Type type;
-    const FieldMetadata *fieldDef = NULL;
+    const FieldMetadata *fieldDef = nullptr;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
         uint8_t *data = structStart + fieldDef->offset;
@@ -32,7 +32,7 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)data;
             FreeStruct(*p, GetStructDef(fieldDef));
-            *p = NULL;
+            *p = nullptr;
         } else if (TYPE_ARRAY == type) {
             Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
             Vec<uint8_t*> *vec = *vecPtr;
@@ -41,12 +41,12 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
                 FreeStruct(vec->At(j), GetStructDef(fieldDef));
             }
             delete vec;
-            *vecPtr = NULL;
+            *vecPtr = nullptr;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)data;
             char *s = *sp;
             free(s);
-            *sp = NULL;
+            *sp = nullptr;
         }
     }
     free(structStart);
@@ -312,13 +312,13 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, const Struct
 static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
 {
     if (!curr)
-        return NULL;
+        return nullptr;
 
     char *nodeName;
     size_t nodeNameLen;
 
     TxtNode *child;
-    TxtNode *found = NULL;
+    TxtNode *found = nullptr;
     for (size_t i = 0; i < curr->children->Count(); i++) {
         child = curr->children->At(i);
         if (TextNode == child->type || StructNode == child->type) {
@@ -333,7 +333,7 @@ static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
         if (found)
             return found;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
@@ -386,7 +386,7 @@ static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const 
     return node;
 Error:
     FreeTxtNode(node);
-    return NULL;
+    return nullptr;
 }
 
 static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructMetadata *structDef)
@@ -394,7 +394,7 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructM
     CrashIf(TextNode != node->type);
     TxtNode *structNode = StructNodeFromTextNode(ds, node, structDef);
     if (!structNode)
-        return NULL;
+        return nullptr;
     uint8_t *res = DeserializeRec(ds, structNode, structDef);
     FreeTxtNode(structNode);
     return res;
@@ -402,7 +402,7 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructM
 
 static uint8_t *DecodeStruct(DecodeState& ds, const FieldMetadata *fieldDef, TxtNode *node, bool isCompact)
 {
-    uint8_t *d = NULL;
+    uint8_t *d = nullptr;
     if (isCompact && (TextNode == node->type)) {
         d = DeserializeCompact(ds, node, GetStructDef(fieldDef));
     } else {
@@ -504,7 +504,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, const Struct
 {
     bool ok = true;
     if (!firstNode)
-        return NULL;
+        return nullptr;
 
     uint8_t *res = AllocArray<uint8_t>(def->size);
     const StructMetadata **defPtr = (const StructMetadata**)res;
@@ -519,7 +519,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, const Struct
     return res;
 Error:
     FreeStruct(res, def);
-    return NULL;
+    return nullptr;
 }
 
 uint8_t* Deserialize(struct TxtNode *root, const StructMetadata *def)
@@ -531,13 +531,13 @@ uint8_t* Deserialize(struct TxtNode *root, const StructMetadata *def)
 uint8_t* Deserialize(char *data, size_t dataSize, const StructMetadata *def)
 {
     if (!data)
-        return NULL;
+        return nullptr;
 
     DecodeState ds;
     ds.parser.SetToParse(data, dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
-        return NULL;
+        return nullptr;
 
     return DeserializeRec(ds, ds.parser.nodes.At(0), def);
 }

@@ -14,14 +14,14 @@ public:
         } value;
         bool isChild;
 
-        DataItem() : key(NULL) { }
+        DataItem() : key(nullptr) { }
         DataItem(const char *key, const char *string) : key(key), isChild(false) { value.str = string; }
         DataItem(const char *key, SquareTreeNode *node) : key(key), isChild(true) { value.child = node; }
     };
     Vec<DataItem> data;
 
-    const char *GetValue(const char *key, size_t *startIdx=NULL) const;
-    SquareTreeNode *GetChild(const char *key, size_t *startIdx=NULL) const;
+    const char *GetValue(const char *key, size_t *startIdx=nullptr) const;
+    SquareTreeNode *GetChild(const char *key, size_t *startIdx=nullptr) const;
 };
 
 class SquareTree {

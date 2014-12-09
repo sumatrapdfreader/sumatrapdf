@@ -79,14 +79,14 @@ struct TxtNode {
     // TODO: move to TxtParser.cpp
     char *KeyDup() const {
         if (!keyStart)
-            return NULL;
+            return nullptr;
         return str::DupN(keyStart, KeyLen());
     }
 
     // TODO: move to TxtParser.cpp
     char *ValDup() const {
         if (!valStart)
-            return NULL;
+            return nullptr;
         return str::DupN(valStart, ValLen());
     }
 };
@@ -117,7 +117,7 @@ struct TxtParser {
         allocator = new PoolAllocator();
         escapeChar = SERIALIZE_ESCAPE_CHAR;
         failed = false;
-        toFree = NULL;
+        toFree = nullptr;
     }
     ~TxtParser() {
         delete allocator;

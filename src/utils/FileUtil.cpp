@@ -77,7 +77,7 @@ WCHAR *Join(const WCHAR *path, const WCHAR *fileName)
 {
     if (IsSep(*fileName))
         fileName++;
-    WCHAR *sepStr = NULL;
+    WCHAR *sepStr = nullptr;
     if (!IsSep(path[str::Len(path) - 1]))
         sepStr = L"\\";
     return str::Join(path, sepStr, fileName);
@@ -87,7 +87,7 @@ char *JoinUtf(const char *path, const char *fileName, Allocator *allocator)
 {
     if (IsSep(*fileName))
         fileName++;
-    char *sepStr = NULL;
+    char *sepStr = nullptr;
     if (!IsSep(path[str::Len(path) - 1]))
         sepStr = "\\";
     return str::Join(path, sepStr, fileName, allocator);
@@ -100,7 +100,7 @@ char *JoinUtf(const char *path, const char *fileName, Allocator *allocator)
 //
 // Returns a pointer to a memory allocated block containing the normalized string.
 //   The caller is responsible for freeing the block.
-//   Returns NULL if the file does not exist or if a memory allocation fails.
+//   Returns nullptr if the file does not exist or if a memory allocation fails.
 //
 // Precondition: the file must exist on the file system.
 //
@@ -114,13 +114,13 @@ char *JoinUtf(const char *path, const char *fileName, Allocator *allocator)
 WCHAR *Normalize(const WCHAR *path)
 {
     // convert to absolute path, change slashes into backslashes
-    DWORD cch = GetFullPathName(path, 0, NULL, NULL);
+    DWORD cch = GetFullPathName(path, 0, nullptr, nullptr);
     if (!cch)
         return str::Dup(path);
     ScopedMem<WCHAR> fullpath(AllocArray<WCHAR>(cch));
-    GetFullPathName(path, cch, fullpath, NULL);
+    GetFullPathName(path, cch, fullpath, nullptr);
     // convert to long form
-    cch = GetLongPathName(fullpath, NULL, 0);
+    cch = GetLongPathName(fullpath, nullptr, 0);
     if (!cch)
         return fullpath.StealData();
     ScopedMem<WCHAR> normpath(AllocArray<WCHAR>(cch));
@@ -128,7 +128,7 @@ WCHAR *Normalize(const WCHAR *path)
     if (cch <= MAX_PATH)
         return normpath.StealData();
     // handle overlong paths: first, try to shorten the path
-    cch = GetShortPathName(fullpath, NULL, 0);
+    cch = GetShortPathName(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
         ScopedMem<WCHAR> shortpath(AllocArray<WCHAR>(cch));
         GetShortPathName(fullpath, shortpath, cch);
@@ -150,7 +150,7 @@ WCHAR *Normalize(const WCHAR *path)
 WCHAR *ShortPath(const WCHAR *path)
 {
     ScopedMem<WCHAR> normpath(Normalize(path));
-    DWORD cch = GetShortPathName(normpath, NULL, 0);
+    DWORD cch = GetShortPathName(normpath, nullptr, 0);
     if (!cch)
         return normpath.StealData();
     WCHAR *shortpath = AllocArray<WCHAR>(cch);
@@ -163,8 +163,8 @@ WCHAR *ShortPath(const WCHAR *path)
 bool IsSame(const WCHAR *path1, const WCHAR *path2)
 {
     bool isSame = false, needFallback = true;
-    HANDLE handle1 = CreateFile(path1, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-    HANDLE handle2 = CreateFile(path2, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    HANDLE handle1 = CreateFile(path1, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE handle2 = CreateFile(path2, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 
     if (handle1 != INVALID_HANDLE_VALUE && handle2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
@@ -265,12 +265,12 @@ WCHAR *GetTempPath(const WCHAR *filePrefix)
     WCHAR tempDir[MAX_PATH - 14];
     DWORD res = ::GetTempPath(dimof(tempDir), tempDir);
     if (!res || res >= dimof(tempDir))
-        return NULL;
+        return nullptr;
     if (!filePrefix)
         return str::Dup(tempDir);
     WCHAR path[MAX_PATH];
     if (!GetTempFileName(tempDir, filePrefix, 0, path))
-        return NULL;
+        return nullptr;
     return str::Dup(path);
 }
 
@@ -295,13 +295,13 @@ namespace file {
 
 HANDLE OpenReadOnly(const WCHAR *filePath)
 {
-    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr,
+                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
 bool Exists(const WCHAR *filePath)
 {
-    if (NULL == filePath)
+    if (nullptr == filePath)
         return false;
 
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
@@ -337,28 +337,28 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
 {
     int64 size64 = GetSize(filePath);
     if (size64 < 0)
-        return NULL;
+        return nullptr;
     size_t size = (size_t)size64;
 #ifdef _WIN64
     CrashIf(size != (size_t)size64);
 #else
     if (size != size64)
-        return NULL;
+        return nullptr;
 #endif
 
     // overflow check
     if (size + 1 + sizeof(WCHAR) < sizeof(WCHAR) + 1)
-        return NULL;
+        return nullptr;
     /* allocate one character more and zero-terminate just in case it's a
        text file we'll want to treat as C string. Doesn't hurt for binary
        files (note: three byte terminator for UTF-16 files) */
     char *data = (char *)Allocator::Alloc(allocator, size + sizeof(WCHAR) + 1);
     if (!data)
-        return NULL;
+        return nullptr;
 
     if (!ReadN(filePath, data, size)) {
         Allocator::Free(allocator, data);
-        return NULL;
+        return nullptr;
     }
 
     // zero-terminate for convenience
@@ -384,19 +384,19 @@ bool ReadN(const WCHAR *filePath, char *buf, size_t toRead)
         return false;
 
     DWORD nRead;
-    BOOL ok = ReadFile(h, buf, (DWORD)toRead, &nRead, NULL);
+    BOOL ok = ReadFile(h, buf, (DWORD)toRead, &nRead, nullptr);
     return ok && nRead == toRead;
 }
 
 bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
+    ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr));
     if (INVALID_HANDLE_VALUE == h)
         return false;
 
     DWORD size;
-    BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
+    BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
     assert(!ok || (dataLen == (size_t)size));
     return ok && dataLen == (size_t)size;
 }
@@ -420,17 +420,17 @@ FILETIME GetModificationTime(const WCHAR *filePath)
     FILETIME lastMod = { 0 };
     ScopedHandle h(OpenReadOnly(filePath));
     if (h != INVALID_HANDLE_VALUE)
-        GetFileTime(h, NULL, NULL, &lastMod);
+        GetFileTime(h, nullptr, nullptr, &lastMod);
     return lastMod;
 }
 
 bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod)
 {
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                              OPEN_EXISTING, 0, NULL));
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr,
+                              OPEN_EXISTING, 0, nullptr));
     if (INVALID_HANDLE_VALUE == h)
         return false;
-    return SetFileTime(h, NULL, NULL, &lastMod);
+    return SetFileTime(h, nullptr, nullptr, &lastMod);
 }
 
 // return true if a file starts with string s of size len
@@ -470,7 +470,7 @@ namespace dir {
 
 bool Exists(const WCHAR *dir)
 {
-    if (NULL == dir)
+    if (nullptr == dir)
         return false;
 
     WIN32_FILE_ATTRIBUTE_DATA   fileInfo;
@@ -486,7 +486,7 @@ bool Exists(const WCHAR *dir)
 // Return true if a directory already exists or has been successfully created
 bool Create(const WCHAR *dir)
 {
-    BOOL ok = CreateDirectory(dir, NULL);
+    BOOL ok = CreateDirectory(dir, nullptr);
     if (ok)
         return true;
     return ERROR_ALREADY_EXISTS == GetLastError();

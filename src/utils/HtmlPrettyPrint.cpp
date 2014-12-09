@@ -53,7 +53,7 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
     HtmlPullParser parser(s, len);
     Vec<HtmlTag> tagNesting;
     HtmlToken *t;
-    while ((t = parser.Next()) != NULL && !t->IsError()) {
+    while ((t = parser.Next()) != nullptr && !t->IsError()) {
         if (t->IsText()) {
             // TODO: normalize whitespace instead?
             if (!IsWsText(t->s, t->sLen))

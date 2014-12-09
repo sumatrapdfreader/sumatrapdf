@@ -185,24 +185,24 @@ int GetIdxFromName(SimpleArchive *archive, const char *fileName)
 char *GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator)
 {
     if (idx >= archive->filesCount)
-        return NULL;
+        return nullptr;
 
     FileInfo *fi = &archive->files[idx];
 
     char *uncompressed = (char *)Allocator::Alloc(allocator, fi->uncompressedSize);
     if (!uncompressed)
-        return NULL;
+        return nullptr;
 
     bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, allocator);
     if (!ok) {
         Allocator::Free(allocator, uncompressed);
-        return NULL;
+        return nullptr;
     }
 
     uint32_t realCrc = crc32(0, (const uint8_t *)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
         Allocator::Free(allocator, uncompressed);
-        return NULL;
+        return nullptr;
     }
 
     return uncompressed;
@@ -213,7 +213,7 @@ char *GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator 
     int idx = GetIdxFromName(archive, fileName);
     if (-1 != idx)
         return GetFileDataByIdx(archive, idx, allocator);
-    return NULL;
+    return nullptr;
 }
 
 static bool ExtractFileByIdx(SimpleArchive *archive, int idx, const char *dstDir, Allocator *allocator)

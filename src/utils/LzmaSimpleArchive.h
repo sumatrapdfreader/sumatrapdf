@@ -25,7 +25,7 @@ bool   ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchi
 int    GetIdxFromName(SimpleArchive *archive, const char *name);
 char * GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator);
 char * GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator *allocator);
-// files is an array of char * entries, last element must be NULL
-bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);
+// files is an array of char * entries, last element must be nullptr
+bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=nullptr);
 
 }

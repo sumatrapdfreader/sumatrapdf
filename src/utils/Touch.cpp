@@ -11,9 +11,9 @@ typedef BOOL (WINAPI * GetGestureInfoPtr)(HGESTUREINFO hGestureInfo, PGESTUREINF
 typedef BOOL (WINAPI * CloseGestureInfoHandlePtr)(HGESTUREINFO hGestureInfo);
 typedef BOOL (WINAPI * SetGestureConfigPtr)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize);
 
-static GetGestureInfoPtr         g_pGetGestureInfo = NULL;
-static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle = NULL;
-static SetGestureConfigPtr       g_pSetGestureConfig = NULL;
+static GetGestureInfoPtr         g_pGetGestureInfo = nullptr;
+static CloseGestureInfoHandlePtr g_pCloseGestureInfoHandle = nullptr;
+static SetGestureConfigPtr       g_pSetGestureConfig = nullptr;
 
 static void InitializeGestures()
 {

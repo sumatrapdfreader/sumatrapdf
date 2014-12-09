@@ -12,7 +12,7 @@ struct JsonValue {
     json::DataType type;
     const char *value;
 
-    JsonValue() : path(NULL), value(NULL) { }
+    JsonValue() : path(nullptr), value(nullptr) { }
     JsonValue(const char *path, const char *value, json::DataType type=json::Type_String) :
         path(path), type(type), value(value) { }
 };
@@ -102,7 +102,7 @@ void JsonTest()
         "[", "[,]"
     };
 
-    JsonVerifier verifyError(NULL, 0);
+    JsonVerifier verifyError(nullptr, 0);
     for (size_t i = 0; i < dimof(invalidJson); i++) {
         utassert(!json::Parse(invalidJson[i], &verifyError));
     }

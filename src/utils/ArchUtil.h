@@ -15,7 +15,7 @@ protected:
     ar_archive *ar;
 
     // call with fileindex = -1 for filename extraction using the fallback
-    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=NULL) { return NULL; }
+    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=nullptr) { return nullptr; }
 
 public:
     ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *));
@@ -28,14 +28,14 @@ public:
     size_t GetFileIndex(const WCHAR *filename);
 
     // caller must free() the result
-    char *GetFileDataByName(const WCHAR *filename, size_t *len=NULL);
-    char *GetFileDataByIdx(size_t fileindex, size_t *len=NULL);
+    char *GetFileDataByName(const WCHAR *filename, size_t *len=nullptr);
+    char *GetFileDataByIdx(size_t fileindex, size_t *len=nullptr);
 
     FILETIME GetFileTime(const WCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
     // caller must free() the result
-    char *GetComment(size_t *len=NULL);
+    char *GetComment(size_t *len=nullptr);
 };
 
 class ZipFile : public ArchFile {
@@ -63,7 +63,7 @@ class RarFile : public ArchFile {
     UnRarDll *fallback;
 
     void ExtractFilenamesWithFallback();
-    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=NULL);
+    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=nullptr);
 
 public:
     explicit RarFile(const WCHAR *path);

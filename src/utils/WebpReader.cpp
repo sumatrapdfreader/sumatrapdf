@@ -28,16 +28,16 @@ Bitmap *ImageFromData(const char *data, size_t len)
 {
     int w, h;
     if (!WebPGetInfo((const uint8_t *)data, len, &w, &h))
-        return NULL;
+        return nullptr;
 
     Bitmap bmp(w, h, PixelFormat32bppARGB);
     Rect bmpRect(0, 0, w, h);
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok)
-        return NULL;
+        return nullptr;
     if (!WebPDecodeBGRAInto((const uint8_t *)data, len, (uint8_t *)bmpData.Scan0, bmpData.Stride * h, bmpData.Stride))
-        return NULL;
+        return nullptr;
     bmp.UnlockBits(&bmpData);
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
@@ -51,7 +51,7 @@ Bitmap *ImageFromData(const char *data, size_t len)
 namespace webp {
 bool HasSignature(const char *data, size_t len) { return false; }
 Gdiplus::Size SizeFromData(const char *data, size_t len) { return Gdiplus::Size(); }
-Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return NULL; }
+Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return nullptr; }
 }
 
 #endif

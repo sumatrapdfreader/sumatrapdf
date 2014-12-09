@@ -101,7 +101,7 @@ static_assert(4 == sizeof(int32) && 4 == sizeof(uint32), "(u)int32 must be four 
 static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight bytes");
 
 #pragma warning(push)
-#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a nullptr pointer
 // Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
 // CrashMe() would show up as the cause of several different crash sites)
 //
@@ -109,7 +109,7 @@ static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight
 // but it seemed to confuse callstack walking
 inline void CrashMe()
 {
-    char *p = NULL;
+    char *p = nullptr;
     *p = 0;
 }
 #pragma warning(pop)
@@ -225,7 +225,7 @@ public:
     virtual void *Realloc(void *mem, size_t size) = 0;
     virtual void Free(void *mem) = 0;
 
-    // helper functions that fallback to malloc()/free() if allocator is NULL
+    // helper functions that fallback to malloc()/free() if allocator is nullptr
     // helps write clients where allocator is optional
     static void *Alloc(Allocator *a, size_t size);
 
@@ -346,7 +346,7 @@ public:
     }
     template <typename T>
     Iter<T> end() {
-        return Iter<T>(NULL);
+        return Iter<T>(nullptr);
     }
 };
 
@@ -360,7 +360,7 @@ class FixedArray {
     T *memBuf;
 public:
     explicit FixedArray(size_t elCount) {
-        memBuf = NULL;
+        memBuf = nullptr;
         size_t stackEls = StackBufInBytes / sizeof(T);
         if (elCount > stackEls)
             memBuf = (T*)malloc(elCount * sizeof(T));

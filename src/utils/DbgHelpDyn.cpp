@@ -2,7 +2,7 @@
    License: Simplified BSD */
 
 /* Wrappers around dbghelp.dll that load it on demand and provide
-   utility functions related to debugging like getting callstacs etc. 
+   utility functions related to debugging like getting callstacs etc.
    This module is carefully written to not allocate memory as it
    can be used from crash handler.
 */
@@ -178,7 +178,7 @@ bool Load()
     Load(SymGetLineFromAddr64);
 #undef Load
 
-    bool ok = (NULL != _StackWalk64);
+    bool ok = (nullptr != _StackWalk64);
     //if (!ok)
     //    plog("dbghelp::Load(): _StackWalk64 not present in dbghelp.dll");
     return ok;
@@ -194,7 +194,7 @@ static bool SetupSymbolPath()
 
     ScopedMem<WCHAR> path(GetSymbolPath());
     if (!path) {
-        plog("SetupSymbolPath(): GetSymbolPath() returned NULL");
+        plog("SetupSymbolPath(): GetSymbolPath() returned nullptr");
         return false;
     }
 
@@ -318,19 +318,19 @@ static BOOL CALLBACK OpenMiniDumpCallback(void *param, PMINIDUMP_CALLBACK_INPUT 
 
 void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump)
 {
-    if (!Initialize(NULL) || !_MiniDumpWriteDump)
+    if (!Initialize(nullptr) || !_MiniDumpWriteDump)
         return;
 
-    HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+    HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
     if (INVALID_HANDLE_VALUE == hFile)
         return;
 
     MINIDUMP_TYPE type = (MINIDUMP_TYPE)(MiniDumpNormal | MiniDumpWithIndirectlyReferencedMemory | MiniDumpScanMemory);
     if (fullDump)
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
-    MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL };
+    MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, nullptr };
 
-    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, NULL, &mci);
+    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, nullptr, &mci);
 
     CloseHandle(hFile);
 }
@@ -394,7 +394,7 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
     symInfo->MaxNameLen = MAX_SYM_LEN;
 
     DWORD64 symDisp = 0;
-    char *symName = NULL;
+    char *symName = nullptr;
     BOOL ok = _SymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
     if (ok)
         symName = &(symInfo->Name[0]);
@@ -435,8 +435,8 @@ static bool GetStackFrameInfo(str::Str<char>& s, STACKFRAME64 *stackFrame,
     int machineType = IMAGE_FILE_MACHINE_I386;
 #endif
     BOOL ok = _StackWalk64(machineType, GetCurrentProcess(), hThread,
-        stackFrame, ctx, NULL, _SymFunctionTableAccess64,
-        _SymGetModuleBase64, NULL);
+        stackFrame, ctx, nullptr, _SymFunctionTableAccess64,
+        _SymGetModuleBase64, nullptr);
     if (!ok)
         return false;
 
@@ -532,7 +532,7 @@ void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
 typedef VOID WINAPI RtlCaptureContextProc(PCONTEXT ContextRecord);
 __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 {
-    if (!Initialize(NULL))
+    if (!Initialize(nullptr))
         return false;
 
     CONTEXT ctx;
@@ -546,7 +546,7 @@ __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 }
 #pragma optimize("", off )
 
-str::Str<char> *gCallstackLogs = NULL;
+str::Str<char> *gCallstackLogs = nullptr;
 
 // start remembering callstack logs done with LogCallstack()
 void RememberCallstackLogs()
@@ -558,13 +558,13 @@ void RememberCallstackLogs()
 void FreeCallstackLogs()
 {
     delete gCallstackLogs;
-    gCallstackLogs = NULL;
+    gCallstackLogs = nullptr;
 }
 
 char *GetCallstacks()
 {
     if (!gCallstackLogs)
-        return NULL;
+        return nullptr;
     return str::Dup(gCallstackLogs->Get());
 }
 

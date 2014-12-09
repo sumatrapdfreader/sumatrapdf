@@ -7,7 +7,7 @@
 
 namespace uitask {
 
-static HWND gTaskDispatchHwnd = NULL;
+static HWND gTaskDispatchHwnd = nullptr;
 
 #define UITASK_CLASS_NAME L"UITask_Wnd_Class"
 #define WM_EXECUTE_TASK (WM_USER + 1)
@@ -28,8 +28,9 @@ void Initialize() {
     RegisterClassEx(&wcex);
 
     CrashIf(gTaskDispatchHwnd);
-    gTaskDispatchHwnd = CreateWindow(UITASK_CLASS_NAME, L"UITask Dispatch Window", WS_OVERLAPPED, 0,
-                                     0, 0, 0, HWND_MESSAGE, NULL, GetModuleHandle(NULL), NULL);
+    gTaskDispatchHwnd =
+        CreateWindow(UITASK_CLASS_NAME, L"UITask Dispatch Window", WS_OVERLAPPED, 0, 0, 0, 0,
+                     HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
 }
 
 void DrainQueue() {
@@ -43,7 +44,7 @@ void DrainQueue() {
 void Destroy() {
     DrainQueue();
     DestroyWindow(gTaskDispatchHwnd);
-    gTaskDispatchHwnd = NULL;
+    gTaskDispatchHwnd = nullptr;
 }
 
 void Post(const std::function<void()> &f) {

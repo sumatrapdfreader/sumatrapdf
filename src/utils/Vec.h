@@ -65,7 +65,7 @@ protected:
         if (!allowFailure)
             EnsureCapCrash(newLen);
         else if (!EnsureCapTry(newLen))
-            return NULL;
+            return nullptr;
         T* res = &(els[idx]);
         if (len > idx) {
             T* src = els + idx;
@@ -83,7 +83,7 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint=0, Allocator *allocator=NULL) :
+    explicit Vec(size_t capHint=0, Allocator *allocator=nullptr) :
         capacityHint(capHint), allocator(allocator)
     {
         els = buf;
@@ -96,7 +96,7 @@ public:
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& orig) : capacityHint(0), allocator(NULL) {
+    Vec(const Vec& orig) : capacityHint(0), allocator(nullptr) {
         els = buf;
         Reset();
         EnsureCapCrash(orig.cap);
@@ -169,7 +169,7 @@ public:
         T* dst = MakeSpaceAt(len, count, true);
         if (dst)
             memcpy(dst, src, count * sizeof(T));
-        return dst != NULL;
+        return dst != nullptr;
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
@@ -279,7 +279,7 @@ public:
             if (check(els[i]))
                 return els[i];
         }
-        return els[len]; // NULL-sentinel
+        return els[len]; // nullptr-sentinel
     }
 
     // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
@@ -335,7 +335,7 @@ namespace str {
 template <typename T>
 class Str : public Vec<T> {
 public:
-    explicit Str(size_t capHint=0, Allocator *allocator=NULL) : Vec<T>(capHint, allocator) { }
+    explicit Str(size_t capHint=0, Allocator *allocator=nullptr) : Vec<T>(capHint, allocator) { }
 
     void Append(T c)
     {
@@ -424,7 +424,7 @@ public:
         FreeVecMembers(*this);
     }
 
-    WCHAR *Join(const WCHAR *joint=NULL) {
+    WCHAR *Join(const WCHAR *joint=nullptr) {
         str::Str<WCHAR> tmp(256);
         size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
@@ -466,7 +466,7 @@ public:
         size_t start = len;
         const WCHAR *next;
 
-        while ((next = str::Find(s, separator)) != NULL) {
+        while ((next = str::Find(s, separator)) != nullptr) {
             if (!collapse || next > s)
                 Append(str::DupN(s, next - s));
             s = next + str::Len(separator);
@@ -497,7 +497,7 @@ class WStrList {
         WCHAR *string;
         uint32_t hash;
 
-        explicit Item(WCHAR *string=NULL, uint32_t hash=0) : string(string), hash(hash) { }
+        explicit Item(WCHAR *string=nullptr, uint32_t hash=0) : string(string), hash(hash) { }
     };
 
     Vec<Item> items;
@@ -519,7 +519,7 @@ class WStrList {
     }
 
 public:
-    explicit WStrList(size_t capHint=0, Allocator *allocator=NULL) :
+    explicit WStrList(size_t capHint=0, Allocator *allocator=nullptr) :
         items(capHint, allocator), count(0), allocator(allocator) { }
 
     ~WStrList() {

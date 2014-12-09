@@ -22,7 +22,7 @@ struct HtmlAttr {
 
 struct HtmlElement {
     HtmlTag tag;
-    char *name; // name is NULL whenever tag != Tag_NotFound
+    char *name; // name is nullptr whenever tag != Tag_NotFound
     HtmlAttr *firstAttr;
     HtmlElement *up, *down, *next;
     UINT codepage;
@@ -61,7 +61,7 @@ class HtmlParser {
     HtmlElement *FindParent(HtmlToken *tok);
     HtmlElement *ParseError(HtmlParseError err) {
         error = err;
-        return NULL;
+        return nullptr;
     }
 
     void Reset();
@@ -84,8 +84,8 @@ public:
         return attributesCount;
     }
 
-    HtmlElement *FindElementByName(const char *name, HtmlElement *from=NULL);
-    HtmlElement *FindElementByNameNS(const char *name, const char *ns, HtmlElement *from=NULL);
+    HtmlElement *FindElementByName(const char *name, HtmlElement *from=nullptr);
+    HtmlElement *FindElementByNameNS(const char *name, const char *ns, HtmlElement *from=nullptr);
 };
 
 WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage);

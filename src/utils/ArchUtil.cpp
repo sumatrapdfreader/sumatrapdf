@@ -17,7 +17,7 @@ extern "C" {
 #include "FileUtil.h"
 #endif
 
-ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : data(data), ar(NULL)
+ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : data(data), ar(nullptr)
 {
     if (data && openFormat)
         ar = openFormat(data);
@@ -28,7 +28,7 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
         if (name)
             filenames.Append(str::conv::FromUtf8(name));
         else
-            filenames.Append(NULL);
+            filenames.Append(nullptr);
         filepos.Append(ar_entry_get_offset(ar));
     }
     // extract (further) filenames with fallback in derived class constructor
@@ -55,7 +55,7 @@ size_t ArchFile::GetFileCount() const
 const WCHAR *ArchFile::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
-        return NULL;
+        return nullptr;
     return filenames.At(fileindex);
 }
 
@@ -67,17 +67,17 @@ char *ArchFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
     if (fileindex >= filenames.Count())
-        return NULL;
+        return nullptr;
 
     if (!ar || !ar_parse_entry_at(ar, filepos.At(fileindex)))
         return GetFileFromFallback(fileindex, len);
 
     size_t size = ar_entry_get_size(ar);
     if (size > SIZE_MAX - 3)
-        return NULL;
+        return nullptr;
     ScopedMem<char> data((char *)malloc(size + 3));
     if (!data)
-        return NULL;
+        return nullptr;
     if (!ar_entry_uncompress(ar, data, size))
         return GetFileFromFallback(fileindex, len);
     // zero-terminate for convenience
@@ -106,16 +106,16 @@ FILETIME ArchFile::GetFileTime(size_t fileindex)
 char *ArchFile::GetComment(size_t *len)
 {
     if (!ar)
-        return NULL;
-    size_t commentLen = ar_get_global_comment(ar, NULL, 0);
+        return nullptr;
+    size_t commentLen = ar_get_global_comment(ar, nullptr, 0);
     if (0 == commentLen || (size_t)-1 == commentLen)
-        return NULL;
+        return nullptr;
     ScopedMem<char> comment((char *)malloc(commentLen + 1));
     if (!comment)
-        return NULL;
+        return nullptr;
     size_t read = ar_get_global_comment(ar, comment, commentLen);
     if (read != commentLen)
-        return NULL;
+        return nullptr;
     comment[commentLen] = '\0';
     if (len)
         *len = commentLen;
@@ -143,16 +143,16 @@ public:
     UnRarDll();
 
     bool ExtractFilenames(const WCHAR *rarPath, WStrList& filenames);
-    char *GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_t *len=NULL);
+    char *GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_t *len=nullptr);
 };
 #else
 class UnRarDll { };
 #endif
 
 RarFile::RarFile(const WCHAR *path) : ArchFile(ar_open_file_w(path), ar_open_rar_archive),
-    path(str::Dup(path)), fallback(NULL) { ExtractFilenamesWithFallback(); }
+    path(str::Dup(path)), fallback(nullptr) { ExtractFilenamesWithFallback(); }
 RarFile::RarFile(IStream *stream) : ArchFile(ar_open_istream(stream), ar_open_rar_archive),
-    path(NULL), fallback(NULL) { ExtractFilenamesWithFallback(); }
+    path(nullptr), fallback(nullptr) { ExtractFilenamesWithFallback(); }
 RarFile::~RarFile() { delete fallback; }
 
 void RarFile::ExtractFilenamesWithFallback()
@@ -180,7 +180,7 @@ char *RarFile::GetFileFromFallback(size_t fileindex, size_t *len)
         }
     }
 #endif
-    return NULL;
+    return nullptr;
 }
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
@@ -249,11 +249,11 @@ typedef int     (PASCAL *RARReadHeaderExProc)(HANDLE hArcData, struct RARHeaderD
 typedef int     (PASCAL *RARProcessFileProc)(HANDLE hArcData, int Operation, char *DestPath, char *DestName);
 typedef int     (PASCAL *RARCloseArchiveProc)(HANDLE hArcData);
 
-static RAROpenArchiveExProc RAROpenArchiveEx = NULL;
-static RARReadHeaderExProc  RARReadHeaderEx = NULL;
-static RARProcessFileProc   RARProcessFile = NULL;
-static RARCloseArchiveProc  RARCloseArchive = NULL;
-static RARGetDllVersionProc RARGetDllVersion = NULL;
+static RAROpenArchiveExProc RAROpenArchiveEx = nullptr;
+static RARReadHeaderExProc  RARReadHeaderEx = nullptr;
+static RARProcessFileProc   RARProcessFile = nullptr;
+static RARCloseArchiveProc  RARCloseArchive = nullptr;
+static RARGetDllVersionProc RARGetDllVersion = nullptr;
 
 UnRarDll::UnRarDll()
 {
@@ -298,7 +298,7 @@ bool UnRarDll::ExtractFilenames(const WCHAR *rarPath, WStrList &filenames)
             filenames.Append(str::Dup(rarHeader.FileNameW));
         else
             CrashIf(!str::Eq(filenames.At(idx), rarHeader.FileNameW));
-        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
     }
 
     RARCloseArchive(hArc);
@@ -329,7 +329,7 @@ char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0)
-        return NULL;
+        return nullptr;
 
     int res = 0;
     RARHeaderDataEx rarHeader;
@@ -340,7 +340,7 @@ char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
         if (str::EqI(rarHeader.FileNameW, filename))
             break;
-        RARProcessFile(hArc, RAR_SKIP, NULL, NULL);
+        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
     }
 
     if (0 == res) {
@@ -348,7 +348,7 @@ char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_
             res = 1;
         }
         else {
-            res = RARProcessFile(hArc, RAR_TEST, NULL, NULL);
+            res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
             if (rarHeader.UnpSize != data.Size()) {
                 res = 1;
             }
@@ -361,7 +361,7 @@ char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_
     RARCloseArchive(hArc);
 
     if (0 != res)
-        return NULL;
+        return nullptr;
     if (len)
         *len = data.Size() - 2;
     return data.StealData();

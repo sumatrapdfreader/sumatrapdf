@@ -83,9 +83,9 @@ void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[1
     HCRYPTHASH hHash = 0;
 
     // http://stackoverflow.com/questions/9794745/ms-cryptoapi-doesnt-work-on-windows-xp-with-cryptacquirecontext
-    BOOL ok = CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    BOOL ok = CryptAcquireContext(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     if (!ok)
-        ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+        ok = CryptAcquireContext(&hProv, nullptr, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
 
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
@@ -121,7 +121,7 @@ void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
 
-    BOOL ok = CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    BOOL ok = CryptAcquireContext(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
@@ -153,10 +153,10 @@ void CalcSha2DigestWin(const void *data, size_t byteCount, unsigned char digest[
     HCRYPTPROV hProv = 0;
     HCRYPTHASH hHash = 0;
 
-    BOOL ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    BOOL ok = CryptAcquireContext(&hProv, nullptr, MS_ENH_RSA_AES_PROV, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
     if (!ok) {
         // TODO: test this on XP SP3
-        ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+        ok = CryptAcquireContext(&hProv, nullptr, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
     }
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
@@ -188,7 +188,7 @@ static bool ExtractSignature(const char *hexSignature, const void *data, size_t&
 {
     // verify hexSignature format - must be either
     // * a string starting with "sha1:" followed by the signature (and optionally whitespace and further content)
-    // * NULL, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
+    // * nullptr, then the signature must be found on the last line of non-binary data, starting at " Signature sha1:"
     if (str::StartsWith(hexSignature, "sha1:"))
         hexSignature += 5;
     else if (!hexSignature) {
@@ -228,7 +228,7 @@ bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignat
 
 #define Check(val) if ((ok = (val)) == FALSE) goto CleanUp
     Check(ExtractSignature(hexSignature, data, dataLen, signature, signatureLen));
-    Check(CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT));
+    Check(CryptAcquireContext(&hProv, nullptr, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT));
     Check(CryptImportKey(hProv, (const BYTE *)pubkey, (DWORD)pubkeyLen, 0, 0, &hPubKey));
     Check(CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash));
 #ifdef _WIN64
@@ -238,7 +238,7 @@ bool VerifySHA1Signature(const void *data, size_t dataLen, const char *hexSignat
 #endif
     Check(dataLen <= DWORD_MAX && pubkeyLen <= DWORD_MAX && signatureLen <= DWORD_MAX);
     Check(CryptHashData(hHash, (const BYTE *)data, (DWORD)dataLen, 0));
-    Check(CryptVerifySignature(hHash, signature, (DWORD)signatureLen, hPubKey, NULL, 0));
+    Check(CryptVerifySignature(hHash, signature, (DWORD)signatureLen, hPubKey, nullptr, 0));
 #undef Check
 
 CleanUp:

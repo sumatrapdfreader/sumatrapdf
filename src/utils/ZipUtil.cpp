@@ -15,7 +15,7 @@ extern "C" {
 }
 
 ZipFileAlloc::ZipFileAlloc(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
-    ar(NULL), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
+    ar(nullptr), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
 {
     data = ar_open_file_w(path);
     if (data)
@@ -24,7 +24,7 @@ ZipFileAlloc::ZipFileAlloc(const WCHAR *path, bool deflatedOnly, Allocator *allo
 }
 
 ZipFileAlloc::ZipFileAlloc(IStream *stream, bool deflatedOnly, Allocator *allocator) :
-    ar(NULL), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
+    ar(nullptr), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
 {
     data = ar_open_istream(stream);
     if (data)
@@ -45,13 +45,13 @@ void ZipFileAlloc::ExtractFilenames()
     while (ar_parse_entry(ar)) {
         const char *nameUtf8 = ar_entry_get_name(ar);
         if (nameUtf8) {
-            int len = MultiByteToWideChar(CP_UTF8, 0, nameUtf8, -1, NULL, 0);
+            int len = MultiByteToWideChar(CP_UTF8, 0, nameUtf8, -1, nullptr, 0);
             WCHAR *name = Allocator::Alloc<WCHAR>(allocator, len);
             str::Utf8ToWcharBuf(nameUtf8, str::Len(nameUtf8), name, len);
             filenames.Append(name);
         }
         else
-            filenames.Append(NULL);
+            filenames.Append(nullptr);
         filepos.Append(ar_entry_get_offset(ar));
     }
 }
@@ -70,7 +70,7 @@ size_t ZipFileAlloc::GetFileCount() const
 const WCHAR *ZipFileAlloc::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
-        return NULL;
+        return nullptr;
     return filenames.At(fileindex);
 }
 
@@ -82,22 +82,22 @@ char *ZipFileAlloc::GetFileDataByName(const WCHAR *fileName, size_t *len)
 char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
     if (!ar)
-        return NULL;
+        return nullptr;
     if (fileindex >= filenames.Count())
-        return NULL;
+        return nullptr;
 
     if (!ar_parse_entry_at(ar, filepos.At(fileindex)))
-        return NULL;
+        return nullptr;
 
     size_t size = ar_entry_get_size(ar);
     if (size > SIZE_MAX - 3)
-        return NULL;
+        return nullptr;
     char *data = (char *)Allocator::Alloc(allocator, size + 3);
     if (!data)
-        return NULL;
+        return nullptr;
     if (!ar_entry_uncompress(ar, data, size)) {
         Allocator::Free(allocator, data);
-        return NULL;
+        return nullptr;
     }
     // zero-terminate for convenience
     data[size] = data[size + 1] = data[size + 2] = '\0';
@@ -125,15 +125,15 @@ FILETIME ZipFileAlloc::GetFileTime(size_t fileindex)
 char *ZipFileAlloc::GetComment(size_t *len)
 {
     if (!ar)
-        return NULL;
-    size_t commentLen = ar_get_global_comment(ar, NULL, 0);
+        return nullptr;
+    size_t commentLen = ar_get_global_comment(ar, nullptr, 0);
     char *comment = (char *)Allocator::Alloc(allocator, commentLen + 1);
     if (!comment)
-        return NULL;
+        return nullptr;
     size_t read = ar_get_global_comment(ar, comment, commentLen);
     if (read != commentLen) {
         Allocator::Free(allocator, comment);
-        return NULL;
+        return nullptr;
     }
     comment[commentLen] = '\0';
     if (len)
@@ -171,8 +171,8 @@ class FileWriteStream : public ISequentialStream {
     LONG refCount;
 public:
     FileWriteStream(const WCHAR *filePath) : refCount(1) {
-        hFile = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        hFile = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     }
     virtual ~FileWriteStream() {
         CloseHandle(hFile);
@@ -196,7 +196,7 @@ public:
         return E_NOTIMPL;
     }
     IFACEMETHODIMP Write(const void *data, ULONG size, ULONG *written) {
-        bool ok = WriteFile(hFile, data, size, written, NULL);
+        bool ok = WriteFile(hFile, data, size, written, nullptr);
         return ok && *written == size ? S_OK : E_FAIL;
     }
 };
@@ -387,17 +387,17 @@ bool ZipCreator::Finish()
 IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
 {
     if (!dir::Exists(dirPath))
-        return NULL;
+        return nullptr;
 
     ScopedComPtr<IStream> stream;
-    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
-        return NULL;
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)))
+        return nullptr;
 
     ZipCreator zc(stream);
     if (!zc.AddDir(dirPath, recursive))
-        return NULL;
+        return nullptr;
     if (!zc.Finish())
-        return NULL;
+        return nullptr;
 
     stream->AddRef();
     return stream;

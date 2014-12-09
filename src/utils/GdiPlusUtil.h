@@ -13,9 +13,9 @@ RectF    MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len);
 RectF    MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, int len);
 RectF    MeasureTextStandard(Graphics *g, Font *f, const WCHAR *s, int len);
 RectF    MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, int len);
-RectF    MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len=-1, TextMeasureAlgorithm algo=NULL);
-//REAL     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=NULL);
-//size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo=NULL);
+RectF    MeasureText(Graphics *g, Font *f, const WCHAR *s, size_t len=-1, TextMeasureAlgorithm algo=nullptr);
+//REAL     GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo=nullptr);
+//size_t   StringLenForWidth(Graphics *g, Font *f, const WCHAR *s, size_t len, float dx, TextMeasureAlgorithm algo=nullptr);
 
 void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
 

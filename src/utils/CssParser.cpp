@@ -96,7 +96,7 @@ bool CssPullParser::NextRule()
     }
 
     if (currPos == end) {
-        currSel = NULL;
+        currSel = nullptr;
         return false;
     }
     selEnd = currPos++;
@@ -107,10 +107,10 @@ bool CssPullParser::NextRule()
 const CssSelector *CssPullParser::NextSelector()
 {
     if (!currSel)
-        return NULL;
+        return nullptr;
     SkipWsAndComments(currSel, selEnd);
     if (currSel == selEnd)
-        return NULL;
+        return nullptr;
 
     sel.s = currSel;
     // skip single selector
@@ -134,7 +134,7 @@ const CssSelector *CssPullParser::NextSelector()
 
     sel.sLen = sEnd - sel.s;
     sel.tag = Tag_NotFound;
-    sel.clazz = NULL;
+    sel.clazz = nullptr;
     sel.clazzLen = 0;
 
     // parse "*", "el", ".class" and "el.class"
@@ -164,20 +164,20 @@ const CssProperty *CssPullParser::NextProperty()
     if (currPos == s)
         inlineStyle = inProps = true;
     else if (!inProps)
-        return NULL;
+        return nullptr;
 
 GetNextProperty:
     SkipWsAndComments(currPos, end);
     if (currPos == end)
-        return NULL;
+        return nullptr;
     if (*currPos == '}') {
         currPos++;
         inProps = false;
-        return NULL;
+        return nullptr;
     }
     if (*currPos == '{') {
         if (!SkipBlock(currPos, end))
-            return NULL;
+            return nullptr;
         goto GetNextProperty;
     }
     if (*currPos == ';') {
@@ -203,12 +203,12 @@ GetNextProperty:
     while (currPos < end && *currPos != ';' && *currPos != '}') {
         if (*currPos == '"' || *currPos == '\'') {
             if (!SkipQuotedString(currPos, end))
-                return NULL;
+                return nullptr;
             valEnd = currPos;
         }
         else if (*currPos == '{') {
             if (!SkipBlock(currPos, end))
-                return NULL;
+                return nullptr;
             valEnd = currPos;
         }
         else if (*currPos == '\\' && currPos < end - 1) {

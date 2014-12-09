@@ -51,9 +51,9 @@ int    FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
 
 WCHAR *ResolveLnk(const WCHAR *path);
 bool   CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
-                    const WCHAR *args=NULL, const WCHAR *description=NULL,
+                    const WCHAR *args=nullptr, const WCHAR *description=nullptr,
                     int iconIndex=0);
-IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd=NULL);
+IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd=nullptr);
 DWORD GetFileVersion(const WCHAR *path);
 
 inline bool IsKeyPressed(int key) { return GetKeyState(key) & 0x8000 ? true : false; }
@@ -68,8 +68,8 @@ RectI   GetWorkAreaRect(RectI rect);
 RectI   GetFullscreenRect(HWND hwnd);
 RectI   GetVirtualScreenRect();
 
-bool    LaunchFile(const WCHAR *path, const WCHAR *params=NULL, const WCHAR *verb=NULL, bool hidden=false);
-HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=NULL, DWORD flags=0);
+bool    LaunchFile(const WCHAR *path, const WCHAR *params=nullptr, const WCHAR *verb=nullptr, bool hidden=false);
+HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=nullptr, DWORD flags=0);
 
 void    PaintRect(HDC hdc, const RectI& rect);
 void    PaintLine(HDC hdc, const RectI& rect);
@@ -79,7 +79,7 @@ SizeI   TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);
 bool    GetCursorPosInHwnd(HWND hwnd, PointI& posOut);
-void    CenterDialog(HWND hDlg, HWND hParent=NULL);
+void    CenterDialog(HWND hDlg, HWND hParent=nullptr);
 WCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const WCHAR *text, bool appendOnly=false);
 bool    CopyImageToClipboard(HBITMAP hbmp, bool appendOnly=false);
@@ -88,7 +88,7 @@ RectI   ChildPosWithinParent(HWND hwnd);
 HFONT   GetDefaultGuiFont();
 
 IStream*CreateStreamFromData(const void *data, size_t len);
-void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
+void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=nullptr);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
 UINT    GuessTextCodepage(const char *data, size_t len, UINT defVal=CP_ACP);
 WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
@@ -97,11 +97,11 @@ void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void    ResizeWindow(HWND, int dx, int dy);
 
 // schedule WM_PAINT at window's leasure
-inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, NULL, FALSE); }
+inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, nullptr, FALSE); }
 
 // do WM_PAINT immediately
 inline void RepaintNow(HWND hwnd) {
-    InvalidateRect(hwnd, NULL, FALSE);
+    InvalidateRect(hwnd, nullptr, FALSE);
     UpdateWindow(hwnd);
 }
 
@@ -158,7 +158,7 @@ public:
     void End() {
         if (hdwp) {
             ::EndDeferWindowPos(hdwp);
-            hdwp = NULL;
+            hdwp = nullptr;
         }
     }
 
@@ -182,14 +182,14 @@ void    InitAllCommonControls();
 SizeI   GetBitmapSize(HBITMAP hbmp);
 void    UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
-HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping=NULL);
+HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping=nullptr);
 COLORREF AdjustLightness(COLORREF c, float factor);
 float GetLightness(COLORREF c);
 double  GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR *s);
-char *LoadTextResource(int resId, size_t *sizeOut=NULL);
+char *LoadTextResource(int resId, size_t *sizeOut=nullptr);
 bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command);
 
 void RectInflateTB(RECT& r, int top, int bottom);

@@ -94,8 +94,8 @@ static HANDLE           g_threadControlHandle = 0;
 // watcher thread i.e. g_watchedDirs, g_watchedFiles
 static CRITICAL_SECTION g_threadCritSec;
 
-static WatchedDir *     g_watchedDirs = NULL;
-static WatchedFile *    g_watchedFiles = NULL;
+static WatchedDir *     g_watchedDirs = nullptr;
+static WatchedFile *    g_watchedFiles = nullptr;
 
 static LONG             gRemovalsPending = 0;
 
@@ -247,7 +247,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg)
          sizeof(wd->buf),                   // length of buffer
          FALSE,                             // bWatchSubtree
          FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME, // filter conditions
-         NULL,                              // bytes returned
+         nullptr,                              // bytes returned
          overlapped,                        // overlapped buffer
          ReadDirectoryChangesNotification); // completion routine
 }
@@ -321,9 +321,9 @@ static void StartThreadIfNecessary()
         return;
 
     InitializeCriticalSection(&g_threadCritSec);
-    g_threadControlHandle = CreateEvent(NULL, TRUE, FALSE, NULL);
+    g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-    g_threadHandle = CreateThread(NULL, 0, FileWatcherThread, 0, 0, &g_threadId);
+    g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, 0, 0, &g_threadId);
     SetThreadName(g_threadId, "FileWatcherThread");
 }
 
@@ -334,7 +334,7 @@ static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
         if (str::EqI(dirPath, wd->dirPath))
             return wd;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg)
@@ -355,10 +355,10 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     HANDLE hDir = CreateFile(
         dirPath, FILE_LIST_DIRECTORY,
         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,
-        NULL, OPEN_EXISTING,
-        FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED, NULL);
+        nullptr, OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED, nullptr);
     if (INVALID_HANDLE_VALUE == hDir)
-        return NULL;
+        return nullptr;
 
     WatchedDir *wd = AllocStruct<WatchedDir>();
     wd->hDir = hDir;
@@ -372,14 +372,14 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
 {
     bool isManualCheck = PathIsNetworkPath(filePath);
     ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
-    WatchedDir *wd = NULL;
+    WatchedDir *wd = nullptr;
     bool newDir = false;
     if (!isManualCheck) {
         wd = FindExistingWatchedDir(dirPath);
         if (!wd) {
             wd = NewWatchedDir(dirPath);
             if (!wd)
-                return NULL;
+                return nullptr;
             newDir = true;
         }
     }
@@ -426,7 +426,7 @@ WatchedFile *FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observe
 
     if (!file::Exists(path)) {
         delete observer;
-        return NULL;
+        return nullptr;
     }
 
     StartThreadIfNecessary();
@@ -460,8 +460,8 @@ void FileWatcherWaitForShutdown()
 {
     // this is meant to be called at the end so we shouldn't
     // have any file watching subscriptions pending
-    CrashIf(g_watchedFiles != NULL);
-    CrashIf(g_watchedDirs != NULL);
+    CrashIf(g_watchedFiles != nullptr);
+    CrashIf(g_watchedDirs != nullptr);
 
     // wait for ReadDirectoryChangesNotification() process actions triggered
     // in RemoveWatchedDirIfNotReferenced

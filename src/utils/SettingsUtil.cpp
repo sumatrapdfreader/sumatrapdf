@@ -238,7 +238,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
             SerializeField(out, (const uint8_t *)&(*(Vec<int> **)fieldPtr)->At(i), info);
         }
         // prevent empty arrays from being replaced with the defaults
-        return (*(Vec<int> **)fieldPtr)->Count() > 0 || field.value != NULL;
+        return (*(Vec<int> **)fieldPtr)->Count() > 0 || field.value != 0;
     case Type_StringArray:
         value.Set(SerializeStringArray(*(Vec<WCHAR *> **)fieldPtr));
         if (!NeedsEscaping(value))
@@ -246,7 +246,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
         else
             EscapeStr(out, value);
         // prevent empty arrays from being replaced with the defaults
-        return (*(Vec<WCHAR *> **)fieldPtr)->Count() > 0 || field.value != NULL;
+        return (*(Vec<WCHAR *> **)fieldPtr)->Count() > 0 || field.value != 0;
     default:
         CrashIf(true);
         return false;
@@ -296,7 +296,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
             if (value) {
                 for (; str::IsWs(*value); value++);
                 if (!*value)
-                    value = NULL;
+                    value = nullptr;
             }
             DeserializeField(GetSubstruct(field)->fields[i], fieldPtr, value);
             if (value)
@@ -399,7 +399,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
-            SerializeStructRec(out, GetSubstruct(field), base + field.offset, prevNode ? prevNode->GetChild(fieldName) : NULL, indent + 1);
+            SerializeStructRec(out, GetSubstruct(field), base + field.offset, prevNode ? prevNode->GetChild(fieldName) : nullptr, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         }
@@ -412,7 +412,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
                 for (size_t j = 0; j < array->Count(); j++) {
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
-                    SerializeStructRec(out, GetSubstruct(field), array->At(j), NULL, indent + 2);
+                    SerializeStructRec(out, GetSubstruct(field), array->At(j), nullptr, indent + 2);
                     Indent(out, indent + 1);
                     out.Append("]\r\n");
                 }
@@ -454,12 +454,12 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
         const FieldInfo& field = info->fields[i];
         uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
-            SquareTreeNode *child = node ? node->GetChild(fieldName) : NULL;
+            SquareTreeNode *child = node ? node->GetChild(fieldName) : nullptr;
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         }
         else if (Type_Array == field.type) {
-            SquareTreeNode *parent = node, *child = NULL;
-            if (parent && (child = parent->GetChild(fieldName)) != NULL &&
+            SquareTreeNode *parent = node, *child = nullptr;
+            if (parent && (child = parent->GetChild(fieldName)) != nullptr &&
                 (0 == child->data.Count() || child->GetChild(""))) {
                 parent = child;
                 fieldName += str::Len(fieldName);
@@ -467,15 +467,15 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
             if (child || useDefaults || !*(Vec<void *> **)fieldPtr) {
                 Vec<void *> *array = new Vec<void *>();
                 size_t idx = 0;
-                while (parent && (child = parent->GetChild(fieldName, &idx)) != NULL) {
-                    array->Append(DeserializeStructRec(GetSubstruct(field), child, NULL, true));
+                while (parent && (child = parent->GetChild(fieldName, &idx)) != nullptr) {
+                    array->Append(DeserializeStructRec(GetSubstruct(field), child, nullptr, true));
                 }
                 FreeArray(*(Vec<void *> **)fieldPtr, field);
                 *(Vec<void *> **)fieldPtr = array;
             }
         }
         else if (field.type != Type_Comment) {
-            const char *value = node ? node->GetValue(fieldName) : NULL;
+            const char *value = node ? node->GetValue(fieldName) : nullptr;
             if (useDefaults || value)
                 DeserializeField(field, base, value);
         }

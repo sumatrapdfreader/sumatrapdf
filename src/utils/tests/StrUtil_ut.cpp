@@ -112,16 +112,16 @@ void StrTest()
     WCHAR *str = L"a string";
     utassert(str::Len(str) == 8);
     utassert(str::Eq(str, L"a string") && str::Eq(str, str));
-    utassert(!str::Eq(str, NULL) && !str::Eq(str, L"A String"));
+    utassert(!str::Eq(str, nullptr) && !str::Eq(str, L"A String"));
     utassert(str::EqI(str, L"A String") && str::EqI(str, str));
-    utassert(!str::EqI(str, NULL) && str::EqI((char*)NULL, (char*)NULL));
+    utassert(!str::EqI(str, nullptr) && str::EqI((char*)nullptr, (char*)nullptr));
     utassert(str::EqN(L"abcd", L"abce", 3) && !str::EqN(L"abcd", L"Abcd", 3));
     utassert(str::EqNI(L"abcd", L"ABCE", 3) && !str::EqNI(L"abcd", L"Ebcd", 3));
     utassert(str::StartsWith(str, L"a s") && str::StartsWithI(str, L"A Str"));
     utassert(!str::StartsWith(str, L"Astr"));
     utassert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
     utassert(!str::EndsWith(str, L"ung"));
-    utassert(str::IsEmpty((char*)NULL) && str::IsEmpty((WCHAR*)NULL)&& str::IsEmpty(L"") && !str::IsEmpty(str));
+    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((WCHAR*)nullptr)&& str::IsEmpty(L"") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     size_t len = str::BufSet(buf, dimof(buf), str);
     utassert(len == str::Len(buf) && str::Eq(buf, str));
@@ -140,7 +140,7 @@ void StrTest()
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
     free(str);
-    str = str::Join(NULL, L"ab");
+    str = str::Join(nullptr, L"ab");
     utassert(str::Eq(str, L"ab"));
     free(str);
 
@@ -174,7 +174,7 @@ void StrTest()
     str = L"[Open(\"filename.pdf\",0,1,0)]";
     {
         UINT u1 = 0;
-        WCHAR *str1 = NULL;
+        WCHAR *str1 = nullptr;
         const WCHAR *end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
         utassert(end && !*end);
         utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
@@ -244,7 +244,7 @@ void StrTest()
     }
 
     {
-        WCHAR *str1 = NULL;
+        WCHAR *str1 = nullptr;
         WCHAR c1;
         utassert(!str::Parse(L"no exclamation mark?", L"%s!", &str1));
         utassert(!str1);
@@ -371,8 +371,8 @@ void StrTest()
         { 1666, L"MDCLXVI" },
         { 2011, L"MMXI" },
         { 12345,L"MMMMMMMMMMMMCCCXLV" },
-        { 0,    NULL },
-        { -133, NULL },
+        { 0,    nullptr },
+        { -133, nullptr },
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
@@ -486,18 +486,18 @@ void StrTest()
     }
 
     {
-        utassert(str::Eq(str::FindI(L"test", NULL), NULL));
-        utassert(str::Eq(str::FindI(NULL, L"test"), NULL));
+        utassert(str::Eq(str::FindI(L"test", nullptr), nullptr));
+        utassert(str::Eq(str::FindI(nullptr, L"test"), nullptr));
         utassert(str::Eq(str::FindI(L"test", L""), L"test"));
         utassert(str::Eq(str::FindI(L"test", L"ES"), L"est"));
         utassert(str::Eq(str::FindI(L"test", L"Te"), L"test"));
         utassert(str::Eq(str::FindI(L"testx", L"X"), L"x"));
         utassert(str::Eq(str::FindI(L"test", L"st"), L"st"));
-        utassert(str::Eq(str::FindI(L"t\xE4st", L"\xC4s"), NULL));
-        utassert(str::Eq(str::FindI(L"t\xE4st", L"T\xC5"), NULL));
+        utassert(str::Eq(str::FindI(L"t\xE4st", L"\xC4s"), nullptr));
+        utassert(str::Eq(str::FindI(L"t\xE4st", L"T\xC5"), nullptr));
 
-        utassert(str::Eq(str::FindI("test", NULL), NULL));
-        utassert(str::Eq(str::FindI(NULL, "test"), NULL));
+        utassert(str::Eq(str::FindI("test", nullptr), nullptr));
+        utassert(str::Eq(str::FindI(nullptr, "test"), nullptr));
         utassert(str::Eq(str::FindI("test", ""), "test"));
         utassert(str::Eq(str::FindI("test", "ES"), "est"));
         utassert(str::Eq(str::FindI("test", "Te"), "test"));

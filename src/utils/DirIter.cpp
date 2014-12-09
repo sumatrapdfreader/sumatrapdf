@@ -30,12 +30,12 @@ bool DirIter::TryNextDir()
 }
 
 // Start iteration in a given dir and return fullPath of first
-// file found or NULL if no files
+// file found or nullptr if no files
 const WCHAR *DirIter::First()
 {
     foundNext = StartDirIter(startDir);
     if (!foundNext)
-        return NULL;
+        return nullptr;
     return Next();
 }
 
@@ -69,14 +69,14 @@ static bool IsSpecialDir(const WCHAR *s)
 }
 
 // Returns a full path of the next file
-// Returns NULL if finished iteration.
+// Returns nullptr if finished iteration.
 // Returned value is valid only until we call Next() again.
 const WCHAR *DirIter::Next()
 {
     // when we enter here, currFindData has info for an entry
     // we haven't processed yet (filled by StartDirIter() or
     // ourselves at the end) unless foundNext is false
-    currPath.Set(NULL);
+    currPath.Set(nullptr);
     while (foundNext && !currPath) {
         WCHAR *f = currFindData.cFileName;
         if ((currFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {

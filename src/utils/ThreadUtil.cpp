@@ -53,7 +53,7 @@ static int GenUniqueThreadId() {
 }
 
 ThreadBase::ThreadBase(const char *name)
-    : hThread(NULL),
+    : hThread(nullptr),
       cancelRequested(false),
       threadNo(GenUniqueThreadId()),
       threadName(str::Dup(name)) {
@@ -75,14 +75,14 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data) {
 
 void ThreadBase::Start() {
     CrashIf(hThread);
-    hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
+    hThread = CreateThread(nullptr, 0, ThreadProc, this, 0, 0);
 }
 
 bool ThreadBase::Join(DWORD waitMs) {
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res) {
         CloseHandle(hThread);
-        hThread = NULL;
+        hThread = nullptr;
         return true;
     }
     return false;
@@ -97,5 +97,5 @@ static DWORD WINAPI ThreadFunc(void *data) {
 
 void RunAsync(const std::function<void()> &func) {
     auto fp = new std::function<void()>(func);
-    ScopedHandle h(CreateThread(NULL, 0, ThreadFunc, fp, 0, 0));
+    ScopedHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, 0));
 }

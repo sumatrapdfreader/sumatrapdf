@@ -121,7 +121,7 @@ const char *ResolveHtmlEntity(const char *s, size_t len, int& rune)
     if (entEnd != s) {
         rune = HtmlEntityNameToRune(s, entEnd - s);
         if (-1 == rune)
-            return NULL;
+            return nullptr;
         // skip the trailing colon - if there is one
         if (entEnd < s + len && *entEnd == ';')
             entEnd++;
@@ -129,17 +129,17 @@ const char *ResolveHtmlEntity(const char *s, size_t len, int& rune)
     }
 
     rune = -1;
-    return NULL;
+    return nullptr;
 }
 
 // if s doesn't contain html entities, we just return it
 // if it contains html entities, we'll return string allocated
 // with alloc in which entities are converted to their values
 // Entities are encoded as utf8 in the result.
-// alloc can be NULL, in which case we'll allocate with malloc()
+// alloc can be nullptr, in which case we'll allocate with malloc()
 const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc)
 {
-    char *        res = NULL;
+    char *        res = nullptr;
     size_t        resLen = 0;
     char *        dst;
 
@@ -183,7 +183,7 @@ const char *ResolveHtmlEntities(const char *s, const char *end, Allocator *alloc
 // convenience function for the above that always allocates
 char *ResolveHtmlEntities(const char *s, size_t len)
 {
-    const char *tmp = ResolveHtmlEntities(s, s + len, NULL);
+    const char *tmp = ResolveHtmlEntities(s, s + len, nullptr);
     if (tmp == s)
         return str::DupN(s, len);
     return (char *)tmp;
@@ -218,7 +218,7 @@ void HtmlToken::SetTag(TokenType new_type, const char *new_s, const char *end)
     SkipName(new_s, s + sLen);
     nLen = new_s - s;
     tag = FindHtmlTag(s, nLen);
-    nextAttr = NULL;
+    nextAttr = nullptr;
 }
 
 void HtmlToken::SetText(const char *new_s, const char *end)
@@ -262,27 +262,27 @@ const char *HtmlToken::GetReparsePoint() const
     if (IsText())
         return s;
     CrashIf(true); // don't call us on error tokens
-    return NULL;
+    return nullptr;
 }
 
 AttrInfo *HtmlToken::GetAttrByName(const char *name)
 {
-    nextAttr = NULL; // start from the beginning
+    nextAttr = nullptr; // start from the beginning
     for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIs(name))
             return a;
     }
-    return NULL;
+    return nullptr;
 }
 
 AttrInfo *HtmlToken::GetAttrByNameNS(const char *name, const char *attrNS)
 {
-    nextAttr = NULL; // start from the beginning
+    nextAttr = nullptr; // start from the beginning
     for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
         if (a->NameIsNS(name, attrNS))
             return a;
     }
-    return NULL;
+    return nullptr;
 }
 
 // We expect:
@@ -300,8 +300,8 @@ AttrInfo *HtmlToken::NextAttr()
     SkipWs(curr, end);
     if (curr == end) {
 NoNextAttr:
-        nextAttr = NULL;
-        return NULL;
+        nextAttr = nullptr;
+        return nullptr;
     }
     attrInfo.name = curr;
     SkipName(curr, end);
@@ -363,11 +363,11 @@ static bool SkipUntilTagEnd(const char*& s, const char *end)
     return false;
 }
 
-// Returns next part of html or NULL if finished
+// Returns next part of html or nullptr if finished
 HtmlToken *HtmlPullParser::Next()
 {
     if (currPos >= end)
-        return NULL;
+        return nullptr;
 
 Next:
     const char *start = currPos;
@@ -375,7 +375,7 @@ Next:
         // this must be text between tags
         if (!SkipUntil(currPos, end, '<') && IsSpaceOnly(start, currPos)) {
             // ignore whitespace after the last tag
-            return NULL;
+            return nullptr;
         }
         currToken.SetText(start, currPos);
         return &currToken;

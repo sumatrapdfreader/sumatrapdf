@@ -212,7 +212,7 @@ void VecTest()
 
     {
         Vec<PointI *> v;
-        srand((unsigned int)time(NULL));
+        srand((unsigned int)time(nullptr));
         for (int i = 0; i < 128; i++) {
             v.Append(new PointI(i, i));
             size_t pos = rand() % v.Count();
