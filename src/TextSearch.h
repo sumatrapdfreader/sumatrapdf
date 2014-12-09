@@ -23,8 +23,8 @@ public:
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
     void SetLastResult(TextSelection *sel);
-    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker=NULL);
-    TextSel *FindNext(ProgressUpdateUI *tracker=NULL);
+    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker=nullptr);
+    TextSel *FindNext(ProgressUpdateUI *tracker=nullptr);
 
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() const { return findPage; }
@@ -48,9 +48,9 @@ protected:
 
     void Clear()
     {
-        str::ReplacePtr(&findText, NULL);
-        str::ReplacePtr(&anchor, NULL);
-        str::ReplacePtr(&lastText, NULL);
+        str::ReplacePtr(&findText, nullptr);
+        str::ReplacePtr(&anchor, nullptr);
+        str::ReplacePtr(&lastText, nullptr);
         Reset();
     }
     void Reset();

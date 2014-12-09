@@ -21,7 +21,7 @@ public:
     ~PageTextCache();
 
     bool HasData(int pageNo);
-    const WCHAR *GetData(int pageNo, int *lenOut=NULL, RectI **coordsOut=NULL);
+    const WCHAR *GetData(int pageNo, int *lenOut=nullptr, RectI **coordsOut=nullptr);
 };
 
 struct TextSel {
@@ -62,5 +62,5 @@ protected:
     PageTextCache * textCache;
 
     int FindClosestGlyph(int pageNo, double x, double y);
-    void FillResultRects(int pageNo, int glyph, int length, WStrVec *lines=NULL);
+    void FillResultRects(int pageNo, int glyph, int length, WStrVec *lines=nullptr);
 };

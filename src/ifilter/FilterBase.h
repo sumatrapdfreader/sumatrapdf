@@ -17,7 +17,7 @@
 class CChunkValue
 {
 public:
-    CChunkValue() : m_fIsValid(false), m_pszValue(NULL)
+    CChunkValue() : m_fIsValid(false), m_pszValue(nullptr)
     {
         PropVariantInit(&m_propVariant);
         Clear();
@@ -31,7 +31,7 @@ public:
         ZeroMemory(&m_chunk, sizeof(m_chunk));
         PropVariantClear(&m_propVariant);
         CoTaskMemFree(m_pszValue);
-        m_pszValue = NULL;
+        m_pszValue = nullptr;
     }
 
     BOOL IsValid() { return m_fIsValid; }
@@ -41,7 +41,7 @@ public:
         if (!ppPropVariant)
             return E_INVALIDARG;
 
-        *ppPropVariant = NULL;
+        *ppPropVariant = nullptr;
 
         PROPVARIANT *pPropVariant = static_cast<PROPVARIANT*>(CoTaskMemAlloc(sizeof(PROPVARIANT)));
         if (!pPropVariant)
@@ -73,7 +73,7 @@ public:
                          LCID locale = 0, DWORD cwcLenSource = 0, DWORD cwcStartSource = 0,
                          CHUNK_BREAKTYPE chunkBreakType = CHUNK_NO_BREAK)
     {
-        if (pszValue == NULL)
+        if (pszValue == nullptr)
             return E_INVALIDARG;
 
         HRESULT hr = SetChunk(pkey, chunkType, locale, cwcLenSource, cwcStartSource, chunkBreakType);
@@ -163,7 +163,7 @@ protected:
 
 public:
     CFilterBase(long *plRefCount) : m_lRef(1), m_plModuleRef(plRefCount),
-        m_dwChunkId(0), m_iText(0), m_pStream(NULL) {
+        m_dwChunkId(0), m_iText(0), m_pStream(nullptr) {
         InterlockedIncrement(m_plModuleRef);
     }
 
@@ -258,7 +258,7 @@ public:
             return FILTER_E_NO_MORE_VALUES;
         if (m_currentChunk.GetChunkType() != CHUNK_VALUE)
             return FILTER_E_NO_VALUES;
-        if (ppPropValue == NULL)
+        if (ppPropValue == nullptr)
             return E_INVALIDARG;
 
         HRESULT hr = m_currentChunk.GetValue(ppPropValue);
@@ -287,16 +287,16 @@ public:
 
     // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
-        HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
-        DWORD size = GetFileSize(hFile, NULL), read;
+        DWORD size = GetFileSize(hFile, nullptr), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
         if (!data) {
             CloseHandle(hFile);
             return E_OUTOFMEMORY;
         }
-        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, NULL);
+        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
         GlobalUnlock(data);
         CloseHandle(hFile);
 

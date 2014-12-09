@@ -71,7 +71,7 @@ void FileHistory::Clear(bool keepFavorites) {
 DisplayState *FileHistory::Get(size_t index) const {
     if (index < states->Count())
         return states->At(index);
-    return NULL;
+    return nullptr;
 }
 
 DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
@@ -82,7 +82,7 @@ DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
             return states->At(i);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 DisplayState *FileHistory::MarkFileLoaded(const WCHAR *filePath) {
@@ -125,7 +125,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
     // also delete the thumbnail and move the link towards the
     // back in the Frequently Read list
     delete state->thumbnail;
-    state->thumbnail = NULL;
+    state->thumbnail = nullptr;
     state->openCount >>= 2;
     state->isMissing = hide;
     return true;
@@ -164,7 +164,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
         DisplayState *state = states->At(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || state->decryptionKey != NULL || state->favorites->Count() > 0)
+        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->Count() > 0)
             continue;
         // forget about missing documents without valuable state
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState))

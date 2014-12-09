@@ -36,26 +36,26 @@
 #include "uia/Provider.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
-    ctrl(NULL), currentTab(NULL), menu(NULL), hwndFrame(hwnd), isMenuHidden(false),
-    linkOnLastButtonDown(NULL), url(NULL),
+    ctrl(nullptr), currentTab(nullptr), menu(nullptr), hwndFrame(hwnd), isMenuHidden(false),
+    linkOnLastButtonDown(nullptr), url(nullptr),
     tocVisible(false), tocLoaded(false), tocKeepSelection(false),
     isFullScreen(false), presentation(PM_DISABLED),
     windowStateBeforePresentation(0), nonFullScreenWindowStyle(0),
-    hwndCanvas(NULL), hwndToolbar(NULL), hwndReBar(NULL),
-    hwndFindText(NULL), hwndFindBox(NULL), hwndFindBg(NULL),
-    hwndPageText(NULL), hwndPageBox(NULL), hwndPageBg(NULL), hwndPageTotal(NULL),
-    hwndTocBox(NULL), hwndTocTree(NULL), tocLabelWithClose(NULL),
-    sidebarSplitter(NULL), favSplitter(NULL),
-    hwndInfotip(NULL), infotipVisible(false),
-    findThread(NULL), findCanceled(false), printThread(NULL), printCanceled(false),
+    hwndCanvas(nullptr), hwndToolbar(nullptr), hwndReBar(nullptr),
+    hwndFindText(nullptr), hwndFindBox(nullptr), hwndFindBg(nullptr),
+    hwndPageText(nullptr), hwndPageBox(nullptr), hwndPageBg(nullptr), hwndPageTotal(nullptr),
+    hwndTocBox(nullptr), hwndTocTree(nullptr), tocLabelWithClose(nullptr),
+    sidebarSplitter(nullptr), favSplitter(nullptr),
+    hwndInfotip(nullptr), infotipVisible(false),
+    findThread(nullptr), findCanceled(false), printThread(nullptr), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
-    loadedFilePath(NULL), currPageNo(0),
+    loadedFilePath(nullptr), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), stressTest(NULL),
-    hwndFavBox(NULL), hwndFavTree(NULL), favLabelWithClose(NULL),
-    uia_provider(NULL), cbHandler(NULL), frameRateWnd(NULL),
-    hwndTabBar(NULL), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(NULL),
-    hwndCaption(NULL), caption(NULL), extendedFrameHeight(0)
+    delayedRepaintTimer(0), stressTest(nullptr),
+    hwndFavBox(nullptr), hwndFavTree(nullptr), favLabelWithClose(nullptr),
+    uia_provider(nullptr), cbHandler(nullptr), frameRateWnd(nullptr),
+    hwndTabBar(nullptr), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(nullptr),
+    hwndCaption(nullptr), caption(nullptr), extendedFrameHeight(0)
 {
     touchState.panStarted = false;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
@@ -104,18 +104,18 @@ WindowInfo::~WindowInfo()
 bool WindowInfo::IsAboutWindow() const
 {
     CrashIf(!loadedFilePath != !currentTab);
-    return NULL == currentTab;
+    return nullptr == currentTab;
 }
 
 bool WindowInfo::IsDocLoaded() const
 {
     CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
-    return this->ctrl != NULL;
+    return this->ctrl != nullptr;
 }
 
-DisplayModel *WindowInfo::AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
-ChmModel *WindowInfo::AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
-EbookController *WindowInfo::AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
+DisplayModel *WindowInfo::AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
+ChmModel *WindowInfo::AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
+EbookController *WindowInfo::AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
 
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
@@ -160,7 +160,7 @@ SizeI WindowInfo::GetViewPortSize()
 
 void WindowInfo::RedrawAll(bool update)
 {
-    InvalidateRect(this->hwndCanvas, NULL, false);
+    InvalidateRect(this->hwndCanvas, nullptr, false);
     if (this->AsEbook())
         this->AsEbook()->RequestRepaint();
     if (update)
@@ -301,7 +301,7 @@ void LinkHandler::GotoLink(PageDestination *link)
                 if (hash)
                     *hash = '\0';
                 // LaunchFile will reject unsupported file types
-                LaunchFile(path, NULL);
+                LaunchFile(path, nullptr);
             }
             else {
                 // LaunchBrowser will reject unsupported URI schemes
@@ -385,10 +385,10 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     }
 
     // TODO: link is deleted when opening the document in a new tab
-    RemoteDestination *remoteLink = NULL;
+    RemoteDestination *remoteLink = nullptr;
     if (link) {
         remoteLink = new RemoteDestination(link);
-        link = NULL;
+        link = nullptr;
     }
 
     ScopedMem<WCHAR> fullPath(path::GetDir(owner->ctrl->FilePath()));
@@ -455,7 +455,7 @@ static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
         return str::Eq(s1, s2);
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const WCHAR *last = s1; (last = str::Find(last, s2)) != NULL; last++) {
+    for (const WCHAR *last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
         if (last == s1 || *(last - 1) == ' ')
             return true;
     }
@@ -474,7 +474,7 @@ PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, b
         if (dest)
             return dest;
     }
-    return NULL;
+    return nullptr;
 }
 
 void LinkHandler::GotoNamedDest(const WCHAR *name)

@@ -39,8 +39,8 @@ struct PrintData {
 
     PrintData(BaseEngine *engine, PRINTER_INFO_2 *printerInfo, DEVMODE *devMode,
               Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
-              int rotation=0, Vec<SelectionOnPage> *sel=NULL) :
-        engine(NULL), advData(advData), rotation(rotation)
+              int rotation=0, Vec<SelectionOnPage> *sel=nullptr) :
+        engine(nullptr), advData(advData), rotation(rotation)
     {
         if (engine)
             this->engine = engine->Clone();
@@ -69,7 +69,7 @@ class AbortCookieManager {
 public:
     AbortCookie *cookie;
 
-    AbortCookieManager() : cookie(NULL) {
+    AbortCookieManager() : cookie(nullptr) {
         InitializeCriticalSection(&cookieAccess);
     }
     ~AbortCookieManager() {
@@ -88,7 +88,7 @@ public:
         ScopedCritSec scope(&cookieAccess);
         if (cookie) {
             delete cookie;
-            cookie = NULL;
+            cookie = nullptr;
         }
     }
 };
@@ -111,7 +111,7 @@ static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo)
     return bounds;
 }
 
-static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
+static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=nullptr, AbortCookieManager *abortCookie=nullptr)
 {
     AssertCrash(pd.engine);
     if (!pd.engine)
@@ -213,14 +213,14 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
                 bool ok = false;
                 if (!pd.advData.asImage) {
                     RectI rc(offset.x, offset.y, (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
-                    ok = engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    ok = engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie)
                         abortCookie->Clear();
                 }
                 else {
                     short shrink = 1;
                     do {
-                        RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                        RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                         if (abortCookie)
                             abortCookie->Clear();
                         if (bmp && bmp->GetBitmap()) {
@@ -316,14 +316,14 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL
             bool ok = false;
             if (!pd.advData.asImage) {
                 RectI rc = RectI::FromXY(offset.x, offset.y, paperSize.dx, paperSize.dy);
-                ok = engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                ok = engine.RenderPage(hdc, rc, pageNo, zoom, rotation, nullptr, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                 if (abortCookie)
                     abortCookie->Clear();
             }
             else {
                 short shrink = 1;
                 do {
-                    RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie)
                         abortCookie->Clear();
                     if (bmp && bmp->GetBitmap()) {
@@ -359,7 +359,7 @@ public:
     HANDLE thread; // close the print thread handle after execution
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
-        win(win), data(data), isCanceled(false), thread(NULL) {
+        win(win), data(data), isCanceled(false), thread(nullptr) {
         wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), this);
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
@@ -388,7 +388,7 @@ public:
     virtual void RemoveNotification(NotificationWnd *wnd) {
         isCanceled = true;
         cookie.Abort();
-        this->wnd = NULL;
+        this->wnd = nullptr;
         if (WindowInfoStillValid(win))
             win->notifications->RemoveNotification(wnd);
     }
@@ -407,7 +407,7 @@ public:
 
         uitask::Post([=] {
             if (WindowInfoStillValid(win) && thread == win->printThread) {
-                win->printThread = NULL;
+                win->printThread = nullptr;
             }
             delete threadData;
         });
@@ -419,8 +419,8 @@ static void PrintToDeviceOnThread(WindowInfo *win, PrintData *data)
 {
     assert(!win->printThread);
     PrintThreadData *threadData = new PrintThreadData(win, data);
-    win->printThread = NULL;
-    win->printThread = CreateThread(NULL, 0, PrintThreadData::PrintThread, threadData, 0, NULL);
+    win->printThread = nullptr;
+    win->printThread = CreateThread(nullptr, 0, PrintThreadData::PrintThread, threadData, 0, nullptr);
 }
 
 void AbortPrinting(WindowInfo *win)
@@ -436,12 +436,12 @@ static HGLOBAL GlobalMemDup(const void *data, size_t len)
 {
     HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, len);
     if (!hGlobal)
-        return NULL;
+        return nullptr;
 
     void *globalData = GlobalLock(hGlobal);
     if (!globalData) {
         GlobalFree(hGlobal);
-        return NULL;
+        return nullptr;
     }
 
     memcpy(globalData, data, len);
@@ -513,7 +513,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 #endif
 
     if (win->printThread) {
-        int res = MessageBox(win->hwndFrame, 
+        int res = MessageBox(win->hwndFrame,
                              _TR("Printing is still in progress. Abort and start over?"),
                              _TR("Printing in progress."),
                              MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
@@ -557,7 +557,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     LPDEVNAMES devNames;
     LPDEVMODE devMode;
     bool failedEngineClone;
-    PrintData *data = NULL;
+    PrintData *data = nullptr;
 
     // restore remembered settings
     if (defaultDevMode) {
@@ -572,7 +572,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
                error code, which we could look at here if we wanted.
                for now just warn the user that printing has stopped
                becasue of an error */
-            MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), 
+            MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"),
                               _TR("Printing problem."));
         }
         goto Exit;
@@ -614,7 +614,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
         printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
     }
     data = new PrintData(dm->GetEngine(), &printerInfo, devMode, ranges, advanced,
-                         dm->GetRotation(), printSelection ? win->currentTab->selectionOnPage : NULL);
+                         dm->GetRotation(), printSelection ? win->currentTab->selectionOnPage : nullptr);
     if (devNames)
         GlobalUnlock(pd.hDevNames);
     if (devMode)
@@ -635,7 +635,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     else {
         PrintToDevice(*data);
         if (failedEngineClone)
-            data->engine = NULL;
+            data->engine = nullptr;
         delete data;
     }
 
@@ -650,15 +650,15 @@ static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode)
     CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
     if (!(devMode->dmFields & DM_DEFAULTSOURCE))
         return devMode->dmDefaultSource;
-    DWORD count = DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINS, NULL, NULL);
-    DWORD count2 = DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINNAMES, NULL, NULL);
+    DWORD count = DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINS, nullptr, nullptr);
+    DWORD count2 = DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINNAMES, nullptr, nullptr);
     if (count != count2 || 0 == count)
         return devMode->dmDefaultSource;
     // try to determine the paper bin number by name
     ScopedMem<WORD> bins(AllocArray<WORD>(count));
     ScopedMem<WCHAR> binNames(AllocArray<WCHAR>(24 * count + 1));
-    DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINS, (WCHAR *)bins.Get(), NULL);
-    DeviceCapabilities(devMode->dmDeviceName, NULL, DC_BINNAMES, binNames.Get(), NULL);
+    DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINS, (WCHAR *)bins.Get(), nullptr);
+    DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
         if (str::EqIS(binNames.Get() + 24 * i, name))
             return bins.Get()[i];
@@ -725,11 +725,11 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (engine && !engine->AllowsPrinting())
-        engine = NULL;
+        engine = nullptr;
 #endif
     if (!engine) {
         if (displayErrors)
-            MessageBoxWarning(NULL, _TR("Cannot print this file"), _TR("Printing problem."));
+            MessageBoxWarning(nullptr, _TR("Cannot print this file"), _TR("Printing problem."));
         return false;
     }
 
@@ -740,35 +740,35 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
     }
 
     HANDLE printer;
-    BOOL res = OpenPrinter(printerName, &printer, NULL);
+    BOOL res = OpenPrinter(printerName, &printer, nullptr);
     if (!res) {
         if (displayErrors)
-            MessageBoxWarning(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
+            MessageBoxWarning(nullptr, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
         return false;
     }
 
     LONG returnCode = 0;
     LONG structSize = 0;
-    LPDEVMODE devMode = NULL;
+    LPDEVMODE devMode = nullptr;
     // get printer driver information
     DWORD needed = 0;
-    GetPrinter(printer, 2, NULL, 0, &needed);
+    GetPrinter(printer, 2, nullptr, 0, &needed);
     ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2 *)AllocArray<BYTE>(needed));
     if (infoData)
         res = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
     if (!res || !infoData || needed <= sizeof(PRINTER_INFO_2))
         goto Exit;
 
-    structSize = DocumentProperties(NULL,
+    structSize = DocumentProperties(nullptr,
         printer,
         printerName,
-        NULL,                   /* Asking for size, so */
-        NULL,                   /* not used. */
+        nullptr,                   /* Asking for size, so */
+        nullptr,                   /* not used. */
         0);                     /* Zero returns buffer size. */
     if (structSize < sizeof(DEVMODE)) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBoxWarning(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+            MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         goto Exit;
     }
     devMode = (LPDEVMODE)malloc(structSize);
@@ -776,21 +776,21 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
         goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
-    returnCode = DocumentProperties(NULL,
+    returnCode = DocumentProperties(nullptr,
         printer,
         printerName,
         devMode,        /* The address of the buffer to fill. */
-        NULL,           /* Not using the input buffer. */
+        nullptr,           /* Not using the input buffer. */
         DM_OUT_BUFFER); /* Have the output buffer filled. */
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBoxWarning(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+            MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         goto Exit;
     }
 
     ClosePrinter(printer);
-    printer = NULL;
+    printer = nullptr;
 
     {
         Print_Advanced_Data advanced;
@@ -800,7 +800,7 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok && displayErrors)
-            MessageBoxWarning(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."));
+            MessageBoxWarning(nullptr, _TR("Couldn't initialize printer"), _TR("Printing problem."));
     }
 
 Exit:

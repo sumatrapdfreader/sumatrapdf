@@ -54,18 +54,18 @@ timestamp = 2013-03-10T05:43:21Z
 static Vec<PageAnnotation> *ParseFileModifications(const char *data)
 {
     if (!data)
-        return NULL;
+        return nullptr;
 
     SquareTree sqt(data);
     if (!sqt.root || sqt.root->data.Count() == 0)
-        return NULL;
+        return nullptr;
     SquareTreeNode::DataItem& item = sqt.root->data.At(0);
     if (!item.isChild || !str::EqI(item.key, "@meta"))
-        return NULL;
+        return nullptr;
     if (!item.value.child->GetValue("version")) {
         // don't check the version value - rather extend the format
         // in a way to ensure backwards compatibility
-        return NULL;
+        return nullptr;
     }
 
     Vec<PageAnnotation> *list = new Vec<PageAnnotation>();
@@ -108,7 +108,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
 Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
 {
     ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    ScopedMem<char> data(file::ReadAll(modificationsPath, NULL));
+    ScopedMem<char> data(file::ReadAll(modificationsPath, nullptr));
     return ParseFileModifications(data);
 }
 
@@ -121,9 +121,9 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     str::Str<char> data;
     size_t offset = 0;
 
-    ScopedMem<char> prevData(file::ReadAll(modificationsPath, NULL));
+    ScopedMem<char> prevData(file::ReadAll(modificationsPath, nullptr));
     Vec<PageAnnotation> *prevList = ParseFileModifications(prevData);
-    bool isUpdate = prevList != NULL;
+    bool isUpdate = prevList != nullptr;
     if (isUpdate) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which

@@ -200,7 +200,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
     FindThreadData(WindowInfo *win, TextSearchDirection direction, HWND findBox) :
         win(win), direction(direction), text(win::GetText(findBox)),
-        wasModified(Edit_GetModify(findBox)), wnd(NULL) { }
+        wasModified(Edit_GetModify(findBox)), wnd(nullptr) { }
     ~FindThreadData() { CloseHandle(thread); }
 
     void ShowUI(bool showProgress) {
@@ -255,7 +255,7 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 };
 
-static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel, 
+static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
     bool wasModifiedCanceled, bool loopedAround) {
     if (!WindowInfoStillValid(win)) {
         delete ftd;
@@ -278,7 +278,7 @@ static void FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
         ClearSearchResult(win);
         ftd->HideUI(false, !wasModifiedCanceled);
     }
-    win->findThread = NULL;
+    win->findThread = nullptr;
     delete ftd;
 }
 
@@ -352,8 +352,8 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showP
     }
 
     ftd->ShowUI(showProgress);
-    win->findThread = NULL;
-    win->findThread = CreateThread(NULL, 0, FindThread, ftd, 0, 0);
+    win->findThread = nullptr;
+    win->findThread = CreateThread(nullptr, 0, FindThread, ftd, 0, 0);
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 
@@ -392,7 +392,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     // Clear the last forward-search result
     win->fwdSearchMark.rects.Reset();
-    InvalidateRect(win->hwndCanvas, NULL, FALSE);
+    InvalidateRect(win->hwndCanvas, nullptr, FALSE);
 
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
@@ -468,14 +468,14 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
     DisplayModel *dm = win->AsFixed();
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = dm->GetPageInfo(page);
-    if ((ret == PDFSYNCERR_SUCCESS) && (rects.Count() > 0) && (NULL != pi)) {
+    if ((ret == PDFSYNCERR_SUCCESS) && (rects.Count() > 0) && (nullptr != pi)) {
         // remember the position of the search result for drawing the rect later on
         win->fwdSearchMark.rects = rects;
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
         if (!gGlobalPrefs->forwardSearch.highlightPermanent)
-            SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
+            SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, nullptr);
 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
@@ -546,7 +546,7 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
-        pdfFile.Set(NULL);
+        pdfFile.Set(nullptr);
         next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u)]",
                           &srcFile, &line, &col);
         if (!next)
@@ -555,15 +555,15 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
     }
 
     if (!next)
-        return NULL;
+        return nullptr;
 
-    WindowInfo *win = NULL;
+    WindowInfo *win = nullptr;
     if (pdfFile) {
         // check if the PDF is already opened
         win = FindWindowInfoByFile(pdfFile, !newWindow);
         // if not then open it
         if (newWindow || !win) {
-            LoadArgs args(pdfFile, !newWindow ? win : NULL);
+            LoadArgs args(pdfFile, !newWindow ? win : nullptr);
             win = LoadDocument(args);
         } else if (win && !win->IsDocLoaded()) {
             ReloadDocument(win);
@@ -606,11 +606,11 @@ static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
         next = str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\",%u,%u,%u)]",
                           &pdfFile, &newWindow, &setFocus, &forceRefresh);
     if (!next)
-        return NULL;
+        return nullptr;
 
     WindowInfo *win = FindWindowInfoByFile(pdfFile, !newWindow);
     if (newWindow || !win) {
-        LoadArgs args(pdfFile, !newWindow ? win : NULL);
+        LoadArgs args(pdfFile, !newWindow ? win : nullptr);
         win = LoadDocument(args);
     } else if (win && !win->IsDocLoaded()) {
         ReloadDocument(win);
@@ -638,7 +638,7 @@ static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_GOTO L"(\"%S\",%? \"%S\")]",
                                    &pdfFile, &destName);
     if (!next)
-        return NULL;
+        return nullptr;
 
     WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
     if (!win)
@@ -664,7 +664,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_PAGE L"(\"%S\",%u)]",
                                    &pdfFile, &page);
     if (!next)
-        return NULL;
+        return nullptr;
 
     // check if the PDF is already opened
     WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
@@ -698,7 +698,7 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
         next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f,%d,%d)]",
                           &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
     if (!next)
-        return NULL;
+        return nullptr;
 
     WindowInfo *win = FindWindowInfoByFile(pdfFile, true);
     if (!win)
@@ -731,7 +731,7 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
 static void HandleDdeCmds(const WCHAR *cmd, DDEACK& ack)
 {
     while (!str::IsEmpty(cmd)) {
-        const WCHAR *nextCmd = NULL;
+        const WCHAR *nextCmd = nullptr;
         if (!nextCmd) nextCmd = HandleSyncCmd(cmd, ack);
         if (!nextCmd) nextCmd = HandleOpenCmd(cmd, ack);
         if (!nextCmd) nextCmd = HandleGotoCmd(cmd, ack);

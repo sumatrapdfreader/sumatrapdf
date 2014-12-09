@@ -78,7 +78,7 @@ bool IsRunningInPortableMode()
 WCHAR *AppGenDataFilename(const WCHAR *fileName)
 {
     if (!fileName)
-        return NULL;
+        return nullptr;
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
@@ -88,10 +88,10 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
     /* Use %APPDATA% */
     ScopedMem<WCHAR> path(GetSpecialFolder(CSIDL_APPDATA, true));
     if (!path)
-        return NULL;
+        return nullptr;
     path.Set(path::Join(path, APP_NAME_STR));
     if (!path || !dir::Create(path))
-        return NULL;
+        return nullptr;
     return path::Join(path, fileName);
 }
 
@@ -149,33 +149,33 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     if (!exePath)
         return;
 
-    ScopedMem<WCHAR> prevHandler(NULL);
+    ScopedMem<WCHAR> prevHandler(nullptr);
     // Remember the previous default app for the Uninstaller
-    prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
+    prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
     if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
         WriteRegStr(hkey, REG_CLASSES_APP, L"previous.pdf", prevHandler);
 
-    WriteRegStr(hkey, REG_CLASSES_APP, NULL, _TR("PDF Document"));
+    WriteRegStr(hkey, REG_CLASSES_APP, nullptr, _TR("PDF Document"));
     WCHAR *icon_path = str::Join(exePath, L",1");
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\DefaultIcon", NULL, icon_path);
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\DefaultIcon", nullptr, icon_path);
     free(icon_path);
 
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", NULL, L"open");
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", nullptr, L"open");
 
     ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
-    bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", NULL, cmdPath);
+    bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", nullptr, cmdPath);
 
     // also register for printing
     cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.Get())); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\print\\command", NULL, cmdPath);
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\print\\command", nullptr, cmdPath);
 
     // also register for printing to specific printer
     cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.Get())); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", NULL, cmdPath);
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", nullptr, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
-        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, APP_NAME_STR);
+        WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, APP_NAME_STR);
         // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
         WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR, L"");
         if (hkey == HKEY_CURRENT_USER) {
@@ -206,17 +206,17 @@ bool IsExeAssociatedWithPdfExtension()
         return false;
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr));
     if (!str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell", NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell", nullptr));
     if (!str::EqI(tmp, L"open"))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell\\open\\command", NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell\\open\\command", nullptr));
     if (!tmp)
         return false;
 
@@ -248,13 +248,13 @@ static struct {
     const WCHAR *  RegValue;            // Registry value name
 } editor_rules[] = {
     L"WinEdt.exe",      L"\"[Open(|%f|);SelPar(%l,8)]\"",   BinaryPath,
-                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\WinEdt.exe", NULL,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\WinEdt.exe", nullptr,
     L"WinEdt.exe",      L"\"[Open(|%f|);SelPar(%l,8)]\"",   BinaryDir,
                         HKEY_CURRENT_USER,  L"Software\\WinEdt", L"Install Root",
     L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryPath,
-                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe", NULL,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe", nullptr,
     L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryDir,
-                        HKEY_LOCAL_MACHINE, L"Software\\Notepad++", NULL,
+                        HKEY_LOCAL_MACHINE, L"Software\\Notepad++", nullptr,
     L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryPath,
                         HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Notepad++", L"DisplayIcon",
     L"TeXnicCenter.exe",L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
@@ -291,7 +291,7 @@ static struct {
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
 WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
-    WCHAR *firstEditor = NULL;
+    WCHAR *firstEditor = nullptr;
     WStrList foundExes;
 
     for (int i = 0; i < dimof(editor_rules); i++) {

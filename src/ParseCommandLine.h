@@ -6,7 +6,7 @@ public:
     WStrVec     fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
-    // - optional (NULL if not available) string that represents which pages
+    // - optional (nullptr if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
     WStrVec     pathsToBenchmark;
@@ -34,7 +34,7 @@ public:
 
     // stress-testing related
     ScopedMem<WCHAR> stressTestPath;
-    ScopedMem<WCHAR> stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
+    ScopedMem<WCHAR> stressTestFilter; // nullptr is equivalent to "*" (i.e. all files)
     ScopedMem<WCHAR> stressTestRanges;
     int         stressTestCycles;
     int         stressParallelCount;
@@ -46,16 +46,16 @@ public:
     ScopedMem<char> lang;
 
     CommandLineInfo(const WCHAR *cmdLine) : makeDefault(false), exitWhenDone(false), printDialog(false),
-        printerName(NULL), printSettings(NULL),
-        reuseDdeInstance(false), lang(NULL),
-        destName(NULL), pageNumber(-1),
-        restrictedUse(false), pluginURL(NULL),
-        enterPresentation(false), enterFullScreen(false), hwndPluginParent(NULL),
+        printerName(nullptr), printSettings(nullptr),
+        reuseDdeInstance(false), lang(nullptr),
+        destName(nullptr), pageNumber(-1),
+        restrictedUse(false), pluginURL(nullptr),
+        enterPresentation(false), enterFullScreen(false), hwndPluginParent(nullptr),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
         showConsole(false), exitImmediately(false), silent(false),
-        forwardSearchOrigin(NULL), forwardSearchLine(0),
-        stressTestPath(NULL), stressTestFilter(NULL),
-        stressTestRanges(NULL), stressTestCycles(1), stressParallelCount(1),
+        forwardSearchOrigin(nullptr), forwardSearchLine(0),
+        stressTestPath(nullptr), stressTestFilter(nullptr),
+        stressTestRanges(nullptr), stressTestCycles(1), stressParallelCount(1),
         stressRandomizeFiles(false),
         crashOnOpen(false)
     {

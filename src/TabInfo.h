@@ -37,9 +37,9 @@ public:
     TabInfo();
     ~TabInfo();
 
-    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : NULL; }
-    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : NULL; }
-    EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : NULL; }
+    DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
+    ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
+    EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
     EngineType GetEngineType() const;
 };
 

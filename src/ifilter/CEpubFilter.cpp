@@ -20,7 +20,7 @@ VOID CEpubFilter::CleanUp()
 {
     if (m_epubDoc) {
         delete m_epubDoc;
-        m_epubDoc = NULL;
+        m_epubDoc = nullptr;
     }
     m_state = STATE_EPUB_END;
 }
@@ -59,7 +59,7 @@ static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
     const WCHAR *end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
         str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
-    return end != NULL;
+    return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
@@ -72,7 +72,7 @@ static WCHAR *ExtractHtmlText(EpubDoc *doc)
     HtmlPullParser p(data, len);
     HtmlToken *t;
     Vec<HtmlTag> tagNesting;
-    while ((t = p.Next()) != NULL && !t->IsError()) {
+    while ((t = p.Next()) != nullptr && !t->IsError()) {
         if (t->IsText() && !tagNesting.Contains(Tag_Head) && !tagNesting.Contains(Tag_Script) && !tagNesting.Contains(Tag_Style)) {
             // trim whitespace (TODO: also normalize within text?)
             while (t->sLen > 0 && str::IsWs(t->s[0])) {

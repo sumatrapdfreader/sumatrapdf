@@ -40,7 +40,7 @@ PageTextCache::~PageTextCache()
 bool PageTextCache::HasData(int pageNo)
 {
     CrashIf(pageNo < 1 || pageNo > engine->PageCount());
-    return text[pageNo - 1] != NULL;
+    return text[pageNo - 1] != nullptr;
 }
 
 const WCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
@@ -73,8 +73,8 @@ TextSelection::TextSelection(BaseEngine *engine, PageTextCache *textCache) :
     endPage(-1), startGlyph(-1), endGlyph(-1)
 {
     result.len = 0;
-    result.pages = NULL;
-    result.rects = NULL;
+    result.pages = nullptr;
+    result.rects = nullptr;
 }
 
 TextSelection::~TextSelection()
@@ -86,9 +86,9 @@ void TextSelection::Reset()
 {
     result.len = 0;
     free(result.pages);
-    result.pages = NULL;
+    result.pages = nullptr;
     free(result.rects);
-    result.rects = NULL;
+    result.rects = nullptr;
 }
 
 // returns the index of the glyph closest to the right of the given coordinates

@@ -12,11 +12,11 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
-GlobalPrefs *gGlobalPrefs = NULL;
+GlobalPrefs *gGlobalPrefs = nullptr;
 
 DisplayState *NewDisplayState(const WCHAR *filePath)
 {
-    DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, NULL);
+    DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, nullptr);
     str::ReplacePtr(&ds->filePath, filePath);
     return ds;
 }
@@ -29,7 +29,7 @@ void DeleteDisplayState(DisplayState *ds)
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
-    Favorite *fav = (Favorite *)DeserializeStruct(&gFavoriteInfo, NULL);
+    Favorite *fav = (Favorite *)DeserializeStruct(&gFavoriteInfo, nullptr);
     fav->pageNo = pageNo;
     fav->name = str::Dup(name);
     fav->pageLabel = str::Dup(pageLabel);

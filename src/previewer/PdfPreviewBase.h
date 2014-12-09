@@ -12,9 +12,9 @@ class PreviewBase : public IThumbnailProvider, public IInitializeWithStream,
 {
 public:
     PreviewBase(long *plRefCount, const WCHAR *clsid) : m_lRef(1),
-        m_plModuleRef(plRefCount), m_pStream(NULL), m_engine(NULL),
-        renderer(NULL), m_gdiScope(NULL), m_site(NULL), m_hwnd(NULL),
-        m_hwndParent(NULL), m_clsid(clsid), m_extractCx(0) {
+        m_plModuleRef(plRefCount), m_pStream(nullptr), m_engine(nullptr),
+        renderer(nullptr), m_gdiScope(nullptr), m_site(nullptr), m_hwnd(nullptr),
+        m_hwndParent(nullptr), m_clsid(clsid), m_extractCx(0) {
         InterlockedIncrement(m_plModuleRef);
         m_dateStamp.dwLowDateTime = m_dateStamp.dwHighDateTime = 0;
     }
@@ -65,7 +65,7 @@ public:
 
     // IObjectWithSite
     IFACEMETHODIMP SetSite(IUnknown *punkSite) {
-        m_site = NULL;
+        m_site = nullptr;
         if (!punkSite)
             return S_OK;
         return punkSite->QueryInterface(&m_site);
@@ -75,7 +75,7 @@ public:
             return m_site->QueryInterface(riid, ppv);
         if (!ppv)
             return E_INVALIDARG;
-        *ppv = NULL;
+        *ppv = nullptr;
         return E_FAIL;
     }
 
@@ -111,8 +111,8 @@ public:
         if (!prc) return E_INVALIDARG;
         m_rcParent = RectI::FromRECT(*prc);
         if (m_hwnd) {
-            SetWindowPos(m_hwnd, NULL, m_rcParent.x, m_rcParent.y, m_rcParent.dx, m_rcParent.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-            InvalidateRect(m_hwnd, NULL, TRUE);
+            SetWindowPos(m_hwnd, nullptr, m_rcParent.x, m_rcParent.y, m_rcParent.dx, m_rcParent.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+            InvalidateRect(m_hwnd, nullptr, TRUE);
             UpdateWindow(m_hwnd);
         }
         return S_OK;
@@ -121,11 +121,11 @@ public:
     IFACEMETHODIMP Unload() {
         if (m_hwnd) {
             DestroyWindow(m_hwnd);
-            m_hwnd = NULL;
+            m_hwnd = nullptr;
         }
-        m_pStream = NULL;
+        m_pStream = nullptr;
         delete m_engine;
-        m_engine = NULL;
+        m_engine = nullptr;
         return S_OK;
     }
 
@@ -145,18 +145,18 @@ public:
 
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
-        HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
-        DWORD size = GetFileSize(hFile, NULL), read;
+        DWORD size = GetFileSize(hFile, nullptr), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
         if (!data) {
             CloseHandle(hFile);
             return E_OUTOFMEMORY;
         }
-        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, NULL);
+        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, nullptr);
         GlobalUnlock(data);
-        GetFileTime(hFile, NULL, NULL, &m_dateStamp);
+        GetFileTime(hFile, nullptr, nullptr, &m_dateStamp);
         CloseHandle(hFile);
 
         IStream *pStm;

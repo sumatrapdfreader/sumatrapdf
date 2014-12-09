@@ -84,26 +84,26 @@ enum ExeType {
     ExeSumatraLib
 };
 
-static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
+static CrashHandlerAllocator *gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
-static WCHAR *  gCrashDumpPath = NULL;
-static WCHAR *  gSymbolPathW = NULL;
-static WCHAR *  gSymbolsDir = NULL;
-static WCHAR *  gPdbZipPath = NULL;
-static WCHAR *  gLibMupdfPdbPath = NULL;
-static WCHAR *  gSumatraPdfPdbPath = NULL;
-static WCHAR *  gInstallerPdbPath = NULL;
-static char *   gSystemInfo = NULL;
-static char *   gModulesInfo = NULL;
-static HANDLE   gDumpEvent = NULL;
-static HANDLE   gDumpThread = NULL;
+static WCHAR *  gCrashDumpPath = nullptr;
+static WCHAR *  gSymbolPathW = nullptr;
+static WCHAR *  gSymbolsDir = nullptr;
+static WCHAR *  gPdbZipPath = nullptr;
+static WCHAR *  gLibMupdfPdbPath = nullptr;
+static WCHAR *  gSumatraPdfPdbPath = nullptr;
+static WCHAR *  gInstallerPdbPath = nullptr;
+static char *   gSystemInfo = nullptr;
+static char *   gModulesInfo = nullptr;
+static HANDLE   gDumpEvent = nullptr;
+static HANDLE   gDumpThread = nullptr;
 static ExeType  gExeType = ExeSumatraStatic;
 static bool     gCrashed = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
-static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
+static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 static char *BuildCrashInfoText()
 {
@@ -169,7 +169,7 @@ static bool DeleteSymbolsIfExist()
 static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
 {
     lf("UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[2] = { "SumatraPDF.pdb", NULL };
+    const char *files[2] = { "SumatraPDF.pdb", nullptr };
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack SumatraPDF.pdb");
@@ -182,7 +182,7 @@ static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
 static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
 {
     lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[3] = { "libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", NULL };
+    const char *files[3] = { "libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", nullptr };
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack libmupdf.pdb or SumatraPDF-no-MuPDF.pdb");
@@ -194,7 +194,7 @@ static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
 static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
 {
     lf("UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[2] = { "Installer.pdb", NULL };
+    const char *files[2] = { "Installer.pdb", nullptr };
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack Installer.pdb");
@@ -277,7 +277,7 @@ void SubmitCrashInfo()
         return;
     }
 
-    char *s = NULL;
+    char *s = nullptr;
     if (!dbghelp::Initialize(gSymbolPathW)) {
         plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
         return;
@@ -321,7 +321,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
 #endif
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
-    DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", NULL, 0);
+    DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", nullptr, 0);
     bool fullDump = (0 != n);
     dbghelp::WriteMiniDump(gCrashDumpPath, &gMei, fullDump);
     return 0;
@@ -425,8 +425,8 @@ static void GetMachineName(str::Str<char>& s)
 {
     WCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
     WCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
-    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : NULL);
-    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : NULL);
+    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : nullptr);
+    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : nullptr);
 
     if (!s1u && !s2u)
         ; // pass
@@ -687,10 +687,10 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
     gCrashDumpPath = str::Dup(crashDumpPath);
-    gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent)
         return;
-    gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
+    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
     if (!gDumpThread)
         return;
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);

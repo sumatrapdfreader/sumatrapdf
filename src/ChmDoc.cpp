@@ -22,7 +22,7 @@ ChmDoc::~ChmDoc()
 bool ChmDoc::HasData(const char *fileName)
 {
     if (!fileName)
-        return NULL;
+        return nullptr;
 
     ScopedMem<char> tmpName;
     if (!str::StartsWith(fileName, "/")) {
@@ -49,19 +49,19 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res)
-        return NULL;
+        return nullptr;
     size_t len = (size_t)info.length;
     if (len > 128 * 1024 * 1024) {
         // don't allow anything above 128 MB
-        return NULL;
+        return nullptr;
     }
 
     // +1 for 0 terminator for C string compatibility
     ScopedMem<unsigned char> data((unsigned char *)malloc(len + 1));
     if (!data)
-        return NULL;
+        return nullptr;
     if (!chm_retrieve_object(chmHandle, &info, data.Get(), 0, len))
-        return NULL;
+        return nullptr;
     data[len] = '\0';
 
     if (lenOut)
@@ -89,11 +89,11 @@ WCHAR *ChmDoc::ToStr(const char *text)
 static char *GetCharZ(const unsigned char *data, size_t len, size_t off)
 {
     if (off >= len)
-        return NULL;
+        return nullptr;
     CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     const char *str = (char *)data + off;
     if (str::IsEmpty(str))
-        return NULL;
+        return nullptr;
     return str::Dup(str);
 }
 
@@ -382,7 +382,7 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
         visitor->Visit(keyword, references.At(1), level);
         return true;
     }
-    visitor->Visit(keyword, NULL, level);
+    visitor->Visit(keyword, nullptr, level);
     for (size_t i = 0; i < references.Count(); i += 2) {
         visitor->Visit(references.At(i), references.At(i + 1), level + 1);
     }
@@ -426,7 +426,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor *visitor, HtmlParser& p, UIN
     bool hadOne = false;
 
     HtmlElement *el = p.FindElementByName("body");
-    while ((el = p.FindElementByName("object", el)) != NULL) {
+    while ((el = p.FindElementByName("object", el)) != nullptr) {
         ScopedMem<WCHAR> type(el->GetAttribute("type"));
         if (!str::EqI(type, L"text/sitemap"))
             continue;
@@ -444,7 +444,7 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
     if (!path)
         return false;
     // TODO: is path already UTF-8 encoded - or do we need str::conv::ToUtf8(ToStr(path)) ?
-    ScopedMem<unsigned char> htmlData(GetData(path, NULL));
+    ScopedMem<unsigned char> htmlData(GetData(path, nullptr));
     const char *html = (char *)htmlData.Get();
     if (!html)
         return false;
@@ -473,7 +473,7 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
 
 bool ChmDoc::HasToc() const
 {
-    return tocPath != NULL;
+    return tocPath != nullptr;
 }
 
 bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
@@ -483,7 +483,7 @@ bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
 
 bool ChmDoc::HasIndex() const
 {
-    return indexPath != NULL;
+    return indexPath != nullptr;
 }
 
 bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
@@ -504,7 +504,7 @@ ChmDoc *ChmDoc::CreateFromFile(const WCHAR *fileName)
     ChmDoc *doc = new ChmDoc();
     if (!doc || !doc->Load(fileName)) {
         delete doc;
-        return NULL;
+        return nullptr;
     }
     return doc;
 }

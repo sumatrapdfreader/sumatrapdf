@@ -36,15 +36,15 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    unsigned char *bmpData = NULL;
-    HBITMAP hthumb = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, (void **)&bmpData, NULL, 0);
+    unsigned char *bmpData = nullptr;
+    HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void **)&bmpData, nullptr, 0);
     if (!hthumb)
         return E_OUTOFMEMORY;
 
     page = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
     RenderedBitmap *bmp = engine->RenderBitmap(1, zoom, 0, &page);
 
-    HDC hdc = GetDC(NULL);
+    HDC hdc = GetDC(nullptr);
     if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
         for (int i = 0; i < thumb.dx * thumb.dy; i++)
@@ -56,10 +56,10 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     }
     else {
         DeleteObject(hthumb);
-        hthumb = NULL;
+        hthumb = nullptr;
     }
 
-    ReleaseDC(NULL, hdc);
+    ReleaseDC(nullptr, hdc);
     delete bmp;
 
     return hthumb ? S_OK : E_NOTIMPL;
@@ -95,8 +95,8 @@ class PageRenderer {
 
 public:
     PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
-        currPage(0), currBmp(NULL), reqPage(0), reqZoom(0), reqAbort(false),
-        abortCookie(NULL), thread(NULL), preventRecursion(false) {
+        currPage(0), currBmp(nullptr), reqPage(0), reqZoom(0), reqAbort(false),
+        abortCookie(nullptr), thread(nullptr), preventRecursion(false) {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
@@ -127,7 +127,7 @@ public:
             reqZoom = zoom;
             reqSize = target.Size();
             reqAbort = false;
-            thread = CreateThread(NULL, 0, RenderThread, this, 0, 0);
+            thread = CreateThread(nullptr, 0, RenderThread, this, 0, 0);
         }
         else if (reqPage != pageNo || reqSize != target.Size()) {
             if (abortCookie)
@@ -141,7 +141,7 @@ protected:
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer *pr = (PageRenderer *)data;
-        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, NULL, Target_View, &pr->abortCookie);
+        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, Target_View, &pr->abortCookie);
 
         ScopedCritSec scope(&pr->currAccess);
 
@@ -154,10 +154,10 @@ protected:
         else
             delete bmp;
         delete pr->abortCookie;
-        pr->abortCookie = NULL;
+        pr->abortCookie = nullptr;
 
         HANDLE thread = pr->thread;
-        pr->thread = NULL;
+        pr->thread = nullptr;
         PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
 
         CloseHandle(thread);
@@ -219,7 +219,7 @@ static LRESULT OnVScroll(HWND hwnd, WPARAM wParam)
     si.fMask = SIF_POS;
     SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, nullptr, TRUE);
     UpdateWindow(hwnd);
     return 0;
 }
@@ -245,7 +245,7 @@ static LRESULT OnDestroy(HWND hwnd)
     PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview) {
         delete preview->renderer;
-        preview->renderer = NULL;
+        preview->renderer = nullptr;
     }
     return 0;
 }
@@ -267,7 +267,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, L
     case WM_DESTROY:
         return OnDestroy(hwnd);
     case UWM_PAINT_AGAIN:
-        InvalidateRect(hwnd, NULL, TRUE);
+        InvalidateRect(hwnd, nullptr, TRUE);
         UpdateWindow(hwnd);
         return 0;
     default:
@@ -280,18 +280,18 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     WNDCLASSEX wcex = { 0 };
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
-    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.lpszClassName = L"SumatraPDF_PreviewPane";
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     RegisterClassEx(&wcex);
 
-    m_hwnd = CreateWindow(wcex.lpszClassName, NULL, WS_CHILD | WS_VSCROLL | WS_VISIBLE,
+    m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE,
                           m_rcParent.x, m_rcParent.x, m_rcParent.dx, m_rcParent.dy,
-                          m_hwndParent, NULL, NULL, NULL);
+                          m_hwndParent, nullptr, nullptr, nullptr);
     if (!m_hwnd)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    this->renderer = NULL;
+    this->renderer = nullptr;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
     BaseEngine *engine = GetEngine();
@@ -300,7 +300,7 @@ IFACEMETHODIMP PreviewBase::DoPreview()
         pageCount = engine->PageCount();
         this->renderer = new PageRenderer(engine, m_hwnd);
         // don't use the engine afterwards directly (cf. PageRenderer::preventRecursion)
-        engine = NULL;
+        engine = nullptr;
     }
 
     SCROLLINFO si = { 0 };

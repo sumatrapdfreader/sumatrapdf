@@ -55,7 +55,7 @@ public:
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown *punkOuter, REFIID riid, void **ppv)
     {
-        *ppv = NULL;
+        *ppv = nullptr;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
 
@@ -115,7 +115,7 @@ STDAPI DllCanUnloadNow(VOID)
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    *ppv = NULL;
+    *ppv = nullptr;
     ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
     if (!pClassFactory)
         return E_OUTOFMEMORY;
@@ -134,50 +134,50 @@ STDAPI DllRegisterServer()
         WCHAR *key, *value, *data;
     } regVals[] = {
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
-                NULL,                   L"SumatraPDF IFilter" },
+                nullptr,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   dllPath.Get() },
+                nullptr,                   dllPath.Get() },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",   L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
-                NULL,                   L"SumatraPDF IFilter Persistent Handler" },
+                nullptr,                   L"SumatraPDF IFilter Persistent Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered",
-                NULL,                   L"" },
+                nullptr,                   L"" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
-                NULL,                   SZ_PDF_FILTER_CLSID },
+                nullptr,                   SZ_PDF_FILTER_CLSID },
         { L"Software\\Classes\\.pdf\\PersistentHandler",
-                NULL,                   SZ_PDF_FILTER_HANDLER },
+                nullptr,                   SZ_PDF_FILTER_HANDLER },
 #ifdef BUILD_TEX_IFILTER
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
-                NULL,                   L"SumatraPDF IFilter" },
+                nullptr,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   dllPath.Get() },
+                nullptr,                   dllPath.Get() },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",      L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
-                NULL,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
+                nullptr,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered",
-                NULL,                   L"" },
+                nullptr,                   L"" },
         { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
-                NULL,                   SZ_TEX_FILTER_CLSID },
+                nullptr,                   SZ_TEX_FILTER_CLSID },
         { L"Software\\Classes\\.tex\\PersistentHandler",
-                NULL,                   SZ_TEX_FILTER_HANDLER },
+                nullptr,                   SZ_TEX_FILTER_HANDLER },
 #endif
 #ifdef BUILD_EPUB_IFILTER
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID,
-                NULL,                   L"SumatraPDF IFilter" },
+                nullptr,                   L"SumatraPDF IFilter" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID L"\\InProcServer32",
-                NULL,                   dllPath.Get() },
+                nullptr,                   dllPath.Get() },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",      L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER,
-                NULL,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
+                nullptr,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER L"\\PersistentAddinsRegistered",
-                NULL,                   L"" },
+                nullptr,                   L"" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
-                NULL,                   SZ_EPUB_FILTER_CLSID },
+                nullptr,                   SZ_EPUB_FILTER_CLSID },
         { L"Software\\Classes\\.epub\\PersistentHandler",
-                NULL,                   SZ_EPUB_FILTER_HANDLER },
+                nullptr,                   SZ_EPUB_FILTER_HANDLER },
 #endif
     };
 

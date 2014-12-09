@@ -55,7 +55,7 @@
  * 4. Hook function needs to call the trampoline during its execution,
  *    to invoke the original function (so address of trampoline is
  *    returned).
- * 
+ *
  * When the WindowsDllInterceptor class is destructed, OrigFunction is
  * patched again to jump directly to the trampoline instead of going
  * through the hook function. As such, re-intercepting the same function
@@ -66,7 +66,7 @@ class WindowsDllInterceptor
 {
   typedef unsigned char *byteptr_t;
 public:
-  WindowsDllInterceptor() 
+  WindowsDllInterceptor()
     : mModule(0)
   {
   }
@@ -112,7 +112,7 @@ public:
     if (mModule)
       return;
 
-    mModule = LoadLibraryExA(modulename, NULL, 0);
+    mModule = LoadLibraryExA(modulename, nullptr, 0);
     if (!mModule) {
       //printf("LoadLibraryEx for '%s' failed\n", modulename);
       return;
@@ -125,7 +125,7 @@ public:
     mMaxHooks = nhooks + (hooksPerPage % nhooks);
     mCurHooks = 0;
 
-    mHookPage = (byteptr_t) VirtualAllocEx(GetCurrentProcess(), NULL, mMaxHooks * kHookSize,
+    mHookPage = (byteptr_t) VirtualAllocEx(GetCurrentProcess(), nullptr, mMaxHooks * kHookSize,
              MEM_COMMIT | MEM_RESERVE,
              PAGE_EXECUTE_READWRITE);
 
@@ -244,14 +244,14 @@ protected:
 #elif defined(_M_X64)
     while (nBytes < 13) {
 
-      // if found JMP 32bit offset, next bytes must be NOP 
+      // if found JMP 32bit offset, next bytes must be NOP
       if (pJmp32 >= 0) {
         if (origBytes[nBytes++] != 0x90)
           return 0;
 
         continue;
-      } 
-        
+      }
+
       if (origBytes[nBytes] == 0x41) {
         // REX.B
         nBytes++;
@@ -365,7 +365,7 @@ protected:
       *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
     }
 #elif defined(_M_X64)
-    // If JMP32 opcode found, we don't insert to trampoline jump 
+    // If JMP32 opcode found, we don't insert to trampoline jump
     if (pJmp32 >= 0) {
       // convert JMP 32bit offset to JMP 64bit direct
       byteptr_t directJmpAddr = origBytes + pJmp32 + 5 + (*((LONG*)(origBytes+pJmp32+1)));

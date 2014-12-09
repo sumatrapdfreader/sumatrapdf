@@ -33,7 +33,7 @@ static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
         if (pl->hwndParent == hwndParent)
             return pl;
     }
-    return NULL;
+    return nullptr;
 }
 
 static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd)
@@ -43,7 +43,7 @@ static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd)
         if (pl->hwnd == hwnd)
             return pl;
     }
-    return NULL;
+    return nullptr;
 }
 
 void DeletePropertiesWindow(HWND hwndParent)
@@ -64,7 +64,7 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
         pdfDate += 2;
     return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
-        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
+        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
@@ -77,7 +77,7 @@ static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
     const WCHAR *end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
         str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
-    return end != NULL;
+    return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
@@ -85,9 +85,9 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 {
     WCHAR buf[512];
     int cchBufLen = dimof(buf);
-    int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
+    int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
     if (ret < 2) // GetDateFormat() failed or returned an empty result
-        return NULL;
+        return nullptr;
 
     // don't add 00:00:00 for dates without time
     if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond)
@@ -95,7 +95,7 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 
     WCHAR *tmp = buf + ret;
     tmp[-1] = ' ';
-    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen - ret);
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
     if (ret < 2) // GetTimeFormat() failed or returned an empty result
         tmp[-1] = '\0';
 
@@ -128,7 +128,7 @@ static void ConvDateToDisplay(WCHAR **s, bool (* DateParse)(const WCHAR *date, S
 // Caller needs to free the result.
 static WCHAR *FormatSizeSuccint(size_t size)
 {
-    const WCHAR *unit = NULL;
+    const WCHAR *unit = nullptr;
     double s = (double)size;
 
     if (size > GB) {
@@ -206,7 +206,7 @@ static WCHAR *FormatPdfFileStructure(Controller *ctrl)
 {
     ScopedMem<WCHAR> fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
-        return NULL;
+        return nullptr;
     WStrVec parts;
     parts.Split(fstruct, L",", true);
 
@@ -231,7 +231,7 @@ static WCHAR *FormatPdfFileStructure(Controller *ctrl)
 static WCHAR *FormatPermissions(Controller *ctrl)
 {
     if (!ctrl->AsFixed())
-        return NULL;
+        return nullptr;
 
     WStrVec denials;
 
@@ -333,8 +333,8 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
            CW_USEDEFAULT, CW_USEDEFAULT,
            CW_USEDEFAULT, CW_USEDEFAULT,
-           NULL, NULL,
-           GetModuleHandle(NULL), NULL);
+           nullptr, nullptr,
+           GetModuleHandle(nullptr), nullptr);
     if (!hwnd)
         return false;
 

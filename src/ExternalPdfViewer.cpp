@@ -21,12 +21,12 @@
 static WCHAR *GetAcrobatPath()
 {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", NULL));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr));
     if (!path)
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe", NULL));
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe", nullptr));
     if (path && file::Exists(path))
         return path.StealData();
-    return NULL;
+    return nullptr;
 }
 
 static WCHAR *GetFoxitPath()
@@ -44,7 +44,7 @@ static WCHAR *GetFoxitPath()
         path.Set(path::Join(path, L"Foxit Reader.exe"));
     if (path && file::Exists(path))
         return path.StealData();
-    return NULL;
+    return nullptr;
 }
 
 static WCHAR *GetPDFXChangePath()
@@ -53,11 +53,11 @@ static WCHAR *GetPDFXChangePath()
     if (!path)
         path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
-        return NULL;
+        return nullptr;
     ScopedMem<WCHAR> exePath(path::Join(path, L"PDFXCview.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
-    return NULL;
+    return nullptr;
 }
 
 static WCHAR *GetXPSViewerPath()
@@ -66,7 +66,7 @@ static WCHAR *GetXPSViewerPath()
     WCHAR buffer[MAX_PATH];
     UINT res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
-        return NULL;
+        return nullptr;
     ScopedMem<WCHAR> exePath(path::Join(buffer, L"xpsrchvw.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
@@ -77,13 +77,13 @@ static WCHAR *GetXPSViewerPath()
     if (IsRunningInWow64()) {
         res = GetWindowsDirectory(buffer, dimof(buffer));
         if (!res || res >= dimof(buffer))
-            return NULL;
+            return nullptr;
         exePath.Set(path::Join(buffer, L"Sysnative\\xpsrchvw.exe"));
         if (file::Exists(exePath))
             return exePath.StealData();
     }
 #endif
-    return NULL;
+    return nullptr;
 }
 
 static WCHAR *GetHtmlHelpPath()
@@ -92,17 +92,17 @@ static WCHAR *GetHtmlHelpPath()
     WCHAR buffer[MAX_PATH];
     UINT res = GetWindowsDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
-        return NULL;
+        return nullptr;
     ScopedMem<WCHAR> exePath(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
-        return NULL;
+        return nullptr;
     exePath.Set(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
-    return NULL;
+    return nullptr;
 }
 
 bool CanViewExternally(TabInfo *tab)
@@ -128,7 +128,7 @@ bool CanViewWithFoxit(TabInfo *tab)
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> path(GetFoxitPath());
-    return path != NULL;
+    return path != nullptr;
 }
 
 bool ViewWithFoxit(TabInfo *tab, const WCHAR *args)
@@ -159,7 +159,7 @@ bool CanViewWithPDFXChange(TabInfo *tab)
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> path(GetPDFXChangePath());
-    return path != NULL;
+    return path != nullptr;
 }
 
 bool ViewWithPDFXChange(TabInfo *tab, const WCHAR *args)
@@ -190,7 +190,7 @@ bool CanViewWithAcrobat(TabInfo *tab)
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
     ScopedMem<WCHAR> exePath(GetAcrobatPath());
-    return exePath != NULL;
+    return exePath != nullptr;
 }
 
 bool ViewWithAcrobat(TabInfo *tab, const WCHAR *args)
@@ -232,7 +232,7 @@ bool CanViewWithXPSViewer(TabInfo *tab)
     if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".xps") && !str::EndsWithI(tab->filePath, L".oxps"))
         return false;
     ScopedMem<WCHAR> path(GetXPSViewerPath());
-    return path != NULL;
+    return path != nullptr;
 }
 
 bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args)
@@ -267,7 +267,7 @@ bool CanViewWithHtmlHelp(TabInfo *tab)
     if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".chm"))
         return false;
     ScopedMem<WCHAR> path(GetHtmlHelpPath());
-    return path != NULL;
+    return path != nullptr;
 }
 
 bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args)

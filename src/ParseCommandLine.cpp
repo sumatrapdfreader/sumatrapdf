@@ -18,18 +18,18 @@ static void EnumeratePrinters()
 {
     str::Str<WCHAR> output;
 
-    PRINTER_INFO_5 *info5Arr = NULL;
+    PRINTER_INFO_5 *info5Arr = nullptr;
     DWORD bufSize = 0, printersCount;
-    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
+    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     if (fOk) {
         info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
+        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
             5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!fOk || !info5Arr) {
         output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
-        MessageBox(NULL, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
+        MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         return;
     }
     ScopedMem<WCHAR> defName(GetDefaultPrinterName());
@@ -39,8 +39,8 @@ static void EnumeratePrinters()
         bool fDefault = str::Eq(defName, printerName);
         output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes, fDefault ? L", default" : L"");
 
-        DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, NULL, NULL);
-        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, NULL, NULL);
+        DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, nullptr, nullptr);
+        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, nullptr, nullptr);
         CrashIf(bins != binNames);
         if (0 == bins) {
             output.Append(L" - no paper bins available\n");
@@ -50,16 +50,16 @@ static void EnumeratePrinters()
         }
         else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(), NULL);
+            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(), nullptr);
             ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * binNames));
-            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), NULL);
+            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
                 output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j, binValues.Get()[j]);
             }
         }
     }
     free(info5Arr);
-    MessageBox(NULL, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
+    MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
 #endif
 
@@ -238,7 +238,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
         else if (is_arg_with_param("-bench")) {
             WCHAR *s = str::Dup(argList.At(++n));
             pathsToBenchmark.Push(s);
-            s = NULL;
+            s = nullptr;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
                 s = str::Dup(argList.At(++n));
             }
@@ -305,7 +305,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
 #endif
         else {
             // Remember this argument as a filename to open
-            WCHAR *filePath = NULL;
+            WCHAR *filePath = nullptr;
             if (str::EndsWithI(argList.At(n), L".lnk"))
                 filePath = ResolveLnk(argList.At(n));
             if (!filePath)

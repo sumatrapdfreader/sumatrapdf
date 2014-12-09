@@ -149,8 +149,8 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(BaseEngine *engine, EngineType type, ControllerCallback *cb) :
     Controller(cb), engine(engine),
-    userAnnots(NULL), userAnnotsModified(false), engineType(type), pdfSync(NULL),
-    pagesInfo(NULL), displayMode(DM_AUTOMATIC), startPage(1),
+    userAnnots(nullptr), userAnnotsModified(false), engineType(type), pdfSync(nullptr),
+    pagesInfo(nullptr), displayMode(DM_AUTOMATIC), startPage(1),
     zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),
     rotation(0), dpiFactor(1.0f), displayR2L(false),
     presentationMode(false), presZoomVirtual(INVALID_ZOOM),
@@ -195,9 +195,9 @@ DisplayModel::~DisplayModel()
 PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 {
     if (!ValidPageNo(pageNo))
-        return NULL;
+        return nullptr;
     assert(pagesInfo);
-    if (!pagesInfo) return NULL;
+    if (!pagesInfo) return nullptr;
     return &(pagesInfo[pageNo-1]);
 }
 
@@ -800,15 +800,15 @@ RectD DisplayModel::CvtFromScreen(RectI r, int pageNo)
 }
 
 /* Given position 'x'/'y' in the draw area, returns a structure describing
-   a link or NULL if there is no link at this position. */
+   a link or nullptr if there is no link at this position. */
 PageElement *DisplayModel::GetElementAtPos(PointI pt)
 {
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo))
-        return NULL;
+        return nullptr;
     // only return visible elements (for cursor interaction)
     if (!RectI(PointI(), viewPort.Size()).Contains(pt))
-        return NULL;
+        return nullptr;
 
     PointD pos = CvtFromScreen(pt, pageNo);
     return engine->GetElementAtPos(pageNo, pos);
@@ -1246,7 +1246,7 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, PointI *fixPt)
         if (ValidPageNo(centerPage))
             centerPt = CvtFromScreen(*fixPt, centerPage);
         else
-            fixPt = NULL;
+            fixPt = nullptr;
     }
 
     if (scrollToFitPage) {
@@ -1365,9 +1365,9 @@ void DisplayModel::RotateBy(int newRotation)
 WCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
 {
     RectI *coords;
-    const WCHAR *pageText = textCache->GetData(pageNo, NULL, &coords);
+    const WCHAR *pageText = textCache->GetData(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText))
-        return NULL;
+        return nullptr;
 
     str::Str<WCHAR> result;
     RectI regionI = region.Round();

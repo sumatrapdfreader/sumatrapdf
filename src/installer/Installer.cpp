@@ -54,13 +54,13 @@ using namespace Gdiplus;
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0
 
-HWND            gHwndFrame = NULL;
-HWND            gHwndButtonExit = NULL;
-HWND            gHwndButtonInstUninst = NULL;
+HWND            gHwndFrame = nullptr;
+HWND            gHwndButtonExit = nullptr;
+HWND            gHwndButtonInstUninst = nullptr;
 HFONT           gFontDefault;
 bool            gShowOptions = false;
 bool            gForceCrash = false;
-WCHAR *         gMsgError = NULL;
+WCHAR *         gMsgError = nullptr;
 
 static WStrVec          gProcessesToClose;
 static float            gUiDPIFactor = 1.0f;
@@ -86,7 +86,7 @@ WCHAR *gSupportedExts[] = {
     L".cbz", L".cbr", L".cb7", L".cbt",
     L".djvu", L".chm",
     L".mobi", L".epub", L".fb2", L".fb2z",
-    NULL
+    nullptr
 };
 
 // The following list is used to verify that all the required files have been
@@ -103,13 +103,13 @@ PayloadInfo gPayloadData[] = {
     { "PdfFilter.dll",          true    },
     { "PdfPreview.dll",         true    },
     { "uninstall.exe",          true    },
-    { NULL,                     false   },
+    { nullptr,                     false   },
 };
 
 GlobalData gGlobalData = {
     false, /* bool silent */
     false, /* bool showUsageAndQuit */
-    NULL,  /* WCHAR *installDir */
+    nullptr,  /* WCHAR *installDir */
 #ifndef BUILD_UNINSTALLER
     false, /* bool registerAsDefault */
     false, /* bool installPdfFilter */
@@ -119,8 +119,8 @@ GlobalData gGlobalData = {
     false, /* bool autoUpdate */
 #endif
 
-    NULL,  /* WCHAR *firstError */
-    NULL,  /* HANDLE hThread */
+    nullptr,  /* WCHAR *firstError */
+    nullptr,  /* HANDLE hThread */
     false, /* bool success */
 };
 
@@ -184,7 +184,7 @@ int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated)
     } while (Process32Next(hProcSnapshot, &pe32));
 
     if (killCount > 0) {
-        UpdateWindow(FindWindow(NULL, L"Shell_TrayWnd"));
+        UpdateWindow(FindWindow(nullptr, L"Shell_TrayWnd"));
         UpdateWindow(GetDesktopWindow());
     }
     return killCount;
@@ -194,7 +194,7 @@ const WCHAR *GetOwnPath()
 {
     static WCHAR exePath[MAX_PATH];
     exePath[0] = '\0';
-    GetModuleFileName(NULL, exePath, dimof(exePath));
+    GetModuleFileName(nullptr, exePath, dimof(exePath));
     exePath[dimof(exePath) - 1] = '\0';
     return exePath;
 }
@@ -262,7 +262,7 @@ WCHAR *GetShortcutPath(bool allUsers)
     // CSIDL_COMMON_PROGRAMS => installing for all users
     ScopedMem<WCHAR> dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
     if (!dir)
-        return NULL;
+        return nullptr;
     return path::Join(dir, APP_NAME_STR L".lnk");
 }
 
@@ -275,9 +275,9 @@ void KillSumatra()
 
 static HFONT CreateDefaultGuiFont()
 {
-    HDC hdc = GetDC(NULL);
+    HDC hdc = GetDC(nullptr);
     HFONT font = CreateSimpleFont(hdc, L"MS Shell Dlg", 14);
-    ReleaseDC(NULL, hdc);
+    ReleaseDC(nullptr, hdc);
     return font;
 }
 
@@ -301,13 +301,13 @@ bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args)
 {
     ScopedMem<WCHAR> cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
     ScopedHandle process(LaunchProcess(cmd));
-    return process != NULL;
+    return process != nullptr;
 }
 
 // cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *args=NULL)
+static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *args=nullptr)
 {
-    if (FAILED(OleInitialize(NULL)))
+    if (FAILED(OleInitialize(nullptr)))
         return false;
 
     // make sure that the DLL can find any DLLs it depends on and
@@ -329,7 +329,7 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
             if (DllInstall)
                 ok = SUCCEEDED(DllInstall(install, args));
             else
-                args = NULL;
+                args = nullptr;
         }
         if (!args) {
             const char *func = install ? "DllRegisterServer" : "DllUnregisterServer";
@@ -504,7 +504,7 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
     HWND button = CreateWindow(WC_BUTTON, label,
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         rc.x, rc.y, rc.dx, rc.dy, hwndParent,
-                        (HMENU)id, GetModuleHandle(NULL), NULL);
+                        (HMENU)id, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(button, gFontDefault, TRUE);
 
     return button;
@@ -589,7 +589,7 @@ static void SetLettersSumatra()
 // how long the animation lasts, in seconds
 #define REVEALING_ANIM_DUR double(2)
 
-static FrameTimeoutCalculator *gRevealingLettersAnim = NULL;
+static FrameTimeoutCalculator *gRevealingLettersAnim = nullptr;
 
 int gRevealingLettersAnimLettersToShow;
 
@@ -604,7 +604,7 @@ static void RevealingLettersAnimStart()
 static void RevealingLettersAnimStop()
 {
     delete gRevealingLettersAnim;
-    gRevealingLettersAnim = NULL;
+    gRevealingLettersAnim = nullptr;
     SetLettersSumatra();
     InvalidateFrame();
 }
@@ -802,7 +802,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_CREATE:
 #ifdef BUILD_UNINSTALLER
             if (!IsUninstallerNeeded()) {
-                MessageBox(NULL, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(nullptr, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
@@ -851,11 +851,11 @@ static bool RegisterWinClass()
     WNDCLASSEX  wcex;
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
 
     ATOM atom = RegisterClassEx(&wcex);
-    CrashIf(atom == NULL);
-    return atom != NULL;
+    CrashIf(atom == nullptr);
+    return atom != nullptr;
 }
 
 static BOOL InstanceInit(int nCmdShow)
@@ -893,7 +893,7 @@ static int RunApp()
             ftc.Step();
         }
 
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
                 return (int)msg.wParam;
             }
@@ -1043,14 +1043,14 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 
     if (gGlobalData.silent) {
 #ifdef BUILD_UNINSTALLER
-        UninstallerThread(NULL);
+        UninstallerThread(nullptr);
 #else
         // make sure not to uninstall the plugins during silent installation
         if (!gGlobalData.installPdfFilter)
             gGlobalData.installPdfFilter = IsPdfFilterInstalled();
         if (!gGlobalData.installPdfPreviewer)
             gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
-        InstallerThread(NULL);
+        InstallerThread(nullptr);
 #endif
         ret = gGlobalData.success ? 0 : 1;
         goto Exit;

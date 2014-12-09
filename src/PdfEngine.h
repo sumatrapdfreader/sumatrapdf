@@ -4,8 +4,8 @@
 namespace PdfEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
-BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
+BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI=nullptr);
+BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=nullptr);
 
 }
 

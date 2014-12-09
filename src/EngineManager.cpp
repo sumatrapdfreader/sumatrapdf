@@ -38,7 +38,7 @@ BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, EngineType *t
 {
     CrashIf(!filePath);
 
-    BaseEngine *engine = NULL;
+    BaseEngine *engine = nullptr;
     EngineType engineType = Engine_None;
     bool sniff = false;
 RetrySniffing:

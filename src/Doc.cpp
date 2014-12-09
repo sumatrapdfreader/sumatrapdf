@@ -97,9 +97,9 @@ Doc::Doc(PalmDoc *doc)
 void Doc::Clear()
 {
     type = Doc_None;
-    generic = NULL;
+    generic = nullptr;
     error = Error_None;
-    filePath.Set(NULL);
+    filePath.Set(nullptr);
 }
 
 // the caller should make sure there is a document object
@@ -115,10 +115,10 @@ const WCHAR *Doc::GetFilePathFromDoc() const
     case Doc_Pdb:
         return palmDoc->GetFileName();
     case Doc_None:
-        return NULL;
+        return nullptr;
     default:
         CrashIf(true);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -146,10 +146,10 @@ const WCHAR *Doc::GetDefaultFileExt() const
     case Doc_Pdb:
         return L".pdb";
     case Doc_None:
-        return NULL;
+        return nullptr;
     default:
         CrashIf(true);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -165,10 +165,10 @@ WCHAR *Doc::GetProperty(DocumentProperty prop) const
     case Doc_Pdb:
         return palmDoc->GetProperty(prop);
     case Doc_None:
-        return NULL;
+        return nullptr;
     default:
         CrashIf(true);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -185,7 +185,7 @@ const char *Doc::GetHtmlData(size_t &len) const
         return palmDoc->GetHtmlData(&len);
     default:
         CrashIf(true);
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -216,7 +216,7 @@ ImageData *Doc::GetCoverImage() const
     case Doc_Epub:
     case Doc_Pdb:
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -265,7 +265,7 @@ HtmlFormatter *Doc::CreateFormatter(HtmlFormatterArgs *args) const
         return new HtmlFormatter(args);
     default:
         CrashIf(true);
-        return NULL;
+        return nullptr;
     }
 }
 

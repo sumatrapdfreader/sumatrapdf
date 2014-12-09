@@ -463,10 +463,10 @@ static bool IsValidCompression(int comprType)
 }
 
 MobiDoc::MobiDoc(const WCHAR *filePath) :
-    fileName(str::Dup(filePath)), pdbReader(NULL),
+    fileName(str::Dup(filePath)), pdbReader(nullptr),
     docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
-    doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0), coverImageRec(0),
-    imagesCount(0), images(NULL), huffDic(NULL), textEncoding(CP_UTF8), docTocIndex((size_t)-1)
+    doc(nullptr), multibyte(false), trailersCount(0), imageFirstRec(0), coverImageRec(0),
+    imagesCount(0), images(nullptr), huffDic(nullptr), textEncoding(CP_UTF8), docTocIndex((size_t)-1)
 {
 }
 
@@ -583,7 +583,7 @@ bool MobiDoc::ParseHeader()
         const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &huffRecSize);
         if (!recData)
             return false;
-        assert(NULL == huffDic);
+        assert(nullptr == huffDic);
         huffDic = new HuffDicDecompressor();
         if (!huffDic->SetHuffData((uint8*)recData, huffRecSize))
             return false;
@@ -686,7 +686,7 @@ static bool KnownNonImageRec(uint8 *data, size_t dataLen)
 
 static bool KnownImageFormat(const char *data, size_t dataLen)
 {
-    return NULL != GfxFileExtFromData(data, dataLen);
+    return nullptr != GfxFileExtFromData(data, dataLen);
 }
 
 // return false if we should stop loading images (because we
@@ -727,25 +727,25 @@ void MobiDoc::LoadImages()
 
 // imgRecIndex corresponds to recindex attribute of <img> tag
 // as far as I can tell, this means: it starts at 1
-// returns NULL if there is no image (e.g. it's not a format we
+// returns nullptr if there is no image (e.g. it's not a format we
 // recognize)
 ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
 {
     if ((imgRecIndex > imagesCount) || (imgRecIndex < 1))
-        return NULL;
+        return nullptr;
     --imgRecIndex;
     if (!images[imgRecIndex].data || (0 == images[imgRecIndex].len))
-        return NULL;
+        return nullptr;
     return &images[imgRecIndex];
 }
 
 ImageData *MobiDoc::GetCoverImage()
 {
     if (!coverImageRec || coverImageRec < imageFirstRec)
-        return NULL;
+        return nullptr;
     size_t imageNo = coverImageRec - imageFirstRec;
     if (imageNo >= imagesCount || !images[imageNo].data)
-        return NULL;
+        return nullptr;
     return &images[imageNo];
 }
 
@@ -786,7 +786,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
 {
     size_t recSize;
     const char *recData = pdbReader->GetRecord(recNo, &recSize);
-    if (NULL == recData)
+    if (nullptr == recData)
         return false;
     recSize = GetRealRecordSize((uint8*)recData, recSize, trailersCount, multibyte);
     if ((size_t)-1 == recSize)
@@ -834,7 +834,7 @@ bool MobiDoc::LoadDocument(PdbReader *pdbReader)
     // replace unexpected \0 with spaces
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
     char *s = doc->Get(), *end = s + doc->Size();
-    while ((s = (char *)memchr(s, '\0', end - s)) != NULL) {
+    while ((s = (char *)memchr(s, '\0', end - s)) != nullptr) {
         *s = ' ';
     }
     if (textEncoding != CP_UTF8) {
@@ -859,7 +859,7 @@ WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
         if (props.At(i).prop == prop)
             return str::conv::FromCodePage(props.At(i).value, textEncoding);
     }
-    return NULL;
+    return nullptr;
 }
 
 bool MobiDoc::HasToc()
@@ -871,7 +871,7 @@ bool MobiDoc::HasToc()
     // search for <reference type=toc filepos=\d+/>
     HtmlPullParser parser(doc->Get(), doc->Size());
     HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference"))
             continue;
         AttrInfo *attr = tok->GetAttrByName("type");
@@ -904,7 +904,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
     // determine the author's intentions by looking at commonly used tags
     HtmlPullParser parser(doc->Get() + docTocIndex, doc->Size() - docTocIndex);
     HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
             ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
@@ -924,14 +924,14 @@ bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
                 itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
         }
         else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
-            PageDestination *dest = NULL;
+            PageDestination *dest = nullptr;
             if (!itemText) {
-                itemLink.Set(NULL);
+                itemLink.Set(nullptr);
                 continue;
             }
             visitor->Visit(itemText, itemLink, itemLevel);
-            itemText.Set(NULL);
-            itemLink.Set(NULL);
+            itemText.Set(nullptr);
+            itemLink.Set(nullptr);
         }
         else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
             if (tok->IsStartTag())
@@ -963,18 +963,18 @@ MobiDoc *MobiDoc::CreateFromFile(const WCHAR *fileName)
     PdbReader *pdbReader = new PdbReader(fileName);
     if (!mb->LoadDocument(pdbReader)) {
         delete mb;
-        return NULL;
+        return nullptr;
     }
     return mb;
 }
 
 MobiDoc *MobiDoc::CreateFromStream(IStream *stream)
 {
-    MobiDoc *mb = new MobiDoc(NULL);
+    MobiDoc *mb = new MobiDoc(nullptr);
     PdbReader *pdbReader = new PdbReader(stream);
     if (!mb->LoadDocument(pdbReader)) {
         delete mb;
-        return NULL;
+        return nullptr;
     }
     return mb;
 }

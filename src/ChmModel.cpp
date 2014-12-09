@@ -31,10 +31,10 @@ public:
         DocTocItem((WCHAR *)title, pageNo), url(url) { }
     virtual ~ChmTocItem() {
         // prevent title from being freed
-        title = NULL;
+        title = nullptr;
     }
 
-    virtual PageDestination *GetLink() { return url ? this : NULL; }
+    virtual PageDestination *GetLink() { return url ? this : nullptr; }
     virtual PageDestType GetDestType() const {
         return !url ? Dest_None : IsExternalUrl(url) ? Dest_LaunchURL : Dest_ScrollTo;
     }
@@ -43,10 +43,10 @@ public:
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     virtual WCHAR *GetDestValue() const {
-        return url && IsExternalUrl(url) ? str::Dup(url) : NULL;
+        return url && IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
     virtual WCHAR *GetDestName() const {
-        return url && !IsExternalUrl(url) ? str::Dup(url) : NULL;
+        return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
 };
 
@@ -55,7 +55,7 @@ class ChmNamedDest : public ChmTocItem {
 
 public:
     ChmNamedDest(const WCHAR *url, int pageNo) :
-        ChmTocItem(NULL, pageNo, NULL), myUrl(str::Dup(url)) {
+        ChmTocItem(nullptr, pageNo, nullptr), myUrl(str::Dup(url)) {
         this->url = this->title = myUrl;
     }
     virtual ~ChmNamedDest() { }
@@ -81,12 +81,12 @@ struct ChmTocTraceItem {
     int level;
     int pageNo;
 
-    explicit ChmTocTraceItem(const WCHAR *title=NULL, const WCHAR *url=NULL, int level=0, int pageNo=0) :
+    explicit ChmTocTraceItem(const WCHAR *title=nullptr, const WCHAR *url=nullptr, int level=0, int pageNo=0) :
         title(title), url(url), level(level), pageNo(pageNo) { }
 };
 
 ChmModel::ChmModel(ControllerCallback *cb) : Controller(cb),
-    doc(NULL), htmlWindow(NULL), htmlWindowCb(NULL), tocTrace(NULL),
+    doc(nullptr), htmlWindow(nullptr), htmlWindowCb(nullptr), tocTrace(nullptr),
     currentPageNo(1), initZoom(INVALID_ZOOM)
 {
     InitializeCriticalSection(&docAccess);
@@ -124,7 +124,7 @@ bool ChmModel::SetParentHwnd(HWND hwnd)
     htmlWindow = HtmlWindow::Create(hwnd, htmlWindowCb);
     if (!htmlWindow) {
         delete htmlWindowCb;
-        htmlWindowCb = NULL;
+        htmlWindowCb = nullptr;
         return false;
     }
     return true;
@@ -133,9 +133,9 @@ bool ChmModel::SetParentHwnd(HWND hwnd)
 void ChmModel::RemoveParentHwnd()
 {
     delete htmlWindow;
-    htmlWindow = NULL;
+    htmlWindow = nullptr;
     delete htmlWindowCb;
-    htmlWindowCb = NULL;
+    htmlWindowCb = nullptr;
 }
 
 void ChmModel::PrintCurrentPage(bool showUI)
@@ -174,7 +174,7 @@ void ChmModel::DisplayPage(const WCHAR *pageUrl)
         // open external links in an external browser
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
-            ChmTocItem item(NULL, 0, pageUrl);
+            ChmTocItem item(nullptr, 0, pageUrl);
             cb->GotoLink(&item);
         }
         return;
@@ -288,7 +288,7 @@ public:
         {
             for (int i = 0; i < (int)pages->Count(); i++) {
                 const WCHAR *url = pages->At(i);
-                bool inserted = urlsSet.Insert(url, i + 1, NULL);
+                bool inserted = urlsSet.Insert(url, i + 1, nullptr);
                 CrashIf(!inserted);
             }
         }
@@ -325,7 +325,7 @@ public:
     unsigned char *data;
     size_t size;
 
-    explicit ChmCacheEntry(const WCHAR *url) : url(url), data(NULL), size(0) { }
+    explicit ChmCacheEntry(const WCHAR *url) : url(url), data(nullptr), size(0) { }
     ~ChmCacheEntry() { free(data); }
 };
 
@@ -336,7 +336,7 @@ ChmCacheEntry *ChmModel::FindDataForUrl(const WCHAR *url)
         if (str::Eq(url, e->url))
             return e;
     }
-    return NULL;
+    return nullptr;
 }
 
 // Called after html document has been loaded.
@@ -375,7 +375,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR *url, bool newWindow)
         // don't allow new MSIE windows to be opened
         // instead pass the URL to the system's default browser
         if (url && cb) {
-            ChmTocItem item(NULL, 0, url);
+            ChmTocItem item(nullptr, 0, url);
             cb->GotoLink(&item);
         }
         return false;
@@ -395,7 +395,7 @@ const unsigned char *ChmModel::GetDataForUrl(const WCHAR *url, size_t *len)
         e->data = doc->GetData(urlUtf8, &e->size);
         if (!e->data) {
             delete e;
-            return NULL;
+            return nullptr;
         }
         urlDataCache.Append(e);
     }
@@ -422,7 +422,7 @@ PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
     int pageNo = pages.Find(plainUrl) + 1;
     if (pageNo > 0)
         return new ChmNamedDest(name, pageNo);
-    return NULL;
+    return nullptr;
 }
 
 bool ChmModel::HasTocTree() const
@@ -434,7 +434,7 @@ bool ChmModel::HasTocTree() const
 // values (which is faster than re-creating it from html every time)
 DocTocItem *ChmModel::GetTocTree()
 {
-    DocTocItem *root = NULL, **nextChild = &root;
+    DocTocItem *root = nullptr, **nextChild = &root;
     Vec<DocTocItem *> levels;
     int idCounter = 0;
 
@@ -525,7 +525,7 @@ class ChmThumbnailTask : public HtmlWindowCallback
 
 public:
     ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, const std::function<void(RenderedBitmap*)> saveThumbnail) :
-        doc(doc), hwnd(hwnd), hw(NULL), size(size), saveThumbnail(saveThumbnail) {
+        doc(doc), hwnd(hwnd), hw(nullptr), size(size), saveThumbnail(saveThumbnail) {
         InitializeCriticalSection(&docAccess);
     }
 
@@ -587,9 +587,9 @@ void ChmModel::CreateThumbnail(SizeI size, const std::function<void(RenderedBitm
     int winDx = size.dx * 2 + GetSystemMetrics(SM_CXVSCROLL);
     int winDy = size.dy * 2 + GetSystemMetrics(SM_CYHSCROLL);
     // reusing WC_STATIC. I don't think exact class matters (WndProc
-    // will be taken over by HtmlWindow anyway) but it can't be NULL.
+    // will be taken over by HtmlWindow anyway) but it can't be nullptr.
     HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
-                             0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
+                             0, 0, winDx, winDy, nullptr, nullptr, nullptr, nullptr);
     if (!hwnd) {
         delete doc;
         return;
@@ -617,7 +617,7 @@ ChmModel *ChmModel::Create(const WCHAR *fileName, ControllerCallback *cb)
     ChmModel *cm = new ChmModel(cb);
     if (!cm->Load(fileName)) {
         delete cm;
-        return NULL;
+        return nullptr;
     }
     return cm;
 }

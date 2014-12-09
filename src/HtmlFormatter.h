@@ -139,7 +139,7 @@ protected:
     void HandleTagBr();
     void HandleTagP(HtmlToken *t, bool isDiv=false);
     void HandleTagFont(HtmlToken *t);
-    bool HandleTagA(HtmlToken *t, const char *linkAttr="href", const char *attrNS=NULL);
+    bool HandleTagA(HtmlToken *t, const char *linkAttr="href", const char *attrNS=nullptr);
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
@@ -259,8 +259,8 @@ public:
     Vec<HtmlPage*> *FormatAllPages(bool skipEmptyPages=true);
 };
 
-void DrawHtmlPage(Graphics *g, mui::ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=NULL);
+void DrawHtmlPage(Graphics *g, mui::ITextRender *textRender, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color textColor, bool *abortCookie=nullptr);
 
 mui::TextRenderMethod GetTextRenderMethod();
 void SetTextRenderMethod(mui::TextRenderMethod method);
-HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator=NULL);
+HtmlFormatterArgs *CreateFormatterDefaultArgs(int dx, int dy, Allocator *textAllocator=nullptr);

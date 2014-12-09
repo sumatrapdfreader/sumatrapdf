@@ -34,17 +34,17 @@ layout logic */
 #define SUMATRA_TXT_FONT_SIZE   18.f
 
 static ATOM gAboutWndAtom = 0;
-static HWND gHwndAbout2 = NULL;
-static HwndWrapper *mainWnd = NULL;
+static HWND gHwndAbout2 = nullptr;
+static HwndWrapper *mainWnd = nullptr;
 
-static Style *   styleMainWnd = NULL;
-static Style *   styleGrid = NULL;
-static Style *   styleCellLeft = NULL;
-static Style *   styleCellVer = NULL;
-static Style *   styleLogo = NULL;
-static Style *   styleBtnVer = NULL;
-static Style *   styleBtnLeft = NULL;
-static Style *   styleBtnRight = NULL;
+static Style *   styleMainWnd = nullptr;
+static Style *   styleGrid = nullptr;
+static Style *   styleCellLeft = nullptr;
+static Style *   styleCellVer = nullptr;
+static Style *   styleLogo = nullptr;
+static Style *   styleBtnVer = nullptr;
+static Style *   styleBtnLeft = nullptr;
+static Style *   styleBtnRight = nullptr;
 
 static void CreateAboutStyles()
 {
@@ -126,10 +126,10 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"translations",   L"The Translators",      URL_TRANSLATORS },
     { L"licenses",       L"Various Open Source",  URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
-    { L"a note",         L"Pre-release version, for testing only!", NULL },
+    { L"a note",         L"Pre-release version, for testing only!", nullptr },
 #endif
 #ifdef DEBUG
-    { L"a note",         L"Debug version, for testing only!", NULL },
+    { L"a note",         L"Debug version, for testing only!", nullptr },
 #endif
 };
 
@@ -192,7 +192,7 @@ void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
         SolidBrush col(c);
         if (n >= dimof(gSumatraLogoCols))
             n = 0;
-        gfx->DrawString(txt, 1, font, PointF((REAL)x, (REAL)y), NULL, &col);
+        gfx->DrawString(txt, 1, font, PointF((REAL)x, (REAL)y), nullptr, &col);
         bbox = MeasureText(gfx, font, txt, 1);
         x += CeilI(bbox.Width);
         txt++;
@@ -212,7 +212,7 @@ void ButtonUrlHandler::Clicked(Control *c, int x, int y)
 }
 
 // we only need one instance
-static ButtonUrlHandler *gButtonUrlHandler = NULL;
+static ButtonUrlHandler *gButtonUrlHandler = nullptr;
 
 static void CreateAboutMuiWindow(HWND hwnd)
 {
@@ -271,11 +271,11 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
 static void DestroyAboutMuiWindow()
 {
-    gHwndAbout2 = NULL;
+    gHwndAbout2 = nullptr;
     delete mainWnd;
-    mainWnd = NULL;
+    mainWnd = nullptr;
     delete gButtonUrlHandler;
-    gButtonUrlHandler = NULL;
+    gButtonUrlHandler = nullptr;
 }
 
 static void CopyAboutInfoToClipboard(HWND hwnd)
@@ -347,7 +347,7 @@ void OnMenuAbout2()
 
     if (!gAboutWndAtom) {
         FillWndClassEx(wcex, WND_CLASS_ABOUT2, WndProcAbout2);
-        wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAboutWndAtom = RegisterClassEx(&wcex);
         CrashIf(!gAboutWndAtom);
     }
@@ -356,8 +356,8 @@ void OnMenuAbout2()
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
             CW_USEDEFAULT, CW_USEDEFAULT,
             520, 400,
-            NULL, NULL,
-            GetModuleHandle(NULL), NULL);
+            nullptr, nullptr,
+            GetModuleHandle(nullptr), nullptr);
     if (!gHwndAbout2)
         return;
 

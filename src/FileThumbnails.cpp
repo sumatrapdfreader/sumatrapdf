@@ -27,10 +27,10 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
     unsigned char digest[16];
     // TODO: why is this happening? Seen in crash reports e.g. 35043
     if (!filePath)
-        return NULL;
+        return nullptr;
     ScopedMem<char> pathU(str::conv::ToUtf8(filePath));
     if (!pathU)
-        return NULL;
+        return nullptr;
     if (path::HasVariableDriveLetter(filePath))
         pathU[0] = '?'; // ignore the drive letter, if it might change
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
@@ -38,7 +38,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
 
     ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
-        return NULL;
+        return nullptr;
     ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
@@ -88,13 +88,13 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
     size_t len;
     ScopedMem<char> data(file::ReadAll(filePath, &len));
     if (!data)
-        return NULL;
+        return nullptr;
     Bitmap *bmp = BitmapFromData(data, len);
     if (!bmp)
-        return NULL;
+        return nullptr;
 
     HBITMAP hbmp;
-    RenderedBitmap *rendered = NULL;
+    RenderedBitmap *rendered = nullptr;
     if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok)
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     delete bmp;
@@ -105,7 +105,7 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 bool LoadThumbnail(DisplayState& ds)
 {
     delete ds.thumbnail;
-    ds.thumbnail = NULL;
+    ds.thumbnail = nullptr;
 
     ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
@@ -134,10 +134,10 @@ bool HasThumbnail(DisplayState& ds)
     // delete the thumbnail if the file is newer than the thumbnail
     if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
         delete ds.thumbnail;
-        ds.thumbnail = NULL;
+        ds.thumbnail = nullptr;
     }
 
-    return ds.thumbnail != NULL;
+    return ds.thumbnail != nullptr;
 }
 
 void SetThumbnail(DisplayState *ds, RenderedBitmap *bmp)
@@ -163,9 +163,9 @@ void SaveThumbnail(DisplayState& ds)
     ScopedMem<WCHAR> thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
-        Bitmap bmp(ds.thumbnail->GetBitmap(), NULL);
+        Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        bmp.Save(bmpPath.Get(), &tmpClsid, NULL);
+        bmp.Save(bmpPath.Get(), &tmpClsid, nullptr);
     }
 }
 
@@ -178,5 +178,5 @@ void RemoveThumbnail(DisplayState& ds)
     if (bmpPath)
         file::Delete(bmpPath);
     delete ds.thumbnail;
-    ds.thumbnail = NULL;
+    ds.thumbnail = nullptr;
 }

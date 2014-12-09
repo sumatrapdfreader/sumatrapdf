@@ -65,8 +65,8 @@ struct TouchState {
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
-    StaticLinkInfo() : target(NULL), infotip(NULL) { }
-    StaticLinkInfo(RectI rect, const WCHAR *target, const WCHAR *infotip=NULL) :
+    StaticLinkInfo() : target(nullptr), infotip(nullptr) { }
+    StaticLinkInfo(RectI rect, const WCHAR *target, const WCHAR *infotip=nullptr) :
         rect(rect), target(target), infotip(infotip) { }
 
     RectI rect;
@@ -138,7 +138,7 @@ public:
     HWND            hwndTabBar;
     bool            tabsVisible;
     bool            tabsInTitlebar;
-    // keeps the sequence of tab selection. This is needed for restoration 
+    // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
     Vec<TabInfo *> *tabSelectionHistory;
 
@@ -169,7 +169,7 @@ public:
        of the mouse from the point where the user middle clicked. */
     int             xScrollSpeed, yScrollSpeed;
 
-    // true while selecting and when currentTab->selectionOnPage != NULL
+    // true while selecting and when currentTab->selectionOnPage != nullptr
     bool            showSelection;
     // selection rectangle in screen coordinates (only needed while selecting)
     RectI           selectionRect;

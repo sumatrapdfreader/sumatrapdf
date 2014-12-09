@@ -78,7 +78,7 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
     virtual DisplayMode GetDisplayMode() const { return displayMode; }
     virtual void SetPresentationMode(bool enable);
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr);
     virtual float GetZoomVirtual(bool absolute=false) const;
     virtual float GetNextZoomStep(float towards) const;
     virtual void SetViewPortSize(SizeI size);
@@ -92,7 +92,7 @@ public:
     // state export
     virtual void UpdateDisplayState(DisplayState *ds);
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) { 
+    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) {
         cb->RenderThumbnail(this, size, saveThumbnail);
     }
 

@@ -24,7 +24,7 @@
 #define NOLOG 1
 #include "DebugLog.h"
 
-PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
+PageControl::PageControl() : page(nullptr), cursorX(-1), cursorY(-1)
 {
     bit::Set(wantedInputBits, WantsMouseMoveBit, WantsMouseClickBit);
 }
@@ -46,7 +46,7 @@ void PageControl::SetPage(HtmlPage *newPage)
 DrawInstr *PageControl::GetLinkAt(int x, int y) const
 {
     if (!page)
-        return NULL;
+        return nullptr;
 
     PointF pt((REAL)(x - cachedStyle->padding.left), (REAL)(y - cachedStyle->padding.top));
     for (DrawInstr& i : page->instructions) {
@@ -54,7 +54,7 @@ DrawInstr *PageControl::GetLinkAt(int x, int y) const
             return &i;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void PageControl::NotifyMouseMove(int x, int y)
@@ -64,7 +64,7 @@ void PageControl::NotifyMouseMove(int x, int y)
         SetCursor(IDC_ARROW);
         if (toolTip) {
             Control::NotifyMouseLeave();
-            str::ReplacePtr(&toolTip, NULL);
+            str::ReplacePtr(&toolTip, nullptr);
         }
         return;
     }
@@ -73,7 +73,7 @@ void PageControl::NotifyMouseMove(int x, int y)
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
         Control::NotifyMouseLeave();
-        str::ReplacePtr(&toolTip, NULL);
+        str::ReplacePtr(&toolTip, nullptr);
     }
     if (!toolTip && url::IsAbsolute(url)) {
         toolTip = url.StealData();
@@ -192,7 +192,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
     // TODO: also match the colors of progress bar to be based on background color
     // TODO: update tab color
 
-    // note: callers are expected to update the background of tree control and 
+    // note: callers are expected to update the background of tree control and
     // other colors that are supposed to match background color
 }
 

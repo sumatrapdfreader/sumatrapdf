@@ -7,7 +7,7 @@ class MobiDoc;
 
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)
-    // it can be NULL (enables testing by feeding raw html)
+    // it can be nullptr (enables testing by feeding raw html)
     MobiDoc *           doc;
 
     void HandleSpacing_Mobi(HtmlToken *t);

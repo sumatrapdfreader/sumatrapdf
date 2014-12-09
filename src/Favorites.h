@@ -26,12 +26,12 @@ class Favorites {
 public:
     Favorites() : idxCache((size_t)-1) { }
 
-    Favorite *GetByMenuId(int menuId, DisplayState **dsOut=NULL);
+    Favorite *GetByMenuId(int menuId, DisplayState **dsOut=nullptr);
     void ResetMenuIds();
     DisplayState *GetFavByFilePath(const WCHAR *filePath);
     DisplayState *GetByFavorite(Favorite *fn);
     bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
-    void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=NULL);
+    void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=nullptr);
     void Remove(const WCHAR *filePath, int pageNo);
     void RemoveAllForFile(const WCHAR *filePath);
 };

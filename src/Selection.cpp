@@ -58,7 +58,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
 
     if (sel->Count() == 0) {
         delete sel;
-        return NULL;
+        return nullptr;
     }
     return sel;
 }
@@ -75,7 +75,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
 
     if (sel->Count() == 0) {
         delete sel;
-        return NULL;
+        return nullptr;
     }
     return sel;
 }
@@ -84,7 +84,7 @@ void DeleteOldSelectionInfo(WindowInfo *win, bool alsoTextSel)
 {
     if (win->currentTab) {
         delete win->currentTab->selectionOnPage;
-        win->currentTab->selectionOnPage = NULL;
+        win->currentTab->selectionOnPage = nullptr;
     }
     win->showSelection = false;
     win->selectionMeasure = SizeD();
@@ -112,7 +112,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     SolidBrush tmpBrush(c);
     gs.FillPath(&tmpBrush, &path);
     if (margin) {
-        path.Outline(NULL, 0.2f);
+        path.Outline(nullptr, 0.2f);
         Pen tmpPen(Color(alpha, 0, 0, 0), (REAL)margin);
         gs.DrawPath(&tmpPen, &path);
     }
@@ -178,7 +178,7 @@ void UpdateTextSelection(WindowInfo *win, bool select)
 
     DeleteOldSelectionInfo(win);
     win->currentTab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
-    win->showSelection = win->currentTab->selectionOnPage != NULL;
+    win->showSelection = win->currentTab->selectionOnPage != nullptr;
 
     if (win->uia_provider)
         win->uia_provider->OnSelectionChanged();
@@ -225,7 +225,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
         }
     }
 
-    win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual(true) : 1), zoomToPt ? &pt : NULL);
+    win->ctrl->SetZoomVirtual(factor * (relative ? win->ctrl->GetZoomVirtual(true) : 1), zoomToPt ? &pt : nullptr);
     UpdateToolbarState(win);
 }
 
@@ -237,7 +237,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
 
-    if (!OpenClipboard(NULL)) return;
+    if (!OpenClipboard(nullptr)) return;
     EmptyClipboard();
 
     DisplayModel *dm = win->AsFixed();
@@ -317,7 +317,7 @@ void OnSelectAll(WindowInfo *win, bool textOnly)
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 
-    win->showSelection = win->currentTab->selectionOnPage != NULL;
+    win->showSelection = win->currentTab->selectionOnPage != nullptr;
     win->RepaintAsync();
 }
 
@@ -383,7 +383,7 @@ void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key)
     }
 
     SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
     win->RepaintAsync();
 }
 
@@ -402,7 +402,7 @@ void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted)
         DeleteOldSelectionInfo(win, true);
     else if (win->mouseAction == MA_SELECTING) {
         win->currentTab->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
-        win->showSelection = win->currentTab->selectionOnPage != NULL;
+        win->showSelection = win->currentTab->selectionOnPage != nullptr;
     }
     win->RepaintAsync();
 }

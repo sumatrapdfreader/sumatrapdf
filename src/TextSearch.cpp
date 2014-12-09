@@ -17,10 +17,10 @@ enum { SEARCH_PAGE, SKIP_PAGE };
 
 TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
     TextSelection(engine, textCache),
-    findText(NULL), anchor(NULL), pageText(NULL),
+    findText(nullptr), anchor(nullptr), pageText(nullptr),
     caseSensitive(false), forward(true),
     matchWordStart(false), matchWordEnd(false),
-    findPage(0), findIndex(0), lastText(NULL)
+    findPage(0), findIndex(0), lastText(nullptr)
 {
     findCache = AllocArray<BYTE>(this->engine->PageCount());
 }
@@ -33,7 +33,7 @@ TextSearch::~TextSearch()
 
 void TextSearch::Reset()
 {
-    pageText = NULL;
+    pageText = nullptr;
     TextSelection::Reset();
 }
 
@@ -68,7 +68,7 @@ void TextSearch::SetText(const WCHAR *text)
     // characters when searching for easy-to-type homoglyphs
     // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
     else if (*text == '-' || *text == '\'' || *text == '"')
-        anchor = NULL;
+        anchor = nullptr;
     else
         anchor = str::DupN(text, 1);
 
@@ -165,7 +165,7 @@ static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
 {
     const WCHAR *c = base + offset + (forward ? 0 : -1);
     if (c < base || !*c)
-        return NULL;
+        return nullptr;
     return c;
 }
 
@@ -245,18 +245,18 @@ TextSel *TextSearch::FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tr
 
     if (FindStartingAtPage(page, tracker))
         return &result;
-    return NULL;
+    return nullptr;
 }
 
 TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
 {
     CrashIf(!findText);
     if (!findText)
-        return NULL;
+        return nullptr;
 
     if (tracker) {
         if (tracker->WasCanceled())
-            return NULL;
+            return nullptr;
         tracker->UpdateProgress(findPage, engine->PageCount());
     }
 
@@ -264,5 +264,5 @@ TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
         return &result;
     if (FindStartingAtPage(findPage + (forward ? 1 : -1), tracker))
         return &result;
-    return NULL;
+    return nullptr;
 }

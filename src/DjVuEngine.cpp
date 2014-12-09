@@ -58,7 +58,7 @@ public:
     virtual WCHAR *GetDestValue() const {
         if (Dest_LaunchURL == GetDestType())
             return str::conv::FromUtf8(link);
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -70,7 +70,7 @@ class DjVuLink : public PageElement {
 
 public:
     DjVuLink(int pageNo, RectI rect, const char *link, const char *comment) :
-        pageNo(pageNo), rect(rect.Convert<double>()), value(NULL) {
+        pageNo(pageNo), rect(rect.Convert<double>()), value(nullptr) {
         dest = new DjVuDestination(link);
         if (!str::IsEmpty(comment))
             value = str::conv::FromUtf8(comment);
@@ -88,7 +88,7 @@ public:
             return str::Dup(value);
         if (Dest_LaunchURL == dest->GetDestType())
             return dest->GetDestValue();
-        return NULL;
+        return nullptr;
     }
 
     virtual PageDestination *AsLink() { return dest; }
@@ -122,7 +122,7 @@ class DjVuContext {
 public:
     CRITICAL_SECTION lock;
 
-    DjVuContext() : ctx(NULL), initialized(false) { }
+    DjVuContext() : ctx(nullptr), initialized(false) { }
     ~DjVuContext() {
         if (initialized) {
             EnterCriticalSection(&lock);
@@ -143,7 +143,7 @@ public:
             setlocale(LC_ALL, "C");
         }
 
-        return ctx != NULL;
+        return ctx != nullptr;
     }
 
     void SpinMessageLoop(bool wait=true) {
@@ -152,7 +152,7 @@ public:
         if (wait)
             ddjvu_message_wait(ctx);
 #endif
-        while ((msg = ddjvu_message_peek(ctx)) != NULL) {
+        while ((msg = ddjvu_message_peek(ctx)) != nullptr) {
             if (DDJVU_NEWSTREAM == msg->m_any.tag && msg->m_newstream.streamid != 0)
                 ddjvu_stream_close(msg->m_any.document, msg->m_newstream.streamid, /* stop */ FALSE);
             ddjvu_message_pop(ctx);
@@ -172,7 +172,7 @@ public:
         size_t datalen;
         ScopedMem<char> data((char *)GetDataFromStream(stream, &datalen));
         if (!data || datalen > ULONG_MAX)
-            return NULL;
+            return nullptr;
         return ddjvu_document_create_by_data(ctx, data, (ULONG)datalen);
     }
 };
@@ -186,7 +186,7 @@ public:
     virtual BaseEngine *Clone() {
         if (stream)
             return CreateFromStream(stream);
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual const WCHAR *FileName() const { return fileName; };
@@ -199,22 +199,22 @@ public:
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return nullptr; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
@@ -267,9 +267,9 @@ protected:
     bool LoadMediaboxes();
 };
 
-DjVuEngineImpl::DjVuEngineImpl() : fileName(NULL), stream(NULL),
-    pageCount(0), mediaboxes(NULL), doc(NULL),
-    outline(miniexp_nil), annos(NULL), hasPageLabels(false)
+DjVuEngineImpl::DjVuEngineImpl() : fileName(nullptr), stream(nullptr),
+    pageCount(0), mediaboxes(nullptr), doc(nullptr),
+    outline(miniexp_nil), annos(nullptr), hasPageLabels(false)
 {
 }
 
@@ -302,10 +302,10 @@ DjVuEngineImpl::~DjVuEngineImpl()
 
 static bool ReadBytes(HANDLE h, DWORD offset, void *buffer, DWORD count)
 {
-    DWORD res = SetFilePointer(h, offset, NULL, FILE_BEGIN);
+    DWORD res = SetFilePointer(h, offset, nullptr, FILE_BEGIN);
     if (res != offset)
         return false;
-    bool ok = ReadFile(h, buffer, count, &res, NULL);
+    bool ok = ReadFile(h, buffer, count, &res, nullptr);
     return ok && res == count;
 }
 
@@ -470,7 +470,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
     if (!bmp || userAnnots.Count() == 0)
         return;
 
-    HDC hdc = CreateCompatibleDC(NULL);
+    HDC hdc = CreateCompatibleDC(nullptr);
     {
         ScopedHdcSelect bmpScope(hdc, bmp->GetBitmap());
         Graphics g(hdc);
@@ -531,7 +531,7 @@ RenderedBitmap *DjVuEngineImpl::CreateRenderedBitmap(const char *bmpData, SizeI 
 
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + (grayscale ? 256 * sizeof(RGBQUAD) : 0));
     if (!bmi)
-        return NULL;
+        return nullptr;
 
     if (grayscale) {
         for (int i = 0; i < 256; i++) {
@@ -548,9 +548,9 @@ RenderedBitmap *DjVuEngineImpl::CreateRenderedBitmap(const char *bmpData, SizeI 
     bmi->bmiHeader.biSizeImage = size.dy * stride;
     bmi->bmiHeader.biClrUsed = grayscale ? 256 : 0;
 
-    void *data = NULL;
-    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, NULL);
-    HBITMAP hbmp = CreateDIBSection(NULL, bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    void *data = nullptr;
+    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi->bmiHeader.biSizeImage, nullptr);
+    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
     if (hbmp)
         memcpy(data, bmpData, bmi->bmiHeader.biSizeImage);
 
@@ -570,22 +570,22 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
     ddjvu_page_t *page = ddjvu_page_create_by_pageno(doc, pageNo-1);
     if (!page)
-        return NULL;
+        return nullptr;
     int rotation4 = (((-rotation / 90) % 4) + 4) % 4;
     ddjvu_page_set_rotation(page, (ddjvu_page_rotation_t)rotation4);
 
     while (!ddjvu_page_decoding_done(page))
         gDjVuContext.SpinMessageLoop();
     if (ddjvu_page_decoding_error(page))
-        return NULL;
+        return nullptr;
 
     bool isBitonal = DDJVU_PAGETYPE_BITONAL == ddjvu_page_get_type(page);
-    ddjvu_format_t *fmt = ddjvu_format_create(isBitonal ? DDJVU_FORMAT_GREY8 : DDJVU_FORMAT_BGR24, 0, NULL);
+    ddjvu_format_t *fmt = ddjvu_format_create(isBitonal ? DDJVU_FORMAT_GREY8 : DDJVU_FORMAT_BGR24, 0, nullptr);
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy };
     ddjvu_rect_t rrect = { screen.x, 2 * full.y - screen.y + full.dy - screen.dy, screen.dx, screen.dy };
 
-    RenderedBitmap *bmp = NULL;
+    RenderedBitmap *bmp = nullptr;
     int stride = ((screen.dx * (isBitonal ? 1 : 3) + 3) / 4) * 4;
     ScopedMem<char> bmpData(AllocArray<char>(stride * (screen.dy + 5)));
     if (bmpData) {
@@ -618,7 +618,7 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     HRGN clip = CreateRectRgn(screenRect.x, screenRect.y, screenRect.x + screenRect.dx, screenRect.y + screenRect.dy);
     SelectClipRgn(hDC, clip);
 
-    DjVuAbortCookie *cookie = NULL;
+    DjVuAbortCookie *cookie = nullptr;
     if (cookie_out)
         *cookie_out = cookie = new DjVuAbortCookie();
 
@@ -646,7 +646,7 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
         }
     }
 
-    SelectClipRgn(hDC, NULL);
+    SelectClipRgn(hDC, nullptr);
     return success;
 }
 
@@ -666,7 +666,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
         return pageRc;
 
     // render the page in 8-bit grayscale up to 250x250 px in size
-    ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, NULL);
+    ddjvu_format_t *fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, nullptr);
     ddjvu_format_set_row_order(fmt, /* top_to_bottom */ TRUE);
     double zoom = std::min(std::min(250.0 / pageRc.dx, 250.0 / pageRc.dy), 1.0);
     RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
@@ -757,7 +757,7 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
             return (unsigned char *)data.StealData();
     }
     if (!fileName)
-        return NULL;
+        return nullptr;
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
@@ -835,17 +835,17 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
     ScopedCritSec scope(&gDjVuContext.lock);
 
     miniexp_t pagetext;
-    while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo-1, NULL)) == miniexp_dummy)
+    while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo-1, nullptr)) == miniexp_dummy)
         gDjVuContext.SpinMessageLoop();
     if (miniexp_nil == pagetext)
-        return NULL;
+        return nullptr;
 
     str::Str<WCHAR> extracted;
     Vec<RectI> coords;
     bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     if (!success)
-        return NULL;
+        return nullptr;
     if (extracted.Count() > 0 && !str::EndsWith(extracted.Get(), lineSep))
         AppendNewline(extracted, coords, lineSep);
 
@@ -897,7 +897,7 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
             gDjVuContext.SpinMessageLoop();
     }
     if (!annos || !annos[pageNo-1])
-        return NULL;
+        return nullptr;
 
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -917,7 +917,7 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
         miniexp_t anno = miniexp_cdr(links[i]);
 
         miniexp_t url = miniexp_car(anno);
-        const char *urlUtf8 = NULL;
+        const char *urlUtf8 = nullptr;
         if (miniexp_stringp(url))
             urlUtf8 = miniexp_to_str(url);
         else if (miniexp_consp(url) && miniexp_car(url) == miniexp_symbol("url") &&
@@ -929,7 +929,7 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 
         anno = miniexp_cdr(anno);
         miniexp_t comment = miniexp_car(anno);
-        const char *commentUtf8 = NULL;
+        const char *commentUtf8 = nullptr;
         if (miniexp_stringp(comment))
             commentUtf8 = miniexp_to_str(comment);
 
@@ -966,13 +966,13 @@ PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 {
     Vec<PageElement *> *els = GetElements(pageNo);
     if (!els)
-        return NULL;
+        return nullptr;
 
     // elements are extracted bottom-to-top but are accessed
     // in top-to-bottom order, so reverse the list first
     els->Reverse();
 
-    PageElement *el = NULL;
+    PageElement *el = nullptr;
     for (size_t i = 0; i < els->Count() && !el; i++)
         if (els->At(i)->GetRect().Contains(pt))
             el = els->At(i);
@@ -990,12 +990,12 @@ PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 char *DjVuEngineImpl::ResolveNamedDest(const char *name)
 {
     if (!str::StartsWith(name, "#"))
-        return NULL;
+        return nullptr;
     for (size_t i = 0; i < fileInfo.Count(); i++) {
         if (str::EqI(name + 1, fileInfo.At(i).id))
             return str::Format("#%d", fileInfo.At(i).pageno + 1);
     }
-    return NULL;
+    return nullptr;
 }
 
 PageDestination *DjVuEngineImpl::GetNamedDest(const WCHAR *name)
@@ -1007,12 +1007,12 @@ PageDestination *DjVuEngineImpl::GetNamedDest(const WCHAR *name)
     ScopedMem<char> link(ResolveNamedDest(nameUtf8));
     if (link)
         return new DjVuDestination(link);
-    return NULL;
+    return nullptr;
 }
 
 DjVuTocItem *DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter)
 {
-    DjVuTocItem *node = NULL;
+    DjVuTocItem *node = nullptr;
 
     for (miniexp_t rest = entry; miniexp_consp(rest); rest = miniexp_cdr(rest)) {
         miniexp_t item = miniexp_car(rest);
@@ -1023,7 +1023,7 @@ DjVuTocItem *DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter)
         const char *name = miniexp_to_str(miniexp_car(item));
         const char *link = miniexp_to_str(miniexp_cadr(item));
 
-        DjVuTocItem *tocItem = NULL;
+        DjVuTocItem *tocItem = nullptr;
         ScopedMem<char> linkNo(ResolveNamedDest(link));
         if (!linkNo)
             tocItem = new DjVuTocItem(name, link);
@@ -1050,7 +1050,7 @@ DjVuTocItem *DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter)
 DocTocItem *DjVuEngineImpl::GetTocTree()
 {
     if (!HasTocTree())
-        return NULL;
+        return nullptr;
 
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
@@ -1086,7 +1086,7 @@ BaseEngine *DjVuEngineImpl::CreateFromFile(const WCHAR *fileName)
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1096,7 +1096,7 @@ BaseEngine *DjVuEngineImpl::CreateFromStream(IStream *stream)
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }

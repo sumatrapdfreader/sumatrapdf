@@ -50,7 +50,7 @@ public:
     // IClassFactory
     IFACEMETHODIMP CreateInstance(IUnknown *punkOuter, REFIID riid, void **ppv)
     {
-        *ppv = NULL;
+        *ppv = nullptr;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
 
@@ -130,7 +130,7 @@ STDAPI DllCanUnloadNow(VOID)
 
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    *ppv = NULL;
+    *ppv = nullptr;
     ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
     if (!pClassFactory)
         return E_OUTOFMEMORY;
@@ -200,36 +200,36 @@ STDAPI DllRegisterServer()
         ScopedMem<WCHAR> displayName(str::Format(L"SumatraPDF Preview (*%s)", gPreviewers[i].ext));
         // register class
         ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
-        WriteOrFail_(key, NULL, displayName);
+        WriteOrFail_(key, nullptr, displayName);
         WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
         WriteOrFail_(key, L"DisplayName", displayName);
         key.Set(str::Format(L"Software\\Classes\\CLSID\\%s\\InProcServer32", gPreviewers[i].clsid));
-        WriteOrFail_(key, NULL, dllPath);
+        WriteOrFail_(key, nullptr, dllPath);
         WriteOrFail_(key, L"ThreadingModel", L"Apartment");
         // IThumbnailProvider
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
-        WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+        WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
         if (gPreviewers[i].ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext2));
-            WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
         }
         // IExtractImage (for Windows XP)
         if (!IsVistaOrGreater()) {
             // don't register for IExtractImage on systems which accept IThumbnailProvider
             // (because it doesn't offer anything beyond what IThumbnailProvider does)
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext));
-            WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
             if (gPreviewers[i].ext2) {
                 key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext2));
-                WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+                WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
             }
         }
         // IPreviewHandler
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext));
-        WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+        WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
         if (gPreviewers[i].ext2) {
             key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext2));
-            WriteOrFail_(key, NULL, gPreviewers[i].clsid);
+            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
         }
         WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid, displayName);
 

@@ -49,7 +49,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
     PageDestination *link = ((DocTocItem *)nmit->lParam)->GetLink();
-    ScopedMem<WCHAR> path(link ? link->GetDestValue() : NULL);
+    ScopedMem<WCHAR> path(link ? link->GetDestValue() : nullptr);
     if (!path)
         return;
     CrashIf(!link); // /analyze claims that this could happen - it really can't
@@ -166,7 +166,7 @@ static void GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, TabInfo *tab, 
     win->tocKeepSelection = false;
 }
 
-static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL, bool allowExternal=true)
+static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=nullptr, bool allowExternal=true)
 {
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
@@ -196,7 +196,7 @@ void ClearTocBox(WindowInfo *win)
     SendMessage(win->hwndTocTree, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(win->hwndTocTree);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
-    RedrawWindow(win->hwndTocTree, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    RedrawWindow(win->hwndTocTree, nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
     win->currPageNo = 0;
     win->tocLoaded = false;
@@ -241,7 +241,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
+static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState, HTREEITEM parent = nullptr)
 {
     for (; entry; entry = entry->next) {
         bool toggle = tocState.Contains(entry->id);
@@ -252,7 +252,7 @@ static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState
 
 static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
 {
-    HTREEITEM hCurrItem = NULL;
+    HTREEITEM hCurrItem = nullptr;
 
     while (hItem) {
         TVITEM item;
@@ -271,7 +271,7 @@ static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
         }
 
         // find any child item closer to the specified page
-        HTREEITEM hSubItem = NULL;
+        HTREEITEM hSubItem = nullptr;
         if ((item.state & TVIS_EXPANDED))
             hSubItem = TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo);
         if (hSubItem)
@@ -294,7 +294,7 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
     // select the item closest to but not after the current page
     // (or the root item, if there's no such item)
     HTREEITEM hItem = TreeItemForPageNo(win, hRoot, currPageNo);
-    if (NULL == hItem)
+    if (nullptr == hItem)
         hItem = hRoot;
     TreeView_SelectItem(win->hwndTocTree, hItem);
 }
@@ -309,7 +309,7 @@ void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
         TreeView_GetItem(hwndTocTree, &item);
 
         // add the ids of toggled items to tocState
-        DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : NULL;
+        DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : nullptr;
         bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
         if (wasToggled) {
             tab->tocState.Append(tocItem->id);
@@ -344,7 +344,7 @@ void UpdateTocColors(WindowInfo *win)
     SetTextCol(win->tocLabelWithClose, labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
     ToggleWindowStyle(win->hwndTocTree, WS_EX_STATICEDGE, !flatTreeWnd, GWL_EXSTYLE);
-    SetWindowPos(win->hwndTocTree, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    SetWindowPos(win->hwndTocTree, nullptr, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
     // TODO: if we have favorites in ebook view, we'll need this
     //SetBgCol(win->favLabelWithClose, labelBgCol);
@@ -406,7 +406,7 @@ void LoadTocTree(WindowInfo *win)
     UpdateTocColors(win);
     SendMessage(win->hwndTocTree, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(win->hwndTocTree, NULL, NULL, fl);
+    RedrawWindow(win->hwndTocTree, nullptr, nullptr, fl);
 }
 
 static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
@@ -480,7 +480,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
     return -1;
 }
 
-static WNDPROC DefWndProcTocTree = NULL;
+static WNDPROC DefWndProcTocTree = nullptr;
 static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -525,7 +525,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
             PostMessage(hwnd, WM_APP_REPAINT_TOC, 0, 0);
             break;
         case WM_APP_REPAINT_TOC:
-            InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, nullptr, TRUE);
             UpdateWindow(hwnd);
             break;
 #endif
@@ -533,7 +533,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 }
 
-static WNDPROC DefWndProcTocBox = NULL;
+static WNDPROC DefWndProcTocBox = nullptr;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -566,7 +566,7 @@ void CreateToc(WindowInfo *win)
     // toc windows
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs->sidebarDx, 0,
-                                   win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
+                                   win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
@@ -579,15 +579,15 @@ void CreateToc(WindowInfo *win)
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
-                                      0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, GetModuleHandle(NULL), NULL);
+                                      0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, GetModuleHandle(nullptr), nullptr);
 
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
 
-    if (NULL == DefWndProcTocTree)
+    if (nullptr == DefWndProcTocTree)
         DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC, (LONG_PTR)WndProcTocTree);
 
-    if (NULL == DefWndProcTocBox)
+    if (nullptr == DefWndProcTocBox)
         DefWndProcTocBox = (WNDPROC)GetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC);
     SetWindowLongPtr(win->hwndTocBox, GWLP_WNDPROC, (LONG_PTR)WndProcTocBox);
 }

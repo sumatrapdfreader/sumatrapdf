@@ -8,7 +8,7 @@ WCHAR *AppGenDataFilename(const WCHAR *pFilename);
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
-WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
+WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo=nullptr);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

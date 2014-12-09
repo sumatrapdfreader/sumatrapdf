@@ -55,7 +55,7 @@ struct PageAnchor {
     DrawInstr *instr;
     int pageNo;
 
-    explicit PageAnchor(DrawInstr *instr=NULL, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
+    explicit PageAnchor(DrawInstr *instr=nullptr, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
 };
 
 class EbookAbortCookie : public AbortCookie {
@@ -81,21 +81,21 @@ public:
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount) {
-        return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
+        return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : nullptr;
     }
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -139,7 +139,7 @@ protected:
     Vec<DrawInstr> *GetHtmlPage(int pageNo) {
         CrashIf(pageNo < 1 || PageCount() < pageNo);
         if (pageNo < 1 || PageCount() < pageNo)
-            return NULL;
+            return nullptr;
         return &pages->At(pageNo - 1)->instructions;
     }
 };
@@ -151,7 +151,7 @@ protected:
     ScopedMem<WCHAR> value;
 
 public:
-    SimpleDest2(int pageNo, RectD rect, WCHAR *value=NULL) :
+    SimpleDest2(int pageNo, RectD rect, WCHAR *value=nullptr) :
         pageNo(pageNo), rect(rect), value(value) { }
 
     virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
@@ -161,14 +161,14 @@ public:
 };
 
 class EbookLink : public PageElement, public PageDestination {
-    PageDestination *dest; // required for internal links, NULL for external ones
+    PageDestination *dest; // required for internal links, nullptr for external ones
     DrawInstr *link; // owned by *EngineImpl::pages
     RectI rect;
     int pageNo;
     bool showUrl;
 
 public:
-    EbookLink() : dest(NULL), link(NULL), pageNo(-1), showUrl(false) { }
+    EbookLink() : dest(nullptr), link(nullptr), pageNo(-1), showUrl(false) { }
     EbookLink(DrawInstr *link, RectI rect, PageDestination *dest, int pageNo=-1, bool showUrl=false) :
         link(link), rect(rect), dest(dest), pageNo(pageNo), showUrl(showUrl) { }
     virtual ~EbookLink() { delete dest; }
@@ -179,7 +179,7 @@ public:
     virtual WCHAR *GetValue() const {
         if (!dest || showUrl)
             return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
-        return NULL;
+        return nullptr;
     }
     virtual PageDestination *AsLink() { return dest ? dest : this; }
 
@@ -201,14 +201,14 @@ public:
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return bbox.Convert<double>(); }
-    virtual WCHAR *GetValue() const { return NULL; }
+    virtual WCHAR *GetValue() const { return nullptr; }
 
     virtual RenderedBitmap *GetImage() {
         HBITMAP hbmp;
         Bitmap *bmp = BitmapFromData(id->data, id->len);
         if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
             delete bmp;
-            return NULL;
+            return nullptr;
         }
         SizeI size(bmp->GetWidth(), bmp->GetHeight());
         delete bmp;
@@ -227,7 +227,7 @@ public:
     virtual PageDestination *GetLink() { return dest; }
 };
 
-EbookEngine::EbookEngine() : fileName(NULL), pages(NULL),
+EbookEngine::EbookEngine() : fileName(nullptr), pages(nullptr),
     pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
     pageBorder(0.4f * GetFileDPI())
 {
@@ -251,7 +251,7 @@ bool EbookEngine::ExtractPageAnchors()
 {
     ScopedCritSec scope(&pagesAccess);
 
-    DrawInstr *baseAnchor = NULL;
+    DrawInstr *baseAnchor = nullptr;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
         if (!pageInstrs)
@@ -296,9 +296,9 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     screen.Offset(-screen.x, -screen.y);
 
-    HANDLE hMap = NULL;
+    HANDLE hMap = nullptr;
     HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
-    HDC hDC = CreateCompatibleDC(NULL);
+    HDC hDC = CreateCompatibleDC(nullptr);
     DeleteObject(SelectObject(hDC, hbmp));
 
     bool ok = RenderPage(hDC, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
@@ -306,7 +306,7 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     if (!ok) {
         DeleteObject(hbmp);
         CloseHandle(hMap);
-        return NULL;
+        return nullptr;
     }
 
     return new RenderedBitmap(hbmp, screen.Size(), hMap);
@@ -396,14 +396,14 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     m.Translate((float)(screenRect.x - screen.x), (float)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
-    EbookAbortCookie *cookie = NULL;
+    EbookAbortCookie *cookie = nullptr;
     if (cookie_out)
         *cookie_out = cookie = new EbookAbortCookie();
 
     ScopedCritSec scope(&pagesAccess);
 
     mui::ITextRender *textDraw = mui::TextRenderGdiplus::Create(&g);
-    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
+    DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : nullptr);
     DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
 
@@ -508,7 +508,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
 {
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url))
-        return new EbookLink(link, rect, NULL, pageNo);
+        return new EbookLink(link, rect, nullptr, pageNo);
 
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
@@ -520,7 +520,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
 
     PageDestination *dest = GetNamedDest(url);
     if (!dest)
-        return NULL;
+        return nullptr;
     return new EbookLink(link, rect, dest, pageNo);
 }
 
@@ -546,9 +546,9 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
 {
     Vec<PageElement *> *els = GetElements(pageNo);
     if (!els)
-        return NULL;
+        return nullptr;
 
-    PageElement *el = NULL;
+    PageElement *el = nullptr;
     for (size_t i = 0; i < els->Count() && !el; i++)
         if (els->At(i)->GetRect().Contains(pt))
             el = els->At(i);
@@ -572,7 +572,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
     // try to first skip to the page with the desired
     // path before looking for the ID to allow
     // for the same ID to be reused on different pages
-    DrawInstr *baseAnchor = NULL;
+    DrawInstr *baseAnchor = nullptr;
     int basePageNo = 0;
     if (id > name_utf8 + 1) {
         size_t base_len = id - name_utf8 - 1;
@@ -592,7 +592,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
         PageAnchor *anchor = &anchors.At(i);
         if (baseAnchor) {
             if (anchor->instr == baseAnchor)
-                baseAnchor = NULL;
+                baseAnchor = nullptr;
             continue;
         }
         // note: at least CHM treats URLs as case-independent
@@ -611,7 +611,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
         return new SimpleDest2(basePageNo, rect);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 WCHAR *EbookEngine::ExtractFontList()
@@ -648,7 +648,7 @@ WCHAR *EbookEngine::ExtractFontList()
         }
     }
     if (fonts.Count() == 0)
-        return NULL;
+        return nullptr;
 
     fonts.SortNatural();
     return fonts.Join(L"\n");
@@ -682,12 +682,12 @@ class EbookTocBuilder : public EbookTocVisitor {
 
 public:
     explicit EbookTocBuilder(BaseEngine *engine) :
-        engine(engine), root(NULL), idCounter(0), isIndex(false) { }
+        engine(engine), root(nullptr), idCounter(0), isIndex(false) { }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         PageDestination *dest;
         if (!url)
-            dest = NULL;
+            dest = nullptr;
         else if (url::IsAbsolute(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else {
@@ -716,12 +716,12 @@ public:
 
 class EpubEngineImpl : public EbookEngine {
 public:
-    EpubEngineImpl() : EbookEngine(), doc(NULL), stream(NULL) { }
+    EpubEngineImpl() : EbookEngine(), doc(nullptr), stream(nullptr) { }
     virtual ~EpubEngineImpl();
     virtual BaseEngine *Clone() {
         if (stream)
             return CreateFromStream(stream);
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual unsigned char *GetFileData(size_t *cbCount);
@@ -807,7 +807,7 @@ unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
             return (unsigned char *)data.StealData();
     }
     if (!fileName)
-        return NULL;
+        return nullptr;
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
@@ -846,7 +846,7 @@ BaseEngine *EpubEngineImpl::CreateFromFile(const WCHAR *fileName)
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -856,7 +856,7 @@ BaseEngine *EpubEngineImpl::CreateFromStream(IStream *stream)
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -888,10 +888,10 @@ BaseEngine *CreateFromStream(IStream *stream)
 
 class Fb2EngineImpl : public EbookEngine {
 public:
-    Fb2EngineImpl() : EbookEngine(), doc(NULL) { }
+    Fb2EngineImpl() : EbookEngine(), doc(nullptr) { }
     virtual ~Fb2EngineImpl() { delete doc; }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -964,7 +964,7 @@ BaseEngine *Fb2EngineImpl::CreateFromFile(const WCHAR *fileName)
     Fb2EngineImpl *engine = new Fb2EngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -974,7 +974,7 @@ BaseEngine *Fb2EngineImpl::CreateFromStream(IStream *stream)
     Fb2EngineImpl *engine = new Fb2EngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1004,10 +1004,10 @@ BaseEngine *CreateFromStream(IStream *stream)
 
 class MobiEngineImpl : public EbookEngine {
 public:
-    MobiEngineImpl() : EbookEngine(), doc(NULL) { }
+    MobiEngineImpl() : EbookEngine(), doc(nullptr) { }
     virtual ~MobiEngineImpl() { delete doc; }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -1068,7 +1068,7 @@ PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
 {
     int filePos = _wtoi(name);
     if (filePos < 0 || 0 == filePos && *name != '0')
-        return NULL;
+        return nullptr;
     int pageNo;
     for (pageNo = 1; pageNo < PageCount(); pageNo++) {
         if (pages->At(pageNo)->reparseIdx > filePos)
@@ -1079,7 +1079,7 @@ PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
     size_t htmlLen;
     char *start = doc->GetHtmlData(htmlLen);
     if ((size_t)filePos > htmlLen)
-        return NULL;
+        return nullptr;
 
     ScopedCritSec scope(&pagesAccess);
     Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
@@ -1114,7 +1114,7 @@ BaseEngine *MobiEngineImpl::CreateFromFile(const WCHAR *fileName)
     MobiEngineImpl *engine = new MobiEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1124,7 +1124,7 @@ BaseEngine *MobiEngineImpl::CreateFromStream(IStream *stream)
     MobiEngineImpl *engine = new MobiEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1152,10 +1152,10 @@ BaseEngine *CreateFromStream(IStream *stream)
 
 class PdbEngineImpl : public EbookEngine {
 public:
-    PdbEngineImpl() : EbookEngine(), doc(NULL) { }
+    PdbEngineImpl() : EbookEngine(), doc(nullptr) { }
     virtual ~PdbEngineImpl() { delete doc; }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -1210,7 +1210,7 @@ BaseEngine *PdbEngineImpl::CreateFromFile(const WCHAR *fileName)
     PdbEngineImpl *engine = new PdbEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1262,7 +1262,7 @@ public:
         ImageData2 data = { 0 };
         data.base.data = (char *)doc->GetData(url, &data.base.len);
         if (!data.base.data)
-            return NULL;
+            return nullptr;
         data.id = url.StealData();
         images.Append(data);
         return &images.Last().base;
@@ -1301,7 +1301,7 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
         ImageData *img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
         HandleText(attr->val, attr->valLen);
 }
 
@@ -1350,7 +1350,7 @@ class Chm2EngineImpl : public EbookEngine {
     friend ChmEmbeddedDest;
 
 public:
-    Chm2EngineImpl() : EbookEngine(), doc(NULL), dataCache(NULL) {
+    Chm2EngineImpl() : EbookEngine(), doc(nullptr), dataCache(nullptr) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
@@ -1359,7 +1359,7 @@ public:
         delete doc;
     }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -1392,7 +1392,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
 
     HtmlPullParser parser(html, std::min(htmlLen, (size_t)1024));
     HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (tok->tag != Tag_Meta)
             continue;
         AttrInfo *attr = tok->GetAttrByName("http-equiv");
@@ -1436,7 +1436,7 @@ public:
         // first add the homepage
         const char *index = doc->GetHomePath();
         ScopedMem<WCHAR> url(doc->ToStr(index));
-        Visit(NULL, url, 0);
+        Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
         doc->ParseToc(this);
@@ -1449,7 +1449,7 @@ public:
                 if (*path == '/')
                     path++;
                 url.Set(str::conv::FromUtf8(path));
-                Visit(NULL, url, -1);
+                Visit(nullptr, url, -1);
             }
         }
         FreeVecMembers(*paths);
@@ -1509,7 +1509,7 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.Visit(L"Index", NULL, 1);
+        builder.Visit(L"Index", nullptr, 1);
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
@@ -1545,7 +1545,7 @@ PageElement *Chm2EngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     ScopedMem<char> url(str::DupN(link->str.s, link->str.len));
     url.Set(NormalizeURL(url, basePath));
     if (!doc->HasData(url))
-        return NULL;
+        return nullptr;
 
     PageDestination *dest = new ChmEmbeddedDest(this, url);
     return new EbookLink(link, rect, dest, pageNo);
@@ -1565,7 +1565,7 @@ BaseEngine *Chm2EngineImpl::CreateFromFile(const WCHAR *fileName)
     Chm2EngineImpl *engine = new Chm2EngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1589,7 +1589,7 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 class HtmlEngineImpl : public EbookEngine {
 public:
-    HtmlEngineImpl() : EbookEngine(), doc(NULL) {
+    HtmlEngineImpl() : EbookEngine(), doc(nullptr) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
@@ -1597,7 +1597,7 @@ public:
         delete doc;
     }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -1661,7 +1661,7 @@ public:
 PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
     if (0 == link->str.len)
-        return NULL;
+        return nullptr;
 
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url) || '#' == *url)
@@ -1676,7 +1676,7 @@ BaseEngine *HtmlEngineImpl::CreateFromFile(const WCHAR *fileName)
     HtmlEngineImpl *engine = new HtmlEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -1699,13 +1699,13 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 class TxtEngineImpl : public EbookEngine {
 public:
-    TxtEngineImpl() : EbookEngine(), doc(NULL) {
+    TxtEngineImpl() : EbookEngine(), doc(nullptr) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
     virtual ~TxtEngineImpl() { delete doc; }
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) {
@@ -1768,7 +1768,7 @@ BaseEngine *TxtEngineImpl::CreateFromFile(const WCHAR *fileName)
     TxtEngineImpl *engine = new TxtEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }

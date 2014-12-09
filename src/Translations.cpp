@@ -74,20 +74,20 @@ bool                    IsLangRtl(int langIdx);
 const char **           GetOriginalStrings();
 
 // used locally, gCurrLangCode points into gLangCodes
-static const char *     gCurrLangCode = NULL;
+static const char *     gCurrLangCode = nullptr;
 static int              gCurrLangIdx = 0;
 
 // Note: we don't have access to STRINGS_COUNT and LANGS_COUNT
 // hence foo[] => *foo here
 // const char *gCurrLangStrings[STRINGS_COUNT];
-const char **           gCurrLangStrings = NULL;
+const char **           gCurrLangStrings = nullptr;
 // WCHAR ** gLangsTransCache[LANGS_COUNT];
-WCHAR ***               gLangsTransCache = NULL;
+WCHAR ***               gLangsTransCache = nullptr;
 
 #if COMPRESSED == 1
 // const char *gLangsStringsUncompressed[LANGS_COUNT];
 const unsigned char *   GetTranslationsForLang(int langIdx, uint32_t *uncompressedSizeOut, uint32_t *compressedSizeOut);
-const char **           gLangsStringsUncompressed = NULL;
+const char **           gLangsStringsUncompressed = nullptr;
 #else
 const char *   GetTranslationsForLang(int langIdx);
 #endif
@@ -200,7 +200,7 @@ static void BuildStringsIndexForLang(int langIdx)
 
 #if COMPRESSED == 1
     const char *s =  gLangsStringsUncompressed[langIdx];
-    if (NULL == s) {
+    if (nullptr == s) {
         uint32_t uncompressedSize, compressedSize;
         const unsigned char *compressed = GetTranslationsForLang(langIdx, &uncompressedSize, &compressedSize);
         void *uncompressed = malloc(uncompressedSize);
@@ -216,7 +216,7 @@ static void BuildStringsIndexForLang(int langIdx)
 #endif
     for (int i = 0; i < gStringsCount; i++) {
         if (0 == *s)
-            gCurrLangStrings[i] = NULL;
+            gCurrLangStrings[i] = nullptr;
         else
             gCurrLangStrings[i] = s;
         // advance to the next string
@@ -259,7 +259,7 @@ const char *ValidateLangCode(const char *langCode)
         idx = EN_RTL_IDX;
 #endif
     if (-1 == idx)
-        return NULL;
+        return nullptr;
     return GetLangCodeByIdx(idx);
 }
 
@@ -324,7 +324,7 @@ static int GetEnglishStringIndex(const char* txt)
 
 const WCHAR *GetTranslation(const char *s)
 {
-    if (NULL == gCurrLangCode)
+    if (nullptr == gCurrLangCode)
         SetCurrentLangByCode("en");
 
     int idx = GetEnglishStringIndex(s);

@@ -68,7 +68,7 @@ class SyncTex : public Synchronizer
 {
 public:
     SyncTex(const WCHAR* syncfilename, BaseEngine *engine) :
-        Synchronizer(syncfilename), engine(engine), scanner(NULL)
+        Synchronizer(syncfilename), engine(engine), scanner(nullptr)
     {
         assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
@@ -167,7 +167,7 @@ WCHAR * Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* file
     const WCHAR* perc;
     str::Str<WCHAR> cmdline(256);
 
-    while ((perc = str::FindChar(pattern, '%')) != NULL) {
+    while ((perc = str::FindChar(pattern, '%')) != nullptr) {
         cmdline.Append(pattern, perc - pattern);
         pattern = perc + 2;
         perc++;
@@ -196,7 +196,7 @@ static char *Advance0Line(char *line, char *end)
     line += str::Len(line);
     // skip all zeroes until the next non-empty line
     for (; line < end && !*line; line++);
-    return line < end ? line : NULL;
+    return line < end ? line : nullptr;
 }
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
@@ -246,7 +246,7 @@ int Pdfsync::RebuildIndex()
 
     // parse data
     UINT maxPageNo = engine->PageCount();
-    while ((line = Advance0Line(line, dataEnd)) != NULL) {
+    while ((line = Advance0Line(line, dataEnd)) != nullptr) {
         if (!line)
             break;
         switch (*line) {
@@ -287,7 +287,7 @@ int Pdfsync::RebuildIndex()
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"')
                     filename.Set(str::DupN(filename + 1, str::Len(filename) - 2));
-                // undecorate the filepath: replace * by space and / by \ 
+                // undecorate the filepath: replace * by space and / by \ (backslash)
                 str::TransChars(filename, L"*/", L" \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExt(filename)))
@@ -494,13 +494,13 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
 
 int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
-    scanner = NULL;
+    scanner = nullptr;
 
     ScopedMem<char> syncfname(str::conv::ToAnsi(syncfilepath));
     if (!syncfname)
         return PDFSYNCERR_OUTOFMEMORY;
 
-    scanner = synctex_scanner_new_with_output_file(syncfname, NULL, 1);
+    scanner = synctex_scanner_new_with_output_file(syncfname, nullptr, 1);
     if (!scanner)
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
 
@@ -534,7 +534,7 @@ TryAgainAnsi:
     if (!filename)
         return PDFSYNCERR_OUTOFMEMORY;
 
-    // undecorate the filepath: replace * by space and / by \ 
+    // undecorate the filepath: replace * by space and / by \ (backslash)
     str::TransChars(filename, L"*/", L" \\");
     // Convert the source filepath to an absolute path
     if (PathIsRelative(filename))
@@ -592,7 +592,7 @@ TryAgainAnsi:
     int firstpage = -1;
     rects.Reset();
 
-    while ((node = synctex_next_result(this->scanner)) != NULL) {
+    while ((node = synctex_next_result(this->scanner)) != nullptr) {
         if (firstpage == -1) {
             firstpage = synctex_node_page(node);
             if (firstpage <= 0 || firstpage > engine->PageCount())

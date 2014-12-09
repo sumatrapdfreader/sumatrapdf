@@ -15,14 +15,14 @@ class FileHistory {
     Vec<DisplayState *> *states;
 
 public:
-    FileHistory() : states(NULL) { }
+    FileHistory() : states(nullptr) { }
     ~FileHistory() { }
 
     void Clear(bool keepFavorites);
     void Append(DisplayState *state) { states->Append(state); }
     void Remove(DisplayState *state) { states->Remove(state); }
     DisplayState *Get(size_t index) const;
-    DisplayState *Find(const WCHAR *filePath, size_t *idxOut = NULL) const;
+    DisplayState *Find(const WCHAR *filePath, size_t *idxOut = nullptr) const;
     DisplayState *MarkFileLoaded(const WCHAR *filePath);
     bool MarkFileInexistent(const WCHAR *filePath, bool hide = false);
     void GetFrequencyOrder(Vec<DisplayState *>& list);

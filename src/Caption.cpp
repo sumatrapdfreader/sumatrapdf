@@ -54,7 +54,7 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffe
 static HMENU GetUpdatedSystemMenu(HWND hwnd);
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
 
-CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(NULL), isMenuOpen(false) {
+CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(nullptr), isMenuOpen(false) {
     UpdateTheme();
     UpdateColors(true);
     UpdateBackgroundAlpha();
@@ -74,7 +74,7 @@ void CaptionInfo::UpdateTheme()
 {
     if (theme) {
         vss::CloseThemeData(theme);
-        theme = NULL;
+        theme = nullptr;
     }
     if (vss::IsThemeActive())
         theme = vss::OpenThemeData(hwnd, L"WINDOW");
@@ -112,7 +112,7 @@ void CaptionInfo::UpdateColors(bool activeWindow)
     }
 }
 
-ButtonInfo::ButtonInfo(): hwnd(NULL), highlighted(false), inactive(false) {
+ButtonInfo::ButtonInfo(): hwnd(nullptr), highlighted(false), inactive(false) {
     SetMargins(0, 0, 0, 0);
 }
 
@@ -151,12 +151,12 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
                     WindowRect wr(hMenuButton);
                     win->caption->isMenuOpen = true;
                     if (!lParam)    // if the WM_COMMAND message was sent as a result of keyboard command
-                        InvalidateRgn(hMenuButton, NULL, FALSE);
+                        InvalidateRgn(hMenuButton, nullptr, FALSE);
                     MenuBarAsPopupMenu(win, wr.x, wr.y + wr.dy);
                     win->caption->isMenuOpen = false;
                     if (!lParam)
-                        InvalidateRgn(hMenuButton, NULL, FALSE);
-                    SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, NULL);
+                        InvalidateRgn(hMenuButton, nullptr, FALSE);
+                    SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
                 }
                 SetFocus(win->hwndFrame);
             }
@@ -206,7 +206,7 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
     return 0;
 }
 
-static WNDPROC DefWndProcButton = NULL;
+static WNDPROC DefWndProcButton = nullptr;
 static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -232,7 +232,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                         tme.hwndTrack = hwnd;
                         TrackMouseEvent(&tme);
                         win->caption->btn[index].highlighted = true;
-                        InvalidateRgn(hwnd, NULL, FALSE);
+                        InvalidateRgn(hwnd, nullptr, FALSE);
                     }
                     return 0;
                 }
@@ -242,7 +242,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
         case WM_MOUSELEAVE:
             if (win) {
                 win->caption->btn[index].highlighted = false;
-                InvalidateRgn(hwnd, NULL, FALSE);
+                InvalidateRgn(hwnd, nullptr, FALSE);
                 return 0;
             }
             break;
@@ -267,13 +267,13 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
 void CreateCaption(WindowInfo *win)
 {
     win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", WS_CHILDWINDOW | WS_CLIPCHILDREN,
-        0, 0, 0, 0, win->hwndFrame, (HMENU)0, GetModuleHandle(NULL), NULL);
+        0, 0, 0, 0, win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     win->caption = new CaptionInfo(win->hwndCaption);
 
     for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
         HWND btn = CreateWindow(L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
-            0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(NULL), NULL);
+            0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(nullptr), nullptr);
 
         if (!DefWndProcButton)
             DefWndProcButton = (WNDPROC)GetWindowLongPtr(btn, GWLP_WNDPROC);
@@ -306,7 +306,7 @@ void RelayoutCaption(WindowInfo *win)
     else {
         int xEdge = GetSystemMetrics(SM_CXEDGE);
         int yEdge = GetSystemMetrics(SM_CYEDGE);
-        bool isClassicStyle = win->caption->theme == NULL;
+        bool isClassicStyle = win->caption->theme == nullptr;
         // Under WIN XP GetSystemMetrics(SM_CXSIZE) returns wrong (previous) value, after theme change
         // or font size change. For this to work, I assume that SM_CXSIZE == SM_CYSIZE.
         int btnDx = GetSystemMetrics(IsVistaOrGreater() ? SM_CXSIZE : SM_CYSIZE) - xEdge * (isClassicStyle ? 1 : 2);
@@ -318,35 +318,35 @@ void RelayoutCaption(WindowInfo *win)
         button = &ci->btn[CB_CLOSE];
         rc.dx -= btnDx + xEdge;
         int rightMargin = maximized ? xEdge : 0;
-        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx + rightMargin, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx + rightMargin, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
         button->SetMargins(0, topMargin, rightMargin, 0);
 
         button = &ci->btn[CB_RESTORE];
         rc.dx -= btnDx + xEdge;
-        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
                         SWP_NOZORDER | (maximized ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
         button->SetMargins(0, topMargin, 0, 0);
 
         button = &ci->btn[CB_MAXIMIZE];
-        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
                         SWP_NOZORDER | (maximized ? SWP_HIDEWINDOW : SWP_SHOWWINDOW));
         button->SetMargins(0, topMargin, 0, 0);
 
         button = &ci->btn[CB_MINIMIZE];
         rc.dx -= btnDx + (isClassicStyle ? 0 : xEdge);
-        dh.SetWindowPos(button->hwnd, NULL, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
         button->SetMargins(0, topMargin, 0, 0);
     }
 
     button = &ci->btn[CB_MENU];
     int tabHeight = GetTabbarHeight(win->hwndFrame);
     rc.y += rc.dy - tabHeight;
-    dh.SetWindowPos(button->hwnd, NULL, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
+    dh.SetWindowPos(button->hwnd, nullptr, rc.x, rc.y, tabHeight, tabHeight, SWP_NOZORDER);
     button->SetMargins(0, 0, 0, 0);
 
     rc.x += tabHeight;
     rc.dx -= tabHeight;
-    dh.SetWindowPos(win->hwndTabBar, NULL, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+    dh.SetWindowPos(win->hwndTabBar, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
     dh.End();
 }
 
@@ -414,7 +414,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 
         RECT r = rc.ToRECT();
         if (win->caption->theme)
-            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, NULL);
+            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
         else
             DrawFrameControl(memDC, &r, DFC_CAPTION, state);
     }
@@ -460,7 +460,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc)
     MapWindowPoints(hwnd, parent, &pt, 1);
     SetViewportOrgEx(hdc, -pt.x, -pt.y, &pt);
     SendMessage(parent, WM_ERASEBKGND, (WPARAM)hdc, 0);
-    SetViewportOrgEx(hdc, pt.x, pt.y, NULL);
+    SetViewportOrgEx(hdc, pt.x, pt.y, nullptr);
 }
 
 static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer)
@@ -579,7 +579,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         case WM_NCACTIVATE:
             win->caption->UpdateColors((bool)wParam);
             if (!IsIconic(hwnd))
-                RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
             break;
         }
     }
@@ -602,7 +602,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 win->caption->btn[i].inactive = wParam == FALSE;
             if (!IsIconic(hwnd)) {
                 DrawFrame(hwnd, win->caption->bgColor);
-                RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
                 *callDef = false;
                 return TRUE;
             }
@@ -678,7 +678,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
             if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
                 flags |= TPM_RIGHTALIGN;
-            WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, NULL);
+            WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, nullptr);
             if (cmd)
                 PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
             *callDef = false;
@@ -704,7 +704,7 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_INITMENUPOPUP:
         if (gMenuAccelPressed) {
             // poorly documented hack: find the menu window and send it the accelerator key
-            HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, NULL);
+            HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
             if (hMenu) {
                 if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
                     gMenuAccelPressed -= 'a' - 'A';
@@ -724,13 +724,13 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_DWMCOLORIZATIONCOLORCHANGED:
         win->caption->UpdateColors(hwnd == GetForegroundWindow());
         if (!IsIconic(hwnd))
-            RedrawWindow(win->hwndCaption, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+            RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
         break;
 
     case WM_DWMCOMPOSITIONCHANGED:
         win->caption->UpdateBackgroundAlpha();
         ClientRect cr(hwnd);
-        SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
         if (ClientRect(hwnd) == cr)
             SendMessage(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));
         *callDef = false;
@@ -775,7 +775,7 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     mii.cbSize = sizeof(MENUITEMINFO);
     mii.fMask = MIIM_SUBMENU | MIIM_STRING;
     for (int i = 0; i < count; i++) {
-        mii.dwTypeData = NULL;
+        mii.dwTypeData = nullptr;
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         if (!mii.hSubMenu || !mii.cch)
             continue;
@@ -790,7 +790,7 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
 
     if (IsUIRightToLeft())
         x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
-    TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, NULL);
+    TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, nullptr);
 
     while (--count >= 0)
         RemoveMenu(popup, count, MF_BYPOSITION);
@@ -807,12 +807,12 @@ typedef HRESULT (WINAPI *GetThemeColorProc)(HTHEME hTheme, int iPartId, int iSta
 namespace vss {
 
 static bool gFuncsLoaded = false;
-static OpenThemeDataProc _OpenThemeData = NULL;
-static CloseThemeDataProc _CloseThemeData = NULL;
-static DrawThemeBackgroundProc _DrawThemeBackground = NULL;
-static IsThemeActiveProc _IsThemeActive = NULL;
-static IsThemeBackgroundPartiallyTransparentProc _IsThemeBackgroundPartiallyTransparent = NULL;
-static GetThemeColorProc _GetThemeColor = NULL;
+static OpenThemeDataProc _OpenThemeData = nullptr;
+static CloseThemeDataProc _CloseThemeData = nullptr;
+static DrawThemeBackgroundProc _DrawThemeBackground = nullptr;
+static IsThemeActiveProc _IsThemeActive = nullptr;
+static IsThemeBackgroundPartiallyTransparentProc _IsThemeBackgroundPartiallyTransparent = nullptr;
+static GetThemeColorProc _GetThemeColor = nullptr;
 
 void Initialize()
 {
@@ -836,7 +836,7 @@ HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
 {
     Initialize();
     if (!_OpenThemeData)
-        return NULL;
+        return nullptr;
     return _OpenThemeData(hwnd, pszClassList);
 }
 
@@ -890,10 +890,10 @@ typedef HRESULT (WINAPI *DwmGetWindowAttributeProc)(HWND hwnd, DWORD dwAttribute
 namespace dwm {
 
 static bool gFuncsLoaded = false;
-static DwmIsCompositionEnabledProc _DwmIsCompositionEnabled = NULL;
-static DwmExtendFrameIntoClientAreaProc _DwmExtendFrameIntoClientArea = NULL;
-static DwmDefWindowProcProc _DwmDefWindowProc = NULL;
-static DwmGetWindowAttributeProc _DwmGetWindowAttribute = NULL;
+static DwmIsCompositionEnabledProc _DwmIsCompositionEnabled = nullptr;
+static DwmExtendFrameIntoClientAreaProc _DwmExtendFrameIntoClientArea = nullptr;
+static DwmDefWindowProcProc _DwmDefWindowProc = nullptr;
+static DwmGetWindowAttributeProc _DwmGetWindowAttribute = nullptr;
 
 void Initialize()
 {

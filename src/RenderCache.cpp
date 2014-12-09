@@ -37,9 +37,9 @@ RenderCache::RenderCache()
     InitializeCriticalSection(&cacheAccess);
     InitializeCriticalSection(&requestAccess);
 
-    startRendering = CreateEvent(NULL, FALSE, FALSE, NULL);
-    renderThread = CreateThread(NULL, 0, RenderCacheThread, this, 0, 0);
-    assert(NULL != renderThread);
+    startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, 0);
+    assert(nullptr != renderThread);
 }
 
 RenderCache::~RenderCache()
@@ -72,7 +72,7 @@ BitmapCacheEntry *RenderCache::Find(DisplayModel *dm, int pageNo, int rotation, 
             return entry;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool RenderCache::Exists(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile)
@@ -80,7 +80,7 @@ bool RenderCache::Exists(DisplayModel *dm, int pageNo, int rotation, float zoom,
     BitmapCacheEntry *entry = Find(dm, pageNo, rotation, zoom, tile);
     if (entry)
         DropCacheEntry(entry);
-    return entry != NULL;
+    return entry != nullptr;
 }
 
 void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
@@ -213,7 +213,7 @@ void RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 
         if (shouldFree) {
             DropCacheEntry(entry);
-            cache[i] = NULL;
+            cache[i] = nullptr;
             cacheCount--;
         }
 
@@ -403,7 +403,7 @@ void RenderCache::RequestRendering(DisplayModel *dm, int pageNo, TilePosition ti
 
 void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, RectD pageRect, RenderingCallback& callback)
 {
-    bool ok = Render(dm, pageNo, rotation, zoom, NULL, &pageRect, &callback);
+    bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &callback);
     if (!ok)
         callback.Callback();
 }
@@ -451,7 +451,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     else
         assert(0);
     newRequest->abort = false;
-    newRequest->abortCookie = NULL;
+    newRequest->abortCookie = nullptr;
     newRequest->timestamp = GetTickCount();
     newRequest->renderCb = renderCb;
 
@@ -497,7 +497,7 @@ bool RenderCache::ClearCurrentRequest()
     ScopedCritSec scope(&requestAccess);
     if (curReq)
         delete curReq->abortCookie;
-    curReq = NULL;
+    curReq = nullptr;
 
     bool isQueueEmpty = requestCount == 0;
     return isQueueEmpty;
@@ -587,7 +587,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (!req.dm->textCache->HasData(req.pageNo))
             req.dm->textCache->GetData(req.pageNo);
 
-        CrashIf(req.abortCookie != NULL);
+        CrashIf(req.abortCookie != nullptr);
         bmp = req.dm->GetEngine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abortCookie);
         if (req.abort) {
             delete bmp;
@@ -630,8 +630,8 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
             RequestRendering(dm, pageNo, tile);
     }
-    RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
-    HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : NULL;
+    RenderedBitmap *renderedBmp = entry ? entry->bitmap : nullptr;
+    HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : nullptr;
 
     if (!hbmp) {
         if (entry && !(renderedBmp && ReduceTileSize()))
@@ -719,7 +719,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
         bool isTargetRes = tile.res == targetRes;
         UINT renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes,
-                                     renderOutOfDateCue, isTargetRes ? &neededScaling : NULL);
+                                     renderOutOfDateCue, isTargetRes ? &neededScaling : nullptr);
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
             queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2 + 1));

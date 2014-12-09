@@ -25,7 +25,7 @@ public:
 
 class PropertiesLayout : public Vec<PropertyEl *> {
 public:
-    PropertiesLayout() : hwnd(NULL), hwndParent(NULL) { }
+    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) { }
     ~PropertiesLayout() { DeleteVecMembers(*this); }
     void AddProperty(const WCHAR *key, WCHAR *value, bool isPath=false);
     bool HasProperty(const WCHAR *key);

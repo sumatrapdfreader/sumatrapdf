@@ -7,8 +7,8 @@ class CTeXFilter : public CFilterBase
 {
 public:
     CTeXFilter(long *plRefCount) : CFilterBase(plRefCount),
-        m_state(STATE_TEX_END), m_pData(NULL), m_pPtr(NULL),
-        m_pBuffer(NULL), m_iDepth(0) { }
+        m_state(STATE_TEX_END), m_pData(nullptr), m_pPtr(nullptr),
+        m_pBuffer(nullptr), m_iDepth(0) { }
     virtual ~CTeXFilter() { CleanUp(); }
 
     virtual HRESULT OnInit();
@@ -17,9 +17,9 @@ public:
     VOID CleanUp()
     {
         free(m_pData);
-        m_pData = NULL;
+        m_pData = nullptr;
         free(m_pBuffer);
-        m_pBuffer = NULL;
+        m_pBuffer = nullptr;
     }
     WCHAR *ExtractBracedBlock();
 

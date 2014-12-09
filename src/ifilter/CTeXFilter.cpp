@@ -189,7 +189,7 @@ ContinueParsing:
     case STATE_TEX_PREAMBLE:
         // the preamble (i.e. everything before \begin{document}) may contain
         // \author{...} and \title{...} commands
-        start = end = NULL;
+        start = end = nullptr;
         while (*m_pPtr && !start) {
             switch (*m_pPtr++){
             case '\\':

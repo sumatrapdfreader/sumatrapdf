@@ -171,7 +171,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
                 SetCursor(IDC_ARROW);
             else
                 SendMessage(win.hwndCanvas, WM_SETCURSOR, 0, 0);
-            SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, NULL);
+            SetTimer(win.hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
         }
     }
 
@@ -183,7 +183,7 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
         }
         win.dragStartPending = false;
         delete win.linkOnLastButtonDown;
-        win.linkOnLastButtonDown = NULL;
+        win.linkOnLastButtonDown = nullptr;
     }
 
     switch (win.mouseAction) {
@@ -282,7 +282,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     PointD ptPage = dm->CvtFromScreen(PointI(x, y));
     // TODO: win.linkHandler->GotoLink might spin the event loop
     PageElement *link = win.linkOnLastButtonDown;
-    win.linkOnLastButtonDown = NULL;
+    win.linkOnLastButtonDown = nullptr;
     win.mouseAction = MA_IDLE;
 
     if (didDragMouse)
@@ -299,7 +299,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(&win, true);
             win.currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));
-            win.showSelection = win.currentTab->selectionOnPage != NULL;
+            win.showSelection = win.currentTab->selectionOnPage != nullptr;
             win.RepaintAsync();
         }
     }
@@ -361,7 +361,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 
         DeleteOldSelectionInfo(&win, true);
         win.currentTab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
-        win.showSelection = win.currentTab->selectionOnPage != NULL;
+        win.showSelection = win.currentTab->selectionOnPage != nullptr;
         win.RepaintAsync();
     }
     delete pageEl;
@@ -999,7 +999,7 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo& win, HWND hwnd, UINT msg, WP
         return 0;
 
     case WM_MBUTTONDOWN:
-        SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, NULL);
+        SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
         // TODO: Create window that shows location of initial click for reference
         OnMouseMiddleButtonDown(win, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam);
         return 0;
@@ -1162,7 +1162,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
         } else
             LaunchBrowser(url);
     }
-    win.url = NULL;
+    win.url = nullptr;
 }
 
 static void OnMouseRightButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
@@ -1290,7 +1290,7 @@ void WindowInfo::RepaintAsync(UINT delay)
         if (!delay)
             WndProcCanvas(this->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
         else if (!this->delayedRepaintTimer)
-            this->delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, NULL);
+            this->delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, nullptr);
     });
 }
 
@@ -1323,13 +1323,13 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
     case HIDE_CURSOR_TIMER_ID:
         KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
         if (win.presentation)
-            SetCursor((HCURSOR)NULL);
+            SetCursor((HCURSOR)nullptr);
         break;
 
     case HIDE_FWDSRCHMARK_TIMER_ID:
         win.fwdSearchMark.hideStep++;
         if (1 == win.fwdSearchMark.hideStep) {
-            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, NULL);
+            SetTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DECAYINTERVAL_IN_MS, nullptr);
         }
         else if (win.fwdSearchMark.hideStep >= HIDE_FWDSRCHMARK_STEPS) {
             KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);

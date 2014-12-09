@@ -9,7 +9,7 @@ class CPdfFilter : public CFilterBase
 {
 public:
     CPdfFilter(long *plRefCount) : CFilterBase(plRefCount),
-        m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(NULL) { }
+        m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(nullptr) { }
     virtual ~CPdfFilter() { CleanUp(); }
 
     virtual HRESULT OnInit();

@@ -17,6 +17,6 @@ enum EngineType {
 namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEngines=true);
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, EngineType *typeOut=NULL, bool enableChm2Engine=true, bool enableEbookEngines=true);
+BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=nullptr, EngineType *typeOut=nullptr, bool enableChm2Engine=true, bool enableEbookEngines=true);
 
 }

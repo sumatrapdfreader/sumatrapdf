@@ -55,7 +55,7 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
         SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
                               bcj_enc ? bcj_enc : (const Byte *)uncompressed, uncompressedSize,
                               &props, (Byte *)compressed + 1, &propsSize,
-                              TRUE /* add EOS marker */, NULL, &lzmaAlloc, &lzmaAlloc);
+                              TRUE /* add EOS marker */, nullptr, &lzmaAlloc, &lzmaAlloc);
         if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
             lzma_size = outSize + LZMA_HEADER_SIZE;
     }
@@ -72,7 +72,7 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
     return true;
 }
 
-static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR *filePath, const char *inArchiveName, lzma::FileInfo *fi=NULL)
+static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR *filePath, const char *inArchiveName, lzma::FileInfo *fi=nullptr)
 {
     size_t nameLen = str::Len(inArchiveName);
     CrashIf(nameLen > UINT32_MAX - 25);
@@ -157,7 +157,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
         }
 
         int idx = GetIdxFromName(&prevArchive, utf8Name);
-        lzma::FileInfo *fi = NULL;
+        lzma::FileInfo *fi = nullptr;
         if (idx != -1)
             fi = &prevArchive.files[idx];
         if (!AppendEntry(data, content, filePath, utf8Name, fi))
@@ -188,7 +188,7 @@ int mainVerify(const WCHAR *archivePath)
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
 
     for (int i = 0; i < lzsa.filesCount; i++) {
-        ScopedMem<char> data(lzma::GetFileDataByIdx(&lzsa, i, NULL));
+        ScopedMem<char> data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
     }
 

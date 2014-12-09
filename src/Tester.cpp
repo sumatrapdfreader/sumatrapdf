@@ -261,7 +261,7 @@ int TesterMain()
     ScopedGdiPlus gdi;
     mui::Initialize();
 
-    WCHAR *dirOrFile = NULL;
+    WCHAR *dirOrFile = nullptr;
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"

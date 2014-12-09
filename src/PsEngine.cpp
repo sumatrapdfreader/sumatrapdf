@@ -65,7 +65,7 @@ TryAgain64Bit:
     }
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
-    DWORD size = GetEnvironmentVariable(L"PATH", NULL, 0);
+    DWORD size = GetEnvironmentVariable(L"PATH", nullptr, 0);
     ScopedMem<WCHAR> envpath(AllocArray<WCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(L"PATH", envpath, size);
@@ -81,7 +81,7 @@ TryAgain64Bit:
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 class ScopedFile {
@@ -108,7 +108,7 @@ static RectI ExtractDSCPageSize(const WCHAR *fileName)
     // the page size in a DSC BoundingBox comment.
     char *nl = header;
     geomutil::RectT<float> bbox;
-    while ((nl = strchr(nl + 1, '\n')) != NULL && '%' == nl[1]) {
+    while ((nl = strchr(nl + 1, '\n')) != nullptr && '%' == nl[1]) {
         if (str::StartsWith(nl + 1, "%%BoundingBox:") &&
             str::Parse(nl + 1, "%%%%BoundingBox: 0 0 %f %f% ", &bbox.dx, &bbox.dy)) {
             return bbox.ToInt();
@@ -126,7 +126,7 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
     ScopedFile tmpFileScope(tmpFile);
     ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
-        return NULL;
+        return nullptr;
 
     // try to help Ghostscript determine the intended page size
     ScopedMem<WCHAR> psSetup;
@@ -140,14 +140,14 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
     fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseName(__FILE__), __LINE__, gswin32c.Get(), path::GetBaseName(tmpFile));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
-    HANDLE process = LaunchProcess(cmdLine, NULL, CREATE_NO_WINDOW);
+    HANDLE process = LaunchProcess(cmdLine, nullptr, CREATE_NO_WINDOW);
     if (!process)
-        return NULL;
+        return nullptr;
 
     DWORD timeout = 10000;
 #ifdef DEBUG
     // allow to disable the timeout for debugging purposes
-    if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", NULL, 0))
+    if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", nullptr, 0))
         timeout = INFINITE;
 #endif
     DWORD exitCode = EXIT_FAILURE;
@@ -156,16 +156,16 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
     TerminateProcess(process, 1);
     CloseHandle(process);
     if (exitCode != EXIT_SUCCESS)
-        return NULL;
+        return nullptr;
 
     size_t len;
     ScopedMem<char> pdfData(file::ReadAll(tmpFile, &len));
     if (!pdfData)
-        return NULL;
+        return nullptr;
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData, len));
     if (!stream)
-        return NULL;
+        return nullptr;
 
     return PdfEngine::CreateFromStream(stream);
 }
@@ -175,16 +175,16 @@ static BaseEngine *psgz2pdf(const WCHAR *fileName)
     ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile)
-        return NULL;
+        return nullptr;
 
     gzFile inFile = gzopen_w(fileName, "rb");
     if (!inFile)
-        return NULL;
-    FILE *outFile = NULL;
+        return nullptr;
+    FILE *outFile = nullptr;
     errno_t err = _wfopen_s(&outFile, tmpFile, L"wb");
     if (err != 0 || !outFile) {
         gzclose(inFile);
-        return NULL;
+        return nullptr;
     }
 
     char buffer[12*1024];
@@ -204,14 +204,14 @@ static BaseEngine *psgz2pdf(const WCHAR *fileName)
 // the ps2pdf conversion from Ghostscript returns
 class PsEngineImpl : public BaseEngine {
 public:
-    PsEngineImpl() : fileName(NULL), pdfEngine(NULL) { }
+    PsEngineImpl() : fileName(nullptr), pdfEngine(nullptr) { }
     virtual ~PsEngineImpl() {
         delete pdfEngine;
     }
     virtual BaseEngine *Clone() {
         BaseEngine *newEngine = pdfEngine->Clone();
         if (!newEngine)
-            return NULL;
+            return nullptr;
         PsEngineImpl *clone = new PsEngineImpl();
         if (fileName)
             clone->fileName.Set(str::Dup(fileName));
@@ -232,12 +232,12 @@ public:
     }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
         return pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
         return pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
 
@@ -257,7 +257,7 @@ public:
     virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
                                     RenderTarget target=Target_View) {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target);
     }
@@ -271,7 +271,7 @@ public:
         // omit properties created by Ghostscript
         if (!pdfEngine || Prop_CreationDate == prop || Prop_ModificationDate == prop ||
             Prop_PdfVersion == prop || Prop_PdfProducer == prop || Prop_PdfFileStructure == prop) {
-            return NULL;
+            return nullptr;
         }
         return pdfEngine->GetProperty(prop);
     }
@@ -337,7 +337,7 @@ protected:
             pdfEngine = psgz2pdf(fileName);
         else
             pdfEngine = ps2pdf(fileName);
-        return pdfEngine != NULL;
+        return pdfEngine != nullptr;
     }
 };
 
@@ -346,7 +346,7 @@ BaseEngine *PsEngineImpl::CreateFromFile(const WCHAR *fileName)
     PsEngineImpl *engine = new PsEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -356,7 +356,7 @@ namespace PsEngine {
 bool IsAvailable()
 {
     ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
-    return gswin32c.Get() != NULL;
+    return gswin32c.Get() != nullptr;
 }
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)

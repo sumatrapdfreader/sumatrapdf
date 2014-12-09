@@ -101,7 +101,7 @@ void MobiFormatter::HandleTagImg(HtmlToken *t)
             needAlt = !img || !EmitImage(img);
         }
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
         HandleText(attr->val, attr->valLen);
 }
 
@@ -144,7 +144,7 @@ void EpubFormatter::HandleTagImg(HtmlToken *t)
         ImageData *img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
         HandleText(attr->val, attr->valLen);
 }
 
@@ -252,7 +252,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken *t)
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
         return;
-    ImageData *img = NULL;
+    ImageData *img = nullptr;
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
         ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
@@ -337,7 +337,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
         ImageData *img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
     }
-    if (needAlt && (attr = t->GetAttrByName("alt")) != NULL)
+    if (needAlt && (attr = t->GetAttrByName("alt")) != nullptr)
         HandleText(attr->val, attr->valLen);
 }
 

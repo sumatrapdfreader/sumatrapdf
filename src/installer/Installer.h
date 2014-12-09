@@ -123,7 +123,7 @@ void ShowUsage();
 void CreateMainWindow();
 const WCHAR *GetOwnPath();
 bool OnWmCommand(WPARAM wParam);
-bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args=NULL);
+bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args=nullptr);
 WCHAR *GetUninstallerPath();
 int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated);
 void UninstallBrowserPlugin();

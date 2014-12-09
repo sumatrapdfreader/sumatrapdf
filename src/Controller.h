@@ -57,7 +57,7 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) = 0;
     virtual DisplayMode GetDisplayMode() const = 0;
     virtual void SetPresentationMode(bool enable) = 0;
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) = 0;
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr) = 0;
     virtual float GetZoomVirtual(bool absolute=false) const = 0;
     virtual float GetNextZoomStep(float towards) const = 0;
     virtual void SetViewPortSize(SizeI size) = 0;
@@ -108,7 +108,7 @@ public:
     }
 
     // for quick type determination and type-safe casting
-    virtual DisplayModel *AsFixed() { return NULL; }
-    virtual ChmModel *AsChm() { return NULL; }
-    virtual EbookController *AsEbook() { return NULL; }
+    virtual DisplayModel *AsFixed() { return nullptr; }
+    virtual ChmModel *AsChm() { return nullptr; }
+    virtual EbookController *AsEbook() { return nullptr; }
 };

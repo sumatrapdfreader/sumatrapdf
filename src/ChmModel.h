@@ -28,7 +28,7 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) { /* not supported */ }
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL);
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr);
     virtual float GetZoomVirtual(bool absolute=false) const;
     virtual float GetNextZoomStep(float towards) const;
     virtual void SetViewPortSize(SizeI size) { /* not needed(?) */ }
@@ -48,7 +48,7 @@ public:
     virtual ChmModel *AsChm() { return this; }
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-    static ChmModel *Create(const WCHAR *fileName, ControllerCallback *cb=NULL);
+    static ChmModel *Create(const WCHAR *fileName, ControllerCallback *cb=nullptr);
 
 public:
     // the following is specific to ChmModel

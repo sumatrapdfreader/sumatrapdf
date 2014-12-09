@@ -25,7 +25,7 @@ char *Escape(WCHAR *string)
     ScopedMem<WCHAR> freeOnReturn(string);
 
     if (str::IsEmpty(string))
-        return NULL;
+        return nullptr;
 
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
         return str::conv::ToUtf8(string);
@@ -114,7 +114,7 @@ char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
     int pageNo = dest->GetDestPageNo();
     if (pageNo <= 0 || pageNo > engine->PageCount())
-        return NULL;
+        return nullptr;
     RectD rect = dest->GetDestRect();
     if (rect.IsEmpty()) {
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
@@ -128,7 +128,7 @@ char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"x %.0f\"", pt.y);
     }
-    return NULL;
+    return nullptr;
 }
 
 void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter)
@@ -214,7 +214,7 @@ const char *PageDestToStr(PageDestType destType)
 #undef HandleType
 #undef HandleTypeDialog
     CrashIf(destType != Dest_None);
-    return NULL;
+    return nullptr;
 }
 
 void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
@@ -294,7 +294,7 @@ void DumpThumbnail(BaseEngine *engine)
 
     size_t len;
     ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-    ScopedMem<char> hexData(data ? str::MemToHex(data, len) : NULL);
+    ScopedMem<char> hexData(data ? str::MemToHex(data, len) : nullptr);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     else
@@ -324,7 +324,7 @@ bool CheckRenderPath(const WCHAR *path)
     CrashIf(!path);
     bool hasArg = false;
     const WCHAR *p = path - 1;
-    while ((p = str::FindChar(p + 1, '%')) != NULL) {
+    while ((p = str::FindChar(p + 1, '%')) != nullptr) {
         p++;
         if (*p == '%')
             continue;
@@ -347,7 +347,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
     if (str::EndsWithI(renderPath, L".txt")) {
         str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++)
-            text.AppendAndFree(engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export));
+            text.AppendAndFree(engine->ExtractPageText(pageNo, L"\r\n", nullptr, Target_Export));
         if (silent)
             return true;
         ScopedMem<WCHAR> txtFilePath(str::Format(renderPath, 0));
@@ -366,7 +366,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
     bool success = true;
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, zoom, 0);
-        success &= bmp != NULL;
+        success &= bmp != nullptr;
         if (!bmp && !silent)
             ErrOut("Error: Failed to render page %d for %s!", pageNo, engine->FileName());
         if (!bmp || silent) {
@@ -375,7 +375,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         }
         ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         if (str::EndsWithI(pageBmpPath, L".png")) {
-            Bitmap gbmp(bmp->GetBitmap(), NULL);
+            Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
             gbmp.Save(pageBmpPath, &pngEncId);
         }
@@ -422,9 +422,9 @@ Usage:
     }
 
     ScopedMem<WCHAR> filePath;
-    WCHAR *password = NULL;
+    WCHAR *password = nullptr;
     bool fullDump = true;
-    WCHAR *renderPath = NULL;
+    WCHAR *renderPath = nullptr;
     float renderZoom = 1.f;
     bool useAlternateHandlers = false;
     bool loadOnly = false, silent = false;
@@ -473,7 +473,7 @@ Usage:
     if (breakAlloc) {
         _CrtSetBreakAlloc(breakAlloc);
         if (!IsDebuggerPresent())
-            MessageBox(NULL, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump", MB_ICONINFORMATION);
+            MessageBox(nullptr, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump", MB_ICONINFORMATION);
     }
 #endif
     if (silent) {

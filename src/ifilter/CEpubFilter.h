@@ -9,7 +9,7 @@ class CEpubFilter : public CFilterBase
 {
 public:
     CEpubFilter(long *plRefCount) : CFilterBase(plRefCount),
-        m_state(STATE_EPUB_END), m_epubDoc(NULL) { }
+        m_state(STATE_EPUB_END), m_epubDoc(nullptr) { }
     virtual ~CEpubFilter() { CleanUp(); }
 
     virtual HRESULT OnInit();

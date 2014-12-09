@@ -31,14 +31,14 @@ struct DLGTEMPLATEEX {
 // cf. http://www.ureader.com/msg/1484387.aspx
 static DLGTEMPLATE *GetRtLDlgTemplate(int dlgId)
 {
-    HRSRC dialogRC = FindResource(NULL, MAKEINTRESOURCE(dlgId), RT_DIALOG);
+    HRSRC dialogRC = FindResource(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
     if (!dialogRC)
-        return NULL;
-    HGLOBAL dlgTemplate = LoadResource(NULL, dialogRC);
+        return nullptr;
+    HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
     if (!dlgTemplate)
-        return NULL;
+        return nullptr;
     void *origDlgTemplate = LockResource(dlgTemplate);
-    size_t size = SizeofResource(NULL, dialogRC);
+    size_t size = SizeofResource(nullptr, dialogRC);
 
     DLGTEMPLATE *rtlDlgTemplate = (DLGTEMPLATE *)memdup(origDlgTemplate, size);
     if (rtlDlgTemplate->style == MAKELONG(0x0001, 0xFFFF))
@@ -54,10 +54,10 @@ static DLGTEMPLATE *GetRtLDlgTemplate(int dlgId)
 static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data)
 {
     if (!IsUIRightToLeft())
-        return DialogBoxParam(NULL, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
+        return DialogBoxParam(nullptr, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
 
     ScopedMem<DLGTEMPLATE> rtlDlgTemplate(GetRtLDlgTemplate(dlgId));
-    return DialogBoxIndirectParam(NULL, rtlDlgTemplate, parent, DlgProc, data);
+    return DialogBoxIndirectParam(nullptr, rtlDlgTemplate, parent, DlgProc, data);
 }
 
 /* For passing data to/from GetPassword dialog */
@@ -77,7 +77,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
         data = (Dialog_GetPassword_Data*)lParam;
         win::SetText(hDlg, _TR("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-        EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
+        EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
         ScopedMem<WCHAR> txt(str::Format(_TR("Enter password for %s"), data->fileName));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
@@ -118,7 +118,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
 
 /* Shows a 'get password' dialog for a given file.
    Returns a password entered by user as a newly allocated string or
-   NULL if user cancelled the dialog or there was an error.
+   nullptr if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
 WCHAR *Dialog_GetPassword(HWND hwndParent, const WCHAR *fileName, bool *rememberPassword)
@@ -131,7 +131,7 @@ WCHAR *Dialog_GetPassword(HWND hwndParent, const WCHAR *fileName, bool *remember
                                   Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
         free(data.pwdOut);
-        return NULL;
+        return nullptr;
     }
     return data.pwdOut;
 }
@@ -199,7 +199,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 }
 
 /* Shows a 'go to page' dialog and returns the page label entered by the user
-   or NULL if user clicked the "cancel" button or there was an error.
+   or nullptr if user clicked the "cancel" button or there was an error.
    The caller must free() the result. */
 WCHAR *Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric)
 {
@@ -207,7 +207,7 @@ WCHAR *Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, 
     data.currPageLabel = currentPageLabel;
     data.pageCount = pageCount;
     data.onlyNumeric = onlyNumeric;
-    data.newPageLabel = NULL;
+    data.newPageLabel = nullptr;
 
     CreateDialogBox(IDD_DIALOG_GOTO_PAGE, hwnd,
                     Dialog_GoToPage_Proc, (LPARAM)&data);
@@ -279,7 +279,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
 }
 
 /* Shows a 'Find' dialog and returns the new search term entered by the user
-   or NULL if the search was canceled. previousSearch is the search term to
+   or nullptr if the search was canceled. previousSearch is the search term to
    be displayed as default. */
 WCHAR *Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase)
 {
@@ -446,7 +446,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
     return FALSE;
 }
 
-/* Returns NULL  -1 if user choses 'cancel' */
+/* Returns nullptr  -1 if user choses 'cancel' */
 const char *Dialog_ChangeLanguge(HWND hwnd, const char *currLangCode)
 {
     Dialog_ChangeLanguage_Data data;
@@ -455,7 +455,7 @@ const char *Dialog_ChangeLanguge(HWND hwnd, const char *currLangCode)
     INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_LANGUAGE, hwnd,
                                   Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (IDCANCEL == res)
-        return NULL;
+        return nullptr;
     return data.langCode;
 }
 
@@ -475,7 +475,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wPara
     if (WM_INITDIALOG == msg)
     {
         data = (Dialog_NewVersion_Data*)lParam;
-        assert(NULL != data);
+        assert(nullptr != data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("SumatraPDF Update"));
 
@@ -969,7 +969,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             if (!str::IsEmpty(name.Get()))
                 data->favName = name.StealData();
             else
-                data->favName = NULL;
+                data->favName = nullptr;
             EndDialog(hDlg, IDOK);
             return TRUE;
         } else if (IDCANCEL == cmd) {
@@ -984,7 +984,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 // pageNo is the page we're adding to favorites
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
-// (passing in a non-NULL favName will use it as default name)
+// (passing in a non-nullptr favName will use it as default name)
 bool Dialog_AddFavorite(HWND hwnd, const WCHAR *pageNo, ScopedMem<WCHAR>& favName)
 {
     Dialog_AddFav_Data data;

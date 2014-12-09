@@ -24,7 +24,7 @@ static void ParseCommandLineTest()
         i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf");
         utassert(2 == i.pathsToBenchmark.Count());
         utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(NULL == i.pathsToBenchmark.At(1));
+        utassert(nullptr == i.pathsToBenchmark.At(1));
     }
 
     {
@@ -33,7 +33,7 @@ static void ParseCommandLineTest()
         utassert(5 == i.forwardSearch.highlightWidth);
         utassert(2 == i.pathsToBenchmark.Count());
         utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(NULL == i.pathsToBenchmark.At(1));
+        utassert(nullptr == i.pathsToBenchmark.At(1));
     }
 
     {
@@ -130,7 +130,7 @@ static void BenchRangeTest()
     utassert(!IsBenchPagesInfo(L"2--4"));
     utassert(!IsBenchPagesInfo(L"4-2"));
     utassert(!IsBenchPagesInfo(L"1-3,loadonly"));
-    utassert(!IsBenchPagesInfo(NULL));
+    utassert(!IsBenchPagesInfo(nullptr));
 }
 #endif
 
@@ -188,9 +188,9 @@ static void hexstrTest()
     utassert(0 == diff);
     utassert(FileTimeEq(ft1, ft2));
 
-    s.Set(str::MemToHex(NULL, 0));
+    s.Set(str::MemToHex(nullptr, 0));
     utassert(str::Eq(s, ""));
-    ok = str::HexToMem(s, NULL, 0);
+    ok = str::HexToMem(s, nullptr, 0);
     utassert(ok);
 }
 

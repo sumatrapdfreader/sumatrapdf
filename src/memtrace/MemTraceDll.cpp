@@ -64,7 +64,7 @@ static HANDLE           gHeap;
 static DWORD            gTlsIndex;
 
 // unnamed pipe used to send data to the collector client
-// it's NULL if we failed to open the pipe in the first place
+// it's nullptr if we failed to open the pipe in the first place
 // or if we failed to write data to the pipe (e.g. collector
 // client exited)
 static HANDLE           gPipe;
@@ -155,13 +155,13 @@ static MemBlock *GetBlock(size_t len)
         newBlock = (MemBlock*)HeapAlloc(gHeap, 0, sizeof(MemBlock) + dataSize);
         if (!newBlock) {
             lf("memtrace.dll: failed to allocate a block");
-            return NULL;
+            return nullptr;
         }
     }
 
     //lf("memtrace.dll: allocated a new block");
     ++gBlocksAllocated;
-    newBlock->next = NULL;
+    newBlock->next = nullptr;
     newBlock->size = dataSize;
     newBlock->used = 0;
     newBlock->sent = 0;
@@ -321,10 +321,10 @@ static void SerializeType(byte *data, TypeSerializeInfo *typeInfo, Vec<byte>& ms
 static bool OpenPipe()
 {
     gPipe = CreateFileA(PIPE_NAME, GENERIC_READ | GENERIC_WRITE,
-        0, NULL, OPEN_EXISTING,
-        SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION | FILE_FLAG_OVERLAPPED, NULL);
+        0, nullptr, OPEN_EXISTING,
+        SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION | FILE_FLAG_OVERLAPPED, nullptr);
     if (INVALID_HANDLE_VALUE == gPipe) {
-        gPipe = NULL;
+        gPipe = nullptr;
         return false;
     }
     return true;
@@ -334,7 +334,7 @@ static void ClosePipe()
 {
     if (gPipe && (INVALID_HANDLE_VALUE != gPipe))
         CloseHandle(gPipe);
-    gPipe = NULL;
+    gPipe = nullptr;
 }
 
 static bool WriteToPipe(const byte *s, size_t len)
@@ -343,7 +343,7 @@ static bool WriteToPipe(const byte *s, size_t len)
     if (!gPipe)
         return false;
     DWORD toWrite = (DWORD)len;
-    BOOL ok = WriteFile(gPipe, s, toWrite, &written, NULL);
+    BOOL ok = WriteFile(gPipe, s, toWrite, &written, nullptr);
     if (!ok) {
         lf("memtrace.dll: WriteToPipe() failed");
         LogLastError();
@@ -375,11 +375,11 @@ static MemBlock* GetDataToSend(byte *buf, size_t bufSize, size_t *bufLenOut)
     // no queued data - send gCurrBlock
     if (!gCurrBlock) {
         *bufLenOut = 0;
-        return NULL;
+        return nullptr;
     }
     if (gCurrBlock->UnsentLen() > bufSize) {
         MemBlock *tmp = gCurrBlock;
-        gCurrBlock = NULL;
+        gCurrBlock = nullptr;
         return tmp;
     }
     size_t len = gCurrBlock->UnsentLen();
@@ -389,7 +389,7 @@ static MemBlock* GetDataToSend(byte *buf, size_t bufSize, size_t *bufLenOut)
     CrashIf(gCurrBlock->sent > gCurrBlock->size);
     CrashIf(0 != gCurrBlock->UnsentLen());
     gCurrBlock->Reset();
-    return NULL;
+    return nullptr;
 }
 
 static bool gStopSendThread = false;
@@ -400,7 +400,7 @@ static void SendQueuedMessages()
     size_t      dataLen;
     MemBlock *  block;
 
-    for (;;) 
+    for (;;)
     {
         if (!gPipe)
             return;
@@ -549,12 +549,12 @@ static BOOL ProcessAttach()
     }
 
     InitializeCriticalSection(&gMemMutex);
-    gSendThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    gSendThreadEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gSendThreadEvent) {
         lf("memtrace.dll: couldn't create gSendThreadEvent");
         return FALSE;
     }
-    gSendThread = CreateThread(NULL, 0, DataSendThreadProc, NULL, 0, 0);
+    gSendThread = CreateThread(nullptr, 0, DataSendThreadProc, nullptr, 0, 0);
     if (!gSendThread) {
         lf("memtrace.dll: couldn't create gSendThread");
         return FALSE;

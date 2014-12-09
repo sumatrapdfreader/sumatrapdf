@@ -11,19 +11,19 @@
 
 // Try harder getting temporary directory
 // Caller needs to free() the result.
-// Returns NULL if fails for any reason.
+// Returns nullptr if fails for any reason.
 static WCHAR *GetValidTempDir()
 {
     ScopedMem<WCHAR> d(path::GetTempPath());
     if (!d) {
         NotifyFailed(_TR("Couldn't obtain temporary directory"));
-        return NULL;
+        return nullptr;
     }
     bool ok = dir::Create(d);
     if (!ok) {
         LogLastError();
         NotifyFailed(_TR("Couldn't create temporary directory"));
-        return NULL;
+        return nullptr;
     }
     return d.StealData();
 }
@@ -32,7 +32,7 @@ static WCHAR *GetTempUninstallerPath()
 {
     ScopedMem<WCHAR> tempDir(GetValidTempDir());
     if (!tempDir)
-        return NULL;
+        return nullptr;
     // Using fixed (unlikely) name instead of GetTempFileName()
     // so that we don't litter temp dir with copies of ourselves
     return path::Join(tempDir, L"sum~inst.exe");
@@ -55,16 +55,16 @@ static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
-    ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
+    ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
     ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
     if (!curr || !str::Eq(curr, APP_NAME_STR)) {
         // not the default, do nothing
     } else if (prev) {
-        WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
+        WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, prev);
     } else {
 #pragma warning(push)
 #pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the specification for the function 'SHDeleteValueW'
-        SHDeleteValue(hkey, REG_CLASSES_PDF, NULL);
+        SHDeleteValue(hkey, REG_CLASSES_PDF, nullptr);
 #pragma warning(pop)
     }
 
@@ -94,8 +94,8 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
 
     DWORD subkeys, values;
     bool isEmpty = false;
-    if (RegQueryInfoKey(hkey, NULL, NULL, NULL, &subkeys, NULL, NULL,
-                        &values, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+    if (RegQueryInfoKey(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr,
+                        &values, nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS) {
         isEmpty = 0 == subkeys && 0 == values;
     }
     RegCloseKey(hkey);
@@ -115,7 +115,7 @@ static void RemoveOwnRegistryKeys()
         DeleteRegKey(keys[i], REG_CLASSES_APPS);
         SHDeleteValue(keys[i], REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
 
-        for (int j = 0; NULL != gSupportedExts[j]; j++) {
+        for (int j = 0; nullptr != gSupportedExts[j]; j++) {
             ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
             SHDeleteValue(keys[i], keyname, APP_NAME_STR);
             DeleteEmptyRegKey(keys[i], keyname);
@@ -171,7 +171,7 @@ static BOOL RemoveInstalledFiles()
 {
     BOOL success = TRUE;
 
-    for (int i = 0; NULL != gPayloadData[i].fileName; i++) {
+    for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
         ScopedMem<WCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].fileName));
         ScopedMem<WCHAR> path(path::Join(gGlobalData.installDir, relPath));
 
@@ -217,7 +217,7 @@ bool ExecuteUninstallerFromTempDir()
     bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
-    MoveFileEx(tempPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+    MoveFileEx(tempPath, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
 
     return ok;
 }
@@ -280,13 +280,13 @@ static void OnButtonUninstall()
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
+    gGlobalData.hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
 }
 
 void OnUninstallationFinished()
 {
     DestroyWindow(gHwndButtonInstUninst);
-    gHwndButtonInstUninst = NULL;
+    gHwndButtonInstUninst = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gGlobalData.firstError;
@@ -331,14 +331,14 @@ void CreateMainWindow()
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
-        NULL, NULL,
-        GetModuleHandle(NULL), NULL);
+        nullptr, nullptr,
+        GetModuleHandle(nullptr), nullptr);
 }
 
 void ShowUsage()
 {
     // Note: translation services aren't initialized at this point, so English only
-    MessageBox(NULL, L"uninstall.exe [/s][/d <path>]\n\
+    MessageBox(nullptr, L"uninstall.exe [/s][/d <path>]\n\
     \n\
     /s\tuninstalls " APP_NAME_STR L" silently (without user interaction).\n\
     /d\tchanges the directory from where " APP_NAME_STR L" will be uninstalled.",

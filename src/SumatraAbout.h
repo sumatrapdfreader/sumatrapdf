@@ -5,7 +5,7 @@ void OnMenuAbout();
 
 void  DrawAboutPage(WindowInfo& win, HDC hdc);
 
-const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=NULL);
+const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=nullptr);
 
 #define SLINK_OPEN_FILE L"<File,Open>"
 #define SLINK_LIST_SHOW L"<View,ShowList>"

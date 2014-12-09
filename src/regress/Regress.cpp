@@ -83,12 +83,12 @@ static void VerifyFileExists(const WCHAR *filePath)
     }
 }
 
-static HANDLE   gDumpEvent = NULL;
-static HANDLE   gDumpThread = NULL;
+static HANDLE   gDumpEvent = nullptr;
+static HANDLE   gDumpThread = nullptr;
 static bool     gCrashed = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
-static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
+static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
@@ -145,12 +145,12 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
 
 static void InstallCrashHandler()
 {
-    gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
         printflush("InstallCrashHandler(): CreateEvent() failed\n");
         return;
     }
-    gDumpThread = CreateThread(NULL, 0, CrashDumpThread, NULL, 0, 0);
+    gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
     if (!gDumpThread) {
         printflush("InstallCrashHandler(): CreateThread() failed\n");
         return;

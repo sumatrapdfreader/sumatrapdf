@@ -45,18 +45,18 @@ public:
     virtual RectD PageMediabox(int pageNo);
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
+                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View) { return NULL; }
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+                                    RenderTarget target=Target_View) { return nullptr; }
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
     virtual bool IsImageCollection() const { return true; }
@@ -71,7 +71,7 @@ public:
         ImagePage *page = GetPage(pageNo);
         if (page)
             DropPage(page);
-        return page != NULL;
+        return page != nullptr;
     }
 
 protected:
@@ -91,7 +91,7 @@ protected:
     void DropPage(ImagePage *page, bool forceRemove=false);
 };
 
-ImagesEngine::ImagesEngine() : fileName(NULL)
+ImagesEngine::ImagesEngine() : fileName(nullptr)
 {
     InitializeCriticalSection(&cacheAccess);
 }
@@ -124,9 +124,9 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     screen.Offset(-screen.x, -screen.y);
 
-    HANDLE hMap = NULL;
+    HANDLE hMap = nullptr;
     HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
-    HDC hDC = CreateCompatibleDC(NULL);
+    HDC hDC = CreateCompatibleDC(nullptr);
     DeleteObject(SelectObject(hDC, hbmp));
 
     bool ok = RenderPage(hDC, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
@@ -134,7 +134,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     if (!ok) {
         DeleteObject(hbmp);
         CloseHandle(hMap);
-        return NULL;
+        return nullptr;
     }
 
     return new RenderedBitmap(hbmp, screen.Size(), hMap);
@@ -215,12 +215,12 @@ public:
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return page->pageNo; }
     virtual RectD GetRect() const { return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight()); }
-    virtual WCHAR *GetValue() const { return NULL; }
+    virtual WCHAR *GetValue() const { return nullptr; }
 
     virtual RenderedBitmap *GetImage() {
         HBITMAP hbmp;
         if (page->bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok)
-            return NULL;
+            return nullptr;
         return new RenderedBitmap(hbmp, SizeI(page->bmp->GetWidth(), page->bmp->GetHeight()));
     }
 };
@@ -229,7 +229,7 @@ Vec<PageElement *> *ImagesEngine::GetElements(int pageNo)
 {
     ImagePage *page = GetPage(pageNo);
     if (!page)
-        return NULL;
+        return nullptr;
 
     Vec<PageElement *> *els = new Vec<PageElement *>();
     els->Append(new ImageElement(this, page));
@@ -239,10 +239,10 @@ Vec<PageElement *> *ImagesEngine::GetElements(int pageNo)
 PageElement *ImagesEngine::GetElementAtPos(int pageNo, PointD pt)
 {
     if (!PageMediabox(pageNo).Contains(pt))
-        return NULL;
+        return nullptr;
     ImagePage *page = GetPage(pageNo);
     if (!page)
-        return NULL;
+        return nullptr;
     return new ImageElement(this, page);
 }
 
@@ -255,7 +255,7 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
     }
     if (fileName)
         return (unsigned char *)file::ReadAll(fileName, cbCount);
-    return NULL;
+    return nullptr;
 }
 
 bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
@@ -276,7 +276,7 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
 {
     ScopedCritSec scope(&cacheAccess);
 
-    ImagePage *result = NULL;
+    ImagePage *result = nullptr;
 
     for (size_t i = 0; i < pageCache.Count(); i++) {
         if (pageCache.At(i)->pageNo == pageNo) {
@@ -285,7 +285,7 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
         }
     }
     if (!result && tryOnly)
-        return NULL;
+        return nullptr;
     if (!result) {
         // TODO: drop most memory intensive pages first
         // (i.e. formats which aren't IsGdiPlusNativeFormat)?
@@ -293,7 +293,7 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
             CrashIf(pageCache.Count() != MAX_IMAGE_PAGE_CACHE);
             DropPage(pageCache.Last(), true);
         }
-        result = new ImagePage(pageNo, NULL);
+        result = new ImagePage(pageNo, nullptr);
         result->bmp = LoadBitmap(pageNo, result->ownBmp);
         pageCache.InsertAt(0, result);
     }
@@ -302,9 +302,9 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
         pageCache.Remove(result);
         pageCache.InsertAt(0, result);
     }
-    // return NULL if a page failed to load
+    // return nullptr if a page failed to load
     if (result && !result->bmp)
-        result = NULL;
+        result = nullptr;
 
     if (result)
         result->refs++;
@@ -330,7 +330,7 @@ void ImagesEngine::DropPage(ImagePage *page, bool forceRemove)
 
 class ImageEngineImpl : public ImagesEngine {
 public:
-    ImageEngineImpl() : fileExt(NULL), image(NULL) { }
+    ImageEngineImpl() : fileExt(nullptr), image(nullptr) { }
     virtual ~ImageEngineImpl() { delete image; }
 
     virtual BaseEngine *Clone();
@@ -361,7 +361,7 @@ BaseEngine *ImageEngineImpl::Clone()
 {
     Bitmap *bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!bmp)
-        return NULL;
+        return nullptr;
 
     ImageEngineImpl *clone = new ImageEngineImpl();
     clone->fileName = str::Dup(fileName);
@@ -428,7 +428,7 @@ bool ImageEngineImpl::FinishLoading()
     }
 
     CrashIf(!fileExt);
-    return fileExt != NULL;
+    return fileExt != nullptr;
 }
 
 // cf. http://www.universalthread.com/ViewPageArticle.aspx?ID=831
@@ -442,7 +442,7 @@ bool ImageEngineImpl::FinishLoading()
 
 static WCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
 {
-    WCHAR *value = NULL;
+    WCHAR *value = nullptr;
     UINT size = bmp->GetPropertyItemSize(id);
     PropertyItem *item = (PropertyItem *)malloc(size);
     Status ok = item ? bmp->GetPropertyItem(id, size, item) : OutOfMemory;
@@ -476,7 +476,7 @@ WCHAR *ImageEngineImpl::GetProperty(DocumentProperty prop)
     case Prop_CreatorApp:
         return GetImageProperty(image, PropertyTagSoftwareUsed);
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -494,11 +494,11 @@ Bitmap *ImageEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
     CrashIf((unsigned int)pageNo > frameCount);
     Bitmap *frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame)
-        return NULL;
+        return nullptr;
     Status ok = frame->SelectActiveFrame(frameDimension, pageNo - 1);
     if (ok != Ok) {
         delete frame;
-        return NULL;
+        return nullptr;
     }
     deleteAfterUse = true;
     return frame;
@@ -562,7 +562,7 @@ BaseEngine *ImageEngineImpl::CreateFromFile(const WCHAR *fileName)
     ImageEngineImpl *engine = new ImageEngineImpl();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -572,7 +572,7 @@ BaseEngine *ImageEngineImpl::CreateFromStream(IStream *stream)
     ImageEngineImpl *engine = new ImageEngineImpl();
     if (!engine->LoadFromStream(stream)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -619,13 +619,13 @@ public:
     ImageDirEngineImpl() : fileDPI(96.0f) { }
 
     virtual BaseEngine *Clone() {
-        return fileName ? CreateFromFile(fileName) : NULL;
+        return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+    virtual unsigned char *GetFileData(size_t *cbCount) { return nullptr; }
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return nullptr; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
     virtual bool HasPageLabels() const { return true; }
@@ -713,7 +713,7 @@ class ImageDirTocItem : public DocTocItem {
 public:
     ImageDirTocItem(WCHAR *title, int pageNo) : DocTocItem(title, pageNo) { }
 
-    virtual PageDestination *GetLink() { return NULL; }
+    virtual PageDestination *GetLink() { return nullptr; }
 };
 
 DocTocItem *ImageDirEngineImpl::GetTocTree()
@@ -731,7 +731,7 @@ DocTocItem *ImageDirEngineImpl::GetTocTree()
 bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     // only copy the files if the target directory doesn't exist yet
-    if (!CreateDirectory(copyFileName, NULL))
+    if (!CreateDirectory(copyFileName, nullptr))
         return false;
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
@@ -750,7 +750,7 @@ Bitmap *ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
         deleteAfterUse = true;
         return BitmapFromData(bmpData, len);
     }
-    return NULL;
+    return nullptr;
 }
 
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
@@ -784,7 +784,7 @@ BaseEngine *ImageDirEngineImpl::CreateFromFile(const WCHAR *fileName)
     ImageDirEngineImpl *engine = new ImageDirEngineImpl();
     if (!engine->LoadImageDir(fileName)) {
         delete engine;
-        return NULL;
+        return nullptr;
     }
     return engine;
 }
@@ -822,7 +822,7 @@ public:
         }
         if (fileName)
             return CreateFromFile(fileName);
-        return NULL;
+        return nullptr;
     }
 
     virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
@@ -913,7 +913,7 @@ bool CbxEngineImpl::FinishLoading()
             return false;
         }
         else {
-            allFileNames.Append(NULL);
+            allFileNames.Append(nullptr);
         }
     }
     AssertCrash(allFileNames.Count() == cbxFile->GetFileCount());
@@ -949,7 +949,7 @@ static char *GetTextContent(HtmlPullParser& parser)
 {
     HtmlToken *tok = parser.Next();
     if (!tok || !tok->IsText())
-        return NULL;
+        return nullptr;
     return ResolveHtmlEntities(tok->s, tok->sLen);
 }
 
@@ -960,7 +960,7 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
     // TODO: convert UTF-16 data and skip UTF-8 BOM
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken *tok;
-    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
+    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag())
             continue;
         if (tok->NameIs("Title")) {
@@ -1057,7 +1057,7 @@ WCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
     case Prop_Title:
         return str::Dup(propTitle);
     case Prop_Author:
-        return propAuthors.Count() ? propAuthors.Join(L", ") : NULL;
+        return propAuthors.Count() ? propAuthors.Join(L", ") : nullptr;
     case Prop_CreationDate:
         return str::Dup(propDate);
     case Prop_ModificationDate:
@@ -1068,7 +1068,7 @@ WCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
     case Prop_Subject:
         return str::Dup(propSummary);
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -1079,7 +1079,7 @@ const WCHAR *CbxEngineImpl::GetDefaultFileExt() const
     case Arch_Rar: return L".cbr";
     case Arch_7z:  return L".cb7";
     case Arch_Tar: return L".cbt";
-    default: CrashIf(true); return NULL;
+    default: CrashIf(true); return nullptr;
     }
 }
 
@@ -1091,7 +1091,7 @@ Bitmap *CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
         deleteAfterUse = true;
         return BitmapFromData(bmpData, len);
     }
-    return NULL;
+    return nullptr;
 }
 
 RectD CbxEngineImpl::LoadMediabox(int pageNo)
@@ -1150,7 +1150,7 @@ BaseEngine *CbxEngineImpl::CreateFromFile(const WCHAR *fileName)
             return engine;
         delete engine;
     }
-    return NULL;
+    return nullptr;
 }
 
 BaseEngine *CbxEngineImpl::CreateFromStream(IStream *stream)
@@ -1175,7 +1175,7 @@ BaseEngine *CbxEngineImpl::CreateFromStream(IStream *stream)
         return engine;
     delete engine;
 
-    return NULL;
+    return nullptr;
 }
 
 namespace CbxEngine {

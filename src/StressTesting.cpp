@@ -57,7 +57,7 @@ struct PageRange {
 };
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
-// into an interable list (returns NULL on parsing errors)
+// into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
 static bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange>& result)
 {
@@ -214,7 +214,7 @@ static void BenchChmLoadOnly(const WCHAR *filePath)
     logbench(L"Starting: %s", filePath);
 
     Timer t;
-    ChmModel *chmModel = ChmModel::Create(filePath, NULL);
+    ChmModel *chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
         logbench(L"Error: failed to load %s", filePath);
         return;
@@ -264,7 +264,7 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
     int pages = engine->PageCount();
     logbench(L"page count: %d", pages);
 
-    if (NULL == pagesSpec) {
+    if (nullptr == pagesSpec) {
         for (int i = 1; i <= pages; i++) {
             BenchLoadRender(engine, i);
         }
@@ -311,7 +311,7 @@ static void BenchDir(WCHAR *dir)
     WStrVec files;
     CollectFilesToBench(dir, files);
     for (size_t i = 0; i < files.Count(); i++) {
-        BenchFile(files.At(i), NULL);
+        BenchFile(files.At(i), nullptr);
     }
 }
 
@@ -428,7 +428,7 @@ static void MakeRandomSelection(WindowInfo *win, int pageNo)
 class TestFileProvider {
 public:
     virtual ~TestFileProvider() {}
-    // returns path of the next file to test or NULL if done (caller needs to free() the result)
+    // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual WCHAR *NextFile() = 0;
     // start the iteration from the beginning
     virtual void Restart() = 0;
@@ -455,7 +455,7 @@ public:
 
     virtual WCHAR *NextFile() {
         if (provided >= files.Count())
-            return NULL;
+            return nullptr;
         return str::Dup(files.At(provided++));
     }
 
@@ -519,7 +519,7 @@ WCHAR *DirFileProvider::NextFile()
         return NextFile();
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void DirFileProvider::Restart()
@@ -580,7 +580,7 @@ class StressTest {
 public:
     StressTest(WindowInfo *win, bool exitWhenDone) :
         win(win), currPage(0), pageForSearchStart(0),
-        filesCount(0), cycles(1), fileIndex(0), fileProvider(NULL),
+        filesCount(0), cycles(1), fileIndex(0), fileProvider(nullptr),
         exitWhenDone(exitWhenDone)
     {
         timerId = gCurrStressTimerId++;
@@ -633,7 +633,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
 
 void StressTest::Finished(bool success)
 {
-    win->stressTest = NULL; // make sure we're not double-deleted
+    win->stressTest = nullptr; // make sure we're not double-deleted
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
@@ -698,7 +698,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
 
         WindowInfo *toClose = win;
         w->stressTest = win->stressTest;
-        win->stressTest = NULL;
+        win->stressTest = nullptr;
         win = w;
         CloseWindow(toClose, false);
     }
@@ -781,7 +781,7 @@ bool StressTest::GoToNextPage()
 
 void StressTest::TickTimer()
 {
-    SetTimer(win->hwndFrame, timerId, USER_TIMER_MINIMUM, NULL);
+    SetTimer(win->hwndFrame, timerId, USER_TIMER_MINIMUM, nullptr);
 }
 
 void StressTest::OnTimer(int timerIdGot)
@@ -927,7 +927,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win)
     gGlobalPrefs->useTabs = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)time(nullptr));
     // redirect stderr to NUL to disable (MuPDF) logging
     FILE *nul; freopen_s(&nul, "NUL", "w", stderr);
 

@@ -35,7 +35,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 
     self = CreateWindowEx(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
                           TL_MARGIN, TL_MARGIN, 0, 0,
-                          parent, (HMENU)0, GetModuleHandle(NULL), NULL);
+                          parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message, true);
@@ -68,14 +68,14 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
     if (!hasProgress) {
-        SetWindowPos(self, NULL, 0, 0, rectMsg.dx, rectMsg.dy, SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(self, nullptr, 0, 0, rectMsg.dx, rectMsg.dy, SWP_NOMOVE | SWP_NOZORDER);
     } else if (init) {
         RectI rect = WindowRect(self);
         rect.dx = std::max(progressWidth + 2 * PADDING, rectMsg.dx);
         rect.dy = rectMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
-        SetWindowPos(self, NULL, 0, 0, rect.dx, rect.dy, SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(self, nullptr, 0, 0, rect.dx, rect.dy, SWP_NOMOVE | SWP_NOZORDER);
     } else if (rectMsg.dx > progressWidth + 2 * PADDING) {
-        SetWindowPos(self, NULL, 0, 0, rectMsg.dx, WindowRect(self).dy, SWP_NOMOVE | SWP_NOZORDER);
+        SetWindowPos(self, nullptr, 0, 0, rectMsg.dx, WindowRect(self).dy, SWP_NOMOVE | SWP_NOZORDER);
     }
 
     // move the window to the right for a right-to-left layout
@@ -83,7 +83,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
         HWND parent = GetParent(self);
         RectI rect = MapRectToWindow(WindowRect(self), HWND_DESKTOP, parent);
         rect.x = WindowRect(parent).dx - rect.dx - TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
-        SetWindowPos(self, NULL, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(self, nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 
@@ -112,9 +112,9 @@ void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool 
         hasCancel = false;
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message);
-    InvalidateRect(self, NULL, TRUE);
+    InvalidateRect(self, nullptr, TRUE);
     if (timeoutInMS)
-        SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
+        SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
 }
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
@@ -231,7 +231,7 @@ void Notifications::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
 {
     RectI rect = WindowRect(fix->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
-    SetWindowPos(move->hwnd(), NULL,
+    SetWindowPos(move->hwnd(), nullptr,
                  GetWndX(move), rect.y + rect.dy + NotificationWnd::TL_MARGIN,
                  0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
@@ -243,7 +243,7 @@ void Notifications::Remove(NotificationWnd *wnd)
         return;
     wnds.Remove(wnd);
     if (ix == 0 && wnds.Count() > 0) {
-        SetWindowPos(wnds.At(0)->hwnd(), NULL,
+        SetWindowPos(wnds.At(0)->hwnd(), nullptr,
                      GetWndX(wnds.At(0)), NotificationWnd::TL_MARGIN,
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);
         ix = 1;
@@ -271,7 +271,7 @@ NotificationWnd *Notifications::GetForGroup(int groupId)
         if (wnds.At(i)->groupId == groupId)
             return wnds.At(i);
     }
-    return NULL;
+    return nullptr;
 }
 
 void Notifications::RemoveForGroup(int groupId)
@@ -305,7 +305,7 @@ void Notifications::Relayout()
             rect.x = frame.dx - rect.dx - NotificationWnd::TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
         else
             rect.x = NotificationWnd::TL_MARGIN;
-        SetWindowPos(wnds.At(i)->hwnd(), NULL, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(wnds.At(i)->hwnd(), nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 
@@ -313,6 +313,6 @@ void RegisterNotificationsWndClass()
 {
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
-    wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
+    wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
     RegisterClassEx(&wcex);
 }

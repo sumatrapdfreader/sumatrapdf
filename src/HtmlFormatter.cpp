@@ -41,11 +41,11 @@ TODO: Instead of inserting explicit SetFont, StartLink, etc. instructions
 at the beginning of every page, DrawHtmlPage could always start with
 that page's nextPageStyle.font, etc.
 The information that we need to remember:
-* font name (if different from default font name, NULL otherwise)
+* font name (if different from default font name, nullptr otherwise)
 * font size scale i.e. 1.f means "default font size". This is to allow the user to change
   default font size and allow us to relayout from arbitrary page
 * font style (bold/italic etc.)
-* a link url if we're carrying over a text for a link (NULL if no link)
+* a link url if we're carrying over a text for a link (nullptr if no link)
 * text color (when/if we support changing text color)
 * more ?
 
@@ -141,7 +141,7 @@ StyleRule StyleRule::Parse(CssPullParser *parser)
 {
     StyleRule rule;
     const CssProperty *prop;
-    while ((prop = parser->NextProperty()) != NULL) {
+    while ((prop = parser->NextProperty()) != nullptr) {
         switch (prop->type) {
         case Css_Text_Align:
             rule.textAlign = FindAlignAttr(prop->s, prop->sLen);
@@ -173,16 +173,16 @@ void StyleRule::Merge(StyleRule& source)
 
 HtmlFormatterArgs::HtmlFormatterArgs() :
     pageDx(0), pageDy(0), fontSize(0),
-    textAllocator(NULL), htmlStr(0), htmlStrLen(0),
+    textAllocator(nullptr), htmlStr(0), htmlStrLen(0),
     reparseIdx(0), textRenderMethod(mui::TextRenderMethodGdiplus)
 {
 }
 
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     pageDx(args->pageDx), pageDy(args->pageDy),
-    textAllocator(args->textAllocator), currLineReparseIdx(NULL),
+    textAllocator(args->textAllocator), currLineReparseIdx(0),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
-    listDepth(0), preFormatted(false), dirRtl(false), currPage(NULL),
+    listDepth(0), preFormatted(false), dirRtl(false), currPage(nullptr),
     finishedParsing(false), pageCount(0),
     keepTagNesting(false)
 {
@@ -251,7 +251,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
 void HtmlFormatter::SetFontBasedOn(mui::CachedFont *font, FontStyle fs, float fontSize)
 {
     const WCHAR *fontName = font->GetName();
-    if (NULL == fontName)
+    if (nullptr == fontName)
         fontName = defaultFontName;
     SetFont(fontName, fs, fontSize);
 }
@@ -357,7 +357,7 @@ float HtmlFormatter::NewLineX()
 // We set position x of each visible element
 void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
 {
-    DrawInstr *lastInstr = NULL;
+    DrawInstr *lastInstr = nullptr;
     int instrCount = 0;
 
     REAL x = offX + NewLineX();
@@ -419,7 +419,7 @@ void HtmlFormatter::JustifyLineBoth()
         else if (InstrImage == i.type)
             endsWithSpace = false;
     }
-    // don't take a space at the end of the line into account 
+    // don't take a space at the end of the line into account
     // (the last word is explicitly right-aligned below)
     if (endsWithSpace)
         spaces--;
@@ -428,7 +428,7 @@ void HtmlFormatter::JustifyLineBoth()
     // redistribute extra dx space among elastic spaces
     REAL extraSpaceDx = extraSpaceDxTotal / (float)spaces;
     float offX = 0.f;
-    DrawInstr *lastStr = NULL;
+    DrawInstr *lastStr = nullptr;
     for (DrawInstr& i : currLineInstr) {
         if (InstrElasticSpace == i.type)
             offX += extraSpaceDx;
@@ -970,18 +970,18 @@ StyleRule *HtmlFormatter::FindStyleRule(HtmlTag tag, const char *clazz, size_t c
         if (tag == rule.tag && classHash == rule.classHash)
             return &rule;
     }
-    return NULL;
+    return nullptr;
 }
 
 StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken *t)
 {
     StyleRule rule;
     // get style rules ordered by specificity
-    StyleRule *prevRule = FindStyleRule(Tag_Body, NULL, 0);
+    StyleRule *prevRule = FindStyleRule(Tag_Body, nullptr, 0);
     if (prevRule) rule.Merge(*prevRule);
-    prevRule = FindStyleRule(Tag_Any, NULL, 0);
+    prevRule = FindStyleRule(Tag_Any, nullptr, 0);
     if (prevRule) rule.Merge(*prevRule);
-    prevRule = FindStyleRule(t->tag, NULL, 0);
+    prevRule = FindStyleRule(t->tag, nullptr, 0);
     if (prevRule) rule.Merge(*prevRule);
     // TODO: support multiple class names
     AttrInfo *attr = t->GetAttrByName("class");
@@ -1005,7 +1005,7 @@ void HtmlFormatter::ParseStyleSheet(const char *data, size_t len)
     while (parser.NextRule()) {
         StyleRule rule = StyleRule::Parse(&parser);
         const CssSelector *sel;
-        while ((sel = parser.NextSelector()) != NULL) {
+        while ((sel = parser.NextSelector()) != nullptr) {
             if (Tag_NotFound == sel->tag)
                 continue;
             StyleRule *prevRule = FindStyleRule(sel->tag, sel->clazz, sel->clazzLen);
@@ -1294,7 +1294,7 @@ static bool IsEmptyPage(HtmlPage *p)
     return true;
 }
 
-// Return the next parsed page. Returns NULL if finished parsing.
+// Return the next parsed page. Returns nullptr if finished parsing.
 // For simplicity of implementation, we parse xml text node or
 // xml element at a time. This might cause a creation of one
 // or more pages, which we remeber and send to the caller
@@ -1316,7 +1316,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
         // pages after parsing has finished so this is to detect
         // that case and really end parsing
         if (finishedParsing)
-            return NULL;
+            return nullptr;
         HtmlToken *t = htmlParser->Next();
         if (!t || t->IsError())
             break;
@@ -1334,7 +1334,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
 
     UpdateLinkBboxes(currPage);
     pagesToSend.Append(currPage);
-    currPage = NULL;
+    currPage = nullptr;
     // call ourselves recursively to return accumulated pages
     finishedParsing = true;
     return Next();

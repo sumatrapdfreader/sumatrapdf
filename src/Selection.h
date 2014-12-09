@@ -7,7 +7,7 @@
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
-    explicit SelectionOnPage(int pageNo=0, RectD *rect=NULL) :
+    explicit SelectionOnPage(int pageNo=0, RectD *rect=nullptr) :
         pageNo(pageNo), rect(rect ? *rect : RectD()) { }
 
     int     pageNo; // page this selection is on

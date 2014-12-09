@@ -16,7 +16,7 @@ VOID CPdfFilter::CleanUp()
 {
     if (m_pdfEngine) {
         delete m_pdfEngine;
-        m_pdfEngine = NULL;
+        m_pdfEngine = nullptr;
     }
     m_state = STATE_PDF_END;
 }
@@ -58,7 +58,7 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
         pdfDate += 2;
     return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
-        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
+        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 

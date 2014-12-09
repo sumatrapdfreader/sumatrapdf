@@ -243,7 +243,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
         if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator)
-                AppendMenu(menu, MF_SEPARATOR, 0, NULL);
+                AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
             ScopedMem<WCHAR> tmp(str::conv::FromUtf8(md.title));
@@ -287,7 +287,7 @@ static void AppendRecentFilesToMenu(HMENU m)
     }
 
     if (i > 0)
-        InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
+        InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
 }
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath)
@@ -521,7 +521,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
     POINT pt = { x, y };
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                             pt.x, pt.y, 0, win->hwndFrame, NULL);
+                             pt.x, pt.y, 0, win->hwndFrame, nullptr);
     switch (cmd) {
     case IDM_OPEN_SELECTED_DOCUMENT:
         {
@@ -581,7 +581,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     POINT pt = { x, y };
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                             pt.x, pt.y, 0, win->hwndFrame, NULL);
+                             pt.x, pt.y, 0, win->hwndFrame, nullptr);
     switch (cmd) {
     case IDM_COPY_SELECTION:
     case IDM_SELECT_ALL:
@@ -741,7 +741,7 @@ void ShowHideMenuBar(WindowInfo *win, bool showTemporarily)
         return;
     }
 
-    bool hideMenu = !showTemporarily && GetMenu(hwnd) != NULL;
-    SetMenu(hwnd, hideMenu ? NULL : win->menu);
+    bool hideMenu = !showTemporarily && GetMenu(hwnd) != nullptr;
+    SetMenu(hwnd, hideMenu ? nullptr : win->menu);
     win->isMenuHidden = hideMenu;
 }

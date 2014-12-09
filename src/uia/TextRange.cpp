@@ -240,7 +240,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release(void)
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Clone(ITextRangeProvider **clonedRange)
 {
-    if (clonedRange == NULL)
+    if (clonedRange == nullptr)
         return E_POINTER;
     *clonedRange = new SumatraUIAutomationTextRange(*this);
     return S_OK;
@@ -248,9 +248,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Clone(ITextRangeProvider
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Compare(ITextRangeProvider *range, BOOL *areSame)
 {
-    if (areSame == NULL)
+    if (areSame == nullptr)
         return E_POINTER;
-    if (range == NULL)
+    if (range == nullptr)
         return E_POINTER;
     // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     if (*((SumatraUIAutomationTextRange*)range) == *this)
@@ -262,9 +262,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Compare(ITextRangeProvid
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::CompareEndpoints(enum TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider *range, enum TextPatternRangeEndpoint targetEndPoint, int *compValue)
 {
-    if (range == NULL)
+    if (range == nullptr)
         return E_POINTER;
-    if (compValue == NULL)
+    if (compValue == nullptr)
         return E_POINTER;
 
     int comp_a_page, comp_a_idx;
@@ -359,19 +359,19 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(TEXTATTRIBUTEID attr, VARIANT val, BOOL backward, ITextRangeProvider **found)
 {
-    if (found == NULL)
+    if (found == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
 
     // raw text doesn't have attributes so just don't find anything
-    *found = NULL;
+    *found = nullptr;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL backward, BOOL ignoreCase, ITextRangeProvider **found)
 {
-    if (found == NULL)
+    if (found == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
@@ -382,13 +382,13 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(TEXTATTRIBUTEID attr, VARIANT *value)
 {
-    if (value == NULL)
+    if (value == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
 
     // text doesn't have attributes, we don't support those
-    IUnknown* not_supported = NULL;
+    IUnknown* not_supported = nullptr;
     HRESULT hr = uia::GetReservedNotSupportedValue(&not_supported);
     if (FAILED(hr))
         return hr;
@@ -400,7 +400,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(TEXTAT
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SAFEARRAY * *boundingRects)
 {
-    if (boundingRects == NULL)
+    if (boundingRects == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
@@ -420,7 +420,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetBoundingRectangles(SA
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetEnclosingElement(IRawElementProviderSimple **enclosingElement)
 {
-    if (enclosingElement == NULL)
+    if (enclosingElement == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
@@ -432,7 +432,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetEnclosingElement(IRaw
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, BSTR *text)
 {
-    if (text == NULL)
+    if (text == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;
@@ -466,7 +466,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,int count, int *moved)
 {
-    if (moved == NULL)
+    if (moved == nullptr)
         return E_POINTER;
 
     // if document is closed, don't do anything
@@ -508,7 +508,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Move(enum TextUnit unit,
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextPatternRangeEndpoint endpoint, TextUnit unit, int count, int *moved)
 {
-    if (moved == NULL)
+    if (moved == nullptr)
         return E_POINTER;
 
     // if document is closed, don't do anything
@@ -704,7 +704,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(TextPatternRangeEndpoint srcEndPoint, ITextRangeProvider *range, TextPatternRangeEndpoint targetEndPoint)
 {
-    if (range == NULL)
+    if (range == nullptr)
         return E_POINTER;
 
     // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
@@ -793,7 +793,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ScrollIntoView(BOOL alig
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY **children)
 {
-    if (children == NULL)
+    if (children == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
         return E_FAIL;

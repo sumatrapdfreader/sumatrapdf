@@ -24,11 +24,11 @@ typedef HRESULT (WINAPI *UiaGetReservedNotSupportedValueProc)(IUnknown **punkNot
 namespace uia {
 
 static bool gFuncsLoaded = false;
-static UiaReturnRawElementProviderProc _UiaReturnRawElementProvider = NULL;
-static UiaHostProviderFromHwndProc _UiaHostProviderFromHwnd = NULL;
-static UiaRaiseAutomationEventProc _UiaRaiseAutomationEvent = NULL;
-static UiaRaiseStructureChangedEventProc _UiaRaiseStructureChangedEvent = NULL;
-static UiaGetReservedNotSupportedValueProc _UiaGetReservedNotSupportedValue = NULL;
+static UiaReturnRawElementProviderProc _UiaReturnRawElementProvider = nullptr;
+static UiaHostProviderFromHwndProc _UiaHostProviderFromHwnd = nullptr;
+static UiaRaiseAutomationEventProc _UiaRaiseAutomationEvent = nullptr;
+static UiaRaiseStructureChangedEventProc _UiaRaiseStructureChangedEvent = nullptr;
+static UiaGetReservedNotSupportedValueProc _UiaGetReservedNotSupportedValue = nullptr;
 
 void Initialize()
 {
@@ -91,7 +91,7 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue)
 };
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(HWND hwnd) :
-    refCount(1), canvasHwnd(hwnd), startpage(NULL), document(NULL)
+    refCount(1), canvasHwnd(hwnd), startpage(nullptr), document(nullptr)
 {
     dbghelp::LogCallstack();
     startpage = new SumatraUIAutomationStartPageProvider(hwnd, this);
@@ -102,11 +102,11 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
     if (document) {
         document->FreeDocument(); // tell that the dm is now invalid
         document->Release(); // release our hooks
-        document = NULL;
+        document = nullptr;
     }
 
     startpage->Release();
-    startpage = NULL;
+    startpage = nullptr;
 }
 
 void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
@@ -115,7 +115,7 @@ void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);
-    uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
+    uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
 }
 
 void SumatraUIAutomationProvider::OnDocumentUnload()
@@ -123,8 +123,8 @@ void SumatraUIAutomationProvider::OnDocumentUnload()
     if (document) {
         document->FreeDocument(); // tell that the dm is now invalid
         document->Release(); // release our hooks
-        document = NULL;
-        uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
+        document = nullptr;
+        uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, nullptr, 0);
     }
 }
 
@@ -163,13 +163,13 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release(void)
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal)
 {
-    *pRetVal = NULL;
+    *pRetVal = nullptr;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTYID propertyId,VARIANT *pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
     if (propertyId == UIA_NamePropertyId) {
@@ -201,7 +201,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_HostRawElementProvide
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(ProviderOptions *pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
     *pRetVal = ProviderOptions_ServerSideProvider;
     return S_OK;
@@ -209,10 +209,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(Provi
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDirection direction, IRawElementProviderFragment **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
-    *pRetVal = NULL;
+    *pRetVal = nullptr;
     // no siblings, no parent
     if (direction == NavigateDirection_Parent ||
         direction == NavigateDirection_NextSibling ||
@@ -236,21 +236,21 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDir
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetRuntimeId(SAFEARRAY **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
-    // top-level elements should return NULL
-    *pRetVal = NULL;
+    // top-level elements should return nullptr
+    *pRetVal = nullptr;
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetEmbeddedFragmentRoots(SAFEARRAY **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
-    // no other roots => return NULL
-    *pRetVal = NULL;
+    // no other roots => return nullptr
+    *pRetVal = nullptr;
     return S_OK;
 }
 
@@ -261,7 +261,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::SetFocus(void)
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(struct UiaRect *pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
     // return Bounding Rect of the Canvas area
@@ -278,7 +278,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(str
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_FragmentRoot(IRawElementProviderFragmentRoot **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
     *pRetVal = this;
@@ -288,7 +288,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_FragmentRoot(IRawElem
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::ElementProviderFromPoint(double x,double y,IRawElementProviderFragment **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
     *pRetVal = this->GetElementFromPoint(x,y,this);
@@ -297,7 +297,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::ElementProviderFromPoint(
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetFocus(IRawElementProviderFragment **pRetVal)
 {
-    if (pRetVal == NULL)
+    if (pRetVal == nullptr)
         return E_POINTER;
 
     // whichever child exists in the tree has the focus
@@ -313,7 +313,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetFocus(IRawElementProvi
 IRawElementProviderFragment* SumatraUIAutomationProvider::GetElementFromPoint(double x,double y,IRawElementProviderFragment * root)
 {
     if (!root)
-        return NULL;
+        return nullptr;
 
     // check the children
     IRawElementProviderFragment* it;

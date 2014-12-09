@@ -79,7 +79,7 @@ public:
     } color;
 
     TabPainter(HWND wnd, SizeI tabSize) :
-        hwnd(wnd), data(NULL), width(0), height(0),
+        hwnd(wnd), data(nullptr), width(0), height(0),
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
         isMouseInClientArea(false), isDragging(false), inTitlebar(false), currBgCol(DEFAULT_CURRENT_BG_COL) {
         Reshape(tabSize.dx, tabSize.dy);
@@ -132,7 +132,7 @@ public:
     }
 
     // Finds the index of the tab, which contains the given point.
-    int IndexFromPoint(int x, int y, bool *inXbutton=NULL) {
+    int IndexFromPoint(int x, int y, bool *inXbutton=nullptr) {
         Point point(x, y);
         Graphics graphics(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
@@ -226,7 +226,7 @@ public:
                 continue;
 
             // in firefox style we only paint current and highlighed tabs
-            // all other tabs only show 
+            // all other tabs only show
             bool onlyText = g_FirefoxStyle && !((current == i) || (highlighted == i));
             if (onlyText) {
 #if 0
@@ -369,7 +369,7 @@ static void TabNotification(WindowInfo *win, UINT code, int idx1, int idx2) {
     if (!WindowInfoStillValid(win)) {
         return;
     }
-    NMHDR nmhdr = { NULL, 0, code };
+    NMHDR nmhdr = { nullptr, 0, code };
     if (TabsOnNotify(win, (LPARAM)&nmhdr, idx1, idx2)) {
         return;
     }
@@ -391,7 +391,7 @@ static void TabNotification(WindowInfo *win, UINT code, int idx1, int idx2) {
     }
 }
 
-static WNDPROC DefWndProcTabBar = NULL;
+static WNDPROC DefWndProcTabBar = nullptr;
 static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
@@ -416,7 +416,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         tab->xClicked = -1;
         if (tab->isMouseInClientArea)
             PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
-        InvalidateRgn(hwnd, NULL, FALSE);
+        InvalidateRgn(hwnd, nullptr, FALSE);
         UpdateWindow(hwnd);
         break;
 
@@ -440,7 +440,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             if (tab->isMouseInClientArea)
                 PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
             if (tab->Count()) {
-                InvalidateRgn(hwnd, NULL, FALSE);
+                InvalidateRgn(hwnd, nullptr, FALSE);
                 UpdateWindow(hwnd);
             }
         }
@@ -457,7 +457,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             if (tab->isMouseInClientArea)
                 PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
             if (tab->Count()) {
-                InvalidateRgn(hwnd, NULL, FALSE);
+                InvalidateRgn(hwnd, nullptr, FALSE);
                 UpdateWindow(hwnd);
             }
         }
@@ -604,7 +604,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         {
             RECT rc;
             GetUpdateRect(hwnd, &rc, FALSE);
-            // TODO: when is wParam != NULL?
+            // TODO: when is wParam != nullptr?
             hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
 
             DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
@@ -612,7 +612,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             tab->Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 
-            ValidateRect(hwnd, NULL);
+            ValidateRect(hwnd, nullptr);
             if (!wParam)
                 EndPaint(hwnd, &ps);
             return 0;
@@ -632,11 +632,11 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
 void CreateTabbar(WindowInfo *win)
 {
-    HWND hwndTabBar = CreateWindow(WC_TABCONTROL, L"", 
-        WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | 
-        TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT, 
-        0, 0, 0, 0, 
-        win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(NULL), NULL);
+    HWND hwndTabBar = CreateWindow(WC_TABCONTROL, L"",
+        WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ |
+        TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT,
+        0, 0, 0, 0,
+        win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(nullptr), nullptr);
 
     if (!DefWndProcTabBar)
         DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
@@ -767,9 +767,9 @@ void TabsOnCloseDoc(WindowInfo *win)
     win->tabs.Remove(tdata);
     delete tdata;
     TabCtrl_DeleteItem(win->hwndTabBar, current);
-    win->loadedFilePath = NULL;
-    win->ctrl = NULL;
-    win->currentTab = NULL;
+    win->loadedFilePath = nullptr;
+    win->ctrl = nullptr;
+    win->currentTab = nullptr;
     UpdateTabWidth(win);
 
     if (win->tabs.Count() > 0) {
@@ -784,9 +784,9 @@ void TabsOnCloseWindow(WindowInfo *win)
 {
     TabCtrl_DeleteAllItems(win->hwndTabBar);
     win->tabSelectionHistory->Reset();
-    win->currentTab = NULL;
-    win->ctrl = NULL;
-    win->loadedFilePath = NULL;
+    win->currentTab = nullptr;
+    win->ctrl = nullptr;
+    win->loadedFilePath = nullptr;
     DeleteVecMembers(win->tabs);
 }
 
@@ -893,7 +893,7 @@ void SetTabsInTitlebar(WindowInfo *win, bool set)
         dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
         win->extendedFrameHeight = 0;
     }
-    SetWindowPos(win->hwndFrame, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+    SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
 }
 
 // Selects the given tab (0-based index).
@@ -902,7 +902,7 @@ void TabsSelect(WindowInfo *win, int tabIndex)
     int count = (int)win->tabs.Count();
     if (count < 2 || tabIndex < 0 || tabIndex >= count)
         return;
-    NMHDR ntd = { NULL, 0, TCN_SELCHANGING };
+    NMHDR ntd = { nullptr, 0, TCN_SELCHANGING };
     if (TabsOnNotify(win, (LPARAM)&ntd))
         return;
     win->currentTab = win->tabs.At(tabIndex);

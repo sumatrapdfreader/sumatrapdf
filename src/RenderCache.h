@@ -12,7 +12,7 @@
 
 class RenderingCallback {
 public:
-    virtual void Callback(RenderedBitmap *bmp=NULL) = 0;
+    virtual void Callback(RenderedBitmap *bmp=nullptr) = 0;
     virtual ~RenderingCallback() { }
 };
 
@@ -97,7 +97,7 @@ public:
                    RectD pageRect, RenderingCallback& callback);
     void    CancelRendering(DisplayModel *dm);
     bool    Exists(DisplayModel *dm, int pageNo, int rotation,
-                   float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
+                   float zoom=INVALID_ZOOM, TilePosition *tile=nullptr);
     void    FreeForDisplayModel(DisplayModel *dm) { FreePage(dm); }
     void    KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
     void    Invalidate(DisplayModel *dm, int pageNo, RectD rect);
@@ -124,18 +124,18 @@ private:
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
     void    RequestRendering(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueueForPage=true);
     bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
-                   TilePosition *tile=NULL, RectD *pageRect=NULL,
-                   RenderingCallback *callback=NULL);
+                   TilePosition *tile=nullptr, RectD *pageRect=nullptr,
+                   RenderingCallback *callback=nullptr);
     void    ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
-                                      TilePosition *tile=NULL);
+                                      TilePosition *tile=nullptr);
     void    AbortCurrentRequest();
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);
 
     BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
-                             float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
+                             float zoom=INVALID_ZOOM, TilePosition *tile=nullptr);
     void    DropCacheEntry(BitmapCacheEntry *entry);
-    void    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
+    void    FreePage(DisplayModel *dm=nullptr, int pageNo=-1, TilePosition *tile=nullptr);
     void    FreeNotVisible() { FreePage(); }
 
     UINT    PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,

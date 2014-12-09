@@ -24,9 +24,9 @@
 #include "Translations.h"
 
 TabInfo::TabInfo() :
-    ctrl(NULL), tabTitle(NULL),
-    showToc(false), showTocPresentation(false), tocRoot(NULL),
-    reloadOnFocus(false), watcher(NULL), selectionOnPage(NULL),
+    ctrl(nullptr), tabTitle(nullptr),
+    showToc(false), showTocPresentation(false), tocRoot(nullptr),
+    reloadOnFocus(false), watcher(nullptr), selectionOnPage(nullptr),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)
 {
 }

@@ -34,7 +34,7 @@ public:
     virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
     virtual DisplayMode GetDisplayMode() const { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
     virtual void SetPresentationMode(bool enable) { /* not supported */ }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=NULL) { /* not supported */ }
+    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr) { /* not supported */ }
     virtual float GetZoomVirtual(bool absolute=false) const { return 100; }
     virtual float GetNextZoomStep(float towards) const { return 100; }
     virtual void SetViewPortSize(SizeI size);
@@ -85,7 +85,7 @@ protected:
     // pages being sent from background formatting thread
     Vec<HtmlPage*> *    incomingPages;
 
-    // currPageNo is in range 1..$numberOfPages. 
+    // currPageNo is in range 1..$numberOfPages.
     int             currPageNo;
     // reparseIdx of the current page (the first one if we're showing 2)
     int             currPageReparseIdx;
@@ -108,7 +108,7 @@ protected:
 
     Vec<HtmlPage*> *GetPages();
     void        UpdateStatus();
-    bool        FormattingInProgress() const { return formattingThread != NULL; }
+    bool        FormattingInProgress() const { return formattingThread != nullptr; }
     void        StopFormattingThread();
     void        CloseCurrentDocument();
     int         GetMaxPageCount() const;
@@ -126,4 +126,4 @@ protected:
     void        ClickedPage2(Control *c, int x, int y);
 };
 
-HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=NULL);
+HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator *textAllocator=nullptr);

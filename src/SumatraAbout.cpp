@@ -72,8 +72,8 @@
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
-static HWND gHwndAboutTooltip = NULL;
-static const WCHAR *gClickedURL = NULL;
+static HWND gHwndAboutTooltip = nullptr;
+static const WCHAR *gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
@@ -98,12 +98,12 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"last change",    L"git commit " GIT_COMMIT_ID_STR, L"https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR },
 #endif
 #ifdef SVN_PRE_RELEASE_VER
-    { L"a note",         L"Pre-release version, for testing only!", NULL },
+    { L"a note",         L"Pre-release version, for testing only!", nullptr },
 #endif
 #ifdef DEBUG
-    { L"a note",         L"Debug version, for testing only!", NULL },
+    { L"a note",         L"Debug version, for testing only!", nullptr },
 #endif
-    { NULL, NULL, NULL }
+    { nullptr, nullptr, nullptr }
 };
 
 static Vec<StaticLinkInfo> gLinkInfo;
@@ -421,7 +421,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
 const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
     if (!HasPermission(Perm_DiskAccess))
-        return NULL;
+        return nullptr;
 
     PointI pt(x, y);
     for (size_t i = 0; i < linkInfo.Count(); i++) {
@@ -432,7 +432,7 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
@@ -441,9 +441,9 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
         return;
 
     gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST,
-        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        gHwndAbout, NULL, GetModuleHandle(NULL), NULL);
+        gHwndAbout, nullptr, GetModuleHandle(nullptr), nullptr);
 
     TOOLINFO ti = { 0 };
     ti.cbSize = sizeof(ti);
@@ -466,7 +466,7 @@ static void ClearInfotip()
 
     SendMessage(gHwndAboutTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
     DestroyWindow(gHwndAboutTooltip);
-    gHwndAboutTooltip = NULL;
+    gHwndAboutTooltip = nullptr;
 }
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -523,7 +523,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_DESTROY:
             ClearInfotip();
             assert(gHwndAbout);
-            gHwndAbout = NULL;
+            gHwndAbout = nullptr;
             break;
 
         default:
@@ -542,7 +542,7 @@ void OnMenuAbout()
     if (!gAtomAbout) {
         WNDCLASSEX  wcex;
         FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
-        wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }
@@ -552,8 +552,8 @@ void OnMenuAbout()
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
             CW_USEDEFAULT, CW_USEDEFAULT,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL, NULL,
-            GetModuleHandle(NULL), NULL);
+            nullptr, nullptr,
+            GetModuleHandle(nullptr), nullptr);
     if (!gHwndAbout)
         return;
 
@@ -700,7 +700,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 else {
                     state->thumbnail->StretchDIBits(hdc, page);
                 }
-                SelectClipRgn(hdc, NULL);
+                SelectClipRgn(hdc, nullptr);
                 DeleteObject(clip);
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);

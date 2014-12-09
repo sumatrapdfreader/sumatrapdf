@@ -24,7 +24,7 @@
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
 
-static WatchedFile * gWatchedSettingsFile = NULL;
+static WatchedFile * gWatchedSettingsFile = nullptr;
 
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
@@ -57,7 +57,7 @@ bool Load()
     CrashIf(gGlobalPrefs);
 
     ScopedMem<WCHAR> path(GetSettingsPath());
-    ScopedMem<char> prefsData(file::ReadAll(path, NULL));
+    ScopedMem<char> prefsData(file::ReadAll(path, nullptr));
     gGlobalPrefs = NewGlobalPrefs(prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
@@ -99,7 +99,7 @@ bool Load()
         gGlobalPrefs->zoomLevels->Pop();
     }
 
-    // TODO: verify that all states have a non-NULL file path?
+    // TODO: verify that all states have a non-nullptr file path?
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
     SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
 
@@ -186,7 +186,7 @@ bool Reload()
     bool showToolbar = gGlobalPrefs->showToolbar;
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
-    gFileHistory.UpdateStatesSource(NULL);
+    gFileHistory.UpdateStatesSource(nullptr);
     CleanUp();
 
     bool ok = Load();
@@ -216,7 +216,7 @@ bool Reload()
 void CleanUp()
 {
     DeleteGlobalPrefs(gGlobalPrefs);
-    gGlobalPrefs = NULL;
+    gGlobalPrefs = nullptr;
 }
 
 class SettingsFileObserver : public FileChangeObserver {

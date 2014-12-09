@@ -118,7 +118,7 @@ extern HBITMAP                  gBitmapReloadingCue;
 extern HCURSOR                  gCursorDrag;
 extern bool                     gCrashOnOpen;
 
-#define gPluginMode             (gPluginURL != NULL)
+#define gPluginMode             (gPluginURL != nullptr)
 
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();
@@ -156,7 +156,7 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab);
 // one place
 struct LoadArgs
 {
-    explicit LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL) :
+    explicit LoadArgs(const WCHAR *fileName, WindowInfo *win=nullptr) :
         fileName(fileName), win(win), showWin(true), forceReuse(false),
         isNewWindow(false), allowFailure(true), placeWindow(true) { }
 
@@ -174,7 +174,7 @@ WindowInfo* LoadDocument(LoadArgs& args);
 WindowInfo *CreateAndShowWindowInfo();
 
 UINT MbRtlReadingMaybe();
-void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL);
+void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = nullptr);
 void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wnd);
 bool DocumentPathExists(const WCHAR *path);
 void EnterFullScreen(WindowInfo* win, bool presentation=false);

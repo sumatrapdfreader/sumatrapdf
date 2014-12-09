@@ -35,7 +35,7 @@ protected:
     ScopedHandle hMap;
 
 public:
-    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap=NULL) : hbmp(hbmp), size(size), hMap(hMap) { }
+    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap=nullptr) : hbmp(hbmp), size(size), hMap(hMap) { }
     ~RenderedBitmap() { DeleteObject(hbmp); }
 
     RenderedBitmap *Clone() const {
@@ -85,11 +85,11 @@ public:
     virtual RectD GetDestRect() const = 0;
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
-    virtual WCHAR *GetDestValue() const { return NULL; }
-    // the name of this destination (reverses BaseEngine::GetNamedDest) or NULL
+    virtual WCHAR *GetDestValue() const { return nullptr; }
+    // the name of this destination (reverses BaseEngine::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result
-    virtual WCHAR *GetDestName() const { return NULL; }
+    virtual WCHAR *GetDestName() const { return nullptr; }
 
     // if this destination's target is an embedded file, this allows to
     // save that file efficiently (the LinkSaverUI might get passed a link
@@ -103,7 +103,7 @@ struct PageAnnotation {
         uint8_t r, g, b, a;
         Color() : r(0), g(0), b(0), a(0) { }
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) : r(r), g(g), b(b), a(a) { }
-        explicit Color(COLORREF c, uint8_t a=255) : 
+        explicit Color(COLORREF c, uint8_t a=255) :
             r(GetRValueSafe(c)), g(GetGValueSafe(c)), b(GetBValueSafe(c)), a(a) { }
         bool operator==(const Color& other) const {
             return other.r == r && other.g == g && other.b == b && other.a == a;
@@ -143,10 +143,10 @@ public:
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageDestination *AsLink() { return NULL; }
+    virtual PageDestination *AsLink() { return nullptr; }
     // if this element is an image, this returns it
     // caller must delete the result
-    virtual RenderedBitmap *GetImage() { return NULL; }
+    virtual RenderedBitmap *GetImage() { return nullptr; }
 };
 
 // an item in a document's Table of Content
@@ -172,13 +172,13 @@ public:
     DocTocItem *next;
 
     explicit DocTocItem(WCHAR *title, int pageNo=0) :
-        title(title), open(false), pageNo(pageNo), id(0), child(NULL), next(NULL), last(NULL) { }
+        title(title), open(false), pageNo(pageNo), id(0), child(nullptr), next(nullptr), last(nullptr) { }
 
     virtual ~DocTocItem() {
         delete child;
         while (next) {
             DocTocItem *tmp = next->next;
-            next->next = NULL;
+            next->next = nullptr;
             delete next;
             next = tmp;
         }
@@ -200,7 +200,7 @@ public:
         }
     }
 
-    // returns the destination this ToC item points to or NULL
+    // returns the destination this ToC item points to or nullptr
     // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination *GetLink() = 0;
 };
@@ -235,12 +235,12 @@ public:
 
     // renders a page into a cacheable RenderedBitmap
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) = 0;
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) = 0;
     // renders a page directly into an hDC (e.g. for printing)
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) = 0;
+                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) = 0;
     // for both rendering methods: *cookie_out must be deleted after the call returns
 
     // applies zoom and rotation to a point in user/page space converting
@@ -260,8 +260,8 @@ public:
     virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) { return false; }
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
-    // caller needs to free() the result and *coords_out (if coords_out is non-NULL)
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=NULL,
+    // caller needs to free() the result and *coords_out (if coords_out is non-nullptr)
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
                                     RenderTarget target=Target_View) = 0;
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
@@ -297,18 +297,18 @@ public:
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
     virtual Vec<PageElement *> *GetElements(int pageNo) = 0;
-    // returns the element at a given point or NULL if there's none
+    // returns the element at a given point or nullptr if there's none
     // caller must delete the result
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt) = 0;
 
-    // creates a PageDestination from a name (or NULL for invalid names)
+    // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return nullptr; }
     // checks whether this document has an associated Table of Contents
     virtual bool HasTocTree() const { return false; }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocItem *GetTocTree() { return NULL; }
+    virtual DocTocItem *GetTocTree() { return nullptr; }
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
@@ -324,7 +324,7 @@ public:
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    virtual char *GetDecryptionKey() const { return NULL; }
+    virtual char *GetDecryptionKey() const { return nullptr; }
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times

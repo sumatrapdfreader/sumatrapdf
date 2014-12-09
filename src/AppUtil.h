@@ -6,4 +6,4 @@ int CompareVersion(const WCHAR *txt1, const WCHAR *txt2);
 
 bool AdjustVariableDriveLetter(WCHAR *path);
 
-bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileUrl=NULL);
+bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileUrl=nullptr);

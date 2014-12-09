@@ -26,7 +26,7 @@ namespace conv {
 
 const WCHAR *   FromDisplayMode(DisplayMode mode);
 DisplayMode     ToDisplayMode(const WCHAR *s, DisplayMode defVal);
-void            FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140=NULL);
+void            FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140=nullptr);
 float           ToZoom(const char *s, float defVal);
 
 };

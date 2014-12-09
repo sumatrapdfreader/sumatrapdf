@@ -101,12 +101,12 @@ public:
     virtual void Run() override;
 };
 
-static FileExistenceChecker *gFileExistenceChecker = NULL;
+static FileExistenceChecker *gFileExistenceChecker = nullptr;
 
 void FileExistenceChecker::GetFilePathsToCheck()
 {
     DisplayState *state;
-    for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != NULL; i++) {
+    for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != nullptr; i++) {
         if (!state->isMissing)
             paths.Append(str::Dup(state->filePath));
     }
@@ -133,7 +133,7 @@ void FileExistenceChecker::HideMissingFiles()
 
 void FileExistenceChecker::Terminate()
 {
-    gFileExistenceChecker = NULL;
+    gFileExistenceChecker = nullptr;
     Join(); // just to be safe
     delete this;
 }
@@ -182,7 +182,7 @@ static bool RegisterWinClass()
     ATOM        atom;
 
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon  = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
     CrashIf(!wcex.hIcon);
     // For the extended translucent frame to be visible, we need black background.
     wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
@@ -195,7 +195,7 @@ static bool RegisterWinClass()
     CrashIf(!atom);
 
     FillWndClassEx(wcex, PROPERTIES_CLASS_NAME, WndProcProperties);
-    wcex.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
     CrashIf(!wcex.hIcon);
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
@@ -241,10 +241,10 @@ COLORREF GetNoDocBgColor()
 
 static bool InstanceInit(int nCmdShow)
 {
-    gCursorDrag     = LoadCursor(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_CURSORDRAG));
+    gCursorDrag     = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));
     CrashIf(!gCursorDrag);
 
-    gBitmapReloadingCue = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_RELOADING_CUE));
+    gBitmapReloadingCue = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDB_RELOADING_CUE));
     CrashIf(!gBitmapReloadingCue);
     return true;
 }
@@ -253,7 +253,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
 {
     // delegate file opening to a previously running instance by sending a DDE message
     WCHAR fullpath[MAX_PATH];
-    GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
+    GetFullPathName(filePath, dimof(fullpath), fullpath, nullptr);
 
     str::Str<WCHAR> cmd;
     cmd.AppendFmt(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath);
@@ -278,7 +278,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
         COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
-        LRESULT res = SendMessage(targetWnd, WM_COPYDATA, NULL, (LPARAM)&cds);
+        LRESULT res = SendMessage(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res)
             return;
     }
@@ -417,7 +417,7 @@ static HWND FindPrevInstWindow(HANDLE *hMutex)
     int retriesLeft = 3;
 Retry:
     // use a memory mapping containing a process id as mutex
-    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
+    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, sizeof(DWORD), mapId);
     if (!hMap)
         goto Error;
     bool hasPrevInst = GetLastError() == ERROR_ALREADY_EXISTS;
@@ -430,15 +430,15 @@ Retry:
         *procId = GetCurrentProcessId();
         UnmapViewOfFile(procId);
         *hMutex = hMap;
-        return NULL;
+        return nullptr;
     }
 
     // if the mapping already exists, find one window belonging to the original process
     DWORD prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
-    HWND hwnd = NULL;
-    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)) != NULL) {
+    HWND hwnd = nullptr;
+    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
         DWORD wndProcId;
         GetWindowThreadProcessId(hwnd, &wndProcId);
         if (wndProcId == prevProcId) {
@@ -450,7 +450,7 @@ Retry:
     // fall through
 Error:
     if (--retriesLeft < 0)
-        return NULL;
+        return nullptr;
     Sleep(100);
     goto Retry;
 }
@@ -479,9 +479,9 @@ static int GetPolicies(bool isRestricted)
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
     ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
     if (file::Exists(restrictPath)) {
-        ScopedMem<char> restrictData(file::ReadAll(restrictPath, NULL));
+        ScopedMem<char> restrictData(file::ReadAll(restrictPath, nullptr));
         SquareTree sqt(restrictData);
-        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : NULL;
+        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
         if (!polsec)
             return Perm_RestrictedUse;
 
@@ -494,13 +494,13 @@ static int GetPolicies(bool isRestricted)
         // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
             const char *value;
-            if ((value = polsec->GetValue("LinkProtocols")) != NULL) {
+            if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
                 ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
                 gAllowedLinkProtocols.Split(protocols, L",", true);
             }
-            if ((value = polsec->GetValue("SafeFileTypes")) != NULL) {
+            if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
                 ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
@@ -533,7 +533,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
        see this dialog */
     if (!gGlobalPrefs->associateSilently) {
         INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
-        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : NULL);
+        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : nullptr);
     }
     // for now, .pdf is the only choice
     if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf"))
@@ -545,10 +545,10 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
 static int RunMessageLoop()
 {
-    HACCEL accTable = LoadAccelerators(GetModuleHandle(NULL), MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    HACCEL accTable = LoadAccelerators(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_SUMATRAPDF));
     MSG msg = { 0 };
 
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessage(&msg, nullptr, 0, 0)) {
         // dispatch the accelerator to the correct window
         WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
@@ -589,7 +589,7 @@ static bool AutoUpdateMain()
         free(argList.At(2));
         argList.At(2) = str::Format(L"replace:%s", exePath);
     }
-    const WCHAR *otherExe = NULL;
+    const WCHAR *otherExe = nullptr;
     if (str::StartsWith(argList.At(2), L"replace:"))
         otherExe = argList.At(2) + 8;
     else if (str::StartsWith(argList.At(2), L"cleanup:"))
@@ -655,7 +655,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 #endif
 
-    srand((unsigned int)time(NULL));
+    srand((unsigned int)time(nullptr));
 
     // load uiautomationcore.dll before installing crash handler (i.e. initializing
     // dbghelp.dll), so that we get function names/offsets in GetCallstack()
@@ -709,7 +709,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!RegisterWinClass())
         goto Exit;
 
-    CrashIf(hInstance != GetModuleHandle(NULL));
+    CrashIf(hInstance != GetModuleHandle(nullptr));
     if (!InstanceInit(nCmdShow))
         goto Exit;
 
@@ -741,13 +741,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
     }
 
-    HANDLE hMutex = NULL;
-    HWND hPrevWnd = NULL;
+    HANDLE hMutex = nullptr;
+    HWND hPrevWnd = nullptr;
     if (i.printDialog || i.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
     }
     else if (i.reuseDdeInstance) {
-        hPrevWnd = FindWindow(FRAME_CLASS_NAME, NULL);
+        hPrevWnd = FindWindow(FRAME_CLASS_NAME, nullptr);
     }
     else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
         hPrevWnd = FindPrevInstWindow(&hMutex);
@@ -759,7 +759,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    WindowInfo *win = NULL;
+    WindowInfo *win = nullptr;
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         win = LoadOnStartup(i.fileNames.At(n), i, !win);
         if (!win) {
@@ -851,7 +851,7 @@ Exit:
 
     // must be after uitask::Destroy() because we might have queued prefs::Reload()
     // which crashes if gGlobalPrefs is freed
-    gFileHistory.UpdateStatesSource(NULL);
+    gFileHistory.UpdateStatesSource(nullptr);
     prefs::CleanUp();
 
     // it's still possible to crash after this (destructors of static classes,
