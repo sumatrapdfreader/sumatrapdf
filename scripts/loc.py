@@ -11,6 +11,7 @@ pj = os.path.join
 DIRS = ["src",
         pj("src", "utils"),
         pj("src", "mui"),
+        pj("src", "wingui"),
         pj("src", "installer"),
         pj("src", "ifilter"),
         pj("src", "previewer"),
