@@ -135,7 +135,7 @@ void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd) {
         if (psd->uSizeInfo & DS_SizeY)
             rect.dy += nDeltaY;
 
-        DeferWindowPos(hdwp, hwndChild, NULL, rect.x, rect.y, rect.dx, rect.dy,
+        DeferWindowPos(hdwp, hwndChild, nullptr, rect.x, rect.y, rect.dx, rect.dy,
                        SWP_NOACTIVATE | SWP_NOZORDER);
     }
     EndDeferWindowPos(hdwp);

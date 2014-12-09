@@ -79,7 +79,7 @@ static ATOM RegisterClass(Win32Window *w) {
     wcex.hIcon = w->hIcon;
     wcex.hIconSm = w->hIconSm;
     wcex.lpszMenuName = w->lpszMenuName;
-    wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszClassName = WIN_CLASS;
 

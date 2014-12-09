@@ -81,7 +81,7 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT &ps) {
         opts = opts | ETO_RTLREADING;
     }
 
-    HGDIOBJ prevFont = NULL;
+    HGDIOBJ prevFont = nullptr;
     if (w->font) {
         prevFont = SelectObject(hdc, w->font);
     }
@@ -89,7 +89,7 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT &ps) {
     SetBkColor(hdc, w->bgCol);
 
     WCHAR *s = win::GetText(w->hwnd);
-    ExtTextOut(hdc, x, y, opts, NULL, s, (UINT)str::Len(s), NULL);
+    ExtTextOut(hdc, x, y, opts, nullptr, s, (UINT)str::Len(s), nullptr);
     free(s);
 
     // Text might be too long and invade close button area. We just re-paint
@@ -134,7 +134,7 @@ static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LP
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
 
-    LabelWithCloseWnd *w = NULL;
+    LabelWithCloseWnd *w = nullptr;
     if (WM_NCCREATE == msg) {
         LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
         w = reinterpret_cast<LabelWithCloseWnd *>(lpcs->lpCreateParams);
@@ -235,7 +235,7 @@ LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd) {
 
     // sets w->hwnd during WM_NCCREATE
     CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, parent, (HMENU)cmd,
-                 GetModuleHandle(NULL), w);
+                 GetModuleHandle(nullptr), w);
     CrashIf(!w->hwnd);
     return w;
 }

@@ -143,7 +143,7 @@ static LRESULT CALLBACK WndProcFrameRate(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 }
 
 static void RegisterFrameRateWndClass() {
-    static ATOM atom = NULL;
+    static ATOM atom = 0;
     if (!atom) {
         WNDCLASSEX wcex;
         FillWndClassEx(wcex, FRAME_RATE_CLASS_NAME, WndProcFrameRate);
@@ -165,7 +165,7 @@ bool CreateFrameRateWnd(FrameRateWnd *w) {
     // so that we can intercept moving messages and re-position frame rate window
     // during main window moves
     HWND topLevel = w->hwndAssociatedWith;
-    while (GetParent(topLevel) != NULL) {
+    while (GetParent(topLevel) != nullptr) {
         topLevel = GetParent(topLevel);
     }
     w->hwndAssociatedWithTopLevel = topLevel;
@@ -178,8 +178,8 @@ bool CreateFrameRateWnd(FrameRateWnd *w) {
     // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
     // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
     HWND hwnd =
-        CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, NULL, dwStyle, 0,
-                       0, 0, 0, w->hwndAssociatedWith, NULL, GetModuleHandle(NULL), w);
+        CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0,
+                       0, 0, 0, w->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), w);
     CrashIf(hwnd != w->hwnd);
     if (!hwnd) {
         return false;

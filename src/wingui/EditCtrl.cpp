@@ -16,7 +16,7 @@ static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                                        UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     EditCtrl *w = (EditCtrl *)dwRefData;
     CrashIf(GetParent(w->hwnd) != (HWND)lp);
-    if ((WM_CTLCOLOREDIT == msg) && (w->bgBrush != NULL)) {
+    if ((WM_CTLCOLOREDIT == msg) && (w->bgBrush != nullptr)) {
         HDC hdc = (HDC)wp;
         // SetBkColor(hdc, w->bgCol);
         SetBkMode(hdc, TRANSPARENT);

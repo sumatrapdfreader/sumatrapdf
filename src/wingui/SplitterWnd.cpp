@@ -12,8 +12,8 @@
 
 #define SPLITTER_CLASS_NAME L"SplitterWndClass"
 
-static HBITMAP splitterBmp = NULL;
-static HBRUSH splitterBrush = NULL;
+static HBITMAP splitterBmp = nullptr;
+static HBRUSH splitterBrush = nullptr;
 
 struct SplitterWnd {
     // none of this data needs to be freed by us
@@ -93,7 +93,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
     }
 
-    SplitterWnd *w = NULL;
+    SplitterWnd *w = nullptr;
     if (WM_NCCREATE == msg) {
         LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lp);
         w = reinterpret_cast<SplitterWnd *>(lpcs->lpCreateParams);
@@ -187,7 +187,7 @@ SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterC
     w->parentClipsChildren = bit::IsMaskSet<DWORD>(style, WS_CLIPCHILDREN);
     // w->hwnd is set during WM_NCCREATE
     CreateWindow(SPLITTER_CLASS_NAME, L"", WS_CHILDWINDOW, 0, 0, 0, 0, parent, (HMENU)0,
-                 GetModuleHandle(NULL), w);
+                 GetModuleHandle(nullptr), w);
     CrashIf(!w->hwnd);
     return w;
 }
@@ -203,7 +203,7 @@ void SetSplitterLive(SplitterWnd *w, bool live) { w->isLive = live; }
 
 void DeleteSplitterBrush() {
     DeleteObject(splitterBrush);
-    splitterBrush = NULL;
+    splitterBrush = nullptr;
     DeleteObject(splitterBmp);
-    splitterBmp = NULL;
+    splitterBmp = nullptr;
 }
