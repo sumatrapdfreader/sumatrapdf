@@ -294,7 +294,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath)
 {
     if (0 == gGlobalPrefs->externalViewers->Count())
         return;
-    if (!HasPermission(Perm_DiskAccess) || !file::Exists(filePath))
+    if (!HasPermission(Perm_DiskAccess) || (filePath && !file::Exists(filePath)))
         return;
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
@@ -437,12 +437,16 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         // are removed instead of disabled (and can remain enabled
         // for broken XPS/CHM documents)
     };
+    // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        IDM_RENAME_FILE, IDM_SEND_BY_EMAIL
-    };
-    static UINT menusToEnableIfBrokenPDF[] = {
+        IDM_RENAME_FILE, IDM_SEND_BY_EMAIL,
         IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
     };
+#define menusToEnableIfBrokenPDF menusToDisableIfDirectory
+
+    TabInfo *tab = win->currentTab;
+    // TODO: is this check too expensive?
+    bool fileExists = tab && file::Exists(tab->filePath);
 
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
         UINT id = menusToDisableIfNoDocument[i];
@@ -454,7 +458,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && win->ctrl->HasTocTree();
+    bool enabled = win->IsDocLoaded() && tab->ctrl->HasTocTree();
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -467,29 +471,27 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     MenuUpdateZoom(win);
 
     if (win->IsDocLoaded()) {
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->ctrl->CanNavigate(-1));
-        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, win->ctrl->CanNavigate(1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, tab->ctrl->CanNavigate(-1));
+        win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
     }
 
-    if (win->currentTab && win->currentTab->GetEngineType() == Engine_ImageDir) {
+    if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath))) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);
         }
     }
-
-    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, L".pdf")) {
+    else if (fileExists && CouldBePDFDoc(tab)) {
         for (int i = 0; i < dimof(menusToEnableIfBrokenPDF); i++) {
             UINT id = menusToEnableIfBrokenPDF[i];
             win::menu::SetEnabled(win->menu, id, true);
         }
     }
 
-    if (win->AsFixed())
-        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !win->AsFixed()->GetEngine()->IsImageCollection());
+    if (tab && tab->AsFixed())
+        win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !tab->AsFixed()->GetEngine()->IsImageCollection());
 
-    // TODO: is this check too expensive?
-    if (win->IsDocLoaded() && !file::Exists(win->ctrl->FilePath()))
+    if (win->IsDocLoaded() && !fileExists)
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
@@ -497,8 +499,8 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
-    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, win->AsFixed() && win->AsFixed()->GetEngine()->SupportsAnnotation() &&
-                                                           win->showSelection && win->currentTab->selectionOnPage);
+    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, tab && tab->selectionOnPage && win->showSelection &&
+                                                           tab->AsFixed() && tab->AsFixed()->GetEngine()->SupportsAnnotation());
 #endif
 }
 
