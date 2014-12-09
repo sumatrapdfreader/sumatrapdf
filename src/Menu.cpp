@@ -475,7 +475,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
     }
 
-    if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath))) {
+    if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath)) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
             UINT id = menusToDisableIfDirectory[i];
             win::menu::SetEnabled(win->menu, id, false);
