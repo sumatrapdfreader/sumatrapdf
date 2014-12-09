@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-69a63feb996d22d1c1265cfc19203507438a1e83
+57b881d3d1b6494c2632407583f2dcac86e65330
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15744,6 +15744,7 @@ bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda ne�
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrarse adecuadamente
+eu:Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno prikazati

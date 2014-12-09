@@ -1490,7 +1490,7 @@ const char * gTranslations_eu =
   "Aldiberetze agiria ezin da ireki\0"\
   "PDF etiketatua\0"\
   "Idazki agiriak\0"\
-  "\0"\
+  "Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea\0"\
   "Izenburua:\0"\
   "Iturburu agiri ezezaguna: (%s)\0"\
   "Erabili &hegatsak\0"\
