@@ -263,7 +263,7 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
 const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 
 
-const char * gTranslations_sq =
+const char * gTranslations_sq = 
   "&P\303\253r\0"\
   "P\303\253rmasa &reale\tCtrl+1\0"\
   "Opsionet e &avancuara...\0"\
@@ -512,7 +512,7 @@ const char * gTranslations_sq =
   "kopjimi i tekstit\0"\
   "printimi i dokumentit\0";
 
-const char * gTranslations_ar =
+const char * gTranslations_ar = 
   "\330\255\331\210\331\204 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
   "\330\247\331\204\330\255\330\254\331\205 \330\247\331\204\330\255\331\202\331\212\331\202\331\212\tCtrl+1\0"\
   "\330\256\331\212\330\247\330\261\330\247\330\252 \331\205\330\252\331\202\330\257\331\205\330\251\0"\
@@ -761,7 +761,7 @@ const char * gTranslations_ar =
   "\331\212\330\252\331\205 \330\255\330\247\331\204\331\212\330\247\331\213 \331\206\330\263\330\256 \330\247\331\204\331\206\330\265\0"\
   "\330\252\330\252\331\205 \330\255\330\247\331\204\331\212\330\247\331\213 \330\247\331\204\330\267\330\250\330\247\330\271\330\251\0";
 
-const char * gTranslations_am =
+const char * gTranslations_am = 
   "&\324\276\326\200\325\241\325\243\326\200\325\253 \325\264\325\241\325\275\325\253\325\266\0"\
   "\324\273\326\200\325\241\325\257\325\241\325\266 &\325\271\325\241\326\203\325\250\tCtrl+1\0"\
   "&\324\270\325\266\325\244\325\254\325\241\325\265\325\266\325\276\325\241\325\256 \325\257\325\241\326\200\325\243\325\241\325\276\325\270\326\200\325\270\326\202\325\264\325\266\325\245\326\200..\0"\
@@ -1010,7 +1010,7 @@ const char * gTranslations_am =
   "\325\217\325\245\326\204\325\275\325\277\325\250 \325\272\325\241\325\277\325\263\325\245\325\266\325\276\325\270\326\202\325\264 \325\247\0"\
   "\325\226\325\241\325\265\325\254\325\250 \325\277\325\272\325\276\325\270\326\202\325\264 \325\247\0";
 
-const char * gTranslations_az =
+const char * gTranslations_az = 
   "Proqram &haqq\304\261nda\0"\
   "&H\311\231qiqi \303\266l\303\247\303\274\tCtrl+1\0"\
   "&\306\217lav\311\231 se\303\247iml\311\231r...\0"\
@@ -1259,7 +1259,7 @@ const char * gTranslations_az =
   "m\311\231tnin kopyalanmas\304\261\0"\
   "s\311\231n\311\231din \303\247ap olunmas\304\261\0";
 
-const char * gTranslations_eu =
+const char * gTranslations_eu = 
   "&Honi buruz...\0"\
   "&Oraingo Neurria\tKtrl+1\0"\
   "Au&kera aurreratuak...\0"\
@@ -1508,7 +1508,7 @@ const char * gTranslations_eu =
   "idazkia kopiatzen\0"\
   "agiria irarkitzen\0";
 
-const char * gTranslations_bs =
+const char * gTranslations_bs = 
   "&O programu...\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
   "N&apredne opcije...\0"\
@@ -1757,7 +1757,7 @@ const char * gTranslations_bs =
   "kopiram tekst\0"\
   "\305\241tampam dokument\0";
 
-const char * gTranslations_bg =
+const char * gTranslations_bg = 
   "\320\227\320\260 &\320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\260\321\202\320\260\0"\
   "&\320\236\321\200\320\270\320\263\320\270\320\275\320\260\320\273\320\265\320\275 (\321\200\320\265\320\260\320\273\320\265\320\275) \321\200\320\260\320\267\320\274\320\265\321\200\tCtrl+1\0"\
   "\320\240\320\260\320\267\321\210\320\270\321\200\320\265\320\275\320\270 \320\276\320\277\321\206\320\270\320\270\0"\
@@ -2006,7 +2006,7 @@ const char * gTranslations_bg =
   "\320\272\320\276\320\277\320\270\321\200\320\260\320\275\320\265 \320\275\320\260 \321\202\320\265\320\272\321\201\321\202\0"\
   "\320\276\321\202\320\277\320\265\321\207\320\260\321\202\320\262\320\260\320\275\320\265 \320\275\320\260 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\0";
 
-const char * gTranslations_ca =
+const char * gTranslations_ca = 
   "&Quant a...\0"\
   "Mida &real\tCtrl+1\0"\
   "Opcions &avan\303\247ades...\0"\
@@ -2255,7 +2255,7 @@ const char * gTranslations_ca =
   "s'est\303\240 copiant text\0"\
   "s'est\303\240 imprimint el document\0";
 
-const char * gTranslations_ca_xv =
+const char * gTranslations_ca_xv = 
   "&Quant a...\0"\
   "Mida &real\tCtrl+1\0"\
   "Opcions &avan\303\247ades...\0"\
@@ -2504,7 +2504,7 @@ const char * gTranslations_ca_xv =
   "s'est\303\240 copiant text\0"\
   "s'est\303\240 imprimint el document\0";
 
-const char * gTranslations_cn =
+const char * gTranslations_cn = 
   "\345\205\263\344\272\216(&A)...\0"\
   "\345\256\236\351\231\205\345\244\247\345\260\217(&A)\tCtrl+1\0"\
   "\351\253\230\347\272\247\351\200\211\351\241\271(&A)...\0"\
@@ -2753,7 +2753,7 @@ const char * gTranslations_cn =
   "\346\255\243\345\234\250\345\244\215\345\210\266\346\226\207\346\234\254\0"\
   "\346\255\243\345\234\250\346\211\223\345\215\260\346\226\207\346\241\243\0";
 
-const char * gTranslations_tw =
+const char * gTranslations_tw = 
   "\351\227\234\346\226\274(&A)...\0"\
   "\345\257\246\351\232\233\345\244\247\345\260\217(&A)\tCtrl+1\0"\
   "\351\200\262\351\232\216\351\201\270\351\240\205(&A)...\0"\
@@ -3002,7 +3002,7 @@ const char * gTranslations_tw =
   "\346\255\243\345\234\250\350\244\207\350\243\275\346\226\207\345\255\227\0"\
   "\346\255\243\345\234\250\345\210\227\345\215\260\346\226\207\344\273\266\0";
 
-const char * gTranslations_hr =
+const char * gTranslations_hr = 
   "&O programu...\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
   "N&apredne mogu\304\207nosti\0"\
@@ -3251,7 +3251,7 @@ const char * gTranslations_hr =
   "kopiram tekst\0"\
   "ispisujem dokument\0";
 
-const char * gTranslations_cz =
+const char * gTranslations_cz = 
   "&O programu\0"\
   "Skute\304\215n\303\241 &velikost\tCtrl+1\0"\
   "&Pokro\304\215il\303\251 mo\305\276nosti...\0"\
@@ -3500,7 +3500,7 @@ const char * gTranslations_cz =
   "kop\303\255rov\303\241n\303\255 textu\0"\
   "tisk dokumentu\0";
 
-const char * gTranslations_dk =
+const char * gTranslations_dk = 
   "&Om\0"\
   "&Faktisk st\303\270rrelse\tCtrl+1\0"\
   "&Avancerede valgmuligheder\0"\
@@ -3749,7 +3749,7 @@ const char * gTranslations_dk =
   "kopierer tekst\0"\
   "udskriver dokument\0";
 
-const char * gTranslations_nl =
+const char * gTranslations_nl = 
   "&Over\0"\
   "W&are grootte\tCtrl+1\0"\
   "&Geavanceerde Opties...\0"\
@@ -3998,7 +3998,7 @@ const char * gTranslations_nl =
   "tekst kopi\303\253ren\0"\
   "document afdrukken\0";
 
-const char * gTranslations_et =
+const char * gTranslations_et = 
   "&Programmi teave\0"\
   "&Tegelik suurus\tCtrl+1\0"\
   "&Rohkem s\303\244tteid...\0"\
@@ -4247,7 +4247,7 @@ const char * gTranslations_et =
   "teksti kopeerimine\0"\
   "dokumendi printimine\0";
 
-const char * gTranslations_fi =
+const char * gTranslations_fi = 
   "&Tietoja\0"\
   "&Todellinen koko\tCtrl+1\0"\
   "&Lis\303\244asetukset...\0"\
@@ -4496,7 +4496,7 @@ const char * gTranslations_fi =
   "Tekstin kopiointi\0"\
   "tulostetaan asiakirjaa\0";
 
-const char * gTranslations_fr =
+const char * gTranslations_fr = 
   "&\303\200 propos\0"\
   "&Taille r\303\251elle\tCtrl+1\0"\
   "Options &avanc\303\251es\342\200\246\0"\
@@ -4745,7 +4745,7 @@ const char * gTranslations_fr =
   "copie de texte\0"\
   "impression du document\0";
 
-const char * gTranslations_gl =
+const char * gTranslations_gl = 
   "A&cerca de\0"\
   "&Tama\303\261o actual\tCtrl+1\0"\
   "&Opci\303\263ns avanzadas...\0"\
@@ -4994,7 +4994,7 @@ const char * gTranslations_gl =
   "copiando texto\0"\
   "imprimindo documento\0";
 
-const char * gTranslations_ka =
+const char * gTranslations_ka = 
   "&\341\203\236\341\203\240\341\203\235\341\203\222\341\203\240\341\203\220\341\203\233\341\203\230\341\203\241 \341\203\250\341\203\224\341\203\241\341\203\220\341\203\256\341\203\224\341\203\221...\0"\
   "&\341\203\227\341\203\220\341\203\225\341\203\223\341\203\220\341\203\236\341\203\230\341\203\240\341\203\225\341\203\224\341\203\232\341\203\230 \341\203\226\341\203\235\341\203\233\341\203\220\tCtrl+1\0"\
   "\0"\
@@ -5243,7 +5243,7 @@ const char * gTranslations_ka =
   "\341\203\242\341\203\224\341\203\245\341\203\241\341\203\242\341\203\230 \341\203\231\341\203\235\341\203\236\341\203\230\341\203\240\341\203\223\341\203\224\341\203\221\341\203\220\0"\
   "\341\203\223\341\203\235\341\203\231\341\203\243\341\203\233\341\203\224\341\203\234\341\203\242\341\203\230 \341\203\230\341\203\221\341\203\224\341\203\255\341\203\223\341\203\224\341\203\221\341\203\220\0";
 
-const char * gTranslations_de =
+const char * gTranslations_de = 
   "\303\234ber &SumatraPDF\0"\
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
   "&Mehr Optionen\342\200\246\0"\
@@ -5492,7 +5492,7 @@ const char * gTranslations_de =
   "Text kopieren verweigert\0"\
   "Dokument drucken verweigert\0";
 
-const char * gTranslations_el =
+const char * gTranslations_el = 
   "&\316\243\317\207\316\265\317\204\316\271\316\272\316\254\0"\
   "\316\240\317\201\316\261\316\263\316\274\316\261\317\204\316\271\316\272\317\214 &\316\234\316\255\316\263\316\265\316\270\316\277\317\202\tCtrl+1\0"\
   "&\316\225\317\200\316\271\316\273\316\277\316\263\316\255\317\202 \316\263\316\271\316\261 \317\200\317\201\316\277\317\207\317\211\317\201\316\267\316\274\316\255\316\275\316\277\317\205\317\202\0"\
@@ -5741,7 +5741,7 @@ const char * gTranslations_el =
   "\316\261\316\275\317\204\316\271\316\263\317\201\316\261\317\206\316\256 \316\272\316\265\316\271\316\274\316\255\316\275\316\277\317\205\0"\
   "\316\265\316\272\317\204\317\215\317\200\317\211\317\203\316\267 \316\265\316\263\316\263\317\201\316\254\317\206\316\277\317\205\0";
 
-const char * gTranslations_he =
+const char * gTranslations_he = 
   "\327\220\327\225\327\223\327\225\327\252...\0"\
   "\327\222\327\225\327\223\327\234 \327\236\327\247\327\225\327\250\327\231\tCtrl+1\0"\
   "\327\224\327\222\327\223\327\250\327\225\327\252 \327\236\327\252\327\247\327\223\327\236\327\225\327\252...\0"\
@@ -5990,7 +5990,7 @@ const char * gTranslations_he =
   "\327\236\327\242\327\252\327\231\327\247 \327\230\327\247\327\241\327\230\0"\
   "\327\236\327\223\327\244\327\231\327\241 \327\247\327\225\327\221\327\245.\0";
 
-const char * gTranslations_hi =
+const char * gTranslations_hi = 
   "\340\244\254\340\244\276\340\244\260\340\245\207 \340\244\256\340\245\207\340\244\202(&A)\0"\
   "\340\244\265\340\244\276\340\244\270\340\245\215\340\244\244\340\244\265\340\244\277\340\244\225 \340\244\206\340\244\225\340\244\276\340\244\260(&A)\tCtrl+1\0"\
   "\0"\
@@ -6239,7 +6239,7 @@ const char * gTranslations_hi =
   "\340\244\252\340\244\276\340\244\240 \340\244\233\340\244\276\340\244\252\340\244\250\340\244\276\0"\
   "\340\244\233\340\244\252\340\244\276\340\244\210 \340\244\246\340\244\270\340\245\215\340\244\244\340\244\276\340\244\265\340\245\207\340\244\234\340\244\274\0";
 
-const char * gTranslations_hu =
+const char * gTranslations_hu = 
   "N\303\251v&jegy\0"\
   "&T\303\251nyleges m\303\251ret\tCtrl+1\0"\
   "Speci\303\241lis be\303\241ll\303\255t\303\241sok...\0"\
@@ -6488,7 +6488,7 @@ const char * gTranslations_hu =
   "Sz\303\266veg v\303\241g\303\263lapra\0"\
   "Nyomtat\303\241s\0";
 
-const char * gTranslations_id =
+const char * gTranslations_id = 
   "&Tentang\0"\
   "&Ukuran Sebenarnya\tCtrl+1\0"\
   "&Pengaturan Lanjutan...\0"\
@@ -6737,7 +6737,7 @@ const char * gTranslations_id =
   "menyalin teks\0"\
   "mencetak dokumen\0";
 
-const char * gTranslations_ga =
+const char * gTranslations_ga = 
   "Maidir le\0"\
   "&F\303\255ormh\303\251id\tCtrl+1\0"\
   "\0"\
@@ -6986,7 +6986,7 @@ const char * gTranslations_ga =
   "ag macasamhl\303\272 an t\303\251acs\0"\
   "ag cl\303\263bhualadh an ch\303\241ip\303\251is\0";
 
-const char * gTranslations_it =
+const char * gTranslations_it = 
   "&Informazioni su...\0"\
   "&Dimensioni reali\t<Ctrl>+1\0"\
   "Opzioni &avanzate...\0"\
@@ -7235,7 +7235,7 @@ const char * gTranslations_it =
   "Copia del testo...\0"\
   "Stampa documento...\0";
 
-const char * gTranslations_ja =
+const char * gTranslations_ja = 
   "\343\203\220\343\203\274\343\202\270\343\203\247\343\203\263\346\203\205\345\240\261(&A)\0"\
   "\345\256\237\351\232\233\343\201\256\343\202\265\343\202\244\343\202\272(&A)\tCtrl+1\0"\
   "\350\251\263\347\264\260\350\250\255\345\256\232(&A)\0"\
@@ -7484,7 +7484,7 @@ const char * gTranslations_ja =
   "\343\202\263\343\203\224\343\203\274\343\201\231\343\202\213\343\203\206\343\202\255\343\202\271\343\203\210\0"\
   "\345\215\260\345\210\267\343\201\231\343\202\213\343\203\211\343\202\255\343\203\245\343\203\241\343\203\263\343\203\210\0";
 
-const char * gTranslations_kr =
+const char * gTranslations_kr = 
   "\354\240\225\353\263\264(&A)\0"\
   "\354\213\244\354\240\234 \355\201\254\352\270\260(&A)\tCtrl+1\0"\
   "\352\263\240\352\270\211 \354\230\265\354\205\230(&A)...\0"\
@@ -7733,7 +7733,7 @@ const char * gTranslations_kr =
   "\353\254\270\354\236\220\354\227\264 \353\263\265\354\202\254\355\225\230\353\212\224 \354\244\221...\0"\
   "\353\254\270\354\204\234 \354\235\270\354\207\204\0";
 
-const char * gTranslations_ku =
+const char * gTranslations_ku = 
   "\330\257\333\225\330\261\330\250\330\247\330\261\333\225\333\214&\0"\
   "\331\202\333\225\330\250\330\247\330\261\333\225\333\214 \332\225\330\247\330\263\330\252\333\225\331\202\333\214\331\206\333\225 &\tCtrl+1\0"\
   "\331\207\333\225\332\265\330\250\332\230\330\247\330\261\330\257\331\206\333\214 \331\276\333\225\330\261\333\225\330\263\333\225\331\206\330\257\331\210\331\210 ...&\0"\
@@ -7982,7 +7982,7 @@ const char * gTranslations_ku =
   "\331\204\333\225\330\250\333\225\330\261\332\257\330\261\330\252\331\206\333\225\331\210\333\225\333\214 \330\257\333\225\331\202\0"\
   "\332\206\330\247\331\276\332\251\330\261\330\257\331\206\333\214 \330\250\333\225\332\265\332\257\333\225\331\206\330\247\331\205\333\225\0";
 
-const char * gTranslations_lt =
+const char * gTranslations_lt = 
   "Apie\0"\
   "&Originalus\tCtrl+1\0"\
   "\0"\
@@ -8231,7 +8231,7 @@ const char * gTranslations_lt =
   "kopijuojamas tekstas\0"\
   "spausdinamas dokumentas\0";
 
-const char * gTranslations_mk =
+const char * gTranslations_mk = 
   "&\320\227\320\260 SumatraPDF...\0"\
   "&\320\240\320\265\320\260\320\273\320\275\320\260 \320\263\320\276\320\273\320\265\320\274\320\270\320\275\320\260\tCtrl+1\0"\
   "&\320\235\320\260\320\277\321\200\320\265\320\264\320\275\320\270 o\320\277\321\206\320\270\320\270...\0"\
@@ -8480,7 +8480,7 @@ const char * gTranslations_mk =
   "\320\272\320\276\320\277\320\270\321\200\320\260\320\274 \321\202\320\265\320\272\321\201\321\202\0"\
   "\320\277\320\265\321\207\320\260\321\202\320\260\320\274 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\0";
 
-const char * gTranslations_my =
+const char * gTranslations_my = 
   "&Mengenai\0"\
   "&Saiz sebenar\tCtrl+1\0"\
   "&Tetapan terperinci...\0"\
@@ -8729,7 +8729,7 @@ const char * gTranslations_my =
   "menyalin teks\0"\
   "mencetak dokumen\0";
 
-const char * gTranslations_ne =
+const char * gTranslations_ne = 
   "SumatraPDF &\340\244\254\340\244\276\340\244\260\340\245\207\340\244\256\340\244\276\0"\
   "&\340\244\270\340\244\271\340\245\200 \340\244\206\340\244\225\340\244\276\340\244\260\tCtrl+1\0"\
   "\0"\
@@ -8978,7 +8978,7 @@ const char * gTranslations_ne =
   "\340\244\252\340\244\276\340\244\240 \340\244\252\340\245\215\340\244\260\340\244\244\340\244\277\340\244\262\340\244\277\340\244\252\340\244\277 \340\244\254\340\244\250\340\244\276\340\244\210\340\244\246\340\245\210\340\244\233\0"\
   "\340\244\225\340\244\276\340\244\227\340\244\234\340\244\276\340\244\244 \340\244\233\340\244\252\340\244\276\340\244\207\0";
 
-const char * gTranslations_no =
+const char * gTranslations_no = 
   "&Om\0"\
   "Fak&tisk st\303\270rrelse\tCtrl+1\0"\
   "&Avanserte tilleggsfunksjoner\0"\
@@ -9227,7 +9227,7 @@ const char * gTranslations_no =
   "kopierer tekst\0"\
   "skriver ut dokument\0";
 
-const char * gTranslations_fa =
+const char * gTranslations_fa = 
   "&\330\257\330\261\330\250\330\247\330\261\331\207\0"\
   "&\330\247\331\206\330\257\330\247\330\262\331\207 \331\210\330\247\331\202\330\271\333\214\tCtrl+1\0"\
   "\330\252\331\206\330\270\333\214\331\205\330\247\330\252 \331\276\333\214\330\264\330\261\331\201\330\252\331\207\0"\
@@ -9476,7 +9476,7 @@ const char * gTranslations_fa =
   "\330\257\330\261 \330\255\330\247\331\204 \330\261\331\210\331\206\331\210\330\264\330\252 \331\205\330\252\331\206\0"\
   "\330\257\330\261 \330\255\330\247\331\204 \332\206\330\247\331\276 \330\263\331\206\330\257\0";
 
-const char * gTranslations_pl =
+const char * gTranslations_pl = 
   "&O SumatraPDF\0"\
   "Rozmiar &rzeczywisty\tCtrl+1\0"\
   "Opcje zaawansowane...\0"\
@@ -9725,7 +9725,7 @@ const char * gTranslations_pl =
   "kopiowanie tekstu\0"\
   "drukowanie dokumentu\0";
 
-const char * gTranslations_br =
+const char * gTranslations_br = 
   "S&obre\0"\
   "&Tamanho real\tCtrl+1\0"\
   "Op\303\247\303\265es &Avan\303\247adas...\0"\
@@ -9974,7 +9974,7 @@ const char * gTranslations_br =
   "copiando texto\0"\
   "imprimindo documento\0";
 
-const char * gTranslations_pt =
+const char * gTranslations_pt = 
   "&Sobre\0"\
   "&Tamanho real\tCtrl+1\0"\
   "Op\303\247\303\265es &avan\303\247adas...\0"\
@@ -10205,7 +10205,7 @@ const char * gTranslations_pt =
   "N\303\243o foi poss\303\255vel abrir o ficheiro de sincroniza\303\247\303\243o\0"\
   "PDF com tags\0"\
   "Documentos de texto\0"\
-  "\0"\
+  "Este documento possui funcionalidades n\303\243o suportadas (%s) e pode n\303\243o ser mostrado corretamente\0"\
   "T\303\255tulo:\0"\
   "O ficheiro (%s) \303\251 desconhecido\0"\
   "&Utilizar separadores\0"\
@@ -10223,7 +10223,7 @@ const char * gTranslations_pt =
   "c\303\263pia de texto\0"\
   "imprimir documento\0";
 
-const char * gTranslations_ro =
+const char * gTranslations_ro = 
   "&Despre\0"\
   "M\304\203rime &efectiv\304\203\tCtrl+1\0"\
   "Op\310\233iuni &avansate...\0"\
@@ -10472,7 +10472,7 @@ const char * gTranslations_ro =
   "se copiaz\304\203 textul\0"\
   "se imprim\304\203 documentul\0";
 
-const char * gTranslations_ru =
+const char * gTranslations_ru = 
   "&\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\274\320\265...\0"\
   "&\320\235\320\260\321\201\321\202\320\276\321\217\321\211\320\270\320\271 \321\200\320\260\320\267\320\274\320\265\321\200\tCtrl+1\0"\
   "&\320\240\320\260\321\201\321\210\320\270\321\200\320\265\320\275\320\275\321\213\320\265 \320\275\320\260\321\201\321\202\321\200\320\276\320\271\320\272\320\270...\0"\
@@ -10721,7 +10721,7 @@ const char * gTranslations_ru =
   "\320\272\320\276\320\277\320\270\321\200\320\276\320\262\320\260\320\275\320\270\320\265 \321\202\320\265\320\272\321\201\321\202\320\260\0"\
   "\320\277\320\265\321\207\320\260\321\202\321\214 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\0";
 
-const char * gTranslations_sr_rs =
+const char * gTranslations_sr_rs = 
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203\0"\
   "\320\241\321\202\320\262\320\260\321\200\320\275\320\260 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260\tCtrl+1\0"\
   "\320\235\320\260\320\277\321\200\320\265\320\264\320\275\320\265 \320\276\320\277\321\206\320\270\321\230\320\265\0"\
@@ -10970,7 +10970,7 @@ const char * gTranslations_sr_rs =
   "\320\272\320\276\320\277\320\270\321\200\320\260\321\232\320\265 \321\202\320\265\320\272\321\201\321\202\320\260\0"\
   "\321\210\321\202\320\260\320\274\320\277\320\260\321\232\320\265 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\0";
 
-const char * gTranslations_sp_rs =
+const char * gTranslations_sp_rs = 
   "O programu\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
   "Napredna pode\305\241avanja...\0"\
@@ -11219,7 +11219,7 @@ const char * gTranslations_sp_rs =
   "kopiranje teksta\0"\
   "\305\241tampanje dokumenta\0";
 
-const char * gTranslations_sk =
+const char * gTranslations_sk = 
   "&O programe...\0"\
   "&Skuto\304\215n\303\241 ve\304\276kos\305\245\tCtrl+1\0"\
   "&Roz\305\241\303\255ren\303\251 mo\305\276nosti...\0"\
@@ -11468,7 +11468,7 @@ const char * gTranslations_sk =
   "prebieha kop\303\255rovanie textu\0"\
   "prebieha tla\304\215 dokumentu\0";
 
-const char * gTranslations_sl =
+const char * gTranslations_sl = 
   "&O programu\0"\
   "&Dejanska velikost\tCtrl+1\0"\
   "N&apredne mo\305\276nosti \342\200\246\0"\
@@ -11717,7 +11717,7 @@ const char * gTranslations_sl =
   "kopiranje besedila\0"\
   "tiskanje dokumenta\0";
 
-const char * gTranslations_es =
+const char * gTranslations_es = 
   "&Acerca de\0"\
   "T&ama\303\261o real\tCtrl+1\0"\
   "Opciones &avanzadas...\0"\
@@ -11966,7 +11966,7 @@ const char * gTranslations_es =
   "copiado de texto\0"\
   "imprimiendo documento\0";
 
-const char * gTranslations_sv =
+const char * gTranslations_sv = 
   "&Om\0"\
   "&Verklig storlek\tCtrl+1\0"\
   "&Avancerade Inst\303\244llningar\0"\
@@ -12215,7 +12215,7 @@ const char * gTranslations_sv =
   "kopierar text\0"\
   "skriver ut dokument\0";
 
-const char * gTranslations_ta =
+const char * gTranslations_ta = 
   "\340\256\252\340\256\261\340\257\215\340\256\261\340\256\277\0"\
   "\340\256\256\340\257\206\340\256\257\340\257\215 \340\256\205\340\256\263\340\256\265\340\257\201\tCtrl+1\0"\
   "&\340\256\256\340\257\207\340\256\256\340\257\215\340\256\252\340\256\237\340\257\215\340\256\237 \340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\231\340\257\215\340\256\225\340\256\263\340\257\215\0"\
@@ -12464,7 +12464,7 @@ const char * gTranslations_ta =
   "\340\256\250\340\256\225\340\256\262\340\257\215 \340\256\216\340\256\237\340\257\201\340\256\225\340\257\215\340\256\225\340\256\252\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201\0"\
   "\340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201 \340\256\205\340\256\225\340\257\215\340\256\232\340\256\277\340\256\237\340\256\252\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201\0";
 
-const char * gTranslations_tr =
+const char * gTranslations_tr = 
   "&Hakk\304\261nda\0"\
   "Ger\303\247ek &Boyut\tCtrl+1\0"\
   "Geli\305\237mi\305\237 Ayarlar\0"\
@@ -12713,7 +12713,7 @@ const char * gTranslations_tr =
   "metin kopyalan\304\261yor\0"\
   "belge yazd\304\261r\304\261l\304\261yor\0";
 
-const char * gTranslations_uk =
+const char * gTranslations_uk = 
   "\320\237\321\200\320\276 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203...\0"\
   "\320\241\320\277\321\200\320\260\320\262\320\266\320\275\321\226\320\271 \321\200\320\276\320\267\320\274\321\226\321\200\tCtrl+1\0"\
   "\320\240\320\276\320\267\321\210\320\270\321\200\320\265\320\275\321\226 \320\275\320\260\320\273\320\260\321\210\321\202\321\203\320\262\320\260\320\275\320\275\321\217...\0"\
@@ -12962,7 +12962,7 @@ const char * gTranslations_uk =
   "\320\272\320\276\320\277\321\226\321\216\320\262\320\260\320\275\320\275\321\217 \321\202\320\265\320\272\321\201\321\202\321\203\0"\
   "\320\264\321\200\321\203\320\272 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260\0";
 
-const char * gTranslations_uz =
+const char * gTranslations_uz = 
   "&Dastur haqida\0"\
   "&Haqiqiy o'lchami\tCtrl+1\0"\
   "&Qo'shimcha parametrlar...\0"\
@@ -13211,7 +13211,7 @@ const char * gTranslations_uz =
   "matnni nusxa olish\0"\
   "hujjatni chop etish\0";
 
-const char * gTranslations_vn =
+const char * gTranslations_vn = 
   "Gi\341\273\233i thi\341\273\207u\0"\
   "K\303\255ch th\306\260\341\273\233&c th\341\272\255t\tCtrl+1\0"\
   "T\303\271y ch\341\273\215n &n\303\242ng cao...\0"\
@@ -13460,7 +13460,7 @@ const char * gTranslations_vn =
   "\304\221ang ch\303\251p v\304\203n b\341\272\243n\0"\
   "\304\221ang in t\341\272\255p tin\0";
 
-const char * gTranslations_cy =
+const char * gTranslations_cy = 
   "&Ynghylch...\0"\
   "&Gwir Faint\tCtrl+1\0"\
   "Dewisiadau &Uwch...\0"\
@@ -13711,60 +13711,60 @@ const char * gTranslations_cy =
 
 
 static const char *gTranslations[LANGS_COUNT] = {
-  nullptr,
-  gTranslations_sq,
-  gTranslations_ar,
-  gTranslations_am,
-  gTranslations_az,
-  gTranslations_eu,
-  gTranslations_bs,
-  gTranslations_bg,
-  gTranslations_ca,
-  gTranslations_ca_xv,
-  gTranslations_cn,
-  gTranslations_tw,
-  gTranslations_hr,
-  gTranslations_cz,
-  gTranslations_dk,
-  gTranslations_nl,
-  gTranslations_et,
-  gTranslations_fi,
-  gTranslations_fr,
-  gTranslations_gl,
-  gTranslations_ka,
-  gTranslations_de,
-  gTranslations_el,
-  gTranslations_he,
-  gTranslations_hi,
-  gTranslations_hu,
-  gTranslations_id,
-  gTranslations_ga,
-  gTranslations_it,
-  gTranslations_ja,
-  gTranslations_kr,
-  gTranslations_ku,
-  gTranslations_lt,
-  gTranslations_mk,
-  gTranslations_my,
-  gTranslations_ne,
-  gTranslations_no,
-  gTranslations_fa,
-  gTranslations_pl,
-  gTranslations_br,
-  gTranslations_pt,
-  gTranslations_ro,
-  gTranslations_ru,
-  gTranslations_sr_rs,
-  gTranslations_sp_rs,
-  gTranslations_sk,
-  gTranslations_sl,
-  gTranslations_es,
-  gTranslations_sv,
-  gTranslations_ta,
-  gTranslations_tr,
-  gTranslations_uk,
-  gTranslations_uz,
-  gTranslations_vn,
+  NULL,
+  gTranslations_sq, 
+  gTranslations_ar, 
+  gTranslations_am, 
+  gTranslations_az, 
+  gTranslations_eu, 
+  gTranslations_bs, 
+  gTranslations_bg, 
+  gTranslations_ca, 
+  gTranslations_ca_xv, 
+  gTranslations_cn, 
+  gTranslations_tw, 
+  gTranslations_hr, 
+  gTranslations_cz, 
+  gTranslations_dk, 
+  gTranslations_nl, 
+  gTranslations_et, 
+  gTranslations_fi, 
+  gTranslations_fr, 
+  gTranslations_gl, 
+  gTranslations_ka, 
+  gTranslations_de, 
+  gTranslations_el, 
+  gTranslations_he, 
+  gTranslations_hi, 
+  gTranslations_hu, 
+  gTranslations_id, 
+  gTranslations_ga, 
+  gTranslations_it, 
+  gTranslations_ja, 
+  gTranslations_kr, 
+  gTranslations_ku, 
+  gTranslations_lt, 
+  gTranslations_mk, 
+  gTranslations_my, 
+  gTranslations_ne, 
+  gTranslations_no, 
+  gTranslations_fa, 
+  gTranslations_pl, 
+  gTranslations_br, 
+  gTranslations_pt, 
+  gTranslations_ro, 
+  gTranslations_ru, 
+  gTranslations_sr_rs, 
+  gTranslations_sp_rs, 
+  gTranslations_sk, 
+  gTranslations_sl, 
+  gTranslations_es, 
+  gTranslations_sv, 
+  gTranslations_ta, 
+  gTranslations_tr, 
+  gTranslations_uk, 
+  gTranslations_uz, 
+  gTranslations_vn, 
   gTranslations_cy
 };
 

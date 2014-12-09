@@ -58,7 +58,7 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
 const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 
 
-const char * gTranslations_sq =
+const char * gTranslations_sq = 
   "&Opsionet\0"\
   "Jeni i sigurt se doni t\303\253 \303\247instaloni SumatraPDF?\0"\
   "Mbyll\0"\
@@ -102,7 +102,7 @@ const char * gTranslations_sq =
   "\303\207instalimi vijon...\0"\
   "P\303\253rdor SumatraPDF si lexuesin &standard t\303\253 PDF-ve\0";
 
-const char * gTranslations_ar =
+const char * gTranslations_ar = 
   "&\330\247\331\204\330\256\331\212\330\247\330\261\330\247\330\252\0"\
   "\331\207\331\204 \330\243\331\206\330\252 \331\205\330\252\330\243\331\203\330\257 \331\205\331\206 \330\243\331\206\331\203 \330\252\330\261\331\212\330\257 \330\245\330\262\330\247\331\204\330\251 SumatraPDF\330\237\0"\
   "\330\245\330\272\331\204\330\247\331\202\0"\
@@ -146,7 +146,7 @@ const char * gTranslations_ar =
   "\330\245\330\262\330\247\331\204\330\251 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 \331\202\331\212\330\257 \330\247\331\204\330\271\331\205\331\204...\0"\
   "\330\252\330\271\331\212\331\212\331\206 SumatraPDF \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 \330\247\331\204\330\247\331\201\330\252\330\261\330\247\330\266\331\212 \331\204\331\201\330\252\330\255 \331\205\331\204\331\201\330\247\330\252 PDF\0";
 
-const char * gTranslations_am =
+const char * gTranslations_am = 
   "&\324\270\325\266\325\277\326\200\325\241\325\266\326\204\325\266\325\245\326\200\0"\
   "\325\200\325\241\325\264\325\270\325\246\325\276\325\241\325\236\325\256 \325\245\326\204, \325\270\326\200 \326\201\325\241\325\266\325\257\325\241\325\266\325\270\326\202\325\264 \325\245\326\204 \325\273\325\266\325\273\325\245\325\254 SumatraPDF-\325\250:\0"\
   "\325\223\325\241\325\257\325\245\325\254\0"\
@@ -190,7 +190,7 @@ const char * gTranslations_am =
   "\324\276\326\200\325\241\325\243\325\253\326\200\325\250 \325\260\325\245\325\274\325\241\326\201\325\276\325\270\326\202\325\264 \325\247...\0"\
   "\325\225\325\243\325\277. SumatraPDF-\325\250 \325\270\326\200\325\272\325\245\325\275 &PDF-\325\253 \325\260\325\253\325\264\325\266\325\241\325\257\325\241\325\266 \325\256\326\200\325\241\325\243\325\253\326\200\0";
 
-const char * gTranslations_az =
+const char * gTranslations_az = 
   "&Se\303\247iml\311\231r\0"\
   "\306\217minsiniz ki, SumatraPDF-i silm\311\231k ist\311\231yirsiniz?\0"\
   "Ba\304\237la\0"\
@@ -234,7 +234,7 @@ const char * gTranslations_az =
   "Deinstalyasiya davam edir...\0"\
   "SumatraPDF &standart PDF oxuyucusu kimi istifad\311\231 olunsun\0";
 
-const char * gTranslations_eu =
+const char * gTranslations_eu = 
   "A&ukerak\0"\
   "Zihur zaude SumatraPDF kentzea nahi duzula?\0"\
   "Itxi\0"\
@@ -278,7 +278,7 @@ const char * gTranslations_eu =
   "Kentzea garatzen...\0"\
   "Erabili SumatraP&DF berezko PDF irakurtzaile bezala\0";
 
-const char * gTranslations_bs =
+const char * gTranslations_bs = 
   "&Opcije\0"\
   "Da li ste sigurni da \305\276elite deinstalirati SumatraPDF?\0"\
   "Zatvori\0"\
@@ -322,7 +322,7 @@ const char * gTranslations_bs =
   "Deinstalacija u toku ...\0"\
   "Koristi SumatraPDF kao &izvorni PDF \304\215ita\304\215\0";
 
-const char * gTranslations_ca =
+const char * gTranslations_ca = 
   "&Opcions\0"\
   "Esteu segur de voler desinstal\302\267lar el SumatraPDF?\0"\
   "Tanca\0"\
@@ -366,7 +366,7 @@ const char * gTranslations_ca =
   "Desinstal\302\267laci\303\263 en progr\303\251s...\0"\
   "Usa el SumatraPDF com a visor PDF &predeterminat\0";
 
-const char * gTranslations_ca_xv =
+const char * gTranslations_ca_xv = 
   "&Opcions\0"\
   "Esteu segur de voler desinstal\302\267lar el SumatraPDF?\0"\
   "Tanca\0"\
@@ -410,7 +410,7 @@ const char * gTranslations_ca_xv =
   "Desinstal\302\267laci\303\263 en progr\303\251s...\0"\
   "Usa el SumatraPDF com a visor PDF &predeterminat\0";
 
-const char * gTranslations_cn =
+const char * gTranslations_cn = 
   "\351\200\211\351\241\271(&O)\0"\
   "\344\275\240\347\241\256\345\256\236\350\246\201\350\247\243\351\231\244\345\256\211\350\243\205 SumatraPDF \345\220\227\357\274\237\0"\
   "\345\205\263\351\227\255\0"\
@@ -454,7 +454,7 @@ const char * gTranslations_cn =
   "\350\247\243\351\231\244\345\256\211\350\243\205\346\255\243\345\234\250\350\277\233\350\241\214...\0"\
   "\344\275\277\347\224\250 SumatraPDF \344\275\234\344\270\272\351\273\230\346\207\247\347\232\204 PDF \351\230\205\350\257\273\345\231\250(&U)\0";
 
-const char * gTranslations_tw =
+const char * gTranslations_tw = 
   "\351\201\270\351\240\205(&O)\0"\
   "\344\275\240\347\242\272\345\256\232\350\246\201\350\247\243\351\231\244\345\256\211\350\243\235 SumatraPDF \345\227\216\357\274\237\0"\
   "\351\227\234\351\226\211(&C)\0"\
@@ -498,7 +498,7 @@ const char * gTranslations_tw =
   "\350\247\243\351\231\244\345\256\211\350\243\235\346\255\243\345\234\250\351\200\262\350\241\214...\0"\
   "\344\275\277\347\224\250 SumatraPDF \344\275\234\347\202\272\351\240\220\350\250\255\347\232\204 PDF \351\226\261\350\256\200\345\231\250(&U)\0";
 
-const char * gTranslations_hr =
+const char * gTranslations_hr = 
   "P&ostavke\0"\
   "Jeste li sigurni da \305\276elite deinstalirati SumatraPDF?\0"\
   "Zatvori\0"\
@@ -542,7 +542,7 @@ const char * gTranslations_hr =
   "Deinstaliranje...\0"\
   "Koristi SumatraPDF kao zadani PDF preglednik\0";
 
-const char * gTranslations_cz =
+const char * gTranslations_cz = 
   "&Mo\305\276nosti\0"\
   "Opravdu chcete odinstalovat SumatraPDF?\0"\
   "Zav\305\231\303\255t\0"\
@@ -586,7 +586,7 @@ const char * gTranslations_cz =
   "Prob\303\255h\303\241 odinstalace...\0"\
   "Pou\305\276\303\255t SumatraPDF jako &v\303\275choz\303\255 PDF prohl\303\255\305\276e\304\215\0";
 
-const char * gTranslations_dk =
+const char * gTranslations_dk = 
   "&Valgmuligheder\0"\
   "Er du sikker p\303\245 at du vil afinstallere SumatraPDF ?\0"\
   "Luk\0"\
@@ -630,7 +630,7 @@ const char * gTranslations_dk =
   "Afinstallation p\303\245g\303\245r ...\0"\
   "Anvend SumatraPDF som &standard PDF l\303\246ser\0";
 
-const char * gTranslations_nl =
+const char * gTranslations_nl = 
   "&Opties\0"\
   "Bent u zeker dat u SumatraPDF wilt verwijderen?\0"\
   "Sluiten\0"\
@@ -674,7 +674,7 @@ const char * gTranslations_nl =
   "Deinstallatie is bezig...\0"\
   "Gebruik SumatraPDF als &standaard PDF lezer\0";
 
-const char * gTranslations_et =
+const char * gTranslations_et = 
   "&S\303\244tted\0"\
   "Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?\0"\
   "Sulge\0"\
@@ -718,7 +718,7 @@ const char * gTranslations_et =
   "Toimub eemaldamine...\0"\
   "Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.\0";
 
-const char * gTranslations_fi =
+const char * gTranslations_fi = 
   "&Asetukset\0"\
   "Oletko varma, ett\303\244 haluat poistaa SumatraPDF:n?\0"\
   "Sulje\0"\
@@ -762,7 +762,7 @@ const char * gTranslations_fi =
   "Poistaminen k\303\244ynniss\303\244...\0"\
   "K\303\244yt\303\244 SumatraPDF:\303\244\303\244 PDF-asiakirjojen oletuslukijana\0";
 
-const char * gTranslations_fr =
+const char * gTranslations_fr = 
   "\0"\
   "\303\212tes-vous certain de vouloir d\303\251sinstaller SumatraPDF ?\0"\
   "Fermer\0"\
@@ -806,7 +806,7 @@ const char * gTranslations_fr =
   "D\303\251sinstallation en cours\342\200\246\0"\
   "Choisir SumatraPDF comme lecteur PDF par &d\303\251faut\0";
 
-const char * gTranslations_gl =
+const char * gTranslations_gl = 
   "&Opci\303\263ns\0"\
   "Seguro que queres desinstalar SumatraPDF?\0"\
   "Pechar\0"\
@@ -850,7 +850,7 @@ const char * gTranslations_gl =
   "Desinstalaci\303\263n en procreso...\0"\
   "Emprega SumatraPDF como o lector de PDF por &defecto\0";
 
-const char * gTranslations_de =
+const char * gTranslations_de = 
   "&Optionen\0"\
   "M\303\266chten Sie SumatraPDF wirklich deinstallieren?\0"\
   "Schlie\303\237en\0"\
@@ -894,7 +894,7 @@ const char * gTranslations_de =
   "Die Deinstallation wird ausgef\303\274hrt\342\200\246\0"\
   "SumatraPDF als Standard&programm f\303\274r PDF Dokumente verwenden\0";
 
-const char * gTranslations_he =
+const char * gTranslations_he = 
   "\327\220\327\244\327\251\327\250\327\225\327\231\327\225\327\252\0"\
   "\327\224\327\220\327\235 \327\220\327\252\327\224 \327\221\327\230\327\225\327\227 \327\251\327\221\327\250\327\246\327\225\327\240\327\232 \327\234\327\224\327\241\327\231\327\250 \327\220\327\252 SumatraPDF?\0"\
   "\327\241\327\222\327\225\327\250\0"\
@@ -938,7 +938,7 @@ const char * gTranslations_he =
   "\327\236\327\241\327\231\327\250 \327\220\327\252 SumatraPDF...\0"\
   "\327\224\327\222\327\223\327\250 \327\220\327\252 SumatraPDF \327\233\327\252\327\225\327\233\327\240\327\252 \327\221\327\250\327\231\327\250\327\252 \327\236\327\227\327\223\327\234 \327\234\327\247\327\225\327\221\327\246\327\231 PDF\0";
 
-const char * gTranslations_hu =
+const char * gTranslations_hu = 
   "&Be\303\241ll\303\255t\303\241sok\0"\
   "Biztosan el szeretn\303\251 t\303\241vol\303\255tani a SumatraPDF-et?\0"\
   "Bez\303\241r\303\241s\0"\
@@ -982,7 +982,7 @@ const char * gTranslations_hu =
   "Elt\303\241vol\303\255t\303\241s folyamatban...\0"\
   "SumatraPDF haszn\303\241lata alap\303\251rtelmezett PDF olvas\303\263k\303\251nt\0";
 
-const char * gTranslations_id =
+const char * gTranslations_id = 
   "Pilihan\0"\
   "Anda yakin ingin menghapus instalasi SumatraPDF?\0"\
   "Tutup\0"\
@@ -1026,7 +1026,7 @@ const char * gTranslations_id =
   "Proses uninstall sedang berjalan...\0"\
   "Gunakan SumatraPDF sebagai pembaca PDF standar.\0";
 
-const char * gTranslations_it =
+const char * gTranslations_it = 
   "&Opzioni\0"\
   "Siete sicuri di voler disinstallare SumatraPDF?\0"\
   "Chiudi\0"\
@@ -1070,7 +1070,7 @@ const char * gTranslations_it =
   "Disinstallazione in corso...\0"\
   "Usa SumatraPDF come lettore PDF pre&definito\0";
 
-const char * gTranslations_ja =
+const char * gTranslations_ja = 
   "\343\202\252\343\203\227\343\202\267\343\203\247\343\203\263(&O)\0"\
   "SumatraPDF\343\202\222\346\234\254\345\275\223\343\201\253\343\202\242\343\203\263\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\343\201\227\343\201\276\343\201\231\343\201\213\357\274\237\0"\
   "\351\226\211\343\201\230\343\202\213\0"\
@@ -1114,7 +1114,7 @@ const char * gTranslations_ja =
   "\343\202\242\343\203\263\343\202\244\343\203\263\343\202\271\343\203\210\343\203\274\343\203\253\344\270\255\342\200\246\0"\
   "SumatraPDF \343\202\222 PDF \343\203\225\343\202\241\343\202\244\343\203\253\343\201\256\346\227\242\345\256\232\343\201\256\343\202\242\343\203\227\343\203\252\343\202\261\343\203\274\343\202\267\343\203\247\343\203\263\343\201\253\343\201\227\343\201\276\343\201\231\343\201\213?(&d)\0";
 
-const char * gTranslations_kr =
+const char * gTranslations_kr = 
   "\354\230\265\354\205\230(&O)\0"\
   "SumatraPDF\353\245\274 \354\240\234\352\261\260\355\225\240\352\271\214\354\232\224?\0"\
   "\353\213\253\352\270\260\0"\
@@ -1158,7 +1158,7 @@ const char * gTranslations_kr =
   "\354\240\234\352\261\260\355\225\230\353\212\224 \354\244\221...\0"\
   "SumatraPDF\353\245\274 \352\270\260\353\263\270 PDF \353\246\254\353\215\224\353\241\234 \354\202\254\354\232\251(&D)\0";
 
-const char * gTranslations_ku =
+const char * gTranslations_ku = 
   "\331\207\333\225\332\265\330\250\332\230\330\247\330\261\330\257\331\206\333\225\332\251\330\247\331\206&\0"\
   "\330\246\330\247\333\214\330\247 \330\257\332\265\331\206\333\214\330\247\333\214\330\252 \331\204\333\225 \330\263\332\225\333\214\331\206\333\225\331\210\333\225\333\214 SumatraPDF?\0"\
   "\330\257\330\247\330\256\330\263\330\252\331\206\0"\
@@ -1202,7 +1202,7 @@ const char * gTranslations_ku =
   "\330\263\332\225\333\214\331\206\333\225\331\210\333\225 \331\204\333\225 \330\246\333\225\331\206\330\254\330\247\331\205\330\257\330\247\331\206\330\257\330\247\333\214\333\225...\0"\
   "\331\210\333\225\332\251\331\210 \330\256\331\210\333\216\331\206\333\225\330\261\333\225\331\210\333\225\333\214 &\330\263\333\225\330\261\333\225\332\251\333\214 PDF SumatraPDF \330\250\333\225\332\251\330\247\330\261\331\207\333\216\331\206\330\247\331\206\333\214\0";
 
-const char * gTranslations_mk =
+const char * gTranslations_mk = 
   "&\320\236\320\277\321\206\320\270\320\270\0"\
   "\320\224\320\260\320\273\320\270 \321\201\321\202\320\265 \321\201\320\270\320\263\321\203\321\200\320\275\320\270 \320\264\320\265\320\272\320\260 \321\201\320\260\320\272\320\260\321\202\320\265 \320\264\320\260 \320\263\320\276 \320\270\320\267\320\261\321\200\320\270\321\210\320\265\321\202\320\265 SumatraPDF?\0"\
   "\320\227\320\260\321\202\320\262\320\276\321\200\320\270\0"\
@@ -1246,7 +1246,7 @@ const char * gTranslations_mk =
   "\320\221\321\200\320\270\321\210\320\265\321\232\320\265\321\202\320\276 \320\265 \320\262\320\276 \321\202\320\265\320\272...\0"\
   "\320\232\320\276\321\200\320\270\321\201\321\202\320\270 \320\263\320\276 SumatraPDF \320\272\320\260\320\272\320\276 &\320\276\321\201\320\275\320\276\320\262\320\265\320\275 \321\207\320\270\321\202\320\260\321\207 \320\275\320\260 PDF\0";
 
-const char * gTranslations_my =
+const char * gTranslations_my = 
   "&Tetapan\0"\
   "Adakah anda pasti anda mahu membuang SumatraPDF?\0"\
   "Tutup\0"\
@@ -1290,7 +1290,7 @@ const char * gTranslations_my =
   "Penyahpasangan sedang dijalankan ...\0"\
   "Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda\0";
 
-const char * gTranslations_no =
+const char * gTranslations_no = 
   "&Tillegg\0"\
   "Vil du virkelig avinstallere SumatraPDF?\0"\
   "Lukk\0"\
@@ -1334,7 +1334,7 @@ const char * gTranslations_no =
   "Avinstallering p\303\245g\303\245r...\0"\
   "Bruk SumatraPDF som &standard PDF-leser\0";
 
-const char * gTranslations_fa =
+const char * gTranslations_fa = 
   "&\332\257\330\262\333\214\331\206\331\207\342\200\214\331\207\330\247\0"\
   "\330\242\333\214\330\247 \330\250\330\261\330\247\333\214 \331\276\330\247\332\251 \332\251\330\261\330\257\331\206 \330\250\330\261\331\206\330\247\331\205\331\207\342\200\214\333\214 \330\263\331\210\331\205\330\247\330\252\330\261\330\247 \331\276\333\214\342\200\214\330\257\333\214\342\200\214\330\247\331\201 \331\205\330\267\331\205\330\246\331\206 \331\207\330\263\330\252\333\214\330\257\330\237\0"\
   "\330\250\330\263\330\252\331\206\0"\
@@ -1378,7 +1378,7 @@ const char * gTranslations_fa =
   "\331\201\330\261\330\242\333\214\331\206\330\257 \330\255\330\260\331\201 \330\250\330\261\331\206\330\247\331\205\331\207 \330\257\330\261 \330\254\330\261\333\214\330\247\331\206 \330\247\330\263\330\252...\0"\
   "\330\247\330\263\330\252\331\201\330\247\330\257\331\207 \330\247\330\262 SumatraPDF \330\250\331\207 \330\271\331\206\331\210\330\247\331\206 \331\276\333\214\342\200\214\330\257\333\214\342\200\214\330\247\331\201 \330\256\331\210\330\247\331\206 &\331\276\333\214\330\264\331\201\330\261\330\266\0";
 
-const char * gTranslations_pl =
+const char * gTranslations_pl = 
   "&Opcje\0"\
   "Czy na pewno chcesz usun\304\205\304\207 SumatraPDF?\0"\
   "Zamknij\0"\
@@ -1422,7 +1422,7 @@ const char * gTranslations_pl =
   "Trwa usuwanie...\0"\
   "U\305\274ywaj SumatraPDF jako domy\305\233lnej przegl\304\205darki PDF\0";
 
-const char * gTranslations_br =
+const char * gTranslations_br = 
   "&Op\303\247\303\265es\0"\
   "Tem certeza de que quer desinstalar o SumatraPDF?\0"\
   "Fechar\0"\
@@ -1466,7 +1466,7 @@ const char * gTranslations_br =
   "Desinstala\303\247\303\243o em progresso...\0"\
   "Usar o SumatraPDF como o leitor PDF pa&dr\303\243o\0";
 
-const char * gTranslations_pt =
+const char * gTranslations_pt = 
   "&Op\303\247\303\265es\0"\
   "Tem a certeza que quer desinstalar o SumatraPDF?\0"\
   "Fechar\0"\
@@ -1510,7 +1510,7 @@ const char * gTranslations_pt =
   "A desinstalar...\0"\
   "Utilizar o SumatraPDF como leitor pa&dr\303\243o de PDF\0";
 
-const char * gTranslations_ro =
+const char * gTranslations_ro = 
   "&Optiuni\0"\
   "Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?\0"\
   "Inchidere\0"\
@@ -1554,7 +1554,7 @@ const char * gTranslations_ro =
   "Dezinstalare in curs...\0"\
   "Folosi\310\233i SumatraPDF ca cititor implicit pentru fi\310\231iere P&DF\0";
 
-const char * gTranslations_ru =
+const char * gTranslations_ru = 
   "&\320\237\320\260\321\200\320\260\320\274\320\265\321\202\321\200\321\213\0"\
   "\320\222\321\213 \321\203\320\262\320\265\321\200\320\265\320\275\321\213, \321\207\321\202\320\276 \321\205\320\276\321\202\320\270\321\202\320\265 \321\203\320\264\320\260\320\273\320\270\321\202\321\214 SumatraPDF?\0"\
   "\320\227\320\260\320\272\321\200\321\213\321\202\321\214\0"\
@@ -1598,7 +1598,7 @@ const char * gTranslations_ru =
   "\320\237\321\200\320\276\320\270\321\201\321\205\320\276\320\264\320\270\321\202 \321\203\320\264\320\260\320\273\320\265\320\275\320\270\320\265...\0"\
   "\320\230\321\201\320\277\320\276\320\273\321\214\320\267\320\276\320\262\320\260\321\202\321\214 SumatraPDF \320\264\320\273\321\217 \320\277\321\200\320\276\321\201\320\274\320\276\321\202\321\200\320\260 PDF\0";
 
-const char * gTranslations_sr_rs =
+const char * gTranslations_sr_rs = 
   "\320\236\320\277\321\206\320\270\321\230\320\265\0"\
   "\320\224\320\260 \320\273\320\270 \320\266\320\265\320\273\320\270\321\202\320\265 \320\264\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\260\321\206\320\270\321\230\321\203 \320\241\321\203\320\274\320\260\321\202\321\200\320\260\320\237\320\224\320\244\0"\
   "\320\227\320\260\321\202\320\262\320\276\321\200\320\270\0"\
@@ -1642,7 +1642,7 @@ const char * gTranslations_sr_rs =
   "\320\224\320\265\320\270\320\275\321\201\321\202\320\260\320\273\320\270\321\200\320\260\321\232\320\265 \321\203 \321\202\320\276\320\272\321\203 ...\0"\
   "\320\241\321\203\320\274\320\260\321\202\321\200\320\260\320\237\320\224\320\244 \321\230\320\265 &\320\277\320\276\320\264\321\200\320\260\320\267\321\203\320\274\320\265\320\262\320\260\320\275\320\270 \320\277\321\200\320\265\320\263\320\273\320\265\320\264\320\260\321\207\0";
 
-const char * gTranslations_sp_rs =
+const char * gTranslations_sp_rs = 
   "Opcije\0"\
   "Da li sigurno \305\276elite da uklonite SumatraPDF?\0"\
   "Zatvori\0"\
@@ -1686,7 +1686,7 @@ const char * gTranslations_sp_rs =
   "Deinstaliranje u toku ...\0"\
   "Koristi SumatraPDF kao glavni PDF \304\215ita\304\215\0";
 
-const char * gTranslations_sk =
+const char * gTranslations_sk = 
   "&Mo\305\276nosti\0"\
   "Naozaj chcete odin\305\241talovat SumatraPDF?\0"\
   "Zatvori\305\245\0"\
@@ -1730,7 +1730,7 @@ const char * gTranslations_sk =
   "Prebieha odin\305\241talovanie...\0"\
   "Pou\305\276i SumatraPDF ako &predvolen\303\275 PDF prehliada\304\215\0";
 
-const char * gTranslations_sl =
+const char * gTranslations_sl = 
   "M&o\305\276nosti\0"\
   "Ali ste prepri\304\215ani, da \305\276elite odstraniti SumatraPDF?\0"\
   "Zapri\0"\
@@ -1774,7 +1774,7 @@ const char * gTranslations_sl =
   "Odstranjevanje poteka \342\200\246\0"\
   "Uporabi SumatraPDF kot privzeti P&DF prikazovalnik\0";
 
-const char * gTranslations_es =
+const char * gTranslations_es = 
   "&Opciones\0"\
   "\302\277Est\303\241 seguro de querer desinstalar SumatraPDF?\0"\
   "Cerrar\0"\
@@ -1818,7 +1818,7 @@ const char * gTranslations_es =
   "Desinstalaci\303\263n en progreso...\0"\
   "Usar SumatraPDF como lector PDF pre&determinado\0";
 
-const char * gTranslations_sv =
+const char * gTranslations_sv = 
   "Alternativ\0"\
   "\303\204r du s\303\244ker p\303\245 att du vill avinstallera SumatraPDF?\0"\
   "St\303\244ng\0"\
@@ -1862,7 +1862,7 @@ const char * gTranslations_sv =
   "Avinstallerar...\0"\
   "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF-filer\0";
 
-const char * gTranslations_ta =
+const char * gTranslations_ta = 
   "&\340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\256\340\257\215\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276 PDF \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\210 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\256\265\340\256\276?\0"\
   "\340\256\256\340\257\202\340\256\237\340\257\201\0"\
@@ -1906,7 +1906,7 @@ const char * gTranslations_ta =
   "\340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\215 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\256\256\340\257\215 \340\256\232\340\257\206\340\256\257\340\256\262\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201...\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276 PDF\340\256\220 \340\256\256\340\257\201\340\256\251\340\257\215\340\256\251\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\225 \340\256\252\340\256\257\340\256\251\340\257\215\340\256\252\340\256\237\340\257\201\340\256\244\340\257\215\340\256\244\340\257\201\0";
 
-const char * gTranslations_tr =
+const char * gTranslations_tr = 
   "&Ayarlar\0"\
   "SumatraPDF'yi bilgisayar\304\261n\304\261zdan kald\304\261rmak istedi\304\237inize emin misiniz ?\0"\
   "Kapat\0"\
@@ -1950,7 +1950,7 @@ const char * gTranslations_tr =
   "Program kald\304\261r\304\261l\304\261yor...\0"\
   "SumatraPDF varsay\304\261lan PDF okuyucum olsun\0";
 
-const char * gTranslations_uk =
+const char * gTranslations_uk = 
   "\320\235\320\260\320\273\320\260\321\210\321\202\321\203\320\262\320\260\320\275\320\275\321\217\0"\
   "\320\222\320\270 \320\262\320\277\320\265\320\262\320\275\320\265\320\275\321\226, \321\211\320\276 \321\205\320\276\321\207\320\265\321\202\320\265 \320\262\320\270\320\264\320\260\320\273\320\270\321\202\320\270 SumatraPDF?\0"\
   "\320\227\320\260\320\272\321\200\320\270\321\202\320\270\0"\
@@ -1994,7 +1994,7 @@ const char * gTranslations_uk =
   "\320\222\320\270\320\264\320\260\320\273\320\265\320\275\320\275\321\217 \321\202\321\200\320\270\320\262\320\260\321\224...\0"\
   "\320\222\320\270\320\272\320\276\321\200\320\270\321\201\321\202\320\276\320\262\321\203\320\262\320\260\321\202\320\270 SumatraPDF \321\217\320\272 \320\277\320\265\321\200\320\265\320\263\320\273\321\217\320\264\320\260\321\207 \320\264\320\273\321\217 PDF \320\267\320\260 \320\267\320\260\320\274\320\276\320\262\321\207\321\203\320\262\320\260\320\275\320\275\321\217\320\274\0";
 
-const char * gTranslations_uz =
+const char * gTranslations_uz = 
   "&Parametrlar\0"\
   "SumatraPDF'ni o'chirishga ishonchingiz komilmi?\0"\
   "Yopish\0"\
@@ -2038,7 +2038,7 @@ const char * gTranslations_uz =
   "O'chirilmoqda...\0"\
   "SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish\0";
 
-const char * gTranslations_vn =
+const char * gTranslations_vn = 
   "&T\303\271y ch\341\273\215n\0"\
   "B\341\272\241n c\303\263 ch\341\272\257c mu\341\273\221n g\341\273\241 b\341\273\217 SumatraPDF kh\303\264ng?\0"\
   "\304\220\303\263ng l\341\272\241i\0"\
@@ -2082,7 +2082,7 @@ const char * gTranslations_vn =
   "\304\220ang g\341\273\241 b\341\273\217...\0"\
   "\304\220\341\272\267t SumatraPDF l\303\240 tr\303\254nh \304\221\341\273\215c PDF m\341\272\267c \304\221\341\273\213nh\0";
 
-const char * gTranslations_cy =
+const char * gTranslations_cy = 
   "&Dewisiadau\0"\
   "Ydych chi'n si\305\265r eich bod am ddadosod SumatraPDF\0"\
   "Cau\0"\
@@ -2128,53 +2128,53 @@ const char * gTranslations_cy =
 
 
 static const char *gTranslations[LANGS_COUNT] = {
-  nullptr,
-  gTranslations_sq,
-  gTranslations_ar,
-  gTranslations_am,
-  gTranslations_az,
-  gTranslations_eu,
-  gTranslations_bs,
-  gTranslations_ca,
-  gTranslations_ca_xv,
-  gTranslations_cn,
-  gTranslations_tw,
-  gTranslations_hr,
-  gTranslations_cz,
-  gTranslations_dk,
-  gTranslations_nl,
-  gTranslations_et,
-  gTranslations_fi,
-  gTranslations_fr,
-  gTranslations_gl,
-  gTranslations_de,
-  gTranslations_he,
-  gTranslations_hu,
-  gTranslations_id,
-  gTranslations_it,
-  gTranslations_ja,
-  gTranslations_kr,
-  gTranslations_ku,
-  gTranslations_mk,
-  gTranslations_my,
-  gTranslations_no,
-  gTranslations_fa,
-  gTranslations_pl,
-  gTranslations_br,
-  gTranslations_pt,
-  gTranslations_ro,
-  gTranslations_ru,
-  gTranslations_sr_rs,
-  gTranslations_sp_rs,
-  gTranslations_sk,
-  gTranslations_sl,
-  gTranslations_es,
-  gTranslations_sv,
-  gTranslations_ta,
-  gTranslations_tr,
-  gTranslations_uk,
-  gTranslations_uz,
-  gTranslations_vn,
+  NULL,
+  gTranslations_sq, 
+  gTranslations_ar, 
+  gTranslations_am, 
+  gTranslations_az, 
+  gTranslations_eu, 
+  gTranslations_bs, 
+  gTranslations_ca, 
+  gTranslations_ca_xv, 
+  gTranslations_cn, 
+  gTranslations_tw, 
+  gTranslations_hr, 
+  gTranslations_cz, 
+  gTranslations_dk, 
+  gTranslations_nl, 
+  gTranslations_et, 
+  gTranslations_fi, 
+  gTranslations_fr, 
+  gTranslations_gl, 
+  gTranslations_de, 
+  gTranslations_he, 
+  gTranslations_hu, 
+  gTranslations_id, 
+  gTranslations_it, 
+  gTranslations_ja, 
+  gTranslations_kr, 
+  gTranslations_ku, 
+  gTranslations_mk, 
+  gTranslations_my, 
+  gTranslations_no, 
+  gTranslations_fa, 
+  gTranslations_pl, 
+  gTranslations_br, 
+  gTranslations_pt, 
+  gTranslations_ro, 
+  gTranslations_ru, 
+  gTranslations_sr_rs, 
+  gTranslations_sp_rs, 
+  gTranslations_sk, 
+  gTranslations_sl, 
+  gTranslations_es, 
+  gTranslations_sv, 
+  gTranslations_ta, 
+  gTranslations_tr, 
+  gTranslations_uk, 
+  gTranslations_uz, 
+  gTranslations_vn, 
   gTranslations_cy
 };
 
