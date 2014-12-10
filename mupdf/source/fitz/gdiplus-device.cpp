@@ -1352,16 +1352,6 @@ ft_get_charcode(fz_font *font, fz_text_item *el)
 	FT_Face face = (FT_Face)font->ft_face;
 	if (el->gid == (int)FT_Get_Char_Index(face, el->ucs))
 		return el->ucs;
-	
-	FT_UInt gid;
-	WCHAR ucs = FT_Get_First_Char(face, &gid), prev = ucs - 1;
-	while (gid != 0 && ucs != prev && ucs < 256)
-	{
-		if ((int)gid == el->gid)
-			return ucs;
-		ucs = FT_Get_Next_Char(face, (prev = ucs), &gid);
-	}
-	
 	return 0;
 }
 
