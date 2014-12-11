@@ -105,7 +105,7 @@ static WCHAR *GetHtmlHelpPath()
     return nullptr;
 }
 
-bool CanViewExternally(TabInfo *tab)
+static bool CanViewExternally(TabInfo *tab)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;
@@ -319,4 +319,41 @@ bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
     else
         params.Set(str::Format(L"%s \"%s\"", params.Get(), tab->filePath));
     return LaunchFile(args.At(0), params);
+}
+
+#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
+
+bool CanSendAsEmailAttachment(TabInfo *tab)
+{
+    // Requirements: a valid filename and access to SendMail's IDropTarget interface
+    if (!CanViewExternally(tab))
+        return false;
+
+    ScopedComPtr<IDropTarget> pDropTarget;
+    return pDropTarget.Create(CLSID_SendMail);
+}
+
+bool SendAsEmailAttachment(TabInfo *tab, HWND hwndParent)
+{
+    if (!tab || !CanSendAsEmailAttachment(tab))
+        return false;
+
+    // We use the SendTo drop target provided by SendMail.dll, which should ship with all
+    // commonly used Windows versions, instead of MAPISendMail, which doesn't support
+    // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
+    ScopedComPtr<IDataObject> pDataObject(GetDataObjectForFile(tab->filePath, hwndParent));
+    if (!pDataObject)
+        return false;
+
+    ScopedComPtr<IDropTarget> pDropTarget;
+    if (!pDropTarget.Create(CLSID_SendMail))
+        return false;
+
+    POINTL pt = { 0, 0 };
+    DWORD dwEffect = 0;
+    pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
+    HRESULT hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
+    return SUCCEEDED(hr);
 }

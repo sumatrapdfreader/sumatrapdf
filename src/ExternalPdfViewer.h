@@ -1,7 +1,6 @@
 /* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-bool CanViewExternally(TabInfo *tab=nullptr);
 bool CouldBePDFDoc(TabInfo *tab);
 
 bool CanViewWithFoxit(TabInfo *tab=nullptr);
@@ -18,3 +17,6 @@ bool CanViewWithHtmlHelp(TabInfo *tab);
 bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args=nullptr);
 
 bool ViewWithExternalViewer(TabInfo *tab, size_t idx);
+
+bool CanSendAsEmailAttachment(TabInfo *tab=nullptr);
+bool SendAsEmailAttachment(TabInfo *tab, HWND hwndParent=nullptr);
