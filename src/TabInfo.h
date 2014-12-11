@@ -3,7 +3,6 @@
 
 struct SelectionOnPage;
 struct WatchedFile;
-class WindowInfo;
 
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on WindowInfo, so that a TabInfo could
@@ -44,11 +43,13 @@ public:
 };
 
 class LinkSaver : public LinkSaverUI {
-    WindowInfo *owner;
+    TabInfo *tab;
+    HWND parentHwnd;
     const WCHAR *fileName;
 
 public:
-    LinkSaver(WindowInfo *win, const WCHAR *fileName) : owner(win), fileName(fileName) { }
+    LinkSaver(TabInfo *tab, HWND parentHwnd, const WCHAR *fileName) :
+        tab(tab), parentHwnd(parentHwnd), fileName(fileName) { }
 
     virtual bool SaveEmbedded(const unsigned char *data, size_t cbCount);
 };

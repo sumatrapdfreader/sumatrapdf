@@ -9,8 +9,10 @@
 #include "LabelWithCloseWnd.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// layout controllers
+// rendering engines
 #include "BaseEngine.h"
+#include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"
@@ -18,6 +20,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "AppPrefs.h"
 #include "Favorites.h"
@@ -531,17 +534,19 @@ static DocTocItem *TocItemForPageNo(DocTocItem *item, int pageNo)
 
 void AddFavorite(WindowInfo *win)
 {
+    TabInfo *tab = win->currentTab;
+    CrashIf(!tab);
     int pageNo = win->currPageNo;
     ScopedMem<WCHAR> name;
-    if (win->ctrl->HasTocTree()) {
+    if (tab->ctrl->HasTocTree()) {
         // use the current ToC heading as default name
-        DocTocItem *root = win->ctrl->GetTocTree();
+        DocTocItem *root = tab->ctrl->GetTocTree();
         DocTocItem *item = TocItemForPageNo(root, pageNo);
         if (item)
             name.Set(str::Dup(item->title));
         delete root;
     }
-    ScopedMem<WCHAR> pageLabel(win->ctrl->GetPageLabel(pageNo));
+    ScopedMem<WCHAR> pageLabel(tab->ctrl->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd)
@@ -551,9 +556,9 @@ void AddFavorite(WindowInfo *win)
     bool needsLabel = !str::Eq(plainLabel, pageLabel);
 
     RememberFavTreeExpansionStateForAllWindows();
-    gFavorites.AddOrReplace(win->loadedFilePath, pageNo, name, needsLabel ? pageLabel.Get() : nullptr);
+    gFavorites.AddOrReplace(tab->filePath, pageNo, name, needsLabel ? pageLabel.Get() : nullptr);
     // expand newly added favorites by default
-    DisplayState *fav = gFavorites.GetFavByFilePath(win->loadedFilePath);
+    DisplayState *fav = gFavorites.GetFavByFilePath(tab->filePath);
     if (fav && fav->favorites->Count() == 2)
         win->expandedFavorites.Append(fav);
     UpdateFavoritesTreeForAllWindows();
@@ -562,10 +567,9 @@ void AddFavorite(WindowInfo *win)
 
 void DelFavorite(WindowInfo *win)
 {
-    int pageNo = win->currPageNo;
-    const WCHAR *filePath = win->loadedFilePath;
+    CrashIf(!win->currentTab);
     RememberFavTreeExpansionStateForAllWindows();
-    gFavorites.Remove(filePath, pageNo);
+    gFavorites.Remove(win->currentTab->filePath, win->currPageNo);
     UpdateFavoritesTreeForAllWindows();
     prefs::Save();
 }

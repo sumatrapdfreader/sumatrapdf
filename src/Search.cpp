@@ -387,8 +387,9 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
 bool OnInverseSearch(WindowInfo *win, int x, int y)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return false;
-    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_PDF) return false;
-    DisplayModel *dm = win->AsFixed();
+    TabInfo *tab = win->currentTab;
+    if (!tab || tab->GetEngineType() != Engine_PDF) return false;
+    DisplayModel *dm = tab->AsFixed();
 
     // Clear the last forward-search result
     win->fwdSearchMark.rects.Reset();
@@ -396,8 +397,8 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     // On double-clicking error message will be shown to the user
     // if the PDF does not have a synchronization file
-    if (!win->AsFixed()->pdfSync) {
-        int err = Synchronizer::Create(win->loadedFilePath, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
+    if (!dm->pdfSync) {
+        int err = Synchronizer::Create(tab->filePath, dm->GetEngine(), &dm->pdfSync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
             // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
@@ -414,13 +415,13 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     }
 
     int pageNo = dm->GetPageNoByPoint(PointI(x, y));
-    if (!win->ctrl->ValidPageNo(pageNo))
+    if (!tab->ctrl->ValidPageNo(pageNo))
         return false;
 
     PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).ToInt();
     ScopedMem<WCHAR> srcfilepath;
     UINT line, col;
-    int err = win->AsFixed()->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
+    int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         win->ShowNotification(_TR("No synchronization info at this position"));
         return true;
@@ -429,7 +430,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     if (!file::Exists(srcfilepath)) {
         // if the source file is missing, check if it's been moved to the same place as
         // the PDF document (which happens if all files are moved together)
-        ScopedMem<WCHAR> altsrcpath(path::GetDir(win->loadedFilePath));
+        ScopedMem<WCHAR> altsrcpath(path::GetDir(tab->filePath));
         altsrcpath.Set(path::Join(altsrcpath, path::GetBaseName(srcfilepath)));
         if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath))
             srcfilepath.Set(altsrcpath.StealData());
@@ -442,7 +443,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 
     ScopedMem<WCHAR> cmdline;
     if (inverseSearch)
-        cmdline.Set(win->AsFixed()->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
+        cmdline.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
         ScopedMem<WCHAR> appDir(GetExePath());
@@ -573,7 +574,7 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
         // check if any opened PDF has sync information for the source file
         win = FindWindowInfoBySyncFile(srcFile, true);
         if (win && newWindow) {
-            LoadArgs args(win->loadedFilePath);
+            LoadArgs args(win->currentTab->filePath);
             win = LoadDocument(args);
         }
     }

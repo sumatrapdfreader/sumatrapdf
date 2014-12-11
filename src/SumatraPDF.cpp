@@ -317,43 +317,38 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
 {
     ScopedMem<WCHAR> normFile(path::Normalize(file));
 
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (!win->IsAboutWindow() && path::IsSame(win->loadedFilePath, normFile))
+    for (WindowInfo *win : gWindows) {
+        if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile))
             return win;
-        if (win->tabsVisible && focusTab) {
+        if (focusTab && win->tabs.Count() > 1) {
             // bring a background tab to the foreground
-            for (size_t j = 0; j < win->tabs.Count(); j++) {
-                TabInfo *tab = win->tabs.At(j);
-                if (path::IsSame(tab->filePath, normFile)) {
-                    TabsSelect(win, (int)j);
+            for (TabInfo *tab : win->tabs) {
+                if (tab != win->currentTab && path::IsSame(tab->filePath, normFile)) {
+                    TabsSelect(win, win->tabs.Find(tab));
                     return win;
                 }
             }
         }
     }
-
     return nullptr;
 }
 
 // Find the first window that has been produced from <file>
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
+    for (WindowInfo *win : gWindows) {
         Vec<RectI> rects;
         UINT page;
         if (win->AsFixed() && win->AsFixed()->pdfSync &&
             win->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
-        if (win->tabsVisible && focusTab) {
+        if (focusTab && win->tabs.Count() > 1) {
             // bring a background tab to the foreground
-            for (size_t j = 0; j < win->tabs.Count(); j++) {
-                TabInfo *tab = win->tabs.At(j);
-                if (tab->AsFixed() && tab->AsFixed()->pdfSync &&
+            for (TabInfo *tab : win->tabs) {
+                if (tab != win->currentTab && tab->AsFixed() && tab->AsFixed()->pdfSync &&
                     tab->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-                    TabsSelect(win, (int)j);
+                    TabsSelect(win, win->tabs.Find(tab));
                     return win;
                 }
             }
@@ -712,7 +707,8 @@ void ControllerCallbackHandler::FocusFrame(bool always)
 void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned char *data, size_t len)
 {
     ScopedMem<WCHAR> fileName(url::GetFileName(url));
-    LinkSaver(win, fileName).SaveEmbedded(data, len);
+    LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
+    linkSaver.SaveEmbedded(data, len);
 }
 
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data)
@@ -780,6 +776,7 @@ LoadEngineInFixedPageUI:
         }
         CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
     }
+    CrashIf(ctrl && !str::Eq(ctrl->FilePath(), filePath));
 
     return ctrl;
 }
@@ -887,7 +884,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     Controller *prevCtrl = win->ctrl;
     tab->filePath.Set(str::Dup(args.fileName));
     tab->tabTitle = path::GetBaseName(tab->filePath);
-    win->loadedFilePath = tab->filePath;
     tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
     win->ctrl = tab->ctrl;
 
@@ -995,8 +991,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         }
     }
 
-    const WCHAR *filePath = win->IsDocLoaded() ? win->ctrl->FilePath() : args.fileName;
-    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? filePath : path::GetBaseName(filePath);
+    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
     WCHAR *docTitle = nullptr;
     if (win->IsDocLoaded() && (docTitle = win->ctrl->GetProperty(Prop_Title)) != nullptr) {
         str::NormalizeWS(docTitle);
@@ -1084,18 +1079,18 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
+    TabInfo *tab = win->currentTab;
     if (!win->IsDocLoaded()) {
-        if (!autorefresh && win->loadedFilePath) {
-            LoadArgs args(win->loadedFilePath, win);
+        if (!autorefresh && tab) {
+            LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
             LoadDocument(args);
         }
         return;
     }
 
-    TabInfo *tab = win->currentTab;
-    DisplayState *ds = NewDisplayState(win->loadedFilePath);
-    win->ctrl->UpdateDisplayState(ds);
+    DisplayState *ds = NewDisplayState(tab->filePath);
+    tab->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
     UpdateSidebarDisplayState(win, tab, ds);
     // Set the windows state based on the actual window's placement
@@ -1105,7 +1100,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
                     : WIN_STATE_NORMAL ;
     ds->useDefaultState = false;
 
-    ScopedMem<WCHAR> path(str::Dup(win->loadedFilePath));
+    ScopedMem<WCHAR> path(str::Dup(tab->filePath));
     HwndPasswordUI pwdUI(win->hwndFrame);
     LoadArgs args(path, win);
     args.showWin = true;
@@ -1131,10 +1126,10 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
             CreateThumbnailForFile(*win, *state);
     }
 
-    if (win->AsFixed()) {
+    if (tab->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        ScopedMem<char> decryptionKey(win->AsFixed()->GetEngine()->GetDecryptionKey());
+        ScopedMem<char> decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
             DisplayState *state = gFileHistory.Find(ds->filePath);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
@@ -1490,7 +1485,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
-        CrashIf(!str::Eq(fullPath, win->loadedFilePath));
+        CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
         DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage)
             CreateThumbnailForFile(*win, *ds);
@@ -1522,7 +1517,6 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     CloseDocumentInTab(win, true);
 
     win->currentTab = tdata;
-    win->loadedFilePath = tdata->filePath;
     win->ctrl = tdata->ctrl;
     win::SetText(win->hwndFrame, tdata->frameTitle);
 
@@ -2052,7 +2046,6 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     }
     else {
         win->currentTab = nullptr;
-        win->loadedFilePath = nullptr;
     }
     win->notifications->RemoveForGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
@@ -2666,12 +2659,13 @@ void OnMenuOpen(WindowInfo& win)
 
 static void BrowseFolder(WindowInfo& win, bool forward)
 {
-    AssertCrash(win.loadedFilePath);
+    AssertCrash(!win.IsAboutWindow());
     if (win.IsAboutWindow()) return;
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
 
+    TabInfo *tab = win.currentTab;
     WStrVec files;
-    ScopedMem<WCHAR> pattern(path::GetDir(win.loadedFilePath));
+    ScopedMem<WCHAR> pattern(path::GetDir(tab->filePath));
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern.Set(path::Join(pattern, L"*"));
     if (!CollectPathsFromDirectory(pattern, files))
@@ -2685,18 +2679,18 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         }
     }
 
-    if (!files.Contains(win.loadedFilePath))
-        files.Append(str::Dup(win.loadedFilePath));
+    if (!files.Contains(tab->filePath))
+        files.Append(str::Dup(tab->filePath));
     files.SortNatural();
 
-    int index = files.Find(win.loadedFilePath);
+    int index = files.Find(tab->filePath);
     if (forward)
         index = (index + 1) % files.Count();
     else
         index = (int)(index + files.Count() - 1) % files.Count();
 
     // TODO: check for unsaved modifications
-    UpdateTabFileDisplayStateForWin(&win, win.currentTab);
+    UpdateTabFileDisplayStateForWin(&win, tab);
     LoadArgs args(files.At(index), &win);
     args.forceReuse = true;
     LoadDocument(args);
@@ -3204,7 +3198,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
     if ((VK_LEFT == key || VK_RIGHT == key) &&
         isShift && isCtrl &&
-        win->loadedFilePath && !inTextfield) {
+        !win->IsAboutWindow() && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
         // so special-case it before the win->IsDocLoaded() check
         BrowseFolder(*win, VK_RIGHT == key);
@@ -3688,12 +3682,6 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         return 0;
     }
 
-    if (win && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST)
-    {
-        ViewWithExternalViewer(wmId - IDM_OPEN_WITH_EXTERNAL_FIRST, win->loadedFilePath, win->ctrl ? win->ctrl->CurrentPageNo() : 0);
-        return 0;
-    }
-
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
     static_assert(IDM_FAV_LAST - IDM_FAV_FIRST == 200, "wrong numer of favorite menu ids");
     if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST))
@@ -3703,6 +3691,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
+
+    if (!win->IsAboutWindow() && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST) {
+        ViewWithExternalViewer(win->currentTab, wmId - IDM_OPEN_WITH_EXTERNAL_FIRST);
+        return 0;
+    }
 
     // most of them require a win, the few exceptions are no-ops
     switch (wmId)

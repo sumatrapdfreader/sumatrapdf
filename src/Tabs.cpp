@@ -658,7 +658,6 @@ void CreateTabbar(WindowInfo *win)
 static void VerifyTabInfo(WindowInfo *win, TabInfo *tdata)
 {
     CrashIf(tdata->ctrl != win->ctrl);
-    CrashIf(!str::Eq(tdata->filePath, win->loadedFilePath));
     CrashIf(!str::Eq(ScopedMem<WCHAR>(win::GetText(win->hwndFrame)), tdata->frameTitle));
     CrashIf(!str::Eq(tdata->tabTitle, path::GetBaseName(tdata->filePath)));
     CrashIf(win->tocVisible != (!win->presentation ? tdata->showToc : PM_ENABLED == win->presentation ? tdata->showTocPresentation : false));
@@ -767,7 +766,6 @@ void TabsOnCloseDoc(WindowInfo *win)
     win->tabs.Remove(tdata);
     delete tdata;
     TabCtrl_DeleteItem(win->hwndTabBar, current);
-    win->loadedFilePath = nullptr;
     win->ctrl = nullptr;
     win->currentTab = nullptr;
     UpdateTabWidth(win);
@@ -786,7 +784,6 @@ void TabsOnCloseWindow(WindowInfo *win)
     win->tabSelectionHistory->Reset();
     win->currentTab = nullptr;
     win->ctrl = nullptr;
-    win->loadedFilePath = nullptr;
     DeleteVecMembers(win->tabs);
 }
 

@@ -290,14 +290,14 @@ bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
+bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
 {
-    if (!HasPermission(Perm_DiskAccess) || !file::Exists(filePath))
+    if (!HasPermission(Perm_DiskAccess) || !tab || !file::Exists(tab->filePath))
         return false;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && i <= idx; i++) {
         ExternalViewer *ev = gGlobalPrefs->externalViewers->At(i);
         // cf. AppendExternalViewersToMenu in Menu.cpp
-        if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
+        if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !path::Match(tab->filePath, ev->filter))
             idx++;
     }
     if (idx >= gGlobalPrefs->externalViewers->Count() || !gGlobalPrefs->externalViewers->At(idx)->commandLine)
@@ -312,11 +312,11 @@ bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
     const WCHAR *cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
-    ScopedMem<WCHAR> pageNoStr(str::Format(L"%d", pageNo));
+    ScopedMem<WCHAR> pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
     ScopedMem<WCHAR> params(str::Replace(cmdLine, L"%p", pageNoStr));
     if (str::Find(params, L"%1"))
-        params.Set(str::Replace(params, L"%1", filePath));
+        params.Set(str::Replace(params, L"%1", tab->filePath));
     else
-        params.Set(str::Format(L"%s \"%s\"", params.Get(), filePath));
+        params.Set(str::Format(L"%s \"%s\"", params.Get(), tab->filePath));
     return LaunchFile(args.At(0), params);
 }

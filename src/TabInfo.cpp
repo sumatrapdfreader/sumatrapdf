@@ -65,7 +65,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = owner->hwndFrame;
+    ofn.hwndOwner = this->parentHwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -76,7 +76,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
     if (!ok)
         return false;
     ok = file::WriteAll(dstFileName, data, len);
-    if (ok && IsUntrustedFile(owner->ctrl ? owner->ctrl->FilePath() : owner->loadedFilePath, gPluginURL))
+    if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL))
         file::SetZoneIdentifier(dstFileName);
     return ok;
 }

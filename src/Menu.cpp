@@ -636,13 +636,20 @@ void OnMenuCustomZoom(WindowInfo* win)
     ZoomToSelection(win, zoom);
 }
 
-static void RebuildFileMenu(WindowInfo *win, HMENU menu)
+static void RebuildFileMenu(TabInfo *tab, HMENU menu)
 {
+    int filter = 0;
+    if (tab && tab->AsChm())
+        filter |= MF_NOT_FOR_CHM;
+    if (tab && tab->AsEbook())
+        filter |= MF_NOT_FOR_EBOOK_UI;
+    if (!tab || tab->GetEngineType() != Engine_ComicBook)
+        filter |= MF_CBX_ONLY;
+
     win::menu::Empty(menu);
-    int filter = win->AsChm() ? MF_NOT_FOR_CHM : win->AsEbook() ? MF_NOT_FOR_EBOOK_UI : 0;
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, filter);
     AppendRecentFilesToMenu(menu);
-    AppendExternalViewersToMenu(menu, win->loadedFilePath);
+    AppendExternalViewersToMenu(menu, tab ? tab->filePath.Get() : nullptr);
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
@@ -652,15 +659,15 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
 
     // Also suppress PDF specific items for non-PDF documents
-    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithAcrobat())
+    if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat())
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithFoxit())
+    if (!CouldBePDFDoc(tab) || !CanViewWithFoxit())
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (!CouldBePDFDoc(win->currentTab) || !CanViewWithPDFXChange())
+    if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange())
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
-    if (!CanViewWithXPSViewer(win->currentTab))
+    if (!CanViewWithXPSViewer(tab))
         win::menu::Remove(menu, IDM_VIEW_WITH_XPS_VIEWER);
-    if (!CanViewWithHtmlHelp(win->currentTab))
+    if (!CanViewWithHtmlHelp(tab))
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
 }
 
@@ -668,6 +675,7 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
 HMENU BuildMenu(WindowInfo *win)
 {
     HMENU mainMenu = CreateMenu();
+
     int filter = 0;
     if (win->AsChm())
         filter |= MF_NOT_FOR_CHM;
@@ -677,7 +685,7 @@ HMENU BuildMenu(WindowInfo *win)
         filter |= MF_CBX_ONLY;
 
     HMENU m = CreateMenu();
-    RebuildFileMenu(win, m);
+    RebuildFileMenu(win->currentTab, m);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
@@ -719,7 +727,7 @@ void UpdateMenu(WindowInfo *win, HMENU m)
     CrashIf(!win);
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
-        RebuildFileMenu(win, m);
+        RebuildFileMenu(win->currentTab, m);
     else if (id == menuDefFavorites[0].id) {
         win::menu::Empty(m);
         BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);

@@ -92,8 +92,6 @@ public:
     ChmModel *AsChm() const;
     EbookController *AsEbook() const;
 
-    // TODO: use currentTab->filePath instead
-    const WCHAR *   loadedFilePath; // owned by currentTab
     // TODO: use currentTab->ctrl instead
     Controller *    ctrl; // owned by currentTab
 

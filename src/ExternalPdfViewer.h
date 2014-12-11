@@ -17,4 +17,4 @@ bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args=nullptr);
 bool CanViewWithHtmlHelp(TabInfo *tab);
 bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args=nullptr);
 
-bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo=0);
+bool ViewWithExternalViewer(TabInfo *tab, size_t idx);

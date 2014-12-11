@@ -31,6 +31,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "AppTools.h"
 #include "ParseCommandLine.h"
 #include "Search.h"
@@ -846,12 +847,12 @@ void GetStressTestInfo(str::Str<char>* s)
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *w = gWindows.At(i);
-        if (!w || !w->IsDocLoaded() || !w->loadedFilePath)
+        if (!w || !w->currentTab || !w->currentTab->filePath)
             continue;
 
         s->Append("File: ");
         char buf[256];
-        str::conv::ToCodePageBuf(buf, dimof(buf), w->loadedFilePath, CP_UTF8);
+        str::conv::ToCodePageBuf(buf, dimof(buf), w->currentTab->filePath, CP_UTF8);
         s->Append(buf);
         w->stressTest->GetLogInfo(s);
         s->Append("\r\n");

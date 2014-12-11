@@ -49,7 +49,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     hwndInfotip(nullptr), infotipVisible(false),
     findThread(nullptr), findCanceled(false), printThread(nullptr), printCanceled(false),
     showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
-    loadedFilePath(nullptr), currPageNo(0),
+    currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), stressTest(nullptr),
     hwndFavBox(nullptr), hwndFavTree(nullptr), favLabelWithClose(nullptr),
@@ -103,7 +103,6 @@ WindowInfo::~WindowInfo()
 
 bool WindowInfo::IsAboutWindow() const
 {
-    CrashIf(!loadedFilePath != !currentTab);
     return nullptr == currentTab;
 }
 
@@ -284,6 +283,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     if (!link || !owner->IsDocLoaded())
         return;
 
+    TabInfo *tab = owner->currentTab;
     ScopedMem<WCHAR> path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
@@ -311,7 +311,7 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     else if (Dest_LaunchEmbedded == type) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path.Get(), owner->ctrl->FilePath())) {
+        if (path && str::StartsWith(path.Get(), tab->filePath.Get())) {
             WindowInfo *newWin = FindWindowInfoByFile(path, true);
             if (!newWin) {
                 LoadArgs args(path, owner);
@@ -322,7 +322,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         }
         // offer to save other attachments to a file
         else {
-            LinkSaver linkSaverTmp(owner, path);
+            LinkSaver linkSaverTmp(tab, owner->hwndFrame, path);
             link->SaveEmbedded(linkSaverTmp);
         }
     }
@@ -335,22 +335,22 @@ void LinkHandler::GotoLink(PageDestination *link)
     }
     // predefined named actions
     else if (Dest_NextPage == type)
-        owner->ctrl->GoToNextPage();
+        tab->ctrl->GoToNextPage();
     else if (Dest_PrevPage == type)
-        owner->ctrl->GoToPrevPage();
+        tab->ctrl->GoToPrevPage();
     else if (Dest_FirstPage == type)
-        owner->ctrl->GoToFirstPage();
+        tab->ctrl->GoToFirstPage();
     else if (Dest_LastPage == type)
-        owner->ctrl->GoToLastPage();
+        tab->ctrl->GoToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
     else if (Dest_FindDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
     else if (Dest_FullScreen == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
     else if (Dest_GoBack == type)
-        owner->ctrl->Navigate(-1);
+        tab->ctrl->Navigate(-1);
     else if (Dest_GoForward == type)
-        owner->ctrl->Navigate(1);
+        tab->ctrl->Navigate(1);
     else if (Dest_GoToPageDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
     else if (Dest_PrintDialog == type)
