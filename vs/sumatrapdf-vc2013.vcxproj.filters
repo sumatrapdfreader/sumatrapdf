@@ -87,7 +87,7 @@
     <ClCompile Include="..\src\Doc.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ExternalPdfViewer.cpp">
+    <ClCompile Include="..\src\ExternalViewers.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Favorites.cpp">
@@ -938,7 +938,7 @@
     <ClInclude Include="..\src\Doc.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ExternalPdfViewer.h">
+    <ClInclude Include="..\src\ExternalViewers.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Favorites.h">

@@ -56,7 +56,7 @@
 #include "Canvas.h"
 #include "Caption.h"
 #include "CrashHandler.h"
-#include "ExternalPdfViewer.h"
+#include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Menu.h"

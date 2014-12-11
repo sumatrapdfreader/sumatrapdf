@@ -94,7 +94,7 @@
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
-    <ClCompile Include="..\src\ExternalPdfViewer.cpp" />
+    <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />
     <ClCompile Include="..\src\FileModifications.cpp" />
@@ -379,7 +379,7 @@
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\Doc.h" />
-    <ClInclude Include="..\src\ExternalPdfViewer.h" />
+    <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FileHistory.h" />
     <ClInclude Include="..\src\FileModifications.h" />

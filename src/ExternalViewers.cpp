@@ -16,7 +16,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "TabInfo.h"
-#include "ExternalPdfViewer.h"
+#include "ExternalViewers.h"
 
 static WCHAR *GetAcrobatPath()
 {

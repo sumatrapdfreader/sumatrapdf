@@ -22,7 +22,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ExternalPdfViewer.h"
+#include "ExternalViewers.h"
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Menu.h"

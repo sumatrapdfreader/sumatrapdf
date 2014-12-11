@@ -1090,11 +1090,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\ExternalPdfViewer.cpp"
+					RelativePath="..\src\ExternalViewers.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\ExternalPdfViewer.h"
+					RelativePath="..\src\ExternalViewers.h"
 					>
 				</File>
 				<File
