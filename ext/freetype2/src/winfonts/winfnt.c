@@ -591,10 +591,13 @@
 
 
   static FT_Error
-  fnt_cmap_init( FNT_CMap  cmap )
+  fnt_cmap_init( FNT_CMap    cmap,
+                 FT_Pointer  pointer )
   {
     FNT_Face  face = (FNT_Face)FT_CMAP_FACE( cmap );
     FNT_Font  font = face->font;
+
+    FT_UNUSED( pointer );
 
 
     cmap->first = (FT_UInt32)  font->header.first_char;
@@ -971,7 +974,7 @@
 
     if ( !face )
     {
-      error = FT_THROW( Invalid_Argument );
+      error = FT_THROW( Invalid_Face_Handle );
       goto Exit;
     }
 

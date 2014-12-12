@@ -250,7 +250,8 @@
         if ( c < 0 || c >= 10 )
           break;
 
-        if ( decimal < 0xCCCCCCCL )
+        /* only add digit if we don't overflow */
+        if ( divider < 0xCCCCCCCL && decimal < 0xCCCCCCCL )
         {
           decimal = decimal * 10 + c;
 

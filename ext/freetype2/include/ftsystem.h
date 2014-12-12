@@ -335,7 +335,6 @@ FT_BEGIN_HEADER
 
   } FT_StreamRec;
 
-
   /* */
 
 

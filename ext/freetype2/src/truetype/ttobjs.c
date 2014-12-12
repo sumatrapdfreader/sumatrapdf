@@ -760,7 +760,9 @@
     if ( !exec )
       return FT_THROW( Could_Not_Find_Context );
 
-    TT_Load_Context( exec, face, size );
+    error = TT_Load_Context( exec, face, size );
+    if ( error )
+      return error;
 
     exec->callTop = 0;
     exec->top     = 0;
@@ -801,17 +803,15 @@
 
     if ( face->font_program_size > 0 )
     {
-      error = TT_Goto_CodeRange( exec, tt_coderange_font, 0 );
+      TT_Goto_CodeRange( exec, tt_coderange_font, 0 );
 
-      if ( !error )
-      {
-        FT_TRACE4(( "Executing `fpgm' table.\n" ));
-
-        error = face->interpreter( exec );
-      }
+      FT_TRACE4(( "Executing `fpgm' table.\n" ));
+      error = face->interpreter( exec );
     }
     else
       error = FT_Err_Ok;
+
+    size->bytecode_ready = error;
 
     if ( !error )
       TT_Save_Context( exec, size );
@@ -854,7 +854,9 @@
     if ( !exec )
       return FT_THROW( Could_Not_Find_Context );
 
-    TT_Load_Context( exec, face, size );
+    error = TT_Load_Context( exec, face, size );
+    if ( error )
+      return error;
 
     exec->callTop = 0;
     exec->top     = 0;
@@ -872,9 +874,9 @@
 
     if ( face->cvt_program_size > 0 )
     {
-      error = TT_Goto_CodeRange( exec, tt_coderange_cvt, 0 );
+      TT_Goto_CodeRange( exec, tt_coderange_cvt, 0 );
 
-      if ( !error && !size->debug )
+      if ( !size->debug )
       {
         FT_TRACE4(( "Executing `prep' table.\n" ));
 
@@ -883,6 +885,8 @@
     }
     else
       error = FT_Err_Ok;
+
+    size->cvt_ready = error;
 
     /* UNDOCUMENTED!  The MS rasterizer doesn't allow the following */
     /* graphics state variables to be modified by the CVT program.  */
@@ -912,10 +916,6 @@
     return error;
   }
 
-#endif /* TT_USE_BYTECODE_INTERPRETER */
-
-
-#ifdef TT_USE_BYTECODE_INTERPRETER
 
   static void
   tt_size_done_bytecode( FT_Size  ftsize )
@@ -953,8 +953,8 @@
     size->max_func = 0;
     size->max_ins  = 0;
 
-    size->bytecode_ready = 0;
-    size->cvt_ready      = 0;
+    size->bytecode_ready = -1;
+    size->cvt_ready      = -1;
   }
 
 
@@ -968,14 +968,13 @@
     TT_Size    size = (TT_Size)ftsize;
     TT_Face    face = (TT_Face)ftsize->face;
     FT_Memory  memory = face->root.memory;
-    FT_Int     i;
 
     FT_UShort       n_twilight;
     TT_MaxProfile*  maxp = &face->max_profile;
 
 
-    size->bytecode_ready = 1;
-    size->cvt_ready      = 0;
+    size->bytecode_ready = -1;
+    size->cvt_ready      = -1;
 
     size->max_function_defs    = maxp->maxFunctionDefs;
     size->max_instruction_defs = maxp->maxInstructionDefs;
@@ -997,9 +996,11 @@
       metrics->rotated   = FALSE;
       metrics->stretched = FALSE;
 
-      /* set default compensation (all 0) */
-      for ( i = 0; i < 4; i++ )
-        metrics->compensations[i] = 0;
+      /* set default engine compensation */
+      metrics->compensations[0] = 0;   /* gray     */
+      metrics->compensations[1] = 0;   /* black    */
+      metrics->compensations[2] = 0;   /* white    */
+      metrics->compensations[3] = 0;   /* reserved */
     }
 
     /* allocate function defs, instruction defs, cvt, and storage area */
@@ -1052,15 +1053,14 @@
     FT_Error  error = FT_Err_Ok;
 
 
-    if ( !size->bytecode_ready )
-    {
+    if ( size->bytecode_ready < 0 )
       error = tt_size_init_bytecode( (FT_Size)size, pedantic );
-      if ( error )
-        goto Exit;
-    }
+
+    if ( error || size->bytecode_ready )
+      goto Exit;
 
     /* rescale CVT when needed */
-    if ( !size->cvt_ready )
+    if ( size->cvt_ready < 0 )
     {
       FT_UInt  i;
       TT_Face  face = (TT_Face)size->root.face;
@@ -1087,8 +1087,6 @@
       size->GS = tt_default_graphics_state;
 
       error = tt_size_run_prep( size, pedantic );
-      if ( !error )
-        size->cvt_ready = 1;
     }
 
   Exit:
@@ -1119,8 +1117,8 @@
     FT_Error  error = FT_Err_Ok;
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-    size->bytecode_ready = 0;
-    size->cvt_ready      = 0;
+    size->bytecode_ready = -1;
+    size->cvt_ready      = -1;
 #endif
 
     size->ttmetrics.valid = FALSE;
@@ -1148,7 +1146,7 @@
 
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-    if ( size->bytecode_ready )
+    if ( size->bytecode_ready >= 0 )
       tt_size_done_bytecode( ttsize );
 #endif
 
@@ -1229,7 +1227,7 @@
     }
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-    size->cvt_ready = 0;
+    size->cvt_ready = -1;
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
     if ( !error )

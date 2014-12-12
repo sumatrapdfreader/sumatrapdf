@@ -55,7 +55,7 @@
 
 
     if ( !face )
-      return FT_THROW( Invalid_Argument );
+      return FT_THROW( Invalid_Face_Handle );
 
     globals = (AF_FaceGlobals)face->autohint.data;
     if ( !globals )
@@ -103,8 +103,8 @@
         AF_StyleClass  style_class = AF_STYLE_CLASSES_GET[ss];
 
 
-        if ( style_class->script == *fallback_script      &&
-             style_class->coverage == AF_COVERAGE_DEFAULT )
+        if ( (FT_UInt)style_class->script == *fallback_script &&
+             style_class->coverage == AF_COVERAGE_DEFAULT     )
         {
           module->fallback_style = ss;
           break;

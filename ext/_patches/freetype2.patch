@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\ftstdlib.h
---- freetype2.orig\include\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
-+++ freetype2\include\config\ftstdlib.h	Tue Mar 11 18:46:46 2014
+--- freetype2.orig\include\config\ftstdlib.h	Sun Apr 20 20:18:50 2014
++++ freetype2\include\config\ftstdlib.h	Fri Dec 12 21:46:18 2014
 @@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -19,10 +19,10 @@ diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\fts
    /*                             sorting                                */
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
---- freetype2.orig\include\ftsystem.h	Sat Jun 26 08:18:37 2010
-+++ freetype2\include\ftsystem.h	Tue Mar 11 18:47:05 2014
-@@ -337,10 +337,16 @@
- 
+--- freetype2.orig\include\ftsystem.h	Tue Dec 02 14:11:56 2014
++++ freetype2\include\ftsystem.h	Fri Dec 12 21:46:51 2014
+@@ -336,10 +336,16 @@
+   } FT_StreamRec;
  
    /* */
  
@@ -39,8 +39,8 @@ diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
  
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
---- freetype2.orig\src\base\ftsystem.c	Tue May 28 22:00:03 2013
-+++ freetype2\src\base\ftsystem.c	Tue Mar 11 18:47:26 2014
+--- freetype2.orig\src\base\ftsystem.c	Wed May 29 01:00:04 2013
++++ freetype2\src\base\ftsystem.c	Fri Dec 12 21:47:09 2014
 @@ -315,6 +315,29 @@
  #endif
      ft_sfree( memory );
@@ -72,9 +72,9 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
  /* END */
 diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
---- freetype2.orig\src\sfnt\sfobjs.c	Mon Dec 02 09:48:39 2013
-+++ freetype2\src\sfnt\sfobjs.c	Tue Nov 25 21:56:56 2014
-@@ -1075,10 +1075,14 @@
+--- freetype2.orig\src\sfnt\sfobjs.c	Wed Nov 19 23:42:04 2014
++++ freetype2\src\sfnt\sfobjs.c	Fri Dec 12 21:48:27 2014
+@@ -1077,10 +1077,14 @@
                   get_glyph_metrics                                 )
            {
              face->horizontal.number_Of_HMetrics = 0;

@@ -144,11 +144,29 @@ THE SOFTWARE.
 
         if ( ( tables[i].size   > tables[i + 1].offset )                  ||
              ( tables[i].offset > tables[i + 1].offset - tables[i].size ) )
-          return FT_THROW( Invalid_Offset );
+        {
+          error = FT_THROW( Invalid_Offset );
+          goto Exit;
+        }
       }
 
       if ( !have_change )
         break;
+    }
+
+    /* we now check whether the `size' and `offset' values are reasonable: */
+    /* `offset' + `size' must not exceed the stream size                   */
+    tables = face->toc.tables;
+    for ( n = 0; n < toc->count; n++ )
+    {
+      /* we need two checks to avoid overflow */
+      if ( ( tables->size   > stream->size                ) ||
+           ( tables->offset > stream->size - tables->size ) )
+      {
+        error = FT_THROW( Invalid_Table );
+        goto Exit;
+      }
+      tables++;
     }
 
 #ifdef FT_DEBUG_LEVEL_TRACE
@@ -631,24 +649,40 @@ THE SOFTWARE.
       return FT_THROW( Out_Of_Memory );
 
     metrics = face->metrics;
-    for ( i = 0; i < nmetrics; i++ )
+    for ( i = 0; i < nmetrics; i++, metrics++ )
     {
-      error = pcf_get_metric( stream, format, metrics + i );
+      error = pcf_get_metric( stream, format, metrics );
 
-      metrics[i].bits = 0;
+      metrics->bits = 0;
 
       FT_TRACE5(( "  idx %d: width=%d, "
                   "lsb=%d, rsb=%d, ascent=%d, descent=%d, swidth=%d\n",
                   i,
-                  ( metrics + i )->characterWidth,
-                  ( metrics + i )->leftSideBearing,
-                  ( metrics + i )->rightSideBearing,
-                  ( metrics + i )->ascent,
-                  ( metrics + i )->descent,
-                  ( metrics + i )->attributes ));
+                  metrics->characterWidth,
+                  metrics->leftSideBearing,
+                  metrics->rightSideBearing,
+                  metrics->ascent,
+                  metrics->descent,
+                  metrics->attributes ));
 
       if ( error )
         break;
+
+      /* sanity checks -- those values are used in `PCF_Glyph_Load' to     */
+      /* compute a glyph's bitmap dimensions, thus setting them to zero in */
+      /* case of an error disables this particular glyph only              */
+      if ( metrics->rightSideBearing < metrics->leftSideBearing ||
+           metrics->ascent + metrics->descent < 0               )
+      {
+        metrics->characterWidth   = 0;
+        metrics->leftSideBearing  = 0;
+        metrics->rightSideBearing = 0;
+        metrics->ascent           = 0;
+        metrics->descent          = 0;
+
+        FT_TRACE0(( "pcf_get_metrics:"
+                    " invalid metrics for glyph %d\n", i ));
+      }
     }
 
     if ( error )
@@ -811,6 +845,15 @@ THE SOFTWARE.
 
     if ( !PCF_FORMAT_MATCH( format, PCF_DEFAULT_FORMAT ) )
       return FT_THROW( Invalid_File_Format );
+
+    /* sanity checks */
+    if ( firstCol < 0       ||
+         firstCol > lastCol ||
+         lastCol  > 0xFF    ||
+         firstRow < 0       ||
+         firstRow > lastRow ||
+         lastRow  > 0xFF    )
+      return FT_THROW( Invalid_Table );
 
     FT_TRACE4(( "pdf_get_encodings:\n" ));
 
