@@ -625,6 +625,8 @@ pdf_xref_find_subsection(pdf_document *doc, int ofs, int len)
 	{
 		/* Case 3 */
 		ensure_solid_xref(doc, new_max, 0);
+		/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/32 */
+		xref = &doc->xref_sections[0];
 		sub = xref->subsec;
 	}
 	return &sub->table[ofs-sub->start];
