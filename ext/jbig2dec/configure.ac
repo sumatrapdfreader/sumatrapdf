@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([jbig2dec], [0.11], [jbig2-dev@ghostscript.com])
+AC_INIT([jbig2dec], [0.12], [jbig2-dev@ghostscript.com])
 AC_PREREQ(2.53)
 AC_CONFIG_SRCDIR([jbig2dec.c])
 
