@@ -52,7 +52,7 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
   return 1;
 }
 
-static void kFlush(VP8BitWriter* const bw) {
+static void Flush(VP8BitWriter* const bw) {
   const int s = 8 + bw->nb_bits_;
   const int32_t bits = bw->value_ >> s;
   assert(bw->nb_bits_ >= 0);
@@ -118,7 +118,7 @@ int VP8PutBit(VP8BitWriter* const bw, int bit, int prob) {
     bw->range_ = kNewRange[bw->range_];
     bw->value_ <<= shift;
     bw->nb_bits_ += shift;
-    if (bw->nb_bits_ > 0) kFlush(bw);
+    if (bw->nb_bits_ > 0) Flush(bw);
   }
   return bit;
 }
@@ -135,7 +135,7 @@ int VP8PutBitUniform(VP8BitWriter* const bw, int bit) {
     bw->range_ = kNewRange[bw->range_];
     bw->value_ <<= 1;
     bw->nb_bits_ += 1;
-    if (bw->nb_bits_ > 0) kFlush(bw);
+    if (bw->nb_bits_ > 0) Flush(bw);
   }
   return bit;
 }
@@ -173,14 +173,14 @@ int VP8BitWriterInit(VP8BitWriter* const bw, size_t expected_size) {
 uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
   VP8PutValue(bw, 0, 9 - bw->nb_bits_);
   bw->nb_bits_ = 0;   // pad with zeroes
-  kFlush(bw);
+  Flush(bw);
   return bw->buf_;
 }
 
 int VP8BitWriterAppend(VP8BitWriter* const bw,
                        const uint8_t* data, size_t size) {
   assert(data != NULL);
-  if (bw->nb_bits_ != -8) return 0;   // kFlush() must have been called
+  if (bw->nb_bits_ != -8) return 0;   // Flush() must have been called
   if (!BitWriterResize(bw, size)) return 0;
   memcpy(bw->buf_ + bw->pos_, data, size);
   bw->pos_ += size;

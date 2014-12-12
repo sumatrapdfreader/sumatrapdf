@@ -444,16 +444,20 @@ struct WebPDecoderOptions {
   int dithering_strength;             // dithering strength (0=Off, 100=full)
 #if WEBP_DECODER_ABI_VERSION > 0x0203
   int flip;                           // flip output vertically
+#endif
+#if WEBP_DECODER_ABI_VERSION > 0x0204
   int alpha_dithering_strength;       // alpha dithering strength in [0..100]
 #endif
 
   // Unused for now:
   int force_rotation;                 // forced rotation (to be applied _last_)
   int no_enhancement;                 // if true, discard enhancement layer
-#if WEBP_DECODER_ABI_VERSION > 0x0203
-  uint32_t pad[3];                    // padding for later use
-#else
+#if WEBP_DECODER_ABI_VERSION < 0x0203
   uint32_t pad[5];                    // padding for later use
+#elif WEBP_DECODER_ABI_VERSION < 0x0204
+  uint32_t pad[4];                    // padding for later use
+#else
+  uint32_t pad[3];                    // padding for later use
 #endif
 };
 

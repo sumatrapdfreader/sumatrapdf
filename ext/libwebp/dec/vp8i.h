@@ -31,7 +31,7 @@ extern "C" {
 // version numbers
 #define DEC_MAJ_VERSION 0
 #define DEC_MIN_VERSION 4
-#define DEC_REV_VERSION 1
+#define DEC_REV_VERSION 2
 
 // intra prediction modes
 enum { B_DC_PRED = 0,   // 4x4 modes

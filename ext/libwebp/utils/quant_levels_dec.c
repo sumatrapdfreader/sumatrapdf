@@ -32,10 +32,10 @@
 #define DSIZE 4          // dithering size (must be a power of two)
 // cf. http://en.wikipedia.org/wiki/Ordered_dithering
 static const uint8_t kOrderedDither[DSIZE][DSIZE] = {
- {  0,  8,  2, 10 },     // coefficients are in DFIX fixed-point precision
- { 12,  4, 14,  6 },
- {  3, 11,  1,  9 },
- { 15,  7, 13,  5 }
+  {  0,  8,  2, 10 },     // coefficients are in DFIX fixed-point precision
+  { 12,  4, 14,  6 },
+  {  3, 11,  1,  9 },
+  { 15,  7, 13,  5 }
 };
 
 #else

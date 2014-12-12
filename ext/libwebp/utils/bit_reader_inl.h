@@ -24,6 +24,7 @@
 #include <string.h>  // memcpy
 #endif
 
+#include "../dsp/dsp.h"
 #include "./bit_reader.h"
 #include "./endian_inl.h"
 
@@ -63,7 +64,7 @@ static WEBP_INLINE void VP8LoadNewBytes(VP8BitReader* const br) {
 #if defined(WEBP_FORCE_ALIGNED)
     lbit_t in_bits;
     memcpy(&in_bits, br->buf_, sizeof(in_bits));
-#elif defined(__mips__)                        // MIPS
+#elif defined(WEBP_USE_MIPS32)
     // This is needed because of un-aligned read.
     lbit_t in_bits;
     lbit_t* p_buf_ = (lbit_t*)br->buf_;

@@ -450,11 +450,20 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
   return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
 }
 
-static WEBP_INLINE int Sub3(int a, int b, int c) {
+// gcc-4.9 on ARM generates incorrect code in Select() when Sub3() is inlined.
+#if defined(__arm__) && LOCAL_GCC_VERSION == 0x409
+# define LOCAL_INLINE __attribute__ ((noinline))
+#else
+# define LOCAL_INLINE WEBP_INLINE
+#endif
+
+static LOCAL_INLINE int Sub3(int a, int b, int c) {
   const int pb = b - c;
   const int pa = a - c;
   return abs(pb) - abs(pa);
 }
+
+#undef LOCAL_INLINE
 
 static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
   const int pa_minus_pb =
@@ -1169,7 +1178,7 @@ static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
       data += remaining_width;
     }
     ++y;
-    if ((y & mask) == 0) pred_row += tiles_per_row;;
+    if ((y & mask) == 0) pred_row += tiles_per_row;
   }
 }
 

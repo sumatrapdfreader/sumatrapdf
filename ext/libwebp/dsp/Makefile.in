@@ -35,7 +35,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-target_triplet = @target@
 @BUILD_LIBWEBPDECODER_TRUE@am__append_1 = libwebpdspdecode.la
 subdir = src/dsp
 DIST_COMMON = $(common_HEADERS) $(noinst_HEADERS) \
@@ -111,6 +110,7 @@ libwebpdspdecode_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 @BUILD_LIBWEBPDECODER_TRUE@am_libwebpdspdecode_la_rpath =
 libwebpdspdecode_sse2_la_LIBADD =
 am_libwebpdspdecode_sse2_la_OBJECTS =  \
+	libwebpdspdecode_sse2_la-alpha_processing_sse2.lo \
 	libwebpdspdecode_sse2_la-dec_sse2.lo \
 	libwebpdspdecode_sse2_la-lossless_sse2.lo \
 	libwebpdspdecode_sse2_la-upsampling_sse2.lo \
@@ -317,11 +317,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
-target = @target@
 target_alias = @target_alias@
-target_cpu = @target_cpu@
-target_os = @target_os@
-target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
@@ -337,8 +333,8 @@ ENC_SOURCES = enc.c enc_mips32.c enc_neon.c
 libwebpdsp_avx2_la_SOURCES = enc_avx2.c
 libwebpdsp_avx2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdsp_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
-libwebpdspdecode_sse2_la_SOURCES = dec_sse2.c lossless_sse2.c \
-	upsampling_sse2.c yuv_sse2.c yuv_tables_sse2.h
+libwebpdspdecode_sse2_la_SOURCES = alpha_processing_sse2.c dec_sse2.c \
+	lossless_sse2.c upsampling_sse2.c yuv_sse2.c yuv_tables_sse2.h
 libwebpdspdecode_sse2_la_CPPFLAGS = $(libwebpdsp_sse2_la_CPPFLAGS)
 libwebpdspdecode_sse2_la_CFLAGS = $(libwebpdsp_sse2_la_CFLAGS)
 libwebpdsp_sse2_la_SOURCES = enc_sse2.c
@@ -445,6 +441,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-upsampling_neon.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-yuv.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_la-yuv_mips32.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-alpha_processing_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-lossless_sse2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libwebpdspdecode_sse2_la-upsampling_sse2.Plo@am__quote@
@@ -690,6 +687,13 @@ libwebpdspdecode_la-yuv_mips32.lo: yuv_mips32.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='yuv_mips32.c' object='libwebpdspdecode_la-yuv_mips32.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_la-yuv_mips32.lo `test -f 'yuv_mips32.c' || echo '$(srcdir)/'`yuv_mips32.c
+
+libwebpdspdecode_sse2_la-alpha_processing_sse2.lo: alpha_processing_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-alpha_processing_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-alpha_processing_sse2.Tpo -c -o libwebpdspdecode_sse2_la-alpha_processing_sse2.lo `test -f 'alpha_processing_sse2.c' || echo '$(srcdir)/'`alpha_processing_sse2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libwebpdspdecode_sse2_la-alpha_processing_sse2.Tpo $(DEPDIR)/libwebpdspdecode_sse2_la-alpha_processing_sse2.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='alpha_processing_sse2.c' object='libwebpdspdecode_sse2_la-alpha_processing_sse2.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -c -o libwebpdspdecode_sse2_la-alpha_processing_sse2.lo `test -f 'alpha_processing_sse2.c' || echo '$(srcdir)/'`alpha_processing_sse2.c
 
 libwebpdspdecode_sse2_la-dec_sse2.lo: dec_sse2.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libwebpdspdecode_sse2_la_CPPFLAGS) $(CPPFLAGS) $(libwebpdspdecode_sse2_la_CFLAGS) $(CFLAGS) -MT libwebpdspdecode_sse2_la-dec_sse2.lo -MD -MP -MF $(DEPDIR)/libwebpdspdecode_sse2_la-dec_sse2.Tpo -c -o libwebpdspdecode_sse2_la-dec_sse2.lo `test -f 'dec_sse2.c' || echo '$(srcdir)/'`dec_sse2.c

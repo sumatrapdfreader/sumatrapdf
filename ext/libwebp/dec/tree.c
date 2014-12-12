@@ -11,7 +11,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "vp8i.h"
+#include "./vp8i.h"
 #include "../utils/bit_reader_inl.h"
 
 #define USE_GENERIC_TREE

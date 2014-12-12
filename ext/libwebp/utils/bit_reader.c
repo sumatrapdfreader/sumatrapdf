@@ -105,9 +105,7 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits) {
 //------------------------------------------------------------------------------
 // VP8LBitReader
 
-#define LBITS 64      // Number of bits prefetched.
-#define WBITS 32      // Minimum number of bytes needed after VP8LFillBitWindow.
-#define LOG8_WBITS 4  // Number of bytes needed to store WBITS bits.
+#define VP8L_LOG8_WBITS 4  // Number of bytes needed to store VP8L_WBITS bits.
 
 #if !defined(WEBP_FORCE_ALIGNED) && \
     (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || \
@@ -151,16 +149,6 @@ void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
   br->buf_ = start;
 }
 
-// Special version that assumes br->pos_ <= br_len_.
-static int IsEndOfStreamSpecial(const VP8LBitReader* const br) {
-  assert(br->pos_ <= br->len_);
-  return br->pos_ == br->len_ && br->bit_pos_ >= LBITS;
-}
-
-static int IsEndOfStream(const VP8LBitReader* const br) {
-  return (br->pos_ > br->len_) || IsEndOfStreamSpecial(br);
-}
-
 void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
                             const uint8_t* const buf, size_t len) {
   assert(br != NULL);
@@ -168,38 +156,39 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
   assert(len < 0xfffffff8u);   // can't happen with a RIFF chunk.
   br->buf_ = buf;
   br->len_ = len;
-  br->eos_ = IsEndOfStream(br);
+  // pos_ > len_ should be considered a param error.
+  br->error_ = (br->pos_ > br->len_);
+  br->eos_ = br->error_ || VP8LIsEndOfStream(br);
 }
 
-// If not at EOS, reload up to LBITS byte-by-byte
+// If not at EOS, reload up to VP8L_LBITS byte-by-byte
 static void ShiftBytes(VP8LBitReader* const br) {
   while (br->bit_pos_ >= 8 && br->pos_ < br->len_) {
     br->val_ >>= 8;
-    br->val_ |= ((vp8l_val_t)br->buf_[br->pos_]) << (LBITS - 8);
+    br->val_ |= ((vp8l_val_t)br->buf_[br->pos_]) << (VP8L_LBITS - 8);
     ++br->pos_;
     br->bit_pos_ -= 8;
   }
+  br->eos_ = VP8LIsEndOfStream(br);
 }
 
-void VP8LFillBitWindow(VP8LBitReader* const br) {
-  if (br->bit_pos_ >= WBITS) {
-    // TODO(jzern): given the fixed read size it may be possible to force
-    //              alignment in this block.
+void VP8LDoFillBitWindow(VP8LBitReader* const br) {
+  assert(br->bit_pos_ >= VP8L_WBITS);
+  // TODO(jzern): given the fixed read size it may be possible to force
+  //              alignment in this block.
 #if defined(VP8L_USE_UNALIGNED_LOAD)
-    if (br->pos_ + sizeof(br->val_) < br->len_) {
-      br->val_ >>= WBITS;
-      br->bit_pos_ -= WBITS;
-      // The expression below needs a little-endian arch to work correctly.
-      // This gives a large speedup for decoding speed.
-      br->val_ |= (vp8l_val_t)*(const uint32_t*)(br->buf_ + br->pos_) <<
-                  (LBITS - WBITS);
-      br->pos_ += LOG8_WBITS;
-      return;
-    }
-#endif
-    ShiftBytes(br);       // Slow path.
-    br->eos_ = IsEndOfStreamSpecial(br);
+  if (br->pos_ + sizeof(br->val_) < br->len_) {
+    br->val_ >>= VP8L_WBITS;
+    br->bit_pos_ -= VP8L_WBITS;
+    // The expression below needs a little-endian arch to work correctly.
+    // This gives a large speedup for decoding speed.
+    br->val_ |= (vp8l_val_t)*(const uint32_t*)(br->buf_ + br->pos_) <<
+                (VP8L_LBITS - VP8L_WBITS);
+    br->pos_ += VP8L_LOG8_WBITS;
+    return;
   }
+#endif
+  ShiftBytes(br);       // Slow path.
 }
 
 uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
@@ -210,8 +199,6 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
         (uint32_t)(br->val_ >> br->bit_pos_) & kBitMask[n_bits];
     const int new_bits = br->bit_pos_ + n_bits;
     br->bit_pos_ = new_bits;
-    // If this read is going to cross the read buffer, set the eos flag.
-    br->eos_ = IsEndOfStreamSpecial(br);
     ShiftBytes(br);
     return val;
   } else {

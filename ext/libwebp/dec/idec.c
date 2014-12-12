@@ -529,6 +529,12 @@ static VP8StatusCode DecodeVP8LData(WebPIDecoder* const idec) {
   }
 
   if (!VP8LDecodeImage(dec)) {
+    // The decoding is called after all the data-bytes are aggregated. Change
+    // the error to VP8_BITSTREAM_ERROR in case lossless decoder fails to decode
+    // all the pixels (VP8_STATUS_SUSPENDED).
+    if (dec->status_ == VP8_STATUS_SUSPENDED) {
+      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+    }
     return ErrorStatusLossless(idec, dec->status_);
   }
 

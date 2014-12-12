@@ -20,6 +20,10 @@
 #include "../enc/vp8enci.h"
 #include "../enc/cost.h"
 
+#if defined(__GNUC__) && defined(__ANDROID__) && LOCAL_GCC_VERSION == 0x409
+#define WORK_AROUND_GCC
+#endif
+
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;
 
@@ -641,6 +645,7 @@ int VP8GetResidualCostMIPS32(int ctx0, const VP8Residual* const res) {
   GET_SSE_INNER(C, C + 1, C + 2, C + 3)   \
   GET_SSE_INNER(D, D + 1, D + 2, D + 3)
 
+#if !defined(WORK_AROUND_GCC)
 static int SSE16x16(const uint8_t* a, const uint8_t* b) {
   int count;
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
@@ -742,6 +747,8 @@ static int SSE4x4(const uint8_t* a, const uint8_t* b) {
   return count;
 }
 
+#endif  // WORK_AROUND_GCC
+
 #undef GET_SSE_MIPS32
 #undef GET_SSE_MIPS32_INNER
 
@@ -759,9 +766,11 @@ void VP8EncDspInitMIPS32(void) {
   VP8TDisto4x4 = Disto4x4;
   VP8TDisto16x16 = Disto16x16;
   VP8FTransform = FTransform;
+#if !defined(WORK_AROUND_GCC)
   VP8SSE16x16 = SSE16x16;
   VP8SSE8x8 = SSE8x8;
   VP8SSE16x8 = SSE16x8;
   VP8SSE4x4 = SSE4x4;
+#endif
 #endif  // WEBP_USE_MIPS32
 }

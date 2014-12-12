@@ -16,6 +16,7 @@
 #include "../webp/config.h"
 #endif
 
+#include "../dsp/dsp.h"
 #include "../webp/types.h"
 
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
@@ -34,25 +35,13 @@
 #endif
 
 #if !defined(HAVE_CONFIG_H)
-#ifdef __GNUC__
-# define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
-#else
-# define LOCAL_GCC_VERSION 0
-#endif  // __GNUC__
-
-#ifdef __clang__
-# define LOCAL_CLANG_VERSION ((__clang_major__ << 8) | __clang_minor__)
-#else
-# define LOCAL_CLANG_VERSION 0
-#endif  // __clang__
-
 // clang-3.3 and gcc-4.3 have builtin functions for swap32/swap64
-#if LOCAL_GCC_VERSION >= 0x403 || LOCAL_CLANG_VERSION >= 0x303
+#if LOCAL_GCC_PREREQ(4,3) || LOCAL_CLANG_PREREQ(3,3)
 #define HAVE_BUILTIN_BSWAP32
 #define HAVE_BUILTIN_BSWAP64
 #endif
 // clang-3.3 and gcc-4.8 have a builtin function for swap16
-#if LOCAL_GCC_VERSION >= 0x408 || LOCAL_CLANG_VERSION >= 0x303
+#if LOCAL_GCC_PREREQ(4,8) || LOCAL_CLANG_PREREQ(3,3)
 #define HAVE_BUILTIN_BSWAP16
 #endif
 #endif  // !HAVE_CONFIG_H
@@ -69,7 +58,16 @@ static WEBP_INLINE uint16_t BSwap16(uint16_t x) {
 }
 
 static WEBP_INLINE uint32_t BSwap32(uint32_t x) {
-#if defined(HAVE_BUILTIN_BSWAP32)
+#if defined(WEBP_USE_MIPS32_R2)
+  uint32_t ret;
+  __asm__ volatile (
+    "wsbh   %[ret], %[x]          \n\t"
+    "rotr   %[ret], %[ret],  16   \n\t"
+    : [ret]"=r"(ret)
+    : [x]"r"(x)
+  );
+  return ret;
+#elif defined(HAVE_BUILTIN_BSWAP32)
   return __builtin_bswap32(x);
 #elif defined(__i386__) || defined(__x86_64__)
   uint32_t swapped_bytes;

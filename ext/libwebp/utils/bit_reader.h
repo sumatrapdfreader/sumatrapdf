@@ -107,6 +107,9 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits);
 // maximum number of bits (inclusive) the bit-reader can handle:
 #define VP8L_MAX_NUM_BIT_READ 24
 
+#define VP8L_LBITS 64  // Number of bits prefetched.
+#define VP8L_WBITS 32  // Minimum number of bytes ready after VP8LFillBitWindow.
+
 typedef uint64_t vp8l_val_t;  // right now, this bit-reader can only use 64bit.
 
 typedef struct {
@@ -138,14 +141,26 @@ static WEBP_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
   return (uint32_t)(br->val_ >> br->bit_pos_);
 }
 
+// Returns true if there was an attempt at reading bit past the end of
+// the buffer. Doesn't set br->eos_ flag.
+static WEBP_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
+  assert(br->pos_ <= br->len_);
+  return (br->pos_ == br->len_) && (br->bit_pos_ > VP8L_LBITS);
+}
+
 // For jumping over a number of bits in the bit stream when accessed with
 // VP8LPrefetchBits and VP8LFillBitWindow.
 static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
   br->bit_pos_ = val;
+  br->eos_ = VP8LIsEndOfStream(br);
 }
 
 // Advances the read buffer by 4 bytes to make room for reading next 32 bits.
-void VP8LFillBitWindow(VP8LBitReader* const br);
+// Speed critical, but infrequent part of the code can be non-inlined.
+extern void VP8LDoFillBitWindow(VP8LBitReader* const br);
+static WEBP_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
+  if (br->bit_pos_ >= VP8L_WBITS) VP8LDoFillBitWindow(br);
+}
 
 #ifdef __cplusplus
 }    // extern "C"

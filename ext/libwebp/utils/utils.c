@@ -155,9 +155,9 @@ static void SubMem(void* ptr) {
 }
 
 #else
-#define Increment(v) do {} while(0)
-#define AddMem(p, s) do {} while(0)
-#define SubMem(p)    do {} while(0)
+#define Increment(v) do {} while (0)
+#define AddMem(p, s) do {} while (0)
+#define SubMem(p)    do {} while (0)
 #endif
 
 // Returns 0 in case of overflow of nmemb * size.

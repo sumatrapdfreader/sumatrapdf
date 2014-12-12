@@ -234,6 +234,7 @@ static int ReadHuffmanCodeLengths(
 
  End:
   VP8LHuffmanTreeFree(&tree);
+  if (!ok) dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
   return ok;
 }
 
@@ -801,6 +802,7 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
       ok = 0;
       goto End;
     }
+    assert(br->eos_ == VP8LIsEndOfStream(br));
     ok = !br->error_;
     if (!ok) goto End;
   }
@@ -918,6 +920,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
       ok = 0;
       goto End;
     }
+    assert(br->eos_ == VP8LIsEndOfStream(br));
     ok = !br->error_;
     if (!ok) goto End;
   }
@@ -1353,6 +1356,10 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
   // Sanity checks.
   if (dec == NULL) return 0;
+
+  dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+  assert(dec->hdr_.htree_groups_ != NULL);
+  assert(dec->hdr_.num_htree_groups_ > 0);
 
   io = dec->io_;
   assert(io != NULL);

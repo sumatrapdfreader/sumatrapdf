@@ -105,7 +105,7 @@ WEBP_OBJS = \
 	$(OWP)\alpha_processing.obj $(OWP)\cpu.obj $(OWP)\dec.obj $(OWP)\dec_sse2.obj \
 	$(OWP)\lossless.obj $(OWP)\lossless_sse2.obj $(OWP)\upsampling.obj \
 	$(OWP)\upsampling_sse2.obj $(OWP)\yuv.obj $(OWP)\yuv_sse2.obj \
-	$(OWP)\dec_clip_tables.obj \
+	$(OWP)\dec_clip_tables.obj $(OWP)\alpha_processing_sse2.obj \
 	$(OWP)\bit_reader.obj $(OWP)\color_cache.obj $(OWP)\filters.obj \
 	$(OWP)\huffman.obj $(OWP)\quant_levels_dec.obj $(OWP)\rescaler.obj \
 	$(OWP)\thread.obj $(OWP)\utils.obj $(OWP)\random.obj
