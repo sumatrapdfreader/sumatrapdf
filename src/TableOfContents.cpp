@@ -563,17 +563,15 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
 void CreateToc(WindowInfo *win)
 {
-    // toc windows
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
-    int padXY = DpiScaleX(win->hwndFrame, 2);
-    SetPaddingXY(l, padXY, padXY);
+    SetPaddingXY(l, 2, 2);
     SetFont(l, GetDefaultGuiFont());
-    // label is set in UpdateSidebarTitles()
+    // label is set in UpdateToolbarSidebarText()
 
     win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|

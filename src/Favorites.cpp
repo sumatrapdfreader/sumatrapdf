@@ -779,12 +779,12 @@ void CreateFavorites(WindowInfo *win)
     win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
-    LabelWithCloseWnd *l =  CreateLabelWithCloseWnd(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
+
+    LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
     win->favLabelWithClose = l;
-    int padXY = DpiScaleX(win->hwndFrame, 2);
-    SetPaddingXY(l, padXY, padXY);
+    SetPaddingXY(l, 2, 2);
     SetFont(l, GetDefaultGuiFont());
-    // label is set in UpdateSidebarTitles()
+    // label is set in UpdateToolbarSidebarText()
 
     win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|

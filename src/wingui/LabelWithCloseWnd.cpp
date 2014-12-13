@@ -7,12 +7,6 @@
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
 
-/*
-TODO:
- . for rtl, the button should be drawn on the other side. strangely, IsMouseOverClose()
-   works correctly
-*/
-
 #define CLOSE_BTN_DX 16
 #define CLOSE_BTN_DY 16
 #define LABEL_BUTTON_SPACE_DX 8
@@ -29,7 +23,7 @@ struct LabelWithCloseWnd {
     COLORREF bgCol;
 
     // in points
-    int padL, padR, padT, padB;
+    int padX, padY;
 };
 
 static bool IsMouseOverClose(LabelWithCloseWnd *w) {
@@ -40,15 +34,23 @@ static bool IsMouseOverClose(LabelWithCloseWnd *w) {
 
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
-static void DrawCloseButton(HDC hdc, RectI &r, bool onHover) {
+static void DrawCloseButton(HDC hdc, LabelWithCloseWnd *w) {
     Graphics g(hdc);
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
+    // GDI+ doesn't pick up the window's orientation through the device context,
+    // so we have to explicitly mirror all rendering horizontally
+    if (IsRtl(w->hwnd)) {
+        g.ScaleTransform(-1, 1);
+        g.TranslateTransform((REAL)ClientRect(w->hwnd).dx, 0, MatrixOrderAppend);
+    }
 
     Color c;
+    RectI& r = w->closeBtnPos;
 
     // in onhover state, background is a red-ish circle
+    bool onHover = IsMouseOverClose(w);
     if (onHover) {
         c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
         SolidBrush b(c);
@@ -74,8 +76,8 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT &ps) {
 
     ClientRect cr(w->hwnd);
 
-    int x = DpiScaleX(w->hwnd, w->padL);
-    int y = DpiScaleY(w->hwnd, w->padT);
+    int x = DpiScaleX(w->hwnd, w->padX);
+    int y = DpiScaleY(w->hwnd, w->padY);
     UINT opts = ETO_OPAQUE;
     if (IsRtl(w->hwnd)) {
         opts = opts | ETO_RTLREADING;
@@ -101,7 +103,7 @@ static void PaintHDC(LabelWithCloseWnd *w, HDC hdc, const PAINTSTRUCT &ps) {
     RECT r = ri.ToRECT();
     FillRect(hdc, &r, br);
 
-    DrawCloseButton(hdc, w->closeBtnPos, IsMouseOverClose(w));
+    DrawCloseButton(hdc, w);
     DeleteObject(br);
 
     if (w->font) {
@@ -121,7 +123,7 @@ static void OnPaint(LabelWithCloseWnd *w) {
 static void CalcCloseButtonPos(LabelWithCloseWnd *w, int dx, int dy) {
     int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
     int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
-    int x = dx - btnDx - DpiScaleX(w->hwnd, w->padR);
+    int x = dx - btnDx - DpiScaleX(w->hwnd, w->padX);
     int y = 0;
     if (dy > btnDy) {
         y = (dy - btnDy) / 2;
@@ -250,20 +252,18 @@ SizeI GetIdealSize(LabelWithCloseWnd *w) {
     int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;
     size.dx += DpiScaleX(w->hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += DpiScaleX(w->hwnd, w->padL) + DpiScaleX(w->hwnd, w->padR);
+    size.dx += 2 * DpiScaleX(w->hwnd, w->padX);
     if (size.dy < btnDy) {
         size.dy = btnDy;
     }
-    size.dy += DpiScaleY(w->hwnd, w->padT) + DpiScaleY(w->hwnd, w->padB);
+    size.dy += 2 * DpiScaleY(w->hwnd, w->padY);
     return size;
 }
 
 void SetFont(LabelWithCloseWnd *w, HFONT f) { w->font = f; }
 
 void SetPaddingXY(LabelWithCloseWnd *w, int x, int y) {
-    w->padL = x;
-    w->padR = x;
-    w->padT = y;
-    w->padB = y;
+    w->padX = x;
+    w->padY = y;
     ScheduleRepaint(w->hwnd);
 }
