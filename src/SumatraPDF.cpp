@@ -103,7 +103,7 @@ bool             gUseGdiRenderer = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-WCHAR *          gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
+const WCHAR *    gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
 
 #define SPLITTER_DX         5
 #define SIDEBAR_MIN_WIDTH   150
@@ -131,24 +131,19 @@ bool                         gCrashOnOpen = false;
 // in restricted mode, some features can be disabled (such as
 // opening files, printing, following URLs), so that SumatraPDF
 // can be used as a PDF reader on locked down systems
-int                          gPolicyRestrictions = Perm_All;
+static int                   gPolicyRestrictions = Perm_RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm_DiskAccess)
-WStrVec                      gAllowedLinkProtocols;
+static WStrVec               gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-WStrVec                      gAllowedFileTypes;
+static WStrVec               gAllowedFileTypes;
 
 static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false, bool deleteModel=false);
 static bool SidebarSplitterCb(void *ctx, bool done);
 static bool FavSplitterCb(void *ctx, bool done);
-
-bool HasPermission(int permission)
-{
-    return (permission & gPolicyRestrictions) == permission;
-}
 
 void SetCurrentLang(const char *langCode)
 {
@@ -176,6 +171,87 @@ void SetCurrentLang(const char *langCode)
 #endif
 
 #define SECS_IN_DAY 60*60*24
+
+#define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
+
+#define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
+#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
+
+void InitializedPolicies(bool restrict)
+{
+    // default configuration should be to restrict everything
+    CrashIf(gPolicyRestrictions != Perm_RestrictedUse);
+    CrashIf(gAllowedLinkProtocols.Count() != 0 || gAllowedFileTypes.Count() != 0);
+
+    // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
+    if (restrict)
+        return;
+
+    // allow to restrict SumatraPDF's functionality from an INI file in the
+    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
+    // (if the file isn't there, everything is allowed)
+    ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
+    if (!file::Exists(restrictPath)) {
+        gPolicyRestrictions = Perm_All;
+        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
+        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
+        return;
+    }
+
+    ScopedMem<char> restrictData(file::ReadAll(restrictPath, nullptr));
+    SquareTree sqt(restrictData);
+    SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
+    // if the restriction file is broken, err on the side of full restriction
+    if (!polsec)
+        return;
+
+    static struct {
+        const char *name;
+        int perm;
+    } policies[] = {
+        { "InternetAccess",     Perm_InternetAccess     },
+        { "DiskAccess",         Perm_DiskAccess         },
+        { "SavePreferences",    Perm_SavePreferences    },
+        { "RegistryAccess",     Perm_RegistryAccess     },
+        { "PrinterAccess",      Perm_PrinterAccess      },
+        { "CopySelection",      Perm_CopySelection      },
+        { "FullscreenAccess",   Perm_FullscreenAccess   },
+    };
+
+    // enable policies as indicated in sumatrapdfrestrict.ini
+    for (size_t i = 0; i < dimof(policies); i++) {
+        const char *value = polsec->GetValue(policies[i].name);
+        if (value && atoi(value) != 0)
+            gPolicyRestrictions = gPolicyRestrictions | policies[i].perm;
+    }
+
+    // determine the list of allowed link protocols and perceived file types
+    if ((gPolicyRestrictions & Perm_DiskAccess)) {
+        const char *value;
+        if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
+            ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
+            str::ToLower(protocols);
+            str::TransChars(protocols, L":; ", L",,,");
+            gAllowedLinkProtocols.Split(protocols, L",", true);
+        }
+        if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
+            ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
+            str::ToLower(protocols);
+            str::TransChars(protocols, L":; ", L",,,");
+            gAllowedFileTypes.Split(protocols, L",", true);
+        }
+    }
+}
+
+void RestrictPolicies(int revokePermission)
+{
+    gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~revokePermission;
+}
+
+bool HasPermission(int permission)
+{
+    return (permission & gPolicyRestrictions) == permission;
+}
 
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
@@ -610,12 +686,6 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, co
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
 
-static void SetFileThumbnail(WCHAR *filePath, RenderedBitmap *bmp) {
-    if (bmp)
-        SetThumbnail(gFileHistory.Find(filePath), bmp);
-    free(filePath);
-}
-
 static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
 {
     if (!ShouldSaveThumbnail(ds))
@@ -632,11 +702,12 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         return;
     }
 
-    // filePath will be freed in SetFileThumbnail()
     WCHAR *filePath = str::Dup(win.ctrl->FilePath());
     win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY),[=] (RenderedBitmap*bmp) {
         uitask::Post([=] {
-            SetFileThumbnail(filePath, bmp);
+            if (bmp)
+                SetThumbnail(gFileHistory.Find(filePath), bmp);
+            free(filePath);
         });
     });
 }

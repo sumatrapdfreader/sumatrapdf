@@ -67,13 +67,6 @@
 #define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
 
 #define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
-#define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
-
-#define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
-#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video"
-
-// in SumatraPDF.cpp
-extern LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #ifdef DEBUG
 static bool TryLoadMemTrace()
@@ -348,7 +341,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     // TODO: Perm_DiskAccess is required for saving viewed files and printing and
     //       Perm_InternetAccess is required for crash reports
     // (they can still be disabled through sumatrapdfrestrict.ini or -restrict)
-    gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~(Perm_SavePreferences | Perm_FullscreenAccess);
+    RestrictPolicies(Perm_SavePreferences | Perm_FullscreenAccess);
 
     i.reuseDdeInstance = i.exitWhenDone = false;
     gGlobalPrefs->reuseInstance = false;
@@ -456,68 +449,6 @@ Error:
 }
 
 extern void RedirectDllIOToConsole();
-
-static int GetPolicies(bool isRestricted)
-{
-    static struct {
-        const char *name;
-        int perm;
-    } policies[] = {
-        { "InternetAccess", Perm_InternetAccess },
-        { "DiskAccess",     Perm_DiskAccess },
-        { "SavePreferences",Perm_SavePreferences },
-        { "RegistryAccess", Perm_RegistryAccess },
-        { "PrinterAccess",  Perm_PrinterAccess },
-        { "CopySelection",  Perm_CopySelection },
-        { "FullscreenAccess",Perm_FullscreenAccess },
-    };
-
-    gAllowedLinkProtocols.Reset();
-    gAllowedFileTypes.Reset();
-
-    // allow to restrict SumatraPDF's functionality from an INI file in the
-    // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
-    ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
-    if (file::Exists(restrictPath)) {
-        ScopedMem<char> restrictData(file::ReadAll(restrictPath, nullptr));
-        SquareTree sqt(restrictData);
-        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
-        if (!polsec)
-            return Perm_RestrictedUse;
-
-        int policy = Perm_RestrictedUse;
-        for (size_t i = 0; i < dimof(policies); i++) {
-            const char *value = polsec->GetValue(policies[i].name);
-            if (value && atoi(value) != 0)
-                policy = policy | policies[i].perm;
-        }
-        // determine the list of allowed link protocols and perceived file types
-        if ((policy & Perm_DiskAccess)) {
-            const char *value;
-            if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-                str::ToLower(protocols);
-                str::TransChars(protocols, L":; ", L",,,");
-                gAllowedLinkProtocols.Split(protocols, L",", true);
-            }
-            if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-                str::ToLower(protocols);
-                str::TransChars(protocols, L":; ", L",,,");
-                gAllowedFileTypes.Split(protocols, L",", true);
-            }
-        }
-
-        return policy;
-    }
-
-    if (isRestricted)
-        return Perm_RestrictedUse;
-
-    gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
-    gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
-    return Perm_All;
-}
 
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
@@ -702,7 +633,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     gCrashOnOpen = i.crashOnOpen;
 
-    gPolicyRestrictions = GetPolicies(i.restrictedUse);
+    InitializedPolicies(i.restrictedUse);
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
     DebugGdiPlusDevice(gUseGdiRenderer);
 
@@ -792,7 +723,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.stressTestPath) {
         // don't save file history and preference changes
-        gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~Perm_SavePreferences;
+        RestrictPolicies(Perm_SavePreferences);
         RebuildMenuBarForWindow(win);
         StartStressTest(&i, win);
     }

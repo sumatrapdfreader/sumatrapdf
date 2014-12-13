@@ -44,7 +44,7 @@
 
 #define EBOOK_LAYOUT_TIMER_ID       7
 
-// permissions that can be revoked (or explicitly set) through Group Policies
+// permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
 enum {
     // enables Update checks, crash report submitting and hyperlinks
     Perm_InternetAccess     = 1 << 0,
@@ -62,7 +62,7 @@ enum {
     Perm_FullscreenAccess   = 1 << 6,
     // enables all of the above
     Perm_All                = 0x0FFFFFF,
-    // set through the command line (Policies might only apply when in restricted use mode)
+    // set if either sumatrapdfrestrict.ini or the -restrict command line flag is present
     Perm_RestrictedUse      = 0x1000000,
 };
 
@@ -102,11 +102,8 @@ struct LabelWithCloseWnd;
 extern bool                     gDebugShowLinks;
 extern bool                     gShowFrameRate;
 extern bool                     gUseGdiRenderer;
-extern int                      gPolicyRestrictions;
-extern WStrVec                  gAllowedLinkProtocols;
-extern WStrVec                  gAllowedFileTypes;
 
-extern WCHAR *                  gPluginURL;
+extern const WCHAR *            gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Favorites                gFavorites;
 extern FileHistory              gFileHistory;
@@ -120,6 +117,8 @@ extern bool                     gCrashOnOpen;
 
 #define gPluginMode             (gPluginURL != nullptr)
 
+void  InitializedPolicies(bool restrict);
+void  RestrictPolicies(int revokePermission);
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();
 bool  LaunchBrowser(const WCHAR *url);
@@ -185,3 +184,5 @@ void GetEbookUiColors(COLORREF& text, COLORREF& bg);
 void RebuildMenuBarForWindow(WindowInfo *win);
 void UpdateCheckAsync(WindowInfo *win, bool autoCheck);
 void DeleteWindowInfo(WindowInfo *win);
+
+LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
