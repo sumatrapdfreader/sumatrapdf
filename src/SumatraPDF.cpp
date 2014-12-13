@@ -660,8 +660,11 @@ public:
 void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail)
 {
     RectD pageRect = dm->GetEngine()->PageMediabox(1);
-    if (pageRect.IsEmpty())
+    if (pageRect.IsEmpty()) {
+        // saveThumbnail must always be called for clean-up code
+        saveThumbnail(nullptr);
         return;
+    }
 
     pageRect = dm->GetEngine()->Transform(pageRect, 1, 1.0f, 0);
     float zoom = size.dx / (float)pageRect.dx;
@@ -1000,17 +1003,14 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
     if (!args.isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
-        OnMenuFindMatchCase(win);
     }
-    UpdateFindbox(win);
 
-    if (win->IsDocLoaded()) {
-        int pageCount = win->ctrl->PageCount();
-        if (pageCount > 0) {
-            UpdateToolbarPageText(win, pageCount);
-            UpdateToolbarFindText(win);
-        }
-    }
+    int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
+    UpdateToolbarPageText(win, pageCount);
+    UpdateToolbarFindText(win);
+
+    OnMenuFindMatchCase(win);
+    UpdateFindbox(win);
 
     const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
     WCHAR *docTitle = nullptr;
@@ -1578,8 +1578,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
 
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
     UpdateToolbarPageText(win, pageCount);
-    if (pageCount > 0)
-        UpdateToolbarFindText(win);
+    UpdateToolbarFindText(win);
 
     if (win->presentation != PM_DISABLED)
         SetSidebarVisibility(win, tdata->showTocPresentation, gGlobalPrefs->showFavorites);
