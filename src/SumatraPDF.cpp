@@ -548,7 +548,8 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
         return;
 
     bool tocVisible = win->tocVisible;
-    if (tocVisible || gGlobalPrefs->showFavorites)
+    bool favVisible = gGlobalPrefs->showFavorites;
+    if (tocVisible || favVisible)
         SetSidebarVisibility(win, false, false);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
@@ -584,19 +585,12 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
-    if (tocVisible || gGlobalPrefs->showFavorites) {
-        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
+    if (tocVisible || favVisible) {
+        SetSidebarVisibility(win, tocVisible, favVisible);
         if (tocVisible)
             SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-        if (gGlobalPrefs->showFavorites)
+        if (favVisible)
             SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
-    }
-}
-
-void UpdateRtlLayoutForAllWindows()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateWindowRtlLayout(gWindows.At(i));
     }
 }
 
@@ -607,13 +601,6 @@ void RebuildMenuBarForWindow(WindowInfo *win)
     if (!win->presentation && !win->isFullScreen && !win->isMenuHidden)
         SetMenu(win->hwndFrame, win->menu);
     DestroyMenu(oldMenu);
-}
-
-static void RebuildMenuBarForAllWindows()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        RebuildMenuBarForWindow(gWindows.At(i));
-    }
 }
 
 static bool ShouldSaveThumbnail(DisplayState& ds)
@@ -1008,7 +995,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     // menu for chm and ebook docs is different, so we have to re-create it
     RebuildMenuBarForWindow(win);
     // the toolbar isn't supported for ebook docs (yet)
-    ShowOrHideToolbarForWindow(win);
+    ShowOrHideToolbar(win);
     ToolbarUpdateStateForWindow(win, true);
 
     if (!args.isNewWindow && win->IsDocLoaded()) {
@@ -1272,6 +1259,16 @@ static WindowInfo* CreateWindowInfo()
     return win;
 }
 
+static void UpdateToolbarSidebarText(WindowInfo *win)
+{
+    UpdateToolbarPageText(win, -1);
+    UpdateToolbarFindText(win);
+    UpdateToolbarButtonsToolTipsForWindow(win);
+
+    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
+    SetLabel(win->favLabelWithClose, _TR("Favorites"));
+}
+
 WindowInfo *CreateAndShowWindowInfo()
 {
     // CreateWindowInfo shouldn't change the windowState value
@@ -1280,6 +1277,9 @@ WindowInfo *CreateAndShowWindowInfo()
     if (!win)
         return nullptr;
     CrashIf(windowState != gGlobalPrefs->windowState);
+
+    // needed for RTL languages
+    UpdateToolbarSidebarText(win);
 
     if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState)
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
@@ -1573,7 +1573,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     if (!win->AsFixed())
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
     // the toolbar isn't supported for ebook docs (yet)
-    ShowOrHideToolbarForWindow(win);
+    ShowOrHideToolbar(win);
     UpdateCurrentTabBgColor(win);
 
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
@@ -2007,8 +2007,7 @@ void GetEbookUiColors(COLORREF& text, COLORREF& bg)
 void UpdateDocumentColors()
 {
     // TODO: only do this if colors have actually changed?
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
+    for (WindowInfo *win : gWindows) {
         if (win->AsEbook()) {
             win->AsEbook()->UpdateDocumentColors();
             UpdateTocColors(win);
@@ -2100,7 +2099,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
         if (wasntFixed) {
             // restore the full menu and toolbar
             RebuildMenuBarForWindow(win);
-            ShowOrHideToolbarForWindow(win);
+            ShowOrHideToolbar(win);
         }
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
@@ -2865,32 +2864,41 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     }
 }
 
-void SetCurrentLanguageAndRefreshUi(const char *langCode)
+void RelayoutWindow(WindowInfo *win)
+{
+    RelayoutFrame(win);
+}
+
+void SetCurrentLanguageAndRefreshUI(const char *langCode)
 {
     if (!langCode || str::Eq(langCode, trans::GetCurrentLangCode()))
         return;
     SetCurrentLang(langCode);
-    UpdateRtlLayoutForAllWindows();
-    RebuildMenuBarForAllWindows();
-    UpdateUITextForLanguage();
-    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
-        gWindows.At(0)->RedrawAll(true);
+
+    for (WindowInfo *win : gWindows) {
+        UpdateWindowRtlLayout(win);
+        RebuildMenuBarForWindow(win);
+        UpdateToolbarSidebarText(win);
+        // About page text is translated during (re)drawing
+        if (win->IsAboutWindow())
+            win->RedrawAll(true);
+    }
+
     prefs::Save();
 }
 
 static void OnMenuChangeLanguage(HWND hwnd)
 {
     const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
-    SetCurrentLanguageAndRefreshUi(newLangCode);
+    SetCurrentLanguageAndRefreshUI(newLangCode);
 }
 
 static void OnMenuViewShowHideToolbar(WindowInfo *win)
 {
-    if (win->presentation || win->isFullScreen)
-        return;
-
     gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
-    ShowOrHideToolbarGlobally();
+    for (WindowInfo *win : gWindows) {
+        ShowOrHideToolbar(win);
+    }
 }
 
 static void OnMenuAdvancedOptions()
@@ -3518,24 +3526,6 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
     }
 
     return false;
-}
-
-static void UpdateSidebarTitles(WindowInfo* win)
-{
-    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
-    SetLabel(win->favLabelWithClose, _TR("Favorites"));
-}
-
-void UpdateUITextForLanguage()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        UpdateToolbarPageText(win, -1);
-        UpdateToolbarFindText(win);
-        UpdateToolbarButtonsToolTipsForWindow(win);
-        // also update the sidebar title at this point
-        UpdateSidebarTitles(win);
-    }
 }
 
 static bool SidebarSplitterCb(void *ctx, bool done)

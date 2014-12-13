@@ -200,7 +200,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
     FindThreadData(WindowInfo *win, TextSearchDirection direction, HWND findBox) :
         win(win), direction(direction), text(win::GetText(findBox)),
-        wasModified(Edit_GetModify(findBox)), wnd(nullptr) { }
+        wasModified(Edit_GetModify(findBox)), wnd(nullptr), thread(nullptr) { }
     ~FindThreadData() { CloseHandle(thread); }
 
     void ShowUI(bool showProgress) {

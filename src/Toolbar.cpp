@@ -183,7 +183,7 @@ void ToolbarUpdateStateForWindow(WindowInfo *win, bool showHide)
         UpdateToolbarFindText(win);
 }
 
-void ShowOrHideToolbarForWindow(WindowInfo *win)
+void ShowOrHideToolbar(WindowInfo *win)
 {
     if (win->presentation || win->isFullScreen)
         return;
@@ -195,16 +195,7 @@ void ShowOrHideToolbarForWindow(WindowInfo *win)
             SetFocus(win->hwndFrame);
         ShowWindow(win->hwndReBar, SW_HIDE);
     }
-    ClientRect rect(win->hwndFrame);
-    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-}
-
-void ShowOrHideToolbarGlobally()
-{
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        ShowOrHideToolbarForWindow(win);
-    }
+    RelayoutWindow(win);
 }
 
 void UpdateFindbox(WindowInfo* win)

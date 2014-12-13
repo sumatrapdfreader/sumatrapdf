@@ -714,8 +714,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             goto Exit;
     }
 
-    UpdateUITextForLanguage(); // needed for RTL languages
-
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
     if (gGlobalPrefs->associatedExtensions)

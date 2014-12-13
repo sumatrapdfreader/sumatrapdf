@@ -145,10 +145,11 @@ $(OMUI)\TextRender.obj: $B\src\utils\WinUtil.h
 $(OS)\AppPrefs.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\AppPrefs.obj: $B\src\EbookEngine.h $B\src\Favorites.h $B\src\FileHistory.h
 $(OS)\AppPrefs.obj: $B\src\GlobalPrefs.h $B\src\SettingsStructs.h $B\src\SumatraPDF.h
-$(OS)\AppPrefs.obj: $B\src\Translations.h $B\src\utils\BaseUtil.h $B\src\utils\FileTransactions.h
-$(OS)\AppPrefs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\WindowInfo.h
+$(OS)\AppPrefs.obj: $B\src\Toolbar.h $B\src\Translations.h $B\src\utils\BaseUtil.h
+$(OS)\AppPrefs.obj: $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
+$(OS)\AppPrefs.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
+$(OS)\AppPrefs.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\AppPrefs.obj: $B\src\WindowInfo.h
 $(OS)\AppTools.obj: $B\src\AppTools.h $B\src\Translations.h $B\src\utils\BaseUtil.h
 $(OS)\AppTools.obj: $B\src\utils\CmdLineParser.h $B\src\utils\DbgHelpDyn.h $B\src\utils\FileUtil.h
 $(OS)\AppTools.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h

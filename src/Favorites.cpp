@@ -486,30 +486,27 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     RedrawWindow(hwndTree, nullptr, nullptr, fl);
 }
 
-static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
+void UpdateFavoritesTree(WindowInfo *win)
 {
     HWND hwndTree = win->hwndFavTree;
-    if (0 == TreeView_GetCount(hwndTree))
-        return;
 
-    SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
-    TreeView_DeleteAllItems(hwndTree);
-    PopulateFavTreeIfNeeded(win);
+    if (TreeView_GetCount(hwndTree) > 0) {
+        // PopulateFavTreeIfNeeded will re-enable WM_SETREDRAW
+        SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
+        TreeView_DeleteAllItems(hwndTree);
+        PopulateFavTreeIfNeeded(win);
+    }
+
+    // hide the favorites tree if we've removed the last favorite
+    if (0 == TreeView_GetCount(hwndTree)) {
+        SetSidebarVisibility(win, win->tocVisible, false);
+    }
 }
 
 void UpdateFavoritesTreeForAllWindows()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        UpdateFavoritesTreeIfNecessary(gWindows.At(i));
-    }
-
-    // hide the favorites tree if we removed the last favorite
-    if (!HasFavorites()) {
-        gGlobalPrefs->showFavorites = false;
-        for (size_t i = 0; i < gWindows.Count(); i++) {
-            WindowInfo *win = gWindows.At(i);
-            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);
-        }
+    for (WindowInfo *win : gWindows) {
+        UpdateFavoritesTree(win);
     }
 }
 

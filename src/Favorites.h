@@ -44,4 +44,5 @@ void ToggleFavorites(WindowInfo *win);
 void PopulateFavTreeIfNeeded(WindowInfo *win);
 void RememberFavTreeExpansionStateForAllWindows();
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
+void UpdateFavoritesTree(WindowInfo *win);
 void UpdateFavoritesTreeForAllWindows();

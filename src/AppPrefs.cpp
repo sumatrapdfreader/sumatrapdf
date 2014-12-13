@@ -20,6 +20,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Favorites.h"
+#include "Toolbar.h"
 #include "Translations.h"
 
 #define PREFS_FILE_NAME     L"SumatraPDF-settings.txt"
@@ -202,13 +203,15 @@ bool Reload()
     }
 
     if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage))
-        SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
+        SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
 
-    if (gGlobalPrefs->showToolbar != showToolbar)
-        ShowOrHideToolbarGlobally();
+    for (WindowInfo *win : gWindows) {
+        if (gGlobalPrefs->showToolbar != showToolbar)
+            ShowOrHideToolbar(win);
+        UpdateFavoritesTree(win);
+    }
 
     UpdateDocumentColors();
-    UpdateFavoritesTreeForAllWindows();
 
     return true;
 }

@@ -841,8 +841,7 @@ static void ShowTabBar(WindowInfo *win, bool show)
         return;
     win->tabsVisible = show;
     win::SetVisibility(win->hwndTabBar, show);
-    ClientRect rect(win->hwndFrame);
-    SendMessage(win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
+    RelayoutWindow(win);
 }
 
 void UpdateTabWidth(WindowInfo *win)
