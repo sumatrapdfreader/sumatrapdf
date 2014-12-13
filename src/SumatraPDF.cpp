@@ -142,6 +142,7 @@ static WStrVec               gAllowedLinkProtocols;
 static WStrVec               gAllowedFileTypes;
 
 static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled=false, bool deleteModel=false);
+static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=nullptr, int pageNo=-1);
 static bool SidebarSplitterCb(void *ctx, bool done);
 static bool FavSplitterCb(void *ctx, bool done);
 
@@ -750,6 +751,81 @@ void ControllerCallbackHandler::RequestDelayedLayout(int delay)
     SetTimer(win->hwndCanvas, EBOOK_LAYOUT_TIMER_ID, delay, nullptr);
 }
 
+void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
+{
+    CrashIf(!win->AsFixed());
+    DisplayModel *dm = win->AsFixed();
+
+    SCROLLINFO si = { 0 };
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
+
+    SizeI viewPort = dm->GetViewPort().Size();
+
+    if (viewPort.dx >= canvas.dx) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->GetViewPort().x;
+        si.nMin = 0;
+        si.nMax = canvas.dx - 1;
+        si.nPage = viewPort.dx;
+    }
+    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
+    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
+
+    if (viewPort.dy >= canvas.dy) {
+        si.nPos = 0;
+        si.nMin = 0;
+        si.nMax = 99;
+        si.nPage = 100;
+    } else {
+        si.nPos = dm->GetViewPort().y;
+        si.nMin = 0;
+        si.nMax = canvas.dy - 1;
+        si.nPage = viewPort.dy;
+
+        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
+            // keep the top/bottom 5% of the previous page visible after paging down/up
+            si.nPage = (UINT)(si.nPage * 0.95);
+            si.nMax -= viewPort.dy - si.nPage;
+        }
+    }
+    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
+    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+}
+
+// The current page edit box is updated with the current page number
+void ControllerCallbackHandler::PageNoChanged(int pageNo)
+{
+    AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
+    if (!win->ctrl || win->ctrl->PageCount() == 0)
+        return;
+
+    if (win->AsEbook())
+        pageNo = win->AsEbook()->CurrentTocPageNo();
+    else if (INVALID_PAGE_NO != pageNo) {
+        ScopedMem<WCHAR> buf(win->ctrl->GetPageLabel(pageNo));
+        win::SetText(win->hwndPageBox, buf);
+        ToolbarUpdateStateForWindow(win, false);
+        if (win->ctrl->HasPageLabels())
+            UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
+    }
+    if (pageNo == win->currPageNo)
+        return;
+
+    UpdateTocSelection(win, pageNo);
+    win->currPageNo = pageNo;
+
+    NotificationWnd *wnd = win->notifications->GetForGroup(NG_PAGE_INFO_HELPER);
+    if (wnd) {
+        CrashIf(!win->AsFixed());
+        UpdatePageInfoHelper(win, wnd, pageNo);
+    }
+}
+
 static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
 {
     if (!win->cbHandler)
@@ -805,50 +881,57 @@ LoadEngineInFixedPageUI:
     return ctrl;
 }
 
-void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
+static void SetFrameTitleForTab(TabInfo *tab, bool needRefresh)
 {
-    CrashIf(!win->AsFixed());
-    DisplayModel *dm = win->AsFixed();
-
-    SCROLLINFO si = { 0 };
-    si.cbSize = sizeof(si);
-    si.fMask = SIF_ALL;
-
-    SizeI viewPort = dm->GetViewPort().Size();
-
-    if (viewPort.dx >= canvas.dx) {
-        si.nPos = 0;
-        si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
-    } else {
-        si.nPos = dm->GetViewPort().x;
-        si.nMin = 0;
-        si.nMax = canvas.dx - 1;
-        si.nPage = viewPort.dx;
+    const WCHAR *titlePath = tab->filePath;
+    if (!gGlobalPrefs->fullPathInTitle)
+        titlePath = path::GetBaseName(titlePath);
+    ScopedMem<WCHAR> docTitle;
+    if (tab->ctrl && (docTitle = tab->ctrl->GetProperty(Prop_Title)) != nullptr) {
+        str::NormalizeWS(docTitle.Get());
+        if (!str::IsEmpty(docTitle.Get()))
+            docTitle = str::Format(L"- [%s] ", docTitle);
     }
-    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
-    SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
-    if (viewPort.dy >= canvas.dy) {
-        si.nPos = 0;
-        si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
-    } else {
-        si.nPos = dm->GetViewPort().y;
-        si.nMin = 0;
-        si.nMax = canvas.dy - 1;
-        si.nPage = viewPort.dy;
-
-        if (ZOOM_FIT_PAGE != dm->GetZoomVirtual()) {
-            // keep the top/bottom 5% of the previous page visible after paging down/up
-            si.nPage = (UINT)(si.nPage * 0.95);
-            si.nMax -= viewPort.dy - si.nPage;
-        }
+    if (!IsUIRightToLeft()) {
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
     }
-    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
-    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+    else {
+        // explicitly revert the title, so that filenames aren't garbled
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
+    }
+    if (needRefresh && tab->ctrl) {
+        // TODO: this isn't visible when tabs are used
+        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle));
+    }
+}
+
+static void UpdateUiForCurrentTab(WindowInfo *win)
+{
+    // hide the scrollbars before any other relayouting (for assertion in WindowInfo::GetViewPortSize)
+    if (!win->AsFixed())
+        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+
+    // menu for chm and ebook docs is different, so we have to re-create it
+    RebuildMenuBarForWindow(win);
+    // the toolbar isn't supported for ebook docs (yet)
+    ShowOrHideToolbar(win);
+    // TODO: unify?
+    ToolbarUpdateStateForWindow(win, true);
+    UpdateToolbarState(win);
+
+    int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
+    UpdateToolbarPageText(win, pageCount);
+    UpdateToolbarFindText(win);
+
+    OnMenuFindMatchCase(win);
+    UpdateFindbox(win);
+
+    win::SetText(win->hwndFrame, win->currentTab->frameTitle);
+    UpdateCurrentTabBgColor(win);
+
+    bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
+    ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, onlyNumbers);
 }
 
 // meaning of the internal values of LoadArgs:
@@ -865,9 +948,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     TabInfo *tab = win->currentTab;
     CrashIf(!tab);
 
-    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
-    int rotation = 0;
-
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!state && gGlobalPrefs->rememberStatePerDocument) {
@@ -881,17 +961,19 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     if (state && state->useDefaultState) {
         state = nullptr;
     }
+
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
-    int startPage = 1;
+    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     ScrollState ss(1, -1, -1);
+    int rotation = 0;
+    bool showToc = gGlobalPrefs->showToc;
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs->windowState;
     int showType = SW_NORMAL;
     if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
         showType = SW_MAXIMIZE;
 
-    bool showToc = gGlobalPrefs->showToc;
     if (state) {
-        startPage = state->pageNo;
+        ss.page = state->pageNo;
         displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
@@ -901,6 +983,8 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         else if (state->windowState == WIN_STATE_MINIMIZED)
             showType = SW_MINIMIZE;
         showToc = state->showToc;
+        if (win->ctrl && win->presentation)
+            showToc = tab->showTocPresentation;
     }
 
     AbortFinding(args.win, false);
@@ -928,7 +1012,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         if (win->AsFixed()) {
             DisplayModel *dm = win->AsFixed();
             int dpi = gGlobalPrefs->customScreenDPI > 0 ? dpi = gGlobalPrefs->customScreenDPI : DpiGetPreciseX(win->hwndFrame);
-            dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), dpi);
+            dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (tab->GetEngineType() == Engine_ComicBook || tab->GetEngineType() == Engine_ImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
@@ -946,7 +1030,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         }
         else if (win->AsChm()) {
             win->ctrl->SetDisplayMode(displayMode);
-            win->ctrl->GoToPage(startPage, false);
+            win->ctrl->GoToPage(ss.page, false);
         }
         else if (win->AsEbook()) {
             if (prevCtrl && prevCtrl->AsEbook() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath()))
@@ -969,76 +1053,37 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     if (state) {
         CrashIf(!win->IsDocLoaded());
         zoomVirtual = prefs::conv::ToZoom(state->zoom, ZOOM_FIT_PAGE);
-        if (win->ctrl->ValidPageNo(startPage)) {
-            ss.page = startPage;
+        if (win->ctrl->ValidPageNo(ss.page)) {
             if (ZOOM_FIT_CONTENT != zoomVirtual) {
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
             // else let win->AsFixed()->Relayout() scroll to fit the page (again)
-        } else if (startPage > win->ctrl->PageCount()) {
-            ss.page = win->ctrl->PageCount();
         }
+        else if (win->ctrl->PageCount() > 0) {
+            ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
+        }
+        // else let win->ctrl->GoToPage(ss.page, false) verify the page number
         rotation = state->rotation;
         tab->tocState = *state->tocState;
     }
 
     // DisplayModel needs a valid zoom value before any relayout
     // caused by showing/hiding UI elements happends
-    if (win->AsFixed()) {
+    if (win->AsFixed())
         win->AsFixed()->Relayout(zoomVirtual, rotation);
-    }
-    else {
-        // remove the scrollbars before EbookController starts layouting
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-        if (win->IsDocLoaded())
-            win->ctrl->SetZoomVirtual(zoomVirtual);
-    }
+    else if (win->IsDocLoaded())
+        win->ctrl->SetZoomVirtual(zoomVirtual);
 
-    // menu for chm and ebook docs is different, so we have to re-create it
-    RebuildMenuBarForWindow(win);
-    // the toolbar isn't supported for ebook docs (yet)
-    ShowOrHideToolbar(win);
-    ToolbarUpdateStateForWindow(win, true);
-
-    if (!args.isNewWindow && win->IsDocLoaded()) {
+    // TODO: why is this needed?
+    if (!args.isNewWindow && win->IsDocLoaded())
         win->RedrawAll();
-    }
 
-    int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
-    UpdateToolbarPageText(win, pageCount);
-    UpdateToolbarFindText(win);
+    SetFrameTitleForTab(tab, needRefresh);
+    UpdateUiForCurrentTab(win);
 
-    OnMenuFindMatchCase(win);
-    UpdateFindbox(win);
-
-    const WCHAR *titlePath = gGlobalPrefs->fullPathInTitle ? args.fileName : path::GetBaseName(args.fileName);
-    WCHAR *docTitle = nullptr;
-    if (win->IsDocLoaded() && (docTitle = win->ctrl->GetProperty(Prop_Title)) != nullptr) {
-        str::NormalizeWS(docTitle);
-        WCHAR *docTitlePart = nullptr;
-        if (!str::IsEmpty(docTitle))
-            docTitlePart = str::Format(L"- [%s] ", docTitle);
-        free(docTitle);
-        docTitle = docTitlePart;
-    }
-    tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
-    if (IsUIRightToLeft()) {
-        // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", titlePath));
-    }
-    free(docTitle);
-    if (needRefresh && win->IsDocLoaded()) {
-        // TODO: this isn't visible when tabs are used
-        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle));
-    }
-    win::SetText(win->hwndFrame, tab->frameTitle);
-
-    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF) {
-        CrashIf(!win->AsFixed());
-        CrashIf(win->AsFixed()->pdfSync && win->ctrl != prevCtrl);
-        delete win->AsFixed()->pdfSync;
-        win->AsFixed()->pdfSync = nullptr;
+    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF && win->ctrl != prevCtrl) {
+        CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
         if (PDFSYNCERR_SUCCESS == res)
@@ -1062,26 +1107,20 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         UpdateWindow(win->hwndFrame);
     }
 
-    if (win->IsDocLoaded()) {
-        ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, !win->ctrl->HasPageLabels());
-        // if the window isn't shown and win.canvasRc is still empty, zoom
-        // has not been determined yet
-        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
-        // AssertCrash(!args.showWin || !win->canvasRc.IsEmpty() || win->AsChm());
-        if ((args.showWin || ss.page != 1) && win->AsFixed())
-            win->AsFixed()->SetScrollState(ss);
-        else if (win->AsChm())
-            win->ctrl->GoToPage(ss.page, false);
-        UpdateToolbarState(win);
-    }
+    // if the window isn't shown and win.canvasRc is still empty, zoom
+    // has not been determined yet
+    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
+    // AssertCrash(!win->IsDocLoaded() || !args.showWin || !win->canvasRc.IsEmpty() || win->AsChm());
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
+    // restore scroll state after the canvas size has been restored
+    if ((args.showWin || ss.page != 1) && win->AsFixed())
+        win->AsFixed()->SetScrollState(ss);
+
     win->RedrawAll(true);
 
-    if (!win->IsDocLoaded()) {
-        win->RedrawAll();
+    if (!win->IsDocLoaded())
         return false;
-    }
 
     ScopedMem<WCHAR> unsupported(win->ctrl->GetProperty(Prop_UnsupportedFeatures));
     if (unsupported) {
@@ -1400,7 +1439,7 @@ public:
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-static WindowInfo* LoadDocumentOld(LoadArgs& args)
+WindowInfo* LoadDocument(LoadArgs& args)
 {
     if (gCrashOnOpen)
         CrashMe();
@@ -1534,15 +1573,6 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     return win;
 }
 
-WindowInfo* LoadDocument(LoadArgs& args)
-{
-#if 0
-    return LoadDocumentNew(args);
-#else
-    return LoadDocumentOld(args);
-#endif
-}
-
 // Loads document data into the WindowInfo.
 void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
 {
@@ -1552,41 +1582,22 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
 
     win->currentTab = tdata;
     win->ctrl = tdata->ctrl;
-    win::SetText(win->hwndFrame, tdata->frameTitle);
 
     if (win->AsChm())
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
     // prevent the ebook UI from redrawing before win->RedrawAll at the bottom
     else if (win->AsEbook())
         win->AsEbook()->EnableMessageHandling(false);
-
     // tell UI Automation about content change
-    if (win->uia_provider && win->AsFixed())
+    else if (win->AsFixed() && win->uia_provider)
         win->uia_provider->OnDocumentLoad(win->AsFixed());
 
-    // menu for chm docs is different, so we have to re-create it
-    RebuildMenuBarForWindow(win);
-    // TODO: unify? (the first enables/disables buttons, the second checks/unchecks them)
-    ToolbarUpdateStateForWindow(win, true);
-    UpdateToolbarState(win);
-    // hide the scrollbars before any other relayouting (for assertion in WindowInfo::GetViewPortSize)
-    if (!win->AsFixed())
-        ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
-    // the toolbar isn't supported for ebook docs (yet)
-    ShowOrHideToolbar(win);
-    UpdateCurrentTabBgColor(win);
-
-    int pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
-    UpdateToolbarPageText(win, pageCount);
-    UpdateToolbarFindText(win);
+    UpdateUiForCurrentTab(win);
 
     if (win->presentation != PM_DISABLED)
         SetSidebarVisibility(win, tdata->showTocPresentation, gGlobalPrefs->showFavorites);
     else
         SetSidebarVisibility(win, tdata->showToc, gGlobalPrefs->showFavorites);
-
-    bool enable = !win->ctrl || !win->ctrl->HasPageLabels();
-    ToggleWindowStyle(win->hwndPageBox, ES_NUMBER, enable);
 
     if (win->AsFixed()) {
         if (tdata->canvasRc != win->canvasRc)
@@ -1606,9 +1617,6 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     }
     tdata->canvasRc = win->canvasRc;
 
-    OnMenuFindMatchCase(win);
-    UpdateFindbox(win);
-
     win->showSelection = tdata->selectionOnPage != nullptr;
     if (win->uia_provider)
         win->uia_provider->OnSelectionChanged();
@@ -1622,7 +1630,7 @@ void LoadModelIntoTab(WindowInfo *win, TabInfo *tdata)
     }
 }
 
-static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd=nullptr, int pageNo=-1)
+static void UpdatePageInfoHelper(WindowInfo *win, NotificationWnd *wnd, int pageNo)
 {
     if (!win->ctrl->ValidPageNo(pageNo))
         pageNo = win->ctrl->CurrentPageNo();
@@ -1690,35 +1698,6 @@ void UpdateCursorPositionHelper(WindowInfo *win, PointI pos, NotificationWnd *wn
         win->ShowNotification(posInfo, NOS_PERSIST, NG_CURSOR_POS_HELPER);
     else
         wnd->UpdateMessage(posInfo);
-}
-
-// The current page edit box is updated with the current page number
-void ControllerCallbackHandler::PageNoChanged(int pageNo)
-{
-    AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
-    if (!win->ctrl || win->ctrl->PageCount() == 0)
-        return;
-
-    if (win->AsEbook())
-        pageNo = win->AsEbook()->CurrentTocPageNo();
-    else if (INVALID_PAGE_NO != pageNo) {
-        ScopedMem<WCHAR> buf(win->ctrl->GetPageLabel(pageNo));
-        win::SetText(win->hwndPageBox, buf);
-        ToolbarUpdateStateForWindow(win, false);
-        if (win->ctrl->HasPageLabels())
-            UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
-    }
-    if (pageNo == win->currPageNo)
-        return;
-
-    UpdateTocSelection(win, pageNo);
-    win->currPageNo = pageNo;
-
-    NotificationWnd *wnd = win->notifications->GetForGroup(NG_PAGE_INFO_HELPER);
-    if (wnd) {
-        CrashIf(!win->AsFixed());
-        UpdatePageInfoHelper(win, wnd, pageNo);
-    }
 }
 
 void AssociateExeWithPdfExtension()

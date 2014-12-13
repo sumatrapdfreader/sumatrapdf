@@ -728,7 +728,6 @@ void TabsOnLoadedDoc(WindowInfo *win)
         // TODO: what now?
         CrashIf(true);
     }
-    UpdateCurrentTabBgColor(win);
 }
 
 // Refresh the tab's title
@@ -746,7 +745,6 @@ void TabsOnChangedDoc(WindowInfo *win)
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR *)tdata->tabTitle;
     TabCtrl_SetItem(win->hwndTabBar, current, &tcs);
-    UpdateCurrentTabBgColor(win);
 }
 
 // Called when we're closing a document
