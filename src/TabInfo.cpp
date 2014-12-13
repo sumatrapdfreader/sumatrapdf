@@ -24,7 +24,7 @@
 #include "Translations.h"
 
 TabInfo::TabInfo() :
-    ctrl(nullptr), tabTitle(nullptr),
+    ctrl(nullptr),
     showToc(false), showTocPresentation(false), tocRoot(nullptr),
     reloadOnFocus(false), watcher(nullptr), selectionOnPage(nullptr),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)
@@ -46,6 +46,13 @@ EngineType TabInfo::GetEngineType() const
     if (ctrl && ctrl->AsFixed())
         return ctrl->AsFixed()->engineType;
     return Engine_None;
+}
+
+const WCHAR *TabInfo::GetTabTitle() const
+{
+    if (gGlobalPrefs->fullPathInTitle)
+        return filePath;
+    return path::GetBaseName(filePath);
 }
 
 bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)

@@ -991,7 +991,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
     Controller *prevCtrl = win->ctrl;
     tab->filePath.Set(str::Dup(args.fileName));
-    tab->tabTitle = path::GetBaseName(tab->filePath);
     tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
     win->ctrl = tab->ctrl;
 

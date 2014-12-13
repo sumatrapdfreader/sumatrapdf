@@ -69,9 +69,7 @@ WindowInfo::~WindowInfo()
     FinishStressTest(this);
 
     CrashIf(tabs.Count() > 0);
-    while (tabs.Count() > 0) {
-        delete tabs.Pop();
-    }
+    CrashIf(ctrl || linkOnLastButtonDown);
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
@@ -83,17 +81,14 @@ WindowInfo::~WindowInfo()
 
     delete linkHandler;
     delete buffer;
-    delete linkOnLastButtonDown;
     delete notifications;
     delete tabSelectionHistory;
     delete caption;
-    // delete DisplayModel/BaseEngine last, as e.g.
-    // DocTocItem or PageElement might still need the
-    // BaseEngine in their destructors
-    delete ctrl;
-    // cbHandler is passed into Controller and
-    // must be deleted afterwards
+    DeleteVecMembers(tabs);
+    // cbHandler is passed into Controller and must be deleted afterwards
+    // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;
+
     DeleteFrameRateWnd(frameRateWnd);
     free(sidebarSplitter);
     free(favSplitter);

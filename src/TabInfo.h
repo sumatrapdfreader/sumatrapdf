@@ -12,7 +12,6 @@ class TabInfo
 public:
     ScopedMem<WCHAR> filePath;
     Controller *ctrl;
-    const WCHAR *tabTitle;
     // text of win->hwndFrame when the tab is selected
     ScopedMem<WCHAR> frameTitle;
     // state of the table of contents
@@ -39,7 +38,10 @@ public:
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
     ChmModel *AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
     EbookController *AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
+    // returns Engine_None if !AsFixed()
     EngineType GetEngineType() const;
+
+    const WCHAR *GetTabTitle() const;
 };
 
 class LinkSaver : public LinkSaverUI {
