@@ -3207,6 +3207,11 @@ static bool ChmForwardKey(WPARAM key)
 
 bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield)
 {
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        // black/white screen is disabled on any unmodified key press in FrameOnChar
+        return true;
+    }
+
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
 
@@ -3215,8 +3220,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         return true;
     }
 
-    if ((VK_LEFT == key || VK_RIGHT == key) &&
-        isShift && isCtrl &&
+    if ((VK_LEFT == key || VK_RIGHT == key) && isShift && isCtrl &&
         !win->IsAboutWindow() && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
         // so special-case it before the win->IsDocLoaded() check
@@ -3263,9 +3267,6 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         }
     }
     //lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
-
-    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
-        return false;
 
     if (VK_UP == key) {
         if (dm && dm->NeedVScroll())
@@ -3323,6 +3324,11 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 {
+    if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
+        win.ChangePresentationMode(PM_ENABLED);
+        return;
+    }
+
     if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
         UINT vk = MapVirtualKey((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
@@ -3332,11 +3338,6 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 
     if (IsCharUpper((WCHAR)key))
         key = (WCHAR)CharLower((LPWSTR)(WCHAR)key);
-
-    if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
-        win.ChangePresentationMode(PM_ENABLED);
-        return;
-    }
 
     switch (key) {
     case VK_ESCAPE:

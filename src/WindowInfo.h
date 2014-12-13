@@ -227,17 +227,9 @@ public:
     void  RedrawAll(bool update=false);
     void  RepaintAsync(UINT delay=0);
 
-    void ChangePresentationMode(PresentationMode mode) {
-        presentation = mode;
-        RedrawAll();
-    }
+    void ChangePresentationMode(PresentationMode mode);
 
-    void Focus() {
-        if (IsIconic(hwndFrame))
-            ShowWindow(hwndFrame, SW_RESTORE);
-        SetForegroundWindow(hwndFrame);
-        SetFocus(hwndFrame);
-    }
+    void Focus();
 
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);

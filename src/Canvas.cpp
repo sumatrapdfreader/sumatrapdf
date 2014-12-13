@@ -165,6 +165,10 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     AssertCrash(win.AsFixed());
 
     if (win.presentation) {
+        if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
+            SetCursor((HCURSOR)nullptr);
+            return;
+        }
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if (PointI(x, y) != win.dragPrevPos && !GetCursor()) {
             if (win.mouseAction == MA_IDLE)

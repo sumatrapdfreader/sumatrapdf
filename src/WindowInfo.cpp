@@ -161,6 +161,23 @@ void WindowInfo::RedrawAll(bool update)
         UpdateWindow(this->hwndCanvas);
 }
 
+void WindowInfo::ChangePresentationMode(PresentationMode mode)
+{
+    presentation = mode;
+    if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
+        DeleteInfotip();
+    }
+    RedrawAll();
+}
+
+void WindowInfo::Focus()
+{
+    if (IsIconic(hwndFrame))
+        ShowWindow(hwndFrame, SW_RESTORE);
+    SetForegroundWindow(hwndFrame);
+    SetFocus(hwndFrame);
+}
+
 void WindowInfo::ToggleZoom()
 {
     CrashIf(!this->ctrl);
