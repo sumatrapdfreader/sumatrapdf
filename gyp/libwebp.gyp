@@ -28,7 +28,9 @@
                 "../ext/libwebp/dec/vp8li.h",
                 "../ext/libwebp/dec/webp.c",
                 "../ext/libwebp/dec/webpi.h",
+
                 "../ext/libwebp/dsp/alpha_processing.c",
+                "../ext/libwebp/dsp/alpha_processing_sse2.c",
                 "../ext/libwebp/dsp/cpu.c",
                 "../ext/libwebp/dsp/dec.c",
                 "../ext/libwebp/dsp/dec_clip_tables.c",
