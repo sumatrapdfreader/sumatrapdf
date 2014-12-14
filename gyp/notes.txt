@@ -32,8 +32,6 @@ TODO:
 * fix guids for generated projects
 * -f ninja fails (on cygwin it complains about SYSTEMROOT, in dos throws
   KeyError: 'Release 64_x64')
-* make sumatra-all.gyp works, it should just be a dummy target that includes
-  all others, but I have a hard time making it work
 
 
 Current linking options  for release:

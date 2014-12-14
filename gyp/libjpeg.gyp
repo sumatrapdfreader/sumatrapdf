@@ -5,7 +5,6 @@
 
 {
   'variables': {
-    #'nasm_path': '<(DEPTH)/bin/nasm.exe',
     #'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)/third_party/libjpeg_turbo',
     'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)',
     'conditions': [

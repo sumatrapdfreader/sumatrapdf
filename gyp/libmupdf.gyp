@@ -11,14 +11,17 @@
     },
     'targets': [
         {
-            'target_name': 'mupdf',
-            'type': 'static_library',
+            'target_name': 'libmupdf',
+            'type': 'dynamic_library',
             'dependencies': [
                 'zlib.gyp:zlib',
                 'libjpeg.gyp:libjpeg',
                 'jbig2dec.gyp:jbig2dec',
                 'freetype.gyp:freetype',
                 'openjpeg.gyp:openjpeg',
+                'djvu.gyp:djvu',
+                'unarr.gyp:unarr',
+                'libwebp.gyp:libwebp',
             ],
             'defines': [
                 'NOCJKFONT',
@@ -223,6 +226,10 @@
                 "../mupdf/include/mupdf/tiff.h",
                 "../mupdf/include/mupdf/xps.h",
                 "../mupdf/font_base14.asm",
+
+                '../src/libmupdf.rc',
+                '../src/Version.h',
+                '../src/libmupdf.def',
             ],
         }
     ],
