@@ -312,12 +312,16 @@ bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
     const WCHAR *cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
-    ScopedMem<WCHAR> pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
-    ScopedMem<WCHAR> params(str::Replace(cmdLine, L"%p", pageNoStr));
-    if (str::Find(params, L"%1"))
-        params.Set(str::Replace(params, L"%1", tab->filePath));
+    ScopedMem<WCHAR> params;
+    if (str::Find(cmdLine, L"%p")) {
+        ScopedMem<WCHAR> pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
+        params.Set(str::Replace(cmdLine, L"%p", pageNoStr));
+        cmdLine = params;
+    }
+    if (str::Find(cmdLine, L"%1"))
+        params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
     else
-        params.Set(str::Format(L"%s \"%s\"", params.Get(), tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath));
     return LaunchFile(args.At(0), params);
 }
 

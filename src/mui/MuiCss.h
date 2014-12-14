@@ -145,7 +145,7 @@ struct ColorData {
 
 struct Padding {
     int top, right, bottom, left;
-    bool operator ==(const Padding& other) const {
+    bool operator==(const Padding& other) const {
         return (top == other.top) &&
                (right == other.right) &&
                (bottom == other.bottom) &&

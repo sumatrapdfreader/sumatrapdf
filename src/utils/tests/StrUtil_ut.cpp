@@ -19,11 +19,36 @@ static void StrReplaceTest()
         "golagon", "gon", "rabato", "golarabato",
         "a", "a", "bor", "bor",
         "abora", "a", "", "bor",
-        "aaaaaa", "a", "b", "bbbbbb"
+        "aaaaaa", "a", "b", "bbbbbb",
+        "aba", "a", "ccc", "cccbccc",
+        "Aba", "a", "c", "Abc",
+        "abc", "abc", "", "",
+        nullptr, "a", "b", nullptr,
+        "a", "", "b", nullptr,
+        "a", "b", nullptr, nullptr,
     };
     size_t n = dimof(d) / 4;
     for (size_t i = 0; i < n; i++) {
         StrReplaceTestOne(d[i*4], d[i*4+1], d[i*4+2], d[i*4+3]);
+    }
+
+    struct {
+        const WCHAR *string, *find, *replace, *result;
+    } data[] = {
+        { L"golagon", L"gon", L"rabato", L"golarabato" },
+        { L"a", L"a", L"bor", L"bor" },
+        { L"abora", L"a", L"", L"bor" },
+        { L"aaaaaa", L"a", L"b", L"bbbbbb" },
+        { L"aba", L"a", L"ccc", L"cccbccc" },
+        { L"Aba", L"a", L"c", L"Abc" },
+        { L"abc", L"abc", L"", L"" },
+        { nullptr, L"a", L"b", nullptr },
+        { L"a", L"", L"b", nullptr },
+        { L"a", L"b", nullptr, nullptr },
+    };
+    for (size_t i = 0; i < dimof(data); i++) {
+        ScopedMem<WCHAR> result(str::Replace(data[i].string, data[i].find, data[i].replace));
+        utassert(str::Eq(result, data[i].result));
     }
 }
 

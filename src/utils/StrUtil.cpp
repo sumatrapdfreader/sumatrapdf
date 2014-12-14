@@ -582,45 +582,37 @@ void TrimWsEnd(char *s, char *&e)
 // the result needs to be free()d
 char *Replace(const char *s, const char *toReplace, const char *replaceWith)
 {
-    Vec<char> res;
-    char first = *toReplace++;
-    size_t replaceWithLen = str::Len(replaceWith);
-    while (*s) {
-        if (*s != first) {
-            res.Append(*s++);
-            continue;
-        }
+    if (!s || str::IsEmpty(toReplace) || !replaceWith)
+        return nullptr;
 
-        const char *tmp = s + 1;
-        const char *tmp2 = toReplace;
-        while (*tmp == *tmp2) {
-            if (*tmp == 0) {
-                res.Append(replaceWith, replaceWithLen);
-                goto Exit;
-            }
-            ++tmp;
-            ++tmp2;
-        }
-        if (!*tmp2) {
-            res.Append(replaceWith, replaceWithLen);
-            s = tmp;
-        } else {
-            res.Append(*s++);
-        }
+    str::Str<char> result(str::Len(s));
+    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
+    const char *start = s, *end;
+    while ((end = str::Find(start, toReplace)) != nullptr) {
+        result.Append(start, end - start);
+        result.Append(replaceWith, replLen);
+        start = end + findLen;
     }
-Exit:
-    return res.StealData();
+    result.Append(start);
+    return result.StealData();
 }
 
 // the result needs to be free()d
 WCHAR *Replace(const WCHAR *s, const WCHAR *toReplace, const WCHAR *replaceWith)
 {
-    if (!str::Find(s, toReplace))
-        return str::Dup(s);
+    if (!s || str::IsEmpty(toReplace) || !replaceWith)
+        return nullptr;
 
-    WStrVec splitter;
-    splitter.Split(s, toReplace);
-    return splitter.Join(replaceWith);
+    str::Str<WCHAR> result(str::Len(s));
+    size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
+    const WCHAR *start = s, *end;
+    while ((end = str::Find(start, toReplace)) != nullptr) {
+        result.Append(start, end - start);
+        result.Append(replaceWith, replLen);
+        start = end + findLen;
+    }
+    result.Append(start);
+    return result.StealData();
 }
 
 // replaces all whitespace characters with spaces, collapses several
