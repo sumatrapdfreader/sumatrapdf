@@ -11,17 +11,34 @@
 			],
 			'include_dirs': [
 				"../src",
-				"../ext/synctex",
 			],
 			'sources': [
-				"../src/previewer/PdfPreview.cpp",
-				"../src/previewer/PdfPreview.h",
-				"../src/previewer/PdfPreview.rc",
-				"../src/previewer/PdfPreviewBase.h",
-				"../src/previewer/PdfPreviewDll.cpp",
+				"../src/ifilter/CPdfFilter.cpp",
+				"../src/ifilter/CPdfFilter.h",
+				"../src/ifilter/FilterBase.h",
+				"../src/ifilter/PdfFilter.h",
+				"../src/ifilter/PdfFilter.rc",
+				"../src/ifilter/PdfFilterDll.cpp",
 				"../src/PdfEngine.cpp",
+
+				# if tex filter BUILD_TEX_IFILTER
+				"../src/ifilter/CTeXFilter.cpp",
+				"../src/ifilter/CTeXFilter.h",
+
+				# if epub filter BUILD_EPUB_IFILTER
+				"../src/ifilter/CEpubFilter.cpp",
+				"../src/ifilter/CEpubFilter.h",
+				"../src/EbookDoc.cpp",
+				"../src/EbookDoc.h",
+				"../src/MobiDoc.cpp",
+				"../src/MobiDoc.h",
+				"../src/utils/PalmDbReader.cpp",
+				"../src/utils/PalmDbReader.h",
 			],
 			'defines': [
+				# TODO: conditional, only in debug
+				'BUILD_EPUB_IFILTER',
+				'BUILD_TEX_IFILTER',
 			],
 			'link_settings': {
 				'libraries': [

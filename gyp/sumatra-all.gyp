@@ -11,6 +11,7 @@
 				'utils.gyp:*',
 				'test_util.gyp:*',
 				'PdfFilter.gyp:*',
+				'PdfPreview.gyp:*',
 				'libmupdf.gyp:*',
 			],
 		},
