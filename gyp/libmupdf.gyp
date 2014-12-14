@@ -12,7 +12,8 @@
     'targets': [
         {
             'target_name': 'libmupdf',
-            'type': 'dynamic_library',
+            #TODO: why changing this to invalid string doesn't fail?
+            'type': 'shared_library', # loadable_module?
             'dependencies': [
                 'zlib.gyp:zlib',
                 'libjpeg.gyp:libjpeg',
