@@ -231,6 +231,11 @@ ExternalViewer = [
 		"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 ]
 
+PrereleaseSettings = [
+	Field("TabWidth", Int, 300,
+		"maximum width of a single tab"),
+]
+
 AnnotationDefaults = [
 	Field("HighlightColor", Color, RGB(0xFF, 0xFF, 0x60),
 		"color used for the highlight tool (in prerelease builds, the current selection " +
@@ -369,6 +374,9 @@ GlobalPrefs = [
 		"list of additional external viewers for various file types " +
 		"(can have multiple entries for the same format)",
 		expert=True),
+	Struct("PrereleaseSettings", PrereleaseSettings,
+		"unsupported settings for experimentation in prerelease builds",
+		expert=True, prerelease=True),
 	Field("ShowMenubar", Bool, True,
 		"if false, the menu bar will be hidden for all newly opened windows " +
 		"(use F9 to show it until the window closes or Alt to show it just briefly), only applies if UseTabs is false",
@@ -380,9 +388,6 @@ GlobalPrefs = [
 	Field("FullPathInTitle", Bool, False,
 		"if true, we show the full path to a file in the title bar",
 		expert=True, version="3.0"),
-	Field("TabWidth", Int, 300,
-		"maximum width of a single tab",
-		expert=True, version="3.1"),
 	# the below prefs don't apply to EbookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
@@ -498,6 +503,8 @@ GlobalPrefs = [
 	Field("DefaultZoomFloat", Float, -1,
 		"value of DefaultZoom for internal usage",
 		internal=True),
+	EmptyLine(),
+	Comment("Settings after this line have not been recognised by the current version"),
 ]
 
 GlobalPrefs = Struct("GlobalPrefs", GlobalPrefs,

@@ -111,6 +111,12 @@ struct ExternalViewer {
     WCHAR * filter;
 };
 
+// unsupported settings for experimentation in prerelease builds
+struct PrereleaseSettings {
+    // maximum width of a single tab
+    int tabWidth;
+};
+
 // these override the default settings in the Print dialog
 struct PrinterDefaults {
     // default value for scaling (shrink, fit, none)
@@ -262,6 +268,8 @@ struct GlobalPrefs {
     // list of additional external viewers for various file types (can have
     // multiple entries for the same format)
     Vec<ExternalViewer *> * externalViewers;
+    // unsupported settings for experimentation in prerelease builds
+    PrereleaseSettings prereleaseSettings;
     // if false, the menu bar will be hidden for all newly opened windows
     // (use F9 to show it until the window closes or Alt to show it just
     // briefly), only applies if UseTabs is false
@@ -271,8 +279,6 @@ struct GlobalPrefs {
     bool reloadModifiedDocuments;
     // if true, we show the full path to a file in the title bar
     bool fullPathInTitle;
-    // maximum width of a single tab
-    int tabWidth;
     // zoom levels which zooming steps through in addition to Fit Page, Fit
     // Width and the minimum and maximum allowed values (8.33 and 6400)
     Vec<float> * zoomLevels;
@@ -432,6 +438,11 @@ static const FieldInfo gExternalViewerFields[] = {
 };
 static const StructInfo gExternalViewerInfo = { sizeof(ExternalViewer), 3, gExternalViewerFields, "CommandLine\0Name\0Filter" };
 
+static const FieldInfo gPrereleaseSettingsFields[] = {
+    { offsetof(PrereleaseSettings, tabWidth), Type_Int, 300 },
+};
+static const StructInfo gPrereleaseSettingsInfo = { sizeof(PrereleaseSettings), 1, gPrereleaseSettingsFields, "TabWidth" };
+
 static const FieldInfo gPrinterDefaultsFields[] = {
     { offsetof(PrinterDefaults, printScale),   Type_Utf8String, (intptr_t)"shrink" },
     { offsetof(PrinterDefaults, printAsImage), Type_Bool,       false              },
@@ -538,10 +549,10 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, comicBookUI),              Type_Struct,      (intptr_t)&gComicBookUIInfo                                                                                           },
     { offsetof(GlobalPrefs, chmUI),                    Type_Struct,      (intptr_t)&gChmUIInfo                                                                                                 },
     { offsetof(GlobalPrefs, externalViewers),          Type_Array,       (intptr_t)&gExternalViewerInfo                                                                                        },
+    { offsetof(GlobalPrefs, prereleaseSettings),       Type_Prerelease,  (intptr_t)&gPrereleaseSettingsInfo                                                                                    },
     { offsetof(GlobalPrefs, showMenubar),              Type_Bool,        true                                                                                                                  },
     { offsetof(GlobalPrefs, reloadModifiedDocuments),  Type_Bool,        true                                                                                                                  },
     { offsetof(GlobalPrefs, fullPathInTitle),          Type_Bool,        false                                                                                                                 },
-    { offsetof(GlobalPrefs, tabWidth),                 Type_Int,         300                                                                                                                   },
     { offsetof(GlobalPrefs, zoomLevels),               Type_FloatArray,  (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
     { offsetof(GlobalPrefs, zoomIncrement),            Type_Float,       (intptr_t)"0"                                                                                                         },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
@@ -577,7 +588,9 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, reopenOnce),               Type_StringArray, 0                                                                                                                     },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,     (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,         0                                                                                                                     },
+    { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
+    { (size_t)-1,                                      Type_Comment,     (intptr_t)"Settings after this line have not been recognised by the current version"                                  },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 51, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0TabWidth\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0WindowTabsInfo\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 53, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0WindowTabsInfo\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
 
 #endif

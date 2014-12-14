@@ -391,11 +391,11 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') ||
                 str::FindChar(fieldName, '[') || str::FindChar(fieldName, ']') ||
                 NeedsEscaping(fieldName));
-#if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
-        if (Type_Prerelease == field.type)
-            continue;
-#endif
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
+#if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
+            if (Type_Prerelease == field.type)
+                continue;
+#endif
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
@@ -455,6 +455,10 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
         uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type || Type_Prerelease == field.type) {
             SquareTreeNode *child = node ? node->GetChild(fieldName) : nullptr;
+#if !(defined(SVN_PRE_RELEASE_VER) || defined(DEBUG))
+            if (Type_Prerelease == field.type)
+                child = nullptr;
+#endif
             DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         }
         else if (Type_Array == field.type) {

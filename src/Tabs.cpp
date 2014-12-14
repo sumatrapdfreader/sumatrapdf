@@ -51,7 +51,7 @@ int GetTabbarHeight(HWND hwnd, float factor)
 
 static inline SizeI GetTabSize(HWND hwnd)
 {
-    int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
+    int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->prereleaseSettings.tabWidth, MIN_TAB_WIDTH));
     int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
