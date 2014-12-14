@@ -71,7 +71,7 @@ xps_parse_document_outline(xps_document *doc, fz_xml *root)
 		}
 	}
 	/* SumatraPDF: support expansion states */
-	if (head && !head->next || !head->next->next)
+	if (head && (!head->next || !head->next->next))
 	{
 		head->is_open = 1;
 		if (head->next)

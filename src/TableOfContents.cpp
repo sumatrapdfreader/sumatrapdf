@@ -308,15 +308,15 @@ void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
         item.stateMask = TVIS_EXPANDED;
         TreeView_GetItem(hwndTocTree, &item);
 
-        // add the ids of toggled items to tocState
         DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : nullptr;
-        bool wasToggled = tocItem && !(item.state & TVIS_EXPANDED) == tocItem->open;
-        if (wasToggled) {
-            tab->tocState.Append(tocItem->id);
+        if (tocItem && tocItem->child) {
+            // add the ids of toggled items to tocState
+            bool wasToggled = !(item.state & TVIS_EXPANDED) == tocItem->open;
+            if (wasToggled)
+                tab->tocState.Append(tocItem->id);
+            UpdateTocExpansionState(tab, hwndTocTree, TreeView_GetChild(hwndTocTree, hItem));
         }
 
-        if (tocItem && tocItem->child)
-            UpdateTocExpansionState(tab, hwndTocTree, TreeView_GetChild(hwndTocTree, hItem));
         hItem = TreeView_GetNextSibling(hwndTocTree, hItem);
     }
 }
