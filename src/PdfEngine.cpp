@@ -1841,7 +1841,7 @@ PageDestination *PdfEngineImpl::GetNamedDest(const WCHAR *name)
         return nullptr;
     }
 
-    if (FZ_LINK_GOTO == ld.kind) {
+    if (FZ_LINK_GOTO == ld.kind && ld.ld.gotor.page != -1) {
         // create a SimpleDest because we have to
         // free the fz_link_dest before returning
         PdfLink tmp(this, &ld);

@@ -940,8 +940,12 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
-    if (!IsSingle(GetDisplayMode()))
+    bool scrollToNextPage = false;
+    if (!IsSingle(GetDisplayMode())) {
+        int actualPageNo = pageNo;
         pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(GetDisplayMode()), IsBookView(GetDisplayMode()));
+        scrollToNextPage = pageNo == actualPageNo - 1;
+    }
 
     if (!IsContinuous(GetDisplayMode())) {
         /* in single page mode going to another page involves recalculating
@@ -978,6 +982,9 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     // make sure that at least part of the page is visible
     else if (viewPort.x >= pageInfo->pos.x + pageInfo->pos.dx)
         viewPort.x = pageInfo->pos.x;
+    // make sure to scroll to the correct page
+    if (-1 != scrollX && scrollToNextPage)
+        viewPort.x += pageInfo->pos.dx;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
