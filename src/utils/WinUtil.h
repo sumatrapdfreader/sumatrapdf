@@ -123,7 +123,7 @@ bool SetEnabled(HMENU m, UINT id, bool isEnabled);
 void Remove(HMENU m, UINT id);
 void Empty(HMENU m);
 void SetText(HMENU m, UINT id, WCHAR *s);
-WCHAR *ToSafeString(const WCHAR *str);
+const WCHAR *ToSafeString(const WCHAR *str, ScopedMem<WCHAR>& newStr);
 
 } // namespace menu
 

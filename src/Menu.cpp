@@ -228,7 +228,7 @@ static MenuDef menuDefContextStart[] = {
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter)
 {
-    assert(menu);
+    CrashIf(!menu);
     bool wasSeparator = true;
     if (!gPluginMode)
         flagFilter |= MF_PLUGIN_MODE_ONLY;
@@ -263,11 +263,12 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
 
 static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
 {
-    assert(filePath && menuFile);
+    CrashIf(!filePath || !menuFile);
     if (!filePath || !menuFile) return;
 
-    ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName.Get()));
+    ScopedMem<WCHAR> menuString;
+    const WCHAR *fileName = win::menu::ToSafeString(path::GetBaseName(filePath), menuString);
+    menuString = str::Format(L"&%d) %s", (index + 1) % 10, fileName);
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -281,9 +282,7 @@ static void AppendRecentFilesToMenu(HMENU m)
         DisplayState *state = gFileHistory.Get(i);
         if (!state || state->isMissing)
             break;
-        assert(state->filePath);
-        if (state->filePath)
-            AddFileMenuItem(m, state->filePath, i);
+        AddFileMenuItem(m, state->filePath, i);
     }
 
     if (i > 0)
@@ -365,13 +364,13 @@ static float ZoomMenuItemToZoom(UINT menuItemId)
         if (menuItemId == gZoomMenuIds[i].itemId)
             return gZoomMenuIds[i].zoom;
     }
-    assert(0);
+    CrashIf(true);
     return 100.0;
 }
 
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 {
-    assert(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
+    AssertCrash(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++)
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
@@ -402,7 +401,6 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
 
     int ix;
     for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
-    assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
         const WCHAR *printItem = trans::GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
@@ -514,7 +512,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
         return;
 
     DisplayState *state = gFileHistory.Find(filePath);
-    assert(state);
+    CrashIf(!state);
     if (!state)
         return;
 

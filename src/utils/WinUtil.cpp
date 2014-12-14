@@ -762,10 +762,13 @@ void SetText(HMENU m, UINT id, WCHAR *s)
 
 /* Make a string safe to be displayed as a menu item
    (preserving all & so that they don't get swallowed)
-   Caller needs to free() the result. */
-WCHAR *ToSafeString(const WCHAR *str)
+   if no change is needed, the string is returned as is,
+   else it's also saved in newResult for automatic freeing */
+const WCHAR *ToSafeString(const WCHAR *str, ScopedMem<WCHAR>& newResult)
 {
-    return str::Replace(str, L"&", L"&&");
+    if (!str::FindChar(str, '&'))
+        return str;
+    return (newResult = str::Replace(str, L"&", L"&&"));
 }
 
     }
