@@ -504,7 +504,7 @@ GlobalPrefs = [
 		"value of DefaultZoom for internal usage",
 		internal=True),
 	EmptyLine(),
-	Comment("Settings after this line have not been recognised by the current version"),
+	Comment("Settings after this line have not been recognized by the current version"),
 ]
 
 GlobalPrefs = Struct("GlobalPrefs", GlobalPrefs,

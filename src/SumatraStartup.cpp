@@ -608,6 +608,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CommandLineInfo i(GetCommandLine());
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
+    InitializePolicies(i.restrictedUse);
 
     // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
     // in layout
@@ -633,7 +634,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     gCrashOnOpen = i.crashOnOpen;
 
-    InitializedPolicies(i.restrictedUse);
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
     DebugGdiPlusDevice(gUseGdiRenderer);
 

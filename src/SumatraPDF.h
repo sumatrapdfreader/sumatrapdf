@@ -117,7 +117,7 @@ extern bool                     gCrashOnOpen;
 
 #define gPluginMode             (gPluginURL != nullptr)
 
-void  InitializedPolicies(bool restrict);
+void  InitializePolicies(bool restrict);
 void  RestrictPolicies(int revokePermission);
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();

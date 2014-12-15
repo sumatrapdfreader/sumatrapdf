@@ -178,7 +178,7 @@ void SetCurrentLang(const char *langCode)
 #define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
 #define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video,webpage"
 
-void InitializedPolicies(bool restrict)
+void InitializePolicies(bool restrict)
 {
     // default configuration should be to restrict everything
     CrashIf(gPolicyRestrictions != Perm_RestrictedUse);
