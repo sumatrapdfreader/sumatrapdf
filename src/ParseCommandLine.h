@@ -45,7 +45,7 @@ public:
     // deprecated flags
     ScopedMem<char> lang;
 
-    CommandLineInfo(const WCHAR *cmdLine) : makeDefault(false), exitWhenDone(false), printDialog(false),
+    CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
         printerName(nullptr), printSettings(nullptr),
         reuseDdeInstance(false), lang(nullptr),
         destName(nullptr), pageNumber(-1),
@@ -58,9 +58,7 @@ public:
         stressTestRanges(nullptr), stressTestCycles(1), stressParallelCount(1),
         stressRandomizeFiles(false),
         crashOnOpen(false)
-    {
-        ParseCommandLine(cmdLine);
-    }
+    { }
 
     ~CommandLineInfo() { }
 

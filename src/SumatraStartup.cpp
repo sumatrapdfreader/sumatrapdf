@@ -603,9 +603,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
+    // TODO: this should happen after InitializePolicies, but
+    // ComandLineInfo::ParseCommandLine requires gGlobalPrefs
+    // for changing prefs as a side-effect (this can be fixed
+    // once the deprecated command line flags have been removed)
     prefs::Load();
 
-    CommandLineInfo i(GetCommandLine());
+    CommandLineInfo i;
+    i.ParseCommandLine(GetCommandLine());
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
     InitializePolicies(i.restrictedUse);
