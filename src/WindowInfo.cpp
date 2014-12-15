@@ -492,26 +492,36 @@ PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, b
 void LinkHandler::GotoNamedDest(const WCHAR *name)
 {
     CrashIf(!owner || owner->linkHandler != this);
-    if (!owner->ctrl)
+    Controller *ctrl = owner->ctrl;
+    if (!ctrl)
         return;
 
     // Match order:
     // 1. Exact match on internal destination name
     // 2. Fuzzy match on full ToC item title
     // 3. Fuzzy match on a part of a ToC item title
-    PageDestination *dest = owner->ctrl->GetNamedDest(name);
+    // 4. Exact match on page label
+    PageDestination *dest = ctrl->GetNamedDest(name);
+    bool hasDest = dest != NULL;
     if (dest) {
         ScrollTo(dest);
         delete dest;
     }
-    else if (owner->ctrl->HasTocTree()) {
-        DocTocItem *root = owner->ctrl->GetTocTree();
+    else if (ctrl->HasTocTree()) {
+        DocTocItem *root = ctrl->GetTocTree();
         ScopedMem<WCHAR> fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)
             dest = FindTocItem(root, fuzName, true);
-        if (dest)
+        if (dest) {
             ScrollTo(dest);
+            hasDest = true;
+        }
         delete root;
+    }
+    if (!hasDest && ctrl->HasPageLabels()) {
+        int pageNo = ctrl->GetPageByLabel(name);
+        if (ctrl->ValidPageNo(pageNo))
+            ctrl->GoToPage(pageNo, true);
     }
 }
