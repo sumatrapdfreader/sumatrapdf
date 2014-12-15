@@ -92,6 +92,7 @@ class Fmt {
     Fmt &f(double);
 
     Fmt &ParseFormat(const char *fmt);
+    Fmt &Reset();
     char *Get();
     char *GetDup();
 
@@ -105,6 +106,7 @@ class Fmt {
     Fmt &addArgType(Type t);
     void serializeInst(int n);
 
+    DWORD threadId;
     const char *format;
     Inst instructions[MaxInstructions];
     int nInst;

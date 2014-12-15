@@ -21,7 +21,10 @@ static Type typeFromChar(char c) {
     return Invalid;
 }
 
-Fmt::Fmt(const char *fmt) { ParseFormat(fmt); }
+Fmt::Fmt(const char *fmt) {
+    threadId = GetCurrentThreadId();
+    ParseFormat(fmt);
+}
 
 void Fmt::addFormatStr(const char *s, size_t len) {
     if (len == 0) {
@@ -75,7 +78,22 @@ static bool hasInstructionWithArgNo(Inst *insts, int nInst, int argNo) {
     return false;
 }
 
+// as an optimization, we can re-use object by calling ParseFormat() only once
+// and then using Reset() to restore the output
+Fmt &Fmt::Reset() {
+    CrashIf(threadId != GetCurrentThreadId()); // check no cross-thread use
+    CrashIf(format != nullptr);
+    res.Reset();
+    return *this;
+}
+
 Fmt &Fmt::ParseFormat(const char *fmt) {
+
+    // we can use Fmt in an optimized way by having only one global instance per
+    // thread or an instance for a given format expression. To make that a bit
+    // safer, we check that they are not used cross-thread
+    CrashIf(threadId != GetCurrentThreadId());
+
     format = fmt;
     nInst = 0;
     nArgs = 0;

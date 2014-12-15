@@ -47,7 +47,7 @@ static void DrawCloseButton(HDC hdc, LabelWithCloseWnd *w) {
     }
 
     Color c;
-    RectI& r = w->closeBtnPos;
+    RectI &r = w->closeBtnPos;
 
     // in onhover state, background is a red-ish circle
     bool onHover = IsMouseOverClose(w);
