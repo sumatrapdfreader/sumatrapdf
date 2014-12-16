@@ -178,7 +178,7 @@ off64_t zip_find_end_of_last_directory_entry(ar_stream *stream, struct zip_eocd6
 bool zip_parse_end_of_central_directory(ar_stream *stream, struct zip_eocd64 *eocd)
 {
     uint8_t data[56];
-    if (ar_read(stream, data, 22) != 22)
+    if (ar_read(stream, data, ZIP_END_OF_CENTRAL_DIR_SIZE) != ZIP_END_OF_CENTRAL_DIR_SIZE)
         return false;
 
     eocd->signature = uint32le(data + 0);
@@ -249,18 +249,20 @@ off64_t zip_find_end_of_central_directory(ar_stream *stream)
         return -1;
     filesize = ar_tell(stream);
 
-    while (fromend < UINT16_MAX + 22 && fromend < filesize) {
+    while (fromend < UINT16_MAX + ZIP_END_OF_CENTRAL_DIR_SIZE && fromend < filesize) {
         count = (int)(filesize - fromend < sizeof(data) ? filesize - fromend : sizeof(data));
         fromend += count;
+        if (count < ZIP_END_OF_CENTRAL_DIR_SIZE)
+            return -1;
         if (!ar_seek(stream, -fromend, SEEK_END))
             return -1;
         if (ar_read(stream, data, count) != (size_t)count)
             return -1;
-        for (i = count - 22; i >= 0; i--) {
+        for (i = count - ZIP_END_OF_CENTRAL_DIR_SIZE; i >= 0; i--) {
             if (uint32le(data + i) == SIG_END_OF_CENTRAL_DIRECTORY)
                 return filesize - fromend + i;
         }
-        fromend += 3;
+        fromend -= ZIP_END_OF_CENTRAL_DIR_SIZE - 1;
     }
 
     return -1;

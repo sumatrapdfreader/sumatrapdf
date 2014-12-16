@@ -201,7 +201,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly)
         ar->entry_offset_first = ar->entry_offset_next = 0;
     }
     zip->deflatedonly = deflatedonly;
-    zip->comment_offset = offset + 22;
+    zip->comment_offset = offset + ZIP_END_OF_CENTRAL_DIR_SIZE;
     zip->comment_size = eocd.commentlen;
 
     return ar;

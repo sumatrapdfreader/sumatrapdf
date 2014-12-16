@@ -36,6 +36,7 @@ enum compression_method {
 
 #define ZIP_LOCAL_ENTRY_FIXED_SIZE 30
 #define ZIP_DIR_ENTRY_FIXED_SIZE 46
+#define ZIP_END_OF_CENTRAL_DIR_SIZE 22
 
 struct zip_entry {
     uint32_t signature;
