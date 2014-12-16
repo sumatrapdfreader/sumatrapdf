@@ -195,7 +195,7 @@ ar_archive *ar_open_zip_archive(ar_stream *stream, bool deflatedonly)
 
     zip = (ar_archive_zip *)ar;
     zip->dir.end_offset = zip_find_end_of_last_directory_entry(stream, &eocd);
-    if (!zip->dir.end_offset) {
+    if (zip->dir.end_offset < 0) {
         warn("Couldn't read central directory @%" PRIi64 ", trying to work around...", eocd.dir_offset);
         ar->parse_entry = zip_parse_local_entry;
         ar->entry_offset_first = ar->entry_offset_next = 0;

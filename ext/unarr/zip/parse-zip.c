@@ -162,14 +162,14 @@ off64_t zip_find_end_of_last_directory_entry(ar_stream *stream, struct zip_eocd6
     uint64_t i;
 
     if (!ar_seek(stream, eocd->dir_offset, SEEK_SET))
-        return 0;
+        return -1;
     for (i = 0; i < eocd->numentries; i++) {
         if (ar_read(stream, data, sizeof(data)) != sizeof(data))
-            return 0;
+            return -1;
         if (uint32le(data + 0) != SIG_CENTRAL_DIRECTORY)
-            return 0;
+            return -1;
         if (!ar_skip(stream, uint16le(data + 28) + uint16le(data + 30) + uint16le(data + 32)))
-            return 0;
+            return -1;
     }
 
     return ar_tell(stream);
@@ -275,7 +275,7 @@ const char *zip_get_name(ar_archive *ar)
         struct zip_entry entry;
         char *name;
 
-        if (zip->dir.end_offset) {
+        if (zip->dir.end_offset >= 0) {
             if (!ar_seek(ar->stream, ar->entry_offset, SEEK_SET))
                 return NULL;
             if (!zip_parse_directory_entry(zip, &entry))
