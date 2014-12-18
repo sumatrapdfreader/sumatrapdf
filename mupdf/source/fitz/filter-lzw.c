@@ -87,7 +87,7 @@ next_lzwd(fz_stream *stm, int len)
 			break;
 		}
 
-		if (next_code >= NUM_CODES && code != LZW_CLEAR)
+		if (next_code > NUM_CODES && code != LZW_CLEAR)
 		{
 			fz_warn(stm->ctx, "missing clear code in lzw decode");
 			code = LZW_CLEAR;
@@ -105,6 +105,12 @@ next_lzwd(fz_stream *stm, int len)
 		if (old_code == -1)
 		{
 			old_code = code;
+		}
+		else if (next_code == NUM_CODES)
+		{
+			/* TODO: Ghostscript checks for a following LZW_CLEAR before tolerating */
+			fz_warn(stm->ctx, "tolerating a single out of range code in lzw decode");
+			next_code++;
 		}
 		else if (code > next_code || next_code >= NUM_CODES)
 		{

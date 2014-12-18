@@ -85,7 +85,6 @@ xps_read_part(xps_document *doc, char *partname)
 				}
 				else
 				{
-					/* SumatraPDF: fix memory leak */
 					fz_drop_buffer(ctx, buf);
 					fz_throw(ctx, FZ_ERROR_GENERIC, "cannot find all pieces for part '%s'", partname);
 				}
@@ -97,7 +96,7 @@ xps_read_part(xps_document *doc, char *partname)
 
 	/* take over the data */
 	data = buf->data;
-	/* SumatraPDF: don't count the zero-terminator */
+	/* size doesn't include the added zero-terminator */
 	size = buf->len - 1;
 	fz_free(ctx, buf);
 
@@ -155,7 +154,6 @@ xps_open_document_with_stream(fz_context *ctx, fz_stream *file)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: fix memory leak */
 		doc->zip = fz_open_archive_with_stream(ctx, file);
 		xps_read_page_list(doc);
 	}
