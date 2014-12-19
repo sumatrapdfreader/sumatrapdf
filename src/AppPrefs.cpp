@@ -63,11 +63,11 @@ bool Load()
     CrashAlwaysIf(!gGlobalPrefs);
 
 #ifdef DISABLE_EBOOK_UI
-    if (!file::Exists(path))
+    if (!prefsData || !str::Find(prefsData, "UseFixedPageUI ="))
         gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
 #endif
 #ifdef DISABLE_TABS
-    if (!file::Exists(path))
+    if (!prefsData || !str::Find(prefsData, "UseTabs ="))
         gGlobalPrefs->useTabs = false;
 #endif
 
