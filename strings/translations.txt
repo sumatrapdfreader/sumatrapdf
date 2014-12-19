@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6aeb6e5d83ad5c508b045c6401710443742f6114
+9779e8c7d8d155583f036cec1e0fd676c9dce335
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -120,7 +120,7 @@ nl:W&are grootte\tCtrl+1
 nn:F&aktisk storleik\tCtrl+1
 no:Fak&tisk størrelse\tCtrl+1
 pa:ਸਹੀ ਅਕਾਰ(&u)\tCtrl+1
-pl:Rozmiar &rzeczywisty\tCtrl+1
+pl:&Rozmiar rzeczywisty\tCtrl+1
 pt:&Tamanho real\tCtrl+1
 ro:Mărime &efectivă\tCtrl+1
 ru:&Настоящий размер\tCtrl+1
@@ -653,7 +653,7 @@ he:עמודים זוגיים בלבד
 hi:&सम पृष्ठ केवल​
 hr:Samo &parne stranice
 hu:Csak a páros oldalak
-id:Hanya halaman gena&p
+id:&Hanya halaman genap
 it:Solo pagin&e pari
 ja:偶数ページのみ(&E)
 ka:მხოლოდ &ლუწი გვერდები
@@ -2960,7 +2960,7 @@ cz:&Okno
 de:Fe&nster
 es:V&entana
 et:A&ken
-eu:&Leihoa
+eu:Lei&hoa
 fa:&پنجره
 fi:Ikkuna
 fr:F&enêtre
@@ -5497,7 +5497,7 @@ he:העתק כתובת קישור
 hi:&लिंक पता नक़ल करें
 hr:Kopiraj adresu &linka
 hu:&Hivatkozás címének másolása
-id:Salin Alamat &Link
+id:Salin Alamat &Tautan
 it:Copia indirizzo co&llegamento
 ja:リンク先のアドレスをコピー(&L)
 ka:&ბმულის კოპირება
@@ -15752,6 +15752,7 @@ hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pon
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
+pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno

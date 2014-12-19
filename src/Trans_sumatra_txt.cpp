@@ -1307,7 +1307,7 @@ const char * gTranslations_eu =
   "&Ahaztu bertsio hau\0"\
   "E&rabili jatorrizko orrilde neurria\0"\
   "I&kusi\0"\
-  "&Leihoa\0"\
+  "Lei&hoa\0"\
   "&Bai\0"\
   "&Zooma\0"\
   "(%d-tik)\0"\
@@ -6499,7 +6499,7 @@ const char * gTranslations_id =
   "&Salin Seleksi\0"\
   "Salin Hasil Seleksi\tCtrl+C\0"\
   "&Jangan ulangi pertanyaan ini\0"\
-  "Hanya halaman gena&p\0"\
+  "&Hanya halaman genap\0"\
   "Meng&hadap\tCtrl+7\0"\
   "&Berkas\0"\
   "&Cari:\0"\
@@ -6575,7 +6575,7 @@ const char * gTranslations_id =
   "Halaman Berhadapan Tersambung\0"\
   "Bantu Alihbahasa\0"\
   "Salin &Gambar\0"\
-  "Salin Alamat &Link\0"\
+  "Salin Alamat &Tautan\0"\
   "Salin &Komentar\0"\
   "Menyalin teks ditolak (menyalin sebagai gambar saja)\0"\
   "Hak Cipta\0"\
@@ -9478,7 +9478,7 @@ const char * gTranslations_fa =
 
 const char * gTranslations_pl = 
   "&O SumatraPDF\0"\
-  "Rozmiar &rzeczywisty\tCtrl+1\0"\
+  "&Rozmiar rzeczywisty\tCtrl+1\0"\
   "Opcje zaawansowane...\0"\
   "&Zaznaczone strony\0"\
   "&Wstecz\tAlt+W lewo\0"\
@@ -9707,7 +9707,7 @@ const char * gTranslations_pl =
   "Nie mo\305\274na otworzy\304\207 pliku synchronizacji\0"\
   "Tagowany plik PDF\0"\
   "Pliki tekstowe\0"\
-  "\0"\
+  "Ten dokument u\305\274ywa niewspieranych funkcji (%s) i mo\305\274e wy\305\233wietla\304\207 si\304\231 niepoprawnie\0"\
   "Tytu\305\202:\0"\
   "Nieznany plik \305\272r\303\263d\305\202owy (%s)\0"\
   "W\305\202\304\205cz wy\305\233wietlanie &kart\0"\
