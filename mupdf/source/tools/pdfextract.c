@@ -219,7 +219,8 @@ int pdfextract_main(int argc, char **argv)
 	if (fz_optind == argc)
 	{
 		int len = pdf_count_objects(doc);
-		for (o = 0; o < len; o++)
+		/* SumatraPDF: object number 0 is always free */
+		for (o = 1; o < len; o++)
 			showobject(o);
 	}
 	else
