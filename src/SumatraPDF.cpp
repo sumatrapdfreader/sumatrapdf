@@ -1712,6 +1712,33 @@ void AssociateExeWithPdfExtension()
     gGlobalPrefs->associateSilently = false;
 }
 
+// TODO: actually restore the session on startup depending on
+//       gGlobalPrefs->restoreSession
+static void RememberSessionState()
+{
+    ResetSessionState(gGlobalPrefs->sessionData);
+    for (WindowInfo *win : gWindows) {
+        SessionData *data = NewSessionData();
+        for (TabInfo *tab : win->tabs) {
+            DisplayState *ds = NewDisplayState(tab->filePath);
+            ds->pageNo = 0;
+            if (tab->ctrl)
+                tab->ctrl->UpdateDisplayState(ds);
+            ds->showToc = tab->showToc;
+            *ds->tocState = tab->tocState;
+            data->tabStates->Append(NewTabState(ds));
+            DeleteDisplayState(ds);
+        }
+        data->tabIndex = win->tabs.Find(win->currentTab) + 1;
+        // TODO: allow recording this state without changing gGlobalPrefs
+        RememberDefaultWindowPosition(*win);
+        data->windowState = gGlobalPrefs->windowState;
+        data->windowPos = gGlobalPrefs->windowPos;
+        data->sidebarDx = gGlobalPrefs->sidebarDx;
+        gGlobalPrefs->sessionData->Append(data);
+    }
+}
+
 #if defined(SUPPORTS_AUTO_UPDATE) && !defined(HAS_PUBLIC_APP_KEY)
 #error Auto-update without authentication of the downloaded data is not recommended
 #endif
@@ -2022,12 +2049,23 @@ static void OnMenuExit()
             return;
     }
 
+    RememberSessionState();
+
+    // CloseWindow will wrongly overwrite gGlobalPrefs->sessionData
+    // if more than one window is still open
+    Vec<SessionData *> *sessionData = new Vec<SessionData *>();
+    std::swap(sessionData, gGlobalPrefs->sessionData);
+
     // CloseWindow removes the WindowInfo from gWindows,
     // so use a stable copy for iteration
     Vec<WindowInfo *> toClose = gWindows;
     for (WindowInfo *win : toClose) {
         CloseWindow(win, true);
     }
+
+    std::swap(sessionData, gGlobalPrefs->sessionData);
+    ResetSessionState(sessionData);
+    delete sessionData;
 }
 
 // closes a document inside a WindowInfo and optionally turns it into
@@ -2167,6 +2205,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (!lastWindow || quitIfLast)
         ShowWindow(win->hwndFrame, SW_HIDE);
     if (lastWindow) {
+        if (quitIfLast)
+            RememberSessionState();
         prefs::Save();
     }
     else {

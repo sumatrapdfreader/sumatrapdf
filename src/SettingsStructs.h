@@ -232,14 +232,41 @@ struct FileState {
     size_t index;
 };
 
-// window and which files they had opened
-struct WindowTabsInfo {
-    // position of the window (can be on any monitor)
-    RectI pos;
-    // list of files (tabs) opened in this window
-    Vec<WCHAR *> * files;
+// a subset of FileState required for restoring the state of a single
+// tab (required for handling documents being opened twice)
+struct TabState {
+    // path of the document
+    WCHAR * filePath;
+    // same as FileStates -> DisplayMode
+    WCHAR * displayMode;
+    // number of the last read page (or ReparseIdx for ebooks)
+    int pageNo;
+    // same as FileStates -> Zoom
+    char * zoom;
+    // same as FileStates -> Rotation
+    int rotation;
+    // how far this document has been scrolled (in x and y direction)
+    PointI scrollPos;
+    // if true, the table of contents was shown when the document was
+    // closed
+    bool showToc;
+    // same as FileStates -> TocState
+    Vec<int> * tocState;
+};
+
+// state of the last session, usage depends on RestoreSession
+struct SessionData {
+    // a subset of FileState required for restoring the state of a single
+    // tab (required for handling documents being opened twice)
+    Vec<TabState *> * tabStates;
     // index of the currently selected tab (1-based)
-    int index;
+    int tabIndex;
+    // same as FileState -> WindowState
+    int windowState;
+    // default position (can be on any monitor)
+    RectI windowPos;
+    // width of favorites/bookmarks sidebar (if shown)
+    int sidebarDx;
 };
 
 // Most values on this structure can be updated through the UI and are
@@ -255,6 +282,9 @@ struct GlobalPrefs {
     // if true, we use Windows system colors for background/text color.
     // Over-rides other settings
     bool useSysColors;
+    // whether to restore the session stored in SessionData (possible
+    // values: yes, no, once, auto)
+    char * restoreSession;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
     // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
@@ -352,8 +382,8 @@ struct GlobalPrefs {
     bool useTabs;
     // information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
-    // window and which files they had opened
-    Vec<WindowTabsInfo *> * windowTabsInfo;
+    // state of the last session, usage depends on RestoreSession
+    Vec<SessionData *> * sessionData;
     // a list of paths for files to be reopened at the next start (needed
     // for auto-updating)
     Vec<WCHAR *> * reopenOnce;
@@ -515,6 +545,24 @@ static const FieldInfo gFileStateFields[] = {
 };
 static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
 
+static const FieldInfo gPointI_1_Fields[] = {
+    { offsetof(PointI, x), Type_Int, 0 },
+    { offsetof(PointI, y), Type_Int, 0 },
+};
+static const StructInfo gPointI_1_Info = { sizeof(PointI), 2, gPointI_1_Fields, "X\0Y" };
+
+static const FieldInfo gTabStateFields[] = {
+    { offsetof(TabState, filePath),    Type_String,     0                         },
+    { offsetof(TabState, displayMode), Type_String,     (intptr_t)L"automatic"    },
+    { offsetof(TabState, pageNo),      Type_Int,        1                         },
+    { offsetof(TabState, zoom),        Type_Utf8String, (intptr_t)"fit page"      },
+    { offsetof(TabState, rotation),    Type_Int,        0                         },
+    { offsetof(TabState, scrollPos),   Type_Compact,    (intptr_t)&gPointI_1_Info },
+    { offsetof(TabState, showToc),     Type_Bool,       true                      },
+    { offsetof(TabState, tocState),    Type_IntArray,   0                         },
+};
+static const StructInfo gTabStateInfo = { sizeof(TabState), 8, gTabStateFields, "FilePath\0DisplayMode\0PageNo\0Zoom\0Rotation\0ScrollPos\0ShowToc\0TocState" };
+
 static const FieldInfo gRectI_2_Fields[] = {
     { offsetof(RectI, x),  Type_Int, 0 },
     { offsetof(RectI, y),  Type_Int, 0 },
@@ -523,12 +571,14 @@ static const FieldInfo gRectI_2_Fields[] = {
 };
 static const StructInfo gRectI_2_Info = { sizeof(RectI), 4, gRectI_2_Fields, "X\0Y\0Dx\0Dy" };
 
-static const FieldInfo gWindowTabsInfoFields[] = {
-    { offsetof(WindowTabsInfo, pos),   Type_Compact,     (intptr_t)&gRectI_2_Info },
-    { offsetof(WindowTabsInfo, files), Type_StringArray, 0                        },
-    { offsetof(WindowTabsInfo, index), Type_Int,         1                        },
+static const FieldInfo gSessionDataFields[] = {
+    { offsetof(SessionData, tabStates),   Type_Array,   (intptr_t)&gTabStateInfo },
+    { offsetof(SessionData, tabIndex),    Type_Int,     1                        },
+    { offsetof(SessionData, windowState), Type_Int,     0                        },
+    { offsetof(SessionData, windowPos),   Type_Compact, (intptr_t)&gRectI_2_Info },
+    { offsetof(SessionData, sidebarDx),   Type_Int,     0                        },
 };
-static const StructInfo gWindowTabsInfoInfo = { sizeof(WindowTabsInfo), 3, gWindowTabsInfoFields, "Pos\0Files\0Index" };
+static const StructInfo gSessionDataInfo = { sizeof(SessionData), 5, gSessionDataFields, "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx" };
 
 static const FieldInfo gFILETIMEFields[] = {
     { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },
@@ -543,6 +593,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, useSysColors),             Type_Bool,        false                                                                                                                 },
+    { offsetof(GlobalPrefs, restoreSession),           Type_Utf8String,  (intptr_t)"auto"                                                                                                      },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,      (intptr_t)&gFixedPageUIInfo                                                                                           },
     { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,      (intptr_t)&gEbookUIInfo                                                                                               },
@@ -584,13 +635,13 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, useTabs),                  Type_Bool,        true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,       (intptr_t)&gFileStateInfo                                                                                             },
-    { offsetof(GlobalPrefs, windowTabsInfo),           Type_Array,       (intptr_t)&gWindowTabsInfoInfo                                                                                        },
+    { offsetof(GlobalPrefs, sessionData),              Type_Array,       (intptr_t)&gSessionDataInfo                                                                                           },
     { offsetof(GlobalPrefs, reopenOnce),               Type_StringArray, 0                                                                                                                     },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,     (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,         0                                                                                                                     },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"Settings after this line have not been recognized by the current version"                                  },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 53, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0WindowTabsInfo\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 54, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
 
 #endif

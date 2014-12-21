@@ -81,6 +81,34 @@ void DeleteGlobalPrefs(GlobalPrefs *gp)
     }
 }
 
+SessionData *NewSessionData()
+{
+    return (SessionData *)DeserializeStruct(&gSessionDataInfo, nullptr);
+}
+
+TabState *NewTabState(DisplayState *ds)
+{
+    TabState *state = (TabState *)DeserializeStruct(&gTabStateInfo, nullptr);
+    state->filePath = str::Dup(ds->filePath);
+    state->displayMode = str::Dup(ds->displayMode);
+    state->pageNo = ds->pageNo ? ds->pageNo : ds->reparseIdx;
+    state->zoom = str::Dup(ds->zoom);
+    state->rotation = ds->rotation;
+    state->scrollPos = ds->scrollPos;
+    state->showToc = ds->showToc;
+    *state->tocState = *ds->tocState;
+    return state;
+}
+
+void ResetSessionState(Vec<SessionData *> *sessionData)
+{
+    CrashIf(!sessionData);
+    for (SessionData *data : *sessionData) {
+        FreeStruct(&gSessionDataInfo, data);
+    }
+    sessionData->Reset();
+}
+
 namespace prefs {
 namespace conv {
 

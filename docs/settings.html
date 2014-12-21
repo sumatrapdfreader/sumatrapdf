@@ -93,6 +93,9 @@ ReuseInstance = false
 <span class=cm id="UseSysColors">if true, we use Windows system <a href="#color">colors</a> for background/text color. Over-rides other settings</span>
 UseSysColors = false
 
+<span class=cm id="RestoreSession">whether to restore the session stored in SessionData (possible values: yes, no, once, auto)</span>
+RestoreSession = auto
+
 <span class=cm id="FixedPageUI">customization options for PDF, XPS, DjVu and PostScript UI</span>
 FixedPageUI [
     <span class=cm id="FixedPageUI_TextColor"><a href="#color">color</a> value with which black (text) will be substituted</span>
@@ -385,17 +388,49 @@ FileStates [
   ]
 ]
 
-<span class=cm id="WindowTabsInfo">window and which files they had opened (introduced in version 3.1)</span>
-WindowTabsInfo [
+<span class=cm id="SessionData">state of the last session, usage depends on RestoreSession (introduced in version 3.1)</span>
+SessionData [
   [
-    <span class=cm id="WindowTabsInfo_Pos">position of the window (can be on any monitor)</span>
-    Pos = 0 0 0 0
+    <span class=cm id="SessionData_TabStates">data required for restoring the view state of a single tab</span>
+    TabStates [
+      [
+        <span class=cm id="TabStates_FilePath">path of the document</span>
+        FilePath =
 
-    <span class=cm id="WindowTabsInfo_Files">list of files (tabs) opened in this window</span>
-    Files =
+        <span class=cm id="TabStates_DisplayMode">same as FileStates -> DisplayMode</span>
+        DisplayMode = automatic
 
-    <span class=cm id="WindowTabsInfo_Index">index of the currently selected tab (1-based)</span>
-    Index = 1
+        <span class=cm id="TabStates_PageNo">number of the last read page (or ReparseIdx for ebooks)</span>
+        PageNo = 1
+
+        <span class=cm id="TabStates_Zoom">same as FileStates -> Zoom</span>
+        Zoom = fit page
+
+        <span class=cm id="TabStates_Rotation">same as FileStates -> Rotation</span>
+        Rotation = 0
+
+        <span class=cm id="TabStates_ScrollPos">how far this document has been scrolled (in x and y direction)</span>
+        ScrollPos = 0 0
+
+        <span class=cm id="TabStates_ShowToc">if true, the table of contents was shown when the document was closed</span>
+        ShowToc = true
+
+        <span class=cm id="TabStates_TocState">same as FileStates -> TocState</span>
+        TocState =
+      ]
+    ]
+
+    <span class=cm id="SessionData_TabIndex">index of the currently selected tab (1-based)</span>
+    TabIndex = 1
+
+    <span class=cm id="SessionData_WindowState">same as FileState -> WindowState</span>
+    WindowState = 0
+
+    <span class=cm id="SessionData_WindowPos">default position (can be on any monitor)</span>
+    WindowPos = 0 0 0 0
+
+    <span class=cm id="SessionData_SidebarDx">width of favorites/bookmarks sidebar (if shown)</span>
+    SidebarDx = 0
   ]
 ]
 

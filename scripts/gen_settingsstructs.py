@@ -93,12 +93,12 @@ class CompactStruct(Struct):
 		self.type.name = "Compact"
 
 class Array(Field):
-	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, version=None):
+	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False, doc=None, version=None):
 		self.structName = structName or name
 		if not structName and name.endswith("s"):
 			# trim plural 's' from struct name
 			self.structName = name[:-1]
-		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert, None, version)
+		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert, doc, version)
 
 class CompactArray(Field):
 	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None, version=None):
@@ -331,14 +331,42 @@ FileSettings = [
 		internal=True),
 ]
 
-WindowTabsInfo = [
-	CompactStruct("Pos", WindowPos, "position of the window (can be on any monitor)", structName="RectI"),
-	CompactArray("Files", String, None, "list of files (tabs) opened in this window"),
-	Field("Index", Int, 1, "index of the currently selected tab (1-based)"),
-]
-
 # list of fields which aren't serialized when UseDefaultState is set
 rememberedDisplayState = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
+
+TabState = [
+	Field("FilePath", String, None,
+		"path of the document"),
+	Field("DisplayMode", String, "automatic",
+		"same as FileStates -> DisplayMode"),
+	Field("PageNo", Int, 1,
+		"number of the last read page (or ReparseIdx for ebooks)"),
+	Field("Zoom", Utf8String, "fit page",
+		"same as FileStates -> Zoom"),
+	Field("Rotation", Int, 0,
+		"same as FileStates -> Rotation"),
+	CompactStruct("ScrollPos", ScrollPos,
+		"how far this document has been scrolled (in x and y direction)",
+		structName="PointI"),
+	Field("ShowToc", Bool, True,
+		"if true, the table of contents was shown when the document was closed"),
+	CompactArray("TocState", Int, None,
+		"same as FileStates -> TocState"),
+]
+
+SessionData = [
+	Array("TabStates", TabState,
+		"a subset of FileState required for restoring the state of a single tab " +
+		"(required for handling documents being opened twice)",
+		doc="data required for restoring the view state of a single tab"),
+	Field("TabIndex", Int, 1, "index of the currently selected tab (1-based)"),
+	Field("WindowState", Int, 0,
+		"same as FileState -> WindowState"),
+	CompactStruct("WindowPos", WindowPos,
+		"default position (can be on any monitor)", structName="RectI"),
+	Field("SidebarDx", Int, 0,
+		"width of favorites/bookmarks sidebar (if shown)"),
+]
 
 GlobalPrefs = [
 	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util2.get_sumatrapdf_version()),
@@ -355,6 +383,10 @@ GlobalPrefs = [
 		expert=True),
 	Field("UseSysColors", Bool, False,
 		"if true, we use Windows system colors for background/text color. Over-rides other settings",
+		expert=True),
+	Field("RestoreSession", Utf8String, "auto",
+		"whether to restore the session stored in SessionData " +
+		"(possible values: yes, no, once, auto)",
 		expert=True),
 	EmptyLine(),
 
@@ -480,7 +512,9 @@ GlobalPrefs = [
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files (in most recently used order)"),
-	Array("WindowTabsInfo", WindowTabsInfo, "window and which files they had opened", version="3.1"),
+	Array("SessionData", SessionData,
+		"state of the last session, usage depends on RestoreSession",
+		version="3.1"),
 	# TODO: remove once sessions can be restored in general
 	CompactArray("ReopenOnce", String, None,
 		"a list of paths for files to be reopened at the next start " +

@@ -21,6 +21,10 @@ GlobalPrefs *NewGlobalPrefs(const char *data);
 char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOut);
 void DeleteGlobalPrefs(GlobalPrefs *gp);
 
+SessionData *NewSessionData();
+TabState *NewTabState(DisplayState *ds);
+void ResetSessionState(Vec<SessionData *> *sessionData);
+
 namespace prefs {
 namespace conv {
 
