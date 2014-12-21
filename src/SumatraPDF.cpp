@@ -1220,6 +1220,16 @@ static void CreateSidebar(WindowInfo* win)
    }
 }
 
+static void UpdateToolbarSidebarText(WindowInfo *win)
+{
+    UpdateToolbarPageText(win, -1);
+    UpdateToolbarFindText(win);
+    UpdateToolbarButtonsToolTipsForWindow(win);
+
+    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
+    SetLabel(win->favLabelWithClose, _TR("Favorites"));
+}
+
 static WindowInfo* CreateWindowInfo()
 {
     RectI windowPos = gGlobalPrefs->windowPos;
@@ -1285,7 +1295,9 @@ static WindowInfo* CreateWindowInfo()
         DragAcceptFiles(win->hwndCanvas, TRUE);
 
     gWindows.Append(win);
+    // needed for RTL languages
     UpdateWindowRtlLayout(win);
+    UpdateToolbarSidebarText(win);
 
     if (Touch::SupportsGestures()) {
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
@@ -1297,16 +1309,6 @@ static WindowInfo* CreateWindowInfo()
     return win;
 }
 
-static void UpdateToolbarSidebarText(WindowInfo *win)
-{
-    UpdateToolbarPageText(win, -1);
-    UpdateToolbarFindText(win);
-    UpdateToolbarButtonsToolTipsForWindow(win);
-
-    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
-    SetLabel(win->favLabelWithClose, _TR("Favorites"));
-}
-
 WindowInfo *CreateAndShowWindowInfo()
 {
     // CreateWindowInfo shouldn't change the windowState value
@@ -1315,9 +1317,6 @@ WindowInfo *CreateAndShowWindowInfo()
     if (!win)
         return nullptr;
     CrashIf(windowState != gGlobalPrefs->windowState);
-
-    // needed for RTL languages
-    UpdateToolbarSidebarText(win);
 
     if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState)
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
