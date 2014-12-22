@@ -1721,12 +1721,16 @@ static void RememberSessionState()
 
     ResetSessionState(gGlobalPrefs->sessionData);
     for (WindowInfo *win : gWindows) {
+        if (win->tabs.Count() == 0)
+            continue;
         SessionData *data = NewSessionData();
         for (TabInfo *tab : win->tabs) {
             DisplayState *ds = NewDisplayState(tab->filePath);
-            ds->pageNo = 0;
             if (tab->ctrl)
                 tab->ctrl->UpdateDisplayState(ds);
+            // TODO: pageNo should be good enough, as canvas size is restored as well
+            if (tab->AsEbook())
+                ds->pageNo = tab->ctrl->CurrentPageNo();
             ds->showToc = tab->showToc;
             *ds->tocState = tab->tocState;
             data->tabStates->Append(NewTabState(ds));
@@ -2059,21 +2063,12 @@ static void OnMenuExit()
 
     RememberSessionState();
 
-    // CloseWindow will wrongly overwrite gGlobalPrefs->sessionData
-    // if more than one window is still open
-    Vec<SessionData *> *sessionData = new Vec<SessionData *>();
-    std::swap(sessionData, gGlobalPrefs->sessionData);
-
     // CloseWindow removes the WindowInfo from gWindows,
     // so use a stable copy for iteration
     Vec<WindowInfo *> toClose = gWindows;
     for (WindowInfo *win : toClose) {
         CloseWindow(win, true);
     }
-
-    std::swap(sessionData, gGlobalPrefs->sessionData);
-    ResetSessionState(sessionData);
-    delete sessionData;
 }
 
 // closes a document inside a WindowInfo and optionally turns it into
@@ -2213,7 +2208,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (!lastWindow || quitIfLast)
         ShowWindow(win->hwndFrame, SW_HIDE);
     if (lastWindow) {
-        if (quitIfLast)
+        // don't call RememberSessionState if OnMenuExit already has
+        if (quitIfLast && gGlobalPrefs->sessionData->Count() == 0)
             RememberSessionState();
         prefs::Save();
     }

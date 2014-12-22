@@ -148,6 +148,7 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 // note: background tabs are only searched if focusTab is true
 WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab);
+WindowInfo* FindWindowInfoByTab(TabInfo *tab);
 
 // LoadDocument carries a lot of state, this holds them in
 // one place

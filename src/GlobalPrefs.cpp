@@ -89,10 +89,10 @@ SessionData *NewSessionData()
 TabState *NewTabState(DisplayState *ds)
 {
     TabState *state = (TabState *)DeserializeStruct(&gTabStateInfo, nullptr);
-    state->filePath = str::Dup(ds->filePath);
-    state->displayMode = str::Dup(ds->displayMode);
-    state->pageNo = ds->pageNo ? ds->pageNo : ds->reparseIdx;
-    state->zoom = str::Dup(ds->zoom);
+    str::ReplacePtr(&state->filePath, ds->filePath);
+    str::ReplacePtr(&state->displayMode, ds->displayMode);
+    state->pageNo = ds->pageNo;
+    str::ReplacePtr(&state->zoom, ds->zoom);
     state->rotation = ds->rotation;
     state->scrollPos = ds->scrollPos;
     state->showToc = ds->showToc;

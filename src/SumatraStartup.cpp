@@ -39,6 +39,7 @@
 // ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "TabInfo.h"
 #include "resource.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -53,6 +54,7 @@
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
+#include "Tabs.h"
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "StressTesting.h"
@@ -321,6 +323,36 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
     return win;
+}
+
+static void RestoreTabOnStartup(WindowInfo *win, TabState *state)
+{
+    LoadArgs args(state->filePath, win);
+    if (!LoadDocument(args))
+        return;
+    TabInfo *tab = win->currentTab;
+    if (!tab || !tab->ctrl)
+        return;
+
+    tab->tocState = *state->tocState;
+    SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
+
+    DisplayMode displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
+    if (displayMode != DM_AUTOMATIC)
+        SwitchToDisplayMode(win, displayMode);
+    // TODO: make EbookController::GoToPage not crash
+    if (!tab->AsEbook())
+        tab->ctrl->GoToPage(state->pageNo, true);
+    float zoom = prefs::conv::ToZoom(state->zoom, INVALID_ZOOM);
+    if (zoom != INVALID_ZOOM) {
+        if (tab->AsFixed())
+            tab->AsFixed()->Relayout(zoom, state->rotation);
+        else
+            tab->ctrl->SetZoomVirtual(zoom);
+    }
+    if (tab->AsFixed())
+        tab->AsFixed()->SetScrollState(ScrollState(state->pageNo, state->scrollPos.x, state->scrollPos.y));
+
 }
 
 static bool SetupPluginMode(CommandLineInfo& i)
@@ -673,10 +705,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    while (gGlobalPrefs->reopenOnce->Count() > 0) {
-        i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
-    }
-
     HANDLE hMutex = nullptr;
     HWND hPrevWnd = nullptr;
     if (i.printDialog || i.stressTestPath || gPluginMode) {
@@ -695,7 +723,35 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
+    bool restoreSession = false;
+    if (gGlobalPrefs->sessionData->Count() > 0 && !gPluginURL) {
+        restoreSession = str::EqI(gGlobalPrefs->restoreSession, "yes") ||
+                         str::EqI(gGlobalPrefs->restoreSession, "true") ||
+                         str::EqI(gGlobalPrefs->restoreSession, "auto");
+    }
+    if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
+        if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->At(0), L"SessionData")) {
+            FreeVecMembers(*gGlobalPrefs->reopenOnce);
+            restoreSession = true;
+        }
+        while (gGlobalPrefs->reopenOnce->Count() > 0) {
+            i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
+        }
+    }
+
     WindowInfo *win = nullptr;
+    if (restoreSession) {
+        for (SessionData *data : *gGlobalPrefs->sessionData) {
+            win = CreateAndShowWindowInfo();
+            // TODO: restore window position
+            for (TabState *state : *data->tabStates) {
+                RestoreTabOnStartup(win, state);
+            }
+            TabsSelect(win, data->tabIndex - 1);
+        }
+    }
+    ResetSessionState(gGlobalPrefs->sessionData);
+
     for (size_t n = 0; n < i.fileNames.Count(); n++) {
         win = LoadOnStartup(i.fileNames.At(n), i, !win);
         if (!win) {

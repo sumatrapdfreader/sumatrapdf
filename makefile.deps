@@ -578,14 +578,15 @@ $(OS)\SumatraStartup.obj: $B\src\PdfEngine.h $B\src\PdfSync.h $B\src\Print.h
 $(OS)\SumatraStartup.obj: $B\src\RenderCache.h $B\src\resource.h $B\src\Search.h
 $(OS)\SumatraStartup.obj: $B\src\Selection.h $B\src\SettingsStructs.h $B\src\StressTesting.h
 $(OS)\SumatraStartup.obj: $B\src\SumatraDialogs.h $B\src\SumatraPDF.h $B\src\SumatraProperties.h
-$(OS)\SumatraStartup.obj: $B\src\TextSearch.h $B\src\TextSelection.h $B\src\Translations.h
-$(OS)\SumatraStartup.obj: $B\src\uia\Provider.h $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h
-$(OS)\SumatraStartup.obj: $B\src\utils\DbgHelpDyn.h $B\src\utils\Dpi.h $B\src\utils\FileUtil.h
-$(OS)\SumatraStartup.obj: $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OS)\SumatraStartup.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h
-$(OS)\SumatraStartup.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h $B\src\utils\UITask.h
-$(OS)\SumatraStartup.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
-$(OS)\SumatraStartup.obj: $B\src\WindowInfo.h $B\src\wingui\LabelWithCloseWnd.h $B\src\wingui\SplitterWnd.h
+$(OS)\SumatraStartup.obj: $B\src\TabInfo.h $B\src\Tabs.h $B\src\TextSearch.h
+$(OS)\SumatraStartup.obj: $B\src\TextSelection.h $B\src\Translations.h $B\src\uia\Provider.h
+$(OS)\SumatraStartup.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\DbgHelpDyn.h
+$(OS)\SumatraStartup.obj: $B\src\utils\Dpi.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
+$(OS)\SumatraStartup.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\mingw_compat.h
+$(OS)\SumatraStartup.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
+$(OS)\SumatraStartup.obj: $B\src\utils\ThreadUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\SumatraStartup.obj: $B\src\utils\WinUtil.h $B\src\Version.h $B\src\WindowInfo.h
+$(OS)\SumatraStartup.obj: $B\src\wingui\LabelWithCloseWnd.h $B\src\wingui\SplitterWnd.h
 $(OS)\TabInfo.obj: $B\src\AppUtil.h $B\src\BaseEngine.h $B\src\ChmModel.h
 $(OS)\TabInfo.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\EngineManager.h
 $(OS)\TabInfo.obj: $B\src\GlobalPrefs.h $B\src\Selection.h $B\src\SettingsStructs.h

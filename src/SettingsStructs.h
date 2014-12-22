@@ -239,7 +239,7 @@ struct TabState {
     WCHAR * filePath;
     // same as FileStates -> DisplayMode
     WCHAR * displayMode;
-    // number of the last read page (or ReparseIdx for ebooks)
+    // number of the last read page
     int pageNo;
     // same as FileStates -> Zoom
     char * zoom;

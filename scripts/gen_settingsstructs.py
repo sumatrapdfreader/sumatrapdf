@@ -340,7 +340,7 @@ TabState = [
 	Field("DisplayMode", String, "automatic",
 		"same as FileStates -> DisplayMode"),
 	Field("PageNo", Int, 1,
-		"number of the last read page (or ReparseIdx for ebooks)"),
+		"number of the last read page"),
 	Field("Zoom", Utf8String, "fit page",
 		"same as FileStates -> Zoom"),
 	Field("Rotation", Int, 0,
