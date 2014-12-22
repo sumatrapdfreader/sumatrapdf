@@ -1716,6 +1716,9 @@ void AssociateExeWithPdfExtension()
 //       gGlobalPrefs->restoreSession
 static void RememberSessionState()
 {
+    if (!gGlobalPrefs->rememberOpenedFiles)
+        return;
+
     ResetSessionState(gGlobalPrefs->sessionData);
     for (WindowInfo *win : gWindows) {
         SessionData *data = NewSessionData();
@@ -1791,11 +1794,16 @@ bool AutoUpdateInitiate(const char *updateData)
 
     // remember currently opened files for reloading after the update
     CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
+#if 0
+    RememberSessionState();
+    gGlobalPrefs->reopenOnce->Append(str::Dup("SessionData"));
+#else
     for (WindowInfo *win : gWindows) {
         for (TabInfo *tab : win->tabs) {
             gGlobalPrefs->reopenOnce->Append(str::Dup(tab->filePath));
         }
     }
+#endif
     // save session before launching the installer (which force-quits SumatraPDF)
     if (installer)
         prefs::Save();

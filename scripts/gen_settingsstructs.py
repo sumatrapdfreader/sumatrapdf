@@ -386,7 +386,7 @@ GlobalPrefs = [
 		expert=True),
 	Field("RestoreSession", Utf8String, "auto",
 		"whether to restore the session stored in SessionData " +
-		"(possible values: yes, no, once, auto)",
+		"(possible values: yes, no, auto)",
 		expert=True),
 	EmptyLine(),
 
@@ -515,9 +515,9 @@ GlobalPrefs = [
 	Array("SessionData", SessionData,
 		"state of the last session, usage depends on RestoreSession",
 		version="3.1"),
-	# TODO: remove once sessions can be restored in general
 	CompactArray("ReopenOnce", String, None,
 		"a list of paths for files to be reopened at the next start " +
+		"or the string \"SessionData\" if this data is saved in SessionData " +
 		"(needed for auto-updating)",
 		doc="data required for reloading documents after an auto-update",
 		version="3.0"),

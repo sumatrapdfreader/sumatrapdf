@@ -283,7 +283,7 @@ struct GlobalPrefs {
     // Over-rides other settings
     bool useSysColors;
     // whether to restore the session stored in SessionData (possible
-    // values: yes, no, once, auto)
+    // values: yes, no, auto)
     char * restoreSession;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
@@ -384,7 +384,8 @@ struct GlobalPrefs {
     Vec<FileState *> * fileStates;
     // state of the last session, usage depends on RestoreSession
     Vec<SessionData *> * sessionData;
-    // a list of paths for files to be reopened at the next start (needed
+    // a list of paths for files to be reopened at the next start or the
+    // string "SessionData" if this data is saved in SessionData (needed
     // for auto-updating)
     Vec<WCHAR *> * reopenOnce;
     // timestamp of the last update check
