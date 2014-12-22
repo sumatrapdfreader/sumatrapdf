@@ -260,7 +260,14 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
 
     switch (field.type) {
     case Type_Bool:
-        *(bool *)fieldPtr = value ? str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseInt(value) != 0 : field.value != 0;
+        if (value) {
+            // boolean true are "true", "yes" and any non-zero integer
+            *(bool *)fieldPtr = str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) ||
+                                str::StartsWithI(value, "yes") && (!value[3] || str::IsWs(value[3])) ||
+                                ParseInt(value) != 0;
+        }
+        else
+            *(bool *)fieldPtr = field.value != 0;
         break;
     case Type_Int:
         *(int *)fieldPtr = value ? ParseInt(value) : (int)field.value;

@@ -176,4 +176,17 @@ Key = Value";
     utassert(PointI(111, 222) == data->point);
     utassert(data->sutStructItems && 0 == data->sutStructItems->Count());
     FreeStruct(&gSutStructInfo, data);
+
+    static const char *boolData[] = {
+        "Boolean = true",   "Boolean = false",
+        "Boolean = TRUE",   "Boolean = FALSE",
+        "Boolean = yes",    "Boolean = no",
+        "Boolean = Yes",    "Boolean = No",
+        "Boolean = 1",      "Boolean = 0",
+    };
+    for (int i = 0; i < dimof(boolData); i++) {
+        data = (SutStruct *)DeserializeStruct(&gSutStructInfo, boolData[i]);
+        utassert(data->boolean == ((i % 2) == 0));
+        FreeStruct(&gSutStructInfo, data);
+    }
 }
