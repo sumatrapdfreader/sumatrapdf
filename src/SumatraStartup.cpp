@@ -742,8 +742,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     WindowInfo *win = nullptr;
     if (restoreSession) {
         for (SessionData *data : *gGlobalPrefs->sessionData) {
-            win = CreateAndShowWindowInfo();
-            // TODO: restore window position
+            win = CreateAndShowWindowInfo(data);
             for (TabState *state : *data->tabStates) {
                 RestoreTabOnStartup(win, state);
             }

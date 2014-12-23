@@ -1309,7 +1309,7 @@ static WindowInfo* CreateWindowInfo()
     return win;
 }
 
-WindowInfo *CreateAndShowWindowInfo()
+WindowInfo *CreateAndShowWindowInfo(SessionData *data)
 {
     // CreateWindowInfo shouldn't change the windowState value
     int windowState = gGlobalPrefs->windowState;
@@ -1317,6 +1317,13 @@ WindowInfo *CreateAndShowWindowInfo()
     if (!win)
         return nullptr;
     CrashIf(windowState != gGlobalPrefs->windowState);
+
+    if (data) {
+        windowState = data->windowState;
+        RectI rect = ShiftRectToWorkArea(data->windowPos);
+        MoveWindow(win->hwndFrame, rect);
+        // TODO: also restore data->sidebarDx
+    }
 
     if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState)
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);

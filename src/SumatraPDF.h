@@ -97,6 +97,7 @@ class NotificationWnd;
 class RenderCache;
 class TabInfo;
 struct LabelWithCloseWnd;
+struct SessionData;
 
 // all defined in SumatraPDF.cpp
 extern bool                     gDebugShowLinks;
@@ -169,7 +170,7 @@ struct LoadArgs
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);
-WindowInfo *CreateAndShowWindowInfo();
+WindowInfo *CreateAndShowWindowInfo(SessionData *data=nullptr);
 
 UINT MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = nullptr);
