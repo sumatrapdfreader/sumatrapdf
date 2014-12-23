@@ -698,13 +698,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    bool showStartPage = i.fileNames.Count() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
-    if (showStartPage) {
-        // make the shell prepare the image list, so that it's ready when the first window's loaded
-        SHFILEINFO sfi;
-        SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
-    }
-
     HANDLE hMutex = nullptr;
     HWND hPrevWnd = nullptr;
     if (i.printDialog || i.stressTestPath || gPluginMode) {
@@ -737,6 +730,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         while (gGlobalPrefs->reopenOnce->Count() > 0) {
             i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
         }
+    }
+
+    bool showStartPage = !restoreSession && i.fileNames.Count() == 0 &&
+                         gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
+    if (showStartPage) {
+        // make the shell prepare the image list, so that it's ready when the first window's loaded
+        SHFILEINFO sfi;
+        SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
     WindowInfo *win = nullptr;
