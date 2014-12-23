@@ -4229,7 +4229,7 @@ const char * gTranslations_et =
   "S\303\274nkroniseerimisfaili ei suudeta avada\0"\
   "Siltidega PDF\0"\
   "Tekstidokumendid\0"\
-  "\0"\
+  "See dokument sisaldab omadusi (%s), mida program ei toeta ja seet\303\265ttu ei pruugi see olla \303\265igesti esitatud.\0"\
   "P\303\244is:\0"\
   "Tundmatu l\303\244htefail (%s)\0"\
   "Kasuta &kaarte\0"\
