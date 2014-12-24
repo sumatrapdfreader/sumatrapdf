@@ -1024,7 +1024,7 @@ FinishBlock:
         if (uncomp_v3 && uncomp_v3->filters.filterstart < end)
             end = uncomp_v3->filters.filterstart;
         end = (size_t)rar_expand(rar, end);
-        if (end < rar->progress.bytes_done + rar->solid.size_total)
+        if (end == (size_t)-1 || end < rar->progress.bytes_done + rar->solid.size_total)
             return false;
         uncomp->bytes_ready = end - rar->progress.bytes_done - rar->solid.size_total;
         if (uncomp_v3)
