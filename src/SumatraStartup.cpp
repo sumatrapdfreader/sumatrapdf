@@ -720,7 +720,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs->sessionData->Count() > 0 && !gPluginURL) {
         restoreSession = str::EqI(gGlobalPrefs->restoreSession, "yes") ||
                          str::EqI(gGlobalPrefs->restoreSession, "true") ||
+#ifndef DISABLE_SESSION_RESTORE
                          str::EqI(gGlobalPrefs->restoreSession, "auto");
+#else
+                         false;
+#endif
     }
     if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
         if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->At(0), L"SessionData")) {
