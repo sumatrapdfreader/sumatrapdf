@@ -287,6 +287,9 @@ struct pdf_document_s
 	int num_type3_fonts;
 	int max_type3_fonts;
 	fz_font **type3_fonts;
+
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695761 */
+	pdf_obj **page_objs;
 };
 
 /*

@@ -170,6 +170,16 @@ pdf_lookup_page_number(pdf_document *doc, pdf_obj *node)
 	if (strcmp(pdf_to_name(pdf_dict_gets(node, "Type")), "Page") != 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
 
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695761 */
+	if (doc->page_objs)
+	{
+		int i;
+		for (i = 0; i < doc->page_count; i++)
+			if (!pdf_objcmp(doc->page_objs[i], node))
+				return i;
+		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
+	}
+
 	parent2 = parent = pdf_dict_gets(node, "Parent");
 	fz_var(parent);
 	fz_try(ctx)

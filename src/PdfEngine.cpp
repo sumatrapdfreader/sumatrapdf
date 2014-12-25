@@ -1121,15 +1121,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
 
             pdf_obj *kid = pdf_array_get(top.kids, top.i);
             char *type = pdf_to_name(pdf_dict_gets(kid, "Type"));
-            if (str::Eq(type, "Page") || str::IsEmpty(type) && pdf_dict_gets(kid, "MediaBox")) {
-tolerate_broken_page_tree:
-                if (page_no >= pdf_count_pages(doc))
-                    fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
-
-                page_objs[page_no] = pdf_keep_obj(kid);
-                page_no++;
-            }
-            else if (str::Eq(type, "Pages") || str::IsEmpty(type) && pdf_dict_gets(kid, "Kids")) {
+            if (*type ? str::Eq(type, "Pages") : pdf_dict_gets(kid, "Kids") && !pdf_dict_gets(kid, "MediaBox")) {
                 int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
                 if (count > 0) {
                     stack.Push(top);
@@ -1140,8 +1132,13 @@ tolerate_broken_page_tree:
                 }
             }
             else {
-                fz_warn(ctx, "non-page object in page tree (%s)", type);
-                goto tolerate_broken_page_tree;
+                if (*type ? !str::Eq(type, "Page") : !pdf_dict_gets(kid, "MediaBox"))
+                    fz_warn(ctx, "non-page object in page tree (%s)", type);
+                if (page_no >= pdf_count_pages(doc))
+                    fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
+
+                page_objs[page_no] = pdf_keep_obj(kid);
+                page_no++;
             }
         }
     }
@@ -1152,6 +1149,8 @@ tolerate_broken_page_tree:
         pdf_unmark_obj(top.kids);
         fz_rethrow(ctx);
     }
+
+    doc->page_objs = page_objs;
 }
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////

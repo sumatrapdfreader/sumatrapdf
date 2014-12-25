@@ -215,6 +215,7 @@ pdf_xref_entry *pdf_get_populating_xref_entry(pdf_document *doc, int num)
 /* This will never throw anything, or return NULL if it is
  * only asked to return objects in range within a 'solid'
  * xref. */
+/* SumatraPDF: TODO: this doesn't scale well (cf. http://bugs.ghostscript.com/show_bug.cgi?id=695761) */
 pdf_xref_entry *pdf_get_xref_entry(pdf_document *doc, int i)
 {
 	fz_context *ctx = doc->ctx;
