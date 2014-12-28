@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ff66f2071674623f533314a4edebb24258f7949c
+5051a4903c7fceb3fadc7f1bd39332311126ee6a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -267,7 +267,7 @@ cn:上一页(&B)\tAlt+左箭头
 cy:Nôl\tAlt+Saeth Chwith
 cz:Z&pět\tAlt+Šipka vlevo
 de:&Zurück\tAlt+<-
-dk:&Tilbage\tAlt+<-
+dk:&Tilbage\tAlt+venstre pil
 el:&Πίσω\tAlt+<-
 es:A&trás\tAlt+Izq
 et:&Tagasi\tAlt+Vasaknool
@@ -454,7 +454,7 @@ cn:复制选定范围(&C)
 cy:Copïo &Dewis
 cz:&Kopírovat výběr
 de:Auswahl &kopieren
-dk:&Kopier Markering
+dk:&Kopier markering
 el:&Αντιγραφή Επιλογής
 es:&Copiar selección
 et:K&opeeri valik
@@ -754,7 +754,7 @@ cn:文件(&F)
 cy:&Ffeil
 cz:&Soubor
 de:&Datei
-dk:&Filer
+dk:&Fil
 el:&Αρχείο
 es:&Archivo
 et:&Fail
@@ -948,7 +948,7 @@ cn:缩放页面以匹配可打印区域(&F)
 cy:&Ffitio tudalennau i ardal argraffu
 cz:Přizpůsobit &stránky na tisknutelnou plochu
 de:Seiten in Druckbereich &einpassen
-dk:&Tilpas sider til printbart område
+dk:&Tilpas sider til udskrivningsområdet
 el:Προσαρμογή σελίδων σε &εκτυπώσιμη περιοχή
 es:&Ajustar páginas al área de impresión
 et:&Sobita leheküljed prinditavale alale
@@ -1874,7 +1874,7 @@ cn:选项(&O)...
 cy:&Dewisiadau...
 cz:&Možnosti...
 de:&Optionen…
-dk:&Valgmuligheder...
+dk:&Valgmuligheder ...
 el:&Επιλογές...
 es:&Opciones...
 et:&Sätted...
@@ -2118,7 +2118,7 @@ cn:打印(&P)...
 cy:&Argraffu...
 cz:&Tisk...
 de:&Drucken…
-dk:&Udskriv...
+dk:&Udskriv ...
 el:&Εκτύπωση
 es:&Imprimir...
 et:&Prindi...
@@ -2175,7 +2175,7 @@ cn:打印(&P)... (已中断)
 cy:&Argraffu... (gwrthodwyd)
 cz:&Tisk... (odepřen)
 de:&Drucken… (verweigert)
-dk:&Udskriv... (nægtet)
+dk:&Udskriv ... (nægtet)
 el:&Εκτύπωση... (απαγορεύεται)
 es:&Imprimir... (protegido)
 et:&Prindi... (keelatud)
@@ -2235,7 +2235,7 @@ cn:打印(&P)...\tCtrl+P
 cy:&Argraffu...\tCtrl+P
 cz:&Tisk...\tCtrl+P
 de:&Drucken…\tStrg+P
-dk:&Udskriv...\tCtrl+P
+dk:&Udskriv ...\tCtrl+P
 el:&Εκτύπωση...\tCtrl+P
 es:&Imprimir...\tCtrl+P
 et:&Prindi...\tCtrl+P
@@ -2472,7 +2472,7 @@ cn:另存为(&A)...
 cy:&Cadw fel...
 cz:&Uložit jako...
 de:&Speichern unter…
-dk:&Gem som
+dk:&Gem som ...
 el:&Αποθήκευση ως...
 es:&Guardar como...
 et:Salvesta &kui...
@@ -2531,7 +2531,7 @@ cn:另存为(&A)...\tCtrl+A
 cy:&Cadw fel...\tCtrl+S
 cz:&Uložit jako...\tCtrl+S
 de:Speichern &unter…\tStrg+S
-dk:&Gem som...\tCtrl+S
+dk:&Gem som ...\tCtrl+S
 el:&Αποθήκευση ως...\tCtrl+S
 es:&Guardar como...\tCtrl+S
 et:Salvesta &kui...\tCtrl+S
@@ -2656,7 +2656,7 @@ cn:缩小页面到可打印区域 (如果需要) (&S)
 cy:C&rebachu tudalennau i'r ardal argraffu (os oes angen)
 cz:&Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
 de:Seiten auf Druckbereich &verkleinern (falls nötig)
-dk:krymp sider til printbart område
+dk:&Formindsk sider til udskriftsområdet (hvis nødvendigt)
 el:Σμίκρυνση σελίδων σε &εκτυπώσιμη περιοχή (αν χρειάζεται)
 es:&Reducir páginas hasta llegar al área imprimible (si es necesario)
 et:Mahuta leheküljed pr&inditavale alale (kui vaja)
@@ -2958,6 +2958,7 @@ cn:窗口(&W)
 cy:&Ffenestr
 cz:&Okno
 de:Fe&nster
+dk:&Vindue
 es:V&entana
 et:A&ken
 eu:Lei&hoa
@@ -3810,7 +3811,7 @@ cn:你确实要解除安装 SumatraPDF 吗？
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
-dk:Er du sikker på at du vil afinstallere SumatraPDF ?
+dk:Er du sikker på, at du vil afinstallere SumatraPDF?
 el:Είστε σίγουροι πως επιθυμείτε την απεγκατάσταση του SumatraPDF ;
 es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
@@ -4126,7 +4127,7 @@ cn:自动检查更新(&U)
 cy:Gwirio'n awtomatig am &ddiweddariadau
 cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
-dk:Tjek automatisk for &opdateringer
+dk:Kontroller automatisk for &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
 es:B&uscar actualizaciones automáticamente
 et:Uuendusi k&ontrollitakse automaatselt
@@ -4491,7 +4492,7 @@ cn:字节
 cy:Beit
 cz:bajtů
 de:Byte
-dk:Bytes
+dk:Byte
 el:Bytes
 es:Bytes
 et:Baiti
@@ -4797,7 +4798,7 @@ cn:无法进行逆向搜索。请检查设置数值里的命令栏。
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
-dk:Kan ikke starte invers søgekommando. Tjek venligst kommandolinjen i indstillingerne.
+dk:Kan ikke starte søgekommandoen invers. Kontroller venligst kommandolinjen i indstillingerne.
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
 es:No se puede iniciar la orden de búsqueda inversa. Compruebe la línea de órdenes en la configuración.
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
@@ -4928,7 +4929,7 @@ cn:检查是否有新版本(&U)
 cy:Gwirio am &Ddiweddariad
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
-dk:Tjek for ny &version
+dk:Kontroller for ny &version
 el:Έ&λεγχος για νέα έκδοση
 es:&Buscar actualizaciones
 et:Vaata, kas on &uuendusi
@@ -5231,7 +5232,7 @@ cn:连续书籍视图
 cy:Golwg Llyfr Didor
 cz:Kniha průběžně
 de:Fortlaufende Buchansicht
-dk:Fortløbende bog-visning
+dk:Fortløbende bogvisning
 el:Συνεχόμενη Προβολή Βιβλίου
 es:Vista continua de libro
 et:Jätkuv raamatuvaade
@@ -5427,7 +5428,7 @@ cn:复制图片(&I)
 cy:Copïo &Delwedd
 cz:Kopírovat &obrázek
 de:&Bild kopieren
-dk:Kopier &Billede
+dk:Kopier &billede
 el:Αντιγραφή &Εικόνας
 es:Copiar &imagen
 et:Kopeeri &pilt
@@ -5483,7 +5484,7 @@ cn:复制链接地址(&L)
 cy:Copïo &Dolen Cyfeiriad
 cz:Kopírovat &adresu odkazu
 de:Adresse des &Links kopieren
-dk:Kopier &Linkadresse
+dk:Kopier &henvisningsadresse
 el:Αντιγραφή &Διεύθυνσης
 es:Copiar dirección del en&lace
 et:Kopeeri &lingi aadress
@@ -5658,7 +5659,7 @@ cn:版权:
 cy:Hawlfraint
 cz:Autorská práva:
 de:Copyright:
-dk:Copyright:
+dk:Ophavsret:
 el:Πνευματική ιδιοκτησία:
 es:Derechos de autor:
 et:Autoriõigus:
@@ -5715,7 +5716,7 @@ cn:无法取得打印机特性
 cy:Methu canfod priodweddau Argraffydd
 cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
-dk:Kan ikke hente printer egenskaber
+dk:Kan ikke hente printeregenskaber
 el:Δεν ήταν δυνατή η ανάκτηση των ιδιοτήτων του εκτυπωτή
 es:No se pudieron obtener las propiedades de la impresora
 et:Printeri sätteid ei õnnestunud lugeda
@@ -5772,7 +5773,7 @@ cn:无法创建临时目录
 cy:Methu creu cyfeiriadur dros dro
 cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
-dk:Kunne ikke oprette midlertidigt folder
+dk:Kunne ikke oprette midlertidig mappe
 el:Αδυναμία δημιουργίας προσωρινού φακέλου
 es:No se pudo crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
@@ -5824,7 +5825,7 @@ cn:无法创建安装文件夹
 cy:Merhu creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
-dk:Kunne ikke oprette installations folder
+dk:Kunne ikke oprette installationsmappe
 el:Αδυναμία δημιουργίας φακέλου εγκατάστασης
 es:No se pudo crear la carpeta de instalación
 et:Ei suudetud luua paigalduskataloogi
@@ -5936,7 +5937,7 @@ cn:无法安装 PDF 预览器
 cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
-dk:Kunne ikke installere PDF viser
+dk:Kunne ikke installere PDF-fremviser
 el:Δεν ήταν δυνατή η εγκατάσταση του PDF previewer
 es:No se pudo instalar el previsualizador de PDF
 et:Ei suudetud paigaldada PDF-eelvaaturit
@@ -5987,7 +5988,7 @@ cn:无法安装 PDF 搜索过滤器
 cy:Methu gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht installieren
-dk:Kunne ikke installere PDF søge filter
+dk:Kunne ikke installere PDF-søgefilter
 es:No se pudo instalar el filtro de búsqueda PDF
 et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
@@ -6036,7 +6037,7 @@ cn:无法获得暂存文件夹
 cy:Methu canfod cyfeiriadur dros dro
 cz:Dočasný adresář není dostupný
 de:Konnte das temporäre Verzeichnis nicht finden
-dk:Kunne ikke tilgå midlertidig folder
+dk:Kunne ikke tilgå midlertidig mappe
 el:Αδυναμία ανάκτησης προσωρινού φακέλου
 es:No se pudo obtener la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
@@ -6086,7 +6087,7 @@ cn:无法移除安装目录
 cy:Methu tynnu'r cyfeiriadur gosod
 cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
-dk:Kunne ikke fjerne installations folder
+dk:Kunne ikke fjerne installationsmappe
 el:Αδυναμία μετακίνησης φακέλου εγκατάστασης
 es:No se pudo eliminar la carpeta de instalación
 et:Ei suudetud kustutada paigalduskataloogi
@@ -6247,7 +6248,7 @@ cn:无法解除安装 PDF 预览器
 cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
-dk:Kunne ikke fjerne PDF viser
+dk:Kunne ikke fjerne PDF-fremviser
 el:Δεν ήταν δυνατή η απεγκατάσταση του PDF previewer
 es:No se pudo desinstalar el previsualizador de PDF
 et:Ei suudetud eemaldada PDF-eelvaaturit
@@ -6297,7 +6298,7 @@ cn:无法安装 PDF 搜索过滤器
 cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
-dk:Kunne ikke afinstallere PDF søge filter
+dk:Kunne ikke afinstallere PDF-søgefilter
 es:No se pudo desinstalar el filtro de búsqueda PDF
 et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
@@ -6346,7 +6347,7 @@ cn:无法解除安装浏览器插件
 cy:Methu dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
-dk:Kunne ikke fjerne browser plugin
+dk:Kunne ikke fjerne browserudvidelsesmodul
 es:No se pudo desinstalar el complemento del navegador
 et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
@@ -6565,6 +6566,7 @@ cn:光标位置:
 cy:Safle'r cyrchwr:
 cz:Pozice kurzoru:
 de:Zeigerposition:
+dk:Markørposition:
 es:Posición del cursor:
 et:Kursori asukoht
 eu:Kurtsorearen kokapena:
@@ -6667,7 +6669,7 @@ cn:默认布局(&L):
 cy:&Cynllun Rhagosodedig:
 cz:Výchozí &uspořádání:
 de:&Standardlayout:
-dk:Standard &Layout:
+dk:Standard&layout:
 el:Προκαθορισμένη &Διαμόρφωση:
 es:Apariencia pre&determinada:
 et:Vaike&küljend:
@@ -6728,7 +6730,7 @@ cn:默认缩放(&Z):
 cy:C&hwyddo Rhagosodedig:
 cz:Výchozí &zvětšení:
 de:Standard&vergrößerung:
-dk:Standard &Zoom
+dk:Standard&zoom
 el:Προκαθορισμένο &Ζουμ:
 es:Am&pliación predeterminada:
 et:Vaike&suurendus:
@@ -6789,7 +6791,7 @@ cn:便携模式不能改变默认 PDF 阅读器
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
-dk:Standard PDF-læser kan ikke ændres i mobil tilstand
+dk:Standardlæseren for PDF kan ikke ændres i mobil tilstand
 el:Δε μπορεί να γίνει συσχετισμός σε portable mode
 es:No se puede cambiar el lector PDF predeterminado en el modo portátil
 et:PDF-failide vaikeprogrammi ei saa muuta portatiivses režiimis
@@ -7347,7 +7349,7 @@ cn:请键入鼠标按两下 PDF 文件时，应运行的命令(&E):
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
-dk:Indtast den kommandolinie du vil bruge når du dobbeltklikker på PDF-dokumentet:
+dk:Indtast den kommandolinje du vil bruge, når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
 et:Sisesta käsurida, mis käivitatakse, kui teed topeltklõpsu PDF dokumendil:
@@ -7576,7 +7578,7 @@ cn:全屏显示(&U)\tCtrl+Shift+L
 cy:Sgrin Lawn\tCtrl+Shift+L
 cz:&Celá obrazovka\tF11
 de:&Vollbild\tF11
-dk:F&uldskærmsvisning\tCtrl+Shift+L
+dk:F&uldskærmsvisning\tCtrl+skift+L
 el:&Πλήρης Οθόνη\tCtrl+Shift+L
 es:Pantalla completa\tCtrl+Mayús+L
 et:&Täisekraanvaade\tCtrl+Shift+L
@@ -7709,7 +7711,7 @@ cn:无法复制解除安装程序到暂存目录
 cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
 cz:Nezdařilo se zkopírovat odinstalační program do dočasného adresáře
 de:Konnte das Deinstallationsprogramm nicht kopieren
-dk:Kunne ikke kopiere fra midlertidig folder
+dk:Kunne ikke kopiere fra midlertidig mappe
 es:Error al copiar el desinstalador al directorio temporal
 et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
@@ -7808,7 +7810,7 @@ cn:删除解除安装器注册项失败。
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Konnte nicht alle Registry-Einträge löschen
-dk:Kunne ikke slette afinstallering nøger i registreringsdatabasen
+dk:Kunne ikke slette afinstalleringsnøgler i registreringsdatabasen
 es:Error al eliminar las claves del registro del desinstalador
 et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
@@ -7977,7 +7979,7 @@ cn:写入扩展名信息到注册项失败。
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
-dk:Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen
+dk:Kunne ikke skrive udvidet information om filens efternavn i registreringsdatabasen
 es:Fallo al escribir información de la extensión de archivo en el registro
 et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
@@ -8025,7 +8027,7 @@ cn:写入解除安装信息到注册项失败。
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
-dk:Kunne ikke skrive afinstallerings information i registreringsdatabasen
+dk:Kunne ikke skrive afinstalleringsinformation i registreringsdatabasen
 es:Error al escribir información de desinstalación en el registro
 et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
@@ -8074,7 +8076,7 @@ cn:快速网页查看
 cy:Golwg Gwe Cyflym
 cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
-dk:Hurtig Internet Visning
+dk:Hurtig Internetvisning
 el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización rápida en Web
 et:Kiire veebivaade
@@ -8235,7 +8237,7 @@ cn:无法找到文件 %s
 cy:Heb ganfod ffeil %s
 cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
-dk:Fil %s ikke fundet
+dk:Filen %s blev ikke fundet
 el:Το αρχείο %s δε βρέθηκε
 es:No se encontró el archivo %s
 et:Faili %s ei leitud
@@ -9299,7 +9301,7 @@ cn:正在格式化书本... %d 页
 cy:Fformatio'r llyfr... %d tudalen
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
-dk:Formaterer bogen... %d sider
+dk:Formaterer bogen ... %d sider
 el:Διαμόρφωση του βιβλίου... %d σελίδες
 es:Dando formato al libro... %d páginas
 et:Raamatu vormindamine... %d lehekülge
@@ -9659,7 +9661,7 @@ cn:隐藏选项(&O)
 cy:Dewisiadau C&uddio
 cz:Skrýt &možnosti
 de:&Optionen
-dk:Gem &Valgmuligheder
+dk:Gem &valgmuligheder
 es:Menos &opciones
 et:Peida &sätted
 eu:Ezkuta A&ukerak
@@ -9763,7 +9765,7 @@ cn:提示: 按 F3 重新查找。
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 cz:Nápověda: Klávesou F3 vyhledáte další výskyt
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
-dk:Vink: Brug F3 knappen for at finde igen
+dk:Vink: Brug F3-knappen for at finde igen
 el:Συμβουλή: Χρησιμοποιήστε το F3 για εύρεση του επόμενου
 es:Consejo: Presione F3 para mostrar el siguiente resultado
 et:Soovitus: Uuesti otsimiseks vajuta F3-klahvi
@@ -9822,7 +9824,7 @@ cn:图片文件 (*.%s)
 cy:Ffeiliau delwedd  (*.%s)
 cz:Soubory obrázků (*.%s)
 de:Bilder (*.%s)
-dk:Billed filer (*.%s)
+dk:Billedfiler (*.%s)
 el:Αρχεία εικόνων (*.%s)
 es:Archivos de imagen (*.%s)
 et:Pildifailid (*.%s)
@@ -9926,7 +9928,7 @@ cn:安装 SumatraPDF 于文件夹(&F):
 cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
-dk:Installer SumatraPDF i &folder:
+dk:Installer SumatraPDF i &mappe:
 el:Εγκατάσταση SumatraPDF σε &folder:
 es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
@@ -9975,7 +9977,7 @@ cn:安装失败!
 cy:Methodd y gosod!
 cz:Instalace se nezdařila!
 de:Die Installation ist fehlgeschlagen!
-dk:Installation fejlede !
+dk:Installation fejlede!
 el:Αποτυχία εγκατάστασης!
 es:¡La instalación ha fallado!
 et:Paigaldamine ebaõnnestus!
@@ -10141,6 +10143,7 @@ cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
 cy:Cadw yr ategyn porwr PDF wedi ei osod (ddim yn cael ei gynnal bellach)
 cz:Ponechat nainstalovaný plugin &prohlížeč PDF (již není podporován)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
+dk:Bevar PDF-&browserudvidelsesmodulet installeret (ikke længere understøttet)
 es:Mantener instalado el complemento de &navegador (ahora obsoleto)
 et:Jäta alles PDF &brauseri plugin (enam ei toetata)
 eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
@@ -10181,7 +10184,7 @@ cn:让 Windows “桌面搜索”搜索 PDF 文件
 cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
 de:PDF Dokumente in Windows-&Suchen einbeziehen
-dk:Lad Windows skrivebord Søge &søg PDF dokumenter
+dk:Lad Windows' skrivebordssøgning &søge i PDF-dokumenter
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
@@ -10229,7 +10232,7 @@ cn:让 Windows 显示 PDF 文件的预览(&P)
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
-dk:Lad Windows vise &femvisning af PDF dokumenter
+dk:Lad Windows vise &forhåndsvisninger af PDF-dokumenter
 es:Mostrar miniaturas en los iconos de documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
@@ -10349,7 +10352,7 @@ cn:把 SumatraPDF 作为默認的 PDF 阅读器?
 cy:Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 cz:Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
-dk:Gør SumatraPDF standardprogram for PDF-filer
+dk:Gør SumatraPDF til standardprogrammet for PDF-filer
 el:Να γίνει το SumatraPDF το προεπιλεγμένο πρόγραμμα αρχείων PDF;
 es:¿Convertir SumatraPDF en la aplicación predeterminada para archivos PDF?
 et:Tee SumatraPDF PDF-failide vaikerakenduseks?
@@ -10415,7 +10418,7 @@ cn:将 SumatraPDF 设置为默认的 PDF 阅读器
 cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 cz:Nastavit SumatraPDF jako výchozí PDF prohlížeč
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
-dk:Gør SumatraPDF til min standard PDF-læser
+dk:Gør SumatraPDF til min standardlæser for PDF-filer
 el:Συσχετισμός του SumatraPDF με τα αρχεία PDF
 es:Convertir SumatraPDF el lector PDF predeterminado
 et:Tee SumatraPDF PDF-failide vaikerakenduseks
@@ -10479,7 +10482,7 @@ cn:漫画模式(&G)
 cy:Modd &Manga
 cz:Man&ga režim
 de:Lese&richtung umkehren
-dk:Man&ga tilstand
+dk:Man&ga-tilstand
 es:Modo man&ga
 et:Man&garežiim
 eu:Ma&nga Modua
@@ -10593,7 +10596,7 @@ cn:Mobi 文档
 cy:Dogfennau Mobi
 cz:Dokumenty Mobi
 de:Kindle E-Bücher
-dk:Mobi documenter
+dk:Mobi-dokumenter
 el:Έγγραφα Mobi
 es:Documentos en formato Mobi
 et:Mobi-dokumendid
@@ -11142,7 +11145,7 @@ cn:确定(&O)
 cy:Iawn
 cz:OK
 de:OK
-dk:OK
+dk:O.k.
 el:ΟΚ
 es:Aceptar
 et:Sobib
@@ -11273,7 +11276,7 @@ cn:在 PDF-XChange 中打开(&I)
 cy:Agor yn PDF-XChange
 cz:Otevřít v programu PDF-XChange
 de:Mit PDF-&XChange öffnen
-dk:Åben med PDF-XChange
+dk:Åbn med PDF-XChange
 el:Άνοιγμα με PDF-XChange
 es:Abr&ir con PDF-XChange
 et:Ava PDF-XChangega
@@ -11332,7 +11335,7 @@ cn:打开一个文件...
 cy:Agor dogfen...
 cz:Otevřít dokument...
 de:Dokument öffnen…
-dk:Åbn et dokument...
+dk:Åbn et dokument ...
 el:Άνοιγμα εγγράφου...
 es:Abrir un documento...
 et:Ava dokument...
@@ -11387,7 +11390,7 @@ cn:用 %s 打开
 cy:Agor yn %s
 cz:Otevřít v %s
 de:Mit %s öffnen
-dk:Åben o %s
+dk:Åbn i %s
 el:Άνοιγμα σε %s
 es:Abrir con %s
 et:Ava rakenduses %s
@@ -11499,7 +11502,7 @@ cn:在 &Foxit Reader 中打开
 cy:Agor yn &Foxit Reader
 cz:Otevřít v programu &Foxit Reader
 de:Mit F&oxit Reader öffnen
-dk:Åben med &Foxit Reader
+dk:Åbn med &Foxit Reader
 el:Άνοιγμα με &Foxit Reader
 es:Abrir con &Foxit Reader
 et:Ava &Foxit Readeris
@@ -11618,7 +11621,7 @@ cn:在 &Microsoft XPS-Viewer 中打开
 cy:Agor yn Microsoft XPS-Viewer
 cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
-dk:Åben med Microsoft XPS-Viewer
+dk:Åbn med Microsoft XPS-Viewer
 el:Άνοιγμα με Microsoft XPS-Viewer
 es:Abrir con el Visor XPS de &Microsoft
 et:Ava Microsoft XPS-Viewerga
@@ -11792,7 +11795,7 @@ cn:PDF 文档
 cy:Dogfen PDF
 cz:Dokument PDF
 de:PDF-Dokument
-dk:PDF dokument
+dk:PDF-dokument
 el:Αρχείο PDF
 es:Documento PDF
 et:PDF-dokument
@@ -11852,7 +11855,7 @@ cn:PDF 优化:
 cy:Gwella'r PDF
 cz:Optimalizace PDF:
 de:PDF Optimierungen:
-dk:PDF Optimeringer:
+dk:PDF-optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 et:PDF-i optimeerimised:
@@ -11905,7 +11908,7 @@ cn:PDF 制作程序:
 cy:Cynhyrchydd PDF:
 cz:Producent PDF:
 de:PDF Urheber:
-dk:PDF producent:
+dk:PDF-producent:
 el:Δημιουργός PDF:
 es:Generador de PDF:
 et:PDF-i looja:
@@ -11963,7 +11966,7 @@ cn:PDF 版本:
 cy:PDF Fersiwn:
 cz:Verze PDF:
 de:PDF Version:
-dk:PDF version:
+dk:PDF-version:
 el:Έκδοση PDF:
 es:Versión de PDF:
 et:PDF-i versioon:
@@ -12085,7 +12088,7 @@ cn:前往页(&G)...\tCtrl+G
 cy:Tudalen...\tCtrl+G
 cz:Strán&ka...\tCtrl+G
 de:&Seite…\tStrg+G
-dk:Side...\tCtrl+G
+dk:&Side ...\tCtrl+G
 el:&Σελίδα...\tCtrl+G
 es:Pá&gina...\tCtrl+G
 et:&Lehekülg...\tCtrl+G
@@ -12267,7 +12270,7 @@ cn:找不到页码 %u
 cy:Nid yw tudalen rhif %u yn bodoli
 cz:Stránka číslo %u neexistuje
 de:Seite %u nicht vorhanden
-dk:Side nummer %u eksisterer ikke
+dk:Sidenummer %u findes ikke
 el:Δεν υπάρχει σελίδα με αριθμό %u
 es:La página %u no existe
 et:Lehekülge number %u ei ole olemas
@@ -12445,6 +12448,7 @@ bs:PalmDoc dokumenti
 cn:PalmDoc 文档
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
+dk:PalmDoc-dokumenter
 es:Documentos PalmDoc
 et:PalmDoc-dokumendid
 eu:PalmDoc agiriak
@@ -12532,7 +12536,7 @@ cn:请稍等─正在渲染...
 cy:Arhoswch, wrthi'n cyflwyno...
 cz:Prosím čekejte, probíhá vykreslování...
 de:Bitte einen Moment Geduld…
-dk:Vent venligst - renderer...
+dk:Vent venligst - optegner ...
 el:Παρακαλώ περιμένετε - φόρτωση...
 es:Espere un momento mientras se carga la visualización...
 et:Palun oota - toimub visualiseerimine...
@@ -12591,7 +12595,7 @@ cn:Postscript 文件
 cy:Dogfennau postscript
 cz:Dokumenty PostScript
 de:Postscript-Dokumente
-dk:Postscript dokumenter
+dk:Postscript-dokumenter
 el:Έγγραφα Postscript
 es:Documentos Postscript
 et:Postscript-dokumendid
@@ -12827,7 +12831,7 @@ cn:打印为图像 (需要更多的内存) (&I)
 cy:Argraffu fel &delwedd (angen mwy o gof)
 cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
-dk:Print som &Billede (kræver mere hukommelse)
+dk:Print som &billede (kræver mere hukommelse)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
 es:Imprimir como &imagen (necesita más memoria)
 et:Prindi kui p&ilt (nõuab rohkem mälu)
@@ -12991,7 +12995,7 @@ cn:正在打印
 cy:Wrthi'n argraffu.
 cz:Probíhá tisk
 de:Drucken - SumatraPDF
-dk:Udskrift igang
+dk:Udskrift i gang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
 et:Printimine on pooleli.
@@ -13043,7 +13047,7 @@ cn:打印仍在持续当中。要中止并放弃吗？
 cy:Dal wrthi'n argraffu. Hepgor a gadael?
 cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
-dk:Udskrift er stadig igang. Afbryd?
+dk:Udskrift er stadig i gang. Afbryd og afslut?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
 es:Impresión aún en progreso. ¿Cancelar y salir?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
@@ -13149,7 +13153,7 @@ cn:正在打印第 %d 页/共 %d 页
 cy:Argraffu tudalen %d o %d...
 cz:Tisk stránky %d z %d...
 de:Drucke Seite %d von %d…
-dk:Udskriver side %d af %d...
+dk:Udskriver side %d af %d ...
 el:Εκτύπωση σελίδας %d από %d...
 es:Imprimiendo página %d de %d...
 et:Lehekülje %d/%d printimine...
@@ -13207,7 +13211,7 @@ cn:打印问题。
 cy:Anhawster argraffu
 cz:Potíže s tiskem
 de:Druckerproblem
-dk:Udskrift problem.
+dk:Udskriftsproblem.
 el:Πρόβλημα εκτύπωσης.
 es:Problema de impresión.
 et:Probleem printimisel
@@ -13272,7 +13276,7 @@ cn:重命名(&N)...\tF2
 cy:&Ailenwi...\tF2
 cz:Přejme&novat...\tF2
 de:Umbe&nennen…\tF2
-dk:Om&døb... \tF2
+dk:Om&døb ... \tF2
 el:&Μετονομασία...\tF2
 es:Re&nombrar...\tF2
 et:&Nimeta ümber...\tF2
@@ -13554,7 +13558,7 @@ cn:向左旋转(&L)\tCtrl+Shift+-
 cy:Troi i'r &Chwith\tCtrl+Shift+-
 cz:Otočit do&leva\tCtrl+Shift+Num-
 de:&Gegen UZS drehen\tStrg+Umschalt+-
-dk:Roter mod &venstre\tCtrl+Shift+-
+dk:Roter mod &venstre\tCtrl+skift+-
 el:Περιστροφή Αριστερά\tCtrl+Shift+-
 es:Girar a la izquierda\tCtrl+Mayús+-
 et:Pööra &vasemale\tCtrl+Shift+-
@@ -13622,7 +13626,7 @@ cn:向右旋转(&R)\tCtrl+Shift++
 cy:Troi i'r dde\tCtrl+Shift++
 cz:Otočit dop&rava\tCtrl+Shift+Num+
 de:Im &UZS drehen\tStrg+Umschalt++
-dk:Roter mod &højre\tCtrl+Shift++
+dk:Roter mod &højre\tCtrl+skift++
 el:Περιστροφή Δεξιά\tCtrl+Shift++
 es:Girar a la derecha\tCtrl+Mayús++
 et:Pööra &paremale\tCtrl+Shift++
@@ -13756,7 +13760,7 @@ cn:保存快捷方式(&H)...\tCtrl+Shift+S
 cy:Cadw'r &Llwybr Byr...\tCtrl+Shift+S
 cz:U&ložit zástupce...\tCtrl+Shift+S
 de:&Verknüpfung speichern…\tStrg+Umschalt+S
-dk:Gem ge&nvej...\tCtrl+Shift+S
+dk:Gem ge&nvej ...\tCtrl+skift+S
 el:Αποθήκευση &Συντόμευσης...\tCtrl+Shift+S
 es:Guardar A&cceso directo...\tCtrl+Mayús+S
 et:Salvesta &otsetee...\tCtrl+Shift+S
@@ -13811,7 +13815,7 @@ cn:正在搜索第 %d 页/共 %d 页
 cy:Chwilio am %d o %d...
 cz:Prohledává se %d z %d...
 de:Durchsuche Seite %d von %d…
-dk:Søgning %d af %d...
+dk:Søger i %d af %d ...
 el:Αναζήτηση %d από %d...
 es:Buscando %d de %d...
 et:Otsitakse %d/%d...
@@ -13870,7 +13874,7 @@ cn:全选(&A)
 cy:Dewis &Popeth
 cz:Vybrat &vše
 de:Alles &markieren
-dk:Markér &alt
+dk:Marker &alt
 el:Επιλογή Ό&λων
 es:Seleccionar &todo
 et:V&ali kõik
@@ -13926,7 +13930,7 @@ cn:全选(&A)\tCtrl+A
 cy:Dewis &Popeth\tCtrl+A
 cz:Vybrat &vše\tCtrl+A
 de:Alles &markieren\tStrg+A
-dk:Vælg &Alle\tCtrl+A
+dk:Vælg &alt\tCtrl+A
 el:Επιλογή Όλων\tCtrl+A
 es:Seleccionar &todo\tCtrl+A
 et:V&ali kõik\tCtrl+A
@@ -14040,7 +14044,7 @@ cn:选择 SumatraPDF 应被安装的文件夹：
 cy:Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
-dk:Vælg folderen hvor SumatraPDF skal installeres:
+dk:Vælg mappen hvor SumatraPDF skal installeres:
 es:Seleccione la carpeta de instalación de SumatraPDF:
 et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
@@ -14087,6 +14091,7 @@ cn:选择:
 cy:Dewis:
 cz:Výběr:
 de:Auswahl:
+dk:Markering:
 es:Selección:
 et:Valik:
 eu:Hautatpena:
@@ -14127,7 +14132,7 @@ cn:通过电子邮件发送(&E)...
 cy:Anfon drwy &E-bost...
 cz:Odeslat &e-mailem...
 de:Per &E-Mail versenden…
-dk:Send med &email...
+dk:Send med &e-post ...
 el:Α&ποστολή με E-mail...
 es:Enviar por correo &electrónico
 et:Saada &e-postiga
@@ -14189,7 +14194,7 @@ cn:设置反向搜索命令行
 cy:Gosod linell-orchymyn chwilio gwrthdro
 cz:Nastavit inverzní vyhledávání z příkazového řádku
 de:Befehlszeile für die Inverssuche setzen
-dk:Indstil komando-linje til invers søgning
+dk:Angiv omvendt søgekommandolinje
 el:Εμφάνιση γραμμής αντίστροφης αναζήτησης
 es:Establecer orden de consola para búsqueda inversa
 et:Loo pööratud otsingu käsurida
@@ -14251,7 +14256,7 @@ cn:显示书签(&B)
 cy:Dangos &Nodau Tudalen
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
-dk:Vis &Bogmærker
+dk:Vis &bogmærker
 el:Εμφάνιση &Σελιδοδεικτών
 es:Mostrar &marcadores
 et:Näita &järjehoidjaid
@@ -14366,7 +14371,7 @@ cn:显示工具栏(&T)
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
 de:&Werkzeugleiste anzeigen
-dk:Vis &værktøjslinie
+dk:Vis &værktøjslinje
 el:&Εμφάνιση Γραμμής Εργαλείων
 es:Mostrar barra de &herramientas
 et:&Näita tööriistariba
@@ -14542,7 +14547,7 @@ cn:可用时显示书签边栏(&B)
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 cz:Zo&brazit záložky v postranním panelu, jsou-li dostupné
 de:&Lesezeichen standardmässig anzeigen
-dk:Vis &bogmærke sidepanelet når tilgængeligt
+dk:Vis sidepanelet for &bogmærker når tilgængeligt
 el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 es:Mostrar la barra de &marcadores cuando esté disponible
 et:Näita &järjehoidjate külgriba kui võimalik
@@ -14668,7 +14673,7 @@ cn:某些安装所需的文件损坏或丢失
 cy:Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll
 cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
 de:Einige Dateien konnten nicht korrekt installiert werden
-dk:Nogle installations filer er beskadiget eller mangler
+dk:Nogle installationsfiler er beskadiget eller mangler
 el:Ορισμένα αρχεία προς εγκατάσταση είναι κατεστραμμένα ή λείπουν
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
 et:Mõned paigaldatavad failid on viga saanud või puuduvad
@@ -14718,7 +14723,7 @@ cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个�
 cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
-dk:Desværrre, det var ikke meningen\n\nKlik på 'Afbryd', hvis du kan og vil hjælpe med at finde årsagen til nedbruddet.
+dk:Desværre, det var ikke meningen\n\nKlik på »Afbryd«, hvis du kan og vil hjælpe med at finde årsagen til nedbruddet.
 el:Μας συγχωρείτε για το αναπάντεχο σφάλμα που συνέβη!\n\nΑν θέλετε να μας βοηθήσετε να αντιμετωπίσουμε το προβλήμα, παρακαλούμε πατήστε 'Άκυρο'.
 es:Lo sentimos, esto no debería haber sucedido...\n\nPresione «cancelar» si quiere ayudarnos a arreglar la causa del fallo.
 et:Vabandust, seda ei oleks tohtinud juhtuda!\n\nPalun vajuta 'Loobu' kui soovid aidata meil parandada selle kokkujooksmise põhjust.
@@ -14943,7 +14948,7 @@ cn:SumatraPDF %s 安装器
 cy:Gosodwr SumatraPDF %s
 cz:SumatraPDF %s instalátor
 de:SumatraPDF %s installieren
-dk:SumatraPDF %s installer
+dk:SumatraPDF %s installationsprogram
 es:Instalador de SumatraPDF %s
 et:SumatraPDF %s paigaldamine
 eu:SumatraPDF %s Ezartzailea
@@ -14991,7 +14996,7 @@ cn:SumatraPDF %s 解除安装器
 cy:Dadosodwr SumatraPDF %s
 cz:SumatraPDF %s odinstalátor
 de:SumatraPDF %s deinstallieren
-dk:SumatraPDF %s afinstallere
+dk:SumatraPDF %s afinstallationsprogram
 es:Desinstalador de SumatraPDF %s
 et:SumatraPDF %s eemaldamine
 eu:SumatraPDF %s Kentzailea
@@ -15041,7 +15046,7 @@ cn:SumatraPDF 选项
 cy:Dewisiadau SumatraPDF
 cz:Možnosti programu SumatraPDF
 de:SumatraPDF Optionen
-dk:SumatraPDF valgmuligheder
+dk:SumatraPDF-valgmuligheder
 el:Επιλογές SumatraPDF
 es:Opciones de SumatraPDF
 et:SumatraPDF-i sätted
@@ -15100,7 +15105,7 @@ cn:升级 SumatraPDF
 cy:Diweddaru SumatraPDF
 cz:SumatraPDF - Aktualizace
 de:SumatraPDF Update
-dk:SumatraPDF Opdatering
+dk:SumatraPDF-opdatering
 el:Ενημέρωση SumatraPDF
 es:Actualizar SumatraPDF
 et:SumatraPDF-i uuendamine
@@ -15261,7 +15266,7 @@ cn:未找到 SumatraPDF 安装。
 cy:Heb ganfod gosodiad SumatraPDF.
 cz:Instalace programu SumatraPDF nebyla nalezena.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
-dk:SumatraPDF installation ikke fundet.
+dk:SumatraPDF-installation blev ikke fundet.
 el:Η εγκατάσταση του SumatraPDF δεν βρέθηκε.
 es:Instalación de SumatraPDF no encontrada.
 et:SumatraPDF paigaldust ei leitud.
@@ -15312,7 +15317,7 @@ cn:SumatraPDF 是默认 PDF 阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
 cz:SumatraPDF je výchozím PDF prohlížečem
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
-dk:SumatraPDF er din standard PDF-læser
+dk:SumatraPDF er din standardlæser til PDF-filer
 el:Το SumatraPDF είναι το προεπιλεγμένο πρόγραμμα PDF
 es:SumatraPDF es el lector PDF predeterminado
 et:SumatraPDF on vaikimisi PDF-lehitseja
@@ -15372,7 +15377,7 @@ cn:现在 SumatraPDF 应该是你的默认 PDF 阅读器了
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 cz:SumatraPDF by měl být výchozím PDF prohlížečem
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
-dk:SumatraPDF skulle nu være din standard PDF-læser
+dk:SumatraPDF skulle nu være din standardlæser til PDF-filer
 el:Το SumatraPDF πρέπει να είναι τώρα συσχετισμένο με τα αρχεία PDF
 es:A partir de ahora SumatraPDF será el lector PDF predeterminado
 et:SumatraPDF peaks nüüd olema vaikimisi PDF-lehitseja
@@ -15491,7 +15496,7 @@ cn:已标记PDF
 cy:PDF wedi ei thagio
 cz:Tagované PDF
 de:PDF mit Tags
-dk:Tagged PDF
+dk:Mærket PDF
 el:PDF με ετικέττα
 es:PDF etiquetado
 et:Siltidega PDF
@@ -15602,7 +15607,7 @@ cn:谢谢选用SumatraPDF!
 cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
-dk:Tak fordi du valgte SumatraPDF !
+dk:Tak fordi du valgte SumatraPDF!
 el:Ευχαριστούμε που διαλέξατε το SumatraPDF!
 es:¡Gracias por elegir a SumatraPDF!
 et:Täname, et valisid SumatraPDF'i!
@@ -15651,7 +15656,7 @@ cn:谢谢! SumatraPDF已经安装好.
 cy:Diolch yn fawr! Mae SumatraPDF wedi ei gosod
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
-dk:Tak ! SumatraPDF er installeret.
+dk:Tak! SumatraPDF er installeret.
 el:Ευχαριστούμε! Το SumatraPDF εγκαταστάθηκε.
 es:¡Gracias! SumatraPDF ha sido instalado.
 et:Täname! SumatraPDF on paigaldatud.
@@ -15743,6 +15748,7 @@ br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido 
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
+dk:Dette dokument bruger funktioner, der ikke er understøttet (%s) og optegner måske ikke korrekt
 es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrarse adecuadamente
 et:See dokument sisaldab omadusi (%s), mida program ei toeta ja seetõttu ei pruugi see olla õigesti esitatud.
 eu:Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea
@@ -16041,6 +16047,7 @@ cn:使用标签页(&T)
 cy:Defnyddio &tabiau
 cz:Použít &karty
 de:Dokumente in &Tabs öffnen
+dk:Brug &faneblade
 es:Usar &pestañas
 et:Kasuta &kaarte
 eu:Erabili &hegatsak
@@ -16080,7 +16087,7 @@ cn:使用 SumatraPDF 作为默懧的 PDF 阅读器(&U)
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
-dk:Anvend SumatraPDF som &standard PDF læser
+dk:Anvend SumatraPDF som &standardlæser for PDF-filer
 el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
 es:Usar SumatraPDF como lector PDF pre&determinado
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
@@ -16202,7 +16209,7 @@ cn:访问网站(&W)
 cy:&Ymweld â'r Wefan
 cz:Navštívit &webovou stránku
 de:SumatraPDF im &Internet
-dk:Besøg &webside
+dk:Besøg &internetside
 el:&Ιστοσελίδα Προγράμματος
 es:Visitar sitio &Web
 et:&Külasta kodulehte

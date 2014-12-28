@@ -3505,18 +3505,18 @@ const char * gTranslations_dk =
   "&Faktisk st\303\270rrelse\tCtrl+1\0"\
   "&Avancerede valgmuligheder\0"\
   "&Alle valgte sider\0"\
-  "&Tilbage\tAlt+<-\0"\
+  "&Tilbage\tAlt+venstre pil\0"\
   "&Bogvisning\tCtrl+8\0"\
   "&Luk\tCtrl+W\0"\
-  "&Kopier Markering\0"\
+  "&Kopier markering\0"\
   "&Kopier markering\tCtrl+C\0"\
   "&Sp\303\270rg mig ikke igen\0"\
   "&Kun lige sider\0"\
   "&Modst\303\245ende\tCtrl+7\0"\
-  "&Filer\0"\
+  "&Fil\0"\
   "&Find hvad:\0"\
   "&F\303\270rste side\tHome\0"\
-  "&Tilpas sider til printbart omr\303\245de\0"\
+  "&Tilpas sider til udskrivningsomr\303\245det\0"\
   "&G\303\245 til\0"\
   "&G\303\245 til side:\0"\
   "&Hj\303\246lp\0"\
@@ -3530,25 +3530,25 @@ const char * gTranslations_dk =
   "&Kun ulige sider\0"\
   "&\303\205bn dokument\0"\
   "&\303\205bn...\tCtrl+O\0"\
-  "&Valgmuligheder...\0"\
+  "&Valgmuligheder ...\0"\
   "&Kodeord:\0"\
   "&Fastg\303\270r dokument\0"\
   "&Forrige side\t<-\0"\
-  "&Udskriv...\0"\
-  "&Udskriv...\tCtrl+P\0"\
-  "&Udskriv... (n\303\246gtet)\0"\
+  "&Udskriv ...\0"\
+  "&Udskriv ...\tCtrl+P\0"\
+  "&Udskriv ... (n\303\246gtet)\0"\
   "&Husk kodeordet for dette dokument\0"\
   "&Husk disse indstillinger for hvert dokument\0"\
   "&Fjern dokument\0"\
-  "&Gem som\0"\
-  "&Gem som...\tCtrl+S\0"\
+  "&Gem som ...\0"\
+  "&Gem som ...\tCtrl+S\0"\
   "&Indstillinger\0"\
-  "krymp sider til printbart omr\303\245de\0"\
+  "&Formindsk sider til udskriftsomr\303\245det (hvis n\303\270dvendigt)\0"\
   "&Enkelt side\tCtrl+6\0"\
   "&Spring over denne version\0"\
   "&Brug originale sidest\303\270rrelser\0"\
   "&Vis\0"\
-  "\0"\
+  "&Vindue\0"\
   "&Ja\0"\
   "\0"\
   "(af %d)\0"\
@@ -3566,41 +3566,41 @@ const char * gTranslations_dk =
   "Bilag: %s\0"\
   "Forfatter:\0"\
   "Automatisk\0"\
-  "Tjek automatisk for &opdateringer\0"\
+  "Kontroller automatisk for &opdateringer\0"\
   "Bogvisning\0"\
   "Bog&m\303\246rker\tF12\0"\
   "Gem genveje\0"\
   "Gem genvej til side %s af %s\0"\
   "Bogm\303\246rker\0"\
-  "\0"\
+  "Byte\0"\
   "CHM-dokumenter\0"\
   "Kan ikke forbinde til internettet (fejl %#x).\0"\
   "Annuller\0"\
   "Kan ikke udskrive denne fil\0"\
-  "Kan ikke starte invers s\303\270gekommando. Tjek venligst kommandolinjen i indstillingerne.\0"\
+  "Kan ikke starte s\303\270gekommandoen invers. Kontroller venligst kommandolinjen i indstillingerne.\0"\
   "Skift sprog (Change Language)\0"\
-  "Tjek for ny &version\0"\
+  "Kontroller for ny &version\0"\
   "Tegneserier\0"\
   "Kompatibilitet\0"\
   "Fortl\303\270bende\0"\
-  "Fortl\303\270bende bog-visning\0"\
+  "Fortl\303\270bende bogvisning\0"\
   "Fortl\303\270bende modst\303\245ende\0"\
   "Bidrag med overs\303\246ttelse\0"\
-  "Kopier &Billede\0"\
-  "Kopier &Linkadresse\0"\
+  "Kopier &billede\0"\
+  "Kopier &henvisningsadresse\0"\
   "Kopier ko&mmentar\0"\
   "Kopiering af tekst blev n\303\246gtet (kopierer kun som billede)\0"\
-  "\0"\
-  "Kan ikke hente printer egenskaber\0"\
+  "Ophavsret:\0"\
+  "Kan ikke hente printeregenskaber\0"\
   "Kunne ikke starte printer\0"\
   "Kunne ikke vise siden\0"\
   "Oprettet:\0"\
   "Aktuel fil\0"\
-  "\0"\
+  "Mark\303\270rposition:\0"\
   "Brugerdefineret &zoom...\tCtrl+Y\0"\
-  "Standard &Layout:\0"\
-  "Standard &Zoom\0"\
-  "Standard PDF-l\303\246ser kan ikke \303\246ndres i mobil tilstand\0"\
+  "Standard&layout:\0"\
+  "Standard&zoom\0"\
+  "Standardl\303\246seren for PDF kan ikke \303\246ndres i mobil tilstand\0"\
   "N\303\246gtede tilladelser:\0"\
   "DjVu-dokumenter\0"\
   "Dokumentegenskaber\0"\
@@ -3609,18 +3609,18 @@ const char * gTranslations_dk =
   "EPUB-dokumenter\0"\
   "Indtast kodeord\0"\
   "Indtast kodeord for %s\0"\
-  "Indtast den kommandolinie du vil bruge n\303\245r du dobbeltklikker p\303\245 PDF-dokumentet:\0"\
+  "Indtast den kommandolinje du vil bruge, n\303\245r du dobbeltklikker p\303\245 PDF-dokumentet:\0"\
   "Side %s kan ikke indl\303\246ses\0"\
   "Bogm&\303\246rker\0"\
   "F&remad\tAlt+->\0"\
-  "F&uldsk\303\246rmsvisning\tCtrl+Shift+L\0"\
+  "F&uldsk\303\246rmsvisning\tCtrl+skift+L\0"\
   "Modst\303\245ende\0"\
   "Fejl ved omd\303\270bning af fil!\0"\
   "Kunne ikke gemme filen\0"\
-  "Hurtig Internet Visning\0"\
+  "Hurtig Internetvisning\0"\
   "Bogm\303\246rker\0"\
   "FictionBook-dokumenter\0"\
-  "Fil %s ikke fundet\0"\
+  "Filen %s blev ikke fundet\0"\
   "Filst\303\270rrelse:\0"\
   "Fil:\0"\
   "\0"\
@@ -3637,22 +3637,22 @@ const char * gTranslations_dk =
   "Tilpas bredde og vis sider l\303\270bende\0"\
   "Vis en side ad gangen\0"\
   "Skrifttyper:\0"\
-  "Formaterer bogen... %d sider\0"\
+  "Formaterer bogen ... %d sider\0"\
   "Fandt tekst p\303\245 side %s\0"\
   "Tekst er (ogs\303\245) fundet p\303\245 side %s\0"\
   "Hyppigt l\303\246ste\0"\
   "Gb\0"\
   "G\303\245 til side\0"\
   "Skjul hyppigt l\303\246ste\0"\
-  "Vink: Brug F3 knappen for at finde igen\0"\
-  "Billed filer (*.%s)\0"\
+  "Vink: Brug F3-knappen for at finde igen\0"\
+  "Billedfiler (*.%s)\0"\
   "Kb\0"\
   "Mb\0"\
-  "G\303\270r SumatraPDF standardprogram for PDF-filer\0"\
-  "G\303\270r SumatraPDF til min standard PDF-l\303\246ser\0"\
-  "Man&ga tilstand\0"\
+  "G\303\270r SumatraPDF til standardprogrammet for PDF-filer\0"\
+  "G\303\270r SumatraPDF til min standardl\303\246ser for PDF-filer\0"\
+  "Man&ga-tilstand\0"\
   "Versalf\303\270lsom s\303\270gning\0"\
-  "Mobi documenter\0"\
+  "Mobi-dokumenter\0"\
   "\303\206ndret:\0"\
   "Ny version %s er tilg\303\246ngelig. Hent ny version?\0"\
   "N\303\246ste side\0"\
@@ -3661,82 +3661,82 @@ const char * gTranslations_dk =
   "Ingen synkroniseringsfil fundet\0"\
   "Ingen synkroniseringsinformation p\303\245 denne position\0"\
   "Antal sider:\0"\
-  "\0"\
+  "O.k.\0"\
   "\303\205bn\0"\
-  "\303\205ben med PDF-XChange\0"\
-  "\303\205bn et dokument...\0"\
-  "\303\205ben o %s\0"\
+  "\303\205bn med PDF-XChange\0"\
+  "\303\205bn et dokument ...\0"\
+  "\303\205bn i %s\0"\
   "\303\205bn med &Adobe Reader\0"\
-  "\303\205ben med &Foxit Reader\0"\
+  "\303\205bn med &Foxit Reader\0"\
   "\303\205bn med Microsoft HTML Help\0"\
-  "\303\205ben med Microsoft XPS-Viewer\0"\
+  "\303\205bn med Microsoft XPS-Viewer\0"\
   "Egenskabe&r\0"\
   "E&genskaber\tCtrl+D\0"\
-  "PDF dokument\0"\
-  "PDF Optimeringer:\0"\
-  "PDF producent:\0"\
-  "PDF version:\0"\
+  "PDF-dokument\0"\
+  "PDF-optimeringer:\0"\
+  "PDF-producent:\0"\
+  "PDF-version:\0"\
   "PDF dokumenter\0"\
-  "Side...\tCtrl+G\0"\
+  "&Side ...\tCtrl+G\0"\
   "Side %s\0"\
   "Sidest\303\270rrelse:\0"\
-  "Side nummer %u eksisterer ikke\0"\
+  "Sidenummer %u findes ikke\0"\
   "Sideskalering\0"\
   "Side:\0"\
-  "\0"\
-  "Vent venligst - renderer...\0"\
-  "Postscript dokumenter\0"\
+  "PalmDoc-dokumenter\0"\
+  "Vent venligst - optegner ...\0"\
+  "Postscript-dokumenter\0"\
   "H&ele sk\303\246rmen\tCtrl+L\0"\
   "Forrige side\0"\
   "Udskriv\0"\
-  "Print som &Billede (kr\303\246ver mere hukommelse)\0"\
+  "Print som &billede (kr\303\246ver mere hukommelse)\0"\
   "Udskriftsomr\303\245de\0"\
   "Printer med dette navn findes ikke\0"\
-  "Udskrift igang\0"\
-  "Udskrift er stadig igang. Afbryd?\0"\
+  "Udskrift i gang\0"\
+  "Udskrift er stadig i gang. Afbryd og afslut?\0"\
   "Udskrift p\303\245g\303\245r stadig. Afbryd og start forfra?\0"\
-  "Udskriver side %d af %d...\0"\
-  "Udskrift problem.\0"\
-  "Om&d\303\270b... \tF2\0"\
+  "Udskriver side %d af %d ...\0"\
+  "Udskriftsproblem.\0"\
+  "Om&d\303\270b ... \tF2\0"\
   "Husk &\303\245bnede filer\0"\
   "Fjern fra bogm\303\246rker\0"\
   "Fjern side %s fra bogm\303\246rker\0"\
   "Omd\303\270b til\0"\
-  "Roter mod &venstre\tCtrl+Shift+-\0"\
-  "Roter mod &h\303\270jre\tCtrl+Shift++\0"\
+  "Roter mod &venstre\tCtrl+skift+-\0"\
+  "Roter mod &h\303\270jre\tCtrl+skift++\0"\
   "Gem som\0"\
-  "Gem ge&nvej...\tCtrl+Shift+S\0"\
-  "S\303\270gning %d af %d...\0"\
-  "Mark\303\251r &alt\0"\
-  "V\303\246lg &Alle\tCtrl+A\0"\
+  "Gem ge&nvej ...\tCtrl+skift+S\0"\
+  "S\303\270ger i %d af %d ...\0"\
+  "Marker &alt\0"\
+  "V\303\246lg &alt\tCtrl+A\0"\
   "V\303\246lg indhold med Ctrl+venstre museknap\0"\
-  "\0"\
-  "Send med &email...\0"\
-  "Indstil komando-linje til invers s\303\270gning\0"\
-  "Vis &Bogm\303\246rker\0"\
+  "Markering:\0"\
+  "Send med &e-post ...\0"\
+  "Angiv omvendt s\303\270gekommandolinje\0"\
+  "Vis &bogm\303\246rker\0"\
   "Vis &sider fortl\303\270bende\0"\
-  "Vis &v\303\246rkt\303\270jslinie\0"\
+  "Vis &v\303\246rkt\303\270jslinje\0"\
   "Vis bogm\303\246rker\0"\
   "Vis hyppigt l\303\246ste\0"\
-  "Vis &bogm\303\246rke sidepanelet n\303\245r tilg\303\246ngeligt\0"\
+  "Vis sidepanelet for &bogm\303\246rker n\303\245r tilg\303\246ngeligt\0"\
   "Enkelt side\0"\
-  "Desv\303\246rrre, det var ikke meningen\n\nKlik p\303\245 'Afbryd', hvis du kan og vil hj\303\246lpe med at finde \303\245rsagen til nedbruddet.\0"\
+  "Desv\303\246rre, det var ikke meningen\n\nKlik p\303\245 \302\273Afbryd\302\253, hvis du kan og vil hj\303\246lpe med at finde \303\245rsagen til nedbruddet.\0"\
   "Kildefilen %s har ingen synkroniseringspunkter\0"\
   "Emne:\0"\
-  "SumatraPDF valgmuligheder\0"\
-  "SumatraPDF Opdatering\0"\
+  "SumatraPDF-valgmuligheder\0"\
+  "SumatraPDF-opdatering\0"\
   "Kritisk fejl, SumatraPDF lukkes\0"\
-  "SumatraPDF er din standard PDF-l\303\246ser\0"\
-  "SumatraPDF skulle nu v\303\246re din standard PDF-l\303\246ser\0"\
+  "SumatraPDF er din standardl\303\246ser til PDF-filer\0"\
+  "SumatraPDF skulle nu v\303\246re din standardl\303\246ser til PDF-filer\0"\
   "Synkroniseringsfil kan ikke \303\245bnes\0"\
-  "\0"\
+  "M\303\246rket PDF\0"\
   "Tekstdokumenter\0"\
-  "\0"\
+  "Dette dokument bruger funktioner, der ikke er underst\303\270ttet (%s) og optegner m\303\245ske ikke korrekt\0"\
   "Titel:\0"\
   "Ukendt kildefil (%s)\0"\
-  "\0"\
+  "Brug &faneblade\0"\
   "Vis\0"\
-  "Bes\303\270g &webside\0"\
+  "Bes\303\270g &internetside\0"\
   "Advarsel\0"\
   "XPS-dokumenter\0"\
   "Du har den seneste version.\0"\

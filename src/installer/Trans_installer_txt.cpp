@@ -588,47 +588,47 @@ const char * gTranslations_cz =
 
 const char * gTranslations_dk = 
   "&Valgmuligheder\0"\
-  "Er du sikker p\303\245 at du vil afinstallere SumatraPDF ?\0"\
+  "Er du sikker p\303\245, at du vil afinstallere SumatraPDF?\0"\
   "Luk\0"\
-  "Kunne ikke oprette midlertidigt folder\0"\
-  "Kunne ikke oprette installations folder\0"\
-  "Kunne ikke installere PDF viser\0"\
-  "Kunne ikke installere PDF s\303\270ge filter\0"\
-  "Kunne ikke tilg\303\245 midlertidig folder\0"\
-  "Kunne ikke fjerne installations folder\0"\
+  "Kunne ikke oprette midlertidig mappe\0"\
+  "Kunne ikke oprette installationsmappe\0"\
+  "Kunne ikke installere PDF-fremviser\0"\
+  "Kunne ikke installere PDF-s\303\270gefilter\0"\
+  "Kunne ikke tilg\303\245 midlertidig mappe\0"\
+  "Kunne ikke fjerne installationsmappe\0"\
   "Kunne ikke fjerne genvej\0"\
-  "Kunne ikke fjerne PDF viser\0"\
-  "Kunne ikke afinstallere PDF s\303\270ge filter\0"\
-  "Kunne ikke fjerne browser plugin\0"\
+  "Kunne ikke fjerne PDF-fremviser\0"\
+  "Kunne ikke afinstallere PDF-s\303\270gefilter\0"\
+  "Kunne ikke fjerne browserudvidelsesmodul\0"\
   "Kunne ikke skrive %s til disk\0"\
-  "Kunne ikke kopiere fra midlertidig folder\0"\
+  "Kunne ikke kopiere fra midlertidig mappe\0"\
   "Kunne ikke oprette genvej\0"\
-  "Kunne ikke slette afinstallering n\303\270ger i registreringsdatabasen\0"\
-  "Kunne ikke skrive udvidet fil efternavn information i registreringsdatabasen\0"\
-  "Kunne ikke skrive afinstallerings information i registreringsdatabasen\0"\
-  "Gem &Valgmuligheder\0"\
+  "Kunne ikke slette afinstalleringsn\303\270gler i registreringsdatabasen\0"\
+  "Kunne ikke skrive udvidet information om filens efternavn i registreringsdatabasen\0"\
+  "Kunne ikke skrive afinstalleringsinformation i registreringsdatabasen\0"\
+  "Gem &valgmuligheder\0"\
   "Installer SumatraPDF\0"\
-  "Installer SumatraPDF i &folder:\0"\
-  "Installation fejlede !\0"\
+  "Installer SumatraPDF i &mappe:\0"\
+  "Installation fejlede!\0"\
   "Installation i gang ...\0"\
-  "\0"\
-  "Lad Windows skrivebord S\303\270ge &s\303\270g PDF dokumenter\0"\
-  "Lad Windows vise &femvisning af PDF dokumenter\0"\
+  "Bevar PDF-&browserudvidelsesmodulet installeret (ikke l\303\246ngere underst\303\270ttet)\0"\
+  "Lad Windows' skrivebordss\303\270gning &s\303\270ge i PDF-dokumenter\0"\
+  "Lad Windows vise &forh\303\245ndsvisninger af PDF-dokumenter\0"\
   "Luk venligst %s for at forts\303\246tte !\0"\
-  "V\303\246lg folderen hvor SumatraPDF skal installeres:\0"\
-  "Nogle installations filer er beskadiget eller mangler\0"\
+  "V\303\246lg mappen hvor SumatraPDF skal installeres:\0"\
+  "Nogle installationsfiler er beskadiget eller mangler\0"\
   "\0"\
-  "SumatraPDF %s installer\0"\
-  "SumatraPDF %s afinstallere\0"\
+  "SumatraPDF %s installationsprogram\0"\
+  "SumatraPDF %s afinstallationsprogram\0"\
   "SumatraPDF er afinstalleret.\0"\
-  "SumatraPDF installation ikke fundet.\0"\
-  "Tak fordi du valgte SumatraPDF !\0"\
-  "Tak ! SumatraPDF er installeret.\0"\
+  "SumatraPDF-installation blev ikke fundet.\0"\
+  "Tak fordi du valgte SumatraPDF!\0"\
+  "Tak! SumatraPDF er installeret.\0"\
   "Installationsprogrammet er fejlbeh\303\246ftet. Pr\303\270v venligst at hente det igen.\nVi beklager ulejligheden!\0"\
   "Afinstaller SumatraPDF\0"\
   "Afinstallationen fejlede\0"\
   "Afinstallation p\303\245g\303\245r ...\0"\
-  "Anvend SumatraPDF som &standard PDF l\303\246ser\0";
+  "Anvend SumatraPDF som &standardl\303\246ser for PDF-filer\0";
 
 const char * gTranslations_nl = 
   "&Opties\0"\
