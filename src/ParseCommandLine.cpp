@@ -20,8 +20,8 @@ static void EnumeratePrinters()
     PRINTER_INFO_5 *info5Arr = nullptr;
     DWORD bufSize = 0, printersCount;
     bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
-        5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
-    if (fOk) {
+        5, nullptr, bufSize, &bufSize, &printersCount);
+    if (fOk || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
         fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
             5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
@@ -29,6 +29,7 @@ static void EnumeratePrinters()
     if (!fOk || !info5Arr) {
         output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
         MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
+        free(info5Arr);
         return;
     }
     ScopedMem<WCHAR> defName(GetDefaultPrinterName());
