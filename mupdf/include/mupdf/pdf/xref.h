@@ -66,7 +66,7 @@ struct pdf_xref_s
 	pdf_obj *pre_repair_trailer;
 };
 
-void pdf_cache_object(pdf_document *doc, int num, int gen);
+pdf_xref_entry *pdf_cache_object(pdf_document *doc, int num, int gen);
 
 int pdf_count_objects(pdf_document *doc);
 pdf_obj *pdf_resolve_indirect(pdf_obj *ref);

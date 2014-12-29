@@ -175,6 +175,7 @@ cbz_load_page(cbz_document *doc, int number)
 	fz_context *ctx = doc->ctx;
 	unsigned char *data = NULL;
 	cbz_page *page = NULL;
+	fz_buffer *buf;
 
 	if (number < 0 || number >= doc->page_count)
 		return NULL;
@@ -182,7 +183,7 @@ cbz_load_page(cbz_document *doc, int number)
 	fz_var(data);
 	fz_var(page);
 
-	fz_buffer *buf = fz_read_archive_entry(doc->ctx, doc->zip, doc->page[number]);
+	buf = fz_read_archive_entry(doc->ctx, doc->zip, doc->page[number]);
 	fz_try(ctx)
 	{
 		page = fz_malloc_struct(ctx, cbz_page);

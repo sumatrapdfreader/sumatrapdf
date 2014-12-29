@@ -11,9 +11,8 @@ pdf_is_stream(pdf_document *doc, int num, int gen)
 	if (num <= 0 || num >= pdf_xref_len(doc))
 		return 0;
 
-	pdf_cache_object(doc, num, gen);
+	entry = pdf_cache_object(doc, num, gen);
 
-	entry = pdf_get_xref_entry(doc, num);
 	return entry->stm_ofs != 0 || entry->stm_buf;
 }
 
@@ -408,9 +407,7 @@ pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num
 	if (num <= 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
-	pdf_cache_object(doc, num, gen);
-
-	x = pdf_get_xref_entry(doc, num);
+	x = pdf_cache_object(doc, num, gen);
 	if (x->stm_ofs == 0)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object is not a stream");
 
@@ -425,9 +422,7 @@ pdf_open_image_stream(pdf_document *doc, int num, int gen, int orig_num, int ori
 	if (num <= 0 || num >= pdf_xref_len(doc))
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object id out of range (%d %d R)", num, gen);
 
-	pdf_cache_object(doc, num, gen);
-
-	x = pdf_get_xref_entry(doc, num);
+	x = pdf_cache_object(doc, num, gen);
 	if (x->stm_ofs == 0 && x->stm_buf == NULL)
 		fz_throw(doc->ctx, FZ_ERROR_GENERIC, "object is not a stream");
 
