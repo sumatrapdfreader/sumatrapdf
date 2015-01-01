@@ -580,6 +580,12 @@
 
         /* don't include delimiters */
         string_size = (FT_Long)( ( parser->root.cursor - cur - 2 + 1 ) / 2 );
+        if ( !string_size )
+        {
+          FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array\n" ));
+          error = FT_THROW( Invalid_File_Format );
+          goto Fail;
+        }
         if ( FT_REALLOC( string_buf, old_string_size, string_size ) )
           goto Fail;
 
@@ -660,6 +666,13 @@
             num_tables     = 16 * face->ttf_data[4] + face->ttf_data[5];
             status         = BEFORE_TABLE_DIR;
             face->ttf_size = 12 + 16 * num_tables;
+
+            if ( (FT_ULong)( limit - parser->root.cursor ) < face->ttf_size )
+            {
+              FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array\n" ));
+              error = FT_THROW( Invalid_File_Format );
+              goto Fail;
+            }
 
             if ( FT_REALLOC( face->ttf_data, 12, face->ttf_size ) )
               goto Fail;

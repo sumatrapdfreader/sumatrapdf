@@ -42,22 +42,22 @@
   } TBBox_Rec;
 
 
-#define FT_UPDATE_BBOX(p, bbox)       \
-  FT_BEGIN_STMNT                      \
-    if ( p->x < bbox.xMin )           \
-      bbox.xMin = p->x;               \
-    if ( p->x > bbox.xMax )           \
-      bbox.xMax = p->x;               \
-    if ( p->y < bbox.yMin )           \
-      bbox.yMin = p->y;               \
-    if ( p->y > bbox.yMax )           \
-      bbox.yMax = p->y;               \
+#define FT_UPDATE_BBOX( p, bbox ) \
+  FT_BEGIN_STMNT                  \
+    if ( p->x < bbox.xMin )       \
+      bbox.xMin = p->x;           \
+    if ( p->x > bbox.xMax )       \
+      bbox.xMax = p->x;           \
+    if ( p->y < bbox.yMin )       \
+      bbox.yMin = p->y;           \
+    if ( p->y > bbox.yMax )       \
+      bbox.yMax = p->y;           \
   FT_END_STMNT
 
-#define CHECK_X( p, bbox )  \
+#define CHECK_X( p, bbox )                         \
           ( p->x < bbox.xMin || p->x > bbox.xMax )
 
-#define CHECK_Y( p, bbox )  \
+#define CHECK_Y( p, bbox )                         \
           ( p->y < bbox.yMin || p->y > bbox.yMax )
 
 
@@ -419,7 +419,8 @@
     return 0;
   }
 
-FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
+
+  FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
     (FT_Outline_MoveTo_Func) BBox_Move_To,
     (FT_Outline_LineTo_Func) BBox_Line_To,
     (FT_Outline_ConicTo_Func)BBox_Conic_To,
@@ -427,14 +428,17 @@ FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
     0, 0
   )
 
+
   /* documentation is in ftbbox.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Outline_Get_BBox( FT_Outline*  outline,
                        FT_BBox     *abbox )
   {
-    FT_BBox     cbox = { 0x7FFFFFFF, 0x7FFFFFFF, -0x7FFFFFFF, -0x7FFFFFFF };
-    FT_BBox     bbox = { 0x7FFFFFFF, 0x7FFFFFFF, -0x7FFFFFFF, -0x7FFFFFFF };
+    FT_BBox     cbox = {  0x7FFFFFFFL,  0x7FFFFFFFL,
+                         -0x7FFFFFFFL, -0x7FFFFFFFL };
+    FT_BBox     bbox = {  0x7FFFFFFFL,  0x7FFFFFFFL,
+                         -0x7FFFFFFFL, -0x7FFFFFFFL };
     FT_Vector*  vec;
     FT_UShort   n;
 

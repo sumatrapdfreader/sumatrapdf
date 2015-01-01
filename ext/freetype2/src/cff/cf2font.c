@@ -150,8 +150,8 @@
       /* logarithms; remembering that the 16 lowest bits of the fraction */
       /* are dropped this is correct to within a factor of almost 4.     */
       /* For example, 0x80.0000 * 0x80.0000 = 0x4000.0000 is 23+23 and   */
-      /* is flagged as possible overflow because 0xff.ffff * 0xff.ffff = */
-      /* 0xffff.fe00 is also 23+23.                                      */
+      /* is flagged as possible overflow because 0xFF.FFFF * 0xFF.FFFF = */
+      /* 0xFFFF.FE00 is also 23+23.                                      */
 
       logBase2 = FT_MSB( (FT_UInt32)stemWidthPer1000 ) +
                    FT_MSB( (FT_UInt32)ppem );

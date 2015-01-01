@@ -3496,7 +3496,7 @@
     {
       FT_ERROR(( "tt_face_build_cmaps:"
                  " unsupported `cmap' table format = %d\n",
-                 TT_PEEK_USHORT( p - 2) ));
+                 TT_PEEK_USHORT( p - 2 ) ));
       return FT_THROW( Invalid_Table );
     }
 

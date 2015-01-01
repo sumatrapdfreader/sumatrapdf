@@ -363,7 +363,7 @@
               p[x] |= p[x - 1] << ( 8 - i );
 
 #if 0
-            if ( p[x] == 0xff )
+            if ( p[x] == 0xFF )
               break;
 #endif
           }

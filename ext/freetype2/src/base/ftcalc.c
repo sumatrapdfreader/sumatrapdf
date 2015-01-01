@@ -86,8 +86,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_RoundFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0x8000L ) & ~0xFFFFL
-                      : -((-a + 0x8000L ) & ~0xFFFFL );
+    return a >= 0 ?   ( a + 0x8000L ) & ~0xFFFFL
+                  : -((-a + 0x8000L ) & ~0xFFFFL );
   }
 
 
@@ -96,8 +96,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_CeilFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   ( a + 0xFFFFL ) & ~0xFFFFL
-                      : -((-a + 0xFFFFL ) & ~0xFFFFL );
+    return a >= 0 ?   ( a + 0xFFFFL ) & ~0xFFFFL
+                  : -((-a + 0xFFFFL ) & ~0xFFFFL );
   }
 
 
@@ -106,8 +106,8 @@
   FT_EXPORT_DEF( FT_Fixed )
   FT_FloorFix( FT_Fixed  a )
   {
-    return ( a >= 0 ) ?   a & ~0xFFFFL
-                      : -((-a) & ~0xFFFFL );
+    return a >= 0 ?   a & ~0xFFFFL
+                  : -((-a) & ~0xFFFFL );
   }
 
 #ifndef FT_MSB
@@ -115,30 +115,31 @@
   FT_BASE_DEF ( FT_Int )
   FT_MSB( FT_UInt32 z )
   {
-    FT_Int shift = 0;
+    FT_Int  shift = 0;
+
 
     /* determine msb bit index in `shift' */
-    if ( z & 0xFFFF0000U )
+    if ( z & 0xFFFF0000UL )
     {
       z     >>= 16;
       shift  += 16;
     }
-    if ( z & 0x0000FF00U )
+    if ( z & 0x0000FF00UL )
     {
       z     >>= 8;
       shift  += 8;
     }
-    if ( z & 0x000000F0U )
+    if ( z & 0x000000F0UL )
     {
       z     >>= 4;
       shift  += 4;
     }
-    if ( z & 0x0000000CU )
+    if ( z & 0x0000000CUL )
     {
       z     >>= 2;
       shift  += 2;
     }
-    if ( z & 0x00000002U )
+    if ( z & 0x00000002UL )
     {
    /* z     >>= 1; */
       shift  += 1;
@@ -187,7 +188,7 @@
     d = (FT_Long)( c > 0 ? ( (FT_Int64)a * b + ( c >> 1 ) ) / c
                          : 0x7FFFFFFFL );
 
-    return ( s > 0 ) ? d : -d;
+    return s < 0 ? -d : d;
   }
 
 
@@ -209,7 +210,7 @@
     d = (FT_Long)( c > 0 ? (FT_Int64)a * b / c
                          : 0x7FFFFFFFL );
 
-    return ( s > 0 ) ? d : -d;
+    return s < 0 ? -d : d;
   }
 
 
@@ -234,7 +235,7 @@
 
     c = (FT_Long)( ( (FT_Int64)a * b + 0x8000L ) >> 16 );
 
-    return ( s > 0 ) ? c : -c;
+    return s < 0 ? -c : c;
 
 #endif /* FT_MULFIX_ASSEMBLER */
   }
@@ -256,7 +257,7 @@
     q = (FT_Long)( b > 0 ? ( ( (FT_UInt64)a << 16 ) + ( b >> 1 ) ) / b
                          : 0x7FFFFFFFL );
 
-    return ( s < 0 ? -q : q );
+    return s < 0 ? -q : q;
   }
 
 
@@ -438,7 +439,7 @@
                        : ft_div64by32( temp.hi, temp.lo, c );
     }
 
-    return ( s < 0 ? -a : a );
+    return s < 0 ? -a : a;
   }
 
 
@@ -475,7 +476,7 @@
                        : ft_div64by32( temp.hi, temp.lo, c );
     }
 
-    return ( s < 0 ? -a : a );
+    return s < 0 ? -a : a;
   }
 
 
@@ -573,7 +574,7 @@
            ( ( al * ( ub & 0xFFFFUL ) + 0x8000UL ) >> 16 );
     }
 
-    return ( s < 0 ? -(FT_Long)ua : (FT_Long)ua );
+    return s < 0 ? -(FT_Long)ua : (FT_Long)ua;
 
 #endif /* 0 */
 
@@ -620,7 +621,7 @@
       q = (FT_Long)ft_div64by32( temp.hi, temp.lo, b );
     }
 
-    return ( s < 0 ? -q : q );
+    return s < 0 ? -q : q;
   }
 
 

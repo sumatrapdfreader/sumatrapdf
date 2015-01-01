@@ -405,6 +405,8 @@ typedef ptrdiff_t  FT_PtrDist;
 
   typedef struct  gray_TWorker_
   {
+    ft_jmp_buf  jump_buffer;
+
     TCoord  ex, ey;
     TPos    min_ex, max_ex;
     TPos    min_ey, max_ey;
@@ -439,8 +441,6 @@ typedef ptrdiff_t  FT_PtrDist;
 
     int  band_size;
     int  band_shoot;
-
-    ft_jmp_buf  jump_buffer;
 
     void*       buffer;
     long        buffer_size;

@@ -481,7 +481,7 @@
     SFNT_Service         sfnt;
 
 
-    /* TT_SERVICES_GET derefers `library' in PIC mode */
+    /* TT_SERVICES_GET dereferences `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;

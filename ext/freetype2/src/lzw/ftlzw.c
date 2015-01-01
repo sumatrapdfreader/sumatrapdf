@@ -96,8 +96,8 @@
       goto Exit;
 
     /* head[0] && head[1] are the magic numbers */
-    if ( head[0] != 0x1f ||
-         head[1] != 0x9d )
+    if ( head[0] != 0x1F ||
+         head[1] != 0x9D )
       error = FT_THROW( Invalid_File_Format );
 
   Exit:

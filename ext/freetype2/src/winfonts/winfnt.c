@@ -72,12 +72,12 @@
 
     FT_FRAME_START( 248 ),
       FT_FRAME_ULONG_LE  ( magic ),   /* PE00 */
-      FT_FRAME_USHORT_LE ( machine ), /* 0x014c - i386 */
+      FT_FRAME_USHORT_LE ( machine ), /* 0x014C - i386 */
       FT_FRAME_USHORT_LE ( number_of_sections ),
       FT_FRAME_SKIP_BYTES( 12 ),
       FT_FRAME_USHORT_LE ( size_of_optional_header ),
       FT_FRAME_SKIP_BYTES( 2 ),
-      FT_FRAME_USHORT_LE ( magic32 ), /* 0x10b */
+      FT_FRAME_USHORT_LE ( magic32 ), /* 0x10B */
       FT_FRAME_SKIP_BYTES( 110 ),
       FT_FRAME_ULONG_LE  ( rsrc_virtual_address ),
       FT_FRAME_ULONG_LE  ( rsrc_size ),
@@ -412,9 +412,9 @@
                     pe32_header.rsrc_size ));
 
         if ( pe32_header.magic != WINFNT_PE_MAGIC /* check full signature */ ||
-             pe32_header.machine != 0x014c /* i386 */                        ||
-             pe32_header.size_of_optional_header != 0xe0 /* FIXME */         ||
-             pe32_header.magic32 != 0x10b                                    )
+             pe32_header.machine != 0x014C /* i386 */                        ||
+             pe32_header.size_of_optional_header != 0xE0 /* FIXME */         ||
+             pe32_header.magic32 != 0x10B                                    )
         {
           FT_TRACE2(( "this file has an invalid PE header\n" ));
           error = FT_THROW( Invalid_File_Format );

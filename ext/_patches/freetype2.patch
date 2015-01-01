@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\ftstdlib.h
---- freetype2.orig\include\config\ftstdlib.h	Sun Apr 20 20:18:50 2014
-+++ freetype2\include\config\ftstdlib.h	Fri Dec 12 21:46:18 2014
+--- freetype2.orig\include\config\ftstdlib.h	Thu Jan 01 15:45:12 2015
++++ freetype2\include\config\ftstdlib.h	Thu Jan 01 15:48:53 2015
 @@ -106,10 +106,16 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -19,9 +19,9 @@ diff -rPu5 freetype2.orig\include\config\ftstdlib.h freetype2\include\config\fts
    /*                             sorting                                */
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
---- freetype2.orig\include\ftsystem.h	Tue Dec 02 14:11:56 2014
-+++ freetype2\include\ftsystem.h	Fri Dec 12 21:46:51 2014
-@@ -336,10 +336,16 @@
+--- freetype2.orig\include\ftsystem.h	Thu Jan 01 15:45:12 2015
++++ freetype2\include\ftsystem.h	Thu Jan 01 15:49:09 2015
+@@ -345,10 +345,16 @@
    } FT_StreamRec;
  
    /* */
@@ -39,8 +39,8 @@ diff -rPu5 freetype2.orig\include\ftsystem.h freetype2\include\ftsystem.h
  
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
---- freetype2.orig\src\base\ftsystem.c	Wed May 29 01:00:04 2013
-+++ freetype2\src\base\ftsystem.c	Fri Dec 12 21:47:09 2014
+--- freetype2.orig\src\base\ftsystem.c	Thu Jan 01 15:45:12 2015
++++ freetype2\src\base\ftsystem.c	Thu Jan 01 15:49:23 2015
 @@ -315,6 +315,29 @@
  #endif
      ft_sfree( memory );
@@ -72,8 +72,8 @@ diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
 +
  /* END */
 diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
---- freetype2.orig\src\sfnt\sfobjs.c	Wed Nov 19 23:42:04 2014
-+++ freetype2\src\sfnt\sfobjs.c	Fri Dec 12 21:48:27 2014
+--- freetype2.orig\src\sfnt\sfobjs.c	Thu Jan 01 15:45:12 2015
++++ freetype2\src\sfnt\sfobjs.c	Thu Jan 01 15:49:41 2015
 @@ -1077,10 +1077,14 @@
                   get_glyph_metrics                                 )
            {

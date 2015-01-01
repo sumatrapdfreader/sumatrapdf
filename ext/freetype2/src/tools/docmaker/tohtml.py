@@ -628,7 +628,7 @@ class  HtmlFormatter( Formatter ):
             for f in self.headers.keys():
                 if block.source.filename.find( f ) >= 0:
                     header = self.headers[f] + ' (' + f + ')'
-                    break;
+                    break
 
 #           if not header:
 #               sys.stderr.write(

@@ -196,7 +196,7 @@ class  Formatter:
                 skip_entry = 1   # this happens e.g. for `/empty/' entries
 
             if skip_entry:
-              continue;
+              continue
 
             self.block_enter( block )
 

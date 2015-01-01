@@ -834,8 +834,8 @@
     stroker->miter_limit = miter_limit;
 
     /* ensure miter limit has sensible value */
-    if ( stroker->miter_limit < 0x10000 )
-      stroker->miter_limit = 0x10000;
+    if ( stroker->miter_limit < 0x10000L )
+      stroker->miter_limit = 0x10000L;
 
     /* save line join style:                                           */
     /* line join style can be temporarily changed when stroking curves */

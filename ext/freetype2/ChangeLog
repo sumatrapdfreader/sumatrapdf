@@ -1,3 +1,163 @@
+2014-12-30  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.5.5 released.
+	=========================
+
+
+	Tag sources with `VER-2-5-5'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.5.5.
+
+	* README, Jamfile (RefDoc), builds/windows/vc2005/freetype.vcproj,
+	builds/windows/vc2005/index.html,
+	builds/windows/vc2008/freetype.vcproj,
+	builds/windows/vc2008/index.html,
+	builds/windows/vc2010/freetype.vcxproj,
+	builds/windows/vc2010/index.html,
+	builds/windows/visualc/freetype.dsp,
+	builds/windows/visualc/freetype.vcproj,
+	builds/windows/visualc/index.html,
+	builds/windows/visualce/freetype.dsp,
+	builds/windows/visualce/freetype.vcproj,
+	builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.5.4/2.5.5/, s/254/255/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 5.
+
+	* builds/unix/configure.raw (version_info): Set to 17:4:11.
+	* CMakeLists.txt (VERSION_PATCH): Set to 5.
+	* docs/CHANGES: Updated.
+
+2014-12-24  Alexei Podtelezhnikov <apodtele@gmail.com>
+
+	[base] Formatting and nanooptimizations.
+
+	* src/base/ftcalc.c,
+	* src/base/fttrigon.c: Revise sign restoration.
+
+2014-12-13  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Improve fix from 2014-12-08.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* builds/toplevel.mk (dist): Use older POSIX standard for `tar'.
+
+	Apparently, BSD tar isn't capable yet of handling POSIX-1.2001
+	(contrary to GNU tar), so force the POSIX-1.1988 format.
+
+	Problem reported by Stephen Fisher <sfisher@SDF.ORG>.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Reject invalid TTF size.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_Get_Glyph_Name): Fix off-by-one check.
+
+	Problem reported by Dennis Felsing <dennis@felsin9.de>.
+
+2014-12-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42parse.c (t42_parse_sfnts): Check `string_size'.
+
+	Problem reported by Dennis Felsing <dennis@felsin9.de>.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[gxvalid] Fix a naming convention conflicting with ftvalid.
+
+	See previous changeset for otvalid.
+
+	* src/gxvalid/{gxvcommn.h, gxvmort.h, gxvmorx.h}: Replace
+	`valid' by `gxvalid'.
+	* src/gxvalid/{gxvbsln.c, gxvcommn.c, gxvfeat.c, gxvjust.c,
+	gxvkern.c, gxvlcar.c, gxvmort.c, gxvmort0.c, gxvmort1.c,
+	gxvmort2.c, gxvmort4.c, gxvmort5.c, gxvmorx.c, gxvmorx0.c,
+	gxvmorx1.c, gxvmorx2.c, gxvmorx4.c, gxvmorx5.c, gxvopbd.c,
+	gxvprop.c, gxvtrak.c}: Replace `valid' by `gxvalid' if
+	it is typed as GXV_Validator.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[otvalid] Fix a naming convention conflicting with ftvalid.
+
+	Some prototypes in ftvalid.h use `valid' for the variables
+	typed as FT_Validator.  Their implementations in src/base/
+	ftobjs.c and utilizations in src/sfnt/ttcmap.c do similar.
+
+	Some macros in otvcommn.h assume the exist of the variable
+	`valid' typed as OTV_Validator in the caller.
+
+	Mixing these two conventions cause invalid pointer conversion
+	and unexpected SEGV in longjmp.  To prevent it, all variables
+	typed as OTV_Validator are renamed to `otvalid'.
+
+	* src/otvalid/otvcommn.h: Replace `valid' by `otvalid'.
+	* src/otvalid/{otvcommn.c, otvbase.c, otvgdef.c, otvgpos.c,
+	otvgsub.c, otvjstf.c, otvmath.c}: Replace `valid' by `otvalid'
+	if it is typed as OTV_Validator.
+
+2014-12-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[ftvalid] Introduce FT_THROW() in FT_INVALID_XXX macros.
+
+	Original patch is designed by Werner Lemberg.  Extra part
+	for otvalid and gxvalid are added by suzuki toshiya, see
+	discussion:
+	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00002.html
+	http://lists.nongnu.org/archive/html/freetype-devel/2014-12/msg00007.html
+
+	* include/internal/ftvalid.h: Introduce FT_THROW() in FT_INVALID_().
+	* src/gxvalid/gxvcommn.h: Ditto.
+	* src/otvalid/otvcommn.h: Ditto.
+
+2014-12-08  Werner Lemberg  <wl@gnu.org>
+
+	[pcf] Fix Savannah bug #43774.
+
+	Work around `features' of X11's `pcfWriteFont' and `pcfReadFont'
+	functions.  Since the PCF format doesn't have an official
+	specification, we have to exactly follow these functions' behaviour.
+
+	The problem was unveiled with a patch from 2014-11-06, fixing issue
+	#43547.
+
+	* src/pcf/pcfread.c (pcf_read_TOC): Don't check table size for last
+	element.  Instead, assign real size.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	Work around a bug in Borland's C++ compiler.
+
+	See
+
+	  http://qc.embarcadero.com/wc/qcmain.aspx?d=118998
+
+	for Borland's bug tracker entry.
+
+	Reported by Yuliana Zigangirova <zigangirova@inbox.ru>,
+	http://lists.gnu.org/archive/html/freetype-devel/2014-04/msg00001.html.
+
+	* include/internal/ftvalid.h (FT_ValidatorRec), src/smooth/ftgrays.c
+	(gray_TWorker_): Move `ft_jmp_buf' field to be the first element.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	*/*: Decorate hex constants with `U' and `L' where appropriate.
+
+2014-12-07  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Prevent memory leak for buggy fonts.
+
+	* src/truetype/ttobjs.c (tt_size_done): Unconditionally call
+	`tt_size_done_bytecode'.
+
 2014-12-06  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.5.4 released.
@@ -568,7 +728,7 @@
 
 	[cff, pfr, psaux, winfonts] Fix Savannah bug #43676.
 
-	Don't cast cmap init function pointers to an incompatible type. 
+	Don't cast cmap init function pointers to an incompatible type.
 
 	Without this patch, the number of parameters between declaration and
 	the real signature differs.  Calling such a function results in

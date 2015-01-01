@@ -3059,7 +3059,7 @@
 #define DO_MD  /* nothing */
 
 
-#define DO_MPPEM              \
+#define DO_MPPEM                   \
     args[0] = CUR_Func_cur_ppem();
 
 
@@ -3072,7 +3072,7 @@
 
 #else
 
-#define DO_MPS                \
+#define DO_MPS                     \
     args[0] = CUR_Func_cur_ppem();
 
 #endif /* 0 */
@@ -5625,7 +5625,7 @@
   /*************************************************************************/
   /*                                                                       */
   /* INSTCTRL[]:   INSTruction ConTRoL                                     */
-  /* Opcode range: 0x8e                                                    */
+  /* Opcode range: 0x8E                                                    */
   /* Stack:        int32 int32 -->                                         */
   /*                                                                       */
   static void
@@ -7654,7 +7654,7 @@
     }
 #endif
 
-    P = (FT_ULong)CUR_Func_cur_ppem();
+    P    = (FT_ULong)CUR_Func_cur_ppem();
     nump = (FT_ULong)args[0];
 
     for ( k = 1; k <= nump; k++ )
@@ -9004,9 +9004,9 @@
     /* If any errors have occurred, function tables may be broken. */
     /* Force a re-execution of `prep' and `fpgm' tables if no      */
     /* bytecode debugger is run.                                   */
-    if ( CUR.error
-         && !CUR.instruction_trap
-         && CUR.curRange == tt_coderange_glyph )
+    if ( CUR.error                          &&
+         !CUR.instruction_trap              &&
+         CUR.curRange == tt_coderange_glyph )
     {
       FT_TRACE1(( "  The interpreter returned error 0x%x\n", CUR.error ));
       exc->size->bytecode_ready = -1;

@@ -2,7 +2,7 @@ Project         Version Date         Download URL
 ----------------------------------------------------------------------------------------------
 bzip2           1.0.6   2010-09-06   http://bzip.org/downloads.html
 CHMLib          0.40a   2009-07-02   https://github.com/jedwing/CHMLib
-freetype2       2.5.4   2014-12-06   http://sourceforge.net/projects/freetype/files/freetype2/
+freetype2       2.5.5   2014-12-30   http://sourceforge.net/projects/freetype/files/freetype2/
 jbig2dec        0.12git 2014-10-31   http://git.ghostscript.com/?p=jbig2dec.git
 libjpeg-turbo   1.3.1   2014-04-20   http://sourceforge.net/projects/libjpeg-turbo/files/
 libdjvu         3.5.25  2012-05-08   http://djvu.sourceforge.net/

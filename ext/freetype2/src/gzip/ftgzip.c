@@ -208,8 +208,8 @@
 
     /* head[0] && head[1] are the magic numbers;    */
     /* head[2] is the method, and head[3] the flags */
-    if ( head[0] != 0x1f              ||
-         head[1] != 0x8b              ||
+    if ( head[0] != 0x1F              ||
+         head[1] != 0x8B              ||
          head[2] != Z_DEFLATED        ||
         (head[3] & FT_GZIP_RESERVED)  )
     {
