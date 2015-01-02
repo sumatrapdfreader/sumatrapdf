@@ -8690,7 +8690,7 @@ const char * gTranslations_my =
   "Pilih &Semua\0"\
   "Pilih Semu&a\tCtrl+A\0"\
   "Pilih kandungan dengan Ctrl + butang kiri tetikus\0"\
-  "\0"\
+  "Pilihan\0"\
   "Hantar melalui &Emel...\0"\
   "Tetapkan pencarian songsang baris arahan\0"\
   "Papar &Bookmark\0"\

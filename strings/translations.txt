@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5051a4903c7fceb3fadc7f1bd39332311126ee6a
+9605631e0320858ffabbb06fe7e27662e986db0e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4017,6 +4017,7 @@ hu:Készítő:
 id:Pencipta:
 it:Autore:
 ja:作者:
+jv:Penerjemah
 ka:ავტორი:
 kr:저자:
 ku:دانەر:
@@ -14106,6 +14107,7 @@ it:Selezione
 ja:Selection:
 kr:선택:
 mk:Селекција:
+my:Pilihan
 nl:Selectie
 no:Valg:
 pl:Selekcja:
