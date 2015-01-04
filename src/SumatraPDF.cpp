@@ -2286,7 +2286,6 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
 static void OnMenuSaveAs(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
-    AssertCrash(win.ctrl);
     if (!win.IsDocLoaded()) return;
 
     const WCHAR *srcFileName = win.ctrl->FilePath();
@@ -2462,7 +2461,6 @@ static void OnMenuSaveAs(WindowInfo& win)
 static void OnMenuRenameFile(WindowInfo &win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
-    CrashIf(!win.ctrl);
     if (!win.IsDocLoaded()) return;
     if (gPluginMode) return;
 
@@ -2532,7 +2530,6 @@ static void OnMenuRenameFile(WindowInfo &win)
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
-    CrashIf(!win.ctrl);
     if (!win.IsDocLoaded()) return;
 
     const WCHAR *defExt = win.ctrl->DefaultFileExt();
@@ -3832,15 +3829,18 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_SINGLE_PAGE:
-            SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
+            if (win->IsDocLoaded())
+                SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
 
         case IDM_VIEW_FACING:
-            SwitchToDisplayMode(win, DM_FACING, true);
+            if (win->IsDocLoaded())
+                SwitchToDisplayMode(win, DM_FACING, true);
             break;
 
         case IDM_VIEW_BOOK:
-            SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
+            if (win->IsDocLoaded())
+                SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
 
         case IDM_VIEW_CONTINUOUS:
@@ -4054,8 +4054,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_DEBUG_ANNOTATION:
-            if (win)
-                FrameOnChar(*win, 'h');
+            FrameOnChar(*win, 'h');
             break;
 
         case IDM_DEBUG_CRASH_ME:
@@ -4064,11 +4063,13 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 #endif
 
         case IDM_FAV_ADD:
-            AddFavorite(win);
+            if (win->IsDocLoaded())
+                AddFavorite(win);
             break;
 
         case IDM_FAV_DEL:
-            DelFavorite(win);
+            if (win->IsDocLoaded())
+                DelFavorite(win);
             break;
 
         case IDM_FAV_TOGGLE:

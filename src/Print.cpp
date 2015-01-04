@@ -490,6 +490,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
     if (!HasPermission(Perm_PrinterAccess))
         return;
+    if (!win->IsDocLoaded())
+        return;
 
     if (win->AsChm()) {
         // the Print dialog allows access to the file system, so fall back
