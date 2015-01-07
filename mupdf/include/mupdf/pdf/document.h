@@ -213,6 +213,7 @@ struct pdf_document_s
 	int max_xref_len;
 	int num_xref_sections;
 	pdf_xref *xref_sections;
+	int *xref_index;
 	int xref_altered;
 	int freeze_updates;
 	int has_xref_streams;

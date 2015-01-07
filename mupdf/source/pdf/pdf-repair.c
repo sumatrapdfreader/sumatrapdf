@@ -241,7 +241,7 @@ pdf_repair_obj_stm(pdf_document *doc, int num, int gen)
 }
 
 void
-pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
+pdf_repair_xref(pdf_document *doc)
 {
 	pdf_obj *dict, *obj = NULL;
 	pdf_obj *length;
@@ -264,6 +264,7 @@ pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf)
 	int next;
 	int i, n, c;
 	fz_context *ctx = doc->ctx;
+	pdf_lexbuf *buf = &doc->lexbuf.base;
 
 	fz_var(encrypt);
 	fz_var(id);
