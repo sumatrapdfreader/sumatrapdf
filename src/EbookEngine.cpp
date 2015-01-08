@@ -1369,6 +1369,7 @@ public:
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return doc->HasToc() || doc->HasIndex(); }
     virtual DocTocItem *GetTocTree();
 
@@ -1499,6 +1500,22 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
         return false;
 
     return pages->Count() > 0;
+}
+
+PageDestination *Chm2EngineImpl::GetNamedDest(const WCHAR *name)
+{
+    PageDestination *dest = EbookEngine::GetNamedDest(name);
+    if (!dest) {
+        unsigned int topicID;
+        if (str::Parse(name, L"%u%$", &topicID)) {
+            ScopedMem<char> urlUtf8(doc->ResolveTopicID(topicID));
+            if (urlUtf8) {
+                ScopedMem<WCHAR> url(str::conv::FromUtf8(urlUtf8));
+                dest = EbookEngine::GetNamedDest(url);
+            }
+        }
+    }
+    return dest;
 }
 
 DocTocItem *Chm2EngineImpl::GetTocTree()

@@ -213,6 +213,24 @@ bool ChmDoc::ParseSystemData()
     return true;
 }
 
+char *ChmDoc::ResolveTopicID(unsigned int id)
+{
+    size_t ivbLen = 0;
+    ScopedMem<unsigned char> ivbData(GetData("/#IVB", &ivbLen));
+    ByteReader br(ivbData, ivbLen);
+    if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0))
+        return nullptr;
+
+    for (size_t off = 4; off < ivbLen; off += 8) {
+        if (br.DWordLE(off) == id) {
+            size_t stringsLen = 0;
+            ScopedMem<unsigned char> stringsData(GetData("/#STRINGS", &stringsLen));
+            return GetCharZ(stringsData, stringsLen, br.DWordLE(off + 4));
+        }
+    }
+    return nullptr;
+}
+
 bool ChmDoc::Load(const WCHAR *fileName)
 {
     chmHandle = chm_open((WCHAR *)fileName);

@@ -24,6 +24,7 @@ public:
 
     bool HasData(const char *fileName);
     unsigned char *GetData(const char *fileName, size_t *lenOut);
+    char *ResolveTopicID(unsigned int id);
 
     char *ToUtf8(const unsigned char *text, UINT overrideCP=0);
     WCHAR *ToStr(const char *text);

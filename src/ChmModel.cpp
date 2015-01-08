@@ -416,10 +416,32 @@ void ChmModel::OnLButtonDown()
         cb->FocusFrame(true);
 }
 
+// named destinations are either in-document URLs or Alias topic IDs
 PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<WCHAR> plainUrl(url::GetFullPath(name));
+    ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+    if (!doc->HasData(urlUtf8)) {
+        unsigned int topicID;
+        if (str::Parse(name, L"%u%$", &topicID)) {
+            urlUtf8.Set(doc->ResolveTopicID(topicID));
+            if (urlUtf8 && doc->HasData(urlUtf8)) {
+                plainUrl.Set(str::conv::FromUtf8(urlUtf8));
+                name = plainUrl;
+            }
+            else
+                urlUtf8.Set(nullptr);
+        }
+        else
+            urlUtf8.Set(nullptr);
+    }
     int pageNo = pages.Find(plainUrl) + 1;
+    if (!pageNo && !str::IsEmpty(urlUtf8.Get())) {
+        // some documents use redirection URLs which aren't listed in the ToC
+        // return pageNo=1 for these, as ScrollToLink will ignore that anyway
+        // but LinkHandler::ScrollTo doesn't
+        pageNo = 1;
+    }
     if (pageNo > 0)
         return new ChmNamedDest(name, pageNo);
     return nullptr;
