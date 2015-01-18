@@ -124,6 +124,10 @@ inline bool IsDigit(WCHAR c) {
     return '0' <= c && c <= '9';
 }
 
+inline bool IsNonCharacter(WCHAR c) {
+    return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
+}
+
 size_t  TrimWS(WCHAR *s, TrimOpt opt=TrimBoth);
 void    TrimWsEnd(char *s, char *&e);
 

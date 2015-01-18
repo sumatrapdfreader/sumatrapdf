@@ -262,16 +262,7 @@ void ReplacePtr(WCHAR **s, const WCHAR *snew)
    Caller needs to free() memory. */
 char *Join(const char *s1, const char *s2, const char *s3)
 {
-    if (!s1) s1= "";
-    if (!s2) s2 = "";
-    if (!s3) s3 = "";
-
-    return Format("%s%s%s", s1, s2, s3);
-}
-
-char *Join(const char *s1, const char *s2)
-{
-    return Join(s1, s2, "");
+    return Join(s1, s2, s3, nullptr);
 }
 
 char *Join(const char *s1, const char *s2, const char *s3, Allocator *allocator)
@@ -298,11 +289,15 @@ char *Join(const char *s1, const char *s2, const char *s3, Allocator *allocator)
    Caller needs to free() memory. */
 WCHAR *Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3)
 {
-    if (!s1) s1 = L"";
-    if (!s2) s2 = L"";
-    if (!s3) s3 = L"";
-
-    return Format(L"%s%s%s", s1, s2, s3);
+    // don't use str::Format(L"%s%s%s", s1, s2, s3) since the strings
+    // might contain non-characters which str::Format fails to handle
+    size_t s1Len = str::Len(s1), s2Len = str::Len(s2), s3Len = str::Len(s3);
+    WCHAR *res = AllocArray<WCHAR>(s1Len + s2Len + s3Len + 1);
+    memcpy(res, s1, s1Len * sizeof(WCHAR));
+    memcpy(res + s1Len, s2, s2Len * sizeof(WCHAR));
+    memcpy(res + s1Len + s2Len, s3, s3Len * sizeof(WCHAR));
+    res[s1Len + s2Len + s3Len] = '\0';
+    return res;
 }
 
 char *DupN(const char *s, size_t lenCch)
@@ -476,17 +471,16 @@ WCHAR *FmtV(const WCHAR *fmt, va_list args)
     WCHAR * buf = message;
     for (;;)
     {
+        // TODO: _vsnwprintf_s fails for certain inputs (e.g. strings containing U+FFFF)
+        //       but doesn't correctly set errno, either, so there's no way of telling
+        //       the failures apart
         int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
         if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
-        /* we have to make the buffer bigger. The algorithm used to calculate
-           the new size is arbitrary (aka. educated guess) */
+        // always grow the buffer exponentially (cf. TODO above)
         if (buf != message)
             free(buf);
-        if (bufCchSize < 4*1024)
-            bufCchSize += bufCchSize;
-        else
-            bufCchSize += 1024;
+        bufCchSize = bufCchSize / 2 * 3;
         buf = AllocArray<WCHAR>(bufCchSize);
         if (!buf)
             break;

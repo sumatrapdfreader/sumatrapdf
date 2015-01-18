@@ -286,7 +286,7 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
             for (fz_text_span *span = line->first_span; span; span = span->next) {
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
                     *dest = c->c;
-                    if (*dest <= 32) {
+                    if (*dest <= 32 || str::IsNonCharacter(*dest)) {
                         if (!str::IsWs(*dest))
                             *dest = '?';
                         // collapse multiple whitespace characters into one
