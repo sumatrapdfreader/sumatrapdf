@@ -658,7 +658,6 @@ pdf_xref_find_subsection(pdf_document *doc, int ofs, int len)
 	else
 	{
 		/* Case 3 */
-		/* SumatraPDF: fix TODO in http://git.ghostscript.com/?p=mupdf.git;a=commitdiff;h=d7c0c0856b31be17823ae4745b2c542a9c71765f */
 		ensure_solid_xref(doc, new_max, doc->num_xref_sections-1);
 		xref = &doc->xref_sections[doc->num_xref_sections-1];
 		sub = xref->subsec;
@@ -1372,7 +1371,7 @@ pdf_init_document(pdf_document *doc)
 
 		if (repaired)
 		{
-			/* SumatraPDF: prevent inconsistencies during reparation */
+			/* pdf_repair_xref may access xref_index, so reset it properly */
 			memset(doc->xref_index, 0, sizeof(int) * doc->max_xref_len);
 			pdf_repair_xref(doc);
 			pdf_prime_xref_index(doc);
@@ -1494,7 +1493,6 @@ pdf_close_document(pdf_document *doc)
 		doc->drop_js(doc->js);
 
 	pdf_free_xref_sections(doc);
-	/* SumatraPDF: fix memory leak */
 	fz_free(ctx, doc->xref_index);
 
 	if (doc->focus_obj)
@@ -1654,11 +1652,13 @@ pdf_load_obj_stm(pdf_document *doc, int num, int gen, pdf_lexbuf *buf, int targe
 				 * a pointer to the old one will be left with a
 				 * stale pointer. Instead, we drop the new one
 				 * and trust that the old one is correct. */
-				if (entry->obj) {
+				if (entry->obj)
+				{
 					if (pdf_objcmp(entry->obj, obj))
 						fz_warn(ctx, "Encountered new definition for object %d - keeping the original one", numbuf[i]);
 					pdf_drop_obj(obj);
-				} else
+				}
+				else
 					entry->obj = obj;
 				if (numbuf[i] == target)
 					ret_entry = entry;

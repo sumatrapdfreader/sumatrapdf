@@ -21,6 +21,8 @@
 	'a':case'b':case'c':case'd':case'e':case'f'
 #define RANGE_A_F \
 	'A':case'B':case'C':case'D':case'E':case'F'
+#define RANGE_0_7 \
+	'0':case'1':case'2':case'3':case'4':case'5':case'6':case'7'
 
 static inline int iswhite(int ch)
 {
@@ -296,8 +298,7 @@ lex_string(fz_stream *f, pdf_lexbuf *lb)
 			case '\\':
 				*s++ = '\\';
 				break;
-			/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/66 */
-			case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+			case RANGE_0_7:
 				oct = c - '0';
 				c = fz_read_byte(f);
 				if (c >= '0' && c <= '7')

@@ -168,17 +168,6 @@ void pdf_update_page(pdf_document *doc, pdf_page *page);
 */
 int pdf_has_unsaved_changes(pdf_document *doc);
 
-typedef struct pdf_obj_read_state_s pdf_obj_read_state;
-
-struct pdf_obj_read_state_s
-{
-	int offset;
-	int num;
-	int numofs;
-	int gen;
-	int genofs;
-};
-
 typedef struct pdf_signer_s pdf_signer;
 
 /* Unsaved signature fields */

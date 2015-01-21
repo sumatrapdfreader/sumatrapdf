@@ -765,7 +765,9 @@ pdf_show_pattern(pdf_csi *csi, pdf_run_state *pr, pdf_pattern *pat, pdf_gstate *
 			y0 = floorf(fy0 + 0.001);
 			x1 = ceilf(fx1 - 0.001);
 			y1 = ceilf(fy1 - 0.001);
-			/* SumatraPDF: make sure that patterns with extreme step values are still rendered */
+			/* The above adjustments cause problems for sufficiently
+			 * large values for xstep/ystep which may be used if the
+			 * pattern is expected to be rendered exactly once. */
 			if (fx1 > fx0 && x1 == x0)
 				x1 = x0 + 1;
 			if (fy1 > fy0 && y1 == y0)
