@@ -157,8 +157,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             exitWhenDone = true;
         }
         else if (is_arg_with_param("-inverse-search")) {
-            str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, argList.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
+            inverseSearchCmdLine.Set(str::Dup(argList.At(++n)));
         }
         else if ((is_arg_with_param("-forward-search") ||
                   is_arg_with_param("-fwdsearch")) && argCount > n + 2) {
@@ -183,7 +182,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
-            gGlobalPrefs->fixedPageUI.invertColors = true;
+            invertColors = true;
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;
@@ -202,6 +201,9 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
         }
         else if (is_arg("-console")) {
             showConsole = true;
+        }
+        else if (is_arg_with_param("-appdata")) {
+            appdataDir.Set(str::Dup(argList.At(++n)));
         }
         else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
@@ -255,40 +257,23 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             reuseDdeInstance = true;
         }
         // TODO: remove the following deprecated options within a release or two
-        else if (is_arg("-esc-to-exit")) {
-            gGlobalPrefs->escToExit = true;
-        }
-        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
-            // -bgcolor is for backwards compat (was used pre-1.3)
-            // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, argList.At(++n));
-        }
         else if (is_arg_with_param("-lang")) {
             lang.Set(str::conv::ToAnsi(argList.At(++n)));
         }
+        else if (is_arg("-esc-to-exit")) {
+            globalPrefArgs.Append(str::Dup(argList.At(n)));
+        }
+        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color") ||
+                 is_arg_with_param("-fwdsearch-offset") || is_arg_with_param("-fwdsearch-width") ||
+                 is_arg_with_param("-fwdsearch-color") || is_arg_with_param("-fwdsearch-permanent") ||
+                 is_arg_with_param("-manga-mode")) {
+            globalPrefArgs.Append(str::Dup(argList.At(n)));
+            globalPrefArgs.Append(str::Dup(argList.At(++n)));
+        }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, argList.At(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, argList.At(++n));
-        }
-        else if (is_arg_with_param("-fwdsearch-offset")) {
-            handle_int_param(gGlobalPrefs->forwardSearch.highlightOffset);
-            gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (is_arg_with_param("-fwdsearch-width")) {
-            handle_int_param(gGlobalPrefs->forwardSearch.highlightWidth);
-            gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, argList.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (is_arg_with_param("-fwdsearch-permanent")) {
-            handle_int_param(gGlobalPrefs->forwardSearch.highlightPermanent);
-            gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (is_arg_with_param("-manga-mode")) {
-            const WCHAR *s = argList.At(++n);
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
+            globalPrefArgs.Append(str::Dup(argList.At(n)));
+            globalPrefArgs.Append(str::Dup(argList.At(++n)));
+            globalPrefArgs.Append(str::Dup(argList.At(++n)));
         }
 #if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
         else if (is_arg_with_param("-autoupdate")) {
@@ -319,4 +304,48 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
 #undef has_additional_param
 #undef handle_string_param
 #undef handle_int_param
+}
+
+void CommandLineInfo::UpdateGlobalPrefs()
+{
+    if (inverseSearchCmdLine) {
+        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, inverseSearchCmdLine);
+        gGlobalPrefs->enableTeXEnhancements = true;
+    }
+    gGlobalPrefs->fixedPageUI.invertColors = invertColors;
+
+    for (size_t n = 0; n < globalPrefArgs.Count(); n++) {
+        if (str::EqI(globalPrefArgs.At(n), L"-esc-to-exit")) {
+            gGlobalPrefs->escToExit = true;
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-bgcolor") || str::EqI(globalPrefArgs.At(n), L"-bg-color")) {
+            // -bgcolor is for backwards compat (was used pre-1.3)
+            // -bg-color is for consistency
+            ParseColor(&gGlobalPrefs->mainWindowBackground, globalPrefArgs.At(++n));
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-set-color-range")) {
+            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, globalPrefArgs.At(++n));
+            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, globalPrefArgs.At(++n));
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-offset")) {
+            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(globalPrefArgs.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-width")) {
+            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(globalPrefArgs.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-color")) {
+            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, globalPrefArgs.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-permanent")) {
+            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(globalPrefArgs.At(++n));
+            gGlobalPrefs->enableTeXEnhancements = true;
+        }
+        else if (str::EqI(globalPrefArgs.At(n), L"-manga-mode")) {
+            const WCHAR *s = globalPrefArgs.At(++n);
+            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
+        }
+    }
 }

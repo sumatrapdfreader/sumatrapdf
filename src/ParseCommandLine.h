@@ -31,6 +31,9 @@ public:
     ScopedMem<WCHAR> pluginURL;
     bool        exitImmediately;
     bool        silent;
+    ScopedMem<WCHAR> appdataDir;
+    ScopedMem<WCHAR> inverseSearchCmdLine;
+    bool        invertColors;
 
     // stress-testing related
     ScopedMem<WCHAR> stressTestPath;
@@ -44,6 +47,7 @@ public:
 
     // deprecated flags
     ScopedMem<char> lang;
+    WStrVec globalPrefArgs;
 
     CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
         printerName(nullptr), printSettings(nullptr),
@@ -57,10 +61,12 @@ public:
         stressTestPath(nullptr), stressTestFilter(nullptr),
         stressTestRanges(nullptr), stressTestCycles(1), stressParallelCount(1),
         stressRandomizeFiles(false),
+        appdataDir(nullptr), inverseSearchCmdLine(nullptr), invertColors(false),
         crashOnOpen(false)
     { }
 
     ~CommandLineInfo() { }
 
     void ParseCommandLine(const WCHAR *cmdLine);
+    void UpdateGlobalPrefs();
 };

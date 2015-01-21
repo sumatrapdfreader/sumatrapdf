@@ -2931,8 +2931,6 @@ static void OnMenuAdvancedOptions()
         return;
 
     ScopedMem<WCHAR> path(prefs::GetSettingsPath());
-    if (!file::Exists(path))
-        prefs::Save();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     LaunchFile(path, nullptr, L"open");
