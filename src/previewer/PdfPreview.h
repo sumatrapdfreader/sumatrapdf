@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #define SZ_PDF_PREVIEW_CLSID    L"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}"

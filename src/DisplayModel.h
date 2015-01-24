@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // define the following if you want shadows drawn around the pages

@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 void CalcMD5Digest(const unsigned char *data, size_t byteCount, unsigned char digest[16]);

@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 /* This is assert for unit tests that can be used in non-interactive usage.
