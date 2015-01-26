@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // utils
@@ -635,17 +635,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
-    // TODO: this should happen after InitializePolicies, but
-    // ComandLineInfo::ParseCommandLine requires gGlobalPrefs
-    // for changing prefs as a side-effect (this can be fixed
-    // once the deprecated command line flags have been removed)
-    prefs::Load();
-
     CommandLineInfo i;
     i.ParseCommandLine(GetCommandLine());
-
-    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
     InitializePolicies(i.restrictedUse);
+    if (i.appdataDir)
+        SetAppDataPath(i.appdataDir);
+
+    prefs::Load();
+    i.UpdateGlobalPrefs();
+    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
     // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
     // in layout

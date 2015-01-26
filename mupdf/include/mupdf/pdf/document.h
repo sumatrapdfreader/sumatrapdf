@@ -168,17 +168,6 @@ void pdf_update_page(pdf_document *doc, pdf_page *page);
 */
 int pdf_has_unsaved_changes(pdf_document *doc);
 
-typedef struct pdf_obj_read_state_s pdf_obj_read_state;
-
-struct pdf_obj_read_state_s
-{
-	int offset;
-	int num;
-	int numofs;
-	int gen;
-	int genofs;
-};
-
 typedef struct pdf_signer_s pdf_signer;
 
 /* Unsaved signature fields */
@@ -213,6 +202,7 @@ struct pdf_document_s
 	int max_xref_len;
 	int num_xref_sections;
 	pdf_xref *xref_sections;
+	int *xref_index;
 	int xref_altered;
 	int freeze_updates;
 	int has_xref_streams;

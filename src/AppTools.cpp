@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // utils
@@ -73,12 +73,23 @@ bool IsRunningInPortableMode()
     return true;
 }
 
+static ScopedMem<WCHAR> gAppDataPath;
+
+void SetAppDataPath(const WCHAR *path)
+{
+    gAppDataPath.Set(path::Normalize(path));
+}
+
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
 WCHAR *AppGenDataFilename(const WCHAR *fileName)
 {
     if (!fileName)
         return nullptr;
+
+    if (gAppDataPath && dir::Exists(gAppDataPath)) {
+        return path::Join(gAppDataPath, fileName);
+    }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */

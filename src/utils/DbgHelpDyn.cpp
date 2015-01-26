@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
 /* Wrappers around dbghelp.dll that load it on demand and provide

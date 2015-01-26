@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
 // We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate

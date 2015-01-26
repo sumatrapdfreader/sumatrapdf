@@ -1,4 +1,4 @@
-/* Copyright 2014 the unarr project authors (see AUTHORS file).
+/* Copyright 2015 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
 /* adapted from https://code.google.com/p/theunarchiver/source/browse/XADMaster/XADRAR30Handle.m */

@@ -40,7 +40,8 @@ pdf_debug_key(FILE *out, void *key_)
 	if (pdf_is_indirect(key))
 	{
 		fprintf(out, "(%d %d R) ", pdf_to_num(key), pdf_to_gen(key));
-	} else
+	}
+	else
 		pdf_fprint_obj(out, key, 0);
 }
 #endif

@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 // utils
@@ -489,6 +489,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     PRINTER_INFO_2 printerInfo = { 0 };
 
     if (!HasPermission(Perm_PrinterAccess))
+        return;
+    if (!win->IsDocLoaded())
         return;
 
     if (win->AsChm()) {

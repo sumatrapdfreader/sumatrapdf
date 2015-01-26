@@ -32,7 +32,7 @@ pdf_jsimp *pdf_new_jsimp(fz_context *ctx, void *jsctx)
 	js_State *J;
 	pdf_jsimp *imp;
 
-	J = js_newstate(alloc, ctx);
+	J = js_newstate(alloc, ctx, 0);
 	js_setcontext(J, jsctx);
 
 	imp = fz_malloc_struct(ctx, pdf_jsimp);
@@ -184,12 +184,12 @@ void pdf_jsimp_addmethod(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_j
 		js_newcfunction(J, wrapmethod, name, 0);
 		{
 			js_pushnull(J);
-			js_newuserdata(J, "method", meth);
+			js_newuserdata(J, "method", meth, NULL);
 			js_defproperty(J, -2, "__call", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 			js_pushstring(J, (const char *)type);
 			js_defproperty(J, -2, "__type", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 		}
-		js_defproperty(J, -2, name, JS_READONLY | JS_DONTENUM | JS_DONTCONF);
+		js_defproperty(J, -2, name, JS_READONLY | JS_DONTCONF);
 	}
 	js_pop(J, 1);
 }
@@ -202,7 +202,7 @@ void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf
 		js_newcfunction(J, wrapgetter, name, 0);
 		{
 			js_pushnull(J);
-			js_newuserdata(J, "getter", get);
+			js_newuserdata(J, "getter", get, NULL);
 			js_defproperty(J, -2, "__get", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 			js_pushstring(J, (const char *)type);
 			js_defproperty(J, -2, "__type", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
@@ -210,12 +210,12 @@ void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf
 		js_newcfunction(J, wrapsetter, name, 0);
 		{
 			js_pushnull(J);
-			js_newuserdata(J, "setter", set);
+			js_newuserdata(J, "setter", set, NULL);
 			js_defproperty(J, -2, "__set", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 			js_pushstring(J, (const char *)type);
 			js_defproperty(J, -2, "__type", JS_READONLY | JS_DONTENUM | JS_DONTCONF);
 		}
-		js_defaccessor(J, -3, name, JS_READONLY | JS_DONTENUM | JS_DONTCONF);
+		js_defaccessor(J, -3, name, JS_READONLY | JS_DONTCONF);
 	}
 	js_pop(J, 1);
 }
@@ -223,17 +223,22 @@ void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf
 void pdf_jsimp_set_global_type(pdf_jsimp *imp, pdf_jsimp_type *type)
 {
 	js_State *J = imp->J;
+	const char *name;
+
 	js_getregistry(J, (const char *)type);
-	js_setglobal(J, "global");
-	js_dostring(J, "Object.getOwnPropertyNames(global).forEach(function(k){this[k]=global[k]}, this)", 0);
-	js_dostring(J, "delete global", 0);
+	js_pushiterator(J, -1, 1);
+	while ((name = js_nextiterator(J, -1)))
+	{
+		js_getproperty(J, -2, name);
+		js_setglobal(J, name);
+	}
 }
 
 pdf_jsimp_obj *pdf_jsimp_new_obj(pdf_jsimp *imp, pdf_jsimp_type *type, void *natobj)
 {
 	js_State *J = imp->J;
 	js_getregistry(J, (const char *)type);
-	js_newuserdata(J, (const char *)type, natobj);
+	js_newuserdata(J, (const char *)type, natobj, NULL);
 	return NEWOBJ(J, -1);
 }
 

@@ -1,4 +1,4 @@
-/* Copyright 2014 the unarr project authors (see AUTHORS file).
+/* Copyright 2015 the unarr project authors (see AUTHORS file).
    License: LGPLv3 */
 
 /* this is the common private/implementation API of unarr which should only be used by unarr code */

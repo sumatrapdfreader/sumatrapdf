@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
@@ -162,11 +162,24 @@ void StrTest()
     str = str::Format(L"%s", buf);
     utassert(str::Eq(str, buf));
     free(str);
+    {
+        ScopedMem<WCHAR> large(AllocArray<WCHAR>(2000));
+        memset(large, 0x11, 1998);
+        str = str::Format(L"%s", large);
+        utassert(str::Eq(str, large));
+        free(str);
+    }
+    str = str::Format(L"%s", L"\uFFFF");
+    utassert(str::Eq(str, nullptr));
+    free(str);
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
     free(str);
     str = str::Join(nullptr, L"ab");
     utassert(str::Eq(str, L"ab"));
+    free(str);
+    str = str::Join(L"\uFDEF", L"\uFFFF");
+    utassert(str::Eq(str, L"\uFDEF\uFFFF"));
     free(str);
 
     str::BufSet(buf, dimof(buf), L"abc\1efg\1");

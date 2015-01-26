@@ -1,4 +1,4 @@
-/* Copyright 2014 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 // note: include BaseUtil.h instead of including directly
@@ -122,6 +122,10 @@ inline bool IsDigit(char c) {
 
 inline bool IsDigit(WCHAR c) {
     return '0' <= c && c <= '9';
+}
+
+inline bool IsNonCharacter(WCHAR c) {
+    return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
 }
 
 size_t  TrimWS(WCHAR *s, TrimOpt opt=TrimBoth);
