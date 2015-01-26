@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9605631e0320858ffabbb06fe7e27662e986db0e
+ea68f62456e411b9fc6f95d9eaeb8a39e8a0c27a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2984,6 +2984,7 @@ sp-rs:P&rozor
 sr-rs:П&розор
 sv:Fönster
 tr:&Pencere
+tw:視窗(&W)
 uk:&Вікно
 vn:&Cửa sổ
 :&Yes
@@ -12459,6 +12460,7 @@ hr:PalmDoc dokumenti
 hu:PalmDoc dokumentumok
 id:Dokumen PalmDoc
 it:Documenti PalmDoc
+ja:PalmDoc ドキュメント
 kr:PalmDoc 문서
 mk:документи на PalmDoc
 nl:PalmDoc documenten
@@ -12472,6 +12474,7 @@ sp-rs:PalmDoc dokumenti
 sr-rs:PalmDoc документи
 sv:PalmDoc dokument
 tr:PalmDoc belgeleri
+tw:PalmDoc 文件
 uk:Документи PalmDoc
 vn:Tài liệu PalmDoc
 :Please close %s to proceed!
@@ -14119,6 +14122,7 @@ sp-rs:Izbor
 sr-rs:Избор
 sv:Markering:
 tr:Seçim:
+tw:選取:
 uk:Виділення:
 vn:Lựa chọn:
 :Send by &E-mail...
@@ -15748,6 +15752,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
+cn:文檔使用未支持的功能 (%s)，可能無法正確繪製。
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 dk:Dette dokument bruger funktioner, der ikke er understøttet (%s) og optegner måske ikke korrekt
@@ -15760,12 +15765,15 @@ hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno p
 hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
+ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
+tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
+tw:此文件使用未支援的功能 (%s) ，並可能無法正確的繪製。
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
 vn:Tài liệu này có vài tính năng không được hỗ trợ (%s) và không được dựng chính xác
 :Title:
@@ -16045,7 +16053,7 @@ ar:الإستعمال & التبويبات
 az:&Tab-vərəqələrdən istifadə et
 br:Usar &abas
 bs:Koristi &tabove
-cn:使用标签页(&T)
+cn:使用页签(&T)
 cy:Defnyddio &tabiau
 cz:Použít &karty
 de:Dokumente in &Tabs öffnen
@@ -16075,6 +16083,7 @@ sp-rs:Koristiti tab
 sr-rs:Користити таб
 sv:Använd flikar
 tr:&Sekmeler kullan
+tw:使用頁籤(&T):
 uk:Використовувати вкладки
 vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
@@ -16393,7 +16402,7 @@ bs:Koristite najnoviju verziju.
 by:Вы выкарыстоўваеце апошнюю версію.
 ca-xv:Teniu la darrera versió.
 ca:Teniu la darrera versió.
-cn:您的版本已经是最新版。
+cn:你已有最新版。
 cy:Mae'r fersiwn diweddaraf gennych.
 cz:Používáte nejnovější verzi.
 de:Sie haben die neuste Version installiert.
