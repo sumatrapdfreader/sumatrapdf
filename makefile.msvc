@@ -152,6 +152,8 @@ MUI_LIB     = $(O)\mui.lib
 ENGINES_LIB = $(O)\engines.lib
 MAIN_UI_LIB = $(O)\sumatra.lib
 
+SYMBOLS_LZSA= $(O)\SumatraPDF.pdb.lzsa
+
 # these are all included in libmupdf.dll for reuse by PdfPreview.dll
 FORMAT_LIBS = $(MUPDF_LIB) $(DJVU_OBJS) $(UNARR_LIB) $(WEBP_OBJS)
 
@@ -334,6 +336,7 @@ PDFFilter:     $(OS) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(PDFPREVIEW_DLL)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 MakeLzsa:      $(OS) $(MAKELZSA_APP)
+AllSymbols:    $(O)  $(SYMBOLS_LZSA)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
@@ -451,6 +454,9 @@ $(ENGINES_LIB): $(ENGINE_OBJS)
 
 $(MAIN_UI_LIB): $(MAIN_UI_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(SYMBOLS_LZSA): $(MAKELZSA_APP) $(SUMATRA_APP) $(INSTALLER_APP)
+	$(MAKELZSA_APP) $@ $(O)\libmupdf.pdb:libmupdf.pdb $(O)\Installer.pdb:Installer.pdb $(O)\SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb $(O)\SumatraPDF.pdb:SumatraPDF.pdb
 
 ## Header-dependencies for $(SRCDIR)\* and $(SRCDIR)\*\*
 !INCLUDE makefile.deps

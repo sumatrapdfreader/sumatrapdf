@@ -19,12 +19,5 @@ build_script:
 
 artifacts:
   - path: obj-rel64\SumatraPDF.exe
-  - path: obj-rel64\SumatraPDF.pdb
-  - path: obj-rel64\SumatraPDF-no-MuPDF.exe
-  - path: obj-rel64\SumatraPDF-no-MuPDF.pdb
-  - path: obj-rel64\uninstall.exe
-  - path: obj-rel64\uninstall.pdb
-  - path: obj-rel64\libmupdf.dll
-  - path: obj-rel64\libmupdf.pdb
   - path: obj-rel64\Installer.exe
-  - path: obj-rel64\Installer.pdb
+  - path: obj-rel64\SumatraPDF.pdb.lzsa
