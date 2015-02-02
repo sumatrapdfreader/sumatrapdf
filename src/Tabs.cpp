@@ -909,7 +909,7 @@ void TabsSelect(WindowInfo *win, int tabIndex)
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(WindowInfo *win, bool reverse)
 {
-    size_t count = win->tabs.Count();
+    int count = (int)win->tabs.Count();
     if (count < 2)
         return;
 
