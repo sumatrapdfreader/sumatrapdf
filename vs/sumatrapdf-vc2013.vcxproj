@@ -261,7 +261,6 @@
     <ClCompile Include="..\mupdf\source\fitz\font.c" />
     <ClCompile Include="..\mupdf\source\fitz\ftoa.c" />
     <ClCompile Include="..\mupdf\source\fitz\function.c" />
-    <ClCompile Include="..\mupdf\source\fitz\gdiplus-device.cpp" />
     <ClCompile Include="..\mupdf\source\fitz\geometry.c" />
     <ClCompile Include="..\mupdf\source\fitz\getopt.c" />
     <ClCompile Include="..\mupdf\source\fitz\glyph.c" />

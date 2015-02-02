@@ -1554,10 +1554,11 @@ bool DisplayModel::ShouldCacheRendering(int pageNo)
         return true;
 
     // recommend caching large images (mainly photos) as well, as shrinking
-    // them for every UI update (WM_PAINT) can cause notable lags
-    // TODO: stretching small images even also causes minor lags
-    RectD page = engine->PageMediabox(pageNo);
-    return page.dx * page.dy > 1024 * 1024;
+    // them for every UI update (WM_PAINT) can cause notable lags, and also
+    // for smaller images which are scaled up
+    PageInfo *info = GetPageInfo(pageNo);
+    return info->page.dx * info->page.dy > 1024 * 1024 ||
+           info->pageOnScreen.dx * info->pageOnScreen.dy > 1024 * 1024;
 }
 
 void DisplayModel::ScrollToLink(PageDestination *dest)

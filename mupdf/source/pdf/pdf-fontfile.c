@@ -753,6 +753,8 @@ create_system_font_list(fz_context *ctx)
 	atexit(destroy_system_font_list);
 }
 
+static LONG fontlist_locked = FALSE;
+
 static fz_font *
 pdf_load_windows_font_by_name(fz_context *ctx, const char *orig_name)
 {
@@ -760,7 +762,10 @@ pdf_load_windows_font_by_name(fz_context *ctx, const char *orig_name)
 	char *comma, *fontname;
 	fz_font *font;
 
-	fz_synchronize_begin();
+	// not using a CRITICAL_SECTION, as there's no good place for creating/deleting it
+	// (and can't use fz_context locks, as fontlistMS is reused across fz_context)
+	while (InterlockedCompareExchange(&fontlist_locked, TRUE, FALSE) != FALSE)
+		Sleep(10);
 	if (fontlistMS.len == 0)
 	{
 		fz_try(ctx)
@@ -769,7 +774,8 @@ pdf_load_windows_font_by_name(fz_context *ctx, const char *orig_name)
 		}
 		fz_catch(ctx) { }
 	}
-	fz_synchronize_end();
+	if (InterlockedCompareExchange(&fontlist_locked, FALSE, TRUE) != TRUE)
+		assert(0);
 	if (fontlistMS.len == 0)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
 

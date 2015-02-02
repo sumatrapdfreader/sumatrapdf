@@ -108,13 +108,6 @@ public:
     virtual PageDestination *GetLink() { return dest; }
 };
 
-class DjVuAbortCookie : public AbortCookie {
-public:
-    bool abort;
-    DjVuAbortCookie() : abort(false) { }
-    virtual void Abort() { abort = true; }
-};
-
 class DjVuContext {
     bool initialized;
     ddjvu_context_t *ctx;
@@ -201,8 +194,6 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -609,45 +600,6 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
     ddjvu_page_release(page);
 
     return bmp;
-}
-
-bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
-{
-    bool success = true;
-    RectD mediabox = PageMediabox(pageNo);
-    HRGN clip = CreateRectRgn(screenRect.x, screenRect.y, screenRect.x + screenRect.dx, screenRect.y + screenRect.dy);
-    SelectClipRgn(hDC, clip);
-
-    DjVuAbortCookie *cookie = nullptr;
-    if (cookie_out)
-        *cookie_out = cookie = new DjVuAbortCookie();
-
-    // render in 1 MB bands, as otherwise GDI can run out of memory
-    RectD rect = pageRect ? *pageRect : mediabox;
-    int bandDy = (int)((1 << 20) / (rect.dy * zoom));
-    PointI pt = Transform(rect, pageNo, zoom, rotation).TL().ToInt();
-
-    for (int y = 0; y * bandDy < rect.dy; y++) {
-        RectD pageBand(rect.x, y * bandDy, rect.dx, bandDy);
-        pageBand = pageBand.Intersect(mediabox);
-        RectI screenBand = Transform(pageBand, pageNo, zoom, rotation).Round();
-        screenBand.Offset(screenRect.x - pt.x, screenRect.y - pt.y);
-
-        RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, &pageBand, target, cookie_out);
-        if (bmp && bmp->GetBitmap())
-            success = bmp->StretchDIBits(hDC, screenBand);
-        else
-            success = false;
-        delete bmp;
-
-        if (cookie && cookie->abort) {
-            success = false;
-            break;
-        }
-    }
-
-    SelectClipRgn(hDC, nullptr);
-    return success;
 }
 
 RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)

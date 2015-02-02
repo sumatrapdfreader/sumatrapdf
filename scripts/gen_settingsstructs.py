@@ -135,7 +135,6 @@ FileTime = [
 
 PrinterDefaults = [
 	Field("PrintScale", Utf8String, "shrink", "default value for scaling (shrink, fit, none)"),
-	Field("PrintAsImage", Bool, False, "default value for the compatibility option"),
 ]
 
 ForwardSearch = [

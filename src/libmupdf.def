@@ -145,7 +145,6 @@ EXPORTS
 	fz_new_draw_device
 	fz_new_draw_device_with_bbox
 	fz_new_draw_device_type3
-	fz_new_gdiplus_device
 	fz_new_display_list
 	fz_new_list_device
 	fz_run_display_list
@@ -410,6 +409,7 @@ EXPORTS
 	fz_seek
 	fz_read
 	fz_read_all
+	fz_read_file
 	fz_stream_meta
 	fz_rebind_stream
 	fz_new_stream
@@ -419,6 +419,8 @@ EXPORTS
 	fz_strsep
 	fz_strlcpy
 	fz_strlcat
+	fz_dirname
+	fz_cleanname
 	fz_chartorune
 	fz_runetochar
 	fz_runelen
@@ -445,8 +447,6 @@ EXPORTS
 	fz_wchar_from_utf8
 	fz_fopen_utf8
 	fz_free_argv
-	fz_synchronize_begin
-	fz_synchronize_end
 	fz_redirect_io_to_console
 	fz_new_text
 	fz_add_text
@@ -459,6 +459,16 @@ EXPORTS
 	fz_tree_insert
 	fz_free_tree
 	fz_debug_tree
+	fz_open_directory
+	fz_open_archive
+	fz_open_archive_with_stream
+	fz_has_archive_entry
+	fz_open_archive_entry
+	fz_read_archive_entry
+	fz_close_archive
+	fz_rebind_archive
+	fz_count_archive_entries
+	fz_list_archive_entry
 
 
 	fz_parse_xml
@@ -473,6 +483,9 @@ EXPORTS
 	fz_free_xml
 	fz_detach_xml
 	fz_debug_xml
+	fz_xml_find
+	fz_xml_find_next
+	fz_xml_find_down
 
 ; MuPDF exports
 
@@ -763,6 +776,7 @@ EXPORTS
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_new_ref
+	pdf_ensure_solid_xref
 	pdf_mark_xref
 	pdf_clear_xref
 	pdf_clear_xref_to_mark
@@ -786,7 +800,6 @@ EXPORTS
 	xps_resolve_url
 	xps_url_is_remote
 	xps_parse_point
-	xps_new_part
 	xps_has_part
 	xps_read_part
 	xps_free_part

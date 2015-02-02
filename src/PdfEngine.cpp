@@ -34,16 +34,6 @@ extern "C" {
 // maximum amount of memory that MuPDF should use per fz_context store
 #define MAX_CONTEXT_MEMORY  (256 * 1024 * 1024)
 
-// normally, GDI+ is mainly used for zoom levels above 4000% and for
-// rendering directly into an HDC; if gDebugGdiPlusDevice is true,
-// the use of Fitz' draw device and the GDI+ device are swapped
-static bool gDebugGdiPlusDevice = false;
-
-void DebugGdiPlusDevice(bool enable)
-{
-    gDebugGdiPlusDevice = enable;
-}
-
 ///// extensions to Fitz that are usable for both PDF and XPS /////
 
 inline RectD fz_rect_to_RectD(fz_rect rect)
@@ -1195,10 +1185,6 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
-        return RenderPage(hDC, GetPdfPage(pageNo), screenRect, nullptr, zoom, rotation, pageRect, target, cookie_out);
-    }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -1280,10 +1266,6 @@ protected:
         fz_rect r;
         return fz_create_view_ctm(pdf_bound_page(_doc, page, &r), zoom, rotation);
     }
-    bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
-                               const fz_matrix *ctm, float zoom, int rotation,
-                               RectD *pageRect, RenderTarget target, AbortCookie **cookie_out);
-    bool            PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip);
     WCHAR         * ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coords_out=nullptr,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
@@ -2135,87 +2117,6 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, const fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
-{
-    if (!page || !pdf_is_dict(page->me))
-        return false;
-
-    fz_matrix ctm2;
-    if (!ctm) {
-        ctm2 = viewctm(page, zoom, rotation);
-        ctm = &ctm2;
-        fz_rect pRect;
-        if (pageRect)
-            pRect = fz_RectD_to_rect(*pageRect);
-        else
-            pdf_bound_page(_doc, page, &pRect);
-        fz_irect bbox;
-        fz_round_rect(&bbox, fz_transform_rect(&pRect, ctm));
-        fz_matrix trans;
-        fz_concat(&ctm2, ctm, fz_translate(&trans, (float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
-    }
-
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
-    RECT tmpRect = screenRect.ToRECT();
-    FillRect(hDC, &tmpRect, bgBrush); // initialize white background
-    DeleteObject(bgBrush);
-
-    fz_rect cliprect = fz_RectD_to_rect(screenRect.Convert<double>());
-    if (pageRect) {
-        fz_rect pageclip = fz_RectD_to_rect(*pageRect);
-        fz_intersect_rect(&cliprect, fz_transform_rect(&pageclip, ctm));
-    }
-    fz_irect tmp;
-    fz_rect_from_irect(&cliprect, fz_round_rect(&tmp, &cliprect));
-
-    fz_device *dev = nullptr;
-    EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) {
-        dev = fz_new_gdiplus_device(ctx, hDC, &cliprect);
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return false;
-    }
-    LeaveCriticalSection(&ctxAccess);
-
-    FitzAbortCookie *cookie = nullptr;
-    if (cookie_out)
-        *cookie_out = cookie = new FitzAbortCookie();
-    return RunPage(page, dev, ctm, target, &cliprect, true, cookie);
-}
-
-// various heuristics for deciding when to use dev_gdiplus instead of fitz/draw
-bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip)
-{
-    PdfPageRun *run = GetPageRun(page);
-    if (!run)
-        return false;
-
-    bool result = false;
-    // dev_gdiplus seems significantly slower at clipping than fitz/draw
-    if (run->clip_path_len > 50000)
-        result = false;
-    // dev_gdiplus seems to render quicker and more reliably at high zoom levels
-    else if (zoom > 40.0f)
-        result = true;
-    // dev_gdiplus' Type 3 fonts look worse at lower zoom levels
-    else if (run->req_t3_fonts)
-        result = false;
-    // dev_gdiplus seems significantly faster at rendering large (amounts of) paths
-    // (only required when tiling, at lower zoom levels lines look slightly worse)
-    else if (run->path_len > 100000) {
-        fz_rect r;
-        fz_irect clipBox, pageBox;
-        fz_round_rect(&clipBox, &clip);
-        fz_round_rect(&pageBox, pdf_bound_page(_doc, page, &r));
-        result = clipBox.x0 > pageBox.x0 || clipBox.x1 < pageBox.x1 ||
-                 clipBox.y0 > pageBox.y0 || clipBox.y1 < pageBox.y1;
-    }
-    DropPageRun(run);
-    return result;
-}
-
 RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     pdf_page* page = GetPdfPage(pageNo);
@@ -2231,29 +2132,6 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_rect r = pRect;
     fz_irect bbox;
     fz_round_rect(&bbox, fz_transform_rect(&r, &ctm));
-
-    if (PreferGdiPlusDevice(page, zoom, pRect) != gDebugGdiPlusDevice) {
-        int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
-        fz_matrix trans;
-        fz_concat(&ctm, &ctm, fz_translate(&trans, (float)-bbox.x0, (float)-bbox.y0));
-
-        // for now, don't render directly into a DC but produce an HBITMAP instead
-        HANDLE hMap = nullptr;
-        HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
-        HDC hDC = CreateCompatibleDC(nullptr);
-        DeleteObject(SelectObject(hDC, hbmp));
-
-        RectI rc(0, 0, w, h);
-        RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool ok = RenderPage(hDC, page, rc, &ctm, 0, 0, &pageRect2, target, cookie_out);
-        DeleteDC(hDC);
-        if (!ok) {
-            DeleteObject(hbmp);
-            CloseHandle(hMap);
-            return nullptr;
-        }
-        return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
-    }
 
     fz_pixmap *image = nullptr;
     EnterCriticalSection(&ctxAccess);
@@ -3516,10 +3394,6 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
-        return RenderPage(hDC, GetXpsPage(pageNo), screenRect, nullptr, zoom, rotation, pageRect, cookie_out);
-    }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -3582,9 +3456,6 @@ protected:
         fz_rect r;
         return fz_create_view_ctm(xps_bound_page(_doc, page, &r), zoom, rotation);
     }
-    bool            RenderPage(HDC hDC, xps_page *page, RectI screenRect,
-                               const fz_matrix *ctm, float zoom, int rotation,
-                               RectD *pageRect, AbortCookie **cookie_out);
     WCHAR         * ExtractPageText(xps_page *page, const WCHAR *lineSep,
                                     RectI **coords_out=nullptr, bool cacheRun=false);
 
@@ -4114,58 +3985,6 @@ RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, const fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, AbortCookie **cookie_out)
-{
-    if (!page)
-        return false;
-
-    fz_matrix ctm2;
-    if (!ctm) {
-        ctm2 = viewctm(page, zoom, rotation);
-        ctm = &ctm2;
-        fz_rect pRect;
-        if (pageRect)
-            pRect = fz_RectD_to_rect(*pageRect);
-        else
-            xps_bound_page(_doc, page, &pRect);
-        fz_irect bbox;
-        fz_round_rect(&bbox, fz_transform_rect(&pRect, ctm));
-        fz_matrix trans;
-        fz_concat(&ctm2, ctm, fz_translate(&trans, (float)screenRect.x - bbox.x0, (float)screenRect.y - bbox.y0));
-    }
-    else
-        ctm2 = *ctm;
-
-    HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
-    RECT tmpRect = screenRect.ToRECT();
-    FillRect(hDC, &tmpRect, bgBrush); // initialize white background
-    DeleteObject(bgBrush);
-
-    fz_rect cliprect = fz_RectD_to_rect(screenRect.Convert<double>());
-    if (pageRect) {
-        fz_rect pageclip = fz_RectD_to_rect(*pageRect);
-        fz_intersect_rect(&cliprect, fz_transform_rect(&pageclip, ctm));
-    }
-    fz_irect tmp;
-    fz_rect_from_irect(&cliprect, fz_round_rect(&tmp, &cliprect));
-
-    fz_device *dev = nullptr;
-    EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) {
-        dev = fz_new_gdiplus_device(ctx, hDC, &cliprect);
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return false;
-    }
-    LeaveCriticalSection(&ctxAccess);
-
-    FitzAbortCookie *cookie = nullptr;
-    if (cookie_out)
-        *cookie_out = cookie = new FitzAbortCookie();
-    return RunPage(page, dev, ctm, &cliprect, true, cookie);
-}
-
 RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     xps_page* page = GetXpsPage(pageNo);
@@ -4181,29 +4000,6 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_rect r = pRect;
     fz_irect bbox;
     fz_round_rect(&bbox, fz_transform_rect(&r, &ctm));
-
-    // GDI+ seems to render quicker and more reliably at high zoom levels
-    if ((zoom > 40.0) != gDebugGdiPlusDevice) {
-        int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
-        fz_matrix trans;
-        fz_concat(&ctm, &ctm, fz_translate(&trans, (float)-bbox.x0, (float)-bbox.y0));
-
-        // for now, don't render directly into a DC but produce an HBITMAP instead
-        HANDLE hMap = nullptr;
-        HBITMAP hbmp = CreateMemoryBitmap(SizeI(w, h), &hMap);
-        HDC hDC = CreateCompatibleDC(nullptr);
-        DeleteObject(SelectObject(hDC, hbmp));
-
-        RectI rc(0, 0, w, h);
-        bool ok = RenderPage(hDC, page, rc, &ctm, 0, 0, pageRect, cookie_out);
-        DeleteDC(hDC);
-        if (!ok) {
-            DeleteObject(hbmp);
-            CloseHandle(hMap);
-            return nullptr;
-        }
-        return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
-    }
 
     fz_pixmap *image = nullptr;
     EnterCriticalSection(&ctxAccess);

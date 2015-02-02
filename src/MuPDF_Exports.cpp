@@ -23,6 +23,6 @@ const fz_irect fz_infinite_irect = { 1, 1, -1, -1 };
 const fz_irect fz_empty_irect = { 0, 0, 0, 0 };
 const fz_irect fz_unit_bbox = { 0, 0, 1, 1 };
 
-// adapted for mupdf/source/fitz/gdiplus-device.cpp
+// adapted for mupdf/source/fitz/time.c
 
-void RedirectDllIOToConsole() { fz_redirect_io_to_console(); }
+extern "C" void fz_redirect_dll_io_to_console() { fz_redirect_io_to_console(); }

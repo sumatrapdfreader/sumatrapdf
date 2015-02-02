@@ -47,8 +47,6 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -120,8 +118,13 @@ RectD ImagesEngine::PageMediabox(int pageNo)
 
 RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
+    ImagePage *page = GetPage(pageNo);
+    if (!page)
+        return nullptr;
+
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    PointI screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
     HANDLE hMap = nullptr;
@@ -129,40 +132,20 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     HDC hDC = CreateCompatibleDC(nullptr);
     DeleteObject(SelectObject(hDC, hbmp));
 
-    bool ok = RenderPage(hDC, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
-    DeleteDC(hDC);
-    if (!ok) {
-        DeleteObject(hbmp);
-        CloseHandle(hMap);
-        return nullptr;
-    }
-
-    return new RenderedBitmap(hbmp, screen.Size(), hMap);
-}
-
-bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
-{
-    ImagePage *page = GetPage(pageNo);
-    if (!page)
-        return false;
-
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-
     Graphics g(hDC);
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
 
     Color white(0xFF, 0xFF, 0xFF);
-    Rect screenR(screenRect.ToGdipRect());
-    g.SetClip(screenR);
     SolidBrush tmpBrush(white);
+    Rect screenR(screen.ToGdipRect());
+    screenR.Inflate(1, 1);
     g.FillRectangle(&tmpBrush, screenR);
 
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
-    m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
+    m.Translate((REAL)-screenTL.x, (REAL)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
 
     RectI pageRcI = PageMediabox(pageNo).Round();
@@ -171,7 +154,15 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     Status ok = g.DrawImage(page->bmp, pageRcI.ToGdipRect(), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
 
     DropPage(page);
-    return ok == Ok;
+    DeleteDC(hDC);
+
+    if (ok != Ok) {
+        DeleteObject(hbmp);
+        CloseHandle(hMap);
+        return nullptr;
+    }
+
+    return new RenderedBitmap(hbmp, screen.Size(), hMap);
 }
 
 void ImagesEngine::GetTransform(Matrix& m, int pageNo, float zoom, int rotation)

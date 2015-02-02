@@ -121,8 +121,6 @@ fz_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 				p[k] = 0;
 		p += pix->n;
 	}
-	pix->has_alpha = pix->n > n; /* SumatraPDF: allow optimizing non-alpha pixmaps */
-	pix->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
 
 static void
@@ -154,7 +152,6 @@ fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image)
 	}
 
 	fz_drop_pixmap(ctx, mask);
-	tile->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
 
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
@@ -177,14 +174,12 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, fz_image *image, int indexe
 			cs = *(fz_colorspace **)cs->data; // cf. struct indexed in res_colorspace.c
 		tile = fz_new_pixmap(ctx, cs, w, h);
 		tile->interpolate = image->interpolate;
-		tile->has_alpha = 0; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 		/* decompress the image in bands of 256 lines */
 		for (part_h = h; part_h > 0; part_h -= band >> l2factor)
 		{
 			image->h = part_h > band >> l2factor ? band : ((orig_h - 1) % band) + 1;
 			part = fz_decomp_image_from_stream(ctx, fz_keep_stream(stm), image, -1 - indexed, l2factor, native_l2factor);
 			memcpy(tile->samples + (h - part_h) * tile->w * tile->n, part->samples, part->h * part->w * part->n);
-			tile->has_alpha |= part->has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
 			fz_drop_pixmap(ctx, part);
 			part = NULL;
 		}

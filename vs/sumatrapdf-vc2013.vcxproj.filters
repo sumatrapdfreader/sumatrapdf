@@ -588,9 +588,6 @@
     <ClCompile Include="..\mupdf\source\fitz\function.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\source\fitz\gdiplus-device.cpp">
-      <Filter>ext\mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\geometry.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

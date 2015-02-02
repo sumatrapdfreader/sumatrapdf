@@ -1488,10 +1488,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\source\fitz\gdiplus-device.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\mupdf\source\fitz\geometry.c"
 					>
 				</File>

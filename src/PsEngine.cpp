@@ -236,10 +236,6 @@ public:
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
         return pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
-        return pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, cookie_out);
-    }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {
         return pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse);

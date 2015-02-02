@@ -97,7 +97,6 @@
 #define IDM_FIND_NEXT_SEL               581
 #define IDM_FIND_PREV_SEL               582
 #define IDM_DEBUG_SHOW_LINKS            590
-#define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592
 #define IDM_LOAD_MOBI_SAMPLE            593
 #define IDM_DEBUG_EBOOK_UI              594
@@ -153,7 +152,6 @@
 #define IDC_PRINT_SCALE_FIT             1062
 #define IDC_PRINT_SCALE_NONE            1063
 #define IDC_SECTION_PRINT_COMPATIBILITY 1070
-#define IDC_PRINT_AS_IMAGE              1071
 #define IDC_TOC_BOX                     1100
 #define IDC_TOC_LABEL_WITH_CLOSE        1101
 #define IDC_TOC_TREE                    1102

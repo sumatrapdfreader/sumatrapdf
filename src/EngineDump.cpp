@@ -11,7 +11,6 @@
 #include "WinUtil.h"
 // rendering engines
 #include "BaseEngine.h"
-#include "PdfEngine.h"
 #include "DjVuEngine.h"
 #include "EngineManager.h"
 #include "FileModifications.h"
@@ -426,7 +425,6 @@ Usage:
     bool fullDump = true;
     WCHAR *renderPath = nullptr;
     float renderZoom = 1.f;
-    bool useAlternateHandlers = false;
     bool loadOnly = false, silent = false;
 #ifdef DEBUG
     int breakAlloc = 0;
@@ -446,9 +444,6 @@ Usage:
             }
             renderPath = argList.At(++i);
         }
-        // -alt is for debugging alternate rendering methods
-        else if (str::Eq(argList.At(i), L"-alt"))
-            useAlternateHandlers = true;
         // -loadonly and -silent are only meant for profiling
         else if (str::Eq(argList.At(i), L"-loadonly"))
             loadOnly = true;
@@ -481,9 +476,6 @@ Usage:
         freopen_s(&nul, "NUL", "w", stdout);
         freopen_s(&nul, "NUL", "w", stderr);
     }
-
-    // optionally use GDI+ rendering for PDF/XPS
-    DebugGdiPlusDevice(useAlternateHandlers);
 
     ScopedGdiPlus gdiPlus;
     ScopedMiniMui miniMui;

@@ -83,8 +83,6 @@ public:
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=nullptr, RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -290,28 +288,6 @@ RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
-{
-    RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
-    RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
-    screen.Offset(-screen.x, -screen.y);
-
-    HANDLE hMap = nullptr;
-    HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
-    HDC hDC = CreateCompatibleDC(nullptr);
-    DeleteObject(SelectObject(hDC, hbmp));
-
-    bool ok = RenderPage(hDC, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
-    DeleteDC(hDC);
-    if (!ok) {
-        DeleteObject(hbmp);
-        CloseHandle(hMap);
-        return nullptr;
-    }
-
-    return new RenderedBitmap(hbmp, screen.Size(), hMap);
-}
-
 // TODO: use AdjustLightness instead to compensate for the alpha?
 static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha)
 {
@@ -376,24 +352,30 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
     }
 }
 
-bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
+RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+    PointI screenTL = screen.TL();
+    screen.Offset(-screen.x, -screen.y);
+
+    HANDLE hMap = nullptr;
+    HBITMAP hbmp = CreateMemoryBitmap(screen.Size(), &hMap);
+    HDC hDC = CreateCompatibleDC(nullptr);
+    DeleteObject(SelectObject(hDC, hbmp));
 
     Graphics g(hDC);
     mui::InitGraphicsMode(&g);
 
     Color white(0xFF, 0xFF, 0xFF);
-    Rect screenR(screenRect.ToGdipRect());
-    g.SetClip(screenR);
-    screenR.Inflate(1, 1);
     SolidBrush tmpBrush(white);
+    Rect screenR(screen.ToGdipRect());
+    screenR.Inflate(1, 1);
     g.FillRectangle(&tmpBrush, screenR);
 
     Matrix m;
     GetTransform(m, zoom, rotation);
-    m.Translate((float)(screenRect.x - screen.x), (float)(screenRect.y - screen.y), MatrixOrderAppend);
+    m.Translate((REAL)-screenTL.x, (REAL)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
 
     EbookAbortCookie *cookie = nullptr;
@@ -406,8 +388,15 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     DrawHtmlPage(&g, textDraw, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : nullptr);
     DrawAnnotations(g, userAnnots, pageNo);
     delete textDraw;
+    DeleteDC(hDC);
 
-    return !(cookie && cookie->abort);
+    if (cookie && cookie->abort) {
+        DeleteObject(hbmp);
+        CloseHandle(hMap);
+        return nullptr;
+    }
+
+    return new RenderedBitmap(hbmp, screen.Size(), hMap);
 }
 
 static RectI GetInstrBbox(DrawInstr& instr, float pageBorder)

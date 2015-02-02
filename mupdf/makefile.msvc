@@ -197,7 +197,7 @@ JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4267
 MUPDF_CFLAGS  = $(MUPDF_CFLAGS) /wd4267
 !endif
 
-LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib ole32.lib WindowsCodecs.lib
+LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib ole32.lib WindowsCodecs.lib
 
 FT_OBJS = \
 	$(OFT)\ftbase.obj $(OFT)\ftbbox.obj $(OFT)\ftbitmap.obj $(OFT)\ftgasp.obj \
@@ -279,8 +279,7 @@ FITZ_OBJS = \
 	$(OFZ)\string.obj $(OFZ)\text.obj $(OFZ)\time.obj \
 	$(OFZ)\trace-device.obj $(OFZ)\transition.obj $(OFZ)\ucdn.obj $(OFZ)\xml.obj \
 	$(OFZ)\glyph.obj $(OFZ)\tree.obj $(OFZ)\document.obj $(OFZ)\filter-leech.obj \
-	$(OFZ)\printf.obj $(OFZ)\strtod.obj $(OFZ)\ftoa.obj $(OFZ)\unzip.obj \
-	$(OFZ)\gdiplus-device.obj
+	$(OFZ)\printf.obj $(OFZ)\strtod.obj $(OFZ)\ftoa.obj $(OFZ)\unzip.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf-annot.obj $(OP)\pdf-cmap-load.obj $(OP)\pdf-cmap-parse.obj $(OP)\pdf-cmap-table.obj \
@@ -409,9 +408,6 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 {$(MUPDF_DIR)\source\fitz}.c{$(OFZ)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\source\fitz}.cpp{$(OFZ)}.obj::
-	$(CC) $(MUPDF_CFLAGS: /TC = ) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
-
 {$(MUPDF_DIR)\source\pdf}.c{$(OP)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
 
@@ -488,7 +484,7 @@ $(FITZ_OBJS) $(MUDOC_OBJS): $(FITZ_H)
 $(MUPDF_OBJS): $(FITZ_H) $(MUPDF_H) $(MUPDF_DIR)\source\pdf\pdf-interpret-imp.h
 $(MUXPS_OBJS): $(FITZ_H) $(MUXPS_H)
 $(MUTOOLS_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUOTH_H)
-$(DRAW_OBJS) $(OFZ)\gdiplus-device.obj: $(MUPDF_DIR)\source\fitz\draw-imp.h
+$(DRAW_OBJS): $(MUPDF_DIR)\source\fitz\draw-imp.h
 $(OP)\pdf-encoding.obj: $(MUPDF_DIR)\source\pdf\pdf-encodings.h $(MUPDF_DIR)\source\pdf\pdf-glyphlist.h
 
 force: ;

@@ -862,7 +862,6 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
         SetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, _TR("&Fit pages to printable area"));
         SetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, _TR("&Use original page sizes"));
         SetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TR("Compatibility"));
-        SetDlgItemText(hDlg, IDC_PRINT_AS_IMAGE, _TR("Print as &image (requires more memory)"));
 
         CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
             data->range == PrintRangeEven ? IDC_PRINT_RANGE_EVEN :
@@ -870,7 +869,6 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
         CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_NONE,
             data->scale == PrintScaleFit ? IDC_PRINT_SCALE_FIT :
             data->scale == PrintScaleShrink ? IDC_PRINT_SCALE_SHRINK : IDC_PRINT_SCALE_NONE);
-        CheckDlgButton(hDlg, IDC_PRINT_AS_IMAGE, data->asImage ? BST_CHECKED : BST_UNCHECKED);
 
         return FALSE;
 //] ACCESSKEY_GROUP Advanced Print Tab
@@ -891,7 +889,6 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
                 data->scale = PrintScaleShrink;
             else
                 data->scale = PrintScaleNone;
-            data->asImage = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_PRINT_AS_IMAGE);
             return TRUE;
         }
         break;
@@ -901,7 +898,6 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
         case IDC_PRINT_RANGE_ALL: case IDC_PRINT_RANGE_EVEN:
         case IDC_PRINT_RANGE_ODD: case IDC_PRINT_SCALE_SHRINK:
         case IDC_PRINT_SCALE_FIT: case IDC_PRINT_SCALE_NONE:
-        case IDC_PRINT_AS_IMAGE:
             {
                 HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                 EnableWindow(hApplyButton, TRUE);

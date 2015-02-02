@@ -190,7 +190,6 @@ static MenuDef menuDefHelp[] = {
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
-    { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
@@ -494,7 +493,6 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, tab && tab->selectionOnPage && win->showSelection &&

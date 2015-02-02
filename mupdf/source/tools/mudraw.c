@@ -6,19 +6,15 @@
 #include "mupdf/pdf.h" /* for pdf output */
 
 #ifdef _MSC_VER
+#include <winsock2.h>
 #define main main_utf8
-#endif
-/* SumatraPDF: add support for GDI+ draw device */
-#ifdef _WIN32
-#include <windows.h>
-#define GDI_PLUS_BMP_RENDERER
 #else
 #include <sys/time.h>
 #endif
 
 enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
-enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_PDF, OUT_TGA, OUT_BMP };
+enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_PCL, OUT_PDF, OUT_TGA };
 
 enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA, CS_CMYK, CS_CMYK_ALPHA };
 
@@ -41,9 +37,6 @@ static const suffix_t suffix_table[] =
 	{ ".pcl", OUT_PCL },
 	{ ".pdf", OUT_PDF },
 	{ ".tga", OUT_TGA },
-#ifdef GDI_PLUS_BMP_RENDERER
-	{ ".bmp", OUT_BMP },
-#endif
 };
 
 typedef struct
@@ -90,9 +83,6 @@ static const format_cs_table_t format_cs_table[] =
 	{ OUT_PCL, CS_MONO, { CS_MONO } },
 	{ OUT_PDF, CS_RGB, { CS_RGB } },
 	{ OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAY_ALPHA, CS_RGB, CS_RGB_ALPHA } },
-#ifdef GDI_PLUS_BMP_RENDERER
-	{ OUT_BMP, CS_RGB, { CS_RGB } },
-#endif
 };
 
 /*
@@ -203,146 +193,6 @@ static int isrange(char *s)
 	}
 	return 1;
 }
-
-#ifdef GDI_PLUS_BMP_RENDERER
-static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display_list *list, int pagenum, fz_cookie *cookie)
-{
-	float zoom;
-	fz_matrix ctm;
-	fz_irect ibounds;
-	fz_rect bounds, tbounds;
-
-	int w, h;
-	fz_device *dev;
-	HDC dc;
-	RECT rc;
-	HBRUSH bg_brush;
-	HANDLE hmap;
-	HBITMAP hbmp;
-	BITMAPINFO bmi = { 0 };
-	unsigned char *bmp_data;
-
-	fz_bound_page(doc, page, &bounds);
-	zoom = resolution / 72;
-	fz_pre_scale(fz_rotate(&ctm, rotation), zoom, zoom);
-	tbounds = bounds;
-	fz_round_rect(&ibounds, fz_transform_rect(&tbounds, &ctm));
-
-	w = width;
-	h = height;
-	if (res_specified)
-	{
-		fz_round_rect(&ibounds, &tbounds);
-		if (w && ibounds.x1 - ibounds.x0 <= w)
-			w = 0;
-		if (h && ibounds.y1 - ibounds.y0 <= h)
-			h = 0;
-	}
-	if (w || h)
-	{
-		float scalex = w / (tbounds.x1 - tbounds.x0);
-		float scaley = h / (tbounds.y1 - tbounds.y0);
-		fz_matrix scale_mat;
-		if (w == 0)
-			scalex = fit ? 1.0f : scaley;
-		if (h == 0)
-			scaley = fit ? 1.0f : scalex;
-		if (!fit)
-			scalex = scaley = min(scalex, scaley);
-		fz_concat(&ctm, &ctm, fz_scale(&scale_mat, scalex, scaley));
-		tbounds = bounds;
-		fz_transform_rect(&tbounds, &ctm);
-	}
-	fz_round_rect(&ibounds, &tbounds);
-	fz_rect_from_irect(&tbounds, &ibounds);
-
-	w = ibounds.x1 - ibounds.x0;
-	h = ibounds.y1 - ibounds.y0;
-
-	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-	bmi.bmiHeader.biWidth = w;
-	bmi.bmiHeader.biHeight = output_format == OUT_TGA ? -h : h;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = output_format == OUT_TGA ? 32 : 24;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = (output_format == OUT_TGA ? w : ((w * 3 + 3) / 4)) * h * 4;
-
-	hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, NULL);
-	hbmp = CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, &bmp_data, hmap, 0);
-	if (!hbmp)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "failed to create a %d x %d bitmap for page %d", w, h, pagenum);
-
-	dc = CreateCompatibleDC(NULL);
-	DeleteObject(SelectObject(dc, hbmp));
-
-	SetRect(&rc, 0, 0, w, h);
-	bg_brush = CreateSolidBrush(RGB(0xFF,0xFF,0xFF));
-	FillRect(dc, &rc, bg_brush);
-	DeleteObject(bg_brush);
-
-	dev = fz_new_gdiplus_device(ctx, dc, &tbounds);
-	if (list)
-		fz_run_display_list(list, dev, &ctm, &tbounds, cookie);
-	else
-		fz_run_page(doc, page, dev, &ctm, cookie);
-	fz_free_device(dev);
-
-	GdiFlush();
-	DeleteDC(dc);
-
-	if (output)
-	{
-		char buf[512];
-		FILE *f;
-
-		sprintf(buf, output, pagenum);
-		f = fopen(buf, "wb");
-		if (!f)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "could not create raster file '%s'", buf);
-
-		if (output_format == OUT_TGA)
-		{
-			fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, bmp_data);
-			fz_write_tga(ctx, pix, buf, 0);
-			fz_drop_pixmap(ctx, pix);
-		}
-		else
-		{
-			BITMAPFILEHEADER bmpfh = { 0 };
-			static const int one = 1;
-			if (!*(char *)&one)
-				fz_throw(ctx, FZ_ERROR_GENERIC, "rendering to BMP is not supported on big-endian architectures");
-
-			bmpfh.bfType = MAKEWORD('B', 'M');
-			bmpfh.bfOffBits = sizeof(bmpfh) + sizeof(bmi);
-			bmpfh.bfSize = bmpfh.bfOffBits + bmi.bmiHeader.biSizeImage;
-
-			fwrite(&bmpfh, sizeof(bmpfh), 1, f);
-			fwrite(&bmi, sizeof(bmi), 1, f);
-			fwrite(bmp_data, 1, bmi.bmiHeader.biSizeImage, f);
-		}
-
-		fclose(f);
-	}
-
-	if (showmd5)
-	{
-		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), bmi.bmiHeader.biSizeImage / 4 / h, h, bmp_data);
-		unsigned char digest[16];
-		int i;
-
-		fz_md5_pixmap(pix, digest);
-		printf(" ");
-		for (i = 0; i < 16; i++)
-			printf("%02x", digest[i]);
-
-		fz_drop_pixmap(ctx, pix);
-	}
-
-	DeleteObject(hbmp);
-	CloseHandle(hmap);
-}
-#endif
 
 static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 {
@@ -577,12 +427,6 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 	}
 
-#ifdef GDI_PLUS_BMP_RENDERER
-	// hack: use -G0 to "enable GDI+" when saving as TGA
-	if (output_format == OUT_BMP || output_format == OUT_TGA && !gamma_value)
-		drawbmp(ctx, doc, page, list, pagenum, &cookie);
-	else
-#endif
 	if ((output && output_format != OUT_SVG && !pdfout)|| showmd5 || showtime)
 	{
 		float zoom;

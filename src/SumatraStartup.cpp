@@ -24,7 +24,6 @@
 #include "WinUtil.h"
 // rendering engines
 #include "BaseEngine.h"
-#include "PdfEngine.h"
 #include "EngineManager.h"
 // layout controllers
 #include "SettingsStructs.h"
@@ -480,7 +479,7 @@ Error:
     goto Retry;
 }
 
-extern void RedirectDllIOToConsole();
+extern "C" void fz_redirect_dll_io_to_console();
 
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
@@ -656,7 +655,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     if (i.showConsole) {
         RedirectIOToConsole();
-        RedirectDllIOToConsole();
+        fz_redirect_dll_io_to_console();
     }
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
@@ -670,7 +669,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCrashOnOpen = i.crashOnOpen;
 
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
-    DebugGdiPlusDevice(gUseGdiRenderer);
 
     if (!RegisterWinClass())
         goto Exit;

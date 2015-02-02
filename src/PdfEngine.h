@@ -16,6 +16,3 @@ BaseEngine *CreateFromFile(const WCHAR *fileName);
 BaseEngine *CreateFromStream(IStream *stream);
 
 }
-
-// swaps Fitz' draw device with the GDI+ device
-void DebugGdiPlusDevice(bool enable);

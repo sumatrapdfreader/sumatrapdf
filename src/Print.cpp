@@ -211,26 +211,18 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=null
                 }
 
                 bool ok = false;
-                if (!pd.advData.asImage) {
-                    RectI rc(offset.x, offset.y, (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
-                    ok = engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
+                short shrink = 1;
+                do {
+                    RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie)
                         abortCookie->Clear();
-                }
-                else {
-                    short shrink = 1;
-                    do {
-                        RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
-                        if (abortCookie)
-                            abortCookie->Clear();
-                        if (bmp && bmp->GetBitmap()) {
-                            RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                            ok = bmp->StretchDIBits(hdc, rc);
-                        }
-                        delete bmp;
-                        shrink *= 2;
-                    } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
-                }
+                    if (bmp && bmp->GetBitmap()) {
+                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        ok = bmp->StretchDIBits(hdc, rc);
+                    }
+                    delete bmp;
+                    shrink *= 2;
+                } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
             }
             // TODO: abort if !ok?
 
@@ -314,26 +306,18 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=null
             }
 
             bool ok = false;
-            if (!pd.advData.asImage) {
-                RectI rc = RectI::FromXY(offset.x, offset.y, paperSize.dx, paperSize.dy);
-                ok = engine.RenderPage(hdc, rc, pageNo, zoom, rotation, nullptr, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
+            short shrink = 1;
+            do {
+                RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
                 if (abortCookie)
                     abortCookie->Clear();
-            }
-            else {
-                short shrink = 1;
-                do {
-                    RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, Target_Print, abortCookie ? &abortCookie->cookie : nullptr);
-                    if (abortCookie)
-                        abortCookie->Clear();
-                    if (bmp && bmp->GetBitmap()) {
-                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                        ok = bmp->StretchDIBits(hdc, rc);
-                    }
-                    delete bmp;
-                    shrink *= 2;
-                } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
-            }
+                if (bmp && bmp->GetBitmap()) {
+                    RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                    ok = bmp->StretchDIBits(hdc, rc);
+                }
+                delete bmp;
+                shrink *= 2;
+            } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
             // TODO: abort if !ok?
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
@@ -472,12 +456,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // we remember some printer settings per process
     static ScopedMem<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleShrink;
-    static bool defaultAsImage = false;
 
     static bool hasDefaults = false;
     if (!hasDefaults) {
         hasDefaults = true;
-        defaultAsImage = gGlobalPrefs->printerDefaults.printAsImage;
         if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "fit"))
             defaultScaleAdv = PrintScaleFit;
         else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "none"))
@@ -550,7 +532,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv, defaultAsImage);
+    Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv);
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
@@ -588,7 +570,6 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             GlobalUnlock(pd.hDevMode);
         }
         defaultScaleAdv = advanced.scale;
-        defaultAsImage = advanced.asImage;
     }
 
     if (pd.dwResultAction != PD_RESULT_PRINT)
@@ -699,8 +680,6 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
             advanced.scale = PrintScaleShrink;
         else if (str::EqI(rangeList.At(i), L"fit"))
             advanced.scale = PrintScaleFit;
-        else if (str::EqI(rangeList.At(i), L"compat"))
-            advanced.asImage = true;
         else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000)
             devMode->dmCopies = (short)val;
         else if (str::EqI(rangeList.At(i), L"simplex"))

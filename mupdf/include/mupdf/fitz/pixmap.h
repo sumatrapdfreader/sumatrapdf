@@ -279,8 +279,6 @@ struct fz_pixmap_s
 	fz_colorspace *colorspace;
 	unsigned char *samples;
 	int free_samples;
-	int has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
-	int single_bit; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 };
 
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);

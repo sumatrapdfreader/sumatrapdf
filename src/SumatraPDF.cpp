@@ -27,7 +27,6 @@
 #include "WinUtil.h"
 // rendering engines
 #include "BaseEngine.h"
-#include "PdfEngine.h"
 #include "PsEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
@@ -94,11 +93,6 @@ bool             gShowFrameRate = true;
 #else
 bool             gShowFrameRate = false;
 #endif
-
-/* if true, we're rendering everything with the GDI+ back-end,
-   otherwise Fitz/MuPDF is used at least for screen rendering.
-   In Debug builds, you can switch between the two through the Debug menu */
-bool             gUseGdiRenderer = false;
 
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
@@ -2049,15 +2043,6 @@ void UpdateDocumentColors()
     RerenderEverything();
 }
 
-#if defined(SHOW_DEBUG_MENU_ITEMS) || defined(DEBUG)
-static void ToggleGdiDebugging()
-{
-    gUseGdiRenderer = !gUseGdiRenderer;
-    DebugGdiPlusDevice(gUseGdiRenderer);
-    RerenderEverything();
-}
-#endif
-
 static void OnMenuExit()
 {
     if (gPluginMode)
@@ -3520,11 +3505,6 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             }
         }
         break;
-#ifdef DEBUG
-    case '$':
-        ToggleGdiDebugging();
-        break;
-#endif
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     case 'h': // convert selection to highlight annotation
         if (win.AsFixed() && win.AsFixed()->GetEngine()->SupportsAnnotation() && win.showSelection && win.currentTab->selectionOnPage) {
@@ -4032,10 +4012,6 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             gDebugShowLinks = !gDebugShowLinks;
             for (size_t i = 0; i < gWindows.Count(); i++)
                 gWindows.At(i)->RedrawAll(true);
-            break;
-
-        case IDM_DEBUG_GDI_RENDERER:
-            ToggleGdiDebugging();
             break;
 
         case IDM_DEBUG_EBOOK_UI:

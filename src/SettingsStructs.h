@@ -121,8 +121,6 @@ struct PrereleaseSettings {
 struct PrinterDefaults {
     // default value for scaling (shrink, fit, none)
     char * printScale;
-    // default value for the compatibility option
-    bool printAsImage;
 };
 
 // customization options for how we show forward search results (used
@@ -475,10 +473,9 @@ static const FieldInfo gPrereleaseSettingsFields[] = {
 static const StructInfo gPrereleaseSettingsInfo = { sizeof(PrereleaseSettings), 1, gPrereleaseSettingsFields, "TabWidth" };
 
 static const FieldInfo gPrinterDefaultsFields[] = {
-    { offsetof(PrinterDefaults, printScale),   Type_Utf8String, (intptr_t)"shrink" },
-    { offsetof(PrinterDefaults, printAsImage), Type_Bool,       false              },
+    { offsetof(PrinterDefaults, printScale), Type_Utf8String, (intptr_t)"shrink" },
 };
-static const StructInfo gPrinterDefaultsInfo = { sizeof(PrinterDefaults), 2, gPrinterDefaultsFields, "PrintScale\0PrintAsImage" };
+static const StructInfo gPrinterDefaultsInfo = { sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale" };
 
 static const FieldInfo gForwardSearchFields[] = {
     { offsetof(ForwardSearch, highlightOffset),    Type_Int,   0        },

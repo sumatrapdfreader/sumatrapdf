@@ -633,12 +633,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win.presentation);
 
         bool renderOutOfDateCue = false;
-        UINT renderDelay = 0;
-        if (!dm->ShouldCacheRendering(pageNo)) {
-            dm->GetEngine()->RenderPage(hdc, pageInfo->pageOnScreen, pageNo, dm->GetZoomReal(pageNo), dm->GetRotation());
-        }
-        else
-            renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+        UINT renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
             ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));

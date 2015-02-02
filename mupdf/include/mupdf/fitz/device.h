@@ -329,9 +329,4 @@ fz_device *fz_new_draw_device_with_bbox(fz_context *ctx, fz_pixmap *dest, const 
 
 fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_pixmap *dest);
 
-/* SumatraPDF: GDI+ draw device */
-#ifdef _WIN32
-fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, const fz_rect *base_clip);
-#endif
-
 #endif

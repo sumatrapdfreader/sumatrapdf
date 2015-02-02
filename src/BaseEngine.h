@@ -234,14 +234,10 @@ public:
     }
 
     // renders a page into a cacheable RenderedBitmap
+    // (*cookie_out must be deleted after the call returns)
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
                          RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) = 0;
-    // renders a page directly into an hDC (e.g. for printing)
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) = 0;
-    // for both rendering methods: *cookie_out must be deleted after the call returns
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction

@@ -692,6 +692,22 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 {
     assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 
+    if (!dm->ShouldCacheRendering(pageNo)) {
+        int rotation = dm->GetRotation();
+        float zoom = dm->GetZoomReal(pageNo);
+        bounds = pageInfo->pageOnScreen.Intersect(bounds);
+
+        RectD area = bounds.Convert<double>();
+        area.Offset(-pageInfo->pageOnScreen.x, -pageInfo->pageOnScreen.y);
+        area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
+
+        RenderedBitmap *bmp = dm->GetEngine()->RenderBitmap(pageNo, zoom, rotation, &area);
+        bool success = bmp && bmp->GetBitmap() && bmp->StretchDIBits(hdc, bounds);
+        delete bmp;
+
+        return success ? 0 : RENDER_DELAY_FAILED;
+    }
+
     int rotation = dm->GetRotation();
     float zoom = dm->GetZoomReal();
     USHORT targetRes = GetTileRes(dm, pageNo);
