@@ -18,11 +18,13 @@ build_script:
   - scripts\appveyor-build.bat
 
 artifacts:
-  - path: obj-rel\SumatraPDF.exe
-  - path: obj-rel\SumatraPDF.pdb
-  - path: obj-rel\SumatraPDF-no-MuPDF.exe
-  - path: obj-rel\SumatraPDF-no-MuPDF.pdb
-  - path: obj-rel\uninstall.exe
-  - path: obj-rel\uninstall.pdb
-  - path: obj-rel\libmupdf.dll
-  - path: obj-rel\libmupdf.pdb
+  - path: obj-rel64\SumatraPDF.exe
+  - path: obj-rel64\SumatraPDF.pdb
+  - path: obj-rel64\SumatraPDF-no-MuPDF.exe
+  - path: obj-rel64\SumatraPDF-no-MuPDF.pdb
+  - path: obj-rel64\uninstall.exe
+  - path: obj-rel64\uninstall.pdb
+  - path: obj-rel64\libmupdf.dll
+  - path: obj-rel64\libmupdf.pdb
+  - path: obj-rel64\Installer.exe
+  - path: obj-rel64\Installer.pdb

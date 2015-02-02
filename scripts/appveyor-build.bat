@@ -16,6 +16,6 @@ EXIT /B
 :build64
 CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
 IF ERRORLEVEL 1 EXIT /B 1
-nmake -f makefile.msvc CFG=rel PLATFORM=X64 all_sumatrapdf
+nmake -f makefile.msvc CFG=rel PLATFORM=X64 EXTCFLAGS="/D VER_QUALIFIER=x64" STRICT_X64=1 Installer
 
 @rem TODO: build with more platforms, build and run tests etc.
