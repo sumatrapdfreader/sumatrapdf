@@ -75,7 +75,7 @@ static void GobEncodingTest()
         dLen -= n;
         utassert(dLen > 0);
     }
-    dLen = (d - buf);
+    dLen = (int)(d - buf);
     d = buf;
     for (int i = 0; i < dimof(intVals); i++) {
         expVal = intVals[i];
@@ -100,7 +100,7 @@ static void GobEncodingTest()
         dLen -= n;
         utassert(dLen > 0);
     }
-    dLen = (d - buf);
+    dLen = (int)(d - buf);
     d = buf;
     for (int i = 0; i < dimof(uintVals); i++) {
         expUval = uintVals[i];

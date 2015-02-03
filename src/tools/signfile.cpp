@@ -171,7 +171,18 @@ SyntaxError:
     // sign data
     ok = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
     QuitIfNot(ok, "Error: Failed to create a SHA-1 hash!");
+#ifdef _WIN64
+    {
+        const BYTE *bytes = (const BYTE *)data.Get();
+        size_t bytesLen = dataLen;
+        for (; bytesLen > ULONG_MAX; bytes += ULONG_MAX, bytesLen -= ULONG_MAX) {
+            ok = ok && CryptHashData(hHash, bytes, ULONG_MAX, 0);
+        }
+        ok = ok && CryptHashData(hHash, bytes, (ULONG)bytesLen, 0);
+    }
+#else
     ok = CryptHashData(hHash, (const BYTE *)data.Get(), dataLen, 0);
+#endif
     QuitIfNot(ok, "Error: Failed to calculate the SHA-1 hash!");
     DWORD sigLen = 0;
     ok = CryptSignHash(hHash, AT_SIGNATURE, nullptr, 0, nullptr, &sigLen);

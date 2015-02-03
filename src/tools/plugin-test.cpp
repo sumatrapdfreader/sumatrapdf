@@ -126,5 +126,5 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         DispatchMessage(&msg);
     }
 
-    return msg.wParam;
+    return (int)msg.wParam;
 }
