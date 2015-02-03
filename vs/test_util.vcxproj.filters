@@ -13,11 +13,8 @@
 		<Filter Include="src\utils\tests">
 			<UniqueIdentifier>{1DE6094F-729A-5D48-80D7-E34694E8122B}</UniqueIdentifier>
 		</Filter>
-		<Filter Include="tools">
+		<Filter Include="src\tools">
 			<UniqueIdentifier>{6032ED46-F689-FA48-98C1-837AC579B6FE}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="tools\tests">
-			<UniqueIdentifier>{5BDAAFD0-2D6D-F345-98FD-22264697F6AE}</UniqueIdentifier>
 		</Filter>
 	</ItemGroup>
 	<ItemGroup>
@@ -233,8 +230,8 @@
 		<ClCompile Include="..\src\mui\SvgPath_ut.cpp">
 			<Filter>src\mui</Filter>
 		</ClCompile>
-		<ClCompile Include="..\tools\tests\UnitMain.cpp">
-			<Filter>tools\tests</Filter>
+		<ClCompile Include="..\src\tools\test_util.cpp">
+			<Filter>src\tools</Filter>
 		</ClCompile>
 	</ItemGroup>
 </Project>

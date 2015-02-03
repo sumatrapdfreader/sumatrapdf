@@ -117,48 +117,8 @@ solution "all_tests"
       "src/AppUtil*",
       "src/UnitTests.cpp",
       "src/mui/SvgPath*",
-      "tools/tests/UnitMain.cpp"
+      "src/tools/test_util.cpp"
     }
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
-solution "plugin-test"
-  solution_common()
-
-  project "plugin-test"
-    kind "WindowedApp"
-    language "C++"
-    files {
-      "src/utils/BaseUtil.*",
-      "src/utils/CmdLineParser.*",
-      "src/utils/FileUtil.*",
-      "src/utils/GeomUtil.*",
-      "src/utils/Scoped.*",
-      "src/utils/StrUtil.*",
-      "src/utils/Vec.*",
-      "tools/plugin-test/plugin-test.cpp"
-    }
-    includedirs { "src/utils" }
-    flags { "NoManifest", "WinMain" }
-    links { "shlwapi" }
-
-solution "signfile"
-  solution_common()
-
-  project "signfile"
-    kind "ConsoleApp"
-    language "C++"
-    files {
-      "src/utils/BaseUtil.*",
-      "src/utils/CmdLineParser.*",
-      "src/utils/CryptoUtil.*",
-      "src/utils/FileUtil.*",
-      "src/utils/Scoped.*",
-      "src/utils/StrUtil.*",
-      "src/utils/Vec.*",
-      "tools/signfile/signfile.cpp"
-    }
-    defines { "NO_LIBMUPDF" }
-    includedirs { "src/utils" }
-    links { "shlwapi", "crypt32" }

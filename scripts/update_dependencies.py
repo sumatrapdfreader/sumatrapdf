@@ -13,6 +13,7 @@ DIRS = [
 	"src", pjoin("src", "utils"), pjoin("src", "mui"),  pjoin("src", "wingui"),
 	pjoin("src", "installer"), pjoin("src", "ifilter"), pjoin("src", "previewer"),
 	pjoin("src", "memtrace"), pjoin("src", "regress"), pjoin("src", "uia"),
+	pjoin("src", "tools"), pjoin("src", "utils", "tests"),
 	pjoin("ext", "unarr"), pjoin("ext", "unarr", "common"),
 ] + [pjoin("ext", "unarr", format) for format in ["rar", "tar", "zip", "_7z"]]
 INCLUDE_DIRS = DIRS + [
@@ -30,11 +31,12 @@ INCLUDE_DIRS = DIRS + [
 	pjoin("ext", "zlib"),
 ]
 OBJECT_DIRS = {
-	"src\\utils": "$(OU)",
+	"src\\utils": "$(OU)", "src\\utils\\tests": "$(OU)",
 	"src\\ifilter": "$(ODLL)", "src\\previewer": "$(ODLL)",
 	"src\\mui": "$(OMUI)",
 	"src\\memtrace": "$(OM)",
 	"src\\uia": "$(OUIA)",
+	"src\\tools": "$(OU)",
 	"ext\\unarr": "$(OUN)", "ext\\unarr\\common": "$(OUN)", "ext\\unarr\\rar": "$(OUN)", "ext\\unarr\\tar": "$(OUN)", "ext\\unarr\\zip": "$(OUN)", "ext\\unarr\\_7z": "$(OUN)"
 } # default: "$(OS)"
 MAKEFILE = "makefile.deps"

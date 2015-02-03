@@ -105,7 +105,7 @@ LIB_FLAGS = $(LIB_FLAGS) /LTCG
 
 LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib urlmon.lib gdiplus.lib \
-	ole32.lib OleAut32.lib shlwapi.lib version.lib WindowsCodecs.lib
+	ole32.lib OleAut32.lib shlwapi.lib version.lib WindowsCodecs.lib crypt32.lib
 
 OS   = $(O)\sumatrapdf
 OU   = $(O)\utils
@@ -142,8 +142,10 @@ MEMTRACE_RES = $(ODLL)\memtrace.res
 MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
-
-MAKELZSA_APP = $(O)\MakeLzsa.exe
+MAKELZSA_APP = $(O)\MakeLzSA.exe
+TEST_UTIL_APP = $(O)\test_util.exe
+SIGNFILE_APP = $(O)\signfile.exe
+PLUGIN_TEST_APP = $(O)\plugin-test.exe
 
 MUPDF_LIB   = $(O)\libmupdfs.lib
 UNARR_LIB   = $(O)\unarr.lib
@@ -238,10 +240,27 @@ ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINES_LIB) $(FORMAT_LIBS) $(UTILS_LIB) $(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
 
 MAKELZSA_OBJS = \
-	$(OS)\MakeLzsa.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
+	$(OU)\MakeLzSA.obj $(UTILS_LIB) $(ZLIB_OBJS) $(LZMA_OBJS)
+
+TEST_UTIL_OBJS = \
+	$(OU)\test_util.obj $(OS)\UnitTests.obj $(UTILS_LIB) $(MUPDF_LIB) \
+	$(OU)\UtAssert.obj $(OU)\VarintGob.obj $(OMUI)\SvgPath.obj \
+	$(OU)\BaseUtil_ut.obj $(OU)\ByteOrderDecoder_ut.obj $(OU)\CmdLineParser_ut.obj \
+	$(OU)\CryptoUtil_ut.obj $(OU)\CssParser_ut.obj $(OU)\Dict_ut.obj \
+	$(OU)\FileUtil_ut.obj $(OU)\HtmlPrettyPrint_ut.obj $(OU)\HtmlPullParser_ut.obj \
+	$(OU)\JsonParser_ut.obj $(OU)\SettingsUtil_ut.obj $(OU)\SimpleLog_ut.obj \
+	$(OU)\SquareTreeParser_ut.obj $(OU)\StrFormat_ut.obj $(OU)\StrUtil_ut.obj \
+	$(OU)\TrivialHtmlParser_ut.obj $(OU)\VarintGob_ut.obj $(OU)\Vec_ut.obj \
+	$(OU)\WinUtil_ut.obj $(OMUI)\SvgPath_ut.obj $(OS)\AppUtil.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_LIB)
+
+SIGNFILE_OBJS = \
+	$(OU)\signfile.obj $(UTILS_LIB) $(MUPDF_LIB)
+
+PLUGIN_TEST_OBJS = \
+	$(OU)\plugin-test.obj $(UTILS_LIB)
 
 !if "$(CFG)"=="dbg"
 # build all optional IFilters for debug builds
@@ -336,10 +355,13 @@ PDFFilter:     $(OS) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(PDFPREVIEW_DLL)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 MakeLzsa:      $(OS) $(MAKELZSA_APP)
+UnitTest:      $(OS) $(TEST_UTIL_APP)
 AllSymbols:    $(O)  $(SYMBOLS_LZSA)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
+signfile:      $(OU) $(SIGNFILE_APP)
+plugin-test:   $(OU) $(PLUGIN_TEST_APP)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
@@ -405,6 +427,15 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 $(MAKELZSA_APP): $(MAKELZSA_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
+$(TEST_UTIL_APP): $(TEST_UTIL_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
+$(SIGNFILE_APP): $(SIGNFILE_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
+
+$(PLUGIN_TEST_APP): $(PLUGIN_TEST_OBJS)
+	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
+
 {$(SRCDIR)\utils}.cpp{$(OU)}.obj::
 	$(CC) $(UTILS_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
 
@@ -413,6 +444,12 @@ $(MAKELZSA_APP): $(MAKELZSA_OBJS)
 
 {$(SRCDIR)\mui}.cpp{$(OMUI)}.obj::
 	$(CC) $(UTILS_CFLAGS) /Fo$(OMUI)\ /Fd$(O)\vc80.pdb $<
+
+{$(SRCDIR)\tools}.cpp{$(OU)}.obj::
+	$(CC) $(UTILS_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
+
+{$(SRCDIR)\utils\tests}.cpp{$(OU)}.obj::
+	$(CC) $(UTILS_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
 
 {$(SRCDIR)\uia}.cpp{$(OUIA)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OUIA)\ /Fd$(O)\vc80.pdb $<

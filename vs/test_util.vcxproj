@@ -235,7 +235,7 @@
     </ClCompile>
     <ClCompile Include="..\src\mui\SvgPath_ut.cpp">
     </ClCompile>
-    <ClCompile Include="..\tools\tests\UnitMain.cpp">
+    <ClCompile Include="..\src\tools\test_util.cpp">
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
