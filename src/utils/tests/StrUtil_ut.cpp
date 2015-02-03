@@ -169,9 +169,12 @@ void StrTest()
         utassert(str::Eq(str, large));
         free(str);
     }
+#ifndef DEBUG
+    // TODO: this test slows down DEBUG builds significantly
     str = str::Format(L"%s", L"\uFFFF");
     utassert(str::Eq(str, nullptr));
     free(str);
+#endif
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
     free(str);
