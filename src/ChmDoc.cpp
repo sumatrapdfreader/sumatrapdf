@@ -48,6 +48,13 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
 
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName, &info);
+    if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
+        // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
+        fileNameTmp.Set(str::Dup(fileName));
+        str::TransChars(fileNameTmp, "\\", "/");
+        fileName = fileNameTmp;
+        res = chm_resolve_object(chmHandle, fileName, &info);
+    }
     if (CHM_RESOLVE_SUCCESS != res)
         return nullptr;
     size_t len = (size_t)info.length;

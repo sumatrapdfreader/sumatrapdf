@@ -101,7 +101,6 @@
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\MakeLzSA.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
