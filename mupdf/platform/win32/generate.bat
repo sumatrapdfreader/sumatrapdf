@@ -15,7 +15,6 @@ if not exist cquote.exe goto usage
 if not exist bin2hex.exe goto usage
 
 if not exist generated/gen_font_base14.h fontdump.exe generated/gen_font_base14.h resources/fonts/urw/*.cff
-if not exist generated/gen_font_droid.h fontdump.exe generated/gen_font_droid.h resources/fonts/droid/DroidSans.ttf resources/fonts/droid/DroidSansMono.ttf
 if not exist generated/gen_font_cjk.h fontdump.exe generated/gen_font_cjk.h resources/fonts/droid/DroidSansFallback.ttc
 if not exist generated/gen_font_cjk_full.h fontdump.exe generated/gen_font_cjk_full.h resources/fonts/droid/DroidSansFallbackFull.ttc
 

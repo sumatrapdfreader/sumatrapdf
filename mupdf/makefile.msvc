@@ -179,12 +179,11 @@ MUPDF_CFLAGS = $(CFLAGS) /TC /I$(MUPDF_DIR)/include /I$(MUPDF_DIR)/generated \
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"
 !endif
 
-# Make it easy to compile in a CJK fallback font and/or the Droid substitution fonts
+# Make it easy to compile in a CJK fallback font
 !if "$(WITHCJKFONT)"==""
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
-!endif
-!if "$(WITHDROIDFONT)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NODROIDFONT"
+!else
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFULL"
 !endif
 
 !if "$(PLATFORM)"=="X64"
@@ -437,7 +436,7 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 MUPDF_CMAP_TABLES = $(MUPDF_GEN_DIR)\gen_cmap_cns.h $(MUPDF_GEN_DIR)\gen_cmap_gb.h \
 	$(MUPDF_GEN_DIR)\gen_cmap_japan.h $(MUPDF_GEN_DIR)\gen_cmap_korea.h
 
-MUPDF_FONT_FILES = $(MUPDF_GEN_DIR)\gen_font_base14.h $(MUPDF_GEN_DIR)\gen_font_droid.h \
+MUPDF_FONT_FILES = $(MUPDF_GEN_DIR)\gen_font_base14.h \
 	$(MUPDF_GEN_DIR)\gen_font_cjk.h $(MUPDF_GEN_DIR)\gen_font_cjk_full.h
 
 MUPDF_GENERATED =  $(MUPDF_CMAP_TABLES) $(MUPDF_FONT_FILES) $(MUPDF_GEN_DIR)\js_util.h

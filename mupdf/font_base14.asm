@@ -14,53 +14,53 @@ global EXPORT(pdf_font_Dingbats)
 EXPORT(pdf_font_Dingbats):
     incbin "resources/fonts/urw/Dingbats.cff"
 
-global EXPORT(pdf_font_NimbusMon_Bol)
-EXPORT(pdf_font_NimbusMon_Bol):
-    incbin "resources/fonts/urw/NimbusMon-Bol.cff"
+global EXPORT(pdf_font_NimbusMono_Bold)
+EXPORT(pdf_font_NimbusMono_Bold):
+    incbin "resources/fonts/urw/NimbusMono-Bold.cff"
 
-global EXPORT(pdf_font_NimbusMon_BolObl)
-EXPORT(pdf_font_NimbusMon_BolObl):
-    incbin "resources/fonts/urw/NimbusMon-BolObl.cff"
+global EXPORT(pdf_font_NimbusMono_BoldOblique)
+EXPORT(pdf_font_NimbusMono_BoldOblique):
+    incbin "resources/fonts/urw/NimbusMono-BoldOblique.cff"
 
-global EXPORT(pdf_font_NimbusMon_Obl)
-EXPORT(pdf_font_NimbusMon_Obl):
-    incbin "resources/fonts/urw/NimbusMon-Obl.cff"
+global EXPORT(pdf_font_NimbusMono_Oblique)
+EXPORT(pdf_font_NimbusMono_Oblique):
+    incbin "resources/fonts/urw/NimbusMono-Oblique.cff"
 
-global EXPORT(pdf_font_NimbusMon_Reg)
-EXPORT(pdf_font_NimbusMon_Reg):
-    incbin "resources/fonts/urw/NimbusMon-Reg.cff"
+global EXPORT(pdf_font_NimbusMono_Regular)
+EXPORT(pdf_font_NimbusMono_Regular):
+    incbin "resources/fonts/urw/NimbusMono-Regular.cff"
 
-global EXPORT(pdf_font_NimbusRom_Ita)
-EXPORT(pdf_font_NimbusRom_Ita):
-    incbin "resources/fonts/urw/NimbusRom-Ita.cff"
+global EXPORT(pdf_font_NimbusRomNo9L_Med)
+EXPORT(pdf_font_NimbusRomNo9L_Med):
+    incbin "resources/fonts/urw/NimbusRomNo9L-Med.cff"
 
-global EXPORT(pdf_font_NimbusRom_Med)
-EXPORT(pdf_font_NimbusRom_Med):
-    incbin "resources/fonts/urw/NimbusRom-Med.cff"
+global EXPORT(pdf_font_NimbusRomNo9L_MedIta)
+EXPORT(pdf_font_NimbusRomNo9L_MedIta):
+    incbin "resources/fonts/urw/NimbusRomNo9L-MedIta.cff"
 
-global EXPORT(pdf_font_NimbusRom_MedIta)
-EXPORT(pdf_font_NimbusRom_MedIta):
-    incbin "resources/fonts/urw/NimbusRom-MedIta.cff"
+global EXPORT(pdf_font_NimbusRomNo9L_Reg)
+EXPORT(pdf_font_NimbusRomNo9L_Reg):
+    incbin "resources/fonts/urw/NimbusRomNo9L-Reg.cff"
 
-global EXPORT(pdf_font_NimbusRom_Reg)
-EXPORT(pdf_font_NimbusRom_Reg):
-    incbin "resources/fonts/urw/NimbusRom-Reg.cff"
+global EXPORT(pdf_font_NimbusRomNo9L_RegIta)
+EXPORT(pdf_font_NimbusRomNo9L_RegIta):
+    incbin "resources/fonts/urw/NimbusRomNo9L-RegIta.cff"
 
-global EXPORT(pdf_font_NimbusSan_Bol)
-EXPORT(pdf_font_NimbusSan_Bol):
-    incbin "resources/fonts/urw/NimbusSan-Bol.cff"
+global EXPORT(pdf_font_NimbusSanL_Bol)
+EXPORT(pdf_font_NimbusSanL_Bol):
+    incbin "resources/fonts/urw/NimbusSanL-Bol.cff"
 
-global EXPORT(pdf_font_NimbusSan_BolIta)
-EXPORT(pdf_font_NimbusSan_BolIta):
-    incbin "resources/fonts/urw/NimbusSan-BolIta.cff"
+global EXPORT(pdf_font_NimbusSanL_BolIta)
+EXPORT(pdf_font_NimbusSanL_BolIta):
+    incbin "resources/fonts/urw/NimbusSanL-BolIta.cff"
 
-global EXPORT(pdf_font_NimbusSan_Ita)
-EXPORT(pdf_font_NimbusSan_Ita):
-    incbin "resources/fonts/urw/NimbusSan-Ita.cff"
+global EXPORT(pdf_font_NimbusSanL_Reg)
+EXPORT(pdf_font_NimbusSanL_Reg):
+    incbin "resources/fonts/urw/NimbusSanL-Reg.cff"
 
-global EXPORT(pdf_font_NimbusSan_Reg)
-EXPORT(pdf_font_NimbusSan_Reg):
-    incbin "resources/fonts/urw/NimbusSan-Reg.cff"
+global EXPORT(pdf_font_NimbusSanL_RegIta)
+EXPORT(pdf_font_NimbusSanL_RegIta):
+    incbin "resources/fonts/urw/NimbusSanL-RegIta.cff"
 
 global EXPORT(pdf_font_StandardSymL)
 EXPORT(pdf_font_StandardSymL):
