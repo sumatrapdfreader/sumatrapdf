@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ea68f62456e411b9fc6f95d9eaeb8a39e8a0c27a
+9279ed7c5bc685a1a2dc8477fe6da663982f4d5b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2986,6 +2986,7 @@ sv:Fönster
 tr:&Pencere
 tw:視窗(&W)
 uk:&Вікно
+uz:&Oyna
 vn:&Cửa sổ
 :&Yes
 am:&Այո
@@ -6596,6 +6597,7 @@ sv:Muspekarens position:
 tr:İmleç konumu:
 tw:游標位置
 uk:Позиція вказівника:
+uz:Kursor holati:
 vn:Vị trí con trỏ:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
@@ -10173,6 +10175,7 @@ sv:Behåll webbläsarens insticksprogram för PDF (stöds inte längre)
 tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
 tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
 uk:Залишити розширення для браузера (більше не підтримується)
+uz:PDF &brauzer plaginini o'rnatilgan qoldirish (boshqa qo'llab-quvvatlanmaydi)
 vn:Giữ lại Plugin PDF đã cài đặt cho các trình duyệt (không còn được hỗ trợ)
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
@@ -12476,6 +12479,7 @@ sv:PalmDoc dokument
 tr:PalmDoc belgeleri
 tw:PalmDoc 文件
 uk:Документи PalmDoc
+uz:PalmDoc ho'jjatlari
 vn:Tài liệu PalmDoc
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
@@ -14124,6 +14128,7 @@ sv:Markering:
 tr:Seçim:
 tw:選取:
 uk:Виділення:
+uz:Tanlash:
 vn:Lựa chọn:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
@@ -15775,6 +15780,7 @@ sr-rs:Овај документ користи неподржане опције
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
 tw:此文件使用未支援的功能 (%s) ，並可能無法正確的繪製。
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
+uz:Ushbu ho'jjat qo'llanmaydigan imkoniyatlarni (%s) ishlatmoqda va to'g'ri render qilinmasligi mo'mkin
 vn:Tài liệu này có vài tính năng không được hỗ trợ (%s) và không được dựng chính xác
 :Title:
 af:Titel:
@@ -16085,6 +16091,7 @@ sv:Använd flikar
 tr:&Sekmeler kullan
 tw:使用頁籤(&T):
 uk:Використовувати вкладки
+uz:&Ilovalarni qo'llash
 vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր

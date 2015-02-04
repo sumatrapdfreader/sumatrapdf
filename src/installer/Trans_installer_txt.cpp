@@ -2019,7 +2019,7 @@ const char * gTranslations_uz =
   "SumatraPDF &jildga o'rnatish\0"\
   "O'rnatish muvaffaqiyatsiz tugadi!\0"\
   "O'rnatilmoqda...\0"\
-  "\0"\
+  "PDF &brauzer plaginini o'rnatilgan qoldirish (boshqa qo'llab-quvvatlanmaydi)\0"\
   "Windows Desktop Search yordamida PDF hujjatlarini &qidirish\0"\
   "Windows yordamida PDF hujjatlarini oldindan &ko'rish\0"\
   "Davom etish uchun %s yoping!\0"\
