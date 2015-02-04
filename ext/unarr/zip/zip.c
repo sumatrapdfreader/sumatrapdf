@@ -32,6 +32,10 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
 
     ar->entry_offset = offset;
     ar->entry_offset_next = offset + ZIP_LOCAL_ENTRY_FIXED_SIZE + entry.namelen + entry.extralen + (off64_t)entry.datasize;
+    if (ar->entry_offset_next <= ar->entry_offset) {
+        warn("Compressed size is too large (%" PRIu64 ")", entry.datasize);
+        return false;
+    }
     ar->entry_size_uncompressed = (size_t)entry.uncompressed;
     ar->entry_filetime = ar_conv_dosdate_to_filetime(entry.dosdate);
 
