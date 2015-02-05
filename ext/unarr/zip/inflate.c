@@ -470,3 +470,15 @@ int inflate_process(inflate_state *state, const void *data_in, size_t *avail_in,
         }
     }
 }
+
+int inflate_flush(inflate_state *state, unsigned char data_in[8])
+{
+    int count = 0;
+    int keep = state->in.available & 0x7;
+    while (count < state->in.available / 8) {
+        data_in[count] = (state->in.bits >> (count * 8 + keep)) & 0xFF;
+        count++;
+    }
+    state->in.available = keep;
+    return count;
+}
