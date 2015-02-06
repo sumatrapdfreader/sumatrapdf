@@ -1509,6 +1509,8 @@ WindowInfo* LoadDocument(LoadArgs& args)
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
         win->staticLinks.Reset();
+        // there's no tab to reuse at this point
+        args.forceReuse = false;
     }
     else {
         CrashIf(!args.forceReuse && !openNewTab);
