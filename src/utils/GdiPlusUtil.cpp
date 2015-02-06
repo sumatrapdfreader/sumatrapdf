@@ -289,6 +289,7 @@ const WCHAR *GfxFileExtFromData(const char *data, size_t len)
     }
 }
 
+// Windows' JPEG codec doesn't support arithmetic coding
 static bool JpegUsesArithmeticCoding(const char *data, size_t len)
 {
     CrashIf(GfxFormatFromData(data, len) != Img_JPEG);
@@ -303,12 +304,30 @@ static bool JpegUsesArithmeticCoding(const char *data, size_t len)
     return false;
 }
 
+// Windows' PNG codec fails to handle an edge case, resulting in
+// an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
+static bool PngRequiresPresetDict(const char *data, size_t len)
+{
+    CrashIf(GfxFormatFromData(data, len) != Img_PNG);
+
+    ByteReader r(data, len);
+    for (size_t ix = 8; ix + 12 < len && r.DWordBE(ix) < len - ix - 12; ix += r.DWordBE(ix) + 12) {
+        if (r.DWordBE(ix + 4) == 0x49444154 /* IDAT */) {
+            // check the zlib header's FDICT flag
+            // (even if this image claims not to be zlib compressed!)
+            return (r.Byte(ix + 9) & (1 << 5)) != 0;
+        }
+    }
+
+    return false;
+}
+
 bool IsGdiPlusNativeFormat(const char *data, size_t len)
 {
     ImgFormat fmt = GfxFormatFromData(data, len);
-    return Img_BMP == fmt || Img_GIF == fmt ||
+    return Img_BMP == fmt || Img_GIF == fmt || Img_TIFF == fmt ||
            (Img_JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
-           Img_PNG == fmt || Img_TIFF == fmt;
+           (Img_PNG == fmt && !PngRequiresPresetDict(data, len));
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
@@ -323,6 +342,8 @@ Bitmap *BitmapFromData(const char *data, size_t len)
         return fitz::ImageFromData(data, len);
     if (Img_JPEG == format && JpegUsesArithmeticCoding(data, len))
         return fitz::ImageFromData(data, len);
+    if (Img_PNG == format && PngRequiresPresetDict(data, len))
+        return nullptr;
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)

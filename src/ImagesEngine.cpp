@@ -389,17 +389,15 @@ bool ImageEngineImpl::LoadFromStream(IStream *stream)
     char header[18];
     if (ReadDataFromStream(stream, header, sizeof(header)))
         fileExt = GfxFileExtFromData(header, sizeof(header));
+    if (!fileExt)
+        return false;
 
-    if (fileExt && !IsGdiPlusNativeFormat(header, sizeof(header))) {
-        size_t len;
-        ScopedMem<char> data((char *)GetDataFromStream(stream, &len));
-        image = BitmapFromData(data, len);
-    }
-    else {
+    size_t len;
+    ScopedMem<char> data((char *)GetDataFromStream(stream, &len));
+    if (IsGdiPlusNativeFormat(data, len))
         image = Bitmap::FromStream(stream);
-        if (!fileExt)
-            fileExt = L".png";
-    }
+    else
+        image = BitmapFromData(data, len);
 
     return FinishLoading();
 }
