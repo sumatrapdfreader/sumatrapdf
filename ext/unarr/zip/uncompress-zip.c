@@ -267,7 +267,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
             return ERR_UNCOMP;
         }
         order = (uncomp->input.data[uncomp->input.offset] & 0x0F) + 1;
-        size = (((uncomp->input.data[uncomp->input.offset] >> 4) | ((uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF))) + 1;
+        size = ((uncomp->input.data[uncomp->input.offset] >> 4) | ((uncomp->input.data[uncomp->input.offset + 1] << 4) & 0xFF));
         method = uncomp->input.data[uncomp->input.offset + 1] >> 4;
         uncomp->input.bytes_left -= 2;
         uncomp->input.offset += 2;
@@ -281,7 +281,7 @@ static uint32_t zip_uncompress_data_ppmd(struct ar_archive_zip_uncomp *uncomp, v
             return ERR_UNCOMP;
         }
 #endif
-        if (!Ppmd8_Alloc(&uncomp->state.ppmd8.ctx, size << 20, &uncomp->state.ppmd8.alloc))
+        if (!Ppmd8_Alloc(&uncomp->state.ppmd8.ctx, (size + 1) << 20, &uncomp->state.ppmd8.alloc))
             return ERR_UNCOMP;
         if (!Ppmd8_RangeDec_Init(&uncomp->state.ppmd8.ctx))
             return ERR_UNCOMP;

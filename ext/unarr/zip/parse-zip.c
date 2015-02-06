@@ -168,7 +168,7 @@ off64_t zip_find_end_of_last_directory_entry(ar_stream *stream, struct zip_eocd6
             return -1;
         if (uint32le(data + 0) != SIG_CENTRAL_DIRECTORY)
             return -1;
-        if (!ar_skip(stream, (uint32_t)uint16le(data + 28) + uint16le(data + 30) + uint16le(data + 32)))
+        if (!ar_skip(stream, uint16le(data + 28) + uint16le(data + 30) + uint16le(data + 32)))
             return -1;
     }
 
