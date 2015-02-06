@@ -1335,15 +1335,15 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
 
 class ChmEmbeddedDest;
 
-class Chm2EngineImpl : public EbookEngine {
+class ChmEngineImpl : public EbookEngine {
     friend ChmEmbeddedDest;
 
 public:
-    Chm2EngineImpl() : EbookEngine(), doc(nullptr), dataCache(nullptr) {
+    ChmEngineImpl() : EbookEngine(), doc(nullptr), dataCache(nullptr) {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
-    virtual ~Chm2EngineImpl() {
+    virtual ~ChmEngineImpl() {
         delete dataCache;
         delete doc;
     }
@@ -1465,7 +1465,7 @@ public:
     }
 };
 
-bool Chm2EngineImpl::Load(const WCHAR *fileName)
+bool ChmEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
@@ -1491,7 +1491,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     return pages->Count() > 0;
 }
 
-PageDestination *Chm2EngineImpl::GetNamedDest(const WCHAR *name)
+PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
 {
     PageDestination *dest = EbookEngine::GetNamedDest(name);
     if (!dest) {
@@ -1507,7 +1507,7 @@ PageDestination *Chm2EngineImpl::GetNamedDest(const WCHAR *name)
     return dest;
 }
 
-DocTocItem *Chm2EngineImpl::GetTocTree()
+DocTocItem *ChmEngineImpl::GetTocTree()
 {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
@@ -1526,11 +1526,11 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
 }
 
 class ChmEmbeddedDest : public PageDestination {
-    Chm2EngineImpl *engine;
+    ChmEngineImpl *engine;
     ScopedMem<char> path;
 
 public:
-    ChmEmbeddedDest(Chm2EngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
+    ChmEmbeddedDest(ChmEngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
 
     virtual PageDestType GetDestType() const { return Dest_LaunchEmbedded; }
     virtual int GetDestPageNo() const { return 0; }
@@ -1540,7 +1540,7 @@ public:
     virtual bool SaveEmbedded(LinkSaverUI& saveUI) { return engine->SaveEmbedded(saveUI, path); }
 };
 
-PageElement *Chm2EngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
+PageElement *ChmEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
     PageElement *linkEl = EbookEngine::CreatePageLink(link, rect, pageNo);
     if (linkEl)
@@ -1557,7 +1557,7 @@ PageElement *Chm2EngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     return new EbookLink(link, rect, dest, pageNo);
 }
 
-bool Chm2EngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char *path)
+bool ChmEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char *path)
 {
     size_t len;
     ScopedMem<unsigned char> data(doc->GetData(path, &len));
@@ -1566,9 +1566,9 @@ bool Chm2EngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char *path)
     return saveUI.SaveEmbedded(data, len);
 }
 
-BaseEngine *Chm2EngineImpl::CreateFromFile(const WCHAR *fileName)
+BaseEngine *ChmEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
-    Chm2EngineImpl *engine = new Chm2EngineImpl();
+    ChmEngineImpl *engine = new ChmEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
         return nullptr;
@@ -1576,7 +1576,7 @@ BaseEngine *Chm2EngineImpl::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
-namespace Chm2Engine {
+namespace ChmEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
@@ -1585,7 +1585,7 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 
 BaseEngine *CreateFromFile(const WCHAR *fileName)
 {
-    return Chm2EngineImpl::CreateFromFile(fileName);
+    return ChmEngineImpl::CreateFromFile(fileName);
 }
 
 }

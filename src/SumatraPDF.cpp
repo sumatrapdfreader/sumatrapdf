@@ -846,11 +846,11 @@ LoadEngineInFixedPageUI:
             // loading one nonetheless); note: this crash should never happen,
             // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
             CrashAlwaysIf(gPluginMode);
-            // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
+            // if CLSID_WebBrowser isn't available, fall back on ChmEngine
             if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
                 delete chmModel;
                 engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType);
-                CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
+                CrashIf(engineType != (engine ? Engine_Chm : Engine_None));
                 goto LoadEngineInFixedPageUI;
             }
             ctrl = chmModel;
@@ -2240,7 +2240,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
     if (ctrl->AsFixed())
         type = ctrl->AsFixed()->engineType;
     else if (ctrl->AsChm())
-        type = Engine_Chm2;
+        type = Engine_Chm;
     else if (ctrl->AsEbook()) {
         switch (ctrl->AsEbook()->GetDocType()) {
         case Doc_Epub: type = Engine_Epub; break;
@@ -2257,7 +2257,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1); break;
         case Engine_ImageDir: return false; // only show "All files"
         case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
-        case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
+        case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
         case Engine_Fb2:    fileFilter.Append(_TR("FictionBook documents")); break;

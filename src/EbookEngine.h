@@ -32,7 +32,7 @@ BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 }
 
-namespace Chm2Engine {
+namespace ChmEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
 BaseEngine *CreateFromFile(const WCHAR *fileName);
