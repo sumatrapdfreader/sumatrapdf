@@ -559,6 +559,9 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 		else
 			cmap = NULL;
 
+		/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/86 */
+		encoding = pdf_dict_gets(dict, "Encoding");
+
 		for (i = 0; i < face->num_charmaps; i++)
 		{
 			FT_CharMap test = face->charmaps[i];
@@ -571,9 +574,10 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 
 			if (kind == TRUETYPE)
 			{
-				if (test->platform_id == 1 && test->encoding_id == 0)
+				/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/86 */
+				if (test->platform_id == 1 && test->encoding_id == 0 && (!pdf_is_name(encoding) || strcmp(pdf_to_name(encoding), "WinAnsiEncoding")))
 					cmap = test;
-				if (test->platform_id == 3 && test->encoding_id == 1)
+				if (test->platform_id == 3 && test->encoding_id == 1 && (!pdf_is_name(encoding) || strcmp(pdf_to_name(encoding), "MacRomanEncoding")))
 					cmap = test;
 				if (symbolic && test->platform_id == 3 && test->encoding_id == 0)
 					cmap = test;
