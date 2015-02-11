@@ -238,7 +238,7 @@ static Byte gPpmd_ByteIn_Read(void *p)
 {
     struct ByteReader *self = p;
     if (!self->input->bytes_left && (!self->zip->progress.data_left || !zip_fill_input_buffer(self->zip)))
-        return 0;
+        return 0xFF;
     self->input->bytes_left--;
     return self->input->data[self->input->offset++];
 }

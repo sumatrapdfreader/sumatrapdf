@@ -47,7 +47,7 @@ static inline uint64_t br_bits(ar_archive_rar *rar, int bits)
 static Byte ByteIn_Read(void *p)
 {
     struct ByteReader *self = p;
-    return br_check(self->rar, 8) ? (Byte)br_bits(self->rar, 8) : 0;
+    return br_check(self->rar, 8) ? (Byte)br_bits(self->rar, 8) : 0xFF;
 }
 
 static void ByteIn_CreateVTable(struct ByteReader *br, ar_archive_rar *rar)

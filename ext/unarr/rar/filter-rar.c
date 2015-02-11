@@ -612,10 +612,9 @@ bool rar_parse_filter(ar_archive_rar *rar, const uint8_t *bytes, uint16_t length
     }
 
     filter = rar_create_filter(prog, globaldata, globaldatalen, registers, blockstartpos, blocklength);
-    if (!filter) {
-        free(globaldata);
+    free(globaldata);
+    if (!filter)
         return false;
-    }
 
     for (i = 0; i < 7; i++)
         bw_write32le(&filter->globaldata[i * 4], registers[i]);
