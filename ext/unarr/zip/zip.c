@@ -52,7 +52,7 @@ static bool zip_parse_local_entry(ar_archive *ar, off64_t offset)
     zip->progress.data_left = (size_t)entry.datasize;
     zip_clear_uncompress(&zip->uncomp);
 
-    if (entry.datasize == 0 && ar_entry_get_name(ar) && zip->entry.name[strlen(zip->entry.name) - 1] == '/') {
+    if (entry.datasize == 0 && ar_entry_get_name(ar) && *zip->entry.name && zip->entry.name[strlen(zip->entry.name) - 1] == '/') {
         log("Skipping directory entry \"%s\"", zip->entry.name);
         return zip_parse_local_entry(ar, ar->entry_offset_next);
     }
