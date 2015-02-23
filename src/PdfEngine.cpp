@@ -617,13 +617,9 @@ struct FitzImagePos {
 
 struct ListInspectionData {
     Vec<FitzImagePos> *images;
-    bool req_t3_fonts;
     size_t mem_estimate;
-    size_t path_len;
-    size_t clip_path_len;
 
-    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
-        req_t3_fonts(false), mem_estimate(0), path_len(0), clip_path_len(0) { }
+    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images), mem_estimate(0) { }
 };
 
 extern "C" static void
@@ -635,19 +631,9 @@ fz_inspection_free(fz_device *dev)
     ((ListInspectionData *)dev->user)->images->Reverse();
 }
 
-static void fz_inspection_handle_path(fz_device *dev, fz_path *path, bool clipping=false)
+static void fz_inspection_handle_path(fz_device *dev, fz_path *path)
 {
-    ListInspectionData *data = (ListInspectionData *)dev->user;
-    if (!clipping)
-        data->path_len += path->cmd_len + path->coord_len;
-    else
-        data->clip_path_len += path->cmd_len + path->coord_len;
-    data->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
-}
-
-static void fz_inspection_handle_text(fz_device *dev, fz_text *text)
-{
-    ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != nullptr;
+    ((ListInspectionData *)dev->user)->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
 }
 
 static void fz_inspection_handle_image(fz_device *dev, fz_image *image)
@@ -671,37 +657,13 @@ fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke
 extern "C" static void
 fz_inspection_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_odd, const fz_matrix *ctm)
 {
-    fz_inspection_handle_path(dev, path, true);
+    fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
 fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
-    fz_inspection_handle_path(dev, path, true);
-}
-
-extern "C" static void
-fz_inspection_fill_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
-{
-    fz_inspection_handle_text(dev, text);
-}
-
-extern "C" static void
-fz_inspection_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
-{
-    fz_inspection_handle_text(dev, text);
-}
-
-extern "C" static void
-fz_inspection_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accumulate)
-{
-    fz_inspection_handle_text(dev, text);
-}
-
-extern "C" static void
-fz_inspection_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm)
-{
-    fz_inspection_handle_text(dev, text);
+    fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
@@ -745,11 +707,6 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
     dev->stroke_path = fz_inspection_stroke_path;
     dev->clip_path = fz_inspection_clip_path;
     dev->clip_stroke_path = fz_inspection_clip_stroke_path;
-
-    dev->fill_text = fz_inspection_fill_text;
-    dev->stroke_text = fz_inspection_stroke_text;
-    dev->clip_text = fz_inspection_clip_text;
-    dev->clip_stroke_text = fz_inspection_clip_stroke_text;
 
     dev->fill_shade = fz_inspection_fill_shade;
     dev->fill_image = fz_inspection_fill_image;
@@ -1149,14 +1106,10 @@ struct PdfPageRun {
     pdf_page *page;
     fz_display_list *list;
     size_t size_est;
-    bool req_t3_fonts;
-    size_t path_len;
-    size_t clip_path_len;
     int refs;
 
     PdfPageRun(pdf_page *page, fz_display_list *list, ListInspectionData& data) :
-        page(page), list(list), size_est(data.mem_estimate), req_t3_fonts(data.req_t3_fonts),
-        path_len(data.path_len), clip_path_len(data.clip_path_len), refs(1) { }
+        page(page), list(list), size_est(data.mem_estimate), refs(1) { }
 };
 
 class PdfTocItem;
