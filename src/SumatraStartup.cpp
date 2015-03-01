@@ -557,7 +557,7 @@ static bool AutoUpdateMain()
     else if (str::StartsWith(argList.At(2), L"cleanup:"))
         otherExe = argList.At(2) + 8;
     if (!str::EndsWithI(otherExe, L".exe") || !file::Exists(otherExe)) {
-        CrashIf(true);
+        // continue startup
         return false;
     }
     RetryIO([&] { return file::Delete(otherExe); });

@@ -275,11 +275,6 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
         }
-#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
-        else if (is_arg_with_param("-autoupdate")) {
-            n++; // this should have been handled already by AutoUpdateMain
-        }
-#endif
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();
@@ -288,6 +283,10 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             return;
         }
 #endif
+        // this should have been handled already by AutoUpdateMain
+        else if (is_arg_with_param("-autoupdate")) {
+            n++;
+        }
         else {
             // Remember this argument as a filename to open
             WCHAR *filePath = nullptr;
