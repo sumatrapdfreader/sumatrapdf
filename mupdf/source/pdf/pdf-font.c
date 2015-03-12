@@ -616,6 +616,9 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 					pdf_load_encoding(estrings, pdf_to_name(base));
 				else if (!fontdesc->is_embedded && !symbolic)
 					pdf_load_encoding(estrings, "StandardEncoding");
+				/* SumatraPDF: TODO: find better fix for encoding mismatch */
+				else if (!fontdesc->encoding && !symbolic && !strcmp(FT_Get_X11_Font_Format(face), "CFF"))
+					pdf_load_encoding(estrings, "StandardEncoding");
 
 				diff = pdf_dict_gets(encoding, "Differences");
 				if (pdf_is_array(diff))
