@@ -7955,7 +7955,7 @@ const char * gTranslations_lv =
   "&Patiesais lielums\tCtrl+1\0"\
   "&Papildu opcijas...\0"\
   "&Visas atlas\304\253t\304\201s lappuses\0"\
-  "&Atpaka\304\274\Alt+Kreis\304\201 bulti\305\206a\0"\
+  "&Atpaka\304\274\tAlt+Kreis\304\201 bulti\305\206a\0"\
   "&Gr\304\201matas skats\tCtrl+8\0"\
   "&Aizv\304\223rt\tCtrl+W\0"\
   "&Kop\304\223t atlasi\0"\

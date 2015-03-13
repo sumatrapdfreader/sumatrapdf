@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5be58abcf37d655297c5edc8d2ca054e6a444ca4
+5b1a16bdf8cbfaa67e240ec792354a63afef3148
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -290,7 +290,7 @@ kr:이전에 본 페이지(&B)\tAlt+왼쪽 방향키
 ku:&گەڕانەوە\tAlt+Left Arrow
 kw:War-lergh\tAlt+<-
 lt:At&gal\tAlt+Kairėn
-lv:&Atpakaļ\Alt+Kreisā bultiņa
+lv:&Atpakaļ\tAlt+Kreisā bultiņa
 mk:Назад\tAlt+Left Arrow
 my:&Kembali\tAlt+Left Arrow
 ne:&पछाडि\tAlt+बायाँ बाण
