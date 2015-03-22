@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5b1a16bdf8cbfaa67e240ec792354a63afef3148
+8eee79e86a81babd2ee370d093083419369166dc
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -722,6 +722,7 @@ ka:&ურთიერთ-საპირისპიროდ\tCtrl+7
 kr:두 페이지씩(&F)\tCtrl+7
 ku:&ڕووکار\tCtrl+7
 lt:&Du puslapiai\tCtrl+7
+lv:&Divas lappuses\tCtrl+7
 mk:Две страници\tCtrl+7
 my:&Menghadap\tCtrl+7
 ne:&सम्मुख\tCtrl+7
@@ -2349,6 +2350,7 @@ ka:ამ დოკუმენტისთვის პაროლის დ�
 kr:이 문서의 비밀번호 기억(&R)
 ku:بیرخستنەوەی تێپەڕە ووشە بۆ ئەم بەڵگەنامەیە&
 lt:Įsiminti šio dokumento &slaptažodį
+lv:&Atcerēties šī dokumenta paroli
 mk:&Запомни ја лозинката за овој документ
 my:&Ingat katalaluan untuk dokumen ini
 ne:यो कागजातको पासवर्ड &सम्झनुहोस्
@@ -2409,6 +2411,7 @@ kr:각 문서의 설정 기억(&R)
 ku:بیرخستنەوەی ئەم هەڵبژاردنە بۆ هەموو بەڵگەنامەکان&
 kw:Gwitha an etholy&ow ma rag pub restren
 lt:Įsiminti šias &nuostatas kiekvienam dokumentui
+lv:&Atcerēties šos iestatījumus katram dokumentam
 mk:&Запомни ги овие поставувања за секој документ
 my:&Ingat tetapan-tetapan ini untuk setiap dokumen
 ne:यी सेटिङहरु प्रत्येक कागजातको लागि &सम्झनुहोस्
@@ -2709,6 +2712,7 @@ ka:გვერდების შემცირება ბეჭდვად
 kr:인쇄 영역에 맞춰 (필요한 경우) 페이지 축소(&S)
 ku:(کورتکردنەوەی پەڕەکان بۆ شوێنی چاپکردن (ئەگەر پێویست بوو&
 lt:&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
+lv:&Samazināt lappuses līdz apdrukājamai zonai (ja ir nepieciešams)
 mk:&Намали страници според зона за печатење (ако е потребно)
 my:&Kecilkan muka surat ke kawasan cetak (jika perlu)
 ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &खुम्च्याउनुहोस् (आवस्यक परेमा)
@@ -2766,7 +2770,7 @@ ka:&თითო გვერდად\tCtrl+6
 kr:한 페이지씩(&S)\tCtrl+6
 ku:پەڕەی تاک&\tCtrl+6
 lt:&Vienas puslapis\tCtrl+6
-lv:&Vienu lappusi\tCtrl+6
+lv:&Viena lappuse\tCtrl+6
 mk:Единечна страница\tCtrl+6
 my:&Halaman Tunggal\tCtrl+6
 ne:&एकल पृष्ठ\tCtrl+6
@@ -4872,6 +4876,7 @@ kr:역방향 검색 명령을 시작할 수 없습니다. 설정에서 명령줄
 ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
 kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
+lv:Neizdevās palaist inversās meklēšanas komandu. Lūdu pārbaudi komandu uzstādījumos.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
 my:Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.
 ne:आदेश पङ्‌क्ति उल्टो खोजाई सुरु गर्न सकिएन | कृपया सेटिङमा आदेश पङ्‌क्ति हेर्नुहोस |
@@ -5375,6 +5380,7 @@ kr:두 페이지씩 계속
 ku:پیشاندانی ڕووکار بە بەردەوامی
 kw:A-dal heb aswa
 lt:Nenutrūkstama dviejų puslapių
+lv:Nepārtraukti divas lappuses
 mk:Непрекинат поглед со две страници
 ml:തുടര്‍ച്ചയായി കാണിക്കുക
 mm:ဆက်တိုက် မျက်နှာ
@@ -7461,6 +7467,7 @@ ka:შეიყვანეთ ბრძანების სტრიქონ
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
+lv:Ievadiet komandrindu, izsaucamu ar dubultklikšķi uz PDF dokumenta:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
 my:Masukkan baris arahan untuk digunakan apabila anda klik dua kali pada dokumen PDF:
 ne:PDF कागजातमा दोहोरो क्लिक गर्दा आह्वान गर्ने आदेश पङ्‌क्ति प्रविष्ट गराउनुहोस्:
@@ -7764,6 +7771,7 @@ kr:두 페이지씩
 ku:ڕووکار
 kw:A-dal
 lt:Du puslapiai
+lv:Divas lappuses
 mk:Две страници
 ml:തിരിച്ച്
 mm: အရှေ့မျက်နှာ
@@ -7822,6 +7830,7 @@ it:Impossibile copiare programma disinstallazione nella cartella temporanea
 ja:アンインストーラを一時ディレクトリへコピーするのに失敗しました
 kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
 ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
+lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
 nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
@@ -7872,6 +7881,7 @@ it:Impossibile creare il collegamento
 ja:ショートカットの作成に失敗しました
 kr:바로가기를 만들지 못했습니다.
 ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
+lv:Neizdevās izveidot saīsni
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
 nl:Kon snelkoppeling niet aanmaken
@@ -7921,6 +7931,7 @@ it:Impossibile rimuovere chiavi registro
 ja:アンインストーラのレジストリキーを削除するのに失敗しました
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
+lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
 nl:Kon deinstallatie register sleutels niet verwijderen
@@ -7973,6 +7984,7 @@ it:Impossibile rinominare il file
 ja:ファイル名の変更に失敗しました！
 kr:파일 이름을 바꾸지 못했습니다!
 ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
+lv:Neizdevās pārdēvēt failu!
 mk:Не успеав да ја преименувам датотеката!
 my:Gagal menamakan semula fail!
 ne:नाम फेराई असफल
@@ -8033,6 +8045,7 @@ kr:파일을 저장하지 못했습니다.
 ku:پاراستنی فایل سەرکەتونەبوو
 kw:Gwithyans restren a fyllis
 lt:Failo įrašyti nepavyko
+lv:Neizdevās saglabāt failu
 mk:Зачувување на PDF-документот не успеа
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
 mm:ဖိုင် သိမ်းမရပါ
@@ -8090,6 +8103,7 @@ it:Scrittura fallita informazione estensione estesa file nel registro
 ja:拡張子情報をレジストリに書き込むのに失敗しました
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
+lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
@@ -8138,6 +8152,7 @@ it:Scrittura fallita informazione disinstallazione nel registro
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
+lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
@@ -9905,6 +9920,7 @@ kr:힌트: 다시 찾으려면, F3 키를 누르세요.
 ku:بەکاربهێنە بۆ دووبارە دۆزینەوە F3 فێرکاری: دوگمەی
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
+lv:Ieteikums: Izmantojiet taustiņu F3, lai atrastu atkal
 mk:Совет: За повторно пребарување користете F3 од тастатурата
 my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
@@ -10281,6 +10297,7 @@ it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:설치된 PDF 브라우저 플러그인 유지(&B) (더 이상 지원 안함)
 ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنراوی (چیتر پاڵپشتی ناکرێت)
+lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
 nl:Behoud de PDF &browser plugin geïnstalleerd (niet ondersteund)
 no:Behold PDF &nettleser -tillegg installert (ingen support lenger)
@@ -10325,6 +10342,7 @@ it:Assegna a Windows la ricerca sul desktop & dei documenti PDF
 ja:Windows デスクトップ サーチの PDF ドキュメント検索を許可する(&s)
 kr:Windows 데스크톱 검색에서 PDF 문서를 검색할 수 있습니다.
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
+lv:&Meklēt PDF dokumentus ar Windows Desktop Search
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 my:Biarkan Windows Desktop Search &mencari dokumen PDF
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
@@ -10373,6 +10391,7 @@ it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
 ja:Windows の PDF ドキュメントプレビューを許可する(&p)
 kr:Windows 내에서 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
+lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
 mk:Дозволи Windows да прикажува слики за PDF-документи
 my:Biarkan Windows menunjukkan &preview dokumen PDF
 nl:Laat Windows &voorbeelden tonen van PDF documenten
@@ -10568,6 +10587,7 @@ kr:SumatraPDF를 기본 PDF 리더로 만들기
 ku:ڕێکخستنی ئەم بەرنامەیە وەکو خوێنەرەوەی سەرەکی فایلەکانی PDF
 kw:Gwra SumatraPDF ow fennredyer PDF
 lt:„SumatraPDF“ nustatymas numatytąja PDF žiūrykle
+lv:Padarīt SumatraPDF par manu noklusējuma PDF lasītāju
 mk:Направи ја SumatraPDF основен читач на PDF
 ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
 mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
@@ -10625,6 +10645,7 @@ it:Modo Man&ga
 ja:漫画モード(&G)
 kr:만화 방식(&G)
 ku:Man&ga شێوازی
+lv:&Manga režīms
 mk:Режим за Man&ga
 my:Mode Man&ga
 nl:Man&gamodus
@@ -11063,6 +11084,7 @@ kr:%u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
 ku:%u هیچ ئەنجامێک نەدۆزرایەوە لە دێڕی %s لە فایلی
 kw:Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s
 lt:Aplink eilutę %u faile %s nerasta jokių rezultatų
+lv:Rezultāts nav atrasts %u līnijā %s failā
 mk:Не најдов резултати околу линијата %u во датотеката %s
 my:Tiada hasil ditemui di sekitar baris %u dalam fail %s
 ne:पङ्क्ति %u (फाइल %s को) वरपर कुनै नतिजा फेला परेन
@@ -11121,6 +11143,7 @@ kr:동기화 파일을 찾을 수 없습니다.
 ku:هیچ فایلێکی هاوکاتکردن نەدۆزرایەوە
 kw:Ny veu kevys restren gettermynegi vyth
 lt:Sinchronizacijos failas nerastas
+lv:Sinhrizācijas fails nav atrasts
 mk:Не најдов синхронизациска датотека
 my:Tiada fail penyegerakan ditemui
 ne:कुनै समक्रमण फाइल भेटिएन्
@@ -11181,6 +11204,7 @@ kr:이 위치의 동기화 정보가 없습니다.
 ku:هیچ زانیارییەکی هاوکاتکردن نیە لەم شوێنەدا
 kw:Ny veu kevys derivadow kettermynegi y'n le ma
 lt:Nėra sinchronizacijos informacijos šioje pozicijoje
+lv:Sinhronizācijas fails nav atrasts šajā pozīcijā
 mk:Нема информации за синхронизација на оваа позиција
 my:Tiada maklumat penyelarasan pada kedudukan ini
 ne:यो स्थानमा समक्रमण जानकारी छैन
@@ -12600,6 +12624,7 @@ ar:وثائق بالم دوك
 az:PalmDoc sənədləri
 br:Documentos PalmDoc
 bs:PalmDoc dokumenti
+ca:Documents PalmDoc
 cn:PalmDoc 文档
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
@@ -14410,6 +14435,7 @@ kr:명령줄 역방향 탐색 설정
 ku:ڕێکخستنی هێڵی پێچەوانەی گەڕان
 kw:Settya linen-arhadow gorthhwilas
 lt:Nustatyti atvirkščios paieškos komandinę eilutę
+lv:Iestatīt inversās meklēšanas komandrindu
 mk:Активирај инверзно пребарување
 mm:command line ဗြောင်းပြန်ရှာကို သတ်မှတ်ရန်
 my:Tetapkan pencarian songsang baris arahan
@@ -14768,6 +14794,7 @@ kr:책갈피 옆구리 표시줄 보이기(&B) (사용 가능한 경우)
 ku:پیشاندانی &نیشانەکراوەکان لە تەنیشتەوە ئەگەر هەبوو
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
+lv:Rādīt &grāmatzīmju sānjoslu, ja ir pieejama
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 my:Tunjukkan &bookmark sidebar apabila ada
 ne:उपलब्ध भएमा &पुस्तकचिनो छेउपट्‍टि देखाउनुहोस्
@@ -14889,6 +14916,7 @@ it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
 ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوون
+lv:Kādi faili ir instalēti bojāti vai tie trūkst
 mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
 my:Sesetengah fail yang akan dipasang akan rosak atau hilang
 nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
@@ -14943,6 +14971,7 @@ ka:ბოდიშს გიხდით, ეს არ უნდა მომ�
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
 ku:تکایە کلیک لەسەر 'پاشگەزبونەوە' ، بکە ئەگەر ئەتەوێ یارمەتیدەرمان بیت لە جارەسەرکردنی ئەم کێشەیە\n\n !ببورە، لە ڕوودانی ئەم کێشەیە
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
+lv:Atvaino, šim nevajadzēja notikt. Lūdzu spied 'Atcelt', ja vēlies palīdzēt salabot šīs kļūdas iemeslu.
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
@@ -15002,6 +15031,7 @@ kr:원본 파일 %s (은)는 동기화 지점이 없습니다.
 ku:خاڵی هاوکاتکردنی نیە %s سەرچاوەی فایلی
 kw:Nyns eus poynt kettermynegi vyth y'n restren %s
 lt:Pradinis failas %s  neturi sinchronizacijos taško
+lv:Izejas failam %s nav sinhronizācijas punkta
 mk:Изворната датотека %s нема синхронизациска точка
 my:Sumber fail %s tidak mempunyai titik penyegerakan
 ne:स्रोत फाइल %s मा समक्रमण विन्दु छैन
@@ -15608,6 +15638,7 @@ kr:SumatraPDF는 이제 기본 PDF 리더여야 합니다.
 ku:PDF ئێستا ئەبێت بە خوێنەرەوەی سەرەکی فایلەکانی SumatraPDF
 kw:Alemma rag y fydh SumatraPDF dha bennredyer PDF
 lt:Dabar „SumatraPDF“ bus numatytoji PDF žiūryklė
+lv:SumatraPDF tagad būs jūsu noklusējuma PDF lasītājs
 mk:Сега SumatraPDF би требало да е Вашиот основен читач на PDF
 my:SumatraPDF kini harus menjadi pembaca utama PDF anda
 ne:SumatraPDF अब तपाईको पूर्वनिर्धारित PDF पाठक हुनुपर्छ
@@ -15668,6 +15699,7 @@ kr:동기화 파일을 열 수 없습니다.
 ku:فایلی هاوکاتکراو ناتوانرێت بکرێتەوە
 kw:Ny yllir ygeri an restren gettermynegi
 lt:Sinchronizacijos failas negali būti atvertas
+lv:Sinhronizācijas failu nevar atvērt
 mk:Синхронизациската датотека не може да се отвори
 my:File penyegerakan tidak boleh dibuka
 ne:समक्रमण फाइल खोल्न सकिदैन्
@@ -15934,6 +15966,7 @@ it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo 
 ja:インストーラが破損しています。もう一度ダウンロードしてください。\nご不便をおかけし、申し訳ありません。
 kr:설치 관리자가 손상됐습니다. 다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
+lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
 nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
@@ -15958,6 +15991,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
+ca:Aquest document utilitza característiques no suportades (%s) i podria no ser mostrat correctament
 cn:文檔使用未支持的功能 (%s)，可能無法正確繪製。
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
@@ -15974,6 +16008,7 @@ it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visua
 ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
+lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
@@ -16266,6 +16301,7 @@ ar:الإستعمال & التبويبات
 az:&Tab-vərəqələrdən istifadə et
 br:Usar &abas
 bs:Koristi &tabove
+ca:Utilitza les pes&tanyes
 cn:使用页签(&T)
 cy:Defnyddio &tabiau
 cz:Použít &karty
@@ -17163,6 +17199,7 @@ ka:დოკუმენტი იბეჭდება
 kr:문서 인쇄
 ku:چاپکردنی بەڵگەنامە
 lt:spausdinamas dokumentas
+lv:dokumenta drukāšana
 mk:печатам документ
 my:mencetak dokumen
 ne:कागजात छपाइ

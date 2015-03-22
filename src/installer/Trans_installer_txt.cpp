@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   48
+#define LANGS_COUNT   49
 #define STRINGS_COUNT 42
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1202,6 +1202,50 @@ const char * gTranslations_ku =
   "\330\263\332\225\333\214\331\206\333\225\331\210\333\225 \331\204\333\225 \330\246\333\225\331\206\330\254\330\247\331\205\330\257\330\247\331\206\330\257\330\247\333\214\333\225...\0"\
   "\331\210\333\225\332\251\331\210 \330\256\331\210\333\216\331\206\333\225\330\261\333\225\331\210\333\225\333\214 &\330\263\333\225\330\261\333\225\332\251\333\214 PDF SumatraPDF \330\250\333\225\332\251\330\247\330\261\331\207\333\216\331\206\330\247\331\206\333\214\0";
 
+const char * gTranslations_lv = 
+  "&Opcijas\0"\
+  "Vai j\305\253s esat p\304\201rliecin\304\201ts, ka v\304\223laties atinstal\304\223t SumatraPDF?\0"\
+  "Aizv\304\223rt\0"\
+  "Nevar\304\223ja izveidot pagaidu direktoriju\0"\
+  "Nevar\304\223ja izveidot instal\304\201cijas direktoriju\0"\
+  "Nevar\304\223ja instal\304\223t PDF priek\305\241skat\304\253jumu\0"\
+  "Nevar\304\223ja instal\304\223t PDF mekl\304\223\305\241anas filtru\0"\
+  "Nevar\304\223ja ieg\305\253t pagaidu direktoriju\0"\
+  "Nevar\304\223ja no\305\206emt instal\304\201cijas direktoriju\0"\
+  "Nevar\304\223ja no\305\206emt sa\304\253sni\0"\
+  "Nevar\304\223ja atinstal\304\223t PDF priek\305\241skat\304\253jumu\0"\
+  "Nevar\304\223ja atinstal\304\223t PDF mekl\304\223\305\241anas filtru\0"\
+  "Nevar\304\223ja atinstal\304\223t p\304\201rl\305\253kprogrammas spraudni\0"\
+  "Nevar\304\223ja rakst\304\253t %s disk\304\201\0"\
+  "Neizdev\304\201s iekop\304\223t instal\304\201cijas no\305\206em\305\241anas programmu pagaidu direktorij\304\201\0"\
+  "Neizdev\304\201s izveidot sa\304\253sni\0"\
+  "Neizdev\304\201s izdz\304\223st instal\304\201cijas no\305\206em\305\241anas programmas re\304\243istra atsl\304\223gas\0"\
+  "Neizdev\304\201s ierakst\304\253t failu papla\305\241in\304\201jumu inform\304\201ciju re\304\243istr\304\201\0"\
+  "Neizdev\304\201s ierakst\304\253t atinstal\304\223\305\241anas inform\304\201ciju re\304\243istr\304\201\0"\
+  "Pasl\304\223pt &opcijas\0"\
+  "Instal\304\223t SumatraPDF\0"\
+  "Instal\304\223t SumatraPDF &map\304\223:\0"\
+  "Instal\304\223\305\241ana neizdev\304\201s!\0"\
+  "Notiek instal\304\223\305\241ana...\0"\
+  "Patur\304\223t p\304\201rl\305\253ka PDF spraudni instal\304\223tu (vairs netiek atbalst\304\253ts)\0"\
+  "&Mekl\304\223t PDF dokumentus ar Windows Desktop Search\0"\
+  "\304\273aut Windows r\304\201d\304\253t PDF dokumentu &priek\305\241skat\304\253jumus\0"\
+  "Lai turpin\304\201tu, l\305\253dzu, aizveriet %s!\0"\
+  "Atlasiet mapi, kur\304\201 j\304\201instal\304\223 SumatraPDF\0"\
+  "K\304\201di faili ir instal\304\223ti boj\304\201ti vai tie tr\305\253kst\0"\
+  "Palaist SumatraPDF\0"\
+  "SumatraPDF %s instal\304\223t\304\201js\0"\
+  "SumatraPDF %s atinstal\304\223t\304\201js\0"\
+  "SumatraPDF ir atinstal\304\223ta\0"\
+  "SumatraPDF instal\304\201cija nav atrasta\0"\
+  "Pateicamies par SumatraPDF izv\304\223l\304\223\305\241anos!\0"\
+  "Paldies! SumatraPDF ir instal\304\223ta.\0"\
+  "Instal\304\223\305\241anas programma ir bijusi boj\304\201ta. L\305\253dzu, lejupiel\304\201d\304\223jiet to v\304\223lreiz.\nPiedodiet par sag\304\201d\304\201taj\304\201m ne\304\223rt\304\253b\304\201m!\0"\
+  "Atinstal\304\223t SumatraPDF\0"\
+  "Atinstal\304\223\305\241ana neizdev\304\201s\0"\
+  "Notiek atinstal\304\223\305\241ana...\0"\
+  "Izmantot SumatraPDF k\304\201 &noklus\304\223juma PDF las\304\253t\304\201ju\0";
+
 const char * gTranslations_mk = 
   "&\320\236\320\277\321\206\320\270\320\270\0"\
   "\320\224\320\260\320\273\320\270 \321\201\321\202\320\265 \321\201\320\270\320\263\321\203\321\200\320\275\320\270 \320\264\320\265\320\272\320\260 \321\201\320\260\320\272\320\260\321\202\320\265 \320\264\320\260 \320\263\320\276 \320\270\320\267\320\261\321\200\320\270\321\210\320\265\321\202\320\265 SumatraPDF?\0"\
@@ -2155,6 +2199,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ja, 
   gTranslations_kr, 
   gTranslations_ku, 
+  gTranslations_lv, 
   gTranslations_mk, 
   gTranslations_my, 
   gTranslations_no, 
@@ -2208,6 +2253,7 @@ const char *gLangCodes =   "en\0" \
   "ja\0" \
   "kr\0" \
   "ku\0" \
+  "lv\0" \
   "mk\0" \
   "my\0" \
   "no\0" \
@@ -2257,6 +2303,7 @@ const char *gLangNames =   "English\0" \
   "Japanese (\346\227\245\346\234\254\350\252\236)\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
+  "Latvian (latvie\305\241u valoda)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
   "Malaysian (Bahasa Melayu)\0" \
   "Norwegian (Norsk)\0" \
@@ -2318,6 +2365,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_JAPANESE),
   _LANGID(LANG_KOREAN),
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
+  _LANGID(LANG_LATVIAN),
   _LANGID(LANG_MACEDONIAN),
   _LANGID(LANG_MALAY),
   MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
@@ -2344,7 +2392,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (20 == idx) || (26 == idx) || (30 == idx);
+  return (2 == idx) || (20 == idx) || (26 == idx) || (31 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

@@ -2181,7 +2181,7 @@ const char * gTranslations_ca =
   "La p\303\240gina %u no existeix\0"\
   "Escalat de la p\303\240gina\0"\
   "P\303\240gina:\0"\
-  "\0"\
+  "Documents PalmDoc\0"\
   "S'est\303\240 renderitzant...\0"\
   "Documents Postscript\0"\
   "Pr&esentaci\303\263\tCtrl+L\0"\
@@ -2228,10 +2228,10 @@ const char * gTranslations_ca =
   "El fitxer de sincronitzaci\303\263 no es pot obrir\0"\
   "PDF etiquetat\0"\
   "Documents de text\0"\
-  "\0"\
+  "Aquest document utilitza caracter\303\255stiques no suportades (%s) i podria no ser mostrat correctament\0"\
   "T\303\255tol:\0"\
   "Fitxer origen desconegut (%s)\0"\
-  "\0"\
+  "Utilitza les pes&tanyes\0"\
   "Visualitza\0"\
   "Visiteu el lloc &web\0"\
   "Av\303\255s\0"\
@@ -7962,7 +7962,7 @@ const char * gTranslations_lv =
   "&Kop\304\223t atlasi\tCtrl+C\0"\
   "&Vairs nejaut\304\201t\0"\
   "Tikai &p\304\201ra lappuses\0"\
-  "\0"\
+  "&Divas lappuses\tCtrl+7\0"\
   "&Fails\0"\
   "&Ko atrast:\0"\
   "&Pirm\304\201 lappuse\tS\304\201kums\0"\
@@ -7987,14 +7987,14 @@ const char * gTranslations_lv =
   "&Druk\304\201t...\0"\
   "&Druk\304\201t...\tCtrl+P\0"\
   "&Druk\304\201t... (liegts)\0"\
-  "\0"\
-  "\0"\
+  "&Atcer\304\223ties \305\241\304\253 dokumenta paroli\0"\
+  "&Atcer\304\223ties \305\241os iestat\304\253jumus katram dokumentam\0"\
   "&No\305\206emt dokumentu\0"\
   "&Saglab\304\201t k\304\201...\0"\
   "&Saglab\304\201t k\304\201...\tCtrl+S\0"\
   "&Iestat\304\253jumi\0"\
-  "\0"\
-  "&Vienu lappusi\tCtrl+6\0"\
+  "&Samazin\304\201t lappuses l\304\253dz apdruk\304\201jamai zonai (ja ir nepiecie\305\241ams)\0"\
+  "&Viena lappuse\tCtrl+6\0"\
   "&Izlaist \305\241o versiju\0"\
   "&Lietot s\304\201kotn\304\223jos lappu\305\241u izm\304\223rus\r\n\0"\
   "&Skats\0"\
@@ -8027,14 +8027,14 @@ const char * gTranslations_lv =
   "Nevar izveidot savienojumu ar internetu (k\304\274\305\253da %#x).\0"\
   "Atcelt\0"\
   "Nevar izdruk\304\201t \305\241o failu\0"\
-  "\0"\
+  "Neizdev\304\201s palaist invers\304\201s mekl\304\223\305\241anas komandu. L\305\253du p\304\201rbaudi komandu uzst\304\201d\304\253jumos.\0"\
   "Main\304\253t valodu (Change Language)\0"\
   "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumu\0"\
   "Komiksu gr\304\201matas (CBZ un CBR)\0"\
   "Sader\304\253ba\0"\
   "Nep\304\201rtraukts\r\n\0"\
   "Nep\304\201rtraukts gr\304\201matu skats\0"\
-  "\0"\
+  "Nep\304\201rtraukti divas lappuses\0"\
   "Piedal\304\253ties tulko\305\241an\304\201\0"\
   "Kop\304\223t &att\304\223lu\0"\
   "Kop\304\223t &saites adresi\0"\
@@ -8059,14 +8059,14 @@ const char * gTranslations_lv =
   "EPUB elektronisk\304\201s gr\304\201matas\0"\
   "Ievad\304\253t paroli\0"\
   "Ievad\304\253t %s paroli\0"\
-  "\0"\
+  "Ievadiet komandrindu, izsaucamu ar dubultklik\305\241\304\267i uz PDF dokumenta:\0"\
   "%s iel\304\201des k\304\274\305\253da\0"\
   "Gr\304\201mat&z\304\253mes\0"\
   "&T\304\201l\304\201k\tAlt+Lab\304\201 bulti\305\206a\0"\
   "Pilnekr\304\201na re\305\276\304\253ms\tF11\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Divas lappuses\0"\
+  "Neizdev\304\201s p\304\201rd\304\223v\304\223t failu!\0"\
+  "Neizdev\304\201s saglab\304\201t failu\0"\
   "\304\200trais t\304\253mek\304\274a skats\0"\
   "Gr\304\201matz\304\253mes\0"\
   "FictionBook dokumenti\0"\
@@ -8094,22 +8094,22 @@ const char * gTranslations_lv =
   "\0"\
   "Doties uz lappusi\0"\
   "Sl\304\223pt bie\305\276i las\304\253tos\0"\
-  "\0"\
+  "Ieteikums: Izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
   "Att\304\223lu faili (*.%s)\0"\
   "\0"\
   "\0"\
   "Vai iestat\304\253t SumatraPDF k\304\201 noklus\304\223juma lietojumprogrammu PDF failiem?\0"\
-  "\0"\
-  "\0"\
+  "Padar\304\253t SumatraPDF par manu noklus\304\223juma PDF las\304\253t\304\201ju\0"\
+  "&Manga re\305\276\304\253ms\0"\
   "Saska\305\206ot re\304\243istru\0"\
   "Mobi dokumenti\0"\
   "Modific\304\223ts:\0"\
   "Ir pieejama jauna versija %s. Vai lejupiel\304\201d\304\223t jauno versiju?\0"\
   "N\304\201kam\304\201 lappuse\0"\
   "Netika atrasta neviena atbilst\304\253ba\0"\
-  "\0"\
-  "\0"\
-  "\0"\
+  "Rezult\304\201ts nav atrasts %u l\304\253nij\304\201 %s fail\304\201\0"\
+  "Sinhriz\304\201cijas fails nav atrasts\0"\
+  "Sinhroniz\304\201cijas fails nav atrasts \305\241aj\304\201 poz\304\253cij\304\201\0"\
   "Lappu\305\241u skaits:\0"\
   "Labi\0"\
   "Atv\304\223rt\0"\
@@ -8161,26 +8161,26 @@ const char * gTranslations_lv =
   "Atlas\304\253t saturu ar Ctrl+peles kreiso pogu\0"\
   "Atlase:\0"\
   "Nos\305\253t\304\253t pa &e-pastu\0"\
-  "\0"\
+  "Iestat\304\253t invers\304\201s mekl\304\223\305\241anas komandrindu\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mes\0"\
   "R\304\201d\304\253t &lappuses nep\304\201rtraukti\0"\
   "R\304\201d\304\253t &r\304\253kjoslu\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mes\0"\
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
-  "\0"\
+  "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja ir pieejama\0"\
   "Viena lappuse\0"\
-  "\0"\
-  "\0"\
+  "Atvaino, \305\241im nevajadz\304\223ja notikt. L\305\253dzu spied 'Atcelt', ja v\304\223lies pal\304\253dz\304\223t salabot \305\241\304\253s k\304\274\305\253das iemeslu.\0"\
+  "Izejas failam %s nav sinhroniz\304\201cijas punkta\0"\
   "T\304\223ma:\0"\
   "SumatraPDF opcijas\0"\
   "SumatraPDF atjaunin\304\201jums\0"\
   "SumatraPDF avar\304\223ja\0"\
   "SumatraPDF ir j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
-  "\0"\
-  "\0"\
+  "SumatraPDF tagad b\305\253s j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
+  "Sinhroniz\304\201cijas failu nevar atv\304\223rt\0"\
   "Atz\304\253m\304\223ts PDF\0"\
   "Teksta dokumenti\0"\
-  "\0"\
+  "\305\240aj\304\201 dokument\304\201 ir izmantotas neatbalst\304\253tas iesp\304\223jas (%s), un iesp\304\223jams, netiek atveidots pareizi\0"\
   "Nosaukums:\0"\
   "Nezin\304\201mas izcelsmes fails (%s)\0"\
   "Lietot &cilnes\0"\
@@ -8196,7 +8196,7 @@ const char * gTranslations_lv =
   "T\304\201lummai\305\206as koeficients\0"\
   "[Ir atkl\304\201tas izmai\305\206as; notiek atsvaidzin\304\201\305\241ana] %s\0"\
   "teksta kop\304\223\305\241ana\0"\
-  "\0";
+  "dokumenta druk\304\201\305\241ana\0";
 
 const char * gTranslations_lt = 
   "Apie\0"\
