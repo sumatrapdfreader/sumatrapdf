@@ -75,7 +75,7 @@ static inline int fz_lighten_byte(int b, int s)
 static inline int fz_color_dodge_byte(int b, int s)
 {
 	s = 255 - s;
-	if (b == 0)
+	if (b <= 0)
 		return 0;
 	else if (b >= s)
 		return 255;
@@ -86,7 +86,7 @@ static inline int fz_color_dodge_byte(int b, int s)
 static inline int fz_color_burn_byte(int b, int s)
 {
 	b = 255 - b;
-	if (b == 0)
+	if (b <= 0)
 		return 255;
 	else if (b >= s)
 		return 0;
