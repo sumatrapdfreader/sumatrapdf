@@ -23,7 +23,7 @@ We need to update all uses of __VA_ARGS___:
         #define dbgprint(format,args...)
 #endif
 
-c99 （gcc） / vs2005
+c99 (gcc) / vs2005
 
 #define dgbmsg(fmt,...) \
              printf(fmt,__VA_ARGS__)

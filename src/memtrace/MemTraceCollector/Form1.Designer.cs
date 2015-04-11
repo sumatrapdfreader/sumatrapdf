@@ -1,4 +1,4 @@
-﻿namespace MemTraceCollector
+namespace MemTraceCollector
 {
     partial class Form1
     {

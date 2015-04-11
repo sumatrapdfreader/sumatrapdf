@@ -21,7 +21,7 @@ BEGIN
       VALUE "OriginalFilename", "PdfFilter.dll"
       VALUE "ProductName",      "SumatraPDF IFilter Persistent Handler"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "CompanyName",      "Simon Bünzli"
+      VALUE "CompanyName",      "Simon BÃ¼nzli"
     END
   END
   BLOCK "VarFileInfo"
