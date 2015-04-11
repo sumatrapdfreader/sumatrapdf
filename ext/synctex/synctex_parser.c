@@ -1055,7 +1055,7 @@ typedef int synctex_status_t;
 #   define SYNCTEX_FILE (scanner->file)
 
 /*  Actually, the minimum buffer size is driven by integer and float parsing.
- *  ±0.123456789e123
+ *  Â±0.123456789e123
  */
 #   define SYNCTEX_BUFFER_MIN_SIZE 16
 #   define SYNCTEX_BUFFER_SIZE 32768

@@ -21,7 +21,7 @@ BEGIN
       VALUE "OriginalFilename", "PdfPreview.dll"
       VALUE "ProductName",      "SumatraPDF Preview Persistent Handler"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "CompanyName",      "Simon Bünzli"
+      VALUE "CompanyName",      "Simon BÃ¼nzli"
     END
   END
   BLOCK "VarFileInfo"
