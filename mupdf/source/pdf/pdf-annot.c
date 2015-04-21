@@ -661,9 +661,19 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 
 	fz_var(content);
 
-	border = pdf_dict_gets(obj, "Border");
-	border_width = pdf_to_real(pdf_array_get(border, 2));
-	dashes = pdf_array_get(border, 3);
+	border = pdf_dict_gets(obj, "BS");
+	if (pdf_is_dict(border))
+	{
+		pdf_obj *w = pdf_dict_gets(border, "W");
+		border_width = pdf_is_number(w) ? pdf_to_real(w) : 1.f;
+		dashes = pdf_dict_gets(border, "D");
+	}
+	else
+	{
+		border = pdf_dict_gets(obj, "Border");
+		border_width = pdf_to_real(pdf_array_get(border, 2));
+		dashes = pdf_array_get(border, 3);
+	}
 
 	/* Adobe Reader omits the border if dashes isn't an array */
 	if (border_width <= 0 || dashes && !pdf_is_array(dashes))
