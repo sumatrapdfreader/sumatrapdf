@@ -29,7 +29,7 @@
 #include "Translations.h"
 
 struct PrintData {
-    ScopedMem<WCHAR> driverName, printerName, portName;
+    ScopedMem<WCHAR> printerName;
     ScopedMem<DEVMODE> devMode;
     BaseEngine *engine;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
@@ -46,9 +46,7 @@ struct PrintData {
             this->engine = engine->Clone();
 
         if (printerInfo) {
-            driverName.Set(str::Dup(printerInfo->pDriverName));
             printerName.Set(str::Dup(printerInfo->pPrinterName));
-            portName.Set(str::Dup(printerInfo->pPortName));
         }
         if (devMode)
             this->devMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
@@ -155,7 +153,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=null
         progressUI->UpdateProgress(current, total);
 
     // cf. http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    ScopeHDC hdc(CreateDC(pd.driverName, pd.printerName, pd.portName, pd.devMode));
+    ScopeHDC hdc(CreateDC(nullptr, pd.printerName, nullptr, pd.devMode));
     if (!hdc)
         return false;
 
