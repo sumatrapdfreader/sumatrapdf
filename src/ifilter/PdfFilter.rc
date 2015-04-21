@@ -19,9 +19,8 @@ BEGIN
       VALUE "FileVersion",      VER_RESOURCE_STR
       VALUE "LegalCopyright",   COPYRIGHT_STR
       VALUE "OriginalFilename", "PdfFilter.dll"
-      VALUE "ProductName",      "SumatraPDF IFilter Persistent Handler"
+      VALUE "ProductName",      "SumatraPDF"
       VALUE "ProductVersion",   VER_RESOURCE_STR
-      VALUE "CompanyName",      "Simon Bünzli"
     END
   END
   BLOCK "VarFileInfo"
