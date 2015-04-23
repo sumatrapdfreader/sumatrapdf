@@ -654,6 +654,7 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	fz_context *ctx = doc->ctx;
 	pdf_obj *border, *dashes;
 	float border_width;
+	char border_style = 'S';
 	fz_buffer *content = NULL;
 	fz_rect rect;
 	float rgb[3];
@@ -665,8 +666,10 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 	if (pdf_is_dict(border))
 	{
 		pdf_obj *w = pdf_dict_gets(border, "W");
+		const char *s = pdf_to_name(pdf_dict_gets(border, "S"));
 		border_width = pdf_is_number(w) ? pdf_to_real(w) : 1.f;
-		dashes = pdf_dict_gets(border, "D");
+		border_style = strlen(s) == 1 ? *s : 'S';
+		dashes = border_style == 'D' ? pdf_dict_gets(border, "D") : NULL;
 	}
 	else
 	{
@@ -694,8 +697,11 @@ pdf_create_link_annot(pdf_document *doc, pdf_obj *obj)
 		fz_buffer_printf(ctx, content, "q %f w [", border_width);
 		for (i = 0, n = pdf_array_len(dashes); i < n; i++)
 			fz_buffer_printf(ctx, content, "%f ", pdf_to_real(pdf_array_get(dashes, i)));
-		fz_buffer_printf(ctx, content, "] 0 d %f %f %f RG 0 0 %f %f re S Q",
-			rgb[0], rgb[1], rgb[2], rect.x1 - rect.x0, rect.y1 - rect.y0);
+		fz_buffer_printf(ctx, content, "] 0 d %f %f %f RG ", rgb[0], rgb[1], rgb[2]);
+		if (border_style == 'U')
+			fz_buffer_printf(ctx, content, "0 0 m %f 0 l S Q", rect.x1 - rect.x0);
+		else
+			fz_buffer_printf(ctx, content, "0 0 %f %f re S Q", rect.x1 - rect.x0, rect.y1 - rect.y0);
 
 		obj = pdf_clone_for_view_only(doc, obj);
 	}
