@@ -15,6 +15,7 @@ class ChmDoc {
     void ParseWindowsData();
     bool ParseSystemData();
     bool ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool isIndex);
+    void FixPathCodepage(ScopedMem<char>& path, UINT& fileCP);
 
     bool Load(const WCHAR *fileName);
 

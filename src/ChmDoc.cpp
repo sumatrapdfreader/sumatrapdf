@@ -238,6 +238,25 @@ char *ChmDoc::ResolveTopicID(unsigned int id)
     return nullptr;
 }
 
+void ChmDoc::FixPathCodepage(ScopedMem<char>& path, UINT& fileCP)
+{
+    if (!path || HasData(path))
+        return;
+
+    ScopedMem<char> utf8Path(ToUtf8((unsigned char *)path.Get()));
+    if (HasData(utf8Path)) {
+        path.Set(utf8Path.StealData());
+        fileCP = codepage;
+    }
+    else if (fileCP != codepage) {
+        utf8Path.Set(ToUtf8((unsigned char *)path.Get(), fileCP));
+        if (HasData(utf8Path)) {
+            path.Set(utf8Path.StealData());
+            codepage = fileCP;
+        }
+    }
+}
+
 bool ChmDoc::Load(const WCHAR *fileName)
 {
     chmHandle = chm_open((WCHAR *)fileName);
@@ -248,6 +267,21 @@ bool ChmDoc::Load(const WCHAR *fileName)
     if (!ParseSystemData())
         return false;
 
+    UINT fileCodepage = codepage;
+    char header[24] = { 0 };
+    if (file::ReadN(fileName, header, sizeof(header))) {
+        DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
+        fileCodepage = LcidToCodepage(lcid);
+    }
+    if (!codepage)
+        codepage = fileCodepage;
+    // if file and #SYSTEM codepage disagree, prefer #SYSTEM's (unless it leads to wrong paths)
+    FixPathCodepage(homePath, fileCodepage);
+    FixPathCodepage(tocPath, fileCodepage);
+    FixPathCodepage(indexPath, fileCodepage);
+    if (GetACP() == codepage)
+        codepage = CP_ACP;
+
     if (!HasData(homePath)) {
         const char *pathsToTest[] = {
             "/index.htm", "/index.html", "/default.htm", "/default.html"
@@ -256,21 +290,9 @@ bool ChmDoc::Load(const WCHAR *fileName)
             if (HasData(pathsToTest[i]))
                 homePath.Set(str::Dup(pathsToTest[i]));
         }
+        if (!HasData(homePath))
+            return false;
     }
-    if (!HasData(homePath))
-        return false;
-
-    if (!codepage) {
-        char header[24] = { 0 };
-        if (file::ReadN(fileName, header, sizeof(header))) {
-            DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
-            codepage = LcidToCodepage(lcid);
-        }
-        else
-            codepage = CP_CHM_DEFAULT;
-    }
-    if (GetACP() == codepage)
-        codepage = CP_ACP;
 
     return true;
 }
@@ -468,7 +490,6 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
 {
     if (!path)
         return false;
-    // TODO: is path already UTF-8 encoded - or do we need str::conv::ToUtf8(ToStr(path)) ?
     ScopedMem<unsigned char> htmlData(GetData(path, nullptr));
     const char *html = (char *)htmlData.Get();
     if (!html)
