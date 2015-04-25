@@ -81,7 +81,8 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     if (!IsContinuous(win.ctrl->GetDisplayMode()) && ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual())
         lineHeight = 1;
 
-    switch (LOWORD(wParam)) {
+    USHORT message = LOWORD(wParam);
+    switch (message) {
     case SB_TOP:        si.nPos = si.nMin; break;
     case SB_BOTTOM:     si.nPos = si.nMax; break;
     case SB_LINEUP:     si.nPos -= lineHeight; break;
@@ -99,8 +100,9 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     SetScrollInfo(win.hwndCanvas, SB_VERT, &si, TRUE);
     GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
 
-    // If the position has changed, scroll the window and update it
-    if (si.nPos != iVertPos)
+    // If the position has changed or we're dealing with a touchpad scroll event, 
+    // scroll the window and update it
+    if (si.nPos != iVertPos || message == SB_THUMBTRACK)
         win.AsFixed()->ScrollYTo(si.nPos);
 }
 
@@ -113,8 +115,9 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
     si.fMask  = SIF_ALL;
     GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
 
-    int iVertPos = si.nPos;
-    switch (LOWORD(wParam)) {
+    int iHorzPos = si.nPos;
+    USHORT message = LOWORD(wParam);
+    switch (message) {
     case SB_LEFT:       si.nPos = si.nMin; break;
     case SB_RIGHT:      si.nPos = si.nMax; break;
     case SB_LINELEFT:   si.nPos -= 16; break;
@@ -130,8 +133,9 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
     SetScrollInfo(win.hwndCanvas, SB_HORZ, &si, TRUE);
     GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
 
-    // If the position has changed, scroll the window and update it
-    if (si.nPos != iVertPos)
+    // If the position has changed or we're dealing with a touchpad scroll event, 
+    // scroll the window and update it
+    if (si.nPos != iHorzPos || message == SB_THUMBTRACK)
         win.AsFixed()->ScrollXTo(si.nPos);
 }
 
