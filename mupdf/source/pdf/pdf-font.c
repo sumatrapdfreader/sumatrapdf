@@ -799,7 +799,9 @@ pdf_load_simple_font_by_name(pdf_document *doc, pdf_obj *dict, char *basefont)
 
 		fz_try(ctx)
 		{
-			pdf_load_to_unicode(doc, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
+			/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/184 */
+			pdf_obj *to_unicode = fontdesc->is_embedded || pdf_is_dict(encoding) ? pdf_dict_gets(dict, "ToUnicode") : NULL;
+			pdf_load_to_unicode(doc, fontdesc, estrings, NULL, to_unicode);
 		}
 		fz_catch(ctx)
 		{
