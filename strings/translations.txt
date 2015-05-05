@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8eee79e86a81babd2ee370d093083419369166dc
+7074f0caa1641b627f4319b0dd5033145519c2af
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2894,7 +2894,7 @@ ka:&გვერდების ორიგინალი ზომის გ�
 kr:원래 페이지 크기 사용(&U)
 ku:بەکارهێنانی قەبارەی ڕاستەقینەی پەڕەکان&
 lt:Na&udoti originalius puslapių dydžius
-lv:&Lietot sākotnējos lappušu izmērus\r\n
+lv:&Lietot sākotnējos lappušu izmērus\n
 mk:&Користи оригинални димензии на страници
 my:&Gunakan saiz halaman asal
 ne:&मौलिक पृष्ठ साईज प्रयोग गर्नुहोस्
@@ -3940,7 +3940,7 @@ kr:PDF 파일 확장자를 연결할까요?
 ku:؟PDF پەیوەستکردن بە فایلەکانی
 kw:Keskelmi orth restrennow PDF?
 lt:Susieti su PDF failais?
-lv:Asociēt ar PDF failiem?
+lv:Vai piesaistīt PDF failiem?
 mk:Да управувам со PDF-датотеки?
 ml:capture
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
@@ -4876,7 +4876,7 @@ kr:역방향 검색 명령을 시작할 수 없습니다. 설정에서 명령줄
 ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
 kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
-lv:Neizdevās palaist inversās meklēšanas komandu. Lūdu pārbaudi komandu uzstādījumos.
+lv:Neizdevās palaist inversās meklēšanas komandu. Lūdzu pārbaudiet komandrindu iestatījumus.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
 my:Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.
 ne:आदेश पङ्‌क्ति उल्टो खोजाई सुरु गर्न सकिएन | कृपया सेटिङमा आदेश पङ्‌क्ति हेर्नुहोस |
@@ -5250,7 +5250,7 @@ kr:한 페이지씩 계속
 ku:بەردەوام
 kw:Heb aswa
 lt:Nenutrūkstama
-lv:Nepārtraukts\r\n
+lv:Nepārtraukts\n
 mk:Непрекинат поглед
 ml:തുടര്‍ച്ച
 mm:ဆက်တိုက်
@@ -9014,7 +9014,7 @@ kr:너비(가로) 맞춤(&H)\tCtrl+2
 ku:گونجاندنی &فراوانی\tCtrl+2
 kw:&Desedha Les\tCtrl+2
 lt:Visas puslapio pl&otis\tCtrl+2
-lv:Ietilpināt &platumu\tCtrl+2\r\n
+lv:Ietilpināt &platumu\tCtrl+2\n
 mk:Прилагоди на &ширина\tCtrl+2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl+2
 mm:အလျားနှင့်အမြင့် အပြည့်
@@ -14971,7 +14971,7 @@ ka:ბოდიშს გიხდით, ეს არ უნდა მომ�
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
 ku:تکایە کلیک لەسەر 'پاشگەزبونەوە' ، بکە ئەگەر ئەتەوێ یارمەتیدەرمان بیت لە جارەسەرکردنی ئەم کێشەیە\n\n !ببورە، لە ڕوودانی ئەم کێشەیە
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
-lv:Atvaino, šim nevajadzēja notikt. Lūdzu spied 'Atcelt', ja vēlies palīdzēt salabot šīs kļūdas iemeslu.
+lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu spiediet 'Atcelt', ja jūs vēlaties mums palīdzēt novērst šīs kļūmes cēloni.
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
@@ -15031,7 +15031,7 @@ kr:원본 파일 %s (은)는 동기화 지점이 없습니다.
 ku:خاڵی هاوکاتکردنی نیە %s سەرچاوەی فایلی
 kw:Nyns eus poynt kettermynegi vyth y'n restren %s
 lt:Pradinis failas %s  neturi sinchronizacijos taško
-lv:Izejas failam %s nav sinhronizācijas punkta
+lv:Avota failam %s nav sinhronizācijas punkta
 mk:Изворната датотека %s нема синхронизациска точка
 my:Sumber fail %s tidak mempunyai titik penyegerakan
 ne:स्रोत फाइल %s मा समक्रमण विन्दु छैन

@@ -7996,7 +7996,7 @@ const char * gTranslations_lv =
   "&Samazin\304\201t lappuses l\304\253dz apdruk\304\201jamai zonai (ja ir nepiecie\305\241ams)\0"\
   "&Viena lappuse\tCtrl+6\0"\
   "&Izlaist \305\241o versiju\0"\
-  "&Lietot s\304\201kotn\304\223jos lappu\305\241u izm\304\223rus\r\n\0"\
+  "&Lietot s\304\201kotn\304\223jos lappu\305\241u izm\304\223rus\n\0"\
   "&Skats\0"\
   "&Logs\0"\
   "&J\304\201\0"\
@@ -8012,7 +8012,7 @@ const char * gTranslations_lv =
   "Visi faili\0"\
   "Visi atbalst\304\253tie dokumenti\0"\
   "Programma:\0"\
-  "Asoci\304\223t ar PDF failiem?\0"\
+  "Vai piesaist\304\253t PDF failiem?\0"\
   "Pielikums: %s\0"\
   "Autors:\0"\
   "Autom\304\201tiski\0"\
@@ -8027,12 +8027,12 @@ const char * gTranslations_lv =
   "Nevar izveidot savienojumu ar internetu (k\304\274\305\253da %#x).\0"\
   "Atcelt\0"\
   "Nevar izdruk\304\201t \305\241o failu\0"\
-  "Neizdev\304\201s palaist invers\304\201s mekl\304\223\305\241anas komandu. L\305\253du p\304\201rbaudi komandu uzst\304\201d\304\253jumos.\0"\
+  "Neizdev\304\201s palaist invers\304\201s mekl\304\223\305\241anas komandu. L\305\253dzu p\304\201rbaudiet komandrindu iestat\304\253jumus.\0"\
   "Main\304\253t valodu (Change Language)\0"\
   "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumu\0"\
   "Komiksu gr\304\201matas (CBZ un CBR)\0"\
   "Sader\304\253ba\0"\
-  "Nep\304\201rtraukts\r\n\0"\
+  "Nep\304\201rtraukts\n\0"\
   "Nep\304\201rtraukts gr\304\201matu skats\0"\
   "Nep\304\201rtraukti divas lappuses\0"\
   "Piedal\304\253ties tulko\305\241an\304\201\0"\
@@ -8080,7 +8080,7 @@ const char * gTranslations_lv =
   "Atrast:\0"\
   "Ietilpin\304\201t &saturu\tCtrl+3\0"\
   "Ietilpin\304\201t &lappusi\tCtrl+0\0"\
-  "Ietilpin\304\201t &platumu\tCtrl+2\r\n\0"\
+  "Ietilpin\304\201t &platumu\tCtrl+2\n\0"\
   "Ietilpin\304\201t saturu\0"\
   "Ietilpin\304\201t lappusi\0"\
   "Ietilpin\304\201t platumu\0"\
@@ -8169,8 +8169,8 @@ const char * gTranslations_lv =
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja ir pieejama\0"\
   "Viena lappuse\0"\
-  "Atvaino, \305\241im nevajadz\304\223ja notikt. L\305\253dzu spied 'Atcelt', ja v\304\223lies pal\304\253dz\304\223t salabot \305\241\304\253s k\304\274\305\253das iemeslu.\0"\
-  "Izejas failam %s nav sinhroniz\304\201cijas punkta\0"\
+  "Piedodiet, \305\241im nevajadz\304\223ja notikt!\n\nL\305\253dzu spiediet 'Atcelt', ja j\305\253s v\304\223laties mums pal\304\253dz\304\223t nov\304\223rst \305\241\304\253s k\304\274\305\253mes c\304\223loni.\0"\
+  "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
   "T\304\223ma:\0"\
   "SumatraPDF opcijas\0"\
   "SumatraPDF atjaunin\304\201jums\0"\
