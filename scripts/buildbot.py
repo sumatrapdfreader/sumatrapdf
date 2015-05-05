@@ -43,6 +43,13 @@ def is_git_up_to_date():
     out = subprocess.check_output(["git", "pull"])
     return "Already up-to-date" in out
 
+def ignore_pre_release_build_error(s):
+    # it's possible we did a pre-release build outside of buildbot and that
+    # shouldn't be a fatal error
+    if "already exists in s3" in s:
+        return True
+    return False
+
 def build_pre_release():
     try:
         cert_dst_path = os.path.join("scripts", "cert.pfx")
