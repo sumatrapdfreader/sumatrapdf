@@ -1,5 +1,7 @@
 /* LzmaDec.c -- LZMA Decoder
-2010-12-15 : Igor Pavlov : Public domain */
+2015-01-01 : Igor Pavlov : Public domain */
+
+#include "Precomp.h"
 
 #include "LzmaDec.h"
 
@@ -43,6 +45,13 @@
   TREE_GET_BIT(probs, i); \
   i -= 0x40; }
 #endif
+
+#define NORMAL_LITER_DEC GET_BIT(prob + symbol, symbol)
+#define MATCHED_LITER_DEC \
+  matchByte <<= 1; \
+  bit = (matchByte & offs); \
+  probLit = prob + offs + bit + symbol; \
+  GET_BIT2(probLit, symbol, offs &= ~bit, offs &= bit)
 
 #define NORMALIZE_CHECK if (range < kTopValue) { if (buf >= bufLimit) return DUMMY_ERROR; range <<= 8; code = (code << 8) | (*buf++); }
 
@@ -171,24 +180,47 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
       {
         state -= (state < 4) ? state : 3;
         symbol = 1;
-        do { GET_BIT(prob + symbol, symbol) } while (symbol < 0x100);
+        #ifdef _LZMA_SIZE_OPT
+        do { NORMAL_LITER_DEC } while (symbol < 0x100);
+        #else
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        NORMAL_LITER_DEC
+        #endif
       }
       else
       {
-        unsigned matchByte = p->dic[(dicPos - rep0) + ((dicPos < rep0) ? dicBufSize : 0)];
+        unsigned matchByte = dic[(dicPos - rep0) + ((dicPos < rep0) ? dicBufSize : 0)];
         unsigned offs = 0x100;
         state -= (state < 10) ? 3 : 6;
         symbol = 1;
+        #ifdef _LZMA_SIZE_OPT
         do
         {
           unsigned bit;
           CLzmaProb *probLit;
-          matchByte <<= 1;
-          bit = (matchByte & offs);
-          probLit = prob + offs + bit + symbol;
-          GET_BIT2(probLit, symbol, offs &= ~bit, offs &= bit)
+          MATCHED_LITER_DEC
         }
         while (symbol < 0x100);
+        #else
+        {
+          unsigned bit;
+          CLzmaProb *probLit;
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+          MATCHED_LITER_DEC
+        }
+        #endif
       }
       dic[dicPos++] = (Byte)symbol;
       processedPos++;

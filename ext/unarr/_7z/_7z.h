@@ -6,7 +6,7 @@
 
 #include "../common/unarr-imp.h"
 
-#include "../lzmasdk/Types.h"
+#include "../lzmasdk/7zTypes.h"
 #ifdef HAVE_7Z
 #include <7z.h>
 #endif

@@ -1,11 +1,10 @@
 /* Ppmd.h -- PPMD codec common code
-2011-01-27 : Igor Pavlov : Public domain
+2013-01-18 : Igor Pavlov : Public domain
 This code is based on PPMd var.H (2001): Dmitry Shkarin : Public domain */
 
 #ifndef __PPMD_H
 #define __PPMD_H
 
-#include "Types.h"
 #include "CpuArch.h"
 
 EXTERN_C_BEGIN

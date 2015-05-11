@@ -14,10 +14,10 @@ LIBS += -lm
 ifeq "$(build)" "debug"
 CFLAGS += -pipe -g -DDEBUG
 else ifeq "$(build)" "profile"
-CFLAGS += -pipe -O2 -DNDEBUG -pg
+CFLAGS += -pipe -O3 -DNDEBUG -pg
 LDFLAGS += -pg
 else ifeq "$(build)" "release"
-CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
+CFLAGS += -pipe -O3 -DNDEBUG -fomit-frame-pointer
 else ifeq "$(build)" "coverage"
 CFLAGS += -pipe -g -DDEBUG -pg -fprofile-arcs -ftest-coverage
 LIBS += -lgcov
