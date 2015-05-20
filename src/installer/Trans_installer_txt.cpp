@@ -2131,7 +2131,7 @@ const char * gTranslations_cy =
   "Ydych chi'n si\305\265r eich bod am ddadosod SumatraPDF\0"\
   "Cau\0"\
   "Methu creu cyfeiriadur dros dro\0"\
-  "Merhu creu'r cyfeiriadur gosod\0"\
+  "Methu creu'r cyfeiriadur gosod\0"\
   "Mehu gosod rhagolygwr PDF\0"\
   "Methu gosod hidl chwilio PDF\0"\
   "Methu canfod cyfeiriadur dros dro\0"\

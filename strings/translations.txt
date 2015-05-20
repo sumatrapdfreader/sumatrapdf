@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7074f0caa1641b627f4319b0dd5033145519c2af
+c2d9580e036a5feb8cd95d5e1da581edf627420b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -203,7 +203,7 @@ bs:Sve označene str&anice
 ca-xv:&Totes les pàgines seleccionades
 ca:&Totes les pàgines seleccionades
 cn:所有已选定页面(&A)
-cy:&Pob tudalen dewiswyd
+cy:&Pob tudalen â ddewiswyd
 cz:Vše&chny vybrané stránky
 de:&Alle angegebenen Seiten
 dk:&Alle valgte sider
@@ -445,7 +445,7 @@ vn:Đóng tập tin\tCtrl+W
 am:&Պատճենել նշվածը
 ar:&نسخ المحدد
 az:Seçilmiş sahəni &kopyala
-bg:&Копирай избраното
+bg:&Копиране на избраното
 bn:&নির্বাচিত অংশ কপি করুন
 br:&Copiar Seleção
 bs:&Kopiraj označeno
@@ -505,7 +505,7 @@ vn:&Chép phần đã chọn
 am:Պատճենել նշվածը\tCtrl+C
 ar:&نسخ المحدد\tCtrl+C
 az:Seçilmiş &sahəni kopyala\tCtrl+C
-bg:&Копирай избраното\tCtrl+C
+bg:&Копиране на избраното\tCtrl+C
 br:Copiar seleção\tCtrl+C
 bs:Kopiraj označeno\tCtrl+C
 ca-xv:&Copia la selecció\tCtrl+C
@@ -567,7 +567,7 @@ af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
 ar:&لا تسألني مرةً أخرى
 az:Bir daha &soruşma
-bg:&Не питай отново
+bg:Без повтор&но питане
 bn:&আমাকে আর জিজ্ঞেস করবেন না
 br:Não perguntar novamente
 bs:Nemoj me ponovo pitati
@@ -1007,7 +1007,7 @@ af:&Gaan Na
 am:&Անցնել
 ar:&الذهاب إلى
 az:K&eçid
-bg:&Отиди на
+bg:&Отиване на
 bn:এতে চলুন...
 br:&Ir para
 bs:Idi na
@@ -1712,7 +1712,7 @@ vn:Chỉ những trang chẵn
 am:&Բացել էջը
 ar:&فتح مستند
 az:Sənədi &aç
-bg:&Отвори документ
+bg:&Отваряне на документ
 br:Abrir d&ocumento
 bs:&Otvori dokument
 ca-xv:&Obri el document
@@ -1769,7 +1769,7 @@ af:&Maak Oop...\tCtrl+O
 am:Բացել...\tCtrl+O
 ar:&فتح...\tCtrl+O
 az:&Aç...\tCtrl+O
-bg:&Отвори...\tCtrl+O
+bg:&Отваряне...\tCtrl+O
 bn:&উন্মীলন...\tCtrl+O
 br:A&brir...\tCtrl+O
 bs:&Otvori...\tCtrl+O
@@ -2495,7 +2495,7 @@ vn:Gỡ tập tin xuống
 am:&Պահպանել որպես
 ar:&حفظ باسم...
 az:&Fərqli adla yadda saxla...
-bg:Запа&мети като...
+bg:За&пис като...
 br:&Salvar como...
 bs:&Spasi kao...
 ca-xv:Anomena i al&ça...
@@ -2553,7 +2553,7 @@ af:&Stoor As\tCtrl+S
 am:&Պահպանել որպես\tCtrl+S
 ar:&حفظ باسم...\tCtrl+S
 az:Fərqli adla &yadda saxla...\tCtrl+S
-bg:Запа&мети като...\tCtrl+S
+bg:За&пис като...\tCtrl+S
 bn:&সংরক্ষণ এই রূপে...\tCtrl+S
 br:&Salvar como...\tCtrl+S
 bs:&Spasi kao...\tCtrl+S
@@ -4166,7 +4166,7 @@ vn:Tự động
 am:Ինքնաշխատ ստուգել &թարմացումները
 ar:تحقق من التحديثات آلياً
 az:Yeniləmələri avto&matik yoxla
-bg:Автоматично проверявай за &обновления
+bg:Автоматична проверка за &обновления
 br:&Procurar atualizações automaticamente
 bs:Automatski provjeravaj za &nadogradnju
 by:&Аўтаматычная праверка абнаўленняў
@@ -4534,7 +4534,7 @@ vn:Chỉ dấu sách
 am:Բայթ
 ar:بايت
 az:bayt
-bg:Байтове
+bg:байта
 bn:বাইটসমূহ
 br:Bytes
 bs:Bajta
@@ -4906,7 +4906,7 @@ af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
 ar:تغيير اللغة (Change language)
 az:Dili dəyişdir (Change Language)
-bg:Смени езика (Change Language)
+bg:Смяна на езика на програмата (Change Language)
 bn:ভাষা পরিবর্তন (Change Language)
 br:Mudar o idioma (Change Language)
 bs:Promijeni jezik (Change Language)
@@ -5042,7 +5042,7 @@ vn:Kiểm tra cập nhật
 am:Փակել
 ar:إغلاق
 az:Bağla
-bg:Затвори
+bg:Затваряне
 bn:বন্ধ করুন
 br:Fechar
 bs:Zatvori
@@ -5482,7 +5482,7 @@ vn:Đóng góp dịch thuật
 am:Պատճենել &Նկարը
 ar:نسخ الصورة
 az:&Şəkli kopyala
-bg:Копирай &изображението
+bg:Копиране на &изображението
 bn:&ছবি কপি করুন
 br:Copiar &Imagem
 bs:Kopiraj &sliku
@@ -5540,7 +5540,7 @@ vn:Sao chép hình ảnh
 am:Պատճենել &հղումը
 ar:نسخ &رابط العنوان
 az:Keçidin &ünvanını kopyala
-bg:Копирай Интернет &адреса
+bg:Копиране на интернет &адреса
 br:Copiar Ata&lho
 bs:Kopiraj adresu &linka
 ca-xv:Copia l'adreça de l'enllaç
@@ -5598,7 +5598,7 @@ vn:Chép địa chỉ liên kết
 am:Պատճենել մեկ&նաբանությունը
 ar:نسخ الملحوظة
 az:&Şərhi kopyala
-bg:Копирай &коментара
+bg:Копиране на &коментара
 br:Copiar Co&mentário
 bs:Kopiraj ko&mentar
 ca-xv:Copia el co&mentari
@@ -5656,7 +5656,7 @@ vn:Chép chú thích
 am:Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
 ar:تعذر نسخ النص (النسخ كصورة فقط)
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
-bg:Текстът не може да бъде копиран (копиране само като картинка)
+bg:Текстът не може да бъде копиран (затова беше копиран само като картинка)
 bn:লেখা কপি করতে দেয়া হয়নি (ছবি-মাত্র কপি করা হচ্ছিল)
 br:Cópia de texto negada (copiando somente como imagem)
 bs:Kopiranje teksta je nemoguće (kopirano kao slika)
@@ -5893,7 +5893,7 @@ bs:Neuspješno kreiranje instalacijskog direktorija
 ca-xv:No es pot crear el directori d'instal·lació
 ca:No es pot crear el directori d'instal·lació
 cn:无法创建安装文件夹
-cy:Merhu creu'r cyfeiriadur gosod
+cy:Methu creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 dk:Kunne ikke oprette installationsmappe
@@ -7668,7 +7668,7 @@ af:Volskerm\tCtrl+Shift+L
 am:Ամ&բողջ էկրանով\tCtrl+Shift+L
 ar:بحجم الشاشة\tCtrl+Shift+L
 az:Tam ek&ran\tCtrl+Shift+L
-bg:&Цял Екран\tCtrl+Shift+L
+bg:На &цял екран\tCtrl+Shift+L / F11
 bn:পূর্ণ পর্দা\tCtrl+Shift+L
 br:Tela cheia\tCtrl+Shift+L
 bs:Cijeli ekran\tCtrl+Shift+L
@@ -8585,7 +8585,7 @@ vn:Tìm kiếm...\tCtrl+F
 am:Փնտրել
 ar:بحث
 az:Axtar
-bg:Търси
+bg:Търсене
 br:Localizar
 bs:Traži
 by:Знайсці
@@ -8649,7 +8649,7 @@ af:Soek Volgende
 am:Գտնել հաջորդը
 ar:بحث عن التالي
 az:Sonrakını tap
-bg:Намери следващото
+bg:Намиране на следващото съвпадение
 bn:পরবর্তী অনুসন্ধান
 br:Localizar próximo
 bs:Nađi sljedeće
@@ -8717,7 +8717,7 @@ af:Soek Vorige
 am:Գտնել նախորդը
 ar:البحث عن السابق
 az:Əvvəlkini tap
-bg:Намери предишното
+bg:Намиране на предишното съвпадение
 bn:পূর্ববর্তী অনুসন্ধান
 br:Localizar anterior
 bs:Nađi prethodno
@@ -8785,7 +8785,7 @@ af:Soek:
 am:Փնտրել.
 ar:بحث
 az:Axtar:
-bg:Търси:
+bg:Търсене:
 bn:অনুসন্ধান:
 br:Localizar:
 bs:Traži:
@@ -8852,7 +8852,7 @@ vn:Tìm kiếm:
 am:Հարմարեցնել &բովանդակությունը\tCtrl+3
 ar:مناسبة المحتوى\tCtrl+3
 az:&Məzmuna görə sığışdır\tCtrl+3
-bg:Оразмери по &съдържание\tCtrl+3
+bg:Оразмеряване по &съдържание\tCtrl+3
 br:Ajustar ao &conteúdo\tCtrl+3
 bs:Uklopi s&adržaj\tCtrl+3
 ca-xv:Ajusta el &contingut\tCtrl+3
@@ -8911,7 +8911,7 @@ af:&Pas Blad In\tCtrl+0
 am:Էջի &չափով\tCtrl+0
 ar:مناسب للشاشة\tCtrl+0
 az:&Səhifəyə görə sığışdır\tCtrl+0
-bg:Оразмери по &височина\tCtrl+0
+bg:Оразмеряване по &височина\tCtrl+0
 bn:পৃষ্ঠা অনুরূপ\tCtrl+0
 br:&Página inteira\tCtrl+0
 bs:Uklopi &stranicu\tCtrl+0
@@ -8980,7 +8980,7 @@ af:Pas In Breedte\tCtrl+2
 am:Հավասարեցնել &լայնությամբ\tCtrl+2
 ar:مناسب لعرض الشاشة\tCtrl+2
 az:&Genişliyə görə sığışdır\tCtrl+2
-bg:Оразмери по &ширина\tCtrl+2
+bg:Оразмеряване по &ширина\tCtrl+2
 bn:প্রস্থ অনুরূপ\tCtrl+2
 br:Ajustar pela l&argura\tCtrl+2
 bs:&Uklopi po širini\tCtrl+2
@@ -9048,7 +9048,7 @@ vn:Vừa chiều &rộng\tCtrl+2
 am:Հարմարեցնել բովանդակությունը
 ar:مناسبة المحتوى
 az:Məzmuna görə sığışdır
-bg:Оразмери по съдържание
+bg:Оразмеряване по съдържание
 br:Ajustar ao conteúdo
 bs:Uklopi sadržaj
 ca-xv:Ajusta el contingut
@@ -9107,7 +9107,7 @@ af:Pas Blad In
 am:Ձգել էջը
 ar:مناسب للشاشة
 az:Səhifəyə görə sığışdır
-bg:Оразмери по височина
+bg:Оразмеряване по височина
 bn:পৃষ্ঠা অনুরূপ
 br:Página inteira
 bs:Uklopi stranicu
@@ -9623,7 +9623,7 @@ mk:Често читани
 ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
 ne:प्रायजसो पढिएको
-nl:Eerder Gelezen
+nl:Vaak gelezen
 no:Ofte leste
 pl:Ostatnio otwierane
 pt:Frequentes
@@ -9715,7 +9715,7 @@ af:Gaan Na Bladsy
 am:Անցնել էջի
 ar:اذهب لصفحة
 az:Səhifəyə keç
-bg:Отиди на страница
+bg:Отиване на страница
 bn:এর পৃষ্ঠায় চলুন
 br:Ir para a página
 bs:Idi na stranicu
@@ -9832,7 +9832,7 @@ vn:Thiết lập ẩn và tùy chọn
 am:Թաքցնել հաճախակի բացվածները
 ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
-bg:Скрий често четените
+bg:Скриване на често четените
 br:Ocultar Lidos com frequência
 bs:Sakrij najčešće čitano
 ca-xv:Amaga els més llegits
@@ -10005,6 +10005,7 @@ af:Installeer SumatraPDF
 am:Տեղակայել SumatraPDF-ը
 ar:تنصيب SumatraPDF
 az:SumatraPDF-i quraşdır
+bg:Инсталиране на SumatraPDF
 br:Instalar SumatraPDF
 bs:Instaliraj SumatraPDF
 ca-xv:Instal·la el SumatraPDF
@@ -10105,6 +10106,7 @@ vn:Cài đặt SumatraPDF trong &thư mục:
 am:Տեղակայումը ձախողվեց:
 ar:فشل في تنصيب البرنامج
 az:Quraşdırma baş tutmadı!
+bg:Инсталацията беше неуспешна!
 br:Falha na instalação!
 bs:Neuspješna instalacija!
 ca-xv:La instal·lació ha fallat!
@@ -10155,6 +10157,7 @@ vn:Cài đặt thất bại!
 am:Ընթացքում է...
 ar:قيد تنصيب البرنامج ...
 az:Quraşdırma davam edir...
+bg:Инсталиране...
 br:Instalação em progresso...
 bs:Instalacija u toku...
 ca-xv:La instal·lació és en progrés...
@@ -10486,7 +10489,7 @@ af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 am:Հաստատե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
 ar:هل تريد جعل قاريء سومطره للبي دي إف ، التطبيق الافتراضي؟
 az:SumatraPDF PDF faylların görüntülənməsi üçün standart proqram edilsin?
-bg:Направи SumatraPDF основно приложение за PDF файлове?
+bg:Искате ли да зададете SumatraPDF като основното си приложение за отваряне на PDF файлове?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
 br:Fazer do SumatraPDF o programa padrão para arquivos PDF?
 bs:Postavi SumatraPDF za glavnu aplikaciju za PDF fajlove?
@@ -10621,6 +10624,7 @@ vn:Đặt SumatraPDF làm trình đọc PDF chính
 am:Man&ga եղանակ
 ar:Man&ga وضعية 
 az:Man&qa rejimi
+bg:Режим за ман&га
 br:Modo Man&gá
 bs:Man&ga režim
 ca-xv:Mode man&ga
@@ -11357,7 +11361,7 @@ af:Maak Oop
 am:Բացել
 ar:فتح
 az:Aç
-bg:Отвори
+bg:Отваряне
 bn:উন্মীলন
 br:Abrir
 bs:Otvori
@@ -11425,7 +11429,7 @@ vn:Mở tập tin
 am:Բացել PDF-XChange-ում
 ar:فتح الملف بـ PDF-XChange
 az:PD&F-XChange-də aç
-bg:Отвори с PDF-XChange
+bg:Отворяне с PDF-XChange
 br:Abrir no PDF-XChange
 bs:Otvori u PDF-XChange
 by:Адкрыць у PDF-XChange
@@ -11486,7 +11490,7 @@ vn:Mở bằng PDF-XChange
 am:Բացել ֆայլ...
 ar:فتح مستند...
 az:Sənədi aç...
-bg:Отвори документ...
+bg:Отворяне на документ...
 br:Abrir um documento...
 bs:Otvori dokument...
 ca-xv:Obri un document...
@@ -11543,6 +11547,7 @@ vn:Mở một tập tin...
 am:Բացել %s-ում
 ar:فتح في  %s
 az:%s ilə aç
+bg:Отваряне с %s
 br:Abrir em %s
 bs:Otvori u %s
 ca-xv:Obri amb %s
@@ -11593,7 +11598,7 @@ vn:Mở bằng %s
 am:Բացել &Adobe Reader-ում
 ar:فتح الملف بـ Adobe Reader
 az:&Adobe Reader-də aç
-bg:Отвори с &Adobe Reader
+bg:Отваряне с &Adobe Reader
 br:Abrir no &Adobe Reader
 bs:Otvori u &Adobe Readeru
 by:Адкрыць у &Adobe Reader
@@ -11655,7 +11660,7 @@ vn:Mở bằng Adobe Reader
 am:Բացել &Foxit Reader-ում
 ar:فتح الملف بـ Foxit Reader
 az:&Foxit Reader-də aç
-bg:Отвори с &Foxit Reader
+bg:Отваряне с &Foxit Reader
 br:Abrir no &Foxit Reader
 bs:Otvori u &Foxit Readeru
 by:Адкрыць у &Foxit Reader
@@ -11716,7 +11721,7 @@ vn:Mở bằng Foxit Reader
 am:Բացել Microsoft HTML Help-ում
 ar:فتح الملف بـ Microsoft HTML Help
 az:Microsoft &HTML Help-də aç
-bg:Отвори с Microsoft HTML Help
+bg:Отваряне с Microsoft HTML Help
 br:Abrir no Microsoft HTML Help
 bs:Otvori u Microsoft HTML Help
 by:Адкрыць у Microsoft HTML Help
@@ -11776,7 +11781,7 @@ vn:Mở bằng Microsoft HTML Help
 am:Բացել Microsoft XPS-Viewer-ում
 ar:فتح الملف بـ Microsoft XPS-Viewer
 az:Microsoft &XPS-Viewer-də aç
-bg:Отвори с Microsoft XPS-Viewer
+bg:Отваряне с Microsoft XPS-Viewer
 br:Abrir no Microsoft XPS-Viewer
 bs:Otvori u Microsoft XPS-Viewer
 by:Адкрыць у Microsoft XPS-Viewer
@@ -12626,6 +12631,7 @@ br:Documentos PalmDoc
 bs:PalmDoc dokumenti
 ca:Documents PalmDoc
 cn:PalmDoc 文档
+cy:Dogfennau PalmDoc
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
 dk:PalmDoc-dokumenter
@@ -12955,7 +12961,7 @@ vn:Trang trước
 am:Տպել
 ar:طباعة
 az:Çap et
-bg:Отпечатай
+bg:Отпечатване
 br:Imprimir
 bs:Štampaj
 ca-xv:Impressora
@@ -13013,7 +13019,7 @@ vn:In
 am:Տպել որպես &նկար (պահանջում է լր. հիշողություն)
 ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
 az:&Şəkil kimi çap et (əlavə yaddaş tələb edir)
-bg:Отпечатай като изображение (изисква повече памет)
+bg:Отпечатване като изображение (изисква повече памет)
 br:Imprimir como &imagem (requer mais memória)
 bs:Štampaj kao &sliku (zahtjeva više memorije)
 ca-xv:Imprimeix com a &imatge (requereix més memòria)
@@ -13751,7 +13757,7 @@ af:Draai Links\tCtrl+Shift+-
 am:Շրջել ձախ\tCtrl+Shift+-
 ar:دوران لليسار\tCtrl+Shift+-
 az:So&la döndər\tCtrl+Shift+-
-bg:Завърти на&ляво\tCtrl+Shift+-
+bg:Завъртане на&ляво\tCtrl+Shift+-
 bn:বামদিকে বিবর্তন\tCtrl+Shift+-
 br:Girar à esquerda\tCtrl+Shift+-
 bs:Rotiraj nalijevo\tCtrl+Shift+-
@@ -13820,7 +13826,7 @@ af:Draai Regs\tCtrl+Shift++
 am:Շրջել աջ\tCtrl+Shift++
 ar:دوران لليمين\tCtrl+Shift++
 az:Sa&ğa döndər\tCtrl+Shift++
-bg:Завърти на&дясно\tCtrl+Shift++
+bg:Завъртане на&дясно\tCtrl+Shift++
 bn:ডানদিকে বিবর্তন\tCtrl+Shift++
 br:Girar à direita\tCtrl+Shift++
 bs:Rotiraj nadesno\tCtrl+Shift++
@@ -13889,7 +13895,7 @@ af:Stoor As
 am:Պահպանել որպես
 ar:حفظ باسم
 az:Fərqli adla yadda saxla
-bg:Запамети като
+bg:Запис като
 bn:সংরক্ষণ এই রূপে
 br:Salvar como
 bs:Spasi kao
@@ -14247,6 +14253,7 @@ vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 am:Ընտրեք թղթապանակում, որտեղ պետք է տեղակայվի SumatraPDF-ը՝
 ar:اختر مجلد تنصيب البرنامج:
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
+bg:Изберете папката, в която да се инсталира SumatraPDF:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
 bs:Izaberite direktorij gdje bi SumatraPDF trebao biti instaliran:
 ca-xv:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
@@ -15993,6 +16000,7 @@ br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido 
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 ca:Aquest document utilitza característiques no suportades (%s) i podria no ser mostrat correctament
 cn:文檔使用未支持的功能 (%s)，可能無法正確繪製。
+cy:Mae'r ddogfen hon yn defnyddio nodweddion sydd ddim yn cael eu cynnal (%s) ac efallai na fyddant yn rendro'n gywir
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
 dk:Dette dokument bruger funktioner, der ikke er understøttet (%s) og optegner måske ikke korrekt
@@ -16009,6 +16017,7 @@ ja:このドキュメントはサポートしていない機能(%s)を使用し�
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
+nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
@@ -16086,6 +16095,7 @@ vn:Tựa đề
 am:Ջնջել SumatraPDF-ը
 ar:إزالة SumatraPDF
 az:SumatraPDF-i sil
+bg:Деинсталиране на SumatraPDF
 br:Desinstalar SumatraPDF
 bs:Deinstaliraj SumatraPDF
 ca-xv:Desinstal·la el SumatraPDF
@@ -16137,6 +16147,7 @@ vn:Gỡ bỏ SumatraPDF
 am:Հնարավոր չեղավ հեռացնել ծրագիրը
 ar:فشل إزالة البرنامج
 az:Deinstalyasiya baş tutmadı
+bg:Деинсталирането беше неуспешно!
 br:A desinstalação falhou
 bs:Neuspješna deinstalacija
 ca-xv:La desinstal·lació ha fallat
@@ -16188,6 +16199,7 @@ vn:Không gỡ bỏ được
 am:Ծրագիրը հեռացվում է...
 ar:إزالة البرنامج قيد العمل...
 az:Deinstalyasiya davam edir...
+bg:Деинсталиране...
 br:Desinstalação em progresso...
 bs:Deinstalacija u toku ...
 ca-xv:Desinstal·lació en progrés...
@@ -16342,6 +16354,7 @@ vn:Dùng &thẻ
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
+bg:Използване на SumatraPDF като основен четец на PDF файлове
 br:Usar o SumatraPDF como o leitor PDF pa&drão
 bs:Koristi SumatraPDF kao &izvorni PDF čitač
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
