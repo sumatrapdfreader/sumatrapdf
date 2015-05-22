@@ -650,22 +650,22 @@ static short GetPaper(BaseEngine *engine) {
 }
 
 static short GetPaperByName(WCHAR *papername) {
-	if (lstrcmpi(papername, L"letter") == 0) {
+	if (str::EqI(papername, L"letter") == 0) {
 		return DMPAPER_LETTER;
 	}
-	else if (lstrcmpi(papername, L"legal") == 0) {
+    else if (str::EqI(papername, L"legal") == 0) {
 		return DMPAPER_LEGAL;
 	}
-	else if (lstrcmpi(papername, L"tabloid") == 0) {
+    else if (str::EqI(papername, L"tabloid") == 0) {
 		return DMPAPER_TABLOID;
 	}
-	else if (lstrcmpi(papername, L"a3") == 0) {
+    else if (str::EqI(papername, L"a3") == 0) {
 		return DMPAPER_A3;
 	}
-	else if (lstrcmpi(papername, L"a4") == 0) {
+    else if (str::EqI(papername, L"a4") == 0) {
 		return DMPAPER_A4;
 	}
-	else if (lstrcmpi(papername, L"a5") == 0) {
+    else if (str::EqI(papername, L"a5") == 0) {
 		return DMPAPER_A5;
 	}
 
