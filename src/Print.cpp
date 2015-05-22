@@ -626,6 +626,52 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
+static short GetPaper(BaseEngine *engine) {
+	RectD mediabox = engine->PageMediabox(1);
+	SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
+
+	SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
+	// common ISO 216 formats (metric)
+	if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
+		return DMPAPER_A4;
+	else if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
+		return DMPAPER_A3;
+	else if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
+		return DMPAPER_A5;
+	// common US/ANSI formats (imperial)
+	else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
+		return DMPAPER_LETTER;
+	else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
+		return DMPAPER_LEGAL;
+	else if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
+		return DMPAPER_TABLOID;
+
+	return 0;
+}
+
+static short GetPaperByName(WCHAR *papername) {
+	if (lstrcmpi(papername, L"letter") == 0) {
+		return DMPAPER_LETTER;
+	}
+	else if (lstrcmpi(papername, L"legal") == 0) {
+		return DMPAPER_LEGAL;
+	}
+	else if (lstrcmpi(papername, L"tabloid") == 0) {
+		return DMPAPER_TABLOID;
+	}
+	else if (lstrcmpi(papername, L"a3") == 0) {
+		return DMPAPER_A3;
+	}
+	else if (lstrcmpi(papername, L"a4") == 0) {
+		return DMPAPER_A4;
+	}
+	else if (lstrcmpi(papername, L"a5") == 0) {
+		return DMPAPER_A5;
+	}
+
+	return 0;
+}
+
 static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode)
 {
     CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
@@ -650,11 +696,13 @@ static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode)
     return devMode->dmDefaultSource;
 }
 
-static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced, LPDEVMODE devMode)
+static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced, LPDEVMODE devMode, short paper)
 {
     WStrVec rangeList;
     if (settings)
         rangeList.Split(settings, L",", true);
+
+	devMode->dmPaperSize = paper; // set papersize to match pdf page size - will be overridden by any paper= value in -print-settings
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int val;
@@ -686,8 +734,14 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
             devMode->dmDuplex = DMDUP_VERTICAL;
         else if (str::EqI(rangeList.At(i), L"duplexshort"))
             devMode->dmDuplex = DMDUP_HORIZONTAL;
+   		else if (str::EqI(rangeList.At(i), L"color"))
+   			devMode->dmColor = DMCOLOR_COLOR;
+   		else if (str::EqI(rangeList.At(i), L"monochrome"))
+   			devMode->dmColor = DMCOLOR_MONOCHROME;
         else if (str::StartsWithI(rangeList.At(i), L"bin="))
             devMode->dmDefaultSource = GetPaperSourceByName(rangeList.At(i) + 4, devMode);
+   		else if (str::StartsWithI(rangeList.At(i), L"paper="))
+   			devMode->dmPaperSize = GetPaperByName(rangeList.At(i) + 6);
     }
 
     if (ranges.Count() == 0) {
@@ -774,7 +828,9 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
     {
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
-        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode);
+
+   	  short paper = GetPaper(engine);
+   	  ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode, paper);
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
