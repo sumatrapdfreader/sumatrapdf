@@ -2,9 +2,9 @@
 struct Win32Window;
 
 typedef std::function<LRESULT(Win32Window *w, UINT msg, WPARAM wp, LPARAM lp, bool &discardMsg)>
-Win32MsgFilter;
+    Win32MsgFilter;
 typedef std::function<LRESULT(Win32Window *w, int id, int event, LPARAM lp, bool &discardMsg)>
-WmCommandCb;
+    WmCommandCb;
 typedef std::function<void(Win32Window *w, int dx, int dy, WPARAM resizeType)> OnSizeCb;
 
 struct Win32Window {
