@@ -26,6 +26,7 @@
 #include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
+#include "SumatraProperties.h"
 #include "Translations.h"
 
 struct PrintData {
@@ -623,50 +624,34 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-static short GetPaper(BaseEngine *engine) {
+static short GetPaperSize(BaseEngine *engine) {
     RectD mediabox = engine->PageMediabox(1);
     SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
-    SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
-    // common ISO 216 formats (metric)
-    if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx &&
-        limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
-        return DMPAPER_A4;
-    else if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx &&
-             limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
-        return DMPAPER_A3;
-    else if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx &&
-             limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
-        return DMPAPER_A5;
-    // common US/ANSI formats (imperial)
-    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx &&
-             limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
-        return DMPAPER_LETTER;
-    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx &&
-             limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
-        return DMPAPER_LEGAL;
-    else if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx &&
-             limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
-        return DMPAPER_TABLOID;
-
-    return 0;
+    switch (GetPaperFormat(size)) {
+    case Paper_A4: return DMPAPER_A4;
+    case Paper_A3: return DMPAPER_A3;
+    case Paper_A5: return DMPAPER_A5;
+    case Paper_Letter: return DMPAPER_LETTER;
+    case Paper_Legal: return DMPAPER_LEGAL;
+    case Paper_Tabloid: return DMPAPER_TABLOID;
+    default: return 0;
+    }
 }
 
-static short GetPaperByName(WCHAR *papername) {
-    if (str::EqI(papername, L"letter") == 0) {
+static short GetPaperByName(const WCHAR *papername) {
+    if (str::EqI(papername, L"letter"))
         return DMPAPER_LETTER;
-    } else if (str::EqI(papername, L"legal") == 0) {
+    if (str::EqI(papername, L"legal"))
         return DMPAPER_LEGAL;
-    } else if (str::EqI(papername, L"tabloid") == 0) {
+    if (str::EqI(papername, L"tabloid"))
         return DMPAPER_TABLOID;
-    } else if (str::EqI(papername, L"a3") == 0) {
+    if (str::EqI(papername, L"A3"))
         return DMPAPER_A3;
-    } else if (str::EqI(papername, L"a4") == 0) {
+    if (str::EqI(papername, L"A4"))
         return DMPAPER_A4;
-    } else if (str::EqI(papername, L"a5") == 0) {
+    if (str::EqI(papername, L"A5"))
         return DMPAPER_A5;
-    }
-
     return 0;
 }
 
@@ -695,13 +680,10 @@ static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode) {
 }
 
 static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE> &ranges,
-                               Print_Advanced_Data &advanced, LPDEVMODE devMode, short paper) {
+                               Print_Advanced_Data &advanced, LPDEVMODE devMode) {
     WStrVec rangeList;
     if (settings)
         rangeList.Split(settings, L",", true);
-
-    devMode->dmPaperSize = paper; // set papersize to match pdf page size - will be overridden by
-                                  // any paper= value in -print-settings
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int val;
@@ -820,12 +802,15 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
     ClosePrinter(printer);
     printer = nullptr;
 
+    // set paper size to match the size of the document's first page
+    // (will be overridden by any paper= value in -print-settings)
+    devMode->dmPaperSize = GetPaperSize(engine);
+
     {
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
 
-        short paper = GetPaper(engine);
-        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode, paper);
+        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode);
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);

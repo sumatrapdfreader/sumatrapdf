@@ -24,6 +24,50 @@
 #define PROPERTIES_TXT_DY_PADDING       2
 #define PROPERTIES_WIN_TITLE    _TR("Document Properties")
 
+enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
+
+class PropertyEl {
+public:
+    PropertyEl(const WCHAR *leftTxt, WCHAR *rightTxt, bool isPath=false)
+        : leftTxt(leftTxt), rightTxt(rightTxt), isPath(isPath) { }
+
+    // A property is always in format: Name (left): Value (right)
+    // (leftTxt is static, rightTxt will be freed)
+    const WCHAR *   leftTxt;
+    ScopedMem<WCHAR>rightTxt;
+
+    // data calculated by the layout
+    RectI           leftPos;
+    RectI           rightPos;
+
+    // overlong paths get the ellipsis in the middle instead of at the end
+    bool            isPath;
+};
+
+class PropertiesLayout : public Vec<PropertyEl *> {
+public:
+    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) { }
+    ~PropertiesLayout() { DeleteVecMembers(*this); }
+
+    void AddProperty(const WCHAR *key, WCHAR *value, bool isPath=false) {
+        // don't display value-less properties
+        if (!str::IsEmpty(value))
+            Append(new PropertyEl(key, value, isPath));
+        else
+            free(value);
+    }
+    bool HasProperty(const WCHAR *key) {
+        for (size_t i = 0; i < Count(); i++) {
+            if (str::Eq(key, At(i)->leftTxt))
+                return true;
+        }
+        return false;
+    }
+
+    HWND    hwnd;
+    HWND    hwndParent;
+};
+
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
 static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
@@ -159,6 +203,26 @@ static WCHAR *FormatFileSize(size_t size)
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
+PaperFormat GetPaperFormat(SizeD size)
+{
+    SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
+    // common ISO 216 formats (metric)
+    if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
+        return Paper_A4;
+    if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
+        return Paper_A3;
+    if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
+        return Paper_A5;
+    // common US/ANSI formats (imperial)
+    if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
+        return Paper_Letter;
+    if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
+        return Paper_Legal;
+    if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
+        return Paper_Tabloid;
+    return Paper_Other;
+}
+
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
 static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
@@ -167,21 +231,14 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     SizeD size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
     const WCHAR *formatName = L"";
-    SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
-    // common ISO 216 formats (metric)
-    if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
-        formatName = L" (A4)";
-    else if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
-        formatName = L" (A3)";
-    else if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
-        formatName = L" (A5)";
-    // common US/ANSI formats (imperial)
-    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
-        formatName = L" (Letter)";
-    else if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
-        formatName = L" (Legal)";
-    else if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
-        formatName = L" (Tabloid)";
+    switch (GetPaperFormat(size)) {
+    case Paper_A4: formatName = L" (A4)"; break;
+    case Paper_A3: formatName = L" (A3)"; break;
+    case Paper_A5: formatName = L" (A5)"; break;
+    case Paper_Letter: formatName = L" (Letter)"; break;
+    case Paper_Legal: formatName = L" (Legal)"; break;
+    case Paper_Tabloid: formatName = L" (Tabloid)"; break;
+    }
 
     WCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
@@ -242,24 +299,6 @@ static WCHAR *FormatPermissions(Controller *ctrl)
         denials.Push(str::Dup(_TR("copying text")));
 
     return denials.Join(L", ");
-}
-
-void PropertiesLayout::AddProperty(const WCHAR *key, WCHAR *value, bool isPath)
-{
-    // don't display value-less properties
-    if (!str::IsEmpty(value))
-        Append(new PropertyEl(key, value, isPath));
-    else
-        free(value);
-}
-
-bool PropertiesLayout::HasProperty(const WCHAR *key)
-{
-    for (size_t i = 0; i < Count(); i++) {
-        if (str::Eq(key, At(i)->leftTxt))
-            return true;
-    }
-    return false;
 }
 
 static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI *rect)
