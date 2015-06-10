@@ -1373,6 +1373,8 @@ pdf_init_document(pdf_document *doc)
 		{
 			/* pdf_repair_xref may access xref_index, so reset it properly */
 			memset(doc->xref_index, 0, sizeof(int) * doc->max_xref_len);
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696012 */
+			pdf_get_populating_xref_entry(doc, 0);
 			pdf_repair_xref(doc);
 			pdf_prime_xref_index(doc);
 		}
