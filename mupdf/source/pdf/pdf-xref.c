@@ -947,8 +947,8 @@ read_xref_section(pdf_document *doc, int ofs, pdf_lexbuf *buf, ofs_list *offsets
 		}
 		if (i < offsets->len)
 		{
-			fz_warn(ctx, "ignoring xref recursion with offset %d", ofs);
-			break;
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696022 */
+			fz_throw(ctx, FZ_ERROR_GENERIC, "xref recursion with offset %d", ofs);
 		}
 		if (offsets->len == offsets->max)
 		{
