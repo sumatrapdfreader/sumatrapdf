@@ -3310,7 +3310,7 @@ const char * gTranslations_cz =
   "Z\303\241stupce z\303\241lo\305\276ky\0"\
   "Z\303\241stupce z\303\241lo\305\276ky na stran\304\233 %s souboru %s\0"\
   "Z\303\241lo\305\276ky\0"\
-  "bajt\305\257\0"\
+  "Bajt\305\257\0"\
   "Dokumenty CHM\0"\
   "Nelze se p\305\231ipojit k Internetu (chyba %#x).\0"\
   "Storno\0"\
@@ -11652,7 +11652,7 @@ const char * gTranslations_sk =
   "Synchroniza\304\215n\303\275 s\303\272bor nie je mo\305\276n\303\251 otvori\305\245\0"\
   "Ozna\304\215en\303\275 PDF\0"\
   "Textov\303\251 dokumenty\0"\
-  "\0"\
+  "Tento dokument pou\305\276\303\255va nepodporovan\303\251 funkcie (%s) a t\303\275mto sa nemus\303\255 vykresli\305\245 spr\303\241vne\0"\
   "N\303\241zov:\0"\
   "Nezn\303\241my zdrojov\303\275 s\303\272bor (%s)\0"\
   "Povoli\305\245 &z\303\241lo\305\276ky\0"\
