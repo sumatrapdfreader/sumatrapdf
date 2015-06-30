@@ -709,6 +709,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
             OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, 0 == n);
         }
+        if (0 == i.fileNames.Count()) {
+            // cf. WindowInfo::Focus()
+            if (IsIconic(hPrevWnd))
+                ShowWindow(hPrevWnd, SW_RESTORE);
+            SetForegroundWindow(hPrevWnd);
+        }
         goto Exit;
     }
 
