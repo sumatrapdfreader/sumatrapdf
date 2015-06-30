@@ -96,6 +96,9 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	dict = xps_parse_resource_dictionary(doc, part_uri, xml);
 	if (dict)
 		dict->base_xml = xml; /* pass on ownership */
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696061 */
+	else
+		fz_free_xml(doc->ctx, xml);
 
 	return dict;
 }
