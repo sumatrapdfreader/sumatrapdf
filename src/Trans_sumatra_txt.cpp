@@ -11900,7 +11900,7 @@ const char * gTranslations_sl =
   "Datoteke sinhronizacije ni mogo\304\215e odpreti\0"\
   "Ozna\304\215en PDF\0"\
   "Tekstovni dokumenti\0"\
-  "\0"\
+  "Da dokument uporablja nepodprte zna\304\215ilnosti (%s) in se morda ne bo nalo\305\276il pravilno\0"\
   "Naslov:\0"\
   "Neznana izvorna datoteka (%s)\0"\
   "Uporabljaj &zavihke\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-27abbfa263f353bde37ea18754cae4c2a19d2b54
+2d63bd08ff26c54557d7e20162267fbe251a6fca
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -16022,6 +16022,7 @@ pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się nie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
 sk:Tento dokument používa nepodporované funkcie (%s) a týmto sa nemusí vykresliť správne
+sl:Da dokument uporablja nepodprte značilnosti (%s) in se morda ne bo naložil pravilno
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
