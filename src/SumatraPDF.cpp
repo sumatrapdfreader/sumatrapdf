@@ -3812,6 +3812,13 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             OnMenuCustomZoom(win);
             break;
 
+        case IDM_VIEW_DUPLICATE_DOCUMENT:
+            if (win->IsDocLoaded()) {
+                LoadArgs args(win->ctrl->FilePath(), win);
+                LoadDocument(args);
+            }
+            break;
+
         case IDM_VIEW_SINGLE_PAGE:
             if (win->IsDocLoaded())
                 SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
