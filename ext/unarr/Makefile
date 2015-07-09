@@ -8,7 +8,7 @@ default: all
 
 # --- Configuration ---
 
-CFLAGS += -Wall
+CFLAGS += -Wall -D_FILE_OFFSET_BITS=64
 LIBS += -lm
 
 ifeq "$(build)" "debug"

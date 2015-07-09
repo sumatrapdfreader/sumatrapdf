@@ -62,7 +62,11 @@ static bool file_seek(void *data, off64_t offset, int origin)
 #ifdef _MSC_VER
     return _fseeki64(data, offset, origin) == 0;
 #else
-    if (offset > INT32_MAX)
+#if _POSIX_C_SOURCE >= 200112L
+    if (sizeof(off_t) == 8)
+        return fseeko(data, offset, origin) == 0;
+#endif
+    if (offset > INT32_MAX || offset < INT32_MIN)
         return false;
     return fseek(data, (long)offset, origin) == 0;
 #endif
@@ -72,6 +76,8 @@ static off64_t file_tell(void *data)
 {
 #ifdef _MSC_VER
     return _ftelli64(data);
+#elif _POSIX_C_SOURCE >= 200112L
+    return ftello(data);
 #else
     return ftell(data);
 #endif
