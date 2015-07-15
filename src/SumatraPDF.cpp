@@ -2860,7 +2860,10 @@ static void RelayoutFrame(WindowInfo *win, bool updateToolbars=true, int sidebar
 
     dh.End();
 
-    if (tocVisible) {
+    // TODO: if a document with ToC and a broken document are loaded
+    //       and the first document is closed with the ToC still visible,
+    //       we have tocVisible but !win->ctrl
+    if (tocVisible && win->ctrl) {
         // the ToC selection may change due to resizing
         // (and SetSidebarVisibility relies on this for initialization)
         if (win->ctrl->AsEbook())
