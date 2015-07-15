@@ -1305,7 +1305,7 @@ HtmlWindow::~HtmlWindow()
         htmlContent->Release();
     if (webBrowser) {
         ULONG refCount = webBrowser->Release();
-        CrashIf(refCount != 0);
+        CrashIfDebugOnly(refCount != 0);
     }
 
     FreeWindowId(windowId);
