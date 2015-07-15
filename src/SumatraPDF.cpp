@@ -396,6 +396,13 @@ WindowInfo *FindWindowInfoByTab(TabInfo *tab)
     return gWindows.FindEl([&](WindowInfo *win) { return win->tabs.Contains(tab); });
 }
 
+WindowInfo *FindWindowInfoByController(Controller *ctrl)
+{
+    return gWindows.FindEl([&](WindowInfo *win) {
+        return win->tabs.FindEl([&](TabInfo *tab) { return tab->ctrl == ctrl; }) != NULL;
+    });
+}
+
 class HwndPasswordUI : public PasswordUI
 {
     HWND hwnd;
@@ -732,10 +739,13 @@ void ControllerCallbackHandler::SaveDownload(const WCHAR *url, const unsigned ch
 
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data)
 {
-    TabInfo *tdata = win->tabs.FindEl([&](TabInfo *tab) { return ctrl == tab->ctrl; });
     uitask::Post([=]{
-        if (FindWindowInfoByTab(tdata) && tdata->ctrl == ctrl) {
+        if (FindWindowInfoByController(ctrl)) {
             ctrl->HandlePagesFromEbookLayout(data);
+        }
+        else {
+            // don't leak data if ctrl has already been deleted
+            EbookController::DeleteEbookFormattingData(data);
         }
     });
 }

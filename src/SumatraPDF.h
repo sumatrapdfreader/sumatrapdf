@@ -90,6 +90,7 @@ enum MenuToolbarFlags {
 // for backward compatibility use a value that older versions will render as yellow
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
+class Controller;
 class Favorites;
 class FileHistory;
 class WindowInfo;
@@ -149,6 +150,7 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab);
 WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab);
 WindowInfo* FindWindowInfoByTab(TabInfo *tab);
+WindowInfo* FindWindowInfoByController(Controller *ctrl);
 
 // LoadDocument carries a lot of state, this holds them in
 // one place

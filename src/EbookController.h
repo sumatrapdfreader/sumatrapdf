@@ -70,6 +70,8 @@ public:
     // call SetDoc before using this EbookController
     static EbookController *Create(HWND hwnd, ControllerCallback *cb, FrameRateWnd *);
 
+    static void DeleteEbookFormattingData(EbookFormattingData *data);
+
 protected:
 
     EbookControls * ctrls;

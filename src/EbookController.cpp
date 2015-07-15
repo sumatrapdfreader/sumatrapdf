@@ -313,7 +313,7 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
     if (formattingThreadNo != ft->threadNo) {
         // this is a message from cancelled thread, we can disregard
         lf("EbookController::HandlePagesFromEbookLayout() thread msg discarded, curr thread: %d, sending thread: %d", formattingThreadNo, ft->threadNo);
-        delete ft;
+        DeleteEbookFormattingData(ft);
         return;
     }
     //lf("EbookController::HandlePagesFromEbookLayout() %d pages, ft=0x%x", ft->pageCount, (int)ft);
@@ -341,6 +341,8 @@ void EbookController::HandlePagesFromEbookLayout(EbookFormattingData *ft)
         StopFormattingThread();
     }
     UpdateStatus();
+    // don't call DeleteEbookFormattingData since
+    // ft->pages are now owned by incomingPages or pages
     delete ft;
 }
 
@@ -951,4 +953,14 @@ EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb, Fram
     if (!ctrls)
         return nullptr;
     return new EbookController(ctrls, cb);
+}
+
+// not a destructor so that EbookFormattingData don't have to be exposed in EbookController.h
+// and so that EbookFormattingData::pages aren't always deleted (when ownership has been passed on)
+void EbookController::DeleteEbookFormattingData(EbookFormattingData *data)
+{
+    for (size_t i = 0; i < data->pageCount; i++) {
+        delete data->pages[i];
+    }
+    delete data;
 }
