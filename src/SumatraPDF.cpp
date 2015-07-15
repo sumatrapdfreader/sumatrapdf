@@ -640,7 +640,7 @@ public:
     virtual ~ControllerCallbackHandler() { }
 
     virtual void Repaint() { win->RepaintAsync(); }
-    virtual void PageNoChanged(int pageNo);
+    virtual void PageNoChanged(Controller *ctrl, int pageNo);
     virtual void UpdateScrollbars(SizeI canvas);
     virtual void RequestRendering(int pageNo);
     virtual void CleanUp(DisplayModel *dm);
@@ -792,8 +792,13 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas)
 }
 
 // The current page edit box is updated with the current page number
-void ControllerCallbackHandler::PageNoChanged(int pageNo)
+void ControllerCallbackHandler::PageNoChanged(Controller *ctrl, int pageNo)
 {
+    // discard page number change requests from documents
+    // loaded asynchronously in a background tab
+    if (win->ctrl != ctrl)
+        return;
+
     AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
     if (!win->ctrl || win->ctrl->PageCount() == 0)
         return;

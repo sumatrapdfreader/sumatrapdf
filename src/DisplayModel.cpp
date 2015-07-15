@@ -1001,7 +1001,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     RecalcVisibleParts();
     RenderVisibleParts();
     cb->UpdateScrollbars(canvasSize);
-    cb->PageNoChanged(pageNo);
+    cb->PageNoChanged(this, pageNo);
     RepaintDisplay();
 }
 
@@ -1155,7 +1155,7 @@ void DisplayModel::ScrollXTo(int xOff)
     cb->UpdateScrollbars(canvasSize);
 
     if (CurrentPageNo() != currPageNo)
-        cb->PageNoChanged(CurrentPageNo());
+        cb->PageNoChanged(this, CurrentPageNo());
     RepaintDisplay();
 }
 
@@ -1175,7 +1175,7 @@ void DisplayModel::ScrollYTo(int yOff)
 
     int newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo)
-        cb->PageNoChanged(newPageNo);
+        cb->PageNoChanged(this, newPageNo);
     RepaintDisplay();
 }
 
@@ -1229,7 +1229,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     cb->UpdateScrollbars(canvasSize);
     newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo)
-        cb->PageNoChanged(newPageNo);
+        cb->PageNoChanged(this, newPageNo);
     RepaintDisplay();
 }
 

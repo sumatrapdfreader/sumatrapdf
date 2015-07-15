@@ -358,7 +358,7 @@ void ChmModel::OnDocumentComplete(const WCHAR *url)
             initZoom = INVALID_ZOOM;
         }
         if (cb)
-            cb->PageNoChanged(pageNo);
+            cb->PageNoChanged(this, pageNo);
     }
 }
 

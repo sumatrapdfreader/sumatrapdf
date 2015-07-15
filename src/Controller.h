@@ -1,6 +1,7 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+class Controller;
 class ChmModel;
 class DisplayModel;
 class EbookController;
@@ -11,8 +12,8 @@ public:
     virtual ~ControllerCallback() { }
     // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for when a page change happens
-    // indirectly or is initiated from within the (CHM) model
-    virtual void PageNoChanged(int pageNo) = 0;
+    // indirectly or is initiated from within the model
+    virtual void PageNoChanged(Controller *ctrl, int pageNo) = 0;
     // tell the UI to open the linked document or URL
     virtual void GotoLink(PageDestination *dest) = 0;
     // DisplayModel //

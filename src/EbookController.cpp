@@ -539,7 +539,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint)
     }
     UpdateStatus();
     // update the ToC selection
-    cb->PageNoChanged(pageNo);
+    cb->PageNoChanged(this, pageNo);
 }
 
 bool EbookController::GoToNextPage()
