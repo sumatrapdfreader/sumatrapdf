@@ -215,7 +215,6 @@ Postscript documents
 Pr&esentation\tF5
 Previous Page
 Print
-Print as &image (requires more memory)
 Print range
 Printer with given name doesn't exist
 Printing in progress.

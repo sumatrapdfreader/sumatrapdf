@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2d63bd08ff26c54557d7e20162267fbe251a6fca
+0695b38e7e1719f45f4f6dfe78953be8d4e63704
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13015,60 +13015,6 @@ tw:列印
 uk:Друк
 uz:Chop etish
 vn:In
-:Print as &image (requires more memory)
-am:Տպել որպես &նկար (պահանջում է լր. հիշողություն)
-ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
-az:&Şəkil kimi çap et (əlavə yaddaş tələb edir)
-bg:Отпечатване като изображение (изисква повече памет)
-br:Imprimir como &imagem (requer mais memória)
-bs:Štampaj kao &sliku (zahtjeva više memorije)
-ca-xv:Imprimeix com a &imatge (requereix més memòria)
-ca:Imprimeix com a &imatge (requereix més memòria)
-cn:打印为图像 (需要更多的内存) (&I)
-cy:Argraffu fel &delwedd (angen mwy o gof)
-cz:Tisknout jako &obrázek (vyžaduje více paměti)
-de:Als B&ild drucken (benötigt mehr Speicher)
-dk:Print som &billede (kræver mere hukommelse)
-el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
-es:Imprimir como &imagen (necesita más memoria)
-et:Prindi kui p&ilt (nõuab rohkem mälu)
-eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
-fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
-fi:Tulosta &kuvana (kuluttaa enemmän muistia)
-fr:Imprimer en tant qu'&image (demande plus de mémoire)
-ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
-gl:Imprimir como &imaxe (precisará de máis memoria)
-he:הדפס כתמונה (צורך יותר זכרון)
-hi:छवि के रूप में छापें (अधिक स्मृति की आवश्यकता होगी)
-hr:Ispiši kao sl&iku (zahtijeva više memorija)
-hu:Nyomtatás képként (több memóriát igényel)
-id:Cetak sebagai gambar (butuh lebih banyak memori)
-it:Stampa come &immagine (richiede più memoria))
-ja:画像として印刷 (より多くのメモリを必要とします) (&I)
-kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
-ku:(چاپکردن بەشێوەی &وێنە (پێویستی بە یادگەی زیاترە
-lv:Drukāt kā &attēlu (nepieciešams vairāk atmiņas)
-mk:Печати како слика (бара повеќе меморија)
-my:Cetak sebagai &imej (memerlukan memori yang lebih)
-ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
-nl:Als afbeelding afdrukken (vereist meer geheugen)
-no:Skriv ut som &bilde (krever mer minne)
-pl:Wydrukuj jako &obraz (wymaga więcej pamięci)
-pt:Imprimir &como imagem (usa mais memória)
-ro:Printează ca &image (ocupă mai multă memorie)
-ru:Печатать как &изображение (требуется больше памяти)
-sk:Vytlač ako &obrázok (vyžaduje viac pamäte)
-sl:Natisni kot sliko (zahteva več pomnilnika)
-sp-rs:Štampati kao sliku (zahteva više memorije)
-sq:Printoj si &figurë (kërkon shumë RAM)
-sr-rs:Штампати као слику (захтева више меморије)
-sv:Skr&iv ut som bild (mer minnekrävande)
-ta:படத்தை போன்று அச்சிடு (நினைவகம் அதிகமாக தேவைப்படுகிறது)
-tr:Resim olarak bas (daha çok hafıza gerektirir)
-tw:列印為圖像 (需要更多的記憶體) (&I)
-uk:Роздрукувати як зображення
-uz:&Rasm sifatida chop etish (ko'proq xotirani talab qiladi)
-vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
 am:Տպելու կարգը
 ar:نطاق الطباعة
