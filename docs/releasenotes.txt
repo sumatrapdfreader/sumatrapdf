@@ -8,6 +8,7 @@ Next version:
 * printing happens (again) always as image which leads to more reliable
   results at the cost of requiring more printer memory; the "Print as Image"
   advanced printing option has been removed
+* many crash and other bug fixes
 
 3.0 (2014-10-18)
 
