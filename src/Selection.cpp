@@ -232,7 +232,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
 void CopySelectionToClipboard(WindowInfo *win)
 {
     if (!win->currentTab || !win->currentTab->selectionOnPage) return;
-    CrashIf(win->currentTab->selectionOnPage->Count() == 0);
+    CrashIf(win->currentTab->selectionOnPage->Count() == 0 && win->mouseAction != MA_SELECTING_TEXT);
     if (win->currentTab->selectionOnPage->Count() == 0) return;
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
