@@ -16,3 +16,4 @@ gyp/Debug/
 *.sdf
 vs/obj/
 *pyc
+*.vcxproj.user

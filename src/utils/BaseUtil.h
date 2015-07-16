@@ -46,7 +46,6 @@
 #define new DEBUG_NEW
 #endif
 
-#include <wchar.h>
 #include <string.h>
 
 /* Few most common includes for C stdlib */
