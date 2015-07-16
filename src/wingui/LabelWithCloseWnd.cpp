@@ -236,8 +236,9 @@ LabelWithCloseWnd *CreateLabelWithCloseWnd(HWND parent, int cmd) {
     w->txtCol = GetSysColor(COLOR_BTNTEXT);
 
     // sets w->hwnd during WM_NCCREATE
-    CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, parent, (HMENU)cmd,
-                 GetModuleHandle(nullptr), w);
+    HWND hwnd = CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0,
+                             parent, (HMENU)cmd, GetModuleHandle(nullptr), w);
+    CrashIf(w->hwnd != hwnd);
     CrashIf(!w->hwnd);
     return w;
 }
