@@ -94,6 +94,8 @@ static MenuDef menuDefFile[] = {
 
 //[ ACCESSKEY_GROUP View Menu
 static MenuDef menuDefView[] = {
+    { _TRN("&Duplicate Document"),          IDM_VIEW_DUPLICATE_DOCUMENT, 0 },
+    { SEP_ITEM,                             0,                          0 },
     { _TRN("&Single Page\tCtrl+6"),         IDM_VIEW_SINGLE_PAGE,       MF_NOT_FOR_CHM },
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
     { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
