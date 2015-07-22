@@ -250,37 +250,41 @@ static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState
     }
 }
 
-static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hItem, int pageNo)
+static void TreeItemForPageNoRec(WindowInfo *win, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem, int& bestMatchPageNo)
 {
-    HTREEITEM hCurrItem = nullptr;
-
-    while (hItem) {
+    while (hItem && bestMatchPageNo < pageNo) {
         TVITEM item;
         item.hItem = hItem;
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
         TreeView_GetItem(win->hwndTocTree, &item);
 
-        // return if this item is on the specified page (or on a latter page)
+        // remember this item if it is on the specified page (or on a previous page and closer than all other items)
         if (item.lParam) {
             int page = ((DocTocItem *)item.lParam)->pageNo;
-            if (1 <= page && page <= pageNo)
-                hCurrItem = hItem;
-            if (page >= pageNo)
-                break;
+            if (page <= pageNo && page >= bestMatchPageNo && page >= 1) {
+                bestMatchItem = hItem;
+                bestMatchPageNo = page;
+            }
         }
 
         // find any child item closer to the specified page
         HTREEITEM hSubItem = nullptr;
         if ((item.state & TVIS_EXPANDED))
-            hSubItem = TreeItemForPageNo(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo);
-        if (hSubItem)
-            hCurrItem = hSubItem;
+            TreeItemForPageNoRec(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo, bestMatchItem, bestMatchPageNo);
 
         hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
     }
+}
 
-    return hCurrItem;
+static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hRoot, int pageNo)
+{
+    HTREEITEM bestMatchItem = hRoot;
+    int bestMatchPageNo = 0;
+
+    TreeItemForPageNoRec(win, hRoot, pageNo, bestMatchItem, bestMatchPageNo);
+
+    return bestMatchItem;
 }
 
 void UpdateTocSelection(WindowInfo *win, int currPageNo)
@@ -294,8 +298,6 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
     // select the item closest to but not after the current page
     // (or the root item, if there's no such item)
     HTREEITEM hItem = TreeItemForPageNo(win, hRoot, currPageNo);
-    if (nullptr == hItem)
-        hItem = hRoot;
     TreeView_SelectItem(win->hwndTocTree, hItem);
 }
 
