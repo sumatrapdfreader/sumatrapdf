@@ -2,6 +2,10 @@ scripts/cert.pfx
 scripts/config.py
 obj-rel/
 obj-dbg/
+rel/
+rel64/
+dbg/
+dbg64/
 builds/
 mupdf/generated/
 gyp/*.sln

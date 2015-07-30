@@ -27,7 +27,7 @@ Building release version:
     make automated update checks find the latest version
 
 Building pre-release version:
-  * get svn version
+  * get git version
   * build with nmake, sending svn version as argument
   * build an installer
   * upload to s3 kjkpub bucket. Uploaded files:
