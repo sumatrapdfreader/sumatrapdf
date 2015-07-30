@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 /*
@@ -237,9 +238,13 @@ func createDirCached(dir string) {
 		return
 	}
 	if err := os.MkdirAll(dir, 0644); err != nil {
-		fmt.Printf("os.MkdirAll(%s) failed wiht %s\n", dir, err)
-		os.Exit(1)
+		fatalf("os.MkdirAll(%s) failed wiht %s\n", dir, err)
 	}
+
+}
+
+func createDirForFileCached(path string) {
+	createDirCached(filepath.Dir(path))
 }
 
 func lookupInEnvPathUncached(exeName string, env []string) string {
@@ -256,8 +261,7 @@ func lookupInEnvPathUncached(exeName string, env []string) string {
 				return path
 			}
 		}
-		fmt.Printf("didn't find %s in '%s'\n", exeName, parts[1])
-		os.Exit(1)
+		fatalf("didn't find %s in '%s'\n", exeName, parts[1])
 	}
 	return ""
 }
@@ -270,16 +274,75 @@ func lookupInEnvPath(exeName string, env []string) string {
 	return cachedExePaths[exeName]
 }
 
-func cl(env []string, args *Args) {
-	exePath := lookupInEnvPath("cl.exe", env)
+func runExe(exeName string, env []string, args *Args) {
+	exePath := lookupInEnvPath(exeName, env)
 	cmd := exec.Command(exePath, args.args...)
 	cmd.Env = env
-	fmt.Printf("Running %s\n", cmd.Args)
+	if true {
+		args := cmd.Args
+		args[0] = exeName
+		fmt.Printf("Running %s\n", args)
+		args[0] = exePath
+	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("%s failed with %s, out:\n%s\n", cmd.Args, err, string(out))
-		fmt.Printf("env:\n%s\n", env)
+		fatalf("%s failed with %s, out:\n%s\n", cmd.Args, err, string(out))
 	}
+}
+
+func rc(src, dst string, env []string, args *Args) {
+	createDirForFileCached(dst)
+	extraArgs := []string{
+		"/Fo" + dst,
+		src,
+	}
+	args = args.Append(extraArgs)
+	runExe("rc.exe", env, args)
+}
+
+func cl(src, dst string, env []string, args *Args) {
+	createDirForFileCached(dst)
+	extraArgs := []string{
+		"/Fo" + dst,
+		src,
+	}
+	args = args.Append(extraArgs)
+	runExe("cl.exe", env, args)
+}
+
+func fatalf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+	os.Exit(1)
+}
+
+// given ${dir}/foo.rc, returns ${outDir}/${dir}/foo.rc
+func rcOut(src, outDir string) string {
+	verifyIsRcFile(src)
+	return filepath.Join(outDir, src)
+}
+
+func verifyIsRcFile(path string) {
+	s := strings.ToLower(path)
+	if strings.HasSuffix(s, ".rc") {
+		return
+	}
+	fatalf("%s should end in '.rc'\n", path)
+}
+
+func verifyIsCFile(path string) {
+	s := strings.ToLower(path)
+	if strings.HasSuffix(s, ".cpp") {
+		return
+	}
+	if strings.HasSuffix(s, ".c") {
+		return
+	}
+	fatalf("%s should end in '.c' or '.cpp'\n", path)
+}
+
+func clOut(src, outDir string) string {
+	verifyIsCFile(src)
+	return filepath.Join(outDir, src)
 }
 
 func build(platform Platform, config Config) {
@@ -287,7 +350,17 @@ func build(platform Platform, config Config) {
 	//dumpEnv(env)
 	outDir := getOutDir(platform, config)
 	createDirCached(outDir)
-	args := []string{
+
+	rcArgs := []string{
+		"/r",
+		"/D", "DEBUG",
+		"/D", "_DEBUG",
+	}
+	rcSrc := filepath.Join("src", "SumatraPDF.rc")
+	rcDst := rcOut(rcSrc, outDir)
+	rc(rcSrc, rcDst, env, &Args{args: rcArgs})
+
+	startArgs := []string{
 		"/nologo", "/c",
 		"/D", "WIN32",
 		"/D", "_WIN32",
@@ -328,16 +401,63 @@ func build(platform Platform, config Config) {
 		"/Isrc/utils",
 		"/Isrc/wingui",
 		"/Isrc/mui",
-		fmt.Sprintf("/Fo%s\\sumatrapdf", outDir),
+		//fmt.Sprintf("/Fo%s\\sumatrapdf", outDir),
 		fmt.Sprintf("/Fd%s\\vc80.pdb", outDir),
-		"src\\AppPrefs.cpp",
 	}
 	initialClArgs := &Args{
-		args: args,
+		args: startArgs,
 	}
-	cl(env, initialClArgs)
+	srcFiles := []string{
+		"AppPrefs.cpp",
+		"DisplayModel.cpp",
+		"CrashHandler.cpp",
+		"Favorites.cpp",
+		"TextSearch.cpp",
+		"SumatraAbout.cpp",
+		"SumatraAbout2.cpp",
+		"SumatraDialogs.cpp",
+		"SumatraProperties.cpp",
+		"GlobalPrefs.cpp",
+		"PdfSync.cpp",
+		"RenderCache.cpp",
+		"TextSelection.cpp",
+		"WindowInfo.cpp",
+		"ParseCOmmandLine.cpp",
+		"StressTesting.cpp",
+		"AppTools.cpp",
+		"AppUtil.cpp",
+		"TableOfContents.cpp",
+		"Toolbar.cpp",
+		"Print.cpp",
+		"Notifications.cpp",
+		"Selection.cpp",
+		"Search.cpp",
+		"ExternalViewers.cpp",
+		"EbookControls.cpp",
+		"EbookController.cpp",
+		"Doc.cpp",
+		"MuiEbookPageDef.cpp",
+		"PagesLayoutDef.cpp",
+		"Tester.cpp",
+		"Translations.cpp",
+		"Trans_sumatra_txt.cpp",
+		"Tabs.cpp",
+		"FileThumbnails.cpp",
+		"FileHistory.cpp",
+		"ChmModel.cpp",
+		"Caption.cpp",
+		"Canvas.cpp",
+		"TabInfo.cpp",
+	}
+	for _, f := range srcFiles {
+		src := filepath.Join("src", f)
+		dst := clOut(src, outDir)
+		cl(src, dst, env, initialClArgs)
+	}
 }
 
 func main() {
+	timeStart := time.Now()
 	build(Platform32Bit, ConfigRelease)
+	fmt.Printf("total time: %s\n", time.Since(timeStart))
 }
