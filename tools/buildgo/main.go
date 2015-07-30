@@ -219,18 +219,25 @@ func (a *Args) Append(toAppend []string) *Args {
 var (
 	cachedExePaths map[string]string
 	createdDirs    map[string]bool
+	fileInfoCache  map[string]os.FileInfo
 )
 
 func init() {
 	cachedExePaths = make(map[string]string)
 	createdDirs = make(map[string]bool)
+	fileInfoCache = make(map[string]os.FileInfo)
 }
 
 func fileExists(path string) bool {
-	if fi, err := os.Stat(path); err == nil {
-		return fi.Mode().IsRegular()
+	if _, ok := fileInfoCache[path]; !ok {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return false
+		}
+		fileInfoCache[path] = fi
 	}
-	return false
+	fi := fileInfoCache[path]
+	return fi.Mode().IsRegular()
 }
 
 func createDirCached(dir string) {
@@ -240,7 +247,40 @@ func createDirCached(dir string) {
 	if err := os.MkdirAll(dir, 0644); err != nil {
 		fatalf("os.MkdirAll(%s) failed wiht %s\n", dir, err)
 	}
+}
 
+func getModTime(path string, def time.Time) time.Time {
+	if _, ok := fileInfoCache[path]; !ok {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return def
+		}
+		fileInfoCache[path] = fi
+	}
+	fi := fileInfoCache[path]
+	return fi.ModTime()
+}
+
+// returns true if dst doesn't exist or is older than src or any of the deps
+func isOutdated(src, dst string, deps []string) bool {
+	if !fileExists(dst) {
+		return true
+	}
+	dstTime := getModTime(dst, time.Now())
+	srcTime := getModTime(src, time.Now())
+	if srcTime.Sub(dstTime) > 0 {
+		return true
+	}
+	for _, path := range deps {
+		pathTime := getModTime(path, time.Now())
+		if srcTime.Sub(pathTime) > 0 {
+			return true
+		}
+	}
+	if true {
+		fmt.Printf("%s is up to date\n", dst)
+	}
+	return false
 }
 
 func createDirForFileCached(path string) {
@@ -301,6 +341,9 @@ func rc(src, dst string, env []string, args *Args) {
 }
 
 func cl(src, dst string, env []string, args *Args) {
+	if !isOutdated(src, dst, nil) {
+		return
+	}
 	createDirForFileCached(dst)
 	extraArgs := []string{
 		"/Fo" + dst,
@@ -318,7 +361,8 @@ func fatalf(format string, args ...interface{}) {
 // given ${dir}/foo.rc, returns ${outDir}/${dir}/foo.rc
 func rcOut(src, outDir string) string {
 	verifyIsRcFile(src)
-	return filepath.Join(outDir, src)
+	s := filepath.Join(outDir, src)
+	return replaceExt(s, ".res")
 }
 
 func verifyIsRcFile(path string) {
@@ -340,9 +384,15 @@ func verifyIsCFile(path string) {
 	fatalf("%s should end in '.c' or '.cpp'\n", path)
 }
 
+func replaceExt(path string, newExt string) string {
+	ext := filepath.Ext(path)
+	return path[0:len(path)-len(ext)] + newExt
+}
+
 func clOut(src, outDir string) string {
 	verifyIsCFile(src)
-	return filepath.Join(outDir, src)
+	s := filepath.Join(outDir, src)
+	return replaceExt(s, ".obj")
 }
 
 func build(platform Platform, config Config) {
