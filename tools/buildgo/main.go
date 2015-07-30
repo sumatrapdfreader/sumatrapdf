@@ -5,8 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -49,6 +51,12 @@ const (
 	ConfigDebug   Config = 1
 	ConfigRelease Config = 2
 	ConfigAnalyze Config = 3
+)
+
+var (
+	alwaysRebuild bool = false
+	wg            sync.WaitGroup
+	sem           chan bool
 )
 
 // maps upper-cased name of env variable to Name/Val
@@ -263,6 +271,9 @@ func getModTime(path string, def time.Time) time.Time {
 
 // returns true if dst doesn't exist or is older than src or any of the deps
 func isOutdated(src, dst string, deps []string) bool {
+	if alwaysRebuild {
+		return true
+	}
 	if !fileExists(dst) {
 		return true
 	}
@@ -314,7 +325,7 @@ func lookupInEnvPath(exeName string, env []string) string {
 	return cachedExePaths[exeName]
 }
 
-func runExe(exeName string, env []string, args *Args) {
+func runExeHelper(exeName string, env []string, args *Args) {
 	exePath := lookupInEnvPath(exeName, env)
 	cmd := exec.Command(exePath, args.args...)
 	cmd.Env = env
@@ -328,6 +339,16 @@ func runExe(exeName string, env []string, args *Args) {
 	if err != nil {
 		fatalf("%s failed with %s, out:\n%s\n", cmd.Args, err, string(out))
 	}
+}
+
+func runExe(exeName string, env []string, args *Args) {
+	semEnter()
+	wg.Add(1)
+	go func() {
+		runExeHelper(exeName, env, args)
+		semLeave()
+		wg.Done()
+	}()
 }
 
 func rc(src, dst string, env []string, args *Args) {
@@ -395,6 +416,18 @@ func clOut(src, outDir string) string {
 	return replaceExt(s, ".obj")
 }
 
+func clDir(srcDir string, files []string, outDir string, env []string, args *Args) {
+	for _, f := range files {
+		src := filepath.Join(srcDir, f)
+		dst := clOut(src, outDir)
+		cl(src, dst, env, args)
+	}
+}
+
+func pj(elem ...string) string {
+	return filepath.Join(elem...)
+}
+
 func build(platform Platform, config Config) {
 	env := getEnv(platform)
 	//dumpEnv(env)
@@ -418,6 +451,7 @@ func build(platform Platform, config Config) {
 		"/D", "_WIN32_WINNT=0x0501",
 		"/D", "DEBUG",
 		"/D", "_DEBUG",
+		"/D", "_USING_V110_SDK71_",
 		"/GR-",
 		"/Zi",
 		"/GS",
@@ -431,6 +465,7 @@ func build(platform Platform, config Config) {
 		"/RTCu",
 		"/WX",
 		"/W4",
+		"/FS",
 		"/wd4100",
 		"/wd4127",
 		"/wd4189",
@@ -499,15 +534,73 @@ func build(platform Platform, config Config) {
 		"Canvas.cpp",
 		"TabInfo.cpp",
 	}
-	for _, f := range srcFiles {
-		src := filepath.Join("src", f)
-		dst := clOut(src, outDir)
-		cl(src, dst, env, initialClArgs)
+	clDir("src", srcFiles, outDir, env, initialClArgs)
+
+	if false {
+		regressFiles := []string{
+			"Regress.cpp",
+		}
+		clDir(pj("src", "regress"), regressFiles, outDir, env, initialClArgs)
 	}
+
+	srcUtilsFiles := []string{
+		"FileUtil.cpp",
+		"HttpUtil.cpp",
+		"StrUtil.cpp",
+		"WinUtil.cpp",
+		"GdiPlusUtil.cpp",
+		"FileTransactions.cpp",
+		"Touch.cpp",
+		"TrivialHtmlParser.cpp",
+		"HtmlWindow.cpp",
+		"DirIter.cpp",
+		"BitReader.cpp",
+		"HtmlPullParser.cpp",
+		"HtmlPrettyPrint.cpp",
+		"ThreadUtil.cpp",
+		"DebugLog.cpp",
+		"DbgHelpDyn.cpp",
+		"JsonParser.cpp",
+		"TgaReader.cpp",
+		"HtmlParserLookup.cpp",
+		"ByteOrderDecoder.cpp",
+		"CmdLineParser.cpp",
+		"UITask.cpp",
+		"StrFormat.cpp",
+		"Dict.cpp",
+		"BaseUtil.cpp",
+		"CssParser.cpp",
+		"FileWatcher.cpp",
+		"CryptoUtil.cpp",
+		"StrSlice.cpp",
+		"TxtParser.cpp",
+		"SerializeTxt.cpp",
+		"SquareTreeParser.cpp",
+		"SettingsUtil.cpp",
+		"WebpReader.cpp",
+		"FzImgReader.cpp",
+		"ArchUtil.cpp",
+		"ZipUtil.cpp",
+		"LzmaSimpleArchive.cpp",
+		"Dpi.cpp",
+	}
+	clDir(pj("src", "utils"), srcUtilsFiles, outDir, env, initialClArgs)
+}
+
+func semEnter() {
+	sem <- true
+}
+
+func semLeave() {
+	<-sem
 }
 
 func main() {
+	n := runtime.NumCPU()
+	fmt.Printf("Using %d goroutines\n", n)
+	sem = make(chan bool, n)
 	timeStart := time.Now()
 	build(Platform32Bit, ConfigRelease)
+	wg.Wait()
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
 }
