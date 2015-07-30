@@ -36,28 +36,169 @@ the exact same code but can compiler bigger programs (can use more memory).
 I'm guessing %VS140COMNTOOLS%\vsvars32.bat is the same as %VSINSTALLDIR%\vcvarsall.bat x86.
 */
 
+// Platform represents a 32bit vs 64bit platform
+type Platform int
+
+// Config is release, debug etc.
+type Config int
+
+const (
+	// Platform32Bit describes 32bit build
+	Platform32Bit Platform = 1
+	// Platform64Bit describes 64bit build
+	Platform64Bit Platform = 2
+
+	// ConfigDebug describes debug build
+	ConfigDebug Config = 1
+	// ConfigRelease describes release build
+	ConfigRelease Config = 2
+	// ConfigAnalyze describes relase build with /analyze option
+	ConfigAnalyze Config = 3
+)
+
+// EnvVar describes an environment variable
 type EnvVar struct {
 	Name string
 	Val  string
 }
 
-type Platform int
-type Config int
-
-const (
-	Platform32Bit Platform = 1
-	Platform64Bit Platform = 2
-
-	ConfigDebug   Config = 1
-	ConfigRelease Config = 2
-	ConfigAnalyze Config = 3
-)
+// Args represent arguments to a command to run
+type Args struct {
+	args []string
+}
 
 var (
-	alwaysRebuild bool = false
-	wg            sync.WaitGroup
-	sem           chan bool
+	cachedVcInstallDir string
+	cachedExePaths     map[string]string
+	createdDirs        map[string]bool
+	fileInfoCache      map[string]os.FileInfo
+	alwaysRebuild      bool
+	wg                 sync.WaitGroup
+	sem                chan bool
+	mupdfDir           string
+	extDir             string
+	zlibDir            string
+	freetypeDir        string
+	jpegTurboDir       string
+	openJpegDir        string
+	jbig2Dir           string
+	mupdfGenDir        string
+	nasmPath           string
+	cflagsB            *Args
+	cflagsOpt          *Args
+	cflags             *Args
+	zlibCflags         *Args // TODO: should be cflagsZlib
+	freetypeCflags     *Args
+	jpegTurboCflags    *Args
+	jbig2Cflags        *Args
+	openJpegCflags     *Args
+	jpegTurboNasmFlags *Args
+	mupdfNasmFlags     *Args
+	mpudfCflags        *Args
+	ldFlags            *Args
+	libs               *Args
+	ftSrc              []string
+	zlibSrc            []string
+	jpegTurboSrc       []string
+	jpegTurboAsmSrc    []string
+	jbig2Src           []string
+	openJpegSrc        []string
+	mupdfDrawSrc       []string
+	mupdfFitzSrc       []string
+	mupdfSrc           []string
+	muxpsSrc           []string
+	mupdfAllSrc        []string
+	mudocSrc           []string
+	mutoolsSrc         []string
+	mutoolAllSrc       []string
+	mudrawSrc          []string
 )
+
+func (p Platform) is64() bool {
+	return p == Platform64Bit
+}
+
+func (p Platform) is32() bool {
+	return p == Platform32Bit
+}
+
+func (a *Args) append(toAppend ...string) *Args {
+	return &Args{
+		args: strConcat(a.args, toAppend),
+	}
+}
+
+func NewArgs(args ...string) *Args {
+	return &Args{
+		args: args,
+	}
+}
+
+func semEnter() {
+	sem <- true
+}
+
+func semLeave() {
+	<-sem
+}
+
+func fatalf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+	os.Exit(1)
+}
+
+func pj(elem ...string) string {
+	return filepath.Join(elem...)
+}
+
+func strConcat(arr1, arr2 []string) []string {
+	var res []string
+	for _, s := range arr1 {
+		res = append(res, s)
+	}
+	for _, s := range arr2 {
+		res = append(res, s)
+	}
+	return res
+}
+
+func replaceExt(path string, newExt string) string {
+	ext := filepath.Ext(path)
+	return path[0:len(path)-len(ext)] + newExt
+}
+
+func fileExists(path string) bool {
+	if _, ok := fileInfoCache[path]; !ok {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return false
+		}
+		fileInfoCache[path] = fi
+	}
+	fi := fileInfoCache[path]
+	return fi.Mode().IsRegular()
+}
+
+func createDirCached(dir string) {
+	if _, ok := createdDirs[dir]; ok {
+		return
+	}
+	if err := os.MkdirAll(dir, 0644); err != nil {
+		fatalf("os.MkdirAll(%s) failed wiht %s\n", dir, err)
+	}
+}
+
+func getModTime(path string, def time.Time) time.Time {
+	if _, ok := fileInfoCache[path]; !ok {
+		fi, err := os.Stat(path)
+		if err != nil {
+			return def
+		}
+		fileInfoCache[path] = fi
+	}
+	fi := fileInfoCache[path]
+	return fi.ModTime()
+}
 
 // maps upper-cased name of env variable to Name/Val
 func envToMap(env []string) map[string]*EnvVar {
@@ -114,10 +255,6 @@ func calcEnvAdded(before, after map[string]*EnvVar) map[string]*EnvVar {
 	}
 	return res
 }
-
-var (
-	cachedVcInstallDir string
-)
 
 // return value of VCINSTALLDIR env variable after running vsvars32.bat
 func getVcInstallDir(toolsDir string) string {
@@ -201,72 +338,6 @@ func getOutDir(platform Platform, config Config) string {
 		dir += "64"
 	}
 	return dir
-}
-
-type Args struct {
-	args []string
-}
-
-func strConcat(arr1, arr2 []string) []string {
-	var res []string
-	for _, s := range arr1 {
-		res = append(res, s)
-	}
-	for _, s := range arr2 {
-		res = append(res, s)
-	}
-	return res
-}
-
-func (a *Args) Append(toAppend []string) *Args {
-	return &Args{
-		args: strConcat(a.args, toAppend),
-	}
-}
-
-var (
-	cachedExePaths map[string]string
-	createdDirs    map[string]bool
-	fileInfoCache  map[string]os.FileInfo
-)
-
-func init() {
-	cachedExePaths = make(map[string]string)
-	createdDirs = make(map[string]bool)
-	fileInfoCache = make(map[string]os.FileInfo)
-}
-
-func fileExists(path string) bool {
-	if _, ok := fileInfoCache[path]; !ok {
-		fi, err := os.Stat(path)
-		if err != nil {
-			return false
-		}
-		fileInfoCache[path] = fi
-	}
-	fi := fileInfoCache[path]
-	return fi.Mode().IsRegular()
-}
-
-func createDirCached(dir string) {
-	if _, ok := createdDirs[dir]; ok {
-		return
-	}
-	if err := os.MkdirAll(dir, 0644); err != nil {
-		fatalf("os.MkdirAll(%s) failed wiht %s\n", dir, err)
-	}
-}
-
-func getModTime(path string, def time.Time) time.Time {
-	if _, ok := fileInfoCache[path]; !ok {
-		fi, err := os.Stat(path)
-		if err != nil {
-			return def
-		}
-		fileInfoCache[path] = fi
-	}
-	fi := fileInfoCache[path]
-	return fi.ModTime()
 }
 
 // returns true if dst doesn't exist or is older than src or any of the deps
@@ -357,7 +428,7 @@ func rc(src, dst string, env []string, args *Args) {
 		"/Fo" + dst,
 		src,
 	}
-	args = args.Append(extraArgs)
+	args = args.append(extraArgs...)
 	runExe("rc.exe", env, args)
 }
 
@@ -370,13 +441,8 @@ func cl(src, dst string, env []string, args *Args) {
 		"/Fo" + dst,
 		src,
 	}
-	args = args.Append(extraArgs)
+	args = args.append(extraArgs...)
 	runExe("cl.exe", env, args)
-}
-
-func fatalf(format string, args ...interface{}) {
-	fmt.Printf(format, args...)
-	os.Exit(1)
 }
 
 // given ${dir}/foo.rc, returns ${outDir}/${dir}/foo.rc
@@ -405,11 +471,6 @@ func verifyIsCFile(path string) {
 	fatalf("%s should end in '.c' or '.cpp'\n", path)
 }
 
-func replaceExt(path string, newExt string) string {
-	ext := filepath.Ext(path)
-	return path[0:len(path)-len(ext)] + newExt
-}
-
 func clOut(src, outDir string) string {
 	verifyIsCFile(src)
 	s := filepath.Join(outDir, src)
@@ -422,10 +483,6 @@ func clDir(srcDir string, files []string, outDir string, env []string, args *Arg
 		dst := clOut(src, outDir)
 		cl(src, dst, env, args)
 	}
-}
-
-func pj(elem ...string) string {
-	return filepath.Join(elem...)
 }
 
 func build(platform Platform, config Config) {
@@ -587,15 +644,136 @@ func build(platform Platform, config Config) {
 	clDir(pj("src", "utils"), srcUtilsFiles, outDir, env, initialClArgs)
 }
 
-func semEnter() {
-	sem <- true
+func initDirs() {
+	mupdfDir = "mupdf"
+	// we invoke make from inside mupdfDir, so this must be relative to that
+	// TODO: fix that
+	extDir = pj("..", "ext")
+	zlibDir = pj(extDir, "zlib")
+	freetypeDir = pj(extDir, "freetype2")
+	jpegTurboDir = pj(extDir, "libjpeg-turbo")
+	openJpegDir = pj(extDir, "openjpeg")
+	jbig2Dir = pj(extDir, "jbig2dec")
+	// TODO: this is a build artifact so should go under outDir
+	mupdfGenDir = pj(mupdfDir, "generated")
 }
 
-func semLeave() {
-	<-sem
+func initFlags(platform Platform, config Config) {
+	cflagsB = NewArgs("/nologo", "/c")
+	if platform.is64() {
+		cflagsB.append("/D", "WIN64", "/D", "_WIN64")
+	} else {
+		cflagsB.append("/D", "WIN32", "/D", "_WIN32")
+	}
+	if config != ConfigAnalyze {
+		// TODO: probably different for vs 2015
+		cflagsB = cflagsB.append("/D", "_USING_V110_SDK71_")
+	}
+	/*
+		# /WX  : treat warnings as errors
+		# /GR- : disable RTTI
+		# /Zi  : enable debug information
+		# /GS  : enable security checks
+		# /Gy  : separate functions for linker
+		# /GF  : enable read-only string pooling
+		# /MP  : use muliple processors to speed up compilation
+		# Note: /MP not used as it might be causing extreme flakiness on EC2 buildbot
+	*/
+	// for 64bit don't treat warnings as errors
+	// TODO: add an over-ride as STRICT_X64 in makefile
+	if !platform.is32() {
+		cflagsB = cflagsB.append("/WX")
+	}
+	cflagsB = cflagsB.append("/GR-", "/Zi", "/GS", "/Gy", "/GF")
+	// disable the default /arch:SSE2 for 32-bit builds
+	if platform.is32() {
+		cflagsB = cflagsB.append("/arch:IA32")
+	}
+	// /EHs-c- : disable C++ exceptions (generates smaller binaries)
+	cflagsB = cflagsB.append("/EHs-c-")
+	/*
+		# /W4  : bump warnings level from 1 to 4
+		# warnings unlikely to be turned off due to false positives from using CrashIf()
+		# and various logging functions:
+		# 4100 : unreferenced param
+		# 4127 : conditional expression is constant
+		# 4189 : variable initialized but not referenced
+		# warnings that might not make sense to fix:
+		# 4428 : universal-character-name encountered in source (prevents using "\u202A" etc.)
+		# 4324 : structure was padded due to __declspec(align())
+	*/
+	cflagsB = cflagsB.append("/W4", "/wd4100", "/wd4127", "/wd4189", "/wd4428", "/wd4324")
+
+	/*
+		# Those only need to be disabled in VS 2015
+		# 4458 : declaration of '*' hides class member, a new warning in VS 2015
+		#        unfortunately it's triggered by SDK 10 Gdiplus headers
+		# 4838 : 'conversion from '*' to '*' requires a narrowing conversion
+		#        because QITABENT in SDK 10 triggers this
+		TODO: only for VS 2015
+	*/
+	cflagsB = cflagsB.append("/wd4458", "/wd4838")
+
+	/*
+		# /Ox  : maximum optimizations
+		# /O2  : maximize speed
+		# docs say /Ox better, my tests say /O2 better
+	*/
+	cflagsOpt = cflagsB.append("/O2", "/D", "NDEBUG")
+
+	ldFlags = NewArgs("/nologo", "/DEBUG", "/RELEASE", "/opt:ref", "/opt:icf")
+	if platform.is32() {
+		ldFlags = ldFlags.append("/MACHINE:X86")
+	} else {
+		ldFlags = ldFlags.append("/MACHINE:X64")
+	}
+
+	if config != ConfigDebug {
+		// /GL  : enable link-time code generation
+		cflags = cflagsOpt.append("/GL")
+		ldFlags = ldFlags.append("/LTCG")
+		// /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
+		// http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
+		// We don't use /NXCOMPAT because we need to turn it on/off at runtime
+		ldFlags = ldFlags.append("/DYNAMICBASE", "/FIXED:NO")
+	} else {
+		// /MTd  : statically link debug crt (libcmtd.lib)
+		cflagsB = cflagsB.append("/MTd")
+		// /RTCs : stack frame runtime checking
+		// /RTCu : ununitialized local usage checks
+		// /Od   : disable optimizations
+		cflags = cflagsB.append("/Od", "/RTCs", "/RTCu")
+	}
+
+	if platform.is64() {
+		ldFlags = ldFlags.append("/SUBSYSTEM:WINDOWS,5.2")
+	} else {
+		ldFlags = ldFlags.append("/SUBSYSTEM:WINDOWS,5.1")
+	}
+
+	zlibCflags = cflagsOpt.append("/TC", "/wd4131", "/wd4244", "/wd4996", "/I"+zlibDir)
+
+	// TODO:
+}
+
+func initSrc() {
+	ftSrc = []string{
+		"ftbase.c", "ftbbox.c", "ftbitmap.c", "ftgasp.c",
+		"ftglyph.c", "ftinit.c", "ftstroke.c", "ftsynth.c",
+		"ftsystem.c", "fttype1.c", "ftxf86.c", "cff.c",
+		"type1cid.c", "psaux.c", "psnames.c", "smooth.c",
+		"sfnt.c", "truetype.c", "type1.c", "raster.c",
+		"otvalid.c", "ftotval.c", "pshinter.c", "ftgzip.c",
+	}
 }
 
 func main() {
+	cachedExePaths = make(map[string]string)
+	createdDirs = make(map[string]bool)
+	fileInfoCache = make(map[string]os.FileInfo)
+	initDirs()
+	initFlags(Platform64Bit, ConfigRelease)
+	initSrc()
 	n := runtime.NumCPU()
 	fmt.Printf("Using %d goroutines\n", n)
 	sem = make(chan bool, n)
