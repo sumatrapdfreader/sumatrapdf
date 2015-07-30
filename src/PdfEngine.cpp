@@ -4,12 +4,13 @@
 // interaction between '_setjmp' and C++ object destruction is non-portable
 #pragma warning(disable: 4611)
 
+// utils
+#include "BaseUtil.h"
+// must be included after "BaseUtil.h" to avoid redefining
+// _HAS_EXCEPTIONS in VS 2015 
 extern "C" {
 #include <mupdf/fitz.h>
 }
-
-// utils
-#include "BaseUtil.h"
 #include "ArchUtil.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
