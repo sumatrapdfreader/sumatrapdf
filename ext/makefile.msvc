@@ -29,6 +29,11 @@ DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 !if "$(PLATFORM)"=="X64"
 DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4267
 !endif
+# VS 2015 only
+# 4456 : declaration of '*' hides previous local declaration
+# 4457 : declaration of '*' hides function parameter
+# 4459 : declaration of '*' hides global declaration
+DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4456 /wd4457 /wd4459
 
 CHMLIB_CFLAGS = $(CFLAGS) /TC /wd4018 /wd4057 /wd4189 /wd4244 /wd4295 /wd4701 /wd4706 /wd4996
 # ChmLib also needs PPC_BSTR defined for UNICODE builds
@@ -38,6 +43,10 @@ CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4267
 !endif
 
 LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C /D "_7ZIP_PPMD_SUPPPORT"
+# VS 2015 only
+# 4456 : declaration of '*' hides previous local declaration
+# 4457 : declaration of '*' hides function parameter
+LZMA_CFLAGS = $(LZMA_CFLAGS) /wd4456 /wd4457
 
 WEBP_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/libwebp /wd4057 /wd4204 /wd4244
 
@@ -45,6 +54,11 @@ UNARR_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_BZIP2" /I$(EXTDIR)/bzip2
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_7Z" /I$(EXTDIR)/lzma/C
+# VS 2015 only
+# 4456 : declaration of '*' hides previous local declaration
+# 4457 : declaration of '*' hides function parameter
+UNARR_CFLAGS = $(UNARR_CFLAGS) /wd4456 /wd4457
+
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj

@@ -110,6 +110,13 @@ CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
 # 4324 : structure was padded due to __declspec(align())
 CFLAGSB = $(CFLAGSB) /wd4428 /wd4324
 
+# Those only need to be disabled in VS 2015
+# 4458 : declaration of '*' hides class member, a new warning in VS 2015
+#        unfortunately it's triggered by SDK 10 Gdiplus headers
+# 4838 : 'conversion from '*' to '*' requires a narrowing conversion
+#        because QITABENT in SDK 10 triggers this
+CFLAGSB = $(CFLAGSB) /wd4458 /wd4838
+
 !if "$(PLATFORM)$(STRICT_X64)"=="X64"
 # disable warnings-as-errors for x64 builds (unless STRICT_X64 is set)
 CFLAGSB = $(CFLAGSB: /WX = )
@@ -174,6 +181,11 @@ MUPDF_CFLAGS = $(CFLAGS) /TC /I$(MUPDF_DIR)/include /I$(MUPDF_DIR)/generated \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR) \
 	/wd4703
+
+# VS 2015 only
+# 4459 : declaration of '*' hides global declaration
+# 4456 : declaration of *' hides previous local declaration
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4459 /wd4456
 
 !if "$(CFG)"=="dbg"
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"

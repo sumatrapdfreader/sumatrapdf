@@ -571,12 +571,12 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion) {
         goto Exit;
 
     if (pd.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr = { dm->CurrentPageNo(), dm->CurrentPageNo() };
+        PRINTPAGERANGE pr = { (DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo() };
         ranges.Append(pr);
     } else if (win->currentTab->selectionOnPage && (pd.Flags & PD_SELECTION)) {
         printSelection = true;
     } else if (!(pd.Flags & PD_PAGENUMS)) {
-        PRINTPAGERANGE pr = { 1, dm->PageCount() };
+        PRINTPAGERANGE pr = { 1, (DWORD)dm->PageCount() };
         ranges.Append(pr);
     } else {
         assert(pd.nPageRanges > 0);
@@ -724,7 +724,7 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
     }
 
     if (ranges.Count() == 0) {
-        PRINTPAGERANGE pr = { 1, pageCount };
+        PRINTPAGERANGE pr = { 1, (DWORD)pageCount };
         ranges.Append(pr);
     }
 }

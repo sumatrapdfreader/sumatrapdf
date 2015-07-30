@@ -2926,7 +2926,7 @@ static void OnMenuChangeLanguage(HWND hwnd)
     SetCurrentLanguageAndRefreshUI(newLangCode);
 }
 
-static void OnMenuViewShowHideToolbar(WindowInfo *win)
+static void OnMenuViewShowHideToolbar()
 {
     gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
     for (WindowInfo *win : gWindows) {
@@ -3378,6 +3378,13 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     return true;
 }
 
+static WCHAR SingleCharLowerW(WCHAR c)
+{
+	WCHAR buf[2] = { c, 0 };
+	CharLowerBuffW(buf, 1);
+	return buf[0];
+}
+
 static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 {
     if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
@@ -3387,13 +3394,13 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
 
     if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
-        UINT vk = MapVirtualKey((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
+        UINT vk = MapVirtualKeyW((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
         if ('A' <= vk && vk <= 'Z')
             key = vk;
     }
 
-    if (IsCharUpper((WCHAR)key))
-        key = (WCHAR)CharLower((LPWSTR)(WCHAR)key);
+    if (IsCharUpperW((WCHAR)key))
+        key = (WPARAM)SingleCharLowerW((WCHAR)key);
 
     switch (key) {
     case VK_ESCAPE:
@@ -3854,7 +3861,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
-            OnMenuViewShowHideToolbar(win);
+            OnMenuViewShowHideToolbar();
             break;
 
         case IDM_VIEW_SHOW_HIDE_MENUBAR:

@@ -3,6 +3,15 @@
 REM append ..\bin to PATH to make nasm.exe available
 FOR %%p IN (nasm.exe) DO IF "%%~$PATH:p" == "" SET PATH=%PATH%;%~dp0..\bin
 
+SET PATH=%PATH%;c:\Python27
+
+CALL "%VS140COMNTOOLS%\vsvars32.bat" 2>NUL
+IF ERRORLEVEL 1 GOTO NO_VS_2015
+ECHO setting up VS 2015
+@REM TODO: setup for using XP toolset (SDK 7.1 ?)
+GOTO OK
+
+:NO_VS_2015
 CALL "%VS120COMNTOOLS%\vsvars32.bat" 2>NUL
 IF ERRORLEVEL 1 GOTO NO_VS
 
