@@ -213,7 +213,7 @@ SyntaxError:
         QuitIfNot(ok, "Error: Failed to write signature to \"%s\"!", signFilePath);
     }
     else {
-        fprintf(stdout, "%s", hexSignature);
+        fprintf(stdout, "%s", hexSignature.Get());
     }
     errorCode = 0;
 
