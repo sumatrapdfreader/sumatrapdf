@@ -9,9 +9,10 @@ fz_eval_function(fz_context *ctx, fz_function *func, const float *in, int inlen,
 
 	if (inlen < func->m)
 	{
-		for (i = 0; i < func->m; ++i)
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696012 */
+		for (i = 0; i < inlen; ++i)
 			fakein[i] = in[i];
-		for (; i < inlen; ++i)
+		for (; i < func->m; ++i)
 			fakein[i] = 0;
 		in = fakein;
 	}
@@ -19,10 +20,9 @@ fz_eval_function(fz_context *ctx, fz_function *func, const float *in, int inlen,
 	if (outlen < func->n)
 	{
 		func->evaluate(ctx, func, in, fakeout);
-		for (i = 0; i < func->n; ++i)
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696012 */
+		for (i = 0; i < outlen; ++i)
 			out[i] = fakeout[i];
-		for (; i < outlen; ++i)
-			out[i] = 0;
 	}
 	else
 	{

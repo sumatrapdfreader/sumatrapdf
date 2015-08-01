@@ -51,12 +51,13 @@ pdf_lookup_agl(char *name)
 			return agl_code_list[m];
 	}
 
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696012 */
 	if (strstr(buf, "uni") == buf)
-		return strtol(buf + 3, NULL, 16);
+		return fz_clampi(strtol(buf + 3, NULL, 16), 0, 0x10ffff);
 	else if (strstr(buf, "u") == buf)
-		return strtol(buf + 1, NULL, 16);
+		return fz_clampi(strtol(buf + 1, NULL, 16), 0, 0x10ffff);
 	else if (strstr(buf, "a") == buf && strlen(buf) >= 3)
-		return strtol(buf + 1, NULL, 10);
+		return fz_clampi(strtol(buf + 1, NULL, 10), 0, 0x10ffff);
 
 	return 0;
 }

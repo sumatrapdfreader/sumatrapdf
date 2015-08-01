@@ -999,6 +999,9 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, 
 	}
 	s.dash_total = phase_len;
 
+	/* cf. http://git.ghostscript.com/?p=mupdf.git;a=commitdiff;h=fd54bf89f2adfd5545202a6df87076fb7269f62c */
+	s.dash_phase = fmodf(s.dash_phase, s.dash_total);
+
 	p0.x = p0.y = 0;
 	i = k = 0;
 
