@@ -2,6 +2,8 @@
 2010-03-24 : Igor Pavlov : Public domain
 This code is based on PPMd var.I (2002): Dmitry Shkarin : Public domain */
 
+#include "Precomp.h"
+
 #include <memory.h>
 
 #include "Ppmd8.h"

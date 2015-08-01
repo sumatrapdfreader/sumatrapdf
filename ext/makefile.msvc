@@ -54,10 +54,6 @@ UNARR_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/unarr /wd4996
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_ZLIB" /I$(ZLIB_DIR)
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_BZIP2" /I$(EXTDIR)/bzip2
 UNARR_CFLAGS = $(UNARR_CFLAGS) /D "HAVE_7Z" /I$(EXTDIR)/lzma/C
-# VS 2015 only
-# 4456 : declaration of '*' hides previous local declaration
-# 4457 : declaration of '*' hides function parameter
-UNARR_CFLAGS = $(UNARR_CFLAGS) /wd4456 /wd4457
 
 
 SYNCTEX_OBJS = \
