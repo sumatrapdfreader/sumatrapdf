@@ -3,44 +3,48 @@
 REM append ..\bin to PATH to make nasm.exe available
 FOR %%p IN (nasm.exe) DO IF "%%~$PATH:p" == "" SET PATH=%PATH%;%~dp0..\bin
 
-SET PATH=%PATH%;c:\Python27
+IF EXIST C:\Python27\python.exe SET PATH=%PATH%;C:\Python27
 
-CALL "%VS140COMNTOOLS%\vsvars32.bat" 2>NUL
-IF ERRORLEVEL 1 GOTO NO_VS_2015
-ECHO setting up VS 2015
-@REM TODO: setup for using XP toolset (SDK 7.1 ?)
-GOTO OK
+REM for an alternative approach, see
+REM https://github.com/HaxeFoundation/hxcpp/blob/master/toolchain/msvc-setup.bat
 
-:NO_VS_2015
-CALL "%VS120COMNTOOLS%\vsvars32.bat" 2>NUL
-IF ERRORLEVEL 1 GOTO NO_VS
+IF "%1" == "2015" GOTO VS_2015
+IF "%1" == "2013" GOTO VS_2013
+IF EXIST "%VS140COMNTOOLS%\vsvars32.bat" GOTO VS_2015
+IF EXIST "%VS120COMNTOOLS%\vsvars32.bat" GOTO VS_2013
 
+ECHO Visual Studio 2013 or 2015 doesn't seem to be installed
+EXIT /B 1
+
+:VS_2015
+CALL "%VS140COMNTOOLS%\vsvars32.bat"
+SET _VS_VERSION=VS 2015
+REM defining _USING_V140_SDK71_ is only needed for MFC/ATL headers
+GOTO SELECT_PLATFORM
+
+:VS_2013
+CALL "%VS120COMNTOOLS%\vsvars32.bat"
+SET _VS_VERSION=VS 2013
+REM defining _USING_V120_SDK71_ is only needed for MFC/ATL headers
+GOTO SELECT_PLATFORM
+
+:SELECT_PLATFORM
 IF NOT "%ProgramFiles(x86)%"=="" GOTO XP_WIN64
-IF NOT "%PROGRAMFILES%"=="" GOTO XP_WIN32
-GOTO NO_VS
-
-@rem TODO: for /analyze, we shouldn't use XP toolset
-
-:XP_WIN64
-ECHO Setting up VS 2013 with XP toolkit in WIN 64
-SET "INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
-SET "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
-SET "LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
-@REM REM TODO: for 64bit it should be:
-@REM REM set LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
-GOTO OK
+REM TODO: for /analyze, we shouldn't use XP toolset
+GOTO XP_WIN32
 
 :XP_WIN32
-ECHO setting up VS 2013 with XP toolkit in WIN 32
+ECHO Setting up %_VS_VERSION% with XP toolkit for Win32
 SET "INCLUDE=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
 SET "PATH=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
 SET "LIB=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
-@REM REM TODO: for 64bit it should be:
-@REM REM set LIB=%PROGRAMFILES%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
-GOTO OK
+EXIT /B
 
-:NO_VS
-ECHO Visual Studio 2013 doesn't seem to be installed
-EXIT /B 1
-
-:OK
+:XP_WIN64
+ECHO Setting up %_VS_VERSION% with XP toolkit for Win64
+SET "INCLUDE=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Include;%INCLUDE%"
+SET "PATH=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Bin;%PATH%"
+SET "LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib;%LIB%"
+@REM TODO: should it rather be ...?
+@REM SET LIB=%ProgramFiles(x86)%\Microsoft SDKs\Windows\7.1A\Lib\x64;%LIB%
+EXIT /B

@@ -74,10 +74,6 @@ CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
 !endif
 # WIN32 means any Windows, not just 32-bit Windows
 CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
-# TODO: also add  /D "_USING_V110_SDK71_" for rc ?
-!if "$(WITH_ANALYZE)"!="yes"
-CFLAGSB = $(CFLAGSB) /D "_USING_V110_SDK71_"
-!endif
 
 # /WX  : treat warnings as errors
 # /GR- : disable RTTI
@@ -111,11 +107,13 @@ CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
 CFLAGSB = $(CFLAGSB) /wd4428 /wd4324
 
 # Those only need to be disabled in VS 2015
+# 4091 : 'typedef ': ignored on left of '' when no variable is declared
+#        (happens in SDK 8.1's dbghelp.h)
 # 4458 : declaration of '*' hides class member, a new warning in VS 2015
 #        unfortunately it's triggered by SDK 10 Gdiplus headers
 # 4838 : 'conversion from '*' to '*' requires a narrowing conversion
 #        because QITABENT in SDK 10 triggers this
-CFLAGSB = $(CFLAGSB) /wd4458 /wd4838
+CFLAGSB = $(CFLAGSB) /wd4091 /wd4458 /wd4838
 
 !if "$(PLATFORM)$(STRICT_X64)"=="X64"
 # disable warnings-as-errors for x64 builds (unless STRICT_X64 is set)

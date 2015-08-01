@@ -271,8 +271,8 @@ void StrTest()
     utassert(!str::Parse("abcd", 3, "abcd"));
 
     {
-        const char *str = "string";
-        utassert(str::Parse(str, 4, "str") == str + 3);
+        const char *str1 = "string";
+        utassert(str::Parse(str1, 4, "str") == str1 + 3);
 
         float f1, f2;
         const WCHAR *end = str::Parse(L"%1.23y -2e-3z", L"%%%fy%fz%$", &f1, &f2);
@@ -296,18 +296,18 @@ void StrTest()
     }
 
     {
-        ScopedMem<char> str;
+        ScopedMem<char> str1;
         int i, j;
         float f;
-        utassert(str::Parse("ansi string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str, &i, &j, &f));
-        utassert(str::Eq(str, "ansi string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Parse("ansi string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
+        utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
-        ScopedMem<WCHAR> str;
+        ScopedMem<WCHAR> str1;
         int i, j;
         float f;
-        utassert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str, &i, &j, &f));
-        utassert(str::Eq(str, L"wide string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
+        utassert(str::Eq(str1, L"wide string") && i == -30 && j == 20 && f == 1.5f);
     }
 
     {
@@ -389,9 +389,9 @@ void StrTest()
     }
 
     {
-        char str[] = "aAbBcC... 1-9";
-        str::ToLower(str);
-        utassert(str::Eq(str, "aabbcc... 1-9"));
+        char str1[] = "aAbBcC... 1-9";
+        str::ToLower(str1);
+        utassert(str::Eq(str1, "aabbcc... 1-9"));
 
         WCHAR wstr[] = L"aAbBcC... 1-9";
         str::ToLower(wstr);
@@ -488,33 +488,33 @@ void StrTest()
     utassert(!str::conv::ToCodePage(L"abc", 987654));
 
     {
-        char buf[6] = { 0 };
-        size_t cnt = str::BufAppend(buf, dimof(buf), "");
+        char buf1[6] = { 0 };
+        size_t cnt = str::BufAppend(buf1, dimof(buf1), "");
         utassert(0 == cnt);
-        cnt = str::BufAppend(buf, dimof(buf), "1234");
+        cnt = str::BufAppend(buf1, dimof(buf1), "1234");
         utassert(4 == cnt);
-        utassert(str::Eq("1234", buf));
-        cnt = str::BufAppend(buf, dimof(buf), "56");
+        utassert(str::Eq("1234", buf1));
+        cnt = str::BufAppend(buf1, dimof(buf1), "56");
         utassert(1 == cnt);
-        utassert(str::Eq("12345", buf));
-        cnt = str::BufAppend(buf, dimof(buf), "6");
+        utassert(str::Eq("12345", buf1));
+        cnt = str::BufAppend(buf1, dimof(buf1), "6");
         utassert(0 == cnt);
-        utassert(str::Eq("12345", buf));
+        utassert(str::Eq("12345", buf1));
     }
 
     {
-        WCHAR buf[6] = { 0 };
-        size_t cnt = str::BufAppend(buf, dimof(buf), L"");
+        WCHAR buf1[6] = { 0 };
+        size_t cnt = str::BufAppend(buf1, dimof(buf1), L"");
         utassert(0 == cnt);
-        cnt = str::BufAppend(buf, dimof(buf), L"1234");
+        cnt = str::BufAppend(buf1, dimof(buf1), L"1234");
         utassert(4 == cnt);
-        utassert(str::Eq(L"1234", buf));
-        cnt = str::BufAppend(buf, dimof(buf), L"56");
+        utassert(str::Eq(L"1234", buf1));
+        cnt = str::BufAppend(buf1, dimof(buf1), L"56");
         utassert(1 == cnt);
-        utassert(str::Eq(L"12345", buf));
-        cnt = str::BufAppend(buf, dimof(buf), L"6");
+        utassert(str::Eq(L"12345", buf1));
+        cnt = str::BufAppend(buf1, dimof(buf1), L"6");
         utassert(0 == cnt);
-        utassert(str::Eq(L"12345", buf));
+        utassert(str::Eq(L"12345", buf1));
     }
 
     {
