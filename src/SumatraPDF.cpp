@@ -5,7 +5,6 @@
 #include "BaseUtil.h"
 #include <wininet.h>
 #include <dwmapi.h>
-#include <vssym32.h>
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include "CryptoUtil.h"

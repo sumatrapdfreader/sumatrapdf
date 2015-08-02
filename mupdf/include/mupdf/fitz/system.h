@@ -91,6 +91,11 @@ typedef unsigned __int64 uint64_t;
 #pragma warning( disable: 4701 ) /* Potentially uninitialized local variable 'name' used */
 #pragma warning( disable: 4996 ) /* 'function': was declared deprecated */
 
+/* SumatraPDF: disable remaining warnings at warning level 4 */
+#pragma warning( disable: 4703 ) /* potentially uninitialized local variable (VS2012+) */
+#pragma warning( disable: 4456 ) /* declaration of '*' hides previous local declaration (VS2015+) */
+#pragma warning( disable: 4459 ) /* declaration of '*' hides global declaration (VS2015+) */
+
 #include <io.h>
 
 struct timeval;

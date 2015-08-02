@@ -5,8 +5,6 @@
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
-#include <dbghelp.h>
-#include <tlhelp32.h>
 #include "DbgHelpDyn.h"
 #include "WinUtil.h"
 #include "uia/Provider.h"

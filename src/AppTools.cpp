@@ -3,8 +3,6 @@
 
 // utils
 #include "BaseUtil.h"
-#include <dbghelp.h>
-#include <tlhelp32.h>
 #include "CmdLineParser.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"

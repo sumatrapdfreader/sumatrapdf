@@ -3,12 +3,9 @@
 
 // utils
 #include "BaseUtil.h"
-#include <dbghelp.h>
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
-#include <dbghelp.h>
-#include <tlhelp32.h>
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"

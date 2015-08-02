@@ -4,7 +4,6 @@
 // utils
 #include "BaseUtil.h"
 #include <dwmapi.h>
-#include <vssym32.h>
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"

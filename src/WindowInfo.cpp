@@ -3,10 +3,9 @@
 
 // utils
 #include "BaseUtil.h"
+#include <dwmapi.h>
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
-#include <dwmapi.h>
-#include <vssym32.h>
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"

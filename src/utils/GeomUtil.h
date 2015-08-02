@@ -123,15 +123,15 @@ public:
     RectT Intersect(RectT other) const {
         /* The intersection starts with the larger of the start coordinates
            and ends with the smaller of the end coordinates */
-        T x = std::max(this->x, other.x);
-        T y = std::max(this->y, other.y);
-        T dx = std::min(this->x + this->dx, other.x + other.dx) - x;
-        T dy = std::min(this->y + this->dy, other.y + other.dy) - y;
+        T _x = std::max(this->x, other.x);
+        T _y = std::max(this->y, other.y);
+        T _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
+        T _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
 
         /* return an empty rectangle if the dimensions aren't positive */
-        if (dx <= 0 || dy <= 0)
+        if (_dx <= 0 || _dy <= 0)
             return RectT();
-        return RectT(x, y, dx, dy);
+        return RectT(_x, _y, _dx, _dy);
     }
 
     RectT Union(RectT other) const {
@@ -142,12 +142,12 @@ public:
 
         /* The union starts with the smaller of the start coordinates
            and ends with the larger of the end coordinates */
-        T x = std::min(this->x, other.x);
-        T y = std::min(this->y, other.y);
-        T dx = std::max(this->x + this->dx, other.x + other.dx) - x;
-        T dy = std::max(this->y + this->dy, other.y + other.dy) - y;
+        T _x = std::min(this->x, other.x);
+        T _y = std::min(this->y, other.y);
+        T _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
+        T _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
 
-        return RectT(x, y, dx, dy);
+        return RectT(_x, _y, _dx, _dy);
     }
 
     void Offset(T _x, T _y) {

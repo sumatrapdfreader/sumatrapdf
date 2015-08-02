@@ -6,8 +6,7 @@
 
 #ifndef NO_LIBMUPDF
 
-// interaction between '_setjmp' and C++ object destruction is non-portable
-#pragma warning(disable: 4611)
+#pragma warning(disable: 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
 
 extern "C" {
 #include <mupdf/fitz.h>

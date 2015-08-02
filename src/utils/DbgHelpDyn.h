@@ -1,6 +1,12 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
+// dbghelp.h is included here so that warning C4091 can be disabled in a single location
+#pragma warning(push)
+#pragma warning(disable: 4091) // VS2015: 'typedef ': ignored on left of '' when no variable is declared
+#include <dbghelp.h>
+#pragma warning(pop)
+
 // We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate
 // memory. We use plog because it's similar to plogf() but we don't want to lie
 // by claiming we support formatted strings.

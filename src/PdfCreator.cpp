@@ -1,17 +1,15 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// interaction between '_setjmp' and C++ object destruction is non-portable
-#pragma warning(disable: 4611)
+#pragma warning(disable: 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
 
-// utils
-#include "BaseUtil.h"
-// must be included after "BaseUtil.h" to avoid redefining
-// _HAS_EXCEPTIONS in VS 2015 
 extern "C" {
 #include <mupdf/pdf.h>
 #include <zlib.h>
 }
+
+// utils
+#include "BaseUtil.h"
 #include "GdiplusUtil.h"
 // rendering engines
 #include "BaseEngine.h"

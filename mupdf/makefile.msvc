@@ -90,8 +90,8 @@ CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF
 CFLAGSB = $(CFLAGSB) /arch:IA32
 !endif
 
-# /EHs-c- : disable C++ exceptions (generates smaller binaries)
-CFLAGSB = $(CFLAGSB) /EHs-c-
+# /EHs-c- : disable C++ exceptions (generates smaller binaries, requires _HAS_EXCEPTIONS to be 0)
+CFLAGSB = $(CFLAGSB) /EHs-c- /D "_HAS_EXCEPTIONS=0"
 
 # /W4  : bump warnings level from 1 to 4
 CFLAGSB = $(CFLAGSB) /W4
@@ -102,18 +102,16 @@ CFLAGSB = $(CFLAGSB) /W4
 # 4189 : variable initialized but not referenced
 CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
 # warnings that might not make sense to fix:
-# 4428 : universal-character-name encountered in source (prevents using "\u202A" etc.)
+# 4428 : universal-character-name encountered in source
+#        (prevents using "\u202A" etc.)
 # 4324 : structure was padded due to __declspec(align())
 CFLAGSB = $(CFLAGSB) /wd4428 /wd4324
-
-# Those only need to be disabled in VS 2015
-# 4091 : 'typedef ': ignored on left of '' when no variable is declared
-#        (happens in SDK 8.1's dbghelp.h)
-# 4458 : declaration of '*' hides class member, a new warning in VS 2015
-#        unfortunately it's triggered by SDK 10 Gdiplus headers
+# warnings that happen only in VS2015 (and later)
+# 4458 : declaration of '*' hides class member
+#        (happens rather often all over the place)
 # 4838 : 'conversion from '*' to '*' requires a narrowing conversion
-#        because QITABENT in SDK 10 triggers this
-CFLAGSB = $(CFLAGSB) /wd4091 /wd4458 /wd4838
+#        (QITABENT triggers this)
+CFLAGSB = $(CFLAGSB) /wd4458 /wd4838
 
 !if "$(PLATFORM)$(STRICT_X64)"=="X64"
 # disable warnings-as-errors for x64 builds (unless STRICT_X64 is set)
@@ -174,16 +172,9 @@ MUPDF_NASM_FLAGS = -D__x86_64__ -DWIN64 -DMSVC -I $(MUPDF_DIR)\ -f win64
 MUPDF_NASM_FLAGS = -I $(MUPDF_DIR)\ -f win32
 !endif
 
-# disable warning C4703: potentially uninitialized local variable (affects VS2012 and later)
 MUPDF_CFLAGS = $(CFLAGS) /TC /I$(MUPDF_DIR)/include /I$(MUPDF_DIR)/generated \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
-	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR) \
-	/wd4703
-
-# VS 2015 only
-# 4459 : declaration of '*' hides global declaration
-# 4456 : declaration of *' hides previous local declaration
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4459 /wd4456
+	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /D "SHARE_JPEG" /I$(OPENJPEG_DIR)
 
 !if "$(CFG)"=="dbg"
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"
