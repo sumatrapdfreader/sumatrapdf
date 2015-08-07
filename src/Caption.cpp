@@ -818,6 +818,7 @@ void Initialize()
 {
     if (gFuncsLoaded)
         return;
+    gFuncsLoaded = true;
 
     HMODULE h = SafeLoadLibrary(L"UxTheme.dll");
 #define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
@@ -828,8 +829,6 @@ void Initialize()
     Load(IsThemeBackgroundPartiallyTransparent);
     Load(GetThemeColor);
 #undef Load
-
-    gFuncsLoaded = true;
 }
 
 HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
@@ -899,6 +898,7 @@ void Initialize()
 {
     if (gFuncsLoaded)
         return;
+    gFuncsLoaded = true;
 
     HMODULE h = SafeLoadLibrary(L"Dwmapi.dll");
 #define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
@@ -907,8 +907,6 @@ void Initialize()
     Load(DwmDefWindowProc);
     Load(DwmGetWindowAttribute);
 #undef Load
-
-    gFuncsLoaded = true;
 }
 
 BOOL IsCompositionEnabled()

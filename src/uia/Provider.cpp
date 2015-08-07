@@ -33,6 +33,7 @@ void Initialize()
     static bool funcsLoaded = false;
     if (funcsLoaded)
         return;
+    funcsLoaded = true;
 
     HMODULE h = SafeLoadLibrary(L"uiautomationcore.dll");
 #define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
@@ -42,8 +43,6 @@ void Initialize()
     Load(UiaRaiseStructureChangedEvent);
     Load(UiaGetReservedNotSupportedValue);
 #undef Load
-
-    funcsLoaded = true;
 }
 
 LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *provider)
