@@ -13,6 +13,13 @@ import (
 )
 
 /*
+To run:
+* install Go
+ - download and run latest installer http://golang.org/doc/install
+ - restart so that PATH changes take place
+ - set GOPATH env variable (e.g. to %USERPROFILE%\src\go)
+* go run .\tools\buildgo\main.go
+
 Some notes on the insanity that is setting up command-line build for both
 32 and 64 bit executables.
 
