@@ -94,7 +94,7 @@ public:
     // if this destination's target is an embedded file, this allows to
     // save that file efficiently (the LinkSaverUI might get passed a link
     // to an internal buffer in order to avoid unnecessary memory allocations)
-    virtual bool SaveEmbedded(LinkSaverUI &saveUI) { return false; }
+    virtual bool SaveEmbedded(LinkSaverUI &) { return false; }
 };
 
 // an user annotation on page
@@ -299,7 +299,7 @@ public:
 
     // creates a PageDestination from a name (or nullptr for invalid names)
     // caller must delete the result
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return nullptr; }
+    virtual PageDestination *GetNamedDest(const WCHAR *) { return nullptr; }
     // checks whether this document has an associated Table of Contents
     virtual bool HasTocTree() const { return false; }
     // returns the root element for the loaded document's Table of Contents

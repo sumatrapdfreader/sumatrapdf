@@ -54,7 +54,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (WM_PAINT == msg) {
         PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
+        BeginPaint(hwnd, &ps);
         EndPaint(hwnd, &ps);
         return 0;
     }

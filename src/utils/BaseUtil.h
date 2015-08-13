@@ -282,7 +282,7 @@ public:
     // Allocator methods
     virtual void *Realloc(void *mem, size_t size) override;
 
-    virtual void Free(void *mem) override {
+    virtual void Free(void *) override {
         // does nothing, we can't free individual pieces of memory
     }
 

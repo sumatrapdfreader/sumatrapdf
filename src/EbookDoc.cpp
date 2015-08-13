@@ -268,7 +268,8 @@ bool EpubDoc::Load()
     WStrList encList;
     ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
     if (encryption) {
-        HtmlElement *encRoot = parser.ParseInPlace(encryption);
+        //TODO: encRoot not used ?
+        //HtmlElement *encRoot = parser.ParseInPlace(encryption);
         HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR *uri = cr->GetAttribute("URI");

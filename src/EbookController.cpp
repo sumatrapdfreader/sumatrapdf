@@ -233,7 +233,6 @@ EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
 EbookController::~EbookController()
 {
     StopFormattingThread();
-    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
     // we must manually disconnect all events becuase evtMgr is
     // destroyed after EbookController, and EbookController destructor
     // will disconnect slots without deleting them, causing leaks

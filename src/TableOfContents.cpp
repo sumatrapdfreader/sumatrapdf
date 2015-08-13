@@ -269,7 +269,6 @@ static void TreeItemForPageNoRec(WindowInfo *win, HTREEITEM hItem, int pageNo, H
         }
 
         // find any child item closer to the specified page
-        HTREEITEM hSubItem = nullptr;
         if ((item.state & TVIS_EXPANDED))
             TreeItemForPageNoRec(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo, bestMatchItem, bestMatchPageNo);
 
