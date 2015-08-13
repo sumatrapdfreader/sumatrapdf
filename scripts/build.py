@@ -56,7 +56,7 @@ import util2
 from util import test_for_flag, run_cmd_throw, run_cmd
 from util import verify_started_in_right_directory, log
 from util import extract_sumatra_version, zip_file, get_git_linear_version
-from util import load_config, verify_path_exists
+from util import load_config, verify_path_exists, strip_empty_lines
 import trans_upload
 import trans_download
 import upload_sources
@@ -266,6 +266,12 @@ def try_find_config_files():
     try_find_scripts_file("cert.pfx")
 
 
+def append_to_file(path, s):
+    with open(path, "a") as fo:
+        fo.write(s)
+        fo.write("\n---------------------------------------------\n\n")
+
+
 def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer, build_prerelease, skip_transl_update, svn_revision, target_platform):
 
     verify_started_in_right_directory()
@@ -294,7 +300,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         # proceed
         if changed:
             print(
-                "\nNew translations have been downloaded from apptranslator.og")
+                "\nNew translations have been downloaded from apptranslator.org")
             print(
                 "Please verify and checkin src/Translations_txt.cpp and strings/translations.txt")
             sys.exit(1)
@@ -339,6 +345,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if target_platform == "X64":
         obj_dir += "64"
 
+    log_file_path = os.path.join(obj_dir, "build_log.txt")
     if not testing and not build_test_installer and not build_rel_installer:
         shutil.rmtree(obj_dir, ignore_errors=True)
         shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
@@ -359,6 +366,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     if build_test_installer:
         print_run_resp(out, err)
 
+    append_to_file(log_file_path, strip_empty_lines(out))
+
     exe = os.path.join(obj_dir, "SumatraPDF.exe")
     sign_retry(exe, cert_pwd)
     sign_retry(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"), cert_pwd)
@@ -368,6 +377,8 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
                                "Installer", config, platform, extcflags)
     if build_test_installer:
         print_run_resp(out, err)
+
+    append_to_file(log_file_path, strip_empty_lines(out))
 
     if build_test_installer or build_rel_installer:
         sys.exit(0)

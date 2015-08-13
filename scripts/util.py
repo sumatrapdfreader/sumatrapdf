@@ -112,6 +112,11 @@ def shell_arg():
     return False
 
 
+def write_to_file(path, s):
+    with open(path, "w") as fo:
+        fo.write(s)
+
+
 # will throw an exception if a command doesn't exist
 # otherwise returns a tuple:
 # (stdout, stderr, errcode)
@@ -136,9 +141,9 @@ def run_cmd_throw(*args):
     if 0 != errcode:
         print("Failed with error code %d" % errcode)
         if len(res[0]) > 0:
-            print("Stdout:\n%s" % res[0])
+            write_to_file("run_cmd_throw_stdout.txt", strip_empty_lines(res[0]))
         if len(res[1]) > 0:
-            print("Stderr:\n%s" % res[1])
+            write_to_file("run_cmd_throw_stderr.txt", strip_empty_lines(res[1]))
         raise Exception("'%s' failed with error code %d" % (cmd, errcode))
     return (res[0], res[1])
 
