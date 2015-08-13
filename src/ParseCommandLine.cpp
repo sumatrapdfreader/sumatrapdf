@@ -212,7 +212,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            hwndPluginParent = (HWND)_wtol(argList.At(++n));
+            hwndPluginParent = (HWND)(INT_PTR)_wtol(argList.At(++n));
         }
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]

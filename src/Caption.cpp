@@ -271,8 +271,8 @@ void CreateCaption(WindowInfo *win)
 
     win->caption = new CaptionInfo(win->hwndCaption);
 
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        HWND btn = CreateWindow(L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
+    for (UINT_PTR i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+        HWND btn = CreateWindowExW(0, L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
             0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(nullptr), nullptr);
 
         if (!DefWndProcButton)

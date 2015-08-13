@@ -13,7 +13,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
         CREATESTRUCT *cs = (CREATESTRUCT *)lp;
         Win32Window *w = (Win32Window *)cs->lpCreateParams;
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)w);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 

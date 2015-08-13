@@ -144,8 +144,8 @@ static int InternString(const char *s)
 static void GetInternedStringsReport(str::Str<char>& resOut)
 {
     resOut.Append("Strings:\n");
-    int n = g_strInterner.StringsCount();
-    for (int i = 0; i < n; i++) {
+    size_t n = g_strInterner.StringsCount();
+    for (size_t i = 0; i < n; i++) {
         resOut.AppendFmt("%d|%s\n", i, g_strInterner.GetByIndex(i));
     }
     resOut.Append("\n");

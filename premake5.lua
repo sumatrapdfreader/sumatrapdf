@@ -19,7 +19,10 @@ TODO:
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
 * mutool, mudraw
 * a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
+* add /analyze configuration
 * compare compilation flags nmake vs. us from compilation logs
+* fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
+  (not dependencies)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -42,19 +45,14 @@ solution "SumatraPDF"
   filter "platforms:x64"
      architecture "x86_64"
      toolset "v140"
-     -- TODO: 64bit has more warnigs. Fix warnings in Sumatra code,
-     -- selectively disable for other projects
-     disablewarnings {
-       "4311",
-       "4312",
-       "4302",
-       "4267",
-       "4244"
-     }
 
   filter {}
 
+  -- 4800 - forcing value to bool (performance warning)
+  disablewarnings { "4800" }
+
   location "this_is_invlid_location"
+
   filter "action:vs2015"
     location "vs2015"
   filter {}
@@ -92,8 +90,7 @@ solution "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
 
-    -- TODO: only for msvc
-    disablewarnings { "4800", "4091", "4577" }
+    disablewarnings { "4091", "4577" }
 
     efi_files()
     includedirs { "src/utils" }
@@ -103,7 +100,6 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
 
-    -- TODO: only for msvc
     disablewarnings { "4996" }
 
     zlib_files()
@@ -117,9 +113,13 @@ solution "SumatraPDF"
     defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0" }
     includedirs { "ext/libjpeg-turbo" }
 
-    -- TODO: only for msvc
+    -- 4244 - 64bit, initializing with possible loss of data
+    -- 4267 - 64bit, conversion with possible loss of data
+    -- 4302 - 64bit, type caset truncation
+    -- 4311 - 64bit, type cast pointer truncation
+    -- 4312 - 64bit, conversion to X of greater size
     -- 4530 - exception mismatch
-    disablewarnings { "4530" }
+    disablewarnings { "4244", "4267", "4302", "4311", "4312", "4530", }
     libdjvu_files()
 
   project "unarr"
@@ -128,20 +128,20 @@ solution "SumatraPDF"
 
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    -- TODO: only for msvc
-    disablewarnings { "4996" }
+
+    -- 4267 - 64bit, conversion with possible lost of data
+    -- 4244 - 64bit, conversion with possible loss of data
+    disablewarnings { "4996", "4267", "4244" }
 
     unarr_files()
 
   project "jbig2dec"
     kind "StaticLib"
     language "C"
-    --targetdir "%{cfg.buildcfg}"
 
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     includedirs { "ext/jbig2dec" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018" }
+    disablewarnings { "4996", "4018", "4267", "4244" }
 
     jbig2dec_files()
 
@@ -150,7 +150,6 @@ solution "SumatraPDF"
     language "C"
 
     includedirs { "ext/openjpeg" }
-    -- TODO: only for msvc
     disablewarnings { "4996", "4018" }
 
     openjpeg_files()
@@ -160,7 +159,6 @@ solution "SumatraPDF"
     language "C"
 
     includedirs { "ext/libwebp" }
-    -- TODO: only for msvc
     disablewarnings { "4996", "4018" }
 
     libwebp_files()
@@ -171,7 +169,7 @@ solution "SumatraPDF"
 
     includedirs { "ext/libjpeg-turbo" }
     includedirs { "ext/libjpeg-turbo/simd" }
-    -- TODO: only for msvc
+
     disablewarnings { "4996", "4018" }
 
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
@@ -194,7 +192,6 @@ solution "SumatraPDF"
       }
     filter {}
 
-
     libjpeg_turbo_files()
 
   project "freetype"
@@ -205,7 +202,7 @@ solution "SumatraPDF"
     includedirs { "ext/freetype2/include" }
     defines { "_HAS_EXCEPTIONS=0" }
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-    -- TODO: only for msvc
+
     disablewarnings { "4996", "4018" }
 
     freetype_files()
@@ -213,56 +210,53 @@ solution "SumatraPDF"
   project "sumatra"
     kind "StaticLib"
     language "C++"
-    --targetdir "%{cfg.buildcfg}"
 
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838" }
+
+    disablewarnings { "4018", "4302", "4311", "4838", "4996" }
 
     sumatra_files()
 
   project "utils"
     kind "StaticLib"
     language "C++"
-    --targetdir "%{cfg.buildcfg}"
 
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838" }
+
+    disablewarnings { "4018", "4838", "4996" }
+    -- TODO: DbgHelpDyn.cpp 64bit warnings only, fix the code
+    disablewarnings { "4302", "4311", "4312" }
 
     utils_files()
 
   project "mui"
     kind "StaticLib"
     language "C++"
-    --targetdir "%{cfg.buildcfg}"
 
     includedirs { "src/utils", "src/wingui", "src/mui" }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838" }
+
+    disablewarnings { "4996", "4018", "4838" }
 
     mui_files()
 
   project "engines"
     kind "StaticLib"
     language "C++"
-    --targetdir "%{cfg.buildcfg}"
 
     includedirs { "src/utils", "src/wingui", "src/mui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838", "4244" }
+    disablewarnings { "4018", "4244", "4267", "4838", "4996",  }
 
     engines_files()
 
@@ -295,8 +289,9 @@ solution "SumatraPDF"
     filter {}
 
     defines { "NOCJKFONT", "SHARE_JPEG" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838", "4244" }
+    -- 4244 - 64bit, initializing with possible loss of data
+    -- 4267 - 64bit, conversion with possible loss of data
+    disablewarnings {  "4018", "4244", "4267", "4838", "4996", }
     mupdf_files()
 
     links {
@@ -310,7 +305,6 @@ solution "SumatraPDF"
   project "SumatraPDF"
     kind "WindowedApp"
     language "C++"
-    --targetdir "%{cfg.buildcfg}"
 
     flags {
       "WinMain",
@@ -318,8 +312,7 @@ solution "SumatraPDF"
     }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838", "4244" }
+    disablewarnings { "4018", "4244", "4267", "4838", "4996" }
 
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
@@ -358,8 +351,7 @@ solution "SumatraPDF"
 
     implibname "libmupdf"
 
-    -- TODO: not sure if it works at all - I don't see it in generated
-    -- Is thre a better way to do it?
+    -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
 
@@ -390,8 +382,7 @@ solution "SumatraPDF"
     }
 
     defines { "_HAS_EXCEPTIONS=0" }
-    -- TODO: only for msvc
-    disablewarnings { "4996", "4018", "4800", "4838", "4244" }
+    disablewarnings { "4018", "4244", "4264", "4838", "4996", }
 
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
@@ -431,8 +422,6 @@ solution "SumatraPDF"
       "src/tools/MakeLzSA.cpp"
     }
 
-    disablewarnings { "4800" }
-
     includedirs {
       "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr"
     }
@@ -455,7 +444,7 @@ solution "SumatraPDF"
     kind "SharedLib"
     language "C++"
 
-    disablewarnings { "4800", "4838" }
+    disablewarnings { "4838" }
     defines { "_HAS_EXCEPTIONS=0" }
 
     -- TODO: probably excessive
@@ -488,7 +477,7 @@ solution "SumatraPDF"
     kind "SharedLib"
     language "C++"
 
-    disablewarnings { "4800", "4838" }
+    disablewarnings { "4838" }
     defines { "_HAS_EXCEPTIONS=0" }
 
     -- TODO: probably excessive
