@@ -10,8 +10,7 @@
 -- 4. assembly for libjpeg-turbo
 -- 5. a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
 -- 6. Installer
--- 7. I get "6>cl : Command line warning D9014: invalid value '2664' for '/wd'; assuming '5999'
--- 8. fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build
+-- 8. fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
 
 dofile("premake5.files.lua")
 
@@ -56,7 +55,7 @@ solution "SumatraPDF"
     "NoExceptions",
     "NoRTTI",
     --"FatalWarnings", TODO: when ready
-    --"MultiProcessorCompile",
+    "MultiProcessorCompile",
     --"UndefinedIndentifiers", TODO: not yet in alpha4 ?
     -- "Unicode", TODO: breaks libdjuv?
   }
@@ -106,7 +105,7 @@ solution "SumatraPDF"
 
     -- TODO: only for msvc
     -- 4530 - exception mismatch
-    disablewarnings { "2664", "4530" }
+    disablewarnings { "4530" }
     libdjvu_files()
 
   project "unarr"
