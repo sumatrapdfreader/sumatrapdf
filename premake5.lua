@@ -19,7 +19,6 @@ TODO:
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
 * mutool, mudraw
 * a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
-* add /analyze configuration
 * compare compilation flags nmake vs. us from compilation logs
 * fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
   (not dependencies)
@@ -34,24 +33,28 @@ dofile("premake5.files.lua")
 -- TODO: rename solution to workspace. workspace is the documented name
 -- but latest alpha4 doesn't recognize it yet
 solution "SumatraPDF"
-  configurations { "Debug", "Release" }
+  configurations { "Debug", "Release", "ReleasePrefast" }
   platforms { "x32", "x64" }
   startproject "SumatraPDF"
 
   filter "platforms:x32"
      architecture "x86"
      toolset "v140_xp"
+     filter "action:vs2013"
+      toolset "v120_xp"
+  filter {}
 
   filter "platforms:x64"
      architecture "x86_64"
      toolset "v140"
-
+     filter "action:vs2013"
+      toolset "v120"
   filter {}
 
   -- 4800 - forcing value to bool (performance warning)
   disablewarnings { "4800" }
 
-  location "this_is_invlid_location"
+  location "this_is_invalid_location"
 
   filter "action:vs2015"
     location "vs2015"
@@ -63,11 +66,12 @@ solution "SumatraPDF"
 
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
-    "Symbols",
-    "NoExceptions",
-    "NoRTTI",
     --"FatalWarnings", TODO: when ready
     "MultiProcessorCompile",
+    "NoExceptions",
+    "NoRTTI",
+    "StaticRuntime",
+    "Symbols",
     --"UndefinedIndentifiers", TODO: not yet in alpha4 ?
     -- "Unicode", TODO: breaks libdjuv?
   }
@@ -77,13 +81,22 @@ solution "SumatraPDF"
   filter "configurations:Debug"
     defines { "DEBUG" }
 
-  filter "configurations:Release"
+  filter "configurations:Release*"
     defines { "NDEBUG" }
     flags {
       "LinkTimeOptimization",
     }
     optimize "On"
 
+    filter "configurations:ReleasePrefast"
+      toolset "v140" -- xp toolset doesn't have prefast
+      -- TODO: somehow /analyze- is default which creates warning about
+      -- over-ride from cl.exe. Don't know how to disable the warning
+      buildoptions { "/analyze" }
+      -- 28125 - function X must be called in try/except (InitializeCriticalSection)
+      -- 28252 - Inconsistent annotaion
+      -- 28253 - Inconsistent annotaion
+      disablewarnings { "28125", "28252", "28253" }
   filter {}
 
   project "efi"
@@ -307,8 +320,8 @@ solution "SumatraPDF"
     language "C++"
 
     flags {
-      "WinMain",
       "NoManifest",
+      "WinMain",
     }
 
     defines { "_HAS_EXCEPTIONS=0" }
@@ -377,8 +390,8 @@ solution "SumatraPDF"
     language "C++"
 
     flags {
-      "WinMain",
       "NoManifest",
+      "WinMain",
     }
 
     defines { "_HAS_EXCEPTIONS=0" }
@@ -422,15 +435,9 @@ solution "SumatraPDF"
       "src/tools/MakeLzSA.cpp"
     }
 
-    includedirs {
-      "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr"
-    }
+    includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
 
-    links {
-      "utils",
-      "unarr",
-      "zlib",
-    }
+    links { "unarr", "utils", "zlib", }
 
     -- TODO: probably excessive
     links {
