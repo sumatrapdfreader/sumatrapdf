@@ -228,44 +228,70 @@ function libwebp_files()
 end
 
 function libjpeg_turbo_files()
-  files {
-    "ext/libjpeg-turbo/jcomapi.c",
-    "ext/libjpeg-turbo/jdapimin.c",
-    "ext/libjpeg-turbo/jdapistd.c",
-    "ext/libjpeg-turbo/jdatadst.c",
-    "ext/libjpeg-turbo/jdatasrc.c",
-    "ext/libjpeg-turbo/jdcoefct.c",
-    "ext/libjpeg-turbo/jdcolor.c",
-    "ext/libjpeg-turbo/jddctmgr.c",
-    "ext/libjpeg-turbo/jdhuff.c",
-    "ext/libjpeg-turbo/jdinput.c",
-    "ext/libjpeg-turbo/jdmainct.c",
-    "ext/libjpeg-turbo/jdmarker.c",
-    "ext/libjpeg-turbo/jdmaster.c",
-    "ext/libjpeg-turbo/jdmerge.c",
-    "ext/libjpeg-turbo/jdpostct.c",
-    "ext/libjpeg-turbo/jdsample.c",
-    "ext/libjpeg-turbo/jdtrans.c",
-    "ext/libjpeg-turbo/jerror.c",
-    "ext/libjpeg-turbo/jfdctflt.c",
-    "ext/libjpeg-turbo/jfdctint.c",
-    "ext/libjpeg-turbo/jidctflt.c",
-    "ext/libjpeg-turbo/jidctfst.c",
-    "ext/libjpeg-turbo/jidctint.c",
-    "ext/libjpeg-turbo/jquant1.c",
-    "ext/libjpeg-turbo/jquant2.c",
-    "ext/libjpeg-turbo/jutils.c",
-    "ext/libjpeg-turbo/jmemmgr.c",
-    "ext/libjpeg-turbo/jmemnobs.c",
-    "ext/libjpeg-turbo/jaricom.c",
-    "ext/libjpeg-turbo/jdarith.c",
-    "ext/libjpeg-turbo/jfdctfst.c",
-    "ext/libjpeg-turbo/jdphuff.c",
-    "ext/libjpeg-turbo/jidctred.c",
+  files_in_dir("ext/libjpeg-turbo", {
+    "jcomapi.c",
+    "jdapimin.c",
+    "jdapistd.c",
+    "jdatadst.c",
+    "jdatasrc.c",
+    "jdcoefct.c",
+    "jdcolor.c",
+    "jddctmgr.c",
+    "jdhuff.c",
+    "jdinput.c",
+    "jdmainct.c",
+    "jdmarker.c",
+    "jdmaster.c",
+    "jdmerge.c",
+    "jdpostct.c",
+    "jdsample.c",
+    "jdtrans.c",
+    "jerror.c",
+    "jfdctflt.c",
+    "jfdctint.c",
+    "jidctflt.c",
+    "jidctfst.c",
+    "jidctint.c",
+    "jquant1.c",
+    "jquant2.c",
+    "jutils.c",
+    "jmemmgr.c",
+    "jmemnobs.c",
+    "jaricom.c",
+    "jdarith.c",
+    "jfdctfst.c",
+    "jdphuff.c",
+    "jidctred.c",
+  })
 
-    -- TODO: make it asm code and jsimd_i386.c
-    "ext/libjpeg-turbo/jsimd_none.c",
-  }
+  --to build non-assembly version, use this:
+  --files {"ext/libjpeg-turbo/jsimd_none.c"}
+
+  filter {'platforms:x32'}
+    files_in_dir("ext/libjpeg-turbo/simd", {
+      "jsimdcpu.asm", "jccolmmx.asm", "jcgrammx.asm", "jdcolmmx.asm",
+    	"jcsammmx.asm", "jdsammmx.asm", "jdmermmx.asm", "jcqntmmx.asm",
+    	"jfmmxfst.asm", "jfmmxint.asm", "jimmxred.asm", "jimmxint.asm",
+    	"jimmxfst.asm", "jcqnt3dn.asm", "jf3dnflt.asm", "ji3dnflt.asm",
+    	"jcqntsse.asm", "jfsseflt.asm", "jisseflt.asm", "jccolss2.asm",
+    	"jcgrass2.asm", "jdcolss2.asm", "jcsamss2.asm", "jdsamss2.asm",
+    	"jdmerss2.asm", "jcqnts2i.asm", "jfss2fst.asm", "jfss2int.asm",
+    	"jiss2red.asm", "jiss2int.asm", "jiss2fst.asm", "jcqnts2f.asm",
+    	"jiss2flt.asm",
+    })
+    files {"ext/libjpeg-turbo/simd/jsimd_i386.c"}
+
+  filter {'platforms:x64'}
+    files_in_dir("ext/libjpeg-turbo/simd", {
+      "jfsseflt-64.asm", "jccolss2-64.asm", "jdcolss2-64.asm", "jcgrass2-64.asm",
+    	"jcsamss2-64.asm", "jdsamss2-64.asm", "jdmerss2-64.asm", "jcqnts2i-64.asm",
+    	"jfss2fst-64.asm", "jfss2int-64.asm", "jiss2red-64.asm", "jiss2int-64.asm",
+    	"jiss2fst-64.asm", "jcqnts2f-64.asm", "jiss2flt-64.asm",
+    })
+    files {"ext/libjpeg-turbo/simd/jsimd_x86_64.c"}
+
+  filter {}
+
 end
 
 function freetype_files()

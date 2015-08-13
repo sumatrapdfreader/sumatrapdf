@@ -1,16 +1,30 @@
--- to generate Visual Studio files in vs-premake directory, run:
--- premake5 vs2013 or premake5 vs2015
--- premake4 is obsolete and doesn't support VS 2013+
--- I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
--- TODO:
--- 1. the final output (SumatraPDF.exe etc.) all end up in the same location
---    Should go to different directories.
--- 2. generate mupdf/generated or check them in
--- 3. libmupdf doesn't have the right toolset set
--- 4. assembly for libjpeg-turbo
--- 5. a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
--- 6. Installer
--- 8. fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
+--[[
+To generate Visual Studio files in vs-premake directory, run:
+
+premake5 vs2013
+ or
+premake5 vs2015
+
+Project files are generated in vs2013 and vs2015 folders.
+
+premake4 is obsolete and doesn't support VS 2013+
+
+I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
+
+TODO:
+* the final output (SumatraPDF.exe etc.) all end up in the same location
+  Should go to different directories.
+* generate mupdf/generated or check them in
+* Installer
+* fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
+* mutool, mudraw
+* a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
+* compare compilation flags nmake vs. us from compilation logs
+
+Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
+"foo/bar/" and not just "foo/bar".
+
+--]]
 
 dofile("premake5.files.lua")
 
@@ -160,6 +174,27 @@ solution "SumatraPDF"
     -- TODO: only for msvc
     disablewarnings { "4996", "4018" }
 
+    -- nasm.exe -I .\ext\libjpeg-turbo\simd\
+    -- -I .\ext\libjpeg-turbo\win\ -f win32
+    -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
+    -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
+    filter {'files:**.asm', 'platforms:x32'}
+       buildmessage 'Assembling %{file.relpath}'
+       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+       buildcommands {
+          '..\\bin\\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+       }
+    filter {}
+
+    filter {'files:**.asm', 'platforms:x64'}
+      buildmessage 'Assembling %{file.relpath}'
+      buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
+      buildcommands {
+        '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
+      }
+    filter {}
+
+
     libjpeg_turbo_files()
 
   project "freetype"
@@ -244,10 +279,7 @@ solution "SumatraPDF"
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
     filter {'files:**.asm', 'platforms:x32'}
-       -- A message to display while this build step is running (optional)
        buildmessage 'Compiling %{file.relpath}'
-
-       -- Note: must be -I ../mupdf/, not just -I ../mupdf
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
           '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
@@ -255,11 +287,7 @@ solution "SumatraPDF"
     filter {}
 
     filter {'files:**.asm', 'platforms:x64'}
-      -- A message to display while this build step is running (optional)
       buildmessage 'Compiling %{file.relpath}'
-
-      -- Note: must be -I ../mupdf/, not just -I ../mupdf
-
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
         '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
