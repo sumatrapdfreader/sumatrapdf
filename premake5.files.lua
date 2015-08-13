@@ -1,6 +1,7 @@
 function files_in_dir(dir, files_in_dir)
   local paths = {}
   for _, file in ipairs(files_in_dir) do
+    -- TODO: don't add "/" if dir ends with it of file starts with it
     local path = dir .. "/" .. file
     table.insert(paths, path)
   end
@@ -628,6 +629,52 @@ function mupdf_files()
   files {
     "mupdf/source/pdf/js/pdf-js-none.c",
   }
+end
+
+function mudoc_files()
+  files_in_dir("mupdf/source", {
+    "cbz/mucbz.c",
+    "img/muimage.c",
+    "tiff/mutiff.c",
+    "fitz/document-all.c",
+    "fitz/document-no-run.c",
+    "fitz/svg-device.c",
+    "fitz/output-pcl.c",
+    "fitz/output-pwg.c",
+    "fitz/stream-prog.c",
+    "fitz/test-device.c",
+  })
+end
+
+function mutools_files()
+  files_in_dir("mupdf/source/tools", {
+      "mudraw.c",
+      "mutool.c",
+      "pdfclean.c",
+      "pdfextract.c",
+      "pdfinfo.c",
+      "pdfposter.c",
+      "pdfshow.c",
+  })
+end
+
+function mutool_files()
+  mudoc_files() -- TODO: could turn into a .lib
+  files_in_dir("mupdf/source/tools", {
+      "mutool.c",
+      "pdfshow.c",
+      "pdfclean.c",
+      "pdfinfo.c",
+      "pdfextract.c",
+      "pdfposter.c",
+  })
+end
+
+function mudraw_files()
+  mudoc_files()
+  files_in_dir("mupdf/source/tools", {
+      "mudraw.c",
+  })
 end
 
 function sumatrapdf_files()
