@@ -6,6 +6,8 @@ rel/
 rel64/
 dbg/
 dbg64/
+rel-mac/
+dbg-mac/
 builds/
 mupdf/generated/
 gyp/*.sln
@@ -21,3 +23,6 @@ gyp/Debug/
 vs/obj/
 *pyc
 *.vcxproj.user
+bin/premake5.exe
+vs2015/
+vs2013/
