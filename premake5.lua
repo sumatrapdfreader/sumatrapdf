@@ -38,11 +38,13 @@ Reference for warnings:
  4131 - uses old-style declarator
  4189 - local variable is initialized but not referenced
  4204 - non-standard extension: non-constant aggregate initializer
+ 4206 - non-standard extension: translation unit is empty
  4244 - 64bit, conversion with possible loss of data
  4267 - 64bit, conversion with possible loss of data
  4302 - 64bit, type caset truncation
  4311 - 64bit, type cast pointer truncation
  4312 - 64bit, conversion to X of greater size
+ 4324 - 64bit, structure was padded
  4458 - declaraion of X hides class member
  4530 - exception mismatch
  4702 - unreachable code
@@ -79,7 +81,7 @@ solution "SumatraPDF"
       toolset "v120"
   filter {}
 
-  disablewarnings { "4100", "4127", "4189", "4458", "4800" }
+  disablewarnings { "4100", "4127", "4189", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -375,6 +377,8 @@ solution "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
+
+    disablewarnings { "4206" }
 
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
