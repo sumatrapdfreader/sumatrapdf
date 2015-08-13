@@ -12,8 +12,6 @@ premake4 is obsolete and doesn't support VS 2013+
 I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
 
 TODO:
-* the final output (SumatraPDF.exe etc.) all end up in the same location
-  Should go to different directories.
 * generate mupdf/generated or check them in
 * Installer
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
@@ -63,6 +61,22 @@ solution "SumatraPDF"
   filter "action:vs2013"
     location "vs2013"
   filter {}
+
+  filter {"platforms:x32", "configurations:Release"}
+    targetdir "rel"
+  filter {"platforms:x32", "configurations:ReleasePrefast"}
+    targetdir "relPrefast"
+  filter {"platforms:x32", "configurations:Debug"}
+    targetdir "dbg"
+
+  filter {"platforms:x64", "configurations:Release"}
+    targetdir "rel64"
+  filter {"platforms:x64", "configurations:ReleasePrefast"}
+    targetdir "relPrefast64"
+  filter {"platforms:x64", "configurations:Debug"}
+    targetdir "dbg64"
+  filter {}
+  objdir "%{cfg.targetdir}/obj"
 
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
