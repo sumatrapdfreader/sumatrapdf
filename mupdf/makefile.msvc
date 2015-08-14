@@ -99,8 +99,7 @@ CFLAGSB = $(CFLAGSB) /W4
 # and various logging functions:
 # 4100 : unreferenced param
 # 4127 : conditional expression is constant
-# 4189 : variable initialized but not referenced
-CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
+CFLAGSB = $(CFLAGSB) /wd4100 /wd4127
 # warnings that might not make sense to fix:
 # 4428 : universal-character-name encountered in source
 #        (prevents using "\u202A" etc.)

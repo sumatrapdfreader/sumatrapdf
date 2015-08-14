@@ -15,7 +15,7 @@ TODO:
 Code fixes:
 * fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
   (not dependencies)
-* fix all 4100 in our code
+* fix all 4100 in our code (by using UNREFERENCED_PARAMETER, not by deleting parameter names from interface definitions)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -154,10 +154,10 @@ solution "SumatraPDF"
 
   project "unarr"
     kind "StaticLib"
-    language "C++"
+    language "C"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    disablewarnings { "4100", "4127", "4244", "4267", "4456", "4457", "4996" }
+    disablewarnings { "4100", "4996" }
     unarr_files()
 
 
@@ -228,6 +228,7 @@ solution "SumatraPDF"
     language "C++"
     includedirs { "src/utils", "src/wingui", "src/mui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
+    -- TODO: 4189 and 4996 only occur in chmlib which should be compiled separately
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295" }
     disablewarnings { "4701", "4706", "4838", "4996"  }
     engines_files()
@@ -289,7 +290,7 @@ solution "SumatraPDF"
     language "C++"
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
-    disablewarnings { "4018", "4838", "4996" }
+    disablewarnings { "4018", "4838" }
     -- TODO: DbgHelpDyn.cpp 64bit warnings only, fix the code
     disablewarnings { "4302", "4311", "4312" }
     utils_files()
@@ -299,7 +300,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C++"
     includedirs { "src/utils", "src/wingui", "src/mui" }
-    disablewarnings { "4996", "4018", "4838" }
+    disablewarnings { "4018", "4838" }
     mui_files()
 
 
@@ -309,7 +310,7 @@ solution "SumatraPDF"
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
-    disablewarnings { "4018", "4302", "4311", "4838", "4996" }
+    disablewarnings { "4018", "4302", "4311", "4838" }
     sumatra_files()
 
 
@@ -562,7 +563,7 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838", "4996" }
+    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838" }
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
@@ -585,7 +586,7 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
@@ -606,7 +607,7 @@ solution "SumatraPDF"
     language "C++"
     defines { "BUILD_UNINSTALLER" }
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     files {
       "src/CrashHandler.*",
       "src/Translations.*",
@@ -653,7 +654,7 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     files {
       "src/CrashHandler.*",
       "src/Translations.*",
