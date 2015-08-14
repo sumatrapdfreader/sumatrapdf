@@ -31,9 +31,13 @@ namespace dbglog {
 void LogF(const char *fmt, ...);
 void LogF(const WCHAR *fmt, ...);
 
+void LogFV(const char *fmt, va_list args);
+void LogFV(const WCHAR *fmt, va_list args);
+
 // call this in the event of an exception to add
 // more information to the crash log
 void CrashLogF(const char *fmt, ...);
+
 // returns a copy of the data recorded with CrashLogF
 const char *GetCrashLog();
 
@@ -41,11 +45,34 @@ const char *GetCrashLog();
 
 // short names are important for this use case
 #if NOLOG == 1
-#define lf(fmt, ...) NoOp()
+inline void lf(const char *, ...) {
+    NoOp();
+}
+inline void lf(const WCHAR *, ...) {
+    NoOp();
+}
 #else
-#define lf(fmt, ...) dbglog::LogF(fmt, __VA_ARGS__)
+inline void lf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    dbglog::LogFV(fmt, args);
+    va_end(args);
+}
+
+inline void lf(const WCHAR *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    dbglog::LogFV(fmt, args);
+    va_end(args);
+}
 #endif
+
 // use to indicate that the log messages are meant to be more
 // permanent (mostly for rarely executed code paths so that
 // the log isn't unnecessarily spammed)
-#define plogf(fmt, ...) lf(fmt, __VA_ARGS__)
+inline void plogf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    dbglog::LogFV(fmt, args);
+    va_end(args);
+}

@@ -6,29 +6,39 @@
 
 namespace dbglog {
 
-// TODO: as an optimization (to avoid allocations) and to prevent potential problems
-// when formatting, when there are no args just output fmt
+  // TODO: as an optimization (to avoid allocations) and to prevent potential problems
+  // when formatting, when there are no args just output fmt
+void LogFV(const char *fmt, va_list args)
+{
+  char buf[512] = { 0 };
+  str::BufFmtV(buf, dimof(buf), fmt, args);
+  str::BufAppend(buf, dimof(buf), "\n");
+  OutputDebugStringA(buf);
+}
+
 void LogF(const char *fmt, ...)
 {
-    char buf[512] = { 0 };
     va_list args;
     va_start(args, fmt);
-    str::BufFmtV(buf, dimof(buf), fmt, args);
-    str::BufAppend(buf, dimof(buf), "\n");
-    OutputDebugStringA(buf);
+    LogFV(fmt, args);
     va_end(args);
 }
 
 // TODO: as an optimization (to avoid allocations) and to prevent potential problems
 // when formatting, when there are no args just output fmt
-void LogF(const WCHAR *fmt, ...)
+void LogFV(const WCHAR *fmt, va_list args)
 {
     WCHAR buf[256] = { 0 };
-    va_list args;
-    va_start(args, fmt);
     str::BufFmtV(buf, dimof(buf), fmt, args);
     str::BufAppend(buf, dimof(buf), L"\n");
     OutputDebugStringW(buf);
+}
+
+void LogF(const WCHAR *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    LogFV(fmt, args);
     va_end(args);
 }
 

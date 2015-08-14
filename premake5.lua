@@ -24,8 +24,6 @@ Code fixes:
   (not dependencies)
 * figure out why CrashIf() in Debug gives us 4127
 * fix all 4100 in our code
-* make plogf() in DebugLog.h an inline function to remove the last 4189 from
- "sumatra" project
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -319,7 +317,7 @@ solution "SumatraPDF"
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
-    disablewarnings { "4018", "4189", "4302", "4311", "4838", "4996" }
+    disablewarnings { "4018", "4302", "4311", "4838", "4996" }
     sumatra_files()
 
 
@@ -372,10 +370,10 @@ solution "SumatraPDF"
     links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
     -- TODO: surely too much
     links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
-      "winspool.lib", "gdiplus.lib", "ole32.lib",
-      "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+      -- "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
+      -- "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
+      -- "winspool.lib", "gdiplus.lib", "ole32.lib",
+      -- "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
 

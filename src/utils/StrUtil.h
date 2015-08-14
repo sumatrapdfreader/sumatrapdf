@@ -53,7 +53,7 @@ bool EndsWith(const WCHAR *txt, const WCHAR *end);
 bool EndsWithI(const char *txt, const char *end);
 bool EndsWithI(const WCHAR *txt, const WCHAR *end);
 
-static inline bool EqNIx(const char *s, size_t len, const char *s2) {
+inline bool EqNIx(const char *s, size_t len, const char *s2) {
     return str::Len(s2) == len && str::StartsWithI(s, s2);
 }
 
