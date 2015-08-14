@@ -368,12 +368,9 @@ solution "SumatraPDF"
       "src/mui/TextRender.*",
     }
     links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
-    -- TODO: surely too much
     links {
-      -- "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      -- "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
-      -- "winspool.lib", "gdiplus.lib", "ole32.lib",
-      -- "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib",
+      "version.lib", "windowscodecs.lib"
     }
 
 
@@ -580,7 +577,6 @@ solution "SumatraPDF"
       "ext/libdjvu", "ext/CHMLib/src"
     }
     sumatrapdf_files()
-    -- TODO: is this necessary? This is also part of sumatra
     files {
       "src/SumatraPDF.rc",
       "docs/releasenotes.txt",
@@ -604,13 +600,12 @@ solution "SumatraPDF"
       "ext/libdjvu", "ext/CHMLib/src"
     }
     sumatrapdf_files()
-    -- TODO: is this necessary? This is also part of sumatra
     files { "src/SumatraPDF.rc" }
     files { "src/MuPDF_Exports.cpp" }
     links { "sumatra", "libmupdf", "utils", "mui", "engines", "unarr", "libwebp" }
     links {
       "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-       "version.lib", "windowscodecs.lib", "wininet.lib"
+      "version.lib", "windowscodecs.lib", "wininet.lib"
     }
 
 
@@ -656,10 +651,11 @@ solution "SumatraPDF"
   project "Installer"
     kind "WindowedApp"
     language "C++"
-    dependson {
-      "MakeLZSA", "SumatraPDF-no-MUPDF", "libmupdf", "PdfFilter", "PdfPreview",
-      "PdfFilter", "Uninstaller"
-    }
+    --TODO: adding "dependson" makes it fail during linking because it can't
+    --find symbols that are in "utils". Those projects end up in .vcxproj
+    --file the same as those referenced from "links" (as <ProjectReference />).
+    --No idea why this causes "utils" to vanish
+    --dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
     flags { "NoManifest", "WinMain" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
     files {
