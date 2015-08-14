@@ -76,3 +76,10 @@ inline void plogf(const char *fmt, ...) {
     dbglog::LogFV(fmt, args);
     va_end(args);
 }
+
+inline void plogf(const WCHAR *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    dbglog::LogFV(fmt, args);
+    va_end(args);
+}
