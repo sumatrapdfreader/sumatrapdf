@@ -26,3 +26,9 @@ vs/obj/
 bin/premake5.exe
 vs2015/
 vs2013/
+rel/
+rel64/
+relPrefast/
+relPrefast64/
+dbg/
+dbg64/
