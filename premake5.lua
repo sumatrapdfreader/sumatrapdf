@@ -24,8 +24,8 @@ Code fixes:
   (not dependencies)
 * figure out why CrashIf() in Debug gives us 4127
 * fix all 4100 in our code
-* figure out how to prevent 4189 in conditional (e.g. debug logging) code
-  make CrashIf() an inline function?{}
+* make plogf() in DebugLog.h an inline function to remove the last 4189 from
+ "sumatra" project
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -80,7 +80,7 @@ solution "SumatraPDF"
       toolset "v120"
   filter {}
 
-  disablewarnings { "4100", "4127", "4189", "4324", "4458", "4800" }
+  disablewarnings { "4100", "4127", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"

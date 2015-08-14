@@ -558,10 +558,10 @@ static void UnregisterInternetProtocolFactory()
         return;
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    assert(!FAILED(hr));
+    CrashIf(FAILED(hr));
     internetSession->UnregisterNameSpace(gInternetProtocolFactory, HW_PROTO_PREFIX);
     ULONG refCount = gInternetProtocolFactory->Release();
-    assert(0 == refCount);
+    CrashIf(refCount != 0);
     gInternetProtocolFactory = nullptr;
 }
 
@@ -1543,7 +1543,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     int protoWindowId;
     ScopedMem<WCHAR> urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    assert(!ok || protoWindowId == windowId);
+    AssertCrash(!ok || protoWindowId == windowId);
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     return shouldNavigate;
 }
@@ -1582,7 +1582,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
     int protoWindowId;
     ScopedMem<WCHAR> urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
-    assert(!ok || protoWindowId == windowId);
+    AssertCrash(!ok || protoWindowId == windowId);
 
     currentURL.Set(urlReal.StealData());
     if (htmlWinCb)

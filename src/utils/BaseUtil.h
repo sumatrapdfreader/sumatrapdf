@@ -127,28 +127,40 @@ inline void CrashMe()
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 
-#define CrashAlwaysIf(cond) \
-    do { if (cond) \
-        CrashMe(); \
-    __analysis_assume(!(cond)); } while (0)
+inline void CrashAlwaysIf(bool cond) {
+    if (cond) {
+        CrashMe();
+        __analysis_assume(!(cond));
+    }
+}
 
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define CrashIf(cond) CrashAlwaysIf(cond)
+inline void CrashIf(bool cond) {
+    CrashAlwaysIf(cond);
+}
 #else
-#define CrashIf(cond) __analysis_assume(!(cond))
+inline void CrashIf(bool cond) {
+    __analysis_assume(!(cond));
+}
 #endif
 
 // Sometimes we want to assert only in debug build (not in pre-release)
 #if defined(DEBUG)
-#define CrashIfDebugOnly(cond) CrashAlwaysIf(cond)
+inline void CrashIfDebugOnly(bool cond) {
+    CrashAlwaysIf(cond);
+}
 #else
-#define CrashIfDebugOnly(cond) __analysis_assume(!(cond))
+inline void CrashIfDebugOnly(bool cond) {
+    __analysis_assume(!(cond));
+}
 #endif
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
-#define AssertCrash(exp) CrashIf(!(exp))
+inline void AssertCrash(bool cond) {
+    CrashIf(!(cond));
+}
 
 template <typename T>
 inline T limitValue(T val, T min, T max)
