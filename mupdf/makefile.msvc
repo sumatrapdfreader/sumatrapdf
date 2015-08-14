@@ -95,16 +95,10 @@ CFLAGSB = $(CFLAGSB) /EHs-c- /D "_HAS_EXCEPTIONS=0"
 
 # /W4  : bump warnings level from 1 to 4
 CFLAGSB = $(CFLAGSB) /W4
-# warnings unlikely to be turned off due to false positives from using CrashIf()
-# and various logging functions:
-# 4100 : unreferenced param
-# 4127 : conditional expression is constant
-CFLAGSB = $(CFLAGSB) /wd4100 /wd4127
 # warnings that might not make sense to fix:
-# 4428 : universal-character-name encountered in source
-#        (prevents using "\u202A" etc.)
+# 4100 : unreferenced param
 # 4324 : structure was padded due to __declspec(align())
-CFLAGSB = $(CFLAGSB) /wd4428 /wd4324
+CFLAGSB = $(CFLAGSB) /wd4100 /wd4428 /wd4324
 # warnings that happen only in VS2015 (and later)
 # 4458 : declaration of '*' hides class member
 #        (happens rather often all over the place)
@@ -147,18 +141,18 @@ LDFLAGS=$(LDFLAGS) /SUBSYSTEM:WINDOWS,5.2
 LDFLAGS=$(LDFLAGS) /SUBSYSTEM:WINDOWS,5.1
 !endif
 
-ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR)
+ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4127 /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR)
 
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
-	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4244 /wd4703 /wd4996
+	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4127 /wd4244 /wd4703 /wd4996
 
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2_DIR)
-JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4018 /wd4244 /wd4701 /wd4996
+JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4018 /wd4127 /wd4244 /wd4701 /wd4996
 
-OPENJPEG_CFLAGS = $(CFLAGS) /TC /I$(OPENJPEG_DIR) /wd4244 /wd4819 /wd4996
+OPENJPEG_CFLAGS = $(CFLAGS) /TC /I$(OPENJPEG_DIR) /wd4127 /wd4244 /wd4819 /wd4996
 
 JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
-JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4245 /wd4996
+JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4018 /wd4101 /wd4127 /wd4244 /wd4245 /wd4996
 !if "$(PLATFORM)"=="X64"
 JPEG_TURBO_NASM_FLAGS = -D__x86_64__ -DWIN64 -DMSVC -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win64
 !else

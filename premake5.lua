@@ -70,7 +70,7 @@ solution "SumatraPDF"
       toolset "v120"
   filter {}
 
-  disablewarnings { "4100", "4127", "4324", "4458", "4800" }
+  disablewarnings { "4100", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -219,7 +219,7 @@ solution "SumatraPDF"
     includedirs { "ext/freetype2/config" }
     includedirs { "ext/freetype2/include" }
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-    disablewarnings { "4996", "4018" }
+    disablewarnings { "4996", "4018", "4127" }
     freetype_files()
 
 
@@ -228,9 +228,10 @@ solution "SumatraPDF"
     language "C++"
     includedirs { "src/utils", "src/wingui", "src/mui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
-    -- TODO: 4189 and 4996 only occur in chmlib which should be compiled separately
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295" }
-    disablewarnings { "4701", "4706", "4838", "4996"  }
+    disablewarnings { "4701", "4706", "4838"  }
+    -- TODO: 4127, 4189 and 4996 only occur in chmlib which should be compiled separately
+    disablewarnings { "4127", "4189", "4996" }
     engines_files()
 
 
@@ -563,7 +564,8 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838" }
+    -- TODO: these warnings should only occur in synctex which should be compiled separately
+    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838", "4127", "4189" }
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",

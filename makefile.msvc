@@ -60,8 +60,9 @@ SRCDIR = $(BASEDIR)\src
 # and http://blogs.msdn.com/oldnewthing/archive/2007/04/11/2079137.aspx
 # We set the features uniformly to Windows XP or later.
 CFLAGS = $(CFLAGS) /D "WINVER=0x0501" /D "_WIN32_WINNT=0x0501"
+# Suppress warning C4428: universal-character-name encountered in source (prevents using "\u202A" etc.)
 # Suppress warning C4800: forcing value to bool 'true' or 'false'
-CFLAGS = $(CFLAGS) /wd4800
+CFLAGS = $(CFLAGS) /wd4428 /wd4800
 
 !if "$(WITH_ANALYZE)"=="yes"
 CFLAGS = /analyze:WX- $(CFLAGS)
