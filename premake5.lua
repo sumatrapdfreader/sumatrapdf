@@ -12,7 +12,6 @@ premake4 is obsolete and doesn't support VS 2013+
 I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
 
 TODO:
-* cmapdump
 * generate mupdf/generated or check them in
 * Installer
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
@@ -397,6 +396,15 @@ solution "SumatraPDF"
       "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
+  -- cl /nologo -Iinclude scripts/cmapdump.c setargv.obj
+
+  project "cmapdump"
+    kind "ConsoleApp"
+    language "C"
+
+    includedirs { "mupdf/include" }
+    files { "mupdf/scripts/cmapdump.c" }
+
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
@@ -642,5 +650,5 @@ solution "SumatraPDF"
 
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
-      "test_util"
+      "test_util", "cmapdump"
     }
