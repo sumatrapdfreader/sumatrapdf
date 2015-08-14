@@ -25,7 +25,7 @@ Code fixes:
 * figure out why CrashIf() in Debug gives us 4127
 * fix all 4100 in our code
 * figure out how to prevent 4189 in conditional (e.g. debug logging) code
-  make CrashIf() an inline function?
+  make CrashIf() an inline function?{}
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -453,6 +453,25 @@ solution "SumatraPDF"
     links { "shlwapi.lib" }
 
 
+    --[[
+    TODO: implement this logic
+    !if "$(CFG)"=="dbg"
+    # build all optional IFilters for debug builds
+    BUILD_TEX_IFILTER = 1
+    BUILD_EPUB_IFILTER = 1
+    !endif
+
+    !if "$(BUILD_TEX_IFILTER)"!=""
+    PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
+    PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
+    !endif
+
+    !if "$(BUILD_EPUB_IFILTER)"!=""
+    PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CEpubFilter.obj \
+    	$(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj
+    PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_EPUB_IFILTER"
+    !endif
+  --]]
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
@@ -473,6 +492,65 @@ solution "SumatraPDF"
     links {  "comctl32.lib", "shlwapi.lib", "version.lib"  }
 
 
+    --[[
+    TODO: implement this logic
+    !if "$(CFG)"=="dbg"
+    # build all optional previews for debug builds
+    BUILD_XPS_PREVIEW = 1
+    BUILD_DJVU_PREVIEW = 1
+    BUILD_EPUB_PREVIEW = 1
+    BUILD_FB2_PREVIEW = 1
+    BUILD_MOBI_PREVIEW = 1
+    BUILD_CBZ_PREVIEW = 1
+    BUILD_CBR_PREVIEW = 1
+    BUILD_CB7_PREVIEW = 1
+    BUILD_CBT_PREVIEW = 1
+    BUILD_TGA_PREVIEW = 1
+    !endif
+
+    !if "$(BUILD_XPS_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
+    !endif
+
+    !if "$(BUILD_DJVU_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_DJVU_PREVIEW"
+    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\DjVuEngine.obj
+    !endif
+
+    !if "$(BUILD_EPUB_PREVIEW)$(BUILD_FB2_PREVIEW)$(BUILD_MOBI_PREVIEW)"!=""
+    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EbookEngine.obj \
+    	$(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
+    	$(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
+    !if "$(BUILD_EPUB_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
+    !endif
+    !if "$(BUILD_FB2_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_FB2_PREVIEW"
+    !endif
+    !if "$(BUILD_MOBI_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_MOBI_PREVIEW"
+    !endif
+    !endif
+
+    !if "$(BUILD_CBZ_PREVIEW)$(BUILD_CBR_PREVIEW)$(BUILD_CB7_PREVIEW)$(BUILD_CBT_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
+    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OS)\PdfCreator.obj
+    !if "$(BUILD_CBZ_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
+    !endif
+    !if "$(BUILD_CBR_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBR_PREVIEW"
+    !endif
+    !if "$(BUILD_CB7_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CB7_PREVIEW"
+    !endif
+    !if "$(BUILD_CBT_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBT_PREVIEW"
+    !endif
+    !if "$(BUILD_TGA_PREVIEW)"!=""
+    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_TGA_PREVIEW"
+    !endif
+    !endif
+  --]]
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
@@ -538,14 +616,80 @@ solution "SumatraPDF"
     }
 
 
+  --[[
+  TODO:
+  INSTALLER_DATA  = $(O)\InstallerData.dat
+
+  $(INSTALLER_DATA): $(MAKELZSA_APP) $(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL)
+  $(CJK_FALLBACK_FONT) $(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
+
+  $(MAKELZSA_APP) $@ $(SUMATRA_APP_NO_MUPDF):SumatraPDF.exe $(LIBMUPDF_DLL):libmupdf.dll
+   $(CJK_FALLBACK_FONT):DroidSansFallback.ttf $(PDFFILTER_DLL):PdfFilter.dll
+   $(PDFPREVIEW_DLL):PdfPreview.dll $(UNINSTALLER_APP):uninstall.exe
+
+  $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
+  	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
+  --]]
+  project "Installer"
+    kind "WindowedApp"
+    language "C++"
+    dependson {
+      "MakeLZSA", "SumatraPDF-no-MUPDF", "libmupdf", "PdfFilter", "PdfPreview",
+      "PdfFilter", "Uninstaller"
+    }
+    flags { "NoManifest", "WinMain" }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    files {
+      "src/CrashHandler.*",
+      "src/Translations.*",
+      "src/installer/Installer.cpp",
+      "src/installer/Installer.h",
+      "src/installer/Trans_installer_txt.cpp",
+
+      "src/installer/Installer.rc",
+    }
+    includedirs {
+      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C"
+    }
+    links { "utils", "zlib", "unarr" }
+    links {
+      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
+       "version.lib", "windowscodecs.lib", "wininet.lib"
+    }
+
+
+  project "Uninstaller"
+    kind "WindowedApp"
+    language "C++"
+    defines { "BUILD_UNINSTALLER" }
+    flags { "NoManifest", "WinMain" }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    files {
+      "src/CrashHandler.*",
+      "src/Translations.*",
+      "src/installer/Installer.cpp",
+      "src/installer/Installer.h",
+      "src/installer/Trans_installer_txt.cpp",
+
+      "src/installer/Installer.rc",
+    }
+    includedirs {
+      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C"
+    }
+    links { "utils", "zlib", "unarr" }
+    links {
+      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
+       "version.lib", "windowscodecs.lib", "wininet.lib"
+    }
+
+
+  -- dummy project that builds all other projects
   project "all"
     kind "ConsoleApp"
     language "C"
-
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/no_op_console.c" }
-
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
       "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA"
