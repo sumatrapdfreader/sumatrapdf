@@ -652,6 +652,7 @@ solution "SumatraPDF"
   -- * specify source files instead of linking projects
   -- * move building of installer data to a separate project which will have
   --   those dependencies instead
+  -- Full description of the problem: https://github.com/premake/premake-core/issues/208
   project "Installer"
     kind "WindowedApp"
     language "C++"
