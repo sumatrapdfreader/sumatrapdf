@@ -47,7 +47,7 @@ Prefast:
 
 --]]
 
-dofile("premake5.files.lua")
+include("premake5.files.lua")
 
 -- TODO: rename solution to workspace. workspace is the documented name
 -- but latest alpha4 doesn't recognize it yet
@@ -277,10 +277,10 @@ solution "SumatraPDF"
     files { "src/libmupdf.rc", "src/no_op_for_premake.cpp" }
     links { "mupdf", "libdjvu", "unarr", "libwebp" }
     links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
-      "winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+      "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
+      "shell32", "windowscodecs", "comctl32", "msimg32",
+      "winspool", "wininet", "urlmon", "gdiplus", "ole32",
+      "oleAut32", "shlwapi", "version", "crypt32"
     }
 
 
@@ -330,7 +330,7 @@ solution "SumatraPDF"
     mutool_files()
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     links { "mupdf" }
-    links { "windowscodecs.lib" }
+    links { "windowscodecs" }
 
 
   -- TODO: libcmtd.lib wants main() but it has wmain for _MSC_VER
@@ -340,7 +340,7 @@ solution "SumatraPDF"
     mudraw_files()
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     links { "mupdf" }
-    links { "windowscodecs.lib" }
+    links { "windowscodecs" }
 
 
   project "cmapdump"
@@ -361,8 +361,8 @@ solution "SumatraPDF"
     }
     links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
     links {
-      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib",
-      "version.lib", "windowscodecs.lib"
+      "comctl32", "gdiplus", "msimg32", "shlwapi",
+      "version", "windowscodecs"
     }
 
 
@@ -418,7 +418,7 @@ solution "SumatraPDF"
     includedirs { "src/utils", "mupdf/include"}
     files { "src/tools/signfile.cpp" }
     links { "utils", "mupdf" }
-    links { "crypt32.lib", "shlwapi.lib" }
+    links { "crypt32", "shlwapi" }
 
 
   project "plugin-test"
@@ -428,7 +428,7 @@ solution "SumatraPDF"
     includedirs { "src/utils"}
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
-    links { "shlwapi.lib" }
+    links { "shlwapi" }
 
 
   project "MakeLZSA"
@@ -437,7 +437,7 @@ solution "SumatraPDF"
     files { "src/tools/MakeLzSA.cpp" }
     includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarr", "utils", "zlib" }
-    links { "shlwapi.lib" }
+    links { "shlwapi" }
 
 
     --[[
@@ -476,7 +476,7 @@ solution "SumatraPDF"
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
     links { "utils", "libmupdf" }
-    links {  "comctl32.lib", "shlwapi.lib", "version.lib"  }
+    links { "comctl32", "shlwapi", "version"  }
 
 
     --[[
@@ -555,7 +555,7 @@ solution "SumatraPDF"
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
     links { "utils", "libmupdf" }
-    links {  "comctl32.lib", "gdiplus.lib", "shlwapi.lib", "version.lib"  }
+    links { "comctl32", "gdiplus", "shlwapi", "version" }
 
 
   project "SumatraPDF"
@@ -576,8 +576,8 @@ solution "SumatraPDF"
     }
     links { "sumatra", "utils", "mui", "engines", "mupdf", "libdjvu", "unarr", "libwebp" }
     links {
-      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-       "version.lib", "windowscodecs.lib", "wininet.lib"
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+       "version", "windowscodecs", "wininet"
     }
 
 
@@ -596,8 +596,8 @@ solution "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
     links { "sumatra", "libmupdf", "utils", "mui", "engines", "unarr", "libwebp" }
     links {
-      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-      "version.lib", "windowscodecs.lib", "wininet.lib"
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+      "version", "windowscodecs", "wininet"
     }
 
 
@@ -621,8 +621,8 @@ solution "SumatraPDF"
     }
     links { "utils", "zlib", "unarr" }
     links {
-      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-       "version.lib", "windowscodecs.lib", "wininet.lib"
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+       "version", "windowscodecs", "wininet"
     }
 
 
@@ -644,6 +644,11 @@ solution "SumatraPDF"
   -- TODO: fails at linking. Can't find symbols that should be in "utils" etc.
   -- and I don't see utils.lib on link.exe list.
   -- Looks like it's triggered by adding dependson
+  -- Possible solution:
+  -- * use linkoptions to force linking utils/zlib/unarr
+  -- * specify source files instead of linking projects
+  -- * move building of installer data to a separate project which will have
+  --   those dependencies instead
   project "Installer"
     kind "WindowedApp"
     language "C++"
@@ -663,8 +668,8 @@ solution "SumatraPDF"
     }
     links { "utils", "zlib", "unarr" }
     links {
-      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-      "version.lib", "windowscodecs.lib", "wininet.lib"
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+      "version", "windowscodecs", "wininet"
     }
     --dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
 
