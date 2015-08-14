@@ -142,84 +142,66 @@ solution "SumatraPDF"
       disablewarnings { "28125", "28252", "28253" }
   filter {}
 
-  project "efi"
-    kind "ConsoleApp"
-    language "C++"
-
-    disablewarnings { "4091", "4577" }
-
-    efi_files()
-    includedirs { "src/utils" }
-    links { }
 
   project "zlib"
     kind "StaticLib"
     language "C"
-
     disablewarnings { "4127", "4131", "4244", "4996" }
-
     zlib_files()
+
 
   project "libdjvu"
     kind "StaticLib"
     language "C++"
-
     -- TODO: try /D USE_EXCEPTION_EMULATION to see if it reduces the size
     -- and disables the exceptions warnings
     defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0" }
     includedirs { "ext/libjpeg-turbo" }
-
     disablewarnings { "4100", "4127", "4189", "4244", "4267", "4302", "4311", "4312" }
     disablewarnings { "4456", "4457", "4459", "4530", "4611", "4701", "4702", "4703", "4706" }
     libdjvu_files()
 
+
   project "unarr"
     kind "StaticLib"
     language "C++"
-
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
     disablewarnings { "4100", "4127", "4244", "4267", "4456", "4457", "4996" }
-
     unarr_files()
+
 
   project "jbig2dec"
     kind "StaticLib"
     language "C"
-
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
     includedirs { "ext/jbig2dec" }
     disablewarnings { "4018", "4100", "4127", "4244", "4267", "4701", "4996" }
-
     jbig2dec_files()
+
 
   project "openjpeg"
     kind "StaticLib"
     language "C"
-
     includedirs { "ext/openjpeg" }
     disablewarnings { "4018", "4127", "4244", "4996" }
-
     openjpeg_files()
+
 
   project "libwebp"
     kind "StaticLib"
     language "C"
-
     includedirs { "ext/libwebp" }
     disablewarnings { "4018", "4057", "4127", "4204", "4244", "4996" }
-
     libwebp_files()
+
 
   project "libjpeg-turbo"
     kind "StaticLib"
     language "C"
-
     includedirs { "ext/libjpeg-turbo" }
     includedirs { "ext/libjpeg-turbo/simd" }
-
     disablewarnings { "4018", "4100", "4127", "4244", "4245", "4996" }
-
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
     -- -I .\ext\libjpeg-turbo\win\ -f win32
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
@@ -239,78 +221,36 @@ solution "SumatraPDF"
         '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
-
     libjpeg_turbo_files()
 
   project "freetype"
     kind "StaticLib"
     language "C"
-
     includedirs { "ext/freetype2/config" }
     includedirs { "ext/freetype2/include" }
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-
     disablewarnings { "4996", "4018" }
-
     freetype_files()
 
-  project "sumatra"
-    kind "StaticLib"
-    language "C++"
-
-    includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
-    includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
-
-    disablewarnings { "4018", "4189", "4302", "4311", "4838", "4996" }
-
-    sumatra_files()
-
-  project "utils"
-    kind "StaticLib"
-    language "C++"
-
-    includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
-    includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
-
-    disablewarnings { "4018", "4838", "4996" }
-    -- TODO: DbgHelpDyn.cpp 64bit warnings only, fix the code
-    disablewarnings { "4302", "4311", "4312" }
-
-    utils_files()
-
-  project "mui"
-    kind "StaticLib"
-    language "C++"
-
-    includedirs { "src/utils", "src/wingui", "src/mui" }
-
-    disablewarnings { "4996", "4018", "4838" }
-
-    mui_files()
 
   project "engines"
     kind "StaticLib"
     language "C++"
-
     includedirs { "src/utils", "src/wingui", "src/mui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
-
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295" }
     disablewarnings { "4701", "4706", "4838", "4996"  }
-
     engines_files()
+
 
   project "mupdf"
     kind "StaticLib"
     language "C"
-
     includedirs {
       "mupdf/include", "mupdf/generated", "ext/zlib",
       "ext/freetype2/config", "ext/freetype2/include",
       "ext/jbig2dec", "ext/libjpeg-turbo", "ext/openjpeg"
     }
-
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
     filter {'files:**.asm', 'platforms:x32'}
@@ -328,67 +268,24 @@ solution "SumatraPDF"
         '..\\bin\\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
       }
     filter {}
-
     defines { "NOCJKFONT", "SHARE_JPEG" }
     disablewarnings {  "4018", "4244", "4267", "4838", "4996", }
     mupdf_files()
+    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg" }
 
-    links {
-      "zlib",
-      "freetype",
-      "libjpeg-turbo",
-      "jbig2dec",
-      "openjpeg",
-    }
-
-  -- TODO: libcmtd.lib wants main() but it has wmain for _MSC_VER
-  project "mutool"
-    kind "ConsoleApp"
-    language "C"
-    mutool_files()
-    includedirs {
-      "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include"
-    }
-    links { "mupdf" }
-    links {
-      "windowscodecs.lib"
-    }
-
-    -- TODO: libcmtd.lib wants main() but it has wmain for _MSC_VER
-  project "mudraw"
-    kind "ConsoleApp"
-    language "C"
-    mudraw_files()
-    includedirs {
-      "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include"
-    }
-    links { "mupdf" }
-    links {
-      "windowscodecs.lib"
-    }
 
   project "libmupdf"
     kind "SharedLib"
     language "C"
-
     implibname "libmupdf"
-
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
-
     disablewarnings { "4206" }
-
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libmupdf.rc", "src/no_op_for_premake.cpp" }
-    links {
-      "mupdf",
-      "libdjvu",
-      "unarr",
-      "libwebp",
-    }
-
+    links { "mupdf", "libdjvu", "unarr", "libwebp" }
     links {
       "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
       "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
@@ -396,19 +293,76 @@ solution "SumatraPDF"
       "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
-  -- cl /nologo -Iinclude scripts/cmapdump.c setargv.obj
+
+  project "utils"
+    kind "StaticLib"
+    language "C++"
+    includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
+    includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
+    disablewarnings { "4018", "4838", "4996" }
+    -- TODO: DbgHelpDyn.cpp 64bit warnings only, fix the code
+    disablewarnings { "4302", "4311", "4312" }
+    utils_files()
+
+
+  project "mui"
+    kind "StaticLib"
+    language "C++"
+    includedirs { "src/utils", "src/wingui", "src/mui" }
+    disablewarnings { "4996", "4018", "4838" }
+    mui_files()
+
+
+  project "sumatra"
+    kind "StaticLib"
+    language "C++"
+    includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
+    includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
+    disablewarnings { "4018", "4189", "4302", "4311", "4838", "4996" }
+    sumatra_files()
+
+
+  ---- executables
+  project "efi"
+    kind "ConsoleApp"
+    language "C++"
+    disablewarnings { "4091", "4577" }
+    efi_files()
+    includedirs { "src/utils" }
+    links { }
+
+
+  -- TODO: libcmtd.lib wants main() but it has wmain for _MSC_VER
+  project "mutool"
+    kind "ConsoleApp"
+    language "C"
+    mutool_files()
+    includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
+    links { "mupdf" }
+    links { "windowscodecs.lib" }
+
+
+  -- TODO: libcmtd.lib wants main() but it has wmain for _MSC_VER
+  project "mudraw"
+    kind "ConsoleApp"
+    language "C"
+    mudraw_files()
+    includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
+    links { "mupdf" }
+    links { "windowscodecs.lib" }
+
 
   project "cmapdump"
     kind "ConsoleApp"
     language "C"
-
     includedirs { "mupdf/include" }
     files { "mupdf/scripts/cmapdump.c" }
+
 
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
-
     includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
     files {
       "src/EngineDump.cpp",
@@ -424,12 +378,11 @@ solution "SumatraPDF"
       "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
+
   project "test_util"
     kind "ConsoleApp"
     language "C++"
-
     disablewarnings { "4838" }
-
     files_in_dir( "src/utils", {
       "BaseUtil*",
       "BitManip*",
@@ -471,174 +424,119 @@ solution "SumatraPDF"
     includedirs { "src/utils" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
-  project "SumatraPDF"
+
+  project "signfile"
+    kind "ConsoleApp"
+    language "C++"
+    includedirs { "src/utils", "mupdf/include"}
+    files { "src/tools/signfile.cpp" }
+    links { "utils", "mupdf" }
+    links { "crypt32.lib", "shlwapi.lib" }
+
+
+  project "plugin-test"
     kind "WindowedApp"
     language "C++"
+    flags { "WinMain" }
+    includedirs { "src/utils"}
+    files { "src/tools/plugin-test.cpp" }
+    links { "utils", "mupdf" }
+    links { "shlwapi.lib" }
 
-    flags {
-      "NoManifest",
-      "WinMain",
-    }
-
-    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838", "4996" }
-
-    includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
-      "ext/libdjvu", "ext/CHMLib/src"
-    }
-
-    sumatrapdf_files()
-
-    -- TODO: is this necessary? This is also part of sumatra
-    files {
-      "src/SumatraPDF.rc",
-      "docs/releasenotes.txt",
-      "docs/releaseplan.txt",
-    }
-
-    links {
-      "sumatra",
-      "utils",
-      "mui",
-      "engines",
-      "mupdf",
-      "libdjvu",
-      "unarr",
-      "libwebp",
-    }
-
-    links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "windowscodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
-    }
-
-  project "SumatraPDF-no-MUPDF"
-    kind "WindowedApp"
-    language "C++"
-
-    flags {
-      "NoManifest",
-      "WinMain",
-    }
-
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
-
-    includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
-      "ext/libdjvu", "ext/CHMLib/src"
-    }
-
-    sumatrapdf_files()
-    -- TODO: is this necessary? This is also part of sumatra
-    files {
-      "src/SumatraPDF.rc",
-    }
-    files { "src/MuPDF_Exports.cpp" }
-
-    links {
-      "sumatra",
-      "libmupdf",
-      "utils",
-      "mui",
-      "engines",
-      "unarr",
-      "libwebp",
-    }
-
-    links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "WindowsCodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
-    }
 
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
-
-    files {
-      "src/tools/MakeLzSA.cpp"
-    }
-
+    files { "src/tools/MakeLzSA.cpp" }
     includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
+    links { "unarr", "utils", "zlib" }
+    links { "shlwapi.lib" }
 
-    links { "unarr", "utils", "zlib", }
-
-    -- TODO: probably excessive
-    links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "WindowsCodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
-    }
 
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
-
     disablewarnings { "4838" }
-
     -- TODO: probably excessive
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
       "ext/libdjvu", "ext/CHMLib/src"
     }
-
     files_in_dir("src/ifilter", {
       "PdfFilter.rc",
       "PdfFilterDll.cpp",
       "CPdfFilter.cpp",
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+    links { "utils", "libmupdf" }
+    links {  "comctl32.lib", "shlwapi.lib", "version.lib"  }
 
-    links {
-      "utils",
-      "libmupdf",
-    }
-    -- TODO: probably excessive
-    links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "WindowsCodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
-    }
 
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
-
     disablewarnings { "4838" }
-
     -- TODO: probably excessive
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
       "ext/libdjvu", "ext/CHMLib/src"
     }
-
     files_in_dir("src/previewer", {
       "PdfPreview.rc",
       "PdfPreviewDll.cpp",
       "PdfPreview.cpp",
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+    links { "utils", "libmupdf" }
+    links {  "comctl32.lib", "gdiplus.lib", "shlwapi.lib", "version.lib"  }
 
-    links {
-      "utils",
-      "libmupdf",
+
+  project "SumatraPDF"
+    kind "WindowedApp"
+    language "C++"
+    flags { "NoManifest", "WinMain" }
+    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838", "4996" }
+    includedirs {
+      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
+      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
+      "ext/libdjvu", "ext/CHMLib/src"
     }
-    -- TODO: probably excessive
-    links {
-      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "WindowsCodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+    sumatrapdf_files()
+    -- TODO: is this necessary? This is also part of sumatra
+    files {
+      "src/SumatraPDF.rc",
+      "docs/releasenotes.txt",
+      "docs/releaseplan.txt",
     }
+    links { "sumatra", "utils", "mui", "engines", "mupdf", "libdjvu", "unarr", "libwebp" }
+    links {
+      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
+       "version.lib", "windowscodecs.lib", "wininet.lib"
+    }
+
+
+  project "SumatraPDF-no-MUPDF"
+    kind "WindowedApp"
+    language "C++"
+    flags { "NoManifest", "WinMain" }
+    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
+    includedirs {
+      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
+      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
+      "ext/libdjvu", "ext/CHMLib/src"
+    }
+    sumatrapdf_files()
+    -- TODO: is this necessary? This is also part of sumatra
+    files { "src/SumatraPDF.rc" }
+    files { "src/MuPDF_Exports.cpp" }
+    links { "sumatra", "libmupdf", "utils", "mui", "engines", "unarr", "libwebp" }
+    links {
+      "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
+       "version.lib", "windowscodecs.lib", "wininet.lib"
+    }
+
 
   project "all"
     kind "ConsoleApp"
@@ -650,5 +548,5 @@ solution "SumatraPDF"
 
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
-      "test_util", "cmapdump"
+      "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA"
     }
