@@ -616,27 +616,10 @@ solution "SumatraPDF"
     }
 
 
-  --[[
-  TODO:
-  INSTALLER_DATA  = $(O)\InstallerData.dat
-
-  $(INSTALLER_DATA): $(MAKELZSA_APP) $(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL)
-  $(CJK_FALLBACK_FONT) $(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
-
-  $(MAKELZSA_APP) $@ $(SUMATRA_APP_NO_MUPDF):SumatraPDF.exe $(LIBMUPDF_DLL):libmupdf.dll
-   $(CJK_FALLBACK_FONT):DroidSansFallback.ttf $(PDFFILTER_DLL):PdfFilter.dll
-   $(PDFPREVIEW_DLL):PdfPreview.dll $(UNINSTALLER_APP):uninstall.exe
-
-  $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
-  	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
-  --]]
-  project "Installer"
+  project "Uninstaller"
     kind "WindowedApp"
     language "C++"
-    dependson {
-      "MakeLZSA", "SumatraPDF-no-MUPDF", "libmupdf", "PdfFilter", "PdfPreview",
-      "PdfFilter", "Uninstaller"
-    }
+    defines { "BUILD_UNINSTALLER" }
     flags { "NoManifest", "WinMain" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
     files {
@@ -658,10 +641,27 @@ solution "SumatraPDF"
     }
 
 
-  project "Uninstaller"
+  --[[
+  TODO:
+  INSTALLER_DATA  = $(O)\InstallerData.dat
+
+  $(INSTALLER_DATA): $(MAKELZSA_APP) $(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL)
+  $(CJK_FALLBACK_FONT) $(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
+
+  $(MAKELZSA_APP) $@ $(SUMATRA_APP_NO_MUPDF):SumatraPDF.exe $(LIBMUPDF_DLL):libmupdf.dll
+   $(CJK_FALLBACK_FONT):DroidSansFallback.ttf $(PDFFILTER_DLL):PdfFilter.dll
+   $(PDFPREVIEW_DLL):PdfPreview.dll $(UNINSTALLER_APP):uninstall.exe
+
+  $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
+  	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
+  --]]
+  project "Installer"
     kind "WindowedApp"
     language "C++"
-    defines { "BUILD_UNINSTALLER" }
+    dependson {
+      "MakeLZSA", "SumatraPDF-no-MUPDF", "libmupdf", "PdfFilter", "PdfPreview",
+      "PdfFilter", "Uninstaller"
+    }
     flags { "NoManifest", "WinMain" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
     files {

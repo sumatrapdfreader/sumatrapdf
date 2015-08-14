@@ -334,8 +334,6 @@ end
 
 function sumatra_files()
   files {
-    "src/SumatraPDF.rc",
-
     "src/AppPrefs.cpp",
     "src/DisplayModel.cpp",
     "src/CrashHandler.cpp",
