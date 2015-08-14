@@ -139,6 +139,11 @@ inline void CrashIf(bool cond) {
     CrashAlwaysIf(cond);
 }
 #else
+// TODO: probably __analysis_assume() is meaningless at this point
+// so we get more warnings in prefast build.
+// Should be a combination of a macro and inline function to
+// address both compiler warnings about unused variables and
+// help prefast builds. Or make it a macro for prefast and inline otherwise
 inline void CrashIf(bool cond) {
     __analysis_assume(!(cond));
 }
