@@ -397,6 +397,53 @@ solution "SumatraPDF"
       "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
+  project "test_util"
+    kind "ConsoleApp"
+    language "C++"
+
+    disablewarnings { "4838" }
+
+    files_in_dir( "src/utils", {
+      "BaseUtil*",
+      "BitManip*",
+      "ByteOrderDecoder*",
+      "CmdLineParser*",
+      "CryptoUtil*",
+      "CssParser*",
+      "Dict*",
+      "DebugLog*",
+      "FileUtil*",
+      "GeomUtil.*",
+      "HtmlParserLookup*",
+      "HtmlPrettyPrint*",
+      "HtmlPullParser*",
+      "JsonParser*",
+      "Scoped.*",
+      "SettingsUtil*",
+      "SimpleLog*",
+      "StrFormat*",
+      "StrUtil*",
+      "SquareTreeParser*",
+      "TrivialHtmlParser*",
+      "UtAssert*",
+      "VarintGob*",
+      "Vec.*",
+      "WinUtil*",
+      "tests/*"
+    })
+    files_in_dir("src", {
+      --"AppTools.*",
+      --"ParseCommandLine.*",
+      --"StressTesting.*",
+      "AppUtil.*",
+      "UnitTests.cpp",
+      "mui/SvgPath*",
+      "tools/test_util.cpp"
+    })
+    defines { "NO_LIBMUPDF" }
+    includedirs { "src/utils" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+
   project "SumatraPDF"
     kind "WindowedApp"
     language "C++"
@@ -419,6 +466,8 @@ solution "SumatraPDF"
     -- TODO: is this necessary? This is also part of sumatra
     files {
       "src/SumatraPDF.rc",
+      "docs/releasenotes.txt",
+      "docs/releaseplan.txt",
     }
 
     links {
@@ -573,5 +622,6 @@ solution "SumatraPDF"
     files { "src/no_op_console.c" }
 
     dependson {
-      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF"
+      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
+      "test_util"
     }
