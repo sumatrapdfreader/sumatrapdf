@@ -12,9 +12,9 @@ premake4 is obsolete and doesn't support VS 2013+
 I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
 
 TODO:
+* cmapdump
 * generate mupdf/generated or check them in
 * Installer
-* enginedump
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
 * fix mutool and mudraw (they have wmain, libcmtd.lib wants main)
 * a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
@@ -392,9 +392,28 @@ solution "SumatraPDF"
 
     links {
       "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
-      "shell32.lib", "WindowsCodecs.lib", "comctl32.lib", "Msimg32.lib",
-      "Winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
-      "OleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+      "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
+      "winspool.lib", "wininet.lib", "urlmon.lib", "gdiplus.lib", "ole32.lib",
+      "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
+    }
+
+  project "enginedump"
+    kind "ConsoleApp"
+    language "C++"
+
+    includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
+    files {
+      "src/EngineDump.cpp",
+      "src/mui/MiniMui.*",
+      "src/mui/TextRender.*",
+    }
+    links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
+    -- TODO: surely too much
+    links {
+      "advapi32.lib", "kernel32.lib", "user32.lib", "gdi32.lib", "comdlg32.lib",
+      "shell32.lib", "windowscodecs.lib", "comctl32.lib", "msimg32.lib",
+      "winspool.lib", "gdiplus.lib", "ole32.lib",
+      "oleAut32.lib", "shlwapi.lib", "version.lib", "crypt32.lib"
     }
 
   project "test_util"
