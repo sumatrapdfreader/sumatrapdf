@@ -1,15 +1,8 @@
 --[[
-To generate Visual Studio files in vs-premake directory, run:
-
-premake5 vs2013
- or
-premake5 vs2015
-
-Project files are generated in vs2013 and vs2015 folders.
-
-premake4 is obsolete and doesn't support VS 2013+
+To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 
 I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
+(premake4 won't work, it doesn't support vs 2013+)
 
 TODO:
 * generate mupdf/generated or check them in
@@ -22,7 +15,6 @@ TODO:
 Code fixes:
 * fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
   (not dependencies)
-* figure out why CrashIf() in Debug gives us 4127
 * fix all 4100 in our code
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
@@ -648,14 +640,13 @@ solution "SumatraPDF"
   $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
   	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
   --]]
+
+  -- TODO: fails at linking. Can't find symbols that should be in "utils" etc.
+  -- and I don't see utils.lib on link.exe list.
+  -- Looks like it's triggered by adding dependson
   project "Installer"
     kind "WindowedApp"
     language "C++"
-    --TODO: adding "dependson" makes it fail during linking because it can't
-    --find symbols that are in "utils". Those projects end up in .vcxproj
-    --file the same as those referenced from "links" (as <ProjectReference />).
-    --No idea why this causes "utils" to vanish
-    --dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
     flags { "NoManifest", "WinMain" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706", "4996", }
     files {
@@ -673,8 +664,9 @@ solution "SumatraPDF"
     links { "utils", "zlib", "unarr" }
     links {
       "comctl32.lib", "gdiplus.lib", "msimg32.lib", "shlwapi.lib", "urlmon.lib",
-       "version.lib", "windowscodecs.lib", "wininet.lib"
+      "version.lib", "windowscodecs.lib", "wininet.lib"
     }
+    --dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
 
 
   -- dummy project that builds all other projects
