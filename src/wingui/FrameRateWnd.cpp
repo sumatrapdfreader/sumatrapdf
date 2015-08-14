@@ -171,7 +171,6 @@ bool CreateFrameRateWnd(FrameRateWnd *w) {
     w->hwndAssociatedWithTopLevel = topLevel;
     // WS_POPUP removes all decorations
     DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_DISABLED;
-    RECT r = GetClientRect(w->hwndAssociatedWithTopLevel);
     // since this is WS_POPUP window, providing w->hwndAssocatedWith doesn't establish
     // parent-child relationship but ownership relationship (as long as hwndAssociatedWith
     // is WS_OVERLAPEPED or WS_POPUP). Owned window always shows up on top of owner in z-order
