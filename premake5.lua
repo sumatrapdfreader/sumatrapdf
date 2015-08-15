@@ -243,13 +243,6 @@ solution "SumatraPDF"
     links { "chm" }
 
 
-  -- unfortunate we need buildcmap re-direction but we can do
-  -- dependson { "cmapdump" } in "mupdf" as it'll break mupdf project
-  project "buildcmap"
-    kind "None"
-    dependson { "cmapdump" }
-
-
   project "mupdf"
     kind "StaticLib"
     language "C"
@@ -381,11 +374,23 @@ solution "SumatraPDF"
   project "cmapdump"
     kind "ConsoleApp"
     language "C"
-    -- force 32build so that we do 64bit even on 32bit machines
+    -- force 32build so that we can compile 64-bit Sumatra even on 32bit machines
+    -- that couldn't run 64-bit cmapdump
     architecture "x86"
     disablewarnings { "4267" }
     includedirs { "mupdf/include" }
     files { "mupdf/scripts/cmapdump.c" }
+
+
+  -- unfortunate we need buildcmap re-direction but we can do
+  -- dependson { "cmapdump" } in "mupdf" as it'll break mupdf project
+  project "buildcmap"
+    kind "ConsoleApp"
+    language "C"
+    -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
+    -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
+    files { "tools/premake/no_op_console.c" }
+    dependson { "cmapdump" }
     postbuildcommands { "{COPY} %{cfg.targetdir}\\cmapdump.exe ..\\bin" }
     postbuildcommands { "cd .. & call scripts\\gen_mupdf_generated.bat bin\\cmapdump.exe"}
 
@@ -515,65 +520,6 @@ solution "SumatraPDF"
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
 
 
-    --[[
-    TODO: implement this logic
-    !if "$(CFG)"=="dbg"
-    # build all optional previews for debug builds
-    BUILD_XPS_PREVIEW = 1
-    BUILD_DJVU_PREVIEW = 1
-    BUILD_EPUB_PREVIEW = 1
-    BUILD_FB2_PREVIEW = 1
-    BUILD_MOBI_PREVIEW = 1
-    BUILD_CBZ_PREVIEW = 1
-    BUILD_CBR_PREVIEW = 1
-    BUILD_CB7_PREVIEW = 1
-    BUILD_CBT_PREVIEW = 1
-    BUILD_TGA_PREVIEW = 1
-    !endif
-
-    !if "$(BUILD_XPS_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_XPS_PREVIEW"
-    !endif
-
-    !if "$(BUILD_DJVU_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_DJVU_PREVIEW"
-    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\DjVuEngine.obj
-    !endif
-
-    !if "$(BUILD_EPUB_PREVIEW)$(BUILD_FB2_PREVIEW)$(BUILD_MOBI_PREVIEW)"!=""
-    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\EbookEngine.obj \
-    	$(EBOOK_OBJS) $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-    	$(OMUI)\MiniMui.obj $(OMUI)\TextRender.obj
-    !if "$(BUILD_EPUB_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_EPUB_PREVIEW"
-    !endif
-    !if "$(BUILD_FB2_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_FB2_PREVIEW"
-    !endif
-    !if "$(BUILD_MOBI_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_MOBI_PREVIEW"
-    !endif
-    !endif
-
-    !if "$(BUILD_CBZ_PREVIEW)$(BUILD_CBR_PREVIEW)$(BUILD_CB7_PREVIEW)$(BUILD_CBT_PREVIEW)$(BUILD_TGA_PREVIEW)"!=""
-    PDFPREVIEW_OBJS = $(PDFPREVIEW_OBJS) $(OS)\ImagesEngine.obj $(OS)\PdfCreator.obj
-    !if "$(BUILD_CBZ_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBZ_PREVIEW"
-    !endif
-    !if "$(BUILD_CBR_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBR_PREVIEW"
-    !endif
-    !if "$(BUILD_CB7_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CB7_PREVIEW"
-    !endif
-    !if "$(BUILD_CBT_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_CBT_PREVIEW"
-    !endif
-    !if "$(BUILD_TGA_PREVIEW)"!=""
-    PDFPREVIEW_CFLAGS = $(PDFPREVIEW_CFLAGS) /D "BUILD_TGA_PREVIEW"
-    !endif
-    !endif
-  --]]
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
@@ -585,13 +531,37 @@ solution "SumatraPDF"
       "ext/libdjvu", "ext/CHMLib/src"
     }
     files_in_dir("src/previewer", {
-      "PdfPreview.rc",
+      "PdfPreview.*",
       "PdfPreviewDll.cpp",
-      "PdfPreview.cpp",
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+
+    filter {"configurations:Debug"}
+      defines {
+        "BUILD_XPS_PREVIEW", "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
+        "BUILD_FB2_PREVIEW", "BUILD_MOBI_PREVIEW", "BUILD_CBZ_PREVIEW",
+        "BUILD_CBR_PREVIEW", "BUILD_CB7_PREVIEW", "BUILD_CBT_PREVIEW",
+        "BUILD_TGA_PREVIEW"
+      }
+      links "chm"
+      files_in_dir("src", {
+        "ChmDoc.*",
+        "DjVuEngine.*",
+        "EbookDoc.*",
+        "EbookEngine.*",
+        "EbookFormatter.*",
+        "HtmlFormatter.*",
+        "ImagesEngine.*",
+        "MobiDoc.*",
+        "PdfCreator.*",
+        "utils/PalmDbReader.*",
+        "mui/MiniMui.*",
+        "mui/TextRender.*",
+    })
+    filter {}
+
     links { "utils", "libmupdf" }
-    links { "comctl32", "gdiplus", "shlwapi", "version" }
+    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
   project "SumatraPDF"
