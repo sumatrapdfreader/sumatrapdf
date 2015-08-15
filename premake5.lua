@@ -157,7 +157,7 @@ solution "SumatraPDF"
     language "C"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
-    disablewarnings { "4100", "4996" }
+    disablewarnings { "4100", "4127", "4244", "4267", "4456", "4457", "4996" }
     unarr_files()
 
 
@@ -197,7 +197,7 @@ solution "SumatraPDF"
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
     -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
     filter {'files:**.asm', 'platforms:x32'}
-       buildmessage 'Assembling %{file.relpath}'
+       buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
           '..\\bin\\nasm.exe -f win32 -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
@@ -205,7 +205,7 @@ solution "SumatraPDF"
     filter {}
 
     filter {'files:**.asm', 'platforms:x64'}
-      buildmessage 'Assembling %{file.relpath}'
+      buildmessage '%{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
       buildcommands {
         '..\\bin\\nasm.exe -f win64 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/libjpeg-turbo/simd/ -I ../ext/libjpeg-turbo/win/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
@@ -213,14 +213,24 @@ solution "SumatraPDF"
     filter {}
     libjpeg_turbo_files()
 
+
   project "freetype"
     kind "StaticLib"
     language "C"
     includedirs { "ext/freetype2/config" }
     includedirs { "ext/freetype2/include" }
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-    disablewarnings { "4996", "4018", "4127" }
+    disablewarnings { "4018", "4127", "4996" }
     freetype_files()
+
+
+  project "chm"
+    kind "StaticLib"
+    language "C"
+    defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
+    includedirs { }
+    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4706", "4996" }
+    files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
 
 
   project "engines"
@@ -230,9 +240,8 @@ solution "SumatraPDF"
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295" }
     disablewarnings { "4701", "4706", "4838"  }
-    -- TODO: 4127, 4189 and 4996 only occur in chmlib which should be compiled separately
-    disablewarnings { "4127", "4189", "4996" }
     engines_files()
+    links { "chm" }
 
 
   project "mupdf"

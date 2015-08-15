@@ -474,9 +474,6 @@ function engines_files()
     "src/FileModifications.cpp",
 
     "src/utils/PalmDbReader.cpp",
-
-    "ext/CHMLib/src/chm_lib.c",
-    "ext/CHMLib/src/lzx.c",
   }
 end
 
