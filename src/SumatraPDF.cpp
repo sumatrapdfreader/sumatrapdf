@@ -173,7 +173,6 @@ void SetCurrentLang(const char *langCode)
 
 void InitializePolicies(bool restrict)
 {
-    UNREFERENCED_PARAMETER(restrict);
     // default configuration should be to restrict everything
     CrashIf(gPolicyRestrictions != Perm_RestrictedUse);
     CrashIf(gAllowedLinkProtocols.Count() != 0 || gAllowedFileTypes.Count() != 0);
