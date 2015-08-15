@@ -757,21 +757,44 @@ function pdf_preview_files()
     "PdfPreviewDll.cpp",
   })
   files { "src/MUPDF_Exports.cpp", "src/PdfEngine.*" }
+
   filter {"configurations:Debug"}
-  files_in_dir("src", {
-    "ChmDoc.*",
-    "DjVuEngine.*",
-    "EbookDoc.*",
-    "EbookEngine.*",
-    "EbookFormatter.*",
-    "HtmlFormatter.*",
-    "ImagesEngine.*",
-    "MobiDoc.*",
-    "PdfCreator.*",
-    "utils/PalmDbReader.*",
-    "mui/MiniMui.*",
-    "mui/TextRender.*",
+    files_in_dir("src", {
+      "ChmDoc.*",
+      "DjVuEngine.*",
+      "EbookDoc.*",
+      "EbookEngine.*",
+      "EbookFormatter.*",
+      "HtmlFormatter.*",
+      "ImagesEngine.*",
+      "MobiDoc.*",
+      "PdfCreator.*",
+      "utils/PalmDbReader.*",
+      "mui/MiniMui.*",
+      "mui/TextRender.*",
+    })
+  filter {}
+end
+
+function pdf_filter_files()
+  files_in_dir("src/ifilter", {
+    "PdfFilter.*",
+    "PdfFilterDll.cpp",
+    "CPdfFilter.*",
+    "FilterBase.h",
   })
+  files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+
+  filter {"configurations:Debug"}
+    files_in_dir("src/ifilter", {
+      "CTeXFilter.*",
+      "CEpubFilter.*",
+    })
+    files {
+      "src/EbookDoc.*",
+      "src/MobiDoc.*",
+      "src/utils/PalmDbReader.*",
+    }
   filter {}
 end
 

@@ -457,34 +457,12 @@ solution "SumatraPDF"
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
-
     disablewarnings { "4838" }
-
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
-      files_in_dir("src/ifilter", {
-        "CTeXFilter.*",
-        "CEpubFilter.*",
-      })
-      files {
-        "src/EbookDoc.*",
-        "src/MobiDoc.*",
-        "src/utils/PalmDbReader.*",
-      }
     filter {}
-
-    includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
-      "ext/libdjvu", "ext/CHMLib/src"
-    }
-    files_in_dir("src/ifilter", {
-      "PdfFilter.*",
-      "PdfFilterDll.cpp",
-      "CPdfFilter.*",
-      "FilterBase.h",
-    })
-    files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+    includedirs { "src", "src/utils", "src/wingui", "src/mui", "mupdf/include" }
+    pdf_filter_files()
     links { "utils", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
 
@@ -493,11 +471,9 @@ solution "SumatraPDF"
     kind "SharedLib"
     language "C++"
     disablewarnings { "4838" }
-    -- TODO: probably excessive
     includedirs {
-      "src", "src/utils", "src/wingui", "src/mui", "mupdf/include", "ext/zlib",
-      "ext/lzma/C", "ext/libwebp", "ext/unarr",
-      "ext/libdjvu", "ext/CHMLib/src"
+      "src", "src/utils", "src/wingui", "src/mui", "mupdf/include",
+      "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
     }
     pdf_preview_files()
     filter {"configurations:Debug"}
@@ -507,9 +483,10 @@ solution "SumatraPDF"
         "BUILD_CBR_PREVIEW", "BUILD_CB7_PREVIEW", "BUILD_CBT_PREVIEW",
         "BUILD_TGA_PREVIEW"
       }
-      links "chm"
     filter {}
-    links { "utils", "libmupdf" }
+    -- TODO: "chm" should only be for Debug config but doing links { "chm" }
+    -- in the filter breaks linking by setting LinkLibraryDependencies to false
+    links { "utils", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
