@@ -20,7 +20,7 @@ Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
 
 Reference for warnings:
- 4018 -
+ 4018 - signed/unsigned mismatch
  4057 - function X differs in indirection to slightly different base types
  4100 - unreferenced formal parameter
  4127 - conditional expression is constant
@@ -40,7 +40,7 @@ Reference for warnings:
  4706 - assignment within conditional expression
  4800 - forcing value to bool (performance warning)
  4838 - 6conversion from X to Y requires a narrowing conversion
- 4996 -
+ 4996 - POSIX name deprecated
 
 Prefast:
  28125 - function X must be called in try/except (InitializeCriticalSection)
@@ -166,7 +166,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4100", "4127", "4244", "4267", "4701", "4996" }
+    disablewarnings { "4018", "4127", "4244", "4267"}
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
@@ -190,7 +190,7 @@ solution "SumatraPDF"
   project "libjpeg-turbo"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4018", "4100", "4127", "4244", "4245", "4996" }
+    disablewarnings { "4018", "4100", "4127", "4244", "4245" }
     includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
 
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
@@ -229,7 +229,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4706", "4996" }
     includedirs { }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
 
