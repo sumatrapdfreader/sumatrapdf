@@ -20,6 +20,7 @@ Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
 
 Reference for warnings:
+ 4018 -
  4057 - function X differs in indirection to slightly different base types
  4100 - unreferenced formal parameter
  4127 - conditional expression is constant
@@ -38,6 +39,8 @@ Reference for warnings:
  4702 - unreachable code
  4706 - assignment within conditional expression
  4800 - forcing value to bool (performance warning)
+ 4838 - 6conversion from X to Y requires a narrowing conversion
+ 4996 -
 
 Prefast:
  28125 - function X must be called in try/except (InitializeCriticalSection)
@@ -171,7 +174,7 @@ solution "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4018", "4127", "4244", "4996" }
+    disablewarnings { "4127", "4244" }
     includedirs { "ext/openjpeg" }
     openjpeg_files()
 
@@ -179,7 +182,7 @@ solution "SumatraPDF"
   project "libwebp"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4018", "4057", "4127", "4204", "4244", "4996" }
+    disablewarnings { "4127", "4204", "4244", "4057" }
     includedirs { "ext/libwebp" }
     libwebp_files()
 
@@ -321,13 +324,20 @@ solution "SumatraPDF"
     mui_files()
 
 
+  project "uia"
+    kind "StaticLib"
+    language "C++"
+    disablewarnings { "4302", "4311", "4838" }
+    includedirs { "src", "src/utils" }
+    uia_files()
+
+
   project "sumatra"
     kind "StaticLib"
     language "C++"
-    disablewarnings { "4018", "4302", "4311", "4838" }
-    includedirs { "src/utils", "src/wingui", "src/mui", "ext/lzma/C" }
-    includedirs { "ext/libwebp", "ext/unarr", "mupdf/include", "src" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src" }
+    -- TODO: in CrashHandler.cpp only, fix them
+    disablewarnings { "4302", "4311" }
+    includedirs { "src", "src/utils", "src/wingui", "src/mui", "ext/synctex" }
     sumatra_files()
 
 
@@ -515,7 +525,7 @@ solution "SumatraPDF"
     }
     links {
       "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra", "synctex",
-      "unarr", "utils"
+      "uia", "unarr", "utils"
     }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -532,7 +542,7 @@ solution "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
     links {
       "synctex", "sumatra", "libmupdf", "utils", "mui", "engines",
-      "unarr", "libwebp"
+      "uia", "unarr", "libwebp"
     }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",

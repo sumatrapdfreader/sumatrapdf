@@ -375,12 +375,17 @@ function sumatra_files()
     "WindowInfo.*",
 
     "regress/Regress.*",
+  })
+end
 
-    "uia/Provider.*",
-    "uia/StartPageProvider.*",
-    "uia/DocumentProvider.*",
-    "uia/PageProvider.*",
-    "uia/TextRange.*",
+
+function uia_files()
+  files_in_dir("src/uia", {
+    "Provider.*",
+    "StartPageProvider.*",
+    "DocumentProvider.*",
+    "PageProvider.*",
+    "TextRange.*",
   })
 end
 
