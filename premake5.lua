@@ -5,7 +5,6 @@ I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support vs 2013+)
 
 TODO:
-* Installer
 * a way to define SVN_PRE_RELEASE_VER, via build_config.h ? or msbuild
 * compare compilation flags nmake vs. us from compilation logs
 * consider checking in generated cmaps anyway. setting up cmapdump.exe
@@ -675,7 +674,8 @@ solution "SumatraPDF"
     -- 1  RCDATA  "..\dbg\InstallerData.dat"
     -- No idea how to fix that. Maybe copy ../dbg/IntallerData.dat and use just InstallerData.dat ?
     -- Or just move this step to build script
-    resdefines { "INSTALL_PAYLOAD_ZIP=%{cfg.targetdir}/InstallerData.dat" }
+    --resdefines { "INSTALL_PAYLOAD_ZIP=.\\..\\..\\InstallerData.dat" }
+    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
     -- TODO: could trim some of that
     utils_files()
@@ -698,7 +698,8 @@ solution "SumatraPDF"
       "version", "windowscodecs", "wininet"
     }
     dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
-    prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf" }
+    --prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf & xcopy /Q /Y InstallerData.dat .."  }
+    prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
 
   -- dummy project that builds all other projects
