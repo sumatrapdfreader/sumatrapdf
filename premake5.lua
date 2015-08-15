@@ -8,8 +8,7 @@ TODO:
 * generate mupdf/generated or check them in
 * Installer
 * fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
-* fix mutool and mudraw (they have wmain, libcmtd.lib wants main)
-* a way to define SVN_PRE_RELEASE_VER, via build_config.h ?
+* a way to define SVN_PRE_RELEASE_VER, via build_config.h ? or msbuild
 * compare compilation flags nmake vs. us from compilation logs
 
 Code fixes:
@@ -229,7 +228,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4706", "4996" }
+    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
     includedirs { }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
 
@@ -346,30 +345,31 @@ solution "SumatraPDF"
   project "mutool"
     kind "ConsoleApp"
     language "C"
-    --this should fix link of mutool but entrypoint was added in
-    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
-    -- and is not in alpha4
-    --entrypoint "wmainCRTStartup"
     disablewarnings { "4267" }
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     mutool_files()
     links { "mupdf" }
     links { "windowscodecs" }
+    linkoptions { "/ENTRY:\"wmainCRTStartup\"" }
+    -- TODO: a better fix should be entrypoint, which was added in
+    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
+    -- and is not in alpha4
+    --entrypoint "wmainCRTStartup"
 
 
   project "mudraw"
     kind "ConsoleApp"
     language "C"
-    --this should fix link of mutool but entrypoint was added in
-    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
-    -- and is not in alpha4
-    --entrypoint "wmainCRTStartup"
-    --entrypoint "wmainCRTStartup"
     disablewarnings { "4267" }
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     mudraw_files()
     links { "mupdf" }
     links { "windowscodecs" }
+    linkoptions { "/ENTRY:\"wmainCRTStartup\"" }
+    -- TODO: a better fix should be entrypoint, which was added in
+    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
+    -- and is not in alpha4
+    --entrypoint "wmainCRTStartup"
 
 
   project "cmapdump"
@@ -708,5 +708,6 @@ solution "SumatraPDF"
     files { "src/no_op_console.c" }
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
-      "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA"
+      "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA",
+      "mutool", "mudraw", "Uninstaller", "enginedump", "efi"
     }
