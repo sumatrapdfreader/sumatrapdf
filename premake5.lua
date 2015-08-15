@@ -480,43 +480,39 @@ solution "SumatraPDF"
     links { "shlwapi" }
 
 
-    --[[
-    TODO: implement this logic
-    !if "$(CFG)"=="dbg"
-    # build all optional IFilters for debug builds
-    BUILD_TEX_IFILTER = 1
-    BUILD_EPUB_IFILTER = 1
-    !endif
-
-    !if "$(BUILD_TEX_IFILTER)"!=""
-    PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
-    PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
-    !endif
-
-    !if "$(BUILD_EPUB_IFILTER)"!=""
-    PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CEpubFilter.obj \
-    	$(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj
-    PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_EPUB_IFILTER"
-    !endif
-  --]]
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
+
     disablewarnings { "4838" }
-    -- TODO: probably excessive
+
+    filter {"configurations:Debug"}
+      defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
+      files_in_dir("src/ifilter", {
+        "CTeXFilter.*",
+        "CEpubFilter.*",
+      })
+      files {
+        "src/EbookDoc.*",
+        "src/MobiDoc.*",
+        "src/utils/PalmDbReader.*",
+      }
+    filter {}
+
     includedirs {
       "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
       "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
       "ext/libdjvu", "ext/CHMLib/src"
     }
     files_in_dir("src/ifilter", {
-      "PdfFilter.rc",
+      "PdfFilter.*",
       "PdfFilterDll.cpp",
-      "CPdfFilter.cpp",
+      "CPdfFilter.*",
+      "FilterBase.h",
     })
     files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
     links { "utils", "libmupdf" }
-    links { "comctl32", "shlwapi", "version"  }
+    links { "comctl32", "gdiplus", "shlwapi", "version"  }
 
 
     --[[
@@ -660,21 +656,41 @@ solution "SumatraPDF"
     }
 
 
+  -- faster to compile than Installer
+  project "InstallerNoData"
+    kind "WindowedApp"
+    language "C++"
+    flags { "NoManifest", "WinMain" }
+    defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
+    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
+    disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    -- TODO: could trim some of that
+    utils_files()
+    zlib_files()
+    unarr_files()
+    files {
+      "src/CrashHandler.*",
+      "src/Translations.*",
+      "src/installer/Installer.cpp",
+      "src/installer/Installer.h",
+      "src/installer/Trans_installer_txt.cpp",
+      "src/installer/Resource.h",
+      "src/installer/Installer.rc",
+    }
+    includedirs {
+      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2"
+    }
+    links {
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+      "version", "windowscodecs", "wininet"
+    }
+
+
   project "Installer"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    -- TODO: INSTALL_PAYLOAD_ZIP ends up ../dbg/InstallerData.dat and
-    -- QM() truns that into .../dbg/InstallerData.dat and gives this error:
-    -- 3>..\src\installer\Installer.rc(39): error RC2135: file not found: ...\dbg\InstallerData.dat
-    -- is it VS 2015 bug? It works that way even if I put that directly in Installer.rc as:
-    -- 1  RCDATA  QM(..\dbg\InstallerData.dat)
-    -- It works if I do:
-    -- 1  RCDATA  "..\dbg\InstallerData.dat"
-    -- No idea how to fix that. Maybe copy ../dbg/IntallerData.dat and use just InstallerData.dat ?
-    -- Or just move this step to build script
-    --resdefines { "INSTALL_PAYLOAD_ZIP=.\\..\\..\\InstallerData.dat" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
     -- TODO: could trim some of that
@@ -698,7 +714,6 @@ solution "SumatraPDF"
       "version", "windowscodecs", "wininet"
     }
     dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
-    --prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf & xcopy /Q /Y InstallerData.dat .."  }
     prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
 
